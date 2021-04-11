@@ -305,11 +305,61 @@ ut_init_trid3(struct spdk_nvme_transport_id *trid)
 	snprintf(trid->trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN, "%s", "4420");
 }
 
+static int
+cmp_int(int a, int b)
+{
+	return a - b;
+}
+
+int
+spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
+			       const struct spdk_nvme_transport_id *trid2)
+{
+	int cmp;
+
+	/* We assume trtype is TCP for now. */
+	CU_ASSERT(trid1->trtype == SPDK_NVME_TRANSPORT_TCP);
+
+	cmp = cmp_int(trid1->trtype, trid2->trtype);
+	if (cmp) {
+		return cmp;
+	}
+
+	cmp = strcasecmp(trid1->traddr, trid2->traddr);
+	if (cmp) {
+		return cmp;
+	}
+
+	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
+	if (cmp) {
+		return cmp;
+	}
+
+	cmp = strcasecmp(trid1->trsvcid, trid2->trsvcid);
+	if (cmp) {
+		return cmp;
+	}
+
+	cmp = strcmp(trid1->subnqn, trid2->subnqn);
+	if (cmp) {
+		return cmp;
+	}
+
+	return 0;
+}
+
 static struct spdk_nvme_ctrlr *
 ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 	uint32_t i;
+
+	TAILQ_FOREACH(ctrlr, &g_ut_init_ctrlrs, tailq) {
+		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) == 0) {
+			/* There is a ctrlr whose trid matches. */
+			return NULL;
+		}
+	}
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -394,49 +444,6 @@ ut_bdev_io_set_buf(struct spdk_bdev_io *bdev_io)
 	bdev_io->iov.iov_len = 4096;
 }
 
-static int
-cmp_int(int a, int b)
-{
-	return a - b;
-}
-
-int
-spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
-			       const struct spdk_nvme_transport_id *trid2)
-{
-	int cmp;
-
-	/* We assume trtype is TCP for now. */
-	CU_ASSERT(trid1->trtype == SPDK_NVME_TRANSPORT_TCP);
-
-	cmp = cmp_int(trid1->trtype, trid2->trtype);
-	if (cmp) {
-		return cmp;
-	}
-
-	cmp = strcasecmp(trid1->traddr, trid2->traddr);
-	if (cmp) {
-		return cmp;
-	}
-
-	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
-	if (cmp) {
-		return cmp;
-	}
-
-	cmp = strcasecmp(trid1->trsvcid, trid2->trsvcid);
-	if (cmp) {
-		return cmp;
-	}
-
-	cmp = strcmp(trid1->subnqn, trid2->subnqn);
-	if (cmp) {
-		return cmp;
-	}
-
-	return 0;
-}
-
 static void
 nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_probe_ctx *probe_ctx)
 {
@@ -458,6 +465,9 @@ spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 	struct spdk_nvme_ctrlr *ctrlr, *tmp;
 
 	TAILQ_FOREACH_SAFE(ctrlr, &g_ut_init_ctrlrs, tailq, tmp) {
+		if (spdk_nvme_transport_id_compare(&ctrlr->trid, &probe_ctx->trid) != 0) {
+			continue;
+		}
 		TAILQ_REMOVE(&g_ut_init_ctrlrs, ctrlr, tailq);
 		nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
 	}
