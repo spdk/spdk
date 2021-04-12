@@ -353,6 +353,7 @@ _reactor_set_notify_cpuset(void *arg1, void *arg2)
 	struct spdk_reactor *target = arg1;
 	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
 
+	assert(reactor != NULL);
 	spdk_cpuset_set_cpu(&reactor->notify_cpuset, target->lcore, target->new_in_interrupt);
 }
 
@@ -715,6 +716,7 @@ _reactors_scheduler_update_core_mode(void *ctx)
 	}
 
 	reactor = spdk_reactor_get(g_scheduler_core_number);
+	assert(reactor != NULL);
 	if (reactor->in_interrupt != g_core_infos[g_scheduler_core_number].interrupt_mode) {
 		/* Switch next found reactor to new state */
 		rc = spdk_reactor_set_interrupt_mode(g_scheduler_core_number,
@@ -1077,6 +1079,8 @@ thread_process_interrupts(void *arg)
 	struct spdk_reactor *reactor = spdk_reactor_get(spdk_env_get_current_core());
 	uint64_t now;
 	int rc;
+
+	assert(reactor != NULL);
 
 	/* Update idle_tsc between the end of last intr_fn and the start of this intr_fn. */
 	now = spdk_get_ticks();
