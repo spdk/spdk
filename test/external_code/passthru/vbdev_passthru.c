@@ -347,7 +347,8 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 				     _pt_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
-		rc = spdk_bdev_zcopy_start(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.offset_blocks,
+		rc = spdk_bdev_zcopy_start(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+					   bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
 					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
 					   _pt_complete_zcopy_io, bdev_io);
 		break;

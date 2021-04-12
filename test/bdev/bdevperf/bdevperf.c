@@ -716,7 +716,7 @@ bdevperf_submit_task(void *arg)
 		break;
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (g_zcopy) {
-			rc = spdk_bdev_zcopy_start(desc, ch, task->offset_blocks, job->io_size_blocks,
+			rc = spdk_bdev_zcopy_start(desc, ch, NULL, 0, task->offset_blocks, job->io_size_blocks,
 						   true, bdevperf_zcopy_populate_complete, task);
 		} else {
 			if (spdk_bdev_is_md_separate(job->bdev)) {
@@ -803,7 +803,7 @@ bdevperf_prep_zcopy_write_task(void *arg)
 	struct bdevperf_job	*job = task->job;
 	int			rc;
 
-	rc = spdk_bdev_zcopy_start(job->bdev_desc, job->ch,
+	rc = spdk_bdev_zcopy_start(job->bdev_desc, job->ch, NULL, 0,
 				   task->offset_blocks, job->io_size_blocks,
 				   false, bdevperf_zcopy_get_buf_complete, task);
 	if (rc != 0) {

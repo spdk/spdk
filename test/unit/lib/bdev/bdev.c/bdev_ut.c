@@ -116,6 +116,11 @@ static void *g_compare_write_buf;
 static uint32_t g_compare_write_buf_len;
 static bool g_abort_done;
 static enum spdk_bdev_io_status g_abort_status;
+static void *g_zcopy_read_buf;
+static uint32_t g_zcopy_read_buf_len;
+static void *g_zcopy_write_buf;
+static uint32_t g_zcopy_write_buf_len;
+static struct spdk_bdev_io *g_zcopy_bdev_io;
 
 static struct ut_expected_io *
 ut_alloc_expected_io(uint8_t type, uint64_t offset, uint64_t length, int iovcnt)
@@ -186,6 +191,43 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 					spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_FAILED);
 					break;
 				}
+			}
+		}
+	}
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ZCOPY) {
+		if (bdev_io->u.bdev.zcopy.start) {
+			g_zcopy_bdev_io = bdev_io;
+			if (bdev_io->u.bdev.zcopy.populate) {
+				/* Start of a read */
+				CU_ASSERT(g_zcopy_read_buf != NULL);
+				CU_ASSERT(g_zcopy_read_buf_len > 0);
+				bdev_io->u.bdev.iovs[0].iov_base = g_zcopy_read_buf;
+				bdev_io->u.bdev.iovs[0].iov_len = g_zcopy_read_buf_len;
+				bdev_io->u.bdev.iovcnt = 1;
+			} else {
+				/* Start of a write */
+				CU_ASSERT(g_zcopy_write_buf != NULL);
+				CU_ASSERT(g_zcopy_write_buf_len > 0);
+				bdev_io->u.bdev.iovs[0].iov_base = g_zcopy_write_buf;
+				bdev_io->u.bdev.iovs[0].iov_len = g_zcopy_write_buf_len;
+				bdev_io->u.bdev.iovcnt = 1;
+			}
+		} else {
+			if (bdev_io->u.bdev.zcopy.commit) {
+				/* End of write */
+				CU_ASSERT(bdev_io->u.bdev.iovs[0].iov_base == g_zcopy_write_buf);
+				CU_ASSERT(bdev_io->u.bdev.iovs[0].iov_len == g_zcopy_write_buf_len);
+				CU_ASSERT(bdev_io->u.bdev.iovcnt == 1);
+				g_zcopy_write_buf = NULL;
+				g_zcopy_write_buf_len = 0;
+			} else {
+				/* End of read */
+				CU_ASSERT(bdev_io->u.bdev.iovs[0].iov_base == g_zcopy_read_buf);
+				CU_ASSERT(bdev_io->u.bdev.iovs[0].iov_len == g_zcopy_read_buf_len);
+				CU_ASSERT(bdev_io->u.bdev.iovcnt == 1);
+				g_zcopy_read_buf = NULL;
+				g_zcopy_read_buf_len = 0;
 			}
 		}
 	}
@@ -856,7 +898,13 @@ io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	g_io_done = true;
 	g_io_status = bdev_io->internal.status;
-	spdk_bdev_free_io(bdev_io);
+	if ((bdev_io->type == SPDK_BDEV_IO_TYPE_ZCOPY) &&
+	    (bdev_io->u.bdev.zcopy.start)) {
+		g_zcopy_bdev_io = bdev_io;
+	} else {
+		spdk_bdev_free_io(bdev_io);
+		g_zcopy_bdev_io = NULL;
+	}
 }
 
 static void
@@ -3443,6 +3491,174 @@ bdev_write_zeroes(void)
 }
 
 static void
+bdev_zcopy_write(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_expected_io *expected_io;
+	uint64_t offset, num_blocks;
+	uint32_t num_completed;
+	char aa_buf[512];
+	struct iovec iov;
+	int rc;
+	const bool populate = false;
+	const bool commit = true;
+
+	memset(aa_buf, 0xaa, sizeof(aa_buf));
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	offset = 50;
+	num_blocks = 1;
+	iov.iov_base = NULL;
+	iov.iov_len = 0;
+
+	g_zcopy_read_buf = (void *) 0x1122334455667788UL;
+	g_zcopy_read_buf_len = (uint32_t) -1;
+	/* Do a zcopy start for a write (populate=false) */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_ZCOPY, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	g_io_done = false;
+	g_zcopy_write_buf = aa_buf;
+	g_zcopy_write_buf_len = sizeof(aa_buf);
+	g_zcopy_bdev_io = NULL;
+	rc = spdk_bdev_zcopy_start(desc, ioch, &iov, 1, offset, num_blocks, populate, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	/* Check that the iov has been set up */
+	CU_ASSERT(iov.iov_base == g_zcopy_write_buf);
+	CU_ASSERT(iov.iov_len == g_zcopy_write_buf_len);
+	/* Check that the bdev_io has been saved */
+	CU_ASSERT(g_zcopy_bdev_io != NULL);
+	/* Now do the zcopy end for a write (commit=true) */
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_ZCOPY, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_zcopy_end(g_zcopy_bdev_io, commit, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	/* Check the g_zcopy are reset by io_done */
+	CU_ASSERT(g_zcopy_write_buf == NULL);
+	CU_ASSERT(g_zcopy_write_buf_len == 0);
+	/* Check that io_done has freed the g_zcopy_bdev_io */
+	CU_ASSERT(g_zcopy_bdev_io == NULL);
+
+	/* Check the zcopy read buffer has not been touched which
+	 * ensures that the correct buffers were used.
+	 */
+	CU_ASSERT(g_zcopy_read_buf == (void *) 0x1122334455667788UL);
+	CU_ASSERT(g_zcopy_read_buf_len == (uint32_t) -1);
+
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
+bdev_zcopy_read(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_expected_io *expected_io;
+	uint64_t offset, num_blocks;
+	uint32_t num_completed;
+	char aa_buf[512];
+	struct iovec iov;
+	int rc;
+	const bool populate = true;
+	const bool commit = false;
+
+	memset(aa_buf, 0xaa, sizeof(aa_buf));
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	offset = 50;
+	num_blocks = 1;
+	iov.iov_base = NULL;
+	iov.iov_len = 0;
+
+	g_zcopy_write_buf = (void *) 0x1122334455667788UL;
+	g_zcopy_write_buf_len = (uint32_t) -1;
+
+	/* Do a zcopy start for a read (populate=true) */
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_ZCOPY, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	g_io_done = false;
+	g_zcopy_read_buf = aa_buf;
+	g_zcopy_read_buf_len = sizeof(aa_buf);
+	g_zcopy_bdev_io = NULL;
+	rc = spdk_bdev_zcopy_start(desc, ioch, &iov, 1, offset, num_blocks, populate, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	/* Check that the iov has been set up */
+	CU_ASSERT(iov.iov_base == g_zcopy_read_buf);
+	CU_ASSERT(iov.iov_len == g_zcopy_read_buf_len);
+	/* Check that the bdev_io has been saved */
+	CU_ASSERT(g_zcopy_bdev_io != NULL);
+
+	/* Now do the zcopy end for a read (commit=false) */
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_ZCOPY, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_zcopy_end(g_zcopy_bdev_io, commit, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	/* Check the g_zcopy are reset by io_done */
+	CU_ASSERT(g_zcopy_read_buf == NULL);
+	CU_ASSERT(g_zcopy_read_buf_len == 0);
+	/* Check that io_done has freed the g_zcopy_bdev_io */
+	CU_ASSERT(g_zcopy_bdev_io == NULL);
+
+	/* Check the zcopy write buffer has not been touched which
+	 * ensures that the correct buffers were used.
+	 */
+	CU_ASSERT(g_zcopy_write_buf == (void *) 0x1122334455667788UL);
+	CU_ASSERT(g_zcopy_write_buf_len == (uint32_t) -1);
+
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
 bdev_open_while_hotremove(void)
 {
 	struct spdk_bdev *bdev;
@@ -4495,6 +4711,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_write_zeroes);
 	CU_ADD_TEST(suite, bdev_compare_and_write);
 	CU_ADD_TEST(suite, bdev_compare);
+	CU_ADD_TEST(suite, bdev_zcopy_write);
+	CU_ADD_TEST(suite, bdev_zcopy_read);
 	CU_ADD_TEST(suite, bdev_open_while_hotremove);
 	CU_ADD_TEST(suite, bdev_close_while_hotremove);
 	CU_ADD_TEST(suite, bdev_open_ext);

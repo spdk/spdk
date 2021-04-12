@@ -4315,6 +4315,7 @@ spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io
 
 int
 spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		      struct iovec *iov, int iovcnt,
 		      uint64_t offset_blocks, uint64_t num_blocks,
 		      bool populate,
 		      spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -4345,8 +4346,8 @@ spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->type = SPDK_BDEV_IO_TYPE_ZCOPY;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
-	bdev_io->u.bdev.iovs = NULL;
-	bdev_io->u.bdev.iovcnt = 0;
+	bdev_io->u.bdev.iovs = iov;
+	bdev_io->u.bdev.iovcnt = iovcnt;
 	bdev_io->u.bdev.md_buf = NULL;
 	bdev_io->u.bdev.zcopy.populate = populate ? 1 : 0;
 	bdev_io->u.bdev.zcopy.commit = 0;

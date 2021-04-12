@@ -374,7 +374,7 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 				     bdev_part_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
-		rc = spdk_bdev_zcopy_start(base_desc, base_ch, remapped_offset,
+		rc = spdk_bdev_zcopy_start(base_desc, base_ch, NULL, 0, remapped_offset,
 					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
 					   bdev_part_complete_zcopy_io, bdev_io);
 		break;

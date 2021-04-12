@@ -51,6 +51,8 @@ Rados Cluster names.
 Removed ZCOPY emulation: The bdev module can be checked to see if it supports ZCOPY
 and if not supported then use existing READ/WRITE commands.
 
+Added iov to spdk_bdev_zcopy_start
+
 ## v21.04:
 
 ### accel

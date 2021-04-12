@@ -1226,6 +1226,8 @@ int spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spd
  *
  * \param desc Block device descriptor
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list to be populated with the buffers
+ * \param iovcnt The maximum number of elements in iov.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks.
  * \param populate Whether the data buffer should be populated with the
@@ -1239,10 +1241,10 @@ int spdk_bdev_comparev_and_writev_blocks(struct spdk_bdev_desc *desc, struct spd
  * negated errno on failure, in which case the callback will not be called.
  */
 int spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  struct iovec *iov, int iovcnt,
 			  uint64_t offset_blocks, uint64_t num_blocks,
 			  bool populate,
 			  spdk_bdev_io_completion_cb cb, void *cb_arg);
-
 
 /**
  * Submit a request to release a data buffer representing a range of blocks.
