@@ -39,4 +39,5 @@ umount "$test_folder_name"
 rm -rf "${testdir:?}/${test_folder_name:?}"
 
 echo "INFO: Deleting partition"
-echo -e "d\n1\nw" | fdisk /dev/$disk_name
+# Zap the entire drive to make sure the partition table is removed as well
+wipefs --all "/dev/$disk_name"

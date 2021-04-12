@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -xe
 
+err_wipe() {
+	[[ -n $devs ]] || return 0
+	local _devs
+
+	_devs=($devs) _devs=("${devs[@]/#//dev/}")
+
+	umount "${_devs[@]}" || :
+	wipefs --all "${_devs[@]}" || :
+}
+
 MAKE="make -j$(($(nproc) * 2))"
 
 if [[ $1 == "spdk_vhost_scsi" ]]; then
@@ -19,7 +29,7 @@ fi
 
 fs=$2
 
-trap "exit 1" SIGINT SIGTERM EXIT
+trap "err_wipe; exit 1" SIGINT SIGTERM EXIT
 
 for fs in $fs; do
 	for dev in $devs; do
@@ -65,9 +75,9 @@ for fs in $fs; do
 	for dev in $devs; do
 		umount /mnt/${dev}dir
 		rm -rf /mnt/${dev}dir
-		parted -s /dev/${dev} rm 1
-
 		stats=($(cat /sys/block/$dev/stat))
+		wipefs --all "/dev/$dev"
+
 		echo ""
 		echo "$dev stats"
 		printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
