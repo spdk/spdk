@@ -2228,6 +2228,78 @@ test_nvme_ctrlr_add_remove_process(void)
 	CU_ASSERT(TAILQ_EMPTY(&ctrlr.active_procs));
 }
 
+static void *
+gpa_to_vva(void *prv, uint64_t addr, uint64_t len)
+{
+	return (void *)(uintptr_t)addr;
+}
+
+static void
+test_nvme_cmd_map_prps(void)
+{
+	struct spdk_nvme_cmd cmd = {};
+	struct iovec iovs[33];
+	uint64_t phy_addr, *prp;
+	uint32_t len;
+	void *buf, *prps;
+	int i, ret;
+	size_t mps = 4096;
+
+	buf = spdk_zmalloc(132 * 1024, 4096, &phy_addr, 0, 0);
+	CU_ASSERT(buf != NULL);
+	prps = spdk_zmalloc(4096, 4096, &phy_addr, 0, 0);
+	CU_ASSERT(prps != NULL);
+
+	/* test case 1: 4KiB with PRP1 only */
+	cmd.dptr.prp.prp1 = (uint64_t)(uintptr_t)buf;
+	len = 4096;
+	ret = nvme_cmd_map_prps(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == 1);
+	CU_ASSERT(iovs[0].iov_base == (void *)(uintptr_t)cmd.dptr.prp.prp1);
+	CU_ASSERT(iovs[0].iov_len == len);
+
+	/* test case 2: 4KiB with PRP1 and PRP2, 1KiB in first iov, and 3KiB in second iov */
+	cmd.dptr.prp.prp1 = (uint64_t)(uintptr_t)buf + 1024 * 3;
+	cmd.dptr.prp.prp2 = (uint64_t)(uintptr_t)buf + 4096;
+	len = 4096;
+	ret = nvme_cmd_map_prps(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == 2);
+	CU_ASSERT(iovs[0].iov_base == (void *)(uintptr_t)cmd.dptr.prp.prp1);
+	CU_ASSERT(iovs[0].iov_len == 1024);
+	CU_ASSERT(iovs[1].iov_base == (void *)(uintptr_t)cmd.dptr.prp.prp2);
+	CU_ASSERT(iovs[1].iov_len == 1024 * 3);
+
+	/* test case 3: 128KiB with PRP list, 1KiB in first iov, 3KiB in last iov */
+	cmd.dptr.prp.prp1 = (uint64_t)(uintptr_t)buf + 1024 * 3;
+	cmd.dptr.prp.prp2 = (uint64_t)(uintptr_t)prps;
+	len = 128 * 1024;
+	prp = prps;
+	for (i = 1; i < 33; i++) {
+		*prp = (uint64_t)(uintptr_t)buf + i * 4096;
+		prp++;
+	}
+	ret = nvme_cmd_map_prps(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == 33);
+	CU_ASSERT(iovs[0].iov_base == (void *)(uintptr_t)cmd.dptr.prp.prp1);
+	CU_ASSERT(iovs[0].iov_len == 1024);
+	for (i = 1; i < 32; i++) {
+		CU_ASSERT(iovs[i].iov_base == (void *)((uintptr_t)buf + i * 4096));
+		CU_ASSERT(iovs[i].iov_len == 4096);
+	}
+	CU_ASSERT(iovs[32].iov_base == (void *)((uintptr_t)buf + 32 * 4096));
+	CU_ASSERT(iovs[32].iov_len == 1024 * 3);
+
+	/* test case 4: 256KiB with PRP list, not enough iovs */
+	cmd.dptr.prp.prp1 = (uint64_t)(uintptr_t)buf + 1024 * 3;
+	cmd.dptr.prp.prp2 = (uint64_t)(uintptr_t)prps;
+	len = 256 * 1024;
+	ret = nvme_cmd_map_prps(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == -ERANGE);
+
+	spdk_free(buf);
+	spdk_free(prps);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2268,6 +2340,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_keep_alive_timeout);
 	CU_ADD_TEST(suite, test_alloc_io_qpair_fail);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_add_remove_process);
+	CU_ADD_TEST(suite, test_nvme_cmd_map_prps);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
