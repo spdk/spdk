@@ -2300,6 +2300,101 @@ test_nvme_cmd_map_prps(void)
 	spdk_free(prps);
 }
 
+static void
+test_nvme_cmd_map_sgls(void)
+{
+	struct spdk_nvme_cmd cmd = {};
+	struct iovec iovs[33];
+	uint64_t phy_addr;
+	uint32_t len;
+	void *buf, *sgls;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	int i, ret;
+	size_t mps = 4096;
+
+	buf = spdk_zmalloc(132 * 1024, 4096, &phy_addr, 0, 0);
+	CU_ASSERT(buf != NULL);
+	sgls = spdk_zmalloc(4096, 4096, &phy_addr, 0, 0);
+	CU_ASSERT(sgls != NULL);
+
+	/* test case 1: 8KiB with 1 data block */
+	len = 8192;
+	cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	cmd.dptr.sgl1.unkeyed.length = len;
+	cmd.dptr.sgl1.address = (uint64_t)(uintptr_t)buf;
+
+	ret = nvme_cmd_map_sgls(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == 1);
+	CU_ASSERT(iovs[0].iov_base == buf);
+	CU_ASSERT(iovs[0].iov_len == 8192);
+
+	/* test case 2: 8KiB with 2 data blocks and 1 last segment */
+	sgl = (struct spdk_nvme_sgl_descriptor *)sgls;
+	sgl[0].unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	sgl[0].unkeyed.length = 2048;
+	sgl[0].address = (uint64_t)(uintptr_t)buf;
+	sgl[1].unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	sgl[1].unkeyed.length = len - 2048;
+	sgl[1].address = (uint64_t)(uintptr_t)buf + 16 * 1024;
+
+	cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+	cmd.dptr.sgl1.unkeyed.length = 2 * sizeof(*sgl);
+	cmd.dptr.sgl1.address = (uint64_t)(uintptr_t)sgls;
+
+	ret = nvme_cmd_map_sgls(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == 2);
+	CU_ASSERT(iovs[0].iov_base == (void *)(uintptr_t)buf);
+	CU_ASSERT(iovs[0].iov_len == 2048);
+	CU_ASSERT(iovs[1].iov_base == (void *)((uintptr_t)buf + 16 * 1024));
+	CU_ASSERT(iovs[1].iov_len == len - 2048);
+
+	/* test case 3: 8KiB with 1 segment, 1 last segment and 3 data blocks */
+	sgl[0].unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	sgl[0].unkeyed.length = 2048;
+	sgl[0].address = (uint64_t)(uintptr_t)buf;
+	sgl[1].unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+	sgl[1].unkeyed.length = 2 * sizeof(*sgl);
+	sgl[1].address = (uint64_t)(uintptr_t)&sgl[9];
+
+	sgl[9].unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	sgl[9].unkeyed.length = 4096;
+	sgl[9].address = (uint64_t)(uintptr_t)buf + 4 * 1024;
+	sgl[10].unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	sgl[10].unkeyed.length = 2048;
+	sgl[10].address = (uint64_t)(uintptr_t)buf + 16 * 1024;
+
+	cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_SEGMENT;
+	cmd.dptr.sgl1.unkeyed.length = 2 * sizeof(*sgl);
+	cmd.dptr.sgl1.address = (uint64_t)(uintptr_t)&sgl[0];
+
+	ret = nvme_cmd_map_sgls(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == 3);
+	CU_ASSERT(iovs[0].iov_base == (void *)(uintptr_t)buf);
+	CU_ASSERT(iovs[0].iov_len == 2048);
+	CU_ASSERT(iovs[1].iov_base == (void *)((uintptr_t)buf + 4 * 1024));
+	CU_ASSERT(iovs[1].iov_len == 4096);
+	CU_ASSERT(iovs[2].iov_base == (void *)((uintptr_t)buf + 16 * 1024));
+	CU_ASSERT(iovs[2].iov_len == 2048);
+
+	/* test case 4: not enough iovs */
+	len = 12 * 1024;
+	for (i = 0; i < 6; i++) {
+		sgl[0].unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		sgl[0].unkeyed.length = 2048;
+		sgl[0].address = (uint64_t)(uintptr_t)buf + i * 4096;
+	}
+
+	cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+	cmd.dptr.sgl1.unkeyed.length = 6 * sizeof(*sgl);
+	cmd.dptr.sgl1.address = (uint64_t)(uintptr_t)sgls;
+
+	ret = nvme_cmd_map_sgls(NULL, &cmd, iovs, 4, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == -ERANGE);
+
+	spdk_free(buf);
+	spdk_free(sgls);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2341,6 +2436,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_alloc_io_qpair_fail);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_add_remove_process);
 	CU_ADD_TEST(suite, test_nvme_cmd_map_prps);
+	CU_ADD_TEST(suite, test_nvme_cmd_map_sgls);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
