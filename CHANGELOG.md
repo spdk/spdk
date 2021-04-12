@@ -46,6 +46,11 @@ to create a rbd bdev with  an already registered Rados Cluster Object.
 New RPC `bdev_rbd_get_clusters_info` was added, it allows to get the info of the registered
 Rados Cluster names.
 
+### bdev
+
+Removed ZCOPY emulation: The bdev module can be checked to see if it supports ZCOPY
+and if not supported then use existing READ/WRITE commands.
+
 ## v21.04:
 
 ### accel
