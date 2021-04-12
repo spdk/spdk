@@ -271,15 +271,19 @@ nvme_pcie_ctrlr_get_cmbsz(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_cmbsz_
 					 &cmbsz->raw);
 }
 
-static  uint32_t
+static uint32_t
 nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/*
 	 * For commands requiring more than 2 PRP entries, one PRP will be
 	 *  embedded in the command (prp1), and the rest of the PRP entries
-	 *  will be in a list pointed to by the command (prp2).  This means
-	 *  that real max number of PRP entries we support is 506+1, which
-	 *  results in a max xfer size of 506*ctrlr->page_size.
+	 *  will be in a list pointed to by the command (prp2).  The number
+	 *  of PRP entries in the list is defined by
+	 *  NVME_MAX_PRP_LIST_ENTRIES.
+	 *
+	 *  Note that the max xfer size is not (MAX_ENTRIES + 1) * page_size
+	 *  because the first PRP entry may not be aligned on a 4KiB
+	 *  boundary.
 	 */
 	return NVME_MAX_PRP_LIST_ENTRIES * ctrlr->page_size;
 }
