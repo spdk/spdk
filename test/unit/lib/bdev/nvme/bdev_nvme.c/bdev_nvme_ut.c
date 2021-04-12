@@ -1319,19 +1319,29 @@ test_failover_ctrlr(void)
 }
 
 static void
+attach_ctrlr_done(void *cb_ctx, size_t bdev_count, int rc)
+{
+	CU_ASSERT(rc == g_ut_attach_ctrlr_status);
+	CU_ASSERT(bdev_count == g_ut_attach_bdev_count);
+}
+
+static void
 test_pending_reset(void)
 {
 	struct spdk_nvme_transport_id trid = {};
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_host_id hostid = {};
+	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
 	struct spdk_bdev_io *first_bdev_io, *second_bdev_io;
 	struct nvme_bdev_io *first_bio, *second_bio;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_io_channel *nvme_ch1, *nvme_ch2;
 	int rc;
 
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
-	TAILQ_INIT(&ctrlr.active_io_qpairs);
 
 	first_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
 	SPDK_CU_ASSERT_FATAL(first_bdev_io != NULL);
@@ -1345,7 +1355,18 @@ test_pending_reset(void)
 
 	set_thread(0);
 
-	nvme_bdev_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+	ctrlr = ut_attach_ctrlr(&trid, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 0;
+
+	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
@@ -1401,7 +1422,7 @@ test_pending_reset(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_FIRST(&nvme_ch1->pending_resets) == second_bdev_io);
 
-	ctrlr.fail_reset = true;
+	ctrlr->fail_reset = true;
 
 	poll_threads();
 
@@ -1419,7 +1440,6 @@ test_pending_reset(void)
 
 	set_thread(0);
 
-
 	rc = bdev_nvme_delete("nvme0", NULL);
 	CU_ASSERT(rc == 0);
 
@@ -1429,13 +1449,6 @@ test_pending_reset(void)
 
 	free(first_bdev_io);
 	free(second_bdev_io);
-}
-
-static void
-attach_ctrlr_done(void *cb_ctx, size_t bdev_count, int rc)
-{
-	CU_ASSERT(rc == g_ut_attach_ctrlr_status);
-	CU_ASSERT(bdev_count == g_ut_attach_bdev_count);
 }
 
 static void
