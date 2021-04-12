@@ -49,6 +49,10 @@
 
 #define NVMF_MAX_ASYNC_EVENTS	(4)
 
+/* The spec reserves cntlid values in the range FFF0h to FFFFh. */
+#define NVMF_MIN_CNTLID 1
+#define NVMF_MAX_CNTLID 0xFFEF
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -286,6 +290,9 @@ struct spdk_nvmf_subsystem {
 	struct spdk_nvmf_ns				**ns;
 	uint32_t					max_nsid;
 
+	uint16_t					min_cntlid;
+	uint16_t					max_cntlid;
+
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)			ctrlrs;
 
 	/* A mutex used to protect the hosts list and allow_any_host flag. Unlike the namespace
@@ -371,6 +378,21 @@ void nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 				  const struct spdk_nvme_transport_id *trid,
 				  enum spdk_nvme_ana_state ana_state,
 				  spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg);
+
+/**
+ * Sets the controller ID range for a subsystem.
+ * Valid range is [1, 0xFFEF].
+ *
+ * May only be performed on subsystems in the INACTIVE state.
+ *
+ * \param subsystem Subsystem to modify.
+ * \param min_cntlid Minimum controller ID.
+ * \param max_cntlid Maximum controller ID.
+ *
+ * \return 0 on success, or negated errno value on failure.
+ */
+int nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
+				    uint16_t min_cntlid, uint16_t max_cntlid);
 
 int nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr);

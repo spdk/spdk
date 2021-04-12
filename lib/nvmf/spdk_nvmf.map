@@ -53,6 +53,8 @@
 	spdk_nvmf_subsystem_get_first_ns;
 	spdk_nvmf_subsystem_get_next_ns;
 	spdk_nvmf_subsystem_get_ns;
+	spdk_nvmf_subsystem_get_min_cntlid;
+	spdk_nvmf_subsystem_get_max_cntlid;
 	spdk_nvmf_subsystem_get_max_namespaces;
 	spdk_nvmf_ns_get_id;
 	spdk_nvmf_ns_get_bdev;

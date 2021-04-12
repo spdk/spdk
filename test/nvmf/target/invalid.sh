@@ -66,6 +66,20 @@ fi
 out=$("$rpc" nvmf_subsystem_remove_listener "$nqn" -t "$TEST_TRANSPORT" -a "$IP" -s 4421 2>&1) && false
 [[ $out != *"Unable to stop listener."* ]]
 
+# Attempt to create subsystem with invalid controller ID range - outside [1, 0xffef]
+out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -i 0 2>&1) && false
+[[ $out == *"Invalid cntlid range"* ]]
+out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -i 65520 2>&1) && false
+[[ $out == *"Invalid cntlid range"* ]]
+out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -I 0 2>&1) && false
+[[ $out == *"Invalid cntlid range"* ]]
+out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -I 65520 2>&1) && false
+[[ $out == *"Invalid cntlid range"* ]]
+
+# Attempt to create subsystem with invalid controller ID range - [x, y] where x>y
+out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -i 6 -I 5 2>&1) && false
+[[ $out == *"Invalid cntlid range"* ]]
+
 # Attempt to delete non-existing target
 out=$("$multi_target_rpc" nvmf_delete_target --name "$target" 2>&1) && false
 [[ $out == *"The specified target doesn't exist, cannot delete it."* ]]

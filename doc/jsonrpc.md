@@ -5911,6 +5911,8 @@ model_number            | Optional | string      | Model number of virtual contr
 max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
 allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host list (`false`). Default: `false`.
 ana_reporting           | Optional | boolean     | Enable ANA reporting feature (default: `false`).
+min_cntlid              | Optional | number      | Minimum controller ID. Default: 1
+max_cntlid              | Optional | number      | Maximum controller ID. Default: 0xffef
 
 ### Example
 

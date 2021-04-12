@@ -259,6 +259,9 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 			spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
 		}
 
+		spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
+		spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
+
 		spdk_json_write_named_array_begin(w, "namespaces");
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 		     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
@@ -344,6 +347,8 @@ struct rpc_subsystem_create {
 	uint32_t max_namespaces;
 	bool allow_any_host;
 	bool ana_reporting;
+	uint16_t min_cntlid;
+	uint16_t max_cntlid;
 };
 
 static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
@@ -354,6 +359,8 @@ static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
 	{"max_namespaces", offsetof(struct rpc_subsystem_create, max_namespaces), spdk_json_decode_uint32, true},
 	{"allow_any_host", offsetof(struct rpc_subsystem_create, allow_any_host), spdk_json_decode_bool, true},
 	{"ana_reporting", offsetof(struct rpc_subsystem_create, ana_reporting), spdk_json_decode_bool, true},
+	{"min_cntlid", offsetof(struct rpc_subsystem_create, min_cntlid), spdk_json_decode_uint16, true},
+	{"max_cntlid", offsetof(struct rpc_subsystem_create, max_cntlid), spdk_json_decode_uint16, true},
 };
 
 static void
@@ -388,6 +395,8 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 						 "Memory allocation failed");
 		return;
 	}
+	req->min_cntlid = NVMF_MIN_CNTLID;
+	req->max_cntlid = NVMF_MAX_CNTLID;
 
 	if (spdk_json_decode_object(params, rpc_subsystem_create_decoders,
 				    SPDK_COUNTOF(rpc_subsystem_create_decoders),
@@ -435,6 +444,14 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
 
 	spdk_nvmf_subsystem_set_ana_reporting(subsystem, req->ana_reporting);
+
+	if (nvmf_subsystem_set_cntlid_range(subsystem, req->min_cntlid, req->max_cntlid)) {
+		SPDK_ERRLOG("Subsystem %s: invalid cntlid range [%u-%u]\n", req->nqn, req->min_cntlid,
+			    req->max_cntlid);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid cntlid range [%u-%u]", req->min_cntlid, req->max_cntlid);
+		goto cleanup;
+	}
 
 	rc = spdk_nvmf_subsystem_start(subsystem,
 				       rpc_nvmf_subsystem_started,

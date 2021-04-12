@@ -845,6 +845,24 @@ struct spdk_nvmf_ns *spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subs
 uint32_t spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem);
 
 /**
+ * Get the minimum controller ID allowed in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return Minimum controller ID allowed in the subsystem.
+ */
+uint16_t spdk_nvmf_subsystem_get_min_cntlid(const struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Get the maximum controller ID allowed in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return Maximum controller ID allowed in the subsystem.
+ */
+uint16_t spdk_nvmf_subsystem_get_max_cntlid(const struct spdk_nvmf_subsystem *subsystem);
+
+/**
  * Get a namespace's NSID.
  *
  * \param ns Namespace to query.

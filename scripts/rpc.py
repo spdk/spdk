@@ -1917,7 +1917,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        model_number=args.model_number,
                                        allow_any_host=args.allow_any_host,
                                        max_namespaces=args.max_namespaces,
-                                       ana_reporting=args.ana_reporting)
+                                       ana_reporting=args.ana_reporting,
+                                       min_cntlid=args.min_cntlid,
+                                       max_cntlid=args.max_cntlid)
 
     p = subparsers.add_parser('nvmf_create_subsystem', aliases=['nvmf_subsystem_create'],
                               help='Create an NVMe-oF subsystem')
@@ -1933,6 +1935,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed",
                    type=int, default=0)
     p.add_argument("-r", "--ana-reporting", action='store_true', help="Enable ANA reporting feature")
+    p.add_argument("-i", "--min_cntlid", help="Minimum controller ID", type=int, default=1)
+    p.add_argument("-I", "--max_cntlid", help="Maximum controller ID", type=int, default=0xffef)
     p.set_defaults(func=nvmf_create_subsystem)
 
     def nvmf_delete_subsystem(args):

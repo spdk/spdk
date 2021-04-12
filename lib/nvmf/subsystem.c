@@ -285,6 +285,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
 	subsystem->next_cntlid = 0;
+	subsystem->min_cntlid = NVMF_MIN_CNTLID;
+	subsystem->max_cntlid = NVMF_MAX_CNTLID;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	pthread_mutex_init(&subsystem->mutex, NULL);
 	TAILQ_INIT(&subsystem->listeners);
@@ -1632,20 +1634,44 @@ spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->max_nsid;
 }
 
+int
+nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
+				uint16_t min_cntlid, uint16_t max_cntlid)
+{
+	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
+		return -EAGAIN;
+	}
+
+	if (min_cntlid > max_cntlid) {
+		return -EINVAL;
+	}
+	/* The spec reserves cntlid values in the range FFF0h to FFFFh. */
+	if (min_cntlid < NVMF_MIN_CNTLID || min_cntlid > NVMF_MAX_CNTLID ||
+	    max_cntlid < NVMF_MIN_CNTLID || max_cntlid > NVMF_MAX_CNTLID) {
+		return -EINVAL;
+	}
+	subsystem->min_cntlid = min_cntlid;
+	subsystem->max_cntlid = max_cntlid;
+	if (subsystem->next_cntlid < min_cntlid || subsystem->next_cntlid > max_cntlid - 1) {
+		subsystem->next_cntlid = min_cntlid - 1;
+	}
+
+	return 0;
+}
+
 static uint16_t
 nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
 	int count;
 
 	/*
-	 * In the worst case, we might have to try all CNTLID values between 1 and 0xFFF0 - 1
+	 * In the worst case, we might have to try all CNTLID values between min_cntlid and max_cntlid
 	 * before we find one that is unused (or find that all values are in use).
 	 */
-	for (count = 0; count < 0xFFF0 - 1; count++) {
+	for (count = 0; count < subsystem->max_cntlid - subsystem->min_cntlid + 1; count++) {
 		subsystem->next_cntlid++;
-		if (subsystem->next_cntlid >= 0xFFF0) {
-			/* The spec reserves cntlid values in the range FFF0h to FFFFh. */
-			subsystem->next_cntlid = 1;
+		if (subsystem->next_cntlid > subsystem->max_cntlid) {
+			subsystem->next_cntlid = subsystem->min_cntlid;
 		}
 
 		/* Check if a controller with this cntlid currently exists. */
@@ -1700,6 +1726,18 @@ uint32_t
 spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->max_nsid;
+}
+
+uint16_t
+spdk_nvmf_subsystem_get_min_cntlid(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->min_cntlid;
+}
+
+uint16_t
+spdk_nvmf_subsystem_get_max_cntlid(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->max_cntlid;
 }
 
 struct _nvmf_ns_registrant {

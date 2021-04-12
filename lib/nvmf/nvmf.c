@@ -450,6 +450,9 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
 	}
 
+	spdk_json_write_named_uint32(w, "min_cntlid", spdk_nvmf_subsystem_get_min_cntlid(subsystem));
+	spdk_json_write_named_uint32(w, "max_cntlid", spdk_nvmf_subsystem_get_max_cntlid(subsystem));
+
 	/*     } "params" */
 	spdk_json_write_object_end(w);
 
