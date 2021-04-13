@@ -1810,6 +1810,51 @@ nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	free(vu_group);
 }
 
+static void
+vfio_user_qpair_disconnect_cb(void *ctx)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = ctx;
+	struct nvmf_vfio_user_ctrlr *ctrlr;
+
+	pthread_mutex_lock(&endpoint->lock);
+	ctrlr = endpoint->ctrlr;
+	if (!ctrlr) {
+		pthread_mutex_unlock(&endpoint->lock);
+		return;
+	}
+
+	if (!ctrlr->num_connected_qps) {
+		destroy_ctrlr(ctrlr);
+		pthread_mutex_unlock(&endpoint->lock);
+		return;
+	}
+	pthread_mutex_unlock(&endpoint->lock);
+}
+
+static int
+vfio_user_stop_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+{
+	uint32_t i;
+	struct nvmf_vfio_user_qpair *qpair;
+	struct nvmf_vfio_user_endpoint *endpoint;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s stop processing\n", ctrlr_id(ctrlr));
+
+	ctrlr->ready = false;
+	endpoint = ctrlr->endpoint;
+	assert(endpoint != NULL);
+
+	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
+		qpair = ctrlr->qp[i];
+		if (qpair == NULL) {
+			continue;
+		}
+		spdk_nvmf_qpair_disconnect(&qpair->qpair, vfio_user_qpair_disconnect_cb, endpoint);
+	}
+
+	return 0;
+}
+
 static int
 handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
@@ -2169,51 +2214,6 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	}
 
 	spdk_nvmf_request_exec(req);
-
-	return 0;
-}
-
-static void
-vfio_user_qpair_disconnect_cb(void *ctx)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = ctx;
-	struct nvmf_vfio_user_ctrlr *ctrlr;
-
-	pthread_mutex_lock(&endpoint->lock);
-	ctrlr = endpoint->ctrlr;
-	if (!ctrlr) {
-		pthread_mutex_unlock(&endpoint->lock);
-		return;
-	}
-
-	if (!ctrlr->num_connected_qps) {
-		destroy_ctrlr(ctrlr);
-		pthread_mutex_unlock(&endpoint->lock);
-		return;
-	}
-	pthread_mutex_unlock(&endpoint->lock);
-}
-
-static int
-vfio_user_stop_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
-{
-	uint32_t i;
-	struct nvmf_vfio_user_qpair *qpair;
-	struct nvmf_vfio_user_endpoint *endpoint;
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s stop processing\n", ctrlr_id(ctrlr));
-
-	ctrlr->ready = false;
-	endpoint = ctrlr->endpoint;
-	assert(endpoint != NULL);
-
-	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
-		qpair = ctrlr->qp[i];
-		if (qpair == NULL) {
-			continue;
-		}
-		spdk_nvmf_qpair_disconnect(&qpair->qpair, vfio_user_qpair_disconnect_cb, endpoint);
-	}
 
 	return 0;
 }
