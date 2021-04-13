@@ -4172,18 +4172,19 @@ spdk_nvme_ctrlr_free_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid)
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
-/* FIXME need to specify max number of iovs */
-int
-spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
-		   uint32_t len, size_t mps,
-		   void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+static int
+nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
+		  uint32_t max_iovcnt, uint32_t len, size_t mps,
+		  void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
 {
 	uint64_t prp1, prp2;
 	void *vva;
 	uint32_t i;
 	uint32_t residue_len, nents;
 	uint64_t *prp_list;
-	int iovcnt;
+	uint32_t iovcnt;
+
+	assert(max_iovcnt > 0);
 
 	prp1 = cmd->dptr.prp.prp1;
 	prp2 = cmd->dptr.prp.prp2;
@@ -4195,16 +4196,18 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 	vva = gpa_to_vva(prv, prp1, residue_len);
 	if (spdk_unlikely(vva == NULL)) {
 		SPDK_ERRLOG("GPA to VVA failed\n");
-		return -1;
+		return -EINVAL;
 	}
 	iovs[0].iov_base = vva;
 	iovs[0].iov_len = residue_len;
 	len -= residue_len;
 
 	if (len) {
+		assert(max_iovcnt > 1);
+
 		if (spdk_unlikely(prp2 == 0)) {
 			SPDK_ERRLOG("no PRP2, %d remaining\n", len);
-			return -1;
+			return -EINVAL;
 		}
 
 		if (len <= mps) {
@@ -4214,18 +4217,23 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 			if (spdk_unlikely(vva == NULL)) {
 				SPDK_ERRLOG("no VVA for %#" PRIx64 ", len%#x\n",
 					    prp2, len);
-				return -1;
+				return -EINVAL;
 			}
 			iovs[1].iov_base = vva;
 			iovs[1].iov_len = len;
 		} else {
 			/* PRP list used */
 			nents = (len + mps - 1) / mps;
+			if (spdk_unlikely(nents + 1 > max_iovcnt)) {
+				SPDK_ERRLOG("Too many page entries\n");
+				return -ERANGE;
+			}
+
 			vva = gpa_to_vva(prv, prp2, nents * sizeof(*prp_list));
 			if (spdk_unlikely(vva == NULL)) {
 				SPDK_ERRLOG("no VVA for %#" PRIx64 ", nents=%#x\n",
 					    prp2, nents);
-				return -1;
+				return -EINVAL;
 			}
 			prp_list = vva;
 			i = 0;
@@ -4235,7 +4243,7 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 				if (spdk_unlikely(vva == NULL)) {
 					SPDK_ERRLOG("no VVA for %#" PRIx64 ", residue_len=%#x\n",
 						    prp_list[i], residue_len);
-					return -1;
+					return -EINVAL;
 				}
 				iovs[i + 1].iov_base = vva;
 				iovs[i + 1].iov_len = residue_len;
@@ -4249,5 +4257,19 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 		iovcnt = 1;
 	}
 
+	assert(iovcnt <= max_iovcnt);
 	return iovcnt;
+}
+
+/* FIXME need to specify max number of iovs */
+int
+spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
+		   uint32_t len, size_t mps,
+		   void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+{
+	if (cmd->psdt == SPDK_NVME_PSDT_PRP) {
+		return nvme_cmd_map_prps(prv, cmd, iovs, UINT32_MAX, len, mps, gpa_to_vva);
+	}
+
+	return -EINVAL;
 }
