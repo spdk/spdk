@@ -320,7 +320,7 @@ nvme_vfio_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		SPDK_ERRLOG("Error to access file %s\n", probe_ctx->trid.traddr);
 		return ret;
 	}
-	SPDK_NOTICELOG("Scan controller : %s\n", probe_ctx->trid.traddr);
+	SPDK_DEBUGLOG(nvme_vfio, "Scan controller : %s\n", probe_ctx->trid.traddr);
 
 	return nvme_ctrlr_probe(&probe_ctx->trid, probe_ctx, NULL);
 }

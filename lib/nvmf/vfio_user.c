@@ -1565,7 +1565,7 @@ destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	assert(ctrlr != NULL);
 
-	SPDK_NOTICELOG("destroy %s\n", ctrlr_id(ctrlr));
+	SPDK_DEBUGLOG(nvmf_vfio, "destroy %s\n", ctrlr_id(ctrlr));
 
 	if (ctrlr->thread == spdk_get_thread()) {
 		_destroy_ctrlr(ctrlr);
@@ -1696,7 +1696,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 
 	pthread_mutex_init(&endpoint->lock, NULL);
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
-	SPDK_NOTICELOG("%s: doorbells %p\n", uuid, endpoint->doorbells);
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: doorbells %p\n", uuid, endpoint->doorbells);
 
 out:
 	if (err != 0) {

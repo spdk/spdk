@@ -266,8 +266,8 @@ vfio_user_check_version(struct vfio_device *dev)
 		return ret;
 	}
 
-	SPDK_NOTICELOG("%s Negotiate version %u.%u\n", vfio_user_message_str[VFIO_USER_VERSION],
-		       version->major, version->minor);
+	SPDK_DEBUGLOG(vfio_user, "%s Negotiate version %u.%u\n", vfio_user_message_str[VFIO_USER_VERSION],
+		      version->major, version->minor);
 
 	return 0;
 }

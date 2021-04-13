@@ -256,11 +256,11 @@ vfio_device_setup_sparse_mmaps(struct vfio_device *device, int index,
 					return -EIO;
 				}
 			} else {
-				SPDK_NOTICELOG("No valid fd, skip mmap for bar %d region %u\n", index, i);
+				SPDK_DEBUGLOG(vfio_pci, "No valid fd, skip mmap for bar %d region %u\n", index, i);
 			}
-			SPDK_NOTICELOG("Sparse region %u, Size 0x%llx, Offset 0x%llx, Map addr %p\n",
-				       i, sparse->areas[i].size, sparse->areas[i].offset,
-				       region->mmaps[j].mem);
+			SPDK_DEBUGLOG(vfio_pci, "Sparse region %u, Size 0x%llx, Offset 0x%llx, Map addr %p\n",
+				      i, sparse->areas[i].size, sparse->areas[i].offset,
+				      region->mmaps[j].mem);
 			j++;
 		}
 	}
@@ -406,7 +406,7 @@ spdk_vfio_user_setup(const char *path)
 		goto cleanup;
 	}
 
-	SPDK_NOTICELOG("Device %s, Path %s Setup Successfully\n", device->name, device->path);
+	SPDK_DEBUGLOG(vfio_pci, "Device %s, Path %s Setup Successfully\n", device->name, device->path);
 	TAILQ_INSERT_TAIL(&g_vfio_devices, device, link);
 
 	return device;
@@ -420,7 +420,7 @@ cleanup:
 void
 spdk_vfio_user_release(struct vfio_device *dev)
 {
-	SPDK_NOTICELOG("Release file %s\n", dev->path);
+	SPDK_DEBUGLOG(vfio_pci, "Release file %s\n", dev->path);
 
 	vfio_device_unmap_bars(dev);
 	if (dev->map) {
