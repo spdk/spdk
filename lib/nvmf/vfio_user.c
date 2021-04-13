@@ -559,8 +559,8 @@ vfio_user_map_prps(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request 
 	/* Map PRP list to from Guest physical memory to
 	 * virtual memory address.
 	 */
-	return spdk_nvme_map_prps(req, &req->cmd->nvme_cmd, iov, length,
-				  4096, _map_one);
+	return spdk_nvme_map_cmd(req, &req->cmd->nvme_cmd, iov, NVMF_REQ_MAX_BUFFERS,
+				 length, 4096, _map_one);
 }
 
 static struct spdk_nvmf_request *

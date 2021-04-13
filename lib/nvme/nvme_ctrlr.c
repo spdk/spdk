@@ -4273,3 +4273,15 @@ spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 
 	return -EINVAL;
 }
+
+int
+spdk_nvme_map_cmd(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint32_t max_iovcnt,
+		  uint32_t len, size_t mps,
+		  void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+{
+	if (cmd->psdt == SPDK_NVME_PSDT_PRP) {
+		return nvme_cmd_map_prps(prv, cmd, iovs, max_iovcnt, len, mps, gpa_to_vva);
+	}
+
+	return -EINVAL;
+}
