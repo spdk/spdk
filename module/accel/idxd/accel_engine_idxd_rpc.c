@@ -41,10 +41,12 @@
 
 struct rpc_idxd_scan_accel_engine {
 	uint32_t config_number;
+	bool config_kernel_mode;
 };
 
 static const struct spdk_json_object_decoder rpc_idxd_scan_accel_engine_decoder[] = {
 	{"config_number", offsetof(struct rpc_idxd_scan_accel_engine, config_number), spdk_json_decode_uint32},
+	{"config_kernel_mode", offsetof(struct rpc_idxd_scan_accel_engine, config_kernel_mode), spdk_json_decode_bool, true},
 };
 
 static void
@@ -64,9 +66,13 @@ rpc_idxd_scan_accel_engine(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	SPDK_NOTICELOG("Enabling IDXD with config #%u\n", req.config_number);
-	accel_engine_idxd_enable_probe(req.config_number);
+	if (req.config_kernel_mode) {
+		SPDK_NOTICELOG("Enabling IDXD kernel with config #%u\n", req.config_number);
+	} else {
+		SPDK_NOTICELOG("Enabling IDXD with config #%u\n", req.config_number);
+	}
 
+	accel_engine_idxd_enable_probe(req.config_number, req.config_kernel_mode);
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("idxd_scan_accel_engine", rpc_idxd_scan_accel_engine, SPDK_RPC_STARTUP)

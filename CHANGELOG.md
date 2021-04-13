@@ -95,6 +95,9 @@ Rados Cluster names.
 Revised a parameter `--stripe-size_kb` to `--stripe-size-kb` of `bdev_raid_create` method
 provided in `scripts/rpc.py` for consistency.
 
+An new optional parameter `config_kernel_mode` was added to the RPC `idxd_scan_accel_engine`,
+and this is used to enable using the kernel mode IDXD driver.
+
 ### bdev
 
 Removed ZCOPY emulation: The bdev module can be checked to see if it supports ZCOPY

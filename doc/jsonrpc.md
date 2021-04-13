@@ -1407,6 +1407,7 @@ This feature is considered as experimental.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 config_number           | Required | number      | Pre-defined config # to use (ie 0, 1). See [docs.](https://spdk.io/doc/idxd.html)
+config_kernel_mode      | Optional | Boolean     | If set, will use kernel idxd driver.
 
 ### Example
 
@@ -1415,7 +1416,8 @@ Example request:
 ~~~
 {
   "params": {
-    "config_number": 0
+    "config_number": 0,
+    "config_kernel_mode": false
   },
   "jsonrpc": "2.0",
   "method": "idxd_scan_accel_engine",

@@ -2373,12 +2373,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     # idxd
     def idxd_scan_accel_engine(args):
-        rpc.idxd.idxd_scan_accel_engine(args.client, config_number=args.config_number)
+        rpc.idxd.idxd_scan_accel_engine(args.client, config_number=args.config_number,
+                                        config_kernel_mode=args.config_kernel_mode)
 
     p = subparsers.add_parser('idxd_scan_accel_engine',
                               help='Set config and enable idxd accel engine offload.')
     p.add_argument('-c', '--config-number', help="""Pre-defined configuration number to use. See docs.""", type=int)
-    p.set_defaults(func=idxd_scan_accel_engine)
+    p.add_argument('-k', '--config-kernel-mode', help='Use Kernel mode idxd',
+                   action='store_true', dest='config_kernel_mode')
+    p.set_defaults(func=idxd_scan_accel_engine, config_kernel_mode=None)
 
     # opal
     def bdev_nvme_opal_init(args):

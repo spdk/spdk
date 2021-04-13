@@ -38,6 +38,6 @@
 
 #define IDXD_MAX_DEVICES	16
 
-void accel_engine_idxd_enable_probe(uint32_t config_number);
+void accel_engine_idxd_enable_probe(uint32_t config_number, bool kernel_mode);
 
 #endif /* SPDK_ACCEL_ENGINE_IDXD_H */

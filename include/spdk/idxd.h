@@ -117,8 +117,9 @@ void spdk_idxd_detach(struct spdk_idxd_device *idxd);
  * Sets the IDXD configuration.
  *
  * \param config_number the configuration number for a valid IDXD config.
+ * \param kernel_mode true if using kernel driver.
   */
-void spdk_idxd_set_config(uint32_t config_number);
+void spdk_idxd_set_config(uint32_t config_number, bool kernel_mode);
 
 /**
  * Return the max number of descriptors per batch for IDXD.

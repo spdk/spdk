@@ -54,7 +54,7 @@ test_spdk_idxd_set_config(void)
 {
 
 	g_dev_cfg = NULL;
-	spdk_idxd_set_config(0);
+	spdk_idxd_set_config(false, 0);
 	SPDK_CU_ASSERT_FATAL(g_dev_cfg != NULL);
 	CU_ASSERT(memcmp(&g_dev_cfg0, g_dev_cfg, sizeof(struct device_config)) == 0);
 

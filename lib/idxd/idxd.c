@@ -46,6 +46,7 @@
 
 #define ALIGN_4K 0x1000
 #define USERSPACE_DRIVER_NAME "user"
+#define KERNEL_DRIVER_NAME "kernel"
 #define CHAN_PER_DEVICE(total_wq_size) ((total_wq_size >= 128) ? 8 : 4)
 /*
  * Need to limit how many completions we reap in one poller to avoid starving
@@ -257,9 +258,13 @@ idxd_get_impl_by_name(const char *impl_name)
 
 /* Called via RPC to select a pre-defined configuration. */
 void
-spdk_idxd_set_config(uint32_t config_num)
+spdk_idxd_set_config(uint32_t config_num, bool kernel_mode)
 {
-	g_idxd_impl = idxd_get_impl_by_name(USERSPACE_DRIVER_NAME);
+	if (kernel_mode) {
+		g_idxd_impl = idxd_get_impl_by_name(KERNEL_DRIVER_NAME);
+	} else {
+		g_idxd_impl = idxd_get_impl_by_name(USERSPACE_DRIVER_NAME);
+	}
 
 	if (g_idxd_impl == NULL) {
 		SPDK_ERRLOG("Cannot set the idxd implementation");
