@@ -1283,7 +1283,7 @@ struct spdk_nvme_status {
 	uint16_t p	:  1;	/* phase tag */
 	uint16_t sc	:  8;	/* status code */
 	uint16_t sct	:  3;	/* status code type */
-	uint16_t rsvd2	:  2;
+	uint16_t crd	:  2;   /* command retry delay */
 	uint16_t m	:  1;	/* more */
 	uint16_t dnr	:  1;	/* do not retry */
 };
@@ -1587,6 +1587,12 @@ spdk_nvme_bytes_to_numd(uint32_t len)
 	return (len >> 2) - 1;
 }
 
+struct __attribute__((packed)) spdk_nvme_host_behavior {
+	uint8_t acre;
+	uint8_t reserved[511];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_host_behavior) == 512, "Incorrect size");
+
 enum spdk_nvme_feat {
 	/* 0x00 - reserved */
 
@@ -1624,6 +1630,14 @@ enum spdk_nvme_feat {
 	/** cdw11 layout defined by \ref spdk_nvme_feat_non_operational_power_state_config */
 	SPDK_NVME_FEAT_NON_OPERATIONAL_POWER_STATE_CONFIG	= 0x11,
 
+	SPDK_NVME_FEAT_READ_RECOVERY_LEVEL_CONFIG		= 0x12,
+	SPDK_NVME_FEAT_PREDICTABLE_LATENCY_MODE_CONFIG		= 0x13,
+	SPDK_NVME_FEAT_PREDICTABLE_LATENCY_MODE_WINDOW		= 0x14,
+	SPDK_NVME_FEAT_LBA_STATUS_INFORMATION_ATTRIBUTES	= 0x15,
+	/** data buffer layout  defined by \ref spdk_nvme_host_behavior */
+	SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT			= 0x16,
+	SPDK_NVME_FEAT_SANITIZE_CONFIG				= 0x17,
+	SPDK_NVME_FEAT_ENDURANCE_GROUP_EVENT			= 0x18,
 	/* 0x12-0x77 - reserved */
 
 	/* 0x78-0x7F - NVMe-MI features */
@@ -1894,7 +1908,10 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	/** FRU globally unique identifier */
 	uint8_t			fguid[16];
 
-	uint8_t			reserved_128[128];
+	/** Command Retry Delay Time 1, 2 and 3 */
+	uint16_t		crdt[3];
+
+	uint8_t			reserved_122[122];
 
 	/* bytes 256-511: admin command set attributes */
 
