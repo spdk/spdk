@@ -4261,6 +4261,118 @@ nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 	return iovcnt;
 }
 
+static int
+nvme_cmd_map_sgls_data(void *prv, struct spdk_nvme_sgl_descriptor *sgls, uint32_t num_sgls,
+		       struct iovec *iovs, uint32_t max_iovcnt,
+		       void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+{
+	uint32_t i;
+	void *vva;
+
+	if (spdk_unlikely(max_iovcnt < num_sgls)) {
+		return -ERANGE;
+	}
+
+	for (i = 0; i < num_sgls; i++) {
+		if (spdk_unlikely(sgls[i].unkeyed.type != SPDK_NVME_SGL_TYPE_DATA_BLOCK)) {
+			SPDK_ERRLOG("Invalid SGL type %u\n", sgls[i].unkeyed.type);
+			return -EINVAL;
+		}
+		vva = gpa_to_vva(prv, sgls[i].address, sgls[i].unkeyed.length);
+		if (spdk_unlikely(vva == NULL)) {
+			SPDK_ERRLOG("GPA to VVA failed\n");
+			return -EINVAL;
+		}
+		iovs[i].iov_base = vva;
+		iovs[i].iov_len = sgls[i].unkeyed.length;
+	}
+
+	return num_sgls;
+}
+
+static int
+nvme_cmd_map_sgls(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint32_t max_iovcnt,
+		  uint32_t len, size_t mps,
+		  void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+{
+	struct spdk_nvme_sgl_descriptor *sgl, *last_sgl;
+	uint32_t num_sgls, seg_len;
+	void *vva;
+	int ret;
+	uint32_t total_iovcnt = 0;
+
+	/* SGL cases */
+	sgl = &cmd->dptr.sgl1;
+
+	/* only one SGL segment */
+	if (sgl->unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+		assert(max_iovcnt > 0);
+		vva = gpa_to_vva(prv, sgl->address, sgl->unkeyed.length);
+		if (spdk_unlikely(vva == NULL)) {
+			SPDK_ERRLOG("GPA to VVA failed\n");
+			return -EINVAL;
+		}
+		iovs[0].iov_base = vva;
+		iovs[0].iov_len = sgl->unkeyed.length;
+		assert(sgl->unkeyed.length == len);
+
+		return 1;
+	}
+
+	for (;;) {
+		if (spdk_unlikely((sgl->unkeyed.type != SPDK_NVME_SGL_TYPE_SEGMENT) &&
+				  (sgl->unkeyed.type != SPDK_NVME_SGL_TYPE_LAST_SEGMENT))) {
+			SPDK_ERRLOG("Invalid SGL type %u\n", sgl->unkeyed.type);
+			return -EINVAL;
+		}
+
+		seg_len = sgl->unkeyed.length;
+		if (spdk_unlikely(seg_len % sizeof(struct spdk_nvme_sgl_descriptor))) {
+			SPDK_ERRLOG("Invalid SGL segment len %u\n", seg_len);
+			return -EINVAL;
+		}
+
+		num_sgls = seg_len / sizeof(struct spdk_nvme_sgl_descriptor);
+		vva = gpa_to_vva(prv, sgl->address, sgl->unkeyed.length);
+		if (spdk_unlikely(vva == NULL)) {
+			SPDK_ERRLOG("GPA to VVA failed\n");
+			return -EINVAL;
+		}
+
+		/* sgl point to the first segment */
+		sgl = (struct spdk_nvme_sgl_descriptor *)vva;
+		last_sgl = &sgl[num_sgls - 1];
+
+		/* we are done */
+		if (last_sgl->unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+			/* map whole sgl list */
+			ret = nvme_cmd_map_sgls_data(prv, sgl, num_sgls, &iovs[total_iovcnt],
+						     max_iovcnt - total_iovcnt, gpa_to_vva);
+			if (spdk_unlikely(ret < 0)) {
+				return ret;
+			}
+			total_iovcnt += ret;
+
+			return total_iovcnt;
+		}
+
+		if (num_sgls > 1) {
+			/* map whole sgl exclude last_sgl */
+			ret = nvme_cmd_map_sgls_data(prv, sgl, num_sgls - 1, &iovs[total_iovcnt],
+						     max_iovcnt - total_iovcnt, gpa_to_vva);
+			if (spdk_unlikely(ret < 0)) {
+				return ret;
+			}
+			total_iovcnt += ret;
+		}
+
+		/* move to next level's segments */
+		sgl = last_sgl;
+	}
+
+	return 0;
+}
+
 /* FIXME need to specify max number of iovs */
 int
 spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
@@ -4283,5 +4395,5 @@ spdk_nvme_map_cmd(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint
 		return nvme_cmd_map_prps(prv, cmd, iovs, max_iovcnt, len, mps, gpa_to_vva);
 	}
 
-	return -EINVAL;
+	return nvme_cmd_map_sgls(prv, cmd, iovs, max_iovcnt, len, mps, gpa_to_vva);
 }
