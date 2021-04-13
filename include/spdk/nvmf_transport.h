@@ -78,6 +78,21 @@ struct spdk_nvmf_dif_info {
 	uint32_t				orig_length;
 };
 
+enum spdk_nvmf_zcopy_phase {
+	NVMF_ZCOPY_PHASE_NONE,        /* Request is not using ZCOPY */
+	NVMF_ZCOPY_PHASE_INIT,        /* Requesting Buffers */
+	NVMF_ZCOPY_PHASE_EXECUTE,     /* Got buffers processing commands */
+	NVMF_ZCOPY_PHASE_END_PENDING, /* Releasing buffers */
+	NVMF_ZCOPY_PHASE_COMPLETE,    /* Buffers Released */
+	NVMF_ZCOPY_PHASE_INIT_FAILED  /* Failed to get the buffers */
+};
+
+static inline bool
+spdk_nvmf_using_zcopy(enum spdk_nvmf_zcopy_phase phase)
+{
+	return (phase != NVMF_ZCOPY_PHASE_NONE);
+}
+
 struct spdk_nvmf_request {
 	struct spdk_nvmf_qpair		*qpair;
 	uint32_t			length;
@@ -101,6 +116,8 @@ struct spdk_nvmf_request {
 	struct spdk_nvmf_request	*first_fused_req;
 	struct spdk_nvmf_request	*req_to_abort;
 	struct spdk_poller		*poller;
+	struct spdk_bdev_io		*zcopy_bdev_io; /* Contains the bdev_io when using ZCOPY */
+	enum spdk_nvmf_zcopy_phase	zcopy_phase;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
@@ -426,6 +443,8 @@ void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 void spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req);
 
 /**
  * Remove the given qpair from the poll group.

@@ -190,6 +190,8 @@ struct spdk_nvmf_ns {
 	char *ptpl_file;
 	/* Persist Through Power Loss feature is enabled */
 	bool ptpl_activated;
+	/* ZCOPY supported on bdev device */
+	bool zcopy;
 };
 
 struct spdk_nvmf_ctrlr_feat {
@@ -343,6 +345,7 @@ int nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
 bool nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
 bool nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
 void nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid);
+bool nvmf_ctrlr_use_zcopy(struct spdk_nvmf_request *req);
 
 void nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata,
 				 bool dif_insert_or_strip);
@@ -364,6 +367,7 @@ int nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_de
 				     struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 bool nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 				 struct spdk_dif_ctx *dif_ctx);
+bool nvmf_bdev_zcopy_enabled(struct spdk_bdev *bdev);
 
 int nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			     struct spdk_nvmf_ctrlr *ctrlr);
@@ -441,5 +445,31 @@ nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->qid == 0;
 }
+
+/**
+ * Initiates a zcopy start operation
+ *
+ * \param bdev The \ref spdk_bdev
+ * \param desc The \ref spdk_bdev_desc
+ * \param ch The \ref spdk_io_channel
+ * \param req The \ref spdk_nvmf_request passed to the bdev for processing
+ *
+ * \return 0 upon success
+ * \return <0 if the zcopy operation could not be started
+ */
+int nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
+				struct spdk_bdev_desc *desc,
+				struct spdk_io_channel *ch,
+				struct spdk_nvmf_request *req);
+
+/**
+ * Ends a zcopy operation
+ *
+ * \param req The NVMe-oF request
+ *
+ * \return 0 upon success
+ * \return <0 on error
+ */
+int nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req);
 
 #endif /* __NVMF_INTERNAL_H__ */

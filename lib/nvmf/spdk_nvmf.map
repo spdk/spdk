@@ -110,6 +110,8 @@
 	spdk_nvmf_request_exec;
 	spdk_nvmf_request_free;
 	spdk_nvmf_request_complete;
+	spdk_nvmf_request_zcopy_start;
+	spdk_nvmf_request_zcopy_end;
 	spdk_nvmf_ctrlr_get_subsystem;
 	spdk_nvmf_ctrlr_get_id;
 	spdk_nvmf_req_get_xfer;

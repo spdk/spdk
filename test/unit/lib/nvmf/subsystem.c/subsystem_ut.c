@@ -59,6 +59,10 @@ DEFINE_STUB(spdk_bdev_get_md_size, uint32_t,
 DEFINE_STUB(spdk_bdev_is_md_interleaved, bool,
 	    (const struct spdk_bdev *bdev), false);
 
+DEFINE_STUB(spdk_bdev_io_type_supported, bool,
+	    (struct spdk_bdev *bdev,
+	     enum spdk_bdev_io_type io_type), false);
+
 DEFINE_STUB(spdk_nvmf_transport_stop_listen,
 	    int,
 	    (struct spdk_nvmf_transport *transport,

@@ -67,6 +67,9 @@ DEFINE_STUB(spdk_bdev_abort, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     void *bio_cb_arg, spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 
+DEFINE_STUB_V(spdk_bdev_io_get_iovec,
+	      (struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp));
+
 uint32_t
 spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
 {
@@ -211,6 +214,19 @@ DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
+
+DEFINE_STUB(spdk_bdev_zcopy_start, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct iovec *iov, int iovcnt,
+	     uint64_t offset_blocks, uint64_t num_blocks,
+	     bool populate,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+
+DEFINE_STUB(spdk_bdev_zcopy_end, int,
+	    (struct spdk_bdev_io *bdev_io, bool commit,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
 
 struct spdk_nvmf_ns *
 spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
@@ -514,6 +530,86 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	CU_ASSERT(!strncmp((uint8_t *)&nsdata.eui64, eui64, 8));
 }
 
+static void
+test_nvmf_bdev_ctrlr_start_zcopy(void)
+{
+	int rc;
+	struct spdk_bdev bdev = {};
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel ch = {};
+
+	struct spdk_nvmf_request write_req = {};
+	union nvmf_c2h_msg write_rsp = {};
+
+	struct spdk_nvmf_qpair qpair = {};
+
+	struct spdk_nvme_cmd write_cmd = {};
+
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvmf_ns *subsys_ns[1] = {};
+
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+	struct spdk_nvmf_subsystem_pg_ns_info ns_info = {};
+
+	bdev.blocklen = 512;
+	bdev.blockcnt = 10;
+	ns.bdev = &bdev;
+
+	subsystem.id = 0;
+	subsystem.max_nsid = 1;
+	subsys_ns[0] = &ns;
+	subsystem.ns = (struct spdk_nvmf_ns **)&subsys_ns;
+
+	/* Enable controller */
+	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.subsys = &subsystem;
+
+	group.num_sgroups = 1;
+	sgroups.num_ns = 1;
+	sgroups.ns_info = &ns_info;
+	group.sgroups = &sgroups;
+
+	qpair.ctrlr = &ctrlr;
+	qpair.group = &group;
+
+	write_req.qpair = &qpair;
+	write_req.cmd = (union nvmf_h2c_msg *)&write_cmd;
+	write_req.rsp = &write_rsp;
+
+	write_cmd.nsid = 1;
+	write_cmd.opc = SPDK_NVME_OPC_WRITE;
+
+	/* 1. SUCCESS */
+	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
+
+	rc = nvmf_bdev_ctrlr_start_zcopy(&bdev, desc, &ch, &write_req);
+
+	CU_ASSERT(rc == 0);
+
+	/* 2. SPDK_NVME_SC_LBA_OUT_OF_RANGE */
+	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	write_cmd.cdw12 = 100;	/* NLB: CDW12 bits 15:00, 0's based */
+	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen;
+
+	rc = nvmf_bdev_ctrlr_start_zcopy(&bdev, desc, &ch, &write_req);
+
+	CU_ASSERT(rc < 0);
+
+	/* 3. SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID */
+	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	write_cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+	write_req.length = (write_cmd.cdw12 + 1) * bdev.blocklen - 1;
+
+	rc = nvmf_bdev_ctrlr_start_zcopy(&bdev, desc, &ch, &write_req);
+
+	CU_ASSERT(rc < 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -528,8 +624,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_lba_in_range);
 	CU_ADD_TEST(suite, test_get_dif_ctx);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_identify_ns);
-
 	CU_ADD_TEST(suite, test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd);
+	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_start_zcopy);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

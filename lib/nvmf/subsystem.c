@@ -1456,6 +1456,9 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		return 0;
 	}
 
+	/* Cache the zcopy capability of the bdev device */
+	ns->zcopy = spdk_bdev_io_type_supported(ns->bdev, SPDK_BDEV_IO_TYPE_ZCOPY);
+
 	if (spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
 		opts.uuid = *spdk_bdev_get_uuid(ns->bdev);
 	}

@@ -63,6 +63,9 @@ the uint128 related data.
 
 Removed deprecated `net` library.
 
+Added support for ZCOPY.  ZCOPY is used in preference to READ and WRITE if the
+bdev module supports ZCOPY and the bdev module has ZCOPY enabled.
+
 ### nvme
 
 `spdk_nvme_map_prps` and `spdk_nvme_map_cmd` were moved to nvmf/vfio-user as internal APIs

@@ -775,11 +775,20 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 	return &req->qpair->group->sgroups[subsystem->id];
 }
 
+static void
+nvmf_add_to_outstanding_queue(struct spdk_nvmf_request *req)
+{
+	if (!spdk_nvmf_using_zcopy(req->zcopy_phase)) {
+		/* if using zcopy then request has been added when the start zcopy was actioned */
+		struct spdk_nvmf_qpair *qpair = req->qpair;
+		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+	}
+}
+
 int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
-	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	enum spdk_nvmf_request_exec_status status;
 
@@ -791,7 +800,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	}
 
 	sgroup->mgmt_io_outstanding++;
-	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+	nvmf_add_to_outstanding_queue(req);
 
 	status = _nvmf_ctrlr_connect(req);
 
@@ -3516,6 +3525,112 @@ nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev 
 	return rc;
 }
 
+bool
+nvmf_ctrlr_use_zcopy(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ns *ns;
+
+	req->zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
+
+	if (nvmf_qpair_is_admin_queue(req->qpair)) {
+		/* Admin queue */
+		return false;
+	}
+
+	if ((req->cmd->nvme_cmd.opc != SPDK_NVME_OPC_WRITE) &&
+	    (req->cmd->nvme_cmd.opc != SPDK_NVME_OPC_READ)) {
+		/* Not a READ or WRITE command */
+		return false;
+	}
+
+	if (req->cmd->nvme_cmd.fuse != SPDK_NVME_CMD_FUSE_NONE) {
+		/* Fused commands dont use zcopy buffers */
+		return false;
+	}
+
+	ns = _nvmf_subsystem_get_ns(req->qpair->ctrlr->subsys, req->cmd->nvme_cmd.nsid);
+	if (ns == NULL || ns->bdev == NULL || !ns->zcopy) {
+		return false;
+	}
+
+	req->zcopy_phase = NVMF_ZCOPY_PHASE_INIT;
+	return true;
+}
+
+/* If this function returns a non-zero value the request
+ * reverts to using SPDK buffers
+ */
+int
+spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+	uint32_t nsid;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	int rc;
+
+	if (!qpair->ctrlr) {
+		goto end;
+	}
+
+	if (qpair->group->sgroups == NULL) {
+		goto end;
+	}
+
+	rc = spdk_nvmf_request_get_bdev(req->cmd->nvme_cmd.nsid, req,
+					&bdev, &desc, &ch);
+	if (rc != 0) {
+		goto end;
+	}
+
+	if (ch == NULL) {
+		goto end;
+	}
+
+	nsid = req->cmd->nvme_cmd.nsid;
+	sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+	ns_info = &sgroup->ns_info[nsid - 1];
+	if (ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+		goto end;
+	}
+
+	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
+		goto end;
+	}
+
+	/* backward compatible */
+	req->data = req->iov[0].iov_base;
+
+	/* Set iovcnt to be the maximum number of
+	 * iovs that the ZCOPY can use
+	 */
+	req->iovcnt = NVMF_REQ_MAX_BUFFERS;
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+	rc = nvmf_bdev_ctrlr_start_zcopy(bdev, desc, ch, req);
+	if (rc == 0) {
+		ns_info->io_outstanding++;
+		return 0;
+	}
+	TAILQ_REMOVE(&qpair->outstanding, req, link);
+
+end:
+	/* An error occurred, the subsystem is paused, or the qpair is not active.
+	 * Revert to using SPDK buffers
+	 */
+	req->zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
+	return -1;
+}
+
+int
+spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req)
+{
+	req->zcopy_phase = NVMF_ZCOPY_PHASE_END_PENDING;
+	return nvmf_bdev_ctrlr_end_zcopy(req);
+}
+
 int
 nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
@@ -3691,7 +3806,30 @@ _nvmf_request_complete(void *ctx)
 		spdk_nvme_print_completion(qpair->qid, rsp);
 	}
 
-	TAILQ_REMOVE(&qpair->outstanding, req, link);
+	switch (req->zcopy_phase) {
+	case NVMF_ZCOPY_PHASE_NONE:
+		TAILQ_REMOVE(&qpair->outstanding, req, link);
+		break;
+	case NVMF_ZCOPY_PHASE_INIT:
+		if (spdk_unlikely(spdk_nvme_cpl_is_error(rsp))) {
+			/* The START failed or was aborted so revert to a normal IO */
+			req->zcopy_phase = NVMF_ZCOPY_PHASE_INIT_FAILED;
+			TAILQ_REMOVE(&qpair->outstanding, req, link);
+		} else {
+			req->zcopy_phase = NVMF_ZCOPY_PHASE_EXECUTE;
+		}
+		break;
+	case NVMF_ZCOPY_PHASE_EXECUTE:
+		break;
+	case NVMF_ZCOPY_PHASE_END_PENDING:
+		TAILQ_REMOVE(&qpair->outstanding, req, link);
+		req->zcopy_phase = NVMF_ZCOPY_PHASE_COMPLETE;
+		break;
+	default:
+		SPDK_ERRLOG("Invalid ZCOPY phase %u\n", req->zcopy_phase);
+		break;
+	}
+
 	if (nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
@@ -3703,9 +3841,14 @@ _nvmf_request_complete(void *ctx)
 			assert(sgroup->mgmt_io_outstanding > 0);
 			sgroup->mgmt_io_outstanding--;
 		} else {
-			/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
-			if (spdk_likely(nsid - 1 < sgroup->num_ns)) {
-				sgroup->ns_info[nsid - 1].io_outstanding--;
+			if ((req->zcopy_phase == NVMF_ZCOPY_PHASE_NONE) ||
+			    (req->zcopy_phase == NVMF_ZCOPY_PHASE_COMPLETE)) {
+				/* End of request */
+
+				/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
+				if (spdk_likely(nsid - 1 < sgroup->num_ns)) {
+					sgroup->ns_info[nsid - 1].io_outstanding--;
+				}
 			}
 		}
 
@@ -3767,7 +3910,7 @@ spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 	sgroup->mgmt_io_outstanding++;
 
 	/* Place the request on the outstanding list so we can keep track of it */
-	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+	nvmf_add_to_outstanding_queue(req);
 
 	assert(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC);
 	status = nvmf_ctrlr_process_fabrics_cmd(req);
@@ -3777,13 +3920,11 @@ spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 	}
 }
 
-void
-spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
+static bool nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
-	enum spdk_nvmf_request_exec_status status;
 	uint32_t nsid;
 
 	if (qpair->ctrlr) {
@@ -3800,7 +3941,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
 				/* The subsystem is not currently active. Queue this request. */
 				TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
-				return;
+				return false;
 			}
 			sgroup->mgmt_io_outstanding++;
 		} else {
@@ -3811,9 +3952,9 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 				req->rsp->nvme_cpl.status.dnr = 1;
-				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+				nvmf_add_to_outstanding_queue(req);
 				_nvmf_request_complete(req);
-				return;
+				return false;
 			}
 
 			ns_info = &sgroup->ns_info[nsid - 1];
@@ -3825,27 +3966,43 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 				req->rsp->nvme_cpl.status.dnr = 1;
-				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+				nvmf_add_to_outstanding_queue(req);
 				ns_info->io_outstanding++;
 				_nvmf_request_complete(req);
-				return;
+				return false;
 			}
 
 			if (ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
 				/* The namespace is not currently active. Queue this request. */
 				TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
-				return;
+				return false;
 			}
+
 			ns_info->io_outstanding++;
+		}
+
+		if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+			nvmf_add_to_outstanding_queue(req);
+			_nvmf_request_complete(req);
+			return false;
 		}
 	}
 
-	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
-		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-		_nvmf_request_complete(req);
-		return;
+	return true;
+}
+
+void
+spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	enum spdk_nvmf_request_exec_status status;
+
+	if (!spdk_nvmf_using_zcopy(req->zcopy_phase)) {
+		if (!nvmf_check_subsystem_active(req)) {
+			return;
+		}
 	}
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
@@ -3853,7 +4010,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */
-	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+	nvmf_add_to_outstanding_queue(req);
 
 	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
 		status = nvmf_ctrlr_process_fabrics_cmd(req);

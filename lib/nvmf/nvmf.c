@@ -1597,6 +1597,7 @@ nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 	/* Release all queued requests */
 	TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
 		TAILQ_REMOVE(&sgroup->queued, req, link);
+		assert(req->zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
 		spdk_nvmf_request_exec(req);
 	}
 fini:

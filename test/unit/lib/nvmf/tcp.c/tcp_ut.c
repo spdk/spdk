@@ -186,6 +186,22 @@ DEFINE_STUB(nvmf_transport_req_complete,
 	    (struct spdk_nvmf_request *req),
 	    0);
 
+DEFINE_STUB(nvmf_bdev_zcopy_enabled,
+	    bool,
+	    (struct spdk_bdev *bdev),
+	    false);
+
+DEFINE_STUB(nvmf_bdev_ctrlr_start_zcopy,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(nvmf_bdev_ctrlr_end_zcopy,
+	    int,
+	    (struct spdk_nvmf_request *req),
+	    0);
+
 DEFINE_STUB_V(spdk_nvmf_request_free_buffers,
 	      (struct spdk_nvmf_request *req, struct spdk_nvmf_transport_poll_group *group,
 	       struct spdk_nvmf_transport *transport));

@@ -267,6 +267,12 @@ nvmf_bdev_ctrl_queue_io(struct spdk_nvmf_request *req, struct spdk_bdev *bdev,
 	req->qpair->group->stat.pending_bdev_io++;
 }
 
+bool
+nvmf_bdev_zcopy_enabled(struct spdk_bdev *bdev)
+{
+	return spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY);
+}
+
 int
 nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
@@ -295,6 +301,13 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
+	if (req->zcopy_phase == NVMF_ZCOPY_PHASE_EXECUTE) {
+		/* Return here after checking the lba etc */
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	assert(!spdk_nvmf_using_zcopy(req->zcopy_phase));
 
 	rc = spdk_bdev_readv_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
 				    nvmf_bdev_ctrlr_complete_cmd, req);
@@ -339,6 +352,13 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
+	if (req->zcopy_phase == NVMF_ZCOPY_PHASE_EXECUTE) {
+		/* Return here after checking the lba etc */
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	assert(!spdk_nvmf_using_zcopy(req->zcopy_phase));
 
 	rc = spdk_bdev_writev_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
 				     nvmf_bdev_ctrlr_complete_cmd, req);
@@ -768,4 +788,101 @@ nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 			       init_ref_tag, 0, 0, 0, 0);
 
 	return (rc == 0) ? true : false;
+}
+
+static void
+nvmf_bdev_ctrlr_start_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
+				     void *cb_arg)
+{
+	struct spdk_nvmf_request	*req = cb_arg;
+	struct iovec *iov;
+	int iovcnt;
+
+	if (spdk_unlikely(!success)) {
+		int                     sc = 0, sct = 0;
+		uint32_t                cdw0 = 0;
+		struct spdk_nvme_cpl    *response = &req->rsp->nvme_cpl;
+		spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+
+		response->cdw0 = cdw0;
+		response->status.sc = sc;
+		response->status.sct = sct;
+
+		spdk_bdev_free_io(bdev_io);
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	spdk_bdev_io_get_iovec(bdev_io, &iov, &iovcnt);
+
+	assert(iovcnt <= NVMF_REQ_MAX_BUFFERS);
+
+	req->iovcnt = iovcnt;
+
+	assert(req->iov == iov);
+
+	req->zcopy_bdev_io = bdev_io; /* Preserve the bdev_io for the end zcopy */
+
+	spdk_nvmf_request_complete(req);
+	/* Don't free the bdev_io here as it is needed for the END ZCOPY */
+}
+
+int
+nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
+			    struct spdk_bdev_desc *desc,
+			    struct spdk_io_channel *ch,
+			    struct spdk_nvmf_request *req)
+{
+	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint64_t start_lba;
+	uint64_t num_blocks;
+
+	nvmf_bdev_ctrlr_get_rw_params(&req->cmd->nvme_cmd, &start_lba, &num_blocks);
+
+	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
+		SPDK_ERRLOG("end of media\n");
+		return -ENXIO;
+	}
+
+	if (spdk_unlikely(num_blocks * block_size > req->length)) {
+		SPDK_ERRLOG("Read NLB %" PRIu64 " * block size %" PRIu32 " > SGL length %" PRIu32 "\n",
+			    num_blocks, block_size, req->length);
+		return -ENXIO;
+	}
+
+	bool populate = (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_READ) ? true : false;
+
+	return spdk_bdev_zcopy_start(desc, ch, req->iov, req->iovcnt, start_lba,
+				     num_blocks, populate, nvmf_bdev_ctrlr_start_zcopy_complete, req);
+}
+
+static void
+nvmf_bdev_ctrlr_end_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
+				   void *cb_arg)
+{
+	struct spdk_nvmf_request	*req = cb_arg;
+
+	if (spdk_unlikely(!success)) {
+		int                     sc = 0, sct = 0;
+		uint32_t                cdw0 = 0;
+		struct spdk_nvme_cpl    *response = &req->rsp->nvme_cpl;
+		spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+
+		response->cdw0 = cdw0;
+		response->status.sc = sc;
+		response->status.sct = sct;
+	}
+
+	spdk_bdev_free_io(bdev_io);
+	req->zcopy_bdev_io = NULL;
+	spdk_nvmf_request_complete(req);
+}
+
+int
+nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req)
+{
+	bool commit = (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_WRITE) ? true : false;
+
+	return spdk_bdev_zcopy_end(req->zcopy_bdev_io, commit, nvmf_bdev_ctrlr_end_zcopy_complete, req);
 }
