@@ -2605,6 +2605,8 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 
 fail:
 	nvme_ctrlr_destruct_namespaces(ctrlr);
+	NVME_CTRLR_ERRLOG(ctrlr, "Failed to construct namespaces, err %d\n", rc);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 	return rc;
 }
 
@@ -3240,8 +3242,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_CONSTRUCT_NS:
 		rc = nvme_ctrlr_construct_namespaces(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS,
-				     ctrlr->opts.admin_timeout_ms);
+		if (!rc) {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS,
+					     ctrlr->opts.admin_timeout_ms);
+		}
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
