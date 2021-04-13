@@ -37,210 +37,17 @@
 #include "common/lib/test_env.c"
 
 #include "idxd/idxd.h"
-
-#define FAKE_REG_SIZE 0x800
-#define GRP_CFG_OFFSET 0x400
-#define MAX_TOKENS 0x40
-#define MAX_ARRAY_SIZE 0x20
-
-DEFINE_STUB(spdk_pci_idxd_get_driver, struct spdk_pci_driver *, (void), NULL);
-
-int
-spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)
-{
-	return -1;
-}
-
-int
-spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
-			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
-{
-	*mapped_addr = NULL;
-	*phys_addr = 0;
-	*size = 0;
-	return 0;
-}
-
-int
-spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr)
-{
-	return 0;
-}
-
-int
-spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value,
-			   uint32_t offset)
-{
-	*value = 0xFFFFFFFFu;
-	return 0;
-}
-
-int
-spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
-			    uint32_t offset)
-{
-	return 0;
-}
-
-#define movdir64b mock_movdir64b
-static inline void
-mock_movdir64b(void *dst, const void *src)
-{
-	return;
-}
-
 #include "idxd/idxd.c"
 
-#define WQ_CFG_OFFSET 0x500
-#define TOTAL_WQE_SIZE 0x40
-static int
-test_idxd_wq_config(void)
+static void
+user_idxd_set_config(struct device_config *dev_cfg, uint32_t config_num)
 {
-	struct spdk_idxd_device idxd = {};
-	union idxd_wqcfg wqcfg = {};
-	uint32_t expected[8] = {0x40, 0, 0x11, 0x9e, 0, 0, 0x40000000, 0};
-	uint32_t wq_size;
-	int rc, i, j;
-
-	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
-
-	SPDK_CU_ASSERT_FATAL(g_dev_cfg->num_groups <= MAX_ARRAY_SIZE);
-	idxd.groups = calloc(g_dev_cfg->num_groups, sizeof(struct idxd_group));
-	SPDK_CU_ASSERT_FATAL(idxd.groups != NULL);
-
-	idxd.registers.wqcap.total_wq_size = TOTAL_WQE_SIZE;
-	idxd.registers.wqcap.num_wqs = g_dev_cfg->total_wqs;
-	idxd.registers.gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
-	idxd.registers.gencap.max_xfer_shift = LOG2_WQ_MAX_XFER;
-	idxd.wqcfg_offset = WQ_CFG_OFFSET;
-	wq_size = idxd.registers.wqcap.total_wq_size / g_dev_cfg->total_wqs;
-
-	rc = idxd_wq_config(&idxd);
-	CU_ASSERT(rc == 0);
-	for (i = 0; i < g_dev_cfg->total_wqs; i++) {
-		CU_ASSERT(idxd.queues[i].wqcfg.wq_size == wq_size);
-		CU_ASSERT(idxd.queues[i].wqcfg.mode == WQ_MODE_DEDICATED);
-		CU_ASSERT(idxd.queues[i].wqcfg.max_batch_shift == LOG2_WQ_MAX_BATCH);
-		CU_ASSERT(idxd.queues[i].wqcfg.max_xfer_shift == LOG2_WQ_MAX_XFER);
-		CU_ASSERT(idxd.queues[i].wqcfg.wq_state == WQ_ENABLED);
-		CU_ASSERT(idxd.queues[i].wqcfg.priority == WQ_PRIORITY_1);
-		CU_ASSERT(idxd.queues[i].idxd == &idxd);
-		CU_ASSERT(idxd.queues[i].group == &idxd.groups[i % g_dev_cfg->num_groups]);
-	}
-
-	for (i = 0 ; i < idxd.registers.wqcap.num_wqs; i++) {
-		for (j = 0 ; j < WQCFG_NUM_DWORDS; j++) {
-			wqcfg.raw[j] = spdk_mmio_read_4((uint32_t *)(idxd.reg_base + idxd.wqcfg_offset + i * 32 + j *
-							4));
-			CU_ASSERT(wqcfg.raw[j] == expected[j]);
-		}
-	}
-
-	free(idxd.queues);
-	free(idxd.reg_base);
-	free(idxd.groups);
-
-	return 0;
 }
 
-static int
-test_idxd_group_config(void)
-{
-	struct spdk_idxd_device idxd = {};
-	uint64_t wqs[MAX_ARRAY_SIZE] = {};
-	uint64_t engines[MAX_ARRAY_SIZE] = {};
-	union idxd_group_flags flags[MAX_ARRAY_SIZE] = {};
-	int rc, i;
-	uint64_t base_offset;
-
-	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
-
-	SPDK_CU_ASSERT_FATAL(g_dev_cfg->num_groups <= MAX_ARRAY_SIZE);
-	idxd.registers.groupcap.num_groups = g_dev_cfg->num_groups;
-	idxd.registers.enginecap.num_engines = g_dev_cfg->total_engines;
-	idxd.registers.wqcap.num_wqs = g_dev_cfg->total_wqs;
-	idxd.registers.groupcap.total_tokens = MAX_TOKENS;
-	idxd.grpcfg_offset = GRP_CFG_OFFSET;
-
-	rc = idxd_group_config(&idxd);
-	CU_ASSERT(rc == 0);
-	for (i = 0 ; i < idxd.registers.groupcap.num_groups; i++) {
-		base_offset = idxd.grpcfg_offset + i * 64;
-
-		wqs[i] = spdk_mmio_read_8((uint64_t *)(idxd.reg_base + base_offset));
-		engines[i] = spdk_mmio_read_8((uint64_t *)(idxd.reg_base + base_offset + CFG_ENGINE_OFFSET));
-		flags[i].raw = spdk_mmio_read_8((uint64_t *)(idxd.reg_base + base_offset + CFG_FLAG_OFFSET));
-	}
-	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
-	CU_ASSERT(wqs[0] == 0x1);
-	CU_ASSERT(engines[0] == 0xf);
-	CU_ASSERT(flags[0].tokens_allowed == MAX_TOKENS / g_dev_cfg->num_groups);
-
-	/* groups allocated by code under test. */
-	free(idxd.groups);
-	free(idxd.reg_base);
-
-	return 0;
-}
-
-static int
-test_idxd_reset_dev(void)
-{
-	struct spdk_idxd_device idxd = {};
-	union idxd_cmdsts_reg *fake_cmd_status_reg;
-	int rc;
-
-	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
-	fake_cmd_status_reg = idxd.reg_base + IDXD_CMDSTS_OFFSET;
-
-	/* Test happy path */
-	rc = idxd_reset_dev(&idxd);
-	CU_ASSERT(rc == 0);
-
-	/* Test error reported path */
-	fake_cmd_status_reg->err = 1;
-	rc = idxd_reset_dev(&idxd);
-	CU_ASSERT(rc == -EINVAL);
-
-	free(idxd.reg_base);
-
-	return 0;
-}
-
-static int
-test_idxd_wait_cmd(void)
-{
-	struct spdk_idxd_device idxd = {};
-	int timeout = 1;
-	union idxd_cmdsts_reg *fake_cmd_status_reg;
-	int rc;
-
-	idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(idxd.reg_base != NULL);
-	fake_cmd_status_reg = idxd.reg_base + IDXD_CMDSTS_OFFSET;
-
-	/* Test happy path. */
-	rc = idxd_wait_cmd(&idxd, timeout);
-	CU_ASSERT(rc == 0);
-
-	/* Setup up our fake register to set the error bit. */
-	fake_cmd_status_reg->err = 1;
-	rc = idxd_wait_cmd(&idxd, timeout);
-	CU_ASSERT(rc == -EINVAL);
-	fake_cmd_status_reg->err = 0;
-
-	/* Setup up our fake register to set the active bit. */
-	fake_cmd_status_reg->active = 1;
-	rc = idxd_wait_cmd(&idxd, timeout);
-	CU_ASSERT(rc == -EBUSY);
-
-	free(idxd.reg_base);
-
-	return 0;
-}
+static struct spdk_idxd_impl g_user_idxd_impl = {
+	.name                   = "user",
+	.set_config	= user_idxd_set_config,
+};
 
 static int
 test_spdk_idxd_set_config(void)
@@ -283,6 +90,8 @@ test_spdk_idxd_reconfigure_chan(void)
 static int
 test_setup(void)
 {
+	idxd_impl_register(&g_user_idxd_impl);
+
 	g_dev_cfg = &g_dev_cfg0;
 	return 0;
 }
@@ -299,10 +108,6 @@ int main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_spdk_idxd_reconfigure_chan);
 	CU_ADD_TEST(suite, test_spdk_idxd_set_config);
-	CU_ADD_TEST(suite, test_idxd_wait_cmd);
-	CU_ADD_TEST(suite, test_idxd_reset_dev);
-	CU_ADD_TEST(suite, test_idxd_group_config);
-	CU_ADD_TEST(suite, test_idxd_wq_config);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

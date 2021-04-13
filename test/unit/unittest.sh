@@ -201,6 +201,7 @@ run_test "unittest_accel" $valgrind $testdir/lib/accel/accel.c/accel_engine_ut
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
 if grep -q '#define SPDK_CONFIG_IDXD 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_idxd" $valgrind $testdir/lib/idxd/idxd.c/idxd_ut
+	run_test "unittest_idxd_user" $valgrind $testdir/lib/idxd/idxd_user.c/idxd_user_ut
 fi
 run_test "unittest_iscsi" unittest_iscsi
 run_test "unittest_json" unittest_json

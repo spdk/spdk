@@ -45,8 +45,10 @@
 #include "idxd.h"
 
 #define ALIGN_4K 0x1000
+#define USERSPACE_DRIVER_NAME "user"
 
-pthread_mutex_t	g_driver_lock = PTHREAD_MUTEX_INITIALIZER;
+static STAILQ_HEAD(, spdk_idxd_impl) g_idxd_impls = STAILQ_HEAD_INITIALIZER(g_idxd_impls);
+static struct spdk_idxd_impl *g_idxd_impl;
 
 /*
  * g_dev_cfg gives us 2 pre-set configurations of DSA to choose from
@@ -73,34 +75,16 @@ struct device_config g_dev_cfg1 = {
 	.total_engines = 4,
 };
 
-static uint32_t
-_idxd_read_4(struct spdk_idxd_device *idxd, uint32_t offset)
-{
-	return spdk_mmio_read_4((uint32_t *)(idxd->reg_base + offset));
-}
-
-static void
-_idxd_write_4(struct spdk_idxd_device *idxd, uint32_t offset, uint32_t value)
-{
-	spdk_mmio_write_4((uint32_t *)(idxd->reg_base + offset), value);
-}
-
-static uint64_t
-_idxd_read_8(struct spdk_idxd_device *idxd, uint32_t offset)
-{
-	return spdk_mmio_read_8((uint64_t *)(idxd->reg_base + offset));
-}
-
-static void
-_idxd_write_8(struct spdk_idxd_device *idxd, uint32_t offset, uint64_t value)
-{
-	spdk_mmio_write_8((uint64_t *)(idxd->reg_base + offset), value);
-}
-
 bool
 spdk_idxd_device_needs_rebalance(struct spdk_idxd_device *idxd)
 {
 	return idxd->needs_rebalance;
+}
+
+static uint64_t
+idxd_read_8(struct spdk_idxd_device *idxd, void *portal, uint32_t offset)
+{
+	return idxd->impl->read_8(idxd, portal, offset);
 }
 
 struct spdk_idxd_io_channel *
@@ -243,8 +227,7 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 		}
 	}
 
-	/* Assign portal based on work queue chosen earlier. */
-	chan->portal = (char *)chan->idxd->portals + chan->idxd->wq_id * PORTAL_SIZE;
+	chan->portal = chan->idxd->impl->portal_get_addr(chan->idxd);
 
 	return 0;
 
@@ -262,34 +245,6 @@ err_desc:
 	spdk_bit_array_free(&chan->ring_slots);
 
 	return rc;
-}
-
-/* Used for control commands, not for descriptor submission. */
-static int
-idxd_wait_cmd(struct spdk_idxd_device *idxd, int _timeout)
-{
-	uint32_t timeout = _timeout;
-	union idxd_cmdsts_reg cmd_status = {};
-
-	cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
-	while (cmd_status.active && --timeout) {
-		usleep(1);
-		cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
-	}
-
-	/* Check for timeout */
-	if (timeout == 0 && cmd_status.active) {
-		SPDK_ERRLOG("Command timeout, waited %u\n", _timeout);
-		return -EBUSY;
-	}
-
-	/* Check for error */
-	if (cmd_status.err) {
-		SPDK_ERRLOG("Command status reg reports error 0x%x\n", cmd_status.err);
-		return -EINVAL;
-	}
-
-	return 0;
 }
 
 static void
@@ -347,10 +302,32 @@ spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan)
 	return rc;
 }
 
+static inline struct spdk_idxd_impl *
+idxd_get_impl_by_name(const char *impl_name)
+{
+	struct spdk_idxd_impl *impl;
+
+	assert(impl_name != NULL);
+	STAILQ_FOREACH(impl, &g_idxd_impls, link) {
+		if (0 == strcmp(impl_name, impl->name)) {
+			return impl;
+		}
+	}
+
+	return NULL;
+}
+
 /* Called via RPC to select a pre-defined configuration. */
 void
 spdk_idxd_set_config(uint32_t config_num)
 {
+	g_idxd_impl = idxd_get_impl_by_name(USERSPACE_DRIVER_NAME);
+
+	if (g_idxd_impl == NULL) {
+		SPDK_ERRLOG("Cannot set the idxd implementation");
+		return;
+	}
+
 	switch (config_num) {
 	case 0:
 		g_dev_cfg = &g_dev_cfg0;
@@ -363,378 +340,27 @@ spdk_idxd_set_config(uint32_t config_num)
 		SPDK_ERRLOG("Invalid config, using default\n");
 		break;
 	}
-}
 
-static int
-idxd_unmap_pci_bar(struct spdk_idxd_device *idxd, int bar)
-{
-	int rc = 0;
-	void *addr = NULL;
-
-	if (bar == IDXD_MMIO_BAR) {
-		addr = (void *)idxd->reg_base;
-	} else if (bar == IDXD_WQ_BAR) {
-		addr = (void *)idxd->portals;
-	}
-
-	if (addr) {
-		rc = spdk_pci_device_unmap_bar(idxd->device, 0, addr);
-	}
-	return rc;
-}
-
-static int
-idxd_map_pci_bars(struct spdk_idxd_device *idxd)
-{
-	int rc;
-	void *addr;
-	uint64_t phys_addr, size;
-
-	rc = spdk_pci_device_map_bar(idxd->device, IDXD_MMIO_BAR, &addr, &phys_addr, &size);
-	if (rc != 0 || addr == NULL) {
-		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n", rc);
-		return -1;
-	}
-	idxd->reg_base = addr;
-
-	rc = spdk_pci_device_map_bar(idxd->device, IDXD_WQ_BAR, &addr, &phys_addr, &size);
-	if (rc != 0 || addr == NULL) {
-		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n", rc);
-		rc = idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
-		if (rc) {
-			SPDK_ERRLOG("unable to unmap MMIO bar\n");
-		}
-		return -EINVAL;
-	}
-	idxd->portals = addr;
-
-	return 0;
-}
-
-static int
-idxd_reset_dev(struct spdk_idxd_device *idxd)
-{
-	int rc;
-
-	_idxd_write_4(idxd, IDXD_CMD_OFFSET, IDXD_RESET_DEVICE << IDXD_CMD_SHIFT);
-	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
-	if (rc < 0) {
-		SPDK_ERRLOG("Error resetting device %u\n", rc);
-	}
-
-	return rc;
-}
-
-/*
- * Build group config based on getting info from the device combined
- * with the defined configuration. Once built, it is written to the
- * device.
- */
-static int
-idxd_group_config(struct spdk_idxd_device *idxd)
-{
-	int i;
-	uint64_t base_offset;
-	struct idxd_grpcfg *grpcfg;
-
-	assert(g_dev_cfg->num_groups <= idxd->registers.groupcap.num_groups);
-	idxd->groups = calloc(idxd->registers.groupcap.num_groups, sizeof(struct idxd_group));
-	if (idxd->groups == NULL) {
-		SPDK_ERRLOG("Failed to allocate group memory\n");
-		return -ENOMEM;
-	}
-
-	assert(g_dev_cfg->total_engines <= idxd->registers.enginecap.num_engines);
-	for (i = 0; i < g_dev_cfg->total_engines; i++) {
-		idxd->groups[i % g_dev_cfg->num_groups].grpcfg.engines |= (1 << i);
-	}
-
-	assert(g_dev_cfg->total_wqs <= idxd->registers.wqcap.num_wqs);
-	for (i = 0; i < g_dev_cfg->total_wqs; i++) {
-		idxd->groups[i % g_dev_cfg->num_groups].grpcfg.wqs[0] |= (1 << i);
-	}
-
-	for (i = 0; i < g_dev_cfg->num_groups; i++) {
-		idxd->groups[i].idxd = idxd;
-		idxd->groups[i].id = i;
-
-		/* Divide BW tokens evenly */
-		idxd->groups[i].grpcfg.flags.tokens_allowed =
-			idxd->registers.groupcap.total_tokens / g_dev_cfg->num_groups;
-	}
-
-	/*
-	 * Now write the group config to the device for all groups. We write
-	 * to the max number of groups in order to 0 out the ones we didn't
-	 * configure.
-	 */
-	for (i = 0 ; i < idxd->registers.groupcap.num_groups; i++) {
-
-		grpcfg = &idxd->groups[i].grpcfg;
-		if (i < g_dev_cfg->num_groups) {
-			SPDK_DEBUGLOG(idxd, "Group #%u: wqueue_cfg 0x%lx, engine_cfg 0x%lx, flags 0x%x\n", i,
-				      grpcfg->wqs[0], grpcfg->engines, grpcfg->flags.raw);
-		}
-
-		base_offset = idxd->grpcfg_offset + i * 64;
-
-		/* GRPWQCFG, work queues config */
-		_idxd_write_8(idxd, base_offset, grpcfg->wqs[0]);
-
-		/* GRPENGCFG, engine config */
-		_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, grpcfg->engines);
-
-		/* GRPFLAGS, flags config */
-		_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, grpcfg->flags.raw);
-	}
-
-	return 0;
-}
-
-/*
- * Build work queue (WQ) config based on getting info from the device combined
- * with the defined configuration. Once built, it is written to the device.
- */
-static int
-idxd_wq_config(struct spdk_idxd_device *idxd)
-{
-	int i, j;
-	struct idxd_wq *queue;
-	u_int32_t wq_size = idxd->registers.wqcap.total_wq_size / g_dev_cfg->total_wqs;
-
-	SPDK_NOTICELOG("Total ring slots available space 0x%x, so per work queue is 0x%x\n",
-		       idxd->registers.wqcap.total_wq_size, wq_size);
-	assert(g_dev_cfg->total_wqs <= IDXD_MAX_QUEUES);
-	assert(g_dev_cfg->total_wqs <= idxd->registers.wqcap.num_wqs);
-	assert(LOG2_WQ_MAX_BATCH <= idxd->registers.gencap.max_batch_shift);
-	assert(LOG2_WQ_MAX_XFER <= idxd->registers.gencap.max_xfer_shift);
-
-	idxd->queues = calloc(1, idxd->registers.wqcap.num_wqs * sizeof(struct idxd_wq));
-	if (idxd->queues == NULL) {
-		SPDK_ERRLOG("Failed to allocate queue memory\n");
-		return -ENOMEM;
-	}
-
-	for (i = 0; i < g_dev_cfg->total_wqs; i++) {
-		queue = &idxd->queues[i];
-		queue->wqcfg.wq_size = wq_size;
-		queue->wqcfg.mode = WQ_MODE_DEDICATED;
-		queue->wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
-		queue->wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
-		queue->wqcfg.wq_state = WQ_ENABLED;
-		queue->wqcfg.priority = WQ_PRIORITY_1;
-
-		/* Not part of the config struct */
-		queue->idxd = idxd;
-		queue->group = &idxd->groups[i % g_dev_cfg->num_groups];
-	}
-
-	/*
-	 * Now write the work queue config to the device for all wq space
-	 */
-	for (i = 0 ; i < idxd->registers.wqcap.num_wqs; i++) {
-		queue = &idxd->queues[i];
-		for (j = 0 ; j < WQCFG_NUM_DWORDS; j++) {
-			_idxd_write_4(idxd, idxd->wqcfg_offset + i * 32 + j * 4,
-				      queue->wqcfg.raw[j]);
-		}
-	}
-
-	return 0;
-}
-
-static int
-idxd_device_configure(struct spdk_idxd_device *idxd)
-{
-	int i, rc = 0;
-	union idxd_offsets_register offsets_reg;
-	union idxd_genstatus_register genstatus_reg;
-
-	/*
-	 * Map BAR0 and BAR2
-	 */
-	rc = idxd_map_pci_bars(idxd);
-	if (rc) {
-		return rc;
-	}
-
-	/*
-	 * Reset the device
-	 */
-	rc = idxd_reset_dev(idxd);
-	if (rc) {
-		goto err_reset;
-	}
-
-	/*
-	 * Read in config registers
-	 */
-	idxd->registers.version = _idxd_read_4(idxd, IDXD_VERSION_OFFSET);
-	idxd->registers.gencap.raw = _idxd_read_8(idxd, IDXD_GENCAP_OFFSET);
-	idxd->registers.wqcap.raw = _idxd_read_8(idxd, IDXD_WQCAP_OFFSET);
-	idxd->registers.groupcap.raw = _idxd_read_8(idxd, IDXD_GRPCAP_OFFSET);
-	idxd->registers.enginecap.raw = _idxd_read_8(idxd, IDXD_ENGCAP_OFFSET);
-	for (i = 0; i < IDXD_OPCAP_WORDS; i++) {
-		idxd->registers.opcap.raw[i] =
-			_idxd_read_8(idxd, i * sizeof(uint64_t) + IDXD_OPCAP_OFFSET);
-	}
-	offsets_reg.raw[0] = _idxd_read_8(idxd, IDXD_TABLE_OFFSET);
-	offsets_reg.raw[1] = _idxd_read_8(idxd, IDXD_TABLE_OFFSET + sizeof(uint64_t));
-	idxd->grpcfg_offset = offsets_reg.grpcfg * IDXD_TABLE_OFFSET_MULT;
-	idxd->wqcfg_offset = offsets_reg.wqcfg * IDXD_TABLE_OFFSET_MULT;
-	idxd->ims_offset = offsets_reg.ims * IDXD_TABLE_OFFSET_MULT;
-	idxd->msix_perm_offset = offsets_reg.msix_perm  * IDXD_TABLE_OFFSET_MULT;
-	idxd->perfmon_offset = offsets_reg.perfmon * IDXD_TABLE_OFFSET_MULT;
-
-	/*
-	 * Configure groups and work queues.
-	 */
-	rc = idxd_group_config(idxd);
-	if (rc) {
-		goto err_group_cfg;
-	}
-
-	rc = idxd_wq_config(idxd);
-	if (rc) {
-		goto err_wq_cfg;
-	}
-
-	/*
-	 * Enable the device
-	 */
-	genstatus_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
-	assert(genstatus_reg.state == IDXD_DEVICE_STATE_DISABLED);
-
-	_idxd_write_4(idxd, IDXD_CMD_OFFSET, IDXD_ENABLE_DEV << IDXD_CMD_SHIFT);
-	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
-	genstatus_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
-	if ((rc < 0) || (genstatus_reg.state != IDXD_DEVICE_STATE_ENABLED)) {
-		rc = -EINVAL;
-		SPDK_ERRLOG("Error enabling device %u\n", rc);
-		goto err_device_enable;
-	}
-
-	genstatus_reg.raw = spdk_mmio_read_4((uint32_t *)(idxd->reg_base + IDXD_GENSTATUS_OFFSET));
-	assert(genstatus_reg.state == IDXD_DEVICE_STATE_ENABLED);
-
-	/*
-	 * Enable the work queues that we've configured
-	 */
-	for (i = 0; i < g_dev_cfg->total_wqs; i++) {
-		_idxd_write_4(idxd, IDXD_CMD_OFFSET,
-			      (IDXD_ENABLE_WQ << IDXD_CMD_SHIFT) | i);
-		rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
-		if (rc < 0) {
-			SPDK_ERRLOG("Error enabling work queues 0x%x\n", rc);
-			goto err_wq_enable;
-		}
-	}
-
-	if ((rc == 0) && (genstatus_reg.state == IDXD_DEVICE_STATE_ENABLED)) {
-		SPDK_NOTICELOG("Device enabled, version 0x%x gencap: 0x%lx\n",
-			       idxd->registers.version,
-			       idxd->registers.gencap.raw);
-
-	}
-
-	return rc;
-err_wq_enable:
-err_device_enable:
-	free(idxd->queues);
-err_wq_cfg:
-	free(idxd->groups);
-err_group_cfg:
-err_reset:
-	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
-	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
-
-	return rc;
+	g_idxd_impl->set_config(g_dev_cfg, config_num);
 }
 
 static void
 idxd_device_destruct(struct spdk_idxd_device *idxd)
 {
-	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
-	idxd_unmap_pci_bar(idxd, IDXD_WQ_BAR);
-	free(idxd->groups);
-	free(idxd->queues);
-	free(idxd);
-}
+	assert(idxd->impl != NULL);
 
-/* Caller must hold g_driver_lock */
-static struct spdk_idxd_device *
-idxd_attach(struct spdk_pci_device *device)
-{
-	struct spdk_idxd_device *idxd;
-	uint32_t cmd_reg;
-	int rc;
-
-	idxd = calloc(1, sizeof(struct spdk_idxd_device));
-	if (idxd == NULL) {
-		SPDK_ERRLOG("Failed to allocate memory for idxd device.\n");
-		return NULL;
-	}
-
-	idxd->device = device;
-	pthread_mutex_init(&idxd->num_channels_lock, NULL);
-
-	/* Enable PCI busmaster. */
-	spdk_pci_device_cfg_read32(device, &cmd_reg, 4);
-	cmd_reg |= 0x4;
-	spdk_pci_device_cfg_write32(device, cmd_reg, 4);
-
-	rc = idxd_device_configure(idxd);
-	if (rc) {
-		goto err;
-	}
-
-	return idxd;
-err:
-	idxd_device_destruct(idxd);
-	return NULL;
-}
-
-struct idxd_enum_ctx {
-	spdk_idxd_probe_cb probe_cb;
-	spdk_idxd_attach_cb attach_cb;
-	void *cb_ctx;
-};
-
-/* This function must only be called while holding g_driver_lock */
-static int
-idxd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
-{
-	struct idxd_enum_ctx *enum_ctx = ctx;
-	struct spdk_idxd_device *idxd;
-
-	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev)) {
-		idxd = idxd_attach(pci_dev);
-		if (idxd == NULL) {
-			SPDK_ERRLOG("idxd_attach() failed\n");
-			return -EINVAL;
-		}
-
-		enum_ctx->attach_cb(enum_ctx->cb_ctx, pci_dev, idxd);
-	}
-
-	return 0;
+	idxd->impl->destruct(idxd);
 }
 
 int
 spdk_idxd_probe(void *cb_ctx, spdk_idxd_probe_cb probe_cb, spdk_idxd_attach_cb attach_cb)
 {
-	int rc;
-	struct idxd_enum_ctx enum_ctx;
+	if (g_idxd_impl == NULL) {
+		SPDK_ERRLOG("No idxd impl is selected\n");
+		return -1;
+	}
 
-	enum_ctx.probe_cb = probe_cb;
-	enum_ctx.attach_cb = attach_cb;
-	enum_ctx.cb_ctx = cb_ctx;
-
-	pthread_mutex_lock(&g_driver_lock);
-	rc = spdk_pci_enumerate(spdk_pci_idxd_get_driver(), idxd_enum_cb, &enum_ctx);
-	pthread_mutex_unlock(&g_driver_lock);
-
-	return rc;
+	return g_idxd_impl->probe(cb_ctx, probe_cb, attach_cb);
 }
 
 void
@@ -1180,11 +806,10 @@ _idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch
 
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_NOOP;
-	/* TODO: temp workaround for simulator.  Remove when fixed or w/silicon. */
-	if (chan->idxd->registers.gencap.raw == 0x1833f011f) {
+
+	if (chan->idxd->impl->nop_check && chan->idxd->impl->nop_check(chan->idxd)) {
 		desc->xfer_size = 1;
 	}
-
 	return 0;
 }
 
@@ -1369,7 +994,7 @@ _dump_error_reg(struct spdk_idxd_io_channel *chan)
 	uint64_t sw_error_0;
 	uint16_t i;
 
-	sw_error_0 = _idxd_read_8(chan->idxd, IDXD_SWERR_OFFSET);
+	sw_error_0 = idxd_read_8(chan->idxd, chan->portal, IDXD_SWERR_OFFSET);
 
 	SPDK_NOTICELOG("SW Error bits set:");
 	for (i = 0; i < CHAR_BIT; i++) {
@@ -1409,7 +1034,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			rc++;
 
 			if (spdk_unlikely(IDXD_FAILURE(comp_ctx->hw.status))) {
-				sw_error_0 = _idxd_read_8(chan->idxd, IDXD_SWERR_OFFSET);
+				sw_error_0 = idxd_read_8(chan->idxd, chan->portal, IDXD_SWERR_OFFSET);
 				if (IDXD_SW_ERROR(sw_error_0)) {
 					_dump_error_reg(chan);
 					status = -EINVAL;
@@ -1451,6 +1076,12 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 		}
 	}
 	return rc;
+}
+
+void
+idxd_impl_register(struct spdk_idxd_impl *impl)
+{
+	STAILQ_INSERT_HEAD(&g_idxd_impls, impl, link);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(idxd)

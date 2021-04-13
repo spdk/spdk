@@ -178,25 +178,39 @@ struct idxd_wq {
 	union idxd_wqcfg		wqcfg;
 };
 
+struct spdk_idxd_impl {
+	const char *name;
+	void (*set_config)(struct device_config *g_dev_cfg, uint32_t config_num);
+	int (*probe)(void *cb_ctx, spdk_idxd_probe_cb probe_cb, spdk_idxd_attach_cb attach_cb);
+	void (*destruct)(struct spdk_idxd_device *idxd);
+	uint64_t (*read_8)(struct spdk_idxd_device *idxd, void *portal, uint32_t offset);
+	char *(*portal_get_addr)(struct spdk_idxd_device *idxd);
+	/* It is a workround for simulator */
+	bool (*nop_check)(struct spdk_idxd_device *idxd);
+
+	STAILQ_ENTRY(spdk_idxd_impl) link;
+};
+
 struct spdk_idxd_device {
 	struct spdk_pci_device		*device;
-	void				*reg_base;
+	struct spdk_idxd_impl		*impl;
 	void				*portals;
-	int				socket_id;
 	int				wq_id;
 	uint32_t			num_channels;
 	bool				needs_rebalance;
 	pthread_mutex_t			num_channels_lock;
 
-	struct idxd_registers		registers;
-	uint32_t			ims_offset;
-	uint32_t			msix_perm_offset;
-	uint32_t			wqcfg_offset;
-	uint32_t			grpcfg_offset;
-	uint32_t			perfmon_offset;
 	struct idxd_group		*groups;
 	struct idxd_wq			*queues;
 };
+
+void idxd_impl_register(struct spdk_idxd_impl *impl);
+
+#define SPDK_IDXD_IMPL_REGISTER(name, impl) \
+static void __attribute__((constructor)) idxd_impl_register_##name(void) \
+{ \
+	idxd_impl_register(impl); \
+}
 
 #ifdef __cplusplus
 }
