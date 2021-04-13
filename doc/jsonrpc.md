@@ -7593,6 +7593,82 @@ Example response:
 }
 ~~~
 
+# Uring
+
+## bdev_uring_create {#rpc_bdev_uring_create}
+
+Create a bdev with io_uring backend.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+filename                | Required | string      | path to device or file (ex: /dev/nvme0n1)
+name                    | Required | string      | name of bdev
+block_size              | Optional | number      | block size of device (If omitted, get the block size from the file)
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_uring_create",
+  "id": 1,
+  "params": {
+    "name": "bdev_u0",
+    "filename": "/dev/nvme0n1",
+    "block_size": 512
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "bdev_u0"
+}
+~~~
+
+## bdev_uring_delete {#rpc_bdev_uring_delete}
+
+Remove a uring bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | name of uring bdev to delete
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_uring_delete",
+  "id": 1,
+  "params": {
+    "name": "bdev_u0"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 # OPAL
 
 ## bdev_nvme_opal_init {#rpc_bdev_nvme_opal_init}
