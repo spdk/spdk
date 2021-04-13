@@ -46,6 +46,19 @@
 
 DEFINE_STUB(spdk_pci_idxd_get_driver, struct spdk_pci_driver *, (void), NULL);
 DEFINE_STUB_V(idxd_impl_register, (struct spdk_idxd_impl *impl));
+DEFINE_STUB_V(spdk_pci_device_detach, (struct spdk_pci_device *device));
+DEFINE_STUB(spdk_pci_device_claim, int, (struct spdk_pci_device *dev), 0);
+DEFINE_STUB(spdk_pci_device_get_device_id, uint16_t, (struct spdk_pci_device *dev), 0);
+DEFINE_STUB(spdk_pci_device_get_vendor_id, uint16_t, (struct spdk_pci_device *dev), 0);
+
+struct spdk_pci_addr
+spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_addr pci_addr;
+
+	memset(&pci_addr, 0, sizeof(pci_addr));
+	return pci_addr;
+}
 
 int
 spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)

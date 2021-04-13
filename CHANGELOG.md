@@ -2,6 +2,11 @@
 
 ## v21.07: (Upcoming Release)
 
+### idxd
+
+Remove the probe_cb parameter in spdk_idxd_probe function. And remove the definition
+of spdk_idxd_probe_cb function pointer. It should be implemented in idxd_user.c.
+
 ## v21.04:
 
 ### accel

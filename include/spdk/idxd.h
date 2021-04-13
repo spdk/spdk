@@ -87,25 +87,13 @@ int spdk_idxd_reconfigure_chan(struct spdk_idxd_io_channel *chan);
 typedef void (*spdk_idxd_req_cb)(void *arg, int status);
 
 /**
- * Callback for spdk_idxd_probe() enumeration.
- *
- * \param cb_ctx User-specified opaque value corresponding to cb_ctx from spdk_idxd_probe().
- * \param pci_dev PCI device that is being probed.
- *
- * \return true to attach to this device.
- */
-typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
-
-/**
  * Callback for spdk_idxd_probe() to report a device that has been attached to
  * the userspace IDXD driver.
  *
  * \param cb_ctx User-specified opaque value corresponding to cb_ctx from spdk_idxd_probe().
- * \param pci_dev PCI device that was attached to the driver.
  * \param idxd IDXD device that was attached to the driver.
  */
-typedef void (*spdk_idxd_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
-				    struct spdk_idxd_device *idxd);
+typedef void (*spdk_idxd_attach_cb)(void *cb_ctx, struct spdk_idxd_device *idxd);
 
 /**
  * Enumerate the IDXD devices attached to the system and attach the userspace
@@ -119,13 +107,12 @@ typedef void (*spdk_idxd_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_de
  *
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
  * the callbacks.
- * \param probe_cb will be called once per IDXD device found in the system.
  * \param attach_cb will be called for devices for which probe_cb returned true
  * once the IDXD controller has been attached to the userspace driver.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_idxd_probe(void *cb_ctx, spdk_idxd_probe_cb probe_cb, spdk_idxd_attach_cb attach_cb);
+int spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb);
 
 /**
  * Detach specified device returned by spdk_idxd_probe() from the IDXD driver.

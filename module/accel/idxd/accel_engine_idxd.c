@@ -58,12 +58,6 @@ enum channel_state {
 
 static bool g_idxd_initialized = false;
 
-struct pci_device {
-	struct spdk_pci_device *pci_dev;
-	TAILQ_ENTRY(pci_device) tailq;
-};
-static TAILQ_HEAD(, pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
-
 struct idxd_device {
 	struct				spdk_idxd_device *idxd;
 	TAILQ_ENTRY(idxd_device)	tailq;
@@ -396,38 +390,8 @@ idxd_get_io_channel(void)
 	return spdk_get_io_channel(&idxd_accel_engine);
 }
 
-static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
-{
-	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
-	struct pci_device *pdev;
-
-	SPDK_NOTICELOG(
-		" Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
-		pci_addr.domain,
-		pci_addr.bus,
-		pci_addr.dev,
-		pci_addr.func,
-		spdk_pci_device_get_vendor_id(pci_dev),
-		spdk_pci_device_get_device_id(pci_dev));
-
-	pdev = calloc(1, sizeof(*pdev));
-	if (pdev == NULL) {
-		return false;
-	}
-	pdev->pci_dev = pci_dev;
-	TAILQ_INSERT_TAIL(&g_pci_devices, pdev, tailq);
-
-	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(pci_dev) < 0) {
-		return false;
-	}
-
-	return true;
-}
-
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_idxd_device *idxd)
+attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 {
 	struct idxd_device *dev;
 
@@ -465,7 +429,7 @@ accel_engine_idxd_init(void)
 		return -EINVAL;
 	}
 
-	if (spdk_idxd_probe(NULL, probe_cb, attach_cb) != 0) {
+	if (spdk_idxd_probe(NULL, attach_cb) != 0) {
 		SPDK_ERRLOG("spdk_idxd_probe() failed\n");
 		return -EINVAL;
 	}
@@ -483,7 +447,6 @@ static void
 accel_engine_idxd_exit(void *ctx)
 {
 	struct idxd_device *dev;
-	struct pci_device *pci_dev;
 
 	if (g_idxd_initialized) {
 		spdk_io_device_unregister(&idxd_accel_engine, NULL);
@@ -494,13 +457,6 @@ accel_engine_idxd_exit(void *ctx)
 		TAILQ_REMOVE(&g_idxd_devices, dev, tailq);
 		spdk_idxd_detach(dev->idxd);
 		free(dev);
-	}
-
-	while (!TAILQ_EMPTY(&g_pci_devices)) {
-		pci_dev = TAILQ_FIRST(&g_pci_devices);
-		TAILQ_REMOVE(&g_pci_devices, pci_dev, tailq);
-		spdk_pci_device_detach(pci_dev->pci_dev);
-		free(pci_dev);
 	}
 
 	spdk_accel_engine_module_finish();

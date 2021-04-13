@@ -46,6 +46,7 @@
 
 struct spdk_user_idxd_device {
 	struct spdk_idxd_device	idxd;
+	struct spdk_pci_device	*device;
 	int			sock_id;
 	struct idxd_registers	registers;
 	void			*reg_base;
@@ -55,6 +56,8 @@ struct spdk_user_idxd_device {
 	uint32_t                        msix_perm_offset;
 	uint32_t                        perfmon_offset;
 };
+
+typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
 
 #define __user_idxd(idxd) (struct spdk_user_idxd_device *)idxd
 
@@ -149,7 +152,7 @@ idxd_unmap_pci_bar(struct spdk_idxd_device *idxd, int bar)
 	}
 
 	if (addr) {
-		rc = spdk_pci_device_unmap_bar(idxd->device, 0, addr);
+		rc = spdk_pci_device_unmap_bar(user_idxd->device, 0, addr);
 	}
 	return rc;
 }
@@ -162,14 +165,14 @@ idxd_map_pci_bars(struct spdk_idxd_device *idxd)
 	uint64_t phys_addr, size;
 	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
-	rc = spdk_pci_device_map_bar(idxd->device, IDXD_MMIO_BAR, &addr, &phys_addr, &size);
+	rc = spdk_pci_device_map_bar(user_idxd->device, IDXD_MMIO_BAR, &addr, &phys_addr, &size);
 	if (rc != 0 || addr == NULL) {
 		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n", rc);
 		return -1;
 	}
 	user_idxd->reg_base = addr;
 
-	rc = spdk_pci_device_map_bar(idxd->device, IDXD_WQ_BAR, &addr, &phys_addr, &size);
+	rc = spdk_pci_device_map_bar(user_idxd->device, IDXD_WQ_BAR, &addr, &phys_addr, &size);
 	if (rc != 0 || addr == NULL) {
 		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n", rc);
 		rc = idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
@@ -422,12 +425,15 @@ err_reset:
 static void
 user_idxd_device_destruct(struct spdk_idxd_device *idxd)
 {
+	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
+
 	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
 	idxd_unmap_pci_bar(idxd, IDXD_WQ_BAR);
 	free(idxd->groups);
 	free(idxd->queues);
 
-	free(idxd);
+	spdk_pci_device_detach(user_idxd->device);
+	free(user_idxd);
 }
 
 struct idxd_enum_ctx {
@@ -450,14 +456,37 @@ idxd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 			return -EINVAL;
 		}
 
-		enum_ctx->attach_cb(enum_ctx->cb_ctx, pci_dev, idxd);
+		enum_ctx->attach_cb(enum_ctx->cb_ctx, idxd);
 	}
 
 	return 0;
 }
 
+
+static bool
+probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
+
+	SPDK_NOTICELOG(
+		" Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
+		pci_addr.domain,
+		pci_addr.bus,
+		pci_addr.dev,
+		pci_addr.func,
+		spdk_pci_device_get_vendor_id(pci_dev),
+		spdk_pci_device_get_device_id(pci_dev));
+
+	/* Claim the device in case conflict with other process */
+	if (spdk_pci_device_claim(pci_dev) < 0) {
+		return false;
+	}
+
+	return true;
+}
+
 static int
-user_idxd_probe(void *cb_ctx, spdk_idxd_probe_cb probe_cb, spdk_idxd_attach_cb attach_cb)
+user_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 {
 	int rc;
 	struct idxd_enum_ctx enum_ctx;
@@ -518,8 +547,8 @@ idxd_attach(struct spdk_pci_device *device)
 	}
 
 	idxd = &user_idxd->idxd;
+	user_idxd->device = device;
 	idxd->impl = &g_user_idxd_impl;
-	idxd->device = device;
 	pthread_mutex_init(&idxd->num_channels_lock, NULL);
 
 	/* Enable PCI busmaster. */
