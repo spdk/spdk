@@ -80,7 +80,6 @@ struct nvmf_vfio_user_req  {
 	struct spdk_nvmf_request		req;
 	struct spdk_nvme_cpl			rsp;
 	struct spdk_nvme_cmd			cmd;
-	uint16_t				cid;
 
 	nvmf_vfio_user_req_cb_fn		cb_fn;
 	void					*cb_arg;
@@ -763,7 +762,6 @@ init_qp(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_transport *transpor
 		vu_req = &qpair->reqs_internal[i];
 		req = &vu_req->req;
 
-		vu_req->cid = i;
 		req->qpair = &qpair->qpair;
 		req->rsp = (union nvmf_c2h_msg *)&vu_req->rsp;
 		req->cmd = (union nvmf_h2c_msg *)&vu_req->cmd;
@@ -2006,7 +2004,7 @@ nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 
 	req = &vu_req->req;
 	req->cmd->connect_cmd.opcode = SPDK_NVME_OPC_FABRIC;
-	req->cmd->connect_cmd.cid = vu_req->cid;
+	req->cmd->connect_cmd.cid = 0;
 	req->cmd->connect_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
 	req->cmd->connect_cmd.recfmt = 0;
 	req->cmd->connect_cmd.sqsize = vu_qpair->qsize - 1;
