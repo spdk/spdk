@@ -1378,6 +1378,10 @@ submit_single_io(struct perf_task *task)
 
 	if (spdk_unlikely(rc != 0)) {
 		RATELIMIT_LOG("starting I/O failed\n");
+		spdk_dma_free(task->iovs[0].iov_base);
+		free(task->iovs);
+		spdk_dma_free(task->md_iov.iov_base);
+		free(task);
 	} else {
 		ns_ctx->current_queue_depth++;
 	}
