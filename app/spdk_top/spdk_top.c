@@ -2577,6 +2577,13 @@ show_core(uint8_t current_page, uint8_t active_tab)
 			if (thread_id != 0) {
 				show_single_thread(thread_id, current_page, active_tab, core_win, core_info);
 			}
+
+			/* This refreshes tab and core_pop-up after exiting threads pop-up. */
+			pthread_mutex_lock(&g_thread_lock);
+			refresh_tab(active_tab, current_page);
+			wnoutrefresh(core_win);
+			refresh();
+			pthread_mutex_unlock(&g_thread_lock);
 			break;
 		case 27: /* ESC */
 			stop_loop = true;
@@ -2998,6 +3005,17 @@ show_stats(pthread_t *data_thread)
 			} else if (active_tab == POLLERS_TAB) {
 				show_poller(current_page, active_tab);
 			}
+			/* After closing pop-up there would be unrefreshed parts
+			 * of the tab, so this is to refresh them */
+			draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+			pthread_mutex_lock(&g_thread_lock);
+			max_pages = refresh_tab(active_tab, current_page);
+			pthread_mutex_unlock(&g_thread_lock);
+			snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
+			mvprintw(g_max_row - 1, 1, "%s", current_page_str);
+			top_panel(g_panels[active_tab]);
+			update_panels();
+			refresh();
 			break;
 		case 'h':
 			help_window_display();
