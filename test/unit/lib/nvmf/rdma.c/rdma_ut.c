@@ -831,7 +831,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	union nvmf_h2c_msg cmd;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {{0}};
-	struct spdk_nvmf_rdma_request_data data;
+	char data_buffer[8192];
+	struct spdk_nvmf_rdma_request_data *data = (struct spdk_nvmf_rdma_request_data *)data_buffer;
 	char data2_buffer[8192];
 	struct spdk_nvmf_rdma_request_data *data2 = (struct spdk_nvmf_rdma_request_data *)data2_buffer;
 	const uint32_t data_bs = 512;
@@ -839,7 +840,7 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	int rc, i;
 	void *aligned_buffer;
 
-	data.wr.sg_list = data.sgl;
+	data->wr.sg_list = data->sgl;
 	STAILQ_INIT(&group.group.buf_cache);
 	group.group.buf_cache_size = 0;
 	group.group.buf_cache_count = 0;
@@ -1148,8 +1149,8 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	sgl->unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
 	sgl->address = 0;
 	rdma_req.recv->buf = (void *)&sgl_desc;
-	MOCK_SET(spdk_mempool_get, &data);
-	aligned_buffer = (void *)((uintptr_t)((char *)&data + NVMF_DATA_BUFFER_MASK) &
+	MOCK_SET(spdk_mempool_get, data_buffer);
+	aligned_buffer = (void *)((uintptr_t)(data_buffer + NVMF_DATA_BUFFER_MASK) &
 				  ~NVMF_DATA_BUFFER_MASK);
 
 	/* part 1: 2 segments each with 1 wr. io_unit_size is aligned with data_bs + md_size */
@@ -1185,17 +1186,17 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0x44);
 	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0x4000);
-	CU_ASSERT(rdma_req.data.wr.next == &data.wr);
-	CU_ASSERT(data.wr.wr.rdma.rkey == 0x44);
-	CU_ASSERT(data.wr.wr.rdma.remote_addr == 0x4000 + data_bs * 4);
-	CU_ASSERT(data.wr.num_sge == 4);
+	CU_ASSERT(rdma_req.data.wr.next == &data->wr);
+	CU_ASSERT(data->wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(data->wr.wr.rdma.remote_addr == 0x4000 + data_bs * 4);
+	CU_ASSERT(data->wr.num_sge == 4);
 	for (i = 0; i < 4; ++i) {
-		CU_ASSERT(data.wr.sg_list[i].addr == (uintptr_t)((unsigned char *)aligned_buffer) + i *
+		CU_ASSERT(data->wr.sg_list[i].addr == (uintptr_t)((unsigned char *)aligned_buffer) + i *
 			  (data_bs + md_size));
-		CU_ASSERT(data.wr.sg_list[i].length == data_bs);
+		CU_ASSERT(data->wr.sg_list[i].length == data_bs);
 	}
 
-	CU_ASSERT(data.wr.next == &rdma_req.rsp.wr);
+	CU_ASSERT(data->wr.next == &rdma_req.rsp.wr);
 }
 
 int main(int argc, char **argv)
