@@ -336,8 +336,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->qpair_mask = spdk_bit_array_create(transport->opts.max_qpairs_per_ctrlr);
 	if (!ctrlr->qpair_mask) {
 		SPDK_ERRLOG("Failed to allocate controller qpair mask\n");
-		free(ctrlr);
-		return NULL;
+		goto err_qpair_mask;
 	}
 
 	nvmf_ctrlr_cdata_init(transport, subsystem, &ctrlr->cdata);
@@ -431,15 +430,13 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &listen_trid) != 0) {
 			SPDK_ERRLOG("Could not get listener transport ID\n");
-			free(ctrlr);
-			return NULL;
+			goto err_listener;
 		}
 
 		ctrlr->listener = nvmf_subsystem_find_listener(ctrlr->subsys, &listen_trid);
 		if (!ctrlr->listener) {
 			SPDK_ERRLOG("Listener was not found\n");
-			free(ctrlr);
-			return NULL;
+			goto err_listener;
 		}
 	}
 
@@ -447,6 +444,11 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_add_ctrlr, req);
 
 	return ctrlr;
+err_listener:
+	spdk_bit_array_free(&ctrlr->qpair_mask);
+err_qpair_mask:
+	free(ctrlr);
+	return NULL;
 }
 
 static void
