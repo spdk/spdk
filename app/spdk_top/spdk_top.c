@@ -2206,7 +2206,9 @@ change_refresh_rate(void)
 			stop_loop = true;
 			break;
 		case 10: /* Enter */
+			pthread_mutex_lock(&g_thread_lock);
 			g_sleep_time = refresh_rate;
+			pthread_mutex_unlock(&g_thread_lock);
 			stop_loop = true;
 			break;
 		}
@@ -2733,12 +2735,20 @@ static void *
 data_thread_routine(void *arg)
 {
 	int rc;
+	uint64_t refresh_rate;
 
 	while (1) {
 		pthread_mutex_lock(&g_thread_lock);
 		if (g_quit_app) {
 			pthread_mutex_unlock(&g_thread_lock);
 			break;
+		}
+
+		if (g_sleep_time == 0) {
+			/* Give display thread time to redraw all windows */
+			refresh_rate = SPDK_SEC_TO_USEC / 100;
+		} else {
+			refresh_rate = g_sleep_time * SPDK_SEC_TO_USEC;
 		}
 		pthread_mutex_unlock(&g_thread_lock);
 
@@ -2762,7 +2772,7 @@ data_thread_routine(void *arg)
 			print_bottom_message("ERROR occurred while getting scheduler data");
 		}
 
-		usleep(g_sleep_time * SPDK_SEC_TO_USEC);
+		usleep(refresh_rate);
 	}
 
 	return NULL;
