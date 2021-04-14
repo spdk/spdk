@@ -54,7 +54,7 @@ spdk_pci_event_listen(void)
 
 	memset(&addr, 0, sizeof(addr));
 	addr.nl_family = AF_NETLINK;
-	addr.nl_pid = getpid();
+	addr.nl_pid = 0;
 	addr.nl_groups = 0xffffffff;
 
 	netlink_fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
