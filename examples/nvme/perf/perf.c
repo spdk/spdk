@@ -255,12 +255,8 @@ static int g_time_in_sec;
 static uint64_t g_elapsed_time_in_usec;
 static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
-static int g_dpdk_mem;
-static bool g_dpdk_mem_single_seg = false;
-static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
 static bool g_use_uring;
-static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
@@ -297,11 +293,8 @@ static uint32_t g_quiet_count = 1;
 static bool g_dump_transport_stats;
 static pthread_mutex_t g_stats_mutex;
 
-static const char *g_core_mask;
-
 #define MAX_ALLOWED_PCI_DEVICE_NUM 128
 static struct spdk_pci_addr g_allowed_pci_addr[MAX_ALLOWED_PCI_DEVICE_NUM];
-static uint32_t g_allowed_pci_addr_num;
 
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
@@ -2065,23 +2058,23 @@ add_trid(const char *trid_str)
 }
 
 static int
-add_allowed_pci_device(const char *bdf_str)
+add_allowed_pci_device(const char *bdf_str, struct spdk_env_opts *env_opts)
 {
 	int rc;
 
-	if (g_allowed_pci_addr_num >= MAX_ALLOWED_PCI_DEVICE_NUM) {
+	if (env_opts->num_pci_addr >= MAX_ALLOWED_PCI_DEVICE_NUM) {
 		fprintf(stderr, "Currently we only support allowed PCI device num=%d\n",
 			MAX_ALLOWED_PCI_DEVICE_NUM);
 		return -1;
 	}
 
-	rc = spdk_pci_addr_parse(&g_allowed_pci_addr[g_allowed_pci_addr_num], bdf_str);
+	rc = spdk_pci_addr_parse(&env_opts->pci_allowed[env_opts->num_pci_addr], bdf_str);
 	if (rc < 0) {
 		fprintf(stderr, "Failed to parse the given bdf_str=%s\n", bdf_str);
 		return -1;
 	}
 
-	g_allowed_pci_addr_num++;
+	env_opts->num_pci_addr++;
 	return 0;
 }
 
@@ -2253,7 +2246,7 @@ static const struct option g_perf_cmdline_opts[] = {
 };
 
 static int
-parse_args(int argc, char **argv)
+parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, long_idx;
 	long int val;
@@ -2285,7 +2278,7 @@ parse_args(int argc, char **argv)
 				g_warmup_time_in_sec = val;
 				break;
 			case PERF_SHMEM_GROUP_ID:
-				g_shm_id = val;
+				env_opts->shm_id = val;
 				break;
 			case PERF_MAX_COMPLETIONS_PER_POLL:
 				g_max_completions = val;
@@ -2306,7 +2299,7 @@ parse_args(int argc, char **argv)
 				g_keep_alive_timeout_in_ms = val;
 				break;
 			case PERF_HUGEMEM_SIZE:
-				g_dpdk_mem = val;
+				env_opts->mem_size = val;
 				break;
 			case PERF_TIME:
 				g_time_in_sec = val;
@@ -2334,13 +2327,13 @@ parse_args(int argc, char **argv)
 			}
 			break;
 		case PERF_ALLOWED_PCI_ADDR:
-			if (add_allowed_pci_device(optarg)) {
+			if (add_allowed_pci_device(optarg, env_opts)) {
 				usage(argv[0]);
 				return 1;
 			}
 			break;
 		case PERF_CORE_MASK:
-			g_core_mask = optarg;
+			env_opts->core_mask = optarg;
 			break;
 		case PERF_METADATA:
 			if (parse_metadata(optarg)) {
@@ -2349,7 +2342,7 @@ parse_args(int argc, char **argv)
 			}
 			break;
 		case PERF_MEM_SINGL_SEG:
-			g_dpdk_mem_single_seg = true;
+			env_opts->hugepage_single_segments = true;
 			break;
 		case PERF_ENABLE_SSD_LATENCY_TRACING:
 			g_latency_ssd_tracking_enable = true;
@@ -2503,11 +2496,11 @@ parse_args(int argc, char **argv)
 	} else {
 		struct trid_entry *trid_entry, *trid_entry_tmp;
 
-		g_no_pci = true;
+		env_opts->no_pci = true;
 		/* check whether there is local PCIe type */
 		TAILQ_FOREACH_SAFE(trid_entry, &g_trid_list, tailq, trid_entry_tmp) {
 			if (trid_entry->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
-				g_no_pci = false;
+				env_opts->no_pci = false;
 				break;
 			}
 		}
@@ -2791,29 +2784,12 @@ int main(int argc, char **argv)
 	struct spdk_env_opts opts;
 	pthread_t thread_id = 0;
 
-	rc = parse_args(argc, argv);
-	if (rc != 0) {
-		return rc;
-	}
-
 	spdk_env_opts_init(&opts);
 	opts.name = "perf";
-	opts.shm_id = g_shm_id;
-	if (g_core_mask) {
-		opts.core_mask = g_core_mask;
-	}
-
-	if (g_dpdk_mem) {
-		opts.mem_size = g_dpdk_mem;
-	}
-	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
-	if (g_no_pci) {
-		opts.no_pci = g_no_pci;
-	}
-
-	if (g_allowed_pci_addr_num) {
-		opts.pci_allowed = g_allowed_pci_addr;
-		opts.num_pci_addr = g_allowed_pci_addr_num;
+	opts.pci_allowed = g_allowed_pci_addr;
+	rc = parse_args(argc, argv, &opts);
+	if (rc != 0) {
+		return rc;
 	}
 	/* Transport statistics are printed from each thread.
 	 * To avoid mess in terminal, init and use mutex */
