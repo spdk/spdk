@@ -2131,7 +2131,7 @@ change_sorting(uint8_t tab, int winnum, bool *pstop_loop)
 	}
 }
 
-static void
+static int
 check_resize_interface(uint8_t active_tab, uint8_t *current_page)
 {
 	int max_row, max_col;
@@ -2149,7 +2149,11 @@ check_resize_interface(uint8_t active_tab, uint8_t *current_page)
 		g_data_win_size = g_max_row - required_size + 1;
 		g_max_data_rows = g_max_row - WINDOW_HEADER;
 		resize_interface(active_tab);
+
+		return 1;
 	}
+
+	return 0;
 }
 
 static void
@@ -2429,7 +2433,7 @@ display_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab,
 	PANEL *thread_panel = NULL;
 	WINDOW *thread_win = NULL;
 	struct rpc_thread_info thread_info;
-	uint64_t pollers_count, last_pollers_count = 0;
+	uint64_t pollers_count, threads_count, last_pollers_count = 0;
 	int c;
 	bool stop_loop = false;
 	long int time_last, time_dif;
@@ -2469,6 +2473,23 @@ display_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab,
 			refresh();
 		}
 		pthread_mutex_unlock(&g_thread_lock);
+
+		if (check_resize_interface(active_tab, &current_page)) {
+			/* This clear is to avoid remaining artifacts after window has been moved */
+			wclear(thread_win);
+			wclear(core_popup);
+			resize_interface(active_tab);
+			draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+			if (core_popup != NULL) {
+				pthread_mutex_lock(&g_thread_lock);
+				threads_count = g_cores_info[core_info->lcore].threads.threads_count;
+				pthread_mutex_unlock(&g_thread_lock);
+				mvwin(core_popup, get_position_for_window(CORE_WIN_HEIGHT + threads_count, g_max_row),
+				      get_position_for_window(CORE_WIN_WIDTH, g_max_col));
+			}
+			mvwin(thread_win, get_position_for_window(THREAD_WIN_HEIGHT + pollers_count, g_max_row),
+			      get_position_for_window(THREAD_WIN_WIDTH, g_max_col));
+		}
 
 		c = getch();
 
@@ -2585,6 +2606,13 @@ show_core(uint8_t current_page, uint8_t active_tab)
 		pthread_mutex_unlock(&g_thread_lock);
 
 		wrefresh(core_win);
+		if (check_resize_interface(active_tab, &current_page)) {
+			wclear(core_win);
+			resize_interface(active_tab);
+			draw_tab_win(active_tab);
+			mvwin(core_win, get_position_for_window(CORE_WIN_HEIGHT + threads_count, g_max_row),
+			      get_position_for_window(CORE_WIN_WIDTH, g_max_col));
+		}
 
 		c = getch();
 		switch (c) {
@@ -2733,6 +2761,14 @@ show_poller(uint8_t current_page, uint8_t active_tab)
 
 	pthread_mutex_unlock(&g_thread_lock);
 	while (!stop_loop) {
+		if (check_resize_interface(active_tab, &current_page)) {
+			/* This clear is to avoid remaining artifacts after window has been moved */
+			wclear(poller_win);
+			resize_interface(active_tab);
+			draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
+			mvwin(poller_win, get_position_for_window(POLLER_WIN_HEIGHT, g_max_row),
+			      get_position_for_window(POLLER_WIN_WIDTH, g_max_col));
+		}
 		c = getch();
 		switch (c) {
 		case 27: /* ESC */
