@@ -896,7 +896,8 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
 	int64_t rc;
 
-	rc = spdk_nvme_poll_group_process_completions(ns_ctx->u.nvme.group, 0, perf_disconnect_cb);
+	rc = spdk_nvme_poll_group_process_completions(ns_ctx->u.nvme.group, g_max_completions,
+			perf_disconnect_cb);
 	if (rc < 0) {
 		fprintf(stderr, "NVMe io qpair process completion error\n");
 		exit(1);
