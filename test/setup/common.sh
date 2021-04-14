@@ -68,3 +68,11 @@ mkfs() {
 	mkfs.ext4 -qF "$dev" $size
 	mount "$dev" "$mount"
 }
+
+sec_size_to_bytes() {
+	local dev=$1
+
+	[[ -e /sys/block/$dev ]] || return 1
+	# /size is always represented in 512B blocks
+	echo $(($(< "/sys/block/$dev/size") * 512))
+}
