@@ -918,6 +918,66 @@ test_spdk_nvme_ctrlr_cmd_abort(void)
 	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 }
 
+static void
+test_nvme_ctrlr_cmd_identify(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	struct nvme_payload payload = {};
+	int rc;
+	MOCK_SET(nvme_ctrlr_submit_admin_request, 0);
+
+	rc = nvme_ctrlr_cmd_identify(&ctrlr, SPDK_NVME_IDENTIFY_NS, 2, 1, 0, &payload, 4096, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_IDENTIFY);
+	CU_ASSERT(req.cmd.cdw10_bits.identify.cns == SPDK_NVME_IDENTIFY_NS);
+	CU_ASSERT(req.cmd.cdw10_bits.identify.cntid == 2);
+	CU_ASSERT(req.cmd.cdw11_bits.identify.csi == 0);
+	CU_ASSERT(req.cmd.nsid == 1);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.adminq->free_req));
+	DECONSTRUCT_CTRLR();
+	MOCK_CLEAR(nvme_ctrlr_submit_admin_request);
+}
+
+static void
+test_spdk_nvme_ctrlr_cmd_security_receive_send(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	struct nvme_payload payload = {};
+	int rc;
+	MOCK_SET(nvme_ctrlr_submit_admin_request, 0);
+
+	rc = spdk_nvme_ctrlr_cmd_security_send(&ctrlr, 0xea, 0xaabb, 0xcc, &payload, 4096, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_SECURITY_SEND);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.nssf == 0xcc);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.spsp0 == 0xbb);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.spsp1 == 0xaa);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.secp == 0xea);
+	CU_ASSERT(req.cmd.cdw11 == 4096);
+	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&ctrlr.adminq->free_req));
+
+	memset(&req, 0, sizeof(req));
+	STAILQ_INSERT_HEAD(&ctrlr.adminq->free_req, &req, stailq);
+	rc = spdk_nvme_ctrlr_cmd_security_receive(&ctrlr, 0xea, 0xaabb, 0xcc, &payload, 4096, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_SECURITY_RECEIVE);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.nssf == 0xcc);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.spsp0 == 0xbb);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.spsp1 == 0xaa);
+	CU_ASSERT(req.cmd.cdw10_bits.sec_send_recv.secp == 0xea);
+	CU_ASSERT(req.cmd.cdw11 == 4096);
+	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&ctrlr.adminq->free_req));
+	MOCK_CLEAR(nvme_ctrlr_submit_admin_request);
+
+	/* Without request valid. */
+	rc = spdk_nvme_ctrlr_cmd_security_send(&ctrlr, 0xea, 0xaabb, 0xcc, &payload, 4096, NULL, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+
+	rc = spdk_nvme_ctrlr_cmd_security_receive(&ctrlr, 0xea, 0xaabb, 0xcc, &payload, 4096, NULL, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+	DECONSTRUCT_CTRLR();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -950,6 +1010,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_directive);
 	CU_ADD_TEST(suite, test_nvme_request_add_abort);
 	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_cmd_abort);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_cmd_identify);
+	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_cmd_security_receive_send);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
