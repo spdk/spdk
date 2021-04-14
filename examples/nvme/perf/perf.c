@@ -1751,6 +1751,7 @@ static void usage(char *program_name)
 #else
 	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
 	printf("\t[--transport-stats dump transport statistics]\n");
+	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
 #endif
 }
 
@@ -2241,6 +2242,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"enable-zcopy",			required_argument,	NULL, PERF_ENABLE_ZCOPY},
 #define PERF_TRANSPORT_STATISTICS	257
 	{"transport-stats", no_argument, NULL, PERF_TRANSPORT_STATISTICS},
+#define PERF_IOVA_MODE		258
+	{"iova-mode", required_argument, NULL, PERF_IOVA_MODE},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2423,6 +2426,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_TRANSPORT_STATISTICS:
 			g_dump_transport_stats = true;
+			break;
+		case PERF_IOVA_MODE:
+			env_opts->iova_mode = optarg;
 			break;
 		default:
 			usage(argv[0]);
