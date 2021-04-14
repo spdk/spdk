@@ -1999,7 +1999,7 @@ change_refresh_rate(void)
 }
 
 static void
-free_resources(void)
+free_poller_history(void)
 {
 	struct run_counter_history *history, *tmp;
 
@@ -2570,7 +2570,7 @@ show_stats(pthread_t *data_thread)
 
 	pthread_join(*data_thread, NULL);
 
-	free_resources();
+	free_poller_history();
 
 	/* Free memory holding current data states before quitting application */
 	free_rpc_threads_stats(&g_threads_stats);
