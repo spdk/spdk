@@ -40,7 +40,6 @@
 #include "spdk/string.h"
 
 static uint64_t g_tsc_rate;
-static uint64_t g_tsc_us_rate;
 static uint64_t g_tsc_end;
 
 static int g_time_in_sec;
@@ -97,7 +96,6 @@ event_perf_start(void *arg1)
 	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
-	g_tsc_us_rate = g_tsc_rate / (1000 * 1000);
 	g_tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	printf("Running I/O for %d seconds...", g_time_in_sec);

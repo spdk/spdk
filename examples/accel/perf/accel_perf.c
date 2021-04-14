@@ -45,7 +45,6 @@
 #define ALIGN_4K 0x1000
 
 static uint64_t	g_tsc_rate;
-static uint64_t g_tsc_us_rate;
 static uint64_t g_tsc_end;
 static int g_rc;
 static int g_xfer_size_bytes = 4096;
@@ -933,7 +932,6 @@ accel_perf_start(void *arg1)
 	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
-	g_tsc_us_rate = g_tsc_rate / (1000 * 1000);
 	g_tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	printf("Running for %d seconds...\n", g_time_in_sec);
