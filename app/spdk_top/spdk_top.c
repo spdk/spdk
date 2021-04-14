@@ -619,20 +619,16 @@ store_last_run_counter(const char *poller_name, uint64_t thread_id, uint64_t las
 }
 
 static int
-get_data(void)
+get_thread_data(void)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
-	struct rpc_core_info *core_info;
 	struct rpc_threads_stats threads_stats;
-	struct rpc_pollers *pollers;
-	struct rpc_poller_info *poller;
-	uint64_t i, j, k;
-	uint64_t pollers_count = 0;
+	uint64_t i, j;
 	int rc = 0;
 
 	rc = rpc_send_req("thread_get_stats", &json_resp);
 	if (rc) {
-		goto end;
+		return rc;
 	}
 
 	/* Decode json */
@@ -643,9 +639,10 @@ get_data(void)
 		goto end;
 	}
 
+	pthread_mutex_lock(&g_thread_lock);
+
 	/* This is to free allocated char arrays with old thread names */
 	free_rpc_threads_stats(&g_threads_stats);
-	spdk_jsonrpc_client_free_response(json_resp);
 
 	for (i = 0; i < threads_stats.threads.threads_count; i++) {
 		for (j = 0; j < g_threads_stats.threads.threads_count; j++) {
@@ -659,10 +656,29 @@ get_data(void)
 	qsort(&g_threads_stats.threads.thread_info, threads_stats.threads.threads_count,
 	      sizeof(g_threads_stats.threads.thread_info[0]), sort_threads);
 
+	pthread_mutex_unlock(&g_thread_lock);
+
+end:
+	spdk_jsonrpc_client_free_response(json_resp);
+	return rc;
+}
+
+static int
+get_pollers_data(void)
+{
+	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	int rc = 0;
+	struct rpc_pollers *pollers;
+	struct rpc_poller_info *poller;
+	uint64_t pollers_count = 0;
+	uint64_t i, j;
+
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
-		goto end;
+		return rc;
 	}
+
+	pthread_mutex_lock(&g_thread_lock);
 
 	/* Save last run counter of each poller before updating g_pollers_stats */
 	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
@@ -697,15 +713,27 @@ get_data(void)
 	if (spdk_json_decode_object(json_resp->result, rpc_pollers_stats_decoders,
 				    SPDK_COUNTOF(rpc_pollers_stats_decoders), &g_pollers_stats)) {
 		rc = -EINVAL;
-		goto end;
 	}
 
+	pthread_mutex_unlock(&g_thread_lock);
 	spdk_jsonrpc_client_free_response(json_resp);
+	return rc;
+}
+
+static int
+get_cores_data(void)
+{
+	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	struct rpc_core_info *core_info;
+	uint64_t i, j, k;
+	int rc = 0;
 
 	rc = rpc_send_req("framework_get_reactors", &json_resp);
 	if (rc) {
-		goto end;
+		return rc;
 	}
+
+	pthread_mutex_lock(&g_thread_lock);
 
 	/* Free old cores values before allocating memory for new ones */
 	free_rpc_cores_stats(&g_cores_stats);
@@ -731,6 +759,7 @@ get_data(void)
 	}
 
 end:
+	pthread_mutex_unlock(&g_thread_lock);
 	spdk_jsonrpc_client_free_response(json_resp);
 	return rc;
 }
@@ -2321,11 +2350,16 @@ show_poller(uint8_t current_page)
 	delwin(poller_win);
 }
 
+static void
+print_bottom_error_message(char *msg)
+{
+	mvprintw(g_max_row - 1, g_max_col - strlen(msg) - 2, msg);
+}
+
 static void *
 data_thread_routine(void *arg)
 {
 	int rc;
-	const char *get_data_error = "ERROR occurred while getting data";
 
 	while (1) {
 		pthread_mutex_lock(&g_thread_lock);
@@ -2333,13 +2367,23 @@ data_thread_routine(void *arg)
 			pthread_mutex_unlock(&g_thread_lock);
 			break;
 		}
+		pthread_mutex_unlock(&g_thread_lock);
 
-		rc = get_data();
+		/* Get data from RPC for each object type */
+		rc = get_thread_data();
 		if (rc) {
-			mvprintw(g_max_row - 1, g_max_col - strlen(get_data_error) - 2, get_data_error);
+			print_bottom_error_message("ERROR occurred while getting threads data");
 		}
 
-		pthread_mutex_unlock(&g_thread_lock);
+		rc = get_pollers_data();
+		if (rc) {
+			print_bottom_error_message("ERROR occurred while getting pollers data");
+		}
+
+		rc = get_cores_data();
+		if (rc) {
+			print_bottom_error_message("ERROR occurred while getting cores data");
+		}
 
 		usleep(g_sleep_time * SPDK_SEC_TO_USEC);
 	}
@@ -2607,9 +2651,19 @@ wait_init(pthread_t *data_thread)
 
 	/* This is to get first batch of data for display functions.
 	 * Since data thread makes RPC calls that take more time than
-	 * startup of display functions on main thread, without this
-	 * call both threads would be subject to a race condition. */
-	rc = get_data();
+	 * startup of display functions on main thread, without these
+	 * calls both threads would be subject to a race condition. */
+	rc = get_thread_data();
+	if (rc) {
+		return -1;
+	}
+
+	rc = get_pollers_data();
+	if (rc) {
+		return -1;
+	}
+
+	rc = get_cores_data();
 	if (rc) {
 		return -1;
 	}
