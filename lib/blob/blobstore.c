@@ -6346,6 +6346,7 @@ struct delete_snapshot_ctx {
 	spdk_blob_op_with_handle_complete cb_fn;
 	void *cb_arg;
 	int bserrno;
+	uint32_t next_extent_page;
 };
 
 static void
@@ -6540,15 +6541,33 @@ delete_snapshot_update_extent_pages_cpl(struct delete_snapshot_ctx *ctx)
 }
 
 static void
-delete_snapshot_update_extent_pages(struct delete_snapshot_ctx *ctx)
+delete_snapshot_update_extent_pages(void *cb_arg, int bserrno)
 {
+	struct delete_snapshot_ctx *ctx = cb_arg;
+	uint32_t *extent_page;
 	uint64_t i;
 
-	for (i = 0; i < ctx->snapshot->active.num_extent_pages &&
+	for (i = ctx->next_extent_page; i < ctx->snapshot->active.num_extent_pages &&
 	     i < ctx->clone->active.num_extent_pages; i++) {
-		if (ctx->clone->active.extent_pages[i] == 0) {
-			ctx->clone->active.extent_pages[i] = ctx->snapshot->active.extent_pages[i];
+		if (ctx->snapshot->active.extent_pages[i] == 0) {
+			/* No extent page to use from snapshot */
+			continue;
 		}
+
+		extent_page = &ctx->clone->active.extent_pages[i];
+		if (*extent_page == 0) {
+			/* Copy extent page from snapshot when clone did not have a matching one */
+			*extent_page = ctx->snapshot->active.extent_pages[i];
+			continue;
+		}
+
+		/* Clone and snapshot both contain partialy filled matching extent pages.
+		 * Update the clone extent page in place with cluster map containing the mix of both. */
+		ctx->next_extent_page = i + 1;
+
+		blob_write_extent_page(ctx->clone, *extent_page, i * SPDK_EXTENTS_PER_EP,
+				       delete_snapshot_update_extent_pages, ctx);
+		return;
 	}
 	delete_snapshot_update_extent_pages_cpl(ctx);
 }
@@ -6576,7 +6595,8 @@ delete_snapshot_sync_snapshot_xattr_cpl(void *cb_arg, int bserrno)
 			ctx->clone->active.clusters[i] = ctx->snapshot->active.clusters[i];
 		}
 	}
-	delete_snapshot_update_extent_pages(ctx);
+	ctx->next_extent_page = 0;
+	delete_snapshot_update_extent_pages(ctx, 0);
 }
 
 static void
