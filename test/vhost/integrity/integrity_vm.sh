@@ -5,7 +5,7 @@ err_wipe() {
 	[[ -n $devs ]] || return 0
 	local _devs
 
-	_devs=($devs) _devs=("${devs[@]/#//dev/}")
+	_devs=($devs) _devs=("${_devs[@]/#//dev/}")
 
 	umount "${_devs[@]}" || :
 	wipefs --all "${_devs[@]}" || :
