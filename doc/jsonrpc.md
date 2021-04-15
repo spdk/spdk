@@ -3077,6 +3077,82 @@ Example response:
 }
 ~~~
 
+## bdev_zone_block_create {#rpc_bdev_zone_block_create}
+
+Creates a virtual zone device on top of existing non-zoned bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the Zone device
+base_bdev               | Required | string      | Name of the Base bdev
+zone_capacity           | Required | number      | Zone capacity in blocks
+optimal_open_zones      | Required | number      | Number of zones required to reach optimal write speed
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_zone_block_create",
+  "id": 1,
+  "params": {
+    "name": "zone1",
+    "base_bdev": "NVMe0n1",
+    "zone_capacity": 4096,
+    "optimal_open_zones": 32
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "zone1"
+}
+~~~
+
+## bdev_zone_block_delete {#rpc_bdev_zone_block_delete}
+
+Deletes a virtual zone device.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the Zone device
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_zone_block_delete",
+  "id": 1,
+  "params": {
+    "name": "zone1"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_nvme_apply_firmware {#rpc_bdev_nvme_apply_firmware}
 
 Download and commit firmware to NVMe device.
