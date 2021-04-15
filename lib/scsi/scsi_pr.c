@@ -1027,7 +1027,13 @@ scsi2_release(struct spdk_scsi_task *task)
 		return ret;
 	}
 
-	assert(lun->reservation.flags & SCSI_SPC2_RESERVE);
+	if (!(lun->reservation.flags & SCSI_SPC2_RESERVE)) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
 
 	memset(&lun->reservation, 0, sizeof(struct spdk_scsi_pr_reservation));
 	memset(&lun->scsi2_holder, 0, sizeof(struct spdk_scsi_pr_registrant));

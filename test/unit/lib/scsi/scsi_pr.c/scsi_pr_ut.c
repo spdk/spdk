@@ -245,6 +245,11 @@ test_reservation_reserve(void)
 	task.target_port = &g_t_port_0;
 
 	ut_init_reservation_test();
+	/* Test Case: call Release without a reservation */
+	rc = scsi2_release(&task);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+
 	test_build_registrants();
 
 	gen = g_lun.pr_generation;
