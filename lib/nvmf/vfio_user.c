@@ -2396,6 +2396,34 @@ nvmf_vfio_user_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 }
 
 static void
+nvmf_vfio_user_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
+				   struct spdk_nvmf_request *req)
+{
+	struct nvmf_vfio_user_qpair *vu_qpair;
+	struct nvmf_vfio_user_req *vu_req, *vu_req_to_abort = NULL;
+	uint16_t i, cid;
+
+	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
+
+	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
+	for (i = 0; i < vu_qpair->qsize; i++) {
+		vu_req = &vu_qpair->reqs_internal[i];
+		if (vu_req->state == VFIO_USER_REQUEST_STATE_EXECUTING && vu_req->cmd.cid == cid) {
+			vu_req_to_abort = vu_req;
+			break;
+		}
+	}
+
+	if (vu_req_to_abort == NULL) {
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	req->req_to_abort = &vu_req_to_abort->req;
+	nvmf_ctrlr_abort_request(req);
+}
+
+static void
 nvmf_vfio_user_opts_init(struct spdk_nvmf_transport_opts *opts)
 {
 	opts->max_queue_depth =		NVMF_VFIO_USER_DEFAULT_MAX_QUEUE_DEPTH;
@@ -2436,6 +2464,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
 	.qpair_get_local_trid = nvmf_vfio_user_qpair_get_local_trid,
 	.qpair_get_peer_trid = nvmf_vfio_user_qpair_get_peer_trid,
 	.qpair_get_listen_trid = nvmf_vfio_user_qpair_get_listen_trid,
+	.qpair_abort_request = nvmf_vfio_user_qpair_abort_request,
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(muser, &spdk_nvmf_transport_vfio_user);
