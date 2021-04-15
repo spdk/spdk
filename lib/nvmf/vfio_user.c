@@ -2065,6 +2065,10 @@ nvmf_vfio_user_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 static void
 _nvmf_vfio_user_req_free(struct nvmf_vfio_user_qpair *vu_qpair, struct nvmf_vfio_user_req *vu_req)
 {
+	memset(&vu_req->cmd, 0, sizeof(vu_req->cmd));
+	memset(&vu_req->rsp, 0, sizeof(vu_req->rsp));
+	vu_req->iovcnt = 0;
+
 	TAILQ_INSERT_TAIL(&vu_qpair->reqs, vu_req, link);
 }
 
@@ -2137,9 +2141,6 @@ get_nvmf_vfio_user_req(struct nvmf_vfio_user_qpair *qpair)
 
 	req = TAILQ_FIRST(&qpair->reqs);
 	TAILQ_REMOVE(&qpair->reqs, req, link);
-	memset(&req->cmd, 0, sizeof(req->cmd));
-	memset(&req->rsp, 0, sizeof(req->rsp));
-	req->iovcnt = 0;
 
 	return req;
 }
