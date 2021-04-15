@@ -2578,14 +2578,46 @@ fail:
 	return rc;
 }
 
+void
+nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
+			       const struct spdk_nvme_cpl *cpl)
+{
+	union spdk_nvme_async_event_completion event;
+	struct spdk_nvme_ctrlr_process *active_proc;
+	int rc;
+
+	event.raw = cpl->cdw0;
+
+	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
+		rc = nvme_ctrlr_identify_active_ns(ctrlr);
+		if (rc) {
+			return;
+		}
+		nvme_ctrlr_update_namespaces(ctrlr);
+		nvme_io_msg_ctrlr_update(ctrlr);
+	}
+
+	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
+		rc = nvme_ctrlr_update_ana_log_page(ctrlr);
+		if (rc) {
+			return;
+		}
+		nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states, ctrlr);
+	}
+
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc && active_proc->aer_cb_fn) {
+		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
+	}
+}
+
 static void
 nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_async_event_request	*aer = arg;
 	struct spdk_nvme_ctrlr		*ctrlr = aer->ctrlr;
-	struct spdk_nvme_ctrlr_process	*active_proc;
-	union spdk_nvme_async_event_completion	event;
-	int					rc;
 
 	if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
 	    cpl->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION) {
@@ -2610,30 +2642,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
-	event.raw = cpl->cdw0;
-	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
-	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		rc = nvme_ctrlr_identify_active_ns(ctrlr);
-		if (rc) {
-			return;
-		}
-		nvme_ctrlr_update_namespaces(ctrlr);
-		nvme_io_msg_ctrlr_update(ctrlr);
-	}
-
-	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
-	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
-		rc = nvme_ctrlr_update_ana_log_page(ctrlr);
-		if (rc) {
-			return;
-		}
-		nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states, ctrlr);
-	}
-
-	active_proc = nvme_ctrlr_get_current_process(ctrlr);
-	if (active_proc && active_proc->aer_cb_fn) {
-		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
-	}
+	nvme_ctrlr_process_async_event(ctrlr, cpl);
 
 	/* If the ctrlr was removed or in the destruct state, we should not send aer again */
 	if (ctrlr->is_removed || ctrlr->is_destructed) {
