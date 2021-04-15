@@ -1637,7 +1637,7 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 	free(ctx.name);
 }
-SPDK_RPC_REGISTER("nvmf_create_target", rpc_nvmf_create_target, SPDK_RPC_RUNTIME);
+/* private */ SPDK_RPC_REGISTER("nvmf_create_target", rpc_nvmf_create_target, SPDK_RPC_RUNTIME);
 
 static const struct spdk_json_object_decoder nvmf_rpc_destroy_target_decoder[] = {
 	{"name", offsetof(struct nvmf_rpc_target_ctx, name), spdk_json_decode_string},
@@ -1680,7 +1680,7 @@ rpc_nvmf_delete_target(struct spdk_jsonrpc_request *request,
 	spdk_nvmf_tgt_destroy(tgt, nvmf_rpc_destroy_target_done, request);
 	free(ctx.name);
 }
-SPDK_RPC_REGISTER("nvmf_delete_target", rpc_nvmf_delete_target, SPDK_RPC_RUNTIME);
+/* private */ SPDK_RPC_REGISTER("nvmf_delete_target", rpc_nvmf_delete_target, SPDK_RPC_RUNTIME);
 
 static void
 rpc_nvmf_get_targets(struct spdk_jsonrpc_request *request,
@@ -1710,7 +1710,7 @@ rpc_nvmf_get_targets(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("nvmf_get_targets", rpc_nvmf_get_targets, SPDK_RPC_RUNTIME);
+/* private */ SPDK_RPC_REGISTER("nvmf_get_targets", rpc_nvmf_get_targets, SPDK_RPC_RUNTIME);
 
 struct nvmf_rpc_create_transport_ctx {
 	char				*trtype;
