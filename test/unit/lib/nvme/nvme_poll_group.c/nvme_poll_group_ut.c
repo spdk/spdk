@@ -71,18 +71,28 @@ DEFINE_STUB(nvme_transport_qpair_get_optimal_poll_group,
 	    (const struct spdk_nvme_transport *transport,
 	     struct spdk_nvme_qpair *qpair),
 	    NULL);
-DEFINE_STUB(nvme_transport_poll_group_get_stats,
-	    int,
-	    (struct spdk_nvme_transport_poll_group *tgroup,
-	     struct spdk_nvme_transport_poll_group_stat **stats),
-	    0);
-DEFINE_STUB_V(nvme_transport_poll_group_free_stats,
-	      (struct spdk_nvme_transport_poll_group *tgroup,
-	       struct spdk_nvme_transport_poll_group_stat *stats));
 DEFINE_STUB(nvme_transport_get_trtype,
 	    enum spdk_nvme_transport_type,
 	    (const struct spdk_nvme_transport *transport),
 	    SPDK_NVME_TRANSPORT_PCIE);
+
+int
+nvme_transport_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				    struct spdk_nvme_transport_poll_group_stat **stats)
+{
+	*stats = calloc(1, sizeof(**stats));
+	SPDK_CU_ASSERT_FATAL(*stats != NULL);
+	(*stats)->trtype = nvme_transport_get_trtype(NULL);
+
+	return 0;
+}
+
+void
+nvme_transport_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				     struct spdk_nvme_transport_poll_group_stat *stats)
+{
+	free(stats);
+}
 
 static void
 unit_test_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
@@ -469,6 +479,35 @@ test_spdk_nvme_poll_group_destroy(void)
 	free(tgroup_1);
 }
 
+static void
+test_spdk_nvme_poll_group_get_free_stats(void)
+{
+	struct spdk_nvme_poll_group group = {};
+	struct spdk_nvme_poll_group_stat *stats = NULL;
+	struct spdk_nvme_transport_poll_group tgroup[3] = {};
+	int rc, i;
+
+	/* Multiple tgroups */
+	STAILQ_INIT(&group.tgroups);
+	for (i = 0; i < 3; i++) {
+		STAILQ_INSERT_TAIL(&group.tgroups, &tgroup[i], link);
+	}
+
+	rc = spdk_nvme_poll_group_get_stats(&group, &stats);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(stats->num_transports == 3);
+
+	spdk_nvme_poll_group_free_stats(&group, stats);
+	for (i = 0; i < 3; i++) {
+		STAILQ_REMOVE(&group.tgroups, &tgroup[i], spdk_nvme_transport_poll_group, link);
+	}
+	SPDK_CU_ASSERT_FATAL(STAILQ_EMPTY(&group.tgroups));
+
+	/* No available tgroup */
+	rc = spdk_nvme_poll_group_get_stats(&group, &stats);
+	CU_ASSERT(rc == -ENOTSUP);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -491,7 +530,9 @@ main(int argc, char **argv)
 			    test_spdk_nvme_poll_group_add_remove) == NULL ||
 		CU_add_test(suite, "nvme_poll_group_process_completions",
 			    test_spdk_nvme_poll_group_process_completions) == NULL ||
-		CU_add_test(suite, "nvme_poll_group_destroy_test", test_spdk_nvme_poll_group_destroy) == NULL
+		CU_add_test(suite, "nvme_poll_group_destroy_test", test_spdk_nvme_poll_group_destroy) == NULL ||
+		CU_add_test(suite, "nvme_poll_group_get_free_stats",
+			    test_spdk_nvme_poll_group_get_free_stats) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
