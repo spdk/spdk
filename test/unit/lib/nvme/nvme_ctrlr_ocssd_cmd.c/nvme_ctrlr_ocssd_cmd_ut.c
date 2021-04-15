@@ -36,10 +36,8 @@
 
 #include "nvme/nvme_ctrlr_ocssd_cmd.c"
 
-DEFINE_STUB(spdk_nvme_ctrlr_get_ns, struct spdk_nvme_ns *,
-	    (struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id), NULL);
 DEFINE_STUB(spdk_nvme_ctrlr_get_first_active_ns, uint32_t,
-	    (struct spdk_nvme_ctrlr *ctrlr), 0);
+	    (struct spdk_nvme_ctrlr *ctrlr), 1);
 
 #define DECLARE_AND_CONSTRUCT_CTRLR()	\
 	struct spdk_nvme_ctrlr	ctrlr = {};	\
@@ -60,6 +58,16 @@ typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
 
 static const uint32_t expected_geometry_ns = 1;
+
+struct spdk_nvme_ns *
+spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (nsid < 1 || nsid > ctrlr->num_ns) {
+		return NULL;
+	}
+
+	return &ctrlr->ns[nsid - 1];
+}
 
 int
 nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_request *req)
@@ -98,6 +106,35 @@ test_geometry_cmd(void)
 	DECONSTRUCT_CTRLR();
 }
 
+static void
+test_spdk_nvme_ctrlr_is_ocssd_supported(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns = {};
+	bool rc;
+
+	ns.nsdata.vendor_specific[0] = 1;
+	ctrlr.ns = &ns;
+	ctrlr.quirks |= NVME_QUIRK_OCSSD;
+	ctrlr.cdata.vid = SPDK_PCI_VID_CNEXLABS;
+	ctrlr.num_ns = 1;
+
+	rc = spdk_nvme_ctrlr_is_ocssd_supported(&ctrlr);
+	CU_ASSERT(rc == true);
+
+	/* Clear quirks`s ocssd flag. */
+	ctrlr.quirks = 0;
+
+	rc = spdk_nvme_ctrlr_is_ocssd_supported(&ctrlr);
+	CU_ASSERT(rc == false);
+
+	/* NS count is 0. */
+	ctrlr.num_ns = 0;
+
+	rc = spdk_nvme_ctrlr_is_ocssd_supported(&ctrlr);
+	CU_ASSERT(rc == false);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -109,6 +146,7 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("nvme_ctrlr_cmd", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_geometry_cmd);
+	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_is_ocssd_supported);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
