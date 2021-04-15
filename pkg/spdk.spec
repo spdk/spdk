@@ -74,6 +74,10 @@ BuildArch: noarch
 
 
 %prep
+cat <<-WARNING
+	WARNING: This RPM spec is considered to be deprecated and scheduled for removal.
+	Using rpmbuild/spdk.spec and accompanying tooling is advised.
+WARNING
 # add -q
 %autosetup -n spdk-%{version}
 
