@@ -76,11 +76,17 @@ typedef int (*nvmf_vfio_user_req_cb_fn)(struct nvmf_vfio_user_req *req, void *cb
 /* 1 more for PRP2 list itself */
 #define NVMF_VFIO_USER_MAX_IOVECS	(NVMF_REQ_MAX_BUFFERS + 1)
 
+enum nvmf_vfio_user_req_state {
+	VFIO_USER_REQUEST_STATE_FREE = 0,
+	VFIO_USER_REQUEST_STATE_EXECUTING,
+};
+
 struct nvmf_vfio_user_req  {
 	struct spdk_nvmf_request		req;
 	struct spdk_nvme_cpl			rsp;
 	struct spdk_nvme_cmd			cmd;
 
+	enum nvmf_vfio_user_req_state		state;
 	nvmf_vfio_user_req_cb_fn		cb_fn;
 	void					*cb_arg;
 
@@ -2068,6 +2074,7 @@ _nvmf_vfio_user_req_free(struct nvmf_vfio_user_qpair *vu_qpair, struct nvmf_vfio
 	memset(&vu_req->cmd, 0, sizeof(vu_req->cmd));
 	memset(&vu_req->rsp, 0, sizeof(vu_req->rsp));
 	vu_req->iovcnt = 0;
+	vu_req->state = VFIO_USER_REQUEST_STATE_FREE;
 
 	TAILQ_INSERT_TAIL(&vu_qpair->reqs, vu_req, link);
 }
@@ -2265,7 +2272,7 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	       struct spdk_nvmf_request *req)
 {
 	int err;
-	struct nvmf_vfio_user_req *vfio_user_req;
+	struct nvmf_vfio_user_req *vu_req;
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
@@ -2280,9 +2287,9 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		return -1;
 	}
 
-	vfio_user_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
-	vfio_user_req->cb_fn = handle_cmd_rsp;
-	vfio_user_req->cb_arg = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
+	vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
+	vu_req->cb_fn = handle_cmd_rsp;
+	vu_req->cb_arg = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
 	req->cmd->nvme_cmd = *cmd;
 	if (nvmf_qpair_is_admin_queue(req->qpair)) {
 		err = map_admin_cmd_req(ctrlr, req);
@@ -2295,9 +2302,10 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 			    ctrlr_id(ctrlr), cmd->opc);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-		return handle_cmd_rsp(vfio_user_req, vfio_user_req->cb_arg);
+		return handle_cmd_rsp(vu_req, vu_req->cb_arg);
 	}
 
+	vu_req->state = VFIO_USER_REQUEST_STATE_EXECUTING;
 	spdk_nvmf_request_exec(req);
 
 	return 0;
