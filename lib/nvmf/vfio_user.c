@@ -2062,18 +2062,24 @@ nvmf_vfio_user_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	return 0;
 }
 
+static void
+_nvmf_vfio_user_req_free(struct nvmf_vfio_user_qpair *vu_qpair, struct nvmf_vfio_user_req *vu_req)
+{
+	TAILQ_INSERT_TAIL(&vu_qpair->reqs, vu_req, link);
+}
+
 static int
 nvmf_vfio_user_req_free(struct spdk_nvmf_request *req)
 {
-	struct nvmf_vfio_user_qpair *qpair;
-	struct nvmf_vfio_user_req *vfio_user_req;
+	struct nvmf_vfio_user_qpair *vu_qpair;
+	struct nvmf_vfio_user_req *vu_req;
 
 	assert(req != NULL);
 
-	vfio_user_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
-	qpair = SPDK_CONTAINEROF(vfio_user_req->req.qpair, struct nvmf_vfio_user_qpair, qpair);
+	vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
+	vu_qpair = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
 
-	TAILQ_INSERT_TAIL(&qpair->reqs, vfio_user_req, link);
+	_nvmf_vfio_user_req_free(vu_qpair, vu_req);
 
 	return 0;
 }
@@ -2081,21 +2087,21 @@ nvmf_vfio_user_req_free(struct spdk_nvmf_request *req)
 static int
 nvmf_vfio_user_req_complete(struct spdk_nvmf_request *req)
 {
-	struct nvmf_vfio_user_qpair *qpair;
-	struct nvmf_vfio_user_req *vfio_user_req;
+	struct nvmf_vfio_user_qpair *vu_qpair;
+	struct nvmf_vfio_user_req *vu_req;
 
 	assert(req != NULL);
 
-	vfio_user_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
-	qpair = SPDK_CONTAINEROF(vfio_user_req->req.qpair, struct nvmf_vfio_user_qpair, qpair);
+	vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
+	vu_qpair = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
 
-	if (vfio_user_req->cb_fn != NULL) {
-		if (vfio_user_req->cb_fn(vfio_user_req, vfio_user_req->cb_arg) != 0) {
-			fail_ctrlr(qpair->ctrlr);
+	if (vu_req->cb_fn != NULL) {
+		if (vu_req->cb_fn(vu_req, vu_req->cb_arg) != 0) {
+			fail_ctrlr(vu_qpair->ctrlr);
 		}
 	}
 
-	TAILQ_INSERT_TAIL(&qpair->reqs, vfio_user_req, link);
+	_nvmf_vfio_user_req_free(vu_qpair, vu_req);
 
 	return 0;
 }
