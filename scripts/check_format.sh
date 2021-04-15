@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 readonly BASEDIR=$(readlink -f $(dirname $0))/..
+source "$BASEDIR/scripts/common.sh"
+
 cd $BASEDIR
 
 # exit on errors
@@ -492,7 +494,13 @@ SC2119,SC2120,SC2148,SC2153,SC2154,SC2164,SC2174,SC2001,SC2206,SC2207,SC2223"
 
 		SHCK_FORMAT="tty"
 		SHCK_APPLY=false
-		SHCH_ARGS=" -x -e $SHCK_EXCLUDE -f $SHCK_FORMAT"
+		SHCH_ARGS="-e $SHCK_EXCLUDE -f $SHCK_FORMAT"
+
+		if ge "$shellcheck_v" 0.4.0; then
+			SHCH_ARGS+=" -x"
+		else
+			echo "shellcheck $shellcheck_v detected, recommended >= 0.4.0."
+		fi
 
 		get_bash_files | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
 		if [[ -s shellcheck.log ]]; then
