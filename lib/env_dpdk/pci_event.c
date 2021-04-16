@@ -66,6 +66,7 @@ spdk_pci_event_listen(void)
 	if (setsockopt(netlink_fd, SOL_SOCKET, SO_RCVBUFFORCE, &size, sizeof(size)) < 0) {
 		rc = errno;
 		SPDK_ERRLOG("Failed to set socket option\n");
+		close(netlink_fd);
 		return -rc;
 	}
 
