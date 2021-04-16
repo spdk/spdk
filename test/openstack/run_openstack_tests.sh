@@ -3,11 +3,13 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 rpc_py=$rootdir/scripts/rpc.py
+
+set -- "--iso" "--transport=rdma" "$@"
+
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
-TEST_TRANSPORT='rdma'
 
-nvmftestinit
+HUGE_EVEN_ALLOC=yes HUGEMEM=1024 nvmftestinit
 
 function finish_test() {
 	{
@@ -40,6 +42,8 @@ timing_enter restart_cinder
 sudo systemctl restart devstack@c-*
 sleep 10
 timing_exit restart_cinder
+
+rxe_cfg status
 
 # Start testing spdk with openstack using tempest (openstack tool that allow testing an openstack functionalities)
 # In this tests is checked if spdk can correctly cooperate with openstack spdk driver

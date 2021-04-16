@@ -2,6 +2,7 @@
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
+source "$rootdir/test/common/autotest_common.sh"
 
 function usage() {
 	[[ -n $2 ]] && (
@@ -31,25 +32,35 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
-cd /opt/stack/devstack
-su -c "./unstack.sh" -s /bin/bash stack
+if [[ -e /opt/stack/devstack/unstack.sh ]]; then
+	cd /opt/stack/devstack
+	su -c "./unstack.sh" -s /bin/bash stack
+fi
 
-cd /opt/stack
-rm -rf cinder devstack glance keystone heat horizon neutron nova placement requirements tacker tacker-horizon tempest
+mkdir -p /opt/stack
+rm -rf /opt/stack/*
 
 r=0
-until [[ $r -ge 20 ]]; do
+until ((++r >= 20)); do
 	if [[ $branch == "master" ]]; then
-		su -c "git clone --depth 1 https://opendev.org/openstack-dev/devstack" -s /bin/bash stack && break
+		git clone --depth 1 https://opendev.org/openstack-dev/devstack /opt/stack/devstack && break
 	else
-		su -c "git clone --depth 1 https://opendev.org/openstack-dev/devstack -b stable/$branch" -s /bin/bash stack && break
+		git clone --depth 1 https://opendev.org/openstack-dev/devstack -b "stable/$branch" /opt/stack/devstack && break
 	fi
-	r=$((r + 1))
 done
+
+# Check if we reached max retries count
+((r < 20))
+
+git clone https://github.com/openstack/os-brick.git /opt/stack/os-brick
+cd /opt/stack/os-brick
+python3 ./setup.py install
+
 cp $rootdir/scripts/vagrant/local.conf /opt/stack/devstack/local.conf
 
 cd /opt/stack/devstack
-sudo sed -i "s|http://download.cirros-cloud.net|https://download.cirros-cloud.net|g" stackrc
+./tools/create-stack-user.sh
+chown -R stack:stack /opt/stack
 su -c "./stack.sh" -s /bin/bash stack
 source openrc admin admin
 openstack volume type create SPDK --public
