@@ -791,6 +791,8 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_bool(w, "enable_zerocopy_send", opts.enable_zerocopy_send);
 			spdk_json_write_named_bool(w, "enable_quickack", opts.enable_quickack);
 			spdk_json_write_named_uint32(w, "enable_placement_id", opts.enable_placement_id);
+			spdk_json_write_named_bool(w, "enable_zerocopy_send_server", opts.enable_zerocopy_send_server);
+			spdk_json_write_named_bool(w, "enable_zerocopy_send_client", opts.enable_zerocopy_send_client);
 			spdk_json_write_object_end(w);
 			spdk_json_write_object_end(w);
 		} else {

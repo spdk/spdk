@@ -2606,7 +2606,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        enable_recv_pipe=args.enable_recv_pipe,
                                        enable_zerocopy_send=args.enable_zerocopy_send,
                                        enable_quickack=args.enable_quickack,
-                                       enable_placement_id=args.enable_placement_id)
+                                       enable_placement_id=args.enable_placement_id,
+                                       enable_zerocopy_send_server=args.enable_zerocopy_send_server,
+                                       enable_zerocopy_send_client=args.enable_zerocopy_send_client)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
@@ -2625,8 +2627,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_quickack')
     p.add_argument('--disable-quickack', help='Disable quick ACK',
                    action='store_false', dest='enable_quickack')
+    p.add_argument('--enable-zerocopy-send-server', help='Enable zerocopy on send for server sockets',
+                   action='store_true', dest='enable_zerocopy_send_server')
+    p.add_argument('--disable-zerocopy-send-server', help='Disable zerocopy on send for server sockets',
+                   action='store_false', dest='enable_zerocopy_server_client')
+    p.add_argument('--enable-zerocopy-send-client', help='Enable zerocopy on send for client sockets',
+                   action='store_true', dest='enable_zerocopy_send_client')
+    p.add_argument('--disable-zerocopy-send-client', help='Disable zerocopy on send for client sockets',
+                   action='store_false', dest='enable_zerocopy_send_client')
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None,
-                   enable_quickack=None, enable_placement_id=None)
+                   enable_quickack=None, enable_placement_id=None, enable_zerocopy_send_server=None,
+                   enable_zerocopy_send_client=None)
 
     def sock_set_default_impl(args):
         print_json(rpc.sock.sock_set_default_impl(args.client,
