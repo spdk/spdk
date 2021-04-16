@@ -168,7 +168,7 @@ cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd,
 	ctx->data_len = admin_cmd->data_len;
 
 	if (ctx->data_len > 0) {
-		ctx->data = spdk_malloc(ctx->data_len, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		ctx->data = spdk_malloc(ctx->data_len, 4096, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!ctx->data) {
 			SPDK_ERRLOG("Cannot allocate memory for data\n");
 			fuse_reply_err(req, ENOMEM);
