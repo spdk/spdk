@@ -85,6 +85,14 @@ struct spdk_bdev_zone_info {
 uint64_t spdk_bdev_get_zone_size(const struct spdk_bdev *bdev);
 
 /**
+ * Get the number of zones for the given device.
+ *
+ * \param bdev Block device to query.
+ * \return The number of zones.
+ */
+uint64_t spdk_bdev_get_num_zones(const struct spdk_bdev *bdev);
+
+/**
  * Get device maximum zone append data transfer size in logical blocks.
  *
  * If this value is 0, there is no limit.

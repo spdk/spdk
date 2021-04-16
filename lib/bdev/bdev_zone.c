@@ -44,6 +44,12 @@ spdk_bdev_get_zone_size(const struct spdk_bdev *bdev)
 	return bdev->zone_size;
 }
 
+uint64_t
+spdk_bdev_get_num_zones(const struct spdk_bdev *bdev)
+{
+	return bdev->zone_size ? bdev->blockcnt / bdev->zone_size : 0;
+}
+
 uint32_t
 spdk_bdev_get_max_zone_append_size(const struct spdk_bdev *bdev)
 {
