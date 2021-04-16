@@ -988,7 +988,9 @@ nvme_ctrlr_cmd_directive(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	cmd->opc = opc_type;
 	cmd->nsid = nsid;
 
-	cmd->cdw10 = (payload_size >> 2) - 1;
+	if ((payload_size >> 2) > 0) {
+		cmd->cdw10 = (payload_size >> 2) - 1;
+	}
 	cmd->cdw11_bits.directive.doper = doper;
 	cmd->cdw11_bits.directive.dtype = dtype;
 	cmd->cdw11_bits.directive.dspec = dspec;
