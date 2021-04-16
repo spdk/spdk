@@ -11,6 +11,7 @@ collect_setup_devs() {
 
 	while read -r _ dev _ _ _ driver _; do
 		[[ $dev == *:*:*.* ]] || continue
+		[[ $driver == nvme ]] || continue
 		devs+=("$dev") drivers["$dev"]=$driver
 	done < <(setup output status)
 	((${#devs[@]} > 0))
@@ -37,8 +38,7 @@ denied() {
 
 allowed() {
 	PCI_ALLOWED="${devs[0]}" setup output config \
-		| grep "Skipping denied controller at " \
-		| grep -v "${devs[0]}"
+		| grep -E "${devs[0]} .*: ${drivers["${devs[0]}"]} -> .*"
 	verify "${devs[@]:1}"
 	setup reset
 }
