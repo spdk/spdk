@@ -339,6 +339,9 @@ set_cpufreq_governor() {
 }
 
 exec_under_dynamic_scheduler() {
+	if [[ -e /proc/$spdk_pid/status ]]; then
+		killprocess "$spdk_pid"
+	fi
 	"$@" --wait-for-rpc &
 	spdk_pid=$!
 	# Give some time for the app to init itself
@@ -514,4 +517,23 @@ collect_cpu_idle() {
 			is_idle[cpu]=0
 		fi
 	done
+}
+
+update_thread_cpus_map() {
+	local cpu
+	local -g thread_cpus=()
+	local reactor_framework
+
+	((${#cpus[@]} > 0)) || return 1
+
+	get_thread_stats
+
+	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
+	for cpu in "${cpus[@]}"; do
+		for thread in $(jq -r "select(.lcore == $cpu) | .lw_threads[].id" <<< "$reactor_framework"); do
+			printf '* Thread %u (%s) on cpu%u\n' "$thread" "${thread_map[thread]}" "$cpu"
+			thread_cpus[thread]=$cpu
+		done
+	done
+	((${#thread_cpus[@]} > 0))
 }

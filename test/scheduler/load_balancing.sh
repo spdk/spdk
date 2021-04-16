@@ -134,7 +134,98 @@ balanced() {
 	done
 }
 
+core_load() {
+	local sched_period=1 # default, 1s
+	local thread
+	local on_main_core=0 on_next_core=0
+
+	# Re-exec the scheduler app to make sure rr balancer won't affect threads without
+	# configured cpumask from the previous test suites.
+
+	exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
+
+	# Create thread0 with 90% activity no cpumask, expecting it to remain on main cpu
+	thread0=$(create_thread -n "thread0" -a 90)
+
+	sleep $((2 * sched_period))
+	update_thread_cpus_map
+
+	((thread_cpus[thread0] == spdk_main_core))
+
+	# Create thread1 with 90% activity. Expecting one of the threads to be moved to next
+	# cpu and the other remain on main cpu. Verifying that threads are spread out when core
+	# load is over 95% limit.
+	thread1=$(create_thread -n "thread1" -a 90)
+
+	# Three iterations are needed, as both active threads first are moved out of main core.
+	# During next scheduling period one of them is moved back to the main core.
+	sleep $((3 * sched_period))
+	update_thread_cpus_map
+
+	((thread_cpus[thread0] == spdk_main_core || thread_cpus[thread1] == spdk_main_core))
+	((thread_cpus[thread0] != thread_cpus[thread1]))
+
+	# Create thread2 with 10% activity. Expecting the idle thread2 to be placed on main cpu and two
+	# other active threads on next cpus. Verifying the condition where core load over 95% moves threads
+	# away from main cpu.
+	thread2=$(create_thread -n "thread2" -a 10)
+
+	sleep $((2 * sched_period))
+	update_thread_cpus_map
+
+	((thread_cpus[thread2] == spdk_main_core))
+	((thread_cpus[thread1] != spdk_main_core))
+	((thread_cpus[thread0] != spdk_main_core))
+	((thread_cpus[thread0] != thread_cpus[thread1]))
+
+	# Change all threads activity to 10%. Expecting all threads to be placed on main cpu.
+	# Verifying the condition where core load less than 95% is grouping multiple threads.
+	active_thread "$thread0" 10
+	active_thread "$thread1" 10
+	active_thread "$thread2" 10
+
+	sleep $((2 * sched_period))
+	update_thread_cpus_map
+
+	for thread in \
+		"$thread0" \
+		"$thread1" \
+		"$thread2"; do
+		((thread_cpus[thread] == spdk_main_core))
+	done
+
+	# Create thread3, thread4 and thread 5 with 25% activity. Expecting one of the threads on next cpu
+	# and rest on main cpu. Total load on main cpu will be (10*3+25*2) 80%, and next cpu 25%.
+	thread3=$(create_thread -n "thread3" -a 25)
+	thread4=$(create_thread -n "thread4" -a 25)
+	thread5=$(create_thread -n "thread5" -a 25)
+
+	# Three iterations are needed, as all threads look active on first iteration since they are on the main core.
+	# Second iteraion will have them spread out over cores and only third will collapse to the expected scenario.
+	sleep $((3 * sched_period))
+	update_thread_cpus_map
+
+	for thread in \
+		"$thread0" \
+		"$thread1" \
+		"$thread2" \
+		"$thread3" \
+		"$thread4" \
+		"$thread5"; do
+		if ((thread_cpus[thread] == spdk_main_core)); then
+			((++on_main_core))
+		else
+			((++on_next_core))
+		fi
+
+		destroy_thread "$thread"
+	done
+
+	((on_main_core == 5 && on_next_core == 1))
+}
+
 exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
 
 run_test "busy" busy
 run_test "balanced" balanced
+run_test "core_load" core_load
