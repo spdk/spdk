@@ -92,6 +92,8 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_zerocopy_send = true,
 	.enable_quickack = false,
 	.enable_placement_id = PLACEMENT_NONE,
+	.enable_zerocopy_send_server = true,
+	.enable_zerocopy_send_client = false
 };
 
 static struct spdk_sock_map g_map = {
@@ -348,7 +350,7 @@ posix_sock_alloc(int fd, bool enable_zero_copy)
 #if defined(SPDK_ZEROCOPY)
 	flag = 1;
 
-	if (enable_zero_copy && g_spdk_posix_sock_impl_opts.enable_zerocopy_send) {
+	if (enable_zero_copy) {
 		/* Try to turn on zero copy sends */
 		rc = setsockopt(sock->fd, SOL_SOCKET, SO_ZEROCOPY, &flag, sizeof(flag));
 		if (rc == 0) {
@@ -441,7 +443,8 @@ posix_sock_create(const char *ip, int port,
 	int fd, flag;
 	int val = 1;
 	int rc, sz;
-	bool enable_zero_copy = true;
+	bool enable_zcopy_user_opts = true;
+	bool enable_zcopy_impl_opts = true;
 
 	assert(opts != NULL);
 
@@ -555,6 +558,8 @@ retry:
 				fd = -1;
 				break;
 			}
+			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_server &&
+						 g_spdk_posix_sock_impl_opts.enable_zerocopy_send;
 		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
 			rc = connect(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
@@ -564,6 +569,8 @@ retry:
 				fd = -1;
 				continue;
 			}
+			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_client &&
+						 g_spdk_posix_sock_impl_opts.enable_zerocopy_send;
 		}
 
 		flag = fcntl(fd, F_GETFL);
@@ -582,9 +589,9 @@ retry:
 	}
 
 	/* Only enable zero copy for non-loopback sockets. */
-	enable_zero_copy = opts->zcopy && !sock_is_loopback(fd);
+	enable_zcopy_user_opts = opts->zcopy && !sock_is_loopback(fd);
 
-	sock = posix_sock_alloc(fd, enable_zero_copy);
+	sock = posix_sock_alloc(fd, enable_zcopy_user_opts && enable_zcopy_impl_opts);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		close(fd);
@@ -1524,6 +1531,8 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	GET_FIELD(enable_zerocopy_send);
 	GET_FIELD(enable_quickack);
 	GET_FIELD(enable_placement_id);
+	GET_FIELD(enable_zerocopy_send_server);
+	GET_FIELD(enable_zerocopy_send_client);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1554,6 +1563,8 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	SET_FIELD(enable_zerocopy_send);
 	SET_FIELD(enable_quickack);
 	SET_FIELD(enable_placement_id);
+	SET_FIELD(enable_zerocopy_send_server);
+	SET_FIELD(enable_zerocopy_send_client);
 
 #undef SET_FIELD
 #undef FIELD_OK

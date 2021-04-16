@@ -179,6 +179,12 @@ sockets to be marked using the SO_MARK socket option as a hint for which hardwar
 queue they should be associated with. This mode leverages that by setting the same
 value for all sockets within a poll group.
 
+New parameters `enable_zerocopy_send_server` and `enable_zerocopy_send_client` were added
+to struct spdk_sock_impl_opts, these parameters enable or disable zero copy send for server
+and client sockets which are created using `spdk_sock_listen` and `spdk_sock_listen_ext` (server);
+`spdk_sock_connect` and `spdk_sock_connect_ext` (client) functions. Existing parameter
+`enable_zerocopy_send`  enables or disables zero copy send for both server and client sockets.
+
 ### thread
 
 A new API `spdk_io_channel_get_io_device` was added to get the io_device for the specified
