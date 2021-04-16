@@ -1527,13 +1527,13 @@ print_periodic_performance(bool warmup)
 		if (g_monitor_perf_cores) {
 			core_busy_tsc += busy_tsc;
 			core_idle_tsc += idle_tsc;
-			core_busy_perc += (double)core_busy_tsc / (core_idle_tsc + core_busy_tsc) * 100;
 		}
 	}
 	mb_this_second = (double)io_this_second * g_io_size_bytes / (1024 * 1024);
 
 	printf("%s%9ju IOPS, %8.2f MiB/s", warmup ? "[warmup] " : "", io_this_second, mb_this_second);
 	if (g_monitor_perf_cores) {
+		core_busy_perc = (double)core_busy_tsc / (core_idle_tsc + core_busy_tsc) * 100;
 		printf("%3d Core(s): %6.2f%% Busy", g_num_workers, core_busy_perc);
 	}
 	printf("\r");
