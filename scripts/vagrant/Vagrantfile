@@ -278,6 +278,14 @@ def setup_libvirt(config, vmcpu, vmram, distro)
       end
     }
 
+    # Add network interface for openstack tests
+    if ENV['SPDK_OPENSTACK_NETWORK'] == "1"
+      libvirt.qemuargs :value => "-device"
+      libvirt.qemuargs :value => "virtio-net,netdev=openstack.0"
+      libvirt.qemuargs :value => "-netdev"
+      libvirt.qemuargs :value => "user,id=openstack.0"
+    end
+
     if ENV['VAGRANT_HUGE_MEM'] == "1"
       libvirt.memorybacking :hugepages
     end
@@ -295,7 +303,6 @@ provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 # Get all variables for creating vm
 vmcpu = (ENV['SPDK_VAGRANT_VMCPU'] || 2)
 vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
-openstack_network = (ENV['SPDK_OPENSTACK_NETWORK'] || false)
 
 # generic/freebsd boxes do not work properly with vagrant-proxyconf and
 # have issues installing rsync and sshfs for syncing files. NFS is
@@ -319,10 +326,6 @@ Vagrant.configure(2) do |config|
   config.vm.box_check_update = false
   config.vm.synced_folder '.', '/vagrant', disabled: true
 
-  # Add network interface for openstack tests
-  if openstack_network == "1"
-    config.vm.network "private_network", ip: "10.0.2.15"
-  end
   # Copy in the .gitconfig if it exists
   copy_gitconfig(config)
 
