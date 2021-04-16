@@ -191,7 +191,7 @@ static int
 bdev_rbd_init(const char *user_id, const char *rbd_pool_name, const char *const *config,
 	      const char *rbd_name, rbd_image_info_t *info)
 {
-	int ret;
+	int ret = 0;
 	rados_t cluster = NULL;
 	rados_ioctx_t io_ctx = NULL;
 	rbd_image_t image = NULL;
@@ -206,21 +206,18 @@ bdev_rbd_init(const char *user_id, const char *rbd_pool_name, const char *const 
 	ret = rbd_open(io_ctx, rbd_name, &image, NULL);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to open specified rbd device\n");
-		goto err;
+		goto end;
 	}
 	ret = rbd_stat(image, info, sizeof(*info));
 	rbd_close(image);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to stat specified rbd device\n");
-		goto err;
 	}
 
-	rados_ioctx_destroy(io_ctx);
-	return 0;
-err:
+end:
 	rados_ioctx_destroy(io_ctx);
 	rados_shutdown(cluster);
-	return -1;
+	return ret;
 }
 
 static void
