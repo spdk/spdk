@@ -51,6 +51,7 @@ struct vfio_user_request {
 	int fd_num;
 };
 
+#ifdef DEBUG
 static const char *vfio_user_message_str[VFIO_USER_MAX] = {
 	[VFIO_USER_VERSION]			= "VFIO_USER_VERSION",
 	[VFIO_USER_DMA_MAP]			= "VFIO_USER_DMA_MAP",
@@ -65,6 +66,7 @@ static const char *vfio_user_message_str[VFIO_USER_MAX] = {
 	[VFIO_USER_DMA_WRITE]			= "VFIO_USER_DMA_WRITE",
 	[VFIO_USER_DEVICE_RESET]		= "VFIO_USER_DEVICE_RESET",
 };
+#endif
 
 static int
 vfio_user_write(int fd, void *buf, int len, int *fds, int num_fds)
