@@ -6516,6 +6516,44 @@ delete_snapshot_sync_clone_cpl(void *cb_arg, int bserrno)
 }
 
 static void
+delete_snapshot_update_extent_pages_cpl(struct delete_snapshot_ctx *ctx)
+{
+	/* Delete old backing bs_dev from clone (related to snapshot that will be removed) */
+	ctx->clone->back_bs_dev->destroy(ctx->clone->back_bs_dev);
+
+	/* Set/remove snapshot xattr and switch parent ID and backing bs_dev on clone... */
+	if (ctx->parent_snapshot_entry != NULL) {
+		/* ...to parent snapshot */
+		ctx->clone->parent_id = ctx->parent_snapshot_entry->id;
+		ctx->clone->back_bs_dev = ctx->snapshot->back_bs_dev;
+		blob_set_xattr(ctx->clone, BLOB_SNAPSHOT, &ctx->parent_snapshot_entry->id,
+			       sizeof(spdk_blob_id),
+			       true);
+	} else {
+		/* ...to blobid invalid and zeroes dev */
+		ctx->clone->parent_id = SPDK_BLOBID_INVALID;
+		ctx->clone->back_bs_dev = bs_create_zeroes_dev();
+		blob_remove_xattr(ctx->clone, BLOB_SNAPSHOT, true);
+	}
+
+	spdk_blob_sync_md(ctx->clone, delete_snapshot_sync_clone_cpl, ctx);
+}
+
+static void
+delete_snapshot_update_extent_pages(struct delete_snapshot_ctx *ctx)
+{
+	uint64_t i;
+
+	for (i = 0; i < ctx->snapshot->active.num_extent_pages &&
+	     i < ctx->clone->active.num_extent_pages; i++) {
+		if (ctx->clone->active.extent_pages[i] == 0) {
+			ctx->clone->active.extent_pages[i] = ctx->snapshot->active.extent_pages[i];
+		}
+	}
+	delete_snapshot_update_extent_pages_cpl(ctx);
+}
+
+static void
 delete_snapshot_sync_snapshot_xattr_cpl(void *cb_arg, int bserrno)
 {
 	struct delete_snapshot_ctx *ctx = cb_arg;
@@ -6538,32 +6576,7 @@ delete_snapshot_sync_snapshot_xattr_cpl(void *cb_arg, int bserrno)
 			ctx->clone->active.clusters[i] = ctx->snapshot->active.clusters[i];
 		}
 	}
-	for (i = 0; i < ctx->snapshot->active.num_extent_pages &&
-	     i < ctx->clone->active.num_extent_pages; i++) {
-		if (ctx->clone->active.extent_pages[i] == 0) {
-			ctx->clone->active.extent_pages[i] = ctx->snapshot->active.extent_pages[i];
-		}
-	}
-
-	/* Delete old backing bs_dev from clone (related to snapshot that will be removed) */
-	ctx->clone->back_bs_dev->destroy(ctx->clone->back_bs_dev);
-
-	/* Set/remove snapshot xattr and switch parent ID and backing bs_dev on clone... */
-	if (ctx->parent_snapshot_entry != NULL) {
-		/* ...to parent snapshot */
-		ctx->clone->parent_id = ctx->parent_snapshot_entry->id;
-		ctx->clone->back_bs_dev = ctx->snapshot->back_bs_dev;
-		blob_set_xattr(ctx->clone, BLOB_SNAPSHOT, &ctx->parent_snapshot_entry->id,
-			       sizeof(spdk_blob_id),
-			       true);
-	} else {
-		/* ...to blobid invalid and zeroes dev */
-		ctx->clone->parent_id = SPDK_BLOBID_INVALID;
-		ctx->clone->back_bs_dev = bs_create_zeroes_dev();
-		blob_remove_xattr(ctx->clone, BLOB_SNAPSHOT, true);
-	}
-
-	spdk_blob_sync_md(ctx->clone, delete_snapshot_sync_clone_cpl, ctx);
+	delete_snapshot_update_extent_pages(ctx);
 }
 
 static void
