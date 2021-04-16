@@ -343,11 +343,6 @@ struct spdk_scheduler *_spdk_scheduler_get(void);
 void _spdk_scheduler_period_set(uint64_t period);
 
 /**
- * Disable the scheduler.
- */
-void _spdk_scheduler_disable(void);
-
-/**
  * Get period of currently set scheduler.
  */
 uint64_t _spdk_scheduler_period_get(void);

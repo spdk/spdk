@@ -155,12 +155,6 @@ _spdk_scheduler_period_set(uint64_t period)
 }
 
 void
-_spdk_scheduler_disable(void)
-{
-	g_scheduler_period = 0;
-}
-
-void
 _spdk_scheduler_list_add(struct spdk_scheduler *scheduler)
 {
 	if (_scheduler_find(scheduler->name)) {
