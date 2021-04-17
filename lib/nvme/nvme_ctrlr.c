@@ -2614,6 +2614,35 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
+nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
+			     const struct spdk_nvme_cpl *cpl)
+{
+	struct  spdk_nvme_ctrlr_aer_completion_list *nvme_event;
+
+	nvme_event = calloc(1, sizeof(*nvme_event));
+	if (!nvme_event) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Alloc nvme event failed, ignore the event\n");
+		return;
+	}
+
+	nvme_event->cpl = *cpl;
+	STAILQ_INSERT_TAIL(&ctrlr->async_events, nvme_event, link);
+}
+
+void
+nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct  spdk_nvme_ctrlr_aer_completion_list  *nvme_event, *nvme_event_tmp;
+
+	STAILQ_FOREACH_SAFE(nvme_event, &ctrlr->async_events, link, nvme_event_tmp) {
+		STAILQ_REMOVE(&ctrlr->async_events, nvme_event,
+			      spdk_nvme_ctrlr_aer_completion_list, link);
+		nvme_ctrlr_process_async_event(ctrlr, &nvme_event->cpl);
+		free(nvme_event);
+	}
+}
+
+static void
 nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_async_event_request	*aer = arg;
@@ -2642,7 +2671,8 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
-	nvme_ctrlr_process_async_event(ctrlr, cpl);
+	/* Add the events to the list */
+	nvme_ctrlr_queue_async_event(ctrlr, cpl);
 
 	/* If the ctrlr was removed or in the destruct state, we should not send aer again */
 	if (ctrlr->is_removed || ctrlr->is_destructed) {
@@ -3325,6 +3355,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	STAILQ_INIT(&ctrlr->queued_aborts);
+	STAILQ_INIT(&ctrlr->async_events);
 	ctrlr->outstanding_aborts = 0;
 
 	ctrlr->ana_log_page = NULL;
@@ -3521,6 +3552,9 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	num_completions = rc;
 
 	rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+
+	nvme_ctrlr_complete_queued_async_events(ctrlr);
+
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	if (rc < 0) {

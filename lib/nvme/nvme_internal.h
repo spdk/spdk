@@ -731,6 +731,11 @@ struct spdk_nvme_ctrlr_process {
 	uint64_t			timeout_ticks;
 };
 
+struct spdk_nvme_ctrlr_aer_completion_list {
+	struct spdk_nvme_cpl	cpl;
+	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion_list) link;
+};
+
 /*
  * One of these per allocated PCI device.
  */
@@ -858,6 +863,8 @@ struct spdk_nvme_ctrlr {
 
 	/* maximum zone append size in bytes */
 	uint32_t			max_zone_append_size;
+
+	STAILQ_HEAD(, spdk_nvme_ctrlr_aer_completion_list)      async_events;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -1026,6 +1033,7 @@ void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_ca
 void    nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 				       const struct spdk_nvme_cpl *cpl);
 void nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair);
+void nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,
 		    enum spdk_nvme_qprio qprio,
