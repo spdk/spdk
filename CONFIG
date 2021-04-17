@@ -76,6 +76,9 @@ CONFIG_UNIT_TESTS=y
 # Build examples
 CONFIG_EXAMPLES=y
 
+# Build apps
+CONFIG_APPS=y
+
 # Build with Control-flow Enforcement Technology (CET)
 CONFIG_CET=n
 

@@ -35,6 +35,7 @@ function usage() {
 	echo " --disable-tests           Disable building of functional tests"
 	echo " --disable-unit-tests      Disable building of unit tests"
 	echo " --disable-examples        Disable building of examples"
+	echo " --disable-apps            Disable building of apps"
 	echo ""
 	echo "Specifying Dependencies:"
 	echo "--with-DEPENDENCY[=path]   Use the given dependency. Optionally, provide the"
@@ -264,6 +265,12 @@ for i in "$@"; do
 			;;
 		--disable-examples)
 			CONFIG[EXAMPLES]=n
+			;;
+		--enable-apps)
+			CONFIG[APPS]=y
+			;;
+		--disable-apps)
+			CONFIG[APPS]=N
 			;;
 		--enable-werror)
 			CONFIG[WERROR]=y
