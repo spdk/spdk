@@ -2132,6 +2132,27 @@ change_sorting(uint8_t tab, int winnum, bool *pstop_loop)
 }
 
 static void
+check_resize_interface(uint8_t active_tab, uint8_t *current_page)
+{
+	int max_row, max_col;
+	uint16_t required_size = WINDOW_HEADER + 1;
+
+	/* Check if interface has to be resized (terminal size changed) */
+	getmaxyx(stdscr, max_row, max_col);
+
+	if (max_row != g_max_row || max_col != g_max_col) {
+		if (max_row != g_max_row) {
+			*current_page = 0;
+		}
+		g_max_row = spdk_max(max_row, required_size);
+		g_max_col = max_col;
+		g_data_win_size = g_max_row - required_size + 1;
+		g_max_data_rows = g_max_row - WINDOW_HEADER;
+		resize_interface(active_tab);
+	}
+}
+
+static void
 change_refresh_rate(void)
 {
 	const int WINDOW_HEADER_END_LINE = 2;
@@ -2882,11 +2903,9 @@ show_stats(pthread_t *data_thread)
 	long int time_last, time_dif;
 	struct timespec time_now;
 	int c;
-	int max_row, max_col;
 	uint8_t active_tab = THREADS_TAB;
 	uint8_t current_page = 0;
 	uint8_t max_pages = 1;
-	uint16_t required_size = WINDOW_HEADER + 1;
 	uint64_t i;
 	char current_page_str[CURRENT_PAGE_STR_LEN];
 	bool force_refresh = true;
@@ -2897,19 +2916,7 @@ show_stats(pthread_t *data_thread)
 	switch_tab(THREADS_TAB);
 
 	while (1) {
-		/* Check if interface has to be resized (terminal size changed) */
-		getmaxyx(stdscr, max_row, max_col);
-
-		if (max_row != g_max_row || max_col != g_max_col) {
-			if (max_row != g_max_row) {
-				current_page = 0;
-			}
-			g_max_row = spdk_max(max_row, required_size);
-			g_max_col = max_col;
-			g_data_win_size = g_max_row - required_size + 1;
-			g_max_data_rows = g_max_row - WINDOW_HEADER;
-			resize_interface(active_tab);
-		}
+		check_resize_interface(active_tab, &current_page);
 
 		clock_gettime(CLOCK_MONOTONIC, &time_now);
 		time_dif = time_now.tv_sec - time_last;
