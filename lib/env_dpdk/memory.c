@@ -832,10 +832,8 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
 	if (ret) {
-		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
-		pthread_mutex_unlock(&g_vfio.mutex);
-		free(dma_map);
-		return ret;
+		/* There are cases the vfio container doesn't have IOMMU group, it's safe for this case */
+		SPDK_NOTICELOG("Cannot set up DMA mapping, error %d, ignored\n", errno);
 	}
 
 out_insert:
@@ -892,9 +890,7 @@ vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 	unmap.size = dma_map->map.size;
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &unmap);
 	if (ret) {
-		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
-		pthread_mutex_unlock(&g_vfio.mutex);
-		return ret;
+		SPDK_NOTICELOG("Cannot clear DMA mapping, error %d, ignored\n", errno);
 	}
 
 out_remove:
