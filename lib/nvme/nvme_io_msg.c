@@ -87,6 +87,10 @@ nvme_io_msg_process(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 
+	if (!spdk_process_is_primary()) {
+		return 0;
+	}
+
 	spdk_nvme_qpair_process_completions(ctrlr->external_io_msgs_qpair, 0);
 
 	count = spdk_ring_dequeue(ctrlr->external_io_msgs, requests,
