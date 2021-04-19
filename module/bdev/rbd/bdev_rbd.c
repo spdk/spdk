@@ -758,6 +758,7 @@ bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
 	new_size_in_byte = new_size_in_mb * 1024 * 1024;
 
 	rc = rbd_resize(rbd_io_ch->image, new_size_in_byte);
+	spdk_put_io_channel(ch);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to resize the ceph bdev.\n");
 		return rc;
