@@ -319,7 +319,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct thread_data	*td = cb_ctx;
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
-	struct spdk_nvme_io_qpair_opts	qpopts;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_qpair	*fio_qpair;
 	struct spdk_nvme_ns	*ns;
@@ -398,25 +397,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	spdk_nvme_ctrlr_get_default_io_qpair_opts(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
-	qpopts.delay_cmd_submit = true;
-	if (fio_options->enable_wrr) {
-		qpopts.qprio = fio_options->wrr_priority;
-	}
-
-	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
-	if (!fio_qpair->qpair) {
-		SPDK_ERRLOG("Cannot allocate nvme io_qpair any more\n");
-		g_error = true;
-		free(fio_qpair);
-		return;
-	}
-
-	if (fio_options->print_qid_mappings == 1) {
-		log_info("job %s: %s qid %d\n", td->o.name, f->file_name,
-			 spdk_nvme_qpair_get_id(fio_qpair->qpair));
-	}
-
+	f->engine_data = fio_qpair;
 	fio_qpair->ns = ns;
 	fio_qpair->f = f;
 	fio_qpair->fio_ctrlr = fio_ctrlr;
@@ -677,6 +658,30 @@ static int spdk_fio_setup(struct thread_data *td)
 
 static int spdk_fio_open(struct thread_data *td, struct fio_file *f)
 {
+	struct spdk_fio_qpair *fio_qpair = f->engine_data;
+	struct spdk_fio_ctrlr *fio_ctrlr = fio_qpair->fio_ctrlr;
+	struct spdk_fio_options *fio_options = td->eo;
+	struct spdk_nvme_io_qpair_opts	qpopts;
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
+	qpopts.delay_cmd_submit = true;
+	if (fio_options->enable_wrr) {
+		qpopts.qprio = fio_options->wrr_priority;
+	}
+
+	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
+	if (!fio_qpair->qpair) {
+		SPDK_ERRLOG("Cannot allocate nvme io_qpair any more\n");
+		g_error = true;
+		free(fio_qpair);
+		return -1;
+	}
+
+	if (fio_options->print_qid_mappings == 1) {
+		log_info("job %s: %s qid %d\n", td->o.name, f->file_name,
+			 spdk_nvme_qpair_get_id(fio_qpair->qpair));
+	}
+
 	return 0;
 }
 
