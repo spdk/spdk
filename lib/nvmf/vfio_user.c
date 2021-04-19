@@ -1264,7 +1264,8 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	if (count != sizeof(uint32_t)) {
 		SPDK_ERRLOG("%s: bad doorbell buffer size %ld\n",
 			    ctrlr_id(ctrlr), count);
-		return -EINVAL;
+		errno = EINVAL;
+		return -1;
 	}
 
 	pos -= NVMF_VFIO_USER_DOORBELLS_OFFSET;
@@ -1272,7 +1273,8 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	/* pos must be dword aligned */
 	if ((pos & 0x3) != 0) {
 		SPDK_ERRLOG("%s: bad doorbell offset %#lx\n", ctrlr_id(ctrlr), pos);
-		return -EINVAL;
+		errno = EINVAL;
+		return -1;
 	}
 
 	/* convert byte offset to array index */
@@ -1284,7 +1286,8 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 		 * asynchronous event
 		 */
 		SPDK_ERRLOG("%s: bad doorbell index %#lx\n", ctrlr_id(ctrlr), pos);
-		return -EINVAL;
+		errno = EINVAL;
+		return -1;
 	}
 
 	if (is_write) {
@@ -1325,13 +1328,14 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 		if (ret == 0) {
 			return count;
 		}
-		assert(ret < 0);
+		assert(errno != 0);
 		return ret;
 	}
 
 	/* Construct a Fabric Property Get/Set command and send it */
 	req = get_nvmf_vfio_user_req(ctrlr->qp[0]);
 	if (req == NULL) {
+		errno = ENOBUFS;
 		return -1;
 	}
 
@@ -1373,14 +1377,16 @@ access_pci_config(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t offset,
 	if (is_write) {
 		SPDK_ERRLOG("%s: write %#lx-%#lx not supported\n",
 			    endpoint_id(endpoint), offset, offset + count);
-		return -EINVAL;
+		errno = EINVAL;
+		return -1;
 	}
 
 	if (offset + count > PCI_CFG_SPACE_EXP_SIZE) {
 		SPDK_ERRLOG("%s: access past end of extended PCI configuration space, want=%ld+%ld, max=%d\n",
 			    endpoint_id(endpoint), offset, count,
 			    PCI_CFG_SPACE_EXP_SIZE);
-		return -ERANGE;
+		errno = ERANGE;
+		return -1;
 	}
 
 	memcpy(buf, ((unsigned char *)endpoint->pci_config_space) + offset, count);
