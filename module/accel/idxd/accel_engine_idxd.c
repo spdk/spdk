@@ -110,6 +110,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	int rc = 0;
 	uint8_t fill_pattern = (uint8_t)task->fill_pattern;
+	void *src;
 
 	switch (task->op_code) {
 	case ACCEL_OPCODE_MEMMOVE:
@@ -128,7 +129,8 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 					   task);
 		break;
 	case ACCEL_OPCODE_CRC32C:
-		rc = spdk_idxd_submit_crc32c(chan->chan, task->dst, task->src, task->seed, task->nbytes, idxd_done,
+		src = (task->v.iovcnt == 0) ? task->src : task->v.iovs[0].iov_base;
+		rc = spdk_idxd_submit_crc32c(chan->chan, task->dst, src, task->seed, task->nbytes, idxd_done,
 					     task);
 		break;
 	default:

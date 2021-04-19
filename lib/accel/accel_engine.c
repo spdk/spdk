@@ -390,7 +390,6 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iove
 		accel_task->chained.cb_fn = cb_fn;
 		accel_task->chained.cb_arg = cb_arg;
 
-		accel_task->src = iov[0].iov_base;
 		accel_task->nbytes = iov[0].iov_len;
 
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
@@ -619,7 +618,6 @@ spdk_accel_batch_prep_crc32cv(struct spdk_io_channel *ch, struct spdk_accel_batc
 		accel_task->chained.cb_fn = cb_fn;
 		accel_task->chained.cb_arg = cb_arg;
 
-		accel_task->src = iovs[0].iov_base;
 		accel_task->nbytes = iovs[0].iov_len;
 
 		TAILQ_INSERT_TAIL(&batch->hw_tasks, accel_task, link);
