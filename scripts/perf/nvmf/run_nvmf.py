@@ -173,7 +173,7 @@ class Server:
     def configure_sysctl(self):
         self.log_print("Tuning sysctl settings...")
 
-        busy_read = 50000
+        busy_read = 0
         if self.enable_adq and self.mode == "spdk":
             busy_read = 1
 
