@@ -261,6 +261,23 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 					  cpl->status.sc);
 }
 
+static inline void
+bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	enum spdk_bdev_io_status io_status;
+
+	if (rc == 0) {
+		io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else if (rc == -ENOMEM) {
+		io_status = SPDK_BDEV_IO_STATUS_NOMEM;
+	} else {
+		io_status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	spdk_bdev_io_complete(bdev_io, io_status);
+}
+
 static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
@@ -348,7 +365,7 @@ static int
 bdev_nvme_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		struct nvme_bdev_io *bio, uint64_t offset, uint64_t nbytes)
 {
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_SUCCESS);
+	bdev_nvme_io_complete(bio, 0);
 
 	return 0;
 }
@@ -706,6 +723,7 @@ static void
 bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
 {
+	struct nvme_bdev_io *bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev->ctxt;
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
@@ -734,12 +752,8 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bdev->dif_check_flags);
 
 exit:
-	if (spdk_likely(ret == 0)) {
-		return;
-	} else if (ret == -ENOMEM) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
-	} else {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	if (spdk_unlikely(ret != 0)) {
+		bdev_nvme_io_complete(bio, ret);
 	}
 }
 
@@ -894,11 +908,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 exit:
 	if (spdk_unlikely(rc != 0)) {
-		if (rc == -ENOMEM) {
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
-		} else {
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
+		bdev_nvme_io_complete(nbdev_io, rc);
 	}
 }
 
@@ -2673,7 +2683,6 @@ bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
 	uint32_t zones_to_copy = bdev_io->u.zone_mgmt.num_zones;
 	struct spdk_bdev_zone_info *info = bdev_io->u.zone_mgmt.buf;
-	enum spdk_bdev_io_status status;
 	uint64_t max_zones_per_buf, i;
 	uint32_t zone_report_bufsize;
 	struct nvme_bdev_ns *nvme_ns;
@@ -2685,8 +2694,8 @@ bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	}
 
 	if (!bdev_nvme_find_io_path(nbdev, nvme_ch, &nvme_ns, &qpair)) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
-		goto out_complete_io_status;
+		ret = -ENXIO;
+		goto out_complete_io_ret;
 	}
 
 	zone_report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(nvme_ns->ns);
@@ -2694,21 +2703,20 @@ bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
 			    sizeof(bio->zone_report_buf->descs[0]);
 
 	if (bio->zone_report_buf->nr_zones > max_zones_per_buf) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
-		goto out_complete_io_status;
+		ret = -EINVAL;
+		goto out_complete_io_ret;
 	}
 
 	if (!bio->zone_report_buf->nr_zones) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
-		goto out_complete_io_status;
+		ret = -EINVAL;
+		goto out_complete_io_ret;
 	}
 
 	for (i = 0; i < bio->zone_report_buf->nr_zones && bio->handled_zones < zones_to_copy; i++) {
 		ret = fill_zone_from_report(&info[bio->handled_zones],
 					    &bio->zone_report_buf->descs[i]);
 		if (ret) {
-			status = SPDK_BDEV_IO_STATUS_FAILED;
-			goto out_complete_io_status;
+			goto out_complete_io_ret;
 		}
 		bio->handled_zones++;
 	}
@@ -2724,12 +2732,8 @@ bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
 						 bdev_nvme_get_zone_info_done, bio);
 		if (!ret) {
 			return;
-		} else if (ret == -ENOMEM) {
-			status = SPDK_BDEV_IO_STATUS_NOMEM;
-			goto out_complete_io_status;
 		} else {
-			status = SPDK_BDEV_IO_STATUS_FAILED;
-			goto out_complete_io_status;
+			goto out_complete_io_ret;
 		}
 	}
 
@@ -2739,10 +2743,10 @@ out_complete_io_nvme_cpl:
 	bdev_nvme_io_complete_nvme_status(bio, cpl);
 	return;
 
-out_complete_io_status:
+out_complete_io_ret:
 	free(bio->zone_report_buf);
 	bio->zone_report_buf = NULL;
-	spdk_bdev_io_complete(bdev_io, status);
+	bdev_nvme_io_complete(bio, ret);
 }
 
 static void
