@@ -1151,6 +1151,25 @@ bdev_nvme_get_module_ctx(void *ctx)
 	return bdev_nvme_get_ctrlr(&nvme_bdev->disk);
 }
 
+static const char *
+_nvme_ana_state_str(enum spdk_nvme_ana_state ana_state)
+{
+	switch (ana_state) {
+	case SPDK_NVME_ANA_OPTIMIZED_STATE:
+		return "optimized";
+	case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
+		return "non_optimized";
+	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
+		return "inaccessible";
+	case SPDK_NVME_ANA_PERSISTENT_LOSS_STATE:
+		return "persistent_loss";
+	case SPDK_NVME_ANA_CHANGE_STATE:
+		return "change";
+	default:
+		return NULL;
+	}
+}
+
 static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -1249,6 +1268,11 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "ns_data");
 
 	spdk_json_write_named_uint32(w, "id", spdk_nvme_ns_get_id(ns));
+
+	if (cdata->cmic.ana_reporting) {
+		spdk_json_write_named_string(w, "ana_state",
+					     _nvme_ana_state_str(spdk_nvme_ns_get_ana_state(ns)));
+	}
 
 	spdk_json_write_object_end(w);
 

@@ -127,6 +127,9 @@ DEFINE_STUB(spdk_nvme_ns_get_dealloc_logical_block_read_value,
 
 DEFINE_STUB(spdk_nvme_ns_get_optimal_io_boundary, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
+DEFINE_STUB(spdk_nvme_ns_get_ana_state, enum spdk_nvme_ana_state,
+	    (const struct spdk_nvme_ns *ns), 0);
+
 DEFINE_STUB(spdk_nvme_ns_get_csi, enum spdk_nvme_csi,
 	    (const struct spdk_nvme_ns *ns), 0);
 
