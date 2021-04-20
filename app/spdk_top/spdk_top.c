@@ -557,6 +557,7 @@ get_data(void)
 	}
 
 	/* Decode json */
+	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
 	if (spdk_json_decode_object(json_resp->result, rpc_threads_stats_decoders,
 				    SPDK_COUNTOF(rpc_threads_stats_decoders), &g_threads_stats)) {
 		rc = -EINVAL;
@@ -799,6 +800,16 @@ sort_threads(const void *p1, const void *p2)
 	const struct rpc_thread_info *thread_info2 = *(struct rpc_thread_info **)p2;
 	uint64_t count1, count2;
 
+	/* thread IDs may not be allocated contiguously, so we need
+	 * to account for NULL thread_info pointers */
+	if (thread_info1 == NULL && thread_info2 == NULL) {
+		return 0;
+	} else if (thread_info1 == NULL) {
+		return 1;
+	} else if (thread_info2 == NULL) {
+		return -1;
+	}
+
 	switch (g_current_sort_col[THREADS_TAB]) {
 	case 0: /* Sort by name */
 		return strcmp(thread_info1->name, thread_info2->name);
@@ -878,10 +889,15 @@ refresh_threads_tab(uint8_t current_page)
 		g_last_threads_count = threads_count;
 	}
 
-	/* Thread IDs starts from '1', so we have to take this into account when copying.
-	 * TODO: In future we can have gaps in ID list, so we will need to change the way we
-	 * handle copying threads list below */
-	memcpy(thread_info, &g_thread_info[1], sizeof(struct rpc_thread_info *) * threads_count);
+	/* From g_thread_info copy to thread_info without null elements.
+	 * The index of g_thread_info equals to Thread IDs, so it starts from '1'. */
+	for (i = 0, j = 1; i <  g_threads_stats.threads.threads_count; i++) {
+		while (g_thread_info[j] == NULL) {
+			j++;
+		}
+		memcpy(&thread_info[i], &g_thread_info[j], sizeof(struct rpc_thread_info *));
+		j++;
+	}
 
 	if (last_page != current_page) {
 		for (i = 0; i < threads_count; i++) {
