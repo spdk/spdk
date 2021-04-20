@@ -448,6 +448,18 @@ pci_device_init(struct rte_pci_driver *_drv,
 	return 0;
 }
 
+static void
+set_allowed_at(struct rte_devargs *rte_da, uint64_t tsc)
+{
+	rte_da->data = (void *)(tsc);
+}
+
+static uint64_t
+get_allowed_at(struct rte_devargs *rte_da)
+{
+	return (uint64_t)rte_da->data;
+}
+
 int
 pci_device_fini(struct rte_pci_device *_dev)
 {
@@ -468,7 +480,7 @@ pci_device_fini(struct rte_pci_device *_dev)
 
 	/* remove our allowed_at option */
 	if (_dev->device.devargs) {
-		_dev->device.devargs->data = NULL;
+		set_allowed_at(_dev->device.devargs, 0);
 	}
 
 	assert(!dev->internal.removed);
@@ -541,8 +553,8 @@ scan_pci_bus(bool delay_init)
 			rte_dev->device.devargs = da;
 		}
 
-		if (da->data) {
-			uint64_t allowed_at = (uint64_t)(uintptr_t)da->data;
+		if (get_allowed_at(da)) {
+			uint64_t allowed_at = get_allowed_at(da);
 
 			/* this device was seen by spdk before... */
 			if (da->policy == RTE_DEV_BLOCKED && allowed_at <= now) {
@@ -554,10 +566,10 @@ scan_pci_bus(bool delay_init)
 
 			if (delay_init) {
 				da->policy = RTE_DEV_BLOCKED;
-				da->data = (void *)(now + 2 * spdk_get_ticks_hz());
+				set_allowed_at(da, now + 2 * spdk_get_ticks_hz());
 			} else {
 				da->policy = RTE_DEV_ALLOWED;
-				da->data = (void *)(uintptr_t)now;
+				set_allowed_at(da, now);
 			}
 		}
 	}
@@ -638,8 +650,8 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 
 	rte_dev = dev->dev_handle;
 	da = rte_dev->device.devargs;
-	if (da && da->data) {
-		da->data = (void *)(uintptr_t)spdk_get_ticks();
+	if (da && get_allowed_at(da)) {
+		set_allowed_at(da, spdk_get_ticks());
 		da->policy = RTE_DEV_ALLOWED;
 	}
 
