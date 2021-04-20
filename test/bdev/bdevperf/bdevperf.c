@@ -1176,6 +1176,14 @@ _bdevperf_construct_job(void *ctx)
 		goto end;
 	}
 
+	if (g_zcopy) {
+		if (!spdk_bdev_io_type_supported(job->bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
+			printf("Test requires ZCOPY but bdev module does not support ZCOPY\n");
+			g_run_rc = -ENOTSUP;
+			goto end;
+		}
+	}
+
 	job->ch = spdk_bdev_get_io_channel(job->bdev_desc);
 	if (!job->ch) {
 		SPDK_ERRLOG("Could not get io_channel for device %s, error=%d\n", spdk_bdev_get_name(job->bdev),
