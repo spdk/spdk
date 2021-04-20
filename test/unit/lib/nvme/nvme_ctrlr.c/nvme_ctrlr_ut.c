@@ -2262,6 +2262,8 @@ test_nvme_cmd_map_prps(void)
 	cmd.dptr.prp.prp1 = (uint64_t)(uintptr_t)buf + 1024 * 3;
 	cmd.dptr.prp.prp2 = (uint64_t)(uintptr_t)buf + 4096;
 	len = 4096;
+	ret = nvme_cmd_map_prps(NULL, &cmd, iovs, 1, len, mps, gpa_to_vva);
+	CU_ASSERT(ret == -ERANGE);
 	ret = nvme_cmd_map_prps(NULL, &cmd, iovs, 33, len, mps, gpa_to_vva);
 	CU_ASSERT(ret == 2);
 	CU_ASSERT(iovs[0].iov_base == (void *)(uintptr_t)cmd.dptr.prp.prp1);

@@ -4198,13 +4198,15 @@ nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 		SPDK_ERRLOG("GPA to VVA failed\n");
 		return -EINVAL;
 	}
+	len -= residue_len;
+	if (len && max_iovcnt < 2) {
+		SPDK_ERRLOG("Too many page entries, at least two iovs are required\n");
+		return -ERANGE;
+	}
 	iovs[0].iov_base = vva;
 	iovs[0].iov_len = residue_len;
-	len -= residue_len;
 
 	if (len) {
-		assert(max_iovcnt > 1);
-
 		if (spdk_unlikely(prp2 == 0)) {
 			SPDK_ERRLOG("no PRP2, %d remaining\n", len);
 			return -EINVAL;
