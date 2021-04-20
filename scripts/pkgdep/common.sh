@@ -14,8 +14,7 @@ install_liburing() {
 			git clone "${GIT_REPO_LIBURING}" "$liburing_dir"
 		fi
 		# Use commit we know we can compile against. See #1673 as a reference.
-		# FIXME: Switch to liburing-2.0 when it's finally released
-		git -C "$liburing_dir" checkout 5d027b315d78415a31dcc9111f6bd8924ba5b4e6
+		git -C "$liburing_dir" checkout liburing-2.0
 		(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
 		echo /usr/lib64 > /etc/ld.so.conf.d/spdk-liburing.conf
 		ldconfig
