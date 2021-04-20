@@ -58,6 +58,12 @@ struct bdev_iscsi_lun;
 
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
+/* MAXIMUM UNMAP LBA COUNT:
+ * indicates the maximum  number of LBAs that may be unmapped
+ * by an UNMAP command.
+ */
+#define BDEV_ISCSI_DEFAULT_MAX_UNMAP_LBA_COUNT (32768)
+
 static int bdev_iscsi_initialize(void);
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
 			g_iscsi_conn_req);
@@ -99,6 +105,7 @@ struct bdev_iscsi_conn_req {
 	spdk_bdev_iscsi_create_cb		create_cb;
 	void					*create_cb_arg;
 	bool					unmap_supported;
+	uint32_t				max_unmap;
 	int					lun;
 	int					status;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
@@ -702,7 +709,37 @@ ret:
 }
 
 static void
-bdev_iscsi_inquiry_cb(struct iscsi_context *context, int status, void *_task, void *private_data)
+bdev_iscsi_inquiry_bl_cb(struct iscsi_context *context, int status, void *_task, void *private_data)
+{
+	struct scsi_task *task = _task;
+	struct scsi_inquiry_block_limits *bl_inq = NULL;
+	struct bdev_iscsi_conn_req *req = private_data;
+
+	if (status == SPDK_SCSI_STATUS_GOOD) {
+		bl_inq = scsi_datain_unmarshall(task);
+		if (bl_inq != NULL) {
+			if (!bl_inq->max_unmap) {
+				SPDK_ERRLOG("Invalid max_unmap, use the default\n");
+				req->max_unmap = BDEV_ISCSI_DEFAULT_MAX_UNMAP_LBA_COUNT;
+			} else {
+				req->max_unmap = bl_inq->max_unmap;
+			}
+		}
+	}
+
+	scsi_free_scsi_task(task);
+	task = iscsi_readcapacity16_task(context, req->lun, iscsi_readcapacity16_cb, req);
+	if (task) {
+		return;
+	}
+
+	SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(req->context));
+	complete_conn_req(req, NULL, status);
+}
+
+static void
+bdev_iscsi_inquiry_lbp_cb(struct iscsi_context *context, int status, void *_task,
+			  void *private_data)
 {
 	struct scsi_task *task = _task;
 	struct scsi_inquiry_logical_block_provisioning *lbp_inq = NULL;
@@ -712,7 +749,17 @@ bdev_iscsi_inquiry_cb(struct iscsi_context *context, int status, void *_task, vo
 		lbp_inq = scsi_datain_unmarshall(task);
 		if (lbp_inq != NULL && lbp_inq->lbpu) {
 			req->unmap_supported = true;
+			scsi_free_scsi_task(task);
+
+			task = iscsi_inquiry_task(context, req->lun, 1,
+						  SCSI_INQUIRY_PAGECODE_BLOCK_LIMITS,
+						  255, bdev_iscsi_inquiry_bl_cb, req);
+			if (task) {
+				return;
+			}
 		}
+	} else {
+		scsi_free_scsi_task(task);
 	}
 
 	task = iscsi_readcapacity16_task(context, req->lun, iscsi_readcapacity16_cb, req);
@@ -737,7 +784,7 @@ iscsi_connect_cb(struct iscsi_context *iscsi, int status,
 
 	task = iscsi_inquiry_task(iscsi, req->lun, 1,
 				  SCSI_INQUIRY_PAGECODE_LOGICAL_BLOCK_PROVISIONING,
-				  255, bdev_iscsi_inquiry_cb, req);
+				  255, bdev_iscsi_inquiry_lbp_cb, req);
 	if (task) {
 		return;
 	}
