@@ -1047,6 +1047,93 @@ test_nvme_tcp_pdu_ch_handle(void)
 			  struct spdk_nvme_tcp_common_pdu_hdr));
 }
 
+DEFINE_RETURN_MOCK(spdk_sock_connect_ext, struct spdk_sock *);
+struct spdk_sock *
+spdk_sock_connect_ext(const char *ip, int port,
+		      char *_impl_name, struct spdk_sock_opts *opts)
+{
+	HANDLE_RETURN_MOCK(spdk_sock_connect_ext);
+	CU_ASSERT(port == 23);
+	CU_ASSERT(opts->opts_size == sizeof(*opts));
+	CU_ASSERT(opts->priority == 1);
+	CU_ASSERT(opts->zcopy == true);
+	CU_ASSERT(!strcmp(ip, "192.168.1.78"));
+	return (struct spdk_sock *)0xDDADBEEF;
+}
+
+static void
+test_nvme_tcp_qpair_connect_sock(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_tcp_qpair tqpair = {};
+	int rc;
+
+	tqpair.qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+	tqpair.qpair.id = 1;
+	tqpair.qpair.poll_group = (void *)0xDEADBEEF;
+	ctrlr.trid.priority = 1;
+	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	memcpy(ctrlr.trid.traddr, "192.168.1.78", sizeof("192.168.1.78"));
+	memcpy(ctrlr.trid.trsvcid, "23", sizeof("23"));
+	memcpy(ctrlr.opts.src_addr, "192.168.1.77", sizeof("192.168.1.77"));
+	memcpy(ctrlr.opts.src_svcid, "23", sizeof("23"));
+
+	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	CU_ASSERT(rc == 0);
+
+	/* Unsupported family of the transport address */
+	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IB;
+
+	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	SPDK_CU_ASSERT_FATAL(rc == -1);
+
+	/* Invalid dst_port, INT_MAX is 2147483647 */
+	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	memcpy(ctrlr.trid.trsvcid, "2147483647", sizeof("2147483647"));
+
+	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	SPDK_CU_ASSERT_FATAL(rc == -1);
+
+	/* Parse invalid address */
+	memcpy(ctrlr.trid.trsvcid, "23", sizeof("23"));
+	memcpy(ctrlr.trid.traddr, "192.168.1.256", sizeof("192.168.1.256"));
+
+	rc = nvme_tcp_qpair_connect_sock(&ctrlr, &tqpair.qpair);
+	SPDK_CU_ASSERT_FATAL(rc != 0);
+}
+
+static void
+test_nvme_tcp_qpair_icreq_send(void)
+{
+	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_tcp_pdu pdu = {};
+	struct nvme_tcp_poll_group poll_group = {};
+	struct spdk_nvme_tcp_ic_req *ic_req = NULL;
+	int rc;
+
+	tqpair.send_pdu = &pdu;
+	tqpair.qpair.ctrlr = &ctrlr;
+	tqpair.qpair.poll_group = &poll_group.group;
+	ic_req = &pdu.hdr.ic_req;
+
+	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.qpair.ctrlr->opts.header_digest = true;
+	tqpair.qpair.ctrlr->opts.data_digest = true;
+	TAILQ_INIT(&tqpair.send_queue);
+
+	rc = nvme_tcp_qpair_icreq_send(&tqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ic_req->common.hlen == sizeof(*ic_req));
+	CU_ASSERT(ic_req->common.plen == sizeof(*ic_req));
+	CU_ASSERT(ic_req->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ);
+	CU_ASSERT(ic_req->pfv == 0);
+	CU_ASSERT(ic_req->maxr2t == NVME_TCP_MAX_R2T_DEFAULT - 1);
+	CU_ASSERT(ic_req->hpda == NVME_TCP_HPDA_DEFAULT);
+	CU_ASSERT(ic_req->dgst.bits.hdgst_enable == true);
+	CU_ASSERT(ic_req->dgst.bits.ddgst_enable == true);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1071,6 +1158,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_send_h2c_term_req);
 	CU_ADD_TEST(suite, test_nvme_tcp_pdu_ch_handle);
+	CU_ADD_TEST(suite, test_nvme_tcp_qpair_connect_sock);
+	CU_ADD_TEST(suite, test_nvme_tcp_qpair_icreq_send);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

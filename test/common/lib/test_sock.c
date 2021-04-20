@@ -40,8 +40,6 @@ DEFINE_STUB(spdk_sock_getaddr, int, (struct spdk_sock *sock, char *saddr, int sl
 				     char *caddr, int clen, uint16_t *cport), 0);
 DEFINE_STUB(spdk_sock_connect, struct spdk_sock *, (const char *ip, int port, char *impl_name),
 	    NULL);
-DEFINE_STUB(spdk_sock_connect_ext, struct spdk_sock *, (const char *ip, int port, char *impl_name,
-		struct spdk_sock_opts *opts), NULL);
 DEFINE_STUB(spdk_sock_listen, struct spdk_sock *, (const char *ip, int port, char *impl_name),
 	    NULL);
 DEFINE_STUB(spdk_sock_listen_ext, struct spdk_sock *, (const char *ip, int port, char *impl_name,
