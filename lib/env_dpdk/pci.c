@@ -37,6 +37,7 @@
 #include <rte_devargs.h>
 #include "spdk/env.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
@@ -62,6 +63,28 @@ static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pc
 static TAILQ_HEAD(, spdk_pci_device) g_pci_hotplugged_devices =
 	TAILQ_HEAD_INITIALIZER(g_pci_hotplugged_devices);
 static TAILQ_HEAD(, spdk_pci_driver) g_pci_drivers = TAILQ_HEAD_INITIALIZER(g_pci_drivers);
+
+struct env_devargs {
+	struct rte_bus	*bus;
+	char		name[128];
+	uint64_t	allowed_at;
+	TAILQ_ENTRY(env_devargs) link;
+};
+static TAILQ_HEAD(, env_devargs) g_env_devargs = TAILQ_HEAD_INITIALIZER(g_env_devargs);
+
+static struct env_devargs *
+find_env_devargs(struct rte_bus *bus, const char *name)
+{
+	struct env_devargs *da;
+
+	TAILQ_FOREACH(da, &g_env_devargs, link) {
+		if (bus == da->bus && !strcmp(name, da->name)) {
+			return da;
+		}
+	}
+
+	return NULL;
+}
 
 static int
 map_bar_rte(struct spdk_pci_device *device, uint32_t bar,
@@ -451,13 +474,34 @@ pci_device_init(struct rte_pci_driver *_drv,
 static void
 set_allowed_at(struct rte_devargs *rte_da, uint64_t tsc)
 {
-	rte_da->data = (void *)(tsc);
+	struct env_devargs *env_da;
+
+	env_da = find_env_devargs(rte_da->bus, rte_da->name);
+	if (env_da == NULL) {
+		env_da = calloc(1, sizeof(*env_da));
+		if (env_da == NULL) {
+			SPDK_ERRLOG("could not set_allowed_at for device %s\n", rte_da->name);
+			return;
+		}
+		env_da->bus = rte_da->bus;
+		spdk_strcpy_pad(env_da->name, rte_da->name, sizeof(env_da->name), 0);
+		TAILQ_INSERT_TAIL(&g_env_devargs, env_da, link);
+	}
+
+	env_da->allowed_at = tsc;
 }
 
 static uint64_t
 get_allowed_at(struct rte_devargs *rte_da)
 {
-	return (uint64_t)rte_da->data;
+	struct env_devargs *env_da;
+
+	env_da = find_env_devargs(rte_da->bus, rte_da->name);
+	if (env_da) {
+		return env_da->allowed_at;
+	} else {
+		return 0;
+	}
 }
 
 int
