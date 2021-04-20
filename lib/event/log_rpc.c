@@ -110,7 +110,7 @@ rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto invalid;
+		goto end;
 	}
 
 	level = _parse_log_level(req.level);
@@ -118,16 +118,12 @@ rpc_log_set_print_level(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(log_rpc, "tried to set invalid log level\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "invalid log level");
-		goto invalid;
+		goto end;
 	}
 
 	spdk_log_set_print_level(level);
-	free_rpc_log_level(&req);
-
 	spdk_jsonrpc_send_bool_response(request, true);
-	return;
-
-invalid:
+end:
 	free_rpc_log_level(&req);
 }
 SPDK_RPC_REGISTER("log_set_print_level", rpc_log_set_print_level,
@@ -177,7 +173,7 @@ rpc_log_set_level(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto invalid;
+		goto end;
 	}
 
 	level = _parse_log_level(req.level);
@@ -185,17 +181,13 @@ rpc_log_set_level(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(log_rpc, "tried to set invalid log level\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "invalid log level");
-		goto invalid;
+		goto end;
 	}
 
 
 	spdk_log_set_level(level);
-	free_rpc_log_level(&req);
-
 	spdk_jsonrpc_send_bool_response(request, true);
-	return;
-
-invalid:
+end:
 	free_rpc_log_level(&req);
 }
 SPDK_RPC_REGISTER("log_set_level", rpc_log_set_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -242,23 +234,19 @@ rpc_log_set_flag(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto invalid;
+		goto end;
 	}
 
 	if (req.flag == 0) {
 		SPDK_DEBUGLOG(log_rpc, "invalid flag 0\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "invalid flag 0");
-		goto invalid;
+		goto end;
 	}
 
 	spdk_log_set_flag(req.flag);
-	free_rpc_log_flag(&req);
-
 	spdk_jsonrpc_send_bool_response(request, true);
-	return;
-
-invalid:
+end:
 	free_rpc_log_flag(&req);
 }
 SPDK_RPC_REGISTER("log_set_flag", rpc_log_set_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
@@ -275,23 +263,19 @@ rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(log_rpc, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		goto invalid;
+		goto end;
 	}
 
 	if (req.flag == 0) {
 		SPDK_DEBUGLOG(log_rpc, "Invalid flag 0\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "invalid flag 0");
-		goto invalid;
+		goto end;
 	}
 
 	spdk_log_clear_flag(req.flag);
-	free_rpc_log_flag(&req);
-
 	spdk_jsonrpc_send_bool_response(request, true);
-	return;
-
-invalid:
+end:
 	free_rpc_log_flag(&req);
 }
 SPDK_RPC_REGISTER("log_clear_flag", rpc_log_clear_flag,
