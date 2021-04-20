@@ -343,6 +343,12 @@ struct spdk_bdev {
 	/* Maximum number of segments in a I/O */
 	uint32_t max_num_segments;
 
+	/* Maximum unmap in unit of logical block */
+	uint32_t max_unmap;
+
+	/* Maximum unmap block segments */
+	uint32_t max_unmap_segments;
+
 	/**
 	 * UUID for this bdev.
 	 *
