@@ -45,11 +45,16 @@
 
 static bool g_is_running = true;
 pthread_mutex_t g_sched_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define TIMESLICE_US 100 /* Execution time of single busy thread poll in us. */
+static uint64_t g_core_time_period;
+static uint64_t g_timeslice_tsc;
 
 struct sched_thread {
 	struct spdk_thread *thread;
 	struct spdk_poller *poller;
 	int active_percent;
+	uint64_t next_period_tsc;
+	uint64_t remaining_tsc;
 	struct spdk_jsonrpc_request *request;
 	TAILQ_ENTRY(sched_thread) link;
 };
@@ -99,12 +104,11 @@ thread_delete(struct sched_thread *sched_thread)
 	}
 }
 
-static __thread unsigned int seed = 0;
-
 static int
 poller_run(void *arg)
 {
 	struct sched_thread *sched_thread = arg;
+	uint64_t now;
 
 	if (spdk_unlikely(!g_is_running)) {
 		pthread_mutex_lock(&g_sched_list_mutex);
@@ -113,10 +117,17 @@ poller_run(void *arg)
 		return SPDK_POLLER_IDLE;
 	}
 
-	spdk_delay_us(1);
+	now = spdk_get_ticks();
 
-	if ((sched_thread->active_percent == 100) ||
-	    (sched_thread->active_percent != 0 && (rand_r(&seed) % 100) < sched_thread->active_percent)) {
+	/* Reset the timers once we go over single core time period */
+	if (sched_thread->next_period_tsc <= now) {
+		sched_thread->next_period_tsc = now + g_core_time_period;
+		sched_thread->remaining_tsc = (g_core_time_period / 100) * sched_thread->active_percent;
+	}
+
+	if (sched_thread->remaining_tsc > 0) {
+		spdk_delay_us(TIMESLICE_US);
+		sched_thread->remaining_tsc -= spdk_min(sched_thread->remaining_tsc, g_timeslice_tsc);
 		return SPDK_POLLER_BUSY;
 	}
 
@@ -184,6 +195,7 @@ rpc_scheduler_thread_create(struct spdk_jsonrpc_request *request,
 
 	sched_thread->request = request;
 	sched_thread->active_percent = req.active_percent;
+	sched_thread->next_period_tsc = 0;
 
 	spdk_thread_send_msg(sched_thread->thread, rpc_register_poller, sched_thread);
 
@@ -225,6 +237,8 @@ rpc_scheduler_thread_set_active_cb(void *arg)
 	pthread_mutex_lock(&g_sched_list_mutex);
 	TAILQ_FOREACH(sched_thread, &g_sched_threads, link) {
 		if (spdk_thread_get_id(sched_thread->thread) == thread_id) {
+			/* Reset next_period_tsc to force recalculation of remaining_tsc. */
+			sched_thread->next_period_tsc = 0;
 			sched_thread->active_percent = ctx->active_percent;
 			pthread_mutex_unlock(&g_sched_list_mutex);
 			spdk_jsonrpc_send_bool_response(ctx->request, true);
@@ -367,6 +381,11 @@ test_shutdown(void)
 static void
 test_start(void *arg1)
 {
+	/* Hardcode g_core_time_period as 100ms. */
+	g_core_time_period = spdk_get_ticks_hz() / 10;
+	/* Hardcode g_timeslice_tsc as 100us. */
+	g_timeslice_tsc = spdk_get_ticks_hz() / SPDK_SEC_TO_USEC * TIMESLICE_US;
+
 	SPDK_NOTICELOG("Scheduler test application started.\n");
 }
 
