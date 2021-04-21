@@ -75,6 +75,10 @@ function build_native_dpdk() {
 		dpdk_cflags+=" -Werror"
 	fi
 
+	if [[ $gcc_version -ge 10 ]]; then
+		dpdk_cflags+=" -Wno-stringop-overflow"
+	fi
+
 	# the drivers we use
 	# net/i40e driver is not really needed by us, but it's built as a workaround
 	# for DPDK issue: https://bugs.dpdk.org/show_bug.cgi?id=576
@@ -120,7 +124,6 @@ function build_native_dpdk() {
 
 	cd $external_dpdk_base_dir
 	if [ "$(uname -s)" = "Linux" ]; then
-		dpdk_cflags+=" -Wno-stringop-overflow"
 		# Fix for freeing device if not kernel driver configured.
 		# TODO: Remove once this is merged in upstream DPDK
 		if grep "20.08.0" $external_dpdk_base_dir/VERSION; then
