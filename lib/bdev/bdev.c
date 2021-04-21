@@ -1953,26 +1953,7 @@ bdev_queue_io_wait_with_cb(struct spdk_bdev_io *bdev_io, spdk_bdev_io_wait_cb cb
 }
 
 static bool
-bdev_io_type_can_split(uint8_t type)
-{
-	assert(type != SPDK_BDEV_IO_TYPE_INVALID);
-	assert(type < SPDK_BDEV_NUM_IO_TYPES);
-
-	/* Only split READ and WRITE I/O.  Theoretically other types of I/O like
-	 * UNMAP could be split, but these types of I/O are typically much larger
-	 * in size (sometimes the size of the entire block device), and the bdev
-	 * module can more efficiently split these types of I/O.  Plus those types
-	 * of I/O do not have a payload, which makes the splitting process simpler.
-	 */
-	if (type == SPDK_BDEV_IO_TYPE_READ || type == SPDK_BDEV_IO_TYPE_WRITE) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-static bool
-bdev_io_should_split(struct spdk_bdev_io *bdev_io)
+bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 {
 	uint32_t io_boundary = bdev_io->bdev->optimal_io_boundary;
 	uint32_t max_size = bdev_io->bdev->max_segment_size;
@@ -1981,10 +1962,6 @@ bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 	io_boundary = bdev_io->bdev->split_on_optimal_io_boundary ? io_boundary : 0;
 
 	if (spdk_likely(!io_boundary && !max_segs && !max_size)) {
-		return false;
-	}
-
-	if (!bdev_io_type_can_split(bdev_io->type)) {
 		return false;
 	}
 
@@ -2024,6 +2001,18 @@ bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 	return false;
 }
 
+static bool
+bdev_io_should_split(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return bdev_rw_should_split(bdev_io);
+	default:
+		return false;
+	}
+}
+
 static uint32_t
 _to_next_boundary(uint64_t offset, uint32_t boundary)
 {
@@ -2034,7 +2023,7 @@ static void
 bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
-_bdev_io_split(void *_bdev_io)
+_bdev_rw_split(void *_bdev_io)
 {
 	struct iovec *parent_iov, *iov;
 	struct spdk_bdev_io *bdev_io = _bdev_io;
@@ -2188,7 +2177,7 @@ _bdev_io_split(void *_bdev_io)
 			if (rc == -ENOMEM) {
 				if (bdev_io->u.bdev.split_outstanding == 0) {
 					/* No I/O is outstanding. Hence we should wait here. */
-					bdev_queue_io_wait_with_cb(bdev_io, _bdev_io_split);
+					bdev_queue_io_wait_with_cb(bdev_io, _bdev_rw_split);
 				}
 			} else {
 				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -2240,40 +2229,46 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 * Continue with the splitting process.  This function will complete the parent I/O if the
 	 * splitting is done.
 	 */
-	_bdev_io_split(parent_io);
+	_bdev_rw_split(parent_io);
 }
 
 static void
-bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success);
+bdev_rw_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success);
 
 static void
 bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	assert(bdev_io_type_can_split(bdev_io->type));
-
 	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
 	bdev_io->u.bdev.split_outstanding = 0;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	if (_is_buf_allocated(bdev_io->u.bdev.iovs)) {
-		_bdev_io_split(bdev_io);
-	} else {
-		assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
-		spdk_bdev_io_get_buf(bdev_io, bdev_io_split_get_buf_cb,
-				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		if (_is_buf_allocated(bdev_io->u.bdev.iovs)) {
+			_bdev_rw_split(bdev_io);
+		} else {
+			assert(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+			spdk_bdev_io_get_buf(bdev_io, bdev_rw_split_get_buf_cb,
+					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		}
+		break;
+	default:
+		assert(false);
+		break;
 	}
 }
 
 static void
-bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
+bdev_rw_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
 {
 	if (!success) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	_bdev_io_split(bdev_io);
+	_bdev_rw_split(bdev_io);
 }
 
 /* Explicitly mark this inline, since it's used as a function pointer and otherwise won't

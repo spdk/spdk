@@ -1021,6 +1021,7 @@ bdev_io_spans_split_test(void)
 	memset(&bdev, 0, sizeof(bdev));
 	bdev_io.u.bdev.iovs = iov;
 
+	bdev_io.type = SPDK_BDEV_IO_TYPE_READ;
 	bdev.optimal_io_boundary = 0;
 	bdev.max_segment_size = 0;
 	bdev.max_num_segments = 0;
