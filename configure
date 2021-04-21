@@ -678,27 +678,6 @@ if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 	fi
 fi
 
-if [[ "${CONFIG[ISAL]}" = "y" ]]; then
-	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
-		echo "ISA-L was not found; To install ISA-L run:"
-		echo "  git submodule update --init"
-		exit 1
-	fi
-
-	cd $rootdir/isa-l
-	ISAL_LOG=$rootdir/isa-l/spdk-isal.log
-	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
-		ISAL_OPTS=("--host=${CONFIG[CROSS_PREFIX]}")
-	else
-		ISAL_OPTS=()
-	fi
-	echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
-	./autogen.sh &> $ISAL_LOG
-	./configure CFLAGS="-fPIC -g -O2" "${ISAL_OPTS[@]}" --enable-shared=no >> $ISAL_LOG 2>&1
-	echo "done."
-	cd $rootdir
-fi
-
 if [[ "${CONFIG[PMDK]}" = "y" ]]; then
 	if ! echo -e '#include <libpmemblk.h>\nint main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lpmemblk - 2> /dev/null; then
@@ -823,6 +802,27 @@ if [ "${CONFIG[CET]}" = "y" ]; then
 		echo "Please install then re-run this script."
 		exit 1
 	fi
+fi
+
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
+		echo "ISA-L was not found; To install ISA-L run:"
+		echo "  git submodule update --init"
+		exit 1
+	fi
+
+	cd $rootdir/isa-l
+	ISAL_LOG=$rootdir/isa-l/spdk-isal.log
+	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
+		ISAL_OPTS=("--host=${CONFIG[CROSS_PREFIX]}")
+	else
+		ISAL_OPTS=()
+	fi
+	echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
+	./autogen.sh &> $ISAL_LOG
+	./configure CFLAGS="-fPIC -g -O2" "${ISAL_OPTS[@]}" --enable-shared=no >> $ISAL_LOG 2>&1
+	echo "done."
+	cd $rootdir
 fi
 
 # We are now ready to generate final configuration. But first do sanity
