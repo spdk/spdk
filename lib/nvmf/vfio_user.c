@@ -193,8 +193,13 @@ struct nvmf_vfio_user_endpoint {
 	TAILQ_ENTRY(nvmf_vfio_user_endpoint)	link;
 };
 
+struct nvmf_vfio_user_transport_opts {
+	bool					disable_mappable_bar0;
+};
+
 struct nvmf_vfio_user_transport {
 	struct spdk_nvmf_transport		transport;
+	struct nvmf_vfio_user_transport_opts    transport_opts;
 	pthread_mutex_t				lock;
 	TAILQ_HEAD(, nvmf_vfio_user_endpoint)	endpoints;
 
@@ -324,6 +329,14 @@ nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
+static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] = {
+	{
+		"disable-mappable-bar0",
+		offsetof(struct nvmf_vfio_user_transport, transport_opts.disable_mappable_bar0),
+		spdk_json_decode_bool, true
+	},
+};
+
 static struct spdk_nvmf_transport *
 nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 {
@@ -344,6 +357,18 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 
 	TAILQ_INIT(&vu_transport->endpoints);
 	TAILQ_INIT(&vu_transport->new_qps);
+
+	if (opts->transport_specific != NULL &&
+	    spdk_json_decode_object_relaxed(opts->transport_specific, vfio_user_transport_opts_decoder,
+					    SPDK_COUNTOF(vfio_user_transport_opts_decoder),
+					    vu_transport)) {
+		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
+		free(vu_transport);
+		return NULL;
+	}
+
+	SPDK_DEBUGLOG(nvmf_vfio, "vfio_user transport: disable_mappable_bar0=%d\n",
+		      vu_transport->transport_opts.disable_mappable_bar0);
 
 	return &vu_transport->transport;
 
@@ -1330,10 +1355,10 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 
 	if (pos >= NVMF_VFIO_USER_DOORBELLS_OFFSET) {
 		/*
-		 * XXX The fact that the doorbells can be memory mapped doesn't
-		 * mean thath the client (VFIO in QEMU) is obliged to memory
-		 * map them, it might still elect to access them via regular
-		 * read/write.
+		 * The fact that the doorbells can be memory mapped doesn't mean
+		 * that the client (VFIO in QEMU) is obliged to memory map them,
+		 * it might still elect to access them via regular read/write;
+		 * we might also have had disable_mappable_bar0 set.
 		 */
 		ret = handle_dbl_access(ctrlr, (uint32_t *)buf, count,
 					pos, is_write);
@@ -1442,7 +1467,8 @@ init_pci_config_space(vfu_pci_config_space_t *p)
 }
 
 static int
-vfio_user_dev_info_fill(struct nvmf_vfio_user_endpoint *endpoint)
+vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
+			struct nvmf_vfio_user_endpoint *endpoint)
 {
 	int ret;
 	ssize_t cap_offset;
@@ -1508,9 +1534,16 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_endpoint *endpoint)
 		return ret;
 	}
 
-	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR0_REGION_IDX, NVME_REG_BAR0_SIZE,
-			       access_bar0_fn, VFU_REGION_FLAG_RW | VFU_REGION_FLAG_MEM,
-			       sparse_mmap, 1, endpoint->fd);
+	if (vu_transport->transport_opts.disable_mappable_bar0) {
+		ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR0_REGION_IDX, NVME_REG_BAR0_SIZE,
+				       access_bar0_fn, VFU_REGION_FLAG_RW | VFU_REGION_FLAG_MEM,
+				       NULL, 0, -1);
+	} else {
+		ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR0_REGION_IDX, NVME_REG_BAR0_SIZE,
+				       access_bar0_fn, VFU_REGION_FLAG_RW | VFU_REGION_FLAG_MEM,
+				       sparse_mmap, 1, endpoint->fd);
+	}
+
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup bar 0\n", vfu_ctx);
 		return ret;
@@ -1711,7 +1744,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log,
 		      SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio") ? LOG_DEBUG : LOG_ERR);
 
-	err = vfio_user_dev_info_fill(endpoint);
+	err = vfio_user_dev_info_fill(vu_transport, endpoint);
 	if (err < 0) {
 		goto out;
 	}
@@ -2452,6 +2485,7 @@ nvmf_vfio_user_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->max_aq_depth =		NVMF_VFIO_USER_DEFAULT_AQ_DEPTH;
 	opts->num_shared_buffers =	NVMF_VFIO_USER_DEFAULT_NUM_SHARED_BUFFERS;
 	opts->buf_cache_size =		NVMF_VFIO_USER_DEFAULT_BUFFER_CACHE_SIZE;
+	opts->transport_specific =      NULL;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
