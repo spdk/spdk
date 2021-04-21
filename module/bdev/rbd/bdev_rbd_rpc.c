@@ -244,3 +244,92 @@ cleanup:
 	free_rpc_bdev_rbd_resize(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_resize", rpc_bdev_rbd_resize, SPDK_RPC_RUNTIME)
+
+static void
+free_rpc_register_cluster(struct cluster_register_info *req)
+{
+	free(req->name);
+	free(req->user_id);
+	bdev_rbd_free_config(req->config_param);
+	free(req->config_file);
+}
+
+static const struct spdk_json_object_decoder rpc_register_cluster_decoders[] = {
+	{"name", offsetof(struct cluster_register_info, name), spdk_json_decode_string, true},
+	{"user_id", offsetof(struct cluster_register_info, user_id), spdk_json_decode_string, true},
+	{"config_param", offsetof(struct cluster_register_info, config_param), bdev_rbd_decode_config, true},
+	{"config_file", offsetof(struct cluster_register_info, config_file), bdev_rbd_decode_config, true}
+};
+
+static void
+rpc_bdev_rbd_register_cluster(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct cluster_register_info req = {};
+	int rc = 0;
+	struct spdk_json_write_ctx *w;
+
+	if (spdk_json_decode_object(params, rpc_register_cluster_decoders,
+				    SPDK_COUNTOF(rpc_register_cluster_decoders),
+				    &req)) {
+		SPDK_DEBUGLOG(bdev_rbd, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = bdev_rbd_register_cluster(&req);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_string(w, req.name);
+	spdk_jsonrpc_end_result(request, w);
+cleanup:
+	free_rpc_register_cluster(&req);
+}
+SPDK_RPC_REGISTER("bdev_rbd_register_cluster", rpc_bdev_rbd_register_cluster, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_rbd_unregister_cluster {
+	char *name;
+};
+
+static void
+free_rpc_bdev_cluster_unregister(struct rpc_bdev_rbd_unregister_cluster *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_rbd_unregister_cluster_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_rbd_unregister_cluster, name), spdk_json_decode_string},
+};
+
+static void
+rpc_bdev_rbd_unregister_cluster(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct rpc_bdev_rbd_unregister_cluster req = {NULL};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_rbd_unregister_cluster_decoders,
+				    SPDK_COUNTOF(rpc_bdev_rbd_unregister_cluster_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = bdev_rbd_unregister_cluster(req.name);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+
+cleanup:
+	free_rpc_bdev_cluster_unregister(&req);
+}
+SPDK_RPC_REGISTER("bdev_rbd_unregister_cluster", rpc_bdev_rbd_unregister_cluster, SPDK_RPC_RUNTIME)

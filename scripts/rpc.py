@@ -629,6 +629,38 @@ if __name__ == "__main__":
     p.add_argument('name', help='Virtual zone bdev name')
     p.set_defaults(func=bdev_zone_block_delete)
 
+    def bdev_rbd_register_cluster(args):
+        config_param = None
+        if args.config_param:
+            config_param = {}
+            for entry in args.config:
+                parts = entry.split('=', 1)
+                if len(parts) != 2:
+                    raise Exception('--config %s not in key=value form' % entry)
+                config_param[parts[0]] = parts[1]
+        print_json(rpc.bdev.bdev_rbd_register_cluster(args.client,
+                                                      name=args.name,
+                                                      user=args.user,
+                                                      config_param=config_param,
+                                                      config_file=args.config_file))
+
+    p = subparsers.add_parser('bdev_rbd_register_cluster',
+                              help='Add a Rados cluster with ceph rbd backend')
+    p.add_argument('name', help="Name of the Rados cluster only known to rbd bdev")
+    p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)", required=False)
+    p.add_argument('--config_param', action='append', metavar='key=value',
+                   help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
+    p.add_argument('--config_file', help="The file path of the Rados configuration file", required=False)
+    p.set_defaults(func=bdev_rbd_register_cluster)
+
+    def bdev_rbd_unregister_cluster(args):
+        rpc.bdev.bdev_rbd_unregister_cluster(args.client, name=args.name)
+
+    p = subparsers.add_parser('bdev_rbd_unregister_cluster',
+                              help='Unregister a Rados cluster object')
+    p.add_argument('name', help='Name of the Rados Cluster only known to rbd bdev')
+    p.set_defaults(func=bdev_rbd_unregister_cluster)
+
     def bdev_rbd_create(args):
         config = None
         if args.config:

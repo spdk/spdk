@@ -38,6 +38,13 @@
 
 #include "spdk/bdev.h"
 
+struct cluster_register_info {
+	char *name;
+	char *user_id;
+	char **config_param;
+	char *config_file;
+};
+
 void bdev_rbd_free_config(char **config);
 char **bdev_rbd_dup_config(const char *const *config);
 
@@ -64,5 +71,19 @@ void bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn,
  * \param new_size_in_mb The new size in MiB for this bdev.
  */
 int bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb);
+
+/**
+ * Create a Rados cluster.
+ *
+ * \param info the info to register the Rados cluster object
+ */
+int bdev_rbd_register_cluster(struct cluster_register_info *info);
+
+/**
+ * Delete a registered cluster.
+ *
+ * \param name the name of the cluster to be deleted.
+ */
+int bdev_rbd_unregister_cluster(const char *name);
 
 #endif /* SPDK_BDEV_RBD_H */

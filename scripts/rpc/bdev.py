@@ -659,6 +659,40 @@ def bdev_zone_block_delete(client, name):
     return client.call('bdev_zone_block_delete', params)
 
 
+def bdev_rbd_register_cluster(client, name, user=None, config_param=None, config_file=None):
+    """Create a Rados Cluster object of the Ceph RBD backend.
+
+    Args:
+        name: name of Rados Cluster
+        user: Ceph user name (optional)
+        config_param: map of config keys to values (optional)
+        config_file: file path of Ceph configuration file (optional)
+
+    Returns:
+        Name of registered Rados Cluster object.
+    """
+    params = {'name': name}
+
+    if user is not None:
+        params['user_id'] = user
+    if config_param is not None:
+        params['config_param'] = config_param
+    if config_file is not None:
+        params['config_file'] = config_file
+
+    return client.call('bdev_rbd_register_cluster', params)
+
+
+def bdev_rbd_unregister_cluster(client, name):
+    """Remove Rados cluster object from the system.
+
+    Args:
+        name: name of Rados cluster object to unregister
+    """
+    params = {'name': name}
+    return client.call('bdev_rbd_unregister_cluster', params)
+
+
 @deprecated_alias('construct_rbd_bdev')
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None):
     """Create a Ceph RBD block device.

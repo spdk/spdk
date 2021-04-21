@@ -86,6 +86,32 @@ struct bdev_rbd_io {
 	size_t	total_len;
 };
 
+struct bdev_rbd_cluster {
+	char *name;
+	char *user_id;
+	char **config_param;
+	char *config_file;
+	rados_t cluster;
+	uint32_t ref;
+	STAILQ_ENTRY(bdev_rbd_cluster) link;
+};
+
+static STAILQ_HEAD(, bdev_rbd_cluster) g_map_bdev_rbd_cluster = STAILQ_HEAD_INITIALIZER(
+			g_map_bdev_rbd_cluster);
+static pthread_mutex_t g_map_bdev_rbd_cluster_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void
+bdev_rbd_cluster_free(struct bdev_rbd_cluster *entry)
+{
+	assert(entry != NULL);
+
+	bdev_rbd_free_config(entry->config_param);
+	free(entry->config_file);
+	free(entry->user_id);
+	free(entry->name);
+	free(entry);
+}
+
 static void
 bdev_rbd_free(struct bdev_rbd *rbd)
 {
@@ -649,6 +675,167 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.dump_info_json		= bdev_rbd_dump_info_json,
 	.write_config_json	= bdev_rbd_write_config_json,
 };
+
+static int
+rbd_register_cluster(const char *name, const char *user_id, const char *const *config_param,
+		     const char *config_file)
+{
+	struct bdev_rbd_cluster *entry;
+	int rc;
+
+	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
+	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
+		if (strncmp(name, entry->name, strlen(entry->name)) == 0) {
+			SPDK_ERRLOG("Cluster name=%s already exists\n", name);
+			pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+			return -1;
+		}
+	}
+
+	entry = calloc(1, sizeof(*entry));
+	if (!entry) {
+		SPDK_ERRLOG("Cannot allocate an entry for name=%s\n", name);
+		pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+		return -1;
+	}
+
+	entry->name = strdup(name);
+	if (entry->name == NULL) {
+		SPDK_ERRLOG("Failed to save the name =%s on entry =%p\n", name, entry);
+		goto err_handle;
+	}
+
+	if (user_id) {
+		entry->user_id = strdup(user_id);
+		if (entry->user_id == NULL) {
+			SPDK_ERRLOG("Failed to save the str =%s on entry =%p\n", user_id, entry);
+			goto err_handle;
+		}
+	}
+
+	/* The first priority is the config_param, then we use the config_file */
+	if (config_param) {
+		entry->config_param = bdev_rbd_dup_config(config_param);
+		if (entry->config_param == NULL) {
+			SPDK_ERRLOG("Failed to save the config_param=%p on entry = %p\n", config_param, entry);
+			goto err_handle;
+		}
+	} else if (config_file) {
+		entry->config_file = strdup(config_file);
+		if (entry->config_file == NULL) {
+			SPDK_ERRLOG("Failed to save the config_file=%s on entry = %p\n", config_file, entry);
+			goto err_handle;
+		}
+	}
+
+	rc = rados_create(&entry->cluster, user_id);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to create rados_t struct\n");
+		goto err_handle;
+	}
+
+	if (config_param) {
+		const char *const *config_entry = config_param;
+		while (*config_entry) {
+			rc = rados_conf_set(entry->cluster, config_entry[0], config_entry[1]);
+			if (rc < 0) {
+				SPDK_ERRLOG("Failed to set %s = %s\n", config_entry[0], config_entry[1]);
+				rados_shutdown(entry->cluster);
+				goto err_handle;
+			}
+			config_entry += 2;
+		}
+	} else {
+		rc = rados_conf_read_file(entry->cluster, entry->config_file);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to read conf file\n");
+			rados_shutdown(entry->cluster);
+			goto err_handle;
+		}
+	}
+
+	rc = rados_connect(entry->cluster);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to connect to rbd_pool on cluster=%p\n", entry->cluster);
+		rados_shutdown(entry->cluster);
+		goto err_handle;
+	}
+
+	STAILQ_INSERT_TAIL(&g_map_bdev_rbd_cluster, entry, link);
+	pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+
+	return 0;
+
+err_handle:
+	bdev_rbd_cluster_free(entry);
+	pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+	return -1;
+}
+
+int
+bdev_rbd_unregister_cluster(const char *name)
+{
+	struct bdev_rbd_cluster *entry;
+	int rc = 0;
+
+	if (name == NULL) {
+		return -1;
+	}
+
+	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
+	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
+		if (strncmp(name, entry->name, strlen(entry->name)) == 0) {
+			if (entry->ref == 0) {
+				STAILQ_REMOVE(&g_map_bdev_rbd_cluster, entry, bdev_rbd_cluster, link);
+				rados_shutdown(entry->cluster);
+				bdev_rbd_cluster_free(entry);
+			} else {
+				SPDK_ERRLOG("Cluster with name=%p is still used and we cannot delete it\n",
+					    entry->name);
+				rc = -1;
+			}
+
+			pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+			return rc;
+		}
+	}
+
+	pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+
+	SPDK_ERRLOG("Could not find the cluster name =%p\n", name);
+
+	return -1;
+}
+
+static void *
+_bdev_rbd_register_cluster(void *arg)
+{
+	struct cluster_register_info *info = arg;
+	void *ret = arg;
+	int rc;
+
+	rc = rbd_register_cluster((const char *)info->name, (const char *)info->user_id,
+				  (const char *const *)info->config_param, (const char *)info->config_file);
+	if (rc) {
+		ret = NULL;
+	}
+
+	return ret;
+}
+
+int
+bdev_rbd_register_cluster(struct cluster_register_info *info)
+{
+	assert(info != NULL);
+
+	/* Rados cluster info need to be created in non SPDK-thread to avoid CPU
+	 * resource contention */
+	if (spdk_call_unaffinitized(_bdev_rbd_register_cluster, info) == NULL) {
+		return -1;
+	}
+
+	return 0;
+}
 
 int
 bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,

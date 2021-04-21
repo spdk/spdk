@@ -15,6 +15,12 @@ Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the cont
 
 Added a new function `spdk_nvme_ns_cmd_copy` to submit a Simple Copy Command to a Namespace.
 
+### rpc
+
+New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create
+and delete the rados object cluster, then users can choose the cluster to create related rbd
+device.
+
 ## v21.04:
 
 ### accel

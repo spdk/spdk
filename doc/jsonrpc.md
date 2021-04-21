@@ -3303,6 +3303,108 @@ Example response:
 }
 ~~~
 
+## bdev_rbd_register_cluster {#rpc_bdev_rbd_register_cluster}
+
+This method is available only if SPDK was build with Ceph RBD support.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Registerd Rados cluster object name
+user_id                 | Optional | string      | Ceph ID (i.e. admin, not client.admin)
+config_param            | Optional | string map  | Explicit librados configuration
+config_file             | Optional | string      | File path of libraodos configuration file
+
+This RPC registers a Rados Cluster object handle which is only known
+to rbd module, it uses user_id + config_param or user_id + config_file to
+identify a Rados cluster object.
+
+If no config_param is specified, Ceph configuration files must exist with
+all relevant settings for accessing the Ceph cluster. If a config map is
+passed, the configuration files are ignored and instead all key/value
+pairs are passed to rados_conf_set to configure cluster access. In
+practice, "mon_host" (= list of monitor address+port) and "key" (= the
+secret key stored in Ceph keyrings) are enough.
+
+When accessing the Ceph cluster as some user other than "admin" (the
+default), the "user_id" has to be set.
+
+### Result
+
+Name of newly created Rados cluster object.
+
+### Example
+
+Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
+
+~~
+{
+  "params": {
+    "name": "rbd_cluster",
+    "config_param": {
+      "mon_host": "192.168.7.1:6789,192.168.7.2:6789",
+      "key": "AQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ==",
+    }
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_rbd_register_cluster",
+  "id": 1
+}
+~~
+
+Example response:
+
+~~
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "rbd_cluster"
+}
+~~
+
+## bdev_rbd_unregister_cluster {#rpc_bdev_rbd_unregister_cluster}
+
+This method is available only if SPDK was build with Ceph RBD support.
+If there is still rbd bdev using this cluster, the unregisteration operation
+will fail.
+
+### Result
+
+`true` if Rados cluster object with provided name was deleted or `false` otherwise.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -------------------------
+name                    | Required | string      | Rados cluster object name
+
+### Example
+
+Example request:
+
+~~
+{
+  "params": {
+    "name": "rbd_cluster"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_rbd_unregister_cluster",
+  "id": 1
+}
+~~
+
+Example response:
+
+~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~
+
 ## bdev_rbd_create {#rpc_bdev_rbd_create}
 
 Create @ref bdev_config_rbd bdev
