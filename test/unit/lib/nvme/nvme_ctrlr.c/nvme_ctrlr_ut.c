@@ -254,13 +254,15 @@ fake_cpl_sc(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 	cb_fn(cb_arg, &fake_cpl);
 }
 
+static uint32_t g_ut_cdw11;
+
 int
 spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 				uint32_t cdw11, uint32_t cdw12, void *payload, uint32_t payload_size,
 				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	CU_ASSERT(0);
-	return -1;
+	g_ut_cdw11 = cdw11;
+	return 0;
 }
 
 int
@@ -2421,6 +2423,57 @@ test_nvme_cmd_map_sgls(void)
 	spdk_free(sgls);
 }
 
+static void
+test_nvme_ctrlr_set_arbitration_feature(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+
+	ctrlr.opts.arbitration_burst = 6;
+	ctrlr.flags |= SPDK_NVME_CTRLR_WRR_SUPPORTED;
+	ctrlr.opts.low_priority_weight = 1;
+	ctrlr.opts.medium_priority_weight = 2;
+	ctrlr.opts.high_priority_weight = 3;
+	/* g_ut_cdw11 used to record value command feature set. */
+	g_ut_cdw11 = 0;
+
+	/* arbitration_burst count available. */
+	nvme_ctrlr_set_arbitration_feature(&ctrlr);
+	CU_ASSERT((uint8_t)g_ut_cdw11 == 6);
+	CU_ASSERT((uint8_t)(g_ut_cdw11 >> 8) == 1);
+	CU_ASSERT((uint8_t)(g_ut_cdw11 >> 16) == 2);
+	CU_ASSERT((uint8_t)(g_ut_cdw11 >> 24) == 3);
+
+	/* arbitration_burst unavailable. */
+	g_ut_cdw11 = 0;
+	ctrlr.opts.arbitration_burst = 8;
+
+	nvme_ctrlr_set_arbitration_feature(&ctrlr);
+	CU_ASSERT(g_ut_cdw11 == 0);
+}
+
+static void
+test_nvme_ctrlr_set_state(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	MOCK_SET(spdk_get_ticks, 0);
+
+	nvme_ctrlr_set_state(&ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, 1000);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT);
+	CU_ASSERT(ctrlr.state_timeout_tsc == 1000000);
+
+	nvme_ctrlr_set_state(&ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT);
+	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+
+	/* Time out ticks causes integer overflow. */
+	MOCK_SET(spdk_get_ticks, UINT64_MAX);
+
+	nvme_ctrlr_set_state(&ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, 1000);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT);
+	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+	MOCK_CLEAR(spdk_get_ticks);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2463,6 +2516,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_add_remove_process);
 	CU_ADD_TEST(suite, test_nvme_cmd_map_prps);
 	CU_ADD_TEST(suite, test_nvme_cmd_map_sgls);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_set_arbitration_feature);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_set_state);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
