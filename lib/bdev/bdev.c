@@ -84,6 +84,11 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 
 #define SPDK_BDEV_POOL_ALIGNMENT 512
 
+/* The maximum number of children requests for a UNMAP command when splitting
+ * into children requests at a time.
+ */
+#define SPDK_BDEV_MAX_CHILDREN_UNMAP_REQS (8)
+
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
 				    };
@@ -2043,18 +2048,29 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void
 _bdev_rw_split(void *_bdev_io);
 
+static void
+bdev_unmap_split(struct spdk_bdev_io *bdev_io);
+
+static void
+_bdev_unmap_split(void *_bdev_io)
+{
+	return bdev_unmap_split((struct spdk_bdev_io *)_bdev_io);
+}
+
 static int
 bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt, void *md_buf,
 		     uint64_t num_blocks, uint64_t *offset, uint64_t *remaining)
 {
 	int rc;
 	uint64_t current_offset, current_remaining;
+	spdk_bdev_io_wait_cb io_wait_fn;
 
 	current_offset = *offset;
 	current_remaining = *remaining;
 
 	bdev_io->u.bdev.split_outstanding++;
 
+	io_wait_fn = _bdev_rw_split;
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		rc = bdev_readv_blocks_with_md(bdev_io->internal.desc,
@@ -2069,6 +2085,13 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 						iov, iovcnt, md_buf, current_offset,
 						num_blocks,
 						bdev_io_split_done, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		io_wait_fn = _bdev_unmap_split;
+		rc = spdk_bdev_unmap_blocks(bdev_io->internal.desc,
+					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					    current_offset, num_blocks,
+					    bdev_io_split_done, bdev_io);
 		break;
 	default:
 		assert(false);
@@ -2088,7 +2111,7 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 		if (rc == -ENOMEM) {
 			if (bdev_io->u.bdev.split_outstanding == 0) {
 				/* No I/O is outstanding. Hence we should wait here. */
-				bdev_queue_io_wait_with_cb(bdev_io, _bdev_rw_split);
+				bdev_queue_io_wait_with_cb(bdev_io, io_wait_fn);
 			}
 		} else {
 			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -2242,6 +2265,30 @@ _bdev_rw_split(void *_bdev_io)
 }
 
 static void
+bdev_unmap_split(struct spdk_bdev_io *bdev_io)
+{
+	uint64_t offset, unmap_blocks, remaining, max_unmap_blocks;
+	uint32_t num_children_reqs = 0;
+	int rc;
+
+	offset = bdev_io->u.bdev.split_current_offset_blocks;
+	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
+	max_unmap_blocks = bdev_io->bdev->max_unmap * bdev_io->bdev->max_unmap_segments;
+
+	while (remaining && (num_children_reqs < SPDK_BDEV_MAX_CHILDREN_UNMAP_REQS)) {
+		unmap_blocks = spdk_min(remaining, max_unmap_blocks);
+
+		rc = bdev_io_split_submit(bdev_io, NULL, 0, NULL, unmap_blocks,
+					  &offset, &remaining);
+		if (spdk_likely(rc == 0)) {
+			num_children_reqs++;
+		} else {
+			return;
+		}
+	}
+}
+
+static void
 bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
@@ -2276,7 +2323,18 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 * Continue with the splitting process.  This function will complete the parent I/O if the
 	 * splitting is done.
 	 */
-	_bdev_rw_split(parent_io);
+	switch (parent_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		_bdev_rw_split(parent_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		bdev_unmap_split(parent_io);
+		break;
+	default:
+		assert(false);
+		break;
+	}
 }
 
 static void
@@ -2300,6 +2358,9 @@ bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 			spdk_bdev_io_get_buf(bdev_io, bdev_rw_split_get_buf_cb,
 					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		}
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		bdev_unmap_split(bdev_io);
 		break;
 	default:
 		assert(false);
