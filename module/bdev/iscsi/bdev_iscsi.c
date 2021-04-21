@@ -64,6 +64,13 @@ struct bdev_iscsi_lun;
  */
 #define BDEV_ISCSI_DEFAULT_MAX_UNMAP_LBA_COUNT (32768)
 
+/* MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT:
+ * indicates the maximum number of UNMAP block descriptors that
+ * shall be contained in the parameter data transferred to the
+ * device server for an UNMAP command.
+ */
+#define BDEV_ISCSI_MAX_UNMAP_BLOCK_DESCS_COUNT (1)
+
 static int bdev_iscsi_initialize(void);
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
 			g_iscsi_conn_req);
@@ -90,6 +97,7 @@ struct bdev_iscsi_lun {
 	struct spdk_poller		*no_main_ch_poller;
 	struct spdk_thread		*no_main_ch_poller_td;
 	bool				unmap_supported;
+	uint32_t			max_unmap;
 	struct spdk_poller		*poller;
 };
 
@@ -319,17 +327,41 @@ bdev_iscsi_unmap(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 		 uint64_t lba, uint64_t num_blocks)
 {
 	struct scsi_task *task;
-	struct unmap_list list[1];
+	struct unmap_list list[BDEV_ISCSI_MAX_UNMAP_BLOCK_DESCS_COUNT] = {};
+	struct unmap_list *entry;
+	uint32_t num_unmap_list;
+	uint64_t offset, remaining, unmap_blocks;
 
-	list[0].lba = lba;
-	list[0].num = num_blocks;
-	task = iscsi_unmap_task(lun->context, 0, 0, 0, list, 1,
+	num_unmap_list = spdk_divide_round_up(num_blocks, lun->max_unmap);
+	if (num_unmap_list > BDEV_ISCSI_MAX_UNMAP_BLOCK_DESCS_COUNT) {
+		SPDK_ERRLOG("Too many unmap entries\n");
+		goto failed;
+	}
+
+	remaining = num_blocks;
+	offset = lba;
+	num_unmap_list = 0;
+	entry = &list[0];
+
+	do {
+		unmap_blocks = spdk_min(remaining, lun->max_unmap);
+		entry->lba = offset;
+		entry->num = unmap_blocks;
+		num_unmap_list++;
+		remaining -= unmap_blocks;
+		offset += unmap_blocks;
+		entry++;
+	} while (remaining > 0);
+
+	task = iscsi_unmap_task(lun->context, 0, 0, 0, list, num_unmap_list,
 				bdev_iscsi_command_cb, iscsi_io);
-	if (task == NULL) {
-		SPDK_ERRLOG("failed to get unmap_task\n");
-		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
+	if (task != NULL) {
 		return;
 	}
+	SPDK_ERRLOG("failed to get unmap_task\n");
+
+failed:
+	bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static void
@@ -655,6 +687,11 @@ create_iscsi_lun(struct bdev_iscsi_conn_req *req, uint64_t num_blocks,
 	lun->bdev.blockcnt = num_blocks;
 	lun->bdev.ctxt = lun;
 	lun->unmap_supported = req->unmap_supported;
+	if (lun->unmap_supported) {
+		lun->max_unmap = req->max_unmap;
+		lun->bdev.max_unmap = req->max_unmap;
+		lun->bdev.max_unmap_segments = BDEV_ISCSI_MAX_UNMAP_BLOCK_DESCS_COUNT;
+	}
 
 	lun->bdev.fn_table = &iscsi_fn_table;
 
