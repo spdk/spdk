@@ -785,6 +785,11 @@ if [[ "${CONFIG[URING]}" = "y" ]]; then
 			echo "${CONFIG[URING_PATH]}: directory not found"
 			exit 1
 		fi
+	elif ! echo -e '#include <liburing.h>\nint main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -luring - 2> /dev/null; then
+		echo "--with-uring requires liburing."
+		echo "Please build and install then re-run this script."
+		exit 1
 	fi
 fi
 
