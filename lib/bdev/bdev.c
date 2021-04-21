@@ -2002,12 +2002,30 @@ bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 }
 
 static bool
+bdev_unmap_should_split(struct spdk_bdev_io *bdev_io)
+{
+	uint32_t num_unmap_segments;
+
+	if (!bdev_io->bdev->max_unmap || !bdev_io->bdev->max_unmap_segments) {
+		return false;
+	}
+	num_unmap_segments = spdk_divide_round_up(bdev_io->u.bdev.num_blocks, bdev_io->bdev->max_unmap);
+	if (num_unmap_segments > bdev_io->bdev->max_unmap_segments) {
+		return true;
+	}
+
+	return false;
+}
+
+static bool
 bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return bdev_rw_should_split(bdev_io);
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return bdev_unmap_should_split(bdev_io);
 	default:
 		return false;
 	}
