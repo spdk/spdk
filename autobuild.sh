@@ -50,7 +50,10 @@ function ocf_precompile() {
 function build_native_dpdk() {
 	local external_dpdk_dir
 	local external_dpdk_base_dir
+	local gcc_version
 
+	gcc_version=$(gcc -dumpversion)
+	gcc_version=${gcc_version//./}
 	external_dpdk_dir="$SPDK_RUN_EXTERNAL_DPDK"
 	external_dpdk_base_dir="$(dirname $external_dpdk_dir)"
 
@@ -64,8 +67,12 @@ function build_native_dpdk() {
 	git clone --branch $SPDK_TEST_NATIVE_DPDK --depth 1 http://dpdk.org/git/dpdk "$external_dpdk_base_dir"
 	git -C "$external_dpdk_base_dir" log --oneline -n 5
 
-	dpdk_cflags="-fPIC -g -Werror -fcommon"
+	dpdk_cflags="-fPIC -g -fcommon"
 	dpdk_ldflags=""
+
+	if [[ $gcc_version -ge 5 ]]; then
+		dpdk_cflags+=" -Werror"
+	fi
 
 	# the drivers we use
 	# net/i40e driver is not really needed by us, but it's built as a workaround
