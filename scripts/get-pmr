@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # We simply check if BAR2 is present as that's where PMR or CMB is
 # meant to be located under qemu. If found, print some stats then exit.
+shopt -s nullglob
 
 [[ $(uname -s) == Linux ]] || exit 0
 # Use MSR instead?
 [[ $(< /sys/class/dmi/id/chassis_vendor) == QEMU ]] || exit 0
 
-get_bar2() {
-	echo "0x$(setpci -s "$1" 0x18.L)"
+get_bar() {
+	echo "0x$(setpci -s "$1" "$2.L")"
 }
 
 get_size() {
@@ -22,29 +23,57 @@ get_size() {
 			return 0
 		fi
 	done < /proc/iomem
-	echo "unknown"
+	echo "unknown/unassigned"
 }
 
 info() {
-	local bar=$1
+	local dev=$1
 
 	local pref loc
+
+	local base_addr2
+	local base_addr4
+
+	local bar local bar2 bar3 bar4 bar5
+	local bar_type2
 
 	pref[0]=non-prefetchable
 	pref[1]=prefetchable
 
-	loc[0]=32-bit
-	loc[1]="<1MiB"
-	loc[2]=64-bit
+	print_info() {
+		local bar=$1 base_addr=$2 bar_type=$3
 
-	echo "${loc[(bar >> 1) & 0x3]}:${pref[bar & 1 << 3 ? 1 : 0]}:$(get_size $((bar & ~0xf)))"
+		printf '%s:%s:%s:%s:%s:%s\n' \
+			"${nvme##*/}" \
+			"$dev" \
+			"64-bit" \
+			"${pref[bar & 1 << 3 ? 1 : 0]}" \
+			"$(get_size "$base_addr")" \
+			"$bar_type"
+	}
+
+	bar2=$(get_bar "$dev" 0x18)
+	bar3=$(get_bar "$dev" 0x1c)
+	bar4=$(get_bar "$dev" 0x20)
+	bar5=$(get_bar "$dev" 0x24)
+
+	# QEMU uses 64-bit BARs
+	if ((bar2 & 1 << 2)); then
+		bar_type2=pmr
+		if [[ -e $nvme/cmb ]]; then
+			bar_type2=cmb
+		fi
+		base_addr2=$(((bar2 & ~0xf) + (bar3 << 32)))
+		print_info "$bar2" "$base_addr2" "$bar_type2"
+	fi
+	# QEMU uses 64-bit BARs
+	if ((bar4 & 1 << 2)); then
+		base_addr4=$(((bar4 & ~0xf) + (bar5 << 32)))
+		print_info "$bar4" "$base_addr4" pmr
+	fi
 }
 
 for nvme in /sys/class/nvme/nvme*; do
 	pci=$(readlink -f "$nvme/device") pci=${pci##*/}
-	bar2=$(get_bar2 "$pci") || continue
-	((bar2 != 0x0)) || continue
-	bar=pmr
-	[[ -e $nvme/cmb ]] && bar=cmb
-	echo "${nvme##*/}:$pci:$(info "$bar2"):$bar"
+	info "$pci"
 done
