@@ -925,6 +925,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	uint32_t				flags;
 	char					uuid_str[SPDK_UUID_STRING_LEN];
 	uint32_t				blocksize;
+	enum spdk_nvme_dealloc_logical_block_read_value	dlfeat_read_value;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	nsdata = spdk_nvme_ns_get_data(ns);
@@ -947,9 +948,10 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	       (flags & SPDK_NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Deallocated/Unwritten Error:           %s\n",
 	       nsdata->nsfeat.dealloc_or_unwritten_error ? "Supported" : "Not Supported");
+	dlfeat_read_value = spdk_nvme_ns_get_dealloc_logical_block_read_value(ns);
 	printf("Deallocated Read Value:                %s\n",
-	       nsdata->dlfeat.bits.read_value == SPDK_NVME_DEALLOC_READ_00 ? "All 0x00" :
-	       nsdata->dlfeat.bits.read_value == SPDK_NVME_DEALLOC_READ_FF ? "All 0xFF" :
+	       dlfeat_read_value == SPDK_NVME_DEALLOC_READ_00 ? "All 0x00" :
+	       dlfeat_read_value == SPDK_NVME_DEALLOC_READ_FF ? "All 0xFF" :
 	       "Unknown");
 	printf("Deallocate in Write Zeroes:            %s\n",
 	       nsdata->dlfeat.bits.write_zero_deallocate ? "Supported" : "Not Supported");
