@@ -2,26 +2,11 @@
 
 ## v21.04: (Upcoming Release)
 
+### accel
 
-### virtio
-
-Add the bdev_virtio_blk_set_hotplug rpc for the virtio blk pci device.
-
-### ocf
-
-Updated OCF submodule to v20.12.2
-
-### nvme
-
-Added an accelerated table pointer in spdk_nvme_poll_group
-which can be used provide the accelerated functions by users with
-hardware engine, such as crc32c accelerated function.
-
-Added `spdk_nvme_map_cmd` API to map the NVMe command with SGL cases.
-
-### raid
-
-For `bdev_raid_create` RPC, the deprecated parameter `strip_size` was removed.
+Two new accelerated crc32 functions `spdk_accel_submit_crc32cv` and
+`spdk_accel_batch_prep_crc32cv` are added in order to provide the
+chained accelerated CRC32 computation support.
 
 ### bdev
 
@@ -38,7 +23,7 @@ Removed the `spdk_bdev_create_bs_dev_from_desc` and `spdk_bdev_create_bs_dev` AP
 
 ### env
 
-Added spdk_pci_device_allow API to allow applications to add PCI addresses to
+Added `spdk_pci_device_allow` API to allow applications to add PCI addresses to
 the allowed list after the application has started.
 
 Removed the `pci_whitelist`, `pci_blacklist` and `master_core` members of struct `spdk_env_opts`.
@@ -47,106 +32,6 @@ Removed the `pci_whitelist`, `pci_blacklist` and `master_core` members of struct
 
 Removed the `config_file`, `max_delay_us`, `pci_whitelist`
 and `pci_blacklist` members of struct `spdk_app_opts`.
-
-### thread
-
-Added `spdk_thread_set_interrupt_mode` function in order to set present spdk_thead into
-interrupt mode or back to poll mode. It is valid only when thread interrupt facility is
-enabled by spdk_interrupt_mode_enable().
-
-Added `spdk_poller_register_interrupt` function to mark that the poller is capable of
-entering interrupt mode. Callback function will be called when the poller must transition
-into or out of interrupt mode.
-
-### iscsi
-
-A security vulnerability has been identified and fixed in the SPDK iSCSI target.
-A TEXT PDU with no data, but CONTINUE flag set, would result in a NULL pointer dereference
-and crash the SPDK iSCSI target process. All users of the SPDK iSCSI target
-are recommended to update. All SPDK versions <= v21.01 are affected.
-
-### accel
-
-Two new accelerated crc32 functions 'spdk_accel_submit_crc32cv' and
-'spdk_accel_batch_prep_crc32cv' are added in order to provide the
-chained accelerated CRC32 computation support.
-
-### net
-
-The net library is deprecated and will be removed in the 21.07 release.
-
-### nvme
-
-Added new functions `spdk_nvme_ctrlr_get_pmrsz`, `spdk_nvme_ctrlr_enable_pmr`,
-`spdk_nvme_ctrlr_disable_pmr`, `spdk_nvme_ctrlr_map_pmr` and `spdk_nvme_ctrlr_unmap_pmr`.
-
-Added NVMe transport operations to enable, disable, map and unmap the PMR.
-
-Added `spdk_nvme_qpair_get_optimal_poll_group` function and `qpair_get_optimal_poll_group`
-function pointer in spdk_nvmf_transport_ops structure in order to add the qpair to the most
-suitable polling group.
-
-Add OPTPERF and namespace optimal performance fields to nvme_spec.h.
-
-Added spdk_nvme_set_hotplug_filter API to allow applications to choose which
-hot-inserted SSDs should be probed. This is useful for use cases where multiple
-independent SPDK processes are running on one node.  The filter function can
-then be implemented in these processes to decide which SSDs to probe based on
-the new SSD's PCI address.
-
-New functions `spdk_nvme_poll_group_get_stats` and `spdk_nvme_poll_group_free_stats`
-added. These functions allow to get transport statistics per NVME poll group.
-
-### nvmf
-
-Removed the `spdk_nvmf_tgt_listen` and `spdk_nvmf_subsystem_add_ns` API.
-
-Added new APIs:
-- `spdk_nvmf_poll_group_dump_stat` (function in `nvmf.h`).
-- `poll_group_dump_stat` (transport op in `nvmf_transport.h`).
-
-The following APIs have been deprecated and will be removed in a future release:
-- `spdk_nvmf_poll_group_get_stat` (function in `nvmf.h`),
-- `spdk_nvmf_transport_poll_group_get_stat` (function in `nvmf.h`),
-- `spdk_nvmf_transport_poll_group_free_stat`(function in `nvmf.h`),
-- `spdk_nvmf_rdma_device_stat ` (struct in `nvmf.h`),
-- `spdk_nvmf_transport_poll_group_stat` (struct in `nvmf.h`),
-- `poll_group_get_stat` (transport op in `nvmf_transport.h`),
-- `poll_group_free_stat` (transport op in `nvmf_transport.h`).
-
-See header files for details.
-
-The `trtype` field in JSON returned by `nvmf_get_stats` RPC contains now the name of the transport,
-which is the same as the type for defined transports and more informative for a custom transport.
-
-### opal
-
-Removed the `spdk_opal_supported` API.
-
-### sock
-
-The type of enable_placement_id in struct spdk_sock_impl_opts is changed from
-bool to int. We can use RPC to configure different value of enable_placement_id.
-Then we can leverage SO_INCOMING_CPU to get placement_id, which aims to utilize
-CPU cache locality, enabled by setting enable_placement_id=2.
-
-### thread
-
-A new API `spdk_io_channel_get_io_device` was added to get the io_device for the specified
-I/O channel.
-
-### rpc
-
-New RPC `bdev_nvme_get_transport_statistics` was added, it allows to get transport statistics
-of nvme poll groups.
-
-### rpm
-
-Added support for new RPM spec, rpmbuild/spdk.spec, which can be used for packaging the
-SPDK. The pkg/spdk.spec is considered to be deprecated and scheduled for removal. See
-[RPM documentation](https://spdk.io/doc/rpm.html) for more details.
-
-## v21.01:
 
 ### idxd
 
@@ -162,6 +47,120 @@ as well.
 
 The API `spdk_idxd_put_channel` now returns the rebalance state for the
 underlying device.
+
+### iscsi
+
+A security vulnerability has been identified and fixed in the SPDK iSCSI target.
+A TEXT PDU with no data, but CONTINUE flag set, would result in a NULL pointer dereference
+and crash the SPDK iSCSI target process. All users of the SPDK iSCSI target
+are recommended to update. All SPDK versions <= v21.01 are affected.
+
+### net
+
+The net library is deprecated and will be removed in the 21.07 release.
+
+### nvme
+
+Added a new function `spdk_nvme_ctrlr_get_regs_pmrcap` to get the PMR capabilities.
+
+Added an accelerated table pointer in `spdk_nvme_poll_group`
+which can be used to provide the accelerated functions by users with
+hardware engine, such as crc32c accelerated function.
+
+Added new functions `spdk_nvme_ctrlr_get_pmrsz`, `spdk_nvme_ctrlr_enable_pmr`,
+`spdk_nvme_ctrlr_disable_pmr`, `spdk_nvme_ctrlr_map_pmr` and `spdk_nvme_ctrlr_unmap_pmr`.
+
+Added NVMe transport operations to enable, disable, map and unmap the PMR.
+
+Added `spdk_nvme_qpair_get_optimal_poll_group` function and `qpair_get_optimal_poll_group`
+function pointer in spdk_nvmf_transport_ops structure in order to add the qpair to the most
+suitable polling group.
+
+Added OPTPERF and namespace optimal performance fields to nvme_spec.h.
+
+Added `spdk_nvme_set_hotplug_filter` API to allow applications to choose which
+hot-inserted SSDs should be probed. This is useful for use cases where multiple
+independent SPDK processes are running on one node. The filter function can
+then be implemented in these processes to decide which SSDs to probe based on
+the new SSD's PCI address.
+
+New functions `spdk_nvme_poll_group_get_stats` and `spdk_nvme_poll_group_free_stats`
+were added. These functions allow to get transport statistics per NVME poll group.
+
+Added `spdk_nvme_map_cmd` API to map the NVMe command with SGL cases.
+
+### nvmf
+
+Removed the `spdk_nvmf_tgt_listen` and `spdk_nvmf_subsystem_add_ns` API.
+
+Added new APIs:
+
+- `spdk_nvmf_poll_group_dump_stat` (function in `nvmf.h`).
+- `poll_group_dump_stat` (transport op in `nvmf_transport.h`).
+
+The following APIs have been deprecated and will be removed in a future release:
+
+- `spdk_nvmf_poll_group_get_stat` (function in `nvmf.h`),
+- `spdk_nvmf_transport_poll_group_get_stat` (function in `nvmf.h`),
+- `spdk_nvmf_transport_poll_group_free_stat`(function in `nvmf.h`),
+- `spdk_nvmf_rdma_device_stat` (struct in `nvmf.h`),
+- `spdk_nvmf_transport_poll_group_stat` (struct in `nvmf.h`),
+- `poll_group_get_stat` (transport op in `nvmf_transport.h`),
+- `poll_group_free_stat` (transport op in `nvmf_transport.h`).
+
+See header files for details.
+
+The `trtype` field in JSON returned by `nvmf_get_stats` RPC contains now the name of the transport,
+which is the same as the type for defined transports and more informative for a custom transport.
+
+### ocf
+
+Updated OCF submodule to v20.12.2
+
+### opal
+
+Removed the `spdk_opal_supported` API.
+
+### raid
+
+For `bdev_raid_create` RPC, the deprecated parameter `strip_size` was removed.
+
+### rpc
+
+New RPC `bdev_nvme_get_transport_statistics` was added, it allows to get transport statistics
+of nvme poll groups.
+
+### rpm
+
+Added support for new RPM spec, rpmbuild/spdk.spec, which can be used for packaging the
+SPDK. The pkg/spdk.spec is considered to be deprecated and scheduled for removal. See
+[RPM documentation](https://spdk.io/doc/rpm.html) for more details.
+
+### sock
+
+The type of `enable_placement_id` in struct `spdk_sock_impl_opts` is changed from
+bool to int. We can use RPC to configure different value of `enable_placement_id`.
+Then we can leverage SO_INCOMING_CPU to get placement_id, which aims to utilize
+CPU cache locality, enabled by setting enable_placement_id=2.
+
+### thread
+
+A new API `spdk_io_channel_get_io_device` was added to get the io_device for the specified
+I/O channel.
+
+Added `spdk_thread_set_interrupt_mode` function in order to set present spdk_thread into
+interrupt mode or back to poll mode. It is valid only when thread interrupt facility is
+enabled by `spdk_interrupt_mode_enable`.
+
+Added `spdk_poller_register_interrupt` function to mark that the poller is capable of
+entering interrupt mode. Callback function will be called when the poller must transition
+into or out of interrupt mode.
+
+### virtio
+
+Added the `bdev_virtio_blk_set_hotplug` RPC for the virtio blk pci device.
+
+## v21.01:
 
 ### bdev
 
@@ -263,8 +262,6 @@ Change the return type of function `spdk_nbd_stop` from void to int. And update 
 `spdk_nbd_fini` with two parameters to make its behavior from sync to async.
 
 ### nvme
-
-Added a new function `spdk_nvme_ctrlr_get_regs_pmrcap` to get the PMR capabilities.
 
 Directives support was added to the NVMe driver.
 
