@@ -372,14 +372,15 @@ _get_thread_stats() {
 
 get_cpu_stat() {
 	local cpu_idx=$1
-	local stat=$2 stats
+	local stat=$2 stats astats
 
 	while read -r cpu stats; do
-		[[ $cpu == "cpu$cpu_idx" ]] && stats=($stats)
+		[[ $cpu == "cpu$cpu_idx" ]] && astats=($stats)
 	done < /proc/stat
 
 	case "$stat" in
-		idle) echo "${stats[3]}" ;;
+		idle) echo "${astats[3]}" ;;
+		all) printf '%u\n' "${astats[@]}" ;;
 		*) ;;
 	esac
 }
@@ -394,4 +395,93 @@ destroy_thread() {
 
 active_thread() {
 	"$rootdir/scripts/rpc.py" --plugin "$plugin" scheduler_thread_set_active "$@"
+}
+
+get_cpu_time() {
+	xtrace_disable
+
+	local interval=$1 cpu_time=$2 interval_count
+	shift 2
+	local cpus=("$@") cpu
+	local stats stat old_stats avg_load
+	local total_sample
+
+	# Exposed for the caller
+	local -g cpu_times=()
+	local -g avg_cpu_time=()
+
+	# cpu_time:
+	# 0 - user (time spent in user mode)
+	# 1 - nice (Time spent in user mode with low priority)
+	# 2 - system (Time spent in system mode)
+	# 3 - idle (Time spent in the idle task)
+	# 4 - iowait (Time waiting for I/O to complete)
+	# 5 - irq (Time servicing interrupts)
+	# 6 - softirq (Time servicing softirqs)
+	# 7 - steal (Stolen time)
+	# 8 - guest (Time spent running a virtual CPU)
+	# 9 - guest_nice (Time spent running a niced guest)
+
+	local -A cpu_time_map
+	cpu_time_map["user"]=0
+	cpu_time_map["nice"]=1
+	cpu_time_map["system"]=2
+	cpu_time_map["idle"]=3
+	cpu_time_map["iowait"]=4
+	cpu_time_map["irq"]=5
+	cpu_time_map["softirq"]=6
+	cpu_time_map["steal"]=7
+	cpu_time_map["guest"]=8
+	cpu_time_map["guest_nice"]=9
+
+	# Clear up the env
+	unset -v ${!stat_@}
+	unset -v ${!old_stat_@}
+	unset -v ${!avg_stat@}
+	unset -v ${!avg_load@}
+
+	cpu_time=${cpu_time_map["$cpu_time"]:-3}
+	interval=$((interval <= 0 ? 1 : interval))
+	# We skip first sample to have min 2 for stat comparision
+	interval=$((interval + 1)) interval_count=0
+	while ((interval_count++, --interval >= 0)); do
+		for cpu in "${cpus[@]}"; do
+			local -n old_stats=old_stats_$cpu
+			local -n avg_load=avg_load_$cpu
+			sample_stats=() total_sample=0
+
+			stats=($(get_cpu_stat "$cpu" all))
+			if ((interval_count == 1)); then
+				# Skip first sample
+				old_stats=("${stats[@]}")
+				continue
+			fi
+			for stat in "${!stats[@]}"; do
+				avg_load[stat]="stat_${stat}_${cpu}[@]"
+				sample_stats[stat]=$((stats[stat] - old_stats[stat]))
+				: $((total_sample += sample_stats[stat]))
+			done
+			for stat in "${!stats[@]}"; do
+				local -n avg_stat=stat_${stat}_${cpu}
+				avg_stat+=($((sample_stats[stat] * 100 / (total_sample == 0 ? 1 : total_sample))))
+			done
+			old_stats=("${stats[@]}")
+		done
+		sleep 1s
+	done
+
+	# We collected % for each time. Now determine the avg % for requested time.
+	local load stat_load
+	for cpu in "${cpus[@]}"; do
+		load=0
+		local -n avg_load_cpu=avg_load_$cpu
+		stat_load=("${!avg_load_cpu[cpu_time]}")
+		for stat in "${stat_load[@]}"; do
+			: $((load += stat))
+		done
+		cpu_times[cpu]=${stat_load[*]}
+		avg_cpu_time[cpu]=$((load / ${#stat_load[@]}))
+	done
+
+	xtrace_restore
 }
