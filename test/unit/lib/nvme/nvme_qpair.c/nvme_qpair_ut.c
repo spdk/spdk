@@ -711,6 +711,46 @@ test_nvme_qpair_init_deinit(void)
 	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
 }
 
+static void
+test_nvme_get_sgl_print_info(void)
+{
+	char buf[NVME_CMD_DPTR_STR_SIZE] = {};
+	struct spdk_nvme_cmd cmd = {};
+
+	cmd.dptr.sgl1.keyed.length = 0x1000;
+	cmd.dptr.sgl1.keyed.key = 0xababccdd;
+
+	nvme_get_sgl_keyed(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	CU_ASSERT(!strncmp(buf, " len:0x1000 key:0xababccdd", NVME_CMD_DPTR_STR_SIZE));
+
+	memset(&cmd.dptr.sgl1, 0, sizeof(cmd.dptr.sgl1));
+	cmd.dptr.sgl1.unkeyed.length = 0x1000;
+
+	nvme_get_sgl_unkeyed(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	CU_ASSERT(!strncmp(buf, " len:0x1000", NVME_CMD_DPTR_STR_SIZE));
+
+	memset(&cmd.dptr.sgl1, 0, sizeof(cmd.dptr.sgl1));
+	cmd.dptr.sgl1.generic.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+	cmd.dptr.sgl1.generic.subtype = 0;
+	cmd.dptr.sgl1.address = 0xdeadbeef;
+	cmd.dptr.sgl1.keyed.length = 0x1000;
+	cmd.dptr.sgl1.keyed.key = 0xababccdd;
+
+	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	CU_ASSERT(!strncmp(buf, "SGL DATA BLOCK ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
+			   NVME_CMD_DPTR_STR_SIZE));
+
+	memset(&cmd.dptr.sgl1, 0, sizeof(cmd.dptr.sgl1));
+	cmd.dptr.sgl1.generic.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+	cmd.dptr.sgl1.generic.subtype = 0;
+	cmd.dptr.sgl1.address = 0xdeadbeef;
+	cmd.dptr.sgl1.unkeyed.length = 0x1000;
+
+	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
+	CU_ASSERT(!strncmp(buf, "SGL RESERVED ADDRESS 0xdeadbeef len:0x1000",
+			   NVME_CMD_DPTR_STR_SIZE));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -734,6 +774,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_with_transport_failed);
 	CU_ADD_TEST(suite, test_nvme_qpair_manual_complete_request);
 	CU_ADD_TEST(suite, test_nvme_qpair_init_deinit);
+	CU_ADD_TEST(suite, test_nvme_get_sgl_print_info);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
