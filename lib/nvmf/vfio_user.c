@@ -1080,9 +1080,9 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 
 	if (!info->vaddr || ((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
 	    (info->mapping.iov_len & MASK_2MB)) {
-		SPDK_ERRLOG("Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
-			    (uintptr_t)info->mapping.iov_base,
-			    (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
+			      (uintptr_t)info->mapping.iov_base,
+			      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
 		return;
 	}
 
@@ -1156,9 +1156,9 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 
 	if (!info->vaddr || ((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
 	    (info->mapping.iov_len & MASK_2MB)) {
-		SPDK_ERRLOG("Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
-			    (uintptr_t)info->mapping.iov_base,
-			    (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
+			      (uintptr_t)info->mapping.iov_base,
+			      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
 		return 0;
 	}
 
