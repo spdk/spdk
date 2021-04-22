@@ -483,3 +483,35 @@ get_cpu_time() {
 
 	xtrace_restore
 }
+
+collect_cpu_idle() {
+	((${#cpus_to_collect[@]} > 0)) || return 1
+
+	local time=${1:-5}
+	local cpu
+	local samples
+	local -g is_idle=()
+
+	printf 'Collecting cpu idle stats (cpus: %s) for %u seconds...\n' \
+		"${cpus_to_collect[*]}" "$time"
+
+	get_cpu_time "$time" idle "${cpus_to_collect[@]}"
+
+	for cpu in "${cpus_to_collect[@]}"; do
+		samples=(${cpu_times[cpu]})
+		printf '* cpu%u idle samples: %s (avg: %u%%)\n' \
+			"$cpu" "${samples[*]}" "${avg_cpu_time[cpu]}"
+		# Cores with polling reactors have 0% idle time,
+		# while the ones in interrupt mode won't have 100% idle.
+		# Work can be potentially be scheduled to the core by kernel,
+		# to prevent that affecting tests set reasonably high idle limit.
+		# Consider last sample
+		if ((samples[-1] >= 70)); then
+			printf '* cpu%u is idle\n' "$cpu"
+			is_idle[cpu]=1
+		else
+			printf '*cpu%u is not idle\n' "$cpu"
+			is_idle[cpu]=0
+		fi
+	done
+}
