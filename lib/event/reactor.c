@@ -443,6 +443,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 	}
 
 	if (target->in_interrupt == new_in_interrupt) {
+		cb_fn(cb_arg);
 		return 0;
 	}
 
