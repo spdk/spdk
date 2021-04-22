@@ -188,27 +188,27 @@ bdev_rados_context_init(const char *user_id, const char *rbd_pool_name, const ch
 }
 
 static int
-bdev_rbd_init(const char *user_id, const char *rbd_pool_name, const char *const *config,
-	      const char *rbd_name, rbd_image_info_t *info)
+bdev_rbd_init(struct bdev_rbd *rbd)
 {
 	int ret = 0;
 	rados_t cluster = NULL;
 	rados_ioctx_t io_ctx = NULL;
 	rbd_image_t image = NULL;
 
-	ret = bdev_rados_context_init(user_id, rbd_pool_name, config, &cluster, &io_ctx);
+	ret = bdev_rados_context_init(rbd->user_id, rbd->pool_name, (const char *const *)rbd->config,
+				      &cluster, &io_ctx);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to create rados context for user_id=%s and rbd_pool=%s\n",
-			    user_id ? user_id : "admin (the default)", rbd_pool_name);
+			    rbd->user_id ? rbd->user_id : "admin (the default)", rbd->pool_name);
 		return -1;
 	}
 
-	ret = rbd_open(io_ctx, rbd_name, &image, NULL);
+	ret = rbd_open(io_ctx, rbd->rbd_name, &image, NULL);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to open specified rbd device\n");
 		goto end;
 	}
-	ret = rbd_stat(image, info, sizeof(*info));
+	ret = rbd_stat(image, &rbd->info, sizeof(rbd->info));
 	rbd_close(image);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to stat specified rbd device\n");
@@ -677,9 +677,7 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		return -ENOMEM;
 	}
 
-	ret = bdev_rbd_init(rbd->user_id, rbd->pool_name,
-			    (const char *const *)rbd->config,
-			    rbd_name, &rbd->info);
+	ret = bdev_rbd_init(rbd);
 	if (ret < 0) {
 		bdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
