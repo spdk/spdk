@@ -743,7 +743,7 @@ Example response:
 }
 ~~~
 
-### framework_get_scheduler {#rpc_framework_get_scheduler}
+## framework_get_scheduler {#rpc_framework_get_scheduler}
 
 Retrieve currently set scheduler name and period, along with current governor name.
 
