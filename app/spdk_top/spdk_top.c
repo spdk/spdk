@@ -2132,7 +2132,7 @@ show_core(uint8_t current_page)
 		core_info[i] = &g_cores_stats.cores.core[i];
 	}
 
-	threads_count = g_cores_stats.cores.core->threads.threads_count;
+	threads_count = g_cores_stats.cores.core[core_number].threads.threads_count;
 
 	core_win = newwin(threads_count + CORE_WIN_HEIGHT, CORE_WIN_WIDTH,
 			  get_position_for_window(CORE_WIN_HEIGHT + threads_count, g_max_row),
