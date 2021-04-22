@@ -63,8 +63,8 @@ static int blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 				const void **value, size_t *value_len, bool internal);
 static int blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal);
 
-static void blob_insert_extent(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
-			       spdk_blob_op_complete cb_fn, void *cb_arg);
+static void blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
+				   spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static void
 blob_verify_md_op(struct spdk_blob *blob)
@@ -7056,8 +7056,8 @@ blob_persist_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-blob_insert_extent(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
-		   spdk_blob_op_complete cb_fn, void *cb_arg)
+blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
+		       spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	spdk_bs_sequence_t		*seq;
 	struct spdk_bs_cpl		cpl;
@@ -7131,8 +7131,8 @@ blob_insert_cluster_msg(void *arg)
 		}
 		/* Extent page already allocated.
 		 * Every cluster allocation, requires just an update of single extent page. */
-		blob_insert_extent(ctx->blob, *extent_page, ctx->cluster_num,
-				   blob_insert_cluster_msg_cb, ctx);
+		blob_write_extent_page(ctx->blob, *extent_page, ctx->cluster_num,
+				       blob_insert_cluster_msg_cb, ctx);
 	}
 }
 
