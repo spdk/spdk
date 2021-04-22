@@ -676,7 +676,8 @@ if __name__ == "__main__":
                                             config=config,
                                             pool_name=args.pool_name,
                                             rbd_name=args.rbd_name,
-                                            block_size=args.block_size))
+                                            block_size=args.block_size,
+                                            cluster_name=args.cluster_name))
 
     p = subparsers.add_parser('bdev_rbd_create', aliases=['construct_rbd_bdev'],
                               help='Add a bdev with ceph rbd backend')
@@ -687,6 +688,7 @@ if __name__ == "__main__":
     p.add_argument('pool_name', help='rbd pool name')
     p.add_argument('rbd_name', help='rbd image name')
     p.add_argument('block_size', help='rbd block size', type=int)
+    p.add_argument('-c', '--cluster_name', help="cluster name to identify the Rados cluster", required=False)
     p.set_defaults(func=bdev_rbd_create)
 
     def bdev_rbd_delete(args):

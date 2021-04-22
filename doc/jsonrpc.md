@@ -3421,6 +3421,7 @@ pool_name               | Required | string      | Pool name
 rbd_name                | Required | string      | Image name
 block_size              | Required | number      | Block size
 config                  | Optional | string map  | Explicit librados configuration
+cluster_name            | Optional | string      | Rados cluster object name created in this module.
 
 If no config is specified, Ceph configuration files must exist with
 all relevant settings for accessing the pool. If a config map is
@@ -3431,6 +3432,10 @@ secret key stored in Ceph keyrings) are enough.
 
 When accessing the image as some user other than "admin" (the
 default), the "user_id" has to be set.
+
+If provided with cluster_name option, it will use the Rados cluster object
+referenced by the name (created by bdev_rbd_register_cluster RPC) and ignores
+"user_id + config" combination to create its own Rados cluster.
 
 ### Result
 
@@ -3467,6 +3472,33 @@ response:
   "result": "Ceph0"
 }
 ~~~
+
+Example request with `cluster_name`:
+
+~~
+{
+  "params": {
+    "pool_name": "rbd",
+    "rbd_name": "foo",
+    "block_size": 4096,
+    "cluster_name": "rbd_cluster"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_rbd_create",
+  "id": 1
+}
+~~
+
+Example response:
+
+~~
+response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "Ceph0"
+}
+~~
 
 ## bdev_rbd_delete {#rpc_bdev_rbd_delete}
 

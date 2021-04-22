@@ -44,6 +44,7 @@ struct rpc_create_rbd {
 	char *rbd_name;
 	uint32_t block_size;
 	char **config;
+	char *cluster_name;
 };
 
 static void
@@ -54,6 +55,7 @@ free_rpc_create_rbd(struct rpc_create_rbd *req)
 	free(req->pool_name);
 	free(req->rbd_name);
 	bdev_rbd_free_config(req->config);
+	free(req->cluster_name);
 }
 
 static int
@@ -104,7 +106,8 @@ static const struct spdk_json_object_decoder rpc_create_rbd_decoders[] = {
 	{"pool_name", offsetof(struct rpc_create_rbd, pool_name), spdk_json_decode_string},
 	{"rbd_name", offsetof(struct rpc_create_rbd, rbd_name), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_create_rbd, block_size), spdk_json_decode_uint32},
-	{"config", offsetof(struct rpc_create_rbd, config), bdev_rbd_decode_config, true}
+	{"config", offsetof(struct rpc_create_rbd, config), bdev_rbd_decode_config, true},
+	{"cluster_name", offsetof(struct rpc_create_rbd, cluster_name), spdk_json_decode_string, true}
 };
 
 static void
@@ -128,7 +131,7 @@ rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 	rc = bdev_rbd_create(&bdev, req.name, req.user_id, req.pool_name,
 			     (const char *const *)req.config,
 			     req.rbd_name,
-			     req.block_size);
+			     req.block_size, req.cluster_name);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

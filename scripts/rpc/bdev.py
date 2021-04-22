@@ -694,7 +694,7 @@ def bdev_rbd_unregister_cluster(client, name):
 
 
 @deprecated_alias('construct_rbd_bdev')
-def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None):
+def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None, cluster_name=None):
     """Create a Ceph RBD block device.
 
     Args:
@@ -704,6 +704,7 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=Non
         name: name of block device (optional)
         user: Ceph user name (optional)
         config: map of config keys to values (optional)
+        cluster_name: Name to identify Rados cluster (optional)
 
     Returns:
         Name of created block device.
@@ -720,6 +721,8 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=Non
         params['user_id'] = user
     if config is not None:
         params['config'] = config
+    if cluster_name is not None:
+        params['cluster_name'] = cluster_name
 
     return client.call('bdev_rbd_create', params)
 

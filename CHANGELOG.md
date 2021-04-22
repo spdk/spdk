@@ -23,6 +23,9 @@ New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added,
 and delete the rados object cluster, then users can choose the cluster to create related rbd
 device.
 
+Revised `bdev_rbd_create` parameter, it allows to use an optional parameter --cluster-name
+to create a rbd bdev with  an already registered Rados Cluster Object.
+
 ## v21.04:
 
 ### accel
