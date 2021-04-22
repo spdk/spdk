@@ -205,6 +205,15 @@ core_load() {
 	sleep $((3 * sched_period))
 	update_thread_cpus_map
 
+	# Verify that load is not exceeding 80% on each of the cpus except the main and next cpu
+	get_cpu_time 5 user "${cpus[@]:2}"
+
+	for cpu in "${!avg_cpu_time[@]}"; do
+		printf '* cpu%u avg load: %u%% (%s)\n' \
+			"$cpu" "${avg_cpu_time[cpu]}" "${cpu_times[cpu]}"
+		((avg_cpu_time[cpu] <= 80))
+	done
+
 	for thread in \
 		"$thread0" \
 		"$thread1" \
