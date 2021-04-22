@@ -778,9 +778,9 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "scheduler name": "static",
-    "scheduler period": 2800000000,
-    "governor name": "default"
+    "scheduler_name": "static",
+    "scheduler_period": 2800000000,
+    "governor_name": "default"
   }
 }
 ~~~
