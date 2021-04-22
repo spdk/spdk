@@ -61,6 +61,7 @@ timing_exit porcelain_check
 
 if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
 	run_test "build_rpms" build_rpms
+	$MAKE clean
 fi
 
 if [[ $RUN_NIGHTLY -eq 0 ]]; then
