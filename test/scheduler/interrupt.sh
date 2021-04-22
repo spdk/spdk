@@ -60,8 +60,7 @@ interrupt() {
 	for cpu in "${!threads[@]}"; do
 		active_thread "${threads[cpu]}" 0
 		cpus_to_collect=("$cpu")
-		# Give some extra time for the cpu to spin down
-		collect_cpu_idle 10
+		collect_cpu_idle
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 		[[ -z $(jq -r "select(.lcore == $cpu) | .lw_threads[].id" <<< "$reactor_framework") ]]
 		[[ -n $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.name == \"thread$cpu\")" <<< "$reactor_framework") ]]
