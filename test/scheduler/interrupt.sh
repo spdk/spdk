@@ -15,62 +15,6 @@ fold_list_onto_array cpus $(parse_cpu_list <(echo "$spdk_cpus_csv"))
 # Normalize the indexes
 cpus=("${cpus[@]}")
 
-collect_cpu_stat() {
-	local list=$1
-	local stat=$2
-
-	for cpu in "${cpus_to_collect[@]}"; do
-		eval "${list}[cpu]=\$(get_cpu_stat $cpu $stat)"
-	done
-}
-
-collect_cpu_idle() {
-	xtrace_disable
-
-	local sample_time=${1:-5} samples=0
-	local cpu bool inc user_hz
-
-	# idle scales to USER_HZ so we use that in order to determine the expected
-	# value it should have been increased to (more or less).
-	user_hz=100
-	# Expected increase of the idle stat
-	inc=$((user_hz * sample_time))
-
-	bool[0]="not" bool[1]="is"
-
-	init_idle_samples=() idle_samples=() is_idle=()
-
-	collect_cpu_stat init_idle_samples idle
-
-	printf 'Collecting cpu idle stats (cpus: %s) for %u seconds...\n' \
-		"${cpus_to_collect[*]}" "$sample_time"
-
-	while ((++samples <= sample_time)) && sleep 1s; do
-		collect_cpu_stat idle_samples idle
-	done
-
-	for cpu in "${!idle_samples[@]}"; do
-		# We start to collect after the spdk app is initialized hence if the interrupt
-		# mode is not working as expected, the idle time of given cpu will not have a
-		# chance to increase. If it does work correctly, then it should change even for
-		# a fraction, depending on how much time we spent on collecting this data.
-		# If idle time is over 70% of expected increase then we consider this cpu as
-		# idle. This is done in order to take into consideration time window the app
-		# needs to actually spin up|down the cpu. It's also taken for granted that
-		# there is no extra load on the target cpus which may be coming from other
-		# processes.
-		if ((idle_samples[cpu] > init_idle_samples[cpu] + (inc * 70 / 100))); then
-			is_idle[cpu]=1
-		else
-			is_idle[cpu]=0
-		fi
-		printf 'cpu%u %s idle (%u %u)\n' \
-			"$cpu" "${bool[is_idle[cpu]]}" "${init_idle_samples[cpu]}" "${idle_samples[cpu]}"
-	done
-
-	xtrace_restore
-}
-
 interrupt() {
 	local busy_cpus
 	local cpu thread
