@@ -990,7 +990,7 @@ interrupt_timerfd_process(void *arg)
 	int rc;
 
 	/* clear the level of interval timer */
-	rc = read(poller->timerfd, &exp, sizeof(exp));
+	rc = read(poller->interruptfd, &exp, sizeof(exp));
 	if (rc < 0) {
 		if (rc == -EAGAIN) {
 			return 0;
@@ -1011,7 +1011,7 @@ period_poller_interrupt_init(struct spdk_poller *poller)
 	int timerfd;
 	int rc;
 
-	SPDK_DEBUGLOG(thread, "timerfd init for period poller %s\n", poller->name);
+	SPDK_DEBUGLOG(thread, "timerfd init for periodic poller %s\n", poller->name);
 	timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
 	if (timerfd < 0) {
 		return -errno;
@@ -1024,14 +1024,14 @@ period_poller_interrupt_init(struct spdk_poller *poller)
 		return rc;
 	}
 
-	poller->timerfd = timerfd;
+	poller->interruptfd = timerfd;
 	return 0;
 }
 
 static void
 period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool interrupt_mode)
 {
-	int timerfd = poller->timerfd;
+	int timerfd = poller->interruptfd;
 	uint64_t now_tick = spdk_get_ticks();
 	uint64_t ticks = spdk_get_ticks_hz();
 	int ret;
@@ -1087,10 +1087,10 @@ static void
 period_poller_interrupt_fini(struct spdk_poller *poller)
 {
 	SPDK_DEBUGLOG(thread, "timerfd fini for poller %s\n", poller->name);
-	assert(poller->timerfd >= 0);
-	spdk_fd_group_remove(poller->thread->fgrp, poller->timerfd);
-	close(poller->timerfd);
-	poller->timerfd = -1;
+	assert(poller->interruptfd >= 0);
+	spdk_fd_group_remove(poller->thread->fgrp, poller->interruptfd);
+	close(poller->interruptfd);
+	poller->interruptfd = -1;
 }
 
 #else
@@ -1171,7 +1171,7 @@ poller_register(spdk_poller_fn fn,
 	poller->fn = fn;
 	poller->arg = arg;
 	poller->thread = thread;
-	poller->timerfd = -1;
+	poller->interruptfd = -1;
 
 	if (period_microseconds) {
 		quotient = period_microseconds / SPDK_SEC_TO_USEC;
@@ -1243,7 +1243,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 		return;
 	}
 
-	if (spdk_interrupt_mode_is_enabled() && poller->timerfd >= 0) {
+	if (spdk_interrupt_mode_is_enabled() && poller->interruptfd >= 0) {
 		period_poller_interrupt_fini(poller);
 	}
 
