@@ -71,6 +71,10 @@ Two new accelerated crc32 functions 'spdk_accel_submit_crc32cv' and
 'spdk_accel_batch_prep_crc32cv' are added in order to provide the
 chained accelerated CRC32 computation support.
 
+### net
+
+The net library is deprecated and will be removed in the 21.07 release.
+
 ### nvme
 
 Added new functions `spdk_nvme_ctrlr_get_pmrsz`, `spdk_nvme_ctrlr_enable_pmr`,
