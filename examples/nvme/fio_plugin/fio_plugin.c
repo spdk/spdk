@@ -436,6 +436,35 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		}
 	}
 
+	if (fio_options->initial_zone_reset == 1 && spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
+#if FIO_HAS_ZBD
+		struct spdk_nvme_qpair *tmp_qpair;
+		int completed = 0, err;
+
+		/* qpair has not been allocated yet (it gets allocated in spdk_fio_open()).
+		 * Create a temporary qpair in order to perform the initial zone reset.
+		 */
+		assert(!fio_qpair->qpair);
+
+		tmp_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+		if (!tmp_qpair) {
+			SPDK_ERRLOG("Cannot allocate a temporary qpair\n");
+			g_error = true;
+			return;
+		}
+
+		err = spdk_nvme_zns_reset_zone(ns, tmp_qpair, 0x0, true, pcu_cb, &completed);
+		if (err || pcu(tmp_qpair, &completed) || completed < 0) {
+			log_err("spdk/nvme: warn: initial_zone_reset: err: %d, cpl: %d\n",
+				err, completed);
+		}
+
+		spdk_nvme_ctrlr_free_io_qpair(tmp_qpair);
+#else
+		log_err("spdk/nvme: ZBD/ZNS is not supported\n");
+#endif
+	}
+
 	f->real_file_size = spdk_nvme_ns_get_size(fio_qpair->ns);
 	if (f->real_file_size <= 0) {
 		g_error = true;
@@ -624,34 +653,6 @@ static int spdk_fio_setup(struct thread_data *td)
 	pthread_mutex_lock(&g_mutex);
 	g_td_count++;
 	pthread_mutex_unlock(&g_mutex);
-
-	if (fio_options->initial_zone_reset == 1) {
-#if FIO_HAS_ZBD
-		struct spdk_fio_qpair *fio_qpair;
-
-		TAILQ_FOREACH(fio_qpair, &fio_thread->fio_qpair, link) {
-			const struct spdk_nvme_zns_ns_data *zns_data;
-			int completed = 0, err;
-
-			if (!fio_qpair->ns) {
-				continue;
-			}
-			zns_data = spdk_nvme_zns_ns_get_data(fio_qpair->ns);
-			if (!zns_data) {
-				continue;
-			}
-
-			err = spdk_nvme_zns_reset_zone(fio_qpair->ns, fio_qpair->qpair, 0x0, true,
-						       pcu_cb, &completed);
-			if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
-				log_err("spdk/nvme: warn: initial_zone_reset: err: %d, cpl: %d\n",
-					err, completed);
-			}
-		}
-#else
-		log_err("spdk/nvme: ZBD/ZNS is not supported\n");
-#endif
-	}
 
 	return rc;
 }
