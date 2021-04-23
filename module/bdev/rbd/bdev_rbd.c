@@ -62,6 +62,7 @@ struct bdev_rbd {
 	char *user_id;
 	char *pool_name;
 	char **config;
+	rados_t cluster;
 	rbd_image_info_t info;
 	TAILQ_ENTRY(bdev_rbd) tailq;
 	struct spdk_poller *reset_timer;
@@ -75,7 +76,6 @@ struct bdev_rbd_group_channel {
 
 struct bdev_rbd_io_channel {
 	rados_ioctx_t io_ctx;
-	rados_t cluster;
 	int pfd;
 	rbd_image_t image;
 	struct bdev_rbd *disk;
@@ -91,6 +91,10 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 {
 	if (!rbd) {
 		return;
+	}
+
+	if (rbd->cluster) {
+		rados_shutdown(rbd->cluster);
 	}
 
 	free(rbd->disk.name);
@@ -138,8 +142,8 @@ bdev_rbd_dup_config(const char *const *config)
 }
 
 static int
-bdev_rados_context_init(const char *user_id, const char *rbd_pool_name, const char *const *config,
-			rados_t *cluster, rados_ioctx_t *io_ctx)
+bdev_rados_cluster_init(const char *user_id, const char *const *config,
+			rados_t *cluster)
 {
 	int ret;
 
@@ -176,30 +180,44 @@ bdev_rados_context_init(const char *user_id, const char *rbd_pool_name, const ch
 		return -1;
 	}
 
-	ret = rados_ioctx_create(*cluster, rbd_pool_name, io_ctx);
+	return 0;
+}
 
-	if (ret < 0) {
-		SPDK_ERRLOG("Failed to create ioctx\n");
-		rados_shutdown(*cluster);
-		return -1;
+static void *
+bdev_rbd_cluster_handle(void *arg)
+{
+	struct bdev_rbd *rbd = arg;
+	void *ret = arg;
+	int rc;
+
+	rc = bdev_rados_cluster_init(rbd->user_id, (const char *const *)rbd->config,
+				     &rbd->cluster);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to create rados cluster for user_id=%s and rbd_pool=%s\n",
+			    rbd->user_id ? rbd->user_id : "admin (the default)", rbd->pool_name);
+		ret = NULL;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int
 bdev_rbd_init(struct bdev_rbd *rbd)
 {
 	int ret = 0;
-	rados_t cluster = NULL;
 	rados_ioctx_t io_ctx = NULL;
 	rbd_image_t image = NULL;
 
-	ret = bdev_rados_context_init(rbd->user_id, rbd->pool_name, (const char *const *)rbd->config,
-				      &cluster, &io_ctx);
+	/* Cluster should be created in non-SPDK thread to avoid conflict between
+	 * Rados and SPDK thread */
+	if (spdk_call_unaffinitized(bdev_rbd_cluster_handle, rbd) == NULL) {
+		SPDK_ERRLOG("Cannot create the rados object on rbd=%p\n", rbd);
+		return -1;
+	}
+
+	ret = rados_ioctx_create(rbd->cluster, rbd->pool_name, &io_ctx);
 	if (ret < 0) {
-		SPDK_ERRLOG("Failed to create rados context for user_id=%s and rbd_pool=%s\n",
-			    rbd->user_id ? rbd->user_id : "admin (the default)", rbd->pool_name);
+		SPDK_ERRLOG("Failed to create ioctx\n");
 		return -1;
 	}
 
@@ -216,7 +234,6 @@ bdev_rbd_init(struct bdev_rbd *rbd)
 
 end:
 	rados_ioctx_destroy(io_ctx);
-	rados_shutdown(cluster);
 	return ret;
 }
 
@@ -325,14 +342,23 @@ bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
 	disk->reset_timer = SPDK_POLLER_REGISTER(bdev_rbd_reset_timer, disk, 1 * 1000 * 1000);
 }
 
+static void
+bdev_rbd_free_cb(void *io_device)
+{
+	struct bdev_rbd *rbd = io_device;
+
+	assert(rbd != NULL);
+
+	bdev_rbd_free((struct bdev_rbd *)rbd);
+}
+
 static int
 bdev_rbd_destruct(void *ctx)
 {
 	struct bdev_rbd *rbd = ctx;
 
-	spdk_io_device_unregister(rbd, NULL);
+	spdk_io_device_unregister(rbd, bdev_rbd_free_cb);
 
-	bdev_rbd_free(rbd);
 	return 0;
 }
 
@@ -447,10 +473,6 @@ bdev_rbd_free_channel(struct bdev_rbd_io_channel *ch)
 		rados_ioctx_destroy(ch->io_ctx);
 	}
 
-	if (ch->cluster) {
-		rados_shutdown(ch->cluster);
-	}
-
 	if (ch->pfd >= 0) {
 		close(ch->pfd);
 	}
@@ -465,16 +487,13 @@ bdev_rbd_handle(void *arg)
 {
 	struct bdev_rbd_io_channel *ch = arg;
 	void *ret = arg;
-	int rc;
 
-	rc = bdev_rados_context_init(ch->disk->user_id, ch->disk->pool_name,
-				     (const char *const *)ch->disk->config,
-				     &ch->cluster, &ch->io_ctx);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to create rados context for user_id %s and rbd_pool=%s\n",
-			    ch->disk->user_id ? ch->disk->user_id : "admin (the default)", ch->disk->pool_name);
+	assert(ch->disk->cluster != NULL);
+
+	if (rados_ioctx_create(ch->disk->cluster, ch->disk->pool_name, &ch->io_ctx) < 0) {
+		SPDK_ERRLOG("Failed to create ioctx\n");
 		ret = NULL;
-		goto end;
+		return ret;
 	}
 
 	if (rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL) < 0) {
@@ -482,7 +501,6 @@ bdev_rbd_handle(void *arg)
 		ret = NULL;
 	}
 
-end:
 	return ret;
 }
 
