@@ -142,7 +142,6 @@ struct core_info {
 uint8_t g_sleep_time = 1;
 uint16_t g_selected_row;
 uint16_t g_max_selected_row;
-struct rpc_thread_info *g_thread_info[MAX_THREADS];
 const char *poller_type_str[SPDK_POLLER_TYPES_COUNT] = {"Active", "Timed", "Paused"};
 const char *g_tab_title[NUMBER_OF_TABS] = {"[1] THREADS", "[2] POLLERS", "[3] CORES"};
 struct spdk_jsonrpc_client *g_rpc_client;
@@ -276,7 +275,6 @@ struct rpc_threads_stats g_threads_stats;
 struct rpc_pollers_stats g_pollers_stats;
 struct rpc_cores_stats g_cores_stats;
 struct rpc_poller_info g_pollers_history[RPC_MAX_POLLERS];
-struct rpc_thread_info g_thread_history[RPC_MAX_THREADS];
 
 static void
 init_str_len(void)
@@ -550,46 +548,36 @@ rpc_send_req(char *rpc_name, struct spdk_jsonrpc_client_response **resp)
 static int
 sort_threads(const void *p1, const void *p2)
 {
-	const struct rpc_thread_info *thread_info1 = *(struct rpc_thread_info **)p1;
-	const struct rpc_thread_info *thread_info2 = *(struct rpc_thread_info **)p2;
+	const struct rpc_thread_info thread_info1 = *(struct rpc_thread_info *)p1;
+	const struct rpc_thread_info thread_info2 = *(struct rpc_thread_info *)p2;
 	uint64_t count1, count2;
-
-	/* thread IDs may not be allocated contiguously, so we need
-	 * to account for NULL thread_info pointers */
-	if (thread_info1 == NULL && thread_info2 == NULL) {
-		return 0;
-	} else if (thread_info1 == NULL) {
-		return 1;
-	} else if (thread_info2 == NULL) {
-		return -1;
-	}
 
 	switch (g_current_sort_col[THREADS_TAB]) {
 	case 0: /* Sort by name */
-		return strcmp(thread_info1->name, thread_info2->name);
+		return strcmp(thread_info1.name, thread_info2.name);
 	case 1: /* Sort by core */
-		count2 = thread_info1->core_num;
-		count1 = thread_info2->core_num;
+		count2 = thread_info1.core_num;
+		count1 = thread_info2.core_num;
 		break;
 	case 2: /* Sort by active pollers number */
-		count1 = thread_info1->active_pollers_count;
-		count2 = thread_info2->active_pollers_count;
+		count1 = thread_info1.active_pollers_count;
+		count2 = thread_info2.active_pollers_count;
 		break;
 	case 3: /* Sort by timed pollers number */
-		count1 = thread_info1->timed_pollers_count;
-		count2 = thread_info2->timed_pollers_count;
+		count1 = thread_info1.timed_pollers_count;
+		count2 = thread_info2.timed_pollers_count;
 		break;
 	case 4: /* Sort by paused pollers number */
-		count1 = thread_info1->paused_pollers_count;
-		count2 = thread_info2->paused_pollers_count;
+		count1 = thread_info1.paused_pollers_count;
+		count2 = thread_info2.paused_pollers_count;
 		break;
 	case 5: /* Sort by idle time */
-		count1 = thread_info1->idle - thread_info1->last_idle;
-		count2 = thread_info2->idle - thread_info2->last_idle;
+		count1 = thread_info1.idle - thread_info1.last_idle;
+		count2 = thread_info2.idle - thread_info2.last_idle;
 		break;
 	case 6: /* Sort by busy time */
-		count1 = thread_info1->busy - thread_info1->last_busy;
-		count2 = thread_info2->busy - thread_info2->last_busy;
+		count1 = thread_info1.busy - thread_info1.last_busy;
+		count2 = thread_info2.busy - thread_info2.last_busy;
 		break;
 	default:
 		return 0;
@@ -608,8 +596,8 @@ static int
 get_data(void)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
-	struct rpc_thread_info *thread_info;
 	struct rpc_core_info *core_info;
+	struct rpc_threads_stats threads_stats;
 	uint64_t i, j;
 	int rc = 0;
 
@@ -618,23 +606,29 @@ get_data(void)
 		goto end;
 	}
 
-	/* Free old threads values before allocating memory for new ones */
-	free_rpc_threads_stats(&g_threads_stats);
-
 	/* Decode json */
-	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
+	memset(&threads_stats, 0, sizeof(threads_stats));
 	if (spdk_json_decode_object(json_resp->result, rpc_threads_stats_decoders,
-				    SPDK_COUNTOF(rpc_threads_stats_decoders), &g_threads_stats)) {
+				    SPDK_COUNTOF(rpc_threads_stats_decoders), &threads_stats)) {
 		rc = -EINVAL;
 		goto end;
 	}
 
+	/* This is to free allocated char arrays with old thread names */
+	free_rpc_threads_stats(&g_threads_stats);
 	spdk_jsonrpc_client_free_response(json_resp);
 
-	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
-		thread_info = &g_threads_stats.threads.thread_info[i];
-		g_thread_info[thread_info->id] = thread_info;
+	for (i = 0; i < threads_stats.threads.threads_count; i++) {
+		for (j = 0; j < g_threads_stats.threads.threads_count; j++) {
+			if (g_threads_stats.threads.thread_info[j].id == threads_stats.threads.thread_info[i].id) {
+				threads_stats.threads.thread_info[i].last_busy = g_threads_stats.threads.thread_info[j].busy;
+				threads_stats.threads.thread_info[i].last_idle = g_threads_stats.threads.thread_info[j].idle;
+			}
+		}
 	}
+	memcpy(&g_threads_stats, &threads_stats, sizeof(struct rpc_threads_stats));
+	qsort(&g_threads_stats.threads.thread_info, threads_stats.threads.threads_count,
+	      sizeof(g_threads_stats.threads.thread_info[0]), sort_threads);
 
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
@@ -674,7 +668,7 @@ get_data(void)
 		core_info = &g_cores_stats.cores.core[i];
 
 		for (j = 0; j < core_info->threads.threads_count; j++) {
-			g_thread_info[core_info->threads.thread[j].id]->core_num = core_info->lcore;
+			g_threads_stats.threads.thread_info[j].core_num = core_info->lcore;
 		}
 	}
 
@@ -882,7 +876,7 @@ refresh_threads_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint64_t i, threads_count;
-	uint16_t j, k;
+	uint16_t j;
 	uint16_t col;
 	uint8_t max_pages, item_index;
 	static uint8_t last_page = 0;
@@ -903,34 +897,15 @@ refresh_threads_tab(uint8_t current_page)
 		g_last_threads_count = threads_count;
 	}
 
-	/* From g_thread_info copy to thread_info without null elements.
-	 * The index of g_thread_info equals to Thread IDs, so it starts from '1'. */
-	for (i = 0, j = 1; i <  g_threads_stats.threads.threads_count; i++) {
-		while (g_thread_info[j] == NULL) {
-			j++;
-		}
-		memcpy(&thread_info[i], &g_thread_info[j], sizeof(struct rpc_thread_info *));
-		j++;
+	for (i = 0; i < threads_count; i++) {
+		thread_info[i] = &g_threads_stats.threads.thread_info[i];
 	}
 
 	if (last_page != current_page) {
-		for (i = 0; i < threads_count; i++) {
-			/* Thread IDs start from 1, so we have to do i + 1 */
-			g_threads_stats.threads.thread_info[i].last_idle = g_thread_info[i + 1]->idle;
-			g_threads_stats.threads.thread_info[i].last_busy = g_thread_info[i + 1]->busy;
-		}
-
 		last_page = current_page;
 	}
 
 	max_pages = (threads_count + g_max_data_rows - 1) / g_max_data_rows;
-
-	qsort(thread_info, threads_count, sizeof(thread_info[0]), sort_threads);
-
-	for (k = 0; k < threads_count; k++) {
-		g_thread_history[thread_info[k]->id].busy = thread_info[k]->busy - thread_info[k]->last_busy;
-		g_thread_history[thread_info[k]->id].idle = thread_info[k]->idle - thread_info[k]->last_idle;
-	}
 
 	for (i = current_page * g_max_data_rows;
 	     i < spdk_min(threads_count, (uint64_t)((current_page + 1) * g_max_data_rows));
@@ -975,7 +950,6 @@ refresh_threads_tab(uint8_t current_page)
 			col += col_desc[4].max_data_string + 2;
 		}
 
-		g_thread_history[thread_info[i]->id].idle = thread_info[i]->idle - thread_info[i]->last_idle;
 		if (!col_desc[5].disabled) {
 			if (g_interval_data == true) {
 				get_time_str(thread_info[i]->idle - thread_info[i]->last_idle, idle_time);
@@ -987,7 +961,6 @@ refresh_threads_tab(uint8_t current_page)
 			col += col_desc[5].max_data_string;
 		}
 
-		g_thread_history[thread_info[i]->id].busy = thread_info[i]->busy - thread_info[i]->last_busy;
 		if (!col_desc[6].disabled) {
 			if (g_interval_data == true) {
 				get_time_str(thread_info[i]->busy - thread_info[i]->last_busy, busy_time);
@@ -1001,11 +974,6 @@ refresh_threads_tab(uint8_t current_page)
 		if (item_index == g_selected_row) {
 			wattroff(g_tabs[THREADS_TAB], COLOR_PAIR(2));
 		}
-	}
-
-	for (k = 0; k < threads_count; k++) {
-		thread_info[k]->last_idle = thread_info[k]->idle;
-		thread_info[k]->last_busy = thread_info[k]->busy;
 	}
 
 	g_max_selected_row = i - current_page * g_max_data_rows - 1;
@@ -2005,9 +1973,9 @@ display_thread(struct rpc_thread_info *thread_info)
 		  thread_info->core_num);
 
 	if (g_interval_data) {
-		get_time_str(g_thread_history[thread_info->id].idle, idle_time);
+		get_time_str(thread_info->idle - thread_info->last_idle, idle_time);
 		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 32, idle_time);
-		get_time_str(g_thread_history[thread_info->id].busy, busy_time);
+		get_time_str(thread_info->busy - thread_info->last_busy, busy_time);
 		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 54, busy_time);
 	} else {
 		get_time_str(thread_info->idle, idle_time);
@@ -2089,16 +2057,13 @@ display_thread(struct rpc_thread_info *thread_info)
 static void
 show_thread(uint8_t current_page)
 {
-	struct rpc_thread_info *thread_info[g_threads_stats.threads.threads_count];
+	struct rpc_thread_info thread_info;
 	uint64_t thread_number = current_page * g_max_data_rows + g_selected_row;
-	uint64_t i;
 
 	assert(thread_number < g_threads_stats.threads.threads_count);
-	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
-		thread_info[i] = &g_threads_stats.threads.thread_info[i];
-	}
+	thread_info = g_threads_stats.threads.thread_info[thread_number];
 
-	display_thread(thread_info[thread_number]);
+	display_thread(&thread_info);
 }
 
 static void
@@ -2332,6 +2297,8 @@ show_stats(void)
 
 	clock_gettime(CLOCK_REALTIME, &time_now);
 	time_last = time_now.tv_sec;
+
+	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
 
 	switch_tab(THREADS_TAB);
 
