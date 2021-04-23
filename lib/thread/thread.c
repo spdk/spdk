@@ -1119,6 +1119,7 @@ busy_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool in
 {
 	int busy_efd = poller->interruptfd;
 	uint64_t notify = 1;
+	int rc __attribute__((unused));
 
 	assert(busy_efd >= 0);
 
@@ -1129,7 +1130,7 @@ busy_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool in
 		}
 	} else {
 		/* Read on eventfd will clear its level triggering. */
-		read(busy_efd, &notify, sizeof(notify));
+		rc = read(busy_efd, &notify, sizeof(notify));
 	}
 }
 
