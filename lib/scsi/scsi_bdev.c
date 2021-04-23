@@ -1397,12 +1397,12 @@ bdev_scsi_task_complete_unmap_cmd(struct spdk_bdev_io *bdev_io, bool success,
 
 	ctx->count--;
 
-	task->bdev_io = bdev_io;
-
 	if (task->status == SPDK_SCSI_STATUS_GOOD) {
 		spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
 		spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
 	}
+
+	spdk_bdev_free_io(bdev_io);
 
 	if (ctx->count == 0) {
 		scsi_lun_complete_task(task->lun, task);
