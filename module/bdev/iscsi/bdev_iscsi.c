@@ -621,10 +621,8 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 };
 
 static int
-create_iscsi_lun(struct iscsi_context *context, int lun_id, char *url, char *initiator_iqn,
-		 char *name,
-		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev, bool unmap_supported,
-		 uint8_t lbppbe)
+create_iscsi_lun(struct bdev_iscsi_conn_req *req, uint64_t num_blocks,
+		 uint32_t block_size, struct spdk_bdev **bdev, uint8_t lbppbe)
 {
 	struct bdev_iscsi_lun *lun;
 	int rc;
@@ -635,27 +633,27 @@ create_iscsi_lun(struct iscsi_context *context, int lun_id, char *url, char *ini
 		return -ENOMEM;
 	}
 
-	lun->context = context;
-	lun->lun_id = lun_id;
-	lun->url = url;
-	lun->initiator_iqn = initiator_iqn;
+	lun->context = req->context;
+	lun->lun_id = req->lun;
+	lun->url = req->url;
+	lun->initiator_iqn = req->initiator_iqn;
 
 	pthread_mutex_init(&lun->mutex, NULL);
 
-	lun->bdev.name = name;
+	lun->bdev.name = req->bdev_name;
 	lun->bdev.product_name = "iSCSI LUN";
 	lun->bdev.module = &g_iscsi_bdev_module;
 	lun->bdev.blocklen = block_size;
 	lun->bdev.phys_blocklen = block_size * (1 << lbppbe);
 	lun->bdev.blockcnt = num_blocks;
 	lun->bdev.ctxt = lun;
-	lun->unmap_supported = unmap_supported;
+	lun->unmap_supported = req->unmap_supported;
 
 	lun->bdev.fn_table = &iscsi_fn_table;
 
 	spdk_io_device_register(lun, bdev_iscsi_create_cb, bdev_iscsi_destroy_cb,
 				sizeof(struct bdev_iscsi_io_channel),
-				name);
+				req->bdev_name);
 	rc = spdk_bdev_register(&lun->bdev);
 	if (rc) {
 		spdk_io_device_unregister(lun, NULL);
@@ -692,8 +690,7 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 		goto ret;
 	}
 
-	status = create_iscsi_lun(req->context, req->lun, req->url, req->initiator_iqn, req->bdev_name,
-				  readcap16->returned_lba + 1, readcap16->block_length, &bdev, req->unmap_supported,
+	status = create_iscsi_lun(req, readcap16->returned_lba + 1, readcap16->block_length, &bdev,
 				  readcap16->lbppbe);
 	if (status) {
 		SPDK_ERRLOG("Unable to create iscsi bdev: %s (%d)\n", spdk_strerror(-status), status);
