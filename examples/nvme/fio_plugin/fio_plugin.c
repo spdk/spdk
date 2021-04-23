@@ -1228,6 +1228,7 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	struct spdk_fio_qpair *fio_qpair = NULL;
 	const struct spdk_nvme_zns_ns_data *zns = NULL;
 	struct spdk_nvme_zns_zone_report *report;
+	struct spdk_nvme_qpair *tmp_qpair;
 	uint32_t report_nzones = 0, report_nzones_max, report_nbytes, mdts_nbytes;
 	uint64_t zsze_nbytes, ns_nzones, lba_nbytes;
 	int completed = 0, err;
@@ -1243,6 +1244,17 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 		return -EINVAL;
 	}
 
+	/* qpair has not been allocated yet (it gets allocated in spdk_fio_open()).
+	 * Create a temporary qpair in order to perform report zones.
+	 */
+	assert(!fio_qpair->qpair);
+
+	tmp_qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_qpair->fio_ctrlr->ctrlr, NULL, 0);
+	if (!tmp_qpair) {
+		log_err("spdk/nvme: cannot allocate a temporary qpair\n");
+		return -EIO;
+	}
+
 	/** Retrieve device parameters */
 	mdts_nbytes = spdk_nvme_ns_get_max_io_xfer_size(fio_qpair->ns);
 	lba_nbytes = spdk_nvme_ns_get_sector_size(fio_qpair->ns);
@@ -1256,13 +1268,14 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	report = calloc(1, report_nbytes);
 	if (!report) {
 		log_err("spdk/nvme: failed report_zones(): ENOMEM\n");
-		return -ENOMEM;
+		err = -ENOMEM;
+		goto exit;
 	}
 
-	err = spdk_nvme_zns_report_zones(fio_qpair->ns, fio_qpair->qpair, report, report_nbytes,
+	err = spdk_nvme_zns_report_zones(fio_qpair->ns, tmp_qpair, report, report_nbytes,
 					 offset / lba_nbytes, SPDK_NVME_ZRA_LIST_ALL, true, pcu_cb,
 					 &completed);
-	if (err || pcu(fio_qpair->qpair, &completed) || completed < 0) {
+	if (err || pcu(tmp_qpair, &completed) || completed < 0) {
 		log_err("spdk/nvme: report_zones(): err: %d, cpl: %d\n", err, completed);
 		err = err ? err : -EIO;
 		goto exit;
@@ -1320,6 +1333,7 @@ spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offse
 	}
 
 exit:
+	spdk_nvme_ctrlr_free_io_qpair(tmp_qpair);
 	free(report);
 
 	return err ? err : (int)report_nzones;
