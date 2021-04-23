@@ -1181,6 +1181,10 @@ posix_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group, struct spdk_
 	rc = kevent(group->fd, &event, 1, NULL, 0, &ts);
 #endif
 
+	if (rc != 0) {
+		return rc;
+	}
+
 	/* switched from another polling group due to scheduling */
 	if (spdk_unlikely(sock->recv_pipe != NULL  &&
 			  (spdk_pipe_reader_bytes_available(sock->recv_pipe) > 0))) {
