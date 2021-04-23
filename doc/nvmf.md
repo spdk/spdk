@@ -106,6 +106,10 @@ using 1GB hugepages or by pre-reserving memory at application startup with `--me
 option. All pre-reserved memory will be registered as a single region, but won't be returned to the
 system until the SPDK application is terminated.
 
+Another known issue occurs when using the E810 NICs in RoCE mode. Specifically, the NVMe-oF target
+sometimes cannot destroy a qpair, because its posted work requests don't get flushed.  It can cause
+the NVMe-oF target application unable to terminate cleanly.
+
 ## TCP transport support {#nvmf_tcp_transport}
 
 The transport is built into the nvmf_tgt by default, and it does not need any special libraries.
