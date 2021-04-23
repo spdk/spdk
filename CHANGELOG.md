@@ -17,6 +17,14 @@ Removed the `spdk_bdev_open` from bdev library API.
 Removed the `spdk_vbdev_register` and `spdk_bdev_part_base_construct` from bdev module API.
 Removed the `config_text` function for bdev modules to report legacy config.
 
+Added `spdk_bdev_get_max_active_zones` API to display maximum number active zones of a given bdev.
+
+Added `spdk_bdev_get_max_zone_append_size` API to display maximum zone append data transfer size.
+
+### bdev_nvme
+
+Added support for zoned namespaces.
+
 ### blobstore
 
 Removed the `spdk_bdev_create_bs_dev_from_desc` and `spdk_bdev_create_bs_dev` API.
@@ -28,6 +36,10 @@ the allowed list after the application has started.
 
 Removed the `pci_whitelist`, `pci_blacklist` and `master_core` members of struct `spdk_env_opts`.
 
+Added hotplug support based on uevent in `pci_event.c`. Added usage of this functionality in
+nvme, virtio-scsi and virtio_blk libraries. Please see the new API `spdk_pci_event_listen`,
+`spdk_pci_get_event`, `spdk_pci_register_error_handler` and `spdk_pci_unregister_error_handler`.
+
 ### event
 
 Removed the `config_file`, `max_delay_us`, `pci_whitelist`
@@ -35,7 +47,7 @@ and `pci_blacklist` members of struct `spdk_app_opts`.
 
 ### idxd
 
-A new API `spdk_idxd_get_rebalance` was added so that users of the library
+A new API `spdk_idxd_device_needs_rebalance` was added so that users of the library
 can know whether they need to rebalance the flow control for the channel
 that was just added/removed.  This is based on how the low level library
 shares devices amongst channels.
@@ -89,6 +101,17 @@ were added. These functions allow to get transport statistics per NVME poll grou
 
 Added `spdk_nvme_map_cmd` API to map the NVMe command with SGL cases.
 
+Added support for vector variant of ZNS zone append commands with new API
+`spdk_nvme_zns_zone_appendv` and `spdk_nvme_zns_zone_appendv_with_md`.
+
+Added `spdk_nvme_zns_ns_get_max_open_zones` and `spdk_nvme_zns_ns_get_max_active_zones` API,
+to display maximum number of open and active zones of the given namespace.
+
+Added `spdk_nvme_zns_ns_get_zone_size_sectors` API to provide size of zone in number of
+sectors.
+
+Added `spdk_nvme_qpair_get_id` API to display the ID of the specified qpair.
+
 ### nvmf
 
 Removed the `spdk_nvmf_tgt_listen` and `spdk_nvmf_subsystem_add_ns` API.
@@ -113,9 +136,17 @@ See header files for details.
 The `trtype` field in JSON returned by `nvmf_get_stats` RPC contains now the name of the transport,
 which is the same as the type for defined transports and more informative for a custom transport.
 
+Added `hdgst` and `ddgst` parameters to `bdev_nvme_attach_controller` RPC in order change
+state of TCP header and data digest.
+
+Added `num_cqe` parameter to `nvmf_create_transport` RPC to set number of completion queues (CQ)
+for RDMA transport. Useful when CQ resize operation is not supported, for example iWARP.
+
 ### ocf
 
 Updated OCF submodule to v20.12.2
+
+Added `bdev_ocf_set_cache_mode` RPC to dynamically switch cache mode of OCF bdev.
 
 ### opal
 
