@@ -38,6 +38,7 @@
 
 #include "spdk/env.h"
 #include "spdk/string.h"
+#include "spdk/endian.h"
 
 struct nvme_active_ns_ctx;
 
@@ -2614,24 +2615,81 @@ fail:
 	return rc;
 }
 
+static int
+nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status	*status;
+	int		rc = -ENOMEM;
+	char		*buffer = NULL;
+	uint32_t	nsid;
+	size_t		buf_size = (SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t));
+
+	buffer = spdk_dma_zmalloc(buf_size, 4096, NULL);
+	if (!buffer) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate buffer for getting "
+				  "changed ns log.\n");
+		return rc;
+	}
+
+	status = calloc(1, sizeof(*status));
+	if (!status) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
+		goto free_buffer;
+	}
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr,
+					      SPDK_NVME_LOG_CHANGED_NS_LIST,
+					      SPDK_NVME_GLOBAL_NS_TAG,
+					      buffer, buf_size, 0,
+					      nvme_completion_poll_cb, status);
+
+	if (rc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_cmd_get_log_page() failed: rc=%d\n", rc);
+		free(status);
+		goto free_buffer;
+	}
+
+	rc = nvme_wait_for_completion_timeout(ctrlr->adminq, status,
+					      ctrlr->opts.admin_timeout_ms * 1000);
+	if (!status->timed_out) {
+		free(status);
+	}
+
+	if (rc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "wait for spdk_nvme_ctrlr_cmd_get_log_page failed: rc=%d\n", rc);
+		goto free_buffer;
+	}
+
+	/* only check the case of overflow. */
+	nsid = from_le32(buffer);
+	if (nsid == 0xffffffffu) {
+		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
+	}
+
+free_buffer:
+	spdk_dma_free(buffer);
+	return rc;
+}
+
 void
 nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 			       const struct spdk_nvme_cpl *cpl)
 {
 	union spdk_nvme_async_event_completion event;
 	struct spdk_nvme_ctrlr_process *active_proc;
+	bool				ns_changed = false;
 	int rc;
 
 	event.raw = cpl->cdw0;
 
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		rc = nvme_ctrlr_identify_active_ns(ctrlr);
-		if (rc) {
-			return;
-		}
-		nvme_ctrlr_update_namespaces(ctrlr);
-		nvme_io_msg_ctrlr_update(ctrlr);
+		/*
+		 * apps (e.g., test/nvme/aer/aer.c) may also get changed ns log (through
+		 * active_proc->aer_cb_fn). To avoid impaction, move our operations
+		 * behind call of active_proc->aer_cb_fn.
+		 */
+		ns_changed = true;
 	}
 
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
@@ -2646,6 +2704,22 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc && active_proc->aer_cb_fn) {
 		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
+	}
+
+	if (ns_changed) {
+		/*
+		 * Must have the changed ns log cleared by getting it.
+		 * Otherwise, the target won't send
+		 * the subsequent ns enabling/disabling events to us.
+		 */
+		nvme_ctrlr_clear_changed_ns_log(ctrlr);
+
+		rc = nvme_ctrlr_identify_active_ns(ctrlr);
+		if (rc) {
+			return;
+		}
+		nvme_ctrlr_update_namespaces(ctrlr);
+		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 }
 

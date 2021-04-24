@@ -72,6 +72,11 @@ extern "C" {
  */
 #define SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS	0xFFFFFFFFu
 
+/**
+ * Maximum number of entries in the log page of Changed Namespace List.
+ */
+#define SPDK_NVME_MAX_CHANGED_NAMESPACES 1024
+
 union spdk_nvme_cap_register {
 	uint64_t	raw;
 	struct {
