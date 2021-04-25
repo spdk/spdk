@@ -2041,6 +2041,70 @@ static void
 bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
+_bdev_rw_split(void *_bdev_io);
+
+static int
+bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt, void *md_buf,
+		     uint64_t num_blocks, uint64_t *offset, uint64_t *remaining)
+{
+	int rc;
+	uint64_t current_offset, current_remaining;
+
+	current_offset = *offset;
+	current_remaining = *remaining;
+
+	bdev_io->u.bdev.split_outstanding++;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		rc = bdev_readv_blocks_with_md(bdev_io->internal.desc,
+					       spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					       iov, iovcnt, md_buf, current_offset,
+					       num_blocks,
+					       bdev_io_split_done, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		rc = bdev_writev_blocks_with_md(bdev_io->internal.desc,
+						spdk_io_channel_from_ctx(bdev_io->internal.ch),
+						iov, iovcnt, md_buf, current_offset,
+						num_blocks,
+						bdev_io_split_done, bdev_io);
+		break;
+	default:
+		assert(false);
+		rc = -EINVAL;
+		break;
+	}
+
+	if (rc == 0) {
+		current_offset += num_blocks;
+		current_remaining -= num_blocks;
+		bdev_io->u.bdev.split_current_offset_blocks = current_offset;
+		bdev_io->u.bdev.split_remaining_num_blocks = current_remaining;
+		*offset = current_offset;
+		*remaining = current_remaining;
+	} else {
+		bdev_io->u.bdev.split_outstanding--;
+		if (rc == -ENOMEM) {
+			if (bdev_io->u.bdev.split_outstanding == 0) {
+				/* No I/O is outstanding. Hence we should wait here. */
+				bdev_queue_io_wait_with_cb(bdev_io, _bdev_rw_split);
+			}
+		} else {
+			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+			if (bdev_io->u.bdev.split_outstanding == 0) {
+				spdk_trace_record_tsc(spdk_get_ticks(), TRACE_BDEV_IO_DONE, 0, 0,
+						      (uintptr_t)bdev_io, 0);
+				TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
+				bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
+			}
+		}
+	}
+
+	return rc;
+}
+
+static void
 _bdev_rw_split(void *_bdev_io)
 {
 	struct iovec *parent_iov, *iov;
@@ -2169,44 +2233,9 @@ _bdev_rw_split(void *_bdev_io)
 			to_next_boundary -= to_next_boundary_bytes / blocklen;
 		}
 
-		bdev_io->u.bdev.split_outstanding++;
-
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			rc = bdev_readv_blocks_with_md(bdev_io->internal.desc,
-						       spdk_io_channel_from_ctx(bdev_io->internal.ch),
-						       iov, iovcnt, md_buf, current_offset,
-						       to_next_boundary,
-						       bdev_io_split_done, bdev_io);
-		} else {
-			rc = bdev_writev_blocks_with_md(bdev_io->internal.desc,
-							spdk_io_channel_from_ctx(bdev_io->internal.ch),
-							iov, iovcnt, md_buf, current_offset,
-							to_next_boundary,
-							bdev_io_split_done, bdev_io);
-		}
-
-		if (rc == 0) {
-			current_offset += to_next_boundary;
-			remaining -= to_next_boundary;
-			bdev_io->u.bdev.split_current_offset_blocks = current_offset;
-			bdev_io->u.bdev.split_remaining_num_blocks = remaining;
-		} else {
-			bdev_io->u.bdev.split_outstanding--;
-			if (rc == -ENOMEM) {
-				if (bdev_io->u.bdev.split_outstanding == 0) {
-					/* No I/O is outstanding. Hence we should wait here. */
-					bdev_queue_io_wait_with_cb(bdev_io, _bdev_rw_split);
-				}
-			} else {
-				bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-				if (bdev_io->u.bdev.split_outstanding == 0) {
-					spdk_trace_record_tsc(spdk_get_ticks(), TRACE_BDEV_IO_DONE, 0, 0,
-							      (uintptr_t)bdev_io, 0);
-					TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
-					bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
-				}
-			}
-
+		rc = bdev_io_split_submit(bdev_io, iov, iovcnt, md_buf, to_next_boundary,
+					  &current_offset, &remaining);
+		if (spdk_unlikely(rc)) {
 			return;
 		}
 	}
