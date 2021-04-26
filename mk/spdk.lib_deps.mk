@@ -51,6 +51,7 @@ DEPDIRS-idxd := log
 DEPDIRS-sock := log $(JSON_LIBS)
 DEPDIRS-util := log
 DEPDIRS-vmd := log
+DEPDIRS-dma := log
 ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-vfio_user := log
 endif

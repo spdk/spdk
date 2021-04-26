@@ -239,6 +239,7 @@ run_test "unittest_util" unittest_util
 if grep -q '#define SPDK_CONFIG_VHOST 1' $rootdir/include/spdk/config.h; then
 	run_test "unittest_vhost" $valgrind $testdir/lib/vhost/vhost.c/vhost_ut
 fi
+run_test "unittest_dma" $valgrind $testdir/lib/dma/dma.c/dma_ut
 
 run_test "unittest_init" unittest_init
 

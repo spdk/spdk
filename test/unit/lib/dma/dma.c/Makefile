@@ -1,8 +1,7 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -14,7 +13,7 @@
 #      notice, this list of conditions and the following disclaimer in
 #      the documentation and/or other materials provided with the
 #      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
+#    * Neither the name of Nvidia Corporation nor the names of its
 #      contributors may be used to endorse or promote products derived
 #      from this software without specific prior written permission.
 #
@@ -31,21 +30,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+TEST_FILE = dma_ut.c
 
-DIRS-y = accel bdev blob blobfs dma event ioat iscsi json jsonrpc log lvol
-DIRS-y += notify nvme nvmf scsi sock thread util env_dpdk init
-DIRS-$(CONFIG_IDXD) += idxd
-DIRS-$(CONFIG_REDUCE) += reduce
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
-DIRS-y += ftl
-endif
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

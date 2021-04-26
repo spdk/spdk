@@ -2,6 +2,14 @@
 
 ## v21.10: (Upcoming Release)
 
+### dma
+
+A new library, lib/dma, has been added. This library provides the necessary infrastructure for
+handling systems and devices with multiple memory domains. For example, a PCIe add-in card with an
+SoC may be running SPDK on the SoC. That SoC has its own local memory, but SPDK may be controlling
+devices that can also access the host system memory. This library provides infrastructure to enumerate
+the memory domains and request hardware perform DMA transfers between them.
+
 ### log
 
 Added API `spdk_log_to_syslog_level` to return syslog level based on SPDK's
