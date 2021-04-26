@@ -608,15 +608,21 @@ thread_execute_poller(struct spdk_thread *thread, struct spdk_poller *poller)
 {
 	int rc;
 
-	if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+	switch (poller->state) {
+	case SPDK_POLLER_STATE_UNREGISTERED:
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		free(poller);
 		return 0;
-	} else if (poller->state == SPDK_POLLER_STATE_PAUSING) {
+	case SPDK_POLLER_STATE_PAUSING:
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_PAUSED;
 		return 0;
+	case SPDK_POLLER_STATE_WAITING:
+		break;
+	default:
+		assert(false);
+		break;
 	}
 
 	poller->state = SPDK_POLLER_STATE_RUNNING;
@@ -633,11 +639,19 @@ thread_execute_poller(struct spdk_thread *thread, struct spdk_poller *poller)
 	}
 #endif
 
-	if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+	switch (poller->state) {
+	case SPDK_POLLER_STATE_UNREGISTERED:
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		free(poller);
-	} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
+		break;
+	case SPDK_POLLER_STATE_PAUSED:
+		break;
+	case SPDK_POLLER_STATE_RUNNING:
 		poller->state = SPDK_POLLER_STATE_WAITING;
+		break;
+	default:
+		assert(false);
+		break;
 	}
 
 	return rc;
@@ -649,15 +663,21 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 {
 	int rc;
 
-	if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+	switch (poller->state) {
+	case SPDK_POLLER_STATE_UNREGISTERED:
 		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
 		free(poller);
 		return 0;
-	} else if (poller->state == SPDK_POLLER_STATE_PAUSING) {
+	case SPDK_POLLER_STATE_PAUSING:
 		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
 		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_PAUSED;
 		return 0;
+	case SPDK_POLLER_STATE_WAITING:
+		break;
+	default:
+		assert(false);
+		break;
 	}
 
 	poller->state = SPDK_POLLER_STATE_RUNNING;
@@ -674,13 +694,21 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 	}
 #endif
 
-	if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+	switch (poller->state) {
+	case SPDK_POLLER_STATE_UNREGISTERED:
 		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
 		free(poller);
-	} else if (poller->state != SPDK_POLLER_STATE_PAUSED) {
+		break;
+	case SPDK_POLLER_STATE_PAUSED:
+		break;
+	case SPDK_POLLER_STATE_RUNNING:
 		poller->state = SPDK_POLLER_STATE_WAITING;
 		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
 		poller_insert_timer(thread, poller, now);
+		break;
+	default:
+		assert(false);
+		break;
 	}
 
 	return rc;
