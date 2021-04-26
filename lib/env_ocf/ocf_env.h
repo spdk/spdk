@@ -54,6 +54,8 @@
 #include "ocf_env_list.h"
 #include "ocf/ocf_err.h"
 
+#include "mpool.h"
+
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -181,7 +183,10 @@ static inline uint64_t env_get_free_memory(void)
 typedef struct {
 	struct spdk_mempool *mempool;
 	size_t element_size;
+	size_t element_count;
 } env_allocator;
+
+env_allocator *env_allocator_create_extended(uint32_t size, const char *name, int limit);
 
 env_allocator *env_allocator_create(uint32_t size, const char *name);
 

@@ -45,6 +45,7 @@
  * for every request it sends and recieves
  */
 #define ENV_ALLOCATOR_NBUFS 32767
+#define GET_ELEMENTS_COUNT(_limit) (_limit < 0 ? ENV_ALLOCATOR_NBUFS : _limit)
 
 /* Use unique index for env allocators */
 static env_atomic g_env_allocator_index = 0;
@@ -64,6 +65,12 @@ env_allocator_new(env_allocator *allocator)
 env_allocator *
 env_allocator_create(uint32_t size, const char *name)
 {
+	return env_allocator_create_extended(size, name, -1);
+}
+
+env_allocator *
+env_allocator_create_extended(uint32_t size, const char *name, int limit)
+{
 	env_allocator *allocator;
 	char qualified_name[128] = {0};
 
@@ -75,7 +82,7 @@ env_allocator_create(uint32_t size, const char *name)
 	}
 
 	allocator->mempool = spdk_mempool_create(qualified_name,
-			     ENV_ALLOCATOR_NBUFS, size,
+			     GET_ELEMENTS_COUNT(limit), size,
 			     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 			     SPDK_ENV_SOCKET_ID_ANY);
 
@@ -86,6 +93,7 @@ env_allocator_create(uint32_t size, const char *name)
 	}
 
 	allocator->element_size = size;
+	allocator->element_count = GET_ELEMENTS_COUNT(limit);
 
 	return allocator;
 }
@@ -100,7 +108,7 @@ void
 env_allocator_destroy(env_allocator *allocator)
 {
 	if (allocator) {
-		if (ENV_ALLOCATOR_NBUFS - spdk_mempool_count(allocator->mempool)) {
+		if (allocator->element_count - spdk_mempool_count(allocator->mempool)) {
 			SPDK_ERRLOG("Not all objects deallocated\n");
 			assert(false);
 		}
