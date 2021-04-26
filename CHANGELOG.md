@@ -161,6 +161,11 @@ For `bdev_raid_create` RPC, the deprecated parameter `strip_size` was removed.
 New RPC `bdev_nvme_get_transport_statistics` was added, it allows to get transport statistics
 of nvme poll groups.
 
+Parameter `enable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
+use `enable-zerocopy-send-server` or `enable-zerocopy-send-client` instead.
+Parameter `disable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
+use `disable-zerocopy-send-server` or `disable-zerocopy-send-client` instead.
+
 ### rpm
 
 Added support for new RPM spec, rpmbuild/spdk.spec, which can be used for packaging the

@@ -111,6 +111,7 @@ struct spdk_sock_impl_opts {
 	bool enable_recv_pipe;
 
 	/**
+	 * **Deprecated, please use enable_zerocopy_send_server or enable_zerocopy_send_client instead**
 	 * Enable or disable use of zero copy flow on send. Used by posix socket module.
 	 */
 	bool enable_zerocopy_send;
