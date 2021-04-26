@@ -899,6 +899,7 @@ test_spdk_nvme_ctrlr_cmd_abort(void)
 	ctrlr.adminq = &admin_qpair;
 	admin_qpair.id = 0;
 	MOCK_SET(nvme_ctrlr_submit_admin_request, 0);
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
 
 	rc = spdk_nvme_ctrlr_cmd_abort(&ctrlr, qpair, 2, (void *)0xDEADBEEF, (void *)0xDCADBEEF);
 	CU_ASSERT(rc == 0);
@@ -914,6 +915,7 @@ test_spdk_nvme_ctrlr_cmd_abort(void)
 	rc = spdk_nvme_ctrlr_cmd_abort(&ctrlr, qpair, 2, (void *)0xDEADBEEF, (void *)0xDCADBEEF);
 	CU_ASSERT(rc == -ENOMEM);
 	MOCK_CLEAR(nvme_ctrlr_submit_admin_request);
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 }
 
 int main(int argc, char **argv)
