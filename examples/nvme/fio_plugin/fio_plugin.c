@@ -424,15 +424,14 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	if (fio_options->zone_append) {
-		if (spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS &&
-		    spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED) {
-			fprintf(stdout, "Using zone append instead of write\n");
+	if (fio_options->zone_append && spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
+		if (spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED) {
+			fprintf(stdout, "Using zone appends instead of writes on: '%s'\n",
+				fio_qpair->f->file_name);
 			fio_qpair->zone_append_enabled = true;
 		} else {
-			SPDK_ERRLOG("zone_append=1 requested, but namespace lacks support\n");
-			g_error = true;
-			return;
+			SPDK_WARNLOG("Falling back to writes on: '%s' - ns lacks zone append cmd\n",
+				     fio_qpair->f->file_name);
 		}
 	}
 
