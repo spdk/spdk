@@ -1391,11 +1391,6 @@ spdk_poller_pause(struct spdk_poller *poller)
 {
 	struct spdk_thread *thread;
 
-	if (poller->state == SPDK_POLLER_STATE_PAUSED ||
-	    poller->state == SPDK_POLLER_STATE_PAUSING) {
-		return;
-	}
-
 	thread = spdk_get_thread();
 	if (!thread) {
 		assert(false);
@@ -1414,9 +1409,11 @@ spdk_poller_pause(struct spdk_poller *poller)
 	 * allows a poller to be paused from another one's context without
 	 * breaking the TAILQ_FOREACH_REVERSE_SAFE iteration.
 	 */
-	if (poller->state != SPDK_POLLER_STATE_RUNNING) {
-		poller->state = SPDK_POLLER_STATE_PAUSING;
-	} else {
+	switch (poller->state) {
+	case SPDK_POLLER_STATE_PAUSED:
+	case SPDK_POLLER_STATE_PAUSING:
+		break;
+	case SPDK_POLLER_STATE_RUNNING:
 		if (poller->period_ticks > 0) {
 			TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
 		} else {
@@ -1425,6 +1422,13 @@ spdk_poller_pause(struct spdk_poller *poller)
 
 		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_PAUSED;
+		break;
+	case SPDK_POLLER_STATE_WAITING:
+		poller->state = SPDK_POLLER_STATE_PAUSING;
+		break;
+	default:
+		assert(false);
+		break;
 	}
 }
 
@@ -1432,11 +1436,6 @@ void
 spdk_poller_resume(struct spdk_poller *poller)
 {
 	struct spdk_thread *thread;
-
-	if (poller->state != SPDK_POLLER_STATE_PAUSED &&
-	    poller->state != SPDK_POLLER_STATE_PAUSING) {
-		return;
-	}
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -1456,12 +1455,21 @@ spdk_poller_resume(struct spdk_poller *poller)
 	 * we just need to flip its state back to waiting, as it's already on
 	 * the appropriate list.
 	 */
-	if (poller->state == SPDK_POLLER_STATE_PAUSED) {
+	switch (poller->state) {
+	case SPDK_POLLER_STATE_PAUSED:
 		TAILQ_REMOVE(&thread->paused_pollers, poller, tailq);
 		thread_insert_poller(thread, poller);
+	/* fallthrough */
+	case SPDK_POLLER_STATE_PAUSING:
+		poller->state = SPDK_POLLER_STATE_WAITING;
+		break;
+	case SPDK_POLLER_STATE_RUNNING:
+	case SPDK_POLLER_STATE_WAITING:
+		break;
+	default:
+		assert(false);
+		break;
 	}
-
-	poller->state = SPDK_POLLER_STATE_WAITING;
 }
 
 const char *
