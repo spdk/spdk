@@ -28,6 +28,13 @@ The following APIs have been deprecated and will be removed in SPDK 21.07:
 - `poll_group_free_stat` (transport op in `nvmf_transport.h`).
 Please use `spdk_nvmf_poll_group_dump_stat` and `poll_group_dump_stat` instead.
 
+## rpc
+
+Parameter `enable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
+use `enable-zerocopy-send-server` or `enable-zerocopy-send-client` instead.
+Parameter `disable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
+use `disable-zerocopy-send-server` or `disable-zerocopy-send-client` instead.
+
 ## rpm
 
 `pkg/spdk.spec` is considered to be deprecated and scheduled for removal in SPDK 21.07.
