@@ -669,6 +669,10 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 	TAILQ_FOREACH_SAFE(poller, &thread->timed_pollers, tailq, tmp) {
 		int timer_rc = 0;
 
+		if (now < poller->next_run_tick) {
+			break;
+		}
+
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 			TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
 			free(poller);
@@ -678,10 +682,6 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_PAUSED;
 			continue;
-		}
-
-		if (now < poller->next_run_tick) {
-			break;
 		}
 
 		poller->state = SPDK_POLLER_STATE_RUNNING;
