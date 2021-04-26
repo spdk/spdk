@@ -1244,6 +1244,22 @@ spdk_poller_register_interrupt(struct spdk_poller *poller,
 	}
 }
 
+static uint64_t
+convert_us_to_ticks(uint64_t us)
+{
+	uint64_t quotient, remainder, ticks;
+
+	if (us) {
+		quotient = us / SPDK_SEC_TO_USEC;
+		remainder = us % SPDK_SEC_TO_USEC;
+		ticks = spdk_get_ticks_hz();
+
+		return ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_USEC;
+	} else {
+		return 0;
+	}
+}
+
 static struct spdk_poller *
 poller_register(spdk_poller_fn fn,
 		void *arg,
@@ -1252,7 +1268,6 @@ poller_register(spdk_poller_fn fn,
 {
 	struct spdk_thread *thread;
 	struct spdk_poller *poller;
-	uint64_t quotient, remainder, ticks;
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -1283,15 +1298,7 @@ poller_register(spdk_poller_fn fn,
 	poller->thread = thread;
 	poller->interruptfd = -1;
 
-	if (period_microseconds) {
-		quotient = period_microseconds / SPDK_SEC_TO_USEC;
-		remainder = period_microseconds % SPDK_SEC_TO_USEC;
-		ticks = spdk_get_ticks_hz();
-
-		poller->period_ticks = ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_USEC;
-	} else {
-		poller->period_ticks = 0;
-	}
+	poller->period_ticks = convert_us_to_ticks(period_microseconds);
 
 	if (spdk_interrupt_mode_is_enabled()) {
 		int rc;
