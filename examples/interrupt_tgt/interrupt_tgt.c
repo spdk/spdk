@@ -97,7 +97,8 @@ err:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 "Invalid parameters");
 }
-SPDK_RPC_REGISTER("reactor_set_interrupt_mode", rpc_reactor_set_interrupt_mode, SPDK_RPC_RUNTIME)
+/* private */ SPDK_RPC_REGISTER("reactor_set_interrupt_mode", rpc_reactor_set_interrupt_mode,
+				SPDK_RPC_RUNTIME)
 
 static void
 interrupt_tgt_usage(void)
