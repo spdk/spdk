@@ -2107,6 +2107,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name to use
 mode                    | Required | string      | OCF cache mode: wb, wt, pt, wa, wi, wo
+cache_line_size         | Optional | int         | OCF cache line size in KiB: 4, 8, 16, 32, 64
 cache_bdev_name         | Required | string      | Name of underlying cache bdev
 core_bdev_name          | Required | string      | Name of underlying core bdev
 
@@ -2123,7 +2124,8 @@ Example request:
   "params": {
     "name": "ocf0",
     "mode": "wt",
-    "cache_bdev_name": "Nvme0n1"
+    "cache_line_size": 64,
+    "cache_bdev_name": "Nvme0n1",
     "core_bdev_name": "aio0"
   },
   "jsonrpc": "2.0",

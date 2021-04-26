@@ -40,6 +40,9 @@
 ocf_cache_mode_t ocf_get_cache_mode(const char *cache_mode);
 const char *ocf_get_cache_modename(ocf_cache_mode_t mode);
 
+/* Get cache line size in KiB units */
+int ocf_get_cache_line_size(ocf_cache_t cache);
+
 /* Initiate management operation
  * Receives NULL terminated array of functions (path)
  * and callback (cb)

@@ -198,7 +198,11 @@ static void
 unregister_finish(struct vbdev_ocf *vbdev)
 {
 	spdk_bdev_destruct_done(&vbdev->exp_bdev, vbdev->state.stop_status);
-	ocf_mngt_cache_put(vbdev->ocf_cache);
+
+	if (vbdev->ocf_cache) {
+		ocf_mngt_cache_put(vbdev->ocf_cache);
+	}
+
 	vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
 	vbdev_ocf_mngt_continue(vbdev, 0);
 }
@@ -740,7 +744,7 @@ vbdev_ocf_dump_info_json(void *opaque, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "mode",
 				     ocf_get_cache_modename(ocf_cache_get_mode(vbdev->ocf_cache)));
 	spdk_json_write_named_uint32(w, "cache_line_size",
-				     ocf_cache_get_line_size(vbdev->ocf_cache));
+				     ocf_get_cache_line_size(vbdev->ocf_cache));
 	spdk_json_write_named_bool(w, "metadata_volatile",
 				   vbdev->cfg.cache.metadata_volatile);
 
@@ -761,7 +765,7 @@ vbdev_ocf_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 	spdk_json_write_named_string(w, "mode",
 				     ocf_get_cache_modename(ocf_cache_get_mode(vbdev->ocf_cache)));
 	spdk_json_write_named_uint32(w, "cache_line_size",
-				     ocf_cache_get_line_size(vbdev->ocf_cache));
+				     ocf_get_cache_line_size(vbdev->ocf_cache));
 	spdk_json_write_named_string(w, "cache_bdev_name", vbdev->cache.name);
 	spdk_json_write_named_string(w, "core_bdev_name", vbdev->core.name);
 	spdk_json_write_object_end(w);
@@ -1092,6 +1096,7 @@ start_cache(struct vbdev_ocf *vbdev)
 
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
+		SPDK_ERRLOG("Could not start cache %s: %d\n", vbdev->name, rc);
 		vbdev_ocf_mngt_exit(vbdev, unregister_path_dirty, rc);
 		return;
 	}

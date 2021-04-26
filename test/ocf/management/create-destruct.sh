@@ -43,7 +43,7 @@ if bdev_check_claimed Malloc0; then
 	exit 1
 fi
 
-$rpc_py bdev_ocf_create FullCache wt Malloc0 Malloc1 --cache-line-size 8
+$rpc_py bdev_ocf_create FullCache wt Malloc0 Malloc1
 
 $rpc_py bdev_ocf_get_bdevs FullCache | jq -e \
 	'.[0] | .started and .cache.attached and .core.attached'
@@ -59,7 +59,7 @@ if bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1; then
 	exit 1
 fi
 
-$rpc_py bdev_ocf_create HotCache wt Malloc0 Malloc1 --cache-line-size 16
+$rpc_py bdev_ocf_create HotCache wt Malloc0 Malloc1
 
 if ! (bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1); then
 	echo >&2 "Base devices expected to be claimed now"

@@ -70,6 +70,12 @@ ocf_get_cache_modename(ocf_cache_mode_t mode)
 }
 
 int
+ocf_get_cache_line_size(ocf_cache_t cache)
+{
+	return ocf_cache_get_line_size(cache) / KiB;
+}
+
+int
 vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
 		     vbdev_ocf_mngt_callback cb, void *cb_arg)
 {
