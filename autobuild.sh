@@ -119,6 +119,9 @@ function build_native_dpdk() {
 		if grep "20.08.0" $external_dpdk_base_dir/VERSION; then
 			wget https://github.com/spdk/dpdk/commit/64f1ced13f974e8b3d46b87c361a09eca68126f9.patch -O dpdk-pci.patch
 			wget https://github.com/spdk/dpdk/commit/c2c273d5c8fbf673623b427f8f4ab5af5ddf0e08.patch -O dpdk-qat.patch
+		elif grep "20.11\|21.02" $external_dpdk_base_dir/VERSION; then
+			wget https://github.com/karlatec/dpdk/commit/3219c0cfc38803aec10c809dde16e013b370bda9.patch -O dpdk-pci.patch
+			wget https://github.com/karlatec/dpdk/commit/adf8f7638de29bc4bf9ba3faf12bbdae73acda0c.patch -O dpdk-qat.patch
 		else
 			wget https://github.com/karlatec/dpdk/commit/eac05db0580091ef8e4d338aa5d2210695521894.patch -O dpdk-pci.patch
 			wget https://github.com/karlatec/dpdk/commit/d649d5efb7bb404ce59dea81768adeb994b284f7.patch -O dpdk-qat.patch
