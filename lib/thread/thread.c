@@ -1355,6 +1355,12 @@ spdk_poller_pause(struct spdk_poller *poller)
 		return;
 	}
 
+	if (poller->thread != thread) {
+		SPDK_ERRLOG("different from the thread that called spdk_poller_pause()\n");
+		assert(false);
+		return;
+	}
+
 	/* If a poller is paused from within itself, we can immediately move it
 	 * on the paused_pollers list.  Otherwise we just set its state to
 	 * SPDK_POLLER_STATE_PAUSING and let spdk_thread_poll() move it.  It
@@ -1387,6 +1393,12 @@ spdk_poller_resume(struct spdk_poller *poller)
 
 	thread = spdk_get_thread();
 	if (!thread) {
+		assert(false);
+		return;
+	}
+
+	if (poller->thread != thread) {
+		SPDK_ERRLOG("different from the thread that called spdk_poller_resume()\n");
 		assert(false);
 		return;
 	}
