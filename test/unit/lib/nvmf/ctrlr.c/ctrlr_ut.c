@@ -1998,6 +1998,111 @@ test_rae(void)
 	cleanup_pending_async_events(&ctrlr);
 }
 
+static void
+test_nvmf_ctrlr_create_destruct(void)
+{
+	struct spdk_nvmf_fabric_connect_data connect_data = {};
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups[2] = {};
+	struct spdk_nvmf_transport transport = {};
+	struct spdk_nvmf_transport_ops tops = {};
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr *ctrlr = NULL;
+	struct spdk_nvmf_tgt tgt = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	const uint8_t hostid[16] = {
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+		0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+	};
+	const char subnqn[] = "nqn.2016-06.io.spdk:subsystem1";
+	const char hostnqn[] = "nqn.2016-06.io.spdk:host1";
+
+	group.thread = spdk_get_thread();
+	transport.ops = &tops;
+	transport.opts.max_aq_depth = 32;
+	transport.opts.max_queue_depth = 64;
+	transport.opts.max_qpairs_per_ctrlr = 3;
+	transport.opts.dif_insert_or_strip = true;
+	transport.tgt = &tgt;
+	qpair.transport = &transport;
+	qpair.group = &group;
+	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	TAILQ_INIT(&qpair.outstanding);
+
+	memcpy(connect_data.hostid, hostid, sizeof(hostid));
+	connect_data.cntlid = 0xFFFF;
+	snprintf(connect_data.subnqn, sizeof(connect_data.subnqn), "%s", subnqn);
+	snprintf(connect_data.hostnqn, sizeof(connect_data.hostnqn), "%s", hostnqn);
+
+	subsystem.thread = spdk_get_thread();
+	subsystem.id = 1;
+	TAILQ_INIT(&subsystem.ctrlrs);
+	subsystem.tgt = &tgt;
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
+
+	group.sgroups = sgroups;
+
+	cmd.connect_cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.connect_cmd.cid = 1;
+	cmd.connect_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+	cmd.connect_cmd.recfmt = 0;
+	cmd.connect_cmd.qid = 0;
+	cmd.connect_cmd.sqsize = 31;
+	cmd.connect_cmd.cattr = 0;
+	cmd.connect_cmd.kato = 120000;
+
+	req.qpair = &qpair;
+	req.length = sizeof(connect_data);
+	req.xfer = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+	req.data = &connect_data;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+	sgroups[subsystem.id].mgmt_io_outstanding++;
+
+	ctrlr = nvmf_ctrlr_create(&subsystem, &req, &req.cmd->connect_cmd, req.data);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+	CU_ASSERT(req.qpair->ctrlr == ctrlr);
+	CU_ASSERT(ctrlr->subsys == &subsystem);
+	CU_ASSERT(ctrlr->thread == req.qpair->group->thread);
+	CU_ASSERT(ctrlr->disconnect_in_progress == false);
+	CU_ASSERT(ctrlr->qpair_mask != NULL);
+	CU_ASSERT(ctrlr->feat.keep_alive_timer.bits.kato == 120000);
+	CU_ASSERT(ctrlr->feat.async_event_configuration.bits.ns_attr_notice == 1);
+	CU_ASSERT(ctrlr->feat.volatile_write_cache.bits.wce == 1);
+	CU_ASSERT(ctrlr->feat.number_of_queues.bits.ncqr == 1);
+	CU_ASSERT(ctrlr->feat.number_of_queues.bits.nsqr == 1);
+	CU_ASSERT(!strncmp((void *)&ctrlr->hostid, hostid, 16));
+	CU_ASSERT(ctrlr->vcprop.cap.bits.cqr == 1);
+	CU_ASSERT(ctrlr->vcprop.cap.bits.mqes == 63);
+	CU_ASSERT(ctrlr->vcprop.cap.bits.ams == 0);
+	CU_ASSERT(ctrlr->vcprop.cap.bits.to == 1);
+	CU_ASSERT(ctrlr->vcprop.cap.bits.dstrd == 0);
+	CU_ASSERT(ctrlr->vcprop.cap.bits.css == SPDK_NVME_CAP_CSS_NVM);
+	CU_ASSERT(ctrlr->vcprop.cap.bits.mpsmin == 0);
+	CU_ASSERT(ctrlr->vcprop.cap.bits.mpsmax == 0);
+	CU_ASSERT(ctrlr->vcprop.vs.bits.mjr == 1);
+	CU_ASSERT(ctrlr->vcprop.vs.bits.mnr == 3);
+	CU_ASSERT(ctrlr->vcprop.vs.bits.ter == 0);
+	CU_ASSERT(ctrlr->vcprop.cc.raw == 0);
+	CU_ASSERT(ctrlr->vcprop.cc.bits.en == 0);
+	CU_ASSERT(ctrlr->vcprop.csts.raw == 0);
+	CU_ASSERT(ctrlr->vcprop.csts.bits.rdy == 0);
+	CU_ASSERT(ctrlr->dif_insert_or_strip == true);
+
+	nvmf_ctrlr_destruct(ctrlr);
+	poll_threads();
+	CU_ASSERT(TAILQ_EMPTY(&subsystem.ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&qpair.outstanding));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2026,6 +2131,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_get_ana_log_page);
 	CU_ADD_TEST(suite, test_multi_async_events);
 	CU_ADD_TEST(suite, test_rae);
+	CU_ADD_TEST(suite, test_nvmf_ctrlr_create_destruct);
 
 	allocate_threads(1);
 	set_thread(0);
