@@ -1591,7 +1591,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 }
 
 static void
-_destroy_ctrlr(void *ctx)
+_free_ctrlr(void *ctx)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	int i;
@@ -1609,16 +1609,16 @@ _destroy_ctrlr(void *ctx)
 }
 
 static int
-destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	assert(ctrlr != NULL);
 
-	SPDK_DEBUGLOG(nvmf_vfio, "destroy %s\n", ctrlr_id(ctrlr));
+	SPDK_DEBUGLOG(nvmf_vfio, "free %s\n", ctrlr_id(ctrlr));
 
 	if (ctrlr->thread == spdk_get_thread()) {
-		_destroy_ctrlr(ctrlr);
+		_free_ctrlr(ctrlr);
 	} else {
-		spdk_thread_send_msg(ctrlr->thread, _destroy_ctrlr, ctrlr);
+		spdk_thread_send_msg(ctrlr->thread, _free_ctrlr, ctrlr);
 	}
 
 	return 0;
@@ -1656,7 +1656,7 @@ out:
 	if (err != 0) {
 		SPDK_ERRLOG("%s: failed to create vfio-user controller: %s\n",
 			    endpoint_id(endpoint), strerror(-err));
-		if (destroy_ctrlr(ctrlr) != 0) {
+		if (free_ctrlr(ctrlr) != 0) {
 			SPDK_ERRLOG("%s: failed to clean up\n",
 				    endpoint_id(endpoint));
 		}
@@ -1774,7 +1774,7 @@ nvmf_vfio_user_stop_listen(struct spdk_nvmf_transport *transport,
 		if (strcmp(trid->traddr, endpoint->trid.traddr) == 0) {
 			TAILQ_REMOVE(&vu_transport->endpoints, endpoint, link);
 			if (endpoint->ctrlr) {
-				err = destroy_ctrlr(endpoint->ctrlr);
+				err = free_ctrlr(endpoint->ctrlr);
 				if (err != 0) {
 					SPDK_ERRLOG("%s: failed destroy controller: %s\n",
 						    endpoint_id(endpoint), strerror(-err));
@@ -1924,7 +1924,7 @@ vfio_user_qpair_disconnect_cb(void *ctx)
 	}
 
 	if (!ctrlr->num_connected_qps) {
-		destroy_ctrlr(ctrlr);
+		free_ctrlr(ctrlr);
 		pthread_mutex_unlock(&endpoint->lock);
 		return;
 	}
@@ -1998,7 +1998,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 	if (spdk_nvme_cpl_is_error(&req->req.rsp->nvme_cpl)) {
 		SPDK_ERRLOG("SC %u, SCT %u\n", req->req.rsp->nvme_cpl.status.sc, req->req.rsp->nvme_cpl.status.sct);
-		destroy_ctrlr(ctrlr);
+		free_ctrlr(ctrlr);
 		return -1;
 	}
 
