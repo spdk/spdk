@@ -2203,6 +2203,14 @@ vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	endpoint = ctrlr->endpoint;
 	assert(endpoint != NULL);
 
+	pthread_mutex_lock(&endpoint->lock);
+	if (ctrlr->num_connected_qps == 0) {
+		free_ctrlr(ctrlr);
+		pthread_mutex_unlock(&endpoint->lock);
+		return 0;
+	}
+	pthread_mutex_unlock(&endpoint->lock);
+
 	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
 		qpair = ctrlr->qp[i];
 		if (qpair == NULL) {
