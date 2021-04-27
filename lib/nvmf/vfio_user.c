@@ -251,6 +251,12 @@ enum nvmf_vfio_user_ctrlr_state {
 	VFIO_USER_CTRLR_MIGRATING
 };
 
+/* Migration region to record NVMe device state data structure */
+struct vfio_user_migration_region {
+	uint64_t last_data_offset;
+	uint64_t pending_bytes;
+};
+
 struct nvmf_vfio_user_sq {
 	struct spdk_nvmf_qpair			qpair;
 	struct spdk_nvmf_transport_poll_group	*group;
@@ -292,6 +298,8 @@ struct nvmf_vfio_user_ctrlr {
 	/* Connected SQs list */
 	TAILQ_HEAD(, nvmf_vfio_user_sq)		connected_sqs;
 	enum nvmf_vfio_user_ctrlr_state		state;
+
+	struct vfio_user_migration_region	migr_reg;
 
 	struct spdk_thread			*thread;
 	struct spdk_poller			*vfu_ctx_poller;
