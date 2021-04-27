@@ -300,6 +300,7 @@ blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 	TAILQ_INIT(&blob->xattrs);
 	TAILQ_INIT(&blob->xattrs_internal);
 	TAILQ_INIT(&blob->pending_persists);
+	TAILQ_INIT(&blob->persists_to_complete);
 
 	return blob;
 }
@@ -322,6 +323,7 @@ blob_free(struct spdk_blob *blob)
 {
 	assert(blob != NULL);
 	assert(TAILQ_EMPTY(&blob->pending_persists));
+	assert(TAILQ_EMPTY(&blob->persists_to_complete));
 
 	free(blob->active.extent_pages);
 	free(blob->clean.extent_pages);
@@ -1635,24 +1637,31 @@ blob_persist_complete_cb(void *arg)
 static void
 blob_persist_complete(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx, int bserrno)
 {
-	struct spdk_blob_persist_ctx	*next_persist;
+	struct spdk_blob_persist_ctx	*next_persist, *tmp;
 	struct spdk_blob		*blob = ctx->blob;
 
 	if (bserrno == 0) {
 		blob_mark_clean(blob);
 	}
 
-	assert(ctx == TAILQ_FIRST(&blob->pending_persists));
-	TAILQ_REMOVE(&blob->pending_persists, ctx, link);
+	assert(ctx == TAILQ_FIRST(&blob->persists_to_complete));
 
-	next_persist = TAILQ_FIRST(&blob->pending_persists);
-
-	spdk_thread_send_msg(spdk_get_thread(), blob_persist_complete_cb, ctx);
-
-	if (next_persist != NULL) {
-		blob->state = SPDK_BLOB_STATE_DIRTY;
-		blob_persist_check_dirty(next_persist);
+	/* Complete all persists that were pending when the current persist started */
+	TAILQ_FOREACH_SAFE(next_persist, &blob->persists_to_complete, link, tmp) {
+		TAILQ_REMOVE(&blob->persists_to_complete, next_persist, link);
+		spdk_thread_send_msg(spdk_get_thread(), blob_persist_complete_cb, next_persist);
 	}
+
+	if (TAILQ_EMPTY(&blob->pending_persists)) {
+		return;
+	}
+
+	/* Queue up all pending persists for completion and start blob persist with first one */
+	TAILQ_SWAP(&blob->persists_to_complete, &blob->pending_persists, spdk_blob_persist_ctx, link);
+	next_persist = TAILQ_FIRST(&blob->persists_to_complete);
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob_persist_check_dirty(next_persist);
 }
 
 static void
@@ -2272,7 +2281,7 @@ blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	blob_verify_md_op(blob);
 
-	if (blob->state == SPDK_BLOB_STATE_CLEAN && TAILQ_EMPTY(&blob->pending_persists)) {
+	if (blob->state == SPDK_BLOB_STATE_CLEAN && TAILQ_EMPTY(&blob->persists_to_complete)) {
 		cb_fn(seq, cb_arg, 0);
 		return;
 	}
@@ -2289,11 +2298,11 @@ blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 
 	/* Multiple blob persists can affect one another, via blob->state or
 	 * blob mutable data changes. To prevent it, queue up the persists. */
-	if (!TAILQ_EMPTY(&blob->pending_persists)) {
+	if (!TAILQ_EMPTY(&blob->persists_to_complete)) {
 		TAILQ_INSERT_TAIL(&blob->pending_persists, ctx, link);
 		return;
 	}
-	TAILQ_INSERT_HEAD(&blob->pending_persists, ctx, link);
+	TAILQ_INSERT_HEAD(&blob->persists_to_complete, ctx, link);
 
 	blob_persist_check_dirty(ctx);
 }

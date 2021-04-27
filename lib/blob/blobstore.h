@@ -168,6 +168,7 @@ struct spdk_blob {
 
 	/* A list of pending metadata pending_persists */
 	TAILQ_HEAD(, spdk_blob_persist_ctx) pending_persists;
+	TAILQ_HEAD(, spdk_blob_persist_ctx) persists_to_complete;
 
 	/* Number of data clusters retrived from extent table,
 	 * that many have to be read from extent pages. */
