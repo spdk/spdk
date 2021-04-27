@@ -64,6 +64,12 @@ DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transpo
 		const struct spdk_nvme_transport_id *trid2), 0);
 DEFINE_STUB(nvmf_subsystem_get_ctrlr, struct spdk_nvmf_ctrlr *,
 	    (struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid), NULL);
+DEFINE_STUB(nvmf_ctrlr_save_aers, int, (struct spdk_nvmf_ctrlr *ctrlr, uint16_t *aer_cids,
+					uint16_t max_aers), 0);
+DEFINE_STUB(nvmf_ctrlr_save_migr_data, int, (struct spdk_nvmf_ctrlr *ctrlr,
+		struct nvmf_ctrlr_migr_data *data), 0);
+DEFINE_STUB(nvmf_ctrlr_restore_migr_data, int, (struct spdk_nvmf_ctrlr *ctrlr,
+		struct nvmf_ctrlr_migr_data *data), 0);
 
 static void *
 gpa_to_vva(void *prv, uint64_t addr, uint64_t len, int prot)
