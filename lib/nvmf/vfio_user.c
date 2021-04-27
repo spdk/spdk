@@ -727,12 +727,8 @@ unmap_qp(struct nvmf_vfio_user_qpair *qp)
 	}
 }
 
-/*
- * TODO we can immediately remove the QP from the list because this function
- * is now executed by the SPDK thread.
- */
 static void
-destroy_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
+free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 {
 	struct nvmf_vfio_user_qpair *qpair;
 
@@ -1601,7 +1597,7 @@ _destroy_ctrlr(void *ctx)
 	int i;
 
 	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
-		destroy_qp(ctrlr, i);
+		free_qp(ctrlr, i);
 	}
 
 	if (ctrlr->endpoint) {
@@ -2002,7 +1998,6 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 	if (spdk_nvme_cpl_is_error(&req->req.rsp->nvme_cpl)) {
 		SPDK_ERRLOG("SC %u, SCT %u\n", req->req.rsp->nvme_cpl.status.sc, req->req.rsp->nvme_cpl.status.sct);
-		destroy_qp(ctrlr, qpair->qpair.qid);
 		destroy_ctrlr(ctrlr);
 		return -1;
 	}
@@ -2172,7 +2167,7 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 
 	assert(qpair != NULL);
 	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
-	destroy_qp(vu_qpair->ctrlr, qpair->qid);
+	free_qp(vu_qpair->ctrlr, qpair->qid);
 
 	if (cb_fn) {
 		cb_fn(cb_arg);
