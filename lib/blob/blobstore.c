@@ -1620,6 +1620,19 @@ bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, ui
 static void blob_persist_check_dirty(struct spdk_blob_persist_ctx *ctx);
 
 static void
+blob_persist_complete_cb(void *arg)
+{
+	struct spdk_blob_persist_ctx *ctx = arg;
+
+	/* Call user callback */
+	ctx->cb_fn(ctx->seq, ctx->cb_arg, 0);
+
+	/* Free the memory */
+	spdk_free(ctx->pages);
+	free(ctx);
+}
+
+static void
 blob_persist_complete(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*next_persist;
@@ -1634,12 +1647,7 @@ blob_persist_complete(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx
 
 	next_persist = TAILQ_FIRST(&blob->pending_persists);
 
-	/* Call user callback */
-	ctx->cb_fn(seq, ctx->cb_arg, bserrno);
-
-	/* Free the memory */
-	spdk_free(ctx->pages);
-	free(ctx);
+	spdk_thread_send_msg(spdk_get_thread(), blob_persist_complete_cb, ctx);
 
 	if (next_persist != NULL) {
 		blob->state = SPDK_BLOB_STATE_DIRTY;

@@ -821,7 +821,7 @@ blob_snapshot_freeze_io(void)
 	/* This is implementation specific.
 	 * Flag 'frozen_io' is set in _spdk_bs_snapshot_freeze_cpl callback.
 	 * Four async I/O operations happen before that. */
-	poll_thread_times(0, 4);
+	poll_thread_times(0, 5);
 
 	CU_ASSERT(TAILQ_EMPTY(&bs_channel->queued_io));
 
