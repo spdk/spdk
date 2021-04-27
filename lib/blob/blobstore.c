@@ -1642,6 +1642,7 @@ blob_persist_complete(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx *ctx
 	free(ctx);
 
 	if (next_persist != NULL) {
+		blob->state = SPDK_BLOB_STATE_DIRTY;
 		blob_persist_check_dirty(next_persist);
 	}
 }
