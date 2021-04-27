@@ -1932,7 +1932,7 @@ vfio_user_qpair_disconnect_cb(void *ctx)
 }
 
 static int
-vfio_user_stop_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	uint32_t i;
 	struct nvmf_vfio_user_qpair *qpair;
@@ -1970,7 +1970,7 @@ vfio_user_poll_mmio(void *ctx)
 
 		/* initiator shutdown or reset, waiting for another re-connect */
 		if (errno == ENOTCONN) {
-			vfio_user_stop_ctrlr(ctrlr);
+			vfio_user_destroy_ctrlr(ctrlr);
 			return SPDK_POLLER_BUSY;
 		}
 
