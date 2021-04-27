@@ -2612,8 +2612,6 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
 
-	is_allocated = blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
-
 	if (blob->frozen_refcnt) {
 		/* This blob I/O is frozen */
 		spdk_bs_user_op_t *op;
@@ -2629,6 +2627,8 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 
 		return;
 	}
+
+	is_allocated = blob_calculate_lba_and_lba_count(blob, offset, length, &lba, &lba_count);
 
 	switch (op_type) {
 	case SPDK_BLOB_READ: {

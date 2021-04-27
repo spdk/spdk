@@ -821,7 +821,7 @@ blob_snapshot_freeze_io(void)
 	/* This is implementation specific.
 	 * Flag 'frozen_io' is set in _spdk_bs_snapshot_freeze_cpl callback.
 	 * Four async I/O operations happen before that. */
-	poll_thread_times(0, 3);
+	poll_thread_times(0, 4);
 
 	CU_ASSERT(TAILQ_EMPTY(&bs_channel->queued_io));
 
@@ -833,9 +833,8 @@ blob_snapshot_freeze_io(void)
 
 	/* Verify that I/O is queued */
 	CU_ASSERT(!TAILQ_EMPTY(&bs_channel->queued_io));
-	/* Verify that payload is not written to disk */
-	CU_ASSERT(memcmp(payload_zero, &g_dev_buffer[blob->active.clusters[0]*SPDK_BS_PAGE_SIZE],
-			 SPDK_BS_PAGE_SIZE) == 0);
+	/* Verify that payload is not written to disk, at this point the blobs already switched */
+	CU_ASSERT(blob->active.clusters[0] == 0);
 
 	/* Finish all operations including spdk_bs_create_snapshot */
 	poll_threads();
