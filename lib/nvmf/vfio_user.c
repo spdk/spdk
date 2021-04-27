@@ -505,7 +505,9 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 		close(endpoint->devmem_fd);
 	}
 
-	vfu_destroy_ctx(endpoint->vfu_ctx);
+	if (endpoint->vfu_ctx) {
+		vfu_destroy_ctx(endpoint->vfu_ctx);
+	}
 
 	pthread_mutex_destroy(&endpoint->lock);
 	free(endpoint);
@@ -2045,85 +2047,94 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_endpoint *endpoint, *tmp;
-	char *path = NULL;
+	char path[PATH_MAX] = {};
 	char uuid[PATH_MAX] = {};
-	int fd;
-	int err;
+	int ret;
 
 	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
 					transport);
 
+	pthread_mutex_lock(&vu_transport->lock);
 	TAILQ_FOREACH_SAFE(endpoint, &vu_transport->endpoints, link, tmp) {
 		/* Only compare traddr */
 		if (strncmp(endpoint->trid.traddr, trid->traddr, sizeof(endpoint->trid.traddr)) == 0) {
+			pthread_mutex_unlock(&vu_transport->lock);
 			return -EEXIST;
 		}
 	}
+	pthread_mutex_unlock(&vu_transport->lock);
 
 	endpoint = calloc(1, sizeof(*endpoint));
 	if (!endpoint) {
 		return -ENOMEM;
 	}
 
+	pthread_mutex_init(&endpoint->lock, NULL);
 	endpoint->devmem_fd = -1;
 	memcpy(&endpoint->trid, trid, sizeof(endpoint->trid));
 
-	err = asprintf(&path, "%s/bar0", endpoint_id(endpoint));
-	if (err == -1) {
+	ret = snprintf(path, PATH_MAX, "%s/bar0", endpoint_id(endpoint));
+	if (ret < 0 || ret >= PATH_MAX) {
+		SPDK_ERRLOG("%s: error to get socket path: %s.\n", endpoint_id(endpoint), spdk_strerror(errno));
+		ret = -1;
 		goto out;
 	}
 
-	fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-	if (fd == -1) {
-		SPDK_ERRLOG("%s: failed to open device memory at %s: %m\n",
-			    endpoint_id(endpoint), path);
-		err = fd;
-		free(path);
+	ret = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+	if (ret == -1) {
+		SPDK_ERRLOG("%s: failed to open device memory at %s: %s.\n",
+			    endpoint_id(endpoint), path, spdk_strerror(errno));
 		goto out;
 	}
-	free(path);
 
-	endpoint->devmem_fd = fd;
-	err = ftruncate(fd, NVMF_VFIO_USER_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE);
-	if (err != 0) {
+	endpoint->devmem_fd = ret;
+	ret = ftruncate(endpoint->devmem_fd,
+			NVMF_VFIO_USER_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE);
+	if (ret != 0) {
+		SPDK_ERRLOG("%s: error to ftruncate file %s: %s.\n", endpoint_id(endpoint), path,
+			    spdk_strerror(errno));
 		goto out;
 	}
 
 	endpoint->doorbells = mmap(NULL, NVMF_VFIO_USER_DOORBELLS_SIZE,
-				   PROT_READ | PROT_WRITE, MAP_SHARED, fd, NVMF_VFIO_USER_DOORBELLS_OFFSET);
+				   PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->devmem_fd, NVMF_VFIO_USER_DOORBELLS_OFFSET);
 	if (endpoint->doorbells == MAP_FAILED) {
+		SPDK_ERRLOG("%s: error to mmap file %s: %s.\n", endpoint_id(endpoint), path, spdk_strerror(errno));
 		endpoint->doorbells = NULL;
-		err = -errno;
+		ret = -1;
 		goto out;
 	}
 
-	snprintf(uuid, PATH_MAX, "%s/cntrl", endpoint_id(endpoint));
-
+	ret = snprintf(uuid, PATH_MAX, "%s/cntrl", endpoint_id(endpoint));
+	if (ret < 0 || ret >= PATH_MAX) {
+		SPDK_ERRLOG("%s: error to get ctrlr file path: %s\n", endpoint_id(endpoint), spdk_strerror(errno));
+		ret = -1;
+		goto out;
+	}
 	endpoint->vfu_ctx = vfu_create_ctx(VFU_TRANS_SOCK, uuid, LIBVFIO_USER_FLAG_ATTACH_NB,
 					   endpoint, VFU_DEV_TYPE_PCI);
 	if (endpoint->vfu_ctx == NULL) {
 		SPDK_ERRLOG("%s: error creating libmuser context: %m\n",
 			    endpoint_id(endpoint));
-		err = -1;
+		ret = -1;
 		goto out;
 	}
 	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log, vfio_user_get_log_level());
 
-	err = vfio_user_dev_info_fill(vu_transport, endpoint);
-	if (err < 0) {
+	ret = vfio_user_dev_info_fill(vu_transport, endpoint);
+	if (ret < 0) {
 		goto out;
 	}
 
-	pthread_mutex_init(&endpoint->lock, NULL);
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: doorbells %p\n", uuid, endpoint->doorbells);
 
 out:
-	if (err != 0) {
+	if (ret != 0) {
 		nvmf_vfio_user_destroy_endpoint(endpoint);
 	}
 
-	return err;
+	return ret;
 }
 
 static void
