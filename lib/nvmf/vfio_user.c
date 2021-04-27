@@ -170,6 +170,7 @@ struct nvmf_vfio_user_ctrlr {
 	struct spdk_poller			*vfu_ctx_poller;
 
 	uint16_t				cntlid;
+	struct spdk_nvmf_ctrlr			*ctrlr;
 
 	struct nvmf_vfio_user_qpair		*qp[NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR];
 
@@ -2392,43 +2393,44 @@ static int
 handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_poll_group *vu_group;
-	struct nvmf_vfio_user_qpair *qpair = cb_arg;
-	struct nvmf_vfio_user_ctrlr *ctrlr;
+	struct nvmf_vfio_user_qpair *vu_qpair = cb_arg;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
 	struct nvmf_vfio_user_endpoint *endpoint;
 
-	assert(qpair != NULL);
+	assert(vu_qpair != NULL);
 	assert(req != NULL);
 
-	ctrlr = qpair->ctrlr;
-	endpoint = ctrlr->endpoint;
-	assert(ctrlr != NULL);
+	vu_ctrlr = vu_qpair->ctrlr;
+	assert(vu_ctrlr != NULL);
+	endpoint = vu_ctrlr->endpoint;
 	assert(endpoint != NULL);
 
 	if (spdk_nvme_cpl_is_error(&req->req.rsp->nvme_cpl)) {
 		SPDK_ERRLOG("SC %u, SCT %u\n", req->req.rsp->nvme_cpl.status.sc, req->req.rsp->nvme_cpl.status.sct);
 		endpoint->ctrlr = NULL;
-		free_ctrlr(ctrlr, true);
+		free_ctrlr(vu_ctrlr, true);
 		return -1;
 	}
 
-	vu_group = SPDK_CONTAINEROF(qpair->group, struct nvmf_vfio_user_poll_group, group);
-	TAILQ_INSERT_TAIL(&vu_group->qps, qpair, link);
-	qpair->state = VFIO_USER_QPAIR_ACTIVE;
+	vu_group = SPDK_CONTAINEROF(vu_qpair->group, struct nvmf_vfio_user_poll_group, group);
+	TAILQ_INSERT_TAIL(&vu_group->qps, vu_qpair, link);
+	vu_qpair->state = VFIO_USER_QPAIR_ACTIVE;
 
 	pthread_mutex_lock(&endpoint->lock);
-	if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
-		ctrlr->cntlid = qpair->qpair.ctrlr->cntlid;
-		ctrlr->thread = spdk_get_thread();
-		ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx, ctrlr, 0);
+	if (nvmf_qpair_is_admin_queue(&vu_qpair->qpair)) {
+		vu_ctrlr->cntlid = vu_qpair->qpair.ctrlr->cntlid;
+		vu_ctrlr->thread = spdk_get_thread();
+		vu_ctrlr->ctrlr = vu_qpair->qpair.ctrlr;
+		vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx, vu_ctrlr, 0);
 	} else {
 		/* For I/O queues this command was generated in response to an
 		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
 		 * been completed. Complete it now.
 		 */
-		post_completion(ctrlr, &ctrlr->qp[0]->cq, 0, 0,
-				qpair->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
+		post_completion(vu_ctrlr, &vu_ctrlr->qp[0]->cq, 0, 0,
+				vu_qpair->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 	}
-	TAILQ_INSERT_TAIL(&ctrlr->connected_qps, qpair, tailq);
+	TAILQ_INSERT_TAIL(&vu_ctrlr->connected_qps, vu_qpair, tailq);
 	pthread_mutex_unlock(&endpoint->lock);
 
 	free(req->req.data);
