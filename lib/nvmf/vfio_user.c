@@ -1078,7 +1078,15 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	struct nvmf_vfio_user_qpair *qpair;
 	int i, ret;
 
-	if (!info->vaddr || ((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
+	/*
+	 * We're not interested in any DMA regions that aren't mappable (we don't
+	 * support clients that don't share their memory).
+	 */
+	if (!info->vaddr) {
+		return;
+	}
+
+	if (((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
 	    (info->mapping.iov_len & MASK_2MB)) {
 		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
 			      (uintptr_t)info->mapping.iov_base,
@@ -1154,7 +1162,11 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	void *map_start, *map_end;
 	int i;
 
-	if (!info->vaddr || ((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
+	if (!info->vaddr) {
+		return 0;
+	}
+
+	if (((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
 	    (info->mapping.iov_len & MASK_2MB)) {
 		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
 			      (uintptr_t)info->mapping.iov_base,
