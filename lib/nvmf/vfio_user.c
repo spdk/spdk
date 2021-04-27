@@ -87,6 +87,84 @@ enum nvmf_vfio_user_req_state {
 	VFIO_USER_REQUEST_STATE_EXECUTING,
 };
 
+/* NVMe device state representation */
+struct nvme_migr_sq_state {
+	uint16_t	sqid;
+	uint16_t	cqid;
+	uint32_t	head;
+	uint32_t	size;
+	uint32_t	reserved;
+	uint64_t	dma_addr;
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_sq_state) == 0x18, "Incorrect size");
+
+struct nvme_migr_cq_state {
+	uint16_t	cqid;
+	uint16_t	phase;
+	uint32_t	tail;
+	uint32_t	size;
+	uint32_t	iv;
+	uint32_t	ien;
+	uint32_t	reserved;
+	uint64_t	dma_addr;
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_cq_state) == 0x20, "Incorrect size");
+
+/* The device state is in VFIO MIGRATION BAR(9) region, keep the device state page aligned.
+ *
+ * NVMe device migration region is defined as below:
+ * ----------------------------------------------------------------------
+ * | nvme_migr_device_state | private controller data | queue pairs | BARs |
+ * ----------------------------------------------------------------------
+ *
+ * Keep nvme_migr_device_state as a fixed 0x1000 length, all new added fields
+ * can use the reserved space at the end of the data structure.
+ */
+struct nvme_migr_device_state {
+	/* Magic value to validate migration data */
+	uint32_t	magic;
+	/* Version to check the data is same from source to destination */
+	uint32_t	version;
+
+	/* The library uses this field to know how many fields in this
+	 * structure are valid, starting at the beginning of this data
+	 * structure.  New added fields in future use `unused` memory
+	 * spaces.
+	 */
+	uint32_t	opts_size;
+	uint32_t	reserved0;
+
+	/* BARs information */
+	uint64_t	bar_offset[VFU_PCI_DEV_NUM_REGIONS];
+	uint64_t	bar_len[VFU_PCI_DEV_NUM_REGIONS];
+
+	/* Queue pair start offset, starting at the beginning of this
+	 * data structure.
+	 */
+	uint64_t	qp_offset;
+	uint64_t	qp_len;
+
+	/* Controller data structure */
+	uint32_t	num_io_queues;
+	uint32_t	reserved1;
+
+	uint16_t	reserved2[3];
+	uint16_t	nr_aers;
+	uint16_t	aer_cids[256];
+
+	/* Controller private data offset and length if exist, starting at
+	 * the beginning of this data structure.
+	 */
+	uint64_t	private_data_offset;
+	uint64_t	private_data_len;
+
+	/* Reserved memory space for new added fields, the
+	 * field is always at the end of this data structure.
+	 */
+	uint8_t		unused[3356];
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_device_state) == 0x1000, "Incorrect size");
+
 struct nvmf_vfio_user_req  {
 	struct spdk_nvmf_request		req;
 	struct spdk_nvme_cpl			rsp;
