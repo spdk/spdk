@@ -157,8 +157,6 @@ struct nvmf_vfio_user_ctrlr {
 	struct nvmf_vfio_user_endpoint		*endpoint;
 	struct nvmf_vfio_user_transport		*transport;
 
-	/* True when the socket connection is active */
-	bool					ready;
 	/* Number of connected queue pairs */
 	uint32_t				num_connected_qps;
 
@@ -268,7 +266,6 @@ fail_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 		SPDK_ERRLOG(":%s failing controller\n", ctrlr_id(ctrlr));
 	}
 
-	ctrlr->ready = false;
 	ctrlr->cfs = 1U;
 }
 
@@ -1655,7 +1652,6 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 		goto out;
 	}
 	endpoint->ctrlr = ctrlr;
-	ctrlr->ready = true;
 
 	/* Notify the generic layer about the new admin queue pair */
 	TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, ctrlr->qp[0], link);
@@ -1852,8 +1848,8 @@ nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 	pthread_mutex_lock(&vu_transport->lock);
 
 	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
-		/* we need try to attach the controller again after reset or shutdown */
-		if (endpoint->ctrlr != NULL && endpoint->ctrlr->ready) {
+		/* try to attach a new controller  */
+		if (endpoint->ctrlr != NULL) {
 			continue;
 		}
 
@@ -1948,7 +1944,6 @@ vfio_user_stop_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s stop processing\n", ctrlr_id(ctrlr));
 
-	ctrlr->ready = false;
 	endpoint = ctrlr->endpoint;
 	assert(endpoint != NULL);
 
