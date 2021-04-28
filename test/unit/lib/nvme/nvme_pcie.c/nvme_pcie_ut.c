@@ -58,9 +58,6 @@ DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr
 DEFINE_STUB_V(nvme_ctrlr_free_processes, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB(nvme_ctrlr_proc_get_devhandle, struct spdk_pci_device *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
-
-DEFINE_STUB(spdk_pci_device_map_bar, int, (struct spdk_pci_device *dev, uint32_t bar,
-		void **mapped_addr, uint64_t *phys_addr, uint64_t *size), 0);
 DEFINE_STUB(spdk_pci_device_unmap_bar, int, (struct spdk_pci_device *dev, uint32_t bar, void *addr),
 	    0);
 DEFINE_STUB(spdk_pci_device_attach, int, (struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,
@@ -86,12 +83,31 @@ DEFINE_STUB(nvme_transport_get_name, const char *, (const struct spdk_nvme_trans
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
+struct dev_mem_resource {
+	uint64_t phys_addr;
+	uint64_t len;
+	void *addr;
+};
+
 struct nvme_pcie_ut_bdev_io {
 	struct iovec iovs[NVME_MAX_SGL_DESCRIPTORS];
 	int iovpos;
 };
 
 struct nvme_driver *g_spdk_nvme_driver = NULL;
+
+int
+spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
+			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+{
+	struct dev_mem_resource *dev_mem_res = (void *)dev;
+
+	*mapped_addr = dev_mem_res->addr;
+	*phys_addr = dev_mem_res->phys_addr;
+	*size = dev_mem_res->len;
+
+	return 0;
+}
 
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
@@ -707,6 +723,82 @@ test_nvme_pcie_qpair_build_contig_request(void)
 	CU_ASSERT(rc == -EFAULT);
 }
 
+static void
+test_nvme_pcie_ctrlr_regs_get_set(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	volatile struct spdk_nvme_registers regs = {};
+	uint32_t value_4;
+	uint64_t value_8;
+	int rc;
+
+	pctrlr.regs = &regs;
+
+	rc = nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, 8, 4);
+	CU_ASSERT(rc == 0);
+
+	rc = nvme_pcie_ctrlr_get_reg_4(&pctrlr.ctrlr, 8, &value_4);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(value_4 == 4);
+
+	rc = nvme_pcie_ctrlr_set_reg_8(&pctrlr.ctrlr, 0, 0x100000000);
+	CU_ASSERT(rc == 0);
+
+	rc = nvme_pcie_ctrlr_get_reg_8(&pctrlr.ctrlr, 0, &value_8);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(value_8 == 0x100000000);
+}
+
+static void
+test_nvme_pcie_ctrlr_map_unmap_cmb(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	volatile struct spdk_nvme_registers regs = {};
+	union spdk_nvme_cmbsz_register cmbsz = {};
+	union spdk_nvme_cmbloc_register cmbloc = {};
+	struct dev_mem_resource cmd_res = {};
+	int rc;
+
+	pctrlr.regs = &regs;
+	pctrlr.devhandle = (void *)&cmd_res;
+	cmd_res.addr = (void *)0x7f7c0080d000;
+	cmd_res.len = 0x800000;
+	cmd_res.phys_addr = 0xFC800000;
+	/* Configure cmb size with unit size 4k, offset 100, unsupported SQ */
+	cmbsz.bits.sz = 512;
+	cmbsz.bits.szu = 0;
+	cmbsz.bits.sqs = 0;
+	cmbloc.bits.bir = 0;
+	cmbloc.bits.ofst = 100;
+
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
+				  cmbsz.raw);
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw),
+				  cmbloc.raw);
+
+	nvme_pcie_ctrlr_map_cmb(&pctrlr);
+	CU_ASSERT(pctrlr.cmb.bar_va == (void *)0x7f7c0080d000);
+	CU_ASSERT(pctrlr.cmb.bar_pa == 0xFC800000);
+	CU_ASSERT(pctrlr.cmb.size == 512 * 4096);
+	CU_ASSERT(pctrlr.cmb.current_offset == 4096 * 100);
+	CU_ASSERT(pctrlr.ctrlr.opts.use_cmb_sqs == false);
+
+	rc = nvme_pcie_ctrlr_unmap_cmb(&pctrlr);
+	CU_ASSERT(rc == 0);
+
+	/* Invalid mapping information */
+	memset(&pctrlr.cmb, 0, sizeof(pctrlr.cmb));
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw), 0);
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw), 0);
+
+	nvme_pcie_ctrlr_map_cmb(&pctrlr);
+	CU_ASSERT(pctrlr.cmb.bar_va == NULL);
+	CU_ASSERT(pctrlr.cmb.bar_pa == 0);
+	CU_ASSERT(pctrlr.cmb.size == 0);
+	CU_ASSERT(pctrlr.cmb.current_offset == 0);
+	CU_ASSERT(pctrlr.ctrlr.opts.use_cmb_sqs == false);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -724,6 +816,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_prps_sgl_request);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_hw_sgl_request);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_contig_request);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_regs_get_set);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_unmap_cmb);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
