@@ -246,10 +246,10 @@ bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 	}
 }
 
-static int
-bdev_aio_destruct(void *ctx)
+static void
+bdev_aio_destruct_cb(void *io_device)
 {
-	struct file_disk *fdisk = ctx;
+	struct file_disk *fdisk = io_device;
 	int rc = 0;
 
 	TAILQ_REMOVE(&g_aio_disk_head, fdisk, link);
@@ -257,9 +257,18 @@ bdev_aio_destruct(void *ctx)
 	if (rc < 0) {
 		SPDK_ERRLOG("bdev_aio_close() failed\n");
 	}
-	spdk_io_device_unregister(fdisk, NULL);
+
 	aio_free_disk(fdisk);
-	return rc;
+}
+
+static int
+bdev_aio_destruct(void *ctx)
+{
+	struct file_disk *fdisk = ctx;
+
+	spdk_io_device_unregister(fdisk, bdev_aio_destruct_cb);
+
+	return 0;
 }
 
 static int
