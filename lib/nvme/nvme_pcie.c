@@ -918,7 +918,6 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 
 	length = req->payload_size;
 	virt_addr = req->payload.contig_or_cb_arg + req->payload_offset;
-	mapping_length = length;
 
 	while (length > 0) {
 		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
@@ -932,6 +931,7 @@ nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struc
 			return -EFAULT;
 		}
 
+		mapping_length = length;
 		phys_addr = spdk_vtophys(virt_addr, &mapping_length);
 		if (phys_addr == SPDK_VTOPHYS_ERROR) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
