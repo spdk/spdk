@@ -776,8 +776,6 @@ zone_block_register(const char *base_bdev_name)
 		bdev_node->zone_shift = spdk_u64log2(zone_size);
 		bdev_node->num_zones = base_bdev->blockcnt / zone_size;
 
-		/* Align num_zones to optimal_open_zones */
-		bdev_node->num_zones -= bdev_node->num_zones % name->optimal_open_zones;
 		bdev_node->zones = calloc(bdev_node->num_zones, sizeof(struct block_zone));
 		if (!bdev_node->zones) {
 			rc = -ENOMEM;
