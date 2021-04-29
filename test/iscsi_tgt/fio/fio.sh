@@ -56,7 +56,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
 rpc_py="$rootdir/scripts/rpc.py"
-fio_py="$rootdir/scripts/fio.py"
+fio_py="$rootdir/scripts/fio-wrapper"
 
 timing_enter start_iscsi_tgt
 

@@ -30,7 +30,7 @@ nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_
 waitforserial "$NVMF_SERIAL"
 
 # Once our timed out I/O complete, we will still have 10 sec of I/O.
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t write -r 60 -v &
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t write -r 60 -v &
 fio_pid=$!
 
 sleep 3

@@ -50,7 +50,7 @@ ctrl2_id=$(nvme list-subsys | sed -n "s/traddr=$NVMF_SECOND_TARGET_IP trsvcid=$N
 # Set IO policy to numa
 echo numa > /sys/class/nvme-subsystem/nvme-subsys$subsys_id/iopolicy
 
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 128 -t randrw -r 6 -v &
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 128 -t randrw -r 6 -v &
 fio_pid=$!
 
 sleep 1
@@ -84,7 +84,7 @@ sleep 1
 # Set IO policy to round-robin
 echo round-robin > /sys/class/nvme-subsystem/nvme-subsys$subsys_id/iopolicy
 
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 128 -t randrw -r 6 -v &
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 128 -t randrw -r 6 -v &
 fio_pid=$!
 
 sleep 1

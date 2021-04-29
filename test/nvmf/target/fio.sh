@@ -35,15 +35,15 @@ nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_
 
 waitforserial $NVMF_SERIAL 3
 
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t write -r 1 -v
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t randwrite -r 1 -v
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 128 -t write -r 1 -v
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 128 -t randwrite -r 1 -v
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t write -r 1 -v
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t randwrite -r 1 -v
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 128 -t write -r 1 -v
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 128 -t randwrite -r 1 -v
 
 sync
 
 #start hotplug test case
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t read -r 10 &
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t read -r 10 &
 fio_pid=$!
 
 sleep 3

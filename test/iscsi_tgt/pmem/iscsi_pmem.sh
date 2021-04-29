@@ -13,7 +13,7 @@ PMEM_BLOCK_SIZE=512
 TGT_NR=10
 PMEM_PER_TGT=1
 rpc_py="$rootdir/scripts/rpc.py"
-fio_py="$rootdir/scripts/fio.py"
+fio_py="$rootdir/scripts/fio-wrapper"
 
 timing_enter start_iscsi_target
 "${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &

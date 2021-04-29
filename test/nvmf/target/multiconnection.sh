@@ -37,8 +37,8 @@ for i in $(seq 1 $NVMF_SUBSYS); do
 	waitforserial SPDK$i
 done
 
-$rootdir/scripts/fio.py -p nvmf -i 262144 -d 64 -t read -r 10
-$rootdir/scripts/fio.py -p nvmf -i 262144 -d 64 -t randwrite -r 10
+$rootdir/scripts/fio-wrapper -p nvmf -i 262144 -d 64 -t read -r 10
+$rootdir/scripts/fio-wrapper -p nvmf -i 262144 -d 64 -t randwrite -r 10
 
 sync
 for i in $(seq 1 $NVMF_SUBSYS); do

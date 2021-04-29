@@ -8,7 +8,7 @@ source $rootdir/test/iscsi_tgt/common.sh
 iscsitestinit
 
 rpc_py="$rootdir/scripts/rpc.py"
-fio_py="$rootdir/scripts/fio.py"
+fio_py="$rootdir/scripts/fio-wrapper"
 
 source "$rootdir/test/common/applications.sh"
 NETMASK=127.0.0.0/24

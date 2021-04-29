@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+rootdir=$(readlink -f "$(dirname "$0")/../")
+
+shopt -s nullglob extglob
+
+fio_config() {
+	local devs=("$@") dev
+
+	cat <<- FIO
+		[global]
+		thread=1
+		invalidate=1
+		rw=$testtype
+		time_based=1
+		runtime=$runtime
+		ioengine=libaio
+		direct=1
+		bs=$blocksize
+		iodepth=$iodepth
+		norandommap=$((verify == 1 ? 0 : 1))
+		numjobs=$numjobs
+		verify_dump=1
+	FIO
+
+	if ((verify == 1)); then
+		cat <<- FIO
+			do_verify=$verify
+			verify=crc32c-intel
+		FIO
+	fi
+
+	for dev in "${!devs[@]}"; do
+		cat <<- FIO
+			[job$dev]
+			filename=/dev/${devs[dev]}
+		FIO
+	done
+}
+
+run_fio() {
+	fio_config "$@" | fio -
+}
+
+get_iscsi() {
+	while read -r; do
+		[[ $REPLY =~ "Attached scsi disk "(sd[a-z]+) ]] && echo "${BASH_REMATCH[1]}"
+	done < <(iscsiadm -m session -P 3)
+}
+
+get_nvme() {
+	local blocks nvme nvme_sub
+	for nvme in /sys/class/nvme/nvme+([0-9]); do
+		# Make sure we touch only the block devices which belong to bdev subsystem and
+		# use supported protocols.
+		[[ $(< "$nvme/transport") == tcp || $(< "$nvme/transport") == rdma ]] || continue
+		for nvme_sub in /sys/class/nvme-subsystem/nvme-subsys+([0-9]); do
+			[[ -e $nvme_sub/${nvme##*/} ]] || continue
+			[[ $(< "$nvme_sub/model") == "SPDK bdev Controller"* ]] || continue
+			blocks+=("$nvme_sub/${nvme##*/}"n*)
+		done
+	done
+	printf '%s\n' "${blocks[@]##*/}"
+}
+
+get_devices() {
+	local devs=("$@")
+
+	if ((${#devs[@]} == 0)); then
+		case "$protocol" in
+			iscsi) devs=($(get_iscsi)) ;;
+			nvmf) devs=($(get_nvme)) ;;
+			*) ;;
+		esac
+	fi
+	printf '%s\n' "${devs[@]}"
+}
+
+configure_devices() {
+	local devs=("$@") dev qd
+
+	for dev in "${devs[@]}"; do
+		qd=128
+		# Disable all merge tries"
+		echo 2 > "/sys/block/$dev/queue/nomerges"
+		# FIXME: nr_requests already has its default value at 128. Also, when no
+		# scheduler is associated with the device this value cannot be changed
+		# and is automatically adjusted as well.
+		# echo 128 > "/sys/block/$dev/queue/nr_requests"
+		if [[ -e /sys/block/$dev/device/queue_depth ]]; then
+			# FIXME: Is this really needed though? Can't we use the default? This is not
+			# very deterministic as depending on the device we may end up with different
+			# qd in the range of 1-128.
+			while ((qd > 0)) && ! echo "$qd" > "/sys/block/$dev/device/queue_depth"; do
+				((--qd))
+			done 2> /dev/null
+			if ((qd == 0)); then
+				printf 'Failed to set queue_depth (%s)\n' "$dev"
+				return 1
+			fi
+			printf 'queue_depth set to %u (%s)\n' "$qd" "$dev"
+		else
+			printf 'Could not set queue depth (%s)\n' "$dev" >&2
+		fi
+		echo none > "/sys/block/$dev/queue/scheduler"
+	done
+}
+
+# Defaults
+blocksize=4096
+iodepth=1
+numjobs=1
+protocol="nvmf"
+runtime=1
+testtype="read"
+verify=0
+
+# Keep short args compatible with fio.py
+while getopts :i:d:n:p:r:t:v arg; do
+	case "$arg" in
+		i) blocksize=$OPTARG ;;
+		d) iodepth=$OPTARG ;;
+		n) numjobs=$OPTARG ;;
+		p) protocol=$OPTARG ;;
+		r) runtime=$OPTARG ;;
+		t) testtype=$OPTARG ;;
+		v) verify=1 ;;
+		*) ;;
+	esac
+done
+shift $((OPTIND - 1))
+
+devices=($(get_devices "$@"))
+if ((${#devices[@]} == 0)); then
+	printf '* No devices were found for the test, aborting\n' >&2
+	exit 1
+fi
+
+fio_config "${devices[@]}"
+configure_devices "${devices[@]}" && run_fio "${devices[@]}"

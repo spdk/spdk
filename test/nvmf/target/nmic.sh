@@ -42,7 +42,7 @@ nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_
 
 waitforserial "$NVMF_SERIAL"
 
-$rootdir/scripts/fio.py -p nvmf -i 4096 -d 1 -t write -r 1 -v
+$rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t write -r 1 -v
 
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
