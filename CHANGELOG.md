@@ -1,6 +1,6 @@
 # Changelog
 
-## v21.04: (Upcoming Release)
+## v21.04: ZNS NVMe bdev, PMR, ADQ initiator, RPM
 
 ### accel
 
