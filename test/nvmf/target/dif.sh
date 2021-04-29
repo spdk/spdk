@@ -15,7 +15,7 @@ create_subsystem() {
 
 	# Make sure NQN matches what's used in gen_nvmf_target_json()
 	rpc_cmd bdev_null_create "bdev_null$sub_id" "$NULL_SIZE" "$NULL_BLOCK_SIZE" --md-size "$NULL_META" --dif-type "$NULL_DIF"
-	rpc_cmd nvmf_subsystem_create "nqn.2016-06.io.spdk:cnode$sub_id" --serial-number "53313233-$sub_id" --allow-any-host
+	rpc_cmd nvmf_create_subsystem "nqn.2016-06.io.spdk:cnode$sub_id" --serial-number "53313233-$sub_id" --allow-any-host
 	rpc_cmd nvmf_subsystem_add_ns "nqn.2016-06.io.spdk:cnode$sub_id" "bdev_null$sub_id"
 	rpc_cmd nvmf_subsystem_add_listener "nqn.2016-06.io.spdk:cnode$sub_id" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 }

@@ -99,7 +99,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Create an NVMe-oF subsystem and add compress bdevs as namespaces
 	$rpc_py nvmf_create_transport -t $TEST_TRANSPORT -u 8192
 	create_vols
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
+	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 COMP_lvs0/lv0
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
