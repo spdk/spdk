@@ -43,10 +43,6 @@ struct spdk_nvmf_fabric_prop_get_rsp g_ut_response = {};
 
 DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
 
-DEFINE_STUB(nvme_wait_for_completion, int,
-	    (struct spdk_nvme_qpair *qpair,
-	     struct nvme_completion_poll_status *status), 0);
-
 DEFINE_STUB_V(spdk_nvme_ctrlr_get_default_ctrlr_opts,
 	      (struct spdk_nvme_ctrlr_opts *opts, size_t opts_size));
 
@@ -71,9 +67,6 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_get_log_page, int,
 	     uint32_t nsid, void *payload, uint32_t payload_size,
 	     uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_STUB(spdk_nvme_transport_id_populate_trstring, int,
-	    (struct spdk_nvme_transport_id *trid, const char *trstring), 0);
-
 DEFINE_STUB(spdk_nvme_transport_available_by_name, bool,
 	    (const char *transport_name), true);
 
@@ -81,10 +74,6 @@ DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
 	    (const struct spdk_nvme_transport_id *trid,
 	     const struct spdk_nvme_ctrlr_opts *opts,
 	     void *devhandle), NULL);
-
-DEFINE_STUB(nvme_ctrlr_probe, int,
-	    (const struct spdk_nvme_transport_id *trid,
-	     struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle), 0);
 
 DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf,
@@ -95,11 +84,76 @@ DEFINE_STUB(nvme_wait_for_completion_timeout, int,
 	     struct nvme_completion_poll_status *status,
 	     uint64_t timeout_in_usecs), 0);
 
-DEFINE_STUB(spdk_nvme_transport_id_trtype_str, const char *,
-	    (enum spdk_nvme_transport_type trtype), NULL);
-
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *,
 	    (enum spdk_nvmf_adrfam adrfam), NULL);
+
+int
+spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
+{
+	int len, i, rc;
+
+	if (trstring == NULL) {
+		return -EINVAL;
+	}
+
+	len = strnlen(trstring, SPDK_NVMF_TRSTRING_MAX_LEN);
+	if (len == SPDK_NVMF_TRSTRING_MAX_LEN) {
+		return -EINVAL;
+	}
+
+	rc = snprintf(trid->trstring, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", trstring);
+	if (rc < 0) {
+		return rc;
+	}
+
+	/* cast official trstring to uppercase version of input. */
+	for (i = 0; i < len; i++) {
+		trid->trstring[i] = toupper(trid->trstring[i]);
+	}
+	return 0;
+}
+
+static const struct spdk_nvme_transport_id *g_ut_trid;
+
+int
+nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
+		 struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle)
+{
+	g_ut_trid = trid;
+
+	return 0;
+}
+
+const char *
+spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
+{
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return "PCIe";
+	case SPDK_NVME_TRANSPORT_RDMA:
+		return "RDMA";
+	case SPDK_NVME_TRANSPORT_FC:
+		return "FC";
+	case SPDK_NVME_TRANSPORT_TCP:
+		return "TCP";
+	case SPDK_NVME_TRANSPORT_VFIOUSER:
+		return "VFIOUSER";
+	case SPDK_NVME_TRANSPORT_CUSTOM:
+		return "CUSTOM";
+	default:
+		return NULL;
+	}
+}
+
+DEFINE_RETURN_MOCK(nvme_wait_for_completion, int);
+int
+nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
+			 struct nvme_completion_poll_status *status)
+{
+	status->timed_out = false;
+	HANDLE_RETURN_MOCK(nvme_wait_for_completion);
+	return 0;
+}
 
 DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_cmd_admin_raw, int);
 int
@@ -177,6 +231,77 @@ test_nvme_fabric_prop_get_cmd(void)
 	CU_ASSERT(g_ut_response.value.u64 == value);
 }
 
+static void
+test_nvme_fabric_get_discovery_log_page(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	char buffer[4096] = {};
+	uint64_t offset = 0;
+	int rc;
+
+	rc = nvme_fabric_get_discovery_log_page(&ctrlr, buffer, sizeof(buffer), offset);
+	CU_ASSERT(rc == 0);
+
+	/* Get log page fail */
+	MOCK_SET(spdk_nvme_ctrlr_cmd_get_log_page, -EINVAL);
+
+	rc = nvme_fabric_get_discovery_log_page(&ctrlr, buffer, sizeof(buffer), offset);
+	CU_ASSERT(rc == -1);
+	MOCK_CLEAR(spdk_nvme_ctrlr_cmd_get_log_page);
+
+	/* Completion time out */
+	MOCK_SET(nvme_wait_for_completion, -1);
+
+	rc = nvme_fabric_get_discovery_log_page(&ctrlr, buffer, sizeof(buffer), offset);
+	CU_ASSERT(rc == -1);
+	MOCK_CLEAR(nvme_wait_for_completion);
+}
+
+static void
+test_nvme_fabric_discover_probe(void)
+{
+	struct spdk_nvmf_discovery_log_page_entry entry = {};
+	struct spdk_nvme_probe_ctx probe_ctx = {};
+	char hostnqn[256] = "nqn.2016-06.io.spdk:cnode1";
+	char traddr[SPDK_NVMF_TRADDR_MAX_LEN] = "192.168.100.8";
+	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN] = "4420";
+	char trstring[SPDK_NVMF_TRSTRING_MAX_LEN + 1] = "RDMA";
+
+	entry.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	entry.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	entry.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+
+	memcpy(entry.subnqn, hostnqn, 256);
+	memcpy(entry.traddr, traddr, SPDK_NVMF_TRADDR_MAX_LEN);
+	memcpy(entry.trsvcid, trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN);
+	memcpy(probe_ctx.trid.trstring, trstring, sizeof(probe_ctx.trid.trstring));
+
+	g_ut_trid = NULL;
+	nvme_fabric_discover_probe(&entry, &probe_ctx, 1);
+	CU_ASSERT(g_ut_trid != NULL);
+	CU_ASSERT(g_ut_trid->trtype == SPDK_NVME_TRANSPORT_RDMA);
+	CU_ASSERT(g_ut_trid->adrfam == SPDK_NVMF_ADRFAM_IPV4);
+	CU_ASSERT(!strncmp(g_ut_trid->trstring, trstring, sizeof(trstring)));
+	CU_ASSERT(!strncmp(g_ut_trid->subnqn, hostnqn, sizeof(hostnqn)));
+	CU_ASSERT(!strncmp(g_ut_trid->traddr, traddr, sizeof(traddr)));
+	CU_ASSERT(!strncmp(g_ut_trid->trsvcid, trsvcid, sizeof(trsvcid)));
+	CU_ASSERT(g_ut_trid->priority == 1);
+
+	/* Entry type unsupported */
+	entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	g_ut_trid = NULL;
+
+	nvme_fabric_discover_probe(&entry, &probe_ctx, 1);
+	CU_ASSERT(g_ut_trid == NULL);
+
+	/* Entry type invalid */
+	entry.subtype = 3;
+	g_ut_trid = NULL;
+
+	nvme_fabric_discover_probe(&entry, &probe_ctx, 1);
+	CU_ASSERT(g_ut_trid == NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -188,6 +313,8 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("nvme_fabric", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_fabric_prop_set_cmd);
 	CU_ADD_TEST(suite, test_nvme_fabric_prop_get_cmd);
+	CU_ADD_TEST(suite, test_nvme_fabric_get_discovery_log_page);
+	CU_ADD_TEST(suite, test_nvme_fabric_discover_probe);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
