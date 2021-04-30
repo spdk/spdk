@@ -695,6 +695,59 @@ test_nvme_ns_cmd_dataset_management(void)
 }
 
 static void
+test_nvme_ns_cmd_copy(void)
+{
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
+	void			*cb_arg = NULL;
+	uint16_t		i;
+	int			rc = 0;
+	uint64_t		cmd_dest_lba;
+	uint32_t		cmd_range_count;
+	struct spdk_nvme_scc_source_range	ranges[64];
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
+
+	for (i = 0; i < 64; i++) {
+		ranges[i].slba = i;
+		ranges[i].nlb = 1;
+	}
+
+	/* COPY one LBA */
+	rc = spdk_nvme_ns_cmd_copy(&ns, &qpair, ranges,
+				   1, 64, cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_COPY);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_dest_lba, &cmd_range_count);
+	CU_ASSERT_EQUAL(cmd_dest_lba, 64);
+	CU_ASSERT_EQUAL(cmd_range_count, 1);
+	spdk_free(g_request->payload.contig_or_cb_arg);
+	nvme_free_request(g_request);
+
+	/* COPY 64 LBAs */
+	rc = spdk_nvme_ns_cmd_copy(&ns, &qpair, ranges,
+				   64, 64, cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_COPY);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_dest_lba, &cmd_range_count);
+	CU_ASSERT_EQUAL(cmd_dest_lba, 64);
+	CU_ASSERT_EQUAL(cmd_range_count, 64);
+	spdk_free(g_request->payload.contig_or_cb_arg);
+	nvme_free_request(g_request);
+
+	rc = spdk_nvme_ns_cmd_copy(&ns, &qpair, ranges,
+				   0, 64, cb_fn, cb_arg);
+	CU_ASSERT(rc != 0);
+	cleanup_after_test(&qpair);
+}
+
+static void
 test_nvme_ns_cmd_readv(void)
 {
 	struct spdk_nvme_ns		ns;
@@ -1988,6 +2041,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, split_test4);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_flush);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_dataset_management);
+	CU_ADD_TEST(suite, test_nvme_ns_cmd_copy);
 	CU_ADD_TEST(suite, test_io_flags);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_write_zeroes);
 	CU_ADD_TEST(suite, test_nvme_ns_cmd_write_uncorrectable);
