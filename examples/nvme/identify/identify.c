@@ -1027,6 +1027,12 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("  Atomic Boundary Offset:              %d\n", nsdata->nabo);
 	}
 
+	if (cdata->oncs.copy) {
+		printf("Maximum Single Source Range Length:    %d\n", nsdata->mssrl);
+		printf("Maximum Copy Length:                   %d\n", nsdata->mcl);
+		printf("Maximum Source Range Count:            %d\n", nsdata->msrc + 1);
+	}
+
 	printf("NGUID/EUI64 Never Reused:              %s\n",
 	       nsdata->nsfeat.guid_never_reused ? "Yes" : "No");
 
@@ -1463,6 +1469,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oncs.reservations ? "Supported" : "Not Supported");
 	printf("Timestamp:                   %s\n",
 	       cdata->oncs.timestamp ? "Supported" : "Not Supported");
+	printf("Copy:                        %s\n",
+	       cdata->oncs.copy ? "Supported" : "Not Supported");
 	printf("Volatile Write Cache:        %s\n",
 	       cdata->vwc.present ? "Present" : "Not Present");
 	printf("Atomic Write Unit (Normal):  %d\n", cdata->awun + 1);

@@ -1339,6 +1339,21 @@ struct spdk_nvme_dsm_range {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_dsm_range) == 16, "Incorrect size");
 
 /**
+ * Simple Copy Command source range
+ */
+struct spdk_nvme_scc_source_range {
+	uint64_t reserved0;
+	uint64_t slba;
+	uint16_t nlb;
+	uint16_t reserved18;
+	uint32_t reserved20;
+	uint32_t eilbrt;
+	uint16_t elbat;
+	uint16_t elbatm;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_scc_source_range) == 32, "Incorrect size");
+
+/**
  * Status code types
  */
 enum spdk_nvme_status_code_type {
@@ -1443,6 +1458,7 @@ enum spdk_nvme_command_specific_status_code {
 	SPDK_NVME_SC_CONFLICTING_ATTRIBUTES		= 0x80,
 	SPDK_NVME_SC_INVALID_PROTECTION_INFO		= 0x81,
 	SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_RANGE	= 0x82,
+	SPDK_NVME_SC_CMD_SIZE_LIMIT_SIZE_EXCEEDED	= 0x83,
 };
 
 /**
@@ -1539,6 +1555,8 @@ enum spdk_nvme_nvm_opcode {
 
 	SPDK_NVME_OPC_RESERVATION_ACQUIRE		= 0x11,
 	SPDK_NVME_OPC_RESERVATION_RELEASE		= 0x15,
+
+	SPDK_NVME_OPC_COPY				= 0x19,
 };
 
 /**
@@ -2149,7 +2167,9 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 		uint16_t	set_features_save: 1;
 		uint16_t	reservations: 1;
 		uint16_t	timestamp: 1;
-		uint16_t	reserved: 9;
+		uint16_t	verify: 1;
+		uint16_t	copy: 1;
+		uint16_t	reserved9: 7;
 	} oncs;
 
 	/** fused operation support */
@@ -2187,7 +2207,12 @@ struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
 	/** atomic compare & write unit */
 	uint16_t		acwu;
 
-	uint16_t		reserved534;
+	/** optional copy formats supported */
+	struct {
+		uint16_t	copy_format0 : 1;
+		uint16_t	reserved1: 15;
+	} ocfs;
+
 
 	struct spdk_nvme_cdata_sgls sgls;
 
@@ -2479,7 +2504,16 @@ struct spdk_nvme_ns_data {
 	/** Namespace Optimal Write Size */
 	uint16_t                nows;
 
-	uint8_t			reserved64[18];
+	/** Maximum Single Source Range Length */
+	uint16_t                mssrl;
+
+	/** Maximum Copy Length */
+	uint32_t                mcl;
+
+	/** Maximum Source Range Count */
+	uint8_t	                msrc;
+
+	uint8_t			reserved64[11];
 
 	/** ANA group identifier */
 	uint32_t		anagrpid;
