@@ -1,0 +1,3 @@
+tracepoint:syscalls:sys_exit_readv /pid == __PID__/ {
+	@bytes = hist(args->ret);
+}
