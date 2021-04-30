@@ -1,0 +1,3 @@
+tracepoint:syscalls:sys_enter_* /pid == __PID__/ {
+	@syscall[probe] = count();
+}
