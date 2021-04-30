@@ -1,0 +1,7 @@
+uprobe:__EXE__:spdk_thread_send_msg {
+	@send_msg[usym(arg1)] = count();
+}
+
+uprobe:__EXE__:spdk_for_each_channel {
+	@for_each_channel[usym(arg1)] = count();
+}
