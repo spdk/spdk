@@ -13,6 +13,10 @@ iscsi_tgt_fio_remote_nvme
 nvme_pmr
 nvme_pmr_persistence
 
+# Waiting on SCC support in CI
+nvme_scc
+nvme_simple_copy
+
 # Waiting on significant test rewrite
 nvme_opal
 nvme_opal_bdevio
