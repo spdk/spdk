@@ -12,6 +12,41 @@
 #include "spdk/likely.h"
 #include "spdk/log.h"
 
+/* Maximum concurrent full stripe writes per io channel */
+#define RAID5F_MAX_STRIPES 32
+
+struct chunk {
+	/* Corresponds to base_bdev index */
+	uint8_t index;
+
+	/* Array of iovecs */
+	struct iovec *iovs;
+
+	/* Number of used iovecs */
+	int iovcnt;
+
+	/* Total number of available iovecs in the array */
+	int iovcnt_max;
+};
+
+struct stripe_request {
+	struct raid5f_io_channel *r5ch;
+
+	/* The associated raid_bdev_io */
+	struct raid_bdev_io *raid_io;
+
+	/* The stripe's index in the raid array. */
+	uint64_t stripe_index;
+
+	/* The stripe's parity chunk */
+	struct chunk *parity_chunk;
+
+	TAILQ_ENTRY(stripe_request) link;
+
+	/* Array of chunks corresponding to base_bdevs */
+	struct chunk chunks[0];
+};
+
 struct raid5f_info {
 	/* The parent raid bdev */
 	struct raid_bdev *raid_bdev;
@@ -23,6 +58,39 @@ struct raid5f_info {
 	uint64_t total_stripes;
 };
 
+struct raid5f_io_channel {
+	/* All available stripe requests on this channel */
+	TAILQ_HEAD(, stripe_request) free_stripe_requests;
+};
+
+#define __CHUNK_IN_RANGE(req, c) \
+	c < req->chunks + raid5f_ch_to_r5f_info(req->r5ch)->raid_bdev->num_base_bdevs
+
+#define FOR_EACH_CHUNK_FROM(req, c, from) \
+	for (c = from; __CHUNK_IN_RANGE(req, c); c++)
+
+#define FOR_EACH_CHUNK(req, c) \
+	FOR_EACH_CHUNK_FROM(req, c, req->chunks)
+
+#define __NEXT_DATA_CHUNK(req, c) \
+	c == req->parity_chunk ? c+1 : c
+
+#define FOR_EACH_DATA_CHUNK(req, c) \
+	for (c = __NEXT_DATA_CHUNK(req, req->chunks); __CHUNK_IN_RANGE(req, c); \
+	     c = __NEXT_DATA_CHUNK(req, c+1))
+
+static inline struct raid5f_info *
+raid5f_ch_to_r5f_info(struct raid5f_io_channel *r5ch)
+{
+	return spdk_io_channel_get_io_device(spdk_io_channel_from_ctx(r5ch));
+}
+
+static inline struct stripe_request *
+raid5f_chunk_stripe_req(struct chunk *chunk)
+{
+	return SPDK_CONTAINEROF((chunk - chunk->index), struct stripe_request, chunks);
+}
+
 static inline uint8_t
 raid5f_stripe_data_chunks_num(const struct raid_bdev *raid_bdev)
 {
@@ -33,6 +101,210 @@ static inline uint8_t
 raid5f_stripe_parity_chunk_index(const struct raid_bdev *raid_bdev, uint64_t stripe_index)
 {
 	return raid5f_stripe_data_chunks_num(raid_bdev) - stripe_index % raid_bdev->num_base_bdevs;
+}
+
+static inline void
+raid5f_stripe_request_release(struct stripe_request *stripe_req)
+{
+	TAILQ_INSERT_HEAD(&stripe_req->r5ch->free_stripe_requests, stripe_req, link);
+}
+
+static void
+raid5f_chunk_write_complete(struct chunk *chunk, enum spdk_bdev_io_status status)
+{
+	struct stripe_request *stripe_req = raid5f_chunk_stripe_req(chunk);
+
+	if (raid_bdev_io_complete_part(stripe_req->raid_io, 1, status)) {
+		raid5f_stripe_request_release(stripe_req);
+	}
+}
+
+static void
+raid5f_chunk_write_complete_bdev_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct chunk *chunk = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	raid5f_chunk_write_complete(chunk, success ? SPDK_BDEV_IO_STATUS_SUCCESS :
+				    SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void raid5f_stripe_request_submit_chunks(struct stripe_request *stripe_req);
+
+static void
+raid5f_chunk_write_retry(void *_raid_io)
+{
+	struct raid_bdev_io *raid_io = _raid_io;
+	struct stripe_request *stripe_req = raid_io->module_private;
+
+	raid5f_stripe_request_submit_chunks(stripe_req);
+}
+
+static int
+raid5f_chunk_write(struct chunk *chunk)
+{
+	struct stripe_request *stripe_req = raid5f_chunk_stripe_req(chunk);
+	struct raid_bdev_io *raid_io = stripe_req->raid_io;
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct raid_base_bdev_info *base_info = &raid_bdev->base_bdev_info[chunk->index];
+	struct spdk_io_channel *base_ch = raid_io->raid_ch->base_channel[chunk->index];
+	uint64_t base_offset_blocks = (stripe_req->stripe_index << raid_bdev->strip_size_shift);
+	int ret;
+
+	ret = spdk_bdev_writev_blocks(base_info->desc, base_ch, chunk->iovs, chunk->iovcnt,
+				      base_offset_blocks, raid_bdev->strip_size,
+				      raid5f_chunk_write_complete_bdev_io, chunk);
+	if (spdk_unlikely(ret)) {
+		if (ret == -ENOMEM) {
+			raid_bdev_queue_io_wait(raid_io, base_info->bdev, base_ch,
+						raid5f_chunk_write_retry);
+		} else {
+			/*
+			 * Implicitly complete any I/Os not yet submitted as FAILED. If completing
+			 * these means there are no more to complete for the stripe request, we can
+			 * release the stripe request as well.
+			 */
+			uint64_t base_bdev_io_not_submitted = raid5f_stripe_data_chunks_num(raid_bdev) -
+							      raid_io->base_bdev_io_submitted;
+
+			if (raid_bdev_io_complete_part(stripe_req->raid_io, base_bdev_io_not_submitted,
+						       SPDK_BDEV_IO_STATUS_FAILED)) {
+				raid5f_stripe_request_release(stripe_req);
+			}
+		}
+	}
+
+	return ret;
+}
+
+static int
+raid5f_stripe_request_map_iovecs(struct stripe_request *stripe_req,
+				 const struct iovec *raid_io_iovs,
+				 int raid_io_iovcnt)
+{
+	struct raid_bdev *raid_bdev = stripe_req->raid_io->raid_bdev;
+	struct chunk *chunk;
+	int raid_io_iov_idx = 0;
+	size_t raid_io_offset = 0;
+	size_t raid_io_iov_offset = 0;
+	int i;
+
+	FOR_EACH_DATA_CHUNK(stripe_req, chunk) {
+		int chunk_iovcnt = 0;
+		uint64_t len = raid_bdev->strip_size << raid_bdev->blocklen_shift;
+		size_t off = raid_io_iov_offset;
+
+		for (i = raid_io_iov_idx; i < raid_io_iovcnt; i++) {
+			chunk_iovcnt++;
+			off += raid_io_iovs[i].iov_len;
+			if (off >= raid_io_offset + len) {
+				break;
+			}
+		}
+
+		assert(raid_io_iov_idx + chunk_iovcnt <= raid_io_iovcnt);
+
+		if (chunk_iovcnt > chunk->iovcnt_max) {
+			struct iovec *iovs = chunk->iovs;
+
+			iovs = realloc(iovs, chunk_iovcnt * sizeof(*iovs));
+			if (!iovs) {
+				return -ENOMEM;
+			}
+			chunk->iovs = iovs;
+			chunk->iovcnt_max = chunk_iovcnt;
+		}
+		chunk->iovcnt = chunk_iovcnt;
+
+		for (i = 0; i < chunk_iovcnt; i++) {
+			struct iovec *chunk_iov = &chunk->iovs[i];
+			const struct iovec *raid_io_iov = &raid_io_iovs[raid_io_iov_idx];
+			size_t chunk_iov_offset = raid_io_offset - raid_io_iov_offset;
+
+			chunk_iov->iov_base = raid_io_iov->iov_base + chunk_iov_offset;
+			chunk_iov->iov_len = spdk_min(len, raid_io_iov->iov_len - chunk_iov_offset);
+			raid_io_offset += chunk_iov->iov_len;
+			len -= chunk_iov->iov_len;
+
+			if (raid_io_offset >= raid_io_iov_offset + raid_io_iov->iov_len) {
+				raid_io_iov_idx++;
+				raid_io_iov_offset += raid_io_iov->iov_len;
+			}
+		}
+
+		if (spdk_unlikely(len > 0)) {
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
+static void
+raid5f_stripe_request_submit_chunks(struct stripe_request *stripe_req)
+{
+	struct raid_bdev_io *raid_io = stripe_req->raid_io;
+	struct chunk *start = &stripe_req->chunks[raid_io->base_bdev_io_submitted];
+	struct chunk *chunk;
+
+	if (start >= stripe_req->parity_chunk) {
+		start++;
+	}
+
+	FOR_EACH_CHUNK_FROM(stripe_req, chunk, start) {
+		if (chunk == stripe_req->parity_chunk) {
+			continue;
+		}
+
+		if (spdk_unlikely(raid5f_chunk_write(chunk) != 0)) {
+			break;
+		}
+		raid_io->base_bdev_io_submitted++;
+	}
+}
+
+static void
+raid5f_submit_stripe_request(struct stripe_request *stripe_req)
+{
+	/* TODO: parity */
+
+	raid5f_stripe_request_submit_chunks(stripe_req);
+}
+
+static int
+raid5f_submit_write_request(struct raid_bdev_io *raid_io, uint64_t stripe_index)
+{
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
+	struct raid5f_io_channel *r5ch = spdk_io_channel_get_ctx(raid_io->raid_ch->module_channel);
+	struct stripe_request *stripe_req;
+	int ret;
+
+	stripe_req = TAILQ_FIRST(&r5ch->free_stripe_requests);
+	if (!stripe_req) {
+		return -ENOMEM;
+	}
+
+	stripe_req->stripe_index = stripe_index;
+	stripe_req->parity_chunk = stripe_req->chunks + raid5f_stripe_parity_chunk_index(raid_bdev,
+				   stripe_req->stripe_index);
+	stripe_req->raid_io = raid_io;
+
+	ret = raid5f_stripe_request_map_iovecs(stripe_req, bdev_io->u.bdev.iovs,
+					       bdev_io->u.bdev.iovcnt);
+	if (spdk_unlikely(ret)) {
+		return ret;
+	}
+
+	TAILQ_REMOVE(&r5ch->free_stripe_requests, stripe_req, link);
+
+	raid_io->module_private = stripe_req;
+	raid_io->base_bdev_io_remaining = raid5f_stripe_data_chunks_num(raid_bdev);
+
+	raid5f_submit_stripe_request(stripe_req);
+
+	return 0;
 }
 
 static void
@@ -88,7 +360,8 @@ static void
 raid5f_submit_rw_request(struct raid_bdev_io *raid_io)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(raid_io);
-	struct raid5f_info *r5f_info = raid_io->raid_bdev->module_private;
+	struct raid_bdev *raid_bdev = raid_io->raid_bdev;
+	struct raid5f_info *r5f_info = raid_bdev->module_private;
 	uint64_t offset_blocks = bdev_io->u.bdev.offset_blocks;
 	uint64_t stripe_index = offset_blocks / r5f_info->stripe_blocks;
 	uint64_t stripe_offset = offset_blocks % r5f_info->stripe_blocks;
@@ -96,8 +369,13 @@ raid5f_submit_rw_request(struct raid_bdev_io *raid_io)
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		assert(bdev_io->u.bdev.num_blocks <= r5f_info->raid_bdev->strip_size);
+		assert(bdev_io->u.bdev.num_blocks <= raid_bdev->strip_size);
 		ret = raid5f_submit_read_request(raid_io, stripe_index, stripe_offset);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		assert(stripe_offset == 0);
+		assert(bdev_io->u.bdev.num_blocks == r5f_info->stripe_blocks);
+		ret = raid5f_submit_write_request(raid_io, stripe_index);
 		break;
 	default:
 		ret = -EINVAL;
@@ -105,8 +383,87 @@ raid5f_submit_rw_request(struct raid_bdev_io *raid_io)
 	}
 
 	if (spdk_unlikely(ret)) {
-		raid_bdev_io_complete(raid_io, SPDK_BDEV_IO_STATUS_FAILED);
+		raid_bdev_io_complete(raid_io, ret == -ENOMEM ? SPDK_BDEV_IO_STATUS_NOMEM :
+				      SPDK_BDEV_IO_STATUS_FAILED);
 	}
+}
+
+static void
+raid5f_stripe_request_free(struct stripe_request *stripe_req)
+{
+	struct chunk *chunk;
+
+	FOR_EACH_CHUNK(stripe_req, chunk) {
+		free(chunk->iovs);
+	}
+
+	free(stripe_req);
+}
+
+static struct stripe_request *
+raid5f_stripe_request_alloc(struct raid5f_io_channel *r5ch)
+{
+	struct raid5f_info *r5f_info = raid5f_ch_to_r5f_info(r5ch);
+	struct raid_bdev *raid_bdev = r5f_info->raid_bdev;
+	struct stripe_request *stripe_req;
+	struct chunk *chunk;
+
+	stripe_req = calloc(1, sizeof(*stripe_req) +
+			    sizeof(struct chunk) * raid_bdev->num_base_bdevs);
+	if (!stripe_req) {
+		return NULL;
+	}
+
+	stripe_req->r5ch = r5ch;
+
+	FOR_EACH_CHUNK(stripe_req, chunk) {
+		chunk->index = chunk - stripe_req->chunks;
+		chunk->iovcnt_max = 4;
+		chunk->iovs = calloc(chunk->iovcnt_max, sizeof(chunk->iovs[0]));
+		if (!chunk->iovs) {
+			raid5f_stripe_request_free(stripe_req);
+			return NULL;
+		}
+	}
+
+	return stripe_req;
+}
+
+static void
+raid5f_ioch_destroy(void *io_device, void *ctx_buf)
+{
+	struct raid5f_io_channel *r5ch = ctx_buf;
+	struct stripe_request *stripe_req;
+
+	while ((stripe_req = TAILQ_FIRST(&r5ch->free_stripe_requests))) {
+		TAILQ_REMOVE(&r5ch->free_stripe_requests, stripe_req, link);
+		raid5f_stripe_request_free(stripe_req);
+	}
+}
+
+static int
+raid5f_ioch_create(void *io_device, void *ctx_buf)
+{
+	struct raid5f_io_channel *r5ch = ctx_buf;
+	struct raid5f_info *r5f_info = io_device;
+	int i;
+
+	TAILQ_INIT(&r5ch->free_stripe_requests);
+
+	for (i = 0; i < RAID5F_MAX_STRIPES; i++) {
+		struct stripe_request *stripe_req;
+
+		stripe_req = raid5f_stripe_request_alloc(r5ch);
+		if (!stripe_req) {
+			SPDK_ERRLOG("Failed to initialize io channel\n");
+			raid5f_ioch_destroy(r5f_info, r5ch);
+			return -ENOMEM;
+		}
+
+		TAILQ_INSERT_HEAD(&r5ch->free_stripe_requests, stripe_req, link);
+	}
+
+	return 0;
 }
 
 static int
@@ -133,10 +490,23 @@ raid5f_start(struct raid_bdev *raid_bdev)
 	raid_bdev->bdev.blockcnt = r5f_info->stripe_blocks * r5f_info->total_stripes;
 	raid_bdev->bdev.optimal_io_boundary = raid_bdev->strip_size;
 	raid_bdev->bdev.split_on_optimal_io_boundary = true;
+	raid_bdev->bdev.write_unit_size = r5f_info->stripe_blocks;
+	raid_bdev->bdev.split_on_write_unit = true;
 
 	raid_bdev->module_private = r5f_info;
 
+	spdk_io_device_register(r5f_info, raid5f_ioch_create, raid5f_ioch_destroy,
+				sizeof(struct raid5f_io_channel), NULL);
+
 	return 0;
+}
+
+static void
+raid5f_io_device_unregister_done(void *io_device)
+{
+	struct raid5f_info *r5f_info = io_device;
+
+	free(r5f_info);
 }
 
 static void
@@ -144,7 +514,15 @@ raid5f_stop(struct raid_bdev *raid_bdev)
 {
 	struct raid5f_info *r5f_info = raid_bdev->module_private;
 
-	free(r5f_info);
+	spdk_io_device_unregister(r5f_info, raid5f_io_device_unregister_done);
+}
+
+static struct spdk_io_channel *
+raid5f_get_io_channel(struct raid_bdev *raid_bdev)
+{
+	struct raid5f_info *r5f_info = raid_bdev->module_private;
+
+	return spdk_get_io_channel(r5f_info);
 }
 
 static struct raid_bdev_module g_raid5f_module = {
@@ -154,6 +532,7 @@ static struct raid_bdev_module g_raid5f_module = {
 	.start = raid5f_start,
 	.stop = raid5f_stop,
 	.submit_rw_request = raid5f_submit_rw_request,
+	.get_io_channel = raid5f_get_io_channel,
 };
 RAID_MODULE_REGISTER(&g_raid5f_module)
 
