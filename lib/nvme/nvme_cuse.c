@@ -557,10 +557,12 @@ cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 
 	switch ((unsigned int)cmd) {
 	case NVME_IOCTL_ADMIN_CMD:
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_ADMIN_CMD\n");
 		cuse_nvme_admin_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case NVME_IOCTL_RESET:
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_RESET\n");
 		cuse_nvme_reset(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
@@ -582,27 +584,33 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
 
 	switch ((unsigned int)cmd) {
 	case NVME_IOCTL_ADMIN_CMD:
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_ADMIN_CMD\n");
 		cuse_nvme_admin_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case NVME_IOCTL_SUBMIT_IO:
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_SUBMIT_IO\n");
 		cuse_nvme_submit_io(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case NVME_IOCTL_ID:
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_ID\n");
 		cuse_getid(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case BLKPBSZGET:
+		SPDK_DEBUGLOG(nvme_cuse, "BLKPBSZGET\n");
 		cuse_blkpbszget(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case BLKGETSIZE:
+		SPDK_DEBUGLOG(nvme_cuse, "BLKGETSIZE\n");
 		/* Returns the device size as a number of 512-byte blocks (returns pointer to long) */
 		cuse_blkgetsize(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case BLKGETSIZE64:
+		SPDK_DEBUGLOG(nvme_cuse, "BLKGETSIZE64\n");
 		/* Returns the device size in sectors (returns pointer to uint64_t) */
 		cuse_blkgetsize64(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
@@ -1103,3 +1111,5 @@ spdk_nvme_cuse_get_ns_name(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, char *n
 
 	return 0;
 }
+
+SPDK_LOG_REGISTER_COMPONENT(nvme_cuse)
