@@ -536,6 +536,22 @@ cuse_blkgetsize(fuse_req_t req, int cmd, void *arg,
 }
 
 static void
+cuse_blkgetsectorsize(fuse_req_t req, int cmd, void *arg,
+		      struct fuse_file_info *fi, unsigned flags,
+		      const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+	int ssize;
+	struct spdk_nvme_ns *ns;
+	struct cuse_device *cuse_device = fuse_req_userdata(req);
+
+	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, ssize);
+
+	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	ssize = spdk_nvme_ns_get_sector_size(ns);
+	fuse_reply_ioctl(req, 0, &ssize, sizeof(ssize));
+}
+
+static void
 cuse_getid(fuse_req_t req, int cmd, void *arg,
 	   struct fuse_file_info *fi, unsigned flags,
 	   const void *in_buf, size_t in_bufsz, size_t out_bufsz)
@@ -601,6 +617,11 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
 	case BLKPBSZGET:
 		SPDK_DEBUGLOG(nvme_cuse, "BLKPBSZGET\n");
 		cuse_blkpbszget(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case BLKSSZGET:
+		SPDK_DEBUGLOG(nvme_cuse, "BLKSSZGET\n");
+		cuse_blkgetsectorsize(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case BLKGETSIZE:
