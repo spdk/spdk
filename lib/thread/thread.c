@@ -1436,6 +1436,42 @@ spdk_poller_state_str(enum spdk_poller_state state)
 	}
 }
 
+struct spdk_poller *
+spdk_thread_get_first_active_poller(struct spdk_thread *thread)
+{
+	return TAILQ_FIRST(&thread->active_pollers);
+}
+
+struct spdk_poller *
+spdk_thread_get_next_active_poller(struct spdk_poller *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
+struct spdk_poller *
+spdk_thread_get_first_timed_poller(struct spdk_thread *thread)
+{
+	return TAILQ_FIRST(&thread->active_pollers);
+}
+
+struct spdk_poller *
+spdk_thread_get_next_timed_poller(struct spdk_poller *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
+struct spdk_poller *
+spdk_thread_get_first_paused_poller(struct spdk_thread *thread)
+{
+	return TAILQ_FIRST(&thread->active_pollers);
+}
+
+struct spdk_poller *
+spdk_thread_get_next_paused_poller(struct spdk_poller *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
 struct call_thread {
 	struct spdk_thread *cur_thread;
 	spdk_msg_fn fn;

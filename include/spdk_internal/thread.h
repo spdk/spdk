@@ -142,4 +142,11 @@ const char *spdk_poller_state_str(enum spdk_poller_state state);
 
 const char *spdk_io_device_get_name(struct io_device *dev);
 
+struct spdk_poller *spdk_thread_get_first_active_poller(struct spdk_thread *thread);
+struct spdk_poller *spdk_thread_get_next_active_poller(struct spdk_poller *prev);
+struct spdk_poller *spdk_thread_get_first_timed_poller(struct spdk_thread *thread);
+struct spdk_poller *spdk_thread_get_next_timed_poller(struct spdk_poller *prev);
+struct spdk_poller *spdk_thread_get_first_paused_poller(struct spdk_thread *thread);
+struct spdk_poller *spdk_thread_get_next_paused_poller(struct spdk_poller *prev);
+
 #endif /* SPDK_THREAD_INTERNAL_H_ */

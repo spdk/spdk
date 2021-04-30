@@ -59,6 +59,12 @@
 	# internal functions in spdk_internal/thread.h
 	spdk_poller_state_str;
 	spdk_io_device_get_name;
+	spdk_thread_get_first_active_poller;
+	spdk_thread_get_next_active_poller;
+	spdk_thread_get_first_timed_poller;
+	spdk_thread_get_next_timed_poller;
+	spdk_thread_get_first_paused_poller;
+	spdk_thread_get_next_paused_poller;
 
 	local: *;
 };

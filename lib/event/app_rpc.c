@@ -202,13 +202,18 @@ _rpc_thread_get_stats(void *arg)
 	uint64_t timed_pollers_count = 0;
 	uint64_t paused_pollers_count = 0;
 
-	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
+	for (poller = spdk_thread_get_first_active_poller(thread); poller != NULL;
+	     poller = spdk_thread_get_next_active_poller(poller)) {
 		active_pollers_count++;
 	}
-	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
+
+	for (poller = spdk_thread_get_first_timed_poller(thread); poller != NULL;
+	     poller = spdk_thread_get_next_timed_poller(poller)) {
 		timed_pollers_count++;
 	}
-	TAILQ_FOREACH(poller, &thread->paused_pollers, tailq) {
+
+	for (poller = spdk_thread_get_first_paused_poller(thread); poller != NULL;
+	     poller = spdk_thread_get_next_paused_poller(poller)) {
 		paused_pollers_count++;
 	}
 
@@ -268,19 +273,22 @@ _rpc_thread_get_pollers(void *arg)
 	spdk_json_write_named_uint64(ctx->w, "id", spdk_thread_get_id(thread));
 
 	spdk_json_write_named_array_begin(ctx->w, "active_pollers");
-	TAILQ_FOREACH(poller, &thread->active_pollers, tailq) {
+	for (poller = spdk_thread_get_first_active_poller(thread); poller != NULL;
+	     poller = spdk_thread_get_next_active_poller(poller)) {
 		rpc_get_poller(poller, ctx->w);
 	}
 	spdk_json_write_array_end(ctx->w);
 
 	spdk_json_write_named_array_begin(ctx->w, "timed_pollers");
-	TAILQ_FOREACH(poller, &thread->timed_pollers, tailq) {
+	for (poller = spdk_thread_get_first_timed_poller(thread); poller != NULL;
+	     poller = spdk_thread_get_next_timed_poller(poller)) {
 		rpc_get_poller(poller, ctx->w);
 	}
 	spdk_json_write_array_end(ctx->w);
 
 	spdk_json_write_named_array_begin(ctx->w, "paused_pollers");
-	TAILQ_FOREACH(poller, &thread->paused_pollers, tailq) {
+	for (poller = spdk_thread_get_first_paused_poller(thread); poller != NULL;
+	     poller = spdk_thread_get_next_paused_poller(poller)) {
 		rpc_get_poller(poller, ctx->w);
 	}
 	spdk_json_write_array_end(ctx->w);
