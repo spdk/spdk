@@ -1092,6 +1092,40 @@ spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 }
 
 int
+spdk_nvme_ns_cmd_copy(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+		      const struct spdk_nvme_scc_source_range *ranges,
+		      uint16_t num_ranges, uint64_t dest_lba,
+		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	if (num_ranges == 0) {
+		return -EINVAL;
+	}
+
+	if (ranges == NULL) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_user_copy(qpair, (void *)ranges,
+					      num_ranges * sizeof(struct spdk_nvme_scc_source_range),
+					      cb_fn, cb_arg, true);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_COPY;
+	cmd->nsid = ns->id;
+
+	*(uint64_t *)&cmd->cdw10 = dest_lba;
+	cmd->cdw12 = num_ranges - 1;
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
 spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		       spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {

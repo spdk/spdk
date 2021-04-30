@@ -3063,6 +3063,40 @@ int spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvm
 					void *cb_arg);
 
 /**
+ * Submit a simple copy command request to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * This is a convenience wrapper that will automatically allocate and construct
+ * the correct data buffers. Therefore, ranges does not need to be allocated from
+ * pinned memory and can be placed on the stack. If a higher performance, zero-copy
+ * version of SCC is required, simply build and submit a raw command using
+ * spdk_nvme_ctrlr_cmd_io_raw().
+ *
+ * \param ns NVMe namespace to submit the SCC request
+ * \param qpair I/O queue pair to submit the request
+ * \param ranges An array of \ref spdk_nvme_scc_source_range elements describing the LBAs
+ * to operate on.
+ * \param num_ranges The number of elements in the ranges array.
+ * \param dest_lba Destination LBA to copy the data.
+ * \param cb_fn Callback function to invoke when the I/O is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -ENOMEM: The request cannot be allocated.
+ * -EINVAL: Invalid ranges.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ns_cmd_copy(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			  const struct spdk_nvme_scc_source_range *ranges,
+			  uint16_t num_ranges,
+			  uint64_t dest_lba,
+			  spdk_nvme_cmd_cb cb_fn,
+			  void *cb_arg);
+
+/**
  * Submit a flush request to the specified NVMe namespace.
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().

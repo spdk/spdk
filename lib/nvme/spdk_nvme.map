@@ -139,6 +139,7 @@
 	spdk_nvme_ns_cmd_readv_with_md;
 	spdk_nvme_ns_cmd_read_with_md;
 	spdk_nvme_ns_cmd_dataset_management;
+	spdk_nvme_ns_cmd_copy;
 	spdk_nvme_ns_cmd_flush;
 	spdk_nvme_ns_cmd_reservation_register;
 	spdk_nvme_ns_cmd_reservation_release;
