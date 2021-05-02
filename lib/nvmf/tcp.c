@@ -901,7 +901,6 @@ nvmf_tcp_qpair_write_pdu(struct spdk_nvmf_tcp_qpair *tqpair,
 	hlen = pdu->hdr.common.hlen;
 	pdu->cb_fn = cb_fn;
 	pdu->cb_arg = cb_arg;
-	pdu->qpair = tqpair;
 
 	pdu->iov[0].iov_base = &pdu->hdr.raw;
 	pdu->iov[0].iov_len = hlen;

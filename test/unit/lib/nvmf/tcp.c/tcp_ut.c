@@ -559,6 +559,7 @@ test_nvmf_tcp_send_c2h_data(void)
 
 	tcp_req.pdu = &pdu;
 	tcp_req.req.length = 300;
+	tcp_req.req.qpair = &tqpair.qpair;
 
 	tqpair.qpair.transport = &ttransport.transport;
 
