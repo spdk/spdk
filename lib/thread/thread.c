@@ -578,6 +578,12 @@ poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller, uint
 	TAILQ_INSERT_HEAD(&thread->timed_pollers, poller, tailq);
 }
 
+static inline void
+poller_remove_timer(struct spdk_thread *thread, struct spdk_poller *poller)
+{
+	TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+}
+
 static void
 thread_insert_poller(struct spdk_thread *thread, struct spdk_poller *poller)
 {
@@ -665,11 +671,11 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 
 	switch (poller->state) {
 	case SPDK_POLLER_STATE_UNREGISTERED:
-		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+		poller_remove_timer(thread, poller);
 		free(poller);
 		return 0;
 	case SPDK_POLLER_STATE_PAUSING:
-		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+		poller_remove_timer(thread, poller);
 		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_PAUSED;
 		return 0;
@@ -696,14 +702,14 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 
 	switch (poller->state) {
 	case SPDK_POLLER_STATE_UNREGISTERED:
-		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+		poller_remove_timer(thread, poller);
 		free(poller);
 		break;
 	case SPDK_POLLER_STATE_PAUSED:
 		break;
 	case SPDK_POLLER_STATE_RUNNING:
 		poller->state = SPDK_POLLER_STATE_WAITING;
-		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+		poller_remove_timer(thread, poller);
 		poller_insert_timer(thread, poller, now);
 		break;
 	default:
@@ -1128,7 +1134,7 @@ period_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bool 
 		 */
 		now_tick = now_tick - poller->period_ticks + ticks * old_tv.it_value.tv_sec + \
 			   (ticks * old_tv.it_value.tv_nsec) / SPDK_SEC_TO_NSEC;
-		TAILQ_REMOVE(&poller->thread->timed_pollers, poller, tailq);
+		poller_remove_timer(poller->thread, poller);
 		poller_insert_timer(poller->thread, poller, now_tick);
 	}
 }
@@ -1427,7 +1433,7 @@ spdk_poller_pause(struct spdk_poller *poller)
 		break;
 	case SPDK_POLLER_STATE_RUNNING:
 		if (poller->period_ticks > 0) {
-			TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+			poller_remove_timer(thread, poller);
 		} else {
 			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		}
