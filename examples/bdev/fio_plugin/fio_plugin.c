@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
+#include "spdk/bdev_zone.h"
 #include "spdk/accel_engine.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
@@ -47,6 +48,12 @@
 #include "config-host.h"
 #include "fio.h"
 #include "optgroup.h"
+
+#ifdef for_each_rw_ddir
+#define FIO_HAS_ZBD (FIO_IOOPS_VERSION >= 26)
+#else
+#define FIO_HAS_ZBD (0)
+#endif
 
 /* FreeBSD is missing CLOCK_MONOTONIC_RAW,
  * so alternative is provided. */
@@ -87,6 +94,15 @@ struct spdk_fio_thread {
 	unsigned int		iocq_size;	/* number of iocq entries allocated */
 
 	TAILQ_ENTRY(spdk_fio_thread)	link;
+};
+
+struct spdk_fio_zone_cb_arg {
+	struct spdk_fio_target *target;
+	struct spdk_bdev_zone_info *spdk_zones;
+	int completed;
+	uint64_t offset_blocks;
+	struct zbd_zone *fio_zones;
+	unsigned int nr_zones;
 };
 
 static bool g_spdk_env_initialized = false;
@@ -534,12 +550,23 @@ spdk_fio_bdev_open(void *arg)
 
 /* Called for each thread, on that thread, shortly after the thread
  * starts.
+ *
+ * Also called by spdk_fio_report_zones(), since we need an I/O channel
+ * in order to get the zone report. (fio calls the .report_zones callback
+ * before it calls the .init callback.)
+ * Therefore, if fio was run with --zonemode=zbd, the thread will already
+ * be initialized by the time that fio calls the .init callback.
  */
 static int
 spdk_fio_init(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
 	int rc;
+
+	/* If thread has already been initialized, do nothing. */
+	if (td->io_ops_data) {
+		return 0;
+	}
 
 	rc = spdk_fio_init_thread(td);
 	if (rc) {
@@ -760,6 +787,241 @@ spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
 	return 0;
 }
 
+#if FIO_HAS_ZBD
+static int
+spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zoned_model *model)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(f->file_name);
+	if (!bdev) {
+		SPDK_ERRLOG("Cannot get zoned model, no bdev with name: %s\n", f->file_name);
+		return -ENODEV;
+	}
+
+	if (spdk_bdev_is_zoned(bdev)) {
+		*model = ZBD_HOST_MANAGED;
+	} else {
+		*model = ZBD_NONE;
+	}
+
+	return 0;
+}
+
+static void
+spdk_fio_bdev_get_zone_info_done(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct spdk_fio_zone_cb_arg *cb_arg = arg;
+	unsigned int i;
+	int handled_zones = 0;
+
+	if (!success) {
+		spdk_bdev_free_io(bdev_io);
+		cb_arg->completed = -EIO;
+		return;
+	}
+
+	for (i = 0; i < cb_arg->nr_zones; i++) {
+		struct spdk_bdev_zone_info *zone_src = &cb_arg->spdk_zones[handled_zones];
+		struct zbd_zone *zone_dest = &cb_arg->fio_zones[handled_zones];
+		uint32_t block_size = spdk_bdev_get_block_size(cb_arg->target->bdev);
+
+		zone_dest->type = ZBD_ZONE_TYPE_SWR;
+		zone_dest->len = spdk_bdev_get_zone_size(cb_arg->target->bdev) * block_size;
+		zone_dest->capacity = zone_src->capacity * block_size;
+		zone_dest->start = zone_src->zone_id * block_size;
+		zone_dest->wp = zone_src->write_pointer * block_size;
+
+		switch (zone_src->state) {
+		case SPDK_BDEV_ZONE_STATE_EMPTY:
+			zone_dest->cond = ZBD_ZONE_COND_EMPTY;
+			break;
+		case SPDK_BDEV_ZONE_STATE_IMP_OPEN:
+			zone_dest->cond = ZBD_ZONE_COND_IMP_OPEN;
+			break;
+		case SPDK_BDEV_ZONE_STATE_EXP_OPEN:
+			zone_dest->cond = ZBD_ZONE_COND_EXP_OPEN;
+			break;
+		case SPDK_BDEV_ZONE_STATE_FULL:
+			zone_dest->cond = ZBD_ZONE_COND_FULL;
+			break;
+		case SPDK_BDEV_ZONE_STATE_CLOSED:
+			zone_dest->cond = ZBD_ZONE_COND_CLOSED;
+			break;
+		case SPDK_BDEV_ZONE_STATE_READ_ONLY:
+			zone_dest->cond = ZBD_ZONE_COND_READONLY;
+			break;
+		case SPDK_BDEV_ZONE_STATE_OFFLINE:
+			zone_dest->cond = ZBD_ZONE_COND_OFFLINE;
+			break;
+		default:
+			spdk_bdev_free_io(bdev_io);
+			cb_arg->completed = -EIO;
+			return;
+		}
+		handled_zones++;
+	}
+
+	spdk_bdev_free_io(bdev_io);
+	cb_arg->completed = handled_zones;
+}
+
+static void
+spdk_fio_bdev_get_zone_info(void *arg)
+{
+	struct spdk_fio_zone_cb_arg *cb_arg = arg;
+	struct spdk_fio_target *target = cb_arg->target;
+	int rc;
+
+	rc = spdk_bdev_get_zone_info(target->desc, target->ch, cb_arg->offset_blocks,
+				     cb_arg->nr_zones, cb_arg->spdk_zones,
+				     spdk_fio_bdev_get_zone_info_done, cb_arg);
+	if (rc < 0) {
+		cb_arg->completed = rc;
+	}
+}
+
+static int
+spdk_fio_report_zones(struct thread_data *td, struct fio_file *f, uint64_t offset,
+		      struct zbd_zone *zones, unsigned int nr_zones)
+{
+	struct spdk_fio_target *target;
+	struct spdk_fio_thread *fio_thread;
+	struct spdk_fio_zone_cb_arg cb_arg;
+	uint32_t block_size;
+	int rc;
+
+	if (nr_zones == 0) {
+		return 0;
+	}
+
+	/* spdk_fio_report_zones() is only called before the bdev I/O channels have been created.
+	 * Since we need an I/O channel for report_zones(), call spdk_fio_init() to initialize
+	 * the thread early.
+	 * spdk_fio_report_zones() might be called several times by fio, if e.g. the zone report
+	 * for all zones does not fit in the buffer that fio has allocated for the zone report.
+	 * It is safe to call spdk_fio_init(), even if the thread has already been initialized.
+	 */
+	rc = spdk_fio_init(td);
+	if (rc) {
+		return rc;
+	}
+	fio_thread = td->io_ops_data;
+	target = f->engine_data;
+
+	assert(fio_thread);
+	assert(target);
+
+	block_size = spdk_bdev_get_block_size(target->bdev);
+
+	cb_arg.target = target;
+	cb_arg.completed = 0;
+	cb_arg.offset_blocks = offset / block_size;
+	cb_arg.fio_zones = zones;
+	cb_arg.nr_zones = spdk_min(nr_zones, spdk_bdev_get_num_zones(target->bdev));
+
+	cb_arg.spdk_zones = calloc(1, sizeof(*cb_arg.spdk_zones) * cb_arg.nr_zones);
+	if (!cb_arg.spdk_zones) {
+		SPDK_ERRLOG("Could not allocate memory for zone report!\n");
+		rc = -ENOMEM;
+		goto cleanup_thread;
+	}
+
+	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_get_zone_info, &cb_arg);
+	do {
+		spdk_fio_poll_thread(fio_thread);
+	} while (!cb_arg.completed);
+
+	/* Free cb_arg.spdk_zones. The report in fio format is stored in cb_arg.fio_zones/zones. */
+	free(cb_arg.spdk_zones);
+
+	rc = cb_arg.completed;
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to get zone info: %d\n", rc);
+		goto cleanup_thread;
+	}
+
+	/* Return the amount of zones successfully copied. */
+	return rc;
+
+cleanup_thread:
+	spdk_fio_cleanup(td);
+
+	return rc;
+}
+
+static void
+spdk_fio_bdev_zone_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct spdk_fio_zone_cb_arg *cb_arg = arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		cb_arg->completed = -EIO;
+	} else {
+		cb_arg->completed = 1;
+	}
+}
+
+static void
+spdk_fio_bdev_zone_reset(void *arg)
+{
+	struct spdk_fio_zone_cb_arg *cb_arg = arg;
+	struct spdk_fio_target *target = cb_arg->target;
+	int rc;
+
+	rc = spdk_bdev_zone_management(target->desc, target->ch, cb_arg->offset_blocks,
+				       SPDK_BDEV_ZONE_RESET,
+				       spdk_fio_bdev_zone_reset_done, cb_arg);
+	if (rc < 0) {
+		cb_arg->completed = rc;
+	}
+}
+
+static int
+spdk_fio_reset_zones(struct spdk_fio_thread *fio_thread, struct spdk_fio_target *target,
+		     uint64_t offset, uint64_t length)
+{
+	uint64_t zone_size_bytes;
+	uint32_t block_size;
+	int rc;
+
+	assert(fio_thread);
+	assert(target);
+
+	block_size = spdk_bdev_get_block_size(target->bdev);
+	zone_size_bytes = spdk_bdev_get_zone_size(target->bdev) * block_size;
+
+	for (uint64_t cur = offset; cur < offset + length; cur += zone_size_bytes) {
+		struct spdk_fio_zone_cb_arg cb_arg = {
+			.target = target,
+			.completed = 0,
+			.offset_blocks = cur / block_size,
+		};
+
+		spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_zone_reset, &cb_arg);
+		do {
+			spdk_fio_poll_thread(fio_thread);
+		} while (!cb_arg.completed);
+
+		rc = cb_arg.completed;
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to reset zone: %d\n", rc);
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+static int
+spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, uint64_t length)
+{
+	return spdk_fio_reset_zones(td->io_ops_data, f->engine_data, offset, length);
+}
+#endif
+
 static struct fio_option options[] = {
 	{
 		.name		= "spdk_conf",
@@ -828,6 +1090,11 @@ struct ioengine_ops ioengine = {
 	.iomem_free		= spdk_fio_iomem_free,
 	.io_u_init		= spdk_fio_io_u_init,
 	.io_u_free		= spdk_fio_io_u_free,
+#if FIO_HAS_ZBD
+	.get_zoned_model	= spdk_fio_get_zoned_model,
+	.report_zones		= spdk_fio_report_zones,
+	.reset_wp		= spdk_fio_reset_wp,
+#endif
 	.option_struct_size	= sizeof(struct spdk_fio_options),
 	.options		= options,
 };
