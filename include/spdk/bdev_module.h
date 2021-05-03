@@ -265,9 +265,6 @@ struct spdk_bdev {
 	/** Size in bytes of a logical block for the backend */
 	uint32_t blocklen;
 
-	/** Size in bytes of a physical block for the backend */
-	uint32_t phys_blocklen;
-
 	/** Number of blocks */
 	uint64_t blockcnt;
 

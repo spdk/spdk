@@ -1014,10 +1014,6 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 			printf("  Atomic Write Unit (PFail):           %d\n", nsdata->nawupf + 1);
 		}
 
-		if (nsdata->npwg) {
-			printf("  Preferred Write Granularity:         %d\n", nsdata->npwg + 1);
-		}
-
 		if (nsdata->nacwu) {
 			printf("  Atomic Compare & Write Unit:         %d\n", nsdata->nacwu + 1);
 		}

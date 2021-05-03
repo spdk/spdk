@@ -40,7 +40,6 @@
 	spdk_bdev_is_md_separate;
 	spdk_bdev_is_zoned;
 	spdk_bdev_get_data_block_size;
-	spdk_bdev_get_physical_block_size;
 	spdk_bdev_get_dif_type;
 	spdk_bdev_is_dif_head_of_md;
 	spdk_bdev_is_dif_check_enabled;

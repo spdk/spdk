@@ -3291,12 +3291,6 @@ spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev)
 	}
 }
 
-uint32_t
-spdk_bdev_get_physical_block_size(const struct spdk_bdev *bdev)
-{
-	return bdev->phys_blocklen;
-}
-
 static uint32_t
 _bdev_get_block_size_with_md(const struct spdk_bdev *bdev)
 {
@@ -5468,10 +5462,6 @@ bdev_init(struct spdk_bdev *bdev)
 	/* Set ACWU value to 1 if bdev module did not set it (does not support it natively) */
 	if (bdev->acwu == 0) {
 		bdev->acwu = 1;
-	}
-
-	if (bdev->phys_blocklen == 0) {
-		bdev->phys_blocklen = spdk_bdev_get_data_block_size(bdev);
 	}
 
 	TAILQ_INIT(&bdev->internal.open_descs);

@@ -591,14 +591,6 @@ bool spdk_bdev_is_zoned(const struct spdk_bdev *bdev);
 uint32_t spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev);
 
 /**
- * Get block device physical block size.
- *
- * \param bdev Block device to query.
- * \return Size of physical block size for this bdev in bytes.
- */
-uint32_t spdk_bdev_get_physical_block_size(const struct spdk_bdev *bdev);
-
-/**
  * Get DIF type of the block device.
  *
  * \param bdev Block device to query.

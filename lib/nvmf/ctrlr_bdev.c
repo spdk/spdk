@@ -140,7 +140,6 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 {
 	struct spdk_bdev *bdev = ns->bdev;
 	uint64_t num_blocks;
-	uint32_t phys_blocklen;
 
 	num_blocks = spdk_bdev_get_num_blocks(bdev);
 
@@ -182,15 +181,6 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 		nsdata->lbaf[0].ms = 0;
 		nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_data_block_size(bdev));
 	}
-
-	phys_blocklen = spdk_bdev_get_physical_block_size(bdev);
-	assert(phys_blocklen > 0);
-	/* Linux driver uses min(nawupf, npwg) to set physical_block_size */
-	nsdata->nsfeat.optperf = 1;
-	nsdata->nsfeat.ns_atomic_write_unit = 1;
-	nsdata->npwg = (phys_blocklen >> nsdata->lbaf[0].lbads) - 1;
-	nsdata->nawupf = nsdata->npwg;
-
 	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 	nsdata->nmic.can_share = 1;
 	if (ns->ptpl_file != NULL) {
