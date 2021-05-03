@@ -727,13 +727,6 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 						     bdev_io->u.bdev.offset_blocks,
 						     bdev->dif_check_flags);
 
-	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		return bdev_nvme_unmap(nvme_ns->ns,
-				       qpair,
-				       nbdev_io,
-				       bdev_io->u.bdev.offset_blocks,
-				       bdev_io->u.bdev.num_blocks);
-
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_nvme_unmap(nvme_ns->ns,
 				       qpair,
@@ -837,20 +830,11 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return cdata->oncs.dsm;
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-		/*
-		 * If an NVMe controller guarantees reading unallocated blocks returns zero,
-		 * we can implement WRITE_ZEROES as an NVMe deallocate command.
-		 */
-		if (cdata->oncs.dsm &&
-		    spdk_nvme_ns_get_dealloc_logical_block_read_value(ns) ==
-		    SPDK_NVME_DEALLOC_READ_00) {
-			return true;
-		}
 		/*
 		 * The NVMe controller write_zeroes function is currently not used by our driver.
-		 * If a user submits an arbitrarily large write_zeroes request to the controller, the request will fail.
-		 * Until this is resolved, we only claim support for write_zeroes if deallocated blocks return 0's when read.
+		 * NVMe write zeroes is limited to 16-bit block count, and the bdev layer currently
+		 * has no mechanism for reporting a max write zeroes block count, nor ability to
+		 * split a write zeroes request.
 		 */
 		return false;
 
