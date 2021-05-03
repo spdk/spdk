@@ -68,6 +68,7 @@ struct spdk_fio_options {
 	unsigned mem_mb;
 	int mem_single_seg;
 	int initial_zone_reset;
+	int zone_append;
 };
 
 struct spdk_fio_request {
@@ -79,6 +80,7 @@ struct spdk_fio_target {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
+	bool zone_append_enabled;
 
 	TAILQ_ENTRY(spdk_fio_target) link;
 };
@@ -114,6 +116,7 @@ static void spdk_fio_cleanup(struct thread_data *td);
 static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
 static int spdk_fio_handle_options(struct thread_data *td, struct fio_file *f,
 				   struct spdk_bdev *bdev);
+static int spdk_fio_handle_options_per_target(struct thread_data *td, struct fio_file *f);
 
 static pthread_t g_init_thread_id = 0;
 static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -552,6 +555,17 @@ spdk_fio_bdev_open(void *arg)
 
 		f->engine_data = target;
 
+		rc = spdk_fio_handle_options_per_target(td, f);
+		if (rc) {
+			SPDK_ERRLOG("Failed to handle options for: %s\n", f->file_name);
+			f->engine_data = NULL;
+			spdk_put_io_channel(target->ch);
+			spdk_bdev_close(target->desc);
+			free(target);
+			fio_thread->failed = true;
+			return;
+		}
+
 		TAILQ_INSERT_TAIL(&fio_thread->targets, target, link);
 	}
 }
@@ -684,6 +698,17 @@ typedef enum fio_q_status fio_q_status_t;
 typedef int fio_q_status_t;
 #endif
 
+static uint64_t
+spdk_fio_zone_bytes_to_blocks(struct spdk_bdev *bdev, uint64_t offset_bytes, uint64_t *zone_start,
+			      uint64_t num_bytes, uint64_t *num_blocks)
+{
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	*zone_start = (offset_bytes / (spdk_bdev_get_zone_size(bdev) * block_size)) *
+		      spdk_bdev_get_zone_size(bdev);
+	*num_blocks = num_bytes / block_size;
+	return (offset_bytes % block_size) | (num_bytes % block_size);
+}
+
 static fio_q_status_t
 spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 {
@@ -706,9 +731,21 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 				    spdk_fio_completion_cb, fio_req);
 		break;
 	case DDIR_WRITE:
-		rc = spdk_bdev_write(target->desc, target->ch,
-				     io_u->buf, io_u->offset, io_u->xfer_buflen,
-				     spdk_fio_completion_cb, fio_req);
+		if (!target->zone_append_enabled) {
+			rc = spdk_bdev_write(target->desc, target->ch,
+					     io_u->buf, io_u->offset, io_u->xfer_buflen,
+					     spdk_fio_completion_cb, fio_req);
+		} else {
+			uint64_t zone_start, num_blocks;
+			if (spdk_fio_zone_bytes_to_blocks(target->bdev, io_u->offset, &zone_start,
+							  io_u->xfer_buflen, &num_blocks) != 0) {
+				rc = -EINVAL;
+				break;
+			}
+			rc = spdk_bdev_zone_append(target->desc, target->ch, io_u->buf,
+						   zone_start, num_blocks, spdk_fio_completion_cb,
+						   fio_req);
+		}
 		break;
 	case DDIR_TRIM:
 		rc = spdk_bdev_unmap(target->desc, target->ch,
@@ -1054,6 +1091,26 @@ spdk_fio_handle_options(struct thread_data *td, struct fio_file *f, struct spdk_
 	return 0;
 }
 
+static int
+spdk_fio_handle_options_per_target(struct thread_data *td, struct fio_file *f)
+{
+	struct spdk_fio_target *target = f->engine_data;
+	struct spdk_fio_options *fio_options = td->eo;
+
+	if (fio_options->zone_append && spdk_bdev_is_zoned(target->bdev)) {
+		if (spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND)) {
+			SPDK_DEBUGLOG(fio_bdev, "Using zone appends instead of writes on: '%s'\n",
+				      f->file_name);
+			target->zone_append_enabled = true;
+		} else {
+			SPDK_WARNLOG("Falling back to writes on: '%s' - bdev lacks zone append cmd\n",
+				     f->file_name);
+		}
+	}
+
+	return 0;
+}
+
 static struct fio_option options[] = {
 	{
 		.name		= "spdk_conf",
@@ -1099,6 +1156,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, initial_zone_reset),
 		.def		= "0",
 		.help		= "Reset Zones on initialization (0=disable, 1=Reset All Zones)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "zone_append",
+		.lname		= "Use zone append instead of write",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, zone_append),
+		.def		= "0",
+		.help		= "Use zone append instead of write (1=zone append, 0=write)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
@@ -1166,3 +1233,5 @@ static void fio_exit spdk_fio_unregister(void)
 	}
 	unregister_ioengine(&ioengine);
 }
+
+SPDK_LOG_REGISTER_COMPONENT(fio_bdev)
