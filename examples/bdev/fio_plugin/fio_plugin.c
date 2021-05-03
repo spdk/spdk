@@ -67,6 +67,7 @@ struct spdk_fio_options {
 	char *json_conf;
 	unsigned mem_mb;
 	int mem_single_seg;
+	int initial_zone_reset;
 };
 
 struct spdk_fio_request {
@@ -111,6 +112,8 @@ static const char *g_json_config_file = NULL;
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
+static int spdk_fio_handle_options(struct thread_data *td, struct fio_file *f,
+				   struct spdk_bdev *bdev);
 
 static pthread_t g_init_thread_id = 0;
 static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -471,6 +474,7 @@ spdk_fio_setup(struct thread_data *td)
 
 	for_each_file(td, f, i) {
 		struct spdk_bdev *bdev;
+		int rc;
 
 		if (strcmp(f->file_name, "*") == 0) {
 			continue;
@@ -485,6 +489,10 @@ spdk_fio_setup(struct thread_data *td)
 		f->real_file_size = spdk_bdev_get_num_blocks(bdev) *
 				    spdk_bdev_get_block_size(bdev);
 
+		rc = spdk_fio_handle_options(td, f, bdev);
+		if (rc) {
+			return rc;
+		}
 	}
 
 	return 0;
@@ -1022,6 +1030,30 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 }
 #endif
 
+static int
+spdk_fio_handle_options(struct thread_data *td, struct fio_file *f, struct spdk_bdev *bdev)
+{
+	struct spdk_fio_options *fio_options = td->eo;
+
+	if (fio_options->initial_zone_reset && spdk_bdev_is_zoned(bdev)) {
+#if FIO_HAS_ZBD
+		int rc = spdk_fio_init(td);
+		if (rc) {
+			return rc;
+		}
+		rc = spdk_fio_reset_zones(td->io_ops_data, f->engine_data, 0, f->real_file_size);
+		if (rc) {
+			spdk_fio_cleanup(td);
+			return rc;
+		}
+#else
+		SPDK_ERRLOG("fio version is too old to support zoned block devices\n");
+#endif
+	}
+
+	return 0;
+}
+
 static struct fio_option options[] = {
 	{
 		.name		= "spdk_conf",
@@ -1057,6 +1089,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, mem_single_seg),
 		.help		= "If set to 1, SPDK will use just a single hugetlbfs file",
 		.def            = "0",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "initial_zone_reset",
+		.lname		= "Reset Zones on initialization",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, initial_zone_reset),
+		.def		= "0",
+		.help		= "Reset Zones on initialization (0=disable, 1=Reset All Zones)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
