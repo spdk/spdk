@@ -1023,7 +1023,6 @@ int
 spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 {
 	struct idxd_comp *comp_ctx, *tmp;
-	uint64_t sw_error_0;
 	int status = 0;
 	int rc = 0;
 
@@ -1034,11 +1033,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			rc++;
 
 			if (spdk_unlikely(IDXD_FAILURE(comp_ctx->hw.status))) {
-				sw_error_0 = idxd_read_8(chan->idxd, chan->portal, IDXD_SWERR_OFFSET);
-				if (IDXD_SW_ERROR(sw_error_0)) {
-					_dump_error_reg(chan);
-					status = -EINVAL;
-				}
+				status = -EINVAL;
+				_dump_error_reg(chan);
 			}
 
 			switch (comp_ctx->desc->opcode) {
