@@ -382,6 +382,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iove
 	accel_task->v.iovs = iov;
 	accel_task->v.iovcnt = iov_cnt;
 	accel_task->dst = (void *)dst;
+	accel_task->seed = seed;
 	accel_task->op_code = ACCEL_OPCODE_CRC32C;
 
 	if (_is_supported(accel_ch->engine, ACCEL_CRC32C)) {
