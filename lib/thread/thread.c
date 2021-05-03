@@ -746,17 +746,22 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(poller, &thread->timed_pollers, tailq, tmp) {
+	poller = TAILQ_FIRST(&thread->timed_pollers);
+	while (poller != NULL) {
 		int timer_rc = 0;
 
 		if (now < poller->next_run_tick) {
 			break;
 		}
 
+		tmp = TAILQ_NEXT(poller, tailq);
+
 		timer_rc = thread_execute_timed_poller(thread, poller, now);
 		if (timer_rc > rc) {
 			rc = timer_rc;
 		}
+
+		poller = tmp;
 	}
 
 	return rc;
