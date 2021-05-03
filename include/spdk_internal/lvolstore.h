@@ -36,8 +36,8 @@
 
 #include "spdk/blob.h"
 #include "spdk/lvol.h"
+#include "spdk/queue.h"
 #include "spdk/uuid.h"
-#include "spdk/bdev_module.h"
 
 /* Default size of blobstore cluster */
 #define SPDK_LVS_OPTS_CLUSTER_SZ (4 * 1024 * 1024)

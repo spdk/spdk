@@ -36,6 +36,8 @@
 #include "spdk/thread.h"
 #include "spdk/util.h"
 
+#include "spdk/bdev_module.h"
+
 #include "common/lib/ut_multithread.c"
 
 #include "lvol/lvol.c"
