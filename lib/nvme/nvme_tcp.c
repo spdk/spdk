@@ -130,6 +130,7 @@ struct nvme_tcp_req {
 	 * waiting for H2C complete */
 	uint16_t				ttag_r2t_next;
 	bool					in_capsule_data;
+	bool					pdu_in_use;
 	/* It is used to track whether the req can be safely freed */
 	union {
 		uint8_t raw;
@@ -200,6 +201,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->datao = 0;
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
+	tcp_req->pdu_in_use = false;
 	tcp_req->r2tl_remain = 0;
 	tcp_req->r2tl_remain_next = 0;
 	tcp_req->active_r2ts = 0;
@@ -479,7 +481,6 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	if (g_nvme_tcp_hdgst[pdu->hdr.common.pdu_type] && tqpair->flags.host_hdgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_header_digest(pdu);
 		MAKE_DIGEST_WORD((uint8_t *)pdu->hdr.raw + hlen, crc32c);
-
 	}
 
 	pdu_data_crc32_compute(pdu);
@@ -967,7 +968,6 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 	tcp_req->datao += pdu->data_len;
 	flags = c2h_data->common.flags;
 
-	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	if (flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) {
 		if (tcp_req->datao == tcp_req->req->payload_size) {
 			tcp_req->rsp.status.p = 0;
@@ -1026,6 +1026,7 @@ _nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 	switch (pdu->hdr.common.pdu_type) {
 	case SPDK_NVME_TCP_PDU_TYPE_C2H_DATA:
 		nvme_tcp_c2h_data_payload_handle(tqpair, pdu, reaped);
+		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 		break;
 
 	case SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ:
@@ -1040,12 +1041,53 @@ _nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 }
 
 static void
+tcp_data_recv_crc32_done(void *cb_arg, int status)
+{
+	struct nvme_tcp_req *tcp_req = cb_arg;
+	struct nvme_tcp_pdu *pdu;
+	struct nvme_tcp_qpair *tqpair;
+	int rc;
+	struct nvme_tcp_poll_group *pgroup;
+	int dummy_reaped = 0;
+
+	pdu = tcp_req->pdu;
+	assert(pdu != NULL);
+
+	tqpair = tcp_req->tqpair;
+	assert(tqpair != NULL);
+
+	if (!tqpair->needs_poll) {
+		pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
+		tqpair->needs_poll = true;
+	}
+
+	if (spdk_unlikely(status)) {
+		SPDK_ERRLOG("Failed to compute the data digest for pdu =%p\n", pdu);
+		tcp_req->rsp.status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
+		goto end;
+	}
+
+	pdu->data_digest_crc32 ^= SPDK_CRC32C_XOR;
+	rc = MATCH_DIGEST_WORD(pdu->data_digest, pdu->data_digest_crc32);
+	if (rc == 0) {
+		SPDK_ERRLOG("data digest error on tqpair=(%p) with pdu=%p\n", tqpair, pdu);
+		tcp_req->rsp.status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
+	}
+
+end:
+	tcp_req->pdu_in_use = false;
+	nvme_tcp_c2h_data_payload_handle(tqpair, tcp_req->pdu, &dummy_reaped);
+}
+
+static void
 nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 			    uint32_t *reaped)
 {
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu;
 	uint32_t crc32c;
+	struct nvme_tcp_poll_group *tgroup;
 	struct nvme_tcp_req *tcp_req;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
@@ -1055,6 +1097,29 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 
 	/* check data digest if need */
 	if (pdu->ddgst_enable) {
+		tcp_req = pdu->req;
+		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+		/* Only suport this limitated case for the first step */
+		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
+		    (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) &&
+		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)
+				&& !tcp_req->pdu_in_use)) {
+
+			tcp_req->pdu_in_use = true;
+			tcp_req->pdu->hdr = pdu->hdr;
+			tcp_req->pdu->req = tcp_req;
+			memcpy(tcp_req->pdu->data_digest, pdu->data_digest, sizeof(pdu->data_digest));
+			memcpy(tcp_req->pdu->data_iov, pdu->data_iov, sizeof(pdu->data_iov[0]) * pdu->data_iovcnt);
+			tcp_req->pdu->data_iovcnt = pdu->data_iovcnt;
+			tcp_req->pdu->data_len = pdu->data_len;
+
+			nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+			tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
+					&tcp_req->pdu->data_digest_crc32, tcp_req->pdu->data_iov,
+					tcp_req->pdu->data_iovcnt, 0, tcp_data_recv_crc32_done, tcp_req);
+			return;
+		}
+
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {

@@ -1175,7 +1175,6 @@ test_nvme_tcp_c2h_payload_handle(void)
 
 	nvme_tcp_c2h_data_payload_handle(&tqpair, &pdu, &reaped);
 
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	CU_ASSERT(tcp_req.rsp.status.p == 0);
 	CU_ASSERT(tcp_req.rsp.cid == tcp_req.cid);
 	CU_ASSERT(tcp_req.rsp.sqid == tqpair.qpair.id);
@@ -1194,7 +1193,6 @@ test_nvme_tcp_c2h_payload_handle(void)
 
 	nvme_tcp_c2h_data_payload_handle(&tqpair, &pdu, &reaped);
 
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	CU_ASSERT(tcp_req.rsp.status.p == 1);
 	CU_ASSERT(tcp_req.rsp.cid == tcp_req.cid);
 	CU_ASSERT(tcp_req.rsp.sqid == tqpair.qpair.id);
@@ -1214,7 +1212,6 @@ test_nvme_tcp_c2h_payload_handle(void)
 
 	nvme_tcp_c2h_data_payload_handle(&tqpair, &pdu, &reaped);
 
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	CU_ASSERT(reaped == 3);
 
 	/* case 4: nvme_tcp_c2h_term_req_payload_handle: recv_state is NVME_TCP_PDU_RECV_STATE_ERROR */
