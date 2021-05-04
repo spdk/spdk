@@ -539,10 +539,15 @@ static int
 spdk_fio_init(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
+	int rc;
 
-	spdk_fio_init_thread(td);
+	rc = spdk_fio_init_thread(td);
+	if (rc) {
+		return rc;
+	}
 
 	fio_thread = td->io_ops_data;
+	assert(fio_thread);
 	fio_thread->failed = false;
 
 	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_open, td);
