@@ -183,6 +183,14 @@ int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *d
  */
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
 
+/* Libraries may define __SPDK_BDEV_MODULE_ONLY so that they include
+ * only the struct spdk_bdev_module definition, and the relevant APIs
+ * to claim/release a bdev. This may be useful in some cases to avoid
+ * abidiff errors related to including the struct spdk_bdev structure
+ * unnecessarily.
+ */
+#ifndef __SPDK_BDEV_MODULE_ONLY
+
 typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
 
 /**
@@ -1226,5 +1234,7 @@ static void __attribute__((constructor)) _spdk_bdev_module_register_##name(void)
 { \
 	spdk_bdev_module_list_add(module); \
 } \
+
+#endif /* __SPDK_BDEV_MODULE_ONLY */
 
 #endif /* SPDK_BDEV_MODULE_H */
