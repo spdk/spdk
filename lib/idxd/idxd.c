@@ -406,9 +406,9 @@ _vtophys(const void *buf, uint64_t *buf_addr, uint64_t size)
 	return 0;
 }
 
-static struct idxd_hw_desc *
+static int
 _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
-		   void *cb_arg, struct idxd_batch *batch)
+		   void *cb_arg, struct idxd_hw_desc **_desc, struct idxd_comp **_comp)
 {
 	uint32_t index;
 	struct idxd_hw_desc *desc;
@@ -419,18 +419,18 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	index = spdk_bit_array_find_first_clear(chan->ring_slots, 0);
 	if (index == UINT32_MAX) {
 		/* ran out of ring slots */
-		return NULL;
+		return -EBUSY;
 	}
 
 	spdk_bit_array_set(chan->ring_slots, index);
 
-	desc = &chan->desc[index];
-	comp = &chan->completions[index];
+	desc = *_desc = &chan->desc[index];
+	comp = *_comp = &chan->completions[index];
 
 	rc = _vtophys(&comp->hw, &comp_hw_addr, sizeof(struct idxd_hw_comp_record));
 	if (rc) {
 		spdk_bit_array_clear(chan->ring_slots, index);
-		return NULL;
+		return rc;
 	}
 
 	_track_comp(chan, false, index, comp, desc, NULL);
@@ -439,9 +439,8 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	desc->completion_addr = comp_hw_addr;
 	comp->cb_arg = cb_arg;
 	comp->cb_fn = cb_fn;
-	comp->batch = batch;
 
-	return desc;
+	return 0;
 }
 
 int
@@ -449,13 +448,14 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t src_addr, dst_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
-	if (desc == NULL) {
-		return -EBUSY;
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -486,6 +486,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 			  const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t src_addr, dst1_addr, dst2_addr;
 	int rc;
 
@@ -495,9 +496,9 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	}
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
-	if (desc == NULL) {
-		return -EBUSY;
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -533,13 +534,14 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 			 uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t src1_addr, src2_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
-	if (desc == NULL) {
-		return -EBUSY;
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src1, &src1_addr, nbytes);
@@ -569,13 +571,14 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t dst_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
-	if (desc == NULL) {
-		return -EBUSY;
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(dst, &dst_addr, nbytes);
@@ -601,13 +604,14 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 			spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	uint64_t src_addr, dst_addr;
+	struct idxd_comp *comp;
+	uint64_t src_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg, NULL);
-	if (desc == NULL) {
-		return -EBUSY;
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -615,18 +619,14 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 		return rc;
 	}
 
-	rc = _vtophys(dst, &dst_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-	desc->dst_addr = dst_addr;
+	desc->dst_addr = 0; /* Per spec, needs to be clear. */
 	desc->src_addr = src_addr;
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
 	desc->xfer_size = nbytes;
+	comp->crc_dst = dst;
 
 	/* Submit operation. */
 	movdir64b(chan->portal, desc);
@@ -709,6 +709,7 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		       spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t desc_addr;
 	int i, rc;
 
@@ -725,10 +726,9 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	}
 
 	/* Common prep. */
-	desc = _idxd_prep_command(chan, cb_fn, cb_arg, batch);
-	if (desc == NULL) {
-		SPDK_DEBUGLOG(idxd, "Busy, can't submit batch %p\n", batch);
-		return -EBUSY;
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(batch->user_desc, &desc_addr, batch->remaining * sizeof(struct idxd_hw_desc));
@@ -740,6 +740,7 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	desc->opcode = IDXD_OPCODE_BATCH;
 	desc->desc_list_addr = desc_addr;
 	desc->desc_count = batch->remaining = batch->index;
+	comp->batch = batch;
 	assert(batch->index <= DESC_PER_BATCH);
 
 	/* Add the batch elements completion contexts to the outstanding list to be polled. */
@@ -1042,8 +1043,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				SPDK_DEBUGLOG(idxd, "Complete batch %p\n", comp_ctx->batch);
 				break;
 			case IDXD_OPCODE_CRC32C_GEN:
-				*(uint32_t *)comp_ctx->desc->dst_addr = comp_ctx->hw.crc32c_val;
-				*(uint32_t *)comp_ctx->desc->dst_addr ^= ~0;
+				*(uint32_t *)comp_ctx->crc_dst = comp_ctx->hw.crc32c_val;
+				*(uint32_t *)comp_ctx->crc_dst ^= ~0;
 				break;
 			case IDXD_OPCODE_COMPARE:
 				if (status == 0) {

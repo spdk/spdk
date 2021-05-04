@@ -164,9 +164,10 @@ struct idxd_comp {
 	void				*cb_arg;
 	spdk_idxd_req_cb		cb_fn;
 	struct idxd_batch		*batch;
-	bool				batch_op;
 	struct idxd_hw_desc		*desc;
+	uint32_t			*crc_dst;
 	uint32_t			index;
+	bool				batch_op;
 	char				pad[3];
 	TAILQ_ENTRY(idxd_comp)		link;
 };
