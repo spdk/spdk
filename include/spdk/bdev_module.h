@@ -161,6 +161,28 @@ struct spdk_bdev_module {
 	} internal;
 };
 
+/**
+ * Called by a bdev module to lay exclusive write claim to a bdev.
+ *
+ * Also upgrades that bdev's descriptor to have write access.
+ *
+ * \param bdev Block device to be claimed.
+ * \param desc Descriptor for the above block device.
+ * \param module Bdev module attempting to claim bdev.
+ *
+ * \return 0 on success
+ * \return -EPERM if the bdev is already claimed by another module.
+ */
+int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				struct spdk_bdev_module *module);
+
+/**
+ * Called to release a write claim on a block device.
+ *
+ * \param bdev Block device to be released.
+ */
+void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
+
 typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
 
 /**
@@ -765,28 +787,6 @@ void spdk_bdev_module_init_done(struct spdk_bdev_module *module);
  *
  */
 void spdk_bdev_module_finish_done(void);
-
-/**
- * Called by a bdev module to lay exclusive write claim to a bdev.
- *
- * Also upgrades that bdev's descriptor to have write access.
- *
- * \param bdev Block device to be claimed.
- * \param desc Descriptor for the above block device.
- * \param module Bdev module attempting to claim bdev.
- *
- * \return 0 on success
- * \return -EPERM if the bdev is already claimed by another module.
- */
-int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-				struct spdk_bdev_module *module);
-
-/**
- * Called to release a write claim on a block device.
- *
- * \param bdev Block device to be released.
- */
-void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
 
 /**
  * Add alias to block device names list.
