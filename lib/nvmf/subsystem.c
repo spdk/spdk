@@ -44,6 +44,7 @@
 #include "spdk/json.h"
 #include "spdk/file.h"
 
+#define __SPDK_BDEV_MODULE_ONLY
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
 #include "spdk_internal/utf.h"
@@ -1320,7 +1321,7 @@ nvmf_ns_event(enum spdk_bdev_event_type type,
 {
 	SPDK_DEBUGLOG(nvmf, "Bdev event: type %d, name %s, subsystem_id %d, ns_id %d\n",
 		      type,
-		      bdev->name,
+		      spdk_bdev_get_name(bdev),
 		      ((struct spdk_nvmf_ns *)event_ctx)->subsystem->id,
 		      ((struct spdk_nvmf_ns *)event_ctx)->nsid);
 

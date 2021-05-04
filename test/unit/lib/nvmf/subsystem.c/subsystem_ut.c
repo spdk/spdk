@@ -37,6 +37,7 @@
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
 
+#include "spdk/bdev_module.h"
 #include "nvmf/subsystem.c"
 
 SPDK_LOG_REGISTER_COMPONENT(nvmf)

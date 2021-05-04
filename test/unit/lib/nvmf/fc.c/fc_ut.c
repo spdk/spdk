@@ -51,6 +51,7 @@
 #include "json/json_write.c"
 #include "nvmf/nvmf.c"
 #include "nvmf/transport.c"
+#include "spdk/bdev_module.h"
 #include "nvmf/subsystem.c"
 #include "nvmf/fc.c"
 #include "nvmf/fc_ls.c"
