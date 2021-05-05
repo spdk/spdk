@@ -71,3 +71,49 @@ engine's full path via the ioengine parameter - LD_PRELOAD is recommended to avo
 When testing random workloads, it is recommended to set norandommap=1.  fio's random map
 processing consumes extra CPU cycles which will degrade performance over time with
 the fio_plugin since all I/O are submitted and completed on a single CPU core.
+
+# Zoned Block Devices
+
+SPDK has a zoned block device API (bdev_zone.h) which currently supports Open-channel SSDs,
+NVMe Zoned Namespaces (ZNS), and the virtual zoned block device SPDK module.
+
+If you wish to run fio against a SPDK zoned block device, you can use the fio option:
+
+    zonemode=zbd
+
+It is recommended to use a fio version newer than version 3.26, if using --numjobs > 1.
+If using --numjobs=1, fio version >= 3.23 should suffice.
+
+See zbd_example.fio in this directory for a zoned block device example config.
+
+## Maximum Open Zones
+
+Most zoned block devices have a resource constraint on the amount of zones which can be in an opened
+state at any point in time. It is very important to not exceed this limit.
+
+You can control how many zones fio will keep in an open state by using the
+``--max_open_zones`` option.
+
+## Maximum Active Zones
+
+Zoned block devices may also have a resource constraint on the number of zones that can be active at
+any point in time. Unlike ``max_open_zones``, fio currently does not manage this constraint, and
+there is thus no option to limit it either.
+
+Since the max active zones limit (by definition) has to be greater than or equal to the max active
+zones limit, the easiest way to work around that fio does not manage this constraint, is to start
+with a clean state each run (except for read-only workloads), by resetting all zones before fio
+starts running its jobs by using the engine option:
+
+    --initial_zone_reset=1
+
+## Zone Append
+
+When running fio against a zoned block device you need to specify --iodepth=1 to avoid
+"Zone Invalid Write: The write to a zone was not at the write pointer." I/O errors.
+However, if your zoned block device supports Zone Append, you can use the engine option:
+
+    --zone_append=1
+
+To send zone append commands instead of write commands to the zoned block device.
+When using zone append, you will be able to specify a --iodepth greater than 1.
