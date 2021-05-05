@@ -101,6 +101,14 @@ nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+struct cuse_device *g_cuse_device;
+DEFINE_RETURN_MOCK(fuse_req_userdata, void *);
+void *
+fuse_req_userdata(fuse_req_t req)
+{
+	return g_cuse_device;
+}
+
 static void
 test_cuse_nvme_submit_io_read_write(void)
 {
@@ -151,6 +159,51 @@ test_cuse_nvme_submit_io_read_write(void)
 	free(user_io);
 }
 
+static void
+test_cuse_nvme_submit_passthru_cmd(void)
+{
+	struct nvme_passthru_cmd *passthru_cmd = NULL;
+	fuse_req_t req = (void *)0xDEEACDFF;
+
+	passthru_cmd = calloc(1, sizeof(struct nvme_passthru_cmd));
+	g_cuse_device = calloc(1, sizeof(struct cuse_device));
+
+	/* Use fatal or we'll segfault if we didn't get memory */
+	SPDK_CU_ASSERT_FATAL(passthru_cmd != NULL);
+	SPDK_CU_ASSERT_FATAL(g_cuse_device != NULL);
+	g_cuse_device->ctrlr = (void *)0xDEADBEEF;
+
+	g_ut_ctx = NULL;
+	/* Passthrough command */
+	passthru_cmd->opcode   = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
+	passthru_cmd->nsid     = 1;
+	passthru_cmd->data_len = 512;
+	passthru_cmd->cdw10    = 0xc0de1010;
+	passthru_cmd->cdw11    = 0xc0de1111;
+	passthru_cmd->cdw12    = 0xc0de1212;
+	passthru_cmd->cdw13    = 0xc0de1313;
+	passthru_cmd->cdw14    = 0xc0de1414;
+	passthru_cmd->cdw15    = 0xc0de1515;
+
+	/* Send IO Command IOCTL */
+	cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, NVME_IOCTL_IO_CMD);
+	SPDK_CU_ASSERT_FATAL(g_ut_ctx != NULL);
+	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->req               == req);
+	CU_ASSERT(g_ut_ctx->data_len          == 512);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.opc      == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.nsid     == 1);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw10    == 0xc0de1010);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw11    == 0xc0de1111);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw12    == 0xc0de1212);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw13    == 0xc0de1313);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw14    == 0xc0de1414);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw15    == 0xc0de1515);
+
+	cuse_io_ctx_free(g_ut_ctx);
+	free(passthru_cmd);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -161,6 +214,7 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_cuse", NULL, NULL);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_io_read_write);
+	CU_ADD_TEST(suite, test_cuse_nvme_submit_passthru_cmd);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

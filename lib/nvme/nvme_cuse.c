@@ -144,7 +144,7 @@ cuse_nvme_passthru_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, voi
 
 static void
 cuse_nvme_passthru_cmd_send(fuse_req_t req, struct nvme_passthru_cmd *passthru_cmd,
-			    const void *data)
+			    const void *data, int cmd)
 {
 	struct cuse_io_ctx *ctx;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
@@ -185,7 +185,13 @@ cuse_nvme_passthru_cmd_send(fuse_req_t req, struct nvme_passthru_cmd *passthru_c
 		}
 	}
 
-	rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_passthru_cmd_execute, ctx);
+	if ((unsigned int)cmd != NVME_IOCTL_ADMIN_CMD) {
+		/* Send NS for IO IOCTLs */
+		rv = nvme_io_msg_send(cuse_device->ctrlr, passthru_cmd->nsid, cuse_nvme_passthru_cmd_execute, ctx);
+	} else {
+		/* NS == 0 for Admin IOCTLs */
+		rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_passthru_cmd_execute, ctx);
+	}
 	if (rv) {
 		SPDK_ERRLOG("Cannot send io msg to the controller\n");
 		fuse_reply_err(req, -rv);
@@ -220,9 +226,9 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 				fuse_reply_ioctl_retry(req, in_iov, 2, NULL, 0);
 				return;
 			}
-			cuse_nvme_passthru_cmd_send(req, passthru_cmd, in_buf + sizeof(*passthru_cmd));
+			cuse_nvme_passthru_cmd_send(req, passthru_cmd, in_buf + sizeof(*passthru_cmd), cmd);
 		} else {
-			cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL);
+			cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, cmd);
 		}
 		return;
 	case SPDK_NVME_DATA_NONE:
@@ -240,7 +246,7 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 			return;
 		}
 
-		cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL);
+		cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, cmd);
 
 		return;
 	case SPDK_NVME_DATA_BIDIRECTIONAL:
@@ -612,6 +618,11 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
 	case NVME_IOCTL_SUBMIT_IO:
 		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_SUBMIT_IO\n");
 		cuse_nvme_submit_io(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		break;
+
+	case NVME_IOCTL_IO_CMD:
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_IO_CMD\n");
+		cuse_nvme_passthru_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case NVME_IOCTL_ID:
