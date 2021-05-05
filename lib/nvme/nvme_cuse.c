@@ -96,7 +96,7 @@ cuse_io_ctx_free(struct cuse_io_ctx *ctx)
 	}
 
 static void
-cuse_nvme_admin_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+cuse_nvme_passthru_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct cuse_io_ctx *ctx = arg;
 	struct iovec out_iov[2];
@@ -124,13 +124,18 @@ cuse_nvme_admin_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-cuse_nvme_admin_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
+cuse_nvme_passthru_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
 {
 	int rc;
 	struct cuse_io_ctx *ctx = arg;
 
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &ctx->nvme_cmd, ctx->data, ctx->data_len,
-					   cuse_nvme_admin_cmd_cb, (void *)ctx);
+	if (nsid != 0) {
+		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, ctrlr->external_io_msgs_qpair, &ctx->nvme_cmd, ctx->data,
+						ctx->data_len, cuse_nvme_passthru_cmd_cb, (void *)ctx);
+	} else {
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &ctx->nvme_cmd, ctx->data, ctx->data_len,
+						   cuse_nvme_passthru_cmd_cb, (void *)ctx);
+	}
 	if (rc < 0) {
 		fuse_reply_err(ctx->req, EINVAL);
 		cuse_io_ctx_free(ctx);
@@ -138,8 +143,8 @@ cuse_nvme_admin_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *
 }
 
 static void
-cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd,
-			 const void *data)
+cuse_nvme_passthru_cmd_send(fuse_req_t req, struct nvme_passthru_cmd *passthru_cmd,
+			    const void *data)
 {
 	struct cuse_io_ctx *ctx;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
@@ -153,19 +158,19 @@ cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd,
 	}
 
 	ctx->req = req;
-	ctx->data_transfer = spdk_nvme_opc_get_data_transfer(admin_cmd->opcode);
+	ctx->data_transfer = spdk_nvme_opc_get_data_transfer(passthru_cmd->opcode);
 
 	memset(&ctx->nvme_cmd, 0, sizeof(ctx->nvme_cmd));
-	ctx->nvme_cmd.opc = admin_cmd->opcode;
-	ctx->nvme_cmd.nsid = admin_cmd->nsid;
-	ctx->nvme_cmd.cdw10 = admin_cmd->cdw10;
-	ctx->nvme_cmd.cdw11 = admin_cmd->cdw11;
-	ctx->nvme_cmd.cdw12 = admin_cmd->cdw12;
-	ctx->nvme_cmd.cdw13 = admin_cmd->cdw13;
-	ctx->nvme_cmd.cdw14 = admin_cmd->cdw14;
-	ctx->nvme_cmd.cdw15 = admin_cmd->cdw15;
+	ctx->nvme_cmd.opc = passthru_cmd->opcode;
+	ctx->nvme_cmd.nsid = passthru_cmd->nsid;
+	ctx->nvme_cmd.cdw10 = passthru_cmd->cdw10;
+	ctx->nvme_cmd.cdw11 = passthru_cmd->cdw11;
+	ctx->nvme_cmd.cdw12 = passthru_cmd->cdw12;
+	ctx->nvme_cmd.cdw13 = passthru_cmd->cdw13;
+	ctx->nvme_cmd.cdw14 = passthru_cmd->cdw14;
+	ctx->nvme_cmd.cdw15 = passthru_cmd->cdw15;
 
-	ctx->data_len = admin_cmd->data_len;
+	ctx->data_len = passthru_cmd->data_len;
 
 	if (ctx->data_len > 0) {
 		ctx->data = spdk_malloc(ctx->data_len, 4096, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -180,7 +185,7 @@ cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd,
 		}
 	}
 
-	rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_admin_cmd_execute, ctx);
+	rv = nvme_io_msg_send(cuse_device->ctrlr, 0, cuse_nvme_passthru_cmd_execute, ctx);
 	if (rv) {
 		SPDK_ERRLOG("Cannot send io msg to the controller\n");
 		fuse_reply_err(req, -rv);
@@ -190,44 +195,44 @@ cuse_nvme_admin_cmd_send(fuse_req_t req, struct nvme_admin_cmd *admin_cmd,
 }
 
 static void
-cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
-		    struct fuse_file_info *fi, unsigned flags,
-		    const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
+		       struct fuse_file_info *fi, unsigned flags,
+		       const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
-	struct nvme_admin_cmd *admin_cmd;
+	struct nvme_passthru_cmd *passthru_cmd;
 	struct iovec in_iov[2], out_iov[2];
 
 	in_iov[0].iov_base = (void *)arg;
-	in_iov[0].iov_len = sizeof(*admin_cmd);
+	in_iov[0].iov_len = sizeof(*passthru_cmd);
 	if (in_bufsz == 0) {
 		fuse_reply_ioctl_retry(req, in_iov, 1, NULL, 0);
 		return;
 	}
 
-	admin_cmd = (struct nvme_admin_cmd *)in_buf;
+	passthru_cmd = (struct nvme_passthru_cmd *)in_buf;
 
-	switch (spdk_nvme_opc_get_data_transfer(admin_cmd->opcode)) {
+	switch (spdk_nvme_opc_get_data_transfer(passthru_cmd->opcode)) {
 	case SPDK_NVME_DATA_HOST_TO_CONTROLLER:
-		if (admin_cmd->addr != 0) {
-			in_iov[1].iov_base = (void *)admin_cmd->addr;
-			in_iov[1].iov_len = admin_cmd->data_len;
-			if (in_bufsz == sizeof(*admin_cmd)) {
+		if (passthru_cmd->addr != 0) {
+			in_iov[1].iov_base = (void *)passthru_cmd->addr;
+			in_iov[1].iov_len = passthru_cmd->data_len;
+			if (in_bufsz == sizeof(*passthru_cmd)) {
 				fuse_reply_ioctl_retry(req, in_iov, 2, NULL, 0);
 				return;
 			}
-			cuse_nvme_admin_cmd_send(req, admin_cmd, in_buf + sizeof(*admin_cmd));
+			cuse_nvme_passthru_cmd_send(req, passthru_cmd, in_buf + sizeof(*passthru_cmd));
 		} else {
-			cuse_nvme_admin_cmd_send(req, admin_cmd, NULL);
+			cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL);
 		}
 		return;
 	case SPDK_NVME_DATA_NONE:
 	case SPDK_NVME_DATA_CONTROLLER_TO_HOST:
 		if (out_bufsz == 0) {
-			out_iov[0].iov_base = &((struct nvme_admin_cmd *)arg)->result;
+			out_iov[0].iov_base = &((struct nvme_passthru_cmd *)arg)->result;
 			out_iov[0].iov_len = sizeof(uint32_t);
-			if (admin_cmd->data_len > 0) {
-				out_iov[1].iov_base = (void *)admin_cmd->addr;
-				out_iov[1].iov_len = admin_cmd->data_len;
+			if (passthru_cmd->data_len > 0) {
+				out_iov[1].iov_base = (void *)passthru_cmd->addr;
+				out_iov[1].iov_len = passthru_cmd->data_len;
 				fuse_reply_ioctl_retry(req, in_iov, 1, out_iov, 2);
 			} else {
 				fuse_reply_ioctl_retry(req, in_iov, 1, out_iov, 1);
@@ -235,7 +240,7 @@ cuse_nvme_admin_cmd(fuse_req_t req, int cmd, void *arg,
 			return;
 		}
 
-		cuse_nvme_admin_cmd_send(req, admin_cmd, NULL);
+		cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL);
 
 		return;
 	case SPDK_NVME_DATA_BIDIRECTIONAL:
@@ -574,7 +579,7 @@ cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 	switch ((unsigned int)cmd) {
 	case NVME_IOCTL_ADMIN_CMD:
 		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_ADMIN_CMD\n");
-		cuse_nvme_admin_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		cuse_nvme_passthru_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case NVME_IOCTL_RESET:
@@ -601,7 +606,7 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
 	switch ((unsigned int)cmd) {
 	case NVME_IOCTL_ADMIN_CMD:
 		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_ADMIN_CMD\n");
-		cuse_nvme_admin_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
+		cuse_nvme_passthru_cmd(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 
 	case NVME_IOCTL_SUBMIT_IO:

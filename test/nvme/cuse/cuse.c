@@ -47,6 +47,10 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_admin_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+
 DEFINE_STUB(spdk_nvme_ctrlr_get_num_ns, uint32_t, (struct spdk_nvme_ctrlr *ctrlr), 128);
 
 static uint32_t g_active_num_ns = 4;
