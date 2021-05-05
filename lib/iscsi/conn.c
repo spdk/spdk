@@ -1650,9 +1650,9 @@ SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
 	spdk_trace_register_description("ISCSI_READ_DONE", TRACE_ISCSI_READ_FROM_SOCKET_DONE,
 					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "");
 	spdk_trace_register_description("ISCSI_WRITE_START", TRACE_ISCSI_FLUSH_WRITEBUF_START,
-					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "iovec: ");
+					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 1, 0, "iovec: ");
 	spdk_trace_register_description("ISCSI_WRITE_DONE", TRACE_ISCSI_FLUSH_WRITEBUF_DONE,
-					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, "");
+					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 0, 0, "");
 	spdk_trace_register_description("ISCSI_READ_PDU", TRACE_ISCSI_READ_PDU,
 					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 1, 0, "opc:   ");
 	spdk_trace_register_description("ISCSI_TASK_DONE", TRACE_ISCSI_TASK_DONE,
