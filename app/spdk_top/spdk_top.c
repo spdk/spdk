@@ -628,7 +628,9 @@ get_thread_data(void)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
 	struct rpc_threads_stats threads_stats;
-	uint64_t i, j;
+	struct rpc_thread_info *thread_info;
+	struct rpc_core_info *core_info;
+	uint64_t i, j, k;
 	int rc = 0;
 
 	rc = rpc_send_req("thread_get_stats", &json_resp);
@@ -660,6 +662,28 @@ get_thread_data(void)
 	memcpy(&g_threads_stats, &threads_stats, sizeof(struct rpc_threads_stats));
 	qsort(&g_threads_stats.threads.thread_info, threads_stats.threads.threads_count,
 	      sizeof(g_threads_stats.threads.thread_info[0]), sort_threads);
+
+	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
+		g_threads_stats.threads.thread_info[i].core_num = -1;
+	}
+
+	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
+		core_info = &g_cores_stats.cores.core[i];
+
+		for (j = 0; j < core_info->threads.threads_count; j++) {
+			for (k = 0; k < g_threads_stats.threads.threads_count; k++) {
+				/* For each thread on current core: check if it's ID also exists
+				 * in g_thread_info data structure. If it does then assign current
+				 * core's number to that thread, otherwise application state is inconsistent
+				 * (e.g. scheduler is moving threads between cores). */
+				thread_info = &g_threads_stats.threads.thread_info[k];
+				if (thread_info->id == core_info->threads.thread[j].id) {
+					thread_info->core_num = core_info->lcore;
+					break;
+				}
+			}
+		}
+	}
 
 	pthread_mutex_unlock(&g_thread_lock);
 
@@ -1141,23 +1165,34 @@ copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poll
 	     struct rpc_poller_info **pollers_info)
 {
 	uint64_t *last_run_counter;
-	uint64_t i;
+	uint64_t i, j;
+	struct rpc_thread_info *thread_info;
 
 	for (i = 0; i < pollers_count; i++) {
-		if (reset_last_counter) {
-			last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
-			if (last_run_counter == NULL) {
-				store_last_run_counter(pollers->pollers[i].name, thread->id, pollers->pollers[i].run_count);
-				last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
+		for (j = 0; j < g_threads_stats.threads.threads_count; j++) {
+			thread_info = &g_threads_stats.threads.thread_info[j];
+			/* Check if poller's thread exists in g_threads_stats
+			 * (if poller is not "hanging" without a thread). */
+			if (thread_info->id != thread->id) {
+				continue;
 			}
 
-			assert(last_run_counter != NULL);
-			*last_run_counter = pollers->pollers[i].run_count;
+			if (reset_last_counter) {
+				last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
+				if (last_run_counter == NULL) {
+					store_last_run_counter(pollers->pollers[i].name, thread->id, pollers->pollers[i].run_count);
+					last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
+				}
+
+				assert(last_run_counter != NULL);
+				*last_run_counter = pollers->pollers[i].run_count;
+			}
+			pollers_info[*current_count] = &pollers->pollers[i];
+			snprintf(pollers_info[*current_count]->thread_name, MAX_POLLER_NAME - 1, "%s", thread->name);
+			pollers_info[*current_count]->thread_id = thread->id;
+			pollers_info[(*current_count)++]->type = type;
+			break;
 		}
-		pollers_info[*current_count] = &pollers->pollers[i];
-		snprintf(pollers_info[*current_count]->thread_name, MAX_POLLER_NAME - 1, "%s", thread->name);
-		pollers_info[*current_count]->thread_id = thread->id;
-		pollers_info[(*current_count)++]->type = type;
 	}
 }
 
@@ -2379,7 +2414,12 @@ data_thread_routine(void *arg)
 		}
 		pthread_mutex_unlock(&g_thread_lock);
 
-		/* Get data from RPC for each object type */
+		/* Get data from RPC for each object type.
+		 * Start with cores since their number should not change. */
+		rc = get_cores_data();
+		if (rc) {
+			print_bottom_error_message("ERROR occurred while getting cores data");
+		}
 		rc = get_thread_data();
 		if (rc) {
 			print_bottom_error_message("ERROR occurred while getting threads data");
@@ -2388,11 +2428,6 @@ data_thread_routine(void *arg)
 		rc = get_pollers_data();
 		if (rc) {
 			print_bottom_error_message("ERROR occurred while getting pollers data");
-		}
-
-		rc = get_cores_data();
-		if (rc) {
-			print_bottom_error_message("ERROR occurred while getting cores data");
 		}
 
 		usleep(g_sleep_time * SPDK_SEC_TO_USEC);
