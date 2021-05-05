@@ -174,11 +174,13 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace)
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
 	spdk_trace_register_description("RDMA_REQ_NEW", "",
 					TRACE_RDMA_REQUEST_STATE_NEW,
-					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 1, 1, "cmid:	");
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 1,
+					SPDK_TRACE_ARG_TYPE_PTR, "cmid:	");
 	...
 	spdk_trace_register_description("NEW_RDMA_REQ_NAME", "",
 					NEW_TRACE_POINT_NAME,
-					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:	");
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
+					SPDK_TRACE_ARG_TYPE_PTR, "cmid:	");
 }
 ~~~
 
