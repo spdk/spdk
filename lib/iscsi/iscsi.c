@@ -4703,10 +4703,6 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 	}
 
-	/* All data for this PDU has now been read from the socket. */
-	spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
-			  (uintptr_t)pdu, pdu->bhs.opcode);
-
 	/* check data digest */
 	if (conn->data_digest) {
 		_iscsi_pdu_calc_data_digest(pdu);
@@ -4842,6 +4838,10 @@ iscsi_read_pdu(struct spdk_iscsi_conn *conn)
 					break;
 				}
 			}
+
+			/* All data for this PDU has now been read from the socket. */
+			spdk_trace_record(TRACE_ISCSI_READ_PDU, conn->id, pdu->data_valid_bytes,
+					  (uintptr_t)pdu, pdu->bhs.opcode);
 
 			if (!pdu->is_rejected) {
 				rc = iscsi_pdu_payload_handle(conn, pdu);
