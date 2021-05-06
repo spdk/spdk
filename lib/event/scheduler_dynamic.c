@@ -37,7 +37,7 @@
 #include "spdk/log.h"
 #include "spdk/env.h"
 
-#include "spdk_internal/thread.h"
+#include "spdk/thread.h"
 #include "spdk_internal/event.h"
 
 static uint32_t g_next_lcore = SPDK_ENV_LCORE_ID_ANY;
