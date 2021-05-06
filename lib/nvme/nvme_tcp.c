@@ -81,7 +81,7 @@ struct nvme_tcp_qpair {
 	TAILQ_HEAD(, nvme_tcp_req)		outstanding_reqs;
 
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
-	struct nvme_tcp_pdu			recv_pdu;
+	struct nvme_tcp_pdu			*recv_pdu;
 	struct nvme_tcp_pdu			*send_pdu; /* only for error pdu and init pdu */
 	struct nvme_tcp_pdu			*send_pdus; /* Used by tcp_reqs */
 	enum nvme_tcp_pdu_recv_state		recv_state;
@@ -271,8 +271,8 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 		goto fail;
 	}
 
-	/* Add additional one member for the send_pdu owned by the tqpair */
-	tqpair->send_pdus = spdk_zmalloc((tqpair->num_entries + 1) * sizeof(struct nvme_tcp_pdu),
+	/* Add additional 2 member for the send_pdu, recv_pdu owned by the tqpair */
+	tqpair->send_pdus = spdk_zmalloc((tqpair->num_entries + 2) * sizeof(struct nvme_tcp_pdu),
 					 0x1000, NULL,
 					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 
@@ -293,6 +293,7 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 	}
 
 	tqpair->send_pdu = &tqpair->send_pdus[i];
+	tqpair->recv_pdu = &tqpair->send_pdus[i + 1];
 
 	return 0;
 fail:
@@ -819,7 +820,7 @@ nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 	switch (state) {
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 	case NVME_TCP_PDU_RECV_STATE_ERROR:
-		memset(&tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
+		memset(tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
 		break;
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
@@ -882,7 +883,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 	uint32_t expected_hlen, hd_len = 0;
 	bool plen_error = false;
 
-	pdu = &tqpair->recv_pdu;
+	pdu = tqpair->recv_pdu;
 
 	SPDK_DEBUGLOG(nvme, "pdu type = %d\n", pdu->hdr.common.pdu_type);
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP) {
@@ -938,7 +939,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 			break;
 
 		default:
-			SPDK_ERRLOG("Unexpected PDU type 0x%02x\n", tqpair->recv_pdu.hdr.common.pdu_type);
+			SPDK_ERRLOG("Unexpected PDU type 0x%02x\n", tqpair->recv_pdu->hdr.common.pdu_type);
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 			error_offset = offsetof(struct spdk_nvme_tcp_common_pdu_hdr, pdu_type);
 			goto err;
@@ -958,7 +959,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 		goto err;
 	} else {
 		nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH);
-		nvme_tcp_pdu_calc_psh_len(&tqpair->recv_pdu, tqpair->flags.host_hdgst_enable);
+		nvme_tcp_pdu_calc_psh_len(tqpair->recv_pdu, tqpair->flags.host_hdgst_enable);
 		return;
 	}
 err:
@@ -1050,7 +1051,7 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 	enum spdk_nvme_tcp_term_req_fes fes;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
-	pdu = &tqpair->recv_pdu;
+	pdu = tqpair->recv_pdu;
 
 	SPDK_DEBUGLOG(nvme, "enter\n");
 
@@ -1467,7 +1468,7 @@ nvme_tcp_pdu_psh_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 	enum spdk_nvme_tcp_term_req_fes fes;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH);
-	pdu = &tqpair->recv_pdu;
+	pdu = tqpair->recv_pdu;
 
 	SPDK_DEBUGLOG(nvme, "enter: pdu type =%u\n", pdu->hdr.common.pdu_type);
 	/* check header digest if needed */
@@ -1502,7 +1503,7 @@ nvme_tcp_pdu_psh_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 		break;
 
 	default:
-		SPDK_ERRLOG("Unexpected PDU type 0x%02x\n", tqpair->recv_pdu.hdr.common.pdu_type);
+		SPDK_ERRLOG("Unexpected PDU type 0x%02x\n", tqpair->recv_pdu->hdr.common.pdu_type);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 		error_offset = 1;
 		nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
@@ -1529,7 +1530,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			break;
 		/* common header */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
-			pdu = &tqpair->recv_pdu;
+			pdu = tqpair->recv_pdu;
 			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
 				rc = nvme_tcp_read_data(tqpair->sock,
 							sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
@@ -1550,7 +1551,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-			pdu = &tqpair->recv_pdu;
+			pdu = tqpair->recv_pdu;
 			rc = nvme_tcp_read_data(tqpair->sock,
 						pdu->psh_len - pdu->psh_valid_bytes,
 						(uint8_t *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
@@ -1569,7 +1570,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			nvme_tcp_pdu_psh_handle(tqpair, reaped);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
-			pdu = &tqpair->recv_pdu;
+			pdu = tqpair->recv_pdu;
 			/* check whether the data is valid, if not we just return */
 			if (!pdu->data_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
