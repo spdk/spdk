@@ -45,6 +45,7 @@
 #include "spdk/rpc.h"
 #include "spdk/bit_array.h"
 #include "spdk/conf.h"
+#include "spdk/zipf.h"
 
 #define BDEVPERF_CONFIG_MAX_FILENAME 1024
 #define BDEVPERF_CONFIG_UNDEFINED -1
@@ -91,6 +92,7 @@ static bool g_multithread_mode = false;
 static int g_timeout_in_sec;
 static struct spdk_conf *g_bdevperf_conf = NULL;
 static const char *g_bdevperf_conf_file = NULL;
+static double g_zipf_theta;
 
 static struct spdk_cpuset g_all_cpuset;
 static struct spdk_poller *g_perf_timer = NULL;
@@ -136,6 +138,7 @@ struct bdevperf_job {
 	struct spdk_poller		*run_timer;
 	struct spdk_poller		*reset_timer;
 	struct spdk_bit_array		*outstanding;
+	struct spdk_zipf		*zipf;
 	TAILQ_HEAD(, bdevperf_task)	task_list;
 };
 
@@ -406,7 +409,7 @@ bdevperf_test_done(void *ctx)
 		if (job->verify) {
 			spdk_bit_array_free(&job->outstanding);
 		}
-
+		spdk_zipf_free(&job->zipf);
 		free(job->name);
 		free(job);
 	}
@@ -832,7 +835,9 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 {
 	uint64_t offset_in_ios;
 
-	if (job->is_random) {
+	if (job->zipf) {
+		offset_in_ios = spdk_zipf_generate(job->zipf);
+	} else if (job->is_random) {
 		offset_in_ios = rand_r(&job->seed) % job->size_in_ios;
 	} else {
 		offset_in_ios = job->offset_in_ios++;
@@ -1296,6 +1301,10 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 		/* Use whole disk */
 		job->size_in_ios = spdk_bdev_get_num_blocks(bdev) / job->io_size_blocks;
 		job->ios_base = 0;
+	}
+
+	if (job->is_random && g_zipf_theta > 0) {
+		job->zipf = spdk_zipf_create(job->size_in_ios, g_zipf_theta, 0);
 	}
 
 	if (job->verify) {
@@ -1935,6 +1944,15 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_continue_on_failure = true;
 	} else if (ch == 'j') {
 		g_bdevperf_conf_file = optarg;
+	} else if (ch == 'F') {
+		char *endptr;
+
+		errno = 0;
+		g_zipf_theta = strtod(optarg, &endptr);
+		if (errno || optarg == endptr || g_zipf_theta < 0) {
+			fprintf(stderr, "Illegal zipf theta value %s\n", optarg);
+			return -EINVAL;
+		}
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -1992,6 +2010,7 @@ bdevperf_usage(void)
 	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 	printf(" -T <bdev>                 bdev to run against. Default: all available bdevs.\n");
 	printf(" -f                        continue processing I/O even after failures\n");
+	printf(" -F <zipf theta>           use zipf distribution for random I/O\n");
 	printf(" -Z                        enable using zcopy bdev API for read or write I/O\n");
 	printf(" -z                        start bdevperf, but wait for RPC to start tests\n");
 	printf(" -X                        abort timed out I/O\n");
@@ -2102,7 +2121,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CM:P:S:T:Xj:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CF:M:P:S:T:Xj:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
