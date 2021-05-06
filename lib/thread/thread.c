@@ -1491,9 +1491,15 @@ spdk_poller_resume(struct spdk_poller *poller)
 }
 
 const char *
-spdk_poller_state_str(enum spdk_poller_state state)
+spdk_poller_get_name(struct spdk_poller *poller)
 {
-	switch (state) {
+	return poller->name;
+}
+
+const char *
+spdk_poller_get_state_str(struct spdk_poller *poller)
+{
+	switch (poller->state) {
 	case SPDK_POLLER_STATE_WAITING:
 		return "waiting";
 	case SPDK_POLLER_STATE_RUNNING:
@@ -1507,6 +1513,19 @@ spdk_poller_state_str(enum spdk_poller_state state)
 	default:
 		return NULL;
 	}
+}
+
+uint64_t
+spdk_poller_get_period_ticks(struct spdk_poller *poller)
+{
+	return poller->period_ticks;
+}
+
+void
+spdk_poller_get_stats(struct spdk_poller *poller, struct spdk_poller_stats *stats)
+{
+	stats->run_count = poller->run_count;
+	stats->busy_count = poller->busy_count;
 }
 
 struct spdk_poller *

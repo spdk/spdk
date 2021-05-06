@@ -250,13 +250,19 @@ SPDK_RPC_REGISTER("thread_get_stats", rpc_thread_get_stats, SPDK_RPC_RUNTIME)
 static void
 rpc_get_poller(struct spdk_poller *poller, struct spdk_json_write_ctx *w)
 {
+	struct spdk_poller_stats stats;
+	uint64_t period_ticks;
+
+	period_ticks = spdk_poller_get_period_ticks(poller);
+	spdk_poller_get_stats(poller, &stats);
+
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", poller->name);
-	spdk_json_write_named_string(w, "state", spdk_poller_state_str(poller->state));
-	spdk_json_write_named_uint64(w, "run_count", poller->run_count);
-	spdk_json_write_named_uint64(w, "busy_count", poller->busy_count);
-	if (poller->period_ticks) {
-		spdk_json_write_named_uint64(w, "period_ticks", poller->period_ticks);
+	spdk_json_write_named_string(w, "name", spdk_poller_get_name(poller));
+	spdk_json_write_named_string(w, "state", spdk_poller_get_state_str(poller));
+	spdk_json_write_named_uint64(w, "run_count", stats.run_count);
+	spdk_json_write_named_uint64(w, "busy_count", stats.busy_count);
+	if (period_ticks) {
+		spdk_json_write_named_uint64(w, "period_ticks", period_ticks);
 	}
 	spdk_json_write_object_end(w);
 }

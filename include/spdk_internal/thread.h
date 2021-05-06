@@ -81,6 +81,11 @@ struct spdk_poller {
 	char				name[SPDK_MAX_POLLER_NAME_LEN + 1];
 };
 
+struct spdk_poller_stats {
+	uint64_t	run_count;
+	uint64_t	busy_count;
+};
+
 enum spdk_thread_state {
 	/* The thread is pocessing poller and message by spdk_thread_poll(). */
 	SPDK_THREAD_STATE_RUNNING,
@@ -138,7 +143,10 @@ struct spdk_thread {
 	uint8_t				ctx[0];
 };
 
-const char *spdk_poller_state_str(enum spdk_poller_state state);
+const char *spdk_poller_get_name(struct spdk_poller *poller);
+const char *spdk_poller_get_state_str(struct spdk_poller *poller);
+uint64_t spdk_poller_get_period_ticks(struct spdk_poller *poller);
+void spdk_poller_get_stats(struct spdk_poller *poller, struct spdk_poller_stats *stats);
 
 const char *spdk_io_device_get_name(struct io_device *dev);
 

@@ -57,7 +57,10 @@
 	spdk_interrupt_mode_is_enabled;
 
 	# internal functions in spdk_internal/thread.h
-	spdk_poller_state_str;
+	spdk_poller_get_name;
+	spdk_poller_get_state_str;
+	spdk_poller_get_period_ticks;
+	spdk_poller_get_stats;
 	spdk_io_device_get_name;
 	spdk_thread_get_first_active_poller;
 	spdk_thread_get_next_active_poller;
