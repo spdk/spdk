@@ -118,6 +118,7 @@ struct bdevperf_job {
 	bool				flush;
 	bool				abort;
 	int				queue_depth;
+	unsigned int			seed;
 
 	uint64_t			io_completed;
 	uint64_t			io_failed;
@@ -826,15 +827,13 @@ bdevperf_job_get_task(struct bdevperf_job *job)
 	return task;
 }
 
-static __thread unsigned int seed = 0;
-
 static void
 bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 {
 	uint64_t offset_in_ios;
 
 	if (job->is_random) {
-		offset_in_ios = rand_r(&seed) % job->size_in_ios;
+		offset_in_ios = rand_r(&job->seed) % job->size_in_ios;
 	} else {
 		offset_in_ios = job->offset_in_ios++;
 		if (job->offset_in_ios == job->size_in_ios) {
@@ -884,7 +883,7 @@ bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task)
 	} else if (job->write_zeroes) {
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 	} else if ((job->rw_percentage == 100) ||
-		   (job->rw_percentage != 0 && ((rand_r(&seed) % 100) < job->rw_percentage))) {
+		   (job->rw_percentage != 0 && ((rand_r(&job->seed) % 100) < job->rw_percentage))) {
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
 		if (g_zcopy) {
