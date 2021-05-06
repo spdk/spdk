@@ -3771,6 +3771,10 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	int					res;
 	struct spdk_nvme_ns			*ns;
 
+	if (nsid == 0) {
+		return -EINVAL;
+	}
+
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
@@ -3808,6 +3812,10 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	struct nvme_completion_poll_status	*status;
 	int					res;
 	struct spdk_nvme_ns			*ns;
+
+	if (nsid == 0) {
+		return -EINVAL;
+	}
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
@@ -3870,8 +3878,11 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 	}
 
 	nsid = status->cpl.cdw0;
-	ns = &ctrlr->ns[nsid - 1];
 	free(status);
+
+	assert(nsid > 0);
+
+	ns = &ctrlr->ns[nsid - 1];
 	/* Inactive NS */
 	res = nvme_ns_construct(ns, nsid, ctrlr);
 	if (res) {
@@ -3888,6 +3899,10 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	struct nvme_completion_poll_status	*status;
 	int					res;
 	struct spdk_nvme_ns			*ns;
+
+	if (nsid == 0) {
+		return -EINVAL;
+	}
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
