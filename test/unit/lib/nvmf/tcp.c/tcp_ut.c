@@ -682,7 +682,7 @@ test_nvmf_tcp_incapsule_data_handle(void)
 {
 	struct spdk_nvmf_tcp_transport ttransport = {};
 	struct spdk_nvmf_tcp_qpair tqpair = {};
-	struct nvme_tcp_pdu *pdu;
+	struct nvme_tcp_pdu *pdu, pdu_in_progress = {};
 	union nvmf_c2h_msg rsp0 = {};
 	union nvmf_c2h_msg rsp = {};
 
@@ -698,6 +698,7 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	struct spdk_nvmf_tcp_poll_group tcp_group = {};
 	struct spdk_sock_group grp = {};
 
+	tqpair.pdu_in_progress = &pdu_in_progress;
 	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
 	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
 
@@ -733,7 +734,7 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	tqpair.state_cntr[TCP_REQUEST_STATE_NEW]++;
 
 	/* init pdu, make pdu need sgl buff */
-	pdu = &tqpair.pdu_in_progress;
+	pdu = tqpair.pdu_in_progress;
 	capsule_data = &pdu->hdr.capsule_cmd;
 	nvmf_capsule_data = (struct spdk_nvmf_capsule_cmd *)&pdu->hdr.capsule_cmd.ccsqe;
 	sgl = &capsule_data->ccsqe.dptr.sgl1;
@@ -756,7 +757,7 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	sgl->unkeyed.length = UT_IO_UNIT_SIZE - 1;
 
 	/* process tqpair capsule req. but we still remain req in pending_buff. */
-	nvmf_tcp_capsule_cmd_hdr_handle(&ttransport, &tqpair, &tqpair.pdu_in_progress);
+	nvmf_tcp_capsule_cmd_hdr_handle(&ttransport, &tqpair, tqpair.pdu_in_progress);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	CU_ASSERT(STAILQ_FIRST(&group->pending_buf_queue) == &tcp_req1.req);
 	STAILQ_FOREACH(req_temp, &group->pending_buf_queue, buf_link) {
@@ -765,7 +766,7 @@ test_nvmf_tcp_incapsule_data_handle(void)
 		}
 	}
 	CU_ASSERT(req_temp == NULL);
-	CU_ASSERT(tqpair.pdu_in_progress.req == (void *)&tcp_req2);
+	CU_ASSERT(tqpair.pdu_in_progress->req == (void *)&tcp_req2);
 }
 
 int main(int argc, char **argv)
