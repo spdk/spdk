@@ -32,68 +32,52 @@
  */
 
 /** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
+ * Zipf random number distribution
  */
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#ifndef SPDK_ZIPF_H
+#define SPDK_ZIPF_H
+
+#include "spdk/stdinc.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <time.h>
+struct spdk_zipf;
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
-#include <regex.h>
+/**
+ * Create a zipf random number generator.
+ *
+ * Numbers from [0, range) will be returned by the generator when
+ * calling \ref spdk_zipf_generate.
+ *
+ * \param range Range of values for the zipf distribution.
+ * \param theta Theta distribution parameter.
+ * \param seed Seed value for the random number generator.
+ *
+ * \return a pointer to the new zipf generator.
+ */
+struct spdk_zipf *spdk_zipf_create(uint64_t range, double theta, uint32_t seed);
 
-/* GNU extension */
-#include <getopt.h>
+/**
+ * Free a zipf generator and set the pointer to NULL.
+ *
+ * \param zipfp Zipf generator to free.
+ */
+void spdk_zipf_free(struct spdk_zipf **zipfp);
+
+/**
+ * Generate a value from the zipf generator.
+ *
+ * \param zipf Zipf generator to generate the value from.
+ *
+ * \return value in the range [0, range)
+ */
+uint64_t spdk_zipf_generate(struct spdk_zipf *zipf);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SPDK_STDINC_H */
+#endif

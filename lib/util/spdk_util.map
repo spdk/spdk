@@ -144,5 +144,10 @@
 	spdk_fd_group_event_modify;
 	spdk_fd_group_get_fd;
 
+	# public functions in zipf.h
+	spdk_zipf_create;
+	spdk_zipf_free;
+	spdk_zipf_generate;
+
 	local: *;
 };
