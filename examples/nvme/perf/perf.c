@@ -105,6 +105,7 @@ struct ns_entry {
 	uint32_t		block_size;
 	uint32_t		md_size;
 	bool			md_interleave;
+	unsigned int		seed;
 	bool			pi_loc;
 	enum spdk_nvme_pi_type	pi_type;
 	uint32_t		io_flags;
@@ -1341,8 +1342,6 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 	}
 }
 
-static __thread unsigned int seed = 0;
-
 static inline void
 submit_single_io(struct perf_task *task)
 {
@@ -1352,7 +1351,7 @@ submit_single_io(struct perf_task *task)
 	struct ns_entry		*entry = ns_ctx->entry;
 
 	if (g_is_random) {
-		offset_in_ios = rand_r(&seed) % entry->size_in_ios;
+		offset_in_ios = rand_r(&entry->seed) % entry->size_in_ios;
 	} else {
 		offset_in_ios = ns_ctx->offset_in_ios++;
 		if (ns_ctx->offset_in_ios == entry->size_in_ios) {
@@ -1363,7 +1362,7 @@ submit_single_io(struct perf_task *task)
 	task->submit_tsc = spdk_get_ticks();
 
 	if ((g_rw_percentage == 100) ||
-	    (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
+	    (g_rw_percentage != 0 && ((rand_r(&entry->seed) % 100) < g_rw_percentage))) {
 		task->is_read = true;
 	} else {
 		task->is_read = false;
