@@ -369,7 +369,7 @@ spdk_vfio_user_setup(const char *path)
 {
 	int ret;
 	struct vfio_device *device = NULL;
-	struct vfio_device_info dev_info = {};
+	struct vfio_user_device_info dev_info = {};
 
 	device = calloc(1, sizeof(*device));
 	if (!device) {

@@ -34,6 +34,7 @@
 #define _VFIO_INTERNAL_H
 
 #include <linux/vfio.h>
+#include "spdk/vfio_user_spec.h"
 
 #define VFIO_USER_MAJOR_VER			0
 #define VFIO_USER_MINOR_VER			1
@@ -85,7 +86,7 @@ struct vfio_device {
 };
 
 int vfio_user_dev_setup(struct vfio_device *dev);
-int vfio_user_get_dev_info(struct vfio_device *dev, struct vfio_device_info *dev_info,
+int vfio_user_get_dev_info(struct vfio_device *dev, struct vfio_user_device_info *dev_info,
 			   size_t buf_len);
 int vfio_user_get_dev_region_info(struct vfio_device *dev, struct vfio_region_info *region_info,
 				  size_t buf_len, int *fds, int num_fds);

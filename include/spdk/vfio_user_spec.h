@@ -81,6 +81,14 @@ struct vfio_user_version {
 	uint8_t		data[];
 } __attribute__((packed));
 
+struct vfio_user_device_info {
+	uint32_t    argsz;
+	/* VFIO_DEVICE_FLAGS_* */
+	uint32_t    flags;
+	uint32_t    num_regions;
+	uint32_t    num_irqs;
+} __attribute__((packed));
+
 struct vfio_user_dma_region {
 	uint64_t	addr;
 	uint64_t	size;

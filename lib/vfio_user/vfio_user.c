@@ -285,10 +285,10 @@ vfio_user_get_dev_region_info(struct vfio_device *dev, struct vfio_region_info *
 }
 
 int
-vfio_user_get_dev_info(struct vfio_device *dev, struct vfio_device_info *dev_info,
+vfio_user_get_dev_info(struct vfio_device *dev, struct vfio_user_device_info *dev_info,
 		       size_t buf_len)
 {
-	dev_info->argsz = sizeof(struct vfio_device_info);
+	dev_info->argsz = sizeof(struct vfio_user_device_info);
 	return vfio_user_dev_send_request(dev, VFIO_USER_DEVICE_GET_INFO,
 					  dev_info, dev_info->argsz, buf_len, NULL, 0);
 }
