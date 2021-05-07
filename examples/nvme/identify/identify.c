@@ -1659,18 +1659,18 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Number of Power States:      %u\n", cdata->npss + 1);
 		printf("Current Power State:         Power State #%u\n", ps);
 		for (i = 0; i <= cdata->npss; i++) {
-			const struct spdk_nvme_power_state *psd = &cdata->psd[i];
+			const struct spdk_nvme_power_state psd = cdata->psd[i];
 			printf("Power State #%u:  ", i);
-			if (psd->mps) {
+			if (psd.mps) {
 				/* MP scale is 0.0001 W */
 				printf("Max Power: %u.%04u W\n",
-				       psd->mp / 10000,
-				       psd->mp % 10000);
+				       psd.mp / 10000,
+				       psd.mp % 10000);
 			} else {
 				/* MP scale is 0.01 W */
 				printf("Max Power: %3u.%02u W\n",
-				       psd->mp / 100,
-				       psd->mp % 100);
+				       psd.mp / 100,
+				       psd.mp % 100);
 			}
 			/* TODO: print other power state descriptor fields */
 		}

@@ -1840,7 +1840,7 @@ struct spdk_nvme_cdata_sgls {
 	uint32_t	reserved2 : 10;
 };
 
-struct __attribute__((packed)) __attribute__((aligned)) spdk_nvme_ctrlr_data {
+struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
 	/** pci vendor id */
