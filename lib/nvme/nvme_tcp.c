@@ -1042,6 +1042,30 @@ nvme_tcp_c2h_term_req_payload_handle(struct nvme_tcp_qpair *tqpair,
 }
 
 static void
+_nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
+{
+	struct nvme_tcp_pdu *pdu;
+
+	assert(tqpair != NULL);
+	pdu = tqpair->recv_pdu;
+
+	switch (pdu->hdr.common.pdu_type) {
+	case SPDK_NVME_TCP_PDU_TYPE_C2H_DATA:
+		nvme_tcp_c2h_data_payload_handle(tqpair, pdu, reaped);
+		break;
+
+	case SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ:
+		nvme_tcp_c2h_term_req_payload_handle(tqpair, pdu);
+		break;
+
+	default:
+		/* The code should not go to here */
+		SPDK_ERRLOG("The code should not go to here\n");
+		break;
+	}
+}
+
+static void
 nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 			    uint32_t *reaped)
 {
@@ -1067,20 +1091,7 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 		}
 	}
 
-	switch (pdu->hdr.common.pdu_type) {
-	case SPDK_NVME_TCP_PDU_TYPE_C2H_DATA:
-		nvme_tcp_c2h_data_payload_handle(tqpair, pdu, reaped);
-		break;
-
-	case SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ:
-		nvme_tcp_c2h_term_req_payload_handle(tqpair, pdu);
-		break;
-
-	default:
-		/* The code should not go to here */
-		SPDK_ERRLOG("The code should not go to here\n");
-		break;
-	}
+	_nvme_tcp_pdu_payload_handle(tqpair, reaped);
 }
 
 static void
