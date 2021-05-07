@@ -38,6 +38,7 @@
 #include "spdk/thread.h"
 #include "spdk/log.h"
 #include "spdk/endian.h"
+#define __SPDK_BDEV_MODULE_ONLY
 #include "spdk/bdev_module.h"
 
 struct blob_bdev {
