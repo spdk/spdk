@@ -1663,6 +1663,31 @@ nvmf_tcp_h2c_term_req_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 }
 
 static void
+_nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
+			     struct spdk_nvmf_tcp_transport *ttransport)
+{
+	struct nvme_tcp_pdu *pdu = tqpair->pdu_in_progress;
+
+	switch (pdu->hdr.common.pdu_type) {
+	case SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD:
+		nvmf_tcp_capsule_cmd_payload_handle(ttransport, tqpair, pdu);
+		break;
+	case SPDK_NVME_TCP_PDU_TYPE_H2C_DATA:
+		nvmf_tcp_h2c_data_payload_handle(ttransport, tqpair, pdu);
+		break;
+
+	case SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ:
+		nvmf_tcp_h2c_term_req_payload_handle(tqpair, pdu);
+		break;
+
+	default:
+		/* The code should not go to here */
+		SPDK_ERRLOG("The code should not go to here\n");
+		break;
+	}
+}
+
+static void
 nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 			    struct spdk_nvmf_tcp_transport *ttransport)
 {
@@ -1688,23 +1713,7 @@ nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 		}
 	}
 
-	switch (pdu->hdr.common.pdu_type) {
-	case SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD:
-		nvmf_tcp_capsule_cmd_payload_handle(ttransport, tqpair, pdu);
-		break;
-	case SPDK_NVME_TCP_PDU_TYPE_H2C_DATA:
-		nvmf_tcp_h2c_data_payload_handle(ttransport, tqpair, pdu);
-		break;
-
-	case SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ:
-		nvmf_tcp_h2c_term_req_payload_handle(tqpair, pdu);
-		break;
-
-	default:
-		/* The code should not go to here */
-		SPDK_ERRLOG("The code should not go to here\n");
-		break;
-	}
+	_nvmf_tcp_pdu_payload_handle(tqpair, ttransport);
 }
 
 static void
