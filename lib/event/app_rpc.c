@@ -322,7 +322,7 @@ rpc_get_io_channel(struct spdk_io_channel *ch, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", spdk_io_device_get_name(ch->dev));
-	spdk_json_write_named_uint32(w, "ref", ch->ref);
+	spdk_json_write_named_uint32(w, "ref", spdk_io_channel_get_ref_count(ch));
 	spdk_json_write_object_end(w);
 }
 
@@ -337,7 +337,8 @@ _rpc_thread_get_io_channels(void *arg)
 	spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
 
 	spdk_json_write_named_array_begin(ctx->w, "io_channels");
-	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+	for (ch = spdk_thread_get_first_io_channel(thread); ch != NULL;
+	     ch = spdk_thread_get_next_io_channel(ch)) {
 		rpc_get_io_channel(ch, ctx->w);
 	}
 	spdk_json_write_array_end(ctx->w);

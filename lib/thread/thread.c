@@ -1606,6 +1606,18 @@ spdk_thread_get_next_paused_poller(struct spdk_poller *prev)
 	return TAILQ_NEXT(prev, tailq);
 }
 
+struct spdk_io_channel *
+spdk_thread_get_first_io_channel(struct spdk_thread *thread)
+{
+	return TAILQ_FIRST(&thread->io_channels);
+}
+
+struct spdk_io_channel *
+spdk_thread_get_next_io_channel(struct spdk_io_channel *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
 struct call_thread {
 	struct spdk_thread *cur_thread;
 	spdk_msg_fn fn;
@@ -2066,6 +2078,12 @@ void *
 spdk_io_channel_get_io_device(struct spdk_io_channel *ch)
 {
 	return ch->dev->io_device;
+}
+
+int
+spdk_io_channel_get_ref_count(struct spdk_io_channel *ch)
+{
+	return ch->ref;
 }
 
 struct spdk_io_channel_iter {

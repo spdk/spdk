@@ -108,6 +108,8 @@ const char *spdk_poller_get_state_str(struct spdk_poller *poller);
 uint64_t spdk_poller_get_period_ticks(struct spdk_poller *poller);
 void spdk_poller_get_stats(struct spdk_poller *poller, struct spdk_poller_stats *stats);
 
+int spdk_io_channel_get_ref_count(struct spdk_io_channel *ch);
+
 const char *spdk_io_device_get_name(struct io_device *dev);
 
 struct spdk_poller *spdk_thread_get_first_active_poller(struct spdk_thread *thread);
@@ -116,5 +118,8 @@ struct spdk_poller *spdk_thread_get_first_timed_poller(struct spdk_thread *threa
 struct spdk_poller *spdk_thread_get_next_timed_poller(struct spdk_poller *prev);
 struct spdk_poller *spdk_thread_get_first_paused_poller(struct spdk_thread *thread);
 struct spdk_poller *spdk_thread_get_next_paused_poller(struct spdk_poller *prev);
+
+struct spdk_io_channel *spdk_thread_get_first_io_channel(struct spdk_thread *thread);
+struct spdk_io_channel *spdk_thread_get_next_io_channel(struct spdk_io_channel *prev);
 
 #endif /* SPDK_THREAD_INTERNAL_H_ */
