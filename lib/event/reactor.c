@@ -901,6 +901,14 @@ _reactor_run(struct spdk_reactor *reactor)
 
 	event_queue_run_batch(reactor);
 
+	/* If no threads are present on the reactor,
+	 * tsc_last gets outdated. Update it to track
+	 * thread execution time correctly. */
+	if (spdk_unlikely(TAILQ_EMPTY(&reactor->threads))) {
+		reactor->tsc_last = spdk_get_ticks();
+		return;
+	}
+
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		thread = spdk_thread_get_from_ctx(lw_thread);
 		rc = spdk_thread_poll(thread, 0, reactor->tsc_last);

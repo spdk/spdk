@@ -374,6 +374,15 @@ test_reactor_stats(void)
 	 * - both elapsed TSC of thread1 and thread2 should be 1100 (= 100 + 1000).
 	 * - busy TSC of reactor should be 500 (= 100 + 400).
 	 * - idle TSC of reactor should be 500 (= 200 + 300).
+	 *
+	 * After that reactor0 runs with no threads for 900 TSC.
+	 * Create thread1 on reactor0 at TSC = 2000.
+	 * Reactor runs
+	 * - thread1 for 100 with busy
+	 * Then,
+	 * - elapsed TSC of thread1 should be 2100 (= 2000+ 100).
+	 * - busy TSC of reactor should be 600 (= 500 + 100).
+	 * - idle TSC of reactor should be 500 (= 500 + 0).
 	 */
 
 	MOCK_SET(spdk_env_get_current_core, 0);
@@ -463,10 +472,43 @@ test_reactor_stats(void)
 
 	_reactor_run(reactor);
 
+	/* After 900 ticks new thread is created. */
+	/* 1100 + 900 = 2000 ticks elapsed */
+	MOCK_SET(spdk_get_ticks, 2000);
+	_reactor_run(reactor);
+	CU_ASSERT(reactor->tsc_last == 2000);
+
+	thread1 = spdk_thread_create(NULL, &cpuset);
+	SPDK_CU_ASSERT_FATAL(thread1 != NULL);
+
+	spdk_set_thread(thread1);
+	busy1 = spdk_poller_register(poller_run_busy, (void *)100, 0);
+	CU_ASSERT(busy1 != NULL);
+
+	_reactor_run(reactor);
+
+	spdk_set_thread(thread1);
+	CU_ASSERT(spdk_thread_get_last_tsc(thread1) == 2100);
+	CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+	CU_ASSERT(stats.busy_tsc == 100);
+	CU_ASSERT(stats.idle_tsc == 0);
+
+	CU_ASSERT(reactor->busy_tsc == 600);
+	CU_ASSERT(reactor->idle_tsc == 500);
+
+	/* 2000 + 100 = 2100 ticks elapsed */
+	CU_ASSERT(reactor->tsc_last == 2100);
+
+	spdk_set_thread(thread1);
+	spdk_poller_unregister(&busy1);
+	spdk_thread_exit(thread1);
+
+	_reactor_run(reactor);
+
 	CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
 
-	/* No further than 1100 ticks elapsed */
-	CU_ASSERT(reactor->tsc_last == 1100);
+	/* No further than 2100 ticks elapsed */
+	CU_ASSERT(reactor->tsc_last == 2100);
 
 	spdk_reactors_fini();
 
