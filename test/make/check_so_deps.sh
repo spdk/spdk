@@ -158,7 +158,7 @@ EOF
 			fi
 
 			if ((abidiff_output == 1)); then
-				"${cmd_args[@]}" --impacted-interfaces
+				"${cmd_args[@]}" --impacted-interfaces || :
 			fi
 		fi
 		processed_so=$((processed_so + 1))
