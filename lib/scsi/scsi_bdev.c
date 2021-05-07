@@ -34,12 +34,6 @@
 
 #include "scsi_internal.h"
 
-/*
- * TODO: move bdev SCSI error code translation tests to bdev unit test
- * and remove this include.
- */
-#include "spdk/bdev_module.h"
-
 #include "spdk/env.h"
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
