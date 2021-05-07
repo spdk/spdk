@@ -39,17 +39,13 @@
 
 #include "nvmf/ctrlr_bdev.c"
 
+#include "spdk/bdev_module.h"
 
 SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), -1);
 
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
-
-DEFINE_STUB(spdk_bdev_get_acwu, uint16_t, (const struct spdk_bdev *bdev), 0);
-
-DEFINE_STUB(spdk_bdev_get_data_block_size, uint32_t,
-	    (const struct spdk_bdev *bdev), 512);
 
 DEFINE_STUB(spdk_bdev_get_physical_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 4096);
@@ -70,11 +66,58 @@ DEFINE_STUB(spdk_bdev_abort, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     void *bio_cb_arg, spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 
-struct spdk_bdev {
-	uint32_t blocklen;
-	uint64_t num_blocks;
-	uint32_t md_len;
-};
+uint32_t
+spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
+{
+	return bdev->optimal_io_boundary;
+}
+
+uint32_t
+spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
+{
+	return bdev->md_len;
+}
+
+bool
+spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev)
+{
+	return (bdev->md_len != 0) && bdev->md_interleave;
+}
+
+enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
+{
+	if (bdev->md_len != 0) {
+		return bdev->dif_type;
+	} else {
+		return SPDK_DIF_DISABLE;
+	}
+}
+
+bool
+spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev)
+{
+	if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
+		return bdev->dif_is_head_of_md;
+	} else {
+		return false;
+	}
+}
+
+uint32_t
+spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev)
+{
+	if (spdk_bdev_is_md_interleaved(bdev)) {
+		return bdev->blocklen - bdev->md_len;
+	} else {
+		return bdev->blocklen;
+	}
+}
+
+uint16_t
+spdk_bdev_get_acwu(const struct spdk_bdev *bdev)
+{
+	return bdev->acwu;
+}
 
 uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
@@ -85,20 +128,7 @@ spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 {
-	return bdev->num_blocks;
-}
-
-uint32_t
-spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
-{
-	abort();
-	return 0;
-}
-
-uint32_t
-spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
-{
-	return bdev->md_len;
+	return bdev->blockcnt;
 }
 
 DEFINE_STUB(spdk_bdev_comparev_and_writev_blocks, int,
@@ -113,13 +143,6 @@ DEFINE_STUB(nvmf_ctrlr_process_io_cmd, int, (struct spdk_nvmf_request *req), 0);
 
 DEFINE_STUB_V(spdk_bdev_io_get_nvme_fused_status, (const struct spdk_bdev_io *bdev_io,
 		uint32_t *cdw0, int *cmp_sct, int *cmp_sc, int *wr_sct, int *wr_sc));
-
-DEFINE_STUB(spdk_bdev_is_md_interleaved, bool, (const struct spdk_bdev *bdev), false);
-
-DEFINE_STUB(spdk_bdev_get_dif_type, enum spdk_dif_type,
-	    (const struct spdk_bdev *bdev), SPDK_DIF_DISABLE);
-
-DEFINE_STUB(spdk_bdev_is_dif_head_of_md, bool, (const struct spdk_bdev *bdev), false);
 
 DEFINE_STUB(spdk_bdev_is_dif_check_enabled, bool,
 	    (const struct spdk_bdev *bdev, enum spdk_dif_check_type check_type), false);
@@ -314,7 +337,7 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 	struct spdk_nvmf_subsystem_pg_ns_info ns_info = {};
 
 	bdev.blocklen = 512;
-	bdev.num_blocks = 10;
+	bdev.blockcnt = 10;
 	ns.bdev = &bdev;
 
 	subsystem.id = 0;
@@ -415,6 +438,81 @@ test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd(void)
 	CU_ASSERT(write_rsp.nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
 }
 
+static void
+test_nvmf_bdev_ctrlr_identify_ns(void)
+{
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvme_ns_data nsdata = {};
+	struct spdk_bdev bdev = {};
+	uint8_t ns_g_id[16] = "abcdefgh";
+	uint8_t eui64[8] = "12345678";
+
+	ns.bdev = &bdev;
+	ns.ptpl_file = (void *)0xDEADBEEF;
+	memcpy(ns.opts.nguid, ns_g_id, 16);
+	memcpy(ns.opts.eui64, eui64, 8);
+
+	bdev.blockcnt = 10;
+	bdev.acwu = 0;
+	bdev.md_len = 512;
+	bdev.dif_type = SPDK_DIF_TYPE1;
+	bdev.blocklen = 4096;
+	bdev.md_interleave = 0;
+	bdev.optimal_io_boundary = BDEV_IO_NUM_CHILD_IOV;
+	bdev.dif_is_head_of_md = true;
+
+	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, false);
+	CU_ASSERT(nsdata.nsze == 10);
+	CU_ASSERT(nsdata.ncap == 10);
+	CU_ASSERT(nsdata.nuse == 10);
+	CU_ASSERT(nsdata.nlbaf == 0);
+	CU_ASSERT(nsdata.flbas.format == 0);
+	CU_ASSERT(nsdata.nacwu == 0);
+	CU_ASSERT(nsdata.lbaf[0].lbads == spdk_u32log2(4096));
+	CU_ASSERT(nsdata.lbaf[0].ms == 512);
+	CU_ASSERT(nsdata.dpc.pit1 == 1);
+	CU_ASSERT(nsdata.dps.pit == SPDK_NVME_FMT_NVM_PROTECTION_TYPE1);
+	CU_ASSERT(nsdata.noiob == BDEV_IO_NUM_CHILD_IOV);
+	CU_ASSERT(nsdata.nmic.can_share == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.persist == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.exclusive_access == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive_reg_only == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.exclusive_access_reg_only == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive_all_reg == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.exclusive_access_all_reg == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.ignore_existing_key == 1);
+	CU_ASSERT(nsdata.flbas.extended == 1);
+	CU_ASSERT(nsdata.mc.extended == 1);
+	CU_ASSERT(nsdata.mc.pointer == 0);
+	CU_ASSERT(nsdata.dps.md_start == true);
+	CU_ASSERT(!strncmp(nsdata.nguid, ns_g_id, 16));
+	CU_ASSERT(!strncmp((uint8_t *)&nsdata.eui64, eui64, 8));
+
+	memset(&nsdata, 0, sizeof(nsdata));
+	nvmf_bdev_ctrlr_identify_ns(&ns, &nsdata, true);
+	CU_ASSERT(nsdata.nsze == 10);
+	CU_ASSERT(nsdata.ncap == 10);
+	CU_ASSERT(nsdata.nuse == 10);
+	CU_ASSERT(nsdata.nlbaf == 0);
+	CU_ASSERT(nsdata.flbas.format == 0);
+	CU_ASSERT(nsdata.nacwu == 0);
+	CU_ASSERT(nsdata.lbaf[0].lbads == spdk_u32log2(4096));
+	CU_ASSERT(nsdata.noiob == BDEV_IO_NUM_CHILD_IOV);
+	CU_ASSERT(nsdata.nmic.can_share == 1);
+	CU_ASSERT(nsdata.lbaf[0].ms == 0);
+	CU_ASSERT(nsdata.nsrescap.rescap.persist == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.exclusive_access == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive_reg_only == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.exclusive_access_reg_only == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.write_exclusive_all_reg == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.exclusive_access_all_reg == 1);
+	CU_ASSERT(nsdata.nsrescap.rescap.ignore_existing_key == 1);
+	CU_ASSERT(!strncmp(nsdata.nguid, ns_g_id, 16));
+	CU_ASSERT(!strncmp((uint8_t *)&nsdata.eui64, eui64, 8));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -428,6 +526,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_get_rw_params);
 	CU_ADD_TEST(suite, test_lba_in_range);
 	CU_ADD_TEST(suite, test_get_dif_ctx);
+	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_identify_ns);
 
 	CU_ADD_TEST(suite, test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd);
 
