@@ -68,8 +68,8 @@ _get_thread_load(struct spdk_lw_thread *lw_thread)
 {
 	uint64_t busy, idle;
 
-	busy = lw_thread->current_stats.busy_tsc - lw_thread->last_stats.busy_tsc;
-	idle = lw_thread->current_stats.idle_tsc - lw_thread->last_stats.idle_tsc;
+	busy = lw_thread->current_stats.busy_tsc;
+	idle = lw_thread->current_stats.idle_tsc;
 
 	if (busy == 0) {
 		/* No work was done, exit before possible division by 0. */
@@ -158,7 +158,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 			thread = spdk_thread_get_from_ctx(lw_thread);
 			cpumask = spdk_thread_get_cpumask(thread);
 
-			thread_busy = lw_thread->current_stats.busy_tsc - lw_thread->last_stats.busy_tsc;
+			thread_busy = lw_thread->current_stats.busy_tsc;
 
 			load = _get_thread_load(lw_thread);
 

@@ -824,7 +824,7 @@ test_governor(void)
 
 		/* Update last stats so that we don't have to call scheduler twice */
 		lw_thread = spdk_thread_get_ctx(thread[i]);
-		lw_thread->last_stats.idle_tsc = 1;
+		lw_thread->current_stats.idle_tsc = 1;
 	}
 
 	reactor = spdk_reactor_get(0);

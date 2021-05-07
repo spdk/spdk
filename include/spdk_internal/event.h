@@ -66,8 +66,10 @@ struct spdk_lw_thread {
 	uint32_t                        lcore;
 	uint32_t                        new_lcore;
 	bool				resched;
+	/* stats over a lifetime of a thread */
+	struct spdk_thread_stats	total_stats;
+	/* stats during the last scheduling period */
 	struct spdk_thread_stats	current_stats;
-	struct spdk_thread_stats	last_stats;
 };
 
 /**

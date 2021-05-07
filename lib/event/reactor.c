@@ -674,18 +674,19 @@ static void
 _init_thread_stats(struct spdk_reactor *reactor, struct spdk_lw_thread *lw_thread)
 {
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
-	struct spdk_thread_stats last_stats;
+	struct spdk_thread_stats prev_total_stats;
 
-	/* Save last stats before replacing them. */
-	last_stats = lw_thread->current_stats;
+	/* Read total_stats before updating it to calculate stats during the last scheduling period. */
+	prev_total_stats = lw_thread->total_stats;
 
 	lw_thread->lcore = reactor->lcore;
 
 	spdk_set_thread(thread);
-	spdk_thread_get_stats(&lw_thread->current_stats);
+	spdk_thread_get_stats(&lw_thread->total_stats);
 	spdk_set_thread(NULL);
 
-	lw_thread->last_stats = last_stats;
+	lw_thread->current_stats.busy_tsc = lw_thread->total_stats.busy_tsc - prev_total_stats.busy_tsc;
+	lw_thread->current_stats.idle_tsc = lw_thread->total_stats.idle_tsc - prev_total_stats.idle_tsc;
 }
 
 static void
@@ -1147,11 +1148,11 @@ _schedule_thread(void *arg1, void *arg2)
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
 
-	/* Update current_stats to reflect state of thread
+	/* Update total_stats to reflect state of thread
 	* at the end of the move. */
 	thread = spdk_thread_get_from_ctx(lw_thread);
 	spdk_set_thread(thread);
-	spdk_thread_get_stats(&lw_thread->current_stats);
+	spdk_thread_get_stats(&lw_thread->total_stats);
 	spdk_set_thread(NULL);
 
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
