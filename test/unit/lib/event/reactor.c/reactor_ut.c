@@ -36,7 +36,7 @@
 #include "spdk_cunit.h"
 #include "common/lib/test_env.c"
 #include "event/reactor.c"
-#include "spdk_internal/thread.h"
+#include "spdk/thread.h"
 #include "event/scheduler_static.c"
 #include "event/scheduler_dynamic.c"
 
@@ -359,6 +359,7 @@ test_reactor_stats(void)
 	struct spdk_thread *thread1, *thread2;
 	struct spdk_reactor *reactor;
 	struct spdk_poller *busy1, *idle1, *busy2, *idle2;
+	struct spdk_thread_stats stats;
 	int rc __attribute__((unused));
 
 	/* Test case is the following:
@@ -406,12 +407,16 @@ test_reactor_stats(void)
 
 	_reactor_run(reactor);
 
-	CU_ASSERT(thread1->tsc_last == 200);
-	CU_ASSERT(thread1->stats.busy_tsc == 100);
-	CU_ASSERT(thread1->stats.idle_tsc == 0);
-	CU_ASSERT(thread2->tsc_last == 500);
-	CU_ASSERT(thread2->stats.busy_tsc == 0);
-	CU_ASSERT(thread2->stats.idle_tsc == 300);
+	spdk_set_thread(thread1);
+	CU_ASSERT(spdk_thread_get_last_tsc(thread1) == 200);
+	CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+	CU_ASSERT(stats.busy_tsc == 100);
+	CU_ASSERT(stats.idle_tsc == 0);
+	spdk_set_thread(thread2);
+	CU_ASSERT(spdk_thread_get_last_tsc(thread2) == 500);
+	CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+	CU_ASSERT(stats.busy_tsc == 0);
+	CU_ASSERT(stats.idle_tsc == 300);
 
 	CU_ASSERT(reactor->busy_tsc == 100);
 	CU_ASSERT(reactor->idle_tsc == 300);
@@ -428,12 +433,16 @@ test_reactor_stats(void)
 
 	_reactor_run(reactor);
 
-	CU_ASSERT(thread1->tsc_last == 700);
-	CU_ASSERT(thread1->stats.busy_tsc == 100);
-	CU_ASSERT(thread1->stats.idle_tsc == 200);
-	CU_ASSERT(thread2->tsc_last == 1100);
-	CU_ASSERT(thread2->stats.busy_tsc == 400);
-	CU_ASSERT(thread2->stats.idle_tsc == 300);
+	spdk_set_thread(thread1);
+	CU_ASSERT(spdk_thread_get_last_tsc(thread1) == 700);
+	CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+	CU_ASSERT(stats.busy_tsc == 100);
+	CU_ASSERT(stats.idle_tsc == 200);
+	spdk_set_thread(thread2);
+	CU_ASSERT(spdk_thread_get_last_tsc(thread2) == 1100);
+	CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+	CU_ASSERT(stats.busy_tsc == 400);
+	CU_ASSERT(stats.idle_tsc == 300);
 
 	CU_ASSERT(reactor->busy_tsc == 500);
 	CU_ASSERT(reactor->idle_tsc == 500);
