@@ -24,6 +24,9 @@ Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the cont
 
 Added a new function `spdk_nvme_ns_cmd_copy` to submit a Simple Copy Command to a Namespace.
 
+Update the spdk_nvme_generic_command_status_code structure with new status code
+according to the definition in nvme 1.4 spec.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create

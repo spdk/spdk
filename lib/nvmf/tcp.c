@@ -1360,10 +1360,12 @@ nvmf_tcp_capsule_cmd_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	struct spdk_nvme_tcp_cmd *capsule_cmd;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
+	struct spdk_nvme_cpl *rsp;
 
 	capsule_cmd = &pdu->hdr.capsule_cmd;
 	tcp_req = pdu->req;
 	assert(tcp_req != NULL);
+
 	if (capsule_cmd->common.pdo > SPDK_NVME_TCP_PDU_PDO_MAX_OFFSET) {
 		SPDK_ERRLOG("Expected ICReq capsule_cmd pdu offset <= %d, got %c\n",
 			    SPDK_NVME_TCP_PDU_PDO_MAX_OFFSET, capsule_cmd->common.pdo);
@@ -1373,7 +1375,14 @@ nvmf_tcp_capsule_cmd_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
-	nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
+
+	rsp = &tcp_req->req.rsp->nvme_cpl;
+	if (spdk_unlikely(rsp->status.sc == SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR)) {
+		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
+	} else {
+		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
+	}
+
 	nvmf_tcp_req_process(ttransport, tcp_req);
 
 	return;
@@ -1582,6 +1591,7 @@ nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 				 struct nvme_tcp_pdu *pdu)
 {
 	struct spdk_nvmf_tcp_req *tcp_req;
+	struct spdk_nvme_cpl *rsp;
 
 	tcp_req = pdu->req;
 	assert(tcp_req != NULL);
@@ -1596,7 +1606,14 @@ nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	 * acknowledged before moving on. */
 	if (tcp_req->h2c_offset == tcp_req->req.length &&
 	    tcp_req->state == TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER) {
-		nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
+		/* After receving all the h2c data, we need to check whether there is
+		 * transient transport error */
+		rsp = &tcp_req->req.rsp->nvme_cpl;
+		if (spdk_unlikely(rsp->status.sc == SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR)) {
+			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
+		} else {
+			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
+		}
 		nvmf_tcp_req_process(ttransport, tcp_req);
 	}
 }
@@ -1678,8 +1695,9 @@ nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 {
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu;
-	uint32_t crc32c, error_offset = 0;
-	enum spdk_nvme_tcp_term_req_fes fes;
+	uint32_t crc32c;
+	struct spdk_nvmf_tcp_req *tcp_req;
+	struct spdk_nvme_cpl *rsp;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	pdu = tqpair->pdu_in_progress;
@@ -1691,10 +1709,10 @@ nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("Data digest error on tqpair=(%p) with pdu=%p\n", tqpair, pdu);
-			fes = SPDK_NVME_TCP_TERM_REQ_FES_HDGST_ERROR;
-			nvmf_tcp_send_c2h_term_req(tqpair, pdu, fes, error_offset);
-			return;
-
+			tcp_req = pdu->req;
+			assert(tcp_req != NULL);
+			rsp = &tcp_req->req.rsp->nvme_cpl;
+			rsp->status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
 		}
 	}
 

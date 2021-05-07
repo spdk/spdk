@@ -846,7 +846,6 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	h2c_term_req->common.plen = h2c_term_req->common.hlen + copy_len;
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 	nvme_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvme_tcp_qpair_send_h2c_term_req_complete, tqpair);
-
 }
 
 static void
@@ -1046,8 +1045,8 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 {
 	int rc = 0;
 	struct nvme_tcp_pdu *pdu;
-	uint32_t crc32c, error_offset = 0;
-	enum spdk_nvme_tcp_term_req_fes fes;
+	uint32_t crc32c;
+	struct nvme_tcp_req *tcp_req;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	pdu = tqpair->recv_pdu;
@@ -1060,9 +1059,9 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("data digest error on tqpair=(%p) with pdu=%p\n", tqpair, pdu);
-			fes = SPDK_NVME_TCP_TERM_REQ_FES_HDGST_ERROR;
-			nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
-			return;
+			tcp_req = pdu->req;
+			assert(tcp_req != NULL);
+			tcp_req->rsp.status.sc = SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR;
 		}
 	}
 
