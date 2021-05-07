@@ -2,7 +2,7 @@
 shopt -s extglob
 
 function get_git_tag() {
-	git -C "${1:-$rootdir}" describe --tags --abbrev=0
+	git -C "${1:-$rootdir}" describe --tags --abbrev=0 --exclude=LTS
 }
 
 if [ "$(uname -s)" = "FreeBSD" ]; then
