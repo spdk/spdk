@@ -426,12 +426,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	if (fio_options->zone_append && spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS) {
 		if (spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED) {
-			fprintf(stdout, "Using zone appends instead of writes on: '%s'\n",
-				fio_qpair->f->file_name);
+			SPDK_DEBUGLOG(fio_nvme, "Using zone appends instead of writes on: '%s'\n",
+				      f->file_name);
 			fio_qpair->zone_append_enabled = true;
 		} else {
 			SPDK_WARNLOG("Falling back to writes on: '%s' - ns lacks zone append cmd\n",
-				     fio_qpair->f->file_name);
+				     f->file_name);
 		}
 	}
 
@@ -1634,7 +1634,7 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_INT,
 		.off1		= offsetof(struct spdk_fio_options, zone_append),
 		.def		= "0",
-		.help		= "Use zone append instead of write (zone_append=1 or zone_append=0)",
+		.help		= "Use zone append instead of write (1=zone append, 0=write)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
@@ -1688,3 +1688,5 @@ static void fio_exit fio_spdk_unregister(void)
 {
 	unregister_ioengine(&ioengine);
 }
+
+SPDK_LOG_REGISTER_COMPONENT(fio_nvme)
