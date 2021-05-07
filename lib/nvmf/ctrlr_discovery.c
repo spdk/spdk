@@ -44,7 +44,6 @@
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
 
-#include "spdk/bdev_module.h"
 #include "spdk/log.h"
 
 void
