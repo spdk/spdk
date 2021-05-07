@@ -121,6 +121,7 @@ interrupt() {
 		((is_idle[cpu] == 1))
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 		[[ -z $(jq -r "select(.lcore == $cpu) | .lw_threads[].id" <<< "$reactor_framework") ]]
+		[[ -n $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.name == \"thread$cpu\")" <<< "$reactor_framework") ]]
 	done
 
 	for cpu in "${!threads[@]}"; do
