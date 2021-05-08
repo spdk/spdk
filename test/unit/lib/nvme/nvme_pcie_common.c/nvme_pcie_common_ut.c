@@ -106,6 +106,8 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	struct nvme_pcie_ctrlr pctrlr = {};
 	struct spdk_nvme_cpl cpl[2] = {};
 	struct nvme_pcie_qpair *pqpair = NULL;
+	size_t page_align = sysconf(_SC_PAGESIZE);
+	uint64_t cmb_offset;
 	int rc;
 
 	opts.sq.paddr = 0xDEADBEEF;
@@ -119,7 +121,9 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	pctrlr.cmb.bar_va = (void *)0xF9000000;
 	pctrlr.cmb.bar_pa = 0xF8000000;
 	pctrlr.cmb.current_offset = 0x10;
-	pctrlr.cmb.size = 1 << 16;
+	cmb_offset = pctrlr.cmb.current_offset;
+	/* Make sure that CMB size is big enough and includes page alignment */
+	pctrlr.cmb.size = (1 << 16) + page_align;
 	pctrlr.doorbell_base = (void *)0xF7000000;
 	pctrlr.doorbell_stride_u32 = 1;
 
@@ -143,12 +147,16 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	CU_ASSERT(pqpair->max_completions_cap == 1);
 	CU_ASSERT(pqpair->sq_in_cmb == true);
 	CU_ASSERT(pqpair->cmd != NULL && pqpair->cmd != (void *)0xDCADBEEF);
-	CU_ASSERT(pqpair->cmd_bus_addr ==  0xF8001000);
+	CU_ASSERT(pqpair->cmd_bus_addr == (((pctrlr.cmb.bar_pa + cmb_offset) + page_align - 1) & ~
+					   (page_align - 1)));
 	CU_ASSERT(pqpair->sq_tdbl == (void *)0xF7000008);
 	CU_ASSERT(pqpair->cq_hdbl == (void *)0xF700000C);
 	CU_ASSERT(pqpair->flags.phase = 1);
 	CU_ASSERT(pqpair->tr != NULL);
 	CU_ASSERT(pqpair->tr == TAILQ_FIRST(&pqpair->free_tr));
+	CU_ASSERT(pctrlr.cmb.current_offset == (uintptr_t)pqpair->cmd + (pqpair->num_entries * sizeof(
+				struct spdk_nvme_cmd)) - (uintptr_t)pctrlr.cmb.bar_va);
+	cmb_offset = pctrlr.cmb.current_offset;
 	nvme_pcie_qpair_destroy(&pqpair->qpair);
 
 	/* Disable submission queue in controller memory buffer. */
