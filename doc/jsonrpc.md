@@ -8330,6 +8330,7 @@ Name                    | Optional | Type        | Description
 nqn                     | Required | string      | Subsystem NQN
 namespace               | Required | object      | @ref rpc_nvmf_namespace object
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
+no_auto_visible         | Optional | bool        | Namespace is not automatically visible to controllers (default: false)
 
 #### namespace {#rpc_nvmf_namespace}
 
@@ -8665,6 +8666,92 @@ Example response:
       "ana_state": "optimized"
     }
   ]
+}
+~~~
+
+### nvmf_ns_add_host {#rpc_nvmf_ns_add_host}
+
+Make the specified namespace of the specified subnqn visible to any existing
+or future controllers with the specified hostnqn.
+
+Note: the namespace must have been added with no_auto_visible = false
+(see @ref rpc_nvmf_subsystem_add_ns).
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+nsid                    | Required | number      | Namespace ID
+host                    | Required | string      | Host NQN
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_ns_add_host",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "nsid": 1,
+    "host": "nqn.2024-01.io.spdk:host0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### nvmf_ns_remove_host {#rpc_nvmf_ns_remove_host}
+
+Make the specified namespace of the specified subnqn not visible to any existing
+or future controllers with the specified hostnqn.
+
+Note: the namespace must have been added to the subsystem with
+no_auto_visible = false (see @ref rpc_nvmf_subsystem_add_ns).
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nqn                     | Required | string      | Subsystem NQN
+nsid                    | Required | number      | Namespace ID
+host                    | Required | string      | Host NQN
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "nvmf_ns_remove_host",
+  "params": {
+    "nqn": "nqn.2016-06.io.spdk:cnode1",
+    "nsid": 1,
+    "host": "nqn.2024-01.io.spdk:host0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
 }
 ~~~
 

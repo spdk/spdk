@@ -362,6 +362,20 @@ nvmf_subsys_has_multi_iocs(struct spdk_nvmf_subsystem *subsystem)
 	return false;
 }
 
+static void
+nvmf_ctrlr_init_visible_ns(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_ns *ns;
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (ns->always_visible || nvmf_ns_find_host(ns, ctrlr->hostnqn) != NULL) {
+			spdk_bit_array_set(ctrlr->visible_ns, ns->nsid - 1);
+		}
+	}
+}
+
 static struct spdk_nvmf_ctrlr *
 nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		  struct spdk_nvmf_request *req,
@@ -461,6 +475,13 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	spdk_uuid_copy(&ctrlr->hostid, (struct spdk_uuid *)connect_data->hostid);
 	memcpy(ctrlr->hostnqn, connect_data->hostnqn, sizeof(ctrlr->hostnqn));
 
+	ctrlr->visible_ns = spdk_bit_array_create(subsystem->max_nsid);
+	if (!ctrlr->visible_ns) {
+		SPDK_ERRLOG("Failed to allocate visible namespace array\n");
+		goto err_visible_ns;
+	}
+	nvmf_ctrlr_init_visible_ns(ctrlr);
+
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */
 	ctrlr->vcprop.cap.bits.mqes = transport->opts.max_queue_depth -
@@ -520,6 +541,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	return ctrlr;
 err_listener:
+	spdk_bit_array_free(&ctrlr->visible_ns);
+err_visible_ns:
 	spdk_bit_array_free(&ctrlr->qpair_mask);
 err_qpair_mask:
 	free(ctrlr);
@@ -558,6 +581,7 @@ _nvmf_ctrlr_destruct(void *ctx)
 		STAILQ_REMOVE(&ctrlr->async_events, event, spdk_nvmf_async_event_completion, link);
 		free(event);
 	}
+	spdk_bit_array_free(&ctrlr->visible_ns);
 	free(ctrlr);
 }
 
@@ -1988,7 +2012,7 @@ nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr) == 4920,
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr) == 4928,
 		   "Please check migration fields that need to be added or not");
 
 static void
@@ -2994,7 +3018,7 @@ nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_ctrlr *ctrlr,
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		if (ns->opts.nsid <= cmd->nsid) {
+		if (ns->opts.nsid <= cmd->nsid || !nvmf_ctrlr_ns_is_visible(ctrlr, ns->opts.nsid)) {
 			continue;
 		}
 

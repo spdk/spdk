@@ -64,6 +64,11 @@ DEFINE_STUB(nvmf_subsystem_find_listener,
 	     const struct spdk_nvme_transport_id *trid),
 	    (void *)0x1);
 
+DEFINE_STUB(spdk_nvmf_ns_find_host,
+	    struct spdk_nvmf_host *,
+	    (struct spdk_nvmf_ns *ns, const char *hostnqn),
+	    NULL);
+
 DEFINE_STUB_V(nvmf_get_discovery_log_page,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
 	       uint32_t iovcnt, uint64_t offset, uint32_t length, struct spdk_nvme_transport_id *cmd_src_trid));

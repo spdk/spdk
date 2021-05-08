@@ -29,6 +29,13 @@ Merged `struct spdk_trace_flags` and `struct spdk_trace_histories` into
 new `struct spdk_trace_file`. Also renamed `spdk_get_trace_histories_size()`
 to `spdk_get_trace_file_size()`.
 
+### nvmf
+
+Added support for namespace masking using new C APIs `spdk_nvmf_ns_add_host` and
+`spdk_nvmf_ns_remove_host` and RPCs `nvmf_ns_add_host` and `nvmf_ns_remove_host`.
+Users must pass new `--no-auto-visible` parameter to `nvmf_subsystem_add_ns` RPC to allow
+namespace masking to be controlled by these new RPCs.
+
 ## v24.01
 
 ### accel

@@ -20,6 +20,7 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 #include "spdk/tree.h"
+#include "spdk/bit_array.h"
 
 /* The spec reserves cntlid values in the range FFF0h to FFFFh. */
 #define NVMF_MIN_CNTLID 1
@@ -173,6 +174,10 @@ struct spdk_nvmf_ns {
 	bool zcopy;
 	/* Command Set Identifier */
 	enum spdk_nvme_csi csi;
+	/* Make namespace visible to controllers of these hosts */
+	TAILQ_HEAD(, spdk_nvmf_host) hosts;
+	/* Namespace is always visible to all controllers */
+	bool always_visible;
 };
 
 /*
@@ -200,6 +205,7 @@ struct spdk_nvmf_ctrlr {
 	uint16_t			cntlid;
 	char				hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	struct spdk_nvmf_subsystem	*subsys;
+	struct spdk_bit_array		*visible_ns;
 
 	struct spdk_nvmf_ctrlr_data	cdata;
 
@@ -421,6 +427,20 @@ void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 
 bool nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns);
 
+static inline struct spdk_nvmf_host *
+nvmf_ns_find_host(struct spdk_nvmf_ns *ns, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host = NULL;
+
+	TAILQ_FOREACH(host, &ns->hosts, link) {
+		if (strcmp(hostnqn, host->nqn) == 0) {
+			return host;
+		}
+	}
+
+	return NULL;
+}
+
 /*
  * Abort zero-copy requests that already got the buffer (received zcopy_start cb), but haven't
  * started zcopy_end.  These requests are kept on the outstanding queue, but are not waiting for a
@@ -441,6 +461,12 @@ int nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req);
 
 void nvmf_ctrlr_set_fatal_status(struct spdk_nvmf_ctrlr *ctrlr);
 
+static inline bool
+nvmf_ctrlr_ns_is_visible(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+{
+	return spdk_bit_array_get(ctrlr->visible_ns, nsid - 1);
+}
+
 static inline struct spdk_nvmf_ns *
 _nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
@@ -456,8 +482,9 @@ static inline struct spdk_nvmf_ns *
 nvmf_ctrlr_get_ns(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_ns *ns = _nvmf_subsystem_get_ns(subsystem, nsid);
 
-	return _nvmf_subsystem_get_ns(subsystem, nsid);
+	return ns && nvmf_ctrlr_ns_is_visible(ctrlr, nsid) ? ns : NULL;
 }
 
 static inline bool

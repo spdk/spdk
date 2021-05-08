@@ -33,6 +33,7 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_connect_stress" $rootdir/test/nvmf/target/connect_stress.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_fused_ordering" $rootdir/test/nvmf/target/fused_ordering.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_delete_subsystem" $rootdir/test/nvmf/target/delete_subsystem.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_ns_masking" test/nvmf/target/ns_masking.sh "${TEST_ARGS[@]}"
 	if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
 		run_test "nvmf_nvme_cli" $rootdir/test/nvmf/target/nvme_cli.sh "${TEST_ARGS[@]}"
 	fi

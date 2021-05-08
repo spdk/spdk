@@ -2674,6 +2674,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-e', '--eui64', help='Namespace EUI-64 identifier (optional)')
     p.add_argument('-u', '--uuid', help='Namespace UUID (optional)')
     p.add_argument('-a', '--anagrpid', help='ANA group ID (optional)', type=int)
+    p.add_argument('-i', '--no-auto-visible', action='store_true',
+                   help='Do not auto make namespace visible to controllers (optional)')
     p.set_defaults(func=nvmf_subsystem_add_ns)
 
     def nvmf_subsystem_remove_ns(args):
@@ -2687,6 +2689,36 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nsid', help='The requested NSID', type=int)
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_remove_ns)
+
+    def nvmf_ns_add_host(args):
+        rpc.nvmf.nvmf_ns_visible(True,
+                                 args.client,
+                                 nqn=args.nqn,
+                                 nsid=args.nsid,
+                                 host=args.host,
+                                 tgt_name=args.tgt_name)
+
+    def nvmf_ns_visible_add_args(p):
+        p.add_argument('nqn', help='NVMe-oF subsystem NQN')
+        p.add_argument('nsid', help='The requested NSID', type=int)
+        p.add_argument('host', help='Host NQN to make namespace visible to')
+        p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
+
+    p = subparsers.add_parser('nvmf_ns_add_host', help='Make namespace visible to controllers of host')
+    nvmf_ns_visible_add_args(p)
+    p.set_defaults(func=nvmf_ns_add_host)
+
+    def nvmf_ns_remove_host(args):
+        rpc.nvmf.nvmf_ns_visible(False,
+                                 args.client,
+                                 nqn=args.nqn,
+                                 nsid=args.nsid,
+                                 host=args.host,
+                                 tgt_name=args.tgt_name)
+
+    p = subparsers.add_parser('nvmf_ns_remove_host', help='Make namespace not visible to controlelrs of host')
+    nvmf_ns_visible_add_args(p)
+    p.set_defaults(func=nvmf_ns_remove_host)
 
     def nvmf_subsystem_add_host(args):
         rpc.nvmf.nvmf_subsystem_add_host(args.client,

@@ -652,6 +652,8 @@ nvmf_write_nvme_subsystem_config(struct spdk_json_write_ctx *w,
 			spdk_json_write_named_uint32(w, "anagrpid", ns_opts.anagrpid);
 		}
 
+		spdk_json_write_named_bool(w, "no_auto_visible", !ns->always_visible);
+
 		/*     "namespace" */
 		spdk_json_write_object_end(w);
 

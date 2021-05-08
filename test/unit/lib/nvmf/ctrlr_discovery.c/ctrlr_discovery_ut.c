@@ -73,6 +73,9 @@ DEFINE_STUB(spdk_nvmf_request_complete, int,
 DEFINE_STUB(nvmf_ctrlr_async_event_ana_change_notice, int,
 	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
 
+DEFINE_STUB(nvmf_ctrlr_async_event_ns_notice, int,
+	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
+
 DEFINE_STUB(spdk_nvme_transport_id_trtype_str, const char *,
 	    (enum spdk_nvme_transport_type trtype), NULL);
 
