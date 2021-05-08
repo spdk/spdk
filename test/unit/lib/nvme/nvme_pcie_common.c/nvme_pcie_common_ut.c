@@ -212,6 +212,81 @@ test_nvme_pcie_qpair_construct_destroy(void)
 	MOCK_CLEAR(spdk_vtophys);
 }
 
+static void
+test_nvme_pcie_ctrlr_cmd_create_delete_io_queue(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_pcie_qpair pqpair = {};
+	struct spdk_nvme_qpair adminq = {};
+	struct nvme_request req = {};
+	int rc;
+
+	ctrlr.adminq = &adminq;
+	STAILQ_INIT(&ctrlr.adminq->free_req);
+	STAILQ_INSERT_HEAD(&ctrlr.adminq->free_req, &req, stailq);
+	pqpair.qpair.id = 1;
+	pqpair.num_entries = 1;
+	pqpair.cpl_bus_addr = 0xDEADBEEF;
+	pqpair.cmd_bus_addr = 0xDDADBEEF;
+	pqpair.qpair.qprio = SPDK_NVME_QPRIO_HIGH;
+
+	rc = nvme_pcie_ctrlr_cmd_create_io_cq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
+	CU_ASSERT(req.cmd.cdw10_bits.create_io_q.qid == 1);
+	CU_ASSERT(req.cmd.cdw10_bits.create_io_q.qsize == 0);
+	CU_ASSERT(req.cmd.cdw11_bits.create_io_cq.pc == 1);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0xDEADBEEF);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.adminq->free_req));
+
+	memset(&req, 0, sizeof(req));
+	STAILQ_INSERT_HEAD(&ctrlr.adminq->free_req, &req, stailq);
+
+	rc = nvme_pcie_ctrlr_cmd_create_io_sq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
+	CU_ASSERT(req.cmd.cdw10_bits.create_io_q.qid == 1);
+	CU_ASSERT(req.cmd.cdw10_bits.create_io_q.qsize == 0);
+	CU_ASSERT(req.cmd.cdw11_bits.create_io_sq.pc == 1);
+	CU_ASSERT(req.cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
+	CU_ASSERT(req.cmd.cdw11_bits.create_io_sq.cqid = 1);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0xDDADBEEF);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.adminq->free_req));
+
+	/* No free request available */
+	rc = nvme_pcie_ctrlr_cmd_create_io_cq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+
+	rc = nvme_pcie_ctrlr_cmd_create_io_sq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+
+	/* Delete cq or sq */
+	memset(&req, 0, sizeof(req));
+	STAILQ_INSERT_HEAD(&ctrlr.adminq->free_req, &req, stailq);
+
+	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_DELETE_IO_CQ);
+	CU_ASSERT(req.cmd.cdw10_bits.delete_io_q.qid == 1);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.adminq->free_req));
+
+	memset(&req, 0, sizeof(req));
+	STAILQ_INSERT_HEAD(&ctrlr.adminq->free_req, &req, stailq);
+
+	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.cmd.opc == SPDK_NVME_OPC_DELETE_IO_SQ);
+	CU_ASSERT(req.cmd.cdw10_bits.delete_io_q.qid == 1);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.adminq->free_req));
+
+	/* No free request available */
+	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+
+	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(&ctrlr, &pqpair.qpair, NULL, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -223,6 +298,7 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("nvme_pcie_common", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_alloc_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
