@@ -2677,13 +2677,11 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 			   struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
-	struct spdk_nvmf_ctrlr *ctrlr_tmp;
 	struct spdk_nvmf_registrant *reg, *tmp;
 	struct spdk_nvme_reservation_status_extended_data *status_data;
 	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
 	uint8_t *payload;
-	uint32_t len, count = 0;
+	uint32_t transfer_len, payload_len = 0;
 	uint32_t regctl = 0;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 
@@ -2701,19 +2699,11 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 		goto exit;
 	}
 
-	/* Get number of registerd controllers, one Host may have more than
-	 * one controller based on different ports.
-	 */
-	TAILQ_FOREACH(ctrlr_tmp, &subsystem->ctrlrs, link) {
-		reg = nvmf_ns_reservation_get_registrant(ns, &ctrlr_tmp->hostid);
-		if (reg) {
-			regctl++;
-		}
-	}
+	/* Number of Dwords of the Reservation Status data structure to transfer */
+	transfer_len = (cmd->cdw10 + 1) * sizeof(uint32_t);
+	payload = req->data;
 
-	len = sizeof(*status_data) + sizeof(*ctrlr_data) * regctl;
-	payload = calloc(1, len);
-	if (!payload) {
+	if (transfer_len < sizeof(struct spdk_nvme_reservation_status_extended_data)) {
 		status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		goto exit;
 	}
@@ -2721,23 +2711,25 @@ nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
 	status_data = (struct spdk_nvme_reservation_status_extended_data *)payload;
 	status_data->data.gen = ns->gen;
 	status_data->data.rtype = ns->rtype;
-	status_data->data.regctl = regctl;
 	status_data->data.ptpls = ns->ptpl_activated;
+	payload_len += sizeof(struct spdk_nvme_reservation_status_extended_data);
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
-		assert(count <= regctl);
+		payload_len += sizeof(struct spdk_nvme_registered_ctrlr_extended_data);
+		if (payload_len > transfer_len) {
+			break;
+		}
+
 		ctrlr_data = (struct spdk_nvme_registered_ctrlr_extended_data *)
-			     (payload + sizeof(*status_data) + sizeof(*ctrlr_data) * count);
+			     (payload + sizeof(*status_data) + sizeof(*ctrlr_data) * regctl);
 		/* Set to 0xffffh for dynamic controller */
 		ctrlr_data->cntlid = 0xffff;
 		ctrlr_data->rcsts.status = (ns->holder == reg) ? true : false;
 		ctrlr_data->rkey = reg->rkey;
 		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data->hostid, &reg->hostid);
-		count++;
+		regctl++;
 	}
-
-	memcpy(req->data, payload, spdk_min(len, (cmd->cdw10 + 1) * sizeof(uint32_t)));
-	free(payload);
+	status_data->data.regctl = regctl;
 
 exit:
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
