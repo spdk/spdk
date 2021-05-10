@@ -1451,7 +1451,7 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_poll_group *rgroup,
 	uint32_t lkey, remaining;
 	int rc;
 
-	if (spdk_unlikely(rdma_req->req.dif.dif_insert_or_strip)) {
+	if (spdk_unlikely(rdma_req->req.dif_enabled)) {
 		dif_ctx = &rdma_req->req.dif.dif_ctx;
 		remaining_data_block = dif_ctx->block_size - dif_ctx->md_size;
 	}
@@ -1590,7 +1590,7 @@ nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	rdma_req->iovpos = 0;
 
-	if (spdk_unlikely(req->dif.dif_insert_or_strip)) {
+	if (spdk_unlikely(req->dif_enabled)) {
 		num_wrs = nvmf_rdma_calc_num_wrs(length, rtransport->transport.opts.io_unit_size,
 						 req->dif.dif_ctx.block_size);
 		if (num_wrs > 1) {
@@ -1649,7 +1649,7 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 
 	desc = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_segment->address;
 	for (i = 0; i < num_sgl_descriptors; i++) {
-		if (spdk_likely(!req->dif.dif_insert_or_strip)) {
+		if (spdk_likely(!req->dif_enabled)) {
 			lengths[i] = desc->keyed.length;
 		} else {
 			req->dif.orig_length += desc->keyed.length;
@@ -1763,7 +1763,7 @@ nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		/* fill request length and populate iovs */
 		req->length = length;
 
-		if (spdk_unlikely(req->dif.dif_insert_or_strip)) {
+		if (spdk_unlikely(req->dif_enabled)) {
 			req->dif.orig_length = length;
 			length = spdk_dif_get_length_with_md(length, &req->dif.dif_ctx);
 			req->dif.elba_length = length;
@@ -1936,7 +1936,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			if (spdk_unlikely(spdk_nvmf_request_get_dif_ctx(&rdma_req->req, &rdma_req->req.dif.dif_ctx))) {
-				rdma_req->req.dif.dif_insert_or_strip = true;
+				rdma_req->req.dif_enabled = true;
 			}
 
 #ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
@@ -2039,7 +2039,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_EXECUTE, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
-			if (spdk_unlikely(rdma_req->req.dif.dif_insert_or_strip)) {
+			if (spdk_unlikely(rdma_req->req.dif_enabled)) {
 				if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 					/* generate DIF for write operation */
 					num_blocks = SPDK_CEIL_DIV(rdma_req->req.dif.elba_length, rdma_req->req.dif.dif_ctx.block_size);
@@ -2079,7 +2079,7 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			} else {
 				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
 			}
-			if (spdk_unlikely(rdma_req->req.dif.dif_insert_or_strip)) {
+			if (spdk_unlikely(rdma_req->req.dif_enabled)) {
 				/* restore the original length */
 				rdma_req->req.length = rdma_req->req.dif.orig_length;
 

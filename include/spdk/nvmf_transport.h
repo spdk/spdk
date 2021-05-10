@@ -74,7 +74,6 @@ SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
 struct spdk_nvmf_dif_info {
 	struct spdk_dif_ctx			dif_ctx;
-	bool					dif_insert_or_strip;
 	uint32_t				elba_length;
 	uint32_t				orig_length;
 };
@@ -82,23 +81,27 @@ struct spdk_nvmf_dif_info {
 struct spdk_nvmf_request {
 	struct spdk_nvmf_qpair		*qpair;
 	uint32_t			length;
-	enum spdk_nvme_data_transfer	xfer;
+	uint8_t				xfer; /* type enum spdk_nvme_data_transfer */
+	bool				data_from_pool;
+	bool				dif_enabled;
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
-	void				*buffers[NVMF_REQ_MAX_BUFFERS];
-	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
+	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;
+	uint64_t			timeout_tsc;
+
 	uint32_t			iovcnt;
-	bool				data_from_pool;
-	struct spdk_bdev_io_wait_entry	bdev_io_wait;
+	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
+	void				*buffers[NVMF_REQ_MAX_BUFFERS];
+
 	struct spdk_nvmf_dif_info	dif;
+
+	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
 	struct spdk_nvmf_request	*first_fused_req;
 	struct spdk_nvmf_request	*req_to_abort;
 	struct spdk_poller		*poller;
-	uint64_t			timeout_tsc;
 
-	STAILQ_ENTRY(spdk_nvmf_request)	buf_link;
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
 
