@@ -52,6 +52,10 @@ LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 CLEAN_FILES = $(APP)
 
+ifeq ($(findstring vfio_user,$(SPDK_LIB_FILES)),vfio_user)
+VFIO_USER_LIB_FILE=$(VFIO_USER_LIBRARY_DIR)/libvfio-user.a
+endif
+
 all : $(APP)
 	@:
 
@@ -63,7 +67,7 @@ uninstall: empty_rule
 empty_rule:
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(VFIO_USER_LIB_FILE)
 	$(LINK_C)
 
 clean :
