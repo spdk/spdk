@@ -430,10 +430,8 @@ bdev_nvme_destroy_qpair(struct nvme_io_channel *nvme_ch)
 }
 
 static void
-_bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
+_bdev_nvme_check_pending_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_ctx(i);
-
 	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 	if (nvme_bdev_ctrlr->destruct_after_reset) {
 		assert(nvme_bdev_ctrlr->ref == 0 && nvme_bdev_ctrlr->destruct);
@@ -444,6 +442,14 @@ _bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 	} else {
 		pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 	}
+}
+
+static void
+bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = spdk_io_channel_iter_get_ctx(i);
+
+	_bdev_nvme_check_pending_destruct(nvme_bdev_ctrlr);
 }
 
 static void
@@ -498,7 +504,7 @@ bdev_nvme_reset_io_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			      rc == 0 ? bdev_nvme_complete_pending_resets :
 			      bdev_nvme_abort_pending_resets,
 			      nvme_bdev_ctrlr,
-			      _bdev_nvme_check_pending_destruct);
+			      bdev_nvme_check_pending_destruct);
 }
 
 static void
@@ -540,7 +546,7 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 				      rc == 0 ? bdev_nvme_complete_pending_resets :
 				      bdev_nvme_abort_pending_resets,
 				      nvme_bdev_ctrlr,
-				      _bdev_nvme_check_pending_destruct);
+				      bdev_nvme_check_pending_destruct);
 	}
 }
 
