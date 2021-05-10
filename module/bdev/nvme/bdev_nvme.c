@@ -980,20 +980,12 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
 	struct nvme_io_channel *nvme_ch = ctx_buf;
-	struct spdk_io_channel *pg_ch = NULL;
+	struct spdk_io_channel *pg_ch;
 	int rc;
-
-	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
-		rc = bdev_ocssd_create_io_channel(nvme_ch);
-		if (rc != 0) {
-			return rc;
-		}
-	}
 
 	pg_ch = spdk_get_io_channel(&g_nvme_bdev_ctrlrs);
 	if (!pg_ch) {
-		rc = -1;
-		goto err_pg_ch;
+		return -1;
 	}
 
 	nvme_ch->group = spdk_io_channel_get_ctx(pg_ch);
@@ -1006,6 +998,13 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&nvme_ch->pending_resets);
 
+	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+		rc = bdev_ocssd_create_io_channel(nvme_ch);
+		if (rc != 0) {
+			goto err_ocssd_ch;
+		}
+	}
+
 	nvme_ch->ctrlr = nvme_bdev_ctrlr;
 
 	rc = bdev_nvme_create_qpair(nvme_ch);
@@ -1016,11 +1015,11 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 
 err_qpair:
-	spdk_put_io_channel(pg_ch);
-err_pg_ch:
 	if (nvme_ch->ocssd_ch) {
 		bdev_ocssd_destroy_io_channel(nvme_ch);
 	}
+err_ocssd_ch:
+	spdk_put_io_channel(pg_ch);
 
 	return rc;
 }
