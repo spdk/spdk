@@ -198,6 +198,12 @@ endif
 VFIO_USER_INSTALL_DIR=$(VFIO_USER_DIR)/build
 VFIO_USER_INCLUDE_DIR=$(VFIO_USER_INSTALL_DIR)/usr/local/include
 VFIO_USER_LIBRARY_DIR=$(VFIO_USER_INSTALL_DIR)/usr/local/lib64
+ifeq (,$(wildcard $(VFIO_USER_LIBRARY_DIR)/.))
+# Some Linux distros use lib instead of lib64
+# for default installations
+VFIO_USER_LIBRARY_DIR=$(VFIO_USER_INSTALL_DIR)/usr/local/lib
+endif
+
 CFLAGS += -I$(VFIO_USER_INCLUDE_DIR)
 LDFLAGS += -L$(VFIO_USER_LIBRARY_DIR)
 SYS_LIBS += -Wl,-Bstatic -lvfio-user -Wl,-Bdynamic -ljson-c
