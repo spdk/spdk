@@ -113,13 +113,15 @@ spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, co
 	return 0;
 }
 
-static const struct spdk_nvme_transport_id *g_ut_trid;
+static struct spdk_nvme_transport_id g_ut_trid;
+static bool g_ut_ctrlr_is_probed;
 
 int
 nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle)
 {
-	g_ut_trid = trid;
+	g_ut_trid = *trid;
+	g_ut_ctrlr_is_probed = true;
 
 	return 0;
 }
@@ -276,30 +278,30 @@ test_nvme_fabric_discover_probe(void)
 	memcpy(entry.trsvcid, trsvcid, SPDK_NVMF_TRSVCID_MAX_LEN);
 	memcpy(probe_ctx.trid.trstring, trstring, sizeof(probe_ctx.trid.trstring));
 
-	g_ut_trid = NULL;
 	nvme_fabric_discover_probe(&entry, &probe_ctx, 1);
-	CU_ASSERT(g_ut_trid != NULL);
-	CU_ASSERT(g_ut_trid->trtype == SPDK_NVME_TRANSPORT_RDMA);
-	CU_ASSERT(g_ut_trid->adrfam == SPDK_NVMF_ADRFAM_IPV4);
-	CU_ASSERT(!strncmp(g_ut_trid->trstring, trstring, sizeof(trstring)));
-	CU_ASSERT(!strncmp(g_ut_trid->subnqn, hostnqn, sizeof(hostnqn)));
-	CU_ASSERT(!strncmp(g_ut_trid->traddr, traddr, sizeof(traddr)));
-	CU_ASSERT(!strncmp(g_ut_trid->trsvcid, trsvcid, sizeof(trsvcid)));
-	CU_ASSERT(g_ut_trid->priority == 1);
+	CU_ASSERT(g_ut_ctrlr_is_probed == true);
+	CU_ASSERT(g_ut_trid.trtype == SPDK_NVME_TRANSPORT_RDMA);
+	CU_ASSERT(g_ut_trid.adrfam == SPDK_NVMF_ADRFAM_IPV4);
+	CU_ASSERT(!strncmp(g_ut_trid.trstring, trstring, sizeof(trstring)));
+	CU_ASSERT(!strncmp(g_ut_trid.subnqn, hostnqn, sizeof(hostnqn)));
+	CU_ASSERT(!strncmp(g_ut_trid.traddr, traddr, sizeof(traddr)));
+	CU_ASSERT(!strncmp(g_ut_trid.trsvcid, trsvcid, sizeof(trsvcid)));
+	CU_ASSERT(g_ut_trid.priority == 1);
+
+	g_ut_ctrlr_is_probed = false;
+	memset(&g_ut_trid, 0, sizeof(g_ut_trid));
 
 	/* Entry type unsupported */
 	entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
-	g_ut_trid = NULL;
 
 	nvme_fabric_discover_probe(&entry, &probe_ctx, 1);
-	CU_ASSERT(g_ut_trid == NULL);
+	CU_ASSERT(g_ut_ctrlr_is_probed == false);
 
 	/* Entry type invalid */
 	entry.subtype = 3;
-	g_ut_trid = NULL;
 
 	nvme_fabric_discover_probe(&entry, &probe_ctx, 1);
-	CU_ASSERT(g_ut_trid == NULL);
+	CU_ASSERT(g_ut_ctrlr_is_probed == false);
 }
 
 int main(int argc, char **argv)
