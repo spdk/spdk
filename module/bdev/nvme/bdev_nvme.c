@@ -595,9 +595,6 @@ bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio)
 	if (rc == 0) {
 		assert(nvme_ch->ctrlr->reset_bio == NULL);
 		nvme_ch->ctrlr->reset_bio = bio;
-	} else if (rc == -EBUSY) {
-		/* Don't bother resetting if the controller is in the process of being destructed. */
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else if (rc == -EAGAIN) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
