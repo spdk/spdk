@@ -227,6 +227,7 @@ Optional, SPDK Initiator only:
   "qd": [32, 128],
   "rw": ["randwrite", "write"],
   "rwmixread": 100,
+  "rate_iops": 10000,
   "num_jobs": 2,
   "run_time": 30,
   "ramp_time": 30,
@@ -246,6 +247,10 @@ Required:
 - ramp_time - fio ramp time, does not do measurements
 - run_num - number of times each workload combination is run.
   If more than 1 then final result is the average of all runs.
+
+Optional:
+
+- rate_iops - limit IOPS to this number
 
 #### Test Combinations
 

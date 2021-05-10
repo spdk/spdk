@@ -777,7 +777,7 @@ class Initiator(Server):
         # Logic implemented in SPDKInitiator and KernelInitiator classes
         pass
 
-    def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no, num_jobs=None, ramp_time=0, run_time=10):
+    def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no, num_jobs=None, ramp_time=0, run_time=10, rate_iops=0):
         fio_conf_template = """
 [global]
 ioengine={ioengine}
@@ -794,6 +794,7 @@ bs={block_size}
 time_based=1
 ramp_time={ramp_time}
 runtime={run_time}
+rate_iops={rate_iops}
 """
         if "spdk" in self.mode:
             bdev_conf = self.gen_spdk_bdev_conf(self.subsystem_info_list)
@@ -835,7 +836,7 @@ runtime={run_time}
 
         fio_config = fio_conf_template.format(ioengine=ioengine, spdk_conf=spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
-                                              ramp_time=ramp_time, run_time=run_time)
+                                              ramp_time=ramp_time, run_time=run_time, rate_iops=rate_iops)
         if num_jobs:
             fio_config = fio_config + "numjobs=%s \n" % num_jobs
         if self.cpus_allowed is not None:
@@ -1342,6 +1343,7 @@ if __name__ == "__main__":
             fio_run_time = data[k]["run_time"]
             fio_ramp_time = data[k]["ramp_time"]
             fio_rw_mix_read = data[k]["rwmixread"]
+            fio_rate_iops = data[k]["rate_iops"]
             fio_run_num = data[k]["run_num"] if "run_num" in data[k].keys() else None
             fio_num_jobs = data[k]["num_jobs"] if "num_jobs" in data[k].keys() else None
         else:
@@ -1369,7 +1371,7 @@ if __name__ == "__main__":
                 i.kernel_init_connect(i.target_nic_ips, target_obj.subsys_no)
 
             cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
-                                   fio_num_jobs, fio_ramp_time, fio_run_time)
+                                   fio_num_jobs, fio_ramp_time, fio_run_time, fio_rate_iops)
             configs.append(cfg)
 
         for i, cfg in zip(initiators, configs):
