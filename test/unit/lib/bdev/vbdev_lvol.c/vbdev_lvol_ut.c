@@ -61,6 +61,12 @@ bool g_examine_done = false;
 bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
 
+const struct spdk_bdev_aliases_list *
+spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
+{
+	return &bdev->aliases;
+}
+
 int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 {
@@ -75,8 +81,8 @@ spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 	tmp = calloc(1, sizeof(*tmp));
 	SPDK_CU_ASSERT_FATAL(tmp != NULL);
 
-	tmp->alias = strdup(alias);
-	SPDK_CU_ASSERT_FATAL(tmp->alias != NULL);
+	tmp->alias.name = strdup(alias);
+	SPDK_CU_ASSERT_FATAL(tmp->alias.name != NULL);
 
 	TAILQ_INSERT_TAIL(&bdev->aliases, tmp, tailq);
 
@@ -92,9 +98,9 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 
 	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
 		SPDK_CU_ASSERT_FATAL(alias != NULL);
-		if (strncmp(alias, tmp->alias, SPDK_LVOL_NAME_MAX) == 0) {
+		if (strncmp(alias, tmp->alias.name, SPDK_LVOL_NAME_MAX) == 0) {
 			TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
-			free(tmp->alias);
+			free(tmp->alias.name);
 			free(tmp);
 			return 0;
 		}
@@ -110,7 +116,7 @@ spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
 
 	TAILQ_FOREACH_SAFE(p, &bdev->aliases, tailq, tmp) {
 		TAILQ_REMOVE(&bdev->aliases, p, tailq);
-		free(p->alias);
+		free(p->alias.name);
 		free(p);
 	}
 }
@@ -1393,7 +1399,7 @@ ut_lvs_rename(void)
 	vbdev_lvs_rename(lvs, "new_lvs_name", lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
-	CU_ASSERT_STRING_EQUAL(TAILQ_FIRST(&g_lvol->bdev->aliases)->alias, "new_lvs_name/lvol");
+	CU_ASSERT_STRING_EQUAL(TAILQ_FIRST(&g_lvol->bdev->aliases)->alias.name, "new_lvs_name/lvol");
 
 	/* Trying to rename lvs with name already used by another lvs */
 	/* This is a bdev_lvol test, so g_lvs_with_name_already_exists simulates
@@ -1402,7 +1408,7 @@ ut_lvs_rename(void)
 	vbdev_lvs_rename(lvs, "another_new_lvs_name", lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == -EEXIST);
 	CU_ASSERT_STRING_EQUAL(lvs->name, "new_lvs_name");
-	CU_ASSERT_STRING_EQUAL(TAILQ_FIRST(&g_lvol->bdev->aliases)->alias, "new_lvs_name/lvol");
+	CU_ASSERT_STRING_EQUAL(TAILQ_FIRST(&g_lvol->bdev->aliases)->alias.name, "new_lvs_name/lvol");
 	g_lvs_with_name_already_exists = false;
 
 	/* Unload lvol store */

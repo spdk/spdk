@@ -47,6 +47,7 @@
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/thread.h"
+#include "spdk/tree.h"
 #include "spdk/util.h"
 #include "spdk/uuid.h"
 
@@ -267,8 +268,14 @@ enum spdk_bdev_io_status {
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
 };
 
+struct spdk_bdev_name {
+	char *name;
+	struct spdk_bdev *bdev;
+	RB_ENTRY(spdk_bdev_name) node;
+};
+
 struct spdk_bdev_alias {
-	char *alias;
+	struct spdk_bdev_name alias;
 	TAILQ_ENTRY(spdk_bdev_alias) tailq;
 };
 
@@ -501,6 +508,9 @@ struct spdk_bdev {
 		 *  locked due to overlapping with another locked range.
 		 */
 		lba_range_tailq_t pending_locked_ranges;
+
+		/** Bdev name used for quick lookup */
+		struct spdk_bdev_name bdev_name;
 	} internal;
 };
 

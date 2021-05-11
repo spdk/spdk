@@ -4399,6 +4399,72 @@ bdev_set_options_test(void)
 	CU_ASSERT(rc == 0);
 }
 
+static uint64_t
+get_ns_time(void)
+{
+	int rc;
+	struct timespec ts;
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &ts);
+	CU_ASSERT(rc == 0);
+	return ts.tv_sec * 1000 * 1000 * 1000 + ts.tv_nsec;
+}
+
+static int
+rb_tree_get_height(struct spdk_bdev_name *bdev_name)
+{
+	int h1, h2;
+
+	if (bdev_name == NULL) {
+		return -1;
+	} else {
+		h1 = rb_tree_get_height(RB_LEFT(bdev_name, node));
+		h2 = rb_tree_get_height(RB_RIGHT(bdev_name, node));
+
+		return spdk_max(h1, h2) + 1;
+	}
+}
+
+static void
+bdev_multi_allocation(void)
+{
+	const int max_bdev_num = 1024 * 16;
+	char name[max_bdev_num][10];
+	char noexist_name[] = "invalid_bdev";
+	struct spdk_bdev *bdev[max_bdev_num];
+	int i, j;
+	uint64_t last_time;
+	int bdev_num;
+	int height;
+
+	for (j = 0; j < max_bdev_num; j++) {
+		snprintf(name[j], sizeof(name[j]), "bdev%d", j);
+	}
+
+	for (i = 0; i < 16; i++) {
+		last_time = get_ns_time();
+		bdev_num = 1024 * (i + 1);
+		for (j = 0; j < bdev_num; j++) {
+			bdev[j] = allocate_bdev(name[j]);
+			height = rb_tree_get_height(&bdev[j]->internal.bdev_name);
+			CU_ASSERT(height <= (int)(spdk_u32log2(j + 1)));
+		}
+		SPDK_NOTICELOG("alloc bdev num %d takes %lu ms\n", bdev_num,
+			       (get_ns_time() - last_time) / 1000 / 1000);
+		for (j = 0; j < bdev_num; j++) {
+			CU_ASSERT(spdk_bdev_get_by_name(name[j]) != NULL);
+		}
+		CU_ASSERT(spdk_bdev_get_by_name(noexist_name) == NULL);
+
+		for (j = 0; j < bdev_num; j++) {
+			free_bdev(bdev[j]);
+		}
+		for (j = 0; j < bdev_num; j++) {
+			CU_ASSERT(spdk_bdev_get_by_name(name[j]) == NULL);
+		}
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4440,6 +4506,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_io_abort);
 	CU_ADD_TEST(suite, bdev_unmap);
 	CU_ADD_TEST(suite, bdev_set_options_test);
+	CU_ADD_TEST(suite, bdev_multi_allocation);
 
 	allocate_cores(1);
 	allocate_threads(1);

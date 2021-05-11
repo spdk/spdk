@@ -363,7 +363,7 @@ rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_array_begin(w, "aliases");
 
 	TAILQ_FOREACH(tmp, spdk_bdev_get_aliases(bdev), tailq) {
-		spdk_json_write_string(w, tmp->alias);
+		spdk_json_write_string(w, tmp->alias.name);
 	}
 
 	spdk_json_write_array_end(w);

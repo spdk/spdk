@@ -92,13 +92,13 @@ _vbdev_lvol_change_bdev_alias(struct spdk_lvol *lvol, const char *new_lvol_name)
 	 * while we changed lvs name earlier, we have to iterate alias list to get one,
 	 * and check if there is only one alias */
 
-	TAILQ_FOREACH(tmp, &lvol->bdev->aliases, tailq) {
+	TAILQ_FOREACH(tmp, spdk_bdev_get_aliases(lvol->bdev), tailq) {
 		if (++alias_number > 1) {
 			SPDK_ERRLOG("There is more than 1 alias in bdev %s\n", lvol->bdev->name);
 			return -EINVAL;
 		}
 
-		old_alias = tmp->alias;
+		old_alias = tmp->alias.name;
 	}
 
 	if (alias_number == 0) {

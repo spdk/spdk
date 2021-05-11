@@ -1591,7 +1591,7 @@ static int _set_compbdev_name(struct vbdev_compress *comp_bdev)
 
 	if (!TAILQ_EMPTY(spdk_bdev_get_aliases(comp_bdev->base_bdev))) {
 		aliases = TAILQ_FIRST(spdk_bdev_get_aliases(comp_bdev->base_bdev));
-		comp_bdev->comp_bdev.name = spdk_sprintf_alloc("COMP_%s", aliases->alias);
+		comp_bdev->comp_bdev.name = spdk_sprintf_alloc("COMP_%s", aliases->alias.name);
 		if (!comp_bdev->comp_bdev.name) {
 			SPDK_ERRLOG("could not allocate comp_bdev name for alias\n");
 			return -ENOMEM;

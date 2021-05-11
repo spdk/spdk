@@ -95,6 +95,16 @@ static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 
 TAILQ_HEAD(spdk_bdev_list, spdk_bdev);
 
+RB_HEAD(bdev_name_tree, spdk_bdev_name);
+
+static int
+bdev_name_cmp(struct spdk_bdev_name *name1, struct spdk_bdev_name *name2)
+{
+	return strcmp(name1->name, name2->name);
+}
+
+RB_GENERATE_STATIC(bdev_name_tree, spdk_bdev_name, node, bdev_name_cmp);
+
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
 
@@ -106,6 +116,7 @@ struct spdk_bdev_mgr {
 	TAILQ_HEAD(bdev_module_list, spdk_bdev_module) bdev_modules;
 
 	struct spdk_bdev_list bdevs;
+	struct bdev_name_tree bdev_names;
 
 	bool init_complete;
 	bool module_init_complete;
@@ -120,6 +131,7 @@ struct spdk_bdev_mgr {
 static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdev_modules),
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
+	.bdev_names = RB_INITIALIZER(g_bdev_mgr.bdev_names),
 	.init_complete = false,
 	.module_init_complete = false,
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
@@ -546,7 +558,7 @@ bdev_in_examine_allowlist(struct spdk_bdev *bdev)
 		return true;
 	}
 	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
-		if (bdev_examine_allowlist_check(tmp->alias)) {
+		if (bdev_examine_allowlist_check(tmp->alias.name)) {
 			return true;
 		}
 	}
@@ -716,21 +728,13 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
-	struct spdk_bdev_alias *tmp;
-	struct spdk_bdev *bdev = spdk_bdev_first();
+	struct spdk_bdev_name find;
+	struct spdk_bdev_name *res;
 
-	while (bdev != NULL) {
-		if (strcmp(bdev_name, bdev->name) == 0) {
-			return bdev;
-		}
-
-		TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
-			if (strcmp(bdev_name, tmp->alias) == 0) {
-				return bdev;
-			}
-		}
-
-		bdev = spdk_bdev_next(bdev);
+	find.name = (char *)bdev_name;
+	res = RB_FIND(bdev_name_tree, &g_bdev_mgr.bdev_names, &find);
+	if (res != NULL) {
+		return res->bdev;
 	}
 
 	return NULL;
@@ -3176,10 +3180,32 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 	bdev_channel_destroy_resource(ch);
 }
 
+static int
+bdev_name_add(struct spdk_bdev_name *bdev_name, struct spdk_bdev *bdev, const char *name)
+{
+	bdev_name->name = strdup(name);
+	if (bdev_name->name == NULL) {
+		SPDK_ERRLOG("Unable to allocate bdev name\n");
+		return -ENOMEM;
+	}
+
+	bdev_name->bdev = bdev;
+	RB_INSERT(bdev_name_tree, &g_bdev_mgr.bdev_names, bdev_name);
+	return 0;
+}
+
+static void
+bdev_name_del(struct spdk_bdev_name *bdev_name)
+{
+	RB_REMOVE(bdev_name_tree, &g_bdev_mgr.bdev_names, bdev_name);
+	free(bdev_name->name);
+}
+
 int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 {
 	struct spdk_bdev_alias *tmp;
+	int ret;
 
 	if (alias == NULL) {
 		SPDK_ERRLOG("Empty alias passed\n");
@@ -3197,11 +3223,10 @@ spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 		return -ENOMEM;
 	}
 
-	tmp->alias = strdup(alias);
-	if (tmp->alias == NULL) {
+	ret = bdev_name_add(&tmp->alias, bdev, alias);
+	if (ret != 0) {
 		free(tmp);
-		SPDK_ERRLOG("Unable to allocate alias\n");
-		return -ENOMEM;
+		return ret;
 	}
 
 	TAILQ_INSERT_TAIL(&bdev->aliases, tmp, tailq);
@@ -3215,9 +3240,9 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 	struct spdk_bdev_alias *tmp;
 
 	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
-		if (strcmp(alias, tmp->alias) == 0) {
+		if (strcmp(alias, tmp->alias.name) == 0) {
 			TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
-			free(tmp->alias);
+			bdev_name_del(&tmp->alias);
 			free(tmp);
 			return 0;
 		}
@@ -3235,7 +3260,7 @@ spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
 
 	TAILQ_FOREACH_SAFE(p, &bdev->aliases, tailq, tmp) {
 		TAILQ_REMOVE(&bdev->aliases, p, tailq);
-		free(p->alias);
+		bdev_name_del(&p->alias);
 		free(p);
 	}
 }
@@ -5516,6 +5541,7 @@ static int
 bdev_register(struct spdk_bdev *bdev)
 {
 	char *bdev_name;
+	int ret;
 
 	assert(bdev->module != NULL);
 
@@ -5547,6 +5573,12 @@ bdev_register(struct spdk_bdev *bdev)
 	bdev->internal.claim_module = NULL;
 	bdev->internal.qd_poller = NULL;
 	bdev->internal.qos = NULL;
+
+	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
+	if (ret != 0) {
+		free(bdev_name);
+		return ret;
+	}
 
 	/* If the user didn't specify a uuid, generate one. */
 	if (spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
@@ -5707,6 +5739,7 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	if (rc == 0) {
 		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
 		SPDK_DEBUGLOG(bdev, "Removing bdev %s from list done\n", bdev->name);
+		bdev_name_del(&bdev->internal.bdev_name);
 		spdk_notify_send("bdev_unregister", spdk_bdev_get_name(bdev));
 	}
 
