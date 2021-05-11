@@ -28,11 +28,23 @@ function pci_can_use() {
 	return 1
 }
 
+resolve_mod() {
+	local mod=$1 aliases=()
+
+	if aliases=($(modprobe -R "$mod")); then
+		echo "${aliases[0]}"
+	else
+		echo "unknown"
+	fi 2> /dev/null
+}
+
 cache_pci_init() {
 	local -gA pci_bus_cache
 	local -gA pci_ids_vendor
 	local -gA pci_ids_device
 	local -gA pci_bus_driver
+	local -gA pci_mod_driver
+	local -gA pci_mod_resolved
 
 	[[ -z ${pci_bus_cache[*]} || $CMD == reset ]] || return 1
 
@@ -40,10 +52,12 @@ cache_pci_init() {
 	pci_bus_ids_vendor=()
 	pci_bus_ids_device=()
 	pci_bus_driver=()
+	pci_mod_driver=()
+	pci_mod_resolved=()
 }
 
 cache_pci() {
-	local pci=$1 class=$2 vendor=$3 device=$4 driver=$5
+	local pci=$1 class=$2 vendor=$3 device=$4 driver=$5 mod=$6
 
 	if [[ -n $class ]]; then
 		class=0x${class/0x/}
@@ -59,6 +73,10 @@ cache_pci() {
 	if [[ -n $driver ]]; then
 		pci_bus_driver["$pci"]=$driver
 	fi
+	if [[ -n $mod ]]; then
+		pci_mod_driver["$pci"]=$mod
+		pci_mod_resolved["$pci"]=$(resolve_mod "$mod")
+	fi
 }
 
 cache_pci_bus_sysfs() {
@@ -67,17 +85,20 @@ cache_pci_bus_sysfs() {
 	cache_pci_init || return 0
 
 	local pci
-	local class vendor device driver
+	local class vendor device driver mod
 
 	for pci in /sys/bus/pci/devices/*; do
-		class=$(< "$pci/class") vendor=$(< "$pci/vendor") device=$(< "$pci/device") driver=""
+		class=$(< "$pci/class") vendor=$(< "$pci/vendor") device=$(< "$pci/device") driver="" mod=""
 		if [[ -e $pci/driver ]]; then
 			driver=$(readlink -f "$pci/driver")
 			driver=${driver##*/}
 		else
 			driver=unbound
 		fi
-		cache_pci "${pci##*/}" "$class" "$vendor" "$device" "$driver"
+		if [[ -e $pci/modalias ]]; then
+			mod=$(< "$pci/modalias")
+		fi
+		cache_pci "${pci##*/}" "$class" "$vendor" "$device" "$driver" "$mod"
 	done
 }
 
