@@ -32,16 +32,18 @@ cache_pci_init() {
 	local -gA pci_bus_cache
 	local -gA pci_ids_vendor
 	local -gA pci_ids_device
+	local -gA pci_bus_driver
 
 	[[ -z ${pci_bus_cache[*]} || $CMD == reset ]] || return 1
 
 	pci_bus_cache=()
 	pci_bus_ids_vendor=()
 	pci_bus_ids_device=()
+	pci_bus_driver=()
 }
 
 cache_pci() {
-	local pci=$1 class=$2 vendor=$3 device=$4
+	local pci=$1 class=$2 vendor=$3 device=$4 driver=$5
 
 	if [[ -n $class ]]; then
 		class=0x${class/0x/}
@@ -54,6 +56,9 @@ cache_pci() {
 		pci_ids_vendor["$pci"]=$vendor
 		pci_ids_device["$pci"]=$device
 	fi
+	if [[ -n $driver ]]; then
+		pci_bus_driver["$pci"]=$driver
+	fi
 }
 
 cache_pci_bus_sysfs() {
@@ -62,11 +67,17 @@ cache_pci_bus_sysfs() {
 	cache_pci_init || return 0
 
 	local pci
-	local class vendor device
+	local class vendor device driver
 
 	for pci in /sys/bus/pci/devices/*; do
-		class=$(< "$pci/class") vendor=$(< "$pci/vendor") device=$(< "$pci/device")
-		cache_pci "${pci##*/}" "$class" "$vendor" "$device"
+		class=$(< "$pci/class") vendor=$(< "$pci/vendor") device=$(< "$pci/device") driver=""
+		if [[ -e $pci/driver ]]; then
+			driver=$(readlink -f "$pci/driver")
+			driver=${driver##*/}
+		else
+			driver=unbound
+		fi
+		cache_pci "${pci##*/}" "$class" "$vendor" "$device" "$driver"
 	done
 }
 
