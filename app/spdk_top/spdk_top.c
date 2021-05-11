@@ -137,6 +137,7 @@ struct core_info {
 	uint64_t last_idle;
 	uint64_t busy;
 	uint64_t last_busy;
+	uint32_t core_freq;
 };
 
 uint8_t g_sleep_time = 1;
@@ -1389,6 +1390,7 @@ refresh_cores_tab(uint8_t current_page)
 		cores[core_num].core = core_num;
 		cores[core_num].busy = g_cores_stats.cores.core[i].busy;
 		cores[core_num].idle = g_cores_stats.cores.core[i].idle;
+		cores[core_num].core_freq = g_cores_stats.cores.core[i].core_freq;
 		if (last_page != current_page) {
 			store_core_last_stats(cores[core_num].core, cores[core_num].idle, cores[core_num].busy);
 		}
@@ -1459,11 +1461,11 @@ refresh_cores_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[5].disabled) {
-			if (!g_cores_stats.cores.core[core_num].core_freq) {
+			if (!cores[core_num].core_freq) {
 				snprintf(core_freq,  MAX_CORE_FREQ_STR_LEN, "%s", "N/A");
 			} else {
 				snprintf(core_freq, MAX_CORE_FREQ_STR_LEN, "%" PRIu32,
-					 g_cores_stats.cores.core[core_num].core_freq);
+					 cores[core_num].core_freq);
 			}
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[5].max_data_string, ALIGN_RIGHT, core_freq);
