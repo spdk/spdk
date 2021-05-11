@@ -10,6 +10,8 @@ if ! [ -e "lib/nvme/nvme.o" ]; then
   git submodule update --init
   ./configure
   make -j$(getconf _NPROCESSORS_ONLN)
+else
+  make -j$(getconf _NPROCESSORS_ONLN)
 fi
 
 mkdir -p /dev/hugepages

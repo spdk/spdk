@@ -289,6 +289,7 @@ CXXFLAGS += $(COMMON_CFLAGS)
 SYS_LIBS += -lrt
 SYS_LIBS += -luuid
 SYS_LIBS += -lcrypto
+SYS_LIBS += -lssl
 
 ifneq ($(CONFIG_NVME_CUSE)$(CONFIG_FUSE),nn)
 SYS_LIBS += -lfuse3

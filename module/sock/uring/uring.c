@@ -493,6 +493,7 @@ retry:
 				}
 			}
 			/* bind OK */
+			printf("%s:%s:%d listen\n", __func__, __FILE__, __LINE__);
 			rc = listen(fd, 512);
 			if (rc != 0) {
 				SPDK_ERRLOG("listen() failed, errno = %d\n", errno);
@@ -501,6 +502,7 @@ retry:
 				break;
 			}
 		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
+			printf("%s:%s:%d connect\n", __func__, __FILE__, __LINE__);
 			rc = connect(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
 				SPDK_ERRLOG("connect() failed, errno = %d\n", errno);

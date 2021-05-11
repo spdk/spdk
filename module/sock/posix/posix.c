@@ -52,6 +52,10 @@
 #include "spdk/util.h"
 #include "spdk_internal/sock.h"
 
+#include "openssl/crypto.h"
+#include "openssl/err.h"
+#include "openssl/ssl.h"
+
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
@@ -430,6 +434,67 @@ end:
 	return is_loopback;
 }
 
+#define PSK_ID                                                            \
+  "nqn.2014-08.org.nvmexpress:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6 " \
+  "nqn.2014-08.org.nvmexpress:uuid:36ebf5a9-1df9-47b3-a6d0-e9"
+#define PSK_KEY "1234567890ABCDEF"
+
+static SSL_CTX *create_context(void)
+{
+//#ifdef CLIENT
+//  ctx = SSL_CTX_new(TLS_client_method());
+//#else
+	SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
+//#endif
+
+	if (!ctx) {
+		SPDK_ERRLOG("SSL ctx new failed\n");
+		return NULL;
+	}
+
+	SPDK_ERRLOG("SSL context created\n");
+	return ctx;
+}
+
+static unsigned int tls_psk_out_of_bound_serv_cb(SSL *ssl,
+		const char *id,
+		unsigned char *psk,
+		unsigned int max_psk_len)
+{
+	SPDK_ERRLOG("Length of Client's PSK ID %lu\n", strlen(PSK_ID));
+	if (strcmp(PSK_ID, id) != 0) {
+		SPDK_ERRLOG("Unknown Client's PSK ID\n");
+		goto err;
+	}
+
+	SPDK_ERRLOG("Length of Client's PSK KEY %u\n", max_psk_len);
+	if (strlen(PSK_KEY) > max_psk_len) {
+		SPDK_ERRLOG("Insufficient buffer size to copy PSK_KEY\n");
+		goto err;
+	}
+
+	memcpy(psk, PSK_KEY, strlen(PSK_KEY));
+	return strlen(PSK_KEY);
+
+err:
+	return 0;
+}
+
+static SSL *create_tls_object_server(SSL_CTX *ctx, int lfd)
+{
+	SSL *ssl = SSL_new(ctx);
+	if (!ssl) {
+		SPDK_ERRLOG("SSL object creation failed\n");
+		return NULL;
+	}
+
+	int fd;
+	SSL_set_fd(ssl, fd);
+	SSL_set_psk_server_callback(ssl, tls_psk_out_of_bound_serv_cb);
+	SPDK_ERRLOG("SSL object creation finished\n");
+	return ssl;
+}
+
 static struct spdk_sock *
 posix_sock_create(const char *ip, int port,
 		  enum posix_sock_create_type type,
@@ -551,6 +616,7 @@ retry:
 				}
 			}
 			/* bind OK */
+			printf("%s:%s:%d listen\n", __func__, __FILE__, __LINE__);
 			rc = listen(fd, 512);
 			if (rc != 0) {
 				SPDK_ERRLOG("listen() failed, errno = %d\n", errno);
@@ -561,6 +627,7 @@ retry:
 			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_server &&
 						 g_spdk_posix_sock_impl_opts.enable_zerocopy_send;
 		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
+			printf("%s:%s:%d connect\n", __func__, __FILE__, __LINE__);
 			rc = connect(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
 				SPDK_ERRLOG("connect() failed, errno = %d\n", errno);
@@ -633,6 +700,10 @@ posix_sock_accept(struct spdk_sock *_sock)
 	if (rc == -1) {
 		return NULL;
 	}
+
+// start tls server here
+	SSL_CTX *ctx = create_context();
+	SSL *ssl = create_tls_object_server(ctx, sock->fd);
 
 	fd = rc;
 
