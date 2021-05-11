@@ -280,6 +280,11 @@ accel_engine_ioat_init(void)
 		return -1;
 	}
 
+	if (TAILQ_EMPTY(&g_devices)) {
+		SPDK_NOTICELOG("No available ioat devices\n");
+		return -1;
+	}
+
 	g_ioat_initialized = true;
 	SPDK_NOTICELOG("Accel engine updated to use IOAT engine.\n");
 	spdk_accel_hw_engine_register(&ioat_accel_engine);
