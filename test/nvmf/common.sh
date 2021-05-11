@@ -280,8 +280,6 @@ function nvmf_veth_init() {
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE2 || true
 	ip netns del $NVMF_TARGET_NAMESPACE || true
 
-	trap 'nvmf_veth_fini; exit 1' SIGINT SIGTERM EXIT
-
 	# Create network namespace
 	ip netns add $NVMF_TARGET_NAMESPACE
 
@@ -368,8 +366,6 @@ function nvmf_tcp_init() {
 	ip -4 addr flush $NVMF_TARGET_INTERFACE || true
 	ip -4 addr flush $NVMF_INITIATOR_INTERFACE || true
 
-	trap 'nvmf_tcp_fini; exit 1' SIGINT SIGTERM
-
 	# Create network namespace
 	ip netns add $NVMF_TARGET_NAMESPACE
 
@@ -401,8 +397,10 @@ function nvmf_tcp_fini() {
 		nvmf_veth_fini
 		return 0
 	fi
-	ip netns del $NVMF_TARGET_NAMESPACE
-	ip -4 addr flush $NVMF_INITIATOR_INTERFACE
+	if [[ -n $NVMF_TARGET_NAMESPACE && -e /var/run/netns/$NVMF_TARGET_NAMESPACE ]]; then
+		ip netns del $NVMF_TARGET_NAMESPACE
+	fi
+	ip -4 addr flush $NVMF_INITIATOR_INTERFACE || :
 }
 
 function nvmftestinit() {
@@ -410,6 +408,9 @@ function nvmftestinit() {
 		echo "transport not specified - use --transport= to specify"
 		return 1
 	fi
+
+	trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini' SIGINT SIGTERM EXIT
+
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
 		if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
@@ -448,7 +449,6 @@ function nvmfappstart() {
 	timing_enter start_nvmf_tgt
 	"${NVMF_APP[@]}" "$@" &
 	nvmfpid=$!
-	trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $nvmfpid
 	timing_exit start_nvmf_tgt
 }
