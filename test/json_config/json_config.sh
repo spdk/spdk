@@ -286,8 +286,7 @@ function create_nvmf_subsystem_config() {
 
 	NVMF_FIRST_TARGET_IP="127.0.0.1"
 	if [[ $SPDK_TEST_NVMF_TRANSPORT == "rdma" ]]; then
-		rdma_device_init
-		NVMF_FIRST_TARGET_IP=$(get_available_rdma_ips | head -n 1)
+		TEST_TRANSPORT=$SPDK_TEST_NVMF_TRANSPORT nvmftestinit
 	fi
 
 	if [[ -z $NVMF_FIRST_TARGET_IP ]]; then

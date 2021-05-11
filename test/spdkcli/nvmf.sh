@@ -17,8 +17,8 @@ timing_exit run_nvmf_tgt
 
 NVMF_TARGET_IP="127.0.0.1"
 if [[ $TEST_TRANSPORT == "rdma" ]]; then
-	rdma_device_init
-	NVMF_TARGET_IP=$(get_available_rdma_ips | head -n 1)
+	nvmftestinit
+	NVMF_TARGET_IP=$NVMF_FIRST_TARGET_IP
 fi
 
 timing_enter spdkcli_create_nvmf_config

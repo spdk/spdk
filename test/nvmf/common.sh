@@ -26,6 +26,8 @@ function build_nvmf_app_args() {
 	fi
 }
 
+source "$rootdir/scripts/common.sh"
+
 : ${NVMF_APP_SHM_ID="0"}
 export NVMF_APP_SHM_ID
 build_nvmf_app_args
@@ -57,140 +59,6 @@ function detect_soft_roce_nics() {
 	rxe_cfg start
 }
 
-# args 1 and 2 represent the grep filters for finding our NICS.
-# subsequent args are all drivers that should be loaded if we find these NICs.
-# Those drivers should be supplied in the correct order.
-function detect_nics_and_probe_drivers() {
-	NIC_VENDOR="$1"
-	NIC_CLASS="$2"
-
-	nvmf_nic_bdfs=$(lspci | grep Ethernet | grep "$NIC_VENDOR" | grep "$NIC_CLASS" | awk -F ' ' '{print "0000:"$1}')
-
-	if [ -z "$nvmf_nic_bdfs" ]; then
-		return 0
-	fi
-
-	have_pci_nics=1
-	if [ $# -ge 2 ]; then
-		# shift out the first two positional arguments.
-		shift 2
-		# Iterate through the remaining arguments.
-		for i; do
-			if [[ $i == irdma ]]; then
-				# Our tests don't play well with iWARP protocol. Make sure we use RoCEv2 instead.
-				if [[ -e /sys/module/irdma/parameters/roce_ena ]]; then
-					# reload the module to re-init the rdma devices
-					(($(< /sys/module/irdma/parameters/roce_ena) != 1)) && modprobe -r irdma
-				fi
-				modprobe "$i" roce_ena=1
-			else
-				modprobe "$i"
-			fi
-		done
-	fi
-}
-
-function pci_rdma_switch() {
-	local driver=$1
-
-	local -a driver_args=()
-	driver_args+=("Mellanox ConnectX-4 mlx5_core mlx5_ib")
-	driver_args+=("Mellanox ConnectX-5 mlx5_core mlx5_ib")
-	driver_args+=("Intel E810 ice irdma")
-	driver_args+=("Intel X722 i40e i40iw")
-	driver_args+=("Chelsio \"Unified Wire\" cxgb4 iw_cxgb4")
-
-	case $driver in
-		mlx5_ib)
-			detect_nics_and_probe_drivers ${driver_args[0]}
-			detect_nics_and_probe_drivers ${driver_args[1]}
-			;;
-		irdma)
-			detect_nics_and_probe_drivers ${driver_args[2]}
-			;;
-		i40iw)
-			detect_nics_and_probe_drivers ${driver_args[3]}
-			;;
-		iw_cxgb4)
-			detect_nics_and_probe_drivers ${driver_args[4]}
-			;;
-		*)
-			for d in "${driver_args[@]}"; do
-				detect_nics_and_probe_drivers $d
-			done
-			;;
-	esac
-}
-
-function pci_tcp_switch() {
-	local driver=$1
-
-	local -a driver_args=()
-	driver_args+=("Intel E810 ice")
-
-	case $driver in
-		ice)
-			detect_nics_and_probe_drivers ${driver_args[0]}
-			;;
-		*)
-			for d in "${driver_args[@]}"; do
-				detect_nics_and_probe_drivers $d
-			done
-			;;
-	esac
-}
-
-function detect_pci_nics() {
-
-	if ! hash lspci; then
-		return 0
-	fi
-
-	local nic_drivers
-	local found_drivers
-
-	if [[ -z "$TEST_TRANSPORT" ]]; then
-		TEST_TRANSPORT=$SPDK_TEST_NVMF_TRANSPORT
-	fi
-
-	if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
-		nic_drivers="mlx5_ib|irdma|i40iw|iw_cxgb4"
-
-		# Try to find RDMA drivers which are already loded and try to
-		# use only it's associated NICs, without probing all drivers.
-		found_drivers=$(lsmod | grep -Eo $nic_drivers | sort -u)
-		for d in $found_drivers; do
-			pci_rdma_switch $d
-		done
-
-		# In case lsmod reported driver, but lspci does not report
-		# physical NICs - fall back to old approach any try to
-		# probe all compatible NICs.
-		((have_pci_nics == 0)) && pci_rdma_switch "default"
-
-	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
-		nic_drivers="ice"
-		found_drivers=$(lsmod | grep -Eo $nic_drivers | sort -u)
-		for d in $found_drivers; do
-			pci_tcp_switch $d
-		done
-		((have_pci_nics == 0)) && pci_tcp_switch "default"
-	fi
-
-	# Use softroce if everything else failed.
-	((have_pci_nics == 0)) && return 0
-
-	# Provide time for drivers to properly load.
-	sleep 5
-}
-
-function detect_transport_nics() {
-	detect_pci_nics
-	if [ "$have_pci_nics" -eq "0" ]; then
-		detect_soft_roce_nics
-	fi
-}
-
 function allocate_nic_ips() {
 	((count = NVMF_IP_LEAST_ADDR))
 	for nic_name in $(get_rdma_if_list); do
@@ -212,17 +80,25 @@ function get_available_rdma_ips() {
 }
 
 function get_rdma_if_list() {
-	rxe_cfg rxe-net
-}
+	local net_dev rxe_net_dev rxe_net_devs
 
-function get_tcp_if_list_by_driver() {
-	local driver
-	driver=${1:-ice}
+	mapfile -t rxe_net_devs < <(rxe_cfg rxe-net)
 
-	shopt -s nullglob
-	tcp_if_list=(/sys/bus/pci/drivers/$driver/0000*/net/*)
-	shopt -u nullglob
-	printf '%s\n' "${tcp_if_list[@]##*/}"
+	if ((${#net_devs[@]} == 0)); then
+		# No rdma-capable nics on board, using soft-RoCE
+		printf '%s\n' "${rxe_net_devs[@]}"
+		return 0
+	fi
+
+	# Pick only these devices which were found during gather_supported_nvmf_pci_devs() run
+	for net_dev in "${net_devs[@]}"; do
+		for rxe_net_dev in "${rxe_net_devs[@]}"; do
+			if [[ $net_dev == "$rxe_net_dev" ]]; then
+				echo "$net_dev"
+				continue 2
+			fi
+		done
+	done
 }
 
 function get_ip_address() {
@@ -345,8 +221,8 @@ function nvmf_veth_fini() {
 function nvmf_tcp_init() {
 	NVMF_INITIATOR_IP=10.0.0.1
 	NVMF_FIRST_TARGET_IP=10.0.0.2
-	TCP_INTERFACE_LIST=($(get_tcp_if_list_by_driver))
-	if ((${#TCP_INTERFACE_LIST[@]} == 0)) || [ "$TEST_MODE" == "iso" ]; then
+	TCP_INTERFACE_LIST=("${net_devs[@]}")
+	if ((${#TCP_INTERFACE_LIST[@]} == 0)); then
 		nvmf_veth_init
 		return 0
 	fi
@@ -400,6 +276,103 @@ function nvmf_tcp_fini() {
 	ip -4 addr flush $NVMF_INITIATOR_INTERFACE || :
 }
 
+function gather_supported_nvmf_pci_devs() {
+	# Go through the entire pci bus and gather all ethernet controllers we support for the nvmf tests.
+	# Focus on the hardware that's currently being tested by the CI.
+	xtrace_disable
+	cache_pci_bus_sysfs
+	xtrace_restore
+
+	local intel=0x8086 mellanox=0x15b3 pci
+
+	local -a pci_devs=()
+	local -a pci_net_devs=()
+	local -A pci_drivers=()
+
+	local -ga net_devs=()
+	local -ga e810=()
+	local -ga x722=()
+	local -ga mlx=()
+
+	# E810-XXV
+	e810+=(${pci_bus_cache["$intel:0x1592"]})
+	e810+=(${pci_bus_cache["$intel:0x159b"]})
+	# X722 10G
+	x722+=(${pci_bus_cache["$intel:0x37d2"]})
+	# ConnectX-5
+	mlx+=(${pci_bus_cache["$mellanox:0x1017"]})
+	# ConnectX-4
+	mlx+=(${pci_bus_cache["$mellanox:0x1015"]})
+	mlx+=(${pci_bus_cache["$mellanox:0x1013"]})
+
+	pci_devs+=("${e810[@]}")
+	if [[ $TEST_TRANSPORT == rdma ]]; then
+		pci_devs+=("${x722[@]}")
+		pci_devs+=("${mlx[@]}")
+	fi
+
+	# Try to respect what CI wants to test and override pci_devs[]
+	if [[ $SPDK_TEST_NVMF_DRIVER == mlx5_ib ]]; then
+		pci_devs=("${mlx[@]}")
+	elif [[ $SPDK_TEST_NVMF_DRIVER == ice ]]; then
+		pci_devs=("${e810[@]}")
+	fi
+
+	if ((${#pci_devs[@]} == 0)); then
+		if [[ $TEST_TRANSPORT == rdma ]]; then
+			echo "WARNING: No pci devices found for the $TEST_TRANSPORT test, falling back to Soft-RoCE"
+			detect_soft_roce_nics
+		fi
+		# tcp fallbacks to veth setup
+		return 0
+	fi
+
+	# Load proper kernel modules if necessary
+	for pci in "${pci_devs[@]}"; do
+		echo "Found $pci (${pci_ids_vendor["$pci"]} - ${pci_ids_device["$pci"]})"
+		if [[ ${pci_mod_resolved["$pci"]} == unknown ]]; then
+			echo "Unresolved modalias for $pci (${pci_mod_driver["$pci"]}). Driver not installed|builtin?"
+			continue
+		fi
+		if [[ ${pci_bus_driver["$pci"]} == unbound ]]; then
+			echo "$pci not bound, needs ${pci_mod_resolved["$pci"]}"
+			pci_drivers["${pci_mod_resolved["$pci"]}"]=1
+		fi
+	done
+
+	if ((${#pci_drivers[@]} > 0)); then
+		echo "Loading kernel modules: ${!pci_drivers[*]}"
+		modprobe -a "${!pci_drivers[@]}"
+	fi
+
+	# E810 cards also need irdma driver to be around.
+	if ((${#e810[@]} > 0)) && [[ $TEST_TRANSPORT == rdma ]]; then
+		if [[ -e /sys/module/irdma/parameters/roce_ena ]]; then
+			# Our tests don't play well with iWARP protocol. Make sure we use RoCEv2 instead.
+			(($(< /sys/module/irdma/parameters/roce_ena) != 1)) && modprobe -r irdma
+		fi
+		modinfo irdma && modprobe irdma roce_ena=1
+	fi > /dev/null
+
+	# All devices detected, kernel modules loaded. Now look under net class to see if there
+	# are any net devices bound to the controllers.
+	for pci in "${pci_devs[@]}"; do
+		if [[ ! -e /sys/bus/pci/devices/$pci/net ]]; then
+			echo "No net devices associated with $pci"
+			continue
+		fi
+		pci_net_devs=("/sys/bus/pci/devices/$pci/net/"*)
+		pci_net_devs=("${pci_net_devs[@]##*/}")
+		echo "Found net devices under $pci: ${pci_net_devs[*]}"
+		net_devs+=("${pci_net_devs[@]}")
+	done
+
+	if ((${#net_devs[@]} == 0)); then
+		echo "ERROR: No net devices were found for: ${pci_devs[*]}. Cannot run the $TEST_TRANSPORT test"
+		return 1
+	fi
+}
+
 function nvmftestinit() {
 	if [ -z $TEST_TRANSPORT ]; then
 		echo "transport not specified - use --transport= to specify"
@@ -408,18 +381,15 @@ function nvmftestinit() {
 
 	trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini' SIGINT SIGTERM EXIT
 
+	gather_supported_nvmf_pci_devs
+
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
-		if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
-			rdma_device_init
-		fi
-		if [[ "$TEST_TRANSPORT" == "tcp" ]]; then
-			tcp_device_init
-		fi
 	fi
 
 	NVMF_TRANSPORT_OPTS="-t $TEST_TRANSPORT"
 	if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
+		rdma_device_init
 		RDMA_IP_LIST=$(get_available_rdma_ips)
 		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
@@ -458,9 +428,6 @@ function nvmftestfini() {
 	fi
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh reset
-		if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
-			rdma_device_init
-		fi
 	fi
 	if [[ "$TEST_TRANSPORT" == "tcp" ]]; then
 		nvmf_tcp_fini
@@ -469,12 +436,7 @@ function nvmftestfini() {
 
 function rdma_device_init() {
 	load_ib_rdma_modules
-	detect_transport_nics
 	allocate_nic_ips
-}
-
-function tcp_device_init() {
-	detect_transport_nics
 }
 
 function revert_soft_roce() {

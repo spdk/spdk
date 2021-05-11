@@ -155,6 +155,8 @@ export SPDK_TEST_USE_IGB_UIO
 export SPDK_TEST_SCHEDULER
 : ${SPDK_TEST_SCANBUILD:=0}
 export SPDK_TEST_SCANBUILD
+: ${SPDK_TEST_NVMF_DRIVER:=}
+export SPDK_TEST_NVMF_DRIVER
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"

@@ -243,15 +243,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		# The NVMe-oF run test cases are split out like this so that the parser that compiles the
 		# list of all tests can properly differentiate them. Please do not merge them into one line.
 		if [ "$SPDK_TEST_NVMF_TRANSPORT" = "rdma" ]; then
-			timing_enter rdma_setup
-			rdma_device_init
-			timing_exit rdma_setup
 			run_test "nvmf_rdma" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 			run_test "spdkcli_nvmf_rdma" ./test/spdkcli/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 		elif [ "$SPDK_TEST_NVMF_TRANSPORT" = "tcp" ]; then
-			timing_enter tcp_setup
-			tcp_device_init
-			timing_exit tcp_setup
 			run_test "nvmf_tcp" ./test/nvmf/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
 			if [[ $SPDK_TEST_URING -eq 0 ]]; then
 				run_test "spdkcli_nvmf_tcp" ./test/spdkcli/nvmf.sh --transport=$SPDK_TEST_NVMF_TRANSPORT
