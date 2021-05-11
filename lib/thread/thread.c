@@ -123,6 +123,7 @@ struct spdk_thread {
 	 * Contains pollers running on this thread with a periodic timer.
 	 */
 	TAILQ_HEAD(timed_pollers_head, spdk_poller)	timed_pollers;
+	struct spdk_poller				*first_timed_poller;
 	/*
 	 * Contains paused pollers.  Pollers on this queue are waiting until
 	 * they are resumed (in which case they're put onto the active/timer
@@ -676,12 +677,18 @@ poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller, uint
 
 	/* No earlier pollers were found, so this poller must be the new head */
 	TAILQ_INSERT_HEAD(&thread->timed_pollers, poller, tailq);
+
+	thread->first_timed_poller = poller;
 }
 
 static inline void
 poller_remove_timer(struct spdk_thread *thread, struct spdk_poller *poller)
 {
 	TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+
+	if (thread->first_timed_poller == poller) {
+		thread->first_timed_poller = TAILQ_FIRST(&thread->timed_pollers);
+	}
 }
 
 static void
@@ -852,7 +859,7 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		}
 	}
 
-	poller = TAILQ_FIRST(&thread->timed_pollers);
+	poller = thread->first_timed_poller;
 	while (poller != NULL) {
 		int timer_rc = 0;
 
@@ -927,7 +934,7 @@ spdk_thread_next_poller_expiration(struct spdk_thread *thread)
 {
 	struct spdk_poller *poller;
 
-	poller = TAILQ_FIRST(&thread->timed_pollers);
+	poller = thread->first_timed_poller;
 	if (poller) {
 		return poller->next_run_tick;
 	}

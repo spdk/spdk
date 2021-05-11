@@ -1332,6 +1332,106 @@ device_unregister_and_thread_exit_race(void)
 	free_threads();
 }
 
+static int
+dummy_poller(void *arg)
+{
+	return SPDK_POLLER_IDLE;
+}
+
+static void
+cache_closest_timed_poller(void)
+{
+	struct spdk_thread *thread;
+	struct spdk_poller *poller1, *poller2, *poller3, *tmp;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	thread = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+
+	poller1 = spdk_poller_register(dummy_poller, NULL, 1000);
+	SPDK_CU_ASSERT_FATAL(poller1 != NULL);
+
+	poller2 = spdk_poller_register(dummy_poller, NULL, 1500);
+	SPDK_CU_ASSERT_FATAL(poller2 != NULL);
+
+	poller3 = spdk_poller_register(dummy_poller, NULL, 1800);
+	SPDK_CU_ASSERT_FATAL(poller3 != NULL);
+
+	poll_threads();
+
+	/* When multiple timed pollers are inserted, the cache should
+	 * have the closest timed poller.
+	 */
+	CU_ASSERT(thread->first_timed_poller == poller1);
+	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller1);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == poller2);
+	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller2);
+
+	/* If we unregister a timed poller by spdk_poller_unregister()
+	 * when it is waiting, it is marked as being unregistereed and
+	 * is actually unregistered when it is expired.
+	 *
+	 * Hence if we unregister the closest timed poller when it is waiting,
+	 * the cache is not updated to the next timed poller until it is expired.
+	 */
+	tmp = poller2;
+
+	spdk_poller_unregister(&poller2);
+	CU_ASSERT(poller2 == NULL);
+
+	spdk_delay_us(499);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == tmp);
+	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == tmp);
+
+	spdk_delay_us(1);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == poller3);
+	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller3);
+
+	/* If we pause a timed poller by spdk_poller_pause() when it is waiting,
+	 * it is marked as being paused and is actually paused when it is expired.
+	 *
+	 * Hence if we pause the closest timed poller when it is waiting, the cache
+	 * is not updated to the next timed poller until it is expired.
+	 */
+	spdk_poller_pause(poller3);
+
+	spdk_delay_us(299);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == poller3);
+	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller3);
+
+	spdk_delay_us(1);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == poller1);
+	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller1);
+
+	/* After unregistering all timed pollers, the cache should
+	 * be NULL.
+	 */
+	spdk_poller_unregister(&poller1);
+	spdk_poller_unregister(&poller3);
+
+	spdk_delay_us(200);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&thread->timed_pollers));
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1357,6 +1457,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, thread_update_stats_test);
 	CU_ADD_TEST(suite, nested_channel);
 	CU_ADD_TEST(suite, device_unregister_and_thread_exit_race);
+	CU_ADD_TEST(suite, cache_closest_timed_poller);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
