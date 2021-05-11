@@ -2167,7 +2167,8 @@ show_core(uint8_t current_page)
 	doupdate();
 
 	box(core_win, 0, 0);
-	snprintf(core_win_title, sizeof(core_win_title), "Core %" PRIu64 " details", core_number);
+	snprintf(core_win_title, sizeof(core_win_title), "Core %" PRIu32 " details",
+		 core_info[core_number]->lcore);
 	print_in_middle(core_win, 1, 0, CORE_WIN_WIDTH, core_win_title, COLOR_PAIR(3));
 
 	mvwaddch(core_win, -1, 0, ACS_LTEE);
@@ -2187,11 +2188,11 @@ show_core(uint8_t current_page)
 	print_left(core_win, 5, 1, CORE_WIN_WIDTH, "Thread count:          Idle time:", COLOR_PAIR(5));
 
 	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL, "%" PRIu64,
-		  g_cores_history[core_number].threads_count);
+		  g_cores_history[core_info[core_number]->lcore].threads_count);
 
 	if (g_interval_data == true) {
-		get_time_str(g_cores_history[core_number].idle, idle_time);
-		get_time_str(g_cores_history[core_number].busy, busy_time);
+		get_time_str(g_cores_history[core_info[core_number]->lcore].idle, idle_time);
+		get_time_str(g_cores_history[core_info[core_number]->lcore].busy, busy_time);
 	} else {
 		get_time_str(core_info[core_number]->idle, idle_time);
 		get_time_str(core_info[core_number]->busy, busy_time);
@@ -2201,7 +2202,7 @@ show_core(uint8_t current_page)
 
 	print_left(core_win, 7, 1, CORE_WIN_WIDTH, "Poller count:          Busy time:", COLOR_PAIR(5));
 	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL, "%" PRIu64,
-		  g_cores_history[core_number].pollers_count);
+		  g_cores_history[core_info[core_number]->lcore].pollers_count);
 
 	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL + 20, busy_time);
 
