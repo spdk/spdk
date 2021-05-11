@@ -434,6 +434,11 @@ accel_engine_idxd_init(void)
 		return -EINVAL;
 	}
 
+	if (TAILQ_EMPTY(&g_idxd_devices)) {
+		SPDK_NOTICELOG("no available idxd devices\n");
+		return -EINVAL;
+	}
+
 	g_idxd_initialized = true;
 	g_batch_max = spdk_idxd_batch_get_max();
 	SPDK_NOTICELOG("Accel engine updated to use IDXD DSA engine.\n");
