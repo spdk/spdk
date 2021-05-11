@@ -818,7 +818,6 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 		i = 0;
 		TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
 			core_info->threads[i] = lw_thread;
-			_spdk_lw_thread_get_current_stats(lw_thread, &lw_thread->snapshot_stats);
 			i++;
 		}
 	}
@@ -1479,13 +1478,6 @@ _spdk_lw_thread_set_core(struct spdk_lw_thread *thread, uint32_t lcore)
 	assert(thread != NULL);
 	thread->lcore = lcore;
 	thread->resched = true;
-}
-
-void
-_spdk_lw_thread_get_current_stats(struct spdk_lw_thread *thread, struct spdk_thread_stats *stats)
-{
-	assert(thread != NULL);
-	*stats = thread->current_stats;
 }
 
 static int

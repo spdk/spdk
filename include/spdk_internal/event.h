@@ -67,7 +67,6 @@ struct spdk_lw_thread {
 	uint32_t                        new_lcore;
 	bool				resched;
 	struct spdk_thread_stats	current_stats;
-	struct spdk_thread_stats	snapshot_stats;
 	struct spdk_thread_stats	last_stats;
 };
 
@@ -354,15 +353,6 @@ static void __attribute__((constructor)) _spdk_scheduler_register_ ## scheduler 
  * \param lcore new CPU core index.
  */
 void _spdk_lw_thread_set_core(struct spdk_lw_thread *thread, uint32_t lcore);
-
-/**
- * Get threads stats
- *
- * \param thread thread that stats regards to.
- * \param stats Output parameter for accumulated TSC counts while the thread was busy.
- */
-void _spdk_lw_thread_get_current_stats(struct spdk_lw_thread *thread,
-				       struct spdk_thread_stats *stats);
 
 #ifdef __cplusplus
 }
