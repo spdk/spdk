@@ -73,3 +73,11 @@ spdk_app_start() is called, it will block the current thread until the applicati
 terminates by calling spdk_app_stop() or an error condition occurs during the
 initialization code within spdk_app_start(), itself, before invoking the caller's
 supplied function.
+
+## Custom shutdown callback {#event_component_shutdown}
+
+When creating SPDK based application user may add custom shutdown callback which
+will be called before the application framework starts the shutdown process.
+To do that set shutdown_cb function callback in spdk_app_opts structure passed
+to spdk_app_start(). Custom shutdown callback should call spdk_app_stop() before
+returning to continue application shutdown process.
