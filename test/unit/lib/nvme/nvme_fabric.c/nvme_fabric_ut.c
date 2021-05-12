@@ -286,7 +286,6 @@ test_nvme_fabric_discover_probe(void)
 	CU_ASSERT(!strncmp(g_ut_trid.subnqn, hostnqn, sizeof(hostnqn)));
 	CU_ASSERT(!strncmp(g_ut_trid.traddr, traddr, sizeof(traddr)));
 	CU_ASSERT(!strncmp(g_ut_trid.trsvcid, trsvcid, sizeof(trsvcid)));
-	CU_ASSERT(g_ut_trid.priority == 1);
 
 	g_ut_ctrlr_is_probed = false;
 	memset(&g_ut_trid, 0, sizeof(g_ut_trid));
