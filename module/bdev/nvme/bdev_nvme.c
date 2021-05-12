@@ -251,6 +251,16 @@ static struct spdk_bdev_module nvme_if = {
 };
 SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 
+static inline void
+bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
+				  const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct,
+					  cpl->status.sc);
+}
+
 static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
@@ -2485,8 +2495,7 @@ bdev_nvme_no_pi_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	}
 
 	/* Return original completion status */
-	spdk_bdev_io_complete_nvme_status(bdev_io, bio->cpl.cdw0, bio->cpl.status.sct,
-					  bio->cpl.status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, &bio->cpl);
 }
 
 static void
@@ -2525,13 +2534,14 @@ bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		}
 	}
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, cpl);
 }
 
 static void
 bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	if (spdk_nvme_cpl_is_pi_error(cpl)) {
 		SPDK_ERRLOG("writev completed with PI error (sct=%d, sc=%d)\n",
@@ -2540,13 +2550,14 @@ bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		bdev_nvme_verify_pi_error(bdev_io);
 	}
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, cpl);
 }
 
 static void
 bdev_nvme_zone_appendv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	/* spdk_bdev_io_get_append_location() requires that the ALBA is stored in offset_blocks.
 	 * Additionally, offset_blocks has to be set before calling bdev_nvme_verify_pi_error().
@@ -2560,13 +2571,14 @@ bdev_nvme_zone_appendv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		bdev_nvme_verify_pi_error(bdev_io);
 	}
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, cpl);
 }
 
 static void
 bdev_nvme_comparev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	if (spdk_nvme_cpl_is_pi_error(cpl)) {
 		SPDK_ERRLOG("comparev completed with PI error (sct=%d, sc=%d)\n",
@@ -2575,14 +2587,13 @@ bdev_nvme_comparev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		bdev_nvme_verify_pi_error(bdev_io);
 	}
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, cpl);
 }
 
 static void
 bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	/* Compare operation completion */
 	if ((cpl->cdw0 & 0xFF) == SPDK_NVME_OPC_COMPARE) {
@@ -2600,18 +2611,18 @@ bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 			SPDK_ERRLOG("Unexpected write success after compare failure.\n");
 		}
 
-		spdk_bdev_io_complete_nvme_status(bdev_io, bio->cpl.cdw0, bio->cpl.status.sct, bio->cpl.status.sc);
+		bdev_nvme_io_complete_nvme_status(bio, &bio->cpl);
 	} else {
-		spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+		bdev_nvme_io_complete_nvme_status(bio, cpl);
 	}
 }
 
 static void
 bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, cpl);
 }
 
 static int
@@ -2725,7 +2736,7 @@ bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
 out_complete_io_nvme_cpl:
 	free(bio->zone_report_buf);
 	bio->zone_report_buf = NULL;
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, cpl);
 	return;
 
 out_complete_io_status:
@@ -2737,19 +2748,17 @@ out_complete_io_status:
 static void
 bdev_nvme_zone_management_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
 
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, cpl);
 }
 
 static void
 bdev_nvme_admin_passthru_completion(void *ctx)
 {
 	struct nvme_bdev_io *bio = ctx;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
-	spdk_bdev_io_complete_nvme_status(bdev_io,
-					  bio->cpl.cdw0, bio->cpl.status.sct, bio->cpl.status.sc);
+	bdev_nvme_io_complete_nvme_status(bio, &bio->cpl);
 }
 
 static void
