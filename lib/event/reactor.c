@@ -394,7 +394,7 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 	assert(target != NULL);
 	assert(target->in_interrupt != target->new_in_interrupt);
 	SPDK_DEBUGLOG(reactor, "Do reactor set on core %u from %s to state %s\n",
-		      target->lcore, !target->in_interrupt ? "intr" : "poll", target->new_in_interrupt ? "intr" : "poll");
+		      target->lcore, target->in_interrupt ? "intr" : "poll", target->new_in_interrupt ? "intr" : "poll");
 
 	target->in_interrupt = target->new_in_interrupt;
 
