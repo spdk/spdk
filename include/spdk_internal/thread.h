@@ -37,8 +37,6 @@
 #include "spdk/stdinc.h"
 #include "spdk/thread.h"
 
-#define SPDK_MAX_THREAD_NAME_LEN	256
-
 struct spdk_poller;
 
 struct spdk_poller_stats {
@@ -46,62 +44,7 @@ struct spdk_poller_stats {
 	uint64_t	busy_count;
 };
 
-enum spdk_thread_state {
-	/* The thread is pocessing poller and message by spdk_thread_poll(). */
-	SPDK_THREAD_STATE_RUNNING,
-
-	/* The thread is in the process of termination. It reaps unregistering
-	 * poller are releasing I/O channel.
-	 */
-	SPDK_THREAD_STATE_EXITING,
-
-	/* The thread is exited. It is ready to call spdk_thread_destroy(). */
-	SPDK_THREAD_STATE_EXITED,
-};
-
-struct spdk_thread {
-	uint64_t			tsc_last;
-	struct spdk_thread_stats	stats;
-	/*
-	 * Contains pollers actively running on this thread.  Pollers
-	 *  are run round-robin. The thread takes one poller from the head
-	 *  of the ring, executes it, then puts it back at the tail of
-	 *  the ring.
-	 */
-	TAILQ_HEAD(active_pollers_head, spdk_poller)	active_pollers;
-	/**
-	 * Contains pollers running on this thread with a periodic timer.
-	 */
-	TAILQ_HEAD(timed_pollers_head, spdk_poller)	timed_pollers;
-	/*
-	 * Contains paused pollers.  Pollers on this queue are waiting until
-	 * they are resumed (in which case they're put onto the active/timer
-	 * queues) or unregistered.
-	 */
-	TAILQ_HEAD(paused_pollers_head, spdk_poller)	paused_pollers;
-	struct spdk_ring		*messages;
-	int				msg_fd;
-	SLIST_HEAD(, spdk_msg)		msg_cache;
-	size_t				msg_cache_count;
-	spdk_msg_fn			critical_msg;
-	uint64_t			id;
-	enum spdk_thread_state		state;
-	int				pending_unregister_count;
-
-	TAILQ_HEAD(, spdk_io_channel)	io_channels;
-	TAILQ_ENTRY(spdk_thread)	tailq;
-
-	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
-	struct spdk_cpuset		cpumask;
-	uint64_t			exit_timeout_tsc;
-
-	/* Indicates whether this spdk_thread currently runs in interrupt. */
-	bool				in_interrupt;
-	struct spdk_fd_group		*fgrp;
-
-	/* User context allocated at the end */
-	uint8_t				ctx[0];
-};
+struct spdk_thread;
 
 const char *spdk_poller_get_name(struct spdk_poller *poller);
 const char *spdk_poller_get_state_str(struct spdk_poller *poller);
