@@ -32,6 +32,16 @@ config+=(
 	)"
 )
 
+config+=(
+	"$(
+		cat <<- JSON
+			{
+			  "method": "bdev_wait_for_examine"
+			}
+		JSON
+	)"
+)
+
 # First ']}' closes our config and bdev subsystem blocks
 jq . <<- CONFIG > "$curdir/config"
 	{"subsystems":[

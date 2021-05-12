@@ -13,6 +13,9 @@
             "name": "VirtioBlk0",
             "trtype": "user"
           }
+        },
+        {
+          "method": "bdev_wait_for_examine"
         }
       ]
     }

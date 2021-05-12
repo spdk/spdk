@@ -31,6 +31,9 @@ jq . <<- JSON > "$curdir/config"
 	            "block_size": 512,
 	            "filename": "./aio1"
 	          }
+	        },
+	        {
+	          "method": "bdev_wait_for_examine"
 	        }
 	      ]
 	    }

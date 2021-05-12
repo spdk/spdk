@@ -573,7 +573,10 @@ function gen_nvmf_target_json() {
 		        $(
 		IFS=","
 		printf '%s\n' "${config[*]}"
-		)
+		),
+			{
+			  "method": "bdev_wait_for_examine"
+			}
 		      ]
 		    }
 		  ]

@@ -142,7 +142,10 @@ jq . <<- JSON > ${conf_file}
 	            "block_size": 512,
 	            "filename": "${tmp_file}"
 	          }
-	        }
+	        },
+	        {
+	          "method": "bdev_wait_for_examine"
+		}
 	      ]
 	    }
 	  ]

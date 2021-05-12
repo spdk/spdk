@@ -143,6 +143,9 @@ function initiator_json_config() {
 		            "url": "iscsi://$TARGET_IP/iqn.2016-06.io.spdk:disk1/0",
 		            "initiator_iqn": "iqn.2016-06.io.spdk:disk1/0"
 		          }
+		        },
+		        {
+		          "method": "bdev_wait_for_examine"
 		        }
 		      ]
 		    }

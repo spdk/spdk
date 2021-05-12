@@ -77,7 +77,10 @@ gen_conf() {
 		    {
 		      "subsystem": "bdev",
 		      "config": [
-		        ${config[*]}
+		        ${config[*]},
+			{
+			  "method": "bdev_wait_for_examine"
+			}
 		      ]
 		    }
 		    ${extra_subsystems[*]:+,${extra_subsystems[*]}}

@@ -68,6 +68,16 @@ for ((d = 0, c = 1; d <= ${#ocf_names[@]} + 2; d += 2, c++)); do
 	)
 done
 
+config+=(
+	"$(
+		cat <<- JSON
+			{
+			  "method": "bdev_wait_for_examine"
+			}
+		JSON
+	)"
+)
+
 # First ']}' closes our config and bdev subsystem blocks
 cat <<- CONFIG > "$curdir/modes.conf"
 	{"subsystems":[

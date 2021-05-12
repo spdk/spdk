@@ -85,7 +85,10 @@ function create_spdk_bdev_conf() {
 				{
 					"subsystem": "bdev",
 					"config": [
-						${bdev_json_cfg[*]}
+						${bdev_json_cfg[*]},
+					        {
+					                "method": "bdev_wait_for_examine"
+					        }
 					]
 				}
 			]
