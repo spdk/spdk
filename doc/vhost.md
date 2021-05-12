@@ -280,9 +280,9 @@ host:~# taskset -c 2,3 qemu-system-x86_64 \
   -drive file=guest_os_image.qcow2,if=none,id=disk \
   -device ide-hd,drive=disk,bootindex=0 \
   -chardev socket,id=spdk_vhost_scsi0,path=/var/tmp/vhost.0 \
-  -device vhost-user-scsi-pci,id=scsi0,chardev=spdk_vhost_scsi0,num_queues=4 \
+  -device vhost-user-scsi-pci,id=scsi0,chardev=spdk_vhost_scsi0,num_queues=2 \
   -chardev socket,id=spdk_vhost_blk0,path=/var/tmp/vhost.1 \
-  -device vhost-user-blk-pci,chardev=spdk_vhost_blk0,num-queues=4
+  -device vhost-user-blk-pci,chardev=spdk_vhost_blk0,num-queues=2
 ~~~
 
 Please note the following two commands are run on the guest VM.
@@ -330,6 +330,10 @@ assigned to the VM and add `num_queues` parameter to the QEMU `device`. It shoul
 to set `num_queues=4` to saturate physical device. Adding too many queues might lead to SPDK
 vhost performance degradation if many vhost devices are used because each device will require
 additional `num_queues` to be polled.
+
+Some Linux distributions report a kernel panic when starting the VM if the number of I/O queues
+specified via the `num-queues` parameter is greater than number of vCPUs. If you need to use
+more I/O queues than vCPUs, check that your OS image supports that configuration.
 
 ## Hot-attach/hot-detach {#vhost_hotattach}
 
