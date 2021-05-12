@@ -59,7 +59,11 @@ get_nvme() {
 			blocks+=("$nvme_sub/${nvme##*/}"n*)
 		done
 	done
-	printf '%s\n' "${blocks[@]##*/}"
+	blocks=("${blocks[@]##*/}")
+	if [[ -e $rootdir/scripts/sync_dev_uevents.sh ]]; then
+		"$rootdir/scripts/sync_dev_uevents.sh" block/disk "${blocks[@]}"
+	fi > /dev/null
+	printf '%s\n' "${blocks[@]}"
 }
 
 get_devices() {
