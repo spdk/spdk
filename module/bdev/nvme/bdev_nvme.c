@@ -1418,6 +1418,17 @@ nvme_bdev_create(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, struct nvme_bdev_ns *n
 	return 0;
 }
 
+static bool
+bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
+{
+	const struct spdk_nvme_ns_data *nsdata1, *nsdata2;
+
+	nsdata1 = spdk_nvme_ns_get_data(ns1);
+	nsdata2 = spdk_nvme_ns_get_data(ns2);
+
+	return memcmp(nsdata1->nguid, nsdata2->nguid, sizeof(nsdata1->nguid));
+}
+
 static void
 nvme_ctrlr_populate_standard_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				       struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx)
@@ -2132,17 +2143,6 @@ bdev_nvme_compare_trids(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	}
 
 	return 0;
-}
-
-static bool
-bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
-{
-	const struct spdk_nvme_ns_data *nsdata1, *nsdata2;
-
-	nsdata1 = spdk_nvme_ns_get_data(ns1);
-	nsdata2 = spdk_nvme_ns_get_data(ns2);
-
-	return memcmp(nsdata1->nguid, nsdata2->nguid, sizeof(nsdata1->nguid));
 }
 
 static int
