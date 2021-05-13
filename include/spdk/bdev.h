@@ -803,7 +803,7 @@ int spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
  *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
  */
 int spdk_bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-				  void *buf, void *md, int64_t offset_blocks, uint64_t num_blocks,
+				  void *buf, void *md, uint64_t offset_blocks, uint64_t num_blocks,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**

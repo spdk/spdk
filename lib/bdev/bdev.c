@@ -3658,7 +3658,7 @@ _bdev_io_check_md_buf(const struct iovec *iovs, const void *md_buf)
 
 static int
 bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
-			 void *md_buf, int64_t offset_blocks, uint64_t num_blocks,
+			 void *md_buf, uint64_t offset_blocks, uint64_t num_blocks,
 			 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
@@ -3715,7 +3715,7 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 int
 spdk_bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			      void *buf, void *md_buf, int64_t offset_blocks, uint64_t num_blocks,
+			      void *buf, void *md_buf, uint64_t offset_blocks, uint64_t num_blocks,
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct iovec iov = {

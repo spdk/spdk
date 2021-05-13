@@ -2,6 +2,9 @@
 
 ## v21.07: (Upcoming Release)
 
+### bdev
+Change `spdk_bdev_read_blocks_with_md` arg offset definiton from int64_t to uint64_t.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 21.02.
