@@ -707,13 +707,13 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	int ret;
 
 	if (!success) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
+		ret = -EINVAL;
+		goto exit;
 	}
 
 	if (spdk_unlikely(!bdev_nvme_find_io_path(nbdev, nvme_ch, &nvme_ns, &qpair))) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
+		ret = -ENXIO;
+		goto exit;
 	}
 
 	ret = bdev_nvme_readv(nvme_ns->ns,
@@ -726,6 +726,7 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bdev_io->u.bdev.offset_blocks,
 			      bdev->dif_check_flags);
 
+exit:
 	if (spdk_likely(ret == 0)) {
 		return;
 	} else if (ret == -ENOMEM) {
