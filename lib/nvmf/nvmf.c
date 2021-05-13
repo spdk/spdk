@@ -1364,6 +1364,8 @@ fini:
 	}
 }
 
+static void nvmf_poll_group_remove_subsystem_msg(void *ctx);
+
 static void
 remove_subsystem_qpair_cb(void *ctx)
 {
@@ -1372,7 +1374,12 @@ remove_subsystem_qpair_cb(void *ctx)
 	assert(qpair_ctx->count > 0);
 	qpair_ctx->count--;
 	if (qpair_ctx->count == 0) {
-		_nvmf_poll_group_remove_subsystem_cb(ctx, 0);
+		/* All of the asynchronous callbacks for this context have been
+		 * completed.  Call nvmf_poll_group_remove_subsystem_msg() again
+		 * to check if all associated qpairs for this subsystem have
+		 * been removed from the poll group.
+		 */
+		nvmf_poll_group_remove_subsystem_msg(ctx);
 	}
 }
 
@@ -1383,6 +1390,7 @@ nvmf_poll_group_remove_subsystem_msg(void *ctx)
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_poll_group *group;
 	struct nvmf_qpair_disconnect_many_ctx *qpair_ctx = ctx;
+	bool qpairs_found = false;
 	int rc = 0;
 
 	group = qpair_ctx->group;
@@ -1390,12 +1398,13 @@ nvmf_poll_group_remove_subsystem_msg(void *ctx)
 
 	/* Initialize count to 1.  This acts like a ref count, to ensure that if spdk_nvmf_qpair_disconnect
 	 * immediately invokes the callback (i.e. the qpairs is already in process of being disconnected)
-	 * that we don't prematurely call _nvmf_poll_group_remove_subsystem_cb() before we've
-	 * iterated the full list of qpairs.
+	 * that we don't recursively call nvmf_poll_group_remove_subsystem_msg before we've iterated the
+	 * full list of qpairs.
 	 */
 	qpair_ctx->count = 1;
 	TAILQ_FOREACH_SAFE(qpair, &group->qpairs, link, qpair_tmp) {
 		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
+			qpairs_found = true;
 			qpair_ctx->count++;
 			rc = spdk_nvmf_qpair_disconnect(qpair, remove_subsystem_qpair_cb, ctx);
 			if (rc) {
@@ -1405,8 +1414,19 @@ nvmf_poll_group_remove_subsystem_msg(void *ctx)
 	}
 	qpair_ctx->count--;
 
+	if (!qpairs_found) {
+		_nvmf_poll_group_remove_subsystem_cb(ctx, 0);
+		return;
+	}
+
 	if (qpair_ctx->count == 0 || rc) {
-		_nvmf_poll_group_remove_subsystem_cb(ctx, rc);
+		/* If count == 0, it means there were some qpairs in the poll group but they
+		 * were already in process of being disconnected.  So we send a message to this
+		 * same thread so that this function executes again later.  We won't actually
+		 * invoke the remove_subsystem_cb until all of the qpairs are actually removed
+		 * from the poll group.
+		 */
+		spdk_thread_send_msg(spdk_get_thread(), nvmf_poll_group_remove_subsystem_msg, ctx);
 	}
 }
 
