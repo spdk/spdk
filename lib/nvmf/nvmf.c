@@ -929,6 +929,7 @@ _nvmf_transport_qpair_fini(void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 
+	spdk_nvmf_poll_group_remove(qpair_ctx->qpair);
 	nvmf_transport_qpair_fini(qpair_ctx->qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
 }
 
@@ -998,9 +999,8 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair_ctx->qid = qpair->qid;
 
-	spdk_nvmf_poll_group_remove(qpair);
-
 	if (!ctrlr || !ctrlr->thread) {
+		spdk_nvmf_poll_group_remove(qpair);
 		nvmf_transport_qpair_fini(qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
 		return;
 	}
