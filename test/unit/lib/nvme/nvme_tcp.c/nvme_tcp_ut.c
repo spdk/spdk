@@ -904,7 +904,7 @@ test_nvme_tcp_qpair_send_h2c_term_req(void)
 	tqpair.send_pdu = &send_pdu;
 	tqpair.recv_pdu = &recv_pdu;
 	TAILQ_INIT(&tqpair.send_queue);
-	/* case1: hlen < SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Except: copy_len == hlen */
+	/* case1: hlen < SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == hlen */
 	pdu.hdr.common.hlen = 64;
 	nvme_tcp_qpair_send_h2c_term_req(&tqpair, &pdu, fes, error_offset);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
@@ -913,7 +913,7 @@ test_nvme_tcp_qpair_send_h2c_term_req(void)
 		  pdu.hdr.common.hlen);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ);
 
-	/* case2: hlen > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Except: copy_len == SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE */
+	/* case2: hlen > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE */
 	pdu.hdr.common.hlen = 255;
 	nvme_tcp_qpair_send_h2c_term_req(&tqpair, &pdu, fes, error_offset);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
@@ -1138,6 +1138,157 @@ test_nvme_tcp_qpair_icreq_send(void)
 	CU_ASSERT(ic_req->dgst.bits.ddgst_enable == true);
 }
 
+static void
+test_nvme_tcp_c2h_payload_handle(void)
+{
+	struct nvme_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {};
+	struct nvme_tcp_req tcp_req = {};
+	struct nvme_request	req = {};
+	struct nvme_tcp_pdu recv_pdu = {};
+	uint32_t reaped = 1;
+
+	tcp_req.req = &req;
+	tcp_req.req->qpair = &tqpair.qpair;
+	tcp_req.req->cb_fn = ut_nvme_complete_request;
+	tcp_req.tqpair = &tqpair;
+	tcp_req.cid = 1;
+
+	TAILQ_INIT(&tcp_req.tqpair->outstanding_reqs);
+
+	pdu.req = &tcp_req;
+	pdu.hdr.c2h_data.common.flags = SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
+	pdu.data_len = 1024;
+
+	tqpair.qpair.id = 1;
+	tqpair.recv_pdu = &recv_pdu;
+
+	/* case 1: nvme_tcp_c2h_data_payload_handle: tcp_req->datao != tcp_req->req->payload_size */
+	tcp_req.datao = 1024;
+	tcp_req.req->payload_size = 2048;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	tcp_req.ordering.bits.send_ack = 1;
+	memset(&tcp_req.rsp, 0, sizeof(tcp_req.rsp));
+	tcp_req.ordering.bits.data_recv = 0;
+	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	nvme_tcp_c2h_data_payload_handle(&tqpair, &pdu, &reaped);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(tcp_req.rsp.status.p == 0);
+	CU_ASSERT(tcp_req.rsp.cid == tcp_req.cid);
+	CU_ASSERT(tcp_req.rsp.sqid == tqpair.qpair.id);
+	CU_ASSERT(tcp_req.ordering.bits.data_recv == 1);
+	CU_ASSERT(reaped == 2);
+
+	/* case 2: nvme_tcp_c2h_data_payload_handle: tcp_req->datao == tcp_req->req->payload_size */
+	tcp_req.datao = 1024;
+	tcp_req.req->payload_size = 1024;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	tcp_req.ordering.bits.send_ack = 1;
+	memset(&tcp_req.rsp, 0, sizeof(tcp_req.rsp));
+	tcp_req.ordering.bits.data_recv = 0;
+	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	nvme_tcp_c2h_data_payload_handle(&tqpair, &pdu, &reaped);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(tcp_req.rsp.status.p == 1);
+	CU_ASSERT(tcp_req.rsp.cid == tcp_req.cid);
+	CU_ASSERT(tcp_req.rsp.sqid == tqpair.qpair.id);
+	CU_ASSERT(tcp_req.ordering.bits.data_recv == 1);
+	CU_ASSERT(reaped == 3);
+
+	/* case 3: nvme_tcp_c2h_data_payload_handle: flag does not have SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS */
+	pdu.hdr.c2h_data.common.flags = SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
+	tcp_req.datao = 1024;
+	tcp_req.req->payload_size = 1024;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	tcp_req.ordering.bits.send_ack = 1;
+	memset(&tcp_req.rsp, 0, sizeof(tcp_req.rsp));
+	tcp_req.ordering.bits.data_recv = 0;
+	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	nvme_tcp_c2h_data_payload_handle(&tqpair, &pdu, &reaped);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(reaped == 3);
+
+	/* case 4: nvme_tcp_c2h_term_req_payload_handle: recv_state is NVME_TCP_PDU_RECV_STATE_ERROR */
+	pdu.hdr.term_req.fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
+	nvme_tcp_c2h_term_req_payload_handle(&tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+}
+
+static void
+test_nvme_tcp_icresp_handle(void)
+{
+	struct nvme_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {};
+	struct nvme_tcp_pdu send_pdu = {};
+	struct nvme_tcp_pdu recv_pdu = {};
+
+	tqpair.send_pdu = &send_pdu;
+	tqpair.recv_pdu = &recv_pdu;
+	TAILQ_INIT(&tqpair.send_queue);
+
+	/* case 1: Expected ICResp PFV and got are different. */
+	pdu.hdr.ic_resp.pfv = 1;
+
+	nvme_tcp_icresp_handle(&tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+
+	/* case 2: Expected ICResp maxh2cdata and got are different. */
+	pdu.hdr.ic_resp.pfv = 0;
+	pdu.hdr.ic_resp.maxh2cdata = 2048;
+
+	nvme_tcp_icresp_handle(&tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+
+	/* case 3: Expected ICResp cpda and got are different. */
+	pdu.hdr.ic_resp.maxh2cdata = NVME_TCP_PDU_H2C_MIN_DATA_SIZE;
+	pdu.hdr.ic_resp.cpda = 64;
+
+	nvme_tcp_icresp_handle(&tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+
+	/* case 4: waiting icreq ack. */
+	pdu.hdr.ic_resp.maxh2cdata = NVME_TCP_PDU_H2C_MIN_DATA_SIZE;
+	pdu.hdr.ic_resp.cpda = 30;
+	pdu.hdr.ic_resp.dgst.bits.hdgst_enable = true;
+	pdu.hdr.ic_resp.dgst.bits.ddgst_enable = true;
+	tqpair.flags.icreq_send_ack = 0;
+
+	nvme_tcp_icresp_handle(&tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(tqpair.state == NVME_TCP_QPAIR_STATE_INITIALIZING);
+	CU_ASSERT(tqpair.maxh2cdata == pdu.hdr.ic_resp.maxh2cdata);
+	CU_ASSERT(tqpair.cpda == pdu.hdr.ic_resp.cpda);
+	CU_ASSERT(tqpair.flags.host_hdgst_enable == pdu.hdr.ic_resp.dgst.bits.hdgst_enable);
+	CU_ASSERT(tqpair.flags.host_ddgst_enable == pdu.hdr.ic_resp.dgst.bits.ddgst_enable);
+
+	/* case 5: Expect: PASS. */
+	tqpair.flags.icreq_send_ack = 1;
+
+	nvme_tcp_icresp_handle(&tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(tqpair.state == NVME_TCP_QPAIR_STATE_RUNNING);
+	CU_ASSERT(tqpair.maxh2cdata == pdu.hdr.ic_resp.maxh2cdata);
+	CU_ASSERT(tqpair.cpda == pdu.hdr.ic_resp.cpda);
+	CU_ASSERT(tqpair.flags.host_hdgst_enable == pdu.hdr.ic_resp.dgst.bits.hdgst_enable);
+	CU_ASSERT(tqpair.flags.host_ddgst_enable == pdu.hdr.ic_resp.dgst.bits.ddgst_enable);
+}
+
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1164,6 +1315,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_pdu_ch_handle);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_connect_sock);
 	CU_ADD_TEST(suite, test_nvme_tcp_qpair_icreq_send);
+	CU_ADD_TEST(suite, test_nvme_tcp_c2h_payload_handle);
+	CU_ADD_TEST(suite, test_nvme_tcp_icresp_handle);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
