@@ -356,6 +356,9 @@ struct spdk_bdev {
 	/* Maximum unmap block segments */
 	uint32_t max_unmap_segments;
 
+	/* Maximum write zeroes in unit of logical block */
+	uint32_t max_write_zeroes;
+
 	/**
 	 * UUID for this bdev.
 	 *
