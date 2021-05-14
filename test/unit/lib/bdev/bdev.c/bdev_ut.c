@@ -4553,7 +4553,7 @@ bdev_unmap(void)
 	CU_ASSERT(g_io_done == false);
 
 	while (num_children > 0) {
-		num_outstanding = spdk_min(num_children, SPDK_BDEV_MAX_CHILDREN_UNMAP_REQS);
+		num_outstanding = spdk_min(num_children, SPDK_BDEV_MAX_CHILDREN_UNMAP_WRITE_ZEROES_REQS);
 		CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == num_outstanding);
 		stub_complete_io(num_outstanding);
 		num_children -= num_outstanding;

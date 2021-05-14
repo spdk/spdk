@@ -84,10 +84,10 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 
 #define SPDK_BDEV_POOL_ALIGNMENT 512
 
-/* The maximum number of children requests for a UNMAP command when splitting
- * into children requests at a time.
+/* The maximum number of children requests for a UNMAP or WRITE ZEROES command
+ * when splitting into children requests at a time.
  */
-#define SPDK_BDEV_MAX_CHILDREN_UNMAP_REQS (8)
+#define SPDK_BDEV_MAX_CHILDREN_UNMAP_WRITE_ZEROES_REQS (8)
 
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
@@ -2279,7 +2279,7 @@ bdev_unmap_split(struct spdk_bdev_io *bdev_io)
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
 	max_unmap_blocks = bdev_io->bdev->max_unmap * bdev_io->bdev->max_unmap_segments;
 
-	while (remaining && (num_children_reqs < SPDK_BDEV_MAX_CHILDREN_UNMAP_REQS)) {
+	while (remaining && (num_children_reqs < SPDK_BDEV_MAX_CHILDREN_UNMAP_WRITE_ZEROES_REQS)) {
 		unmap_blocks = spdk_min(remaining, max_unmap_blocks);
 
 		rc = bdev_io_split_submit(bdev_io, NULL, 0, NULL, unmap_blocks,
