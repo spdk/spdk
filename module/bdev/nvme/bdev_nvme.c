@@ -761,6 +761,12 @@ bdev_nvme_unmap(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		uint64_t offset_blocks,
 		uint64_t num_blocks);
 
+static int
+bdev_nvme_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+		       struct nvme_bdev_io *bio,
+		       uint64_t offset_blocks,
+		       uint64_t num_blocks);
+
 static void
 bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
@@ -876,6 +882,12 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				     bdev_io->u.bdev.offset_blocks,
 				     bdev_io->u.bdev.num_blocks);
 		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		rc =  bdev_nvme_write_zeroes(ns, qpair,
+					     nbdev_io,
+					     bdev_io->u.bdev.offset_blocks,
+					     bdev_io->u.bdev.num_blocks);
+		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		rc = bdev_nvme_reset(io_path, bdev_io);
 		break;
@@ -989,13 +1001,8 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return cdata->oncs.dsm;
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		/*
-		 * The NVMe controller write_zeroes function is currently not used by our driver.
-		 * NVMe write zeroes is limited to 16-bit block count, and the bdev layer currently
-		 * has no mechanism for reporting a max write zeroes block count, nor ability to
-		 * split a write zeroes request.
-		 */
-		return false;
+		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+		return cdata->oncs.write_zeroes;
 
 	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
 		if (spdk_nvme_ctrlr_get_flags(ctrlr) &
@@ -1389,6 +1396,9 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	if (cdata->vwc.present) {
 		/* Enable if the Volatile Write Cache exists */
 		disk->write_cache = 1;
+	}
+	if (cdata->oncs.write_zeroes) {
+		disk->max_write_zeroes = UINT16_MAX + 1;
 	}
 	disk->blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
 	disk->blockcnt = spdk_nvme_ns_get_num_sectors(ns);
@@ -3228,6 +3238,23 @@ bdev_nvme_unmap(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			bdev_nvme_queued_done, bio);
 
 	return rc;
+}
+
+static int
+bdev_nvme_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+		       struct nvme_bdev_io *bio,
+		       uint64_t offset_blocks,
+		       uint64_t num_blocks)
+{
+	if (num_blocks > UINT16_MAX + 1) {
+		SPDK_ERRLOG("NVMe write zeroes is limited to 16-bit block count\n");
+		return -EINVAL;
+	}
+
+	return spdk_nvme_ns_cmd_write_zeroes(ns, qpair,
+					     offset_blocks, num_blocks,
+					     bdev_nvme_queued_done, bio,
+					     0);
 }
 
 static int
