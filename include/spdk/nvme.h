@@ -1434,6 +1434,14 @@ struct spdk_nvme_io_qpair_opts {
 	 * poll group and then connect it later.
 	 */
 	bool create_only;
+
+	/**
+	 * This flag if set to true enables the creation of submission and completion queue
+	 * asynchronously. This mode is currently supported at PCIe layer and tracks the
+	 * qpair creation with state machine and returns to the user.Default mode is set to
+	 * false to create io qpair synchronosuly.
+	 */
+	bool async_mode;
 };
 
 /**

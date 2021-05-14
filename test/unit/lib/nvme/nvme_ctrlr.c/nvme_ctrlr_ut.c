@@ -240,11 +240,12 @@ nvme_driver_init(void)
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,
 		    enum spdk_nvme_qprio qprio,
-		    uint32_t num_requests)
+		    uint32_t num_requests, bool async)
 {
 	qpair->id = id;
 	qpair->qprio = qprio;
 	qpair->ctrlr = ctrlr;
+	qpair->async = async;
 
 	return 0;
 }

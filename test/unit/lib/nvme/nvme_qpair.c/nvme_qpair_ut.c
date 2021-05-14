@@ -87,7 +87,7 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_procs);
 	MOCK_CLEAR(spdk_zmalloc);
-	nvme_qpair_init(qpair, 1, ctrlr, 0, 32);
+	nvme_qpair_init(qpair, 1, ctrlr, 0, 32, false);
 }
 
 static void
@@ -191,8 +191,8 @@ static void test_nvme_qpair_process_completions(void)
 
 	TAILQ_INIT(&ctrlr.active_io_qpairs);
 	TAILQ_INIT(&ctrlr.active_procs);
-	nvme_qpair_init(&qpair, 1, &ctrlr, 0, 32);
-	nvme_qpair_init(&admin_qp, 0, &ctrlr, 0, 32);
+	nvme_qpair_init(&qpair, 1, &ctrlr, 0, 32, false);
+	nvme_qpair_init(&admin_qp, 0, &ctrlr, 0, 32, false);
 
 	ctrlr.adminq = &admin_qp;
 
@@ -665,7 +665,7 @@ test_nvme_qpair_init_deinit(void)
 
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
-	rc = nvme_qpair_init(&qpair, 1, &ctrlr, SPDK_NVME_QPRIO_HIGH, 3);
+	rc = nvme_qpair_init(&qpair, 1, &ctrlr, SPDK_NVME_QPRIO_HIGH, 3, false);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(qpair.id == 1);
 	CU_ASSERT(qpair.qprio == SPDK_NVME_QPRIO_HIGH);

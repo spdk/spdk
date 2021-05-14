@@ -409,6 +409,7 @@ bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	opts.delay_cmd_submit = g_opts.delay_cmd_submit;
 	opts.create_only = true;
+	opts.async_mode = true;
 	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
 	g_opts.io_queue_requests = opts.io_queue_requests;
 

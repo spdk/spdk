@@ -408,6 +408,10 @@ struct spdk_nvme_qpair {
 
 	uint8_t					state : 3;
 
+	uint8_t					async: 1;
+
+	uint8_t					is_new_qpair: 1;
+
 	/*
 	 * Members for handling IO qpair deletion inside of a completion context.
 	 * These are specifically defined as single bits, so that they do not
@@ -1065,7 +1069,7 @@ void nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,
 		    enum spdk_nvme_qprio qprio,
-		    uint32_t num_requests);
+		    uint32_t num_requests, bool async);
 void	nvme_qpair_deinit(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
@@ -1073,7 +1077,6 @@ int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 void	nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 uint32_t nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, void *cmd_cb_arg);
 void	nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests);
-
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns);
@@ -1219,6 +1222,9 @@ static inline void
 nvme_qpair_set_state(struct spdk_nvme_qpair *qpair, enum nvme_qpair_state state)
 {
 	qpair->state = state;
+	if (state == NVME_QPAIR_ENABLED) {
+		qpair->is_new_qpair = false;
+	}
 }
 
 static inline enum nvme_qpair_state

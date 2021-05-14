@@ -76,11 +76,12 @@ DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,
 		    enum spdk_nvme_qprio qprio,
-		    uint32_t num_requests)
+		    uint32_t num_requests, bool async)
 {
 	qpair->id = id;
 	qpair->qprio = qprio;
 	qpair->ctrlr = ctrlr;
+	qpair->async = async;
 
 	return 0;
 }
@@ -318,7 +319,7 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	struct spdk_nvme_transport_poll_group poll_group = {};
 	struct spdk_nvme_cpl cpl = {};
 	struct spdk_nvme_qpair adminq = {};
-	struct nvme_request req[2] = {};
+	struct nvme_request req[3] = {};
 	int rc;
 
 	pqpair.cpl = &cpl;
@@ -367,6 +368,8 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 
 	/* Complete the second request */
 	req[1].cb_fn(req[1].cb_arg, &cpl);
+	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_READY);
+	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_CONNECTED);
 
 	/* doorbell stride and qid are 1 */
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == pctrlr.ctrlr.shadow_doorbell + 2);
@@ -417,11 +420,89 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 
 	/* Complete the second request */
 	req[1].cb_fn(req[1].cb_arg, &cpl);
+	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_READY);
+	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_CONNECTED);
 
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == NULL);
 	CU_ASSERT(pqpair.shadow_doorbell.sq_eventidx == NULL);
 	CU_ASSERT(pqpair.flags.has_shadow_doorbell == 0);
 	CU_ASSERT(STAILQ_EMPTY(&pctrlr.ctrlr.adminq->free_req));
+
+	/* Completion error for CQ */
+	memset(req, 0, sizeof(struct nvme_request) * 2);
+	memset(&pqpair, 0, sizeof(pqpair));
+	pqpair.cpl = &cpl;
+	pqpair.qpair.ctrlr = &pctrlr.ctrlr;
+	pqpair.qpair.id = 1;
+	pqpair.num_entries = 1;
+	pqpair.cpl_bus_addr = 0xDEADBEEF;
+	pqpair.cmd_bus_addr = 0xDDADBEEF;
+	pqpair.qpair.qprio = SPDK_NVME_QPRIO_HIGH;
+	pqpair.stat = NULL;
+	pqpair.qpair.poll_group = &poll_group;
+	/* Modify cpl such that CQ fails */
+	pqpair.cpl->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	pqpair.cpl->status.sct = SPDK_NVME_SCT_GENERIC;
+	for (int i = 0; i < 2; i++) {
+		STAILQ_INSERT_TAIL(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
+	}
+
+	rc = nvme_pcie_ctrlr_connect_qpair(&pctrlr.ctrlr, &pqpair.qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req[0].cmd.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
+
+	/* Request to complete callback in async operation */
+	req[0].cb_fn(req[0].cb_arg, &cpl);
+	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_FAILED);
+	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_DISCONNECTED);
+
+	/* Remove unused request */
+	STAILQ_REMOVE_HEAD(&pctrlr.ctrlr.adminq->free_req, stailq);
+	CU_ASSERT(STAILQ_EMPTY(&pctrlr.ctrlr.adminq->free_req));
+
+	/* Completion error for SQ */
+	memset(req, 0, sizeof(struct nvme_request) * 3);
+	memset(&pqpair, 0, sizeof(pqpair));
+	pqpair.cpl = &cpl;
+	pqpair.qpair.ctrlr = &pctrlr.ctrlr;
+	pqpair.qpair.id = 1;
+	pqpair.num_entries = 1;
+	pqpair.cpl_bus_addr = 0xDEADBEEF;
+	pqpair.cmd_bus_addr = 0xDDADBEEF;
+	pqpair.qpair.qprio = SPDK_NVME_QPRIO_HIGH;
+	pqpair.stat = NULL;
+	pqpair.cpl->status.sc = SPDK_NVME_SC_SUCCESS;
+	pqpair.cpl->status.sct = SPDK_NVME_SCT_GENERIC;
+	pqpair.qpair.poll_group = &poll_group;
+	for (int i = 0; i < 3; i++) {
+		STAILQ_INSERT_TAIL(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
+	}
+
+	rc = nvme_pcie_ctrlr_connect_qpair(&pctrlr.ctrlr, &pqpair.qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req[0].cmd.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
+	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_WAIT_FOR_CQ);
+
+	/* Request to complete cq callback in async operation */
+	req[0].cb_fn(req[0].cb_arg, &cpl);
+	CU_ASSERT(req[1].cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
+	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_WAIT_FOR_SQ);
+	/* Modify cpl such that SQ fails */
+	pqpair.cpl->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	pqpair.cpl->status.sct = SPDK_NVME_SCT_GENERIC;
+
+	/* Request to complete sq callback in async operation */
+	req[1].cb_fn(req[1].cb_arg, &cpl);
+	CU_ASSERT(req[2].cmd.opc == SPDK_NVME_OPC_DELETE_IO_CQ);
+	/* Modify cpl back to success */
+	pqpair.cpl->status.sc = SPDK_NVME_SC_SUCCESS;
+	pqpair.cpl->status.sct = SPDK_NVME_SCT_GENERIC;
+	req[2].cb_fn(req[2].cb_arg, &cpl);
+	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_FAILED);
+	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_DISCONNECTED);
+	/* No need to remove unused requests here */
+	CU_ASSERT(STAILQ_EMPTY(&pctrlr.ctrlr.adminq->free_req));
+
 
 	/* No available request used */
 	memset(req, 0, sizeof(struct nvme_request) * 2);

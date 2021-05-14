@@ -620,9 +620,11 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 		 * but we have historically not disconnected pcie qpairs during reset so we have to abort requests
 		 * here.
 		 */
-		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE &&
+		    !qpair->is_new_qpair) {
 			nvme_qpair_abort_reqs(qpair, 0);
 		}
+
 		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
 		while (!STAILQ_EMPTY(&qpair->queued_req)) {
 			req = STAILQ_FIRST(&qpair->queued_req);
@@ -753,7 +755,7 @@ int
 nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		struct spdk_nvme_ctrlr *ctrlr,
 		enum spdk_nvme_qprio qprio,
-		uint32_t num_requests)
+		uint32_t num_requests, bool async)
 {
 	size_t req_size_padded;
 	uint32_t i;
@@ -767,6 +769,8 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	qpair->ctrlr = ctrlr;
 	qpair->trtype = ctrlr->trid.trtype;
+	qpair->is_new_qpair = true;
+	qpair->async = async;
 
 	STAILQ_INIT(&qpair->free_req);
 	STAILQ_INIT(&qpair->queued_req);

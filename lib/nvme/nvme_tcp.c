@@ -1964,7 +1964,7 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	tqpair->num_entries = qsize;
 	qpair = &tqpair->qpair;
-	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
+	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests, false);
 	if (rc != 0) {
 		free(tqpair);
 		return NULL;
