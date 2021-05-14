@@ -138,6 +138,13 @@ struct nvme_pcie_poll_group {
 	struct spdk_nvme_pcie_stat stats;
 };
 
+enum nvme_pcie_qpair_state {
+	NVME_PCIE_QPAIR_WAIT_FOR_CQ = 1,
+	NVME_PCIE_QPAIR_WAIT_FOR_SQ,
+	NVME_PCIE_QPAIR_READY,
+	NVME_PCIE_QPAIR_FAILED,
+};
+
 /* PCIe transport extensions for spdk_nvme_qpair */
 struct nvme_pcie_qpair {
 	/* Submission queue tail doorbell */
@@ -161,6 +168,8 @@ struct nvme_pcie_qpair {
 	struct spdk_nvme_pcie_stat *stat;
 
 	uint16_t num_entries;
+
+	uint8_t pcie_state;
 
 	uint8_t retry_count;
 

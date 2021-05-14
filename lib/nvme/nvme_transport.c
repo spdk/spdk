@@ -370,7 +370,12 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	}
 
 	/* Busy wait until the qpair exits the connecting state */
-	while (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) { }
+	while (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
+		rc = spdk_nvme_qpair_process_completions(qpair, 0);
+		if (rc < 0) {
+			goto err;
+		}
+	}
 
 	if (qpair->poll_group) {
 		rc = nvme_poll_group_connect_qpair(qpair);
@@ -379,7 +384,7 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 		}
 	}
 
-	return rc;
+	return 0;
 
 err:
 	/* If the qpair was unable to reconnect, restore the original failure reason. */

@@ -354,6 +354,9 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[0].cmd.cdw10_bits.create_io_q.qsize == 0);
 	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_cq.pc == 1);
 	CU_ASSERT(req[0].cmd.dptr.prp.prp1 == 0xDEADBEEF);
+
+	/* Complete the first request, which triggers the second. */
+	req[0].cb_fn(req[0].cb_arg, &cpl);
 	CU_ASSERT(req[1].cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qid == 1);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qsize == 0);
@@ -361,6 +364,9 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
 	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
+
+	/* Complete the second request */
+	req[1].cb_fn(req[1].cb_arg, &cpl);
 
 	/* doorbell stride and qid are 1 */
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == pctrlr.ctrlr.shadow_doorbell + 2);
@@ -398,6 +404,9 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[0].cmd.cdw10_bits.create_io_q.qsize == 0);
 	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_cq.pc == 1);
 	CU_ASSERT(req[0].cmd.dptr.prp.prp1 == 0xDEADBEEF);
+
+	/* Complete the first request, which triggers the second. */
+	req[0].cb_fn(req[0].cb_arg, &cpl);
 	CU_ASSERT(req[1].cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qid == 1);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qsize == 0);
@@ -406,34 +415,13 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
 	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
 
+	/* Complete the second request */
+	req[1].cb_fn(req[1].cb_arg, &cpl);
+
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == NULL);
 	CU_ASSERT(pqpair.shadow_doorbell.sq_eventidx == NULL);
 	CU_ASSERT(pqpair.flags.has_shadow_doorbell == 0);
 	CU_ASSERT(STAILQ_EMPTY(&pctrlr.ctrlr.adminq->free_req));
-
-	/* Completion error */
-	memset(req, 0, sizeof(struct nvme_request) * 2);
-	memset(&pqpair, 0, sizeof(pqpair));
-	pqpair.cpl = &cpl;
-	pqpair.qpair.ctrlr = &pctrlr.ctrlr;
-	pqpair.qpair.id = 1;
-	pqpair.num_entries = 1;
-	pqpair.cpl_bus_addr = 0xDEADBEEF;
-	pqpair.cmd_bus_addr = 0xDDADBEEF;
-	pqpair.qpair.qprio = SPDK_NVME_QPRIO_HIGH;
-	pqpair.stat = NULL;
-	pqpair.qpair.poll_group = &poll_group;
-	for (int i = 0; i < 2; i++) {
-		STAILQ_INSERT_TAIL(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
-	}
-	MOCK_SET(nvme_wait_for_completion, -EIO);
-
-	rc = nvme_pcie_ctrlr_connect_qpair(&pctrlr.ctrlr, &pqpair.qpair);
-	CU_ASSERT(rc == -1);
-	/* Remove unused request */
-	STAILQ_REMOVE_HEAD(&pctrlr.ctrlr.adminq->free_req, stailq);
-	CU_ASSERT(STAILQ_EMPTY(&pctrlr.ctrlr.adminq->free_req));
-	MOCK_CLEAR(nvme_wait_for_completion);
 
 	/* No available request used */
 	memset(req, 0, sizeof(struct nvme_request) * 2);

@@ -260,6 +260,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t nu
 
 	pqpair->num_entries = num_entries;
 	pqpair->flags.delay_cmd_submit = 0;
+	pqpair->pcie_state = NVME_PCIE_QPAIR_READY;
 
 	ctrlr->adminq = &pqpair->qpair;
 
@@ -437,89 +438,42 @@ nvme_pcie_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
-static int
-_nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-				 uint16_t qid)
+static void
+nvme_completion_sq_error_delete_cq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
+	struct spdk_nvme_qpair *qpair = arg;
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("delete_io_cq failed!\n");
+	}
+
+	pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+}
+
+static void
+nvme_completion_create_sq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_qpair *qpair = arg;
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(ctrlr);
-	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_completion_poll_status	*status;
-	int					rc;
+	int rc;
 
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		SPDK_ERRLOG("Failed to allocate status tracker\n");
-		return -ENOMEM;
-	}
-
-	/* Statistics may already be allocated in the case of controller reset */
-	if (!pqpair->stat) {
-		if (qpair->poll_group) {
-			struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(qpair->poll_group,
-							     struct nvme_pcie_poll_group, group);
-
-			pqpair->stat = &group->stats;
-			pqpair->shared_stats = true;
-		} else {
-			pqpair->stat = calloc(1, sizeof(*pqpair->stat));
-			if (!pqpair->stat) {
-				SPDK_ERRLOG("Failed to allocate qpair statistics\n");
-				free(status);
-				return -ENOMEM;
-			}
-		}
-	}
-
-	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		free(status);
-		return rc;
-	}
-
-	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
-		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
-		if (!status->timed_out) {
-			free(status);
-		}
-		return -1;
-	}
-
-	memset(status, 0, sizeof(*status));
-	rc = nvme_pcie_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		free(status);
-		return rc;
-	}
-
-	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
-		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
-		if (status->timed_out) {
-			/* Request is still queued, the memory will be freed in a completion callback.
-			   allocate a new request */
-			status = calloc(1, sizeof(*status));
-			if (!status) {
-				SPDK_ERRLOG("Failed to allocate status tracker\n");
-				return -ENOMEM;
-			}
-		}
-
-		memset(status, 0, sizeof(*status));
-		/* Attempt to delete the completion queue */
-		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, status);
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("nvme_create_io_sq failed, deleting cq!\n");
+		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_sq_error_delete_cq_cb,
+						      qpair);
 		if (rc != 0) {
-			/* The originall or newly allocated status structure can be freed since
-			 * the corresponding request has been completed of failed to submit */
-			free(status);
-			return -1;
+			SPDK_ERRLOG("Failed to send request to delete_io_cq with rc=%d\n", rc);
+			pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
+			nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 		}
-		nvme_wait_for_completion(ctrlr->adminq, status);
-		if (!status->timed_out) {
-			/* status can be freed regardless of nvme_wait_for_completion return value */
-			free(status);
-		}
-		return -1;
+		return;
 	}
-
+	pqpair->pcie_state = NVME_PCIE_QPAIR_READY;
+	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 	if (ctrlr->shadow_doorbell) {
 		pqpair->shadow_doorbell.sq_tdbl = ctrlr->shadow_doorbell + (2 * qpair->id + 0) *
 						  pctrlr->doorbell_stride_u32;
@@ -534,8 +488,73 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		pqpair->flags.has_shadow_doorbell = 0;
 	}
 	nvme_pcie_qpair_reset(qpair);
-	free(status);
 
+}
+
+static void
+nvme_completion_create_cq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_qpair *qpair = arg;
+	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
+		nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
+		return;
+	}
+
+	rc = nvme_pcie_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_create_sq_cb, qpair);
+
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to send request to create_io_sq, deleting cq!\n");
+		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_sq_error_delete_cq_cb,
+						      qpair);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to send request to delete_io_cq with rc=%d\n", rc);
+			pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
+			nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+		}
+		return;
+	}
+	pqpair->pcie_state = NVME_PCIE_QPAIR_WAIT_FOR_SQ;
+}
+
+static int
+_nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+				 uint16_t qid)
+{
+	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	int	rc;
+
+	/* Statistics may already be allocated in the case of controller reset */
+	if (!pqpair->stat) {
+		if (qpair->poll_group) {
+			struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(qpair->poll_group,
+							     struct nvme_pcie_poll_group, group);
+
+			pqpair->stat = &group->stats;
+			pqpair->shared_stats = true;
+		} else {
+			pqpair->stat = calloc(1, sizeof(*pqpair->stat));
+			if (!pqpair->stat) {
+				SPDK_ERRLOG("Failed to allocate qpair statistics\n");
+				nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+				return -ENOMEM;
+			}
+		}
+	}
+
+
+	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_create_cq_cb, qpair);
+
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to send request to create_io_cq\n");
+		nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+		return rc;
+	}
+	pqpair->pcie_state = NVME_PCIE_QPAIR_WAIT_FOR_CQ;
 	return 0;
 }
 
@@ -546,9 +565,7 @@ nvme_pcie_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 
 	if (!nvme_qpair_is_admin_queue(qpair)) {
 		rc = _nvme_pcie_ctrlr_create_io_qpair(ctrlr, qpair, qpair->id);
-	}
-
-	if (rc == 0) {
+	} else {
 		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 	}
 
@@ -804,6 +821,19 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	uint16_t		 next_cq_head;
 	uint8_t			 next_phase;
 	bool			 next_is_valid = false;
+	int			 rc;
+
+	if (spdk_unlikely(pqpair->pcie_state == NVME_PCIE_QPAIR_FAILED)) {
+		return -ENXIO;
+	}
+
+	if (spdk_unlikely(pqpair->pcie_state != NVME_PCIE_QPAIR_READY)) {
+		rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+		if (rc < 0) {
+			return rc;
+		}
+		return 0;
+	}
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
