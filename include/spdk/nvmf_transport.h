@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2019, 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -429,10 +429,6 @@ int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				  struct spdk_nvmf_transport_poll_group *group,
 				  struct spdk_nvmf_transport *transport,
 				  uint32_t length);
-int spdk_nvmf_request_get_buffers_multi(struct spdk_nvmf_request *req,
-					struct spdk_nvmf_transport_poll_group *group,
-					struct spdk_nvmf_transport *transport,
-					uint32_t *lengths, uint32_t num_lengths);
 
 bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
 
