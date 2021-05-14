@@ -75,6 +75,7 @@ The cores tab provides insights into how the application is using the CPU cores 
 * Thread count - number of threads currently running on core.
 * Poller count - total number of pollers running on core.
 * Idle/Busy - how many microseconds core was idle (including time when core ran pollers but did not find any work) or doing actual work.
+* Intr - whether this core is in interrupt mode or not.
 
 \n
 Pressing ENTER key makes a pop-up window appear, showing above information, along with a list of threads running on selected core. Cores details

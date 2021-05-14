@@ -88,10 +88,11 @@
 #define MAX_TIME_STR_LEN 12
 #define MAX_POLLER_RUN_COUNT 20
 #define MAX_PERIOD_STR_LEN 12
+#define MAX_INTR_LEN 6
 #define WINDOW_HEADER 12
 #define FROM_HEX 16
 #define THREAD_WIN_WIDTH 69
-#define THREAD_WIN_HEIGHT 9
+#define THREAD_WIN_HEIGHT 10
 #define THREAD_WIN_FIRST_COL 2
 #define CORE_WIN_FIRST_COL 16
 #define CORE_WIN_WIDTH 48
@@ -174,6 +175,7 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = "Idle [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = "Busy [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = "Frequency [MHz]", .max_data_string = MAX_CORE_FREQ_STR_LEN},
+		{.name = "Intr", .max_data_string = MAX_INTR_LEN},
 		{.name = (char *)NULL}
 	}
 };
@@ -223,6 +225,7 @@ struct rpc_core_info {
 	uint32_t core_freq;
 	uint64_t last_idle;
 	uint64_t last_busy;
+	bool in_interrupt;
 	struct rpc_core_threads threads;
 };
 
@@ -473,6 +476,7 @@ static const struct spdk_json_object_decoder rpc_core_info_decoders[] = {
 	{"busy", offsetof(struct rpc_core_info, busy), spdk_json_decode_uint64},
 	{"idle", offsetof(struct rpc_core_info, idle), spdk_json_decode_uint64},
 	{"core_freq", offsetof(struct rpc_core_info, core_freq), spdk_json_decode_uint32, true},
+	{"in_interrupt", offsetof(struct rpc_core_info, in_interrupt), spdk_json_decode_bool},
 	{"lw_threads", offsetof(struct rpc_core_info, threads), rpc_decode_cores_lw_threads},
 };
 
@@ -1355,7 +1359,8 @@ refresh_cores_tab(uint8_t current_page)
 	uint8_t max_pages, item_index;
 	char core[MAX_CORE_STR_LEN], threads_number[MAX_THREAD_COUNT_STR_LEN],
 	     pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
-	     busy_time[MAX_TIME_STR_LEN], core_freq[MAX_CORE_FREQ_STR_LEN];
+	     busy_time[MAX_TIME_STR_LEN], core_freq[MAX_CORE_FREQ_STR_LEN],
+	     in_interrupt[MAX_INTR_LEN];
 
 	count = g_last_cores_count;
 
@@ -1423,6 +1428,13 @@ refresh_cores_tab(uint8_t current_page)
 			}
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
 				      col_desc[5].max_data_string, ALIGN_RIGHT, core_freq);
+			offset += col_desc[5].max_data_string + 2;
+		}
+
+		if (!col_desc[6].disabled) {
+			snprintf(in_interrupt, MAX_INTR_LEN, "%s", g_cores_info[i].in_interrupt ? "Yes" : "No");
+			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index,
+				      offset + (col_desc[6].name_len / 2), col_desc[6].max_data_string, ALIGN_LEFT, in_interrupt);
 		}
 
 		if (item_index == g_selected_row) {
@@ -2085,13 +2097,17 @@ show_core(uint8_t current_page)
 	mvwaddch(core_win, -1, 0, ACS_LTEE);
 	mvwhline(core_win, 2, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 	mvwaddch(core_win, 2, CORE_WIN_WIDTH, ACS_RTEE);
-	print_in_middle(core_win, 3, 0, CORE_WIN_WIDTH - (CORE_WIN_WIDTH / 3), "Frequency:", COLOR_PAIR(5));
+	print_left(core_win, 3, 1, CORE_WIN_WIDTH - (CORE_WIN_WIDTH / 3),
+		   "Frequency:             Intr:", COLOR_PAIR(5));
 	if (core_info->core_freq) {
-		mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 15, "%" PRIu32,
+		mvwprintw(core_win, 3, CORE_WIN_FIRST_COL - 3, "%" PRIu32,
 			  core_info->core_freq);
 	} else {
-		mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 15, "%s", "N/A");
+		mvwprintw(core_win, 3, CORE_WIN_FIRST_COL - 3, "%s", "N/A");
 	}
+
+	mvwprintw(core_win, 3, CORE_WIN_FIRST_COL + 15, "%s",
+		  core_info->in_interrupt ? "Yes" : "No");
 
 	mvwaddch(core_win, -1, 0, ACS_LTEE);
 	mvwhline(core_win, 4, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
