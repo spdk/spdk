@@ -4568,6 +4568,107 @@ bdev_unmap(void)
 }
 
 static void
+bdev_write_zeroes_split_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct ut_expected_io *expected_io;
+	struct spdk_bdev_opts bdev_opts = {};
+	uint32_t i, num_outstanding;
+	uint64_t offset, num_blocks, max_write_zeroes_blocks, num_children;
+	int rc;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 512;
+	bdev_opts.bdev_io_cache_size = 64;
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+	bdev_ch = spdk_io_channel_get_ctx(ioch);
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->io_submitted));
+
+	fn_table.submit_request = stub_submit_request;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	/* Case 1: First test the request won't be split */
+	num_blocks = 32;
+
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, 0, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_write_zeroes_blocks(desc, ioch, 0, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Case 2: Test the split with 2 children requests */
+	max_write_zeroes_blocks = 8;
+	bdev->max_write_zeroes = max_write_zeroes_blocks;
+	num_blocks = max_write_zeroes_blocks * 2;
+	offset = 0;
+
+	g_io_done = false;
+	for (i = 0; i < 2; i++) {
+		expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, offset, max_write_zeroes_blocks,
+						   0);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		offset += max_write_zeroes_blocks;
+	}
+
+	rc = spdk_bdev_write_zeroes_blocks(desc, ioch, 0, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Case 3: Test the split with 15 children requests, will finish 8 requests first */
+	num_children = 15;
+	num_blocks = max_write_zeroes_blocks * num_children;
+	g_io_done = false;
+	offset = 0;
+	for (i = 0; i < num_children; i++) {
+		expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, offset, max_write_zeroes_blocks,
+						   0);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		offset += max_write_zeroes_blocks;
+	}
+
+	rc = spdk_bdev_write_zeroes_blocks(desc, ioch, 0, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(g_io_done == false);
+
+	while (num_children > 0) {
+		num_outstanding = spdk_min(num_children, SPDK_BDEV_MAX_CHILDREN_UNMAP_WRITE_ZEROES_REQS);
+		CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == num_outstanding);
+		stub_complete_io(num_outstanding);
+		num_children -= num_outstanding;
+	}
+	CU_ASSERT(g_io_done == true);
+
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
 bdev_set_options_test(void)
 {
 	struct spdk_bdev_opts bdev_opts = {};
@@ -4712,6 +4813,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
 	CU_ADD_TEST(suite, bdev_io_abort);
 	CU_ADD_TEST(suite, bdev_unmap);
+	CU_ADD_TEST(suite, bdev_write_zeroes_split_test);
 	CU_ADD_TEST(suite, bdev_set_options_test);
 	CU_ADD_TEST(suite, bdev_multi_allocation);
 

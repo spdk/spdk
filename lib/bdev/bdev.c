@@ -2027,6 +2027,20 @@ bdev_unmap_should_split(struct spdk_bdev_io *bdev_io)
 }
 
 static bool
+bdev_write_zeroes_should_split(struct spdk_bdev_io *bdev_io)
+{
+	if (!bdev_io->bdev->max_write_zeroes) {
+		return false;
+	}
+
+	if (bdev_io->u.bdev.num_blocks > bdev_io->bdev->max_write_zeroes) {
+		return true;
+	}
+
+	return false;
+}
+
+static bool
 bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
@@ -2035,6 +2049,8 @@ bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 		return bdev_rw_should_split(bdev_io);
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_unmap_should_split(bdev_io);
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return bdev_write_zeroes_should_split(bdev_io);
 	default:
 		return false;
 	}
@@ -2059,6 +2075,15 @@ static void
 _bdev_unmap_split(void *_bdev_io)
 {
 	return bdev_unmap_split((struct spdk_bdev_io *)_bdev_io);
+}
+
+static void
+bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io);
+
+static void
+_bdev_write_zeroes_split(void *_bdev_io)
+{
+	return bdev_write_zeroes_split((struct spdk_bdev_io *)_bdev_io);
 }
 
 static int
@@ -2096,6 +2121,13 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 					    spdk_io_channel_from_ctx(bdev_io->internal.ch),
 					    current_offset, num_blocks,
 					    bdev_io_split_done, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		io_wait_fn = _bdev_write_zeroes_split;
+		rc = spdk_bdev_write_zeroes_blocks(bdev_io->internal.desc,
+						   spdk_io_channel_from_ctx(bdev_io->internal.ch),
+						   current_offset, num_blocks,
+						   bdev_io_split_done, bdev_io);
 		break;
 	default:
 		assert(false);
@@ -2293,6 +2325,29 @@ bdev_unmap_split(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io)
+{
+	uint64_t offset, write_zeroes_blocks, remaining;
+	uint32_t num_children_reqs = 0;
+	int rc;
+
+	offset = bdev_io->u.bdev.split_current_offset_blocks;
+	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
+
+	while (remaining && (num_children_reqs < SPDK_BDEV_MAX_CHILDREN_UNMAP_WRITE_ZEROES_REQS)) {
+		write_zeroes_blocks = spdk_min(remaining, bdev_io->bdev->max_write_zeroes);
+
+		rc = bdev_io_split_submit(bdev_io, NULL, 0, NULL, write_zeroes_blocks,
+					  &offset, &remaining);
+		if (spdk_likely(rc == 0)) {
+			num_children_reqs++;
+		} else {
+			return;
+		}
+	}
+}
+
+static void
 bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
@@ -2335,6 +2390,9 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		bdev_unmap_split(parent_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		bdev_write_zeroes_split(parent_io);
+		break;
 	default:
 		assert(false);
 		break;
@@ -2365,6 +2423,9 @@ bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		bdev_unmap_split(bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		bdev_write_zeroes_split(bdev_io);
 		break;
 	default:
 		assert(false);
