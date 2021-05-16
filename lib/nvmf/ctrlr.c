@@ -1590,6 +1590,41 @@ nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
 }
 
 static int
+nvmf_ctrlr_set_features_host_behavior_support(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvme_host_behavior *host_behavior;
+
+	SPDK_DEBUGLOG(nvmf, "Set Features - Host Behavior Support\n");
+	if (req->iovcnt != 1) {
+		SPDK_ERRLOG("Host Behavior Support invalid iovcnt: %d\n", req->iovcnt);
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	if (req->iov[0].iov_len != sizeof(struct spdk_nvme_host_behavior)) {
+		SPDK_ERRLOG("Host Behavior Support invalid iov_len: %ld\n", req->iov[0].iov_len);
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	host_behavior = (struct spdk_nvme_host_behavior *)req->iov[0].iov_base;
+	if (host_behavior->acre == 0) {
+		ctrlr->acre_enabled = false;
+	} else if (host_behavior->acre == 1) {
+		ctrlr->acre_enabled = true;
+	} else {
+		SPDK_ERRLOG("Host Behavior Support invalid acre: 0x%02x\n", host_behavior->acre);
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -2249,6 +2284,14 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		nvmf_ctrlr_populate_oacs(ctrlr, cdata);
 
+		/*
+		 * FIXME: Set all crdt to 0 currently,
+		 * will provide an API to customize them later.
+		 */
+		cdata->crdt[0] = 0;
+		cdata->crdt[1] = 0;
+		cdata->crdt[2] = 0;
+
 		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ioccsz 0x%x\n",
 			      cdata->nvmf_specific.ioccsz);
 		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: iorcsz 0x%x\n",
@@ -2742,6 +2785,8 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 		return nvmf_ctrlr_set_features_reservation_notification_mask(req);
 	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
 		return nvmf_ctrlr_set_features_reservation_persistence(req);
+	case SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT:
+		return nvmf_ctrlr_set_features_host_behavior_support(req);
 	default:
 		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -3490,6 +3535,17 @@ _nvmf_request_complete(void *ctx)
 		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
 		assert(sgroup != NULL);
 		is_aer = req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+
+		/*
+		 * Set the crd value.
+		 * If the the IO has any error, and dnr (DoNotRetry) is not 1,
+		 * and ACRE is enabled, we will set the crd to 1 to select the first CRDT.
+		 */
+		if (spdk_nvme_cpl_is_error(rsp) &&
+		    rsp->status.dnr == 0 &&
+		    qpair->ctrlr->acre_enabled) {
+			rsp->status.crd = 1;
+		}
 	} else if (spdk_unlikely(nvmf_request_is_fabric_connect(req))) {
 		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
 	}
