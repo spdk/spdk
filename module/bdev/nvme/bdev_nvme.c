@@ -1422,11 +1422,16 @@ static bool
 bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
 {
 	const struct spdk_nvme_ns_data *nsdata1, *nsdata2;
+	const struct spdk_uuid *uuid1, *uuid2;
 
 	nsdata1 = spdk_nvme_ns_get_data(ns1);
 	nsdata2 = spdk_nvme_ns_get_data(ns2);
+	uuid1 = spdk_nvme_ns_get_uuid(ns1);
+	uuid2 = spdk_nvme_ns_get_uuid(ns2);
 
-	return memcmp(nsdata1->nguid, nsdata2->nguid, sizeof(nsdata1->nguid));
+	return memcmp(nsdata1->nguid, nsdata2->nguid, sizeof(nsdata1->nguid)) == 0 &&
+	       nsdata1->eui64 == nsdata2->eui64 &&
+	       uuid1 != NULL && uuid2 != NULL && spdk_uuid_compare(uuid1, uuid2) == 0;
 }
 
 static void
@@ -2168,7 +2173,7 @@ bdev_nvme_compare_namespaces(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, nsid);
 		assert(new_ns != NULL);
 
-		if (bdev_nvme_compare_ns(nvme_ns->ns, new_ns) != 0) {
+		if (!bdev_nvme_compare_ns(nvme_ns->ns, new_ns)) {
 			return -EINVAL;
 		}
 	}

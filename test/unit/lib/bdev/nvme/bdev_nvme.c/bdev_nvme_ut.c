@@ -127,9 +127,6 @@ DEFINE_STUB(spdk_nvme_ns_get_dealloc_logical_block_read_value,
 
 DEFINE_STUB(spdk_nvme_ns_get_optimal_io_boundary, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_uuid, const struct spdk_uuid *,
-	    (const struct spdk_nvme_ns *ns), NULL);
-
 DEFINE_STUB(spdk_nvme_ns_get_csi, enum spdk_nvme_csi,
 	    (const struct spdk_nvme_ns *ns), 0);
 
@@ -231,6 +228,7 @@ struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	uint32_t			id;
 	bool				is_active;
+	struct spdk_uuid		uuid;
 };
 
 struct spdk_nvme_qpair {
@@ -742,6 +740,13 @@ spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns)
 {
 	return _nvme_ns_get_data(ns)->nsze;
 }
+
+const struct spdk_uuid *
+spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
+{
+	return &ns->uuid;
+}
+
 int
 spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
 			      void *metadata, uint64_t lba, uint32_t lba_count,
@@ -2252,6 +2257,55 @@ test_bdev_unregister(void)
 }
 
 static void
+test_compare_ns(void)
+{
+	struct spdk_nvme_ns_data nsdata1 = {}, nsdata2 = {};
+	struct spdk_nvme_ctrlr ctrlr1 = { .nsdata = &nsdata1, }, ctrlr2 = { .nsdata = &nsdata2, };
+	struct spdk_nvme_ns ns1 = { .id = 1, .ctrlr = &ctrlr1, }, ns2 = { .id = 1, .ctrlr = &ctrlr2, };
+
+	/* No IDs are defined. */
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
+
+	/* Only EUI64 are defined and not matched. */
+	nsdata1.eui64 = 0xABCDEF0123456789;
+	nsdata2.eui64 = 0xBBCDEF0123456789;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == false);
+
+	/* Only EUI64 are defined and matched. */
+	nsdata2.eui64 = 0xABCDEF0123456789;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
+
+	/* Only NGUID are defined and not matched. */
+	nsdata1.eui64 = 0x0;
+	nsdata2.eui64 = 0x0;
+	nsdata1.nguid[0] = 0x12;
+	nsdata2.nguid[0] = 0x10;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == false);
+
+	/* Only NGUID are defined and matched. */
+	nsdata2.nguid[0] = 0x12;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
+
+	/* Only UUID are defined and not matched. */
+	nsdata1.nguid[0] = 0x0;
+	nsdata2.nguid[0] = 0x0;
+	ns1.uuid.u.raw[0] = 0xAA;
+	ns2.uuid.u.raw[0] = 0xAB;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == false);
+
+	/* Only UUID are defined and matched. */
+	ns1.uuid.u.raw[0] = 0xAB;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
+
+	/* All EUI64, NGUID, and UUID are defined and matched. */
+	nsdata1.eui64 = 0x123456789ABCDEF;
+	nsdata2.eui64 = 0x123456789ABCDEF;
+	nsdata1.nguid[15] = 0x34;
+	nsdata2.nguid[15] = 0x34;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
+}
+
+static void
 init_accel(void)
 {
 	spdk_io_device_register(g_accel_p, accel_engine_create_cb, accel_engine_destroy_cb,
@@ -2288,6 +2342,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_abort);
 	CU_ADD_TEST(suite, test_get_io_qpair);
 	CU_ADD_TEST(suite, test_bdev_unregister);
+	CU_ADD_TEST(suite, test_compare_ns);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
