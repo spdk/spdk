@@ -159,63 +159,63 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
 	spdk_trace_register_description("RDMA_REQ_NEW", TRACE_RDMA_REQUEST_STATE_NEW,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 1,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_NEED_BUFFER", TRACE_RDMA_REQUEST_STATE_NEED_BUFFER,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_TX_PENDING_C2H",
 					TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_TX_PENDING_H2C",
 					TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_TX_H2C",
 					TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_RDY_TO_EXECUTE",
 					TRACE_RDMA_REQUEST_STATE_READY_TO_EXECUTE,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_EXECUTING",
 					TRACE_RDMA_REQUEST_STATE_EXECUTING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_EXECUTED",
 					TRACE_RDMA_REQUEST_STATE_EXECUTED,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_RDY_TO_COMPL",
 					TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_COMPLETING_C2H",
 					TRACE_RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_COMPLETING",
 					TRACE_RDMA_REQUEST_STATE_COMPLETING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("RDMA_REQ_COMPLETED",
 					TRACE_RDMA_REQUEST_STATE_COMPLETED,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "qpair:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 
 	spdk_trace_register_description("RDMA_QP_CREATE", TRACE_RDMA_QP_CREATE,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
 	spdk_trace_register_description("RDMA_IBV_ASYNC_EVENT", TRACE_RDMA_IBV_ASYNC_EVENT,
 					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_INT, "type:   ");
+					SPDK_TRACE_ARG_TYPE_INT, "type");
 	spdk_trace_register_description("RDMA_CM_ASYNC_EVENT", TRACE_RDMA_CM_ASYNC_EVENT,
 					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_INT, "type:   ");
+					SPDK_TRACE_ARG_TYPE_INT, "type");
 	spdk_trace_register_description("RDMA_QP_STATE_CHANGE", TRACE_RDMA_QP_STATE_CHANGE,
 					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "state:  ");
+					SPDK_TRACE_ARG_TYPE_PTR, "state");
 	spdk_trace_register_description("RDMA_QP_DISCONNECT", TRACE_RDMA_QP_DISCONNECT,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");

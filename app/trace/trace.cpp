@@ -93,10 +93,19 @@ get_us_from_tsc(uint64_t tsc, uint64_t tsc_rate)
 	return ((float)tsc) * 1000 * 1000 / tsc_rate;
 }
 
+static const char *
+format_argname(const char *name)
+{
+	static char namebuf[16];
+
+	snprintf(namebuf, sizeof(namebuf), "%s: ", name);
+	return namebuf;
+}
+
 static void
 print_ptr(const char *arg_string, uint64_t arg)
 {
-	printf("%-7.7s0x%-14jx ", arg_string, arg);
+	printf("%-7.7s0x%-14jx ", format_argname(arg_string), arg);
 }
 
 static void
@@ -107,14 +116,14 @@ print_uint64(const char *arg_string, uint64_t arg)
 	 *  for FLUSH WRITEBUF when writev() returns -1 due to full
 	 *  socket buffer.
 	 */
-	printf("%-7.7s%-16jd ", arg_string, arg);
+	printf("%-7.7s%-16jd ", format_argname(arg_string), arg);
 }
 
 static void
 print_string(const char *arg_string, uint64_t arg)
 {
 	char *str = (char *)&arg;
-	printf("%-7.7s%.8s ", arg_string, str);
+	printf("%-7.7s%.8s ", format_argname(arg_string), str);
 }
 
 static void
@@ -136,7 +145,7 @@ print_object_id(uint8_t type, uint64_t id)
 static void
 print_float(const char *arg_string, float arg)
 {
-	printf("%-7s%-16.3f ", arg_string, arg);
+	printf("%-7s%-16.3f ", format_argname(arg_string), arg);
 }
 
 static void
@@ -201,12 +210,12 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 			us = get_us_from_tsc(e->tsc - stats->start[e->object_id],
 					     tsc_rate);
 			print_object_id(d->object_type, stats->index[e->object_id]);
-			print_float("time:", us);
+			print_float("time", us);
 		} else {
 			printf("id:    N/A");
 		}
 	} else if (e->object_id != 0) {
-		print_arg(SPDK_TRACE_ARG_TYPE_PTR, "object: ", e->object_id);
+		print_arg(SPDK_TRACE_ARG_TYPE_PTR, "object", e->object_id);
 	}
 	printf("\n");
 }
