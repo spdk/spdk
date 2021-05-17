@@ -94,6 +94,9 @@ state at any point in time. It is very important to not exceed this limit.
 You can control how many zones fio will keep in an open state by using the
 ``--max_open_zones`` option.
 
+If you use a fio version newer than 3.26, fio will automatically detect and set the proper value.
+If you use an old version of fio, make sure to provide the proper --max_open_zones value yourself.
+
 ## Maximum Active Zones
 
 Zoned block devices may also have a resource constraint on the number of zones that can be active at

@@ -1067,6 +1067,24 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 }
 #endif
 
+#if FIO_IOOPS_VERSION >= 30
+static int spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
+				       unsigned int *max_open_zones)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(f->file_name);
+	if (!bdev) {
+		SPDK_ERRLOG("Cannot get max open zones, no bdev with name: %s\n", f->file_name);
+		return -ENODEV;
+	}
+
+	*max_open_zones = spdk_bdev_get_max_open_zones(bdev);
+
+	return 0;
+}
+#endif
+
 static int
 spdk_fio_handle_options(struct thread_data *td, struct fio_file *f, struct spdk_bdev *bdev)
 {
@@ -1203,6 +1221,9 @@ struct ioengine_ops ioengine = {
 	.get_zoned_model	= spdk_fio_get_zoned_model,
 	.report_zones		= spdk_fio_report_zones,
 	.reset_wp		= spdk_fio_reset_wp,
+#endif
+#if FIO_IOOPS_VERSION >= 30
+	.get_max_open_zones	= spdk_fio_get_max_open_zones,
 #endif
 	.option_struct_size	= sizeof(struct spdk_fio_options),
 	.options		= options,
