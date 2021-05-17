@@ -799,6 +799,100 @@ test_nvme_pcie_ctrlr_map_unmap_cmb(void)
 	CU_ASSERT(pctrlr.ctrlr.opts.use_cmb_sqs == false);
 }
 
+
+static void
+prepare_map_io_cmd(struct nvme_pcie_ctrlr *pctrlr)
+{
+	union spdk_nvme_cmbsz_register cmbsz = {};
+	union spdk_nvme_cmbloc_register cmbloc = {};
+
+	cmbsz.bits.sz = 512;
+	cmbsz.bits.wds = 1;
+	cmbsz.bits.rds = 1;
+
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
+				  cmbsz.raw);
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw),
+				  cmbloc.raw);
+
+	pctrlr->cmb.bar_va = (void *)0x7F7C0080D000;
+	pctrlr->cmb.bar_pa = 0xFC800000;
+	pctrlr->cmb.current_offset = 1ULL << 22;
+	pctrlr->cmb.size = (1ULL << 22) * 512;
+	pctrlr->cmb.mem_register_addr = NULL;
+	pctrlr->ctrlr.opts.use_cmb_sqs = false;
+}
+
+static void
+test_nvme_pcie_ctrlr_map_io_cmb(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	volatile struct spdk_nvme_registers regs = {};
+	union spdk_nvme_cmbsz_register cmbsz = {};
+	void *mem_reg_addr = NULL;
+	size_t size;
+	int rc;
+
+	pctrlr.regs = &regs;
+	prepare_map_io_cmd(&pctrlr);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_cmb(&pctrlr.ctrlr, &size);
+	/* Ceil the current cmb vaddr and cmb size to 2MB_aligned */
+	CU_ASSERT(mem_reg_addr == (void *)0x7F7C00E00000);
+	CU_ASSERT(size == 0x7FE00000);
+
+	rc = nvme_pcie_ctrlr_unmap_io_cmb(&pctrlr.ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pctrlr.cmb.mem_register_addr == NULL);
+	CU_ASSERT(pctrlr.cmb.mem_register_size == 0);
+
+	/* cmb mem_register_addr not NULL */
+	prepare_map_io_cmd(&pctrlr);
+	pctrlr.cmb.mem_register_addr = (void *)0xDEADBEEF;
+	pctrlr.cmb.mem_register_size = 1024;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_cmb(&pctrlr.ctrlr, &size);
+	CU_ASSERT(size == 1024);
+	CU_ASSERT(mem_reg_addr == (void *)0xDEADBEEF);
+
+	/* cmb.bar_va is NULL */
+	prepare_map_io_cmd(&pctrlr);
+	pctrlr.cmb.bar_va = NULL;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_cmb(&pctrlr.ctrlr, &size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(size == 0);
+
+	/* submission queue already used */
+	prepare_map_io_cmd(&pctrlr);
+	pctrlr.ctrlr.opts.use_cmb_sqs = true;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_cmb(&pctrlr.ctrlr, &size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(size == 0);
+
+	pctrlr.ctrlr.opts.use_cmb_sqs = false;
+
+	/* Only SQS is supported */
+	prepare_map_io_cmd(&pctrlr);
+	cmbsz.bits.wds = 0;
+	cmbsz.bits.rds = 0;
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
+				  cmbsz.raw);
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_cmb(&pctrlr.ctrlr, &size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(size == 0);
+
+	/* CMB size is less than 4MB */
+	prepare_map_io_cmd(&pctrlr);
+	pctrlr.cmb.size = 1ULL << 16;
+
+	mem_reg_addr = nvme_pcie_ctrlr_map_io_cmb(&pctrlr.ctrlr, &size);
+	CU_ASSERT(mem_reg_addr == NULL);
+	CU_ASSERT(size == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -818,6 +912,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_build_contig_request);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_regs_get_set);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_unmap_cmb);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_io_cmb);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
