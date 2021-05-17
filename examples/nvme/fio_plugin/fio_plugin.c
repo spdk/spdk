@@ -1186,29 +1186,6 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 
 		*model = ZBD_HOST_MANAGED;
 
-		/** Unlimited open resources, skip checking 'max_open_zones' */
-		if (0xFFFFFFFF == zns_data->mor) {
-			return 0;
-		}
-
-		if (!td->o.max_open_zones) {
-			td->o.max_open_zones = spdk_min(ZBD_MAX_OPEN_ZONES, zns_data->mor + 1);
-			log_info("spdk/nvme: parameter 'max_open_zones' was unset; assigned: %d.\n",
-				 td->o.max_open_zones);
-		} else if (td->o.max_open_zones < 0) {
-			log_err("spdk/nvme: invalid parameter 'max_open_zones': %d\n",
-				td->o.max_open_zones);
-			return -EINVAL;
-		} else if (td->o.max_open_zones > ZBD_MAX_OPEN_ZONES) {
-			log_err("spdk/nvme: parameter 'max_open_zones': %d exceeds fio-limit: %d\n",
-				td->o.max_open_zones, ZBD_MAX_OPEN_ZONES);
-			return -EINVAL;
-		} else if ((uint32_t)td->o.max_open_zones > (zns_data->mor + 1)) {
-			log_err("spdk/nvme: parameter 'max_open_zones': %d exceeds dev-limit: %u\n",
-				td->o.max_open_zones, zns_data->mor + 1);
-			return -EINVAL;
-		}
-
 		return 0;
 	}
 
@@ -1375,6 +1352,25 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 	}
 
 	return err;
+}
+#endif
+
+#if FIO_IOOPS_VERSION >= 30
+static int spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
+				       unsigned int *max_open_zones)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+	struct spdk_fio_qpair *fio_qpair = NULL;
+
+	fio_qpair = get_fio_qpair(fio_thread, f);
+	if (!fio_qpair) {
+		log_err("spdk/nvme: no ns/qpair or file_name: '%s'\n", f->file_name);
+		return -ENODEV;
+	}
+
+	*max_open_zones = spdk_nvme_zns_ns_get_max_open_zones(fio_qpair->ns);
+
+	return 0;
 }
 #endif
 
@@ -1669,6 +1665,9 @@ struct ioengine_ops ioengine = {
 	.get_zoned_model	= spdk_fio_get_zoned_model,
 	.report_zones		= spdk_fio_report_zones,
 	.reset_wp		= spdk_fio_reset_wp,
+#endif
+#if FIO_IOOPS_VERSION >= 30
+	.get_max_open_zones	= spdk_fio_get_max_open_zones,
 #endif
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
 	.options		= options,

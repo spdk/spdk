@@ -125,7 +125,8 @@ Zoned Namespaces has a resource constraint on the amount of zones which can be i
 any point in time. You can control how many zones fio will keep in an open state by using the
 ``--max_open_zones`` option.
 
-The SPDK/NVMe fio io-engine will set a default value if you do not provide one.
+If you use a fio version newer than 3.26, fio will automatically detect and set the proper value.
+If you use an old version of fio, make sure to provide the proper --max_open_zones value yourself.
 
 ## Maximum Active Zones
 
