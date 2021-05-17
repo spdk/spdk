@@ -800,6 +800,12 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 			nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
 						      ctrlr);
 		}
+	} else {
+		uint32_t i;
+
+		for (i = 0; i < ctrlr->num_ns; i++) {
+			ctrlr->ns[i].ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+		}
 	}
 
 out:
