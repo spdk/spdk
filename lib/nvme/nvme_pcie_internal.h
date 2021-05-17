@@ -241,6 +241,8 @@ nvme_pcie_qpair_update_mmio_required(struct spdk_nvme_qpair *qpair, uint16_t val
 		return true;
 	}
 
+	spdk_wmb();
+
 	old = *shadow_db;
 	*shadow_db = value;
 
