@@ -275,7 +275,6 @@ struct rpc_cores_stats {
 struct rpc_threads_stats g_threads_stats;
 struct rpc_pollers_stats g_pollers_stats;
 struct rpc_cores_stats g_cores_stats;
-struct rpc_poller_info g_pollers_history[RPC_MAX_POLLERS];
 
 static void
 init_str_len(void)
@@ -1102,13 +1101,6 @@ copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poll
 	}
 }
 
-static void
-store_pollers_last_stats(uint64_t poller, uint64_t run_counter, uint64_t period_ticks_counter)
-{
-	g_pollers_history[poller].run_count = run_counter;
-	g_pollers_history[poller].period_ticks = period_ticks_counter;
-}
-
 static uint8_t
 prepare_poller_data(uint8_t current_page, struct rpc_poller_info **pollers,
 		    uint64_t *count, uint8_t last_page)
@@ -1212,7 +1204,6 @@ refresh_pollers_tab(uint8_t current_page)
 			col += col_desc[2].max_data_string + 1;
 		}
 
-		store_pollers_last_stats(i, pollers[i]->run_count - *last_run_counter, pollers[i]->period_ticks);
 		if (!col_desc[3].disabled) {
 			if (g_interval_data == true) {
 				snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count - *last_run_counter);
@@ -2208,6 +2199,7 @@ show_poller(uint8_t current_page)
 	PANEL *poller_panel;
 	WINDOW *poller_win;
 	uint64_t count = 0;
+	uint64_t *last_run_counter;
 	uint64_t poller_number = current_page * g_max_data_rows + g_selected_row;
 	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
 	bool stop_loop = false;
@@ -2216,6 +2208,10 @@ show_poller(uint8_t current_page)
 
 	prepare_poller_data(current_page, pollers, &count, current_page);
 	assert(poller_number < count);
+
+	last_run_counter = get_last_run_counter(pollers[poller_number]->name,
+						pollers[poller_number]->thread_id);
+	assert(last_run_counter != NULL);
 
 	poller_win = newwin(POLLER_WIN_HEIGHT, POLLER_WIN_WIDTH,
 			    get_position_for_window(POLLER_WIN_HEIGHT, g_max_row),
@@ -2243,7 +2239,7 @@ show_poller(uint8_t current_page)
 
 	if (g_interval_data) {
 		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64,
-			  g_pollers_history[poller_number].run_count);
+			  pollers[poller_number]->run_count - *last_run_counter);
 	} else {
 		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64,
 			  pollers[poller_number]->run_count);
@@ -2251,7 +2247,7 @@ show_poller(uint8_t current_page)
 
 	if (pollers[poller_number]->period_ticks != 0) {
 		print_left(poller_win, 4, 28, POLLER_WIN_WIDTH, "Period:", COLOR_PAIR(5));
-		get_time_str(g_pollers_history[poller_number].period_ticks, poller_period);
+		get_time_str(pollers[poller_number]->period_ticks, poller_period);
 		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL + 23, poller_period);
 	}
 	mvwhline(poller_win, 5, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
