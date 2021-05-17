@@ -52,8 +52,9 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
 	struct spdk_trace_tpoint *tpoint;
+	const char *strval;
 	unsigned lcore, i, offset;
-	uint64_t value, next_circular_entry;
+	uint64_t intval, next_circular_entry;
 	va_list vl;
 
 	lcore = spdk_env_get_current_core();
@@ -90,9 +91,21 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 	va_start(vl, num_args);
 	for (i = 0, offset = 0; i < tpoint->num_args; ++i) {
-		/* All values are currently passed as uint64_t */
-		value = va_arg(vl, uint64_t);
-		memcpy(&next_entry->args[offset], &value, sizeof(value));
+		switch (tpoint->args[i].type) {
+		case SPDK_TRACE_ARG_TYPE_STR:
+			strval = va_arg(vl, const char *);
+			snprintf(&next_entry->args[offset], tpoint->args[i].size, "%s", strval);
+			break;
+		case SPDK_TRACE_ARG_TYPE_INT:
+		case SPDK_TRACE_ARG_TYPE_PTR:
+			intval = va_arg(vl, uint64_t);
+			memcpy(&next_entry->args[offset], &intval, sizeof(intval));
+			break;
+		default:
+			assert(0 && "Invalid trace argument type");
+			break;
+		}
+
 		offset += tpoint->args[i].size;
 	}
 	va_end(vl);

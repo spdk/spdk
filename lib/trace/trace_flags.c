@@ -310,9 +310,12 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 		switch (opts->args[i].type) {
 		case SPDK_TRACE_ARG_TYPE_INT:
 		case SPDK_TRACE_ARG_TYPE_PTR:
-		case SPDK_TRACE_ARG_TYPE_STR:
-			/* For now all trace types need to be passed as uint64_t */
+			/* The integers and pointers have to be exactly 64b long */
 			assert(opts->args[i].size == sizeof(uint64_t));
+			break;
+		case SPDK_TRACE_ARG_TYPE_STR:
+			/* Strings need to have at least one byte for the NULL terminator */
+			assert(opts->args[i].size > 0);
 			break;
 		default:
 			assert(0 && "invalid trace argument type");

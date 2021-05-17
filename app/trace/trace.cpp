@@ -120,10 +120,9 @@ print_uint64(const char *arg_string, uint64_t arg)
 }
 
 static void
-print_string(const char *arg_string, uint64_t arg)
+print_string(const char *arg_string, const char *arg)
 {
-	char *str = (char *)&arg;
-	printf("%-7.7s%.8s ", format_argname(arg_string), str);
+	printf("%-7.7s%-16.16s ", format_argname(arg_string), arg);
 }
 
 static void
@@ -158,16 +157,17 @@ print_arg(uint8_t arg_type, const char *arg_string, const void *arg)
 		return;
 	}
 
-	memcpy(&value, arg, sizeof(value));
 	switch (arg_type) {
 	case SPDK_TRACE_ARG_TYPE_PTR:
+		memcpy(&value, arg, sizeof(value));
 		print_ptr(arg_string, value);
 		break;
 	case SPDK_TRACE_ARG_TYPE_INT:
+		memcpy(&value, arg, sizeof(value));
 		print_uint64(arg_string, value);
 		break;
 	case SPDK_TRACE_ARG_TYPE_STR:
-		print_string(arg_string, value);
+		print_string(arg_string, (const char *)arg);
 		break;
 	}
 }

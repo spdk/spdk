@@ -74,36 +74,40 @@ static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
 
 SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 {
-	spdk_trace_register_description("BLOBFS_XATTR_START",
-					TRACE_BLOBFS_XATTR_START,
-					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_STR,
-					"file");
-	spdk_trace_register_description("BLOBFS_XATTR_END",
-					TRACE_BLOBFS_XATTR_END,
-					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_STR,
-					"file");
-	spdk_trace_register_description("BLOBFS_OPEN",
-					TRACE_BLOBFS_OPEN,
-					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_STR,
-					"file");
-	spdk_trace_register_description("BLOBFS_CLOSE",
-					TRACE_BLOBFS_CLOSE,
-					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_STR,
-					"file");
-	spdk_trace_register_description("BLOBFS_DELETE_START",
-					TRACE_BLOBFS_DELETE_START,
-					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_STR,
-					"file");
-	spdk_trace_register_description("BLOBFS_DELETE_DONE",
-					TRACE_BLOBFS_DELETE_DONE,
-					OWNER_NONE, OBJECT_NONE, 0,
-					SPDK_TRACE_ARG_TYPE_STR,
-					"file");
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"BLOBFS_XATTR_START", TRACE_BLOBFS_XATTR_START,
+			OWNER_NONE, OBJECT_NONE, 0,
+			{{ "file", SPDK_TRACE_ARG_TYPE_STR, 40 }},
+		},
+		{
+			"BLOBFS_XATTR_END", TRACE_BLOBFS_XATTR_END,
+			OWNER_NONE, OBJECT_NONE, 0,
+			{{ "file", SPDK_TRACE_ARG_TYPE_STR, 40 }},
+		},
+		{
+			"BLOBFS_OPEN", TRACE_BLOBFS_OPEN,
+			OWNER_NONE, OBJECT_NONE, 0,
+			{{ "file", SPDK_TRACE_ARG_TYPE_STR, 40 }},
+		},
+		{
+			"BLOBFS_CLOSE", TRACE_BLOBFS_CLOSE,
+			OWNER_NONE, OBJECT_NONE, 0,
+			{{ "file", SPDK_TRACE_ARG_TYPE_STR, 40 }},
+		},
+		{
+			"BLOBFS_DELETE_START", TRACE_BLOBFS_DELETE_START,
+			OWNER_NONE, OBJECT_NONE, 0,
+			{{ "file", SPDK_TRACE_ARG_TYPE_STR, 40 }},
+		},
+		{
+			"BLOBFS_DELETE_DONE", TRACE_BLOBFS_DELETE_DONE,
+			OWNER_NONE, OBJECT_NONE, 0,
+			{{ "file", SPDK_TRACE_ARG_TYPE_STR, 40 }},
+		}
+	};
+
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
 
 void
@@ -119,7 +123,6 @@ struct spdk_file {
 	struct spdk_filesystem	*fs;
 	struct spdk_blob	*blob;
 	char			*name;
-	uint64_t		trace_arg_name;
 	uint64_t		length;
 	bool                    is_deleted;
 	bool			open_for_writing;
@@ -707,14 +710,6 @@ fs_load_done(void *ctx, int bserrno)
 }
 
 static void
-_file_build_trace_arg_name(struct spdk_file *f)
-{
-	f->trace_arg_name = 0;
-	memcpy(&f->trace_arg_name, f->name,
-	       spdk_min(sizeof(f->trace_arg_name), strlen(f->name)));
-}
-
-static void
 iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 {
 	struct spdk_fs_request *req = ctx;
@@ -761,7 +756,6 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		}
 
 		f->name = strdup(name);
-		_file_build_trace_arg_name(f);
 		f->blobid = spdk_blob_get_id(blob);
 		f->length = *length;
 		f->length_flushed = *length;
@@ -1120,7 +1114,6 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
-	_file_build_trace_arg_name(file);
 	spdk_bs_create_blob(fs->bs, fs_create_blob_create_cb, args);
 }
 
@@ -1184,7 +1177,7 @@ fs_open_blob_done(void *ctx, struct spdk_blob *blob, int bserrno)
 		req = TAILQ_FIRST(&f->open_requests);
 		args = &req->args;
 		TAILQ_REMOVE(&f->open_requests, req, args.op.open.tailq);
-		spdk_trace_record(TRACE_BLOBFS_OPEN, 0, 0, 0, f->trace_arg_name);
+		spdk_trace_record(TRACE_BLOBFS_OPEN, 0, 0, 0, f->name);
 		args->fn.file_op_with_handle(args->arg, f, bserrno);
 		free_fs_request(req);
 	}
@@ -1363,7 +1356,6 @@ _fs_md_rename_file(struct spdk_fs_request *req)
 
 	free(f->name);
 	f->name = strdup(args->op.rename.new_name);
-	_file_build_trace_arg_name(f);
 	args->file = f;
 	spdk_bs_open_blob(args->fs->bs, f->blobid, fs_rename_blob_open_cb, req);
 }
@@ -1524,21 +1516,13 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
 }
 
-static uint64_t
-fs_name_to_uint64(const char *name)
-{
-	uint64_t result = 0;
-	memcpy(&result, name, spdk_min(sizeof(result), strlen(name)));
-	return result;
-}
-
 static void
 __fs_delete_file_done(void *arg, int fserrno)
 {
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	spdk_trace_record(TRACE_BLOBFS_DELETE_DONE, 0, 0, 0, fs_name_to_uint64(args->op.delete.name));
+	spdk_trace_record(TRACE_BLOBFS_DELETE_DONE, 0, 0, 0, args->op.delete.name);
 	__wake_caller(args, fserrno);
 }
 
@@ -1548,7 +1532,7 @@ __fs_delete_file(void *arg)
 	struct spdk_fs_request *req = arg;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	spdk_trace_record(TRACE_BLOBFS_DELETE_START, 0, 0, 0, fs_name_to_uint64(args->op.delete.name));
+	spdk_trace_record(TRACE_BLOBFS_DELETE_START, 0, 0, 0, args->op.delete.name);
 	spdk_fs_delete_file_async(args->fs, args->op.delete.name, __fs_delete_file_done, req);
 }
 
@@ -2221,7 +2205,7 @@ __file_cache_finish_sync(void *ctx, int bserrno)
 	file->length_xattr = sync_args->op.sync.length;
 	assert(sync_args->op.sync.offset <= file->length_flushed);
 	spdk_trace_record(TRACE_BLOBFS_XATTR_END, 0, sync_args->op.sync.offset,
-			  0, file->trace_arg_name);
+			  0, file->name);
 	BLOBFS_TRACE(file, "sync done offset=%jx\n", sync_args->op.sync.offset);
 	TAILQ_REMOVE(&file->sync_requests, sync_req, args.op.sync.tailq);
 	pthread_spin_unlock(&file->lock);
@@ -2254,7 +2238,7 @@ __check_sync_reqs(struct spdk_file *file)
 
 		pthread_spin_unlock(&file->lock);
 		spdk_trace_record(TRACE_BLOBFS_XATTR_START, 0, file->length_flushed,
-				  0, file->trace_arg_name);
+				  0, file->name);
 		spdk_blob_sync_md(file->blob, __file_cache_finish_sync, sync_req);
 	} else {
 		pthread_spin_unlock(&file->lock);
@@ -2832,7 +2816,7 @@ __file_close_async_done(void *ctx, int bserrno)
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_file *file = args->file;
 
-	spdk_trace_record(TRACE_BLOBFS_CLOSE, 0, 0, 0, file->trace_arg_name);
+	spdk_trace_record(TRACE_BLOBFS_CLOSE, 0, 0, 0, file->name);
 
 	if (file->is_deleted) {
 		spdk_fs_delete_file_async(file->fs, file->name, blob_delete_cb, ctx);
