@@ -49,9 +49,6 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_STUB(spdk_nvme_ctrlr_get_num_ns, uint32_t,
-	    (struct spdk_nvme_ctrlr *ctrlr), 128);
-
 DEFINE_STUB(spdk_nvme_ctrlr_reset, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 DEFINE_STUB(spdk_nvme_ns_cmd_read, int,
@@ -89,6 +86,12 @@ DEFINE_STUB(spdk_nvme_ctrlr_is_active_ns, bool,
 DEFINE_STUB(fuse_reply_err, int, (fuse_req_t req, int err), 0);
 
 struct cuse_io_ctx *g_ut_ctx;
+
+uint32_t
+spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->num_ns;
+}
 
 DEFINE_RETURN_MOCK(nvme_io_msg_send, int);
 int
@@ -204,6 +207,37 @@ test_cuse_nvme_submit_passthru_cmd(void)
 	free(passthru_cmd);
 }
 
+static void
+test_nvme_cuse_get_cuse_ns_device(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct cuse_device ctrlr_device = {};
+	struct cuse_device ns_devices[3] = {};
+	struct cuse_device *cuse_dev = NULL;
+
+	ctrlr.num_ns = 3;
+	ctrlr_device.ctrlr = &ctrlr;
+	ctrlr_device.ns_devices = ns_devices;
+	ns_devices[0].is_started = true;
+	ns_devices[1].is_started = false;
+
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_ctrlr_ctx_head));
+	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, &ctrlr_device, tailq);
+
+	cuse_dev = nvme_cuse_get_cuse_ns_device(&ctrlr, 1);
+	CU_ASSERT(cuse_dev == &ns_devices[0]);
+
+	/* nsid 2 was not started */
+	cuse_dev = nvme_cuse_get_cuse_ns_device(&ctrlr, 2);
+	CU_ASSERT(cuse_dev == NULL);
+
+	/* nsid invalid */
+	cuse_dev = nvme_cuse_get_cuse_ns_device(&ctrlr, 0);
+	CU_ASSERT(cuse_dev == NULL);
+
+	TAILQ_REMOVE(&g_ctrlr_ctx_head, &ctrlr_device, tailq);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -215,6 +249,7 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("nvme_cuse", NULL, NULL);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_io_read_write);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_passthru_cmd);
+	CU_ADD_TEST(suite, test_nvme_cuse_get_cuse_ns_device);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
