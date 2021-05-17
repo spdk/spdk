@@ -382,7 +382,7 @@ test_reactor_stats(void)
 	 * Then,
 	 * - elapsed TSC of thread1 should be 2100 (= 2000+ 100).
 	 * - busy TSC of reactor should be 600 (= 500 + 100).
-	 * - idle TSC of reactor should be 500 (= 500 + 0).
+	 * - idle TSC of reactor should be 500 (= 500 + 900).
 	 */
 
 	MOCK_SET(spdk_env_get_current_core, 0);
@@ -494,7 +494,7 @@ test_reactor_stats(void)
 	CU_ASSERT(stats.idle_tsc == 0);
 
 	CU_ASSERT(reactor->busy_tsc == 600);
-	CU_ASSERT(reactor->idle_tsc == 500);
+	CU_ASSERT(reactor->idle_tsc == 1400);
 
 	/* 2000 + 100 = 2100 ticks elapsed */
 	CU_ASSERT(reactor->tsc_last == 2100);

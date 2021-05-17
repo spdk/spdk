@@ -908,7 +908,9 @@ _reactor_run(struct spdk_reactor *reactor)
 	 * tsc_last gets outdated. Update it to track
 	 * thread execution time correctly. */
 	if (spdk_unlikely(TAILQ_EMPTY(&reactor->threads))) {
-		reactor->tsc_last = spdk_get_ticks();
+		now = spdk_get_ticks();
+		reactor->idle_tsc += now - reactor->tsc_last;
+		reactor->tsc_last = now;
 		return;
 	}
 
