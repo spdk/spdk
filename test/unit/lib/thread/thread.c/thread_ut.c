@@ -644,12 +644,12 @@ for_each_channel_unreg(void)
 
 	allocate_threads(1);
 	set_thread(0);
-	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	CU_ASSERT(RB_EMPTY(&g_io_devices));
 	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
-	CU_ASSERT(!TAILQ_EMPTY(&g_io_devices));
-	dev = TAILQ_FIRST(&g_io_devices);
+	CU_ASSERT(!RB_EMPTY(&g_io_devices));
+	dev = RB_MIN(io_device_tree, &g_io_devices);
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
-	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
+	CU_ASSERT(RB_NEXT(io_device_tree, &g_io_devices, dev) == NULL);
 	ch0 = spdk_get_io_channel(&io_target);
 	spdk_for_each_channel(&io_target, unreg_ch_done, &ctx, unreg_foreach_done);
 
@@ -658,14 +658,14 @@ for_each_channel_unreg(void)
 	 * There is an outstanding foreach call on the io_device, so the unregister should not
 	 *  have removed the device.
 	 */
-	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
+	CU_ASSERT(dev == RB_MIN(io_device_tree, &g_io_devices));
 	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
 	/*
 	 * There is already a device registered at &io_target, so a new io_device should not
 	 *  have been added to g_io_devices.
 	 */
-	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
-	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
+	CU_ASSERT(dev == RB_MIN(io_device_tree, &g_io_devices));
+	CU_ASSERT(RB_NEXT(io_device_tree, &g_io_devices, dev) == NULL);
 
 	poll_thread(0);
 	CU_ASSERT(ctx.ch_done == true);
@@ -675,7 +675,7 @@ for_each_channel_unreg(void)
 	 *  even though a channel still exists for the device.
 	 */
 	spdk_io_device_unregister(&io_target, NULL);
-	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	CU_ASSERT(RB_EMPTY(&g_io_devices));
 
 	set_thread(0);
 	spdk_put_io_channel(ch0);
@@ -824,7 +824,7 @@ channel(void)
 	poll_threads();
 	spdk_io_device_unregister(&g_device2, NULL);
 	poll_threads();
-	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	CU_ASSERT(RB_EMPTY(&g_io_devices));
 	free_threads();
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
@@ -879,7 +879,7 @@ channel_destroy_races(void)
 	spdk_io_device_unregister(&device, NULL);
 	poll_threads();
 
-	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	CU_ASSERT(RB_EMPTY(&g_io_devices));
 	free_threads();
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
@@ -1135,20 +1135,6 @@ struct ut_nested_dev {
 	struct ut_nested_dev *child;
 };
 
-static struct io_device *
-ut_get_io_device(void *dev)
-{
-	struct io_device *tmp;
-
-	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
-		if (tmp->io_device == dev) {
-			return tmp;
-		}
-	}
-
-	return NULL;
-}
-
 static int
 ut_null_poll(void *ctx)
 {
@@ -1246,11 +1232,11 @@ nested_channel(void)
 	spdk_io_device_register(&_dev3, ut_nested_ch_create_cb, ut_nested_ch_destroy_cb,
 				sizeof(struct ut_nested_ch), "dev3");
 
-	dev1 = ut_get_io_device(&_dev1);
+	dev1 = io_device_get(&_dev1);
 	SPDK_CU_ASSERT_FATAL(dev1 != NULL);
-	dev2 = ut_get_io_device(&_dev2);
+	dev2 = io_device_get(&_dev2);
 	SPDK_CU_ASSERT_FATAL(dev2 != NULL);
-	dev3 = ut_get_io_device(&_dev3);
+	dev3 = io_device_get(&_dev3);
 	SPDK_CU_ASSERT_FATAL(dev3 != NULL);
 
 	/* A single call spdk_get_io_channel() to dev1 will also create channels
@@ -1315,7 +1301,7 @@ nested_channel(void)
 	spdk_io_device_unregister(&_dev1, NULL);
 	spdk_io_device_unregister(&_dev2, NULL);
 	spdk_io_device_unregister(&_dev3, NULL);
-	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	CU_ASSERT(RB_EMPTY(&g_io_devices));
 
 	free_threads();
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
@@ -1676,6 +1662,146 @@ multi_timed_pollers_have_same_expiration(void)
 	free_threads();
 }
 
+static int
+dummy_create_cb(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+dummy_destroy_cb(void *io_device, void *ctx_buf)
+{
+}
+
+/* We had a bug that the compare function for the io_device tree
+ * did not work as expected because subtraction caused overflow
+ * when the difference between two keys was more than 32 bits.
+ * This test case verifies the fix for the bug.
+ */
+static void
+io_device_lookup(void)
+{
+	struct io_device dev1, dev2, *dev;
+	struct spdk_io_channel *ch;
+
+	/* The compare function io_device_cmp() had a overflow bug.
+	 * Verify the fix first.
+	 */
+	dev1.io_device = (void *)0x7FFFFFFF;
+	dev2.io_device = NULL;
+	CU_ASSERT(io_device_cmp(&dev1, &dev2) > 0);
+	CU_ASSERT(io_device_cmp(&dev2, &dev1) < 0);
+
+	/* Check if overflow due to 32 bits does not occur. */
+	dev1.io_device = (void *)0x80000000;
+	CU_ASSERT(io_device_cmp(&dev1, &dev2) > 0);
+	CU_ASSERT(io_device_cmp(&dev2, &dev1) < 0);
+
+	dev1.io_device = (void *)0x100000000;
+	CU_ASSERT(io_device_cmp(&dev1, &dev2) > 0);
+	CU_ASSERT(io_device_cmp(&dev2, &dev1) < 0);
+
+	dev1.io_device = (void *)0x8000000000000000;
+	CU_ASSERT(io_device_cmp(&dev1, &dev2) > 0);
+	CU_ASSERT(io_device_cmp(&dev2, &dev1) < 0);
+
+	allocate_threads(1);
+	set_thread(0);
+
+	spdk_io_device_register((void *)0x1, dummy_create_cb, dummy_destroy_cb, 0, NULL);
+	spdk_io_device_register((void *)0x7FFFFFFF, dummy_create_cb, dummy_destroy_cb, 0, NULL);
+	spdk_io_device_register((void *)0x80000000, dummy_create_cb, dummy_destroy_cb, 0, NULL);
+	spdk_io_device_register((void *)0x100000000, dummy_create_cb, dummy_destroy_cb, 0, NULL);
+	spdk_io_device_register((void *)0x8000000000000000, dummy_create_cb, dummy_destroy_cb, 0, NULL);
+	spdk_io_device_register((void *)0x8000000100000000, dummy_create_cb, dummy_destroy_cb, 0, NULL);
+	spdk_io_device_register((void *)UINT64_MAX, dummy_create_cb, dummy_destroy_cb, 0, NULL);
+
+	/* RB_MIN and RB_NEXT should return devs in ascending order by addresses.
+	 * RB_FOREACH uses RB_MIN and RB_NEXT internally.
+	 */
+	dev = RB_MIN(io_device_tree, &g_io_devices);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(dev->io_device == (void *)0x1);
+
+	dev = RB_NEXT(io_device_tree, &g_io_devices, dev);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(dev->io_device == (void *)0x7FFFFFFF);
+
+	dev = RB_NEXT(io_device_tree, &g_io_devices, dev);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(dev->io_device == (void *)0x80000000);
+
+	dev = RB_NEXT(io_device_tree, &g_io_devices, dev);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(dev->io_device == (void *)0x100000000);
+
+	dev = RB_NEXT(io_device_tree, &g_io_devices, dev);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(dev->io_device == (void *)0x8000000000000000);
+
+	dev = RB_NEXT(io_device_tree, &g_io_devices, dev);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(dev->io_device == (void *)0x8000000100000000);
+
+	dev = RB_NEXT(io_device_tree, &g_io_devices, dev);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(dev->io_device == (void *)UINT64_MAX);
+
+	/* Verify spdk_get_io_channel() creates io_channels associated with the
+	 * correct io_devices.
+	 */
+	ch = spdk_get_io_channel((void *)0x1);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	CU_ASSERT(ch->dev->io_device == (void *)0x1);
+	spdk_put_io_channel(ch);
+
+	ch = spdk_get_io_channel((void *)0x7FFFFFFF);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	CU_ASSERT(ch->dev->io_device == (void *)0x7FFFFFFF);
+	spdk_put_io_channel(ch);
+
+	ch = spdk_get_io_channel((void *)0x80000000);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	CU_ASSERT(ch->dev->io_device == (void *)0x80000000);
+	spdk_put_io_channel(ch);
+
+	ch = spdk_get_io_channel((void *)0x100000000);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	CU_ASSERT(ch->dev->io_device == (void *)0x100000000);
+	spdk_put_io_channel(ch);
+
+	ch = spdk_get_io_channel((void *)0x8000000000000000);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	CU_ASSERT(ch->dev->io_device == (void *)0x8000000000000000);
+	spdk_put_io_channel(ch);
+
+	ch = spdk_get_io_channel((void *)0x8000000100000000);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	CU_ASSERT(ch->dev->io_device == (void *)0x8000000100000000);
+	spdk_put_io_channel(ch);
+
+	ch = spdk_get_io_channel((void *)UINT64_MAX);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	CU_ASSERT(ch->dev->io_device == (void *)UINT64_MAX);
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	spdk_io_device_unregister((void *)0x1, NULL);
+	spdk_io_device_unregister((void *)0x7FFFFFFF, NULL);
+	spdk_io_device_unregister((void *)0x80000000, NULL);
+	spdk_io_device_unregister((void *)0x100000000, NULL);
+	spdk_io_device_unregister((void *)0x8000000000000000, NULL);
+	spdk_io_device_unregister((void *)0x8000000100000000, NULL);
+	spdk_io_device_unregister((void *)UINT64_MAX, NULL);
+
+	poll_threads();
+
+	CU_ASSERT(RB_EMPTY(&g_io_devices));
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1703,6 +1829,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, device_unregister_and_thread_exit_race);
 	CU_ADD_TEST(suite, cache_closest_timed_poller);
 	CU_ADD_TEST(suite, multi_timed_pollers_have_same_expiration);
+	CU_ADD_TEST(suite, io_device_lookup);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
