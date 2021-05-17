@@ -39,7 +39,6 @@
 #include "spdk/string.h"
 #include "spdk/thread.h"
 #include "spdk/trace.h"
-#include "spdk/tree.h"
 #include "spdk/util.h"
 #include "spdk/fd_group.h"
 
@@ -143,8 +142,8 @@ struct spdk_thread {
 	enum spdk_thread_state		state;
 	int				pending_unregister_count;
 
-	TAILQ_HEAD(, spdk_io_channel)	io_channels;
-	TAILQ_ENTRY(spdk_thread)	tailq;
+	RB_HEAD(io_channel_tree, spdk_io_channel)	io_channels;
+	TAILQ_ENTRY(spdk_thread)			tailq;
 
 	char				name[SPDK_MAX_THREAD_NAME_LEN + 1];
 	struct spdk_cpuset		cpumask;
@@ -195,6 +194,14 @@ io_device_cmp(struct io_device *dev1, struct io_device *dev2)
 }
 
 RB_GENERATE_STATIC(io_device_tree, io_device, node, io_device_cmp);
+
+static int
+io_channel_cmp(struct spdk_io_channel *ch1, struct spdk_io_channel *ch2)
+{
+	return (ch1->dev < ch2->dev ? -1 : ch1->dev > ch2->dev);
+}
+
+RB_GENERATE_STATIC(io_channel_tree, spdk_io_channel, node, io_channel_cmp);
 
 struct spdk_msg {
 	spdk_msg_fn		fn;
@@ -347,7 +354,7 @@ _free_thread(struct spdk_thread *thread)
 	struct spdk_msg *msg;
 	struct spdk_poller *poller, *ptmp;
 
-	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+	RB_FOREACH(ch, io_channel_tree, &thread->io_channels) {
 		SPDK_ERRLOG("thread %s still has channel for io_device %s\n",
 			    thread->name, ch->dev->name);
 	}
@@ -422,7 +429,7 @@ spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
 		spdk_cpuset_negate(&thread->cpumask);
 	}
 
-	TAILQ_INIT(&thread->io_channels);
+	RB_INIT(&thread->io_channels);
 	TAILQ_INIT(&thread->active_pollers);
 	RB_INIT(&thread->timed_pollers);
 	TAILQ_INIT(&thread->paused_pollers);
@@ -538,7 +545,7 @@ thread_exit(struct spdk_thread *thread, uint64_t now)
 		return;
 	}
 
-	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+	RB_FOREACH(ch, io_channel_tree, &thread->io_channels) {
 		SPDK_INFOLOG(thread,
 			     "thread %s still has channel for io_device %s\n",
 			     thread->name, ch->dev->name);
@@ -1741,13 +1748,13 @@ spdk_thread_get_next_paused_poller(struct spdk_poller *prev)
 struct spdk_io_channel *
 spdk_thread_get_first_io_channel(struct spdk_thread *thread)
 {
-	return TAILQ_FIRST(&thread->io_channels);
+	return RB_MIN(io_channel_tree, &thread->io_channels);
 }
 
 struct spdk_io_channel *
 spdk_thread_get_next_io_channel(struct spdk_io_channel *prev)
 {
-	return TAILQ_NEXT(prev, tailq);
+	return RB_NEXT(io_channel_tree, &thread->io_channels, prev);
 }
 
 struct call_thread {
@@ -2024,6 +2031,15 @@ spdk_io_device_get_name(struct io_device *dev)
 	return dev->name;
 }
 
+static struct spdk_io_channel *
+thread_get_io_channel(struct spdk_thread *thread, struct io_device *dev)
+{
+	struct spdk_io_channel find = {};
+
+	find.dev = dev;
+	return RB_FIND(io_channel_tree, &thread->io_channels, &find);
+}
+
 struct spdk_io_channel *
 spdk_get_io_channel(void *io_device)
 {
@@ -2053,22 +2069,21 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
-	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-		if (ch->dev == dev) {
-			ch->ref++;
+	ch = thread_get_io_channel(thread, dev);
+	if (ch != NULL) {
+		ch->ref++;
 
-			SPDK_DEBUGLOG(thread, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
-				      ch, dev->name, dev->io_device, thread->name, ch->ref);
+		SPDK_DEBUGLOG(thread, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
+			      ch, dev->name, dev->io_device, thread->name, ch->ref);
 
-			/*
-			 * An I/O channel already exists for this device on this
-			 *  thread, so return it.
-			 */
-			pthread_mutex_unlock(&g_devlist_mutex);
-			spdk_trace_record(TRACE_THREAD_IOCH_GET, 0, 0,
-					  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref);
-			return ch;
-		}
+		/*
+		 * An I/O channel already exists for this device on this
+		 *  thread, so return it.
+		 */
+		pthread_mutex_unlock(&g_devlist_mutex);
+		spdk_trace_record(TRACE_THREAD_IOCH_GET, 0, 0,
+				  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref);
+		return ch;
 	}
 
 	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
@@ -2083,7 +2098,7 @@ spdk_get_io_channel(void *io_device)
 	ch->thread = thread;
 	ch->ref = 1;
 	ch->destroy_ref = 0;
-	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
+	RB_INSERT(io_channel_tree, &thread->io_channels, ch);
 
 	SPDK_DEBUGLOG(thread, "Get io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
 		      ch, dev->name, dev->io_device, thread->name, ch->ref);
@@ -2095,7 +2110,7 @@ spdk_get_io_channel(void *io_device)
 	rc = dev->create_cb(io_device, (uint8_t *)ch + sizeof(*ch));
 	if (rc != 0) {
 		pthread_mutex_lock(&g_devlist_mutex);
-		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
+		RB_REMOVE(io_channel_tree, &ch->thread->io_channels, ch);
 		dev->refcnt--;
 		free(ch);
 		pthread_mutex_unlock(&g_devlist_mutex);
@@ -2138,7 +2153,7 @@ put_io_channel(void *arg)
 	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
+	RB_REMOVE(io_channel_tree, &ch->thread->io_channels, ch);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	/* Don't hold the devlist mutex while the destroy_cb is called. */
@@ -2283,11 +2298,7 @@ _call_channel(void *ctx)
 	 *  the fn() on this thread.
 	 */
 	pthread_mutex_lock(&g_devlist_mutex);
-	TAILQ_FOREACH(ch, &i->cur_thread->io_channels, tailq) {
-		if (ch->dev == i->dev) {
-			break;
-		}
-	}
+	ch = thread_get_io_channel(i->cur_thread, i->dev);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (ch) {
@@ -2327,16 +2338,15 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	}
 
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
-		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev == i->dev) {
-				ch->dev->for_each_count++;
-				i->cur_thread = thread;
-				i->ch = ch;
-				pthread_mutex_unlock(&g_devlist_mutex);
-				rc = spdk_thread_send_msg(thread, _call_channel, i);
-				assert(rc == 0);
-				return;
-			}
+		ch = thread_get_io_channel(thread, i->dev);
+		if (ch != NULL) {
+			ch->dev->for_each_count++;
+			i->cur_thread = thread;
+			i->ch = ch;
+			pthread_mutex_unlock(&g_devlist_mutex);
+			rc = spdk_thread_send_msg(thread, _call_channel, i);
+			assert(rc == 0);
+			return;
 		}
 	}
 
@@ -2364,15 +2374,14 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 	}
 	thread = TAILQ_NEXT(i->cur_thread, tailq);
 	while (thread) {
-		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev == i->dev) {
-				i->cur_thread = thread;
-				i->ch = ch;
-				pthread_mutex_unlock(&g_devlist_mutex);
-				rc = spdk_thread_send_msg(thread, _call_channel, i);
-				assert(rc == 0);
-				return;
-			}
+		ch = thread_get_io_channel(thread, i->dev);
+		if (ch != NULL) {
+			i->cur_thread = thread;
+			i->ch = ch;
+			pthread_mutex_unlock(&g_devlist_mutex);
+			rc = spdk_thread_send_msg(thread, _call_channel, i);
+			assert(rc == 0);
+			return;
 		}
 		thread = TAILQ_NEXT(thread, tailq);
 	}

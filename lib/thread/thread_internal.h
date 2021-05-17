@@ -34,8 +34,8 @@
 #define SPDK_THREAD_INTERNAL_H_
 
 #include "spdk/assert.h"
-#include "spdk/queue.h"
 #include "spdk/thread.h"
+#include "spdk/tree.h"
 
 /**
  * \brief Represents a per-thread channel for accessing an I/O device.
@@ -51,10 +51,10 @@ struct spdk_io_channel {
 	struct io_device		*dev;
 	uint32_t			ref;
 	uint32_t			destroy_ref;
-	TAILQ_ENTRY(spdk_io_channel)	tailq;
+	RB_ENTRY(spdk_io_channel)	node;
 	spdk_io_channel_destroy_cb	destroy_cb;
 
-	uint8_t				_padding[48];
+	uint8_t				_padding[40];
 	/*
 	 * Modules will allocate extra memory off the end of this structure
 	 *  to store references to hardware-specific references (i.e. NVMe queue
