@@ -47,12 +47,14 @@ struct spdk_trace_histories *g_trace_histories;
 
 void
 _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
-		   uint64_t object_id, uint64_t arg1)
+		   uint64_t object_id, int num_args, ...)
 {
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
-	unsigned lcore;
-	uint64_t next_circular_entry;
+	struct spdk_trace_tpoint *tpoint;
+	unsigned lcore, i, offset;
+	uint64_t value, next_circular_entry;
+	va_list vl;
 
 	lcore = spdk_env_get_current_core();
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {
@@ -74,7 +76,26 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry->poller_id = poller_id;
 	next_entry->size = size;
 	next_entry->object_id = object_id;
-	next_entry->arg1 = arg1;
+
+	tpoint = &g_trace_flags->tpoint[tpoint_id];
+	/* Make sure that the number of arguments passed matches tracepoint definition. For now,
+	 * allow passing extra arguments (which will be silently discard), as some traces that don't
+	 * have any arguments pass 0 as an argument.  Once they're fixed, change the condition to
+	 * "!=".
+	 */
+	if (tpoint->num_args > num_args) {
+		assert(0 && "Unexpected number of tracepoint arguments");
+		return;
+	}
+
+	va_start(vl, num_args);
+	for (i = 0, offset = 0; i < tpoint->num_args; ++i) {
+		/* All values are currently passed as uint64_t */
+		value = va_arg(vl, uint64_t);
+		memcpy(&next_entry->args[offset], &value, sizeof(value));
+		offset += tpoint->args[i].size;
+	}
+	va_end(vl);
 
 	/* Ensure all elements of the trace entry are visible to outside trace tools */
 	spdk_smp_wmb();

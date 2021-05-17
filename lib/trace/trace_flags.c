@@ -277,35 +277,99 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 	object->id_prefix = id_prefix;
 }
 
-void
-spdk_trace_register_description(const char *name, uint16_t tpoint_id, uint8_t owner_type,
-				uint8_t object_type, uint8_t new_object,
-				uint8_t arg1_type, const char *arg1_name)
+static void
+trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 {
 	struct spdk_trace_tpoint *tpoint;
+	size_t i, remaining_size, max_name_length;
 
-	assert(tpoint_id != 0);
-	assert(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
+	assert(opts->tpoint_id != 0);
+	assert(opts->tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
+
+	if (strnlen(opts->name, sizeof(tpoint->name)) == sizeof(tpoint->name)) {
+		SPDK_ERRLOG("name (%s) too long\n", opts->name);
+	}
+
+	tpoint = &g_trace_flags->tpoint[opts->tpoint_id];
+	assert(tpoint->tpoint_id == 0);
+
+	snprintf(tpoint->name, sizeof(tpoint->name), "%s", opts->name);
+	tpoint->tpoint_id = opts->tpoint_id;
+	tpoint->object_type = opts->object_type;
+	tpoint->owner_type = opts->owner_type;
+	tpoint->new_object = opts->new_object;
+
+	max_name_length = sizeof(tpoint->args[0].name);
+	remaining_size = sizeof(((struct spdk_trace_entry *)0)->args);
+
+	for (i = 0; i < SPDK_TRACE_MAX_ARGS_COUNT; ++i) {
+		if (!opts->args[i].name) {
+			break;
+		}
+
+		switch (opts->args[i].type) {
+		case SPDK_TRACE_ARG_TYPE_INT:
+		case SPDK_TRACE_ARG_TYPE_PTR:
+		case SPDK_TRACE_ARG_TYPE_STR:
+			/* For now all trace types need to be passed as uint64_t */
+			assert(opts->args[i].size == sizeof(uint64_t));
+			break;
+		default:
+			assert(0 && "invalid trace argument type");
+			break;
+		}
+
+		assert(remaining_size >= opts->args[i].size && "tpoint exceeds max size");
+		remaining_size -= opts->args[i].size;
+
+		if (strnlen(opts->args[i].name, max_name_length) == max_name_length) {
+			SPDK_ERRLOG("argument name (%s) is too long\n", opts->args[i].name);
+		}
+
+		snprintf(tpoint->args[i].name, sizeof(tpoint->args[i].name),
+			 "%s", opts->args[i].name);
+		tpoint->args[i].type = opts->args[i].type;
+		tpoint->args[i].size = opts->args[i].size;
+	}
+
+	tpoint->num_args = i;
+}
+
+void
+spdk_trace_register_description_ext(const struct spdk_trace_tpoint_opts *opts, size_t num_opts)
+{
+	size_t i;
 
 	if (g_trace_flags == NULL) {
 		SPDK_ERRLOG("trace is not initialized\n");
 		return;
 	}
 
-	if (strnlen(name, sizeof(tpoint->name)) == sizeof(tpoint->name)) {
-		SPDK_ERRLOG("name (%s) too long\n", name);
+	for (i = 0; i < num_opts; ++i) {
+		trace_register_description(&opts[i]);
 	}
+}
 
-	tpoint = &g_trace_flags->tpoint[tpoint_id];
-	assert(tpoint->tpoint_id == 0);
+void
+spdk_trace_register_description(const char *name, uint16_t tpoint_id, uint8_t owner_type,
+				uint8_t object_type, uint8_t new_object,
+				uint8_t arg1_type, const char *arg1_name)
+{
+	struct spdk_trace_tpoint_opts opts = {
+		.name = name,
+		.tpoint_id = tpoint_id,
+		.owner_type = owner_type,
+		.object_type = object_type,
+		.new_object = new_object,
+		.args = {{
+				.name = arg1_name,
+				.type = arg1_type,
+				.size = sizeof(uint64_t)
+			}
+		}
+	};
 
-	snprintf(tpoint->name, sizeof(tpoint->name), "%s", name);
-	tpoint->tpoint_id = tpoint_id;
-	tpoint->object_type = object_type;
-	tpoint->owner_type = owner_type;
-	tpoint->new_object = new_object;
-	tpoint->arg1_type = arg1_type;
-	snprintf(tpoint->arg1_name, sizeof(tpoint->arg1_name), "%s", arg1_name);
+	spdk_trace_register_description_ext(&opts, 1);
 }
 
 void
