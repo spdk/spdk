@@ -241,7 +241,6 @@ get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
-#if FIO_HAS_ZBD
 /**
  * Returns the fio_qpair matching the given fio_file and has an associated ns
  */
@@ -259,6 +258,7 @@ get_fio_qpair(struct spdk_fio_thread *fio_thread, struct fio_file *f)
 	return NULL;
 }
 
+#if FIO_HAS_ZBD
 /**
  * Callback function to use while processing completions until completion-indicator turns non-zero
  */
@@ -988,16 +988,12 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	uint64_t		lba;
 	uint32_t		lba_count;
 
-	/* Find the namespace that corresponds to the file in the io_u */
-	TAILQ_FOREACH(fio_qpair, &fio_thread->fio_qpair, link) {
-		if (fio_qpair->f == io_u->file) {
-			ns = fio_qpair->ns;
-			break;
-		}
-	}
-	if (fio_qpair == NULL || ns == NULL) {
+	fio_qpair = get_fio_qpair(fio_thread, io_u->file);
+	if (fio_qpair == NULL) {
 		return -ENXIO;
 	}
+	ns = fio_qpair->ns;
+
 	if (fio_qpair->nvme_pi_enabled && !fio_qpair->extended_lba) {
 		md_buf = fio_req->md_buf;
 	}
@@ -1041,7 +1037,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 								    spdk_fio_completion_cb, fio_req,
 								    fio_qpair->io_flags, dif_ctx->apptag_mask, dif_ctx->app_tag);
 			} else {
-				uint64_t zslba = fio_offset_to_zslba(io_u->offset, fio_qpair->ns);
+				uint64_t zslba = fio_offset_to_zslba(io_u->offset, ns);
 				rc = spdk_nvme_zns_zone_append_with_md(ns, fio_qpair->qpair, io_u->buf, md_buf, zslba,
 								       lba_count,
 								       spdk_fio_completion_cb, fio_req,
@@ -1054,7 +1050,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 								     spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
 								     dif_ctx->apptag_mask, dif_ctx->app_tag);
 			} else {
-				uint64_t zslba = fio_offset_to_zslba(io_u->offset, fio_qpair->ns);
+				uint64_t zslba = fio_offset_to_zslba(io_u->offset, ns);
 				rc = spdk_nvme_zns_zone_appendv_with_md(ns, fio_qpair->qpair, zslba,
 									lba_count, spdk_fio_completion_cb, fio_req, fio_qpair->io_flags,
 									spdk_nvme_io_reset_sgl, spdk_nvme_io_next_sge, md_buf,
