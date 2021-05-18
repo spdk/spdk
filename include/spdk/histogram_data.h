@@ -123,9 +123,7 @@ __spdk_histogram_data_get_bucket_range(struct spdk_histogram_data *h, uint64_t d
 {
 	uint32_t clz, range;
 
-	assert(datapoint != 0);
-
-	clz = __builtin_clzll(datapoint);
+	clz = datapoint > 0 ? __builtin_clzll(datapoint) : 64;
 
 	if (clz <= SPDK_HISTOGRAM_BUCKET_LSB(h)) {
 		range = SPDK_HISTOGRAM_BUCKET_LSB(h) - clz;
