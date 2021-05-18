@@ -74,6 +74,10 @@ _get_thread_load(struct spdk_lw_thread *lw_thread)
 	lw_thread->last_stats.busy_tsc = lw_thread->snapshot_stats.busy_tsc;
 	lw_thread->last_stats.idle_tsc = lw_thread->snapshot_stats.idle_tsc;
 
+	if (busy == 0) {
+		/* No work was done, exit before possible division by 0. */
+		return 0;
+	}
 	/* return percentage of time thread was busy */
 	return busy  * 100 / (busy + idle);
 }
@@ -156,17 +160,6 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 			lw_thread->new_lcore = lw_thread->lcore;
 			thread = spdk_thread_get_from_ctx(lw_thread);
 			cpumask = spdk_thread_get_cpumask(thread);
-
-			if (lw_thread->last_stats.busy_tsc + lw_thread->last_stats.idle_tsc == 0) {
-				lw_thread->last_stats.busy_tsc = lw_thread->snapshot_stats.busy_tsc;
-				lw_thread->last_stats.idle_tsc = lw_thread->snapshot_stats.idle_tsc;
-
-				if (i != g_main_lcore) {
-					busy_threads_present = true;
-				}
-
-				continue;
-			}
 
 			thread_busy = lw_thread->snapshot_stats.busy_tsc - lw_thread->last_stats.busy_tsc;
 
