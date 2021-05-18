@@ -86,6 +86,7 @@ function unittest_nvme() {
 	$valgrind $testdir/lib/nvme/nvme_io_msg.c/nvme_io_msg_ut
 	$valgrind $testdir/lib/nvme/nvme_pcie_common.c/nvme_pcie_common_ut
 	$valgrind $testdir/lib/nvme/nvme_fabric.c/nvme_fabric_ut
+	$valgrind $testdir/lib/nvme/nvme_opal.c/nvme_opal_ut
 }
 
 function unittest_nvmf() {
