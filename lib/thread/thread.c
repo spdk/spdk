@@ -757,7 +757,13 @@ thread_execute_poller(struct spdk_thread *thread, struct spdk_poller *poller)
 		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		free(poller);
 		break;
+	case SPDK_POLLER_STATE_PAUSING:
+		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+		poller->state = SPDK_POLLER_STATE_PAUSED;
+		break;
 	case SPDK_POLLER_STATE_PAUSED:
+	case SPDK_POLLER_STATE_WAITING:
 		break;
 	case SPDK_POLLER_STATE_RUNNING:
 		poller->state = SPDK_POLLER_STATE_WAITING;
@@ -812,10 +818,17 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 		poller_remove_timer(thread, poller);
 		free(poller);
 		break;
+	case SPDK_POLLER_STATE_PAUSING:
+		poller_remove_timer(thread, poller);
+		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
+		poller->state = SPDK_POLLER_STATE_PAUSED;
+		break;
 	case SPDK_POLLER_STATE_PAUSED:
 		break;
 	case SPDK_POLLER_STATE_RUNNING:
 		poller->state = SPDK_POLLER_STATE_WAITING;
+	/* fallthrough */
+	case SPDK_POLLER_STATE_WAITING:
 		poller_remove_timer(thread, poller);
 		poller_insert_timer(thread, poller, now);
 		break;
@@ -1528,26 +1541,17 @@ spdk_poller_pause(struct spdk_poller *poller)
 		return;
 	}
 
-	/* If a poller is paused from within itself, we can immediately move it
-	 * on the paused_pollers list.  Otherwise we just set its state to
-	 * SPDK_POLLER_STATE_PAUSING and let spdk_thread_poll() move it.  It
-	 * allows a poller to be paused from another one's context without
-	 * breaking the TAILQ_FOREACH_REVERSE_SAFE iteration.
+	/* We just set its state to SPDK_POLLER_STATE_PAUSING and let
+	 * spdk_thread_poll() move it. It allows a poller to be paused from
+	 * another one's context without breaking the TAILQ_FOREACH_REVERSE_SAFE
+	 * iteration, or from within itself without breaking the logic to always
+	 * remove the closest timed poller in the TAILQ_FOREACH_SAFE iteration.
 	 */
 	switch (poller->state) {
 	case SPDK_POLLER_STATE_PAUSED:
 	case SPDK_POLLER_STATE_PAUSING:
 		break;
 	case SPDK_POLLER_STATE_RUNNING:
-		if (poller->period_ticks > 0) {
-			poller_remove_timer(thread, poller);
-		} else {
-			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
-		}
-
-		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
-		poller->state = SPDK_POLLER_STATE_PAUSED;
-		break;
 	case SPDK_POLLER_STATE_WAITING:
 		poller->state = SPDK_POLLER_STATE_PAUSING;
 		break;

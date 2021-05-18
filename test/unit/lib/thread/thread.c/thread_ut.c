@@ -244,6 +244,23 @@ poller_run_pause(void *ctx)
 	return 0;
 }
 
+/* Verify the same poller can be switched multiple times between
+ * pause and resume while it runs.
+ */
+static int
+poller_run_pause_resume_pause(void *ctx)
+{
+	struct poller_ctx *poller_ctx = ctx;
+
+	poller_ctx->run = true;
+
+	spdk_poller_pause(poller_ctx->poller);
+	spdk_poller_resume(poller_ctx->poller);
+	spdk_poller_pause(poller_ctx->poller);
+
+	return 0;
+}
+
 static void
 poller_msg_pause_cb(void *ctx)
 {
@@ -272,6 +289,21 @@ poller_pause(void)
 
 	/* Register a poller that pauses itself */
 	poller_ctx.poller = spdk_poller_register(poller_run_pause, &poller_ctx, 0);
+	CU_ASSERT_PTR_NOT_NULL(poller_ctx.poller);
+
+	poller_ctx.run = false;
+	poll_threads();
+	CU_ASSERT_EQUAL(poller_ctx.run, true);
+
+	poller_ctx.run = false;
+	poll_threads();
+	CU_ASSERT_EQUAL(poller_ctx.run, false);
+
+	spdk_poller_unregister(&poller_ctx.poller);
+	CU_ASSERT_PTR_NULL(poller_ctx.poller);
+
+	/* Register a poller that switches between pause and resume itself */
+	poller_ctx.poller = spdk_poller_register(poller_run_pause_resume_pause, &poller_ctx, 0);
 	CU_ASSERT_PTR_NOT_NULL(poller_ctx.poller);
 
 	poller_ctx.run = false;
@@ -382,6 +414,55 @@ poller_pause(void)
 			spdk_delay_us(delay[i]);
 			poll_threads();
 		}
+		CU_ASSERT_EQUAL(poller_ctx.run, true);
+
+		spdk_poller_unregister(&poller_ctx.poller);
+		CU_ASSERT_PTR_NULL(poller_ctx.poller);
+
+		/* Register a timed poller that pauses itself */
+		poller_ctx.poller = spdk_poller_register(poller_run_pause, &poller_ctx, delay[i]);
+		CU_ASSERT_PTR_NOT_NULL(poller_ctx.poller);
+
+		spdk_delay_us(delay[i]);
+		poller_ctx.run = false;
+		poll_threads();
+		CU_ASSERT_EQUAL(poller_ctx.run, true);
+
+		poller_ctx.run = false;
+		spdk_delay_us(delay[i]);
+		poll_threads();
+		CU_ASSERT_EQUAL(poller_ctx.run, false);
+
+		spdk_poller_resume(poller_ctx.poller);
+
+		CU_ASSERT_EQUAL(poller_ctx.run, false);
+		spdk_delay_us(delay[i]);
+		poll_threads();
+		CU_ASSERT_EQUAL(poller_ctx.run, true);
+
+		spdk_poller_unregister(&poller_ctx.poller);
+		CU_ASSERT_PTR_NULL(poller_ctx.poller);
+
+		/* Register a timed poller that switches between pause and resume itself */
+		poller_ctx.poller = spdk_poller_register(poller_run_pause_resume_pause,
+				    &poller_ctx, delay[i]);
+		CU_ASSERT_PTR_NOT_NULL(poller_ctx.poller);
+
+		spdk_delay_us(delay[i]);
+		poller_ctx.run = false;
+		poll_threads();
+		CU_ASSERT_EQUAL(poller_ctx.run, true);
+
+		poller_ctx.run = false;
+		spdk_delay_us(delay[i]);
+		poll_threads();
+		CU_ASSERT_EQUAL(poller_ctx.run, false);
+
+		spdk_poller_resume(poller_ctx.poller);
+
+		CU_ASSERT_EQUAL(poller_ctx.run, false);
+		spdk_delay_us(delay[i]);
+		poll_threads();
 		CU_ASSERT_EQUAL(poller_ctx.run, true);
 
 		spdk_poller_unregister(&poller_ctx.poller);
