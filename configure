@@ -845,6 +845,20 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	cd $rootdir
 fi
 
+# For ARM Neoverse-N1 platform, debug build needs gcc version newer than 8.4
+if [[ "${CONFIG[DEBUG]}" = "y" && $arch = aarch64* && "$CC_TYPE" = "gcc" ]]; then
+	GCC_VERSION=$($CC -dumpfullversion)
+	PART_NUM=$(grep -i -m 1 "CPU part" /proc/cpuinfo | awk '{print $4}')
+
+	if [[ "$(printf '%s\n' "8.4.0" "$GCC_VERSION" | sort -V | head -n1)" != "8.4.0" ]]; then
+		if [[ $PART_NUM = 0xd0c ]]; then
+			echo "WARNING: For ARM Neoverse-N1 platform, debug build needs GCC version newer than 8.4."
+			echo "         Will work around this by using armv8.2-a+crypto as target architecture for now."
+			CONFIG[ARCH]=armv8.2-a+crypto
+		fi
+	fi
+fi
+
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
 if (($(grep -cE "^\s*CONFIG_[[:alnum:]_]+=" "$rootdir/CONFIG") != ${#CONFIG[@]})); then
