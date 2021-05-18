@@ -103,7 +103,7 @@ Zoned block devices may also have a resource constraint on the number of zones t
 any point in time. Unlike ``max_open_zones``, fio currently does not manage this constraint, and
 there is thus no option to limit it either.
 
-Since the max active zones limit (by definition) has to be greater than or equal to the max active
+Since the max active zones limit (by definition) has to be greater than or equal to the max open
 zones limit, the easiest way to work around that fio does not manage this constraint, is to start
 with a clean state each run (except for read-only workloads), by resetting all zones before fio
 starts running its jobs by using the engine option:
