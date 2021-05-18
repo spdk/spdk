@@ -784,11 +784,9 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 
 	switch (poller->state) {
 	case SPDK_POLLER_STATE_UNREGISTERED:
-		poller_remove_timer(thread, poller);
 		free(poller);
 		return 0;
 	case SPDK_POLLER_STATE_PAUSING:
-		poller_remove_timer(thread, poller);
 		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_PAUSED;
 		return 0;
@@ -815,11 +813,9 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 
 	switch (poller->state) {
 	case SPDK_POLLER_STATE_UNREGISTERED:
-		poller_remove_timer(thread, poller);
 		free(poller);
 		break;
 	case SPDK_POLLER_STATE_PAUSING:
-		poller_remove_timer(thread, poller);
 		TAILQ_INSERT_TAIL(&thread->paused_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_PAUSED;
 		break;
@@ -829,7 +825,6 @@ thread_execute_timed_poller(struct spdk_thread *thread, struct spdk_poller *poll
 		poller->state = SPDK_POLLER_STATE_WAITING;
 	/* fallthrough */
 	case SPDK_POLLER_STATE_WAITING:
-		poller_remove_timer(thread, poller);
 		poller_insert_timer(thread, poller, now);
 		break;
 	default:
@@ -881,6 +876,7 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		}
 
 		tmp = TAILQ_NEXT(poller, tailq);
+		poller_remove_timer(thread, poller);
 
 		timer_rc = thread_execute_timed_poller(thread, poller, now);
 		if (timer_rc > rc) {
