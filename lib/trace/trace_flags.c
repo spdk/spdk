@@ -303,7 +303,7 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 	remaining_size = sizeof(((struct spdk_trace_entry *)0)->args);
 
 	for (i = 0; i < SPDK_TRACE_MAX_ARGS_COUNT; ++i) {
-		if (!opts->args[i].name) {
+		if (!opts->args[i].name || opts->args[i].name[0] == '\0') {
 			break;
 		}
 

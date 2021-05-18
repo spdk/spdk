@@ -152,11 +152,6 @@ print_arg(uint8_t arg_type, const char *arg_string, const void *arg)
 {
 	uint64_t value;
 
-	if (arg_string[0] == 0) {
-		printf("%24s", "");
-		return;
-	}
-
 	switch (arg_type) {
 	case SPDK_TRACE_ARG_TYPE_PTR:
 		memcpy(&value, arg, sizeof(value));
@@ -206,11 +201,6 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	printf("%-*s ", (int)sizeof(d->name), d->name);
 	print_size(e->size);
 
-	for (i = 0, offset = 0; i < d->num_args; ++i) {
-		assert(offset < sizeof(e->args));
-		print_arg(d->args[i].type, d->args[i].name, &e->args[offset]);
-		offset += d->args[i].size;
-	}
 	if (d->new_object) {
 		print_object_id(d->object_type, stats->index[e->object_id]);
 	} else if (d->object_type != OBJECT_NONE) {
@@ -224,6 +214,12 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		}
 	} else if (e->object_id != 0) {
 		print_arg(SPDK_TRACE_ARG_TYPE_PTR, "object", &e->object_id);
+	}
+
+	for (i = 0, offset = 0; i < d->num_args; ++i) {
+		assert(offset < sizeof(e->args));
+		print_arg(d->args[i].type, d->args[i].name, &e->args[offset]);
+		offset += d->args[i].size;
 	}
 	printf("\n");
 }
