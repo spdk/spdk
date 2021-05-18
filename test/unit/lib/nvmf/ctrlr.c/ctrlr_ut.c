@@ -1787,6 +1787,7 @@ test_get_ana_log_page(void)
 	int i;
 	char expected_page[UT_ANA_LOG_PAGE_SIZE] = {0};
 	char actual_page[UT_ANA_LOG_PAGE_SIZE] = {0};
+	struct iovec iov, iovs[2];
 	struct spdk_nvme_ana_page *ana_hdr;
 	char _ana_desc[UT_ANA_DESC_SIZE];
 	struct spdk_nvme_ana_group_descriptor *ana_desc;
@@ -1825,11 +1826,24 @@ test_get_ana_log_page(void)
 	offset = 0;
 	while (offset < UT_ANA_LOG_PAGE_SIZE) {
 		length = spdk_min(16, UT_ANA_LOG_PAGE_SIZE - offset);
-		nvmf_get_ana_log_page(&ctrlr, &actual_page[offset], offset, length, 0);
+		iov.iov_base = &actual_page[offset];
+		iov.iov_len = length;
+		nvmf_get_ana_log_page(&ctrlr, &iov, 1, offset, length, 0);
 		offset += length;
 	}
 
 	/* compare expected page and actual page */
+	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
+
+	memset(&actual_page[0], 0, UT_ANA_LOG_PAGE_SIZE);
+	offset = 0;
+	iovs[0].iov_base = &actual_page[offset];
+	iovs[0].iov_len = UT_ANA_LOG_PAGE_SIZE - UT_ANA_DESC_SIZE + 4;
+	offset += UT_ANA_LOG_PAGE_SIZE - UT_ANA_DESC_SIZE + 4;
+	iovs[1].iov_base = &actual_page[offset];
+	iovs[1].iov_len = UT_ANA_LOG_PAGE_SIZE - offset;
+	nvmf_get_ana_log_page(&ctrlr, &iovs[0], 2, 0, UT_ANA_LOG_PAGE_SIZE, 0);
+
 	CU_ASSERT(memcmp(expected_page, actual_page, UT_ANA_LOG_PAGE_SIZE) == 0);
 }
 

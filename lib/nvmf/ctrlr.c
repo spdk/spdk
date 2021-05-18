@@ -1742,6 +1742,56 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+struct copy_iovs_ctx {
+	struct iovec *iovs;
+	int iovcnt;
+	int cur_iov_idx;
+	size_t cur_iov_offset;
+};
+
+static void
+_init_copy_iovs_ctx(struct copy_iovs_ctx *copy_ctx, struct iovec *iovs, int iovcnt)
+{
+	copy_ctx->iovs = iovs;
+	copy_ctx->iovcnt = iovcnt;
+	copy_ctx->cur_iov_idx = 0;
+	copy_ctx->cur_iov_offset = 0;
+}
+
+static size_t
+_copy_buf_to_iovs(struct copy_iovs_ctx *copy_ctx, const void *buf, size_t buf_len)
+{
+	size_t len, iov_remain_len, copied_len = 0;
+	struct iovec *iov;
+
+	if (buf_len == 0) {
+		return 0;
+	}
+
+	while (copy_ctx->cur_iov_idx < copy_ctx->iovcnt) {
+		iov = &copy_ctx->iovs[copy_ctx->cur_iov_idx];
+		iov_remain_len = iov->iov_len - copy_ctx->cur_iov_offset;
+		if (iov_remain_len == 0) {
+			copy_ctx->cur_iov_idx++;
+			copy_ctx->cur_iov_offset = 0;
+			continue;
+		}
+
+		len = spdk_min(iov_remain_len, buf_len - copied_len);
+		memcpy((char *)iov->iov_base + copy_ctx->cur_iov_offset,
+		       (const char *)buf + copied_len,
+		       len);
+		copied_len += len;
+		copy_ctx->cur_iov_offset += len;
+
+		if (buf_len == copied_len) {
+			return copied_len;
+		}
+	}
+
+	return copied_len;
+}
+
 static void
 nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
 {
@@ -1799,16 +1849,18 @@ nvmf_ctrlr_mask_aen(struct spdk_nvmf_ctrlr *ctrlr,
 #define SPDK_NVMF_ANA_DESC_SIZE	(sizeof(struct spdk_nvme_ana_group_descriptor) +	\
 				 sizeof(uint32_t))
 static void
-nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
+nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
 		      uint64_t offset, uint32_t length, uint32_t rae)
 {
-	char *buf = data;
 	struct spdk_nvme_ana_page ana_hdr;
 	char _ana_desc[SPDK_NVMF_ANA_DESC_SIZE];
 	struct spdk_nvme_ana_group_descriptor *ana_desc;
-	size_t copy_len;
+	size_t copy_len, copied_len;
 	uint32_t num_ns = 0;
 	struct spdk_nvmf_ns *ns;
+	struct copy_iovs_ctx copy_ctx;
+
+	_init_copy_iovs_ctx(&copy_ctx, iovs, iovcnt);
 
 	if (length == 0) {
 		return;
@@ -1829,9 +1881,9 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
 		ana_hdr.change_count = 0;
 
 		copy_len = spdk_min(sizeof(ana_hdr) - offset, length);
-		memcpy(buf, (const char *)&ana_hdr + offset, copy_len);
-		length -= copy_len;
-		buf += copy_len;
+		copied_len = _copy_buf_to_iovs(&copy_ctx, (const char *)&ana_hdr + offset, copy_len);
+		assert(copied_len == copy_len);
+		length -= copied_len;
 		offset = 0;
 	}
 
@@ -1858,9 +1910,9 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, void *data,
 		ana_desc->change_count = 0;
 
 		copy_len = spdk_min(SPDK_NVMF_ANA_DESC_SIZE - offset, length);
-		memcpy(buf, (const char *)ana_desc + offset, copy_len);
-		length -= copy_len;
-		buf += copy_len;
+		copied_len = _copy_buf_to_iovs(&copy_ctx, (const char *)ana_desc + offset, copy_len);
+		assert(copied_len == copy_len);
+		length -= copied_len;
 		offset = 0;
 
 		if (length == 0) {
@@ -2089,7 +2141,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
 			if (subsystem->flags.ana_reporting) {
-				nvmf_get_ana_log_page(ctrlr, req->data, offset, len, rae);
+				nvmf_get_ana_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 			} else {
 				goto invalid_log_page;
