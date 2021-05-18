@@ -546,6 +546,64 @@ rpc_send_req(char *rpc_name, struct spdk_jsonrpc_client_response **resp)
 	return 0;
 }
 
+
+static int
+sort_threads(const void *p1, const void *p2)
+{
+	const struct rpc_thread_info *thread_info1 = *(struct rpc_thread_info **)p1;
+	const struct rpc_thread_info *thread_info2 = *(struct rpc_thread_info **)p2;
+	uint64_t count1, count2;
+
+	/* thread IDs may not be allocated contiguously, so we need
+	 * to account for NULL thread_info pointers */
+	if (thread_info1 == NULL && thread_info2 == NULL) {
+		return 0;
+	} else if (thread_info1 == NULL) {
+		return 1;
+	} else if (thread_info2 == NULL) {
+		return -1;
+	}
+
+	switch (g_current_sort_col[THREADS_TAB]) {
+	case 0: /* Sort by name */
+		return strcmp(thread_info1->name, thread_info2->name);
+	case 1: /* Sort by core */
+		count2 = thread_info1->core_num;
+		count1 = thread_info2->core_num;
+		break;
+	case 2: /* Sort by active pollers number */
+		count1 = thread_info1->active_pollers_count;
+		count2 = thread_info2->active_pollers_count;
+		break;
+	case 3: /* Sort by timed pollers number */
+		count1 = thread_info1->timed_pollers_count;
+		count2 = thread_info2->timed_pollers_count;
+		break;
+	case 4: /* Sort by paused pollers number */
+		count1 = thread_info1->paused_pollers_count;
+		count2 = thread_info2->paused_pollers_count;
+		break;
+	case 5: /* Sort by idle time */
+		count1 = thread_info1->idle - thread_info1->last_idle;
+		count2 = thread_info2->idle - thread_info2->last_idle;
+		break;
+	case 6: /* Sort by busy time */
+		count1 = thread_info1->busy - thread_info1->last_busy;
+		count2 = thread_info2->busy - thread_info2->last_busy;
+		break;
+	default:
+		return 0;
+	}
+
+	if (count2 > count1) {
+		return 1;
+	} else if (count2 < count1) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
 static int
 get_data(void)
 {
@@ -795,63 +853,6 @@ get_time_str(uint64_t ticks, char *time_str)
 
 	time = ticks * SPDK_SEC_TO_USEC / g_cores_stats.tick_rate;
 	snprintf(time_str, MAX_TIME_STR_LEN, "%" PRIu64, time);
-}
-
-static int
-sort_threads(const void *p1, const void *p2)
-{
-	const struct rpc_thread_info *thread_info1 = *(struct rpc_thread_info **)p1;
-	const struct rpc_thread_info *thread_info2 = *(struct rpc_thread_info **)p2;
-	uint64_t count1, count2;
-
-	/* thread IDs may not be allocated contiguously, so we need
-	 * to account for NULL thread_info pointers */
-	if (thread_info1 == NULL && thread_info2 == NULL) {
-		return 0;
-	} else if (thread_info1 == NULL) {
-		return 1;
-	} else if (thread_info2 == NULL) {
-		return -1;
-	}
-
-	switch (g_current_sort_col[THREADS_TAB]) {
-	case 0: /* Sort by name */
-		return strcmp(thread_info1->name, thread_info2->name);
-	case 1: /* Sort by core */
-		count2 = thread_info1->core_num;
-		count1 = thread_info2->core_num;
-		break;
-	case 2: /* Sort by active pollers number */
-		count1 = thread_info1->active_pollers_count;
-		count2 = thread_info2->active_pollers_count;
-		break;
-	case 3: /* Sort by timed pollers number */
-		count1 = thread_info1->timed_pollers_count;
-		count2 = thread_info2->timed_pollers_count;
-		break;
-	case 4: /* Sort by paused pollers number */
-		count1 = thread_info1->paused_pollers_count;
-		count2 = thread_info2->paused_pollers_count;
-		break;
-	case 5: /* Sort by idle time */
-		count1 = thread_info1->idle - thread_info1->last_idle;
-		count2 = thread_info2->idle - thread_info2->last_idle;
-		break;
-	case 6: /* Sort by busy time */
-		count1 = thread_info1->busy - thread_info1->last_busy;
-		count2 = thread_info2->busy - thread_info2->last_busy;
-		break;
-	default:
-		return 0;
-	}
-
-	if (count2 > count1) {
-		return 1;
-	} else if (count2 < count1) {
-		return -1;
-	} else {
-		return 0;
-	}
 }
 
 static void
