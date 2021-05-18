@@ -1432,6 +1432,169 @@ cache_closest_timed_poller(void)
 	free_threads();
 }
 
+static void
+multi_timed_pollers_have_same_expiration(void)
+{
+	struct spdk_thread *thread;
+	struct spdk_poller *poller1, *poller2, *poller3, *poller4, *tmp;
+	uint64_t start_ticks;
+
+	allocate_threads(1);
+	set_thread(0);
+
+	thread = spdk_get_thread();
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+
+	/*
+	 * case 1: multiple timed pollers have the same next_run_tick.
+	 */
+	start_ticks = spdk_get_ticks();
+
+	poller1 = spdk_poller_register(dummy_poller, NULL, 500);
+	SPDK_CU_ASSERT_FATAL(poller1 != NULL);
+
+	poller2 = spdk_poller_register(dummy_poller, NULL, 500);
+	SPDK_CU_ASSERT_FATAL(poller2 != NULL);
+
+	poller3 = spdk_poller_register(dummy_poller, NULL, 1000);
+	SPDK_CU_ASSERT_FATAL(poller3 != NULL);
+
+	poller4 = spdk_poller_register(dummy_poller, NULL, 1500);
+	SPDK_CU_ASSERT_FATAL(poller4 != NULL);
+
+	/* poller1 and poller2 have the same next_run_tick but cache has poller1
+	 * because poller1 is registered earlier than poller2.
+	 */
+	CU_ASSERT(thread->first_timed_poller == poller1);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 500);
+	CU_ASSERT(poller2->next_run_tick == start_ticks + 500);
+	CU_ASSERT(poller3->next_run_tick == start_ticks + 1000);
+	CU_ASSERT(poller4->next_run_tick == start_ticks + 1500);
+
+	/* after 500 usec, poller1 and poller2 are expired. */
+	spdk_delay_us(500);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 500);
+	poll_threads();
+
+	/* poller1, poller2, and poller3 have the same next_run_tick but cache
+	 * has poller3 because poller3 is not expired yet.
+	 */
+	CU_ASSERT(thread->first_timed_poller == poller3);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 1000);
+	CU_ASSERT(poller2->next_run_tick == start_ticks + 1000);
+	CU_ASSERT(poller3->next_run_tick == start_ticks + 1000);
+	CU_ASSERT(poller4->next_run_tick == start_ticks + 1500);
+
+	/* after 500 usec, poller1, poller2, and poller3 are expired. */
+	spdk_delay_us(500);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 1000);
+	poll_threads();
+
+	/* poller1, poller2, and poller4 have the same next_run_tick but cache
+	 * has poller4 because poller4 is not expired yet.
+	 */
+	CU_ASSERT(thread->first_timed_poller == poller4);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 1500);
+	CU_ASSERT(poller2->next_run_tick == start_ticks + 1500);
+	CU_ASSERT(poller3->next_run_tick == start_ticks + 2000);
+	CU_ASSERT(poller4->next_run_tick == start_ticks + 1500);
+
+	/* after 500 usec, poller1, poller2, and poller4 are expired. */
+	spdk_delay_us(500);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 1500);
+	poll_threads();
+
+	/* poller1, poller2, and poller3 have the same next_run_tick but cache
+	 * has poller3 because poller3 is updated earlier than poller1 and poller2.
+	 */
+	CU_ASSERT(thread->first_timed_poller == poller3);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 2000);
+	CU_ASSERT(poller2->next_run_tick == start_ticks + 2000);
+	CU_ASSERT(poller3->next_run_tick == start_ticks + 2000);
+	CU_ASSERT(poller4->next_run_tick == start_ticks + 3000);
+
+	spdk_poller_unregister(&poller1);
+	spdk_poller_unregister(&poller2);
+	spdk_poller_unregister(&poller3);
+	spdk_poller_unregister(&poller4);
+
+	spdk_delay_us(1500);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 3000);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&thread->timed_pollers));
+
+	/*
+	 * case 2: unregister timed pollers while multiple timed pollers are registered.
+	 */
+	start_ticks = spdk_get_ticks();
+
+	poller1 = spdk_poller_register(dummy_poller, NULL, 500);
+	SPDK_CU_ASSERT_FATAL(poller1 != NULL);
+
+	CU_ASSERT(thread->first_timed_poller == poller1);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 500);
+
+	/* after 250 usec, register poller2 and poller3. */
+	spdk_delay_us(250);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 250);
+
+	poller2 = spdk_poller_register(dummy_poller, NULL, 500);
+	SPDK_CU_ASSERT_FATAL(poller2 != NULL);
+
+	poller3 = spdk_poller_register(dummy_poller, NULL, 750);
+	SPDK_CU_ASSERT_FATAL(poller3 != NULL);
+
+	CU_ASSERT(thread->first_timed_poller == poller1);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 500);
+	CU_ASSERT(poller2->next_run_tick == start_ticks + 750);
+	CU_ASSERT(poller3->next_run_tick == start_ticks + 1000);
+
+	/* unregister poller2 which is not the closest. */
+	tmp = poller2;
+	spdk_poller_unregister(&poller2);
+
+	/* after 250 usec, poller1 is expired. */
+	spdk_delay_us(250);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 500);
+	poll_threads();
+
+	/* poller2 is not unregistered yet because it is not expired. */
+	CU_ASSERT(thread->first_timed_poller == tmp);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 1000);
+	CU_ASSERT(tmp->next_run_tick == start_ticks + 750);
+	CU_ASSERT(poller3->next_run_tick == start_ticks + 1000);
+
+	spdk_delay_us(250);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 750);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == poller3);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 1000);
+	CU_ASSERT(poller3->next_run_tick == start_ticks + 1000);
+
+	spdk_poller_unregister(&poller3);
+
+	spdk_delay_us(250);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 1000);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == poller1);
+	CU_ASSERT(poller1->next_run_tick == start_ticks + 1500);
+
+	spdk_poller_unregister(&poller1);
+
+	spdk_delay_us(500);
+	CU_ASSERT(spdk_get_ticks() == start_ticks + 1500);
+	poll_threads();
+
+	CU_ASSERT(thread->first_timed_poller == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&thread->timed_pollers));
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1458,6 +1621,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, nested_channel);
 	CU_ADD_TEST(suite, device_unregister_and_thread_exit_race);
 	CU_ADD_TEST(suite, cache_closest_timed_poller);
+	CU_ADD_TEST(suite, multi_timed_pollers_have_same_expiration);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
