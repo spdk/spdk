@@ -267,10 +267,21 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
-	/* set the coremask */
-	/* NOTE: If coremask starts with '[' and ends with ']' it is a core list
+	/*
+	 * Set the coremask:
+	 *
+	 * - if it starts with '-', we presume it's literal EAL arguments such
+	 *   as --lcores.
+	 *
+	 * - if it starts with '[', we presume it's a core list to use with the
+	 *   -l option.
+	 *
+	 * - otherwise, it's a CPU mask of the form "0xff.." as expected by the
+	 *   -c option.
 	 */
-	if (opts->core_mask[0] == '[') {
+	if (opts->core_mask[0] == '-') {
+		args = push_arg(args, &argcount, _sprintf_alloc("%s", opts->core_mask));
+	} else if (opts->core_mask[0] == '[') {
 		char *l_arg = _sprintf_alloc("-l %s", opts->core_mask + 1);
 
 		if (l_arg != NULL) {
