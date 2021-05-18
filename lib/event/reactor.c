@@ -1131,6 +1131,7 @@ static void
 _schedule_thread(void *arg1, void *arg2)
 {
 	struct spdk_lw_thread *lw_thread = arg1;
+	struct spdk_thread *thread;
 	struct spdk_reactor *reactor;
 	uint32_t current_core;
 	int efd;
@@ -1139,15 +1140,20 @@ _schedule_thread(void *arg1, void *arg2)
 	reactor = spdk_reactor_get(current_core);
 	assert(reactor != NULL);
 
+	/* Update current_stats to reflect state of thread
+	* at the end of the move. */
+	thread = spdk_thread_get_from_ctx(lw_thread);
+	spdk_set_thread(thread);
+	spdk_thread_get_stats(&lw_thread->current_stats);
+	spdk_set_thread(NULL);
+
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
 	reactor->thread_count++;
 
 	/* Operate thread intr if running with full interrupt ability */
 	if (spdk_interrupt_mode_is_enabled()) {
 		int rc;
-		struct spdk_thread *thread;
 
-		thread = spdk_thread_get_from_ctx(lw_thread);
 		efd = spdk_thread_get_interrupt_fd(thread);
 		rc = spdk_fd_group_add(reactor->fgrp, efd, thread_process_interrupts, thread);
 		if (rc < 0) {
