@@ -1373,6 +1373,7 @@ test_reservation_notification_log_page(void)
 	union nvmf_c2h_msg rsp = {};
 	union spdk_nvme_async_event_completion event = {};
 	struct spdk_nvme_reservation_notification_log logs[3];
+	struct iovec iov;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.thread = spdk_get_thread();
@@ -1422,7 +1423,9 @@ test_reservation_notification_log_page(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 3);
 
 	/* Test Case: Get Log Page to clear the log pages */
-	nvmf_get_reservation_notification_log_page(&ctrlr, (void *)logs, 0, sizeof(logs), 0);
+	iov.iov_base = &logs[0];
+	iov.iov_len = sizeof(logs);
+	nvmf_get_reservation_notification_log_page(&ctrlr, &iov, 1, 0, sizeof(logs), 0);
 	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 0);
 
 	cleanup_pending_async_events(&ctrlr);

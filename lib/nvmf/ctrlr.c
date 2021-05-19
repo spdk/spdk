@@ -1757,10 +1757,19 @@ struct copy_iovs_ctx {
 static void
 _init_copy_iovs_ctx(struct copy_iovs_ctx *copy_ctx, struct iovec *iovs, int iovcnt)
 {
+	int iov_idx = 0;
+	struct iovec *iov;
+
 	copy_ctx->iovs = iovs;
 	copy_ctx->iovcnt = iovcnt;
 	copy_ctx->cur_iov_idx = 0;
 	copy_ctx->cur_iov_offset = 0;
+
+	while (iov_idx < copy_ctx->iovcnt) {
+		iov = &copy_ctx->iovs[iov_idx];
+		memset(iov->iov_base, 0, iov->iov_len);
+		iov_idx++;
+	}
 }
 
 static size_t
@@ -1798,10 +1807,13 @@ _copy_buf_to_iovs(struct copy_iovs_ctx *copy_ctx, const void *buf, size_t buf_le
 }
 
 static void
-nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
+nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length)
 {
 	struct spdk_nvme_firmware_page fw_page;
 	size_t copy_len;
+	struct copy_iovs_ctx copy_ctx;
+
+	_init_copy_iovs_ctx(&copy_ctx, iovs, iovcnt);
 
 	memset(&fw_page, 0, sizeof(fw_page));
 	fw_page.afi.active_slot = 1;
@@ -1811,7 +1823,7 @@ nvmf_get_firmware_slot_log_page(void *buffer, uint64_t offset, uint32_t length)
 	if (offset < sizeof(fw_page)) {
 		copy_len = spdk_min(sizeof(fw_page) - offset, length);
 		if (copy_len > 0) {
-			memcpy(buffer, (const char *)&fw_page + offset, copy_len);
+			_copy_buf_to_iovs(&copy_ctx, (const char *)&fw_page + offset, copy_len);
 		}
 	}
 }
@@ -1961,14 +1973,17 @@ nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
 
 static void
 nvmf_get_changed_ns_list_log_page(struct spdk_nvmf_ctrlr *ctrlr,
-				  void *buffer, uint64_t offset, uint32_t length, uint32_t rae)
+				  struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length, uint32_t rae)
 {
 	size_t copy_length;
+	struct copy_iovs_ctx copy_ctx;
+
+	_init_copy_iovs_ctx(&copy_ctx, iovs, iovcnt);
 
 	if (offset < sizeof(ctrlr->changed_ns_list)) {
 		copy_length = spdk_min(length, sizeof(ctrlr->changed_ns_list) - offset);
 		if (copy_length) {
-			memcpy(buffer, (char *)&ctrlr->changed_ns_list + offset, copy_length);
+			_copy_buf_to_iovs(&copy_ctx, (char *)&ctrlr->changed_ns_list + offset, copy_length);
 		}
 	}
 
@@ -2017,36 +2032,34 @@ static const struct spdk_nvme_cmds_and_effect_log_page g_cmds_and_effect_log_pag
 };
 
 static void
-nvmf_get_cmds_and_effects_log_page(void *buffer,
+nvmf_get_cmds_and_effects_log_page(struct iovec *iovs, int iovcnt,
 				   uint64_t offset, uint32_t length)
 {
 	uint32_t page_size = sizeof(struct spdk_nvme_cmds_and_effect_log_page);
 	size_t copy_len = 0;
-	size_t zero_len = length;
+	struct copy_iovs_ctx copy_ctx;
+
+	_init_copy_iovs_ctx(&copy_ctx, iovs, iovcnt);
 
 	if (offset < page_size) {
 		copy_len = spdk_min(page_size - offset, length);
-		zero_len -= copy_len;
-		memcpy(buffer, (char *)(&g_cmds_and_effect_log_page) + offset, copy_len);
-	}
-
-	if (zero_len) {
-		memset((char *)buffer + copy_len, 0, zero_len);
+		_copy_buf_to_iovs(&copy_ctx, (char *)(&g_cmds_and_effect_log_page) + offset, copy_len);
 	}
 }
 
 static void
 nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
-		void *data, uint64_t offset, uint32_t length, uint32_t rae)
+		struct iovec *iovs, int iovcnt, uint64_t offset, uint32_t length, uint32_t rae)
 {
 	uint32_t unit_log_len, avail_log_len, next_pos, copy_len;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
-	uint8_t *buf = data;
+	struct copy_iovs_ctx copy_ctx;
+
+	_init_copy_iovs_ctx(&copy_ctx, iovs, iovcnt);
 
 	unit_log_len = sizeof(struct spdk_nvme_reservation_notification_log);
-	/* No available log, return 1 zeroed log page */
+	/* No available log, return zeroed log pages */
 	if (!ctrlr->num_avail_log_pages) {
-		memset(buf, 0, spdk_min(length, unit_log_len));
 		return;
 	}
 
@@ -2063,10 +2076,9 @@ nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
 		next_pos += unit_log_len;
 		if (next_pos > offset) {
 			copy_len = spdk_min(next_pos - offset, length);
-			memcpy(buf, &log->log, copy_len);
+			_copy_buf_to_iovs(&copy_ctx, &log->log, copy_len);
 			length -= copy_len;
 			offset += copy_len;
-			buf += copy_len;
 		}
 		free(log);
 
@@ -2142,7 +2154,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			/* TODO: actually fill out log page data */
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_FIRMWARE_SLOT:
-			nvmf_get_firmware_slot_log_page(req->data, offset, len);
+			nvmf_get_firmware_slot_log_page(req->iov, req->iovcnt, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
 			if (subsystem->flags.ana_reporting) {
@@ -2152,13 +2164,13 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 				goto invalid_log_page;
 			}
 		case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
-			nvmf_get_cmds_and_effects_log_page(req->data, offset, len);
+			nvmf_get_cmds_and_effects_log_page(req->iov, req->iovcnt, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_CHANGED_NS_LIST:
-			nvmf_get_changed_ns_list_log_page(ctrlr, req->data, offset, len, rae);
+			nvmf_get_changed_ns_list_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
-			nvmf_get_reservation_notification_log_page(ctrlr, req->data, offset, len, rae);
+			nvmf_get_reservation_notification_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
