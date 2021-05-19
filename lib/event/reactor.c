@@ -679,8 +679,6 @@ _init_thread_stats(struct spdk_reactor *reactor, struct spdk_lw_thread *lw_threa
 	/* Read total_stats before updating it to calculate stats during the last scheduling period. */
 	prev_total_stats = lw_thread->total_stats;
 
-	lw_thread->lcore = reactor->lcore;
-
 	spdk_set_thread(thread);
 	spdk_thread_get_stats(&lw_thread->total_stats);
 	spdk_set_thread(NULL);
@@ -1154,6 +1152,8 @@ _schedule_thread(void *arg1, void *arg2)
 	spdk_set_thread(thread);
 	spdk_thread_get_stats(&lw_thread->total_stats);
 	spdk_set_thread(NULL);
+
+	lw_thread->lcore = current_core;
 
 	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
 	reactor->thread_count++;
