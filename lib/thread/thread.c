@@ -681,6 +681,7 @@ poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller, uint
 	thread->first_timed_poller = poller;
 }
 
+#ifdef __linux__
 static inline void
 poller_remove_timer(struct spdk_thread *thread, struct spdk_poller *poller)
 {
@@ -690,6 +691,7 @@ poller_remove_timer(struct spdk_thread *thread, struct spdk_poller *poller)
 		thread->first_timed_poller = TAILQ_FIRST(&thread->timed_pollers);
 	}
 }
+#endif
 
 static void
 thread_insert_poller(struct spdk_thread *thread, struct spdk_poller *poller)
@@ -876,7 +878,15 @@ thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 		}
 
 		tmp = TAILQ_NEXT(poller, tailq);
-		poller_remove_timer(thread, poller);
+		TAILQ_REMOVE(&thread->timed_pollers, poller, tailq);
+
+		/* Update the cache to the next timed poller in the list
+		 * only if the current poller is still the closest, otherwise,
+		 * do nothing because the cache has been already updated.
+		 */
+		if (thread->first_timed_poller == poller) {
+			thread->first_timed_poller = tmp;
+		}
 
 		timer_rc = thread_execute_timed_poller(thread, poller, now);
 		if (timer_rc > rc) {
