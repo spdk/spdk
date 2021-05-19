@@ -674,11 +674,18 @@ static void
 _init_thread_stats(struct spdk_reactor *reactor, struct spdk_lw_thread *lw_thread)
 {
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
+	struct spdk_thread_stats last_stats;
+
+	/* Save last stats before replacing them. */
+	last_stats = lw_thread->current_stats;
 
 	lw_thread->lcore = reactor->lcore;
 
 	spdk_set_thread(thread);
 	spdk_thread_get_stats(&lw_thread->current_stats);
+	spdk_set_thread(NULL);
+
+	lw_thread->last_stats = last_stats;
 }
 
 static void
@@ -1170,7 +1177,6 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 {
 	uint32_t core;
 	struct spdk_lw_thread *lw_thread;
-	struct spdk_thread_stats last_stats;
 	struct spdk_event *evt = NULL;
 	struct spdk_cpuset *cpumask;
 	uint32_t i;
@@ -1184,9 +1190,7 @@ _reactor_schedule_thread(struct spdk_thread *thread)
 	lw_thread = spdk_thread_get_ctx(thread);
 	assert(lw_thread != NULL);
 	core = lw_thread->lcore;
-	last_stats = lw_thread->last_stats;
 	memset(lw_thread, 0, sizeof(*lw_thread));
-	lw_thread->last_stats = last_stats;
 
 	if (current_lcore != SPDK_ENV_LCORE_ID_ANY) {
 		local_reactor = spdk_reactor_get(current_lcore);

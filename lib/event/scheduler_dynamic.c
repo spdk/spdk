@@ -71,9 +71,6 @@ _get_thread_load(struct spdk_lw_thread *lw_thread)
 	busy = lw_thread->current_stats.busy_tsc - lw_thread->last_stats.busy_tsc;
 	idle = lw_thread->current_stats.idle_tsc - lw_thread->last_stats.idle_tsc;
 
-	lw_thread->last_stats.busy_tsc = lw_thread->current_stats.busy_tsc;
-	lw_thread->last_stats.idle_tsc = lw_thread->current_stats.idle_tsc;
-
 	if (busy == 0) {
 		/* No work was done, exit before possible division by 0. */
 		return 0;
