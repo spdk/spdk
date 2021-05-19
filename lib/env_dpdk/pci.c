@@ -528,7 +528,7 @@ pci_device_fini(struct rte_pci_device *_dev)
 	if (dev == NULL || dev->internal.attached) {
 		/* The device might be still referenced somewhere in SPDK. */
 		pthread_mutex_unlock(&g_pci_mutex);
-		return -1;
+		return -EBUSY;
 	}
 
 	/* remove our allowed_at option */
@@ -552,6 +552,7 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 		spdk_pci_device_unclaim(dev);
 	}
 
+	dev->internal.attached = false;
 	if (strcmp(dev->type, "pci") == 0) {
 		/* if it's a physical device we need to deal with DPDK on
 		 * a different process and we can't just unset one flag
@@ -561,8 +562,6 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 		 * to a different process, or to a kernel driver like nvme.
 		 */
 		detach_rte(dev);
-	} else {
-		dev->internal.attached = false;
 	}
 
 	cleanup_pci_devices();
