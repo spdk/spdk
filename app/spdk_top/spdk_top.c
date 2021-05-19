@@ -592,6 +592,30 @@ sort_threads(const void *p1, const void *p2)
 	}
 }
 
+static void
+store_last_run_counter(const char *poller_name, uint64_t thread_id, uint64_t last_run_counter)
+{
+	struct run_counter_history *history;
+
+	TAILQ_FOREACH(history, &g_run_counter_history, link) {
+		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+			history->last_run_counter = last_run_counter;
+			return;
+		}
+	}
+
+	history = calloc(1, sizeof(*history));
+	if (history == NULL) {
+		fprintf(stderr, "Unable to allocate a history object in store_last_run_counter.\n");
+		return;
+	}
+	history->poller_name = strdup(poller_name);
+	history->thread_id = thread_id;
+	history->last_run_counter = last_run_counter;
+
+	TAILQ_INSERT_TAIL(&g_run_counter_history, history, link);
+}
+
 static int
 get_data(void)
 {
@@ -993,30 +1017,6 @@ get_last_run_counter(const char *poller_name, uint64_t thread_id)
 	}
 
 	return NULL;
-}
-
-static void
-store_last_run_counter(const char *poller_name, uint64_t thread_id, uint64_t last_run_counter)
-{
-	struct run_counter_history *history;
-
-	TAILQ_FOREACH(history, &g_run_counter_history, link) {
-		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
-			history->last_run_counter = last_run_counter;
-			return;
-		}
-	}
-
-	history = calloc(1, sizeof(*history));
-	if (history == NULL) {
-		fprintf(stderr, "Unable to allocate a history object in store_last_run_counter.\n");
-		return;
-	}
-	history->poller_name = strdup(poller_name);
-	history->thread_id = thread_id;
-	history->last_run_counter = last_run_counter;
-
-	TAILQ_INSERT_TAIL(&g_run_counter_history, history, link);
 }
 
 enum sort_type {
