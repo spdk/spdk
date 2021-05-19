@@ -622,6 +622,8 @@ get_data(void)
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
 	struct rpc_core_info *core_info;
 	struct rpc_threads_stats threads_stats;
+	struct rpc_pollers *pollers;
+	struct rpc_poller_info *poller;
 	uint64_t i, j;
 	int rc = 0;
 
@@ -657,6 +659,25 @@ get_data(void)
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
 		goto end;
+	}
+
+	/* Save last run counter of each poller before updating g_pollers_stats */
+	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
+		pollers = &g_pollers_stats.pollers_threads.threads[i].active_pollers;
+		for (j = 0; j < pollers->pollers_count; j++) {
+			poller = &pollers->pollers[j];
+			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
+		}
+		pollers = &g_pollers_stats.pollers_threads.threads[i].timed_pollers;
+		for (j = 0; j < pollers->pollers_count; j++) {
+			poller = &pollers->pollers[j];
+			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
+		}
+		pollers = &g_pollers_stats.pollers_threads.threads[i].paused_pollers;
+		for (j = 0; j < pollers->pollers_count; j++) {
+			poller = &pollers->pollers[j];
+			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
+		}
 	}
 
 	/* Free old pollers values before allocating memory for new ones */
@@ -1223,8 +1244,6 @@ refresh_pollers_tab(uint8_t current_page)
 			}
 			col += col_desc[3].max_data_string + 4;
 		}
-
-		store_last_run_counter(pollers[i]->name, pollers[i]->thread_id, pollers[i]->run_count);
 
 		if (!col_desc[5].disabled) {
 			if (pollers[i]->busy_count > 0) {
