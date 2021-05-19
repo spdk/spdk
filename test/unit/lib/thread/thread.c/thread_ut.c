@@ -1446,13 +1446,13 @@ cache_closest_timed_poller(void)
 	 * have the closest timed poller.
 	 */
 	CU_ASSERT(thread->first_timed_poller == poller1);
-	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller1);
+	CU_ASSERT(RB_MIN(timed_pollers_tree, &thread->timed_pollers) == poller1);
 
 	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == poller2);
-	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller2);
+	CU_ASSERT(RB_MIN(timed_pollers_tree, &thread->timed_pollers) == poller2);
 
 	/* If we unregister a timed poller by spdk_poller_unregister()
 	 * when it is waiting, it is marked as being unregistereed and
@@ -1470,13 +1470,13 @@ cache_closest_timed_poller(void)
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == tmp);
-	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == tmp);
+	CU_ASSERT(RB_MIN(timed_pollers_tree, &thread->timed_pollers) == tmp);
 
 	spdk_delay_us(1);
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == poller3);
-	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller3);
+	CU_ASSERT(RB_MIN(timed_pollers_tree, &thread->timed_pollers) == poller3);
 
 	/* If we pause a timed poller by spdk_poller_pause() when it is waiting,
 	 * it is marked as being paused and is actually paused when it is expired.
@@ -1490,13 +1490,13 @@ cache_closest_timed_poller(void)
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == poller3);
-	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller3);
+	CU_ASSERT(RB_MIN(timed_pollers_tree, &thread->timed_pollers) == poller3);
 
 	spdk_delay_us(1);
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == poller1);
-	CU_ASSERT(TAILQ_FIRST(&thread->timed_pollers) == poller1);
+	CU_ASSERT(RB_MIN(timed_pollers_tree, &thread->timed_pollers) == poller1);
 
 	/* After unregistering all timed pollers, the cache should
 	 * be NULL.
@@ -1508,7 +1508,7 @@ cache_closest_timed_poller(void)
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == NULL);
-	CU_ASSERT(TAILQ_EMPTY(&thread->timed_pollers));
+	CU_ASSERT(RB_EMPTY(&thread->timed_pollers));
 
 	free_threads();
 }
@@ -1604,7 +1604,7 @@ multi_timed_pollers_have_same_expiration(void)
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == NULL);
-	CU_ASSERT(TAILQ_EMPTY(&thread->timed_pollers));
+	CU_ASSERT(RB_EMPTY(&thread->timed_pollers));
 
 	/*
 	 * case 2: unregister timed pollers while multiple timed pollers are registered.
@@ -1671,7 +1671,7 @@ multi_timed_pollers_have_same_expiration(void)
 	poll_threads();
 
 	CU_ASSERT(thread->first_timed_poller == NULL);
-	CU_ASSERT(TAILQ_EMPTY(&thread->timed_pollers));
+	CU_ASSERT(RB_EMPTY(&thread->timed_pollers));
 
 	free_threads();
 }
