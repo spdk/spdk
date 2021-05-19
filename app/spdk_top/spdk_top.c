@@ -2153,6 +2153,7 @@ show_core(uint8_t current_page)
 		get_time_str(core_info[core_number]->busy, busy_time);
 	}
 	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL + 20, idle_time);
+	mvwhline(core_win, 6, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 
 	print_left(core_win, 7, 1, CORE_WIN_WIDTH, "Poller count:          Busy time:", COLOR_PAIR(5));
 	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL, "%" PRIu64,
@@ -2160,7 +2161,6 @@ show_core(uint8_t current_page)
 
 	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL + 20, busy_time);
 
-	mvwhline(core_win, 6, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 	mvwhline(core_win, 8, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 	print_left(core_win, 9, 1, CORE_WIN_WIDTH, "Threads on this core", COLOR_PAIR(5));
 
