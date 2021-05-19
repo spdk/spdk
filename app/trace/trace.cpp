@@ -178,14 +178,6 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 
 	d = &g_histories->flags.tpoint[e->tpoint_id];
 	stats = &g_stats[d->object_type];
-
-	if (d->new_object) {
-		stats->index[e->object_id] = stats->counter++;
-		stats->tpoint_id[e->object_id] = e->tpoint_id;
-		stats->start[e->object_id] = e->tsc;
-		stats->size[e->object_id] = e->size;
-	}
-
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
 	printf("%2d: %10.3f ", lcore, us);
@@ -228,6 +220,19 @@ static void
 process_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	      uint64_t tsc_offset, uint16_t lcore)
 {
+	struct spdk_trace_tpoint	*d;
+	struct object_stats		*stats;
+
+	d = &g_histories->flags.tpoint[e->tpoint_id];
+	stats = &g_stats[d->object_type];
+
+	if (d->new_object) {
+		stats->index[e->object_id] = stats->counter++;
+		stats->tpoint_id[e->object_id] = e->tpoint_id;
+		stats->start[e->object_id] = e->tsc;
+		stats->size[e->object_id] = e->size;
+	}
+
 	if (g_verbose) {
 		print_event(e, tsc_rate, tsc_offset, lcore);
 	}
