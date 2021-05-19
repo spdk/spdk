@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -60,11 +60,34 @@ DEFINE_STUB(fcntl, int, (int fd, int cmd, ...), 0);
 DEFINE_STUB_V(rdma_destroy_event_channel, (struct rdma_event_channel *channel));
 
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
+DEFINE_STUB(ibv_resize_cq, int, (struct ibv_cq *cq, int cqe), 0);
 
-int ibv_resize_cq(struct ibv_cq *cq, int cqe)
+DEFINE_RETURN_MOCK(spdk_memory_domain_create, int);
+int
+spdk_memory_domain_create(struct spdk_memory_domain **domain, enum spdk_dma_device_type type,
+			  struct spdk_memory_domain_ctx *ctx, const char *id)
 {
+	static struct spdk_memory_domain *__dma_dev = (struct spdk_memory_domain *)0xdeaddead;
+
+	HANDLE_RETURN_MOCK(spdk_memory_domain_create);
+
+	*domain = __dma_dev;
+
 	return 0;
 }
+
+DEFINE_STUB(spdk_memory_domain_get_context, struct spdk_memory_domain_ctx *,
+	    (struct spdk_memory_domain *device), NULL);
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *device), SPDK_DMA_DEVICE_TYPE_RDMA);
+DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *device));
+DEFINE_STUB(spdk_memory_domain_fetch_data, int, (struct spdk_memory_domain *src_domain,
+		void *src_domain_ctx, struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov,
+		uint32_t dst_iov_cnt, spdk_memory_domain_fetch_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
+DEFINE_STUB(spdk_memory_domain_translate_data, int, (struct spdk_memory_domain *src_domain,
+		void *src_domain_ctx, struct spdk_memory_domain *dst_domain,
+		struct spdk_memory_domain_translation_ctx *dst_domain_ctx, void *addr, size_t len,
+		struct spdk_memory_domain_translation_result *result), 0);
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
@@ -1055,7 +1078,8 @@ test_nvme_rdma_qpair_init(void)
 {
 	struct nvme_rdma_qpair		rqpair = {};
 	struct rdma_cm_id		 cm_id = {};
-	struct ibv_qp			    qp = {};
+	struct ibv_pd				*pd = (struct ibv_pd *)0xfeedbeef;
+	struct ibv_qp				qp = { .pd = pd };
 	struct nvme_rdma_ctrlr	rctrlr = {};
 	int rc = 0;
 
@@ -1075,6 +1099,7 @@ test_nvme_rdma_qpair_init(void)
 	CU_ASSERT(rqpair.current_num_sends == 0);
 	CU_ASSERT(rqpair.current_num_recvs == 0);
 	CU_ASSERT(rqpair.cq == (struct ibv_cq *)0xFEEDBEEF);
+	CU_ASSERT(rqpair.memory_domain != NULL);
 }
 
 static void
@@ -1119,6 +1144,62 @@ test_nvme_rdma_qpair_submit_request(void)
 	nvme_rdma_free_reqs(&rqpair);
 }
 
+static void
+test_nvme_rdma_memory_domain(void)
+{
+	struct nvme_rdma_memory_domain *domain_1 = NULL, *domain_2 = NULL, *domain_tmp;
+	struct ibv_pd *pd_1 = (struct ibv_pd *)0x1, *pd_2 = (struct ibv_pd *)0x2;
+	/* Counters below are used to check the number of created/destroyed rdma_dma_device objects.
+	 * Since other unit tests may create dma_devices, we can't just check that the queue is empty or not */
+	uint32_t dma_dev_count_start = 0, dma_dev_count = 0, dma_dev_count_end = 0;
+
+	TAILQ_FOREACH(domain_tmp, &g_memory_domains, link) {
+		dma_dev_count_start++;
+	}
+
+	/* spdk_memory_domain_create failed, expect fail */
+	MOCK_SET(spdk_memory_domain_create, -1);
+	domain_1 = nvme_rdma_get_memory_domain(pd_1);
+	CU_ASSERT(domain_1 == NULL);
+	MOCK_CLEAR(spdk_memory_domain_create);
+
+	/* Normal scenario */
+	domain_1 = nvme_rdma_get_memory_domain(pd_1);
+	SPDK_CU_ASSERT_FATAL(domain_1 != NULL);
+	CU_ASSERT(domain_1->domain != NULL);
+	CU_ASSERT(domain_1->pd == pd_1);
+	CU_ASSERT(domain_1->ref == 1);
+
+	/* Request the same pd, ref counter increased */
+	CU_ASSERT(nvme_rdma_get_memory_domain(pd_1) == domain_1);
+	CU_ASSERT(domain_1->ref == 2);
+
+	/* Request another pd */
+	domain_2 = nvme_rdma_get_memory_domain(pd_2);
+	SPDK_CU_ASSERT_FATAL(domain_2 != NULL);
+	CU_ASSERT(domain_2->domain != NULL);
+	CU_ASSERT(domain_2->pd == pd_2);
+	CU_ASSERT(domain_2->ref == 1);
+
+	TAILQ_FOREACH(domain_tmp, &g_memory_domains, link) {
+		dma_dev_count++;
+	}
+	CU_ASSERT(dma_dev_count == dma_dev_count_start + 2);
+
+	/* put domain_1, decrement refcount */
+	nvme_rdma_put_memory_domain(domain_1);
+
+	/* Release both devices */
+	CU_ASSERT(domain_2->ref == 1);
+	nvme_rdma_put_memory_domain(domain_1);
+	nvme_rdma_put_memory_domain(domain_2);
+
+	TAILQ_FOREACH(domain_tmp, &g_memory_domains, link) {
+		dma_dev_count_end++;
+	}
+	CU_ASSERT(dma_dev_count_start == dma_dev_count_end);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1147,6 +1228,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
+	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
