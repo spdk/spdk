@@ -618,6 +618,9 @@ get_data(void)
 		goto end;
 	}
 
+	/* Free old threads values before allocating memory for new ones */
+	free_rpc_threads_stats(&g_threads_stats);
+
 	/* Decode json */
 	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
 	if (spdk_json_decode_object(json_resp->result, rpc_threads_stats_decoders,
@@ -638,6 +641,9 @@ get_data(void)
 		goto end;
 	}
 
+	/* Free old pollers values before allocating memory for new ones */
+	free_rpc_pollers_stats(&g_pollers_stats);
+
 	/* Decode json */
 	memset(&g_pollers_stats, 0, sizeof(g_pollers_stats));
 	if (spdk_json_decode_object(json_resp->result, rpc_pollers_stats_decoders,
@@ -652,6 +658,9 @@ get_data(void)
 	if (rc) {
 		goto end;
 	}
+
+	/* Free old cores values before allocating memory for new ones */
+	free_rpc_cores_stats(&g_cores_stats);
 
 	/* Decode json */
 	memset(&g_cores_stats, 0, sizeof(g_cores_stats));
@@ -2084,18 +2093,12 @@ show_thread(uint8_t current_page)
 	uint64_t thread_number = current_page * g_max_data_rows + g_selected_row;
 	uint64_t i;
 
-	get_data();
-
 	assert(thread_number < g_threads_stats.threads.threads_count);
 	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
 		thread_info[i] = &g_threads_stats.threads.thread_info[i];
 	}
 
-	qsort(thread_info, g_threads_stats.threads.threads_count, sizeof(thread_info[0]), sort_threads);
-
 	display_thread(thread_info[thread_number]);
-
-	free_data();
 }
 
 static void
@@ -2124,8 +2127,6 @@ show_core(uint8_t current_page)
 	char core_win_title[25];
 	bool stop_loop = false;
 	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
-
-	get_data();
 
 	assert(core_number < g_cores_stats.cores.cores_count);
 	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
@@ -2232,8 +2233,6 @@ show_core(uint8_t current_page)
 
 	del_panel(core_panel);
 	delwin(core_win);
-
-	free_data();
 }
 
 static void
@@ -2247,8 +2246,6 @@ show_poller(uint8_t current_page)
 	bool stop_loop = false;
 	char poller_period[MAX_TIME_STR_LEN];
 	int c;
-
-	get_data();
 
 	prepare_poller_data(current_page, pollers, &count, current_page);
 	assert(poller_number < count);
@@ -2315,8 +2312,6 @@ show_poller(uint8_t current_page)
 
 	del_panel(poller_panel);
 	delwin(poller_win);
-
-	free_data();
 }
 
 static void
@@ -2350,6 +2345,27 @@ show_stats(void)
 			g_data_win_size = g_max_row - required_size + 1;
 			g_max_data_rows = g_max_row - WINDOW_HEADER;
 			resize_interface(active_tab);
+		}
+
+		clock_gettime(CLOCK_REALTIME, &time_now);
+		time_dif = time_now.tv_sec - time_last;
+		if (time_dif < 0) {
+			time_dif = g_sleep_time;
+		}
+
+		if (time_dif >= g_sleep_time || force_refresh) {
+			time_last = time_now.tv_sec;
+			rc = get_data();
+			if (rc) {
+				mvprintw(g_max_row - 1, g_max_col - strlen(refresh_error) - 2, refresh_error);
+			}
+
+			max_pages = refresh_tab(active_tab, current_page);
+
+			snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
+			mvprintw(g_max_row - 1, 1, current_page_str);
+
+			refresh();
 		}
 
 		c = getch();
@@ -2430,30 +2446,8 @@ show_stats(void)
 			force_refresh = false;
 			break;
 		}
-
-		clock_gettime(CLOCK_REALTIME, &time_now);
-		time_dif = time_now.tv_sec - time_last;
-		if (time_dif < 0) {
-			time_dif = g_sleep_time;
-		}
-
-		if (time_dif >= g_sleep_time || force_refresh) {
-			time_last = time_now.tv_sec;
-			rc = get_data();
-			if (rc) {
-				mvprintw(g_max_row - 1, g_max_col - strlen(refresh_error) - 2, refresh_error);
-			}
-
-			max_pages = refresh_tab(active_tab, current_page);
-
-			snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
-			mvprintw(g_max_row - 1, 1, current_page_str);
-
-			free_data();
-
-			refresh();
-		}
 	}
+	free_data();
 }
 
 static void
