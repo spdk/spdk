@@ -1703,7 +1703,7 @@ spdk_thread_get_next_timed_poller(struct spdk_poller *prev)
 struct spdk_poller *
 spdk_thread_get_first_paused_poller(struct spdk_thread *thread)
 {
-	return TAILQ_FIRST(&thread->active_pollers);
+	return TAILQ_FIRST(&thread->paused_pollers);
 }
 
 struct spdk_poller *
