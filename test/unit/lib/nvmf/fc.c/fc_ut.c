@@ -112,9 +112,6 @@ DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bde
 	    NULL);
 DEFINE_STUB_V(spdk_nvmf_request_exec, (struct spdk_nvmf_request *req));
 DEFINE_STUB_V(nvmf_ctrlr_ns_changed, (struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid));
-DEFINE_STUB(spdk_bdev_open, int, (struct spdk_bdev *bdev, bool write,
-				  spdk_bdev_remove_cb_t remove_cb,
-				  void *remove_ctx, struct spdk_bdev_desc **desc), 0);
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_module_claim_bdev, int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,

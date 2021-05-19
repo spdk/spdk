@@ -94,11 +94,6 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	CU_ASSERT(0);
 }
 
-DEFINE_STUB(spdk_bdev_open, int,
-	    (struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	     void *remove_ctx, struct spdk_bdev_desc **desc),
-	    0);
-
 DEFINE_STUB(spdk_bdev_open_ext, int,
 	    (const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
 	     void *event_ctx, struct spdk_bdev_desc **desc),

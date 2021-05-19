@@ -15,7 +15,6 @@
 	spdk_bdev_next;
 	spdk_bdev_first_leaf;
 	spdk_bdev_next_leaf;
-	spdk_bdev_open;
 	spdk_bdev_open_ext;
 	spdk_bdev_close;
 	spdk_bdev_desc_get_bdev;
