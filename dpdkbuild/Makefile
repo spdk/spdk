@@ -137,7 +137,7 @@ ifeq ($(MAKE_PID),)
 MAKE_PID := $(shell echo $$PPID)
 endif
 
-MAKE_NUMJOBS := $(shell ps T | sed -nE 's/\s*$(MAKE_PID)\s.* (-j|--jobs=)( *[0-9]+).*/\1\2/p')
+MAKE_NUMJOBS := $(shell ps T | sed -nE 's/[[:space:]]*$(MAKE_PID)[[:space:]].* (-j|--jobs=)( *[0-9]+).*/\1\2/p')
 
 all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 	$(Q)# DPDK doesn't handle nested make calls, so unset MAKEFLAGS

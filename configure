@@ -852,7 +852,7 @@ if (($(grep -cE "^\s*CONFIG_[[:alnum:]_]+=" "$rootdir/CONFIG") != ${#CONFIG[@]})
 	echo "BUG: Some configuration options are not present in CONFIG file. Please update this file."
 	echo "Missing options in CONFIG (+) file and in current config (-): "
 	diff -u --label "CONFIG file" --label "CONFIG[@]" \
-		<(sed -r -e '/^\s*$/d; /^\s*#.*/d; s/(CONFIG_[[:alnum:]_]+)=.*/\1/g' CONFIG | sort) \
+		<(sed -r -e '/^[[:space:]]*$/d; /^[[:space:]]*#.*/d; s/(CONFIG_[[:alnum:]_]+)=.*/\1/g' CONFIG | sort) \
 		<(printf "CONFIG_%s\n" "${!CONFIG[@]}" | sort)
 	exit 1
 fi
@@ -860,7 +860,7 @@ fi
 echo -n "Creating mk/config.mk..."
 cp -f $rootdir/CONFIG $rootdir/mk/config.mk
 for key in "${!CONFIG[@]}"; do
-	sed -i.bak -r "s#^\s*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" $rootdir/mk/config.mk
+	sed -i.bak -r "s#[[:space:]]*CONFIG_${key}=.*#CONFIG_${key}\?=${CONFIG[$key]}#g" $rootdir/mk/config.mk
 done
 # On FreeBSD sed -i 'SUFFIX' - SUFFIX is mandatory. So no way but to delete the backed file.
 rm -f $rootdir/mk/config.mk.bak
