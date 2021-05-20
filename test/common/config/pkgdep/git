@@ -37,35 +37,9 @@ function install_refspdk() {
 		cp -R "$GIT_REPOS/spdk_repo/spdk" "$output_dir"
 	fi
 
-	lts_2001_fallback=false
-	if [[ "$release" == v20.01* ]]; then
-		# We switch to a .x branch in order to slurp all the backports which fix spdk_abi_lts
-		# build for this particular release. Fetch the branch explicitly as in case of our CI,
-		# jenkins will set remote.*.fetch to a particular ref the build run against, so plain
-		# git fetch won't include any branches from the repo. FIXME: This could be removed
-		# after new LTS is in place.
-		release=${release%%-*}.x
-		git -C "$output_dir" fetch origin "+refs/heads/$release:refs/heads/$release"
-		lts_2001_fallback=true
-	fi
 	git -C "$output_dir" checkout "$release"
 	git -C "$output_dir" submodule update --init
 
-	if [[ "$release" == v20.01* ]]; then
-		makefiles=(
-			"$output_dir/dpdk/drivers/crypto/aesni_gcm/Makefile"
-			"$output_dir/dpdk/drivers/crypto/aesni_mb/Makefile"
-			"$output_dir/dpdk/drivers/crypto/kasumi/Makefile"
-			"$output_dir/dpdk/drivers/crypto/snow3g/Makefile"
-		)
-		# Attempt to replicate dpdk's 2a860943b8 commit which fixes builds under make 4.3
-		# FIXME: Remove this when LTS changes!
-		for makefile in "${makefiles[@]}"; do
-			# This sed call is meant to be compatible with its FreeBSD implementation
-			echo "$(sed -e 's/\\#/\$H/g' -e '/IMB_HDR =/i\
-				H := \\#' "$makefile")" > "$makefile"
-		done
-	fi
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
 		SPDK_TEST_AUTOBUILD=1
@@ -99,25 +73,11 @@ function install_refspdk() {
 		if [[ $OSID == freebsd ]]; then
 			config_params="--enable-debug"
 			config_params+=" --without-isal --with-fio=/usr/src/fio"
-
-			# TODO: Remove this if-block after 21.01 LTS is released and 20.01 LTS is deprecated.
-			if ! "$lts_2001_fallback"; then
-				config_params+=" --with-idxd --disable-unit-tests"
-			fi
+			config_params+=" --with-idxd --disable-unit-tests"
 
 			MAKE=gmake
 		else
-			# TODO: "get_config_params" was not available in 20.01 LTS release.
-			# Remove this if-block after 21.01 release.
-			if "$lts_2001_fallback"; then
-				config_params="--enable-debug --enable-werror --with-rdma"
-				config_params+=" --with-fio=/usr/src/fio --with-iscsi-initiator"
-				config_params+=" --with-nvme-cuse --with-pmdk --with-reduce"
-				config_params+=" --with-rbd --with-crypto --with-ocf --enable-ubsan"
-				config_params+=" --enable-asan --with-fuse --with-uring"
-			else
-				config_params="$(get_config_params)"
-			fi
+			config_params="$(get_config_params)"
 		fi
 		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g')
 		if [[ $OSID != freebsd ]]; then
