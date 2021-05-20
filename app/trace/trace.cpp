@@ -82,7 +82,6 @@ struct object_stats {
 struct object_stats g_stats[SPDK_TRACE_MAX_OBJECT];
 
 static char *g_exe_name;
-static int g_verbose = 1;
 
 static uint64_t g_tsc_rate;
 static uint64_t g_first_tsc = 0x0;
@@ -233,9 +232,7 @@ process_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		stats->size[e->object_id] = e->size;
 	}
 
-	if (g_verbose) {
-		print_event(e, tsc_rate, tsc_offset, lcore);
-	}
+	print_event(e, tsc_rate, tsc_offset, lcore);
 }
 
 static int
@@ -298,7 +295,6 @@ static void usage(void)
 {
 	fprintf(stderr, "usage:\n");
 	fprintf(stderr, "   %s <option> <lcore#>\n", g_exe_name);
-	fprintf(stderr, "        option = '-q' to disable verbose mode\n");
 	fprintf(stderr, "                 '-c' to display single lcore history\n");
 	fprintf(stderr, "                 '-t' to display TSC offset for each event\n");
 	fprintf(stderr, "                 '-s' to specify spdk_trace shm name for a\n");
@@ -327,7 +323,7 @@ int main(int argc, char **argv)
 	struct stat		_stat;
 
 	g_exe_name = argv[0];
-	while ((op = getopt(argc, argv, "c:f:i:p:qs:t")) != -1) {
+	while ((op = getopt(argc, argv, "c:f:i:p:s:t")) != -1) {
 		switch (op) {
 		case 'c':
 			lcore = atoi(optarg);
@@ -343,9 +339,6 @@ int main(int argc, char **argv)
 			break;
 		case 'p':
 			shm_pid = atoi(optarg);
-			break;
-		case 'q':
-			g_verbose = 0;
 			break;
 		case 's':
 			app_name = optarg;
@@ -420,9 +413,7 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	if (g_verbose) {
-		printf("TSC Rate: %ju\n", g_tsc_rate);
-	}
+	printf("TSC Rate: %ju\n", g_tsc_rate);
 
 	/* Remap the entire trace file */
 	trace_histories_size = spdk_get_trace_histories_size(g_histories);
@@ -448,7 +439,7 @@ int main(int argc, char **argv)
 				continue;
 			}
 
-			if (g_verbose && history->num_entries) {
+			if (history->num_entries) {
 				printf("Trace Size of lcore (%d): %ju\n", i, history->num_entries);
 			}
 
@@ -457,7 +448,7 @@ int main(int argc, char **argv)
 	} else {
 		history = spdk_get_per_lcore_history(g_histories, lcore);
 		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
-			if (g_verbose && history->num_entries) {
+			if (history->num_entries) {
 				printf("Trace Size of lcore (%d): %ju\n", lcore, history->num_entries);
 			}
 
