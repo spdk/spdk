@@ -57,12 +57,6 @@ function error() {
 }
 
 function set_os_id_version() {
-	if [[ $(uname -s) == FreeBSD ]] && ! pkg info -q etc_os-release; then
-		echo "Please install 'etc_os-release' package" >&2
-		echo "pkg install -y etc_os-release" >&2
-		exit 2
-	fi
-
 	if [[ -f /etc/os-release ]]; then
 		source /etc/os-release
 	elif [[ -f /usr/local/etc/os-release ]]; then
