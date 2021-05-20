@@ -120,8 +120,14 @@ struct spdk_nvmf_listen_opts {
 void spdk_nvmf_listen_opts_init(struct spdk_nvmf_listen_opts *opts, size_t opts_size);
 
 struct spdk_nvmf_poll_group_stat {
+	/* cumulative admin qpair count */
 	uint32_t admin_qpairs;
+	/* cumulative io qpair count */
 	uint32_t io_qpairs;
+	/* current admin qpair count */
+	uint32_t current_admin_qpairs;
+	/* current io qpair count */
+	uint32_t current_io_qpairs;
 	uint64_t pending_bdev_io;
 };
 

@@ -999,6 +999,16 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair_ctx->qid = qpair->qid;
 
+	if (ctrlr) {
+		if (0 == qpair->qid) {
+			assert(qpair->group->stat.current_admin_qpairs > 0);
+			qpair->group->stat.current_admin_qpairs--;
+		} else {
+			assert(qpair->group->stat.current_io_qpairs > 0);
+			qpair->group->stat.current_io_qpairs--;
+		}
+	}
+
 	if (!ctrlr || !ctrlr->thread) {
 		spdk_nvmf_poll_group_remove(qpair);
 		nvmf_transport_qpair_fini(qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
@@ -1607,6 +1617,8 @@ spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group, struct spdk_j
 	spdk_json_write_named_string(w, "name", spdk_thread_get_name(spdk_get_thread()));
 	spdk_json_write_named_uint32(w, "admin_qpairs", group->stat.admin_qpairs);
 	spdk_json_write_named_uint32(w, "io_qpairs", group->stat.io_qpairs);
+	spdk_json_write_named_uint32(w, "current_admin_qpairs", group->stat.current_admin_qpairs);
+	spdk_json_write_named_uint32(w, "current_io_qpairs", group->stat.current_io_qpairs);
 	spdk_json_write_named_uint64(w, "pending_bdev_io", group->stat.pending_bdev_io);
 
 	spdk_json_write_named_array_begin(w, "transports");

@@ -711,8 +711,10 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 
 	if (0 == qpair->qid) {
 		qpair->group->stat.admin_qpairs++;
+		qpair->group->stat.current_admin_qpairs++;
 	} else {
 		qpair->group->stat.io_qpairs++;
+		qpair->group->stat.current_io_qpairs++;
 	}
 
 	if (cmd->qid == 0) {

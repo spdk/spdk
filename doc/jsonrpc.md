@@ -6770,6 +6770,7 @@ tgt_name                    | Optional | string      | Parent NVMe-oF target nam
 ### Response
 
 The response is an object containing NVMf subsystem statistics.
+In the response, `admin_qpairs` and `io_qpairs` are reflecting cumulative queue pair counts while `current_admin_qpairs` and `current_io_qpairs` are showing the current number.
 
 ### Example
 
@@ -6794,6 +6795,8 @@ Example response:
         "name": "app_thread",
         "admin_qpairs": 1,
         "io_qpairs": 4,
+        "current_admin_qpairs": 1,
+        "current_io_qpairs": 2,
         "pending_bdev_io": 1721,
         "transports": [
           {
