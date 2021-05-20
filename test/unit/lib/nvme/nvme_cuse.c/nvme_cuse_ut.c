@@ -66,13 +66,7 @@ DEFINE_STUB(spdk_nvme_ns_cmd_write, int,
 DEFINE_STUB(spdk_nvme_ns_get_num_sectors, uint64_t,
 	    (struct spdk_nvme_ns *ns), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_sector_size, uint32_t,
-	    (struct spdk_nvme_ns *ns), 0);
-
 DEFINE_STUB_V(spdk_unaffinitize_thread, (void));
-
-DEFINE_STUB(spdk_nvme_ctrlr_get_ns, struct spdk_nvme_ns *,
-	    (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid), NULL);
 
 DEFINE_STUB(nvme_io_msg_ctrlr_register, int,
 	    (struct spdk_nvme_ctrlr *ctrlr,
@@ -88,6 +82,8 @@ DEFINE_STUB(spdk_nvme_ctrlr_is_active_ns, bool,
 DEFINE_STUB(fuse_reply_err, int, (fuse_req_t req, int err), 0);
 
 struct cuse_io_ctx *g_ut_ctx;
+struct spdk_nvme_ctrlr *g_ut_ctrlr;
+uint32_t g_ut_nsid;
 
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
@@ -101,9 +97,27 @@ nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr,
 		 uint32_t nsid, spdk_nvme_io_msg_fn fn, void *arg)
 {
 	g_ut_ctx = arg;
+	g_ut_nsid = nsid;
+	g_ut_ctrlr = ctrlr;
 
 	HANDLE_RETURN_MOCK(nvme_io_msg_send);
 	return 0;
+}
+
+uint32_t
+spdk_nvme_ns_get_sector_size(struct spdk_nvme_ns *ns)
+{
+	return ns->sector_size;
+}
+
+struct spdk_nvme_ns *
+spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (nsid < 1 || nsid > ctrlr->num_ns) {
+		return NULL;
+	}
+
+	return &ctrlr->ns[nsid - 1];
 }
 
 struct cuse_device *g_cuse_device;
@@ -207,6 +221,7 @@ test_cuse_nvme_submit_passthru_cmd(void)
 
 	cuse_io_ctx_free(g_ut_ctx);
 	free(passthru_cmd);
+	free(g_cuse_device);
 }
 
 static void
@@ -240,6 +255,95 @@ test_nvme_cuse_get_cuse_ns_device(void)
 	TAILQ_REMOVE(&g_ctrlr_ctx_head, &ctrlr_device, tailq);
 }
 
+static void
+test_cuse_nvme_submit_io(void)
+{
+	struct cuse_device cuse_device = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct fuse_file_info fi = {};
+	struct spdk_nvme_ns ns = {};
+	struct nvme_user_io *user_io = NULL;
+	char arg[1024] = {};
+	fuse_req_t req = (void *)0xDEEACDFF;
+
+	/* Allocate memory to avoid stack buffer overflow */
+	user_io = calloc(3, 4096);
+	SPDK_CU_ASSERT_FATAL(user_io != NULL);
+
+	cuse_device.ctrlr = &ctrlr;
+	ctrlr.ns = &ns;
+	ctrlr.num_ns = 1;
+	ns.sector_size = 4096;
+	ns.id = 1;
+	user_io->slba = 1024;
+	user_io->nblocks = 1;
+	cuse_device.nsid = 1;
+	g_cuse_device = &cuse_device;
+
+	/* Read */
+	user_io->opcode = SPDK_NVME_OPC_READ;
+	g_ut_ctx = NULL;
+
+	cuse_nvme_submit_io(req, 0, arg, &fi, FUSE_IOCTL_DIR, user_io, 4096, 4096);
+	SPDK_CU_ASSERT_FATAL(g_ut_ctx != NULL);
+	CU_ASSERT(g_ut_nsid == 1);
+	CU_ASSERT(g_ut_ctx->req == (void *)0xDEEACDFF);
+	CU_ASSERT(g_ut_ctx->lba = 1024);
+	CU_ASSERT(g_ut_ctx->lba_count == 2);
+	CU_ASSERT(g_ut_ctx->data_len == 2 * 4096);
+	CU_ASSERT(g_ut_ctx->data != NULL);
+	cuse_io_ctx_free(g_ut_ctx);
+
+	/* Write */
+	user_io->opcode = SPDK_NVME_OPC_WRITE;
+	g_ut_ctx = NULL;
+
+	cuse_nvme_submit_io(req, 0, arg, &fi, FUSE_IOCTL_DIR, user_io, 4096, 4096);
+	SPDK_CU_ASSERT_FATAL(g_ut_ctx != NULL);
+	CU_ASSERT(g_ut_nsid == 1);
+	CU_ASSERT(g_ut_ctx->req == req);
+	CU_ASSERT(g_ut_ctx->lba = 1024);
+	CU_ASSERT(g_ut_ctx->lba_count == 2);
+	CU_ASSERT(g_ut_ctx->data_len == 2 * 4096);
+	CU_ASSERT(g_ut_ctx->data != NULL);
+	cuse_io_ctx_free(g_ut_ctx);
+
+	/* Invalid */
+	g_ut_ctx = NULL;
+	user_io->opcode = SPDK_NVME_OPC_FLUSH;
+
+	cuse_nvme_submit_io(req, 0, arg, &fi, FUSE_IOCTL_DIR, user_io, 4096, 4096);
+	SPDK_CU_ASSERT_FATAL(g_ut_ctx == NULL);
+
+	free(user_io);
+}
+
+static void
+test_cuse_nvme_reset(void)
+{
+	struct cuse_device cuse_device = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	fuse_req_t req = (void *)0xDEADBEEF;
+
+	cuse_device.ctrlr = &ctrlr;
+	g_cuse_device = &cuse_device;
+
+	/* Invalid nsid  */
+	cuse_device.nsid = 1;
+	g_ut_ctx = NULL;
+
+	cuse_nvme_reset(req, 0, NULL, NULL, 0, NULL, 4096, 4096);
+	CU_ASSERT(g_ut_ctx == NULL);
+
+	/* Valid nsid, check IO message sent value */
+	cuse_device.nsid = 0;
+
+	cuse_nvme_reset(req, 0, NULL, NULL, 0, NULL, 4096, 4096);
+	CU_ASSERT(g_ut_ctx == (void *)0xDEADBEEF);
+	CU_ASSERT(g_ut_ctrlr == &ctrlr);
+	CU_ASSERT(g_ut_nsid == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -252,6 +356,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_io_read_write);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_passthru_cmd);
 	CU_ADD_TEST(suite, test_nvme_cuse_get_cuse_ns_device);
+	CU_ADD_TEST(suite, test_cuse_nvme_submit_io);
+	CU_ADD_TEST(suite, test_cuse_nvme_reset);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
