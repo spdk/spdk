@@ -296,7 +296,7 @@ vfio_user_get_dev_info(struct vfio_device *dev, struct vfio_user_device_info *de
 int
 vfio_user_dev_dma_map_unmap(struct vfio_device *dev, struct vfio_memory_region *mr, bool map)
 {
-	struct vfio_user_dma_region region;
+	struct vfio_user_dma_region region = { 0 };
 
 	region.addr = mr->iova;
 	region.size = mr->size;
