@@ -735,14 +735,6 @@ end:
 	return rc;
 }
 
-static void
-free_data(void)
-{
-	free_rpc_threads_stats(&g_threads_stats);
-	free_rpc_pollers_stats(&g_pollers_stats);
-	free_rpc_cores_stats(&g_cores_stats);
-}
-
 enum str_alignment {
 	ALIGN_LEFT,
 	ALIGN_RIGHT,
@@ -2490,7 +2482,11 @@ show_stats(pthread_t *data_thread)
 	pthread_join(*data_thread, NULL);
 
 	free_resources();
-	free_data();
+
+	/* Free memory holding current data states before quitting application */
+	free_rpc_threads_stats(&g_threads_stats);
+	free_rpc_pollers_stats(&g_pollers_stats);
+	free_rpc_cores_stats(&g_cores_stats);
 }
 
 static void
