@@ -266,7 +266,7 @@ simple_copy_test(void)
 			exit(1);
 		}
 
-		range.nlb = NUM_LBAS;
+		range.nlb = NUM_LBAS - 1;
 		range.slba = 0;
 
 		rc = spdk_nvme_ns_cmd_copy(ns_entry->ns, ns_entry->qpair,
