@@ -1107,7 +1107,8 @@ class SPDKTarget(Target):
                                                allow_any_host=True, max_namespaces=8)
                 rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
 
-                rpc.nvmf.nvmf_subsystem_add_listener(self.client, nqn,
+                rpc.nvmf.nvmf_subsystem_add_listener(self.client,
+                                                     nqn=nqn,
                                                      trtype=self.transport,
                                                      traddr=ip,
                                                      trsvcid=port,
