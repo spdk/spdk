@@ -256,7 +256,7 @@ bdev_rbd_get_cluster(const char *cluster_name, rados_t **cluster)
 
 	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
 	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
-		if (strncmp(cluster_name, entry->name, strlen(entry->name)) == 0) {
+		if (strcmp(cluster_name, entry->name) == 0) {
 			entry->ref++;
 			*cluster = &entry->cluster;
 			pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
@@ -692,7 +692,7 @@ bdev_rbd_cluster_dump_entry(const char *cluster_name, struct spdk_json_write_ctx
 
 	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
 	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
-		if (strncmp(cluster_name, entry->name, strlen(entry->name))) {
+		if (strcmp(cluster_name, entry->name)) {
 			continue;
 		}
 		if (entry->user_id) {
@@ -808,7 +808,7 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 
 	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
 	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
-		if (strncmp(name, entry->name, strlen(entry->name)) == 0) {
+		if (strcmp(name, entry->name) == 0) {
 			SPDK_ERRLOG("Cluster name=%s already exists\n", name);
 			pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
 			return -1;
@@ -907,7 +907,7 @@ bdev_rbd_unregister_cluster(const char *name)
 
 	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
 	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
-		if (strncmp(name, entry->name, strlen(entry->name)) == 0) {
+		if (strcmp(name, entry->name) == 0) {
 			if (entry->ref == 0) {
 				STAILQ_REMOVE(&g_map_bdev_rbd_cluster, entry, bdev_rbd_cluster, link);
 				rados_shutdown(entry->cluster);
