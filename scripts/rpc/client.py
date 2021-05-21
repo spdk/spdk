@@ -14,6 +14,22 @@ def print_json(s):
     print(json.dumps(s, indent=2).strip('"'))
 
 
+def get_addr_type(addr):
+    try:
+        socket.inet_pton(socket.AF_INET, addr)
+        return socket.AF_INET
+    except Exception as e:
+        pass
+    try:
+        socket.inet_pton(socket.AF_INET6, addr)
+        return socket.AF_INET6
+    except Exception as e:
+        pass
+    if os.path.exists(addr):
+        return socket.AF_UNIX
+    return None
+
+
 class JSONRPCException(Exception):
     def __init__(self, message):
         self.message = message
@@ -54,23 +70,24 @@ class JSONRPCClient(object):
 
     def _connect(self, addr, port):
         try:
-            if os.path.exists(addr):
+            addr_type = get_addr_type(addr)
+
+            if addr_type == socket.AF_UNIX:
                 self._logger.debug("Trying to connect to UNIX socket: %s", addr)
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.sock.connect(addr)
-            elif port:
-                if ':' in addr:
-                    self._logger.debug("Trying to connect to IPv6 address addr:%s, port:%i", addr, port)
-                    for res in socket.getaddrinfo(addr, port, socket.AF_INET6, socket.SOCK_STREAM, socket.SOL_TCP):
-                        af, socktype, proto, canonname, sa = res
-                    self.sock = socket.socket(af, socktype, proto)
-                    self.sock.connect(sa)
-                else:
-                    self._logger.debug("Trying to connect to IPv4 address addr:%s, port:%i'", addr, port)
-                    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self.sock.connect((addr, port))
+            elif addr_type == socket.AF_INET6:
+                self._logger.debug("Trying to connect to IPv6 address addr:%s, port:%i", addr, port)
+                for res in socket.getaddrinfo(addr, port, socket.AF_INET6, socket.SOCK_STREAM, socket.SOL_TCP):
+                    af, socktype, proto, canonname, sa = res
+                self.sock = socket.socket(af, socktype, proto)
+                self.sock.connect(sa)
+            elif addr_type == socket.AF_INET:
+                self._logger.debug("Trying to connect to IPv4 address addr:%s, port:%i'", addr, port)
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.sock.connect((addr, port))
             else:
-                raise socket.error("Unix socket '%s' does not exist" % addr)
+                raise socket.error("Invalid or non-existing address: '%s'" % addr)
         except socket.error as ex:
             raise JSONRPCException("Error while connecting to %s\n"
                                    "Is SPDK application running?\n"
