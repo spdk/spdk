@@ -790,6 +790,76 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_object_end(w);
 }
 
+static void
+dump_single_cluster_entry(struct bdev_rbd_cluster *entry, struct spdk_json_write_ctx *w)
+{
+	assert(entry != NULL);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "cluster_name", entry->name);
+
+	if (entry->user_id) {
+		spdk_json_write_named_string(w, "user_id", entry->user_id);
+	}
+
+	if (entry->config_param) {
+		char **config_entry = entry->config_param;
+
+		spdk_json_write_named_object_begin(w, "config_param");
+		while (*config_entry) {
+			spdk_json_write_named_string(w, config_entry[0], config_entry[1]);
+			config_entry += 2;
+		}
+		spdk_json_write_object_end(w);
+	} else if (entry->config_file) {
+		spdk_json_write_named_string(w, "config_file", entry->config_file);
+	}
+
+	spdk_json_write_object_end(w);
+}
+
+int
+bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request, const char *name)
+{
+	struct bdev_rbd_cluster *entry;
+	struct spdk_json_write_ctx *w;
+
+	pthread_mutex_lock(&g_map_bdev_rbd_cluster_mutex);
+
+	if (STAILQ_EMPTY(&g_map_bdev_rbd_cluster)) {
+		pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+		return -ENOENT;
+	}
+
+	/* If cluster name is provided */
+	if (name) {
+		STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
+			if (strcmp(name, entry->name) == 0) {
+				w = spdk_jsonrpc_begin_result(request);
+				dump_single_cluster_entry(entry, w);
+				spdk_jsonrpc_end_result(request, w);
+
+				pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+				return 0;
+			}
+		}
+
+		pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+		return -ENOENT;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_array_begin(w);
+	STAILQ_FOREACH(entry, &g_map_bdev_rbd_cluster, link) {
+		dump_single_cluster_entry(entry, w);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.destruct		= bdev_rbd_destruct,
 	.submit_request		= bdev_rbd_submit_request,

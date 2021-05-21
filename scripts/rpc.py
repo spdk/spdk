@@ -661,6 +661,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name of the Rados Cluster only known to rbd bdev')
     p.set_defaults(func=bdev_rbd_unregister_cluster)
 
+    def bdev_rbd_get_clusters_info(args):
+        print_json(rpc.bdev.bdev_rbd_get_clusters_info(args.client, name=args.name))
+
+    p = subparsers.add_parser('bdev_rbd_get_clusters_info',
+                              help='Display registered Rados Cluster names and related info')
+    p.add_argument('-b', '--name', help="Name of the registered Rados Cluster Name. Example: Cluster1", required=False)
+    p.set_defaults(func=bdev_rbd_get_clusters_info)
+
     def bdev_rbd_create(args):
         config = None
         if args.config:

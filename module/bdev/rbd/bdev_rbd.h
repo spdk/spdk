@@ -37,6 +37,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
+#include "spdk/rpc.h"
 
 struct cluster_register_info {
 	char *name;
@@ -85,5 +86,14 @@ int bdev_rbd_register_cluster(struct cluster_register_info *info);
  * \param name the name of the cluster to be deleted.
  */
 int bdev_rbd_unregister_cluster(const char *name);
+
+/**
+ * Show the cluster info of a given name. If given name is empty,
+ * the info of every registered cluster name will be showed.
+ *
+ * \param request the json request.
+ * \param name the name of the cluster.
+ */
+int bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request, const char *name);
 
 #endif /* SPDK_BDEV_RBD_H */

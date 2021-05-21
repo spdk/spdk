@@ -32,7 +32,6 @@
  */
 
 #include "bdev_rbd.h"
-#include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
@@ -336,3 +335,43 @@ cleanup:
 	free_rpc_bdev_cluster_unregister(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_unregister_cluster", rpc_bdev_rbd_unregister_cluster, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_rbd_get_cluster_info {
+	char *name;
+};
+
+static void
+free_rpc_bdev_rbd_get_cluster_info(struct rpc_bdev_rbd_get_cluster_info *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_rbd_get_cluster_info_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_rbd_get_cluster_info, name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_bdev_rbd_get_clusters_info(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_rbd_get_cluster_info req = {NULL};
+	int rc;
+
+	if (params && spdk_json_decode_object(params, rpc_bdev_rbd_get_cluster_info_decoders,
+					      SPDK_COUNTOF(rpc_bdev_rbd_get_cluster_info_decoders),
+					      &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = bdev_rbd_get_clusters_info(request, req.name);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+cleanup:
+	free_rpc_bdev_rbd_get_cluster_info(&req);
+}
+SPDK_RPC_REGISTER("bdev_rbd_get_clusters_info", rpc_bdev_rbd_get_clusters_info, SPDK_RPC_RUNTIME)

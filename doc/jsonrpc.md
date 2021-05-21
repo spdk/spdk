@@ -3405,6 +3405,45 @@ Example response:
 }
 ~~
 
+## bdev_rbd_get_clusters_info {#rpc_bdev_rbd_get_clusters_info}
+
+This method is available only if SPDK was build with Ceph RBD support.
+
+### Result
+
+Returns the cluster info of the Rados Cluster name if provided. Otherwise, it
+returns the cluster info of every registered Raods Cluster name.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -------------------------
+name                    | Optional | string      | Rados cluster object name
+
+### Example
+
+Example request:
+
+~~
+{
+  "params": {
+    "name": "rbd_cluster"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_rbd_get_clusters_info",
+  "id": 1
+}
+~~
+
+Example response:
+
+~~
+{
+  "jsonrpc": "2.0",
+  "cluster_name": "rbd_cluster"
+}
+~~
+
 ## bdev_rbd_create {#rpc_bdev_rbd_create}
 
 Create @ref bdev_config_rbd bdev

@@ -30,6 +30,9 @@ device.
 Revised `bdev_rbd_create` parameter, it allows to use an optional parameter --cluster-name
 to create a rbd bdev with  an already registered Rados Cluster Object.
 
+New RPC `bdev_rbd_get_clusters_info` was added, it allows to get the info of the registered
+Rados Cluster names.
+
 ## v21.04:
 
 ### accel

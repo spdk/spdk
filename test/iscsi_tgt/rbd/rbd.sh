@@ -32,6 +32,7 @@ timing_exit start_iscsi_tgt
 $rpc_py iscsi_create_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py iscsi_create_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 rbd_cluster_name="$($rpc_py bdev_rbd_register_cluster iscsi_rbd_cluster)"
+$rpc_py bdev_rbd_get_clusters_info -b $rbd_cluster_name
 rbd_bdev="$($rpc_py bdev_rbd_create $RBD_POOL $RBD_NAME 4096 -c $rbd_cluster_name)"
 $rpc_py bdev_get_bdevs
 

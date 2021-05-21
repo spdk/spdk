@@ -693,6 +693,21 @@ def bdev_rbd_unregister_cluster(client, name):
     return client.call('bdev_rbd_unregister_cluster', params)
 
 
+def bdev_rbd_get_clusters_info(client, name):
+    """Get the cluster(s) info
+
+    Args:
+        name: name of Rados cluster object to query (optional; if omitted, query all clusters)
+
+    Returns:
+        List of registered Rados cluster information objects.
+    """
+    params = {}
+    if name:
+        params['name'] = name
+    return client.call('bdev_rbd_get_clusters_info', params)
+
+
 @deprecated_alias('construct_rbd_bdev')
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None, cluster_name=None):
     """Create a Ceph RBD block device.
