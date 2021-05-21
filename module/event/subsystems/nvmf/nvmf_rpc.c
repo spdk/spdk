@@ -35,6 +35,7 @@
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/cpuset.h"
 
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_opts_decoder[] = {
 	{"max_subsystems", 0, spdk_json_decode_uint32, true}
@@ -98,10 +99,57 @@ static int decode_admin_passthru(const struct spdk_json_val *val, void *out)
 	return 0;
 }
 
+static int
+nvmf_is_subset_of_env_core_mask(const struct spdk_cpuset *set)
+{
+	uint32_t i, tmp_counter = 0;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (spdk_cpuset_get_cpu(set, i)) {
+			++tmp_counter;
+		}
+	}
+	return spdk_cpuset_count(set) - tmp_counter;
+}
+
+static int
+nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
+{
+	char *mask = spdk_json_strdup(val);
+	int ret = -1;
+
+	if (mask == NULL) {
+		return -1;
+	}
+
+	if (!(g_poll_groups_mask = spdk_cpuset_alloc())) {
+		SPDK_ERRLOG("Unable to allocate a poll groups mask object in nvmf_decode_poll_groups_mask.\n");
+		free(mask);
+		return -1;
+	}
+
+	ret = spdk_cpuset_parse(g_poll_groups_mask, mask);
+	free(mask);
+	if (ret == 0) {
+		if (nvmf_is_subset_of_env_core_mask(g_poll_groups_mask) == 0) {
+			return 0;
+		} else {
+			SPDK_ERRLOG("Poll groups cpumask 0x%s is out of range\n", spdk_cpuset_fmt(g_poll_groups_mask));
+		}
+	} else {
+		SPDK_ERRLOG("Invalid cpumask\n");
+	}
+
+	spdk_cpuset_free(g_poll_groups_mask);
+	g_poll_groups_mask = NULL;
+	return -1;
+}
+
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
 	{"acceptor_poll_rate", offsetof(struct spdk_nvmf_tgt_conf, acceptor_poll_rate), spdk_json_decode_uint32, true},
 	{"conn_sched", offsetof(struct spdk_nvmf_tgt_conf, conn_sched), decode_conn_sched, true},
-	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true}
+	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
+	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true}
 };
 
 static void

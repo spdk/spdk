@@ -23,7 +23,8 @@ def nvmf_set_max_subsystems(client,
 def nvmf_set_config(client,
                     acceptor_poll_rate=None,
                     conn_sched=None,
-                    passthru_identify_ctrlr=None):
+                    passthru_identify_ctrlr=None,
+                    poll_groups_mask=None):
     """Set NVMe-oF target subsystem configuration.
 
     Args:
@@ -43,6 +44,8 @@ def nvmf_set_config(client,
         admin_cmd_passthru = {}
         admin_cmd_passthru['identify_ctrlr'] = passthru_identify_ctrlr
         params['admin_cmd_passthru'] = admin_cmd_passthru
+    if poll_groups_mask:
+        params['poll_groups_mask'] = poll_groups_mask
 
     return client.call('nvmf_set_config', params)
 

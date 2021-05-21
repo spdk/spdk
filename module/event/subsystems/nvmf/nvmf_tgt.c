@@ -488,6 +488,9 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "identify_ctrlr",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr);
 	spdk_json_write_object_end(w);
+	if (g_poll_groups_mask) {
+		spdk_json_write_named_string(w, "poll_groups_mask", spdk_cpuset_fmt(g_poll_groups_mask));
+	}
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 

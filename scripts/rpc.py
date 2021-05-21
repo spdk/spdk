@@ -1895,7 +1895,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.nvmf.nvmf_set_config(args.client,
                                  acceptor_poll_rate=args.acceptor_poll_rate,
                                  conn_sched=args.conn_sched,
-                                 passthru_identify_ctrlr=args.passthru_identify_ctrlr)
+                                 passthru_identify_ctrlr=args.passthru_identify_ctrlr,
+                                 poll_groups_mask=args.poll_groups_mask)
 
     p = subparsers.add_parser('nvmf_set_config', aliases=['set_nvmf_target_config'],
                               help='Set NVMf target config')
@@ -1903,6 +1904,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-s', '--conn-sched', help='(Deprecated). Ignored.')
     p.add_argument('-i', '--passthru-identify-ctrlr', help="""Passthrough fields like serial number and model number
     when the controller has a single namespace that is an NVMe bdev""", action='store_true')
+    p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
     p.set_defaults(func=nvmf_set_config)
 
     def nvmf_create_transport(args):

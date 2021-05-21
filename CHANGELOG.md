@@ -116,6 +116,10 @@ is associated with a fabrics controller.
 Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the controller ID range.
 Added `spdk_nvmf_subsystem_get_min_cntlid` and `spdk_nvmf_subsystem_get_max_cntlid` to request those values.
 
+A new parameter, `poll_groups_mask` was added to the nvmf_set_config RPC that allows specifying
+a subset of cores for the nvmf poll groups. This helps to avoid imbalances when some cores are
+busy with periodic timer tasks that run very frequently.
+
 `spdk_nvmf_request_get_buffers_multi` API is removed.
 
 Added the `nvmf_set_crdt` RPC for setting command retry delay times.
