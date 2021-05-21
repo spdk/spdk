@@ -609,7 +609,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 			return -1;
 		}
 		task->used_len = spdk_min((size_t)VIRTIO_BLK_ID_BYTES, task->iovs[1].iov_len);
-		spdk_strcpy_pad(task->iovs[1].iov_base, spdk_bdev_get_product_name(bvdev->bdev),
+		spdk_strcpy_pad(task->iovs[1].iov_base, spdk_bdev_get_name(bvdev->bdev),
 				task->used_len, ' ');
 		blk_request_finish(true, task);
 		break;
