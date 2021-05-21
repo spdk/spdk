@@ -940,7 +940,7 @@ refresh_threads_tab(uint8_t current_page)
 	static uint8_t last_page = 0;
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN];
-	struct rpc_thread_info *thread_info[g_threads_stats.threads.threads_count];
+	struct rpc_thread_info *thread_info[RPC_MAX_THREADS];
 
 	threads_count = g_threads_stats.threads.threads_count;
 
