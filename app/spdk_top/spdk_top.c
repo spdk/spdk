@@ -627,6 +627,7 @@ get_data(void)
 	struct rpc_pollers *pollers;
 	struct rpc_poller_info *poller;
 	uint64_t i, j, k;
+	uint64_t pollers_count = 0;
 	int rc = 0;
 
 	rc = rpc_send_req("thread_get_stats", &json_resp);
@@ -670,17 +671,23 @@ get_data(void)
 			poller = &pollers->pollers[j];
 			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
 		}
+		pollers_count += pollers->pollers_count;
+
 		pollers = &g_pollers_stats.pollers_threads.threads[i].timed_pollers;
 		for (j = 0; j < pollers->pollers_count; j++) {
 			poller = &pollers->pollers[j];
 			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
 		}
+		pollers_count += pollers->pollers_count;
+
 		pollers = &g_pollers_stats.pollers_threads.threads[i].paused_pollers;
 		for (j = 0; j < pollers->pollers_count; j++) {
 			poller = &pollers->pollers[j];
 			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
 		}
+		pollers_count += pollers->pollers_count;
 	}
+	g_last_pollers_count = pollers_count;
 
 	/* Free old pollers values before allocating memory for new ones */
 	free_rpc_pollers_stats(&g_pollers_stats);
@@ -1190,8 +1197,6 @@ refresh_pollers_tab(uint8_t current_page)
 				mvwprintw(g_tabs[POLLERS_TAB], i, j, " ");
 			}
 		}
-
-		g_last_pollers_count = count;
 
 		/* We need to run store_last_run_counter() again, so the easiest way is to call this function
 		 * again with changed g_last_page value */
