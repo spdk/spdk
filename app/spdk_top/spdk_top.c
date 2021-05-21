@@ -2206,19 +2206,37 @@ print_bottom_error_message(char *msg)
 }
 
 static void
-display_thread(struct rpc_thread_info *thread_info)
+display_thread(uint64_t thread_id, uint8_t current_page)
 {
 	PANEL *thread_panel;
 	WINDOW *thread_win;
+	struct rpc_thread_info thread_info;
 	uint64_t pollers_count, current_row, i, time;
 	int c;
 	bool stop_loop = false;
 	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
 
+	memset(&thread_info, 0, sizeof(thread_info));
 	pthread_mutex_lock(&g_thread_lock);
-	pollers_count = thread_info->active_pollers_count +
-			thread_info->timed_pollers_count +
-			thread_info->paused_pollers_count;
+
+	/* Use local copy of thread_info */
+	for (i = 0; i < g_last_threads_count; i++) {
+		if (g_threads_info[i].id == thread_id) {
+			memcpy(&thread_info, &g_threads_info[i], sizeof(struct rpc_thread_info));
+			break;
+		}
+	}
+
+	/* We did not find this thread, so we cannot show its information. */
+	if (i == g_last_threads_count) {
+		print_bottom_error_message("This thread does not exist.");
+		pthread_mutex_unlock(&g_thread_lock);
+		return;
+	}
+
+	pollers_count = thread_info.active_pollers_count +
+			thread_info.timed_pollers_count +
+			thread_info.paused_pollers_count;
 
 	thread_win = newwin(pollers_count + THREAD_WIN_HEIGHT, THREAD_WIN_WIDTH,
 			    get_position_for_window(THREAD_WIN_HEIGHT + pollers_count, g_max_row),
@@ -2232,7 +2250,7 @@ display_thread(struct rpc_thread_info *thread_info)
 
 	box(thread_win, 0, 0);
 
-	print_in_middle(thread_win, 1, 0, THREAD_WIN_WIDTH, thread_info->name,
+	print_in_middle(thread_win, 1, 0, THREAD_WIN_WIDTH, thread_info.name,
 			COLOR_PAIR(3));
 	mvwhline(thread_win, 2, 1, ACS_HLINE, THREAD_WIN_WIDTH - 2);
 	mvwaddch(thread_win, 2, THREAD_WIN_WIDTH, ACS_RTEE);
@@ -2240,28 +2258,28 @@ display_thread(struct rpc_thread_info *thread_info)
 	print_left(thread_win, 3, THREAD_WIN_FIRST_COL, THREAD_WIN_WIDTH,
 		   "Core:                Idle [us]:            Busy [us]:", COLOR_PAIR(5));
 	mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 6, "%d",
-		  thread_info->core_num);
+		  thread_info.core_num);
 
 	if (g_interval_data) {
-		get_time_str(thread_info->idle - thread_info->last_idle, idle_time);
+		get_time_str(thread_info.idle - thread_info.last_idle, idle_time);
 		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 32, "%s", idle_time);
-		get_time_str(thread_info->busy - thread_info->last_busy, busy_time);
+		get_time_str(thread_info.busy - thread_info.last_busy, busy_time);
 		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 54, "%s", busy_time);
 	} else {
-		get_time_str(thread_info->idle, idle_time);
+		get_time_str(thread_info.idle, idle_time);
 		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 32, "%s", idle_time);
-		get_time_str(thread_info->busy, busy_time);
+		get_time_str(thread_info.busy, busy_time);
 		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 54, "%s", busy_time);
 	}
 
 	print_left(thread_win, 4, THREAD_WIN_FIRST_COL, THREAD_WIN_WIDTH,
 		   "Active pollers:      Timed pollers:        Paused pollers:", COLOR_PAIR(5));
 	mvwprintw(thread_win, 4, THREAD_WIN_FIRST_COL + 17, "%" PRIu64,
-		  thread_info->active_pollers_count);
+		  thread_info.active_pollers_count);
 	mvwprintw(thread_win, 4, THREAD_WIN_FIRST_COL + 36, "%" PRIu64,
-		  thread_info->timed_pollers_count);
+		  thread_info.timed_pollers_count);
 	mvwprintw(thread_win, 4, THREAD_WIN_FIRST_COL + 59, "%" PRIu64,
-		  thread_info->paused_pollers_count);
+		  thread_info.paused_pollers_count);
 
 	mvwhline(thread_win, 5, 1, ACS_HLINE, THREAD_WIN_WIDTH - 2);
 
@@ -2273,7 +2291,7 @@ display_thread(struct rpc_thread_info *thread_info)
 	current_row = 8;
 
 	for (i = 0; i < g_last_pollers_count; i++) {
-		if (g_pollers_info[i].thread_id == thread_info->id) {
+		if (g_pollers_info[i].thread_id == thread_info.id) {
 			mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL, "%s", g_pollers_info[i].name);
 			if (g_pollers_info[i].type == SPDK_ACTIVE_POLLER) {
 				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 33, "Active");
@@ -2315,29 +2333,27 @@ display_thread(struct rpc_thread_info *thread_info)
 static void
 show_thread(uint8_t current_page)
 {
-	struct rpc_thread_info thread_info;
 	uint64_t thread_number = current_page * g_max_data_rows + g_selected_row;
+	uint64_t thread_id;
 
 	pthread_mutex_lock(&g_thread_lock);
 	assert(thread_number < g_last_threads_count);
-	thread_info = g_threads_info[thread_number];
+	thread_id = g_threads_info[thread_number].id;
 	pthread_mutex_unlock(&g_thread_lock);
 
-	display_thread(&thread_info);
+	display_thread(thread_id, current_page);
 }
 
 static void
-show_single_thread(uint64_t thread_id)
+show_single_thread(uint64_t thread_id, uint8_t current_page)
 {
 	uint64_t i;
-	struct rpc_thread_info thread_info;
 
 	pthread_mutex_lock(&g_thread_lock);
 	for (i = 0; i < g_last_threads_count; i++) {
 		if (g_threads_info[i].id == thread_id) {
-			thread_info = g_threads_info[i];
 			pthread_mutex_unlock(&g_thread_lock);
-			display_thread(&thread_info);
+			display_thread(thread_id, current_page);
 			return;
 		}
 	}
@@ -2454,8 +2470,9 @@ show_core(uint8_t current_page)
 				thread_id = core_info->threads.thread[current_threads_row].id;
 			}
 			pthread_mutex_unlock(&g_thread_lock);
+
 			if (thread_id != 0) {
-				show_single_thread(thread_id);
+				show_single_thread(thread_id, current_page);
 			}
 			break;
 		case 27: /* ESC */
