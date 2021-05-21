@@ -167,7 +167,7 @@ DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread
 DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock
 
 DEPDIRS-event_nbd := init nbd event_bdev
-DEPDIRS-event_nvmf := init nvmf event_bdev event_sock thread log bdev $(JSON_LIBS)
+DEPDIRS-event_nvmf := init nvmf event_bdev event_sock thread log bdev util $(JSON_LIBS)
 DEPDIRS-event_scsi := init scsi event_bdev
 
 DEPDIRS-event_iscsi := init iscsi event_scsi event_sock

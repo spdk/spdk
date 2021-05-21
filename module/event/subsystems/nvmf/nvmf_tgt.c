@@ -64,6 +64,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 	.admin_passthru.identify_ctrlr = false
 };
 
+struct spdk_cpuset *g_poll_groups_mask = NULL;
 struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
 uint16_t g_spdk_nvmf_tgt_crdt[3] = {0, 0, 0};
@@ -150,6 +151,16 @@ nvmf_tgt_destroy_poll_groups(void)
 	}
 }
 
+static uint32_t
+nvmf_get_cpuset_count(void)
+{
+	if (g_poll_groups_mask) {
+		return spdk_cpuset_count(g_poll_groups_mask);
+	} else {
+		return spdk_env_get_core_count();
+	}
+}
+
 static void
 nvmf_tgt_create_poll_group_done(void *ctx)
 {
@@ -157,9 +168,9 @@ nvmf_tgt_create_poll_group_done(void *ctx)
 
 	TAILQ_INSERT_TAIL(&g_poll_groups, pg, link);
 
-	assert(g_num_poll_groups < spdk_env_get_core_count());
+	assert(g_num_poll_groups < nvmf_get_cpuset_count());
 
-	if (++g_num_poll_groups == spdk_env_get_core_count()) {
+	if (++g_num_poll_groups == nvmf_get_cpuset_count()) {
 		g_tgt_state = NVMF_TGT_INIT_START_SUBSYSTEMS;
 		nvmf_tgt_advance_state();
 	}
@@ -195,9 +206,12 @@ nvmf_tgt_create_poll_groups(void)
 	assert(g_tgt_init_thread != NULL);
 
 	SPDK_ENV_FOREACH_CORE(i) {
+		if (g_poll_groups_mask && !spdk_cpuset_get_cpu(g_poll_groups_mask, i)) {
+			continue;
+		}
 		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", i);
 
-		thread = spdk_thread_create(thread_name, NULL);
+		thread = spdk_thread_create(thread_name, g_poll_groups_mask);
 		assert(thread != NULL);
 
 		spdk_thread_send_msg(thread, nvmf_tgt_create_poll_group, NULL);

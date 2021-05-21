@@ -61,4 +61,6 @@ extern uint16_t g_spdk_nvmf_tgt_crdt[3];
 
 extern struct spdk_nvmf_tgt *g_spdk_nvmf_tgt;
 
+extern struct spdk_cpuset *g_poll_groups_mask;
+
 #endif
