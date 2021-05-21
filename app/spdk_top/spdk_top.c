@@ -2176,6 +2176,12 @@ get_position_for_window(uint64_t window_size, uint64_t max_size)
 }
 
 static void
+print_bottom_error_message(char *msg)
+{
+	mvprintw(g_max_row - 1, g_max_col - strlen(msg) - 2, msg);
+}
+
+static void
 display_thread(struct rpc_thread_info *thread_info)
 {
 	PANEL *thread_panel;
@@ -2541,12 +2547,6 @@ show_poller(uint8_t current_page)
 
 	del_panel(poller_panel);
 	delwin(poller_win);
-}
-
-static void
-print_bottom_error_message(char *msg)
-{
-	mvprintw(g_max_row - 1, g_max_col - strlen(msg) - 2, msg);
 }
 
 static void *
