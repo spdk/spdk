@@ -991,9 +991,11 @@ function print_backtrace() {
 	local args=("${BASH_ARGV[@]}")
 
 	xtrace_disable
+	# Reset IFS in case we were called from an environment where it was modified
+	IFS=" "$'\t'$'\n'
 	echo "========== Backtrace start: =========="
 	echo ""
-	for i in $(seq 1 $((${#FUNCNAME[@]} - 1))); do
+	for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
 		local func="${FUNCNAME[$i]}"
 		local line_nr="${BASH_LINENO[$((i - 1))]}"
 		local src="${BASH_SOURCE[$i]}"
