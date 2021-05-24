@@ -522,7 +522,6 @@ test_scheduler(void)
 {
 	struct spdk_cpuset cpuset = {};
 	struct spdk_thread *thread[3];
-	struct spdk_lw_thread *lw_thread;
 	struct spdk_reactor *reactor;
 	struct spdk_poller *busy, *idle;
 	uint64_t current_time;
@@ -563,35 +562,25 @@ test_scheduler(void)
 
 	/* Init threads stats (low load) */
 	/* Each reactor starts at 100 tsc,
-	 * ends at 100 + 10 + 90 = 200 tsc. */
+	 * ends at 100 + 100 = 200 tsc. */
 	current_time = 100;
 	for (i = 0; i < 3; i++) {
 		spdk_set_thread(thread[i]);
-		/* FIXME: A single _reactor_run() iterates over all active pollers.
-		 * If at least one returns busy, so does the thread. Load here is not
-		 * 'low', but 100% busy. */
-		busy = spdk_poller_register(poller_run_busy, (void *)10, 0);
-		idle = spdk_poller_register(poller_run_idle, (void *)90, 0);
+		idle = spdk_poller_register(poller_run_idle, (void *)100, 0);
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
 		MOCK_SET(spdk_get_ticks, current_time);
 		reactor->tsc_last = spdk_get_ticks();
 		_reactor_run(reactor);
 		CU_ASSERT(reactor->tsc_last == 200);
-		spdk_poller_unregister(&busy);
 		spdk_poller_unregister(&idle);
 
 		CU_ASSERT(spdk_thread_get_last_tsc(thread[i]) == 200);
 		CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
-		CU_ASSERT(stats.busy_tsc == 100);
-		CU_ASSERT(stats.idle_tsc == 0);
-		CU_ASSERT(reactor->busy_tsc == 100);
-		CU_ASSERT(reactor->idle_tsc == 0);
-
-		/* Update last stats so that we don't have to call scheduler twice */
-		lw_thread = spdk_thread_get_ctx(thread[i]);
-		lw_thread->last_stats.busy_tsc = UINT32_MAX;
-		lw_thread->last_stats.idle_tsc = UINT32_MAX;
+		CU_ASSERT(stats.busy_tsc == 0);
+		CU_ASSERT(stats.idle_tsc == 100);
+		CU_ASSERT(reactor->busy_tsc == 0);
+		CU_ASSERT(reactor->idle_tsc == 100);
 	}
 	CU_ASSERT(spdk_get_ticks() == 200);
 	current_time = 200;
@@ -623,13 +612,13 @@ test_scheduler(void)
 		MOCK_SET(spdk_get_ticks, current_time);
 		_reactor_run(reactor);
 		CU_ASSERT(reactor->tsc_last == current_time);
-		CU_ASSERT(reactor->busy_tsc == 100);
-		CU_ASSERT(reactor->idle_tsc == 0);
+		CU_ASSERT(reactor->busy_tsc == 0);
+		CU_ASSERT(reactor->idle_tsc == 100);
 		spdk_set_thread(thread[i]);
 		CU_ASSERT(spdk_thread_get_last_tsc(thread[i]) == current_time);
 		CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
-		CU_ASSERT(stats.busy_tsc == 100);
-		CU_ASSERT(stats.idle_tsc == 0);
+		CU_ASSERT(stats.busy_tsc == 0);
+		CU_ASSERT(stats.idle_tsc == 100);
 	}
 	CU_ASSERT(spdk_get_ticks() == current_time);
 
@@ -666,11 +655,11 @@ test_scheduler(void)
 		CU_ASSERT(reactor->tsc_last == (current_time + 100 * (i + 1)));
 		CU_ASSERT(spdk_thread_get_last_tsc(thread[i]) == (current_time + 100 * (i + 1)));
 		CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
-		CU_ASSERT(stats.busy_tsc == 200);
-		CU_ASSERT(stats.idle_tsc == 0);
+		CU_ASSERT(stats.busy_tsc == 100);
+		CU_ASSERT(stats.idle_tsc == 100);
 	}
-	CU_ASSERT(reactor->busy_tsc == 400);
-	CU_ASSERT(reactor->idle_tsc == 0);
+	CU_ASSERT(reactor->busy_tsc == 300);
+	CU_ASSERT(reactor->idle_tsc == 100);
 	CU_ASSERT(spdk_get_ticks() == 500);
 	current_time = 500;
 
