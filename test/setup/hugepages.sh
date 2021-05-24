@@ -134,28 +134,30 @@ odd_alloc() {
 }
 
 custom_alloc() {
-	# Custom alloc: node0 == 512 pages [node1 == 1024 pages]
+	# Custom alloc: node0 == 1GB [node1 == 2 GB]
 
 	local IFS=","
 
 	local node
 	local nodes_hp=()
 
-	local nr_hugepages=0
+	local nr_hugepages=0 _nr_hugepages=0
 
-	nodes_hp[0]=512
+	get_test_nr_hugepages $((1024 * 1024))
+	nodes_hp[0]=$nr_hugepages
 	if ((${#nodes_sys[@]} > 1)); then
-		nodes_hp[1]=1024
+		get_test_nr_hugepages $((2048 * 1024))
+		nodes_hp[1]=$nr_hugepages
 	fi
 
 	for node in "${!nodes_hp[@]}"; do
 		HUGENODE+=("nodes_hp[$node]=${nodes_hp[node]}")
-		((nr_hugepages += nodes_hp[node]))
+		((_nr_hugepages += nodes_hp[node]))
 	done
 
 	get_test_nr_hugepages_per_node
 	HUGENODE="${HUGENODE[*]}" setup
-	verify_nr_hugepages
+	nr_hugepages=$_nr_hugepages verify_nr_hugepages
 }
 
 hp_status() {
