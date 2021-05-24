@@ -262,6 +262,9 @@ struct spdk_scheduler_core_info {
 	/* stats over a lifetime of a core */
 	uint64_t total_idle_tsc;
 	uint64_t total_busy_tsc;
+	/* stats during the last scheduling period */
+	uint64_t current_idle_tsc;
+	uint64_t current_busy_tsc;
 
 	uint32_t lcore;
 	uint32_t threads_count;

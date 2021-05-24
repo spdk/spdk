@@ -43,7 +43,6 @@
 static uint32_t g_next_lcore = SPDK_ENV_LCORE_ID_ANY;
 static uint32_t g_main_lcore;
 static bool g_core_mngmnt_available;
-uint64_t g_last_main_core_busy, g_last_main_core_idle;
 
 #define SCHEDULER_THREAD_BUSY 100
 #define SCHEDULER_LOAD_LIMIT 50
@@ -88,9 +87,6 @@ init(struct spdk_governor *governor)
 
 	rc = _spdk_governor_set("dpdk_governor");
 	g_core_mngmnt_available = !rc;
-
-	g_last_main_core_busy = 0;
-	g_last_main_core_idle = 0;
 
 	return 0;
 }
@@ -139,10 +135,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	uint8_t load;
 	bool busy_threads_present = false;
 
-	main_core_busy = cores_info[g_main_lcore].total_busy_tsc - g_last_main_core_busy;
-	main_core_idle = cores_info[g_main_lcore].total_idle_tsc - g_last_main_core_idle;
-	g_last_main_core_busy = cores_info[g_main_lcore].total_busy_tsc;
-	g_last_main_core_idle = cores_info[g_main_lcore].total_idle_tsc;
+	main_core_busy = cores_info[g_main_lcore].current_busy_tsc;
+	main_core_idle = cores_info[g_main_lcore].current_idle_tsc;
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		cores_info[i].pending_threads_count = cores_info[i].threads_count;

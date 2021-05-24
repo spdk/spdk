@@ -792,7 +792,9 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	reactor->flags.is_scheduling = true;
 	core_info = &g_core_infos[reactor->lcore];
 	core_info->lcore = reactor->lcore;
+	core_info->current_idle_tsc = reactor->idle_tsc - core_info->total_idle_tsc;
 	core_info->total_idle_tsc = reactor->idle_tsc;
+	core_info->current_busy_tsc = reactor->busy_tsc - core_info->total_busy_tsc;
 	core_info->total_busy_tsc = reactor->busy_tsc;
 	core_info->interrupt_mode = reactor->in_interrupt;
 
