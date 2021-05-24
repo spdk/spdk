@@ -101,7 +101,6 @@ struct nvme_tcp_pdu {
 
 	bool						has_hdgst;
 	bool						ddgst_enable;
-	uint32_t					header_digest_crc32;
 	uint32_t					data_digest_crc32;
 	uint8_t						data_digest[SPDK_NVME_TCP_DIGEST_LEN];
 
