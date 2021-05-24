@@ -139,10 +139,10 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	uint8_t load;
 	bool busy_threads_present = false;
 
-	main_core_busy = cores_info[g_main_lcore].core_busy_tsc - g_last_main_core_busy;
-	main_core_idle = cores_info[g_main_lcore].core_idle_tsc - g_last_main_core_idle;
-	g_last_main_core_busy = cores_info[g_main_lcore].core_busy_tsc;
-	g_last_main_core_idle = cores_info[g_main_lcore].core_idle_tsc;
+	main_core_busy = cores_info[g_main_lcore].total_busy_tsc - g_last_main_core_busy;
+	main_core_idle = cores_info[g_main_lcore].total_idle_tsc - g_last_main_core_idle;
+	g_last_main_core_busy = cores_info[g_main_lcore].total_busy_tsc;
+	g_last_main_core_idle = cores_info[g_main_lcore].total_idle_tsc;
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		cores_info[i].pending_threads_count = cores_info[i].threads_count;

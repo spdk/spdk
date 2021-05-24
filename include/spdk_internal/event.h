@@ -259,8 +259,10 @@ struct spdk_governor *_spdk_governor_get(void);
  * A list of cores and threads which is used for scheduling.
  */
 struct spdk_scheduler_core_info {
-	uint64_t core_idle_tsc;
-	uint64_t core_busy_tsc;
+	/* stats over a lifetime of a core */
+	uint64_t total_idle_tsc;
+	uint64_t total_busy_tsc;
+
 	uint32_t lcore;
 	uint32_t threads_count;
 	uint32_t pending_threads_count;

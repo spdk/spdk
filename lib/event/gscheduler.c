@@ -89,7 +89,7 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 
 		turbo_available = (capabilities.turbo_available && capabilities.turbo_set) ? true : false;
 
-		if (core->core_busy_tsc < (core->core_idle_tsc / 1000)) {
+		if (core->total_busy_tsc < (core->total_idle_tsc / 1000)) {
 			rc = governor->set_core_freq_min(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("setting to minimal frequency for core %u failed\n", core->lcore);
@@ -103,7 +103,7 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 			}
 
 			SPDK_DEBUGLOG(reactor, "setting to minimal frequency for core: %u\n", core->lcore);
-		} else if (core->core_idle_tsc > core->core_busy_tsc) {
+		} else if (core->total_idle_tsc > core->total_busy_tsc) {
 			rc = governor->core_freq_down(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("lowering frequency for core %u failed\n", core->lcore);
@@ -117,7 +117,7 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 			}
 
 			SPDK_DEBUGLOG(reactor, "lowering frequency for core: %u\n", core->lcore);
-		} else if (core->core_idle_tsc < (core->core_busy_tsc / 1000)) {
+		} else if (core->total_idle_tsc < (core->total_busy_tsc / 1000)) {
 			rc = governor->set_core_freq_max(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("setting to maximal frequency for core %u failed\n", core->lcore);
