@@ -88,6 +88,7 @@ nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 #define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
 	nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
+
 static void
 nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -2338,13 +2339,10 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		nvmf_ctrlr_populate_oacs(ctrlr, cdata);
 
-		/*
-		 * FIXME: Set all crdt to 0 currently,
-		 * will provide an API to customize them later.
-		 */
-		cdata->crdt[0] = 0;
-		cdata->crdt[1] = 0;
-		cdata->crdt[2] = 0;
+		assert(subsystem->tgt != NULL);
+		cdata->crdt[0] = subsystem->tgt->crdt[0];
+		cdata->crdt[1] = subsystem->tgt->crdt[1];
+		cdata->crdt[2] = subsystem->tgt->crdt[2];
 
 		SPDK_DEBUGLOG(nvmf, "ext ctrlr data: ioccsz 0x%x\n",
 			      cdata->nvmf_specific.ioccsz);

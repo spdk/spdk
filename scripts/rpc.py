@@ -2155,6 +2155,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_stats)
 
+    def nvmf_set_crdt(args):
+        print_dict(rpc.nvmf.nvmf_set_crdt(args.client, args.crdt1, args.crdt2, args.crdt3))
+
+    p = subparsers.add_parser(
+        'nvmf_set_crdt',
+        help="""Set the 3 crdt (Command Retry Delay Time) values for NVMf subsystem. All
+        values are in units of 100 milliseconds (same as the NVM Express specification).""")
+    p.add_argument('-t1', '--crdt1', help='Command Retry Delay Time 1, in units of 100 milliseconds', type=int)
+    p.add_argument('-t2', '--crdt2', help='Command Retry Delay Time 2, in units of 100 milliseconds', type=int)
+    p.add_argument('-t3', '--crdt3', help='Command Retry Delay Time 3, in units of 100 milliseconds', type=int)
+    p.set_defaults(func=nvmf_set_crdt)
+
     # pmem
     def bdev_pmem_create_pool(args):
         num_blocks = int((args.total_size * 1024 * 1024) / args.block_size)

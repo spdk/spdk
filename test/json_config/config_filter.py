@@ -28,6 +28,7 @@ def filter_methods(do_remove_global_rpcs):
         'nvmf_set_config',
         'nvmf_set_max_subsystems',
         'nvmf_create_transport',
+        'nvmf_set_crdt',
         'bdev_set_options',
         'bdev_wait_for_examine',
         'bdev_nvme_set_options',

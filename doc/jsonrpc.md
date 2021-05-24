@@ -6840,6 +6840,22 @@ Example response:
 }
 ~~~
 
+
+## nvmf_set_crdt {#rpc_nvmf_set_crdt}
+
+Set the 3 CRDT (Command Retry Delay Time) values. For details about
+CRDT, please refer to the NVMe specification. Currently all the
+SPDK nvmf subsystems share the same CRDT values. The default values
+are 0. This rpc can only be invoked in STARTUP stage. All values are
+in units of 100 milliseconds (same as the NVMe specification).
+
+### Parameters
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+crdt1                   | Optional | number      | Command Retry Delay Time 1
+crdt2                   | Optional | number      | Command Retry Delay Time 2
+crdt3                   | Optional | number      | Command Retry Delay Time 3
+
 # Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.

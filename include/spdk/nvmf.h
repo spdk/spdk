@@ -70,6 +70,7 @@ struct spdk_nvmf_target_opts {
 	char		name[NVMF_TGT_NAME_MAX_LENGTH];
 	uint32_t	max_subsystems;
 	uint32_t	acceptor_poll_rate;
+	uint16_t	crdt[3];
 };
 
 struct spdk_nvmf_transport_opts {

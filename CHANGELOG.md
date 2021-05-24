@@ -25,6 +25,8 @@ Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the cont
 
 `spdk_nvmf_request_get_buffers_multi` API is removed.
 
+Added the `nvmf_set_crdt` RPC for setting command retry delay times.
+
 ### nvme
 
 Added a new function `spdk_nvme_ns_cmd_copy` to submit a Simple Copy Command to a Namespace.

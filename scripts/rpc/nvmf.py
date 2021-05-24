@@ -540,3 +540,25 @@ def nvmf_get_stats(client, tgt_name=None):
         }
 
     return client.call('nvmf_get_stats', params)
+
+
+def nvmf_set_crdt(client, crdt1=None, crdt2=None, crdt3=None):
+    """Set the 3 crdt (Command Retry Delay Time) values
+
+    Args:
+        crdt1: Command Retry Delay Time 1
+        crdt2: Command Retry Delay Time 2
+        crdt3: Command Retry Delay Time 3
+
+    Returns:
+        True or False
+    """
+    params = {}
+    if crdt1 is not None:
+        params['crdt1'] = crdt1
+    if crdt2 is not None:
+        params['crdt2'] = crdt2
+    if crdt3 is not None:
+        params['crdt3'] = crdt3
+
+    return client.call('nvmf_set_crdt', params)

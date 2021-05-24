@@ -128,3 +128,43 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_set_config", rpc_nvmf_set_config, SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_set_config, set_nvmf_target_config)
+
+struct nvmf_rpc_set_crdt {
+	uint16_t crdt1;
+	uint16_t crdt2;
+	uint16_t crdt3;
+};
+
+static const struct spdk_json_object_decoder rpc_set_crdt_opts_decoders[] = {
+	{"crdt1", offsetof(struct nvmf_rpc_set_crdt, crdt1), spdk_json_decode_uint16, true},
+	{"crdt2", offsetof(struct nvmf_rpc_set_crdt, crdt2), spdk_json_decode_uint16, true},
+	{"crdt3", offsetof(struct nvmf_rpc_set_crdt, crdt3), spdk_json_decode_uint16, true},
+};
+
+static void
+rpc_nvmf_set_crdt(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
+{
+	struct nvmf_rpc_set_crdt rpc_set_crdt;
+
+	rpc_set_crdt.crdt1 = 0;
+	rpc_set_crdt.crdt2 = 0;
+	rpc_set_crdt.crdt3 = 0;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_set_crdt_opts_decoders,
+					    SPDK_COUNTOF(rpc_set_crdt_opts_decoders), &rpc_set_crdt)) {
+			SPDK_ERRLOG("spdk_json_decode_object() failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Invalid parameters");
+			return;
+		}
+	}
+
+	g_spdk_nvmf_tgt_crdt[0] = rpc_set_crdt.crdt1;
+	g_spdk_nvmf_tgt_crdt[1] = rpc_set_crdt.crdt2;
+	g_spdk_nvmf_tgt_crdt[2] = rpc_set_crdt.crdt3;
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("nvmf_set_crdt", rpc_nvmf_set_crdt, SPDK_RPC_STARTUP)

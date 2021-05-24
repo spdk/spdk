@@ -65,6 +65,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
 
 struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
+uint16_t g_spdk_nvmf_tgt_crdt[3] = {0, 0, 0};
 
 static enum nvmf_tgt_state g_tgt_state;
 
@@ -277,6 +278,9 @@ nvmf_tgt_create_target(void)
 
 	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
 	opts.acceptor_poll_rate = g_spdk_nvmf_tgt_conf.acceptor_poll_rate;
+	opts.crdt[0] = g_spdk_nvmf_tgt_crdt[0];
+	opts.crdt[1] = g_spdk_nvmf_tgt_crdt[1];
+	opts.crdt[2] = g_spdk_nvmf_tgt_crdt[2];
 	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
 	if (!g_spdk_nvmf_tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");

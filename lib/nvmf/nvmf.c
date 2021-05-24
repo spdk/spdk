@@ -283,6 +283,16 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 		acceptor_poll_rate = opts->acceptor_poll_rate;
 	}
 
+	if (!opts) {
+		tgt->crdt[0] = 0;
+		tgt->crdt[1] = 0;
+		tgt->crdt[2] = 0;
+	} else {
+		tgt->crdt[0] = opts->crdt[0];
+		tgt->crdt[1] = opts->crdt[1];
+		tgt->crdt[2] = opts->crdt[2];
+	}
+
 	tgt->discovery_genctr = 0;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);
@@ -570,6 +580,15 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	spdk_json_write_named_uint32(w, "max_subsystems", tgt->max_subsystems);
 	spdk_json_write_object_end(w);
 
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "nvmf_set_crdt");
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint32(w, "crdt1", tgt->crdt[0]);
+	spdk_json_write_named_uint32(w, "crdt2", tgt->crdt[1]);
+	spdk_json_write_named_uint32(w, "crdt3", tgt->crdt[2]);
+	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 
 	/* write transports */

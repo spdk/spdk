@@ -1499,8 +1499,10 @@ test_get_dif_ctx(void)
 static void
 test_identify_ctrlr(void)
 {
+	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem subsystem = {
-		.subtype = SPDK_NVMF_SUBTYPE_NVME
+		.subtype = SPDK_NVMF_SUBTYPE_NVME,
+		.tgt = &tgt,
 	};
 	struct spdk_nvmf_transport_ops tops = {};
 	struct spdk_nvmf_transport transport = {

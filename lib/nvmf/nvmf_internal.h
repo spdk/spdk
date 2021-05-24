@@ -87,6 +87,8 @@ struct spdk_nvmf_tgt {
 	spdk_nvmf_tgt_destroy_done_fn		*destroy_cb_fn;
 	void					*destroy_cb_arg;
 
+	uint16_t				crdt[3];
+
 	TAILQ_ENTRY(spdk_nvmf_tgt)		link;
 };
 
