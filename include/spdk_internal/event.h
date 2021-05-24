@@ -64,7 +64,6 @@ struct spdk_lw_thread {
 	TAILQ_ENTRY(spdk_lw_thread)	link;
 	uint64_t			tsc_start;
 	uint32_t                        lcore;
-	uint32_t                        new_lcore;
 	bool				resched;
 	/* stats over a lifetime of a thread */
 	struct spdk_thread_stats	total_stats;

@@ -154,7 +154,6 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 
 		for (j = 0; j < core->threads_count; j++) {
 			lw_thread = core->threads[j];
-			lw_thread->new_lcore = lw_thread->lcore;
 			thread = spdk_thread_get_from_ctx(lw_thread);
 			cpumask = spdk_thread_get_cpumask(thread);
 
@@ -173,7 +172,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 					}
 
 					if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
-						lw_thread->new_lcore = target_lcore;
+						lw_thread->lcore = target_lcore;
 						cores_info[target_lcore].pending_threads_count++;
 						core->pending_threads_count--;
 
@@ -188,7 +187,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 				}
 			} else if (i != g_main_lcore && load < SCHEDULER_LOAD_LIMIT) {
 				/* This thread is idle but not on the main core, so we need to move it to the main core */
-				lw_thread->new_lcore = g_main_lcore;
+				lw_thread->lcore = g_main_lcore;
 				cores_info[g_main_lcore].pending_threads_count++;
 				core->pending_threads_count--;
 
@@ -202,7 +201,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 							target_lcore = _get_next_target_core();
 
 							if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
-								lw_thread->new_lcore = target_lcore;
+								lw_thread->lcore = target_lcore;
 								cores_info[target_lcore].pending_threads_count++;
 								core->pending_threads_count--;
 

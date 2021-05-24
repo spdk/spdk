@@ -698,8 +698,8 @@ _threads_reschedule(struct spdk_scheduler_core_info *cores_info)
 		core = &cores_info[i];
 		for (j = 0; j < core->threads_count; j++) {
 			lw_thread = core->threads[j];
-			if (lw_thread->lcore != lw_thread->new_lcore) {
-				_spdk_lw_thread_set_core(lw_thread, lw_thread->new_lcore);
+			if (lw_thread->lcore != i) {
+				lw_thread->resched = true;
 			}
 		}
 	}
@@ -1276,7 +1276,9 @@ _reactor_request_thread_reschedule(struct spdk_thread *thread)
 
 	lw_thread = spdk_thread_get_ctx(thread);
 
-	_spdk_lw_thread_set_core(lw_thread, SPDK_ENV_LCORE_ID_ANY);
+	assert(lw_thread != NULL);
+	lw_thread->resched = true;
+	lw_thread->lcore = SPDK_ENV_LCORE_ID_ANY;
 
 	current_core = spdk_env_get_current_core();
 	reactor = spdk_reactor_get(current_core);
@@ -1481,14 +1483,6 @@ reactor_interrupt_fini(struct spdk_reactor *reactor)
 
 	spdk_fd_group_destroy(fgrp);
 	reactor->fgrp = NULL;
-}
-
-void
-_spdk_lw_thread_set_core(struct spdk_lw_thread *thread, uint32_t lcore)
-{
-	assert(thread != NULL);
-	thread->lcore = lcore;
-	thread->resched = true;
 }
 
 static int

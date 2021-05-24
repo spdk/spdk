@@ -72,22 +72,14 @@ static void
 balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_governor *governor)
 {
 	struct spdk_scheduler_core_info *core;
-	struct spdk_lw_thread *thread;
 	struct spdk_governor_capabilities capabilities;
-	uint32_t i, j;
+	uint32_t i;
 	int rc;
 	bool turbo_available = false;
 
 	/* Gather active/idle statistics */
 	SPDK_ENV_FOREACH_CORE(i) {
 		core = &cores[i];
-
-		for (j = 0; j < core->threads_count; j++) {
-			thread = core->threads[j];
-
-			/* do not change thread lcore */
-			thread->new_lcore = thread->lcore;
-		}
 
 		rc = governor->get_core_capabilities(core->lcore, &capabilities);
 		if (rc < 0) {
