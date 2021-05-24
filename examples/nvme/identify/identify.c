@@ -201,7 +201,7 @@ get_zns_zone_report_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid)
+get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid, uint32_t nsid)
 {
 	struct spdk_nvme_cmd cmd = {};
 	struct feature *feature = &features[fid];
@@ -210,35 +210,28 @@ get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid)
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10_bits.get_features.fid = fid;
+	cmd.nsid = nsid;
 
 	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, feature);
 }
 
 static void
-get_features(struct spdk_nvme_ctrlr *ctrlr)
+get_features(struct spdk_nvme_ctrlr *ctrlr, uint8_t *features_to_get, size_t num_features,
+	     uint32_t nsid)
 {
 	size_t i;
-
-	uint8_t features_to_get[] = {
-		SPDK_NVME_FEAT_ARBITRATION,
-		SPDK_NVME_FEAT_POWER_MANAGEMENT,
-		SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD,
-		SPDK_NVME_FEAT_ERROR_RECOVERY,
-		SPDK_NVME_FEAT_NUMBER_OF_QUEUES,
-		SPDK_OCSSD_FEAT_MEDIA_FEEDBACK,
-	};
 
 	/* Submit only one GET FEATURES at a time. There is a known issue #1799
 	 * with Google Cloud Platform NVMe SSDs that do not handle overlapped
 	 * GET FEATURES commands correctly.
 	 */
 	outstanding_commands = 0;
-	for (i = 0; i < SPDK_COUNTOF(features_to_get); i++) {
+	for (i = 0; i < num_features; i++) {
 		if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr) &&
 		    features_to_get[i] == SPDK_OCSSD_FEAT_MEDIA_FEEDBACK) {
 			continue;
 		}
-		if (get_feature(ctrlr, features_to_get[i]) == 0) {
+		if (get_feature(ctrlr, features_to_get[i], nsid) == 0) {
 			outstanding_commands++;
 		} else {
 			printf("get_feature(0x%02X) failed to submit command\n", features_to_get[i]);
@@ -249,6 +242,21 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+}
+
+static void
+get_ctrlr_features(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint8_t features_to_get[] = {
+		SPDK_NVME_FEAT_ARBITRATION,
+		SPDK_NVME_FEAT_POWER_MANAGEMENT,
+		SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD,
+		SPDK_NVME_FEAT_ERROR_RECOVERY,
+		SPDK_NVME_FEAT_NUMBER_OF_QUEUES,
+		SPDK_OCSSD_FEAT_MEDIA_FEEDBACK,
+	};
+
+	get_features(ctrlr, features_to_get, SPDK_COUNTOF(features_to_get), 0);
 }
 
 static int
@@ -1204,7 +1212,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		 * attempt GET_FEATURES when NOT targeting a
 		 * Discovery Controller.
 		 */
-		get_features(ctrlr);
+		get_ctrlr_features(ctrlr);
 	}
 	get_log_pages(ctrlr);
 
