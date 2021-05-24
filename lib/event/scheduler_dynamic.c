@@ -47,6 +47,7 @@ static bool g_core_mngmnt_available;
 struct core_stats {
 	uint64_t busy;
 	uint64_t idle;
+	uint32_t thread_count;
 };
 
 static struct core_stats *g_cores;
@@ -151,7 +152,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	bool busy_threads_present = false;
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		cores_info[i].pending_threads_count = cores_info[i].threads_count;
+		g_cores[i].thread_count = cores_info[i].threads_count;
 		g_cores[i].busy = cores_info[i].current_busy_tsc;
 		g_cores[i].idle = cores_info[i].current_idle_tsc;
 	}
@@ -182,8 +183,9 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 
 					if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
 						lw_thread->lcore = target_lcore;
-						cores_info[target_lcore].pending_threads_count++;
-						core->pending_threads_count--;
+						g_cores[target_lcore].thread_count++;
+						assert(g_cores[i].thread_count > 0);
+						g_cores[i].thread_count--;
 
 						if (target_lcore != g_main_lcore) {
 							busy_threads_present = true;
@@ -197,9 +199,10 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 			} else if (i != g_main_lcore && load < SCHEDULER_LOAD_LIMIT) {
 				/* This thread is idle but not on the main core, so we need to move it to the main core */
 				lw_thread->lcore = g_main_lcore;
-				cores_info[g_main_lcore].pending_threads_count++;
-				core->pending_threads_count--;
+				assert(g_cores[i].thread_count > 0);
+				g_cores[i].thread_count--;
 
+				main_core->thread_count++;
 				main_core->busy += spdk_min(UINT64_MAX - main_core->busy, thread_busy);
 				main_core->idle -= spdk_min(main_core->idle, thread_busy);
 			} else {
@@ -211,8 +214,9 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 
 							if (spdk_cpuset_get_cpu(cpumask, target_lcore)) {
 								lw_thread->lcore = target_lcore;
-								cores_info[target_lcore].pending_threads_count++;
-								core->pending_threads_count--;
+								g_cores[target_lcore].thread_count++;
+								assert(g_cores[i].thread_count > 0);
+								g_cores[i].thread_count--;
 
 								if (target_lcore == g_main_lcore) {
 									main_core->busy += spdk_min(UINT64_MAX - main_core->busy, thread_busy);
@@ -235,9 +239,9 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 		reactor = spdk_reactor_get(i);
 		core = &cores_info[i];
 		/* We can switch mode only if reactor already does not have any threads */
-		if (core->pending_threads_count == 0 && TAILQ_EMPTY(&reactor->threads)) {
+		if (g_cores[i].thread_count == 0 && TAILQ_EMPTY(&reactor->threads)) {
 			core->interrupt_mode = true;
-		} else if (core->pending_threads_count != 0) {
+		} else if (g_cores[i].thread_count != 0) {
 			core->interrupt_mode = false;
 		}
 	}
