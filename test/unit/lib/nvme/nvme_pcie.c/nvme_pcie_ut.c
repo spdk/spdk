@@ -893,6 +893,63 @@ test_nvme_pcie_ctrlr_map_io_cmb(void)
 	CU_ASSERT(size == 0);
 }
 
+static void
+test_nvme_pcie_ctrlr_map_unmap_pmr(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	volatile struct spdk_nvme_registers regs = {};
+	union spdk_nvme_pmrcap_register pmrcap = {};
+	struct dev_mem_resource cmd_res = {};
+	int rc;
+
+	pctrlr.regs = &regs;
+	pctrlr.devhandle = (void *)&cmd_res;
+	regs.cap.bits.pmrs = 1;
+	cmd_res.addr = (void *)0x7F7C0080d000;
+	cmd_res.len = 0x800000;
+	cmd_res.phys_addr = 0xFC800000;
+	pmrcap.bits.bir = 2;
+	pmrcap.bits.cmss = 1;
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr,
+				  offsetof(struct spdk_nvme_registers, pmrcap.raw),
+				  pmrcap.raw);
+
+	nvme_pcie_ctrlr_map_pmr(&pctrlr);
+	CU_ASSERT(pctrlr.regs->pmrmscu == 0);
+	/* Controller memory space enable, bit 1 */
+	CU_ASSERT(pctrlr.regs->pmrmscl.raw == 0xFC800002);
+	CU_ASSERT(pctrlr.regs->pmrsts.raw == 0);
+	CU_ASSERT(pctrlr.pmr.bar_va == (void *)0x7F7C0080d000);
+	CU_ASSERT(pctrlr.pmr.bar_pa == 0xFC800000);
+	CU_ASSERT(pctrlr.pmr.size == 0x800000);
+
+	rc = nvme_pcie_ctrlr_unmap_pmr(&pctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pctrlr.regs->pmrmscu == 0);
+	CU_ASSERT(pctrlr.regs->pmrmscl.raw == 0);
+
+	/* pmrcap value invalid */
+	memset(&pctrlr, 0, sizeof(pctrlr));
+	memset((void *)&regs, 0, sizeof(regs));
+	memset(&cmd_res, 0, sizeof(cmd_res));
+
+	pctrlr.regs = &regs;
+	pctrlr.devhandle = (void *)&cmd_res;
+	regs.cap.bits.pmrs = 1;
+	cmd_res.addr = (void *)0x7F7C0080d000;
+	cmd_res.len = 0x800000;
+	cmd_res.phys_addr = 0xFC800000;
+	pmrcap.raw = 0;
+	nvme_pcie_ctrlr_set_reg_4(&pctrlr.ctrlr,
+				  offsetof(struct spdk_nvme_registers, pmrcap.raw),
+				  pmrcap.raw);
+
+	nvme_pcie_ctrlr_map_pmr(&pctrlr);
+	CU_ASSERT(pctrlr.pmr.bar_va == NULL);
+	CU_ASSERT(pctrlr.pmr.bar_pa == 0);
+	CU_ASSERT(pctrlr.pmr.size == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -913,6 +970,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_regs_get_set);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_unmap_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_io_cmb);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_map_unmap_pmr);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
