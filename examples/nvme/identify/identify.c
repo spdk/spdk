@@ -251,12 +251,21 @@ get_ctrlr_features(struct spdk_nvme_ctrlr *ctrlr)
 		SPDK_NVME_FEAT_ARBITRATION,
 		SPDK_NVME_FEAT_POWER_MANAGEMENT,
 		SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD,
-		SPDK_NVME_FEAT_ERROR_RECOVERY,
 		SPDK_NVME_FEAT_NUMBER_OF_QUEUES,
 		SPDK_OCSSD_FEAT_MEDIA_FEEDBACK,
 	};
 
 	get_features(ctrlr, features_to_get, SPDK_COUNTOF(features_to_get), 0);
+}
+
+static void
+get_ns_features(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	uint8_t features_to_get[] = {
+		SPDK_NVME_FEAT_ERROR_RECOVERY,
+	};
+
+	get_features(ctrlr, features_to_get, SPDK_COUNTOF(features_to_get), nsid);
 }
 
 static int
@@ -950,6 +959,16 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	/* This function is only called for active namespaces. */
 	assert(spdk_nvme_ns_is_active(ns));
 
+	if (features[SPDK_NVME_FEAT_ERROR_RECOVERY].valid) {
+		unsigned tler = features[SPDK_NVME_FEAT_ERROR_RECOVERY].result & 0xFFFF;
+		printf("Error Recovery Timeout:                ");
+		if (tler == 0) {
+			printf("Unlimited\n");
+		} else {
+			printf("%u milliseconds\n", tler * 100);
+		}
+	}
+
 	printf("Command Set Identifier:                %s (%02Xh)\n",
 	       csi_name(spdk_nvme_ns_get_csi(ns)), spdk_nvme_ns_get_csi(ns));
 	printf("Deallocate:                            %s\n",
@@ -1273,15 +1292,6 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("%" PRIu64 "\n", (uint64_t)1 << (12 + cap.bits.mpsmin + cdata->mdts));
 	}
 	printf("Max Number of Namespaces:              %d\n", cdata->nn);
-	if (features[SPDK_NVME_FEAT_ERROR_RECOVERY].valid) {
-		unsigned tler = features[SPDK_NVME_FEAT_ERROR_RECOVERY].result & 0xFFFF;
-		printf("Error Recovery Timeout:                ");
-		if (tler == 0) {
-			printf("Unlimited\n");
-		} else {
-			printf("%u milliseconds\n", tler * 100);
-		}
-	}
 	printf("NVMe Specification Version (VS):       %u.%u", vs.bits.mjr, vs.bits.mnr);
 	if (vs.bits.ter) {
 		printf(".%u", vs.bits.ter);
@@ -1963,6 +1973,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("=================\n");
 	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
 	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		get_ns_features(ctrlr, nsid);
 		print_namespace(ctrlr, spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
 	}
 
