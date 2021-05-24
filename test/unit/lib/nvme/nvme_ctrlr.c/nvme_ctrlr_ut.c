@@ -67,9 +67,7 @@ DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB_V(nvme_ns_set_identify_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_ns_set_id_desc_list_data, (struct spdk_nvme_ns *ns));
-DEFINE_STUB_V(nvme_ns_free_zns_specific_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_ns_free_iocs_specific_data, (struct spdk_nvme_ns *ns));
-DEFINE_STUB(nvme_ns_has_supported_iocs_specific_data, bool, (struct spdk_nvme_ns *ns), false);
 DEFINE_STUB_V(nvme_qpair_abort_reqs, (struct spdk_nvme_qpair *qpair, uint32_t dnr));
 DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
 		struct spdk_nvme_qpair *qpair), 0);
@@ -438,6 +436,10 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		if (g_cdata) {
 			memcpy(payload, g_cdata, sizeof(*g_cdata));
 		}
+	} else if (nsid == 99) {
+		return 1;
+	} else if (cns == SPDK_NVME_IDENTIFY_NS_IOCS) {
+		return 0;
 	}
 
 	fake_cpl_sc(cb_fn, cb_arg);
@@ -539,6 +541,37 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 	}
 	CU_ASSERT(offset == 0);
 	return 0;
+}
+
+bool
+nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns)
+{
+	switch (ns->csi) {
+	case SPDK_NVME_CSI_NVM:
+		/*
+		 * NVM Command Set Specific Identify Namespace data structure
+		 * is currently all-zeroes, reserved for future use.
+		 */
+		return false;
+	case SPDK_NVME_CSI_ZNS:
+		return true;
+	default:
+		SPDK_WARNLOG("Unsupported CSI: %u for NSID: %u\n", ns->csi, ns->id);
+		return false;
+	}
+}
+
+void
+nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns)
+{
+	if (!ns->id) {
+		return;
+	}
+
+	if (ns->nsdata_zns) {
+		spdk_free(ns->nsdata_zns);
+		ns->nsdata_zns = NULL;
+	}
 }
 
 void
@@ -2835,6 +2868,80 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
+static void
+test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	uint32_t prev_nsid;
+	uint32_t active_ns_list[5] = {1, 2, 3, 4, 5};
+	struct spdk_nvme_ns ns[5] = {};
+	struct spdk_nvme_ctrlr ns_ctrlr[5] = {};
+	int rc = 0;
+
+	ctrlr.ns = ns;
+	ctrlr.cdata.nn = 5;
+	ctrlr.max_active_ns_idx = 5;
+	ctrlr.num_ns = 5;
+	/* case 1: No first/next active NS, move on to the next state, expect: pass */
+	prev_nsid = 0;
+	ctrlr.active_ns_list = NULL;
+	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
+	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONFIGURE_AER);
+	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+
+	/* case 2: move on to the next active NS, and no namespace with (supported) iocs specific data found , expect: pass */
+	memset(&ctrlr.state, 0x00, sizeof(ctrlr.state));
+	memset(&ctrlr.state_timeout_tsc, 0x00, sizeof(ctrlr.state_timeout_tsc));
+	prev_nsid = 1;
+	ctrlr.active_ns_list = active_ns_list;
+	ns[1].csi = SPDK_NVME_CSI_NVM;
+	ns[1].id = 2;
+	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONFIGURE_AER);
+	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+
+	/* case 3: ns.csi is SPDK_NVME_CSI_ZNS, do not loop, expect: pass */
+	memset(&ctrlr.state, 0x00, sizeof(ctrlr.state));
+	memset(&ctrlr.state_timeout_tsc, 0x00, sizeof(ctrlr.state_timeout_tsc));
+	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
+	prev_nsid = 0;
+	ctrlr.active_ns_list = active_ns_list;
+
+	for (int i = 0; i < 5; i++) {
+		ns[i].csi = SPDK_NVME_CSI_NVM;
+		ns[i].id = i + 1;
+		ns[i].ctrlr = &ns_ctrlr[i];
+	}
+	ns[4].csi = SPDK_NVME_CSI_ZNS;
+	ns_ctrlr[4].opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
+
+	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.state == 0);
+	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+	CU_ASSERT(ns_ctrlr[4].state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC);
+	CU_ASSERT(ns_ctrlr[4].state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+
+	for (int i = 0; i < 5; i++) {
+		nvme_ns_free_zns_specific_data(&ns[i]);
+	}
+
+	/* case 4: nvme_ctrlr_identify_ns_iocs_specific_async return 1, expect: false */
+	memset(&ctrlr.state, 0x00, sizeof(ctrlr.state));
+	memset(&ctrlr.state_timeout_tsc, 0x00, sizeof(ctrlr.state_timeout_tsc));
+	prev_nsid = 1;
+	ctrlr.active_ns_list = active_ns_list;
+	ns[1].csi = SPDK_NVME_CSI_ZNS;
+	ns[1].id = 99;
+	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
+	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2885,6 +2992,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_reset);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_aer_callback);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ns_attr_changed);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_namespaces_iocs_specific_next);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
