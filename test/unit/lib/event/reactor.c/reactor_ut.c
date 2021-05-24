@@ -525,6 +525,8 @@ test_scheduler(void)
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_reactor *reactor;
 	struct spdk_poller *busy, *idle;
+	uint64_t current_time;
+	struct spdk_thread_stats stats;
 	int i;
 
 	MOCK_SET(spdk_env_get_current_core, 0);
@@ -560,22 +562,39 @@ test_scheduler(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	/* Init threads stats (low load) */
+	/* Each reactor starts at 100 tsc,
+	 * ends at 100 + 10 + 90 = 200 tsc. */
+	current_time = 100;
 	for (i = 0; i < 3; i++) {
 		spdk_set_thread(thread[i]);
+		/* FIXME: A single _reactor_run() iterates over all active pollers.
+		 * If at least one returns busy, so does the thread. Load here is not
+		 * 'low', but 100% busy. */
 		busy = spdk_poller_register(poller_run_busy, (void *)10, 0);
 		idle = spdk_poller_register(poller_run_idle, (void *)90, 0);
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
-		reactor->tsc_last = 100;
+		MOCK_SET(spdk_get_ticks, current_time);
+		reactor->tsc_last = spdk_get_ticks();
 		_reactor_run(reactor);
+		CU_ASSERT(reactor->tsc_last == 200);
 		spdk_poller_unregister(&busy);
 		spdk_poller_unregister(&idle);
+
+		CU_ASSERT(spdk_thread_get_last_tsc(thread[i]) == 200);
+		CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+		CU_ASSERT(stats.busy_tsc == 100);
+		CU_ASSERT(stats.idle_tsc == 0);
+		CU_ASSERT(reactor->busy_tsc == 100);
+		CU_ASSERT(reactor->idle_tsc == 0);
 
 		/* Update last stats so that we don't have to call scheduler twice */
 		lw_thread = spdk_thread_get_ctx(thread[i]);
 		lw_thread->last_stats.busy_tsc = UINT32_MAX;
 		lw_thread->last_stats.idle_tsc = UINT32_MAX;
 	}
+	CU_ASSERT(spdk_get_ticks() == 200);
+	current_time = 200;
 
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
@@ -596,12 +615,23 @@ test_scheduler(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 	CU_ASSERT(event_queue_run_batch(reactor) == 1);
 
-	/* Threads were idle, so all of them should be placed on core 0 */
+	/* Threads were idle, so all of them should be placed on core 0.
+	 * All reactors start and end at 200 tsc, since threads are idle. */
 	for (i = 0; i < 3; i++) {
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
+		MOCK_SET(spdk_get_ticks, current_time);
 		_reactor_run(reactor);
+		CU_ASSERT(reactor->tsc_last == current_time);
+		CU_ASSERT(reactor->busy_tsc == 100);
+		CU_ASSERT(reactor->idle_tsc == 0);
+		spdk_set_thread(thread[i]);
+		CU_ASSERT(spdk_thread_get_last_tsc(thread[i]) == current_time);
+		CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+		CU_ASSERT(stats.busy_tsc == 100);
+		CU_ASSERT(stats.idle_tsc == 0);
 	}
+	CU_ASSERT(spdk_get_ticks() == current_time);
 
 	/* 2 threads should be scheduled to core 0 */
 	reactor = spdk_reactor_get(0);
@@ -622,17 +652,27 @@ test_scheduler(void)
 	/* Make threads busy */
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
-	reactor->tsc_last = 100;
 
+	/* All threads run on single reactor,
+	 * reactor 0 starts at 200 tsc,
+	 * ending at 200 + (100 * 3) = 500 tsc. */
+	MOCK_SET(spdk_get_ticks, current_time);
 	for (i = 0; i < 3; i++) {
 		spdk_set_thread(thread[i]);
 		busy = spdk_poller_register(poller_run_busy, (void *)100, 0);
 		_reactor_run(reactor);
 		spdk_poller_unregister(&busy);
-	}
 
-	reactor->busy_tsc = 0;
-	reactor->idle_tsc = UINT32_MAX;
+		CU_ASSERT(reactor->tsc_last == (current_time + 100 * (i + 1)));
+		CU_ASSERT(spdk_thread_get_last_tsc(thread[i]) == (current_time + 100 * (i + 1)));
+		CU_ASSERT(spdk_thread_get_stats(&stats) == 0);
+		CU_ASSERT(stats.busy_tsc == 200);
+		CU_ASSERT(stats.idle_tsc == 0);
+	}
+	CU_ASSERT(reactor->busy_tsc == 400);
+	CU_ASSERT(reactor->idle_tsc == 0);
+	CU_ASSERT(spdk_get_ticks() == 500);
+	current_time = 500;
 
 	/* Run scheduler again, this time all threads are busy */
 	_reactors_scheduler_gather_metrics(NULL, NULL);
