@@ -311,24 +311,6 @@ nbd_put_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 }
 
 /*
- * Check whether received nbd_io are all transmitted.
- *
- * \return 1 there is still some nbd_io not transmitted.
- *         0 all nbd_io received are transmitted.
- */
-static int
-nbd_io_xmit_check(struct spdk_nbd_disk *nbd)
-{
-	if (nbd->io_count == 0) {
-		return 0;
-	} else if (nbd->io_count == 1 && nbd->io_in_recv != NULL) {
-		return 0;
-	}
-
-	return 1;
-}
-
-/*
  * Check whether received nbd_io are all executed,
  * and put back executed nbd_io instead of transmitting them
  *
@@ -502,10 +484,6 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (bdev_io != NULL) {
 		spdk_bdev_free_io(bdev_io);
-	}
-
-	if (nbd->state == NBD_DISK_STATE_HARDDISC && !nbd_cleanup_io(nbd)) {
-		_nbd_stop(nbd);
 	}
 }
 
@@ -833,14 +811,6 @@ nbd_io_xmit(struct spdk_nbd_disk *nbd)
 		spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN);
 	}
 
-	/*
-	 * For soft disconnection, nbd server can close connection after all
-	 * outstanding request are transmitted.
-	 */
-	if (nbd->state == NBD_DISK_STATE_SOFTDISC && !nbd_io_xmit_check(nbd)) {
-		return -1;
-	}
-
 	return ret;
 }
 
@@ -883,7 +853,14 @@ nbd_poll(void *arg)
 	if (rc < 0) {
 		SPDK_INFOLOG(nbd, "nbd_poll() returned %s (%d); closing connection\n",
 			     spdk_strerror(-rc), rc);
-		spdk_nbd_stop(nbd);
+		_nbd_stop(nbd);
+	}
+	if (nbd->state != NBD_DISK_STATE_RUNNING) {
+		if (nbd->state == NBD_DISK_STATE_HARDDISC && !nbd_cleanup_io(nbd)) {
+			_nbd_stop(nbd);
+		} else if (nbd->state == NBD_DISK_STATE_SOFTDISC) {
+			spdk_nbd_stop(nbd);
+		}
 	}
 
 	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
@@ -1016,7 +993,7 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	return;
 
 err:
-	spdk_nbd_stop(ctx->nbd);
+	_nbd_stop(ctx->nbd);
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_arg, NULL, rc);
 	}
@@ -1053,7 +1030,7 @@ nbd_enable_kernel(void *arg)
 			spdk_poller_unregister(&ctx->nbd->retry_poller);
 		}
 
-		spdk_nbd_stop(ctx->nbd);
+		_nbd_stop(ctx->nbd);
 
 		if (ctx->cb_fn) {
 			ctx->cb_fn(ctx->cb_arg, NULL, -errno);
@@ -1155,7 +1132,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 err:
 	free(ctx);
 	if (nbd) {
-		spdk_nbd_stop(nbd);
+		_nbd_stop(nbd);
 	}
 
 	if (cb_fn) {
