@@ -1344,9 +1344,12 @@ if __name__ == "__main__":
             fio_run_time = data[k]["run_time"]
             fio_ramp_time = data[k]["ramp_time"]
             fio_rw_mix_read = data[k]["rwmixread"]
-            fio_rate_iops = data[k]["rate_iops"]
             fio_run_num = data[k]["run_num"] if "run_num" in data[k].keys() else None
             fio_num_jobs = data[k]["num_jobs"] if "num_jobs" in data[k].keys() else None
+
+            fio_rate_iops = 0
+            if "rate_iops" in data[k]:
+                fio_rate_iops = data[k]["rate_iops"]
         else:
             continue
 
