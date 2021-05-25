@@ -340,8 +340,13 @@ struct {								\
 #define RB_RED_RIGHT(elm, field)	((RB_BITS(elm, field) & RB_RED_R) != 0)
 #define RB_PARENT(elm, field)		((__typeof(RB_UP(elm, field)))	\
 					 (RB_BITS(elm, field) & ~RB_RED_MASK))
-#define RB_ROOT(head)			(head)->rbh_root
-#define RB_EMPTY(head)			(RB_ROOT(head) == NULL)
+/*
+ * _RB_ROOT starts with an underscore. This is a workaround for the issue that
+ * RB_ROOT() had a name conflict with the SPDK FIO plugin. The SPDK FIO plugin
+ * includes FIO and FIO defines RB_ROOT() itself.
+ */
+#define _RB_ROOT(head)			(head)->rbh_root
+#define RB_EMPTY(head)			(_RB_ROOT(head) == NULL)
 
 #define RB_SET_PARENT(dst, src, field) do {				\
 	RB_BITS(dst, field) &= RB_RED_MASK;				\
@@ -368,7 +373,7 @@ struct {								\
 
 #define RB_SWAP_CHILD(head, out, in, field) do {			\
 	if (RB_PARENT(out, field) == NULL)				\
-		RB_ROOT(head) = (in);					\
+		_RB_ROOT(head) = (in);					\
 	else if ((out) == RB_LEFT(RB_PARENT(out, field), field))	\
 		RB_LEFT(RB_PARENT(out, field), field) = (in);		\
 	else								\
@@ -638,7 +643,7 @@ name##_RB_INSERT(struct name *head, struct type *elm)			\
 	struct type *tmp;						\
 	struct type *parent = NULL;					\
 	int comp = 0;							\
-	tmp = RB_ROOT(head);						\
+	tmp = _RB_ROOT(head);						\
 	while (tmp) {							\
 		parent = tmp;						\
 		comp = (cmp)(elm, parent);				\
@@ -651,7 +656,7 @@ name##_RB_INSERT(struct name *head, struct type *elm)			\
 	}								\
 	RB_SET(elm, parent, field);					\
 	if (parent == NULL)						\
-		RB_ROOT(head) = elm;					\
+		_RB_ROOT(head) = elm;					\
 	else if (comp < 0)						\
 		RB_LEFT(parent, field) = elm;				\
 	else								\
@@ -669,7 +674,7 @@ name##_RB_INSERT(struct name *head, struct type *elm)			\
 attr struct type *							\
 name##_RB_FIND(struct name *head, struct type *elm)			\
 {									\
-	struct type *tmp = RB_ROOT(head);				\
+	struct type *tmp = _RB_ROOT(head);				\
 	int comp;							\
 	while (tmp) {							\
 		comp = cmp(elm, tmp);					\
@@ -688,7 +693,7 @@ name##_RB_FIND(struct name *head, struct type *elm)			\
 attr struct type *							\
 name##_RB_NFIND(struct name *head, struct type *elm)			\
 {									\
-	struct type *tmp = RB_ROOT(head);				\
+	struct type *tmp = _RB_ROOT(head);				\
 	struct type *res = NULL;					\
 	int comp;							\
 	while (tmp) {							\
@@ -755,7 +760,7 @@ name##_RB_PREV(struct type *elm)					\
 attr struct type *							\
 name##_RB_MINMAX(struct name *head, int val)				\
 {									\
-	struct type *tmp = RB_ROOT(head);				\
+	struct type *tmp = _RB_ROOT(head);				\
 	struct type *parent = NULL;					\
 	while (tmp) {							\
 		parent = tmp;						\
