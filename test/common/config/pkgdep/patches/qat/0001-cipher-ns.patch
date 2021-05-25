@@ -1,0 +1,28 @@
+Cipher routines were moved to their own header file and the symbol exports
+are now available under a new namespace, CRYPTO_INTERNAL.
+
+Details: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0eb76ba29d16df2951d37c54ca279c4e5630b071
+---
+
+diff --git a/quickassist/lookaside/access_layer/src/linux/icp_qa_module.c b/quickassist/lookaside/access_layer/src/linux/icp_qa_module.c
+index 413eb07..f7d09bd 100644
+--- a/quickassist/lookaside/access_layer/src/linux/icp_qa_module.c
++++ b/quickassist/lookaside/access_layer/src/linux/icp_qa_module.c
+@@ -120,3 +120,4 @@ module_exit(kapi_mod_exit);
+ MODULE_DESCRIPTION("Intel(R) Quickassist Technology Acceleration Driver");
+ MODULE_AUTHOR("Intel");
+ MODULE_LICENSE("Dual BSD/GPL");
++MODULE_IMPORT_NS(CRYPTO_INTERNAL);
+diff --git a/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c b/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c
+index 9d2e85c..f265422 100644
+--- a/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c
++++ b/quickassist/utilities/osal/src/linux/kernel_space/OsalCryptoInterface.c
+@@ -65,7 +65,7 @@
+  */
+ 
+ #include "Osal.h"
+-#include <linux/crypto.h>
++#include <crypto/internal/cipher.h>
+ #include <linux/version.h>
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+ #include <crypto/internal/hash.h>

@@ -158,6 +158,12 @@ function install_qat() {
 		# qat_algs_ablkcipher.c doesn't exist in older versions of the driver so simply force the patch
 		patch --force --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-sha.patch" || :
+
+	# cipher routines were moved from crypto.h to crypto/internal/cipher.h in kernels >= 5.12
+	if ((kernel_ver >= 0x050c00)); then
+		patch --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-cipher-ns.patch"
+
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then
