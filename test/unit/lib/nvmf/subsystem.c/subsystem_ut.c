@@ -784,6 +784,29 @@ test_reservation_register(void)
 	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
 	SPDK_CU_ASSERT_FATAL(reg == NULL);
 
+	/* TEST CASE: No registrant now, g_ctrlr_B replace new key with IEKEY disabled */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REPLACE_KEY,
+					      0, 0, 0, 0xb1);
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc != SPDK_NVME_SC_SUCCESS);
+
+	/* TEST CASE: No registrant now, g_ctrlr_B replace new key with IEKEY enabled */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REPLACE_KEY,
+					      1, 0, 0, 0xb1);
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
+	SPDK_CU_ASSERT_FATAL(reg != NULL);
+
+	/* TEST CASE: g_ctrlr_B replace new key with IEKEY enabled and wrong crkey  */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REPLACE_KEY,
+					      1, 0, 0xff, 0xb2);
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	reg = nvmf_ns_reservation_get_registrant(&g_ns, &g_ctrlr_B.hostid);
+	SPDK_CU_ASSERT_FATAL(reg != NULL);
+	SPDK_CU_ASSERT_FATAL(reg->rkey == 0xb2);
+
 	/* TEST CASE: g_ctrlr1_A unregister with correct key,
 	 * reservation should be removed as well.
 	 */

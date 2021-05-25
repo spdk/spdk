@@ -2399,18 +2399,36 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 		update_sgroup = true;
 		break;
 	case SPDK_NVME_RESERVE_REPLACE_KEY:
-		if (!reg || (!iekey && reg->rkey != key.crkey)) {
-			SPDK_ERRLOG("No registrant or current key doesn't match "
-				    "with existing registrant key\n");
-			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
-			goto exit;
-		}
 		if (key.nrkey == 0) {
 			SPDK_ERRLOG("Can't register zeroed new key\n");
 			status = SPDK_NVME_SC_INVALID_FIELD;
 			goto exit;
 		}
-		reg->rkey = key.nrkey;
+		/* Registrant exists */
+		if (reg) {
+			if (!iekey && reg->rkey != key.crkey) {
+				SPDK_ERRLOG("Current key doesn't match "
+					    "existing registrant key\n");
+				status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+				goto exit;
+			}
+			if (reg->rkey == key.nrkey) {
+				goto exit;
+			}
+			reg->rkey = key.nrkey;
+		} else if (iekey) { /* No registrant but IEKEY is set */
+			/* new registrant */
+			rc = nvmf_ns_reservation_add_registrant(ns, ctrlr, key.nrkey);
+			if (rc < 0) {
+				status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+				goto exit;
+			}
+		} else { /* No registrant */
+			SPDK_ERRLOG("No registrant\n");
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+
+		}
 		update_sgroup = true;
 		break;
 	default:
