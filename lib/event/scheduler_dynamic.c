@@ -188,7 +188,6 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 						g_cores[i].thread_count--;
 
 						if (target_lcore != g_main_lcore) {
-							busy_threads_present = true;
 							main_core->idle += spdk_min(UINT64_MAX - main_core->idle, thread_busy);
 							main_core->busy -= spdk_min(main_core->busy, thread_busy);
 						}
@@ -226,8 +225,6 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 							}
 						}
 					}
-
-					busy_threads_present = true;
 				}
 			}
 		}
@@ -243,6 +240,11 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 			core->interrupt_mode = true;
 		} else if (g_cores[i].thread_count != 0) {
 			core->interrupt_mode = false;
+			if (i != g_main_lcore) {
+				/* If a thread is present on non g_main_lcore,
+				 * it has to be busy. */
+				busy_threads_present = true;
+			}
 		}
 	}
 
