@@ -1148,7 +1148,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	TAILQ_INIT(&nbd->executed_io_list);
 
 	/* Add nbd_disk to the end of disk list */
-	nbd_disk_register(ctx->nbd);
+	rc = nbd_disk_register(ctx->nbd);
 	if (rc != 0) {
 		goto err;
 	}
