@@ -605,16 +605,14 @@ event_queue_run_batch(struct spdk_reactor *reactor)
 		thread = NULL;
 	}
 
-	spdk_set_thread(thread);
-
 	for (i = 0; i < count; i++) {
 		struct spdk_event *event = events[i];
 
 		assert(event != NULL);
+		spdk_set_thread(thread);
 		event->fn(event->arg1, event->arg2);
+		spdk_set_thread(NULL);
 	}
-
-	spdk_set_thread(NULL);
 
 	spdk_mempool_put_bulk(g_spdk_event_mempool, events, count);
 
