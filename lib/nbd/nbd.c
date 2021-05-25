@@ -148,37 +148,23 @@ spdk_nbd_init(void)
 }
 
 static void
-_nbd_stop_async(void *arg)
-{
-	struct spdk_nbd_disk *nbd = arg;
-	int rc;
-
-	rc = spdk_nbd_stop(nbd);
-	if (rc) {
-		/* spdk_nbd_stop failed because some IO are still executing. Send a message
-		* to this thread to try again later. */
-		spdk_thread_send_msg(spdk_get_thread(),
-				     _nbd_stop_async, nbd);
-	} else {
-		_nbd_fini(NULL);
-	}
-}
-
-static void
 _nbd_fini(void *arg1)
 {
-	struct spdk_nbd_disk *nbd_first;
+	struct spdk_nbd_disk *nbd, *nbd_tmp;
 
-	nbd_first = TAILQ_FIRST(&g_spdk_nbd.disk_head);
-	if (nbd_first) {
-		/* Stop running spdk_nbd_disk */
-		spdk_thread_send_msg(spdk_io_channel_get_thread(nbd_first->ch),
-				     _nbd_stop_async, nbd_first);
-	} else {
-		/* We can directly call final function here, because
-		 spdk_subsystem_fini_next handles the case: current thread does not equal
-		 to g_final_thread */
+	/* Change all nbds into closing state */
+	TAILQ_FOREACH_SAFE(nbd, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
+		if (nbd->state != NBD_DISK_STATE_HARDDISC) {
+			spdk_nbd_stop(nbd);
+		}
+	}
+
+	/* Check if all nbds closed */
+	if (!TAILQ_FIRST(&g_spdk_nbd.disk_head)) {
 		g_fini_cb_fn(g_fini_cb_arg);
+	} else {
+		spdk_thread_send_msg(spdk_get_thread(),
+				     _nbd_fini, NULL);
 	}
 }
 
