@@ -32,6 +32,10 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/env.h"
+#include "spdk/json.h"
+#include "spdk/string.h"
+#include "spdk/util.h"
 
 #include <map>
 
@@ -41,7 +45,28 @@ extern "C" {
 }
 
 static struct spdk_trace_histories *g_histories;
+static struct spdk_json_write_ctx *g_json;
 static bool g_print_tsc = false;
+
+/* This is a bit ugly, but we don't want to include env_dpdk in the app, while spdk_util, which we
+ * do need, uses some of the functions implemented there.  We're not actually using the functions
+ * that depend on those, so just define them as no-ops to allow the app to link.
+ */
+extern "C" {
+	void *
+	spdk_realloc(void *buf, size_t size, size_t align)
+	{
+		assert(false);
+
+		return NULL;
+	}
+
+	void
+	spdk_free(void *buf)
+	{
+		assert(false);
+	}
+} /* extern "C" */
 
 static void usage(void);
 
@@ -167,6 +192,23 @@ print_arg(uint8_t arg_type, const char *arg_string, const void *arg)
 }
 
 static void
+print_arg_json(uint8_t arg_type, const void *arg)
+{
+	uint64_t value;
+
+	switch (arg_type) {
+	case SPDK_TRACE_ARG_TYPE_PTR:
+	case SPDK_TRACE_ARG_TYPE_INT:
+		memcpy(&value, arg, sizeof(value));
+		spdk_json_write_uint64(g_json, value);
+		break;
+	case SPDK_TRACE_ARG_TYPE_STR:
+		spdk_json_write_string(g_json, (const char *)arg);
+		break;
+	}
+}
+
+static void
 print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	    uint64_t tsc_offset, uint16_t lcore)
 {
@@ -216,6 +258,64 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 }
 
 static void
+print_event_json(struct spdk_trace_entry *e, uint64_t tsc_rate,
+		 uint64_t tsc_offset, uint16_t lcore)
+{
+	struct spdk_trace_tpoint *d;
+	struct object_stats *stats;
+	size_t i, offset;
+
+	d = &g_histories->flags.tpoint[e->tpoint_id];
+	stats = &g_stats[d->object_type];
+
+	spdk_json_write_object_begin(g_json);
+	spdk_json_write_named_uint64(g_json, "lcore", lcore);
+	spdk_json_write_named_uint64(g_json, "tpoint", e->tpoint_id);
+	spdk_json_write_named_uint64(g_json, "tsc", e->tsc);
+
+	if (g_histories->flags.owner[d->owner_type].id_prefix) {
+		spdk_json_write_named_string_fmt(g_json, "poller", "%c%02d",
+						 g_histories->flags.owner[d->owner_type].id_prefix,
+						 e->poller_id);
+	}
+	if (e->size != 0) {
+		spdk_json_write_named_uint32(g_json, "size", e->size);
+	}
+	if (d->new_object || d->object_type != OBJECT_NONE || e->object_id != 0) {
+		char object_type;
+
+		spdk_json_write_named_object_begin(g_json, "object");
+		if (d->new_object) {
+			object_type =  g_histories->flags.object[d->object_type].id_prefix;
+			spdk_json_write_named_string_fmt(g_json, "id", "%c%lu", object_type,
+							 stats->index[e->object_id]);
+		} else if (d->object_type != OBJECT_NONE) {
+			object_type =  g_histories->flags.object[d->object_type].id_prefix;
+			if (stats->start.find(e->object_id) != stats->start.end()) {
+				spdk_json_write_named_string_fmt(g_json, "id", "%c%lu",
+								 object_type,
+								 stats->index[e->object_id]);
+				spdk_json_write_named_uint64(g_json, "time",
+							     e->tsc - stats->start[e->object_id]);
+			}
+		}
+		spdk_json_write_named_uint64(g_json, "value", e->object_id);
+		spdk_json_write_object_end(g_json);
+	}
+	if (d->num_args > 0) {
+		spdk_json_write_named_array_begin(g_json, "args");
+		for (i = 0, offset = 0; i < d->num_args; ++i) {
+			assert(offset < sizeof(e->args));
+			print_arg_json(d->args[i].type, &e->args[offset]);
+			offset += d->args[i].size;
+		}
+		spdk_json_write_array_end(g_json);
+	}
+
+	spdk_json_write_object_end(g_json);
+}
+
+static void
 process_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	      uint64_t tsc_offset, uint16_t lcore)
 {
@@ -232,7 +332,11 @@ process_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		stats->size[e->object_id] = e->size;
 	}
 
-	print_event(e, tsc_rate, tsc_offset, lcore);
+	if (g_json == NULL) {
+		print_event(e, tsc_rate, tsc_offset, lcore);
+	} else {
+		print_event_json(e, tsc_rate, tsc_offset, lcore);
+	}
 }
 
 static int
@@ -291,6 +395,64 @@ populate_events(struct spdk_trace_history *history, int num_entries)
 	return (0);
 }
 
+static void
+print_tpoint_definitions(void)
+{
+	struct spdk_trace_tpoint *tpoint;
+	size_t i, j;
+
+	/* We only care about these when printing JSON */
+	if (!g_json) {
+		return;
+	}
+
+	spdk_json_write_named_uint64(g_json, "tsc_rate", g_tsc_rate);
+	spdk_json_write_named_array_begin(g_json, "tpoints");
+
+	for (i = 0; i < SPDK_COUNTOF(g_histories->flags.tpoint); ++i) {
+		tpoint = &g_histories->flags.tpoint[i];
+		if (tpoint->tpoint_id == 0) {
+			continue;
+		}
+
+		spdk_json_write_object_begin(g_json);
+		spdk_json_write_named_string(g_json, "name", tpoint->name);
+		spdk_json_write_named_uint32(g_json, "id", tpoint->tpoint_id);
+		spdk_json_write_named_bool(g_json, "new_object", tpoint->new_object);
+
+		spdk_json_write_named_array_begin(g_json, "args");
+		for (j = 0; j < tpoint->num_args; ++j) {
+			spdk_json_write_object_begin(g_json);
+			spdk_json_write_named_string(g_json, "name", tpoint->args[j].name);
+			spdk_json_write_named_uint32(g_json, "type", tpoint->args[j].type);
+			spdk_json_write_named_uint32(g_json, "size", tpoint->args[j].size);
+			spdk_json_write_object_end(g_json);
+		}
+		spdk_json_write_array_end(g_json);
+		spdk_json_write_object_end(g_json);
+	}
+
+	spdk_json_write_array_end(g_json);
+}
+
+static int
+print_json(void *cb_ctx, const void *data, size_t size)
+{
+	ssize_t rc;
+
+	while (size > 0) {
+		rc = write(STDOUT_FILENO, data, size);
+		if (rc < 0) {
+			fprintf(stderr, "%s: %s\n", g_exe_name, spdk_strerror(errno));
+			abort();
+		}
+
+		size -= rc;
+	}
+
+	return 0;
+}
+
 static void usage(void)
 {
 	fprintf(stderr, "usage:\n");
@@ -305,6 +467,7 @@ static void usage(void)
 	fprintf(stderr, "                       -i or -p must be specified)\n");
 	fprintf(stderr, "                 '-f' to specify a tracepoint file name\n");
 	fprintf(stderr, "                      (-s and -f are mutually exclusive)\n");
+	fprintf(stderr, "                 '-j' to use JSON to format the output\n");
 }
 
 int main(int argc, char **argv)
@@ -321,9 +484,10 @@ int main(int argc, char **argv)
 	int			shm_id = -1, shm_pid = -1;
 	uint64_t		trace_histories_size;
 	struct stat		_stat;
+	bool			json = false;
 
 	g_exe_name = argv[0];
-	while ((op = getopt(argc, argv, "c:f:i:p:s:t")) != -1) {
+	while ((op = getopt(argc, argv, "c:f:i:jp:s:t")) != -1) {
 		switch (op) {
 		case 'c':
 			lcore = atoi(optarg);
@@ -349,6 +513,9 @@ int main(int argc, char **argv)
 		case 't':
 			g_print_tsc = true;
 			break;
+		case 'j':
+			json = true;
+			break;
 		default:
 			usage();
 			exit(1);
@@ -365,6 +532,14 @@ int main(int argc, char **argv)
 		fprintf(stderr, "One of -f and -s must be specified\n");
 		usage();
 		exit(1);
+	}
+
+	if (json) {
+		g_json = spdk_json_write_begin(print_json, NULL, 0);
+		if (g_json == NULL) {
+			fprintf(stderr, "Failed to allocate JSON write context\n");
+			exit(1);
+		}
 	}
 
 	if (file_name) {
@@ -413,7 +588,9 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	printf("TSC Rate: %ju\n", g_tsc_rate);
+	if (!g_json) {
+		printf("TSC Rate: %ju\n", g_tsc_rate);
+	}
 
 	/* Remap the entire trace file */
 	trace_histories_size = spdk_get_trace_histories_size(g_histories);
@@ -439,7 +616,7 @@ int main(int argc, char **argv)
 				continue;
 			}
 
-			if (history->num_entries) {
+			if (!g_json && history->num_entries) {
 				printf("Trace Size of lcore (%d): %ju\n", i, history->num_entries);
 			}
 
@@ -448,12 +625,18 @@ int main(int argc, char **argv)
 	} else {
 		history = spdk_get_per_lcore_history(g_histories, lcore);
 		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
-			if (history->num_entries) {
+			if (!g_json && history->num_entries) {
 				printf("Trace Size of lcore (%d): %ju\n", lcore, history->num_entries);
 			}
 
 			populate_events(history, history->num_entries);
 		}
+	}
+
+	if (g_json != NULL) {
+		spdk_json_write_object_begin(g_json);
+		print_tpoint_definitions();
+		spdk_json_write_named_array_begin(g_json, "entries");
 	}
 
 	tsc_offset = g_first_tsc;
@@ -462,6 +645,12 @@ int main(int argc, char **argv)
 			continue;
 		}
 		process_event(it->second, g_tsc_rate, tsc_offset, it->first.lcore);
+	}
+
+	if (g_json != NULL) {
+		spdk_json_write_array_end(g_json);
+		spdk_json_write_object_end(g_json);
+		spdk_json_write_end(g_json);
 	}
 
 	munmap(history_ptr, trace_histories_size);
