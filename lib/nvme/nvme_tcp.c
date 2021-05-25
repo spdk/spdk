@@ -148,7 +148,7 @@ struct nvme_tcp_req {
 			uint8_t				reserved : 4;
 		} bits;
 	} ordering;
-	struct nvme_tcp_pdu			*send_pdu;
+	struct nvme_tcp_pdu			*pdu;
 	struct iovec				iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
 	uint32_t				iovcnt;
 	/* Used to hold a value received from subsequent R2T while we are still
@@ -205,7 +205,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->active_r2ts = 0;
 	tcp_req->iovcnt = 0;
 	tcp_req->ordering.raw = 0;
-	memset(tcp_req->send_pdu, 0, sizeof(struct nvme_tcp_pdu));
+	memset(tcp_req->pdu, 0, sizeof(struct nvme_tcp_pdu));
 	memset(&tcp_req->rsp, 0, sizeof(struct spdk_nvme_cpl));
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
@@ -288,7 +288,7 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 		tcp_req = &tqpair->tcp_reqs[i];
 		tcp_req->cid = i;
 		tcp_req->tqpair = tqpair;
-		tcp_req->send_pdu = &tqpair->send_pdus[i];
+		tcp_req->pdu = &tqpair->send_pdus[i];
 		TAILQ_INSERT_TAIL(&tqpair->free_reqs, tcp_req, link);
 	}
 
@@ -670,7 +670,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 	uint8_t pdo;
 
 	SPDK_DEBUGLOG(nvme, "enter\n");
-	pdu = tcp_req->send_pdu;
+	pdu = tcp_req->pdu;
 
 	capsule_cmd = &pdu->hdr.capsule_cmd;
 	capsule_cmd->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
@@ -1319,7 +1319,7 @@ nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	/* Reinit the send_ack and h2c_send_waiting_ack bits */
 	tcp_req->ordering.bits.send_ack = 0;
 	tcp_req->ordering.bits.h2c_send_waiting_ack = 0;
-	rsp_pdu = tcp_req->send_pdu;
+	rsp_pdu = tcp_req->pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
 	h2c_data = &rsp_pdu->hdr.h2c_data;
 

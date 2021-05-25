@@ -586,7 +586,7 @@ test_nvme_tcp_req_get(void)
 	struct nvme_tcp_qpair tqpair = {};
 	struct nvme_tcp_pdu send_pdu = {};
 
-	tcp_req.send_pdu = &send_pdu;
+	tcp_req.pdu = &send_pdu;
 	tcp_req.state = NVME_TCP_REQ_FREE;
 
 	TAILQ_INIT(&tqpair.free_reqs);
@@ -623,7 +623,7 @@ test_nvme_tcp_qpair_capsule_cmd_send(void)
 	memset(iov_base0, 0xFF, 4096);
 	memset(iov_base1, 0xFF, 4096);
 	tcp_req.req = &req;
-	tcp_req.send_pdu = &pdu;
+	tcp_req.pdu = &pdu;
 	TAILQ_INIT(&tqpair.send_queue);
 
 	tcp_req.iov[0].iov_base = (void *)iov_base0;
@@ -854,7 +854,7 @@ test_nvme_tcp_alloc_reqs(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(tqpair.tcp_reqs[0].cid == 0);
 	CU_ASSERT(tqpair.tcp_reqs[0].tqpair == &tqpair);
-	CU_ASSERT(tqpair.tcp_reqs[0].send_pdu == &tqpair.send_pdus[0]);
+	CU_ASSERT(tqpair.tcp_reqs[0].pdu == &tqpair.send_pdus[0]);
 	CU_ASSERT(tqpair.send_pdu == &tqpair.send_pdus[tqpair.num_entries]);
 	free(tqpair.tcp_reqs);
 	spdk_free(tqpair.send_pdus);
@@ -866,7 +866,7 @@ test_nvme_tcp_alloc_reqs(void)
 	for (int i = 0; i < tqpair.num_entries; i++) {
 		CU_ASSERT(tqpair.tcp_reqs[i].cid == i);
 		CU_ASSERT(tqpair.tcp_reqs[i].tqpair == &tqpair);
-		CU_ASSERT(tqpair.tcp_reqs[i].send_pdu == &tqpair.send_pdus[i]);
+		CU_ASSERT(tqpair.tcp_reqs[i].pdu == &tqpair.send_pdus[i]);
 	}
 	CU_ASSERT(tqpair.send_pdu == &tqpair.send_pdus[tqpair.num_entries]);
 
