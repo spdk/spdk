@@ -444,8 +444,9 @@ pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
 	/* Data Digest */
 	if (pdu->data_len > 0 && g_nvme_tcp_ddgst[pdu->hdr.common.pdu_type] &&
 	    tqpair->flags.host_ddgst_enable) {
-		/* Only suport this limitated case for the first step */
-		if (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c &&
+		/* Only suport this limited case for the first step */
+		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
+		    (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) &&
 		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0))) {
 			tgroup->group.group->accel_fn_table.submit_accel_crc32c(tgroup->group.group->ctx,
 					&pdu->data_digest_crc32, pdu->data_iov,
