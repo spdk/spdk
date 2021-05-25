@@ -705,6 +705,143 @@ end:
 	return rc;
 }
 
+static uint64_t
+get_last_run_counter(const char *poller_name, uint64_t thread_id)
+{
+	struct run_counter_history *history;
+
+	TAILQ_FOREACH(history, &g_run_counter_history, link) {
+		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+			return history->last_run_counter;
+		}
+	}
+
+	return 0;
+}
+
+static uint64_t
+get_last_busy_counter(const char *poller_name, uint64_t thread_id)
+{
+	struct run_counter_history *history;
+
+	TAILQ_FOREACH(history, &g_run_counter_history, link) {
+		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+			return history->last_busy_counter;
+		}
+	}
+
+	return 0;
+}
+
+enum sort_type {
+	BY_NAME,
+	USE_GLOBAL,
+};
+
+static int
+#ifdef __FreeBSD__
+sort_pollers(void *arg, const void *p1, const void *p2)
+#else
+sort_pollers(const void *p1, const void *p2, void *arg)
+#endif
+{
+	const struct rpc_poller_info *poller1 = *(struct rpc_poller_info **)p1;
+	const struct rpc_poller_info *poller2 = *(struct rpc_poller_info **)p2;
+	enum sort_type sorting = *(enum sort_type *)arg;
+	uint64_t count1, count2;
+	uint64_t last_run_counter;
+
+	if (sorting == BY_NAME) {
+		/* Sorting by name requested explicitly */
+		return strcmp(poller1->name, poller2->name);
+	} else {
+		/* Use globaly set sorting */
+		switch (g_current_sort_col[POLLERS_TAB]) {
+		case 0: /* Sort by name */
+			return strcmp(poller1->name, poller2->name);
+		case 1: /* Sort by type */
+			return poller1->type - poller2->type;
+		case 2: /* Sort by thread */
+			return strcmp(poller1->thread_name, poller2->thread_name);
+		case 3: /* Sort by run counter */
+			last_run_counter = get_last_run_counter(poller1->name, poller1->thread_id);
+			count1 = poller1->run_count - last_run_counter;
+			last_run_counter = get_last_run_counter(poller2->name, poller2->thread_id);
+			count2 = poller2->run_count - last_run_counter;
+			break;
+		case 4: /* Sort by period */
+			count1 = poller1->period_ticks;
+			count2 = poller2->period_ticks;
+			break;
+		default:
+			return 0;
+		}
+	}
+
+	if (count2 > count1) {
+		return 1;
+	} else if (count2 < count1) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+static void
+copy_pollers(struct rpc_poller_info *pollers, uint64_t pollers_count,
+	     uint64_t *current_count, bool reset_last_counter,
+	     struct rpc_poller_info **pollers_info)
+{
+	uint64_t i, j;
+	struct rpc_thread_info *thread_info;
+
+	for (i = 0; i < pollers_count; i++) {
+		for (j = 0; j < g_last_threads_count; j++) {
+			thread_info = &g_threads_info[j];
+			/* Check if poller's thread exists in g_threads_stats
+			 * (if poller is not "hanging" without a thread). */
+			if (thread_info->id != pollers[i].thread_id) {
+				continue;
+			}
+
+			if (reset_last_counter) {
+				store_last_counters(pollers[i].name, pollers[i].thread_id, pollers[i].run_count,
+						    pollers[i].busy_count);
+			}
+			pollers_info[(*current_count)++] = &pollers[i];
+			break;
+		}
+	}
+}
+
+static uint8_t
+prepare_poller_data(uint8_t current_page, struct rpc_poller_info **pollers,
+		    uint64_t *count, uint8_t last_page)
+{
+	bool reset_last_counter = false;
+	enum sort_type sorting;
+
+	if (last_page != current_page) {
+		reset_last_counter = true;
+	}
+
+	copy_pollers(g_pollers_info, g_last_pollers_count,
+		     count, reset_last_counter, pollers);
+
+	if (last_page != current_page) {
+		last_page = current_page;
+	}
+
+	/* Timed pollers can switch their possition on a list because of how they work.
+	 * Let's sort them by name first so that they won't switch on data refresh */
+	sorting = BY_NAME;
+	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
+	sorting = USE_GLOBAL;
+	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
+
+	return last_page;
+}
+
 static int
 get_pollers_data(void)
 {
@@ -1131,143 +1268,6 @@ refresh_threads_tab(uint8_t current_page)
 	g_max_selected_row = i - current_page * g_max_data_rows - 1;
 
 	return max_pages;
-}
-
-static uint64_t
-get_last_run_counter(const char *poller_name, uint64_t thread_id)
-{
-	struct run_counter_history *history;
-
-	TAILQ_FOREACH(history, &g_run_counter_history, link) {
-		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
-			return history->last_run_counter;
-		}
-	}
-
-	return 0;
-}
-
-static uint64_t
-get_last_busy_counter(const char *poller_name, uint64_t thread_id)
-{
-	struct run_counter_history *history;
-
-	TAILQ_FOREACH(history, &g_run_counter_history, link) {
-		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
-			return history->last_busy_counter;
-		}
-	}
-
-	return 0;
-}
-
-enum sort_type {
-	BY_NAME,
-	USE_GLOBAL,
-};
-
-static int
-#ifdef __FreeBSD__
-sort_pollers(void *arg, const void *p1, const void *p2)
-#else
-sort_pollers(const void *p1, const void *p2, void *arg)
-#endif
-{
-	const struct rpc_poller_info *poller1 = *(struct rpc_poller_info **)p1;
-	const struct rpc_poller_info *poller2 = *(struct rpc_poller_info **)p2;
-	enum sort_type sorting = *(enum sort_type *)arg;
-	uint64_t count1, count2;
-	uint64_t last_run_counter;
-
-	if (sorting == BY_NAME) {
-		/* Sorting by name requested explicitly */
-		return strcmp(poller1->name, poller2->name);
-	} else {
-		/* Use globaly set sorting */
-		switch (g_current_sort_col[POLLERS_TAB]) {
-		case 0: /* Sort by name */
-			return strcmp(poller1->name, poller2->name);
-		case 1: /* Sort by type */
-			return poller1->type - poller2->type;
-		case 2: /* Sort by thread */
-			return strcmp(poller1->thread_name, poller2->thread_name);
-		case 3: /* Sort by run counter */
-			last_run_counter = get_last_run_counter(poller1->name, poller1->thread_id);
-			count1 = poller1->run_count - last_run_counter;
-			last_run_counter = get_last_run_counter(poller2->name, poller2->thread_id);
-			count2 = poller2->run_count - last_run_counter;
-			break;
-		case 4: /* Sort by period */
-			count1 = poller1->period_ticks;
-			count2 = poller2->period_ticks;
-			break;
-		default:
-			return 0;
-		}
-	}
-
-	if (count2 > count1) {
-		return 1;
-	} else if (count2 < count1) {
-		return -1;
-	} else {
-		return 0;
-	}
-}
-
-static void
-copy_pollers(struct rpc_poller_info *pollers, uint64_t pollers_count,
-	     uint64_t *current_count, bool reset_last_counter,
-	     struct rpc_poller_info **pollers_info)
-{
-	uint64_t i, j;
-	struct rpc_thread_info *thread_info;
-
-	for (i = 0; i < pollers_count; i++) {
-		for (j = 0; j < g_last_threads_count; j++) {
-			thread_info = &g_threads_info[j];
-			/* Check if poller's thread exists in g_threads_stats
-			 * (if poller is not "hanging" without a thread). */
-			if (thread_info->id != pollers[i].thread_id) {
-				continue;
-			}
-
-			if (reset_last_counter) {
-				store_last_counters(pollers[i].name, pollers[i].thread_id, pollers[i].run_count,
-						    pollers[i].busy_count);
-			}
-			pollers_info[(*current_count)++] = &pollers[i];
-			break;
-		}
-	}
-}
-
-static uint8_t
-prepare_poller_data(uint8_t current_page, struct rpc_poller_info **pollers,
-		    uint64_t *count, uint8_t last_page)
-{
-	bool reset_last_counter = false;
-	enum sort_type sorting;
-
-	if (last_page != current_page) {
-		reset_last_counter = true;
-	}
-
-	copy_pollers(g_pollers_info, g_last_pollers_count,
-		     count, reset_last_counter, pollers);
-
-	if (last_page != current_page) {
-		last_page = current_page;
-	}
-
-	/* Timed pollers can switch their possition on a list because of how they work.
-	 * Let's sort them by name first so that they won't switch on data refresh */
-	sorting = BY_NAME;
-	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
-	sorting = USE_GLOBAL;
-	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
-
-	return last_page;
 }
 
 static uint8_t
