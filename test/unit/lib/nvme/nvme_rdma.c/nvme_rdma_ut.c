@@ -61,6 +61,11 @@ DEFINE_STUB_V(rdma_destroy_event_channel, (struct rdma_event_channel *channel));
 
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
 
+int ibv_resize_cq(struct ibv_cq *cq, int cqe)
+{
+	return 0;
+}
+
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
 #undef ibv_reg_mr
@@ -958,6 +963,73 @@ test_nvme_rdma_register_and_unregister_reqs(void)
 	CU_ASSERT(rqpair.cmd_mr.mr == NULL);
 }
 
+static void
+test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
+{
+	int					rc;
+	struct nvme_rdma_poll_group		group = {};
+	struct rdma_cm_id			cm_id = {};
+	struct nvme_rdma_qpair			*rqpair = NULL;
+	struct nvme_rdma_destroyed_qpair	*qpair_tracker = NULL;
+	struct ibv_context			*contexts = (void *)0xDEADBEEF;
+
+	/* Allocate memory for deleting qpair to free */
+	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
+	rqpair->cm_id =  &cm_id;
+	rqpair->qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rqpair->qpair.poll_group = &group.group;
+	rqpair->qpair.state = NVME_QPAIR_DESTROYING;
+	cm_id.verbs = (void *)0xDEADBEEF;
+
+	STAILQ_INIT(&group.destroyed_qpairs);
+	STAILQ_INIT(&group.pollers);
+	rc = nvme_rdma_poller_create(&group, contexts);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	rc = nvme_rdma_poll_group_connect_qpair(&rqpair->qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair->cq == (void *)0xFEEDBEEF);
+	CU_ASSERT(rqpair->poller != NULL);
+
+	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair->qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair->defer_deletion_to_pg == true);
+	CU_ASSERT(rqpair->poll_group_disconnect_in_progress == false);
+	CU_ASSERT(rqpair->cq == NULL);
+	CU_ASSERT(!STAILQ_EMPTY(&group.destroyed_qpairs));
+
+	qpair_tracker = STAILQ_FIRST(&group.destroyed_qpairs);
+	CU_ASSERT(qpair_tracker->destroyed_qpair_tracker == rqpair);
+	CU_ASSERT(qpair_tracker->completed_cycles == 0);
+
+	nvme_rdma_poll_group_delete_qpair(&group, qpair_tracker);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(STAILQ_EMPTY(&group.destroyed_qpairs));
+
+	nvme_rdma_poll_group_free_pollers(&group);
+	CU_ASSERT(STAILQ_EMPTY(&group.pollers));
+
+	/* No available poller */
+	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
+
+	rqpair->cm_id =  &cm_id;
+	rqpair->qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rqpair->qpair.poll_group = &group.group;
+	rqpair->qpair.state = NVME_QPAIR_DESTROYING;
+	cm_id.verbs = (void *)0xDEADBEEF;
+
+	rc = nvme_rdma_poll_group_connect_qpair(&rqpair->qpair);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(rqpair->cq == NULL);
+
+	/* Poll group disconnect in progress */
+	rqpair->poll_group_disconnect_in_progress = true;
+
+	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair->qpair);
+	CU_ASSERT(rc == -EINPROGRESS);
+	free(rqpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -982,6 +1054,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_req_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_validate_cm_event);
 	CU_ADD_TEST(suite, test_nvme_rdma_register_and_unregister_reqs);
+	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_connect_disconnect_qpair);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
