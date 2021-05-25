@@ -60,9 +60,6 @@ get_nvme() {
 		done
 	done
 	blocks=("${blocks[@]##*/}")
-	if [[ -e $rootdir/scripts/sync_dev_uevents.sh ]]; then
-		"$rootdir/scripts/sync_dev_uevents.sh" block/disk "${blocks[@]}"
-	fi > /dev/null
 	printf '%s\n' "${blocks[@]}"
 }
 
@@ -81,6 +78,10 @@ get_devices() {
 
 configure_devices() {
 	local devs=("$@") dev qd
+
+	if [[ -e $rootdir/scripts/sync_dev_uevents.sh ]]; then
+		"$rootdir/scripts/sync_dev_uevents.sh" block/disk "${devs[@]}"
+	fi > /dev/null
 
 	for dev in "${devs[@]}"; do
 		qd=128
