@@ -5513,7 +5513,7 @@ spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io)
 }
 
 static int
-bdev_init(struct spdk_bdev *bdev)
+bdev_register(struct spdk_bdev *bdev)
 {
 	char *bdev_name;
 
@@ -5593,6 +5593,10 @@ bdev_init(struct spdk_bdev *bdev)
 	free(bdev_name);
 
 	pthread_mutex_init(&bdev->internal.mutex, NULL);
+
+	SPDK_DEBUGLOG(bdev, "Inserting bdev %s into list\n", bdev->name);
+	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
+
 	return 0;
 }
 
@@ -5621,32 +5625,23 @@ bdev_destroy_cb(void *io_device)
 }
 
 static void
-bdev_start_finished(void *arg)
+bdev_register_finished(void *arg)
 {
 	struct spdk_bdev *bdev = arg;
 
 	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
 }
 
-static void
-bdev_start(struct spdk_bdev *bdev)
-{
-	SPDK_DEBUGLOG(bdev, "Inserting bdev %s into list\n", bdev->name);
-	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, internal.link);
-
-	/* Examine configuration before initializing I/O */
-	bdev_examine(bdev);
-
-	spdk_bdev_wait_for_examine(bdev_start_finished, bdev);
-}
-
 int
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
-	int rc = bdev_init(bdev);
+	int rc = bdev_register(bdev);
 
 	if (rc == 0) {
-		bdev_start(bdev);
+		/* Examine configuration before initializing I/O */
+		bdev_examine(bdev);
+
+		spdk_bdev_wait_for_examine(bdev_register_finished, bdev);
 	}
 
 	return rc;
