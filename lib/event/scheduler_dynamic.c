@@ -194,9 +194,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 {
 	struct spdk_reactor *reactor;
 	struct spdk_lw_thread *lw_thread;
-	struct spdk_thread *thread;
 	struct spdk_scheduler_core_info *core;
-	struct spdk_cpuset *cpumask;
 	struct core_stats *main_core;
 	uint32_t target_lcore;
 	uint32_t i, j;
@@ -217,19 +215,13 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 
 		for (j = 0; j < core->threads_count; j++) {
 			lw_thread = core->threads[j];
-			thread = spdk_thread_get_from_ctx(lw_thread);
-			cpumask = spdk_thread_get_cpumask(thread);
 			load = _get_thread_load(lw_thread);
 
-			if (i == g_main_lcore && load >= SCHEDULER_LOAD_LIMIT) {
-				/* This thread is active and on the main core, we need to pick a core to move it to */
-				target_lcore = _find_optimal_core(lw_thread);
-				_move_thread(lw_thread, target_lcore);
-			} else if (i != g_main_lcore && load < SCHEDULER_LOAD_LIMIT) {
-				/* This thread is idle but not on the main core, so we need to move it to the main core */
+			if (load < SCHEDULER_LOAD_LIMIT) {
+				/* This thread is idle, move it to the main core. */
 				_move_thread(lw_thread, g_main_lcore);
-			} else if (i != g_main_lcore && !spdk_cpuset_get_cpu(cpumask, i)) {
-				/* Move busy thread only if cpumask does not match current core (except main core) */
+			} else {
+				/* This thread is active. */
 				target_lcore = _find_optimal_core(lw_thread);
 				_move_thread(lw_thread, target_lcore);
 			}
