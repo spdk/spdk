@@ -271,7 +271,6 @@ static struct spdk_nvme_ctrlr *
 		goto exit;
 	}
 
-	nvme_ctrlr_init_cap(&pctrlr->ctrlr, &cap);
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;

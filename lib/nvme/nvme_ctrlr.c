@@ -48,6 +48,7 @@ static void nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx);
 static int nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns);
+static void nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr);
 
 #define CTRLR_STRING(ctrlr) \
 	((ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP || ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) ? \
@@ -1136,6 +1137,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "delay init";
 	case NVME_CTRLR_STATE_READ_VS:
 		return "read vs";
+	case NVME_CTRLR_STATE_READ_CAP:
+		return "read cap";
 	case NVME_CTRLR_STATE_CHECK_EN:
 		return "check en";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
@@ -3128,6 +3131,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_READ_VS: /* synonymous with NVME_CTRLR_STATE_INIT */
 		nvme_ctrlr_get_vs(ctrlr, &ctrlr->vs);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_CAP, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_READ_CAP:
+		nvme_ctrlr_init_cap(ctrlr);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CHECK_EN, NVME_TIMEOUT_INFINITE);
 		break;
 
@@ -3410,11 +3418,10 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
-/* This function should be called once at ctrlr initialization to set up constant properties. */
-void
-nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap)
+static void
+nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr)
 {
-	ctrlr->cap = *cap;
+	nvme_ctrlr_get_cap(ctrlr, &ctrlr->cap);
 
 	if (ctrlr->cap.bits.ams & SPDK_NVME_CAP_AMS_WRR) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_WRR_SUPPORTED;

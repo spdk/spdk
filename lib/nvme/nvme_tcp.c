@@ -1934,7 +1934,6 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 		void *devhandle)
 {
 	struct nvme_tcp_ctrlr *tctrlr;
-	union spdk_nvme_cap_register cap;
 	int rc;
 
 	tctrlr = calloc(1, sizeof(*tctrlr));
@@ -1968,19 +1967,11 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 		return NULL;
 	}
 
-	if (nvme_ctrlr_get_cap(&tctrlr->ctrlr, &cap)) {
-		SPDK_ERRLOG("get_cap() failed\n");
-		nvme_ctrlr_destruct(&tctrlr->ctrlr);
-		return NULL;
-	}
-
 	if (nvme_ctrlr_add_process(&tctrlr->ctrlr, 0) != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");
 		nvme_ctrlr_destruct(&tctrlr->ctrlr);
 		return NULL;
 	}
-
-	nvme_ctrlr_init_cap(&tctrlr->ctrlr, &cap);
 
 	return &tctrlr->ctrlr;
 }
