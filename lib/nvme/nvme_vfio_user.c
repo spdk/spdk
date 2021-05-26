@@ -201,7 +201,6 @@ static struct spdk_nvme_ctrlr *
 	struct nvme_pcie_ctrlr *pctrlr;
 	uint16_t cmd_reg;
 	union spdk_nvme_cap_register cap;
-	union spdk_nvme_vs_register vs;
 	int ret;
 	char ctrlr_path[PATH_MAX];
 	char ctrlr_bar0[PATH_MAX];
@@ -272,12 +271,7 @@ static struct spdk_nvme_ctrlr *
 		goto exit;
 	}
 
-	if (nvme_ctrlr_get_vs(&pctrlr->ctrlr, &vs)) {
-		SPDK_ERRLOG("get_vs() failed\n");
-		goto exit;
-	}
-
-	nvme_ctrlr_init_cap(&pctrlr->ctrlr, &cap, &vs);
+	nvme_ctrlr_init_cap(&pctrlr->ctrlr, &cap);
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;

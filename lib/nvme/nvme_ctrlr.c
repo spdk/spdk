@@ -1134,6 +1134,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 	switch (state) {
 	case NVME_CTRLR_STATE_INIT_DELAY:
 		return "delay init";
+	case NVME_CTRLR_STATE_READ_VS:
+		return "read vs";
 	case NVME_CTRLR_STATE_CHECK_EN:
 		return "check en";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
@@ -3124,7 +3126,12 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		}
 		break;
 
-	case NVME_CTRLR_STATE_CHECK_EN: /* synonymous with NVME_CTRLR_STATE_INIT */
+	case NVME_CTRLR_STATE_READ_VS: /* synonymous with NVME_CTRLR_STATE_INIT */
+		nvme_ctrlr_get_vs(ctrlr, &ctrlr->vs);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CHECK_EN, NVME_TIMEOUT_INFINITE);
+		break;
+
+	case NVME_CTRLR_STATE_CHECK_EN:
 		/* Begin the hardware initialization by making sure the controller is disabled. */
 		if (cc.bits.en) {
 			NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1\n");
@@ -3405,11 +3412,9 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 /* This function should be called once at ctrlr initialization to set up constant properties. */
 void
-nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap,
-		    const union spdk_nvme_vs_register *vs)
+nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap)
 {
 	ctrlr->cap = *cap;
-	ctrlr->vs = *vs;
 
 	if (ctrlr->cap.bits.ams & SPDK_NVME_CAP_AMS_WRR) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_WRR_SUPPORTED;

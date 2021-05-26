@@ -518,14 +518,19 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_INIT_DELAY,
 
 	/**
-	 * Check EN to prepare for controller initialization.
+	 * Read Version (VS) register.
 	 */
-	NVME_CTRLR_STATE_CHECK_EN,
+	NVME_CTRLR_STATE_READ_VS,
 
 	/**
 	 * Controller has not started initialized yet.
 	 */
-	NVME_CTRLR_STATE_INIT = NVME_CTRLR_STATE_CHECK_EN,
+	NVME_CTRLR_STATE_INIT = NVME_CTRLR_STATE_READ_VS,
+
+	/**
+	 * Check EN to prepare for controller initialization.
+	 */
+	NVME_CTRLR_STATE_CHECK_EN,
 
 	/**
 	 * Waiting for CSTS.RDY to transition from 0 to 1 so that CC.EN may be set to 0.
@@ -1037,8 +1042,7 @@ int	nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register
 int	nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz);
 int	nvme_ctrlr_get_pmrcap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_pmrcap_register *pmrcap);
 bool	nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr);
-void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap,
-			    const union spdk_nvme_vs_register *vs);
+void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap);
 void    nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 				       const struct spdk_nvme_cpl *cpl);
 void nvme_ctrlr_disconnect_qpair(struct spdk_nvme_qpair *qpair);

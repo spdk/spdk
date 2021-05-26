@@ -74,8 +74,7 @@ DEFINE_STUB_V(nvme_ctrlr_destruct_finish, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB(nvme_ctrlr_construct, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 DEFINE_STUB_V(nvme_ctrlr_destruct, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_init_cap, (struct spdk_nvme_ctrlr *ctrlr,
-				    const union spdk_nvme_cap_register *cap,
-				    const union spdk_nvme_vs_register *vs));
+				    const union spdk_nvme_cap_register *cap));
 DEFINE_STUB(nvme_ctrlr_get_vs, int, (struct spdk_nvme_ctrlr *ctrlr,
 				     union spdk_nvme_vs_register *vs), 0);
 DEFINE_STUB(nvme_ctrlr_get_cap, int, (struct spdk_nvme_ctrlr *ctrlr,
