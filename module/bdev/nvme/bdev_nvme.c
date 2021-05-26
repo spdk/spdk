@@ -1854,9 +1854,6 @@ _nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	if (spdk_nvme_ctrlr_get_flags(nvme_bdev_ctrlr->ctrlr) &
 	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
 		nvme_bdev_ctrlr->opal_dev = spdk_opal_dev_construct(nvme_bdev_ctrlr->ctrlr);
-		if (nvme_bdev_ctrlr->opal_dev == NULL) {
-			SPDK_ERRLOG("Failed to initialize Opal\n");
-		}
 	}
 
 	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->trids, trid_entry, link);
