@@ -4230,6 +4230,17 @@ spdk_nvme_ctrlr_is_discovery(struct spdk_nvme_ctrlr *ctrlr)
 			strlen(SPDK_NVMF_DISCOVERY_NQN));
 }
 
+bool
+spdk_nvme_ctrlr_is_fabrics(struct spdk_nvme_ctrlr *ctrlr)
+{
+	assert(ctrlr);
+
+	/* We always define non-fabrics trtypes outside of the 8-bit range
+	 * of NVMe-oF trtype.
+	 */
+	return ctrlr->trid.trtype < UINT8_MAX;
+}
+
 int
 spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 				 uint16_t spsp, uint8_t nssf, void *payload, size_t size)

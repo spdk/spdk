@@ -298,6 +298,15 @@ struct spdk_nvme_accel_fn_table {
 bool spdk_nvme_ctrlr_is_discovery(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Indicate whether a ctrlr handle is associated with a fabrics controller.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return true if a fabrics controller, else false.
+ */
+bool spdk_nvme_ctrlr_is_fabrics(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the default options for the creation of a specific NVMe controller.
  *
  * \param[out] opts Will be filled with the default option.
