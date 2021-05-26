@@ -476,6 +476,8 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 {
 	struct spdk_nvme_qpair *qpair = req->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	uint64_t timeout_ticks = nvme_qpair_is_admin_queue(qpair) ?
+				 active_proc->timeout_admin_ticks : active_proc->timeout_io_ticks;
 
 	assert(active_proc->timeout_cb_fn != NULL);
 
@@ -492,7 +494,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 		return 0;
 	}
 
-	if (req->submit_tick + active_proc->timeout_ticks > now_tick) {
+	if (req->submit_tick + timeout_ticks > now_tick) {
 		return 1;
 	}
 

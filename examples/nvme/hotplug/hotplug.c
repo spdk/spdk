@@ -101,7 +101,8 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 	dev->is_removed = false;
 	dev->is_draining = false;
 
-	spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout_in_us, timeout_cb, NULL);
+	spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout_in_us, g_timeout_in_us, timeout_cb,
+			NULL);
 
 	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, 1);
 

@@ -1294,12 +1294,14 @@ typedef void (*spdk_nvme_timeout_cb)(void *cb_arg,
  * for timeout callback.
  *
  * \param ctrlr NVMe controller on which to monitor for timeout.
- * \param timeout_us Timeout value in microseconds.
+ * \param timeout_io_us Timeout value in microseconds for io commands.
+ * \param timeout_admin_us Timeout value in microseconds for admin commands.
  * \param cb_fn A function pointer that points to the callback function.
  * \param cb_arg Argument to the callback function.
  */
 void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
-		uint64_t timeout_us, spdk_nvme_timeout_cb cb_fn, void *cb_arg);
+		uint64_t timeout_io_us, uint64_t timeout_admin_us,
+		spdk_nvme_timeout_cb cb_fn, void *cb_arg);
 
 /**
  * NVMe I/O queue pair initialization options.

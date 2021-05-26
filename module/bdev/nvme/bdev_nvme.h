@@ -51,6 +51,7 @@ enum spdk_bdev_timeout_action {
 struct spdk_bdev_nvme_opts {
 	enum spdk_bdev_timeout_action action_on_timeout;
 	uint64_t timeout_us;
+	uint64_t timeout_admin_us;
 	uint32_t keep_alive_timeout_ms;
 	uint32_t retry_count;
 	uint32_t arbitration_burst;

@@ -72,6 +72,9 @@ the spdk_nvme_ctrlr_opts structure prior to controller attach.
 Add a new function `spdk_nvme_detach_poll` to simplify a common use case to continue
 polling until all detachments complete.
 
+Added new argument 'timeout_admin_us' to 'spdk_nvme_ctrlr_register_timeout_callback' so callers
+can specify a different timeout for admin commands vs. io commands.
+
 An existing function `spdk_nvme_detach_async` was updated to add one or more detachments
 to an active context while it is being polled.
 

@@ -3854,7 +3854,8 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 
 void
 spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
-		uint64_t timeout_us, spdk_nvme_timeout_cb cb_fn, void *cb_arg)
+		uint64_t timeout_io_us, uint64_t timeout_admin_us,
+		spdk_nvme_timeout_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
@@ -3862,7 +3863,8 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
-		active_proc->timeout_ticks = timeout_us * spdk_get_ticks_hz() / 1000000ULL;
+		active_proc->timeout_io_ticks = timeout_io_us * spdk_get_ticks_hz() / 1000000ULL;
+		active_proc->timeout_admin_ticks = timeout_admin_us * spdk_get_ticks_hz() / 1000000ULL;
 		active_proc->timeout_cb_fn = cb_fn;
 		active_proc->timeout_cb_arg = cb_arg;
 	}

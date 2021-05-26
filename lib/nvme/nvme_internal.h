@@ -749,7 +749,9 @@ struct spdk_nvme_ctrlr_process {
 	 */
 	spdk_nvme_timeout_cb		timeout_cb_fn;
 	void				*timeout_cb_arg;
-	uint64_t			timeout_ticks;
+	/** separate timeout values for io vs. admin reqs */
+	uint64_t			timeout_io_ticks;
+	uint64_t			timeout_admin_ticks;
 };
 
 struct spdk_nvme_ctrlr_aer_completion_list {

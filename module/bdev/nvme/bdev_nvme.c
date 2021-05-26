@@ -117,6 +117,7 @@ static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_IN
 static struct spdk_bdev_nvme_opts g_opts = {
 	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
 	.timeout_us = 0,
+	.timeout_admin_us = 0,
 	.keep_alive_timeout_ms = SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS,
 	.retry_count = 4,
 	.arbitration_burst = 0,
@@ -1896,8 +1897,12 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	if (g_opts.timeout_us > 0) {
+		/* Register timeout callback. Timeout values for IO vs. admin reqs can be different. */
+		/* If timeout_admin_us is 0 (not specified), admin uses same timeout as IO. */
+		uint64_t adm_timeout_us = (g_opts.timeout_admin_us == 0) ?
+					  g_opts.timeout_us : g_opts.timeout_admin_us;
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
-				timeout_cb, nvme_ctrlr);
+				adm_timeout_us, timeout_cb, nvme_ctrlr);
 	}
 
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_ctrlr);
