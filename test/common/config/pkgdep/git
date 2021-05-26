@@ -288,7 +288,7 @@ function install_qemu() {
 
 	# Forked QEMUs
 	SPDK_QEMU_BRANCH=spdk-5.0.0
-	VFIO_QEMU_BRANCH=vfio-user-v0.6
+	VFIO_QEMU_BRANCH=vfio-user-master
 	VANILLA_QEMU_BRANCH=v6.0.0
 
 	_install_qemu $GIT_REPO_QEMU_SPDK $SPDK_QEMU_BRANCH
