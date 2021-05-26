@@ -14,6 +14,10 @@ source "$1"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/scripts/common.sh"
 
+if [[ -n $EXTERNAL_MAKE_HUGEMEM ]]; then
+	export EXTERNAL_MAKE_HUGEMEM
+fi
+
 out=$output_dir
 if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
 	scanbuild_exclude=" --exclude $(dirname $SPDK_RUN_EXTERNAL_DPDK)"
