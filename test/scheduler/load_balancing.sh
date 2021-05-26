@@ -96,7 +96,7 @@ balanced() {
 
 	thread0_name=thread0
 	thread0=$(create_thread -n "$thread0_name" -m "$(mask_cpus "${selected_cpus[@]}")" -a 0)
-	for cpu in "${selected_cpus[@]}"; do
+	for cpu in "${selected_cpus[@]::${#selected_cpus[@]}-1}"; do
 		extra_threads+=("$(create_thread -n "thread_cpu_$cpu" -m "$(mask_cpus "$cpu")" -a 100)")
 	done
 
@@ -124,13 +124,12 @@ balanced() {
 
 	[[ -n $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framework"
 
-	# thread0 is active, wait for scheduler to run (2x) and check if it is not on main core, nor the core from 2)
+	# thread0 is active, wait for scheduler to run (2x) and check if it is not on main core
 	active_thread "$thread0" 100
 	sleep $((2 * sched_period))
 	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 
-	[[ -z $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framewrk"
-	[[ -z $(jq -r "select(.lcore == $active_cpu) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framewrk"
+	[[ -z $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.id == $thread0)") ]] <<< "$reactor_framework"
 
 	destroy_thread "$thread0"
 	for thread in "${extra_threads[@]}"; do

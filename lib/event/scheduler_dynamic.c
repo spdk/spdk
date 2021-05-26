@@ -126,14 +126,41 @@ _move_thread(struct spdk_lw_thread *lw_thread, uint32_t dst_core)
 	lw_thread->lcore = dst_core;
 }
 
+static bool
+_can_core_fit_thread(struct spdk_lw_thread *lw_thread, uint32_t dst_core)
+{
+	struct core_stats *dst = &g_cores[dst_core];
+
+	/* Thread can always fit on the core it's currently on. */
+	if (lw_thread->lcore == dst_core) {
+		return true;
+	}
+
+	/* Reactors in interrupt mode do not update stats,
+	 * a thread can always fit into reactor in interrupt mode. */
+	if (dst->busy + dst->idle == 0) {
+		return true;
+	}
+
+	/* Core has no threads. */
+	if (dst->thread_count == 0) {
+		return true;
+	}
+
+	if (lw_thread->current_stats.busy_tsc <= dst->idle) {
+		return true;
+	}
+	return false;
+}
+
 static uint32_t
 _find_optimal_core(struct spdk_lw_thread *lw_thread)
 {
 	uint32_t i;
 	uint32_t target_lcore;
+	uint32_t current_lcore = lw_thread->lcore;
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
 	struct spdk_cpuset *cpumask = spdk_thread_get_cpumask(thread);
-	uint64_t thread_busy = lw_thread->current_stats.busy_tsc;
 
 	/* Find a core that can fit the thread. */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
@@ -144,8 +171,8 @@ _find_optimal_core(struct spdk_lw_thread *lw_thread)
 			continue;
 		}
 
-		/* Do not use main core if it is too busy for new thread. */
-		if (target_lcore == g_main_lcore && thread_busy > g_cores[g_main_lcore].idle) {
+		/* Skip cores that cannot fit the thread and current one. */
+		if (!_can_core_fit_thread(lw_thread, target_lcore) || target_lcore == current_lcore) {
 			continue;
 		}
 
@@ -153,7 +180,7 @@ _find_optimal_core(struct spdk_lw_thread *lw_thread)
 	}
 
 	/* If no better core is found, remain on the same one. */
-	return lw_thread->lcore;
+	return current_lcore;
 }
 
 static int
