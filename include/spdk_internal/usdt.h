@@ -35,16 +35,17 @@
 #define SPDK_INTERNAL_USDT_H
 
 #include "spdk/config.h"
+#include "spdk/env.h"
 
 #ifdef SPDK_CONFIG_USDT
 
 #include <sys/sdt.h>
 
-#define SPDK_DTRACE_PROBE(name)			DTRACE_PROBE(spdk,name)
-#define SPDK_DTRACE_PROBE1(name,a1)		DTRACE_PROBE1(spdk,name,a1)
-#define SPDK_DTRACE_PROBE2(name,a1,a2)		DTRACE_PROBE2(spdk,name,a1,a2)
-#define SPDK_DTRACE_PROBE3(name,a1,a2,a3)	DTRACE_PROBE3(spdk,name,a1,a2,a3)
-#define SPDK_DTRACE_PROBE4(name,a1,a2,a3,a4)	DTRACE_PROBE4(spdk,name,a1,a2,a3,a4)
+#define SPDK_DTRACE_PROBE(name)			DTRACE_PROBE1(spdk,name,spdk_get_ticks())
+#define SPDK_DTRACE_PROBE1(name,a1)		DTRACE_PROBE2(spdk,name,spdk_get_ticks(),a1)
+#define SPDK_DTRACE_PROBE2(name,a1,a2)		DTRACE_PROBE3(spdk,name,spdk_get_ticks(),a1,a2)
+#define SPDK_DTRACE_PROBE3(name,a1,a2,a3)	DTRACE_PROBE4(spdk,name,spdk_get_ticks(),a1,a2,a3)
+#define SPDK_DTRACE_PROBE4(name,a1,a2,a3,a4)	DTRACE_PROBE5(spdk,name,spdk_get_ticks(),a1,a2,a3,a4)
 
 #else
 
