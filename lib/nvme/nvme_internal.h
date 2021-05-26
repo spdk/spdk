@@ -518,9 +518,14 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_INIT_DELAY,
 
 	/**
-	 * Controller has not been initialized yet.
+	 * Check EN to prepare for controller initialization.
 	 */
-	NVME_CTRLR_STATE_INIT,
+	NVME_CTRLR_STATE_CHECK_EN,
+
+	/**
+	 * Controller has not started initialized yet.
+	 */
+	NVME_CTRLR_STATE_INIT = NVME_CTRLR_STATE_CHECK_EN,
 
 	/**
 	 * Waiting for CSTS.RDY to transition from 0 to 1 so that CC.EN may be set to 0.

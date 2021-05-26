@@ -1134,8 +1134,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 	switch (state) {
 	case NVME_CTRLR_STATE_INIT_DELAY:
 		return "delay init";
-	case NVME_CTRLR_STATE_INIT:
-		return "init";
+	case NVME_CTRLR_STATE_CHECK_EN:
+		return "check en";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		return "disable and wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
@@ -3124,7 +3124,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		}
 		break;
 
-	case NVME_CTRLR_STATE_INIT:
+	case NVME_CTRLR_STATE_CHECK_EN: /* synonymous with NVME_CTRLR_STATE_INIT */
 		/* Begin the hardware initialization by making sure the controller is disabled. */
 		if (cc.bits.en) {
 			NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1\n");
