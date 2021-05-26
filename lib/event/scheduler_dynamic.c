@@ -86,6 +86,22 @@ _get_thread_load(struct spdk_lw_thread *lw_thread)
 	return busy  * 100 / (busy + idle);
 }
 
+typedef void (*_foreach_fn)(struct spdk_lw_thread *lw_thread);
+
+static void
+_foreach_thread(struct spdk_scheduler_core_info *cores_info, _foreach_fn fn)
+{
+	struct spdk_scheduler_core_info *core;
+	uint32_t i, j;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		core = &cores_info[i];
+		for (j = 0; j < core->threads_count; j++) {
+			fn(core->threads[j]);
+		}
+	}
+}
+
 static void
 _move_thread(struct spdk_lw_thread *lw_thread, uint32_t dst_core)
 {
@@ -189,17 +205,31 @@ deinit(struct spdk_governor *governor)
 }
 
 static void
+_balance_thread(struct spdk_lw_thread *lw_thread)
+{
+	uint32_t target_lcore;
+	uint8_t load;
+
+	load = _get_thread_load(lw_thread);
+	if (load < SCHEDULER_LOAD_LIMIT) {
+		/* This thread is idle, move it to the main core. */
+		_move_thread(lw_thread, g_main_lcore);
+	} else {
+		/* This thread is active. */
+		target_lcore = _find_optimal_core(lw_thread);
+		_move_thread(lw_thread, target_lcore);
+	}
+}
+
+static void
 balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	struct spdk_governor *governor)
 {
 	struct spdk_reactor *reactor;
-	struct spdk_lw_thread *lw_thread;
 	struct spdk_scheduler_core_info *core;
 	struct core_stats *main_core;
-	uint32_t target_lcore;
-	uint32_t i, j;
+	uint32_t i;
 	int rc;
-	uint8_t load;
 	bool busy_threads_present = false;
 
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -210,23 +240,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 	main_core = &g_cores[g_main_lcore];
 
 	/* Distribute active threads across all cores and move idle threads to main core */
-	SPDK_ENV_FOREACH_CORE(i) {
-		core = &cores_info[i];
-
-		for (j = 0; j < core->threads_count; j++) {
-			lw_thread = core->threads[j];
-			load = _get_thread_load(lw_thread);
-
-			if (load < SCHEDULER_LOAD_LIMIT) {
-				/* This thread is idle, move it to the main core. */
-				_move_thread(lw_thread, g_main_lcore);
-			} else {
-				/* This thread is active. */
-				target_lcore = _find_optimal_core(lw_thread);
-				_move_thread(lw_thread, target_lcore);
-			}
-		}
-	}
+	_foreach_thread(cores_info, _balance_thread);
 
 	/* Switch unused cores to interrupt mode and switch cores to polled mode
 	 * if they will be used after rebalancing */
