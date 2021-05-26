@@ -543,6 +543,7 @@ test_scheduler(void)
 
 	/* Create threads. */
 	for (i = 0; i < 3; i++) {
+		spdk_cpuset_zero(&cpuset);
 		spdk_cpuset_set_cpu(&cpuset, i, true);
 		thread[i] = spdk_thread_create(NULL, &cpuset);
 		CU_ASSERT(thread[i] != NULL);
@@ -789,6 +790,7 @@ test_governor(void)
 
 	/* Create threads. */
 	for (i = 0; i < 2; i++) {
+		spdk_cpuset_zero(&cpuset);
 		spdk_cpuset_set_cpu(&cpuset, i, true);
 		thread[i] = spdk_thread_create(NULL, &cpuset);
 		CU_ASSERT(thread[i] != NULL);
