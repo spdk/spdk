@@ -518,14 +518,19 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_INIT_DELAY,
 
 	/**
-	 * Read Version (VS) register.
+	 * Connect the admin queue.
 	 */
-	NVME_CTRLR_STATE_READ_VS,
+	NVME_CTRLR_STATE_CONNECT_ADMINQ,
 
 	/**
 	 * Controller has not started initialized yet.
 	 */
-	NVME_CTRLR_STATE_INIT = NVME_CTRLR_STATE_READ_VS,
+	NVME_CTRLR_STATE_INIT = NVME_CTRLR_STATE_CONNECT_ADMINQ,
+
+	/**
+	 * Read Version (VS) register.
+	 */
+	NVME_CTRLR_STATE_READ_VS,
 
 	/**
 	 * Read Capabilities (CAP) register.

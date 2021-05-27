@@ -1959,13 +1959,6 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 		return NULL;
 	}
 
-	rc = nvme_transport_ctrlr_connect_qpair(&tctrlr->ctrlr, tctrlr->ctrlr.adminq);
-	if (rc < 0) {
-		SPDK_ERRLOG("failed to connect admin qpair\n");
-		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
-		return NULL;
-	}
-
 	if (nvme_ctrlr_add_process(&tctrlr->ctrlr, 0) != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");
 		nvme_ctrlr_destruct(&tctrlr->ctrlr);

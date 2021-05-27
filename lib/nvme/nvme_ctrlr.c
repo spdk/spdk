@@ -1135,6 +1135,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 	switch (state) {
 	case NVME_CTRLR_STATE_INIT_DELAY:
 		return "delay init";
+	case NVME_CTRLR_STATE_CONNECT_ADMINQ:
+		return "connect adminq";
 	case NVME_CTRLR_STATE_READ_VS:
 		return "read vs";
 	case NVME_CTRLR_STATE_READ_CAP:
@@ -1409,11 +1411,6 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
-	rc = nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
-	if (rc != 0) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Controller reinitialization failed.\n");
-		goto out;
-	}
 
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
@@ -1426,7 +1423,6 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
-	nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
 			NVME_CTRLR_ERRLOG(ctrlr, "controller reinitialization failed\n");
@@ -1456,7 +1452,6 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-out:
 	if (rc) {
 		nvme_ctrlr_fail(ctrlr, false);
 	}
@@ -3094,8 +3089,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	ctrlr->sleep_timeout_tsc = 0;
 
-	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
-	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
+	if (ctrlr->state > NVME_CTRLR_STATE_CONNECT_ADMINQ &&
+	    (nvme_ctrlr_get_cc(ctrlr, &cc) || nvme_ctrlr_get_csts(ctrlr, &csts))) {
 		if (!ctrlr->is_failed && ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
 			/* While a device is resetting, it may be unable to service MMIO reads
 			 * temporarily. Allow for this case.
@@ -3129,7 +3124,17 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		}
 		break;
 
-	case NVME_CTRLR_STATE_READ_VS: /* synonymous with NVME_CTRLR_STATE_INIT */
+	case NVME_CTRLR_STATE_CONNECT_ADMINQ: /* synonymous with NVME_CTRLR_STATE_INIT */
+		rc = nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
+		if (rc == 0) {
+			nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_VS, NVME_TIMEOUT_INFINITE);
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		}
+		break;
+
+	case NVME_CTRLR_STATE_READ_VS:
 		nvme_ctrlr_get_vs(ctrlr, &ctrlr->vs);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_CAP, NVME_TIMEOUT_INFINITE);
 		break;

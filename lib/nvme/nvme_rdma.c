@@ -1825,12 +1825,6 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 		goto destruct_ctrlr;
 	}
 
-	rc = nvme_transport_ctrlr_connect_qpair(&rctrlr->ctrlr, rctrlr->ctrlr.adminq);
-	if (rc < 0) {
-		SPDK_ERRLOG("failed to connect admin qpair\n");
-		goto destruct_ctrlr;
-	}
-
 	if (nvme_ctrlr_add_process(&rctrlr->ctrlr, 0) != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");
 		goto destruct_ctrlr;
