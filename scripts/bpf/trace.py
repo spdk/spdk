@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from itertools import islice
 from typing import Dict, List, TypeVar
 import json
 import os
@@ -9,6 +10,8 @@ import re
 import subprocess
 import sys
 import tempfile
+
+TSC_MAX = (1 << 64) - 1
 
 
 @dataclass
@@ -166,6 +169,7 @@ class Trace:
     """Stores, parses, and prints out SPDK traces"""
     def __init__(self, file):
         self._json = json.load(file)
+        self._objects = []
         self._argfmt = {TracepointArgument.TYPE_PTR: lambda a: f'0x{a:x}'}
         self.tpoints = {t.id: t for t in self._parse_tpoints()}
         self.tsc_rate = self._json['tsc_rate']
@@ -192,12 +196,29 @@ class Trace:
         for entry in self._json.get('entries', []):
             yield self._parse_entry(entry)
 
+    def _annotate_args(self, entry):
+        annotations = {}
+        for obj in self._objects:
+            current = obj.annotate(entry)
+            if current is None:
+                continue
+            annotations.update(current)
+        return annotations
+
     def _format_args(self, entry):
+        annotations = self._annotate_args(entry)
         args = []
         for arg, (name, value) in zip(entry.tpoint.args, entry.args.items()):
-            args.append('{}: {}'.format(name, self._argfmt.get(arg.argtype,
-                                                               lambda a: a)(value)))
+            annot = annotations.get(name)
+            if annot is not None:
+                args.append('{}({})'.format(name, ', '.join(f'{n}={v}' for n, v in annot.items())))
+            else:
+                args.append('{}: {}'.format(name, self._argfmt.get(arg.argtype,
+                                                                   lambda a: a)(value)))
         return args
+
+    def register_object(self, obj):
+        self._objects.append(obj)
 
     def print(self):
         def get_us(tsc, off):
@@ -223,7 +244,90 @@ class Trace:
             print(' '.join([*filter(lambda f: f is not None, fields)]).rstrip())
 
 
-def build_dtrace():
+class SPDKObject:
+    """Describes a specific type of an SPDK objects (e.g. qpair, thread, etc.)"""
+    @dataclass
+    class Lifetime:
+        """Describes a lifetime and properites of a particular SPDK object."""
+        begin: int
+        end: int
+        ptr: int
+        properties: dict = field(default_factory=dict)
+
+    def __init__(self, trace: Trace, tpoints: List[str]):
+        self.tpoints = {}
+        for name in tpoints:
+            tpoint = next((t for t in trace.tpoints.values() if t.name == name), None)
+            if tpoint is None:
+                # Some tpoints might be undefined if configured without specific subystems
+                continue
+            self.tpoints[tpoint.id] = tpoint
+
+    def _annotate(self, entry: TraceEntry):
+        """Abstract annotation method to be implemented by subclasses."""
+        raise NotImplementedError()
+
+    def annotate(self, entry: TraceEntry):
+        """Annotates a tpoint entry and returns a dict indexed by argname with values representing
+        various object properites.  For instance, {"qpair": {"qid": 1, "subnqn": "nqn"}} could be
+        returned to annotate an argument called "qpair" with two items: "qid" and "subnqn".
+        """
+        if entry.tpoint.id not in self.tpoints:
+            return None
+        return self._annotate(entry)
+
+
+class QPair(SPDKObject):
+    def __init__(self, trace: Trace, dtrace: DTrace):
+        super().__init__(trace, tpoints=[
+            'RDMA_REQ_NEW',
+            'RDMA_REQ_NEED_BUFFER',
+            'RDMA_REQ_TX_PENDING_C2H',
+            'RDMA_REQ_TX_PENDING_H2C',
+            'RDMA_REQ_TX_H2C',
+            'RDMA_REQ_RDY_TO_EXECUTE',
+            'RDMA_REQ_EXECUTING',
+            'RDMA_REQ_EXECUTED',
+            'RDMA_REQ_RDY_TO_COMPL',
+            'RDMA_REQ_COMPLETING_C2H',
+            'RDMA_REQ_COMPLETING',
+            'RDMA_REQ_COMPLETED'])
+        self._objects = []
+        self._find_objects(dtrace.entries)
+
+    def _find_objects(self, dprobes):
+        def probe_match(probe, other):
+            return probe.args['qpair'] == other.args['qpair']
+
+        for i, dprobe in enumerate(dprobes):
+            if dprobe.name != 'nvmf_poll_group_add_qpair':
+                continue
+            # We've found a new qpair, now find the probe indicating its destruction
+            last_idx, last = next((((i + j + 1), d) for j, d in enumerate(islice(dprobes, i, None))
+                                   if d.name == 'nvmf_poll_group_remove_qpair' and
+                                   probe_match(d, dprobe)), (None, None))
+            obj = SPDKObject.Lifetime(begin=dprobe.args['tsc'],
+                                      end=last.args['tsc'] if last is not None else TSC_MAX,
+                                      ptr=dprobe.args['qpair'],
+                                      properties={'ptr': hex(dprobe.args['qpair']),
+                                                  'thread': dprobe.args['thread']})
+            for other in filter(lambda p: probe_match(p, dprobe), dprobes[i:last_idx]):
+                if other.name == 'nvmf_ctrlr_add_qpair':
+                    for prop in ['qid', 'subnqn', 'hostnqn']:
+                        obj.properties[prop] = other.args[prop]
+            self._objects.append(obj)
+
+    def _annotate(self, entry):
+        qpair = entry.args.get('qpair')
+        if qpair is None:
+            return None
+        for obj in self._objects:
+            if obj.ptr == qpair and obj.begin <= entry.tsc <= obj.end:
+                return {'qpair': obj.properties}
+        return None
+
+
+def build_dtrace(file=None):
     return DTrace([
         DTraceProbe(
             name='nvmf_poll_group_add_qpair',
@@ -241,7 +345,14 @@ def build_dtrace():
                   DTraceArgument(name='qpair', pos=1, type=int),
                   DTraceArgument(name='qid', pos=2, type=int),
                   DTraceArgument(name='subnqn', pos=3, type=str),
-                  DTraceArgument(name='hostnqn', pos=4, type=str)])])
+                  DTraceArgument(name='hostnqn', pos=4, type=str)])], file)
+
+
+def print_trace(trace_file, dtrace_file):
+    dtrace = build_dtrace(dtrace_file)
+    trace = Trace(trace_file)
+    trace.register_object(QPair(trace, dtrace))
+    trace.print()
 
 
 def main(argv):
@@ -250,6 +361,7 @@ def main(argv):
                         help='JSON-formatted trace file produced by spdk_trace app')
     parser.add_argument('-g', '--generate', help='Generate bpftrace script', action='store_true')
     parser.add_argument('-r', '--record', help='Record BPF traces on PID', metavar='PID', type=int)
+    parser.add_argument('-b', '--bpftrace', help='BPF trace script to use for annotations')
     args = parser.parse_args(argv)
 
     if args.generate:
@@ -257,8 +369,8 @@ def main(argv):
     elif args.record:
         build_dtrace().record(args.record)
     else:
-        file = open(args.input, 'r') if args.input is not None else sys.stdin
-        Trace(file).print()
+        print_trace(open(args.input, 'r') if args.input is not None else sys.stdin,
+                    open(args.bpftrace) if args.bpftrace is not None else None)
 
 
 if __name__ == '__main__':
