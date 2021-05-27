@@ -3,7 +3,11 @@
 ## v21.07: (Upcoming Release)
 
 ### bdev
+
 Change `spdk_bdev_read_blocks_with_md` arg offset definiton from int64_t to uint64_t.
+
+Red-black tree has been used to organize the bdev names and aliases uniformly
+to provide faster lookup.
 
 ### dpdk
 
@@ -52,6 +56,16 @@ Removed ZCOPY emulation: The bdev module can be checked to see if it supports ZC
 and if not supported then use existing READ/WRITE commands.
 
 Added iov to spdk_bdev_zcopy_start
+
+### thread
+
+Red-black tree has been used for timed pollers to provide faster insertion and deletion
+and for io_devices to provide faster lookup.
+
+### util
+
+Red-black tree macros has been added by using the macros provided by the FreeBSD operating system
+under the same BSD license.
 
 ## v21.04:
 
