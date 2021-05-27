@@ -1438,13 +1438,13 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/*
-	 * For PCIe controllers, the memory locations of the transport qpair
+	 * For non-fabrics controllers, the memory locations of the transport qpair
 	 * don't change when the controller is reset. They simply need to be
 	 * re-enabled with admin commands to the controller. For fabric
 	 * controllers we need to disconnect and reconnect the qpair on its
 	 * own thread outside of the context of the reset.
 	 */
-	if (rc == 0 && ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+	if (rc == 0 && !spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			assert(spdk_bit_array_get(ctrlr->free_io_qids, qpair->id));
