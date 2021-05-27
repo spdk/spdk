@@ -271,6 +271,21 @@ cuse_nvme_reset_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
 }
 
 static void
+cuse_nvme_subsys_reset_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *arg)
+{
+	int rc;
+	fuse_req_t req = arg;
+
+	rc = spdk_nvme_ctrlr_reset_subsystem(ctrlr);
+	if (rc) {
+		fuse_reply_err(req, rc);
+		return;
+	}
+
+	fuse_reply_ioctl_iov(req, 0, NULL, 0);
+}
+
+static void
 cuse_nvme_reset(fuse_req_t req, int cmd, void *arg,
 		struct fuse_file_info *fi, unsigned flags,
 		const void *in_buf, size_t in_bufsz, size_t out_bufsz)
@@ -284,7 +299,14 @@ cuse_nvme_reset(fuse_req_t req, int cmd, void *arg,
 		return;
 	}
 
-	rv = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_reset_execute, (void *)req);
+	if (cmd == NVME_IOCTL_SUBSYS_RESET) {
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_SUBSYS_RESET\n");
+		rv = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_subsys_reset_execute,
+				      (void *)req);
+	} else {
+		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_RESET\n");
+		rv = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_reset_execute, (void *)req);
+	}
 	if (rv) {
 		SPDK_ERRLOG("Cannot send reset\n");
 		fuse_reply_err(req, EINVAL);
@@ -589,7 +611,7 @@ cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 		break;
 
 	case NVME_IOCTL_RESET:
-		SPDK_DEBUGLOG(nvme_cuse, "NVME_IOCTL_RESET\n");
+	case NVME_IOCTL_SUBSYS_RESET:
 		cuse_nvme_reset(req, cmd, arg, fi, flags, in_buf, in_bufsz, out_bufsz);
 		break;
 

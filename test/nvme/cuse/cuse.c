@@ -64,6 +64,8 @@ spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 
 DEFINE_STUB(spdk_nvme_ctrlr_reset, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+
 DEFINE_STUB(spdk_nvme_ns_cmd_read, int, (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		void *payload,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,

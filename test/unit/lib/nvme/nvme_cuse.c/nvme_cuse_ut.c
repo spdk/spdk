@@ -51,6 +51,8 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
 
 DEFINE_STUB(spdk_nvme_ctrlr_reset, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
+DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+
 DEFINE_STUB(spdk_nvme_ns_cmd_read, int,
 	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	     void *payload, uint64_t lba, uint32_t lba_count,
