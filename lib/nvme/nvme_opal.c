@@ -841,7 +841,37 @@ static int
 opal_discovery0(struct spdk_opal_dev *dev, void *payload, uint32_t payload_size)
 {
 	int ret;
+	uint16_t i, sp_list_len;
+	uint8_t *sp_list;
+	bool sp_tcg_supported = false;
 
+	/* NVMe 1.4 chapter 5.25.2 Security Protocol 00h */
+	ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_INFO, 0,
+					       0, payload, payload_size);
+	if (ret) {
+		return ret;
+	}
+
+	/* spc4r31 chapter 7.7.1.3 Supported security protocols list description */
+	sp_list_len = from_be16(payload + 6);
+	sp_list = (uint8_t *)payload + 8;
+
+	if (sp_list_len + 8 > (int)payload_size) {
+		return -EINVAL;
+	}
+
+	for (i = 0; i < sp_list_len; i++) {
+		if (sp_list[i] == SPDK_SCSI_SECP_TCG) {
+			sp_tcg_supported = true;
+			break;
+		}
+	}
+
+	if (!sp_tcg_supported) {
+		return -ENOTSUP;
+	}
+
+	memset(payload, 0, payload_size);
 	ret = spdk_nvme_ctrlr_security_receive(dev->ctrlr, SPDK_SCSI_SECP_TCG, LV0_DISCOVERY_COMID,
 					       0, payload, payload_size);
 	if (ret) {
