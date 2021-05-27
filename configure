@@ -166,7 +166,7 @@ fi
 
 #check nasm only on x86
 if [[ $arch == x86_64* ]]; then
-	ver=$(nasm -v 2> /dev/null | awk '{print $3}')
+	ver=$(nasm -v 2> /dev/null | awk '{print $3}' | awk -Fr '{print $1}')
 	if lt "$ver" 2.14; then
 		# ISA-L, compression & crypto require NASM version 2.14 or newer.
 		CONFIG[ISAL]=n
