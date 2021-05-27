@@ -3232,8 +3232,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_RESET_ADMIN_QUEUE:
 		nvme_transport_qpair_reset(ctrlr->adminq);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY,
-				     ctrlr->opts.admin_timeout_ms);
+		if (spdk_nvme_ctrlr_is_discovery(ctrlr)) {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY, ctrlr->opts.admin_timeout_ms);
+		}
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY:

@@ -87,6 +87,8 @@ DEFINE_STUB(nvme_wait_for_completion_timeout, int,
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *,
 	    (enum spdk_nvmf_adrfam adrfam), NULL);
 
+DEFINE_STUB(nvme_ctrlr_process_init, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+
 int
 spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
 {

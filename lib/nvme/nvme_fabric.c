@@ -265,7 +265,6 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 {
 	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
-	union spdk_nvme_cc_register cc;
 	int rc;
 	struct nvme_completion_poll_status *status;
 
@@ -283,19 +282,12 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
-	nvme_qpair_set_state(discovery_ctrlr->adminq, NVME_QPAIR_ENABLED);
 
-	/* TODO: this should be using the normal NVMe controller initialization process +1 */
-	cc.raw = 0;
-	cc.bits.en = 1;
-	cc.bits.iosqes = 6; /* SQ entry size == 64 == 2^6 */
-	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
-	rc = nvme_transport_ctrlr_set_reg_4(discovery_ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
-					    cc.raw);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to set cc\n");
-		nvme_ctrlr_destruct(discovery_ctrlr);
-		return -1;
+	while (discovery_ctrlr->state != NVME_CTRLR_STATE_READY) {
+		if (nvme_ctrlr_process_init(discovery_ctrlr) != 0) {
+			nvme_ctrlr_destruct(discovery_ctrlr);
+			return -1;
+		}
 	}
 
 	status = calloc(1, sizeof(*status));
