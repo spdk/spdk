@@ -398,7 +398,7 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec 
 	assert(iov != NULL);
 
 	ret = vfu_addr_to_sg(ctx, (void *)(uintptr_t)addr, len, sg, 1, PROT_READ | PROT_WRITE);
-	if (ret != 1) {
+	if (ret < 0) {
 		return NULL;
 	}
 
@@ -1478,7 +1478,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 	struct pxcap pxcap = {
 		.hdr.id = PCI_CAP_ID_EXP,
 		.pxcaps.ver = 0x2,
-		.pxdcap = {.per = 0x1, .flrc = 0x1},
+		.pxdcap = {.rer = 0x1, .flrc = 0x1},
 		.pxdcap2.ctds = 0x1
 	};
 

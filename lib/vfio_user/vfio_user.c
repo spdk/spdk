@@ -296,18 +296,26 @@ vfio_user_get_dev_info(struct vfio_device *dev, struct vfio_user_device_info *de
 int
 vfio_user_dev_dma_map_unmap(struct vfio_device *dev, struct vfio_memory_region *mr, bool map)
 {
-	struct vfio_user_dma_region region = { 0 };
+	struct vfio_user_dma_map dma_map = { 0 };
+	struct vfio_user_dma_unmap dma_unmap = { 0 };
 
-	region.addr = mr->iova;
-	region.size = mr->size;
-	region.offset = mr->offset;
 	if (map) {
-		region.flags = VFIO_USER_F_DMA_REGION_MAPPABLE;
-		region.prot = PROT_READ | PROT_WRITE;
-	}
+		dma_map.argsz = sizeof(struct vfio_user_dma_map);
+		dma_map.addr = mr->iova;
+		dma_map.size = mr->size;
+		dma_map.offset = mr->offset;
+		dma_map.flags = VFIO_USER_F_DMA_REGION_READ | VFIO_USER_F_DMA_REGION_WRITE |
+				VFIO_USER_F_DMA_REGION_MAPPABLE;
 
-	return vfio_user_dev_send_request(dev, map ? VFIO_USER_DMA_MAP : VFIO_USER_DMA_UNMAP,
-					  &region, sizeof(region), sizeof(region), &mr->fd, 1);
+		return vfio_user_dev_send_request(dev, VFIO_USER_DMA_MAP,
+						  &dma_map, sizeof(dma_map), sizeof(dma_map), &mr->fd, 1);
+	} else {
+		dma_unmap.argsz = sizeof(struct vfio_user_dma_unmap);
+		dma_unmap.addr = mr->iova;
+		dma_unmap.size = mr->size;
+		return vfio_user_dev_send_request(dev, VFIO_USER_DMA_UNMAP,
+						  &dma_unmap, sizeof(dma_unmap), sizeof(dma_unmap), &mr->fd, 1);
+	}
 }
 
 int
