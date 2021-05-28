@@ -189,7 +189,7 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 struct rpc_thread_info {
 	char *name;
 	uint64_t id;
-	uint32_t core_num;
+	int core_num;
 	char *cpumask;
 	uint64_t busy;
 	uint64_t last_busy;
@@ -1389,7 +1389,7 @@ refresh_cores_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[CORES_TAB];
 	uint64_t i;
-	uint32_t core_num;
+	int core_num;
 	uint16_t offset, count = 0;
 	uint8_t max_pages, item_index;
 	static uint8_t last_page = 0;
@@ -1402,6 +1402,10 @@ refresh_cores_tab(uint8_t current_page)
 
 	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
 		core_num = g_threads_stats.threads.thread_info[i].core_num;
+		/* If the thread is hanging, do not count it. */
+		if (core_num == -1) {
+			continue;
+		}
 		cores[core_num].threads_count++;
 		cores[core_num].pollers_count += g_threads_stats.threads.thread_info[i].active_pollers_count +
 						 g_threads_stats.threads.thread_info[i].timed_pollers_count +
