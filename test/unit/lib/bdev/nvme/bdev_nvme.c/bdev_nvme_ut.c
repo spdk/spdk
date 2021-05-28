@@ -1343,7 +1343,6 @@ test_pending_reset(void)
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
 	struct spdk_bdev_io *first_bdev_io, *second_bdev_io;
-	struct nvme_bdev_io *first_bio, *second_bio;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_io_channel *nvme_ch1, *nvme_ch2;
 	int rc;
@@ -1354,12 +1353,10 @@ test_pending_reset(void)
 	first_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
 	SPDK_CU_ASSERT_FATAL(first_bdev_io != NULL);
 	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-	first_bio = (struct nvme_bdev_io *)first_bdev_io->driver_ctx;
 
 	second_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
 	SPDK_CU_ASSERT_FATAL(second_bdev_io != NULL);
 	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-	second_bio = (struct nvme_bdev_io *)second_bdev_io->driver_ctx;
 
 	set_thread(0);
 
@@ -1394,14 +1391,14 @@ test_pending_reset(void)
 	/* The first reset request is submitted on thread 1, and the second reset request
 	 * is submitted on thread 0 while processing the first request.
 	 */
-	rc = bdev_nvme_reset(nvme_ch2, first_bio);
+	rc = bdev_nvme_reset(nvme_ch2, first_bdev_io);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_bdev_ctrlr->resetting == true);
 	CU_ASSERT(TAILQ_EMPTY(&nvme_ch2->pending_resets));
 
 	set_thread(0);
 
-	rc = bdev_nvme_reset(nvme_ch1, second_bio);
+	rc = bdev_nvme_reset(nvme_ch1, second_bdev_io);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_FIRST(&nvme_ch1->pending_resets) == second_bdev_io);
 
@@ -1419,14 +1416,14 @@ test_pending_reset(void)
 	 */
 	set_thread(1);
 
-	rc = bdev_nvme_reset(nvme_ch2, first_bio);
+	rc = bdev_nvme_reset(nvme_ch2, first_bdev_io);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_bdev_ctrlr->resetting == true);
 	CU_ASSERT(TAILQ_EMPTY(&nvme_ch2->pending_resets));
 
 	set_thread(0);
 
-	rc = bdev_nvme_reset(nvme_ch1, second_bio);
+	rc = bdev_nvme_reset(nvme_ch1, second_bdev_io);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_FIRST(&nvme_ch1->pending_resets) == second_bdev_io);
 

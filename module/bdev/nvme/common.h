@@ -107,7 +107,7 @@ struct nvme_bdev_ctrlr {
 
 	struct ocssd_bdev_ctrlr			*ocssd_ctrlr;
 
-	struct nvme_bdev_io			*reset_bio;
+	struct spdk_bdev_io			*reset_bdev_io;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)		tailq;

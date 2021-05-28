@@ -187,7 +187,7 @@ static int bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int bdev_nvme_abort(struct nvme_io_channel *nvme_ch,
 			   struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
-static int bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio);
+static int bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct spdk_bdev_io *bdev_io);
 static int bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
@@ -255,16 +255,13 @@ static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
-
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct,
-					  cpl->status.sc);
+	spdk_bdev_io_complete_nvme_status(spdk_bdev_io_from_ctx(bio), cpl->cdw0,
+					  cpl->status.sct, cpl->status.sc);
 }
 
 static inline void
 bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	enum spdk_bdev_io_status io_status;
 
 	if (rc == 0) {
@@ -275,7 +272,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
-	spdk_bdev_io_complete(bdev_io, io_status);
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), io_status);
 }
 
 static void
@@ -489,7 +486,7 @@ bdev_nvme_abort_pending_resets(struct spdk_io_channel_iter *i)
 
 static void
 bdev_nvme_reset_io_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-			    struct nvme_bdev_io *bio, int rc)
+			    struct spdk_bdev_io *bdev_io, int rc)
 {
 	enum spdk_bdev_io_status io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
@@ -497,7 +494,7 @@ bdev_nvme_reset_io_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), io_status);
+	spdk_bdev_io_complete(bdev_io, io_status);
 
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_bdev_ctrlr,
@@ -511,9 +508,9 @@ static void
 _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 {
 	struct nvme_bdev_ctrlr_trid *curr_trid;
-	struct nvme_bdev_io *bio = nvme_bdev_ctrlr->reset_bio;
+	struct spdk_bdev_io *bdev_io = nvme_bdev_ctrlr->reset_bdev_io;
 
-	nvme_bdev_ctrlr->reset_bio = NULL;
+	nvme_bdev_ctrlr->reset_bdev_io = NULL;
 
 	if (rc) {
 		SPDK_ERRLOG("Resetting controller failed.\n");
@@ -538,8 +535,8 @@ _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 
 	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 
-	if (bio) {
-		bdev_nvme_reset_io_complete(nvme_bdev_ctrlr, bio, rc);
+	if (bdev_io) {
+		bdev_nvme_reset_io_complete(nvme_bdev_ctrlr, bdev_io, rc);
 	} else {
 		/* Make sure we clear any pending resets before returning. */
 		spdk_for_each_channel(nvme_bdev_ctrlr,
@@ -637,15 +634,14 @@ _bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 }
 
 static int
-bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio)
+bdev_nvme_reset(struct nvme_io_channel *nvme_ch, struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	int rc;
 
 	rc = _bdev_nvme_reset(nvme_ch->ctrlr);
 	if (rc == 0) {
-		assert(nvme_ch->ctrlr->reset_bio == NULL);
-		nvme_ch->ctrlr->reset_bio = bio;
+		assert(nvme_ch->ctrlr->reset_bdev_io == NULL);
+		nvme_ch->ctrlr->reset_bdev_io = bdev_io;
 	} else if (rc == -EAGAIN) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
@@ -767,7 +763,7 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 
 	ret = bdev_nvme_readv(nvme_ns->ns,
 			      qpair,
-			      (struct nvme_bdev_io *)bdev_io->driver_ctx,
+			      bio,
 			      bdev_io->u.bdev.iovs,
 			      bdev_io->u.bdev.iovcnt,
 			      bdev_io->u.bdev.md_buf,
@@ -859,7 +855,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				     bdev_io->u.bdev.num_blocks);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		rc = bdev_nvme_reset(nvme_ch, nbdev_io);
+		rc = bdev_nvme_reset(nvme_ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = bdev_nvme_flush(nvme_ns->ns,
@@ -2508,8 +2504,9 @@ bdev_nvme_library_fini(void)
 }
 
 static void
-bdev_nvme_verify_pi_error(struct spdk_bdev_io *bdev_io)
+bdev_nvme_verify_pi_error(struct nvme_bdev_io *bio)
 {
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_dif_ctx dif_ctx;
 	struct spdk_dif_error err_blk = {};
@@ -2549,11 +2546,10 @@ static void
 bdev_nvme_no_pi_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	if (spdk_nvme_cpl_is_success(cpl)) {
 		/* Run PI verification for read data buffer. */
-		bdev_nvme_verify_pi_error(bdev_io);
+		bdev_nvme_verify_pi_error(bio);
 	}
 
 	/* Return original completion status */
@@ -2603,13 +2599,12 @@ static void
 bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	if (spdk_nvme_cpl_is_pi_error(cpl)) {
 		SPDK_ERRLOG("writev completed with PI error (sct=%d, sc=%d)\n",
 			    cpl->status.sct, cpl->status.sc);
 		/* Run PI verification for write data buffer if PI error is detected. */
-		bdev_nvme_verify_pi_error(bdev_io);
+		bdev_nvme_verify_pi_error(bio);
 	}
 
 	bdev_nvme_io_complete_nvme_status(bio, cpl);
@@ -2630,7 +2625,7 @@ bdev_nvme_zone_appendv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		SPDK_ERRLOG("zone append completed with PI error (sct=%d, sc=%d)\n",
 			    cpl->status.sct, cpl->status.sc);
 		/* Run PI verification for zone append data buffer if PI error is detected. */
-		bdev_nvme_verify_pi_error(bdev_io);
+		bdev_nvme_verify_pi_error(bio);
 	}
 
 	bdev_nvme_io_complete_nvme_status(bio, cpl);
@@ -2640,13 +2635,12 @@ static void
 bdev_nvme_comparev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	if (spdk_nvme_cpl_is_pi_error(cpl)) {
 		SPDK_ERRLOG("comparev completed with PI error (sct=%d, sc=%d)\n",
 			    cpl->status.sct, cpl->status.sc);
 		/* Run PI verification for compare data buffer if PI error is detected. */
-		bdev_nvme_verify_pi_error(bdev_io);
+		bdev_nvme_verify_pi_error(bio);
 	}
 
 	bdev_nvme_io_complete_nvme_status(bio, cpl);
