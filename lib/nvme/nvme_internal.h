@@ -455,6 +455,7 @@ struct spdk_nvme_qpair {
 	const struct spdk_nvme_transport	*transport;
 
 	uint8_t					transport_failure_reason: 2;
+	uint8_t					last_transport_failure_reason: 2;
 };
 
 struct spdk_nvme_poll_group {
