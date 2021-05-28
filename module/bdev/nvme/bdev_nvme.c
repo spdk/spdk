@@ -941,7 +941,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	struct spdk_nvme_ctrlr *ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
 
-	nvme_ns = nvme_bdev_to_bdev_ns(nbdev);
+	nvme_ns = nbdev->nvme_ns;
 	assert(nvme_ns != NULL);
 	ns = nvme_ns->ns;
 	ctrlr = spdk_nvme_ns_get_ctrlr(ns);
@@ -1179,7 +1179,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	union spdk_nvme_csts_register csts;
 	char buf[128];
 
-	nvme_ns = nvme_bdev_to_bdev_ns(nvme_bdev);
+	nvme_ns = nvme_bdev->nvme_ns;
 	assert(nvme_ns != NULL);
 	ns = nvme_ns->ns;
 	ctrlr = spdk_nvme_ns_get_ctrlr(ns);
