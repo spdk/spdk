@@ -262,6 +262,66 @@ dummy_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
 }
 
+int
+nvme_wait_for_completion_robust_lock_timeout_poll(struct spdk_nvme_qpair *qpair,
+		struct nvme_completion_poll_status *status,
+		pthread_mutex_t *robust_mutex)
+{
+	int rc;
+
+	if (robust_mutex) {
+		nvme_robust_mutex_lock(robust_mutex);
+	}
+
+	if (qpair->poll_group) {
+		rc = (int)spdk_nvme_poll_group_process_completions(qpair->poll_group->group, 0,
+				dummy_disconnected_qpair_cb);
+	} else {
+		rc = spdk_nvme_qpair_process_completions(qpair, 0);
+	}
+
+	if (robust_mutex) {
+		nvme_robust_mutex_unlock(robust_mutex);
+	}
+
+	if (rc < 0) {
+		status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+		goto error;
+	}
+
+	if (!status->done && status->timeout_tsc && spdk_get_ticks() > status->timeout_tsc) {
+		goto error;
+	}
+
+	if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		union spdk_nvme_csts_register csts = spdk_nvme_ctrlr_get_regs_csts(qpair->ctrlr);
+		if (csts.raw == SPDK_NVME_INVALID_REGISTER_VALUE) {
+			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			status->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			goto error;
+		}
+	}
+
+	if (!status->done) {
+		return -EAGAIN;
+	} else if (spdk_nvme_cpl_is_error(&status->cpl)) {
+		return -EIO;
+	} else {
+		return 0;
+	}
+error:
+	/* Either transport error occurred or we've timed out.  Either way, if the response hasn't
+	 * been received yet, mark the command as timed out, so the status gets freed when the
+	 * command is completed or aborted.
+	 */
+	if (!status->done) {
+		status->timed_out = true;
+	}
+
+	return -ECANCELED;
+}
+
 /**
  * Poll qpair for completions until a command completes.
  *
@@ -285,7 +345,7 @@ nvme_wait_for_completion_robust_lock_timeout(
 	pthread_mutex_t *robust_mutex,
 	uint64_t timeout_in_usecs)
 {
-	int rc = 0;
+	int rc;
 
 	if (timeout_in_usecs) {
 		status->timeout_tsc = spdk_get_ticks() + timeout_in_usecs *
@@ -294,50 +354,12 @@ nvme_wait_for_completion_robust_lock_timeout(
 		status->timeout_tsc = 0;
 	}
 
-	while (status->done == false) {
-		if (robust_mutex) {
-			nvme_robust_mutex_lock(robust_mutex);
-		}
+	status->cpl.status_raw = 0;
+	do {
+		rc = nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, robust_mutex);
+	} while (rc == -EAGAIN);
 
-		if (qpair->poll_group) {
-			rc = (int)spdk_nvme_poll_group_process_completions(qpair->poll_group->group, 0,
-					dummy_disconnected_qpair_cb);
-		} else {
-			rc = spdk_nvme_qpair_process_completions(qpair, 0);
-		}
-
-		if (robust_mutex) {
-			nvme_robust_mutex_unlock(robust_mutex);
-		}
-
-		if (rc < 0) {
-			status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
-			break;
-		}
-		if (status->timeout_tsc && spdk_get_ticks() > status->timeout_tsc) {
-			rc = -1;
-			break;
-		}
-		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
-			union spdk_nvme_csts_register csts = spdk_nvme_ctrlr_get_regs_csts(qpair->ctrlr);
-			if (csts.raw == SPDK_NVME_INVALID_REGISTER_VALUE) {
-				status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-				status->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-				break;
-			}
-		}
-	}
-
-	if (status->done == false) {
-		status->timed_out = true;
-	}
-
-	if (rc < 0) {
-		return -ECANCELED;
-	}
-
-	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
+	return rc;
 }
 
 /**

@@ -1038,6 +1038,9 @@ int	nvme_wait_for_completion_robust_lock_timeout(struct spdk_nvme_qpair *qpair,
 		struct nvme_completion_poll_status *status,
 		pthread_mutex_t *robust_mutex,
 		uint64_t timeout_in_usecs);
+int	nvme_wait_for_completion_robust_lock_timeout_poll(struct spdk_nvme_qpair *qpair,
+		struct nvme_completion_poll_status *status,
+		pthread_mutex_t *robust_mutex);
 
 struct spdk_nvme_ctrlr_process *nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr,
 		pid_t pid);
