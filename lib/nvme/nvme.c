@@ -285,11 +285,13 @@ nvme_wait_for_completion_robust_lock_timeout(
 	pthread_mutex_t *robust_mutex,
 	uint64_t timeout_in_usecs)
 {
-	uint64_t timeout_tsc = 0;
 	int rc = 0;
 
 	if (timeout_in_usecs) {
-		timeout_tsc = spdk_get_ticks() + timeout_in_usecs * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+		status->timeout_tsc = spdk_get_ticks() + timeout_in_usecs *
+				      spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	} else {
+		status->timeout_tsc = 0;
 	}
 
 	while (status->done == false) {
@@ -313,7 +315,7 @@ nvme_wait_for_completion_robust_lock_timeout(
 			status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
 			break;
 		}
-		if (timeout_tsc && spdk_get_ticks() > timeout_tsc) {
+		if (status->timeout_tsc && spdk_get_ticks() > status->timeout_tsc) {
 			rc = -1;
 			break;
 		}

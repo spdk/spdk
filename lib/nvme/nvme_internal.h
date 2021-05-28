@@ -382,6 +382,7 @@ struct nvme_request {
 
 struct nvme_completion_poll_status {
 	struct spdk_nvme_cpl	cpl;
+	uint64_t		timeout_tsc;
 	bool			done;
 	/* This flag indicates that the request has been timed out and the memory
 	   must be freed in a completion callback */
