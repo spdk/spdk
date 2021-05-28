@@ -40,7 +40,6 @@
 #include "spdk/thread.h"
 #include "spdk_internal/event.h"
 
-static uint32_t g_next_lcore = SPDK_ENV_LCORE_ID_ANY;
 static uint32_t g_main_lcore;
 static bool g_core_mngmnt_available;
 
@@ -55,21 +54,6 @@ static struct core_stats *g_cores;
 #define SCHEDULER_THREAD_BUSY 100
 #define SCHEDULER_LOAD_LIMIT 50
 #define SCHEDULER_CORE_LIMIT 95
-
-static uint32_t
-_get_next_target_core(void)
-{
-	uint32_t target_lcore;
-
-	if (g_next_lcore == SPDK_ENV_LCORE_ID_ANY) {
-		g_next_lcore = spdk_env_get_first_core();
-	}
-
-	target_lcore = g_next_lcore;
-	g_next_lcore = spdk_env_get_next_core(g_next_lcore);
-
-	return target_lcore;
-}
 
 static uint8_t
 _get_thread_load(struct spdk_lw_thread *lw_thread)
@@ -188,7 +172,6 @@ static uint32_t
 _find_optimal_core(struct spdk_lw_thread *lw_thread)
 {
 	uint32_t i;
-	uint32_t target_lcore;
 	uint32_t current_lcore = lw_thread->lcore;
 	uint32_t least_busy_lcore = lw_thread->lcore;
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
@@ -196,30 +179,28 @@ _find_optimal_core(struct spdk_lw_thread *lw_thread)
 	bool core_over_limit = _is_core_over_limit(current_lcore);
 
 	/* Find a core that can fit the thread. */
-	for (i = 0; i < spdk_env_get_core_count(); i++) {
-		target_lcore = _get_next_target_core();
-
+	SPDK_ENV_FOREACH_CORE(i) {
 		/* Ignore cores outside cpumask. */
-		if (!spdk_cpuset_get_cpu(cpumask, target_lcore)) {
+		if (!spdk_cpuset_get_cpu(cpumask, i)) {
 			continue;
 		}
 
 		/* Search for least busy core. */
-		if (g_cores[target_lcore].busy < g_cores[least_busy_lcore].busy) {
-			least_busy_lcore = target_lcore;
+		if (g_cores[i].busy < g_cores[least_busy_lcore].busy) {
+			least_busy_lcore = i;
 		}
 
 		/* Skip cores that cannot fit the thread and current one. */
-		if (!_can_core_fit_thread(lw_thread, target_lcore) || target_lcore == current_lcore) {
+		if (!_can_core_fit_thread(lw_thread, i) || i == current_lcore) {
 			continue;
 		}
 
-		if (target_lcore < current_lcore) {
+		if (i < current_lcore) {
 			/* Lower core id was found, move to consolidate threads on lowest core ids. */
-			return target_lcore;
+			return i;
 		} else if (core_over_limit) {
 			/* When core is over the limit, even higher core ids are better than current one. */
-			return target_lcore;
+			return i;
 		}
 	}
 
