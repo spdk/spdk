@@ -1411,8 +1411,10 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	tqpair.qpair.ctrlr->opts.data_digest = true;
 	TAILQ_INIT(&tqpair.send_queue);
 
-
 	rc = nvme_tcp_ctrlr_connect_qpair(&ctrlr, qpair);
+	while (rc == -EAGAIN) {
+		rc = nvme_tcp_ctrlr_connect_qpair_poll(&ctrlr, qpair);
+	}
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(tqpair.maxr2t == NVME_TCP_MAX_R2T_DEFAULT);
