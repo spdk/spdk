@@ -2865,21 +2865,22 @@ Array of names of newly created bdevs.
 
 ### Parameters
 
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-name                    | Required | string      | Name of the NVMe controller, prefix for each bdev name
-trtype                  | Required | string      | NVMe-oF target trtype: rdma or pcie
-traddr                  | Required | string      | NVMe-oF target address: ip or BDF
-adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
-trsvcid                 | Optional | string      | NVMe-oF target trsvcid: port number
-subnqn                  | Optional | string      | NVMe-oF target subnqn
-hostnqn                 | Optional | string      | NVMe-oF target hostnqn
-hostaddr                | Optional | string      | NVMe-oF host address: ip address
-hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
-prchk_reftag            | Optional | bool        | Enable checking of PI reference tag for I/O processing
-prchk_guard             | Optional | bool        | Enable checking of PI guard for I/O processing
-hdgst                   | Optional | bool        | Enable TCP header digest
-ddgst                   | Optional | bool        | Enable TCP data digest
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+name                       | Required | string      | Name of the NVMe controller, prefix for each bdev name
+trtype                     | Required | string      | NVMe-oF target trtype: rdma or pcie
+traddr                     | Required | string      | NVMe-oF target address: ip or BDF
+adrfam                     | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
+trsvcid                    | Optional | string      | NVMe-oF target trsvcid: port number
+subnqn                     | Optional | string      | NVMe-oF target subnqn
+hostnqn                    | Optional | string      | NVMe-oF target hostnqn
+hostaddr                   | Optional | string      | NVMe-oF host address: ip address
+hostsvcid                  | Optional | string      | NVMe-oF host trsvcid: port number
+prchk_reftag               | Optional | bool        | Enable checking of PI reference tag for I/O processing
+prchk_guard                | Optional | bool        | Enable checking of PI guard for I/O processing
+hdgst                      | Optional | bool        | Enable TCP header digest
+ddgst                      | Optional | bool        | Enable TCP data digest
+fabrics_connect_timeout_us | Optional | bool        | Timeout for fabrics connect (in microseconds)
 
 ### Example
 

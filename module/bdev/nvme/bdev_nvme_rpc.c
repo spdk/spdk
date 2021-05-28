@@ -180,6 +180,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *hostsvcid;
 	bool prchk_reftag;
 	bool prchk_guard;
+	uint64_t fabrics_connect_timeout_us;
 	struct spdk_nvme_ctrlr_opts opts;
 };
 
@@ -214,7 +215,8 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"prchk_reftag", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_reftag), spdk_json_decode_bool, true},
 	{"prchk_guard", offsetof(struct rpc_bdev_nvme_attach_controller, prchk_guard), spdk_json_decode_bool, true},
 	{"hdgst", offsetof(struct rpc_bdev_nvme_attach_controller, opts.header_digest), spdk_json_decode_bool, true},
-	{"ddgst", offsetof(struct rpc_bdev_nvme_attach_controller, opts.data_digest), spdk_json_decode_bool, true}
+	{"ddgst", offsetof(struct rpc_bdev_nvme_attach_controller, opts.data_digest), spdk_json_decode_bool, true},
+	{"fabrics_connect_timeout_us", offsetof(struct rpc_bdev_nvme_attach_controller, opts.fabrics_connect_timeout_us), spdk_json_decode_uint64, true},
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
