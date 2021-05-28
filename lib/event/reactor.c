@@ -363,9 +363,6 @@ _reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
 	struct spdk_reactor *target = arg1;
 
 	if (target->new_in_interrupt == false) {
-		/* Reactor is no longer in interrupt mode. Refresh the tsc_last to accurately
-		 * track reactor stats. */
-		target->tsc_last = spdk_get_ticks();
 		target->set_interrupt_mode_in_progress = false;
 		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
 				     target->set_interrupt_mode_cb_arg);
@@ -408,6 +405,9 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 	}
 
 	if (target->new_in_interrupt == false) {
+		/* Reactor is no longer in interrupt mode. Refresh the tsc_last to accurately
+		 * track reactor stats. */
+		target->tsc_last = spdk_get_ticks();
 		spdk_for_each_reactor(_reactor_set_notify_cpuset, target, NULL, _reactor_set_notify_cpuset_cpl);
 	} else {
 		uint64_t notify = 1;
