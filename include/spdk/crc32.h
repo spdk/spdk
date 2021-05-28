@@ -66,6 +66,16 @@ uint32_t spdk_crc32_ieee_update(const void *buf, size_t len, uint32_t crc);
  */
 uint32_t spdk_crc32c_update(const void *buf, size_t len, uint32_t crc);
 
+/**
+ * Calculate a partial CRC-32C checksum.
+ *
+ * \param iov Data buffer vectors to checksum.
+ * \param iovcnt size of iov parameter.
+ * \param crc32c Previous CRC-32C value.
+ * \return Updated CRC-32C value.
+ */
+uint32_t spdk_crc32c_iov_update(struct iovec *iov, int iovcnt, uint32_t crc32c);
+
 #ifdef __cplusplus
 }
 #endif

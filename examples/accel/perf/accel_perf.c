@@ -559,20 +559,6 @@ batch_done(void *cb_arg, int status)
 	spdk_thread_send_msg(worker_batch->worker->thread, _batch_done, worker_batch);
 }
 
-static uint32_t
-_update_crc32c_iov(struct iovec *iov, int iovcnt, uint32_t crc32c)
-{
-	int i;
-
-	for (i = 0; i < iovcnt; i++) {
-		assert(iov[i].iov_base != NULL);
-		assert(iov[i].iov_len != 0);
-		crc32c = spdk_crc32c_update(iov[i].iov_base, iov[i].iov_len, crc32c);
-
-	}
-	return crc32c;
-}
-
 static void
 _accel_done(void *arg1)
 {
@@ -586,7 +572,7 @@ _accel_done(void *arg1)
 	if (g_verify && task->status == 0) {
 		switch (g_workload_selection) {
 		case ACCEL_CRC32C:
-			sw_crc32c = _update_crc32c_iov(task->iovs, task->iov_cnt, ~g_crc32c_seed);
+			sw_crc32c = spdk_crc32c_iov_update(task->iovs, task->iov_cnt, ~g_crc32c_seed);
 			if (*(uint32_t *)task->dst != sw_crc32c) {
 				SPDK_NOTICELOG("CRC-32C miscompare\n");
 				worker->xfer_failed++;

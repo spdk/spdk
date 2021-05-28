@@ -14,6 +14,11 @@ Updated DPDK submodule to DPDK 21.02.
 Remove the probe_cb parameter in spdk_idxd_probe function. And remove the definition
 of spdk_idxd_probe_cb function pointer. It should be implemented in idxd_user.c.
 
+### util
+
+`spdk_crc32c_iov_update` function was added to support calculating the crc32c of the
+iovs.
+
 ### nvmf
 
 Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the controller ID range.

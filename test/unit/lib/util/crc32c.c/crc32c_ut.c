@@ -42,12 +42,33 @@ static void
 test_crc32c(void)
 {
 	uint32_t crc;
-	char buf[1024];
+	char buf[1024], buf1[1024];
+	struct iovec iov[2] = {};
 
 	/* Verify a string's CRC32-C value against the known correct result. */
 	snprintf(buf, sizeof(buf), "%s", "Hello world!");
 	crc = 0xFFFFFFFFu;
 	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x7b98e751);
+
+	crc = 0xFFFFFFFFu;
+	iov[0].iov_base = buf;
+	iov[0].iov_len = strlen(buf);
+	crc = spdk_crc32c_iov_update(iov, 1, crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x7b98e751);
+
+	crc = 0xFFFFFFFFu;
+	snprintf(buf, sizeof(buf), "%s", "Hello");
+	iov[0].iov_base = buf;
+	iov[0].iov_len = strlen(buf);
+
+	snprintf(buf1, sizeof(buf1), "%s", " world!");
+	iov[1].iov_base = buf1;
+	iov[1].iov_len = strlen(buf1);
+
+	crc = spdk_crc32c_iov_update(iov, 2, crc);
 	crc ^= 0xFFFFFFFFu;
 	CU_ASSERT(crc == 0x7b98e751);
 

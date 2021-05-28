@@ -131,3 +131,21 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 }
 
 #endif
+
+uint32_t
+spdk_crc32c_iov_update(struct iovec *iov, int iovcnt, uint32_t crc32c)
+{
+	int i;
+
+	if (iov == NULL) {
+		return crc32c;
+	}
+
+	for (i = 0; i < iovcnt; i++) {
+		assert(iov[i].iov_base != NULL);
+		assert(iov[i].iov_len != 0);
+		crc32c = spdk_crc32c_update(iov[i].iov_base, iov[i].iov_len, crc32c);
+	}
+
+	return crc32c;
+}
