@@ -511,7 +511,7 @@ iscsi_fuzz_read_pdu(struct spdk_iscsi_conn *conn)
 				rc = 0;
 			}
 			if (rc == 0) {
-				spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu, 0);
+				spdk_trace_record(TRACE_ISCSI_TASK_EXECUTED, 0, 0, (uintptr_t)pdu);
 				conn->pdu_in_progress = NULL;
 				conn->pdu_recv_state = ISCSI_PDU_RECV_STATE_AWAIT_PDU_READY;
 				return 1;

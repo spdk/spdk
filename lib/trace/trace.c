@@ -79,12 +79,8 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry->object_id = object_id;
 
 	tpoint = &g_trace_flags->tpoint[tpoint_id];
-	/* Make sure that the number of arguments passed matches tracepoint definition. For now,
-	 * allow passing extra arguments (which will be silently discard), as some traces that don't
-	 * have any arguments pass 0 as an argument.  Once they're fixed, change the condition to
-	 * "!=".
-	 */
-	if (tpoint->num_args > num_args) {
+	/* Make sure that the number of arguments passed match tracepoint definition */
+	if (tpoint->num_args != num_args) {
 		assert(0 && "Unexpected number of tracepoint arguments");
 		return;
 	}

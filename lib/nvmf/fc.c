@@ -331,7 +331,7 @@ nvmf_fc_record_req_trace_point(struct spdk_nvmf_fc_request *fc_req,
 	}
 	if (tpoint_id != SPDK_TRACE_MAX_TPOINT_ID) {
 		spdk_trace_record(tpoint_id, fc_req->poller_lcore, 0,
-				  (uint64_t)(&fc_req->req), 0);
+				  (uint64_t)(&fc_req->req));
 	}
 }
 

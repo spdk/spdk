@@ -884,7 +884,7 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	struct ibv_recv_wr		*bad_recv_wr = NULL;
 	int				rc;
 
-	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair, 0);
+	spdk_trace_record(TRACE_RDMA_QP_DESTROY, 0, 0, (uintptr_t)rqpair);
 
 	if (rqpair->qd != 0) {
 		struct spdk_nvmf_qpair *qpair = &rqpair->qpair;
@@ -1043,7 +1043,7 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 					  qp_init_attr.cap.max_send_wr);
 	rqpair->max_send_sge = spdk_min(NVMF_DEFAULT_TX_SGE, qp_init_attr.cap.max_send_sge);
 	rqpair->max_recv_sge = spdk_min(NVMF_DEFAULT_RX_SGE, qp_init_attr.cap.max_recv_sge);
-	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair, 0);
+	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair);
 	SPDK_DEBUGLOG(rdma, "New RDMA Connection: %p\n", qpair);
 
 	if (rqpair->poller->srq == NULL) {
@@ -2811,7 +2811,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair, 0);
+	spdk_trace_record(TRACE_RDMA_QP_DISCONNECT, 0, 0, (uintptr_t)rqpair);
 
 	spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 
