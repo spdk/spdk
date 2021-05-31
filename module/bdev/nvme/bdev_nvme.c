@@ -3326,34 +3326,6 @@ bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			(uint32_t)nbytes, md_buf, bdev_nvme_queued_done, bio);
 }
 
-static void
-bdev_nvme_abort_admin_cmd(void *ctx)
-{
-	struct nvme_bdev_io *bio = ctx;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
-	struct nvme_io_channel *nvme_ch;
-	struct nvme_bdev_io *bio_to_abort;
-	int rc;
-
-	nvme_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
-	bio_to_abort = (struct nvme_bdev_io *)bdev_io->u.abort.bio_to_abort->driver_ctx;
-
-	rc = spdk_nvme_ctrlr_cmd_abort_ext(nvme_ch->ctrlr->ctrlr,
-					   NULL,
-					   bio_to_abort,
-					   bdev_nvme_abort_done, bio);
-	if (rc == -ENOENT) {
-		/* If no admin command was found in admin qpair, complete the abort
-		 * request with failure.
-		 */
-		bio->cpl.cdw0 |= 1U;
-		bio->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
-		bio->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-
-		spdk_thread_send_msg(bio->orig_thread, bdev_nvme_abort_completion, bio);
-	}
-}
-
 static int
 bdev_nvme_abort(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio,
 		struct nvme_bdev_io *bio_to_abort)
@@ -3368,11 +3340,22 @@ bdev_nvme_abort(struct nvme_io_channel *nvme_ch, struct nvme_bdev_io *bio,
 					   bdev_nvme_abort_done, bio);
 	if (rc == -ENOENT) {
 		/* If no command was found in I/O qpair, the target command may be
-		 * admin command. Only a single thread tries aborting admin command
-		 * to clean I/O flow.
+		 * admin command.
 		 */
-		spdk_thread_send_msg(nvme_ch->ctrlr->thread,
-				     bdev_nvme_abort_admin_cmd, bio);
+		rc = spdk_nvme_ctrlr_cmd_abort_ext(nvme_ch->ctrlr->ctrlr,
+						   NULL,
+						   bio_to_abort,
+						   bdev_nvme_abort_done, bio);
+	}
+
+	if (rc == -ENOENT) {
+		/* If no command was found, complete the abort request with failure. */
+		bio->cpl.cdw0 |= 1U;
+		bio->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+		bio->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+		bdev_nvme_abort_completion(bio);
+
 		rc = 0;
 	}
 

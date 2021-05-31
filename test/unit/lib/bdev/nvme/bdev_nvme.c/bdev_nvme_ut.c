@@ -1995,13 +1995,13 @@ test_abort(void)
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev;
 	struct spdk_bdev_io *write_io, *admin_io, *abort_io;
-	struct spdk_io_channel *ch;
-	struct nvme_io_channel *nvme_ch;
+	struct spdk_io_channel *ch1, *ch2;
+	struct nvme_io_channel *nvme_ch1;
 	int rc;
 
 	/* Create ctrlr on thread 1 and submit I/O and admin requests to be aborted on
-	 * thread 0. Abort requests are submitted on thread 0. Aborting I/O requests are
-	 * done on thread 0 but aborting admin requests are done on thread 1.
+	 * thread 0. Aborting I/O requests are submitted on thread 0. Aborting admin requests
+	 * are submitted on thread 1. Both should succeed.
 	 */
 
 	ut_init_trid(&trid);
@@ -2027,8 +2027,6 @@ test_abort(void)
 	bdev = nvme_bdev_ctrlr->namespaces[0]->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
-	set_thread(0);
-
 	write_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
 	SPDK_CU_ASSERT_FATAL(write_io != NULL);
 	write_io->bdev = &bdev->disk;
@@ -2046,17 +2044,23 @@ test_abort(void)
 	abort_io->bdev = &bdev->disk;
 	abort_io->type = SPDK_BDEV_IO_TYPE_ABORT;
 
-	ch = spdk_get_io_channel(nvme_bdev_ctrlr);
-	SPDK_CU_ASSERT_FATAL(ch != NULL);
-	nvme_ch = spdk_io_channel_get_ctx(ch);
+	set_thread(0);
 
-	write_io->internal.ch = (struct spdk_bdev_channel *)ch;
-	admin_io->internal.ch = (struct spdk_bdev_channel *)ch;
-	abort_io->internal.ch = (struct spdk_bdev_channel *)ch;
+	ch1 = spdk_get_io_channel(nvme_bdev_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+	nvme_ch1 = spdk_io_channel_get_ctx(ch1);
+
+	set_thread(1);
+
+	ch2 = spdk_get_io_channel(nvme_bdev_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+
+	write_io->internal.ch = (struct spdk_bdev_channel *)ch1;
+	abort_io->internal.ch = (struct spdk_bdev_channel *)ch1;
 
 	/* Aborting the already completed request should fail. */
 	write_io->internal.in_submit_request = true;
-	bdev_nvme_submit_request(ch, write_io);
+	bdev_nvme_submit_request(ch1, write_io);
 	poll_threads();
 
 	CU_ASSERT(write_io->internal.in_submit_request == false);
@@ -2064,7 +2068,7 @@ test_abort(void)
 	abort_io->u.abort.bio_to_abort = write_io;
 	abort_io->internal.in_submit_request = true;
 
-	bdev_nvme_submit_request(ch, abort_io);
+	bdev_nvme_submit_request(ch1, abort_io);
 
 	poll_threads();
 
@@ -2072,8 +2076,11 @@ test_abort(void)
 	CU_ASSERT(abort_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 
+	admin_io->internal.ch = (struct spdk_bdev_channel *)ch1;
+	abort_io->internal.ch = (struct spdk_bdev_channel *)ch2;
+
 	admin_io->internal.in_submit_request = true;
-	bdev_nvme_submit_request(ch, admin_io);
+	bdev_nvme_submit_request(ch1, admin_io);
 	spdk_delay_us(10000);
 	poll_threads();
 
@@ -2082,7 +2089,7 @@ test_abort(void)
 	abort_io->u.abort.bio_to_abort = admin_io;
 	abort_io->internal.in_submit_request = true;
 
-	bdev_nvme_submit_request(ch, abort_io);
+	bdev_nvme_submit_request(ch2, abort_io);
 
 	poll_threads();
 
@@ -2092,15 +2099,16 @@ test_abort(void)
 
 	/* Aborting the write request should succeed. */
 	write_io->internal.in_submit_request = true;
-	bdev_nvme_submit_request(ch, write_io);
+	bdev_nvme_submit_request(ch1, write_io);
 
 	CU_ASSERT(write_io->internal.in_submit_request == true);
-	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 1);
+	CU_ASSERT(nvme_ch1->qpair->num_outstanding_reqs == 1);
 
+	abort_io->internal.ch = (struct spdk_bdev_channel *)ch1;
 	abort_io->u.abort.bio_to_abort = write_io;
 	abort_io->internal.in_submit_request = true;
 
-	bdev_nvme_submit_request(ch, abort_io);
+	bdev_nvme_submit_request(ch1, abort_io);
 
 	spdk_delay_us(10000);
 	poll_threads();
@@ -2110,19 +2118,20 @@ test_abort(void)
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 	CU_ASSERT(write_io->internal.in_submit_request == false);
 	CU_ASSERT(write_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
-	CU_ASSERT(nvme_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(nvme_ch1->qpair->num_outstanding_reqs == 0);
 
 	/* Aborting the admin request should succeed. */
 	admin_io->internal.in_submit_request = true;
-	bdev_nvme_submit_request(ch, admin_io);
+	bdev_nvme_submit_request(ch1, admin_io);
 
 	CU_ASSERT(admin_io->internal.in_submit_request == true);
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
 
+	abort_io->internal.ch = (struct spdk_bdev_channel *)ch2;
 	abort_io->u.abort.bio_to_abort = admin_io;
 	abort_io->internal.in_submit_request = true;
 
-	bdev_nvme_submit_request(ch, abort_io);
+	bdev_nvme_submit_request(ch2, abort_io);
 
 	spdk_delay_us(10000);
 	poll_threads();
@@ -2134,7 +2143,13 @@ test_abort(void)
 	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 
-	spdk_put_io_channel(ch);
+	set_thread(0);
+
+	spdk_put_io_channel(ch1);
+
+	set_thread(1);
+
+	spdk_put_io_channel(ch2);
 
 	poll_threads();
 
