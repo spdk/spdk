@@ -6,6 +6,11 @@
 
 New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.
 
+New API functions `spdk_bdev_readv_blocks_ext` and `spdk_bdev_writev_blocks_ext` have been added.
+These functions accept `spdk_bdev_ext_io_opts` structure with extended IO request
+options, e.g. DMA memory domain which describes data that may belong to another memory domain and
+can't be accessed directly.
+
 ### dma
 
 A new library, lib/dma, has been added. This library provides the necessary infrastructure for

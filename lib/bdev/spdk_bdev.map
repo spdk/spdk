@@ -95,6 +95,8 @@
 	spdk_bdev_histogram_get;
 	spdk_bdev_get_media_events;
 	spdk_bdev_get_memory_domains;
+	spdk_bdev_readv_blocks_ext;
+	spdk_bdev_writev_blocks_ext;
 
 	# Public functions in bdev_module.h
 	spdk_bdev_register;

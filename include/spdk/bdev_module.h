@@ -750,6 +750,9 @@ struct spdk_bdev_io {
 
 		/** Enables queuing parent I/O when no bdev_ios available for split children. */
 		struct spdk_bdev_io_wait_entry waitq_entry;
+
+		/** Pointer to a structure passed by the user in ext API */
+		struct spdk_bdev_ext_io_opts *ext_opts;
 	} internal;
 
 	/**

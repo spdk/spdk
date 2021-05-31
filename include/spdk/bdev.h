@@ -81,9 +81,6 @@ struct spdk_bdev_media_event {
  */
 struct spdk_bdev;
 
-/** Forward declaration of spdk memory domain */
-struct spdk_memory_domain;
-
 /**
  * Block device remove callback.
  *
@@ -201,6 +198,24 @@ struct spdk_bdev_opts {
 
 	uint32_t small_buf_pool_size;
 	uint32_t large_buf_pool_size;
+};
+
+/**
+ * Structure with optional IO request parameters
+ * The content of this structure must be valid until the IO request is completed
+ */
+struct spdk_bdev_ext_io_opts {
+	/** Size of this structure in bytes */
+	size_t size;
+	/** Memory domain which describes payload in this IO request. bdev must support DMA device type that
+	 * can access this memory domain, refer to \ref spdk_bdev_get_memory_domains and \erf spdk_memory_domain_get_dma_device_type
+	 * If set, that means that data buffers can't be accessed directly and the memory domain must
+	 * be used to fetch data to local buffers or to translate data to another memory domain */
+	struct spdk_memory_domain *memory_domain;
+	/** Context to be passed to memory domain operations */
+	void *memory_domain_ctx;
+	/** Metadata buffer, optional */
+	void *metadata;
 };
 
 /**
@@ -901,6 +916,40 @@ int spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_c
 				   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit a read request to the bdev on the given channel. This differs from
+ * spdk_bdev_read by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data or metadata and may not be able to directly transfer into the buffers
+ * provided. In this case, the request may fail. This function uses separate
+ * buffer for metadata transfer (valid only if bdev supports this mode).
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be read into.
+ * \param iovcnt The number of elements in iov.
+ * \param md Metadata buffer, optional.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to read.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ * \param opts Optional structure with extended IO request options. If set, this structure must be
+ * valid until the IO is completed.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range or separate
+ *               metadata is not supported or opts_size is incorrect
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			       struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+			       uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+			       struct spdk_bdev_ext_io_opts *opts);
+
+/**
  * Submit a write request to the bdev on the given channel.
  *
  * \ingroup bdev_io_submit_functions
@@ -1068,6 +1117,41 @@ int spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_
 				    struct iovec *iov, int iovcnt, void *md,
 				    uint64_t offset_blocks, uint64_t num_blocks,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a write request to the bdev on the given channel. This differs from
+ * spdk_bdev_write by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data or metadata and may not be able to directly transfer out of the buffers
+ * provided. In this case, the request may fail.  This function uses separate
+ * buffer for metadata transfer (valid only if bdev supports this mode).
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iov.
+ * \param md Metadata buffer, optional.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to write.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ * \param opts Optional structure with extended IO request options. If set, this structure must be
+ * valid until the IO is completed.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range or separate
+ *               metadata is not supported or opts_size is incorrect
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ */
+int spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				struct iovec *iov, int iovcnt, uint64_t offset_blocks,
+				uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+				struct spdk_bdev_ext_io_opts *opts);
 
 /**
  * Submit a compare request to the bdev on the given channel.
