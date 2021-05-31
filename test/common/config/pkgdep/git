@@ -286,11 +286,6 @@ function install_qemu() {
 	#  - vfio-user QEMU: A special fork to test libvfio-user components.
 	#  - Vanilla QEMU: Used for the upstream PMR support.
 
-	# Forked QEMUs
-	SPDK_QEMU_BRANCH=spdk-5.0.0
-	VFIO_QEMU_BRANCH=vfio-user-master
-	VANILLA_QEMU_BRANCH=v6.0.0
-
 	_install_qemu $GIT_REPO_QEMU_SPDK $SPDK_QEMU_BRANCH
 	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH
 	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH" vanilla
@@ -534,6 +529,10 @@ function install_sources() {
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.5.2
 ICE_VERSION=1.4.11
+SPDK_QEMU_BRANCH=${SPDK_QEMU_BRANCH:-spdk-5.0.0}
+VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-master}
+VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v6.0.0}
+
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
 : ${GIT_REPO_DPDK=https://github.com/spdk/dpdk.git}
