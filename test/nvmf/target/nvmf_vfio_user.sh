@@ -39,13 +39,13 @@ for i in $(seq 1 $NUM_DEVICES); do
 done
 
 for i in $(seq 1 $NUM_DEVICES); do
-	$SPDK_EXAMPLE_DIR/identify -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i" -g -L nvme -L nvme_vfio -L vfio_pci
+	$SPDK_EXAMPLE_DIR/identify -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -g -L nvme -L nvme_vfio -L vfio_pci
 	sleep 1
-	$SPDK_EXAMPLE_DIR/perf -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
+	$SPDK_EXAMPLE_DIR/perf -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
 	sleep 1
-	$SPDK_EXAMPLE_DIR/perf -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
+	$SPDK_EXAMPLE_DIR/perf -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
 	sleep 1
-	$SPDK_EXAMPLE_DIR/reconnect -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
+	$SPDK_EXAMPLE_DIR/reconnect -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
 	sleep 1
 done
 
