@@ -154,7 +154,7 @@ struct nvme_async_probe_ctx {
 
 struct ocssd_io_channel;
 
-struct nvme_io_channel {
+struct nvme_io_path {
 	struct nvme_bdev_ctrlr		*ctrlr;
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_bdev_poll_group	*group;
@@ -178,24 +178,24 @@ void nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 void nvme_bdev_ctrlr_unregister(void *ctx);
 
 static inline bool
-bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_channel *nvme_ch,
+bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_path *io_path,
 		       struct nvme_bdev_ns **_nvme_ns, struct spdk_nvme_qpair **_qpair)
 {
-	if (spdk_unlikely(nvme_ch->qpair == NULL)) {
+	if (spdk_unlikely(io_path->qpair == NULL)) {
 		/* The device is currently resetting. */
 		return false;
 	}
 
 	*_nvme_ns = nbdev->nvme_ns;
-	*_qpair = nvme_ch->qpair;
+	*_qpair = io_path->qpair;
 	return true;
 }
 
 static inline bool
-bdev_nvme_find_admin_path(struct nvme_io_channel *nvme_ch,
+bdev_nvme_find_admin_path(struct nvme_io_path *io_path,
 			  struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
 {
-	*_nvme_bdev_ctrlr = nvme_ch->ctrlr;
+	*_nvme_bdev_ctrlr = io_path->ctrlr;
 	return true;
 }
 

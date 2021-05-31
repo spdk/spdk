@@ -50,8 +50,8 @@ void bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 void bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *nvme_ns);
 void bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *nvme_ns);
 
-int bdev_ocssd_create_io_channel(struct nvme_io_channel *ioch);
-void bdev_ocssd_destroy_io_channel(struct nvme_io_channel *ioch);
+int bdev_ocssd_create_io_channel(struct nvme_io_path *ioch);
+void bdev_ocssd_destroy_io_channel(struct nvme_io_path *ioch);
 
 int bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 void bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);

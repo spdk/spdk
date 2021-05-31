@@ -885,7 +885,7 @@ test_get_zone_info(void)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_io_channel *ch;
-	struct nvme_io_channel *nvme_ch;
+	struct nvme_io_path *io_path;
 #define MAX_ZONE_INFO_COUNT 64
 	struct spdk_bdev_zone_info zone_info[MAX_ZONE_INFO_COUNT];
 	struct spdk_ocssd_chunk_information_entry *chunk_info;
@@ -915,12 +915,12 @@ test_get_zone_info(void)
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
-	ch = calloc(1, sizeof(*ch) + sizeof(*nvme_ch));
+	ch = calloc(1, sizeof(*ch) + sizeof(*io_path));
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
-	nvme_ch = spdk_io_channel_get_ctx(ch);
-	nvme_ch->ctrlr = nvme_bdev_ctrlr;
-	nvme_ch->qpair = (struct spdk_nvme_qpair *)0x1;
+	io_path = spdk_io_channel_get_ctx(ch);
+	io_path->ctrlr = nvme_bdev_ctrlr;
+	io_path->qpair = (struct spdk_nvme_qpair *)0x1;
 
 	bdev_io = alloc_ocssd_io();
 	bdev_io->internal.cb = get_zone_info_cb;
