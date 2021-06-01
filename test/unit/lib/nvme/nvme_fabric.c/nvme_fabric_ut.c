@@ -38,6 +38,7 @@
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
+pid_t g_spdk_nvme_pid;
 struct spdk_nvmf_fabric_prop_set_cmd g_ut_cmd = {};
 struct spdk_nvmf_fabric_prop_get_rsp g_ut_response = {};
 
@@ -75,19 +76,51 @@ DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
 	     const struct spdk_nvme_ctrlr_opts *opts,
 	     void *devhandle), NULL);
 
-DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf,
-		uint32_t len, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
-
-DEFINE_STUB(nvme_wait_for_completion_timeout, int,
-	    (struct spdk_nvme_qpair *qpair,
-	     struct nvme_completion_poll_status *status,
-	     uint64_t timeout_in_usecs), 0);
-
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *,
 	    (enum spdk_nvmf_adrfam adrfam), NULL);
 
 DEFINE_STUB(nvme_ctrlr_process_init, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
+
+static struct spdk_nvmf_fabric_connect_data g_nvmf_data;
+
+int
+spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
+			   struct spdk_nvme_qpair *qpair,
+			   struct spdk_nvme_cmd *cmd,
+			   void *buf, uint32_t len,
+			   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+
+	req = nvme_allocate_request_contig(qpair, buf, len, cb_fn, cb_arg);
+
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	memcpy(&req->cmd, cmd, sizeof(req->cmd));
+	memcpy(&g_nvmf_data, buf, sizeof(g_nvmf_data));
+
+	return 0;
+}
+
+DEFINE_RETURN_MOCK(nvme_wait_for_completion_timeout, int);
+int
+nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
+				 struct nvme_completion_poll_status *status,
+				 uint64_t timeout_in_usecs)
+{
+	struct spdk_nvmf_fabric_connect_rsp *rsp = (void *)&status->cpl;
+
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		rsp->status_code_specific.success.cntlid = 1;
+	}
+
+	status->timed_out = false;
+	HANDLE_RETURN_MOCK(nvme_wait_for_completion_timeout);
+
+	return 0;
+}
 
 int
 spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
@@ -305,6 +338,82 @@ test_nvme_fabric_discover_probe(void)
 	CU_ASSERT(g_ut_ctrlr_is_probed == false);
 }
 
+static void
+test_nvme_fabric_qpair_connect(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct nvme_request	req = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvmf_fabric_connect_cmd *cmd = NULL;
+	int rc;
+	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1] = "nqn.2016-06.io.spdk:host1";
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1] = "nqn.2016-06.io.spdk:subsystem1";
+	const uint8_t hostid[16] = {
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+		0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+	};
+
+	cmd = (void *)&req.cmd;
+	qpair.ctrlr = &ctrlr;
+	req.qpair = &qpair;
+	STAILQ_INIT(&qpair.free_req);
+	STAILQ_INSERT_HEAD(&qpair.free_req, &req, stailq);
+	memset(&g_nvmf_data, 0, sizeof(g_nvmf_data));
+
+	qpair.id = 1;
+	ctrlr.opts.keep_alive_timeout_ms = 100;
+	ctrlr.cntlid = 2;
+	memcpy(ctrlr.opts.extended_host_id, hostid, sizeof(hostid));
+	memcpy(ctrlr.opts.hostnqn, hostnqn, sizeof(hostnqn));
+	memcpy(ctrlr.trid.subnqn, subnqn, sizeof(subnqn));
+
+	rc = nvme_fabric_qpair_connect(&qpair, 1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cmd->opcode == SPDK_NVME_OPC_FABRIC);
+	CU_ASSERT(cmd->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT);
+	CU_ASSERT(cmd->qid == 1);
+	CU_ASSERT(cmd->sqsize == 0);
+	CU_ASSERT(cmd->kato == 100);
+	CU_ASSERT(g_nvmf_data.cntlid == 2);
+	CU_ASSERT(!strncmp(g_nvmf_data.hostid, ctrlr.opts.extended_host_id, sizeof(g_nvmf_data.hostid)));
+	CU_ASSERT(!strncmp(g_nvmf_data.hostnqn, ctrlr.opts.hostnqn, sizeof(ctrlr.opts.hostnqn)));
+	CU_ASSERT(!strncmp(g_nvmf_data.subnqn, ctrlr.trid.subnqn, sizeof(ctrlr.trid.subnqn)));
+	CU_ASSERT(STAILQ_EMPTY(&qpair.free_req));
+
+	/* qid is adminq */
+	memset(&g_nvmf_data, 0, sizeof(g_nvmf_data));
+	memset(&req, 0, sizeof(req));
+	STAILQ_INSERT_HEAD(&qpair.free_req, &req, stailq);
+	qpair.id = 0;
+	ctrlr.cntlid = 0;
+
+	rc = nvme_fabric_qpair_connect(&qpair, 1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cmd->opcode == SPDK_NVME_OPC_FABRIC);
+	CU_ASSERT(cmd->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT);
+	CU_ASSERT(cmd->qid == 0);
+	CU_ASSERT(cmd->sqsize == 0);
+	CU_ASSERT(cmd->kato == 100);
+	CU_ASSERT(ctrlr.cntlid == 1);
+	CU_ASSERT(g_nvmf_data.cntlid == 0xffff);
+	CU_ASSERT(!strncmp(g_nvmf_data.hostid, ctrlr.opts.extended_host_id, sizeof(g_nvmf_data.hostid)));
+	CU_ASSERT(!strncmp(g_nvmf_data.hostnqn, ctrlr.opts.hostnqn, sizeof(ctrlr.opts.hostnqn)));
+	CU_ASSERT(!strncmp(g_nvmf_data.subnqn, ctrlr.trid.subnqn, sizeof(ctrlr.trid.subnqn)));
+	CU_ASSERT(STAILQ_EMPTY(&qpair.free_req));
+
+	/* Wait_for completion timeout */
+	STAILQ_INSERT_HEAD(&qpair.free_req, &req, stailq);
+	MOCK_SET(nvme_wait_for_completion_timeout, 1);
+
+	rc = nvme_fabric_qpair_connect(&qpair, 1);
+	CU_ASSERT(rc == -EIO);
+	MOCK_CLEAR(nvme_wait_for_completion_timeout);
+
+	/* Input parameters invalid */
+	rc = nvme_fabric_qpair_connect(&qpair, 0);
+	CU_ASSERT(rc == -EINVAL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -318,6 +427,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_fabric_prop_get_cmd);
 	CU_ADD_TEST(suite, test_nvme_fabric_get_discovery_log_page);
 	CU_ADD_TEST(suite, test_nvme_fabric_discover_probe);
+	CU_ADD_TEST(suite, test_nvme_fabric_qpair_connect);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
