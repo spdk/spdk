@@ -1723,10 +1723,10 @@ ut_test_submit_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 {
 	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
-	struct nvme_bdev_ns *nvme_ns = NULL;
+	struct spdk_nvme_ns *ns = NULL;
 	struct spdk_nvme_qpair *qpair = NULL;
 
-	CU_ASSERT(bdev_nvme_find_io_path(nbdev, io_path, &nvme_ns, &qpair));
+	CU_ASSERT(bdev_nvme_find_io_path(nbdev, io_path, &ns, &qpair));
 
 	bdev_io->type = io_type;
 	bdev_io->internal.in_submit_request = true;
@@ -1749,10 +1749,10 @@ ut_test_submit_nop(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 {
 	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
-	struct nvme_bdev_ns *nvme_ns = NULL;
+	struct spdk_nvme_ns *ns = NULL;
 	struct spdk_nvme_qpair *qpair = NULL;
 
-	CU_ASSERT(bdev_nvme_find_io_path(nbdev, io_path, &nvme_ns, &qpair));
+	CU_ASSERT(bdev_nvme_find_io_path(nbdev, io_path, &ns, &qpair));
 
 	bdev_io->type = io_type;
 	bdev_io->internal.in_submit_request = true;
@@ -1771,10 +1771,10 @@ ut_test_submit_fused_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	struct nvme_bdev_io *bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct ut_nvme_req *req;
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
-	struct nvme_bdev_ns *nvme_ns = NULL;
+	struct spdk_nvme_ns *ns = NULL;
 	struct spdk_nvme_qpair *qpair = NULL;
 
-	CU_ASSERT(bdev_nvme_find_io_path(nbdev, io_path, &nvme_ns, &qpair));
+	CU_ASSERT(bdev_nvme_find_io_path(nbdev, io_path, &ns, &qpair));
 
 	/* Only compare and write now. */
 	bdev_io->type = SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE;
