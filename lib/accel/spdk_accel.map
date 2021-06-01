@@ -15,6 +15,7 @@
 	spdk_accel_batch_prep_fill;
 	spdk_accel_batch_prep_crc32c;
 	spdk_accel_batch_prep_crc32cv;
+	spdk_accel_batch_prep_copy_crc32c;
 	spdk_accel_batch_submit;
 	spdk_accel_batch_cancel;
 	spdk_accel_submit_copy;
