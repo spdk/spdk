@@ -3579,10 +3579,13 @@ _nvmf_request_complete(void *ctx)
 	bool is_aer = false;
 	uint32_t nsid;
 	bool paused;
+	uint8_t opcode;
 
 	rsp->sqid = 0;
 	rsp->status.p = 0;
 	rsp->cid = req->cmd->nvme_cmd.cid;
+	nsid = req->cmd->nvme_cmd.nsid;
+	opcode = req->cmd->nvmf_cmd.opcode;
 
 	qpair = req->qpair;
 	if (qpair->ctrlr) {
@@ -3615,13 +3618,11 @@ _nvmf_request_complete(void *ctx)
 
 	/* AER cmd is an exception */
 	if (sgroup && !is_aer) {
-		if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC ||
+		if (spdk_unlikely(opcode == SPDK_NVME_OPC_FABRIC ||
 				  nvmf_qpair_is_admin_queue(qpair))) {
 			assert(sgroup->mgmt_io_outstanding > 0);
 			sgroup->mgmt_io_outstanding--;
 		} else {
-			nsid = req->cmd->nvme_cmd.nsid;
-
 			/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
 			if (spdk_likely(nsid - 1 < sgroup->num_ns)) {
 				sgroup->ns_info[nsid - 1].io_outstanding--;
