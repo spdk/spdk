@@ -39,8 +39,9 @@
 #define RDMA_UT_LKEY 123
 #define RDMA_UT_RKEY 312
 
+struct spdk_rdma_qp g_spdk_rdma_qp = {};
 DEFINE_STUB(spdk_rdma_qp_create, struct spdk_rdma_qp *, (struct rdma_cm_id *cm_id,
-		struct spdk_rdma_qp_init_attr *qp_attr), NULL);
+		struct spdk_rdma_qp_init_attr *qp_attr), &g_spdk_rdma_qp);
 DEFINE_STUB(spdk_rdma_qp_accept, int, (struct spdk_rdma_qp *spdk_rdma_qp,
 				       struct rdma_conn_param *conn_param), 0);
 DEFINE_STUB(spdk_rdma_qp_complete_connect, int, (struct spdk_rdma_qp *spdk_rdma_qp), 0);

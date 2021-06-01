@@ -1030,6 +1030,50 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 	free(rqpair);
 }
 
+static void
+test_nvme_rdma_parse_addr(void)
+{
+	struct sockaddr_storage dst_addr;
+	int rc = 0;
+
+	memset(&dst_addr, 0, sizeof(dst_addr));
+	/* case1: getaddrinfo failed */
+	rc = nvme_rdma_parse_addr(&dst_addr, AF_INET, NULL, NULL);
+	CU_ASSERT(rc != 0);
+
+	/* case2: res->ai_addrlen < sizeof(*sa). Expect: Pass. */
+	rc = nvme_rdma_parse_addr(&dst_addr, AF_INET, "12.34.56.78", "23");
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(dst_addr.ss_family == AF_INET);
+}
+
+static void
+test_nvme_rdma_qpair_init(void)
+{
+	struct nvme_rdma_qpair		rqpair = {};
+	struct rdma_cm_id		 cm_id = {};
+	struct ibv_qp			    qp = {};
+	struct nvme_rdma_ctrlr	rctrlr = {};
+	int rc = 0;
+
+	rctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rqpair.cm_id = &cm_id;
+	g_nvme_hooks.get_ibv_pd = NULL;
+	rqpair.qpair.poll_group = NULL;
+	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
+	g_spdk_rdma_qp.qp = &qp;
+
+	rc = nvme_rdma_qpair_init(&rqpair);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(rqpair.cm_id->context == &rqpair.qpair);
+	CU_ASSERT(rqpair.max_send_sge == NVME_RDMA_DEFAULT_TX_SGE);
+	CU_ASSERT(rqpair.max_recv_sge == NVME_RDMA_DEFAULT_RX_SGE);
+	CU_ASSERT(rqpair.current_num_sends == 0);
+	CU_ASSERT(rqpair.current_num_recvs == 0);
+	CU_ASSERT(rqpair.cq == (struct ibv_cq *)0xFEEDBEEF);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1055,6 +1099,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_validate_cm_event);
 	CU_ADD_TEST(suite, test_nvme_rdma_register_and_unregister_reqs);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_connect_disconnect_qpair);
+	CU_ADD_TEST(suite, test_nvme_rdma_parse_addr);
+	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
