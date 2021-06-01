@@ -339,7 +339,7 @@ int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
  *
  * \param chan IDXD channel to submit request.
  * \param batch Handle provided when the batch was started with spdk_idxd_batch_create().
- * \param dst Resulting calculation.
+ * \param crc_dst Resulting calculation.
  * \param src Source virtual address.
  * \param seed Four byte CRC-32C seed value.
  * \param nbytes Number of bytes to calculate on.
@@ -350,7 +350,7 @@ int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
  * \return 0 on success, negative errno on failure.
  */
 int spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-				uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes,
+				uint32_t *crc_dst, void *src, uint32_t seed, uint64_t nbytes,
 				spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
