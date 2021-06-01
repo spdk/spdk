@@ -23,6 +23,7 @@
 	spdk_accel_submit_fill;
 	spdk_accel_submit_crc32c;
 	spdk_accel_submit_crc32cv;
+	spdk_accel_submit_copy_crc32c;
 	spdk_accel_write_config_json;
 
 	# functions needed by modules

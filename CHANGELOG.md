@@ -2,6 +2,10 @@
 
 ## v21.07: (Upcoming Release)
 
+### accel_fw
+
+Added API `spdk_accel_submit_copy_crc32c` to perform a CRC32C while copying data.
+
 ### bdev
 
 Change `spdk_bdev_read_blocks_with_md` arg offset definiton from int64_t to uint64_t.

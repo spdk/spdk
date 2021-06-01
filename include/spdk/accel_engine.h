@@ -51,6 +51,7 @@ enum accel_capability {
 	ACCEL_COMPARE		= 1 << 3,
 	ACCEL_CRC32C		= 1 << 4,
 	ACCEL_DIF		= 1 << 5,
+	ACCEL_COPY_CRC32C	= 1 << 6,
 };
 
 /**
@@ -371,6 +372,26 @@ int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *sr
  */
 int spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iovec *iovs,
 			      uint32_t iovcnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Submit a copy with CRC-32C calculation request.
+ *
+ * This operation will copy data and calculate the 4 byte CRC32-C for the given data.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param dst Destination to write the data to.
+ * \param src The source address for the data.
+ * \param crc_dst Destination to write the CRC-32C to.
+ * \param seed Four byte seed value.
+ * \param nbytes Length in bytes.
+ * \param cb_fn Called when this CRC-32C operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
+				  uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+				  spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 struct spdk_json_write_ctx;
 

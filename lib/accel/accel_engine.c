@@ -401,6 +401,38 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iove
 	}
 }
 
+/* Accel framework public API for copy with CRC-32C function */
+int
+spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
+			      uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+			      spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *accel_task;
+
+	accel_task = _get_task(accel_ch, NULL, cb_fn, cb_arg);
+	if (accel_task == NULL) {
+		return -ENOMEM;
+	}
+
+	accel_task->dst = dst;
+	accel_task->src = src;
+	accel_task->crc_dst = crc_dst;
+	accel_task->v.iovcnt = 0;
+	accel_task->seed = seed;
+	accel_task->nbytes = nbytes;
+	accel_task->op_code = ACCEL_OPCODE_COPY_CRC32C;
+
+	if (_is_supported(accel_ch->engine, ACCEL_COPY_CRC32C)) {
+		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
+	} else {
+		_sw_accel_copy(dst, src, nbytes);
+		_sw_accel_crc32c(crc_dst, src, seed, nbytes);
+		spdk_accel_task_complete(accel_task, 0);
+		return 0;
+	}
+}
+
 /* Accel framework public API for getting max operations for a batch. */
 uint32_t
 spdk_accel_batch_get_max(struct spdk_io_channel *ch)

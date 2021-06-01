@@ -67,12 +67,13 @@ struct spdk_accel_batch {
 };
 
 enum accel_opcode {
-	ACCEL_OPCODE_MEMMOVE	= 0,
-	ACCEL_OPCODE_MEMFILL	= 1,
-	ACCEL_OPCODE_COMPARE	= 2,
-	ACCEL_OPCODE_BATCH	= 3,
-	ACCEL_OPCODE_CRC32C	= 4,
-	ACCEL_OPCODE_DUALCAST	= 5,
+	ACCEL_OPCODE_MEMMOVE		= 0,
+	ACCEL_OPCODE_MEMFILL		= 1,
+	ACCEL_OPCODE_COMPARE		= 2,
+	ACCEL_OPCODE_BATCH		= 3,
+	ACCEL_OPCODE_CRC32C		= 4,
+	ACCEL_OPCODE_DUALCAST		= 5,
+	ACCEL_OPCODE_COPY_CRC32C	= 6,
 };
 
 struct spdk_accel_task {
@@ -100,6 +101,7 @@ struct spdk_accel_task {
 		uint32_t			seed;
 		uint64_t			fill_pattern;
 	};
+	uint32_t			*crc_dst;
 	enum accel_opcode		op_code;
 	uint64_t			nbytes;
 	TAILQ_ENTRY(spdk_accel_task)	link;
