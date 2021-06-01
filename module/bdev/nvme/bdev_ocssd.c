@@ -105,6 +105,20 @@ bdev_ocssd_get_ns_from_nvme(struct nvme_bdev_ns *nvme_ns)
 	return nvme_ns->type_ctx;
 }
 
+static inline bool
+bdev_ocssd_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_path *io_path,
+			struct nvme_bdev_ns **_nvme_ns, struct spdk_nvme_qpair **_qpair)
+{
+	if (spdk_unlikely(io_path->qpair == NULL)) {
+		/* The device is currently resetting. */
+		return false;
+	}
+
+	*_nvme_ns = nbdev->nvme_ns;
+	*_qpair = io_path->qpair;
+	return true;
+}
+
 static int
 bdev_ocssd_library_init(void)
 {
@@ -524,7 +538,7 @@ bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		return;
 	}
 
-	if (spdk_unlikely(!bdev_nvme_find_io_path(&ocssd_bdev->nvme_bdev, io_path,
+	if (spdk_unlikely(!bdev_ocssd_find_io_path(&ocssd_bdev->nvme_bdev, io_path,
 			  &nvme_ns, &qpair))) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
@@ -653,7 +667,7 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	io_path = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-	if (spdk_unlikely(!bdev_nvme_find_io_path(&ocssd_bdev->nvme_bdev, io_path, &nvme_ns, &qpair))) {
+	if (spdk_unlikely(!bdev_ocssd_find_io_path(&ocssd_bdev->nvme_bdev, io_path, &nvme_ns, &qpair))) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -786,7 +800,7 @@ _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	struct nvme_bdev_ns *nvme_ns;
 	struct spdk_nvme_qpair *qpair;
 
-	if (spdk_unlikely(!bdev_nvme_find_io_path(&ocssd_bdev->nvme_bdev, io_path,
+	if (spdk_unlikely(!bdev_ocssd_find_io_path(&ocssd_bdev->nvme_bdev, io_path,
 			  &nvme_ns, &qpair))) {
 		return -1;
 	}

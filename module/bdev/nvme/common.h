@@ -177,26 +177,4 @@ void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 void nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 void nvme_bdev_ctrlr_unregister(void *ctx);
 
-static inline bool
-bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_path *io_path,
-		       struct nvme_bdev_ns **_nvme_ns, struct spdk_nvme_qpair **_qpair)
-{
-	if (spdk_unlikely(io_path->qpair == NULL)) {
-		/* The device is currently resetting. */
-		return false;
-	}
-
-	*_nvme_ns = nbdev->nvme_ns;
-	*_qpair = io_path->qpair;
-	return true;
-}
-
-static inline bool
-bdev_nvme_find_admin_path(struct nvme_io_path *io_path,
-			  struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
-{
-	*_nvme_bdev_ctrlr = io_path->ctrlr;
-	return true;
-}
-
 #endif /* SPDK_COMMON_BDEV_NVME_H */

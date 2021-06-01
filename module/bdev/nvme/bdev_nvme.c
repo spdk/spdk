@@ -251,6 +251,28 @@ static struct spdk_bdev_module nvme_if = {
 };
 SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 
+static inline bool
+bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_path *io_path,
+		       struct nvme_bdev_ns **_nvme_ns, struct spdk_nvme_qpair **_qpair)
+{
+	if (spdk_unlikely(io_path->qpair == NULL)) {
+		/* The device is currently resetting. */
+		return false;
+	}
+
+	*_nvme_ns = nbdev->nvme_ns;
+	*_qpair = io_path->qpair;
+	return true;
+}
+
+static inline bool
+bdev_nvme_find_admin_path(struct nvme_io_path *io_path,
+			  struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
+{
+	*_nvme_bdev_ctrlr = io_path->ctrlr;
+	return true;
+}
+
 static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
