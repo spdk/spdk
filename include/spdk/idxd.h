@@ -375,6 +375,28 @@ int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, vo
 			    spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit a copy combined with CRC32-C request.
+ *
+ * This function will build the descriptor for copy plus CRC32-C and then immediately
+ * submit by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param dst Destination virtual address.
+ * \param src Source virtual address.
+ * \param crc_dst Resulting calculation.
+ * \param seed Four byte CRC-32C seed value.
+ * \param nbytes Number of bytes to calculate on.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
+ * in the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void *src,
+				 uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+				 spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Check for completed requests on an IDXD channel.
  *
  * \param chan IDXD channel to check for completions.

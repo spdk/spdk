@@ -18,6 +18,8 @@ Updated DPDK submodule to DPDK 21.02.
 Remove the probe_cb parameter in spdk_idxd_probe function. And remove the definition
 of spdk_idxd_probe_cb function pointer. It should be implemented in idxd_user.c.
 
+Added API `spdk_idxd_submit_copy_crc32c` to perform a CRC32C while copying data.
+
 ### util
 
 `spdk_crc32c_iov_update` function was added to support calculating the crc32c of the

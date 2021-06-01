@@ -637,6 +637,47 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 	return 0;
 }
 
+int
+spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void *src,
+			     uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+			     spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
+	uint64_t src_addr, dst_addr;
+	int rc;
+
+	/* Common prep. */
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _vtophys(src, &src_addr, nbytes);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _vtophys(dst, &dst_addr, nbytes);
+	if (rc) {
+		return rc;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_COPY_CRC;
+	desc->dst_addr = dst_addr;
+	desc->src_addr = src_addr;
+	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
+	desc->crc32c.seed = seed;
+	desc->xfer_size = nbytes;
+	comp->crc_dst = crc_dst;
+
+	/* Submit operation. */
+	movdir64b(chan->portal, desc);
+
+	return 0;
+}
+
 uint32_t
 spdk_idxd_batch_get_max(void)
 {
@@ -1046,6 +1087,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				SPDK_DEBUGLOG(idxd, "Complete batch %p\n", comp_ctx->batch);
 				break;
 			case IDXD_OPCODE_CRC32C_GEN:
+			case IDXD_OPCODE_COPY_CRC:
 				*(uint32_t *)comp_ctx->crc_dst = comp_ctx->hw.crc32c_val;
 				*(uint32_t *)comp_ctx->crc_dst ^= ~0;
 				break;
