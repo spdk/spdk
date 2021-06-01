@@ -167,7 +167,8 @@ There can be one or more `initiatorX` setting sections, depending on the test se
   "cpus_allowed_policy": "shared",
   "num_cores": 4,
   "cpu_frequency": 2100000,
-  "adq_enable": false
+  "adq_enable": false,
+  "kernel_engine": "io_uring"
 }
 ```
 
@@ -212,6 +213,11 @@ Optional, common:
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;
   Used to run set_irq_affinity.sh script.
   Default: /usr/src/local/mlnx-tools/ofed_scripts
+- kernel_engine - Select fio ioengine mode to run tests. io_uring libraries and
+  io_uring capable fio binaries must be present on Initiator systems!
+  Available options:
+  - libaio (default)
+  - io_uring
 
 Optional, SPDK Initiator only:
 

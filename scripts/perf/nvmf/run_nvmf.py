@@ -802,7 +802,7 @@ rate_iops={rate_iops}
             ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
             spdk_conf = "spdk_json_conf=%s/bdev.conf" % self.spdk_dir
         else:
-            ioengine = "libaio"
+            ioengine = self.ioengine
             spdk_conf = ""
             out = self.exec_cmd(["sudo", "nvme", "list", "|", "grep", "-E", "'SPDK|Linux'",
                                  "|", "awk", "'{print $1}'"])
@@ -837,6 +837,16 @@ rate_iops={rate_iops}
         fio_config = fio_conf_template.format(ioengine=ioengine, spdk_conf=spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
                                               ramp_time=ramp_time, run_time=run_time, rate_iops=rate_iops)
+
+        # TODO: hipri disabled for now, as it causes fio errors:
+        # io_u error on file /dev/nvme2n1: Operation not supported
+        # See comment in KernelInitiator class, kernel_init_connect() function
+        if hasattr(self, "ioengine") and "io_uring" in self.ioengine:
+            fio_config = fio_config + """
+fixedbufs=1
+registerfiles=1
+#hipri=1
+"""
         if num_jobs:
             fio_config = fio_config + "numjobs=%s \n" % num_jobs
         if self.cpus_allowed is not None:
@@ -1172,12 +1182,24 @@ class KernelInitiator(Initiator):
 
         # Defaults
         self.extra_params = ""
+        self.ioengine = "libaio"
 
         if "extra_params" in initiator_config:
             self.extra_params = initiator_config["extra_params"]
 
+        if "kernel_engine" in initiator_config:
+            self.ioengine = initiator_config["kernel_engine"]
+            if "io_uring" in self.ioengine:
+                self.extra_params = "--nr-poll-queues=8"
+
     def __del__(self):
         self.ssh_connection.close()
+
+    def get_connected_nvme_list(self):
+        json_obj = json.loads(self.exec_cmd(["sudo", "nvme", "list", "-o", "json"]))
+        nvme_list = [os.path.basename(x["DevicePath"]) for x in json_obj["Devices"]
+                     if "SPDK" in x["ModelNumber"] or "Linux" in x["ModelNumber"]]
+        return nvme_list
 
     def kernel_init_connect(self):
         self.log_print("Below connection attempts may result in error messages, this is expected!")
@@ -1186,6 +1208,30 @@ class KernelInitiator(Initiator):
             self.exec_cmd(["sudo", self.nvmecli_bin, "connect", "-t", self.transport,
                            "-s", subsystem[0], "-n", subsystem[1], "-a", subsystem[2], self.extra_params])
             time.sleep(2)
+
+        if "io_uring" in self.ioengine:
+            self.log_print("Setting block layer settings for io_uring.")
+
+            # TODO: io_poll=1 and io_poll_delay=-1 params not set here, because
+            #       apparently it's not possible for connected subsystems.
+            #       Results in "error: Invalid argument"
+            block_sysfs_settings = {
+                "iostats": "0",
+                "rq_affinity": "0",
+                "nomerges": "2"
+            }
+
+            for disk in self.get_connected_nvme_list():
+                sysfs = os.path.join("/sys/block", disk, "queue")
+                for k, v in block_sysfs_settings.items():
+                    sysfs_opt_path = os.path.join(sysfs, k)
+                    try:
+                        self.exec_cmd(["sudo", "bash", "-c", "echo %s > %s" % (v, sysfs_opt_path)], stderr_redirect=True)
+                    except subprocess.CalledProcessError as e:
+                        self.log_print("Warning: command %s failed due to error %s. %s was not set!" % (e.cmd, e.output, v))
+                    finally:
+                        _ = self.exec_cmd(["sudo", "cat", "%s" % (sysfs_opt_path)])
+                        self.log_print("%s=%s" % (sysfs_opt_path, _))
 
     def kernel_init_disconnect(self):
         for subsystem in self.subsystem_info_list:
