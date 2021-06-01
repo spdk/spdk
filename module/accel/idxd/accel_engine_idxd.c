@@ -127,6 +127,10 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = spdk_idxd_submit_crc32c(chan->chan, task->dst, src, task->seed, task->nbytes, idxd_done,
 					     task);
 		break;
+	case ACCEL_OPCODE_COPY_CRC32C:
+		rc = spdk_idxd_submit_copy_crc32c(chan->chan, task->dst, task->src, task->crc_dst, task->seed,
+						  task->nbytes, idxd_done, task);
+		break;
 	default:
 		assert(false);
 		rc = -EINVAL;
@@ -219,7 +223,7 @@ static uint64_t
 idxd_get_capabilities(void)
 {
 	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C | ACCEL_COMPARE |
-	       ACCEL_DUALCAST;
+	       ACCEL_DUALCAST | ACCEL_COPY_CRC32C;
 }
 
 static uint32_t
