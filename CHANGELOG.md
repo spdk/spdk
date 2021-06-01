@@ -24,6 +24,9 @@ of spdk_idxd_probe_cb function pointer. It should be implemented in idxd_user.c.
 
 Added API `spdk_idxd_submit_copy_crc32c` to perform a CRC32C while copying data.
 
+Added API `spdk_idxd_batch_prep_copy_crc32c` to prepare a batch operation to perform
+a CRC32C while copying data.
+
 ### util
 
 `spdk_crc32c_iov_update` function was added to support calculating the crc32c of the

@@ -1004,6 +1004,44 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 }
 
 int
+spdk_idxd_batch_prep_copy_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+				 void *dst, void *src, uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+				 spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
+	uint64_t src_addr, dst_addr;
+	int rc;
+
+	/* Common prep. */
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _vtophys(src, &src_addr, nbytes);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _vtophys(dst, &dst_addr, nbytes);
+	if (rc) {
+		return rc;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_COPY_CRC;
+	desc->dst_addr = dst_addr;
+	desc->src_addr = src_addr;
+	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
+	desc->crc32c.seed = seed;
+	desc->xfer_size = nbytes;
+	comp->crc_dst = crc_dst;
+
+	return 0;
+}
+
+int
 spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 			     void *src1, void *src2, uint64_t nbytes, spdk_idxd_req_cb cb_fn,
 			     void *cb_arg)
