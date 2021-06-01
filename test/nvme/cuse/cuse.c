@@ -91,6 +91,8 @@ DEFINE_STUB(nvme_io_msg_ctrlr_register, int,
 DEFINE_STUB_V(nvme_io_msg_ctrlr_unregister,
 	      (struct spdk_nvme_ctrlr *ctrlr, struct nvme_io_msg_producer *io_msg_producer));
 
+DEFINE_STUB_V(nvme_ctrlr_update_namespaces, (struct spdk_nvme_ctrlr *ctrlr));
+
 static bool
 wait_for_file(char *filename, bool exists)
 {

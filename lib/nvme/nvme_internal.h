@@ -1318,6 +1318,7 @@ const struct spdk_nvme_transport *nvme_get_transport(const char *transport_name)
 const struct spdk_nvme_transport *nvme_get_first_transport(void);
 const struct spdk_nvme_transport *nvme_get_next_transport(const struct spdk_nvme_transport
 		*transport);
+void  nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr);
 
 /* Transport specific functions */
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
