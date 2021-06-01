@@ -57,6 +57,8 @@
 
 #include "spdk/log.h"
 
+#include "spdk_internal/sgl.h"
+
 #define MAX_TMPBUF 1024
 
 #ifdef __FreeBSD__
@@ -387,49 +389,11 @@ iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 	}
 }
 
-struct _iscsi_sgl {
-	struct iovec	*iov;
-	int		iovcnt;
-	uint32_t	iov_offset;
-	uint32_t	total_size;
-};
-
-static inline void
-_iscsi_sgl_init(struct _iscsi_sgl *s, struct iovec *iovs, int iovcnt,
-		uint32_t iov_offset)
-{
-	s->iov = iovs;
-	s->iovcnt = iovcnt;
-	s->iov_offset = iov_offset;
-	s->total_size = 0;
-}
-
-static inline bool
-_iscsi_sgl_append(struct _iscsi_sgl *s, uint8_t *data, uint32_t data_len)
-{
-	if (s->iov_offset >= data_len) {
-		s->iov_offset -= data_len;
-	} else {
-		assert(s->iovcnt > 0);
-		s->iov->iov_base = data + s->iov_offset;
-		s->iov->iov_len = data_len - s->iov_offset;
-		s->total_size += data_len - s->iov_offset;
-		s->iov_offset = 0;
-		s->iov++;
-		s->iovcnt--;
-		if (s->iovcnt == 0) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 /* Build iovec array to leave metadata space for every data block
  * when reading data segment from socket.
  */
 static inline bool
-_iscsi_sgl_append_with_md(struct _iscsi_sgl *s,
+_iscsi_sgl_append_with_md(struct spdk_iov_sgl *s,
 			  void *buf, uint32_t buf_len, uint32_t data_len,
 			  struct spdk_dif_ctx *dif_ctx)
 {
@@ -468,7 +432,7 @@ int
 iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
 		 struct spdk_iscsi_pdu *pdu, uint32_t *_mapped_length)
 {
-	struct _iscsi_sgl sgl;
+	struct spdk_iov_sgl sgl;
 	int enable_digest;
 	uint32_t total_ahs_len;
 	uint32_t data_len;
@@ -487,22 +451,22 @@ iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
 		enable_digest = 0;
 	}
 
-	_iscsi_sgl_init(&sgl, iovs, iovcnt, pdu->writev_offset);
+	spdk_iov_sgl_init(&sgl, iovs, iovcnt, pdu->writev_offset);
 
 	/* BHS */
-	if (!_iscsi_sgl_append(&sgl, (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN)) {
+	if (!spdk_iov_sgl_append(&sgl, (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN)) {
 		goto end;
 	}
 	/* AHS */
 	if (total_ahs_len > 0) {
-		if (!_iscsi_sgl_append(&sgl, pdu->ahs, 4 * total_ahs_len)) {
+		if (!spdk_iov_sgl_append(&sgl, pdu->ahs, 4 * total_ahs_len)) {
 			goto end;
 		}
 	}
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		if (!_iscsi_sgl_append(&sgl, pdu->header_digest, ISCSI_DIGEST_LEN)) {
+		if (!spdk_iov_sgl_append(&sgl, pdu->header_digest, ISCSI_DIGEST_LEN)) {
 			goto end;
 		}
 	}
@@ -510,7 +474,7 @@ iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
 	/* Data Segment */
 	if (data_len > 0) {
 		if (!pdu->dif_insert_or_strip) {
-			if (!_iscsi_sgl_append(&sgl, pdu->data, data_len)) {
+			if (!spdk_iov_sgl_append(&sgl, pdu->data, data_len)) {
 				goto end;
 			}
 		} else {
@@ -523,7 +487,7 @@ iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int iovcnt,
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		_iscsi_sgl_append(&sgl, pdu->data_digest, ISCSI_DIGEST_LEN);
+		spdk_iov_sgl_append(&sgl, pdu->data_digest, ISCSI_DIGEST_LEN);
 	}
 
 end:
