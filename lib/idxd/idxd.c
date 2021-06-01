@@ -805,25 +805,27 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	return 0;
 }
 
-static struct idxd_hw_desc *
+static int
 _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
-		     void *cb_arg, struct idxd_batch *batch)
+		     void *cb_arg, struct idxd_batch *batch,
+		     struct idxd_hw_desc **_desc, struct idxd_comp **_comp)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_comp *comp;
 
 	if (_is_batch_valid(batch, chan) == false) {
 		SPDK_ERRLOG("Attempt to add to an invalid batch.\n");
-		return NULL;
+		return -EINVAL;
 	}
 
+	assert(batch != NULL); /* suppress scan-build warning. */
 	if (batch->index == DESC_PER_BATCH) {
 		SPDK_ERRLOG("Attempt to add to a batch that is already full.\n");
-		return NULL;
+		return -EINVAL;
 	}
 
-	desc = &batch->user_desc[batch->index];
-	comp = &batch->user_completions[batch->index];
+	desc = *_desc = &batch->user_desc[batch->index];
+	comp = *_comp = &batch->user_completions[batch->index];
 	_track_comp(chan, true, batch->index, comp, desc, batch);
 	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->index);
 
@@ -835,18 +837,20 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	comp->cb_fn = cb_fn;
 	comp->batch = batch;
 
-	return desc;
+	return 0;
 }
 
 static int
 _idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
+	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch);
-	if (desc == NULL) {
-		return -EINVAL;
+	rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	/* Command specific. */
@@ -863,13 +867,14 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 			  void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t src_addr, dst_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
-	if (desc == NULL) {
-		return -EINVAL;
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -897,13 +902,14 @@ spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 			  spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t dst_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
-	if (desc == NULL) {
-		return -EINVAL;
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(dst, &dst_addr, nbytes);
@@ -925,6 +931,7 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 			      void *dst1, void *dst2, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t src_addr, dst1_addr, dst2_addr;
 	int rc;
 
@@ -934,9 +941,9 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 	}
 
 	/* Common prep. */
-	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
-	if (desc == NULL) {
-		return -EINVAL;
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -969,13 +976,14 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 			    spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t src_addr, dst_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
-	if (desc == NULL) {
-		return -EINVAL;
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -1005,13 +1013,14 @@ spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batc
 			     void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
+	struct idxd_comp *comp;
 	uint64_t src1_addr, src2_addr;
 	int rc;
 
 	/* Common prep. */
-	desc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch);
-	if (desc == NULL) {
-		return -EINVAL;
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
+	if (rc) {
+		return rc;
 	}
 
 	rc = _vtophys(src1, &src1_addr, nbytes);
