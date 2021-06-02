@@ -11,6 +11,7 @@ fi
 source "$1"
 
 rootdir=$(readlink -f $(dirname $0))
+testdir=$rootdir # to get the storage space for tests
 source "$rootdir/test/common/autotest_common.sh"
 
 function build_rpms() (
@@ -20,7 +21,7 @@ function build_rpms() (
 	unset -v LD_LIBRARY_PATH
 
 	install_uninstall_rpms() {
-		rpms=("$HOME/rpmbuild/RPMS/x86_64/"spdk{,-devel,{,-dpdk}-libs}-$version-1.x86_64.rpm)
+		rpms=("$builddir/rpm/x86_64/"spdk{,-devel,{,-dpdk}-libs}-$version-1.x86_64.rpm)
 
 		sudo rpm -i "${rpms[@]}"
 		rpms=("${rpms[@]##*/}") rpms=("${rpms[@]%.rpm}")
@@ -31,11 +32,12 @@ function build_rpms() (
 	}
 
 	build_rpm() {
-		MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@"
+		BUILDDIR=$builddir MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@"
 		install_uninstall_rpms
 	}
 
 	version="test_shared"
+	builddir=$SPDK_TEST_STORAGE/test-rpm
 	run_test "build_shared_rpm" build_rpm --with-shared
 
 	if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then

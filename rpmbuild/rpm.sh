@@ -46,15 +46,18 @@ get_version() {
 }
 
 build_rpm() (
-	local macros=()
+	local macros=() dir
 
 	macros+=(-D "configure $configure")
 	macros+=(-D "make $make")
 	macros+=(-D "release $release")
 	macros+=(-D "version $version")
 
-	# Prepare default dir structure
-	mkdir -p "$HOME"/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+	# Adjust dir macros to update the final location of the RPMS
+	for dir in build buildroot rpm source spec srcrpm; do
+		mkdir -p "$rpmbuild_dir/$dir"
+		macros+=(-D "_${dir}dir $rpmbuild_dir/$dir")
+	done
 
 	if [[ $configure == *"with-shared"* || $configure == *"with-dpdk"* ]]; then
 		macros+=(-D "dpdk 1")
@@ -82,10 +85,10 @@ build_rpm() (
 
 	fedora_python_sys_path_workaround
 
-	# Despite building in-place, rpmbuild still looks under SOURCES as defined
+	# Despite building in-place, rpmbuild still looks under source dir as defined
 	# in Source:. Create a dummy file to fulfil its needs and to keep Source in
 	# the .spec.
-	: > "$rpmbuild_dir/SOURCES/spdk-$version.tar.gz"
+	: > "$rpmbuild_dir/source/spdk-$version.tar.gz"
 
 	printf '* Starting rpmbuild...\n'
 	rpmbuild --clean --nodebuginfo "${macros[@]}" --build-in-place -ba "$spec"
@@ -99,7 +102,7 @@ release=${RPM_RELEASE:-1}
 requirements=${REQUIREMENTS:-}
 version=${SPDK_VERSION:-$(get_version)}
 
-rpmbuild_dir=$HOME/rpmbuild
+rpmbuild_dir=${BUILDDIR:-"$HOME/rpmbuild"}
 spec=$specdir/spdk.spec
 
 build_rpm
