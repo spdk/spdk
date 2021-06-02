@@ -95,6 +95,8 @@ to create a rbd bdev with  an already registered Rados Cluster Object.
 New RPC `bdev_rbd_get_clusters_info` was added, it allows to get the info of the registered
 Rados Cluster names.
 
+New optional parameter, 'timeout_admin_us', added to the bdev_nvme_set_options RPC.
+
 Revised a parameter `--stripe-size_kb` to `--stripe-size-kb` of `bdev_raid_create` method
 provided in `scripts/rpc.py` for consistency.
 

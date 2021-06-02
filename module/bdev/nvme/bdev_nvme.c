@@ -2047,9 +2047,27 @@ bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
 	*opts = g_opts;
 }
 
+static int
+bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
+{
+	if ((opts->timeout_us == 0) && (opts->timeout_admin_us != 0)) {
+		/* Can't set timeout_admin_us without also setting timeout_us */
+		SPDK_WARNLOG("Invalid options: Can't have (timeout_us == 0) with (timeout_admin_us > 0)\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 int
 bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
+	int ret = bdev_nvme_validate_opts(opts);
+	if (ret) {
+		SPDK_WARNLOG("Failed to set nvme opts.\n");
+		return ret;
+	}
+
 	if (g_bdev_nvme_init_thread != NULL) {
 		if (!TAILQ_EMPTY(&g_nvme_ctrlrs)) {
 			return -EPERM;
@@ -3429,6 +3447,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "action_on_timeout", action);
 	spdk_json_write_named_uint64(w, "timeout_us", g_opts.timeout_us);
+	spdk_json_write_named_uint64(w, "timeout_admin_us", g_opts.timeout_admin_us);
 	spdk_json_write_named_uint32(w, "keep_alive_timeout_ms", g_opts.keep_alive_timeout_ms);
 	spdk_json_write_named_uint32(w, "retry_count", g_opts.retry_count);
 	spdk_json_write_named_uint32(w, "arbitration_burst", g_opts.arbitration_burst);

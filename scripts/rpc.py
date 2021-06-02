@@ -456,6 +456,7 @@ if __name__ == "__main__":
         rpc.bdev.bdev_nvme_set_options(args.client,
                                        action_on_timeout=args.action_on_timeout,
                                        timeout_us=args.timeout_us,
+                                       timeout_admin_us=args.timeout_admin_us,
                                        keep_alive_timeout_ms=args.keep_alive_timeout_ms,
                                        retry_count=args.retry_count,
                                        arbitration_burst=args.arbitration_burst,
@@ -473,6 +474,8 @@ if __name__ == "__main__":
                    help="Action to take on command time out. Valid valies are: none, reset, abort")
     p.add_argument('-t', '--timeout-us',
                    help="Timeout for each command, in microseconds. If 0, don't track timeouts.", type=int)
+    p.add_argument('--timeout-admin-us',
+                   help="Timeout for each admin command, in microseconds. If 0, treat same as io timeouts.", type=int)
     p.add_argument('-k', '--keep-alive-timeout-ms',
                    help="Keep alive timeout period in millisecond. If 0, disable keep-alive.", type=int)
     p.add_argument('-n', '--retry-count',
