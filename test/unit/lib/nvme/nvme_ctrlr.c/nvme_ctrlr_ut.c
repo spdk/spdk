@@ -3004,6 +3004,58 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
 }
 
+static void
+test_nvme_ctrlr_set_supported_log_pages(void)
+{
+	int rc;
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_intel_log_page_directory *log_page_directory = NULL;
+
+	/* Intel device */
+	ctrlr.cdata.lpa.celp = true;
+	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
+	ctrlr.quirks |= NVME_INTEL_QUIRK_READ_LATENCY;
+	ctrlr.quirks |= NVME_INTEL_QUIRK_WRITE_LATENCY;
+	log_page_directory = spdk_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
+					  64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	SPDK_CU_ASSERT_FATAL(log_page_directory != NULL);
+
+	log_page_directory->temperature_statistics_log_len = 1;
+	log_page_directory->smart_log_len = 1;
+	log_page_directory->marketing_description_log_len = 1;
+	MOCK_SET(spdk_zmalloc, log_page_directory);
+
+	rc = nvme_ctrlr_set_supported_log_pages(&ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_ERROR] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_HEALTH_INFORMATION] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_FIRMWARE_SLOT] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_INTEL_LOG_TEMPERATURE] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_INTEL_LOG_SMART] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_INTEL_MARKETING_DESCRIPTION] == true);
+	MOCK_CLEAR(spdk_zmalloc);
+
+	/* ana supported */
+	memset(&ctrlr, 0, sizeof(ctrlr));
+	ctrlr.cdata.cmic.ana_reporting = true;
+	ctrlr.cdata.lpa.celp = 1;
+	ctrlr.cdata.nanagrpid = 1;
+	ctrlr.cdata.nn = 1;
+
+	rc = nvme_ctrlr_set_supported_log_pages(&ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_ERROR] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_HEALTH_INFORMATION] == true);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_FIRMWARE_SLOT] == true);
+	CU_ASSERT(ctrlr.ana_log_page_size == sizeof(struct spdk_nvme_ana_page) +
+		  sizeof(struct spdk_nvme_ana_group_descriptor) * 1 + sizeof(uint32_t) * 1);
+	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] == true);
+	spdk_free(ctrlr.ana_log_page);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -3055,6 +3107,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_aer_callback);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ns_attr_changed);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_namespaces_iocs_specific_next);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_set_supported_log_pages);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
