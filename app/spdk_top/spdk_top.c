@@ -624,7 +624,7 @@ get_data(void)
 	struct rpc_threads_stats threads_stats;
 	struct rpc_pollers *pollers;
 	struct rpc_poller_info *poller;
-	uint64_t i, j;
+	uint64_t i, j, k;
 	int rc = 0;
 
 	rc = rpc_send_req("thread_get_stats", &json_resp);
@@ -713,7 +713,11 @@ get_data(void)
 		core_info = &g_cores_stats.cores.core[i];
 
 		for (j = 0; j < core_info->threads.threads_count; j++) {
-			g_threads_stats.threads.thread_info[j].core_num = core_info->lcore;
+			for (k = 0; k < g_threads_stats.threads.threads_count; k++) {
+				if (core_info->threads.thread[j].id == g_threads_stats.threads.thread_info[k].id) {
+					g_threads_stats.threads.thread_info[k].core_num = core_info->lcore;
+				}
+			}
 		}
 	}
 
