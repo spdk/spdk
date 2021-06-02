@@ -1070,6 +1070,13 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 					_free_batch(comp_ctx->batch, chan);
 				}
 			}
+		} else {
+			/*
+			 * oldest locations are at the head of the list so if
+			 * we've polled a location that hasn't completed, bail
+			 * now as there are unlikely to be any more completions.
+			 */
+			break;
 		}
 	}
 	return rc;
