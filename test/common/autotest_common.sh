@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+function xtrace_fd() {
+	if [[ -n $BASH_XTRACEFD && -e /proc/self/fd/$BASH_XTRACEFD ]]; then
+		# Close it first to make sure it's sane
+		exec {BASH_XTRACEFD}>&-
+	fi
+	exec {BASH_XTRACEFD}>&2
+
+	set -x
+	echo "Tracing to $BASH_XTRACEFD FD"
+}
+
 function xtrace_disable() {
 	if [ "$XTRACE_DISABLED" != "yes" ]; then
 		PREV_BASH_OPTS="$-"
@@ -1388,7 +1399,7 @@ if $SPDK_AUTOTEST_X; then
 	# explicitly enable xtraces, overriding any tracking information.
 	unset XTRACE_DISABLED
 	unset XTRACE_NESTING_LEVEL
-	set -x
+	xtrace_fd
 	xtrace_enable
 else
 	xtrace_restore
