@@ -848,10 +848,22 @@ get_pollers_data(void)
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
 	int rc = 0;
 	uint64_t i = 0;
+	uint32_t current_pollers_count;
+	struct rpc_poller_info pollers_info[RPC_MAX_POLLERS];
 
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
 		return rc;
+	}
+
+	/* Decode json */
+	memset(&pollers_info, 0, sizeof(pollers_info));
+	if (rpc_decode_pollers_threads_array(json_resp->result, pollers_info, &current_pollers_count)) {
+		rc = -EINVAL;
+		for (i = 0; i < current_pollers_count; i++) {
+			free_rpc_poller(&pollers_info[i]);
+		}
+		goto end;
 	}
 
 	pthread_mutex_lock(&g_thread_lock);
@@ -867,13 +879,13 @@ get_pollers_data(void)
 		free_rpc_poller(&g_pollers_info[i]);
 	}
 
-	/* Decode json */
-	memset(&g_pollers_info, 0, sizeof(g_pollers_info));
-	if (rpc_decode_pollers_threads_array(json_resp->result, g_pollers_info, &g_last_pollers_count)) {
-		rc = -EINVAL;
-	}
+	g_last_pollers_count = current_pollers_count;
+
+	memcpy(&g_pollers_info, &pollers_info, sizeof(struct rpc_poller_info) * g_last_pollers_count);
 
 	pthread_mutex_unlock(&g_thread_lock);
+
+end:
 	spdk_jsonrpc_client_free_response(json_resp);
 	return rc;
 }
