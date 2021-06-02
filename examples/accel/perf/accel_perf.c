@@ -44,6 +44,7 @@
 #define DATA_PATTERN 0x5a
 #define ALIGN_4K 0x1000
 
+static bool g_using_sw_engine = false;
 static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_end;
 static int g_rc;
@@ -894,7 +895,11 @@ accel_done(void *cb_arg, int status)
 	assert(worker);
 
 	task->status = status;
-	spdk_thread_send_msg(worker->thread, _accel_done, task);
+	if (g_using_sw_engine == false) {
+		_accel_done(task);
+	} else {
+		spdk_thread_send_msg(worker->thread, _accel_done, task);
+	}
 }
 
 static void
@@ -913,6 +918,7 @@ accel_perf_start(void *arg1)
 	spdk_put_io_channel(accel_ch);
 
 	if ((g_capabilites & g_workload_selection) != g_workload_selection) {
+		g_using_sw_engine = true;
 		SPDK_WARNLOG("The selected workload is not natively supported by the current engine\n");
 		SPDK_WARNLOG("The software engine will be used instead.\n\n");
 	}
