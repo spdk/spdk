@@ -14,6 +14,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
+devs=()
 
 nvmftestinit
 nvmfappstart -m 0xF
@@ -29,11 +30,11 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 nvme discover -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s "$NVMF_PORT"
-nvme_num_before_connection=$(get_nvme_devs 2>&1 || echo 0)
+devs=($(get_nvme_devs)) nvme_num_before_connection=${#devs[@]}
 nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 waitforserial $NVMF_SERIAL 2
-if ! get_nvme_devs print 2> /dev/null; then
+if [[ -z $(get_nvme_devs) ]]; then
 	echo "Could not find any nvme devices to work with, aborting the test" >&2
 	exit 1
 fi
@@ -57,9 +58,9 @@ for ns in "${nvmes[@]}"; do
 	nvme id-ns $ns
 done
 
-nvme_num=$(get_nvme_devs 2>&1)
+devs=($(get_nvme_devs)) nvme_num=${#devs[@]}
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
-if [ $nvme_num -le $nvme_num_before_connection ]; then
+if ((nvme_num <= nvme_num_before_connection)); then
 	echo "nvme-cli connect target devices failed"
 	exit 1
 fi

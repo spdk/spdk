@@ -507,19 +507,13 @@ function nvme_connect() {
 }
 
 function get_nvme_devs() {
-	local dev rest
+	local dev _
 
-	nvmes=()
-	while read -r dev rest; do
+	while read -r dev _; do
 		if [[ $dev == /dev/nvme* ]]; then
-			nvmes+=("$dev")
-		fi
-		if [[ $1 == print ]]; then
-			echo "$dev $rest"
+			echo "$dev"
 		fi
 	done < <(nvme list)
-	((${#nvmes[@]})) || return 1
-	echo "${#nvmes[@]}" >&2
 }
 
 function gen_nvmf_target_json() {
