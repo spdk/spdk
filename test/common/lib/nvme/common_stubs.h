@@ -77,10 +77,6 @@ DEFINE_STUB(nvme_ctrlr_get_vs, int, (struct spdk_nvme_ctrlr *ctrlr,
 				     union spdk_nvme_vs_register *vs), 0);
 DEFINE_STUB(nvme_ctrlr_get_cap, int, (struct spdk_nvme_ctrlr *ctrlr,
 				      union spdk_nvme_cap_register *cap), 0);
-DEFINE_STUB(nvme_qpair_init, int, (struct spdk_nvme_qpair *qpair, uint16_t id,
-				   struct spdk_nvme_ctrlr *ctrlr,
-				   enum spdk_nvme_qprio qprio,
-				   uint32_t num_requests), 0);
 DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB_V(spdk_nvme_transport_register, (const struct spdk_nvme_transport_ops *ops));
 DEFINE_STUB(nvme_transport_ctrlr_connect_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
@@ -112,3 +108,18 @@ DEFINE_STUB(nvme_fabric_qpair_connect, int, (struct spdk_nvme_qpair *qpair, uint
 DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair));
 DEFINE_STUB(nvme_poll_group_disconnect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
+
+int
+nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		struct spdk_nvme_ctrlr *ctrlr,
+		enum spdk_nvme_qprio qprio,
+		uint32_t num_requests)
+{
+	qpair->ctrlr = ctrlr;
+	qpair->id = id;
+	qpair->qprio = qprio;
+	qpair->trtype = SPDK_NVME_TRANSPORT_TCP;
+	qpair->poll_group = (void *)0xDEADBEEF;
+
+	return 0;
+}

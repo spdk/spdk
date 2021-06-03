@@ -47,7 +47,7 @@ DEFINE_STUB(spdk_sock_listen_ext, struct spdk_sock *, (const char *ip, int port,
 DEFINE_STUB_V(spdk_sock_get_default_opts, (struct spdk_sock_opts *opts));
 DEFINE_STUB(spdk_sock_accept, struct spdk_sock *, (struct spdk_sock *sock), NULL);
 DEFINE_STUB(spdk_sock_close, int, (struct spdk_sock **sock), 0);
-DEFINE_STUB(spdk_sock_recv, ssize_t, (struct spdk_sock *sock, void *buf, size_t len), 0);
+DEFINE_STUB(spdk_sock_recv, ssize_t, (struct spdk_sock *sock, void *buf, size_t len), 1);
 DEFINE_STUB(spdk_sock_writev, ssize_t, (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
 DEFINE_STUB(spdk_sock_readv, ssize_t, (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
 DEFINE_STUB(spdk_sock_set_recvlowat, int, (struct spdk_sock *sock, int nbytes), 0);

@@ -1383,6 +1383,145 @@ test_nvme_tcp_capsule_resp_hdr_handle(void)
 	nvme_tcp_free_reqs(&tqpair);
 }
 
+static void
+test_nvme_tcp_ctrlr_connect_qpair(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair *qpair;
+	struct nvme_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {};
+	struct nvme_tcp_pdu recv_pdu = {};
+	struct spdk_nvme_tcp_ic_req *ic_req = NULL;
+	int rc;
+
+	tqpair.qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+	tqpair.recv_pdu = &recv_pdu;
+	qpair = &tqpair.qpair;
+	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
+	tqpair.send_pdu = &pdu;
+	tqpair.qpair.ctrlr = &ctrlr;
+	ic_req = &pdu.hdr.ic_req;
+
+	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
+	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
+	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
+	tqpair.recv_pdu->ch_valid_bytes = 8;
+	tqpair.recv_pdu->psh_valid_bytes = tqpair.recv_pdu->hdr.common.hlen;
+	tqpair.recv_pdu->hdr.ic_resp.maxh2cdata = 4096;
+	tqpair.recv_pdu->hdr.ic_resp.cpda = 1;
+	tqpair.flags.icreq_send_ack = 1;
+	tqpair.qpair.ctrlr->opts.header_digest = true;
+	tqpair.qpair.ctrlr->opts.data_digest = true;
+	TAILQ_INIT(&tqpair.send_queue);
+
+
+	rc = nvme_tcp_ctrlr_connect_qpair(&ctrlr, qpair);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tqpair.maxr2t == NVME_TCP_MAX_R2T_DEFAULT);
+	CU_ASSERT(tqpair.state == NVME_TCP_QPAIR_STATE_RUNNING);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
+	CU_ASSERT(ic_req->common.hlen == sizeof(*ic_req));
+	CU_ASSERT(ic_req->common.plen == sizeof(*ic_req));
+	CU_ASSERT(ic_req->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ);
+	CU_ASSERT(ic_req->pfv == 0);
+	CU_ASSERT(ic_req->maxr2t == NVME_TCP_MAX_R2T_DEFAULT - 1);
+	CU_ASSERT(ic_req->hpda == NVME_TCP_HPDA_DEFAULT);
+	CU_ASSERT(ic_req->dgst.bits.hdgst_enable == true);
+	CU_ASSERT(ic_req->dgst.bits.ddgst_enable == true);
+}
+
+static void
+test_nvme_tcp_ctrlr_disconnect_qpair(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair *qpair;
+	struct nvme_tcp_qpair tqpair = {
+		.qpair.trtype = SPDK_NVME_TRANSPORT_TCP,
+	};
+	struct nvme_tcp_poll_group tgroup = {};
+	struct nvme_tcp_pdu pdu = {};
+
+	qpair = &tqpair.qpair;
+	qpair->poll_group = &tgroup.group;
+	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
+	tqpair.needs_poll = true;
+	TAILQ_INIT(&tgroup.needs_poll);
+	TAILQ_INIT(&tqpair.send_queue);
+	TAILQ_INSERT_TAIL(&tgroup.needs_poll, &tqpair, link);
+	TAILQ_INSERT_TAIL(&tqpair.send_queue, &pdu, tailq);
+
+	nvme_tcp_ctrlr_disconnect_qpair(&ctrlr, qpair);
+
+	CU_ASSERT(tqpair.needs_poll == false);
+	CU_ASSERT(tqpair.sock == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&tqpair.send_queue) == true);
+}
+
+static void
+test_nvme_tcp_ctrlr_create_io_qpair(void)
+{
+	struct spdk_nvme_qpair *qpair = NULL;
+	struct spdk_nvme_ctrlr ctrlr = {};
+	uint16_t qid = 1;
+	const struct spdk_nvme_io_qpair_opts opts = {
+		.io_queue_size = 1,
+		.qprio = SPDK_NVME_QPRIO_URGENT,
+		.io_queue_requests = 1,
+	};
+	struct nvme_tcp_qpair *tqpair;
+
+	ctrlr.trid.priority = 1;
+	ctrlr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	memcpy(ctrlr.trid.traddr, "192.168.1.78", sizeof("192.168.1.78"));
+	memcpy(ctrlr.trid.trsvcid, "23", sizeof("23"));
+	memcpy(ctrlr.opts.src_addr, "192.168.1.77", sizeof("192.168.1.77"));
+	memcpy(ctrlr.opts.src_svcid, "23", sizeof("23"));
+
+	qpair = nvme_tcp_ctrlr_create_io_qpair(&ctrlr, qid, &opts);
+	tqpair = nvme_tcp_qpair(qpair);
+
+	CU_ASSERT(qpair != NULL);
+	CU_ASSERT(qpair->id == 1);
+	CU_ASSERT(qpair->ctrlr == &ctrlr);
+	CU_ASSERT(qpair->qprio == SPDK_NVME_QPRIO_URGENT);
+	CU_ASSERT(qpair->trtype == SPDK_NVME_TRANSPORT_TCP);
+	CU_ASSERT(qpair->poll_group == (void *)0xDEADBEEF);
+	CU_ASSERT(tqpair->num_entries = 1);
+
+	free(tqpair->tcp_reqs);
+	spdk_free(tqpair->send_pdus);
+	free(tqpair);
+}
+
+static void
+test_nvme_tcp_ctrlr_delete_io_qpair(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)0xdeadbeef;
+	struct spdk_nvme_qpair *qpair;
+	struct nvme_tcp_qpair *tqpair;
+	struct nvme_tcp_req tcp_req = {};
+	struct nvme_request	req = {};
+	int rc;
+
+	tqpair = calloc(1, sizeof(struct nvme_tcp_qpair));
+	tqpair->tcp_reqs = calloc(1, sizeof(struct nvme_tcp_req));
+	tqpair->send_pdus = calloc(1, sizeof(struct nvme_tcp_pdu));
+	tqpair->qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+	qpair = &tqpair->qpair;
+	tcp_req.req = &req;
+	tcp_req.req->qpair = &tqpair->qpair;
+	tcp_req.req->cb_fn = ut_nvme_complete_request;
+	tcp_req.tqpair = tqpair;
+	tcp_req.state = NVME_TCP_REQ_ACTIVE;
+	TAILQ_INIT(&tqpair->outstanding_reqs);
+	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
+
+	rc = nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
+
+	CU_ASSERT(rc == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1413,6 +1552,10 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_tcp_icresp_handle);
 	CU_ADD_TEST(suite, test_nvme_tcp_pdu_payload_handle);
 	CU_ADD_TEST(suite, test_nvme_tcp_capsule_resp_hdr_handle);
+	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_connect_qpair);
+	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_disconnect_qpair);
+	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_create_io_qpair);
+	CU_ADD_TEST(suite, test_nvme_tcp_ctrlr_delete_io_qpair);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
