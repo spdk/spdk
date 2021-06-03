@@ -53,12 +53,6 @@ struct nvme_vfio_ctrlr {
 	struct vfio_device *dev;
 };
 
-static inline uint64_t
-vfio_vtophys(const void *vaddr, uint64_t *size)
-{
-	return (uint64_t)(uintptr_t)vaddr;
-}
-
 static inline struct nvme_vfio_ctrlr *
 nvme_vfio_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -379,136 +373,6 @@ nvme_vfio_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 	return NVME_MAX_SGES;
 }
 
-static inline int
-nvme_vfio_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *virt_addr, size_t len,
-			  uint32_t page_size)
-{
-	struct spdk_nvme_cmd *cmd = &tr->req->cmd;
-	uintptr_t page_mask = page_size - 1;
-	uint64_t phys_addr;
-	uint32_t i;
-
-	SPDK_DEBUGLOG(nvme_vfio, "prp_index:%u virt_addr:%p len:%u\n",
-		      *prp_index, virt_addr, (uint32_t)len);
-
-	if (spdk_unlikely(((uintptr_t)virt_addr & 3) != 0)) {
-		SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
-		return -EFAULT;
-	}
-
-	i = *prp_index;
-	while (len) {
-		uint32_t seg_len;
-
-		/*
-		 * prp_index 0 is stored in prp1, and the rest are stored in the prp[] array,
-		 * so prp_index == count is valid.
-		 */
-		if (spdk_unlikely(i > SPDK_COUNTOF(tr->u.prp))) {
-			SPDK_ERRLOG("out of PRP entries\n");
-			return -EFAULT;
-		}
-
-		phys_addr = vfio_vtophys(virt_addr, NULL);
-
-		if (i == 0) {
-			SPDK_DEBUGLOG(nvme_vfio, "prp1 = %p\n", (void *)phys_addr);
-			cmd->dptr.prp.prp1 = phys_addr;
-			seg_len = page_size - ((uintptr_t)virt_addr & page_mask);
-		} else {
-			if ((phys_addr & page_mask) != 0) {
-				SPDK_ERRLOG("PRP %u not page aligned (%p)\n", i, virt_addr);
-				return -EFAULT;
-			}
-
-			SPDK_DEBUGLOG(nvme_vfio, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
-			tr->u.prp[i - 1] = phys_addr;
-			seg_len = page_size;
-		}
-
-		seg_len = spdk_min(seg_len, len);
-		virt_addr += seg_len;
-		len -= seg_len;
-		i++;
-	}
-
-	cmd->psdt = SPDK_NVME_PSDT_PRP;
-	if (i <= 1) {
-		cmd->dptr.prp.prp2 = 0;
-	} else if (i == 2) {
-		cmd->dptr.prp.prp2 = tr->u.prp[0];
-		SPDK_DEBUGLOG(nvme_vfio, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
-	} else {
-		cmd->dptr.prp.prp2 = tr->prp_sgl_bus_addr;
-		SPDK_DEBUGLOG(nvme_vfio, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
-	}
-
-	*prp_index = i;
-	return 0;
-}
-
-static int
-nvme_vfio_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
-				     struct nvme_tracker *tr, bool dword_aligned)
-{
-	uint32_t prp_index = 0;
-	int rc;
-
-	rc = nvme_vfio_prp_list_append(tr, &prp_index, req->payload.contig_or_cb_arg + req->payload_offset,
-				       req->payload_size, qpair->ctrlr->page_size);
-	if (rc) {
-		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
-							SPDK_NVME_SC_INVALID_FIELD,
-							1 /* do not retry */, true);
-	}
-
-	return rc;
-}
-
-static int
-nvme_vfio_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
-{
-	struct nvme_tracker	*tr;
-	int			rc = 0;
-	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
-	struct nvme_pcie_qpair	*vqpair = nvme_pcie_qpair(qpair);
-
-	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	}
-
-	tr = TAILQ_FIRST(&vqpair->free_tr);
-
-	if (tr == NULL) {
-		/* Inform the upper layer to try again later. */
-		rc = -EAGAIN;
-		goto exit;
-	}
-
-	TAILQ_REMOVE(&vqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
-	TAILQ_INSERT_TAIL(&vqpair->outstanding_tr, tr, tq_list);
-	tr->req = req;
-	tr->cb_fn = req->cb_fn;
-	tr->cb_arg = req->cb_arg;
-	req->cmd.cid = tr->cid;
-
-	if (req->payload_size != 0) {
-		rc = nvme_vfio_qpair_build_contig_request(qpair, req, tr, true);
-		if (rc) {
-			goto exit;
-		}
-	}
-
-	nvme_pcie_qpair_submit_tracker(qpair, tr);
-
-exit:
-	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-	}
-
-	return rc;
-}
-
 const struct spdk_nvme_transport_ops vfio_ops = {
 	.name = "VFIOUSER",
 	.type = SPDK_NVME_TRANSPORT_VFIOUSER,
@@ -533,7 +397,7 @@ const struct spdk_nvme_transport_ops vfio_ops = {
 
 	.qpair_reset = nvme_pcie_qpair_reset,
 	.qpair_abort_reqs = nvme_pcie_qpair_abort_reqs,
-	.qpair_submit_request = nvme_vfio_qpair_submit_request,
+	.qpair_submit_request = nvme_pcie_qpair_submit_request,
 	.qpair_process_completions = nvme_pcie_qpair_process_completions,
 
 	.poll_group_create = nvme_pcie_poll_group_create,
