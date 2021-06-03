@@ -1045,6 +1045,520 @@ free:
 	return 0;
 }
 
+static void
+nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
+{
+	/*
+	 * Bad vtophys translation, so abort this request and return
+	 *  immediately.
+	 */
+	nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
+						SPDK_NVME_SC_INVALID_FIELD,
+						1 /* do not retry */, true);
+}
+
+/*
+ * Append PRP list entries to describe a virtually contiguous buffer starting at virt_addr of len bytes.
+ *
+ * *prp_index will be updated to account for the number of PRP entries used.
+ */
+static inline int
+nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *virt_addr, size_t len,
+			  uint32_t page_size)
+{
+	struct spdk_nvme_cmd *cmd = &tr->req->cmd;
+	uintptr_t page_mask = page_size - 1;
+	uint64_t phys_addr;
+	uint32_t i;
+
+	SPDK_DEBUGLOG(nvme, "prp_index:%u virt_addr:%p len:%u\n",
+		      *prp_index, virt_addr, (uint32_t)len);
+
+	if (spdk_unlikely(((uintptr_t)virt_addr & 3) != 0)) {
+		SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
+		return -EFAULT;
+	}
+
+	i = *prp_index;
+	while (len) {
+		uint32_t seg_len;
+
+		/*
+		 * prp_index 0 is stored in prp1, and the rest are stored in the prp[] array,
+		 * so prp_index == count is valid.
+		 */
+		if (spdk_unlikely(i > SPDK_COUNTOF(tr->u.prp))) {
+			SPDK_ERRLOG("out of PRP entries\n");
+			return -EFAULT;
+		}
+
+		phys_addr = spdk_vtophys(virt_addr, NULL);
+		if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
+			SPDK_ERRLOG("vtophys(%p) failed\n", virt_addr);
+			return -EFAULT;
+		}
+
+		if (i == 0) {
+			SPDK_DEBUGLOG(nvme, "prp1 = %p\n", (void *)phys_addr);
+			cmd->dptr.prp.prp1 = phys_addr;
+			seg_len = page_size - ((uintptr_t)virt_addr & page_mask);
+		} else {
+			if ((phys_addr & page_mask) != 0) {
+				SPDK_ERRLOG("PRP %u not page aligned (%p)\n", i, virt_addr);
+				return -EFAULT;
+			}
+
+			SPDK_DEBUGLOG(nvme, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
+			tr->u.prp[i - 1] = phys_addr;
+			seg_len = page_size;
+		}
+
+		seg_len = spdk_min(seg_len, len);
+		virt_addr += seg_len;
+		len -= seg_len;
+		i++;
+	}
+
+	cmd->psdt = SPDK_NVME_PSDT_PRP;
+	if (i <= 1) {
+		cmd->dptr.prp.prp2 = 0;
+	} else if (i == 2) {
+		cmd->dptr.prp.prp2 = tr->u.prp[0];
+		SPDK_DEBUGLOG(nvme, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
+	} else {
+		cmd->dptr.prp.prp2 = tr->prp_sgl_bus_addr;
+		SPDK_DEBUGLOG(nvme, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
+	}
+
+	*prp_index = i;
+	return 0;
+}
+
+static int
+nvme_pcie_qpair_build_request_invalid(struct spdk_nvme_qpair *qpair,
+				      struct nvme_request *req, struct nvme_tracker *tr, bool dword_aligned)
+{
+	assert(0);
+	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	return -EINVAL;
+}
+
+/**
+ * Build PRP list describing physically contiguous payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				     struct nvme_tracker *tr, bool dword_aligned)
+{
+	uint32_t prp_index = 0;
+	int rc;
+
+	rc = nvme_pcie_prp_list_append(tr, &prp_index, req->payload.contig_or_cb_arg + req->payload_offset,
+				       req->payload_size, qpair->ctrlr->page_size);
+	if (rc) {
+		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	}
+
+	return rc;
+}
+
+/**
+ * Build an SGL describing a physically contiguous payload buffer.
+ *
+ * This is more efficient than using PRP because large buffers can be
+ * described this way.
+ */
+static int
+nvme_pcie_qpair_build_contig_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+		struct nvme_tracker *tr, bool dword_aligned)
+{
+	void *virt_addr;
+	uint64_t phys_addr, mapping_length;
+	uint32_t length;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	uint32_t nseg = 0;
+
+	assert(req->payload_size != 0);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
+
+	sgl = tr->u.sgl;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
+
+	length = req->payload_size;
+	virt_addr = req->payload.contig_or_cb_arg + req->payload_offset;
+
+	while (length > 0) {
+		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		if (dword_aligned && ((uintptr_t)virt_addr & 3)) {
+			SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		mapping_length = length;
+		phys_addr = spdk_vtophys(virt_addr, &mapping_length);
+		if (phys_addr == SPDK_VTOPHYS_ERROR) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		mapping_length = spdk_min(length, mapping_length);
+
+		length -= mapping_length;
+		virt_addr += mapping_length;
+
+		sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		sgl->unkeyed.length = mapping_length;
+		sgl->address = phys_addr;
+		sgl->unkeyed.subtype = 0;
+
+		sgl++;
+		nseg++;
+	}
+
+	if (nseg == 1) {
+		/*
+		 * The whole transfer can be described by a single SGL descriptor.
+		 *  Use the special case described by the spec where SGL1's type is Data Block.
+		 *  This means the SGL in the tracker is not used at all, so copy the first (and only)
+		 *  SGL element into SGL1.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
+		req->cmd.dptr.sgl1.unkeyed.length = tr->u.sgl[0].unkeyed.length;
+	} else {
+		/* SPDK NVMe driver supports only 1 SGL segment for now, it is enough because
+		 *  NVME_MAX_SGL_DESCRIPTORS * 16 is less than one page.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
+		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
+	}
+
+	return 0;
+}
+
+/**
+ * Build SGL list describing scattered payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				     struct nvme_tracker *tr, bool dword_aligned)
+{
+	int rc;
+	void *virt_addr;
+	uint64_t phys_addr, mapping_length;
+	uint32_t remaining_transfer_len, remaining_user_sge_len, length;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	uint32_t nseg = 0;
+
+	/*
+	 * Build scattered payloads.
+	 */
+	assert(req->payload_size != 0);
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
+	assert(req->payload.reset_sgl_fn != NULL);
+	assert(req->payload.next_sge_fn != NULL);
+	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
+
+	sgl = tr->u.sgl;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
+
+	remaining_transfer_len = req->payload_size;
+
+	while (remaining_transfer_len > 0) {
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg,
+					      &virt_addr, &remaining_user_sge_len);
+		if (rc) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		/* Bit Bucket SGL descriptor */
+		if ((uint64_t)virt_addr == UINT64_MAX) {
+			/* TODO: enable WRITE and COMPARE when necessary */
+			if (req->cmd.opc != SPDK_NVME_OPC_READ) {
+				SPDK_ERRLOG("Only READ command can be supported\n");
+				goto exit;
+			}
+			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+				SPDK_ERRLOG("Too many SGL entries\n");
+				goto exit;
+			}
+
+			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_BIT_BUCKET;
+			/* If the SGL describes a destination data buffer, the length of data
+			 * buffer shall be discarded by controller, and the length is included
+			 * in Number of Logical Blocks (NLB) parameter. Otherwise, the length
+			 * is not included in the NLB parameter.
+			 */
+			remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
+			remaining_transfer_len -= remaining_user_sge_len;
+
+			sgl->unkeyed.length = remaining_user_sge_len;
+			sgl->address = 0;
+			sgl->unkeyed.subtype = 0;
+
+			sgl++;
+			nseg++;
+
+			continue;
+		}
+
+		remaining_user_sge_len = spdk_min(remaining_user_sge_len, remaining_transfer_len);
+		remaining_transfer_len -= remaining_user_sge_len;
+		while (remaining_user_sge_len > 0) {
+			if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+				SPDK_ERRLOG("Too many SGL entries\n");
+				goto exit;
+			}
+
+			if (dword_aligned && ((uintptr_t)virt_addr & 3)) {
+				SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
+				goto exit;
+			}
+
+			mapping_length = remaining_user_sge_len;
+			phys_addr = spdk_vtophys(virt_addr, &mapping_length);
+			if (phys_addr == SPDK_VTOPHYS_ERROR) {
+				goto exit;
+			}
+
+			length = spdk_min(remaining_user_sge_len, mapping_length);
+			remaining_user_sge_len -= length;
+			virt_addr += length;
+
+			if (nseg > 0 && phys_addr ==
+			    (*(sgl - 1)).address + (*(sgl - 1)).unkeyed.length) {
+				/* extend previous entry */
+				(*(sgl - 1)).unkeyed.length += length;
+				continue;
+			}
+
+			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+			sgl->unkeyed.length = length;
+			sgl->address = phys_addr;
+			sgl->unkeyed.subtype = 0;
+
+			sgl++;
+			nseg++;
+		}
+	}
+
+	if (nseg == 1) {
+		/*
+		 * The whole transfer can be described by a single SGL descriptor.
+		 *  Use the special case described by the spec where SGL1's type is Data Block.
+		 *  This means the SGL in the tracker is not used at all, so copy the first (and only)
+		 *  SGL element into SGL1.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
+		req->cmd.dptr.sgl1.unkeyed.length = tr->u.sgl[0].unkeyed.length;
+	} else {
+		/* SPDK NVMe driver supports only 1 SGL segment for now, it is enough because
+		 *  NVME_MAX_SGL_DESCRIPTORS * 16 is less than one page.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
+		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
+	}
+
+	return 0;
+
+exit:
+	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	return -EFAULT;
+}
+
+/**
+ * Build PRP list describing scattered payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				       struct nvme_tracker *tr, bool dword_aligned)
+{
+	int rc;
+	void *virt_addr;
+	uint32_t remaining_transfer_len, length;
+	uint32_t prp_index = 0;
+	uint32_t page_size = qpair->ctrlr->page_size;
+
+	/*
+	 * Build scattered payloads.
+	 */
+	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
+	assert(req->payload.reset_sgl_fn != NULL);
+	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
+
+	remaining_transfer_len = req->payload_size;
+	while (remaining_transfer_len > 0) {
+		assert(req->payload.next_sge_fn != NULL);
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+		if (rc) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -EFAULT;
+		}
+
+		length = spdk_min(remaining_transfer_len, length);
+
+		/*
+		 * Any incompatible sges should have been handled up in the splitting routine,
+		 *  but assert here as an additional check.
+		 *
+		 * All SGEs except last must end on a page boundary.
+		 */
+		assert((length == remaining_transfer_len) ||
+		       _is_page_aligned((uintptr_t)virt_addr + length, page_size));
+
+		rc = nvme_pcie_prp_list_append(tr, &prp_index, virt_addr, length, page_size);
+		if (rc) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return rc;
+		}
+
+		remaining_transfer_len -= length;
+	}
+
+	return 0;
+}
+
+typedef int(*build_req_fn)(struct spdk_nvme_qpair *, struct nvme_request *, struct nvme_tracker *,
+			   bool);
+
+static build_req_fn const g_nvme_pcie_build_req_table[][2] = {
+	[NVME_PAYLOAD_TYPE_INVALID] = {
+		nvme_pcie_qpair_build_request_invalid,			/* PRP */
+		nvme_pcie_qpair_build_request_invalid			/* SGL */
+	},
+	[NVME_PAYLOAD_TYPE_CONTIG] = {
+		nvme_pcie_qpair_build_contig_request,			/* PRP */
+		nvme_pcie_qpair_build_contig_hw_sgl_request		/* SGL */
+	},
+	[NVME_PAYLOAD_TYPE_SGL] = {
+		nvme_pcie_qpair_build_prps_sgl_request,			/* PRP */
+		nvme_pcie_qpair_build_hw_sgl_request			/* SGL */
+	}
+};
+
+static int
+nvme_pcie_qpair_build_metadata(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
+			       bool sgl_supported, bool dword_aligned)
+{
+	void *md_payload;
+	struct nvme_request *req = tr->req;
+
+	if (req->payload.md) {
+		md_payload = req->payload.md + req->md_offset;
+		if (dword_aligned && ((uintptr_t)md_payload & 3)) {
+			SPDK_ERRLOG("virt_addr %p not dword aligned\n", md_payload);
+			goto exit;
+		}
+
+		if (sgl_supported && dword_aligned) {
+			assert(req->cmd.psdt == SPDK_NVME_PSDT_SGL_MPTR_CONTIG);
+			req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+			tr->meta_sgl.address = spdk_vtophys(md_payload, NULL);
+			if (tr->meta_sgl.address == SPDK_VTOPHYS_ERROR) {
+				goto exit;
+			}
+			tr->meta_sgl.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+			tr->meta_sgl.unkeyed.length = req->md_size;
+			tr->meta_sgl.unkeyed.subtype = 0;
+			req->cmd.mptr = tr->prp_sgl_bus_addr - sizeof(struct spdk_nvme_sgl_descriptor);
+		} else {
+			req->cmd.mptr = spdk_vtophys(md_payload, NULL);
+			if (req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
+				goto exit;
+			}
+		}
+	}
+
+	return 0;
+
+exit:
+	nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+	return -EINVAL;
+}
+
+int
+nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	struct nvme_tracker	*tr;
+	int			rc = 0;
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	enum nvme_payload_type	payload_type;
+	bool			sgl_supported;
+	bool			dword_aligned = true;
+
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	}
+
+	tr = TAILQ_FIRST(&pqpair->free_tr);
+
+	if (tr == NULL) {
+		pqpair->stat->queued_requests++;
+		/* Inform the upper layer to try again later. */
+		rc = -EAGAIN;
+		goto exit;
+	}
+
+	pqpair->stat->submitted_requests++;
+	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
+	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
+	tr->req = req;
+	tr->cb_fn = req->cb_fn;
+	tr->cb_arg = req->cb_arg;
+	req->cmd.cid = tr->cid;
+
+	if (req->payload_size != 0) {
+		payload_type = nvme_payload_type(&req->payload);
+		/* According to the specification, PRPs shall be used for all
+		 *  Admin commands for NVMe over PCIe implementations.
+		 */
+		sgl_supported = (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) != 0 &&
+				!nvme_qpair_is_admin_queue(qpair);
+
+		if (sgl_supported) {
+			/* Don't use SGL for DSM command */
+			if (spdk_unlikely((ctrlr->quirks & NVME_QUIRK_NO_SGL_FOR_DSM) &&
+					  (req->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT))) {
+				sgl_supported = false;
+			}
+		}
+
+		if (sgl_supported && !(ctrlr->flags & SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT)) {
+			dword_aligned = false;
+		}
+		rc = g_nvme_pcie_build_req_table[payload_type][sgl_supported](qpair, req, tr, dword_aligned);
+		if (rc < 0) {
+			goto exit;
+		}
+
+		rc = nvme_pcie_qpair_build_metadata(qpair, tr, sgl_supported, dword_aligned);
+		if (rc < 0) {
+			goto exit;
+		}
+	}
+
+	nvme_pcie_qpair_submit_tracker(qpair, tr);
+
+exit:
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
+
+	return rc;
+}
+
 struct spdk_nvme_transport_poll_group *
 nvme_pcie_poll_group_create(void)
 {
