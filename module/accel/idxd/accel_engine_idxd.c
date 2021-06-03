@@ -64,36 +64,64 @@ struct idxd_device {
 };
 static TAILQ_HEAD(, idxd_device) g_idxd_devices = TAILQ_HEAD_INITIALIZER(g_idxd_devices);
 static struct idxd_device *g_next_dev = NULL;
+static uint32_t g_num_devices = 0;
 
 struct idxd_io_channel {
 	struct spdk_idxd_io_channel	*chan;
 	struct idxd_device		*dev;
 	enum channel_state		state;
 	struct spdk_poller		*poller;
+	uint32_t			num_outstanding;
+	uint32_t			max_outstanding;
 	TAILQ_HEAD(, spdk_accel_task)	queued_tasks;
 };
 
 static struct spdk_io_channel *idxd_get_io_channel(void);
 
 static struct idxd_device *
-idxd_select_device(void)
+idxd_select_device(struct idxd_io_channel *chan)
 {
+	uint32_t count = 0;
+
 	/*
 	 * We allow channels to share underlying devices,
-	 * selection is round-robin based.
+	 * selection is round-robin based with a limitation
+	 * on how many channel can share one device.
 	 */
+	do {
+		/* select next device */
+		g_next_dev = TAILQ_NEXT(g_next_dev, tailq);
+		if (g_next_dev == NULL) {
+			g_next_dev = TAILQ_FIRST(&g_idxd_devices);
+		}
 
-	g_next_dev = TAILQ_NEXT(g_next_dev, tailq);
-	if (g_next_dev == NULL) {
-		g_next_dev = TAILQ_FIRST(&g_idxd_devices);
-	}
-	return g_next_dev;
+		/*
+		 * Now see if a channel is available on this one. We only
+		 * allow a specific number of channels to share a device
+		 * to limit outstanding IO for flow control purposes.
+		 */
+		chan->chan = spdk_idxd_get_channel(g_next_dev->idxd);
+		if (chan->chan != NULL) {
+			chan->max_outstanding = spdk_idxd_chan_get_max_operations(chan->chan);
+			return g_next_dev;
+		}
+	} while (count++ < g_num_devices);
+
+	/* we are out of available channels and devices. */
+	SPDK_ERRLOG("No more DSA devices available!\n");
+	return NULL;
 }
 
 static void
 idxd_done(void *cb_arg, int status)
 {
 	struct spdk_accel_task *accel_task = cb_arg;
+	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(accel_task->accel_ch->engine_ch);
+
+	assert(chan->num_outstanding > 0);
+	if (chan->num_outstanding-- == chan->max_outstanding) {
+		chan->state = IDXD_CHANNEL_ACTIVE;
+	}
 
 	spdk_accel_task_complete(accel_task, status);
 }
@@ -105,6 +133,12 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	int rc = 0;
 	uint8_t fill_pattern = (uint8_t)task->fill_pattern;
 	void *src;
+
+	if (chan->num_outstanding == chan->max_outstanding) {
+		chan->state = IDXD_CHANNEL_PAUSED;
+		return -EBUSY;
+	}
+	chan->num_outstanding++;
 
 	switch (task->op_code) {
 	case ACCEL_OPCODE_MEMMOVE:
@@ -239,70 +273,6 @@ static struct spdk_accel_engine idxd_accel_engine = {
 	.submit_tasks		= idxd_submit_tasks,
 };
 
-/*
- * Configure the max number of descriptors that a channel is
- * allowed to use based on the total number of current channels.
- * This is to allow for dynamic load balancing for hw flow control.
- */
-static void
-_config_max_desc(struct spdk_io_channel_iter *i)
-{
-	struct idxd_io_channel *chan;
-	struct spdk_io_channel *ch;
-	struct spdk_idxd_device *idxd;
-	int rc;
-
-	ch = spdk_io_channel_iter_get_channel(i);
-	chan = spdk_io_channel_get_ctx(ch);
-	idxd = spdk_io_channel_iter_get_ctx(i);
-
-	/* reconfigure channel only if this channel is on the same idxd
-	 * device that initiated the rebalance.
-	 */
-	if (chan->dev->idxd == idxd) {
-		rc = spdk_idxd_reconfigure_chan(chan->chan);
-		if (rc == 0) {
-			chan->state = IDXD_CHANNEL_ACTIVE;
-		} else {
-			chan->state = IDXD_CHANNEL_ERROR;
-		}
-	}
-
-	spdk_for_each_channel_continue(i, 0);
-}
-
-/* Pauses a channel so that it can be re-configured. */
-static void
-_pause_chan(struct spdk_io_channel_iter *i)
-{
-	struct idxd_io_channel *chan;
-	struct spdk_io_channel *ch;
-	struct spdk_idxd_device *idxd;
-
-	ch = spdk_io_channel_iter_get_channel(i);
-	chan = spdk_io_channel_get_ctx(ch);
-	idxd = spdk_io_channel_iter_get_ctx(i);
-
-	/* start queueing up new requests if this channel is on the same idxd
-	 * device that initiated the rebalance.
-	 */
-	if (chan->dev->idxd == idxd) {
-		chan->state = IDXD_CHANNEL_PAUSED;
-	}
-
-	spdk_for_each_channel_continue(i, 0);
-}
-
-static void
-_pause_chan_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct spdk_idxd_device *idxd;
-
-	idxd = spdk_io_channel_iter_get_ctx(i);
-
-	spdk_for_each_channel(&idxd_accel_engine, _config_max_desc, idxd, NULL);
-}
-
 static int
 idxd_create_cb(void *io_device, void *ctx_buf)
 {
@@ -310,28 +280,16 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 	struct idxd_device *dev;
 	int rc;
 
-	dev = idxd_select_device();
+	dev = idxd_select_device(chan);
 	if (dev == NULL) {
-		SPDK_ERRLOG("Failed to allocate idxd_device\n");
+		SPDK_ERRLOG("Failed to get an idxd channel\n");
 		return -EINVAL;
-	}
-
-	chan->chan = spdk_idxd_get_channel(dev->idxd);
-	if (chan->chan == NULL) {
-		return -ENOMEM;
 	}
 
 	chan->dev = dev;
 	chan->poller = SPDK_POLLER_REGISTER(idxd_poll, chan, 0);
 	TAILQ_INIT(&chan->queued_tasks);
 
-	/*
-	 * Configure the channel but leave paused until all others
-	 * are paused and re-configured based on the new number of
-	 * channels. This enables dynamic load balancing for HW
-	 * flow control. The idxd device will tell us if rebalance is
-	 * needed based on how many channels are using it.
-	 */
 	rc = spdk_idxd_configure_chan(chan->chan);
 	if (rc) {
 		SPDK_ERRLOG("Failed to configure new channel rc = %d\n", rc);
@@ -340,52 +298,19 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 		return rc;
 	}
 
-	if (spdk_idxd_device_needs_rebalance(chan->dev->idxd) == false) {
-		chan->state = IDXD_CHANNEL_ACTIVE;
-		return 0;
-	}
-
-	chan->state = IDXD_CHANNEL_PAUSED;
-
-	/*
-	 * Pause all channels so that we can set proper flow control
-	 * per channel. When all are paused, we'll update the max
-	 * number of descriptors allowed per channel.
-	 */
-	spdk_for_each_channel(&idxd_accel_engine, _pause_chan, chan->dev->idxd,
-			      _pause_chan_done);
+	chan->num_outstanding = 0;
+	chan->state = IDXD_CHANNEL_ACTIVE;
 
 	return 0;
-}
-
-static void
-_pause_chan_destroy_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct spdk_idxd_device *idxd;
-
-	idxd = spdk_io_channel_iter_get_ctx(i);
-
-	/* Rebalance the rings with the smaller number of remaining channels, but
-	 * pass the idxd device along so its only done on shared channels.
-	 */
-	spdk_for_each_channel(&idxd_accel_engine, _config_max_desc, idxd, NULL);
 }
 
 static void
 idxd_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
-	bool rebalance;
 
 	spdk_poller_unregister(&chan->poller);
-	rebalance = spdk_idxd_put_channel(chan->chan);
-
-	/* Only rebalance if there are still other channels on this device */
-	if (rebalance == true) {
-		/* Pause each channel then rebalance the max number of ring slots. */
-		spdk_for_each_channel(&idxd_accel_engine, _pause_chan, chan->dev->idxd,
-				      _pause_chan_destroy_done);
-	}
+	spdk_idxd_put_channel(chan->chan);
 }
 
 static struct spdk_io_channel *
@@ -411,6 +336,7 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 	}
 
 	TAILQ_INSERT_TAIL(&g_idxd_devices, dev, tailq);
+	g_num_devices++;
 }
 
 void

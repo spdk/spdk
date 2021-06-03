@@ -119,15 +119,8 @@ struct spdk_idxd_io_channel {
 	 * We use one bit array to track ring slots for both
 	 * desc and completions.
 	 *
-	 * TODO: We can get rid of the bit array and just use a uint
-	 * to manage flow control as the current implementation saves
-	 * enough info in comp_ctx that it doesn't need the index. Keeping
-	 * the bit arrays for now as (a) they provide some extra debug benefit
-	 * until we have silicon and (b) they may still be needed depending on
-	 * polling implementation experiments that we need to run with real silicon.
 	 */
 	struct spdk_bit_array		*ring_slots;
-	uint32_t			max_ring_slots;
 
 	/* Lists of batches, free and in use. */
 	TAILQ_HEAD(, idxd_batch)	batch_pool;
@@ -197,7 +190,7 @@ struct spdk_idxd_device {
 	void				*portals;
 	int				wq_id;
 	uint32_t			num_channels;
-	bool				needs_rebalance;
+	uint32_t			total_wq_size;
 	pthread_mutex_t			num_channels_lock;
 
 	struct idxd_group		*groups;

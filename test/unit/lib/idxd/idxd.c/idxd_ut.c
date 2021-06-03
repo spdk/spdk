@@ -45,7 +45,7 @@ user_idxd_set_config(struct device_config *dev_cfg, uint32_t config_num)
 }
 
 static struct spdk_idxd_impl g_user_idxd_impl = {
-	.name                   = "user",
+	.name		= "user",
 	.set_config	= user_idxd_set_config,
 };
 
@@ -58,32 +58,6 @@ test_spdk_idxd_set_config(void)
 	SPDK_CU_ASSERT_FATAL(g_dev_cfg != NULL);
 	CU_ASSERT(memcmp(&g_dev_cfg0, g_dev_cfg, sizeof(struct device_config)) == 0);
 
-	return 0;
-}
-
-static int
-test_spdk_idxd_reconfigure_chan(void)
-{
-	struct spdk_idxd_io_channel chan = {};
-	struct spdk_idxd_device idxd = {};
-	int rc;
-	uint32_t test_ring_size = 8;
-	uint32_t num_channels = 2;
-
-	chan.ring_slots = spdk_bit_array_create(test_ring_size);
-	chan.ring_size = test_ring_size;
-	chan.completions = spdk_zmalloc(test_ring_size * sizeof(struct idxd_hw_desc), 0, NULL,
-					SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-	SPDK_CU_ASSERT_FATAL(chan.completions != NULL);
-	chan.idxd = &idxd;
-	chan.idxd->num_channels = num_channels;
-
-	rc = spdk_idxd_reconfigure_chan(&chan);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(chan.max_ring_slots == test_ring_size / num_channels);
-
-	spdk_bit_array_free(&chan.ring_slots);
-	spdk_free(chan.completions);
 	return 0;
 }
 
@@ -106,7 +80,6 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("idxd", test_setup, NULL);
 
-	CU_ADD_TEST(suite, test_spdk_idxd_reconfigure_chan);
 	CU_ADD_TEST(suite, test_spdk_idxd_set_config);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);

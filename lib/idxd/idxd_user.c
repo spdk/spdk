@@ -52,9 +52,9 @@ struct spdk_user_idxd_device {
 	void			*reg_base;
 	uint32_t		wqcfg_offset;
 	uint32_t		grpcfg_offset;
-	uint32_t                        ims_offset;
-	uint32_t                        msix_perm_offset;
-	uint32_t                        perfmon_offset;
+	uint32_t		ims_offset;
+	uint32_t		msix_perm_offset;
+	uint32_t		perfmon_offset;
 };
 
 typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
@@ -279,6 +279,7 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	assert(LOG2_WQ_MAX_BATCH <= user_idxd->registers.gencap.max_batch_shift);
 	assert(LOG2_WQ_MAX_XFER <= user_idxd->registers.gencap.max_xfer_shift);
 
+	idxd->total_wq_size = user_idxd->registers.wqcap.total_wq_size;
 	idxd->queues = calloc(1, user_idxd->registers.wqcap.num_wqs * sizeof(struct idxd_wq));
 	if (idxd->queues == NULL) {
 		SPDK_ERRLOG("Failed to allocate queue memory\n");

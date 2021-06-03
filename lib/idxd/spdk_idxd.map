@@ -2,9 +2,8 @@
 	global:
 
 	# public functions
-	spdk_idxd_device_needs_rebalance;
+	spdk_idxd_chan_get_max_operations;
 	spdk_idxd_configure_chan;
-	spdk_idxd_reconfigure_chan;
 	spdk_idxd_probe;
 	spdk_idxd_detach;
 	spdk_idxd_batch_prep_copy;
