@@ -80,6 +80,8 @@ DEFINE_STUB(spdk_nvme_ctrlr_is_active_ns, bool,
 	    (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid), true);
 
 DEFINE_STUB(fuse_reply_err, int, (fuse_req_t req, int err), 0);
+DEFINE_STUB_V(fuse_session_exit, (struct fuse_session *se));
+DEFINE_STUB(pthread_join, int, (pthread_t tid, void **val), 0);
 
 DEFINE_STUB_V(nvme_ctrlr_update_namespaces, (struct spdk_nvme_ctrlr *ctrlr));
 
@@ -346,6 +348,34 @@ test_cuse_nvme_reset(void)
 	CU_ASSERT(g_ut_nsid == 0);
 }
 
+static void
+test_nvme_cuse_stop(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct cuse_device *ctrlr_device = NULL;
+
+	/* Allocate memory for nvme_cuse_stop() to free. */
+	ctrlr_device = calloc(1, sizeof(struct cuse_device));
+	SPDK_CU_ASSERT_FATAL(ctrlr_device != NULL);
+
+	ctrlr_device->ns_devices = calloc(2, sizeof(struct cuse_device));
+	SPDK_CU_ASSERT_FATAL(ctrlr_device->ns_devices != NULL);
+
+	g_ctrlr_started = spdk_bit_array_create(128);
+	SPDK_CU_ASSERT_FATAL(g_ctrlr_started != NULL);
+
+	ctrlr_device->ns_devices[0].is_started = true;
+	ctrlr_device->ns_devices[1].is_started = true;
+	ctrlr.num_ns = 2;
+	ctrlr_device->ctrlr = &ctrlr;
+	pthread_mutex_init(&g_cuse_mtx, NULL);
+	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);
+
+	nvme_cuse_stop(&ctrlr);
+	CU_ASSERT(g_ctrlr_started == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_ctrlr_ctx_head));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -360,6 +390,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_cuse_get_cuse_ns_device);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_io);
 	CU_ADD_TEST(suite, test_cuse_nvme_reset);
+	CU_ADD_TEST(suite, test_nvme_cuse_stop);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
