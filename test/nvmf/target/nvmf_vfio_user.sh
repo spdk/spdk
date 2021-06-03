@@ -13,7 +13,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 export TEST_TRANSPORT=VFIOUSER
 
-rm -rf /var/run/muser
+rm -rf /var/run/vfio-user
 
 # Start the target
 "${NVMF_APP[@]}" -m 0x1 &
@@ -25,32 +25,34 @@ waitforlisten $nvmfpid
 
 sleep 1
 
-$rpc_py nvmf_create_transport -t VFIOUSER
+$rpc_py nvmf_create_transport -t $TEST_TRANSPORT
 
-mkdir -p /var/run/muser
+mkdir -p /var/run/vfio-user
 
 for i in $(seq 1 $NUM_DEVICES); do
-	mkdir -p /var/run/muser/domain/muser$i/$i
+	mkdir -p /var/run/vfio-user/domain/vfio-user$i/$i
 
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
 	$rpc_py nvmf_create_subsystem nqn.2019-07.io.spdk:cnode$i -a -s SPDK$i
 	$rpc_py nvmf_subsystem_add_ns nqn.2019-07.io.spdk:cnode$i Malloc$i
-	$rpc_py nvmf_subsystem_add_listener nqn.2019-07.io.spdk:cnode$i -t VFIOUSER -a "/var/run/muser/domain/muser$i/$i" -s 0
+	$rpc_py nvmf_subsystem_add_listener nqn.2019-07.io.spdk:cnode$i -t $TEST_TRANSPORT -a "/var/run/vfio-user/domain/vfio-user$i/$i" -s 0
 done
 
 for i in $(seq 1 $NUM_DEVICES); do
-	$SPDK_EXAMPLE_DIR/identify -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -g -L nvme -L nvme_vfio -L vfio_pci
+	test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
+	test_subnqn=nqn.2019-07.io.spdk:cnode$i
+	$SPDK_EXAMPLE_DIR/identify -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
 	sleep 1
-	$SPDK_EXAMPLE_DIR/perf -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
+	$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
 	sleep 1
-	$SPDK_EXAMPLE_DIR/perf -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
+	$SPDK_EXAMPLE_DIR/perf -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
 	sleep 1
-	$SPDK_EXAMPLE_DIR/reconnect -r "trtype:VFIOUSER traddr:/var/run/muser/domain/muser$i/$i subnqn:nqn.2019-07.io.spdk:cnode$i" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
+	$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
 	sleep 1
 done
 
 killprocess $nvmfpid
 
-rm -rf /var/run/muser
+rm -rf /var/run/vfio-user
 
 trap - SIGINT SIGTERM EXIT
