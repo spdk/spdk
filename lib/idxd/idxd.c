@@ -473,6 +473,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	desc->src_addr = src_addr;
 	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
+	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
 	movdir64b(chan->portal, desc);
@@ -522,6 +523,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	desc->dst_addr = dst1_addr;
 	desc->dest2 = dst2_addr;
 	desc->xfer_size = nbytes;
+	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
 	movdir64b(chan->portal, desc);
@@ -591,6 +593,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	desc->pattern = fill_pattern;
 	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
+	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
 	movdir64b(chan->portal, desc);
