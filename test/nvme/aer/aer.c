@@ -42,8 +42,9 @@
 
 struct dev {
 	struct spdk_nvme_ctrlr				*ctrlr;
+	/* Expected changed NS ID state before AER */
+	bool						ns_test_active;
 	struct spdk_nvme_health_information_page	*health_page;
-	struct spdk_nvme_ns_list			*changed_ns_list;
 	uint32_t					orig_temp_threshold;
 	char						name[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 };
@@ -65,9 +66,7 @@ static char *g_touch_file;
 
 /* Enable AER temperature test */
 static int g_enable_temp_test = 0;
-/* Enable AER namespace attribute notice test, this variable holds
- * the NSID that is expected to be in the Changed NS List.
- */
+/* Expected changed NS ID */
 static uint32_t g_expected_ns_test = 0;
 
 static void
@@ -167,43 +166,6 @@ get_health_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	g_aer_done++;
 }
 
-static void
-get_changed_ns_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
-{
-	struct dev *dev = cb_arg;
-	bool found = false;
-	uint32_t i;
-
-	g_outstanding_commands --;
-
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		printf("%s: get log page failed\n", dev->name);
-		g_failed = 1;
-		return;
-	}
-
-	/* Let's compare the expected namespce ID is
-	 * in changed namespace list
-	 */
-	if (dev->changed_ns_list->ns_list[0] != 0xffffffffu) {
-		for (i = 0; i < sizeof(*dev->changed_ns_list) / sizeof(uint32_t); i++) {
-			if (g_expected_ns_test == dev->changed_ns_list->ns_list[i]) {
-				printf("%s: changed NS list contains expected NSID: %u\n",
-				       dev->name, g_expected_ns_test);
-				found = true;
-				break;
-			}
-		}
-	}
-
-	if (!found) {
-		printf("%s: Error: Can't find expected NSID %u\n", dev->name, g_expected_ns_test);
-		g_failed = 1;
-	}
-
-	g_aer_done++;
-}
-
 static int
 get_health_log_page(struct dev *dev)
 {
@@ -220,21 +182,15 @@ get_health_log_page(struct dev *dev)
 	return rc;
 }
 
-static int
-get_changed_ns_log_page(struct dev *dev)
+static void
+get_ns_state_test(struct dev *dev, uint32_t nsid)
 {
-	int rc;
+	bool new_ns_state;
 
-	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_CHANGED_NS_LIST,
-					      SPDK_NVME_GLOBAL_NS_TAG, dev->changed_ns_list,
-					      sizeof(*dev->changed_ns_list), 0,
-					      get_changed_ns_log_page_completion, dev);
-
-	if (rc == 0) {
-		g_outstanding_commands++;
+	new_ns_state = spdk_nvme_ctrlr_is_active_ns(dev->ctrlr, nsid);
+	if (new_ns_state == dev->ns_test_active) {
+		g_failed = 1;
 	}
-
-	return rc;
 }
 
 static void
@@ -245,9 +201,6 @@ cleanup(void)
 	foreach_dev(dev) {
 		if (dev->health_page) {
 			spdk_free(dev->health_page);
-		}
-		if (dev->changed_ns_list) {
-			spdk_free(dev->changed_ns_list);
 		}
 	}
 }
@@ -273,7 +226,8 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		set_temp_threshold(dev, dev->orig_temp_threshold);
 		get_health_log_page(dev);
 	} else if (log_page_id == SPDK_NVME_LOG_CHANGED_NS_LIST) {
-		get_changed_ns_log_page(dev);
+		get_ns_state_test(dev, g_expected_ns_test);
+		g_aer_done++;
 	}
 }
 
@@ -387,12 +341,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		printf("Allocation error (health page)\n");
 		g_failed = 1;
 	}
-	dev->changed_ns_list = spdk_zmalloc(sizeof(*dev->changed_ns_list), 4096, NULL,
-					    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-	if (dev->changed_ns_list == NULL) {
-		printf("Allocation error (changed namespace list page)\n");
-		g_failed = 1;
-	}
 }
 
 static void
@@ -501,6 +449,7 @@ spdk_aer_changed_ns_test(void)
 
 	foreach_dev(dev) {
 		get_feature_test(dev);
+		dev->ns_test_active = spdk_nvme_ctrlr_is_active_ns(dev->ctrlr, g_expected_ns_test);
 	}
 
 	if (g_failed) {

@@ -2677,19 +2677,20 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 {
 	union spdk_nvme_async_event_completion event;
 	struct spdk_nvme_ctrlr_process *active_proc;
-	bool				ns_changed = false;
 	int rc;
 
 	event.raw = cpl->cdw0;
 
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
-		/*
-		 * apps (e.g., test/nvme/aer/aer.c) may also get changed ns log (through
-		 * active_proc->aer_cb_fn). To avoid impaction, move our operations
-		 * behind call of active_proc->aer_cb_fn.
-		 */
-		ns_changed = true;
+		nvme_ctrlr_clear_changed_ns_log(ctrlr);
+
+		rc = nvme_ctrlr_identify_active_ns(ctrlr);
+		if (rc) {
+			return;
+		}
+		nvme_ctrlr_update_namespaces(ctrlr);
+		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
@@ -2704,22 +2705,6 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc && active_proc->aer_cb_fn) {
 		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
-	}
-
-	if (ns_changed) {
-		/*
-		 * Must have the changed ns log cleared by getting it.
-		 * Otherwise, the target won't send
-		 * the subsequent ns enabling/disabling events to us.
-		 */
-		nvme_ctrlr_clear_changed_ns_log(ctrlr);
-
-		rc = nvme_ctrlr_identify_active_ns(ctrlr);
-		if (rc) {
-			return;
-		}
-		nvme_ctrlr_update_namespaces(ctrlr);
-		nvme_io_msg_ctrlr_update(ctrlr);
 	}
 }
 
