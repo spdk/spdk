@@ -83,6 +83,12 @@ main(int argc, char **argv)
 
 	zipf = spdk_zipf_create(range, theta, time(NULL));
 	h = spdk_histogram_data_alloc();
+	if (zipf == NULL || h == NULL) {
+		spdk_zipf_free(&zipf);
+		spdk_histogram_data_free(h);
+		printf("out of resource\n");
+		return 1;
+	}
 
 	for (i = 0; i < count; i++) {
 		spdk_histogram_data_tally(h, spdk_zipf_generate(zipf));
