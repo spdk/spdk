@@ -43,11 +43,11 @@
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 
-static uint64_t
-nvme_pcie_vtophys(struct spdk_nvme_ctrlr *ctrlr, const void *buf)
+static inline uint64_t
+nvme_pcie_vtophys(struct spdk_nvme_ctrlr *ctrlr, const void *buf, uint64_t *size)
 {
 	if (spdk_likely(ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE)) {
-		return spdk_vtophys(buf, NULL);
+		return spdk_vtophys(buf, size);
 	} else {
 		/* vfio-user address translation with IOVA=VA mode */
 		return (uint64_t)(uintptr_t)buf;
@@ -187,7 +187,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 			assert(pqpair->sq_vaddr != NULL);
 			pqpair->cmd_bus_addr = sq_paddr;
 		} else {
-			pqpair->cmd_bus_addr = nvme_pcie_vtophys(ctrlr, pqpair->cmd);
+			pqpair->cmd_bus_addr = nvme_pcie_vtophys(ctrlr, pqpair->cmd, NULL);
 			if (pqpair->cmd_bus_addr == SPDK_VTOPHYS_ERROR) {
 				SPDK_ERRLOG("spdk_vtophys(pqpair->cmd) failed\n");
 				return -EFAULT;
@@ -210,7 +210,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 		assert(pqpair->cq_vaddr != NULL);
 		pqpair->cpl_bus_addr = cq_paddr;
 	} else {
-		pqpair->cpl_bus_addr =  nvme_pcie_vtophys(ctrlr, pqpair->cpl);
+		pqpair->cpl_bus_addr =  nvme_pcie_vtophys(ctrlr, pqpair->cpl, NULL);
 		if (pqpair->cpl_bus_addr == SPDK_VTOPHYS_ERROR) {
 			SPDK_ERRLOG("spdk_vtophys(pqpair->cpl) failed\n");
 			return -EFAULT;
@@ -238,7 +238,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 
 	for (i = 0; i < num_trackers; i++) {
 		tr = &pqpair->tr[i];
-		nvme_qpair_construct_tracker(tr, i, nvme_pcie_vtophys(ctrlr, tr));
+		nvme_qpair_construct_tracker(tr, i, nvme_pcie_vtophys(ctrlr, tr, NULL));
 		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
 	}
 
