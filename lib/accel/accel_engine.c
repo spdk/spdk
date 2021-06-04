@@ -968,15 +968,7 @@ _sw_accel_crc32c(uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes)
 static void
 _sw_accel_crc32cv(uint32_t *dst, struct iovec *iov, uint32_t iovcnt, uint32_t seed)
 {
-	uint32_t i, crc32c = ~seed;
-
-	for (i = 0; i < iovcnt; i++) {
-		assert(iov[i].iov_base != NULL);
-		assert(iov[i].iov_len != 0);
-		crc32c = spdk_crc32c_update(iov[i].iov_base, iov[i].iov_len, crc32c);
-	}
-
-	*dst = crc32c;
+	*dst = spdk_crc32c_iov_update(iov, iovcnt, ~seed);
 }
 
 static struct spdk_io_channel *sw_accel_get_io_channel(void);
