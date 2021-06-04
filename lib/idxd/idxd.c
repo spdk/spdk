@@ -546,7 +546,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 }
 
 int
-spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *src,
+spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, void *src,
 			uint32_t seed, uint64_t nbytes,
 			spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
@@ -573,7 +573,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *dst, void *
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
 	desc->xfer_size = nbytes;
-	comp->crc_dst = dst;
+	comp->crc_dst = crc_dst;
 
 	/* Submit operation. */
 	movdir64b(chan->portal, desc);
