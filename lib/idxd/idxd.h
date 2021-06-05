@@ -102,6 +102,7 @@ struct spdk_idxd_io_channel {
 	struct spdk_idxd_device		*idxd;
 	/* The portal is the address that we write descriptors to for submission. */
 	void				*portal;
+	uint32_t			portal_offset;
 	uint16_t			ring_size;
 
 	/*
@@ -191,6 +192,7 @@ struct spdk_idxd_device {
 	int				wq_id;
 	uint32_t			num_channels;
 	uint32_t			total_wq_size;
+	uint32_t			chan_per_device;
 	pthread_mutex_t			num_channels_lock;
 
 	struct idxd_group		*groups;

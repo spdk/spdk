@@ -274,6 +274,10 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	assert(LOG2_WQ_MAX_XFER <= user_idxd->registers.gencap.max_xfer_shift);
 
 	idxd->total_wq_size = user_idxd->registers.wqcap.total_wq_size;
+	/* Spread the channels we allow per device based on the total number of WQE to try
+	 * and achieve optimal performance for common cases.
+	 */
+	idxd->chan_per_device = (idxd->total_wq_size >= 128) ? 8 : 4;
 	idxd->queues = calloc(1, user_idxd->registers.wqcap.num_wqs * sizeof(struct idxd_wq));
 	if (idxd->queues == NULL) {
 		SPDK_ERRLOG("Failed to allocate queue memory\n");
@@ -519,7 +523,7 @@ user_idxd_dump_sw_err(struct spdk_idxd_device *idxd, void *portal)
 static char *
 user_idxd_portal_get_addr(struct spdk_idxd_device *idxd)
 {
-	return (char *)idxd->portals + idxd->wq_id * PORTAL_SIZE;
+	return (char *)idxd->portals + idxd->wq_id * WQ_TOTAL_PORTAL_SIZE;
 }
 
 static bool

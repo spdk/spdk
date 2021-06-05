@@ -210,6 +210,10 @@ config_wqs(struct spdk_kernel_idxd_device *kernel_idxd,
 		return -1;
 	}
 
+	/* Spread the channels we allow per device based on the total number of WQE to try
+	 * and achieve optimal performance for common cases.
+	 */
+	kernel_idxd->idxd.chan_per_device = (kernel_idxd->idxd.total_wq_size >= 128) ? 8 : 4;
 	return 0;
 }
 

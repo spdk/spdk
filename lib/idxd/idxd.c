@@ -47,7 +47,6 @@
 #define ALIGN_4K 0x1000
 #define USERSPACE_DRIVER_NAME "user"
 #define KERNEL_DRIVER_NAME "kernel"
-#define CHAN_PER_DEVICE(total_wq_size) ((total_wq_size >= 128) ? 8 : 4)
 /*
  * Need to limit how many completions we reap in one poller to avoid starving
  * other threads as callers can submit new operations on the polling thread.
@@ -82,6 +81,15 @@ struct device_config g_dev_cfg1 = {
 	.total_engines = 4,
 };
 
+static inline void
+_submit_to_hw(struct spdk_idxd_io_channel *chan, struct idxd_hw_desc *desc)
+{
+	movdir64b(chan->portal + chan->portal_offset, desc);
+	chan->portal_offset = (chan->portal_offset + chan->idxd->chan_per_device * PORTAL_STRIDE) &
+			      PORTAL_MASK;
+
+}
+
 struct spdk_idxd_io_channel *
 spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 {
@@ -103,13 +111,17 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	}
 
 	pthread_mutex_lock(&idxd->num_channels_lock);
-	if (idxd->num_channels == CHAN_PER_DEVICE(idxd->total_wq_size)) {
+	if (idxd->num_channels == idxd->chan_per_device) {
 		/* too many channels sharing this device */
 		pthread_mutex_unlock(&idxd->num_channels_lock);
 		free(chan->batch_base);
 		free(chan);
 		return NULL;
 	}
+
+	/* Have each channel start at a different offset. */
+	chan->portal_offset = (idxd->num_channels * PORTAL_STRIDE) & PORTAL_MASK;
+
 	idxd->num_channels++;
 	pthread_mutex_unlock(&idxd->num_channels_lock);
 
@@ -153,7 +165,7 @@ spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 int
 spdk_idxd_chan_get_max_operations(struct spdk_idxd_io_channel *chan)
 {
-	return chan->idxd->total_wq_size / CHAN_PER_DEVICE(chan->idxd->total_wq_size);
+	return chan->idxd->total_wq_size / chan->idxd->chan_per_device;
 }
 
 int
@@ -168,8 +180,7 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 		chan->idxd->wq_id = 0;
 	}
 
-	num_ring_slots = chan->idxd->queues[chan->idxd->wq_id].wqcfg.wq_size / CHAN_PER_DEVICE(
-				 chan->idxd->total_wq_size);
+	num_ring_slots = chan->idxd->queues[chan->idxd->wq_id].wqcfg.wq_size / chan->idxd->chan_per_device;
 
 	chan->ring_slots = spdk_bit_array_create(num_ring_slots);
 	if (chan->ring_slots == NULL) {
@@ -419,7 +430,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
-	movdir64b(chan->portal, desc);
+	_submit_to_hw(chan, desc);
 
 	return 0;
 }
@@ -469,7 +480,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
-	movdir64b(chan->portal, desc);
+	_submit_to_hw(chan, desc);
 
 	return 0;
 }
@@ -506,7 +517,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
-	movdir64b(chan->portal, desc);
+	_submit_to_hw(chan, desc);
 
 	return 0;
 }
@@ -539,7 +550,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
-	movdir64b(chan->portal, desc);
+	_submit_to_hw(chan, desc);
 
 	return 0;
 }
@@ -575,7 +586,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, vo
 	comp->crc_dst = crc_dst;
 
 	/* Submit operation. */
-	movdir64b(chan->portal, desc);
+	_submit_to_hw(chan, desc);
 
 	return 0;
 }
@@ -616,7 +627,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void 
 	comp->crc_dst = crc_dst;
 
 	/* Submit operation. */
-	movdir64b(chan->portal, desc);
+	_submit_to_hw(chan, desc);
 
 	return 0;
 }
@@ -742,7 +753,7 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	batch->remaining++;
 
 	/* Submit operation. */
-	movdir64b(chan->portal, desc);
+	_submit_to_hw(chan, desc);
 	SPDK_DEBUGLOG(idxd, "Submitted batch %p\n", batch);
 
 	return 0;
