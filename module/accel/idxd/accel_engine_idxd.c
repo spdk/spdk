@@ -65,6 +65,7 @@ struct idxd_device {
 static TAILQ_HEAD(, idxd_device) g_idxd_devices = TAILQ_HEAD_INITIALIZER(g_idxd_devices);
 static struct idxd_device *g_next_dev = NULL;
 static uint32_t g_num_devices = 0;
+static pthread_mutex_t g_dev_lock = PTHREAD_MUTEX_INITIALIZER;
 
 struct idxd_io_channel {
 	struct spdk_idxd_io_channel	*chan;
@@ -82,6 +83,7 @@ static struct idxd_device *
 idxd_select_device(struct idxd_io_channel *chan)
 {
 	uint32_t count = 0;
+	struct idxd_device *dev;
 
 	/*
 	 * We allow channels to share underlying devices,
@@ -90,20 +92,23 @@ idxd_select_device(struct idxd_io_channel *chan)
 	 */
 	do {
 		/* select next device */
+		pthread_mutex_lock(&g_dev_lock);
 		g_next_dev = TAILQ_NEXT(g_next_dev, tailq);
 		if (g_next_dev == NULL) {
 			g_next_dev = TAILQ_FIRST(&g_idxd_devices);
 		}
+		dev = g_next_dev;
+		pthread_mutex_unlock(&g_dev_lock);
 
 		/*
 		 * Now see if a channel is available on this one. We only
 		 * allow a specific number of channels to share a device
 		 * to limit outstanding IO for flow control purposes.
 		 */
-		chan->chan = spdk_idxd_get_channel(g_next_dev->idxd);
+		chan->chan = spdk_idxd_get_channel(dev->idxd);
 		if (chan->chan != NULL) {
 			chan->max_outstanding = spdk_idxd_chan_get_max_operations(chan->chan);
-			return g_next_dev;
+			return dev;
 		}
 	} while (count++ < g_num_devices);
 
