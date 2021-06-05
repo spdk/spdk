@@ -36,6 +36,7 @@
 #define UNIT_TEST_NO_VTOPHYS
 #include "common/lib/test_env.c"
 #include "spdk_internal/mock.h"
+#include "thread/thread_internal.h"
 #include "unit/lib/json_mock.c"
 #include "spdk/reduce.h"
 
@@ -590,7 +591,7 @@ test_setup(void)
 	g_bdev_io->bdev = &g_comp_bdev.comp_bdev;
 	g_io_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct comp_io_channel));
 	g_io_ch->thread = thread;
-	g_comp_ch = (struct comp_io_channel *)((uint8_t *)g_io_ch + sizeof(struct spdk_io_channel));
+	g_comp_ch = (struct comp_io_channel *)spdk_io_channel_get_ctx(g_io_ch);
 	g_io_ctx = (struct comp_bdev_io *)g_bdev_io->driver_ctx;
 
 	g_io_ctx->comp_ch = g_comp_ch;

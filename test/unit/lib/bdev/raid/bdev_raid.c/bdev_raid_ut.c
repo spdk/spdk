@@ -35,6 +35,7 @@
 #include "spdk_cunit.h"
 #include "spdk/env.h"
 #include "spdk_internal/mock.h"
+#include "thread/thread_internal.h"
 #include "bdev/raid/bdev_raid.c"
 #include "bdev/raid/bdev_raid_rpc.c"
 #include "bdev/raid/raid0.c"

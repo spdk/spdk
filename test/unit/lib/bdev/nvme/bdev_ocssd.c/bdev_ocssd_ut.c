@@ -34,10 +34,10 @@
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "spdk/nvme_ocssd_spec.h"
-#include "spdk/thread.h"
 #include "spdk/bdev_module.h"
 #include "spdk/util.h"
 #include "spdk_internal/mock.h"
+#include "thread/thread_internal.h"
 
 #include "bdev/nvme/bdev_ocssd.c"
 #include "bdev/nvme/common.c"

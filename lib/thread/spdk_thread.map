@@ -61,6 +61,7 @@
 	spdk_poller_get_state_str;
 	spdk_poller_get_period_ticks;
 	spdk_poller_get_stats;
+	spdk_io_channel_get_io_device_name;
 	spdk_io_channel_get_ref_count;
 	spdk_io_device_get_name;
 	spdk_thread_get_first_active_poller;

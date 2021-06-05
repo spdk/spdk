@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_THREAD_INTERNAL_H_
-#define SPDK_THREAD_INTERNAL_H_
+#ifndef SPDK_INTERNAL_THREAD_H_
+#define SPDK_INTERNAL_THREAD_H_
 
 #include "spdk/stdinc.h"
 #include "spdk/thread.h"
@@ -44,6 +44,7 @@ struct spdk_poller_stats {
 	uint64_t	busy_count;
 };
 
+struct io_device;
 struct spdk_thread;
 
 const char *spdk_poller_get_name(struct spdk_poller *poller);
@@ -51,6 +52,7 @@ const char *spdk_poller_get_state_str(struct spdk_poller *poller);
 uint64_t spdk_poller_get_period_ticks(struct spdk_poller *poller);
 void spdk_poller_get_stats(struct spdk_poller *poller, struct spdk_poller_stats *stats);
 
+const char *spdk_io_channel_get_io_device_name(struct spdk_io_channel *ch);
 int spdk_io_channel_get_ref_count(struct spdk_io_channel *ch);
 
 const char *spdk_io_device_get_name(struct io_device *dev);
@@ -65,4 +67,4 @@ struct spdk_poller *spdk_thread_get_next_paused_poller(struct spdk_poller *prev)
 struct spdk_io_channel *spdk_thread_get_first_io_channel(struct spdk_thread *thread);
 struct spdk_io_channel *spdk_thread_get_next_io_channel(struct spdk_io_channel *prev);
 
-#endif /* SPDK_THREAD_INTERNAL_H_ */
+#endif /* SPDK_INTERNAL_THREAD_H_ */

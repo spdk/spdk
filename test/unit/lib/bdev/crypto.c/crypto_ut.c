@@ -35,6 +35,7 @@
 
 #include "common/lib/test_env.c"
 #include "spdk_internal/mock.h"
+#include "thread/thread_internal.h"
 #include "unit/lib/json_mock.c"
 
 #include <rte_crypto.h>
@@ -317,7 +318,7 @@ test_setup(void)
 	g_bdev_io->u.bdev.iovs = calloc(1, sizeof(struct iovec) * 128);
 	g_bdev_io->bdev = &g_crypto_bdev.crypto_bdev;
 	g_io_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct crypto_io_channel));
-	g_crypto_ch = (struct crypto_io_channel *)((uint8_t *)g_io_ch + sizeof(struct spdk_io_channel));
+	g_crypto_ch = (struct crypto_io_channel *)spdk_io_channel_get_ctx(g_io_ch);
 	g_io_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
 	memset(&g_device, 0, sizeof(struct vbdev_dev));
 	memset(&g_crypto_bdev, 0, sizeof(struct vbdev_crypto));

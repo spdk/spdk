@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "spdk_internal/thread.h"
+#include "thread/thread_internal.h"
 
 #include "thread/thread.c"
 #include "common/lib/ut_multithread.c"

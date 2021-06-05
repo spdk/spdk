@@ -35,7 +35,7 @@
 #include "spdk_cunit.h"
 #include "spdk/env.h"
 #include "spdk_internal/mock.h"
-#include "spdk/thread.h"
+#include "thread/thread_internal.h"
 #include "common/lib/test_env.c"
 #include "bdev/zone_block/vbdev_zone_block.c"
 #include "bdev/zone_block/vbdev_zone_block_rpc.c"

@@ -1,8 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -31,59 +30,39 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef SPDK_THREAD_INTERNAL_H_
+#define SPDK_THREAD_INTERNAL_H_
+
+#include "spdk/assert.h"
+#include "spdk/queue.h"
 #include "spdk/thread.h"
 
-bool g_scheduler_delay = false;
+/**
+ * \brief Represents a per-thread channel for accessing an I/O device.
+ *
+ * An I/O device may be a physical entity (i.e. NVMe controller) or a software
+ *  entity (i.e. a blobstore).
+ *
+ * This structure is not part of the API - all accesses should be done through
+ *  spdk_io_channel function calls.
+ */
+struct spdk_io_channel {
+	struct spdk_thread		*thread;
+	struct io_device		*dev;
+	uint32_t			ref;
+	uint32_t			destroy_ref;
+	TAILQ_ENTRY(spdk_io_channel)	tailq;
+	spdk_io_channel_destroy_cb	destroy_cb;
 
-struct scheduled_ops {
-	spdk_msg_fn	fn;
-	void		*ctx;
-
-	TAILQ_ENTRY(scheduled_ops)	ops_queue;
+	uint8_t				_padding[48];
+	/*
+	 * Modules will allocate extra memory off the end of this structure
+	 *  to store references to hardware-specific references (i.e. NVMe queue
+	 *  pairs, or references to child device spdk_io_channels (i.e.
+	 *  virtual bdevs).
+	 */
 };
 
-static TAILQ_HEAD(, scheduled_ops) g_scheduled_ops = TAILQ_HEAD_INITIALIZER(g_scheduled_ops);
+SPDK_STATIC_ASSERT(sizeof(struct spdk_io_channel) == SPDK_IO_CHANNEL_STRUCT_SIZE, "incorrect size");
 
-void _bs_flush_scheduler(uint32_t);
-
-static void
-_bs_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
-{
-	if (g_scheduler_delay) {
-		struct scheduled_ops *ops = calloc(1, sizeof(*ops));
-
-		SPDK_CU_ASSERT_FATAL(ops != NULL);
-		ops->fn = fn;
-		ops->ctx = ctx;
-		TAILQ_INSERT_TAIL(&g_scheduled_ops, ops, ops_queue);
-
-	} else {
-		fn(ctx);
-	}
-}
-
-static void
-_bs_flush_scheduler_single(void)
-{
-	struct scheduled_ops *op;
-	TAILQ_HEAD(, scheduled_ops) ops;
-	TAILQ_INIT(&ops);
-
-	TAILQ_SWAP(&g_scheduled_ops, &ops, scheduled_ops, ops_queue);
-
-	while (!TAILQ_EMPTY(&ops)) {
-		op = TAILQ_FIRST(&ops);
-		TAILQ_REMOVE(&ops, op, ops_queue);
-
-		op->fn(op->ctx);
-		free(op);
-	}
-}
-
-void
-_bs_flush_scheduler(uint32_t n)
-{
-	while (n--) {
-		_bs_flush_scheduler_single();
-	}
-}
+#endif /* SPDK_THREAD_INTERNAL_H_ */

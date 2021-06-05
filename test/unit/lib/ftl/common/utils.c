@@ -33,6 +33,7 @@
 
 #include "spdk/ftl.h"
 #include "ftl/ftl_core.h"
+#include "thread/thread_internal.h"
 
 struct base_bdev_geometry {
 	size_t write_unit_size;

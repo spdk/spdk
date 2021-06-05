@@ -36,6 +36,7 @@
 #include "spdk_cunit.h"
 
 #include "spdk_internal/mock.h"
+#include "thread/thread_internal.h"
 
 #include "nvmf/ctrlr_bdev.c"
 

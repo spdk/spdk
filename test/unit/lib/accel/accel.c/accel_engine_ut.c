@@ -33,6 +33,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
+#include "thread/thread_internal.h"
 #include "common/lib/test_env.c"
 
 #include "accel/accel_engine.c"
@@ -185,7 +186,7 @@ test_spdk_accel_get_capabilities(void)
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
 	/* Setup a few capabilites and make sure they are reported as expected. */
-	accel_ch = (struct accel_io_channel *)((char *)ch + sizeof(struct spdk_io_channel));
+	accel_ch = (struct accel_io_channel *)spdk_io_channel_get_ctx(ch);
 	accel_ch->engine = &engine;
 	expected_cap = ACCEL_COPY | ACCEL_DUALCAST | ACCEL_CRC32C;
 	accel_ch->engine->capabilities = expected_cap;

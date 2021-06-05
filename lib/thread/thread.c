@@ -45,6 +45,7 @@
 
 #include "spdk/log.h"
 #include "spdk_internal/thread.h"
+#include "thread_internal.h"
 
 #ifdef __linux__
 #include <sys/timerfd.h>
@@ -2207,6 +2208,12 @@ void *
 spdk_io_channel_get_io_device(struct spdk_io_channel *ch)
 {
 	return ch->dev->io_device;
+}
+
+const char *
+spdk_io_channel_get_io_device_name(struct spdk_io_channel *ch)
+{
+	return spdk_io_device_get_name(ch->dev);
 }
 
 int

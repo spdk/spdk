@@ -321,7 +321,7 @@ static void
 rpc_get_io_channel(struct spdk_io_channel *ch, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", spdk_io_device_get_name(ch->dev));
+	spdk_json_write_named_string(w, "name", spdk_io_channel_get_io_device_name(ch));
 	spdk_json_write_named_uint32(w, "ref", spdk_io_channel_get_ref_count(ch));
 	spdk_json_write_object_end(w);
 }

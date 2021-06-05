@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/thread.h"
+#include "thread/thread_internal.h"
 #include "bs_scheduler.c"
 
 

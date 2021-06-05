@@ -33,10 +33,10 @@
 
 #include "spdk_cunit.h"
 #include "spdk/blob.h"
-#include "spdk/thread.h"
 #include "spdk/util.h"
 
 #include "spdk/bdev_module.h"
+#include "thread/thread_internal.h"
 
 #include "common/lib/ut_multithread.c"
 
