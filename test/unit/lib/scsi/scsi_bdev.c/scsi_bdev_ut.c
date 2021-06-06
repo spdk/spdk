@@ -44,8 +44,6 @@
 
 SPDK_LOG_REGISTER_COMPONENT(scsi)
 
-struct spdk_scsi_globals g_spdk_scsi;
-
 static uint64_t g_test_bdev_num_blocks;
 
 TAILQ_HEAD(, spdk_bdev_io) g_bdev_io_queue;

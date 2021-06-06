@@ -213,10 +213,4 @@ int scsi2_reserve(struct spdk_scsi_task *task, uint8_t *cdb);
 int scsi2_release(struct spdk_scsi_task *task);
 int scsi2_reserve_check(struct spdk_scsi_task *task);
 
-struct spdk_scsi_globals {
-	pthread_mutex_t mutex;
-};
-
-extern struct spdk_scsi_globals g_scsi;
-
 #endif /* SPDK_SCSI_INTERNAL_H */

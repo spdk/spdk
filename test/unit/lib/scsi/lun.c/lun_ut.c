@@ -51,8 +51,6 @@ struct spdk_bdev {
 
 SPDK_LOG_REGISTER_COMPONENT(scsi)
 
-struct spdk_scsi_globals g_spdk_scsi;
-
 static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
