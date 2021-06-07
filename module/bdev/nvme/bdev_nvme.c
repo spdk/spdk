@@ -1357,6 +1357,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	const struct spdk_nvme_ns_data	*nsdata;
 	int				rc;
 	enum spdk_nvme_csi		csi;
+	uint32_t atomic_bs, phys_bs, bs;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	csi = spdk_nvme_ns_get_csi(ns);
@@ -1399,6 +1400,20 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	}
 
 	nsdata = spdk_nvme_ns_get_data(ns);
+	bs = spdk_nvme_ns_get_sector_size(ns);
+	atomic_bs = bs;
+	phys_bs = bs;
+	if (nsdata->nabo == 0) {
+		if (nsdata->nsfeat.ns_atomic_write_unit && nsdata->nawupf) {
+			atomic_bs = bs * (1 + nsdata->nawupf);
+		} else {
+			atomic_bs = bs * (1 + cdata->awupf);
+		}
+	}
+	if (nsdata->nsfeat.optperf) {
+		phys_bs = bs * (1 + nsdata->npwg);
+	}
+	disk->phys_blocklen = spdk_min(phys_bs, atomic_bs);
 
 	disk->md_len = spdk_nvme_ns_get_md_size(ns);
 	if (disk->md_len != 0) {
