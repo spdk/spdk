@@ -177,22 +177,14 @@ struct io_device {
 	struct spdk_thread		*unregister_thread;
 	uint32_t			ctx_size;
 	uint32_t			for_each_count;
-	RB_ENTRY(io_device)		node;
+	TAILQ_ENTRY(io_device)		tailq;
 
 	uint32_t			refcnt;
 
 	bool				unregistered;
 };
 
-static RB_HEAD(io_device_tree, io_device) g_io_devices = RB_INITIALIZER(g_io_devices);
-
-static int
-io_device_cmp(struct io_device *dev1, struct io_device *dev2)
-{
-	return dev1->io_device - dev2->io_device;
-}
-
-RB_GENERATE_STATIC(io_device_tree, io_device, node, io_device_cmp);
+static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
 struct spdk_msg {
 	spdk_msg_fn		fn;
@@ -304,7 +296,7 @@ spdk_thread_lib_fini(void)
 {
 	struct io_device *dev;
 
-	RB_FOREACH(dev, io_device_tree, &g_io_devices) {
+	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		SPDK_ERRLOG("io_device %s not unregistered\n", dev->name);
 	}
 
@@ -1850,15 +1842,6 @@ spdk_thread_set_interrupt_mode(bool enable_interrupt)
 	return;
 }
 
-static struct io_device *
-io_device_get(void *io_device)
-{
-	struct io_device find = {};
-
-	find.io_device = io_device;
-	return RB_FIND(io_device_tree, &g_io_devices, &find);
-}
-
 void
 spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size,
@@ -1902,14 +1885,16 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 		      dev->name, dev->io_device, thread->name);
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	tmp = RB_INSERT(io_device_tree, &g_io_devices, dev);
-	if (tmp != NULL) {
-		SPDK_ERRLOG("io_device %p already registered (old:%s new:%s)\n",
-			    io_device, tmp->name, dev->name);
-		free(dev);
-		pthread_mutex_unlock(&g_devlist_mutex);
-		return;
+	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
+		if (tmp->io_device == io_device) {
+			SPDK_ERRLOG("io_device %p already registered (old:%s new:%s)\n",
+				    io_device, tmp->name, dev->name);
+			free(dev);
+			pthread_mutex_unlock(&g_devlist_mutex);
+			return;
+		}
 	}
+	TAILQ_INSERT_TAIL(&g_io_devices, dev, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
 
@@ -1963,7 +1948,12 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	dev = io_device_get(io_device);
+	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
+		if (dev->io_device == io_device) {
+			break;
+		}
+	}
+
 	if (!dev) {
 		SPDK_ERRLOG("io_device %p not found\n", io_device);
 		assert(false);
@@ -1980,7 +1970,7 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 
 	dev->unregister_cb = unregister_cb;
 	dev->unregistered = true;
-	RB_REMOVE(io_device_tree, &g_io_devices, dev);
+	TAILQ_REMOVE(&g_io_devices, dev, tailq);
 	refcnt = dev->refcnt;
 	dev->unregister_thread = thread;
 	pthread_mutex_unlock(&g_devlist_mutex);
@@ -2015,7 +2005,11 @@ spdk_get_io_channel(void *io_device)
 	int rc;
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	dev = io_device_get(io_device);
+	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
+		if (dev->io_device == io_device) {
+			break;
+		}
+	}
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not find io_device %p\n", io_device);
 		pthread_mutex_unlock(&g_devlist_mutex);
