@@ -1153,13 +1153,11 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 	struct spdk_fio_qpair *fio_qpair = NULL;
 	const struct spdk_nvme_zns_ns_data *zns_data = NULL;
 
-	*model = ZBD_IGNORE;
-
 	if (f->filetype != FIO_TYPE_FILE && \
 	    f->filetype != FIO_TYPE_BLOCK && \
 	    f->filetype != FIO_TYPE_CHAR) {
-		log_info("spdk/nvme: ignoring filetype: %d\n", f->filetype);
-		return 0;
+		log_info("spdk/nvme: unsupported filetype: %d\n", f->filetype);
+		return -EINVAL;
 	}
 
 	fio_qpair = get_fio_qpair(fio_thread, f);
