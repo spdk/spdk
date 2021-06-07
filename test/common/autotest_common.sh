@@ -8,7 +8,6 @@ function xtrace_fd() {
 	exec {BASH_XTRACEFD}>&2
 
 	set -x
-	echo "Tracing to $BASH_XTRACEFD FD"
 }
 
 function xtrace_disable() {
