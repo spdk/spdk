@@ -841,6 +841,11 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 {
 	struct spdk_bdev *bdev;
 
+	if (f->filetype != FIO_TYPE_BLOCK) {
+		SPDK_ERRLOG("Unsupported filetype: %d\n", f->filetype);
+		return -EINVAL;
+	}
+
 	bdev = spdk_bdev_get_by_name(f->file_name);
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot get zoned model, no bdev with name: %s\n", f->file_name);
