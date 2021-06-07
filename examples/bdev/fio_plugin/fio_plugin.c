@@ -492,6 +492,8 @@ spdk_fio_setup(struct thread_data *td)
 
 		f->real_file_size = spdk_bdev_get_num_blocks(bdev) *
 				    spdk_bdev_get_block_size(bdev);
+		f->filetype = FIO_TYPE_BLOCK;
+		fio_file_set_size_known(f);
 
 		rc = spdk_fio_handle_options(td, f, bdev);
 		if (rc) {
