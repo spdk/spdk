@@ -415,6 +415,26 @@ int spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *s
 				  uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
 				  spdk_accel_completion_cb cb_fn, void *cb_arg);
 
+/**
+ * Submit a chained copy + CRC-32C calculation request.
+ *
+ * This operation will calculate the 4 byte CRC32-C for the given data.
+ *
+ * \param ch I/O channel associated with this call.
+ * \param dst Destination to write the data to.
+ * \param src_iovs The io vector array which stores the src data and len.
+ * \param iovcnt The size of the io vectors.
+ * \param crc_dst Destination to write the CRC-32C to.
+ * \param seed Four byte seed value.
+ * \param cb_fn Called when this CRC-32C operation completes.
+ * \param cb_arg Callback argument.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iovec *src_iovs,
+				   uint32_t iovcnt, uint32_t *crc_dst, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+
 struct spdk_json_write_ctx;
 
 /**

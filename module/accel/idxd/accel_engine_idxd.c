@@ -168,7 +168,8 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 					     task);
 		break;
 	case ACCEL_OPCODE_COPY_CRC32C:
-		rc = spdk_idxd_submit_copy_crc32c(chan->chan, task->dst, task->src, task->crc_dst, task->seed,
+		src = (task->v.iovcnt == 0) ? task->src : task->v.iovs[0].iov_base;
+		rc = spdk_idxd_submit_copy_crc32c(chan->chan, task->dst, src, task->crc_dst, task->seed,
 						  task->nbytes, idxd_done, task);
 		break;
 	default:

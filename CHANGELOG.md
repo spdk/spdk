@@ -8,6 +8,8 @@ Added API `spdk_accel_submit_copy_crc32c` to perform a CRC32C while copying data
 
 Added API `spdk_accel_batch_prep_copy_crc32c` to batch CRC32C + copy commands.
 
+Added API `spdk_accel_submit_copy_crc32cv` to submit chained CRC32C + copy commands.
+
 ### bdev
 
 Change `spdk_bdev_read_blocks_with_md` arg offset definiton from int64_t to uint64_t.

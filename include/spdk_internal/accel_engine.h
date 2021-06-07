@@ -84,7 +84,7 @@ struct spdk_accel_task {
 	struct {
 		spdk_accel_completion_cb	cb_fn;
 		void				*cb_arg;
-	}				chained;
+	} chained;
 	union {
 		struct {
 			struct iovec			*iovs; /* iovs passed by the caller */
