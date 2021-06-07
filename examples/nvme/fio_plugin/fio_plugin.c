@@ -1153,9 +1153,7 @@ spdk_fio_get_zoned_model(struct thread_data *td, struct fio_file *f, enum zbd_zo
 	struct spdk_fio_qpair *fio_qpair = NULL;
 	const struct spdk_nvme_zns_ns_data *zns_data = NULL;
 
-	if (f->filetype != FIO_TYPE_FILE && \
-	    f->filetype != FIO_TYPE_BLOCK && \
-	    f->filetype != FIO_TYPE_CHAR) {
+	if (f->filetype != FIO_TYPE_BLOCK) {
 		log_info("spdk/nvme: unsupported filetype: %d\n", f->filetype);
 		return -EINVAL;
 	}
