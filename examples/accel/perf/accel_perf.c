@@ -82,6 +82,7 @@ struct ap_task {
 	uint32_t		iov_cnt;
 	void			*dst;
 	void			*dst2;
+	uint32_t		crc_dst;
 	struct worker_thread	*worker;
 	int			status;
 	int			expected_status; /* used for the compare operation */
@@ -124,15 +125,20 @@ dump_user_config(struct spdk_app_opts *opts)
 	printf("Core mask:      %s\n\n", opts->reactor_mask);
 	printf("Accel Perf Configuration:\n");
 	printf("Workload Type:  %s\n", g_workload_type);
-	if (g_workload_selection == ACCEL_CRC32C) {
+	if (g_workload_selection == ACCEL_CRC32C || g_workload_selection == ACCEL_COPY_CRC32C) {
 		printf("CRC-32C seed:   %u\n", g_crc32c_seed);
-		printf("vector size:    %u\n", g_crc32c_chained_count);
+		printf("vector count    %u\n", g_crc32c_chained_count);
 	} else if (g_workload_selection == ACCEL_FILL) {
 		printf("Fill pattern:   0x%x\n", g_fill_pattern);
 	} else if ((g_workload_selection == ACCEL_COMPARE) && g_fail_percent_goal > 0) {
 		printf("Failure inject: %u percent\n", g_fail_percent_goal);
 	}
-	printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
+	if (g_workload_selection == ACCEL_COPY_CRC32C) {
+		printf("Vector size:    %u bytes\n", g_xfer_size_bytes);
+		printf("Transfer size:  %u bytes\n", g_xfer_size_bytes * g_crc32c_chained_count);
+	} else {
+		printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
+	}
 	printf("Queue depth:    %u\n", g_queue_depth);
 	printf("Allocate depth: %u\n", g_allocate_depth);
 	printf("# threads/core: %u\n", g_threads_per_core);
@@ -151,12 +157,12 @@ usage(void)
 	printf("accel_perf options:\n");
 	printf("\t[-h help message]\n");
 	printf("\t[-q queue depth per core]\n");
-	printf("\t[-C for crc32c workload, use this value to configre the io vector size to test (default 1)\n");
+	printf("\t[-C for crc32c workload, use this value to configure the io vector size to test (default 1)\n");
 	printf("\t[-T number of threads per core\n");
 	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill, crc32c, compare, dualcast\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, dualcast\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-f for fill workload, use this BYTE value (default 255)\n");
@@ -235,6 +241,8 @@ parse_args(int argc, char *argv)
 			g_workload_selection = ACCEL_FILL;
 		} else if (!strcmp(g_workload_type, "crc32c")) {
 			g_workload_selection = ACCEL_CRC32C;
+		} else if (!strcmp(g_workload_type, "copy_crc32c")) {
+			g_workload_selection = ACCEL_COPY_CRC32C;
 		} else if (!strcmp(g_workload_type, "compare")) {
 			g_workload_selection = ACCEL_COMPARE;
 		} else if (!strcmp(g_workload_type, "dualcast")) {
@@ -273,6 +281,7 @@ _get_task_data_bufs(struct ap_task *task)
 {
 	uint32_t align = 0;
 	uint32_t i = 0;
+	int dst_buff_len = g_xfer_size_bytes;
 
 	/* For dualcast, the DSA HW requires 4K alignment on destination addresses but
 	 * we do this for all engines to keep it simple.
@@ -281,13 +290,17 @@ _get_task_data_bufs(struct ap_task *task)
 		align = ALIGN_4K;
 	}
 
-	if (g_workload_selection == ACCEL_CRC32C) {
+	if (g_workload_selection == ACCEL_CRC32C || g_workload_selection == ACCEL_COPY_CRC32C) {
 		assert(g_crc32c_chained_count > 0);
 		task->iov_cnt = g_crc32c_chained_count;
 		task->iovs = calloc(task->iov_cnt, sizeof(struct iovec));
 		if (!task->iovs) {
 			fprintf(stderr, "cannot allocated task->iovs fot task=%p\n", task);
 			return -ENOMEM;
+		}
+
+		if (g_workload_selection == ACCEL_COPY_CRC32C) {
+			dst_buff_len = g_xfer_size_bytes * g_crc32c_chained_count;
 		}
 
 		for (i = 0; i < task->iov_cnt; i++) {
@@ -314,17 +327,19 @@ _get_task_data_bufs(struct ap_task *task)
 		}
 	}
 
-	task->dst = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
-	if (task->dst == NULL) {
-		fprintf(stderr, "Unable to alloc dst buffer\n");
-		return -ENOMEM;
-	}
+	if (g_workload_selection != ACCEL_COPY_CRC32C) {
+		task->dst = spdk_dma_zmalloc(dst_buff_len, align, NULL);
+		if (task->dst == NULL) {
+			fprintf(stderr, "Unable to alloc dst buffer\n");
+			return -ENOMEM;
+		}
 
-	/* For compare we want the buffers to match, otherwise not. */
-	if (g_workload_selection == ACCEL_COMPARE) {
-		memset(task->dst, DATA_PATTERN, g_xfer_size_bytes);
-	} else {
-		memset(task->dst, ~DATA_PATTERN, g_xfer_size_bytes);
+		/* For compare we want the buffers to match, otherwise not. */
+		if (g_workload_selection == ACCEL_COMPARE) {
+			memset(task->dst, DATA_PATTERN, dst_buff_len);
+		} else {
+			memset(task->dst, ~DATA_PATTERN, dst_buff_len);
+		}
 	}
 
 	if (g_workload_selection == ACCEL_DUALCAST) {
@@ -378,6 +393,10 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		rc = spdk_accel_submit_crc32cv(worker->ch, (uint32_t *)task->dst,
 					       task->iovs, task->iov_cnt, g_crc32c_seed,
 					       accel_done, task);
+		break;
+	case ACCEL_COPY_CRC32C:
+		rc = spdk_accel_submit_copy_crc32cv(worker->ch, task->dst, task->iovs, task->iov_cnt,
+						    &task->crc_dst, g_crc32c_seed, accel_done, task);
 		break;
 	case ACCEL_COMPARE:
 		random_num = rand() % 100;
@@ -433,6 +452,10 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task,
 		rc = spdk_accel_batch_prep_fill(worker->ch, batch, task->dst,
 						*(uint8_t *)task->src,
 						g_xfer_size_bytes, accel_done, task);
+		break;
+	case ACCEL_COPY_CRC32C:
+		rc = spdk_accel_batch_prep_copy_crc32c(worker->ch, batch, task->dst, task->src, &task->crc_dst,
+						       g_crc32c_seed, g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
 		rc = spdk_accel_batch_prep_crc32cv(worker->ch, batch, (uint32_t *)task->dst,
@@ -591,6 +614,28 @@ batch_done(void *cb_arg, int status)
 	spdk_thread_send_msg(worker_batch->worker->thread, _batch_done, worker_batch);
 }
 
+static int
+_vector_memcmp(void *_dst, struct iovec *src_iovs, uint32_t iovcnt)
+{
+	uint32_t i;
+	uint32_t ttl_len = 0;
+	uint8_t *dst = (uint8_t *)_dst;
+
+	for (i = 0; i < iovcnt; i++) {
+		if (memcmp(dst, src_iovs[i].iov_base, src_iovs[i].iov_len)) {
+			return -1;
+		}
+		dst += src_iovs[i].iov_len;
+		ttl_len += src_iovs[i].iov_len;
+	}
+
+	if (ttl_len != iovcnt * g_xfer_size_bytes) {
+		return -1;
+	}
+
+	return 0;
+}
+
 static void
 _accel_done(void *arg1)
 {
@@ -603,6 +648,17 @@ _accel_done(void *arg1)
 
 	if (g_verify && task->status == 0) {
 		switch (g_workload_selection) {
+		case ACCEL_COPY_CRC32C:
+			sw_crc32c = spdk_crc32c_iov_update(task->iovs, task->iov_cnt, ~g_crc32c_seed);
+			if (task->crc_dst != sw_crc32c) {
+				SPDK_NOTICELOG("CRC-32C miscompare\n");
+				worker->xfer_failed++;
+			}
+			if (_vector_memcmp(task->dst, task->iovs, task->iov_cnt)) {
+				SPDK_NOTICELOG("Data miscompare\n");
+				worker->xfer_failed++;
+			}
+			break;
 		case ACCEL_CRC32C:
 			sw_crc32c = spdk_crc32c_iov_update(task->iovs, task->iov_cnt, ~g_crc32c_seed);
 			if (*(uint32_t *)task->dst != sw_crc32c) {
@@ -1002,6 +1058,7 @@ main(int argc, char **argv)
 	if ((g_workload_selection != ACCEL_COPY) &&
 	    (g_workload_selection != ACCEL_FILL) &&
 	    (g_workload_selection != ACCEL_CRC32C) &&
+	    (g_workload_selection != ACCEL_COPY_CRC32C) &&
 	    (g_workload_selection != ACCEL_COMPARE) &&
 	    (g_workload_selection != ACCEL_DUALCAST)) {
 		usage();
@@ -1027,7 +1084,7 @@ main(int argc, char **argv)
 		g_allocate_depth = g_queue_depth;
 	}
 
-	if (g_workload_selection == ACCEL_CRC32C &&
+	if ((g_workload_selection == ACCEL_CRC32C || g_workload_selection == ACCEL_COPY_CRC32C) &&
 	    g_crc32c_chained_count == 0) {
 		usage();
 		g_rc = -1;
