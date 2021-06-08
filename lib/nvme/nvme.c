@@ -678,16 +678,6 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 		ctrlr->remove_cb = probe_ctx->remove_cb;
 		ctrlr->cb_ctx = probe_ctx->cb_ctx;
 
-		if (ctrlr->quirks & NVME_QUIRK_MINIMUM_IO_QUEUE_SIZE &&
-		    ctrlr->opts.io_queue_size == DEFAULT_IO_QUEUE_SIZE) {
-			/* If the user specifically set an IO queue size different than the
-			 * default, use that value.  Otherwise overwrite with the quirked value.
-			 * This allows this quirk to be overridden when necessary.
-			 * However, cap.mqes still needs to be respected.
-			 */
-			ctrlr->opts.io_queue_size = spdk_min(DEFAULT_IO_QUEUE_SIZE_FOR_QUIRK, ctrlr->cap.bits.mqes + 1u);
-		}
-
 		nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
 		TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
 		return 0;

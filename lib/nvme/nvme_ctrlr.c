@@ -3522,6 +3522,15 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->opts.io_queue_size = spdk_max(ctrlr->opts.io_queue_size, SPDK_NVME_IO_QUEUE_MIN_ENTRIES);
 	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, MAX_IO_QUEUE_ENTRIES);
+	if (ctrlr->quirks & NVME_QUIRK_MINIMUM_IO_QUEUE_SIZE &&
+	    ctrlr->opts.io_queue_size == DEFAULT_IO_QUEUE_SIZE) {
+		/* If the user specifically set an IO queue size different than the
+		 * default, use that value.  Otherwise overwrite with the quirked value.
+		 * This allows this quirk to be overridden when necessary.
+		 * However, cap.mqes still needs to be respected.
+		 */
+		ctrlr->opts.io_queue_size = DEFAULT_IO_QUEUE_SIZE_FOR_QUIRK;
+	}
 	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, ctrlr->cap.bits.mqes + 1u);
 
 	ctrlr->opts.io_queue_requests = spdk_max(ctrlr->opts.io_queue_requests, ctrlr->opts.io_queue_size);
