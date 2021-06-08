@@ -1279,7 +1279,7 @@ test_nvme_tcp_icresp_handle(void)
 	nvme_tcp_icresp_handle(&tqpair, &pdu);
 
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
-	CU_ASSERT(tqpair.state == NVME_TCP_QPAIR_STATE_RUNNING);
+	CU_ASSERT(tqpair.state == NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND);
 	CU_ASSERT(tqpair.maxh2cdata == pdu.hdr.ic_resp.maxh2cdata);
 	CU_ASSERT(tqpair.cpda == pdu.hdr.ic_resp.cpda);
 	CU_ASSERT(tqpair.flags.host_hdgst_enable == pdu.hdr.ic_resp.dgst.bits.hdgst_enable);

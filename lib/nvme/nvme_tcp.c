@@ -851,6 +851,19 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 	nvme_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvme_tcp_qpair_send_h2c_term_req_complete, tqpair);
 }
 
+static bool
+nvme_tcp_qpair_recv_state_valid(struct nvme_tcp_qpair *tqpair)
+{
+	switch (tqpair->state) {
+	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND:
+	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL:
+	case NVME_TCP_QPAIR_STATE_RUNNING:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static void
 nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 {
@@ -874,7 +887,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 			plen_error = true;
 		}
 	} else {
-		if (tqpair->state != NVME_TCP_QPAIR_STATE_RUNNING) {
+		if (spdk_unlikely(!nvme_tcp_qpair_recv_state_valid(tqpair))) {
 			SPDK_ERRLOG("The TCP/IP tqpair connection is not negotitated\n");
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
 			goto err;
@@ -1147,7 +1160,7 @@ nvme_tcp_send_icreq_complete(void *cb_arg)
 
 	if (tqpair->state == NVME_TCP_QPAIR_STATE_INITIALIZING) {
 		SPDK_DEBUGLOG(nvme, "tqpair %p %u, finilize icresp\n", tqpair, tqpair->qpair.id);
-		tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
+		tqpair->state = NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND;
 	}
 }
 
@@ -1218,7 +1231,7 @@ nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair,
 		return;
 	}
 
-	tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair->state = NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND;
 	return;
 end:
 	nvme_tcp_qpair_send_h2c_term_req(tqpair, pdu, fes, error_offset);
@@ -1926,13 +1939,26 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 			SPDK_ERRLOG("Failed to construct the tqpair=%p via correct icresp\n", tqpair);
 		}
 		break;
-	case NVME_TCP_QPAIR_STATE_RUNNING:
-		rc = nvme_fabric_qpair_connect(&tqpair->qpair, tqpair->num_entries);
+	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND:
+		rc = nvme_fabric_qpair_connect_async(&tqpair->qpair, tqpair->num_entries);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 			break;
 		}
-		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+		tqpair->state = NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL;
+		rc = -EAGAIN;
+		break;
+	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL:
+		rc = nvme_fabric_qpair_connect_poll(&tqpair->qpair);
+		if (rc == 0) {
+			tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
+			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+		} else if (rc != -EAGAIN) {
+			SPDK_ERRLOG("Failed to poll NVMe-oF Fabric CONNECT command\n");
+		}
+		break;
+	case NVME_TCP_QPAIR_STATE_RUNNING:
+		rc = 0;
 		break;
 	default:
 		assert(false);
