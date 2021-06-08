@@ -1237,6 +1237,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "check en";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		return "disable and wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_SET_EN_0:
+		return "set CC.EN = 0";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		return "disable and wait for CSTS.RDY = 0";
 	case NVME_CTRLR_STATE_ENABLE:
@@ -3462,56 +3464,44 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		/* Begin the hardware initialization by making sure the controller is disabled. */
 		if (cc.bits.en) {
 			NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1\n");
-			/*
-			 * Controller is currently enabled. We need to disable it to cause a reset.
-			 *
-			 * If CC.EN = 1 && CSTS.RDY = 0, the controller is in the process of becoming ready.
-			 *  Wait for the ready bit to be 1 before disabling the controller.
-			 */
-			if (csts.bits.rdy == 0) {
-				NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1 && CSTS.RDY = 0 - waiting for reset to complete\n");
-				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
-				return 0;
-			}
-
-			/* CC.EN = 1 && CSTS.RDY == 1, so we can immediately disable the controller. */
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Setting CC.EN = 0\n");
-			cc.bits.en = 0;
-			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-				NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
-				return -EIO;
-			}
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
-
-			/*
-			 * Wait 2.5 seconds before accessing PCI registers.
-			 * Not using sleep() to avoid blocking other controller's initialization.
-			 */
-			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
-				NVME_CTRLR_DEBUGLOG(ctrlr, "Applying quirk: delay 2.5 seconds before reading registers\n");
-				ctrlr->sleep_timeout_tsc = ticks + (2500 * spdk_get_ticks_hz() / 1000);
-			}
-			return 0;
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 		} else {
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
-			return 0;
 		}
-		break;
+		return 0;
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
+		/*
+		 * Controller is currently enabled. We need to disable it to cause a reset.
+		 *
+		 * If CC.EN = 1 && CSTS.RDY = 0, the controller is in the process of becoming ready.
+		 *  Wait for the ready bit to be 1 before disabling the controller.
+		 */
 		if (csts.bits.rdy == 1) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1 && CSTS.RDY = 1 - disabling controller\n");
-			/* CC.EN = 1 && CSTS.RDY = 1, so we can set CC.EN = 0 now. */
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Setting CC.EN = 0\n");
-			cc.bits.en = 0;
-			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-				NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
-				return -EIO;
-			}
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
-			return 0;
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_EN_0, ready_timeout_in_ms);
+		} else {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1 && CSTS.RDY = 0 - waiting for reset to complete\n");
 		}
-		break;
+		return 0;
+
+	case NVME_CTRLR_STATE_SET_EN_0:
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Setting CC.EN = 0\n");
+		cc.bits.en = 0;
+		if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
+			NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
+			return -EIO;
+		}
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
+
+		/*
+		 * Wait 2.5 seconds before accessing PCI registers.
+		 * Not using sleep() to avoid blocking other controller's initialization.
+		 */
+		if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Applying quirk: delay 2.5 seconds before reading registers\n");
+			ctrlr->sleep_timeout_tsc = ticks + (2500 * spdk_get_ticks_hz() / 1000);
+		}
+		return 0;
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		if (csts.bits.rdy == 0) {

@@ -724,6 +724,8 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 	 */
 	g_ut_nvme_regs.csts.bits.rdy = 1;
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_EN_0);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
@@ -777,7 +779,7 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
-	while (ctrlr.state != NVME_CTRLR_STATE_CHECK_EN) {
+	while (ctrlr.state != NVME_CTRLR_STATE_SET_EN_0) {
 		CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
 	}
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
