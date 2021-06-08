@@ -466,6 +466,8 @@ struct spdk_nvme_qpair {
 	void					*req_buf;
 
 	const struct spdk_nvme_transport	*transport;
+
+	struct nvme_completion_poll_status	*poll_status;
 };
 
 struct spdk_nvme_poll_group {
