@@ -3438,10 +3438,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			}
 			return 0;
 		} else {
-			if (csts.bits.rdy == 1) {
-				NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 0 && CSTS.RDY = 1 - waiting for shutdown to complete\n");
-			}
-
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
 			return 0;
 		}
