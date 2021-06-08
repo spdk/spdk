@@ -432,7 +432,7 @@ test_nvme_fabric_qpair_connect(void)
 	g_nvme_wait_for_completion_timeout = true;
 
 	rc = nvme_fabric_qpair_connect(&qpair, 1);
-	CU_ASSERT(rc == -EIO);
+	CU_ASSERT(rc == -ECANCELED);
 	g_nvme_wait_for_completion_timeout = false;
 	abort_request(g_request);
 

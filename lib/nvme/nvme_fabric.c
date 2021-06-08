@@ -384,10 +384,9 @@ nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 int
-nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
+nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 {
 	struct nvme_completion_poll_status *status;
-	struct spdk_nvmf_fabric_connect_rsp *rsp;
 	struct spdk_nvmf_fabric_connect_cmd cmd;
 	struct spdk_nvmf_fabric_connect_data *nvmf_data;
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -454,26 +453,43 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 				      spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	}
 
-	/* Wait until the command completes or times out */
-	while (nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL) == -EAGAIN) {}
+	qpair->poll_status = status;
+	return 0;
+}
+
+int
+nvme_fabric_qpair_connect_poll(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_completion_poll_status *status;
+	struct spdk_nvmf_fabric_connect_rsp *rsp;
+	struct spdk_nvme_ctrlr *ctrlr;
+	int rc = 0;
+
+	ctrlr = qpair->ctrlr;
+	status = qpair->poll_status;
+
+	if (nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL) == -EAGAIN) {
+		return -EAGAIN;
+	}
 
 	if (status->timed_out || spdk_nvme_cpl_is_error(&status->cpl)) {
-		SPDK_ERRLOG("Connect command failed, rc %d, trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\n",
+		SPDK_ERRLOG("Connect command failed, rc %d, trtype:%s adrfam:%s "
+			    "traddr:%s trsvcid:%s subnqn:%s\n",
 			    status->timed_out ? -ECANCELED : -EIO,
 			    spdk_nvme_transport_id_trtype_str(ctrlr->trid.trtype),
 			    spdk_nvme_transport_id_adrfam_str(ctrlr->trid.adrfam),
 			    ctrlr->trid.traddr,
 			    ctrlr->trid.trsvcid,
 			    ctrlr->trid.subnqn);
-		if (spdk_nvme_cpl_is_error(&status->cpl)) {
-			SPDK_ERRLOG("Connect command completed with error: sct %d, sc %d\n", status->cpl.status.sct,
-				    status->cpl.status.sc);
+		if (status->timed_out) {
+			rc = -ECANCELED;
+		} else {
+			SPDK_ERRLOG("Connect command completed with error: sct %d, sc %d\n",
+				    status->cpl.status.sct, status->cpl.status.sc);
+			rc = -EIO;
 		}
-		if (!status->timed_out) {
-			spdk_free(status->dma_data);
-			free(status);
-		}
-		return -EIO;
+
+		goto finish;
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
@@ -481,8 +497,30 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		ctrlr->cntlid = rsp->status_code_specific.success.cntlid;
 		SPDK_DEBUGLOG(nvme, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
 	}
+finish:
+	qpair->poll_status = NULL;
+	if (!status->timed_out) {
+		spdk_free(status->dma_data);
+		free(status);
+	}
 
-	spdk_free(status->dma_data);
-	free(status);
-	return 0;
+	return rc;
+}
+
+int
+nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
+{
+	int rc;
+
+	rc = nvme_fabric_qpair_connect_async(qpair, num_entries);
+	if (rc) {
+		return rc;
+	}
+
+	do {
+		/* Wait until the command completes or times out */
+		rc = nvme_fabric_qpair_connect_poll(qpair);
+	} while (rc == -EAGAIN);
+
+	return rc;
 }
