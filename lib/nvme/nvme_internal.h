@@ -383,6 +383,11 @@ struct nvme_request {
 struct nvme_completion_poll_status {
 	struct spdk_nvme_cpl	cpl;
 	uint64_t		timeout_tsc;
+	/**
+	 * DMA buffer retained throughout the duration of the command.  It'll be released
+	 * automatically if the command times out, otherwise the user is responsible for freeing it.
+	 */
+	void			*dma_data;
 	bool			done;
 	/* This flag indicates that the request has been timed out and the memory
 	   must be freed in a completion callback */

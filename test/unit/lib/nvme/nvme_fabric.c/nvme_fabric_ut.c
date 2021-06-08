@@ -42,8 +42,6 @@ pid_t g_spdk_nvme_pid;
 struct spdk_nvmf_fabric_prop_set_cmd g_ut_cmd = {};
 struct spdk_nvmf_fabric_prop_get_rsp g_ut_response = {};
 
-DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
-
 DEFINE_STUB_V(spdk_nvme_ctrlr_get_default_ctrlr_opts,
 	      (struct spdk_nvme_ctrlr_opts *opts, size_t opts_size));
 
@@ -82,6 +80,7 @@ DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *,
 DEFINE_STUB(nvme_ctrlr_process_init, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 static struct spdk_nvmf_fabric_connect_data g_nvmf_data;
+static struct nvme_request *g_request;
 
 int
 spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
@@ -100,15 +99,30 @@ spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
 	memcpy(&g_nvmf_data, buf, sizeof(g_nvmf_data));
+	g_request = req;
 
 	return 0;
 }
 
-DEFINE_RETURN_MOCK(nvme_wait_for_completion_timeout, int);
+void
+nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_completion_poll_status *status = arg;
+
+	if (status->timed_out) {
+		spdk_free(status->dma_data);
+		free(status);
+	}
+
+	g_request = NULL;
+}
+
+static bool g_nvme_wait_for_completion_timeout;
+
 int
-nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
-				 struct nvme_completion_poll_status *status,
-				 uint64_t timeout_in_usecs)
+nvme_wait_for_completion_robust_lock_timeout_poll(struct spdk_nvme_qpair *qpair,
+		struct nvme_completion_poll_status *status,
+		pthread_mutex_t *robust_mutex)
 {
 	struct spdk_nvmf_fabric_connect_rsp *rsp = (void *)&status->cpl;
 
@@ -116,8 +130,7 @@ nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
 		rsp->status_code_specific.success.cntlid = 1;
 	}
 
-	status->timed_out = false;
-	HANDLE_RETURN_MOCK(nvme_wait_for_completion_timeout);
+	status->timed_out = g_nvme_wait_for_completion_timeout;
 
 	return 0;
 }
@@ -216,6 +229,19 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 
 	HANDLE_RETURN_MOCK(spdk_nvme_ctrlr_cmd_admin_raw);
 	return 0;
+}
+
+static void
+abort_request(struct nvme_request *request)
+{
+	struct spdk_nvme_cpl cpl = {
+		.status = {
+			.sct = SPDK_NVME_SCT_GENERIC,
+			.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION,
+		}
+	};
+
+	request->cb_fn(request->cb_arg, &cpl);
 }
 
 static void
@@ -403,11 +429,12 @@ test_nvme_fabric_qpair_connect(void)
 
 	/* Wait_for completion timeout */
 	STAILQ_INSERT_HEAD(&qpair.free_req, &req, stailq);
-	MOCK_SET(nvme_wait_for_completion_timeout, 1);
+	g_nvme_wait_for_completion_timeout = true;
 
 	rc = nvme_fabric_qpair_connect(&qpair, 1);
 	CU_ASSERT(rc == -EIO);
-	MOCK_CLEAR(nvme_wait_for_completion_timeout);
+	g_nvme_wait_for_completion_timeout = false;
+	abort_request(g_request);
 
 	/* Input parameters invalid */
 	rc = nvme_fabric_qpair_connect(&qpair, 0);

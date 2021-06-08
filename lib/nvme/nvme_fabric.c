@@ -416,6 +416,8 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		return -ENOMEM;
 	}
 
+	status->dma_data = nvmf_data;
+
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
@@ -441,16 +443,23 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 					nvme_completion_poll_cb, status);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to allocate/submit FABRIC_CONNECT command, rc %d\n", rc);
-		spdk_free(nvmf_data);
+		spdk_free(status->dma_data);
 		free(status);
 		return rc;
 	}
 
 	/* If we time out, the qpair will abort the request upon destruction. */
-	rc = nvme_wait_for_completion_timeout(qpair, status, ctrlr->opts.fabrics_connect_timeout_us);
-	if (rc) {
+	if (ctrlr->opts.fabrics_connect_timeout_us > 0) {
+		status->timeout_tsc = spdk_get_ticks() + ctrlr->opts.fabrics_connect_timeout_us *
+				      spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	}
+
+	/* Wait until the command completes or times out */
+	while (nvme_wait_for_completion_robust_lock_timeout_poll(qpair, status, NULL) == -EAGAIN) {}
+
+	if (status->timed_out || spdk_nvme_cpl_is_error(&status->cpl)) {
 		SPDK_ERRLOG("Connect command failed, rc %d, trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\n",
-			    rc,
+			    status->timed_out ? -ECANCELED : -EIO,
 			    spdk_nvme_transport_id_trtype_str(ctrlr->trid.trtype),
 			    spdk_nvme_transport_id_adrfam_str(ctrlr->trid.adrfam),
 			    ctrlr->trid.traddr,
@@ -460,8 +469,8 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 			SPDK_ERRLOG("Connect command completed with error: sct %d, sc %d\n", status->cpl.status.sct,
 				    status->cpl.status.sc);
 		}
-		spdk_free(nvmf_data);
 		if (!status->timed_out) {
+			spdk_free(status->dma_data);
 			free(status);
 		}
 		return -EIO;
@@ -473,7 +482,7 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		SPDK_DEBUGLOG(nvme, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
 	}
 
-	spdk_free(nvmf_data);
+	spdk_free(status->dma_data);
 	free(status);
 	return 0;
 }

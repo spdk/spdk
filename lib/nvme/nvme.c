@@ -244,6 +244,7 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	if (status->timed_out) {
 		/* There is no routine waiting for the completion of this request, free allocated memory */
+		spdk_free(status->dma_data);
 		free(status);
 		return;
 	}
