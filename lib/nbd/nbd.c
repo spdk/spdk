@@ -87,14 +87,6 @@ struct nbd_io {
 	TAILQ_ENTRY(nbd_io)	tailq;
 };
 
-enum nbd_disk_state_t {
-	NBD_DISK_STATE_RUNNING = 0,
-	/* soft disconnection caused by receiving nbd_cmd_disc */
-	NBD_DISK_STATE_SOFTDISC,
-	/* hard disconnection caused by mandatory conditions */
-	NBD_DISK_STATE_HARDDISC,
-};
-
 struct spdk_nbd_disk {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
@@ -117,7 +109,8 @@ struct spdk_nbd_disk {
 	TAILQ_HEAD(, nbd_io)	received_io_list;
 	TAILQ_HEAD(, nbd_io)	executed_io_list;
 
-	enum nbd_disk_state_t	state;
+	bool			is_started;
+	bool			is_closing;
 	/* count of nbd_io in spdk_nbd_disk */
 	int			io_count;
 
@@ -152,9 +145,8 @@ _nbd_fini(void *arg1)
 {
 	struct spdk_nbd_disk *nbd, *nbd_tmp;
 
-	/* Change all nbds into closing state */
 	TAILQ_FOREACH_SAFE(nbd, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
-		if (nbd->state != NBD_DISK_STATE_HARDDISC) {
+		if (!nbd->is_closing) {
 			spdk_nbd_stop(nbd);
 		}
 	}
@@ -422,7 +414,12 @@ spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 		return rc;
 	}
 
-	nbd->state = NBD_DISK_STATE_HARDDISC;
+	nbd->is_closing = true;
+
+	/* if nbd is not started, it will continue to call nbd stop later */
+	if (!nbd->is_started) {
+		return 1;
+	}
 
 	/*
 	 * Stop action should be called only after all nbd_io are executed.
@@ -548,7 +545,7 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 		break;
 #endif
 	case NBD_CMD_DISC:
-		nbd->state = NBD_DISK_STATE_SOFTDISC;
+		nbd->is_closing = true;
 		rc = spdk_bdev_abort(desc, ch, io, nbd_io_done, io);
 
 		/* when there begins to have executed_io to send, enable socket writable notice */
@@ -663,7 +660,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 				io->state = NBD_IO_RECV_PAYLOAD;
 			} else {
 				io->state = NBD_IO_XMIT_RESP;
-				if (spdk_likely(nbd->state == NBD_DISK_STATE_RUNNING)) {
+				if (spdk_likely((!nbd->is_closing) && nbd->is_started)) {
 					TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 				} else {
 					nbd_io_done(NULL, false, io);
@@ -688,7 +685,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 		if (io->offset == io->payload_size) {
 			io->offset = 0;
 			io->state = NBD_IO_XMIT_RESP;
-			if (spdk_likely(nbd->state == NBD_DISK_STATE_RUNNING)) {
+			if (spdk_likely((!nbd->is_closing) && nbd->is_started)) {
 				TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 			} else {
 				nbd_io_done(NULL, false, io);
@@ -707,10 +704,9 @@ nbd_io_recv(struct spdk_nbd_disk *nbd)
 	int i, rc, ret = 0;
 
 	/*
-	 * nbd server should not accept request in both soft and hard
-	 * disconnect states.
+	 * nbd server should not accept request after closing command
 	 */
-	if (nbd->state != NBD_DISK_STATE_RUNNING) {
+	if (nbd->is_closing) {
 		return 0;
 	}
 
@@ -854,16 +850,13 @@ nbd_poll(void *arg)
 		SPDK_INFOLOG(nbd, "nbd_poll() returned %s (%d); closing connection\n",
 			     spdk_strerror(-rc), rc);
 		_nbd_stop(nbd);
+		return SPDK_POLLER_IDLE;
 	}
-	if (nbd->state != NBD_DISK_STATE_RUNNING) {
-		if (nbd->state == NBD_DISK_STATE_HARDDISC && !nbd_cleanup_io(nbd)) {
-			_nbd_stop(nbd);
-		} else if (nbd->state == NBD_DISK_STATE_SOFTDISC) {
-			spdk_nbd_stop(nbd);
-		}
+	if (nbd->is_closing) {
+		spdk_nbd_stop(nbd);
 	}
 
-	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+	return SPDK_POLLER_BUSY;
 }
 
 static void *
@@ -988,6 +981,9 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctx->cb_arg, ctx->nbd, 0);
 	}
+
+	/* nbd will possibly receive stop command while initing */
+	ctx->nbd->is_started = true;
 
 	free(ctx);
 	return;
