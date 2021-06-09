@@ -530,7 +530,7 @@ GIT_VERSION=2.25.1
 IRDMA_VERSION=1.5.2
 ICE_VERSION=1.4.11
 SPDK_QEMU_BRANCH=${SPDK_QEMU_BRANCH:-spdk-5.0.0}
-VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-master}
+VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-v0.9}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v6.0.0}
 
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
@@ -547,7 +547,7 @@ export GIT_REPO_FLAMEGRAPH
 export GIT_REPO_QEMU
 : ${GIT_REPO_QEMU_SPDK=https://github.com/spdk/qemu}
 export GIT_REPO_QEMU_SPDK
-: ${GIT_REPO_QEMU_VFIO=https://github.com/tmakatos/qemu}
+: ${GIT_REPO_QEMU_VFIO=https://github.com/oracle/qemu}
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
 export GIT_REPO_LIBISCSI
