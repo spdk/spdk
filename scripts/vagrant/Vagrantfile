@@ -140,18 +140,13 @@ def setup_nvme_disk(libvirt, disk, index)
     nvme_drive << ",namespaces=#{nvme_namespaces[index]}"
   end
 
-  cmb_set = "false"
   pmr_cmdline = ""
 
   if !nvme_cmbs[index].nil? && nvme_cmbs[index] == "true"
     # Fix the size of the buffer to 128M
     nvme_drive << ",cmb_size_mb=128"
-    cmb_set = "true"
   end
   if !nvme_pmrs[index].nil?
-    if cmb_set == "true"
-      abort("CMB and PMR are mutually exclusive, aborting (#{nvme_disk})")
-    end
     pmr_path, pmr_size = nvme_pmrs[index].split(':')
     if !File.exist?(pmr_path)
       abort("#{pmr_path} does not exist, aborting")
