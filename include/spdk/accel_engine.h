@@ -303,7 +303,7 @@ int spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, 
  *
  * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param dst Destination to write the CRC-32C to.
+ * \param crc_dst Destination to write the CRC-32C to.
  * \param src The source address for the data.
  * \param seed Four byte seed value.
  * \param nbytes Length in bytes.
@@ -313,7 +313,7 @@ int spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, 
  * \return 0 on success, negative errno on failure.
  */
 int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				 uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes,
+				 uint32_t *crc_dst, void *src, uint32_t seed, uint64_t nbytes,
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
@@ -324,7 +324,7 @@ int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_b
  *
  * \param ch I/O channel associated with this call.
  * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param dst Destination to write the CRC-32C to.
+ * \param crc_dst Destination to write the CRC-32C to.
  * \param iovs The io vector array which stores the src data and len.
  * \param iovcnt The size of the iov.
  * \param seed Four byte seed value.
@@ -334,7 +334,7 @@ int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_b
  * \return 0 on success, negative errno on failure.
  */
 int spdk_accel_batch_prep_crc32cv(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				  uint32_t *dst, struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
+				  uint32_t *crc_dst, struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
 				  spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
@@ -365,7 +365,7 @@ int spdk_accel_batch_prep_copy_crc32c(struct spdk_io_channel *ch, struct spdk_ac
  * This operation will calculate the 4 byte CRC32-C for the given data.
  *
  * \param ch I/O channel associated with this call.
- * \param dst Destination to write the CRC-32C to.
+ * \param crc_dst Destination to write the CRC-32C to.
  * \param src The source address for the data.
  * \param seed Four byte seed value.
  * \param nbytes Length in bytes.
@@ -374,7 +374,8 @@ int spdk_accel_batch_prep_copy_crc32c(struct spdk_io_channel *ch, struct spdk_ac
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *src, uint32_t seed,
+int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst, void *src,
+			     uint32_t seed,
 			     uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
@@ -383,7 +384,7 @@ int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *sr
  * This operation will calculate the 4 byte CRC32-C for the given data.
  *
  * \param ch I/O channel associated with this call.
- * \param dst Destination to write the CRC-32C to.
+ * \param crc_dst Destination to write the CRC-32C to.
  * \param iovs The io vector array which stores the src data and len.
  * \param iovcnt The size of the iov.
  * \param seed Four byte seed value.
@@ -392,7 +393,7 @@ int spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *dst, void *sr
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *dst, struct iovec *iovs,
+int spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst, struct iovec *iovs,
 			      uint32_t iovcnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
