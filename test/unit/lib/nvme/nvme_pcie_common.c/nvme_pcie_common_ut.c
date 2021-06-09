@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "nvme/nvme_pcie_common.c"
-#include "common/lib/nvme/common_stubs.h"
+#include "common/lib/test_env.c"
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
@@ -61,6 +61,29 @@ DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 
 DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cpl *cpl));
+
+DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
+
+DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+
+DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
+	    (struct spdk_nvme_qpair *qpair, uint32_t max_completions), 0);
+
+DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t cid,
+		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 0);
+
+int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		    struct spdk_nvme_ctrlr *ctrlr,
+		    enum spdk_nvme_qprio qprio,
+		    uint32_t num_requests)
+{
+	qpair->id = id;
+	qpair->qprio = qprio;
+	qpair->ctrlr = ctrlr;
+
+	return 0;
+}
 
 static void
 test_nvme_pcie_ctrlr_alloc_cmb(void)
@@ -429,6 +452,46 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(rc == -ENOMEM);
 }
 
+static void
+test_nvme_pcie_ctrlr_construct_admin_qpair(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_qpair *pqpair = NULL;
+	int rc = 0;
+
+	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr.ctrlr.opts.admin_queue_size = 32;
+	pctrlr.doorbell_base = (void *)0xF7000000;
+	pctrlr.doorbell_stride_u32 = 1;
+	pctrlr.ctrlr.flags = 0;
+	pctrlr.ctrlr.free_io_qids = NULL;
+	pctrlr.ctrlr.is_resetting = false;
+	pctrlr.ctrlr.is_failed = false;
+	pctrlr.ctrlr.is_destructed = false;
+	pctrlr.ctrlr.outstanding_aborts = 0;
+	pctrlr.ctrlr.ana_log_page = NULL;
+	pctrlr.ctrlr.ana_log_page_size = 0;
+
+	TAILQ_INIT(&pctrlr.ctrlr.active_io_qpairs);
+	STAILQ_INIT(&pctrlr.ctrlr.queued_aborts);
+	STAILQ_INIT(&pctrlr.ctrlr.async_events);
+	TAILQ_INIT(&pctrlr.ctrlr.active_procs);
+
+	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr.ctrlr, 32);
+	CU_ASSERT(rc == 0);
+	pqpair = nvme_pcie_qpair(pctrlr.ctrlr.adminq);
+	SPDK_CU_ASSERT_FATAL(pqpair != NULL);
+	CU_ASSERT(pqpair->num_entries == 32);
+	CU_ASSERT(pqpair->flags.delay_cmd_submit == 0);
+	CU_ASSERT(pqpair->qpair.id == 0);
+	CU_ASSERT(pqpair->qpair.qprio == SPDK_NVME_QPRIO_URGENT);
+	CU_ASSERT(pqpair->qpair.ctrlr == &pctrlr.ctrlr);
+	CU_ASSERT(pqpair->stat != NULL);
+
+	rc = nvme_pcie_qpair_destroy(pctrlr.ctrlr.adminq);
+	CU_ASSERT(rc == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -442,6 +505,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_connect_qpair);
+	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_construct_admin_qpair);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
