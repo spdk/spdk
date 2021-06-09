@@ -529,6 +529,8 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 
 	ns->ctrlr = ctrlr;
 	ns->id = id;
+	/* This will be overwritten when reading ANA log page. */
+	ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	rc = nvme_ctrlr_identify_ns(ns);
 	if (rc != 0) {
