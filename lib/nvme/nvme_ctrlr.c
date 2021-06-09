@@ -158,7 +158,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	} \
 
 	SET_FIELD(num_io_queues, DEFAULT_MAX_IO_QUEUES);
-	SET_FIELD(use_cmb_sqs, true);
+	SET_FIELD(use_cmb_sqs, false);
 	SET_FIELD(no_shn_notification, false);
 	SET_FIELD(arb_mechanism, SPDK_NVME_CC_AMS_RR);
 	SET_FIELD(arbitration_burst, 0);

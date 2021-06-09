@@ -49,6 +49,11 @@ Added a new function `spdk_nvme_ns_cmd_copy` to submit a Simple Copy Command to 
 Update the spdk_nvme_generic_command_status_code structure with new status code
 according to the definition in nvme 1.4 spec.
 
+spdk_nvme_ctrlr_get_default_ctrlr_opts now sets use_cmb_sqs to false. This means
+that is a controller has a CMB and supports SQs in the CMB, SPDK will not use
+the CMB for SQs by default - the user must set use_cmb_sqs to true in
+the spdk_nvme_ctrlr_opts structure prior to controller attach.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create
