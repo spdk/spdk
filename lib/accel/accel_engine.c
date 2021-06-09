@@ -312,7 +312,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst, void *sr
 		return -ENOMEM;
 	}
 
-	accel_task->dst = (void *)crc_dst;
+	accel_task->crc_dst = crc_dst;
 	accel_task->src = src;
 	accel_task->v.iovcnt = 0;
 	accel_task->seed = seed;
@@ -345,8 +345,8 @@ crc32cv_done(void *cb_arg, int status)
 								~(*((uint32_t *)accel_task->crc_dst)),
 								accel_task->chained.cb_fn, accel_task->chained.cb_arg);
 		} else {
-			status = spdk_accel_submit_crc32cv(ch, accel_task->dst, ++accel_task->v.iovs,
-							   accel_task->v.iovcnt - 1, ~(*((uint32_t *)accel_task->dst)),
+			status = spdk_accel_submit_crc32cv(ch, accel_task->crc_dst, ++accel_task->v.iovs,
+							   accel_task->v.iovcnt - 1, ~(*((uint32_t *)accel_task->crc_dst)),
 							   accel_task->chained.cb_fn, accel_task->chained.cb_arg);
 		}
 
@@ -390,7 +390,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst, struct 
 
 	accel_task->v.iovs = iov;
 	accel_task->v.iovcnt = iov_cnt;
-	accel_task->dst = (void *)crc_dst;
+	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->op_code = ACCEL_OPCODE_CRC32C;
 
@@ -635,7 +635,7 @@ spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch
 		return -ENOMEM;
 	}
 
-	accel_task->dst = crc_dst;
+	accel_task->crc_dst = crc_dst;
 	accel_task->src = src;
 	accel_task->v.iovcnt = 0;
 	accel_task->seed = seed;
@@ -664,8 +664,9 @@ batched_crc32cv_done(void *cb_arg, int status)
 	assert(accel_task->chained.cb_arg != NULL);
 
 	if (spdk_likely(!status)) {
-		status = spdk_accel_batch_prep_crc32cv(ch, batch, accel_task->dst,
-						       ++accel_task->v.iovs, accel_task->v.iovcnt - 1,  ~(*((uint32_t *)accel_task->dst)),
+		status = spdk_accel_batch_prep_crc32cv(ch, batch, accel_task->crc_dst,
+						       ++accel_task->v.iovs, accel_task->v.iovcnt - 1,
+						       ~(*((uint32_t *)accel_task->crc_dst)),
 						       accel_task->chained.cb_fn, accel_task->chained.cb_arg);
 		if (spdk_likely(!status)) {
 			return;
@@ -707,7 +708,7 @@ spdk_accel_batch_prep_crc32cv(struct spdk_io_channel *ch, struct spdk_accel_batc
 
 	accel_task->v.iovs = iovs;
 	accel_task->v.iovcnt = iov_cnt;
-	accel_task->dst = crc_dst;
+	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->op_code = ACCEL_OPCODE_CRC32C;
 
