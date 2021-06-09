@@ -80,6 +80,12 @@ interrupt() {
 	cpus_to_collect=("${cpus[@]}")
 	collect_cpu_idle
 
+	# Verify that each cpu, except the main cpu, has no threads assigned
+	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
+	for cpu in "${cpus[@]:1}"; do
+		[[ -z $(jq -r "select(.lcore == $cpu) | .lw_threads[].id" <<< "$reactor_framework") ]]
+	done
+
 	# Standard scenario - spdk app is idle, all cpus, except the main cpu, should be
 	# switched into interrupt mode. main cpu should remain busy, all remaining cpus
 	# should become idle.
@@ -92,12 +98,6 @@ interrupt() {
 		fi
 	done
 
-	# While cpus are still idle, verify that each cpu, except the main cpu, has no threads assigned
-	reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
-	for cpu in "${cpus[@]:1}"; do
-		[[ -z $(jq -r "select(.lcore == $cpu) | .lw_threads[].id" <<< "$reactor_framework") ]]
-	done
-
 	# select 3 cpus except the main one
 	busy_cpus=("${cpus[@]:1:3}") threads=()
 
@@ -106,9 +106,9 @@ interrupt() {
 	for cpu in "${busy_cpus[@]}"; do
 		threads[cpu]=$(create_thread -n "thread$cpu" -m "$(mask_cpus "$cpu")" -a 100) cpus_to_collect=("$cpu")
 		collect_cpu_idle
-		((is_idle[cpu] == 0))
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 		[[ -n $(jq -r "select(.lcore == $cpu) | .lw_threads[] | select(.name == \"thread$cpu\")" <<< "$reactor_framework") ]]
+		((is_idle[cpu] == 0))
 	done
 
 	# Make all the threads idle and verify if their cpus have become idle as well and if they were
@@ -118,10 +118,10 @@ interrupt() {
 		cpus_to_collect=("$cpu")
 		# Give some extra time for the cpu to spin down
 		collect_cpu_idle 10
-		((is_idle[cpu] == 1))
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 		[[ -z $(jq -r "select(.lcore == $cpu) | .lw_threads[].id" <<< "$reactor_framework") ]]
 		[[ -n $(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.name == \"thread$cpu\")" <<< "$reactor_framework") ]]
+		((is_idle[cpu] == 1))
 	done
 
 	for cpu in "${!threads[@]}"; do
