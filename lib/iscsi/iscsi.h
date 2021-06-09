@@ -339,6 +339,9 @@ struct spdk_iscsi_opts {
 	bool AllowDuplicateIsid;
 	uint32_t MaxLargeDataInPerConnection;
 	uint32_t MaxR2TPerConnection;
+	uint32_t pdu_pool_size;
+	uint32_t immediate_data_pool_size;
+	uint32_t data_out_pool_size;
 };
 
 struct spdk_iscsi_globals {
@@ -372,6 +375,9 @@ struct spdk_iscsi_globals {
 	bool AllowDuplicateIsid;
 	uint32_t MaxLargeDataInPerConnection;
 	uint32_t MaxR2TPerConnection;
+	uint32_t pdu_pool_size;
+	uint32_t immediate_data_pool_size;
+	uint32_t data_out_pool_size;
 
 	struct spdk_mempool *pdu_pool;
 	struct spdk_mempool *pdu_immediate_data_pool;

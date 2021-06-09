@@ -29,6 +29,12 @@ Added API `spdk_idxd_submit_copy_crc32c` to perform a CRC32C while copying data.
 Added API `spdk_idxd_batch_prep_copy_crc32c` to prepare a batch operation to perform
 a CRC32C while copying data.
 
+### iscsi
+
+New parameters, `pdu_pool_size`, `immediate_data_pool_size`, and `data_out_pool_size`,
+were added to the RPC `iscsi_set_options` to run iSCSI target with varying amount of
+available memory.
+
 ### util
 
 `spdk_crc32c_iov_update` function was added to support calculating the crc32c of the

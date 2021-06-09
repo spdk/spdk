@@ -68,13 +68,6 @@ mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 			  ~ISCSI_DATA_BUFFER_MASK);
 }
 
-#define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth +	\
-					 iscsi->MaxLargeDataInPerConnection +	\
-					 2 * iscsi->MaxR2TPerConnection + 8))
-#define PDU_POOL_SIZE(iscsi)		(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
-#define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
-#define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
-
 static int
 iscsi_initialize_pdu_pool(void)
 {
@@ -86,7 +79,7 @@ iscsi_initialize_pdu_pool(void)
 
 	/* create PDU pool */
 	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
-					      PDU_POOL_SIZE(iscsi),
+					      iscsi->pdu_pool_size,
 					      sizeof(struct spdk_iscsi_pdu),
 					      256, SPDK_ENV_SOCKET_ID_ANY);
 	if (!iscsi->pdu_pool) {
@@ -95,7 +88,7 @@ iscsi_initialize_pdu_pool(void)
 	}
 
 	iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
-					 IMMEDIATE_DATA_POOL_SIZE(iscsi),
+					 iscsi->immediate_data_pool_size,
 					 imm_mobj_size, 256,
 					 SPDK_ENV_SOCKET_ID_ANY,
 					 mobj_ctor, NULL);
@@ -105,7 +98,7 @@ iscsi_initialize_pdu_pool(void)
 	}
 
 	iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
-				   DATA_OUT_POOL_SIZE(iscsi),
+				   iscsi->data_out_pool_size,
 				   dout_mobj_size, 256,
 				   SPDK_ENV_SOCKET_ID_ANY,
 				   mobj_ctor, NULL);
@@ -201,10 +194,10 @@ iscsi_check_pools(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_iscsi;
 
-	iscsi_check_pool(iscsi->pdu_pool, PDU_POOL_SIZE(iscsi));
+	iscsi_check_pool(iscsi->pdu_pool, iscsi->pdu_pool_size);
 	iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
-	iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
-	iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
+	iscsi_check_pool(iscsi->pdu_immediate_data_pool, iscsi->immediate_data_pool_size);
+	iscsi_check_pool(iscsi->pdu_data_out_pool, iscsi->data_out_pool_size);
 	iscsi_check_pool(iscsi->task_pool, DEFAULT_TASK_POOL_SIZE);
 }
 
@@ -319,6 +312,13 @@ iscsi_log_globals(void)
 		      g_iscsi.MaxR2TPerConnection);
 }
 
+#define NUM_PDU_PER_CONNECTION(opts)	(2 * (opts->MaxQueueDepth +	\
+					 opts->MaxLargeDataInPerConnection +	\
+					 2 * opts->MaxR2TPerConnection + 8))
+#define PDU_POOL_SIZE(opts)		(opts->MaxSessions * NUM_PDU_PER_CONNECTION(opts))
+#define IMMEDIATE_DATA_POOL_SIZE(opts)	(opts->MaxSessions * 128)
+#define DATA_OUT_POOL_SIZE(opts)	(opts->MaxSessions * MAX_DATA_OUT_PER_CONNECTION)
+
 static void
 iscsi_opts_init(struct spdk_iscsi_opts *opts)
 {
@@ -341,6 +341,9 @@ iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->nodebase = NULL;
 	opts->MaxLargeDataInPerConnection = DEFAULT_MAX_LARGE_DATAIN_PER_CONNECTION;
 	opts->MaxR2TPerConnection = DEFAULT_MAXR2T;
+	opts->pdu_pool_size = PDU_POOL_SIZE(opts);
+	opts->immediate_data_pool_size = IMMEDIATE_DATA_POOL_SIZE(opts);
+	opts->data_out_pool_size = DATA_OUT_POOL_SIZE(opts);
 }
 
 struct spdk_iscsi_opts *
@@ -415,6 +418,9 @@ iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->chap_group = src->chap_group;
 	dst->MaxLargeDataInPerConnection = src->MaxLargeDataInPerConnection;
 	dst->MaxR2TPerConnection = src->MaxR2TPerConnection;
+	dst->pdu_pool_size = src->pdu_pool_size;
+	dst->immediate_data_pool_size = src->immediate_data_pool_size;
+	dst->data_out_pool_size = src->data_out_pool_size;
 
 	return dst;
 }
@@ -504,6 +510,21 @@ iscsi_opts_verify(struct spdk_iscsi_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->pdu_pool_size == 0) {
+		SPDK_ERRLOG("0 is invalid. pdu_pool_size must be more than 0\n");
+		return -EINVAL;
+	}
+
+	if (opts->immediate_data_pool_size == 0) {
+		SPDK_ERRLOG("0 is invalid. immediate_data_pool_size must be more than 0\n");
+		return -EINVAL;
+	}
+
+	if (opts->data_out_pool_size == 0) {
+		SPDK_ERRLOG("0 is invalid. data_out_pool_size must be more than 0\n");
+		return -EINVAL;
+	}
+
 	return 0;
 }
 
@@ -549,6 +570,9 @@ iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_iscsi.chap_group = opts->chap_group;
 	g_iscsi.MaxLargeDataInPerConnection = opts->MaxLargeDataInPerConnection;
 	g_iscsi.MaxR2TPerConnection = opts->MaxR2TPerConnection;
+	g_iscsi.pdu_pool_size = opts->pdu_pool_size;
+	g_iscsi.immediate_data_pool_size = opts->immediate_data_pool_size;
+	g_iscsi.data_out_pool_size = opts->data_out_pool_size;
 
 	iscsi_log_globals();
 
@@ -1251,6 +1275,11 @@ iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 				     g_iscsi.MaxLargeDataInPerConnection);
 	spdk_json_write_named_uint32(w, "max_r2t_per_connection",
 				     g_iscsi.MaxR2TPerConnection);
+
+	spdk_json_write_named_uint32(w, "pdu_pool_size", g_iscsi.pdu_pool_size);
+	spdk_json_write_named_uint32(w, "immediate_data_pool_size",
+				     g_iscsi.immediate_data_pool_size);
+	spdk_json_write_named_uint32(w, "data_out_pool_size", g_iscsi.data_out_pool_size);
 
 	spdk_json_write_object_end(w);
 }

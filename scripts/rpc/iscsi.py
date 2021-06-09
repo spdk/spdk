@@ -22,7 +22,10 @@ def iscsi_set_options(
         error_recovery_level=None,
         allow_duplicated_isid=None,
         max_large_datain_per_connection=None,
-        max_r2t_per_connection=None):
+        max_r2t_per_connection=None,
+        pdu_pool_size=None,
+        immediate_data_pool_size=None,
+        data_out_pool_size=None):
     """Set iSCSI target options.
 
     Args:
@@ -45,6 +48,9 @@ def iscsi_set_options(
         allow_duplicated_isid: Allow duplicated initiator session ID
         max_large_datain_per_connection: Max number of outstanding split read I/Os per connection (optional)
         max_r2t_per_connection: Max number of outstanding R2Ts per connection (optional)
+        pdu_pool_size: Number of PDUs in the pool (optional)
+        immediate_data_pool_size: Number of immediate data buffers in the pool (optional)
+        data_out_pool_size: Number of data out buffers in the pool (optional)
 
     Returns:
         True or False
@@ -89,6 +95,12 @@ def iscsi_set_options(
         params['max_large_datain_per_connection'] = max_large_datain_per_connection
     if max_r2t_per_connection:
         params['max_r2t_per_connection'] = max_r2t_per_connection
+    if pdu_pool_size:
+        params['pdu_pool_size'] = pdu_pool_size
+    if immediate_data_pool_size:
+        params['immediate_data_pool_size'] = immediate_data_pool_size
+    if data_out_pool_size:
+        params['data_out_pool_size'] = data_out_pool_size
 
     return client.call('iscsi_set_options', params)
 

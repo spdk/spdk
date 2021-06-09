@@ -1701,6 +1701,9 @@ static const struct spdk_json_object_decoder rpc_set_iscsi_opts_decoders[] = {
 	{"allow_duplicated_isid", offsetof(struct spdk_iscsi_opts, AllowDuplicateIsid), spdk_json_decode_bool, true},
 	{"max_large_datain_per_connection", offsetof(struct spdk_iscsi_opts, MaxLargeDataInPerConnection), spdk_json_decode_uint32, true},
 	{"max_r2t_per_connection", offsetof(struct spdk_iscsi_opts, MaxR2TPerConnection), spdk_json_decode_uint32, true},
+	{"pdu_pool_size", offsetof(struct spdk_iscsi_opts, pdu_pool_size), spdk_json_decode_uint32, true},
+	{"immediate_data_pool_size", offsetof(struct spdk_iscsi_opts, immediate_data_pool_size), spdk_json_decode_uint32, true},
+	{"data_out_pool_size", offsetof(struct spdk_iscsi_opts, data_out_pool_size), spdk_json_decode_uint32, true},
 };
 
 static void

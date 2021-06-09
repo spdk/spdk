@@ -975,7 +975,10 @@ if __name__ == "__main__":
             error_recovery_level=args.error_recovery_level,
             allow_duplicated_isid=args.allow_duplicated_isid,
             max_large_datain_per_connection=args.max_large_datain_per_connection,
-            max_r2t_per_connection=args.max_r2t_per_connection)
+            max_r2t_per_connection=args.max_r2t_per_connection,
+            pdu_pool_size=args.pdu_pool_size,
+            immediate_data_pool_size=args.immediate_data_pool_size,
+            data_out_pool_size=args.data_out_pool_size)
 
     p = subparsers.add_parser('iscsi_set_options', aliases=['set_iscsi_options'],
                               help="""Set options of iSCSI subsystem""")
@@ -1001,6 +1004,9 @@ if __name__ == "__main__":
     p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
     p.add_argument('-x', '--max-large-datain-per-connection', help='Max number of outstanding split read I/Os per connection', type=int)
     p.add_argument('-k', '--max-r2t-per-connection', help='Max number of outstanding R2Ts per connection', type=int)
+    p.add_argument('-u', '--pdu-pool-size', help='Number of PDUs in the pool', type=int)
+    p.add_argument('-j', '--immediate_data-pool-size', help='Number of immediate data buffers in the pool', type=int)
+    p.add_argument('-z', '--data-out-pool-size', help='Number of data out buffers in the pool', type=int)
     p.set_defaults(func=iscsi_set_options)
 
     def iscsi_set_discovery_auth(args):

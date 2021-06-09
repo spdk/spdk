@@ -4618,6 +4618,9 @@ error_recovery_level            | Optional | number  | Session specific paramete
 allow_duplicated_isid           | Optional | boolean | Allow duplicated initiator session ID (default: `false`)
 max_large_datain_per_connection | Optional | number  | Max number of outstanding split read I/Os per connection (default: 64)
 max_r2t_per_connection          | Optional | number  | Max number of outstanding R2Ts per connection (default: 4)
+pdu_pool_size                   | Optional | number  | Number of PDUs in the pool (default: approximately 2 * max_sessions * (max_queue_depth + max_connections_per_session))
+immediate_data_pool_size        | Optional | number  | Number of immediate data buffers in the pool (default: 128 * max_sessions)
+data_out_pool_size              | Optional | number  | Number of data out buffers in the pool (default: 16 * max_sessions)
 
 To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
 
