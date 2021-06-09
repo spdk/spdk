@@ -141,7 +141,7 @@ def setup_nvme_disk(libvirt, disk, index)
   end
 
   cmb_set = "false"
-  pmr_cmdline =
+  pmr_cmdline = ""
 
   if !nvme_cmbs[index].nil? && nvme_cmbs[index] == "true"
     # Fix the size of the buffer to 128M
@@ -163,7 +163,7 @@ def setup_nvme_disk(libvirt, disk, index)
     pmr_cmdline = "memory-backend-file,id=pmr#{index},share=on,mem-path=#{pmr_path},size=#{pmr_size}"
   end
   libvirt.qemuargs :value => nvme_drive
-  if !pmr_cmdline.nil?
+  if pmr_cmdline != ""
     libvirt.qemuargs :value => "-object"
     libvirt.qemuargs :value => pmr_cmdline
   end
