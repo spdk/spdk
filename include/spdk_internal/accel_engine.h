@@ -81,6 +81,10 @@ struct spdk_accel_task {
 	struct spdk_accel_batch		*batch;
 	spdk_accel_completion_cb	cb_fn;
 	void				*cb_arg;
+	struct {
+		spdk_accel_completion_cb	cb_fn;
+		void				*cb_arg;
+	}				chained;
 	union {
 		struct {
 			struct iovec			*iovs; /* iovs passed by the caller */
@@ -93,10 +97,6 @@ struct spdk_accel_task {
 		void			*src2;
 	};
 	union {
-		struct {
-			spdk_accel_completion_cb	cb_fn;
-			void				*cb_arg;
-		} chained;
 		void				*dst2;
 		uint32_t			seed;
 		uint64_t			fill_pattern;
