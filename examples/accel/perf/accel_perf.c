@@ -390,7 +390,7 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 					    g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
-		rc = spdk_accel_submit_crc32cv(worker->ch, (uint32_t *)task->dst,
+		rc = spdk_accel_submit_crc32cv(worker->ch, &task->crc_dst,
 					       task->iovs, task->iov_cnt, g_crc32c_seed,
 					       accel_done, task);
 		break;
@@ -458,7 +458,7 @@ _batch_prep_cmd(struct worker_thread *worker, struct ap_task *task,
 						       g_crc32c_seed, g_xfer_size_bytes, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
-		rc = spdk_accel_batch_prep_crc32cv(worker->ch, batch, (uint32_t *)task->dst,
+		rc = spdk_accel_batch_prep_crc32cv(worker->ch, batch, &task->crc_dst,
 						   task->iovs, task->iov_cnt, g_crc32c_seed, accel_done, task);
 		break;
 	default:
@@ -661,7 +661,7 @@ _accel_done(void *arg1)
 			break;
 		case ACCEL_CRC32C:
 			sw_crc32c = spdk_crc32c_iov_update(task->iovs, task->iov_cnt, ~g_crc32c_seed);
-			if (*(uint32_t *)task->dst != sw_crc32c) {
+			if (task->crc_dst != sw_crc32c) {
 				SPDK_NOTICELOG("CRC-32C miscompare\n");
 				worker->xfer_failed++;
 			}
