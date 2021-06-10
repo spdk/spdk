@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/common.sh
 
-rpc_py=$rootdir/scripts/rpc.py
-
 mount_dir=$(mktemp -d)
 
 device=$1
@@ -33,8 +31,8 @@ svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
-$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
-ftl_construct_args="bdev_ftl_create -b ftl0 -d nvme0n1"
+bdev_create_zone nvme0n1
+ftl_construct_args="bdev_ftl_create -b ftl0 -d $ZONE_DEV"
 
 $rpc_py $ftl_construct_args
 
@@ -48,7 +46,7 @@ $rpc_py save_config > "$config"
 # Prepare the disk by creating ext4 fs and putting a file on it
 make_filesystem ext4 /dev/nbd0
 mount /dev/nbd0 $mount_dir
-dd if=/dev/urandom of=$mount_dir/testfile bs=4K count=256K
+dd if=/dev/urandom of=$mount_dir/testfile bs=4K count=4k
 sync
 mount -o remount /dev/nbd0 $mount_dir
 md5sum $mount_dir/testfile > "$SPDK_TEST_STORAGE/testfile.md5"
@@ -68,7 +66,7 @@ waitfornbd nbd0
 mount /dev/nbd0 $mount_dir
 
 # Write second file, to make sure writer thread has restored properly
-dd if=/dev/urandom of=$mount_dir/testfile2 bs=4K count=256K
+dd if=/dev/urandom of=$mount_dir/testfile2 bs=4K count=4k
 md5sum $mount_dir/testfile2 > "$SPDK_TEST_STORAGE/testfile2.md5"
 
 # Make sure second file will be read from disk

@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/common.sh
 
-rpc_py=$rootdir/scripts/rpc.py
-
 device=$1
 
 restore_kill() {
@@ -34,8 +32,8 @@ svcpid=$!
 waitforlisten $svcpid
 
 $rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
-$rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1 -n 1
-ftl_construct_args="bdev_ftl_create -b ftl0 -d nvme0n1 -o"
+bdev_create_zone nvme0n1
+ftl_construct_args="bdev_ftl_create -b ftl0 -d $ZONE_DEV -o"
 
 $rpc_py $ftl_construct_args
 
