@@ -7,6 +7,7 @@ pacman -Sy --needed --noconfirm gcc make cmake cunit libaio openssl \
 pacman -Sy --needed --noconfirm python-pexpect python-pip libffi
 pip install configshell_fb
 pip install pyelftools
+pip install ijson
 # Additional dependencies for DPDK
 pacman -Sy --needed --noconfirm numactl nasm
 # Additional dependencies for ISA-L used in compression

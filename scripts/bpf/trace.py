@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from dataclasses import dataclass, field
 from itertools import islice
 from typing import Dict, List, TypeVar
-import json
+import ijson
 import os
 import re
 import subprocess
@@ -168,20 +168,39 @@ class TraceEntry:
 class Trace:
     """Stores, parses, and prints out SPDK traces"""
     def __init__(self, file):
-        self._json = json.load(file)
+        self._parser = ijson.parse(file)
         self._objects = []
         self._argfmt = {TracepointArgument.TYPE_PTR: lambda a: f'0x{a:x}'}
-        self.tpoints = {t.id: t for t in self._parse_tpoints()}
-        self.tsc_rate = self._json['tsc_rate']
+        self.tpoints = {}
+        self._parse_defs()
 
-    def _parse_tpoints(self):
-        for tpoint in self._json.get('tpoints', []):
-            yield Tracepoint(
-                name=tpoint['name'], id=tpoint['id'],
+    def _parse_tpoints(self, tpoints):
+        for tpoint in tpoints:
+            tpoint_id = tpoint['id']
+            self.tpoints[tpoint_id] = Tracepoint(
+                name=tpoint['name'], id=tpoint_id,
                 new_object=tpoint['new_object'],
                 args=[TracepointArgument(name=a['name'],
                                          argtype=a['type'])
                       for a in tpoint.get('args', [])])
+
+    def _parse_defs(self):
+        builder = None
+        for prefix, event, value in self._parser:
+            # If we reach entries array, there are no more tracepoint definitions
+            if prefix == 'entries':
+                break
+            elif prefix == 'tsc_rate':
+                self.tsc_rate = value
+                continue
+
+            if (prefix, event) == ('tpoints', 'start_array'):
+                builder = ijson.ObjectBuilder()
+            if builder is not None:
+                builder.event(event, value)
+            if (prefix, event) == ('tpoints', 'end_array'):
+                self._parse_tpoints(builder.value)
+                builder = None
 
     def _parse_entry(self, entry):
         tpoint = self.tpoints[entry['tpoint']]
@@ -193,8 +212,15 @@ class Trace:
                           args={n.name: v for n, v in zip(tpoint.args, entry.get('args', []))})
 
     def _entries(self):
-        for entry in self._json.get('entries', []):
-            yield self._parse_entry(entry)
+        builder = None
+        for prefix, event, value in self._parser:
+            if (prefix, event) == ('entries.item', 'start_map'):
+                builder = ijson.ObjectBuilder()
+            if builder is not None:
+                builder.event(event, value)
+            if (prefix, event) == ('entries.item', 'end_map'):
+                yield self._parse_entry(builder.value)
+                builder = None
 
     def _annotate_args(self, entry):
         annotations = {}

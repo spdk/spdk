@@ -13,6 +13,7 @@ if ! pip3 install meson; then
 	apt-get install -y meson
 fi
 pip3 install pyelftools
+pip3 install ijson
 # Additional dependencies for SPDK CLI - not available on older Ubuntus
 apt-get install -y python3-configshell-fb python3-pexpect || echo \
 	"Note: Some SPDK CLI dependencies could not be installed."
