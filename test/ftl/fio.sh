@@ -5,9 +5,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/common.sh
 
-declare -A suite
-suite['basic']='randw-verify randw-verify-j2 randw-verify-depth128'
-suite['extended']='drive-prep randw-verify-qd128-ext randw randr randrw'
+tests=(randw randw-verify randw-verify-j2 randw-verify-depth128)
 
 rpc_py=$rootdir/scripts/rpc.py
 
@@ -17,16 +15,9 @@ fio_kill() {
 }
 
 device=$1
-tests=${suite[$2]}
-uuid=$3
 
 if [[ $CONFIG_FIO_PLUGIN != y ]]; then
 	echo "FIO not available"
-	exit 1
-fi
-
-if [ -z "$tests" ]; then
-	echo "Invalid test suite '$2'"
 	exit 1
 fi
 
@@ -41,12 +32,7 @@ waitforlisten $svcpid
 
 $rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
 $rpc_py bdev_ocssd_create -c nvme0 -b nvme0n1
-
-if [ -z "$uuid" ]; then
-	$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1
-else
-	$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1 -u $uuid
-fi
+$rpc_py bdev_ftl_create -b ftl0 -d nvme0n1
 
 waitforbdev ftl0
 
@@ -59,7 +45,7 @@ waitforbdev ftl0
 killprocess $svcpid
 trap - SIGINT SIGTERM EXIT
 
-for test in ${tests}; do
+for test in "${tests[@]}"; do
 	timing_enter $test
 	fio_bdev $testdir/config/fio/$test.fio
 	timing_exit $test
