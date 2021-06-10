@@ -196,6 +196,7 @@ _rpc_thread_get_stats(void *arg)
 {
 	struct rpc_get_stats_ctx *ctx = arg;
 	struct spdk_thread *thread = spdk_get_thread();
+	struct spdk_cpuset tmp_mask = {};
 	struct spdk_poller *poller;
 	struct spdk_thread_stats stats;
 	uint64_t active_pollers_count = 0;
@@ -221,8 +222,9 @@ _rpc_thread_get_stats(void *arg)
 		spdk_json_write_object_begin(ctx->w);
 		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
 		spdk_json_write_named_uint64(ctx->w, "id", spdk_thread_get_id(thread));
-		spdk_json_write_named_string(ctx->w, "cpumask",
-					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
+		spdk_cpuset_copy(&tmp_mask, spdk_app_get_core_mask());
+		spdk_cpuset_and(&tmp_mask, spdk_thread_get_cpumask(thread));
+		spdk_json_write_named_string(ctx->w, "cpumask", spdk_cpuset_fmt(&tmp_mask));
 		spdk_json_write_named_uint64(ctx->w, "busy", stats.busy_tsc);
 		spdk_json_write_named_uint64(ctx->w, "idle", stats.idle_tsc);
 		spdk_json_write_named_uint64(ctx->w, "active_pollers_count", active_pollers_count);
@@ -384,6 +386,7 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	struct spdk_reactor *reactor;
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_thread *thread;
+	struct spdk_cpuset tmp_mask = {};
 	struct spdk_governor *governor;
 	struct spdk_governor_capabilities capabilities;
 
@@ -414,8 +417,9 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 		spdk_json_write_object_begin(ctx->w);
 		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(thread));
 		spdk_json_write_named_uint64(ctx->w, "id", spdk_thread_get_id(thread));
-		spdk_json_write_named_string(ctx->w, "cpumask",
-					     spdk_cpuset_fmt(spdk_thread_get_cpumask(thread)));
+		spdk_cpuset_copy(&tmp_mask, spdk_app_get_core_mask());
+		spdk_cpuset_and(&tmp_mask, spdk_thread_get_cpumask(thread));
+		spdk_json_write_named_string(ctx->w, "cpumask", spdk_cpuset_fmt(&tmp_mask));
 		spdk_json_write_named_uint64(ctx->w, "elapsed",
 					     GET_DELTA(ctx->now, lw_thread->tsc_start));
 		spdk_json_write_object_end(ctx->w);
