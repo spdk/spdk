@@ -894,7 +894,7 @@ test_governor(void)
 	/* TEST 3 */
 	/* Make second thread very busy so that it will be moved to second core */
 	spdk_set_thread(thread[1]);
-	busy = spdk_poller_register(poller_run_busy, (void *)1000, 0);
+	busy = spdk_poller_register(poller_run_busy, (void *)2000, 0);
 	_reactor_run(reactor);
 	spdk_poller_unregister(&busy);
 

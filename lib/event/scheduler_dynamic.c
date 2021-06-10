@@ -54,6 +54,7 @@ static struct core_stats *g_cores;
 
 #define SCHEDULER_THREAD_BUSY 100
 #define SCHEDULER_LOAD_LIMIT 50
+#define SCHEDULER_CORE_LIMIT 95
 
 static uint32_t
 _get_next_target_core(void)
@@ -127,6 +128,33 @@ _move_thread(struct spdk_lw_thread *lw_thread, uint32_t dst_core)
 }
 
 static bool
+_is_core_over_limit(uint32_t core_id)
+{
+	struct core_stats *core = &g_cores[core_id];
+	uint64_t busy, idle;
+
+	/* Core with no or single thread cannot be over the limit. */
+	if (core->thread_count <= 1) {
+		return false;
+	}
+
+	busy = core->busy;
+	idle = core->idle;
+
+	/* No work was done, exit before possible division by 0. */
+	if (busy == 0) {
+		return false;
+	}
+
+	/* Work done was less than the limit */
+	if (busy * 100 / (busy + idle) < SCHEDULER_CORE_LIMIT) {
+		return false;
+	}
+
+	return true;
+}
+
+static bool
 _can_core_fit_thread(struct spdk_lw_thread *lw_thread, uint32_t dst_core)
 {
 	struct core_stats *dst = &g_cores[dst_core];
@@ -159,6 +187,7 @@ _find_optimal_core(struct spdk_lw_thread *lw_thread)
 	uint32_t i;
 	uint32_t target_lcore;
 	uint32_t current_lcore = lw_thread->lcore;
+	uint32_t least_busy_lcore = lw_thread->lcore;
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
 	struct spdk_cpuset *cpumask = spdk_thread_get_cpumask(thread);
 
@@ -171,12 +200,23 @@ _find_optimal_core(struct spdk_lw_thread *lw_thread)
 			continue;
 		}
 
+		/* Search for least busy core. */
+		if (g_cores[target_lcore].busy < g_cores[least_busy_lcore].busy) {
+			least_busy_lcore = target_lcore;
+		}
+
 		/* Skip cores that cannot fit the thread and current one. */
 		if (!_can_core_fit_thread(lw_thread, target_lcore) || target_lcore == current_lcore) {
 			continue;
 		}
 
 		return target_lcore;
+	}
+
+	/* For cores over the limit, place the thread on least busy core
+	 * to balance threads. */
+	if (_is_core_over_limit(current_lcore)) {
+		return least_busy_lcore;
 	}
 
 	/* If no better core is found, remain on the same one. */
