@@ -193,6 +193,7 @@ _find_optimal_core(struct spdk_lw_thread *lw_thread)
 	uint32_t least_busy_lcore = lw_thread->lcore;
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
 	struct spdk_cpuset *cpumask = spdk_thread_get_cpumask(thread);
+	bool core_over_limit = _is_core_over_limit(current_lcore);
 
 	/* Find a core that can fit the thread. */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
@@ -213,12 +214,18 @@ _find_optimal_core(struct spdk_lw_thread *lw_thread)
 			continue;
 		}
 
-		return target_lcore;
+		if (target_lcore < current_lcore) {
+			/* Lower core id was found, move to consolidate threads on lowest core ids. */
+			return target_lcore;
+		} else if (core_over_limit) {
+			/* When core is over the limit, even higher core ids are better than current one. */
+			return target_lcore;
+		}
 	}
 
 	/* For cores over the limit, place the thread on least busy core
 	 * to balance threads. */
-	if (_is_core_over_limit(current_lcore)) {
+	if (core_over_limit) {
 		return least_busy_lcore;
 	}
 
