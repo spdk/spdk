@@ -734,22 +734,14 @@ static const struct cuse_lowlevel_ops cuse_ns_clop = {
 	.ioctl		= cuse_ns_ioctl,
 };
 
-static void *
-cuse_thread(void *arg)
+static int cuse_session_create(struct cuse_device *cuse_device)
 {
-	struct cuse_device *cuse_device = arg;
 	char *cuse_argv[] = { "cuse", "-f" };
+	int multithreaded;
 	int cuse_argc = SPDK_COUNTOF(cuse_argv);
+	struct cuse_info ci;
 	char devname_arg[128 + 8];
 	const char *dev_info_argv[] = { devname_arg };
-	struct cuse_info ci;
-	int multithreaded;
-	int rc;
-	struct fuse_buf buf = { .mem = NULL };
-	struct pollfd fds;
-	int timeout_msecs = 500;
-
-	spdk_unaffinitize_thread();
 
 	snprintf(devname_arg, sizeof(devname_arg), "DEVNAME=%s", cuse_device->dev_name);
 
@@ -765,12 +757,25 @@ cuse_thread(void *arg)
 		cuse_device->session = cuse_lowlevel_setup(cuse_argc, cuse_argv, &ci, &cuse_ctrlr_clop,
 				       &multithreaded, cuse_device);
 	}
+
 	if (!cuse_device->session) {
 		SPDK_ERRLOG("Cannot create cuse session\n");
-		goto err;
+		return -1;
 	}
-
 	SPDK_NOTICELOG("fuse session for device %s created\n", cuse_device->dev_name);
+	return 0;
+}
+
+static void *
+cuse_thread(void *arg)
+{
+	struct cuse_device *cuse_device = arg;
+	int rc;
+	struct fuse_buf buf = { .mem = NULL };
+	struct pollfd fds;
+	int timeout_msecs = 500;
+
+	spdk_unaffinitize_thread();
 
 	/* Receive and process fuse requests */
 	fds.fd = fuse_session_fd(cuse_device->session);
@@ -788,7 +793,6 @@ cuse_thread(void *arg)
 	free(buf.mem);
 	fuse_session_reset(cuse_device->session);
 	cuse_lowlevel_teardown(cuse_device->session);
-err:
 	pthread_exit(NULL);
 }
 
@@ -817,13 +821,15 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid)
 		free(ns_device);
 		return -ENAMETOOLONG;
 	}
-
+	rv = cuse_session_create(ns_device);
+	if (rv != 0) {
+		return rv;
+	}
 	rv = pthread_create(&ns_device->tid, NULL, cuse_thread, ns_device);
 	if (rv != 0) {
 		SPDK_ERRLOG("pthread_create failed\n");
 		return -rv;
 	}
-
 	ns_device->is_started = true;
 
 	return 0;
@@ -916,8 +922,12 @@ cuse_nvme_ctrlr_stop(struct cuse_device *ctrlr_device)
 		cuse_nvme_ns_stop(ctrlr_device, i);
 	}
 
+	if (!ctrlr_device->is_started) {
+		return;
+	}
 	fuse_session_exit(ctrlr_device->session);
 	pthread_join(ctrlr_device->tid, NULL);
+	ctrlr_device->is_started = false;
 	TAILQ_REMOVE(&g_ctrlr_ctx_head, ctrlr_device, tailq);
 	spdk_bit_array_clear(g_ctrlr_started, ctrlr_device->index);
 	if (spdk_bit_array_count_set(g_ctrlr_started) == 0) {
@@ -970,7 +980,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	if (!ctrlr_device) {
 		SPDK_ERRLOG("Cannot allocate memory for ctrlr_device.");
 		rv = -ENOMEM;
-		goto err2;
+		goto free_device;
 	}
 
 	ctrlr_device->ctrlr = ctrlr;
@@ -981,7 +991,7 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr_device->index = spdk_bit_array_find_first_clear(g_ctrlr_started, ctrlr_device->index);
 		if (ctrlr_device->index == UINT32_MAX) {
 			SPDK_ERRLOG("Too many registered controllers\n");
-			goto err2;
+			goto free_device;
 		}
 
 		if (nvme_cuse_claim(ctrlr_device, ctrlr_device->index) == 0) {
@@ -993,12 +1003,19 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 	snprintf(ctrlr_device->dev_name, sizeof(ctrlr_device->dev_name), "spdk/nvme%d",
 		 ctrlr_device->index);
 
+	rv = cuse_session_create(ctrlr_device);
+	if (rv != 0) {
+		goto clear_and_free;
+	}
+
 	rv = pthread_create(&ctrlr_device->tid, NULL, cuse_thread, ctrlr_device);
 	if (rv != 0) {
 		SPDK_ERRLOG("pthread_create failed\n");
 		rv = -rv;
-		goto err3;
+		goto clear_and_free;
 	}
+	ctrlr_device->is_started = true;
+
 	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);
 
 	ctrlr_device->ns_devices = (struct cuse_device *)calloc(num_ns, sizeof(struct cuse_device));
@@ -1007,14 +1024,14 @@ nvme_cuse_start(struct spdk_nvme_ctrlr *ctrlr)
 		SPDK_ERRLOG("Cannot start CUSE namespace devices.");
 		cuse_nvme_ctrlr_stop(ctrlr_device);
 		rv = -1;
-		goto err3;
+		goto clear_and_free;
 	}
 
 	return 0;
 
-err3:
+clear_and_free:
 	spdk_bit_array_clear(g_ctrlr_started, ctrlr_device->index);
-err2:
+free_device:
 	free(ctrlr_device);
 	if (spdk_bit_array_count_set(g_ctrlr_started) == 0) {
 		spdk_bit_array_free(&g_ctrlr_started);
