@@ -91,7 +91,7 @@ struct nvmf_vfio_user_req  {
 	void					*cb_arg;
 
 	/* placeholder for gpa_to_vva memory map table, the IO buffer doesn't use it */
-	dma_sg_t				sg[NVMF_VFIO_USER_MAX_IOVECS];
+	dma_sg_t				*sg;
 	struct iovec				iov[NVMF_VFIO_USER_MAX_IOVECS];
 	uint8_t					iovcnt;
 
@@ -106,7 +106,7 @@ struct nvme_q {
 
 	void *addr;
 
-	dma_sg_t sg;
+	dma_sg_t *sg;
 	struct iovec iov;
 
 	uint32_t size;
@@ -399,7 +399,7 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec 
 		return NULL;
 	}
 
-	ret = vfu_map_sg(ctx, sg, iov, 1);
+	ret = vfu_map_sg(ctx, sg, iov, 1, 0);
 	if (ret != 0) {
 		return NULL;
 	}
@@ -440,7 +440,7 @@ asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	sq->head = ctrlr->doorbells[0] = 0;
 	sq->cqid = 0;
 	sq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->asq,
-			   sq->size * sizeof(struct spdk_nvme_cmd), &sq->sg, &sq->iov);
+			   sq->size * sizeof(struct spdk_nvme_cmd), sq->sg, &sq->iov);
 	if (sq->addr == NULL) {
 		return -1;
 	}
@@ -516,7 +516,7 @@ acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	cq->size = regs->aqa.bits.acqs + 1;
 	cq->tail = 0;
 	cq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
-			   cq->size * sizeof(struct spdk_nvme_cpl), &cq->sg, &cq->iov);
+			   cq->size * sizeof(struct spdk_nvme_cpl), cq->sg, &cq->iov);
 	if (cq->addr == NULL) {
 		return -1;
 	}
@@ -526,6 +526,12 @@ acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	*hdbl(ctrlr, cq) = 0;
 
 	return 0;
+}
+
+static inline dma_sg_t *
+vu_req_to_sg_t(struct nvmf_vfio_user_req *vu_req, uint32_t iovcnt)
+{
+	return (dma_sg_t *)((uintptr_t)vu_req->sg + iovcnt * dma_sg_size());
 }
 
 static void *
@@ -544,7 +550,7 @@ _map_one(void *prv, uint64_t addr, uint64_t len)
 
 	assert(vu_req->iovcnt < NVMF_VFIO_USER_MAX_IOVECS);
 	ret = map_one(vu_qpair->ctrlr->endpoint->vfu_ctx, addr, len,
-		      &vu_req->sg[vu_req->iovcnt],
+		      vu_req_to_sg_t(vu_req, vu_req->iovcnt),
 		      &vu_req->iov[vu_req->iovcnt]);
 	if (spdk_likely(ret != NULL)) {
 		vu_req->iovcnt++;
@@ -695,12 +701,12 @@ unmap_qp(struct nvmf_vfio_user_qpair *qp)
 		      ctrlr_id(ctrlr), qp->qpair.qid);
 
 	if (qp->sq.addr != NULL) {
-		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, &qp->sq.sg, &qp->sq.iov, 1);
+		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, qp->sq.sg, &qp->sq.iov, 1);
 		qp->sq.addr = NULL;
 	}
 
 	if (qp->cq.addr != NULL) {
-		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, &qp->cq.sg, &qp->cq.iov, 1);
+		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, qp->cq.sg, &qp->cq.iov, 1);
 		qp->cq.addr = NULL;
 	}
 }
@@ -709,6 +715,8 @@ static void
 free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 {
 	struct nvmf_vfio_user_qpair *qpair;
+	struct nvmf_vfio_user_req *vu_req;
+	uint32_t i;
 
 	if (ctrlr == NULL) {
 		return;
@@ -723,8 +731,17 @@ free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 		      qid, qpair);
 
 	unmap_qp(qpair);
+
+	for (i = 0; i < qpair->qsize; i++) {
+		vu_req = &qpair->reqs_internal[i];
+		free(vu_req->sg);
+	}
 	free(qpair->reqs_internal);
+
+	free(qpair->sq.sg);
+	free(qpair->cq.sg);
 	free(qpair);
+
 	ctrlr->qp[qid] = NULL;
 }
 
@@ -733,9 +750,9 @@ static int
 init_qp(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_transport *transport,
 	const uint16_t qsize, const uint16_t id)
 {
-	int err = 0, i;
+	uint16_t i;
 	struct nvmf_vfio_user_qpair *qpair;
-	struct nvmf_vfio_user_req *vu_req;
+	struct nvmf_vfio_user_req *vu_req, *tmp;
 	struct spdk_nvmf_request *req;
 
 	assert(ctrlr != NULL);
@@ -743,6 +760,17 @@ init_qp(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_transport *transpor
 
 	qpair = calloc(1, sizeof(*qpair));
 	if (qpair == NULL) {
+		return -ENOMEM;
+	}
+	qpair->sq.sg = calloc(1, dma_sg_size());
+	if (qpair->sq.sg == NULL) {
+		free(qpair);
+		return -ENOMEM;
+	}
+	qpair->cq.sg = calloc(1, dma_sg_size());
+	if (qpair->cq.sg == NULL) {
+		free(qpair->sq.sg);
+		free(qpair);
 		return -ENOMEM;
 	}
 
@@ -756,26 +784,38 @@ init_qp(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_transport *transpor
 	qpair->reqs_internal = calloc(qsize, sizeof(struct nvmf_vfio_user_req));
 	if (qpair->reqs_internal == NULL) {
 		SPDK_ERRLOG("%s: error allocating reqs: %m\n", ctrlr_id(ctrlr));
-		err = -ENOMEM;
-		goto out;
+		goto reqs_err;
 	}
 
 	for (i = 0; i < qsize; i++) {
 		vu_req = &qpair->reqs_internal[i];
-		req = &vu_req->req;
+		vu_req->sg = calloc(NVMF_VFIO_USER_MAX_IOVECS, dma_sg_size());
+		if (vu_req->sg == NULL) {
+			goto sg_err;
+		}
 
+		req = &vu_req->req;
 		req->qpair = &qpair->qpair;
 		req->rsp = (union nvmf_c2h_msg *)&vu_req->rsp;
 		req->cmd = (union nvmf_h2c_msg *)&vu_req->cmd;
 
 		TAILQ_INSERT_TAIL(&qpair->reqs, vu_req, link);
 	}
+
 	ctrlr->qp[id] = qpair;
-out:
-	if (err != 0) {
-		free(qpair);
+	return 0;
+
+sg_err:
+	TAILQ_FOREACH_SAFE(vu_req, &qpair->reqs, link, tmp) {
+		free(vu_req->sg);
 	}
-	return err;
+	free(qpair->reqs_internal);
+
+reqs_err:
+	free(qpair->sq.sg);
+	free(qpair->cq.sg);
+	free(qpair);
+	return -ENOMEM;
 }
 
 /*
@@ -879,7 +919,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	io_q->is_cq = is_cq;
 	io_q->size = qsize;
 	io_q->addr = map_one(ctrlr->endpoint->vfu_ctx, cmd->dptr.prp.prp1,
-			     io_q->size * entry_size, &io_q->sg, &io_q->iov);
+			     io_q->size * entry_size, io_q->sg, &io_q->iov);
 	if (io_q->addr == NULL) {
 		sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		SPDK_ERRLOG("%s: failed to map I/O queue: %m\n", ctrlr_id(ctrlr));
@@ -1138,13 +1178,13 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 			struct nvme_q *sq = &qpair->sq;
 			struct nvme_q *cq = &qpair->cq;
 
-			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, &sq->sg, &sq->iov);
+			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, sq->sg, &sq->iov);
 			if (!sq->addr) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap SQID %d %#lx-%#lx\n",
 					      i, sq->prp1, sq->prp1 + sq->size * 64);
 				continue;
 			}
-			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, &cq->sg, &cq->iov);
+			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, cq->sg, &cq->iov);
 			if (!cq->addr) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap CQID %d %#lx-%#lx\n",
 					      i, cq->prp1, cq->prp1 + cq->size * 16);

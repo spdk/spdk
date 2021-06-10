@@ -304,8 +304,7 @@ vfio_user_dev_dma_map_unmap(struct vfio_device *dev, struct vfio_memory_region *
 		dma_map.addr = mr->iova;
 		dma_map.size = mr->size;
 		dma_map.offset = mr->offset;
-		dma_map.flags = VFIO_USER_F_DMA_REGION_READ | VFIO_USER_F_DMA_REGION_WRITE |
-				VFIO_USER_F_DMA_REGION_MAPPABLE;
+		dma_map.flags = VFIO_USER_F_DMA_REGION_READ | VFIO_USER_F_DMA_REGION_WRITE;
 
 		return vfio_user_dev_send_request(dev, VFIO_USER_DMA_MAP,
 						  &dma_map, sizeof(dma_map), sizeof(dma_map), &mr->fd, 1);
