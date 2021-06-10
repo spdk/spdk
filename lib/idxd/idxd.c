@@ -1079,8 +1079,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				break;
 			case IDXD_OPCODE_CRC32C_GEN:
 			case IDXD_OPCODE_COPY_CRC:
-				*(uint32_t *)comp_ctx->crc_dst = comp_ctx->hw.crc32c_val;
-				*(uint32_t *)comp_ctx->crc_dst ^= ~0;
+				*comp_ctx->crc_dst = comp_ctx->hw.crc32c_val;
+				*comp_ctx->crc_dst ^= ~0;
 				break;
 			case IDXD_OPCODE_COMPARE:
 				if (status == 0) {
