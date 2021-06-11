@@ -333,7 +333,7 @@ spdk_reactors_fini(void)
 		reactor_interrupt_fini(reactor);
 
 		if (g_core_infos != NULL) {
-			free(g_core_infos[i].threads);
+			free(g_core_infos[i].thread_infos);
 		}
 	}
 
@@ -688,18 +688,36 @@ _init_thread_stats(struct spdk_reactor *reactor, struct spdk_lw_thread *lw_threa
 }
 
 static void
+_threads_reschedule_thread(struct spdk_scheduler_thread_info *thread_info)
+{
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_thread *thread;
+
+	thread = spdk_thread_get_by_id(thread_info->thread_id);
+	if (thread == NULL) {
+		/* Thread no longer exists. */
+		return;
+	}
+	lw_thread = spdk_thread_get_ctx(thread);
+	assert(lw_thread != NULL);
+
+	lw_thread->lcore = thread_info->lcore;
+	lw_thread->resched = true;
+}
+
+static void
 _threads_reschedule(struct spdk_scheduler_core_info *cores_info)
 {
 	struct spdk_scheduler_core_info *core;
-	struct spdk_lw_thread *lw_thread;
+	struct spdk_scheduler_thread_info *thread_info;
 	uint32_t i, j;
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		core = &cores_info[i];
 		for (j = 0; j < core->threads_count; j++) {
-			lw_thread = core->threads[j];
-			if (lw_thread->lcore != i) {
-				lw_thread->resched = true;
+			thread_info = &core->thread_infos[j];
+			if (thread_info->lcore != i) {
+				_threads_reschedule_thread(thread_info);
 			}
 		}
 	}
@@ -782,6 +800,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 {
 	struct spdk_scheduler_core_info *core_info;
 	struct spdk_lw_thread *lw_thread;
+	struct spdk_thread *thread;
 	struct spdk_reactor *reactor;
 	struct spdk_event *evt;
 	uint32_t next_core;
@@ -800,8 +819,8 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 
 	SPDK_DEBUGLOG(reactor, "Gathering metrics on %u\n", reactor->lcore);
 
-	free(core_info->threads);
-	core_info->threads = NULL;
+	free(core_info->thread_infos);
+	core_info->thread_infos = NULL;
 
 	i = 0;
 
@@ -813,8 +832,8 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	core_info->threads_count = i;
 
 	if (core_info->threads_count > 0) {
-		core_info->threads = calloc(core_info->threads_count, sizeof(struct spdk_lw_thread *));
-		if (core_info->threads == NULL) {
+		core_info->thread_infos = calloc(core_info->threads_count, sizeof(*core_info->thread_infos));
+		if (core_info->thread_infos == NULL) {
 			SPDK_ERRLOG("Failed to allocate memory when gathering metrics on %u\n", reactor->lcore);
 
 			/* Cancel this round of schedule work */
@@ -825,7 +844,11 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 
 		i = 0;
 		TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
-			core_info->threads[i] = lw_thread;
+			core_info->thread_infos[i].lcore = lw_thread->lcore;
+			thread = spdk_thread_get_from_ctx(lw_thread);
+			core_info->thread_infos[i].thread_id = spdk_thread_get_id(thread);
+			core_info->thread_infos[i].total_stats = lw_thread->total_stats;
+			core_info->thread_infos[i].current_stats = lw_thread->current_stats;
 			i++;
 		}
 	}

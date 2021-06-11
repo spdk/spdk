@@ -256,6 +256,18 @@ struct spdk_governor *_spdk_governor_get(void);
 	} \
 
 /**
+ * Structure representing thread used for scheduling.
+ */
+struct spdk_scheduler_thread_info {
+	uint32_t lcore;
+	uint64_t thread_id;
+	/* stats over a lifetime of a thread */
+	struct spdk_thread_stats total_stats;
+	/* stats during the last scheduling period */
+	struct spdk_thread_stats current_stats;
+};
+
+/**
  * A list of cores and threads which is used for scheduling.
  */
 struct spdk_scheduler_core_info {
@@ -269,7 +281,7 @@ struct spdk_scheduler_core_info {
 	uint32_t lcore;
 	uint32_t threads_count;
 	bool interrupt_mode;
-	struct spdk_lw_thread **threads;
+	struct spdk_scheduler_thread_info *thread_infos;
 };
 
 /**
