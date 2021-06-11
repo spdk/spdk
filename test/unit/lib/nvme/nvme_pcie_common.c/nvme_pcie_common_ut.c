@@ -321,23 +321,24 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	pctrlr.ctrlr.adminq = &adminq;
 	STAILQ_INIT(&pctrlr.ctrlr.adminq->free_req);
 	for (int i = 0; i < 2; i++) {
-		STAILQ_INSERT_HEAD(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
+		STAILQ_INSERT_TAIL(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
 	}
 
 	rc = nvme_pcie_ctrlr_connect_qpair(&pctrlr.ctrlr, &pqpair.qpair);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(req[0].cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
+	CU_ASSERT(req[0].cmd.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
 	CU_ASSERT(req[0].cmd.cdw10_bits.create_io_q.qid == 1);
 	CU_ASSERT(req[0].cmd.cdw10_bits.create_io_q.qsize == 0);
-	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_sq.pc == 1);
-	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
-	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_sq.cqid = 1);
-	CU_ASSERT(req[0].cmd.dptr.prp.prp1 == 0xDDADBEEF);
-	CU_ASSERT(req[1].cmd.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
+	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_cq.pc == 1);
+	CU_ASSERT(req[0].cmd.dptr.prp.prp1 == 0xDEADBEEF);
+	CU_ASSERT(req[1].cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qid == 1);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qsize == 0);
-	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_cq.pc == 1);
-	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDEADBEEF);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.pc == 1);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
+	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
+
 	/* doorbell stride and qid are 1 */
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == pctrlr.ctrlr.shadow_doorbell + 2);
 	CU_ASSERT(pqpair.shadow_doorbell.cq_hdbl == pctrlr.ctrlr.shadow_doorbell + 3);
@@ -364,23 +365,24 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	pqpair.stat = NULL;
 	pqpair.qpair.poll_group = &poll_group;
 	for (int i = 0; i < 2; i++) {
-		STAILQ_INSERT_HEAD(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
+		STAILQ_INSERT_TAIL(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
 	}
 
 	rc = nvme_pcie_ctrlr_connect_qpair(&pctrlr.ctrlr, &pqpair.qpair);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(req[0].cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
+	CU_ASSERT(req[0].cmd.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
 	CU_ASSERT(req[0].cmd.cdw10_bits.create_io_q.qid == 1);
 	CU_ASSERT(req[0].cmd.cdw10_bits.create_io_q.qsize == 0);
-	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_sq.pc == 1);
-	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
-	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_sq.cqid = 1);
-	CU_ASSERT(req[0].cmd.dptr.prp.prp1 == 0xDDADBEEF);
-	CU_ASSERT(req[1].cmd.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
+	CU_ASSERT(req[0].cmd.cdw11_bits.create_io_cq.pc == 1);
+	CU_ASSERT(req[0].cmd.dptr.prp.prp1 == 0xDEADBEEF);
+	CU_ASSERT(req[1].cmd.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qid == 1);
 	CU_ASSERT(req[1].cmd.cdw10_bits.create_io_q.qsize == 0);
-	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_cq.pc == 1);
-	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDEADBEEF);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.pc == 1);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.qprio == SPDK_NVME_QPRIO_HIGH);
+	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
+	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
+
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == NULL);
 	CU_ASSERT(pqpair.shadow_doorbell.sq_eventidx == NULL);
 	CU_ASSERT(pqpair.flags.has_shadow_doorbell == 0);
@@ -399,7 +401,7 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	pqpair.stat = NULL;
 	pqpair.qpair.poll_group = &poll_group;
 	for (int i = 0; i < 2; i++) {
-		STAILQ_INSERT_HEAD(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
+		STAILQ_INSERT_TAIL(&pctrlr.ctrlr.adminq->free_req, &req[i], stailq);
 	}
 	MOCK_SET(nvme_wait_for_completion, -EIO);
 
