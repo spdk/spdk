@@ -123,6 +123,46 @@ test_opal_nvme_security_recv_send_done(void)
 	CU_ASSERT(g_ut_sess_ctx == (void *)0xDEADBEEF);
 }
 
+static void
+test_opal_add_short_atom_header(void)
+{
+	struct opal_session sess = {};
+	int err = 0;
+
+	/* short atom header */
+	memset(&sess, 0, sizeof(sess));
+	sess.cmd_pos = 0;
+
+	opal_add_token_bytestring(&err, &sess, spdk_opal_uid[UID_SMUID],
+				  OPAL_UID_LENGTH);
+	CU_ASSERT(sess.cmd[0] & SPDK_SHORT_ATOM_ID);
+	CU_ASSERT(sess.cmd[0] & SPDK_SHORT_ATOM_BYTESTRING_FLAG);
+	CU_ASSERT((sess.cmd[0] & SPDK_SHORT_ATOM_SIGN_FLAG) == 0);
+	CU_ASSERT(sess.cmd_pos == OPAL_UID_LENGTH +  1);
+	CU_ASSERT(!memcmp(&sess.cmd[1], spdk_opal_uid, OPAL_UID_LENGTH + 1));
+
+	/* medium atom header */
+	memset(&sess, 0, sizeof(sess));
+	sess.cmd_pos = 0;
+
+	opal_add_token_bytestring(&err, &sess, spdk_opal_uid[UID_SMUID],
+				  0x10);
+	CU_ASSERT(sess.cmd[0] & SPDK_SHORT_ATOM_ID);
+	CU_ASSERT(sess.cmd[0] & SPDK_MEDIUM_ATOM_BYTESTRING_FLAG);
+	CU_ASSERT((sess.cmd[0] & SPDK_MEDIUM_ATOM_SIGN_FLAG) == 0);
+	CU_ASSERT(sess.cmd_pos == 0x12);
+	CU_ASSERT(!memcmp(&sess.cmd[2], spdk_opal_uid, 0x10));
+
+	/* Invalid length */
+	memset(&sess, 0, sizeof(sess));
+	err = 0;
+
+	opal_add_token_bytestring(&err, &sess, spdk_opal_uid[UID_SMUID],
+				  0x1000);
+	CU_ASSERT(err == -ERANGE);
+	CU_ASSERT(sess.cmd_pos == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -133,6 +173,7 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_opal", NULL, NULL);
 	CU_ADD_TEST(suite, test_opal_nvme_security_recv_send_done);
+	CU_ADD_TEST(suite, test_opal_add_short_atom_header);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
