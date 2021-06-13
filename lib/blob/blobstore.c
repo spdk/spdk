@@ -1494,16 +1494,18 @@ blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	if (page->next != SPDK_INVALID_MD_PAGE) {
+		struct spdk_blob_md_page *tmp_pages;
 		uint32_t next_page = page->next;
 		uint64_t next_lba = bs_md_page_to_lba(blob->bs, next_page);
 
 		/* Read the next page */
-		ctx->num_pages++;
-		ctx->pages = spdk_realloc(ctx->pages, (sizeof(*page) * ctx->num_pages), 0);
-		if (ctx->pages == NULL) {
+		tmp_pages = spdk_realloc(ctx->pages, (sizeof(*page) * (ctx->num_pages + 1)), 0);
+		if (tmp_pages == NULL) {
 			blob_load_final(ctx, -ENOMEM);
 			return;
 		}
+		ctx->num_pages++;
+		ctx->pages = tmp_pages;
 
 		bs_sequence_read_dev(seq, &ctx->pages[ctx->num_pages - 1],
 				     next_lba,
