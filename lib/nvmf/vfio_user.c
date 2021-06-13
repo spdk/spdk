@@ -1708,6 +1708,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	}
 	free(path);
 
+	endpoint->fd = fd;
 	err = ftruncate(fd, NVMF_VFIO_USER_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE);
 	if (err != 0) {
 		goto out;
@@ -1720,8 +1721,6 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		err = -errno;
 		goto out;
 	}
-
-	endpoint->fd = fd;
 
 	snprintf(uuid, PATH_MAX, "%s/cntrl", endpoint_id(endpoint));
 
