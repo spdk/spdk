@@ -1806,6 +1806,19 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
 	}
 }
 
+static void
+nvme_bdev_ctrlr_create_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+			    struct nvme_async_probe_ctx *ctx)
+{
+	spdk_io_device_register(nvme_bdev_ctrlr,
+				bdev_nvme_create_path_cb,
+				bdev_nvme_destroy_path_cb,
+				sizeof(struct nvme_io_path),
+				nvme_bdev_ctrlr->name);
+
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
+}
+
 static int
 nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		       const char *name,
@@ -1884,12 +1897,6 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_bdev_ctrlr->prchk_flags = prchk_flags;
 
-	spdk_io_device_register(nvme_bdev_ctrlr,
-				bdev_nvme_create_path_cb,
-				bdev_nvme_destroy_path_cb,
-				sizeof(struct nvme_io_path),
-				name);
-
 	nvme_bdev_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_bdev_ctrlr,
 					       g_opts.nvme_adminq_poll_period_us);
 
@@ -1908,7 +1915,7 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_bdev_ctrlr->opal_dev = spdk_opal_dev_construct(nvme_bdev_ctrlr->ctrlr);
 	}
 
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
+	nvme_bdev_ctrlr_create_done(nvme_bdev_ctrlr, ctx);
 	return 0;
 
 err:
