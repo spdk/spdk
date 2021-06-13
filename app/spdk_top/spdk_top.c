@@ -612,6 +612,11 @@ store_last_run_counter(const char *poller_name, uint64_t thread_id, uint64_t las
 		return;
 	}
 	history->poller_name = strdup(poller_name);
+	if (!history->poller_name) {
+		fprintf(stderr, "Unable to allocate poller_name of a history object in store_last_run_counter.\n");
+		free(history);
+		return;
+	}
 	history->thread_id = thread_id;
 	history->last_run_counter = last_run_counter;
 
