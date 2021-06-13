@@ -429,7 +429,6 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 
 	comp_update_bus_addr = spdk_vtophys((void *)ioat->comp_update, NULL);
 	if (comp_update_bus_addr == SPDK_VTOPHYS_ERROR) {
-		spdk_free((void *)ioat->comp_update);
 		return -1;
 	}
 
