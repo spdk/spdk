@@ -848,8 +848,13 @@ spdk_nvmf_subsystem_disconnect_host(struct spdk_nvmf_subsystem *subsystem,
 		return -ENOMEM;
 	}
 
-	ctx->subsystem = subsystem;
 	ctx->hostnqn = strdup(hostnqn);
+	if (ctx->hostnqn == NULL) {
+		free(ctx);
+		return -ENOMEM;
+	}
+
+	ctx->subsystem = subsystem;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
