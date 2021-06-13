@@ -1927,7 +1927,7 @@ err_init_mutex:
 	return rc;
 }
 
-static void
+static int
 nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		       const char *name,
 		       const struct spdk_nvme_transport_id *trid,
@@ -1940,16 +1940,11 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	rc = _nvme_bdev_ctrlr_create(ctrlr, name, trid, prchk_flags, &nvme_bdev_ctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create new NVMe controller\n");
-		goto err;
+		return rc;
 	}
 
 	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
-	return;
-
-err:
-	if (ctx != NULL) {
-		populate_namespaces_cb(ctx, 0, rc);
-	}
+	return 0;
 }
 
 static void
@@ -2275,11 +2270,10 @@ _bdev_nvme_add_secondary_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
  * nvme_bdev_ctrlr for failover. After checking if it can access the same
  * namespaces as the primary path, it is disconnected until failover occurs.
  */
-static void
+static int
 bdev_nvme_add_secondary_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			     struct spdk_nvme_ctrlr *new_ctrlr,
-			     struct spdk_nvme_transport_id *trid,
-			     struct nvme_async_probe_ctx *ctx)
+			     struct spdk_nvme_transport_id *trid)
 {
 	int rc;
 
@@ -2304,9 +2298,7 @@ exit:
 
 	spdk_nvme_detach(new_ctrlr);
 
-	if (ctx != NULL) {
-		populate_namespaces_cb(ctx, 0, rc);
-	}
+	return rc;
 }
 
 static void
@@ -2316,17 +2308,22 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
 	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
 	struct nvme_async_probe_ctx *ctx;
+	int rc;
 
 	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
 	ctx->ctrlr_attached = true;
 
 	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->base_name);
 	if (nvme_bdev_ctrlr) {
-		bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, ctrlr, &ctx->trid, ctx);
-		return;
+		rc = bdev_nvme_add_secondary_trid(nvme_bdev_ctrlr, ctrlr, &ctx->trid);
+	} else {
+		rc = nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags, ctx);
+		if (rc == 0) {
+			return;
+		}
 	}
 
-	nvme_bdev_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags, ctx);
+	populate_namespaces_cb(ctx, 0, rc);
 }
 
 static int
