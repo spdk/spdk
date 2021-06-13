@@ -112,7 +112,7 @@ nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid, struct spdk_
 	}
 }
 
-static void
+void
 nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct nvme_bdev_ctrlr_trid *trid, *tmp_trid;

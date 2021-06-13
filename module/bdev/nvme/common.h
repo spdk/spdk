@@ -176,5 +176,6 @@ void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 
 void nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 void nvme_bdev_ctrlr_unregister(void *ctx);
+void nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */

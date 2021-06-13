@@ -1815,7 +1815,7 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ctrlr_trid *trid_entry;
-	uint32_t i;
+	uint32_t i, num_ns;
 	int rc;
 
 	nvme_bdev_ctrlr = calloc(1, sizeof(*nvme_bdev_ctrlr));
@@ -1826,54 +1826,59 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	rc = pthread_mutex_init(&nvme_bdev_ctrlr->mutex, NULL);
 	if (rc != 0) {
-		goto err_init_mutex;
+		free(nvme_bdev_ctrlr);
+		return rc;
 	}
 
 	TAILQ_INIT(&nvme_bdev_ctrlr->trids);
-	nvme_bdev_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	if (nvme_bdev_ctrlr->num_ns != 0) {
-		nvme_bdev_ctrlr->namespaces = calloc(nvme_bdev_ctrlr->num_ns, sizeof(struct nvme_bdev_ns *));
+
+	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+	if (num_ns != 0) {
+		nvme_bdev_ctrlr->namespaces = calloc(num_ns, sizeof(struct nvme_bdev_ns *));
 		if (!nvme_bdev_ctrlr->namespaces) {
 			SPDK_ERRLOG("Failed to allocate block namespaces pointer\n");
 			rc = -ENOMEM;
-			goto err_alloc_namespaces;
+			goto err;
 		}
+
+		for (i = 0; i < num_ns; i++) {
+			nvme_bdev_ctrlr->namespaces[i] = calloc(1, sizeof(struct nvme_bdev_ns));
+			if (nvme_bdev_ctrlr->namespaces[i] == NULL) {
+				SPDK_ERRLOG("Failed to allocate block namespace struct\n");
+				rc = -ENOMEM;
+				goto err;
+			}
+			nvme_bdev_ctrlr->num_ns++;
+		}
+
+		assert(num_ns == nvme_bdev_ctrlr->num_ns);
 	}
 
 	trid_entry = calloc(1, sizeof(*trid_entry));
 	if (trid_entry == NULL) {
 		SPDK_ERRLOG("Failed to allocate trid entry pointer\n");
 		rc = -ENOMEM;
-		goto err_alloc_trid;
+		goto err;
 	}
 
 	trid_entry->trid = *trid;
-
-	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
-		nvme_bdev_ctrlr->namespaces[i] = calloc(1, sizeof(struct nvme_bdev_ns));
-		if (nvme_bdev_ctrlr->namespaces[i] == NULL) {
-			SPDK_ERRLOG("Failed to allocate block namespace struct\n");
-			rc = -ENOMEM;
-			goto err_alloc_namespace;
-		}
-	}
+	nvme_bdev_ctrlr->connected_trid = &trid_entry->trid;
+	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->trids, trid_entry, link);
 
 	nvme_bdev_ctrlr->thread = spdk_get_thread();
-	nvme_bdev_ctrlr->adminq_timer_poller = NULL;
 	nvme_bdev_ctrlr->ctrlr = ctrlr;
 	nvme_bdev_ctrlr->ref = 1;
-	nvme_bdev_ctrlr->connected_trid = &trid_entry->trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 	if (nvme_bdev_ctrlr->name == NULL) {
 		rc = -ENOMEM;
-		goto err_alloc_name;
+		goto err;
 	}
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
 		rc = bdev_ocssd_init_ctrlr(nvme_bdev_ctrlr);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Unable to initialize OCSSD controller\n");
-			goto err_init_ocssd;
+			goto err;
 		}
 	}
 
@@ -1903,25 +1908,11 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_bdev_ctrlr->opal_dev = spdk_opal_dev_construct(nvme_bdev_ctrlr->ctrlr);
 	}
 
-	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->trids, trid_entry, link);
-
 	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
 	return 0;
 
-err_init_ocssd:
-	free(nvme_bdev_ctrlr->name);
-err_alloc_name:
-err_alloc_namespace:
-	for (; i > 0; i--) {
-		free(nvme_bdev_ctrlr->namespaces[i - 1]);
-	}
-	free(trid_entry);
-err_alloc_trid:
-	free(nvme_bdev_ctrlr->namespaces);
-err_alloc_namespaces:
-	pthread_mutex_destroy(&nvme_bdev_ctrlr->mutex);
-err_init_mutex:
-	free(nvme_bdev_ctrlr);
+err:
+	nvme_bdev_ctrlr_delete(nvme_bdev_ctrlr);
 	return rc;
 }
 
