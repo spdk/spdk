@@ -876,26 +876,28 @@ blob_serialize_add_page(const struct spdk_blob *blob,
 			uint32_t *page_count,
 			struct spdk_blob_md_page **last_page)
 {
-	struct spdk_blob_md_page *page;
+	struct spdk_blob_md_page *page, *tmp_pages;
 
 	assert(pages != NULL);
 	assert(page_count != NULL);
 
+	*last_page = NULL;
 	if (*page_count == 0) {
 		assert(*pages == NULL);
-		*page_count = 1;
 		*pages = spdk_malloc(SPDK_BS_PAGE_SIZE, 0,
 				     NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+		if (*pages == NULL) {
+			return -ENOMEM;
+		}
+		*page_count = 1;
 	} else {
 		assert(*pages != NULL);
+		tmp_pages = spdk_realloc(*pages, SPDK_BS_PAGE_SIZE * (*page_count + 1), 0);
+		if (tmp_pages == NULL) {
+			return -ENOMEM;
+		}
 		(*page_count)++;
-		*pages = spdk_realloc(*pages, SPDK_BS_PAGE_SIZE * (*page_count), 0);
-	}
-
-	if (*pages == NULL) {
-		*page_count = 0;
-		*last_page = NULL;
-		return -ENOMEM;
+		*pages = tmp_pages;
 	}
 
 	page = &(*pages)[*page_count - 1];
