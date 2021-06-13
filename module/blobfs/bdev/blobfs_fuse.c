@@ -301,14 +301,18 @@ blobfs_fuse_start(const char *bdev_name, const char *mountpoint, struct spdk_fil
 		return -ENOMEM;
 	}
 
-	rc = fuse_parse_cmdline(&args, &opts);
-	assert(rc == 0);
-
 	bfuse->bdev_name = strdup(bdev_name);
 	bfuse->mountpoint = strdup(mountpoint);
+	if (!bfuse->bdev_name || !bfuse->mountpoint) {
+		rc = -ENOMEM;
+		goto err;
+	}
 	bfuse->fs = fs;
 	bfuse->cb_fn = cb_fn;
 	bfuse->cb_arg = cb_arg;
+
+	rc = fuse_parse_cmdline(&args, &opts);
+	assert(rc == 0);
 
 	fuse_handle = fuse_new(&args, &spdk_fuse_oper, sizeof(spdk_fuse_oper), NULL);
 	fuse_opt_free_args(&args);
