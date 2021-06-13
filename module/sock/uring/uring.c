@@ -441,12 +441,14 @@ retry:
 		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
 		if (rc != 0) {
 			close(fd);
+			fd = -1;
 			/* error */
 			continue;
 		}
 		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
 		if (rc != 0) {
 			close(fd);
+			fd = -1;
 			/* error */
 			continue;
 		}
@@ -456,6 +458,7 @@ retry:
 			rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
 			if (rc != 0) {
 				close(fd);
+				fd = -1;
 				/* error */
 				continue;
 			}
@@ -465,6 +468,7 @@ retry:
 			rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
 			if (rc != 0) {
 				close(fd);
+				fd = -1;
 				/* error */
 				continue;
 			}
