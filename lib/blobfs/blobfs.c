@@ -1100,6 +1100,8 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		SPDK_ERRLOG("Cannot allocate create async req for file=%s\n", name);
+		TAILQ_REMOVE(&fs->files, file, tailq);
+		file_free(file);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
@@ -1110,6 +1112,14 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 	args->arg = cb_arg;
 
 	file->name = strdup(name);
+	if (!file->name) {
+		SPDK_ERRLOG("Cannot allocate file->name for file=%s\n", name);
+		free_fs_request(req);
+		TAILQ_REMOVE(&fs->files, file, tailq);
+		file_free(file);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
 	_file_build_trace_arg_name(file);
 	spdk_bs_create_blob(fs->bs, fs_create_blob_create_cb, args);
 }
