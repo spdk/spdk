@@ -108,6 +108,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	chan->batch_base = calloc(NUM_BATCHES_PER_CHANNEL, sizeof(struct idxd_batch));
 	if (chan->batch_base == NULL) {
 		SPDK_ERRLOG("Failed to allocate batch pool\n");
+		free(chan);
 		return NULL;
 	}
 
