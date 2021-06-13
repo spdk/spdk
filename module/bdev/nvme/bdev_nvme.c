@@ -1807,11 +1807,11 @@ populate_namespaces_cb(struct nvme_async_probe_ctx *ctx, size_t count, int rc)
 }
 
 static int
-_nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
-			const char *name,
-			const struct spdk_nvme_transport_id *trid,
-			uint32_t prchk_flags,
-			struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
+nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
+		       const char *name,
+		       const struct spdk_nvme_transport_id *trid,
+		       uint32_t prchk_flags,
+		       struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	struct nvme_bdev_ctrlr_trid *trid_entry;
@@ -1905,9 +1905,7 @@ _nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->trids, trid_entry, link);
 
-	if (_nvme_bdev_ctrlr != NULL) {
-		*_nvme_bdev_ctrlr = nvme_bdev_ctrlr;
-	}
+	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
 	return 0;
 
 err_init_ocssd:
@@ -1925,26 +1923,6 @@ err_alloc_namespaces:
 err_init_mutex:
 	free(nvme_bdev_ctrlr);
 	return rc;
-}
-
-static int
-nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
-		       const char *name,
-		       const struct spdk_nvme_transport_id *trid,
-		       uint32_t prchk_flags,
-		       struct nvme_async_probe_ctx *ctx)
-{
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
-	int rc;
-
-	rc = _nvme_bdev_ctrlr_create(ctrlr, name, trid, prchk_flags, &nvme_bdev_ctrlr);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to create new NVMe controller\n");
-		return rc;
-	}
-
-	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
-	return 0;
 }
 
 static void
