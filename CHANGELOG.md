@@ -89,6 +89,9 @@ A new option `disable_read_ana_log_page` was added to struct `spdk_nvme_ctrlr_op
 reading ANA log page. The upper layer is expected to read ANA log page instead if `true`.
 The default value is `false`.
 
+New APIs, `spdk_nvme_ctrlr_reset_async` and `spdk_nvme_ctrlr_reset_poll_async`, have been added to
+reset a controller asynchronously.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create

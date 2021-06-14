@@ -919,6 +919,10 @@ struct spdk_nvme_detach_ctx {
 	TAILQ_HEAD(, nvme_ctrlr_detach_ctx)	head;
 };
 
+struct spdk_nvme_ctrlr_reset_ctx {
+	struct spdk_nvme_ctrlr			*ctrlr;
+};
+
 struct nvme_driver {
 	pthread_mutex_t			lock;
 
@@ -1043,7 +1047,6 @@ void	nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 				       struct nvme_ctrlr_detach_ctx *ctx);
 void	nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove);
-int	nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_connected(struct spdk_nvme_probe_ctx *probe_ctx,
 			     struct spdk_nvme_ctrlr *ctrlr);

@@ -1017,6 +1017,41 @@ void spdk_nvme_ctrlr_set_remove_cb(struct spdk_nvme_ctrlr *ctrlr,
  */
 int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 
+struct spdk_nvme_ctrlr_reset_ctx;
+
+/**
+ * Create a context object that can be polled to perform a full hardware reset of the NVMe controller.
+ *
+ * The function will set the controller reset context on success, user must call
+ * spdk_nvme_ctrlr_reset_poll_async() until it returns a value other than -EAGAIN.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param reset_ctx Double pointer to reset context.
+ *
+ * \return 0 on success.
+ * \return -ENOMEM if context could not be allocated.
+ * \return -ENXIO if controller has been removed.
+ *
+ */
+int spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
+				struct spdk_nvme_ctrlr_reset_ctx **reset_ctx);
+
+/**
+ * Proceed with resetting contoller associated with the controller reset context.
+ *
+ * The controller reset context is one returned from a previous call to
+ * spdk_nvme_ctrlr_reset_async().  Users must call this function on the
+ * controller reset context until it returns a value other than -EAGAIN.
+ *
+ * \param ctrlr_reset_ctx Context used to track controller reset actions.
+ *
+ * \return 0 if all controller reset operations are complete; the ctrlr_reset_ctx
+ * is also freed and no longer valid.
+ * \return -EAGAIN if there are still pending controller reset operations; user must call
+ * spdk_nvme_ctrlr_reset_poll_async again to continue progress.
+ */
+int spdk_nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx);
+
 /**
  * Perform a NVMe subsystem reset.
  *

@@ -1390,8 +1390,8 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-int
-spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+static int
+nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0, rc_tmp = 0;
 	struct spdk_nvme_qpair	*qpair;
@@ -1480,6 +1480,70 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		 * we need to update system handling device reset.
 		 */
 		nvme_io_msg_ctrlr_update(ctrlr);
+	}
+
+	return rc;
+}
+
+static void
+nvme_ctrlr_reset_ctx_init(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx,
+			  struct spdk_nvme_ctrlr *ctrlr)
+{
+	ctrlr_reset_ctx->ctrlr = ctrlr;
+}
+
+static int
+nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
+{
+	return nvme_ctrlr_reset(ctrlr_reset_ctx->ctrlr);
+}
+
+int
+spdk_nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
+{
+	int rc;
+	if (!ctrlr_reset_ctx) {
+		return -EINVAL;
+	}
+	rc = nvme_ctrlr_reset_poll_async(ctrlr_reset_ctx);
+	if (rc == -EAGAIN) {
+		return rc;
+	}
+
+	free(ctrlr_reset_ctx);
+	return rc;
+}
+
+int
+spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
+			    struct spdk_nvme_ctrlr_reset_ctx **reset_ctx)
+{
+	struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx;
+
+	ctrlr_reset_ctx = calloc(1, sizeof(*ctrlr_reset_ctx));
+	if (!ctrlr_reset_ctx) {
+		return -ENOMEM;
+	}
+
+	nvme_ctrlr_reset_ctx_init(ctrlr_reset_ctx, ctrlr);
+	*reset_ctx = ctrlr_reset_ctx;
+
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_reset_ctx reset_ctx = {};
+	int rc = 0;
+
+	nvme_ctrlr_reset_ctx_init(&reset_ctx, ctrlr);
+
+	while (true) {
+		rc = nvme_ctrlr_reset_poll_async(&reset_ctx);
+		if (rc != -EAGAIN) {
+			break;
+		}
 	}
 
 	return rc;
