@@ -40,7 +40,21 @@
 #include "event/scheduler_static.c"
 #include "event/scheduler_dynamic.c"
 
-DEFINE_STUB(_spdk_get_app_thread, struct spdk_thread *, (void), NULL);
+struct spdk_thread *
+_spdk_get_app_thread(void)
+{
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_thread *thread;
+
+	/* Assume there has to be at least one thread on main
+	 * reactor, that has at least one thread. */
+	lw_thread = TAILQ_FIRST(&g_scheduling_reactor->threads);
+	SPDK_CU_ASSERT_FATAL(lw_thread != NULL);
+	thread = spdk_thread_get_from_ctx(lw_thread);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+
+	return thread;
+}
 
 static void
 test_create_reactor(void)
@@ -521,6 +535,7 @@ static uint32_t
 _run_events_till_completion(uint32_t reactor_count)
 {
 	struct spdk_reactor *reactor;
+	struct spdk_thread *app_thread = _spdk_get_app_thread();
 	uint32_t i, events;
 	uint32_t total_events = 0;
 
@@ -531,6 +546,11 @@ _run_events_till_completion(uint32_t reactor_count)
 			CU_ASSERT(reactor != NULL);
 			MOCK_SET(spdk_env_get_current_core, i);
 			events += event_queue_run_batch(reactor);
+
+			/* Some events still require app_thread to run */
+			MOCK_SET(spdk_env_get_current_core, g_scheduling_reactor->lcore);
+			spdk_thread_poll(app_thread, 0, 0);
+
 			MOCK_CLEAR(spdk_env_get_current_core);
 		}
 		total_events += events;
@@ -868,7 +888,7 @@ test_governor(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 	_reactors_scheduler_gather_metrics(NULL, NULL);
 
-	CU_ASSERT(_run_events_till_completion(2) == 2);
+	CU_ASSERT(_run_events_till_completion(2) == 6);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	/* Main core should be busy more than 50% time now - frequency should be raised */
@@ -891,7 +911,7 @@ test_governor(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 	_reactors_scheduler_gather_metrics(NULL, NULL);
 
-	CU_ASSERT(_run_events_till_completion(2) == 2);
+	CU_ASSERT(_run_events_till_completion(2) == 6);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	for (i = 0; i < 2; i++) {
