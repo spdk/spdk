@@ -540,7 +540,7 @@ delete_nvme_bdev_controller(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		bdev_ocssd_depopulate_namespace(nvme_bdev_ctrlr->namespaces[nsid]);
 	}
 
-	nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+	nvme_bdev_ctrlr_release(nvme_bdev_ctrlr);
 	spdk_delay_us(1000);
 
 	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}

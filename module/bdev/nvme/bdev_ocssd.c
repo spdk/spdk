@@ -238,7 +238,7 @@ bdev_ocssd_destruct(void *ctx)
 	if (!nvme_ns->populated) {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
-		nvme_bdev_ctrlr_destruct(nvme_ns->ctrlr);
+		nvme_bdev_ctrlr_release(nvme_ns->ctrlr);
 	} else {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 	}

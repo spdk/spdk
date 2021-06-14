@@ -175,7 +175,7 @@ nvme_bdev_ctrlr_unregister(void *ctx)
 }
 
 void
-nvme_bdev_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+nvme_bdev_ctrlr_release(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
 
@@ -210,5 +210,5 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns)
 	}
 	pthread_mutex_unlock(&nvme_bdev_ctrlr->mutex);
 
-	nvme_bdev_ctrlr_destruct(nvme_bdev_ctrlr);
+	nvme_bdev_ctrlr_release(nvme_bdev_ctrlr);
 }
