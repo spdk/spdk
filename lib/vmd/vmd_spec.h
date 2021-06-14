@@ -36,7 +36,6 @@
 #define VMD_SPEC_H
 
 #define MAX_VMD_SUPPORTED 48  /* max number of vmd controllers in a system - */
-#define VMD_DOMAIN_START 0x201D
 
 #define PCI_INVALID_VENDORID 0xFFFF
 #define ONE_MB (1<<20)
@@ -45,6 +44,10 @@
 
 #define VMD_UPPER_BASE_SIGNATURE  0xFFFFFFEF
 #define VMD_UPPER_LIMIT_SIGNATURE 0xFFFFFFED
+
+/* VMD Registers */
+#define PCI_VMD_VMCAP		0x40
+#define PCI_VMD_VMCONFIG	0x44
 
 /*
  *  BAR assignment constants

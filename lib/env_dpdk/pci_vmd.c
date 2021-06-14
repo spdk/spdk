@@ -36,7 +36,8 @@
 #include "spdk/pci_ids.h"
 
 static struct spdk_pci_id vmd_pci_driver_id[] = {
-	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_INTEL, PCI_DEVICE_ID_INTEL_VMD) },
+	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_INTEL, PCI_DEVICE_ID_INTEL_VMD_SKX) },
+	{ SPDK_PCI_DEVICE(SPDK_PCI_VID_INTEL, PCI_DEVICE_ID_INTEL_VMD_ICX) },
 	{ .vendor_id = 0, /* sentinel */ },
 };
 

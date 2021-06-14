@@ -94,11 +94,15 @@ vmd_device_is_enumerated(const struct vmd_pci_device *vmd_device)
 static bool
 vmd_device_is_root_port(const struct vmd_pci_device *vmd_device)
 {
-	return vmd_device->header->common.vendor_id == 0x8086 &&
-	       (vmd_device->header->common.device_id == 0x2030 ||
-		vmd_device->header->common.device_id == 0x2031 ||
-		vmd_device->header->common.device_id == 0x2032 ||
-		vmd_device->header->common.device_id == 0x2033);
+	return vmd_device->header->common.vendor_id == SPDK_PCI_VID_INTEL &&
+	       (vmd_device->header->common.device_id == PCI_ROOT_PORT_A_INTEL_SKX ||
+		vmd_device->header->common.device_id == PCI_ROOT_PORT_B_INTEL_SKX ||
+		vmd_device->header->common.device_id == PCI_ROOT_PORT_C_INTEL_SKX ||
+		vmd_device->header->common.device_id == PCI_ROOT_PORT_D_INTEL_SKX ||
+		vmd_device->header->common.device_id == PCI_ROOT_PORT_A_INTEL_ICX ||
+		vmd_device->header->common.device_id == PCI_ROOT_PORT_B_INTEL_ICX ||
+		vmd_device->header->common.device_id == PCI_ROOT_PORT_C_INTEL_ICX ||
+		vmd_device->header->common.device_id == PCI_ROOT_PORT_D_INTEL_ICX);
 }
 
 static void
@@ -593,7 +597,7 @@ vmd_bus_device_present(struct vmd_pci_bus *bus, uint32_t devfn)
 	volatile struct pci_header *header;
 
 	header = (volatile struct pci_header *)(bus->vmd->cfg_vaddr +
-						CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
+						CONFIG_OFFSET_ADDR(bus->config_bus_number, devfn, 0, 0));
 	if (!vmd_is_valid_cfg_addr(bus, (uint64_t)header)) {
 		return false;
 	}
@@ -625,7 +629,7 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 	}
 
 	header = (struct pci_header * volatile)(bus->vmd->cfg_vaddr +
-						CONFIG_OFFSET_ADDR(bus->bus_number, devfn, 0, 0));
+						CONFIG_OFFSET_ADDR(bus->config_bus_number, devfn, 0, 0));
 
 	SPDK_DEBUGLOG(vmd, "PCI device found: %04x:%04x ***\n",
 		      header->common.vendor_id, header->common.device_id);
@@ -674,6 +678,7 @@ vmd_create_new_bus(struct vmd_pci_bus *parent, struct vmd_pci_device *bridge, ui
 	new_bus->secondary_bus = new_bus->subordinate_bus = bus_number;
 	new_bus->self = bridge;
 	new_bus->vmd = parent->vmd;
+	new_bus->config_bus_number = new_bus->bus_number - new_bus->vmd->vmd_bus.bus_start;
 	TAILQ_INIT(&new_bus->dev_list);
 
 	bridge->subordinate = new_bus;
@@ -1158,13 +1163,47 @@ vmd_map_bars(struct vmd_adapter *vmd, struct spdk_pci_device *dev)
 	return rc;
 }
 
+static void
+vmd_set_starting_bus_number(struct vmd_adapter *vmd, uint8_t *bus_start,
+			    uint8_t *max_bus)
+{
+	uint32_t vmd_cap = 0, vmd_config = 0;
+	uint8_t bus_restrict_cap, bus_restrictions;
+
+	spdk_pci_device_cfg_read32(vmd->pci, &vmd_cap, PCI_VMD_VMCAP);
+	spdk_pci_device_cfg_read32(vmd->pci, &vmd_config, PCI_VMD_VMCONFIG);
+
+	bus_restrict_cap = vmd_cap & 0x1; /* bit 0 */
+	bus_restrictions = (vmd_config >> 8) & 0x3; /* bits 8-9 */
+	if ((bus_restrict_cap == 0x1) && (bus_restrictions == 0x1)) {
+		*bus_start = 128;
+		*max_bus = 255;
+	} else {
+		*bus_start = 0;
+		*max_bus = 127;
+	}
+}
+
 static int
 vmd_enumerate_devices(struct vmd_adapter *vmd)
 {
+	uint8_t max_bus, bus_start;
+
 	vmd->vmd_bus.vmd = vmd;
-	vmd->vmd_bus.secondary_bus = vmd->vmd_bus.subordinate_bus = 0;
-	vmd->vmd_bus.primary_bus = vmd->vmd_bus.bus_number = 0;
 	vmd->vmd_bus.domain = vmd->pci->addr.domain;
+
+	if (vmd->pci->id.device_id == PCI_DEVICE_ID_INTEL_VMD_ICX) {
+		vmd_set_starting_bus_number(vmd, &bus_start, &max_bus);
+		vmd->vmd_bus.bus_start = bus_start;
+		vmd->vmd_bus.secondary_bus = vmd->vmd_bus.subordinate_bus = vmd->vmd_bus.bus_start;
+		vmd->vmd_bus.primary_bus = vmd->vmd_bus.bus_number = vmd->vmd_bus.bus_start;
+		vmd->max_pci_bus = max_bus;
+	} else {
+		vmd->vmd_bus.bus_start = 0;
+		vmd->vmd_bus.secondary_bus = vmd->vmd_bus.subordinate_bus = 0;
+		vmd->vmd_bus.primary_bus = vmd->vmd_bus.bus_number = 0;
+		vmd->max_pci_bus = PCI_MAX_BUS_NUMBER;
+	}
 
 	return vmd_scan_pcibus(&vmd->vmd_bus);
 }
@@ -1216,7 +1255,6 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	vmd_c->vmd[i].vmd_index = i;
 	vmd_c->vmd[i].domain =
 		(pci_dev->addr.bus << 16) | (pci_dev->addr.dev << 8) | pci_dev->addr.func;
-	vmd_c->vmd[i].max_pci_bus = PCI_MAX_BUS_NUMBER;
 	TAILQ_INIT(&vmd_c->vmd[i].bus_list);
 
 	if (vmd_map_bars(&vmd_c->vmd[i], pci_dev) == -1) {

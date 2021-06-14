@@ -66,6 +66,8 @@ struct vmd_pci_bus {
 	uint32_t  primary_bus     : 8;
 	uint32_t  secondary_bus   : 8;
 	uint32_t  subordinate_bus : 8;
+	uint32_t  bus_start       : 8;
+	uint32_t  config_bus_number : 8;
 
 	TAILQ_HEAD(, vmd_pci_device) dev_list;	/* list of pci end device attached to this bus */
 	TAILQ_ENTRY(vmd_pci_bus) tailq;		/* link for all buses found during scan */
