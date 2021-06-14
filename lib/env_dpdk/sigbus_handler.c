@@ -53,7 +53,7 @@ sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
 
 	pthread_mutex_lock(&g_sighandler_mutex);
 	TAILQ_FOREACH(sigbus_handler, &g_sigbus_handler, tailq) {
-		sigbus_handler->func(info, sigbus_handler->ctx);
+		sigbus_handler->func(info->si_addr, sigbus_handler->ctx);
 	}
 	pthread_mutex_unlock(&g_sighandler_mutex);
 }

@@ -1343,7 +1343,7 @@ struct spdk_pci_event {
 	struct spdk_pci_addr traddr;
 };
 
-typedef void (*spdk_pci_error_handler)(siginfo_t *info, void *ctx);
+typedef void (*spdk_pci_error_handler)(const void *failure_addr, void *ctx);
 
 /**
  * Begin listening for PCI bus events. This is used to detect hot-insert and

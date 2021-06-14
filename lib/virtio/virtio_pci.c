@@ -89,9 +89,9 @@ static bool g_sigset = false;
 #define PCI_CAP_ID_MSIX		0x11
 
 static void
-virtio_pci_dev_sigbus_handler(siginfo_t *info, void *ctx)
+virtio_pci_dev_sigbus_handler(const void *failure_addr, void *ctx)
 {
-	void *map_address = NULL;;
+	void *map_address = NULL;
 	uint16_t flag = 0;
 	int i;
 

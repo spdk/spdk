@@ -54,7 +54,7 @@ static bool g_sigset = false;
 static spdk_nvme_pcie_hotplug_filter_cb g_hotplug_filter_cb;
 
 static void
-nvme_sigbus_fault_sighandler(siginfo_t *info, void *ctx)
+nvme_sigbus_fault_sighandler(const void *failure_addr, void *ctx)
 {
 	void *map_address;
 	uint16_t flag = 0;
