@@ -66,7 +66,7 @@ extern "C" {
  * power-of-two value.
  */
 #define SPDK_ALIGN_FLOOR(val, align) \
-	(typeof(val))((val) & (~((typeof(val))((align) - 1))))
+	(__typeof__(val))((val) & (~((__typeof__(val))((align) - 1))))
 /**
  * Macro to align a value to a given power-of-two. The resultant value
  * will be of the same type as the first parameter, and will be no lower
@@ -74,7 +74,7 @@ extern "C" {
  * value.
  */
 #define SPDK_ALIGN_CEIL(val, align) \
-	SPDK_ALIGN_FLOOR(((val) + ((typeof(val)) (align) - 1)), align)
+	SPDK_ALIGN_FLOOR(((val) + ((__typeof__(val)) (align) - 1)), align)
 
 uint32_t spdk_u32log2(uint32_t x);
 
