@@ -284,6 +284,17 @@ for i in "$@"; do
 		--disable-cet)
 			CONFIG[CET]=n
 			;;
+		--with-dpdk)
+			if pkg-config --exists libdpdk; then
+				CONFIG[DPDK_LIB_DIR]=$(pkg-config --variable=libdir libdpdk)
+				CONFIG[DPDK_INC_DIR]=$(pkg-config --variable=includedir libdpdk)
+				CONFIG[DPDK_PKG_CONFIG]=y
+				CFLAGS="${CFLAGS:+$CFLAGS }$(pkg-config --cflags libdpdk)"
+			else
+				echo "libdpdk.pc not found, aborting"
+				exit 1
+			fi
+			;;
 		--with-dpdk=*)
 			check_dir "$i"
 			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
@@ -535,7 +546,7 @@ fi
 if [ -z "${CONFIG[ENV]}" ]; then
 	CONFIG[ENV]=$rootdir/lib/env_dpdk
 	echo "Using default SPDK env in ${CONFIG[ENV]}"
-	if [ -z "${CONFIG[DPDK_DIR]}" ]; then
+	if [[ -z "${CONFIG[DPDK_DIR]}" && "${CONFIG[DPDK_PKG_CONFIG]}" == n ]]; then
 		if [ ! -f "$rootdir"/dpdk/config/meson.build ]; then
 			echo "DPDK not found; please specify --with-dpdk=<path> or run:"
 			echo
@@ -547,7 +558,7 @@ if [ -z "${CONFIG[ENV]}" ]; then
 		fi
 	fi
 else
-	if [ -n "${CONFIG[DPDK_DIR]}" ]; then
+	if [[ -n "${CONFIG[DPDK_DIR]}" || "${CONFIG[DPDK_PKG_CONFIG]}" == y ]]; then
 		echo "--with-env and --with-dpdk are mutually exclusive."
 		exit 1
 	fi
@@ -562,6 +573,14 @@ else
 	fi
 	# Always disable virtio, but only print the error message if the user explicitly turned it on.
 	CONFIG[VIRTIO]="n"
+fi
+
+if [[ "${CONFIG[DPDK_PKG_CONFIG]}" == y ]]; then
+	if [[ "${CONFIG[SHARED]}" == n ]]; then
+		# dpdk-devel doesn't provide static libs
+		echo "Build against packaged DPDK requested, enabling shared libraries"
+		CONFIG[SHARED]=y
+	fi
 fi
 
 if [[ $sys_name == "Windows" ]]; then

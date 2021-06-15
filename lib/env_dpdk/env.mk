@@ -41,11 +41,22 @@ DPDK_DIR = $(CONFIG_DPDK_DIR)
 
 export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))
 
+ifneq ($(CONFIG_DPDK_LIB_DIR),)
+DPDK_LIB_DIR = $(CONFIG_DPDK_LIB_DIR)
+else
+DPDK_LIB_DIR = $(DPDK_ABS_DIR)/lib
+endif
+
+ifneq ($(CONFIG_DPDK_INC_DIR),)
+DPDK_INC_DIR = $(CONFIG_DPDK_INC_DIR)
+else
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/include/rte_config.h))
 DPDK_INC_DIR := $(DPDK_ABS_DIR)/include
 else
 DPDK_INC_DIR := $(DPDK_ABS_DIR)/include/dpdk
 endif
+endif
+
 DPDK_INC := -I$(DPDK_INC_DIR)
 
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_mbuf rte_bus_pci rte_pci rte_mempool_ring
@@ -55,7 +66,7 @@ DPDK_LIB_LIST += rte_power rte_ethdev rte_net
 endif
 
 # DPDK 20.05 eal dependency
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_telemetry.*))
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_telemetry.*))
 DPDK_LIB_LIST += rte_telemetry
 endif
 
@@ -66,7 +77,7 @@ DPDK_FRAMEWORK=n
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
 DPDK_LIB_LIST += rte_reorder
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_crypto_aesni_mb.*))
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_aesni_mb.*))
 DPDK_LIB_LIST += rte_crypto_aesni_mb
 else
 # PMD name for DPDK 20.08 and earlier
@@ -76,7 +87,7 @@ endif
 
 ifeq ($(CONFIG_REDUCE),y)
 DPDK_FRAMEWORK=y
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_compress_isal.*))
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
 else
 # PMD name for DPDK 20.08 and earlier
@@ -86,7 +97,7 @@ endif
 
 ifeq ($(DPDK_FRAMEWORK),y)
 DPDK_LIB_LIST += rte_cryptodev rte_compressdev rte_bus_vdev
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_common_qat.*))
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_common_qat.*))
 DPDK_LIB_LIST += rte_common_qat
 else
 # PMD name for DPDK 20.08 and earlier
@@ -94,7 +105,7 @@ DPDK_LIB_LIST += rte_pmd_qat
 endif
 endif
 
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_kvargs.*))
 DPDK_LIB_LIST += rte_kvargs
 endif
 
@@ -114,13 +125,13 @@ endif
 
 ifeq ($(LINK_HASH),y)
 DPDK_LIB_LIST += rte_hash
-ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_rcu.*))
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_rcu.*))
 DPDK_LIB_LIST += rte_rcu
 endif
 endif
 
-DPDK_SHARED_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%.so)
-DPDK_STATIC_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%.a)
+DPDK_SHARED_LIB = $(DPDK_LIB_LIST:%=$(DPDK_LIB_DIR)/lib%.so)
+DPDK_STATIC_LIB = $(DPDK_LIB_LIST:%=$(DPDK_LIB_DIR)/lib%.a)
 DPDK_SHARED_LIB_LINKER_ARGS = $(call add_no_as_needed,$(DPDK_SHARED_LIB))
 DPDK_STATIC_LIB_LINKER_ARGS = $(call add_whole_archive,$(DPDK_STATIC_LIB))
 
@@ -160,12 +171,12 @@ endif
 ifeq ($(CONFIG_SHARED),y)
 ENV_DPDK_FILE = $(call spdk_lib_list_to_shared_libs,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_SHARED_LIB)
-DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_ABS_DIR)/lib $(DPDK_SHARED_LIB_LINKER_ARGS)
+DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_LIB_DIR) $(DPDK_SHARED_LIB_LINKER_ARGS)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
 else
 ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_STATIC_LIB)
-DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_ABS_DIR)/lib $(DPDK_STATIC_LIB_LINKER_ARGS)
+DPDK_LINKER_ARGS = -Wl,-rpath-link $(DPDK_LIB_DIR) $(DPDK_STATIC_LIB_LINKER_ARGS)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) $(DPDK_LINKER_ARGS)
 ENV_LINKER_ARGS += $(DPDK_PRIVATE_LINKER_ARGS)
 endif

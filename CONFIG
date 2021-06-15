@@ -89,6 +89,10 @@ CONFIG_ENV=
 # This directory should contain 'include' and 'lib' directories for your DPDK
 # installation.
 CONFIG_DPDK_DIR=
+# Automatically set via pkg-config when bare --with-dpdk is set
+CONFIG_DPDK_LIB_DIR=
+CONFIG_DPDK_INC_DIR=
+CONFIG_DPDK_PKG_CONFIG=n
 
 # This directory should contain 'include' and 'lib' directories for WPDK.
 CONFIG_WPDK_DIR=

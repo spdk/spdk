@@ -58,8 +58,10 @@ export MAKE_PID := $(shell echo $$PPID)
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
 ifneq ($(SKIP_DPDK_BUILD),1)
+ifneq ($(CONFIG_DPDK_PKG_CONFIG),y)
 DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
+endif
 endif
 endif
 endif
