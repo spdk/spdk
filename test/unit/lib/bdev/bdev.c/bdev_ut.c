@@ -4654,7 +4654,7 @@ bdev_multi_allocation(void)
 			height = rb_tree_get_height(&bdev[j]->internal.bdev_name);
 			CU_ASSERT(height <= (int)(spdk_u32log2(j + 1)));
 		}
-		SPDK_NOTICELOG("alloc bdev num %d takes %lu ms\n", bdev_num,
+		SPDK_NOTICELOG("alloc bdev num %d takes %" PRIu64 " ms\n", bdev_num,
 			       (get_ns_time() - last_time) / 1000 / 1000);
 		for (j = 0; j < bdev_num; j++) {
 			CU_ASSERT(spdk_bdev_get_by_name(name[j]) != NULL);
