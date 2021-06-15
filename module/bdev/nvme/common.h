@@ -133,6 +133,8 @@ struct nvme_ctrlr {
 
 	bdev_nvme_reset_cb			reset_cb_fn;
 	void					*reset_cb_arg;
+	struct spdk_nvme_ctrlr_reset_ctx	*reset_ctx;
+	struct spdk_poller			*reset_poller;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;

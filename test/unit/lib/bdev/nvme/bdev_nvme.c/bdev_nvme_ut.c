@@ -274,6 +274,10 @@ struct spdk_nvme_probe_ctx {
 	struct spdk_nvme_ctrlr		*init_ctrlr;
 };
 
+struct spdk_nvme_ctrlr_reset_ctx {
+	struct spdk_nvme_ctrlr		*ctrlr;
+};
+
 static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_ut_init_ctrlrs);
 static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_attached_ctrlrs = TAILQ_HEAD_INITIALIZER(
 			g_ut_attached_ctrlrs);
@@ -669,6 +673,32 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	ctrlr->is_failed = false;
+
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctrlr_reset_ctx->ctrlr;
+
+	free(ctrlr_reset_ctx);
+	return spdk_nvme_ctrlr_reset(ctrlr);
+}
+
+int
+spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
+			    struct spdk_nvme_ctrlr_reset_ctx **reset_ctx)
+{
+	struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx;
+
+	ctrlr_reset_ctx = calloc(1, sizeof(*ctrlr_reset_ctx));
+	if (!ctrlr_reset_ctx) {
+		return -ENOMEM;
+	}
+
+	ctrlr_reset_ctx->ctrlr = ctrlr;
+	*reset_ctx = ctrlr_reset_ctx;
 
 	return 0;
 }

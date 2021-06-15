@@ -573,6 +573,30 @@ bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, rc);
 }
 
+static int
+bdev_nvme_ctrlr_reset_poll(void *arg)
+{
+	struct nvme_ctrlr *nvme_ctrlr = arg;
+	int rc;
+
+	rc = spdk_nvme_ctrlr_reset_poll_async(nvme_ctrlr->reset_ctx);
+	if (rc == -EAGAIN) {
+		return SPDK_POLLER_BUSY;
+	}
+
+	spdk_poller_unregister(&nvme_ctrlr->reset_poller);
+	if (rc == 0) {
+		/* Recreate all of the I/O queue pairs */
+		spdk_for_each_channel(nvme_ctrlr,
+				      bdev_nvme_reset_create_qpair,
+				      NULL,
+				      bdev_nvme_reset_create_qpairs_done);
+	} else {
+		bdev_nvme_reset_complete(nvme_ctrlr, rc);
+	}
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
@@ -584,16 +608,15 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 		goto err;
 	}
 
-	rc = spdk_nvme_ctrlr_reset(nvme_ctrlr->ctrlr);
+	rc = spdk_nvme_ctrlr_reset_async(nvme_ctrlr->ctrlr, &nvme_ctrlr->reset_ctx);
 	if (rc != 0) {
+		SPDK_ERRLOG("Create controller reset context failed\n");
 		goto err;
 	}
+	assert(nvme_ctrlr->reset_poller == NULL);
+	nvme_ctrlr->reset_poller = SPDK_POLLER_REGISTER(bdev_nvme_ctrlr_reset_poll,
+				   nvme_ctrlr, 0);
 
-	/* Recreate all of the I/O queue pairs */
-	spdk_for_each_channel(nvme_ctrlr,
-			      bdev_nvme_reset_create_qpair,
-			      NULL,
-			      bdev_nvme_reset_create_qpairs_done);
 	return;
 
 err:
