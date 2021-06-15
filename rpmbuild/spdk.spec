@@ -1,20 +1,4 @@
-Name:           spdk
-Version:        %{version}
-Release:        %{release}
-Summary:        Storage Performance Development Kit
-
-License:       BSD
-URL:           https://spdk.io
-Source:        spdk-%{version}.tar.gz
-
-%description
-
-The Storage Performance Development Kit (SPDK) provides a set of tools and libraries for
-writing high performance, scalable, user-mode storage applications. It achieves high
-performance by moving all of the necessary drivers into userspace and operating in a
-polled mode instead of relying on interrupts, which avoids kernel context switches and
-eliminates interrupt handling overhead.
-
+# Global macros
 %define debug_package %{nil}
 
 %{!?deps:%define deps 1}
@@ -23,6 +7,12 @@ eliminates interrupt handling overhead.
 %{!?dpdk_path:%define dpdk_path "dpdk"}
 %{!?requirements:%define requirements 0}
 %{!?shared:%define shared 0}
+
+# Spec metadata
+Name:           spdk
+Version:        %{version}
+Release:        %{release}
+Summary:        Storage Performance Development Kit
 
 # This is a minimal set of requirements needed for SPDK apps to run when built with
 # default configuration. These are also predetermined by rpmbuild. Extra requirements
@@ -39,8 +29,20 @@ Requires: openssl-libs
 Requires: zlib
 
 %if %{requirements}
-Requires: %{requirements_list}
+Requires: %(echo "%{requirements_list}")
 %endif
+
+License:       BSD
+URL:           https://spdk.io
+Source:        spdk-%{version}.tar.gz
+
+%description
+
+The Storage Performance Development Kit (SPDK) provides a set of tools and libraries for
+writing high performance, scalable, user-mode storage applications. It achieves high
+performance by moving all of the necessary drivers into userspace and operating in a
+polled mode instead of relying on interrupts, which avoids kernel context switches and
+eliminates interrupt handling overhead.
 
 %prep
 make clean &>/dev/null || :
