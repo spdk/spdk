@@ -1155,10 +1155,6 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 static void
 iscsi_fini_done(void *io_device)
 {
-	free(g_iscsi.authfile);
-	free(g_iscsi.nodebase);
-
-	pthread_mutex_destroy(&g_iscsi.mutex);
 	g_fini_cb_fn(g_fini_cb_arg);
 }
 
@@ -1176,7 +1172,20 @@ _iscsi_fini_dev_unreg(struct spdk_io_channel_iter *i, int status)
 	iscsi_portal_grps_destroy();
 	iscsi_auth_groups_destroy();
 
-	spdk_io_device_unregister(&g_iscsi, iscsi_fini_done);
+	free(g_iscsi.authfile);
+	free(g_iscsi.nodebase);
+
+	pthread_mutex_destroy(&g_iscsi.mutex);
+	if (g_init_thread != NULL) {
+		/* g_init_thread is set just after the io_device is
+		 * registered, so we can use it to determine if it
+		 * needs to be unregistered (in cases where iscsi init
+		 * fails).
+		 */
+		spdk_io_device_unregister(&g_iscsi, iscsi_fini_done);
+	} else {
+		iscsi_fini_done(NULL);
+	}
 }
 
 static void
