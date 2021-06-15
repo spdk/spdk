@@ -1242,6 +1242,56 @@ test_spdk_nvmf_rdma_request_parse_sgl_with_md(void)
 	CU_ASSERT(data->wr.next == &rdma_req.rsp.wr);
 }
 
+static void
+test_nvmf_rdma_opts_init(void)
+{
+	struct spdk_nvmf_transport_opts	opts = {};
+
+	nvmf_rdma_opts_init(&opts);
+	CU_ASSERT(opts.max_queue_depth == SPDK_NVMF_RDMA_DEFAULT_MAX_QUEUE_DEPTH);
+	CU_ASSERT(opts.max_qpairs_per_ctrlr ==	SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR);
+	CU_ASSERT(opts.in_capsule_data_size ==	SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE);
+	CU_ASSERT(opts.max_io_size == SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE);
+	CU_ASSERT(opts.io_unit_size == SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE);
+	CU_ASSERT(opts.max_aq_depth == SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH);
+	CU_ASSERT(opts.num_shared_buffers == SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS);
+	CU_ASSERT(opts.buf_cache_size == SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE);
+	CU_ASSERT(opts.dif_insert_or_strip == SPDK_NVMF_RDMA_DIF_INSERT_OR_STRIP);
+	CU_ASSERT(opts.abort_timeout_sec == SPDK_NVMF_RDMA_DEFAULT_ABORT_TIMEOUT_SEC);
+	CU_ASSERT(opts.transport_specific == NULL);
+}
+
+static void
+test_nvmf_rdma_request_free_data(void)
+{
+	struct spdk_nvmf_rdma_request rdma_req = {};
+	struct spdk_nvmf_rdma_transport rtransport = {};
+	struct spdk_nvmf_rdma_request_data *next_request_data = NULL;
+
+	MOCK_CLEAR(spdk_mempool_get);
+	rtransport.data_wr_pool = spdk_mempool_create("spdk_nvmf_rdma_wr_data",
+				  SPDK_NVMF_MAX_SGL_ENTRIES,
+				  sizeof(struct spdk_nvmf_rdma_request_data),
+				  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+				  SPDK_ENV_SOCKET_ID_ANY);
+	next_request_data = spdk_mempool_get(rtransport.data_wr_pool);
+	SPDK_CU_ASSERT_FATAL(((struct test_mempool *)rtransport.data_wr_pool)->count ==
+			     SPDK_NVMF_MAX_SGL_ENTRIES - 1);
+	next_request_data->wr.wr_id = 1;
+	next_request_data->wr.num_sge = 2;
+	next_request_data->wr.next = NULL;
+	rdma_req.data.wr.next = &next_request_data->wr;
+	rdma_req.data.wr.wr_id = 1;
+	rdma_req.data.wr.num_sge = 2;
+
+	nvmf_rdma_request_free_data(&rdma_req, &rtransport);
+	/* Check if next_request_data put into memory pool */
+	CU_ASSERT(((struct test_mempool *)rtransport.data_wr_pool)->count == SPDK_NVMF_MAX_SGL_ENTRIES);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 0);
+
+	spdk_mempool_free(rtransport.data_wr_pool);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1256,6 +1306,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_request_process);
 	CU_ADD_TEST(suite, test_nvmf_rdma_get_optimal_poll_group);
 	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_request_parse_sgl_with_md);
+	CU_ADD_TEST(suite, test_nvmf_rdma_opts_init);
+	CU_ADD_TEST(suite, test_nvmf_rdma_request_free_data);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
