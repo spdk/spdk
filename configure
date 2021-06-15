@@ -733,6 +733,15 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		echo "Please install then re-run this script."
 		exit 1
 	fi
+
+	if echo -e '#include <spdk/stdinc.h>\n' \
+		'#include <infiniband/mlx5dv.h>\n' \
+		'#include <infiniband/verbs.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lmlx5 -I${rootdir}/include -c - 2> /dev/null; then
+		CONFIG[REDUCE_MLX5]="y"
+		echo "mlx5 available so enabling DPDK mlx5_pci compress PMD"
+	fi
 fi
 
 if [[ "${CONFIG[NVME_CUSE]}" = "y" ]]; then

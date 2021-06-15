@@ -3,6 +3,7 @@
 #
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
+#  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -66,6 +67,9 @@ endif
 
 ifeq ($(CONFIG_REDUCE),y)
 DPDK_DRIVERS += compress compress/isal
+ifeq ($(CONFIG_REDUCE_MLX5),y)
+DPDK_DRIVERS += common/mlx5 compress/mlx5
+endif
 DPDK_CFLAGS += -I$(ISAL_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
 endif
