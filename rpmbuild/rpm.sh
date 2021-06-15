@@ -13,6 +13,20 @@ if [[ $ID != fedora && $ID != centos && $ID != rhel ]]; then
 	exit 1
 fi
 
+get_config() {
+	# Intercept part of the ./configure's cmdline we are interested in
+	configure_opts=($(getopt -l "$1::" -o "" -- $configure 2> /dev/null))
+	# Drop "--"
+	configure_opts=("${configure_opts[@]::${#configure_opts[@]}-1}")
+	((${#configure_opts[@]} > 0)) || return 1
+
+	if [[ $2 == has-arg ]]; then
+		[[ -n ${configure_opts[1]} && ${configure_opts[1]} != "''" ]]
+	elif [[ $2 == print ]]; then
+		echo "${configure_opts[1]//\'/}"
+	fi
+}
+
 fedora_python_sys_path_workaround() {
 	[[ -z $NO_WORKAROUND ]] || return 0
 
@@ -59,17 +73,25 @@ build_rpm() (
 		macros+=(-D "_${dir}dir $rpmbuild_dir/$dir")
 	done
 
-	if [[ $configure == *"with-shared"* || $configure == *"with-dpdk"* ]]; then
-		macros+=(-D "dpdk 1")
+	if get_config with-shared; then
 		macros+=(-D "shared 1")
+		macros+=(-D "dpdk 1")
 	fi
 
-	if [[ $configure == *"with-dpdk"* ]]; then
-		dpdk_build_path=${configure#*with-dpdk=}
-		dpdk_build_path=${dpdk_build_path%% *}
-		dpdk_path=${dpdk_build_path%/*}
-		macros+=(-D "dpdk_build_path $dpdk_build_path")
-		macros+=(-D "dpdk_path $dpdk_path")
+	if get_config with-dpdk; then
+		if ! get_config with-dpdk has-arg; then
+			# spdk is requested to build against installed dpdk (i.e. provided by the dist).
+			# Don't build dpdk rpm rather define proper requirements for the spdk.
+			macros+=(-D "dpdk 0")
+			macros+=(-D "shared 1")
+			requirements=${requirements:+$requirements, }"dpdk-devel >= 19.11"
+			build_requirements=${build_requirements:+$build_requirements, }"dpdk-devel >= 19.11"
+		else
+			dpdk_build_path=$(get_config with-dpdk print)
+			dpdk_path=$(dirname "$dpdk_build_path")
+			macros+=(-D "dpdk_build_path $dpdk_build_path")
+			macros+=(-D "dpdk_path $dpdk_path")
+		fi
 	fi
 
 	if [[ $deps == no ]]; then
@@ -79,6 +101,11 @@ build_rpm() (
 	if [[ -n $requirements ]]; then
 		macros+=(-D "requirements 1")
 		macros+=(-D "requirements_list $requirements")
+	fi
+
+	if [[ -n $build_requirements ]]; then
+		macros+=(-D "build_requirements 1")
+		macros+=(-D "build_requirements_list $build_requirements")
 	fi
 
 	cd "$rootdir"
@@ -100,6 +127,7 @@ deps=${DEPS:-yes}
 make="${MAKEFLAGS:--j $(nproc)}"
 release=${RPM_RELEASE:-1}
 requirements=${REQUIREMENTS:-}
+build_requirements=${BUILD_REQUIREMENTS:-}
 version=${SPDK_VERSION:-$(get_version)}
 
 rpmbuild_dir=${BUILDDIR:-"$HOME/rpmbuild"}

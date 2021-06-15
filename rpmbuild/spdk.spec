@@ -6,6 +6,7 @@
 %{!?dpdk_build_path:%define dpdk_build_path "dpdk/build"}
 %{!?dpdk_path:%define dpdk_path "dpdk"}
 %{!?requirements:%define requirements 0}
+%{!?build_requirements:%define build_requirements 0}
 %{!?shared:%define shared 0}
 
 # Spec metadata
@@ -30,6 +31,10 @@ Requires: zlib
 
 %if %{requirements}
 Requires: %(echo "%{requirements_list}")
+%endif
+
+%if %{build_requirements}
+BuildRequires: %(echo "%{build_requirements_list}")
 %endif
 
 License:       BSD
