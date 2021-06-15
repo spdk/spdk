@@ -1609,7 +1609,7 @@ nvmf_ctrlr_set_features_host_behavior_support(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 	if (req->iov[0].iov_len != sizeof(struct spdk_nvme_host_behavior)) {
-		SPDK_ERRLOG("Host Behavior Support invalid iov_len: %ld\n", req->iov[0].iov_len);
+		SPDK_ERRLOG("Host Behavior Support invalid iov_len: %zd\n", req->iov[0].iov_len);
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
