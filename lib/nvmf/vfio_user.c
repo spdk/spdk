@@ -423,34 +423,10 @@ sqhd_advance(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_qpair *qp
 	qpair->sq.head = (qpair->sq.head + 1) % qpair->sq.size;
 }
 
-static void
-insert_queue(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q,
-	     const bool is_cq, const uint16_t id)
-{
-	struct nvme_q *_q;
-	struct nvmf_vfio_user_qpair *qpair;
-
-	assert(ctrlr != NULL);
-	assert(q != NULL);
-
-	qpair = ctrlr->qp[id];
-
-	q->is_cq = is_cq;
-	if (is_cq) {
-		_q = &qpair->cq;
-		*_q = *q;
-		*hdbl(ctrlr, _q) = 0;
-	} else {
-		_q = &qpair->sq;
-		*_q = *q;
-		*tdbl(ctrlr, _q) = 0;
-	}
-}
-
 static int
 asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
-	struct nvme_q q = {};
+	struct nvme_q *sq;
 	const struct spdk_nvmf_registers *regs;
 
 	assert(ctrlr != NULL);
@@ -459,16 +435,18 @@ asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	/* XXX ctrlr->asq == 0 is a valid memory address */
 
 	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
-	q.size = regs->aqa.bits.asqs + 1;
-	q.head = ctrlr->doorbells[0] = 0;
-	q.cqid = 0;
-	q.addr = map_one(ctrlr->endpoint->vfu_ctx, regs->asq,
-			 q.size * sizeof(struct spdk_nvme_cmd), &q.sg, &q.iov);
-	if (q.addr == NULL) {
+	sq = &ctrlr->qp[0]->sq;
+	sq->size = regs->aqa.bits.asqs + 1;
+	sq->head = ctrlr->doorbells[0] = 0;
+	sq->cqid = 0;
+	sq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->asq,
+			   sq->size * sizeof(struct spdk_nvme_cmd), &sq->sg, &sq->iov);
+	if (sq->addr == NULL) {
 		return -1;
 	}
-	memset(q.addr, 0, q.size * sizeof(struct spdk_nvme_cmd));
-	insert_queue(ctrlr, &q, false, 0);
+	memset(sq->addr, 0, sq->size * sizeof(struct spdk_nvme_cmd));
+	sq->is_cq = false;
+	*tdbl(ctrlr, sq) = 0;
 
 	return 0;
 }
@@ -525,7 +503,7 @@ cq_tail_advance(struct nvme_q *q)
 static int
 acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
-	struct nvme_q q = {};
+	struct nvme_q *cq;
 	const struct spdk_nvmf_registers *regs;
 
 	assert(ctrlr != NULL);
@@ -534,18 +512,18 @@ acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 
 	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 	assert(regs != NULL);
-
-	q.size = regs->aqa.bits.acqs + 1;
-	q.tail = 0;
-	q.addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
-			 q.size * sizeof(struct spdk_nvme_cpl), &q.sg, &q.iov);
-	if (q.addr == NULL) {
+	cq = &ctrlr->qp[0]->cq;
+	cq->size = regs->aqa.bits.acqs + 1;
+	cq->tail = 0;
+	cq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
+			   cq->size * sizeof(struct spdk_nvme_cpl), &cq->sg, &cq->iov);
+	if (cq->addr == NULL) {
 		return -1;
 	}
-	memset(q.addr, 0, q.size * sizeof(struct spdk_nvme_cpl));
-	q.is_cq = true;
-	q.ien = true;
-	insert_queue(ctrlr, &q, true, 0);
+	memset(cq->addr, 0, cq->size * sizeof(struct spdk_nvme_cpl));
+	cq->is_cq = true;
+	cq->ien = true;
+	*hdbl(ctrlr, cq) = 0;
 
 	return 0;
 }
@@ -811,10 +789,11 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		   struct spdk_nvme_cmd *cmd, const bool is_cq)
 {
 	size_t entry_size;
+	uint16_t qsize;
 	uint16_t sc = SPDK_NVME_SC_SUCCESS;
 	uint16_t sct = SPDK_NVME_SCT_GENERIC;
 	int err = 0;
-	struct nvme_q io_q = {};
+	struct nvme_q *io_q;
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
@@ -841,8 +820,25 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		goto out;
 	}
 
+	qsize = cmd->cdw10_bits.create_io_q.qsize + 1;
+	if (qsize > max_queue_size(ctrlr)) {
+		SPDK_ERRLOG("%s: queue too big, want=%d, max=%d\n", ctrlr_id(ctrlr),
+			    qsize, max_queue_size(ctrlr));
+		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		sc = SPDK_NVME_SC_INVALID_QUEUE_SIZE;
+		goto out;
+	}
+
 	/* TODO break rest of this function into smaller functions */
 	if (is_cq) {
+		err = init_qp(ctrlr, ctrlr->qp[0]->qpair.transport, qsize,
+			      cmd->cdw10_bits.create_io_q.qid);
+		if (err != 0) {
+			sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			goto out;
+		}
+
+		io_q = &ctrlr->qp[cmd->cdw10_bits.create_io_q.qid]->cq;
 		entry_size = sizeof(struct spdk_nvme_cpl);
 		if (cmd->cdw11_bits.create_io_cq.pc != 0x1) {
 			/*
@@ -855,8 +851,8 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
 			goto out;
 		}
-		io_q.ien = cmd->cdw11_bits.create_io_cq.ien;
-		io_q.iv = cmd->cdw11_bits.create_io_cq.iv;
+		io_q->ien = cmd->cdw11_bits.create_io_cq.ien;
+		io_q->iv = cmd->cdw11_bits.create_io_cq.iv;
 	} else {
 		/* CQ must be created before SQ */
 		if (!lookup_io_q(ctrlr, cmd->cdw11_bits.create_io_sq.cqid, true)) {
@@ -867,6 +863,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			goto out;
 		}
 
+		io_q = &ctrlr->qp[cmd->cdw10_bits.create_io_q.qid]->sq;
 		entry_size = sizeof(struct spdk_nvme_cmd);
 		if (cmd->cdw11_bits.create_io_sq.pc != 0x1) {
 			SPDK_ERRLOG("%s: non-PC SQ not supported\n", ctrlr_id(ctrlr));
@@ -874,42 +871,30 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			goto out;
 		}
 
-		io_q.cqid = cmd->cdw11_bits.create_io_sq.cqid;
+		io_q->cqid = cmd->cdw11_bits.create_io_sq.cqid;
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: SQ%d CQID=%d\n", ctrlr_id(ctrlr),
-			      cmd->cdw10_bits.create_io_q.qid, io_q.cqid);
+			      cmd->cdw10_bits.create_io_q.qid, io_q->cqid);
 	}
 
-	io_q.size = cmd->cdw10_bits.create_io_q.qsize + 1;
-	if (io_q.size > max_queue_size(ctrlr)) {
-		SPDK_ERRLOG("%s: queue too big, want=%d, max=%d\n", ctrlr_id(ctrlr),
-			    io_q.size, max_queue_size(ctrlr));
-		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		sc = SPDK_NVME_SC_INVALID_QUEUE_SIZE;
-		goto out;
-	}
-
-	io_q.addr = map_one(ctrlr->endpoint->vfu_ctx, cmd->dptr.prp.prp1,
-			    io_q.size * entry_size, &io_q.sg, &io_q.iov);
-	if (io_q.addr == NULL) {
+	io_q->is_cq = is_cq;
+	io_q->size = qsize;
+	io_q->addr = map_one(ctrlr->endpoint->vfu_ctx, cmd->dptr.prp.prp1,
+			     io_q->size * entry_size, &io_q->sg, &io_q->iov);
+	if (io_q->addr == NULL) {
 		sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		SPDK_ERRLOG("%s: failed to map I/O queue: %m\n", ctrlr_id(ctrlr));
 		goto out;
 	}
-	io_q.prp1 = cmd->dptr.prp.prp1;
-	memset(io_q.addr, 0, io_q.size * entry_size);
+	io_q->prp1 = cmd->dptr.prp.prp1;
+	memset(io_q->addr, 0, io_q->size * entry_size);
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: mapped %cQ%d IOVA=%#lx vaddr=%#llx\n",
 		      ctrlr_id(ctrlr), is_cq ? 'C' : 'S',
 		      cmd->cdw10_bits.create_io_q.qid, cmd->dptr.prp.prp1,
-		      (unsigned long long)io_q.addr);
+		      (unsigned long long)io_q->addr);
 
 	if (is_cq) {
-		err = init_qp(ctrlr, ctrlr->qp[0]->qpair.transport, io_q.size,
-			      cmd->cdw10_bits.create_io_q.qid);
-		if (err != 0) {
-			sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			goto out;
-		}
+		*hdbl(ctrlr, io_q) = 0;
 	} else {
 		/*
 		 * After we've returned from the nvmf_vfio_user_poll_group_poll thread, once
@@ -919,9 +904,9 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		 * completion callback.
 		 */
 		TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, ctrlr->qp[cmd->cdw10_bits.create_io_q.qid], link);
+		*tdbl(ctrlr, io_q) = 0;
 
 	}
-	insert_queue(ctrlr, &io_q, is_cq, cmd->cdw10_bits.create_io_q.qid);
 
 out:
 	return post_completion(ctrlr, cmd, &ctrlr->qp[0]->cq, 0, sc, sct);
