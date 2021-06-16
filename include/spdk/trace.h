@@ -54,13 +54,13 @@ struct spdk_trace_entry {
 	uint16_t	poller_id;
 	uint32_t	size;
 	uint64_t	object_id;
-	uint8_t		args[40];
+	uint8_t		args[8];
 };
 
 struct spdk_trace_entry_buffer {
 	uint64_t	tsc;
 	uint16_t	tpoint_id;
-	uint8_t		data[54];
+	uint8_t		data[22];
 };
 
 SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_entry_buffer) == sizeof(struct spdk_trace_entry),
