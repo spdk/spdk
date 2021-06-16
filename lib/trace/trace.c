@@ -58,6 +58,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
 	struct spdk_trace_tpoint *tpoint;
+	struct spdk_trace_argument *argument;
 	const char *strval;
 	unsigned lcore, i, offset;
 	uint64_t intval;
@@ -75,6 +76,13 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 	lcore_history->tpoint_count[tpoint_id]++;
 
+	tpoint = &g_trace_flags->tpoint[tpoint_id];
+	/* Make sure that the number of arguments passed matches tracepoint definition */
+	if (tpoint->num_args != num_args) {
+		assert(0 && "Unexpected number of tracepoint arguments");
+		return;
+	}
+
 	/* Get next entry index in the circular buffer */
 	next_entry = get_trace_entry(lcore_history, lcore_history->next_entry);
 	next_entry->tsc = tsc;
@@ -83,19 +91,13 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry->size = size;
 	next_entry->object_id = object_id;
 
-	tpoint = &g_trace_flags->tpoint[tpoint_id];
-	/* Make sure that the number of arguments passed match tracepoint definition */
-	if (tpoint->num_args != num_args) {
-		assert(0 && "Unexpected number of tracepoint arguments");
-		return;
-	}
-
 	va_start(vl, num_args);
 	for (i = 0, offset = 0; i < tpoint->num_args; ++i) {
-		switch (tpoint->args[i].type) {
+		argument = &tpoint->args[i];
+		switch (argument->type) {
 		case SPDK_TRACE_ARG_TYPE_STR:
 			strval = va_arg(vl, const char *);
-			snprintf(&next_entry->args[offset], tpoint->args[i].size, "%s", strval);
+			snprintf(&next_entry->args[offset], argument->size, "%s", strval);
 			break;
 		case SPDK_TRACE_ARG_TYPE_INT:
 		case SPDK_TRACE_ARG_TYPE_PTR:
@@ -107,7 +109,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 			break;
 		}
 
-		offset += tpoint->args[i].size;
+		offset += argument->size;
 	}
 	va_end(vl);
 
