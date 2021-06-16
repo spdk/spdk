@@ -2579,7 +2579,9 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 
 		nvme_rdma_qpair_submit_sends(rqpair);
 		nvme_rdma_qpair_submit_recvs(rqpair);
-		nvme_qpair_resubmit_requests(&rqpair->qpair, rqpair->num_completions);
+		if (rqpair->num_completions > 0) {
+			nvme_qpair_resubmit_requests(&rqpair->qpair, rqpair->num_completions);
+		}
 	}
 
 	/*

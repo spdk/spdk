@@ -658,6 +658,8 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 	int resubmit_rc;
 	struct nvme_request *req;
 
+	assert(num_requests > 0);
+
 	for (i = 0; i < num_requests; i++) {
 		if (qpair->ctrlr->is_resetting) {
 			break;
@@ -733,7 +735,9 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	 * At this point, ret must represent the number of completions we reaped.
 	 * submit as many queued requests as we completed.
 	 */
-	nvme_qpair_resubmit_requests(qpair, ret);
+	if (ret > 0) {
+		nvme_qpair_resubmit_requests(qpair, ret);
+	}
 
 	return ret;
 }
