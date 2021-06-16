@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
 #include "spdk/json.h"
+#include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 
@@ -104,6 +105,25 @@ struct object_stats {
 	object_stats() : start(), index(), size(), tpoint_id(), counter(0) {}
 };
 
+struct argument_context {
+	struct spdk_trace_entry		*entry;
+	struct spdk_trace_entry_buffer	*buffer;
+	uint16_t			lcore;
+	size_t				offset;
+
+	argument_context(struct spdk_trace_entry *entry,
+			 uint16_t lcore) : entry(entry), lcore(lcore)
+	{
+		buffer = (struct spdk_trace_entry_buffer *)entry;
+
+		/* The first argument resides within the spdk_trace_entry structure, so the initial
+		 * offset needs to be adjusted to the start of the spdk_trace_entry.args array
+		 */
+		offset = offsetof(struct spdk_trace_entry, args) -
+			 offsetof(struct spdk_trace_entry_buffer, data);
+	}
+};
+
 struct object_stats g_stats[SPDK_TRACE_MAX_OBJECT];
 
 static char *g_exe_name;
@@ -171,39 +191,102 @@ print_float(const char *arg_string, float arg)
 	printf("%-7s%-16.3f ", format_argname(arg_string), arg);
 }
 
-static void
-print_arg(uint8_t arg_type, const char *arg_string, const void *arg)
+static struct spdk_trace_entry_buffer *
+get_next_buffer(struct spdk_trace_entry_buffer *buf, uint16_t lcore)
 {
-	uint64_t value;
+	struct spdk_trace_history *history;
 
-	switch (arg_type) {
+	history = spdk_get_per_lcore_history(g_histories, lcore);
+
+	if (spdk_unlikely((void *)buf == &history->entries[history->num_entries - 1])) {
+		return (struct spdk_trace_entry_buffer *)&history->entries[0];
+	} else {
+		return buf + 1;
+	}
+}
+
+static bool
+build_arg(struct argument_context *argctx, const struct spdk_trace_argument *arg,
+	  void *buf, size_t bufsize)
+{
+	struct spdk_trace_entry *entry = argctx->entry;
+	struct spdk_trace_entry_buffer *buffer = argctx->buffer;
+	size_t curlen, argoff;
+
+	argoff = 0;
+	while (argoff < arg->size) {
+		if (argctx->offset == sizeof(buffer->data)) {
+			buffer = get_next_buffer(buffer, argctx->lcore);
+			if (spdk_unlikely(buffer->tpoint_id != SPDK_TRACE_MAX_TPOINT_ID ||
+					  buffer->tsc != entry->tsc)) {
+				return false;
+			}
+
+			argctx->offset = 0;
+			argctx->buffer = buffer;
+		}
+
+		curlen = spdk_min(sizeof(buffer->data) - argctx->offset, arg->size - argoff);
+		if (argoff < bufsize) {
+			memcpy((uint8_t *)buf + argoff, &buffer->data[argctx->offset],
+			       spdk_min(curlen, bufsize - argoff));
+		}
+
+		argctx->offset += curlen;
+		argoff += curlen;
+	}
+
+	return true;
+}
+
+static void
+print_arg(struct argument_context *argctx, const struct spdk_trace_argument *arg)
+{
+	uint64_t value = 0;
+	char strbuf[256];
+
+	switch (arg->type) {
 	case SPDK_TRACE_ARG_TYPE_PTR:
-		memcpy(&value, arg, sizeof(value));
-		print_ptr(arg_string, value);
+		if (build_arg(argctx, arg, &value, sizeof(value))) {
+			print_ptr(arg->name, value);
+		}
 		break;
 	case SPDK_TRACE_ARG_TYPE_INT:
-		memcpy(&value, arg, sizeof(value));
-		print_uint64(arg_string, value);
+		if (build_arg(argctx, arg, &value, sizeof(value))) {
+			print_uint64(arg->name, value);
+		}
 		break;
 	case SPDK_TRACE_ARG_TYPE_STR:
-		print_string(arg_string, (const char *)arg);
+		assert((size_t)arg->size <= sizeof(strbuf));
+		if (build_arg(argctx, arg, strbuf, sizeof(strbuf))) {
+			print_string(arg->name, strbuf);
+		}
 		break;
 	}
 }
 
 static void
-print_arg_json(uint8_t arg_type, const void *arg)
+print_arg_json(struct argument_context *argctx, const struct spdk_trace_argument *arg)
 {
-	uint64_t value;
+	uint64_t value = 0;
+	char strbuf[256];
 
-	switch (arg_type) {
+	switch (arg->type) {
 	case SPDK_TRACE_ARG_TYPE_PTR:
 	case SPDK_TRACE_ARG_TYPE_INT:
-		memcpy(&value, arg, sizeof(value));
-		spdk_json_write_uint64(g_json, value);
+		if (build_arg(argctx, arg, &value, sizeof(value))) {
+			spdk_json_write_uint64(g_json, value);
+		} else {
+			spdk_json_write_null(g_json);
+		}
 		break;
 	case SPDK_TRACE_ARG_TYPE_STR:
-		spdk_json_write_string(g_json, (const char *)arg);
+		assert((size_t)arg->size <= sizeof(strbuf));
+		if (build_arg(argctx, arg, strbuf, sizeof(strbuf))) {
+			spdk_json_write_string(g_json, strbuf);
+		} else {
+			spdk_json_write_null(g_json);
+		}
 		break;
 	}
 }
@@ -215,7 +298,7 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	struct spdk_trace_tpoint	*d;
 	struct object_stats		*stats;
 	float				us;
-	size_t				i, offset;
+	size_t				i;
 
 	d = &g_histories->flags.tpoint[e->tpoint_id];
 	stats = &g_stats[d->object_type];
@@ -246,13 +329,12 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 			printf("id:    N/A");
 		}
 	} else if (e->object_id != 0) {
-		print_arg(SPDK_TRACE_ARG_TYPE_PTR, "object", &e->object_id);
+		print_ptr("object", e->object_id);
 	}
 
-	for (i = 0, offset = 0; i < d->num_args; ++i) {
-		assert(offset < sizeof(e->args));
-		print_arg(d->args[i].type, d->args[i].name, &e->args[offset]);
-		offset += d->args[i].size;
+	struct argument_context argctx(e, lcore);
+	for (i = 0; i < d->num_args; ++i) {
+		print_arg(&argctx, &d->args[i]);
 	}
 	printf("\n");
 }
@@ -263,7 +345,7 @@ print_event_json(struct spdk_trace_entry *e, uint64_t tsc_rate,
 {
 	struct spdk_trace_tpoint *d;
 	struct object_stats *stats;
-	size_t i, offset;
+	size_t i;
 
 	d = &g_histories->flags.tpoint[e->tpoint_id];
 	stats = &g_stats[d->object_type];
@@ -303,11 +385,11 @@ print_event_json(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		spdk_json_write_object_end(g_json);
 	}
 	if (d->num_args > 0) {
+		struct argument_context argctx(e, lcore);
+
 		spdk_json_write_named_array_begin(g_json, "args");
-		for (i = 0, offset = 0; i < d->num_args; ++i) {
-			assert(offset < sizeof(e->args));
-			print_arg_json(d->args[i].type, &e->args[offset]);
-			offset += d->args[i].size;
+		for (i = 0; i < d->num_args; ++i) {
+			print_arg_json(&argctx, &d->args[i]);
 		}
 		spdk_json_write_array_end(g_json);
 	}
@@ -382,7 +464,9 @@ populate_events(struct spdk_trace_history *history, int num_entries)
 
 	i = first;
 	while (1) {
-		g_entry_map[entry_key(lcore, e[i].tsc)] = &e[i];
+		if (e[i].tpoint_id != SPDK_TRACE_MAX_TPOINT_ID) {
+			g_entry_map[entry_key(lcore, e[i].tsc)] = &e[i];
+		}
 		if (i == last) {
 			break;
 		}
