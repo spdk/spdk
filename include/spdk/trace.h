@@ -40,6 +40,7 @@
 #define _SPDK_TRACE_H_
 
 #include "spdk/stdinc.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,6 +56,15 @@ struct spdk_trace_entry {
 	uint64_t	object_id;
 	uint8_t		args[40];
 };
+
+struct spdk_trace_entry_buffer {
+	uint64_t	tsc;
+	uint16_t	tpoint_id;
+	uint8_t		data[54];
+};
+
+SPDK_STATIC_ASSERT(sizeof(struct spdk_trace_entry_buffer) == sizeof(struct spdk_trace_entry),
+		   "Invalid size of trace entry buffer");
 
 /* If type changes from a uint8_t, change this value. */
 #define SPDK_TRACE_MAX_OWNER (UCHAR_MAX + 1)

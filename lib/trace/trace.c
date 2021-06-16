@@ -57,11 +57,12 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 {
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
+	struct spdk_trace_entry_buffer *buffer;
 	struct spdk_trace_tpoint *tpoint;
 	struct spdk_trace_argument *argument;
-	const char *strval;
-	unsigned lcore, i, offset;
+	unsigned lcore, i, offset, num_entries, arglen, argoff, curlen;
 	uint64_t intval;
+	void *argval;
 	va_list vl;
 
 	lcore = spdk_env_get_current_core();
@@ -91,31 +92,74 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	next_entry->size = size;
 	next_entry->object_id = object_id;
 
+	num_entries = 1;
+	buffer = (struct spdk_trace_entry_buffer *)next_entry;
+	/* The initial offset needs to be adjusted by the fields present in the first entry
+	 * (poller_id, size, etc.).
+	 */
+	offset = offsetof(struct spdk_trace_entry, args) -
+		 offsetof(struct spdk_trace_entry_buffer, data);
+
 	va_start(vl, num_args);
-	for (i = 0, offset = 0; i < tpoint->num_args; ++i) {
+	for (i = 0; i < tpoint->num_args; ++i) {
 		argument = &tpoint->args[i];
 		switch (argument->type) {
 		case SPDK_TRACE_ARG_TYPE_STR:
-			strval = va_arg(vl, const char *);
-			snprintf(&next_entry->args[offset], argument->size, "%s", strval);
+			argval = va_arg(vl, void *);
+			arglen = strnlen((const char *)argval, argument->size - 1) + 1;
 			break;
 		case SPDK_TRACE_ARG_TYPE_INT:
 		case SPDK_TRACE_ARG_TYPE_PTR:
 			intval = va_arg(vl, uint64_t);
-			memcpy(&next_entry->args[offset], &intval, sizeof(intval));
+			argval = &intval;
+			arglen = sizeof(uint64_t);
 			break;
 		default:
 			assert(0 && "Invalid trace argument type");
 			break;
 		}
 
-		offset += argument->size;
+		/* Copy argument's data. For some argument types (strings) user is allowed to pass a
+		 * value that is either larger or smaller than what's defined in the tracepoint's
+		 * description. If the value is larger, we'll truncate it, while if it's smaller,
+		 * we'll only fill portion of the buffer, without touching the rest. For instance,
+		 * if the definition marks an argument as 40B and user passes 12B string, we'll only
+		 * copy 13B (accounting for the NULL terminator).
+		 */
+		argoff = 0;
+		while (argoff < argument->size) {
+			/* Current buffer is full, we need to acquire another one */
+			if (offset == sizeof(buffer->data)) {
+				buffer = (struct spdk_trace_entry_buffer *) get_trace_entry(
+						 lcore_history,
+						 lcore_history->next_entry + num_entries);
+				buffer->tpoint_id = SPDK_TRACE_MAX_TPOINT_ID;
+				buffer->tsc = tsc;
+				num_entries++;
+				offset = 0;
+			}
+
+			curlen = spdk_min(sizeof(buffer->data) - offset, argument->size - argoff);
+			if (argoff < arglen) {
+				memcpy(&buffer->data[offset], (uint8_t *)argval + argoff,
+				       spdk_min(curlen, arglen - argoff));
+			}
+
+			offset += curlen;
+			argoff += curlen;
+		}
+
+		/* Make sure that truncated strings are NULL-terminated */
+		if (argument->type == SPDK_TRACE_ARG_TYPE_STR) {
+			assert(offset > 0);
+			buffer->data[offset - 1] = '\0';
+		}
 	}
 	va_end(vl);
 
 	/* Ensure all elements of the trace entry are visible to outside trace tools */
 	spdk_smp_wmb();
-	lcore_history->next_entry++;
+	lcore_history->next_entry += num_entries;
 }
 
 int

@@ -281,7 +281,7 @@ static void
 trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 {
 	struct spdk_trace_tpoint *tpoint;
-	size_t i, remaining_size, max_name_length;
+	size_t i, max_name_length;
 
 	assert(opts->tpoint_id != 0);
 	assert(opts->tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
@@ -300,8 +300,6 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 	tpoint->new_object = opts->new_object;
 
 	max_name_length = sizeof(tpoint->args[0].name);
-	remaining_size = sizeof(((struct spdk_trace_entry *)0)->args);
-
 	for (i = 0; i < SPDK_TRACE_MAX_ARGS_COUNT; ++i) {
 		if (!opts->args[i].name || opts->args[i].name[0] == '\0') {
 			break;
@@ -321,9 +319,6 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 			assert(0 && "invalid trace argument type");
 			break;
 		}
-
-		assert(remaining_size >= opts->args[i].size && "tpoint exceeds max size");
-		remaining_size -= opts->args[i].size;
 
 		if (strnlen(opts->args[i].name, max_name_length) == max_name_length) {
 			SPDK_ERRLOG("argument name (%s) is too long\n", opts->args[i].name);
