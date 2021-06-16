@@ -32,6 +32,9 @@ function build_rpms() (
 	}
 
 	build_rpm() {
+		# Separate run to see the final .spec in use
+		GEN_SPEC=yes BUILDDIR=$builddir MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@"
+		# Actual build
 		BUILDDIR=$builddir MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@"
 		install_uninstall_rpms
 	}

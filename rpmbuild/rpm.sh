@@ -65,8 +65,9 @@ get_version() {
 	echo "${version%%-*}"
 }
 
-build_rpm() (
-	local macros=() dir
+build_macros() {
+	local -g macros=()
+	local dir
 
 	macros+=(-D "configure ${configure:-"%{nil}"}")
 	macros+=(-D "make $make")
@@ -113,9 +114,13 @@ build_rpm() (
 		macros+=(-D "build_requirements 1")
 		macros+=(-D "build_requirements_list $build_requirements")
 	fi
+}
 
-	cd "$rootdir"
+gen_spec() {
+	rpmspec "${macros[@]}" -P "$spec"
+}
 
+build_rpm() (
 	fedora_python_sys_path_workaround
 
 	# Despite building in-place, rpmbuild still looks under source dir as defined
@@ -139,4 +144,9 @@ version=${SPDK_VERSION:-$(get_version)}
 rpmbuild_dir=${BUILDDIR:-"$HOME/rpmbuild"}
 spec=$specdir/spdk.spec
 
+build_macros
+if [[ -n $GEN_SPEC ]]; then
+	gen_spec
+	exit 0
+fi
 build_rpm
