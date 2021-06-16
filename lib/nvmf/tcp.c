@@ -946,7 +946,7 @@ nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 	}
 
 	/* Add addtional 2 members, which will be used for mgmt_pdu and pdu_in_progress owned by the tqpair */
-	tqpair->pdus = spdk_dma_malloc((tqpair->resource_count + 2) * sizeof(*tqpair->pdus), 0x1000, NULL);
+	tqpair->pdus = spdk_dma_zmalloc((tqpair->resource_count + 2) * sizeof(*tqpair->pdus), 0x1000, NULL);
 	if (!tqpair->pdus) {
 		SPDK_ERRLOG("Unable to allocate pdu pool on tqpair =%p.\n", tqpair);
 		return -1;
