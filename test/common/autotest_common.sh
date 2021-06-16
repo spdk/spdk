@@ -775,6 +775,8 @@ function waitforbdev() {
 	local bdev_name=$1
 	local i
 
+	$rpc_py bdev_wait_for_examine
+
 	for ((i = 1; i <= 20; i++)); do
 		if $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
 			return 0
