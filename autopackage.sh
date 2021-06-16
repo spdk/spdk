@@ -21,7 +21,7 @@ function build_rpms() (
 	unset -v LD_LIBRARY_PATH
 
 	install_uninstall_rpms() {
-		rpms=("$builddir/rpm/x86_64/"spdk{,-devel,{,-dpdk}-libs}-$version-1.x86_64.rpm)
+		rpms=("$builddir/rpm/x86_64/"*.rpm)
 
 		sudo rpm -i "${rpms[@]}"
 		rpms=("${rpms[@]##*/}") rpms=("${rpms[@]%.rpm}")
@@ -36,9 +36,16 @@ function build_rpms() (
 		install_uninstall_rpms
 	}
 
+	build_rpm_with_rpmed_dpdk() {
+		sudo dnf install -y dpdk-devel
+		build_rpm --with-shared --with-dpdk
+	}
+
 	version="test_shared"
 	builddir=$SPDK_TEST_STORAGE/test-rpm
+
 	run_test "build_shared_rpm" build_rpm --with-shared
+	run_test "build_shared_rpm_with_rpmed_dpdk" build_rpm_with_rpmed_dpdk
 
 	if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then
 		version="test_shared_native_dpdk"
