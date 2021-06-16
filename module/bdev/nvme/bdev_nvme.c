@@ -660,6 +660,19 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 	return 0;
 }
 
+int
+bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, void *cb_arg)
+{
+	int rc;
+
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	if (rc == 0) {
+		nvme_ctrlr->reset_cb_fn = cb_fn;
+		nvme_ctrlr->reset_cb_arg = cb_arg;
+	}
+	return rc;
+}
+
 static void
 bdev_nvme_reset_io_complete(void *cb_arg, int rc)
 {

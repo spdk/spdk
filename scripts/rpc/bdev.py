@@ -611,6 +611,18 @@ def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
     return client.call('bdev_nvme_detach_controller', params)
 
 
+def bdev_nvme_reset_controller(client, name):
+    """Reset NVMe controller.
+
+    Args:
+        name: controller name
+    """
+
+    params = {'name': name}
+
+    return client.call('bdev_nvme_reset_controller', params)
+
+
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 

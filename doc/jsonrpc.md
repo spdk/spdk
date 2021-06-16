@@ -3006,6 +3006,43 @@ Example response:
 }
 ~~~
 
+## bdev_nvme_reset_controller {#rpc_bdev_nvme_reset_controller}
+
+Reset NVMe controller.
+
+Returns true if the controller reset was successful, false otherwise.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | NVMe controller name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_nvme_reset_controller",
+  "params": {
+    "name": "Nvme0"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.

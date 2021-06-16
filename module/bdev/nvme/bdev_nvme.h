@@ -92,4 +92,16 @@ struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
  */
 int bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid);
 
+/**
+ * Reset NVMe controller.
+ *
+ * \param nvme_ctrlr The specified NVMe controller to reset
+ * \param cb_fn Function to be called back after reset completes
+ * \param cb_arg Argument for callback function
+ * \return zero on success. Negated errno on the following error conditions:
+ * -EBUSY: controller is being destroyed.
+ * -EAGAIN: controller is already being reset.
+ */
+int bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, void *cb_arg);
+
 #endif /* SPDK_BDEV_NVME_H */

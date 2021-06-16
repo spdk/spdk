@@ -589,6 +589,14 @@ if __name__ == "__main__":
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
     p.set_defaults(func=bdev_nvme_detach_controller)
 
+    def bdev_nvme_reset_controller(args):
+        rpc.bdev.bdev_nvme_reset_controller(args.client, name=args.name)
+
+    p = subparsers.add_parser('bdev_nvme_reset_controller',
+                              help='Reset an NVMe controller')
+    p.add_argument('name', help="Name of the NVMe controller")
+    p.set_defaults(func=bdev_nvme_reset_controller)
+
     def bdev_nvme_cuse_register(args):
         rpc.bdev.bdev_nvme_cuse_register(args.client,
                                          name=args.name)

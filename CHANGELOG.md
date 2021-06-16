@@ -92,6 +92,8 @@ The default value is `false`.
 New APIs, `spdk_nvme_ctrlr_reset_async` and `spdk_nvme_ctrlr_reset_poll_async`, have been added to
 reset a controller asynchronously.
 
+New RPC `bdev_nvme_reset_controller` was added, to reset an NVMe controller.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create

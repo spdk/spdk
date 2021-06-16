@@ -1089,3 +1089,59 @@ rpc_bdev_nvme_get_transport_statistics(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_nvme_get_transport_statistics", rpc_bdev_nvme_get_transport_statistics,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_nvme_reset_controller_req {
+	char *name;
+};
+
+static void
+free_rpc_bdev_nvme_reset_controller_req(struct rpc_bdev_nvme_reset_controller_req *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_reset_controller_req_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_nvme_reset_controller_req, name), spdk_json_decode_string},
+};
+
+static void
+_rpc_bdev_nvme_reset_controller_cb(void *cb_arg, int rc)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	spdk_jsonrpc_send_bool_response(request, rc == 0);
+}
+
+static void
+rpc_bdev_nvme_reset_controller(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct rpc_bdev_nvme_reset_controller_req req = {NULL};
+	struct nvme_ctrlr *nvme_ctrlr;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_reset_controller_req_decoders,
+				    SPDK_COUNTOF(rpc_bdev_nvme_reset_controller_req_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(EINVAL));
+		goto cleanup;
+	}
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name(req.name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed at device lookup\n");
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	rc = bdev_nvme_reset_rpc(nvme_ctrlr, _rpc_bdev_nvme_reset_controller_cb, request);
+	if (rc != 0) {
+		SPDK_NOTICELOG("Failed at bdev_nvme_reset_rpc\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
+	}
+
+cleanup:
+	free_rpc_bdev_nvme_reset_controller_req(&req);
+}
+SPDK_RPC_REGISTER("bdev_nvme_reset_controller", rpc_bdev_nvme_reset_controller, SPDK_RPC_RUNTIME)
