@@ -67,7 +67,7 @@ get_version() {
 
 build_macros() {
 	local -g macros=()
-	local dir
+	local dir _dir
 
 	macros+=(-D "configure ${configure:-"%{nil}"}")
 	macros+=(-D "make $make")
@@ -76,8 +76,12 @@ build_macros() {
 
 	# Adjust dir macros to update the final location of the RPMS
 	for dir in build buildroot rpm source spec srcrpm; do
-		mkdir -p "$rpmbuild_dir/$dir"
-		macros+=(-D "_${dir}dir $rpmbuild_dir/$dir")
+		_dir=$(rpm --eval "%{_${dir}dir}")
+		if [[ -z $USE_DEFAULT_DIRS ]]; then
+			macros+=(-D "_${dir}dir $rpmbuild_dir/$dir")
+			_dir=$rpmbuild_dir/$dir
+		fi
+		local -g "_${dir}dir=$_dir"
 	done
 
 	if get_config with-shared; then
@@ -123,10 +127,18 @@ gen_spec() {
 build_rpm() (
 	fedora_python_sys_path_workaround
 
-	# Despite building in-place, rpmbuild still looks under source dir as defined
+	mkdir -p \
+		"$_builddir" \
+		"$_buildrootdir" \
+		"$_rpmdir" \
+		"$_sourcedir" \
+		"$_specdir" \
+		"$_srcrpmdir"
+
+	# Despite building in-place, rpmbuild still looks under %{_sourcedir} as defined
 	# in Source:. Create a dummy file to fulfil its needs and to keep Source in
 	# the .spec.
-	: > "$rpmbuild_dir/source/spdk-$version.tar.gz"
+	: > "$_sourcedir/spdk-$version.tar.gz"
 
 	printf '* Starting rpmbuild...\n'
 	rpmbuild --clean --nodebuginfo "${macros[@]}" --build-in-place -ba "$spec"
