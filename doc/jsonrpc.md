@@ -7866,7 +7866,7 @@ Example request:
       "Malloc2",
       "Malloc3"
     ],
-    "strip_size": 4096
+    "strip_size_kb": 4
   }
 }
 ~~~

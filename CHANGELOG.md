@@ -72,6 +72,9 @@ to create a rbd bdev with  an already registered Rados Cluster Object.
 New RPC `bdev_rbd_get_clusters_info` was added, it allows to get the info of the registered
 Rados Cluster names.
 
+Revised a parameter `--stripe-size_kb` to `--stripe-size-kb` of `bdev_raid_create` method
+provided in `scripts/rpc.py` for consistency.
+
 ### bdev
 
 Removed ZCOPY emulation: The bdev module can be checked to see if it supports ZCOPY
