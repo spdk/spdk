@@ -715,6 +715,11 @@ nvme_ctrlr_init_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate ANA log page buffer\n");
 		return -ENXIO;
 	}
+	ctrlr->copied_ana_desc = calloc(1, ana_log_page_size);
+	if (ctrlr->copied_ana_desc == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate a buffer to parse ANA descriptor\n");
+		return -ENOMEM;
+	}
 	ctrlr->ana_log_page_size = ana_log_page_size;
 
 	ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
@@ -750,23 +755,32 @@ int
 nvme_ctrlr_parse_ana_log_page(struct spdk_nvme_ctrlr *ctrlr,
 			      spdk_nvme_parse_ana_log_page_cb cb_fn, void *cb_arg)
 {
-	struct spdk_nvme_ana_group_descriptor *desc;
-	uint32_t i;
+	struct spdk_nvme_ana_group_descriptor *copied_desc;
+	uint8_t *orig_desc;
+	uint32_t i, desc_size, copy_len;
 	int rc = 0;
 
 	if (ctrlr->ana_log_page == NULL) {
 		return -EINVAL;
 	}
 
-	desc = (void *)((uint8_t *)ctrlr->ana_log_page + sizeof(struct spdk_nvme_ana_page));
+	copied_desc = ctrlr->copied_ana_desc;
+
+	orig_desc = (uint8_t *)ctrlr->ana_log_page + sizeof(struct spdk_nvme_ana_page);
+	copy_len = ctrlr->ana_log_page_size - sizeof(struct spdk_nvme_ana_page);
 
 	for (i = 0; i < ctrlr->ana_log_page->num_ana_group_desc; i++) {
-		rc = cb_fn(desc, cb_arg);
+		memcpy(copied_desc, orig_desc, copy_len);
+
+		rc = cb_fn(copied_desc, cb_arg);
 		if (rc != 0) {
 			break;
 		}
-		desc = (void *)((uint8_t *)desc + sizeof(struct spdk_nvme_ana_group_descriptor) +
-				desc->num_of_nsid * sizeof(uint32_t));
+
+		desc_size = sizeof(struct spdk_nvme_ana_group_descriptor) +
+			    copied_desc->num_of_nsid * sizeof(uint32_t);
+		orig_desc += desc_size;
+		copy_len -= desc_size;
 	}
 
 	return rc;
@@ -3574,7 +3588,9 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
 	spdk_free(ctrlr->ana_log_page);
+	free(ctrlr->copied_ana_desc);
 	ctrlr->ana_log_page = NULL;
+	ctrlr->copied_ana_desc = NULL;
 	ctrlr->ana_log_page_size = 0;
 
 	nvme_transport_ctrlr_destruct(ctrlr);

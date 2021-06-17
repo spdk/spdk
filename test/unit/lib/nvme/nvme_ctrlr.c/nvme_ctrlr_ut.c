@@ -2884,6 +2884,83 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 		  sizeof(struct spdk_nvme_ana_group_descriptor) * 1 + sizeof(uint32_t) * 1);
 	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] == true);
 	spdk_free(ctrlr.ana_log_page);
+	free(ctrlr.copied_ana_desc);
+}
+
+#define UT_ANA_DESC_SIZE	(sizeof(struct spdk_nvme_ana_group_descriptor) +	\
+				 sizeof(uint32_t))
+static void
+test_nvme_ctrlr_parse_ana_log_page(void)
+{
+	int rc;
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns ns[3] = {};
+	struct spdk_nvme_ana_page ana_hdr;
+	char _ana_desc[UT_ANA_DESC_SIZE];
+	struct spdk_nvme_ana_group_descriptor *ana_desc;
+	uint32_t offset;
+
+	ctrlr.ns = ns;
+	ctrlr.cdata.nn = 3;
+	ctrlr.cdata.nanagrpid = 3;
+	ctrlr.num_ns = 3;
+
+	rc = nvme_ctrlr_init_ana_log_page(&ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.ana_log_page != NULL);
+	CU_ASSERT(ctrlr.copied_ana_desc != NULL);
+
+	/*
+	 * Create ANA log page data - There are three ANA groups.
+	 * Each ANA group has a namespace and has a different ANA state.
+	 */
+	memset(&ana_hdr, 0, sizeof(ana_hdr));
+	ana_hdr.num_ana_group_desc = 3;
+
+	SPDK_CU_ASSERT_FATAL(sizeof(ana_hdr) <= ctrlr.ana_log_page_size);
+	memcpy((char *)ctrlr.ana_log_page, (char *)&ana_hdr, sizeof(ana_hdr));
+	offset = sizeof(ana_hdr);
+
+	ana_desc = (struct spdk_nvme_ana_group_descriptor *)_ana_desc;
+	memset(ana_desc, 0, UT_ANA_DESC_SIZE);
+	ana_desc->num_of_nsid = 1;
+
+	ana_desc->ana_group_id = 1;
+	ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	ana_desc->nsid[0] = 3;
+
+	SPDK_CU_ASSERT_FATAL(offset + UT_ANA_DESC_SIZE <= ctrlr.ana_log_page_size);
+	memcpy((char *)ctrlr.ana_log_page + offset, (char *)ana_desc, UT_ANA_DESC_SIZE);
+	offset += UT_ANA_DESC_SIZE;
+
+	ana_desc->ana_group_id = 2;
+	ana_desc->ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	ana_desc->nsid[0] = 2;
+
+	SPDK_CU_ASSERT_FATAL(offset + UT_ANA_DESC_SIZE <= ctrlr.ana_log_page_size);
+	memcpy((char *)ctrlr.ana_log_page + offset, (char *)ana_desc, UT_ANA_DESC_SIZE);
+	offset += UT_ANA_DESC_SIZE;
+
+	ana_desc->ana_group_id = 3;
+	ana_desc->ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	ana_desc->nsid[0] = 1;
+
+	SPDK_CU_ASSERT_FATAL(offset + UT_ANA_DESC_SIZE <= ctrlr.ana_log_page_size);
+	memcpy((char *)ctrlr.ana_log_page + offset, (char *)ana_desc, UT_ANA_DESC_SIZE);
+
+	/* Parse the created ANA log page data, and update ANA states. */
+	rc = nvme_ctrlr_parse_ana_log_page(&ctrlr, nvme_ctrlr_update_ns_ana_states,
+					   &ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ns[0].ana_group_id == 3);
+	CU_ASSERT(ns[0].ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
+	CU_ASSERT(ns[1].ana_group_id == 2);
+	CU_ASSERT(ns[1].ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
+	CU_ASSERT(ns[2].ana_group_id == 1);
+	CU_ASSERT(ns[2].ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
+
+	spdk_free(ctrlr.ana_log_page);
+	free(ctrlr.copied_ana_desc);
 }
 
 int main(int argc, char **argv)
@@ -2936,6 +3013,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ns_attr_changed);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_namespaces_iocs_specific_next);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_supported_log_pages);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_parse_ana_log_page);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

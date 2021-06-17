@@ -879,8 +879,9 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_io_msg_producer) io_producers;
 
-	struct spdk_nvme_ana_page	*ana_log_page;
-	uint32_t			ana_log_page_size;
+	struct spdk_nvme_ana_page		*ana_log_page;
+	struct spdk_nvme_ana_group_descriptor	*copied_ana_desc;
+	uint32_t				ana_log_page_size;
 
 	/* scratchpad pointer that can be used to send data between two NVME_CTRLR_STATEs */
 	void				*tmp_ptr;
