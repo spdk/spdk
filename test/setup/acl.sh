@@ -28,9 +28,7 @@ verify() {
 }
 
 denied() {
-	# Include OCSSD devices in the PCI_BLOCKED to make sure we don't unbind
-	# them from the pci-stub (see autotest.sh for details).
-	PCI_BLOCKED="$OCSSD_PCI_DEVICES ${devs[0]}" setup output config \
+	PCI_BLOCKED="${devs[0]}" setup output config \
 		| grep "Skipping denied controller at ${devs[0]}"
 	verify "${devs[0]}"
 	setup reset

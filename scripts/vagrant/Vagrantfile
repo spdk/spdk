@@ -117,7 +117,7 @@ def get_nvme_disk(disk, index)
     nvme_disk = '/var/lib/libvirt/images/nvme_disk.img'
   end
 
-  unless File.exist? (nvme_disk)
+  unless nvme_disk == "none" || File.exist?(nvme_disk)
     puts 'If run with libvirt provider please execute create_nvme_img.sh'
   end
 
@@ -131,37 +131,65 @@ def setup_nvme_disk(libvirt, disk, index)
   nvme_namespaces=(ENV['NVME_DISKS_NAMESPACES'] || "").split(',')
   nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
   nvme_pmrs=(ENV['NVME_PMR'] || "").split(',')
+  nvme_zns=(ENV['NVME_ZNS'] || "").split(',')
 
-  libvirt.qemuargs :value => "-drive"
-  libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
-  libvirt.qemuargs :value => "-device"
-  nvme_drive = "nvme,drive=#{nvme_disk_id},serial=1234#{index}"
-  if !nvme_namespaces[index].nil? && nvme_namespaces[index] != "1"
-    nvme_drive << ",namespaces=#{nvme_namespaces[index]}"
-  end
-
+  namespace_disks = []
   pmr_cmdline = ""
+  nvme_controller = ""
 
-  if !nvme_cmbs[index].nil? && nvme_cmbs[index] == "true"
-    # Fix the size of the buffer to 128M
-    nvme_drive << ",cmb_size_mb=128"
-  end
-  if !nvme_pmrs[index].nil?
-    pmr_path, pmr_size = nvme_pmrs[index].split(':')
-    if !File.exist?(pmr_path)
-      abort("#{pmr_path} does not exist, aborting")
+  # Define controller
+  nvme_controller = "nvme,id=#{nvme_disk_id},serial=1234#{index}"
+
+  # Gather all drives - each namespace requires separate drive
+  if nvme_namespaces[index].nil?
+    namespace_disks = namespace_disks + nvme_disk.split()
+  elsif !nvme_namespaces[index].nil? && !nvme_namespaces[index].match(/^[0-9]+$/)
+    namespace_disks = namespace_disks + nvme_disk.split() + nvme_namespaces[index].split(':')
+  elsif !nvme_namespaces[index].nil? && nvme_namespaces[index].match(/^[0-9]+$/)
+    # Compatibility with spdk-5.0.0 fork
+    libvirt.qemuargs :value => "-drive"
+    libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
+    if nvme_namespaces[index] == "1"
+      nvme_controller <<",drive=#{nvme_disk_id}"
+    else
+      nvme_controller <<",namespaces=#{nvme_namespaces[index]},drive=#{nvme_disk_id}"
     end
+  end
+
+  if !nvme_cmbs[index].nil? && nvme_cmbs[index] != ""
+    # Fix the size of the buffer to 128M
+    nvme_controller << ",cmb_size_mb=128"
+  end
+
+  if !nvme_pmrs[index].nil? && nvme_pmrs[index] != ""
+    pmr_path, pmr_size = nvme_pmrs[index].split(':')
     if pmr_size.nil?
       pmr_size = "16M"
     end
-    nvme_drive << ",pmrdev=pmr#{index}"
+    nvme_controller << ",pmrdev=pmr#{index}"
     pmr_cmdline = "memory-backend-file,id=pmr#{index},share=on,mem-path=#{pmr_path},size=#{pmr_size}"
   end
-  libvirt.qemuargs :value => nvme_drive
+
+  libvirt.qemuargs :value => "-device"
+  libvirt.qemuargs :value => nvme_controller
+
   if pmr_cmdline != ""
     libvirt.qemuargs :value => "-object"
     libvirt.qemuargs :value => pmr_cmdline
   end
+
+  # Define all namespaces
+  namespace_disks.each_with_index { |disk, nsid|
+    if disk == "none"
+      next
+    end
+    zoned = nvme_zns[index].nil? ? "false" : "true"
+    libvirt.qemuargs :value => "-drive"
+    libvirt.qemuargs :value => "format=raw,file=#{disk},if=none,id=#{nvme_disk_id}-drive#{nsid}"
+    libvirt.qemuargs :value => "-device"
+    libvirt.qemuargs :value => "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096"
+  }
+
 end
 
 def setup_ssh(config)
@@ -251,9 +279,7 @@ def setup_libvirt(config, vmcpu, vmram, distro)
 
     # Loop to create all emulated disks set
     emulated_nvme_types.each_with_index { |disk, index|
-      if disk == "nvme"
-        setup_nvme_disk(libvirt, disk, index)
-      end
+      setup_nvme_disk(libvirt, disk, index)
     }
 
     # Add network interface for openstack tests

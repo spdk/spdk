@@ -2,7 +2,6 @@
 SYSTEM=$(uname -s)
 size="1024M"
 nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
-type="nvme"
 
 function usage() {
 	echo "Usage: ${0##*/} [-s <disk_size>] [-n <backing file name>]"
@@ -10,7 +9,6 @@ function usage() {
 	echo "                                    for OCSSD default: 9G"
 	echo "-n <backing file name>        backing file path with name"
 	echo "           default: /var/lib/libvirt/images/nvme_disk.img"
-	echo "-t <type>                  default: nvme available: ocssd"
 }
 
 while getopts "s:n:t:h-:" opt; do
@@ -25,9 +23,6 @@ while getopts "s:n:t:h-:" opt; do
 			;;
 		n)
 			nvme_disk=$OPTARG
-			;;
-		t)
-			type=$OPTARG
 			;;
 		h)
 			usage
@@ -47,22 +42,7 @@ if [ "${SYSTEM}" != "Linux" ]; then
 fi
 
 WHICH_OS=$(lsb_release -i | awk '{print $3}')
-case $type in
-	"nvme")
-		qemu-img create -f raw "$nvme_disk" $size
-		;;
-	"ocssd")
-		if [ $size == "1024M" ]; then
-			size="9G"
-		fi
-		fallocate -l $size "$nvme_disk"
-		touch "${nvme_disk}_ocssd_md"
-		;;
-	*)
-		echo "We support only nvme and ocssd disks types"
-		exit 1
-		;;
-esac
+qemu-img create -f raw "$nvme_disk" $size
 
 case $WHICH_OS in
 	"Fedora")
@@ -83,6 +63,3 @@ esac
 
 chmod 777 "$nvme_disk"
 chown $qemu_user_group "$nvme_disk"
-if [ "$type" == "ocssd" ]; then
-	chown $qemu_user_group "${nvme_disk}_ocssd_md"
-fi
