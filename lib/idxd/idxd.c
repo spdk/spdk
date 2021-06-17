@@ -646,7 +646,7 @@ spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
 
 	if (!TAILQ_EMPTY(&chan->batch_pool)) {
 		batch = TAILQ_FIRST(&chan->batch_pool);
-		batch->index = batch->remaining = 0;
+		batch->index = 0;
 		TAILQ_REMOVE(&chan->batch_pool, batch, link);
 		TAILQ_INSERT_TAIL(&chan->batches, batch, link);
 	} else {
@@ -677,7 +677,6 @@ static void
 _free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 {
 	SPDK_DEBUGLOG(idxd, "Free batch %p\n", batch);
-	assert(batch->remaining == 0);
 	TAILQ_REMOVE(&chan->batches, batch, link);
 	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
 }
@@ -690,7 +689,7 @@ spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		return -EINVAL;
 	}
 
-	if (batch->remaining > 0) {
+	if (batch->index > 0) {
 		SPDK_ERRLOG("Cannot cancel batch, already submitted to HW.\n");
 		return -EINVAL;
 	}
@@ -723,40 +722,42 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		}
 	}
 
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(batch->user_desc, &desc_addr, batch->remaining * sizeof(struct idxd_hw_desc));
-	if (rc) {
-		return -EINVAL;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_BATCH;
-	desc->desc_list_addr = desc_addr;
-	desc->desc_count = batch->remaining = batch->index;
-	comp->batch = batch;
-	assert(batch->index <= DESC_PER_BATCH);
-
 	/* Add the batch elements completion contexts to the outstanding list to be polled. */
 	for (i = 0 ; i < batch->index; i++) {
 		TAILQ_INSERT_TAIL(&chan->comp_ctx_oustanding, (struct idxd_comp *)&batch->user_completions[i],
 				  link);
 	}
 
-	/* Add one for the batch desc itself, we use this to determine when
-	 * to free the batch.
-	 */
-	batch->remaining++;
+	/* Common prep. */
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
+	if (rc) {
+		goto error;
+	}
+
+	rc = _vtophys(batch->user_desc, &desc_addr, batch->index * sizeof(struct idxd_hw_desc));
+	if (rc) {
+		rc = -EINVAL;
+		goto error;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_BATCH;
+	desc->desc_list_addr = desc_addr;
+	desc->desc_count = batch->index;
+	comp->batch = batch;
+	assert(batch->index <= DESC_PER_BATCH);
 
 	/* Submit operation. */
 	_submit_to_hw(chan, desc);
 	SPDK_DEBUGLOG(idxd, "Submitted batch %p\n", batch);
 
 	return 0;
+error:
+	for (i = 0 ; i < batch->index; i++) {
+		comp = TAILQ_LAST(&chan->comp_ctx_oustanding, comp_head);
+		TAILQ_REMOVE(&chan->comp_ctx_oustanding, comp, link);
+	}
+	return rc;
 }
 
 static int
@@ -1100,11 +1101,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				spdk_bit_array_clear(chan->ring_slots, comp_ctx->index);
 			}
 
-			if (comp_ctx->batch) {
-				assert(comp_ctx->batch->remaining > 0);
-				if (--comp_ctx->batch->remaining == 0) {
-					_free_batch(comp_ctx->batch, chan);
-				}
+			if (comp_ctx->desc->opcode == IDXD_OPCODE_BATCH) {
+				_free_batch(comp_ctx->batch, chan);
 			}
 		} else {
 			/*

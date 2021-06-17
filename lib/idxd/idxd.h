@@ -84,7 +84,6 @@ static inline void movdir64b(void *dst, const void *src)
 struct idxd_batch {
 	struct idxd_hw_desc		*user_desc;
 	struct idxd_comp		*user_completions;
-	uint32_t			remaining;
 	uint8_t				index;
 	TAILQ_ENTRY(idxd_batch)		link;
 };
@@ -99,35 +98,35 @@ struct device_config {
 struct idxd_comp ;
 
 struct spdk_idxd_io_channel {
-	struct spdk_idxd_device		*idxd;
+	struct spdk_idxd_device			*idxd;
 	/* The portal is the address that we write descriptors to for submission. */
-	void				*portal;
-	uint32_t			portal_offset;
-	uint16_t			ring_size;
+	void					*portal;
+	uint32_t				portal_offset;
+	uint16_t				ring_size;
 
 	/*
 	 * Descriptors and completions share the same index. User descriptors
 	 * (those included in a batch) are managed independently from data descriptors
 	 * and are located in the batch structure.
 	 */
-	struct idxd_hw_desc		*desc;
-	struct idxd_comp		*completions;
+	struct idxd_hw_desc			*desc;
+	struct idxd_comp			*completions;
 
 	/* Current list of oustanding completion addresses to poll. */
-	TAILQ_HEAD(, idxd_comp)		comp_ctx_oustanding;
+	TAILQ_HEAD(comp_head, idxd_comp)	comp_ctx_oustanding;
 
 	/*
 	 * We use one bit array to track ring slots for both
 	 * desc and completions.
 	 *
 	 */
-	struct spdk_bit_array		*ring_slots;
+	struct spdk_bit_array			*ring_slots;
 
 	/* Lists of batches, free and in use. */
-	TAILQ_HEAD(, idxd_batch)	batch_pool;
-	TAILQ_HEAD(, idxd_batch)	batches;
+	TAILQ_HEAD(, idxd_batch)		batch_pool;
+	TAILQ_HEAD(, idxd_batch)		batches;
 
-	void				*batch_base;
+	void					*batch_base;
 };
 
 struct pci_dev_id {
