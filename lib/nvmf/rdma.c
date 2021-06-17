@@ -3212,6 +3212,14 @@ nvmf_rdma_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_sub
 	if (transport->opts.dif_insert_or_strip) {
 		cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
 	}
+
+	if (cdata->nvmf_specific.ioccsz > ((sizeof(struct spdk_nvme_cmd) + 0x1000) / 16)) {
+		SPDK_WARNLOG("RDMA is configured to support up to 16 SGL entries while in capsule"
+			     " data is greater than 4KiB.\n");
+		SPDK_WARNLOG("When used in conjunction with the NVMe-oF initiator from the Linux "
+			     "kernel between versions 5.4 and 5.12 data corruption may occur for "
+			     "writes that are not a multiple of 4KiB in size.\n");
+	}
 }
 
 static void
