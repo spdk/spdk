@@ -17,7 +17,7 @@ to provide faster lookup.
 
 ### dpdk
 
-Updated DPDK submodule to DPDK 21.02.
+Updated DPDK submodule to DPDK 21.05.
 
 ### idxd
 
