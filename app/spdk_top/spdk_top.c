@@ -53,6 +53,7 @@
 #define MAX_POLLER_NAME_LEN 36
 #define MAX_POLLER_COUNT_STR_LEN 16
 #define MAX_POLLER_TYPE_STR_LEN 8
+#define MAX_STATUS_IND_STR_LEN 8
 #define MAX_POLLER_IND_STR_LEN 28
 #define MAX_CORE_MASK_STR_LEN 16
 #define MAX_CORE_STR_LEN 6
@@ -93,6 +94,7 @@ enum column_threads_type {
 	COL_THREADS_IDLE_TIME,
 	COL_THREADS_BUSY_TIME,
 	COL_THREADS_CPU_USAGE,
+	COL_THREADS_STATUS,
 	COL_THREADS_NONE = 255,
 };
 
@@ -115,6 +117,7 @@ enum column_cores_type {
 	COL_CORES_CORE_FREQ,
 	COL_CORES_INTR,
 	COL_CORES_CPU_USAGE,
+	COL_CORES_STATUS,
 	COL_CORES_NONE = 255,
 };
 
@@ -168,6 +171,7 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = "Idle [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = "Busy [us]", .max_data_string = MAX_TIME_STR_LEN},
 		{.name = "CPU %", .max_data_string = MAX_CPU_STR_LEN},
+		{.name = "Status", .max_data_string = MAX_STATUS_IND_STR_LEN},
 		{.name = (char *)NULL}
 	},
 	{	{.name = "Poller name", .max_data_string = MAX_POLLER_NAME_LEN},
@@ -186,6 +190,7 @@ static struct col_desc g_col_desc[NUMBER_OF_TABS][TABS_COL_COUNT] = {
 		{.name = "Frequency [MHz]", .max_data_string = MAX_CORE_FREQ_STR_LEN},
 		{.name = "Intr", .max_data_string = MAX_INTR_LEN},
 		{.name = "CPU %", .max_data_string = MAX_CPU_STR_LEN},
+		{.name = "Status", .max_data_string = MAX_STATUS_IND_STR_LEN},
 		{.name = (char *)NULL}
 	}
 };
@@ -1305,10 +1310,10 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 {
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint16_t col = TABS_DATA_START_COL;
-	int core_num;
+	int core_num, color_attr = COLOR_PAIR(6);
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN],
-	     cpu_usage[MAX_CPU_STR_LEN];
+	     cpu_usage[MAX_CPU_STR_LEN], *status_str;
 
 	if (!col_desc[COL_THREADS_NAME].disabled) {
 		print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
@@ -1385,6 +1390,29 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 
 		print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 			      col_desc[COL_THREADS_CPU_USAGE].max_data_string, ALIGN_RIGHT, cpu_usage);
+		col += col_desc[COL_THREADS_CPU_USAGE].max_data_string + 2;
+	}
+
+	if (!col_desc[COL_THREADS_STATUS].disabled) {
+		if (g_threads_info[current_row].busy > g_threads_info[current_row].idle) {
+			if (item_index != g_selected_row) {
+				color_attr = COLOR_PAIR(6);
+			} else {
+				color_attr = COLOR_PAIR(8);
+			}
+			status_str = "Busy";
+		} else {
+			if (item_index != g_selected_row) {
+				color_attr = COLOR_PAIR(7);
+			} else {
+				color_attr = COLOR_PAIR(9);
+			}
+			status_str = "Idle";
+		}
+		wattron(g_tabs[THREADS_TAB], color_attr);
+		print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
+			      col_desc[COL_THREADS_STATUS].max_data_string, ALIGN_RIGHT, status_str);
+		wattroff(g_tabs[THREADS_TAB], color_attr);
 	}
 }
 
@@ -1571,10 +1599,11 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 {
 	struct col_desc *col_desc = g_col_desc[CORES_TAB];
 	uint16_t col = 1;
+	int color_attr = COLOR_PAIR(6);
 	char core[MAX_CORE_STR_LEN], threads_number[MAX_THREAD_COUNT_STR_LEN],  cpu_usage[MAX_CPU_STR_LEN],
 	     pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_freq[MAX_CORE_FREQ_STR_LEN],
-	     in_interrupt[MAX_INTR_LEN];
+	     in_interrupt[MAX_INTR_LEN], *status_str;
 
 	snprintf(threads_number, MAX_THREAD_COUNT_STR_LEN, "%ld",
 		 g_cores_info[current_row].threads.threads_count);
@@ -1650,6 +1679,29 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 				  cpu_usage);
 		print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, col,
 			      col_desc[COL_CORES_CPU_USAGE].max_data_string, ALIGN_RIGHT, cpu_usage);
+		col += col_desc[COL_CORES_CPU_USAGE].max_data_string + 1;
+	}
+
+	if (!col_desc[COL_CORES_STATUS].disabled) {
+		if (g_cores_info[current_row].busy > g_cores_info[current_row].idle) {
+			if (item_index != g_selected_row) {
+				color_attr = COLOR_PAIR(6);
+			} else {
+				color_attr = COLOR_PAIR(8);
+			}
+			status_str = "Busy";
+		} else {
+			if (item_index != g_selected_row) {
+				color_attr = COLOR_PAIR(7);
+			} else {
+				color_attr = COLOR_PAIR(9);
+			}
+			status_str = "Idle";
+		}
+		wattron(g_tabs[CORES_TAB], color_attr);
+		print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, col,
+			      col_desc[COL_CORES_STATUS].max_data_string, ALIGN_RIGHT, status_str);
+		wattroff(g_tabs[CORES_TAB], color_attr);
 	}
 }
 
