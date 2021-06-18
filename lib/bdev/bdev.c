@@ -6783,7 +6783,7 @@ bdev_lock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 static void
 bdev_lock_lba_range_ctx(struct spdk_bdev *bdev, struct locked_lba_range_ctx *ctx)
 {
-	assert(spdk_get_thread() == ctx->range.owner_ch->channel->thread);
+	assert(spdk_get_thread() == spdk_io_channel_get_thread(ctx->range.owner_ch->channel));
 
 	/* We will add a copy of this range to each channel now. */
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_lock_lba_range_get_channel, ctx,
@@ -6874,7 +6874,7 @@ bdev_unlock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
 			TAILQ_REMOVE(&bdev->internal.pending_locked_ranges, range, tailq);
 			pending_ctx = SPDK_CONTAINEROF(range, struct locked_lba_range_ctx, range);
 			TAILQ_INSERT_TAIL(&bdev->internal.locked_ranges, range, tailq);
-			spdk_thread_send_msg(pending_ctx->range.owner_ch->channel->thread,
+			spdk_thread_send_msg(spdk_io_channel_get_thread(pending_ctx->range.owner_ch->channel),
 					     bdev_lock_lba_range_ctx_msg, pending_ctx);
 		}
 	}
