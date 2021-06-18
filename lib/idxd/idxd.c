@@ -215,7 +215,7 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 		if (batch->user_desc == NULL) {
 			SPDK_ERRLOG("Failed to allocate batch descriptor memory\n");
 			rc = -ENOMEM;
-			goto err_user_desc;
+			goto err_user_desc_or_comp;
 		}
 
 		batch->user_completions = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_comp),
@@ -224,7 +224,7 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 		if (batch->user_completions == NULL) {
 			SPDK_ERRLOG("Failed to allocate user completion memory\n");
 			rc = -ENOMEM;
-			goto err_user_comp;
+			goto err_user_desc_or_comp;
 		}
 	}
 
@@ -232,16 +232,18 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 
 	return 0;
 
-err_user_comp:
+err_user_desc_or_comp:
 	TAILQ_FOREACH(batch, &chan->batch_pool, link) {
 		spdk_free(batch->user_desc);
+		batch->user_desc = NULL;
+		spdk_free(batch->user_completions);
+		batch->user_completions = NULL;
 	}
-err_user_desc:
-	TAILQ_FOREACH(batch, &chan->batch_pool, link) {
-		spdk_free(chan->completions);
-	}
+	spdk_free(chan->completions);
+	chan->completions = NULL;
 err_comp:
 	spdk_free(chan->desc);
+	chan->desc = NULL;
 err_desc:
 	spdk_bit_array_free(&chan->ring_slots);
 
