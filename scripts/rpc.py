@@ -341,6 +341,23 @@ if __name__ == "__main__":
     p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt', 'wa', 'wi', 'wo'])
     p.set_defaults(func=bdev_ocf_set_cache_mode)
 
+    def bdev_ocf_set_seqcutoff(args):
+        rpc.bdev.bdev_ocf_set_seqcutoff(args.client,
+                                        name=args.name,
+                                        policy=args.policy,
+                                        threshold=args.threshold,
+                                        promotion_count=args.promotion_count)
+    p = subparsers.add_parser('bdev_ocf_set_seqcutoff',
+                              help='Set sequential cutoff parameters on all cores for the given OCF cache device')
+    p.add_argument('name', help='Name of OCF cache bdev')
+    p.add_argument('-t', '--threshold', type=int,
+                   help='Activation threshold [KiB]')
+    p.add_argument('-c', '--promotion-count', type=int,
+                   help='Promotion request count')
+    p.add_argument('-p', '--policy', choices=['always', 'full', 'never'], required=True,
+                   help='Sequential cutoff policy')
+    p.set_defaults(func=bdev_ocf_set_seqcutoff)
+
     def bdev_malloc_create(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print_json(rpc.bdev.bdev_malloc_create(args.client,

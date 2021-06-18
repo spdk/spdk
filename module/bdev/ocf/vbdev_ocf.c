@@ -1518,6 +1518,52 @@ vbdev_ocf_set_cache_mode(struct vbdev_ocf *vbdev,
 	cb(rc, vbdev, cb_arg);
 }
 
+/* Set sequential cutoff parameters on OCF cache */
+void
+vbdev_ocf_set_seqcutoff(struct vbdev_ocf *vbdev, const char *policy_name, uint32_t threshold,
+			uint32_t promotion_count, void (*cb)(int, void *), void *cb_arg)
+{
+	ocf_cache_t cache;
+	ocf_seq_cutoff_policy policy;
+	int rc;
+
+	cache = vbdev->ocf_cache;
+
+	policy = ocf_get_seqcutoff_policy(policy_name);
+	if (policy == ocf_seq_cutoff_policy_max) {
+		cb(OCF_ERR_INVAL, cb_arg);
+		return;
+	}
+
+	rc = ocf_mngt_cache_trylock(cache);
+	if (rc) {
+		cb(rc, cb_arg);
+		return;
+	}
+
+	rc = ocf_mngt_core_set_seq_cutoff_policy_all(cache, policy);
+	if (rc) {
+		goto end;
+	}
+
+	if (threshold) {
+		threshold = threshold * KiB;
+
+		rc = ocf_mngt_core_set_seq_cutoff_threshold_all(cache, threshold);
+		if (rc) {
+			goto end;
+		}
+	}
+
+	if (promotion_count) {
+		rc = ocf_mngt_core_set_seq_cutoff_promotion_count_all(cache, promotion_count);
+	}
+
+end:
+	ocf_mngt_cache_unlock(cache);
+	cb(rc, cb_arg);
+}
+
 /* This called if new device is created in SPDK application
  * If that device named as one of base bdevs of OCF vbdev,
  * claim and open them */

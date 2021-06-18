@@ -428,3 +428,70 @@ end:
 	free_rpc_bdev_ocf_set_cache_mode(&req);
 }
 SPDK_RPC_REGISTER("bdev_ocf_set_cache_mode", rpc_bdev_ocf_set_cache_mode, SPDK_RPC_RUNTIME)
+
+static void
+seqcutoff_cb(int status, void *cb_arg)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	if (status) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "OCF could not set sequential cutoff parameters: %d", status);
+	} else {
+		spdk_jsonrpc_send_bool_response(request, true);
+	}
+}
+
+/* Structure to hold the parameters for this RPC method. */
+struct rpc_bdev_ocf_set_seqcutoff {
+	char *name;		/* main vbdev name */
+	char *policy;
+	uint32_t threshold;
+	uint32_t promotion_count;
+};
+
+static void
+free_rpc_bdev_ocf_set_seqcutoff(struct rpc_bdev_ocf_set_seqcutoff *r)
+{
+	free(r->name);
+	free(r->policy);
+}
+
+/* Structure to decode the input parameters for this RPC method. */
+static const struct spdk_json_object_decoder rpc_bdev_ocf_set_seqcutoff_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_ocf_set_seqcutoff, name), spdk_json_decode_string},
+	{"policy", offsetof(struct rpc_bdev_ocf_set_seqcutoff, policy), spdk_json_decode_string},
+	{"threshold", offsetof(struct rpc_bdev_ocf_set_seqcutoff, threshold), spdk_json_decode_uint32, true},
+	{"promotion_count", offsetof(struct rpc_bdev_ocf_set_seqcutoff, promotion_count), spdk_json_decode_uint32, true},
+};
+
+static void
+rpc_bdev_ocf_set_seqcutoff(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_bdev_ocf_set_seqcutoff req = {NULL};
+	struct vbdev_ocf *vbdev;
+	int ret;
+
+	ret = spdk_json_decode_object(params, rpc_bdev_ocf_set_seqcutoff_decoders,
+				      SPDK_COUNTOF(rpc_bdev_ocf_set_seqcutoff_decoders), &req);
+	if (ret) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto end;
+	}
+
+	vbdev = vbdev_ocf_get_by_name(req.name);
+	if (vbdev == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(ENODEV));
+		goto end;
+	}
+
+	vbdev_ocf_set_seqcutoff(vbdev, req.policy, req.threshold, req.promotion_count, seqcutoff_cb,
+				request);
+
+end:
+	free_rpc_bdev_ocf_set_seqcutoff(&req);
+}
+SPDK_RPC_REGISTER("bdev_ocf_set_seqcutoff", rpc_bdev_ocf_set_seqcutoff, SPDK_RPC_RUNTIME)

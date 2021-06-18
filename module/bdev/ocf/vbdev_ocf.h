@@ -210,6 +210,15 @@ void vbdev_ocf_set_cache_mode(
 	void (*cb)(int, struct vbdev_ocf *, void *),
 	void *cb_arg);
 
+/* Set sequential cutoff parameters on OCF cache */
+void vbdev_ocf_set_seqcutoff(
+	struct vbdev_ocf *vbdev,
+	const char *policy_name,
+	uint32_t threshold,
+	uint32_t promotion_count,
+	void (*cb)(int, void *),
+	void *cb_arg);
+
 typedef void (*vbdev_ocf_foreach_fn)(struct vbdev_ocf *, void *);
 
 /* Execute fn for each OCF device that is online or waits for base devices */

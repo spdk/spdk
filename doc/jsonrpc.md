@@ -2572,6 +2572,48 @@ Example response:
 }
 ~~~
 
+### bdev_ocf_set_seqcutoff {#rpc_bdev_ocf_set_seqcutoff}
+
+Set sequential cutoff parameters on all cores for the given OCF cache device.
+A brief description of this functionality can be found in [OpenCAS documentation](https://open-cas.github.io/guide_tool_details.html#seq-cutoff).
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+policy                  | Required | string      | Sequential cutoff policy: always, full, never
+threshold               | Optional | int         | Activation threshold in KiB
+promotion_count         | Optional | int         | Promotion request count
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ocf0",
+    "policy": "full",
+    "threshold": 4,
+    "promotion_count": 2
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_set_seqcutoff",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_malloc_create {#rpc_bdev_malloc_create}
 
 Construct @ref bdev_config_malloc

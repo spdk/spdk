@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/log.h"
 
 #include "utils.h"
 #include "vbdev_ocf.h"
@@ -43,6 +44,12 @@ static char *cache_modes[ocf_cache_mode_max] = {
 	[ocf_cache_mode_pt] = "pt",
 	[ocf_cache_mode_wi] = "wi",
 	[ocf_cache_mode_wo] = "wo",
+};
+
+static char *seqcutoff_policies[ocf_seq_cutoff_policy_max] = {
+	[ocf_seq_cutoff_policy_always] = "always",
+	[ocf_seq_cutoff_policy_full] = "full",
+	[ocf_seq_cutoff_policy_never] = "never",
 };
 
 ocf_cache_mode_t
@@ -73,6 +80,19 @@ int
 ocf_get_cache_line_size(ocf_cache_t cache)
 {
 	return ocf_cache_get_line_size(cache) / KiB;
+}
+
+ocf_seq_cutoff_policy
+ocf_get_seqcutoff_policy(const char *policy_name)
+{
+	int policy;
+
+	for (policy = 0; policy < ocf_seq_cutoff_policy_max; policy++)
+		if (!strcmp(policy_name, seqcutoff_policies[policy])) {
+			return policy;
+		}
+
+	return ocf_seq_cutoff_policy_max;
 }
 
 int
