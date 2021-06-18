@@ -1979,7 +1979,7 @@ Example response:
 ## bdev_compress_set_pmd {#rpc_bdev_compress_set_pmd}
 
 Select the DPDK polled mode driver (pmd) for a compressed bdev,
-0 = auto-select, 1= QAT only, 2 = ISAL only.
+0 = auto-select, 1= QAT only, 2 = ISAL only, 3 = mlx5_pci only.
 
 ### Parameters
 

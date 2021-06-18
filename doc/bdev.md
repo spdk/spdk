@@ -82,7 +82,12 @@ for detailed information.
 The vbdev module relies on the DPDK CompressDev Framework to provide all compression
 functionality. The framework provides support for many different software only
 compression modules as well as hardware assisted support for Intel QAT. At this
-time the vbdev module supports the DPDK drivers for ISAL and QAT.
+time the vbdev module supports the DPDK drivers for ISAL, QAT and mlx5_pci.
+
+mlx5_pci driver works with BlueField 2 SmartNIC and requires additional configuration of DPDK
+environment to enable compression function. It can be done via SPDK event library by configuring
+`env_context` member of `spdk_app_opts` structure or by passing corresponding CLI arguments in the
+following form: `--allow=BDF,class=compress`, e.g. `--allow=0000:01:00.0,class=compress`.
 
 Persistent memory is used to store metadata associated with the layout of the data on the
 backing device. SPDK relies on [PMDK](http://pmem.io/pmdk/) to interface persistent memory so any hardware

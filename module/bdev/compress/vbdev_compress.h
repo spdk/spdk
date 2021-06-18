@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -76,6 +77,7 @@ enum compress_pmd {
 	COMPRESS_PMD_AUTO = 0,
 	COMPRESS_PMD_QAT_ONLY,
 	COMPRESS_PMD_ISAL_ONLY,
+	COMPRESS_PMD_MLX5_PCI_ONLY,
 	COMPRESS_PMD_MAX
 };
 
