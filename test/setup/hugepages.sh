@@ -15,6 +15,12 @@ default_huges=$(get_meminfo Hugepagesize)
 default_huge_nr=/sys/kernel/mm/hugepages/hugepages-${default_huges}kB/nr_hugepages
 global_huge_nr=/proc/sys/vm/nr_hugepages
 
+# Make sure environment doesn't affect the tests
+unset -v HUGE_EVEN_ALLOC
+unset -v HUGEMEM
+unset -v HUGENODE
+unset -v NRHUGE
+
 get_nodes() {
 	local node
 
@@ -104,8 +110,8 @@ verify_nr_hugepages() {
 
 # Test cases
 default_setup() {
-	# Default HUGEMEM (8G) alloc on node0
-	get_test_nr_hugepages $((HUGEMEM * 1024)) 0
+	# Default HUGEMEM (2G) alloc on node0
+	get_test_nr_hugepages $((2048 * 1024)) 0
 	setup
 	verify_nr_hugepages
 }
