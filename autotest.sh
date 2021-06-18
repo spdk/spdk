@@ -151,11 +151,6 @@ timing_enter afterboot
 timing_exit afterboot
 
 if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
-	# Make sure that memory is distributed across all NUMA nodes - by default, all goes to
-	# node0, but if QAT devices are attached to a different node, all of their VFs will end
-	# up under that node too and memory needs to be available there for the tests.
-	CLEAR_HUGE=yes HUGE_EVEN_ALLOC=yes ./scripts/setup.sh
-	./scripts/setup.sh status
 	if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
 		./scripts/qat_setup.sh igb_uio
 	else

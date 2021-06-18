@@ -43,3 +43,6 @@ function check_match() {
 	$rootdir/test/app/match/match $testdir/match_files/${MATCH_FILE}.match
 	rm -f $testdir/match_files/${MATCH_FILE}
 }
+
+# Allocate 5GB of hugepages to have some overhead for run_*()s
+HUGEMEM=5120 CLEAR_HUGE=yes "$rootdir/scripts/setup.sh"
