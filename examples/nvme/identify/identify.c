@@ -70,6 +70,8 @@ static struct spdk_nvme_firmware_page firmware_page;
 
 static struct spdk_nvme_ana_page *g_ana_log_page;
 
+static struct spdk_nvme_ana_group_descriptor *g_copied_ana_desc;
+
 static size_t g_ana_log_page_size;
 
 static struct spdk_nvme_cmds_and_effect_log_page cmd_effects_log_page;
@@ -513,6 +515,10 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 				      sizeof(uint32_t);
 		g_ana_log_page = calloc(1, g_ana_log_page_size);
 		if (g_ana_log_page == NULL) {
+			exit(1);
+		}
+		g_copied_ana_desc = calloc(1, g_ana_log_page_size);
+		if (g_copied_ana_desc == NULL) {
 			exit(1);
 		}
 		if (get_ana_log_page(ctrlr) == 0) {
@@ -1218,7 +1224,10 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	struct spdk_pci_id			pci_id;
 	uint32_t				nsid;
 	uint64_t				pmrsz;
-	struct spdk_nvme_ana_group_descriptor	*desc;
+	uint8_t					*orig_desc;
+	struct spdk_nvme_ana_group_descriptor	*copied_desc;
+	uint32_t				desc_size, copy_len;
+
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
@@ -1559,21 +1568,29 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Change Count                    : %" PRIx64 "\n", g_ana_log_page->change_count);
 		printf("Number of ANA Group Descriptors : %u\n", g_ana_log_page->num_ana_group_desc);
 
-		desc = (void *)((uint8_t *)g_ana_log_page + sizeof(struct spdk_nvme_ana_page));
+		copied_desc = g_copied_ana_desc;
+		orig_desc = (uint8_t *)g_ana_log_page + sizeof(struct spdk_nvme_ana_page);
+		copy_len = g_ana_log_page_size - sizeof(struct spdk_nvme_ana_page);
 
 		for (i = 0; i < g_ana_log_page->num_ana_group_desc; i++) {
+			memcpy(copied_desc, orig_desc, copy_len);
+
 			printf("ANA Group Descriptor            : %u\n", i);
-			printf("  ANA Group ID                  : %u\n", desc->ana_group_id);
-			printf("  Number of NSID Values         : %u\n", desc->num_of_nsid);
-			printf("  Change Count                  : %" PRIx64 "\n", desc->change_count);
-			printf("  ANA State                     : %u\n", desc->ana_state);
-			for (j = 0; j < desc->num_of_nsid; j++) {
-				printf("  Namespace Identifier          : %u\n", desc->nsid[j]);
+			printf("  ANA Group ID                  : %u\n", copied_desc->ana_group_id);
+			printf("  Number of NSID Values         : %u\n", copied_desc->num_of_nsid);
+			printf("  Change Count                  : %" PRIx64 "\n", copied_desc->change_count);
+			printf("  ANA State                     : %u\n", copied_desc->ana_state);
+			for (j = 0; j < copied_desc->num_of_nsid; j++) {
+				printf("  Namespace Identifier          : %u\n", copied_desc->nsid[j]);
 			}
-			desc = (void *)((uint8_t *)desc + sizeof(struct spdk_nvme_ana_group_descriptor) +
-					desc->num_of_nsid * sizeof(uint32_t));
+
+			desc_size = sizeof(struct spdk_nvme_ana_group_descriptor) +
+				    copied_desc->num_of_nsid * sizeof(uint32_t);
+			orig_desc += desc_size;
+			copy_len -= desc_size;
 		}
 		free(g_ana_log_page);
+		free(g_copied_ana_desc);
 	}
 
 	printf("\n");
