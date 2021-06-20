@@ -978,10 +978,7 @@ _nvmf_ctrlr_free_from_qpair(void *ctx)
 void
 spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_transport_poll_group *tgroup;
-	struct spdk_nvmf_request *req, *tmp;
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
 
 	SPDK_DTRACE_PROBE2(nvmf_poll_group_remove_qpair, qpair,
@@ -1000,18 +997,6 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_qpair *qpair)
 		}
 	}
 
-	if (ctrlr) {
-		sgroup = &qpair->group->sgroups[ctrlr->subsys->id];
-		TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
-			if (req->qpair == qpair) {
-				TAILQ_REMOVE(&sgroup->queued, req, link);
-				if (nvmf_transport_req_free(req)) {
-					SPDK_ERRLOG("Transport request free error!\n");
-				}
-			}
-		}
-	}
-
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
 	qpair->group = NULL;
 }
@@ -1022,6 +1007,8 @@ _nvmf_qpair_destroy(void *ctx, int status)
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_request *req, *tmp;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	qpair_ctx->qid = qpair->qid;
@@ -1033,6 +1020,16 @@ _nvmf_qpair_destroy(void *ctx, int status)
 		} else {
 			assert(qpair->group->stat.current_io_qpairs > 0);
 			qpair->group->stat.current_io_qpairs--;
+		}
+
+		sgroup = &qpair->group->sgroups[ctrlr->subsys->id];
+		TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
+			if (req->qpair == qpair) {
+				TAILQ_REMOVE(&sgroup->queued, req, link);
+				if (nvmf_transport_req_free(req)) {
+					SPDK_ERRLOG("Transport request free error!/n");
+				}
+			}
 		}
 	}
 
