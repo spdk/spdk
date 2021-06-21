@@ -1757,8 +1757,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		err = -1;
 		goto out;
 	}
-	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log,
-		      SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio") ? LOG_DEBUG : LOG_ERR);
+	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log, LOG_DEBUG);
 
 	err = vfio_user_dev_info_fill(vu_transport, endpoint);
 	if (err < 0) {
