@@ -318,8 +318,6 @@ _get_task(struct worker_thread *worker)
 		return NULL;
 	}
 
-	task->worker = worker;
-	task->worker->current_queue_depth++;
 	return task;
 }
 
@@ -814,6 +812,7 @@ _init_thread(void *arg1)
 	task = worker->task_base;
 	for (i = 0; i < num_tasks; i++) {
 		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
+		task->worker = worker;
 		if (_get_task_data_bufs(task)) {
 			fprintf(stderr, "Unable to get data bufs\n");
 			goto error;
@@ -844,6 +843,7 @@ _init_thread(void *arg1)
 
 			for (i = 0; i < g_ops_per_batch; i++) {
 				task = _get_task(worker);
+				worker->current_queue_depth++;
 				if (task == NULL) {
 					goto error;
 				}
@@ -873,6 +873,7 @@ _init_thread(void *arg1)
 	/* Submit as singles when no batching is enabled or we ran out of batches. */
 	for (i = 0; i < remaining; i++) {
 		task = _get_task(worker);
+		worker->current_queue_depth++;
 		if (task == NULL) {
 			goto error;
 		}
