@@ -75,7 +75,7 @@ install_spdk_bash_completion() {
 	mkdir -p "$compat_dir"
 
 	if [[ ! -e $compat_dir/spdk ]]; then
-		ln -vs "$scriptsdir/bash-completion/spdk" "$compat_dir"
+		cp -v "$scriptsdir/bash-completion/spdk" "$compat_dir"
 	fi
 }
 
