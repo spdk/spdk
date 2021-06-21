@@ -1074,6 +1074,48 @@ test_nvme_rdma_qpair_init(void)
 	CU_ASSERT(rqpair.cq == (struct ibv_cq *)0xFEEDBEEF);
 }
 
+static void
+test_nvme_rdma_qpair_submit_request(void)
+{
+	int				rc;
+	struct nvme_rdma_qpair		rqpair = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
+	struct nvme_request		req = {};
+	struct nvme_rdma_poller		poller = {};
+	struct spdk_nvme_rdma_req	*rdma_req = NULL;
+
+	req.cmd.opc = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
+	req.payload.contig_or_cb_arg = (void *)0xdeadbeef;
+	req.payload_size = 0;
+	rqpair.mr_map = (struct spdk_rdma_mem_map *)0xdeadbeef;
+	rqpair.rdma_qp = (struct spdk_rdma_qp *)0xdeadbeef;
+	rqpair.qpair.ctrlr = &ctrlr;
+	rqpair.num_entries = 1;
+	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rqpair.poller = &poller;
+
+	rc = nvme_rdma_alloc_reqs(&rqpair);
+	CU_ASSERT(rc == 0);
+	/* Give send_wr.next a non null value */
+	rdma_req = TAILQ_FIRST(&rqpair.free_reqs);
+	SPDK_CU_ASSERT_FATAL(rdma_req != NULL);
+	rdma_req->send_wr.next = (void *)0xdeadbeef;
+
+	rc = nvme_rdma_qpair_submit_request(&rqpair.qpair, &req);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.current_num_sends == 1);
+	CU_ASSERT(rdma_req->send_wr.next == NULL);
+	TAILQ_REMOVE(&rqpair.outstanding_reqs, rdma_req, link);
+	CU_ASSERT(TAILQ_EMPTY(&rqpair.outstanding_reqs));
+
+	/* No request available */
+	rc = nvme_rdma_qpair_submit_request(&rqpair.qpair, &req);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rqpair.poller->stats.queued_requests == 1);
+
+	nvme_rdma_free_reqs(&rqpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1101,6 +1143,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_connect_disconnect_qpair);
 	CU_ADD_TEST(suite, test_nvme_rdma_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
+	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
