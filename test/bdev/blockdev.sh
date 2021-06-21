@@ -153,7 +153,11 @@ function nbd_function_test() {
 		local conf=$1
 		local nbd_all=($(ls /dev/nbd* | grep -v p))
 		local bdev_all=($bdevs_name)
-		local nbd_num=${#bdevs_all[@]}
+		local nbd_num=${#bdev_all[@]}
+		if ((nbd_num < 1)); then
+			# There should be at least one bdev and one valid nbd device
+			return 1
+		fi
 		if [ ${#nbd_all[@]} -le $nbd_num ]; then
 			nbd_num=${#nbd_all[@]}
 		fi
