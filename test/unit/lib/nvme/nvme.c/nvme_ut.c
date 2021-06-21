@@ -78,6 +78,7 @@ void
 nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr, struct nvme_ctrlr_detach_ctx *ctx)
 {
 	ut_destruct_called = true;
+	ctrlr->is_destructed = true;
 }
 
 int
@@ -892,6 +893,7 @@ test_nvme_robust_mutex_init_shared(void)
 #else
 	CU_ASSERT(rc == 0);
 #endif
+	MOCK_CLEAR(pthread_mutex_init);
 }
 
 static void
@@ -1487,6 +1489,78 @@ test_spdk_nvme_parse_func(void)
 	CU_ASSERT(hostid.hostaddr[0] == '\0' && hostid.hostsvcid[0] == '\0');
 }
 
+static void
+test_spdk_nvme_detach_async(void)
+{
+	int rc = 1;
+	struct spdk_nvme_ctrlr ctrlr1, ctrlr2;
+	struct nvme_driver test_driver;
+	struct spdk_nvme_detach_ctx *detach_ctx;
+
+	detach_ctx = NULL;
+	memset(&ctrlr1, 0, sizeof(ctrlr1));
+	ctrlr1.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	memset(&ctrlr2, 0, sizeof(ctrlr2));
+	ctrlr2.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
+	g_spdk_nvme_driver = &test_driver;
+	TAILQ_INIT(&test_driver.shared_attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr1, tailq);
+	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr2, tailq);
+	CU_ASSERT(pthread_mutex_init(&test_driver.lock, NULL) == 0);
+	MOCK_SET(nvme_ctrlr_get_ref_count, 1);
+
+	rc = spdk_nvme_detach_async(&ctrlr1, &detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr1.is_destructed == true);
+	CU_ASSERT(detach_ctx != NULL);
+
+	rc = spdk_nvme_detach_async(&ctrlr2, &detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr2.is_destructed == true);
+	CU_ASSERT(detach_ctx != NULL);
+
+	CU_ASSERT(TAILQ_EMPTY(&test_driver.shared_attached_ctrlrs) == false);
+
+	rc = spdk_nvme_detach_poll_async(detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_EMPTY(&test_driver.shared_attached_ctrlrs) == true);
+
+	/* ctrlr1 is a PCIe controller but ctrlr2 is an non-PCIe controller.
+	 * Even for this case, detachment should complete successfully.
+	 */
+	detach_ctx = NULL;
+	memset(&ctrlr1, 0, sizeof(ctrlr1));
+	ctrlr1.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	memset(&ctrlr2, 0, sizeof(ctrlr2));
+	ctrlr2.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	TAILQ_INIT(&g_nvme_attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&g_nvme_attached_ctrlrs, &ctrlr1, tailq);
+	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr2, tailq);
+
+	rc = spdk_nvme_detach_async(&ctrlr1, &detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr1.is_destructed == true);
+	CU_ASSERT(detach_ctx != NULL);
+
+	rc = spdk_nvme_detach_async(&ctrlr2, &detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr2.is_destructed == true);
+	CU_ASSERT(detach_ctx != NULL);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs) == false);
+	CU_ASSERT(TAILQ_EMPTY(&test_driver.shared_attached_ctrlrs) == false);
+
+	rc = spdk_nvme_detach_poll_async(detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs) == true);
+	CU_ASSERT(TAILQ_EMPTY(&test_driver.shared_attached_ctrlrs) == true);
+
+	g_spdk_nvme_driver = NULL;
+	pthread_mutex_destroy(&test_driver.lock);
+	MOCK_CLEAR(nvme_ctrlr_get_ref_count);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1520,6 +1594,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_request_check_timeout);
 	CU_ADD_TEST(suite, test_nvme_wait_for_completion);
 	CU_ADD_TEST(suite, test_spdk_nvme_parse_func);
+	CU_ADD_TEST(suite, test_spdk_nvme_detach_async);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
