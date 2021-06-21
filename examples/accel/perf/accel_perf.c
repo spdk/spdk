@@ -618,6 +618,8 @@ _accel_done(void *arg1)
 	worker->current_queue_depth--;
 
 	if (!worker->is_draining) {
+		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
+		task = _get_task(worker);
 		if (g_ops_per_batch == 0) {
 			_submit_single(worker, task);
 			worker->current_queue_depth++;
