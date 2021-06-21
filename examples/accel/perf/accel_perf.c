@@ -50,6 +50,10 @@ static uint64_t g_tsc_end;
 static int g_rc;
 static int g_xfer_size_bytes = 4096;
 static int g_queue_depth = 32;
+/* g_allocate_depth indicates how many tasks we allocate per worker. It will
+ * be at least as much as the queue depth.
+ */
+static int g_allocate_depth = 0;
 static int g_ops_per_batch = 0;
 static int g_threads_per_core = 1;
 static int g_time_in_sec = 5;
@@ -130,6 +134,7 @@ dump_user_config(struct spdk_app_opts *opts)
 	}
 	printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	printf("Queue depth:    %u\n", g_queue_depth);
+	printf("Allocate depth: %u\n", g_allocate_depth);
 	printf("# threads/core: %u\n", g_threads_per_core);
 	printf("Run time:       %u seconds\n", g_time_in_sec);
 	if (g_ops_per_batch > 0) {
@@ -157,6 +162,8 @@ usage(void)
 	printf("\t[-f for fill workload, use this BYTE value (default 255)\n");
 	printf("\t[-y verify result if this switch is on]\n");
 	printf("\t[-b batch this number of operations at a time (default 0 = disabled)]\n");
+	printf("\t[-a tasks to allocate per core (default: same value as -q)]\n");
+	printf("\t\tCan be used to spread operations across a wider range of memory.\n");
 }
 
 static int
@@ -165,6 +172,7 @@ parse_args(int argc, char *argv)
 	int argval;
 
 	switch (argc) {
+	case 'a':
 	case 'b':
 	case 'C':
 	case 'f':
@@ -186,6 +194,9 @@ parse_args(int argc, char *argv)
 	};
 
 	switch (argc) {
+	case 'a':
+		g_allocate_depth = argval;
+		break;
 	case 'b':
 		g_ops_per_batch = argval;
 		break;
@@ -749,7 +760,7 @@ _init_thread(void *arg1)
 	int i, rc, num_batches;
 	int max_per_batch;
 	int remaining = g_queue_depth;
-	int num_tasks = g_queue_depth;
+	int num_tasks = g_allocate_depth;
 	struct accel_batch *tmp;
 	struct accel_batch *worker_batch = NULL;
 	struct display_info *display = arg1;
@@ -982,7 +993,7 @@ main(int argc, char **argv)
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.reactor_mask = "0x1";
-	if (spdk_app_parse_args(argc, argv, &opts, "C:o:q:t:yw:P:f:b:T:", NULL, parse_args,
+	if (spdk_app_parse_args(argc, argv, &opts, "a:C:o:q:t:yw:P:f:b:T:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		g_rc = -1;
 		goto cleanup;
@@ -1003,6 +1014,17 @@ main(int argc, char **argv)
 		usage();
 		g_rc = -1;
 		goto cleanup;
+	}
+
+	if (g_allocate_depth > 0 && g_queue_depth > g_allocate_depth) {
+		fprintf(stdout, "allocate depth must be at least as big as queue depth\n");
+		usage();
+		g_rc = -1;
+		goto cleanup;
+	}
+
+	if (g_allocate_depth == 0) {
+		g_allocate_depth = g_queue_depth;
 	}
 
 	if (g_workload_selection == ACCEL_CRC32C &&
