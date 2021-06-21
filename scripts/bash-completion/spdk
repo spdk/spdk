@@ -261,8 +261,8 @@ _spdk_apps() {
 		vm_setup.sh
 	) # TODO: Add more?
 
-	complete -F _spdk_app "${apps[@]}"
-	complete -F _rpc rpc.py
+	complete -o default -F _spdk_app "${apps[@]}"
+	complete -o default -F _rpc rpc.py
 }
 
 _spdk_apps
