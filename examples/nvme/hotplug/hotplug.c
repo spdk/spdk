@@ -73,6 +73,7 @@ static int g_insert_times;
 static int g_removal_times;
 static int g_shm_id = -1;
 static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC;
+static struct spdk_nvme_detach_ctx *g_detach_ctx;
 
 static void
 task_complete(struct perf_task *task);
@@ -142,7 +143,7 @@ unregister_dev(struct dev_ctx *dev)
 	fprintf(stderr, "unregister_dev: %s\n", dev->name);
 
 	spdk_nvme_ctrlr_free_io_qpair(dev->qpair);
-	spdk_nvme_detach(dev->ctrlr);
+	spdk_nvme_detach_async(dev->ctrlr, &g_detach_ctx);
 
 	TAILQ_REMOVE(&g_devs, dev, tailq);
 	free(dev);
@@ -319,7 +320,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	 * in g_devs (for example, because we skipped it during register_dev),
 	 * so immediately detach it.
 	 */
-	spdk_nvme_detach(ctrlr);
+	spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
 }
 
 static void
@@ -338,6 +339,7 @@ io_loop(void)
 	struct dev_ctx *dev, *dev_tmp;
 	uint64_t tsc_end;
 	uint64_t next_stats_tsc;
+	int rc;
 
 	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 	next_stats_tsc = spdk_get_ticks();
@@ -382,6 +384,13 @@ io_loop(void)
 			}
 		}
 
+		if (g_detach_ctx) {
+			rc = spdk_nvme_detach_poll_async(g_detach_ctx);
+			if (rc == 0) {
+				g_detach_ctx = NULL;
+			}
+		}
+
 		now = spdk_get_ticks();
 		if (now > tsc_end) {
 			break;
@@ -399,6 +408,10 @@ io_loop(void)
 	TAILQ_FOREACH_SAFE(dev, &g_devs, tailq, dev_tmp) {
 		drain_io(dev);
 		unregister_dev(dev);
+	}
+
+	if (g_detach_ctx) {
+		spdk_nvme_detach_poll(g_detach_ctx);
 	}
 }
 
