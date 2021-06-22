@@ -10,6 +10,21 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
 
+function check_ana_state() {
+	local subsys_id=$1
+	local ctrl_id=$2
+	local ana_state=$3
+	local timeout=3
+
+	while [ $(cat /sys/block/nvme"$subsys_id"c"$ctrl_id"n1/ana_state) != "$ana_state" ]; do
+		sleep 1
+		if ((timeout-- == 0)); then
+			echo "timeout before ANA state (nvme$subsys_id c$ctrl_id) becomes $ana_state"
+			return 1
+		fi
+	done
+}
+
 nvmftestinit
 
 if [ -z $NVMF_SECOND_TARGET_IP ]; then
@@ -44,8 +59,8 @@ subsys_id=$(nvme list-subsys | sed -n 's/nqn.2016-06.io.spdk:cnode1//p' | sed 's
 ctrl1_id=$(nvme list-subsys | sed -n "s/traddr=$NVMF_FIRST_TARGET_IP trsvcid=$NVMF_PORT//p" | sed 's/[^0-9]*//g')
 ctrl2_id=$(nvme list-subsys | sed -n "s/traddr=$NVMF_SECOND_TARGET_IP trsvcid=$NVMF_PORT//p" | sed 's/[^0-9]*//g')
 
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl1_id"n1/ana_state) == "optimized" ]
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl2_id"n1/ana_state) == "optimized" ]
+check_ana_state "$subsys_id" "$ctrl1_id" "optimized"
+check_ana_state "$subsys_id" "$ctrl2_id" "optimized"
 
 # Set IO policy to numa
 echo numa > /sys/class/nvme-subsystem/nvme-subsys$subsys_id/iopolicy
@@ -58,28 +73,22 @@ sleep 1
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
 
-sleep 1
-
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl1_id"n1/ana_state) == "inaccessible" ]
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl2_id"n1/ana_state) == "non-optimized" ]
+check_ana_state "$subsys_id" "$ctrl1_id" "inaccessible"
+check_ana_state "$subsys_id" "$ctrl2_id" "non-optimized"
 
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
 
-sleep 1
-
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl1_id"n1/ana_state) == "non-optimized" ]
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl2_id"n1/ana_state) == "inaccessible" ]
+check_ana_state "$subsys_id" "$ctrl1_id" "non-optimized"
+check_ana_state "$subsys_id" "$ctrl2_id" "inaccessible"
 
 wait $fio_pid
 
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n optimized
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n optimized
 
-sleep 1
-
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl1_id"n1/ana_state) == "optimized" ]
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl2_id"n1/ana_state) == "optimized" ]
+check_ana_state "$subsys_id" "$ctrl1_id" "optimized"
+check_ana_state "$subsys_id" "$ctrl2_id" "optimized"
 
 # Set IO policy to round-robin
 echo round-robin > /sys/class/nvme-subsystem/nvme-subsys$subsys_id/iopolicy
@@ -92,18 +101,14 @@ sleep 1
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
 
-sleep 1
-
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl1_id"n1/ana_state) == "inaccessible" ]
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl2_id"n1/ana_state) == "non-optimized" ]
+check_ana_state "$subsys_id" "$ctrl1_id" "inaccessible"
+check_ana_state "$subsys_id" "$ctrl2_id" "non-optimized"
 
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n non_optimized
 $rpc_py nvmf_subsystem_listener_set_ana_state nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a "$NVMF_SECOND_TARGET_IP" -s "$NVMF_PORT" -n inaccessible
 
-sleep 1
-
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl1_id"n1/ana_state) == "non-optimized" ]
-[ $(cat /sys/block/nvme"$subsys_id"c"$ctrl2_id"n1/ana_state) == "inaccessible" ]
+check_ana_state "$subsys_id" "$ctrl1_id" "non-optimized"
+check_ana_state "$subsys_id" "$ctrl2_id" "inaccessible"
 
 wait $fio_pid
 
