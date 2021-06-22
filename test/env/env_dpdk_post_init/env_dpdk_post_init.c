@@ -95,6 +95,7 @@ main(int argc, char **argv)
 {
 	int ret;
 	int i;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	printf("Starting DPDK initialization...\n");
 	ret = rte_eal_init(argc, argv);
@@ -119,7 +120,11 @@ main(int argc, char **argv)
 	printf("Cleaning up...\n");
 	for (i = 0; i < g_num_devs; i++) {
 		struct dev *dev = &g_nvme_devs[i];
-		spdk_nvme_detach(dev->ctrlr);
+		spdk_nvme_detach_async(dev->ctrlr, &detach_ctx);
+	}
+
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
 	}
 
 	return g_failed;
