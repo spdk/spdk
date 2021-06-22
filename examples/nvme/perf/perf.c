@@ -5,6 +5,7 @@
  *   All rights reserved.
  *
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2599,6 +2600,11 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		if (g_no_shn_notification) {
 			opts->no_shn_notification = true;
 		}
+	}
+
+	if (trid->trtype != trid_entry->trid.trtype &&
+	    strcasecmp(trid->trstring, trid_entry->trid.trstring)) {
+		return false;
 	}
 
 	/* Set io_queue_size to UINT16_MAX, NVMe driver
