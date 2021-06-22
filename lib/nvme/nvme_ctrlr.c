@@ -3712,6 +3712,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	TAILQ_INIT(&ctrlr->active_procs);
+	STAILQ_INIT(&ctrlr->register_operations);
 
 	return rc;
 }

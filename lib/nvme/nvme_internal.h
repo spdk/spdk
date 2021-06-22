@@ -787,6 +787,13 @@ struct spdk_nvme_ctrlr_process {
 	STAILQ_HEAD(, spdk_nvme_ctrlr_aer_completion_list)      async_events;
 };
 
+struct nvme_register_completion {
+	struct spdk_nvme_cpl			cpl;
+	uint64_t				value;
+	spdk_nvme_reg_cb			cb_fn;
+	void					*cb_ctx;
+	STAILQ_ENTRY(nvme_register_completion)	stailq;
+};
 
 /*
  * One of these per allocated PCI device.
@@ -938,6 +945,9 @@ struct spdk_nvme_ctrlr {
 	unsigned int			fw_size_remaining;
 	unsigned int			fw_offset;
 	unsigned int			fw_transfer_size;
+
+	/* Completed register operations */
+	STAILQ_HEAD(, nvme_register_completion)	register_operations;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -1392,6 +1402,14 @@ int nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offse
 int nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
 int nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
 int nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
+int nvme_transport_ctrlr_set_reg_4_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint32_t value, spdk_nvme_reg_cb cb_fn, void *cb_arg);
+int nvme_transport_ctrlr_set_reg_8_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint64_t value, spdk_nvme_reg_cb cb_fn, void *cb_arg);
+int nvme_transport_ctrlr_get_reg_4_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		spdk_nvme_reg_cb cb_fn, void *cb_arg);
+int nvme_transport_ctrlr_get_reg_8_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		spdk_nvme_reg_cb cb_fn, void *cb_arg);
 uint32_t nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr);
 uint16_t nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr);
 struct spdk_nvme_qpair *nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,

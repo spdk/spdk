@@ -3804,6 +3804,15 @@ struct spdk_nvme_transport_poll_group;
  */
 void spdk_nvme_cuse_update_namespaces(struct spdk_nvme_ctrlr *ctrlr);
 
+/**
+ * Signature for callback invoked after completing a register read/write operation.
+ *
+ * \param ctx Context passed by the user.
+ * \param value Value of the register, undefined in case of a failure.
+ * \param cpl Completion queue entry that contains the status of the command.
+ */
+typedef void (*spdk_nvme_reg_cb)(void *ctx, uint64_t value, const struct spdk_nvme_cpl *cpl);
+
 struct nvme_request;
 
 struct spdk_nvme_transport;
@@ -3830,6 +3839,18 @@ struct spdk_nvme_transport_ops {
 	int (*ctrlr_get_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
 
 	int (*ctrlr_get_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
+
+	int (*ctrlr_set_reg_4_async)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg);
+
+	int (*ctrlr_set_reg_8_async)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg);
+
+	int (*ctrlr_get_reg_4_async)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg);
+
+	int (*ctrlr_get_reg_8_async)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg);
 
 	uint32_t (*ctrlr_get_max_xfer_size)(struct spdk_nvme_ctrlr *ctrlr);
 

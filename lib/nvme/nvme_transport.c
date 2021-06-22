@@ -204,6 +204,113 @@ nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, u
 	return transport->ops.ctrlr_get_reg_8(ctrlr, offset, value);
 }
 
+static int
+nvme_queue_register_operation_completion(struct spdk_nvme_ctrlr *ctrlr, uint64_t value,
+		spdk_nvme_reg_cb cb_fn, void *cb_ctx)
+{
+	struct nvme_register_completion *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	ctx->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+	ctx->value = value;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	STAILQ_INSERT_TAIL(&ctrlr->register_operations, ctx, stailq);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_set_reg_4_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	int rc;
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_set_reg_4_async == NULL) {
+		rc = transport->ops.ctrlr_set_reg_4(ctrlr, offset, value);
+		if (rc != 0) {
+			return rc;
+		}
+
+		return nvme_queue_register_operation_completion(ctrlr, value, cb_fn, cb_arg);
+	}
+
+	return transport->ops.ctrlr_set_reg_4_async(ctrlr, offset, value, cb_fn, cb_arg);
+}
+
+int
+nvme_transport_ctrlr_set_reg_8_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg)
+
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	int rc;
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_set_reg_8_async == NULL) {
+		rc = transport->ops.ctrlr_set_reg_8(ctrlr, offset, value);
+		if (rc != 0) {
+			return rc;
+		}
+
+		return nvme_queue_register_operation_completion(ctrlr, value, cb_fn, cb_arg);
+	}
+
+	return transport->ops.ctrlr_set_reg_8_async(ctrlr, offset, value, cb_fn, cb_arg);
+}
+
+int
+nvme_transport_ctrlr_get_reg_4_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	uint32_t value;
+	int rc;
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_get_reg_4_async == NULL) {
+		rc = transport->ops.ctrlr_get_reg_4(ctrlr, offset, &value);
+		if (rc != 0) {
+			return rc;
+		}
+
+		return nvme_queue_register_operation_completion(ctrlr, value, cb_fn, cb_arg);
+	}
+
+	return transport->ops.ctrlr_get_reg_4_async(ctrlr, offset, cb_fn, cb_arg);
+}
+
+int
+nvme_transport_ctrlr_get_reg_8_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	uint64_t value;
+	int rc;
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_get_reg_8_async == NULL) {
+		rc = transport->ops.ctrlr_get_reg_8(ctrlr, offset, &value);
+		if (rc != 0) {
+			return rc;
+		}
+
+		return nvme_queue_register_operation_completion(ctrlr, value, cb_fn, cb_arg);
+	}
+
+	return transport->ops.ctrlr_get_reg_8_async(ctrlr, offset, cb_fn, cb_arg);
+}
+
 uint32_t
 nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {

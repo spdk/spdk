@@ -689,6 +689,28 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 	_nvme_qpair_complete_abort_queued_reqs(qpair);
 }
 
+static void
+nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_register_completion *ctx;
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	STAILQ_HEAD(, nvme_register_completion) operations;
+
+	STAILQ_INIT(&operations);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	STAILQ_SWAP(&ctrlr->register_operations, &operations, nvme_register_completion);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	while (!STAILQ_EMPTY(&operations)) {
+		ctx = STAILQ_FIRST(&operations);
+		STAILQ_REMOVE_HEAD(&operations, stailq);
+		if (ctx->cb_fn != NULL) {
+			ctx->cb_fn(ctx->cb_ctx, ctx->value, &ctx->cpl);
+		}
+		free(ctx);
+	}
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -748,6 +770,11 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	 */
 	if (ret > 0) {
 		nvme_qpair_resubmit_requests(qpair, ret);
+	}
+
+	/* Complete any pending register operations */
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_complete_register_operations(qpair);
 	}
 
 	return ret;
