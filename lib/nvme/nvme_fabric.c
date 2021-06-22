@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -191,7 +192,6 @@ nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 		return;
 	}
 
-	snprintf(trid.trstring, sizeof(trid.trstring), "%s", probe_ctx->trid.trstring);
 	trid.adrfam = entry->adrfam;
 
 	/* Ensure that subnqn is null terminated. */
