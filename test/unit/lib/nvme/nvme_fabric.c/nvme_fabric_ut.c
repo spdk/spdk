@@ -252,7 +252,7 @@ test_nvme_fabric_prop_set_cmd(void)
 
 	memset(&g_ut_cmd, 0, sizeof(g_ut_cmd));
 
-	rc = nvme_fabric_prop_set_cmd(&ctrlr, 1024, SPDK_NVMF_PROP_SIZE_8, 4096);
+	rc = nvme_fabric_prop_set_cmd_sync(&ctrlr, 1024, SPDK_NVMF_PROP_SIZE_8, 4096);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_ut_cmd.opcode == SPDK_NVME_OPC_FABRIC);
 	CU_ASSERT(g_ut_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET);
@@ -273,7 +273,7 @@ test_nvme_fabric_prop_get_cmd(void)
 	value = 0xFFDEADBEEF;
 
 	/* Case 1: size is SPDK_NVMF_PROP_SIZE_4 */
-	rc = nvme_fabric_prop_get_cmd(&ctrlr, 1024, SPDK_NVMF_PROP_SIZE_4, &value);
+	rc = nvme_fabric_prop_get_cmd_sync(&ctrlr, 1024, SPDK_NVMF_PROP_SIZE_4, &value);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_ut_cmd.opcode == SPDK_NVME_OPC_FABRIC);
 	CU_ASSERT(g_ut_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET);
@@ -285,7 +285,7 @@ test_nvme_fabric_prop_get_cmd(void)
 	memset(&g_ut_cmd, 0, sizeof(g_ut_cmd));
 	memset(&g_ut_response, 0, sizeof(g_ut_response));
 
-	rc = nvme_fabric_prop_get_cmd(&ctrlr, 1024, SPDK_NVMF_PROP_SIZE_8, &value);
+	rc = nvme_fabric_prop_get_cmd_sync(&ctrlr, 1024, SPDK_NVMF_PROP_SIZE_8, &value);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_ut_cmd.opcode == SPDK_NVME_OPC_FABRIC);
 	CU_ASSERT(g_ut_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET);

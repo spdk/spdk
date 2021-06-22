@@ -43,19 +43,12 @@
 
 static int
 nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
-			 uint32_t offset, uint8_t size, uint64_t value)
+			 uint32_t offset, uint8_t size, uint64_t value,
+			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
-	struct nvme_completion_poll_status *status;
-	int rc;
 
 	assert(size == SPDK_NVMF_PROP_SIZE_4 || size == SPDK_NVMF_PROP_SIZE_8);
-
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		SPDK_ERRLOG("Failed to allocate status tracker\n");
-		return -ENOMEM;
-	}
 
 	cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET;
@@ -63,9 +56,25 @@ nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 	cmd.attrib.size = size;
 	cmd.value.u64 = value;
 
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
-					   NULL, 0,
-					   nvme_completion_poll_cb, status);
+	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
+					     NULL, 0, cb_fn, cb_arg);
+}
+
+static int
+nvme_fabric_prop_set_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
+			      uint32_t offset, uint8_t size, uint64_t value)
+{
+	struct nvme_completion_poll_status *status;
+	int rc;
+
+	status = calloc(1, sizeof(*status));
+	if (!status) {
+		SPDK_ERRLOG("Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
+
+	rc = nvme_fabric_prop_set_cmd(ctrlr, offset, size, value,
+				      nvme_completion_poll_cb, status);
 	if (rc < 0) {
 		free(status);
 		return rc;
@@ -84,15 +93,29 @@ nvme_fabric_prop_set_cmd(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static int
-nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
-			 uint32_t offset, uint8_t size, uint64_t *value)
+nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint8_t size,
+			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_fabric_prop_set_cmd cmd = {};
+
+	assert(size == SPDK_NVMF_PROP_SIZE_4 || size == SPDK_NVMF_PROP_SIZE_8);
+
+	cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
+	cmd.ofst = offset;
+	cmd.attrib.size = size;
+
+	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
+					     NULL, 0, cb_fn, cb_arg);
+}
+
+static int
+nvme_fabric_prop_get_cmd_sync(struct spdk_nvme_ctrlr *ctrlr,
+			      uint32_t offset, uint8_t size, uint64_t *value)
+{
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvmf_fabric_prop_get_rsp *response;
 	int rc;
-
-	assert(size == SPDK_NVMF_PROP_SIZE_4 || size == SPDK_NVMF_PROP_SIZE_8);
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
@@ -100,14 +123,7 @@ nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 
-	cmd.opcode = SPDK_NVME_OPC_FABRIC;
-	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
-	cmd.ofst = offset;
-	cmd.attrib.size = size;
-
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
-					   NULL, 0, nvme_completion_poll_cb,
-					   status);
+	rc = nvme_fabric_prop_get_cmd(ctrlr, offset, size, nvme_completion_poll_cb, status);
 	if (rc < 0) {
 		free(status);
 		return rc;
@@ -137,13 +153,13 @@ nvme_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 int
 nvme_fabric_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
-	return nvme_fabric_prop_set_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_4, value);
+	return nvme_fabric_prop_set_cmd_sync(ctrlr, offset, SPDK_NVMF_PROP_SIZE_4, value);
 }
 
 int
 nvme_fabric_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 {
-	return nvme_fabric_prop_set_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_8, value);
+	return nvme_fabric_prop_set_cmd_sync(ctrlr, offset, SPDK_NVMF_PROP_SIZE_8, value);
 }
 
 int
@@ -151,7 +167,7 @@ nvme_fabric_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint
 {
 	uint64_t tmp_value;
 	int rc;
-	rc = nvme_fabric_prop_get_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_4, &tmp_value);
+	rc = nvme_fabric_prop_get_cmd_sync(ctrlr, offset, SPDK_NVMF_PROP_SIZE_4, &tmp_value);
 
 	if (!rc) {
 		*value = (uint32_t)tmp_value;
@@ -162,7 +178,7 @@ nvme_fabric_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint
 int
 nvme_fabric_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
-	return nvme_fabric_prop_get_cmd(ctrlr, offset, SPDK_NVMF_PROP_SIZE_8, value);
+	return nvme_fabric_prop_get_cmd_sync(ctrlr, offset, SPDK_NVMF_PROP_SIZE_8, value);
 }
 
 static void
