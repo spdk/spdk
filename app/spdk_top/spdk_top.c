@@ -223,29 +223,6 @@ struct rpc_poller_info {
 	uint64_t thread_id;
 };
 
-struct rpc_pollers {
-	uint64_t pollers_count;
-	struct rpc_poller_info pollers[RPC_MAX_POLLERS];
-};
-
-struct rpc_poller_thread_info {
-	char *name;
-	uint64_t id;
-	struct rpc_pollers active_pollers;
-	struct rpc_pollers timed_pollers;
-	struct rpc_pollers paused_pollers;
-};
-
-struct rpc_pollers_threads {
-	uint64_t threads_count;
-	struct rpc_poller_thread_info threads[RPC_MAX_THREADS];
-};
-
-struct rpc_pollers_stats {
-	uint64_t tick_rate;
-	struct rpc_pollers_threads pollers_threads;
-};
-
 struct rpc_core_thread_info {
 	char *name;
 	uint64_t id;
@@ -277,7 +254,7 @@ struct rpc_cores_stats {
 };
 
 struct rpc_threads_stats g_threads_stats;
-struct rpc_pollers_stats g_pollers_stats;
+struct rpc_poller_info g_pollers_info[RPC_MAX_POLLERS];
 struct rpc_cores_stats g_cores_stats;
 
 static void
@@ -349,32 +326,6 @@ free_rpc_poller(struct rpc_poller_info *poller)
 }
 
 static void
-free_rpc_pollers_stats(struct rpc_pollers_stats *req)
-{
-	struct rpc_poller_thread_info *thread;
-	uint64_t i, j;
-
-	for (i = 0; i < req->pollers_threads.threads_count; i++) {
-		thread = &req->pollers_threads.threads[i];
-
-		for (j = 0; j < thread->active_pollers.pollers_count; j++) {
-			free_rpc_poller(&thread->active_pollers.pollers[j]);
-		}
-
-		for (j = 0; j < thread->timed_pollers.pollers_count; j++) {
-			free_rpc_poller(&thread->timed_pollers.pollers[j]);
-		}
-
-		for (j = 0; j < thread->paused_pollers.pollers_count; j++) {
-			free_rpc_poller(&thread->paused_pollers.pollers[j]);
-		}
-
-		free(thread->name);
-		thread->name = NULL;
-	}
-}
-
-static void
 free_rpc_cores_stats(struct rpc_cores_stats *req)
 {
 	struct rpc_core_info *core;
@@ -402,52 +353,106 @@ static const struct spdk_json_object_decoder rpc_pollers_decoders[] = {
 };
 
 static int
-rpc_decode_pollers_object(const struct spdk_json_val *val, void *out)
+rpc_decode_pollers_array(struct spdk_json_val *poller, struct rpc_poller_info *out,
+			 uint64_t *poller_count,
+			 const char *thread_name, uint64_t thread_name_length, uint64_t thread_id,
+			 enum spdk_poller_type poller_type)
 {
-	struct rpc_poller_info *info = out;
+	int rc;
 
-	return spdk_json_decode_object(val, rpc_pollers_decoders, SPDK_COUNTOF(rpc_pollers_decoders), info);
+	for (poller = spdk_json_array_first(poller); poller != NULL; poller = spdk_json_next(poller)) {
+		out[*poller_count].thread_id = thread_id;
+		memcpy(out[*poller_count].thread_name, thread_name, sizeof(char) * thread_name_length);
+		out[*poller_count].type = poller_type;
+
+		rc = spdk_json_decode_object(poller, rpc_pollers_decoders,
+					     SPDK_COUNTOF(rpc_pollers_decoders), &out[*poller_count]);
+		if (rc) {
+			printf("Could not decode poller object from JSON.\n");
+			return rc;
+		}
+
+		(*poller_count)++;
+		if (*poller_count == RPC_MAX_POLLERS) {
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
-static int
-rpc_decode_pollers_array(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_pollers *pollers = out;
-
-	return spdk_json_decode_array(val, rpc_decode_pollers_object, pollers->pollers, RPC_MAX_THREADS,
-				      &pollers->pollers_count, sizeof(struct rpc_poller_info));
-}
-
-static const struct spdk_json_object_decoder rpc_pollers_threads_decoders[] = {
-	{"name", offsetof(struct rpc_poller_thread_info, name), spdk_json_decode_string},
-	{"id", offsetof(struct rpc_poller_thread_info, id), spdk_json_decode_uint64},
-	{"active_pollers", offsetof(struct rpc_poller_thread_info, active_pollers), rpc_decode_pollers_array},
-	{"timed_pollers", offsetof(struct rpc_poller_thread_info, timed_pollers), rpc_decode_pollers_array},
-	{"paused_pollers", offsetof(struct rpc_poller_thread_info, paused_pollers), rpc_decode_pollers_array},
+static const struct spdk_json_object_decoder rpc_thread_pollers_decoders[] = {
+	{"name", offsetof(struct rpc_thread_info, name), spdk_json_decode_string},
+	{"id", offsetof(struct rpc_thread_info, id), spdk_json_decode_uint64},
 };
 
 static int
-rpc_decode_pollers_threads_object(const struct spdk_json_val *val, void *out)
+rpc_decode_pollers_threads_array(struct spdk_json_val *val, struct rpc_poller_info *out,
+				 uint32_t *num_pollers)
 {
-	struct rpc_poller_thread_info *info = out;
+	struct spdk_json_val *thread = val, *poller;
+	/* This is a temporary poller structure to hold thread name and id.
+	 * It is filled with data only once per thread change and then
+	 * that memory is copied to each poller running on that thread. */
+	struct rpc_thread_info thread_info = {};
+	uint64_t poller_count = 0, i, thread_name_length;
+	int rc;
+	const char *poller_typenames[] = { "active_pollers", "timed_pollers", "paused_pollers" };
+	enum spdk_poller_type poller_types[] = { SPDK_ACTIVE_POLLER, SPDK_TIMED_POLLER, SPDK_PAUSED_POLLER };
 
-	return spdk_json_decode_object(val, rpc_pollers_threads_decoders,
-				       SPDK_COUNTOF(rpc_pollers_threads_decoders), info);
+	/* Fetch the beginning of threads array */
+	rc = spdk_json_find_array(thread, "threads", NULL, &thread);
+	if (rc) {
+		printf("Could not fetch threads array from JSON.\n");
+		goto end;
+	}
+
+	for (thread = spdk_json_array_first(thread); thread != NULL; thread = spdk_json_next(thread)) {
+		rc = spdk_json_decode_object_relaxed(thread, rpc_thread_pollers_decoders,
+						     SPDK_COUNTOF(rpc_thread_pollers_decoders), &thread_info);
+		if (rc) {
+			printf("Could not decode thread info from JSON.\n");
+			goto end;
+		}
+
+		thread_name_length = strlen(thread_info.name);
+
+		for (i = 0; i < SPDK_COUNTOF(poller_types); i++) {
+			/* Find poller array */
+			rc = spdk_json_find(thread, poller_typenames[i], NULL, &poller,
+					    SPDK_JSON_VAL_ARRAY_BEGIN);
+			if (rc) {
+				printf("Could not fetch pollers array from JSON.\n");
+				goto end;
+			}
+
+			rc = rpc_decode_pollers_array(poller, out, &poller_count, thread_info.name,
+						      thread_name_length,
+						      thread_info.id, poller_types[i]);
+			if (rc) {
+				printf("Could not decode the first object in pollers array.\n");
+				goto end;
+			}
+		}
+	}
+
+	*num_pollers = poller_count;
+
+end:
+	/* Since we rely in spdk_json_object_decode() to free this value
+	 * each time we rewrite it, we need to free the last allocation
+	 * manually. */
+	free(thread_info.name);
+
+	if (rc) {
+		*num_pollers = 0;
+		for (i = 0; i < poller_count; i++) {
+			free_rpc_poller(&out[i]);
+		}
+	}
+
+	return rc;
 }
-
-static int
-rpc_decode_pollers_threads_array(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_pollers_threads *pollers_threads = out;
-
-	return spdk_json_decode_array(val, rpc_decode_pollers_threads_object, pollers_threads->threads,
-				      RPC_MAX_THREADS, &pollers_threads->threads_count, sizeof(struct rpc_poller_thread_info));
-}
-
-static const struct spdk_json_object_decoder rpc_pollers_stats_decoders[] = {
-	{"tick_rate", offsetof(struct rpc_pollers_stats, tick_rate), spdk_json_decode_uint64},
-	{"threads", offsetof(struct rpc_pollers_stats, pollers_threads), rpc_decode_pollers_threads_array},
-};
 
 static const struct spdk_json_object_decoder rpc_core_thread_info_decoders[] = {
 	{"name", offsetof(struct rpc_core_thread_info, name), spdk_json_decode_string},
@@ -700,10 +705,7 @@ get_pollers_data(void)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
 	int rc = 0;
-	struct rpc_pollers *pollers;
-	struct rpc_poller_info *poller;
-	uint64_t pollers_count = 0;
-	uint64_t i, j;
+	uint64_t i = 0;
 
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
@@ -712,38 +714,20 @@ get_pollers_data(void)
 
 	pthread_mutex_lock(&g_thread_lock);
 
-	/* Save last run counter of each poller before updating g_pollers_stats */
-	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
-		pollers = &g_pollers_stats.pollers_threads.threads[i].active_pollers;
-		for (j = 0; j < pollers->pollers_count; j++) {
-			poller = &pollers->pollers[j];
-			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
-		}
-		pollers_count += pollers->pollers_count;
-
-		pollers = &g_pollers_stats.pollers_threads.threads[i].timed_pollers;
-		for (j = 0; j < pollers->pollers_count; j++) {
-			poller = &pollers->pollers[j];
-			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
-		}
-		pollers_count += pollers->pollers_count;
-
-		pollers = &g_pollers_stats.pollers_threads.threads[i].paused_pollers;
-		for (j = 0; j < pollers->pollers_count; j++) {
-			poller = &pollers->pollers[j];
-			store_last_run_counter(poller->name, poller->thread_id, poller->run_count);
-		}
-		pollers_count += pollers->pollers_count;
+	/* Save last run counter of each poller before updating g_pollers_stats. */
+	for (i = 0; i < g_last_pollers_count; i++) {
+		store_last_run_counter(g_pollers_info[i].name, g_pollers_info[i].thread_id,
+				       g_pollers_info[i].run_count);
 	}
-	g_last_pollers_count = pollers_count;
 
 	/* Free old pollers values before allocating memory for new ones */
-	free_rpc_pollers_stats(&g_pollers_stats);
+	for (i = 0; i < g_last_pollers_count; i++) {
+		free_rpc_poller(&g_pollers_info[i]);
+	}
 
 	/* Decode json */
-	memset(&g_pollers_stats, 0, sizeof(g_pollers_stats));
-	if (spdk_json_decode_object(json_resp->result, rpc_pollers_stats_decoders,
-				    SPDK_COUNTOF(rpc_pollers_stats_decoders), &g_pollers_stats)) {
+	memset(&g_pollers_info, 0, sizeof(g_pollers_info));
+	if (rpc_decode_pollers_threads_array(json_resp->result, g_pollers_info, &g_last_pollers_count)) {
 		rc = -EINVAL;
 	}
 
@@ -1163,8 +1147,8 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 }
 
 static void
-copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poller_type type,
-	     struct rpc_poller_thread_info *thread, uint64_t *current_count, bool reset_last_counter,
+copy_pollers(struct rpc_poller_info *pollers, uint64_t pollers_count,
+	     uint64_t *current_count, bool reset_last_counter,
 	     struct rpc_poller_info **pollers_info)
 {
 	uint64_t *last_run_counter;
@@ -1176,24 +1160,21 @@ copy_pollers(struct rpc_pollers *pollers, uint64_t pollers_count, enum spdk_poll
 			thread_info = &g_threads_stats.threads.thread_info[j];
 			/* Check if poller's thread exists in g_threads_stats
 			 * (if poller is not "hanging" without a thread). */
-			if (thread_info->id != thread->id) {
+			if (thread_info->id != pollers[i].thread_id) {
 				continue;
 			}
 
 			if (reset_last_counter) {
-				last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
+				last_run_counter = get_last_run_counter(pollers[i].name, pollers[i].thread_id);
 				if (last_run_counter == NULL) {
-					store_last_run_counter(pollers->pollers[i].name, thread->id, pollers->pollers[i].run_count);
-					last_run_counter = get_last_run_counter(pollers->pollers[i].name, thread->id);
+					store_last_run_counter(pollers[i].name, pollers[i].thread_id, pollers[i].run_count);
+					last_run_counter = get_last_run_counter(pollers[i].name, pollers[i].thread_id);
 				}
 
 				assert(last_run_counter != NULL);
-				*last_run_counter = pollers->pollers[i].run_count;
+				*last_run_counter = pollers[i].run_count;
 			}
-			pollers_info[*current_count] = &pollers->pollers[i];
-			snprintf(pollers_info[*current_count]->thread_name, MAX_POLLER_NAME - 1, "%s", thread->name);
-			pollers_info[*current_count]->thread_id = thread->id;
-			pollers_info[(*current_count)++]->type = type;
+			pollers_info[(*current_count)++] = &pollers[i];
 			break;
 		}
 	}
@@ -1203,24 +1184,15 @@ static uint8_t
 prepare_poller_data(uint8_t current_page, struct rpc_poller_info **pollers,
 		    uint64_t *count, uint8_t last_page)
 {
-	struct rpc_poller_thread_info *thread;
-	uint64_t i;
 	bool reset_last_counter = false;
 	enum sort_type sorting;
 
-	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
-		thread = &g_pollers_stats.pollers_threads.threads[i];
-		if (last_page != current_page) {
-			reset_last_counter = true;
-		}
-
-		copy_pollers(&thread->active_pollers, thread->active_pollers.pollers_count, SPDK_ACTIVE_POLLER,
-			     thread, count, reset_last_counter, pollers);
-		copy_pollers(&thread->timed_pollers, thread->timed_pollers.pollers_count, SPDK_TIMED_POLLER, thread,
-			     count, reset_last_counter, pollers);
-		copy_pollers(&thread->paused_pollers, thread->paused_pollers.pollers_count, SPDK_PAUSED_POLLER,
-			     thread, count, reset_last_counter, pollers);
+	if (last_page != current_page) {
+		reset_last_counter = true;
 	}
+
+	copy_pollers(g_pollers_info, g_last_pollers_count,
+		     count, reset_last_counter, pollers);
 
 	if (last_page != current_page) {
 		last_page = current_page;
@@ -2024,13 +1996,10 @@ display_thread(struct rpc_thread_info *thread_info)
 {
 	PANEL *thread_panel;
 	WINDOW *thread_win;
-	struct rpc_poller_thread_info *thread;
-	struct rpc_pollers *pollers;
-	struct rpc_poller_info *poller;
-	uint64_t pollers_count, current_row, i, j, time;
+	uint64_t pollers_count, current_row, i, time;
 	int c;
 	bool stop_loop = false;
-	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN], run_count[MAX_POLLER_COUNT_STR_LEN];
+	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
 
 	pthread_mutex_lock(&g_thread_lock);
 	pollers_count = thread_info->active_pollers_count +
@@ -2089,36 +2058,23 @@ display_thread(struct rpc_thread_info *thread_info)
 
 	current_row = 8;
 
-	for (i = 0; i < g_pollers_stats.pollers_threads.threads_count; i++) {
-		thread = &g_pollers_stats.pollers_threads.threads[i];
-		if (thread->id == thread_info->id) {
-			pollers = &thread->active_pollers;
-			for (j = 0; j < pollers->pollers_count; j++) {
-				poller = &pollers->pollers[j];
-				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL, "%s", poller->name);
+	for (i = 0; i < g_last_pollers_count; i++) {
+		if (g_pollers_info[i].thread_id == thread_info->id) {
+			mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL, "%s", g_pollers_info[i].name);
+			if (g_pollers_info[i].type == SPDK_ACTIVE_POLLER) {
 				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 33, "Active");
-				snprintf(run_count, MAX_POLLER_COUNT_STR_LEN, "%" PRIu64, poller->run_count);
-				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 41, run_count);
-				current_row++;
-			}
-			pollers = &thread->timed_pollers;
-			for (j = 0; j < pollers->pollers_count; j++) {
-				poller = &pollers->pollers[j];
-				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL, "%s", poller->name);
+			} else if (g_pollers_info[i].type == SPDK_TIMED_POLLER) {
 				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 33, "Timed");
-				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 41, "%" PRIu64, poller->run_count);
-				time = poller->period_ticks * SPDK_SEC_TO_USEC / g_cores_stats.tick_rate;
-				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 59, "%" PRIu64, time);
-				current_row++;
-			}
-			pollers = &thread->paused_pollers;
-			for (j = 0; j < pollers->pollers_count; j++) {
-				poller = &pollers->pollers[j];
-				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL, "%s", poller->name);
+			} else {
 				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 33, "Paused");
-				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 41, "%" PRIu64, poller->run_count);
-				current_row++;
 			}
+			mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 41, "%" PRIu64,
+				  g_pollers_info[i].run_count);
+			if (g_pollers_info[i].period_ticks) {
+				time = g_pollers_info[i].period_ticks * SPDK_SEC_TO_USEC / g_cores_stats.tick_rate;
+				mvwprintw(thread_win, current_row, THREAD_WIN_FIRST_COL + 59, "%" PRIu64, time);
+			}
+			current_row++;
 		}
 	}
 
@@ -2532,6 +2488,7 @@ show_stats(pthread_t *data_thread)
 	uint8_t current_page = 0;
 	uint8_t max_pages = 1;
 	uint16_t required_size = WINDOW_HEADER + 1;
+	uint64_t i;
 	char current_page_str[CURRENT_PAGE_STR_LEN];
 	bool force_refresh = true;
 
@@ -2660,8 +2617,10 @@ show_stats(pthread_t *data_thread)
 	free_poller_history();
 
 	/* Free memory holding current data states before quitting application */
+	for (i = 0; i < g_last_pollers_count; i++) {
+		free_rpc_poller(&g_pollers_info[i]);
+	}
 	free_rpc_threads_stats(&g_threads_stats);
-	free_rpc_pollers_stats(&g_pollers_stats);
 	free_rpc_cores_stats(&g_cores_stats);
 }
 
