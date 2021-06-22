@@ -1767,9 +1767,9 @@ static void usage(char *program_name)
 	printf("\t[-G, --enable-debug enable debug logging]\n");
 #else
 	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+#endif
 	printf("\t[--transport-stats dump transport statistics]\n");
 	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
-#endif
 }
 
 static void
