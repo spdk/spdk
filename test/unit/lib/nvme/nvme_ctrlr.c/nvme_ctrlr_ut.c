@@ -149,6 +149,64 @@ nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, u
 	return 0;
 }
 
+int
+nvme_transport_ctrlr_set_reg_4_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     uint32_t value, spdk_nvme_reg_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_cpl cpl = {};
+
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+
+	nvme_transport_ctrlr_set_reg_4(ctrlr, offset, value);
+	cb_fn(cb_arg, value, &cpl);
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_set_reg_8_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     uint64_t value, spdk_nvme_reg_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_cpl cpl = {};
+
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+
+	nvme_transport_ctrlr_set_reg_8(ctrlr, offset, value);
+	cb_fn(cb_arg, value, &cpl);
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_get_reg_4_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_cpl cpl = {};
+	uint32_t value;
+
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+
+	nvme_transport_ctrlr_get_reg_4(ctrlr, offset, &value);
+	cb_fn(cb_arg, value, &cpl);
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_get_reg_8_async(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+				     spdk_nvme_reg_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_cpl cpl = {};
+	uint64_t value;
+
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+
+	nvme_transport_ctrlr_get_reg_8(ctrlr, offset, &value);
+	cb_fn(cb_arg, value, &cpl);
+	return 0;
+}
+
 uint32_t
 nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
