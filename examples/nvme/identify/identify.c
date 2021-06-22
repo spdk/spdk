@@ -111,6 +111,8 @@ static bool g_vmd = false;
 
 static bool g_ocssd_verbose = false;
 
+static struct spdk_nvme_detach_ctx *g_detach_ctx = NULL;
+
 static void
 hex_dump(const void *data, size_t size)
 {
@@ -2205,7 +2207,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	g_controllers_found++;
 	print_controller(ctrlr, trid);
-	spdk_nvme_detach(ctrlr);
+	spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
 }
 
 int main(int argc, char **argv)
@@ -2254,10 +2256,14 @@ int main(int argc, char **argv)
 
 		g_controllers_found++;
 		print_controller(ctrlr, &g_trid);
-		spdk_nvme_detach(ctrlr);
+		spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
 	} else if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
+	}
+
+	if (g_detach_ctx) {
+		spdk_nvme_detach_poll(g_detach_ctx);
 	}
 
 	if (g_controllers_found == 0) {
