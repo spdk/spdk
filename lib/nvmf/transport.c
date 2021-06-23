@@ -201,16 +201,18 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 		return NULL;
 	}
 
-	transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
-				   opts_local.num_shared_buffers,
-				   opts_local.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
-				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-				   SPDK_ENV_SOCKET_ID_ANY);
+	if (opts_local.num_shared_buffers) {
+		transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
+					   opts_local.num_shared_buffers,
+					   opts_local.io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
+					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
 
-	if (!transport->data_buf_pool) {
-		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
-		ops->destroy(transport, NULL, NULL);
-		return NULL;
+		if (!transport->data_buf_pool) {
+			SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+			ops->destroy(transport, NULL, NULL);
+			return NULL;
+		}
 	}
 
 	return transport;
@@ -239,9 +241,8 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 				    spdk_mempool_count(transport->data_buf_pool),
 				    transport->opts.num_shared_buffers);
 		}
+		spdk_mempool_free(transport->data_buf_pool);
 	}
-
-	spdk_mempool_free(transport->data_buf_pool);
 
 	return transport->ops->destroy(transport, cb_fn, cb_arg);
 }
