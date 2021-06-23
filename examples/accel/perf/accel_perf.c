@@ -162,33 +162,56 @@ usage(void)
 static int
 parse_args(int argc, char *argv)
 {
+	int argval;
+
 	switch (argc) {
 	case 'b':
-		g_ops_per_batch = spdk_strtol(optarg, 10);
+	case 'C':
+	case 'f':
+	case 'T':
+	case 'o':
+	case 'P':
+	case 'q':
+	case 's':
+	case 't':
+		argval = spdk_strtol(optarg, 10);
+		if (argval < 0) {
+			fprintf(stderr, "-%c option must be non-negative.\n", argc);
+			usage();
+			return 1;
+		}
+		break;
+	default:
+		break;
+	};
+
+	switch (argc) {
+	case 'b':
+		g_ops_per_batch = argval;
 		break;
 	case 'C':
-		g_crc32c_chained_count = spdk_strtol(optarg, 10);
+		g_crc32c_chained_count = argval;
 		break;
 	case 'f':
-		g_fill_pattern = (uint8_t)spdk_strtol(optarg, 10);
+		g_fill_pattern = (uint8_t)argval;
 		break;
 	case 'T':
-		g_threads_per_core = spdk_strtol(optarg, 10);
+		g_threads_per_core = argval;
 		break;
 	case 'o':
-		g_xfer_size_bytes = spdk_strtol(optarg, 10);
+		g_xfer_size_bytes = argval;
 		break;
 	case 'P':
-		g_fail_percent_goal = spdk_strtol(optarg, 10);
+		g_fail_percent_goal = argval;
 		break;
 	case 'q':
-		g_queue_depth = spdk_strtol(optarg, 10);
+		g_queue_depth = argval;
 		break;
 	case 's':
-		g_crc32c_seed = spdk_strtol(optarg, 10);
+		g_crc32c_seed = argval;
 		break;
 	case 't':
-		g_time_in_sec = spdk_strtol(optarg, 10);
+		g_time_in_sec = argval;
 		break;
 	case 'y':
 		g_verify = true;
