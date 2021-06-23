@@ -12,6 +12,7 @@ try:
 except ImportError:
     from http.server import HTTPServer
     from http.server import BaseHTTPRequestHandler
+from rpc.client import print_json
 
 rpc_sock = None
 
@@ -45,6 +46,8 @@ def rpc_call(req):
     closed = False
     response = None
 
+    print_json(req.decode('ascii'))
+
     while not closed:
         newdata = sock.recv(1024)
         if (newdata == b''):
@@ -60,6 +63,8 @@ def rpc_call(req):
 
     if not response and len(buf) > 0:
         raise
+
+    print_json(buf)
 
     return buf
 
