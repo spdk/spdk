@@ -64,3 +64,13 @@ chown -R stack:stack /opt/stack
 su -c "./stack.sh" -s /bin/bash stack
 source openrc admin admin
 openstack volume type create SPDK --public
+
+if [[ $branch == master ]]; then
+	# FIXME: For some reason tempest won't work unless neutron has securitygroup enabled
+	# (even when testing with security_group disabled in tempest.conf). For the time
+	# being, until someone understands why this seem to be the case, patch the ml2 plugin
+	# config - instead of touching our local.conf which is still valid for the wallaby -
+	# to enable the securitygroup right before the tests start.
+	[[ -e /etc/neutron/plugins/ml2/ml2_conf.ini ]]
+	sed -i -e "s/enable_security_group = False/enable_security_group = True/g" /etc/neutron/plugins/ml2/ml2_conf.ini
+fi

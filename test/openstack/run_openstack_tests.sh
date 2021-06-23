@@ -41,6 +41,9 @@ timing_exit configure_spdk
 timing_enter restart_cinder
 sudo systemctl restart devstack@c-*
 sleep 10
+# Make sure neutron is restarted as well
+sudo systemctl restart devstack@q-*
+sleep 10
 timing_exit restart_cinder
 
 rxe_cfg status
