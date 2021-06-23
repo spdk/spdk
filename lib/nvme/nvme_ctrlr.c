@@ -1391,9 +1391,8 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
-nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int rc = 0, rc_tmp = 0;
 	struct spdk_nvme_qpair	*qpair;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -1405,7 +1404,7 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		 *  reset in these cases.
 		 */
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ctrlr->is_resetting ? 0 : -ENXIO;
+		return ctrlr->is_resetting ? -EBUSY : -ENXIO;
 	}
 
 	ctrlr->is_resetting = true;
@@ -1437,12 +1436,26 @@ nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
-	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
-		if (nvme_ctrlr_process_init(ctrlr) != 0) {
-			NVME_CTRLR_ERRLOG(ctrlr, "controller reinitialization failed\n");
-			rc = -1;
-			break;
-		}
+	/* Return without releasing ctrlr_lock. ctrlr_lock will be released when spdk_nvme_ctrlr_reset_poll_async() returns 0. */
+	return 0;
+}
+
+/**
+ * This function will be called when the controller is being reinitialized.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static int
+nvme_ctrlr_reinit_on_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_qpair	*qpair;
+	int rc = 0, rc_tmp = 0;
+
+	if (nvme_ctrlr_process_init(ctrlr) != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "controller reinitialization failed\n");
+		rc = -1;
+	}
+	if (ctrlr->state != NVME_CTRLR_STATE_READY && rc != -1) {
+		return -EAGAIN;
 	}
 
 	/*
@@ -1495,7 +1508,9 @@ nvme_ctrlr_reset_ctx_init(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx,
 static int
 nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
 {
-	return nvme_ctrlr_reset(ctrlr_reset_ctx->ctrlr);
+	struct spdk_nvme_ctrlr *ctrlr = ctrlr_reset_ctx->ctrlr;
+
+	return nvme_ctrlr_reinit_on_reset(ctrlr);
 }
 
 int
@@ -1519,24 +1534,37 @@ spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
 			    struct spdk_nvme_ctrlr_reset_ctx **reset_ctx)
 {
 	struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx;
+	int rc;
 
 	ctrlr_reset_ctx = calloc(1, sizeof(*ctrlr_reset_ctx));
 	if (!ctrlr_reset_ctx) {
 		return -ENOMEM;
 	}
 
-	nvme_ctrlr_reset_ctx_init(ctrlr_reset_ctx, ctrlr);
-	*reset_ctx = ctrlr_reset_ctx;
+	rc = nvme_ctrlr_reset_pre(ctrlr);
+	if (rc != 0) {
+		free(ctrlr_reset_ctx);
+	} else {
+		nvme_ctrlr_reset_ctx_init(ctrlr_reset_ctx, ctrlr);
+		*reset_ctx = ctrlr_reset_ctx;
+	}
 
-	return 0;
+	return rc;
 }
 
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_reset_ctx reset_ctx = {};
-	int rc = 0;
+	int rc;
 
+	rc = nvme_ctrlr_reset_pre(ctrlr);
+	if (rc != 0) {
+		if (rc == -EBUSY) {
+			rc = 0;
+		}
+		return rc;
+	}
 	nvme_ctrlr_reset_ctx_init(&reset_ctx, ctrlr);
 
 	while (true) {

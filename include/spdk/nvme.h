@@ -1030,6 +1030,7 @@ struct spdk_nvme_ctrlr_reset_ctx;
  *
  * \return 0 on success.
  * \return -ENOMEM if context could not be allocated.
+ * \return -EBUSY if controller is already resetting.
  * \return -ENXIO if controller has been removed.
  *
  */
