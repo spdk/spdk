@@ -291,17 +291,6 @@ function set_test_storage() {
 	local source fs size avail mount use
 
 	local storage_fallback storage_candidates
-	local storage_fallback_purge
-
-	shopt -s nullglob
-	storage_fallback_purge=("${TMPDIR:-/tmp}/spdk."??????)
-	shopt -u nullglob
-
-	if ((${#storage_fallback_purge[@]} > 0)); then
-		printf '* Purging old temporary test storage (%s)\n' \
-			"${storage_fallback_purge[*]}" >&2
-		sudo rm -rf "${storage_fallback_purge[@]}"
-	fi
 
 	storage_fallback=$(mktemp -udt spdk.XXXXXX)
 	storage_candidates=(
@@ -1245,6 +1234,16 @@ function autotest_cleanup() {
 		kill "$udevadm_pid" || :
 	fi
 	revert_soft_roce
+
+	shopt -s nullglob
+	local storage_fallback_purge=("${TMPDIR:-/tmp}/spdk."??????)
+	shopt -u nullglob
+
+	if ((${#storage_fallback_purge[@]} > 0)); then
+		printf '* Purging old temporary test storage (%s)\n' \
+			"${storage_fallback_purge[*]}" >&2
+		rm -rf "${storage_fallback_purge[@]}"
+	fi
 }
 
 function freebsd_update_contigmem_mod() {
