@@ -2178,7 +2178,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	}
 
 invalid_log_page:
-	SPDK_ERRLOG("Unsupported Get Log Page 0x%02X\n", lid);
+	SPDK_DEBUGLOG(nvmf, "Unsupported Get Log Page 0x%02X\n", lid);
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2696,7 +2696,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
 			return get_features_generic(req, ctrlr->feat.async_event_configuration.raw);
 		default:
-			SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
+			SPDK_DEBUGLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
