@@ -2318,7 +2318,6 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->ctratt.host_id_exhid_supported = 1;
 		/* TODO: Concurrent execution of multiple abort commands. */
 		cdata->acl = 0;
-		cdata->aerl = 0;
 		cdata->frmw.slot1_ro = 1;
 		cdata->frmw.num_slots = 1;
 
