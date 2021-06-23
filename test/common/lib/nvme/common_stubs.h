@@ -101,6 +101,14 @@ DEFINE_STUB(nvme_fabric_ctrlr_get_reg_4, int, (struct spdk_nvme_ctrlr *ctrlr, ui
 		uint32_t *value), 0);
 DEFINE_STUB(nvme_fabric_ctrlr_get_reg_8, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
 		uint64_t *value), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_set_reg_4_async, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint32_t value, spdk_nvme_reg_cb cb, void *ctx), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_set_reg_8_async, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
+		uint64_t value, spdk_nvme_reg_cb cb, void *ctx), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_get_reg_4_async, int, (struct spdk_nvme_ctrlr *ctrlr,
+		uint32_t offset, spdk_nvme_reg_cb cb, void *ctx), 0);
+DEFINE_STUB(nvme_fabric_ctrlr_get_reg_8_async, int, (struct spdk_nvme_ctrlr *ctrlr,
+		uint32_t offset, spdk_nvme_reg_cb cb, void *ctx), 0);
 DEFINE_STUB(nvme_fabric_ctrlr_scan, int, (struct spdk_nvme_probe_ctx *probe_ctx,
 		bool direct_connect), 0);
 DEFINE_STUB(nvme_fabric_qpair_connect, int, (struct spdk_nvme_qpair *qpair, uint32_t num_entries),
