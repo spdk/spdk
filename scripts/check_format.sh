@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-readonly BASEDIR=$(readlink -f $(dirname $0))/..
-source "$BASEDIR/scripts/common.sh"
+rootdir=$(readlink -f "$(dirname "$0")")/..
+source "$rootdir/scripts/common.sh"
 
-cd $BASEDIR
+cd "$rootdir"
 
 # exit on errors
 set -e
