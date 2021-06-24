@@ -26,6 +26,7 @@
 	spdk_nvme_detach;
 	spdk_nvme_detach_async;
 	spdk_nvme_detach_poll_async;
+	spdk_nvme_detach_poll;
 
 	spdk_nvme_pcie_set_hotplug_filter;
 

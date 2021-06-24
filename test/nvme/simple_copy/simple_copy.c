@@ -385,16 +385,16 @@ cleanup(struct simple_copy_context *context)
 	while (ns_entry) {
 		struct ns_entry *next = ns_entry->next;
 
-		detach_ctx = NULL;
 		spdk_nvme_detach_async(ns_entry->ctrlr, &detach_ctx);
-
-		while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
-			;
-		}
 
 		free(ns_entry);
 		ns_entry = next;
 	}
+
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
+	}
+
 	for (i = 0; i < NUM_LBAS; i++) {
 		if (context->write_bufs && context->write_bufs[i]) {
 			spdk_free(context->write_bufs[i]);

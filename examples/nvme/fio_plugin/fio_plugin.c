@@ -1397,8 +1397,8 @@ static void spdk_fio_cleanup(struct thread_data *td)
 			free(fio_ctrlr);
 		}
 
-		while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
-			;
+		if (detach_ctx) {
+			spdk_nvme_detach_poll(detach_ctx);
 		}
 
 		if (fio_options->enable_vmd) {

@@ -951,6 +951,13 @@ int spdk_nvme_detach_async(struct spdk_nvme_ctrlr *ctrlr,
 int spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *detach_ctx);
 
 /**
+ * Continue calling spdk_nvme_detach_poll_async() internally until it returns 0.
+ *
+ * \param detach_ctx Context to track the detachment.
+ */
+void spdk_nvme_detach_poll(struct spdk_nvme_detach_ctx *detach_ctx);
+
+/**
  * Update the transport ID for a given controller.
  *
  * This function allows the user to set a new trid for a controller only if the

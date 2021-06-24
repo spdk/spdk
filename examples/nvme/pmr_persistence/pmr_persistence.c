@@ -351,8 +351,8 @@ cleanup(void)
 
 	spdk_nvme_detach_async(g_config.pmr_dev.ctrlr, &detach_ctx);
 
-	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
-		;
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
 	}
 }
 

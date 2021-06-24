@@ -649,8 +649,8 @@ int main(int argc, char **argv)
 		spdk_nvme_detach_async(iter->ctrlr, &detach_ctx);
 	}
 
-	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
-		;
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
 	}
 
 	return rc;

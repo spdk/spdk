@@ -235,6 +235,14 @@ spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *detach_ctx)
 }
 
 void
+spdk_nvme_detach_poll(struct spdk_nvme_detach_ctx *detach_ctx)
+{
+	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
+		;
+	}
+}
+
+void
 nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_completion_poll_status	*status = arg;

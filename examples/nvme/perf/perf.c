@@ -2701,8 +2701,8 @@ unregister_controllers(void)
 		free(entry);
 	}
 
-	while (detach_ctx && spdk_nvme_detach_poll_async(detach_ctx) == -EAGAIN) {
-		;
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
 	}
 
 	if (g_vmd) {
