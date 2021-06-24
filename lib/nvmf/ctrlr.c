@@ -1194,8 +1194,6 @@ nvmf_property_get(struct spdk_nvmf_request *req)
 
 	response->value.u64 = prop->get_cb(ctrlr);
 
-	SPDK_DEBUGLOG(nvmf, "response value: 0x%" PRIx64 "\n", response->value.u64);
-
 	if (size != prop->size) {
 		/* The size must be 4 and the prop->size is 8. Figure out which part of the property to read. */
 		assert(size == 4);
@@ -1209,6 +1207,8 @@ nvmf_property_get(struct spdk_nvmf_request *req)
 			response->value.u64 >>= 32;
 		}
 	}
+
+	SPDK_DEBUGLOG(nvmf, "response value: 0x%" PRIx64 "\n", response->value.u64);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
