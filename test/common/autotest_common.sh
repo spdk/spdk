@@ -679,11 +679,6 @@ function process_shm() {
 	id=$2
 	if [ "$type" = "--pid" ]; then
 		id="pid${id}"
-	elif [ "$type" = "--id" ]; then
-		id="${id}"
-	else
-		echo "Please specify to search for pid or shared memory id."
-		return 1
 	fi
 
 	shm_files=$(find /dev/shm -name "*.${id}" -printf "%f\n")
