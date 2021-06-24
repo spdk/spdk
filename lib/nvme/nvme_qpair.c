@@ -936,6 +936,9 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 	}
 
 	if (spdk_likely(rc == 0)) {
+		if (SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
+			spdk_nvme_print_command(qpair->id, &req->cmd);
+		}
 		req->queued = false;
 		return 0;
 	}

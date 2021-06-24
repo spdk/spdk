@@ -633,6 +633,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	struct nvme_request		*req;
 	bool				retry, error;
 	bool				req_from_current_proc = true;
+	bool				print_error;
 
 	req = tr->req;
 
@@ -641,9 +642,13 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	error = spdk_nvme_cpl_is_error(cpl);
 	retry = error && nvme_completion_is_retry(cpl) &&
 		req->retries < pqpair->retry_count;
+	print_error = error && print_on_error && !qpair->ctrlr->opts.disable_error_logging;
 
-	if (error && print_on_error && !qpair->ctrlr->opts.disable_error_logging) {
+	if (print_error) {
 		spdk_nvme_qpair_print_command(qpair, &req->cmd);
+	}
+
+	if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
 		spdk_nvme_qpair_print_completion(qpair, cpl);
 	}
 
