@@ -219,7 +219,7 @@ function confirm_deps() {
 	if [ "$diff" != "" ]; then
 		touch $fail_file
 		echo "there was a dependency mismatch in the library $lib_shortname"
-		echo "The makefile lists: '${lib_make_deps[*]}'"
+		echo "The makefile (spdk.lib_deps.mk) lists: '${lib_make_deps[*]}'"
 		echo "readelf outputs   : '${dep_names[*]}'"
 		echo "---------------------------------------------------------------------"
 	fi
