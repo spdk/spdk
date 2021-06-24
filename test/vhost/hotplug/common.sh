@@ -88,7 +88,7 @@ function print_test_fio_header() {
 function vms_setup() {
 	for vm_conf in "${vms[@]}"; do
 		IFS=',' read -ra conf <<< "$vm_conf"
-		if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
+		if [[ -z ${conf[0]} ]] || ! assert_number ${conf[0]}; then
 			fail "invalid VM configuration syntax $vm_conf"
 		fi
 
