@@ -63,6 +63,9 @@ the spdk_nvme_ctrlr_opts structure prior to controller attach.
 Add a new function `spdk_nvme_detach_poll` to simplify a common use case to continue
 polling until all detachments complete.
 
+An existing function `spdk_nvme_detach_async` was updated to add one or more detachments
+to an active context while it is being polled.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create

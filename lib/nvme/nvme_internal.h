@@ -914,7 +914,6 @@ struct nvme_ctrlr_detach_ctx {
 
 struct spdk_nvme_detach_ctx {
 	TAILQ_HEAD(, nvme_ctrlr_detach_ctx)	head;
-	bool					polling_started;
 };
 
 struct nvme_driver {

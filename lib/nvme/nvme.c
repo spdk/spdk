@@ -180,9 +180,6 @@ spdk_nvme_detach_async(struct spdk_nvme_ctrlr *ctrlr,
 			return -ENOMEM;
 		}
 		TAILQ_INIT(&detach_ctx->head);
-	} else if (detach_ctx->polling_started) {
-		SPDK_ERRLOG("Busy at polling detachment now.\n");
-		return -EBUSY;
 	}
 
 	rc = nvme_ctrlr_detach_async(ctrlr, &ctx);
@@ -213,8 +210,6 @@ spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *detach_ctx)
 	if (detach_ctx == NULL) {
 		return -EINVAL;
 	}
-
-	detach_ctx->polling_started = true;
 
 	TAILQ_FOREACH_SAFE(ctx, &detach_ctx->head, link, tmp_ctx) {
 		TAILQ_REMOVE(&detach_ctx->head, ctx, link);

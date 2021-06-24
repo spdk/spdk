@@ -79,12 +79,18 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr, struct nvme_ctrlr_detac
 {
 	ut_destruct_called = true;
 	ctrlr->is_destructed = true;
+
+	ctx->shutdown_complete = true;
 }
 
 int
 nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 			       struct nvme_ctrlr_detach_ctx *ctx)
 {
+	if (!ctx->shutdown_complete) {
+		return -EAGAIN;
+	}
+
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctrlr);
 	}
@@ -1496,6 +1502,7 @@ test_spdk_nvme_detach_async(void)
 	struct spdk_nvme_ctrlr ctrlr1, ctrlr2;
 	struct nvme_driver test_driver;
 	struct spdk_nvme_detach_ctx *detach_ctx;
+	struct nvme_ctrlr_detach_ctx *ctx;
 
 	detach_ctx = NULL;
 	memset(&ctrlr1, 0, sizeof(ctrlr1));
@@ -1554,6 +1561,49 @@ test_spdk_nvme_detach_async(void)
 	rc = spdk_nvme_detach_poll_async(detach_ctx);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs) == true);
+	CU_ASSERT(TAILQ_EMPTY(&test_driver.shared_attached_ctrlrs) == true);
+
+	/* Test if ctrlr2 can be detached by using the same context that
+	 * ctrlr1 uses while ctrlr1 is being detached.
+	 */
+	detach_ctx = NULL;
+	memset(&ctrlr1, 0, sizeof(ctrlr1));
+	ctrlr1.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	memset(&ctrlr2, 0, sizeof(ctrlr2));
+	ctrlr2.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr1, tailq);
+	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr2, tailq);
+
+	rc = spdk_nvme_detach_async(&ctrlr1, &detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr1.is_destructed == true);
+	SPDK_CU_ASSERT_FATAL(detach_ctx != NULL);
+
+	ctx = TAILQ_FIRST(&detach_ctx->head);
+	SPDK_CU_ASSERT_FATAL(ctx != NULL);
+	CU_ASSERT(ctx->ctrlr == &ctrlr1);
+	CU_ASSERT(ctx->shutdown_complete == true);
+
+	/* Set ctx->shutdown_complete for ctrlr1 to false to allow ctrlr2 to
+	 * add to detach_ctx while spdk_nvme_detach_poll_async() is being
+	 * executed.
+	 */
+	ctx->shutdown_complete = false;
+
+	rc = spdk_nvme_detach_poll_async(detach_ctx);
+	CU_ASSERT(rc == -EAGAIN);
+
+	rc = spdk_nvme_detach_async(&ctrlr2, &detach_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr2.is_destructed == true);
+
+	/* After ctrlr2 is added to detach_ctx, set ctx->shutdown_complete for
+	 * ctrlr1 to true to complete spdk_nvme_detach_poll_async().
+	 */
+	ctx->shutdown_complete = true;
+
+	rc = spdk_nvme_detach_poll_async(detach_ctx);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_EMPTY(&test_driver.shared_attached_ctrlrs) == true);
 
 	g_spdk_nvme_driver = NULL;
