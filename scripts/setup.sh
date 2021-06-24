@@ -579,7 +579,9 @@ function status_linux() {
 	printf '\n%-8s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 		"Type" "BDF" "Vendor" "Device" "NUMA" "Driver" "Device" "Block devices" >&2
 
-	for bdf in "${!all_devices_d[@]}"; do
+	sorted_bdfs=($(printf '%s\n' "${!all_devices_d[@]}" | sort))
+
+	for bdf in "${sorted_bdfs[@]}"; do
 		driver=${drivers_d["$bdf"]}
 		if [ "$numa_nodes" = "0" ]; then
 			node="-"
@@ -611,7 +613,7 @@ function status_linux() {
 		printf '%-8s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 			"$desc" "$bdf" "${pci_ids_vendor["$bdf"]#0x}" "${pci_ids_device["$bdf"]#0x}" \
 			"$node" "${driver:--}" "${name:-}" "${blknames[*]:--}"
-	done | sort -bk2,2
+	done
 }
 
 function status_freebsd() {
