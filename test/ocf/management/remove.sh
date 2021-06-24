@@ -60,7 +60,7 @@ $rpc_py bdev_ocf_delete ocfWT
 
 # Check that ocfWT was deleted properly
 
-! $rpc_py bdev_ocf_get_bdevs | jq -r '.[] .name' | grep -qw ocfWT
+[[ -z $("$rpc_py" bdev_ocf_get_bdevs | jq -r '.[] | select(.name == "ocfWT") | .name') ]]
 
 trap - SIGINT SIGTERM EXIT
 
@@ -76,7 +76,7 @@ waitforlisten $spdk_pid
 
 # Check that ocfWT was not loaded on app start
 
-! $rpc_py bdev_ocf_get_bdevs | jq -r '.[] .name' | grep -qw ocfWT
+[[ -z $("$rpc_py" bdev_ocf_get_bdevs | jq -r '.[] | select(name == "ocfWT") | .name') ]]
 
 trap - SIGINT SIGTERM EXIT
 
