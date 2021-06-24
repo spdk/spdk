@@ -32,13 +32,13 @@ $rpc_py framework_start_init
 echo "iscsi_tgt is listening. Running tests..."
 
 # RPC framework_wait_init should be already returned, so its process must be non-existed
-! ps $rpc_wait_pid
+NOT ps $rpc_wait_pid
 
 # RPC framework_wait_init will directly returned after subsystem initialized.
 $rpc_py framework_wait_init &
 rpc_wait_pid=$!
 sleep 1
-! ps $rpc_wait_pid
+NOT ps $rpc_wait_pid
 
 timing_exit start_iscsi_tgt
 
