@@ -43,7 +43,7 @@
 struct list_head {
 	struct list_head *next;
 	struct list_head *prev;
-};
+} __attribute__((aligned(64)));
 
 /**
  * start an empty list
