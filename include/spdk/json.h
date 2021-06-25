@@ -69,6 +69,9 @@ struct spdk_json_val {
 	 *
 	 * For SPDK_JSON_VAL_NUMBER, this points to the beginning of the number as represented in
 	 *  the original JSON (text representation, not converted to a numeric value).
+	 *
+	 * For JSON objects and arrays, this points to their beginning and has a type
+	 *  set to SPDK_JSON_VAL_OBJECT_BEGIN or SPDK_JSON_VAL_ARRAY_BEGIN respectively.
 	 */
 	void *start;
 
@@ -80,7 +83,7 @@ struct spdk_json_val {
 	 *
 	 * For SPDK_JSON_VAL_ARRAY_BEGIN and SPDK_JSON_VAL_OBJECT_BEGIN,
 	 *  this is the number of values contained within the array or object (including
-	 *  nested objects and arrays, but not including the _END value).  The array or object _END
+	 *  nested objects and arrays, but not including the _END value). The array or object _END
 	 *  value can be found by advancing len values from the _BEGIN value.
 	 */
 	uint32_t len;
