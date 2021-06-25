@@ -1312,6 +1312,12 @@ nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 	uint64_t ticks_per_ms, timeout_in_ticks, now_ticks;
 
 	ctrlr->state = state;
+	if (timeout_in_ms == NVME_TIMEOUT_KEEP_EXISTING) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "setting state to %s (keeping existing timeout)\n",
+				    nvme_ctrlr_state_string(ctrlr->state));
+		return;
+	}
+
 	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
 		goto inf;
 	}
