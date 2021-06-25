@@ -678,22 +678,43 @@ nvme_ctrlr_alloc_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t ana_log_page_size;
 
 	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + ctrlr->cdata.nanagrpid *
-			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->cdata.nn *
+			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->max_active_ns_idx *
 			    sizeof(uint32_t);
 
-	ctrlr->ana_log_page = calloc(1, ana_log_page_size);
-	if (ctrlr->ana_log_page == NULL) {
-		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate ANA log page buffer\n");
-		return -ENXIO;
-	}
+	/* Number of active namespaces may have changed.
+	 * Check if ANA log page fits into existing buffer.
+	 */
+	if (ana_log_page_size > ctrlr->ana_log_page_size) {
+		void *new_buffer;
 
-	ctrlr->copied_ana_desc = calloc(1, ana_log_page_size);
-	if (ctrlr->copied_ana_desc == NULL) {
-		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate a buffer to parse ANA descriptor\n");
-		return -ENOMEM;
-	}
+		if (ctrlr->ana_log_page) {
+			new_buffer = realloc(ctrlr->ana_log_page, ana_log_page_size);
+		} else {
+			new_buffer = calloc(1, ana_log_page_size);
+		}
 
-	ctrlr->ana_log_page_size = ana_log_page_size;
+		if (!new_buffer) {
+			NVME_CTRLR_ERRLOG(ctrlr, "could not allocate ANA log page buffer, size %u\n",
+					  ana_log_page_size);
+			return -ENXIO;
+		}
+
+		ctrlr->ana_log_page = new_buffer;
+		if (ctrlr->copied_ana_desc) {
+			new_buffer = realloc(ctrlr->copied_ana_desc, ana_log_page_size);
+		} else {
+			new_buffer = calloc(1, ana_log_page_size);
+		}
+
+		if (!new_buffer) {
+			NVME_CTRLR_ERRLOG(ctrlr, "could not allocate a buffer to parse ANA descriptor, size %u\n",
+					  ana_log_page_size);
+			return -ENOMEM;
+		}
+
+		ctrlr->copied_ana_desc = new_buffer;
+		ctrlr->ana_log_page_size = ana_log_page_size;
+	}
 
 	return 0;
 }
@@ -703,6 +724,11 @@ nvme_ctrlr_update_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status *status;
 	int rc;
+
+	rc = nvme_ctrlr_alloc_ana_log_page(ctrlr);
+	if (rc != 0) {
+		return rc;
+	}
 
 	status = calloc(1, sizeof(*status));
 	if (status == NULL) {

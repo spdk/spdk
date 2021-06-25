@@ -280,11 +280,29 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	return 0;
 }
 
+struct spdk_nvme_ana_page *g_ana_hdr;
+struct spdk_nvme_ana_group_descriptor **g_ana_descs;
+
 int
 spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
 				 uint32_t nsid, void *payload, uint32_t payload_size,
 				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	if ((log_page == SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS) && g_ana_hdr) {
+		uint32_t i;
+		uint8_t *ptr = payload;
+
+		memset(payload, 0, payload_size);
+		memcpy(ptr, g_ana_hdr, sizeof(*g_ana_hdr));
+		ptr += sizeof(*g_ana_hdr);
+		for (i = 0; i < g_ana_hdr->num_ana_group_desc; ++i) {
+			uint32_t desc_size = sizeof(**g_ana_descs) +
+					     g_ana_descs[i]->num_of_nsid * sizeof(uint32_t);
+			memcpy(ptr, g_ana_descs[i], desc_size);
+			ptr += desc_size;
+		}
+	}
+
 	fake_cpl_sc(cb_fn, cb_arg);
 	return 0;
 }
@@ -2874,7 +2892,7 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 	ctrlr.cdata.cmic.ana_reporting = true;
 	ctrlr.cdata.lpa.celp = 1;
 	ctrlr.cdata.nanagrpid = 1;
-	ctrlr.cdata.nn = 1;
+	ctrlr.max_active_ns_idx = 1;
 
 	rc = nvme_ctrlr_set_supported_log_pages(&ctrlr);
 	CU_ASSERT(rc == 0);
@@ -2905,6 +2923,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	ctrlr.cdata.nn = 3;
 	ctrlr.cdata.nanagrpid = 3;
 	ctrlr.num_ns = 3;
+	ctrlr.max_active_ns_idx = 3;
 
 	rc = nvme_ctrlr_init_ana_log_page(&ctrlr);
 	CU_ASSERT(rc == 0);
@@ -2964,6 +2983,90 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	free(ctrlr.copied_ana_desc);
 }
 
+static void
+test_nvme_ctrlr_ana_resize(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	uint32_t active_ns_list[] = { 1, 2, 3, 4 };
+	struct spdk_nvme_ana_page ana_hdr = {
+		.change_count = 0,
+		.num_ana_group_desc = 1
+	};
+	uint8_t ana_desc_buf[sizeof(struct spdk_nvme_ana_group_descriptor) + 4 * sizeof(uint32_t)] = {};
+	struct spdk_nvme_ana_group_descriptor *ana_desc =
+		(struct spdk_nvme_ana_group_descriptor *)ana_desc_buf;
+	struct spdk_nvme_ns *ns;
+	union spdk_nvme_async_event_completion aer_event = {
+		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
+		.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED
+	};
+	struct spdk_nvme_cpl aer_cpl = {
+		.status.sct = SPDK_NVME_SCT_GENERIC,
+		.status.sc = SPDK_NVME_SC_SUCCESS,
+		.cdw0 = aer_event.raw
+	};
+	uint32_t i;
+
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+
+	ctrlr.vs.bits.mjr = 1;
+	ctrlr.vs.bits.mnr = 4;
+	ctrlr.vs.bits.ter = 0;
+	ctrlr.cdata.nn = 4096;
+	ctrlr.cdata.cmic.ana_reporting = true;
+	ctrlr.cdata.nanagrpid = 1;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
+	/* Start with 2 active namespaces */
+	g_active_ns_list = active_ns_list;
+	g_active_ns_list_length = 2;
+	g_ana_hdr = &ana_hdr;
+	g_ana_descs = &ana_desc;
+	ana_desc->ana_group_id = 1;
+	ana_desc->ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	ana_desc->num_of_nsid = 2;
+	for (i = 0; i < ana_desc->num_of_nsid; ++i) {
+		ana_desc->nsid[i] = i + 1;
+	}
+
+	/* Bring controller to ready state */
+	while (ctrlr.state != NVME_CTRLR_STATE_READY) {
+		SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
+	}
+
+	for (i = 0; i < ana_desc->num_of_nsid; ++i) {
+		ns = spdk_nvme_ctrlr_get_ns(&ctrlr, i + 1);
+		CU_ASSERT(ns->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
+	}
+
+	/* Add more namespaces */
+	g_active_ns_list_length = 4;
+	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+
+	/* Update ANA log with new namespaces */
+	ana_desc->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	ana_desc->num_of_nsid = 4;
+	for (i = 0; i < ana_desc->num_of_nsid; ++i) {
+		ana_desc->nsid[i] = i + 1;
+	}
+	aer_event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_ANA_CHANGE;
+	aer_cpl.cdw0 = aer_event.raw;
+	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+
+	for (i = 0; i < ana_desc->num_of_nsid; ++i) {
+		ns = spdk_nvme_ctrlr_get_ns(&ctrlr, i + 1);
+		CU_ASSERT(ns->ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
+	}
+
+	g_active_ns_list = 0;
+	g_active_ns_list_length = 0;
+	g_ana_hdr = NULL;
+	g_ana_descs = NULL;
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -3015,6 +3118,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_namespaces_iocs_specific_next);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_supported_log_pages);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_parse_ana_log_page);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_ana_resize);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
