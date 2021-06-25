@@ -1387,6 +1387,35 @@ test_nvmf_ns_reservation_add_remove_registrant(void)
 	CU_ASSERT(ns.gen == 2);
 }
 
+static void
+test_nvmf_subsystem_add_ctrlr(void)
+{
+	int rc;
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_tgt tgt = {};
+	char nqn[256] = "nqn.2016-06.io.spdk:subsystem1";
+	struct spdk_nvmf_subsystem *subsystem = NULL;
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	ctrlr.subsys = subsystem;
+
+	rc = nvmf_subsystem_add_ctrlr(subsystem, &ctrlr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&subsystem->ctrlrs));
+	CU_ASSERT(ctrlr.cntlid == 1);
+	CU_ASSERT(nvmf_subsystem_get_ctrlr(subsystem, 1) == &ctrlr);
+
+	nvmf_subsystem_remove_ctrlr(subsystem, &ctrlr);
+	CU_ASSERT(TAILQ_EMPTY(&subsystem->ctrlrs));
+	spdk_nvmf_subsystem_destroy(subsystem);
+	free(tgt.subsystems);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1412,6 +1441,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_preempt_notification);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
+	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
 
 	allocate_threads(1);
 	set_thread(0);
