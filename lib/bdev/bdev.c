@@ -475,6 +475,21 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	return 0;
 }
 
+struct spdk_bdev *
+spdk_bdev_get_by_name(const char *bdev_name)
+{
+	struct spdk_bdev_name find;
+	struct spdk_bdev_name *res;
+
+	find.name = (char *)bdev_name;
+	res = RB_FIND(bdev_name_tree, &g_bdev_mgr.bdev_names, &find);
+	if (res != NULL) {
+		return res->bdev;
+	}
+
+	return NULL;
+}
+
 struct spdk_bdev_wait_for_examine_ctx {
 	struct spdk_poller              *poller;
 	spdk_bdev_wait_for_examine_cb	cb_fn;
@@ -723,21 +738,6 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 	}
 
 	return bdev;
-}
-
-struct spdk_bdev *
-spdk_bdev_get_by_name(const char *bdev_name)
-{
-	struct spdk_bdev_name find;
-	struct spdk_bdev_name *res;
-
-	find.name = (char *)bdev_name;
-	res = RB_FIND(bdev_name_tree, &g_bdev_mgr.bdev_names, &find);
-	if (res != NULL) {
-		return res->bdev;
-	}
-
-	return NULL;
 }
 
 void
