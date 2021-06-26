@@ -475,8 +475,8 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 	return 0;
 }
 
-struct spdk_bdev *
-spdk_bdev_get_by_name(const char *bdev_name)
+static struct spdk_bdev *
+bdev_get_by_name(const char *bdev_name)
 {
 	struct spdk_bdev_name find;
 	struct spdk_bdev_name *res;
@@ -488,6 +488,18 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	}
 
 	return NULL;
+}
+
+struct spdk_bdev *
+spdk_bdev_get_by_name(const char *bdev_name)
+{
+	struct spdk_bdev *bdev;
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	bdev = bdev_get_by_name(bdev_name);
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
+	return bdev;
 }
 
 struct spdk_bdev_wait_for_examine_ctx {
@@ -3265,7 +3277,7 @@ spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 		return -EINVAL;
 	}
 
-	if (spdk_bdev_get_by_name(alias)) {
+	if (bdev_get_by_name(alias)) {
 		SPDK_ERRLOG("Bdev name/alias: %s already exists\n", alias);
 		return -EEXIST;
 	}
@@ -5557,7 +5569,7 @@ bdev_register(struct spdk_bdev *bdev)
 		return -EINVAL;
 	}
 
-	if (spdk_bdev_get_by_name(bdev->name)) {
+	if (bdev_get_by_name(bdev->name)) {
 		SPDK_ERRLOG("Bdev name:%s already exists\n", bdev->name);
 		return -EEXIST;
 	}
@@ -5872,7 +5884,7 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 
 	pthread_mutex_lock(&g_bdev_mgr.mutex);
 
-	bdev = spdk_bdev_get_by_name(bdev_name);
+	bdev = bdev_get_by_name(bdev_name);
 
 	if (bdev == NULL) {
 		SPDK_NOTICELOG("Currently unable to find bdev with name: %s\n", bdev_name);
