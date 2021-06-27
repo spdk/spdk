@@ -3318,7 +3318,9 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
 		if (strcmp(alias, tmp->alias.name) == 0) {
 			TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
+			pthread_mutex_lock(&g_bdev_mgr.mutex);
 			bdev_name_del(&tmp->alias);
+			pthread_mutex_unlock(&g_bdev_mgr.mutex);
 			free(tmp);
 			return 0;
 		}
@@ -3336,7 +3338,9 @@ spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
 
 	TAILQ_FOREACH_SAFE(p, &bdev->aliases, tailq, tmp) {
 		TAILQ_REMOVE(&bdev->aliases, p, tailq);
+		pthread_mutex_lock(&g_bdev_mgr.mutex);
 		bdev_name_del(&p->alias);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		free(p);
 	}
 }
@@ -5954,6 +5958,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 
 	spdk_poller_unregister(&desc->io_timeout_poller);
 
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
 	pthread_mutex_lock(&bdev->internal.mutex);
 	pthread_mutex_lock(&desc->mutex);
 
@@ -5986,12 +5991,14 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
 		rc = bdev_unregister_unsafe(bdev);
 		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 		if (rc == 0) {
 			spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
 		}
 	} else {
 		pthread_mutex_unlock(&bdev->internal.mutex);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 	}
 }
 
