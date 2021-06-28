@@ -164,7 +164,7 @@ struct nvmf_vfio_user_ctrlr {
 	uint32_t				num_connected_qps;
 
 	struct spdk_thread			*thread;
-	struct spdk_poller			*mmio_poller;
+	struct spdk_poller			*vfu_ctx_poller;
 
 	uint16_t				cntlid;
 
@@ -1885,7 +1885,7 @@ _free_ctrlr(void *ctx)
 		free_qp(ctrlr, i);
 	}
 
-	spdk_poller_unregister(&ctrlr->mmio_poller);
+	spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 	free(ctrlr);
 }
 
@@ -2244,8 +2244,11 @@ vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	return 0;
 }
 
+/*
+ * Poll for and process any incoming vfio-user messages.
+ */
 static int
-vfio_user_poll_mmio(void *ctx)
+vfio_user_poll_vfu_ctx(void *ctx)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	int ret;
@@ -2255,8 +2258,8 @@ vfio_user_poll_mmio(void *ctx)
 	/* This will call access_bar0_fn() if there are any writes
 	 * to the portion of the BAR that is not mmap'd */
 	ret = vfu_run_ctx(ctrlr->endpoint->vfu_ctx);
-	if (spdk_unlikely(ret != 0)) {
-		spdk_poller_unregister(&ctrlr->mmio_poller);
+	if (spdk_unlikely(ret == -1)) {
+		spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 
 		/* initiator shutdown or reset, waiting for another re-connect */
 		if (errno == ENOTCONN) {
@@ -2267,7 +2270,7 @@ vfio_user_poll_mmio(void *ctx)
 		fail_ctrlr(ctrlr);
 	}
 
-	return SPDK_POLLER_BUSY;
+	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int
@@ -2301,7 +2304,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
 		ctrlr->cntlid = qpair->qpair.ctrlr->cntlid;
 		ctrlr->thread = spdk_get_thread();
-		ctrlr->mmio_poller = SPDK_POLLER_REGISTER(vfio_user_poll_mmio, ctrlr, 0);
+		ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx, ctrlr, 0);
 	} else {
 		/* For I/O queues this command was generated in response to an
 		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
