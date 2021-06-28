@@ -652,7 +652,7 @@ cuse_ctrlr_ioctl(fuse_req_t req, int cmd, void *arg,
 
 	default:
 		SPDK_ERRLOG("Unsupported IOCTL 0x%X.\n", cmd);
-		fuse_reply_err(req, EINVAL);
+		fuse_reply_err(req, ENOTTY);
 	}
 }
 
@@ -711,7 +711,7 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
 
 	default:
 		SPDK_ERRLOG("Unsupported IOCTL 0x%X.\n", cmd);
-		fuse_reply_err(req, EINVAL);
+		fuse_reply_err(req, ENOTTY);
 	}
 }
 
