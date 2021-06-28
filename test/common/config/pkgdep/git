@@ -253,6 +253,10 @@ function _install_qemu() {
 		opt_params+=("--disable-glusterfs")
 	fi
 
+	if ((gcc_version >= 11)); then
+		extra_cflags+=("-Wno-error=array-bounds")
+	fi
+
 	# Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
 	# If using tsocks, please make sure to complete this config before trying to build qemu.
 	if [[ $INSTALL_TSOCKS == true && $NO_TSOCKS != true ]]; then
