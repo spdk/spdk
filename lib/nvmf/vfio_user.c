@@ -2045,7 +2045,10 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 }
 
 /*
- * Called by spdk_nvmf_transport_poll_group_add.
+ * Add the given qpair to the given poll group. New qpairs are added to
+ * ->new_qps; they are processed via nvmf_vfio_user_accept(), calling
+ * spdk_nvmf_tgt_new_qpair(), which picks a poll group, then calls back
+ * here via nvmf_transport_poll_group_add().
  */
 static int
 nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
