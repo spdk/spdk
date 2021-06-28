@@ -203,16 +203,6 @@ struct rpc_thread_info {
 	uint64_t paused_pollers_count;
 };
 
-struct rpc_threads {
-	uint64_t threads_count;
-	struct rpc_thread_info thread_info[RPC_MAX_THREADS];
-};
-
-struct rpc_threads_stats {
-	uint64_t tick_rate;
-	struct rpc_threads threads;
-};
-
 struct rpc_poller_info {
 	char *name;
 	char *state;
@@ -254,7 +244,7 @@ struct rpc_cores_stats {
 	struct rpc_cores cores;
 };
 
-struct rpc_threads_stats g_threads_stats;
+struct rpc_thread_info g_threads_info[RPC_MAX_THREADS];
 struct rpc_poller_info g_pollers_info[RPC_MAX_POLLERS];
 struct rpc_cores_stats g_cores_stats;
 
@@ -271,16 +261,12 @@ init_str_len(void)
 }
 
 static void
-free_rpc_threads_stats(struct rpc_threads_stats *req)
+free_rpc_threads_stats(struct rpc_thread_info *req)
 {
-	uint64_t i;
-
-	for (i = 0; i < req->threads.threads_count; i++) {
-		free(req->threads.thread_info[i].name);
-		req->threads.thread_info[i].name = NULL;
-		free(req->threads.thread_info[i].cpumask);
-		req->threads.thread_info[i].cpumask = NULL;
-	}
+	free(req->name);
+	req->name = NULL;
+	free(req->cpumask);
+	req->cpumask = NULL;
 }
 
 static const struct spdk_json_object_decoder rpc_thread_info_decoders[] = {
@@ -295,27 +281,36 @@ static const struct spdk_json_object_decoder rpc_thread_info_decoders[] = {
 };
 
 static int
-rpc_decode_threads_object(const struct spdk_json_val *val, void *out)
+rpc_decode_threads_array(struct spdk_json_val *val, struct rpc_thread_info *out,
+			 uint64_t *current_threads_count)
 {
-	struct rpc_thread_info *info = out;
+	struct spdk_json_val *thread = val;
+	uint64_t i = 0;
+	int rc;
 
-	return spdk_json_decode_object(val, rpc_thread_info_decoders,
-				       SPDK_COUNTOF(rpc_thread_info_decoders), info);
+	/* Fetch the beginning of threads array */
+	rc = spdk_json_find_array(thread, "threads", NULL, &thread);
+	if (rc) {
+		printf("Could not fetch threads array from JSON.\n");
+		goto end;
+	}
+
+	for (thread = spdk_json_array_first(thread); thread != NULL; thread = spdk_json_next(thread)) {
+		rc = spdk_json_decode_object(thread, rpc_thread_info_decoders,
+					     SPDK_COUNTOF(rpc_thread_info_decoders), &out[i]);
+		if (rc) {
+			printf("Could not decode thread object from JSON.\n");
+			break;
+		}
+
+		i++;
+	}
+
+end:
+
+	*current_threads_count = i;
+	return rc;
 }
-
-static int
-rpc_decode_threads_array(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_threads *threads = out;
-
-	return spdk_json_decode_array(val, rpc_decode_threads_object, threads->thread_info, RPC_MAX_THREADS,
-				      &threads->threads_count, sizeof(struct rpc_thread_info));
-}
-
-static const struct spdk_json_object_decoder rpc_threads_stats_decoders[] = {
-	{"tick_rate", offsetof(struct rpc_threads_stats, tick_rate), spdk_json_decode_uint64},
-	{"threads", offsetof(struct rpc_threads_stats, threads), rpc_decode_threads_array},
-};
 
 static void
 free_rpc_poller(struct rpc_poller_info *poller)
@@ -638,10 +633,9 @@ static int
 get_thread_data(void)
 {
 	struct spdk_jsonrpc_client_response *json_resp = NULL;
-	struct rpc_threads_stats threads_stats;
-	struct rpc_thread_info *thread_info;
+	struct rpc_thread_info thread_info[RPC_MAX_THREADS], *thread;
 	struct rpc_core_info *core_info;
-	uint64_t i, j, k;
+	uint64_t i, j, k, current_threads_count = 0;
 	int rc = 0;
 
 	rc = rpc_send_req("thread_get_stats", &json_resp);
@@ -650,52 +644,57 @@ get_thread_data(void)
 	}
 
 	/* Decode json */
-	memset(&threads_stats, 0, sizeof(threads_stats));
-	if (spdk_json_decode_object(json_resp->result, rpc_threads_stats_decoders,
-				    SPDK_COUNTOF(rpc_threads_stats_decoders), &threads_stats)) {
+	memset(thread_info, 0, sizeof(struct rpc_thread_info) * RPC_MAX_THREADS);
+	if (rpc_decode_threads_array(json_resp->result, thread_info, &current_threads_count)) {
 		rc = -EINVAL;
+		for (i = 0; i < current_threads_count; i++) {
+			free_rpc_threads_stats(&thread_info[i]);
+		}
 		goto end;
 	}
 
 	pthread_mutex_lock(&g_thread_lock);
 
 	/* This is to free allocated char arrays with old thread names */
-	free_rpc_threads_stats(&g_threads_stats);
+	for (i = 0; i < g_last_threads_count; i++) {
+		free_rpc_threads_stats(&g_threads_info[i]);
+	}
 
-	for (i = 0; i < threads_stats.threads.threads_count; i++) {
-		for (j = 0; j < g_threads_stats.threads.threads_count; j++) {
-			if (g_threads_stats.threads.thread_info[j].id == threads_stats.threads.thread_info[i].id) {
-				threads_stats.threads.thread_info[i].last_busy = g_threads_stats.threads.thread_info[j].busy;
-				threads_stats.threads.thread_info[i].last_idle = g_threads_stats.threads.thread_info[j].idle;
+	for (i = 0; i < current_threads_count; i++) {
+		for (j = 0; j < g_last_threads_count; j++) {
+			if (thread_info[i].id == g_threads_info[j].id) {
+				thread_info[i].last_busy = g_threads_info[j].busy;
+				thread_info[i].last_idle = g_threads_info[j].idle;
 			}
 		}
 	}
-	memcpy(&g_threads_stats, &threads_stats, sizeof(struct rpc_threads_stats));
+	g_last_threads_count = current_threads_count;
 
-	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
-		g_threads_stats.threads.thread_info[i].core_num = -1;
+	memcpy(g_threads_info, thread_info, sizeof(struct rpc_thread_info) * RPC_MAX_THREADS);
+
+	for (i = 0; i < g_last_threads_count; i++) {
+		g_threads_info[i].core_num = -1;
 	}
 
 	for (i = 0; i < g_cores_stats.cores.cores_count; i++) {
 		core_info = &g_cores_stats.cores.core[i];
 
 		for (j = 0; j < core_info->threads.threads_count; j++) {
-			for (k = 0; k < g_threads_stats.threads.threads_count; k++) {
+			for (k = 0; k < g_last_threads_count; k++) {
 				/* For each thread on current core: check if it's ID also exists
 				 * in g_thread_info data structure. If it does then assign current
 				 * core's number to that thread, otherwise application state is inconsistent
 				 * (e.g. scheduler is moving threads between cores). */
-				thread_info = &g_threads_stats.threads.thread_info[k];
-				if (thread_info->id == core_info->threads.thread[j].id) {
-					thread_info->core_num = core_info->lcore;
+				thread = &g_threads_info[k];
+				if (thread->id == core_info->threads.thread[j].id) {
+					thread->core_num = core_info->lcore;
 					break;
 				}
 			}
 		}
 	}
 
-	qsort(&g_threads_stats.threads.thread_info, threads_stats.threads.threads_count,
-	      sizeof(g_threads_stats.threads.thread_info[0]), sort_threads);
+	qsort(g_threads_info, g_last_threads_count, sizeof(struct rpc_thread_info), sort_threads);
 
 	pthread_mutex_unlock(&g_thread_lock);
 
@@ -770,9 +769,9 @@ get_cores_data(void)
 		core_info = &g_cores_stats.cores.core[i];
 
 		for (j = 0; j < core_info->threads.threads_count; j++) {
-			for (k = 0; k < g_threads_stats.threads.threads_count; k++) {
-				if (core_info->threads.thread[j].id == g_threads_stats.threads.thread_info[k].id) {
-					g_threads_stats.threads.thread_info[k].core_num = core_info->lcore;
+			for (k = 0; k < g_last_threads_count; k++) {
+				if (core_info->threads.thread[j].id == g_threads_info[k].id) {
+					g_threads_info[k].core_num = core_info->lcore;
 				}
 			}
 		}
@@ -975,33 +974,16 @@ refresh_threads_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint64_t i, threads_count;
-	uint16_t j;
 	uint16_t col;
 	uint8_t max_pages, item_index;
-	static uint8_t last_page = 0;
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN];
 	struct rpc_thread_info *thread_info[RPC_MAX_THREADS];
 
-	threads_count = g_threads_stats.threads.threads_count;
-
-	/* Clear screen if number of threads changed */
-	if (g_last_threads_count != threads_count) {
-		for (i = TABS_DATA_START_ROW; i < g_data_win_size; i++) {
-			for (j = 1; j < (uint64_t)g_max_col - 1; j++) {
-				mvwprintw(g_tabs[THREADS_TAB], i, j, " ");
-			}
-		}
-
-		g_last_threads_count = threads_count;
-	}
+	threads_count = g_last_threads_count;
 
 	for (i = 0; i < threads_count; i++) {
-		thread_info[i] = &g_threads_stats.threads.thread_info[i];
-	}
-
-	if (last_page != current_page) {
-		last_page = current_page;
+		thread_info[i] = &g_threads_info[i];
 	}
 
 	max_pages = (threads_count + g_max_data_rows - 1) / g_max_data_rows;
@@ -1171,8 +1153,8 @@ copy_pollers(struct rpc_poller_info *pollers, uint64_t pollers_count,
 	struct rpc_thread_info *thread_info;
 
 	for (i = 0; i < pollers_count; i++) {
-		for (j = 0; j < g_threads_stats.threads.threads_count; j++) {
-			thread_info = &g_threads_stats.threads.thread_info[j];
+		for (j = 0; j < g_last_threads_count; j++) {
+			thread_info = &g_threads_info[j];
 			/* Check if poller's thread exists in g_threads_stats
 			 * (if poller is not "hanging" without a thread). */
 			if (thread_info->id != pollers[i].thread_id) {
@@ -1430,13 +1412,16 @@ refresh_cores_tab(uint8_t current_page)
 		}
 	}
 
-	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
+	for (i = 0; i < g_last_threads_count; i++) {
 		for (int j = 0; j < count; j++) {
-			if ((int)cores[j].core == g_threads_stats.threads.thread_info[i].core_num) {
+			/* Do not display threads which changed cores when issuing
+			 * RPCs to get_core_data and get_thread_data and threads
+			 * not currently assigned to this core. */
+			if ((int)cores[j].core == g_threads_info[i].core_num) {
 				cores[j].threads_count++;
-				cores[j].pollers_count += g_threads_stats.threads.thread_info[i].active_pollers_count +
-							  g_threads_stats.threads.thread_info[i].timed_pollers_count +
-							  g_threads_stats.threads.thread_info[i].paused_pollers_count;
+				cores[j].pollers_count += g_threads_info[i].active_pollers_count +
+							  g_threads_info[i].timed_pollers_count +
+							  g_threads_info[i].paused_pollers_count;
 			}
 		}
 	}
@@ -2114,8 +2099,8 @@ show_thread(uint8_t current_page)
 	uint64_t thread_number = current_page * g_max_data_rows + g_selected_row;
 
 	pthread_mutex_lock(&g_thread_lock);
-	assert(thread_number < g_threads_stats.threads.threads_count);
-	thread_info = g_threads_stats.threads.thread_info[thread_number];
+	assert(thread_number < g_last_threads_count);
+	thread_info = g_threads_info[thread_number];
 	pthread_mutex_unlock(&g_thread_lock);
 
 	display_thread(&thread_info);
@@ -2128,9 +2113,9 @@ show_single_thread(uint64_t thread_id)
 	struct rpc_thread_info thread_info;
 
 	pthread_mutex_lock(&g_thread_lock);
-	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
-		if (g_threads_stats.threads.thread_info[i].id == thread_id) {
-			thread_info = g_threads_stats.threads.thread_info[i];
+	for (i = 0; i < g_last_threads_count; i++) {
+		if (g_threads_info[i].id == thread_id) {
+			thread_info = g_threads_info[i];
 			pthread_mutex_unlock(&g_thread_lock);
 			display_thread(&thread_info);
 			return;
@@ -2629,7 +2614,9 @@ show_stats(pthread_t *data_thread)
 	for (i = 0; i < g_last_pollers_count; i++) {
 		free_rpc_poller(&g_pollers_info[i]);
 	}
-	free_rpc_threads_stats(&g_threads_stats);
+	for (i = 0; i < g_last_threads_count; i++) {
+		free_rpc_threads_stats(&g_threads_info[i]);
+	}
 	free_rpc_cores_stats(&g_cores_stats);
 }
 
@@ -2748,7 +2735,7 @@ wait_init(pthread_t *data_thread)
 		return -1;
 	}
 
-	memset(&g_threads_stats, 0, sizeof(g_threads_stats));
+	memset(&g_threads_info, 0, sizeof(struct rpc_thread_info) * RPC_MAX_THREADS);
 
 	/* This is to get first batch of data for display functions.
 	 * Since data thread makes RPC calls that take more time than
