@@ -920,8 +920,10 @@ nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
 		SPDK_DEBUGLOG(nvmf, "Association timer already set\n");
 		nvmf_ctrlr_stop_association_timer(ctrlr);
 	}
-	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
-				   ctrlr->association_timeout * 1000);
+	if (ctrlr->association_timeout) {
+		ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
+					   ctrlr->association_timeout * 1000);
+	}
 	ctrlr->disconnect_in_progress = false;
 }
 
@@ -945,8 +947,10 @@ nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
 		SPDK_DEBUGLOG(nvmf, "Association timer already set\n");
 		nvmf_ctrlr_stop_association_timer(ctrlr);
 	}
-	ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
-				   ctrlr->association_timeout * 1000);
+	if (ctrlr->association_timeout) {
+		ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
+					   ctrlr->association_timeout * 1000);
+	}
 	ctrlr->disconnect_in_progress = false;
 }
 
