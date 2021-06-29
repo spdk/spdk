@@ -1034,10 +1034,8 @@ reqs_err:
 }
 
 /*
- * Creates a completion or sumbission I/O queue. Returns 0 on success, -errno
+ * Creates a completion or submission I/O queue. Returns 0 on success, -errno
  * on error.
- *
- * XXX SPDK thread context.
  */
 static int
 handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
@@ -1187,7 +1185,7 @@ vfio_user_qpair_delete_cb(void *cb_arg)
 }
 
 /*
- * Deletes a completion or sumbission I/O queue.
+ * Deletes a completion or submission I/O queue.
  */
 static int
 handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
@@ -1245,8 +1243,6 @@ out:
 
 /*
  * Returns 0 on success and -errno on error.
- *
- * XXX SPDK thread context
  */
 static int
 consume_admin_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
@@ -1564,6 +1560,13 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	return 0;
 }
 
+/*
+ * Handles a write at offset 0x1000 or more; this is the non-mapped path when a
+ * doorbell is written via access_bar0_fn().
+ *
+ * DSTRD is set to fixed value 0 for NVMf.
+ *
+ */
 static int
 handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 		  const size_t count, loff_t pos, const bool is_write)
@@ -2089,8 +2092,6 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 
 /*
  * Executed periodically.
- *
- * XXX SPDK thread context.
  */
 static uint32_t
 nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
