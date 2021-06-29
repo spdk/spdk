@@ -51,6 +51,8 @@ static int nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns);
 static void nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr);
+static void nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
+				 uint64_t timeout_in_ms);
 
 #define CTRLR_STRING(ctrlr) \
 	((ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP || ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) ? \
@@ -74,6 +76,13 @@ static void nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr);
 #else
 #define NVME_CTRLR_DEBUGLOG(ctrlr, ...) do { } while (0)
 #endif
+
+#define nvme_ctrlr_get_reg_async(ctrlr, reg, sz, cb_fn, cb_arg) \
+	nvme_transport_ctrlr_get_reg_ ## sz ## _async(ctrlr, \
+		offsetof(struct spdk_nvme_registers, reg), cb_fn, cb_arg)
+
+#define nvme_ctrlr_get_vs_async(ctrlr, cb_fn, cb_arg) \
+	nvme_ctrlr_get_reg_async(ctrlr, vs, 4, cb_fn, cb_arg)
 
 static int
 nvme_ctrlr_get_cc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
@@ -1231,6 +1240,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "wait for connect adminq";
 	case NVME_CTRLR_STATE_READ_VS:
 		return "read vs";
+	case NVME_CTRLR_STATE_READ_VS_WAIT_FOR_VS:
+		return "read vs wait for vs";
 	case NVME_CTRLR_STATE_READ_CAP:
 		return "read cap";
 	case NVME_CTRLR_STATE_CHECK_EN:
@@ -3360,6 +3371,22 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 	return devhandle;
 }
 
+static void
+nvme_ctrlr_process_init_vs_done(void *ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the VS register\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	assert(value <= UINT32_MAX);
+	ctrlr->vs.raw = (uint32_t)value;
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_CAP, NVME_TIMEOUT_INFINITE);
+}
+
 /**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
@@ -3451,8 +3478,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_READ_VS:
-		nvme_ctrlr_get_vs(ctrlr, &ctrlr->vs);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_CAP, NVME_TIMEOUT_INFINITE);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_VS_WAIT_FOR_VS, NVME_TIMEOUT_INFINITE);
+		rc = nvme_ctrlr_get_vs_async(ctrlr, nvme_ctrlr_process_init_vs_done, ctrlr);
 		break;
 
 	case NVME_CTRLR_STATE_READ_CAP:
@@ -3613,6 +3640,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		NVME_CTRLR_ERRLOG(ctrlr, "Ctrlr is in error state\n");
 		return -1;
 
+	case NVME_CTRLR_STATE_READ_VS_WAIT_FOR_VS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:
