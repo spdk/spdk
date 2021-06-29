@@ -1296,6 +1296,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "enable controller by writing CC.EN = 1 reg";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		return "wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS:
+		return "wait for CSTS.RDY = 1 reg";
 	case NVME_CTRLR_STATE_RESET_ADMIN_QUEUE:
 		return "reset admin queue";
 	case NVME_CTRLR_STATE_IDENTIFY:
@@ -3593,14 +3595,51 @@ nvme_ctrlr_process_init_wait_for_ready_0(void *ctx, uint64_t value, const struct
 	}
 }
 
+static void
+nvme_ctrlr_process_init_enable_wait_for_ready_1(void *ctx, uint64_t value,
+		const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx;
+	union spdk_nvme_csts_register csts;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		/* While a device is resetting, it may be unable to service MMIO reads
+		 * temporarily. Allow for this case.
+		 */
+		if (!ctrlr->is_failed && ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to read the CSTS register\n");
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
+					     NVME_TIMEOUT_KEEP_EXISTING);
+		} else {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CSTS register\n");
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		}
+
+		return;
+	}
+
+	assert(value <= UINT32_MAX);
+	csts.raw = value;
+	if (csts.bits.rdy == 1) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
+		/*
+		 * The controller has been enabled.
+		 *  Perform the rest of initialization serially.
+		 */
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_RESET_ADMIN_QUEUE,
+				     ctrlr->opts.admin_timeout_ms);
+	} else {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
+				     NVME_TIMEOUT_KEEP_EXISTING);
+	}
+}
+
 /**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
 int
 nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 {
-	union spdk_nvme_cc_register cc;
-	union spdk_nvme_csts_register csts;
 	uint32_t ready_timeout_in_ms;
 	uint64_t ticks;
 	int rc = 0;
@@ -3617,19 +3656,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 	ctrlr->sleep_timeout_tsc = 0;
-
-	if (ctrlr->state > NVME_CTRLR_STATE_WAIT_FOR_CONNECT_ADMINQ &&
-	    (nvme_ctrlr_get_cc(ctrlr, &cc) || nvme_ctrlr_get_csts(ctrlr, &csts))) {
-		if (!ctrlr->is_failed && ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
-			/* While a device is resetting, it may be unable to service MMIO reads
-			 * temporarily. Allow for this case.
-			 */
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Get registers failed while waiting for CSTS.RDY == 0\n");
-			goto init_timeout;
-		}
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to read CC and CSTS in state %d\n", ctrlr->state);
-		return -EIO;
-	}
 
 	ready_timeout_in_ms = nvme_ctrlr_get_ready_timeout(ctrlr);
 
@@ -3730,16 +3756,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
-		if (csts.bits.rdy == 1) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
-			/*
-			 * The controller has been enabled.
-			 *  Perform the rest of initialization serially.
-			 */
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_RESET_ADMIN_QUEUE,
-					     ctrlr->opts.admin_timeout_ms);
-			return 0;
-		}
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS,
+				     NVME_TIMEOUT_KEEP_EXISTING);
+		rc = nvme_ctrlr_get_csts_async(ctrlr, nvme_ctrlr_process_init_enable_wait_for_ready_1,
+					       ctrlr);
 		break;
 
 	case NVME_CTRLR_STATE_RESET_ADMIN_QUEUE:
@@ -3827,6 +3847,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC:
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:
@@ -3847,7 +3868,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		return -1;
 	}
 
-init_timeout:
 	/* Note: we use the ticks captured when we entered this function.
 	 * This covers environments where the SPDK process gets swapped out after
 	 * we tried to advance the state but before we check the timeout here.

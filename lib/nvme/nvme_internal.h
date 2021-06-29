@@ -634,6 +634,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
 
 	/**
+	 * Waiting for CSTS register to be read as part of waiting for CSTS.RDY = 1.
+	 */
+	NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS,
+
+	/**
 	 * Reset the Admin queue of the controller.
 	 */
 	NVME_CTRLR_STATE_RESET_ADMIN_QUEUE,
