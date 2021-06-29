@@ -54,11 +54,8 @@
 #define NVMF_VFIO_USER_DEFAULT_MAX_QUEUE_DEPTH 256
 #define NVMF_VFIO_USER_DEFAULT_AQ_DEPTH 32
 #define NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
-#define NVMF_VFIO_USER_DEFAULT_IN_CAPSULE_DATA_SIZE 0
 #define NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE ((NVMF_REQ_MAX_BUFFERS - 1) << SHIFT_4KB)
 #define NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE
-#define NVMF_VFIO_USER_DEFAULT_NUM_SHARED_BUFFERS 0 /* internal buf size */
-#define NVMF_VFIO_USER_DEFAULT_BUFFER_CACHE_SIZE 0
 
 #define NVMF_VFIO_USER_DOORBELLS_OFFSET	0x1000
 #define NVMF_VFIO_USER_DOORBELLS_SIZE 0x1000
@@ -2495,12 +2492,12 @@ nvmf_vfio_user_opts_init(struct spdk_nvmf_transport_opts *opts)
 {
 	opts->max_queue_depth =		NVMF_VFIO_USER_DEFAULT_MAX_QUEUE_DEPTH;
 	opts->max_qpairs_per_ctrlr =	NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR;
-	opts->in_capsule_data_size =	NVMF_VFIO_USER_DEFAULT_IN_CAPSULE_DATA_SIZE;
+	opts->in_capsule_data_size =	0;
 	opts->max_io_size =		NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE;
 	opts->io_unit_size =		NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE;
 	opts->max_aq_depth =		NVMF_VFIO_USER_DEFAULT_AQ_DEPTH;
-	opts->num_shared_buffers =	NVMF_VFIO_USER_DEFAULT_NUM_SHARED_BUFFERS;
-	opts->buf_cache_size =		NVMF_VFIO_USER_DEFAULT_BUFFER_CACHE_SIZE;
+	opts->num_shared_buffers =	0;
+	opts->buf_cache_size =		0;
 	opts->transport_specific =      NULL;
 }
 
