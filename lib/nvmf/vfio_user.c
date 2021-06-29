@@ -2095,15 +2095,26 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 }
 
 /*
- * Executed periodically.
+ * Executed periodically at a default SPDK_NVMF_DEFAULT_ACCEPT_POLL_RATE_US
+ * frequency.
+ *
+ * For each transport endpoint (which at the libvfio-user level corresponds to
+ * a socket), if we don't currently have a controller set up, peek to see if the
+ * socket is able to accept a new connection.
+ *
+ * This poller also takes care of handling the creation of any pending new
+ * qpairs.
+ *
+ * Returns the number of events handled.
  */
 static uint32_t
 nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 {
-	int err;
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_qpair *qp, *tmp_qp;
 	struct nvmf_vfio_user_endpoint *endpoint;
+	uint32_t count = 0;
+	int err;
 
 	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
 					transport);
@@ -2111,7 +2122,6 @@ nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 	pthread_mutex_lock(&vu_transport->lock);
 
 	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
-		/* try to attach a new controller  */
 		if (endpoint->ctrlr != NULL) {
 			continue;
 		}
@@ -2123,21 +2133,24 @@ nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 			}
 
 			pthread_mutex_unlock(&vu_transport->lock);
-			return -EFAULT;
+			return 1;
 		}
+
+		count++;
 
 		/* Construct a controller */
 		nvmf_vfio_user_create_ctrlr(vu_transport, endpoint);
 	}
 
 	TAILQ_FOREACH_SAFE(qp, &vu_transport->new_qps, link, tmp_qp) {
+		count++;
 		TAILQ_REMOVE(&vu_transport->new_qps, qp, link);
 		spdk_nvmf_tgt_new_qpair(transport->tgt, &qp->qpair);
 	}
 
 	pthread_mutex_unlock(&vu_transport->lock);
 
-	return 0;
+	return count;
 }
 
 static void
