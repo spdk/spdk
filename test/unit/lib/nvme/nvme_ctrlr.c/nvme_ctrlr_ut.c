@@ -1578,7 +1578,7 @@ test_alloc_io_qpair_wrr_1(void)
 	 * Fake to simulate the controller with weighted round robin
 	 * arbitration mechanism.
 	 */
-	g_ut_nvme_regs.cc.bits.ams = SPDK_NVME_CC_AMS_WRR;
+	ctrlr.process_init_cc.bits.ams = SPDK_NVME_CC_AMS_WRR;
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, &opts, sizeof(opts));
 
@@ -1632,7 +1632,7 @@ test_alloc_io_qpair_wrr_2(void)
 	 * Fake to simulate the controller with weighted round robin
 	 * arbitration mechanism.
 	 */
-	g_ut_nvme_regs.cc.bits.ams = SPDK_NVME_CC_AMS_WRR;
+	ctrlr.process_init_cc.bits.ams = SPDK_NVME_CC_AMS_WRR;
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, &opts, sizeof(opts));
 

@@ -387,11 +387,7 @@ nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "get_cc failed\n");
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return NULL;
-	}
+	cc.raw = ctrlr->process_init_cc.raw;
 
 	if (opts->qprio & ~SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
