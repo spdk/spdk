@@ -574,6 +574,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_READ_CAP,
 
 	/**
+	 * Waiting for Capabilities (CAP) register to be read.
+	 */
+	NVME_CTRLR_STATE_READ_CAP_WAIT_FOR_CAP,
+
+	/**
 	 * Check EN to prepare for controller initialization.
 	 */
 	NVME_CTRLR_STATE_CHECK_EN,
