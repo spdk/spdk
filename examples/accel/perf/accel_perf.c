@@ -169,7 +169,7 @@ usage(void)
 static int
 parse_args(int argc, char *argv)
 {
-	int argval;
+	int argval = 0;
 
 	switch (argc) {
 	case 'a':
