@@ -249,16 +249,21 @@ if [[ "$PLUGIN" =~ "kernel" ]]; then
 	fi
 fi
 
+cpu_governor="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)"
+
 if [[ -n "$CPUFREQ" ]]; then
 	if [[ ! "$(cat /proc/cmdline)" =~ "intel_pstate=disable" ]]; then
 		echo "ERROR: Cannot set custom CPU frequency for test. intel_pstate=disable not in boot options."
 		false
 	else
-		cpu_governor="$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)"
 		cpupower frequency-set -g userspace
 		cpupower frequency-set -f $CPUFREQ
 	fi
+else
+	cpupower frequency-set -g performance
 fi
+current_governor=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+echo "INFO: Using $current_governor cpu governor for test."
 
 if $PERFTOP; then
 	echo "INFO: starting perf record on cores $CPUS_ALLOWED"
