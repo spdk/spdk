@@ -197,10 +197,11 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 					      nvmf_ctrlr_disconnect_qpairs_on_pg,
 					      ctrlr,
 					      nvmf_ctrlr_disconnect_qpairs_done);
+			return SPDK_POLLER_BUSY;
 		}
 	}
 
-	return SPDK_POLLER_BUSY;
+	return SPDK_POLLER_IDLE;
 }
 
 static void
