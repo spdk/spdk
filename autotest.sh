@@ -187,8 +187,18 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "blockdev_general" test/bdev/blockdev.sh
 		run_test "bdev_raid" test/bdev/bdev_raid.sh
 		run_test "bdevperf_config" test/bdev/bdevperf/test_config.sh
-		if [[ $(uname -s) == Linux ]]; then
-			run_test "spdk_dd" test/dd/dd.sh
+	fi
+
+	if [[ $(uname -s) == Linux ]]; then
+		if [[ $SPDK_TEST_BLOCKDEV -eq 1 || $SPDK_TEST_URING -eq 1 ]]; then
+			# The crypto job also includes the SPDK_TEST_BLOCKDEV in its configuration hence the
+			# dd tests are executed there as well. However, these tests can take a significant
+			# amount of time to complete (up to 4min) on a physical system leading to a potential
+			# job timeout. Avoid that by skipping these tests - this should not affect the coverage
+			# since dd tests are still run as part of the vg jobs.
+			if [[ $SPDK_TEST_CRYPTO -eq 0 ]]; then
+				run_test "spdk_dd" test/dd/dd.sh
+			fi
 		fi
 	fi
 
