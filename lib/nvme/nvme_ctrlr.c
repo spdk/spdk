@@ -81,6 +81,10 @@ static void nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_
 	nvme_transport_ctrlr_get_reg_ ## sz ## _async(ctrlr, \
 		offsetof(struct spdk_nvme_registers, reg), cb_fn, cb_arg)
 
+#define nvme_ctrlr_set_reg_async(ctrlr, reg, sz, val, cb_fn, cb_arg) \
+	nvme_transport_ctrlr_set_reg_ ## sz ## _async(ctrlr, \
+		offsetof(struct spdk_nvme_registers, reg), val, cb_fn, cb_arg)
+
 #define nvme_ctrlr_get_cc_async(ctrlr, cb_fn, cb_arg) \
 	nvme_ctrlr_get_reg_async(ctrlr, cc, 4, cb_fn, cb_arg)
 
@@ -92,6 +96,9 @@ static void nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_
 
 #define nvme_ctrlr_get_vs_async(ctrlr, cb_fn, cb_arg) \
 	nvme_ctrlr_get_reg_async(ctrlr, vs, 4, cb_fn, cb_arg)
+
+#define nvme_ctrlr_set_cc_async(ctrlr, value, cb_fn, cb_arg) \
+	nvme_ctrlr_set_reg_async(ctrlr, cc, 4, value, cb_fn, cb_arg)
 
 static int
 nvme_ctrlr_get_cc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
@@ -1265,6 +1272,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "disable and wait for CSTS.RDY = 1 reg";
 	case NVME_CTRLR_STATE_SET_EN_0:
 		return "set CC.EN = 0";
+	case NVME_CTRLR_STATE_SET_EN_0_WAIT_FOR_CC:
+		return "set CC.EN = 0 wait for cc";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		return "disable and wait for CSTS.RDY = 0";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS:
@@ -3446,6 +3455,58 @@ nvme_ctrlr_process_init_check_en(void *ctx, uint64_t value, const struct spdk_nv
 }
 
 static void
+nvme_ctrlr_process_init_set_en_0(void *ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to write the CC register\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	/*
+	 * Wait 2.5 seconds before accessing PCI registers.
+	 * Not using sleep() to avoid blocking other controller's initialization.
+	 */
+	if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Applying quirk: delay 2.5 seconds before reading registers\n");
+		ctrlr->sleep_timeout_tsc = spdk_get_ticks() + (2500 * spdk_get_ticks_hz() / 1000);
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
+			     nvme_ctrlr_get_ready_timeout(ctrlr));
+}
+
+static void
+nvme_ctrlr_process_init_set_en_0_read_cc(void *ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx;
+	union spdk_nvme_cc_register cc;
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CC register\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	assert(value <= UINT32_MAX);
+	cc.raw = (uint32_t)value;
+	cc.bits.en = 0;
+	ctrlr->process_init_cc.raw = cc.raw;
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_EN_0_WAIT_FOR_CC,
+			     nvme_ctrlr_get_ready_timeout(ctrlr));
+
+	rc = nvme_ctrlr_set_cc_async(ctrlr, cc.raw, nvme_ctrlr_process_init_set_en_0, ctrlr);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+	}
+}
+
+static void
 nvme_ctrlr_process_init_wait_for_ready_1(void *ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ctx;
@@ -3636,22 +3697,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_EN_0:
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Setting CC.EN = 0\n");
-		cc.bits.en = 0;
-		if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-			NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
-			return -EIO;
-		}
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
-
-		/*
-		 * Wait 2.5 seconds before accessing PCI registers.
-		 * Not using sleep() to avoid blocking other controller's initialization.
-		 */
-		if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Applying quirk: delay 2.5 seconds before reading registers\n");
-			ctrlr->sleep_timeout_tsc = ticks + (2500 * spdk_get_ticks_hz() / 1000);
-		}
-		return 0;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_EN_0_WAIT_FOR_CC, ready_timeout_in_ms);
+		rc = nvme_ctrlr_get_cc_async(ctrlr, nvme_ctrlr_process_init_set_en_0_read_cc, ctrlr);
+		break;
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS,
@@ -3759,6 +3807,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_READ_VS_WAIT_FOR_VS:
 	case NVME_CTRLR_STATE_READ_CAP_WAIT_FOR_CAP:
 	case NVME_CTRLR_STATE_CHECK_EN_WAIT_FOR_CC:
+	case NVME_CTRLR_STATE_SET_EN_0_WAIT_FOR_CC:
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:

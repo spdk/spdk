@@ -604,6 +604,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_SET_EN_0,
 
 	/**
+	 * Waiting for the CC register to be read as part of disabling the controller.
+	 */
+	NVME_CTRLR_STATE_SET_EN_0_WAIT_FOR_CC,
+
+	/**
 	 * Waiting for CSTS.RDY to transition from 1 to 0 so that CC.EN may be set to 1.
 	 */
 	NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
