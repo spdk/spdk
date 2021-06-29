@@ -212,6 +212,15 @@ if [[ -z $disk_map ]]; then
 	fail "No disk map provided for test. Exiting."
 fi
 
+# ===== Enable "performance" cpu governor =====
+if hash cpupower; then
+	cpupower frequency-set -g performance
+else
+	echo "WARNING: Missing CPUPOWER!!! Please install."
+fi
+current_governor=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+echo "INFO: Using $current_governor cpu governor for test."
+
 # ===== Precondition NVMes if specified =====
 if [[ $run_precondition == true ]]; then
 	# Using the same precondition routine possible for lvols thanks
