@@ -248,7 +248,7 @@ nvmf_tgt_accept(void *ctx)
 		count += nvmf_transport_accept(transport);
 	}
 
-	return count;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 struct spdk_nvmf_tgt *
