@@ -81,6 +81,9 @@ static void nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_
 	nvme_transport_ctrlr_get_reg_ ## sz ## _async(ctrlr, \
 		offsetof(struct spdk_nvme_registers, reg), cb_fn, cb_arg)
 
+#define nvme_ctrlr_get_cc_async(ctrlr, cb_fn, cb_arg) \
+	nvme_ctrlr_get_reg_async(ctrlr, cc, 4, cb_fn, cb_arg)
+
 #define nvme_ctrlr_get_cap_async(ctrlr, cb_fn, cb_arg) \
 	nvme_ctrlr_get_reg_async(ctrlr, cap, 8, cb_fn, cb_arg)
 
@@ -1251,6 +1254,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "read cap wait for cap";
 	case NVME_CTRLR_STATE_CHECK_EN:
 		return "check en";
+	case NVME_CTRLR_STATE_CHECK_EN_WAIT_FOR_CC:
+		return "check en wait for cc";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		return "disable and wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_SET_EN_0:
@@ -3408,6 +3413,31 @@ nvme_ctrlr_process_init_cap_done(void *ctx, uint64_t value, const struct spdk_nv
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CHECK_EN, NVME_TIMEOUT_INFINITE);
 }
 
+static void
+nvme_ctrlr_process_init_check_en(void *ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx;
+	enum nvme_ctrlr_state state;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CC register\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	assert(value <= UINT32_MAX);
+	ctrlr->process_init_cc.raw = (uint32_t)value;
+
+	if (ctrlr->process_init_cc.bits.en) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1\n");
+		state = NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1;
+	} else {
+		state = NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, state, nvme_ctrlr_get_ready_timeout(ctrlr));
+}
+
 /**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
@@ -3510,13 +3540,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_CHECK_EN:
 		/* Begin the hardware initialization by making sure the controller is disabled. */
-		if (cc.bits.en) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1\n");
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
-		} else {
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
-		}
-		return 0;
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CHECK_EN_WAIT_FOR_CC, ready_timeout_in_ms);
+		rc = nvme_ctrlr_get_cc_async(ctrlr, nvme_ctrlr_process_init_check_en, ctrlr);
+		break;
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		/*
@@ -3663,6 +3689,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_READ_VS_WAIT_FOR_VS:
 	case NVME_CTRLR_STATE_READ_CAP_WAIT_FOR_CAP:
+	case NVME_CTRLR_STATE_CHECK_EN_WAIT_FOR_CC:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:
