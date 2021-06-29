@@ -1125,6 +1125,21 @@ nvme_ctrlr_get_ready_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	return ctrlr->cap.bits.to * 500;
 }
 
+static void
+nvme_ctrlr_set_cc_en_done(void *ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to set the CC register\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
+			     nvme_ctrlr_get_ready_timeout(ctrlr));
+}
+
 static int
 nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1137,11 +1152,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "get_cc() failed\n");
-		return -EIO;
-	}
-
+	cc.raw = ctrlr->process_init_cc.raw;
 	if (cc.bits.en != 0) {
 		NVME_CTRLR_ERRLOG(ctrlr, "called with CC.EN = 1\n");
 		return -EINVAL;
@@ -1211,8 +1222,9 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	cc.bits.ams = ctrlr->opts.arb_mechanism;
+	ctrlr->process_init_cc.raw = cc.raw;
 
-	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
+	if (nvme_ctrlr_set_cc_async(ctrlr, cc.raw, nvme_ctrlr_set_cc_en_done, ctrlr)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
 		return -EIO;
 	}
@@ -1280,6 +1292,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "disable and wait for CSTS.RDY = 0 reg";
 	case NVME_CTRLR_STATE_ENABLE:
 		return "enable controller by writing CC.EN = 1";
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC:
+		return "enable controller by writing CC.EN = 1 reg";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		return "wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_RESET_ADMIN_QUEUE:
@@ -3709,8 +3723,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_ENABLE:
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Setting CC.EN = 1\n");
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC, ready_timeout_in_ms);
 		rc = nvme_ctrlr_enable(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 		return rc;
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
@@ -3810,6 +3824,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_SET_EN_0_WAIT_FOR_CC:
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS:
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:

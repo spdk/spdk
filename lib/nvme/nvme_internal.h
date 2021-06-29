@@ -624,6 +624,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_ENABLE,
 
 	/**
+	 * Waiting for CC register to be written as part of enabling the controller.
+	 */
+	NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC,
+
+	/**
 	 * Waiting for CSTS.RDY to transition from 0 to 1 after enabling the controller.
 	 */
 	NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
