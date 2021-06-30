@@ -694,7 +694,7 @@ unmap_qp(struct nvmf_vfio_user_qpair *qp)
 	}
 	ctrlr = qp->ctrlr;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: destroy I/O QP%d\n",
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap QP%d\n",
 		      ctrlr_id(ctrlr), qp->qpair.qid);
 
 	if (qp->sq.addr != NULL) {
@@ -1171,6 +1171,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 				continue;
 			}
 			qpair->state = VFIO_USER_QPAIR_ACTIVE;
+			SPDK_DEBUGLOG(nvmf_vfio, "Remap Admin queue\n");
 		} else {
 			struct nvme_q *sq = &qpair->sq;
 			struct nvme_q *cq = &qpair->cq;
@@ -1188,6 +1189,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 				continue;
 			}
 			qpair->state = VFIO_USER_QPAIR_ACTIVE;
+			SPDK_DEBUGLOG(nvmf_vfio, "Remap IO QP%u\n", i);
 		}
 	}
 }
