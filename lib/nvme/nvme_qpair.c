@@ -33,6 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/nvme_ocssd.h"
+#include "spdk/string.h"
 
 #define NVME_CMD_DPTR_STR_SIZE 256
 
@@ -716,7 +717,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	qpair->in_completion_context = 1;
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	if (ret < 0) {
-		SPDK_ERRLOG("CQ transport error %d on qpair id %hu\n", ret, qpair->id);
+		SPDK_ERRLOG("CQ transport error %d (%s) on qpair id %hu\n", ret, spdk_strerror(-ret), qpair->id);
 		if (nvme_qpair_is_admin_queue(qpair)) {
 			nvme_ctrlr_fail(qpair->ctrlr, false);
 		}
