@@ -579,7 +579,7 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
  * @ctrlr: the vfio-user controller
  * @cmd: the NVMe command for which the completion is posted
  * @cq: the completion queue
- * @cdw0: cdw0 as reported by NVMf (only for SPDK_NVME_OPC_GET/SET_FEATURES)
+ * @cdw0: cdw0 as reported by NVMf
  * @sc: the NVMe CQE status code
  * @sct: the NVMe CQE status code type
  */
@@ -617,20 +617,11 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		      ctrlr_id(ctrlr), qid, cmd->cid, sc, ctrlr->qp[qid]->sq.head,
 		      cq->tail);
 
-	if (qid == 0) {
-		switch (cmd->opc) {
-		case SPDK_NVME_OPC_SET_FEATURES:
-		case SPDK_NVME_OPC_GET_FEATURES:
-			cpl->cdw0 = cdw0;
-			break;
-		}
-	}
-
-
 	assert(ctrlr->qp[qid] != NULL);
 
 	cpl->sqhd = ctrlr->qp[qid]->sq.head;
 	cpl->cid = cmd->cid;
+	cpl->cdw0 = cdw0;
 	cpl->status.dnr = 0x0;
 	cpl->status.m = 0x0;
 	cpl->status.sct = sct;
