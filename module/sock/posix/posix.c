@@ -1499,7 +1499,6 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 
 		/* Break the link between C and D */
 		pc->link.tqe_next = NULL;
-		pd->link.tqe_prev = NULL;
 
 		/* Connect F to A */
 		pf->link.tqe_next = pa;
@@ -1508,6 +1507,9 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 		/* Fix up the list first/last pointers */
 		group->socks_with_data.tqh_first = pd;
 		group->socks_with_data.tqh_last = &pc->link.tqe_next;
+
+		/* D is in front of the list, make tqe prev pointer point to the head of list */
+		pd->link.tqe_prev = &group->socks_with_data.tqh_first;
 	}
 
 	return num_events;
