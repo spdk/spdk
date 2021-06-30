@@ -522,7 +522,7 @@ bdev_nvme_reset_io_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 static void
 _bdev_nvme_reset_complete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, int rc)
 {
-	struct nvme_bdev_ctrlr_trid *curr_trid;
+	struct nvme_ctrlr_trid *curr_trid;
 	struct spdk_bdev_io *bdev_io = nvme_bdev_ctrlr->reset_bdev_io;
 
 	nvme_bdev_ctrlr->reset_bdev_io = NULL;
@@ -672,7 +672,7 @@ bdev_nvme_reset(struct nvme_ctrlr_channel *ctrlr_ch, struct spdk_bdev_io *bdev_i
 static int
 _bdev_nvme_failover_start(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove)
 {
-	struct nvme_bdev_ctrlr_trid *curr_trid = NULL, *next_trid = NULL;
+	struct nvme_ctrlr_trid *curr_trid = NULL, *next_trid = NULL;
 	int rc;
 
 	pthread_mutex_lock(&nvme_bdev_ctrlr->mutex);
@@ -1824,7 +1824,7 @@ nvme_bdev_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		       struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	struct nvme_bdev_ctrlr_trid *trid_entry;
+	struct nvme_ctrlr_trid *trid_entry;
 	uint32_t i, num_ns;
 	int rc;
 
@@ -2157,7 +2157,7 @@ bdev_nvme_compare_trids(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			struct spdk_nvme_ctrlr *new_ctrlr,
 			struct spdk_nvme_transport_id *trid)
 {
-	struct nvme_bdev_ctrlr_trid *tmp_trid;
+	struct nvme_ctrlr_trid *tmp_trid;
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		SPDK_ERRLOG("PCIe failover is not supported.\n");
@@ -2219,7 +2219,7 @@ static int
 _bdev_nvme_add_secondary_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			      struct spdk_nvme_transport_id *trid)
 {
-	struct nvme_bdev_ctrlr_trid *new_trid, *tmp_trid;
+	struct nvme_ctrlr_trid *new_trid, *tmp_trid;
 
 	new_trid = calloc(1, sizeof(*new_trid));
 	if (new_trid == NULL) {
@@ -2409,7 +2409,7 @@ static int
 bdev_nvme_delete_secondary_trid(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 				const struct spdk_nvme_transport_id *trid)
 {
-	struct nvme_bdev_ctrlr_trid	*ctrlr_trid, *tmp_trid;
+	struct nvme_ctrlr_trid	*ctrlr_trid, *tmp_trid;
 
 	if (!spdk_nvme_transport_id_compare(trid, nvme_bdev_ctrlr->connected_trid)) {
 		return -EBUSY;
@@ -2430,7 +2430,7 @@ int
 bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
-	struct nvme_bdev_ctrlr_trid	*ctrlr_trid;
+	struct nvme_ctrlr_trid	*ctrlr_trid;
 
 	if (name == NULL) {
 		return -EINVAL;

@@ -1028,7 +1028,7 @@ test_reset_ctrlr(void)
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
-	struct nvme_bdev_ctrlr_trid *curr_trid;
+	struct nvme_ctrlr_trid *curr_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
 	int rc;
@@ -1211,7 +1211,7 @@ test_failover_ctrlr(void)
 	struct spdk_nvme_transport_id trid1 = {}, trid2 = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
-	struct nvme_bdev_ctrlr_trid *curr_trid, *next_trid;
+	struct nvme_ctrlr_trid *curr_trid, *next_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	int rc;
 
@@ -1929,7 +1929,7 @@ test_remove_trid(void)
 	struct spdk_nvme_transport_id trid1 = {}, trid2 = {}, trid3 = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
-	struct nvme_bdev_ctrlr_trid *ctrid;
+	struct nvme_ctrlr_trid *ctrid;
 	int rc;
 
 	ut_init_trid(&trid1);

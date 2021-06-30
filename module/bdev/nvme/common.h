@@ -70,9 +70,9 @@ struct nvme_ns {
 
 struct ocssd_bdev_ctrlr;
 
-struct nvme_bdev_ctrlr_trid {
+struct nvme_ctrlr_trid {
 	struct spdk_nvme_transport_id		trid;
-	TAILQ_ENTRY(nvme_bdev_ctrlr_trid)	link;
+	TAILQ_ENTRY(nvme_ctrlr_trid)		link;
 	bool					is_failed;
 };
 
@@ -112,7 +112,7 @@ struct nvme_bdev_ctrlr {
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)		tailq;
 
-	TAILQ_HEAD(, nvme_bdev_ctrlr_trid)	trids;
+	TAILQ_HEAD(, nvme_ctrlr_trid)		trids;
 
 	pthread_mutex_t				mutex;
 };
