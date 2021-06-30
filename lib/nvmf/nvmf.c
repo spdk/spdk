@@ -1315,6 +1315,12 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 
 	if (ns_changed) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			/* It is possible that a ctrlr was added but the admin_qpair hasn't been
+			 * assigned yet.
+			 */
+			if (!ctrlr->admin_qpair) {
+				continue;
+			}
 			if (ctrlr->admin_qpair->group == group) {
 				nvmf_ctrlr_async_event_ns_notice(ctrlr);
 				nvmf_ctrlr_async_event_ana_change_notice(ctrlr);
