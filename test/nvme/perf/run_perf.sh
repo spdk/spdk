@@ -35,6 +35,7 @@ IO_BATCH_COMPLETE=0
 FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
 FIO_FNAME_STRATEGY="group"
 TMP_RESULT_FILE=$testdir/result.json
+MAIN_CORE=""
 PLUGIN="nvme"
 DISKCFG=""
 BDEV_CACHE=""
@@ -105,6 +106,7 @@ function usage() {
 	echo "    --cpu-frequency=INT     Run tests with CPUs set to a desired frequency. 'intel_pstate=disable' must be set in"
 	echo "                            GRUB options. You can use 'cpupower frequency-info' and 'cpupower frequency-set' to"
 	echo "                            check list of available frequencies. Example: --cpu-frequency=1100000."
+	echo "    --main-core             main (primary) core for DPDK (for bdevperf only)."
 	echo
 	echo "Other options:"
 	echo "    --perftop           Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
@@ -162,6 +164,7 @@ while getopts 'h-:' optchar; do
 				perftop) PERFTOP=true ;;
 				dpdk-mem-stats) DPDKMEM=true ;;
 				latency-log) LATENCY_LOG=true ;;
+				main-core=*) MAIN_CORE="${OPTARG#*=}" ;;
 				*)
 					usage $0 echo "Invalid argument '$OPTARG'"
 					exit 1
