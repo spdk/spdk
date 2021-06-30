@@ -967,6 +967,20 @@ bdev_io_types_test(void)
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE, true);
 
+	/* NVME_IO, NVME_IO_MD and NVME_ADMIN are not supported */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO, false);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO_MD, false);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_ADMIN, false);
+	rc = spdk_bdev_nvme_io_passthru(desc, io_ch, NULL, NULL, 0, NULL, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	rc = spdk_bdev_nvme_io_passthru_md(desc, io_ch, NULL, NULL, 0, NULL, 0, NULL, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	rc = spdk_bdev_nvme_admin_passthru(desc, io_ch, NULL, NULL, 0, NULL, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO, true);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO_MD, true);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_ADMIN, true);
+
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
