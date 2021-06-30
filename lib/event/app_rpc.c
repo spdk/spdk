@@ -398,6 +398,7 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	spdk_json_write_named_uint32(ctx->w, "lcore", current_core);
 	spdk_json_write_named_uint64(ctx->w, "busy", reactor->busy_tsc);
 	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
+	spdk_json_write_named_bool(ctx->w, "in_interrupt", reactor->in_interrupt);
 	governor = _spdk_governor_get();
 	/* We need to check whether governor can return current core frequency. */
 	if (governor->get_core_curr_freq != NULL) {

@@ -820,6 +820,7 @@ Example response:
 	"cpumask": "1",
         "busy": 139223208,
         "idle": 8641080608,
+        "in_interrupt": false,
         "active_pollers_count": 1,
         "timed_pollers_count": 2,
         "paused_pollers_count": 0
