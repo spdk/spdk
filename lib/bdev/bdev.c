@@ -3245,9 +3245,15 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 	bdev_channel_destroy_resource(ch);
 }
 
+/*
+ * If the name already exists in the global bdev name tree, RB_INSERT() returns a pointer
+ * to it. Hence we do not have to call bdev_get_by_name() when using this function.
+ */
 static int
 bdev_name_add(struct spdk_bdev_name *bdev_name, struct spdk_bdev *bdev, const char *name)
 {
+	struct spdk_bdev_name *tmp;
+
 	bdev_name->name = strdup(name);
 	if (bdev_name->name == NULL) {
 		SPDK_ERRLOG("Unable to allocate bdev name\n");
@@ -3255,7 +3261,14 @@ bdev_name_add(struct spdk_bdev_name *bdev_name, struct spdk_bdev *bdev, const ch
 	}
 
 	bdev_name->bdev = bdev;
-	RB_INSERT(bdev_name_tree, &g_bdev_mgr.bdev_names, bdev_name);
+
+	tmp = RB_INSERT(bdev_name_tree, &g_bdev_mgr.bdev_names, bdev_name);
+	if (tmp != NULL) {
+		SPDK_ERRLOG("Bdev name %s already exists\n", name);
+		free(bdev_name->name);
+		return -EEXIST;
+	}
+
 	return 0;
 }
 
@@ -3275,11 +3288,6 @@ spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 	if (alias == NULL) {
 		SPDK_ERRLOG("Empty alias passed\n");
 		return -EINVAL;
-	}
-
-	if (bdev_get_by_name(alias)) {
-		SPDK_ERRLOG("Bdev name/alias: %s already exists\n", alias);
-		return -EEXIST;
 	}
 
 	tmp = calloc(1, sizeof(*tmp));
@@ -5567,11 +5575,6 @@ bdev_register(struct spdk_bdev *bdev)
 	if (!strlen(bdev->name)) {
 		SPDK_ERRLOG("Bdev name must not be an empty string\n");
 		return -EINVAL;
-	}
-
-	if (bdev_get_by_name(bdev->name)) {
-		SPDK_ERRLOG("Bdev name:%s already exists\n", bdev->name);
-		return -EEXIST;
 	}
 
 	/* Users often register their own I/O devices using the bdev name. In
