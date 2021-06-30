@@ -191,7 +191,7 @@ io_channel_destroy_cb(void *io_device, void *ctx_buf)
 
 void
 nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
-				   struct nvme_bdev_ns *ns, int rc)
+				   struct nvme_ns *ns, int rc)
 {
 	CU_ASSERT_EQUAL(rc, 0);
 	ns->ctrlr->ref++;
@@ -217,7 +217,7 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 	rc = pthread_mutex_init(&nvme_bdev_ctrlr->mutex, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
-	nvme_bdev_ctrlr->namespaces = calloc(ctrlr->ns_count, sizeof(struct nvme_bdev_ns *));
+	nvme_bdev_ctrlr->namespaces = calloc(ctrlr->ns_count, sizeof(struct nvme_ns *));
 	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces != NULL);
 
 	trid_entry = calloc(1, sizeof(struct nvme_bdev_ctrlr_trid));
@@ -230,12 +230,12 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 	nvme_bdev_ctrlr->connected_trid = &trid_entry->trid;
 	nvme_bdev_ctrlr->name = strdup(name);
 	for (nsid = 0; nsid < ctrlr->ns_count; ++nsid) {
-		nvme_bdev_ctrlr->namespaces[nsid] = calloc(1, sizeof(struct nvme_bdev_ns));
+		nvme_bdev_ctrlr->namespaces[nsid] = calloc(1, sizeof(struct nvme_ns));
 		SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces[nsid] != NULL);
 
 		nvme_bdev_ctrlr->namespaces[nsid]->id = nsid + 1;
 		nvme_bdev_ctrlr->namespaces[nsid]->ctrlr = nvme_bdev_ctrlr;
-		nvme_bdev_ctrlr->namespaces[nsid]->type = NVME_BDEV_NS_OCSSD;
+		nvme_bdev_ctrlr->namespaces[nsid]->type = NVME_NS_OCSSD;
 
 		bdev_ocssd_populate_namespace(nvme_bdev_ctrlr, nvme_bdev_ctrlr->namespaces[nsid], NULL);
 	}

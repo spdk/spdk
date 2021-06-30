@@ -46,15 +46,15 @@ extern bool g_bdev_nvme_module_finish;
 
 #define NVME_MAX_CONTROLLERS 1024
 
-enum nvme_bdev_ns_type {
-	NVME_BDEV_NS_UNKNOWN	= 0,
-	NVME_BDEV_NS_STANDARD	= 1,
-	NVME_BDEV_NS_OCSSD	= 2,
+enum nvme_ns_type {
+	NVME_NS_UNKNOWN		= 0,
+	NVME_NS_STANDARD	= 1,
+	NVME_NS_OCSSD		= 2,
 };
 
-struct nvme_bdev_ns {
+struct nvme_ns {
 	uint32_t		id;
-	enum nvme_bdev_ns_type	type;
+	enum nvme_ns_type	type;
 	/** Marks whether this data structure has its bdevs
 	 *  populated for the associated namespace.  It is used
 	 *  to keep track if we need manage the populated
@@ -98,7 +98,7 @@ struct nvme_bdev_ctrlr {
 	uint32_t				prchk_flags;
 	uint32_t				num_ns;
 	/** Array of pointers to namespaces indexed by nsid - 1 */
-	struct nvme_bdev_ns			**namespaces;
+	struct nvme_ns				**namespaces;
 
 	struct spdk_opal_dev			*opal_dev;
 
@@ -119,7 +119,7 @@ struct nvme_bdev_ctrlr {
 
 struct nvme_bdev {
 	struct spdk_bdev	disk;
-	struct nvme_bdev_ns	*nvme_ns;
+	struct nvme_ns		*nvme_ns;
 	bool			opal;
 };
 
@@ -163,8 +163,8 @@ struct nvme_ctrlr_channel {
 };
 
 void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
-					struct nvme_bdev_ns *nvme_ns, int rc);
-void nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns);
+					struct nvme_ns *nvme_ns, int rc);
+void nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns);
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);

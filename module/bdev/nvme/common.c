@@ -194,7 +194,7 @@ nvme_bdev_ctrlr_release(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 }
 
 void
-nvme_ctrlr_depopulate_namespace_done(struct nvme_bdev_ns *nvme_ns)
+nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = nvme_ns->ctrlr;
 

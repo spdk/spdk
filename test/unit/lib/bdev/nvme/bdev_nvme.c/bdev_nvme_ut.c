@@ -201,12 +201,12 @@ DEFINE_STUB(spdk_opal_dev_construct, struct spdk_opal_dev *, (struct spdk_nvme_c
 DEFINE_STUB_V(spdk_opal_dev_destruct, (struct spdk_opal_dev *dev));
 
 DEFINE_STUB_V(bdev_ocssd_populate_namespace, (struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-		struct nvme_bdev_ns *nvme_ns, struct nvme_async_probe_ctx *ctx));
+		struct nvme_ns *nvme_ns, struct nvme_async_probe_ctx *ctx));
 
-DEFINE_STUB_V(bdev_ocssd_depopulate_namespace, (struct nvme_bdev_ns *nvme_ns));
+DEFINE_STUB_V(bdev_ocssd_depopulate_namespace, (struct nvme_ns *nvme_ns));
 
 DEFINE_STUB_V(bdev_ocssd_namespace_config_json, (struct spdk_json_write_ctx *w,
-		struct nvme_bdev_ns *nvme_ns));
+		struct nvme_ns *nvme_ns));
 
 DEFINE_STUB(bdev_ocssd_create_io_channel, int, (struct nvme_ctrlr_channel *ioch), 0);
 
@@ -2243,7 +2243,7 @@ test_bdev_unregister(void)
 	struct spdk_nvme_host_id hostid = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-	struct nvme_bdev_ns *nvme_ns1, *nvme_ns2;
+	struct nvme_ns *nvme_ns1, *nvme_ns2;
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev1, *bdev2;

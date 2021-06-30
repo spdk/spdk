@@ -100,7 +100,7 @@ struct ocssd_bdev_ctrlr {
 };
 
 static struct bdev_ocssd_ns *
-bdev_ocssd_get_ns_from_nvme(struct nvme_bdev_ns *nvme_ns)
+bdev_ocssd_get_ns_from_nvme(struct nvme_ns *nvme_ns)
 {
 	return nvme_ns->type_ctx;
 }
@@ -139,7 +139,7 @@ bdev_ocssd_config_json(struct spdk_json_write_ctx *w)
 }
 
 void
-bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *nvme_ns)
+bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_ns *nvme_ns)
 {
 	struct nvme_bdev *nvme_bdev;
 
@@ -229,7 +229,7 @@ bdev_ocssd_destruct(void *ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = ctx;
 	struct nvme_bdev *nvme_bdev = &ocssd_bdev->nvme_bdev;
-	struct nvme_bdev_ns *nvme_ns = nvme_bdev->nvme_ns;
+	struct nvme_ns *nvme_ns = nvme_bdev->nvme_ns;
 
 	pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 
@@ -913,7 +913,7 @@ bdev_ocssd_get_io_channel(void *ctx)
 }
 
 static void
-bdev_ocssd_free_namespace(struct nvme_bdev_ns *nvme_ns)
+bdev_ocssd_free_namespace(struct nvme_ns *nvme_ns)
 {
 	struct nvme_bdev *bdev;
 
@@ -929,7 +929,7 @@ bdev_ocssd_free_namespace(struct nvme_bdev_ns *nvme_ns)
 }
 
 static void
-bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
+bdev_ocssd_push_media_events(struct nvme_ns *nvme_ns,
 			     struct spdk_ocssd_chunk_notification_entry *chunk_entry)
 {
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
@@ -975,7 +975,7 @@ bdev_ocssd_push_media_events(struct nvme_bdev_ns *nvme_ns,
 }
 
 static void
-bdev_ocssd_notify_media_management(struct nvme_bdev_ns *nvme_ns)
+bdev_ocssd_notify_media_management(struct nvme_ns *nvme_ns)
 {
 	struct nvme_bdev *nvme_bdev;
 
@@ -988,7 +988,7 @@ bdev_ocssd_notify_media_management(struct nvme_bdev_ns *nvme_ns)
 static void
 bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_bdev_ns *nvme_ns = ctx;
+	struct nvme_ns *nvme_ns = ctx;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	struct spdk_ocssd_chunk_notification_entry *chunk_entry;
 	size_t chunk_id;
@@ -1038,7 +1038,7 @@ static int
 bdev_ocssd_poll_mm(void *ctx)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
-	struct nvme_bdev_ns *nvme_ns;
+	struct nvme_ns *nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns;
 	uint32_t nsid;
 	int rc;
@@ -1076,7 +1076,7 @@ void
 bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct bdev_ocssd_ns *ocssd_ns;
-	struct nvme_bdev_ns *nvme_ns;
+	struct nvme_ns *nvme_ns;
 	uint32_t nsid;
 
 	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
@@ -1099,7 +1099,7 @@ static struct spdk_bdev_fn_table ocssdlib_fn_table = {
 
 struct bdev_ocssd_create_ctx {
 	struct ocssd_bdev				*ocssd_bdev;
-	struct nvme_bdev_ns				*nvme_ns;
+	struct nvme_ns				*nvme_ns;
 	bdev_ocssd_create_cb				cb_fn;
 	void						*cb_arg;
 	uint64_t					chunk_offset;
@@ -1129,7 +1129,7 @@ bdev_ocssd_register_bdev(void *ctx)
 {
 	struct bdev_ocssd_create_ctx *create_ctx = ctx;
 	struct nvme_bdev *nvme_bdev = &create_ctx->ocssd_bdev->nvme_bdev;
-	struct nvme_bdev_ns *nvme_ns = create_ctx->nvme_ns;
+	struct nvme_ns *nvme_ns = create_ctx->nvme_ns;
 	int rc;
 
 	rc = spdk_bdev_register(&nvme_bdev->disk);
@@ -1253,7 +1253,7 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	struct nvme_bdev *nvme_bdev = NULL;
 	struct ocssd_bdev *ocssd_bdev = NULL;
 	struct spdk_nvme_ns *ns;
-	struct nvme_bdev_ns *nvme_ns;
+	struct nvme_ns *nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns;
 	struct spdk_ocssd_geometry_data *geometry;
 	int rc = 0;
@@ -1411,7 +1411,7 @@ bdev_ocssd_delete_bdev(const char *bdev_name, bdev_ocssd_delete_cb cb_fn, void *
 
 struct bdev_ocssd_populate_ns_ctx {
 	struct nvme_async_probe_ctx	*nvme_ctx;
-	struct nvme_bdev_ns		*nvme_ns;
+	struct nvme_ns		*nvme_ns;
 };
 
 static void
@@ -1419,7 +1419,7 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct bdev_ocssd_populate_ns_ctx *ctx = _ctx;
 	struct nvme_async_probe_ctx *nvme_ctx = ctx->nvme_ctx;
-	struct nvme_bdev_ns *nvme_ns = ctx->nvme_ns;
+	struct nvme_ns *nvme_ns = ctx->nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ns);
 	const struct spdk_ocssd_geometry_data *geometry = &ocssd_ns->geometry;
 	struct bdev_ocssd_lba_offsets *offsets = &ocssd_ns->lba_offsets;
@@ -1445,7 +1445,7 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 
 void
 bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-			      struct nvme_bdev_ns *nvme_ns,
+			      struct nvme_ns *nvme_ns,
 			      struct nvme_async_probe_ctx *nvme_ctx)
 {
 	struct bdev_ocssd_ns *ocssd_ns;
@@ -1497,7 +1497,7 @@ error:
 }
 
 void
-bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *nvme_ns)
+bdev_ocssd_depopulate_namespace(struct nvme_ns *nvme_ns)
 {
 	struct bdev_ocssd_ns *ocssd_ns;
 

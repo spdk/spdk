@@ -45,10 +45,10 @@ void bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint3
 void bdev_ocssd_delete_bdev(const char *bdev_name, bdev_ocssd_delete_cb cb_fn, void *cb_arg);
 
 void bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
-				   struct nvme_bdev_ns *nvme_ns,
+				   struct nvme_ns *nvme_ns,
 				   struct nvme_async_probe_ctx *ctx);
-void bdev_ocssd_depopulate_namespace(struct nvme_bdev_ns *nvme_ns);
-void bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_bdev_ns *nvme_ns);
+void bdev_ocssd_depopulate_namespace(struct nvme_ns *nvme_ns);
+void bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme_ns *nvme_ns);
 
 int bdev_ocssd_create_io_channel(struct nvme_ctrlr_channel *ioch);
 void bdev_ocssd_destroy_io_channel(struct nvme_ctrlr_channel *ioch);
