@@ -3229,6 +3229,10 @@ nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 	struct spdk_nvmf_request *req;
 	int i;
 
+	if (!ctrlr->nr_aer_reqs) {
+		return;
+	}
+
 	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
 		req = ctrlr->aer_req[i];
 

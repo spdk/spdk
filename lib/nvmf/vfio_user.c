@@ -1033,6 +1033,27 @@ handle_cmd_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 }
 
 static int
+handle_admin_aer_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
+{
+	struct nvmf_vfio_user_qpair *qpair = cb_arg;
+
+	assert(qpair != NULL);
+	assert(req != NULL);
+
+	vfu_unmap_sg(qpair->ctrlr->endpoint->vfu_ctx, req->sg, req->iov, req->iovcnt);
+
+	if (qpair->state != VFIO_USER_QPAIR_ACTIVE) {
+		return 0;
+	}
+
+	return post_completion(qpair->ctrlr, &req->req.cmd->nvme_cmd,
+			       &qpair->ctrlr->qp[req->req.qpair->qid]->cq,
+			       req->req.rsp->nvme_cpl.cdw0,
+			       req->req.rsp->nvme_cpl.status.sc,
+			       req->req.rsp->nvme_cpl.status.sct);
+}
+
+static int
 consume_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_qpair *qpair,
 	    struct spdk_nvme_cmd *cmd)
 {
@@ -1284,6 +1305,8 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 					      ctrlr_id(qpair->ctrlr));
 				unmap_admin_queue(qpair->ctrlr);
 				qpair->state = VFIO_USER_QPAIR_INACTIVE;
+				/* For PCIe controller reset, we will drop all AER responses */
+				nvmf_ctrlr_abort_aer(req->req.qpair->ctrlr);
 			}
 		}
 	}
@@ -2350,6 +2373,9 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	req->cmd->nvme_cmd = *cmd;
 	if (nvmf_qpair_is_admin_queue(req->qpair)) {
 		err = map_admin_cmd_req(ctrlr, req);
+		if (cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+			vu_req->cb_fn = handle_admin_aer_rsp;
+		}
 	} else {
 		err = map_io_cmd_req(ctrlr, req);
 	}
