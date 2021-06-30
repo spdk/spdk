@@ -801,6 +801,25 @@ out:
 	return status;
 }
 
+static int nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req);
+
+static int
+retry_connect(void *arg)
+{
+	struct spdk_nvmf_request *req = arg;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	int rc;
+
+	sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
+	sgroup->mgmt_io_outstanding++;
+	spdk_poller_unregister(&req->poller);
+	rc = nvmf_ctrlr_cmd_connect(req);
+	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		_nvmf_request_complete(req);
+	}
+	return SPDK_POLLER_BUSY;
+}
+
 static int
 nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 {
@@ -825,10 +844,27 @@ nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSING) ||
 	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED) ||
 	    (subsystem->state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING)) {
-		SPDK_ERRLOG("Subsystem '%s' is not ready\n", subsystem->subnqn);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		struct spdk_nvmf_subsystem_poll_group *sgroup;
+
+		if (req->timeout_tsc == 0) {
+			/* We will only retry the request up to 1 second. */
+			req->timeout_tsc = spdk_get_ticks() + spdk_get_ticks_hz();
+		} else if (spdk_get_ticks() > req->timeout_tsc) {
+			SPDK_ERRLOG("Subsystem '%s' was not ready for 1 second\n", subsystem->subnqn);
+			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+
+		/* Subsystem is not ready to handle a connect. Use a poller to retry it
+		 * again later. Decrement the mgmt_io_outstanding to avoid the
+		 * subsystem waiting for this command to complete before unpausing.
+		 */
+		sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
+		sgroup->mgmt_io_outstanding--;
+		SPDK_DEBUGLOG(nvmf, "Subsystem '%s' is not ready for connect, retrying...\n", subsystem->subnqn);
+		req->poller = SPDK_POLLER_REGISTER(retry_connect, req, 100);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	}
 
 	/* Ensure that hostnqn is null terminated */
