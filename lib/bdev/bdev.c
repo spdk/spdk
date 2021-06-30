@@ -3262,7 +3262,10 @@ bdev_name_add(struct spdk_bdev_name *bdev_name, struct spdk_bdev *bdev, const ch
 
 	bdev_name->bdev = bdev;
 
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
 	tmp = RB_INSERT(bdev_name_tree, &g_bdev_mgr.bdev_names, bdev_name);
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
 	if (tmp != NULL) {
 		SPDK_ERRLOG("Bdev name %s already exists\n", name);
 		free(bdev_name->name);
