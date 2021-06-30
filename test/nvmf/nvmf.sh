@@ -68,6 +68,7 @@ run_test "nvmf_multicontroller" test/nvmf/host/multicontroller.sh "${TEST_ARGS[@
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 run_test "nvmf_aer" test/nvmf/host/aer.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
+run_test "nvmf_async_init" test/nvmf/host/async_init.sh "${TEST_ARGS[@]}"
 
 # There is an intermittent error relating to those tests and Soft-RoCE.
 # Skip those tests if we are using rxe.
