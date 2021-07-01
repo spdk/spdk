@@ -570,14 +570,16 @@ function check_changelog() {
 }
 
 function check_json_rpc() {
-	local rc=0
+	local rc=1
 
 	while IFS='"' read -r _ rpc _; do
 		if ! grep -q "^## $rpc" doc/jsonrpc.md; then
 			echo "Missing JSON-RPC documentation for ${rpc}"
 			rc=1
+			continue
 		fi
-	done < <(git grep -h "^SPDK_RPC_REGISTER\(" ':!test/*')
+		rc=0
+	done < <(git grep -h -E "^SPDK_RPC_REGISTER\(" ':!test/*')
 
 	return $rc
 }
