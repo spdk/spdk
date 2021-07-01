@@ -45,6 +45,10 @@
 extern "C" {
 #endif
 
+/**
+ * Pollers should always return a value of this type
+ * indicating whether they did real work or not.
+ */
 enum spdk_thread_poller_rc {
 	SPDK_POLLER_IDLE,
 	SPDK_POLLER_BUSY,
@@ -117,9 +121,8 @@ typedef void (*spdk_thread_pass_msg)(spdk_msg_fn fn, void *ctx,
  * Callback function for a poller.
  *
  * \param ctx Context passed as arg to spdk_poller_register().
- * \return 0 to indicate that polling took place but no events were found;
- * positive to indicate that polling took place and some events were processed;
- * negative if the poller does not provide spin-wait information.
+ * \return value of type `enum spdk_thread_poller_rc` (ex: SPDK_POLLER_IDLE
+ * if no work was done or SPDK_POLLER_BUSY if work was done.)
  */
 typedef int (*spdk_poller_fn)(void *ctx);
 
@@ -561,7 +564,9 @@ struct spdk_poller *spdk_poller_register_named(spdk_poller_fn fn,
 
 /*
  * \brief Register a poller on the current thread with setting its name
- * to the string of the poller function name.
+ * to the string of the poller function name. The poller being registered
+ * should return a value of type `enum spdk_thread_poller_rc`. See
+ * \ref spdk_poller_fn for more information.
  */
 #define SPDK_POLLER_REGISTER(fn, arg, period_microseconds)	\
 	spdk_poller_register_named(fn, arg, period_microseconds, #fn)
