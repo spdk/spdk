@@ -846,6 +846,7 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+	CU_ASSERT(rsp.nvme_cpl.status.dnr == 1);
 
 	/* NVME_IO no channel - queue IO */
 	memset(&rsp, 0, sizeof(rsp));
@@ -881,6 +882,7 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+	CU_ASSERT(rsp.nvme_cpl.status.dnr == 1);
 
 	/* NVME_ADMIN no channel - queue IO */
 	memset(&rsp, 0, sizeof(rsp));
