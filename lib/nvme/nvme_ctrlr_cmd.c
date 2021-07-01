@@ -572,7 +572,7 @@ nvme_ctrlr_retry_queued_abort(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_request	*next, *tmp;
 	int rc;
 
-	if (ctrlr->is_resetting || ctrlr->is_destructed) {
+	if (ctrlr->is_resetting || ctrlr->is_destructed || ctrlr->is_failed) {
 		return;
 	}
 
