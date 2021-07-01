@@ -133,7 +133,7 @@ hello_sock_close_timeout_poll(void *arg)
 	spdk_sock_group_close(&ctx->group);
 
 	spdk_app_stop(ctx->rc);
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static int
@@ -162,12 +162,12 @@ hello_sock_recv_poll(void *arg)
 
 	if (rc <= 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			return 0;
+			return SPDK_POLLER_IDLE;
 		}
 
 		SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
 			    errno, spdk_strerror(errno));
-		return -1;
+		return SPDK_POLLER_BUSY;
 	}
 
 	if (rc > 0) {
@@ -176,7 +176,7 @@ hello_sock_recv_poll(void *arg)
 		printf("%s", buf_in);
 	}
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static int
@@ -193,7 +193,7 @@ hello_sock_writev_poll(void *arg)
 		/* EOF */
 		SPDK_NOTICELOG("Closing connection...\n");
 		hello_sock_quit(ctx, 0);
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 	if (n > 0) {
 		/*
@@ -206,7 +206,7 @@ hello_sock_writev_poll(void *arg)
 			ctx->bytes_out += rc;
 		}
 	}
-	return rc;
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int
@@ -292,7 +292,7 @@ hello_sock_accept_poll(void *arg)
 
 	if (!g_is_running) {
 		hello_sock_quit(ctx, 0);
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 
 	while (1) {
@@ -302,7 +302,7 @@ hello_sock_accept_poll(void *arg)
 			if (rc < 0) {
 				SPDK_ERRLOG("Cannot get connection addresses\n");
 				spdk_sock_close(&ctx->sock);
-				return -1;
+				return SPDK_POLLER_IDLE;
 			}
 
 			SPDK_NOTICELOG("Accepting a new connection from (%s, %hu) to (%s, %hu)\n",
@@ -326,7 +326,7 @@ hello_sock_accept_poll(void *arg)
 		}
 	}
 
-	return count;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int
@@ -340,7 +340,7 @@ hello_sock_group_poll(void *arg)
 		SPDK_ERRLOG("Failed to poll sock_group=%p\n", ctx->group);
 	}
 
-	return -1;
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int

@@ -752,7 +752,7 @@ migrate_poll_groups_by_rr(void *ctx)
 		spdk_thread_send_msg(pg->thread, migrate_poll_group_by_rr, NULL);
 	}
 
-	return 1;
+	return SPDK_POLLER_BUSY;
 }
 
 static void

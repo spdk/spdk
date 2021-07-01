@@ -775,7 +775,7 @@ _check_draining(void *arg)
 		unregister_worker(worker);
 	}
 
-	return -1;
+	return SPDK_POLLER_BUSY;
 }
 
 static int
@@ -791,7 +791,7 @@ _worker_stop(void *arg)
 	worker->is_draining = true;
 	worker->is_draining_poller = SPDK_POLLER_REGISTER(_check_draining, worker, 0);
 
-	return 0;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
