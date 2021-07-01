@@ -50,6 +50,9 @@ Added the `nvmf_set_crdt` RPC for setting command retry delay times.
 
 ### nvme
 
+`spdk_nvme_map_prps` and `spdk_nvme_map_cmd` were moved to nvmf/vfio-user as internal APIs
+as vfio-user is the only user for the above two APIs.
+
 Added a new function `spdk_nvme_ns_cmd_copy` to submit a Simple Copy Command to a Namespace.
 
 Update the spdk_nvme_generic_command_status_code structure with new status code

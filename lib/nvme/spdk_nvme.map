@@ -175,9 +175,6 @@
 	spdk_nvme_cuse_unregister;
 	spdk_nvme_cuse_update_namespaces;
 
-	spdk_nvme_map_prps;
-	spdk_nvme_map_cmd;
-
 	spdk_nvme_poll_group_get_stats;
 	spdk_nvme_poll_group_free_stats;
 

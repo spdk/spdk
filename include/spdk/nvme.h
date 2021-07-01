@@ -3587,25 +3587,6 @@ int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
  */
 int spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 
-int spdk_nvme_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
-		       uint32_t len, size_t mps,
-		       void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len));
-
-/**
- * Map NVMe command data buffers sent from Virtual Machine to virtual addresses
- *
- *\param prv Opaque handle to gpa_to_vva callback
- *\param cmd NVMe command
- *\param iovs IO vectors used to point the data buffers in NVMe command
- *\param max_iovcnt Maximum IO vectors that can be used
- *\param len Total buffer length for the NVMe command
- *\param mps Memory page size
- *\param gpa_to_vva Callback to map memory from Guest Physical address to Virtual address
- */
-int spdk_nvme_map_cmd(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint32_t max_iovcnt,
-		      uint32_t len, size_t mps,
-		      void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len));
-
 /**
  * Opaque handle for a transport poll group. Used by the transport function table.
  */
