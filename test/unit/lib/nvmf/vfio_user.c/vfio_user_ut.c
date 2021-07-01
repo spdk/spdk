@@ -53,7 +53,7 @@ DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 
 DEFINE_STUB_V(nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
 
 static void *
-gpa_to_vva(void *prv, uint64_t addr, uint64_t len)
+gpa_to_vva(void *prv, uint64_t addr, uint64_t len, int prot)
 {
 	return (void *)(uintptr_t)addr;
 }

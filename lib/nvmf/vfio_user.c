@@ -224,7 +224,7 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 static int
 nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 		  uint32_t max_iovcnt, uint32_t len, size_t mps,
-		  void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+		  void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len, int prot))
 {
 	uint64_t prp1, prp2;
 	void *vva;
@@ -242,7 +242,7 @@ nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 	residue_len = mps - (prp1 % mps);
 	residue_len = spdk_min(len, residue_len);
 
-	vva = gpa_to_vva(prv, prp1, residue_len);
+	vva = gpa_to_vva(prv, prp1, residue_len, PROT_READ | PROT_WRITE);
 	if (spdk_unlikely(vva == NULL)) {
 		SPDK_ERRLOG("GPA to VVA failed\n");
 		return -EINVAL;
@@ -264,7 +264,7 @@ nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 		if (len <= mps) {
 			/* 2 PRP used */
 			iovcnt = 2;
-			vva = gpa_to_vva(prv, prp2, len);
+			vva = gpa_to_vva(prv, prp2, len, PROT_READ | PROT_WRITE);
 			if (spdk_unlikely(vva == NULL)) {
 				SPDK_ERRLOG("no VVA for %#" PRIx64 ", len%#x\n",
 					    prp2, len);
@@ -280,7 +280,7 @@ nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 				return -ERANGE;
 			}
 
-			vva = gpa_to_vva(prv, prp2, nents * sizeof(*prp_list));
+			vva = gpa_to_vva(prv, prp2, nents * sizeof(*prp_list), PROT_READ);
 			if (spdk_unlikely(vva == NULL)) {
 				SPDK_ERRLOG("no VVA for %#" PRIx64 ", nents=%#x\n",
 					    prp2, nents);
@@ -290,7 +290,7 @@ nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 			i = 0;
 			while (len != 0) {
 				residue_len = spdk_min(len, mps);
-				vva = gpa_to_vva(prv, prp_list[i], residue_len);
+				vva = gpa_to_vva(prv, prp_list[i], residue_len, PROT_READ | PROT_WRITE);
 				if (spdk_unlikely(vva == NULL)) {
 					SPDK_ERRLOG("no VVA for %#" PRIx64 ", residue_len=%#x\n",
 						    prp_list[i], residue_len);
@@ -315,7 +315,7 @@ nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 static int
 nvme_cmd_map_sgls_data(void *prv, struct spdk_nvme_sgl_descriptor *sgls, uint32_t num_sgls,
 		       struct iovec *iovs, uint32_t max_iovcnt,
-		       void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+		       void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len, int prot))
 {
 	uint32_t i;
 	void *vva;
@@ -329,7 +329,7 @@ nvme_cmd_map_sgls_data(void *prv, struct spdk_nvme_sgl_descriptor *sgls, uint32_
 			SPDK_ERRLOG("Invalid SGL type %u\n", sgls[i].unkeyed.type);
 			return -EINVAL;
 		}
-		vva = gpa_to_vva(prv, sgls[i].address, sgls[i].unkeyed.length);
+		vva = gpa_to_vva(prv, sgls[i].address, sgls[i].unkeyed.length, PROT_READ | PROT_WRITE);
 		if (spdk_unlikely(vva == NULL)) {
 			SPDK_ERRLOG("GPA to VVA failed\n");
 			return -EINVAL;
@@ -344,7 +344,7 @@ nvme_cmd_map_sgls_data(void *prv, struct spdk_nvme_sgl_descriptor *sgls, uint32_
 static int
 nvme_cmd_map_sgls(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint32_t max_iovcnt,
 		  uint32_t len, size_t mps,
-		  void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+		  void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len, int prot))
 {
 	struct spdk_nvme_sgl_descriptor *sgl, *last_sgl;
 	uint32_t num_sgls, seg_len;
@@ -358,7 +358,7 @@ nvme_cmd_map_sgls(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint
 	/* only one SGL segment */
 	if (sgl->unkeyed.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
 		assert(max_iovcnt > 0);
-		vva = gpa_to_vva(prv, sgl->address, sgl->unkeyed.length);
+		vva = gpa_to_vva(prv, sgl->address, sgl->unkeyed.length, PROT_READ | PROT_WRITE);
 		if (spdk_unlikely(vva == NULL)) {
 			SPDK_ERRLOG("GPA to VVA failed\n");
 			return -EINVAL;
@@ -384,7 +384,7 @@ nvme_cmd_map_sgls(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint
 		}
 
 		num_sgls = seg_len / sizeof(struct spdk_nvme_sgl_descriptor);
-		vva = gpa_to_vva(prv, sgl->address, sgl->unkeyed.length);
+		vva = gpa_to_vva(prv, sgl->address, sgl->unkeyed.length, PROT_READ);
 		if (spdk_unlikely(vva == NULL)) {
 			SPDK_ERRLOG("GPA to VVA failed\n");
 			return -EINVAL;
@@ -427,7 +427,7 @@ nvme_cmd_map_sgls(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint
 static int
 nvme_map_cmd(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint32_t max_iovcnt,
 	     uint32_t len, size_t mps,
-	     void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len))
+	     void *(*gpa_to_vva)(void *prv, uint64_t addr, uint64_t len, int prot))
 {
 	if (cmd->psdt == SPDK_NVME_PSDT_PRP) {
 		return nvme_cmd_map_prps(prv, cmd, iovs, max_iovcnt, len, mps, gpa_to_vva);
@@ -598,7 +598,7 @@ max_queue_size(struct nvmf_vfio_user_ctrlr const *ctrlr)
 }
 
 static void *
-map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec *iov)
+map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec *iov, int prot)
 {
 	int ret;
 
@@ -606,7 +606,7 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec 
 	assert(sg != NULL);
 	assert(iov != NULL);
 
-	ret = vfu_addr_to_sg(ctx, (void *)(uintptr_t)addr, len, sg, 1, PROT_READ | PROT_WRITE);
+	ret = vfu_addr_to_sg(ctx, (void *)(uintptr_t)addr, len, sg, 1, prot);
 	if (ret < 0) {
 		return NULL;
 	}
@@ -652,7 +652,8 @@ asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	sq->head = ctrlr->doorbells[0] = 0;
 	sq->cqid = 0;
 	sq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->asq,
-			   sq->size * sizeof(struct spdk_nvme_cmd), sq->sg, &sq->iov);
+			   sq->size * sizeof(struct spdk_nvme_cmd), sq->sg,
+			   &sq->iov, PROT_READ);
 	if (sq->addr == NULL) {
 		return -1;
 	}
@@ -728,7 +729,8 @@ acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	cq->size = regs->aqa.bits.acqs + 1;
 	cq->tail = 0;
 	cq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
-			   cq->size * sizeof(struct spdk_nvme_cpl), cq->sg, &cq->iov);
+			   cq->size * sizeof(struct spdk_nvme_cpl), cq->sg,
+			   &cq->iov, PROT_READ | PROT_WRITE);
 	if (cq->addr == NULL) {
 		return -1;
 	}
@@ -747,7 +749,7 @@ vu_req_to_sg_t(struct nvmf_vfio_user_req *vu_req, uint32_t iovcnt)
 }
 
 static void *
-_map_one(void *prv, uint64_t addr, uint64_t len)
+_map_one(void *prv, uint64_t addr, uint64_t len, int prot)
 {
 	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)prv;
 	struct spdk_nvmf_qpair *qpair;
@@ -763,7 +765,7 @@ _map_one(void *prv, uint64_t addr, uint64_t len)
 	assert(vu_req->iovcnt < NVMF_VFIO_USER_MAX_IOVECS);
 	ret = map_one(vu_qpair->ctrlr->endpoint->vfu_ctx, addr, len,
 		      vu_req_to_sg_t(vu_req, vu_req->iovcnt),
-		      &vu_req->iov[vu_req->iovcnt]);
+		      &vu_req->iov[vu_req->iovcnt], prot);
 	if (spdk_likely(ret != NULL)) {
 		vu_req->iovcnt++;
 	}
@@ -1037,6 +1039,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	uint16_t sct = SPDK_NVME_SCT_GENERIC;
 	int err = 0;
 	struct nvme_q *io_q;
+	int prot;
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
@@ -1121,8 +1124,12 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	io_q->is_cq = is_cq;
 	io_q->size = qsize;
+	prot = PROT_READ;
+	if (is_cq) {
+		prot |= PROT_WRITE;
+	}
 	io_q->addr = map_one(ctrlr->endpoint->vfu_ctx, cmd->dptr.prp.prp1,
-			     io_q->size * entry_size, io_q->sg, &io_q->iov);
+			     io_q->size * entry_size, io_q->sg, &io_q->iov, prot);
 	if (io_q->addr == NULL) {
 		sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		SPDK_ERRLOG("%s: failed to map I/O queue: %m\n", ctrlr_id(ctrlr));
@@ -1403,13 +1410,15 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 			struct nvme_q *sq = &qpair->sq;
 			struct nvme_q *cq = &qpair->cq;
 
-			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, sq->sg, &sq->iov);
+			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, sq->sg, &sq->iov,
+					   PROT_READ | PROT_WRITE);
 			if (!sq->addr) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap SQID %d %#lx-%#lx\n",
 					      i, sq->prp1, sq->prp1 + sq->size * 64);
 				continue;
 			}
-			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, cq->sg, &cq->iov);
+			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, cq->sg, &cq->iov,
+					   PROT_READ | PROT_WRITE);
 			if (!cq->addr) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap CQID %d %#lx-%#lx\n",
 					      i, cq->prp1, cq->prp1 + cq->size * 16);
