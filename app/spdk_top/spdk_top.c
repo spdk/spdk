@@ -662,8 +662,6 @@ get_thread_data(void)
 		}
 	}
 	memcpy(&g_threads_stats, &threads_stats, sizeof(struct rpc_threads_stats));
-	qsort(&g_threads_stats.threads.thread_info, threads_stats.threads.threads_count,
-	      sizeof(g_threads_stats.threads.thread_info[0]), sort_threads);
 
 	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
 		g_threads_stats.threads.thread_info[i].core_num = -1;
@@ -686,6 +684,9 @@ get_thread_data(void)
 			}
 		}
 	}
+
+	qsort(&g_threads_stats.threads.thread_info, threads_stats.threads.threads_count,
+	      sizeof(g_threads_stats.threads.thread_info[0]), sort_threads);
 
 	pthread_mutex_unlock(&g_thread_lock);
 
