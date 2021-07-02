@@ -409,7 +409,7 @@ class Target(Server):
                 # key prefix - lat, clat or slat.
                 # dict section - portion of json containing latency bucket in question
                 # Return dict key to access the bucket and unit as string
-                for k, v in dict_section.items():
+                for k, _ in dict_section.items():
                     if k.startswith(key_prefix):
                         return k, k.split("_")[1]
 
@@ -467,7 +467,7 @@ class Target(Server):
                 write_iops, write_bw, write_avg_lat, write_min_lat, write_max_lat,
                 write_p99_lat, write_p99_9_lat, write_p99_99_lat, write_p99_999_lat]
 
-    def parse_results(self, results_dir, initiator_count=None, run_num=None):
+    def parse_results(self, results_dir):
         files = os.listdir(results_dir)
         fio_files = filter(lambda x: ".fio" in x, files)
         json_files = [x for x in files if ".json" in x]
@@ -1029,7 +1029,6 @@ class SPDKTarget(Target):
 
     def spdk_tgt_configure(self):
         self.log_print("Configuring SPDK NVMeOF target via RPC")
-        numa_list = get_used_numa_nodes()
 
         # Create RDMA transport layer
         rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport,
@@ -1180,7 +1179,7 @@ class KernelInitiator(Initiator):
     def __del__(self):
         self.ssh_connection.close()
 
-    def kernel_init_connect(self, address_list, subsys_no):
+    def kernel_init_connect(self):
         self.log_print("Below connection attempts may result in error messages, this is expected!")
         for subsystem in self.subsystem_info_list:
             self.log_print("Trying to connect %s %s %s" % subsystem)
@@ -1188,7 +1187,7 @@ class KernelInitiator(Initiator):
                            "-s", subsystem[0], "-n", subsystem[1], "-a", subsystem[2], self.extra_params])
             time.sleep(2)
 
-    def kernel_init_disconnect(self, address_list, subsys_no):
+    def kernel_init_disconnect(self):
         for subsystem in self.subsystem_info_list:
             self.exec_cmd(["sudo", self.nvmecli_bin, "disconnect", "-n", subsystem[1]])
             time.sleep(1)
@@ -1205,7 +1204,7 @@ class KernelInitiator(Initiator):
         result = []
         for i in range(len(threads)):
             result.append([])
-            for j in range(nvme_per_split):
+            for _ in range(nvme_per_split):
                 result[i].append(next(iterator))
                 if remainder:
                     result[i].append(next(iterator))
@@ -1227,12 +1226,12 @@ class SPDKInitiator(Initiator):
         super(SPDKInitiator, self).__init__(name, general_config, initiator_config)
 
         if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
-            self.install_spdk(self.spdk_dir)
+            self.install_spdk()
 
         # Required fields
         self.num_cores = initiator_config["num_cores"]
 
-    def install_spdk(self, local_spdk_zip):
+    def install_spdk(self):
         self.log_print("Using fio binary %s" % self.fio_bin)
         self.exec_cmd(["git", "-C", self.spdk_dir, "submodule", "update", "--init"])
         self.exec_cmd(["git", "-C", self.spdk_dir, "clean", "-ffdx"])
@@ -1285,7 +1284,7 @@ class SPDKInitiator(Initiator):
         result = []
         for i in range(len(threads)):
             result.append([])
-            for j in range(nvme_per_split):
+            for _ in range(nvme_per_split):
                 result[i].append(next(iterator))
             if remainder:
                 result[i].append(next(iterator))
@@ -1372,7 +1371,7 @@ if __name__ == "__main__":
         configs = []
         for i in initiators:
             if i.mode == "kernel":
-                i.kernel_init_connect(i.target_nic_ips, target_obj.subsys_no)
+                i.kernel_init_connect()
 
             cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
                                    fio_num_jobs, fio_ramp_time, fio_run_time, fio_rate_iops)
@@ -1415,7 +1414,7 @@ if __name__ == "__main__":
 
         for i in initiators:
             if i.mode == "kernel":
-                i.kernel_init_disconnect(i.target_nic_ips, target_obj.subsys_no)
+                i.kernel_init_disconnect()
             i.copy_result_files(target_results_dir)
 
     target_obj.restore_governor()
