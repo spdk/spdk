@@ -18,6 +18,10 @@ iscsi_tgt_fio_remote_nvme
 nvme_scc
 nvme_simple_copy
 
+# Waiting on Boot Partition support in CI
+nvme_bp
+nvme_boot_partition
+
 # Waiting on significant test rewrite
 nvme_opal
 nvme_opal_bdevio
