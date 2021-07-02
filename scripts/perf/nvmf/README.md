@@ -361,7 +361,7 @@ By default script uses config.json configuration file in the scripts/perf/nvmf
 directory. You can specify a different configuration file at runtime as below:
 
 ``` ~sh
-sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py /path/to/config.json
+sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py -c /path/to/config.json
 ```
 
 PYTHONPATH environment variable is needed because script uses SPDK-local Python
@@ -373,3 +373,4 @@ you need to modify your environment so that Python interpreter is aware of
 
 Test results for all workload combinations are printed to screen once the tests
 are finished. Additionally all aggregate results are saved to /tmp/results/nvmf_results.conf
+Results directory path can be changed by -r script parameter.

@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import argparse
 import json
 import zipfile
 import threading
@@ -467,7 +468,7 @@ class Target(Server):
                 write_iops, write_bw, write_avg_lat, write_min_lat, write_max_lat,
                 write_p99_lat, write_p99_9_lat, write_p99_99_lat, write_p99_999_lat]
 
-    def parse_results(self, results_dir):
+    def parse_results(self, results_dir, csv_file):
         files = os.listdir(results_dir)
         fio_files = filter(lambda x: ".fio" in x, files)
         json_files = [x for x in files if ".json" in x]
@@ -484,7 +485,6 @@ class Target(Server):
         aggr_header_line = ",".join(["Name", *aggr_headers])
 
         # Create empty results file
-        csv_file = "nvmf_results.csv"
         with open(os.path.join(results_dir, csv_file), "w") as fh:
             fh.write(aggr_header_line + "\n")
         rows = set()
@@ -1302,17 +1302,21 @@ class SPDKInitiator(Initiator):
 
 
 if __name__ == "__main__":
-    spdk_zip_path = "/tmp/spdk.zip"
-    target_results_dir = "/tmp/results"
+    script_full_dir = os.path.dirname(os.path.realpath(__file__))
+    default_config_file_path = os.path.relpath(os.path.join(script_full_dir, "config.json"))
 
-    if (len(sys.argv) > 1):
-        config_file_path = sys.argv[1]
-    else:
-        script_full_dir = os.path.dirname(os.path.realpath(__file__))
-        config_file_path = os.path.join(script_full_dir, "config.json")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-c', '--config', type=str, default=default_config_file_path,
+                        help='Configuration file.')
+    parser.add_argument('-r', '--results', type=str, default='/tmp/results',
+                        help='Results directory.')
+    parser.add_argument('-s', '--csv-filename', type=str, default='nvmf_results.csv',
+                        help='CSV results filename.')
 
-    print("Using config file: %s" % config_file_path)
-    with open(config_file_path, "r") as config:
+    args = parser.parse_args()
+
+    print("Using config file: %s" % args.config)
+    with open(args.config, "r") as config:
         data = json.load(config)
 
     initiators = []
@@ -1355,7 +1359,7 @@ if __name__ == "__main__":
     target_obj.tgt_start()
 
     try:
-        os.mkdir(target_results_dir)
+        os.mkdir(args.results)
     except FileExistsError:
         pass
 
@@ -1383,15 +1387,15 @@ if __name__ == "__main__":
         if target_obj.enable_sar:
             sar_file_name = "_".join([str(block_size), str(rw), str(io_depth), "sar"])
             sar_file_name = ".".join([sar_file_name, "txt"])
-            t = threading.Thread(target=target_obj.measure_sar, args=(target_results_dir, sar_file_name))
+            t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_name))
             threads.append(t)
 
         if target_obj.enable_pcm:
             pcm_fnames = ["%s_%s_%s_%s.csv" % (block_size, rw, io_depth, x) for x in ["pcm_cpu", "pcm_memory", "pcm_power"]]
 
-            pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm, args=(target_results_dir, pcm_fnames[0],))
-            pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory, args=(target_results_dir, pcm_fnames[1],))
-            pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power, args=(target_results_dir, pcm_fnames[2],))
+            pcm_cpu_t = threading.Thread(target=target_obj.measure_pcm, args=(args.results, pcm_fnames[0],))
+            pcm_mem_t = threading.Thread(target=target_obj.measure_pcm_memory, args=(args.results, pcm_fnames[1],))
+            pcm_pow_t = threading.Thread(target=target_obj.measure_pcm_power, args=(args.results, pcm_fnames[2],))
 
             threads.append(pcm_cpu_t)
             threads.append(pcm_mem_t)
@@ -1400,11 +1404,11 @@ if __name__ == "__main__":
         if target_obj.enable_bandwidth:
             bandwidth_file_name = "_".join(["bandwidth", str(block_size), str(rw), str(io_depth)])
             bandwidth_file_name = ".".join([bandwidth_file_name, "csv"])
-            t = threading.Thread(target=target_obj.measure_network_bandwidth, args=(target_results_dir, bandwidth_file_name,))
+            t = threading.Thread(target=target_obj.measure_network_bandwidth, args=(args.results, bandwidth_file_name,))
             threads.append(t)
 
         if target_obj.enable_dpdk_memory:
-            t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(target_results_dir))
+            t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results))
             threads.append(t)
 
         for t in threads:
@@ -1415,7 +1419,7 @@ if __name__ == "__main__":
         for i in initiators:
             if i.mode == "kernel":
                 i.kernel_init_disconnect()
-            i.copy_result_files(target_results_dir)
+            i.copy_result_files(args.results)
 
     target_obj.restore_governor()
     target_obj.restore_tuned()
@@ -1426,4 +1430,4 @@ if __name__ == "__main__":
         i.restore_tuned()
         i.restore_services()
         i.restore_sysctl()
-    target_obj.parse_results(target_results_dir)
+    target_obj.parse_results(args.results, args.csv_filename)
