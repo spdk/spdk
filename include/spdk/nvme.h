@@ -1197,6 +1197,15 @@ union spdk_nvme_cmbsz_register spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_c
 union spdk_nvme_pmrcap_register spdk_nvme_ctrlr_get_regs_pmrcap(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the NVMe controller BPINFO (Boot Partition Information) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller BPINFO (Boot Partition Information) register.
+ */
+union spdk_nvme_bpinfo_register spdk_nvme_ctrlr_get_regs_bpinfo(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the NVMe controller PMR size.
  *
  * \param ctrlr Opaque handle to NVMe controller.
@@ -2300,6 +2309,78 @@ int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
 				    int slot, enum spdk_nvme_fw_commit_action commit_action,
 				    struct spdk_nvme_status *completion_status);
+
+/**
+ * Start the Read from a Boot Partition.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
+ *
+ * \param ctrlr NVMe controller to perform the Boot Partition read.
+ * \param payload The data buffer for Boot Partition read.
+ * \param bprsz Read size in multiples of 4 KiB to copy into the Boot Partition Memory Buffer.
+ * \param bprof Boot Partition offset to read from in 4 KiB units.
+ * \param bpid Boot Partition identifier for the Boot Partition read operation.
+ *
+ * \return 0 if Boot Partition read is successful. Negated errno on the following error conditions:
+ * -ENOMEM: if resources could not be allocated.
+ * -ENOTSUP: Boot Partition is not supported by the Controller.
+ * -EIO: Registers access failure.
+ * -EINVAL: Parameters are invalid.
+ * -EFAULT: Invalid address was specified as part of payload.
+ * -EALREADY: Boot Partition read already initiated.
+ */
+int spdk_nvme_ctrlr_read_boot_partition_start(struct spdk_nvme_ctrlr *ctrlr, void *payload,
+		uint32_t bprsz, uint32_t bprof, uint32_t bpid);
+
+/**
+ * Poll the status of the Read from a Boot Partition.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
+ *
+ * \param ctrlr NVMe controller to perform the Boot Partition read.
+ *
+ * \return 0 if Boot Partition read is successful. Negated errno on the following error conditions:
+ * -EIO: Registers access failure.
+ * -EINVAL: Invalid read status or the Boot Partition read is not initiated yet.
+ * -EAGAIN: If the read is still in progress; users must call
+ * spdk_nvme_ctrlr_read_boot_partition_poll again to check the read status.
+ */
+int spdk_nvme_ctrlr_read_boot_partition_poll(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Write to a Boot Partition.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
+ * Users will get the completion after the data is downloaded, image is replaced and
+ * Boot Partition is activated or when the sequence encounters an error.
+ *
+ * \param ctrlr NVMe controller to perform the Boot Partition write.
+ * \param payload The data buffer for Boot Partition write.
+ * \param size Data size to write to the Boot Partition.
+ * \param bpid Boot Partition identifier for the Boot Partition write operation.
+ * \param cb_fn Callback function to invoke when the operation is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if Boot Partition write submit is successful. Negated errno on the following error conditions:
+ * -ENOMEM: if resources could not be allocated.
+ * -ENOTSUP: Boot Partition is not supported by the Controller.
+ * -EIO: Registers access failure.
+ * -EINVAL: Parameters are invalid.
+ */
+int spdk_nvme_ctrlr_write_boot_partition(struct spdk_nvme_ctrlr *ctrlr, void *payload,
+		uint32_t size, uint32_t bpid, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Return virtual address of PCIe NVM I/O registers
+ *
+ * This function returns a pointer to the PCIe I/O registers for a controller
+ * or NULL if unsupported for this transport.
+ *
+ * \param ctrlr Controller whose registers are to be accessed.
+ *
+ * \return Pointer to virtual address of register bank, or NULL.
+ */
+volatile struct spdk_nvme_registers *spdk_nvme_ctrlr_get_registers(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Reserve the controller memory buffer for data transfer use.

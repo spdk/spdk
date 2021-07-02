@@ -216,6 +216,14 @@ enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_SGL,
 };
 
+/** Boot partition write states */
+enum nvme_bp_write_state {
+	SPDK_NVME_BP_WS_DOWNLOADING	= 0x0,
+	SPDK_NVME_BP_WS_DOWNLOADED	= 0x1,
+	SPDK_NVME_BP_WS_REPLACE		= 0x2,
+	SPDK_NVME_BP_WS_ACTIVATE	= 0x3,
+};
+
 /**
  * Descriptor for a request data payload.
  */
@@ -918,6 +926,18 @@ struct spdk_nvme_ctrlr {
 
 	/* PMR size in bytes */
 	uint64_t			pmr_size;
+
+	/* Boot Partition Info */
+	enum nvme_bp_write_state	bp_ws;
+	uint32_t			bpid;
+	spdk_nvme_cmd_cb		bp_write_cb_fn;
+	void				*bp_write_cb_arg;
+
+	/* Firmware Download */
+	void				*fw_payload;
+	unsigned int			fw_size_remaining;
+	unsigned int			fw_offset;
+	unsigned int			fw_transfer_size;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -1085,6 +1105,9 @@ int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_regist
 int	nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs);
 int	nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz);
 int	nvme_ctrlr_get_pmrcap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_pmrcap_register *pmrcap);
+int	nvme_ctrlr_get_bpinfo(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bpinfo_register *bpinfo);
+int	nvme_ctrlr_set_bprsel(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bprsel_register *bprsel);
+int	nvme_ctrlr_set_bpmbl(struct spdk_nvme_ctrlr *ctrlr, uint64_t bpmbl_value);
 bool	nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr);
 void    nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 				       const struct spdk_nvme_cpl *cpl);

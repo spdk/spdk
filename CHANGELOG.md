@@ -56,6 +56,11 @@ have been added. These functions accept `spdk_nvme_ns_cmd_ext_io_opts` structure
 options, e.g. DMA memory domain which describes data that may belong to another memory domain and
 can't be accessed directly.
 
+Added a new function `spdk_nvme_ctrlr_get_regs_bpinfo` to get boot partition info of a controller.
+Added new functions `spdk_nvme_ctrlr_write_boot_partition`,
+`spdk_nvme_ctrlr_read_boot_partition_start` and `spdk_nvme_ctrlr_read_boot_partition_poll`
+to write and read the boot partitions of a controller.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 21.08.

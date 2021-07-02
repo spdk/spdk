@@ -124,6 +124,27 @@ nvme_ctrlr_get_pmrcap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_pmrcap_regi
 					      &pmrcap->raw);
 }
 
+int
+nvme_ctrlr_get_bpinfo(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bpinfo_register *bpinfo)
+{
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, bpinfo.raw),
+					      &bpinfo->raw);
+}
+
+int
+nvme_ctrlr_set_bprsel(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_bprsel_register *bprsel)
+{
+	return nvme_transport_ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, bprsel.raw),
+					      bprsel->raw);
+}
+
+int
+nvme_ctrlr_set_bpmbl(struct spdk_nvme_ctrlr *ctrlr, uint64_t bpmbl_value)
+{
+	return nvme_transport_ctrlr_set_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, bpmbl),
+					      bpmbl_value);
+}
+
 static int
 nvme_ctrlr_set_nssr(struct spdk_nvme_ctrlr *ctrlr, uint32_t nssr_value)
 {
@@ -3959,6 +3980,17 @@ union spdk_nvme_pmrcap_register spdk_nvme_ctrlr_get_regs_pmrcap(struct spdk_nvme
 	return pmrcap;
 }
 
+union spdk_nvme_bpinfo_register spdk_nvme_ctrlr_get_regs_bpinfo(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_bpinfo_register bpinfo;
+
+	if (nvme_ctrlr_get_bpinfo(ctrlr, &bpinfo)) {
+		bpinfo.raw = 0;
+	}
+
+	return bpinfo;
+}
+
 uint64_t
 spdk_nvme_ctrlr_get_pmrsz(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -4511,6 +4543,194 @@ spdk_nvme_ctrlr_unmap_pmr(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
+}
+
+int spdk_nvme_ctrlr_read_boot_partition_start(struct spdk_nvme_ctrlr *ctrlr, void *payload,
+		uint32_t bprsz, uint32_t bprof, uint32_t bpid)
+{
+	union spdk_nvme_bprsel_register bprsel;
+	union spdk_nvme_bpinfo_register bpinfo;
+	uint64_t bpmbl, bpmb_size;
+
+	if (ctrlr->cap.bits.bps == 0) {
+		return -ENOTSUP;
+	}
+
+	if (nvme_ctrlr_get_bpinfo(ctrlr, &bpinfo)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "get bpinfo failed\n");
+		return -EIO;
+	}
+
+	if (bpinfo.bits.brs == SPDK_NVME_BRS_READ_IN_PROGRESS) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Boot Partition read already initiated\n");
+		return -EALREADY;
+	}
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	bpmb_size = bprsz * 4096;
+	bpmbl = spdk_vtophys(payload, &bpmb_size);
+	if (bpmbl == SPDK_VTOPHYS_ERROR) {
+		NVME_CTRLR_ERRLOG(ctrlr, "spdk_vtophys of bpmbl failed\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -EFAULT;
+	}
+
+	if (bpmb_size != bprsz * 4096) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Boot Partition buffer is not physically contiguous\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -EFAULT;
+	}
+
+	if (nvme_ctrlr_set_bpmbl(ctrlr, bpmbl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "set_bpmbl() failed\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -EIO;
+	}
+
+	bprsel.bits.bpid = bpid;
+	bprsel.bits.bprof = bprof;
+	bprsel.bits.bprsz = bprsz;
+
+	if (nvme_ctrlr_set_bprsel(ctrlr, &bprsel)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "set_bprsel() failed\n");
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -EIO;
+	}
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	return 0;
+}
+
+int spdk_nvme_ctrlr_read_boot_partition_poll(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc = 0;
+	union spdk_nvme_bpinfo_register bpinfo;
+
+	if (nvme_ctrlr_get_bpinfo(ctrlr, &bpinfo)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "get bpinfo failed\n");
+		return -EIO;
+	}
+
+	switch (bpinfo.bits.brs) {
+	case SPDK_NVME_BRS_NO_READ:
+		NVME_CTRLR_ERRLOG(ctrlr, "Boot Partition read not initiated\n");
+		rc = -EINVAL;
+		break;
+	case SPDK_NVME_BRS_READ_IN_PROGRESS:
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Boot Partition read in progress\n");
+		rc = -EAGAIN;
+		break;
+	case SPDK_NVME_BRS_READ_ERROR:
+		NVME_CTRLR_ERRLOG(ctrlr, "Error completing Boot Partition read\n");
+		rc = -EIO;
+		break;
+	case SPDK_NVME_BRS_READ_SUCCESS:
+		NVME_CTRLR_INFOLOG(ctrlr, "Boot Partition read completed successfully\n");
+		break;
+	default:
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid Boot Partition read status\n");
+		rc = -EINVAL;
+	}
+
+	return rc;
+}
+
+static void
+nvme_write_boot_partition_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	int res;
+	struct spdk_nvme_ctrlr *ctrlr = arg;
+	struct spdk_nvme_fw_commit fw_commit;
+	struct spdk_nvme_cpl err_cpl =
+	{.status = {.sct = SPDK_NVME_SCT_GENERIC, .sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR }};
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Write Boot Partition failed\n");
+		ctrlr->bp_write_cb_fn(ctrlr->bp_write_cb_arg, cpl);
+		return;
+	}
+
+	if (ctrlr->bp_ws == SPDK_NVME_BP_WS_DOWNLOADING) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Boot Partition Downloading at Offset %d Success\n", ctrlr->fw_offset);
+		ctrlr->fw_payload += ctrlr->fw_transfer_size;
+		ctrlr->fw_offset += ctrlr->fw_transfer_size;
+		ctrlr->fw_size_remaining -= ctrlr->fw_transfer_size;
+		ctrlr->fw_transfer_size = spdk_min(ctrlr->fw_size_remaining, ctrlr->min_page_size);
+		res = nvme_ctrlr_cmd_fw_image_download(ctrlr, ctrlr->fw_transfer_size, ctrlr->fw_offset,
+						       ctrlr->fw_payload, nvme_write_boot_partition_cb, ctrlr);
+		if (res) {
+			NVME_CTRLR_ERRLOG(ctrlr, "nvme_ctrlr_cmd_fw_image_download failed!\n");
+			ctrlr->bp_write_cb_fn(ctrlr->bp_write_cb_arg, &err_cpl);
+			return;
+		}
+
+		if (ctrlr->fw_transfer_size < ctrlr->min_page_size) {
+			ctrlr->bp_ws = SPDK_NVME_BP_WS_DOWNLOADED;
+		}
+	} else if (ctrlr->bp_ws == SPDK_NVME_BP_WS_DOWNLOADED) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Boot Partition Download Success\n");
+		memset(&fw_commit, 0, sizeof(struct spdk_nvme_fw_commit));
+		fw_commit.bpid = ctrlr->bpid;
+		fw_commit.ca = SPDK_NVME_FW_COMMIT_REPLACE_BOOT_PARTITION;
+		res = nvme_ctrlr_cmd_fw_commit(ctrlr, &fw_commit,
+					       nvme_write_boot_partition_cb, ctrlr);
+		if (res) {
+			NVME_CTRLR_ERRLOG(ctrlr, "nvme_ctrlr_cmd_fw_commit failed!\n");
+			NVME_CTRLR_ERRLOG(ctrlr, "commit action: %d\n", fw_commit.ca);
+			ctrlr->bp_write_cb_fn(ctrlr->bp_write_cb_arg, &err_cpl);
+			return;
+		}
+
+		ctrlr->bp_ws = SPDK_NVME_BP_WS_REPLACE;
+	} else if (ctrlr->bp_ws == SPDK_NVME_BP_WS_REPLACE) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Boot Partition Replacement Success\n");
+		memset(&fw_commit, 0, sizeof(struct spdk_nvme_fw_commit));
+		fw_commit.bpid = ctrlr->bpid;
+		fw_commit.ca = SPDK_NVME_FW_COMMIT_ACTIVATE_BOOT_PARTITION;
+		res = nvme_ctrlr_cmd_fw_commit(ctrlr, &fw_commit,
+					       nvme_write_boot_partition_cb, ctrlr);
+		if (res) {
+			NVME_CTRLR_ERRLOG(ctrlr, "nvme_ctrlr_cmd_fw_commit failed!\n");
+			NVME_CTRLR_ERRLOG(ctrlr, "commit action: %d\n", fw_commit.ca);
+			ctrlr->bp_write_cb_fn(ctrlr->bp_write_cb_arg, &err_cpl);
+			return;
+		}
+
+		ctrlr->bp_ws = SPDK_NVME_BP_WS_ACTIVATE;
+	} else if (ctrlr->bp_ws == SPDK_NVME_BP_WS_ACTIVATE) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Boot Partition Activation Success\n");
+		ctrlr->bp_write_cb_fn(ctrlr->bp_write_cb_arg, cpl);
+	} else {
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid Boot Partition write state\n");
+		ctrlr->bp_write_cb_fn(ctrlr->bp_write_cb_arg, &err_cpl);
+		return;
+	}
+}
+
+int spdk_nvme_ctrlr_write_boot_partition(struct spdk_nvme_ctrlr *ctrlr,
+		void *payload, uint32_t size, uint32_t bpid,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	int res;
+
+	if (ctrlr->cap.bits.bps == 0) {
+		return -ENOTSUP;
+	}
+
+	ctrlr->bp_ws = SPDK_NVME_BP_WS_DOWNLOADING;
+	ctrlr->bpid = bpid;
+	ctrlr->bp_write_cb_fn = cb_fn;
+	ctrlr->bp_write_cb_arg = cb_arg;
+	ctrlr->fw_offset = 0;
+	ctrlr->fw_size_remaining = size;
+	ctrlr->fw_payload = payload;
+	ctrlr->fw_transfer_size = spdk_min(ctrlr->fw_size_remaining, ctrlr->min_page_size);
+
+	res = nvme_ctrlr_cmd_fw_image_download(ctrlr, ctrlr->fw_transfer_size, ctrlr->fw_offset,
+					       ctrlr->fw_payload, nvme_write_boot_partition_cb, ctrlr);
+
+	return res;
 }
 
 bool

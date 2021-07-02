@@ -48,6 +48,7 @@
 	spdk_nvme_ctrlr_get_regs_vs;
 	spdk_nvme_ctrlr_get_regs_cmbsz;
 	spdk_nvme_ctrlr_get_regs_pmrcap;
+	spdk_nvme_ctrlr_get_regs_bpinfo;
 	spdk_nvme_ctrlr_get_pmrsz;
 	spdk_nvme_ctrlr_get_num_ns;
 	spdk_nvme_ctrlr_get_pci_device;
@@ -100,6 +101,9 @@
 	spdk_nvme_ctrlr_disable_pmr;
 	spdk_nvme_ctrlr_map_pmr;
 	spdk_nvme_ctrlr_unmap_pmr;
+	spdk_nvme_ctrlr_read_boot_partition_start;
+	spdk_nvme_ctrlr_read_boot_partition_poll;
+	spdk_nvme_ctrlr_write_boot_partition;
 	spdk_nvme_ctrlr_get_transport_id;
 	spdk_nvme_ctrlr_alloc_qid;
 	spdk_nvme_ctrlr_free_qid;
