@@ -1351,6 +1351,7 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		 uint32_t prchk_flags, void *ctx)
 {
 	const struct spdk_uuid		*uuid;
+	const uint8_t *nguid;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_ns_data	*nsdata;
 	int				rc;
@@ -1395,9 +1396,14 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	disk->blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 	disk->optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 
-	uuid = spdk_nvme_ns_get_uuid(ns);
-	if (uuid != NULL) {
-		disk->uuid = *uuid;
+	nguid = spdk_nvme_ns_get_nguid(ns);
+	if (!nguid) {
+		uuid = spdk_nvme_ns_get_uuid(ns);
+		if (uuid) {
+			disk->uuid = *uuid;
+		}
+	} else {
+		memcpy(&disk->uuid, nguid, sizeof(disk->uuid));
 	}
 
 	nsdata = spdk_nvme_ns_get_data(ns);
