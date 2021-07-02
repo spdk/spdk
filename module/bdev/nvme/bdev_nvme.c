@@ -1282,7 +1282,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	if (cdata->cmic.ana_reporting) {
 		spdk_json_write_named_string(w, "ana_state",
-					     _nvme_ana_state_str(spdk_nvme_ns_get_ana_state(ns)));
+					     _nvme_ana_state_str(nvme_ns->ana_state));
 	}
 
 	spdk_json_write_object_end(w);
@@ -1820,6 +1820,85 @@ nvme_ctrlr_depopulate_namespaces(struct nvme_ctrlr *nvme_ctrlr)
 	}
 }
 
+static bool
+nvme_ctrlr_acquire(struct nvme_ctrlr *nvme_ctrlr)
+{
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	if (nvme_ctrlr->destruct || nvme_ctrlr->resetting) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		return false;
+	}
+	nvme_ctrlr->ref++;
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+	return true;
+}
+
+static int
+nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
+			  void *cb_arg)
+{
+	struct nvme_ctrlr *nvme_ctrlr = cb_arg;
+	struct nvme_ns *nvme_ns;
+	uint32_t i, nsid;
+
+	for (i = 0; i < desc->num_of_nsid; i++) {
+		nsid = desc->nsid[i];
+		if (nsid == 0 || nsid > nvme_ctrlr->num_ns) {
+			continue;
+		}
+
+		nvme_ns = nvme_ctrlr->namespaces[nsid - 1];
+		assert(nvme_ns != NULL);
+
+		if (!nvme_ns->populated) {
+			continue;
+		}
+
+		nvme_ns->ana_group_id = desc->ana_group_id;
+		nvme_ns->ana_state = desc->ana_state;
+	}
+
+	return 0;
+}
+
+static void
+nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_ctrlr *nvme_ctrlr = ctx;
+
+	if (spdk_nvme_cpl_is_success(cpl)) {
+		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ctrlr_set_ana_states,
+					     nvme_ctrlr);
+	}
+
+	nvme_ctrlr_release(nvme_ctrlr);
+}
+
+static void
+nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
+{
+	int rc;
+
+	if (nvme_ctrlr->ana_log_page == NULL) {
+		return;
+	}
+
+	if (!nvme_ctrlr_acquire(nvme_ctrlr)) {
+		return;
+	}
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_ctrlr->ctrlr,
+					      SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
+					      SPDK_NVME_GLOBAL_NS_TAG,
+					      nvme_ctrlr->ana_log_page,
+					      nvme_ctrlr->ana_log_page_size, 0,
+					      nvme_ctrlr_read_ana_log_page_done,
+					      nvme_ctrlr);
+	if (rc != 0) {
+		nvme_ctrlr_release(nvme_ctrlr);
+	}
+}
+
 static void
 aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -1839,6 +1918,9 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		   (event.bits.log_page_identifier == SPDK_OCSSD_LOG_CHUNK_NOTIFICATION) &&
 		   spdk_nvme_ctrlr_is_ocssd_supported(nvme_ctrlr->ctrlr)) {
 		bdev_ocssd_handle_chunk_notification(nvme_ctrlr);
+	} else if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+		   (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
+		nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
 	}
 }
 

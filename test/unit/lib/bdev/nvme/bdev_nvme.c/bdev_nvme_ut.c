@@ -129,9 +129,6 @@ DEFINE_STUB(spdk_nvme_ns_get_dealloc_logical_block_read_value,
 
 DEFINE_STUB(spdk_nvme_ns_get_optimal_io_boundary, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_ana_state, enum spdk_nvme_ana_state,
-	    (const struct spdk_nvme_ns *ns), 0);
-
 DEFINE_STUB(spdk_nvme_ns_get_csi, enum spdk_nvme_csi,
 	    (const struct spdk_nvme_ns *ns), 0);
 
@@ -1757,7 +1754,7 @@ test_aer_cb(void)
 	/* Attach a ctrlr, whose max number of namespaces is 4, and 2nd, 3rd, and 4th
 	 * namespaces are populated.
 	 */
-	ctrlr = ut_attach_ctrlr(&trid, 4, false);
+	ctrlr = ut_attach_ctrlr(&trid, 4, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
 	ctrlr->ns[0].is_active = false;
@@ -1770,6 +1767,9 @@ test_aer_cb(void)
 	CU_ASSERT(rc == 0);
 
 	spdk_delay_us(1000);
+	poll_threads();
+
+	spdk_delay_us(10000);
 	poll_threads();
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
@@ -1803,6 +1803,24 @@ test_aer_cb(void)
 	CU_ASSERT(nvme_ctrlr->namespaces[2]->populated == false);
 	CU_ASSERT(nvme_ctrlr->namespaces[3]->populated == true);
 	CU_ASSERT(bdev->disk.blockcnt == 2048);
+
+	/* Change ANA state of active namespaces. */
+	ctrlr->ns[0].ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	ctrlr->ns[1].ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	ctrlr->ns[3].ana_state = SPDK_NVME_ANA_CHANGE_STATE;
+
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_ANA_CHANGE;
+	cpl.cdw0 = event.raw;
+
+	aer_cb(nvme_ctrlr, &cpl);
+
+	spdk_delay_us(10000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr->namespaces[0]->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
+	CU_ASSERT(nvme_ctrlr->namespaces[1]->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
+	CU_ASSERT(nvme_ctrlr->namespaces[3]->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
 
 	rc = bdev_nvme_delete("nvme0", NULL);
 	CU_ASSERT(rc == 0);
