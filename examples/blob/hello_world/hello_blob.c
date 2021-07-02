@@ -415,7 +415,7 @@ hello_start(void *arg1)
 
 	/*
 	 * In this example, use our malloc (RAM) disk configured via
-	 * hello_blob.conf that was passed in when we started the
+	 * hello_blob.json that was passed in when we started the
 	 * SPDK app framework.
 	 *
 	 * spdk_bs_init() requires us to fill out the structure
