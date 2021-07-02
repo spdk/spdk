@@ -1460,6 +1460,12 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		opts.uuid = *spdk_bdev_get_uuid(ns->bdev);
 	}
 
+	/* if nguid descriptor is supported by bdev module (nvme) then uuid = nguid */
+	if (spdk_mem_all_zero(opts.nguid, sizeof(opts.nguid))) {
+		SPDK_STATIC_ASSERT(sizeof(opts.nguid) == sizeof(opts.uuid), "size mismatch");
+		memcpy(opts.nguid, spdk_bdev_get_uuid(ns->bdev), sizeof(opts.nguid));
+	}
+
 	ns->opts = opts;
 	ns->subsystem = subsystem;
 	subsystem->ns[opts.nsid - 1] = ns;
