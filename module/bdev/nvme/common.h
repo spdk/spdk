@@ -46,6 +46,25 @@ extern bool g_bdev_nvme_module_finish;
 
 #define NVME_MAX_CONTROLLERS 1024
 
+typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
+
+struct nvme_async_probe_ctx {
+	struct spdk_nvme_probe_ctx *probe_ctx;
+	const char *base_name;
+	const char **names;
+	uint32_t count;
+	uint32_t prchk_flags;
+	struct spdk_poller *poller;
+	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_ctrlr_opts opts;
+	spdk_bdev_create_nvme_fn cb_fn;
+	void *cb_ctx;
+	uint32_t populates_in_progress;
+	bool ctrlr_attached;
+	bool probe_done;
+	bool namespaces_populated;
+};
+
 enum nvme_ns_type {
 	NVME_NS_UNKNOWN		= 0,
 	NVME_NS_STANDARD	= 1,
@@ -135,25 +154,6 @@ struct nvme_poll_group {
 	uint64_t				spin_ticks;
 	uint64_t				start_ticks;
 	uint64_t				end_ticks;
-};
-
-typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
-
-struct nvme_async_probe_ctx {
-	struct spdk_nvme_probe_ctx *probe_ctx;
-	const char *base_name;
-	const char **names;
-	uint32_t count;
-	uint32_t prchk_flags;
-	struct spdk_poller *poller;
-	struct spdk_nvme_transport_id trid;
-	struct spdk_nvme_ctrlr_opts opts;
-	spdk_bdev_create_nvme_fn cb_fn;
-	void *cb_ctx;
-	uint32_t populates_in_progress;
-	bool ctrlr_attached;
-	bool probe_done;
-	bool namespaces_populated;
 };
 
 struct ocssd_io_channel;
