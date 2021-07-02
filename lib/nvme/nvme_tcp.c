@@ -95,7 +95,8 @@ struct nvme_tcp_qpair {
 		uint16_t host_hdgst_enable: 1;
 		uint16_t host_ddgst_enable: 1;
 		uint16_t icreq_send_ack: 1;
-		uint16_t reserved: 13;
+		uint16_t in_connect_poll: 1;
+		uint16_t reserved: 12;
 	} flags;
 
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
@@ -1931,6 +1932,16 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 
 	tqpair = nvme_tcp_qpair(qpair);
 
+	/* Prevent this function from being called recursively, as it could lead to issues with
+	 * nvme_fabric_qpair_connect_poll() if the connect response is received in the recursive
+	 * call.
+	 */
+	if (tqpair->flags.in_connect_poll) {
+		return -EAGAIN;
+	}
+
+	tqpair->flags.in_connect_poll = 1;
+
 	switch (tqpair->state) {
 	case NVME_TCP_QPAIR_STATE_INVALID:
 	case NVME_TCP_QPAIR_STATE_INITIALIZING:
@@ -1966,6 +1977,7 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 		break;
 	}
 
+	tqpair->flags.in_connect_poll = 0;
 	return rc;
 }
 
