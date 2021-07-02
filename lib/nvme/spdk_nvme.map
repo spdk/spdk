@@ -124,6 +124,7 @@
 	spdk_nvme_ns_supports_compare;
 	spdk_nvme_ns_get_dealloc_logical_block_read_value;
 	spdk_nvme_ns_get_optimal_io_boundary;
+	spdk_nvme_ns_get_nguid;
 	spdk_nvme_ns_get_uuid;
 	spdk_nvme_ns_get_csi;
 	spdk_nvme_ns_get_flags;
