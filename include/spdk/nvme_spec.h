@@ -466,6 +466,14 @@ union spdk_nvme_bpinfo_register	{
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_bpinfo_register) == 4, "Incorrect size");
 
+/** Boot read status values */
+enum spdk_nvme_brs_value {
+	SPDK_NVME_BRS_NO_READ		= 0x0,
+	SPDK_NVME_BRS_READ_IN_PROGRESS	= 0x1,
+	SPDK_NVME_BRS_READ_SUCCESS	= 0x2,
+	SPDK_NVME_BRS_READ_ERROR	= 0x3,
+};
+
 /** Boot partition read select */
 union spdk_nvme_bprsel_register {
 	uint32_t	raw;
@@ -3330,6 +3338,16 @@ enum spdk_nvme_fw_commit_action {
 	 * requested to be activated immediately without reset.
 	 */
 	SPDK_NVME_FW_COMMIT_RUN_IMG			= 0x3,
+	/**
+	 * Downloaded image replaces the Boot Partition specified by
+	 * the Boot Partition ID field.
+	 */
+	SPDK_NVME_FW_COMMIT_REPLACE_BOOT_PARTITION	= 0x6,
+	/**
+	 * Mark the Boot Partition specified in the BPID field as Active
+	 * and update BPINFO.ABPID.
+	 */
+	SPDK_NVME_FW_COMMIT_ACTIVATE_BOOT_PARTITION	= 0x7,
 };
 
 /** Parameters for SPDK_NVME_OPC_FIRMWARE_COMMIT cdw10 */
@@ -3346,7 +3364,12 @@ struct spdk_nvme_fw_commit {
 	 * placed image.
 	 */
 	uint32_t	ca		: 3;
-	uint32_t	reserved	: 26;
+	uint32_t	reserved	: 25;
+	/**
+	 * Boot Partition ID. Specifies the boot partition that shall be used for the
+	 * Commit Action.
+	 */
+	uint32_t	bpid		: 1;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 
