@@ -476,7 +476,7 @@ function install_ice() {
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
-		make -j"$(nproc)" install
+		sudo make -j"$(nproc)" install
 	)
 }
 
