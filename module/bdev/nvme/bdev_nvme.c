@@ -459,7 +459,7 @@ _bdev_nvme_check_pending_destruct(struct nvme_ctrlr *nvme_ctrlr)
 static void
 bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 {
-	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
 	_bdev_nvme_check_pending_destruct(nvme_ctrlr);
 }
@@ -538,14 +538,14 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 	spdk_for_each_channel(nvme_ctrlr,
 			      rc == 0 ? bdev_nvme_complete_pending_resets :
 			      bdev_nvme_abort_pending_resets,
-			      nvme_ctrlr,
+			      NULL,
 			      bdev_nvme_check_pending_destruct);
 }
 
 static void
 bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
 	bdev_nvme_reset_complete(nvme_ctrlr, status);
 }
@@ -565,7 +565,7 @@ bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 static void
 bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
-	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 	int rc;
 
 	if (status) {
@@ -581,7 +581,7 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 	/* Recreate all of the I/O queue pairs */
 	spdk_for_each_channel(nvme_ctrlr,
 			      bdev_nvme_reset_create_qpair,
-			      nvme_ctrlr,
+			      NULL,
 			      bdev_nvme_reset_create_qpairs_done);
 	return;
 
@@ -620,7 +620,7 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_ctrlr,
 			      bdev_nvme_reset_destroy_qpair,
-			      nvme_ctrlr,
+			      NULL,
 			      bdev_nvme_reset_ctrlr);
 
 	return 0;
@@ -719,7 +719,7 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		/* First, delete all NVMe I/O queue pairs. */
 		spdk_for_each_channel(nvme_ctrlr,
 				      bdev_nvme_reset_destroy_qpair,
-				      nvme_ctrlr,
+				      NULL,
 				      bdev_nvme_reset_ctrlr);
 	} else if (rc != -EBUSY) {
 		return rc;
