@@ -77,6 +77,8 @@ struct nvme_ctrlr_trid {
 	bool					is_failed;
 };
 
+typedef void (*bdev_nvme_reset_cb)(void *cb_arg, int rc);
+
 struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -108,7 +110,8 @@ struct nvme_ctrlr {
 
 	struct ocssd_bdev_ctrlr			*ocssd_ctrlr;
 
-	struct nvme_bdev_io			*reset_bio;
+	bdev_nvme_reset_cb			reset_cb_fn;
+	void					*reset_cb_arg;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;

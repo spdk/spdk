@@ -503,9 +503,11 @@ static void
 bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 {
 	struct nvme_ctrlr_trid *curr_trid;
-	struct nvme_bdev_io *bio = nvme_ctrlr->reset_bio;
+	bdev_nvme_reset_cb reset_cb_fn = nvme_ctrlr->reset_cb_fn;
+	void *reset_cb_arg = nvme_ctrlr->reset_cb_arg;
 
-	nvme_ctrlr->reset_bio = NULL;
+	nvme_ctrlr->reset_cb_fn = NULL;
+	nvme_ctrlr->reset_cb_arg = NULL;
 
 	if (rc) {
 		SPDK_ERRLOG("Resetting controller failed.\n");
@@ -530,8 +532,8 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	if (bio) {
-		bdev_nvme_io_complete(bio, rc);
+	if (reset_cb_fn) {
+		reset_cb_fn(reset_cb_arg, rc);
 	}
 
 	/* Make sure we clear any pending resets before returning. */
@@ -626,6 +628,14 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 	return 0;
 }
 
+static void
+bdev_nvme_reset_io_complete(void *cb_arg, int rc)
+{
+	struct nvme_bdev_io *bio = cb_arg;
+
+	bdev_nvme_io_complete(bio, rc);
+}
+
 static int
 bdev_nvme_reset_io(struct nvme_ctrlr_channel *ctrlr_ch, struct nvme_bdev_io *bio)
 {
@@ -634,8 +644,10 @@ bdev_nvme_reset_io(struct nvme_ctrlr_channel *ctrlr_ch, struct nvme_bdev_io *bio
 
 	rc = bdev_nvme_reset(ctrlr_ch->ctrlr);
 	if (rc == 0) {
-		assert(ctrlr_ch->ctrlr->reset_bio == NULL);
-		ctrlr_ch->ctrlr->reset_bio = bio;
+		assert(ctrlr_ch->ctrlr->reset_cb_fn == NULL);
+		assert(ctrlr_ch->ctrlr->reset_cb_arg == NULL);
+		ctrlr_ch->ctrlr->reset_cb_fn = bdev_nvme_reset_io_complete;
+		ctrlr_ch->ctrlr->reset_cb_arg = bio;
 	} else if (rc == -EAGAIN) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
