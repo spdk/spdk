@@ -204,11 +204,10 @@ nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid
 	return qpair;
 }
 
-int
+void
 nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	free(qpair);
-	return 0;
 }
 
 void

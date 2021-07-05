@@ -328,10 +328,11 @@ nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid
 	return qpair;
 }
 
-int
+void
 nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	int rc;
 
 	assert(transport != NULL);
 
@@ -340,7 +341,12 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	 * own unique transport objects since they contain function pointers).  So we look up the
 	 * transport object in the delete_io_qpair case.
 	 */
-	return transport->ops.ctrlr_delete_io_qpair(ctrlr, qpair);
+	rc = transport->ops.ctrlr_delete_io_qpair(ctrlr, qpair);
+	if (rc != 0) {
+		SPDK_ERRLOG("transport %s returned non-zero for ctrlr_delete_io_qpair op\n",
+			    transport->ops.name);
+		assert(false);
+	}
 }
 
 int

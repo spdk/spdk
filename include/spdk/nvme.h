@@ -1501,10 +1501,11 @@ spdk_nvme_qp_failure_reason spdk_nvme_ctrlr_get_admin_qp_failure_reason(
 /**
  * Free an I/O queue pair that was allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  *
+ * The qpair must not be accessed after calling this function.
+ *
  * \param qpair I/O queue pair to free.
  *
- * \return 0 on success, -1 on failure.  On failure, the caller should reset
- * the controller and try to free the io qpair again after the reset.
+ * \return 0 on success.  This function will never return any value other than 0.
  */
 int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);
 

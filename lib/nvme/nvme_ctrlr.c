@@ -583,11 +583,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
 	spdk_nvme_ctrlr_free_qid(ctrlr, qpair->id);
 
-	if (nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair)) {
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return -1;
-	}
-
+	nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return 0;
 }
