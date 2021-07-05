@@ -33,7 +33,7 @@ function vhosttestinit() {
 		$rootdir/scripts/setup.sh
 	fi
 
-	if [[ -e $VM_IMAGE.gz ]]; then
+	if [[ -e $VM_IMAGE.gz && ! -e $VM_IMAGE ]]; then
 		gzip -dc "$VM_IMAGE.gz" > "$VM_IMAGE"
 	fi
 
