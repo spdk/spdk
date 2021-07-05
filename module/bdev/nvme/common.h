@@ -85,6 +85,8 @@ struct nvme_ns {
 	struct nvme_ctrlr	*ctrlr;
 	struct nvme_bdev	*bdev;
 	void			*type_ctx;
+	uint32_t		ana_group_id;
+	enum spdk_nvme_ana_state ana_state;
 };
 
 struct nvme_bdev_io;
@@ -136,6 +138,12 @@ struct nvme_ctrlr {
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 
 	TAILQ_HEAD(, nvme_ctrlr_trid)		trids;
+
+	uint32_t				ana_log_page_size;
+	struct spdk_nvme_ana_page		*ana_log_page;
+	struct spdk_nvme_ana_group_descriptor	*copied_ana_desc;
+
+	struct nvme_async_probe_ctx		*probe_ctx;
 
 	pthread_mutex_t				mutex;
 };

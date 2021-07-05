@@ -122,6 +122,9 @@ nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 	struct nvme_ctrlr_trid *trid, *tmp_trid;
 	uint32_t i;
 
+	free(nvme_ctrlr->copied_ana_desc);
+	spdk_free(nvme_ctrlr->ana_log_page);
+
 	if (nvme_ctrlr->opal_dev) {
 		spdk_opal_dev_destruct(nvme_ctrlr->opal_dev);
 		nvme_ctrlr->opal_dev = NULL;

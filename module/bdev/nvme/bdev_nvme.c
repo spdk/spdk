@@ -1340,6 +1340,62 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_module_ctx		= bdev_nvme_get_module_ctx,
 };
 
+typedef int (*bdev_nvme_parse_ana_log_page_cb)(
+	const struct spdk_nvme_ana_group_descriptor *desc, void *cb_arg);
+
+static int
+bdev_nvme_parse_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
+			     bdev_nvme_parse_ana_log_page_cb cb_fn, void *cb_arg)
+{
+	struct spdk_nvme_ana_group_descriptor *copied_desc;
+	uint8_t *orig_desc;
+	uint32_t i, desc_size, copy_len;
+	int rc = 0;
+
+	if (nvme_ctrlr->ana_log_page == NULL) {
+		return -EINVAL;
+	}
+
+	copied_desc = nvme_ctrlr->copied_ana_desc;
+
+	orig_desc = (uint8_t *)nvme_ctrlr->ana_log_page + sizeof(struct spdk_nvme_ana_page);
+	copy_len = nvme_ctrlr->ana_log_page_size - sizeof(struct spdk_nvme_ana_page);
+
+	for (i = 0; i < nvme_ctrlr->ana_log_page->num_ana_group_desc; i++) {
+		memcpy(copied_desc, orig_desc, copy_len);
+
+		rc = cb_fn(copied_desc, cb_arg);
+		if (rc != 0) {
+			break;
+		}
+
+		desc_size = sizeof(struct spdk_nvme_ana_group_descriptor) +
+			    copied_desc->num_of_nsid * sizeof(uint32_t);
+		orig_desc += desc_size;
+		copy_len -= desc_size;
+	}
+
+	return rc;
+}
+
+static int
+nvme_ns_set_ana_state(const struct spdk_nvme_ana_group_descriptor *desc, void *cb_arg)
+{
+	struct nvme_ns *nvme_ns = cb_arg;
+	uint32_t i;
+
+	for (i = 0; i < desc->num_of_nsid; i++) {
+		if (desc->nsid[i] != spdk_nvme_ns_get_id(nvme_ns->ns)) {
+			continue;
+		}
+		nvme_ns->ana_group_id = desc->ana_group_id;
+		nvme_ns->ana_state = desc->ana_state;
+		return 1;
+	}
+
+	return 0;
+}
+
 static int
 nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		 struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
@@ -1510,6 +1566,11 @@ nvme_ctrlr_populate_standard_namespace(struct nvme_ctrlr *nvme_ctrlr,
 
 	nvme_ns->ns = ns;
 	nvme_ns->populated = true;
+	nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+
+	if (nvme_ctrlr->ana_log_page != NULL) {
+		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ns_set_ana_state, nvme_ns);
+	}
 
 	rc = nvme_bdev_create(nvme_ctrlr, nvme_ns);
 done:
@@ -1811,6 +1872,72 @@ nvme_ctrlr_create_done(struct nvme_ctrlr *nvme_ctrlr,
 	nvme_ctrlr_populate_namespaces(nvme_ctrlr, ctx);
 }
 
+static void
+nvme_ctrlr_init_ana_log_page_done(void *_ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_ctrlr *nvme_ctrlr = _ctx;
+	struct nvme_async_probe_ctx *ctx = nvme_ctrlr->probe_ctx;
+
+	nvme_ctrlr->probe_ctx = NULL;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		nvme_ctrlr_delete(nvme_ctrlr);
+
+		if (ctx != NULL) {
+			populate_namespaces_cb(ctx, 0, -1);
+		}
+		return;
+	}
+
+	nvme_ctrlr_create_done(nvme_ctrlr, ctx);
+}
+
+static int
+nvme_ctrlr_init_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
+			     struct nvme_async_probe_ctx *ctx)
+{
+	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	uint32_t ana_log_page_size;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + cdata->nanagrpid *
+			    sizeof(struct spdk_nvme_ana_group_descriptor) + cdata->nn *
+			    sizeof(uint32_t);
+
+	nvme_ctrlr->ana_log_page = spdk_zmalloc(ana_log_page_size, 64, NULL,
+						SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	if (nvme_ctrlr->ana_log_page == NULL) {
+		SPDK_ERRLOG("could not allocate ANA log page buffer\n");
+		return -ENXIO;
+	}
+
+	/* Each descriptor in a ANA log page is not ensured to be 8-bytes aligned.
+	 * Hence copy each descriptor to a temporary area when parsing it.
+	 *
+	 * Allocate a buffer whose size is as large as ANA log page buffer because
+	 * we do not know the size of a descriptor until actually reading it.
+	 */
+	nvme_ctrlr->copied_ana_desc = calloc(1, ana_log_page_size);
+	if (nvme_ctrlr->copied_ana_desc == NULL) {
+		SPDK_ERRLOG("could not allocate a buffer to parse ANA descriptor\n");
+		return -ENOMEM;
+	}
+
+	nvme_ctrlr->ana_log_page_size = ana_log_page_size;
+
+	nvme_ctrlr->probe_ctx = ctx;
+
+	return spdk_nvme_ctrlr_cmd_get_log_page(ctrlr,
+						SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
+						SPDK_NVME_GLOBAL_NS_TAG,
+						nvme_ctrlr->ana_log_page,
+						nvme_ctrlr->ana_log_page_size, 0,
+						nvme_ctrlr_init_ana_log_page_done,
+						nvme_ctrlr);
+}
+
 static int
 nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		  const char *name,
@@ -1821,6 +1948,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_ctrlr_trid *trid_entry;
 	uint32_t i, num_ns;
+	const struct spdk_nvme_ctrlr_data *cdata;
 	int rc;
 
 	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
@@ -1879,7 +2007,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		goto err;
 	}
 
-	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_ctrlr->ctrlr)) {
+	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
 		rc = bdev_ocssd_init_ctrlr(nvme_ctrlr);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_ERRLOG("Unable to initialize OCSSD controller\n");
@@ -1908,13 +2036,22 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, nvme_ctrlr);
 	spdk_nvme_ctrlr_set_remove_cb(ctrlr, remove_cb, nvme_ctrlr);
 
-	if (spdk_nvme_ctrlr_get_flags(nvme_ctrlr->ctrlr) &
+	if (spdk_nvme_ctrlr_get_flags(ctrlr) &
 	    SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
-		nvme_ctrlr->opal_dev = spdk_opal_dev_construct(nvme_ctrlr->ctrlr);
+		nvme_ctrlr->opal_dev = spdk_opal_dev_construct(ctrlr);
 	}
 
-	nvme_ctrlr_create_done(nvme_ctrlr, ctx);
-	return 0;
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	if (cdata->cmic.ana_reporting) {
+		rc = nvme_ctrlr_init_ana_log_page(nvme_ctrlr, ctx);
+		if (rc == 0) {
+			return 0;
+		}
+	} else {
+		nvme_ctrlr_create_done(nvme_ctrlr, ctx);
+		return 0;
+	}
 
 err:
 	nvme_ctrlr_delete(nvme_ctrlr);
