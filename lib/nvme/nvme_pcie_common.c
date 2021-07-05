@@ -996,7 +996,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
-		return -ENOMEM;
+		goto free;
 	}
 
 	/* Delete the I/O submission queue */
@@ -1004,13 +1004,13 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to send request to delete_io_sq with rc=%d\n", rc);
 		free(status);
-		return rc;
+		goto free;
 	}
 	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
-		return -1;
+		goto free;
 	}
 
 	/* Now that the submission queue is deleted, the device is supposed to have
@@ -1024,13 +1024,13 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to send request to delete_io_cq with rc=%d\n", rc);
 		free(status);
-		return rc;
+		goto free;
 	}
 	if (nvme_wait_for_completion(ctrlr->adminq, status)) {
 		if (!status->timed_out) {
 			free(status);
 		}
-		return -1;
+		goto free;
 	}
 	free(status);
 
