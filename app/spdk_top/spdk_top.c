@@ -745,8 +745,8 @@ sort_pollers(void *arg, const void *p1, const void *p2)
 sort_pollers(const void *p1, const void *p2, void *arg)
 #endif
 {
-	const struct rpc_poller_info *poller1 = *(struct rpc_poller_info **)p1;
-	const struct rpc_poller_info *poller2 = *(struct rpc_poller_info **)p2;
+	const struct rpc_poller_info *poller1 = (struct rpc_poller_info *)p1;
+	const struct rpc_poller_info *poller2 = (struct rpc_poller_info *)p2;
 	enum sort_type sorting = *(enum sort_type *)arg;
 	uint64_t count1, count2;
 	uint64_t last_run_counter;
@@ -787,61 +787,6 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 	}
 }
 
-static void
-copy_pollers(struct rpc_poller_info *pollers, uint64_t pollers_count,
-	     uint64_t *current_count, bool reset_last_counter,
-	     struct rpc_poller_info **pollers_info)
-{
-	uint64_t i, j;
-	struct rpc_thread_info *thread_info;
-
-	for (i = 0; i < pollers_count; i++) {
-		for (j = 0; j < g_last_threads_count; j++) {
-			thread_info = &g_threads_info[j];
-			/* Check if poller's thread exists in g_threads_stats
-			 * (if poller is not "hanging" without a thread). */
-			if (thread_info->id != pollers[i].thread_id) {
-				continue;
-			}
-
-			if (reset_last_counter) {
-				store_last_counters(pollers[i].name, pollers[i].thread_id, pollers[i].run_count,
-						    pollers[i].busy_count);
-			}
-			pollers_info[(*current_count)++] = &pollers[i];
-			break;
-		}
-	}
-}
-
-static uint8_t
-prepare_poller_data(uint8_t current_page, struct rpc_poller_info **pollers,
-		    uint64_t *count, uint8_t last_page)
-{
-	bool reset_last_counter = false;
-	enum sort_type sorting;
-
-	if (last_page != current_page) {
-		reset_last_counter = true;
-	}
-
-	copy_pollers(g_pollers_info, g_last_pollers_count,
-		     count, reset_last_counter, pollers);
-
-	if (last_page != current_page) {
-		last_page = current_page;
-	}
-
-	/* Timed pollers can switch their possition on a list because of how they work.
-	 * Let's sort them by name first so that they won't switch on data refresh */
-	sorting = BY_NAME;
-	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
-	sorting = USE_GLOBAL;
-	qsort_r(pollers, *count, sizeof(pollers[0]), sort_pollers, (void *)&sorting);
-
-	return last_page;
-}
-
 static int
 get_pollers_data(void)
 {
@@ -850,6 +795,7 @@ get_pollers_data(void)
 	uint64_t i = 0;
 	uint32_t current_pollers_count;
 	struct rpc_poller_info pollers_info[RPC_MAX_POLLERS];
+	enum sort_type sorting;
 
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
@@ -880,6 +826,13 @@ get_pollers_data(void)
 	}
 
 	g_last_pollers_count = current_pollers_count;
+
+	sorting = BY_NAME;
+	qsort_r(&pollers_info, g_last_pollers_count, sizeof(struct rpc_poller_info), sort_pollers,
+		(void *)&sorting);
+	sorting = USE_GLOBAL;
+	qsort_r(&pollers_info, g_last_pollers_count, sizeof(struct rpc_poller_info), sort_pollers,
+		(void *)&sorting);
 
 	memcpy(&g_pollers_info, &pollers_info, sizeof(struct rpc_poller_info) * g_last_pollers_count);
 
@@ -1287,70 +1240,59 @@ refresh_pollers_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[POLLERS_TAB];
 	uint64_t last_run_counter, last_busy_counter;
-	uint64_t i, count = 0;
-	uint16_t col, j;
+	uint64_t i, j;
+	uint16_t col;
 	uint8_t max_pages, item_index;
-	static uint8_t g_last_page = 0xF;
-	/* Init g_last_page with value != 0 to force store_last_counters() call in copy_pollers()
-	 * so that initial values for run_counter are stored in g_run_counter_history */
 	char run_count[MAX_TIME_STR_LEN], period_ticks[MAX_PERIOD_STR_LEN];
-	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
 
-	g_last_page = prepare_poller_data(current_page, pollers, &count, g_last_page);
-
-	max_pages = (count + g_max_data_rows - 1) / g_max_data_rows;
-
-	/* Clear screen if number of pollers changed */
-	if (g_last_pollers_count != count) {
-		for (i = TABS_DATA_START_ROW; i < g_data_win_size; i++) {
-			for (j = 1; j < (uint64_t)g_max_col - 1; j++) {
-				mvwprintw(g_tabs[POLLERS_TAB], i, j, " ");
-			}
-		}
-
-		/* We need to run store_last_counters() again, so the easiest way is to call this function
-		 * again with changed g_last_page value */
-		g_last_page = 0xF;
-		refresh_pollers_tab(current_page);
-		return max_pages;
-	}
+	max_pages = (g_last_pollers_count + g_max_data_rows - 1) / g_max_data_rows;
 
 	/* Display info */
 	for (i = current_page * g_max_data_rows;
-	     i < spdk_min(count, (uint64_t)((current_page + 1) * g_max_data_rows));
+	     i < (uint64_t)((current_page + 1) * g_max_data_rows);
 	     i++) {
 		item_index = i - (current_page * g_max_data_rows);
 
+		/* When number of pollers decreases, this will print spaces in places
+		 * where non existent pollers were previously displayed. */
+		if (i >= g_last_pollers_count) {
+			for (j = 1; j < (uint64_t)g_max_col - 1; j++) {
+				mvwprintw(g_tabs[POLLERS_TAB], item_index + TABS_DATA_START_ROW, j, " ");
+			}
+
+			continue;
+		}
+
 		col = TABS_DATA_START_COL;
 
-		last_busy_counter = get_last_busy_counter(pollers[i]->name, pollers[i]->thread_id);
+		last_busy_counter = get_last_busy_counter(g_pollers_info[i].name, g_pollers_info[i].thread_id);
 
 		draw_row_background(item_index, POLLERS_TAB);
 
 		if (!col_desc[0].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col + 1,
-				      col_desc[0].max_data_string, ALIGN_LEFT, pollers[i]->name);
+				      col_desc[0].max_data_string, ALIGN_LEFT, g_pollers_info[i].name);
 			col += col_desc[0].max_data_string + 2;
 		}
 
 		if (!col_desc[1].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[1].max_data_string, ALIGN_LEFT, poller_type_str[pollers[i]->type]);
+				      col_desc[1].max_data_string, ALIGN_LEFT, poller_type_str[g_pollers_info[i].type]);
 			col += col_desc[1].max_data_string + 2;
 		}
 
 		if (!col_desc[2].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[2].max_data_string, ALIGN_LEFT, pollers[i]->thread_name);
+				      col_desc[2].max_data_string, ALIGN_LEFT, g_pollers_info[i].thread_name);
 			col += col_desc[2].max_data_string + 1;
 		}
 
 		if (!col_desc[3].disabled) {
-			last_run_counter = get_last_run_counter(pollers[i]->name, pollers[i]->thread_id);
+			last_run_counter = get_last_run_counter(g_pollers_info[i].name, g_pollers_info[i].thread_id);
 			if (g_interval_data == true) {
-				snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count - last_run_counter);
+				snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, g_pollers_info[i].run_count - last_run_counter);
 			} else {
-				snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, pollers[i]->run_count);
+				snprintf(run_count, MAX_TIME_STR_LEN, "%" PRIu64, g_pollers_info[i].run_count);
 			}
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[3].max_data_string, ALIGN_RIGHT, run_count);
@@ -1358,8 +1300,8 @@ refresh_pollers_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[4].disabled) {
-			if (pollers[i]->period_ticks != 0) {
-				get_time_str(pollers[i]->period_ticks, period_ticks);
+			if (g_pollers_info[i].period_ticks != 0) {
+				get_time_str(g_pollers_info[i].period_ticks, period_ticks);
 				print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
 					      col_desc[4].max_data_string, ALIGN_RIGHT, period_ticks);
 			}
@@ -1367,7 +1309,7 @@ refresh_pollers_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[5].disabled) {
-			if (pollers[i]->busy_count > last_busy_counter) {
+			if (g_pollers_info[i].busy_count > last_busy_counter) {
 				if (item_index != g_selected_row) {
 					wattron(g_tabs[POLLERS_TAB], COLOR_PAIR(6));
 					print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
@@ -2239,17 +2181,17 @@ show_poller(uint8_t current_page)
 {
 	PANEL *poller_panel;
 	WINDOW *poller_win;
-	uint64_t count = 0;
 	uint64_t last_run_counter, last_busy_counter;
 	uint64_t poller_number = current_page * g_max_data_rows + g_selected_row;
-	struct rpc_poller_info *pollers[RPC_MAX_POLLERS];
+	struct rpc_poller_info *poller;
 	bool stop_loop = false;
 	char poller_period[MAX_TIME_STR_LEN];
 	int c;
 
 	pthread_mutex_lock(&g_thread_lock);
-	prepare_poller_data(current_page, pollers, &count, current_page);
-	assert(poller_number < count);
+
+	assert(poller_number < g_last_pollers_count);
+	poller = &g_pollers_info[poller_number];
 
 	poller_win = newwin(POLLER_WIN_HEIGHT, POLLER_WIN_WIDTH,
 			    get_position_for_window(POLLER_WIN_HEIGHT, g_max_row),
@@ -2264,38 +2206,34 @@ show_poller(uint8_t current_page)
 
 	box(poller_win, 0, 0);
 
-	print_in_middle(poller_win, 1, 0, POLLER_WIN_WIDTH, pollers[poller_number]->name, COLOR_PAIR(3));
+	print_in_middle(poller_win, 1, 0, POLLER_WIN_WIDTH, poller->name, COLOR_PAIR(3));
 	mvwhline(poller_win, 2, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
 	mvwaddch(poller_win, 2, POLLER_WIN_WIDTH, ACS_RTEE);
 
 	print_left(poller_win, 3, 2, POLLER_WIN_WIDTH, "Type:                  On thread:", COLOR_PAIR(5));
 	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL,
-		  poller_type_str[pollers[poller_number]->type]);
-	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL + 23, pollers[poller_number]->thread_name);
+		  poller_type_str[poller->type]);
+	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL + 23, poller->thread_name);
 
 	print_left(poller_win, 4, 2, POLLER_WIN_WIDTH, "Run count:", COLOR_PAIR(5));
 
-	last_run_counter = get_last_run_counter(pollers[poller_number]->name,
-						pollers[poller_number]->thread_id);
-	last_busy_counter = get_last_busy_counter(pollers[poller_number]->name,
-			    pollers[poller_number]->thread_id);
+	last_run_counter = get_last_run_counter(poller->name, poller->thread_id);
+	last_busy_counter = get_last_busy_counter(poller->name, poller->thread_id);
 	if (g_interval_data) {
-		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64,
-			  pollers[poller_number]->run_count - last_run_counter);
+		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64, poller->run_count - last_run_counter);
 	} else {
-		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64,
-			  pollers[poller_number]->run_count);
+		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64, poller->run_count);
 	}
 
-	if (pollers[poller_number]->period_ticks != 0) {
+	if (poller->period_ticks != 0) {
 		print_left(poller_win, 4, 28, POLLER_WIN_WIDTH, "Period:", COLOR_PAIR(5));
-		get_time_str(pollers[poller_number]->period_ticks, poller_period);
+		get_time_str(poller->period_ticks, poller_period);
 		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL + 23, poller_period);
 	}
 	mvwhline(poller_win, 5, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
 	print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH - 7, "Status:", COLOR_PAIR(5));
 
-	if (pollers[poller_number]->busy_count > last_busy_counter) {
+	if (poller->busy_count > last_busy_counter) {
 		print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH + 6, "Busy", COLOR_PAIR(6));
 	} else {
 		print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH + 6, "Idle", COLOR_PAIR(7));
