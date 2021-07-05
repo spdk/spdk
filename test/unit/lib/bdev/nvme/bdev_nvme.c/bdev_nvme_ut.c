@@ -1360,6 +1360,7 @@ test_pending_reset(void)
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
 	struct spdk_bdev_io *first_bdev_io, *second_bdev_io;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
@@ -1368,21 +1369,13 @@ test_pending_reset(void)
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid);
 
-	first_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(first_bdev_io != NULL);
-	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-
-	second_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(second_bdev_io != NULL);
-	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-
 	set_thread(0);
 
-	ctrlr = ut_attach_ctrlr(&trid, 0);
+	ctrlr = ut_attach_ctrlr(&trid, 1);
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
 
 	g_ut_attach_ctrlr_status = 0;
-	g_ut_attach_bdev_count = 0;
+	g_ut_attach_bdev_count = 1;
 
 	rc = bdev_nvme_create(&trid, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
 			      attach_ctrlr_done, NULL, NULL);
@@ -1394,10 +1387,20 @@ test_pending_reset(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
+	bdev = nvme_ctrlr->namespaces[0]->bdev;
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
 	ch1 = spdk_get_io_channel(nvme_ctrlr);
 	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
 
 	ctrlr_ch1 = spdk_io_channel_get_ctx(ch1);
+
+	first_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
+	SPDK_CU_ASSERT_FATAL(first_bdev_io != NULL);
+	first_bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
+	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	first_bdev_io->bdev = &bdev->disk;
+	first_bdev_io->internal.ch = (struct spdk_bdev_channel *)ch1;
 
 	set_thread(1);
 
@@ -1406,18 +1409,23 @@ test_pending_reset(void)
 
 	ctrlr_ch2 = spdk_io_channel_get_ctx(ch2);
 
+	second_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
+	SPDK_CU_ASSERT_FATAL(second_bdev_io != NULL);
+	second_bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
+	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+	second_bdev_io->bdev = &bdev->disk;
+	second_bdev_io->internal.ch = (struct spdk_bdev_channel *)ch2;
+
 	/* The first reset request is submitted on thread 1, and the second reset request
 	 * is submitted on thread 0 while processing the first request.
 	 */
-	rc = bdev_nvme_reset(ctrlr_ch2, first_bdev_io);
-	CU_ASSERT(rc == 0);
+	bdev_nvme_submit_request(ch2, first_bdev_io);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(TAILQ_EMPTY(&ctrlr_ch2->pending_resets));
 
 	set_thread(0);
 
-	rc = bdev_nvme_reset(ctrlr_ch1, second_bdev_io);
-	CU_ASSERT(rc == 0);
+	bdev_nvme_submit_request(ch1, second_bdev_io);
 	CU_ASSERT(TAILQ_FIRST(&ctrlr_ch1->pending_resets) == second_bdev_io);
 
 	poll_threads();
@@ -1434,15 +1442,13 @@ test_pending_reset(void)
 	 */
 	set_thread(1);
 
-	rc = bdev_nvme_reset(ctrlr_ch2, first_bdev_io);
-	CU_ASSERT(rc == 0);
+	bdev_nvme_submit_request(ch2, first_bdev_io);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(TAILQ_EMPTY(&ctrlr_ch2->pending_resets));
 
 	set_thread(0);
 
-	rc = bdev_nvme_reset(ctrlr_ch1, second_bdev_io);
-	CU_ASSERT(rc == 0);
+	bdev_nvme_submit_request(ch1, second_bdev_io);
 	CU_ASSERT(TAILQ_FIRST(&ctrlr_ch1->pending_resets) == second_bdev_io);
 
 	ctrlr->fail_reset = true;
