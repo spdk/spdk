@@ -306,12 +306,14 @@ iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
 	}
 
 	/* BHS and AHS are always 4-byte multiples in length, so no padding is necessary. */
-	crc32c = crc32c ^ SPDK_CRC32C_XOR;
-	return crc32c;
+
+	/* Finalize CRC by inverting all bits. */
+	return crc32c ^ SPDK_CRC32C_XOR;
 }
 
+/* Calculate CRC for each partial data segment. */
 static void
-_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_calc_partial_data_digest(struct spdk_iscsi_pdu *pdu)
 {
 	struct iovec iov;
 	uint32_t num_blocks;
@@ -330,11 +332,12 @@ _iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 }
 
 static uint32_t
-_iscsi_pdu_finalize_data_digest(struct spdk_iscsi_pdu *pdu)
+iscsi_pdu_calc_partial_data_digest_done(struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c = pdu->crc32c;
 	uint32_t mod;
 
+	/* Include padding bytes into CRC if any. */
 	mod = pdu->data_valid_bytes % ISCSI_ALIGNMENT;
 	if (mod != 0) {
 		uint32_t pad_length = ISCSI_ALIGNMENT - mod;
@@ -345,15 +348,45 @@ _iscsi_pdu_finalize_data_digest(struct spdk_iscsi_pdu *pdu)
 		crc32c = spdk_crc32c_update(pad, pad_length, crc32c);
 	}
 
-	crc32c = crc32c ^ SPDK_CRC32C_XOR;
-	return crc32c;
+	/* Finalize CRC by inverting all bits. */
+	return crc32c ^ SPDK_CRC32C_XOR;
 }
 
 uint32_t
 iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 {
-	_iscsi_pdu_calc_data_digest(pdu);
-	return _iscsi_pdu_finalize_data_digest(pdu);
+	uint32_t data_len = DGET24(pdu->bhs.data_segment_len);
+	uint32_t crc32c;
+	uint32_t mod;
+	struct iovec iov;
+	uint32_t num_blocks;
+
+	/* Initialize CRC. */
+	crc32c = SPDK_CRC32C_INITIAL;
+
+	/* Calculate CRC for the whole data segment. */
+	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+		crc32c = spdk_crc32c_update(pdu->data, data_len, crc32c);
+	} else {
+		iov.iov_base = pdu->data;
+		iov.iov_len = pdu->data_buf_len;
+		num_blocks = pdu->data_buf_len / pdu->dif_ctx.block_size;
+
+		spdk_dif_update_crc32c(&iov, 1, num_blocks, &crc32c, &pdu->dif_ctx);
+	}
+
+	/* Include padding bytes into CRC if any. */
+	mod = data_len % ISCSI_ALIGNMENT;
+	if (mod != 0) {
+		uint32_t pad_length = ISCSI_ALIGNMENT - mod;
+		uint8_t pad[3] = {0, 0, 0};
+		assert(pad_length > 0);
+		assert(pad_length <= sizeof(pad));
+		crc32c = spdk_crc32c_update(pad, pad_length, crc32c);
+	}
+
+	/* Finalize CRC by inverting all bits. */
+	return crc32c ^ SPDK_CRC32C_XOR;
 }
 
 static int
@@ -4620,7 +4653,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		assert(!pdu->dif_insert_or_strip);
 
 		if (conn->data_digest) {
-			_iscsi_pdu_calc_data_digest(pdu);
+			iscsi_pdu_calc_partial_data_digest(pdu);
 		}
 		mobj = iscsi_datapool_get(g_iscsi.pdu_data_out_pool);
 		if (mobj == NULL) {
@@ -4669,8 +4702,9 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	/* check data digest */
 	if (conn->data_digest) {
-		_iscsi_pdu_calc_data_digest(pdu);
-		crc32c = _iscsi_pdu_finalize_data_digest(pdu);
+		iscsi_pdu_calc_partial_data_digest(pdu);
+		crc32c = iscsi_pdu_calc_partial_data_digest_done(pdu);
+
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
