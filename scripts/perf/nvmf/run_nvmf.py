@@ -360,6 +360,8 @@ class Target(Server):
             self.scheduler_name = target_config["scheduler_settings"]
         if "zcopy_settings" in target_config:
             self.enable_zcopy = target_config["zcopy_settings"]
+        if "results_dir" in target_config:
+            self.results_dir = target_config["results_dir"]
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -1022,6 +1024,8 @@ class SPDKTarget(Target):
         self.dif_insert_strip = False
         self.null_block_dif_type = 0
         self.num_shared_buffers = 4096
+        self.bpf_proc = None
+        self.bpf_scripts = []
 
         if "num_shared_buffers" in target_config:
             self.num_shared_buffers = target_config["num_shared_buffers"]
@@ -1029,6 +1033,8 @@ class SPDKTarget(Target):
             self.null_block_dif_type = target_config["null_block_dif_type"]
         if "dif_insert_strip" in target_config:
             self.dif_insert_strip = target_config["dif_insert_strip"]
+        if "bpf_scripts" in target_config:
+            self.bpf_scripts = target_config["bpf_scripts"]
 
     def get_num_cores(self, core_mask):
         if "0x" in core_mask:
@@ -1135,6 +1141,19 @@ class SPDKTarget(Target):
         self.log_print("SPDK NVMeOF subsystem configuration:")
         rpc.client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
 
+    def bpf_start(self):
+        self.log_print("Starting BPF Trace scripts: %s" % self.bpf_scripts)
+        bpf_script = os.path.join(self.spdk_dir, "scripts/bpftrace.sh")
+        bpf_traces = [os.path.join(self.spdk_dir, "scripts/bpf", trace) for trace in self.bpf_scripts]
+        results_path = os.path.join(self.results_dir, "bpf_traces.txt")
+
+        with open(self.pid, "r") as fh:
+            nvmf_pid = str(fh.readline())
+
+        cmd = [bpf_script, nvmf_pid, *bpf_traces]
+        self.log_print(cmd)
+        self.bpf_proc = subprocess.Popen(cmd, env={"BPF_OUTFILE": results_path})
+
     def tgt_start(self):
         if self.null_block:
             self.subsys_no = 1
@@ -1171,9 +1190,18 @@ class SPDKTarget(Target):
         rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
 
         rpc.framework_start_init(self.client)
+
+        if self.bpf_scripts:
+            self.bpf_start()
+
         self.spdk_tgt_configure()
 
     def __del__(self):
+        if self.bpf_proc:
+            self.log_print("Stopping BPF Trace script")
+            self.bpf_proc.terminate()
+            self.bpf_proc.wait()
+
         if hasattr(self, "nvmf_proc"):
             try:
                 self.nvmf_proc.terminate()
@@ -1380,6 +1408,7 @@ if __name__ == "__main__":
 
     for k, v in data.items():
         if "target" in k:
+            v.update({"results_dir": args.results})
             if data[k]["mode"] == "spdk":
                 target_obj = SPDKTarget(k, data["general"], v)
             elif data[k]["mode"] == "kernel":
@@ -1408,12 +1437,12 @@ if __name__ == "__main__":
         else:
             continue
 
-    target_obj.tgt_start()
-
     try:
         os.mkdir(args.results)
     except FileExistsError:
         pass
+
+    target_obj.tgt_start()
 
     for i in initiators:
         i.discover_subsystems(i.target_nic_ips, target_obj.subsys_no)

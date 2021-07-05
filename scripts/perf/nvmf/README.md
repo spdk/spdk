@@ -150,6 +150,8 @@ Optional, SPDK Target only:
 - adq_enable - bool; only for TCP transport.
   Configure system modules, NIC settings and create priority traffic classes
   for ADQ testing. You need and ADQ-capable NIC like the Intel E810.
+- bpf_scripts - list of bpftrace scripts that will be attached during the
+  test run. Available scripts can be found in the spdk/scripts/bpf directory.
 
 ### Initiator system settings section
 
