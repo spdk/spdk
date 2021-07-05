@@ -68,6 +68,7 @@ struct nvme_ns {
 	void			*type_ctx;
 };
 
+struct nvme_bdev_io;
 struct ocssd_bdev_ctrlr;
 
 struct nvme_ctrlr_trid {
@@ -107,7 +108,7 @@ struct nvme_ctrlr {
 
 	struct ocssd_bdev_ctrlr			*ocssd_ctrlr;
 
-	struct spdk_bdev_io			*reset_bdev_io;
+	struct nvme_bdev_io			*reset_bio;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;

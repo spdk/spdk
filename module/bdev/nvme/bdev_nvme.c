@@ -187,7 +187,7 @@ static int bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int bdev_nvme_abort(struct nvme_ctrlr_channel *ctrlr_ch,
 			   struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
-static int bdev_nvme_reset_io(struct nvme_ctrlr_channel *ctrlr_ch, struct spdk_bdev_io *bdev_io);
+static int bdev_nvme_reset_io(struct nvme_ctrlr_channel *ctrlr_ch, struct nvme_bdev_io *bio);
 static int bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
@@ -501,15 +501,9 @@ bdev_nvme_abort_pending_resets(struct spdk_io_channel_iter *i)
 
 static void
 bdev_nvme_reset_io_complete(struct nvme_ctrlr *nvme_ctrlr,
-			    struct spdk_bdev_io *bdev_io, int rc)
+			    struct nvme_bdev_io *bio, int rc)
 {
-	enum spdk_bdev_io_status io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
-	if (rc) {
-		io_status = SPDK_BDEV_IO_STATUS_FAILED;
-	}
-
-	spdk_bdev_io_complete(bdev_io, io_status);
+	bdev_nvme_io_complete(bio, rc);
 
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_ctrlr,
@@ -523,9 +517,9 @@ static void
 bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 {
 	struct nvme_ctrlr_trid *curr_trid;
-	struct spdk_bdev_io *bdev_io = nvme_ctrlr->reset_bdev_io;
+	struct nvme_bdev_io *bio = nvme_ctrlr->reset_bio;
 
-	nvme_ctrlr->reset_bdev_io = NULL;
+	nvme_ctrlr->reset_bio = NULL;
 
 	if (rc) {
 		SPDK_ERRLOG("Resetting controller failed.\n");
@@ -550,8 +544,8 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	if (bdev_io) {
-		bdev_nvme_reset_io_complete(nvme_ctrlr, bdev_io, rc);
+	if (bio) {
+		bdev_nvme_reset_io_complete(nvme_ctrlr, bio, rc);
 	} else {
 		/* Make sure we clear any pending resets before returning. */
 		spdk_for_each_channel(nvme_ctrlr,
@@ -647,20 +641,22 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static int
-bdev_nvme_reset_io(struct nvme_ctrlr_channel *ctrlr_ch, struct spdk_bdev_io *bdev_io)
+bdev_nvme_reset_io(struct nvme_ctrlr_channel *ctrlr_ch, struct nvme_bdev_io *bio)
 {
+	struct spdk_bdev_io *bdev_io;
 	int rc;
 
 	rc = bdev_nvme_reset(ctrlr_ch->ctrlr);
 	if (rc == 0) {
-		assert(ctrlr_ch->ctrlr->reset_bdev_io == NULL);
-		ctrlr_ch->ctrlr->reset_bdev_io = bdev_io;
+		assert(ctrlr_ch->ctrlr->reset_bio == NULL);
+		ctrlr_ch->ctrlr->reset_bio = bio;
 	} else if (rc == -EAGAIN) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
 		 * we don't interfere with the app framework reset strategy. i.e. we are deferring to the
 		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
 		 */
+		bdev_io = spdk_bdev_io_from_ctx(bio);
 		TAILQ_INSERT_TAIL(&ctrlr_ch->pending_resets, bdev_io, module_link);
 	} else {
 		return rc;
@@ -880,7 +876,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					     bdev_io->u.bdev.num_blocks);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		rc = bdev_nvme_reset_io(ctrlr_ch, bdev_io);
+		rc = bdev_nvme_reset_io(ctrlr_ch, nbdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = bdev_nvme_flush(ns,
