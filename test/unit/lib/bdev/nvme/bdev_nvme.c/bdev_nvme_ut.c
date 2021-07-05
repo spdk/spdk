@@ -1082,14 +1082,14 @@ test_reset_ctrlr(void)
 	/* Case 1: ctrlr is already being destructed. */
 	nvme_ctrlr->destruct = true;
 
-	rc = _bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset(nvme_ctrlr);
 	CU_ASSERT(rc == -EBUSY);
 
 	/* Case 2: reset is in progress. */
 	nvme_ctrlr->destruct = false;
 	nvme_ctrlr->resetting = true;
 
-	rc = _bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset(nvme_ctrlr);
 	CU_ASSERT(rc == -EAGAIN);
 
 	/* Case 3: reset completes successfully. */
@@ -1097,7 +1097,7 @@ test_reset_ctrlr(void)
 	curr_trid->is_failed = true;
 	ctrlr.is_failed = true;
 
-	rc = _bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(ctrlr_ch1->qpair != NULL);
@@ -1176,7 +1176,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	/* Reset starts from thread 1. */
 	set_thread(1);
 
-	rc = _bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 
@@ -1197,7 +1197,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 
 	/* New reset request is rejected. */
-	rc = _bdev_nvme_reset(nvme_ctrlr);
+	rc = bdev_nvme_reset(nvme_ctrlr);
 	CU_ASSERT(rc == -EBUSY);
 
 	/* Additional polling called spdk_io_device_unregister() to ctrlr,
