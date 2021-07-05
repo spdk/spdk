@@ -441,6 +441,21 @@ ut_submit_nvme_request(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	return 0;
 }
 
+static struct spdk_bdev_io *
+ut_alloc_bdev_io(enum spdk_bdev_io_type type, struct nvme_bdev *nbdev,
+		 struct spdk_io_channel *ch)
+{
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io->type = type;
+	bdev_io->bdev = &nbdev->disk;
+	bdev_io->internal.ch = (struct spdk_bdev_channel *)ch;
+
+	return bdev_io;
+}
+
 static void
 ut_bdev_io_set_buf(struct spdk_bdev_io *bdev_io)
 {
@@ -1395,12 +1410,8 @@ test_pending_reset(void)
 
 	ctrlr_ch1 = spdk_io_channel_get_ctx(ch1);
 
-	first_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(first_bdev_io != NULL);
-	first_bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
+	first_bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_RESET, bdev, ch1);
 	first_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-	first_bdev_io->bdev = &bdev->disk;
-	first_bdev_io->internal.ch = (struct spdk_bdev_channel *)ch1;
 
 	set_thread(1);
 
@@ -1409,12 +1420,8 @@ test_pending_reset(void)
 
 	ctrlr_ch2 = spdk_io_channel_get_ctx(ch2);
 
-	second_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(second_bdev_io != NULL);
-	second_bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
+	second_bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_RESET, bdev, ch2);
 	second_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-	second_bdev_io->bdev = &bdev->disk;
-	second_bdev_io->internal.ch = (struct spdk_bdev_channel *)ch2;
 
 	/* The first reset request is submitted on thread 1, and the second reset request
 	 * is submitted on thread 0 while processing the first request.
@@ -1891,10 +1898,7 @@ test_submit_nvme_cmd(void)
 	ch = spdk_get_io_channel(nvme_ctrlr);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
-	bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
-	bdev_io->bdev = &bdev->disk;
-	bdev_io->internal.ch = (struct spdk_bdev_channel *)ch;
+	bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_INVALID, bdev, ch);
 
 	bdev_io->u.bdev.iovs = NULL;
 
@@ -2057,22 +2061,13 @@ test_abort(void)
 	bdev = nvme_ctrlr->namespaces[0]->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
-	write_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(write_io != NULL);
-	write_io->bdev = &bdev->disk;
-	write_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	write_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, NULL);
 	ut_bdev_io_set_buf(write_io);
 
-	admin_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(admin_io != NULL);
-	admin_io->bdev = &bdev->disk;
-	admin_io->type = SPDK_BDEV_IO_TYPE_NVME_ADMIN;
+	admin_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_NVME_ADMIN, bdev, NULL);
 	admin_io->u.nvme_passthru.cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 
-	abort_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct nvme_bdev_io));
-	SPDK_CU_ASSERT_FATAL(abort_io != NULL);
-	abort_io->bdev = &bdev->disk;
-	abort_io->type = SPDK_BDEV_IO_TYPE_ABORT;
+	abort_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_ABORT, bdev, NULL);
 
 	set_thread(0);
 
