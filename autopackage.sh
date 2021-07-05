@@ -74,12 +74,13 @@ function build_rpms() (
 	builddir=$SPDK_TEST_STORAGE/test-rpm
 
 	run_test "build_shared_rpm" build_rpm --with-shared
-	run_test "build_shared_rpm_with_rpmed_dpdk" build_rpm_with_rpmed_dpdk
-	run_test "build_rpm_from_gen_spec" build_rpm_from_gen_spec
-
-	if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then
-		version="test_shared_native_dpdk"
-		run_test "build_shared_native_dpdk_rpm" build_rpm --with-shared --with-dpdk="$SPDK_RUN_EXTERNAL_DPDK"
+	if [[ $RUN_NIGHTLY -eq 1 ]]; then
+		run_test "build_shared_rpm_with_rpmed_dpdk" build_rpm_with_rpmed_dpdk
+		run_test "build_rpm_from_gen_spec" build_rpm_from_gen_spec
+		if [[ -n $SPDK_TEST_NATIVE_DPDK ]]; then
+			version="test_shared_native_dpdk"
+			run_test "build_shared_native_dpdk_rpm" build_rpm --with-shared --with-dpdk="$SPDK_RUN_EXTERNAL_DPDK"
+		fi
 	fi
 )
 

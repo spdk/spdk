@@ -53,7 +53,9 @@ bdev_fio_rw_verify_ext
 bdev_fio_trim_ext
 bdev_reset
 build_native_dpdk
+build_rpm_from_gen_spec
 build_shared_native_dpdk_rpm
+build_shared_rpm_with_rpmed_dpdk
 iscsi_tgt_digest
 iscsi_tgt_data_digest
 iscsi_tgt_pmem
