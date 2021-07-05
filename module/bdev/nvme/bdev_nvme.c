@@ -432,20 +432,13 @@ err:
 	return rc;
 }
 
-static int
+static void
 bdev_nvme_destroy_qpair(struct nvme_io_path *io_path)
 {
-	int rc;
-
-	if (io_path->qpair == NULL) {
-		return 0;
-	}
-
-	rc = spdk_nvme_ctrlr_free_io_qpair(io_path->qpair);
-	if (!rc) {
+	if (io_path->qpair != NULL) {
+		spdk_nvme_ctrlr_free_io_qpair(io_path->qpair);
 		io_path->qpair = NULL;
 	}
-	return rc;
 }
 
 static void
@@ -621,11 +614,9 @@ _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
-	int rc;
 
-	rc = bdev_nvme_destroy_qpair(io_path);
-
-	spdk_for_each_channel_continue(i, rc);
+	bdev_nvme_destroy_qpair(io_path);
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static int
