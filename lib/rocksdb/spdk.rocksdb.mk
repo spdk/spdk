@@ -53,7 +53,7 @@ ifeq ($(CONFIG_ASAN),y)
 CXXFLAGS += -fno-sanitize=address
 endif
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event_bdev event
 
 AM_LINK += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 AM_LINK += $(SYS_LIBS)
