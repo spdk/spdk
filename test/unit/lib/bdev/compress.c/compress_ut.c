@@ -427,8 +427,8 @@ _compress_done(void *_req, int reduce_errno)
 }
 
 static void
-_get_mbuf_array(struct rte_mbuf *mbuf_array[UT_MBUFS_PER_OP_BOUND_TEST],
-		struct rte_mbuf *mbuf_head, int mbuf_count, bool null_final)
+_get_mbuf_array(struct rte_mbuf **mbuf_array, struct rte_mbuf *mbuf_head,
+		int mbuf_count, bool null_final)
 {
 	int i;
 
