@@ -238,7 +238,7 @@ bdev_ocssd_destruct(void *ctx)
 	if (!nvme_ns->populated) {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
-		nvme_bdev_ctrlr_release(nvme_ns->ctrlr);
+		nvme_ctrlr_release(nvme_ns->ctrlr);
 	} else {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 	}
@@ -1037,14 +1037,14 @@ bdev_ocssd_chunk_notification_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 static int
 bdev_ocssd_poll_mm(void *ctx)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = ctx;
+	struct nvme_ctrlr *nvme_ctrlr = ctx;
 	struct nvme_ns *nvme_ns;
 	struct bdev_ocssd_ns *ocssd_ns;
 	uint32_t nsid;
 	int rc;
 
-	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
-		nvme_ns = nvme_bdev_ctrlr->namespaces[nsid];
+	for (nsid = 0; nsid < nvme_ctrlr->num_ns; ++nsid) {
+		nvme_ns = nvme_ctrlr->namespaces[nsid];
 		if (nvme_ns == NULL || !nvme_ns->populated) {
 			continue;
 		}
@@ -1054,7 +1054,7 @@ bdev_ocssd_poll_mm(void *ctx)
 			ocssd_ns->chunk_notify_pending = false;
 			ocssd_ns->num_outstanding++;
 
-			rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_bdev_ctrlr->ctrlr,
+			rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_ctrlr->ctrlr,
 							      SPDK_OCSSD_LOG_CHUNK_NOTIFICATION,
 							      nsid + 1, ocssd_ns->chunk,
 							      sizeof(ocssd_ns->chunk[0]) *
@@ -1073,14 +1073,14 @@ bdev_ocssd_poll_mm(void *ctx)
 }
 
 void
-bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+bdev_ocssd_handle_chunk_notification(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct bdev_ocssd_ns *ocssd_ns;
 	struct nvme_ns *nvme_ns;
 	uint32_t nsid;
 
-	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
-		nvme_ns = nvme_bdev_ctrlr->namespaces[nsid];
+	for (nsid = 0; nsid < nvme_ctrlr->num_ns; ++nsid) {
+		nvme_ns = nvme_ctrlr->namespaces[nsid];
 		if (nvme_ns == NULL || !nvme_ns->populated) {
 			continue;
 		}
@@ -1248,7 +1248,7 @@ void
 bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid,
 		       bdev_ocssd_create_cb cb_fn, void *cb_arg)
 {
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct bdev_ocssd_create_ctx *create_ctx = NULL;
 	struct nvme_bdev *nvme_bdev = NULL;
 	struct ocssd_bdev *ocssd_bdev = NULL;
@@ -1258,14 +1258,14 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 	struct spdk_ocssd_geometry_data *geometry;
 	int rc = 0;
 
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctrlr_name);
-	if (!nvme_bdev_ctrlr) {
+	nvme_ctrlr = nvme_ctrlr_get_by_name(ctrlr_name);
+	if (!nvme_ctrlr) {
 		SPDK_ERRLOG("Unable to find controller %s\n", ctrlr_name);
 		rc = -ENODEV;
 		goto error;
 	}
 
-	ns = spdk_nvme_ctrlr_get_ns(nvme_bdev_ctrlr->ctrlr, nsid);
+	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nsid);
 	if (!ns) {
 		SPDK_ERRLOG("Unable to retrieve namespace %"PRIu32"\n", nsid);
 		rc = -ENODEV;
@@ -1278,8 +1278,8 @@ bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t n
 		goto error;
 	}
 
-	assert(nsid <= nvme_bdev_ctrlr->num_ns);
-	nvme_ns = nvme_bdev_ctrlr->namespaces[nsid - 1];
+	assert(nsid <= nvme_ctrlr->num_ns);
+	nvme_ns = nvme_ctrlr->namespaces[nsid - 1];
 	if (nvme_ns == NULL) {
 		SPDK_ERRLOG("Namespace %"PRIu32" is not initialized\n", nsid);
 		rc = -EINVAL;
@@ -1444,7 +1444,7 @@ bdev_ocssd_geometry_cb(void *_ctx, const struct spdk_nvme_cpl *cpl)
 }
 
 void
-bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+bdev_ocssd_populate_namespace(struct nvme_ctrlr *nvme_ctrlr,
 			      struct nvme_ns *nvme_ns,
 			      struct nvme_async_probe_ctx *nvme_ctx)
 {
@@ -1453,7 +1453,7 @@ bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	struct spdk_nvme_ns *ns;
 	int rc;
 
-	ns = spdk_nvme_ctrlr_get_ns(nvme_bdev_ctrlr->ctrlr, nvme_ns->id);
+	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nvme_ns->id);
 	if (ns == NULL) {
 		rc = -EINVAL;
 		goto error;
@@ -1478,7 +1478,7 @@ bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 	ctx->nvme_ctx = nvme_ctx;
 	ctx->nvme_ns = nvme_ns;
 
-	rc = spdk_nvme_ocssd_ctrlr_cmd_geometry(nvme_bdev_ctrlr->ctrlr, nvme_ns->id,
+	rc = spdk_nvme_ocssd_ctrlr_cmd_geometry(nvme_ctrlr->ctrlr, nvme_ns->id,
 						&ocssd_ns->geometry,
 						sizeof(ocssd_ns->geometry),
 						bdev_ocssd_geometry_cb, ctx);
@@ -1550,7 +1550,7 @@ bdev_ocssd_destroy_io_channel(struct nvme_ctrlr_channel *ctrlr_ch)
 }
 
 int
-bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+bdev_ocssd_init_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct ocssd_bdev_ctrlr *ocssd_ctrlr;
 
@@ -1559,24 +1559,24 @@ bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		return -ENOMEM;
 	}
 
-	ocssd_ctrlr->mm_poller = SPDK_POLLER_REGISTER(bdev_ocssd_poll_mm, nvme_bdev_ctrlr,
+	ocssd_ctrlr->mm_poller = SPDK_POLLER_REGISTER(bdev_ocssd_poll_mm, nvme_ctrlr,
 				 10000ULL);
 	if (!ocssd_ctrlr->mm_poller) {
 		free(ocssd_ctrlr);
 		return -ENOMEM;
 	}
 
-	nvme_bdev_ctrlr->ocssd_ctrlr = ocssd_ctrlr;
+	nvme_ctrlr->ocssd_ctrlr = ocssd_ctrlr;
 
 	return 0;
 }
 
 void
-bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+bdev_ocssd_fini_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
-	spdk_poller_unregister(&nvme_bdev_ctrlr->ocssd_ctrlr->mm_poller);
-	free(nvme_bdev_ctrlr->ocssd_ctrlr);
-	nvme_bdev_ctrlr->ocssd_ctrlr = NULL;
+	spdk_poller_unregister(&nvme_ctrlr->ocssd_ctrlr->mm_poller);
+	free(nvme_ctrlr->ocssd_ctrlr);
+	nvme_ctrlr->ocssd_ctrlr = NULL;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_ocssd)

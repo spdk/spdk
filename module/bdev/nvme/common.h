@@ -39,8 +39,8 @@
 #include "spdk/bdev_module.h"
 #include "spdk/opal.h"
 
-TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
-extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
+TAILQ_HEAD(nvme_ctrlrs, nvme_ctrlr);
+extern struct nvme_ctrlrs g_nvme_ctrlrs;
 extern pthread_mutex_t g_bdev_nvme_mutex;
 extern bool g_bdev_nvme_module_finish;
 
@@ -63,7 +63,7 @@ struct nvme_ns {
 	 */
 	bool			populated;
 	struct spdk_nvme_ns	*ns;
-	struct nvme_bdev_ctrlr	*ctrlr;
+	struct nvme_ctrlr	*ctrlr;
 	struct nvme_bdev	*bdev;
 	void			*type_ctx;
 };
@@ -76,7 +76,7 @@ struct nvme_ctrlr_trid {
 	bool					is_failed;
 };
 
-struct nvme_bdev_ctrlr {
+struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
 	 * contains 4KB IDENTIFY structure for controller which is
@@ -110,7 +110,7 @@ struct nvme_bdev_ctrlr {
 	struct spdk_bdev_io			*reset_bdev_io;
 
 	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_bdev_ctrlr)		tailq;
+	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 
 	TAILQ_HEAD(, nvme_ctrlr_trid)		trids;
 
@@ -155,7 +155,7 @@ struct nvme_async_probe_ctx {
 struct ocssd_io_channel;
 
 struct nvme_ctrlr_channel {
-	struct nvme_bdev_ctrlr		*ctrlr;
+	struct nvme_ctrlr		*ctrlr;
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_bdev_poll_group	*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
@@ -166,16 +166,16 @@ void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 					struct nvme_ns *nvme_ns, int rc);
 void nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns);
 
-struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
-struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
-struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
-struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
+struct nvme_ctrlr *nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
+struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
+struct nvme_ctrlr *nvme_bdev_first_ctrlr(void);
+struct nvme_ctrlr *nvme_bdev_next_ctrlr(struct nvme_ctrlr *prev);
 
 void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
 
-void nvme_bdev_ctrlr_release(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
-void nvme_bdev_ctrlr_unregister(void *ctx);
-void nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr);
+void nvme_ctrlr_unregister(void *ctx);
+void nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */

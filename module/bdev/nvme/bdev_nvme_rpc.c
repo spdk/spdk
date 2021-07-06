@@ -268,7 +268,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_host_id hostid = {};
 	uint32_t prchk_flags = 0;
-	struct nvme_bdev_ctrlr *ctrlr = NULL;
+	struct nvme_ctrlr *ctrlr = NULL;
 	size_t len, maxlen;
 	int rc;
 
@@ -302,7 +302,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, ctx->req.trtype);
 	assert(rc == 0);
 
-	ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->req.name);
+	ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
 
 	/* Parse traddr */
 	maxlen = sizeof(trid.traddr);
@@ -413,20 +413,20 @@ SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_b
 
 static void
 rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
-			      struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+			      struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct spdk_nvme_transport_id	*trid;
 
-	trid = nvme_bdev_ctrlr->connected_trid;
+	trid = nvme_ctrlr->connected_trid;
 
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
+	spdk_json_write_named_string(w, "name", nvme_ctrlr->name);
 
 #ifdef SPDK_CONFIG_NVME_CUSE
 	size_t cuse_name_size = 128;
 	char cuse_name[cuse_name_size];
 
-	int rc = spdk_nvme_cuse_get_ctrlr_name(nvme_bdev_ctrlr->ctrlr, cuse_name, &cuse_name_size);
+	int rc = spdk_nvme_cuse_get_ctrlr_name(nvme_ctrlr->ctrlr, cuse_name, &cuse_name_size);
 	if (rc == 0) {
 		spdk_json_write_named_string(w, "cuse_device", cuse_name);
 	}
@@ -459,7 +459,7 @@ rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_nvme_get_controllers req = {};
 	struct spdk_json_write_ctx *w;
-	struct nvme_bdev_ctrlr *ctrlr = NULL;
+	struct nvme_ctrlr *ctrlr = NULL;
 
 	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_get_controllers_decoders,
 					      SPDK_COUNTOF(rpc_bdev_nvme_get_controllers_decoders),
@@ -471,7 +471,7 @@ rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.name) {
-		ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
+		ctrlr = nvme_ctrlr_get_by_name(req.name);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("ctrlr '%s' does not exist\n", req.name);
 			spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Controller %s does not exist", req.name);
@@ -1085,7 +1085,7 @@ rpc_bdev_nvme_get_transport_statistics(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
 
-	spdk_for_each_channel(&g_nvme_bdev_ctrlrs,
+	spdk_for_each_channel(&g_nvme_ctrlrs,
 			      rpc_bdev_nvme_stats_per_channel,
 			      ctx,
 			      rpc_bdev_nvme_stats_done);

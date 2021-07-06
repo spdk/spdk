@@ -42,7 +42,7 @@
 
 struct opal_vbdev {
 	char *name;
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_opal_dev *opal_dev;
 	struct spdk_bdev_part *bdev_part;
 
@@ -227,7 +227,7 @@ struct spdk_opal_locking_range_info *
 vbdev_opal_get_info_from_bdev(const char *opal_bdev_name, const char *password)
 {
 	struct opal_vbdev *vbdev;
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int locking_range_id;
 	int rc;
 
@@ -321,7 +321,7 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 	int rc;
 	char *opal_vbdev_name;
 	char *base_bdev_name;
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct opal_vbdev *opal_bdev;
 	struct vbdev_opal_part_base *opal_part_base = NULL;
 	struct spdk_bdev_part *part_bdev;
@@ -332,7 +332,7 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 		return -EINVAL;
 	}
 
-	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(nvme_ctrlr_name);
+	nvme_ctrlr = nvme_ctrlr_get_by_name(nvme_ctrlr_name);
 	if (!nvme_ctrlr) {
 		SPDK_ERRLOG("get nvme ctrlr failed\n");
 		return -ENODEV;
@@ -471,7 +471,7 @@ vbdev_opal_destruct_bdev(struct opal_vbdev *opal_bdev)
 int
 vbdev_opal_destruct(const char *bdev_name, const char *password)
 {
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int locking_range_id;
 	int rc;
 	struct opal_vbdev *opal_bdev;
@@ -531,7 +531,7 @@ int
 vbdev_opal_set_lock_state(const char *bdev_name, uint16_t user_id, const char *password,
 			  const char *lock_state)
 {
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int locking_range_id;
 	int rc;
 	enum spdk_opal_lock_state state_flag;
@@ -579,7 +579,7 @@ int
 vbdev_opal_enable_new_user(const char *bdev_name, const char *admin_password, uint16_t user_id,
 			   const char *user_password)
 {
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int locking_range_id;
 	int rc;
 	struct opal_vbdev *opal_bdev;

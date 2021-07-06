@@ -110,7 +110,7 @@ find_controller(const struct spdk_nvme_transport_id *trid)
 static void
 free_controller(struct spdk_nvme_ctrlr *ctrlr)
 {
-	CU_ASSERT(!nvme_bdev_ctrlr_get(&ctrlr->trid));
+	CU_ASSERT(!nvme_ctrlr_get(&ctrlr->trid));
 	LIST_REMOVE(ctrlr, list);
 	spdk_nvme_ctrlr_free_io_qpair(ctrlr->admin_qpair);
 	free(ctrlr->chunk_info);
@@ -197,11 +197,11 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 	ns->ctrlr->ref++;
 }
 
-static struct nvme_bdev_ctrlr *
+static struct nvme_ctrlr *
 create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const char *name)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_ctrlr_trid *trid_entry;
 	uint32_t nsid;
 	int rc;
@@ -209,48 +209,48 @@ create_nvme_bdev_controller(const struct spdk_nvme_transport_id *trid, const cha
 	ctrlr = find_controller(trid);
 
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
-	SPDK_CU_ASSERT_FATAL(!nvme_bdev_ctrlr_get(trid));
+	SPDK_CU_ASSERT_FATAL(!nvme_ctrlr_get(trid));
 
-	nvme_bdev_ctrlr = calloc(1, sizeof(*nvme_bdev_ctrlr));
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	rc = pthread_mutex_init(&nvme_bdev_ctrlr->mutex, NULL);
+	rc = pthread_mutex_init(&nvme_ctrlr->mutex, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
-	nvme_bdev_ctrlr->namespaces = calloc(ctrlr->ns_count, sizeof(struct nvme_ns *));
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces != NULL);
+	nvme_ctrlr->namespaces = calloc(ctrlr->ns_count, sizeof(struct nvme_ns *));
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr->namespaces != NULL);
 
 	trid_entry = calloc(1, sizeof(struct nvme_ctrlr_trid));
 	SPDK_CU_ASSERT_FATAL(trid_entry != NULL);
 	trid_entry->trid = *trid;
 
-	nvme_bdev_ctrlr->ctrlr = ctrlr;
-	nvme_bdev_ctrlr->num_ns = ctrlr->ns_count;
-	nvme_bdev_ctrlr->ref = 1;
-	nvme_bdev_ctrlr->connected_trid = &trid_entry->trid;
-	nvme_bdev_ctrlr->name = strdup(name);
+	nvme_ctrlr->ctrlr = ctrlr;
+	nvme_ctrlr->num_ns = ctrlr->ns_count;
+	nvme_ctrlr->ref = 1;
+	nvme_ctrlr->connected_trid = &trid_entry->trid;
+	nvme_ctrlr->name = strdup(name);
 	for (nsid = 0; nsid < ctrlr->ns_count; ++nsid) {
-		nvme_bdev_ctrlr->namespaces[nsid] = calloc(1, sizeof(struct nvme_ns));
-		SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces[nsid] != NULL);
+		nvme_ctrlr->namespaces[nsid] = calloc(1, sizeof(struct nvme_ns));
+		SPDK_CU_ASSERT_FATAL(nvme_ctrlr->namespaces[nsid] != NULL);
 
-		nvme_bdev_ctrlr->namespaces[nsid]->id = nsid + 1;
-		nvme_bdev_ctrlr->namespaces[nsid]->ctrlr = nvme_bdev_ctrlr;
-		nvme_bdev_ctrlr->namespaces[nsid]->type = NVME_NS_OCSSD;
+		nvme_ctrlr->namespaces[nsid]->id = nsid + 1;
+		nvme_ctrlr->namespaces[nsid]->ctrlr = nvme_ctrlr;
+		nvme_ctrlr->namespaces[nsid]->type = NVME_NS_OCSSD;
 
-		bdev_ocssd_populate_namespace(nvme_bdev_ctrlr, nvme_bdev_ctrlr->namespaces[nsid], NULL);
+		bdev_ocssd_populate_namespace(nvme_ctrlr, nvme_ctrlr->namespaces[nsid], NULL);
 	}
 
 	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
 
-	spdk_io_device_register(nvme_bdev_ctrlr, io_channel_create_cb,
+	spdk_io_device_register(nvme_ctrlr, io_channel_create_cb,
 				io_channel_destroy_cb, 0, name);
 
-	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
+	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
-	TAILQ_INIT(&nvme_bdev_ctrlr->trids);
-	TAILQ_INSERT_HEAD(&nvme_bdev_ctrlr->trids, trid_entry, link);
+	TAILQ_INIT(&nvme_ctrlr->trids);
+	TAILQ_INSERT_HEAD(&nvme_ctrlr->trids, trid_entry, link);
 
-	return nvme_bdev_ctrlr;
+	return nvme_ctrlr;
 }
 
 static struct nvme_request *
@@ -530,29 +530,29 @@ create_bdev(const char *ctrlr_name, const char *bdev_name, uint32_t nsid)
 }
 
 static void
-delete_nvme_bdev_controller(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
+delete_nvme_bdev_controller(struct nvme_ctrlr *nvme_ctrlr)
 {
 	uint32_t nsid;
 
-	nvme_bdev_ctrlr->destruct = true;
+	nvme_ctrlr->destruct = true;
 
-	for (nsid = 0; nsid < nvme_bdev_ctrlr->num_ns; ++nsid) {
-		bdev_ocssd_depopulate_namespace(nvme_bdev_ctrlr->namespaces[nsid]);
+	for (nsid = 0; nsid < nvme_ctrlr->num_ns; ++nsid) {
+		bdev_ocssd_depopulate_namespace(nvme_ctrlr->namespaces[nsid]);
 	}
 
-	nvme_bdev_ctrlr_release(nvme_bdev_ctrlr);
+	nvme_ctrlr_release(nvme_ctrlr);
 	spdk_delay_us(1000);
 
 	while (spdk_thread_poll(g_thread, 0, 0) > 0) {}
 
-	CU_ASSERT(TAILQ_EMPTY(&g_nvme_bdev_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_ctrlrs));
 }
 
 static void
 test_create_controller(void)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
 	struct spdk_ocssd_geometry_data geometry = {};
 	struct spdk_bdev *bdev;
@@ -579,7 +579,7 @@ test_create_controller(void)
 	};
 
 	ctrlr = create_controller(&trid, ns_count, &geometry);
-	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+	nvme_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
 	for (nsid = 1; nsid <= ns_count; ++nsid) {
 		snprintf(namebuf, sizeof(namebuf), "%sn%"PRIu32, controller_name, nsid);
@@ -591,10 +591,10 @@ test_create_controller(void)
 		CU_ASSERT_TRUE(bdev->zoned);
 	}
 
-	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+	delete_nvme_bdev_controller(nvme_ctrlr);
 
 	/* Verify that after deletion the bdevs can still be created */
-	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+	nvme_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
 	for (nsid = 1; nsid <= ns_count; ++nsid) {
 		snprintf(namebuf, sizeof(namebuf), "%sn%"PRIu32, controller_name, nsid);
@@ -606,7 +606,7 @@ test_create_controller(void)
 		CU_ASSERT_TRUE(bdev->zoned);
 	}
 
-	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+	delete_nvme_bdev_controller(nvme_ctrlr);
 
 	free_controller(ctrlr);
 }
@@ -615,7 +615,7 @@ static void
 test_device_geometry(void)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
 	const char *controller_name = "nvme0";
 	const char *bdev_name = "nvme0n1";
@@ -640,7 +640,7 @@ test_device_geometry(void)
 	};
 
 	ctrlr = create_controller(&trid, 1, &geometry);
-	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+	nvme_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
 	rc = create_bdev(controller_name, bdev_name, 1);
 	CU_ASSERT_EQUAL(rc, 0);
@@ -655,7 +655,7 @@ test_device_geometry(void)
 	CU_ASSERT_EQUAL(bdev->max_open_zones, geometry.maxocpu);
 	CU_ASSERT_EQUAL(bdev->write_unit_size, geometry.ws_opt);
 
-	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+	delete_nvme_bdev_controller(nvme_ctrlr);
 
 	free_controller(ctrlr);
 }
@@ -687,7 +687,7 @@ static void
 test_lba_translation(void)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
 	const char *controller_name = "nvme0";
 	const char *bdev_name = "nvme0n1";
@@ -711,11 +711,11 @@ test_lba_translation(void)
 	};
 
 	ctrlr = create_controller(&trid, 1, &geometry);
-	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+	nvme_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces[0] != NULL);
-	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_bdev_ctrlr->namespaces[0]);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr->namespaces[0] != NULL);
+	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ctrlr->namespaces[0]);
 
 	rc = create_bdev(controller_name, bdev_name, 1);
 	CU_ASSERT_EQUAL(rc, 0);
@@ -749,7 +749,7 @@ test_lba_translation(void)
 	CU_ASSERT_EQUAL(lba, generate_lba(&geometry, 68, 0, 1, 0));
 	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba), bdev->zone_size + 68);
 
-	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+	delete_nvme_bdev_controller(nvme_ctrlr);
 	free_controller(ctrlr);
 
 	geometry = (struct spdk_ocssd_geometry_data) {
@@ -766,11 +766,11 @@ test_lba_translation(void)
 	};
 
 	ctrlr = create_controller(&trid, 1, &geometry);
-	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr != NULL);
+	nvme_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	SPDK_CU_ASSERT_FATAL(nvme_bdev_ctrlr->namespaces[0] != NULL);
-	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_bdev_ctrlr->namespaces[0]);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr->namespaces[0] != NULL);
+	ocssd_ns = bdev_ocssd_get_ns_from_nvme(nvme_ctrlr->namespaces[0]);
 
 	rc = create_bdev(controller_name, bdev_name, 1);
 	CU_ASSERT_EQUAL(rc, 0);
@@ -807,7 +807,7 @@ test_lba_translation(void)
 	CU_ASSERT_EQUAL(bdev_ocssd_from_disk_lba(ocssd_ns, lba),
 			bdev->zone_size * geometry.num_pu * geometry.num_grp + 68);
 
-	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+	delete_nvme_bdev_controller(nvme_ctrlr);
 
 	free_controller(ctrlr);
 }
@@ -878,7 +878,7 @@ static void
 test_get_zone_info(void)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_nvme_transport_id trid = { .traddr = "00:00:00" };
 	const char *controller_name = "nvme0";
 	const char *bdev_name = "nvme0n1";
@@ -907,7 +907,7 @@ test_get_zone_info(void)
 	};
 
 	ctrlr = create_controller(&trid, 1, &geometry);
-	nvme_bdev_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
+	nvme_ctrlr = create_nvme_bdev_controller(&trid, controller_name);
 
 	rc = create_bdev(controller_name, bdev_name, 1);
 	CU_ASSERT_EQUAL(rc, 0);
@@ -919,7 +919,7 @@ test_get_zone_info(void)
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
 	ctrlr_ch = spdk_io_channel_get_ctx(ch);
-	ctrlr_ch->ctrlr = nvme_bdev_ctrlr;
+	ctrlr_ch->ctrlr = nvme_ctrlr;
 	ctrlr_ch->qpair = (struct spdk_nvme_qpair *)0x1;
 
 	bdev_io = alloc_ocssd_io();
@@ -1033,7 +1033,7 @@ test_get_zone_info(void)
 	g_chunk_info_cpl = (struct spdk_nvme_cpl) {};
 	g_zone_info_status = true;
 
-	delete_nvme_bdev_controller(nvme_bdev_ctrlr);
+	delete_nvme_bdev_controller(nvme_ctrlr);
 
 	free(bdev_io);
 	free(ch);

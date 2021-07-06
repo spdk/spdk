@@ -61,7 +61,7 @@ rpc_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct rpc_nvme_cuse_register req = {};
-	struct nvme_bdev_ctrlr *bdev_ctrlr = NULL;
+	struct nvme_ctrlr *bdev_ctrlr = NULL;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_nvme_cuse_register_decoders,
@@ -73,7 +73,7 @@ rpc_nvme_cuse_register(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
+	bdev_ctrlr = nvme_ctrlr_get_by_name(req.name);
 	if (!bdev_ctrlr) {
 		SPDK_ERRLOG("No such controller\n");
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
@@ -113,7 +113,7 @@ rpc_nvme_cuse_unregister(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
 	struct rpc_nvme_cuse_unregister req = {};
-	struct nvme_bdev_ctrlr *bdev_ctrlr = NULL;
+	struct nvme_ctrlr *bdev_ctrlr = NULL;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_nvme_cuse_unregister_decoders,
@@ -125,7 +125,7 @@ rpc_nvme_cuse_unregister(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
+	bdev_ctrlr = nvme_ctrlr_get_by_name(req.name);
 	if (!bdev_ctrlr) {
 		SPDK_ERRLOG("No such controller\n");
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));

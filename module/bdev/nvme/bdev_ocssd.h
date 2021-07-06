@@ -44,7 +44,7 @@ void bdev_ocssd_create_bdev(const char *ctrlr_name, const char *bdev_name, uint3
 			    bdev_ocssd_create_cb cb_fn, void *cb_arg);
 void bdev_ocssd_delete_bdev(const char *bdev_name, bdev_ocssd_delete_cb cb_fn, void *cb_arg);
 
-void bdev_ocssd_populate_namespace(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
+void bdev_ocssd_populate_namespace(struct nvme_ctrlr *nvme_ctrlr,
 				   struct nvme_ns *nvme_ns,
 				   struct nvme_async_probe_ctx *ctx);
 void bdev_ocssd_depopulate_namespace(struct nvme_ns *nvme_ns);
@@ -53,9 +53,9 @@ void bdev_ocssd_namespace_config_json(struct spdk_json_write_ctx *w, struct nvme
 int bdev_ocssd_create_io_channel(struct nvme_ctrlr_channel *ioch);
 void bdev_ocssd_destroy_io_channel(struct nvme_ctrlr_channel *ioch);
 
-int bdev_ocssd_init_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
-void bdev_ocssd_fini_ctrlr(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+int bdev_ocssd_init_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
+void bdev_ocssd_fini_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
 
-void bdev_ocssd_handle_chunk_notification(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+void bdev_ocssd_handle_chunk_notification(struct nvme_ctrlr *nvme_ctrlr);
 
 #endif /* SPDK_BDEV_OCSSD_H */

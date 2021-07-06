@@ -60,7 +60,7 @@ rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_opal_init req = {};
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_opal_init_decoders,
@@ -72,7 +72,7 @@ rpc_bdev_nvme_opal_init(struct spdk_jsonrpc_request *request,
 	}
 
 	/* check if opal supported */
-	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
+	nvme_ctrlr = nvme_ctrlr_get_by_name(req.nvme_ctrlr_name);
 	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL) {
 		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -135,7 +135,7 @@ rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_opal_revert req = {};
-	struct nvme_bdev_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_opal_revert_decoders,
@@ -147,7 +147,7 @@ rpc_bdev_nvme_opal_revert(struct spdk_jsonrpc_request *request,
 	}
 
 	/* check if opal supported */
-	nvme_ctrlr = nvme_bdev_ctrlr_get_by_name(req.nvme_ctrlr_name);
+	nvme_ctrlr = nvme_ctrlr_get_by_name(req.nvme_ctrlr_name);
 	if (nvme_ctrlr == NULL || nvme_ctrlr->opal_dev == NULL) {
 		SPDK_ERRLOG("%s not support opal\n", req.nvme_ctrlr_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
