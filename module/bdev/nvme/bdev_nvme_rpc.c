@@ -1003,8 +1003,7 @@ rpc_bdev_nvme_stats_per_channel(struct spdk_io_channel_iter *i)
 {
 	struct rpc_bdev_nvme_transport_stat_ctx *ctx;
 	struct spdk_io_channel *ch;
-	struct nvme_bdev_poll_group *bdev_group;
-	struct spdk_nvme_poll_group *group;
+	struct nvme_poll_group *group;
 	struct spdk_nvme_poll_group_stat *stat;
 	struct spdk_nvme_transport_poll_group_stat *tr_stat;
 	uint32_t j;
@@ -1012,10 +1011,9 @@ rpc_bdev_nvme_stats_per_channel(struct spdk_io_channel_iter *i)
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 	ch = spdk_io_channel_iter_get_channel(i);
-	bdev_group = spdk_io_channel_get_ctx(ch);
-	group = bdev_group->group;
+	group = spdk_io_channel_get_ctx(ch);
 
-	rc = spdk_nvme_poll_group_get_stats(group, &stat);
+	rc = spdk_nvme_poll_group_get_stats(group->group, &stat);
 	if (rc) {
 		spdk_for_each_channel_continue(i, rc);
 		return;
@@ -1047,7 +1045,7 @@ rpc_bdev_nvme_stats_per_channel(struct spdk_io_channel_iter *i)
 	spdk_json_write_array_end(ctx->w);
 	spdk_json_write_object_end(ctx->w);
 
-	spdk_nvme_poll_group_free_stats(group, stat);
+	spdk_nvme_poll_group_free_stats(group->group, stat);
 	spdk_for_each_channel_continue(i, 0);
 }
 

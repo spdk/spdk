@@ -123,7 +123,7 @@ struct nvme_bdev {
 	bool			opal;
 };
 
-struct nvme_bdev_poll_group {
+struct nvme_poll_group {
 	struct spdk_nvme_poll_group		*group;
 	struct spdk_io_channel			*accel_channel;
 	struct spdk_poller			*poller;
@@ -157,7 +157,7 @@ struct ocssd_io_channel;
 struct nvme_ctrlr_channel {
 	struct nvme_ctrlr		*ctrlr;
 	struct spdk_nvme_qpair		*qpair;
-	struct nvme_bdev_poll_group	*group;
+	struct nvme_poll_group		*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
 	struct ocssd_io_channel		*ocssd_ch;
 };

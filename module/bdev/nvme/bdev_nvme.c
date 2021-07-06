@@ -316,7 +316,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 static int
 bdev_nvme_poll(void *arg)
 {
-	struct nvme_bdev_poll_group *group = arg;
+	struct nvme_poll_group *group = arg;
 	int64_t num_completions;
 
 	if (group->collect_spin_stat && group->start_ticks == 0) {
@@ -1081,11 +1081,11 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-bdev_nvme_poll_group_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec *iov,
-		uint32_t iov_cnt, uint32_t seed,
-		spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+bdev_nvme_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec *iov,
+			      uint32_t iov_cnt, uint32_t seed,
+			      spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
 {
-	struct nvme_bdev_poll_group *group = ctx;
+	struct nvme_poll_group *group = ctx;
 	int rc;
 
 	assert(group->accel_channel != NULL);
@@ -1103,13 +1103,13 @@ bdev_nvme_poll_group_submit_accel_crc32c(void *ctx, uint32_t *dst, struct iovec 
 
 static struct spdk_nvme_accel_fn_table g_bdev_nvme_accel_fn_table = {
 	.table_size		= sizeof(struct spdk_nvme_accel_fn_table),
-	.submit_accel_crc32c	= bdev_nvme_poll_group_submit_accel_crc32c,
+	.submit_accel_crc32c	= bdev_nvme_submit_accel_crc32c,
 };
 
 static int
-bdev_nvme_poll_group_create_cb(void *io_device, void *ctx_buf)
+bdev_nvme_create_poll_group_cb(void *io_device, void *ctx_buf)
 {
-	struct nvme_bdev_poll_group *group = ctx_buf;
+	struct nvme_poll_group *group = ctx_buf;
 
 	group->group = spdk_nvme_poll_group_create(group, &g_bdev_nvme_accel_fn_table);
 	if (group->group == NULL) {
@@ -1136,9 +1136,9 @@ bdev_nvme_poll_group_create_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-bdev_nvme_poll_group_destroy_cb(void *io_device, void *ctx_buf)
+bdev_nvme_destroy_poll_group_cb(void *io_device, void *ctx_buf)
 {
-	struct nvme_bdev_poll_group *group = ctx_buf;
+	struct nvme_poll_group *group = ctx_buf;
 
 	if (group->accel_channel) {
 		spdk_put_io_channel(group->accel_channel);
@@ -1315,7 +1315,7 @@ static uint64_t
 bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
 {
 	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
-	struct nvme_bdev_poll_group *group = ctrlr_ch->group;
+	struct nvme_poll_group *group = ctrlr_ch->group;
 	uint64_t spin_time;
 
 	if (!group || !group->collect_spin_stat) {
@@ -2469,9 +2469,9 @@ bdev_nvme_library_init(void)
 {
 	g_bdev_nvme_init_thread = spdk_get_thread();
 
-	spdk_io_device_register(&g_nvme_ctrlrs, bdev_nvme_poll_group_create_cb,
-				bdev_nvme_poll_group_destroy_cb,
-				sizeof(struct nvme_bdev_poll_group),  "bdev_nvme_poll_groups");
+	spdk_io_device_register(&g_nvme_ctrlrs, bdev_nvme_create_poll_group_cb,
+				bdev_nvme_destroy_poll_group_cb,
+				sizeof(struct nvme_poll_group),  "nvme_poll_groups");
 
 	return 0;
 }
