@@ -78,6 +78,14 @@ rpc_reactor_set_interrupt_mode(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	if (!spdk_interrupt_mode_is_enabled()) {
+		SPDK_ERRLOG("Interrupt mode is not set when staring the application\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+
 	SPDK_NOTICELOG("RPC Start to %s interrupt mode on reactor %d.\n",
 		       req.disable_interrupt ? "disable" : "enable", req.lcore);
 	if (req.lcore >= (int64_t)spdk_env_get_first_core() &&
