@@ -90,13 +90,15 @@ struct spdk_uring_sock {
 	TAILQ_ENTRY(spdk_uring_sock)		link;
 };
 
+TAILQ_HEAD(pending_recv_list, spdk_uring_sock);
+
 struct spdk_uring_sock_group_impl {
 	struct spdk_sock_group_impl		base;
 	struct io_uring				uring;
 	uint32_t				io_inflight;
 	uint32_t				io_queued;
 	uint32_t				io_avail;
-	TAILQ_HEAD(, spdk_uring_sock)		pending_recv;
+	struct pending_recv_list		pending_recv;
 };
 
 static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
@@ -941,29 +943,52 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			break;
 		}
 
-		/* If the socket's cb_fn is NULL, just remove it from
-		 * the list and do not add it to socks array */
-		if (spdk_unlikely(sock->base.cb_fn == NULL)) {
+		if (spdk_unlikely(sock->base.cb_fn == NULL) ||
+		    (sock->recv_pipe == NULL || spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0)) {
 			sock->pending_recv = false;
 			TAILQ_REMOVE(&group->pending_recv, sock, link);
-			continue;
+			if (spdk_unlikely(sock->base.cb_fn == NULL)) {
+				/* If the socket's cb_fn is NULL, do not add it to socks array */
+				continue;
+			}
 		}
 
 		socks[count++] = &sock->base;
 	}
 
+
 	/* Cycle the pending_recv list so that each time we poll things aren't
-	 * in the same order. */
-	for (i = 0; i < count; i++) {
-		sock = __uring_sock(socks[i]);
+	 * in the same order. Say we have 6 sockets in the list, named as follows:
+	 * A B C D E F
+	 * And all 6 sockets had the poll events, but max_events is only 3. That means
+	 * psock currently points at D. We want to rearrange the list to the following:
+	 * D E F A B C
+	 *
+	 * The variables below are named according to this example to make it easier to
+	 * follow the swaps.
+	 */
+	if (sock != NULL) {
+		struct spdk_uring_sock *ua, *uc, *ud, *uf;
 
-		TAILQ_REMOVE(&group->pending_recv, sock, link);
+		/* Capture pointers to the elements we need */
+		ud = sock;
+		uc = TAILQ_PREV(ud, pending_recv_list, link);
+		ua = TAILQ_FIRST(&group->pending_recv);
+		uf = TAILQ_LAST(&group->pending_recv, pending_recv_list);
 
-		if (sock->recv_pipe == NULL || spdk_pipe_reader_bytes_available(sock->recv_pipe) == 0) {
-			sock->pending_recv = false;
-		} else {
-			TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
-		}
+		/* Break the link between C and D */
+		uc->link.tqe_next = NULL;
+
+		/* Connect F to A */
+		uf->link.tqe_next = ua;
+		ua->link.tqe_prev = &uf->link.tqe_next;
+
+		/* Fix up the list first/last pointers */
+		group->pending_recv.tqh_first = ud;
+		group->pending_recv.tqh_last = &uc->link.tqe_next;
+
+		/* D is in front of the list, make tqe prev pointer point to the head of list */
+		ud->link.tqe_prev = &group->pending_recv.tqh_first;
 	}
 
 	return count;
