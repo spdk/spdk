@@ -13,6 +13,7 @@ sar_delay="0"
 sar_interval="1"
 sar_count="10"
 vm_throttle=""
+bpf_traces=()
 ctrl_type="spdk_vhost_scsi"
 use_split=false
 kernel_cpus=""
@@ -59,6 +60,8 @@ function usage() {
 	echo "    --sar-delay=INT         Wait for X seconds before starting SAR measurement. Default: 0."
 	echo "    --sar-interval=INT      Interval (seconds) argument for SAR. Default: 1s."
 	echo "    --sar-count=INT         Count argument for SAR. Default: 10."
+	echo "    --bpf-traces=LIST       Comma delimited list of .bt scripts for enabling BPF traces."
+	echo "                            List of .bt scripts available in scripts/bpf"
 	echo "    --vm-throttle-iops=INT  I/Os throttle rate in IOPS for each device on the VMs."
 	echo "    --ctrl-type=TYPE        Controller type to use for test:"
 	echo "                            spdk_vhost_scsi - use spdk vhost scsi"
@@ -171,6 +174,7 @@ while getopts 'xh-:' optchar; do
 				sar-delay=*) sar_delay="${OPTARG#*=}" ;;
 				sar-interval=*) sar_interval="${OPTARG#*=}" ;;
 				sar-count=*) sar_count="${OPTARG#*=}" ;;
+				bpf-traces=*) IFS="," read -r -a bpf_traces <<< "${OPTARG#*=}" ;;
 				vm-throttle-iops=*) vm_throttle="${OPTARG#*=}" ;;
 				ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
 				packed-ring) packed_ring=true ;;
@@ -312,6 +316,23 @@ else
 	notice "Configuring SPDK vhost..."
 	vhost_run -n "${vhost_num}" -g -a "-p ${vhost_main_core} -m ${vhost_reactor_mask}"
 	notice "..."
+	if [[ ${#bpf_traces[@]} -gt 0 ]]; then
+		notice "Enabling BPF traces: ${bpf_traces[*]}"
+		vhost_dir="$(get_vhost_dir 0)"
+		vhost_pid="$(cat $vhost_dir/vhost.pid)"
+
+		bpf_cmd=("$rootdir/scripts/bpftrace.sh")
+		bpf_cmd+=("$vhost_pid")
+		for trace in "${bpf_traces[@]}"; do
+			bpf_cmd+=("$rootdir/scripts/bpf/$trace")
+		done
+
+		BPF_OUTFILE="$VHOST_DIR/bpftraces.txt" "${bpf_cmd[@]}" &
+		bpf_script_pid=$!
+
+		# Wait a bit for trace capture to start
+		sleep 3
+	fi
 
 	if [[ $use_split == true ]]; then
 		notice "Configuring split bdevs configuration..."
@@ -488,4 +509,8 @@ else
 		cleanup_lvol_cfg
 	fi
 	vhost_kill "${vhost_num}"
+
+	if ((bpf_script_pid)); then
+		wait $bpf_script_pid
+	fi
 fi
