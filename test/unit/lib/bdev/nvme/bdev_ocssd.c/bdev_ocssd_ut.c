@@ -883,9 +883,12 @@ test_get_zone_info(void)
 	const char *controller_name = "nvme0";
 	const char *bdev_name = "nvme0n1";
 	struct spdk_bdev *bdev;
+	struct nvme_bdev *nvme_bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_io_channel *ch;
-	struct nvme_ctrlr_channel *ctrlr_ch;
+	struct nvme_bdev_channel *nbdev_ch;
+	struct nvme_ns *nvme_ns;
+	struct nvme_ctrlr_channel ctrlr_ch = {};
 #define MAX_ZONE_INFO_COUNT 64
 	struct spdk_bdev_zone_info zone_info[MAX_ZONE_INFO_COUNT];
 	struct spdk_ocssd_chunk_information_entry *chunk_info;
@@ -915,12 +918,18 @@ test_get_zone_info(void)
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
-	ch = calloc(1, sizeof(*ch) + sizeof(*ctrlr_ch));
+	nvme_bdev = (struct nvme_bdev *)bdev->ctxt;
+	nvme_ns = nvme_bdev->nvme_ns;
+	SPDK_CU_ASSERT_FATAL(nvme_ns != NULL);
+
+	ch = calloc(1, sizeof(*ch) + sizeof(*nbdev_ch));
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
-	ctrlr_ch = spdk_io_channel_get_ctx(ch);
-	ctrlr_ch->ctrlr = nvme_ctrlr;
-	ctrlr_ch->qpair = (struct spdk_nvme_qpair *)0x1;
+	nbdev_ch = spdk_io_channel_get_ctx(ch);
+	nbdev_ch->nvme_ns = nvme_ns;
+	nbdev_ch->ctrlr_ch = &ctrlr_ch;
+	ctrlr_ch.ctrlr = nvme_ctrlr;
+	ctrlr_ch.qpair = (struct spdk_nvme_qpair *)0x1;
 
 	bdev_io = alloc_ocssd_io();
 	bdev_io->internal.cb = get_zone_info_cb;

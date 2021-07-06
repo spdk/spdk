@@ -174,6 +174,11 @@ struct nvme_ctrlr_channel {
 	struct ocssd_io_channel		*ocssd_ch;
 };
 
+struct nvme_bdev_channel {
+	struct nvme_ns			*nvme_ns;
+	struct nvme_ctrlr_channel	*ctrlr_ch;
+};
+
 void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 					struct nvme_ns *nvme_ns, int rc);
 void nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns);
@@ -191,5 +196,8 @@ void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 void nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr);
 void nvme_ctrlr_unregister(void *ctx);
 void nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr);
+
+int bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf);
+void bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */

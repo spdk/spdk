@@ -106,18 +106,18 @@ bdev_ocssd_get_ns_from_nvme(struct nvme_ns *nvme_ns)
 }
 
 static inline bool
-bdev_ocssd_find_io_path(struct nvme_bdev *nbdev, struct nvme_ctrlr_channel *ctrlr_ch,
+bdev_ocssd_find_io_path(struct nvme_bdev_channel *nbdev_ch,
 			struct bdev_ocssd_ns **_ocssd_ns,
 			struct spdk_nvme_ns **_ns, struct spdk_nvme_qpair **_qpair)
 {
-	if (spdk_unlikely(ctrlr_ch->qpair == NULL)) {
+	if (spdk_unlikely(nbdev_ch->ctrlr_ch->qpair == NULL)) {
 		/* The device is currently resetting. */
 		return false;
 	}
 
-	*_ocssd_ns = bdev_ocssd_get_ns_from_nvme(nbdev->nvme_ns);
-	*_ns = nbdev->nvme_ns->ns;
-	*_qpair = ctrlr_ch->qpair;
+	*_ocssd_ns = bdev_ocssd_get_ns_from_nvme(nbdev_ch->nvme_ns);
+	*_ns = nbdev_ch->nvme_ns->ns;
+	*_qpair = nbdev_ch->ctrlr_ch->qpair;
 	return true;
 }
 
@@ -224,6 +224,15 @@ bdev_ocssd_free_bdev(struct ocssd_bdev *ocssd_bdev)
 	free(ocssd_bdev);
 }
 
+static void
+_bdev_ocssd_unregister_dev_cb(void *io_device)
+{
+	struct nvme_bdev *nvme_bdev = io_device;
+	struct ocssd_bdev *ocssd_bdev = nvme_bdev->disk.ctxt;
+
+	bdev_ocssd_free_bdev(ocssd_bdev);
+}
+
 static int
 bdev_ocssd_destruct(void *ctx)
 {
@@ -243,7 +252,7 @@ bdev_ocssd_destruct(void *ctx)
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 	}
 
-	bdev_ocssd_free_bdev(ocssd_bdev);
+	spdk_io_device_unregister(nvme_bdev, _bdev_ocssd_unregister_dev_cb);
 
 	return 0;
 }
@@ -527,7 +536,7 @@ static void
 bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
 {
 	struct ocssd_bdev *ocssd_bdev = (struct ocssd_bdev *)bdev_io->bdev->ctxt;
-	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
 	struct bdev_ocssd_ns *ocssd_ns;
 	struct spdk_nvme_ns *ns;
 	struct spdk_nvme_qpair *qpair;
@@ -538,8 +547,7 @@ bdev_ocssd_io_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		return;
 	}
 
-	if (spdk_unlikely(!bdev_ocssd_find_io_path(&ocssd_bdev->nvme_bdev, ctrlr_ch,
-			  &ocssd_ns, &ns, &qpair))) {
+	if (spdk_unlikely(!bdev_ocssd_find_io_path(nbdev_ch, &ocssd_ns, &ns, &qpair))) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -653,7 +661,7 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_ocssd_chunk_information_entry *chunk_info = &ocdev_io->zone_info.chunk_info;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(ctx);
 	struct ocssd_bdev *ocssd_bdev = bdev_io->bdev->ctxt;
-	struct nvme_ctrlr_channel *ctrlr_ch;
+	struct nvme_bdev_channel *nbdev_ch;
 	struct spdk_nvme_ns *ns;
 	struct spdk_nvme_qpair *qpair;
 	struct bdev_ocssd_ns *ocssd_ns;
@@ -665,10 +673,9 @@ bdev_ocssd_zone_info_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
-	ctrlr_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-	if (spdk_unlikely(!bdev_ocssd_find_io_path(&ocssd_bdev->nvme_bdev, ctrlr_ch, &ocssd_ns, &ns,
-			  &qpair))) {
+	if (spdk_unlikely(!bdev_ocssd_find_io_path(nbdev_ch, &ocssd_ns, &ns, &qpair))) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -786,7 +793,8 @@ bdev_ocssd_poll_pending(void *ctx)
 static void
 bdev_ocssd_delay_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = nbdev_ch->ctrlr_ch;
 	struct ocssd_io_channel *ocssd_ch = ctrlr_ch->ocssd_ch;
 
 	TAILQ_INSERT_TAIL(&ocssd_ch->pending_requests, bdev_io, module_link);
@@ -796,15 +804,14 @@ bdev_ocssd_delay_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 static int
 _bdev_ocssd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
 	struct ocssd_bdev *ocssd_bdev = (struct ocssd_bdev *)bdev_io->bdev->ctxt;
 	struct bdev_ocssd_io *ocdev_io = (struct bdev_ocssd_io *)bdev_io->driver_ctx;
 	struct bdev_ocssd_ns *ocssd_ns;
 	struct spdk_nvme_ns *ns;
 	struct spdk_nvme_qpair *qpair;
 
-	if (spdk_unlikely(!bdev_ocssd_find_io_path(&ocssd_bdev->nvme_bdev, ctrlr_ch,
-			  &ocssd_ns, &ns, &qpair))) {
+	if (spdk_unlikely(!bdev_ocssd_find_io_path(nbdev_ch, &ocssd_ns, &ns, &qpair))) {
 		return -1;
 	}
 
@@ -909,7 +916,7 @@ bdev_ocssd_get_io_channel(void *ctx)
 {
 	struct ocssd_bdev *ocssd_bdev = ctx;
 
-	return spdk_get_io_channel(ocssd_bdev->nvme_bdev.nvme_ns->ctrlr);
+	return spdk_get_io_channel(&ocssd_bdev->nvme_bdev);
 }
 
 static void
@@ -1132,11 +1139,18 @@ bdev_ocssd_register_bdev(void *ctx)
 	struct nvme_ns *nvme_ns = create_ctx->nvme_ns;
 	int rc;
 
+	spdk_io_device_register(nvme_bdev,
+				bdev_nvme_create_bdev_channel_cb,
+				bdev_nvme_destroy_bdev_channel_cb,
+				sizeof(struct nvme_bdev_channel),
+				nvme_bdev->disk.name);
+
 	rc = spdk_bdev_register(&nvme_bdev->disk);
 	if (spdk_likely(rc == 0)) {
 		nvme_ns->bdev = nvme_bdev;
 	} else {
 		SPDK_ERRLOG("Failed to register bdev %s\n", nvme_bdev->disk.name);
+		spdk_io_device_unregister(nvme_bdev, NULL);
 	}
 
 	bdev_ocssd_create_complete(create_ctx, rc);

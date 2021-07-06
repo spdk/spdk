@@ -219,3 +219,35 @@ nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 
 	nvme_ctrlr_release(nvme_ctrlr);
 }
+
+int
+bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
+{
+	struct nvme_bdev_channel *nbdev_ch = ctx_buf;
+	struct nvme_bdev *nbdev = io_device;
+	struct nvme_ns *nvme_ns;
+	struct spdk_io_channel *ch;
+
+	nvme_ns = nbdev->nvme_ns;
+
+	ch = spdk_get_io_channel(nvme_ns->ctrlr);
+	if (ch == NULL) {
+		SPDK_ERRLOG("Failed to alloc io_channel.\n");
+		return -ENOMEM;
+	}
+
+	nbdev_ch->ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	nbdev_ch->nvme_ns = nvme_ns;
+
+	return 0;
+}
+
+void
+bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf)
+{
+	struct nvme_bdev_channel *nbdev_ch = ctx_buf;
+	struct spdk_io_channel *ch;
+
+	ch = spdk_io_channel_from_ctx(nbdev_ch->ctrlr_ch);
+	spdk_put_io_channel(ch);
+}
