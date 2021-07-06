@@ -407,12 +407,49 @@ function run_nvme_fio() {
 }
 
 function run_bdevperf() {
-	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
+	local bdevperf_rpc
+	local bdevperf_pid
+	local rpc_socket
+	local bpf_script_cmd
+	local bpf_script_pid
+	local bpf_app_pid
 	local main_core_param=""
+
+	bdevperf_rpc="$rootdir/test/bdev/bdevperf/bdevperf.py"
+	rpc_socket="/var/tmp/spdk.sock"
+
 	if [[ -n $MAIN_CORE ]]; then
 		main_core_param="-p ${MAIN_CORE}"
 	fi
-	$bdevperf_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r /var/tmp/spdk.sock $main_core_param
+
+	echo "** Running bdevperf test, this can take a while, depending on the run-time setting."
+	$bdevperf_dir/bdevperf --json $testdir/bdev.conf -q $IODEPTH -o $BLK_SIZE -w $RW -M $MIX -t $RUNTIME -m "[$CPUS_ALLOWED]" -r "$rpc_socket" $main_core_param -z &
+	bdevperf_pid=$!
+	waitforlisten $bdevperf_pid
+
+	if [[ ${#BPFTRACES[@]} -gt 0 ]]; then
+		echo "INFO: Enabling BPF Traces ${BPFTRACES[*]}"
+		bpf_script_cmd=("$rootdir/scripts/bpftrace.sh")
+		bpf_script_cmd+=("$bdevperf_pid")
+		for trace in "${BPFTRACES[@]}"; do
+			bpf_script_cmd+=("$rootdir/scripts/bpf/$trace")
+		done
+
+		BPF_OUTFILE=$TMP_BPF_FILE "${bpf_script_cmd[@]}" &
+		bpf_script_pid=$!
+		sleep 3
+	fi
+
+	PYTHONPATH=$PYTHONPATH:$rootdir/scripts $bdevperf_rpc -s "$rpc_socket" perform_tests
+
+	# Using "-z" option causes bdevperf to NOT exit automatically after running the test,
+	# so we need to stop it ourselves.
+	kill -s SIGINT $bdevperf_pid
+	wait $bdevperf_pid
+
+	if ((bpf_script_pid)); then
+		wait $bpf_script_pid
+	fi
 	sleep 1
 }
 

@@ -36,6 +36,7 @@ FIO_BIN=$CONFIG_FIO_SOURCE_DIR/fio
 FIO_FNAME_STRATEGY="group"
 TMP_RESULT_FILE=$testdir/result.json
 MAIN_CORE=""
+TMP_BPF_FILE=$testdir/bpftraces.txt
 PLUGIN="nvme"
 DISKCFG=""
 BDEV_CACHE=""
@@ -47,6 +48,7 @@ PRECONDITIONING=true
 CPUFREQ=""
 PERFTOP=false
 DPDKMEM=false
+BPFTRACES=()
 DATE="$(date +'%m_%d_%Y_%H%M%S')"
 
 function usage() {
@@ -111,6 +113,9 @@ function usage() {
 	echo "Other options:"
 	echo "    --perftop           Run perftop measurements on the same CPU cores as specified in --cpu-allowed option."
 	echo "    --dpdk-mem-stats    Dump DPDK memory stats during the test."
+	echo "    --bpf-traces=LIST       Comma delimited list of .bt scripts for enabling BPF traces."
+	echo "                            List of .bt scripts available in spdk/scripts/bpf."
+	echo "                            Only for spdk-perf-bdev"
 	set -x
 }
 
@@ -163,6 +168,7 @@ while getopts 'h-:' optchar; do
 				cpu-frequency=*) CPUFREQ="${OPTARG#*=}" ;;
 				perftop) PERFTOP=true ;;
 				dpdk-mem-stats) DPDKMEM=true ;;
+				bpf-traces=*) IFS="," read -r -a BPFTRACES <<< "${OPTARG#*=}" ;;
 				latency-log) LATENCY_LOG=true ;;
 				main-core=*) MAIN_CORE="${OPTARG#*=}" ;;
 				*)
@@ -304,6 +310,7 @@ for ((j = 0; j < REPEAT_NO; j++)); do
 		iops_disks=$(bc "$iops_disks + $iops")
 		bw=$(bc "$bw + $bandwidth")
 		cp $TMP_RESULT_FILE $result_dir/perf_results_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.output
+		[[ -f $TMP_BPF_FILE ]] && mv $TMP_BPF_FILE $result_dir/bpftraces_${MIX}_${PLUGIN}_${NO_CORES}cpus_${DATE}_${k}_disks_${j}.txt
 	elif [ $PLUGIN = "spdk-perf-nvme" ]; then
 		run_nvmeperf $DISKNO > $TMP_RESULT_FILE
 		read -r iops bandwidth mean_lat min_lat max_lat <<< $(get_nvmeperf_results)
