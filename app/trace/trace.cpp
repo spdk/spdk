@@ -369,12 +369,12 @@ print_event_json(struct spdk_trace_entry *e, uint64_t tsc_rate,
 		spdk_json_write_named_object_begin(g_json, "object");
 		if (d->new_object) {
 			object_type =  g_histories->flags.object[d->object_type].id_prefix;
-			spdk_json_write_named_string_fmt(g_json, "id", "%c%lu", object_type,
+			spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64, object_type,
 							 stats->index[e->object_id]);
 		} else if (d->object_type != OBJECT_NONE) {
 			object_type =  g_histories->flags.object[d->object_type].id_prefix;
 			if (stats->start.find(e->object_id) != stats->start.end()) {
-				spdk_json_write_named_string_fmt(g_json, "id", "%c%lu",
+				spdk_json_write_named_string_fmt(g_json, "id", "%c%" PRIu64,
 								 object_type,
 								 stats->index[e->object_id]);
 				spdk_json_write_named_uint64(g_json, "time",
