@@ -120,7 +120,7 @@ _nvme_pcie_event_process(struct spdk_pci_event *event, void *cb_ctx)
 		/* get the user app to clean up and stop I/O */
 		if (ctrlr->remove_cb) {
 			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-			ctrlr->remove_cb(cb_ctx, ctrlr);
+			ctrlr->remove_cb(ctrlr->cb_ctx, ctrlr);
 			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		}
 	}
