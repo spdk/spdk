@@ -154,7 +154,7 @@ struct nvme_async_probe_ctx {
 
 struct ocssd_io_channel;
 
-struct nvme_io_path {
+struct nvme_ctrlr_channel {
 	struct nvme_bdev_ctrlr		*ctrlr;
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_bdev_poll_group	*group;

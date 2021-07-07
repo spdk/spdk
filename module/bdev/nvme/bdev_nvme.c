@@ -176,7 +176,7 @@ static int bdev_nvme_get_zone_info(struct spdk_nvme_ns *ns, struct spdk_nvme_qpa
 static int bdev_nvme_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				     struct nvme_bdev_io *bio, uint64_t zone_id,
 				     enum spdk_bdev_zone_action action);
-static int bdev_nvme_admin_passthru(struct nvme_io_path *io_path,
+static int bdev_nvme_admin_passthru(struct nvme_ctrlr_channel *ctrlr_ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
 static int bdev_nvme_io_passthru(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
@@ -185,9 +185,9 @@ static int bdev_nvme_io_passthru(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 static int bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
-static int bdev_nvme_abort(struct nvme_io_path *io_path,
+static int bdev_nvme_abort(struct nvme_ctrlr_channel *ctrlr_ch,
 			   struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
-static int bdev_nvme_reset(struct nvme_io_path *io_path, struct spdk_bdev_io *bdev_io);
+static int bdev_nvme_reset(struct nvme_ctrlr_channel *ctrlr_ch, struct spdk_bdev_io *bdev_io);
 static int bdev_nvme_failover(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr, bool remove);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
@@ -223,15 +223,15 @@ static config_json_namespace_fn g_config_json_namespace_fn[] = {
 };
 
 struct spdk_nvme_qpair *
-bdev_nvme_get_io_qpair(struct spdk_io_channel *io_path_ch)
+bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 {
-	struct nvme_io_path *io_path;
+	struct nvme_ctrlr_channel *ctrlr_ch;
 
-	assert(io_path_ch != NULL);
+	assert(ctrlr_io_ch != NULL);
 
-	io_path = spdk_io_channel_get_ctx(io_path_ch);
+	ctrlr_ch = spdk_io_channel_get_ctx(ctrlr_io_ch);
 
-	return io_path->qpair;
+	return ctrlr_ch->qpair;
 }
 
 static int
@@ -252,24 +252,24 @@ static struct spdk_bdev_module nvme_if = {
 SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 
 static inline bool
-bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_io_path *io_path,
+bdev_nvme_find_io_path(struct nvme_bdev *nbdev, struct nvme_ctrlr_channel *ctrlr_ch,
 		       struct spdk_nvme_ns **_ns, struct spdk_nvme_qpair **_qpair)
 {
-	if (spdk_unlikely(io_path->qpair == NULL)) {
+	if (spdk_unlikely(ctrlr_ch->qpair == NULL)) {
 		/* The device is currently resetting. */
 		return false;
 	}
 
 	*_ns = nbdev->nvme_ns->ns;
-	*_qpair = io_path->qpair;
+	*_qpair = ctrlr_ch->qpair;
 	return true;
 }
 
 static inline bool
-bdev_nvme_find_admin_path(struct nvme_io_path *io_path,
+bdev_nvme_find_admin_path(struct nvme_ctrlr_channel *ctrlr_ch,
 			  struct nvme_bdev_ctrlr **_nvme_bdev_ctrlr)
 {
-	*_nvme_bdev_ctrlr = io_path->ctrlr;
+	*_nvme_bdev_ctrlr = ctrlr_ch->ctrlr;
 	return true;
 }
 
@@ -390,9 +390,9 @@ bdev_nvme_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 }
 
 static int
-bdev_nvme_create_qpair(struct nvme_io_path *io_path)
+bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 {
-	struct spdk_nvme_ctrlr *ctrlr = io_path->ctrlr->ctrlr;
+	struct spdk_nvme_ctrlr *ctrlr = ctrlr_ch->ctrlr->ctrlr;
 	struct spdk_nvme_io_qpair_opts opts;
 	struct spdk_nvme_qpair *qpair;
 	int rc;
@@ -408,9 +408,9 @@ bdev_nvme_create_qpair(struct nvme_io_path *io_path)
 		return -1;
 	}
 
-	assert(io_path->group != NULL);
+	assert(ctrlr_ch->group != NULL);
 
-	rc = spdk_nvme_poll_group_add(io_path->group->group, qpair);
+	rc = spdk_nvme_poll_group_add(ctrlr_ch->group->group, qpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to begin polling on NVMe Channel.\n");
 		goto err;
@@ -422,7 +422,7 @@ bdev_nvme_create_qpair(struct nvme_io_path *io_path)
 		goto err;
 	}
 
-	io_path->qpair = qpair;
+	ctrlr_ch->qpair = qpair;
 
 	return 0;
 
@@ -433,11 +433,11 @@ err:
 }
 
 static void
-bdev_nvme_destroy_qpair(struct nvme_io_path *io_path)
+bdev_nvme_destroy_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 {
-	if (io_path->qpair != NULL) {
-		spdk_nvme_ctrlr_free_io_qpair(io_path->qpair);
-		io_path->qpair = NULL;
+	if (ctrlr_ch->qpair != NULL) {
+		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
+		ctrlr_ch->qpair = NULL;
 	}
 }
 
@@ -465,14 +465,14 @@ bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_bdev_nvme_complete_pending_resets(struct nvme_io_path *io_path,
+_bdev_nvme_complete_pending_resets(struct nvme_ctrlr_channel *ctrlr_ch,
 				   enum spdk_bdev_io_status status)
 {
 	struct spdk_bdev_io *bdev_io;
 
-	while (!TAILQ_EMPTY(&io_path->pending_resets)) {
-		bdev_io = TAILQ_FIRST(&io_path->pending_resets);
-		TAILQ_REMOVE(&io_path->pending_resets, bdev_io, module_link);
+	while (!TAILQ_EMPTY(&ctrlr_ch->pending_resets)) {
+		bdev_io = TAILQ_FIRST(&ctrlr_ch->pending_resets);
+		TAILQ_REMOVE(&ctrlr_ch->pending_resets, bdev_io, module_link);
 		spdk_bdev_io_complete(bdev_io, status);
 	}
 }
@@ -481,9 +481,9 @@ static void
 bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(_ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(_ch);
 
-	_bdev_nvme_complete_pending_resets(io_path, SPDK_BDEV_IO_STATUS_SUCCESS);
+	_bdev_nvme_complete_pending_resets(ctrlr_ch, SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	spdk_for_each_channel_continue(i, 0);
 }
@@ -492,9 +492,9 @@ static void
 bdev_nvme_abort_pending_resets(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(_ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(_ch);
 
-	_bdev_nvme_complete_pending_resets(io_path, SPDK_BDEV_IO_STATUS_FAILED);
+	_bdev_nvme_complete_pending_resets(ctrlr_ch, SPDK_BDEV_IO_STATUS_FAILED);
 
 	spdk_for_each_channel_continue(i, 0);
 }
@@ -574,10 +574,10 @@ static void
 _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(_ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(_ch);
 	int rc;
 
-	rc = bdev_nvme_create_qpair(io_path);
+	rc = bdev_nvme_create_qpair(ctrlr_ch);
 
 	spdk_for_each_channel_continue(i, rc);
 }
@@ -613,9 +613,9 @@ static void
 _bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
 
-	bdev_nvme_destroy_qpair(io_path);
+	bdev_nvme_destroy_qpair(ctrlr_ch);
 	spdk_for_each_channel_continue(i, 0);
 }
 
@@ -647,21 +647,21 @@ _bdev_nvme_reset(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 }
 
 static int
-bdev_nvme_reset(struct nvme_io_path *io_path, struct spdk_bdev_io *bdev_io)
+bdev_nvme_reset(struct nvme_ctrlr_channel *ctrlr_ch, struct spdk_bdev_io *bdev_io)
 {
 	int rc;
 
-	rc = _bdev_nvme_reset(io_path->ctrlr);
+	rc = _bdev_nvme_reset(ctrlr_ch->ctrlr);
 	if (rc == 0) {
-		assert(io_path->ctrlr->reset_bdev_io == NULL);
-		io_path->ctrlr->reset_bdev_io = bdev_io;
+		assert(ctrlr_ch->ctrlr->reset_bdev_io == NULL);
+		ctrlr_ch->ctrlr->reset_bdev_io = bdev_io;
 	} else if (rc == -EAGAIN) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
 		 * we don't interfere with the app framework reset strategy. i.e. we are deferring to the
 		 * upper level. If they are in the middle of a reset, we won't try to schedule another one.
 		 */
-		TAILQ_INSERT_TAIL(&io_path->pending_resets, bdev_io, module_link);
+		TAILQ_INSERT_TAIL(&ctrlr_ch->pending_resets, bdev_io, module_link);
 	} else {
 		return rc;
 	}
@@ -765,7 +765,7 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	struct nvme_bdev_io *bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev->ctxt;
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_nvme_ns *ns;
 	struct spdk_nvme_qpair *qpair;
 	int ret;
@@ -775,7 +775,7 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		goto exit;
 	}
 
-	if (spdk_unlikely(!bdev_nvme_find_io_path(nbdev, io_path, &ns, &qpair))) {
+	if (spdk_unlikely(!bdev_nvme_find_io_path(nbdev, ctrlr_ch, &ns, &qpair))) {
 		ret = -ENXIO;
 		goto exit;
 	}
@@ -799,7 +799,7 @@ exit:
 static void
 bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev->ctxt;
 	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
@@ -808,7 +808,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	struct spdk_nvme_qpair *qpair;
 	int rc = 0;
 
-	if (spdk_unlikely(!bdev_nvme_find_io_path(nbdev, io_path, &ns, &qpair))) {
+	if (spdk_unlikely(!bdev_nvme_find_io_path(nbdev, ctrlr_ch, &ns, &qpair))) {
 		rc = -ENXIO;
 		goto exit;
 	}
@@ -880,7 +880,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					     bdev_io->u.bdev.num_blocks);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		rc = bdev_nvme_reset(io_path, bdev_io);
+		rc = bdev_nvme_reset(ctrlr_ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = bdev_nvme_flush(ns,
@@ -916,7 +916,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					       bdev_io->u.zone_mgmt.zone_action);
 		break;
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
-		rc = bdev_nvme_admin_passthru(io_path,
+		rc = bdev_nvme_admin_passthru(ctrlr_ch,
 					      nbdev_io,
 					      &bdev_io->u.nvme_passthru.cmd,
 					      bdev_io->u.nvme_passthru.buf,
@@ -942,7 +942,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
 		nbdev_io_to_abort = (struct nvme_bdev_io *)bdev_io->u.abort.bio_to_abort->driver_ctx;
-		rc = bdev_nvme_abort(io_path,
+		rc = bdev_nvme_abort(ctrlr_ch,
 				     nbdev_io,
 				     nbdev_io_to_abort);
 		break;
@@ -1016,10 +1016,10 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static int
-bdev_nvme_create_path_cb(void *io_device, void *ctx_buf)
+bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = io_device;
-	struct nvme_io_path *io_path = ctx_buf;
+	struct nvme_ctrlr_channel *ctrlr_ch = ctx_buf;
 	struct spdk_io_channel *pg_ch;
 	int rc;
 
@@ -1028,26 +1028,26 @@ bdev_nvme_create_path_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	io_path->group = spdk_io_channel_get_ctx(pg_ch);
+	ctrlr_ch->group = spdk_io_channel_get_ctx(pg_ch);
 
 #ifdef SPDK_CONFIG_VTUNE
-	io_path->group->collect_spin_stat = true;
+	ctrlr_ch->group->collect_spin_stat = true;
 #else
-	io_path->group->collect_spin_stat = false;
+	ctrlr_ch->group->collect_spin_stat = false;
 #endif
 
-	TAILQ_INIT(&io_path->pending_resets);
+	TAILQ_INIT(&ctrlr_ch->pending_resets);
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
-		rc = bdev_ocssd_create_io_channel(io_path);
+		rc = bdev_ocssd_create_io_channel(ctrlr_ch);
 		if (rc != 0) {
 			goto err_ocssd_ch;
 		}
 	}
 
-	io_path->ctrlr = nvme_bdev_ctrlr;
+	ctrlr_ch->ctrlr = nvme_bdev_ctrlr;
 
-	rc = bdev_nvme_create_qpair(io_path);
+	rc = bdev_nvme_create_qpair(ctrlr_ch);
 	if (rc != 0) {
 		goto err_qpair;
 	}
@@ -1055,8 +1055,8 @@ bdev_nvme_create_path_cb(void *io_device, void *ctx_buf)
 	return 0;
 
 err_qpair:
-	if (io_path->ocssd_ch) {
-		bdev_ocssd_destroy_io_channel(io_path);
+	if (ctrlr_ch->ocssd_ch) {
+		bdev_ocssd_destroy_io_channel(ctrlr_ch);
 	}
 err_ocssd_ch:
 	spdk_put_io_channel(pg_ch);
@@ -1065,19 +1065,19 @@ err_ocssd_ch:
 }
 
 static void
-bdev_nvme_destroy_path_cb(void *io_device, void *ctx_buf)
+bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 {
-	struct nvme_io_path *io_path = ctx_buf;
+	struct nvme_ctrlr_channel *ctrlr_ch = ctx_buf;
 
-	assert(io_path->group != NULL);
+	assert(ctrlr_ch->group != NULL);
 
-	if (io_path->ocssd_ch != NULL) {
-		bdev_ocssd_destroy_io_channel(io_path);
+	if (ctrlr_ch->ocssd_ch != NULL) {
+		bdev_ocssd_destroy_io_channel(ctrlr_ch);
 	}
 
-	bdev_nvme_destroy_qpair(io_path);
+	bdev_nvme_destroy_qpair(ctrlr_ch);
 
-	spdk_put_io_channel(spdk_io_channel_from_ctx(io_path->group));
+	spdk_put_io_channel(spdk_io_channel_from_ctx(ctrlr_ch->group));
 }
 
 static void
@@ -1314,8 +1314,8 @@ bdev_nvme_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 static uint64_t
 bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
 {
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
-	struct nvme_bdev_poll_group *group = io_path->group;
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_bdev_poll_group *group = ctrlr_ch->group;
 	uint64_t spin_time;
 
 	if (!group || !group->collect_spin_stat) {
@@ -1808,9 +1808,9 @@ nvme_bdev_ctrlr_create_done(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr,
 			    struct nvme_async_probe_ctx *ctx)
 {
 	spdk_io_device_register(nvme_bdev_ctrlr,
-				bdev_nvme_create_path_cb,
-				bdev_nvme_destroy_path_cb,
-				sizeof(struct nvme_io_path),
+				bdev_nvme_create_ctrlr_channel_cb,
+				bdev_nvme_destroy_ctrlr_channel_cb,
+				sizeof(struct nvme_ctrlr_channel),
 				nvme_bdev_ctrlr->name);
 
 	nvme_ctrlr_populate_namespaces(nvme_bdev_ctrlr, ctx);
@@ -2578,7 +2578,7 @@ bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct nvme_bdev_io *bio = ref;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
-	struct nvme_io_path *io_path;
+	struct nvme_ctrlr_channel *ctrlr_ch;
 	struct spdk_nvme_ns *ns;
 	struct spdk_nvme_qpair *qpair;
 	int ret;
@@ -2590,9 +2590,9 @@ bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		/* Save completion status to use after verifying PI error. */
 		bio->cpl = *cpl;
 
-		io_path = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+		ctrlr_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-		if (spdk_likely(bdev_nvme_find_io_path(nbdev, io_path, &ns, &qpair))) {
+		if (spdk_likely(bdev_nvme_find_io_path(nbdev, ctrlr_ch, &ns, &qpair))) {
 			/* Read without PI checking to verify PI error. */
 			ret = bdev_nvme_no_pi_readv(ns,
 						    qpair,
@@ -2741,7 +2741,7 @@ bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev_io->bdev->ctxt;
 	struct spdk_io_channel *ch = spdk_bdev_io_get_io_channel(bdev_io);
-	struct nvme_io_path *io_path = spdk_io_channel_get_ctx(ch);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
 	uint64_t zone_id = bdev_io->u.zone_mgmt.zone_id;
 	uint32_t zones_to_copy = bdev_io->u.zone_mgmt.num_zones;
 	struct spdk_bdev_zone_info *info = bdev_io->u.zone_mgmt.buf;
@@ -2755,7 +2755,7 @@ bdev_nvme_get_zone_info_done(void *ref, const struct spdk_nvme_cpl *cpl)
 		goto out_complete_io_nvme_cpl;
 	}
 
-	if (!bdev_nvme_find_io_path(nbdev, io_path, &ns, &qpair)) {
+	if (!bdev_nvme_find_io_path(nbdev, ctrlr_ch, &ns, &qpair)) {
 		ret = -ENXIO;
 		goto out_complete_io_ret;
 	}
@@ -3284,13 +3284,13 @@ bdev_nvme_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 }
 
 static int
-bdev_nvme_admin_passthru(struct nvme_io_path *io_path, struct nvme_bdev_io *bio,
+bdev_nvme_admin_passthru(struct nvme_ctrlr_channel *ctrlr_ch, struct nvme_bdev_io *bio,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
 	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
 	uint32_t max_xfer_size;
 
-	if (!bdev_nvme_find_admin_path(io_path, &nvme_bdev_ctrlr)) {
+	if (!bdev_nvme_find_admin_path(ctrlr_ch, &nvme_bdev_ctrlr)) {
 		return -EINVAL;
 	}
 
@@ -3360,22 +3360,22 @@ bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 }
 
 static int
-bdev_nvme_abort(struct nvme_io_path *io_path, struct nvme_bdev_io *bio,
+bdev_nvme_abort(struct nvme_ctrlr_channel *ctrlr_ch, struct nvme_bdev_io *bio,
 		struct nvme_bdev_io *bio_to_abort)
 {
 	int rc;
 
 	bio->orig_thread = spdk_get_thread();
 
-	rc = spdk_nvme_ctrlr_cmd_abort_ext(io_path->ctrlr->ctrlr,
-					   io_path->qpair,
+	rc = spdk_nvme_ctrlr_cmd_abort_ext(ctrlr_ch->ctrlr->ctrlr,
+					   ctrlr_ch->qpair,
 					   bio_to_abort,
 					   bdev_nvme_abort_done, bio);
 	if (rc == -ENOENT) {
 		/* If no command was found in I/O qpair, the target command may be
 		 * admin command.
 		 */
-		rc = spdk_nvme_ctrlr_cmd_abort_ext(io_path->ctrlr->ctrlr,
+		rc = spdk_nvme_ctrlr_cmd_abort_ext(ctrlr_ch->ctrlr->ctrlr,
 						   NULL,
 						   bio_to_abort,
 						   bdev_nvme_abort_done, bio);
