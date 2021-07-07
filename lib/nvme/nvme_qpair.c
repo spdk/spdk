@@ -572,10 +572,18 @@ static void
 _nvme_qpair_complete_abort_queued_reqs(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_request		*req;
+	STAILQ_HEAD(, nvme_request)	tmp;
 
-	while (!STAILQ_EMPTY(&qpair->aborting_queued_req)) {
-		req = STAILQ_FIRST(&qpair->aborting_queued_req);
-		STAILQ_REMOVE_HEAD(&qpair->aborting_queued_req, stailq);
+	if (spdk_likely(STAILQ_EMPTY(&qpair->aborting_queued_req))) {
+		return;
+	}
+
+	STAILQ_INIT(&tmp);
+	STAILQ_SWAP(&tmp, &qpair->aborting_queued_req, nvme_request);
+
+	while (!STAILQ_EMPTY(&tmp)) {
+		req = STAILQ_FIRST(&tmp);
+		STAILQ_REMOVE_HEAD(&tmp, stailq);
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 1, true);
 	}
