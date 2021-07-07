@@ -1897,7 +1897,9 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_ctrlr,
 					  g_opts.nvme_adminq_poll_period_us);
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	if (g_opts.timeout_us > 0) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,

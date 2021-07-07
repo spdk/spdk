@@ -44,13 +44,15 @@ nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_ctrlr	*nvme_ctrlr;
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
 		if (spdk_nvme_transport_id_compare(trid, nvme_ctrlr->connected_trid) == 0) {
-			return nvme_ctrlr;
+			break;
 		}
 	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	return NULL;
+	return nvme_ctrlr;
 }
 
 struct nvme_ctrlr *
@@ -62,13 +64,15 @@ nvme_ctrlr_get_by_name(const char *name)
 		return NULL;
 	}
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
 		if (strcmp(name, nvme_ctrlr->name) == 0) {
-			return nvme_ctrlr;
+			break;
 		}
 	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	return NULL;
+	return nvme_ctrlr;
 }
 
 void
@@ -76,9 +80,11 @@ nvme_ctrlr_for_each(nvme_ctrlr_for_each_fn fn, void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
 		fn(nvme_ctrlr, ctx);
 	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 void
