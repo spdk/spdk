@@ -37,7 +37,7 @@
 #include "spdk/config.h"
 #include "spdk/env.h"
 
-#ifdef SPDK_CONFIG_USDT
+#if defined(SPDK_CONFIG_USDT) && !defined(SPDK_UNIT_TEST)
 
 #include <sys/sdt.h>
 
