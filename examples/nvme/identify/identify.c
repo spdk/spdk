@@ -100,7 +100,7 @@ static bool g_dpdk_mem_single_seg = false;
 
 static int g_main_core = 0;
 
-static char g_core_mask[16] = "0x1";
+static char g_core_mask[20] = "0x1";
 
 static struct spdk_nvme_transport_id g_trid;
 static char g_hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
