@@ -1427,7 +1427,6 @@ refresh_cores_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[CORES_TAB];
 	uint64_t i;
-	uint32_t core_num;
 	uint16_t offset, count = 0;
 	uint8_t max_pages, item_index;
 	static uint8_t last_page = 0;
@@ -1451,9 +1450,8 @@ refresh_cores_tab(uint8_t current_page)
 	}
 
 	for (i = 0; i < g_threads_stats.threads.threads_count; i++) {
-		core_num = g_threads_stats.threads.thread_info[i].core_num;
 		for (int j = 0; j < count; j++) {
-			if (cores[j].core == core_num) {
+			if ((int)cores[j].core == g_threads_stats.threads.thread_info[i].core_num) {
 				cores[j].threads_count++;
 				cores[j].pollers_count += g_threads_stats.threads.thread_info[i].active_pollers_count +
 							  g_threads_stats.threads.thread_info[i].timed_pollers_count +
