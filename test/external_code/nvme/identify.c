@@ -82,7 +82,7 @@ print_controller(struct nvme_ctrlr *ctrlr, const struct spdk_pci_addr *addr)
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
 	printf("Multi-path I/O\n");
 	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.multi_port ? "Yes" : "No");
-	printf("  May be connected to multiple hosts:  %s\n", cdata->cmic.multi_host ? "Yes" : "No");
+	printf("  May have multiple controllers:       %s\n", cdata->cmic.multi_ctrlr ? "Yes" : "No");
 	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.sr_iov ? "Yes" : "No");
 	printf("Max Number of Namespaces:              %d\n", cdata->nn);
 	if (cdata->ver.raw != 0) {

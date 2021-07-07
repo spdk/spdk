@@ -1285,7 +1285,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
 	printf("Multi-path I/O\n");
 	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.multi_port ? "Yes" : "No");
-	printf("  May be connected to multiple hosts:  %s\n", cdata->cmic.multi_host ? "Yes" : "No");
+	printf("  May have multiple controllers:       %s\n", cdata->cmic.multi_ctrlr ? "Yes" : "No");
 	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.sr_iov ? "Yes" : "No");
 	printf("Max Data Transfer Size:                ");
 	if (cdata->mdts == 0) {

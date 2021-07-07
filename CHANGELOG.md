@@ -66,6 +66,11 @@ polling until all detachments complete.
 An existing function `spdk_nvme_detach_async` was updated to add one or more detachments
 to an active context while it is being polled.
 
+Rename a variable in the member `cmic` of the struct `spdk_nvme_ctrlr_data` from
+`multi_host` to `multi_ctrlr`. The variable means that the NVM subsystem may have two or
+more controllers if set to 1. However `multi_host` had indicated a particular use case
+such that the NVM subsystem is used by multiple hosts.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create

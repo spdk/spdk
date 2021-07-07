@@ -1875,7 +1875,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/** controller multi-path I/O and namespace sharing capabilities */
 	struct {
 		uint8_t multi_port	: 1;
-		uint8_t multi_host	: 1;
+		uint8_t multi_ctrlr	: 1;
 		uint8_t sr_iov		: 1;
 		uint8_t ana_reporting	: 1;
 		uint8_t reserved	: 4;

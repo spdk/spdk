@@ -2346,7 +2346,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		cdata->rab = 6;
 		cdata->cmic.multi_port = 1;
-		cdata->cmic.multi_host = 1;
+		cdata->cmic.multi_ctrlr = 1;
 		if (subsystem->flags.ana_reporting) {
 			/* Asymmetric Namespace Access Reporting is supported. */
 			cdata->cmic.ana_reporting = 1;
