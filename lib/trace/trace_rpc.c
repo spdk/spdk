@@ -123,7 +123,7 @@ rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
 	uint64_t tpoint_group_mask;
-	char mask_str[7];
+	char mask_str[20];
 	bool enabled;
 	struct spdk_json_write_ctx *w;
 	struct spdk_trace_register_fn *register_fn;
