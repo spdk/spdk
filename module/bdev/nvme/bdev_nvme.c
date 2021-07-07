@@ -1593,6 +1593,7 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	opts->low_priority_weight = (uint8_t)g_opts.low_priority_weight;
 	opts->medium_priority_weight = (uint8_t)g_opts.medium_priority_weight;
 	opts->high_priority_weight = (uint8_t)g_opts.high_priority_weight;
+	opts->disable_read_ana_log_page = true;
 
 	SPDK_DEBUGLOG(bdev_nvme, "Attaching to %s\n", trid->traddr);
 
@@ -2619,6 +2620,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	ctx->opts.transport_retry_count = g_opts.retry_count;
 	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
+	ctx->opts.disable_read_ana_log_page = true;
 
 	if (hostnqn) {
 		snprintf(ctx->opts.hostnqn, sizeof(ctx->opts.hostnqn), "%s", hostnqn);

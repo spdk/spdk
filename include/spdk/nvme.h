@@ -256,6 +256,14 @@ struct spdk_nvme_ctrlr_opts {
 	 * this controller in microseconds.
 	 */
 	uint64_t fabrics_connect_timeout_us;
+
+	/**
+	 * Disable reading ANA log page. The upper layer should reading ANA log page instead
+	 * if set to true.
+	 *
+	 * Default is `false` (ANA log page is read).
+	 */
+	bool disable_read_ana_log_page;
 };
 
 /**

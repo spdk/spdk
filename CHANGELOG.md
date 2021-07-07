@@ -83,6 +83,10 @@ Rename a variable in the member `cmic` of the struct `spdk_nvme_ctrlr_data` from
 more controllers if set to 1. However `multi_host` had indicated a particular use case
 such that the NVM subsystem is used by multiple hosts.
 
+A new option `disable_read_ana_log_page` was added to struct `spdk_nvme_ctrlr_opts` to disable
+reading ANA log page. The upper layer is expected to read ANA log page instead if `true`.
+The default value is `false`.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create

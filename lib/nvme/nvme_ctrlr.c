@@ -206,6 +206,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	SET_FIELD(transport_ack_timeout, SPDK_NVME_DEFAULT_TRANSPORT_ACK_TIMEOUT);
 	SET_FIELD(admin_queue_size, DEFAULT_ADMIN_QUEUE_SIZE);
 	SET_FIELD(fabrics_connect_timeout_us, NVME_FABRIC_CONNECT_COMMAND_TIMEOUT);
+	SET_FIELD(disable_read_ana_log_page, false);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -722,7 +723,6 @@ nvme_ctrlr_init_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	ctrlr->ana_log_page_size = ana_log_page_size;
 
-	ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
 
 	return nvme_ctrlr_update_ana_log_page(ctrlr);
 }
@@ -806,10 +806,13 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 	if (ctrlr->cdata.cmic.ana_reporting) {
-		rc = nvme_ctrlr_init_ana_log_page(ctrlr);
-		if (rc == 0) {
-			nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
-						      ctrlr);
+		ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
+		if (!ctrlr->opts.disable_read_ana_log_page) {
+			rc = nvme_ctrlr_init_ana_log_page(ctrlr);
+			if (rc == 0) {
+				nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
+							      ctrlr);
+			}
 		}
 	}
 
@@ -2699,11 +2702,14 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr *ctrlr,
 
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
-		rc = nvme_ctrlr_update_ana_log_page(ctrlr);
-		if (rc) {
-			return;
+		if (!ctrlr->opts.disable_read_ana_log_page) {
+			rc = nvme_ctrlr_update_ana_log_page(ctrlr);
+			if (rc) {
+				return;
+			}
+			nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
+						      ctrlr);
 		}
-		nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states, ctrlr);
 	}
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
