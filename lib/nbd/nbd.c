@@ -544,16 +544,6 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 				     from_be32(&io->req.len), nbd_io_done, io);
 		break;
 #endif
-	case NBD_CMD_DISC:
-		nbd->is_closing = true;
-		rc = spdk_bdev_abort(desc, ch, io, nbd_io_done, io);
-
-		/* when there begins to have executed_io to send, enable socket writable notice */
-		if (nbd->interrupt_mode && TAILQ_EMPTY(&nbd->executed_io_list)) {
-			spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT);
-		}
-
-		break;
 	default:
 		rc = -1;
 	}
@@ -633,6 +623,17 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 				return -EINVAL;
 			}
 
+			if (from_be32(&io->req.type) == NBD_CMD_DISC) {
+				nbd->is_closing = true;
+				nbd->io_in_recv = NULL;
+				if (nbd->interrupt_mode && TAILQ_EMPTY(&nbd->executed_io_list)) {
+					spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT);
+				}
+				nbd_put_io(nbd, io);
+				/* After receiving NBD_CMD_DISC, nbd will not receive any new commands */
+				return received;
+			}
+
 			/* io except read/write should ignore payload */
 			if (from_be32(&io->req.type) == NBD_CMD_WRITE ||
 			    from_be32(&io->req.type) == NBD_CMD_READ) {
@@ -703,14 +704,13 @@ nbd_io_recv(struct spdk_nbd_disk *nbd)
 {
 	int i, rc, ret = 0;
 
-	/*
-	 * nbd server should not accept request after closing command
-	 */
-	if (nbd->is_closing) {
-		return 0;
-	}
-
 	for (i = 0; i < GET_IO_LOOP_COUNT; i++) {
+		/*
+		 * nbd server should not accept requests after closing command
+		 */
+		if (nbd->is_closing) {
+			break;
+		}
 		rc = nbd_io_recv_internal(nbd);
 		if (rc < 0) {
 			return rc;
