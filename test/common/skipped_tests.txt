@@ -9,10 +9,6 @@ ftl_restore_nv_cache
 # Waiting for test refactor
 iscsi_tgt_fio_remote_nvme
 
-# Waiting on PMR support in CI
-nvme_pmr
-nvme_pmr_persistence
-
 # Waiting on SCC support in CI
 nvme_scc
 nvme_simple_copy
