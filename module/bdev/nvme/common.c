@@ -71,16 +71,14 @@ nvme_ctrlr_get_by_name(const char *name)
 	return NULL;
 }
 
-struct nvme_ctrlr *
-nvme_bdev_first_ctrlr(void)
+void
+nvme_ctrlr_for_each(nvme_ctrlr_for_each_fn fn, void *ctx)
 {
-	return TAILQ_FIRST(&g_nvme_ctrlrs);
-}
+	struct nvme_ctrlr *nvme_ctrlr;
 
-struct nvme_ctrlr *
-nvme_bdev_next_ctrlr(struct nvme_ctrlr *prev)
-{
-	return TAILQ_NEXT(prev, tailq);
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		fn(nvme_ctrlr, ctx);
+	}
 }
 
 void

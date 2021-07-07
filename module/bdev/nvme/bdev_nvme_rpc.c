@@ -412,9 +412,9 @@ SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_bdev)
 
 static void
-rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
-			      struct nvme_ctrlr *nvme_ctrlr)
+rpc_dump_nvme_controller_info(struct nvme_ctrlr *nvme_ctrlr, void *ctx)
 {
+	struct spdk_json_write_ctx	*w = ctx;
 	struct spdk_nvme_transport_id	*trid;
 
 	trid = nvme_ctrlr->connected_trid;
@@ -483,11 +483,9 @@ rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	if (ctrlr != NULL) {
-		rpc_dump_nvme_controller_info(w, ctrlr);
+		rpc_dump_nvme_controller_info(ctrlr, w);
 	} else {
-		for (ctrlr = nvme_bdev_first_ctrlr(); ctrlr; ctrlr = nvme_bdev_next_ctrlr(ctrlr))  {
-			rpc_dump_nvme_controller_info(w, ctrlr);
-		}
+		nvme_ctrlr_for_each(rpc_dump_nvme_controller_info, w);
 	}
 
 	spdk_json_write_array_end(w);

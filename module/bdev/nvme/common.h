@@ -168,8 +168,10 @@ void nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns);
 
 struct nvme_ctrlr *nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
-struct nvme_ctrlr *nvme_bdev_first_ctrlr(void);
-struct nvme_ctrlr *nvme_bdev_next_ctrlr(struct nvme_ctrlr *prev);
+
+typedef void (*nvme_ctrlr_for_each_fn)(struct nvme_ctrlr *nvme_ctrlr, void *ctx);
+
+void nvme_ctrlr_for_each(nvme_ctrlr_for_each_fn fn, void *ctx);
 
 void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
