@@ -595,7 +595,7 @@ spdk_app_fini(void)
 static void
 _start_subsystem_fini(void *arg1)
 {
-	if (_spdk_get_scheduling_reactor()->flags.is_scheduling) {
+	if (g_scheduling_in_progress) {
 		spdk_thread_send_msg(g_app_thread, _start_subsystem_fini, NULL);
 		return;
 	}

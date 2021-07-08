@@ -69,6 +69,7 @@ TAILQ_HEAD(, spdk_scheduler) g_scheduler_list
 static struct spdk_scheduler *g_scheduler;
 static struct spdk_scheduler *g_new_scheduler;
 static struct spdk_reactor *g_scheduling_reactor;
+bool g_scheduling_in_progress = false;
 static uint64_t g_scheduler_period;
 static uint32_t g_scheduler_core_number;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
@@ -112,7 +113,7 @@ _spdk_scheduler_set(char *name)
 		return -ENOENT;
 	}
 
-	if (g_scheduling_reactor->flags.is_scheduling) {
+	if (g_scheduling_in_progress) {
 		if (g_scheduler != g_new_scheduler) {
 			/* Scheduler already changed, cannot defer multiple deinits */
 			return -EBUSY;
@@ -231,12 +232,6 @@ spdk_reactor_get(uint32_t lcore)
 	}
 
 	return reactor;
-}
-
-struct spdk_reactor *
-_spdk_get_scheduling_reactor(void)
-{
-	return g_scheduling_reactor;
 }
 
 static int reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op);
@@ -726,17 +721,10 @@ _threads_reschedule(struct spdk_scheduler_core_info *cores_info)
 static void
 _reactors_scheduler_fini(void)
 {
-	struct spdk_reactor *reactor;
-	uint32_t i;
-
 	/* Reschedule based on the balancing output */
 	_threads_reschedule(g_core_infos);
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		reactor = spdk_reactor_get(i);
-		assert(reactor != NULL);
-		reactor->flags.is_scheduling = false;
-	}
+	g_scheduling_in_progress = false;
 }
 
 static void
@@ -784,14 +772,7 @@ _reactors_scheduler_balance(void *arg1, void *arg2)
 static void
 _reactors_scheduler_cancel(void *arg1, void *arg2)
 {
-	struct spdk_reactor *reactor;
-	uint32_t i;
-
-	SPDK_ENV_FOREACH_CORE(i) {
-		reactor = spdk_reactor_get(i);
-		assert(reactor != NULL);
-		reactor->flags.is_scheduling = false;
-	}
+	g_scheduling_in_progress = false;
 }
 
 /* Phase 1 of thread scheduling is to gather metrics on the existing threads */
@@ -808,7 +789,6 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 
 	reactor = spdk_reactor_get(spdk_env_get_current_core());
 	assert(reactor != NULL);
-	reactor->flags.is_scheduling = true;
 	core_info = &g_core_infos[reactor->lcore];
 	core_info->lcore = reactor->lcore;
 	core_info->current_idle_tsc = reactor->idle_tsc - core_info->total_idle_tsc;
@@ -904,11 +884,9 @@ reactor_post_process_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thre
 
 	if (spdk_unlikely(spdk_thread_is_exited(thread) &&
 			  spdk_thread_is_idle(thread))) {
-		if (reactor->flags.is_scheduling == false) {
-			_reactor_remove_lw_thread(reactor, lw_thread);
-			spdk_thread_destroy(thread);
-			return true;
-		}
+		_reactor_remove_lw_thread(reactor, lw_thread);
+		spdk_thread_destroy(thread);
+		return true;
 	}
 
 	return false;
@@ -995,7 +973,7 @@ reactor_run(void *arg)
 		if (spdk_unlikely(g_scheduler_period > 0 &&
 				  (reactor->tsc_last - last_sched) > g_scheduler_period &&
 				  reactor == g_scheduling_reactor &&
-				  !reactor->flags.is_scheduling)) {
+				  !g_scheduling_in_progress)) {
 			if (spdk_unlikely(g_scheduler != g_new_scheduler)) {
 				if (g_scheduler->deinit != NULL) {
 					g_scheduler->deinit(&g_governor);
@@ -1005,6 +983,7 @@ reactor_run(void *arg)
 
 			if (spdk_unlikely(g_scheduler->balance != NULL)) {
 				last_sched = reactor->tsc_last;
+				g_scheduling_in_progress = true;
 				_reactors_scheduler_gather_metrics(NULL, NULL);
 			}
 		}

@@ -88,8 +88,7 @@ struct spdk_reactor {
 
 	struct {
 		uint32_t				is_valid : 1;
-		uint32_t				is_scheduling : 1;
-		uint32_t				reserved : 30;
+		uint32_t				reserved : 31;
 	} flags;
 
 	uint64_t					tsc_last;
@@ -125,7 +124,7 @@ void spdk_reactors_stop(void *arg1);
 
 struct spdk_reactor *spdk_reactor_get(uint32_t lcore);
 
-struct spdk_reactor *_spdk_get_scheduling_reactor(void);
+extern bool g_scheduling_in_progress;
 
 /**
  * Allocate and pass an event to each reactor, serially.
