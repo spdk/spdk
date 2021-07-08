@@ -1009,12 +1009,21 @@ struct spdk_nvme_probe_ctx {
 
 typedef void (*nvme_ctrlr_detach_cb)(struct spdk_nvme_ctrlr *ctrlr);
 
+enum nvme_ctrlr_detach_state {
+	NVME_CTRLR_DETACH_SET_CC,
+	NVME_CTRLR_DETACH_CHECK_CSTS,
+	NVME_CTRLR_DETACH_GET_CSTS,
+	NVME_CTRLR_DETACH_GET_CSTS_DONE,
+};
+
 struct nvme_ctrlr_detach_ctx {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	nvme_ctrlr_detach_cb			cb_fn;
 	uint64_t				shutdown_start_tsc;
 	uint32_t				shutdown_timeout_ms;
 	bool					shutdown_complete;
+	enum nvme_ctrlr_detach_state		state;
+	union spdk_nvme_csts_register		csts;
 	TAILQ_ENTRY(nvme_ctrlr_detach_ctx)	link;
 };
 

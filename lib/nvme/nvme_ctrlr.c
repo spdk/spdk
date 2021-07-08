@@ -1043,26 +1043,13 @@ spdk_nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
-nvme_ctrlr_shutdown_async(struct spdk_nvme_ctrlr *ctrlr,
-			  struct nvme_ctrlr_detach_ctx *ctx)
+nvme_ctrlr_shutdown_set_cc_done(void *_ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
 {
-	union spdk_nvme_cc_register	cc;
+	struct nvme_ctrlr_detach_ctx *ctx = _ctx;
+	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
 
-	if (ctrlr->is_removed) {
-		ctx->shutdown_complete = true;
-		return;
-	}
-
-	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "get_cc() failed\n");
-		ctx->shutdown_complete = true;
-		return;
-	}
-
-	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
-
-	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to write CC.SHN\n");
 		ctx->shutdown_complete = true;
 		return;
 	}
@@ -1081,6 +1068,67 @@ nvme_ctrlr_shutdown_async(struct spdk_nvme_ctrlr *ctrlr,
 	NVME_CTRLR_DEBUGLOG(ctrlr, "shutdown timeout = %" PRIu32 " ms\n", ctx->shutdown_timeout_ms);
 
 	ctx->shutdown_start_tsc = spdk_get_ticks();
+	ctx->state = NVME_CTRLR_DETACH_CHECK_CSTS;
+}
+
+static void
+nvme_ctrlr_shutdown_get_cc_done(void *_ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_ctrlr_detach_ctx *ctx = _ctx;
+	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
+	union spdk_nvme_cc_register cc;
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CC register\n");
+		ctx->shutdown_complete = true;
+		return;
+	}
+
+	assert(value <= UINT32_MAX);
+	cc.raw = (uint32_t)value;
+	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
+
+	rc = nvme_ctrlr_set_cc_async(ctrlr, cc.raw, nvme_ctrlr_shutdown_set_cc_done, ctx);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to write CC.SHN\n");
+		ctx->shutdown_complete = true;
+	}
+}
+
+static void
+nvme_ctrlr_shutdown_async(struct spdk_nvme_ctrlr *ctrlr,
+			  struct nvme_ctrlr_detach_ctx *ctx)
+{
+	int rc;
+
+	if (ctrlr->is_removed) {
+		ctx->shutdown_complete = true;
+		return;
+	}
+
+	ctx->state = NVME_CTRLR_DETACH_SET_CC;
+	rc = nvme_ctrlr_get_cc_async(ctrlr, nvme_ctrlr_shutdown_get_cc_done, ctx);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CC register\n");
+		ctx->shutdown_complete = true;
+	}
+}
+
+static void
+nvme_ctrlr_shutdown_get_csts_done(void *_ctx, uint64_t value, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_ctrlr_detach_ctx *ctx = _ctx;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctx->ctrlr, "Failed to read the CSTS register\n");
+		ctx->shutdown_complete = true;
+		return;
+	}
+
+	assert(value <= UINT32_MAX);
+	ctx->csts.raw = (uint32_t)value;
+	ctx->state = NVME_CTRLR_DETACH_GET_CSTS_DONE;
 }
 
 static int
@@ -1090,12 +1138,32 @@ nvme_ctrlr_shutdown_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 	union spdk_nvme_csts_register	csts;
 	uint32_t			ms_waited;
 
-	ms_waited = (spdk_get_ticks() - ctx->shutdown_start_tsc) * 1000 / spdk_get_ticks_hz();
+	switch (ctx->state) {
+	case NVME_CTRLR_DETACH_SET_CC:
+	case NVME_CTRLR_DETACH_GET_CSTS:
+		/* We're still waiting for the register operation to complete */
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+		return -EAGAIN;
 
-	if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "get_csts() failed\n");
-		return -EIO;
+	case NVME_CTRLR_DETACH_CHECK_CSTS:
+		ctx->state = NVME_CTRLR_DETACH_GET_CSTS;
+		if (nvme_ctrlr_get_csts_async(ctrlr, nvme_ctrlr_shutdown_get_csts_done, ctx)) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CSTS register\n");
+			return -EIO;
+		}
+		return -EAGAIN;
+
+	case NVME_CTRLR_DETACH_GET_CSTS_DONE:
+		ctx->state = NVME_CTRLR_DETACH_CHECK_CSTS;
+		break;
+
+	default:
+		assert(0 && "Should never happen");
+		return -EINVAL;
 	}
+
+	ms_waited = (spdk_get_ticks() - ctx->shutdown_start_tsc) * 1000 / spdk_get_ticks_hz();
+	csts.raw = ctx->csts.raw;
 
 	if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "shutdown complete in %u milliseconds\n", ms_waited);
@@ -4062,7 +4130,7 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_ctrlr_detach_ctx ctx = {};
+	struct nvme_ctrlr_detach_ctx ctx = { .ctrlr = ctrlr };
 	int rc;
 
 	nvme_ctrlr_destruct_async(ctrlr, &ctx);
