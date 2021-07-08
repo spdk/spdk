@@ -731,31 +731,24 @@ static void
 _reactors_scheduler_update_core_mode(void *ctx)
 {
 	struct spdk_reactor *reactor;
+	uint32_t i;
 	int rc = 0;
 
-	if (g_scheduler_core_number == SPDK_ENV_LCORE_ID_ANY) {
-		g_scheduler_core_number = spdk_env_get_first_core();
-	} else {
-		g_scheduler_core_number = spdk_env_get_next_core(g_scheduler_core_number);
-	}
-
-	if (g_scheduler_core_number == SPDK_ENV_LCORE_ID_ANY) {
-		_reactors_scheduler_fini();
-		return;
-	}
-
-	reactor = spdk_reactor_get(g_scheduler_core_number);
-	assert(reactor != NULL);
-	if (reactor->in_interrupt != g_core_infos[g_scheduler_core_number].interrupt_mode) {
-		/* Switch next found reactor to new state */
-		rc = spdk_reactor_set_interrupt_mode(g_scheduler_core_number,
-						     g_core_infos[g_scheduler_core_number].interrupt_mode, _reactors_scheduler_update_core_mode, NULL);
-		if (rc == 0) {
-			return;
+	for (i = g_scheduler_core_number; i < SPDK_ENV_LCORE_ID_ANY; i = spdk_env_get_next_core(i)) {
+		reactor = spdk_reactor_get(i);
+		assert(reactor != NULL);
+		if (reactor->in_interrupt != g_core_infos[i].interrupt_mode) {
+			/* Switch next found reactor to new state */
+			rc = spdk_reactor_set_interrupt_mode(i, g_core_infos[i].interrupt_mode,
+							     _reactors_scheduler_update_core_mode, NULL);
+			if (rc == 0) {
+				/* Set core to start with after callback completes */
+				g_scheduler_core_number = spdk_env_get_next_core(i);
+				return;
+			}
 		}
 	}
-
-	_reactors_scheduler_update_core_mode(NULL);
+	_reactors_scheduler_fini();
 }
 
 static void
@@ -764,7 +757,7 @@ _reactors_scheduler_balance(void *arg1, void *arg2)
 	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING) {
 		g_scheduler->balance(g_core_infos, g_reactor_count, &g_governor);
 
-		g_scheduler_core_number = SPDK_ENV_LCORE_ID_ANY;
+		g_scheduler_core_number = spdk_env_get_first_core();
 		_reactors_scheduler_update_core_mode(NULL);
 	}
 }
