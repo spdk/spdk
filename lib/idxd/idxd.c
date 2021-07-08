@@ -81,12 +81,6 @@ struct device_config g_dev_cfg1 = {
 	.total_engines = 4,
 };
 
-static uint64_t
-idxd_read_8(struct spdk_idxd_device *idxd, void *portal, uint32_t offset)
-{
-	return idxd->impl->read_8(idxd, portal, offset);
-}
-
 struct spdk_idxd_io_channel *
 spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 {
@@ -1020,23 +1014,13 @@ spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batc
 	return 0;
 }
 
-static void
-_dump_error_reg(struct spdk_idxd_io_channel *chan)
+static inline void
+_dump_sw_error_reg(struct spdk_idxd_io_channel *chan)
 {
-	uint64_t sw_error_0;
-	uint16_t i;
+	struct spdk_idxd_device *idxd = chan->idxd;
 
-	sw_error_0 = idxd_read_8(chan->idxd, chan->portal, IDXD_SWERR_OFFSET);
-
-	SPDK_NOTICELOG("SW Error bits set:");
-	for (i = 0; i < CHAR_BIT; i++) {
-		if ((1ULL << i) & sw_error_0) {
-			SPDK_NOTICELOG("    %d\n", i);
-		}
-	}
-	SPDK_NOTICELOG("SW Error error code: %#x\n", (uint8_t)(sw_error_0 >> 8));
-	SPDK_NOTICELOG("SW Error WQ index: %u\n", (uint8_t)(sw_error_0 >> 16));
-	SPDK_NOTICELOG("SW Error Operation: %u\n", (uint8_t)(sw_error_0 >> 32));
+	assert(idxd != NULL);
+	idxd->impl->dump_sw_error(idxd, chan->portal);
 }
 
 /* TODO: there are multiple ways of getting completions but we can't really pick the best one without
@@ -1070,7 +1054,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 
 			if (spdk_unlikely(IDXD_FAILURE(comp_ctx->hw.status))) {
 				status = -EINVAL;
-				_dump_error_reg(chan);
+				_dump_sw_error_reg(chan);
 			}
 
 			switch (comp_ctx->desc->opcode) {

@@ -90,12 +90,6 @@ _idxd_read_8(struct spdk_idxd_device *idxd, uint32_t offset)
 	return spdk_mmio_read_8((uint64_t *)(user_idxd->reg_base + offset));
 }
 
-static uint64_t
-idxd_read_8(struct spdk_idxd_device *idxd, void *portal, uint32_t offset)
-{
-	return _idxd_read_8(idxd, offset);
-}
-
 static void
 _idxd_write_8(struct spdk_idxd_device *idxd, uint32_t offset, uint64_t value)
 {
@@ -503,6 +497,25 @@ user_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 	return rc;
 }
 
+static void
+user_idxd_dump_sw_err(struct spdk_idxd_device *idxd, void *portal)
+{
+	uint64_t sw_error_0;
+	uint16_t i;
+
+	sw_error_0 = _idxd_read_8(idxd, IDXD_SWERR_OFFSET);
+
+	SPDK_NOTICELOG("SW Error bits set:");
+	for (i = 0; i < CHAR_BIT; i++) {
+		if ((1ULL << i) & sw_error_0) {
+			SPDK_NOTICELOG("    %d\n", i);
+		}
+	}
+	SPDK_NOTICELOG("SW Error error code: %#x\n", (uint8_t)(sw_error_0 >> 8));
+	SPDK_NOTICELOG("SW Error WQ index: %u\n", (uint8_t)(sw_error_0 >> 16));
+	SPDK_NOTICELOG("SW Error Operation: %u\n", (uint8_t)(sw_error_0 >> 32));
+}
+
 static char *
 user_idxd_portal_get_addr(struct spdk_idxd_device *idxd)
 {
@@ -527,7 +540,7 @@ static struct spdk_idxd_impl g_user_idxd_impl = {
 	.set_config		= user_idxd_set_config,
 	.probe			= user_idxd_probe,
 	.destruct		= user_idxd_device_destruct,
-	.read_8			= idxd_read_8,
+	.dump_sw_error		= user_idxd_dump_sw_err,
 	.portal_get_addr	= user_idxd_portal_get_addr,
 	.nop_check		= user_idxd_nop_check,
 };

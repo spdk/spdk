@@ -177,7 +177,7 @@ struct spdk_idxd_impl {
 	void (*set_config)(struct device_config *g_dev_cfg, uint32_t config_num);
 	int (*probe)(void *cb_ctx, spdk_idxd_attach_cb attach_cb);
 	void (*destruct)(struct spdk_idxd_device *idxd);
-	uint64_t (*read_8)(struct spdk_idxd_device *idxd, void *portal, uint32_t offset);
+	void (*dump_sw_error)(struct spdk_idxd_device *idxd, void *portal);
 	char *(*portal_get_addr)(struct spdk_idxd_device *idxd);
 	/* It is a workround for simulator */
 	bool (*nop_check)(struct spdk_idxd_device *idxd);
