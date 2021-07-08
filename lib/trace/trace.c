@@ -116,7 +116,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 			break;
 		default:
 			assert(0 && "Invalid trace argument type");
-			break;
+			return;
 		}
 
 		/* Copy argument's data. For some argument types (strings) user is allowed to pass a
@@ -141,6 +141,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 			curlen = spdk_min(sizeof(buffer->data) - offset, argument->size - argoff);
 			if (argoff < arglen) {
+				assert(argval != NULL);
 				memcpy(&buffer->data[offset], (uint8_t *)argval + argoff,
 				       spdk_min(curlen, arglen - argoff));
 			}
