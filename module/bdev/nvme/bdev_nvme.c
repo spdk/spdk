@@ -441,14 +441,6 @@ nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 
 	free(nvme_ctrlr->namespaces);
 	free(nvme_ctrlr);
-}
-
-static void
-nvme_ctrlr_unregister_cb(void *io_device)
-{
-	struct nvme_ctrlr *nvme_ctrlr = io_device;
-
-	nvme_ctrlr_delete(nvme_ctrlr);
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	if (g_bdev_nvme_module_finish && TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
@@ -457,8 +449,15 @@ nvme_ctrlr_unregister_cb(void *io_device)
 		spdk_bdev_module_fini_done();
 		return;
 	}
-
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
+
+static void
+nvme_ctrlr_unregister_cb(void *io_device)
+{
+	struct nvme_ctrlr *nvme_ctrlr = io_device;
+
+	nvme_ctrlr_delete(nvme_ctrlr);
 }
 
 static void
