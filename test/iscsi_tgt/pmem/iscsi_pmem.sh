@@ -36,7 +36,7 @@ for i in $(seq 1 $TGT_NR); do
 
 	luns=""
 	for j in $(seq 1 $PMEM_PER_TGT); do
-		$rpc_py create_pmem_pool /tmp/pool_file${i}_${j} $PMEM_SIZE $PMEM_BLOCK_SIZE
+		$rpc_py bdev_pmem_create_pool /tmp/pool_file${i}_${j} $PMEM_SIZE $PMEM_BLOCK_SIZE
 		bdevs_name="$($rpc_py bdev_pmem_create -n pmem${i}_${j} /tmp/pool_file${i}_${j})"
 		PMEM_BDEVS+="$bdevs_name "
 		luns+="$bdevs_name:$((j - 1)) "

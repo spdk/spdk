@@ -242,7 +242,7 @@ function create_bdev_subsystem_config() {
 	if [[ $SPDK_TEST_PMDK -eq 1 ]]; then
 		pmem_pool_file=$(mktemp /tmp/pool_file1.XXXXX)
 		rm -f $pmem_pool_file
-		tgt_rpc create_pmem_pool $pmem_pool_file 128 4096
+		tgt_rpc bdev_pmem_create_pool $pmem_pool_file 128 4096
 		tgt_rpc bdev_pmem_create -n pmem1 $pmem_pool_file
 		expected_notifications+=(bdev_register:pmem1)
 	fi
