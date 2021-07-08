@@ -378,8 +378,9 @@ function get_config_params() {
 	fi
 
 	if [ -d /usr/include/iscsi ]; then
-		libiscsi_version=$(grep LIBISCSI_API_VERSION /usr/include/iscsi/iscsi.h | head -1 | awk '{print $3}' | awk -F '(' '{print $2}' | awk -F ')' '{print $1}')
-		if [ $libiscsi_version -ge 20150621 ]; then
+		[[ $(< /usr/include/iscsi/iscsi.h) =~ "define LIBISCSI_API_VERSION ("([0-9]+)")" ]] \
+			&& libiscsi_version=${BASH_REMATCH[1]}
+		if ((libiscsi_version >= 20150621)); then
 			config_params+=' --with-iscsi-initiator'
 		fi
 	fi
