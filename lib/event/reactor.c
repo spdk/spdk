@@ -715,6 +715,9 @@ _threads_reschedule(struct spdk_scheduler_core_info *cores_info)
 				_threads_reschedule_thread(thread_info);
 			}
 		}
+		core->threads_count = 0;
+		free(core->thread_infos);
+		core->thread_infos = NULL;
 	}
 }
 
@@ -778,7 +781,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	struct spdk_reactor *reactor;
 	struct spdk_event *evt;
 	uint32_t next_core;
-	uint32_t i;
+	uint32_t i = 0;
 
 	reactor = spdk_reactor_get(spdk_env_get_current_core());
 	assert(reactor != NULL);
@@ -789,23 +792,12 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	core_info->current_busy_tsc = reactor->busy_tsc - core_info->total_busy_tsc;
 	core_info->total_busy_tsc = reactor->busy_tsc;
 	core_info->interrupt_mode = reactor->in_interrupt;
+	core_info->threads_count = 0;
 
 	SPDK_DEBUGLOG(reactor, "Gathering metrics on %u\n", reactor->lcore);
 
-	free(core_info->thread_infos);
-	core_info->thread_infos = NULL;
-
-	i = 0;
-
-	TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
-		_init_thread_stats(reactor, lw_thread);
-		i++;
-	}
-
-	core_info->threads_count = i;
-
-	if (core_info->threads_count > 0) {
-		core_info->thread_infos = calloc(core_info->threads_count, sizeof(*core_info->thread_infos));
+	if (reactor->thread_count > 0) {
+		core_info->thread_infos = calloc(reactor->thread_count, sizeof(*core_info->thread_infos));
 		if (core_info->thread_infos == NULL) {
 			SPDK_ERRLOG("Failed to allocate memory when gathering metrics on %u\n", reactor->lcore);
 
@@ -815,13 +807,17 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 			return;
 		}
 
-		i = 0;
 		TAILQ_FOREACH(lw_thread, &reactor->threads, link) {
+			_init_thread_stats(reactor, lw_thread);
+
 			core_info->thread_infos[i].lcore = lw_thread->lcore;
 			thread = spdk_thread_get_from_ctx(lw_thread);
+			assert(thread != NULL);
 			core_info->thread_infos[i].thread_id = spdk_thread_get_id(thread);
 			core_info->thread_infos[i].total_stats = lw_thread->total_stats;
 			core_info->thread_infos[i].current_stats = lw_thread->current_stats;
+			core_info->threads_count++;
+			assert(core_info->threads_count <= reactor->thread_count);
 			i++;
 		}
 	}
