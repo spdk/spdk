@@ -77,6 +77,24 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair));
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
 
+int ibv_query_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
+		 int attr_mask, struct ibv_qp_init_attr *init_attr)
+{
+	if (qp == NULL) {
+		return -1;
+	} else {
+		attr->port_num = 80;
+
+		if (qp->state == IBV_QPS_ERR) {
+			attr->qp_state = 10;
+		} else {
+			attr->qp_state = IBV_QPS_INIT;
+		}
+
+		return 0;
+	}
+}
+
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
 {
@@ -1292,6 +1310,37 @@ test_nvmf_rdma_request_free_data(void)
 	spdk_mempool_free(rtransport.data_wr_pool);
 }
 
+static void
+test_nvmf_rdma_update_ibv_state(void)
+{
+	struct spdk_nvmf_rdma_qpair rqpair = {};
+	struct spdk_rdma_qp rdma_qp = {};
+	struct ibv_qp qp = {};
+	int rc = 0;
+
+	rqpair.rdma_qp = &rdma_qp;
+
+	/* Case 1: Failed to get updated RDMA queue pair state */
+	rqpair.ibv_state = IBV_QPS_INIT;
+	rqpair.rdma_qp->qp = NULL;
+
+	rc = nvmf_rdma_update_ibv_state(&rqpair);
+	CU_ASSERT(rc == IBV_QPS_ERR + 1);
+
+	/* Case 2: Bad state updated */
+	rqpair.rdma_qp->qp = &qp;
+	qp.state = IBV_QPS_ERR;
+	rc = nvmf_rdma_update_ibv_state(&rqpair);
+	CU_ASSERT(rqpair.ibv_state == 10);
+	CU_ASSERT(rc == IBV_QPS_ERR + 1);
+
+	/* Case 3: Pass */
+	qp.state = IBV_QPS_INIT;
+	rc = nvmf_rdma_update_ibv_state(&rqpair);
+	CU_ASSERT(rqpair.ibv_state == IBV_QPS_INIT);
+	CU_ASSERT(rc == IBV_QPS_INIT);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1308,6 +1357,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_rdma_request_parse_sgl_with_md);
 	CU_ADD_TEST(suite, test_nvmf_rdma_opts_init);
 	CU_ADD_TEST(suite, test_nvmf_rdma_request_free_data);
+	CU_ADD_TEST(suite, test_nvmf_rdma_update_ibv_state);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
