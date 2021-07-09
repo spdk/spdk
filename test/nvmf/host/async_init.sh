@@ -38,7 +38,8 @@ $rpc_py bdev_nvme_attach_controller -b $nvme_bdev -t $TEST_TRANSPORT -a $NVMF_FI
 # Make sure the reset is also asynchronous
 $rpc_py bdev_nvme_reset_controller $nvme_bdev
 
-# TODO: Once the async detach path is functional, send a bdev_nvme_detach_controller here
+# Finally, detach the controller to verify the detach path
+$rpc_py bdev_nvme_detach_controller $nvme_bdev
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini

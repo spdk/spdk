@@ -565,6 +565,21 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+int
+spdk_nvme_detach_async(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_detach_ctx **ctx)
+{
+	SPDK_CU_ASSERT_FATAL(ctx != NULL);
+	*(struct spdk_nvme_ctrlr **)ctx = ctrlr;
+
+	return 0;
+}
+
+int
+spdk_nvme_detach_poll_async(struct spdk_nvme_detach_ctx *ctx)
+{
+	return spdk_nvme_detach((struct spdk_nvme_ctrlr *)ctx);
+}
+
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
@@ -1187,6 +1202,8 @@ test_create_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
@@ -1295,6 +1312,8 @@ test_reset_ctrlr(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
@@ -1369,6 +1388,8 @@ test_race_between_reset_and_destruct_ctrlr(void)
 
 	spdk_put_io_channel(ch2);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
@@ -1509,6 +1530,8 @@ test_failover_ctrlr(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
@@ -1638,6 +1661,8 @@ test_pending_reset(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 
@@ -1702,6 +1727,8 @@ test_attach_ctrlr(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 
@@ -1736,6 +1763,8 @@ test_attach_ctrlr(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 
@@ -1765,6 +1794,8 @@ test_attach_ctrlr(void)
 	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
@@ -1864,6 +1895,8 @@ test_aer_cb(void)
 	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
@@ -2059,6 +2092,8 @@ test_submit_nvme_cmd(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
@@ -2171,6 +2206,8 @@ test_add_remove_trid(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 
@@ -2212,6 +2249,8 @@ test_add_remove_trid(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
@@ -2389,6 +2428,8 @@ test_abort(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
@@ -2428,6 +2469,8 @@ test_get_io_qpair(void)
 	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
@@ -2492,6 +2535,8 @@ test_bdev_unregister(void)
 	nvme_ctrlr->destruct = true;
 	_nvme_ctrlr_destruct(nvme_ctrlr);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
@@ -2606,6 +2651,8 @@ test_init_ana_log_page(void)
 	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
@@ -2768,6 +2815,8 @@ test_reconnect_qpair(void)
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
@@ -2852,6 +2901,8 @@ test_create_bdev_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &trid2) != NULL);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
 
@@ -2893,6 +2944,8 @@ test_create_bdev_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &trid2) != NULL);
 
 	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == nbdev_ctrlr);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &trid1) == NULL);
@@ -2905,6 +2958,8 @@ test_create_bdev_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &trid1) == NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &trid2) != NULL);
 
+	poll_threads();
+	spdk_delay_us(1000);
 	poll_threads();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);

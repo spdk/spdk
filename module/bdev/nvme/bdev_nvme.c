@@ -409,7 +409,7 @@ nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 }
 
 static void
-nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
+_nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct nvme_ctrlr_trid *trid, *tmp_trid;
 	uint32_t i;
@@ -426,8 +426,6 @@ nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 		nvme_bdev_ctrlr_delete(nvme_ctrlr->nbdev_ctrlr, nvme_ctrlr);
 	}
 
-	spdk_nvme_detach(nvme_ctrlr->ctrlr);
-	spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
 	for (i = 0; i < nvme_ctrlr->num_ns; i++) {
 		free(nvme_ctrlr->namespaces[i]);
 	}
@@ -450,6 +448,53 @@ nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 		return;
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
+
+static int
+nvme_detach_poller(void *arg)
+{
+	struct nvme_ctrlr *nvme_ctrlr = arg;
+	int rc;
+
+	rc = spdk_nvme_detach_poll_async(nvme_ctrlr->detach_ctx);
+	if (rc != -EAGAIN) {
+		spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);
+		_nvme_ctrlr_delete(nvme_ctrlr);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
+{
+	int rc;
+
+	/* First, unregister the adminq poller, as the driver will poll adminq if necessary */
+	spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
+
+	/* If we got here, the reset/detach poller cannot be active */
+	assert(nvme_ctrlr->reset_detach_poller == NULL);
+	nvme_ctrlr->reset_detach_poller = SPDK_POLLER_REGISTER(nvme_detach_poller,
+					  nvme_ctrlr, 1000);
+	if (nvme_ctrlr->reset_detach_poller == NULL) {
+		SPDK_ERRLOG("Failed to register detach poller\n");
+		goto error;
+	}
+
+	rc = spdk_nvme_detach_async(nvme_ctrlr->ctrlr, &nvme_ctrlr->detach_ctx);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to detach the NVMe controller\n");
+		goto error;
+	}
+
+	return;
+error:
+	/* We don't have a good way to handle errors here, so just do what we can and delete the
+	 * controller without detaching the underlying NVMe device.
+	 */
+	spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);
+	_nvme_ctrlr_delete(nvme_ctrlr);
 }
 
 static void
@@ -868,7 +913,7 @@ bdev_nvme_ctrlr_reset_poll(void *arg)
 		return SPDK_POLLER_BUSY;
 	}
 
-	spdk_poller_unregister(&nvme_ctrlr->reset_poller);
+	spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);
 	if (rc == 0) {
 		/* Recreate all of the I/O queue pairs */
 		spdk_for_each_channel(nvme_ctrlr,
@@ -897,9 +942,9 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 		SPDK_ERRLOG("Create controller reset context failed\n");
 		goto err;
 	}
-	assert(nvme_ctrlr->reset_poller == NULL);
-	nvme_ctrlr->reset_poller = SPDK_POLLER_REGISTER(bdev_nvme_ctrlr_reset_poll,
-				   nvme_ctrlr, 0);
+	assert(nvme_ctrlr->reset_detach_poller == NULL);
+	nvme_ctrlr->reset_detach_poller = SPDK_POLLER_REGISTER(bdev_nvme_ctrlr_reset_poll,
+					  nvme_ctrlr, 0);
 
 	return;
 
