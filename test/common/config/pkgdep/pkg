@@ -22,6 +22,5 @@ packages=(
 	gdisk
 	socat
 	sshpass
-	py37-pandas
 	wget
 )

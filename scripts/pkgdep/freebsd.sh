@@ -2,14 +2,16 @@
 
 # Minimal install
 pkg install -y gmake cunit openssl git bash misc/e2fsprogs-libuuid python \
-	ncurses ninja meson py37-pyelftools-0.26
+	ncurses ninja meson
+pkg install -g -y "py*-pyelftools-*" "py*-pandas"
 # Additional dependencies for ISA-L used in compression
 pkg install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
-	pkg install -y devel/astyle bash py37-pycodestyle \
+	pkg install -y devel/astyle bash \
 		misc/e2fsprogs-libuuid sysutils/sg3_utils nasm \
 		bash-completion
+	pkg install -g -y "py*-pycodestyle"
 fi
 if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
