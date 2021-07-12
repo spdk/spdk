@@ -543,7 +543,6 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 
 	TAILQ_INIT(&pctrlr.ctrlr.active_io_qpairs);
 	STAILQ_INIT(&pctrlr.ctrlr.queued_aborts);
-	STAILQ_INIT(&pctrlr.ctrlr.async_events);
 	TAILQ_INIT(&pctrlr.ctrlr.active_procs);
 
 	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr.ctrlr, 32);

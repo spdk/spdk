@@ -727,6 +727,11 @@ enum nvme_ctrlr_state {
 
 #define NVME_TIMEOUT_INFINITE	0
 
+struct spdk_nvme_ctrlr_aer_completion_list {
+	struct spdk_nvme_cpl	cpl;
+	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion_list) link;
+};
+
 /*
  * Used to track properties for all processes accessing the controller.
  */
@@ -762,12 +767,11 @@ struct spdk_nvme_ctrlr_process {
 	/** separate timeout values for io vs. admin reqs */
 	uint64_t			timeout_io_ticks;
 	uint64_t			timeout_admin_ticks;
+
+	/** List to publish AENs to all procs in multiprocess setup */
+	STAILQ_HEAD(, spdk_nvme_ctrlr_aer_completion_list)      async_events;
 };
 
-struct spdk_nvme_ctrlr_aer_completion_list {
-	struct spdk_nvme_cpl	cpl;
-	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion_list) link;
-};
 
 /*
  * One of these per allocated PCI device.
@@ -898,8 +902,6 @@ struct spdk_nvme_ctrlr {
 
 	/* maximum zone append size in bytes */
 	uint32_t			max_zone_append_size;
-
-	STAILQ_HEAD(, spdk_nvme_ctrlr_aer_completion_list)      async_events;
 
 	/* PMR size in bytes */
 	uint64_t			pmr_size;

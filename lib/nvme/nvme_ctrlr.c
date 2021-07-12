@@ -2867,27 +2867,36 @@ nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 			     const struct spdk_nvme_cpl *cpl)
 {
 	struct  spdk_nvme_ctrlr_aer_completion_list *nvme_event;
+	struct spdk_nvme_ctrlr_process *proc;
 
-	nvme_event = calloc(1, sizeof(*nvme_event));
-	if (!nvme_event) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Alloc nvme event failed, ignore the event\n");
-		return;
+	/* Add async event to each process objects event list */
+	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
+		/* Must be shared memory so other processes can access */
+		nvme_event = spdk_zmalloc(sizeof(*nvme_event), 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		if (!nvme_event) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Alloc nvme event failed, ignore the event\n");
+			return;
+		}
+		nvme_event->cpl = *cpl;
+
+		STAILQ_INSERT_TAIL(&proc->async_events, nvme_event, link);
 	}
-
-	nvme_event->cpl = *cpl;
-	STAILQ_INSERT_TAIL(&ctrlr->async_events, nvme_event, link);
 }
 
 void
 nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct  spdk_nvme_ctrlr_aer_completion_list  *nvme_event, *nvme_event_tmp;
+	struct spdk_nvme_ctrlr_process	*active_proc;
 
-	STAILQ_FOREACH_SAFE(nvme_event, &ctrlr->async_events, link, nvme_event_tmp) {
-		STAILQ_REMOVE(&ctrlr->async_events, nvme_event,
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
+
+	STAILQ_FOREACH_SAFE(nvme_event, &active_proc->async_events, link, nvme_event_tmp) {
+		STAILQ_REMOVE(&active_proc->async_events, nvme_event,
 			      spdk_nvme_ctrlr_aer_completion_list, link);
 		nvme_ctrlr_process_async_event(ctrlr, &nvme_event->cpl);
-		free(nvme_event);
+		spdk_free(nvme_event);
+
 	}
 }
 
@@ -3083,6 +3092,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	ctrlr_proc->devhandle = devhandle;
 	ctrlr_proc->ref = 0;
 	TAILQ_INIT(&ctrlr_proc->allocated_io_qpairs);
+	STAILQ_INIT(&ctrlr_proc->async_events);
 
 	TAILQ_INSERT_TAIL(&ctrlr->active_procs, ctrlr_proc, tailq);
 
@@ -3125,6 +3135,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 {
 	struct nvme_request	*req, *tmp_req;
 	struct spdk_nvme_qpair	*qpair, *tmp_qpair;
+	struct spdk_nvme_ctrlr_aer_completion_list *event;
 
 	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {
 		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);
@@ -3132,6 +3143,13 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		assert(req->pid == proc->pid);
 
 		nvme_free_request(req);
+	}
+
+	/* Remove async event from each process objects event list */
+	while (!STAILQ_EMPTY(&proc->async_events)) {
+		event = STAILQ_FIRST(&proc->async_events);
+		STAILQ_REMOVE_HEAD(&proc->async_events, link);
+		spdk_free(event);
 	}
 
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
@@ -3630,7 +3648,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	STAILQ_INIT(&ctrlr->queued_aborts);
-	STAILQ_INIT(&ctrlr->async_events);
 	ctrlr->outstanding_aborts = 0;
 
 	ctrlr->ana_log_page = NULL;
@@ -3687,7 +3704,6 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 			  struct nvme_ctrlr_detach_ctx *ctx)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
-	struct  spdk_nvme_ctrlr_aer_completion_list *event;
 
 	NVME_CTRLR_DEBUGLOG(ctrlr, "Prepare to destruct SSD\n");
 
@@ -3697,12 +3713,6 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_ctrlr_abort_queued_aborts(ctrlr);
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
-
-	while (!STAILQ_EMPTY(&ctrlr->async_events)) {
-		event = STAILQ_FIRST(&ctrlr->async_events);
-		STAILQ_REMOVE_HEAD(&ctrlr->async_events, link);
-		free(event);
-	}
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
@@ -3826,6 +3836,7 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int32_t num_completions;
 	int32_t rc;
+	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -3846,7 +3857,11 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 
 	rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 
-	nvme_ctrlr_complete_queued_async_events(ctrlr);
+	/* Each process has an async list, complete the ones for this process object */
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
+	if (active_proc) {
+		nvme_ctrlr_complete_queued_async_events(ctrlr);
+	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
