@@ -1115,8 +1115,6 @@ dif_inject_error(struct _dif_sgl *sgl, uint32_t block_size, uint32_t num_blocks,
 	return -1;
 }
 
-#define _member_size(type, member)	sizeof(((type *)0)->member)
-
 int
 spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 		      const struct spdk_dif_ctx *ctx, uint32_t inject_flags,
@@ -1135,7 +1133,7 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
 				      ctx->guard_interval + offsetof(struct spdk_dif, ref_tag),
-				      _member_size(struct spdk_dif, ref_tag),
+				      SPDK_SIZEOF_MEMBER(struct spdk_dif, ref_tag),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
@@ -1146,7 +1144,7 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
 				      ctx->guard_interval + offsetof(struct spdk_dif, app_tag),
-				      _member_size(struct spdk_dif, app_tag),
+				      SPDK_SIZEOF_MEMBER(struct spdk_dif, app_tag),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
@@ -1156,7 +1154,7 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
 		rc = dif_inject_error(&sgl, ctx->block_size, num_blocks,
 				      ctx->guard_interval,
-				      _member_size(struct spdk_dif, guard),
+				      SPDK_SIZEOF_MEMBER(struct spdk_dif, guard),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Guard.\n");
@@ -1422,7 +1420,7 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
 				      ctx->guard_interval + offsetof(struct spdk_dif, ref_tag),
-				      _member_size(struct spdk_dif, ref_tag),
+				      SPDK_SIZEOF_MEMBER(struct spdk_dif, ref_tag),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
@@ -1433,7 +1431,7 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
 				      ctx->guard_interval + offsetof(struct spdk_dif, app_tag),
-				      _member_size(struct spdk_dif, app_tag),
+				      SPDK_SIZEOF_MEMBER(struct spdk_dif, app_tag),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
@@ -1444,7 +1442,7 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
 		rc = dif_inject_error(&md_sgl, ctx->md_size, num_blocks,
 				      ctx->guard_interval,
-				      _member_size(struct spdk_dif, guard),
+				      SPDK_SIZEOF_MEMBER(struct spdk_dif, guard),
 				      inject_offset);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to inject error to Guard.\n");

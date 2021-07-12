@@ -52,7 +52,7 @@
 #define DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT	256
 
 #define INQUIRY_OFFSET(field)		offsetof(struct spdk_scsi_cdb_inquiry_data, field) + \
-					sizeof(((struct spdk_scsi_cdb_inquiry_data *)0x0)->field)
+					SPDK_SIZEOF_MEMBER(struct spdk_scsi_cdb_inquiry_data, field)
 
 static void bdev_scsi_process_block_resubmit(void *arg);
 

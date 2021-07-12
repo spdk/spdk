@@ -72,7 +72,7 @@ struct load_json_config_ctx;
 typedef void (*client_resp_handler)(struct load_json_config_ctx *,
 				    struct spdk_jsonrpc_client_response *);
 
-#define RPC_SOCKET_PATH_MAX sizeof(((struct sockaddr_un *)0)->sun_path)
+#define RPC_SOCKET_PATH_MAX SPDK_SIZEOF_MEMBER(struct sockaddr_un, sun_path)
 
 /* 1s connections timeout */
 #define RPC_CLIENT_CONNECT_TIMEOUT_US (1U * 1000U * 1000U)

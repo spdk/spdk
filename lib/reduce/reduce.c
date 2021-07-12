@@ -63,7 +63,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size inco
 #define SPDK_REDUCE_SIGNATURE "SPDKREDU"
 /* null terminator counts one */
 SPDK_STATIC_ASSERT(sizeof(SPDK_REDUCE_SIGNATURE) - 1 ==
-		   sizeof(((struct spdk_reduce_vol_superblock *)0)->signature), "size incorrect");
+		   SPDK_SIZEOF_MEMBER(struct spdk_reduce_vol_superblock, signature), "size incorrect");
 
 #define REDUCE_PATH_MAX 4096
 

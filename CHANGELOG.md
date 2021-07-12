@@ -124,6 +124,8 @@ and for io_devices to provide faster lookup.
 Red-black tree macros has been added by using the macros provided by the FreeBSD operating system
 under the same BSD license.
 
+Add an new macro `SPDK_SIZEOF_MEMBER` to get the size of a member of a struct.
+
 ## v21.04:
 
 ### accel

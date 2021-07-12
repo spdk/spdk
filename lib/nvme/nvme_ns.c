@@ -413,9 +413,9 @@ spdk_nvme_ns_get_nguid(const struct spdk_nvme_ns *ns)
 	size_t size;
 
 	nguid = nvme_ns_find_id_desc(ns, SPDK_NVME_NIDT_NGUID, &size);
-	if (nguid && size != sizeof(((struct spdk_nvme_ns_data *)0)->nguid)) {
+	if (nguid && size != SPDK_SIZEOF_MEMBER(struct spdk_nvme_ns_data, nguid)) {
 		SPDK_WARNLOG("Invalid NIDT_NGUID descriptor length reported: %zu (expected: %zu)\n",
-			     size, sizeof(((struct spdk_nvme_ns_data *)0)->nguid));
+			     size, SPDK_SIZEOF_MEMBER(struct spdk_nvme_ns_data, nguid));
 		return NULL;
 	}
 

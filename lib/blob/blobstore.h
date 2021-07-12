@@ -392,7 +392,7 @@ struct spdk_blob_md_page {
 #define SPDK_BS_PAGE_SIZE 0x1000
 SPDK_STATIC_ASSERT(SPDK_BS_PAGE_SIZE == sizeof(struct spdk_blob_md_page), "Invalid md page size");
 
-#define SPDK_BS_MAX_DESC_SIZE sizeof(((struct spdk_blob_md_page*)0)->descriptors)
+#define SPDK_BS_MAX_DESC_SIZE SPDK_SIZEOF_MEMBER(struct spdk_blob_md_page, descriptors)
 
 /* Maximum number of extents a single Extent Page can fit.
  * For an SPDK_BS_PAGE_SIZE of 4K SPDK_EXTENTS_PER_EP would be 512. */
