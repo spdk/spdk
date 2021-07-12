@@ -1247,9 +1247,7 @@ class KernelInitiator(Initiator):
             time.sleep(1)
 
     def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1):
-        out = self.exec_cmd(["sudo", "nvme", "list", "|", "grep", "-E", "'SPDK|Linux'",
-                             "|", "awk", "'{print $1}'"])
-        nvme_list = [x for x in out.split("\n") if "nvme" in x]
+        nvme_list = [os.path.join("/dev", nvme) for nvme in self.get_connected_nvme_list()]
 
         filename_section = ""
         nvme_per_split = int(len(nvme_list) / len(threads))
