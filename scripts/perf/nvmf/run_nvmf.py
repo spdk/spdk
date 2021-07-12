@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from json.decoder import JSONDecodeError
 import os
 import re
 import sys
@@ -524,9 +525,12 @@ class Target(Server):
 
                 separate_stats = []
                 for r in i_results:
-                    stats = self.read_json_stats(os.path.join(results_dir, r))
-                    separate_stats.append(stats)
-                    self.log_print(stats)
+                    try:
+                        stats = self.read_json_stats(os.path.join(results_dir, r))
+                        separate_stats.append(stats)
+                        self.log_print(stats)
+                    except JSONDecodeError as e:
+                        self.log_print("ERROR: Failed to parse %s results! Results might be incomplete!")
 
                 init_results = [sum(x) for x in zip(*separate_stats)]
                 init_results = [x / len(separate_stats) for x in init_results]
@@ -886,10 +890,14 @@ registerfiles=1
         if run_num:
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
-                output = self.exec_cmd(["sudo", self.fio_bin,
-                                        fio_config_file, "--output-format=json",
-                                        "--output=%s" % output_filename], True)
-                self.log_print(output)
+                try:
+                    output = self.exec_cmd(["sudo", self.fio_bin,
+                                            fio_config_file, "--output-format=json",
+                                            "--output=%s" % output_filename], True)
+                    self.log_print(output)
+                except subprocess.CalledProcessError as e:
+                    self.log_print("ERROR: Fio process failed!")
+                    self.log_print(e.stdout)
         else:
             output_filename = job_name + "_" + self.name + ".json"
             output = self.exec_cmd(["sudo", self.fio_bin,
