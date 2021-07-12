@@ -3542,6 +3542,7 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 			  struct nvme_ctrlr_detach_ctx *ctx)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
+	struct  spdk_nvme_ctrlr_aer_completion_list *event;
 
 	NVME_CTRLR_DEBUGLOG(ctrlr, "Prepare to destruct SSD\n");
 
@@ -3551,6 +3552,12 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_ctrlr_abort_queued_aborts(ctrlr);
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
+
+	while (!STAILQ_EMPTY(&ctrlr->async_events)) {
+		event = STAILQ_FIRST(&ctrlr->async_events);
+		STAILQ_REMOVE_HEAD(&ctrlr->async_events, link);
+		free(event);
+	}
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
