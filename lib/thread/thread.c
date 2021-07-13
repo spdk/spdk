@@ -2284,7 +2284,7 @@ _call_channel(void *ctx)
 	 */
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(ch, &i->cur_thread->io_channels, tailq) {
-		if (ch->dev->io_device == i->io_device) {
+		if (ch->dev == i->dev) {
 			break;
 		}
 	}
@@ -2316,15 +2316,20 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	i->fn = fn;
 	i->ctx = ctx;
 	i->cpl = cpl;
+	i->orig_thread = _get_thread();
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	i->orig_thread = _get_thread();
+	i->dev = io_device_get(io_device);
+	if (i->dev == NULL) {
+		SPDK_ERRLOG("could not find io_device %p\n", io_device);
+		assert(false);
+		goto end;
+	}
 
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev->io_device == io_device) {
+			if (ch->dev == i->dev) {
 				ch->dev->for_each_count++;
-				i->dev = ch->dev;
 				i->cur_thread = thread;
 				i->ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
@@ -2335,6 +2340,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 		}
 	}
 
+end:
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	rc = spdk_thread_send_msg(i->orig_thread, _call_completion, i);
@@ -2359,7 +2365,7 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 	thread = TAILQ_NEXT(i->cur_thread, tailq);
 	while (thread) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev->io_device == i->io_device) {
+			if (ch->dev == i->dev) {
 				i->cur_thread = thread;
 				i->ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
