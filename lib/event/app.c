@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -140,6 +141,8 @@ static const struct option g_cmdline_options[] = {
 	{"iova-mode",			required_argument,	NULL, IOVA_MODE_OPT_IDX},
 #define BASE_VIRTADDR_OPT_IDX	265
 	{"base-virtaddr",		required_argument,	NULL, BASE_VIRTADDR_OPT_IDX},
+#define ENV_CONTEXT_OPT_IDX	266
+	{"env-context",			required_argument,	NULL, ENV_CONTEXT_OPT_IDX},
 };
 
 static void
@@ -685,6 +688,7 @@ usage(void (*app_usage)(void))
 	printf("     --base-virtaddr <addr>      the base virtual address for DPDK (default: 0x200000000000)\n");
 	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2, setting 0 to disable trace (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
+	printf("     --env-context         Opaque context for use of the env implementation\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
 	if (app_usage) {
@@ -915,6 +919,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case MAX_REACTOR_DELAY_OPT_IDX:
 			SPDK_ERRLOG("Deprecation warning: The maximum allowed latency parameter is no longer supported.\n");
+			break;
+		case ENV_CONTEXT_OPT_IDX:
+			opts->env_context = optarg;
 			break;
 		case VERSION_OPT_IDX:
 			printf(SPDK_VERSION_STRING"\n");
