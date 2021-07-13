@@ -164,7 +164,6 @@ int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 struct spdk_thread *_spdk_get_app_thread(void);
 
 struct spdk_governor_capabilities {
-	bool turbo_available;
 	bool priority;
 };
 
@@ -180,17 +179,6 @@ struct spdk_governor {
 	int (*set_core_freq_max)(uint32_t lcore_id);
 	int (*set_core_freq_min)(uint32_t lcore_id);
 
-	/**
-	 * return
-	 *  - 1 Turbo Boost is enabled for this lcore.
-	 *  - 0 Turbo Boost is disabled for this lcore.
-	 *  - Negative on error.
-	 */
-	int (*get_core_turbo_status)(uint32_t lcore_id);
-
-	/* return - 0 on success; negative on error */
-	int (*enable_core_turbo)(uint32_t lcore_id);
-	int (*disable_core_turbo)(uint32_t lcore_id);
 	int (*get_core_capabilities)(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities);
 	int (*init_core)(uint32_t lcore_id);
 	int (*deinit_core)(uint32_t lcore_id);

@@ -1476,7 +1476,6 @@ static int
 _governor_get_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities)
 {
 	capabilities->priority = false;
-	capabilities->turbo_available = false;
 
 	return 0;
 }

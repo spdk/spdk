@@ -75,7 +75,6 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 	struct spdk_governor_capabilities capabilities;
 	uint32_t i;
 	int rc;
-	bool turbo_available = false;
 
 	/* Gather active/idle statistics */
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -87,19 +86,10 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 			return;
 		}
 
-		turbo_available = (capabilities.turbo_available) ? true : false;
-
 		if (core->total_busy_tsc < (core->total_idle_tsc / 1000)) {
 			rc = governor->set_core_freq_min(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("setting to minimal frequency for core %u failed\n", core->lcore);
-			}
-
-			if (turbo_available) {
-				rc = governor->disable_core_turbo(core->lcore);
-				if (rc < 0) {
-					SPDK_ERRLOG("setting to minimal frequency for core %u failed\n", core->lcore);
-				}
 			}
 
 			SPDK_DEBUGLOG(reactor, "setting to minimal frequency for core: %u\n", core->lcore);
@@ -109,13 +99,6 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 				SPDK_ERRLOG("lowering frequency for core %u failed\n", core->lcore);
 			}
 
-			if (turbo_available) {
-				rc = governor->disable_core_turbo(core->lcore);
-				if (rc < 0) {
-					SPDK_ERRLOG("disabling turbo for core %u failed\n", core->lcore);
-				}
-			}
-
 			SPDK_DEBUGLOG(reactor, "lowering frequency for core: %u\n", core->lcore);
 		} else if (core->total_idle_tsc < (core->total_busy_tsc / 1000)) {
 			rc = governor->set_core_freq_max(core->lcore);
@@ -123,25 +106,11 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 				SPDK_ERRLOG("setting to maximal frequency for core %u failed\n", core->lcore);
 			}
 
-			if (turbo_available) {
-				rc = governor->enable_core_turbo(core->lcore);
-				if (rc < 0) {
-					SPDK_ERRLOG("enabling turbo for core %u failed\n", core->lcore);
-				}
-			}
-
 			SPDK_DEBUGLOG(reactor, "setting to maximum frequency for core: %u\n", core->lcore);
 		} else {
 			rc = governor->core_freq_up(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("increasing frequency for core %u failed\n", core->lcore);
-			}
-
-			if (turbo_available) {
-				rc = governor->disable_core_turbo(core->lcore);
-				if (rc < 0) {
-					SPDK_ERRLOG("disabling turbo for core %u failed\n", core->lcore);
-				}
 			}
 
 			SPDK_DEBUGLOG(reactor, "increasing frequency for core: %u\n", core->lcore);

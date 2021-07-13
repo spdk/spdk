@@ -88,24 +88,6 @@ _set_core_freq_min(uint32_t lcore_id)
 }
 
 static int
-_get_core_turbo_status(uint32_t lcore_id)
-{
-	return rte_power_turbo_status(lcore_id);
-}
-
-static int
-_enable_core_turbo(uint32_t lcore_id)
-{
-	return rte_power_freq_enable_turbo(lcore_id);
-}
-
-static int
-_disable_core_turbo(uint32_t lcore_id)
-{
-	return rte_power_freq_disable_turbo(lcore_id);
-}
-
-static int
 _get_core_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities)
 {
 	struct rte_power_core_capabilities caps;
@@ -116,7 +98,6 @@ _get_core_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *cap
 		return rc;
 	}
 
-	capabilities->turbo_available = caps.turbo == 0 ? false : true;
 	capabilities->priority = caps.priority == 0 ? false : true;
 
 	return 0;
@@ -125,11 +106,27 @@ _get_core_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *cap
 static int
 _init_core(uint32_t lcore_id)
 {
+	struct rte_power_core_capabilities caps;
 	int rc;
 
 	rc = rte_power_init(lcore_id);
-	if (rc) {
-		SPDK_ERRLOG("DPDK Power management library initialization failed on core%d\n", lcore_id);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to initialize on core%d\n", lcore_id);
+		return rc;
+	}
+
+	rc = rte_power_get_capabilities(lcore_id, &caps);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed retrievie capabilities of core%d\n", lcore_id);
+		return rc;
+	}
+
+	if (caps.turbo) {
+		rc = rte_power_freq_enable_turbo(lcore_id);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to set turbo on core%d\n", lcore_id);
+			return rc;
+		}
 	}
 
 	return rc;
@@ -155,9 +152,6 @@ static struct spdk_governor dpdk_governor = {
 	.core_freq_down = _core_freq_down,
 	.set_core_freq_max = _set_core_freq_max,
 	.set_core_freq_min = _set_core_freq_min,
-	.get_core_turbo_status = _get_core_turbo_status,
-	.enable_core_turbo = _enable_core_turbo,
-	.disable_core_turbo = _disable_core_turbo,
 	.get_core_capabilities = _get_core_capabilities,
 	.init_core = _init_core,
 	.deinit_core = _deinit_core,
