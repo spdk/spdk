@@ -39,13 +39,6 @@
 
 #include <rte_power.h>
 
-
-static uint32_t
-_get_core_freqs(uint32_t lcore_id, uint32_t *freqs, uint32_t num)
-{
-	return rte_power_freqs(lcore_id, freqs,  num);
-}
-
 static uint32_t
 _get_core_curr_freq(uint32_t lcore_id)
 {
@@ -68,12 +61,6 @@ _get_core_curr_freq(uint32_t lcore_id)
 	}
 
 	return freqs[freq_index];
-}
-
-static int
-_set_core_freq(uint32_t lcore_id, uint32_t freq_index)
-{
-	return rte_power_set_freq(lcore_id, freq_index);
 }
 
 static int
@@ -163,9 +150,7 @@ _deinit_core(uint32_t lcore_id)
 
 static struct spdk_governor dpdk_governor = {
 	.name = "dpdk_governor",
-	.get_core_freqs = _get_core_freqs,
 	.get_core_curr_freq = _get_core_curr_freq,
-	.set_core_freq = _set_core_freq,
 	.core_freq_up = _core_freq_up,
 	.core_freq_down = _core_freq_down,
 	.set_core_freq_max = _set_core_freq_max,

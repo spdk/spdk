@@ -764,9 +764,7 @@ core_freq_max(uint32_t lcore)
 
 static struct spdk_governor governor = {
 	.name = "dpdk_governor",
-	.get_core_freqs = NULL,
 	.get_core_curr_freq = NULL,
-	.set_core_freq = NULL,
 	.core_freq_up = core_freq_up,
 	.core_freq_down = core_freq_down,
 	.set_core_freq_max = core_freq_max,
