@@ -49,16 +49,6 @@ function create_json_config() {
 	JSON
 }
 
-function create_json_config_with_subsystems() {
-	cat <<- JSON
-		{
-			"subsystems": [
-				$(create_json_config)
-			]
-		}
-	JSON
-}
-
 while getopts 'h-:' optchar; do
 	case "$optchar" in
 		-)
@@ -73,8 +63,17 @@ while getopts 'h-:' optchar; do
 	esac
 done
 
+bdev_json_cfg=$(create_json_config)
 if [[ $gen_subsystems == true ]]; then
-	create_json_config_with_subsystems
-else
-	create_json_config
+	bdev_json_cfg=$(
+		cat <<- JSON
+			{
+				"subsystems": [
+					$bdev_json_cfg
+				]
+			}
+		JSON
+	)
 fi
+
+echo "$bdev_json_cfg"
