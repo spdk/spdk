@@ -5,6 +5,18 @@ set -e
 rootdir=$(readlink -f $(dirname $0))/..
 source "$rootdir/scripts/common.sh"
 
+gen_subsystems=false
+
+function usage() {
+	echo "Script for generating JSON configuration file for attaching"
+	echo "local userspace NVMe drives."
+	echo "Usage: ${0##*/} [OPTIONS]"
+	echo
+	echo "-h, --help                     Print help and exit"
+	echo "    --json-with-subsystems     Wrap bdev subsystem JSON configuration with higher level 'subsystems' dictionary."
+	exit 0
+}
+
 function create_json_config() {
 	local bdev_json_cfg=()
 
@@ -44,9 +56,23 @@ function create_json_config_with_subsystems() {
 	JSON
 }
 
+while getopts 'h-:' optchar; do
+	case "$optchar" in
+		-)
+			case "$OPTARG" in
+				help) usage ;;
+				json-with-subsystems) gen_subsystems=true ;;
+				*) echo "Invalid argument '$OPTARG'" && usage ;;
+			esac
+			;;
+		h) usage ;;
+		*) echo "Invalid argument '$OPTARG'" && usage ;;
+	esac
+done
+
 bdfs=($(nvme_in_userspace))
 
-if [[ "$1" = "--json-with-subsystems" ]]; then
+if [[ $gen_subsystems == true ]]; then
 	create_json_config_with_subsystems
 else
 	create_json_config
