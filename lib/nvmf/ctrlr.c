@@ -359,6 +359,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		ctrlr->feat.async_event_configuration.bits.ana_change_notice = 1;
 	}
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
+	/* Coalescing Disable */
+	ctrlr->feat.interrupt_vector_configuration.bits.cd = 1;
 
 	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		/*
@@ -1423,6 +1425,23 @@ nvmf_ctrlr_get_features_temperature_threshold(struct spdk_nvmf_request *req)
 
 	/* TODO: no sensors implemented - return 0 for all thresholds */
 	rsp->cdw0 = 0;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+nvmf_ctrlr_get_features_interrupt_vector_configuration(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	union spdk_nvme_feat_interrupt_vector_configuration iv_conf = {};
+
+	SPDK_DEBUGLOG(nvmf, "Get Features - Interrupt Vector Configuration (cdw11 = 0x%0x)\n", cmd->cdw11);
+
+	iv_conf.bits.iv = cmd->cdw11_bits.feat_interrupt_vector_configuration.bits.iv;
+	iv_conf.bits.cd = ctrlr->feat.interrupt_vector_configuration.bits.cd;
+	rsp->cdw0 = iv_conf.raw;
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -2779,6 +2798,10 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		return get_features_generic(req, ctrlr->feat.volatile_write_cache.raw);
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
 		return get_features_generic(req, ctrlr->feat.number_of_queues.raw);
+	case SPDK_NVME_FEAT_INTERRUPT_COALESCING:
+		return get_features_generic(req, ctrlr->feat.interrupt_coalescing.raw);
+	case SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION:
+		return nvmf_ctrlr_get_features_interrupt_vector_configuration(req);
 	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
 		return get_features_generic(req, ctrlr->feat.write_atomicity.raw);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
