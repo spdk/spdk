@@ -5481,6 +5481,113 @@ blob_relations2(void)
 	g_bs = NULL;
 }
 
+/**
+ * Snapshot-clones relation test 3
+ *
+ *         snapshot0
+ *            |
+ *         snapshot1
+ *            |
+ *         snapshot2
+ *            |
+ *           blob
+ */
+static void
+blob_relations3(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_io_channel *channel;
+	struct spdk_bs_opts bs_opts;
+	struct spdk_blob_opts opts;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid, snapshotid0, snapshotid1, snapshotid2;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&bs_opts, sizeof(opts));
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "TESTTYPE");
+
+	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(channel != NULL);
+
+	/* 1. Create blob with 10 clusters */
+	ut_spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	blob = ut_blob_create_and_open(bs, &opts);
+	blobid = spdk_blob_get_id(blob);
+
+	/* 2. Create snapshot0 */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid0 = g_blobid;
+
+	/* 3. Create snapshot1 */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid1 = g_blobid;
+
+	/* 4. Create snapshot2 */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid2 = g_blobid;
+
+	/* 5. Decouple blob */
+	spdk_bs_blob_decouple_parent(bs, channel, blobid, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* 6. Decouple snapshot2. Make sure updating md of snapshot2 is possible */
+	spdk_bs_blob_decouple_parent(bs, channel, snapshotid2, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* 7. Delete blob */
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* 8. Delete snapshot2.
+	 * If md of snapshot 2 was updated, it should be possible to delete it */
+	spdk_bs_delete_blob(bs, snapshotid2, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Remove remaining blobs and unload bs */
+	spdk_bs_delete_blob(bs, snapshotid1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, snapshotid0, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	g_bs = NULL;
+}
+
 static void
 blobstore_clean_power_failure(void)
 {
@@ -6924,6 +7031,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_snapshot_rw_iov);
 	CU_ADD_TEST(suite, blob_relations);
 	CU_ADD_TEST(suite, blob_relations2);
+	CU_ADD_TEST(suite, blob_relations3);
 	CU_ADD_TEST(suite, blobstore_clean_power_failure);
 	CU_ADD_TEST(suite, blob_delete_snapshot_power_failure);
 	CU_ADD_TEST(suite, blob_create_snapshot_power_failure);

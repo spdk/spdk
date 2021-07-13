@@ -5561,6 +5561,7 @@ struct spdk_clone_snapshot_ctx {
 	struct {
 		spdk_blob_id id;
 		struct spdk_blob *blob;
+		bool md_ro;
 	} original;
 	struct {
 		spdk_blob_id id;
@@ -5617,6 +5618,9 @@ bs_snapshot_unfreeze_cpl(void *cb_arg, int bserrno)
 
 	ctx->original.id = origblob->id;
 	origblob->locked_operation_in_progress = false;
+
+	/* Revert md_ro to original state */
+	origblob->md_ro = ctx->original.md_ro;
 
 	spdk_blob_close(origblob, bs_clone_snapshot_cleanup_finish, ctx);
 }
@@ -5982,6 +5986,7 @@ bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	}
 
 	ctx->original.blob = _blob;
+	ctx->original.md_ro = _blob->md_ro;
 
 	if (!_blob->data_ro || !_blob->md_ro) {
 		SPDK_DEBUGLOG(blob, "Clone not from read-only blob\n");
@@ -6056,12 +6061,19 @@ bs_inflate_blob_set_parent_cpl(void *cb_arg, struct spdk_blob *_parent, int bser
 		return;
 	}
 
+	/* Temporarily override md_ro flag for MD modification */
+	_blob->md_ro = false;
+
+	bserrno = blob_set_xattr(_blob, BLOB_SNAPSHOT, &_parent->id, sizeof(spdk_blob_id), true);
+	if (bserrno != 0) {
+		bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
+		return;
+	}
+
 	assert(_parent != NULL);
 
 	bs_blob_list_remove(_blob);
 	_blob->parent_id = _parent->id;
-	blob_set_xattr(_blob, BLOB_SNAPSHOT, &_blob->parent_id,
-		       sizeof(spdk_blob_id), true);
 
 	_blob->back_bs_dev->destroy(_blob->back_bs_dev);
 	_blob->back_bs_dev = bs_create_blob_bs_dev(_parent);
@@ -6171,6 +6183,7 @@ bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	}
 
 	ctx->original.blob = _blob;
+	ctx->original.md_ro = _blob->md_ro;
 
 	if (_blob->locked_operation_in_progress) {
 		SPDK_DEBUGLOG(blob, "Cannot inflate blob - another operation in progress\n");
