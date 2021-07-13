@@ -743,6 +743,68 @@ test_nvmf_tcp_incapsule_data_handle(void)
 	CU_ASSERT(tqpair.pdu_in_progress->req == (void *)&tcp_req2);
 }
 
+static void
+test_nvmf_tcp_qpair_init_mem_resource(void)
+{
+	int rc;
+	struct spdk_nvmf_tcp_qpair *tqpair = NULL;
+	struct spdk_nvmf_transport transport = {};
+
+	tqpair = calloc(1, sizeof(*tqpair));
+	tqpair->qpair.transport = &transport;
+
+	nvmf_tcp_opts_init(&transport.opts);
+	CU_ASSERT(transport.opts.max_queue_depth == SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH);
+	CU_ASSERT(transport.opts.max_qpairs_per_ctrlr == SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR);
+	CU_ASSERT(transport.opts.in_capsule_data_size == SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE);
+	CU_ASSERT(transport.opts.max_io_size ==	SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE);
+	CU_ASSERT(transport.opts.io_unit_size == SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE);
+	CU_ASSERT(transport.opts.max_aq_depth == SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH);
+	CU_ASSERT(transport.opts.num_shared_buffers == SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS);
+	CU_ASSERT(transport.opts.buf_cache_size == SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE);
+	CU_ASSERT(transport.opts.dif_insert_or_strip ==	SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP);
+	CU_ASSERT(transport.opts.abort_timeout_sec == SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC);
+	CU_ASSERT(transport.opts.transport_specific == NULL);
+
+	rc = nvmf_tcp_qpair_init(&tqpair->qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tqpair->host_hdgst_enable == true);
+	CU_ASSERT(tqpair->host_ddgst_enable == true);
+
+	rc = nvmf_tcp_qpair_init_mem_resource(tqpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tqpair->resource_count == SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH);
+	CU_ASSERT(tqpair->reqs != NULL);
+	CU_ASSERT(tqpair->bufs != NULL);
+	CU_ASSERT(tqpair->pdus != NULL);
+	/* Just to check the first and last entry */
+	CU_ASSERT(tqpair->reqs[0].ttag == 1);
+	CU_ASSERT(tqpair->reqs[0].req.qpair == &tqpair->qpair);
+	CU_ASSERT(tqpair->reqs[0].pdu == &tqpair->pdus[0]);
+	CU_ASSERT(tqpair->reqs[0].pdu->qpair == &tqpair->qpair);
+	CU_ASSERT(tqpair->reqs[0].buf == (void *)((uintptr_t)tqpair->bufs));
+	CU_ASSERT(tqpair->reqs[0].req.rsp == (void *)&tqpair->reqs[0].rsp);
+	CU_ASSERT(tqpair->reqs[0].req.cmd == (void *)&tqpair->reqs[0].cmd);
+	CU_ASSERT(tqpair->reqs[0].state == TCP_REQUEST_STATE_FREE);
+	CU_ASSERT(tqpair->reqs[127].ttag == 128);
+	CU_ASSERT(tqpair->reqs[127].req.qpair == &tqpair->qpair);
+	CU_ASSERT(tqpair->reqs[127].pdu == &tqpair->pdus[127]);
+	CU_ASSERT(tqpair->reqs[127].pdu->qpair == &tqpair->qpair);
+	CU_ASSERT(tqpair->reqs[127].buf == (void *)((uintptr_t)tqpair->bufs) + 127 * 4096);
+	CU_ASSERT(tqpair->reqs[127].req.rsp == (void *)&tqpair->reqs[127].rsp);
+	CU_ASSERT(tqpair->reqs[127].req.cmd == (void *)&tqpair->reqs[127].cmd);
+	CU_ASSERT(tqpair->reqs[127].state == TCP_REQUEST_STATE_FREE);
+	CU_ASSERT(tqpair->state_cntr[TCP_REQUEST_STATE_FREE] == SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH);
+	CU_ASSERT(tqpair->mgmt_pdu == &tqpair->pdus[SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH]);
+	CU_ASSERT(tqpair->mgmt_pdu->qpair == tqpair);
+	CU_ASSERT(tqpair->pdu_in_progress == &tqpair->pdus[SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH + 1]);
+	CU_ASSERT(tqpair->recv_buf_size == (4096 + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
+					    SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR);
+
+	/* Free all of tqpair resource */
+	nvmf_tcp_qpair_destroy(tqpair);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -759,6 +821,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_data);
 	CU_ADD_TEST(suite, test_nvmf_tcp_h2c_data_hdr_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_incapsule_data_handle);
+	CU_ADD_TEST(suite, test_nvmf_tcp_qpair_init_mem_resource);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
