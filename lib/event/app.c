@@ -657,7 +657,7 @@ usage(void (*app_usage)(void))
 	printf("                           force creating just one hugetlbfs file\n");
 	printf(" -h, --help                show this usage\n");
 	printf(" -i, --shm-id <id>         shared memory ID (optional)\n");
-	printf(" -m, --cpumask <mask>      core mask for DPDK\n");
+	printf(" -m, --cpumask <mask or list>    core mask (like 0xF) or core list of '[]' embraced (like [0,1,10]) for DPDK\n");
 	printf(" -n, --mem-channels <num>  channel number of memory channels used for DPDK\n");
 	printf(" -p, --main-core <id>      main (primary) core for DPDK\n");
 	printf(" -r, --rpc-socket <path>   RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
