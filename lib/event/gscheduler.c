@@ -41,41 +41,32 @@
 #include "spdk/env.h"
 
 static int
-init(struct spdk_governor *governor)
+init(void)
 {
 	return _spdk_governor_set("dpdk_governor");
 }
 
-static int
-deinit(struct spdk_governor *governor)
+static void
+deinit(void)
 {
-	uint32_t i;
-	int rc = 0;
+	struct spdk_governor *governor;
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (governor->deinit_core) {
-			rc = governor->deinit_core(i);
-			if (rc != 0) {
-				return rc;
-			}
-		}
-	}
-
+	governor = _spdk_governor_get();
 	if (governor->deinit) {
-		rc = governor->deinit();
+		governor->deinit();
 	}
-
-	return rc;
 }
 
 static void
-balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_governor *governor)
+balance(struct spdk_scheduler_core_info *cores, int core_count)
 {
+	struct spdk_governor *governor;
 	struct spdk_scheduler_core_info *core;
 	struct spdk_governor_capabilities capabilities;
 	uint32_t i;
 	int rc;
 
+	governor = _spdk_governor_get();
 	/* Gather active/idle statistics */
 	SPDK_ENV_FOREACH_CORE(i) {
 		core = &cores[i];

@@ -180,10 +180,8 @@ struct spdk_governor {
 	int (*set_core_freq_min)(uint32_t lcore_id);
 
 	int (*get_core_capabilities)(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities);
-	int (*init_core)(uint32_t lcore_id);
-	int (*deinit_core)(uint32_t lcore_id);
 	int (*init)(void);
-	int (*deinit)(void);
+	void (*deinit)(void);
 
 	TAILQ_ENTRY(spdk_governor) link;
 };
@@ -256,20 +254,19 @@ struct spdk_scheduler_core_info {
  * Scheduler balance function type.
  * Accepts array of core_info which is of size 'count' and returns updated array.
  */
-typedef void (*spdk_scheduler_balance_fn)(struct spdk_scheduler_core_info *core_info, int count,
-		struct spdk_governor *governor);
+typedef void (*spdk_scheduler_balance_fn)(struct spdk_scheduler_core_info *core_info, int count);
 
 /**
  * Scheduler init function type.
  * Called on scheduler module initialization.
  */
-typedef int (*spdk_scheduler_init_fn)(struct spdk_governor *governor);
+typedef int (*spdk_scheduler_init_fn)(void);
 
 /**
  * Scheduler deinitialization function type.
  * Called on reactor fini.
  */
-typedef int (*spdk_scheduler_deinit_fn)(struct spdk_governor *governor);
+typedef void (*spdk_scheduler_deinit_fn)(void);
 
 /** Thread scheduler */
 struct spdk_scheduler {

@@ -221,7 +221,7 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 }
 
 static int
-init(struct spdk_governor *governor)
+init(void)
 {
 	int rc;
 
@@ -239,33 +239,18 @@ init(struct spdk_governor *governor)
 	return 0;
 }
 
-static int
-deinit(struct spdk_governor *governor)
+static void
+deinit(void)
 {
-	uint32_t i;
-	int rc = 0;
+	struct spdk_governor *governor;
 
 	free(g_cores);
 	g_cores = NULL;
 
-	if (!g_core_mngmnt_available) {
-		return 0;
-	}
-
-	if (governor->deinit_core) {
-		SPDK_ENV_FOREACH_CORE(i) {
-			rc = governor->deinit_core(i);
-			if (rc != 0) {
-				SPDK_ERRLOG("Failed to deinitialize governor for core %d\n", i);
-			}
-		}
-	}
-
+	governor = _spdk_governor_get();
 	if (governor->deinit) {
-		rc = governor->deinit();
+		governor->deinit();
 	}
-
-	return rc;
 }
 
 static void
@@ -293,10 +278,10 @@ _balance_active(struct spdk_scheduler_thread_info *thread_info)
 }
 
 static void
-balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
-	struct spdk_governor *governor)
+balance(struct spdk_scheduler_core_info *cores_info, int cores_count)
 {
 	struct spdk_reactor *reactor;
+	struct spdk_governor *governor;
 	struct spdk_scheduler_core_info *core;
 	struct core_stats *main_core;
 	uint32_t i;
@@ -338,6 +323,7 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count,
 		return;
 	}
 
+	governor = _spdk_governor_get();
 	/* Change main core frequency if needed */
 	if (busy_threads_present) {
 		rc = governor->set_core_freq_max(g_main_lcore);

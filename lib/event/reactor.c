@@ -120,7 +120,7 @@ _spdk_scheduler_set(char *name)
 		}
 	} else {
 		if (g_scheduler != NULL && g_scheduler->deinit != NULL) {
-			g_scheduler->deinit(&g_governor);
+			g_scheduler->deinit();
 		}
 		g_scheduler = scheduler;
 	}
@@ -128,7 +128,7 @@ _spdk_scheduler_set(char *name)
 	g_new_scheduler = scheduler;
 
 	if (scheduler->init != NULL) {
-		scheduler->init(&g_governor);
+		scheduler->init();
 	}
 
 	return 0;
@@ -306,7 +306,7 @@ spdk_reactors_fini(void)
 	}
 
 	if (g_scheduler->deinit != NULL) {
-		g_scheduler->deinit(&g_governor);
+		g_scheduler->deinit();
 	}
 
 	spdk_thread_lib_fini();
@@ -757,7 +757,7 @@ static void
 _reactors_scheduler_balance(void *arg1, void *arg2)
 {
 	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING) {
-		g_scheduler->balance(g_core_infos, g_reactor_count, &g_governor);
+		g_scheduler->balance(g_core_infos, g_reactor_count);
 
 		g_scheduler_core_number = spdk_env_get_first_core();
 		_reactors_scheduler_update_core_mode(NULL);
@@ -964,7 +964,7 @@ reactor_run(void *arg)
 				  !g_scheduling_in_progress)) {
 			if (spdk_unlikely(g_scheduler != g_new_scheduler)) {
 				if (g_scheduler->deinit != NULL) {
-					g_scheduler->deinit(&g_governor);
+					g_scheduler->deinit();
 				}
 				g_scheduler = g_new_scheduler;
 			}
@@ -1503,33 +1503,21 @@ int
 _spdk_governor_set(char *name)
 {
 	struct spdk_governor *governor;
-	uint32_t i;
-	int rc;
+	int rc = 0;
 
 	governor = _governor_find(name);
 	if (governor == NULL) {
 		return -EINVAL;
 	}
 
-	g_governor = *governor;
-
-	if (g_governor.init) {
-		rc = g_governor.init();
-		if (rc != 0) {
-			return rc;
-		}
+	if (governor->init) {
+		rc = governor->init();
 	}
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (g_governor.init_core) {
-			rc = g_governor.init_core(i);
-			if (rc != 0) {
-				return rc;
-			}
-		}
+	if (rc == 0) {
+		g_governor = *governor;
 	}
-
-	return 0;
+	return rc;
 }
 
 struct spdk_governor *

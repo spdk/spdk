@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
 #include "spdk/event.h"
 
 #include "spdk_internal/event.h"
@@ -133,16 +134,45 @@ _init_core(uint32_t lcore_id)
 }
 
 static int
-_deinit_core(uint32_t lcore_id)
+_init(void)
 {
-	int rc;
+	uint32_t i, j;
+	int rc = 0;
 
-	rc = rte_power_exit(lcore_id);
-	if (rc) {
-		SPDK_ERRLOG("DPDK Power management library deinitialization failed on core%d\n", lcore_id);
+	SPDK_ENV_FOREACH_CORE(i) {
+		rc = _init_core(i);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to initialize on core%d\n", i);
+			break;
+		}
 	}
 
+	if (rc == 0) {
+		return rc;
+	}
+
+	/* When initalization of a core failed, deinitalize prior cores. */
+	SPDK_ENV_FOREACH_CORE(j) {
+		if (j >= i) {
+			break;
+		}
+		if (rte_power_exit(j) != 0) {
+			SPDK_ERRLOG("Failed to deinitialize on core%d\n", j);
+		}
+	}
 	return rc;
+}
+
+static void
+_deinit(void)
+{
+	uint32_t i;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (rte_power_exit(i) != 0) {
+			SPDK_ERRLOG("Failed to deinitialize on core%d\n", i);
+		}
+	}
 }
 
 static struct spdk_governor dpdk_governor = {
@@ -153,10 +183,8 @@ static struct spdk_governor dpdk_governor = {
 	.set_core_freq_max = _set_core_freq_max,
 	.set_core_freq_min = _set_core_freq_min,
 	.get_core_capabilities = _get_core_capabilities,
-	.init_core = _init_core,
-	.deinit_core = _deinit_core,
-	.init = NULL,
-	.deinit = NULL,
+	.init = _init,
+	.deinit = _deinit,
 };
 
 SPDK_GOVERNOR_REGISTER(&dpdk_governor);

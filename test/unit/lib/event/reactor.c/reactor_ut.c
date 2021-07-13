@@ -770,8 +770,6 @@ static struct spdk_governor governor = {
 	.set_core_freq_max = core_freq_max,
 	.set_core_freq_min = NULL,
 	.get_core_capabilities = NULL,
-	.init_core = NULL,
-	.deinit_core = NULL,
 	.init = NULL,
 	.deinit = NULL,
 };
