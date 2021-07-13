@@ -1475,13 +1475,6 @@ reactor_interrupt_fini(struct spdk_reactor *reactor)
 static int
 _governor_get_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities)
 {
-	capabilities->freq_change = false;
-	capabilities->freq_getset = false;
-	capabilities->freq_up = false;
-	capabilities->freq_down = false;
-	capabilities->freq_max = false;
-	capabilities->freq_min = false;
-	capabilities->turbo_set = false;
 	capabilities->priority = false;
 	capabilities->turbo_available = false;
 

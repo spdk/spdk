@@ -388,7 +388,6 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	struct spdk_thread *thread;
 	struct spdk_cpuset tmp_mask = {};
 	struct spdk_governor *governor;
-	struct spdk_governor_capabilities capabilities;
 
 	current_core = spdk_env_get_current_core();
 	reactor = spdk_reactor_get(current_core);
@@ -401,13 +400,10 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
 	governor = _spdk_governor_get();
 	/* We need to check whether governor can return current core frequency. */
-	if (governor->get_core_capabilities && governor->get_core_freqs) {
-		governor->get_core_capabilities(current_core, &capabilities);
-		if (capabilities.freq_getset) {
-			/* Governor returns core freqs in kHz, we want MHz. */
-			curr_core_freq = governor->get_core_curr_freq(current_core) / 1000;
-			spdk_json_write_named_uint32(ctx->w, "core_freq", curr_core_freq);
-		}
+	if (governor->get_core_curr_freq != NULL) {
+		/* Governor returns core freqs in kHz, we want MHz. */
+		curr_core_freq = governor->get_core_curr_freq(current_core) / 1000;
+		spdk_json_write_named_uint32(ctx->w, "core_freq", curr_core_freq);
 	}
 
 	spdk_json_write_named_array_begin(ctx->w, "lw_threads");

@@ -87,7 +87,7 @@ balance(struct spdk_scheduler_core_info *cores, int core_count, struct spdk_gove
 			return;
 		}
 
-		turbo_available = (capabilities.turbo_available && capabilities.turbo_set) ? true : false;
+		turbo_available = (capabilities.turbo_available) ? true : false;
 
 		if (core->total_busy_tsc < (core->total_idle_tsc / 1000)) {
 			rc = governor->set_core_freq_min(core->lcore);

@@ -164,13 +164,6 @@ int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 struct spdk_thread *_spdk_get_app_thread(void);
 
 struct spdk_governor_capabilities {
-	bool freq_change;
-	bool freq_getset;
-	bool freq_up;
-	bool freq_down;
-	bool freq_max;
-	bool freq_min;
-	bool turbo_set;
 	bool turbo_available;
 	bool priority;
 };

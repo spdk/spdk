@@ -131,13 +131,6 @@ _get_core_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *cap
 
 	capabilities->turbo_available = caps.turbo == 0 ? false : true;
 	capabilities->priority = caps.priority == 0 ? false : true;
-	capabilities->freq_change = true;
-	capabilities->freq_getset = true;
-	capabilities->freq_up = true;
-	capabilities->freq_down = true;
-	capabilities->freq_max = true;
-	capabilities->freq_min = true;
-	capabilities->turbo_set = true;
 
 	return 0;
 }
