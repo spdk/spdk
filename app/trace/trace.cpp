@@ -197,6 +197,7 @@ get_next_buffer(struct spdk_trace_entry_buffer *buf, uint16_t lcore)
 	struct spdk_trace_history *history;
 
 	history = spdk_get_per_lcore_history(g_histories, lcore);
+	assert(history);
 
 	if (spdk_unlikely((void *)buf == &history->entries[history->num_entries - 1])) {
 		return (struct spdk_trace_entry_buffer *)&history->entries[0];
