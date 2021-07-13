@@ -19,6 +19,9 @@ function usage() {
 
 function create_json_config() {
 	local bdev_json_cfg=()
+	local bdfs=()
+
+	bdfs=($(nvme_in_userspace))
 
 	for i in "${!bdfs[@]}"; do
 		bdev_json_cfg+=("$(
@@ -69,8 +72,6 @@ while getopts 'h-:' optchar; do
 		*) echo "Invalid argument '$OPTARG'" && usage ;;
 	esac
 done
-
-bdfs=($(nvme_in_userspace))
 
 if [[ $gen_subsystems == true ]]; then
 	create_json_config_with_subsystems
