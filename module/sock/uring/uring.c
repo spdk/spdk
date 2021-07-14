@@ -48,6 +48,7 @@
 
 #include "spdk_internal/sock.h"
 #include "spdk_internal/assert.h"
+#include "../sock_kernel.h"
 
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
@@ -135,35 +136,6 @@ uring_sock_map_cleanup(void)
 }
 
 #define SPDK_URING_SOCK_REQUEST_IOV(req) ((struct iovec *)((uint8_t *)req + sizeof(struct spdk_sock_request)))
-
-static int
-get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
-{
-	const char *result = NULL;
-
-	if (sa == NULL || host == NULL) {
-		return -1;
-	}
-
-	switch (sa->sa_family) {
-	case AF_INET:
-		result = inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
-				   host, hlen);
-		break;
-	case AF_INET6:
-		result = inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
-				   host, hlen);
-		break;
-	default:
-		break;
-	}
-
-	if (result != NULL) {
-		return 0;
-	} else {
-		return -1;
-	}
-}
 
 #define __uring_sock(sock) (struct spdk_uring_sock *)sock
 #define __uring_group_impl(group) (struct spdk_uring_sock_group_impl *)group
@@ -565,7 +537,7 @@ retry:
 		return NULL;
 	}
 
-	enable_zcopy_user_opts = opts->zcopy;
+	enable_zcopy_user_opts = opts->zcopy && !sock_is_loopback(fd);
 	sock = uring_sock_alloc(fd, enable_zcopy_user_opts && enable_zcopy_impl_opts);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
