@@ -1296,6 +1296,17 @@ test_reservation_preempt_notification(void)
 	ut_reservation_deinit();
 }
 
+static int
+nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+}
+
 static void
 test_spdk_nvmf_ns_event(void)
 {
@@ -1318,6 +1329,12 @@ test_spdk_nvmf_ns_event(void)
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
 	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+
+	spdk_io_device_register(&tgt,
+				nvmf_tgt_create_poll_group,
+				nvmf_tgt_destroy_poll_group,
+				sizeof(struct spdk_nvmf_poll_group),
+				NULL);
 
 	/* Add one namespace */
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
@@ -1358,6 +1375,10 @@ test_spdk_nvmf_ns_event(void)
 	CU_ASSERT(&ctrlr == g_ns_changed_ctrlr);
 	CU_ASSERT(NULL == subsystem.ns[0]);
 	CU_ASSERT(SPDK_NVMF_SUBSYSTEM_ACTIVE == subsystem.state);
+
+	spdk_io_device_unregister(&tgt, NULL);
+
+	poll_threads();
 
 	free(subsystem.ns);
 	free(tgt.subsystems);
