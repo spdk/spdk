@@ -1287,7 +1287,7 @@ nvmf_property_set(struct spdk_nvmf_request *req)
 
 	prop = find_prop(cmd->ofst, size);
 	if (prop == NULL || prop->set_cb == NULL) {
-		SPDK_ERRLOG("Invalid offset 0x%x\n", cmd->ofst);
+		SPDK_INFOLOG(nvmf, "Invalid offset 0x%x\n", cmd->ofst);
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2918,7 +2918,7 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT:
 		return nvmf_ctrlr_set_features_host_behavior_support(req);
 	default:
-		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
+		SPDK_INFOLOG(nvmf, "Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
