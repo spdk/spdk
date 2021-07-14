@@ -150,14 +150,14 @@ function vhost_run() {
 		return 1
 	fi
 
-	local cmd="$vhost_app -r $vhost_dir/rpc.sock $vhost_args"
+	local cmd="$vhost_app -r $vhost_dir/rpc.sock -S $vhost_dir $vhost_args"
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
 	notice "Command:     $cmd"
 
 	timing_enter vhost_start
-	cd $vhost_dir
+
 	$cmd &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
@@ -170,6 +170,7 @@ function vhost_run() {
 	fi
 
 	notice "vhost started - pid=$vhost_pid"
+
 	timing_exit vhost_start
 }
 
