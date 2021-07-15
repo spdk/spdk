@@ -1160,6 +1160,25 @@ out:
 	return post_completion(ctrlr, cmd, &ctrlr->qp[0]->cq, 0, sc, sct);
 }
 
+/* For ADMIN I/O DELETE COMPLETION QUEUE the NVMf library will disconnect and free
+ * queue pair, so save the command in a context.
+ */
+struct vfio_user_delete_cq_ctx {
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+	struct spdk_nvme_cmd delete_io_cq_cmd;
+};
+
+static void
+vfio_user_qpair_delete_cb(void *cb_arg)
+{
+	struct vfio_user_delete_cq_ctx *ctx = cb_arg;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx->vu_ctrlr;
+
+	post_completion(vu_ctrlr, &ctx->delete_io_cq_cmd, &vu_ctrlr->qp[0]->cq, 0,
+			SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
+	free(ctx);
+}
+
 /*
  * Deletes a completion or sumbission I/O queue.
  */
@@ -1169,6 +1188,8 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 {
 	uint16_t sct = SPDK_NVME_SCT_GENERIC;
 	uint16_t sc = SPDK_NVME_SC_SUCCESS;
+	struct nvmf_vfio_user_qpair *vu_qpair;
+	struct vfio_user_delete_cq_ctx *ctx;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: delete I/O %cQ: QID=%d\n",
 		      ctrlr_id(ctrlr), is_cq ? 'C' : 'S',
@@ -1182,25 +1203,33 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		goto out;
 	}
 
+	vu_qpair = ctrlr->qp[cmd->cdw10_bits.delete_io_q.qid];
 	if (is_cq) {
 		/* SQ must have been deleted first */
-		if (ctrlr->qp[cmd->cdw10_bits.delete_io_q.qid]->state != VFIO_USER_QPAIR_DELETED) {
+		if (vu_qpair->state != VFIO_USER_QPAIR_DELETED) {
 			SPDK_ERRLOG("%s: the associated SQ must be deleted first\n", ctrlr_id(ctrlr));
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			sc = SPDK_NVME_SC_INVALID_QUEUE_DELETION;
 			goto out;
 		}
+		ctx = calloc(1, sizeof(*ctx));
+		if (!ctx) {
+			sct = SPDK_NVME_SCT_GENERIC;
+			sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			goto out;
+		}
+		ctx->vu_ctrlr = ctrlr;
+		ctx->delete_io_cq_cmd = *cmd;
+		spdk_nvmf_qpair_disconnect(&vu_qpair->qpair, vfio_user_qpair_delete_cb, ctx);
+		return 0;
 	} else {
 		/*
-		 * This doesn't actually delete the I/O queue, we can't
-		 * do that anyway because NVMf doesn't support it. We're merely
-		 * telling the poll_group_poll function to skip checking this
-		 * queue. The only workflow this works is when CC.EN is set to
-		 * 0 and we're stopping the subsystem, so we know that the
-		 * relevant callbacks to destroy the queues will be called.
+		 * This doesn't actually delete the SQ, We're merely telling the poll_group_poll
+		 * function to skip checking this SQ.  The queue pair will be disconnected in Delete
+		 * IO CQ command.
 		 */
-		assert(ctrlr->qp[cmd->cdw10_bits.delete_io_q.qid]->state == VFIO_USER_QPAIR_ACTIVE);
-		ctrlr->qp[cmd->cdw10_bits.delete_io_q.qid]->state = VFIO_USER_QPAIR_DELETED;
+		assert(vu_qpair->state == VFIO_USER_QPAIR_ACTIVE);
+		vu_qpair->state = VFIO_USER_QPAIR_DELETED;
 	}
 
 out:
