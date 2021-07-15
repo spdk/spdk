@@ -39,10 +39,26 @@
 
 #include "spdk_internal/event.h"
 
+static int
+init_static(void)
+{
+	return 0;
+}
+
+static void
+deinit_static(void)
+{
+}
+
+static void
+balance_static(struct spdk_scheduler_core_info *cores, int core_count)
+{
+}
+
 static struct spdk_scheduler scheduler = {
 	.name = "static",
-	.init = NULL,
-	.deinit = NULL,
-	.balance = NULL,
+	.init = init_static,
+	.deinit = deinit_static,
+	.balance = balance_static,
 };
 SPDK_SCHEDULER_REGISTER(scheduler);

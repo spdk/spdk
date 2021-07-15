@@ -291,7 +291,10 @@ struct spdk_scheduler {
 void _spdk_scheduler_list_add(struct spdk_scheduler *scheduler);
 
 /**
- * Change current scheduler.
+ * Change current scheduler. If another scheduler was used prior,
+ * it will be deinitalized. No scheduler will be set if name parameter
+ * is NULL.
+ * This function should be invoked from scheduling reactor.
  *
  * \param name Name of the scheduler to be used.
  *

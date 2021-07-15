@@ -66,8 +66,7 @@ static struct spdk_mempool *g_spdk_event_mempool = NULL;
 TAILQ_HEAD(, spdk_scheduler) g_scheduler_list
 	= TAILQ_HEAD_INITIALIZER(g_scheduler_list);
 
-static struct spdk_scheduler *g_scheduler;
-static struct spdk_scheduler *g_new_scheduler;
+static struct spdk_scheduler *g_scheduler = NULL;
 static struct spdk_reactor *g_scheduling_reactor;
 bool g_scheduling_in_progress = false;
 static uint64_t g_scheduler_period;
@@ -100,32 +99,36 @@ int
 _spdk_scheduler_set(char *name)
 {
 	struct spdk_scheduler *scheduler;
+	int rc = 0;
+
+	/* NULL scheduler was specifically requested */
+	if (name == NULL) {
+		if (g_scheduler) {
+			g_scheduler->deinit();
+		}
+		g_scheduler = NULL;
+		return 0;
+	}
 
 	scheduler = _scheduler_find(name);
 	if (scheduler == NULL) {
 		SPDK_ERRLOG("Requested scheduler is missing\n");
-		return -ENOENT;
+		return -EINVAL;
 	}
 
-	if (g_scheduling_in_progress) {
-		if (g_scheduler != g_new_scheduler) {
-			/* Scheduler already changed, cannot defer multiple deinits */
-			return -EBUSY;
-		}
-	} else {
-		if (g_scheduler != NULL && g_scheduler->deinit != NULL) {
+	if (g_scheduler == scheduler) {
+		return 0;
+	}
+
+	rc = scheduler->init();
+	if (rc == 0) {
+		if (g_scheduler) {
 			g_scheduler->deinit();
 		}
 		g_scheduler = scheduler;
 	}
 
-	g_new_scheduler = scheduler;
-
-	if (scheduler->init != NULL) {
-		scheduler->init();
-	}
-
-	return 0;
+	return rc;
 }
 
 struct spdk_scheduler *
@@ -299,9 +302,7 @@ spdk_reactors_fini(void)
 		return;
 	}
 
-	if (g_scheduler->deinit != NULL) {
-		g_scheduler->deinit();
-	}
+	_spdk_scheduler_set(NULL);
 
 	spdk_thread_lib_fini();
 
@@ -750,8 +751,10 @@ _reactors_scheduler_update_core_mode(void *ctx)
 static void
 _reactors_scheduler_balance(void *arg1, void *arg2)
 {
-	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING) {
-		g_scheduler->balance(g_core_infos, g_reactor_count);
+	struct spdk_scheduler *scheduler = _spdk_scheduler_get();
+
+	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING && scheduler != NULL) {
+		scheduler->balance(g_core_infos, g_reactor_count);
 
 		g_scheduler_core_number = spdk_env_get_first_core();
 		_reactors_scheduler_update_core_mode(NULL);
@@ -956,18 +959,9 @@ reactor_run(void *arg)
 				  (reactor->tsc_last - last_sched) > g_scheduler_period &&
 				  reactor == g_scheduling_reactor &&
 				  !g_scheduling_in_progress)) {
-			if (spdk_unlikely(g_scheduler != g_new_scheduler)) {
-				if (g_scheduler->deinit != NULL) {
-					g_scheduler->deinit();
-				}
-				g_scheduler = g_new_scheduler;
-			}
-
-			if (spdk_unlikely(g_scheduler->balance != NULL)) {
-				last_sched = reactor->tsc_last;
-				g_scheduling_in_progress = true;
-				_reactors_scheduler_gather_metrics(NULL, NULL);
-			}
+			last_sched = reactor->tsc_last;
+			g_scheduling_in_progress = true;
+			_reactors_scheduler_gather_metrics(NULL, NULL);
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
