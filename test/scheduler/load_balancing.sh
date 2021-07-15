@@ -23,10 +23,8 @@ busy() {
 
 	fold_list_onto_array selected_cpus "${cpus[@]:1:2}"
 
-	thread0_name=thread0
-	thread0=$(create_thread -n "$thread0_name" -m "$(mask_cpus "${selected_cpus[@]}")" -a 100)
-	thread1_name=thread1
-	thread1=$(create_thread -n "$thread1_name" -m "$(mask_cpus "${selected_cpus[@]}")" -a 100)
+	thread0=$(create_thread -n "thread0" -m "$(mask_cpus "${selected_cpus[@]}")" -a 100)
+	thread1=$(create_thread -n "thread1" -m "$(mask_cpus "${selected_cpus[@]}")" -a 100)
 
 	local samples=0
 
@@ -94,8 +92,7 @@ balanced() {
 	# Exclude main cpu
 	fold_list_onto_array selected_cpus "${cpus[@]:1}"
 
-	thread0_name=thread0
-	thread0=$(create_thread -n "$thread0_name" -m "$(mask_cpus "${selected_cpus[@]}")" -a 0)
+	thread0=$(create_thread -n "thread0" -m "$(mask_cpus "${selected_cpus[@]}")" -a 0)
 	for cpu in "${selected_cpus[@]::${#selected_cpus[@]}-1}"; do
 		extra_threads+=("$(create_thread -n "thread_cpu_$cpu" -m "$(mask_cpus "$cpu")" -a 100)")
 	done
