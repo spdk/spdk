@@ -141,6 +141,9 @@ struct nvmf_vfio_user_qpair {
 	struct nvme_q				sq;
 	enum nvmf_vfio_user_qpair_state		state;
 
+	/* Copy of Create IO SQ command */
+	struct spdk_nvme_cmd			create_io_sq_cmd;
+
 	TAILQ_HEAD(, nvmf_vfio_user_req)	reqs;
 	TAILQ_ENTRY(nvmf_vfio_user_qpair)	link;
 };
@@ -1038,6 +1041,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	uint16_t sc = SPDK_NVME_SC_SUCCESS;
 	uint16_t sct = SPDK_NVME_SCT_GENERIC;
 	int err = 0;
+	struct nvmf_vfio_user_qpair *vu_qpair;
 	struct nvme_q *io_q;
 	int prot;
 
@@ -1075,7 +1079,6 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		goto out;
 	}
 
-	/* TODO break rest of this function into smaller functions */
 	if (is_cq) {
 		err = init_qp(ctrlr, ctrlr->qp[0]->qpair.transport, qsize,
 			      cmd->cdw10_bits.create_io_q.qid);
@@ -1087,12 +1090,6 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		io_q = &ctrlr->qp[cmd->cdw10_bits.create_io_q.qid]->cq;
 		entry_size = sizeof(struct spdk_nvme_cpl);
 		if (cmd->cdw11_bits.create_io_cq.pc != 0x1) {
-			/*
-			 * TODO CAP.CMBS is currently set to zero, however we
-			 * should zero it out explicitly when CAP is read.
-			 * Support for CAP.CMBS is not mentioned in the NVMf
-			 * spec.
-			 */
 			SPDK_ERRLOG("%s: non-PC CQ not supporred\n", ctrlr_id(ctrlr));
 			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
 			goto out;
@@ -1146,16 +1143,17 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	if (is_cq) {
 		*hdbl(ctrlr, io_q) = 0;
 	} else {
-		/*
-		 * After we've returned from the nvmf_vfio_user_poll_group_poll thread, once
-		 * nvmf_vfio_user_accept executes it will pick up this QP and will eventually
-		 * call nvmf_vfio_user_poll_group_add. The rest of the opertion needed to
-		 * complete the addition of the queue will be continued at the
-		 * completion callback.
+		/* After we've returned here, on the next time nvmf_vfio_user_accept executes it will
+		 * pick up this qpair and will eventually call nvmf_vfio_user_poll_group_add which will
+		 * call spdk_nvmf_request_exec_fabrics with a generated fabrics connect command. That
+		 * will then call handle_queue_connect_rsp, which is where we ultimately complete
+		 * this command.
 		 */
-		TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, ctrlr->qp[cmd->cdw10_bits.create_io_q.qid], link);
+		vu_qpair = ctrlr->qp[cmd->cdw10_bits.create_io_q.qid];
+		vu_qpair->create_io_sq_cmd = *cmd;
+		TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, vu_qpair, link);
 		*tdbl(ctrlr, io_q) = 0;
-
+		return 0;
 	}
 
 out:
@@ -2268,6 +2266,13 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		ctrlr->cntlid = qpair->qpair.ctrlr->cntlid;
 		ctrlr->thread = spdk_get_thread();
 		ctrlr->mmio_poller = SPDK_POLLER_REGISTER(vfio_user_poll_mmio, ctrlr, 0);
+	} else {
+		/* For I/O queues this command was generated in response to an
+		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
+		 * been completed. Complete it now.
+		 */
+		post_completion(ctrlr, &qpair->create_io_sq_cmd, &ctrlr->qp[0]->cq, 0,
+				SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 	}
 	ctrlr->num_connected_qps++;
 	pthread_mutex_unlock(&endpoint->lock);
