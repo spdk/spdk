@@ -220,9 +220,9 @@ struct spdk_governor *_spdk_governor_get(void);
  * Macro used to register new cores governor.
  */
 #define SPDK_GOVERNOR_REGISTER(governor) \
-	static void __attribute__((constructor)) _spdk_governor_register_##name(void) \
+	static void __attribute__((constructor)) _spdk_governor_register_ ## governor(void) \
 	{ \
-		_spdk_governor_list_add(governor); \
+		_spdk_governor_list_add(&governor); \
 	} \
 
 /**

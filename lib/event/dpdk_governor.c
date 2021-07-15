@@ -187,4 +187,4 @@ static struct spdk_governor dpdk_governor = {
 	.deinit = _deinit,
 };
 
-SPDK_GOVERNOR_REGISTER(&dpdk_governor);
+SPDK_GOVERNOR_REGISTER(dpdk_governor);
