@@ -762,16 +762,22 @@ core_freq_max(uint32_t lcore)
 	return 0;
 }
 
+DEFINE_STUB(core_freq_min, int, (uint32_t lcore_id), 0);
+DEFINE_STUB(core_caps, int,
+	    (uint32_t lcore_id, struct spdk_governor_capabilities *capabilities), 0);
+DEFINE_STUB(governor_init, int, (void), 0);
+DEFINE_STUB_V(governor_deinit, (void));
+
 static struct spdk_governor governor = {
 	.name = "dpdk_governor",
 	.get_core_curr_freq = NULL,
 	.core_freq_up = core_freq_up,
 	.core_freq_down = core_freq_down,
 	.set_core_freq_max = core_freq_max,
-	.set_core_freq_min = NULL,
-	.get_core_capabilities = NULL,
-	.init = NULL,
-	.deinit = NULL,
+	.set_core_freq_min = core_freq_min,
+	.get_core_capabilities = core_caps,
+	.init = governor_init,
+	.deinit = governor_deinit,
 };
 
 static void

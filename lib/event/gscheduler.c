@@ -49,12 +49,7 @@ init(void)
 static void
 deinit(void)
 {
-	struct spdk_governor *governor;
-
-	governor = _spdk_governor_get();
-	if (governor->deinit) {
-		governor->deinit();
-	}
+	_spdk_governor_set(NULL);
 }
 
 static void
@@ -67,6 +62,8 @@ balance(struct spdk_scheduler_core_info *cores, int core_count)
 	int rc;
 
 	governor = _spdk_governor_get();
+	assert(governor != NULL);
+
 	/* Gather active/idle statistics */
 	SPDK_ENV_FOREACH_CORE(i) {
 		core = &cores[i];

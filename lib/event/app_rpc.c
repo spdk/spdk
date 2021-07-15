@@ -400,8 +400,7 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
 	spdk_json_write_named_bool(ctx->w, "in_interrupt", reactor->in_interrupt);
 	governor = _spdk_governor_get();
-	/* We need to check whether governor can return current core frequency. */
-	if (governor->get_core_curr_freq != NULL) {
+	if (governor != NULL) {
 		/* Governor returns core freqs in kHz, we want MHz. */
 		curr_core_freq = governor->get_core_curr_freq(current_core) / 1000;
 		spdk_json_write_named_uint32(ctx->w, "core_freq", curr_core_freq);
@@ -528,7 +527,9 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "scheduler_name", scheduler->name);
 	spdk_json_write_named_uint64(w, "scheduler_period", scheduler_period);
-	spdk_json_write_named_string(w, "governor_name", governor->name);
+	if (governor != NULL) {
+		spdk_json_write_named_string(w, "governor_name", governor->name);
+	}
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }

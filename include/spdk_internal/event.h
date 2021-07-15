@@ -198,7 +198,11 @@ struct spdk_governor {
 void _spdk_governor_list_add(struct spdk_governor *governor);
 
 /**
- * Change current governor.
+ * Set the current governor.
+ *
+ * Always deinitalizes previously set governor.
+ * No governor will be set if name parameter is NULL.
+ * This function should be invoked on scheduling reactor.
  *
  * \param name Name of the governor to be used.
  *

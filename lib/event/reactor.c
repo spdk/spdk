@@ -77,13 +77,7 @@ static struct spdk_scheduler_core_info *g_core_infos = NULL;
 TAILQ_HEAD(, spdk_governor) g_governor_list
 	= TAILQ_HEAD_INITIALIZER(g_governor_list);
 
-static int _governor_get_capabilities(uint32_t lcore_id,
-				      struct spdk_governor_capabilities *capabilities);
-
-static struct spdk_governor g_governor = {
-	.name = "default",
-	.get_core_capabilities = _governor_get_capabilities,
-};
+static struct spdk_governor *g_governor;
 
 static int reactor_interrupt_init(struct spdk_reactor *reactor);
 static void reactor_interrupt_fini(struct spdk_reactor *reactor);
@@ -1477,14 +1471,6 @@ reactor_interrupt_fini(struct spdk_reactor *reactor)
 	reactor->fgrp = NULL;
 }
 
-static int
-_governor_get_capabilities(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities)
-{
-	capabilities->priority = false;
-
-	return 0;
-}
-
 static struct spdk_governor *
 _governor_find(char *name)
 {
@@ -1505,25 +1491,39 @@ _spdk_governor_set(char *name)
 	struct spdk_governor *governor;
 	int rc = 0;
 
+	/* NULL governor was specifically requested */
+	if (name == NULL) {
+		if (g_governor) {
+			g_governor->deinit();
+		}
+		g_governor = NULL;
+		return 0;
+	}
+
 	governor = _governor_find(name);
 	if (governor == NULL) {
 		return -EINVAL;
 	}
 
-	if (governor->init) {
-		rc = governor->init();
+	if (g_governor == governor) {
+		return 0;
 	}
 
+	rc = governor->init();
 	if (rc == 0) {
-		g_governor = *governor;
+		if (g_governor) {
+			g_governor->deinit();
+		}
+		g_governor = governor;
 	}
+
 	return rc;
 }
 
 struct spdk_governor *
 _spdk_governor_get(void)
 {
-	return &g_governor;
+	return g_governor;
 }
 
 void

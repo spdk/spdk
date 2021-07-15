@@ -242,15 +242,10 @@ init(void)
 static void
 deinit(void)
 {
-	struct spdk_governor *governor;
-
 	free(g_cores);
 	g_cores = NULL;
 
-	governor = _spdk_governor_get();
-	if (governor->deinit) {
-		governor->deinit();
-	}
+	_spdk_governor_set(NULL);
 }
 
 static void
@@ -324,6 +319,8 @@ balance(struct spdk_scheduler_core_info *cores_info, int cores_count)
 	}
 
 	governor = _spdk_governor_get();
+	assert(governor != NULL);
+
 	/* Change main core frequency if needed */
 	if (busy_threads_present) {
 		rc = governor->set_core_freq_max(g_main_lcore);
