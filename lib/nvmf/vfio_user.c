@@ -812,15 +812,20 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 		uint16_t sct)
 {
 	struct spdk_nvme_cpl *cpl;
+	const struct spdk_nvmf_registers *regs;
 	uint16_t qid;
 	int err;
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
 
-	qid = io_q_id(cq);
+	if (spdk_unlikely(cq == NULL || cq->addr == NULL)) {
+		return 0;
+	}
 
-	if (ctrlr->qp[0]->qpair.ctrlr->vcprop.csts.bits.shst != SPDK_NVME_SHST_NORMAL) {
+	qid = io_q_id(cq);
+	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
+	if (regs->csts.bits.shst != SPDK_NVME_SHST_NORMAL) {
 		SPDK_DEBUGLOG(nvmf_vfio,
 			      "%s: ignore completion SQ%d cid=%d status=%#x\n",
 			      ctrlr_id(ctrlr), qid, cmd->cid, sc);
@@ -835,12 +840,11 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 
 	cpl = ((struct spdk_nvme_cpl *)cq->addr) + cq->tail;
 
+	assert(ctrlr->qp[qid] != NULL);
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: request complete SQ%d cid=%d status=%#x SQ head=%#x CQ tail=%#x\n",
 		      ctrlr_id(ctrlr), qid, cmd->cid, sc, ctrlr->qp[qid]->sq.head,
 		      cq->tail);
-
-	assert(ctrlr->qp[qid] != NULL);
 
 	cpl->sqhd = ctrlr->qp[qid]->sq.head;
 	cpl->cid = cmd->cid;
@@ -1276,27 +1280,6 @@ handle_cmd_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	assert(req != NULL);
 
 	vfu_unmap_sg(qpair->ctrlr->endpoint->vfu_ctx, req->sg, req->iov, req->iovcnt);
-
-	return post_completion(qpair->ctrlr, &req->req.cmd->nvme_cmd,
-			       &qpair->ctrlr->qp[req->req.qpair->qid]->cq,
-			       req->req.rsp->nvme_cpl.cdw0,
-			       req->req.rsp->nvme_cpl.status.sc,
-			       req->req.rsp->nvme_cpl.status.sct);
-}
-
-static int
-handle_admin_aer_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
-{
-	struct nvmf_vfio_user_qpair *qpair = cb_arg;
-
-	assert(qpair != NULL);
-	assert(req != NULL);
-
-	vfu_unmap_sg(qpair->ctrlr->endpoint->vfu_ctx, req->sg, req->iov, req->iovcnt);
-
-	if (qpair->state != VFIO_USER_QPAIR_ACTIVE) {
-		return 0;
-	}
 
 	return post_completion(qpair->ctrlr, &req->req.cmd->nvme_cmd,
 			       &qpair->ctrlr->qp[req->req.qpair->qid]->cq,
@@ -2647,9 +2630,6 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	req->cmd->nvme_cmd = *cmd;
 	if (nvmf_qpair_is_admin_queue(req->qpair)) {
 		err = map_admin_cmd_req(ctrlr, req);
-		if (cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
-			vu_req->cb_fn = handle_admin_aer_rsp;
-		}
 	} else {
 		err = map_io_cmd_req(ctrlr, req);
 	}
