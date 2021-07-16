@@ -87,6 +87,9 @@ struct nvmf_vfio_user_req  {
 	nvmf_vfio_user_req_cb_fn		cb_fn;
 	void					*cb_arg;
 
+	/* old CC before prop_set_cc fabric command */
+	union spdk_nvme_cc_register		cc;
+
 	/* placeholder for gpa_to_vva memory map table, the IO buffer doesn't use it */
 	dma_sg_t				*sg;
 	struct iovec				iov[NVMF_VFIO_USER_MAX_IOVECS];
@@ -1517,14 +1520,16 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 static int
 nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
-	struct nvmf_vfio_user_qpair *qpair = cb_arg;
+	struct nvmf_vfio_user_qpair *vu_qpair = cb_arg;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+	bool unmap_admin = false;
 	int ret;
 
-	assert(qpair != NULL);
+	assert(vu_qpair != NULL);
 	assert(req != NULL);
 
 	if (req->req.cmd->prop_get_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET) {
-		assert(qpair->ctrlr != NULL);
+		assert(vu_qpair->ctrlr != NULL);
 		assert(req != NULL);
 
 		memcpy(req->req.data,
@@ -1532,32 +1537,43 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		       req->req.length);
 	} else {
 		assert(req->req.cmd->prop_set_cmd.fctype == SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET);
-		assert(qpair->ctrlr != NULL);
+		assert(vu_qpair->ctrlr != NULL);
+		vu_ctrlr = vu_qpair->ctrlr;
 
 		if (req->req.cmd->prop_set_cmd.ofst == offsetof(struct spdk_nvme_registers, cc)) {
-			union spdk_nvme_cc_register *cc;
+			union spdk_nvme_cc_register cc, diff;
 
-			cc = (union spdk_nvme_cc_register *)&req->req.cmd->prop_set_cmd.value.u64;
+			cc.raw = req->req.cmd->prop_set_cmd.value.u64;
+			diff.raw = cc.raw ^ req->cc.raw;
 
-			if (cc->bits.en == 1 && cc->bits.shn == 0) {
-				SPDK_DEBUGLOG(nvmf_vfio,
-					      "%s: MAP Admin queue\n",
-					      ctrlr_id(qpair->ctrlr));
-				ret = map_admin_queue(qpair->ctrlr);
-				if (ret) {
-					SPDK_ERRLOG("%s: failed to map Admin queue\n", ctrlr_id(qpair->ctrlr));
-					return ret;
+			if (diff.bits.en) {
+				if (cc.bits.en) {
+					SPDK_DEBUGLOG(nvmf_vfio, "%s: MAP Admin queue\n", ctrlr_id(vu_ctrlr));
+					ret = map_admin_queue(vu_ctrlr);
+					if (ret) {
+						SPDK_ERRLOG("%s: failed to map Admin queue\n", ctrlr_id(vu_ctrlr));
+						return ret;
+					}
+					vu_qpair->state = VFIO_USER_QPAIR_ACTIVE;
+				} else {
+					unmap_admin = true;
 				}
-				qpair->state = VFIO_USER_QPAIR_ACTIVE;
-			} else if ((cc->bits.en == 0 && cc->bits.shn == 0) ||
-				   (cc->bits.en == 1 && cc->bits.shn != 0)) {
+			}
+
+			if (diff.bits.shn) {
+				if (cc.bits.shn == SPDK_NVME_SHN_NORMAL || cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
+					unmap_admin = true;
+				}
+			}
+
+			if (unmap_admin) {
 				SPDK_DEBUGLOG(nvmf_vfio,
 					      "%s: UNMAP Admin queue\n",
-					      ctrlr_id(qpair->ctrlr));
-				unmap_admin_queue(qpair->ctrlr);
-				qpair->state = VFIO_USER_QPAIR_INACTIVE;
-				/* For PCIe controller reset, we will drop all AER responses */
-				nvmf_ctrlr_abort_aer(req->req.qpair->ctrlr);
+					      ctrlr_id(vu_ctrlr));
+				unmap_admin_queue(vu_ctrlr);
+				vu_qpair->state = VFIO_USER_QPAIR_INACTIVE;
+				/* For PCIe controller reset or shutdown, we will drop all AER responses */
+				nvmf_ctrlr_abort_aer(vu_qpair->qpair.ctrlr);
 			}
 		}
 	}
@@ -1626,6 +1642,7 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
 	struct nvmf_vfio_user_ctrlr *ctrlr;
 	struct nvmf_vfio_user_req *req;
+	const struct spdk_nvmf_registers *regs;
 	int ret;
 
 	ctrlr = endpoint->ctrlr;
@@ -1657,6 +1674,8 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 		errno = ENOBUFS;
 		return -1;
 	}
+	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
+	req->cc.raw = regs->cc.raw;
 
 	req->cb_fn = nvmf_vfio_user_prop_req_rsp;
 	req->cb_arg = ctrlr->qp[0];
