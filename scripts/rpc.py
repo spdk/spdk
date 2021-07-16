@@ -964,6 +964,15 @@ if __name__ == "__main__":
                               help='Get bdev_nvme poll group transport statistics')
     p.set_defaults(func=bdev_nvme_get_transport_statistics)
 
+    def bdev_nvme_get_controller_health_info(args):
+        print_dict(rpc.bdev.bdev_nvme_get_controller_health_info(args.client,
+                                                                 name=args.name))
+
+    p = subparsers.add_parser('bdev_nvme_get_controller_health_info',
+                              help='Display health log of the required NVMe bdev controller.')
+    p.add_argument('-c', '--name', help="Name of the NVMe bdev controller. Example: Nvme0", required=True)
+    p.set_defaults(func=bdev_nvme_get_controller_health_info)
+
     # iSCSI
     def iscsi_set_options(args):
         rpc.iscsi.iscsi_set_options(

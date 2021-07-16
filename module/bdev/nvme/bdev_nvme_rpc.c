@@ -41,6 +41,9 @@
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/env.h"
+#include "spdk/nvme.h"
+#include "spdk/nvme_spec.h"
 
 #include "spdk/log.h"
 #include "spdk/bdev_module.h"
@@ -1145,3 +1148,217 @@ cleanup:
 	free_rpc_bdev_nvme_reset_controller_req(&req);
 }
 SPDK_RPC_REGISTER("bdev_nvme_reset_controller", rpc_bdev_nvme_reset_controller, SPDK_RPC_RUNTIME)
+
+struct rpc_get_controller_health_info {
+	char *name;
+};
+
+struct spdk_nvme_health_info_context {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_health_information_page health_page;
+};
+
+static void
+free_rpc_get_controller_health_info(struct rpc_get_controller_health_info *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_get_controller_health_info_decoders[] = {
+	{"name", offsetof(struct rpc_get_controller_health_info, name), spdk_json_decode_string, true},
+};
+
+static void nvme_health_info_cleanup(struct spdk_nvme_health_info_context *context, bool response)
+{
+	if (response == true) {
+		spdk_jsonrpc_send_error_response(context->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Internal error.");
+	}
+
+	free(context);
+}
+
+static void
+get_health_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	int i;
+	char buf[128];
+	struct spdk_nvme_health_info_context *context = cb_arg;
+	struct spdk_jsonrpc_request *request = context->request;
+	struct spdk_json_write_ctx *w;
+	struct spdk_nvme_ctrlr *ctrlr = context->ctrlr;
+	const struct spdk_nvme_transport_id *trid = NULL;
+	const struct spdk_nvme_ctrlr_data *cdata = NULL;
+	struct spdk_nvme_health_information_page *health_page = NULL;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		nvme_health_info_cleanup(context, true);
+		SPDK_ERRLOG("get log page failed\n");
+		return;
+	}
+
+	if (ctrlr == NULL) {
+		nvme_health_info_cleanup(context, true);
+		SPDK_ERRLOG("ctrlr is NULL\n");
+		return;
+	} else {
+		trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
+		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+		health_page = &(context->health_page);
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_object_begin(w);
+	snprintf(buf, sizeof(cdata->mn) + 1, "%s", cdata->mn);
+	spdk_str_trim(buf);
+	spdk_json_write_named_string(w, "model_number", buf);
+	snprintf(buf, sizeof(cdata->sn) + 1, "%s", cdata->sn);
+	spdk_str_trim(buf);
+	spdk_json_write_named_string(w, "serial_number", buf);
+	snprintf(buf, sizeof(cdata->fr) + 1, "%s", cdata->fr);
+	spdk_str_trim(buf);
+	spdk_json_write_named_string(w, "firmware_revision", buf);
+	spdk_json_write_named_string(w, "traddr", trid->traddr);
+	spdk_json_write_named_uint64(w, "temperature_celsius", health_page->temperature - 273);
+	spdk_json_write_named_uint64(w, "available_spare_percentage", health_page->available_spare);
+	spdk_json_write_named_uint64(w, "available_spare_threshold_percentage",
+				     health_page->available_spare_threshold);
+	spdk_json_write_named_uint64(w, "percentage_used", health_page->percentage_used);
+	spdk_json_write_named_uint128(w, "data_units_read",
+				      health_page->data_units_read[0], health_page->data_units_read[1]);
+	spdk_json_write_named_uint128(w, "data_units_written",
+				      health_page->data_units_written[0], health_page->data_units_written[1]);
+	spdk_json_write_named_uint128(w, "host_read_commands",
+				      health_page->host_read_commands[0], health_page->host_read_commands[1]);
+	spdk_json_write_named_uint128(w, "host_write_commands",
+				      health_page->host_write_commands[0], health_page->host_write_commands[1]);
+	spdk_json_write_named_uint128(w, "controller_busy_time",
+				      health_page->controller_busy_time[0], health_page->controller_busy_time[1]);
+	spdk_json_write_named_uint128(w, "power_cycles",
+				      health_page->power_cycles[0], health_page->power_cycles[1]);
+	spdk_json_write_named_uint128(w, "power_on_hours",
+				      health_page->power_on_hours[0], health_page->power_on_hours[1]);
+	spdk_json_write_named_uint128(w, "unsafe_shutdowns",
+				      health_page->unsafe_shutdowns[0], health_page->unsafe_shutdowns[1]);
+	spdk_json_write_named_uint128(w, "media_errors",
+				      health_page->media_errors[0], health_page->media_errors[1]);
+	spdk_json_write_named_uint128(w, "num_err_log_entries",
+				      health_page->num_error_info_log_entries[0], health_page->num_error_info_log_entries[1]);
+	spdk_json_write_named_uint64(w, "warning_temperature_time_minutes", health_page->warning_temp_time);
+	spdk_json_write_named_uint64(w, "critical_composite_temperature_time_minutes",
+				     health_page->critical_temp_time);
+	for (i = 0; i < 8; i++) {
+		if (health_page->temp_sensor[i] != 0) {
+			spdk_json_write_named_uint64(w, "temperature_sensor_celsius", health_page->temp_sensor[i] - 273);
+		}
+	}
+	spdk_json_write_object_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+	nvme_health_info_cleanup(context, false);
+}
+
+static void
+get_health_log_page(struct spdk_nvme_health_info_context *context)
+{
+	struct spdk_nvme_ctrlr *ctrlr = context->ctrlr;
+
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
+					     SPDK_NVME_GLOBAL_NS_TAG,
+					     &(context->health_page), sizeof(context->health_page), 0,
+					     get_health_log_page_completion, context)) {
+		nvme_health_info_cleanup(context, true);
+		SPDK_ERRLOG("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+	}
+}
+
+static void
+get_temperature_threshold_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_health_info_context *context = cb_arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		nvme_health_info_cleanup(context, true);
+		SPDK_ERRLOG("feature SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD failed in completion\n");
+	} else {
+		get_health_log_page(context);
+	}
+}
+
+static int
+get_temperature_threshold_feature(struct spdk_nvme_health_info_context *context)
+{
+	struct spdk_nvme_cmd cmd = {};
+
+	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.cdw10 = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+
+	return spdk_nvme_ctrlr_cmd_admin_raw(context->ctrlr, &cmd, NULL, 0,
+					     get_temperature_threshold_feature_completion, context);
+}
+
+static void
+get_controller_health_info(struct spdk_jsonrpc_request *request, struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_health_info_context *context;
+
+	context = calloc(1, sizeof(struct spdk_nvme_health_info_context));
+	if (!context) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error.");
+		return;
+	}
+
+	context->request = request;
+	context->ctrlr = ctrlr;
+
+	if (get_temperature_threshold_feature(context)) {
+		nvme_health_info_cleanup(context, true);
+		SPDK_ERRLOG("feature SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD failed to submit\n");
+	}
+
+	return;
+}
+
+static void
+rpc_bdev_nvme_get_controller_health_info(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params)
+{
+	struct rpc_get_controller_health_info req = {};
+	struct nvme_ctrlr *nvme_ctrlr = NULL;
+
+	if (!params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Missing device name");
+
+		return;
+	}
+	if (spdk_json_decode_object(params, rpc_get_controller_health_info_decoders,
+				    SPDK_COUNTOF(rpc_get_controller_health_info_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		free_rpc_get_controller_health_info(&req);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Invalid parameters");
+
+		return;
+	}
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name(req.name);
+
+	if (!nvme_ctrlr) {
+		SPDK_ERRLOG("nvme ctrlr name '%s' does not exist\n", req.name);
+		free_rpc_get_controller_health_info(&req);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Device not found");
+		return;
+	}
+
+	get_controller_health_info(request, nvme_ctrlr->ctrlr);
+	free_rpc_get_controller_health_info(&req);
+
+	return;
+}
+SPDK_RPC_REGISTER("bdev_nvme_get_controller_health_info",
+		  rpc_bdev_nvme_get_controller_health_info, SPDK_RPC_RUNTIME)

@@ -457,6 +457,7 @@ Example response:
     "bdev_passthru_delete"
     "bdev_nvme_apply_firmware",
     "bdev_nvme_get_transport_statistics",
+    "bdev_nvme_get_controller_health_info",
     "bdev_nvme_detach_controller",
     "bdev_nvme_attach_controller",
     "bdev_null_create",
@@ -3338,6 +3339,62 @@ Example response:
 		}
 	  ]
 	}
+}
+~~~
+
+## bdev_nvme_get_controller_health_info {#rpc_bdev_nvme_get_controller_health_info}
+
+Display health log of the required NVMe bdev device.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe bdev controller
+
+### Response
+
+The response is the object containing information about health log of the NVMe controller.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_controller_health_info",
+  "id": 1,
+  "params": {
+    "name": "Nvme0"
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "model_number": "INTEL SSDPE2KX020T8",
+  "serial_number": "BTLJ72430ARH2P0BGN",
+  "firmware_revision": "VDV10110",
+  "traddr": "0000:08:00.0",
+  "temperature_celsius": 32,
+  "available_spare_percentage": 99,
+  "available_spare_threshold_percentage": 10,
+  "percentage_used": 2,
+  "data_units_read": 1013408619,
+  "data_units_written": 346792685,
+  "host_read_commands": 30457773282,
+  "host_write_commands": 18949677715,
+  "controller_busy_time": 4979,
+  "power_cycles": 49,
+  "power_on_hours": 31118,
+  "unsafe_shutdowns": 18,
+  "media_errors": 17,
+  "num_err_log_entries": 19,
+  "warning_temperature_time_minutes": 0,
+  "critical_composite_temperature_time_minutes": 0
 }
 ~~~
 

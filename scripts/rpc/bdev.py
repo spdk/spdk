@@ -1276,3 +1276,17 @@ def bdev_nvme_apply_firmware(client, bdev_name, filename):
 def bdev_nvme_get_transport_statistics(client):
     """Get bdev_nvme poll group transport statistics"""
     return client.call('bdev_nvme_get_transport_statistics')
+
+
+def bdev_nvme_get_controller_health_info(client, name):
+    """Display health log of the required NVMe bdev controller.
+
+    Args:
+        name: name of the required NVMe bdev controller
+
+    Returns:
+        Health log for the requested NVMe bdev controller.
+    """
+    params = {}
+    params['name'] = name
+    return client.call('bdev_nvme_get_controller_health_info', params)
