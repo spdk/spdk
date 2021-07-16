@@ -2649,7 +2649,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--enable-zerocopy-send-server', help='Enable zerocopy on send for server sockets',
                    action='store_true', dest='enable_zerocopy_send_server')
     p.add_argument('--disable-zerocopy-send-server', help='Disable zerocopy on send for server sockets',
-                   action='store_false', dest='enable_zerocopy_server_client')
+                   action='store_false', dest='enable_zerocopy_send_server')
     p.add_argument('--enable-zerocopy-send-client', help='Enable zerocopy on send for client sockets',
                    action='store_true', dest='enable_zerocopy_send_client')
     p.add_argument('--disable-zerocopy-send-client', help='Disable zerocopy on send for client sockets',
