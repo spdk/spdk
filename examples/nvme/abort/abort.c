@@ -846,6 +846,14 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	uint16_t min_aq_size;
+
+	/* We need to make sure the admin queue is big enough to handle all of the aborts that
+	 * will be sent by this test app.  We add a few extra entries to account for any admin
+	 * commands other than the aborts. */
+	min_aq_size = spdk_divide_round_up(g_queue_depth, g_abort_interval) + 8;
+	opts->admin_queue_size = spdk_max(opts->admin_queue_size, min_aq_size);
+
 	return true;
 }
 
