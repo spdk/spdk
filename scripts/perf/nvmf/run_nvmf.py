@@ -1140,7 +1140,7 @@ class SPDKTarget(Target):
 
         if self.enable_zcopy:
             rpc.sock.sock_impl_set_options(self.client, impl_name="posix",
-                                           enable_zerocopy_send=True)
+                                           enable_zerocopy_send_server=True)
             self.log_print("Target socket options:")
             rpc.client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
 
