@@ -13,6 +13,9 @@ test/unit/lib/nvmf/fc_ls.c/fc_ls_ut
 # Not configured for Neon testing
 lib/util/base64_neon
 
+# Not configured for ARM SVE testing
+lib/util/base64_sve
+
 # Not configured for mlx5 dv testing
 lib/rdma/rdma_mlx5_dv
 

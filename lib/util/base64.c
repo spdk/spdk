@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright(c) Intel Corporation. All rights reserved.
+ *   Copyright(c) ARM Limited. 2021 All rights reserved.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -36,8 +37,13 @@
 #include "spdk/base64.h"
 
 #ifdef __aarch64__
+#ifdef __ARM_FEATURE_SVE
+#include "base64_sve.c"
+#else
 #include "base64_neon.c"
 #endif
+#endif
+
 
 #define BASE64_ENC_BITMASK 0x3FUL
 #define BASE64_PADDING_CHAR '='
@@ -102,8 +108,13 @@ base64_encode(char *dst, const char *enc_table, const void *src, size_t src_len)
 	}
 
 #ifdef __aarch64__
+#ifdef __ARM_FEATURE_SVE
+	base64_encode_sve(&dst, enc_table, &src, &src_len);
+#else
 	base64_encode_neon64(&dst, enc_table, &src, &src_len);
 #endif
+#endif
+
 
 	while (src_len >= 4) {
 		raw_u32 = from_be32(src);
@@ -148,7 +159,7 @@ spdk_base64_urlsafe_encode(char *dst, const void *src, size_t src_len)
 	return base64_encode(dst, base64_urfsafe_enc_table, src, src_len);
 }
 
-#ifdef __aarch64__
+#if defined(__aarch64__) && !defined(__ARM_FEATURE_SVE)
 static int
 base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table,
 	      const uint8_t *dec_table_opt, const char *src)
@@ -199,12 +210,17 @@ base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const char 
 	src_in = (const uint8_t *) src;
 
 #ifdef __aarch64__
+#ifdef __ARM_FEATURE_SVE
+	base64_decode_sve(&dst, dec_table, &src_in, &src_strlen);
+#else
 	base64_decode_neon64(&dst, dec_table_opt, &src_in, &src_strlen);
+#endif
 
 	if (src_strlen == 0) {
 		return 0;
 	}
 #endif
+
 
 	/* space of dst can be used by to_be32 */
 	while (src_strlen > 4) {
@@ -243,7 +259,7 @@ base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const char 
 int
 spdk_base64_decode(void *dst, size_t *dst_len, const char *src)
 {
-#ifdef __aarch64__
+#if defined(__aarch64__) && !defined(__ARM_FEATURE_SVE)
 	return base64_decode(dst, dst_len, base64_dec_table, base64_dec_table_neon64, src);
 #else
 	return base64_decode(dst, dst_len, base64_dec_table, src);
@@ -253,7 +269,7 @@ spdk_base64_decode(void *dst, size_t *dst_len, const char *src)
 int
 spdk_base64_urlsafe_decode(void *dst, size_t *dst_len, const char *src)
 {
-#ifdef __aarch64__
+#if defined(__aarch64__) && !defined(__ARM_FEATURE_SVE)
 	return base64_decode(dst, dst_len, base64_urlsafe_dec_table, base64_urlsafe_dec_table_neon64,
 			     src);
 #else
