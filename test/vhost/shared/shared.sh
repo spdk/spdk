@@ -39,7 +39,8 @@ bdev_conf=$(
 function run_spdk_fio() {
 	fio_bdev --ioengine=spdk_bdev \
 		"$rootdir/test/vhost/common/fio_jobs/default_initiator.job" --runtime=10 --rw=randrw \
-		--spdk_mem=1024 --spdk_single_seg=1 --spdk_json_conf=<(echo "$bdev_conf") "$@"
+		--spdk_mem=1024 --spdk_single_seg=1 --verify_state_save=0 \
+		--spdk_json_conf=<(echo "$bdev_conf") "$@"
 }
 
 vhosttestinit "--no_vm"
