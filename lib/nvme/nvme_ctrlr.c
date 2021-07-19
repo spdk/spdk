@@ -4436,6 +4436,10 @@ spdk_nvme_ctrlr_free_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid)
 	assert(qid <= ctrlr->opts.num_io_queues);
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	spdk_bit_array_set(ctrlr->free_io_qids, qid);
+
+	if (spdk_likely(ctrlr->free_io_qids)) {
+		spdk_bit_array_set(ctrlr->free_io_qids, qid);
+	}
+
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
