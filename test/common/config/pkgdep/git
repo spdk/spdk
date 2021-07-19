@@ -190,6 +190,28 @@ function install_rocksdb() {
 	fi
 }
 
+function install_markdownlint() {
+	local mdl_version="v0.11.0"
+	if [ ! -d /usr/src/markdownlint ]; then
+		sudo -E git clone --branch "$mdl_version" "${GIT_REPO_MDL}" "/usr/src/markdownlint"
+		(
+			cd /usr/src/markdownlint
+			if hash gem; then
+				sudo -E dnf install ruby-devel
+			fi
+			if hash rake; then
+				sudo -E gem install rake
+			fi
+			if hash bundler; then
+				sudo -E gem install bundler
+			fi
+			sudo -E rake install
+		)
+	else
+		echo "Markdown lint tool already in /usr/src/markdownlint. Not installing"
+	fi
+}
+
 function install_fio() {
 	# This version of fio is installed in /usr/src/fio to enable
 	# building the spdk fio plugin.
@@ -512,6 +534,7 @@ function install_sources() {
 			install_qemu
 			install_igb_uio
 			install_ice
+			install_markdownlint
 		)
 		install_extra_pkgs
 	fi
@@ -574,6 +597,8 @@ export GIT_REPO_DPDK_KMODS
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
+: ${GIT_REPO_MDL="https://github.com/markdownlint/markdownlint.git"}
+export GIT_REPO_MDL
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
