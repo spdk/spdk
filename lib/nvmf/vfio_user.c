@@ -1564,14 +1564,6 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	return 0;
 }
 
-/*
- * XXX Do NOT remove, see comment in access_bar0_fn.
- *
- * Handles a write at offset 0x1000 or more.
- *
- * DSTRD is set to fixed value 0 for NVMf.
- *
- */
 static int
 handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 		  const size_t count, loff_t pos, const bool is_write)
@@ -1599,10 +1591,6 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	pos >>= 2;
 
 	if (pos > NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR * 2) {
-		/*
-		 * TODO: need to emit a "Write to Invalid Doorbell Register"
-		 * asynchronous event
-		 */
 		SPDK_ERRLOG("%s: bad doorbell index %#lx\n", ctrlr_id(ctrlr), pos);
 		errno = EINVAL;
 		return -1;
@@ -1647,7 +1635,6 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 		if (ret == 0) {
 			return count;
 		}
-		assert(errno != 0);
 		return ret;
 	}
 
@@ -2668,13 +2655,6 @@ nvmf_vfio_user_qpair_poll(struct nvmf_vfio_user_qpair *qpair)
 	}
 }
 
-/*
- * Called unconditionally, periodically, very frequently from SPDK to ask
- * whether there's work to be done.  This function consumes requests generated
- * from read/write_bar0 by setting ctrlr->prop_req.dir.  read_bar0, and
- * occasionally write_bar0 -- though this may change, synchronously wait. This
- * function also consumes requests by looking at the doorbells.
- */
 static int
 nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
