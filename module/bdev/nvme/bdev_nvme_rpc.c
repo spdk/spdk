@@ -1015,6 +1015,18 @@ rpc_bdev_nvme_pcie_stats(struct spdk_json_write_ctx *w,
 }
 
 static void
+rpc_bdev_nvme_tcp_stats(struct spdk_json_write_ctx *w,
+			struct spdk_nvme_transport_poll_group_stat *stat)
+{
+	spdk_json_write_named_uint64(w, "polls", stat->tcp.polls);
+	spdk_json_write_named_uint64(w, "idle_polls", stat->tcp.idle_polls);
+	spdk_json_write_named_uint64(w, "socket_completions", stat->tcp.socket_completions);
+	spdk_json_write_named_uint64(w, "nvme_completions", stat->tcp.nvme_completions);
+	spdk_json_write_named_uint64(w, "queued_requests", stat->tcp.queued_requests);
+	spdk_json_write_named_uint64(w, "submitted_requests", stat->tcp.submitted_requests);
+}
+
+static void
 rpc_bdev_nvme_stats_per_channel(struct spdk_io_channel_iter *i)
 {
 	struct rpc_bdev_nvme_transport_stat_ctx *ctx;
@@ -1050,6 +1062,9 @@ rpc_bdev_nvme_stats_per_channel(struct spdk_io_channel_iter *i)
 			break;
 		case SPDK_NVME_TRANSPORT_PCIE:
 			rpc_bdev_nvme_pcie_stats(ctx->w, tr_stat);
+			break;
+		case SPDK_NVME_TRANSPORT_TCP:
+			rpc_bdev_nvme_tcp_stats(ctx->w, tr_stat);
 			break;
 		default:
 			SPDK_WARNLOG("Can't handle trtype %d %s\n", tr_stat->trtype,

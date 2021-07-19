@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -613,6 +614,7 @@ static void
 test_nvme_tcp_qpair_capsule_cmd_send(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_tcp_stat stats = {};
 	struct nvme_tcp_req tcp_req = {};
 	struct nvme_tcp_pdu pdu = {};
 	struct nvme_request req = {};
@@ -626,6 +628,7 @@ test_nvme_tcp_qpair_capsule_cmd_send(void)
 	tcp_req.req = &req;
 	tcp_req.pdu = &pdu;
 	TAILQ_INIT(&tqpair.send_queue);
+	tqpair.stats = &stats;
 
 	tcp_req.iov[0].iov_base = (void *)iov_base0;
 	tcp_req.iov[0].iov_len = 4096;
@@ -716,6 +719,7 @@ static void
 test_nvme_tcp_qpair_write_pdu(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_tcp_stat stats = {};
 	struct nvme_tcp_pdu pdu = {};
 	void *cb_arg = (void *)0xDEADBEEF;
 	char iov_base0[4096];
@@ -743,6 +747,7 @@ test_nvme_tcp_qpair_write_pdu(void)
 	pdu.hdr.common.plen += pdu.data_len;
 	tqpair.flags.host_hdgst_enable = 1;
 	tqpair.flags.host_ddgst_enable = 1;
+	tqpair.stats = &stats;
 
 	nvme_tcp_qpair_write_pdu(&tqpair,
 				 &pdu,
@@ -898,12 +903,14 @@ static void
 test_nvme_tcp_qpair_send_h2c_term_req(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_tcp_stat stats = {};
 	struct nvme_tcp_pdu pdu = {}, recv_pdu = {}, send_pdu = {};
 	enum spdk_nvme_tcp_term_req_fes fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 	uint32_t error_offset = 1;
 
 	tqpair.send_pdu = &send_pdu;
 	tqpair.recv_pdu = &recv_pdu;
+	tqpair.stats = &stats;
 	TAILQ_INIT(&tqpair.send_queue);
 	/* case1: hlen < SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == hlen */
 	pdu.hdr.common.hlen = 64;
@@ -928,10 +935,12 @@ static void
 test_nvme_tcp_pdu_ch_handle(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_tcp_stat stats = {};
 	struct nvme_tcp_pdu send_pdu = {}, recv_pdu = {};
 
 	tqpair.send_pdu = &send_pdu;
 	tqpair.recv_pdu = &recv_pdu;
+	tqpair.stats = &stats;
 	TAILQ_INIT(&tqpair.send_queue);
 	/* case 1: Already received IC_RESP PDU. Expect: fail */
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
@@ -1111,6 +1120,7 @@ static void
 test_nvme_tcp_qpair_icreq_send(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_tcp_stat stats = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_tcp_pdu pdu = {};
 	struct nvme_tcp_poll_group poll_group = {};
@@ -1120,6 +1130,7 @@ test_nvme_tcp_qpair_icreq_send(void)
 	tqpair.send_pdu = &pdu;
 	tqpair.qpair.ctrlr = &ctrlr;
 	tqpair.qpair.poll_group = &poll_group.group;
+	tqpair.stats = &stats;
 	ic_req = &pdu.hdr.ic_req;
 
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
@@ -1143,6 +1154,7 @@ static void
 test_nvme_tcp_c2h_payload_handle(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_tcp_stat stats = {};
 	struct nvme_tcp_pdu pdu = {};
 	struct nvme_tcp_req tcp_req = {};
 	struct nvme_request	req = {};
@@ -1154,6 +1166,7 @@ test_nvme_tcp_c2h_payload_handle(void)
 	tcp_req.req->cb_fn = ut_nvme_complete_request;
 	tcp_req.tqpair = &tqpair;
 	tcp_req.cid = 1;
+	tqpair.stats = &stats;
 
 	TAILQ_INIT(&tcp_req.tqpair->outstanding_reqs);
 
@@ -1227,12 +1240,14 @@ static void
 test_nvme_tcp_icresp_handle(void)
 {
 	struct nvme_tcp_qpair tqpair = {};
+	struct spdk_nvme_tcp_stat stats = {};
 	struct nvme_tcp_pdu pdu = {};
 	struct nvme_tcp_pdu send_pdu = {};
 	struct nvme_tcp_pdu recv_pdu = {};
 
 	tqpair.send_pdu = &send_pdu;
 	tqpair.recv_pdu = &recv_pdu;
+	tqpair.stats = &stats;
 	TAILQ_INIT(&tqpair.send_queue);
 
 	/* case 1: Expected ICResp PFV and got are different. */
@@ -1291,6 +1306,7 @@ static void
 test_nvme_tcp_pdu_payload_handle(void)
 {
 	struct nvme_tcp_qpair	tqpair = {};
+	struct spdk_nvme_tcp_stat	stats = {};
 	struct nvme_tcp_pdu	recv_pdu = {};
 	struct nvme_tcp_req	tcp_req = {};
 	struct nvme_request	req = {};
@@ -1300,6 +1316,7 @@ test_nvme_tcp_pdu_payload_handle(void)
 	tcp_req.tqpair = &tqpair;
 	tcp_req.req = &req;
 	tcp_req.req->qpair = &tqpair.qpair;
+	tqpair.stats = &stats;
 
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD;
 	tqpair.qpair.id = 1;
@@ -1342,6 +1359,7 @@ static void
 test_nvme_tcp_capsule_resp_hdr_handle(void)
 {
 	struct nvme_tcp_qpair	tqpair = {};
+	struct spdk_nvme_tcp_stat	stats = {};
 	struct nvme_request	req = {};
 	struct spdk_nvme_cpl	rccqe_tgt = {};
 	struct nvme_tcp_req	*tcp_req = NULL;
@@ -1350,6 +1368,7 @@ test_nvme_tcp_capsule_resp_hdr_handle(void)
 
 	/* Initialize requests and pdus */
 	tqpair.num_entries = 1;
+	tqpair.stats = &stats;
 	req.qpair = &tqpair.qpair;
 
 	rc = nvme_tcp_alloc_reqs(&tqpair);
@@ -1388,32 +1407,33 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_qpair *qpair;
-	struct nvme_tcp_qpair tqpair = {};
+	struct nvme_tcp_qpair *tqpair;
 	struct nvme_tcp_pdu pdu = {};
 	struct nvme_tcp_pdu recv_pdu = {};
 	struct spdk_nvme_tcp_ic_req *ic_req = NULL;
 	int rc;
 
-	tqpair.qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
-	tqpair.recv_pdu = &recv_pdu;
-	qpair = &tqpair.qpair;
-	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
-	tqpair.send_pdu = &pdu;
-	tqpair.qpair.ctrlr = &ctrlr;
-	tqpair.qpair.state = NVME_QPAIR_CONNECTING;
+	tqpair = calloc(1, sizeof(*tqpair));
+	tqpair->qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
+	tqpair->recv_pdu = &recv_pdu;
+	qpair = &tqpair->qpair;
+	tqpair->sock = (struct spdk_sock *)0xDEADBEEF;
+	tqpair->send_pdu = &pdu;
+	tqpair->qpair.ctrlr = &ctrlr;
+	tqpair->qpair.state = NVME_QPAIR_CONNECTING;
 	ic_req = &pdu.hdr.ic_req;
 
-	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
-	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
-	tqpair.recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
-	tqpair.recv_pdu->ch_valid_bytes = 8;
-	tqpair.recv_pdu->psh_valid_bytes = tqpair.recv_pdu->hdr.common.hlen;
-	tqpair.recv_pdu->hdr.ic_resp.maxh2cdata = 4096;
-	tqpair.recv_pdu->hdr.ic_resp.cpda = 1;
-	tqpair.flags.icreq_send_ack = 1;
-	tqpair.qpair.ctrlr->opts.header_digest = true;
-	tqpair.qpair.ctrlr->opts.data_digest = true;
-	TAILQ_INIT(&tqpair.send_queue);
+	tqpair->recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
+	tqpair->recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
+	tqpair->recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
+	tqpair->recv_pdu->ch_valid_bytes = 8;
+	tqpair->recv_pdu->psh_valid_bytes = tqpair->recv_pdu->hdr.common.hlen;
+	tqpair->recv_pdu->hdr.ic_resp.maxh2cdata = 4096;
+	tqpair->recv_pdu->hdr.ic_resp.cpda = 1;
+	tqpair->flags.icreq_send_ack = 1;
+	tqpair->qpair.ctrlr->opts.header_digest = true;
+	tqpair->qpair.ctrlr->opts.data_digest = true;
+	TAILQ_INIT(&tqpair->send_queue);
 
 	rc = nvme_tcp_ctrlr_connect_qpair(&ctrlr, qpair);
 	CU_ASSERT(rc == 0);
@@ -1423,9 +1443,9 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 		CU_ASSERT(rc >= 0);
 	}
 
-	CU_ASSERT(tqpair.maxr2t == NVME_TCP_MAX_R2T_DEFAULT);
-	CU_ASSERT(tqpair.state == NVME_TCP_QPAIR_STATE_RUNNING);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
+	CU_ASSERT(tqpair->maxr2t == NVME_TCP_MAX_R2T_DEFAULT);
+	CU_ASSERT(tqpair->state == NVME_TCP_QPAIR_STATE_RUNNING);
+	CU_ASSERT(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 	CU_ASSERT(ic_req->common.hlen == sizeof(*ic_req));
 	CU_ASSERT(ic_req->common.plen == sizeof(*ic_req));
 	CU_ASSERT(ic_req->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ);
@@ -1434,6 +1454,8 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	CU_ASSERT(ic_req->hpda == NVME_TCP_HPDA_DEFAULT);
 	CU_ASSERT(ic_req->dgst.bits.hdgst_enable == true);
 	CU_ASSERT(ic_req->dgst.bits.ddgst_enable == true);
+
+	nvme_tcp_ctrlr_delete_io_qpair(&ctrlr, qpair);
 }
 
 static void

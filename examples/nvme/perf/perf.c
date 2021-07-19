@@ -1065,6 +1065,22 @@ nvme_dump_pcie_statistics(struct spdk_nvme_transport_poll_group_stat *stat)
 }
 
 static void
+nvme_dump_tcp_statistics(struct spdk_nvme_transport_poll_group_stat *stat)
+{
+	struct spdk_nvme_tcp_stat *tcp_stat;
+
+	tcp_stat = &stat->tcp;
+
+	printf("TCP transport:\n");
+	printf("\tpolls:              %"PRIu64"\n", tcp_stat->polls);
+	printf("\tidle_polls:         %"PRIu64"\n", tcp_stat->idle_polls);
+	printf("\tsock_completions:   %"PRIu64"\n", tcp_stat->socket_completions);
+	printf("\tnvme_completions:   %"PRIu64"\n", tcp_stat->nvme_completions);
+	printf("\tsubmitted_requests: %"PRIu64"\n", tcp_stat->submitted_requests);
+	printf("\tqueued_requests:    %"PRIu64"\n", tcp_stat->queued_requests);
+}
+
+static void
 nvme_dump_transport_stats(uint32_t lcore, struct ns_worker_ctx *ns_ctx)
 {
 	struct spdk_nvme_poll_group *group;
@@ -1093,6 +1109,9 @@ nvme_dump_transport_stats(uint32_t lcore, struct ns_worker_ctx *ns_ctx)
 			break;
 		case SPDK_NVME_TRANSPORT_PCIE:
 			nvme_dump_pcie_statistics(stat->transport_stat[i]);
+			break;
+		case SPDK_NVME_TRANSPORT_TCP:
+			nvme_dump_tcp_statistics(stat->transport_stat[i]);
 			break;
 		default:
 			fprintf(stderr, "Unknown transport statistics %d %s\n", stat->transport_stat[i]->trtype,
