@@ -1,12 +1,11 @@
 # Introduction
 
-This directory contains a plug-in module for fio to enable use
-with SPDK. Fio is free software published under version 2 of
-the GPL license.
+This directory contains a plug-in module for fio to enable use with SPDK. Fio is free software
+published under version 2 of the GPL license.
 
 ## Compiling fio
 
-Clone the fio source repository from https://github.com/axboe/fio
+Clone the [fio source repository](https://github.com/axboe/fio)
 
 ```bash
     git clone https://github.com/axboe/fio
@@ -22,7 +21,7 @@ Compile the fio code and install:
 
 ## Compiling SPDK
 
-Clone the SPDK source repository from https://github.com/spdk/spdk
+Clone the [SPDK source repository](https://github.com/spdk/spdk)
 
 ```bash
     git clone https://github.com/spdk/spdk
@@ -55,13 +54,13 @@ EXTRA_CFLAGS=-fPIC
 
 To use the SPDK fio plugin with fio, specify the plugin binary using LD_PRELOAD when running
 fio and set ioengine=spdk_bdev in the fio configuration file (see example_config.fio in the same
-directory as this README).
+directory as this README). Following example command assumes `fio` is in your system `$PATH` environment variable.
 
 ```bash
 LD_PRELOAD=<path to spdk repo>/build/fio/spdk_bdev fio
 ```
 
-The fio configuration file must contain one new parameter:
+The fio configuration file must contain parameter pointing to a JSON configuration file containing SPDK bdev configuration:
 
 ```bash
 spdk_json_conf=./examples/bdev/fio_plugin/bdev.json
@@ -92,6 +91,154 @@ When testing random workloads, it is recommended to set norandommap=1.  fio's ra
 processing consumes extra CPU cycles which will degrade performance over time with
 the fio_plugin since all I/O are submitted and completed on a single CPU core.
 
+### Step-by-step usage examples
+
+These examples assume you have built fio and SPDK with `--with-fio` option enabled.
+
+#### Using fio bdev plugin with local NVMe storage
+
+- Bind local NVMe drives to userspace driver
+
+- Run gen_nvme.sh script to create a JSON file with bdev subsystem configuration
+
+    ```bash
+    scripts/gen_nvme.sh --json-with-subsystems > /tmp/bdev.json
+
+    cat /tmp/bdev_local.json  | jq
+    {
+        "subsystems": [
+        {
+            "subsystem": "bdev",
+            "config": [
+            {
+                "method": "bdev_nvme_attach_controller",
+                "params": {
+                "trtype": "PCIe",
+                "name": "Nvme0",
+                "traddr": "0000:0a:00.0"
+                }
+            },
+            {
+                "method": "bdev_nvme_attach_controller",
+                "params": {
+                "trtype": "PCIe",
+                "name": "Nvme1",
+                "traddr": "0000:85:00.0"
+                }
+            }
+            ]
+        }
+        ]
+    }
+    ```
+
+- Prepare fio configuration file
+
+    ```bash
+    cat /tmp/fio.conf
+
+    [global]
+    ioengine=/spdk/build/fio/spdk_bdev
+    spdk_json_conf=/tmp/bdev.json
+
+    thread=1
+    direct=1
+    group_reporting=1
+
+    bs=4k
+    rw=randread
+    rwmixread=70
+    time_based=1
+    runtime=10
+    norandommap=1
+
+    [filename0]
+    filename=Nvme0n1
+    filename=Nvme1n1
+    iodepth=8
+    ```
+
+- Run fio with spdk bdev plugin
+
+    ```bash
+    /usr/src/fio/fio /tmp/fio.conf
+    ```
+
+#### Using fio bdev plugin as NVMe-oF initiator with remote storage
+
+- Start SPDK NVMe-oF Target process and configure it with block devices and NVMe-oF subsystems
+
+    ```bash
+    build/bin/nvmf_tgt &
+    sleep 3
+    scripts/rpc.py bdev_malloc_create 10 512 -b Malloc0
+    scripts/rpc.py nvmf_create_transport -t TCP
+    scripts/rpc.py nvmf_create_subsystem nqn.2018-09.io.spdk:cnode1 -a -s S000001
+    scripts/rpc.py nvmf_subsystem_add_listener nqn.2018-09.io.spdk:cnode1 -t tcp -f ipv4 -s 4420 -a 10.0.0.1
+    scripts/rpc.py nvmf_subsystem_add_ns nqn.2018-09.io.spdk:cnode1 Malloc0
+    ```
+
+- Run gen_nvme.sh script to prepare a JSON file containing bdev subsystem configuration
+  for initiator which will allow it to connect to target
+
+    ```bash
+    scripts/gen_nvme.sh --json-with-subsystems --mode=remote \
+    --trid=tcp:10.0.0.1:4420:nqn.2018-09.io.spdk:cnode1 > /tmp/bdev.json
+
+    cat /tmp/bdev.json | jq
+    {
+        "subsystems": [
+        {
+            "subsystem": "bdev",
+            "config": [
+            {
+                "method": "bdev_nvme_attach_controller",
+                "params": {
+                "trtype": "tcp",
+                "adrfam": "IPv4",
+                "name": "Nvme0",
+                "subnqn": "nqn.2018-09.io.spdk:cnode1",
+                "traddr": "10.0.0.1",
+                "trsvcid": "4420"
+                }
+            }
+            ]
+        }
+        ]
+    }
+    ```
+
+- Prepare fio configuration file
+
+    ```bash
+    cat /tmp/fio.conf
+
+    [global]
+    ioengine=/spdk/build/fio/spdk_bdev
+    spdk_json_conf=/tmp/bdev.json
+
+    thread=1
+    direct=1
+    group_reporting=1
+
+    bs=4k
+    rw=randread
+    rwmixread=70
+    time_based=1
+    runtime=10
+    norandommap=1
+
+    [filename0]
+    filename=Nvme0n1
+    iodepth=8
+    ```
+
+- Run fio bdev plugin as initiator
+
+    ```bash
+    /usr/src/fio/fio /tmp/fio.conf
+    ```
+
 ## Zoned Block Devices
 
 SPDK has a zoned block device API (bdev_zone.h) which currently supports Open-channel SSDs,
@@ -114,7 +261,7 @@ Most zoned block devices have a resource constraint on the amount of zones which
 state at any point in time. It is very important to not exceed this limit.
 
 You can control how many zones fio will keep in an open state by using the
-``--max_open_zones`` option.
+`--max_open_zones` option.
 
 If you use a fio version newer than 3.26, fio will automatically detect and set the proper value.
 If you use an old version of fio, make sure to provide the proper --max_open_zones value yourself.
@@ -122,7 +269,7 @@ If you use an old version of fio, make sure to provide the proper --max_open_zon
 ### Maximum Active Zones
 
 Zoned block devices may also have a resource constraint on the number of zones that can be active at
-any point in time. Unlike ``max_open_zones``, fio currently does not manage this constraint, and
+any point in time. Unlike `max_open_zones`, fio currently does not manage this constraint, and
 there is thus no option to limit it either.
 
 Since the max active zones limit (by definition) has to be greater than or equal to the max open
