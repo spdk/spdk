@@ -273,7 +273,7 @@ _balance_active(struct spdk_scheduler_thread_info *thread_info)
 }
 
 static void
-balance(struct spdk_scheduler_core_info *cores_info, int cores_count)
+balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 {
 	struct spdk_reactor *reactor;
 	struct spdk_governor *governor;

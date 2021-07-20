@@ -620,7 +620,7 @@ app_stop(void *arg1)
 
 	spdk_rpc_finish();
 	g_spdk_app.stopped = true;
-	_spdk_scheduler_period_set(0);
+	_spdk_scheduler_set_period(0);
 	_start_subsystem_fini(NULL);
 }
 

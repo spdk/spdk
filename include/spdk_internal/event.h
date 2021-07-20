@@ -255,40 +255,35 @@ struct spdk_scheduler_core_info {
 };
 
 /**
- * Scheduler balance function type.
- * Accepts array of core_info which is of size 'count' and returns updated array.
+ * Thread scheduler.
+ * Functions from this structure are invoked from scheduling reactor.
  */
-typedef void (*spdk_scheduler_balance_fn)(struct spdk_scheduler_core_info *core_info, int count);
-
-/**
- * Scheduler init function type.
- * Called on scheduler module initialization.
- */
-typedef int (*spdk_scheduler_init_fn)(void);
-
-/**
- * Scheduler deinitialization function type.
- * Called on reactor fini.
- */
-typedef void (*spdk_scheduler_deinit_fn)(void);
-
-/** Thread scheduler */
 struct spdk_scheduler {
-	char                        *name;
-	spdk_scheduler_init_fn       init;
-	spdk_scheduler_deinit_fn     deinit;
-	spdk_scheduler_balance_fn    balance;
-	TAILQ_ENTRY(spdk_scheduler)  link;
-};
+	const char *name;
 
-/**
- * Add the given scheduler to the list of registered schedulers.
- * This function should be invoked by referencing the macro
- * SPDK_SCHEDULER_REGISTER in the scheduler c file.
- *
- * \param scheduler Scheduler to be added.
- */
-void _spdk_scheduler_list_add(struct spdk_scheduler *scheduler);
+	/**
+	 * This function is called to initialize a scheduler.
+	 *
+	 * \return 0 on success or non-zero on failure.
+	 */
+	int (*init)(void);
+
+	/**
+	 * This function is called to deinitialize a scheduler.
+	 */
+	void (*deinit)(void);
+
+	/**
+	 * Function to balance threads across cores by modifying
+	 * the value of their lcore field.
+	 *
+	 * \param core_info Structure describing cores and threads on them.
+	 * \param count Size of the core_info array.
+	 */
+	void (*balance)(struct spdk_scheduler_core_info *core_info, uint32_t count);
+
+	TAILQ_ENTRY(spdk_scheduler)	link;
+};
 
 /**
  * Change current scheduler. If another scheduler was used prior,
@@ -300,43 +295,47 @@ void _spdk_scheduler_list_add(struct spdk_scheduler *scheduler);
  *
  * \return 0 on success or non-zero on failure.
  */
-int _spdk_scheduler_set(char *name);
+int _spdk_scheduler_set(const char *name);
 
 /**
  * Get currently set scheduler.
  *
+ * \return a pointer to spdk scheduler or NULL if none is set.
  */
 struct spdk_scheduler *_spdk_scheduler_get(void);
 
 /**
  * Change current scheduling period.
+ * Setting period to 0 disables scheduling.
  *
- * \param period New period (microseconds).
+ * \param period Period to set in microseconds.
  */
-void _spdk_scheduler_period_set(uint64_t period);
+void _spdk_scheduler_set_period(uint64_t period);
 
 /**
- * Get period of currently set scheduler.
+ * Get scheduling period of currently set scheduler.
+ *
+ * \return Scheduling period in microseconds.
  */
-uint64_t _spdk_scheduler_period_get(void);
+uint64_t _spdk_scheduler_get_period(void);
+
+/**
+ * Add the given scheduler to the list of registered schedulers.
+ * This function should be invoked by referencing the macro
+ * SPDK_SCHEDULER_REGISTER in the scheduler c file.
+ *
+ * \param scheduler Scheduler to be added.
+ */
+void _spdk_scheduler_register(struct spdk_scheduler *scheduler);
 
 /*
- * Macro used to register new reactor balancer.
+ * Macro used to register new scheduler.
  */
 #define SPDK_SCHEDULER_REGISTER(scheduler) \
 static void __attribute__((constructor)) _spdk_scheduler_register_ ## scheduler (void) \
 { \
-	_spdk_scheduler_list_add(&scheduler); \
+	_spdk_scheduler_register(&scheduler); \
 } \
-
-/**
- * Set new CPU core index. Used for scheduling, assigns new CPU core index and marks it =
- * for rescheduling - does not actually change it. Can be used with SPDK_ENV_LCORE_ID_ANY
- *
- * \param thread thread to change core.
- * \param lcore new CPU core index.
- */
-void _spdk_lw_thread_set_core(struct spdk_lw_thread *thread, uint32_t lcore);
 
 #ifdef __cplusplus
 }

@@ -51,7 +51,7 @@ deinit_static(void)
 }
 
 static void
-balance_static(struct spdk_scheduler_core_info *cores, int core_count)
+balance_static(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 {
 }
 

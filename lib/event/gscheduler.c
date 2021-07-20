@@ -53,7 +53,7 @@ deinit(void)
 }
 
 static void
-balance(struct spdk_scheduler_core_info *cores, int core_count)
+balance(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 {
 	struct spdk_governor *governor;
 	struct spdk_scheduler_core_info *core;

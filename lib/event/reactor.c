@@ -82,7 +82,7 @@ static int reactor_interrupt_init(struct spdk_reactor *reactor);
 static void reactor_interrupt_fini(struct spdk_reactor *reactor);
 
 static struct spdk_scheduler *
-_scheduler_find(char *name)
+_scheduler_find(const char *name)
 {
 	struct spdk_scheduler *tmp;
 
@@ -96,7 +96,7 @@ _scheduler_find(char *name)
 }
 
 int
-_spdk_scheduler_set(char *name)
+_spdk_scheduler_set(const char *name)
 {
 	struct spdk_scheduler *scheduler;
 	int rc = 0;
@@ -138,21 +138,21 @@ _spdk_scheduler_get(void)
 }
 
 uint64_t
-_spdk_scheduler_period_get(void)
+_spdk_scheduler_get_period(void)
 {
 	/* Convert from ticks to microseconds */
 	return (g_scheduler_period * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
 }
 
 void
-_spdk_scheduler_period_set(uint64_t period)
+_spdk_scheduler_set_period(uint64_t period)
 {
 	/* Convert microseconds to ticks */
 	g_scheduler_period = period * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 }
 
 void
-_spdk_scheduler_list_add(struct spdk_scheduler *scheduler)
+_spdk_scheduler_register(struct spdk_scheduler *scheduler)
 {
 	if (_scheduler_find(scheduler->name)) {
 		SPDK_ERRLOG("scheduler named '%s' already registered.\n", scheduler->name);

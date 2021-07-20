@@ -491,7 +491,7 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.period != 0) {
-		_spdk_scheduler_period_set(req.period);
+		_spdk_scheduler_set_period(req.period);
 	}
 
 	ret = _spdk_scheduler_set(req.name);
@@ -514,7 +514,7 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_scheduler *scheduler = _spdk_scheduler_get();
-	uint64_t scheduler_period = _spdk_scheduler_period_get();
+	uint64_t scheduler_period = _spdk_scheduler_get_period();
 	struct spdk_governor *governor = _spdk_governor_get();
 
 	if (params) {
