@@ -120,7 +120,7 @@ test_spdk_app_parse_args(void)
 							"-d",
 							"-p",
 							"--single-file-segments",
-							"--silence-noticelog"
+							"--silence-noticelog",
 							"-R"
 						       };
 
