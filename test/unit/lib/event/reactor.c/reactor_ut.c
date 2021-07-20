@@ -794,7 +794,7 @@ test_governor(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	g_curr_freq = last_freq;
-	_spdk_governor_list_add(&governor);
+	_spdk_governor_register(&governor);
 
 	allocate_cores(2);
 

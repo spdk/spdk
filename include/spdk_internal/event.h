@@ -164,38 +164,86 @@ int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 struct spdk_thread *_spdk_get_app_thread(void);
 
 struct spdk_governor_capabilities {
-	bool priority;
+	bool priority; /* Core with higher base frequency */
 };
 
-/** Cores governor */
+/**
+ * Cores governor
+ * Implements core frequency control for schedulers. Functions from this structure
+ * are invoked from scheduling reactor.
+ */
 struct spdk_governor {
-	char *name;
+	const char *name;
 
-	/* return - current frequency on success, 0 on failure */
+	/**
+	 * Get current frequency of a given core.
+	 *
+	 * \param lcore_id Core number.
+	 *
+	 * \return Currently set core frequency.
+	 */
 	uint32_t (*get_core_curr_freq)(uint32_t lcore_id);
 
+	/**
+	 * Increase core frequency to next available one.
+	 *
+	 * \param lcore_id Core number.
+	 *
+	 * \return 1 on success, 0 already at max frequency, negative on error.
+	 */
 	int (*core_freq_up)(uint32_t lcore_id);
+
+	/**
+	 * Decrease core frequency to next available one.
+	 *
+	 * \param lcore_id Core number.
+	 *
+	 * \return 1 on success, 0 already at min frequency, negative on error.
+	 */
 	int (*core_freq_down)(uint32_t lcore_id);
+
+	/**
+	 * Set core frequency to maximum available.
+	 *
+	 * \param lcore_id Core number.
+	 *
+	 * \return 1 on success, 0 already at max frequency, negative on error.
+	 */
 	int (*set_core_freq_max)(uint32_t lcore_id);
+
+	/**
+	 * Set core frequency to minimum available.
+	 *
+	 * \param lcore_id Core number.
+	 *
+	 * \return 1 on success, 0 already at min frequency, negative on error.
+	 */
 	int (*set_core_freq_min)(uint32_t lcore_id);
 
+	/**
+	 * Get capabilities of a given core.
+	 *
+	 * \param lcore_id Core number.
+	 * \param capabilities Structure to fill with capabilities data.
+	 *
+	 * \return 0 on success, negative on error.
+	 */
 	int (*get_core_capabilities)(uint32_t lcore_id, struct spdk_governor_capabilities *capabilities);
+
+	/**
+	 * Initialize a governor.
+	 *
+	 * \return 0 on success, non-zero on error.
+	 */
 	int (*init)(void);
+
+	/**
+	 * Deinitialize a governor.
+	 */
 	void (*deinit)(void);
 
 	TAILQ_ENTRY(spdk_governor) link;
 };
-
-/**
- * Add the given governor to the list of registered governors.
- * This function should be invoked by referencing the macro
- * SPDK_GOVERNOR_REGISTER in the governor c file.
- *
- * \param governor Governor to be added.
- *
- * \return 0 on success or non-zero on failure.
- */
-void _spdk_governor_list_add(struct spdk_governor *governor);
 
 /**
  * Set the current governor.
@@ -208,21 +256,33 @@ void _spdk_governor_list_add(struct spdk_governor *governor);
  *
  * \return 0 on success or non-zero on failure.
  */
-int _spdk_governor_set(char *name);
+int _spdk_governor_set(const char *name);
 
 /**
  * Get currently set governor.
  *
+ * \return a pointer to spdk governor or NULL if none is set.
  */
 struct spdk_governor *_spdk_governor_get(void);
 
 /**
- * Macro used to register new cores governor.
+ * Add the given governor to the list of registered governors.
+ * This function should be invoked by referencing the macro
+ * SPDK_GOVERNOR_REGISTER in the governor c file.
+ *
+ * \param governor Governor to be added.
+ *
+ * \return 0 on success or non-zero on failure.
+ */
+void _spdk_governor_register(struct spdk_governor *governor);
+
+/**
+ * Macro used to register new governors.
  */
 #define SPDK_GOVERNOR_REGISTER(governor) \
 	static void __attribute__((constructor)) _spdk_governor_register_ ## governor(void) \
 	{ \
-		_spdk_governor_list_add(&governor); \
+		_spdk_governor_register(&governor); \
 	} \
 
 /**

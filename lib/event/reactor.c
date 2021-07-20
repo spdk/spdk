@@ -1466,7 +1466,7 @@ reactor_interrupt_fini(struct spdk_reactor *reactor)
 }
 
 static struct spdk_governor *
-_governor_find(char *name)
+_governor_find(const char *name)
 {
 	struct spdk_governor *governor, *tmp;
 
@@ -1480,7 +1480,7 @@ _governor_find(char *name)
 }
 
 int
-_spdk_governor_set(char *name)
+_spdk_governor_set(const char *name)
 {
 	struct spdk_governor *governor;
 	int rc = 0;
@@ -1521,7 +1521,7 @@ _spdk_governor_get(void)
 }
 
 void
-_spdk_governor_list_add(struct spdk_governor *governor)
+_spdk_governor_register(struct spdk_governor *governor)
 {
 	if (_governor_find(governor->name)) {
 		SPDK_ERRLOG("governor named '%s' already registered.\n", governor->name);
