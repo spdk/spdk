@@ -1,8 +1,7 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -14,7 +13,7 @@
 #      notice, this list of conditions and the following disclaimer in
 #      the documentation and/or other materials provided with the
 #      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
+#    * Neither the name of Nvidia Corporation nor the names of its
 #      contributors may be used to endorse or promote products derived
 #      from this software without specific prior written permission.
 #
@@ -31,14 +30,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-# These directories contain tests.
-TESTDIRS = app bdev blobfs cpp_headers dma env event nvme rpc_client thread
-
-DIRS-$(CONFIG_TESTS) += $(TESTDIRS)
-DIRS-$(CONFIG_UNIT_TESTS) += unit
+ifeq ($(CONFIG_RDMA),y)
+DIRS-y = test_dma
+endif
 
 .PHONY: all clean $(DIRS-y)
 

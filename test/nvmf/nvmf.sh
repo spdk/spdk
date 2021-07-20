@@ -78,6 +78,8 @@ if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	run_test "nvmf_target_disconnect" test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
 fi
 
+run_test "dma" test/nvmf/host/dma.sh "${TEST_ARGS[@]}"
+
 timing_exit host
 
 trap - SIGINT SIGTERM EXIT
