@@ -1056,16 +1056,16 @@ class SPDKTarget(Target):
         self.log_print("SPDK NVMeOF transport layer:")
         rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
+        if self.enable_adq:
+            self.adq_configure_tc()
+            self.log_print("Done configuring SPDK NVMeOF Target")
+
         if self.null_block:
             self.spdk_tgt_add_nullblock(self.null_block)
             self.spdk_tgt_add_subsystem_conf(self.nic_ips, self.null_block)
         else:
             self.spdk_tgt_add_nvme_conf()
             self.spdk_tgt_add_subsystem_conf(self.nic_ips)
-
-        if self.enable_adq:
-            self.adq_configure_tc()
-        self.log_print("Done configuring SPDK NVMeOF Target")
 
     def spdk_tgt_add_nullblock(self, null_block_count):
         md_size = 0
