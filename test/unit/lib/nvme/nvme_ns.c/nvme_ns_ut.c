@@ -71,7 +71,8 @@ test_nvme_ns_construct(void)
 {
 	struct spdk_nvme_ns ns = {};
 	uint32_t id = 1;
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns_data nsdata = {};
+	struct spdk_nvme_ctrlr ctrlr = { .nsdata = &nsdata };
 
 	nvme_ns_construct(&ns, id, &ctrlr);
 	CU_ASSERT(ns.id == 1);
