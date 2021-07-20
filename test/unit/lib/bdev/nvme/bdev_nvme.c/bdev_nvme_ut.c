@@ -1221,14 +1221,14 @@ test_reset_ctrlr(void)
 	nvme_ctrlr->destruct = true;
 
 	rc = bdev_nvme_reset(nvme_ctrlr);
-	CU_ASSERT(rc == -EBUSY);
+	CU_ASSERT(rc == -ENXIO);
 
 	/* Case 2: reset is in progress. */
 	nvme_ctrlr->destruct = false;
 	nvme_ctrlr->resetting = true;
 
 	rc = bdev_nvme_reset(nvme_ctrlr);
-	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rc == -EBUSY);
 
 	/* Case 3: reset completes successfully. */
 	nvme_ctrlr->resetting = false;
@@ -1336,7 +1336,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 
 	/* New reset request is rejected. */
 	rc = bdev_nvme_reset(nvme_ctrlr);
-	CU_ASSERT(rc == -EBUSY);
+	CU_ASSERT(rc == -ENXIO);
 
 	/* Additional polling called spdk_io_device_unregister() to ctrlr,
 	 * However there are two channels and destruct is not completed yet.
@@ -1399,7 +1399,7 @@ test_failover_ctrlr(void)
 	nvme_ctrlr->destruct = true;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -ENXIO);
 	CU_ASSERT(curr_trid->is_failed == false);
 
 	/* Case 2: reset is in progress. */
@@ -1452,7 +1452,7 @@ test_failover_ctrlr(void)
 	nvme_ctrlr->resetting = true;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
-	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(rc == -EBUSY);
 
 	/* Case 5: failover is in progress. */
 	nvme_ctrlr->failover_in_progress = true;

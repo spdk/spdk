@@ -856,13 +856,13 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->destruct) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return -EBUSY;
+		return -ENXIO;
 	}
 
 	if (nvme_ctrlr->resetting) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
-		return -EAGAIN;
+		return -EBUSY;
 	}
 
 	nvme_ctrlr->resetting = true;
@@ -912,7 +912,7 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 		assert(ctrlr_ch->ctrlr->reset_cb_arg == NULL);
 		ctrlr_ch->ctrlr->reset_cb_fn = bdev_nvme_reset_io_complete;
 		ctrlr_ch->ctrlr->reset_cb_arg = bio;
-	} else if (rc == -EAGAIN) {
+	} else if (rc == -EBUSY) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
 		 * we don't interfere with the app framework reset strategy. i.e. we are deferring to the
@@ -937,7 +937,7 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	if (nvme_ctrlr->destruct) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		/* Don't bother resetting if the controller is in the process of being destructed. */
-		return -EBUSY;
+		return -ENXIO;
 	}
 
 	curr_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
@@ -947,9 +947,9 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 	if (nvme_ctrlr->resetting) {
 		if (next_trid && !nvme_ctrlr->failover_in_progress) {
-			rc = -EAGAIN;
-		} else {
 			rc = -EBUSY;
+		} else {
+			rc = -EALREADY;
 		}
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
@@ -997,7 +997,7 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 				      bdev_nvme_reset_destroy_qpair,
 				      NULL,
 				      bdev_nvme_reset_ctrlr);
-	} else if (rc != -EBUSY) {
+	} else if (rc != -EALREADY) {
 		return rc;
 	}
 

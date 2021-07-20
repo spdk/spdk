@@ -229,8 +229,8 @@ int bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid
  * \param cb_fn Function to be called back after reset completes
  * \param cb_arg Argument for callback function
  * \return zero on success. Negated errno on the following error conditions:
- * -EBUSY: controller is being destroyed.
- * -EAGAIN: controller is already being reset.
+ * -ENXIO: controller is being destroyed.
+ * -EBUSY: controller is already being reset.
  */
 int bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, void *cb_arg);
 
