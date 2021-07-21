@@ -1155,11 +1155,13 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				break;
 			case IDXD_OPCODE_CRC32C_GEN:
 			case IDXD_OPCODE_COPY_CRC:
-				*comp_ctx->crc_dst = comp_ctx->hw.crc32c_val;
-				*comp_ctx->crc_dst ^= ~0;
+				if (spdk_likely(status == 0)) {
+					*comp_ctx->crc_dst = comp_ctx->hw.crc32c_val;
+					*comp_ctx->crc_dst ^= ~0;
+				}
 				break;
 			case IDXD_OPCODE_COMPARE:
-				if (status == 0) {
+				if (spdk_likely(status == 0)) {
 					status = comp_ctx->hw.result;
 				}
 				break;
@@ -1169,8 +1171,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				comp_ctx->cb_fn(comp_ctx->cb_arg, status);
 			}
 
+			/* reinit the status in the completion context */
 			comp_ctx->hw.status = status = 0;
-
 			if (comp_ctx->batch_op == false) {
 				assert(spdk_bit_array_get(chan->ring_slots, comp_ctx->index));
 				spdk_bit_array_clear(chan->ring_slots, comp_ctx->index);
