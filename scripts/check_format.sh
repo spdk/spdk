@@ -584,6 +584,22 @@ function check_json_rpc() {
 	return $rc
 }
 
+function check_markdown_format() {
+	local rc=0
+
+	echo -n "Checking markdown files format..."
+	mdl -s $rootdir/mdl_rules.rb . > mdl.log || true
+	if [ -s mdl.log ]; then
+		echo " Errors in .md files detected:"
+		cat mdl.log
+		rc=1
+	else
+		echo " OK"
+	fi
+	rm -f mdl.log
+	return $rc
+}
+
 rc=0
 
 check_permissions || rc=1
@@ -598,6 +614,7 @@ if version_lt "1.9.5" "${GIT_VERSION}"; then
 fi
 
 check_comment_style || rc=1
+check_markdown_format || rc=1
 check_spaces_before_tabs || rc=1
 check_trailing_whitespace || rc=1
 check_forbidden_functions || rc=1
