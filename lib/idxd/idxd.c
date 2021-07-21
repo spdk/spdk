@@ -144,11 +144,14 @@ spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 {
 	struct idxd_batch *batch;
 
+	assert(chan != NULL);
+
 	pthread_mutex_lock(&chan->idxd->num_channels_lock);
 	assert(chan->idxd->num_channels > 0);
 	chan->idxd->num_channels--;
 	pthread_mutex_unlock(&chan->idxd->num_channels_lock);
 
+	assert(TAILQ_EMPTY(&chan->batches));
 	spdk_free(chan->completions);
 	spdk_free(chan->desc);
 	spdk_bit_array_free(&chan->ring_slots);
