@@ -97,6 +97,8 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	struct idxd_batch *batch;
 	int i;
 
+	assert(idxd != NULL);
+
 	chan = calloc(1, sizeof(struct spdk_idxd_io_channel));
 	if (chan == NULL) {
 		SPDK_ERRLOG("Failed to allocate idxd chan\n");
@@ -168,6 +170,8 @@ spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 int
 spdk_idxd_chan_get_max_operations(struct spdk_idxd_io_channel *chan)
 {
+	assert(chan != NULL);
+
 	return chan->idxd->total_wq_size / chan->idxd->chan_per_device;
 }
 
@@ -176,6 +180,8 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 {
 	struct idxd_batch *batch;
 	int rc, num_ring_slots;
+
+	assert(chan != NULL);
 
 	/* Round robin the WQ selection for the chan on this IDXD device. */
 	chan->idxd->wq_id++;
@@ -323,6 +329,7 @@ spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 void
 spdk_idxd_detach(struct spdk_idxd_device *idxd)
 {
+	assert(idxd != NULL);
 	idxd_device_destruct(idxd);
 }
 
@@ -409,6 +416,10 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	uint64_t src_addr, dst_addr;
 	int rc;
 
+	assert(chan != NULL);
+	assert(dst != NULL);
+	assert(src != NULL);
+
 	/* Common prep. */
 	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
 	if (rc) {
@@ -447,6 +458,11 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	struct idxd_comp *comp;
 	uint64_t src_addr, dst1_addr, dst2_addr;
 	int rc;
+
+	assert(chan != NULL);
+	assert(dst1 != NULL);
+	assert(dst2 != NULL);
+	assert(src != NULL);
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
@@ -497,6 +513,10 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 	uint64_t src1_addr, src2_addr;
 	int rc;
 
+	assert(chan != NULL);
+	assert(src1 != NULL);
+	assert(src2 != NULL);
+
 	/* Common prep. */
 	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
 	if (rc) {
@@ -534,6 +554,9 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	uint64_t dst_addr;
 	int rc;
 
+	assert(chan != NULL);
+	assert(dst != NULL);
+
 	/* Common prep. */
 	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
 	if (rc) {
@@ -567,6 +590,10 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, vo
 	struct idxd_comp *comp;
 	uint64_t src_addr;
 	int rc;
+
+	assert(chan != NULL);
+	assert(crc_dst != NULL);
+	assert(src != NULL);
 
 	/* Common prep. */
 	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
@@ -603,6 +630,11 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void 
 	struct idxd_comp *comp;
 	uint64_t src_addr, dst_addr;
 	int rc;
+
+	assert(chan != NULL);
+	assert(dst != NULL);
+	assert(src != NULL);
+	assert(crc_dst != NULL);
 
 	/* Common prep. */
 	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &comp);
@@ -647,6 +679,8 @@ spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
 {
 	struct idxd_batch *batch;
 
+	assert(chan != NULL);
+
 	if (!TAILQ_EMPTY(&chan->batch_pool)) {
 		batch = TAILQ_FIRST(&chan->batch_pool);
 		batch->index = 0;
@@ -687,6 +721,9 @@ _free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 int
 spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
 {
+	assert(chan != NULL);
+	assert(batch != NULL);
+
 	if (_is_batch_valid(batch, chan) == false) {
 		SPDK_ERRLOG("Attempt to cancel an invalid batch.\n");
 		return -EINVAL;
@@ -712,6 +749,9 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	struct idxd_comp *comp;
 	uint64_t desc_addr;
 	int i, rc;
+
+	assert(chan != NULL);
+	assert(batch != NULL);
 
 	if (_is_batch_valid(batch, chan) == false) {
 		SPDK_ERRLOG("Attempt to submit an invalid batch.\n");
@@ -829,6 +869,11 @@ spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 	uint64_t src_addr, dst_addr;
 	int rc;
 
+	assert(chan != NULL);
+	assert(batch != NULL);
+	assert(dst != NULL);
+	assert(src != NULL);
+
 	/* Common prep. */
 	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
 	if (rc) {
@@ -864,6 +909,10 @@ spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *
 	uint64_t dst_addr;
 	int rc;
 
+	assert(chan != NULL);
+	assert(batch != NULL);
+	assert(dst != NULL);
+
 	/* Common prep. */
 	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
 	if (rc) {
@@ -892,6 +941,12 @@ spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_bat
 	struct idxd_comp *comp;
 	uint64_t src_addr, dst1_addr, dst2_addr;
 	int rc;
+
+	assert(chan != NULL);
+	assert(batch != NULL);
+	assert(dst1 != NULL);
+	assert(dst2 != NULL);
+	assert(src != NULL);
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
@@ -938,6 +993,11 @@ spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch
 	uint64_t src_addr;
 	int rc;
 
+	assert(chan != NULL);
+	assert(batch != NULL);
+	assert(crc_dst != NULL);
+	assert(src != NULL);
+
 	/* Common prep. */
 	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
 	if (rc) {
@@ -970,6 +1030,11 @@ spdk_idxd_batch_prep_copy_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_
 	struct idxd_comp *comp;
 	uint64_t src_addr, dst_addr;
 	int rc;
+
+	assert(chan != NULL);
+	assert(batch != NULL);
+	assert(crc_dst != NULL);
+	assert(src != NULL);
 
 	/* Common prep. */
 	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
@@ -1008,6 +1073,11 @@ spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batc
 	struct idxd_comp *comp;
 	uint64_t src1_addr, src2_addr;
 	int rc;
+
+	assert(chan != NULL);
+	assert(batch != NULL);
+	assert(src1 != NULL);
+	assert(src2 != NULL);
 
 	/* Common prep. */
 	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &comp);
@@ -1061,6 +1131,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 	struct idxd_comp *comp_ctx, *tmp;
 	int status = 0;
 	int rc = 0;
+
+	assert(chan != NULL);
 
 	TAILQ_FOREACH_SAFE(comp_ctx, &chan->comp_ctx_oustanding, link, tmp) {
 		if (rc == MAX_COMPLETIONS_PER_POLL) {
