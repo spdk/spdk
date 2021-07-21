@@ -907,8 +907,8 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 		switch (task->type) {
 		case SPDK_SOCK_TASK_POLLIN:
 			if ((status & POLLIN) == POLLIN) {
-				if (sock->base.cb_fn != NULL) {
-					assert(sock->pending_recv == false);
+				if (sock->base.cb_fn != NULL &&
+				    sock->pending_recv == false) {
 					sock->pending_recv = true;
 					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				}
