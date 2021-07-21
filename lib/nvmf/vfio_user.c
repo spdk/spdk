@@ -1303,9 +1303,6 @@ consume_admin_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: handle admin req opc=%#x cid=%d\n",
-		      ctrlr_id(ctrlr), cmd->opc, cmd->cid);
-
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_CREATE_IO_CQ:
 	case SPDK_NVME_OPC_CREATE_IO_SQ:
@@ -2689,6 +2686,11 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	if (spdk_unlikely(req == NULL)) {
 		return -1;
 	}
+
+	assert(req->qpair != NULL);
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: handle qid%u, req opc=%#x cid=%d\n",
+		      ctrlr_id(ctrlr), req->qpair->qid, cmd->opc, cmd->cid);
+
 	vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
 	vu_req->cb_fn = handle_cmd_rsp;
 	vu_req->cb_arg = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
