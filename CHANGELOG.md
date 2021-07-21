@@ -2,6 +2,11 @@
 
 ## v21.07: (Upcoming Release)
 
+### json
+
+Added API `spdk_json_write_named_uint128` and `spdk_json_write_uint128` to perform
+the uint128 related data.
+
 ### accel_fw
 
 Added API `spdk_accel_submit_copy_crc32c` to perform a CRC32C while copying data.

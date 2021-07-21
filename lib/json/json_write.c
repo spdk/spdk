@@ -265,6 +265,54 @@ spdk_json_write_uint64(struct spdk_json_write_ctx *w, uint64_t val)
 	return emit(w, buf, count);
 }
 
+int
+spdk_json_write_uint128(struct spdk_json_write_ctx *w, uint64_t low_val, uint64_t high_val)
+{
+	char buf[128] = {'\0'};
+	uint64_t low = low_val, high = high_val;
+	int count = 0;
+
+	if (begin_value(w)) { return fail(w); }
+
+	if (high != 0) {
+		char temp_buf[128] = {'\0'};
+		uint64_t seg;
+		unsigned __int128 total = (unsigned __int128)low +
+					  ((unsigned __int128)high << 64);
+
+		while (total) {
+			seg = total % 10000000000;
+			total = total / 10000000000;
+			if (total) {
+				count = snprintf(temp_buf, 128, "%010" PRIu64 "%s", seg, buf);
+			} else {
+				count = snprintf(temp_buf, 128, "%" PRIu64 "%s", seg, buf);
+			}
+
+			if (count <= 0 || (size_t)count >= sizeof(temp_buf)) {
+				return fail(w);
+			}
+
+			snprintf(buf, 128, "%s", temp_buf);
+		}
+	} else {
+		count = snprintf(buf, sizeof(buf), "%" PRIu64, low);
+
+		if (count <= 0 || (size_t)count >= sizeof(buf)) { return fail(w); }
+	}
+
+	return emit(w, buf, count);
+}
+
+int
+spdk_json_write_named_uint128(struct spdk_json_write_ctx *w, const char *name,
+			      uint64_t low_val, uint64_t high_val)
+{
+	int rc = spdk_json_write_name(w, name);
+
+	return rc ? rc : spdk_json_write_uint128(w, low_val, high_val);
+}
+
 static void
 write_hex_4(void *dest, uint16_t val)
 {

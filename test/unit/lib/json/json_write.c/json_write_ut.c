@@ -69,6 +69,11 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 	CU_ASSERT(g_write_pos - g_buf == sizeof(json) - 1); \
 	CU_ASSERT(memcmp(json, g_buf, sizeof(json) - 1) == 0)
 
+#define END_SIZE(val, size) \
+	CU_ASSERT(spdk_json_write_end(w) == 0); \
+	CU_ASSERT(g_write_pos - g_buf == size); \
+	CU_ASSERT(memcmp(val, g_buf, size) == 0)
+
 #define END_NOCMP() \
 	CU_ASSERT(spdk_json_write_end(w) == 0)
 
@@ -111,6 +116,11 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 
 #define VAL_INT64(i) CU_ASSERT(spdk_json_write_int64(w, i) == 0);
 #define VAL_UINT64(u) CU_ASSERT(spdk_json_write_uint64(w, u) == 0);
+
+#define VAL_UINT128(low, high) \
+	CU_ASSERT(spdk_json_write_uint128(w, low, high) == 0);
+#define VAL_NAME_UINT128(name, low, high) \
+	CU_ASSERT(spdk_json_write_named_uint128(w, name, low, high) == 0);
 
 #define VAL_ARRAY_BEGIN() CU_ASSERT(spdk_json_write_array_begin(w) == 0)
 #define VAL_ARRAY_END() CU_ASSERT(spdk_json_write_array_end(w) == 0)
@@ -349,6 +359,138 @@ test_write_number_uint32(void)
 	BEGIN();
 	VAL_UINT32(4294967295);
 	END("4294967295");
+}
+
+static int
+test_generate_string_uint128(char *buf, int buf_size, uint64_t low, uint64_t high)
+{
+	char tmp_buf[256] = {0};
+	unsigned __int128 total;
+	uint64_t seg;
+	int count = 0;
+
+	memset(buf, 0, buf_size);
+	total = ((unsigned __int128)high << 64) + (unsigned __int128)low;
+	while (total) {
+		/* Use the different calculation to get the 128bits decimal value in UT */
+		seg = total % 1000000000000000;
+		total = total / 1000000000000000;
+		if (total) {
+			snprintf(tmp_buf, buf_size, "%015" PRIu64 "%s", seg, buf);
+		} else {
+			snprintf(tmp_buf, buf_size, "%" PRIu64 "%s", seg, buf);
+		}
+
+		count = snprintf(buf, buf_size, "%s", tmp_buf);
+	}
+
+	return count;
+}
+
+static int
+test_generate_string_name_uint128(char *name, char *buf, int buf_size, uint64_t low, uint64_t high)
+{
+	char tmp_buf[256] = {0};
+	int count = test_generate_string_uint128(buf, buf_size, low, high);
+
+	memcpy(tmp_buf, buf, buf_size);
+	count = snprintf(buf, 256, "\"%s\":%s", name, tmp_buf);
+
+	return count;
+}
+
+static void
+test_write_number_uint128(void)
+{
+	struct spdk_json_write_ctx *w;
+	char buf[256] = {0};
+	int used_count = 0;
+
+	BEGIN();
+	VAL_UINT128(0, 0);
+	END("0");
+
+	BEGIN();
+	VAL_UINT128(1, 0);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 1, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(123, 0);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 123, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(2147483647, 0);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 2147483647, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(0, 1);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 0, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(4294967295, 1);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 4294967295, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(2147483647, 4294967295);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 2147483647, 4294967295);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_UINT128(4294967295, 4294967295);
+	used_count = test_generate_string_uint128(buf, sizeof(buf), 4294967295, 4294967295);
+	END_SIZE(buf, used_count);
+}
+
+static void
+test_write_string_number_uint128(void)
+{
+	struct spdk_json_write_ctx *w;
+	char buf[256] = {0};
+	int used_count = 0;
+
+	BEGIN();
+	VAL_NAME_UINT128("case1", 0, 0);
+	END("\"case1\":0");
+
+	BEGIN();
+	VAL_NAME_UINT128("case2", 1, 0);
+	used_count = test_generate_string_name_uint128("case2", buf, sizeof(buf), 1, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case3", 123, 0);
+	used_count = test_generate_string_name_uint128("case3", buf, sizeof(buf), 123, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case4", 2147483647, 0);
+	used_count = test_generate_string_name_uint128("case4", buf, sizeof(buf), 2147483647, 0);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case5", 0, 1);
+	used_count = test_generate_string_name_uint128("case5", buf, sizeof(buf), 0, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case6", 4294967295, 1);
+	used_count = test_generate_string_name_uint128("case6", buf, sizeof(buf), 4294967295, 1);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case7", 2147483647, 4294967295);
+	used_count = test_generate_string_name_uint128("case7", buf, sizeof(buf), 2147483647, 4294967295);
+	END_SIZE(buf, used_count);
+
+	BEGIN();
+	VAL_NAME_UINT128("case8", 4294967295, 4294967295);
+	used_count = test_generate_string_name_uint128("case8", buf, sizeof(buf), 4294967295, 4294967295);
+	END_SIZE(buf, used_count);
 }
 
 static void
@@ -718,6 +860,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_write_string_utf16le);
 	CU_ADD_TEST(suite, test_write_number_int32);
 	CU_ADD_TEST(suite, test_write_number_uint32);
+	CU_ADD_TEST(suite, test_write_number_uint128);
+	CU_ADD_TEST(suite, test_write_string_number_uint128);
 	CU_ADD_TEST(suite, test_write_number_int64);
 	CU_ADD_TEST(suite, test_write_number_uint64);
 	CU_ADD_TEST(suite, test_write_array);
