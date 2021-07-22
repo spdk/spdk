@@ -2,11 +2,6 @@
 
 ## v21.07: (Upcoming Release)
 
-### json
-
-Added API `spdk_json_write_named_uint128` and `spdk_json_write_uint128` to perform
-the uint128 related data.
-
 ### accel_fw
 
 Added API `spdk_accel_submit_copy_crc32c` to perform a CRC32C while copying data.
@@ -17,10 +12,15 @@ Added API `spdk_accel_submit_copy_crc32cv` to submit chained CRC32C + copy comma
 
 ### bdev
 
-Change `spdk_bdev_read_blocks_with_md` arg offset definiton from int64_t to uint64_t.
+Change `spdk_bdev_read_blocks_with_md` arg offset definition from int64_t to uint64_t.
 
 Red-black tree has been used to organize the bdev names and aliases uniformly
 to provide faster lookup.
+
+Removed ZCOPY emulation: The bdev module can be checked to see if it supports ZCOPY
+and if not supported then use existing READ/WRITE commands.
+
+Added iov to spdk_bdev_zcopy_start.
 
 ### dpdk
 
@@ -28,8 +28,8 @@ Updated DPDK submodule to DPDK 21.05.
 
 ### idxd
 
-Remove the probe_cb parameter in spdk_idxd_probe function. And remove the definition
-of spdk_idxd_probe_cb function pointer. It should be implemented in idxd_user.c.
+Remove the `probe_cb` parameter in `spdk_idxd_probe` function. And remove the definition
+of `spdk_idxd_probe_cb` function pointer. It should be implemented in idxd_user.c.
 
 Added API `spdk_idxd_submit_copy_crc32c` to perform a CRC32C while copying data.
 
@@ -48,18 +48,10 @@ New parameters, `pdu_pool_size`, `immediate_data_pool_size`, and `data_out_pool_
 were added to the RPC `iscsi_set_options` to run iSCSI target with varying amount of
 available memory.
 
-### util
+### json
 
-`spdk_crc32c_iov_update` function was added to support calculating the crc32c of the
-iovs.
-
-### nvmf
-
-Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the controller ID range.
-
-`spdk_nvmf_request_get_buffers_multi` API is removed.
-
-Added the `nvmf_set_crdt` RPC for setting command retry delay times.
+Added API `spdk_json_write_named_uint128` and `spdk_json_write_uint128` to perform
+the uint128 related data.
 
 ### nvme
 
@@ -68,18 +60,18 @@ as vfio-user is the only user for the above two APIs.
 
 Added a new function `spdk_nvme_ns_cmd_copy` to submit a Simple Copy Command to a Namespace.
 
-Update the spdk_nvme_generic_command_status_code structure with new status code
-according to the definition in nvme 1.4 spec.
+Update the `spdk_nvme_generic_command_status_code` structure with new status code
+according to the definition in NVMe 1.4 spec.
 
-spdk_nvme_ctrlr_get_default_ctrlr_opts now sets use_cmb_sqs to false. This means
+`spdk_nvme_ctrlr_get_default_ctrlr_opts` now sets `use_cmb_sqs` to false. This means
 that if a controller has a CMB and supports SQs in the CMB, SPDK will not use
-the CMB for SQs by default - the user must set use_cmb_sqs to true in
-the spdk_nvme_ctrlr_opts structure prior to controller attach.
+the CMB for SQs by default - the user must set `use_cmb_sqs` to true in
+the `spdk_nvme_ctrlr_opts` structure prior to controller attach.
 
 Add a new function `spdk_nvme_detach_poll` to simplify a common use case to continue
 polling until all detachments complete.
 
-Added new argument 'timeout_admin_us' to 'spdk_nvme_ctrlr_register_timeout_callback' so callers
+Added new argument `timeout_admin_us` to `spdk_nvme_ctrlr_register_timeout_callback` so callers
 can specify a different timeout for admin commands vs. io commands.
 
 An existing function `spdk_nvme_detach_async` was updated to add one or more detachments
@@ -99,32 +91,33 @@ reset a controller asynchronously.
 
 New RPC `bdev_nvme_reset_controller` was added, to reset an NVMe controller.
 
+### nvmf
+
+Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the controller ID range.
+
+`spdk_nvmf_request_get_buffers_multi` API is removed.
+
+Added the `nvmf_set_crdt` RPC for setting command retry delay times.
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create
 and delete the rados object cluster, then users can choose the cluster to create related rbd
 device.
 
-Revised `bdev_rbd_create` parameter, it allows to use an optional parameter --cluster-name
+Revised `bdev_rbd_create` parameter, it allows to use an optional parameter `--cluster-name`
 to create a rbd bdev with  an already registered Rados Cluster Object.
 
 New RPC `bdev_rbd_get_clusters_info` was added, it allows to get the info of the registered
 Rados Cluster names.
 
-New optional parameter, 'timeout_admin_us', added to the bdev_nvme_set_options RPC.
+New optional parameter, `timeout_admin_us`, added to the bdev_nvme_set_options RPC.
 
 Revised a parameter `--stripe-size_kb` to `--stripe-size-kb` of `bdev_raid_create` method
 provided in `scripts/rpc.py` for consistency.
 
 An new optional parameter `config_kernel_mode` was added to the RPC `idxd_scan_accel_engine`,
 and this is used to enable using the kernel mode IDXD driver.
-
-### bdev
-
-Removed ZCOPY emulation: The bdev module can be checked to see if it supports ZCOPY
-and if not supported then use existing READ/WRITE commands.
-
-Added iov to spdk_bdev_zcopy_start
 
 ### thread
 
@@ -137,6 +130,8 @@ Red-black tree macros has been added by using the macros provided by the FreeBSD
 under the same BSD license.
 
 Add an new macro `SPDK_SIZEOF_MEMBER` to get the size of a member of a struct.
+
+`spdk_crc32c_iov_update` function was added to support calculating the crc32c of the iovs.
 
 ## v21.04:
 
