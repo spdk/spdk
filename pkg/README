@@ -1,3 +1,0 @@
-pkg/spdk.spec is deprecated and not fully supported. Use of the
-rpmbuild/spdk.spec together with provided script suite is advised.
-The pkg/spdk.spec is going to be removed from future releases.

@@ -137,6 +137,11 @@ provided in `scripts/rpc.py` for consistency.
 An new optional parameter `config_kernel_mode` was added to the RPC `idxd_scan_accel_engine`,
 and this is used to enable using the kernel mode IDXD driver.
 
+### rpm
+
+Removed deprecated `pkg/spdk.spec`, please use `rpmbuild/spdk.spec` instead.
+See [RPM documentation](https://spdk.io/doc/rpm.html) for more details.
+
 ### thread
 
 Red-black tree has been used for timed pollers to provide faster insertion and deletion

@@ -30,9 +30,3 @@ Parameter `enable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated an
 use `enable-zerocopy-send-server` or `enable-zerocopy-send-client` instead.
 Parameter `disable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
 use `disable-zerocopy-send-server` or `disable-zerocopy-send-client` instead.
-
-## rpm
-
-`pkg/spdk.spec` is considered to be deprecated and scheduled for removal in SPDK 21.07.
-Please use `rpmbuild/spdk.spec` instead and see
-[RPM documentation](https://spdk.io/doc/rpm.html) for more details.
