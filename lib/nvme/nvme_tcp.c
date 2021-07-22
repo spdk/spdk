@@ -1941,6 +1941,8 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		return rc;
 	}
 
+	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+
 	return 0;
 }
 

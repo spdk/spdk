@@ -542,11 +542,17 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 int
 nvme_pcie_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	if (nvme_qpair_is_admin_queue(qpair)) {
-		return 0;
-	} else {
-		return _nvme_pcie_ctrlr_create_io_qpair(ctrlr, qpair, qpair->id);
+	int rc = 0;
+
+	if (!nvme_qpair_is_admin_queue(qpair)) {
+		rc = _nvme_pcie_ctrlr_create_io_qpair(ctrlr, qpair, qpair->id);
 	}
+
+	if (rc == 0) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+	}
+
+	return rc;
 }
 
 void

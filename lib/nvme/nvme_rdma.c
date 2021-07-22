@@ -1245,6 +1245,10 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 		} while (rc == -EAGAIN && retry_count < NVME_RDMA_STALE_CONN_RETRY_MAX);
 	}
 
+	if (rc == 0) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+	}
+
 	return rc;
 }
 
