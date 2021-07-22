@@ -821,6 +821,38 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 	nvmf_tcp_qpair_destroy(tqpair);
 }
 
+static void
+test_nvmf_tcp_send_c2h_term_req(void)
+{
+	struct spdk_nvmf_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {}, mgmt_pdu = {}, pdu_in_progress = {};
+	enum spdk_nvme_tcp_term_req_fes fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
+	uint32_t error_offset = 1;
+
+	mgmt_pdu.sgl.total_size = 0;
+	mgmt_pdu.qpair = &tqpair;
+	tqpair.mgmt_pdu = &mgmt_pdu;
+	tqpair.pdu_in_progress = &pdu_in_progress;
+
+	/* case1: hlen < SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == hlen */
+	pdu.hdr.common.hlen = 64;
+	nvmf_tcp_send_c2h_term_req(&tqpair, &pdu, fes, error_offset);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.plen == tqpair.mgmt_pdu->hdr.term_req.common.hlen +
+		  pdu.hdr.common.hlen);
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);
+
+	/* case2: hlen > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE */
+	pdu.hdr.common.hlen = 255;
+	nvmf_tcp_send_c2h_term_req(&tqpair, &pdu, fes, error_offset);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.hlen == sizeof(struct spdk_nvme_tcp_term_req_hdr));
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.plen == (unsigned)
+		  tqpair.mgmt_pdu->hdr.term_req.common.hlen + SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE);
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -838,6 +870,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_h2c_data_hdr_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_incapsule_data_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_qpair_init_mem_resource);
+	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_term_req);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
