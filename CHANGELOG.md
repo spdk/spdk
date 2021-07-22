@@ -1,6 +1,8 @@
 # Changelog
 
-## v21.07: (Upcoming Release)
+## v21.10: (Upcoming Release)
+
+## v21.07:
 
 ### accel_fw
 
