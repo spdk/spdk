@@ -117,6 +117,15 @@ Added the `nvmf_set_crdt` RPC for setting command retry delay times.
 
 Expanded `spdk_nvmf_poll_group_stat` with current qpair count statistics.
 
+Removed following deprecated APIs:
+- `spdk_nvmf_poll_group_get_stat` (function in `nvmf.h`),
+- `spdk_nvmf_transport_poll_group_get_stat` (function in `nvmf.h`),
+- `spdk_nvmf_transport_poll_group_free_stat`(function in `nvmf.h`),
+- `spdk_nvmf_rdma_device_stat` (struct in `nvmf.h`),
+- `spdk_nvmf_transport_poll_group_stat` (struct in `nvmf.h`),
+- `poll_group_get_stat` (transport op in `nvmf_transport.h`),
+- `poll_group_free_stat` (transport op in `nvmf_transport.h`).
+
 ### rpc
 
 New RPC `bdev_rbd_register_cluster` and `bdev_rbd_unregister_cluster` was added, it allows to create

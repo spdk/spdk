@@ -132,41 +132,6 @@ struct spdk_nvmf_poll_group_stat {
 	uint64_t pending_bdev_io;
 };
 
-/* Deprecated.
- * Please use the flow with spdk_nvmf_poll_group_dump_stat,
- * which hides statistics structures within the transport.
- */
-struct spdk_nvmf_rdma_device_stat {
-	const char *name;
-	uint64_t polls;
-	uint64_t idle_polls;
-	uint64_t completions;
-	uint64_t requests;
-	uint64_t request_latency;
-	uint64_t pending_free_request;
-	uint64_t pending_rdma_read;
-	uint64_t pending_rdma_write;
-	uint64_t total_send_wrs;
-	uint64_t send_doorbell_updates;
-	uint64_t total_recv_wrs;
-	uint64_t recv_doorbell_updates;
-};
-
-/* Deprecated.
- * Please use the flow with spdk_nvmf_poll_group_dump_stat,
- * which hides statistics structures within the transport.
- */
-struct spdk_nvmf_transport_poll_group_stat {
-	spdk_nvme_transport_type_t trtype;
-	union {
-		struct {
-			uint64_t pending_data_buffer;
-			uint64_t num_devices;
-			struct spdk_nvmf_rdma_device_stat *devices;
-		} rdma;
-	};
-};
-
 /**
  * Function to be called once asynchronous listen add and remove
  * operations are completed. See spdk_nvmf_subsystem_add_listener()
@@ -319,18 +284,6 @@ void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group,
  */
 int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			     struct spdk_nvmf_qpair *qpair);
-
-/**
- * Get current poll group statistics. (deprecated)
- *
- * \param tgt The NVMf target.
- * \param stat Pointer to allocated statistics structure to fill with values.
- *
- * \return 0 upon success.
- * \return -EINVAL if either group or stat is NULL.
- */
-int spdk_nvmf_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
-				  struct spdk_nvmf_poll_group_stat *stat);
 
 typedef void (*nvmf_qpair_disconnect_cb)(void *ctx);
 
@@ -1129,44 +1082,6 @@ int spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 		const struct spdk_nvme_transport_id *trid,
 		spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 		void *cb_arg);
-
-
-/**
- * \brief Get current transport poll group statistics. (deprecated)
- *
- * Please use the flow with spdk_nvmf_poll_group_dump_stat.
- *
- * This function allocates memory for statistics and returns it
- * in \p stat parameter. Caller must free this memory with
- * spdk_nvmf_transport_poll_group_free_stat() when it is not needed
- * anymore.
- *
- * \param tgt The NVMf target.
- * \param transport The NVMf transport.
- * \param stat Output parameter that will contain pointer to allocated statistics structure.
- *
- * \return 0 upon success.
- * \return -ENOTSUP if transport does not support statistics.
- * \return -EINVAL if any of parameters is NULL.
- * \return -ENOENT if transport poll group is not found.
- * \return -ENOMEM if memory allocation failed.
- */
-int
-spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
-					struct spdk_nvmf_transport *transport,
-					struct spdk_nvmf_transport_poll_group_stat **stat);
-
-/**
- * Free statistics memory previously allocated with spdk_nvmf_transport_poll_group_get_stat(). (deprecated)
- *
- * Please use the flow with spdk_nvmf_poll_group_dump_stat.
- *
- * \param transport The NVMf transport.
- * \param stat Pointer to transport poll group statistics structure.
- */
-void
-spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_transport_poll_group_stat *stat);
 
 /**
  * Dump poll group statistics into JSON.

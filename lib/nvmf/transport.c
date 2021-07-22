@@ -600,31 +600,6 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 	return true;
 }
 
-int
-spdk_nvmf_transport_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
-					struct spdk_nvmf_transport *transport,
-					struct spdk_nvmf_transport_poll_group_stat **stat)
-{
-	SPDK_ERRLOG("spdk_nvmf_transport_poll_group_get_stat is deprecated and will be removed\n");
-
-	if (transport->ops->poll_group_get_stat) {
-		return transport->ops->poll_group_get_stat(tgt, stat);
-	} else {
-		return -ENOTSUP;
-	}
-}
-
-void
-spdk_nvmf_transport_poll_group_free_stat(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_transport_poll_group_stat *stat)
-{
-	SPDK_ERRLOG("spdk_nvmf_transport_poll_group_free_stat is deprecated and will be removed\n");
-
-	if (transport->ops->poll_group_free_stat) {
-		transport->ops->poll_group_free_stat(stat);
-	}
-}
-
 void
 spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 			       struct spdk_nvmf_transport_poll_group *group,

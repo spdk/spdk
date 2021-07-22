@@ -1620,26 +1620,6 @@ spdk_nvmf_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 	return tgroup->group;
 }
 
-int
-spdk_nvmf_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
-			      struct spdk_nvmf_poll_group_stat *stat)
-{
-	struct spdk_io_channel *ch;
-	struct spdk_nvmf_poll_group *group;
-
-	SPDK_ERRLOG("spdk_nvmf_poll_group_get_stat is deprecated and will be removed\n");
-
-	if (tgt == NULL || stat == NULL) {
-		return -EINVAL;
-	}
-
-	ch = spdk_get_io_channel(tgt);
-	group = spdk_io_channel_get_ctx(ch);
-	*stat = group->stat;
-	spdk_put_io_channel(ch);
-	return 0;
-}
-
 void
 spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group, struct spdk_json_write_ctx *w)
 {

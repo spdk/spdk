@@ -16,7 +16,6 @@
 	spdk_nvmf_get_optimal_poll_group;
 	spdk_nvmf_poll_group_destroy;
 	spdk_nvmf_poll_group_add;
-	spdk_nvmf_poll_group_get_stat;
 	spdk_nvmf_qpair_disconnect;
 	spdk_nvmf_qpair_get_peer_trid;
 	spdk_nvmf_qpair_get_local_trid;
@@ -79,8 +78,6 @@
 	spdk_nvmf_transport_listen;
 	spdk_nvmf_transport_stop_listen;
 	spdk_nvmf_transport_stop_listen_async;
-	spdk_nvmf_transport_poll_group_get_stat;
-	spdk_nvmf_transport_poll_group_free_stat;
 	spdk_nvmf_poll_group_dump_stat;
 	spdk_nvmf_rdma_init_hooks;
 	spdk_nvmf_subsystem_set_ana_reporting;

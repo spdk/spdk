@@ -4178,86 +4178,6 @@ nvmf_rdma_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 	_nvmf_rdma_qpair_abort_request(req);
 }
 
-/* Deprecated, please use the flow with nvmf_rdma_poll_group_dump_stat. */
-static int
-nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
-			      struct spdk_nvmf_transport_poll_group_stat **stat)
-{
-	struct spdk_io_channel *ch;
-	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_transport_poll_group *tgroup;
-	struct spdk_nvmf_rdma_poll_group *rgroup;
-	struct spdk_nvmf_rdma_poller *rpoller;
-	struct spdk_nvmf_rdma_device_stat *device_stat;
-	uint64_t num_devices = 0;
-
-	SPDK_ERRLOG("nvmf_rdma_poll_group_get_stat is deprecated and will be removed\n");
-
-	if (tgt == NULL || stat == NULL) {
-		return -EINVAL;
-	}
-
-	ch = spdk_get_io_channel(tgt);
-	group = spdk_io_channel_get_ctx(ch);;
-	spdk_put_io_channel(ch);
-	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		if (SPDK_NVME_TRANSPORT_RDMA == tgroup->transport->ops->type) {
-			*stat = calloc(1, sizeof(struct spdk_nvmf_transport_poll_group_stat));
-			if (!*stat) {
-				SPDK_ERRLOG("Failed to allocate memory for NVMf RDMA statistics\n");
-				return -ENOMEM;
-			}
-			(*stat)->trtype = SPDK_NVME_TRANSPORT_RDMA;
-
-			rgroup = SPDK_CONTAINEROF(tgroup, struct spdk_nvmf_rdma_poll_group, group);
-			/* Count devices to allocate enough memory */
-			TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
-				++num_devices;
-			}
-			(*stat)->rdma.devices = calloc(num_devices, sizeof(struct spdk_nvmf_rdma_device_stat));
-			if (!(*stat)->rdma.devices) {
-				SPDK_ERRLOG("Failed to allocate NVMf RDMA devices statistics\n");
-				free(*stat);
-				return -ENOMEM;
-			}
-
-			(*stat)->rdma.pending_data_buffer = rgroup->stat.pending_data_buffer;
-			(*stat)->rdma.num_devices = num_devices;
-			num_devices = 0;
-			TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
-				device_stat = &(*stat)->rdma.devices[num_devices++];
-				device_stat->name = ibv_get_device_name(rpoller->device->context->device);
-				device_stat->polls = rpoller->stat.polls;
-				device_stat->idle_polls = rpoller->stat.idle_polls;
-				device_stat->completions = rpoller->stat.completions;
-				device_stat->requests = rpoller->stat.requests;
-				device_stat->request_latency = rpoller->stat.request_latency;
-				device_stat->pending_free_request = rpoller->stat.pending_free_request;
-				device_stat->pending_rdma_read = rpoller->stat.pending_rdma_read;
-				device_stat->pending_rdma_write = rpoller->stat.pending_rdma_write;
-				device_stat->total_send_wrs = rpoller->stat.qp_stats.send.num_submitted_wrs;
-				device_stat->send_doorbell_updates = rpoller->stat.qp_stats.send.doorbell_updates;
-				device_stat->total_recv_wrs = rpoller->stat.qp_stats.recv.num_submitted_wrs;
-				device_stat->recv_doorbell_updates = rpoller->stat.qp_stats.recv.doorbell_updates;
-			}
-			return 0;
-		}
-	}
-	return -ENOENT;
-}
-
-/* Deprecated, please use the flow with nvmf_rdma_poll_group_dump_stat. */
-static void
-nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *stat)
-{
-	SPDK_ERRLOG("nvmf_rdma_poll_group_free_stat is deprecated and will be removed\n");
-
-	if (stat) {
-		free(stat->rdma.devices);
-	}
-	free(stat);
-}
-
 static void
 nvmf_rdma_poll_group_dump_stat(struct spdk_nvmf_transport_poll_group *group,
 			       struct spdk_json_write_ctx *w)
@@ -4338,8 +4258,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.qpair_get_listen_trid = nvmf_rdma_qpair_get_listen_trid,
 	.qpair_abort_request = nvmf_rdma_qpair_abort_request,
 
-	.poll_group_get_stat = nvmf_rdma_poll_group_get_stat,
-	.poll_group_free_stat = nvmf_rdma_poll_group_free_stat,
 	.poll_group_dump_stat = nvmf_rdma_poll_group_dump_stat,
 };
 

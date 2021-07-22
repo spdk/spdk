@@ -371,19 +371,6 @@ struct spdk_nvmf_transport_ops {
 				    struct spdk_nvmf_request *req);
 
 	/*
-	 * Get transport poll group statistics. (deprecated)
-	 * Please use the flow with spdk_nvmf_poll_group_dump_stat.
-	 */
-	int (*poll_group_get_stat)(struct spdk_nvmf_tgt *tgt,
-				   struct spdk_nvmf_transport_poll_group_stat **stat);
-
-	/*
-	 * Free transport poll group statistics previously allocated with poll_group_get_stat(). (deprecated)
-	 * Please use the flow with spdk_nvmf_poll_group_dump_stat.
-	 */
-	void (*poll_group_free_stat)(struct spdk_nvmf_transport_poll_group_stat *stat);
-
-	/*
 	 * Dump transport poll group statistics into JSON.
 	 */
 	void (*poll_group_dump_stat)(struct spdk_nvmf_transport_poll_group *group,

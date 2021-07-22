@@ -12,18 +12,6 @@ ABI cannot be removed without providing deprecation notice for at least single S
 
 # Deprecation Notices {#deprecation-notices}
 
-## nvmf
-
-The following APIs have been deprecated and will be removed in SPDK 21.07:
-- `spdk_nvmf_poll_group_get_stat` (function in `nvmf.h`),
-- `spdk_nvmf_transport_poll_group_get_stat` (function in `nvmf.h`),
-- `spdk_nvmf_transport_poll_group_free_stat`(function in `nvmf.h`),
-- `spdk_nvmf_rdma_device_stat` (struct in `nvmf.h`),
-- `spdk_nvmf_transport_poll_group_stat` (struct in `nvmf.h`),
-- `poll_group_get_stat` (transport op in `nvmf_transport.h`),
-- `poll_group_free_stat` (transport op in `nvmf_transport.h`).
-Please use `spdk_nvmf_poll_group_dump_stat` and `poll_group_dump_stat` instead.
-
 ## rpc
 
 Parameter `enable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
