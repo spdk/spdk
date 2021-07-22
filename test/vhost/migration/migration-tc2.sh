@@ -34,6 +34,8 @@ function migration_tc2_cleanup_vhost_config() {
 function migration_tc2_configure_vhost() {
 	timing_enter migration_tc2_configure_vhost
 
+	# HACK: Make sure we stop detecting rdma-capable NICs on mlx
+	modprobe mlx5_ib || :
 	TEST_TRANSPORT=rdma TEST_MODE=iso nvmftestinit
 
 	# Those are global intentionally - they will be unset in cleanup handler
