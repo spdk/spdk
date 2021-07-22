@@ -34,10 +34,7 @@ function migration_tc2_cleanup_vhost_config() {
 function migration_tc2_configure_vhost() {
 	timing_enter migration_tc2_configure_vhost
 
-	# Just in case we don't have any rdma-capable NICs on board - using hw or
-	# soft-RoCE during vhost tests should not matter.
-	detect_soft_roce_nics
-	allocate_nic_ips
+	TEST_TRANSPORT=rdma TEST_MODE=iso nvmftestinit
 
 	# Those are global intentionally - they will be unset in cleanup handler
 
@@ -60,7 +57,7 @@ function migration_tc2_configure_vhost() {
 	# Override the trap set in place via nvmfappstart()
 	trap 'migration_tc2_error_cleanup; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 	rpc_cmd framework_start_init
-	rpc_cmd nvmf_create_transport -t rdma -u 8192
+	rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 	mapfile -t json < <("$rootdir/scripts/gen_nvme.sh")
 	rpc_cmd load_subsystem_config -j "'${json[*]}'"
 	timing_exit start_nvmf_tgt
