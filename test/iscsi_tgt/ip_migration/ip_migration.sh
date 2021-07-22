@@ -9,6 +9,7 @@ iscsitestinit
 
 rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio-wrapper"
+pids=()
 
 source "$rootdir/test/common/applications.sh"
 NETMASK=127.0.0.0/24
@@ -35,6 +36,7 @@ function iscsi_tgt_start() {
 	"${ISCSI_APP[@]}" -r $1 -m $2 --wait-for-rpc &
 	pid=$!
 	echo "Process pid: $pid"
+	pids+=($pid)
 
 	trap 'kill_all_iscsi_target; exit 1' SIGINT SIGTERM EXIT
 
@@ -74,6 +76,7 @@ fiopid=$!
 sleep 3
 
 $rpc_py -s $rpc_first_addr spdk_kill_instance SIGTERM
+wait ${pids[0]}
 
 rpc_add_target_node $rpc_second_addr
 
@@ -84,4 +87,5 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 
 $rpc_py -s $rpc_second_addr spdk_kill_instance SIGTERM
+wait ${pids[1]}
 iscsitestfini
