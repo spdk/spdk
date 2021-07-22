@@ -583,12 +583,22 @@ sort_threads(const void *p1, const void *p2)
 		count2 = thread_info2.paused_pollers_count;
 		break;
 	case 5: /* Sort by idle time */
-		count1 = thread_info1.idle - thread_info1.last_idle;
-		count2 = thread_info2.idle - thread_info2.last_idle;
+		if (g_interval_data) {
+			count1 = thread_info1.idle - thread_info1.last_idle;
+			count2 = thread_info2.idle - thread_info2.last_idle;
+		} else {
+			count1 = thread_info1.idle;
+			count2 = thread_info2.idle;
+		}
 		break;
 	case 6: /* Sort by busy time */
-		count1 = thread_info1.busy - thread_info1.last_busy;
-		count2 = thread_info2.busy - thread_info2.last_busy;
+		if (g_interval_data) {
+			count1 = thread_info1.busy - thread_info1.last_busy;
+			count2 = thread_info2.busy - thread_info2.last_busy;
+		} else {
+			count1 = thread_info1.busy;
+			count2 = thread_info2.busy;
+		}
 		break;
 	default:
 		return 0;
@@ -753,7 +763,6 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 	const struct rpc_poller_info *poller2 = (struct rpc_poller_info *)p2;
 	enum sort_type sorting = *(enum sort_type *)arg;
 	uint64_t count1, count2;
-	uint64_t last_run_counter;
 
 	if (sorting == BY_NAME) {
 		/* Sorting by name requested explicitly */
@@ -768,10 +777,13 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 		case 2: /* Sort by thread */
 			return strcmp(poller1->thread_name, poller2->thread_name);
 		case 3: /* Sort by run counter */
-			last_run_counter = get_last_run_counter(poller1->name, poller1->thread_id);
-			count1 = poller1->run_count - last_run_counter;
-			last_run_counter = get_last_run_counter(poller2->name, poller2->thread_id);
-			count2 = poller2->run_count - last_run_counter;
+			if (g_interval_data) {
+				count1 = poller1->run_count - get_last_run_counter(poller1->name, poller1->thread_id);
+				count2 = poller2->run_count - get_last_run_counter(poller2->name, poller2->thread_id);
+			} else {
+				count1 = poller1->run_count;
+				count2 = poller2->run_count;
+			}
 			break;
 		case 4: /* Sort by period */
 			count1 = poller1->period_ticks;
@@ -868,12 +880,22 @@ sort_cores(const void *p1, const void *p2)
 		count2 = core_info2.pollers_count;
 		break;
 	case 3: /* Sort by idle time */
-		count1 = core_info1.last_idle - core_info1.idle;
-		count2 = core_info1.last_idle - core_info2.idle;
+		if (g_interval_data) {
+			count1 = core_info1.last_idle - core_info1.idle;
+			count2 = core_info2.last_idle - core_info2.idle;
+		} else {
+			count1 = core_info1.idle;
+			count2 = core_info2.idle;
+		}
 		break;
 	case 4: /* Sort by busy time */
-		count1 = core_info1.last_busy - core_info1.busy;
-		count2 = core_info1.last_busy - core_info2.busy;
+		if (g_interval_data) {
+			count1 = core_info1.last_busy - core_info1.busy;
+			count2 = core_info2.last_busy - core_info2.busy;
+		} else {
+			count1 = core_info1.busy;
+			count2 = core_info2.busy;
+		}
 		break;
 	default:
 		return 0;
