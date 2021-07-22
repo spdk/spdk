@@ -329,6 +329,8 @@ _track_comp(struct spdk_idxd_io_channel *chan, bool batch_op, uint32_t index,
 {
 	comp_ctx->desc = desc;
 	comp_ctx->index = index;
+	/* Tag this as a batched operation or not so we know which bit array index to clear. */
+	comp_ctx->batch_op = batch_op;
 
 	/* Only add non-batch completions here.  Batch completions are added when the batch is
 	 * submitted.
@@ -1093,10 +1095,13 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			}
 
 			comp_ctx->hw.status = status = 0;
-			if (comp_ctx->desc->opcode != IDXD_OPCODE_BATCH) {
+
+			if (comp_ctx->batch_op == false) {
 				assert(spdk_bit_array_get(chan->ring_slots, comp_ctx->index));
 				spdk_bit_array_clear(chan->ring_slots, comp_ctx->index);
-			} else {
+			}
+
+			if (comp_ctx->desc->opcode == IDXD_OPCODE_BATCH) {
 				_free_batch(comp_ctx->batch, chan);
 			}
 		} else {

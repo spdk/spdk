@@ -160,6 +160,7 @@ struct idxd_comp {
 	struct idxd_hw_desc		*desc;
 	uint32_t			*crc_dst;
 	uint32_t			index;
+	bool				batch_op;
 	char				pad[3];
 	TAILQ_ENTRY(idxd_comp)		link;
 };
