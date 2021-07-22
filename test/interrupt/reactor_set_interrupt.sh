@@ -27,7 +27,7 @@ function reactor_set_intr_mode() {
 		reactor_is_idle $spdk_pid $i
 	done
 
-	if [ "$without_thd"x = x ]; then
+	if [ "$without_thd"x != x ]; then
 		# Schedule all spdk_threads to reactor 1
 		for i in ${thd0_ids[*]}; do
 			$rpc_py thread_set_cpumask -i $i -m $r1_mask
@@ -46,7 +46,7 @@ function reactor_set_intr_mode() {
 
 	# Set reactor 2 back to intr mode
 	$rpc_py --plugin interrupt_plugin reactor_set_interrupt_mode 2
-	if [ "$without_thd"x = x ]; then
+	if [ "$without_thd"x != x ]; then
 		# Schedule spdk_threads in thd2_ids back to reactor 2
 		for i in ${thd2_ids[*]}; do
 			$rpc_py thread_set_cpumask -i $i -m $r2_mask
@@ -57,7 +57,7 @@ function reactor_set_intr_mode() {
 
 	# Set reactor 0 back to intr mode
 	$rpc_py --plugin interrupt_plugin reactor_set_interrupt_mode 0
-	if [ "$without_thd"x = x ]; then
+	if [ "$without_thd"x != x ]; then
 		# Schedule spdk_threads in thd2_ids back to reactor 0
 		for i in ${thd0_ids[*]}; do
 			$rpc_py thread_set_cpumask -i $i -m $r0_mask
