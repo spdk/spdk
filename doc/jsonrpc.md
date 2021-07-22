@@ -8376,6 +8376,10 @@ Example response:
 
 ## RAID
 
+### construct_ms_lvol_bdev {#rpc_construct_ms_lvol_bdev}
+
+Placeholder: Mayastor-specific
+
 ### bdev_raid_get_bdevs {#rpc_bdev_raid_get_bdevs}
 
 This is used to list all the raid bdev names based on the input category requested. Category should be one
