@@ -12,10 +12,6 @@ ABI cannot be removed without providing deprecation notice for at least single S
 
 # Deprecation Notices {#deprecation-notices}
 
-## net
-
-The net library is deprecated and will be removed in the 21.07 release.
-
 ## nvmf
 
 The following APIs have been deprecated and will be removed in SPDK 21.07:

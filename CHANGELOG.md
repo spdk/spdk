@@ -42,6 +42,12 @@ implemented a wrapper library to use IDXD device by leveraging the kernel DSA dr
 SPDK idxd library (lib/idxd). Then users can leverage the RPC later to configure how to
 use the DSA device by user space driver or kernel driver.
 
+### init
+
+Added new `init` library that initializes the SPDK subsystems, which previously was
+internal to application framework. That functionality has been made public and for
+use by applications which don't leverage SPDK's application framework.
+
 ### iscsi
 
 New parameters, `pdu_pool_size`, `immediate_data_pool_size`, and `data_out_pool_size`,
@@ -52,6 +58,10 @@ available memory.
 
 Added API `spdk_json_write_named_uint128` and `spdk_json_write_uint128` to perform
 the uint128 related data.
+
+### net
+
+Removed deprecated `net` library.
 
 ### nvme
 
@@ -91,13 +101,21 @@ reset a controller asynchronously.
 
 New RPC `bdev_nvme_reset_controller` was added, to reset an NVMe controller.
 
+Added `spdk_nvme_ns_get_nguid` function to get NGUID for the given namespace.
+
+Added `spdk_nvme_ctrlr_is_fabrics` function to indicate whether a ctrlr handle
+is associated with a fabrics controller.
+
 ### nvmf
 
 Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the controller ID range.
+Added `spdk_nvmf_subsystem_get_min_cntlid` and `spdk_nvmf_subsystem_get_max_cntlid` to request those values.
 
 `spdk_nvmf_request_get_buffers_multi` API is removed.
 
 Added the `nvmf_set_crdt` RPC for setting command retry delay times.
+
+Expanded `spdk_nvmf_poll_group_stat` with current qpair count statistics.
 
 ### rpc
 
@@ -124,6 +142,14 @@ and this is used to enable using the kernel mode IDXD driver.
 Red-black tree has been used for timed pollers to provide faster insertion and deletion
 and for io_devices to provide faster lookup.
 
+Removed `spdk_io_channel` structure from public header and moved it to thread_internal.h.
+
+### trace
+
+Added `spdk_trace_register_description_ext` function to register variable number of tracepoint arguments.
+
+Added ability to chain multiple trace entries together to extend the size of the argument buffer.
+
 ### util
 
 Red-black tree macros has been added by using the macros provided by the FreeBSD operating system
@@ -132,6 +158,10 @@ under the same BSD license.
 Add an new macro `SPDK_SIZEOF_MEMBER` to get the size of a member of a struct.
 
 `spdk_crc32c_iov_update` function was added to support calculating the crc32c of the iovs.
+
+Added zipf random number generator with power law probability distribution.
+When applied to performance testing of block devices, it will select blocks over
+the full range of LBAs, but will more frequently select lower-numbered LBAs.
 
 ## v21.04:
 
