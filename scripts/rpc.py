@@ -2653,12 +2653,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_recv_pipe')
     p.add_argument('--disable-recv-pipe', help='Disable receive pipe',
                    action='store_false', dest='enable_recv_pipe')
-    p.add_argument('--enable-zerocopy-send', help="""Enable zerocopy on send
-    (Deprecated, use enable-zerocopy-send-server or enable-zerocopy-send-client)""",
-                   action='store_true', dest='enable_zerocopy_send')
-    p.add_argument('--disable-zerocopy-send', help="""Enable zerocopy on send
-    (Deprecated, use disable-zerocopy-send-server or disable-zerocopy-send-client)""",
-                   action='store_false', dest='enable_zerocopy_send')
     p.add_argument('--enable-quickack', help='Enable quick ACK',
                    action='store_true', dest='enable_quickack')
     p.add_argument('--disable-quickack', help='Disable quick ACK',

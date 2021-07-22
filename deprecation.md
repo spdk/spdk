@@ -11,10 +11,3 @@ Specific future SPDK release for the removal must be provided.
 ABI cannot be removed without providing deprecation notice for at least single SPDK release.
 
 # Deprecation Notices {#deprecation-notices}
-
-## rpc
-
-Parameter `enable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
-use `enable-zerocopy-send-server` or `enable-zerocopy-send-client` instead.
-Parameter `disable-zerocopy-send` of RPC `sock_impl_set_options` is deprecated and will be removed in SPDK 21.07,
-use `disable-zerocopy-send-server` or `disable-zerocopy-send-client` instead.

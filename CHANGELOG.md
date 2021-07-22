@@ -146,6 +146,11 @@ provided in `scripts/rpc.py` for consistency.
 An new optional parameter `config_kernel_mode` was added to the RPC `idxd_scan_accel_engine`,
 and this is used to enable using the kernel mode IDXD driver.
 
+Removed deprecated parameter `enable-zerocopy-send` of RPC `sock_impl_set_options`,
+use `enable-zerocopy-send-server` or `enable-zerocopy-send-client` instead.
+Removed deprecated parameter `disable-zerocopy-send` of RPC `sock_impl_set_options`,
+use `disable-zerocopy-send-server` or `disable-zerocopy-send-client` instead.
+
 ### rpm
 
 Removed deprecated `pkg/spdk.spec`, please use `rpmbuild/spdk.spec` instead.
