@@ -1855,6 +1855,10 @@ spdk_thread_set_interrupt_mode(bool enable_interrupt)
 	assert(thread);
 	assert(spdk_interrupt_mode_is_enabled());
 
+	SPDK_NOTICELOG("Set spdk_thread (%s) to %s mode from %s mode.\n",
+		       thread->name,  enable_interrupt ? "intr" : "poll",
+		       thread->in_interrupt ? "intr" : "poll");
+
 	if (thread->in_interrupt == enable_interrupt) {
 		return;
 	}
