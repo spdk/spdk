@@ -3029,7 +3029,7 @@ blob_get_snapshot_and_clone_entries(struct spdk_blob *blob,
 			}
 		}
 
-		assert(clone_entry != NULL);
+		assert(*clone_entry != NULL);
 	}
 }
 
