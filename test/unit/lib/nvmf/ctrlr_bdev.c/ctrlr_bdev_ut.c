@@ -610,6 +610,109 @@ test_nvmf_bdev_ctrlr_start_zcopy(void)
 	CU_ASSERT(rc < 0);
 }
 
+static void
+test_nvmf_bdev_ctrlr_cmd(void)
+{
+	int rc;
+	struct spdk_bdev bdev = {};
+	struct spdk_io_channel ch = {};
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_qpair qpair = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+	req.qpair = &qpair;
+	req.length = 4096;
+	bdev.blocklen = 512;
+	bdev.blockcnt = 3;
+	cmd.nvme_cmd.cdw10 = 0;
+	cmd.nvme_cmd.cdw12 = 2;
+
+	/* Compare status asynchronous */
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
+	/* SLBA out of range */
+	cmd.nvme_cmd.cdw10 = 3;
+
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_LBA_OUT_OF_RANGE);
+
+	/* SGL length invalid */
+	cmd.nvme_cmd.cdw10 = 0;
+	req.length = 512;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
+
+	/* Device error */
+	req.length = 4096;
+	memset(&rsp, 0, sizeof(rsp));
+	MOCK_SET(spdk_bdev_comparev_blocks, -1);
+
+	rc = nvmf_bdev_ctrlr_compare_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+
+	/* bdev not support flush */
+	MOCK_SET(spdk_bdev_io_type_supported, false);
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/*  Flush error */
+	MOCK_SET(spdk_bdev_io_type_supported, true);
+	MOCK_SET(spdk_bdev_flush_blocks, -1);
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+
+	/* Flush blocks status asynchronous */
+	MOCK_SET(spdk_bdev_flush_blocks, 0);
+
+	rc = nvmf_bdev_ctrlr_flush_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	MOCK_CLEAR(spdk_bdev_io_type_supported);
+	MOCK_CLEAR(spdk_bdev_flush_blocks);
+
+	/* Write zeroes blocks status asynchronous */
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
+	/* SLBA out of range */
+	cmd.nvme_cmd.cdw10 = 3;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_LBA_OUT_OF_RANGE);
+
+	/* Write block error */
+	MOCK_SET(spdk_bdev_write_zeroes_blocks, -1);
+	cmd.nvme_cmd.cdw10 = 0;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -626,6 +729,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_identify_ns);
 	CU_ADD_TEST(suite, test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_start_zcopy);
+	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_cmd);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
