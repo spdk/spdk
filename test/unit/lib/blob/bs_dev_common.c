@@ -157,8 +157,10 @@ dev_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload
 		length = lba_count * dev->blocklen;
 		SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 
-		memcpy(payload, &g_dev_buffer[offset], length);
-		g_dev_read_bytes += length;
+		if (length > 0) {
+			memcpy(payload, &g_dev_buffer[offset], length);
+			g_dev_read_bytes += length;
+		}
 	} else {
 		g_power_failure_rc = -EIO;
 	}

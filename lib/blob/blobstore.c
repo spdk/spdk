@@ -2746,6 +2746,11 @@ blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 		return;
 	}
 
+	if (length == 0) {
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
 	if (offset + length > bs_cluster_to_lba(blob->bs, blob->active.num_clusters)) {
 		cb_fn(cb_arg, -EINVAL);
 		return;
@@ -6112,7 +6117,10 @@ bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 		_blob->back_bs_dev = bs_create_zeroes_dev();
 	}
 
+	/* Temporarily override md_ro flag for MD modification */
+	_blob->md_ro = false;
 	_blob->state = SPDK_BLOB_STATE_DIRTY;
+
 	spdk_blob_sync_md(_blob, bs_clone_snapshot_origblob_cleanup, ctx);
 }
 
@@ -6143,6 +6151,8 @@ bs_inflate_blob_touch_next(void *cb_arg, int bserrno)
 {
 	struct spdk_clone_snapshot_ctx *ctx = (struct spdk_clone_snapshot_ctx *)cb_arg;
 	struct spdk_blob *_blob = ctx->original.blob;
+	struct spdk_bs_cpl cpl;
+	spdk_bs_user_op_t *op;
 	uint64_t offset;
 
 	if (bserrno != 0) {
@@ -6159,12 +6169,22 @@ bs_inflate_blob_touch_next(void *cb_arg, int bserrno)
 	if (ctx->cluster < _blob->active.num_clusters) {
 		offset = bs_cluster_to_lba(_blob->bs, ctx->cluster);
 
-		/* We may safely increment a cluster before write */
+		/* We may safely increment a cluster before copying */
 		ctx->cluster++;
 
-		/* Use zero length write to touch a cluster */
-		spdk_blob_io_write(_blob, ctx->channel, NULL, offset, 0,
-				   bs_inflate_blob_touch_next, ctx);
+		/* Use a dummy 0B read as a context for cluster copy */
+		cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+		cpl.u.blob_basic.cb_fn = bs_inflate_blob_touch_next;
+		cpl.u.blob_basic.cb_arg = ctx;
+
+		op = bs_user_op_alloc(ctx->channel, &cpl, SPDK_BLOB_READ, _blob,
+				      NULL, 0, offset, 0);
+		if (!op) {
+			bs_clone_snapshot_origblob_cleanup(ctx, -ENOMEM);
+			return;
+		}
+
+		bs_allocate_and_copy_cluster(_blob, ctx->channel, offset, op);
 	} else {
 		bs_inflate_blob_done(ctx);
 	}

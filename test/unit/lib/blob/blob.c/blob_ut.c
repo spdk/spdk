@@ -6875,6 +6875,78 @@ blob_persist_test(void)
 }
 
 static void
+blob_decouple_snapshot(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob_opts opts;
+	struct spdk_blob *blob, *snapshot1, *snapshot2;
+	struct spdk_io_channel *channel;
+	spdk_blob_id blobid, snapshotid;
+	uint64_t cluster;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(channel != NULL);
+
+	ut_spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+	opts.thin_provision = false;
+
+	blob = ut_blob_create_and_open(bs, &opts);
+	blobid = spdk_blob_get_id(blob);
+
+	/* Create first snapshot */
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 0);
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 1);
+	snapshotid = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot1 = g_blob;
+
+	/* Create the second one */
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 1);
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 2);
+	snapshotid = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot2 = g_blob;
+	CU_ASSERT_EQUAL(spdk_blob_get_parent_snapshot(bs, snapshot2->id), snapshot1->id);
+
+	/* Now decouple the second snapshot forcing it to copy the written clusters */
+	spdk_bs_blob_decouple_parent(bs, channel, snapshot2->id, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Verify that the snapshot has been decoupled and that the clusters have been copied */
+	CU_ASSERT_EQUAL(spdk_blob_get_parent_snapshot(bs, snapshot2->id), SPDK_BLOBID_INVALID);
+	for (cluster = 0; cluster < snapshot2->active.num_clusters; ++cluster) {
+		CU_ASSERT_NOT_EQUAL(snapshot2->active.clusters[cluster], 0);
+		CU_ASSERT_NOT_EQUAL(snapshot2->active.clusters[cluster],
+				    snapshot1->active.clusters[cluster]);
+	}
+
+	spdk_bs_free_io_channel(channel);
+
+	ut_blob_close_and_delete(bs, snapshot2);
+	ut_blob_close_and_delete(bs, snapshot1);
+	ut_blob_close_and_delete(bs, blob);
+	poll_threads();
+}
+
+static void
 suite_bs_setup(void)
 {
 	struct spdk_bs_dev *dev;
@@ -7043,6 +7115,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, blob_io_unit_compatiblity);
 	CU_ADD_TEST(suite_bs, blob_simultaneous_operations);
 	CU_ADD_TEST(suite_bs, blob_persist_test);
+	CU_ADD_TEST(suite_bs, blob_decouple_snapshot);
 
 	allocate_threads(2);
 	set_thread(0);
