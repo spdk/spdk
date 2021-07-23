@@ -2859,6 +2859,101 @@ Example response:
 }
 ~~~
 
+### bdev_ocf_flush_start {#rpc_bdev_ocf_flush_start}
+
+Start flushing OCF cache device.
+
+Automatic flushes of dirty data are managed by OCF cleaning policy settings.
+In addition to that, all dirty data is flushed to core device when there is
+an attempt to stop caching.
+On the other hand, this RPC call gives a possibility to flush dirty data manually
+when there is a need for it, e.g. to speed up the shutdown process when data
+hasn't been flushed for a long time.
+This RPC returns immediately, and flush is then being performed in the
+background. To see the status of flushing operation use bdev_ocf_flush_status.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ocf0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_flush_start",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_ocf_flush_status {#rpc_bdev_ocf_flush_status}
+
+Get flush status of OCF cache device.
+
+Automatic flushes of dirty data are managed by OCF cleaning policy settings.
+In addition to that, all dirty data is flushed to core device when there is
+an attempt to stop caching.
+On the other hand, there is a possibility to flush dirty data manually
+when there is a need for it, e.g. to speed up the shutdown process when data
+hasn't been flushed for a long time.
+This RPC reports if such manual flush is still in progress and if the operation
+was successful. To start manual flush use bdev_ocf_flush_start.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Response
+
+Status of OCF cache device flush.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ocf0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ocf_flush_status",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "in_progress": false,
+    "status": 0
+  }
+}
+~~~
+
 ### bdev_malloc_create {#rpc_bdev_malloc_create}
 
 Construct @ref bdev_config_malloc
