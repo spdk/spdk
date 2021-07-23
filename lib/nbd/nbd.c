@@ -108,6 +108,7 @@ struct spdk_nbd_disk {
 	struct nbd_io		*io_in_recv;
 	TAILQ_HEAD(, nbd_io)	received_io_list;
 	TAILQ_HEAD(, nbd_io)	executed_io_list;
+	TAILQ_HEAD(, nbd_io)	processing_io_list;
 
 	bool			is_started;
 	bool			is_closing;
@@ -477,6 +478,7 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_interrupt_set_event_types(nbd->intr, SPDK_INTERRUPT_EVENT_IN | SPDK_INTERRUPT_EVENT_OUT);
 	}
 
+	TAILQ_REMOVE(&nbd->processing_io_list, io, tailq);
 	TAILQ_INSERT_TAIL(&nbd->executed_io_list, io, tailq);
 
 	if (bdev_io != NULL) {
@@ -571,6 +573,7 @@ nbd_io_exec(struct spdk_nbd_disk *nbd)
 	if (!TAILQ_EMPTY(&nbd->received_io_list)) {
 		TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
 			TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
+			TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
 			ret = nbd_submit_bdev_io(nbd, io);
 			if (ret < 0) {
 				return ret;
@@ -664,6 +667,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 				if (spdk_likely((!nbd->is_closing) && nbd->is_started)) {
 					TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 				} else {
+					TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
 					nbd_io_done(NULL, false, io);
 				}
 				nbd->io_in_recv = NULL;
@@ -689,6 +693,7 @@ nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 			if (spdk_likely((!nbd->is_closing) && nbd->is_started)) {
 				TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 			} else {
+				TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
 				nbd_io_done(NULL, false, io);
 			}
 			nbd->io_in_recv = NULL;
@@ -704,18 +709,22 @@ nbd_io_recv(struct spdk_nbd_disk *nbd)
 {
 	int i, rc, ret = 0;
 
+	/*
+	 * nbd server should not accept request after closing command
+	 */
+	if (nbd->is_closing) {
+		return 0;
+	}
+
 	for (i = 0; i < GET_IO_LOOP_COUNT; i++) {
-		/*
-		 * nbd server should not accept requests after closing command
-		 */
-		if (nbd->is_closing) {
-			break;
-		}
 		rc = nbd_io_recv_internal(nbd);
 		if (rc < 0) {
 			return rc;
 		}
 		ret += rc;
+		if (nbd->is_closing) {
+			break;
+		}
 	}
 
 	return ret;
@@ -877,7 +886,22 @@ nbd_start_kernel(void *arg)
 static void
 nbd_bdev_hot_remove(struct spdk_nbd_disk *nbd)
 {
-	spdk_nbd_stop(nbd);
+	struct nbd_io *io, *io_tmp;
+
+	nbd->is_closing = true;
+	nbd_cleanup_io(nbd);
+
+	if (!TAILQ_EMPTY(&nbd->received_io_list)) {
+		TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
+			TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
+			TAILQ_INSERT_TAIL(&nbd->processing_io_list, io, tailq);
+		}
+	}
+	if (!TAILQ_EMPTY(&nbd->processing_io_list)) {
+		TAILQ_FOREACH_SAFE(io, &nbd->processing_io_list, tailq, io_tmp) {
+			nbd_io_done(NULL, false, io);
+		}
+	}
 }
 
 static void
@@ -1105,6 +1129,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 
 	TAILQ_INIT(&nbd->received_io_list);
 	TAILQ_INIT(&nbd->executed_io_list);
+	TAILQ_INIT(&nbd->processing_io_list);
 
 	/* Add nbd_disk to the end of disk list */
 	rc = nbd_disk_register(ctx->nbd);
