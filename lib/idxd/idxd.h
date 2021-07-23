@@ -39,7 +39,6 @@
 #include "spdk/idxd.h"
 #include "spdk/queue.h"
 #include "spdk/mmio.h"
-#include "spdk/bit_array.h"
 
 #include "idxd_spec.h"
 
@@ -83,7 +82,7 @@ static inline void movdir64b(void *dst, const void *src)
  */
 struct idxd_batch {
 	struct idxd_hw_desc		*user_desc;
-	struct idxd_comp		*user_completions;
+	struct idxd_ops			*user_ops;
 	uint8_t				index;
 	TAILQ_ENTRY(idxd_batch)		link;
 };
@@ -95,37 +94,27 @@ struct device_config {
 	uint16_t	total_engines;
 };
 
-struct idxd_comp ;
+struct idxd_ops;
 
 struct spdk_idxd_io_channel {
 	struct spdk_idxd_device			*idxd;
 	/* The portal is the address that we write descriptors to for submission. */
 	void					*portal;
 	uint32_t				portal_offset;
-	uint16_t				ring_size;
 
 	/*
-	 * Descriptors and completions share the same index. User descriptors
-	 * (those included in a batch) are managed independently from data descriptors
-	 * and are located in the batch structure.
+	 * User descriptors (those included in a batch) are managed independently from
+	 * data descriptors and are located in the batch structure.
 	 */
-	struct idxd_hw_desc			*desc;
-	struct idxd_comp			*completions;
-
-	/* Current list of oustanding completion addresses to poll. */
-	TAILQ_HEAD(comp_head, idxd_comp)	comp_ctx_oustanding;
-
-	/*
-	 * We use one bit array to track ring slots for both
-	 * desc and completions.
-	 *
-	 */
-	struct spdk_bit_array			*ring_slots;
+	void					*desc_base;
+	TAILQ_HEAD(, idxd_ops)			ops_pool;
+	/* Current list of oustanding operations to poll. */
+	TAILQ_HEAD(op_head, idxd_ops)		ops_outstanding;
+	void					*ops_base;
 
 	/* Lists of batches, free and in use. */
 	TAILQ_HEAD(, idxd_batch)		batch_pool;
 	TAILQ_HEAD(, idxd_batch)		batches;
-
 	void					*batch_base;
 };
 
@@ -152,19 +141,18 @@ struct idxd_group {
  * This struct wraps the hardware completion record which is 32 bytes in
  * size and must be 32 byte aligned.
  */
-struct idxd_comp {
+struct idxd_ops {
 	struct idxd_hw_comp_record	hw;
 	void				*cb_arg;
 	spdk_idxd_req_cb		cb_fn;
 	struct idxd_batch		*batch;
 	struct idxd_hw_desc		*desc;
 	uint32_t			*crc_dst;
-	uint32_t			index;
 	bool				batch_op;
-	char				pad[3];
-	TAILQ_ENTRY(idxd_comp)		link;
+	char				pad[7];
+	TAILQ_ENTRY(idxd_ops)		link;
 };
-SPDK_STATIC_ASSERT(sizeof(struct idxd_comp) == 96, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(struct idxd_ops) == 96, "size mismatch");
 
 struct idxd_wq {
 	struct spdk_idxd_device		*idxd;
