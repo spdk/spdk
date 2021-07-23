@@ -339,7 +339,6 @@ perf_set_sock_zcopy(const char *impl_name, bool enable)
 		opts_size = sizeof(sock_opts);
 	}
 
-	sock_opts.enable_zerocopy_send = enable;
 	sock_opts.enable_zerocopy_send_client = enable;
 
 	if (spdk_sock_impl_set_opts(impl_name, &sock_opts, opts_size)) {

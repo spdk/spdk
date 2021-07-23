@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2020, 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -90,7 +91,6 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.recv_buf_size = MIN_SO_RCVBUF_SIZE,
 	.send_buf_size = MIN_SO_SNDBUF_SIZE,
 	.enable_recv_pipe = true,
-	.enable_zerocopy_send = true,
 	.enable_quickack = false,
 	.enable_placement_id = PLACEMENT_NONE,
 	.enable_zerocopy_send_server = true,
@@ -563,8 +563,7 @@ retry:
 				fd = -1;
 				break;
 			}
-			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_server &&
-						 g_spdk_posix_sock_impl_opts.enable_zerocopy_send;
+			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_server;
 		} else if (type == SPDK_SOCK_CREATE_CONNECT) {
 			rc = connect(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
@@ -574,8 +573,7 @@ retry:
 				fd = -1;
 				continue;
 			}
-			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_client &&
-						 g_spdk_posix_sock_impl_opts.enable_zerocopy_send;
+			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_client;
 		}
 
 		flag = fcntl(fd, F_GETFL);

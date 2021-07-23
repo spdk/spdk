@@ -8885,7 +8885,6 @@ Example response:
     "recv_buf_size": 2097152,
     "send_buf_size": 2097152,
     "enable_recv_pipe": true,
-    "enable_zerocopy_send": true,
     "enable_quickack": true,
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
@@ -8906,7 +8905,6 @@ impl_name                   | Required | string      | Name of socket implementa
 recv_buf_size               | Optional | number      | Size of socket receive buffer in bytes
 send_buf_size               | Optional | number      | Size of socket send buffer in bytes
 enable_recv_pipe            | Optional | boolean     | Enable or disable receive pipe
-enable_zerocopy_send        | Optional | boolean     | Deprecated. Enable or disable zero copy on send for client and server sockets
 enable_quick_ack            | Optional | boolean     | Enable or disable quick ACK
 enable_placement_id         | Optional | number      | Enable or disable placement_id. 0:disable,1:incoming_napi,2:incoming_cpu
 enable_zerocopy_send_server | Optional | boolean     | Enable or disable zero copy on send for server sockets
@@ -8930,7 +8928,6 @@ Example request:
     "recv_buf_size": 2097152,
     "send_buf_size": 2097152,
     "enable_recv_pipe": false,
-    "enable_zerocopy_send": true,
     "enable_quick_ack": false,
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,

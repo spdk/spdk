@@ -16,7 +16,6 @@ def sock_impl_set_options(client,
                           recv_buf_size=None,
                           send_buf_size=None,
                           enable_recv_pipe=None,
-                          enable_zerocopy_send=None,
                           enable_quickack=None,
                           enable_placement_id=None,
                           enable_zerocopy_send_server=None,
@@ -28,7 +27,6 @@ def sock_impl_set_options(client,
         recv_buf_size: size of socket receive buffer in bytes (optional)
         send_buf_size: size of socket send buffer in bytes (optional)
         enable_recv_pipe: enable or disable receive pipe (optional)
-        enable_zerocopy_send: (Deprecated) enable or disable zerocopy on send (optional)
         enable_quickack: enable or disable quickack (optional)
         enable_placement_id: option for placement_id. 0:disable,1:incoming_napi,2:incoming_cpu (optional)
         enable_zerocopy_send_server: enable or disable zerocopy on send for server sockets(optional)
@@ -43,9 +41,6 @@ def sock_impl_set_options(client,
         params['send_buf_size'] = send_buf_size
     if enable_recv_pipe is not None:
         params['enable_recv_pipe'] = enable_recv_pipe
-    if enable_zerocopy_send is not None:
-        print("WARNING: enable_zerocopy_send is deprecated, please use enable_zerocopy_send_server or enable_zerocopy_send_client.")
-        params['enable_zerocopy_send'] = enable_zerocopy_send
     if enable_quickack is not None:
         params['enable_quickack'] = enable_quickack
     if enable_placement_id is not None:

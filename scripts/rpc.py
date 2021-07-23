@@ -2638,7 +2638,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        recv_buf_size=args.recv_buf_size,
                                        send_buf_size=args.send_buf_size,
                                        enable_recv_pipe=args.enable_recv_pipe,
-                                       enable_zerocopy_send=args.enable_zerocopy_send,
                                        enable_quickack=args.enable_quickack,
                                        enable_placement_id=args.enable_placement_id,
                                        enable_zerocopy_send_server=args.enable_zerocopy_send_server,
@@ -2665,9 +2664,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_zerocopy_send_client')
     p.add_argument('--disable-zerocopy-send-client', help='Disable zerocopy on send for client sockets',
                    action='store_false', dest='enable_zerocopy_send_client')
-    p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_zerocopy_send=None,
-                   enable_quickack=None, enable_placement_id=None, enable_zerocopy_send_server=None,
-                   enable_zerocopy_send_client=None)
+    p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_quickack=None,
+                   enable_placement_id=None, enable_zerocopy_send_server=None, enable_zerocopy_send_client=None)
 
     def sock_set_default_impl(args):
         print_json(rpc.sock.sock_set_default_impl(args.client,
