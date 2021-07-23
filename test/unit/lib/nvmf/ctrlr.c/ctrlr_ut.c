@@ -2544,6 +2544,67 @@ test_zcopy_write(void)
 	CU_ASSERT(ns_info.io_outstanding == 0);
 }
 
+static void
+test_nvmf_property_set(void)
+{
+	int rc;
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+
+	req.qpair = &qpair;
+	qpair.ctrlr = &ctrlr;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+
+	/* Invalid parameters */
+	cmd.prop_set_cmd.attrib.size = SPDK_NVMF_PROP_SIZE_4;
+	cmd.prop_set_cmd.ofst = offsetof(struct spdk_nvme_registers, vs);
+
+	rc = nvmf_property_set(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
+
+	cmd.prop_set_cmd.ofst = offsetof(struct spdk_nvme_registers, intms);
+
+	rc = nvmf_property_get(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
+
+	/* Set cc with same property size */
+	memset(req.rsp, 0, sizeof(union nvmf_c2h_msg));
+	cmd.prop_set_cmd.ofst = offsetof(struct spdk_nvme_registers, cc);
+
+	rc = nvmf_property_set(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Emulate cc data */
+	ctrlr.vcprop.cc.raw = 0xDEADBEEF;
+
+	rc = nvmf_property_get(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->prop_get_rsp.value.u64 == 0xDEADBEEF);
+
+	/* Set asq with different property size */
+	memset(req.rsp, 0, sizeof(union nvmf_c2h_msg));
+	cmd.prop_set_cmd.attrib.size = SPDK_NVMF_PROP_SIZE_4;
+	cmd.prop_set_cmd.ofst = offsetof(struct spdk_nvme_registers, asq);
+
+	rc = nvmf_property_set(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Emulate asq data */
+	ctrlr.vcprop.asq = 0xAADDADBEEF;
+
+	rc = nvmf_property_get(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->prop_get_rsp.value.u64 == 0xDDADBEEF);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2577,6 +2638,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_request_zcopy_start);
 	CU_ADD_TEST(suite, test_zcopy_read);
 	CU_ADD_TEST(suite, test_zcopy_write);
+	CU_ADD_TEST(suite, test_nvmf_property_set);
 
 	allocate_threads(1);
 	set_thread(0);
