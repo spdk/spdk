@@ -2731,7 +2731,7 @@ show_stats(pthread_t *data_thread)
 	char current_page_str[CURRENT_PAGE_STR_LEN];
 	bool force_refresh = true;
 
-	clock_gettime(CLOCK_REALTIME, &time_now);
+	clock_gettime(CLOCK_MONOTONIC, &time_now);
 	time_last = time_now.tv_sec;
 
 	switch_tab(THREADS_TAB);
@@ -2751,7 +2751,7 @@ show_stats(pthread_t *data_thread)
 			resize_interface(active_tab);
 		}
 
-		clock_gettime(CLOCK_REALTIME, &time_now);
+		clock_gettime(CLOCK_MONOTONIC, &time_now);
 		time_dif = time_now.tv_sec - time_last;
 		if (time_dif < 0) {
 			time_dif = g_sleep_time;
