@@ -2912,6 +2912,10 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 		return nvmf_ctrlr_set_features_volatile_write_cache(req);
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
 		return nvmf_ctrlr_set_features_number_of_queues(req);
+	case SPDK_NVME_FEAT_INTERRUPT_COALESCING:
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		response->status.sc = SPDK_NVME_SC_FEATURE_NOT_CHANGEABLE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
 		return nvmf_ctrlr_set_features_write_atomicity(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
