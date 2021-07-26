@@ -3601,9 +3601,6 @@ spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req)
 		goto end;
 	}
 
-	/* backward compatible */
-	req->data = req->iov[0].iov_base;
-
 	/* Set iovcnt to be the maximum number of
 	 * iovs that the ZCOPY can use
 	 */
