@@ -816,10 +816,14 @@ nvmf_bdev_ctrlr_start_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_io_get_iovec(bdev_io, &iov, &iovcnt);
 
 	assert(iovcnt <= NVMF_REQ_MAX_BUFFERS);
+	assert(iovcnt > 0);
 
 	req->iovcnt = iovcnt;
 
 	assert(req->iov == iov);
+
+	/* backward compatible */
+	req->data = req->iov[0].iov_base;
 
 	req->zcopy_bdev_io = bdev_io; /* Preserve the bdev_io for the end zcopy */
 
