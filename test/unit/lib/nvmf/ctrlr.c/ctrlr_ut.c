@@ -292,7 +292,7 @@ nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
 }
 
 int
-nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req, bool commit)
 {
 	req->zcopy_bdev_io = NULL;
 	spdk_nvmf_request_complete(req);
@@ -2452,7 +2452,7 @@ test_zcopy_read(void)
 	CU_ASSERT(ns_info.io_outstanding == 1);
 
 	/* Perform the zcopy end */
-	spdk_nvmf_request_zcopy_end(&req);
+	spdk_nvmf_request_zcopy_end(&req, false);
 	CU_ASSERT(req.zcopy_bdev_io == NULL);
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_COMPLETE);
 	CU_ASSERT(qpair.outstanding.tqh_first == NULL);
@@ -2537,7 +2537,7 @@ test_zcopy_write(void)
 	CU_ASSERT(ns_info.io_outstanding == 1);
 
 	/* Perform the zcopy end */
-	spdk_nvmf_request_zcopy_end(&req);
+	spdk_nvmf_request_zcopy_end(&req, true);
 	CU_ASSERT(req.zcopy_bdev_io == NULL);
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_COMPLETE);
 	CU_ASSERT(qpair.outstanding.tqh_first == NULL);

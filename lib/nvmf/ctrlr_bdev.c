@@ -880,9 +880,7 @@ nvmf_bdev_ctrlr_end_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 int
-nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req, bool commit)
 {
-	bool commit = (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_WRITE) ? true : false;
-
 	return spdk_bdev_zcopy_end(req->zcopy_bdev_io, commit, nvmf_bdev_ctrlr_end_zcopy_complete, req);
 }

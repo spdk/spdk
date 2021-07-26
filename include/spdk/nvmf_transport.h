@@ -444,7 +444,7 @@ void spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req);
-int spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req, bool commit);
 
 /**
  * Remove the given qpair from the poll group.
