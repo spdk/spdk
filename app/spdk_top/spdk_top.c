@@ -2344,43 +2344,53 @@ get_single_thread_info(uint64_t thread_id, struct rpc_thread_info *thread_info)
 }
 
 static void
-display_thread(uint64_t thread_id, uint8_t current_page)
+display_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab)
 {
-	PANEL *thread_panel;
-	WINDOW *thread_win;
+	PANEL *thread_panel = NULL;
+	WINDOW *thread_win = NULL;
 	struct rpc_thread_info thread_info;
-	uint64_t pollers_count;
+	uint64_t pollers_count, last_pollers_count = 0;
 	int c;
 	bool stop_loop = false;
+	long int time_last, time_dif;
+	struct timespec time_now;
+
+	clock_gettime(CLOCK_MONOTONIC, &time_now);
+	time_last = time_now.tv_sec;
 
 	memset(&thread_info, 0, sizeof(thread_info));
-	pthread_mutex_lock(&g_thread_lock);
-
-	if (get_single_thread_info(thread_id, &thread_info)) {
-		pthread_mutex_unlock(&g_thread_lock);
-		return;
-	}
-
-	pollers_count = thread_info.active_pollers_count +
-			thread_info.timed_pollers_count +
-			thread_info.paused_pollers_count;
-
-	thread_win = newwin(pollers_count + THREAD_WIN_HEIGHT, THREAD_WIN_WIDTH,
-			    get_position_for_window(THREAD_WIN_HEIGHT + pollers_count, g_max_row),
-			    get_position_for_window(THREAD_WIN_WIDTH, g_max_col));
-	keypad(thread_win, TRUE);
-	thread_panel = new_panel(thread_win);
-
-	top_panel(thread_panel);
-	update_panels();
-	doupdate();
-
-	draw_thread_win_content(thread_win, &thread_info);
-
-	pthread_mutex_unlock(&g_thread_lock);
 
 	while (!stop_loop) {
-		c = wgetch(thread_win);
+		pthread_mutex_lock(&g_thread_lock);
+		if (get_single_thread_info(thread_id, &thread_info)) {
+			pthread_mutex_unlock(&g_thread_lock);
+			return;
+		}
+		pollers_count = thread_info.active_pollers_count +
+				thread_info.timed_pollers_count +
+				thread_info.paused_pollers_count;
+		if (pollers_count != last_pollers_count) {
+			if (thread_win != NULL) {
+				assert(thread_panel != NULL);
+				del_panel(thread_panel);
+				delwin(thread_win);
+			}
+
+			thread_win = newwin(pollers_count + THREAD_WIN_HEIGHT, THREAD_WIN_WIDTH,
+					    get_position_for_window(THREAD_WIN_HEIGHT + pollers_count, g_max_row),
+					    get_position_for_window(THREAD_WIN_WIDTH, g_max_col));
+			keypad(thread_win, TRUE);
+			thread_panel = new_panel(thread_win);
+
+			top_panel(thread_panel);
+			update_panels();
+			doupdate();
+			draw_thread_win_content(thread_win, &thread_info);
+			refresh();
+		}
+		pthread_mutex_unlock(&g_thread_lock);
+
+		c = getch();
 
 		switch (c) {
 		case 27: /* ESC */
@@ -2389,6 +2399,21 @@ display_thread(uint64_t thread_id, uint8_t current_page)
 		default:
 			break;
 		}
+
+		clock_gettime(CLOCK_MONOTONIC, &time_now);
+		time_dif = time_now.tv_sec - time_last;
+
+		if (time_dif >= g_sleep_time) {
+			time_last = time_now.tv_sec;
+			pthread_mutex_lock(&g_thread_lock);
+			refresh_tab(active_tab, current_page);
+			draw_thread_win_content(thread_win, &thread_info);
+			wrefresh(thread_win);
+			refresh();
+			pthread_mutex_unlock(&g_thread_lock);
+		}
+
+		last_pollers_count = pollers_count;
 	}
 
 	del_panel(thread_panel);
@@ -2396,7 +2421,7 @@ display_thread(uint64_t thread_id, uint8_t current_page)
 }
 
 static void
-show_thread(uint8_t current_page)
+show_thread(uint8_t current_page, uint8_t active_tab)
 {
 	uint64_t thread_number = current_page * g_max_data_rows + g_selected_row;
 	uint64_t thread_id;
@@ -2406,11 +2431,11 @@ show_thread(uint8_t current_page)
 	thread_id = g_threads_info[thread_number].id;
 	pthread_mutex_unlock(&g_thread_lock);
 
-	display_thread(thread_id, current_page);
+	display_thread(thread_id, current_page, active_tab);
 }
 
 static void
-show_single_thread(uint64_t thread_id, uint8_t current_page)
+show_single_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab)
 {
 	uint64_t i;
 
@@ -2418,7 +2443,7 @@ show_single_thread(uint64_t thread_id, uint8_t current_page)
 	for (i = 0; i < g_last_threads_count; i++) {
 		if (g_threads_info[i].id == thread_id) {
 			pthread_mutex_unlock(&g_thread_lock);
-			display_thread(thread_id, current_page);
+			display_thread(thread_id, current_page, active_tab);
 			return;
 		}
 	}
@@ -2426,7 +2451,7 @@ show_single_thread(uint64_t thread_id, uint8_t current_page)
 }
 
 static void
-show_core(uint8_t current_page)
+show_core(uint8_t current_page, uint8_t active_tab)
 {
 	PANEL *core_panel;
 	WINDOW *core_win;
@@ -2537,7 +2562,7 @@ show_core(uint8_t current_page)
 			pthread_mutex_unlock(&g_thread_lock);
 
 			if (thread_id != 0) {
-				show_single_thread(thread_id, current_page);
+				show_single_thread(thread_id, current_page, active_tab);
 			}
 			break;
 		case 27: /* ESC */
@@ -2908,9 +2933,9 @@ show_stats(pthread_t *data_thread)
 			break;
 		case 10: /* Enter */
 			if (active_tab == THREADS_TAB) {
-				show_thread(current_page);
+				show_thread(current_page, active_tab);
 			} else if (active_tab == CORES_TAB) {
-				show_core(current_page);
+				show_core(current_page, active_tab);
 			} else if (active_tab == POLLERS_TAB) {
 				show_poller(current_page);
 			}
