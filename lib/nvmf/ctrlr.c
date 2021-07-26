@@ -3625,10 +3625,10 @@ end:
 }
 
 int
-spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req)
+spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 {
 	req->zcopy_phase = NVMF_ZCOPY_PHASE_END_PENDING;
-	return nvmf_bdev_ctrlr_end_zcopy(req);
+	return nvmf_bdev_ctrlr_end_zcopy(req, commit);
 }
 
 int
