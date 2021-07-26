@@ -31,14 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-# These directories contain tests.
-TESTDIRS = app bdev blobfs cpp_headers env event nvme rpc_client thread
-
-DIRS-$(CONFIG_TESTS) += $(TESTDIRS)
-DIRS-$(CONFIG_UNIT_TESTS) += unit
+DIRS-y = poller_perf
 
 .PHONY: all clean $(DIRS-y)
 
