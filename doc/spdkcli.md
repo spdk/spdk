@@ -7,21 +7,21 @@ This experimental version was added for v18.04 to get early feedback
 that can be incorporated as spdkcli becomes more fully-featured
 for the next SPDK release.
 
-### Install needed dependencies
+## Install needed dependencies
 
 All dependencies should be handled by scripts/pkgdep.sh script.
 Package dependencies at the moment include:
 
  - configshell
 
-### Run SPDK application instance
+## Run SPDK application instance
 
 ~~~{.sh}
 ./scripts/setup.sh
 ./build/bin/vhost -c vhost.json
 ~~~
 
-### Run SPDK CLI
+## Run SPDK CLI
 
 Spdkcli should be run with the same privileges as SPDK application.
 In order to use SPDK CLI in interactive mode please use:
@@ -37,7 +37,7 @@ For example, to view current configuration and immediately exit:
 scripts/spdkcli.py ls
 ~~~
 
-### Optional - create Python virtual environment
+## Optional - create Python virtual environment
 
 You can use Python virtual environment if you don't want to litter your
 system Python installation.
