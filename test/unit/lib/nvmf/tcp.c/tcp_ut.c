@@ -853,6 +853,51 @@ test_nvmf_tcp_send_c2h_term_req(void)
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);
 }
 
+static void
+test_nvmf_tcp_send_capsule_resp_pdu(void)
+{
+	struct spdk_nvmf_tcp_req tcp_req = {};
+	struct spdk_nvmf_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {};
+
+	tcp_req.pdu_in_use = false;
+	tcp_req.req.qpair = &tqpair.qpair;
+	tcp_req.pdu = &pdu;
+	tcp_req.req.rsp = (union nvmf_c2h_msg *)&tcp_req.rsp;
+	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
+	tqpair.host_hdgst_enable = true;
+
+	nvmf_tcp_send_capsule_resp_pdu(&tcp_req, &tqpair);
+	CU_ASSERT(pdu.hdr.capsule_resp.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP);
+	CU_ASSERT(pdu.hdr.capsule_resp.common.plen == sizeof(struct spdk_nvme_tcp_rsp) +
+		  SPDK_NVME_TCP_DIGEST_LEN);
+	CU_ASSERT(pdu.hdr.capsule_resp.common.hlen == sizeof(struct spdk_nvme_tcp_rsp));
+	CU_ASSERT(!memcmp(&pdu.hdr.capsule_resp.rccqe, &tcp_req.req.rsp->nvme_cpl,
+			  sizeof(struct spdk_nvme_cpl)));
+	CU_ASSERT(pdu.hdr.capsule_resp.common.flags & SPDK_NVME_TCP_CH_FLAGS_HDGSTF);
+	CU_ASSERT(pdu.cb_fn == nvmf_tcp_request_free);
+	CU_ASSERT(pdu.cb_arg == &tcp_req);
+	CU_ASSERT(pdu.iov[0].iov_base == &pdu.hdr.raw);
+	CU_ASSERT(pdu.iov[0].iov_len == sizeof(struct spdk_nvme_tcp_rsp) + SPDK_NVME_TCP_DIGEST_LEN);
+
+	/* hdgst disable */
+	tqpair.host_hdgst_enable = false;
+	tcp_req.pdu_in_use = false;
+	memset(&pdu, 0, sizeof(pdu));
+
+	nvmf_tcp_send_capsule_resp_pdu(&tcp_req, &tqpair);
+	CU_ASSERT(pdu.hdr.capsule_resp.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP);
+	CU_ASSERT(pdu.hdr.capsule_resp.common.plen == sizeof(struct spdk_nvme_tcp_rsp));
+	CU_ASSERT(pdu.hdr.capsule_resp.common.hlen == sizeof(struct spdk_nvme_tcp_rsp));
+	CU_ASSERT(!memcmp(&pdu.hdr.capsule_resp.rccqe, &tcp_req.req.rsp->nvme_cpl,
+			  sizeof(struct spdk_nvme_cpl)));
+	CU_ASSERT(!(pdu.hdr.capsule_resp.common.flags & SPDK_NVME_TCP_CH_FLAGS_HDGSTF));
+	CU_ASSERT(pdu.cb_fn == nvmf_tcp_request_free);
+	CU_ASSERT(pdu.cb_arg == &tcp_req);
+	CU_ASSERT(pdu.iov[0].iov_base == &pdu.hdr.raw);
+	CU_ASSERT(pdu.iov[0].iov_len == sizeof(struct spdk_nvme_tcp_rsp));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -871,6 +916,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_incapsule_data_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_qpair_init_mem_resource);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_term_req);
+	CU_ADD_TEST(suite, test_nvmf_tcp_send_capsule_resp_pdu);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
