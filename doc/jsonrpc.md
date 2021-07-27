@@ -2756,7 +2756,8 @@ Example response:
 
 ## bdev_nvme_set_options {#rpc_bdev_nvme_set_options}
 
-Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized or any bdev NVMe has been created.
+Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized
+or any bdev NVMe has been created.
 
 ### Parameters
 
@@ -4720,7 +4721,9 @@ data_out_pool_size              | Optional | number  | Number of data out buffer
 
 To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
 
-Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters `no_discovery_auth`, `req_discovery_auth`, `req_discovery_auth_mutual`, and `discovery_auth_group` are still available instead of `disable_chap`, `require_chap`, `mutual_chap`, and `chap_group`, respectivey but will be removed in future releases.
+Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters `no_discovery_auth`, `req_discovery_auth`,
+`req_discovery_auth_mutual`, and `discovery_auth_group` are still available instead of `disable_chap`, `require_chap`,
+`mutual_chap`, and `chap_group`, respectivey but will be removed in future releases.
 
 ### Example
 
@@ -6870,7 +6873,8 @@ tgt_name                    | Optional | string      | Parent NVMe-oF target nam
 ### Response
 
 The response is an object containing NVMf subsystem statistics.
-In the response, `admin_qpairs` and `io_qpairs` are reflecting cumulative queue pair counts while `current_admin_qpairs` and `current_io_qpairs` are showing the current number.
+In the response, `admin_qpairs` and `io_qpairs` are reflecting cumulative queue pair counts while
+`current_admin_qpairs` and `current_io_qpairs` are showing the current number.
 
 ### Example
 
@@ -7820,7 +7824,8 @@ Example response:
 
 ## bdev_lvol_inflate {#rpc_bdev_lvol_inflate}
 
-Inflate a logical volume. All unallocated clusters are allocated and copied from the parent or zero filled if not allocated in the parent. Then all dependencies on the parent are removed.
+Inflate a logical volume. All unallocated clusters are allocated and copied from the parent or zero filled
+if not allocated in the parent. Then all dependencies on the parent are removed.
 
 ### Parameters
 
@@ -7855,7 +7860,9 @@ Example response:
 
 ## bdev_lvol_decouple_parent {#rpc_bdev_lvol_decouple_parent}
 
-Decouple the parent of a logical volume. For unallocated clusters which is allocated in the parent, they are allocated and copied from the parent, but for unallocated clusters which is thin provisioned in the parent, they are kept thin provisioned. Then all dependencies on the parent are removed.
+Decouple the parent of a logical volume. For unallocated clusters which is allocated in the parent, they are
+allocated and copied from the parent, but for unallocated clusters which is thin provisioned in the parent,
+they are kept thin provisioned. Then all dependencies on the parent are removed.
 
 ### Parameters
 
@@ -8506,7 +8513,8 @@ Example response:
 
 Request notifications. Returns array of notifications that happend since the specified id (or first that is available).
 
-Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccesible due to being overwritten by new ones.
+Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccesible
+due to being overwritten by new ones.
 
 ### Parameters
 
@@ -8565,7 +8573,8 @@ Example response:
 
 # Linux Network Block Device (NBD) {#jsonrpc_components_nbd}
 
-SPDK supports exporting bdevs through Linux nbd. These devices then appear as standard Linux kernel block devices and can be accessed using standard utilities like fdisk.
+SPDK supports exporting bdevs through Linux nbd. These devices then appear as standard Linux kernel block devices
+and can be accessed using standard utilities like fdisk.
 
 In order to export a device over nbd, first make sure the Linux kernel nbd driver is loaded by running 'modprobe nbd'.
 
@@ -8809,7 +8818,8 @@ Example response:
 
 Set cache pool size for blobfs filesystems.  This RPC is only permitted when the cache pool is not already initialized.
 
-The cache pool is initialized when the first blobfs filesystem is initialized or loaded.  It is freed when the all initialized or loaded filesystems are unloaded.
+The cache pool is initialized when the first blobfs filesystem is initialized or loaded.  It is freed when the all
+initialized or loaded filesystems are unloaded.
 
 ### Parameters
 
@@ -8993,7 +9003,8 @@ Example response:
 
 Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
 
-Notice: bdev_nvme_send_cmd requires user to guarentee the correctness of NVMe command itself, and also optional parameters. Illegal command contents or mismatching buffer size may result in unpredictable behavior.
+Notice: bdev_nvme_send_cmd requires user to guarentee the correctness of NVMe command itself, and also optional parameters.
+Illegal command contents or mismatching buffer size may result in unpredictable behavior.
 
 ### Parameters
 

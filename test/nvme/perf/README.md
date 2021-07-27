@@ -2,7 +2,10 @@
 
 ## Compile SPDK with LTO
 
-The link time optimization (lto) gcc flag allows the linker to run a post-link optimization pass on the code. During that pass the linker inlines thin wrappers such as those around DPDK calls which results in a shallow call stack and significantly improves performance. Therefore, we recommend compiling SPDK with the lto flag prior to running this benchmark script to archieve optimal performance.
+The link time optimization (lto) gcc flag allows the linker to run a post-link optimization pass on the code. During
+that pass the linker inlines thin wrappers such as those around DPDK calls which results in a shallow call stack and
+significantly improves performance. Therefore, we recommend compiling SPDK with the lto flag prior to running this
+benchmark script to archieve optimal performance.
 Link time optimization can be enabled in SPDK by doing the following:
 
 ~{.sh}
@@ -35,7 +38,9 @@ Path to fio binary.
 #### --driver
 
 Select between SPDK driver and kernel driver. The Linux Kernel driver has three configurations:
-Default mode, Hybrid Polling and Classic Polling. The SPDK driver supports 2 fio_plugin modes: bdev and NVMe PMD. Before running test with spdk, you will need to bind NVMe devics to the Linux uio_pci_generic or vfio-pci driver.  When running test with the Kernel driver, NVMe devices use the Kernel driver. The 5 valid values for this option are:
+Default mode, Hybrid Polling and Classic Polling. The SPDK driver supports 2 fio_plugin modes: bdev and NVMe PMD.
+Before running test with spdk, you will need to bind NVMe devics to the Linux uio_pci_generic or vfio-pci driver.
+When running test with the Kernel driver, NVMe devices use the Kernel driver. The 5 valid values for this option are:
 'bdev', 'nvme', 'kernel-libaio', 'kernel-classic-polling' and 'kernel-hybrid-polling'.
 
 #### --max-disk
@@ -52,9 +57,10 @@ will be set to all available devices. Only one of the max-disk or disk-no option
 
 #### --cpu-allowed
 
-Specifies the CPU cores that will be used by fio to execute the performance test cases. When spdk driver is chosen, Nthe script attempts to assign NVMe devices to CPU cores on the same NUMA node. The script will try to align each core with devices matching
-core's NUMA first but if the is no devices left within the CPU core NUMA then it will use devices from the other
-NUMA node. It is important to choose cores that will ensure best NUMA node alignment. For example:
+Specifies the CPU cores that will be used by fio to execute the performance test cases. When spdk driver is chosen,
+the script attempts to assign NVMe devices to CPU cores on the same NUMA node. The script will try to align each
+core with devices matching core's NUMA first but if the is no devices left within the CPU core NUMA then it will use
+devices from the other NUMA node. It is important to choose cores that will ensure best NUMA node alignment. For example:
 On System with 8 devices on NUMA node 0 and 8 devices on NUMA node 1, cores 0-27 on numa node 0 and 28-55
 on numa node 1, if test is set to use 16 disk and four cores then "--cpu-allowed=1,2,28,29" can be used
 resulting with 4 devices with node0 per core 1 and 2 and 4 devices with node1 per core 28 and 29. If 10 cores

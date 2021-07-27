@@ -10,7 +10,10 @@ acceleration capabilities. ISA/L is used for optimized CRC32C calculation within
 the software module.
 
 The framework includes an API for getting the current capabilities of the
-selected module. See [`spdk_accel_get_capabilities`](https://spdk.io/doc/accel__engine_8h.html) for more details. For the software module, all capabilities will be reported as supported. For the hardware modules, only functions accelerated by hardware will be reported however any function can still be called, it will just be backed by software if it is not reported as a supported capability.
+selected module. See [`spdk_accel_get_capabilities`](https://spdk.io/doc/accel__engine_8h.html) for more details.
+For the software module, all capabilities will be reported as supported. For the hardware modules, only functions
+accelerated by hardware will be reported however any function can still be called, it will just be backed by
+software if it is not reported as a supported capability.
 
 # Acceleration Framework Functions {#accel_functions}
 
@@ -63,8 +66,11 @@ To use the IOAT engine, use the RPC [`ioat_scan_accel_engine`](https://spdk.io/d
 
 ## IDXD Module {#accel_idxd}
 
-To use the DSA engine, use the RPC [`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) with an optional parameter of `-c` and provide a configuration number of either 0 or 1. These pre-defined configurations determine how the DSA engine will be setup in terms
-of work queues and engines.  The DSA engine is very flexible allowing for various configurations of these elements to either account for different quality of service requirements or to isolate hardware paths where the back end media is of varying latency (i.e. persistent memory vs DRAM).  The pre-defined configurations are as follows:
+To use the DSA engine, use the RPC [`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) with an optional parameter
+of `-c` and provide a configuration number of either 0 or 1. These pre-defined configurations determine how the DSA engine
+will be setup in terms of work queues and engines.  The DSA engine is very flexible allowing for various configurations of
+these elements to either account for different quality of service requirements or to isolate hardware paths where the back
+end media is of varying latency (i.e. persistent memory vs DRAM).  The pre-defined configurations are as follows:
 
 0: A single work queue backed with four DSA engines.  This is a generic configuration
 that enables the hardware to best determine which engine to use as it pulls in new

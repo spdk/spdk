@@ -10,7 +10,7 @@ exclude_rule 'MD009'
 exclude_rule 'MD010'
 exclude_rule 'MD011'
 exclude_rule 'MD012'
-exclude_rule 'MD013'
+rule 'MD013', :line_length => 170
 exclude_rule 'MD014'
 exclude_rule 'MD018'
 exclude_rule 'MD019'

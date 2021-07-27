@@ -78,7 +78,8 @@ Your output should look something like this:
 ~~~{.sh}
 $ sudo docker run --privileged -v //dev//hugepages://dev//hugepages hello:1.0
 Starting SPDK v20.01-pre git sha1 80da95481 // DPDK 19.11.0 initialization...
-[ DPDK EAL parameters: hello_world -c 0x1 --log-level=lib.eal:6 --log-level=lib.cryptodev:5 --log-level=user1:6 --iova-mode=pa --base-virtaddr=0x200000000000 --match-allocations --file-prefix=spdk0 --proc-type=auto ]
+[ DPDK EAL parameters: hello_world -c 0x1 --log-level=lib.eal:6 --log-level=lib.cryptodev:5 --log-level=user1:6 --iova-mode=pa
+--base-virtaddr=0x200000000000 --match-allocations --file-prefix=spdk0 --proc-type=auto ]
 EAL: No available hugepages reported in hugepages-1048576kB
 Initializing NVMe Controllers
 Attaching to 0000:06:00.0

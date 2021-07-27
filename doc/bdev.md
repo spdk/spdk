@@ -2,7 +2,8 @@
 
 # Target Audience {#bdev_ug_targetaudience}
 
-This user guide is intended for software developers who have knowledge of block storage, storage drivers, issuing JSON-RPC commands and storage services such as RAID, compression, crypto, and others.
+This user guide is intended for software developers who have knowledge of block storage, storage drivers, issuing JSON-RPC
+commands and storage services such as RAID, compression, crypto, and others.
 
 # Introduction {#bdev_ug_introduction}
 

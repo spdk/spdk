@@ -3055,7 +3055,8 @@ See the [Pmem Block Device](http://www.spdk.io/doc/bdev.html#bdev_config_pmem) d
 A userspace driver for Virtio SCSI devices has been added.
 The driver is capable of creating block devices on top of LUNs exposed by another SPDK vhost-scsi application.
 
-See the [Virtio SCSI](http://www.spdk.io/doc/virtio.html) documentation and [Getting Started](http://www.spdk.io/doc/bdev.html#bdev_config_virtio_scsi) guide for more information.
+See the [Virtio SCSI](http://www.spdk.io/doc/virtio.html) documentation and
+[Getting Started](http://www.spdk.io/doc/bdev.html#bdev_config_virtio_scsi) guide for more information.
 
 ### Vhost target
 
@@ -3362,7 +3363,8 @@ user code.
 
 ## v1.2.0: IOAT user-space driver
 
-This release adds a user-space driver with support for the Intel I/O Acceleration Technology (I/OAT, also known as "Crystal Beach") DMA offload engine.
+This release adds a user-space driver with support for the Intel I/O Acceleration Technology
+(I/OAT, also known as "Crystal Beach") DMA offload engine.
 
 - IOAT
   - New user-space driver supporting DMA memory copy offload

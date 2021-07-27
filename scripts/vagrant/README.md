@@ -46,7 +46,8 @@ Quick start instructions for OSX:
 
 ## Linux Setup
 
-Following the generic instructions should be sufficient for most Linux distributions. For more thorough instructions on installing VirtualBox on your distribution of choice, please see the following [guide](https://www.virtualbox.org/wiki/Linux_Downloads).
+Following the generic instructions should be sufficient for most Linux distributions. For more thorough instructions on installing
+VirtualBox on your distribution of choice, please see the following [guide](https://www.virtualbox.org/wiki/Linux_Downloads).
 
  Examples on Fedora26/Fedora27/Fedora28
 
@@ -76,7 +77,9 @@ If you are behind a corporate firewall, configure the following proxy settings.
 
 ## Download SPDK from GitHub
 
-Use git to clone a new spdk repository. GerritHub can also be used. See the instructions at [spdk.io](http://www.spdk.io/development/#gerrithub) to setup your GerritHub account. Note that this spdk repository will be rsync'd into your VM, so you can use this repository to continue development within the VM.
+Use git to clone a new spdk repository. GerritHub can also be used. See the instructions at
+[spdk.io](http://www.spdk.io/development/#gerrithub) to setup your GerritHub account. Note that this spdk
+repository will be rsync'd into your VM, so you can use this repository to continue development within the VM.
 
 ## Create a Virtual Box
 
@@ -117,7 +120,9 @@ $ spdk/scripts/vagrant/create_vbox.sh -h
   ./scripts/vagrant/create_vbox.sh fedora26
 ```
 
-It is recommended that you call the `create_vbox.sh` script from outside of the spdk repository. Call this script from a parent directory. This will allow the creation of multiple VMs in separate <distro> directories, all using the same spdk repository.  For example:
+It is recommended that you call the `create_vbox.sh` script from outside of the spdk repository.
+Call this script from a parent directory. This will allow the creation of multiple VMs in separate
+<distro> directories, all using the same spdk repository.  For example:
 
 ```
    $ spdk/scripts/vagrant/create_vbox.sh -s 2048 -n 2 fedora26
@@ -133,7 +138,8 @@ This script will:
 6. rsync a copy of the `~/vagrant_tools` directory to `/home/vagrant/tools` (optional)
 7. execute vm_setup.sh on the guest to install all spdk dependencies (optional)
 
-This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using the same spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initialization.
+This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using thesame
+spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initialization.
 
 ```
   $ cd <distro>
@@ -142,7 +148,9 @@ This arrangement allows the provisioning of multiple, different VMs within that 
 
 ## Finish VM Initialization
 
-A copy of the `spdk` repository you cloned will exist in the `spdk_repo` directory of the `/home/vagrant` user account. After using `vagrant ssh` to enter your VM you must complete the initialization of your VM by running the `scripts/vagrant/update.sh` script. For example:
+A copy of the `spdk` repository you cloned will exist in the `spdk_repo` directory of the `/home/vagrant` user
+account. After using `vagrant ssh` to enter your VM you must complete the initialization of your VM by running
+the `scripts/vagrant/update.sh` script. For example:
 
 ```
    $ script -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh' update.log
@@ -154,7 +162,8 @@ The `update.sh` script completes initialization of the VM by automating the foll
 2. Runs the scripts/pdkdep.sh script
 3. Installs the FreeBSD source in /usr/sys (FreeBSD only)
 
-This only needs to be done once. This is also not necessary for Fedora VMs provisioned with the -d flag. The `vm_setup` script performs these operations instead.
+This only needs to be done once. This is also not necessary for Fedora VMs provisioned with the -d flag. The `vm_setup`
+script performs these operations instead.
 
 ## Post VM Initialization
 
@@ -190,7 +199,8 @@ Following VM initialization you must:
 
 ### Running autorun.sh with vagrant
 
-After running vm_setup.sh the `run-autorun.sh` can be used to run `spdk/autorun.sh` on a Fedora vagrant machine. Note that the `spdk/scripts/vagrant/autorun-spdk.conf` should be copied to `~/autorun-spdk.conf` before starting your tests.
+After running vm_setup.sh the `run-autorun.sh` can be used to run `spdk/autorun.sh` on a Fedora vagrant machine.
+Note that the `spdk/scripts/vagrant/autorun-spdk.conf` should be copied to `~/autorun-spdk.conf` before starting your tests.
 
 ```
    $ cp spdk/scripts/vagrant/autorun-spdk.conf ~/

@@ -1,6 +1,8 @@
 # JSON-RPC Remote access {#jsonrpc_proxy}
 
-SPDK provides a sample python script `rpc_http_proxy.py`, that provides http server which listens for JSON objects from users. It uses HTTP POST method to receive JSON objects including methods and parameters described in this chapter.
+SPDK provides a sample python script `rpc_http_proxy.py`, that provides http server which listens for JSON
+objects from users. It uses HTTP POST method to receive JSON objects including methods and parameters
+described in this chapter.
 
 ## Parameters
 
@@ -26,7 +28,8 @@ Status 200 with resultant JSON object included on success.
 
 ## Client side
 
-Below is a sample python script acting as a client side. It sends `bdev_get_bdevs` method with optional `name` parameter and prints JSON object returned from remote_rpc script.
+Below is a sample python script acting as a client side. It sends `bdev_get_bdevs` method with optional `name`
+parameter and prints JSON object returned from remote_rpc script.
 
 ~~~
 import json
@@ -47,5 +50,8 @@ Output:
 
 ~~~
 python client.py
-[{u'num_blocks': 2621440, u'name': u'Malloc0', u'uuid': u'fb57e59c-599d-42f1-8b89-3e46dbe12641', u'claimed': True, u'driver_specific': {}, u'supported_io_types': {u'reset': True, u'nvme_admin': False, u'unmap': True, u'read': True, u'nvme_io': False, u'write': True, u'flush': True, u'write_zeroes': True}, u'qos_ios_per_sec': 0, u'block_size': 4096, u'product_name': u'Malloc disk', u'aliases': []}]
+[{u'num_blocks': 2621440, u'name': u'Malloc0', u'uuid': u'fb57e59c-599d-42f1-8b89-3e46dbe12641', u'claimed': True,
+u'driver_specific': {}, u'supported_io_types': {u'reset': True, u'nvme_admin': False, u'unmap': True, u'read': True,
+u'nvme_io': False, u'write': True, u'flush': True, u'write_zeroes': True}, u'qos_ios_per_sec': 0, u'block_size': 4096,
+u'product_name': u'Malloc disk', u'aliases': []}]
 ~~~
