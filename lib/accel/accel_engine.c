@@ -839,10 +839,10 @@ spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *bat
 			break;
 		case ACCEL_OPCODE_CRC32C:
 			if (accel_task->v.iovcnt == 0) {
-				_sw_accel_crc32c(accel_task->dst, accel_task->src, accel_task->seed,
+				_sw_accel_crc32c(accel_task->crc_dst, accel_task->src, accel_task->seed,
 						 accel_task->nbytes);
 			} else {
-				_sw_accel_crc32cv(accel_task->dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
+				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
 			}
 			spdk_accel_task_complete(accel_task, 0);
 			break;
