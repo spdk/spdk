@@ -551,3 +551,73 @@ function remove_spdk_ns() {
 	# Let it settle
 	sleep 1
 }
+
+configure_kernel_target() {
+	# Keep it global in scope for easier cleanup
+	kernel_name=${1:-kernel_target}
+	nvmet=/sys/kernel/config/nvmet
+	kernel_subsystem=$nvmet/subsystems/$kernel_name
+	kernel_namespace=$kernel_subsystem/namespaces/1
+	kernel_port=$nvmet/ports/1
+
+	local block nvme
+
+	if [[ ! -e /sys/module/nvmet ]]; then
+		modprobe nvmet
+	fi
+
+	[[ -e $nvmet ]]
+
+	"$rootdir/scripts/setup.sh" reset
+
+	# Find nvme with an active ns device
+	for block in /sys/block/nvme*; do
+		[[ -e $block ]] || continue
+		block_in_use "${block##*/}" || nvme="/dev/${block##*/}"
+	done
+
+	[[ -b $nvme ]]
+
+	mkdir "$kernel_subsystem"
+	mkdir "$kernel_namespace"
+	mkdir "$kernel_port"
+
+	# It allows only %llx value and for some reason kernel swaps the byte order
+	# so setting the serial is not very useful here
+	# "$kernel_subsystem/attr_serial"
+	echo "SPDK-$kernel_name" > "$kernel_subsystem/attr_model"
+
+	echo 1 > "$kernel_subsystem/attr_allow_any_host"
+	echo "$nvme" > "$kernel_namespace/device_path"
+	echo 1 > "$kernel_namespace/enable"
+
+	# By default use initiator ip which was set by nvmftestinit(). This is the
+	# interface which resides in the main net namespace and which is visible
+	# to nvmet.
+
+	echo "$NVMF_INITIATOR_IP" > "$kernel_port/addr_traddr"
+	echo "$TEST_TRANSPORT" > "$kernel_port/addr_trtype"
+	echo "$NVMF_PORT" > "$kernel_port/addr_trsvcid"
+	echo ipv4 > "$kernel_port/addr_adrfam"
+
+	# Enable the listener by linking the port to previously created subsystem
+	ln -s "$kernel_subsystem" "$kernel_port/subsystems/"
+
+	# Check if target is available
+	nvme discover -a "$NVMF_INITIATOR_IP" -t "$TEST_TRANSPORT" -s "$NVMF_PORT"
+}
+
+clean_kernel_target() {
+	[[ -e $kernel_subsystem ]] || return 0
+
+	echo 0 > "$kernel_namespace/enable"
+
+	rm -f "$kernel_port/subsystems/$kernel_name"
+	rmdir "$kernel_namespace"
+	rmdir "$kernel_port"
+	rmdir "$kernel_subsystem"
+
+	modules=(/sys/module/nvmet/holders/*)
+
+	modprobe -r "${modules[@]##*/}" nvmet
+}
