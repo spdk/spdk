@@ -1,6 +1,6 @@
 # Changelog
 
-## v21.07: (Upcoming Release)
+## v21.07: Kernel DSA, Init lib, Userspace DTrace
 
 ### accel_fw
 
