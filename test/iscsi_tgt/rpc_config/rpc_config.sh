@@ -29,6 +29,7 @@ $rpc_py iscsi_set_options -o 30 -a 16
 ps $rpc_wait_pid
 
 $rpc_py framework_start_init
+sleep 1
 echo "iscsi_tgt is listening. Running tests..."
 
 # RPC framework_wait_init should be already returned, so its process must be non-existed
