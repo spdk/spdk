@@ -3088,7 +3088,7 @@ subsystem_listener_update_on_pg(struct spdk_io_channel_iter *i)
 	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
 
 	TAILQ_FOREACH(ctrlr, &listener->subsystem->ctrlrs, link) {
-		if (ctrlr->admin_qpair->group == group && ctrlr->listener == listener) {
+		if (ctrlr->admin_qpair && ctrlr->admin_qpair->group == group && ctrlr->listener == listener) {
 			nvmf_ctrlr_async_event_ana_change_notice(ctrlr);
 		}
 	}
