@@ -128,13 +128,6 @@ nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs
 					      &vs->raw);
 }
 
-static int
-nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc)
-{
-	return nvme_transport_ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
-					      cc->raw);
-}
-
 int
 nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz)
 {
@@ -1054,6 +1047,11 @@ nvme_ctrlr_shutdown_set_cc_done(void *_ctx, uint64_t value, const struct spdk_nv
 		return;
 	}
 
+	if (ctrlr->opts.no_shn_notification) {
+		ctx->shutdown_complete = true;
+		return;
+	}
+
 	/*
 	 * The NVMe specification defines RTD3E to be the time between
 	 *  setting SHN = 1 until the controller will set SHST = 10b.
@@ -1087,7 +1085,18 @@ nvme_ctrlr_shutdown_get_cc_done(void *_ctx, uint64_t value, const struct spdk_nv
 
 	assert(value <= UINT32_MAX);
 	cc.raw = (uint32_t)value;
-	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
+
+	if (ctrlr->opts.no_shn_notification) {
+		NVME_CTRLR_INFOLOG(ctrlr, "Disable SSD without shutdown notification\n");
+		if (cc.bits.en == 0) {
+			ctx->shutdown_complete = true;
+			return;
+		}
+
+		cc.bits.en = 0;
+	} else {
+		cc.bits.shn = SPDK_NVME_SHN_NORMAL;
+	}
 
 	rc = nvme_ctrlr_set_cc_async(ctrlr, cc.raw, nvme_ctrlr_shutdown_set_cc_done, ctx);
 	if (rc != 0) {
@@ -1289,30 +1298,6 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->process_init_cc.raw = cc.raw;
 
 	if (nvme_ctrlr_set_cc_async(ctrlr, cc.raw, nvme_ctrlr_set_cc_en_done, ctrlr)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
-		return -EIO;
-	}
-
-	return 0;
-}
-
-static int
-nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
-{
-	union spdk_nvme_cc_register	cc;
-
-	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "get_cc() failed\n");
-		return -EIO;
-	}
-
-	if (cc.bits.en == 0) {
-		return 0;
-	}
-
-	cc.bits.en = 0;
-
-	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "set_cc() failed\n");
 		return -EIO;
 	}
@@ -4082,13 +4067,7 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 	nvme_ctrlr_free_iocs_specific_data(ctrlr);
 
-	if (ctrlr->opts.no_shn_notification) {
-		NVME_CTRLR_INFOLOG(ctrlr, "Disable SSD without shutdown notification\n");
-		nvme_ctrlr_disable(ctrlr);
-		ctx->shutdown_complete = true;
-	} else {
-		nvme_ctrlr_shutdown_async(ctrlr, ctx);
-	}
+	nvme_ctrlr_shutdown_async(ctrlr, ctx);
 }
 
 int
