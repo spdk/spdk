@@ -1413,7 +1413,7 @@ refresh_pollers_tab(uint8_t current_page)
 	struct col_desc *col_desc = g_col_desc[POLLERS_TAB];
 	uint64_t last_run_counter, last_busy_counter;
 	uint64_t i, j;
-	uint16_t col;
+	uint16_t col, empty_col = 0;
 	uint8_t max_pages, item_index;
 	char run_count[MAX_POLLER_RUN_COUNT], period_ticks[MAX_PERIOD_STR_LEN],
 	     status[MAX_POLLER_IND_STR_LEN];
@@ -1433,6 +1433,7 @@ refresh_pollers_tab(uint8_t current_page)
 				mvwprintw(g_tabs[POLLERS_TAB], item_index + TABS_DATA_START_ROW, j, " ");
 			}
 
+			empty_col++;
 			continue;
 		}
 
@@ -1528,7 +1529,7 @@ refresh_pollers_tab(uint8_t current_page)
 		}
 	}
 
-	g_max_selected_row = i - current_page * g_max_data_rows - 1;
+	g_max_selected_row = i - current_page * g_max_data_rows - 1 - empty_col;
 
 	return max_pages;
 }
