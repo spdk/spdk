@@ -1265,20 +1265,25 @@ consume_admin_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
 }
 
 static int
-handle_cmd_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
+handle_cmd_rsp(struct nvmf_vfio_user_req *vu_req, void *cb_arg)
 {
-	struct nvmf_vfio_user_qpair *qpair = cb_arg;
+	struct nvmf_vfio_user_qpair *vu_qpair = cb_arg;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = vu_qpair->ctrlr;
+	uint16_t sqid, cqid;
 
-	assert(qpair != NULL);
-	assert(req != NULL);
+	assert(vu_qpair != NULL);
+	assert(vu_req != NULL);
+	assert(vu_ctrlr != NULL);
 
-	vfu_unmap_sg(qpair->ctrlr->endpoint->vfu_ctx, req->sg, req->iov, req->iovcnt);
+	vfu_unmap_sg(vu_ctrlr->endpoint->vfu_ctx, vu_req->sg, vu_req->iov, vu_req->iovcnt);
+	sqid = vu_qpair->qpair.qid;
+	cqid = vu_ctrlr->qp[sqid]->sq.cqid;
 
-	return post_completion(qpair->ctrlr, &req->req.cmd->nvme_cmd,
-			       &qpair->ctrlr->qp[req->req.qpair->qid]->cq,
-			       req->req.rsp->nvme_cpl.cdw0,
-			       req->req.rsp->nvme_cpl.status.sc,
-			       req->req.rsp->nvme_cpl.status.sct);
+	return post_completion(vu_ctrlr, &vu_req->req.cmd->nvme_cmd,
+			       &vu_ctrlr->qp[cqid]->cq,
+			       vu_req->req.rsp->nvme_cpl.cdw0,
+			       vu_req->req.rsp->nvme_cpl.status.sc,
+			       vu_req->req.rsp->nvme_cpl.status.sct);
 }
 
 static int
