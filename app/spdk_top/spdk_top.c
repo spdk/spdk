@@ -2700,6 +2700,9 @@ show_stats(pthread_t *data_thread)
 		getmaxyx(stdscr, max_row, max_col);
 
 		if (max_row != g_max_row || max_col != g_max_col) {
+			if (max_row != g_max_row) {
+				current_page = 0;
+			}
 			g_max_row = spdk_max(max_row, required_size);
 			g_max_col = max_col;
 			g_data_win_size = g_max_row - required_size + 1;
