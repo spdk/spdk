@@ -106,7 +106,7 @@ def nvmf_create_transport(client, **params):
         in_capsule_data_size: Maximum in-capsule data size in bytes (optional)
         max_io_size: Maximum I/O data size in bytes (optional)
         io_unit_size: I/O unit size in bytes (optional)
-        max_aq_depth: Max size admin quque per controller (optional)
+        max_aq_depth: Max size admin queue per controller (optional)
         num_shared_buffers: The number of pooled data buffers available to the transport (optional)
         buf_cache_size: The number of shared buffers to reserve for each poll group (optional)
         num_cqe: The number of CQ entries to configure CQ size. Only used when no_srq=true - RDMA specific (optional)
