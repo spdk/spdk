@@ -794,17 +794,17 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
  * @ctrlr: the vfio-user controller
  * @cq: the completion queue
  * @cdw0: cdw0 as reported by NVMf
+ * @sqid: submission queue ID
  * @cid: command identifier in NVMe command
  * @sc: the NVMe CQE status code
  * @sct: the NVMe CQE status code type
  */
 static int
 post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *cq,
-		uint32_t cdw0, uint16_t cid, uint16_t sc, uint16_t sct)
+		uint32_t cdw0, uint16_t sqid, uint16_t cid, uint16_t sc, uint16_t sct)
 {
 	struct spdk_nvme_cpl *cpl;
 	const struct spdk_nvmf_registers *regs;
-	uint16_t qid;
 	int err;
 
 	assert(ctrlr != NULL);
@@ -813,30 +813,30 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *cq,
 		return 0;
 	}
 
-	qid = io_q_id(cq);
 	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 	if (regs->csts.bits.shst != SPDK_NVME_SHST_NORMAL) {
 		SPDK_DEBUGLOG(nvmf_vfio,
 			      "%s: ignore completion SQ%d cid=%d status=%#x\n",
-			      ctrlr_id(ctrlr), qid, cid, sc);
+			      ctrlr_id(ctrlr), sqid, cid, sc);
 		return 0;
 	}
 
 	if (cq_is_full(ctrlr, cq)) {
 		SPDK_ERRLOG("%s: CQ%d full (tail=%d, head=%d)\n",
-			    ctrlr_id(ctrlr), qid, cq->tail, *hdbl(ctrlr, cq));
+			    ctrlr_id(ctrlr), io_q_id(cq), cq->tail, *hdbl(ctrlr, cq));
 		return -1;
 	}
 
 	cpl = ((struct spdk_nvme_cpl *)cq->addr) + cq->tail;
 
-	assert(ctrlr->qp[qid] != NULL);
+	assert(ctrlr->qp[sqid] != NULL);
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: request complete SQ%d cid=%d status=%#x SQ head=%#x CQ tail=%#x\n",
-		      ctrlr_id(ctrlr), qid, cid, sc, ctrlr->qp[qid]->sq.head,
+		      ctrlr_id(ctrlr), sqid, cid, sc, ctrlr->qp[sqid]->sq.head,
 		      cq->tail);
 
-	cpl->sqhd = ctrlr->qp[qid]->sq.head;
+	cpl->sqhd = ctrlr->qp[sqid]->sq.head;
+	cpl->sqid = sqid;
 	cpl->cid = cid;
 	cpl->cdw0 = cdw0;
 	cpl->status.dnr = 0x0;
@@ -1151,7 +1151,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	}
 
 out:
-	return post_completion(ctrlr, &ctrlr->qp[0]->cq, 0, cmd->cid, sc, sct);
+	return post_completion(ctrlr, &ctrlr->qp[0]->cq, 0, 0, cmd->cid, sc, sct);
 }
 
 /* For ADMIN I/O DELETE COMPLETION QUEUE the NVMf library will disconnect and free
@@ -1168,7 +1168,7 @@ vfio_user_qpair_delete_cb(void *cb_arg)
 	struct vfio_user_delete_cq_ctx *ctx = cb_arg;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx->vu_ctrlr;
 
-	post_completion(vu_ctrlr, &vu_ctrlr->qp[0]->cq, 0, ctx->delete_io_cq_cmd.cid,
+	post_completion(vu_ctrlr, &vu_ctrlr->qp[0]->cq, 0, 0, ctx->delete_io_cq_cmd.cid,
 			SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 	free(ctx);
 }
@@ -1227,7 +1227,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	}
 
 out:
-	return post_completion(ctrlr, &ctrlr->qp[0]->cq, 0, cmd->cid, sc, sct);
+	return post_completion(ctrlr, &ctrlr->qp[0]->cq, 0, 0, cmd->cid, sc, sct);
 }
 
 /*
@@ -1273,6 +1273,7 @@ handle_cmd_rsp(struct nvmf_vfio_user_req *vu_req, void *cb_arg)
 
 	return post_completion(vu_ctrlr, &vu_ctrlr->qp[cqid]->cq,
 			       vu_req->req.rsp->nvme_cpl.cdw0,
+			       sqid,
 			       vu_req->req.cmd->nvme_cmd.cid,
 			       vu_req->req.rsp->nvme_cpl.status.sc,
 			       vu_req->req.rsp->nvme_cpl.status.sct);
@@ -2297,7 +2298,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
 		 * been completed. Complete it now.
 		 */
-		post_completion(ctrlr, &ctrlr->qp[0]->cq, 0,
+		post_completion(ctrlr, &ctrlr->qp[0]->cq, 0, 0,
 				qpair->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 	}
 	ctrlr->num_connected_qps++;
