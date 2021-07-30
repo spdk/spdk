@@ -177,28 +177,24 @@ print the final results of the maps.
   itself as a probe parameter and let the script decide which fields it wants to access
   (Note: these would need to be kept up-to-date with the C definitions of the struct - it is
   not possible to include the header files in a bpftrace script)
-
 - investigate using pahole to generate data structure definitions that can be included in
   bpftrace scripts; this would allow us to pass the subsystem pointer itself as a probe
   argument, and let the script decide which fields it wants to access; for example,
   `pahole -E -C spdk_nvmf_subsystem build/bin/spdk_tgt` gets us close to what we need,
   but there are some limiters:
-
-	- our structures have char arrays (not char pointers) for things like subnqn; large
-	  arrays like these cannot currently be passed to bpftrace printf without generating
-	  a stack space error (probe points are limited to 512 bytes of stack); we could
-	  modify SPDK to have the char array for storage, and a char pointer that points to
-	  that storage, the latter could easily then be used in bpftrace scripts
-	- our structures include fields with their enum types instead of int; bpftrace will
-	  complain it does not know about the enum (pahole doesn't print out enum
-	  descriptions); information on enums can be found in the applications .debug_info
-	  section, but we would need something that can convert that into a file we can
-	  include in a bpftrace script
-
+  - our structures have char arrays (not char pointers) for things like subnqn; large
+    arrays like these cannot currently be passed to bpftrace printf without generating
+    a stack space error (probe points are limited to 512 bytes of stack); we could
+    modify SPDK to have the char array for storage, and a char pointer that points to
+    that storage, the latter could easily then be used in bpftrace scripts
+  - our structures include fields with their enum types instead of int; bpftrace will
+    complain it does not know about the enum (pahole doesn't print out enum
+    descriptions); information on enums can be found in the applications .debug_info
+    section, but we would need something that can convert that into a file we can
+    include in a bpftrace script
 - Note that bpftrace prints are not always printed in exact chronological order; this can
   be seen especially with spdk_for_each_channel iterations, where we execute trace points
   on multiple threads in a very short period of time, and those may not get printed to the
   console in exact order; this is why the nvmf.bt script prints out a msec.nsec timestamp
   so that the user can understand the ordering and even pipe through sort if desired
-
 - flesh out more DTrace probes in the nvmf code
