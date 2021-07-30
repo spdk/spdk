@@ -44,7 +44,7 @@ DEPDIRS-env_ocf :=
 DEPDIRS-log :=
 DEPDIRS-rte_vhost :=
 
-DEPDIRS-env_dpdk := log
+DEPDIRS-env_dpdk := log util
 
 DEPDIRS-ioat := log
 DEPDIRS-idxd := log util
