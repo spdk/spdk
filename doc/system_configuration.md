@@ -62,7 +62,7 @@ Let's assume we want to use PCI device `0000:04:00.0`. First of all, verify
 that it has an IOMMU group assigned:
 
 ~~~{.sh}
-$ readlink "/sys/bus/pci/devices/0000:00:04.0/iommu_group"
+readlink "/sys/bus/pci/devices/0000:00:04.0/iommu_group"
 ~~~
 
 The output should be e.g.
@@ -100,7 +100,7 @@ The limit can be checked by running the following command as target user:
 (output in kilobytes)
 
 ~~~{.sh}
-$ ulimit -l
+ulimit -l
 ~~~
 
 On Ubuntu 18.04 this returns 16384 (16MB) by default, which is way below
