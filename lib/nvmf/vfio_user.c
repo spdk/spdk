@@ -618,14 +618,14 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec 
 	return iov->iov_base;
 }
 
-static uint32_t
+static inline uint32_t
 sq_head(struct nvmf_vfio_user_qpair *qpair)
 {
 	assert(qpair != NULL);
 	return qpair->sq.head;
 }
 
-static void
+static inline void
 sqhd_advance(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_qpair *qpair)
 {
 	assert(ctrlr != NULL);
@@ -662,7 +662,7 @@ asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
 	return 0;
 }
 
-static uint16_t
+static inline uint16_t
 cq_next(struct nvme_q *q)
 {
 	assert(q != NULL);
@@ -670,7 +670,7 @@ cq_next(struct nvme_q *q)
 	return (q->tail + 1) % q->size;
 }
 
-static int
+static inline int
 queue_index(uint16_t qid, int is_cq)
 {
 	return (qid * 2) + is_cq;
@@ -696,18 +696,21 @@ hdbl(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q)
 	return &ctrlr->doorbells[queue_index(io_q_id(q), true)];
 }
 
-static bool
+static inline bool
 cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q)
 {
 	assert(ctrlr != NULL);
 	assert(q != NULL);
+
 	return cq_next(q) == *hdbl(ctrlr, q);
 }
 
-static void
+static inline void
 cq_tail_advance(struct nvme_q *q)
 {
 	assert(q != NULL);
+	assert(q->is_cq);
+
 	q->tail = cq_next(q);
 }
 
@@ -832,10 +835,10 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *cq,
 	assert(ctrlr->qp[sqid] != NULL);
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: request complete SQ%d cid=%d status=%#x SQ head=%#x CQ tail=%#x\n",
-		      ctrlr_id(ctrlr), sqid, cid, sc, ctrlr->qp[sqid]->sq.head,
+		      ctrlr_id(ctrlr), sqid, cid, sc, sq_head(ctrlr->qp[sqid]),
 		      cq->tail);
 
-	cpl->sqhd = ctrlr->qp[sqid]->sq.head;
+	cpl->sqhd = sq_head(ctrlr->qp[sqid]);
 	cpl->sqid = sqid;
 	cpl->cid = cid;
 	cpl->cdw0 = cdw0;
