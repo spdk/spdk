@@ -2568,10 +2568,9 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 }
 
 /*
- * Handles an I/O command.
+ * Map an I/O command's buffers.
  *
- * Returns 0 on success and -errno on failure. Sets @submit on whether or not
- * the request must be forwarded to NVMf.
+ * Returns 0 on success and -errno on failure.
  */
 static int
 map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req)
