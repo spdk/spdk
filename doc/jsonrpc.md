@@ -6945,7 +6945,6 @@ Example response:
 }
 ~~~
 
-
 ## nvmf_set_crdt {#rpc_nvmf_set_crdt}
 
 Set the 3 CRDT (Command Retry Delay Time) values. For details about
