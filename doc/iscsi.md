@@ -45,11 +45,11 @@ The iSCSI target is configured via JSON-RPC calls. See @ref jsonrpc for details.
 
 ### Portal groups
 
- - iscsi_create_portal_group -- Add a portal group.
- - iscsi_delete_portal_group -- Delete an existing portal group.
- - iscsi_target_node_add_pg_ig_maps -- Add initiator group to portal group mappings to an existing iSCSI target node.
- - iscsi_target_node_remove_pg_ig_maps -- Delete initiator group to portal group mappings from an existing iSCSI target node.
- - iscsi_get_portal_groups -- Show information about all available portal groups.
+- iscsi_create_portal_group -- Add a portal group.
+- iscsi_delete_portal_group -- Delete an existing portal group.
+- iscsi_target_node_add_pg_ig_maps -- Add initiator group to portal group mappings to an existing iSCSI target node.
+- iscsi_target_node_remove_pg_ig_maps -- Delete initiator group to portal group mappings from an existing iSCSI target node.
+- iscsi_get_portal_groups -- Show information about all available portal groups.
 
 ~~~
 /path/to/spdk/scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
@@ -57,10 +57,10 @@ The iSCSI target is configured via JSON-RPC calls. See @ref jsonrpc for details.
 
 ### Initiator groups
 
- - iscsi_create_initiator_group -- Add an initiator group.
- - iscsi_delete_initiator_group -- Delete an existing initiator group.
- - iscsi_initiator_group_add_initiators -- Add initiators to an existing initiator group.
- - iscsi_get_initiator_groups -- Show information about all available initiator groups.
+- iscsi_create_initiator_group -- Add an initiator group.
+- iscsi_delete_initiator_group -- Delete an existing initiator group.
+- iscsi_initiator_group_add_initiators -- Add initiators to an existing initiator group.
+- iscsi_get_initiator_groups -- Show information about all available initiator groups.
 
 ~~~
 /path/to/spdk/scripts/rpc.py iscsi_create_initiator_group 2 ANY 10.0.0.2/32
@@ -68,10 +68,10 @@ The iSCSI target is configured via JSON-RPC calls. See @ref jsonrpc for details.
 
 ### Target nodes
 
- - iscsi_create_target_node -- Add an iSCSI target node.
- - iscsi_delete_target_node -- Delete an iSCSI target node.
- - iscsi_target_node_add_lun -- Add a LUN to an existing iSCSI target node.
- - iscsi_get_target_nodes -- Show information about all available iSCSI target nodes.
+- iscsi_create_target_node -- Add an iSCSI target node.
+- iscsi_delete_target_node -- Delete an iSCSI target node.
+- iscsi_target_node_add_lun -- Add a LUN to an existing iSCSI target node.
+- iscsi_get_target_nodes -- Show information about all available iSCSI target nodes.
 
 ~~~
 /path/to/spdk/scripts/rpc.py iscsi_create_target_node Target3 Target3_alias MyBdev:0 1:2 64 -d
@@ -274,20 +274,22 @@ sde
 At the iSCSI level, we provide the following support for Hotplug:
 
 1. bdev/nvme:
-  At the bdev/nvme level, we start one hotplug monitor which will call
-  spdk_nvme_probe() periodically to get the hotplug events. We provide the
-  private attach_cb and remove_cb for spdk_nvme_probe(). For the attach_cb,
-  we will create the block device base on the NVMe device attached, and for the
-  remove_cb, we will unregister the block device, which will also notify the
-  upper level stack (for iSCSI target, the upper level stack is scsi/lun) to
-  handle the hot-remove event.
+
+At the bdev/nvme level, we start one hotplug monitor which will call
+spdk_nvme_probe() periodically to get the hotplug events. We provide the
+private attach_cb and remove_cb for spdk_nvme_probe(). For the attach_cb,
+we will create the block device base on the NVMe device attached, and for the
+remove_cb, we will unregister the block device, which will also notify the
+upper level stack (for iSCSI target, the upper level stack is scsi/lun) to
+handle the hot-remove event.
 
 2. scsi/lun:
-  When the LUN receive the hot-remove notification from block device layer,
-  the LUN will be marked as removed, and all the IOs after this point will
-  return with check condition status. Then the LUN starts one poller which will
-  wait for all the commands which have already been submitted to block device to
-  return back; after all the commands return back, the LUN will be deleted.
+
+When the LUN receive the hot-remove notification from block device layer,
+the LUN will be marked as removed, and all the IOs after this point will
+return with check condition status. Then the LUN starts one poller which will
+wait for all the commands which have already been submitted to block device to
+return back; after all the commands return back, the LUN will be deleted.
 
 @sa spdk_nvme_probe
 

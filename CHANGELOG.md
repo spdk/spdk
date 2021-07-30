@@ -1385,11 +1385,11 @@ of logical blocks for write operation.
 
 New zone-related fields were added to the result of the `get_bdevs` RPC call:
 
- - `zoned`: indicates whether the device is zoned or a regular
-   block device
- - `zone_size`: number of blocks in a single zone
- - `max_open_zones`: maximum number of open zones
- - `optimal_open_zones`: optimal number of open zones
+- `zoned`: indicates whether the device is zoned or a regular
+  block device
+- `zone_size`: number of blocks in a single zone
+- `max_open_zones`: maximum number of open zones
+- `optimal_open_zones`: optimal number of open zones
 
 The `zoned` field is a boolean and is always present, while the rest is only available for zoned
 bdevs.
@@ -2109,19 +2109,19 @@ for which the memory is contiguous in the physical memory address space.
 
 The following functions were removed:
 
- - spdk_pci_nvme_device_attach()
- - spdk_pci_nvme_enumerate()
- - spdk_pci_ioat_device_attach()
- - spdk_pci_ioat_enumerate()
- - spdk_pci_virtio_device_attach()
- - spdk_pci_virtio_enumerate()
+- spdk_pci_nvme_device_attach()
+- spdk_pci_nvme_enumerate()
+- spdk_pci_ioat_device_attach()
+- spdk_pci_ioat_enumerate()
+- spdk_pci_virtio_device_attach()
+- spdk_pci_virtio_enumerate()
 
 They were replaced with generic spdk_pci_device_attach() and spdk_pci_enumerate() which
 require a new spdk_pci_driver object to be provided. It can be one of the following:
 
- - spdk_pci_nvme_get_driver()
- - spdk_pci_ioat_get_driver()
- - spdk_pci_virtio_get_driver()
+- spdk_pci_nvme_get_driver()
+- spdk_pci_ioat_get_driver()
+- spdk_pci_virtio_get_driver()
 
 spdk_pci_hook_device() and spdk_pci_unhook_device() were added. Those allow adding a virtual
 spdk_pci_device into the SPDK PCI subsystem. A virtual device calls provided callbacks for
@@ -2300,12 +2300,12 @@ Dropped support for DPDK 16.07 and earlier, which SPDK won't even compile with r
 
 The following RPC commands deprecated in the previous release are now removed:
 
- - construct_virtio_user_scsi_bdev
- - construct_virtio_pci_scsi_bdev
- - construct_virtio_user_blk_bdev
- - construct_virtio_pci_blk_bdev
- - remove_virtio_scsi_bdev
- - construct_nvmf_subsystem
+- construct_virtio_user_scsi_bdev
+- construct_virtio_pci_scsi_bdev
+- construct_virtio_user_blk_bdev
+- construct_virtio_pci_blk_bdev
+- remove_virtio_scsi_bdev
+- construct_nvmf_subsystem
 
 ### Miscellaneous
 
@@ -2489,11 +2489,11 @@ respectively.
 
 The following RPC commands have been deprecated:
 
- - construct_virtio_user_scsi_bdev
- - construct_virtio_pci_scsi_bdev
- - construct_virtio_user_blk_bdev
- - construct_virtio_pci_blk_bdev
- - remove_virtio_scsi_bdev
+- construct_virtio_user_scsi_bdev
+- construct_virtio_pci_scsi_bdev
+- construct_virtio_user_blk_bdev
+- construct_virtio_pci_blk_bdev
+- remove_virtio_scsi_bdev
 
 The `construct_virtio_*` ones were replaced with a single `construct_virtio_dev`
 command that can create any type of Virtio bdev(s). `remove_virtio_scsi_bdev`
@@ -2510,12 +2510,12 @@ Added jsonrpc-client C library intended for issuing RPC commands from applicatio
 
 Added API enabling iteration over JSON object:
 
- - spdk_json_find()
- - spdk_json_find_string()
- - spdk_json_find_array()
- - spdk_json_object_first()
- - spdk_json_array_first()
- - spdk_json_next()
+- spdk_json_find()
+- spdk_json_find_string()
+- spdk_json_find_array()
+- spdk_json_object_first()
+- spdk_json_array_first()
+- spdk_json_next()
 
 ### Blobstore
 
@@ -3282,33 +3282,33 @@ in app/iscsi_tgt and a documented configuration file can be found at etc/spdk/sp
 
 This release also significantly improves the existing NVMe over Fabrics target.
 
-  - The configuration file format was changed, which will require updates to
-    any existing nvmf.conf files (see `etc/spdk/nvmf.conf.in`):
-    - `SubsystemGroup` was renamed to `Subsystem`.
-    - `AuthFile` was removed (it was unimplemented).
-    - `nvmf_tgt` was updated to correctly recognize NQN (NVMe Qualified Names)
-      when naming subsystems.  The default node name was changed to reflect this;
-      it is now "nqn.2016-06.io.spdk".
-    - `Port` and `Host` sections were merged into the `Subsystem` section
-    - Global options to control max queue depth, number of queues, max I/O
-      size, and max in-capsule data size were added.
-    - The Nvme section was removed. Now a list of devices is specified by
-      bus/device/function directly in the Subsystem section.
-    - Subsystems now have a Mode, which can be Direct or Virtual. This is an attempt
-      to future-proof the interface, so the only mode supported by this release
-      is "Direct".
-  - Many bug fixes and cleanups were applied to the `nvmf_tgt` app and library.
-  - The target now supports discovery.
+- The configuration file format was changed, which will require updates to
+  any existing nvmf.conf files (see `etc/spdk/nvmf.conf.in`):
+  - `SubsystemGroup` was renamed to `Subsystem`.
+  - `AuthFile` was removed (it was unimplemented).
+  - `nvmf_tgt` was updated to correctly recognize NQN (NVMe Qualified Names)
+    when naming subsystems.  The default node name was changed to reflect this;
+    it is now "nqn.2016-06.io.spdk".
+  - `Port` and `Host` sections were merged into the `Subsystem` section
+  - Global options to control max queue depth, number of queues, max I/O
+    size, and max in-capsule data size were added.
+  - The Nvme section was removed. Now a list of devices is specified by
+    bus/device/function directly in the Subsystem section.
+  - Subsystems now have a Mode, which can be Direct or Virtual. This is an attempt
+    to future-proof the interface, so the only mode supported by this release
+    is "Direct".
+- Many bug fixes and cleanups were applied to the `nvmf_tgt` app and library.
+- The target now supports discovery.
 
 This release also adds one new feature and provides some better examples and tools
 for the NVMe driver.
 
-  - The Weighted Round Robin arbitration method is now supported. This allows
-    the user to specify different priorities on a per-I/O-queue basis.  To
-    enable WRR, set the `arb_mechanism` field during `spdk_nvme_probe()`.
-  - A simplified "Hello World" example was added to show the proper way to use
-    the NVMe library API; see `examples/nvme/hello_world/hello_world.c`.
-  - A test for measuring software overhead was added. See `test/lib/nvme/overhead`.
+- The Weighted Round Robin arbitration method is now supported. This allows
+  the user to specify different priorities on a per-I/O-queue basis.  To
+  enable WRR, set the `arb_mechanism` field during `spdk_nvme_probe()`.
+- A simplified "Hello World" example was added to show the proper way to use
+  the NVMe library API; see `examples/nvme/hello_world/hello_world.c`.
+- A test for measuring software overhead was added. See `test/lib/nvme/overhead`.
 
 ## v16.06: NVMf userspace target
 
@@ -3336,13 +3336,13 @@ user code.
   supported on any attached controller.
   - Added support for the Write Zeroes command.
   - `examples/nvme/perf` can now report I/O command latency from the
-   the controller's viewpoint using the Intel vendor-specific read/write latency
-   log page.
+  the controller's viewpoint using the Intel vendor-specific read/write latency
+  log page.
   - Added namespace reservation command support, which can be used to coordinate
   sharing of a namespace between multiple hosts.
   - Added hardware SGL support, which enables use of scattered buffers that
-   don't conform to the PRP list alignment and length requirements on supported
-   NVMe controllers.
+  don't conform to the PRP list alignment and length requirements on supported
+  NVMe controllers.
   - Added end-to-end data protection support, including the ability to write and
   read metadata in extended LBA (metadata appended to each block of data in the
   buffer) and separate metadata buffer modes.

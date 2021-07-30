@@ -2,14 +2,14 @@
 
 # In this document {#nvme_toc}
 
-* @ref nvme_intro
-* @ref nvme_examples
-* @ref nvme_interface
-* @ref nvme_design
-* @ref nvme_fabrics_host
-* @ref nvme_multi_process
-* @ref nvme_hotplug
-* @ref nvme_cuse
+- @ref nvme_intro
+- @ref nvme_examples
+- @ref nvme_interface
+- @ref nvme_design
+- @ref nvme_fabrics_host
+- @ref nvme_multi_process
+- @ref nvme_hotplug
+- @ref nvme_cuse
 
 # Introduction {#nvme_intro}
 
@@ -124,8 +124,8 @@ io flag set, and the next one should have the SPDK_NVME_IO_FLAGS_FUSE_SECOND.
 
 In addition, the following rules must be met to execute two commands as an atomic unit:
 
- - The commands shall be inserted next to each other in the same submission queue.
- - The LBA range, should be the same for the two commands.
+- The commands shall be inserted next to each other in the same submission queue.
+- The LBA range, should be the same for the two commands.
 
 E.g. To send fused compare and write operation user must call spdk_nvme_ns_cmd_compare
 followed with spdk_nvme_ns_cmd_write and make sure no other operations are submitted

@@ -49,34 +49,34 @@ To create the VM image manually use following steps:
 
 1. Create an image file for the VM. It does not have to be large, about 3.5G should suffice.
 2. Create an ssh keypair for host-guest communications (performed on the host):
-    - Generate an ssh keypair with the name spdk_vhost_id_rsa and save it in `/root/.ssh`.
-    - Make sure that only root has read access to the private key.
+  - Generate an ssh keypair with the name spdk_vhost_id_rsa and save it in `/root/.ssh`.
+  - Make sure that only root has read access to the private key.
 3. Install the OS in the VM image (performed on guest):
-    - Use the latest Fedora Cloud (Currently Fedora 32).
-    - When partitioning the disk, make one partion that consumes the whole disk mounted at /. Do not encrypt the disk or enable LVM.
-    - Choose the OpenSSH server packages during install.
+  - Use the latest Fedora Cloud (Currently Fedora 32).
+  - When partitioning the disk, make one partion that consumes the whole disk mounted at /. Do not encrypt the disk or enable LVM.
+  - Choose the OpenSSH server packages during install.
 4. Post installation configuration (performed on guest):
-    - Run the following commands to enable all necessary dependencies:
-      ~~~{.sh}
-      sudo dnf update
-      sudo dnf upgrade
-      sudo dnf -y install git sg3_utils bc wget libubsan libasan xfsprogs btrfs-progs ntfsprogs ntfs-3g
-      git clone https://github.com/spdk/spdk.git
-      ./spdk/scripts/pkgdep.sh -p -f -r -u
-      ~~~
-    - Enable the root user: "sudo passwd root -> root".
-    - Enable root login over ssh: vim `/etc/ssh/sshd_config` -> PermitRootLogin=yes.
-    - Change the grub boot options for the guest as follows:
-      - Add "console=ttyS0 earlyprintk=ttyS0" to the boot options in `/etc/default/grub` (for serial output redirect).
-      - Add "scsi_mod.use_blk_mq=1" to boot options in `/etc/default/grub`.
-      ~~~{.sh}
-      sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-      ~~~
-    - Reboot the VM.
-    - Remove any unnecessary packages (this is to make booting the VM faster):
-      ~~~{.sh}
-      sudo dnf clean all
-      ~~~
+  - Run the following commands to enable all necessary dependencies:
+    ~~~{.sh}
+    sudo dnf update
+    sudo dnf upgrade
+    sudo dnf -y install git sg3_utils bc wget libubsan libasan xfsprogs btrfs-progs ntfsprogs ntfs-3g
+    git clone https://github.com/spdk/spdk.git
+    ./spdk/scripts/pkgdep.sh -p -f -r -u
+    ~~~
+  - Enable the root user: "sudo passwd root -> root".
+  - Enable root login over ssh: vim `/etc/ssh/sshd_config` -> PermitRootLogin=yes.
+  - Change the grub boot options for the guest as follows:
+        - Add "console=ttyS0 earlyprintk=ttyS0" to the boot options in `/etc/default/grub` (for serial output redirect).
+        - Add "scsi_mod.use_blk_mq=1" to boot options in `/etc/default/grub`.
+          ~~~{.sh}
+          sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+          ~~~
+  - Reboot the VM.
+  - Remove any unnecessary packages (this is to make booting the VM faster):
+    ~~~{.sh}
+    sudo dnf clean all
+    ~~~
 5. Install fio:
    ~~~
    ./spdk/test/common/config/vm_setup.sh -t 'fio'

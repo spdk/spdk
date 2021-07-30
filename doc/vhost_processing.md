@@ -90,13 +90,13 @@ physically-discontiguous regions and Vhost-user specification puts a limit on
 their number - currently 8. The driver sends a single message for each region with
 the following data:
 
- * file descriptor - for mmap
- * user address - for memory translations in Vhost-user messages (e.g.
-   translating vring addresses)
- * guest address - for buffers addresses translations in vrings (for QEMU this
-   is a physical address inside the guest)
- * user offset - positive offset for the mmap
- * size
+- file descriptor - for mmap
+- user address - for memory translations in Vhost-user messages (e.g.
+  translating vring addresses)
+- guest address - for buffers addresses translations in vrings (for QEMU this
+  is a physical address inside the guest)
+- user offset - positive offset for the mmap
+- size
 
 The Master will send new memory regions after each memory change - usually
 hotplug/hotremove. The previous mappings will be removed.
@@ -108,11 +108,11 @@ as they use common SCSI I/O to inquiry the underlying disk(s).
 Afterwards, the driver requests the number of maximum supported queues and
 starts sending virtqueue data, which consists of:
 
- * unique virtqueue id
- * index of the last processed vring descriptor
- * vring addresses (from user address space)
- * call descriptor (for interrupting the driver after I/O completions)
- * kick descriptor (to listen for I/O requests - unused by SPDK)
+- unique virtqueue id
+- index of the last processed vring descriptor
+- vring addresses (from user address space)
+- call descriptor (for interrupting the driver after I/O completions)
+- kick descriptor (to listen for I/O requests - unused by SPDK)
 
 If multiqueue feature has been negotiated, the driver has to send a specific
 *ENABLE* message for each extra queue it wants to be polled. Other queues are
