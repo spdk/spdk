@@ -1464,6 +1464,43 @@ test_nvmf_subsystem_add_ctrlr(void)
 	free(tgt.subsystems);
 }
 
+static void
+test_spdk_nvmf_subsystem_add_host(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem *subsystem = NULL;
+	int rc;
+	const char hostnqn[] = "nqn.2016-06.io.spdk:host1";
+	const char subsystemnqn[] = "nqn.2016-06.io.spdk:subsystem1";
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+
+	subsystem = spdk_nvmf_subsystem_create(&tgt, subsystemnqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, subsystemnqn);
+
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&subsystem->hosts));
+
+	/* Add existing nqn, this function is allowed to be called if the nqn was previously added. */
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_EMPTY(&subsystem->hosts));
+
+	/* No available nqn */
+	rc = spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
+	CU_ASSERT(rc == -ENOENT);
+
+	spdk_nvmf_subsystem_destroy(subsystem);
+	free(tgt.subsystems);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1490,6 +1527,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_event);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_host);
 
 	allocate_threads(1);
 	set_thread(0);
