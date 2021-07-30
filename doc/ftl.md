@@ -9,7 +9,7 @@ media management events, and manages the defragmentation process.
 
 ## Logical to physical address map
 
- * Shorthand: L2P
+- Shorthand: L2P
 
 Contains the mapping of the logical addresses (LBA) to their on-disk physical location. The LBAs
 are contiguous and in range from 0 to the number of surfaced blocks (the number of spare blocks
@@ -53,9 +53,9 @@ metadata is split in two parts:
     |block 1|   |block 1|   |   |block x|   |           |     |block y   |block y|
     +-------------------+-------------+-----------------+------------------------+
 
- * the head part, containing information already known when opening the band (device's UUID, band's
-   sequence number, etc.), located at the beginning blocks of the band,
- * the tail part, containing the address map and the valid map, located at the end of the band.
+- the head part, containing information already known when opening the band (device's UUID, band's
+  sequence number, etc.), located at the beginning blocks of the band,
+- the tail part, containing the address map and the valid map, located at the end of the band.
 
 Bands are written sequentially (in a way that was described earlier). Before a band can be written
 to, all of its zones need to be erased. During that time, the band is considered to be in a `PREP`
@@ -66,7 +66,7 @@ band. Once the whole available space is filled, tail metadata is written and the
 
 ## Ring write buffer {#ftl_rwb}
 
- * Shorthand: RWB
+- Shorthand: RWB
 
 Because the smallest write size the SSD may support can be a multiple of block size, in order to
 support writes to a single block, the data needs to be buffered. The write buffer is the solution to
@@ -99,7 +99,7 @@ servicing read requests from the buffer.
 
 ## Defragmentation and relocation {#ftl_reloc}
 
- * Shorthand: defrag, reloc
+- Shorthand: defrag, reloc
 
 Since a write to the same LBA invalidates its previous physical location, some of the blocks on a
 band might contain old data that basically wastes space. As there is no way to overwrite an already
@@ -146,9 +146,9 @@ Similar to other bdevs, the FTL bdevs can be created either based on JSON config
 Both interfaces require the same arguments which are described by the `--help` option of the
 `bdev_ftl_create` RPC call, which are:
 
- - bdev's name
- - base bdev's name (base bdev must implement bdev_zone API)
- - UUID of the FTL device (if the FTL is to be restored from the SSD)
+- bdev's name
+- base bdev's name (base bdev must implement bdev_zone API)
+- UUID of the FTL device (if the FTL is to be restored from the SSD)
 
 ## FTL usage with OCSSD nvme bdev {#ftl_ocssd}
 
@@ -162,19 +162,19 @@ on [spdk-3.0.0](https://github.com/spdk/qemu/tree/spdk-3.0.0) branch.
 To emulate an Open Channel device, QEMU expects parameters describing the characteristics and
 geometry of the SSD:
 
- - `serial` - serial number,
- - `lver` - version of the OCSSD standard (0 - disabled, 1 - "1.2", 2 - "2.0"), libftl only supports
-   2.0,
- - `lba_index` - default LBA format. Possible values can be found in the table below (libftl only supports lba_index >= 3):
- - `lnum_ch` - number of groups,
- - `lnum_lun` - number of parallel units
- - `lnum_pln` - number of planes (logical blocks from all planes constitute a chunk)
- - `lpgs_per_blk` - number of pages (smallest programmable unit) per chunk
- - `lsecs_per_pg` - number of sectors in a page
- - `lblks_per_pln` - number of chunks in a parallel unit
- - `laer_thread_sleep` - timeout in ms between asynchronous events requesting the host to relocate
-   the data based on media feedback
- - `lmetadata` - metadata file
+- `serial` - serial number,
+- `lver` - version of the OCSSD standard (0 - disabled, 1 - "1.2", 2 - "2.0"), libftl only supports
+  2.0,
+- `lba_index` - default LBA format. Possible values can be found in the table below (libftl only supports lba_index >= 3):
+- `lnum_ch` - number of groups,
+- `lnum_lun` - number of parallel units
+- `lnum_pln` - number of planes (logical blocks from all planes constitute a chunk)
+- `lpgs_per_blk` - number of pages (smallest programmable unit) per chunk
+- `lsecs_per_pg` - number of sectors in a page
+- `lblks_per_pln` - number of chunks in a parallel unit
+- `laer_thread_sleep` - timeout in ms between asynchronous events requesting the host to relocate
+  the data based on media feedback
+- `lmetadata` - metadata file
 
         |lba_index| data| metadata|
         |---------|-----|---------|

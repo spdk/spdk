@@ -12,7 +12,7 @@ for the next SPDK release.
 All dependencies should be handled by scripts/pkgdep.sh script.
 Package dependencies at the moment include:
 
- - configshell
+- configshell
 
 ## Run SPDK application instance
 
@@ -33,7 +33,7 @@ Use "help" command to get a list of available commands for each tree node.
 It is also possible to use SPDK CLI to run just a single command,
 just use the command as an argument to the application.
 For example, to view current configuration and immediately exit:
- ~~~{.sh}
+~~~{.sh}
 scripts/spdkcli.py ls
 ~~~
 
