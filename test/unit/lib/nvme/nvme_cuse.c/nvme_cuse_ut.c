@@ -363,6 +363,7 @@ test_nvme_cuse_stop(void)
 
 	g_ctrlr_started = spdk_bit_array_create(128);
 	SPDK_CU_ASSERT_FATAL(g_ctrlr_started != NULL);
+	ctrlr_device->is_started = true;
 
 	ctrlr_device->ns_devices[0].is_started = true;
 	ctrlr_device->ns_devices[1].is_started = true;
