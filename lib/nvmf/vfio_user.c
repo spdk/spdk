@@ -634,7 +634,7 @@ sqhd_advance(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_qpair *qp
 }
 
 static int
-asq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
+asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	struct nvme_q *sq;
 	const struct spdk_nvmf_registers *regs;
@@ -715,7 +715,7 @@ cq_tail_advance(struct nvme_q *q)
 }
 
 static int
-acq_map(struct nvmf_vfio_user_ctrlr *ctrlr)
+acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	struct nvme_q *cq;
 	const struct spdk_nvmf_registers *regs;
@@ -1328,18 +1328,18 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 }
 
 static int
-map_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
+enable_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	int err;
 
 	assert(ctrlr != NULL);
 
-	err = acq_map(ctrlr);
+	err = acq_setup(ctrlr);
 	if (err != 0) {
 		return err;
 	}
 
-	err = asq_map(ctrlr);
+	err = asq_setup(ctrlr);
 	if (err != 0) {
 		return err;
 	}
@@ -1348,7 +1348,7 @@ map_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
 }
 
 static void
-unmap_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
+disable_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	assert(ctrlr->qp[0] != NULL);
 
@@ -1410,7 +1410,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		}
 
 		if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
-			ret = map_admin_queue(ctrlr);
+			ret = enable_admin_queue(ctrlr);
 			if (ret) {
 				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap Admin queue\n");
 				continue;
@@ -1503,7 +1503,7 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_qpair *vu_qpair = cb_arg;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
-	bool unmap_admin = false;
+	bool disable_admin = false;
 	int ret;
 
 	assert(vu_qpair != NULL);
@@ -1530,29 +1530,29 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 			if (diff.bits.en) {
 				if (cc.bits.en) {
 					SPDK_DEBUGLOG(nvmf_vfio, "%s: MAP Admin queue\n", ctrlr_id(vu_ctrlr));
-					ret = map_admin_queue(vu_ctrlr);
+					ret = enable_admin_queue(vu_ctrlr);
 					if (ret) {
 						SPDK_ERRLOG("%s: failed to map Admin queue\n", ctrlr_id(vu_ctrlr));
 						return ret;
 					}
 					vu_qpair->state = VFIO_USER_QPAIR_ACTIVE;
 				} else {
-					unmap_admin = true;
+					disable_admin = true;
 				}
 			}
 
 			if (diff.bits.shn) {
 				if (cc.bits.shn == SPDK_NVME_SHN_NORMAL || cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
-					unmap_admin = true;
+					disable_admin = true;
 				}
 			}
 
-			if (unmap_admin) {
+			if (disable_admin) {
 				SPDK_DEBUGLOG(nvmf_vfio,
 					      "%s: UNMAP Admin queue\n",
 					      ctrlr_id(vu_ctrlr));
-				unmap_admin_queue(vu_ctrlr);
 				vu_qpair->state = VFIO_USER_QPAIR_INACTIVE;
+				disable_admin_queue(vu_ctrlr);
 				/* For PCIe controller reset or shutdown, we will drop all AER responses */
 				nvmf_ctrlr_abort_aer(vu_qpair->qpair.ctrlr);
 			}
