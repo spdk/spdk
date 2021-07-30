@@ -96,6 +96,7 @@ function unittest_nvmf() {
 	$valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
 	$valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
 	$valgrind $testdir/lib/nvmf/nvmf.c/nvmf_ut
+	$valgrind $testdir/lib/nvmf/transport.c/transport_ut
 }
 
 function unittest_scsi() {

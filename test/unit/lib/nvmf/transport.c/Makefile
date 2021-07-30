@@ -31,20 +31,9 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-DIRS-y = tcp.c ctrlr.c subsystem.c ctrlr_discovery.c ctrlr_bdev.c nvmf.c transport.c
+SPDK_LIB_LIST = json
+TEST_FILE = transport_ut.c
 
-DIRS-$(CONFIG_RDMA) += rdma.c
-
-DIRS-$(CONFIG_FC) += fc.c fc_ls.c
-
-DIRS-$(CONFIG_VFIO_USER) += vfio_user.c
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
