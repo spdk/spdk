@@ -3,7 +3,6 @@ exclude_rule 'MD003'
 exclude_rule 'MD004'
 exclude_rule 'MD010'
 rule 'MD013', :line_length => 170
-exclude_rule 'MD021'
 exclude_rule 'MD022'
 exclude_rule 'MD023'
 exclude_rule 'MD024'
