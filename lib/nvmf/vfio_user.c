@@ -122,6 +122,7 @@ struct nvme_q {
 			uint32_t tail;
 			uint16_t iv;
 			bool ien;
+			bool phase;
 		};
 	};
 };
@@ -739,7 +740,13 @@ cq_tail_advance(struct nvme_q *q)
 	assert(q != NULL);
 	assert(q->is_cq);
 
-	q->tail = cq_next(q);
+	assert(q->tail < q->size);
+	q->tail++;
+
+	if (spdk_unlikely(q->tail == q->size)) {
+		q->tail = 0;
+		q->phase = !q->phase;
+	}
 }
 
 static int
@@ -761,6 +768,7 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	cq->tail = 0;
 	cq->is_cq = true;
 	cq->ien = true;
+	cq->phase = true;
 
 	ret = map_q(ctrlr, cq, true, true);
 	if (ret) {
@@ -873,7 +881,7 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *cq,
 	cpl->status.dnr = 0x0;
 	cpl->status.m = 0x0;
 	cpl->status.sct = sct;
-	cpl->status.p = ~cpl->status.p;
+	cpl->status.p = cq->phase;
 	cpl->status.sc = sc;
 
 	cq_tail_advance(cq);
@@ -1150,6 +1158,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		}
 		io_q->ien = cmd->cdw11_bits.create_io_cq.ien;
 		io_q->iv = cmd->cdw11_bits.create_io_cq.iv;
+		io_q->phase = true;
 	} else {
 		/* CQ must be created before SQ */
 		if (!lookup_io_q(ctrlr, cmd->cdw11_bits.create_io_sq.cqid, true)) {
