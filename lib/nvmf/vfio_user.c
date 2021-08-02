@@ -691,14 +691,6 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	return 0;
 }
 
-static inline uint16_t
-cq_next(struct nvme_q *q)
-{
-	assert(q != NULL);
-	assert(q->is_cq);
-	return (q->tail + 1) % q->size;
-}
-
 static inline int
 queue_index(uint16_t qid, int is_cq)
 {
@@ -730,8 +722,9 @@ cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q)
 {
 	assert(ctrlr != NULL);
 	assert(q != NULL);
+	assert(q->is_cq);
 
-	return cq_next(q) == *hdbl(ctrlr, q);
+	return ((q->tail + 1) % q->size) == *hdbl(ctrlr, q);
 }
 
 static inline void
