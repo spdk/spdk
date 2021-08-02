@@ -2249,7 +2249,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	}
 
 invalid_log_page:
-	SPDK_DEBUGLOG(nvmf, "Unsupported Get Log Page 0x%02X\n", lid);
+	SPDK_INFOLOG(nvmf, "Unsupported Get Log Page 0x%02X\n", lid);
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2580,7 +2580,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	}
 
 invalid_cns:
-	SPDK_ERRLOG("Identify command with unsupported CNS 0x%02x\n", cns);
+	SPDK_INFOLOG(nvmf, "Identify command with unsupported CNS 0x%02x\n", cns);
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2768,7 +2768,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
 			return get_features_generic(req, ctrlr->feat.async_event_configuration.raw);
 		default:
-			SPDK_DEBUGLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
+			SPDK_INFOLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
@@ -2827,7 +2827,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
 		return nvmf_ctrlr_get_features_reservation_persistence(req);
 	default:
-		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
+		SPDK_INFOLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -2864,7 +2864,7 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
 			return nvmf_ctrlr_set_features_async_event_configuration(req);
 		default:
-			SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
+			SPDK_INFOLOG(nvmf, "Set Features command with unsupported feature ID 0x%02x\n", feature);
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
@@ -3037,7 +3037,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	}
 
 invalid_opcode:
-	SPDK_ERRLOG("Unsupported admin opcode 0x%x\n", cmd->opc);
+	SPDK_INFOLOG(nvmf, "Unsupported admin opcode 0x%x\n", cmd->opc);
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
