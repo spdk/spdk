@@ -634,10 +634,38 @@ sqhd_advance(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_qpair *qp
 }
 
 static int
+map_q(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvme_q *q, bool is_cq, bool unmap)
+{
+	uint64_t len;
+
+	assert(q->size);
+	assert(q->addr == NULL);
+
+	if (is_cq) {
+		len = q->size * sizeof(struct spdk_nvme_cpl);
+	} else {
+		len = q->size * sizeof(struct spdk_nvme_cmd);
+	}
+
+	q->addr = map_one(vu_ctrlr->endpoint->vfu_ctx, q->prp1, len, q->sg,
+			  &q->iov, is_cq ? PROT_READ | PROT_WRITE : PROT_READ);
+	if (q->addr == NULL) {
+		return -EFAULT;
+	}
+
+	if (unmap) {
+		memset(q->addr, 0, len);
+	}
+
+	return 0;
+}
+
+static int
 asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	struct nvme_q *sq;
 	const struct spdk_nvmf_registers *regs;
+	int ret;
 
 	assert(ctrlr != NULL);
 	assert(ctrlr->qp[0] != NULL);
@@ -647,16 +675,16 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->qp[0]->qpair.ctrlr);
 	sq = &ctrlr->qp[0]->sq;
 	sq->size = regs->aqa.bits.asqs + 1;
+	sq->prp1 = regs->asq;
 	sq->head = ctrlr->doorbells[0] = 0;
 	sq->cqid = 0;
-	sq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->asq,
-			   sq->size * sizeof(struct spdk_nvme_cmd), sq->sg,
-			   &sq->iov, PROT_READ);
-	if (sq->addr == NULL) {
-		return -1;
-	}
-	memset(sq->addr, 0, sq->size * sizeof(struct spdk_nvme_cmd));
 	sq->is_cq = false;
+
+	ret = map_q(ctrlr, sq, false, true);
+	if (ret) {
+		return ret;
+	}
+
 	*tdbl(ctrlr, sq) = 0;
 
 	return 0;
@@ -719,6 +747,7 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	struct nvme_q *cq;
 	const struct spdk_nvmf_registers *regs;
+	int ret;
 
 	assert(ctrlr != NULL);
 	assert(ctrlr->qp[0] != NULL);
@@ -728,16 +757,15 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	assert(regs != NULL);
 	cq = &ctrlr->qp[0]->cq;
 	cq->size = regs->aqa.bits.acqs + 1;
+	cq->prp1 = regs->acq;
 	cq->tail = 0;
-	cq->addr = map_one(ctrlr->endpoint->vfu_ctx, regs->acq,
-			   cq->size * sizeof(struct spdk_nvme_cpl), cq->sg,
-			   &cq->iov, PROT_READ | PROT_WRITE);
-	if (cq->addr == NULL) {
-		return -1;
-	}
-	memset(cq->addr, 0, cq->size * sizeof(struct spdk_nvme_cpl));
 	cq->is_cq = true;
 	cq->ien = true;
+
+	ret = map_q(ctrlr, cq, true, true);
+	if (ret) {
+		return ret;
+	}
 	*hdbl(ctrlr, cq) = 0;
 
 	return 0;
@@ -1034,14 +1062,12 @@ static int
 handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		   struct spdk_nvme_cmd *cmd, const bool is_cq)
 {
-	size_t entry_size;
 	uint16_t qid, qsize;
 	uint16_t sc = SPDK_NVME_SC_SUCCESS;
 	uint16_t sct = SPDK_NVME_SCT_GENERIC;
 	int err = 0;
 	struct nvmf_vfio_user_qpair *vu_qpair;
 	struct nvme_q *io_q;
-	int prot;
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
@@ -1084,7 +1110,6 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		}
 
 		io_q = &ctrlr->qp[qid]->cq;
-		entry_size = sizeof(struct spdk_nvme_cpl);
 		if (cmd->cdw11_bits.create_io_cq.pc != 0x1) {
 			SPDK_ERRLOG("%s: non-PC CQ not supporred\n", ctrlr_id(ctrlr));
 			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
@@ -1103,7 +1128,6 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		}
 
 		io_q = &ctrlr->qp[qid]->sq;
-		entry_size = sizeof(struct spdk_nvme_cmd);
 		if (cmd->cdw11_bits.create_io_sq.pc != 0x1) {
 			SPDK_ERRLOG("%s: non-PC SQ not supported\n", ctrlr_id(ctrlr));
 			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
@@ -1117,19 +1141,14 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	io_q->is_cq = is_cq;
 	io_q->size = qsize;
-	prot = PROT_READ;
-	if (is_cq) {
-		prot |= PROT_WRITE;
-	}
-	io_q->addr = map_one(ctrlr->endpoint->vfu_ctx, cmd->dptr.prp.prp1,
-			     io_q->size * entry_size, io_q->sg, &io_q->iov, prot);
-	if (io_q->addr == NULL) {
+	io_q->prp1 = cmd->dptr.prp.prp1;
+
+	err = map_q(ctrlr, io_q, is_cq, true);
+	if (err) {
 		sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		SPDK_ERRLOG("%s: failed to map I/O queue: %m\n", ctrlr_id(ctrlr));
 		goto out;
 	}
-	io_q->prp1 = cmd->dptr.prp.prp1;
-	memset(io_q->addr, 0, io_q->size * entry_size);
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: mapped %cQ%d IOVA=%#lx vaddr=%#llx\n",
 		      ctrlr_id(ctrlr), is_cq ? 'C' : 'S',
