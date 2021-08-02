@@ -184,6 +184,7 @@ modifications to the spdk source directly.
 Any environment can replace the `spdk_env_dpdk` environment by implementing the `include/env.h` header
 file. The environment can either be implemented wholesale in a single library or as a two-part
 shim/implementation library system.
+
 ~~~{.sh}
 	# single library
 	gcc -o my_app ./my_app.c -lspdk -lcustom_env_implementation
