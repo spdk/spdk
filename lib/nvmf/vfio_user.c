@@ -947,6 +947,39 @@ unmap_qp(struct nvmf_vfio_user_qpair *qp)
 	}
 }
 
+static int
+remap_qp(struct nvmf_vfio_user_qpair *vu_qpair)
+{
+	struct nvme_q *sq, *cq;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+	int ret;
+
+	vu_ctrlr = vu_qpair->ctrlr;
+	sq = &vu_qpair->sq;
+	cq = &vu_qpair->cq;
+
+	if (sq->size) {
+		ret = map_q(vu_ctrlr, sq, false, false);
+		if (ret) {
+			SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap SQID %d %#lx-%#lx\n",
+				      io_q_id(sq), sq->prp1, sq->prp1 + sq->size * sizeof(struct spdk_nvme_cmd));
+			return -EFAULT;
+		}
+	}
+
+	if (cq->size) {
+		ret = map_q(vu_ctrlr, cq, true, false);
+		if (ret) {
+			SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap CQID %d %#lx-%#lx\n",
+				      io_q_id(cq), cq->prp1, cq->prp1 + cq->size * sizeof(struct spdk_nvme_cpl));
+			return -EFAULT;
+		}
+
+	}
+
+	return 0;
+}
+
 static void
 free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 {
@@ -1428,35 +1461,12 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 			continue;
 		}
 
-		if (nvmf_qpair_is_admin_queue(&qpair->qpair)) {
-			ret = enable_admin_queue(ctrlr);
-			if (ret) {
-				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap Admin queue\n");
-				continue;
-			}
-			qpair->state = VFIO_USER_QPAIR_ACTIVE;
-			SPDK_DEBUGLOG(nvmf_vfio, "Remap Admin queue\n");
-		} else {
-			struct nvme_q *sq = &qpair->sq;
-			struct nvme_q *cq = &qpair->cq;
-
-			sq->addr = map_one(ctrlr->endpoint->vfu_ctx, sq->prp1, sq->size * 64, sq->sg, &sq->iov,
-					   PROT_READ | PROT_WRITE);
-			if (!sq->addr) {
-				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap SQID %d %#lx-%#lx\n",
-					      i, sq->prp1, sq->prp1 + sq->size * 64);
-				continue;
-			}
-			cq->addr = map_one(ctrlr->endpoint->vfu_ctx, cq->prp1, cq->size * 16, cq->sg, &cq->iov,
-					   PROT_READ | PROT_WRITE);
-			if (!cq->addr) {
-				SPDK_DEBUGLOG(nvmf_vfio, "Memory isn't ready to remap CQID %d %#lx-%#lx\n",
-					      i, cq->prp1, cq->prp1 + cq->size * 16);
-				continue;
-			}
-			qpair->state = VFIO_USER_QPAIR_ACTIVE;
-			SPDK_DEBUGLOG(nvmf_vfio, "Remap IO QP%u\n", i);
+		ret = remap_qp(qpair);
+		if (ret) {
+			continue;
 		}
+		qpair->state = VFIO_USER_QPAIR_ACTIVE;
+		SPDK_DEBUGLOG(nvmf_vfio, "Remap QP %u successfully\n", i);
 	}
 }
 
