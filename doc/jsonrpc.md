@@ -6954,6 +6954,7 @@ are 0. This rpc can only be invoked in STARTUP stage. All values are
 in units of 100 milliseconds (same as the NVMe specification).
 
 ### Parameters
+
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 crdt1                   | Optional | number      | Command Retry Delay Time 1
@@ -9072,6 +9073,7 @@ This method has no parameters.
 ### Response
 
 Completion status of enumeration is returned as a boolean.
+
 ### Example
 
 Example request:

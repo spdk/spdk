@@ -16,6 +16,7 @@ This information enables users to identify CPU cores that are busy doing real wo
 needs more or less CPU resources.
 
 # Run spdk_top
+
 Before running spdk_top you need to run the SPDK application whose performance you want to analyze using spdk_top.
 
 Run the spdk_top application
@@ -25,6 +26,7 @@ Run the spdk_top application
 ~~~
 
 # Bottom menu
+
 Menu at the bottom of SPDK top window shows many options for changing displayed data. Each menu item has a key associated with it in square brackets.
 
 * Quit - quits the SPDK top application.
@@ -35,6 +37,7 @@ of all available pages.
 * Help - displays help pop-up window.
 
 # Threads Tab
+
 The threads tab displays a line item for each spdk thread. The information displayed shows:
 
 * Thread name - name of SPDK thread.
@@ -50,6 +53,7 @@ Pop-up then can be closed by pressing ESC key.
 To learn more about spdk threads see @ref concurrency.
 
 # Pollers Tab
+
 The pollers tab displays a line item for each poller. The information displayed shows:
 
 * Poller name - name of currently selected poller.
@@ -64,6 +68,7 @@ Poller pop-up window can be displayed by pressing ENTER on a selected data row a
 Pop-up can be closed by pressing ESC key.
 
 # Cores Tab
+
 The cores tab provides insights into how the application is using the CPU cores assigned to it. The information displayed for each core shows:
 
 * Core - core number.
@@ -76,4 +81,5 @@ Pressing ENTER key makes a pop-up window appear, showing above information, alon
 window allows to select a thread and display thread details pop-up on top of it. To close both pop-ups use ESC key.
 
 # Help Window
+
 Help window pop-up can be invoked by pressing H key inside any tab. It contains explanations for each key used inside the spdk_top application.
