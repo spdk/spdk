@@ -1,6 +1,6 @@
 # GDB Macros User Guide {#gdb_macros}
 
-# Introduction
+## Introduction
 
 When debugging an spdk application using gdb we may need to view data structures
 in lists, e.g. information about bdevs or threads.
@@ -125,7 +125,7 @@ nqn "nqn.2016-06.io.spdk.umgmt:cnode1", '\000' <repeats 191 times>
 ID 1
 ~~~
 
-# Loading The gdb Macros
+## Loading The gdb Macros
 
 Copy the gdb macros to the host where you are about to debug.
 It is best to copy the file either to somewhere within the PYTHONPATH, or to add
@@ -146,7 +146,7 @@ the PYTHONPATH, so I had to manually add the directory to the path.
 (gdb) spdk_load_macros
 ~~~
 
-# Using the gdb Data Directory
+## Using the gdb Data Directory
 
 On most systems, the data directory is /usr/share/gdb. The python script should
 be copied into the python/gdb/function (or python/gdb/command) directory under
@@ -155,7 +155,7 @@ the data directory, e.g. /usr/share/gdb/python/gdb/function.
 If the python script is in there, then the only thing you need to do when
 starting gdb is type "spdk_load_macros".
 
-# Using .gdbinit To Load The Macros
+## Using .gdbinit To Load The Macros
 
 .gdbinit can also be used in order to run automatically run the manual steps
 above prior to starting gdb.
@@ -168,7 +168,7 @@ source /opt/km/install/tools/gdb_macros/gdb_macros.py
 
 When starting gdb you still have to call spdk_load_macros.
 
-# Why Do We Need to Explicitly Call spdk_load_macros
+## Why Do We Need to Explicitly Call spdk_load_macros
 
 The reason is that the macros need to use globals provided by spdk in order to
 iterate the spdk lists and build iterable representations of the list objects.
@@ -196,7 +196,7 @@ Error occurred in Python command: No symbol table is loaded.  Use the "file"
 command.
 ~~~
 
-# Macros available
+## Macros available
 
 - spdk_load_macros: load the macros (use --reload in order to reload them)
 - spdk_print_bdevs: information about bdevs
@@ -205,7 +205,7 @@ command.
 - spdk_print_nvmf_subsystems: information about nvmf subsystems
 - spdk_print_threads: information about threads
 
-# Adding New Macros
+## Adding New Macros
 
 The list iteration macros are usually built from 3 layers:
 

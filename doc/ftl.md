@@ -5,9 +5,9 @@ implementing bdev_zone interface.
 It handles the logical to physical address mapping, responds to the asynchronous
 media management events, and manages the defragmentation process.
 
-# Terminology {#ftl_terminology}
+## Terminology {#ftl_terminology}
 
-## Logical to physical address map
+### Logical to physical address map
 
 - Shorthand: L2P
 
@@ -17,7 +17,7 @@ are calculated during device formation and are subtracted from the available add
 spare blocks account for zones going offline throughout the lifespan of the device as well as
 provide necessary buffer for data [defragmentation](#ftl_reloc).
 
-## Band {#ftl_band}
+### Band {#ftl_band}
 
 A band describes a collection of zones, each belonging to a different parallel unit. All writes to
 a band follow the same pattern - a batch of logical blocks is written to one zone, another batch
@@ -64,7 +64,7 @@ is being written. Then the band moves to the `OPEN` state and actual user data c
 band. Once the whole available space is filled, tail metadata is written and the band transitions to
 `CLOSING` state. When that finishes the band becomes `CLOSED`.
 
-## Ring write buffer {#ftl_rwb}
+### Ring write buffer {#ftl_rwb}
 
 - Shorthand: RWB
 
@@ -97,7 +97,7 @@ After that operation is completed the whole batch can be freed. For the whole ti
 the `rwb`, the L2P points at the buffer entry instead of a location on the SSD. This allows for
 servicing read requests from the buffer.
 
-## Defragmentation and relocation {#ftl_reloc}
+### Defragmentation and relocation {#ftl_reloc}
 
 - Shorthand: defrag, reloc
 
@@ -133,14 +133,14 @@ index of its zones (3) (how many times the band was written to). The lower the r
 higher its age (2) and the lower its write count (3), the higher the chance the band will be chosen
 for defrag.
 
-# Usage {#ftl_usage}
+## Usage {#ftl_usage}
 
-## Prerequisites {#ftl_prereq}
+### Prerequisites {#ftl_prereq}
 
 In order to use the FTL module, a device capable of zoned interface is required e.g. `zone_block`
 bdev or OCSSD `nvme` bdev.
 
-## FTL bdev creation {#ftl_create}
+### FTL bdev creation {#ftl_create}
 
 Similar to other bdevs, the FTL bdevs can be created either based on JSON config files or via RPC.
 Both interfaces require the same arguments which are described by the `--help` option of the
@@ -150,7 +150,7 @@ Both interfaces require the same arguments which are described by the `--help` o
 - base bdev's name (base bdev must implement bdev_zone API)
 - UUID of the FTL device (if the FTL is to be restored from the SSD)
 
-## FTL usage with OCSSD nvme bdev {#ftl_ocssd}
+### FTL usage with OCSSD nvme bdev {#ftl_ocssd}
 
 This option requires an Open Channel SSD, which can be emulated using QEMU.
 

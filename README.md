@@ -18,7 +18,7 @@ The development kit currently includes:
 * [vhost target](http://www.spdk.io/doc/vhost.html)
 * [Virtio-SCSI driver](http://www.spdk.io/doc/virtio.html)
 
-# In this readme
+## In this readme
 
 * [Documentation](#documentation)
 * [Prerequisites](#prerequisites)

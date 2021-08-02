@@ -92,7 +92,7 @@ SPDK must be allocated using spdk_dma_malloc() or its siblings. The buffers
 must be allocated specifically so that they are pinned and so that physical
 addresses are known.
 
-# IOMMU Support
+## IOMMU Support
 
 Many platforms contain an extra piece of hardware called an I/O Memory
 Management Unit (IOMMU). An IOMMU is much like a regular MMU, except it

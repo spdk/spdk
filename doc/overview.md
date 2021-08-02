@@ -1,6 +1,6 @@
 # SPDK Structural Overview {#overview}
 
-# Overview {#dir_overview}
+## Overview {#dir_overview}
 
 SPDK is composed of a set of C libraries residing in `lib` with public interface
 header files in `include/spdk`, plus a set of applications built out of those

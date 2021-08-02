@@ -1,6 +1,6 @@
 # iSCSI Target {#iscsi}
 
-# iSCSI Target Getting Started Guide {#iscsi_getting_started}
+## iSCSI Target Getting Started Guide {#iscsi_getting_started}
 
 The Storage Performance Development Kit iSCSI target application is named `iscsi_tgt`.
 This following section describes how to run iscsi from your cloned package.
@@ -269,7 +269,7 @@ sdd
 sde
 ~~~
 
-# iSCSI Hotplug {#iscsi_hotplug}
+## iSCSI Hotplug {#iscsi_hotplug}
 
 At the iSCSI level, we provide the following support for Hotplug:
 
@@ -293,7 +293,7 @@ return back; after all the commands return back, the LUN will be deleted.
 
 @sa spdk_nvme_probe
 
-# iSCSI Login Redirection {#iscsi_login_redirection}
+## iSCSI Login Redirection {#iscsi_login_redirection}
 
 The SPDK iSCSI target application supports iSCSI login redirection feature.
 

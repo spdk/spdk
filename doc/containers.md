@@ -4,12 +4,12 @@ This is a living document as there are many ways to use containers with
 SPDK. As new usages are identified and tested, they will be documented
 here.
 
-# In this document {#containers_toc}
+## In this document {#containers_toc}
 
 * @ref kata_containers_with_spdk_vhost
 * @ref spdk_in_docker
 
-# Using SPDK vhost target to provide volume service to Kata Containers and Docker {#kata_containers_with_spdk_vhost}
+## Using SPDK vhost target to provide volume service to Kata Containers and Docker {#kata_containers_with_spdk_vhost}
 
 [Kata Containers](https://katacontainers.io) can build a secure container
 runtime with lightweight virtual machines that feel and perform like
@@ -23,7 +23,7 @@ In addition, a container manager like Docker, can be configured easily to launch
 a Kata container with an SPDK vhost-user block device. For operating details, visit
 Kata containers use-case [Setup to run SPDK vhost-user devices with Kata Containers and Docker](https://github.com/kata-containers/documentation/blob/master/use-cases/using-SPDK-vhostuser-and-kata.md#host-setup-for-vhost-user-devices)
 
-# Containerizing an SPDK Application for Docker {#spdk_in_docker}
+## Containerizing an SPDK Application for Docker {#spdk_in_docker}
 
 There are no SPDK specific changes needed to run an SPDK based application in
 a docker container, however this quick start guide should help you as you

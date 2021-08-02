@@ -3,14 +3,14 @@
 Please note that the functionality discussed in this document is
 currently tagged as experimental.
 
-# In this document {#p2p_toc}
+## In this document {#p2p_toc}
 
 * @ref p2p_overview
 * @ref p2p_nvme_api
 * @ref p2p_cmb_copy
 * @ref p2p_issues
 
-# Overview {#p2p_overview}
+## Overview {#p2p_overview}
 
 Peer-2-Peer (P2P) is the concept of DMAing data directly from one PCI
 End Point (EP) to another without using a system memory buffer. The
@@ -22,7 +22,7 @@ In this section of documentation we outline how to perform P2P
 operations in SPDK and outline some of the issues that can occur when
 performing P2P operations.
 
-# The P2P API for NVMe {#p2p_nvme_api}
+## The P2P API for NVMe {#p2p_nvme_api}
 
 The functions that provide access to the NVMe CMBs for P2P
 capabilities are given in the table below.
@@ -33,7 +33,7 @@ spdk_nvme_ctrlr_map_cmb()                   | @copybrief spdk_nvme_ctrlr_map_cmb
 spdk_nvme_ctrlr_unmap_cmb()                 | @copybrief spdk_nvme_ctrlr_unmap_cmb()
 spdk_nvme_ctrlr_get_regs_cmbsz()            | @copybrief spdk_nvme_ctrlr_get_regs_cmbsz()
 
-# Determining device support {#p2p_support}
+## Determining device support {#p2p_support}
 
 SPDK's identify example application displays whether a device has a controller
 memory buffer and which operations it supports. Run it as follows:
@@ -42,7 +42,7 @@ memory buffer and which operations it supports. Run it as follows:
 ./build/examples/identify -r traddr:<pci id of ssd>
 ~~~
 
-# cmb_copy: An example P2P Application {#p2p_cmb_copy}
+## cmb_copy: An example P2P Application {#p2p_cmb_copy}
 
 Run the cmb_copy example application.
 
@@ -53,7 +53,7 @@ This should copy a single LBA (LBA 0) from namespace 1 on the read
 NVMe SSD to LBA 0 on namespace 1 on the write SSD using the CMB as the
 DMA buffer.
 
-# Issues with P2P {#p2p_issues}
+## Issues with P2P {#p2p_issues}
 
 * In some systems when performing peer-2-peer DMAs between PCIe EPs
   that are directly connected to the Root Complex (RC) the DMA may

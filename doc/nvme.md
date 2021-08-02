@@ -1,6 +1,6 @@
 # NVMe Driver {#nvme}
 
-# In this document {#nvme_toc}
+## In this document {#nvme_toc}
 
 - @ref nvme_intro
 - @ref nvme_examples
@@ -11,7 +11,7 @@
 - @ref nvme_hotplug
 - @ref nvme_cuse
 
-# Introduction {#nvme_intro}
+## Introduction {#nvme_intro}
 
 The NVMe driver is a C library that may be linked directly into an application
 that provides direct, zero-copy data transfer to and from
@@ -29,23 +29,23 @@ devices via NVMe over Fabrics. Users may now call spdk_nvme_probe() on both
 local PCI busses and on remote NVMe over Fabrics discovery services. The API is
 otherwise unchanged.
 
-# Examples {#nvme_examples}
+## Examples {#nvme_examples}
 
-## Getting Start with Hello World {#nvme_helloworld}
+### Getting Start with Hello World {#nvme_helloworld}
 
 There are a number of examples provided that demonstrate how to use the NVMe
 library. They are all in the [examples/nvme](https://github.com/spdk/spdk/tree/master/examples/nvme)
 directory in the repository. The best place to start is
 [hello_world](https://github.com/spdk/spdk/blob/master/examples/nvme/hello_world/hello_world.c).
 
-## Running Benchmarks with Fio Plugin {#nvme_fioplugin}
+### Running Benchmarks with Fio Plugin {#nvme_fioplugin}
 
 SPDK provides a plugin to the very popular [fio](https://github.com/axboe/fio)
 tool for running some basic benchmarks. See the fio start up
 [guide](https://github.com/spdk/spdk/blob/master/examples/nvme/fio_plugin/)
 for more details.
 
-## Running Benchmarks with Perf Tool {#nvme_perf}
+### Running Benchmarks with Perf Tool {#nvme_perf}
 
 NVMe perf utility in the [examples/nvme/perf](https://github.com/spdk/spdk/tree/master/examples/nvme/perf)
 is one of the examples which also can be used for performance tests. The fio
@@ -79,7 +79,7 @@ perf -q 1 -o 4096 -w write -r 'trtype:PCIe traddr:0000:04:00.0' -t 300 -e 'PRACT
 perf -q 1 -o 4096 -w read -r 'trtype:PCIe traddr:0000:04:00.0' -t 200 -e 'PRACT=0,PRCKH=GUARD'
 ~~~
 
-# Public Interface {#nvme_interface}
+## Public Interface {#nvme_interface}
 
 - spdk/nvme.h
 
@@ -103,9 +103,9 @@ spdk_nvme_ctrlr_process_admin_completions() | @copybrief spdk_nvme_ctrlr_process
 spdk_nvme_ctrlr_cmd_io_raw()                | @copybrief spdk_nvme_ctrlr_cmd_io_raw()
 spdk_nvme_ctrlr_cmd_io_raw_with_md()        | @copybrief spdk_nvme_ctrlr_cmd_io_raw_with_md()
 
-# NVMe Driver Design {#nvme_design}
+## NVMe Driver Design {#nvme_design}
 
-## NVMe I/O Submission {#nvme_io_submission}
+### NVMe I/O Submission {#nvme_io_submission}
 
 I/O is submitted to an NVMe namespace using nvme_ns_cmd_xxx functions. The NVMe
 driver submits the I/O request as an NVMe submission queue entry on the queue
@@ -117,7 +117,7 @@ spdk_nvme_qpair_process_completions().
 @sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_dataset_management,
 spdk_nvme_ns_cmd_flush, spdk_nvme_qpair_process_completions
 
-### Fused operations {#nvme_fuses}
+#### Fused operations {#nvme_fuses}
 
 To "fuse" two commands, the first command should have the SPDK_NVME_IO_FLAGS_FUSE_FIRST
 io flag set, and the next one should have the SPDK_NVME_IO_FLAGS_FUSE_SECOND.
@@ -149,7 +149,7 @@ The NVMe specification currently defines compare-and-write as a fused operation.
 Support for compare-and-write is reported by the controller flag
 SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED.
 
-### Scaling Performance {#nvme_scaling}
+#### Scaling Performance {#nvme_scaling}
 
 NVMe queue pairs (struct spdk_nvme_qpair) provide parallel submission paths for
 I/O. I/O may be submitted on multiple queue pairs simultaneously from different
@@ -182,7 +182,7 @@ require that data should be done by sending a request to the owning thread.
 This results in a message passing architecture, as opposed to a locking
 architecture, and will result in superior scaling across CPU cores.
 
-## NVMe Driver Internal Memory Usage {#nvme_memory_usage}
+### NVMe Driver Internal Memory Usage {#nvme_memory_usage}
 
 The SPDK NVMe driver provides a zero-copy data transfer path, which means that
 there are no data buffers for I/O commands. However, some Admin commands have
@@ -202,12 +202,12 @@ Each submission queue entry (SQE) and completion queue entry (CQE) consumes 64 b
 and 16 bytes respectively. Therefore, the maximum memory used for each I/O queue
 pair is (MQES + 1) * (64 + 16) Bytes.
 
-# NVMe over Fabrics Host Support {#nvme_fabrics_host}
+## NVMe over Fabrics Host Support {#nvme_fabrics_host}
 
 The NVMe driver supports connecting to remote NVMe-oF targets and
 interacting with them in the same manner as local NVMe SSDs.
 
-## Specifying Remote NVMe over Fabrics Targets {#nvme_fabrics_trid}
+### Specifying Remote NVMe over Fabrics Targets {#nvme_fabrics_trid}
 
 The method for connecting to a remote NVMe-oF target is very similar
 to the normal enumeration process for local PCIe-attached NVMe devices.
@@ -228,11 +228,11 @@ single NVM subsystem directly, the NVMe library will call `probe_cb`
 for just that subsystem; this allows the user to skip the discovery step
 and connect directly to a subsystem with a known address.
 
-## RDMA Limitations
+### RDMA Limitations
 
 Please refer to NVMe-oF target's @ref nvmf_rdma_limitations
 
-# NVMe Multi Process {#nvme_multi_process}
+## NVMe Multi Process {#nvme_multi_process}
 
 This capability enables the SPDK NVMe driver to support multiple processes accessing the
 same NVMe device. The NVMe driver allocates critical structures from shared memory, so
@@ -243,7 +243,7 @@ The primary motivation for this feature is to support management tools that can 
 to long running applications, perform some maintenance work or gather information, and
 then detach.
 
-## Configuration {#nvme_multi_process_configuration}
+### Configuration {#nvme_multi_process_configuration}
 
 DPDK EAL allows different types of processes to be spawned, each with different permissions
 on the hugepage memory used by the applications.
@@ -269,7 +269,7 @@ Example: identical shm_id and non-overlapping core masks
 ./perf -q 8 -o 131072 -w write -c 0x10 -t 60 -i 1
 ~~~
 
-## Limitations {#nvme_multi_process_limitations}
+### Limitations {#nvme_multi_process_limitations}
 
 1. Two processes sharing memory may not share any cores in their core mask.
 2. If a primary process exits while secondary processes are still running, those processes
@@ -280,7 +280,7 @@ Example: identical shm_id and non-overlapping core masks
 
 @sa spdk_nvme_probe, spdk_nvme_ctrlr_process_admin_completions
 
-# NVMe Hotplug {#nvme_hotplug}
+## NVMe Hotplug {#nvme_hotplug}
 
 At the NVMe driver level, we provide the following support for Hotplug:
 
@@ -300,11 +300,11 @@ At the NVMe driver level, we provide the following support for Hotplug:
 
 @sa spdk_nvme_probe
 
-# NVMe Character Devices {#nvme_cuse}
+## NVMe Character Devices {#nvme_cuse}
 
 This feature is considered as experimental.
 
-## Design
+### Design
 
 ![NVMe character devices processing diagram](nvme_cuse.svg)
 
@@ -326,9 +326,9 @@ immediate response, without passing them through the ring.
 
 This interface reserves one additional qpair for sending down the I/O for each controller.
 
-## Usage
+### Usage
 
-### Enabling cuse support for NVMe
+#### Enabling cuse support for NVMe
 
 Cuse support is disabled by default. To enable support for NVMe-CUSE devices first
 install required dependencies
@@ -337,7 +337,7 @@ sudo scripts/pkgdep.sh --fuse
 ~~~
 Then compile SPDK with "./configure --with-nvme-cuse".
 
-### Creating NVMe-CUSE device
+#### Creating NVMe-CUSE device
 
 First make sure to prepare the environment (see @ref getting_started).
 This includes loading CUSE kernel module.
@@ -367,7 +367,7 @@ $ ls /dev/spdk/
 nvme0  nvme0n1
 ~~~
 
-### Example of using nvme-cli
+#### Example of using nvme-cli
 
 Most nvme-cli commands can point to specific controller or namespace by providing a path to it.
 This can be leveraged to issue commands to the SPDK NVMe-CUSE devices.
@@ -381,7 +381,7 @@ sudo nvme id-ns /dev/spdk/nvme0n1
 Note: `nvme list` command does not display SPDK NVMe-CUSE devices,
 see nvme-cli [PR #773](https://github.com/linux-nvme/nvme-cli/pull/773).
 
-### Examples of using smartctl
+#### Examples of using smartctl
 
 smartctl tool recognizes device type based on the device path. If none of expected
 patterns match, SCSI translation layer is used to identify device.
@@ -395,7 +395,7 @@ the NVMe device.
     ...
 ~~~
 
-## Limitations
+### Limitations
 
 NVMe namespaces are created as character devices and their use may be limited for
 tools expecting block devices.

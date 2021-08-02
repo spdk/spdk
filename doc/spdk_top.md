@@ -15,7 +15,7 @@ spdk_top utility gets the fine grained metrics from the pollers, analyzes and re
 This information enables users to identify CPU cores that are busy doing real work so that they can determine if the application
 needs more or less CPU resources.
 
-# Run spdk_top
+## Run spdk_top
 
 Before running spdk_top you need to run the SPDK application whose performance you want to analyze using spdk_top.
 
@@ -25,7 +25,7 @@ Run the spdk_top application
 ./build/bin/spdk_top
 ~~~
 
-# Bottom menu
+## Bottom menu
 
 Menu at the bottom of SPDK top window shows many options for changing displayed data. Each menu item has a key associated with it in square brackets.
 
@@ -36,7 +36,7 @@ of all available pages.
 * Item details - displays details pop-up window for highlighted data row. Selection is changed by pressing UP and DOWN arrow keys.
 * Help - displays help pop-up window.
 
-# Threads Tab
+## Threads Tab
 
 The threads tab displays a line item for each spdk thread. The information displayed shows:
 
@@ -52,7 +52,7 @@ Pop-up then can be closed by pressing ESC key.
 
 To learn more about spdk threads see @ref concurrency.
 
-# Pollers Tab
+## Pollers Tab
 
 The pollers tab displays a line item for each poller. The information displayed shows:
 
@@ -67,7 +67,7 @@ The pollers tab displays a line item for each poller. The information displayed 
 Poller pop-up window can be displayed by pressing ENTER on a selected data row and displays above information.
 Pop-up can be closed by pressing ESC key.
 
-# Cores Tab
+## Cores Tab
 
 The cores tab provides insights into how the application is using the CPU cores assigned to it. The information displayed for each core shows:
 
@@ -81,6 +81,6 @@ The cores tab provides insights into how the application is using the CPU cores 
 Pressing ENTER key makes a pop-up window appear, showing above information, along with a list of threads running on selected core. Cores details
 window allows to select a thread and display thread details pop-up on top of it. To close both pop-ups use ESC key.
 
-# Help Window
+## Help Window
 
 Help window pop-up can be invoked by pressing H key inside any tab. It contains explanations for each key used inside the spdk_top application.

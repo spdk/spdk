@@ -1,6 +1,6 @@
 # Virtualized I/O with Vhost-user {#vhost_processing}
 
-# Table of Contents {#vhost_processing_toc}
+## Table of Contents {#vhost_processing_toc}
 
 - @ref vhost_processing_intro
 - @ref vhost_processing_qemu
@@ -8,7 +8,7 @@
 - @ref vhost_processing_io_path
 - @ref vhost_spdk_optimizations
 
-# Introduction {#vhost_processing_intro}
+## Introduction {#vhost_processing_intro}
 
 This document is intended to provide an overview of how Vhost works behind the
 scenes. Code snippets used in this document might have been simplified for the
@@ -68,7 +68,7 @@ in the socket communication.
 SPDK vhost is a Vhost-user slave server. It exposes Unix domain sockets and
 allows external applications to connect.
 
-# QEMU {#vhost_processing_qemu}
+## QEMU {#vhost_processing_qemu}
 
 One of major Vhost-user use cases is networking (DPDK) or storage (SPDK)
 offload in QEMU. The following diagram presents how QEMU-based VM
@@ -76,7 +76,7 @@ communicates with SPDK Vhost-SCSI device.
 
 ![QEMU/SPDK vhost data flow](img/qemu_vhost_data_flow.svg)
 
-# Device initialization {#vhost_processing_init}
+## Device initialization {#vhost_processing_init}
 
 All initialization and management information is exchanged using Vhost-user
 messages. The connection always starts with the feature negotiation. Both
@@ -118,7 +118,7 @@ If multiqueue feature has been negotiated, the driver has to send a specific
 *ENABLE* message for each extra queue it wants to be polled. Other queues are
 polled as soon as they're initialized.
 
-# I/O path {#vhost_processing_io_path}
+## I/O path {#vhost_processing_io_path}
 
 The Master sends I/O by allocating proper buffers in shared memory, filling
 the request data, and putting guest addresses of those buffers into virtqueues.
@@ -186,7 +186,7 @@ proper data and interrupts the guest by doing an eventfd_write on the call
 descriptor for proper virtqueue. There are multiple interrupt coalescing
 features involved, but they are not be discussed in this document.
 
-## SPDK optimizations {#vhost_spdk_optimizations}
+### SPDK optimizations {#vhost_spdk_optimizations}
 
 Due to its poll-mode nature, SPDK vhost removes the requirement for I/O submission
 notifications, drastically increasing the vhost server throughput and decreasing

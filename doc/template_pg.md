@@ -1,6 +1,6 @@
 # ComponentName Programmer's Guide {#componentname_pg}
 
-# In this document {#componentname_pg_toc}
+## In this document {#componentname_pg_toc}
 
 @ref componentname_pg_audience
 @ref componentname_pg_intro

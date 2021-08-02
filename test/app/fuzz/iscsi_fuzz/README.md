@@ -3,7 +3,7 @@
 This application is intended to fuzz test the iSCSI target by submitting
 randomized PDU commands through a simulated iSCSI initiator.
 
-# Input
+## Input
 
 1. iSCSI initiator send a login request PDU to iSCSI Target. Once a session is connected,
 2. iSCSI initiator send huge amount and random PDUs continuously to iSCSI Target.
@@ -12,7 +12,7 @@ Especially, iSCSI initiator need to build different bhs according to different b
 Then iSCSI initiator will receive all kinds of responsed opcodes from iSCSI Target.
 The application will terminate when run time expires (see the -t flag).
 
-# Output
+## Output
 
 By default, the fuzzer will print commands that:
 1. Complete successfully back from the target, or

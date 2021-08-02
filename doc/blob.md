@@ -1,6 +1,6 @@
 # Blobstore Programmer's Guide {#blob}
 
-# In this document {#blob_pg_toc}
+## In this document {#blob_pg_toc}
 
 * @ref blob_pg_audience
 * @ref blob_pg_intro

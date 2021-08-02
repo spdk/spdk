@@ -9,7 +9,7 @@ mixing of SPDK event framework dependent code and lower level libraries. This do
 is aimed at explaining the structure, naming conventions, versioning scheme, and use cases
 of the libraries contained in these two directories.
 
-# Directory Structure {#structure}
+## Directory Structure {#structure}
 
 The SPDK libraries are divided into two directories. The `lib` directory contains the base libraries that
 compose SPDK. Some of these base libraries define plug-in systems. Instances of those plug-ins are called
@@ -17,7 +17,7 @@ modules and are located in the `module` directory. For example, the `spdk_sock` 
 `lib` directory while the implementations of socket abstractions, `sock_posix` and `sock_uring`
 are contained in the `module` directory.
 
-## lib {#lib}
+### lib {#lib}
 
 The libraries in the `lib` directory can be readily divided into four categories:
 
@@ -48,7 +48,7 @@ Much like the `spdk_event` library, the `spdk_env_dpdk` library has been archite
 can be readily replaced by an alternate environment shim. More information on replacing the `spdk_env_dpdk`
 module and the underlying `dpdk` environment can be found in the [environment](#env_replacement) section.
 
-## module {#module}
+### module {#module}
 
 The component libraries in the `module` directory represent specific implementations of the base libraries in
 the `lib` directory. As with the `lib` directory, much care has been taken to avoid dependencies on the
@@ -77,11 +77,11 @@ explicitly registered to that library via a constructor. The libraries in the `b
 directories fall into this category. None of the libraries in this category depend explicitly on the
 `spdk_event` library.
 
-# Library Conventions {#conventions}
+## Library Conventions {#conventions}
 
 The SPDK libraries follow strict conventions for naming functions, logging, versioning, and header files.
 
-## Headers {#headers}
+### Headers {#headers}
 
 All public SPDK header files exist in the `include` directory of the SPDK repository. These headers
 are divided into two sub-directories.
@@ -105,7 +105,7 @@ Other header files contained directly in the `lib` and `module` directories are 
 by source files of their corresponding library. Any symbols intended to be used across libraries need to be
 included in a header in the `include/spdk_internal` directory.
 
-## Naming Conventions {#naming}
+### Naming Conventions {#naming}
 
 All public types and functions in SPDK libraries begin with the prefix `spdk_`. They are also typically
 further namespaced using the spdk library name. The rest of the function or type name describes its purpose.
@@ -114,15 +114,15 @@ There are no internal library functions that begin with the `spdk_` prefix. This
 enforced by the SPDK continuous Integration testing. Functions not intended for use outside of their home
 library should be namespaced with the name of the library only.
 
-## Map Files {#map}
+### Map Files {#map}
 
 SPDK libraries can be built as both static and shared object files. To facilitate building libraries as shared
 objects, each one has a corresponding map file (e.g. `spdk_nvmf` relies on `spdk_nvmf.map`). SPDK libraries
 not exporting any symbols rely on a blank map file located at `mk/spdk_blank.map`.
 
-# SPDK Shared Objects {#shared_objects}
+## SPDK Shared Objects {#shared_objects}
 
-## Shared Object Versioning {#versioning}
+### Shared Object Versioning {#versioning}
 
 SPDK shared objects follow a semantic versioning pattern with a major and minor version. Any changes which
 break backwards compatibility (symbol removal or change) will cause a shared object major increment and
@@ -141,7 +141,7 @@ Shared objects are versioned independently of one another. This means that `libs
 with the same suffix are not necessarily compatible with each other. It is important to source all of your
 SPDK libraries from the same repository and version to ensure inter-library compatibility.
 
-## Linking to Shared Objects {#so_linking}
+### Linking to Shared Objects {#so_linking}
 
 Shared objects in SPDK are created on a per-library basis. There is a top level `libspdk.so` object
 which is a linker script. It simply contains references to all of the other spdk shared objects.
@@ -172,7 +172,7 @@ itself need to be supplied to the linker. In the examples above, these are `spdk
 respectively. This was intentional and allows one to easily swap out both the environment and the
 environment shim.
 
-## Replacing the env abstraction {#env_replacement}
+### Replacing the env abstraction {#env_replacement}
 
 SPDK depends on an environment abstraction that provides crucial pinned memory management and PCIe
 bus management operations. The interface for this environment abstraction is defined in the
@@ -193,7 +193,7 @@ shim/implementation library system.
 	gcc -o my_app ./my_app.c -lspdk -lcustom_env_shim -lcustom_env_implementation
 ~~~
 
-# SPDK Static Objects {#static_objects}
+## SPDK Static Objects {#static_objects}
 
 SPDK static objects are compiled by default even when no parameters are supplied to the build system.
 Unlike SPDK shared objects, the filename does not contain any versioning semantics. Linking against

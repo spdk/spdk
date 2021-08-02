@@ -1,6 +1,6 @@
 # NVMe-oF Target Tracepoints {#nvmf_tgt_tracepoints}
 
-# Introduction {#tracepoints_intro}
+## Introduction {#tracepoints_intro}
 
 SPDK has a tracing framework for capturing low-level event information at runtime.
 Tracepoints provide a high-performance tracing mechanism that is accessible at runtime.
@@ -9,7 +9,7 @@ processes. The NVMe-oF target is instrumented with tracepoints to enable analysi
 both performance and application crashes. (Note: the SPDK tracing framework should still
 be considered experimental.  Work to formalize and document the framework is in progress.)
 
-# Enabling Tracepoints {#enable_tracepoints}
+## Enabling Tracepoints {#enable_tracepoints}
 
 Tracepoints are placed in groups. They are enabled and disabled as a group. To enable
 the instrumentation of all the tracepoints group in an SPDK target application, start the
@@ -41,7 +41,7 @@ exits.  This ensures the file can be used for analysis after the application exi
 shared memory files are in /dev/shm, and can be deleted manually to free shm space if needed.  A system
 reboot will also free all of the /dev/shm files.
 
-# Capturing a snapshot of events {#capture_tracepoints}
+## Capturing a snapshot of events {#capture_tracepoints}
 
 Send I/Os to the SPDK target application to generate events. The following is
 an example usage of perf to send I/Os to the NVMe-oF target over an RDMA network
@@ -124,7 +124,7 @@ the same I/O.
 28:   6033.056 ( 12669500)     RDMA_REQ_COMPLETED                                        id:    r3564            time:  100.211
 ~~~
 
-# Capturing sufficient trace events {#capture_trace_events}
+## Capturing sufficient trace events {#capture_trace_events}
 
 Since the tracepoint file generated directly by SPDK application is a circular buffer in shared memory,
 the trace events captured by it may be insufficient for further analysis.
@@ -150,7 +150,7 @@ To analyze the tracepoints output file from spdk_trace_record, simply run spdk_t
 build/bin/spdk_trace -f /tmp/spdk_nvmf_record.trace
 ~~~
 
-# Adding New Tracepoints {#add_tracepoints}
+## Adding New Tracepoints {#add_tracepoints}
 
 SPDK applications and libraries provide several trace points. You can add new
 tracepoints to the existing trace groups. For example, to add a new tracepoints

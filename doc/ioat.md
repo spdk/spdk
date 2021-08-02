@@ -1,10 +1,10 @@
 # I/OAT Driver {#ioat}
 
-# Public Interface {#ioat_interface}
+## Public Interface {#ioat_interface}
 
 - spdk/ioat.h
 
-# Key Functions {#ioat_key_functions}
+## Key Functions {#ioat_key_functions}
 
 Function                                | Description
 --------------------------------------- | -----------

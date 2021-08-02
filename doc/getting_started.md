@@ -1,6 +1,6 @@
 # Getting Started {#getting_started}
 
-# Getting the Source Code {#getting_started_source}
+## Getting the Source Code {#getting_started_source}
 
 ~~~{.sh}
 git clone https://github.com/spdk/spdk
@@ -8,7 +8,7 @@ cd spdk
 git submodule update --init
 ~~~
 
-# Installing Prerequisites {#getting_started_prerequisites}
+## Installing Prerequisites {#getting_started_prerequisites}
 
 The `scripts/pkgdep.sh` script will automatically install the bare minimum
 dependencies required to build SPDK.
@@ -24,7 +24,7 @@ Option --all will install all dependencies needed by SPDK features.
 sudo scripts/pkgdep.sh --all
 ~~~
 
-# Building {#getting_started_building}
+## Building {#getting_started_building}
 
 Linux:
 
@@ -57,7 +57,7 @@ can enable it by doing the following:
 make
 ~~~
 
-# Running the Unit Tests {#getting_started_unittests}
+## Running the Unit Tests {#getting_started_unittests}
 
 It's always a good idea to confirm your build worked by running the
 unit tests.
@@ -70,7 +70,7 @@ You will see several error messages when running the unit tests, but they are
 part of the test suite. The final message at the end of the script indicates
 success or failure.
 
-# Running the Example Applications {#getting_started_examples}
+## Running the Example Applications {#getting_started_examples}
 
 Before running an SPDK application, some hugepages must be allocated and
 any NVMe and I/OAT devices must be unbound from the native kernel drivers.

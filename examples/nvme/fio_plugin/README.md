@@ -1,4 +1,6 @@
-# Compiling fio
+# FIO plugin
+
+## Compiling fio
 
 First, clone the fio source repository from https://github.com/axboe/fio
 
@@ -8,7 +10,7 @@ Then check out the latest fio version and compile the code:
 
     make
 
-# Compiling SPDK
+## Compiling SPDK
 
 First, clone the SPDK source repository from https://github.com/spdk/spdk
 
@@ -30,7 +32,7 @@ with -fPIC by modifying your DPDK configuration file and adding the line:
 
     EXTRA_CFLAGS=-fPIC
 
-# Usage
+## Usage
 
 To use the SPDK fio plugin with fio, specify the plugin binary using LD_PRELOAD when running
 fio and set ioengine=spdk in the fio configuration file (see example_config.fio in the same
@@ -76,7 +78,7 @@ multiple jobs for FIO test, the performance of FIO is similiar with SPDK perf. A
 think that is caused by the FIO architecture. Mainly FIO can scale with multiple threads (i.e., using CPU cores),
 but it is not good to use one thread against many I/O devices.
 
-# End-to-end Data Protection (Optional)
+## End-to-end Data Protection (Optional)
 
 Running with PI setting, following settings steps are required.
 First, format device namespace with proper PI setting. For example:
@@ -102,13 +104,13 @@ Expose two options 'apptag' and 'apptag_mask', users can change them in the conf
 application tag and application tag mask in end-to-end data protection.  Application tag and application
 tag mask are set to 0x1234 and 0xFFFF by default.
 
-# VMD (Optional)
+## VMD (Optional)
 
 To enable VMD enumeration add enable_vmd flag in fio configuration file:
 
     enable_vmd=1
 
-# ZNS
+## ZNS
 
 To use Zoned Namespaces then build the io-engine against, and run using, a fio version >= 3.23 and add:
 
@@ -119,7 +121,7 @@ To your fio-script, also have a look at script-examples provided with fio:
     fio/examples/zbd-seq-read.fio
     fio/examples/zbd-rand-write.fio
 
-## Maximum Open Zones
+### Maximum Open Zones
 
 Zoned Namespaces has a resource constraint on the amount of zones which can be in an opened state at
 any point in time. You can control how many zones fio will keep in an open state by using the
@@ -128,7 +130,7 @@ any point in time. You can control how many zones fio will keep in an open state
 If you use a fio version newer than 3.26, fio will automatically detect and set the proper value.
 If you use an old version of fio, make sure to provide the proper --max_open_zones value yourself.
 
-## Maximum Active Zones
+### Maximum Active Zones
 
 Zoned Namespaces has a resource constraint on the number of zones that can be active at any point in
 time. Unlike ``max_open_zones``, then fio currently do not manage this constraint, and there is thus
@@ -140,7 +142,7 @@ then you can reset all zones before fio start running its jobs by using the engi
 
     --initial_zone_reset=1
 
-## Zone Append
+### Zone Append
 
 When running FIO against a Zoned Namespace you need to specify --iodepth=1 to avoid
 "Zone Invalid Write: The write to a zone was not at the write pointer." I/O errors.
@@ -151,7 +153,7 @@ However, if your controller supports Zone Append, you can use the engine option:
 To send zone append commands instead of write commands to the controller.
 When using zone append, you will be able to specify a --iodepth greater than 1.
 
-## Shared Memory Increase
+### Shared Memory Increase
 
 If your device has a lot of zones, fio can give you errors such as:
 

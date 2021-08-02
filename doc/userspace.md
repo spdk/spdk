@@ -1,6 +1,6 @@
 # User Space Drivers {#userspace}
 
-# Controlling Hardware From User Space {#userspace_control}
+## Controlling Hardware From User Space {#userspace_control}
 
 Much of the documentation for SPDK talks about _user space drivers_, so it's
 important to understand what that means at a technical level. First and
@@ -53,7 +53,7 @@ with the
 [NVMe Specification](http://nvmexpress.org/wp-content/uploads/NVM_Express_Revision_1.3.pdf)
 to initialize the device, create queue pairs, and ultimately send I/O.
 
-# Interrupts {#userspace_interrupts}
+## Interrupts {#userspace_interrupts}
 
 SPDK polls devices for completions instead of waiting for interrupts. There
 are a number of reasons for doing this: 1) practically speaking, routing an
@@ -69,7 +69,7 @@ technologies such as Intel's
 will ensure that the host memory being checked is present in the CPU cache
 after an update by the device.
 
-# Threading {#userspace_threading}
+## Threading {#userspace_threading}
 
 NVMe devices expose multiple queues for submitting requests to the hardware.
 Separate queues can be accessed without coordination, so software can send

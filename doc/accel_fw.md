@@ -15,12 +15,12 @@ For the software module, all capabilities will be reported as supported. For the
 accelerated by hardware will be reported however any function can still be called, it will just be backed by
 software if it is not reported as a supported capability.
 
-# Acceleration Framework Functions {#accel_functions}
+## Acceleration Framework Functions {#accel_functions}
 
 Functions implemented via the framework can be found in the DoxyGen documentation of the
 framework public header file here [accel_engine.h](https://spdk.io/doc/accel__engine_8h.html)
 
-# Acceleration Framework Design Considerations {#accel_dc}
+## Acceleration Framework Design Considerations {#accel_dc}
 
 The general interface is defined by `/include/accel_engine.h` and implemented
 in `/lib/accel`.  These functions may be called by an SPDK application and in
@@ -35,7 +35,7 @@ optimized implementation.  For example, IOAT does not support the dualcast funct
 in hardware but if the IOAT module has been initialized and the public dualcast API
 is called, it will actually be done via software behind the scenes.
 
-# Acceleration Low Level Libraries {#accel_libs}
+## Acceleration Low Level Libraries {#accel_libs}
 
 Low level libraries provide only the most basic functions that are specific to
 the hardware. Low level libraries are located in the '/lib' directory with the
@@ -51,7 +51,7 @@ way needs to be certain that the underlying hardware exists everywhere that it r
 The low level library for IOAT is located in `/lib/ioat`.  The low level library
 for DSA is in `/liv/idxd` (IDXD stands for Intel(R) Data Acceleration Driver).
 
-# Acceleration Plug-In Modules {#accel_modules}
+## Acceleration Plug-In Modules {#accel_modules}
 
 Plug-in modules depend on low level libraries to interact with the hardware and
 add additional functionality such as queueing during busy conditions or flow
@@ -60,11 +60,11 @@ the complete implementation of the acceleration component. A module must be
 selected via startup RPC when the application is started. Otherwise, if no startup
 RPC is provided, the framework is available and will use the software plug-in module.
 
-## IOAT Module {#accel_ioat}
+### IOAT Module {#accel_ioat}
 
 To use the IOAT engine, use the RPC [`ioat_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) before starting the application.
 
-## IDXD Module {#accel_idxd}
+### IDXD Module {#accel_idxd}
 
 To use the DSA engine, use the RPC [`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) with an optional parameter
 of `-c` and provide a configuration number of either 0 or 1. These pre-defined configurations determine how the DSA engine
@@ -86,14 +86,14 @@ of service parameters on the work queues that are not currently utilized by
 the module. Specialized use of DSA may require different configurations that
 can be added to the module as needed.
 
-## Software Module {#accel_sw}
+### Software Module {#accel_sw}
 
 The software module is enabled by default. If no hardware engine is explicitly
 enabled via startup RPC as discussed earlier, the software module will use ISA-L
 if available for functions such as CRC32C. Otherwise, standard glibc calls are
 used to back the framework API.
 
-## Batching {#batching}
+### Batching {#batching}
 
 Batching is exposed by the acceleration framework and provides an interface to
 batch sets of commands up and then submit them with a single command.  The public

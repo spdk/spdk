@@ -1,6 +1,6 @@
 # Virtio driver {#virtio}
 
-# Introduction {#virtio_intro}
+## Introduction {#virtio_intro}
 
 SPDK Virtio driver is a C library that allows communicating with Virtio devices.
 It allows any SPDK application to become an initiator for (SPDK) vhost targets.
@@ -20,7 +20,7 @@ This Virtio library is currently used to implement two bdev modules:
 @ref bdev_config_virtio_scsi and @ref bdev_config_virtio_blk.
 These modules will export generic SPDK block devices usable by any SPDK application.
 
-# 2MB hugepages {#virtio_2mb}
+## 2MB hugepages {#virtio_2mb}
 
 vhost-user specification puts a limitation on the number of "memory regions" used (8).
 Each region corresponds to one file descriptor, and DPDK - as SPDK's memory allocator -

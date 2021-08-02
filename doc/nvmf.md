@@ -3,7 +3,7 @@
 @sa @ref nvme_fabrics_host
 @sa @ref nvmf_tgt_tracepoints
 
-# NVMe-oF Target Getting Started Guide {#nvmf_getting_started}
+## NVMe-oF Target Getting Started Guide {#nvmf_getting_started}
 
 The SPDK NVMe over Fabrics target is a user space application that presents block devices over a fabrics
 such as Ethernet, Infiniband or Fibre Channel. SPDK currently supports RDMA and TCP transports.

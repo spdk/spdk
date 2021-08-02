@@ -3,9 +3,9 @@
 The Logical Volumes library is a flexible storage space management system. It provides creating and managing virtual
 block devices with variable size. The SPDK Logical Volume library is built on top of @ref blob.
 
-# Terminology {#lvol_terminology}
+## Terminology {#lvol_terminology}
 
-## Logical volume store {#lvs}
+### Logical volume store {#lvs}
 
 * Shorthand:  lvolstore, lvs
 * Type name:  struct spdk_lvol_store
@@ -16,7 +16,7 @@ creation, so that it can be uniquely identified from other lvolstores.
 By default when creating lvol store data region is unmapped. Optional --clear-method parameter can be passed
 on creation to change that behavior to writing zeroes or performing no operation.
 
-## Logical volume {#lvol}
+### Logical volume {#lvol}
 
 * Shorthand: lvol
 * Type name: struct spdk_lvol
@@ -24,7 +24,7 @@ on creation to change that behavior to writing zeroes or performing no operation
 A logical volume is implemented as an SPDK blob created from an lvolstore. An lvol is uniquely identified by
 its UUID. Lvol additional can have alias name.
 
-## Logical volume block device {#lvol_bdev}
+### Logical volume block device {#lvol_bdev}
 
 * Shorthand: lvol_bdev
 * Type name: struct spdk_lvol_bdev
@@ -39,7 +39,7 @@ option is enabled, no space is taken from lvol store until data is written to lv
 By default when deleting lvol bdev or resizing down, allocated clusters are unmapped. Optional --clear-method
 parameter can be passed on creation to change that behavior to writing zeroes or performing no operation.
 
-## Thin provisioning {#lvol_thin_provisioning}
+### Thin provisioning {#lvol_thin_provisioning}
 
 Thin provisioned lvols rely on dynamic cluster allocation (e.g. when the first write operation on a cluster is performed), only space
 required to store data is used and unallocated clusters are obtained from underlying device (e.g. zeroes_dev).
@@ -52,7 +52,7 @@ Sample read operations and the structure of thin provisioned blob are shown on t
 
 ![Reading clusters from thin provisioned blob](lvol_thin_provisioning.svg)
 
-## Snapshots and clone {#lvol_snapshots}
+### Snapshots and clone {#lvol_snapshots}
 
 Logical volumes support snapshots and clones functionality. User may at any given time create snapshot of existing
 logical volume to save a backup of current volume state. When creating snapshot original volume becomes thin provisioned
@@ -74,26 +74,26 @@ A snapshot can be removed only if there is a single clone on top of it. The rela
 The cluster map of clone and snapshot will be merged and entries for unallocated clusters in the clone will be updated with
 addresses from the snapshot cluster map. The entire operation modifies metadata only - no data is copied during this process.
 
-## Inflation {#lvol_inflation}
+### Inflation {#lvol_inflation}
 
 Blobs can be inflated to copy data from backing devices (e.g. snapshots) and allocate all remaining clusters. As a result of this
 operation all dependencies for the blob are removed.
 
 ![Removing backing blob and bdevs relations using inflate call](lvol_inflate_clone_snapshot.svg)
 
-## Decoupling {#lvol_decoupling}
+### Decoupling {#lvol_decoupling}
 
 Blobs can be decoupled from their parent blob by copying data from backing devices (e.g. snapshots) for all allocated clusters.
 Remaining unallocated clusters are kept thin provisioned.
 Note: When decouple is performed, only single dependency is removed. To remove all dependencies in a chain of blobs depending
 on each other, multiple calls need to be issued.
 
-# Configuring Logical Volumes
+## Configuring Logical Volumes
 
 There is no static configuration available for logical volumes. All configuration is done trough RPC. Information about
 logical volumes is kept on block devices.
 
-# RPC overview {#lvol_rpc}
+## RPC overview {#lvol_rpc}
 
 RPC regarding lvolstore:
 

@@ -2,7 +2,7 @@
 
 This system configuration guide describes how to configure a system for use with SPDK.
 
-# IOMMU configuration {#iommu_config}
+## IOMMU configuration {#iommu_config}
 
 An IOMMU may be present and enabled on many platforms. When an IOMMU is present and enabled, it is
 recommended that SPDK applications are deployed with the `vfio-pci` kernel driver. SPDK's
@@ -21,7 +21,7 @@ version they are using has a bug where `uio_pci_generic` [fails to bind to NVMe 
 In these cases, users can build the `igb_uio` kernel module which can be found in dpdk-kmods repository.
 To ensure that the driver is properly bound, users should specify `DRIVER_OVERRIDE=/path/to/igb_uio.ko`.
 
-# Running SPDK as non-priviledged user {#system_configuration_nonroot}
+## Running SPDK as non-priviledged user {#system_configuration_nonroot}
 
 One of the benefits of using the `VFIO` Linux kernel driver is the ability to
 perform DMA operations with peripheral devices as unprivileged user. The
@@ -29,7 +29,7 @@ permissions to access particular devices still need to be granted by the system
 administrator, but only on a one-time basis. Note that this functionality
 is supported with DPDK starting from version 18.11.
 
-## Hugetlbfs access
+### Hugetlbfs access
 
 Make sure the target user has RW access to at least one hugepage mount.
 A good idea is to create a new mount specifically for SPDK:
@@ -44,7 +44,7 @@ Then start SPDK applications with an additional parameter `--huge-dir /mnt/spdk_
 Full guide on configuring hugepage mounts is available in the
 [Linux Hugetlbpage Documentation](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt)
 
-## Device access {#system_configuration_nonroot_device_access}
+### Device access {#system_configuration_nonroot_device_access}
 
 `VFIO` device access is protected with sysfs file permissions and can be
 configured with chown/chmod.
@@ -86,7 +86,7 @@ devices, use the following:
 # chown spdk /dev/vfio/5
 ~~~
 
-## Memory constraints {#system_configuration_nonroot_memory_constraints}
+### Memory constraints {#system_configuration_nonroot_memory_constraints}
 
 As soon as the first device is attached to SPDK, all of SPDK memory will be
 mapped to the IOMMU through the VFIO APIs. VFIO will try to mlock that memory and
@@ -111,7 +111,7 @@ try to map not only its reserved hugepages, but also all the memory that's
 shared by its vhost clients as described in the
 [Vhost processing guide](https://spdk.io/doc/vhost_processing.html#vhost_processing_init).
 
-### Increasing the memlock limit permanently
+#### Increasing the memlock limit permanently
 
 Open the `/etc/security/limits.conf` file as root and append the following:
 
@@ -122,7 +122,7 @@ spdk     soft   memlock           unlimited
 
 Then logout from the target user account. The changes will take effect after the next login.
 
-### Increasing the memlock for a specific process
+#### Increasing the memlock for a specific process
 
 Linux offers a `prlimit` utility that can override limits of any given process.
 On Ubuntu, it is a part of the `util-linux` package.

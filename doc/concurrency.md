@@ -1,6 +1,6 @@
 # Message Passing and Concurrency {#concurrency}
 
-# Theory
+## Theory
 
 One of the primary aims of SPDK is to scale linearly with the addition of
 hardware. This can mean many things in practice. For instance, moving from one
@@ -56,7 +56,7 @@ data isn't mutated very often, but is read very frequently, and is often
 employed in the I/O path. This of course trades memory size for computational
 efficiency, so it is used in only the most critical code paths.
 
-# Message Passing Infrastructure
+## Message Passing Infrastructure
 
 SPDK provides several layers of message passing infrastructure. The most
 fundamental libraries in SPDK, for instance, don't do any message passing on
@@ -110,7 +110,7 @@ repeatedly call `spdk_thread_poll()` on each `spdk_thread()` that exists. This
 makes SPDK very portable to a wide variety of asynchronous, event-based
 frameworks such as [Seastar](https://www.seastar.io) or [libuv](https://libuv.org/).
 
-# The event Framework
+## The event Framework
 
 The SPDK project didn't want to officially pick an asynchronous, event-based
 framework for all of the example applications it shipped with, in the interest
@@ -122,7 +122,7 @@ signal handlers to cleanly shutdown, and basic command line option parsing.
 Only established applications should consider directly integrating the lower
 level libraries.
 
-# Limitations of the C Language
+## Limitations of the C Language
 
 Message passing is efficient, but it results in asynchronous code.
 Unfortunately, asynchronous code is a challenge in C. It's often implemented by

@@ -1,6 +1,6 @@
 # Vagrant Development Environment {#vagrant}
 
-# Introduction {#vagrant_intro}
+## Introduction {#vagrant_intro}
 
 [Vagrant](https://www.vagrantup.com/) provides a quick way to get a basic
 NVMe enabled virtual machine sandbox running without the need for any
@@ -22,7 +22,7 @@ vagrant plugin install vagrant-proxyconf
 
 In case you want use kvm/libvirt you should also install `vagrant-libvirt`
 
-# VM Configuration {#vagrant_config}
+## VM Configuration {#vagrant_config}
 
 To create a configured VM with vagrant you need to run `create_vbox.sh` script.
 
@@ -47,7 +47,7 @@ world example application.
     vagrant --help
 ~~~
 
-# Running An Example {#vagrant_example}
+## Running An Example {#vagrant_example}
 
 The following shows sample output from starting up a Ubuntu18 VM,
 compiling SPDK on it and running the NVMe sample application `hello_world`.

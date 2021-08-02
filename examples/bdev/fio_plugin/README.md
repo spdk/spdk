@@ -4,7 +4,7 @@ This directory contains a plug-in module for fio to enable use
 with SPDK. Fio is free software published under version 2 of
 the GPL license.
 
-# Compiling fio
+## Compiling fio
 
 Clone the fio source repository from https://github.com/axboe/fio
 
@@ -16,7 +16,7 @@ Compile the fio code and install:
     make
     make install
 
-# Compiling SPDK
+## Compiling SPDK
 
 Clone the SPDK source repository from https://github.com/spdk/spdk
 
@@ -39,7 +39,7 @@ with -fPIC by modifying your DPDK configuration file and adding the line:
 
     EXTRA_CFLAGS=-fPIC
 
-# Usage
+## Usage
 
 To use the SPDK fio plugin with fio, specify the plugin binary using LD_PRELOAD when running
 fio and set ioengine=spdk_bdev in the fio configuration file (see example_config.fio in the same
@@ -72,7 +72,7 @@ When testing random workloads, it is recommended to set norandommap=1.  fio's ra
 processing consumes extra CPU cycles which will degrade performance over time with
 the fio_plugin since all I/O are submitted and completed on a single CPU core.
 
-# Zoned Block Devices
+## Zoned Block Devices
 
 SPDK has a zoned block device API (bdev_zone.h) which currently supports Open-channel SSDs,
 NVMe Zoned Namespaces (ZNS), and the virtual zoned block device SPDK module.
@@ -86,7 +86,7 @@ If using --numjobs=1, fio version >= 3.23 should suffice.
 
 See zbd_example.fio in this directory for a zoned block device example config.
 
-## Maximum Open Zones
+### Maximum Open Zones
 
 Most zoned block devices have a resource constraint on the amount of zones which can be in an opened
 state at any point in time. It is very important to not exceed this limit.
@@ -97,7 +97,7 @@ You can control how many zones fio will keep in an open state by using the
 If you use a fio version newer than 3.26, fio will automatically detect and set the proper value.
 If you use an old version of fio, make sure to provide the proper --max_open_zones value yourself.
 
-## Maximum Active Zones
+### Maximum Active Zones
 
 Zoned block devices may also have a resource constraint on the number of zones that can be active at
 any point in time. Unlike ``max_open_zones``, fio currently does not manage this constraint, and
@@ -110,7 +110,7 @@ starts running its jobs by using the engine option:
 
     --initial_zone_reset=1
 
-## Zone Append
+### Zone Append
 
 When running fio against a zoned block device you need to specify --iodepth=1 to avoid
 "Zone Invalid Write: The write to a zone was not at the write pointer." I/O errors.

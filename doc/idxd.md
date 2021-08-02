@@ -1,10 +1,10 @@
 # IDXD Driver {#idxd}
 
-# Public Interface {#idxd_interface}
+## Public Interface {#idxd_interface}
 
 - spdk/idxd.h
 
-# Key Functions {#idxd_key_functions}
+## Key Functions {#idxd_key_functions}
 
 Function                                | Description
 --------------------------------------- | -----------
@@ -19,7 +19,7 @@ spdk_idxd_submit_crc32c()               | @copybrief spdk_idxd_submit_crc32c()
 spdk_idxd_submit_dualcast               | @copybrief spdk_idxd_submit_dualcast()
 spdk_idxd_submit_fill()                 | @copybrief spdk_idxd_submit_fill()
 
-# Pre-defined configurations {#idxd_configs}
+## Pre-defined configurations {#idxd_configs}
 
 The RPC `idxd_scan_accel_engine` is used to both enable IDXD and set it's
 configuration to one of two pre-defined configs:

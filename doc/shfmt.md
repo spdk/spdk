@@ -1,13 +1,13 @@
 # shfmt {#shfmt}
 
-# In this document {#shfmt_toc}
+## In this document {#shfmt_toc}
 
 * @ref shfmt_overview
 * @ref shfmt_usage
 * @ref shfmt_installation
 * @ref shfmt_examples
 
-# Overview {#shfmt_overview}
+## Overview {#shfmt_overview}
 
 The majority of tests (and scripts overall) in the SPDK repo are written
 in Bash (with a quite significant emphasis on "Bashism"), thus a style
@@ -15,7 +15,7 @@ formatter, shfmt, was introduced to help keep the .sh code consistent
 across the entire repo. For more details on the tool itself, please see
 [shfmt](https://github.com/mvdan/sh).
 
-# Usage {#shfmt_usage}
+## Usage {#shfmt_usage}
 
 On the CI pool, the shfmt is run against all the updated .sh files that
 have been committed but not merged yet. Additionally, shfmt will pick
@@ -36,7 +36,7 @@ Please, see ./scripts/check_format.sh for all the arguments the shfmt
 is run with. Additionally, @ref shfmt_examples has more details on how
 each of the arguments behave.
 
-# Installation {#shfmt_installation}
+## Installation {#shfmt_installation}
 
 The shfmt can be easily installed via pkgdep.sh:
 
@@ -55,7 +55,7 @@ SHFMT_DIR_OUT=/and_link_it_here \
   ./scripts/pkgdep.sh -d
 ~~~
 
-# Examples {#shfmt_examples}
+## Examples {#shfmt_examples}
 
 ~~~{.sh}
 #######################################

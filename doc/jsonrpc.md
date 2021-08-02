@@ -1,6 +1,6 @@
 # JSON-RPC {#jsonrpc}
 
-# Overview {#jsonrpc_overview}
+## Overview {#jsonrpc_overview}
 
 SPDK implements a [JSON-RPC 2.0](http://www.jsonrpc.org/specification) server
 to allow external management tools to dynamically configure SPDK components.
@@ -218,19 +218,19 @@ file can be converted to JSON-RPC using python tool:
 ./scripts/config_converter.py < config.ini > config.json
 ~~~
 
-# App Framework {#jsonrpc_components_app}
+## App Framework {#jsonrpc_components_app}
 
-## spdk_kill_instance {#rpc_spdk_kill_instance}
+### spdk_kill_instance {#rpc_spdk_kill_instance}
 
 Send a signal to the application.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 sig_name                | Required | string      | Signal to send (SIGINT, SIGTERM, SIGQUIT, SIGHUP, or SIGKILL)
 
-### Example
+#### Example
 
 Example request:
 
@@ -255,23 +255,23 @@ Example response:
 }
 ~~~
 
-## framework_monitor_context_switch {#rpc_framework_monitor_context_switch}
+### framework_monitor_context_switch {#rpc_framework_monitor_context_switch}
 
 Query, enable, or disable the context switch monitoring functionality.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 enabled                 | Optional | boolean     | Enable (`true`) or disable (`false`) monitoring (omit this parameter to query the current state)
 
-### Response
+#### Response
 
 Name                    | Type        | Description
 ----------------------- | ----------- | -----------
 enabled                 | boolean     | The current state of context switch monitoring
 
-### Example
+#### Example
 
 Example request:
 
@@ -298,21 +298,21 @@ Example response:
 }
 ~~~
 
-## framework_start_init {#rpc_framework_start_init}
+### framework_start_init {#rpc_framework_start_init}
 
 Start initialization of SPDK subsystems when it is deferred by starting SPDK application with option -w.
 During its deferral some RPCs can be used to set global parameters for SPDK subsystems.
 This RPC can be called only once.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 Completion status of SPDK subsystem initialization is returned as a boolean.
 
-### Example
+#### Example
 
 Example request:
 
@@ -334,20 +334,20 @@ Example response:
 }
 ~~~
 
-## framework_wait_init {#rpc_framework_wait_init}
+### framework_wait_init {#rpc_framework_wait_init}
 
 Do not return until all subsystems have been initialized and the RPC system state is running.
 If the application is already running, this call will return immediately. This RPC can be called at any time.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 Returns True when subsystems have been initialized.
 
-### Example
+#### Example
 
 Example request:
 
@@ -369,21 +369,21 @@ Example response:
 }
 ~~~
 
-## rpc_get_methods {#rpc_rpc_get_methods}
+### rpc_get_methods {#rpc_rpc_get_methods}
 
 Get an array of supported RPC methods.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 current                 | Optional | boolean     | Get an array of RPC methods only callable in the current state.
 
-### Response
+#### Response
 
 The response is an array of supported RPC methods.
 
-### Example
+#### Example
 
 Example request:
 
@@ -482,19 +482,19 @@ Example response:
 }
 ~~~
 
-## framework_get_subsystems {#rpc_framework_get_subsystems}
+### framework_get_subsystems {#rpc_framework_get_subsystems}
 
 Get an array of name and dependency relationship of SPDK subsystems in initialization order.
 
-### Parameters
+#### Parameters
 
 None
 
-### Response
+#### Response
 
 The response is an array of name and dependency relationship of SPDK subsystems in initialization order.
 
-### Example
+#### Example
 
 Example request:
 
@@ -567,22 +567,22 @@ Example response:
 }
 ~~~
 
-## framework_get_config {#rpc_framework_get_config}
+### framework_get_config {#rpc_framework_get_config}
 
 Get current configuration of the specified SPDK framework
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | SPDK subsystem name
 
-### Response
+#### Response
 
 The response is current configuration of the specified SPDK subsystem.
 Null is returned if it is not retrievable by the framework_get_config method and empty array is returned if it is empty.
 
-### Example
+#### Example
 
 Example request:
 
@@ -650,19 +650,19 @@ Example response:
 }
 ~~~
 
-## framework_get_reactors {#rpc_framework_get_reactors}
+### framework_get_reactors {#rpc_framework_get_reactors}
 
 Retrieve an array of all reactors.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 The response is an array of all reactors.
 
-### Example
+#### Example
 
 Example request:
 ~~~
@@ -699,23 +699,23 @@ Example response:
 }
 ~~~
 
-## framework_set_scheduler {#rpc_framework_set_scheduler}
+### framework_set_scheduler {#rpc_framework_set_scheduler}
 
 Select thread scheduler that will be activated.
 This feature is considered as experimental.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of a scheduler
 period                  | Optional | number      | Scheduler period
 
-### Response
+#### Response
 
 Completion status of the operation is returned as a boolean.
 
-### Example
+#### Example
 
 Example request:
 
@@ -741,15 +741,15 @@ Example response:
 }
 ~~~
 
-## framework_get_scheduler {#rpc_framework_get_scheduler}
+### framework_get_scheduler {#rpc_framework_get_scheduler}
 
 Retrieve currently set scheduler name and period, along with current governor name.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 Name                    | Description
 ------------------------| -----------
@@ -757,7 +757,7 @@ scheduler_name          | Current scheduler name
 scheduler_period        | Currently set scheduler period in microseconds
 governor_name           | Governor name
 
-### Example
+#### Example
 
 Example request:
 
@@ -783,19 +783,19 @@ Example response:
 }
 ~~~
 
-## thread_get_stats {#rpc_thread_get_stats}
+### thread_get_stats {#rpc_thread_get_stats}
 
 Retrieve current statistics of all the threads.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 The response is an array of objects containing threads statistics.
 
-### Example
+#### Example
 
 Example request:
 ~~~
@@ -830,23 +830,23 @@ Example response:
 }
 ~~~
 
-## thread_set_cpumask {#rpc_thread_set_cpumask}
+### thread_set_cpumask {#rpc_thread_set_cpumask}
 
 Set the cpumask of the thread to the specified value. The thread may be migrated
 to one of the specified CPUs.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 id                      | Required | string      | Thread ID
 cpumask                 | Required | string      | Cpumask for this thread
 
-### Response
+#### Response
 
 Completion status of the operation is returned as a boolean.
 
-### Example
+#### Example
 
 Example request:
 
@@ -872,18 +872,18 @@ Example response:
 }
 ~~~
 
-## trace_enable_tpoint_group {#rpc_trace_enable_tpoint_group}
+### trace_enable_tpoint_group {#rpc_trace_enable_tpoint_group}
 
 Enable trace on a specific tpoint group. For example "bdev" for bdev trace group,
 "all" for all trace groups.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, blobfs, scsi, iscsi_conn, ftl, all
 
-### Example
+#### Example
 
 Example request:
 
@@ -908,18 +908,18 @@ Example response:
 }
 ~~~
 
-## trace_disable_tpoint_group {#rpc_trace_disable_tpoint_group}
+### trace_disable_tpoint_group {#rpc_trace_disable_tpoint_group}
 
 Disable trace on a specific tpoint group. For example "bdev" for bdev trace group,
 "all" for all trace groups.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, blobfs, all
 
-### Example
+#### Example
 
 Example request:
 
@@ -944,15 +944,15 @@ Example response:
 }
 ~~~
 
-## trace_get_tpoint_group_mask {#rpc_trace_get_tpoint_group_mask}
+### trace_get_tpoint_group_mask {#rpc_trace_get_tpoint_group_mask}
 
 Display mask info for every group.
 
-### Parameters
+#### Parameters
 
 No parameters required
 
-### Example
+#### Example
 
 Example request:
 
@@ -1000,18 +1000,18 @@ Example response:
 }
 ~~~
 
-## log_set_print_level {#rpc_log_set_print_level}
+### log_set_print_level {#rpc_log_set_print_level}
 
 Set the current level at which output will additionally be
 sent to the current console.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 level                   | Required | string      | ERROR, WARNING, NOTICE, INFO, DEBUG
 
-### Example
+#### Example
 
 Example request:
 
@@ -1036,12 +1036,12 @@ Example response:
 }
 ~~~
 
-## log_get_print_level {#rpc_log_get_print_level}
+### log_get_print_level {#rpc_log_get_print_level}
 
 Get the current level at which output will additionally be
 sent to the current console.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1063,17 +1063,17 @@ Example response:
 }
 ~~~
 
-## log_set_level {#rpc_log_set_level}
+### log_set_level {#rpc_log_set_level}
 
 Set the current logging level output by the `log` module.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 level                   | Required | string      | ERROR, WARNING, NOTICE, INFO, DEBUG
 
-### Example
+#### Example
 
 Example request:
 
@@ -1098,11 +1098,11 @@ Example response:
 }
 ~~~
 
-## log_get_level {#rpc_log_get_level}
+### log_get_level {#rpc_log_get_level}
 
 Get the current logging level output by the `log` module.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1124,19 +1124,19 @@ Example response:
 }
 ~~~
 
-## log_set_flag {#rpc_log_set_flag}
+### log_set_flag {#rpc_log_set_flag}
 
 Enable logging for specific portions of the application. The list of possible
 log flags can be obtained using the `log_get_flags` RPC and may be different
 for each application.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 flag                    | Required | string      | A log flag, or 'all'
 
-### Example
+#### Example
 
 Example request:
 
@@ -1161,19 +1161,19 @@ Example response:
 }
 ~~~
 
-## log_clear_flag {#rpc_log_clear_flag}
+### log_clear_flag {#rpc_log_clear_flag}
 
 Disable logging for specific portions of the application. The list of possible
 log flags can be obtained using the `log_get_flags` RPC and may be different
 for each application.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 flag                    | Required | string      | A log flag, or 'all'
 
-### Example
+#### Example
 
 Example request:
 
@@ -1198,12 +1198,12 @@ Example response:
 }
 ~~~
 
-## log_get_flags {#rpc_log_get_flags}
+### log_get_flags {#rpc_log_get_flags}
 
 Get the list of valid flags for this application and whether
 they are currently enabled.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1230,17 +1230,17 @@ Example response:
 }
 ~~~
 
-## log_enable_timestamps {#rpc_log_enable_timestamps}
+### log_enable_timestamps {#rpc_log_enable_timestamps}
 
 Enable or disable timestamps.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 enabled                 | Required | boolean     | on or off
 
-### Example
+#### Example
 
 Example request:
 
@@ -1265,11 +1265,11 @@ Example response:
 }
 ~~~
 
-## thread_get_pollers {#rpc_thread_get_pollers}
+### thread_get_pollers {#rpc_thread_get_pollers}
 
 Retrieve current pollers of all the threads.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
@@ -1277,7 +1277,7 @@ This method has no parameters.
 
 The response is an array of objects containing pollers of all the threads.
 
-### Example
+#### Example
 
 Example request:
 ~~~
@@ -1316,19 +1316,19 @@ Example response:
 }
 ~~~
 
-## thread_get_io_channels {#rpc_thread_get_io_channels}
+### thread_get_io_channels {#rpc_thread_get_io_channels}
 
 Retrieve current IO channels of all the threads.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 The response is an array of objects containing IO channels of all the threads.
 
-### Example
+#### Example
 
 Example request:
 ~~~
@@ -1361,19 +1361,19 @@ Example response:
 }
 ~~~
 
-## env_dpdk_get_mem_stats {#rpc_env_dpdk_get_mem_stats}
+### env_dpdk_get_mem_stats {#rpc_env_dpdk_get_mem_stats}
 
 Write the dpdk memory stats to a file.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 The response is a pathname to a text file containing the memory stats.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1397,21 +1397,21 @@ Example response:
 }
 ~~~
 
-# Acceleration Framework Layer {#jsonrpc_components_accel_fw}
+## Acceleration Framework Layer {#jsonrpc_components_accel_fw}
 
-## idxd_scan_accel_engine {#rpc_idxd_scan_accel_engine}
+### idxd_scan_accel_engine {#rpc_idxd_scan_accel_engine}
 
 Set config and enable idxd accel engine offload.
 This feature is considered as experimental.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 config_number           | Required | number      | Pre-defined config # to use (ie 0, 1). See [docs.](https://spdk.io/doc/idxd.html)
 config_kernel_mode      | Optional | Boolean     | If set, will use kernel idxd driver.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1437,15 +1437,15 @@ Example response:
 }
 ~~~
 
-## ioat_scan_accel_engine {#rpc_ioat_scan_accel_engine}
+### ioat_scan_accel_engine {#rpc_ioat_scan_accel_engine}
 
 Enable ioat accel engine offload.
 
-### Parameters
+#### Parameters
 
 None
 
-### Example
+#### Example
 
 Example request:
 
@@ -1467,14 +1467,14 @@ Example response:
 }
 ~~~
 
-# Block Device Abstraction Layer {#jsonrpc_components_bdev}
+## Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
-## bdev_set_options {#rpc_bdev_set_options}
+### bdev_set_options {#rpc_bdev_set_options}
 
 Set global parameters for the block device (bdev) subsystem.  This RPC may only be called
 before SPDK subsystems have been initialized.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -1482,7 +1482,7 @@ bdev_io_pool_size       | Optional | number      | Number of spdk_bdev_io struct
 bdev_io_cache_size      | Optional | number      | Maximum number of spdk_bdev_io structures cached per thread
 bdev_auto_examine       | Optional | boolean     | If set to false, the bdev layer will not examine every disks automatically
 
-### Example
+#### Example
 
 Example request:
 
@@ -1508,11 +1508,11 @@ Example response:
 }
 ~~~
 
-## bdev_get_bdevs {#rpc_bdev_get_bdevs}
+### bdev_get_bdevs {#rpc_bdev_get_bdevs}
 
 Get information about block devices (bdevs).
 
-### Parameters
+#### Parameters
 
 The user may specify no parameters in order to list all block devices, or a block device may be
 specified by name.
@@ -1521,11 +1521,11 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
 
-### Response
+#### Response
 
 The response is an array of objects containing information about the requested block devices.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1570,24 +1570,24 @@ Example response:
 }
 ~~~
 
-## bdev_examine {#rpc_bdev_examine}
+### bdev_examine {#rpc_bdev_examine}
 
 Request that the bdev layer examines the given bdev for metadata and creates
 new bdevs if metadata is found. This is only necessary if `auto_examine` has
 been set to false using `bdev_set_options`. By default, `auto_examine` is true
 and bdev examination is automatic.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 
-### Response
+#### Response
 
 The response is an array of objects containing I/O statistics of the requested block devices.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1612,19 +1612,19 @@ Example response:
 }
 ~~~
 
-## bdev_wait_for_examine {#rpc_bdev_wait_for_examine}
+### bdev_wait_for_examine {#rpc_bdev_wait_for_examine}
 
 Report when all bdevs have been examined by every bdev module.
 
-### Parameters
+#### Parameters
 
 None
 
-### Response
+#### Response
 
 The response is sent when all bdev modules had a chance to examine every bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1646,11 +1646,11 @@ Example response:
 }
 ~~~
 
-## bdev_get_iostat {#rpc_bdev_get_iostat}
+### bdev_get_iostat {#rpc_bdev_get_iostat}
 
 Get I/O statistics of block devices (bdevs).
 
-### Parameters
+#### Parameters
 
 The user may specify no parameters in order to list all block devices, or a block device may be
 specified by name.
@@ -1659,11 +1659,11 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
 
-### Response
+#### Response
 
 The response is an array of objects containing I/O statistics of the requested block devices.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1708,18 +1708,18 @@ Example response:
 }
 ~~~
 
-## bdev_enable_histogram {#rpc_bdev_enable_histogram}
+### bdev_enable_histogram {#rpc_bdev_enable_histogram}
 
 Control whether collecting data for histogram is enabled for specified bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 enable                  | Required | boolean     | Enable or disable histogram on specified device
 
-### Example
+#### Example
 
 Example request:
 
@@ -1745,17 +1745,17 @@ Example response:
 }
 ~~~
 
-## bdev_get_histogram {#rpc_bdev_get_histogram}
+### bdev_get_histogram {#rpc_bdev_get_histogram}
 
 Get latency histogram for specified bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 
-### Result
+#### Result
 
 Name                    | Description
 ------------------------| -----------
@@ -1763,7 +1763,7 @@ histogram               | Base64 encoded histogram
 bucket_shift            | Granularity of the histogram buckets
 tsc_rate                | Ticks per second
 
-### Example
+#### Example
 
 Example request:
 
@@ -1793,11 +1793,11 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 }
 ~~~
 
-## bdev_set_qos_limit {#rpc_bdev_set_qos_limit}
+### bdev_set_qos_limit {#rpc_bdev_set_qos_limit}
 
 Set the quality of service rate limit on a bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -1807,7 +1807,7 @@ rw_mbytes_per_sec       | Optional | number      | Number of R/W megabytes per s
 r_mbytes_per_sec        | Optional | number      | Number of Read megabytes per second to allow. 0 means unlimited.
 w_mbytes_per_sec        | Optional | number      | Number of Write megabytes per second to allow. 0 means unlimited.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1836,18 +1836,18 @@ Example response:
 }
 ~~~
 
-## bdev_set_qd_sampling_period {#rpc_bdev_set_qd_sampling_period}
+### bdev_set_qd_sampling_period {#rpc_bdev_set_qd_sampling_period}
 
 Enable queue depth tracking on a specified bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 period                  | Required | int         | period (in microseconds).If set to 0, polling will be disabled.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1873,11 +1873,11 @@ Example response:
 }
 ~~~
 
-## bdev_compress_create {#rpc_bdev_compress_create}
+### bdev_compress_create {#rpc_bdev_compress_create}
 
 Create a new compress bdev on a given base bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -1885,11 +1885,11 @@ base_bdev_name          | Required | string      | Name of the base bdev
 pm_path                 | Required | string      | Path to persistent memory
 lb_size                 | Optional | int         | Compressed vol logical block size (512 or 4096)
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -1906,17 +1906,17 @@ Example request:
 }
 ~~~
 
-## bdev_compress_delete {#rpc_bdev_compress_delete}
+### bdev_compress_delete {#rpc_bdev_compress_delete}
 
 Delete a compressed bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the compress bdev
 
-### Example
+#### Example
 
 Example request:
 
@@ -1941,17 +1941,17 @@ Example response:
 }
 ~~~
 
-## bdev_compress_get_orphans {#rpc_bdev_compress_get_orphans}
+### bdev_compress_get_orphans {#rpc_bdev_compress_get_orphans}
 
 Get a list of compressed volumes that are missing their pmem metadata.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the compress bdev
 
-### Example
+#### Example
 
 Example request:
 
@@ -1976,18 +1976,18 @@ Example response:
 }
 ~~~
 
-## bdev_compress_set_pmd {#rpc_bdev_compress_set_pmd}
+### bdev_compress_set_pmd {#rpc_bdev_compress_set_pmd}
 
 Select the DPDK polled mode driver (pmd) for a compressed bdev,
 0 = auto-select, 1= QAT only, 2 = ISAL only, 3 = mlx5_pci only.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 pmd                     | Required | int         | pmd selection
 
-### Example
+#### Example
 
 Example request:
 
@@ -2012,11 +2012,11 @@ Example response:
 }
 ~~~
 
-## bdev_crypto_create {#rpc_bdev_crypto_create}
+### bdev_crypto_create {#rpc_bdev_crypto_create}
 
 Create a new crypto bdev on a given base bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -2027,11 +2027,11 @@ key                     | Required | string      | Key
 cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT only)
 key2                    | Required | string      | 2nd key only required for cipher AET_XTS
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2061,17 +2061,17 @@ Example response:
 }
 ~~~
 
-## bdev_crypto_delete {#rpc_bdev_crypto_delete}
+### bdev_crypto_delete {#rpc_bdev_crypto_delete}
 
 Delete a crypto bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the crypto bdev
 
-### Example
+#### Example
 
 Example request:
 
@@ -2096,13 +2096,13 @@ Example response:
 }
 ~~~
 
-## bdev_ocf_create {#rpc_bdev_ocf_create}
+### bdev_ocf_create {#rpc_bdev_ocf_create}
 
 Construct new OCF bdev.
 Command accepts cache mode that is going to be used.
 You can find more details about supported cache modes in the [OCF documentation](https://open-cas.github.io/cache_configuration.html#cache-mode)
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -2112,11 +2112,11 @@ cache_line_size         | Optional | int         | OCF cache line size in KiB: 4
 cache_bdev_name         | Required | string      | Name of underlying cache bdev
 core_bdev_name          | Required | string      | Name of underlying core bdev
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2145,17 +2145,17 @@ Example response:
 }
 ~~~
 
-## bdev_ocf_delete {#rpc_bdev_ocf_delete}
+### bdev_ocf_delete {#rpc_bdev_ocf_delete}
 
 Delete the OCF bdev
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -2180,21 +2180,21 @@ Example response:
 }
 ~~~
 
-## bdev_ocf_get_stats {#rpc_bdev_ocf_get_stats}
+### bdev_ocf_get_stats {#rpc_bdev_ocf_get_stats}
 
 Get statistics of chosen OCF block device.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Block device name
 
-### Response
+#### Response
 
 Statistics as json object.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2384,21 +2384,21 @@ Example response:
 }
 ~~~
 
-## bdev_ocf_get_bdevs {#rpc_bdev_ocf_get_bdevs}
+### bdev_ocf_get_bdevs {#rpc_bdev_ocf_get_bdevs}
 
 Get list of OCF devices including unregistered ones.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Name of OCF vbdev or name of cache device or name of core device
 
-### Response
+#### Response
 
 Array of OCF devices with their current status, along with core and cache bdevs.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2433,22 +2433,22 @@ Example response:
 }
 ~~~
 
-## bdev_ocf_set_cache_mode {#rpc_bdev_ocf_set_cache_mode}
+### bdev_ocf_set_cache_mode {#rpc_bdev_ocf_set_cache_mode}
 
 Set new cache mode on OCF bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 mode                    | Required | string      | OCF cache mode: wb, wt, pt, wa, wi, wo
 
-### Response
+#### Response
 
 New cache mode name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2474,11 +2474,11 @@ Example response:
 }
 ~~~
 
-## bdev_malloc_create {#rpc_bdev_malloc_create}
+### bdev_malloc_create {#rpc_bdev_malloc_create}
 
 Construct @ref bdev_config_malloc
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -2487,11 +2487,11 @@ block_size              | Required | number      | Block size in bytes -must be 
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2519,17 +2519,17 @@ Example response:
 }
 ~~~
 
-## bdev_malloc_delete {#rpc_bdev_malloc_delete}
+### bdev_malloc_delete {#rpc_bdev_malloc_delete}
 
 Delete @ref bdev_config_malloc
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -2554,11 +2554,11 @@ Example response:
 }
 ~~~
 
-## bdev_null_create {#rpc_bdev_null_create}
+### bdev_null_create {#rpc_bdev_null_create}
 
 Construct @ref bdev_config_null
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -2570,11 +2570,11 @@ md_size                 | Optional | number      | Metadata size for this bdev. 
 dif_type                | Optional | number      | Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
 dif_is_head_of_md       | Optional | boolean     | Protection information is in the first 8 bytes of metadata. Default=false.
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2605,17 +2605,17 @@ Example response:
 }
 ~~~
 
-## bdev_null_delete {#rpc_bdev_null_delete}
+### bdev_null_delete {#rpc_bdev_null_delete}
 
 Delete @ref bdev_config_null.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -2640,18 +2640,18 @@ Example response:
 }
 ~~~
 
-## bdev_null_resize {#rpc_bdev_null_resize}
+### bdev_null_resize {#rpc_bdev_null_resize}
 
 Resize @ref bdev_config_null.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 new_size                | Required | number      | Bdev new capacity in MB
 
-### Example
+#### Example
 
 Example request:
 
@@ -2677,11 +2677,11 @@ Example response:
 }
 ~~~
 
-## bdev_aio_create {#rpc_bdev_aio_create}
+### bdev_aio_create {#rpc_bdev_aio_create}
 
 Construct @ref bdev_config_aio.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -2689,11 +2689,11 @@ name                    | Required | string      | Bdev name to use
 filename                | Required | number      | Path to device or file
 block_size              | Optional | number      | Block size in bytes
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2720,17 +2720,17 @@ Example response:
 }
 ~~~
 
-## bdev_aio_delete {#rpc_bdev_aio_delete}
+### bdev_aio_delete {#rpc_bdev_aio_delete}
 
 Delete @ref bdev_config_aio.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -2755,12 +2755,12 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_set_options {#rpc_bdev_nvme_set_options}
+### bdev_nvme_set_options {#rpc_bdev_nvme_set_options}
 
 Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized
 or any bdev NVMe has been created.
 
-### Parameters
+#### Parameters
 
 Name                       | Optional | Type        | Description
 -------------------------- | -------- | ----------- | -----------
@@ -2778,7 +2778,7 @@ nvme_ioq_poll_period_us    | Optional | number      | How often I/O queues are p
 io_queue_requests          | Optional | number      | The number of requests allocated for each NVMe I/O queue. Default: 512.
 delay_cmd_submit           | Optional | boolean     | Enable delaying NVMe command submission to allow batching of multiple commands. Default: `true`.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2815,19 +2815,19 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_set_hotplug {#rpc_bdev_nvme_set_hotplug}
+### bdev_nvme_set_hotplug {#rpc_bdev_nvme_set_hotplug}
 
 Change settings of the NVMe hotplug feature. If enabled, PCIe NVMe bdevs will be automatically discovered on insertion
 and deleted on removal.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 enabled                 | Required | string      | True to enable, false to disable
 period_us               | Optional | number      | How often to poll for hot-insert and hot-remove events. Values: 0 - reset/use default or 1 to 10000000.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2854,18 +2854,18 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_attach_controller {#rpc_bdev_nvme_attach_controller}
+### bdev_nvme_attach_controller {#rpc_bdev_nvme_attach_controller}
 
 Construct @ref bdev_config_nvme. This RPC can also be used to add additional paths to an existing controller to enable
 multipathing. This is done by specifying the `name` parameter as an existing controller. When adding an additional
 path, the hostnqn, hostsvcid, hostaddr, prchk_reftag, and prchk_guard_arguments must not be specified and are assumed
 to have the same value as the existing path.
 
-### Result
+#### Result
 
 Array of names of newly created bdevs.
 
-### Parameters
+#### Parameters
 
 Name                       | Optional | Type        | Description
 -------------------------- | -------- | ----------- | -----------
@@ -2884,7 +2884,7 @@ hdgst                      | Optional | bool        | Enable TCP header digest
 ddgst                      | Optional | bool        | Enable TCP data digest
 fabrics_connect_timeout_us | Optional | bool        | Timeout for fabrics connect (in microseconds)
 
-### Example
+#### Example
 
 Example request:
 
@@ -2913,11 +2913,11 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_get_controllers {#rpc_bdev_nvme_get_controllers}
+### bdev_nvme_get_controllers {#rpc_bdev_nvme_get_controllers}
 
 Get information about NVMe controllers.
 
-### Parameters
+#### Parameters
 
 The user may specify no parameters in order to list all NVMe controllers, or one NVMe controller may be
 specified by name.
@@ -2926,11 +2926,11 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | NVMe controller name
 
-### Response
+#### Response
 
 The response is an array of objects containing information about the requested NVMe controllers.
 
-### Example
+#### Example
 
 Example request:
 
@@ -2963,7 +2963,7 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_detach_controller {#rpc_bdev_nvme_detach_controller}
+### bdev_nvme_detach_controller {#rpc_bdev_nvme_detach_controller}
 
 Detach NVMe controller and delete any associated bdevs. Optionally,
 If all of the transport ID options are specified, only remove that
@@ -2974,7 +2974,7 @@ controller being detached and the associated bdevs being deleted.
 returns true if the controller and bdevs were successfully destroyed
 or the address was properly removed, false otherwise.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -2985,7 +2985,7 @@ adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, 
 trsvcid                 | Optional | string      | NVMe-oF target trsvcid: port number
 subnqn                  | Optional | string      | NVMe-oF target subnqn
 
-### Example
+#### Example
 
 Example requests:
 
@@ -3010,19 +3010,19 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_reset_controller {#rpc_bdev_nvme_reset_controller}
+### bdev_nvme_reset_controller {#rpc_bdev_nvme_reset_controller}
 
 Reset NVMe controller.
 
 Returns true if the controller reset was successful, false otherwise.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | NVMe controller name
 
-### Example
+#### Example
 
 Example request:
 
@@ -3047,19 +3047,19 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
+### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.
 This feature is considered as experimental.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the NVMe controller
 dev_path                | Required | string      | Path to the CUSE controller device, e.g. spdk/nvme0
 
-### Example
+#### Example
 
 Example request:
 
@@ -3085,18 +3085,18 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_cuse_unregister {#rpc_bdev_nvme_cuse_unregister}
+### bdev_nvme_cuse_unregister {#rpc_bdev_nvme_cuse_unregister}
 
 Unregister CUSE device on NVMe controller.
 This feature is considered as experimental.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the NVMe controller
 
-### Example
+#### Example
 
 Example request:
 
@@ -3121,11 +3121,11 @@ Example response:
 }
 ~~~
 
-## bdev_zone_block_create {#rpc_bdev_zone_block_create}
+### bdev_zone_block_create {#rpc_bdev_zone_block_create}
 
 Creates a virtual zone device on top of existing non-zoned bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -3134,7 +3134,7 @@ base_bdev               | Required | string      | Name of the Base bdev
 zone_capacity           | Required | number      | Zone capacity in blocks
 optimal_open_zones      | Required | number      | Number of zones required to reach optimal write speed
 
-### Example
+#### Example
 
 Example request:
 
@@ -3162,17 +3162,17 @@ Example response:
 }
 ~~~
 
-## bdev_zone_block_delete {#rpc_bdev_zone_block_delete}
+### bdev_zone_block_delete {#rpc_bdev_zone_block_delete}
 
 Deletes a virtual zone device.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the Zone device
 
-### Example
+#### Example
 
 Example request:
 
@@ -3197,18 +3197,18 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_apply_firmware {#rpc_bdev_nvme_apply_firmware}
+### bdev_nvme_apply_firmware {#rpc_bdev_nvme_apply_firmware}
 
 Download and commit firmware to NVMe device.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 filename                | Required | string      | filename of the firmware to download
 bdev_name               | Required | string      | Name of the NVMe block device
 
-### Example
+#### Example
 
 Example request:
 
@@ -3224,19 +3224,19 @@ Example request:
 }
 ~~~
 
-## bdev_nvme_get_transport_statistics {#rpc_bdev_nvme_get_transport_statistics}
+### bdev_nvme_get_transport_statistics {#rpc_bdev_nvme_get_transport_statistics}
 
 Get bdev_nvme poll group transport statistics.
 
-### Parameters
+#### Parameters
 
 This RPC method accepts no parameters
 
-### Response
+#### Response
 
 The response is an array of objects containing information about transport statistics per NVME poll group.
 
-### Example
+#### Example
 
 Example request:
 
@@ -3345,21 +3345,21 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_get_controller_health_info {#rpc_bdev_nvme_get_controller_health_info}
+### bdev_nvme_get_controller_health_info {#rpc_bdev_nvme_get_controller_health_info}
 
 Display health log of the required NVMe bdev device.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the NVMe bdev controller
 
-### Response
+#### Response
 
 The response is the object containing information about health log of the NVMe controller.
 
-### Example
+#### Example
 
 Example request:
 
@@ -3401,11 +3401,11 @@ Example response:
 }
 ~~~
 
-## bdev_rbd_register_cluster {#rpc_bdev_rbd_register_cluster}
+### bdev_rbd_register_cluster {#rpc_bdev_rbd_register_cluster}
 
 This method is available only if SPDK was build with Ceph RBD support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -3428,11 +3428,11 @@ secret key stored in Ceph keyrings) are enough.
 When accessing the Ceph cluster as some user other than "admin" (the
 default), the "user_id" has to be set.
 
-### Result
+#### Result
 
 Name of newly created Rados cluster object.
 
-### Example
+#### Example
 
 Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
 
@@ -3462,23 +3462,23 @@ response:
 }
 ~~
 
-## bdev_rbd_unregister_cluster {#rpc_bdev_rbd_unregister_cluster}
+### bdev_rbd_unregister_cluster {#rpc_bdev_rbd_unregister_cluster}
 
 This method is available only if SPDK was build with Ceph RBD support.
 If there is still rbd bdev using this cluster, the unregisteration operation
 will fail.
 
-### Result
+#### Result
 
 `true` if Rados cluster object with provided name was deleted or `false` otherwise.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -------------------------
 name                    | Required | string      | Rados cluster object name
 
-### Example
+#### Example
 
 Example request:
 
@@ -3503,22 +3503,22 @@ Example response:
 }
 ~~
 
-## bdev_rbd_get_clusters_info {#rpc_bdev_rbd_get_clusters_info}
+### bdev_rbd_get_clusters_info {#rpc_bdev_rbd_get_clusters_info}
 
 This method is available only if SPDK was build with Ceph RBD support.
 
-### Result
+#### Result
 
 Returns the cluster info of the Rados Cluster name if provided. Otherwise, it
 returns the cluster info of every registered Raods Cluster name.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -------------------------
 name                    | Optional | string      | Rados cluster object name
 
-### Example
+#### Example
 
 Example request:
 
@@ -3542,13 +3542,13 @@ Example response:
 }
 ~~
 
-## bdev_rbd_create {#rpc_bdev_rbd_create}
+### bdev_rbd_create {#rpc_bdev_rbd_create}
 
 Create @ref bdev_config_rbd bdev
 
 This method is available only if SPDK was build with Ceph RBD support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -3574,11 +3574,11 @@ If provided with cluster_name option, it will use the Rados cluster object
 referenced by the name (created by bdev_rbd_register_cluster RPC) and ignores
 "user_id + config" combination to create its own Rados cluster.
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
 
@@ -3637,23 +3637,23 @@ response:
 }
 ~~
 
-## bdev_rbd_delete {#rpc_bdev_rbd_delete}
+### bdev_rbd_delete {#rpc_bdev_rbd_delete}
 
 Delete @ref bdev_config_rbd bdev
 
 This method is available only if SPDK was build with Ceph RBD support.
 
-### Result
+#### Result
 
 `true` if bdev with provided name was deleted or `false` otherwise.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -3678,24 +3678,24 @@ Example response:
 }
 ~~~
 
-## bdev_rbd_resize {#rpc_bdev_rbd_resize}
+### bdev_rbd_resize {#rpc_bdev_rbd_resize}
 
 Resize @ref bdev_config_rbd bdev
 
 This method is available only if SPDK was build with Ceph RBD support.
 
-### Result
+#### Result
 
 `true` if bdev with provided name was resized or `false` otherwise.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 new_size                | Required | int         | New bdev size for resize operation in MiB
 
-### Example
+#### Example
 
 Example request:
 
@@ -3721,12 +3721,12 @@ Example response:
 }
 ~~~
 
-## bdev_delay_create {#rpc_bdev_delay_create}
+### bdev_delay_create {#rpc_bdev_delay_create}
 
 Create delay bdev. This bdev type redirects all IO to it's base bdev and inserts a delay on the completion
 path to create an artificial drive latency. All latency values supplied to this bdev should be in microseconds.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -3737,11 +3737,11 @@ p99_read_latency        | Required | number      | p99 read latency (us)
 avg_write_latency       | Required | number      | average write latency (us)
 p99_write_latency       | Required | number      | p99 write latency (us)
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -3771,17 +3771,17 @@ Example response:
 }
 ~~~
 
-## bdev_delay_delete {#rpc_bdev_delay_delete}
+### bdev_delay_delete {#rpc_bdev_delay_delete}
 
 Delete delay bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -3807,12 +3807,12 @@ Example response:
 }
 ~~~
 
-## bdev_delay_update_latency {#rpc_bdev_delay_update_latency}
+### bdev_delay_update_latency {#rpc_bdev_delay_update_latency}
 
 Update a target latency value associated with a given delay bdev. Any currently
 outstanding I/O will be completed with the old latency.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -3820,11 +3820,11 @@ delay_bdev_name         | Required | string      | Name of the delay bdev
 latency_type            | Required | string      | One of: avg_read, avg_write, p99_read, p99_write
 latency_us              | Required | number      | The new latency value in microseconds
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -3849,17 +3849,17 @@ Example response:
 }
 ~~~
 
-## bdev_error_create {#rpc_bdev_error_create}
+### bdev_error_create {#rpc_bdev_error_create}
 
 Construct error bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 base_name               | Required | string      | Base bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -3884,21 +3884,21 @@ Example response:
 }
 ~~~
 
-## bdev_error_delete {#rpc_bdev_error_delete}
+### bdev_error_delete {#rpc_bdev_error_delete}
 
 Delete error bdev
 
-### Result
+#### Result
 
 `true` if bdev with provided name was deleted or `false` otherwise.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Error bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -3923,12 +3923,12 @@ Example response:
 }
 ~~~
 
-## bdev_error_inject_error {#rpc_bdev_error_inject_error}
+### bdev_error_inject_error {#rpc_bdev_error_inject_error}
 
 Inject an error via an error bdev. Create an error bdev on base bdev first. Default 'num'
 value is 1 and if 'num' is set to zero, the specified injection is disabled.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -3937,7 +3937,7 @@ io_type                 | Required | string      | io type 'clear' 'read' 'write
 error_type              | Required | string      | error type 'failure' 'pending'
 num                     | Optional | int         | the number of commands you want to fail.(default:1)
 
-### Example
+#### Example
 
 Example request:
 
@@ -3965,13 +3965,13 @@ Example response:
 }
 ~~~
 
-## bdev_iscsi_create {#rpc_bdev_iscsi_create}
+### bdev_iscsi_create {#rpc_bdev_iscsi_create}
 
 Connect to iSCSI target and create bdev backed by this connection.
 
 This method is available only if SPDK was build with iSCSI initiator support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -3979,11 +3979,11 @@ name                    | Required | string      | Bdev name
 initiator_iqn           | Required | string      | IQN name used during connection
 url                     | Required | string      | iSCSI resource URI
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4010,19 +4010,19 @@ Example response:
 }
 ~~~
 
-## bdev_iscsi_delete {#rpc_bdev_iscsi_delete}
+### bdev_iscsi_delete {#rpc_bdev_iscsi_delete}
 
 Delete iSCSI bdev and terminate connection to target.
 
 This method is available only if SPDK was built with iSCSI initiator support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -4047,13 +4047,13 @@ Example response:
 }
 ~~~
 
-## bdev_ftl_create {#rpc_bdev_ftl_create}
+### bdev_ftl_create {#rpc_bdev_ftl_create}
 
 Create FTL bdev.
 
 This RPC is subject to change.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -4064,11 +4064,11 @@ punits                  | Required | string      | Parallel unit range in the fo
 uuid                    | Optional | string      | UUID of restored bdev (not applicable when creating new instance)
 cache                   | Optional | string      | Name of the bdev to be used as a write buffer cache
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4100,19 +4100,19 @@ Example response:
 }
 ~~~
 
-## bdev_ftl_delete {#rpc_bdev_ftl_delete}
+### bdev_ftl_delete {#rpc_bdev_ftl_delete}
 
 Delete FTL bdev.
 
 This RPC is subject to change.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -4137,11 +4137,11 @@ Example response:
 }
 ~~~
 
-## bdev_ocssd_create {#rpc_bdev_ocssd_create}
+### bdev_ocssd_create {#rpc_bdev_ocssd_create}
 
 Create Open Channel zoned bdev on specified Open Channel controller.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -4149,7 +4149,7 @@ ctrlr_name              | Required | string      | OC NVMe controller
 name                    | Required | string      | Bdev name to create
 nsid                    | Optional | string      | namespace ID
 
-### Example
+#### Example
 
 Example request:
 
@@ -4175,17 +4175,17 @@ Example response:
 }
 ~~~
 
-## bdev_ocssd_delete {#rpc_bdev_ocssd_delete}
+### bdev_ocssd_delete {#rpc_bdev_ocssd_delete}
 
 Delete Open Channel zoned bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name to delete
 
-### Example
+#### Example
 
 Example request:
 
@@ -4210,7 +4210,7 @@ Example response:
 }
 ~~~
 
-## bdev_pmem_create_pool {#rpc_bdev_pmem_create_pool}
+### bdev_pmem_create_pool {#rpc_bdev_pmem_create_pool}
 
 Create a @ref bdev_config_pmem blk pool file. It is equivalent of following `pmempool create` command:
 
@@ -4220,7 +4220,7 @@ pmempool create -s $((num_blocks * block_size)) blk $block_size $pmem_file
 
 This method is available only if SPDK was built with PMDK support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -4228,7 +4228,7 @@ pmem_file               | Required | string      | Path to new pmem file
 num_blocks              | Required | number      | Number of blocks
 block_size              | Required | number      | Size of each block in bytes
 
-### Example
+#### Example
 
 Example request:
 
@@ -4255,19 +4255,19 @@ Example response:
 }
 ~~~
 
-## bdev_pmem_get_pool_info {#rpc_bdev_pmem_get_pool_info}
+### bdev_pmem_get_pool_info {#rpc_bdev_pmem_get_pool_info}
 
 Retrieve basic information about PMDK memory pool.
 
 This method is available only if SPDK was built with PMDK support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 pmem_file               | Required | string      | Path to existing pmem file
 
-### Result
+#### Result
 
 Array of objects describing memory pool:
 
@@ -4276,7 +4276,7 @@ Name                    | Type        | Description
 num_blocks              | number      | Number of blocks
 block_size              | number      | Size of each block in bytes
 
-### Example
+#### Example
 
 Example request:
 
@@ -4307,20 +4307,20 @@ Example response:
 }
 ~~~
 
-## bdev_pmem_delete_pool {#rpc_bdev_pmem_delete_pool}
+### bdev_pmem_delete_pool {#rpc_bdev_pmem_delete_pool}
 
 Delete pmem pool by removing file `pmem_file`. This method will fail if `pmem_file` is not a
 valid pmem pool file.
 
 This method is available only if SPDK was built with PMDK support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 pmem_file               | Required | string      | Path to new pmem file
 
-### Example
+#### Example
 
 Example request:
 
@@ -4345,24 +4345,24 @@ Example response:
 }
 ~~~
 
-## bdev_pmem_create {#rpc_bdev_pmem_create}
+### bdev_pmem_create {#rpc_bdev_pmem_create}
 
 Construct @ref bdev_config_pmem bdev.
 
 This method is available only if SPDK was built with PMDK support.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 pmem_file               | Required | string      | Path to existing pmem blk pool file
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4388,23 +4388,23 @@ Example response:
 }
 ~~~
 
-## bdev_pmem_delete {#rpc_bdev_pmem_delete}
+### bdev_pmem_delete {#rpc_bdev_pmem_delete}
 
 Delete @ref bdev_config_pmem bdev. This call will not remove backing pool files.
 
 This method is available only if SPDK was built with PMDK support.
 
-### Result
+#### Result
 
 `true` if bdev with provided name was deleted or `false` otherwise.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -4429,23 +4429,23 @@ Example response:
 }
 ~~~
 
-## bdev_passthru_create {#rpc_bdev_passthru_create}
+### bdev_passthru_create {#rpc_bdev_passthru_create}
 
 Create passthru bdev. This bdev type redirects all IO to it's base bdev. It has no other purpose than being an example
 and a starting point in development of new bdev type.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 base_bdev_name          | Required | string      | Base bdev name
 
-### Result
+#### Result
 
 Name of newly created bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4471,17 +4471,17 @@ Example response:
 }
 ~~~
 
-## bdev_passthru_delete {#rpc_bdev_passthru_delete}
+### bdev_passthru_delete {#rpc_bdev_passthru_delete}
 
 Delete passthru bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -4507,11 +4507,11 @@ Example response:
 }
 ~~~
 
-## bdev_virtio_attach_controller {#rpc_bdev_virtio_attach_controller}
+### bdev_virtio_attach_controller {#rpc_bdev_virtio_attach_controller}
 
 Create new initiator @ref bdev_config_virtio_scsi or @ref bdev_config_virtio_blk and expose all found bdevs.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -4527,11 +4527,11 @@ name of created bdev.
 
 `vq_count` and `vq_size` parameters are valid only if `trtype` is `user`.
 
-### Result
+#### Result
 
 Array of names of newly created bdevs.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4561,19 +4561,19 @@ Example response:
 }
 ~~~
 
-## bdev_virtio_scsi_get_devices {#rpc_bdev_virtio_scsi_get_devices}
+### bdev_virtio_scsi_get_devices {#rpc_bdev_virtio_scsi_get_devices}
 
 Show information about all available Virtio SCSI devices.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Result
+#### Result
 
 Array of Virtio SCSI information objects.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4605,17 +4605,17 @@ Example response:
 }
 ~~~
 
-## bdev_virtio_detach_controller {#rpc_bdev_virtio_detach_controller}
+### bdev_virtio_detach_controller {#rpc_bdev_virtio_detach_controller}
 
 Remove a Virtio device. This command can be used to remove any type of virtio device.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Virtio name
 
-### Example
+#### Example
 
 Example request:
 
@@ -4641,11 +4641,11 @@ Example response:
 }
 ~~~
 
-## bdev_virtio_blk_set_hotplug {#rpc_bdev_virtio_blk_set_hotplug}
+### bdev_virtio_blk_set_hotplug {#rpc_bdev_virtio_blk_set_hotplug}
 
 Enable/Disable the virtio blk hotplug monitor or change the monitor period time
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -4655,11 +4655,11 @@ period-us               | Optional | number      | The period time of the monito
 When the enable is true then the period-us is optional. If user don't set the period time then use the default
 value. When the enable is false then the period-us is not required.
 
-### Result
+#### Result
 
 True the rpc is successful otherwise false
 
-### Example
+#### Example
 
 Example request:
 
@@ -4685,15 +4685,15 @@ Example response:
 }
 ~~~
 
-# iSCSI Target {#jsonrpc_components_iscsi_tgt}
+## iSCSI Target {#jsonrpc_components_iscsi_tgt}
 
-## iscsi_set_options method {#rpc_iscsi_set_options}
+### iscsi_set_options method {#rpc_iscsi_set_options}
 
 Set global parameters for iSCSI targets.
 
 This RPC may only be called before SPDK subsystems have been initialized. This RPC can be called only once.
 
-### Parameters
+#### Parameters
 
 Name                            | Optional | Type    | Description
 ------------------------------- | -------- | ------- | -----------
@@ -4726,7 +4726,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters 
 `req_discovery_auth_mutual`, and `discovery_auth_group` are still available instead of `disable_chap`, `require_chap`,
 `mutual_chap`, and `chap_group`, respectivey but will be removed in future releases.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4761,15 +4761,15 @@ Example response:
 }
 ~~~
 
-## iscsi_get_options method {#rpc_iscsi_get_options}
+### iscsi_get_options method {#rpc_iscsi_get_options}
 
 Show global parameters of iSCSI targets.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4812,15 +4812,15 @@ Example response:
 }
 ~~~
 
-## scsi_get_devices {#rpc_scsi_get_devices}
+### scsi_get_devices {#rpc_scsi_get_devices}
 
 Display SCSI devices
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4847,11 +4847,11 @@ Example response:
 }
 ~~~
 
-## iscsi_set_discovery_auth method {#rpc_iscsi_set_discovery_auth}
+### iscsi_set_discovery_auth method {#rpc_iscsi_set_discovery_auth}
 
 Set CHAP authentication for sessions dynamically.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -4862,7 +4862,7 @@ chap_group                  | Optional | number  | CHAP group ID for discovery s
 
 Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
-### Example
+#### Example
 
 Example request:
 
@@ -4890,18 +4890,18 @@ Example response:
 }
 ~~~
 
-## iscsi_create_auth_group method {#rpc_iscsi_create_auth_group}
+### iscsi_create_auth_group method {#rpc_iscsi_create_auth_group}
 
 Create an authentication group for CHAP authentication.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Authentication group tag (unique, integer > 0)
 secrets                     | Optional | array   | Array of @ref rpc_iscsi_create_auth_group_secret objects
 
-### secret {#rpc_iscsi_create_auth_group_secret}
+#### secret {#rpc_iscsi_create_auth_group_secret}
 
 Name                        | Optional | Type    | Description
 --------------------------- | ---------| --------| -----------
@@ -4910,7 +4910,7 @@ secret                      | Required | string  | Unidirectional CHAP secret
 muser                       | Optional | string  | Bidirectional CHAP name
 msecret                     | Optional | string  | Bidirectional CHAP secret
 
-### Example
+#### Example
 
 Example request:
 
@@ -4943,17 +4943,17 @@ Example response:
 }
 ~~~
 
-## iscsi_delete_auth_group method {#rpc_iscsi_delete_auth_group}
+### iscsi_delete_auth_group method {#rpc_iscsi_delete_auth_group}
 
 Delete an existing authentication group for CHAP authentication.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Authentication group tag (unique, integer > 0)
 
-### Example
+#### Example
 
 Example request:
 
@@ -4978,15 +4978,15 @@ Example response:
 }
 ~~~
 
-## iscsi_get_auth_groups {#rpc_iscsi_get_auth_groups}
+### iscsi_get_auth_groups {#rpc_iscsi_get_auth_groups}
 
 Show information about all existing authentication group for CHAP authentication.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Result
+#### Result
 
 Array of objects describing authentication group.
 
@@ -4995,7 +4995,7 @@ Name                        | Type    | Description
 tag                         | number  | Authentication group tag
 secrets                     | array   | Array of @ref rpc_iscsi_create_auth_group_secret objects
 
-### Example
+#### Example
 
 Example request:
 
@@ -5037,11 +5037,11 @@ Example response:
 }
 ~~~
 
-## iscsi_auth_group_add_secret {#rpc_iscsi_auth_group_add_secret}
+### iscsi_auth_group_add_secret {#rpc_iscsi_auth_group_add_secret}
 
 Add a secret to an existing authentication group for CHAP authentication.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5051,7 +5051,7 @@ secret                      | Required | string  | Unidirectional CHAP secret
 muser                       | Optional | string  | Bidirectional CHAP name
 msecret                     | Optional | string  | Bidirectional CHAP secret
 
-### Example
+#### Example
 
 Example request:
 
@@ -5080,18 +5080,18 @@ Example response:
 }
 ~~~
 
-## iscsi_auth_group_remove_secret {#rpc_iscsi_auth_group_remove_secret}
+### iscsi_auth_group_remove_secret {#rpc_iscsi_auth_group_remove_secret}
 
 Remove a secret from an existing authentication group for CHAP authentication.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Authentication group tag (unique, integer > 0)
 user                        | Required | string  | Unidirectional CHAP name
 
-### Example
+#### Example
 
 Example request:
 
@@ -5117,15 +5117,15 @@ Example response:
 }
 ~~~
 
-## iscsi_get_initiator_groups method {#rpc_iscsi_get_initiator_groups}
+### iscsi_get_initiator_groups method {#rpc_iscsi_get_initiator_groups}
 
 Show information about all available initiator groups.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Result
+#### Result
 
 Array of objects describing initiator groups.
 
@@ -5135,7 +5135,7 @@ tag                         | number  | Initiator group tag
 initiators                  | array   | Array of initiator hostnames or IP addresses
 netmasks                    | array   | Array of initiator netmasks
 
-### Example
+#### Example
 
 Example request:
 
@@ -5168,11 +5168,11 @@ Example response:
 }
 ~~~
 
-## iscsi_create_initiator_group method {#rpc_iscsi_create_initiator_group}
+### iscsi_create_initiator_group method {#rpc_iscsi_create_initiator_group}
 
 Add an initiator group.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5180,7 +5180,7 @@ tag                         | Required | number  | Initiator group tag (unique, 
 initiators                  | Required | array   | Not empty array of initiator hostnames or IP addresses
 netmasks                    | Required | array   | Not empty array of initiator netmasks
 
-### Example
+#### Example
 
 Example request:
 
@@ -5213,17 +5213,17 @@ response:
 }
 ~~~
 
-## iscsi_delete_initiator_group method {#rpc_iscsi_delete_initiator_group}
+### iscsi_delete_initiator_group method {#rpc_iscsi_delete_initiator_group}
 
 Delete an existing initiator group.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Initiator group tag (unique, integer > 0)
 
-### Example
+#### Example
 
 Example request:
 
@@ -5248,11 +5248,11 @@ Example response:
 }
 ~~~
 
-## iscsi_initiator_group_add_initiators method {#rpc_iscsi_initiator_group_add_initiators}
+### iscsi_initiator_group_add_initiators method {#rpc_iscsi_initiator_group_add_initiators}
 
 Add initiators to an existing initiator group.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5260,7 +5260,7 @@ tag                         | Required | number  | Existing initiator group tag.
 initiators                  | Optional | array   | Array of initiator hostnames or IP addresses
 netmasks                    | Optional | array   | Array of initiator netmasks
 
-### Example
+#### Example
 
 Example request:
 
@@ -5293,11 +5293,11 @@ response:
 }
 ~~~
 
-## iscsi_initiator_group_remove_initiators method {#rpc_iscsi_initiator_group_remove_initiators}
+### iscsi_initiator_group_remove_initiators method {#rpc_iscsi_initiator_group_remove_initiators}
 
 Remove initiators from an initiator group.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5305,7 +5305,7 @@ tag                         | Required | number  | Existing initiator group tag.
 initiators                  | Optional | array   | Array of initiator hostnames or IP addresses
 netmasks                    | Optional | array   | Array of initiator netmasks
 
-### Example
+#### Example
 
 Example request:
 
@@ -5338,15 +5338,15 @@ response:
 }
 ~~~
 
-## iscsi_get_target_nodes method {#rpc_iscsi_get_target_nodes}
+### iscsi_get_target_nodes method {#rpc_iscsi_get_target_nodes}
 
 Show information about all available iSCSI target nodes.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Result
+#### Result
 
 Array of objects describing target node.
 
@@ -5364,7 +5364,7 @@ chap_group                  | number  | Authentication group ID for this target 
 header_digest               | boolean | Header Digest should be required for this target node
 data_digest                 | boolean | Data Digest should be required for this target node
 
-### Example
+#### Example
 
 Example request:
 
@@ -5410,11 +5410,11 @@ Example response:
 }
 ~~~
 
-## iscsi_create_target_node method {#rpc_iscsi_create_target_node}
+### iscsi_create_target_node method {#rpc_iscsi_create_target_node}
 
 Add an iSCSI target node.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5432,7 +5432,7 @@ data_digest                 | Optional | boolean | Data Digest should be require
 
 Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
-### Example
+#### Example
 
 Example request:
 
@@ -5479,11 +5479,11 @@ Example response:
 }
 ~~~
 
-## iscsi_target_node_set_auth method {#rpc_iscsi_target_node_set_auth}
+### iscsi_target_node_set_auth method {#rpc_iscsi_target_node_set_auth}
 
 Set CHAP authentication to an existing iSCSI target node.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5495,7 +5495,7 @@ chap_group                  | Optional | number  | Authentication group ID for t
 
 Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
-### Example
+#### Example
 
 Example request:
 
@@ -5523,11 +5523,11 @@ Example response:
 }
 ~~~
 
-## iscsi_target_node_add_pg_ig_maps method {#rpc_iscsi_target_node_add_pg_ig_maps}
+### iscsi_target_node_add_pg_ig_maps method {#rpc_iscsi_target_node_add_pg_ig_maps}
 
 Add initiator group to portal group mappings to an existing iSCSI target node.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5541,7 +5541,7 @@ Name                        | Optional | Type    | Description
 ig_tag                      | Required | number  | Existing initiator group tag
 pg_tag                      | Required | number  | Existing portal group tag
 
-### Example
+#### Example
 
 Example request:
 
@@ -5580,11 +5580,11 @@ Example response:
 }
 ~~~
 
-## iscsi_target_node_remove_pg_ig_maps method {#rpc_iscsi_target_node_remove_pg_ig_maps}
+### iscsi_target_node_remove_pg_ig_maps method {#rpc_iscsi_target_node_remove_pg_ig_maps}
 
 Delete initiator group to portal group mappings from an existing iSCSI target node.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5598,7 +5598,7 @@ Name                        | Optional | Type    | Description
 ig_tag                      | Required | number  | Existing initiator group tag
 pg_tag                      | Required | number  | Existing portal group tag
 
-### Example
+#### Example
 
 Example request:
 
@@ -5637,17 +5637,17 @@ Example response:
 }
 ~~~
 
-## iscsi_delete_target_node method {#rpc_iscsi_delete_target_node}
+### iscsi_delete_target_node method {#rpc_iscsi_delete_target_node}
 
 Delete an iSCSI target node.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 name                        | Required | string  | Target node name (ASCII)
 
-### Example
+#### Example
 
 Example request:
 
@@ -5672,15 +5672,15 @@ Example response:
 }
 ~~~
 
-## iscsi_get_portal_groups method {#rpc_iscsi_get_portal_groups}
+### iscsi_get_portal_groups method {#rpc_iscsi_get_portal_groups}
 
 Show information about all available portal groups.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Example
+#### Example
 
 Example request:
 
@@ -5714,11 +5714,11 @@ Example response:
 }
 ~~~
 
-## iscsi_create_portal_group method {#rpc_iscsi_create_portal_group}
+### iscsi_create_portal_group method {#rpc_iscsi_create_portal_group}
 
 Add a portal group.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5734,7 +5734,7 @@ Name                        | Optional | Type    | Description
 host                        | Required | string  | Hostname or IP address
 port                        | Required | string  | Port number
 
-### Example
+#### Example
 
 Example request:
 
@@ -5765,18 +5765,18 @@ Example response:
 }
 ~~~
 
-## iscsi_start_portal_group method {#rpc_iscsi_start_portal_group}
+### iscsi_start_portal_group method {#rpc_iscsi_start_portal_group}
 
 Start listening on portals if the portal group is not started yet, or do nothing
 if the portal group already started. Return a success response for both cases.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Existing portal group tag
 
-### Example
+#### Example
 
 Example request:
 
@@ -5801,17 +5801,17 @@ Example response:
 }
 ~~~
 
-## iscsi_delete_portal_group method {#rpc_iscsi_delete_portal_group}
+### iscsi_delete_portal_group method {#rpc_iscsi_delete_portal_group}
 
 Delete an existing portal group.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 tag                         | Required | number  | Existing portal group tag
 
-### Example
+#### Example
 
 Example request:
 
@@ -5836,12 +5836,12 @@ Example response:
 }
 ~~~
 
-## iscsi_portal_group_set_auth method {#rpc_iscsi_portal_group_set_auth}
+### iscsi_portal_group_set_auth method {#rpc_iscsi_portal_group_set_auth}
 
 Set CHAP authentication for discovery sessions specific for the existing iSCSI portal group.
 This RPC overwrites the setting by the global parameters for the iSCSI portal group.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5852,7 +5852,7 @@ chap_group                  | Optional | number  | CHAP group ID for discovery s
 
 Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
-### Example
+#### Example
 
 Example request:
 
@@ -5881,15 +5881,15 @@ Example response:
 }
 ~~~
 
-## iscsi_get_connections method {#rpc_iscsi_get_connections}
+### iscsi_get_connections method {#rpc_iscsi_get_connections}
 
 Show information about all active connections.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Results
+#### Results
 
 Array of objects describing iSCSI connection.
 
@@ -5903,7 +5903,7 @@ initiator_addr              | string  | Initiator address
 target_addr                 | string  | Target address
 target_node_name            | string  | Target node name (ASCII) without prefix
 
-### Example
+#### Example
 
 Example request:
 
@@ -5935,11 +5935,11 @@ Example response:
 }
 ~~~
 
-## iscsi_target_node_add_lun method {#rpc_iscsi_target_node_add_lun}
+### iscsi_target_node_add_lun method {#rpc_iscsi_target_node_add_lun}
 
 Add an LUN to an existing iSCSI target node.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5947,7 +5947,7 @@ name                        | Required | string  | Target node name (ASCII)
 bdev_name                   | Required | string  | bdev name to be added as a LUN
 lun_id                      | Optional | number  | LUN ID (default: first free ID)
 
-### Example
+#### Example
 
 Example request:
 
@@ -5974,11 +5974,11 @@ Example response:
 }
 ~~~
 
-## iscsi_target_node_set_redirect method {#rpc_iscsi_target_node_set_redirect}
+### iscsi_target_node_set_redirect method {#rpc_iscsi_target_node_set_redirect}
 
 Update redirect portal of the primary portal group for the target node,
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -5989,7 +5989,7 @@ redirect_port               | Optional | string  | Numeric TCP port to which the
 
 If both redirect_host and redirect_port are omitted, clear the redirect portal.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6017,19 +6017,19 @@ Example response:
 }
 ~~~
 
-## iscsi_target_node_request_logout method {#rpc_iscsi_target_node_request_logout}
+### iscsi_target_node_request_logout method {#rpc_iscsi_target_node_request_logout}
 
 For the target node, request connections whose portal group tag match to logout,
 or request all connections to logout if portal group tag is omitted.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
 name                        | Required | string  | Target node name (ASCII)
 pg_tag                      | Optional | number  | Existing portal group tag
 
-### Example
+#### Example
 
 Example request:
 
@@ -6055,13 +6055,13 @@ Example response:
 }
 ~~~
 
-# NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
+## NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
-## nvmf_create_transport method {#rpc_nvmf_create_transport}
+### nvmf_create_transport method {#rpc_nvmf_create_transport}
 
 Initialize an NVMe-oF transport with the given options.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type    | Description
 --------------------------- | -------- | --------| -----------
@@ -6086,7 +6086,7 @@ acceptor_backlog            | Optional | number  | The number of pending connect
 abort_timeout_sec           | Optional | number  | Abort execution timeout value, in seconds
 no_wr_batching              | Optional | boolean | Disable work requests batching (RDMA only)
 
-### Example
+#### Example
 
 Example request:
 
@@ -6112,15 +6112,15 @@ Example response:
 }
 ~~~
 
-## nvmf_get_subsystems method {#rpc_nvmf_get_subsystems}
+### nvmf_get_subsystems method {#rpc_nvmf_get_subsystems}
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type        | Description
 --------------------------- | -------- | ------------| -----------
 tgt_name                    | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6172,11 +6172,11 @@ Example response:
 }
 ~~~
 
-## nvmf_create_subsystem method {#rpc_nvmf_create_subsystem}
+### nvmf_create_subsystem method {#rpc_nvmf_create_subsystem}
 
 Construct an NVMe over Fabrics target subsystem.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6190,7 +6190,7 @@ ana_reporting           | Optional | boolean     | Enable ANA reporting feature 
 min_cntlid              | Optional | number      | Minimum controller ID. Default: 1
 max_cntlid              | Optional | number      | Maximum controller ID. Default: 0xffef
 
-### Example
+#### Example
 
 Example request:
 
@@ -6218,18 +6218,18 @@ Example response:
 }
 ~~~
 
-## nvmf_delete_subsystem method {#rpc_nvmf_delete_subsystem}
+### nvmf_delete_subsystem method {#rpc_nvmf_delete_subsystem}
 
 Delete an existing NVMe-oF subsystem.
 
-### Parameters
+#### Parameters
 
 Parameter              | Optional | Type        | Description
 ---------------------- | -------- | ----------- | -----------
 nqn                    | Required | string      | Subsystem NQN to delete.
 tgt_name               | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6254,11 +6254,11 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_add_listener  method {#rpc_nvmf_subsystem_add_listener}
+### nvmf_subsystem_add_listener  method {#rpc_nvmf_subsystem_add_listener}
 
 Add a new listen address to an NVMe-oF subsystem.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6266,7 +6266,7 @@ nqn                     | Required | string      | Subsystem NQN
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
 
-### listen_address {#rpc_nvmf_listen_address}
+#### listen_address {#rpc_nvmf_listen_address}
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6275,7 +6275,7 @@ adrfam                  | Required | string      | Address family ("IPv4", "IPv6
 traddr                  | Required | string      | Transport address
 trsvcid                 | Optional | string      | Transport service ID (required for RDMA or TCP)
 
-### Example
+#### Example
 
 Example request:
 
@@ -6306,11 +6306,11 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_remove_listener  method {#rpc_nvmf_subsystem_remove_listener}
+### nvmf_subsystem_remove_listener  method {#rpc_nvmf_subsystem_remove_listener}
 
 Remove a listen address from an NVMe-oF subsystem.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6318,7 +6318,7 @@ nqn                     | Required | string      | Subsystem NQN
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
 
-### Example
+#### Example
 
 Example request:
 
@@ -6349,11 +6349,11 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_listener_set_ana_state  method {#rpc_nvmf_subsystem_listener_set_ana_state}
+### nvmf_subsystem_listener_set_ana_state  method {#rpc_nvmf_subsystem_listener_set_ana_state}
 
 Set ANA state of a listener for an NVMe-oF subsystem.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6362,7 +6362,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
 ana_state               | Required | string      | ANA state to set ("optimized", "non_optimized", or "inaccessible")
 
-### Example
+#### Example
 
 Example request:
 
@@ -6394,7 +6394,7 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_add_ns method {#rpc_nvmf_subsystem_add_ns}
+### nvmf_subsystem_add_ns method {#rpc_nvmf_subsystem_add_ns}
 
 Add a namespace to a subsystem. The namespace ID is returned as the result.
 
@@ -6406,7 +6406,7 @@ nqn                     | Required | string      | Subsystem NQN
 namespace               | Required | object      | @ref rpc_nvmf_namespace object
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### namespace {#rpc_nvmf_namespace}
+#### namespace {#rpc_nvmf_namespace}
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6417,7 +6417,7 @@ eui64                   | Optional | string      | 8-byte namespace EUI-64 in he
 uuid                    | Optional | string      | RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
 ptpl_file               | Optional | string      | File path to save/restore persistent reservation information
 
-### Example
+#### Example
 
 Example request:
 
@@ -6447,11 +6447,11 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_remove_ns method {#rpc_nvmf_subsystem_remove_ns}
+### nvmf_subsystem_remove_ns method {#rpc_nvmf_subsystem_remove_ns}
 
 Remove a namespace from a subsystem.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6459,7 +6459,7 @@ nqn                     | Required | string      | Subsystem NQN
 nsid                    | Required | number      | Namespace ID
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6485,11 +6485,11 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
+### nvmf_subsystem_add_host method {#rpc_nvmf_subsystem_add_host}
 
 Add a host NQN to the list of allowed hosts.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6497,7 +6497,7 @@ nqn                     | Required | string      | Subsystem NQN
 host                    | Required | string      | Host NQN to add to the list of allowed host NQNs
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6523,11 +6523,11 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_remove_host method {#rpc_nvmf_subsystem_remove_host}
+### nvmf_subsystem_remove_host method {#rpc_nvmf_subsystem_remove_host}
 
 Remove a host NQN from the list of allowed hosts.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6535,7 +6535,7 @@ nqn                     | Required | string      | Subsystem NQN
 host                    | Required | string      | Host NQN to remove from the list of allowed host NQNs
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6561,11 +6561,11 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_allow_any_host method {#rpc_nvmf_subsystem_allow_any_host}
+### nvmf_subsystem_allow_any_host method {#rpc_nvmf_subsystem_allow_any_host}
 
 Configure a subsystem to allow any host to connect or to enforce the host NQN list.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6573,7 +6573,7 @@ nqn                     | Required | string      | Subsystem NQN
 allow_any_host          | Required | boolean     | Allow any host (`true`) or enforce allowed host list (`false`).
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6599,16 +6599,16 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_get_controllers {#rpc_nvmf_subsystem_get_controllers}
+### nvmf_subsystem_get_controllers {#rpc_nvmf_subsystem_get_controllers}
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6640,16 +6640,16 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_get_qpairs {#rpc_nvmf_subsystem_get_qpairs}
+### nvmf_subsystem_get_qpairs {#rpc_nvmf_subsystem_get_qpairs}
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6697,16 +6697,16 @@ Example response:
 }
 ~~~
 
-## nvmf_subsystem_get_listeners {#rpc_nvmf_subsystem_get_listeners}
+### nvmf_subsystem_get_listeners {#rpc_nvmf_subsystem_get_listeners}
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6741,18 +6741,18 @@ Example response:
 }
 ~~~
 
-## nvmf_set_max_subsystems {#rpc_nvmf_set_max_subsystems}
+### nvmf_set_max_subsystems {#rpc_nvmf_set_max_subsystems}
 
 Set the maximum allowed subsystems for the NVMe-oF target.  This RPC may only be called
 before SPDK subsystems have been initialized.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 max_subsystems          | Required | number      | Maximum number of NVMe-oF subsystems
 
-### Example
+#### Example
 
 Example request:
 
@@ -6777,12 +6777,12 @@ Example response:
 }
 ~~~
 
-## nvmf_set_config {#rpc_nvmf_set_config}
+### nvmf_set_config {#rpc_nvmf_set_config}
 
 Set global configuration of NVMe-oF target.  This RPC may only be called before SPDK subsystems
 have been initialized.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6790,13 +6790,13 @@ acceptor_poll_rate      | Optional | number      | Polling interval of the accep
 admin_cmd_passthru      | Optional | object      | Admin command passthru configuration
 poll_groups_mask        | Optional | string      | Set cpumask for NVMf poll groups
 
-### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
+#### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 identify_ctrlr          | Required | bool        | If true, enables custom identify handler that reports some identify attributes from the underlying NVMe drive
 
-### Example
+#### Example
 
 Example request:
 
@@ -6821,15 +6821,15 @@ Example response:
 }
 ~~~
 
-## nvmf_get_transports method {#rpc_nvmf_get_transports}
+### nvmf_get_transports method {#rpc_nvmf_get_transports}
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type        | Description
 --------------------------- | -------- | ------------| -----------
 tgt_name                    | Optional | string      | Parent NVMe-oF target name.
 
-### Example
+#### Example
 
 Example request:
 
@@ -6861,23 +6861,23 @@ Example response:
 }
 ~~~
 
-## nvmf_get_stats method {#rpc_nvmf_get_stats}
+### nvmf_get_stats method {#rpc_nvmf_get_stats}
 
 Retrieve current statistics of the NVMf subsystem.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type        | Description
 --------------------------- | -------- | ------------| -----------
 tgt_name                    | Optional | string      | Parent NVMe-oF target name.
 
-### Response
+#### Response
 
 The response is an object containing NVMf subsystem statistics.
 In the response, `admin_qpairs` and `io_qpairs` are reflecting cumulative queue pair counts while
 `current_admin_qpairs` and `current_io_qpairs` are showing the current number.
 
-### Example
+#### Example
 
 Example request:
 ~~~
@@ -6945,7 +6945,7 @@ Example response:
 }
 ~~~
 
-## nvmf_set_crdt {#rpc_nvmf_set_crdt}
+### nvmf_set_crdt {#rpc_nvmf_set_crdt}
 
 Set the 3 CRDT (Command Retry Delay Time) values. For details about
 CRDT, please refer to the NVMe specification. Currently all the
@@ -6953,7 +6953,7 @@ SPDK nvmf subsystems share the same CRDT values. The default values
 are 0. This rpc can only be invoked in STARTUP stage. All values are
 in units of 100 milliseconds (same as the NVMe specification).
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6961,7 +6961,7 @@ crdt1                   | Optional | number      | Command Retry Delay Time 1
 crdt2                   | Optional | number      | Command Retry Delay Time 2
 crdt3                   | Optional | number      | Command Retry Delay Time 3
 
-# Vhost Target {#jsonrpc_components_vhost_tgt}
+## Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
 
@@ -6971,14 +6971,14 @@ directory path needs to be valid UNIX socket name.
 @ref cpu_mask parameter is used to choose CPU on which pollers will be launched when new initiator is connecting.
 It must be a subset of application CPU mask. Default value is CPU mask of the application.
 
-## vhost_controller_set_coalescing {#rpc_vhost_controller_set_coalescing}
+### vhost_controller_set_coalescing {#rpc_vhost_controller_set_coalescing}
 
 Controls interrupt coalescing for specific target. Because `delay_base_us` is used to calculate delay in CPU ticks
 there is no hardcoded limit for this parameter. Only limitation is that final delay in CPU ticks might not overflow
 32 bit unsigned integer (which is more than 1s @ 4GHz CPU). In real scenarios `delay_base_us` should be much lower
 than 150us. To disable coalescing set `delay_base_us` to 0.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -6986,7 +6986,7 @@ ctrlr                   | Required | string      | Controller name
 delay_base_us           | Required | number      | Base (minimum) coalescing time in microseconds
 iops_threshold          | Required | number      | Coalescing activation level greater than 0 in IO per second
 
-### Example
+#### Example
 
 Example request:
 
@@ -7013,18 +7013,18 @@ Example response:
 }
 ~~~
 
-## vhost_create_scsi_controller {#rpc_vhost_create_scsi_controller}
+### vhost_create_scsi_controller {#rpc_vhost_create_scsi_controller}
 
 Construct vhost SCSI target.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 ctrlr                   | Required | string      | Controller name
 cpumask                 | Optional | string      | @ref cpu_mask for this controller
 
-### Example
+#### Example
 
 Example request:
 
@@ -7050,11 +7050,11 @@ Example response:
 }
 ~~~
 
-## vhost_scsi_controller_add_target {#rpc_vhost_scsi_controller_add_target}
+### vhost_scsi_controller_add_target {#rpc_vhost_scsi_controller_add_target}
 
 In vhost target `ctrlr` create SCSI target with ID `scsi_target_num` and add `bdev_name` as LUN 0.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -7062,11 +7062,11 @@ ctrlr                   | Required | string      | Controller name
 scsi_target_num         | Required | number      | SCSI target ID between 0 and 7 or -1 to use first free ID.
 bdev_name               | Required | string      | Name of bdev to expose as a LUN 0
 
-### Response
+#### Response
 
 SCSI target ID.
 
-### Example
+#### Example
 
 Example request:
 
@@ -7094,20 +7094,20 @@ response:
 }
 ~~~
 
-## vhost_scsi_controller_remove_target {#rpc_vhost_scsi_controller_remove_target}
+### vhost_scsi_controller_remove_target {#rpc_vhost_scsi_controller_remove_target}
 
 Remove SCSI target ID `scsi_target_num` from vhost target `scsi_target_num`.
 
 This method will fail if initiator is connected, but doesn't support hot-remove (the `VIRTIO_SCSI_F_HOTPLUG` is not negotiated).
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 ctrlr                   | Required | string      | Controller name
 scsi_target_num         | Required | number      | SCSI target ID between 0 and 7
 
-### Example
+#### Example
 
 Example request:
 
@@ -7134,14 +7134,14 @@ Example response:
 }
 ~~~
 
-## vhost_create_blk_controller {#rpc_vhost_create_blk_controller}
+### vhost_create_blk_controller {#rpc_vhost_create_blk_controller}
 
 Create vhost block controller
 
 If `readonly` is `true` then vhost block target will be created as read only and fail any write requests.
 The `VIRTIO_BLK_F_RO` feature flag will be offered to the initiator.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -7150,7 +7150,7 @@ bdev_name               | Required | string      | Name of bdev to expose block 
 readonly                | Optional | boolean     | If true, this target will be read only (default: false)
 cpumask                 | Optional | string      | @ref cpu_mask for this controller
 
-### Example
+#### Example
 
 Example request:
 
@@ -7176,11 +7176,11 @@ Example response:
 }
 ~~~
 
-## vhost_get_controllers {#rpc_vhost_get_controllers}
+### vhost_get_controllers {#rpc_vhost_get_controllers}
 
 Display information about all or specific vhost controller(s).
 
-### Parameters
+#### Parameters
 
 The user may specify no parameters in order to list all controllers, or a controller may be
 specified by name.
@@ -7189,7 +7189,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Vhost controller name
 
-### Response {#rpc_vhost_get_controllers_response}
+#### Response {#rpc_vhost_get_controllers_response}
 
 Response is an array of objects describing requested controller(s). Common fields are:
 
@@ -7239,7 +7239,7 @@ Name                    | Type        | Description
 nsid                    | number      | Namespace ID
 bdev                    | string      | Backing bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -7324,20 +7324,20 @@ Example response:
 }
 ~~~
 
-## vhost_delete_controller {#rpc_vhost_delete_controller}
+### vhost_delete_controller {#rpc_vhost_delete_controller}
 
 Remove vhost target.
 
 This call will fail if there is an initiator connected or there is at least one SCSI target configured in case of
 vhost SCSI target. In the later case please remove all SCSI targets first using @ref rpc_vhost_scsi_controller_remove_target.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 ctrlr                   | Required | string      | Controller name
 
-### Example
+#### Example
 
 Example request:
 
@@ -7362,7 +7362,7 @@ Example response:
 }
 ~~~
 
-# Logical Volume {#jsonrpc_components_lvol}
+## Logical Volume {#jsonrpc_components_lvol}
 
 Identification of logical volume store and logical volume is explained first.
 
@@ -7378,11 +7378,11 @@ The alias of the logical volume takes the format _lvs_name/lvol_name_ where:
 * _lvs_name_ is the name of the logical volume store.
 * _lvol_name_ is specified on creation and can be renamed.
 
-## bdev_lvol_create_lvstore {#rpc_bdev_lvol_create_lvstore}
+### bdev_lvol_create_lvstore {#rpc_bdev_lvol_create_lvstore}
 
 Construct a logical volume store.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -7391,11 +7391,11 @@ lvs_name                | Required | string      | Name of the logical volume st
 cluster_sz              | Optional | number      | Cluster size of the logical volume store in bytes
 clear_method            | Optional | string      | Change clear method for data region. Available: none, unmap (default), write_zeroes
 
-### Response
+#### Response
 
 UUID of the created logical volume store is returned.
 
-### Example
+#### Example
 
 Example request:
 
@@ -7422,11 +7422,11 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_delete_lvstore {#rpc_bdev_lvol_delete_lvstore}
+### bdev_lvol_delete_lvstore {#rpc_bdev_lvol_delete_lvstore}
 
 Destroy a logical volume store.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -7435,7 +7435,7 @@ lvs_name                | Optional | string      | Name of the logical volume st
 
 Either uuid or lvs_name must be specified, but not both.
 
-### Example
+#### Example
 
 Example request:
 
@@ -7460,11 +7460,11 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_get_lvstores {#rpc_bdev_lvol_get_lvstores}
+### bdev_lvol_get_lvstores {#rpc_bdev_lvol_get_lvstores}
 
 Get a list of logical volume stores.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -7474,7 +7474,7 @@ lvs_name                | Optional | string      | Name of the logical volume st
 Either uuid or lvs_name may be specified, but not both.
 If both uuid and lvs_name are omitted, information about all logical volume stores is returned.
 
-### Example
+#### Example
 
 Example request:
 
@@ -7509,18 +7509,18 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_rename_lvstore {#rpc_bdev_lvol_rename_lvstore}
+### bdev_lvol_rename_lvstore {#rpc_bdev_lvol_rename_lvstore}
 
 Rename a logical volume store.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 old_name                | Required | string      | Existing logical volume store name
 new_name                | Required | string      | New logical volume store name
 
-### Example
+#### Example
 
 Example request:
 
@@ -7546,11 +7546,11 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_create {#rpc_bdev_lvol_create}
+### bdev_lvol_create {#rpc_bdev_lvol_create}
 
 Create a logical volume on a logical volume store.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -7564,11 +7564,11 @@ clear_method            | Optional | string      | Change default data clusters 
 Size will be rounded up to a multiple of cluster size. Either uuid or lvs_name must be specified, but not both.
 lvol_name will be used in the alias of the created logical volume.
 
-### Response
+#### Response
 
 UUID of the created logical volume is returned.
 
-### Example
+#### Example
 
 Example request:
 
@@ -7597,22 +7597,22 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_snapshot {#rpc_bdev_lvol_snapshot}
+### bdev_lvol_snapshot {#rpc_bdev_lvol_snapshot}
 
 Capture a snapshot of the current state of a logical volume.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 lvol_name               | Required | string      | UUID or alias of the logical volume to create a snapshot from
 snapshot_name           | Required | string      | Name for the newly created snapshot
 
-### Response
+#### Response
 
 UUID of the created logical volume snapshot is returned.
 
-### Example
+#### Example
 
 Example request:
 
@@ -7638,22 +7638,22 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_clone {#rpc_bdev_lvol_clone}
+### bdev_lvol_clone {#rpc_bdev_lvol_clone}
 
 Create a logical volume based on a snapshot.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 snapshot_name           | Required | string      | UUID or alias of the snapshot to clone
 clone_name              | Required | string      | Name for the logical volume to create
 
-### Response
+#### Response
 
 UUID of the created logical volume clone is returned.
 
-### Example
+#### Example
 
 Example request:
 
@@ -7679,18 +7679,18 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_rename {#rpc_bdev_lvol_rename}
+### bdev_lvol_rename {#rpc_bdev_lvol_rename}
 
 Rename a logical volume. New name will rename only the alias of the logical volume.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 old_name                | Required | string      | UUID or alias of the existing logical volume
 new_name                | Required | string      | New logical volume name
 
-### Example
+#### Example
 
 Example request:
 
@@ -7716,18 +7716,18 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_resize {#rpc_bdev_lvol_resize}
+### bdev_lvol_resize {#rpc_bdev_lvol_resize}
 
 Resize a logical volume.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | UUID or alias of the logical volume to resize
 size                    | Required | number      | Desired size of the logical volume in bytes
 
-### Example
+#### Example
 
 Example request:
 
@@ -7753,17 +7753,17 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_set_read_only{#rpc_bdev_lvol_set_read_only}
+### bdev_lvol_set_read_only{#rpc_bdev_lvol_set_read_only}
 
 Mark logical volume as read only.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | UUID or alias of the logical volume to set as read only
 
-### Example
+#### Example
 
 Example request:
 
@@ -7788,17 +7788,17 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_delete {#rpc_bdev_lvol_delete}
+### bdev_lvol_delete {#rpc_bdev_lvol_delete}
 
 Destroy a logical volume.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | UUID or alias of the logical volume to destroy
 
-### Example
+#### Example
 
 Example request:
 
@@ -7823,7 +7823,7 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_inflate {#rpc_bdev_lvol_inflate}
+### bdev_lvol_inflate {#rpc_bdev_lvol_inflate}
 
 Inflate a logical volume. All unallocated clusters are allocated and copied from the parent or zero filled
 if not allocated in the parent. Then all dependencies on the parent are removed.
@@ -7834,7 +7834,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | UUID or alias of the logical volume to inflate
 
-### Example
+#### Example
 
 Example request:
 
@@ -7859,19 +7859,19 @@ Example response:
 }
 ~~~
 
-## bdev_lvol_decouple_parent {#rpc_bdev_lvol_decouple_parent}
+### bdev_lvol_decouple_parent {#rpc_bdev_lvol_decouple_parent}
 
 Decouple the parent of a logical volume. For unallocated clusters which is allocated in the parent, they are
 allocated and copied from the parent, but for unallocated clusters which is thin provisioned in the parent,
 they are kept thin provisioned. Then all dependencies on the parent are removed.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | UUID or alias of the logical volume to decouple the parent of it
 
-### Example
+#### Example
 
 Example request:
 
@@ -7896,9 +7896,9 @@ Example response:
 }
 ~~~
 
-# RAID
+## RAID
 
-## bdev_raid_get_bdevs {#rpc_bdev_raid_get_bdevs}
+### bdev_raid_get_bdevs {#rpc_bdev_raid_get_bdevs}
 
 This is used to list all the raid bdev names based on the input category requested. Category should be one
 of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raid bdevs whether they are online or
@@ -7907,13 +7907,13 @@ the raid bdev which does not have full configuration discovered yet. 'offline' i
 not registered with bdev as of now and it has encountered any error or user has requested to offline
 the raid bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 category                | Required | string      | all or online or configuring or offline
 
-### Example
+#### Example
 
 Example request:
 
@@ -7940,11 +7940,11 @@ Example response:
 }
 ~~~
 
-## bdev_raid_create {#rpc_bdev_raid_create}
+### bdev_raid_create {#rpc_bdev_raid_create}
 
 Constructs new RAID bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -7953,7 +7953,7 @@ strip_size_kb           | Required | number      | Strip size in KB
 raid_level              | Required | string      | RAID level
 base_bdevs              | Required | string      | Base bdevs name, whitespace separated list in quotes
 
-### Example
+#### Example
 
 Example request:
 
@@ -7986,17 +7986,17 @@ Example response:
 }
 ~~~
 
-## bdev_raid_delete {#rpc_bdev_raid_delete}
+### bdev_raid_delete {#rpc_bdev_raid_delete}
 
 Removes RAID bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | RAID bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -8021,13 +8021,13 @@ Example response:
 }
 ~~~
 
-# SPLIT
+## SPLIT
 
-## bdev_split_create {#rpc_bdev_split_create}
+### bdev_split_create {#rpc_bdev_split_create}
 
 This is used to split an underlying block device and create several smaller equal-sized vbdevs.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -8035,7 +8035,7 @@ base_bdev               | Required | string      | base bdev name
 split_count             | Required | number      | number of splits
 split_size_mb           | Optional | number      | size in MB to restrict the size
 
-### Example
+#### Example
 
 Example request:
 
@@ -8066,17 +8066,17 @@ Example response:
 }
 ~~~
 
-## bdev_split_delete {#rpc_bdev_split_delete}
+### bdev_split_delete {#rpc_bdev_split_delete}
 
 This is used to remove the split vbdevs.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 base_bdev               | Required | string      | base bdev name
 
-### Example
+#### Example
 
 Example request:
 
@@ -8101,13 +8101,13 @@ Example response:
 }
 ~~~
 
-# Uring
+## Uring
 
-## bdev_uring_create {#rpc_bdev_uring_create}
+### bdev_uring_create {#rpc_bdev_uring_create}
 
 Create a bdev with io_uring backend.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -8115,7 +8115,7 @@ filename                | Required | string      | path to device or file (ex: /
 name                    | Required | string      | name of bdev
 block_size              | Optional | number      | block size of device (If omitted, get the block size from the file)
 
-### Example
+#### Example
 
 Example request:
 
@@ -8142,17 +8142,17 @@ Example response:
 }
 ~~~
 
-## bdev_uring_delete {#rpc_bdev_uring_delete}
+### bdev_uring_delete {#rpc_bdev_uring_delete}
 
 Remove a uring bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | name of uring bdev to delete
 
-### Example
+#### Example
 
 Example request:
 
@@ -8177,20 +8177,20 @@ Example response:
 }
 ~~~
 
-# OPAL
+## OPAL
 
-## bdev_nvme_opal_init {#rpc_bdev_nvme_opal_init}
+### bdev_nvme_opal_init {#rpc_bdev_nvme_opal_init}
 
 This is used to initialize OPAL of a given NVMe ctrlr, including taking ownership and activating.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nvme_ctrlr_name         | Required | string      | name of nvme ctrlr
 password                | Required | string      | admin password of OPAL
 
-### Example
+#### Example
 
 Example request:
 
@@ -8216,18 +8216,18 @@ Example response:
 }
 ~~~
 
-## bdev_nvme_opal_revert {#rpc_bdev_nvme_opal_revert}
+### bdev_nvme_opal_revert {#rpc_bdev_nvme_opal_revert}
 
 This is used to revert OPAL to its factory settings. Erase all user configuration and data.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nvme_ctrlr_name         | Required | string      | name of nvme ctrlr
 password                | Required | string      | admin password of OPAL
 
-### Example
+#### Example
 
 Example request:
 
@@ -8253,11 +8253,11 @@ Example response:
 }
 ~~~
 
-## bdev_opal_create {#rpc_bdev_opal_create}
+### bdev_opal_create {#rpc_bdev_opal_create}
 
 This is used to create an OPAL virtual bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -8268,11 +8268,11 @@ range_start             | Required | number      | locking range start LBA
 range_length            | Required | number      | locking range length
 password                | Required | string      | admin password of OPAL
 
-### Response
+#### Response
 
 The response is the name of created OPAL virtual bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8302,22 +8302,22 @@ Example response:
 }
 ~~~
 
-## bdev_opal_get_info {#rpc_bdev_opal_get_info}
+### bdev_opal_get_info {#rpc_bdev_opal_get_info}
 
 This is used to get information of a given OPAL bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_name               | Required | string      | name of OPAL vbdev
 password                | Required | string      | admin password
 
-### Response
+#### Response
 
 The response is the locking info of OPAL virtual bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8351,18 +8351,18 @@ Example response:
 }
 ~~~
 
-## bdev_opal_delete {#rpc_bdev_opal_delete}
+### bdev_opal_delete {#rpc_bdev_opal_delete}
 
 This is used to delete OPAL vbdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_name               | Required | string      | name of OPAL vbdev
 password                | Required | string      | admin password
 
-### Example
+#### Example
 
 Example request:
 
@@ -8388,12 +8388,12 @@ Example response:
 }
 ~~~
 
-## bdev_opal_new_user {#rpc_bdev_opal_new_user}
+### bdev_opal_new_user {#rpc_bdev_opal_new_user}
 
 This enables a new user to the specified opal bdev so that the user can lock/unlock the bdev.
 Recalling this for the same opal bdev, only the newest user will have the privilege.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -8402,7 +8402,7 @@ admin_password          | Required | string      | admin password
 user_id                 | Required | number      | user ID
 user_password           | Required | string      | user password
 
-### Example
+#### Example
 
 Example request:
 
@@ -8430,11 +8430,11 @@ Example response:
 }
 ~~~
 
-## bdev_opal_set_lock_state {#rpc_bdev_opal_set_lock_state}
+### bdev_opal_set_lock_state {#rpc_bdev_opal_set_lock_state}
 
 This is used to lock/unlock specific opal bdev providing user ID and password.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -8443,7 +8443,7 @@ user_id                 | Required | number      | user ID
 password                | Required | string      | user password
 lock_state              | Required | string      | lock state
 
-### Example
+#### Example
 
 Example request:
 
@@ -8471,21 +8471,21 @@ Example response:
 }
 ~~~
 
-# Notifications
+## Notifications
 
-## notify_get_types {#rpc_notify_get_types}
+### notify_get_types {#rpc_notify_get_types}
 
 Return list of all supported notification types.
 
-### Parameters
+#### Parameters
 
 None
 
-### Response
+#### Response
 
 The response is an array of strings - supported RPC notification types.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8510,21 +8510,21 @@ Example response:
 }
 ~~~
 
-## notify_get_notifications {#notify_get_notifications}
+### notify_get_notifications {#notify_get_notifications}
 
 Request notifications. Returns array of notifications that happend since the specified id (or first that is available).
 
 Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccesible
 due to being overwritten by new ones.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 id                      | Optional | number      | First Event ID to fetch (default: first available).
 max                     | Optional | number      | Maximum number of event to return (default: no limit).
 
-### Response
+#### Response
 
 Response is an array of event objects.
 
@@ -8534,7 +8534,7 @@ id                      | Optional | number      | Event ID.
 type                    | Optional | number      | Type of the event.
 ctx                     | Optional | string      | Event context.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8572,29 +8572,29 @@ Example response:
 }
 ~~~
 
-# Linux Network Block Device (NBD) {#jsonrpc_components_nbd}
+## Linux Network Block Device (NBD) {#jsonrpc_components_nbd}
 
 SPDK supports exporting bdevs through Linux nbd. These devices then appear as standard Linux kernel block devices
 and can be accessed using standard utilities like fdisk.
 
 In order to export a device over nbd, first make sure the Linux kernel nbd driver is loaded by running 'modprobe nbd'.
 
-## nbd_start_disk {#rpc_nbd_start_disk}
+### nbd_start_disk {#rpc_nbd_start_disk}
 
 Start to export one SPDK bdev as NBD disk
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_name               | Required | string      | Bdev name to export
 nbd_device              | Optional | string      | NBD device name to assign
 
-### Response
+#### Response
 
 Path of exported NBD disk
 
-### Example
+#### Example
 
 Example request:
 
@@ -8620,17 +8620,17 @@ Example response:
 }
 ~~~
 
-## nbd_stop_disk {#rpc_nbd_stop_disk}
+### nbd_stop_disk {#rpc_nbd_stop_disk}
 
 Stop one NBD disk which is based on SPDK bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nbd_device              | Required | string      | NBD device name to stop
 
-### Example
+#### Example
 
 Example request:
 
@@ -8655,21 +8655,21 @@ Example response:
 }
 ~~~
 
-## nbd_get_disks {#rpc_nbd_get_disks}
+### nbd_get_disks {#rpc_nbd_get_disks}
 
 Display all or specified NBD device list
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nbd_device              | Optional | string      | NBD device name to display
 
-### Response
+#### Response
 
 The response is an array of exported NBD devices and their corresponding SPDK bdev.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8700,23 +8700,23 @@ Example response:
 }
 ~~~
 
-# Blobfs {#jsonrpc_components_blobfs}
+## Blobfs {#jsonrpc_components_blobfs}
 
-## blobfs_detect {#rpc_blobfs_detect}
+### blobfs_detect {#rpc_blobfs_detect}
 
 Detect whether a blobfs exists on bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_name               | Required | string      | Block device name to detect blobfs
 
-### Response
+#### Response
 
 True if a blobfs exists on the bdev; False otherwise.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8741,18 +8741,18 @@ Example response:
 }
 ~~~
 
-## blobfs_create {#rpc_blobfs_create}
+### blobfs_create {#rpc_blobfs_create}
 
 Build blobfs on bdev.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_name               | Required | string      | Block device name to create blobfs
 cluster_sz              | Optional | number      | Size of cluster in bytes. Must be multiple of 4KiB page size, default and minimal value is 1M.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8778,18 +8778,18 @@ Example response:
 }
 ~~~
 
-## blobfs_mount {#rpc_blobfs_mount}
+### blobfs_mount {#rpc_blobfs_mount}
 
 Mount a blobfs on bdev to one host path through FUSE
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_name               | Required | string      | Block device name where the blobfs is
 mountpoint              | Required | string      | Mountpoint path in host to mount blobfs
 
-### Example
+#### Example
 
 Example request:
 
@@ -8815,24 +8815,24 @@ Example response:
 }
 ~~~
 
-## blobfs_set_cache_size {#rpc_blobfs_set_cache_size}
+### blobfs_set_cache_size {#rpc_blobfs_set_cache_size}
 
 Set cache pool size for blobfs filesystems.  This RPC is only permitted when the cache pool is not already initialized.
 
 The cache pool is initialized when the first blobfs filesystem is initialized or loaded.  It is freed when the all
 initialized or loaded filesystems are unloaded.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 size_in_mb              | Required | number      | Cache size in megabytes
 
-### Response
+#### Response
 
 True if cache size is set successfully; False if failed to set.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8857,23 +8857,23 @@ Example response:
 }
 ~~~
 
-# Socket layer {#jsonrpc_components_sock}
+## Socket layer {#jsonrpc_components_sock}
 
-## sock_impl_get_options {#rpc_sock_impl_get_options}
+### sock_impl_get_options {#rpc_sock_impl_get_options}
 
 Get parameters for the socket layer implementation.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 impl_name               | Required | string      | Name of socket implementation, e.g. posix
 
-### Response
+#### Response
 
 Response is an object with current socket layer options for requested implementation.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8906,11 +8906,11 @@ Example response:
 }
 ~~~
 
-## sock_impl_set_options {#rpc_sock_impl_set_options}
+### sock_impl_set_options {#rpc_sock_impl_set_options}
 
 Set parameters for the socket layer implementation.
 
-### Parameters
+#### Parameters
 
 Name                        | Optional | Type        | Description
 --------------------------- | -------- | ----------- | -----------
@@ -8923,11 +8923,11 @@ enable_placement_id         | Optional | number      | Enable or disable placeme
 enable_zerocopy_send_server | Optional | boolean     | Enable or disable zero copy on send for server sockets
 enable_zerocopy_send_client | Optional | boolean     | Enable or disable zero copy on send for client sockets
 
-### Response
+#### Response
 
 True if socket layer options were set successfully.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8959,21 +8959,21 @@ Example response:
 }
 ~~~
 
-## sock_set_default_impl {#rpc_sock_set_default_impl}
+### sock_set_default_impl {#rpc_sock_set_default_impl}
 
 Set the default sock implementation.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 impl_name               | Required | string      | Name of socket implementation, e.g. posix
 
-### Response
+#### Response
 
 True if the default socket layer configuration was set successfully.
 
-### Example
+#### Example
 
 Example request:
 
@@ -8998,16 +8998,16 @@ Example response:
 }
 ~~~
 
-# Miscellaneous RPC commands
+## Miscellaneous RPC commands
 
-## bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}
+### bdev_nvme_send_cmd {#rpc_bdev_nvme_send_cmd}
 
 Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
 
 Notice: bdev_nvme_send_cmd requires user to guarentee the correctness of NVMe command itself, and also optional parameters.
 Illegal command contents or mismatching buffer size may result in unpredictable behavior.
 
-### Parameters
+#### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
@@ -9021,7 +9021,7 @@ data_len                | Optional | number      | Data length required to trans
 metadata_len            | Optional | number      | Metadata length required to transfer from controller to host
 timeout_ms              | Optional | number      | Command execution timeout value, in milliseconds
 
-### Response
+#### Response
 
 Name                    | Type        | Description
 ----------------------- | ----------- | -----------
@@ -9029,7 +9029,7 @@ cpl                     | string      | NVMe completion queue entry, encoded by 
 data                    | string      | Data transferred from controller to host, encoded by base64 urlsafe
 metadata                | string      | Metadata transferred from controller to host, encoded by base64 urlsafe
 
-### Example
+#### Example
 
 Example request:
 
@@ -9062,15 +9062,15 @@ Example response:
 }
 ~~~
 
-## enable_vmd {#rpc_enable_vmd}
+### enable_vmd {#rpc_enable_vmd}
 
 Enable VMD enumeration.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 Completion status of enumeration is returned as a boolean.
 
@@ -9096,19 +9096,19 @@ Example response:
 }
 ~~~
 
-## spdk_get_version {#rpc_spdk_get_version}
+### spdk_get_version {#rpc_spdk_get_version}
 
 Get the version info of the running SPDK application.
 
-### Parameters
+#### Parameters
 
 This method has no parameters.
 
-### Response
+#### Response
 
 The response is the version number including major version number, minor version number, patch level number and suffix string.
 
-### Example
+#### Example
 
 Example request:
 ~~

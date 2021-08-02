@@ -1,4 +1,6 @@
-# ABI and API Deprecation {#deprecation}
+# Deprecation
+
+## ABI and API Deprecation {#deprecation}
 
 This document details the policy for maintaining stability of SPDK ABI and API.
 
@@ -10,9 +12,9 @@ Each entry must describe what will be removed and can suggest the future use or 
 Specific future SPDK release for the removal must be provided.
 ABI cannot be removed without providing deprecation notice for at least single SPDK release.
 
-# Deprecation Notices {#deprecation-notices}
+## Deprecation Notices {#deprecation-notices}
 
-## bdev
+### bdev
 
 Deprecated `spdk_bdev_module_finish_done()` API, which will be removed in SPDK 22.01.
 Bdev modules should use `spdk_bdev_module_fini_done()` instead.

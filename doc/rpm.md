@@ -1,10 +1,10 @@
 # RPMs {#rpms}
 
-# In this document {#rpms_toc}
+## In this document {#rpms_toc}
 
 * @ref building_rpms
 
-# Building SPDK RPMs {#building_rpms}
+## Building SPDK RPMs {#building_rpms}
 
 To build basic set of RPM packages out of the SPDK repo simply run:
 

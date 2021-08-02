@@ -1,8 +1,8 @@
 # BlobFS (Blobstore Filesystem) {#blobfs}
 
-# BlobFS Getting Started Guide {#blobfs_getting_started}
+## BlobFS Getting Started Guide {#blobfs_getting_started}
 
-# RocksDB Integration {#blobfs_rocksdb}
+## RocksDB Integration {#blobfs_rocksdb}
 
 Clone and build the SPDK repository as per https://github.com/spdk/spdk
 
@@ -68,7 +68,7 @@ At this point, RocksDB is ready for testing with SPDK.  Three `db_bench` paramet
 SPDK has a set of scripts which will run `db_bench` against a variety of workloads and capture performance and profiling
 data.  The primary script is `test/blobfs/rocksdb/rocksdb.sh`.
 
-# FUSE
+## FUSE
 
 BlobFS provides a FUSE plug-in to mount an SPDK BlobFS as a kernel filesystem for inspection or debug purposes.
 The FUSE plug-in requires fuse3 and will be built automatically when fuse3 is detected on the system.
@@ -79,7 +79,7 @@ test/blobfs/fuse/fuse /usr/local/etc/spdk/rocksdb.json Nvme0n1 /mnt/fuse
 
 Note that the FUSE plug-in has some limitations - see the list below.
 
-# Limitations
+## Limitations
 
 * BlobFS has primarily been tested with RocksDB so far, so any use cases different from how RocksDB uses a filesystem
   may run into issues.  BlobFS will be tested in a broader range of use cases after this initial release.

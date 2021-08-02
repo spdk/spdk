@@ -573,7 +573,7 @@ function check_json_rpc() {
 	local rc=1
 
 	while IFS='"' read -r _ rpc _; do
-		if ! grep -q "^## $rpc" doc/jsonrpc.md; then
+		if ! grep -q "^### $rpc" doc/jsonrpc.md; then
 			echo "Missing JSON-RPC documentation for ${rpc}"
 			rc=1
 			continue
