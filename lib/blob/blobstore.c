@@ -4131,7 +4131,8 @@ bs_load_replay_md_chain_cpl(struct spdk_bs_load_ctx *ctx)
 		bs_load_replay_cur_md_page(ctx);
 	} else {
 		/* Claim all of the clusters used by the metadata */
-		num_md_clusters = spdk_divide_round_up(ctx->super->md_len, ctx->bs->pages_per_cluster);
+		num_md_clusters = spdk_divide_round_up(
+					  ctx->super->md_start + ctx->super->md_len, ctx->bs->pages_per_cluster);
 		for (i = 0; i < num_md_clusters; i++) {
 			spdk_bit_array_set(ctx->used_clusters, i);
 		}

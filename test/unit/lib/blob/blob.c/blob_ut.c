@@ -2656,6 +2656,54 @@ bs_super_block(void)
 	g_bs = NULL;
 }
 
+static void
+bs_test_recover_cluster_count(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_super_block super_block;
+	struct spdk_bs_opts opts;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+
+	super_block.version = 3;
+	memcpy(super_block.signature, "SPDKBLOB", sizeof(super_block.signature));
+	super_block.length = 0x1000;
+	super_block.clean = 0;
+	super_block.super_blob = 0xFFFFFFFFFFFFFFFF;
+	super_block.cluster_size = 4096;
+	super_block.used_page_mask_start = 0x01;
+	super_block.used_page_mask_len = 0x01;
+	super_block.used_cluster_mask_start = 0x02;
+	super_block.used_cluster_mask_len = 0x01;
+	super_block.used_blobid_mask_start = 0x03;
+	super_block.used_blobid_mask_len = 0x01;
+	super_block.md_start = 0x04;
+	super_block.md_len = 0x40;
+	memset(super_block.bstype.bstype, 0, sizeof(super_block.bstype.bstype));
+	super_block.size = dev->blockcnt * dev->blocklen;
+	super_block.io_unit_size = 0x1000;
+	memset(super_block.reserved, 0, 4000);
+	super_block.crc = blob_md_page_calc_crc(&super_block);
+	memcpy(g_dev_buffer, &super_block, sizeof(struct spdk_bs_super_block));
+
+	memset(opts.bstype.bstype, 0, sizeof(opts.bstype.bstype));
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+	CU_ASSERT(bs->num_free_clusters == bs->total_clusters - (super_block.md_start +
+			super_block.md_len));
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
 /*
  * Create a blobstore and then unload it.
  */
@@ -7085,6 +7133,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, bs_destroy);
 	CU_ADD_TEST(suite, bs_type);
 	CU_ADD_TEST(suite, bs_super_block);
+	CU_ADD_TEST(suite, bs_test_recover_cluster_count);
 	CU_ADD_TEST(suite, blob_serialize_test);
 	CU_ADD_TEST(suite_bs, blob_crc);
 	CU_ADD_TEST(suite, super_block_crc);
