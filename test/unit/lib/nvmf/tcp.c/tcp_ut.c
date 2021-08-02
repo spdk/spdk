@@ -898,6 +898,51 @@ test_nvmf_tcp_send_capsule_resp_pdu(void)
 	CU_ASSERT(pdu.iov[0].iov_len == sizeof(struct spdk_nvme_tcp_rsp));
 }
 
+static void
+test_nvmf_tcp_icreq_handle(void)
+{
+	struct spdk_nvmf_tcp_transport ttransport = {};
+	struct spdk_nvmf_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu = {};
+	struct nvme_tcp_pdu mgmt_pdu = {};
+	struct nvme_tcp_pdu pdu_in_progress = {};
+	struct spdk_nvme_tcp_ic_resp *ic_resp;
+
+	mgmt_pdu.qpair = &tqpair;
+	tqpair.mgmt_pdu = &mgmt_pdu;
+	tqpair.pdu_in_progress = &pdu_in_progress;
+
+	/* case 1: Expected ICReq PFV 0 and got are different. */
+	pdu.hdr.ic_req.pfv = 1;
+
+	nvmf_tcp_icreq_handle(&ttransport, &tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+
+	/* case 2: Expect: PASS.  */
+	ttransport.transport.opts.max_io_size = 32;
+	pdu.hdr.ic_req.pfv = 0;
+	tqpair.host_hdgst_enable = false;
+	tqpair.host_ddgst_enable = false;
+	tqpair.recv_buf_size = 64;
+	pdu.hdr.ic_req.hpda = 16;
+
+	nvmf_tcp_icreq_handle(&ttransport, &tqpair, &pdu);
+
+	ic_resp = &tqpair.mgmt_pdu->hdr.ic_resp;
+	CU_ASSERT(tqpair.recv_buf_size == MIN_SOCK_PIPE_SIZE);
+	CU_ASSERT(tqpair.cpda == pdu.hdr.ic_req.hpda);
+	CU_ASSERT(ic_resp->common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP);
+	CU_ASSERT(ic_resp->common.hlen == sizeof(struct spdk_nvme_tcp_ic_resp));
+	CU_ASSERT(ic_resp->common.plen ==  sizeof(struct spdk_nvme_tcp_ic_resp));
+	CU_ASSERT(ic_resp->pfv == 0);
+	CU_ASSERT(ic_resp->cpda == tqpair.cpda);
+	CU_ASSERT(ic_resp->maxh2cdata == ttransport.transport.opts.max_io_size);
+	CU_ASSERT(ic_resp->dgst.bits.hdgst_enable == 0);
+	CU_ASSERT(ic_resp->dgst.bits.ddgst_enable == 0);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -917,6 +962,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_qpair_init_mem_resource);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_term_req);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_capsule_resp_pdu);
+	CU_ADD_TEST(suite, test_nvmf_tcp_icreq_handle);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
