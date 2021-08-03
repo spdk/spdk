@@ -546,6 +546,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_INIT = NVME_CTRLR_STATE_CONNECT_ADMINQ,
 
 	/**
+	 * Waiting for admin queue to connect.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_CONNECT_ADMINQ,
+
+	/**
 	 * Read Version (VS) register.
 	 */
 	NVME_CTRLR_STATE_READ_VS,

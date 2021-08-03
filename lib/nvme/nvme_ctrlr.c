@@ -1195,6 +1195,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "delay init";
 	case NVME_CTRLR_STATE_CONNECT_ADMINQ:
 		return "connect adminq";
+	case NVME_CTRLR_STATE_WAIT_FOR_CONNECT_ADMINQ:
+		return "wait for connect adminq";
 	case NVME_CTRLR_STATE_READ_VS:
 		return "read vs";
 	case NVME_CTRLR_STATE_READ_CAP:
@@ -3326,7 +3328,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	ctrlr->sleep_timeout_tsc = 0;
 
-	if (ctrlr->state > NVME_CTRLR_STATE_CONNECT_ADMINQ &&
+	if (ctrlr->state > NVME_CTRLR_STATE_WAIT_FOR_CONNECT_ADMINQ &&
 	    (nvme_ctrlr_get_cc(ctrlr, &cc) || nvme_ctrlr_get_csts(ctrlr, &csts))) {
 		if (!ctrlr->is_failed && ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
 			/* While a device is resetting, it may be unable to service MMIO reads
@@ -3362,14 +3364,33 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_CONNECT_ADMINQ: /* synonymous with NVME_CTRLR_STATE_INIT */
-		assert(ctrlr->adminq->async == false); /* not currently supported */
 		rc = nvme_transport_ctrlr_connect_qpair(ctrlr, ctrlr->adminq);
 		if (rc == 0) {
-			nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_VS, NVME_TIMEOUT_INFINITE);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_CONNECT_ADMINQ,
+					     NVME_TIMEOUT_INFINITE);
 		} else {
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		}
+		break;
+
+	case NVME_CTRLR_STATE_WAIT_FOR_CONNECT_ADMINQ:
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+
+		switch (nvme_qpair_get_state(ctrlr->adminq)) {
+		case NVME_QPAIR_CONNECTING:
+			break;
+		case NVME_QPAIR_CONNECTED:
+			nvme_qpair_set_state(ctrlr->adminq, NVME_QPAIR_ENABLED);
+		/* Fall through */
+		case NVME_QPAIR_ENABLED:
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_VS,
+					     NVME_TIMEOUT_INFINITE);
+			break;
+		default:
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+			break;
+		}
+
 		break;
 
 	case NVME_CTRLR_STATE_READ_VS:

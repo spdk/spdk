@@ -1649,6 +1649,7 @@ int g_connect_qpair_return_code = 0;
 int nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	g_connect_qpair_called = true;
+	qpair->state = NVME_QPAIR_CONNECTED;
 	return g_connect_qpair_return_code;
 }
 
