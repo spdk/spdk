@@ -2240,7 +2240,15 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 					rqpair = rdma_qpair != NULL ? rdma_qpair : nvme_rdma_poll_group_get_qpair_by_id(group,
 							wc[i].qp_num);
 				}
-				assert(rqpair);
+				if (!rqpair) {
+					/* When poll_group is used, several qpairs share the same CQ and it is possible to
+					 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
+					 * That happens due to qpair is destroyed while there are submitted but not completed send/receive
+					 * Work Requests
+					 * TODO: ibv qpair must be destroyed only when all submitted Work Requests are completed */
+					assert(group);
+					continue;
+				}
 				assert(rqpair->current_num_sends > 0);
 				rqpair->current_num_sends--;
 				nvme_rdma_conditional_fail_qpair(rqpair, group);
