@@ -64,6 +64,7 @@ DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
 
 DEFINE_STUB(nvme_poll_group_connect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair, uint32_t num_requests));
 
 static void
 test_nvme_tcp_pdu_set_data_buf(void)
@@ -1399,6 +1400,7 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	tqpair.sock = (struct spdk_sock *)0xDEADBEEF;
 	tqpair.send_pdu = &pdu;
 	tqpair.qpair.ctrlr = &ctrlr;
+	tqpair.qpair.state = NVME_QPAIR_CONNECTING;
 	ic_req = &pdu.hdr.ic_req;
 
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
@@ -1414,11 +1416,13 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	TAILQ_INIT(&tqpair.send_queue);
 
 	rc = nvme_tcp_ctrlr_connect_qpair(&ctrlr, qpair);
-	while (rc == -EAGAIN) {
-		rc = nvme_tcp_ctrlr_connect_qpair_poll(&ctrlr, qpair);
+	CU_ASSERT(rc == 0);
+
+	while (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
+		rc = nvme_tcp_qpair_process_completions(qpair, 0);
+		CU_ASSERT(rc >= 0);
 	}
 
-	CU_ASSERT(rc == 0);
 	CU_ASSERT(tqpair.maxr2t == NVME_TCP_MAX_R2T_DEFAULT);
 	CU_ASSERT(tqpair.state == NVME_TCP_QPAIR_STATE_RUNNING);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);

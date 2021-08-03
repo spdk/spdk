@@ -1731,6 +1731,9 @@ nvme_tcp_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+static int nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair);
+
 static int
 nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -1767,6 +1770,17 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 
 	if (spdk_unlikely(tqpair->qpair.ctrlr->timeout_enabled)) {
 		nvme_tcp_qpair_check_timeout(qpair);
+	}
+
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING)) {
+		rc = nvme_tcp_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+		if (rc != 0 && rc != -EAGAIN) {
+			SPDK_ERRLOG("Failed to connect tqpair=%p\n", tqpair);
+			goto fail;
+		} else if (rc == 0) {
+			/* Once the connection is completed, we can submit queued requests */
+			nvme_qpair_resubmit_requests(qpair, tqpair->num_entries);
+		}
 	}
 
 	return reaped;
@@ -1809,11 +1823,6 @@ nvme_tcp_qpair_sock_cb(void *ctx, struct spdk_sock_group *group, struct spdk_soc
 	}
 }
 
-static void
-dummy_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
-{
-}
-
 static int
 nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 {
@@ -1837,23 +1846,6 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 
 	tqpair->icreq_timeout_tsc = spdk_get_ticks() + (NVME_TCP_TIME_OUT_IN_SECONDS * spdk_get_ticks_hz());
 	return 0;
-}
-
-static int
-nvme_tcp_qpair_icreq_poll(struct nvme_tcp_qpair *tqpair)
-{
-	int rc;
-
-	if (spdk_get_ticks() > tqpair->icreq_timeout_tsc) {
-		rc = -ETIMEDOUT;
-	} else if (tqpair->qpair.poll_group) {
-		rc = nvme_tcp_poll_group_process_completions(tqpair->qpair.poll_group, 0,
-				dummy_disconnected_qpair_cb);
-	} else {
-		rc = nvme_tcp_qpair_process_completions(&tqpair->qpair, 0);
-	}
-
-	return rc == 0 ? -EAGAIN : rc;
 }
 
 static int
@@ -1945,10 +1937,12 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 	switch (tqpair->state) {
 	case NVME_TCP_QPAIR_STATE_INVALID:
 	case NVME_TCP_QPAIR_STATE_INITIALIZING:
-		rc = nvme_tcp_qpair_icreq_poll(tqpair);
-		if (rc != 0 && rc != -EAGAIN) {
+		if (spdk_get_ticks() > tqpair->icreq_timeout_tsc) {
 			SPDK_ERRLOG("Failed to construct the tqpair=%p via correct icresp\n", tqpair);
+			rc = -ETIMEDOUT;
+			break;
 		}
+		rc = -EAGAIN;
 		break;
 	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND:
 		rc = nvme_fabric_qpair_connect_async(&tqpair->qpair, tqpair->num_entries);
@@ -2014,14 +2008,6 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect the tqpair\n");
 		return rc;
-	}
-
-	do {
-		rc = nvme_tcp_ctrlr_connect_qpair_poll(ctrlr, qpair);
-	} while (rc == -EAGAIN);
-
-	if (rc != 0) {
-		nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 	}
 
 	return rc;
