@@ -46,6 +46,9 @@ DEFINE_STUB(spdk_nvme_transport_id_trtype_str, const char *,
 	    (enum spdk_nvme_transport_type trtype), NULL);
 DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t, (struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions), 0);
+DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme_poll_group *group,
+		uint32_t completions_per_qpair,
+		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
 
 static void
 ut_construct_transport(struct spdk_nvme_transport *transport, const char name[])
