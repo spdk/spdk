@@ -1237,15 +1237,15 @@ test_rdma_ctrlr_get_memory_domain(void)
 static void
 test_rdma_get_memory_translation(void)
 {
-	struct ibv_qp qp = { .pd = (struct ibv_pd *)0xfeedbeef };
-	struct spdk_rdma_qp rdma_qp = { .qp = &qp };
-	struct nvme_rdma_qpair rqpair = { .rdma_qp = &rdma_qp };
+	struct ibv_qp qp = {.pd = (struct ibv_pd *) 0xfeedbeef};
+	struct spdk_rdma_qp rdma_qp = {.qp = &qp};
+	struct nvme_rdma_qpair rqpair = {.rdma_qp = &rdma_qp};
 	struct spdk_nvme_ns_cmd_ext_io_opts io_opts = {
-		.memory_domain = (struct spdk_memory_domain *)0xdeaddead
+		.memory_domain = (struct spdk_memory_domain *) 0xdeaddead
 	};
-	struct nvme_request req = { .payload = { .opts = &io_opts } };
+	struct nvme_request req = {.payload = {.opts = &io_opts}};
 	struct nvme_rdma_memory_translation_ctx ctx = {
-		.addr = (void *)0xBAADF00D,
+		.addr = (void *) 0xBAADF00D,
 		.length = 0x100
 	};
 	int rc;
@@ -1286,6 +1286,53 @@ test_rdma_get_memory_translation(void)
 	nvme_rdma_put_memory_domain(rqpair.memory_domain);
 }
 
+static void
+test_nvme_rdma_poll_group_get_qpair_by_id(void)
+{
+	const uint32_t test_qp_num = 123;
+	struct nvme_rdma_poll_group	group = {};
+	struct nvme_rdma_destroyed_qpair tracker = {};
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_rdma_qp rdma_qp = {};
+	struct ibv_qp qp = { .qp_num = test_qp_num };
+
+	STAILQ_INIT(&group.group.disconnected_qpairs);
+	STAILQ_INIT(&group.group.connected_qpairs);
+	STAILQ_INIT(&group.destroyed_qpairs);
+	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	tracker.destroyed_qpair_tracker = &rqpair;
+
+	/* Test 1 - Simulate case when nvme_rdma_qpair is disconnected but still in one of lists.
+	 * nvme_rdma_poll_group_get_qpair_by_id must return NULL */
+	STAILQ_INSERT_HEAD(&group.group.disconnected_qpairs, &rqpair.qpair, poll_group_stailq);
+	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
+	STAILQ_REMOVE_HEAD(&group.group.disconnected_qpairs, poll_group_stailq);
+
+	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
+	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
+	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
+
+	STAILQ_INSERT_HEAD(&group.destroyed_qpairs, &tracker, link);
+	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
+	STAILQ_REMOVE_HEAD(&group.destroyed_qpairs, link);
+
+	/* Test 2 - nvme_rdma_qpair with valid rdma_qp/ibv_qp and qp_num */
+	rdma_qp.qp = &qp;
+	rqpair.rdma_qp = &rdma_qp;
+
+	STAILQ_INSERT_HEAD(&group.group.disconnected_qpairs, &rqpair.qpair, poll_group_stailq);
+	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
+	STAILQ_REMOVE_HEAD(&group.group.disconnected_qpairs, poll_group_stailq);
+
+	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
+	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
+	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
+
+	STAILQ_INSERT_HEAD(&group.destroyed_qpairs, &tracker, link);
+	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
+	STAILQ_REMOVE_HEAD(&group.destroyed_qpairs, link);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1317,6 +1364,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);
 	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domain);
 	CU_ADD_TEST(suite, test_rdma_get_memory_translation);
+	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_qpair_by_id);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

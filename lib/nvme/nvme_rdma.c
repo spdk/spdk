@@ -104,6 +104,9 @@
 
 #define WC_PER_QPAIR(queue_depth)	(queue_depth * 2)
 
+#define NVME_RDMA_POLL_GROUP_CHECK_QPN(_rqpair, qpn)				\
+	((_rqpair)->rdma_qp && (_rqpair)->rdma_qp->qp->qp_num == (qpn))	\
+
 struct nvme_rdma_memory_domain {
 	TAILQ_ENTRY(nvme_rdma_memory_domain) link;
 	uint32_t ref;
@@ -2504,22 +2507,21 @@ nvme_rdma_poll_group_get_qpair_by_id(struct nvme_rdma_poll_group *group, uint32_
 
 	STAILQ_FOREACH(qpair, &group->group.disconnected_qpairs, poll_group_stailq) {
 		rqpair = nvme_rdma_qpair(qpair);
-		if (rqpair->rdma_qp->qp->qp_num == qp_num) {
+		if (NVME_RDMA_POLL_GROUP_CHECK_QPN(rqpair, qp_num)) {
 			return rqpair;
 		}
 	}
 
 	STAILQ_FOREACH(qpair, &group->group.connected_qpairs, poll_group_stailq) {
 		rqpair = nvme_rdma_qpair(qpair);
-		if (rqpair->rdma_qp->qp->qp_num == qp_num) {
+		if (NVME_RDMA_POLL_GROUP_CHECK_QPN(rqpair, qp_num)) {
 			return rqpair;
 		}
 	}
 
 	STAILQ_FOREACH(rqpair_tracker, &group->destroyed_qpairs, link) {
-		rqpair = rqpair_tracker->destroyed_qpair_tracker;
-		if (rqpair->rdma_qp->qp->qp_num == qp_num) {
-			return rqpair;
+		if (NVME_RDMA_POLL_GROUP_CHECK_QPN(rqpair_tracker->destroyed_qpair_tracker, qp_num)) {
+			return rqpair_tracker->destroyed_qpair_tracker;
 		}
 	}
 
