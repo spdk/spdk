@@ -12,7 +12,7 @@ function usage() {
 	echo "  -h --help"
 	echo "  -a --all"
 	echo "  -d --developer-tools        Install tools for developers (code styling, code coverage, etc.)"
-	echo "  -p --pmem                   Additional dependencies for reduce and pmdk"
+	echo "  -p --pmem                   Additional dependencies for reduce, pmdk and pmdkobj"
 	echo "  -f --fuse                   Additional dependencies for FUSE and NVMe-CUSE"
 	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
 	echo "  -b --docs                   Additional dependencies for building docs"

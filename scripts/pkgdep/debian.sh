@@ -43,6 +43,7 @@ if [[ $INSTALL_PMEM == "true" ]]; then
 	if [[ $NAME == "Ubuntu" ]] && [[ $VERSION_ID_NUM -gt 1800 ]]; then
 		apt-get install -y libpmem-dev
 		apt-get install -y libpmemblk-dev
+		apt-get install -y libpmemobj-dev
 	fi
 fi
 if [[ $INSTALL_FUSE == "true" ]]; then
