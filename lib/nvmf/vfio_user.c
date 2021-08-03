@@ -203,8 +203,6 @@ struct nvmf_vfio_user_transport {
 	struct nvmf_vfio_user_transport_opts    transport_opts;
 	pthread_mutex_t				lock;
 	TAILQ_HEAD(, nvmf_vfio_user_endpoint)	endpoints;
-
-	TAILQ_HEAD(, nvmf_vfio_user_qpair)	new_qps;
 };
 
 /*
@@ -566,7 +564,6 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	TAILQ_INIT(&vu_transport->endpoints);
-	TAILQ_INIT(&vu_transport->new_qps);
 
 	if (opts->transport_specific != NULL &&
 	    spdk_json_decode_object_relaxed(opts->transport_specific, vfio_user_transport_opts_decoder,
@@ -1138,15 +1135,17 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	if (is_cq) {
 		*hdbl(ctrlr, io_q) = 0;
 	} else {
-		/* After we've returned here, on the next time nvmf_vfio_user_accept executes it will
-		 * pick up this qpair and will eventually call nvmf_vfio_user_poll_group_add which will
-		 * call spdk_nvmf_request_exec_fabrics with a generated fabrics connect command. That
-		 * will then call handle_queue_connect_rsp, which is where we ultimately complete
-		 * this command.
+		/*
+		 * Create our new I/O qpair. This asynchronously invokes, on a
+		 * suitable poll group, the nvmf_vfio_user_poll_group_add()
+		 * callback, which will call spdk_nvmf_request_exec_fabrics()
+		 * with a generated fabrics connect command. This command is
+		 * then eventually completed via handle_queue_connect_rsp().
 		 */
 		vu_qpair = ctrlr->qp[qid];
 		vu_qpair->create_io_sq_cmd = *cmd;
-		TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, vu_qpair, link);
+		spdk_nvmf_tgt_new_qpair(ctrlr->transport->transport.tgt,
+					&vu_qpair->qpair);
 		*tdbl(ctrlr, io_q) = 0;
 		return 0;
 	}
@@ -1924,7 +1923,7 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 	endpoint->ctrlr = ctrlr;
 
 	/* Notify the generic layer about the new admin queue pair */
-	TAILQ_INSERT_TAIL(&ctrlr->transport->new_qps, ctrlr->qp[0], link);
+	spdk_nvmf_tgt_new_qpair(transport->transport.tgt, &ctrlr->qp[0]->qpair);
 
 out:
 	if (err != 0) {
@@ -2106,7 +2105,6 @@ static uint32_t
 nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 {
 	struct nvmf_vfio_user_transport *vu_transport;
-	struct nvmf_vfio_user_qpair *qp, *tmp_qp;
 	struct nvmf_vfio_user_endpoint *endpoint;
 	uint32_t count = 0;
 	int err;
@@ -2135,12 +2133,6 @@ nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 
 		/* Construct a controller */
 		nvmf_vfio_user_create_ctrlr(vu_transport, endpoint);
-	}
-
-	TAILQ_FOREACH_SAFE(qp, &vu_transport->new_qps, link, tmp_qp) {
-		count++;
-		TAILQ_REMOVE(&vu_transport->new_qps, qp, link);
-		spdk_nvmf_tgt_new_qpair(transport->tgt, &qp->qpair);
 	}
 
 	pthread_mutex_unlock(&vu_transport->lock);
@@ -2318,8 +2310,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 }
 
 /*
- * Add the given qpair to the given poll group. New qpairs are added to
- * ->new_qps; they are processed via nvmf_vfio_user_accept(), calling
+ * Add the given qpair to the given poll group. New qpairs are added via
  * spdk_nvmf_tgt_new_qpair(), which picks a poll group, then calls back
  * here via nvmf_transport_poll_group_add().
  */
