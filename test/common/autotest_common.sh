@@ -1056,7 +1056,7 @@ function waitforserial_disconnect() {
 		sleep 1
 	done
 
-	if lsblk -l -o NAME | grep -q -w $1; then
+	if lsblk -l -o NAME,SERIAL | grep -q -w $1; then
 		return 1
 	fi
 
