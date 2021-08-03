@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+app=spdk_tgt args=() limit_args=()
+
+# Override default app
+if [[ -n $SPDK_APP ]]; then
+	app=$SPDK_APP
+fi
+
+# Define extra arguments to the app
+if [[ -n $SPDK_ARGS ]]; then
+	args=($SPDK_ARGS)
+fi
+
+# Limit the app with to following options,
+# to allow for minimal impact on the host.
+limit_args+=("--no-pci")
+limit_args+=("--num-trace-entries" 0)
+
+# if set, don't include limit_args[] on the cmdline
+if [[ ! -v SPDK_NO_LIMIT ]]; then
+	args+=("${limit_args[@]}")
+fi
+
+if [[ -e /config ]]; then
+	args+=("--json" "/config")
+fi
+
+# Wait a bit to make sure ip is in place
+sleep 2s
+
+exec "$app" "${args[@]}"

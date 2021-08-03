@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -e
+
+spdk_repo=$(mktemp -dt "spdk.XXXXXX")
+spdk_tar=/spdk.tar.gz
+
+cleanup() {
+
+	rm -f "$HOME/rpmbuild/rpm/x86_64/"*.rpm
+	rm -f "$spdk_tar"
+	rm -rf "$spdk_repo"
+}
+
+trap 'cleanup' EXIT
+
+if [[ ! -e $spdk_tar ]]; then
+	printf 'Missing %s\n' "$spdk_tar" >&2
+	exit 1
+fi
+
+tar -C "$spdk_repo" -xf "$spdk_tar"
+
+# Required for building RPM
+dnf install -y rpm-build
+
+# Spice it a bit with supported sources
+"$spdk_repo/scripts/pkgdep.sh" -d
+"$spdk_repo/test/common/config/vm_setup.sh" --test-conf=fio
+
+# HACK: In case we received a .tar with built SPDK we need to overwrite the
+# configuration to update all the paths make would need to lookup - this is
+# needed since we execute inside a different mount namespace so we won't be
+# able to find any absoulte paths that were used prior creating the .tar.
+"$spdk_repo/configure" > /dev/null
+
+# Deploy SPDK inside the container
+DEPS="no" "$spdk_repo/rpmbuild/rpm.sh" \
+	--with-shared \
+	--with-fio
+
+mv "$HOME/rpmbuild/rpm/x86_64/"*.rpm /tmp
+mv "/usr/src/fio/fio" /tmp
+dnf clean all

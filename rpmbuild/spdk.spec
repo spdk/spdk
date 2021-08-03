@@ -75,6 +75,7 @@ cp -a %{dpdk_build_path}/lib/* %{buildroot}/usr/local/lib/dpdk/
 # Try to include all the binaries that were potentially built
 [[ -e build/examples ]] && cp -a build/examples/* %{buildroot}/usr/local/bin/
 [[ -e build/bin ]] && cp -a build/bin/* %{buildroot}/usr/local/bin/
+[[ -e build/fio ]] && cp -a build/fio %{buildroot}/usr/local/bin/fio
 
 # And some useful setup scripts SPDK uses
 mkdir -p %{buildroot}/usr/libexec/spdk

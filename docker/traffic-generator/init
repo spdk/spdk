@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+args=()
+
+# Define extra arguments to the app
+if [[ -n $FIO_ARGS ]]; then
+	args+=($FIO_ARGS)
+fi
+
+# Wait a bit to make sure ip is in place
+sleep 2s
+
+export LD_PRELOAD=/usr/local/bin/fio/spdk_bdev
+exec /usr/src/fio/fio "${args[@]}" /fio.conf

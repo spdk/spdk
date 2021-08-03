@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -e
+
+dnf install -y /tmp/*.rpm
+
+# Be nice for docker exec and link SPDK scripts|binaries under common PATH
+# location like /usr/bin.
+ln -sf $(ls -1dpA /usr/local/bin/* | grep -v "/$") /usr/bin
+ln -sf $(ls -1dpA /usr/local/bin/fio/* | grep -v "/$") /usr/bin
+ln -s /usr/libexec/spdk/scripts/rpc.py /usr/bin
+ln -s /usr/libexec/spdk/scripts/rpc_http_proxy.py /usr/bin
+ln -s /usr/libexec/spdk/scripts/setup.sh /usr/bin
+ln -s /usr/libexec/spdk/include/spdk /usr/include
+ln -s /usr/libexec/spdk/scripts/ /usr
+
+mkdir -p /usr/src/fio
+mv /tmp/fio /usr/src/fio
+
+dnf clean all
+rm -f /tmp/*.rpm
