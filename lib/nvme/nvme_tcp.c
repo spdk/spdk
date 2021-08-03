@@ -2017,7 +2017,7 @@ static struct spdk_nvme_qpair *
 nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			    uint16_t qid, uint32_t qsize,
 			    enum spdk_nvme_qprio qprio,
-			    uint32_t num_requests)
+			    uint32_t num_requests, bool async)
 {
 	struct nvme_tcp_qpair *tqpair;
 	struct spdk_nvme_qpair *qpair;
@@ -2031,7 +2031,7 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	tqpair->num_entries = qsize;
 	qpair = &tqpair->qpair;
-	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests, false);
+	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests, async);
 	if (rc != 0) {
 		free(tqpair);
 		return NULL;
@@ -2059,7 +2059,7 @@ nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 			       const struct spdk_nvme_io_qpair_opts *opts)
 {
 	return nvme_tcp_ctrlr_create_qpair(ctrlr, qid, opts->io_queue_size, opts->qprio,
-					   opts->io_queue_requests);
+					   opts->io_queue_requests, opts->async_mode);
 }
 
 static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
@@ -2086,7 +2086,7 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 
 	tctrlr->ctrlr.adminq = nvme_tcp_ctrlr_create_qpair(&tctrlr->ctrlr, 0,
 			       tctrlr->ctrlr.opts.admin_queue_size, 0,
-			       tctrlr->ctrlr.opts.admin_queue_size);
+			       tctrlr->ctrlr.opts.admin_queue_size, true);
 	if (!tctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
 		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
