@@ -11,6 +11,9 @@ These functions accept `spdk_bdev_ext_io_opts` structure with extended IO reques
 options, e.g. DMA memory domain which describes data that may belong to another memory domain and
 can't be accessed directly.
 
+Added `async_fini_start` to allow bdev modules to complete the `fini_start` asynchronously,
+with new `spdk_bdev_module_fini_start_done` API.
+
 ### dma
 
 A new library, lib/dma, has been added. This library provides the necessary infrastructure for

@@ -1619,11 +1619,56 @@ bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 	}
 }
 
+static void
+bdev_module_fini_start_iter(void *arg)
+{
+	struct spdk_bdev_module *bdev_module;
+
+	if (!g_resume_bdev_module) {
+		bdev_module = TAILQ_LAST(&g_bdev_mgr.bdev_modules, bdev_module_list);
+	} else {
+		bdev_module = TAILQ_PREV(g_resume_bdev_module, bdev_module_list, internal.tailq);
+	}
+
+	while (bdev_module) {
+		if (bdev_module->async_fini_start) {
+			/* Save our place so we can resume later. We must
+			 * save the variable here, before calling fini_start()
+			 * below, because in some cases the module may immediately
+			 * call spdk_bdev_module_fini_start_done() and re-enter
+			 * this function to continue iterating. */
+			g_resume_bdev_module = bdev_module;
+		}
+
+		if (bdev_module->fini_start) {
+			bdev_module->fini_start();
+		}
+
+		if (bdev_module->async_fini_start) {
+			return;
+		}
+
+		bdev_module = TAILQ_PREV(bdev_module, bdev_module_list, internal.tailq);
+	}
+
+	g_resume_bdev_module = NULL;
+
+	bdev_finish_unregister_bdevs_iter(NULL, 0);
+}
+
+void
+spdk_bdev_module_fini_start_done(void)
+{
+	if (spdk_get_thread() != g_fini_thread) {
+		spdk_thread_send_msg(g_fini_thread, bdev_module_fini_start_iter, NULL);
+	} else {
+		bdev_module_fini_start_iter(NULL);
+	}
+}
+
 void
 spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 {
-	struct spdk_bdev_module *m;
-
 	assert(cb_fn != NULL);
 
 	g_fini_thread = spdk_get_thread();
@@ -1631,13 +1676,7 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
 
-	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, internal.tailq) {
-		if (m->fini_start) {
-			m->fini_start();
-		}
-	}
-
-	bdev_finish_unregister_bdevs_iter(NULL, 0);
+	bdev_module_fini_start_iter(NULL);
 }
 
 struct spdk_bdev_io *

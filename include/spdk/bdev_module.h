@@ -152,6 +152,13 @@ struct spdk_bdev_module {
 	bool async_fini;
 
 	/**
+	 * Denotes if the fini_start function may complete asynchronously.
+	 * If set to true finishing has to be explicitly completed by calling
+	 * spdk_bdev_module_fini_start_done().
+	 */
+	bool async_fini_start;
+
+	/**
 	 * Fields that are used by the internal bdev subsystem. Bdev modules
 	 *  must not read or write to these fields.
 	 */
@@ -831,6 +838,15 @@ void spdk_bdev_module_init_done(struct spdk_bdev_module *module);
  *
  */
 void spdk_bdev_module_finish_done(void);
+
+/**
+ * Indicate that the module fini start has completed.
+ *
+ * To be called in response to the fini_start, only if async_fini_start is set.
+ * May be called during fini_start or asynchronously.
+ *
+ */
+void spdk_bdev_module_fini_start_done(void);
 
 /**
  * Add alias to block device names list.
