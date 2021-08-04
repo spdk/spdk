@@ -1418,7 +1418,7 @@ test_reservation_notification_log_page(void)
 	struct spdk_nvmf_ctrlr ctrlr;
 	struct spdk_nvmf_qpair qpair;
 	struct spdk_nvmf_ns ns;
-	struct spdk_nvmf_request req;
+	struct spdk_nvmf_request req = {};
 	union nvmf_h2c_msg cmd = {};
 	union nvmf_c2h_msg rsp = {};
 	union spdk_nvme_async_event_completion event = {};
