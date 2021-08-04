@@ -233,6 +233,12 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 	for (i = 0; i < num_descriptors; i++) {
 		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 		op->desc = desc;
+		rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct idxd_hw_comp_record));
+		if (rc) {
+			SPDK_ERRLOG("Failed to translate completion memory\n");
+			rc = -ENOMEM;
+			goto err_op;
+		}
 		op++;
 		desc++;
 	}
@@ -356,8 +362,6 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
-	uint64_t op_hw_addr;
-	int rc;
 
 	if (!TAILQ_EMPTY(&chan->ops_pool)) {
 		op = *_op = TAILQ_FIRST(&chan->ops_pool);
@@ -368,15 +372,7 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 		return -EBUSY;
 	}
 
-	/* TODO: pre translate this when mem is allocated. */
-	rc = _vtophys(&op->hw, &op_hw_addr, sizeof(struct idxd_hw_comp_record));
-	if (rc) {
-		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
-		return rc;
-	}
-
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
-	desc->completion_addr = op_hw_addr;
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb_fn;
 	op->batch = NULL;

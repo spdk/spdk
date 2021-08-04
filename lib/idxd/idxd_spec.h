@@ -269,7 +269,7 @@ struct idxd_hw_desc {
 		} dif_upd;
 		uint8_t		op_specific[24];
 	};
-} __attribute__((packed));
+} __attribute__((packed)) __attribute((aligned(64)));
 SPDK_STATIC_ASSERT(sizeof(struct idxd_hw_desc) == 64, "size mismatch");
 
 struct idxd_hw_comp_record {
