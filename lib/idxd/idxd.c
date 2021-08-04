@@ -380,7 +380,6 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb_fn;
 	op->batch = NULL;
-	op->batch_op = false;
 
 	return 0;
 }
@@ -805,7 +804,6 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	}
 
 	op->desc = desc;
-	op->batch_op = true;
 	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->index);
 
 	batch->index++;
@@ -1146,12 +1144,10 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 
 			op->hw.status = status = 0;
 
-			if (op->batch_op == false) {
-				TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
-			}
-
 			if (op->desc->opcode == IDXD_OPCODE_BATCH) {
 				_free_batch(op->batch, chan);
+			} else if (op->batch == NULL) {
+				TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 			}
 		} else {
 			/*

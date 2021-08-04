@@ -148,8 +148,7 @@ struct idxd_ops {
 	struct idxd_batch		*batch;
 	struct idxd_hw_desc		*desc;
 	uint32_t			*crc_dst;
-	bool				batch_op;
-	char				pad[7];
+	char				pad[8];
 	TAILQ_ENTRY(idxd_ops)		link;
 };
 SPDK_STATIC_ASSERT(sizeof(struct idxd_ops) == 96, "size mismatch");
