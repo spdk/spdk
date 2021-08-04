@@ -61,6 +61,8 @@ bool g_examine_done = false;
 bool g_bdev_alias_already_exists = false;
 bool g_lvs_with_name_already_exists = false;
 
+DEFINE_STUB_V(spdk_bdev_module_fini_start_done, (void));
+
 const struct spdk_bdev_aliases_list *
 spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
 {
@@ -1042,7 +1044,29 @@ ut_bdev_finish(void)
 	int sz = 10;
 	int rc;
 
-	/* Test creating lvs with two lvols. Delete first lvol explicitly,
+	/* Scenario 1
+	 * Test unload of lvs with no lvols during bdev finish. */
+
+	rc = vbdev_lvs_create("bdev", "lvs", 0, LVS_CLEAR_WITH_UNMAP,
+			      lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs = g_lvol_store;
+
+	/* Start bdev finish */
+	vbdev_lvs_fini_start();
+	CU_ASSERT(g_shutdown_started == true);
+
+	/* During shutdown, lvs with no lvols should be unloaded */
+	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_lvol_pairs));
+
+	/* Revert module state back to normal */
+	g_shutdown_started = false;
+
+	/* Scenario 2
+	 * Test creating lvs with two lvols. Delete first lvol explicitly,
 	 * then start bdev finish. This should unload the remaining lvol and
 	 * lvol store. */
 
