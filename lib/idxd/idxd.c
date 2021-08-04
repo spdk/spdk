@@ -82,10 +82,10 @@ struct device_config g_dev_cfg1 = {
 };
 
 static inline void
-_submit_to_hw(struct spdk_idxd_io_channel *chan, struct idxd_hw_desc *desc)
+_submit_to_hw(struct spdk_idxd_io_channel *chan, struct idxd_ops *op)
 {
-	/* TODO: move the addition of the op to the outstanding list to here. */
-	movdir64b(chan->portal + chan->portal_offset, desc);
+	TAILQ_INSERT_TAIL(&chan->ops_outstanding, op, link);
+	movdir64b(chan->portal + chan->portal_offset, op->desc);
 	chan->portal_offset = (chan->portal_offset + chan->idxd->chan_per_device * PORTAL_STRIDE) &
 			      PORTAL_MASK;
 }
@@ -381,7 +381,6 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	op->cb_fn = cb_fn;
 	op->batch = NULL;
 	op->batch_op = false;
-	TAILQ_INSERT_TAIL(&chan->ops_outstanding, op, link);
 
 	return 0;
 }
@@ -423,7 +422,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
-	_submit_to_hw(chan, desc);
+	_submit_to_hw(chan, op);
 
 	return 0;
 }
@@ -478,7 +477,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
-	_submit_to_hw(chan, desc);
+	_submit_to_hw(chan, op);
 
 	return 0;
 }
@@ -519,7 +518,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 	desc->xfer_size = nbytes;
 
 	/* Submit operation. */
-	_submit_to_hw(chan, desc);
+	_submit_to_hw(chan, op);
 
 	return 0;
 }
@@ -555,7 +554,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
 	/* Submit operation. */
-	_submit_to_hw(chan, desc);
+	_submit_to_hw(chan, op);
 
 	return 0;
 }
@@ -595,7 +594,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, vo
 	op->crc_dst = crc_dst;
 
 	/* Submit operation. */
-	_submit_to_hw(chan, desc);
+	_submit_to_hw(chan, op);
 
 	return 0;
 }
@@ -641,7 +640,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void 
 	op->crc_dst = crc_dst;
 
 	/* Submit operation. */
-	_submit_to_hw(chan, desc);
+	_submit_to_hw(chan, op);
 
 	return 0;
 }
@@ -744,23 +743,16 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		}
 	}
 
-	/* Add the batch elements completion contexts to the outstanding list to be polled. */
-	for (i = 0 ; i < batch->index; i++) {
-		TAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
-				  link);
-	}
-
 	/* Common prep. */
 	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
 	if (rc) {
-		goto error;
+		return rc;
 	}
 
 	/* TODO: pre-tranlate these when allocated for max batch size. */
 	rc = _vtophys(batch->user_desc, &desc_addr, batch->index * sizeof(struct idxd_hw_desc));
 	if (rc) {
-		rc = -EINVAL;
-		goto error;
+		return -EINVAL;
 	}
 
 	/* Command specific. */
@@ -770,17 +762,17 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	op->batch = batch;
 	assert(batch->index <= DESC_PER_BATCH);
 
+	/* Add the batch elements completion contexts to the outstanding list to be polled. */
+	for (i = 0 ; i < batch->index; i++) {
+		TAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
+				  link);
+	}
+
 	/* Submit operation. */
-	_submit_to_hw(chan, desc);
+	_submit_to_hw(chan, op);
 	SPDK_DEBUGLOG(idxd, "Submitted batch %p\n", batch);
 
 	return 0;
-error:
-	for (i = 0 ; i < batch->index; i++) {
-		op = TAILQ_LAST(&chan->ops_outstanding, op_head);
-		TAILQ_REMOVE(&chan->ops_outstanding, op, link);
-	}
-	return rc;
 }
 
 static int
