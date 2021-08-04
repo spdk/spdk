@@ -360,14 +360,16 @@ function cleanup_linux() {
 		dirs_to_clean+="$(readlink -e assert_not_empty $XDG_RUNTIME_DIR/dpdk/spdk{,_pid}+([0-9]) || true) "
 	fi
 
-	files_to_clean=""
+	files_to_clean="" file_locks=()
 	for dir in $dirs_to_clean; do
 		files_to_clean+="$(echo $dir/*) "
 	done
+	file_locks+=(/var/tmp/spdk_pci_lock*)
 	shopt -u extglob nullglob
 
 	files_to_clean+="$(ls -1 /dev/shm/* \
 		| grep -E '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf|vhost_fuzz|nvme_fuzz)_trace|spdk_iscsi_conns' || true) "
+	files_to_clean+=" ${file_locks[*]}"
 	files_to_clean="$(readlink -e assert_not_empty $files_to_clean || true)"
 	if [[ -z "$files_to_clean" ]]; then
 		echo "Clean"
