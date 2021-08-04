@@ -175,6 +175,26 @@ spdk_idxd_chan_get_max_operations(struct spdk_idxd_io_channel *chan)
 	return chan->idxd->total_wq_size / chan->idxd->chan_per_device;
 }
 
+inline static int
+_vtophys(const void *buf, uint64_t *buf_addr, uint64_t size)
+{
+	uint64_t updated_size = size;
+
+	*buf_addr = spdk_vtophys(buf, &updated_size);
+
+	if (*buf_addr == SPDK_VTOPHYS_ERROR) {
+		SPDK_ERRLOG("Error translating address\n");
+		return -EINVAL;
+	}
+
+	if (updated_size < size) {
+		SPDK_ERRLOG("Error translating size (0x%lx), return size (0x%lx)\n", size, updated_size);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 int
 spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 {
@@ -328,26 +348,6 @@ spdk_idxd_detach(struct spdk_idxd_device *idxd)
 {
 	assert(idxd != NULL);
 	idxd_device_destruct(idxd);
-}
-
-inline static int
-_vtophys(const void *buf, uint64_t *buf_addr, uint64_t size)
-{
-	uint64_t updated_size = size;
-
-	*buf_addr = spdk_vtophys(buf, &updated_size);
-
-	if (*buf_addr == SPDK_VTOPHYS_ERROR) {
-		SPDK_ERRLOG("Error translating address\n");
-		return -EINVAL;
-	}
-
-	if (updated_size < size) {
-		SPDK_ERRLOG("Error translating size (0x%lx), return size (0x%lx)\n", size, updated_size);
-		return -EINVAL;
-	}
-
-	return 0;
 }
 
 static int
