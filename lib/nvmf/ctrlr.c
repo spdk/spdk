@@ -1990,7 +1990,7 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 
 			ana_desc.ana_group_id = anagrpid;
 			ana_desc.num_of_nsid = ctrlr->subsys->ana_group[anagrpid - 1];
-			ana_desc.ana_state = ctrlr->listener->ana_state;
+			ana_desc.ana_state = ctrlr->listener->ana_state[anagrpid - 1];
 
 			copy_len = spdk_min(sizeof(ana_desc) - offset, length);
 			copied_len = _copy_buf_to_iovs(&copy_ctx, (const char *)&ana_desc + offset,
@@ -2287,6 +2287,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
 	uint32_t max_num_blocks;
+	enum spdk_nvme_ana_state ana_state;
 
 	if (cmd->nsid == 0 || cmd->nsid > subsystem->max_nsid) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
@@ -2318,10 +2319,12 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	}
 
 	if (subsystem->flags.ana_reporting) {
+		assert(ns->anagrpid - 1 < subsystem->max_nsid);
 		nsdata->anagrpid = ns->anagrpid;
 
-		if (ctrlr->listener->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE ||
-		    ctrlr->listener->ana_state == SPDK_NVME_ANA_PERSISTENT_LOSS_STATE) {
+		ana_state = ctrlr->listener->ana_state[ns->anagrpid - 1];
+		if (ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE ||
+		    ana_state == SPDK_NVME_ANA_PERSISTENT_LOSS_STATE) {
 			nsdata->nuse = 0;
 		}
 	}
@@ -2769,6 +2772,28 @@ _nvme_ana_state_to_path_status(enum spdk_nvme_ana_state ana_state)
 	}
 }
 
+/* we have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvme_ana_state spdk_nvme_ana_state_t;
+
+static spdk_nvme_ana_state_t
+nvmf_ctrlr_get_ana_state(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvmf_ns *ns;
+
+	/* We do not have NVM subsystem specific ANA state. Hence if NSID is either
+	 * SPDK_NVMF_GLOBAL_NS_TAG, invalid, or for inactive namespace, return
+	 * the optimized state.
+	 */
+	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	if (ns == NULL) {
+		return SPDK_NVME_ANA_OPTIMIZED_STATE;
+	}
+
+	assert(ns->anagrpid - 1 < ctrlr->subsys->max_nsid);
+
+	return ctrlr->listener->ana_state[ns->anagrpid];
+}
+
 static int
 nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
@@ -2798,7 +2823,7 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 	/*
 	 * Process Get Features command for non-discovery controller
 	 */
-	ana_state = ctrlr->listener->ana_state;
+	ana_state = nvmf_ctrlr_get_ana_state(ctrlr, cmd->nsid);
 	switch (ana_state) {
 	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
 	case SPDK_NVME_ANA_PERSISTENT_LOSS_STATE:
@@ -2894,7 +2919,7 @@ nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 	/*
 	 * Process Set Features command for non-discovery controller
 	 */
-	ana_state = ctrlr->listener->ana_state;
+	ana_state = nvmf_ctrlr_get_ana_state(ctrlr, cmd->nsid);
 	switch (ana_state) {
 	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
 	case SPDK_NVME_ANA_CHANGE_STATE:
@@ -3690,24 +3715,23 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	/* It will be lower overhead to check if ANA state is optimized or
-	 * non-optimized.
-	 */
-	ana_state = ctrlr->listener->ana_state;
+	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		SPDK_DEBUGLOG(nvmf, "Unsuccessful query for nsid %u\n", cmd->nsid);
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		response->status.dnr = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	assert(ns->anagrpid - 1 < ctrlr->subsys->max_nsid);
+
+	ana_state = ctrlr->listener->ana_state[ns->anagrpid - 1];
 	if (spdk_unlikely(ana_state != SPDK_NVME_ANA_OPTIMIZED_STATE &&
 			  ana_state != SPDK_NVME_ANA_NON_OPTIMIZED_STATE)) {
 		SPDK_DEBUGLOG(nvmf, "Fail I/O command due to ANA state %d\n",
 			      ana_state);
 		response->status.sct = SPDK_NVME_SCT_PATH;
 		response->status.sc = _nvme_ana_state_to_path_status(ana_state);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	ns = _nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
-	if (ns == NULL || ns->bdev == NULL) {
-		SPDK_DEBUGLOG(nvmf, "Unsuccessful query for nsid %u\n", cmd->nsid);
-		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		response->status.dnr = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 

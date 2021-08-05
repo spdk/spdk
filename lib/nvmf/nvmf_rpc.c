@@ -2207,6 +2207,7 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 {
 	const struct spdk_nvme_transport_id *trid = listener->trid;
 	const char *adrfam;
+	uint32_t i;
 
 	spdk_json_write_object_begin(w);
 
@@ -2222,8 +2223,15 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 
 	if (nvmf_subsystem_get_ana_reporting(listener->subsystem)) {
-		spdk_json_write_named_string(w, "ana_state",
-					     nvme_ana_state_str(listener->ana_state));
+		spdk_json_write_named_array_begin(w, "ana_states");
+		for (i = 0; i < listener->subsystem->max_nsid; i++) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_uint32(w, "ana_group", i + 1);
+			spdk_json_write_named_string(w, "ana_state",
+						     nvme_ana_state_str(listener->ana_state[i]));
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
 	}
 
 	spdk_json_write_object_end(w);

@@ -103,7 +103,7 @@ struct spdk_nvmf_subsystem_listener {
 	void						*cb_arg;
 	struct spdk_nvme_transport_id			*trid;
 	struct spdk_nvmf_transport			*transport;
-	enum spdk_nvme_ana_state			ana_state;
+	enum spdk_nvme_ana_state			*ana_state;
 	uint64_t					ana_state_change_count;
 	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;
 };

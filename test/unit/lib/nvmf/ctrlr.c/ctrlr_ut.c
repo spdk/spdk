@@ -1052,14 +1052,15 @@ test_set_get_features(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_qpair admin_qpair = {};
-	struct spdk_nvmf_subsystem_listener listener = {};
+	enum spdk_nvme_ana_state ana_state[3];
+	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state };
 	struct spdk_nvmf_ctrlr ctrlr = {
 		.subsys = &subsystem, .admin_qpair = &admin_qpair, .listener = &listener
 	};
 	union nvmf_h2c_msg cmd = {};
 	union nvmf_c2h_msg rsp = {};
 	struct spdk_nvmf_ns ns[3];
-	struct spdk_nvmf_ns *ns_arr[3] = {&ns[0], NULL, &ns[2]};;
+	struct spdk_nvmf_ns *ns_arr[3] = {&ns[0], NULL, &ns[2]};
 	struct spdk_nvmf_request req;
 	int rc;
 
@@ -1067,7 +1068,8 @@ test_set_get_features(void)
 	ns[2].anagrpid = 3;
 	subsystem.ns = ns_arr;
 	subsystem.max_nsid = SPDK_COUNTOF(ns_arr);
-	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	listener.ana_state[0] = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	listener.ana_state[2] = SPDK_NVME_ANA_OPTIMIZED_STATE;
 	admin_qpair.ctrlr = &ctrlr;
 	req.qpair = &admin_qpair;
 	cmd.nvme_cmd.nsid = 1;
@@ -1666,7 +1668,8 @@ test_fused_compare_and_write(void)
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_ns ns = {};
 	struct spdk_nvmf_ns *subsys_ns[1] = {};
-	struct spdk_nvmf_subsystem_listener listener = {};
+	enum spdk_nvme_ana_state ana_state[1];
+	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state };
 	struct spdk_bdev bdev = {};
 
 	struct spdk_nvmf_poll_group group = {};
@@ -1682,7 +1685,7 @@ test_fused_compare_and_write(void)
 	subsys_ns[0] = &ns;
 	subsystem.ns = (struct spdk_nvmf_ns **)&subsys_ns;
 
-	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	listener.ana_state[0] = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	/* Enable controller */
 	ctrlr.vcprop.cc.bits.en = 1;
@@ -1838,7 +1841,8 @@ test_get_ana_log_page_one_ns_per_anagrp(void)
 	uint32_t ana_group[3];
 	struct spdk_nvmf_subsystem subsystem = { .ana_group = ana_group };
 	struct spdk_nvmf_ctrlr ctrlr = {};
-	struct spdk_nvmf_subsystem_listener listener = {};
+	enum spdk_nvme_ana_state ana_state[3];
+	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state };
 	struct spdk_nvmf_ns ns[3];
 	struct spdk_nvmf_ns *ns_arr[3] = {&ns[0], &ns[1], &ns[2]};
 	uint64_t offset;
@@ -1858,7 +1862,10 @@ test_get_ana_log_page_one_ns_per_anagrp(void)
 	}
 	ctrlr.subsys = &subsystem;
 	ctrlr.listener = &listener;
-	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+
+	for (i = 0; i < 3; i++) {
+		listener.ana_state[i] = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	}
 
 	for (i = 0; i < 3; i++) {
 		ns_arr[i]->nsid = i + 1;
@@ -1879,7 +1886,7 @@ test_get_ana_log_page_one_ns_per_anagrp(void)
 		ana_desc->ana_group_id = ns_arr[i]->nsid;
 		ana_desc->num_of_nsid = 1;
 		ana_desc->change_count = 0;
-		ana_desc->ana_state = ctrlr.listener->ana_state;
+		ana_desc->ana_state = ctrlr.listener->ana_state[i];
 		ana_desc->nsid[0] = ns_arr[i]->nsid;
 		memcpy(&expected_page[offset], ana_desc, UT_ANA_DESC_SIZE);
 		offset += UT_ANA_DESC_SIZE;
@@ -1923,7 +1930,8 @@ test_get_ana_log_page_multi_ns_per_anagrp(void)
 	struct spdk_nvmf_ns *ns_arr[5] = {&ns[0], &ns[1], &ns[2], &ns[3], &ns[4]};
 	uint32_t ana_group[5] = {0};
 	struct spdk_nvmf_subsystem subsystem = { .ns = ns_arr, .ana_group = ana_group, };
-	struct spdk_nvmf_subsystem_listener listener = {};
+	enum spdk_nvme_ana_state ana_state[5];
+	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state, };
 	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem, .listener = &listener, };
 	char expected_page[UT_ANA_LOG_PAGE_SIZE] = {0};
 	char actual_page[UT_ANA_LOG_PAGE_SIZE] = {0};
@@ -1938,7 +1946,9 @@ test_get_ana_log_page_multi_ns_per_anagrp(void)
 	subsystem.max_nsid = 5;
 	subsystem.ana_group[1] = 3;
 	subsystem.ana_group[2] = 2;
-	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	for (i = 0; i < 5; i++) {
+		listener.ana_state[i] = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	}
 
 	for (i = 0; i < 5; i++) {
 		ns_arr[i]->nsid = i + 1;
@@ -2365,7 +2375,8 @@ test_spdk_nvmf_request_zcopy_start(void)
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_ns ns = {};
 	struct spdk_nvmf_ns *subsys_ns[1] = {};
-	struct spdk_nvmf_subsystem_listener listener = {};
+	enum spdk_nvme_ana_state ana_state[1];
+	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state };
 	struct spdk_bdev bdev = { .blockcnt = 100, .blocklen = 512};
 
 	struct spdk_nvmf_poll_group group = {};
@@ -2382,7 +2393,7 @@ test_spdk_nvmf_request_zcopy_start(void)
 	subsys_ns[0] = &ns;
 	subsystem.ns = (struct spdk_nvmf_ns **)&subsys_ns;
 
-	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	listener.ana_state[0] = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	/* Enable controller */
 	ctrlr.vcprop.cc.bits.en = 1;
@@ -2489,7 +2500,8 @@ test_zcopy_read(void)
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_ns ns = {};
 	struct spdk_nvmf_ns *subsys_ns[1] = {};
-	struct spdk_nvmf_subsystem_listener listener = {};
+	enum spdk_nvme_ana_state ana_state[1];
+	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state };
 	struct spdk_bdev bdev = { .blockcnt = 100, .blocklen = 512};
 
 	struct spdk_nvmf_poll_group group = {};
@@ -2506,7 +2518,7 @@ test_zcopy_read(void)
 	subsys_ns[0] = &ns;
 	subsystem.ns = (struct spdk_nvmf_ns **)&subsys_ns;
 
-	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	listener.ana_state[0] = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	/* Enable controller */
 	ctrlr.vcprop.cc.bits.en = 1;
@@ -2575,7 +2587,8 @@ test_zcopy_write(void)
 	struct spdk_nvmf_subsystem subsystem = {};
 	struct spdk_nvmf_ns ns = {};
 	struct spdk_nvmf_ns *subsys_ns[1] = {};
-	struct spdk_nvmf_subsystem_listener listener = {};
+	enum spdk_nvme_ana_state ana_state[1];
+	struct spdk_nvmf_subsystem_listener listener = { .ana_state = ana_state };
 	struct spdk_bdev bdev = { .blockcnt = 100, .blocklen = 512};
 
 	struct spdk_nvmf_poll_group group = {};
@@ -2592,7 +2605,7 @@ test_zcopy_write(void)
 	subsys_ns[0] = &ns;
 	subsystem.ns = (struct spdk_nvmf_ns **)&subsys_ns;
 
-	listener.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	listener.ana_state[0] = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	/* Enable controller */
 	ctrlr.vcprop.cc.bits.en = 1;

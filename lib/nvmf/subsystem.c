@@ -348,6 +348,7 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	TAILQ_REMOVE(&subsystem->listeners, listener, link);
+	free(listener->ana_state);
 	free(listener);
 }
 
@@ -991,6 +992,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_subsystem_listener *listener;
 	struct spdk_nvmf_listener *tr_listener;
+	uint32_t i;
 	int rc = 0;
 
 	assert(cb_fn != NULL);
@@ -1033,7 +1035,16 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	listener->cb_fn = cb_fn;
 	listener->cb_arg = cb_arg;
 	listener->subsystem = subsystem;
-	listener->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	listener->ana_state = calloc(subsystem->max_nsid, sizeof(enum spdk_nvme_ana_state));
+	if (!listener->ana_state) {
+		free(listener);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	for (i = 0; i < subsystem->max_nsid; i++) {
+		listener->ana_state[i] = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	}
 
 	if (transport->ops->listen_associate != NULL) {
 		rc = transport->ops->listen_associate(transport, subsystem, trid);
@@ -1570,7 +1581,6 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	ns->anagrpid = opts.anagrpid;
 	subsystem->ana_group[ns->anagrpid - 1]++;
 	TAILQ_INIT(&ns->registrants);
-
 	if (ptpl_file) {
 		rc = nvmf_ns_load_reservation(ptpl_file, &info);
 		if (!rc) {
@@ -3019,6 +3029,7 @@ nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_subsystem_listener *listener;
 	struct subsystem_listener_update_ctx *ctx;
+	uint32_t i;
 
 	assert(cb_fn != NULL);
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
@@ -3048,11 +3059,6 @@ nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	if (listener->ana_state == ana_state) {
-		cb_fn(cb_arg, 0);
-		return;
-	}
-
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		SPDK_ERRLOG("Unable to allocate context\n");
@@ -3060,7 +3066,9 @@ nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	listener->ana_state = ana_state;
+	for (i = 0; i < subsystem->max_nsid; i++) {
+		listener->ana_state[i] = ana_state;
+	}
 	listener->ana_state_change_count++;
 
 	ctx->listener = listener;
