@@ -57,6 +57,7 @@ packages=(
 	btrfs-progs
 	xfsprogs
 	rpmdevtools
+	ruby-devel
 )
 
 pre_install() { :; }

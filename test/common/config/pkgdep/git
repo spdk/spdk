@@ -196,9 +196,6 @@ function install_markdownlint() {
 		sudo -E git clone --branch "$mdl_version" "${GIT_REPO_MDL}" "/usr/src/markdownlint"
 		(
 			cd /usr/src/markdownlint
-			if ! hash gem; then
-				sudo -E dnf install ruby-devel -y
-			fi
 			if ! hash rake; then
 				sudo -E gem install rake
 			fi

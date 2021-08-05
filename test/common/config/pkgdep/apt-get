@@ -71,6 +71,7 @@ packages=(
 	xfsprogs
 	ibverbs-utils
 	rdmacm-utils
+	ruby-dev
 )
 
 install_vagrant_dependencies() {

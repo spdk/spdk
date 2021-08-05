@@ -59,6 +59,7 @@ packages=(
 	wget
 	xfsprogs
 	rpmdevtools
+	ruby-devel
 )
 
 pre_install() { :; }
