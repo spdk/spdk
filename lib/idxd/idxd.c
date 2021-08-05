@@ -95,7 +95,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 {
 	struct spdk_idxd_io_channel *chan;
 	struct idxd_batch *batch;
-	int i;
+	int i, num_batches;
 
 	assert(idxd != NULL);
 
@@ -105,7 +105,9 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 		return NULL;
 	}
 
-	chan->batch_base = calloc(NUM_BATCHES_PER_CHANNEL, sizeof(struct idxd_batch));
+	num_batches = idxd->queues[idxd->wq_id].wqcfg.wq_size / idxd->chan_per_device;
+
+	chan->batch_base = calloc(num_batches, sizeof(struct idxd_batch));
 	if (chan->batch_base == NULL) {
 		SPDK_ERRLOG("Failed to allocate batch pool\n");
 		free(chan);
@@ -134,7 +136,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	TAILQ_INIT(&chan->ops_outstanding);
 
 	batch = chan->batch_base;
-	for (i = 0 ; i < NUM_BATCHES_PER_CHANNEL ; i++) {
+	for (i = 0 ; i < num_batches ; i++) {
 		TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
 		batch++;
 	}

@@ -65,11 +65,6 @@ static inline void movdir64b(void *dst, const void *src)
 /* The following sets up a max desc count per batch of 16 */
 #define LOG2_WQ_MAX_BATCH	4  /* 2^4 = 16 */
 #define DESC_PER_BATCH		(1 << LOG2_WQ_MAX_BATCH)
-/* We decide how many batches we want to support based on what max queue
- * depth makes sense resource wise. There is a small price to pay with
- * larger numbers wrt polling for completions.
- */
-#define NUM_BATCHES_PER_CHANNEL	0x400
 #define MIN_USER_DESC_COUNT	2
 
 #define LOG2_WQ_MAX_XFER	30 /* 2^30 = 1073741824 */
