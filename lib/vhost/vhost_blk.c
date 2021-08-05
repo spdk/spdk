@@ -1304,8 +1304,11 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 		}
 	}
 
-	bvsession->requestq_poller = SPDK_POLLER_REGISTER(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-				     bvsession, 0);
+	if (bvdev->bdev) {
+		bvsession->requestq_poller = SPDK_POLLER_REGISTER(vdev_worker, bvsession, 0);
+	} else {
+		bvsession->requestq_poller = SPDK_POLLER_REGISTER(no_bdev_vdev_worker, bvsession, 0);
+	}
 	SPDK_INFOLOG(vhost, "%s: started poller on lcore %d\n",
 		     vsession->name, spdk_env_get_current_core());
 
