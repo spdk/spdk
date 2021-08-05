@@ -401,12 +401,12 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 
 	rc = _vtophys(src, &src_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	rc = _vtophys(dst, &dst_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	/* Command specific. */
@@ -420,6 +420,9 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *
 	_submit_to_hw(chan, op);
 
 	return 0;
+error:
+	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
 }
 
 /* Dual-cast copies the same source to two separate destination buffers. */
@@ -450,17 +453,17 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 
 	rc = _vtophys(src, &src_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	rc = _vtophys(dst1, &dst1_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	rc = _vtophys(dst2, &dst2_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	/* Command specific. */
@@ -475,6 +478,9 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	_submit_to_hw(chan, op);
 
 	return 0;
+error:
+	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
 }
 
 int
@@ -498,12 +504,12 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 
 	rc = _vtophys(src1, &src1_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	rc = _vtophys(src2, &src2_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	/* Command specific. */
@@ -516,6 +522,9 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 	_submit_to_hw(chan, op);
 
 	return 0;
+error:
+	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
 }
 
 int
@@ -538,6 +547,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 
 	rc = _vtophys(dst, &dst_addr, nbytes);
 	if (rc) {
+		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 		return rc;
 	}
 
@@ -576,6 +586,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, vo
 
 	rc = _vtophys(src, &src_addr, nbytes);
 	if (rc) {
+		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 		return rc;
 	}
 
@@ -617,12 +628,12 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void 
 
 	rc = _vtophys(src, &src_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	rc = _vtophys(dst, &dst_addr, nbytes);
 	if (rc) {
-		return rc;
+		goto error;
 	}
 
 	/* Command specific. */
@@ -638,6 +649,9 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void 
 	_submit_to_hw(chan, op);
 
 	return 0;
+error:
+	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
 }
 
 uint32_t
@@ -747,7 +761,8 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	/* TODO: pre-tranlate these when allocated for max batch size. */
 	rc = _vtophys(batch->user_desc, &desc_addr, batch->index * sizeof(struct idxd_hw_desc));
 	if (rc) {
-		return -EINVAL;
+		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+		return rc;
 	}
 
 	/* Command specific. */
