@@ -587,16 +587,21 @@ function check_json_rpc() {
 function check_markdown_format() {
 	local rc=0
 
-	echo -n "Checking markdown files format..."
-	mdl -s $rootdir/mdl_rules.rb . > mdl.log || true
-	if [ -s mdl.log ]; then
-		echo " Errors in .md files detected:"
-		cat mdl.log
-		rc=1
+	if hash mdl 2> /dev/null; then
+		echo -n "Checking markdown files format..."
+		mdl -g -s $rootdir/mdl_rules.rb . > mdl.log || true
+		if [ -s mdl.log ]; then
+			echo " Errors in .md files detected:"
+			cat mdl.log
+			rc=1
+		else
+			echo " OK"
+		fi
+		rm -f mdl.log
 	else
-		echo " OK"
+		echo "You do not have markdownlint installed so .md files not being checked!"
 	fi
-	rm -f mdl.log
+
 	return $rc
 }
 
