@@ -1725,6 +1725,23 @@ vfio_user_log(vfu_ctx_t *vfu_ctx, int level, char const *msg)
 	}
 }
 
+static int
+vfio_user_get_log_level(void)
+{
+	int level;
+
+	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
+		return LOG_DEBUG;
+	}
+
+	level = spdk_log_to_syslog_level(spdk_log_get_level());
+	if (level < 0) {
+		return LOG_ERR;
+	}
+
+	return level;
+}
+
 static void
 init_pci_config_space(vfu_pci_config_space_t *p)
 {
@@ -2006,7 +2023,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		err = -1;
 		goto out;
 	}
-	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log, LOG_DEBUG);
+	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log, vfio_user_get_log_level());
 
 	err = vfio_user_dev_info_fill(vu_transport, endpoint);
 	if (err < 0) {
