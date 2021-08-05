@@ -247,22 +247,33 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 
 	/* Populate the batches */
 	TAILQ_FOREACH(batch, &chan->batch_pool, link) {
-		batch->user_desc = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_hw_desc),
-						0x40, NULL,
-						SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		batch->user_desc = desc = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_hw_desc),
+						       0x40, NULL,
+						       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (batch->user_desc == NULL) {
 			SPDK_ERRLOG("Failed to allocate batch descriptor memory\n");
 			rc = -ENOMEM;
 			goto err_user_desc_or_op;
 		}
 
-		batch->user_ops = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_ops),
-					       0x40, NULL,
-					       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		batch->user_ops = op = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_ops),
+						    0x40, NULL,
+						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (batch->user_ops == NULL) {
 			SPDK_ERRLOG("Failed to allocate user completion memory\n");
 			rc = -ENOMEM;
 			goto err_user_desc_or_op;
+		}
+
+		for (i = 0; i < DESC_PER_BATCH; i++) {
+			rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct idxd_hw_comp_record));
+			if (rc) {
+				SPDK_ERRLOG("Failed to translate batch entry completion memory\n");
+				rc = -ENOMEM;
+				goto err_user_desc_or_op;
+			}
+			op++;
+			desc++;
 		}
 	}
 
@@ -794,8 +805,6 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
-	uint64_t op_hw_addr;
-	int rc;
 
 	if (_is_batch_valid(batch, chan) == false) {
 		SPDK_ERRLOG("Attempt to add to an invalid batch.\n");
@@ -811,18 +820,12 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	desc = *_desc = &batch->user_desc[batch->index];
 	op = *_op = &batch->user_ops[batch->index];
 
-	rc = _vtophys(&op->hw, &op_hw_addr, sizeof(struct idxd_hw_comp_record));
-	if (rc) {
-		return rc;
-	}
-
 	op->desc = desc;
 	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->index);
 
 	batch->index++;
 
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
-	desc->completion_addr = op_hw_addr;
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb_fn;
 	op->batch = batch;
