@@ -158,7 +158,7 @@ struct col_desc {
 };
 
 struct run_counter_history {
-	char *poller_name;
+	uint64_t poller_id;
 	uint64_t thread_id;
 	uint64_t last_run_counter;
 	uint64_t last_busy_counter;
@@ -230,6 +230,7 @@ struct rpc_thread_info {
 struct rpc_poller_info {
 	char *name;
 	char *state;
+	uint64_t id;
 	uint64_t run_count;
 	uint64_t busy_count;
 	uint64_t period_ticks;
@@ -360,6 +361,7 @@ free_rpc_core_info(struct rpc_core_info *core_info, size_t size)
 static const struct spdk_json_object_decoder rpc_pollers_decoders[] = {
 	{"name", offsetof(struct rpc_poller_info, name), spdk_json_decode_string},
 	{"state", offsetof(struct rpc_poller_info, state), spdk_json_decode_string},
+	{"id", offsetof(struct rpc_poller_info, id), spdk_json_decode_uint64},
 	{"run_count", offsetof(struct rpc_poller_info, run_count), spdk_json_decode_uint64},
 	{"busy_count", offsetof(struct rpc_poller_info, busy_count), spdk_json_decode_uint64},
 	{"period_ticks", offsetof(struct rpc_poller_info, period_ticks), spdk_json_decode_uint64, true},
@@ -661,13 +663,13 @@ sort_threads(const void *p1, const void *p2)
 }
 
 static void
-store_last_counters(const char *poller_name, uint64_t thread_id, uint64_t last_run_counter,
+store_last_counters(uint64_t poller_id, uint64_t thread_id, uint64_t last_run_counter,
 		    uint64_t last_busy_counter)
 {
 	struct run_counter_history *history;
 
 	TAILQ_FOREACH(history, &g_run_counter_history, link) {
-		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+		if ((history->poller_id == poller_id) && (history->thread_id == thread_id)) {
 			history->last_run_counter = last_run_counter;
 			history->last_busy_counter = last_busy_counter;
 			return;
@@ -679,12 +681,7 @@ store_last_counters(const char *poller_name, uint64_t thread_id, uint64_t last_r
 		fprintf(stderr, "Unable to allocate a history object in store_last_counters.\n");
 		return;
 	}
-	history->poller_name = strdup(poller_name);
-	if (!history->poller_name) {
-		fprintf(stderr, "Unable to allocate poller_name of a history object in store_last_counters.\n");
-		free(history);
-		return;
-	}
+	history->poller_id = poller_id;
 	history->thread_id = thread_id;
 	history->last_run_counter = last_run_counter;
 	history->last_busy_counter = last_busy_counter;
@@ -767,12 +764,12 @@ end:
 }
 
 static uint64_t
-get_last_run_counter(const char *poller_name, uint64_t thread_id)
+get_last_run_counter(uint64_t poller_id, uint64_t thread_id)
 {
 	struct run_counter_history *history;
 
 	TAILQ_FOREACH(history, &g_run_counter_history, link) {
-		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+		if ((history->poller_id == poller_id) && (history->thread_id == thread_id)) {
 			return history->last_run_counter;
 		}
 	}
@@ -781,12 +778,12 @@ get_last_run_counter(const char *poller_name, uint64_t thread_id)
 }
 
 static uint64_t
-get_last_busy_counter(const char *poller_name, uint64_t thread_id)
+get_last_busy_counter(uint64_t poller_id, uint64_t thread_id)
 {
 	struct run_counter_history *history;
 
 	TAILQ_FOREACH(history, &g_run_counter_history, link) {
-		if (!strcmp(history->poller_name, poller_name) && history->thread_id == thread_id) {
+		if ((history->poller_id == poller_id) && (history->thread_id == thread_id)) {
 			return history->last_busy_counter;
 		}
 	}
@@ -811,8 +808,8 @@ subsort_pollers(enum column_pollers_type sort_column, const void *p1, const void
 		return strcmp(poller1->thread_name, poller2->thread_name);
 	case COL_POLLERS_RUN_COUNTER:
 		if (g_interval_data) {
-			count1 = poller1->run_count - get_last_run_counter(poller1->name, poller1->thread_id);
-			count2 = poller2->run_count - get_last_run_counter(poller2->name, poller2->thread_id);
+			count1 = poller1->run_count - get_last_run_counter(poller1->id, poller1->thread_id);
+			count2 = poller2->run_count - get_last_run_counter(poller2->id, poller2->thread_id);
 		} else {
 			count1 = poller1->run_count;
 			count2 = poller2->run_count;
@@ -826,8 +823,8 @@ subsort_pollers(enum column_pollers_type sort_column, const void *p1, const void
 		count1 = poller1->busy_count;
 		count2 = poller2->busy_count;
 		if (g_interval_data) {
-			last_busy_counter1 = get_last_busy_counter(poller1->name, poller1->thread_id);
-			last_busy_counter2 = get_last_busy_counter(poller2->name, poller2->thread_id);
+			last_busy_counter1 = get_last_busy_counter(poller1->id, poller1->thread_id);
+			last_busy_counter2 = get_last_busy_counter(poller2->id, poller2->thread_id);
 			if (count1 > last_busy_counter1) {
 				count1 -= last_busy_counter1;
 			}
@@ -890,7 +887,7 @@ get_pollers_data(void)
 
 	/* Save last run counter of each poller before updating g_pollers_stats. */
 	for (i = 0; i < g_last_pollers_count; i++) {
-		store_last_counters(g_pollers_info[i].name, g_pollers_info[i].thread_id,
+		store_last_counters(g_pollers_info[i].id, g_pollers_info[i].thread_id,
 				    g_pollers_info[i].run_count, g_pollers_info[i].busy_count);
 	}
 
@@ -1384,7 +1381,7 @@ refresh_pollers_tab(uint8_t current_page)
 
 		col = TABS_DATA_START_COL;
 
-		last_busy_counter = get_last_busy_counter(g_pollers_info[i].name, g_pollers_info[i].thread_id);
+		last_busy_counter = get_last_busy_counter(g_pollers_info[i].id, g_pollers_info[i].thread_id);
 
 		draw_row_background(item_index, POLLERS_TAB);
 
@@ -1407,7 +1404,7 @@ refresh_pollers_tab(uint8_t current_page)
 		}
 
 		if (!col_desc[COL_POLLERS_RUN_COUNTER].disabled) {
-			last_run_counter = get_last_run_counter(g_pollers_info[i].name, g_pollers_info[i].thread_id);
+			last_run_counter = get_last_run_counter(g_pollers_info[i].id, g_pollers_info[i].thread_id);
 			if (g_interval_data == true) {
 				snprintf(run_count, MAX_POLLER_RUN_COUNT, "%" PRIu64,
 					 g_pollers_info[i].run_count - last_run_counter);
@@ -2096,7 +2093,6 @@ free_poller_history(void)
 
 	TAILQ_FOREACH_SAFE(history, &g_run_counter_history, link, tmp) {
 		TAILQ_REMOVE(&g_run_counter_history, history, link);
-		free(history->poller_name);
 		free(history);
 	}
 }
@@ -2430,8 +2426,8 @@ show_poller(uint8_t current_page)
 
 	print_left(poller_win, 4, 2, POLLER_WIN_WIDTH, "Run count:", COLOR_PAIR(5));
 
-	last_run_counter = get_last_run_counter(poller->name, poller->thread_id);
-	last_busy_counter = get_last_busy_counter(poller->name, poller->thread_id);
+	last_run_counter = get_last_run_counter(poller->id, poller->thread_id);
+	last_busy_counter = get_last_busy_counter(poller->id, poller->thread_id);
 	if (g_interval_data) {
 		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64, poller->run_count - last_run_counter);
 	} else {
