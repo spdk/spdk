@@ -44,12 +44,15 @@ static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
 
 static int vbdev_lvs_init(void);
+static void vbdev_lvs_fini_start(void);
 static int vbdev_lvs_get_ctx_size(void);
 static void vbdev_lvs_examine(struct spdk_bdev *bdev);
+static bool g_shutdown_started = false;
 
 static struct spdk_bdev_module g_lvol_if = {
 	.name = "lvol",
 	.module_init = vbdev_lvs_init,
+	.fini_start = vbdev_lvs_fini_start,
 	.examine_disk = vbdev_lvs_examine,
 	.get_ctx_size = vbdev_lvs_get_ctx_size,
 
@@ -549,9 +552,32 @@ struct vbdev_lvol_destroy_ctx {
 };
 
 static void
+_vbdev_lvol_unregister_unload_lvs(void *cb_arg, int lvserrno)
+{
+	struct lvol_bdev *lvol_bdev = cb_arg;
+	struct lvol_store_bdev *lvs_bdev = lvol_bdev->lvs_bdev;
+
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(vbdev_lvol, "Lvol store removed with error: %d.\n", lvserrno);
+	}
+
+	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	free(lvs_bdev);
+
+	spdk_bdev_destruct_done(&lvol_bdev->bdev, lvserrno);
+	free(lvol_bdev);
+}
+
+static void
 _vbdev_lvol_unregister_cb(void *ctx, int lvolerrno)
 {
 	struct lvol_bdev *lvol_bdev = ctx;
+	struct lvol_store_bdev *lvs_bdev = lvol_bdev->lvs_bdev;
+
+	if (g_shutdown_started && _vbdev_lvs_are_lvols_closed(lvs_bdev->lvs)) {
+		spdk_lvs_unload(lvs_bdev->lvs, _vbdev_lvol_unregister_unload_lvs, lvol_bdev);
+		return;
+	}
 
 	spdk_bdev_destruct_done(&lvol_bdev->bdev, lvolerrno);
 	free(lvol_bdev);
@@ -944,6 +970,7 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	}
 
 	lvol_bdev->lvol = lvol;
+	lvol_bdev->lvs_bdev = lvs_bdev;
 
 	bdev = &lvol_bdev->bdev;
 	bdev->name = lvol->unique_id;
@@ -1201,6 +1228,12 @@ static int
 vbdev_lvs_init(void)
 {
 	return 0;
+}
+
+static void
+vbdev_lvs_fini_start(void)
+{
+	g_shutdown_started = true;
 }
 
 static int

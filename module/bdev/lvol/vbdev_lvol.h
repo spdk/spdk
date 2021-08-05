@@ -50,6 +50,7 @@ struct lvol_store_bdev {
 struct lvol_bdev {
 	struct spdk_bdev	bdev;
 	struct spdk_lvol	*lvol;
+	struct lvol_store_bdev	*lvs_bdev;
 };
 
 int vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,

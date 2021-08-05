@@ -1040,7 +1040,7 @@ ut_lvol_rename(void)
 }
 
 static void
-ut_lvol_destroy(void)
+ut_bdev_finish(void)
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol *lvol;
@@ -1048,44 +1048,47 @@ ut_lvol_destroy(void)
 	int sz = 10;
 	int rc;
 
-	/* Lvol store is successfully created */
-	rc = vbdev_lvs_create("bdev", "lvs", 0, LVS_CLEAR_WITH_UNMAP, lvol_store_op_with_handle_complete,
-			      NULL);
+	/* Test creating lvs with two lvols. Delete first lvol explicitly,
+	 * then start bdev finish. This should unload the remaining lvol and
+	 * lvol store. */
+
+	rc = vbdev_lvs_create("bdev", "lvs", 0, LVS_CLEAR_WITH_UNMAP,
+			      lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-	CU_ASSERT(g_lvol_store->bs_dev != NULL);
 	lvs = g_lvol_store;
 
-	/* Successful lvols create */
-	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(lvs, "lvol", sz, false, LVOL_CLEAR_WITH_DEFAULT, vbdev_lvol_create_complete,
-			       NULL);
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, LVOL_CLEAR_WITH_DEFAULT,
+			       vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 	lvol = g_lvol;
 
-	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(lvs, "lvol2", sz, false, LVOL_CLEAR_WITH_DEFAULT, vbdev_lvol_create_complete,
-			       NULL);
+	rc = vbdev_lvol_create(lvs, "lvol2", sz, false, LVOL_CLEAR_WITH_DEFAULT,
+			       vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 	lvol2 = g_lvol;
 
-	/* Successful lvols destroy */
+	/* Destroy explicitly first lvol */
 	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
-	/* Hot remove lvol bdev */
+	/* Start bdev finish and unregister remaining lvol */
+	vbdev_lvs_fini_start();
+	CU_ASSERT(g_shutdown_started == true);
 	spdk_bdev_unregister(lvol2->bdev, _spdk_bdev_unregister_cb, NULL);
 
-	/* Unload lvol store */
-	vbdev_lvs_unload(lvs, lvol_store_op_complete, NULL);
-	CU_ASSERT(g_lvserrno == 0);
+	/* During shutdown, removal of last lvol should unload lvs */
 	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_lvol_pairs));
+
+	/* Revert module state back to normal */
+	g_shutdown_started = false;
 }
 
 static void
@@ -1456,7 +1459,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_vbdev_lvol_submit_request);
 	CU_ADD_TEST(suite, ut_lvol_examine);
 	CU_ADD_TEST(suite, ut_lvol_rename);
-	CU_ADD_TEST(suite, ut_lvol_destroy);
+	CU_ADD_TEST(suite, ut_bdev_finish);
 	CU_ADD_TEST(suite, ut_lvs_rename);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
