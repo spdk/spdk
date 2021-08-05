@@ -91,6 +91,7 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_next_host, struct spdk_nvmf_host *,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_host *prev_host), NULL);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns, struct spdk_nvmf_ns *,
 	    (struct spdk_nvmf_subsystem *subsystem), NULL);
+DEFINE_STUB(nvmf_subsystem_get_ana_reporting, bool, (struct spdk_nvmf_subsystem *subsystem), false);
 DEFINE_STUB_V(spdk_nvmf_ns_get_opts, (const struct spdk_nvmf_ns *ns,
 				      struct spdk_nvmf_ns_opts *opts, size_t opts_size));
 DEFINE_STUB(spdk_nvmf_ns_get_id, uint32_t, (const struct spdk_nvmf_ns *ns), 0);

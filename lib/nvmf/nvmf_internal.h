@@ -387,6 +387,7 @@ void nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 				  const struct spdk_nvme_transport_id *trid,
 				  enum spdk_nvme_ana_state ana_state,
 				  spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg);
+bool nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem);
 
 /**
  * Sets the controller ID range for a subsystem.

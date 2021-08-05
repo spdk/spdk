@@ -2871,6 +2871,12 @@ spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
+bool
+nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->flags.ana_reporting;
+}
+
 struct subsystem_listener_update_ctx {
 	struct spdk_nvmf_subsystem_listener *listener;
 

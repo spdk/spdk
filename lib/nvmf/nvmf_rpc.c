@@ -2221,8 +2221,10 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_named_string(w, "ana_state",
-				     nvme_ana_state_str(listener->ana_state));
+	if (nvmf_subsystem_get_ana_reporting(listener->subsystem)) {
+		spdk_json_write_named_string(w, "ana_state",
+					     nvme_ana_state_str(listener->ana_state));
+	}
 
 	spdk_json_write_object_end(w);
 }
