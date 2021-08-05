@@ -1028,7 +1028,7 @@ function print_backtrace() {
 
 function waitforserial() {
 	local i=0
-	local nvme_device_counter=1
+	local nvme_device_counter=1 nvme_devices=0
 	if [[ -n "$2" ]]; then
 		nvme_device_counter=$2
 	fi
@@ -1039,7 +1039,11 @@ function waitforserial() {
 	# (unless kernel is rebooted) and which start to negatively affect all the tests.
 	sleep 2
 	while ((i++ <= 15)); do
-		(($(lsblk -l -o NAME,SERIAL | grep -c "$1") == nvme_device_counter)) && return 0
+		nvme_devices=$(lsblk -l -o NAME,SERIAL | grep -c "$1")
+		((nvme_devices == nvme_device_counter)) && return 0
+		if ((nvme_devices > nvme_device_counter)); then
+			echo "$nvme_device_counter device(s) expected, found $nvme_devices" >&2
+		fi
 		echo "Waiting for devices"
 		sleep 1
 	done
