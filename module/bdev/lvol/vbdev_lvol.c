@@ -378,24 +378,33 @@ _vbdev_lvs_remove_lvol_cb(void *cb_arg, int lvolerrno)
 	assert(false);
 }
 
+static bool
+_vbdev_lvs_are_lvols_closed(struct spdk_lvol_store *lvs)
+{
+	struct spdk_lvol *lvol;
+
+	TAILQ_FOREACH(lvol, &lvs->lvols, link) {
+		if (lvol->ref_count != 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
 static void
 _vbdev_lvs_remove_bdev_unregistered_cb(void *cb_arg, int bdeverrno)
 {
 	struct lvol_store_bdev *lvs_bdev = cb_arg;
 	struct spdk_lvol_store *lvs = lvs_bdev->lvs;
-	struct spdk_lvol *lvol, *tmp;
 
 	if (bdeverrno != 0) {
 		SPDK_DEBUGLOG(vbdev_lvol, "Lvol unregistered with errno %d\n", bdeverrno);
 	}
 
-	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-		if (lvol->ref_count != 0) {
-			/* An lvol is still open, don't unload whole lvol store. */
-			return;
-		}
+	/* Lvol store can be unloaded once all lvols are closed. */
+	if (_vbdev_lvs_are_lvols_closed(lvs)) {
+		spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 	}
-	spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 }
 
 static void
@@ -405,7 +414,6 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 	struct spdk_lvs_req *req;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_lvol *lvol, *tmp;
-	bool all_lvols_closed = true;
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 	if (!lvs_bdev) {
@@ -429,13 +437,7 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 	req->cb_arg = cb_arg;
 	lvs_bdev->req = req;
 
-	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-		if (lvol->ref_count != 0) {
-			all_lvols_closed = false;
-		}
-	}
-
-	if (all_lvols_closed == true) {
+	if (_vbdev_lvs_are_lvols_closed(lvs)) {
 		if (destroy) {
 			spdk_lvs_destroy(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 		} else {
