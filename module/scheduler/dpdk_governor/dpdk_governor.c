@@ -35,6 +35,7 @@
 #include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/scheduler.h"
 
 #include "spdk_internal/event.h"
 

@@ -39,6 +39,7 @@
 
 #include "spdk/thread.h"
 #include "spdk_internal/event.h"
+#include "spdk/scheduler.h"
 
 static uint32_t g_main_lcore;
 
@@ -224,7 +225,7 @@ init(void)
 {
 	g_main_lcore = spdk_env_get_current_core();
 
-	if (_spdk_governor_set("dpdk_governor") != 0) {
+	if (spdk_governor_set("dpdk_governor") != 0) {
 		SPDK_NOTICELOG("Unable to initialize dpdk governor\n");
 	}
 
@@ -242,8 +243,7 @@ deinit(void)
 {
 	free(g_cores);
 	g_cores = NULL;
-
-	_spdk_governor_set(NULL);
+	spdk_governor_set(NULL);
 }
 
 static void
@@ -312,7 +312,7 @@ balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 		}
 	}
 
-	governor = _spdk_governor_get();
+	governor = spdk_governor_get();
 	if (governor == NULL) {
 		return;
 	}

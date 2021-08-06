@@ -37,8 +37,9 @@
 #include "common/lib/test_env.c"
 #include "event/reactor.c"
 #include "spdk/thread.h"
+#include "spdk_internal/thread.h"
 #include "event/scheduler_static.c"
-#include "event/scheduler_dynamic.c"
+#include "../module/scheduler/scheduler_dynamic/scheduler_dynamic.c"
 
 struct spdk_thread *
 _spdk_get_app_thread(void)
@@ -576,7 +577,7 @@ test_scheduler(void)
 
 	CU_ASSERT(spdk_reactors_init() == 0);
 
-	_spdk_scheduler_set("dynamic");
+	spdk_scheduler_set("dynamic");
 
 	for (i = 0; i < 3; i++) {
 		spdk_cpuset_set_cpu(&g_reactor_core_mask, i, true);
@@ -794,13 +795,14 @@ test_governor(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	g_curr_freq = last_freq;
-	_spdk_governor_register(&governor);
+	spdk_governor_register(&governor);
 
 	allocate_cores(2);
 
 	CU_ASSERT(spdk_reactors_init() == 0);
 
-	_spdk_scheduler_set("dynamic");
+	spdk_scheduler_set("dynamic");
+	spdk_governor_set("dpdk_governor");
 
 	for (i = 0; i < 2; i++) {
 		spdk_cpuset_set_cpu(&g_reactor_core_mask, i, true);

@@ -34,15 +34,20 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 9
-SO_MINOR := 1
+DIRS-y = scheduler_dynamic
 
-CFLAGS += $(ENV_CFLAGS)
+# Do not compile schedulers and governors based on DPDK env
+# if non-DPDK env is used.
+ENV_NAME := $(notdir $(CONFIG_ENV))
+ifeq ($(ENV_NAME),env_dpdk)
+ifeq ($(OS),Linux)
+DIRS-y += dpdk_governor gscheduler
+endif
+endif
 
-LIBNAME = event
-C_SRCS = app.c reactor.c log_rpc.c \
-	 app_rpc.c scheduler_static.c
+.PHONY: all clean $(DIRS-y)
 
-SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_event.map)
+all: $(DIRS-y)
+clean: $(DIRS-y)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

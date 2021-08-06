@@ -38,6 +38,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/env.h"
+#include "spdk/scheduler.h"
 #include "spdk/thread.h"
 
 #include "spdk/log.h"
@@ -399,7 +400,8 @@ _rpc_framework_get_reactors(void *arg1, void *arg2)
 	spdk_json_write_named_uint64(ctx->w, "busy", reactor->busy_tsc);
 	spdk_json_write_named_uint64(ctx->w, "idle", reactor->idle_tsc);
 	spdk_json_write_named_bool(ctx->w, "in_interrupt", reactor->in_interrupt);
-	governor = _spdk_governor_get();
+
+	governor = spdk_governor_get();
 	if (governor != NULL) {
 		/* Governor returns core freqs in kHz, we want MHz. */
 		curr_core_freq = governor->get_core_curr_freq(current_core) / 1000;
@@ -491,10 +493,10 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.period != 0) {
-		_spdk_scheduler_set_period(req.period);
+		spdk_scheduler_set_period(req.period);
 	}
 
-	ret = _spdk_scheduler_set(req.name);
+	ret = spdk_scheduler_set(req.name);
 	if (ret) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 spdk_strerror(ret));
@@ -513,9 +515,9 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
-	struct spdk_scheduler *scheduler = _spdk_scheduler_get();
-	uint64_t scheduler_period = _spdk_scheduler_get_period();
-	struct spdk_governor *governor = _spdk_governor_get();
+	struct spdk_scheduler *scheduler = spdk_scheduler_get();
+	uint64_t scheduler_period = spdk_scheduler_get_period();
+	struct spdk_governor *governor = spdk_governor_get();
 
 	if (params) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,

@@ -31,18 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 9
-SO_MINOR := 1
+SO_VER := 1
+SO_MINOR := 0
 
-CFLAGS += $(ENV_CFLAGS)
+LIBNAME = scheduler_dynamic
+C_SRCS = scheduler_dynamic.c
 
-LIBNAME = event
-C_SRCS = app.c reactor.c log_rpc.c \
-	 app_rpc.c scheduler_static.c
-
-SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_event.map)
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

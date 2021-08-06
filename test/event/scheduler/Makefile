@@ -38,6 +38,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP = scheduler
 C_SRCS := scheduler.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev conf
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev conf event_scheduler
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

@@ -44,6 +44,7 @@
 #include "spdk/thread.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
+#include "spdk/scheduler.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
@@ -620,7 +621,6 @@ app_stop(void *arg1)
 
 	spdk_rpc_finish();
 	g_spdk_app.stopped = true;
-	_spdk_scheduler_set_period(0);
 	_start_subsystem_fini(NULL);
 }
 

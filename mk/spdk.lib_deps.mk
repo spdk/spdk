@@ -127,6 +127,15 @@ DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)
 DEPDIRS-sock_posix := log sock util
 DEPDIRS-sock_uring := log sock util
 
+# module/scheduler
+DEPDIRS-scheduler_dynamic := event log thread util
+ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
+ifeq ($(OS),Linux)
+DEPDIRS-scheduler_dpdk_governor := event log
+DEPDIRS-scheduler_gscheduler := event log
+endif
+endif
+
 # module/bdev
 DEPDIRS-bdev_gpt := bdev json log thread util
 
@@ -166,10 +175,12 @@ DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread
 
 DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock
 
+DEPDIRS-event_scheduler := event init
+
 DEPDIRS-event_nbd := init nbd event_bdev
-DEPDIRS-event_nvmf := init nvmf event_bdev event_sock thread log bdev util $(JSON_LIBS)
+DEPDIRS-event_nvmf := init nvmf event_bdev event_scheduler event_sock thread log bdev util $(JSON_LIBS)
 DEPDIRS-event_scsi := init scsi event_bdev
 
-DEPDIRS-event_iscsi := init iscsi event_scsi event_sock
-DEPDIRS-event_vhost := init vhost event_scsi
+DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock
+DEPDIRS-event_vhost := init vhost event_scheduler event_scsi
 DEPDIRS-event_sock := init sock

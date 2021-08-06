@@ -39,17 +39,18 @@
 
 #include "spdk/log.h"
 #include "spdk/env.h"
+#include "spdk/scheduler.h"
 
 static int
 init(void)
 {
-	return _spdk_governor_set("dpdk_governor");
+	return spdk_governor_set("dpdk_governor");
 }
 
 static void
 deinit(void)
 {
-	_spdk_governor_set(NULL);
+	spdk_governor_set(NULL);
 }
 
 static void
@@ -61,7 +62,7 @@ balance(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 	uint32_t i;
 	int rc;
 
-	governor = _spdk_governor_get();
+	governor = spdk_governor_get();
 	assert(governor != NULL);
 
 	/* Gather active/idle statistics */
@@ -79,29 +80,21 @@ balance(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 			if (rc < 0) {
 				SPDK_ERRLOG("setting to minimal frequency for core %u failed\n", core->lcore);
 			}
-
-			SPDK_DEBUGLOG(reactor, "setting to minimal frequency for core: %u\n", core->lcore);
 		} else if (core->total_idle_tsc > core->total_busy_tsc) {
 			rc = governor->core_freq_down(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("lowering frequency for core %u failed\n", core->lcore);
 			}
-
-			SPDK_DEBUGLOG(reactor, "lowering frequency for core: %u\n", core->lcore);
 		} else if (core->total_idle_tsc < (core->total_busy_tsc / 1000)) {
 			rc = governor->set_core_freq_max(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("setting to maximal frequency for core %u failed\n", core->lcore);
 			}
-
-			SPDK_DEBUGLOG(reactor, "setting to maximum frequency for core: %u\n", core->lcore);
 		} else {
 			rc = governor->core_freq_up(core->lcore);
 			if (rc < 0) {
 				SPDK_ERRLOG("increasing frequency for core %u failed\n", core->lcore);
 			}
-
-			SPDK_DEBUGLOG(reactor, "increasing frequency for core: %u\n", core->lcore);
 		}
 	}
 }

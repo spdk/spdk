@@ -32,34 +32,41 @@
  */
 
 #include "spdk/stdinc.h"
-#include "spdk/likely.h"
-#include "spdk/event.h"
-#include "spdk/log.h"
 #include "spdk/env.h"
 #include "spdk/scheduler.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/init.h"
 
-static int
-init_static(void)
+static void
+scheduler_subsystem_init(void)
 {
-	return 0;
+	int rc = 0;
+
+	/* Set the defaults */
+	if (spdk_scheduler_get() == NULL) {
+		rc = spdk_scheduler_set("static");
+	}
+	if (spdk_scheduler_get_period() == 0) {
+		spdk_scheduler_set_period(SPDK_SEC_TO_USEC);
+	}
+
+	spdk_subsystem_init_next(rc);
 }
 
 static void
-deinit_static(void)
+scheduler_subsystem_fini(void)
 {
+	spdk_scheduler_set_period(0);
+	spdk_scheduler_set(NULL);
+
+	spdk_subsystem_fini_next();
 }
 
-static void
-balance_static(struct spdk_scheduler_core_info *cores, uint32_t core_count)
-{
-}
-
-static struct spdk_scheduler scheduler = {
-	.name = "static",
-	.init = init_static,
-	.deinit = deinit_static,
-	.balance = balance_static,
+static struct spdk_subsystem g_spdk_subsystem_scheduler = {
+	.name = "scheduler",
+	.init = scheduler_subsystem_init,
+	.fini = scheduler_subsystem_fini,
 };
-SPDK_SCHEDULER_REGISTER(scheduler);
+
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_scheduler);

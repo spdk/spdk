@@ -40,6 +40,7 @@
 #include "spdk/thread.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/scheduler.h"
 #include "spdk/string.h"
 #include "spdk/fd_group.h"
 
@@ -69,7 +70,7 @@ TAILQ_HEAD(, spdk_scheduler) g_scheduler_list
 static struct spdk_scheduler *g_scheduler = NULL;
 static struct spdk_reactor *g_scheduling_reactor;
 bool g_scheduling_in_progress = false;
-static uint64_t g_scheduler_period;
+static uint64_t g_scheduler_period = 0;
 static uint32_t g_scheduler_core_number;
 static struct spdk_scheduler_core_info *g_core_infos = NULL;
 
@@ -96,7 +97,7 @@ _scheduler_find(const char *name)
 }
 
 int
-_spdk_scheduler_set(const char *name)
+spdk_scheduler_set(const char *name)
 {
 	struct spdk_scheduler *scheduler;
 	int rc = 0;
@@ -132,27 +133,27 @@ _spdk_scheduler_set(const char *name)
 }
 
 struct spdk_scheduler *
-_spdk_scheduler_get(void)
+spdk_scheduler_get(void)
 {
 	return g_scheduler;
 }
 
 uint64_t
-_spdk_scheduler_get_period(void)
+spdk_scheduler_get_period(void)
 {
 	/* Convert from ticks to microseconds */
 	return (g_scheduler_period * SPDK_SEC_TO_USEC / spdk_get_ticks_hz());
 }
 
 void
-_spdk_scheduler_set_period(uint64_t period)
+spdk_scheduler_set_period(uint64_t period)
 {
 	/* Convert microseconds to ticks */
 	g_scheduler_period = period * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 }
 
 void
-_spdk_scheduler_register(struct spdk_scheduler *scheduler)
+spdk_scheduler_register(struct spdk_scheduler *scheduler)
 {
 	if (_scheduler_find(scheduler->name)) {
 		SPDK_ERRLOG("scheduler named '%s' already registered.\n", scheduler->name);
@@ -281,12 +282,6 @@ spdk_reactors_init(void)
 	assert(reactor != NULL);
 	g_scheduling_reactor = reactor;
 
-	/* set default scheduling period to one second */
-	g_scheduler_period = spdk_get_ticks_hz();
-
-	rc = _spdk_scheduler_set("static");
-	assert(rc == 0);
-
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
 
 	return 0;
@@ -301,8 +296,6 @@ spdk_reactors_fini(void)
 	if (g_reactor_state == SPDK_REACTOR_STATE_UNINITIALIZED) {
 		return;
 	}
-
-	_spdk_scheduler_set(NULL);
 
 	spdk_thread_lib_fini();
 
@@ -767,7 +760,7 @@ _reactors_scheduler_cancel(void *arg1, void *arg2)
 static void
 _reactors_scheduler_balance(void *arg1, void *arg2)
 {
-	struct spdk_scheduler *scheduler = _spdk_scheduler_get();
+	struct spdk_scheduler *scheduler = spdk_scheduler_get();
 
 	if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING || scheduler == NULL) {
 		_reactors_scheduler_cancel(NULL, NULL);
@@ -1493,7 +1486,7 @@ _governor_find(const char *name)
 }
 
 int
-_spdk_governor_set(const char *name)
+spdk_governor_set(const char *name)
 {
 	struct spdk_governor *governor;
 	int rc = 0;
@@ -1528,13 +1521,13 @@ _spdk_governor_set(const char *name)
 }
 
 struct spdk_governor *
-_spdk_governor_get(void)
+spdk_governor_get(void)
 {
 	return g_governor;
 }
 
 void
-_spdk_governor_register(struct spdk_governor *governor)
+spdk_governor_register(struct spdk_governor *governor)
 {
 	if (_governor_find(governor->name)) {
 		SPDK_ERRLOG("governor named '%s' already registered.\n", governor->name);

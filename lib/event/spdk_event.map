@@ -17,6 +17,16 @@
 	spdk_framework_enable_context_switch_monitor;
 	spdk_framework_context_switch_monitor_enabled;
 
+	# Public scheduler functions
+	spdk_scheduler_set;
+	spdk_scheduler_get;
+	spdk_scheduler_register;
+	spdk_scheduler_set_period;
+	spdk_scheduler_get_period;
+	spdk_governor_set;
+	spdk_governor_get;
+	spdk_governor_register;
+
 	# Functions used by other SPDK libraries
 	spdk_reactors_init;
 	spdk_reactors_fini;

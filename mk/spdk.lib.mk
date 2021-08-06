@@ -88,6 +88,7 @@ endif
 MODULES-bdev = spdk_bdev_modules
 MODULES-sock = spdk_sock_modules
 MODULES-accel = spdk_accel_modules
+MODULES-scheduler = spdk_scheduler_modules
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 MODULES-event = spdk_env_dpdk_rpc
 endif
