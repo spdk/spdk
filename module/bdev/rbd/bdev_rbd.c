@@ -74,6 +74,7 @@ struct bdev_rbd {
 	rbd_image_info_t info;
 	pthread_mutex_t mutex;
 	struct spdk_thread *main_td;
+	struct spdk_thread *destruct_td;
 	uint32_t ch_count;
 	struct bdev_rbd_group_channel *group_ch;
 
@@ -496,14 +497,28 @@ bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_rbd_free_cb(void *io_device)
+_bdev_rbd_destruct_done(void *io_device)
 {
 	struct bdev_rbd *rbd = io_device;
 
 	assert(rbd != NULL);
 	assert(rbd->ch_count == 0);
 
+	spdk_bdev_destruct_done(&rbd->disk, 0);
 	bdev_rbd_free(rbd);
+}
+
+static void
+bdev_rbd_free_cb(void *io_device)
+{
+	struct bdev_rbd *rbd = io_device;
+
+	/* The io device has been unregistered.  Send a message back to the
+	 * original thread that started the destruct operation, so that the
+	 * bdev unregister callback is invoked on the same thread that started
+	 * this whole process.
+	 */
+	spdk_thread_send_msg(rbd->destruct_td, _bdev_rbd_destruct_done, rbd);
 }
 
 static void
@@ -534,9 +549,12 @@ bdev_rbd_destruct(void *ctx)
 	 * from the main thread, in case there are pending
 	 * channel delete messages in flight to this thread.
 	 */
+	assert(rbd->destruct_td == NULL);
+	rbd->destruct_td = td;
 	spdk_thread_send_msg(td, _bdev_rbd_destruct, rbd);
 
-	return 0;
+	/* Return 1 to indicate the destruct path is asynchronous. */
+	return 1;
 }
 
 static void
