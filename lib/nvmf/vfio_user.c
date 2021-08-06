@@ -677,7 +677,7 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	sq = &ctrlr->qp[0]->sq;
 	sq->size = regs->aqa.bits.asqs + 1;
 	sq->prp1 = regs->asq;
-	sq->head = ctrlr->doorbells[0] = 0;
+	sq->head = 0;
 	sq->cqid = 0;
 	sq->is_cq = false;
 
