@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -246,6 +247,12 @@ struct spdk_bdev_fn_table {
 
 	/** Get bdev module context. */
 	void *(*get_module_ctx)(void *ctx);
+
+	/** Get memory domains used by bdev. Optional - may be NULL.
+	 * Vbdev module implementation should call \ref spdk_bdev_get_memory_domains for underlying bdev.
+	 * Vbdev module must inspect types of memory domains returned by base bdev and report only those
+	 * memory domains that it can work with. */
+	int (*get_memory_domains)(void *ctx, struct spdk_memory_domain **domains, int array_size);
 };
 
 /** bdev I/O completion status */

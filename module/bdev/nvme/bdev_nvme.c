@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1226,6 +1227,24 @@ _nvme_ana_state_str(enum spdk_nvme_ana_state ana_state)
 }
 
 static int
+bdev_nvme_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
+{
+	struct nvme_bdev *nbdev = ctx;
+	struct spdk_memory_domain *domain;
+
+	domain = spdk_nvme_ctrlr_get_memory_domain(nbdev->nvme_ns->ctrlr->ctrlr);
+
+	if (domain) {
+		if (array_size > 0 && domains) {
+			domains[0] = domain;
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
@@ -1383,6 +1402,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.write_config_json	= bdev_nvme_write_config_json,
 	.get_spin_time		= bdev_nvme_get_spin_time,
 	.get_module_ctx		= bdev_nvme_get_module_ctx,
+	.get_memory_domains	= bdev_nvme_get_memory_domains,
 };
 
 typedef int (*bdev_nvme_parse_ana_log_page_cb)(

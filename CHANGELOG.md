@@ -2,6 +2,10 @@
 
 ## v21.10: (Upcoming Release)
 
+### bdev
+
+New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.
+
 ### dma
 
 A new library, lib/dma, has been added. This library provides the necessary infrastructure for

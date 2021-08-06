@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -72,6 +73,15 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_flags, uint64_t, (struct spdk_nvme_ctrlr *ctrlr)
 
 DEFINE_STUB(accel_engine_create_cb, int, (void *io_device, void *ctx_buf), 0);
 DEFINE_STUB_V(accel_engine_destroy_cb, (void *io_device, void *ctx_buf));
+
+DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domain, struct spdk_memory_domain *);
+
+struct spdk_memory_domain *spdk_nvme_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	HANDLE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domain);
+
+	return NULL;
+}
 
 struct spdk_io_channel *
 spdk_accel_engine_get_io_channel(void)
@@ -2541,6 +2551,40 @@ fini_accel(void)
 	spdk_io_device_unregister(g_accel_p, NULL);
 }
 
+static void
+test_get_memory_domains(void)
+{
+	struct nvme_ctrlr ctrlr = { .ctrlr = (struct spdk_nvme_ctrlr *) 0xbaadbeef };
+	struct nvme_ns ns = { .ctrlr = &ctrlr };
+	struct nvme_bdev nbdev = { .nvme_ns = &ns };
+	struct spdk_memory_domain *domain = (struct spdk_memory_domain *) 0xf00df00d;
+	struct spdk_memory_domain *domains[2] = {};
+	int rc = 0;
+
+	/* nvme controller doesn't have a memory domain */
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domain, NULL);
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 2);
+	CU_ASSERT(rc == 0)
+
+	/* nvme controller has a memory domain but array size is insufficient */
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domain, domain);
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 0);
+	CU_ASSERT(rc == 1);
+
+	/* nvme controller has a memory domain but domains array is NULL */
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domain, domain);
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 0);
+	CU_ASSERT(rc == 1);
+
+	/* nvme controller has a memory domain */
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domain, domain);
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 1);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(domains[0] == domain);
+
+	MOCK_CLEAR(spdk_nvme_ctrlr_get_memory_domain);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -2567,6 +2611,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_bdev_unregister);
 	CU_ADD_TEST(suite, test_compare_ns);
 	CU_ADD_TEST(suite, test_init_ana_log_page);
+	CU_ADD_TEST(suite, test_get_memory_domains);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

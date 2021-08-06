@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -7004,6 +7005,21 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_unlock_lba_range_get_channel, ctx,
 			      bdev_unlock_lba_range_cb);
+	return 0;
+}
+
+int
+spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain **domains,
+			     int array_size)
+{
+	if (!bdev) {
+		return -EINVAL;
+	}
+
+	if (bdev->fn_table->get_memory_domains) {
+		return bdev->fn_table->get_memory_domains(bdev->ctxt, domains, array_size);
+	}
+
 	return 0;
 }
 

@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -79,6 +80,9 @@ struct spdk_bdev_media_event {
  * This is a virtual representation of a block device that is exported by the backend.
  */
 struct spdk_bdev;
+
+/** Forward declaration of spdk memory domain */
+struct spdk_memory_domain;
 
 /**
  * Block device remove callback.
@@ -1747,6 +1751,25 @@ void spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data 
  */
 size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
 				  struct spdk_bdev_media_event *events, size_t max_events);
+
+/**
+ * Get SPDK memory domains used by the given bdev. If bdev reports that it uses memory domains
+ * that means that it can work with data buffers located in those memory domains.
+ *
+ * The user can call this function with \b domains set to NULL and \b array_size set to 0 to get the
+ * number of memory domains used by bdev
+ *
+ * \param bdev Block device
+ * \param domains Pointer to an array of memory domains to be filled by this function. The user should allocate big enough
+ * array to keep all memory domains used by bdev and all underlying bdevs
+ * \param array_size size of \b domains array
+ * \return the number of entries in \b domains array or negated errno. If returned value is bigger than \b array_size passed by the user
+ * then the user should increase the size of \b domains array and call this function again. There is no guarantees that
+ * the content of \b domains array is valid in that case.
+ *         -EINVAL if input parameters were invalid
+ */
+int spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain **domains,
+				 int array_size);
 
 #ifdef __cplusplus
 }

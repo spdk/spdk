@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -4771,6 +4772,52 @@ bdev_multi_allocation(void)
 	}
 }
 
+static struct spdk_memory_domain *g_bdev_memory_domain = (struct spdk_memory_domain *) 0xf00df00d;
+
+static int
+test_bdev_get_supported_dma_device_types_op(void *ctx, struct spdk_memory_domain **domains,
+		int array_size)
+{
+	if (array_size > 0 && domains) {
+		domains[0] = g_bdev_memory_domain;
+	}
+
+	return 1;
+}
+
+static void
+bdev_get_memory_domains(void)
+{
+	struct spdk_bdev_fn_table fn_table = {
+		.get_memory_domains = test_bdev_get_supported_dma_device_types_op
+	};
+	struct spdk_bdev bdev = { .fn_table = &fn_table };
+	struct spdk_memory_domain *domains[2] = {};
+	int rc;
+
+	/* bdev is NULL */
+	rc = spdk_bdev_get_memory_domains(NULL, domains, 2);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* domains is NULL */
+	rc = spdk_bdev_get_memory_domains(&bdev, NULL, 2);
+	CU_ASSERT(rc == 1);
+
+	/* array size is 0 */
+	rc = spdk_bdev_get_memory_domains(&bdev, domains, 0);
+	CU_ASSERT(rc == 1);
+
+	/* get_supported_dma_device_types op is set */
+	rc = spdk_bdev_get_memory_domains(&bdev, domains, 2);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(domains[0] == g_bdev_memory_domain);
+
+	/* get_supported_dma_device_types op is not set */
+	fn_table.get_memory_domains = NULL;
+	rc = spdk_bdev_get_memory_domains(&bdev, domains, 2);
+	CU_ASSERT(rc == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4816,6 +4863,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_write_zeroes_split_test);
 	CU_ADD_TEST(suite, bdev_set_options_test);
 	CU_ADD_TEST(suite, bdev_multi_allocation);
+	CU_ADD_TEST(suite, bdev_get_memory_domains);
 
 	allocate_cores(1);
 	allocate_threads(1);

@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -551,6 +552,15 @@ vbdev_passthru_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_
 	/* No config per bdev needed */
 }
 
+static int
+vbdev_passthru_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
+{
+	struct vbdev_passthru *pt_node = (struct vbdev_passthru *)ctx;
+
+	/* Passthru bdev doesn't work with data buffers, so it supports any memory domain used by base_bdev */
+	return spdk_bdev_get_memory_domains(pt_node->base_bdev, domains, array_size);
+}
+
 /* When we register our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.destruct		= vbdev_passthru_destruct,
@@ -559,6 +569,7 @@ static const struct spdk_bdev_fn_table vbdev_passthru_fn_table = {
 	.get_io_channel		= vbdev_passthru_get_io_channel,
 	.dump_info_json		= vbdev_passthru_dump_info_json,
 	.write_config_json	= vbdev_passthru_write_config_json,
+	.get_memory_domains	= vbdev_passthru_get_memory_domains,
 };
 
 static void
