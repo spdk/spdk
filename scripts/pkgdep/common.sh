@@ -79,9 +79,30 @@ install_spdk_bash_completion() {
 	fi
 }
 
+install_markdownlint() {
+	local git_repo_mdl="https://github.com/markdownlint/markdownlint.git"
+	local mdl_version="v0.11.0"
+	if [ ! -d /usr/src/markdownlint ]; then
+		sudo -E git clone --branch "$mdl_version" "$git_repo_mdl" "/usr/src/markdownlint"
+		(
+			cd /usr/src/markdownlint
+			if ! hash rake; then
+				sudo -E gem install rake
+			fi
+			if ! hash bundler; then
+				sudo -E gem install bundler
+			fi
+			sudo -E rake install
+		)
+	else
+		echo "Markdown lint tool already in /usr/src/markdownlint. Not installing"
+	fi
+}
+
 if [[ $INSTALL_DEV_TOOLS == true ]]; then
 	install_shfmt
 	install_spdk_bash_completion
+	install_markdownlint
 fi
 
 if [[ $INSTALL_LIBURING == true ]]; then

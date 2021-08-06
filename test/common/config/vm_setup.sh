@@ -29,7 +29,7 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 
 UPGRADE=false
 INSTALL=false
-CONF="rocksdb,fio,flamegraph,tsocks,qemu,libiscsi,nvmecli,qat,spdk,refspdk,vagrant,igb_uio,ice,markdownlint"
+CONF="rocksdb,fio,flamegraph,tsocks,qemu,libiscsi,nvmecli,qat,spdk,refspdk,vagrant,igb_uio,ice"
 package_manager=
 
 function pre_install() { :; }
