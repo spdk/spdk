@@ -102,6 +102,14 @@ void spdk_log_set_level(enum spdk_log_level level);
 enum spdk_log_level spdk_log_get_level(void);
 
 /**
+ * Get syslog level based on SPDK current log level threshold.
+ *
+ * \param level Log level threshold
+ * \return -1 for disable log print, otherwise is syslog level.
+ */
+int spdk_log_to_syslog_level(enum spdk_log_level level);
+
+/**
  * Set the current log level threshold for printing to stderr.
  * Messages with a level less than or equal to this level
  * are also printed to stderr. You can use \c SPDK_LOG_DISABLED to completely

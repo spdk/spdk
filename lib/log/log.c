@@ -111,6 +111,28 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 	va_end(ap);
 }
 
+int
+spdk_log_to_syslog_level(enum spdk_log_level level)
+{
+	switch (level) {
+	case SPDK_LOG_DEBUG:
+	case SPDK_LOG_INFO:
+		return LOG_INFO;
+	case SPDK_LOG_NOTICE:
+		return LOG_NOTICE;
+	case SPDK_LOG_WARN:
+		return LOG_WARNING;
+	case SPDK_LOG_ERROR:
+		return LOG_ERR;
+	case SPDK_LOG_DISABLED:
+		return -1;
+	default:
+		break;
+	}
+
+	return LOG_INFO;
+}
+
 void
 spdk_vlog(enum spdk_log_level level, const char *file, const int line, const char *func,
 	  const char *format, va_list ap)
@@ -128,21 +150,8 @@ spdk_vlog(enum spdk_log_level level, const char *file, const int line, const cha
 		return;
 	}
 
-	switch (level) {
-	case SPDK_LOG_ERROR:
-		severity = LOG_ERR;
-		break;
-	case SPDK_LOG_WARN:
-		severity = LOG_WARNING;
-		break;
-	case SPDK_LOG_NOTICE:
-		severity = LOG_NOTICE;
-		break;
-	case SPDK_LOG_INFO:
-	case SPDK_LOG_DEBUG:
-		severity = LOG_INFO;
-		break;
-	case SPDK_LOG_DISABLED:
+	severity = spdk_log_to_syslog_level(level);
+	if (severity < 0) {
 		return;
 	}
 

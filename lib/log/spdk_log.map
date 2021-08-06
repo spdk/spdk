@@ -6,6 +6,7 @@
 	spdk_log_close;
 	spdk_log_set_level;
 	spdk_log_get_level;
+	spdk_log_to_syslog_level;
 	spdk_log_set_print_level;
 	spdk_log_get_print_level;
 	spdk_log;

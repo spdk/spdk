@@ -2,6 +2,11 @@
 
 ## v21.10: (Upcoming Release)
 
+### log
+
+Added API `spdk_log_to_syslog_level` to return syslog level based on SPDK's
+log level.
+
 ## v21.07:
 
 ### accel_fw
