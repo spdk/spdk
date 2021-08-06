@@ -401,10 +401,19 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 	if (opts->env_context) {
-		args = push_arg(args, &argcount, strdup(opts->env_context));
-		if (args == NULL) {
-			return -1;
+		char *ptr = strdup(opts->env_context);
+		char *tok = strtok(ptr, " \t");
+
+		/* DPDK expects each argument as a separate string in the argv
+		 * array, so we need to tokenize here in case the caller
+		 * passed multiple arguments in the env_context string.
+		 */
+		while (tok != NULL) {
+			args = push_arg(args, &argcount, strdup(tok));
+			tok = strtok(NULL, " \t");
 		}
+
+		free(ptr);
 	}
 
 #ifdef __linux__
