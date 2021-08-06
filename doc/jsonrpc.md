@@ -6343,6 +6343,7 @@ nguid                   | Optional | string      | 16-byte namespace globally un
 eui64                   | Optional | string      | 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789")
 uuid                    | Optional | string      | RFC 4122 UUID (e.g. "ceccf520-691e-4b46-9546-34af789907c5")
 ptpl_file               | Optional | string      | File path to save/restore persistent reservation information
+anagrpid                | Optional | number      | ANA group ID. Default: Namespace ID.
 
 #### Example
 

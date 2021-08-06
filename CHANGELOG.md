@@ -11,6 +11,8 @@ An `opts_size` element was added in the `spdk_nvmf_ns_opts` structure to solve t
 ABI compatibility issue between different SPDK version. An new option `anagrpid` was
 added in the `spdk_nvmf_ns_opts` structure.
 
+An new parameter `anagrpid` was added to the RPC `nvmf_subsystem_add_ns`.
+
 ### bdev
 
 New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.

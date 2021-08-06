@@ -332,7 +332,16 @@ def nvmf_subsystem_listener_set_ana_state(
     return client.call('nvmf_subsystem_listener_set_ana_state', params)
 
 
-def nvmf_subsystem_add_ns(client, nqn, bdev_name, tgt_name=None, ptpl_file=None, nsid=None, nguid=None, eui64=None, uuid=None):
+def nvmf_subsystem_add_ns(client,
+                          nqn,
+                          bdev_name,
+                          tgt_name=None,
+                          ptpl_file=None,
+                          nsid=None,
+                          nguid=None,
+                          eui64=None,
+                          uuid=None,
+                          anagrpid=None):
     """Add a namespace to a subsystem.
 
     Args:
@@ -343,6 +352,7 @@ def nvmf_subsystem_add_ns(client, nqn, bdev_name, tgt_name=None, ptpl_file=None,
         nguid: 16-byte namespace globally unique identifier in hexadecimal (optional).
         eui64: 8-byte namespace EUI-64 in hexadecimal (e.g. "ABCDEF0123456789") (optional).
         uuid: Namespace UUID (optional).
+        anagrpid: ANA group ID (optional).
 
     Returns:
         The namespace ID
@@ -363,6 +373,9 @@ def nvmf_subsystem_add_ns(client, nqn, bdev_name, tgt_name=None, ptpl_file=None,
 
     if uuid:
         ns['uuid'] = uuid
+
+    if anagrpid:
+        ns['anagrpid'] = anagrpid
 
     params = {'nqn': nqn,
               'namespace': ns}
