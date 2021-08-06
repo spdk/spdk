@@ -2518,7 +2518,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		}
 	} else {
 		fprintf(stderr,
-			"-o (--io-pattern) io pattern type must be one of\n"
+			"-w (--io-pattern) io pattern type must be one of\n"
 			"(read, write, randread, randwrite, rw, randrw)\n");
 		return 1;
 	}
