@@ -452,21 +452,21 @@ ctrlr_id(struct nvmf_vfio_user_ctrlr *ctrlr)
 	return endpoint_id(ctrlr->endpoint);
 }
 
-static uint16_t
+static inline uint16_t
 io_q_id(struct nvme_q *q)
 {
 
-	struct nvmf_vfio_user_qpair *vfio_user_qpair;
+	struct nvmf_vfio_user_qpair *vu_qpair;
 
 	assert(q);
 
 	if (q->is_cq) {
-		vfio_user_qpair = SPDK_CONTAINEROF(q, struct nvmf_vfio_user_qpair, cq);
+		vu_qpair = SPDK_CONTAINEROF(q, struct nvmf_vfio_user_qpair, cq);
 	} else {
-		vfio_user_qpair = SPDK_CONTAINEROF(q, struct nvmf_vfio_user_qpair, sq);
+		vu_qpair = SPDK_CONTAINEROF(q, struct nvmf_vfio_user_qpair, sq);
 	}
-	assert(vfio_user_qpair);
-	return vfio_user_qpair->qpair.qid;
+	assert(vu_qpair);
+	return vu_qpair->qpair.qid;
 }
 
 static void
