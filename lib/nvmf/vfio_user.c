@@ -2579,22 +2579,30 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 	uint32_t len = 0;
 	int iovcnt;
 
-	req->xfer = cmd->opc & 0x3;
+	req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
 	req->length = 0;
 	req->data = NULL;
 
-	switch (cmd->opc) {
-	case SPDK_NVME_OPC_IDENTIFY:
-		len = 4096; /* TODO: there should be a define somewhere for this */
-		break;
-	case SPDK_NVME_OPC_GET_LOG_PAGE:
-		len = (cmd->cdw10_bits.get_log_page.numdl + 1) * 4;
-		break;
-	}
-
-	if (!cmd->dptr.prp.prp1 || !len) {
+	if (req->xfer == SPDK_NVME_DATA_NONE) {
 		return 0;
 	}
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_IDENTIFY:
+		len = 4096;
+		break;
+	case SPDK_NVME_OPC_GET_LOG_PAGE:
+		len = (((cmd->cdw11_bits.get_log_page.numdu << 16) | cmd->cdw10_bits.get_log_page.numdl) + 1) * 4;
+		break;
+	default:
+		/*
+		 * CREATE IO SQ/CQ are processed separately in handle_create_io_q().
+		 * GET/SET FEATURES: no need to support Host Identifier for vfio-user transport.
+		 * Let the NVMf library to decide other commands.
+		 */
+		return 0;
+	}
+
 	/* ADMIN command will not use SGL */
 	assert(req->cmd->nvme_cmd.psdt == 0);
 	iovcnt = vfio_user_map_cmd(ctrlr, req, req->iov, len);
@@ -2603,9 +2611,9 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 			    ctrlr_id(ctrlr), cmd->opc);
 		return -1;
 	}
-
 	req->length = len;
 	req->data = req->iov[0].iov_base;
+	req->iovcnt = iovcnt;
 
 	return 0;
 }
