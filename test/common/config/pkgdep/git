@@ -67,6 +67,7 @@ function install_refspdk() {
 		SPDK_TEST_NVME_CUSE=1
 		SPDK_TEST_BLOBFS=1
 		SPDK_TEST_URING=1
+		SPDK_TEST_VFIOUSER=1
 	EOF
 
 	mkdir -p $HOME/output
