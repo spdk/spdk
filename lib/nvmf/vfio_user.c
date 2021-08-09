@@ -2628,7 +2628,7 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 static int
 map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req)
 {
-	int err = 0;
+	int len, iovcnt;
 	struct spdk_nvme_cmd *cmd;
 
 	assert(ctrlr != NULL);
@@ -2636,25 +2636,26 @@ map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req
 
 	cmd = &req->cmd->nvme_cmd;
 	req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
+	req->length = 0;
+	req->data = NULL;
 
 	if (spdk_unlikely(req->xfer == SPDK_NVME_DATA_NONE)) {
 		return 0;
 	}
 
-	err = get_nvmf_io_req_length(req);
-	if (err < 0) {
+	len = get_nvmf_io_req_length(req);
+	if (len < 0) {
 		return -EINVAL;
 	}
+	req->length = len;
 
-	req->length = err;
-	err = vfio_user_map_cmd(ctrlr, req, req->iov, req->length);
-	if (err < 0) {
+	iovcnt = vfio_user_map_cmd(ctrlr, req, req->iov, req->length);
+	if (iovcnt < 0) {
 		SPDK_ERRLOG("%s: failed to map IO OPC %u\n", ctrlr_id(ctrlr), cmd->opc);
 		return -EFAULT;
 	}
-
 	req->data = req->iov[0].iov_base;
-	req->iovcnt = err;
+	req->iovcnt = iovcnt;
 
 	return 0;
 }
@@ -2678,19 +2679,29 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	if (spdk_unlikely(req == NULL)) {
 		return -1;
 	}
-
 	vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
 	vu_req->cb_fn = handle_cmd_rsp;
 	vu_req->cb_arg = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
 	req->cmd->nvme_cmd = *cmd;
+
 	if (nvmf_qpair_is_admin_queue(req->qpair)) {
 		err = map_admin_cmd_req(ctrlr, req);
 	} else {
-		err = map_io_cmd_req(ctrlr, req);
+		switch (cmd->opc) {
+		case SPDK_NVME_OPC_RESERVATION_REGISTER:
+		case SPDK_NVME_OPC_RESERVATION_REPORT:
+		case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+		case SPDK_NVME_OPC_RESERVATION_RELEASE:
+			err = -ENOTSUP;
+			break;
+		default:
+			err = map_io_cmd_req(ctrlr, req);
+			break;
+		}
 	}
 
 	if (spdk_unlikely(err < 0)) {
-		SPDK_ERRLOG("%s: map NVMe command opc 0x%x failed\n",
+		SPDK_ERRLOG("%s: process NVMe command opc 0x%x failed\n",
 			    ctrlr_id(ctrlr), cmd->opc);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
