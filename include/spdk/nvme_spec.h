@@ -1856,6 +1856,20 @@ struct spdk_nvme_cdata_sgls {
 	uint32_t	reserved2 : 10;
 };
 
+/** Identify Controller data Optional NVM Command Support */
+struct spdk_nvme_cdata_oncs {
+	uint16_t	compare : 1;
+	uint16_t	write_unc : 1;
+	uint16_t	dsm: 1;
+	uint16_t	write_zeroes: 1;
+	uint16_t	set_features_save: 1;
+	uint16_t	reservations: 1;
+	uint16_t	timestamp: 1;
+	uint16_t	verify: 1;
+	uint16_t	copy: 1;
+	uint16_t	reserved9: 7;
+};
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -2175,18 +2189,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	uint32_t		nn;
 
 	/** optional nvm command support */
-	struct {
-		uint16_t	compare : 1;
-		uint16_t	write_unc : 1;
-		uint16_t	dsm: 1;
-		uint16_t	write_zeroes: 1;
-		uint16_t	set_features_save: 1;
-		uint16_t	reservations: 1;
-		uint16_t	timestamp: 1;
-		uint16_t	verify: 1;
-		uint16_t	copy: 1;
-		uint16_t	reserved9: 7;
-	} oncs;
+	struct spdk_nvme_cdata_oncs oncs;
 
 	/** fused operation support */
 	struct {
