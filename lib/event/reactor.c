@@ -429,6 +429,11 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		return -EINVAL;
 	}
 
+	/* Eventfd has to be supported in order to use interrupt functionality. */
+	if (target->fgrp == NULL) {
+		return -ENOTSUP;
+	}
+
 	if (spdk_get_thread() != _spdk_get_app_thread()) {
 		SPDK_ERRLOG("It is only permitted within spdk application thread.\n");
 		return -EPERM;

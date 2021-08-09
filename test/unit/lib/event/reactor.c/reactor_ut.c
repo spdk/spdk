@@ -883,7 +883,9 @@ test_governor(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 	_reactors_scheduler_gather_metrics(NULL, NULL);
 
-	CU_ASSERT(_run_events_till_completion(2) == 6);
+	i = _run_events_till_completion(2);
+	/* Six runs when interrupt mode is supported, two if not. */
+	CU_ASSERT(i == 6 || i == 2);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	/* Main core should be busy more than 50% time now - frequency should be raised */
@@ -906,7 +908,9 @@ test_governor(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 	_reactors_scheduler_gather_metrics(NULL, NULL);
 
-	CU_ASSERT(_run_events_till_completion(2) == 6);
+	i = _run_events_till_completion(2);
+	/* Six runs when interrupt mode is supported, two if not. */
+	CU_ASSERT(i == 6 || i == 2);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	for (i = 0; i < 2; i++) {
