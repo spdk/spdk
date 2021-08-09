@@ -299,6 +299,7 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 		      struct spdk_nvmf_ctrlr_data *cdata)
 {
 	cdata->kas = KAS_DEFAULT_VALUE;
+	cdata->oncs.reservations = 1;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
@@ -2406,7 +2407,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
-		cdata->oncs.reservations = 1;
+		cdata->oncs.reservations = ctrlr->cdata.oncs.reservations;
 		if (subsystem->flags.ana_reporting) {
 			cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;
 			/* ANA Change state is not used, and ANA Persistent Loss state

@@ -2,6 +2,11 @@
 
 ## v21.10: (Upcoming Release)
 
+### nvmf
+
+Added `oncs` to `struct spdk_nvmf_ctrlr_data` so that the transport layer
+can decide support RESERVATION feature or not.
+
 ### bdev
 
 New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.

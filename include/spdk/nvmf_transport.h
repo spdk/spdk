@@ -200,6 +200,7 @@ struct spdk_nvmf_listener {
  */
 struct spdk_nvmf_ctrlr_data {
 	uint16_t kas;
+	struct spdk_nvme_cdata_oncs oncs;
 	struct spdk_nvme_cdata_sgls sgls;
 	struct spdk_nvme_cdata_nvmf_specific nvmf_specific;
 };

@@ -2113,6 +2113,8 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 {
 	memset(&cdata->sgls, 0, sizeof(struct spdk_nvme_cdata_sgls));
 	cdata->sgls.supported = SPDK_NVME_SGLS_SUPPORTED_DWORD_ALIGNED;
+	/* libvfio-user can only support 1 connection for now */
+	cdata->oncs.reservations = 0;
 }
 
 static int
