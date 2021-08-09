@@ -481,15 +481,15 @@ fail_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	ctrlr->cfs = 1U;
 }
 
-static bool
-ctrlr_interrupt_enabled(struct nvmf_vfio_user_ctrlr *ctrlr)
+static inline bool
+ctrlr_interrupt_enabled(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 {
-	assert(ctrlr != NULL);
-	assert(ctrlr->endpoint != NULL);
+	assert(vu_ctrlr != NULL);
+	assert(vu_ctrlr->endpoint != NULL);
 
-	vfu_pci_config_space_t *pci = ctrlr->endpoint->pci_config_space;
+	vfu_pci_config_space_t *pci = vu_ctrlr->endpoint->pci_config_space;
 
-	return (!pci->hdr.cmd.id || ctrlr->endpoint->msix->mxc.mxe);
+	return (!pci->hdr.cmd.id || vu_ctrlr->endpoint->msix->mxc.mxe);
 }
 
 static void
