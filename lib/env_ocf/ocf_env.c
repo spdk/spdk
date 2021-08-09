@@ -55,7 +55,11 @@ env_allocator_new(env_allocator *allocator)
 {
 	void *mem = spdk_mempool_get(allocator->mempool);
 
-	if (spdk_likely(mem)) {
+	if (spdk_unlikely(!mem)) {
+		return NULL;
+	}
+
+	if (allocator->zero) {
 		memset(mem, 0, allocator->element_size);
 	}
 
@@ -63,13 +67,13 @@ env_allocator_new(env_allocator *allocator)
 }
 
 env_allocator *
-env_allocator_create(uint32_t size, const char *name)
+env_allocator_create(uint32_t size, const char *name, bool zero)
 {
-	return env_allocator_create_extended(size, name, -1);
+	return env_allocator_create_extended(size, name, -1, zero);
 }
 
 env_allocator *
-env_allocator_create_extended(uint32_t size, const char *name, int limit)
+env_allocator_create_extended(uint32_t size, const char *name, int limit, bool zero)
 {
 	env_allocator *allocator;
 	char qualified_name[128] = {0};
@@ -94,6 +98,7 @@ env_allocator_create_extended(uint32_t size, const char *name, int limit)
 
 	allocator->element_size = size;
 	allocator->element_count = GET_ELEMENTS_COUNT(limit);
+	allocator->zero = zero;
 
 	return allocator;
 }

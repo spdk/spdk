@@ -1105,7 +1105,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	vbdev_ocf_cache_ctx_get(vbdev->cache_ctx);
 	pthread_mutex_init(&vbdev->cache_ctx->lock, NULL);
 
-	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
+	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Could not start cache %s: %d\n", vbdev->name, rc);
 		vbdev_ocf_mngt_exit(vbdev, unregister_path_dirty, rc);
