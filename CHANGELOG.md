@@ -48,7 +48,7 @@ can't be accessed directly.
 
 Updated DPDK submodule to DPDK 21.08.
 
-## v21.07:
+## v21.07
 
 ### accel_fw
 
@@ -237,7 +237,7 @@ Added zipf random number generator with power law probability distribution.
 When applied to performance testing of block devices, it will select blocks over
 the full range of LBAs, but will more frequently select lower-numbered LBAs.
 
-## v21.04:
+## v21.04
 
 ### accel
 
@@ -449,7 +449,7 @@ into or out of interrupt mode.
 
 Added the `bdev_virtio_blk_set_hotplug` RPC for the virtio blk pci device.
 
-## v21.01:
+## v21.01
 
 ### bdev
 
@@ -630,7 +630,7 @@ into `bdev_set_options` function.
 Added optional `packed_ring_recovery` parameter to `vhost_create_blk_controller` RPC
 enabling packed ring live recovery.
 
-## v20.10:
+## v20.10
 
 ### accel
 
