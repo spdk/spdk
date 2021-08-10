@@ -115,7 +115,7 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	else
 		yum install -y python-pycodestyle lcov ShellCheck
 	fi
-	yum install -y git astyle sg3_utils pciutils libabigail bash-completion
+	yum install -y git astyle sg3_utils pciutils libabigail bash-completion ruby-devel
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends

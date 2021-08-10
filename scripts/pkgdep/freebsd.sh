@@ -10,7 +10,7 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
 	pkg install -y devel/astyle bash \
 		misc/e2fsprogs-libuuid sysutils/sg3_utils nasm \
-		bash-completion
+		bash-completion ruby devel/ruby-gems
 	pkg install -g -y "py*-pycodestyle"
 fi
 if [[ $INSTALL_DOCS == "true" ]]; then
