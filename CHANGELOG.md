@@ -14,6 +14,9 @@ can't be accessed directly.
 Added `async_fini_start` to allow bdev modules to complete the `fini_start` asynchronously,
 with new `spdk_bdev_module_fini_start_done` API.
 
+Deprecated `spdk_bdev_module_finish_done()` API, which will be removed in SPDK 22.01.
+Bdev modules should use `spdk_bdev_module_fini_done()` instead.
+
 ### dma
 
 A new library, lib/dma, has been added. This library provides the necessary infrastructure for

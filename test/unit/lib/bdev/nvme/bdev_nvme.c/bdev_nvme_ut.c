@@ -199,7 +199,7 @@ DEFINE_STUB(spdk_nvme_zns_offline_zone, int,
 	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
 	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_STUB_V(spdk_bdev_module_finish_done, (void));
+DEFINE_STUB_V(spdk_bdev_module_fini_done, (void));
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 

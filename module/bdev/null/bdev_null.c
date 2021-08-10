@@ -452,7 +452,7 @@ static void
 _bdev_null_finish_cb(void *arg)
 {
 	spdk_free(g_null_read_buf);
-	spdk_bdev_module_finish_done();
+	spdk_bdev_module_fini_done();
 }
 
 static void

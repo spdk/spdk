@@ -1734,7 +1734,7 @@ _virtio_scsi_dev_unregister_cb(void *io_device)
 	finish_module = TAILQ_EMPTY(&g_virtio_scsi_devs);
 
 	if (g_bdev_virtio_finish && finish_module) {
-		spdk_bdev_module_finish_done();
+		spdk_bdev_module_fini_done();
 	}
 }
 
@@ -1793,7 +1793,7 @@ bdev_virtio_finish(void)
 	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	if (TAILQ_EMPTY(&g_virtio_scsi_devs)) {
 		pthread_mutex_unlock(&g_virtio_scsi_mutex);
-		spdk_bdev_module_finish_done();
+		spdk_bdev_module_fini_done();
 		return;
 	}
 

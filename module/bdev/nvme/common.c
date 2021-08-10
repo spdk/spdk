@@ -166,7 +166,7 @@ nvme_ctrlr_unregister_cb(void *io_device)
 	if (g_bdev_nvme_module_finish && TAILQ_EMPTY(&g_nvme_ctrlrs)) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(&g_nvme_ctrlrs, NULL);
-		spdk_bdev_module_finish_done();
+		spdk_bdev_module_fini_done();
 		return;
 	}
 

@@ -1498,7 +1498,7 @@ bdev_mgr_unregister_cb(void *io_device)
 }
 
 static void
-bdev_module_finish_iter(void *arg)
+bdev_module_fini_iter(void *arg)
 {
 	struct spdk_bdev_module *bdev_module;
 
@@ -1525,7 +1525,7 @@ bdev_module_finish_iter(void *arg)
 			/* Save our place so we can resume later. We must
 			 * save the variable here, before calling module_fini()
 			 * below, because in some cases the module may immediately
-			 * call spdk_bdev_module_finish_done() and re-enter
+			 * call spdk_bdev_module_fini_done() and re-enter
 			 * this function to continue iterating. */
 			g_resume_bdev_module = bdev_module;
 		}
@@ -1547,13 +1547,21 @@ bdev_module_finish_iter(void *arg)
 }
 
 void
-spdk_bdev_module_finish_done(void)
+spdk_bdev_module_fini_done(void)
 {
 	if (spdk_get_thread() != g_fini_thread) {
-		spdk_thread_send_msg(g_fini_thread, bdev_module_finish_iter, NULL);
+		spdk_thread_send_msg(g_fini_thread, bdev_module_fini_iter, NULL);
 	} else {
-		bdev_module_finish_iter(NULL);
+		bdev_module_fini_iter(NULL);
 	}
+}
+
+/* Deprecated */
+void
+spdk_bdev_module_finish_done(void)
+{
+	SPDK_NOTICELOG("spdk_bdev_module_finish_done() is deprecated, please use spdk_bdev_module_fini_done().\n");
+	spdk_bdev_module_fini_done();
 }
 
 static void
@@ -1580,7 +1588,7 @@ bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 		 * (like bdev part free) that will use this bdev (or private bdev driver ctx data)
 		 * after returning.
 		 */
-		spdk_thread_send_msg(spdk_get_thread(), bdev_module_finish_iter, NULL);
+		spdk_thread_send_msg(spdk_get_thread(), bdev_module_fini_iter, NULL);
 		return;
 	}
 

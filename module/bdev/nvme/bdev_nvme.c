@@ -2827,7 +2827,7 @@ bdev_nvme_library_fini(void)
 	if (TAILQ_EMPTY(&g_nvme_ctrlrs)) {
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(&g_nvme_ctrlrs, NULL);
-		spdk_bdev_module_finish_done();
+		spdk_bdev_module_fini_done();
 		return;
 	}
 

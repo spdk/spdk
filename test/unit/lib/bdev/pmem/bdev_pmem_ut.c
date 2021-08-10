@@ -38,6 +38,8 @@
 
 #include "bdev/pmem/bdev_pmem.c"
 
+DEFINE_STUB_V(spdk_bdev_module_fini_done, (void));
+
 static struct spdk_bdev_module *g_bdev_pmem_module;
 static int g_bdev_module_cnt;
 
@@ -268,11 +270,6 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
-{
-}
-
-void
-spdk_bdev_module_finish_done(void)
 {
 }
 

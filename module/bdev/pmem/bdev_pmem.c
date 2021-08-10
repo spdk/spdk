@@ -423,7 +423,7 @@ bdev_pmem_initialize(void)
 static void
 bdev_pmem_finish_done(void *io_device)
 {
-	spdk_bdev_module_finish_done();
+	spdk_bdev_module_fini_done();
 }
 
 static void
