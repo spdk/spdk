@@ -184,7 +184,11 @@ for block in "/sys/block/nvme"*; do
 	# there's any metadata (pt, fs, etc.) present on the drive.
 	# If the drive's size is less than 2G, skip it as we need
 	# something bigger for the tests.
-	if ! blkid "/dev/${block##*/}" && (($(sec_size_to_bytes "${block##*/}") >= min_disk_size)); then
+	# FIXME: Special case to ignore atari as a potential false
+	# positive:
+	# https://github.com/spdk/spdk/issues/2079
+	pt=$(blkid -s PTTYPE -o value "/dev/${block##*/}") || pt=none
+	if [[ $pt == none || $pt == atari ]] && (($(sec_size_to_bytes "${block##*/}") >= min_disk_size)); then
 		blocks+=("${block##*/}")
 		blocks_to_pci["${block##*/}"]=$pci
 	fi
