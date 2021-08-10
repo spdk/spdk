@@ -173,6 +173,7 @@ Added the `nvmf_set_crdt` RPC for setting command retry delay times.
 Expanded `spdk_nvmf_poll_group_stat` with current qpair count statistics.
 
 Removed following deprecated APIs:
+
 - `spdk_nvmf_poll_group_get_stat` (function in `nvmf.h`),
 - `spdk_nvmf_transport_poll_group_get_stat` (function in `nvmf.h`),
 - `spdk_nvmf_transport_poll_group_free_stat`(function in `nvmf.h`),
@@ -405,6 +406,7 @@ use `disable-zerocopy-send-server` or `disable-zerocopy-send-client` instead.
 
 Added cmd_parser.py used to parse the args from argparse. There are
 two benefit to use command parser:
+
 - Simplify the definition of rpc method. It will reduce the rpc method code.
 - Make the rpc call more versatile. User can add private args into rpc method.
 

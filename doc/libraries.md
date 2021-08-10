@@ -22,19 +22,19 @@ are contained in the `module` directory.
 The libraries in the `lib` directory can be readily divided into four categories:
 
 - Utility Libraries: These libraries contain basic, commonly used functions that make more complex
-libraries easier to implement. For example, `spdk_log` contains macro definitions that provide a
-consistent logging paradigm and `spdk_json` is a general purpose JSON parsing library.
+  libraries easier to implement. For example, `spdk_log` contains macro definitions that provide a
+  consistent logging paradigm and `spdk_json` is a general purpose JSON parsing library.
 - Protocol Libraries: These libraries contain the building blocks for a specific service. For example,
-`spdk_nvmf` and `spdk_vhost` each define the storage protocols after which they are named.
+  `spdk_nvmf` and `spdk_vhost` each define the storage protocols after which they are named.
 - Storage Service Libraries: These libraries provide a specific abstraction that can be mapped to somewhere
-between the physical drive and the filesystem level of your typical storage stack. For example `spdk_bdev`
-provides a general block device abstraction layer, `spdk_lvol` provides a logical volume abstraction,
-`spdk_blobfs` provides a filesystem abstraction, and `spdk_ftl` provides a flash translation layer
-abstraction.
+  between the physical drive and the filesystem level of your typical storage stack. For example `spdk_bdev`
+  provides a general block device abstraction layer, `spdk_lvol` provides a logical volume abstraction,
+  `spdk_blobfs` provides a filesystem abstraction, and `spdk_ftl` provides a flash translation layer
+  abstraction.
 - System Libraries: These libraries provide system level services such as a JSON based RPC service
-(see `spdk_jsonrpc`) and thread abstractions (see `spdk_thread`). The most notable library in this category
-is the `spdk_env_dpdk` library which provides a shim for the underlying Data Plane Development Kit (DPDK)
-environment and provides services like memory management.
+  (see `spdk_jsonrpc`) and thread abstractions (see `spdk_thread`). The most notable library in this category
+  is the `spdk_env_dpdk` library which provides a shim for the underlying Data Plane Development Kit (DPDK)
+  environment and provides services like memory management.
 
 The one library in the `lib` directory that doesn't fit into the above classification is the `spdk_event` library.
 This library defines a framework used by the applications contained in the `app` and `example` directories. Much
@@ -58,10 +58,10 @@ There are seven sub-directories in the `module` directory which each hold a diff
 sub-directories can be divided into two types.
 
 - plug-in libraries: These libraries are explicitly tied to one of the libraries in the `lib` directory and
-are registered with that library at runtime by way of a specific constructor function. The parent library in
-the `lib` directory then manages the module directly. These types of libraries each implement a function table
-defined by their parent library. The following table shows these directories and their corresponding parent
-libraries:
+  are registered with that library at runtime by way of a specific constructor function. The parent library in
+  the `lib` directory then manages the module directly. These types of libraries each implement a function table
+  defined by their parent library. The following table shows these directories and their corresponding parent
+  libraries:
 
 <center>
 | module directory | parent library | dependent on event library |
@@ -73,9 +73,9 @@ libraries:
 </center>
 
 - Free libraries: These libraries are highly dependent upon a library in the `lib` directory but are not
-explicitly registered to that library via a constructor. The libraries in the `blob`, `blobfs`, and `env_dpdk`
-directories fall into this category. None of the libraries in this category depend explicitly on the
-`spdk_event` library.
+  explicitly registered to that library via a constructor. The libraries in the `blob`, `blobfs`, and `env_dpdk`
+  directories fall into this category. None of the libraries in this category depend explicitly on the
+  `spdk_event` library.
 
 ## Library Conventions {#conventions}
 
@@ -149,15 +149,15 @@ which is a linker script. It simply contains references to all of the other spdk
 There are essentially two ways of linking to SPDK libraries.
 
 1. An application can link to the top level shared object library as follows:
-~~~{.sh}
+   ~~~{.sh}
 	gcc -o my_app ./my_app.c -lspdk -lspdk_env_dpdk -ldpdk
-~~~
+   ~~~
 
 2. An application can link to only a subset of libraries by linking directly to the ones it relies on:
-~~~{.sh}
+   ~~~{.sh}
 	gcc -o my_app ./my_app.c -lpassthru_external -lspdk_event_bdev -lspdk_bdev -lspdk_bdev_malloc
 	-lspdk_log -lspdk_thread -lspdk_util -lspdk_event -lspdk_env_dpdk -ldpdk
-~~~
+   ~~~
 
 In the second instance, please note that applications need only link to the libraries upon which they
 directly depend. All SPDK libraries have their dependencies specified at object compile time. This means

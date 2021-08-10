@@ -32,7 +32,7 @@ Menu at the bottom of SPDK top window shows many options for changing displayed 
 * Quit - quits the SPDK top application.
 * Switch tab - allows to select THREADS/POLLERS/CORES tabs.
 * Previous page/Next page - scrolls up/down to the next set of rows displayed. Indicator in the bottom-left corner shows current page and number
-of all available pages.
+  of all available pages.
 * Item details - displays details pop-up window for highlighted data row. Selection is changed by pressing UP and DOWN arrow keys.
 * Help - displays help pop-up window.
 

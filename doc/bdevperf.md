@@ -73,6 +73,7 @@ length    | 100% of bdev size | End I/O at `offset`+`length` on the bdev
 rw        |                   | Type of I/O pattern
 
 Available rw types:
+
 - read
 - randread
 - write
