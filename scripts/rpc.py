@@ -2187,7 +2187,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('bdev_pmem_create_pool', aliases=['create_pmem_pool'],
                               help='Create pmem pool')
     p.add_argument('pmem_file', help='Path to pmemblk pool file')
-    p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
+    p.add_argument('total_size', help='Size of pmem bdev in MB (int > 0)', type=int)
     p.add_argument('block_size', help='Block size for this pmem pool', type=int)
     p.set_defaults(func=bdev_pmem_create_pool)
 
