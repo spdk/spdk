@@ -77,7 +77,6 @@ struct bdev_rbd {
 	uint32_t ch_count;
 	struct bdev_rbd_group_channel *group_ch;
 
-	bool deferred_free;
 	TAILQ_ENTRY(bdev_rbd) tailq;
 	struct spdk_poller *reset_timer;
 	struct spdk_bdev_io *reset_bdev_io;
@@ -502,24 +501,40 @@ bdev_rbd_free_cb(void *io_device)
 	struct bdev_rbd *rbd = io_device;
 
 	assert(rbd != NULL);
+	assert(rbd->ch_count == 0);
 
-	pthread_mutex_lock(&rbd->mutex);
+	bdev_rbd_free(rbd);
+}
 
-	if (rbd->ch_count != 0) {
-		rbd->deferred_free = true;
-		pthread_mutex_unlock(&rbd->mutex);
-	} else {
-		pthread_mutex_unlock(&rbd->mutex);
-		bdev_rbd_free((struct bdev_rbd *)rbd);
-	}
+static void
+_bdev_rbd_destruct(void *ctx)
+{
+	struct bdev_rbd *rbd = ctx;
+
+	spdk_io_device_unregister(rbd, bdev_rbd_free_cb);
 }
 
 static int
 bdev_rbd_destruct(void *ctx)
 {
 	struct bdev_rbd *rbd = ctx;
+	struct spdk_thread *td;
 
-	spdk_io_device_unregister(rbd, bdev_rbd_free_cb);
+	if (rbd->main_td == NULL) {
+		td = spdk_get_thread();
+	} else {
+		td = rbd->main_td;
+	}
+
+	/* Start the destruct operation on the rbd bdev's
+	 * main thread.  This guarantees it will only start
+	 * executing after any messages related to channel
+	 * deletions have finished completing.  *Always*
+	 * send a message, even if this function gets called
+	 * from the main thread, in case there are pending
+	 * channel delete messages in flight to this thread.
+	 */
+	spdk_thread_send_msg(td, _bdev_rbd_destruct, rbd);
 
 	return 0;
 }
@@ -756,7 +771,6 @@ static void
 _bdev_rbd_destroy_cb(void *ctx)
 {
 	struct bdev_rbd *disk = ctx;
-	bool deferred_free;
 
 	pthread_mutex_lock(&disk->mutex);
 	assert(disk->ch_count > 0);
@@ -769,15 +783,7 @@ _bdev_rbd_destroy_cb(void *ctx)
 	}
 
 	bdev_rbd_free_channel_resources(disk);
-
-	deferred_free = disk->deferred_free;
 	pthread_mutex_unlock(&disk->mutex);
-
-	/* Need to free rbd structure if there is deferred_free case
-	 * by the bdev_rbd_destruct function */
-	if (deferred_free) {
-		bdev_rbd_free(disk);
-	}
 }
 
 static void
