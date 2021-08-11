@@ -551,21 +551,22 @@ struct vbdev_lvol_destroy_ctx {
 static void
 _vbdev_lvol_unregister_cb(void *ctx, int lvolerrno)
 {
-	struct spdk_bdev *bdev = ctx;
+	struct lvol_bdev *lvol_bdev = ctx;
 
-	spdk_bdev_destruct_done(bdev, lvolerrno);
-	free(bdev);
+	spdk_bdev_destruct_done(&lvol_bdev->bdev, lvolerrno);
+	free(lvol_bdev);
 }
 
 static int
 vbdev_lvol_unregister(void *ctx)
 {
 	struct spdk_lvol *lvol = ctx;
+	struct lvol_bdev *lvol_bdev = SPDK_CONTAINEROF(lvol->bdev, struct lvol_bdev, bdev);
 
 	assert(lvol != NULL);
 
 	spdk_bdev_alias_del_all(lvol->bdev);
-	spdk_lvol_close(lvol, _vbdev_lvol_unregister_cb, lvol->bdev);
+	spdk_lvol_close(lvol, _vbdev_lvol_unregister_cb, lvol_bdev);
 
 	/* return 1 to indicate we have an operation that must finish asynchronously before the
 	 *  lvol is closed
@@ -924,6 +925,7 @@ static int
 _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 {
 	struct spdk_bdev *bdev;
+	struct lvol_bdev *lvol_bdev;
 	struct lvol_store_bdev *lvs_bdev;
 	uint64_t total_size;
 	unsigned char *alias;
@@ -935,12 +937,15 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 		return -ENODEV;
 	}
 
-	bdev = calloc(1, sizeof(struct spdk_bdev));
-	if (!bdev) {
+	lvol_bdev = calloc(1, sizeof(struct lvol_bdev));
+	if (!lvol_bdev) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol bdev\n");
 		return -ENOMEM;
 	}
 
+	lvol_bdev->lvol = lvol;
+
+	bdev = &lvol_bdev->bdev;
 	bdev->name = lvol->unique_id;
 	bdev->product_name = "Logical Volume";
 	bdev->blocklen = spdk_bs_get_io_unit_size(lvol->lvol_store->blobstore);
@@ -959,7 +964,7 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 
 	rc = spdk_bdev_register(bdev);
 	if (rc) {
-		free(bdev);
+		free(lvol_bdev);
 		return rc;
 	}
 	lvol->bdev = bdev;
