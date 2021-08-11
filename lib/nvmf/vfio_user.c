@@ -1450,11 +1450,14 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	/* VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE are enabled when registering to VFIO, here we also
 	 * check the protection bits before registering.
 	 */
-	if ((info->prot == (PROT_WRITE | PROT_READ)) &&
-	    (spdk_mem_register(info->mapping.iov_base, info->mapping.iov_len))) {
-		SPDK_ERRLOG("Memory region register %#lx-%#lx failed\n",
-			    (uint64_t)(uintptr_t)info->mapping.iov_base,
-			    (uint64_t)(uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+	if (info->prot == (PROT_WRITE | PROT_READ)) {
+		ret = spdk_mem_register(info->mapping.iov_base, info->mapping.iov_len);
+		if (ret) {
+			SPDK_ERRLOG("Memory region register %#lx-%#lx failed, ret=%d\n",
+				    (uint64_t)(uintptr_t)info->mapping.iov_base,
+				    (uint64_t)(uintptr_t)info->mapping.iov_base + info->mapping.iov_len,
+				    ret);
+		}
 	}
 
 	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
@@ -1484,7 +1487,7 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	struct nvmf_vfio_user_ctrlr *ctrlr;
 	struct nvmf_vfio_user_qpair *qpair;
 	void *map_start, *map_end;
-	int i;
+	int i, ret;
 
 	if (!info->vaddr) {
 		return 0;
@@ -1508,11 +1511,14 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		      (uintptr_t)info->mapping.iov_base,
 		      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
 
-	if ((info->prot == (PROT_WRITE | PROT_READ)) &&
-	    (spdk_mem_unregister(info->mapping.iov_base, info->mapping.iov_len))) {
-		SPDK_ERRLOG("Memory region unregister %#lx-%#lx failed\n",
-			    (uint64_t)(uintptr_t)info->mapping.iov_base,
-			    (uint64_t)(uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+	if (info->prot == (PROT_WRITE | PROT_READ)) {
+		ret = spdk_mem_unregister(info->mapping.iov_base, info->mapping.iov_len);
+		if (ret) {
+			SPDK_ERRLOG("Memory region unregister %#lx-%#lx failed, ret=%d\n",
+				    (uint64_t)(uintptr_t)info->mapping.iov_base,
+				    (uint64_t)(uintptr_t)info->mapping.iov_base + info->mapping.iov_len,
+				    ret);
+		}
 	}
 
 	map_start = info->mapping.iov_base;
