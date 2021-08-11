@@ -292,6 +292,14 @@ zone_block_reset_zone(struct bdev_zone_block *bdev_node, struct zone_block_io_ch
 		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
 		zone->zone_info.write_pointer = zone->zone_info.zone_id;
 		pthread_spin_unlock(&zone->lock);
+
+		/* The unmap isn't necessary, so if the base bdev doesn't support it, we're done */
+		if (!spdk_bdev_io_type_supported(spdk_bdev_desc_get_bdev(bdev_node->base_desc),
+						 SPDK_BDEV_IO_TYPE_UNMAP)) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+			return 0;
+		}
+
 		return spdk_bdev_unmap_blocks(bdev_node->base_desc, ch->base_ch,
 					      zone->zone_info.zone_id, zone->zone_info.capacity,
 					      _zone_block_complete_unmap, bdev_io);
