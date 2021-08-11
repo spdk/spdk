@@ -349,6 +349,17 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	}
 }
 
+static void
+nvme_transport_connect_qpair_fail(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	/* If the qpair was unable to reconnect, restore the original failure reason */
+	qpair->transport_failure_reason = qpair->last_transport_failure_reason;
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+}
+
 int
 nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -387,12 +398,8 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	}
 
 	return 0;
-
 err:
-	/* If the qpair was unable to reconnect, restore the original failure reason. */
-	qpair->transport_failure_reason = qpair->last_transport_failure_reason;
-	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
-	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+	nvme_transport_connect_qpair_fail(qpair);
 	return rc;
 }
 
