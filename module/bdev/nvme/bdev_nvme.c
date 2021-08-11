@@ -479,14 +479,6 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch,
 	return true;
 }
 
-static inline bool
-bdev_nvme_find_admin_path(struct nvme_bdev_channel *nbdev_ch,
-			  struct nvme_ctrlr **_nvme_ctrlr)
-{
-	*_nvme_ctrlr = nbdev_ch->ctrlr_ch->ctrlr;
-	return true;
-}
-
 static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
@@ -3838,9 +3830,7 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 	struct nvme_ctrlr *nvme_ctrlr;
 	uint32_t max_xfer_size;
 
-	if (!bdev_nvme_find_admin_path(nbdev_ch, &nvme_ctrlr)) {
-		return -EINVAL;
-	}
+	nvme_ctrlr = nbdev_ch->ctrlr_ch->ctrlr;
 
 	max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ctrlr->ctrlr);
 
