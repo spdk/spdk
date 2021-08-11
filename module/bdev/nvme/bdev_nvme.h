@@ -151,11 +151,13 @@ struct nvme_poll_group {
 };
 
 struct nvme_ctrlr_channel {
-	struct nvme_ctrlr		*ctrlr;
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_poll_group		*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
 };
+
+#define nvme_ctrlr_channel_get_ctrlr(ctrlr_ch)	\
+	(struct nvme_ctrlr *)spdk_io_channel_get_io_device(spdk_io_channel_from_ctx(ctrlr_ch))
 
 struct nvme_bdev_channel {
 	struct nvme_ns			*nvme_ns;

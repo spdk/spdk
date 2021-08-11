@@ -609,19 +609,21 @@ bdev_nvme_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 static int
 bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 {
-	struct spdk_nvme_ctrlr *ctrlr = ctrlr_ch->ctrlr->ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_nvme_io_qpair_opts opts;
 	struct spdk_nvme_qpair *qpair;
 	int rc;
 
-	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(nvme_ctrlr->ctrlr, &opts, sizeof(opts));
 	opts.delay_cmd_submit = g_opts.delay_cmd_submit;
 	opts.create_only = true;
 	opts.async_mode = true;
 	opts.io_queue_requests = spdk_max(g_opts.io_queue_requests, opts.io_queue_requests);
 	g_opts.io_queue_requests = opts.io_queue_requests;
 
-	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(nvme_ctrlr->ctrlr, &opts, sizeof(opts));
 	if (qpair == NULL) {
 		return -1;
 	}
@@ -634,7 +636,7 @@ bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 		goto err;
 	}
 
-	rc = spdk_nvme_ctrlr_connect_io_qpair(ctrlr, qpair);
+	rc = spdk_nvme_ctrlr_connect_io_qpair(nvme_ctrlr->ctrlr, qpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to connect I/O qpair.\n");
 		goto err;
@@ -895,15 +897,18 @@ static int
 bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 {
 	struct nvme_ctrlr_channel *ctrlr_ch = nbdev_ch->ctrlr_ch;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct spdk_bdev_io *bdev_io;
 	int rc;
 
-	rc = bdev_nvme_reset(ctrlr_ch->ctrlr);
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
+
+	rc = bdev_nvme_reset(nvme_ctrlr);
 	if (rc == 0) {
-		assert(ctrlr_ch->ctrlr->reset_cb_fn == NULL);
-		assert(ctrlr_ch->ctrlr->reset_cb_arg == NULL);
-		ctrlr_ch->ctrlr->reset_cb_fn = bdev_nvme_reset_io_complete;
-		ctrlr_ch->ctrlr->reset_cb_arg = bio;
+		assert(nvme_ctrlr->reset_cb_fn == NULL);
+		assert(nvme_ctrlr->reset_cb_arg == NULL);
+		nvme_ctrlr->reset_cb_fn = bdev_nvme_reset_io_complete;
+		nvme_ctrlr->reset_cb_arg = bio;
 	} else if (rc == -EBUSY) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
@@ -1269,7 +1274,6 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 static int
 bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 {
-	struct nvme_ctrlr *nvme_ctrlr = io_device;
 	struct nvme_ctrlr_channel *ctrlr_ch = ctx_buf;
 	struct spdk_io_channel *pg_ch;
 	int rc;
@@ -1288,8 +1292,6 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 #endif
 
 	TAILQ_INIT(&ctrlr_ch->pending_resets);
-
-	ctrlr_ch->ctrlr = nvme_ctrlr;
 
 	rc = bdev_nvme_create_qpair(ctrlr_ch);
 	if (rc != 0) {
@@ -3827,10 +3829,11 @@ static int
 bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
+	struct nvme_ctrlr_channel *ctrlr_ch = nbdev_ch->ctrlr_ch;
 	struct nvme_ctrlr *nvme_ctrlr;
 	uint32_t max_xfer_size;
 
-	nvme_ctrlr = nbdev_ch->ctrlr_ch->ctrlr;
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
 
 	max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ctrlr->ctrlr);
 
@@ -3902,11 +3905,14 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		struct nvme_bdev_io *bio_to_abort)
 {
 	struct nvme_ctrlr_channel *ctrlr_ch = nbdev_ch->ctrlr_ch;
+	struct nvme_ctrlr *nvme_ctrlr;
 	int rc;
 
 	bio->orig_thread = spdk_get_thread();
 
-	rc = spdk_nvme_ctrlr_cmd_abort_ext(ctrlr_ch->ctrlr->ctrlr,
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
+
+	rc = spdk_nvme_ctrlr_cmd_abort_ext(nvme_ctrlr->ctrlr,
 					   ctrlr_ch->qpair,
 					   bio_to_abort,
 					   bdev_nvme_abort_done, bio);
@@ -3914,7 +3920,7 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		/* If no command was found in I/O qpair, the target command may be
 		 * admin command.
 		 */
-		rc = spdk_nvme_ctrlr_cmd_abort_ext(ctrlr_ch->ctrlr->ctrlr,
+		rc = spdk_nvme_ctrlr_cmd_abort_ext(nvme_ctrlr->ctrlr,
 						   NULL,
 						   bio_to_abort,
 						   bdev_nvme_abort_done, bio);
