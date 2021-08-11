@@ -124,6 +124,9 @@ spdk_bdev_alias_del_all(struct spdk_bdev *bdev)
 void
 spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 {
+	CU_ASSERT(bdeverrno == 0);
+	SPDK_CU_ASSERT_FATAL(bdev->internal.unregister_cb != NULL);
+	bdev->internal.unregister_cb(bdev->internal.unregister_ctx, bdeverrno);
 }
 
 void
@@ -261,16 +264,23 @@ spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module *module)
 	return 0;
 }
 
+static void
+_spdk_bdev_unregister_cb(void *cb_arg, int rc)
+{
+	CU_ASSERT(rc == 0);
+}
+
 void
 spdk_bdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	int rc;
 
 	SPDK_CU_ASSERT_FATAL(vbdev != NULL);
-	rc = vbdev->fn_table->destruct(vbdev->ctxt);
+	vbdev->internal.unregister_cb = cb_fn;
+	vbdev->internal.unregister_ctx = cb_arg;
 
-	SPDK_CU_ASSERT_FATAL(cb_fn != NULL);
-	cb_fn(cb_arg, rc);
+	rc = vbdev->fn_table->destruct(vbdev->ctxt);
+	CU_ASSERT(rc == 1);
 }
 
 void
@@ -1070,7 +1080,7 @@ ut_lvol_destroy(void)
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Hot remove lvol bdev */
-	vbdev_lvol_unregister(lvol2);
+	spdk_bdev_unregister(lvol2->bdev, _spdk_bdev_unregister_cb, NULL);
 
 	/* Unload lvol store */
 	vbdev_lvs_unload(lvs, lvol_store_op_complete, NULL);
