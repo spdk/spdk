@@ -131,7 +131,6 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 
 	chan->idxd = idxd;
 	TAILQ_INIT(&chan->ops_pool);
-	TAILQ_INIT(&chan->batches);
 	TAILQ_INIT(&chan->batch_pool);
 	TAILQ_INIT(&chan->ops_outstanding);
 
@@ -156,7 +155,6 @@ spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 	chan->idxd->num_channels--;
 	pthread_mutex_unlock(&chan->idxd->num_channels_lock);
 
-	assert(TAILQ_EMPTY(&chan->batches));
 	spdk_free(chan->ops_base);
 	spdk_free(chan->desc_base);
 	while ((batch = TAILQ_FIRST(&chan->batch_pool))) {
@@ -684,8 +682,8 @@ spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
 	if (!TAILQ_EMPTY(&chan->batch_pool)) {
 		batch = TAILQ_FIRST(&chan->batch_pool);
 		batch->index = 0;
+		batch->chan = chan;
 		TAILQ_REMOVE(&chan->batch_pool, batch, link);
-		TAILQ_INSERT_TAIL(&chan->batches, batch, link);
 	} else {
 		/* The application needs to handle this. */
 		return NULL;
@@ -697,24 +695,15 @@ spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
 static bool
 _is_batch_valid(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 {
-	bool found = false;
-	struct idxd_batch *cur_batch;
-
-	TAILQ_FOREACH(cur_batch, &chan->batches, link) {
-		if (cur_batch == batch) {
-			found = true;
-			break;
-		}
-	}
-
-	return found;
+	return batch->chan == chan;
 }
 
 static void
 _free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 {
 	SPDK_DEBUGLOG(idxd, "Free batch %p\n", batch);
-	TAILQ_REMOVE(&chan->batches, batch, link);
+	batch->index = 0;
+	batch->chan = NULL;
 	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
 }
 

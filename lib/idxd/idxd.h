@@ -79,6 +79,7 @@ struct idxd_batch {
 	struct idxd_hw_desc		*user_desc;
 	struct idxd_ops			*user_ops;
 	uint8_t				index;
+	struct spdk_idxd_io_channel	*chan;
 	TAILQ_ENTRY(idxd_batch)		link;
 };
 
@@ -107,9 +108,7 @@ struct spdk_idxd_io_channel {
 	TAILQ_HEAD(op_head, idxd_ops)		ops_outstanding;
 	void					*ops_base;
 
-	/* Lists of batches, free and in use. */
 	TAILQ_HEAD(, idxd_batch)		batch_pool;
-	TAILQ_HEAD(, idxd_batch)		batches;
 	void					*batch_base;
 };
 
