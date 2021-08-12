@@ -307,6 +307,7 @@ nvmf_tgt_create_target(void)
 	opts.crdt[0] = g_spdk_nvmf_tgt_crdt[0];
 	opts.crdt[1] = g_spdk_nvmf_tgt_crdt[1];
 	opts.crdt[2] = g_spdk_nvmf_tgt_crdt[2];
+	opts.discovery_filter = g_spdk_nvmf_tgt_conf.discovery_filter;
 	g_spdk_nvmf_tgt = spdk_nvmf_tgt_create(&opts);
 	if (!g_spdk_nvmf_tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
@@ -486,6 +487,31 @@ nvmf_subsystem_init(void)
 }
 
 static void
+nvmf_subsystem_dump_discover_filter(struct spdk_json_write_ctx *w)
+{
+	static char const *const answers[] = {
+		"match_any",
+		"transport",
+		"address",
+		"transport,address",
+		"svcid",
+		"transport,svcid",
+		"address,svcid",
+		"transport,address,svcid"
+	};
+
+	if ((g_spdk_nvmf_tgt_conf.discovery_filter & ~(SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE |
+			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS |
+			SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID)) != 0) {
+		SPDK_ERRLOG("Incorrect discovery filter %d\n", g_spdk_nvmf_tgt_conf.discovery_filter);
+		assert(0);
+		return;
+	}
+
+	spdk_json_write_named_string(w, "discovery_filter", answers[g_spdk_nvmf_tgt_conf.discovery_filter]);
+}
+
+static void
 nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_array_begin(w);
@@ -495,6 +521,7 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "acceptor_poll_rate", g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
+	nvmf_subsystem_dump_discover_filter(w);
 	spdk_json_write_named_object_begin(w, "admin_cmd_passthru");
 	spdk_json_write_named_bool(w, "identify_ctrlr",
 				   g_spdk_nvmf_tgt_conf.admin_passthru.identify_ctrlr);

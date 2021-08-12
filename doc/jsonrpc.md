@@ -6736,6 +6736,7 @@ Name                    | Optional | Type        | Description
 acceptor_poll_rate      | Optional | number      | Polling interval of the acceptor for incoming connections (microseconds)
 admin_cmd_passthru      | Optional | object      | Admin command passthru configuration
 poll_groups_mask        | Optional | string      | Set cpumask for NVMf poll groups
+discovery_filter        | Optional | string      | Set discovery filter, possible values are: `match_any` (default) or comma separated values: `transport`, `address`, `svcid`
 
 #### admin_cmd_passthru {#spdk_nvmf_admin_passthru_conf}
 

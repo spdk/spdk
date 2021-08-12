@@ -67,11 +67,26 @@ struct spdk_json_write_ctx;
 struct spdk_json_val;
 struct spdk_nvmf_transport;
 
+/**
+ * Specify filter rules which are applied during discovery log generation.
+ */
+enum spdk_nvmf_tgt_discovery_filter {
+	/** Log all listeners in discovery log page */
+	SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY = 0,
+	/** Only log listeners with the same transport type on which the DISCOVERY command was received */
+	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE = 1u << 0u,
+	/** Only log listeners with the same transport address on which the DISCOVERY command was received */
+	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS = 1u << 1u,
+	/** Only log listeners with the same transport svcid on which the DISCOVERY command was received */
+	SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID = 1u << 2u
+};
+
 struct spdk_nvmf_target_opts {
 	char		name[NVMF_TGT_NAME_MAX_LENGTH];
 	uint32_t	max_subsystems;
 	uint32_t	acceptor_poll_rate;
 	uint16_t	crdt[3];
+	enum spdk_nvmf_tgt_discovery_filter discovery_filter;
 };
 
 struct spdk_nvmf_transport_opts {

@@ -2271,6 +2271,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvme_transport_id cmd_source_trid;
 	uint64_t offset, len;
 	uint32_t rae, numdl, numdu;
 	uint8_t lid;
@@ -2309,8 +2310,14 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		switch (lid) {
 		case SPDK_NVME_LOG_DISCOVERY:
-			nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt, offset,
-						    len);
+			if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &cmd_source_trid)) {
+				SPDK_ERRLOG("Failed to get LOG_DISCOVERY source trid\n");
+				response->status.sct = SPDK_NVME_SCT_GENERIC;
+				response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			}
+			nvmf_get_discovery_log_page(subsystem->tgt, ctrlr->hostnqn, req->iov, req->iovcnt,
+						    offset, len, &cmd_source_trid);
 			if (!rae) {
 				nvmf_ctrlr_unmask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT);
 			}

@@ -104,7 +104,7 @@ DEFINE_STUB(nvmf_ctrlr_write_zeroes_supported,
 
 DEFINE_STUB_V(nvmf_get_discovery_log_page,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-	       uint32_t iovcnt, uint64_t offset, uint32_t length));
+	       uint32_t iovcnt, uint64_t offset, uint32_t length, struct spdk_nvme_transport_id *cmd_src_trid));
 
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    int,

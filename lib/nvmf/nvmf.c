@@ -303,6 +303,12 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_target_opts *opts)
 		tgt->crdt[2] = opts->crdt[2];
 	}
 
+	if (!opts) {
+		tgt->discovery_filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	} else {
+		tgt->discovery_filter = opts->discovery_filter;
+	}
+
 	tgt->discovery_genctr = 0;
 	TAILQ_INIT(&tgt->transports);
 	TAILQ_INIT(&tgt->poll_groups);

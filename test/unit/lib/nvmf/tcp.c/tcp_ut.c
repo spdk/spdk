@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -92,7 +93,7 @@ DEFINE_STUB(nvmf_subsystem_find_listener,
 
 DEFINE_STUB_V(nvmf_get_discovery_log_page,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
-	       uint32_t iovcnt, uint64_t offset, uint32_t length));
+	       uint32_t iovcnt, uint64_t offset, uint32_t length, struct spdk_nvme_transport_id *cmd_src_trid));
 
 DEFINE_STUB_V(nvmf_subsystem_remove_ctrlr,
 	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr));

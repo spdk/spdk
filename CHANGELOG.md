@@ -2,6 +2,9 @@
 
 ## v21.10: (Upcoming Release)
 
+Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify
+filtering rules applied during discovery log generation. Refer to `enum spdk_nvmf_tgt_discovery_filter` for more info.
+
 ### bdev
 
 New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.
