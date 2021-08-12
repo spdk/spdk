@@ -1174,6 +1174,12 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
 			goto out;
 		}
+		/* TODO: support shared IO CQ */
+		if (qid != cmd->cdw11_bits.create_io_sq.cqid) {
+			SPDK_ERRLOG("%s: doesn't support shared CQ now\n", ctrlr_id(ctrlr));
+			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
+		}
 
 		io_q = &ctrlr->qp[qid]->sq;
 		io_q->cqid = cmd->cdw11_bits.create_io_sq.cqid;
