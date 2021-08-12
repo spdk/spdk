@@ -6,6 +6,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 rpc_py="$rootdir/scripts/rpc.py"
+loops=5
 
 function jcount() {
 	local filter=$1
@@ -38,13 +39,6 @@ if [ 'rdma' == $TEST_TRANSPORT ]; then
 	transport_type=$(jq -r .poll_groups[0].transports[0].trtype <<< "$stats")
 	[ "${transport_type,,}" == "${TEST_TRANSPORT,,}" ]
 	[ "0" -lt $(jcount .poll_groups[0].transports[0].devices[].name <<< "$stats") ]
-fi
-
-# set times for subsystem construct/delete
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	times=50
-else
-	times=3
 fi
 
 MALLOC_BDEV_SIZE=64
@@ -80,7 +74,7 @@ nvme disconnect -n nqn.2016-06.io.spdk:cnode1
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 # do frequent add delete of namespaces with different nsid.
-for i in $(seq 1 $times); do
+for i in $(seq 1 $loops); do
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s $NVMF_SERIAL
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1 -n 5
@@ -97,7 +91,7 @@ for i in $(seq 1 $times); do
 done
 
 # do frequent add delete.
-for i in $(seq 1 $times); do
+for i in $(seq 1 $loops); do
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s $NVMF_SERIAL
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
