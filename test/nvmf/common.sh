@@ -219,6 +219,11 @@ function get_tcp_if_list_by_driver() {
 	local driver
 	driver=${1:-ice}
 
+	# If we are called right after netns is deleted we need to wait a
+	# bit to make sure all net devices are visible in the main netns
+	# again.
+	sleep 1
+
 	shopt -s nullglob
 	tcp_if_list=(/sys/bus/pci/drivers/$driver/0000*/net/*)
 	shopt -u nullglob
