@@ -97,12 +97,7 @@ endif
 all: mk/cc.mk $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f include/spdk/config.h
-	$(Q)rm -rf build/bin
-	$(Q)rm -rf build/fio
-	$(Q)rm -rf build/examples
-	$(Q)rm -rf build/include
-	$(Q)rm -rf build/lib/pkgconfig
-	$(Q)find build/lib ! -name .gitignore -type f -delete
+	$(Q)rm -rf build
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"

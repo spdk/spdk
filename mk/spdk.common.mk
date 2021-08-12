@@ -358,6 +358,7 @@ BUILD_LINKERNAME_LIB=\
 LIB_C=\
 	$(Q)echo "  LIB $(notdir $@)"; \
 	rm -f $@; \
+	mkdir -p $(dir $@); \
 	$(CCAR) crDs $@ $(OBJS)
 
 # Clean up generated files listed as arguments plus a default list
