@@ -12,6 +12,9 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		misc/e2fsprogs-libuuid sysutils/sg3_utils nasm \
 		bash-completion ruby devel/ruby-gems
 	pkg install -g -y "py*-pycodestyle"
+	# ruby and ruby-gems are not preinstalled on FreeBSD but are needed to
+	# build mdl - make sure they are in place.
+	pkg install -y ruby devel/ruby-gems
 fi
 if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
