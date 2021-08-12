@@ -1153,6 +1153,13 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		io_q->iv = cmd->cdw11_bits.create_io_cq.iv;
 		io_q->phase = true;
 	} else {
+		if (cmd->cdw11_bits.create_io_sq.cqid == 0) {
+			SPDK_ERRLOG("%s: invalid CQID 0\n", ctrlr_id(ctrlr));
+			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
+			goto out;
+
+		}
 		/* CQ must be created before SQ */
 		if (!lookup_io_q(ctrlr, cmd->cdw11_bits.create_io_sq.cqid, true)) {
 			SPDK_ERRLOG("%s: CQ%d does not exist\n", ctrlr_id(ctrlr),
@@ -1162,13 +1169,13 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			goto out;
 		}
 
-		io_q = &ctrlr->qp[qid]->sq;
 		if (cmd->cdw11_bits.create_io_sq.pc != 0x1) {
 			SPDK_ERRLOG("%s: non-PC SQ not supported\n", ctrlr_id(ctrlr));
 			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
 			goto out;
 		}
 
+		io_q = &ctrlr->qp[qid]->sq;
 		io_q->cqid = cmd->cdw11_bits.create_io_sq.cqid;
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: SQ%d CQID=%d\n", ctrlr_id(ctrlr),
 			      qid, io_q->cqid);
