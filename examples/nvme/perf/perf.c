@@ -1034,14 +1034,14 @@ nvme_dump_rdma_statistics(struct spdk_nvme_transport_poll_group_stat *stat)
 	printf("RDMA transport:\n");
 	for (i = 0; i < stat->rdma.num_devices; i++) {
 		device_stats = &stat->rdma.device_stats[i];
-		printf("\tdev name: %s\n", device_stats->name);
-		printf("\tpolls: %"PRIu64"\n", device_stats->polls);
-		printf("\tidle_polls: %"PRIu64"\n", device_stats->idle_polls);
-		printf("\tcompletions: %"PRIu64"\n", device_stats->completions);
-		printf("\tqueued_requests: %"PRIu64"\n", device_stats->queued_requests);
-		printf("\ttotal_send_wrs: %"PRIu64"\n", device_stats->total_send_wrs);
+		printf("\tdev name:              %s\n", device_stats->name);
+		printf("\tpolls:                 %"PRIu64"\n", device_stats->polls);
+		printf("\tidle_polls:            %"PRIu64"\n", device_stats->idle_polls);
+		printf("\tcompletions:           %"PRIu64"\n", device_stats->completions);
+		printf("\tqueued_requests:       %"PRIu64"\n", device_stats->queued_requests);
+		printf("\ttotal_send_wrs:        %"PRIu64"\n", device_stats->total_send_wrs);
 		printf("\tsend_doorbell_updates: %"PRIu64"\n", device_stats->send_doorbell_updates);
-		printf("\ttotal_recv_wrs: %"PRIu64"\n", device_stats->total_recv_wrs);
+		printf("\ttotal_recv_wrs:        %"PRIu64"\n", device_stats->total_recv_wrs);
 		printf("\trecv_doorbell_updates: %"PRIu64"\n", device_stats->recv_doorbell_updates);
 		printf("\t---------------------------------\n");
 	}
@@ -1055,13 +1055,13 @@ nvme_dump_pcie_statistics(struct spdk_nvme_transport_poll_group_stat *stat)
 	pcie_stat = &stat->pcie;
 
 	printf("PCIE transport:\n");
-	printf("\tpolls: %"PRIu64"\n", pcie_stat->polls);
-	printf("\tidle_polls: %"PRIu64"\n", pcie_stat->idle_polls);
-	printf("\tcompletions: %"PRIu64"\n", pcie_stat->completions);
+	printf("\tpolls:               %"PRIu64"\n", pcie_stat->polls);
+	printf("\tidle_polls:          %"PRIu64"\n", pcie_stat->idle_polls);
+	printf("\tcompletions:         %"PRIu64"\n", pcie_stat->completions);
 	printf("\tcq_doorbell_updates: %"PRIu64"\n", pcie_stat->cq_doorbell_updates);
-	printf("\tsubmitted_requests: %"PRIu64"\n", pcie_stat->submitted_requests);
-	printf("\tsq_doobell_updates: %"PRIu64"\n", pcie_stat->sq_doobell_updates);
-	printf("\tqueued_requests: %"PRIu64"\n", pcie_stat->queued_requests);
+	printf("\tsubmitted_requests:  %"PRIu64"\n", pcie_stat->submitted_requests);
+	printf("\tsq_doobell_updates:  %"PRIu64"\n", pcie_stat->sq_doobell_updates);
+	printf("\tqueued_requests:     %"PRIu64"\n", pcie_stat->queued_requests);
 }
 
 static void
