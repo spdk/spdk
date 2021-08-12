@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -100,6 +101,56 @@ static int decode_admin_passthru(const struct spdk_json_val *val, void *out)
 }
 
 static int
+decode_discovery_filter(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_nvmf_tgt_discovery_filter *_filter = (enum spdk_nvmf_tgt_discovery_filter *)out;
+	enum spdk_nvmf_tgt_discovery_filter filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	char *tokens = spdk_json_strdup(val);
+	char *tok;
+	int rc = -EINVAL;
+	bool all_specified = false;
+
+	if (!tokens) {
+		return -ENOMEM;
+	}
+
+	tok = strtok(tokens, ",");
+	while (tok) {
+		if (strncmp(tok, "match_any", 9) == 0) {
+			if (filter != SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY) {
+				goto out;
+			}
+			filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+			all_specified = true;
+		} else {
+			if (all_specified) {
+				goto out;
+			}
+			if (strncmp(tok, "transport", 9) == 0) {
+				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE;
+			} else if (strncmp(tok, "address", 7) == 0) {
+				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
+			} else if (strncmp(tok, "svcid", 5) == 0) {
+				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
+			} else {
+				SPDK_ERRLOG("Invalid value %s\n", tok);
+				goto out;
+			}
+		}
+
+		tok = strtok(NULL, ",");
+	}
+
+	rc = 0;
+	*_filter = filter;
+
+out:
+	free(tokens);
+
+	return rc;
+}
+
+static int
 nvmf_is_subset_of_env_core_mask(const struct spdk_cpuset *set)
 {
 	uint32_t i, tmp_counter = 0;
@@ -149,7 +200,8 @@ static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder
 	{"acceptor_poll_rate", offsetof(struct spdk_nvmf_tgt_conf, acceptor_poll_rate), spdk_json_decode_uint32, true},
 	{"conn_sched", offsetof(struct spdk_nvmf_tgt_conf, conn_sched), decode_conn_sched, true},
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
-	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true}
+	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
+	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, discovery_filter), decode_discovery_filter, true}
 };
 
 static void

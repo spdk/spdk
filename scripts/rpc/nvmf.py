@@ -24,12 +24,15 @@ def nvmf_set_config(client,
                     acceptor_poll_rate=None,
                     conn_sched=None,
                     passthru_identify_ctrlr=None,
-                    poll_groups_mask=None):
+                    poll_groups_mask=None,
+                    discovery_filter=None):
     """Set NVMe-oF target subsystem configuration.
 
     Args:
         acceptor_poll_rate: Acceptor poll period in microseconds (optional)
         conn_sched: (Deprecated) Ignored
+        discovery_filter: Set discovery filter (optional), possible values are: `match_any` (default) or
+         comma separated values: `transport`, `address`, `svcid`
 
     Returns:
         True or False
@@ -46,18 +49,23 @@ def nvmf_set_config(client,
         params['admin_cmd_passthru'] = admin_cmd_passthru
     if poll_groups_mask:
         params['poll_groups_mask'] = poll_groups_mask
+    if discovery_filter:
+        params['discovery_filter'] = discovery_filter
 
     return client.call('nvmf_set_config', params)
 
 
 def nvmf_create_target(client,
                        name,
-                       max_subsystems=0):
+                       max_subsystems=0,
+                       discovery_filter="match_any"):
     """Create a new NVMe-oF Target.
 
     Args:
         name: Must be unique within the application
         max_subsystems: Maximum number of NVMe-oF subsystems (e.g. 1024). default: 0 (Uses SPDK_NVMF_DEFAULT_MAX_SUBSYSTEMS).
+        discovery_filter: Set discovery filter (optional), possible values are: `match_any` (default) or
+         comma separated values: `transport`, `address`, `svcid`
 
     Returns:
         The name of the new target.
@@ -66,6 +74,7 @@ def nvmf_create_target(client,
 
     params['name'] = name
     params['max_subsystems'] = max_subsystems
+    params['discovery_filter'] = discovery_filter
     return client.call("nvmf_create_target", params)
 
 

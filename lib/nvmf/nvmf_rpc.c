@@ -1657,11 +1657,63 @@ SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", rpc_nvmf_subsystem_allow_any_
 struct nvmf_rpc_target_ctx {
 	char *name;
 	uint32_t max_subsystems;
+	char *discovery_filter;
 };
+
+static int
+decode_discovery_filter(const struct spdk_json_val *val, void *out)
+{
+	enum spdk_nvmf_tgt_discovery_filter *_filter = (enum spdk_nvmf_tgt_discovery_filter *)out;
+	enum spdk_nvmf_tgt_discovery_filter filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+	char *tokens = spdk_json_strdup(val);
+	char *tok;
+	int rc = -EINVAL;
+	bool all_specified = false;
+
+	if (!tokens) {
+		return -ENOMEM;
+	}
+
+	tok = strtok(tokens, ",");
+	while (tok) {
+		if (strncmp(tok, "match_any", 9) == 0) {
+			if (filter != SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY) {
+				goto out;
+			}
+			filter = SPDK_NVMF_TGT_DISCOVERY_MATCH_ANY;
+			all_specified = true;
+		} else {
+			if (all_specified) {
+				goto out;
+			}
+			if (strncmp(tok, "transport", 9) == 0) {
+				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE;
+			} else if (strncmp(tok, "address", 7) == 0) {
+				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_ADDRESS;
+			} else if (strncmp(tok, "svcid", 5) == 0) {
+				filter |= SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_SVCID;
+			} else {
+				SPDK_ERRLOG("Invalid value %s\n", tok);
+				goto out;
+			}
+		}
+
+		tok = strtok(NULL, ",");
+	}
+
+	rc = 0;
+	*_filter = filter;
+
+out:
+	free(tokens);
+
+	return rc;
+}
 
 static const struct spdk_json_object_decoder nvmf_rpc_create_target_decoder[] = {
 	{"name", offsetof(struct nvmf_rpc_target_ctx, name), spdk_json_decode_string},
 	{"max_subsystems", offsetof(struct nvmf_rpc_target_ctx, max_subsystems), spdk_json_decode_uint32, true},
+	{"discovery_filter", offsetof(struct nvmf_rpc_target_ctx, discovery_filter), decode_discovery_filter, true}
 };
 
 static void
@@ -1679,8 +1731,7 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 				    &ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		free(ctx.name);
-		return;
+		goto out;
 	}
 
 	snprintf(opts.name, NVMF_TGT_NAME_MAX_LENGTH, "%s", ctx.name);
@@ -1689,8 +1740,7 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 	if (spdk_nvmf_get_tgt(opts.name) != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Target already exists.");
-		free(ctx.name);
-		return;
+		goto out;
 	}
 
 	tgt = spdk_nvmf_tgt_create(&opts);
@@ -1698,14 +1748,15 @@ rpc_nvmf_create_target(struct spdk_jsonrpc_request *request,
 	if (tgt == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to create the requested target.");
-		free(ctx.name);
-		return;
+		goto out;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, spdk_nvmf_tgt_get_name(tgt));
 	spdk_jsonrpc_end_result(request, w);
+out:
 	free(ctx.name);
+	free(ctx.discovery_filter);
 }
 /* private */ SPDK_RPC_REGISTER("nvmf_create_target", rpc_nvmf_create_target, SPDK_RPC_RUNTIME);
 
