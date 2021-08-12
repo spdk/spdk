@@ -90,8 +90,8 @@ function install_refspdk() {
 		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g')
 		if [[ $OSID != freebsd ]]; then
 			$MAKE -C $output_dir $MAKEFLAGS include/spdk/config.h
-			CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/build/ocf.a
-			$output_dir/configure $config_params --with-ocf=$output_dir/build/ocf.a --with-shared
+			CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/ocf.a
+			$output_dir/configure $config_params --with-ocf=$output_dir/ocf.a --with-shared
 		fi
 		$MAKE -C $output_dir $MAKEFLAGS
 	)

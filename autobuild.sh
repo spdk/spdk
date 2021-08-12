@@ -45,9 +45,9 @@ function ocf_precompile() {
 	# So we precompile OCF now for further use as standalone static library
 	./configure $(echo $config_params | sed 's/--enable-coverage//g')
 	$MAKE $MAKEFLAGS include/spdk/config.h
-	CC=gcc CCAR=ar $MAKE $MAKEFLAGS -C lib/env_ocf exportlib O=$rootdir/build/ocf.a
+	CC=gcc CCAR=ar $MAKE $MAKEFLAGS -C lib/env_ocf exportlib O=$rootdir/ocf.a
 	# Set config to use precompiled library
-	config_params="$config_params --with-ocf=/$rootdir/build/ocf.a"
+	config_params="$config_params --with-ocf=/$rootdir/ocf.a"
 	# need to reconfigure to avoid clearing ocf related files on future make clean.
 	./configure $config_params
 }

@@ -243,7 +243,7 @@ function confirm_makefile_deps() {
 
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
-	config_params="$config_params --with-ocf=$rootdir/build/ocf.a"
+	config_params="$config_params --with-ocf=$rootdir/ocf.a"
 fi
 
 $MAKE $MAKEFLAGS clean
