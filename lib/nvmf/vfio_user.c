@@ -183,7 +183,7 @@ struct nvmf_vfio_user_endpoint {
 	vfu_ctx_t				*vfu_ctx;
 	struct msixcap				*msix;
 	vfu_pci_config_space_t			*pci_config_space;
-	int					fd;
+	int					devmem_fd;
 	volatile uint32_t			*doorbells;
 
 	struct spdk_nvme_transport_id		trid;
@@ -499,8 +499,8 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 		munmap((void *)endpoint->doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
 	}
 
-	if (endpoint->fd > 0) {
-		close(endpoint->fd);
+	if (endpoint->devmem_fd > 0) {
+		close(endpoint->devmem_fd);
 	}
 
 	vfu_destroy_ctx(endpoint->vfu_ctx);
@@ -1875,7 +1875,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 	} else {
 		ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR0_REGION_IDX, NVME_REG_BAR0_SIZE,
 				       access_bar0_fn, VFU_REGION_FLAG_RW | VFU_REGION_FLAG_MEM,
-				       sparse_mmap, 1, endpoint->fd, 0);
+				       sparse_mmap, 1, endpoint->devmem_fd, 0);
 	}
 
 	if (ret < 0) {
@@ -2022,7 +2022,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		return -ENOMEM;
 	}
 
-	endpoint->fd = -1;
+	endpoint->devmem_fd = -1;
 	memcpy(&endpoint->trid, trid, sizeof(endpoint->trid));
 
 	err = asprintf(&path, "%s/bar0", endpoint_id(endpoint));
@@ -2040,7 +2040,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	}
 	free(path);
 
-	endpoint->fd = fd;
+	endpoint->devmem_fd = fd;
 	err = ftruncate(fd, NVMF_VFIO_USER_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE);
 	if (err != 0) {
 		goto out;
