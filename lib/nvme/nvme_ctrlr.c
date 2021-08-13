@@ -673,6 +673,32 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+nvme_ctrlr_alloc_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t ana_log_page_size;
+
+	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + ctrlr->cdata.nanagrpid *
+			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->cdata.nn *
+			    sizeof(uint32_t);
+
+	ctrlr->ana_log_page = calloc(1, ana_log_page_size);
+	if (ctrlr->ana_log_page == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate ANA log page buffer\n");
+		return -ENXIO;
+	}
+
+	ctrlr->copied_ana_desc = calloc(1, ana_log_page_size);
+	if (ctrlr->copied_ana_desc == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate a buffer to parse ANA descriptor\n");
+		return -ENOMEM;
+	}
+
+	ctrlr->ana_log_page_size = ana_log_page_size;
+
+	return 0;
+}
+
+static int
 nvme_ctrlr_update_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status *status;
@@ -708,24 +734,12 @@ nvme_ctrlr_update_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_init_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint32_t ana_log_page_size;
+	int rc;
 
-	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + ctrlr->cdata.nanagrpid *
-			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->cdata.nn *
-			    sizeof(uint32_t);
-
-	ctrlr->ana_log_page = calloc(1, ana_log_page_size);
-	if (ctrlr->ana_log_page == NULL) {
-		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate ANA log page buffer\n");
-		return -ENXIO;
+	rc = nvme_ctrlr_alloc_ana_log_page(ctrlr);
+	if (rc) {
+		return rc;
 	}
-	ctrlr->copied_ana_desc = calloc(1, ana_log_page_size);
-	if (ctrlr->copied_ana_desc == NULL) {
-		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate a buffer to parse ANA descriptor\n");
-		return -ENOMEM;
-	}
-	ctrlr->ana_log_page_size = ana_log_page_size;
-
 
 	return nvme_ctrlr_update_ana_log_page(ctrlr);
 }
