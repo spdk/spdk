@@ -1462,6 +1462,24 @@ function reap_spdk_processes() {
 	return 1
 }
 
+function is_block_zoned() {
+	local device=$1
+
+	[[ -e /sys/block/$device/queue/zoned ]] || return 1
+	[[ $(< "/sys/block/$device/queue/zoned") != none ]]
+}
+
+function get_zoned_devs() {
+	local -gA zoned_devs=()
+	local nvme bdf
+
+	for nvme in /sys/block/nvme*; do
+		if is_block_zoned "${nvme##*/}"; then
+			zoned_devs["${nvme##*/}"]=$(< "$nvme/device/address")
+		fi
+	done
+}
+
 # Define temp storage for all the tests. Look for 2GB at minimum
 set_test_storage "${TEST_MIN_STORAGE_SIZE:-$((1 << 31))}"
 

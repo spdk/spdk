@@ -41,6 +41,9 @@ get_ftl_nvme_dev() {
 
 	for nvme in $(nvme_in_userspace); do
 		identify=$("$SPDK_EXAMPLE_DIR/identify" -r trtype:pcie -r "traddr:$nvme")
+		# TODO: Skip zoned nvme devices - such setup for FTL is currently not
+		# supported. See https://github.com/spdk/spdk/issues/1992 for details.
+		[[ $identity =~ "NVMe ZNS Zone Report" ]] && continue
 		[[ $identify =~ "Current LBA Format:"\ +"LBA Format #"([0-9]+) ]]
 		[[ $identify =~ "LBA Format #${BASH_REMATCH[1]}: Data Size:"\ +([0-9]+) ]]
 		lba=${BASH_REMATCH[1]}

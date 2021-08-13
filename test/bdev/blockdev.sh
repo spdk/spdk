@@ -63,11 +63,13 @@ function setup_nvme_conf() {
 
 function setup_gpt_conf() {
 	$rootdir/scripts/setup.sh reset
+	get_zoned_devs
 	# Get nvme devices by following drivers' links towards nvme class
 	local nvme_devs=(/sys/bus/pci/drivers/nvme/*/nvme/nvme*/nvme*n*) nvme_dev
 	gpt_nvme=""
 	# Pick first device which doesn't have any valid partition table
 	for nvme_dev in "${nvme_devs[@]}"; do
+		[[ -z ${zoned_devs["${nvme_dev##*/}"]} ]] || continue
 		dev=/dev/${nvme_dev##*/}
 		if ! pt=$(parted "$dev" -ms print 2>&1); then
 			[[ $pt == *"$dev: unrecognised disk label"* ]] || continue

@@ -87,10 +87,22 @@ rm -f /var/tmp/spdk*.sock
 # Load the kernel driver
 ./scripts/setup.sh reset
 
+get_zoned_devs
+
+if ((${#zoned_devs[@]} > 0)); then
+	# FIXME: For now make sure zoned devices are tested on-demand by
+	# a designated tests instead of falling into any other. The main
+	# concern here are fio workloads where specific configuration
+	# must be in place for it to work with the zoned device.
+	export PCI_BLOCKED="${zoned_devs[*]}"
+fi
+
 # Delete all leftover lvols and gpt partitions
 # Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
 # Filter out nvme with partitions - the "p*" suffix
 for dev in $(ls /dev/nvme*n* | grep -v p || true); do
+	# Skip zoned devices as non-sequential IO will always fail
+	[[ -z ${zoned_devs["${dev##*/}"]} ]] || continue
 	if ! block_in_use "$dev"; then
 		dd if=/dev/zero of="$dev" bs=1M count=1
 	fi
@@ -194,6 +206,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		if [[ $SPDK_TEST_NVME_CMB -eq 1 ]]; then
 			run_test "nvme_cmb" test/nvme/cmb/cmb.sh
 		fi
+
 		run_test "nvme_rpc" test/nvme/nvme_rpc.sh
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
