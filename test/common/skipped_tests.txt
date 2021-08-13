@@ -82,3 +82,7 @@ vhost_scsi_cores_2ctrl
 busy
 balanced
 core_load
+# Waiting for CI support
+nvme_zns
+is_zoned
+zoned_fio

@@ -95,6 +95,7 @@ if ((${#zoned_devs[@]} > 0)); then
 	# concern here are fio workloads where specific configuration
 	# must be in place for it to work with the zoned device.
 	export PCI_BLOCKED="${zoned_devs[*]}"
+	export PCI_ZONED="${zoned_devs[*]}"
 fi
 
 # Delete all leftover lvols and gpt partitions
@@ -205,6 +206,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		fi
 		if [[ $SPDK_TEST_NVME_CMB -eq 1 ]]; then
 			run_test "nvme_cmb" test/nvme/cmb/cmb.sh
+		fi
+
+		if [[ $SPDK_TEST_NVME_ZNS -eq 1 ]]; then
+			run_test "nvme_zns" test/nvme/zns/zns.sh
 		fi
 
 		run_test "nvme_rpc" test/nvme/nvme_rpc.sh
