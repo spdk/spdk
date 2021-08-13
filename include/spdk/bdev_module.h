@@ -55,8 +55,8 @@
 /** Block device module */
 struct spdk_bdev_module {
 	/**
-	 * Initialization function for the module.  Called by the spdk
-	 * application during startup.
+	 * Initialization function for the module. Called by the bdev library
+	 * during startup.
 	 *
 	 * Modules are required to define this function.
 	 */
@@ -72,16 +72,20 @@ struct spdk_bdev_module {
 
 	/**
 	 * Optional callback for modules that require notification of when
-	 * the bdev subsystem is starting the fini process.
+	 * the bdev subsystem is starting the fini process. Called by
+	 * the bdev library before starting to unregister the bdevs.
+	 *
+	 * If a module claimed a bdev without presenting virtual bdevs on top of it,
+	 * it has to release that claim during this call.
 	 *
 	 * Modules are not required to define this function.
 	 */
 	void (*fini_start)(void);
 
 	/**
-	 * Finish function for the module.  Called by the spdk application
+	 * Finish function for the module. Called by the bdev library
 	 * after all bdevs for all modules have been unregistered.  This allows
-	 * the module to do any final cleanup before the SPDK application exits.
+	 * the module to do any final cleanup before the bdev library finishes operation.
 	 *
 	 * Modules are not required to define this function.
 	 */
@@ -128,7 +132,8 @@ struct spdk_bdev_module {
 	/**
 	 * Second notification that a bdev should be examined by a virtual bdev module.
 	 * Virtual bdev modules may use this to examine newly-added bdevs and automatically
-	 * create their own vbdevs. This callback may use I/O operations end finish asynchronously.
+	 * create their own vbdevs. This callback may use I/O operations and finish asynchronously.
+	 * Once complete spdk_bdev_module_examine_done() must be called.
 	 */
 	void (*examine_disk)(struct spdk_bdev *bdev);
 
@@ -802,8 +807,8 @@ void spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno);
 /**
  * Indicate to the bdev layer that the module is done examining a bdev.
  *
- * To be called synchronously or asynchronously in response to the
- * module's examine function being called.
+ * To be called during examine_config function or asynchronously in response to the
+ * module's examine_disk function being called.
  *
  * \param module Pointer to the module completing the examination.
  */
@@ -812,18 +817,17 @@ void spdk_bdev_module_examine_done(struct spdk_bdev_module *module);
 /**
  * Indicate to the bdev layer that the module is done initializing.
  *
- * To be called synchronously or asynchronously in response to the
- * module_init function being called.
+ * To be called once during module_init or asynchronously after
+ * an asynchronous operation required for module initialization is completed.
  *
  * \param module Pointer to the module completing the initialization.
  */
 void spdk_bdev_module_init_done(struct spdk_bdev_module *module);
 
 /**
- * Indicate to the bdev layer that the module is done cleaning up.
+ * Indicate that the module finish has completed.
  *
- * To be called either synchronously or asynchronously
- * in response to the module_fini function being called.
+ * To be called in response to the module_fini, only if async_fini is set.
  *
  */
 void spdk_bdev_module_finish_done(void);
