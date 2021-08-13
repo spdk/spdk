@@ -184,6 +184,17 @@ _get_task(struct accel_io_channel *accel_ch, struct spdk_accel_batch *batch,
 	return accel_task;
 }
 
+/* Post SW completions to a list and complete in a poller as we don't want to
+ * complete them on the caller's stack as they'll likely submit another. */
+inline static void
+_add_to_comp_list(struct accel_io_channel *accel_ch, struct spdk_accel_task *accel_task, int status)
+{
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(accel_ch->engine_ch);
+
+	accel_task->status = status;
+	TAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
+}
+
 /* Accel framework public API for copy function */
 int
 spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
@@ -206,7 +217,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		_sw_accel_copy(dst, src, nbytes);
-		spdk_accel_task_complete(accel_task, 0);
+		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
 }
@@ -239,7 +250,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, v
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		_sw_accel_dualcast(dst1, dst2, src, nbytes);
-		spdk_accel_task_complete(accel_task, 0);
+		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
 }
@@ -267,7 +278,7 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1, void *src2, ui
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		rc = _sw_accel_compare(src1, src2, nbytes);
-		spdk_accel_task_complete(accel_task, rc);
+		_add_to_comp_list(accel_ch, accel_task, rc);
 		return 0;
 	}
 }
@@ -294,7 +305,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		_sw_accel_fill(dst, fill, nbytes);
-		spdk_accel_task_complete(accel_task, 0);
+		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
 }
@@ -323,7 +334,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst, void *sr
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		_sw_accel_crc32c(crc_dst, src, seed, nbytes);
-		spdk_accel_task_complete(accel_task, 0);
+		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
 }
@@ -405,7 +416,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst, struct 
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		_sw_accel_crc32cv(crc_dst, iov, iov_cnt, seed);
-		spdk_accel_task_complete(accel_task, 0);
+		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
 }
@@ -437,7 +448,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
 	} else {
 		_sw_accel_copy(dst, src, nbytes);
 		_sw_accel_crc32c(crc_dst, src, seed, nbytes);
-		spdk_accel_task_complete(accel_task, 0);
+		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
 }
@@ -493,7 +504,7 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iov
 	} else {
 		_sw_accel_copy(dst, src_iovs[0].iov_base, src_iovs[0].iov_len);
 		_sw_accel_crc32cv(crc_dst, src_iovs, iov_cnt, seed);
-		spdk_accel_task_complete(accel_task, 0);
+		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
 }
@@ -826,15 +837,15 @@ spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *bat
 		switch (accel_task->op_code) {
 		case ACCEL_OPCODE_MEMMOVE:
 			_sw_accel_copy(accel_task->dst, accel_task->src, accel_task->nbytes);
-			spdk_accel_task_complete(accel_task, 0);
+			_add_to_comp_list(accel_ch, accel_task, 0);
 			break;
 		case ACCEL_OPCODE_MEMFILL:
 			_sw_accel_fill(accel_task->dst, accel_task->fill_pattern, accel_task->nbytes);
-			spdk_accel_task_complete(accel_task, 0);
+			_add_to_comp_list(accel_ch, accel_task, 0);
 			break;
 		case ACCEL_OPCODE_COMPARE:
 			rc = _sw_accel_compare(accel_task->src, accel_task->src2, accel_task->nbytes);
-			spdk_accel_task_complete(accel_task, rc);
+			_add_to_comp_list(accel_ch, accel_task, rc);
 			batch->status |= rc;
 			break;
 		case ACCEL_OPCODE_CRC32C:
@@ -844,17 +855,17 @@ spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *bat
 			} else {
 				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
 			}
-			spdk_accel_task_complete(accel_task, 0);
+			_add_to_comp_list(accel_ch, accel_task, 0);
 			break;
 		case ACCEL_OPCODE_COPY_CRC32C:
 			_sw_accel_copy(accel_task->dst, accel_task->src, accel_task->nbytes);
 			_sw_accel_crc32c(accel_task->crc_dst, accel_task->src, accel_task->seed, accel_task->nbytes);
-			spdk_accel_task_complete(accel_task, 0);
+			_add_to_comp_list(accel_ch, accel_task, 0);
 			break;
 		case ACCEL_OPCODE_DUALCAST:
 			_sw_accel_dualcast(accel_task->dst, accel_task->dst2, accel_task->src,
 					   accel_task->nbytes);
-			spdk_accel_task_complete(accel_task, 0);
+			_add_to_comp_list(accel_ch, accel_task, 0);
 			break;
 		default:
 			assert(false);
@@ -1121,14 +1132,44 @@ static struct spdk_accel_engine sw_accel_engine = {
 };
 
 static int
+accel_comp_poll(void *arg)
+{
+	struct sw_accel_io_channel	*sw_ch = arg;
+	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
+	struct spdk_accel_task		*accel_task;
+
+	if (TAILQ_EMPTY(&sw_ch->tasks_to_complete)) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	TAILQ_INIT(&tasks_to_complete);
+	TAILQ_SWAP(&tasks_to_complete, &sw_ch->tasks_to_complete, spdk_accel_task, link);
+
+	while ((accel_task = TAILQ_FIRST(&tasks_to_complete))) {
+		TAILQ_REMOVE(&tasks_to_complete, accel_task, link);
+		spdk_accel_task_complete(accel_task, accel_task->status);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static int
 sw_accel_create_cb(void *io_device, void *ctx_buf)
 {
+	struct sw_accel_io_channel *sw_ch = ctx_buf;
+
+	TAILQ_INIT(&sw_ch->tasks_to_complete);
+	sw_ch->completion_poller = SPDK_POLLER_REGISTER(accel_comp_poll, sw_ch, 0);
+
 	return 0;
 }
 
 static void
 sw_accel_destroy_cb(void *io_device, void *ctx_buf)
 {
+	struct sw_accel_io_channel *sw_ch = ctx_buf;
+
+	spdk_poller_unregister(&sw_ch->completion_poller);
 }
 
 static struct spdk_io_channel *sw_accel_get_io_channel(void)
@@ -1147,7 +1188,7 @@ sw_accel_engine_init(void)
 {
 	accel_sw_register(&sw_accel_engine);
 	spdk_io_device_register(&sw_accel_engine, sw_accel_create_cb, sw_accel_destroy_cb,
-				0, "sw_accel_engine");
+				sizeof(struct sw_accel_io_channel), "sw_accel_engine");
 
 	return 0;
 }

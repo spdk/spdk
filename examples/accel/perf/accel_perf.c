@@ -44,7 +44,6 @@
 #define DATA_PATTERN 0x5a
 #define ALIGN_4K 0x1000
 
-static bool g_using_sw_engine = false;
 static uint64_t	g_tsc_rate;
 static uint64_t g_tsc_end;
 static int g_rc;
@@ -84,13 +83,11 @@ struct ap_task {
 	void			*dst2;
 	uint32_t		crc_dst;
 	struct worker_thread	*worker;
-	int			status;
 	int			expected_status; /* used for the compare operation */
 	TAILQ_ENTRY(ap_task)	link;
 };
 
 struct accel_batch {
-	int				status;
 	int				cmd_count;
 	struct spdk_accel_batch		*batch;
 	struct worker_thread		*worker;
@@ -493,7 +490,6 @@ _free_task_buffers(struct ap_task *task)
 	}
 }
 
-static void _batch_done(void *cb_arg);
 static void
 _build_batch(struct worker_thread *worker, struct ap_task *task)
 {
@@ -562,16 +558,17 @@ _drain_batch(struct worker_thread *worker)
 }
 
 static void
-_batch_done(void *cb_arg)
+batch_done(void *arg1, int status)
 {
-	struct accel_batch *worker_batch = (struct accel_batch *)cb_arg;
+	struct accel_batch *worker_batch = (struct accel_batch *)arg1;
 	struct worker_thread *worker = worker_batch->worker;
 	int rc;
 
+	assert(worker);
 	assert(TAILQ_EMPTY(&worker->in_use_batches) == 0);
 
-	if (worker_batch->status) {
-		SPDK_ERRLOG("error %d\n", worker_batch->status);
+	if (status) {
+		SPDK_ERRLOG("error %d\n", status);
 	}
 
 	worker->current_queue_depth--;
@@ -603,17 +600,6 @@ _batch_done(void *cb_arg)
 	}
 }
 
-static void
-batch_done(void *cb_arg, int status)
-{
-	struct accel_batch *worker_batch = (struct accel_batch *)cb_arg;
-
-	assert(worker_batch->worker);
-
-	worker_batch->status = status;
-	spdk_thread_send_msg(worker_batch->worker->thread, _batch_done, worker_batch);
-}
-
 static int
 _vector_memcmp(void *_dst, struct iovec *src_iovs, uint32_t iovcnt)
 {
@@ -637,7 +623,7 @@ _vector_memcmp(void *_dst, struct iovec *src_iovs, uint32_t iovcnt)
 }
 
 static void
-_accel_done(void *arg1)
+accel_done(void *arg1, int status)
 {
 	struct ap_task *task = arg1;
 	struct worker_thread *worker = task->worker;
@@ -646,7 +632,7 @@ _accel_done(void *arg1)
 	assert(worker);
 	assert(worker->current_queue_depth > 0);
 
-	if (g_verify && task->status == 0) {
+	if (g_verify && status == 0) {
 		switch (g_workload_selection) {
 		case ACCEL_COPY_CRC32C:
 			sw_crc32c = spdk_crc32c_iov_update(task->iovs, task->iov_cnt, ~g_crc32c_seed);
@@ -697,9 +683,9 @@ _accel_done(void *arg1)
 	}
 
 	if (task->expected_status == -EILSEQ) {
-		assert(task->status != 0);
+		assert(status != 0);
 		worker->injected_miscompares++;
-	} else if (task->status) {
+	} else if (status) {
 		/* Expected to pass but the accel engine reported an error (ex: COMPARE operation). */
 		worker->xfer_failed++;
 	}
@@ -978,22 +964,6 @@ error:
 	spdk_app_stop(-1);
 }
 
-static void
-accel_done(void *cb_arg, int status)
-{
-	struct ap_task *task = (struct ap_task *)cb_arg;
-	struct worker_thread *worker = task->worker;
-
-	assert(worker);
-
-	task->status = status;
-	if (g_using_sw_engine == false) {
-		_accel_done(task);
-	} else {
-		spdk_thread_send_msg(worker->thread, _accel_done, task);
-	}
-}
-
 static inline void
 identify_accel_engine_usage(void)
 {
@@ -1005,7 +975,6 @@ identify_accel_engine_usage(void)
 
 	capabilities = spdk_accel_get_capabilities(ch);
 	if ((capabilities & g_workload_selection) != g_workload_selection) {
-		g_using_sw_engine = true;
 		SPDK_WARNLOG("The selected workload is not natively supported by the current engine\n");
 		SPDK_WARNLOG("The software engine will be used instead.\n\n");
 	}

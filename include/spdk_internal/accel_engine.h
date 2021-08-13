@@ -53,6 +53,11 @@ struct accel_io_channel {
 	TAILQ_HEAD(, spdk_accel_batch)	batches;
 };
 
+struct sw_accel_io_channel {
+	struct spdk_poller		*completion_poller;
+	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
+};
+
 struct spdk_accel_batch {
 	/* Lists of commands in the batch. */
 	TAILQ_HEAD(, spdk_accel_task)	hw_tasks;
@@ -104,8 +109,8 @@ struct spdk_accel_task {
 	uint32_t			*crc_dst;
 	enum accel_opcode		op_code;
 	uint64_t			nbytes;
+	int				status;
 	TAILQ_ENTRY(spdk_accel_task)	link;
-	uint8_t				offload_ctx[0]; /* Not currently used. */
 };
 
 struct spdk_accel_engine {
