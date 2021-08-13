@@ -2884,7 +2884,7 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 	CU_ASSERT(ctrlr.ana_log_page_size == sizeof(struct spdk_nvme_ana_page) +
 		  sizeof(struct spdk_nvme_ana_group_descriptor) * 1 + sizeof(uint32_t) * 1);
 	CU_ASSERT(ctrlr.log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] == true);
-	spdk_free(ctrlr.ana_log_page);
+	free(ctrlr.ana_log_page);
 	free(ctrlr.copied_ana_desc);
 }
 
@@ -2960,7 +2960,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	CU_ASSERT(ns[2].ana_group_id == 1);
 	CU_ASSERT(ns[2].ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
 
-	spdk_free(ctrlr.ana_log_page);
+	free(ctrlr.ana_log_page);
 	free(ctrlr.copied_ana_desc);
 }
 
