@@ -203,7 +203,9 @@ unregister_finish(struct vbdev_ocf *vbdev)
 		ocf_mngt_cache_put(vbdev->ocf_cache);
 	}
 
-	vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
+	if (vbdev->cache_ctx) {
+		vbdev_ocf_cache_ctx_put(vbdev->cache_ctx);
+	}
 	vbdev_ocf_mngt_continue(vbdev, 0);
 }
 
@@ -1066,10 +1068,19 @@ static void
 start_cache(struct vbdev_ocf *vbdev)
 {
 	ocf_cache_t existing;
+	uint32_t cache_block_size = vbdev->cache.bdev->blocklen;
+	uint32_t core_block_size = vbdev->core.bdev->blocklen;
 	int rc;
 
 	if (is_ocf_cache_running(vbdev)) {
 		vbdev_ocf_mngt_stop(vbdev, NULL, -EALREADY);
+		return;
+	}
+
+	if (cache_block_size > core_block_size) {
+		SPDK_ERRLOG("Cache bdev block size (%d) is bigger then core bdev block size (%d)\n",
+			    cache_block_size, core_block_size);
+		vbdev_ocf_mngt_exit(vbdev, unregister_path_dirty, -EINVAL);
 		return;
 	}
 
