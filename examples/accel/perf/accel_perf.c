@@ -324,7 +324,7 @@ _get_task_data_bufs(struct ap_task *task)
 		}
 	}
 
-	if (g_workload_selection != ACCEL_COPY_CRC32C) {
+	if (g_workload_selection != ACCEL_CRC32C) {
 		task->dst = spdk_dma_zmalloc(dst_buff_len, align, NULL);
 		if (task->dst == NULL) {
 			fprintf(stderr, "Unable to alloc dst buffer\n");
@@ -471,7 +471,7 @@ _free_task_buffers(struct ap_task *task)
 {
 	uint32_t i;
 
-	if (g_workload_selection == ACCEL_CRC32C) {
+	if (g_workload_selection == ACCEL_CRC32C || g_workload_selection == ACCEL_COPY_CRC32C) {
 		if (task->iovs) {
 			for (i = 0; i < task->iov_cnt; i++) {
 				if (task->iovs[i].iov_base) {
