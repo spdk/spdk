@@ -970,7 +970,7 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 	tcp_req->datao += pdu->data_len;
 	flags = c2h_data->common.flags;
 
-	if (flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) {
+	if (flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU) {
 		if (tcp_req->datao == tcp_req->req->payload_size) {
 			tcp_req->rsp.status.p = 0;
 		} else {
@@ -979,10 +979,11 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 
 		tcp_req->rsp.cid = tcp_req->cid;
 		tcp_req->rsp.sqid = tqpair->qpair.id;
-		tcp_req->ordering.bits.data_recv = 1;
-
-		if (nvme_tcp_req_complete_safe(tcp_req)) {
-			(*reaped)++;
+		if (flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) {
+			tcp_req->ordering.bits.data_recv = 1;
+			if (nvme_tcp_req_complete_safe(tcp_req)) {
+				(*reaped)++;
+			}
 		}
 	}
 }
@@ -1292,6 +1293,7 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data = &pdu->hdr.c2h_data;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
+	int flags = c2h_data->common.flags;
 
 	SPDK_DEBUGLOG(nvme, "enter\n");
 	SPDK_DEBUGLOG(nvme, "c2h_data info on tqpair(%p): datao=%u, datal=%u, cccid=%d\n",
@@ -1307,6 +1309,14 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 	SPDK_DEBUGLOG(nvme, "tcp_req(%p) on tqpair(%p): datao=%u, payload_size=%u\n",
 		      tcp_req, tqpair, tcp_req->datao, tcp_req->req->payload_size);
+
+	if (spdk_unlikely((flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) &&
+			  !(flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU))) {
+		SPDK_ERRLOG("Invalid flag flags=%d in c2h_data=%p\n", flags, c2h_data);
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
+		error_offset = offsetof(struct spdk_nvme_tcp_c2h_data_hdr, common);
+		goto end;
+	}
 
 	if (c2h_data->datal > tcp_req->req->payload_size) {
 		SPDK_ERRLOG("Invalid datal for tcp_req(%p), datal(%u) exceeds payload_size(%u)\n",

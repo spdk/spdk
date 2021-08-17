@@ -1157,7 +1157,8 @@ test_nvme_tcp_c2h_payload_handle(void)
 	TAILQ_INIT(&tcp_req.tqpair->outstanding_reqs);
 
 	pdu.req = &tcp_req;
-	pdu.hdr.c2h_data.common.flags = SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
+	pdu.hdr.c2h_data.common.flags = SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS |
+					SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
 	pdu.data_len = 1024;
 
 	tqpair.qpair.id = 1;
@@ -1303,7 +1304,8 @@ test_nvme_tcp_pdu_payload_handle(void)
 	tqpair.qpair.id = 1;
 	recv_pdu.ddgst_enable = false;
 	recv_pdu.req = &tcp_req;
-	recv_pdu.hdr.c2h_data.common.flags = SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS;
+	recv_pdu.hdr.c2h_data.common.flags = SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS |
+					     SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU;
 	recv_pdu.data_len = 1024;
 	tcp_req.ordering.bits.data_recv = 0;
 	tcp_req.req->cb_fn = ut_nvme_complete_request;
