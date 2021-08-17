@@ -423,12 +423,18 @@ nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 static uint32_t *g_active_ns_list = NULL;
 static uint32_t g_active_ns_list_length = 0;
 static struct spdk_nvme_ctrlr_data *g_cdata = NULL;
+static bool g_fail_next_identify = false;
 
 int
 nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cntid, uint32_t nsid,
 			uint8_t csi, void *payload, size_t payload_size,
 			spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	if (g_fail_next_identify) {
+		g_fail_next_identify = false;
+		return 1;
+	}
+
 	memset(payload, 0, payload_size);
 	if (cns == SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST) {
 		uint32_t count = 0;
@@ -463,8 +469,6 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		if (g_cdata) {
 			memcpy(payload, g_cdata, sizeof(*g_cdata));
 		}
-	} else if (nsid == 99) {
-		return 1;
 	} else if (cns == SPDK_NVME_IDENTIFY_NS_IOCS) {
 		return 0;
 	}
@@ -2856,7 +2860,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	prev_nsid = 1;
 	ctrlr.active_ns_list = active_ns_list;
 	ns[1].csi = SPDK_NVME_CSI_ZNS;
-	ns[1].id = 99;
+	g_fail_next_identify = true;
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
