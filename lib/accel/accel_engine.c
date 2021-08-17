@@ -70,6 +70,7 @@ static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
 
 static void _sw_accel_dualcast(void *dst1, void *dst2, void *src, uint64_t nbytes);
 static void _sw_accel_copy(void *dst, void *src, uint64_t nbytes);
+static void _sw_accel_copyv(void *dst, struct iovec *iov, uint32_t iovcnt);
 static int _sw_accel_compare(void *src1, void *src2, uint64_t nbytes);
 static void _sw_accel_fill(void *dst, uint8_t fill, uint64_t nbytes);
 static void _sw_accel_crc32c(uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes);
@@ -502,7 +503,7 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iov
 
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		_sw_accel_copy(dst, src_iovs[0].iov_base, src_iovs[0].iov_len);
+		_sw_accel_copyv(dst, src_iovs, iov_cnt);
 		_sw_accel_crc32cv(crc_dst, src_iovs, iov_cnt, seed);
 		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
@@ -858,8 +859,13 @@ spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *bat
 			_add_to_comp_list(accel_ch, accel_task, 0);
 			break;
 		case ACCEL_OPCODE_COPY_CRC32C:
-			_sw_accel_copy(accel_task->dst, accel_task->src, accel_task->nbytes);
-			_sw_accel_crc32c(accel_task->crc_dst, accel_task->src, accel_task->seed, accel_task->nbytes);
+			if (accel_task->v.iovcnt == 0) {
+				_sw_accel_copy(accel_task->dst, accel_task->src, accel_task->nbytes);
+				_sw_accel_crc32c(accel_task->crc_dst, accel_task->src, accel_task->seed, accel_task->nbytes);
+			} else {
+				_sw_accel_copyv(accel_task->dst, accel_task->v.iovs, accel_task->v.iovcnt);
+				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
+			}
 			_add_to_comp_list(accel_ch, accel_task, 0);
 			break;
 		case ACCEL_OPCODE_DUALCAST:
@@ -1091,6 +1097,18 @@ static void
 _sw_accel_copy(void *dst, void *src, uint64_t nbytes)
 {
 	memcpy(dst, src, (size_t)nbytes);
+}
+
+static void
+_sw_accel_copyv(void *dst, struct iovec *iov, uint32_t iovcnt)
+{
+	uint32_t i;
+
+	for (i = 0; i < iovcnt; i++) {
+		assert(iov[i].iov_base != NULL);
+		memcpy(dst, iov[i].iov_base, iov[i].iov_len);
+		dst += iov[i].iov_len;
+	}
 }
 
 static int
