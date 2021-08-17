@@ -1233,8 +1233,6 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify active ns";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ACTIVE_NS:
 		return "wait for identify active ns";
-	case NVME_CTRLR_STATE_CONSTRUCT_NS:
-		return "construct namespaces";
 	case NVME_CTRLR_STATE_IDENTIFY_NS:
 		return "identify ns";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
@@ -2099,22 +2097,33 @@ out:
 	}
 }
 
+static int nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr);
+
 static void
 _nvme_active_ns_ctx_deleter(struct nvme_active_ns_ctx *ctx)
 {
+	int rc;
 	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
 
 	if (ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
-		nvme_ctrlr_destruct_namespaces(ctrlr);
 		nvme_active_ns_ctx_destroy(ctx);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
 	}
 
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
+
+	rc = nvme_ctrlr_construct_namespaces(ctrlr);
+	if (rc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Unable to construct namespace array!\n");
+		nvme_active_ns_ctx_destroy(ctx);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		return;
+	}
+
 	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list);
 	nvme_active_ns_ctx_destroy(ctx);
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONSTRUCT_NS, ctrlr->opts.admin_timeout_ms);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS, ctrlr->opts.admin_timeout_ms);
 }
 
 static void
@@ -3518,14 +3527,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS:
 		_nvme_ctrlr_identify_active_ns(ctrlr);
-		break;
-
-	case NVME_CTRLR_STATE_CONSTRUCT_NS:
-		rc = nvme_ctrlr_construct_namespaces(ctrlr);
-		if (!rc) {
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS,
-					     ctrlr->opts.admin_timeout_ms);
-		}
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_NS:
