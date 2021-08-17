@@ -1152,25 +1152,31 @@ static uint8_t
 refresh_threads_tab(uint8_t current_page)
 {
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
-	uint64_t i, threads_count;
-	uint16_t col;
+	uint64_t i, j, threads_count;
+	uint16_t col, empty_col = 0;
 	uint8_t max_pages, item_index;
 	char pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
 	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN];
-	struct rpc_thread_info *thread_info[RPC_MAX_THREADS];
 
 	threads_count = g_last_threads_count;
-
-	for (i = 0; i < threads_count; i++) {
-		thread_info[i] = &g_threads_info[i];
-	}
 
 	max_pages = (threads_count + g_max_data_rows - 1) / g_max_data_rows;
 
 	for (i = current_page * g_max_data_rows;
-	     i < spdk_min(threads_count, (uint64_t)((current_page + 1) * g_max_data_rows));
+	     i < (uint64_t)((current_page + 1) * g_max_data_rows);
 	     i++) {
 		item_index = i - (current_page * g_max_data_rows);
+
+		/* When number of threads decreases, this will print spaces in places
+		 * where non existent threads were previously displayed. */
+		if (i >= threads_count) {
+			for (j = 1; j < (uint64_t)g_max_col - 1; j++) {
+				mvwprintw(g_tabs[THREADS_TAB], item_index + TABS_DATA_START_ROW, j, " ");
+			}
+
+			empty_col++;
+			continue;
+		}
 
 		col = TABS_DATA_START_COL;
 
@@ -1178,33 +1184,33 @@ refresh_threads_tab(uint8_t current_page)
 
 		if (!col_desc[0].disabled) {
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[0].max_data_string, ALIGN_LEFT, thread_info[i]->name);
+				      col_desc[0].max_data_string, ALIGN_LEFT, g_threads_info[i].name);
 			col += col_desc[0].max_data_string;
 		}
 
 		if (!col_desc[1].disabled) {
-			snprintf(core_str, MAX_CORE_STR_LEN, "%d", thread_info[i]->core_num);
+			snprintf(core_str, MAX_CORE_STR_LEN, "%d", g_threads_info[i].core_num);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 				      col, col_desc[1].max_data_string, ALIGN_RIGHT, core_str);
 			col += col_desc[1].max_data_string + 2;
 		}
 
 		if (!col_desc[2].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->active_pollers_count);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", g_threads_info[i].active_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 				      col + (col_desc[2].name_len / 2), col_desc[2].max_data_string, ALIGN_LEFT, pollers_number);
 			col += col_desc[2].max_data_string + 2;
 		}
 
 		if (!col_desc[3].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->timed_pollers_count);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", g_threads_info[i].timed_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 				      col + (col_desc[3].name_len / 2), col_desc[3].max_data_string, ALIGN_LEFT, pollers_number);
 			col += col_desc[3].max_data_string + 1;
 		}
 
 		if (!col_desc[4].disabled) {
-			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", thread_info[i]->paused_pollers_count);
+			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", g_threads_info[i].paused_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
 				      col + (col_desc[4].name_len / 2), col_desc[4].max_data_string, ALIGN_LEFT, pollers_number);
 			col += col_desc[4].max_data_string + 2;
@@ -1212,9 +1218,9 @@ refresh_threads_tab(uint8_t current_page)
 
 		if (!col_desc[5].disabled) {
 			if (g_interval_data == true) {
-				get_time_str(thread_info[i]->idle - thread_info[i]->last_idle, idle_time);
+				get_time_str(g_threads_info[i].idle - g_threads_info[i].last_idle, idle_time);
 			} else {
-				get_time_str(thread_info[i]->idle, idle_time);
+				get_time_str(g_threads_info[i].idle, idle_time);
 			}
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[5].max_data_string, ALIGN_RIGHT, idle_time);
@@ -1223,9 +1229,9 @@ refresh_threads_tab(uint8_t current_page)
 
 		if (!col_desc[6].disabled) {
 			if (g_interval_data == true) {
-				get_time_str(thread_info[i]->busy - thread_info[i]->last_busy, busy_time);
+				get_time_str(g_threads_info[i].busy - g_threads_info[i].last_busy, busy_time);
 			} else {
-				get_time_str(thread_info[i]->busy, busy_time);
+				get_time_str(g_threads_info[i].busy, busy_time);
 			}
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
 				      col_desc[6].max_data_string, ALIGN_RIGHT, busy_time);
@@ -1236,7 +1242,7 @@ refresh_threads_tab(uint8_t current_page)
 		}
 	}
 
-	g_max_selected_row = i - current_page * g_max_data_rows - 1;
+	g_max_selected_row = i - current_page * g_max_data_rows - 1 - empty_col;
 
 	return max_pages;
 }
