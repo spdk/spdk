@@ -90,10 +90,10 @@
 #define NVME_RDMA_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT	31
 
 /*
- * Number of poller cycles to keep a pointer to destroyed qpairs
+ * Number of microseconds to keep a pointer to destroyed qpairs
  * in the poll group.
  */
-#define NVME_RDMA_DESTROYED_QPAIR_EXPIRATION_CYCLES	50
+#define NVME_RDMA_DESTROYED_QPAIR_EXPIRATION_TIMEOUT_US	1000000ull
 
 /*
  * The max length of keyed SGL data block (3 bytes)
@@ -144,7 +144,7 @@ struct nvme_rdma_ctrlr {
 
 struct nvme_rdma_destroyed_qpair {
 	struct nvme_rdma_qpair			*destroyed_qpair_tracker;
-	uint32_t				completed_cycles;
+	uint64_t				timeout_ticks;
 	STAILQ_ENTRY(nvme_rdma_destroyed_qpair)	link;
 };
 
@@ -2470,7 +2470,9 @@ nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	}
 
 	destroyed_qpair->destroyed_qpair_tracker = rqpair;
-	destroyed_qpair->completed_cycles = 0;
+	destroyed_qpair->timeout_ticks = spdk_get_ticks() +
+					 (NVME_RDMA_DESTROYED_QPAIR_EXPIRATION_TIMEOUT_US *
+					  spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC;
 	STAILQ_INSERT_TAIL(&group->destroyed_qpairs, destroyed_qpair, link);
 
 	rqpair->defer_deletion_to_pg = true;
@@ -2595,10 +2597,9 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	 * but have a fallback for other cases where we don't get all of our completions back.
 	 */
 	STAILQ_FOREACH_SAFE(qpair_tracker, &group->destroyed_qpairs, link, tmp_qpair_tracker) {
-		qpair_tracker->completed_cycles++;
 		rqpair = qpair_tracker->destroyed_qpair_tracker;
 		if ((rqpair->current_num_sends == 0 && rqpair->current_num_recvs == 0) ||
-		    qpair_tracker->completed_cycles > NVME_RDMA_DESTROYED_QPAIR_EXPIRATION_CYCLES) {
+		    spdk_get_ticks() > qpair_tracker->timeout_ticks) {
 			nvme_rdma_poll_group_delete_qpair(group, qpair_tracker);
 		}
 	}

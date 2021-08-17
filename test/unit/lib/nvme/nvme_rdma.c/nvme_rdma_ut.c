@@ -991,6 +991,7 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 	CU_ASSERT(rqpair->cq == (void *)0xFEEDBEEF);
 	CU_ASSERT(rqpair->poller != NULL);
 
+	MOCK_SET(spdk_get_ticks, 10);
 	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair->qpair);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rqpair->defer_deletion_to_pg == true);
@@ -1000,7 +1001,8 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 
 	qpair_tracker = STAILQ_FIRST(&group.destroyed_qpairs);
 	CU_ASSERT(qpair_tracker->destroyed_qpair_tracker == rqpair);
-	CU_ASSERT(qpair_tracker->completed_cycles == 0);
+	CU_ASSERT(qpair_tracker->timeout_ticks == 10 + (NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US *
+			spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC);
 
 	nvme_rdma_poll_group_delete_qpair(&group, qpair_tracker);
 	CU_ASSERT(rc == 0);
@@ -1008,6 +1010,7 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 
 	nvme_rdma_poll_group_free_pollers(&group);
 	CU_ASSERT(STAILQ_EMPTY(&group.pollers));
+	MOCK_CLEAR(spdk_get_ticks);
 
 	/* No available poller */
 	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
