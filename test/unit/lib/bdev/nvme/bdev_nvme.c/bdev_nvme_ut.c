@@ -2097,28 +2097,59 @@ test_submit_nvme_cmd(void)
 }
 
 static void
-test_remove_trid(void)
+test_add_remove_trid(void)
 {
 	struct spdk_nvme_transport_id trid1 = {}, trid2 = {}, trid3 = {};
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_host_id hostid = {};
+	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2, *ctrlr3;
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
 	struct nvme_ctrlr_trid *ctrid;
 	int rc;
 
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&trid1);
 	ut_init_trid2(&trid2);
 	ut_init_trid3(&trid3);
 
 	set_thread(0);
 
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, NULL);
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 0;
+
+	ctrlr1 = ut_attach_ctrlr(&trid1, 0, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	rc = bdev_nvme_create(&trid1, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, &ctrlr, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_compare(nvme_ctrlr->connected_trid, &trid1) == 0);
+
+	ctrlr2 = ut_attach_ctrlr(&trid2, 0, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	rc = bdev_nvme_create(&trid2, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(spdk_nvme_transport_id_compare(nvme_ctrlr->connected_trid, &trid1) == 0);
+	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
+		if (spdk_nvme_transport_id_compare(&ctrid->trid, &trid2) == 0) {
+			break;
+		}
+	}
+	CU_ASSERT(ctrid != NULL);
 
 	/* trid3 is not in the registered list. */
 	rc = bdev_nvme_delete("nvme0", &trid3);
@@ -2132,8 +2163,23 @@ test_remove_trid(void)
 		CU_ASSERT(spdk_nvme_transport_id_compare(&ctrid->trid, &trid2) != 0);
 	}
 
-	rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, &ctrlr, &trid3);
+	ctrlr3 = ut_attach_ctrlr(&trid3, 0, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr3 != NULL);
+
+	rc = bdev_nvme_create(&trid3, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(spdk_nvme_transport_id_compare(nvme_ctrlr->connected_trid, &trid1) == 0);
+	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
+		if (spdk_nvme_transport_id_compare(&ctrid->trid, &trid3) == 0) {
+			break;
+		}
+	}
+	CU_ASSERT(ctrid != NULL);
 
 	/* trid1 is currently used and trid3 is an alternative path.
 	 * If we remove trid1, path is changed to trid3.
@@ -2162,14 +2208,38 @@ test_remove_trid(void)
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, NULL);
+	ctrlr1 = ut_attach_ctrlr(&trid1, 0, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	rc = bdev_nvme_create(&trid1, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, &ctrlr, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_compare(nvme_ctrlr->connected_trid, &trid1) == 0);
+
+	ctrlr2 = ut_attach_ctrlr(&trid2, 0, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	rc = bdev_nvme_create(&trid2, &hostid, "nvme0", attached_names, STRING_SIZE, NULL, 0,
+			      attach_ctrlr_done, NULL, NULL);
 	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(spdk_nvme_transport_id_compare(nvme_ctrlr->connected_trid, &trid1) == 0);
+	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
+		if (spdk_nvme_transport_id_compare(&ctrid->trid, &trid2) == 0) {
+			break;
+		}
+	}
+	CU_ASSERT(ctrid != NULL);
 
 	/* If trid is not specified, nvme_ctrlr itself is removed. */
 	rc = bdev_nvme_delete("nvme0", NULL);
@@ -2645,7 +2715,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_reconnect_qpair);
 	CU_ADD_TEST(suite, test_aer_cb);
 	CU_ADD_TEST(suite, test_submit_nvme_cmd);
-	CU_ADD_TEST(suite, test_remove_trid);
+	CU_ADD_TEST(suite, test_add_remove_trid);
 	CU_ADD_TEST(suite, test_abort);
 	CU_ADD_TEST(suite, test_get_io_qpair);
 	CU_ADD_TEST(suite, test_bdev_unregister);

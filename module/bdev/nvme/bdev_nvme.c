@@ -2599,7 +2599,25 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
-	struct nvme_ctrlr	*nvme_ctrlr;
+	struct nvme_async_probe_ctx *ctx;
+	int rc;
+
+	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
+	ctx->ctrlr_attached = true;
+
+	rc = nvme_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags, ctx);
+	if (rc != 0) {
+		populate_namespaces_cb(ctx, 0, rc);
+	}
+}
+
+static void
+connect_set_failover_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			struct spdk_nvme_ctrlr *ctrlr,
+			const struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
+	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_async_probe_ctx *ctx;
 	int rc;
 
@@ -2610,10 +2628,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	if (nvme_ctrlr) {
 		rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, ctrlr, &ctx->trid);
 	} else {
-		rc = nvme_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags, ctx);
-		if (rc == 0) {
-			return;
-		}
+		rc = -ENODEV;
 	}
 
 	populate_namespaces_cb(ctx, 0, rc);
@@ -2662,6 +2677,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 {
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
+	spdk_nvme_attach_cb attach_cb;
 
 	/* TODO expand this check to include both the host and target TRIDs.
 	 * Only if both are the same should we fail.
@@ -2715,7 +2731,13 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		snprintf(ctx->opts.src_svcid, sizeof(ctx->opts.src_svcid), "%s", hostid->hostsvcid);
 	}
 
-	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, connect_attach_cb);
+	if (nvme_ctrlr_get_by_name(base_name) == NULL) {
+		attach_cb = connect_attach_cb;
+	} else {
+		attach_cb = connect_set_failover_cb;
+	}
+
+	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, attach_cb);
 	if (ctx->probe_ctx == NULL) {
 		SPDK_ERRLOG("No controller was found with provided trid (traddr: %s)\n", trid->traddr);
 		free(ctx);
