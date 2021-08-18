@@ -50,6 +50,18 @@ way needs to be certain that the underlying hardware exists everywhere that it r
 
 The low level library for IOAT is located in `/lib/ioat`.  The low level library
 for DSA is in `/lib/idxd` (IDXD stands for Intel(R) Data Acceleration Driver).
+In `/lib/idxd` folder, SPDK supports to leverage both user space and kernel space driver
+to drive DSA devices. And the following describes each usage scenerio:
+
+Leveraging user space idxd driver: The DSA devices are managed by the user space
+driver in a dedicated SPDK process, then the device cannot be shared by another
+process. The benefit of this usage is no kernel dependency.
+
+Leveraging kernel space driver: The DSA devices are managed by kernel
+space drivers. And the Work queues inside the DSA device can be shared among
+different processes. Naturally, it can be used in cloud native scenerio. The drawback of
+this usage is the kernel dependency, i.e., idxd driver must be supported and loaded
+in the kernel.
 
 ## Acceleration Plug-In Modules {#accel_modules}
 
@@ -66,8 +78,9 @@ To use the IOAT engine, use the RPC [`ioat_scan_accel_engine`](https://spdk.io/d
 
 ### IDXD Module {#accel_idxd}
 
-To use the DSA engine, use the RPC [`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) with an optional parameter
-of `-c` and provide a configuration number of either 0 or 1. These pre-defined configurations determine how the DSA engine
+To use the DSA engine, use the RPC [`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html). With an optional parameter
+of `-c` and providing a configuration number of either 0 or 1, users can determine which pre-defined configuration can be used.
+With an optional parameter of `-k` to use kernel or user space driver. These pre-defined configurations determine how the DSA engine
 will be setup in terms of work queues and engines.  The DSA engine is very flexible allowing for various configurations of
 these elements to either account for different quality of service requirements or to isolate hardware paths where the back
 end media is of varying latency (i.e. persistent memory vs DRAM).  The pre-defined configurations are as follows:
@@ -94,6 +107,33 @@ idxd module will only use DSA devices on the same socket as the requesting
 channel/thread.  If an error occurs on initialization indicating that there are no
 more DSA devices available either try fewer threads or, if on a 2 socket system,
 try spreading threads across cores if possible.
+
+### How to use kernel idxd driver (#accel_idxd_kernel)
+
+There are several dependencies to leverage kernel idxd driver for driving DSA devices.
+
+1 Linux kernel support: To leverage kernel space idxd driver, you need to have a Linux kernel with
+`idxd` driver loaded with scalable mode. And currently SPDK uses the character device while `idxd` driver is
+enabled in the kernel. So when booting the machine, we need to add additional configuration in
+the grub, i.e, revise the kernel boot commandline `intel_iommu=on,sm_on` with VT-d turned on in BIOS.
+
+2 User library dependency: Users need to install `idxd-config` library. For example, users can
+download the library from [idxd-config repo](https://github.com/intel/idxd-config). After the
+library is installed, users can use the `accel-config` command to configure the work queues(WQs)
+of the idxd devices managed by the kernel with the following steps:
+
+```bash
+accel-config disable-wq dsa0/wq0.1
+accel-config disable-device dsa0
+accel-config config-wq --group-id=0 --mode=dedicated --wq-size=16 --type=user --name="MyApp1"
+ --priority=10 --block-on-fault=1 dsa0/wq0.1
+accel-config config-engine dsa0/engine0.1 --group-id=0
+accel-config enable-device dsa0
+accel-config enable-wq dsa0/wq0.1
+```
+
+For more details on the usage of `idxd-config`, please refer to
+[idxd-config usage](https://github.com/intel/idxd-config/tree/master/Documentation/accfg).
 
 ### Software Module {#accel_sw}
 
