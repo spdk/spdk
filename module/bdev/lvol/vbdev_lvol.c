@@ -588,9 +588,10 @@ static int
 vbdev_lvol_unregister(void *ctx)
 {
 	struct spdk_lvol *lvol = ctx;
-	struct lvol_bdev *lvol_bdev = SPDK_CONTAINEROF(lvol->bdev, struct lvol_bdev, bdev);
+	struct lvol_bdev *lvol_bdev;
 
 	assert(lvol != NULL);
+	lvol_bdev = SPDK_CONTAINEROF(lvol->bdev, struct lvol_bdev, bdev);
 
 	spdk_bdev_alias_del_all(lvol->bdev);
 	spdk_lvol_close(lvol, _vbdev_lvol_unregister_cb, lvol_bdev);
