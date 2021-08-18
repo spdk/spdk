@@ -1141,6 +1141,15 @@ const struct spdk_nvme_ctrlr_data *spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctr
 union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the NVMe controller CC (Configuration) register.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller CC (Configuration) register.
+ */
+union spdk_nvme_cc_register spdk_nvme_ctrlr_get_regs_cc(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the NVMe controller CAP (Capabilities) register.
  *
  * \param ctrlr Opaque handle to NVMe controller.

@@ -3908,6 +3908,16 @@ union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctr
 	return csts;
 }
 
+union spdk_nvme_cc_register spdk_nvme_ctrlr_get_regs_cc(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cc_register cc;
+
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		cc.raw = SPDK_NVME_INVALID_REGISTER_VALUE;
+	}
+	return cc;
+}
+
 union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->cap;

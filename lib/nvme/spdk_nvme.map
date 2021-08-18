@@ -42,6 +42,7 @@
 	spdk_nvme_ctrlr_is_failed;
 	spdk_nvme_ctrlr_get_data;
 	spdk_nvme_ctrlr_get_regs_csts;
+	spdk_nvme_ctrlr_get_regs_cc;
 	spdk_nvme_ctrlr_get_regs_cap;
 	spdk_nvme_ctrlr_get_regs_vs;
 	spdk_nvme_ctrlr_get_regs_cmbsz;
