@@ -68,7 +68,7 @@ endif
 ifeq ($(CONFIG_REDUCE),y)
 DPDK_DRIVERS += compress compress/isal
 ifeq ($(CONFIG_REDUCE_MLX5),y)
-DPDK_DRIVERS += common/mlx5 compress/mlx5
+DPDK_DRIVERS += common/mlx5 compress/mlx5 bus/auxiliary
 endif
 DPDK_CFLAGS += -I$(ISAL_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal

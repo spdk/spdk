@@ -96,6 +96,10 @@ DPDK_LIB_LIST += rte_pmd_isal
 endif
 ifeq ($(CONFIG_REDUCE_MLX5),y)
 DPDK_LIB_LIST += rte_common_mlx5 rte_compress_mlx5
+# Introduced in DPDK 21.08
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_bus_auxiliary.*))
+DPDK_LIB_LIST += rte_bus_auxiliary
+endif
 endif
 endif
 

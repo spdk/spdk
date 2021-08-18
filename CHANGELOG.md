@@ -39,6 +39,10 @@ have been added. These functions accept `spdk_nvme_ns_cmd_ext_io_opts` structure
 options, e.g. DMA memory domain which describes data that may belong to another memory domain and
 can't be accessed directly.
 
+### dpdk
+
+Updated DPDK submodule to DPDK 21.08.
+
 ## v21.07:
 
 ### accel_fw
