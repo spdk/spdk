@@ -2109,9 +2109,6 @@ int spdk_nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t sec
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
  *
- * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
- * commands submitted through this function.
- *
  * \param ctrlr NVMe controller to use for security receive command submission.
  * \param secp Security Protocol that is used.
  * \param spsp Security Protocol Specific field.
@@ -2130,9 +2127,6 @@ int spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp
  * Send security protocol data to controller.
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
- *
- * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
- * commands submitted through this function.
  *
  * \param ctrlr NVMe controller to use for security send command submission.
  * \param secp Security Protocol that is used.
@@ -2218,9 +2212,6 @@ uint64_t spdk_nvme_ctrlr_get_flags(struct spdk_nvme_ctrlr *ctrlr);
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
  *
- * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
- * commands submitted through this function.
- *
  * \param ctrlr NVMe controller to use for command submission.
  * \param nsid Namespace identifier for namespace to attach.
  * \param payload The pointer to the controller list.
@@ -2235,9 +2226,6 @@ int spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  * Detach the specified namespace from controllers.
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
- *
- * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
- * commands submitted through this function.
  *
  * \param ctrlr NVMe controller to use for command submission.
  * \param nsid Namespace ID to detach.
@@ -2266,9 +2254,6 @@ uint32_t spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr,
  * Delete a namespace.
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
- *
- * Call spdk_nvme_ctrlr_process_admin_completions() to poll for completion of
- * commands submitted through this function.
  *
  * \param ctrlr NVMe controller to delete namespace from.
  * \param nsid The namespace identifier.
