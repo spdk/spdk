@@ -91,7 +91,6 @@
 	spdk_nvme_ctrlr_delete_ns;
 	spdk_nvme_ctrlr_format;
 	spdk_nvme_ctrlr_update_firmware;
-	spdk_nvme_ctrlr_get_registers;
 	spdk_nvme_ctrlr_reserve_cmb;
 	spdk_nvme_ctrlr_map_cmb;
 	spdk_nvme_ctrlr_unmap_cmb;
