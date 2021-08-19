@@ -713,6 +713,67 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
 }
 
+static void
+test_nvmf_bdev_ctrlr_read_write_cmd(void)
+{
+	struct spdk_bdev bdev = {};
+	struct spdk_nvmf_request req = {};
+	union nvmf_c2h_msg rsp = {};
+	union nvmf_h2c_msg cmd = {};
+	int rc;
+
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+
+	/* Read two blocks, block size 4096 */
+	cmd.nvme_cmd.cdw12 = 1;
+	bdev.blockcnt = 100;
+	bdev.blocklen = 4096;
+	req.length = 8192;
+	req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
+
+	rc = nvmf_bdev_ctrlr_read_cmd(&bdev, NULL, NULL, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
+	/* Execute zero copy  */
+	req.zcopy_phase = NVMF_ZCOPY_PHASE_EXECUTE;
+
+	rc = nvmf_bdev_ctrlr_read_cmd(&bdev, NULL, NULL, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Read cmd request length invalid */
+	req.length = 4096;
+
+	rc = nvmf_bdev_ctrlr_read_cmd(&bdev, NULL, NULL, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
+
+	/* Write two blocks, block size 4096 */
+	cmd.nvme_cmd.cdw12 = 1;
+	bdev.blockcnt = 100;
+	bdev.blocklen = 4096;
+	req.length = 8192;
+	req.zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
+
+	rc = nvmf_bdev_ctrlr_write_cmd(&bdev, NULL, NULL, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
+	/* Execute zero copy  */
+	req.zcopy_phase = NVMF_ZCOPY_PHASE_EXECUTE;
+
+	rc = nvmf_bdev_ctrlr_write_cmd(&bdev, NULL, NULL, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Write cmd request length invalid */
+	req.length = 4096;
+
+	rc = nvmf_bdev_ctrlr_read_cmd(&bdev, NULL, NULL, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -730,6 +791,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_start_zcopy);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_cmd);
+	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_read_write_cmd);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
