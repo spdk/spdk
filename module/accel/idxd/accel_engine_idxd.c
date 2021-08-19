@@ -144,7 +144,6 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		chan->state = IDXD_CHANNEL_PAUSED;
 		return -EBUSY;
 	}
-	chan->num_outstanding++;
 
 	switch (task->op_code) {
 	case ACCEL_OPCODE_MEMMOVE:
@@ -176,6 +175,10 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		assert(false);
 		rc = -EINVAL;
 		break;
+	}
+
+	if (rc == 0) {
+		chan->num_outstanding++;
 	}
 
 	return rc;
