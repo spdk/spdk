@@ -1409,6 +1409,16 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 		}
 	}
 
+	if (sock->pollin_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
+		_sock_prep_cancel_task(_sock, &sock->pollin_task);
+		/* Since spdk_sock_group_remove_sock is not asynchronous interface, so
+		 * currently can use a while loop here. */
+		while ((sock->pollin_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) ||
+		       (sock->cancel_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE)) {
+			uring_sock_group_impl_poll(_group, 32, NULL);
+		}
+	}
+
 	if (sock->recv_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
 		_sock_prep_cancel_task(_sock, &sock->recv_task);
 		/* Since spdk_sock_group_remove_sock is not asynchronous interface, so
@@ -1419,15 +1429,11 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 		}
 	}
 
-	if (sock->pollin_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		_sock_prep_cancel_task(_sock, &sock->pollin_task);
-		/* Since spdk_sock_group_remove_sock is not asynchronous interface, so
-		 * currently can use a while loop here. */
-		while ((sock->pollin_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) ||
-		       (sock->cancel_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE)) {
-			uring_sock_group_impl_poll(_group, 32, NULL);
-		}
-	}
+	/* Make sure the cancelling the tasks above didn't cause sending new requests */
+	assert(sock->write_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
+	assert(sock->pollin_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
+	assert(sock->recv_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
+
 	if (sock->pending_recv) {
 		TAILQ_REMOVE(&group->pending_recv, sock, link);
 		sock->pending_recv = false;
