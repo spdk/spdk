@@ -95,6 +95,22 @@ spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 	return ctrlr->num_ns;
 }
 
+uint32_t
+spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 1;
+}
+
+uint32_t
+spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (nsid > ctrlr->num_ns) {
+		return 0;
+	}
+
+	return nsid + 1;
+}
+
 DEFINE_RETURN_MOCK(nvme_io_msg_send, int);
 int
 nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr,
@@ -233,20 +249,19 @@ test_nvme_cuse_get_cuse_ns_device(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct cuse_device ctrlr_device = {};
-	struct cuse_device ns_devices[3] = {};
+	struct cuse_device ns_device = { .nsid = 1 };
 	struct cuse_device *cuse_dev = NULL;
 
 	ctrlr.num_ns = 3;
 	ctrlr_device.ctrlr = &ctrlr;
-	ctrlr_device.ns_devices = ns_devices;
-	ns_devices[0].is_started = true;
-	ns_devices[1].is_started = false;
+	TAILQ_INIT(&ctrlr_device.ns_devices);
+	TAILQ_INSERT_TAIL(&ctrlr_device.ns_devices, &ns_device, tailq);
 
 	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_ctrlr_ctx_head));
 	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, &ctrlr_device, tailq);
 
 	cuse_dev = nvme_cuse_get_cuse_ns_device(&ctrlr, 1);
-	CU_ASSERT(cuse_dev == &ns_devices[0]);
+	CU_ASSERT(cuse_dev == &ns_device);
 
 	/* nsid 2 was not started */
 	cuse_dev = nvme_cuse_get_cuse_ns_device(&ctrlr, 2);
@@ -353,20 +368,23 @@ test_nvme_cuse_stop(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct cuse_device *ctrlr_device = NULL;
+	struct cuse_device *ns_dev1, *ns_dev2;
 
 	/* Allocate memory for nvme_cuse_stop() to free. */
 	ctrlr_device = calloc(1, sizeof(struct cuse_device));
 	SPDK_CU_ASSERT_FATAL(ctrlr_device != NULL);
 
-	ctrlr_device->ns_devices = calloc(2, sizeof(struct cuse_device));
-	SPDK_CU_ASSERT_FATAL(ctrlr_device->ns_devices != NULL);
+	TAILQ_INIT(&ctrlr_device->ns_devices);
+	ns_dev1 = calloc(1, sizeof(struct cuse_device));
+	SPDK_CU_ASSERT_FATAL(ns_dev1 != NULL);
+	ns_dev2 = calloc(1, sizeof(struct cuse_device));
+	SPDK_CU_ASSERT_FATAL(ns_dev2 != NULL);
 
 	g_ctrlr_started = spdk_bit_array_create(128);
 	SPDK_CU_ASSERT_FATAL(g_ctrlr_started != NULL);
-	ctrlr_device->is_started = true;
 
-	ctrlr_device->ns_devices[0].is_started = true;
-	ctrlr_device->ns_devices[1].is_started = true;
+	TAILQ_INSERT_TAIL(&ctrlr_device->ns_devices, ns_dev1, tailq);
+	TAILQ_INSERT_TAIL(&ctrlr_device->ns_devices, ns_dev2, tailq);
 	ctrlr.num_ns = 2;
 	ctrlr_device->ctrlr = &ctrlr;
 	pthread_mutex_init(&g_cuse_mtx, NULL);

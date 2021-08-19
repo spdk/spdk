@@ -62,6 +62,24 @@ spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	return nsid >= g_active_nsid_min && nsid < g_active_num_ns + g_active_nsid_min;
 }
 
+uint32_t
+spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return g_active_nsid_min;
+}
+
+uint32_t
+spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	nsid = nsid + 1;
+
+	if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		return nsid;
+	}
+
+	return 0;
+}
+
 DEFINE_STUB(spdk_nvme_ctrlr_reset, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
