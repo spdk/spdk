@@ -342,11 +342,18 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 				bool stop)
 {
 	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_ctrlr *ctrlr;
 
 	if (stop) {
 		transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid->trstring);
 		if (transport != NULL) {
 			spdk_nvmf_transport_stop_listen(transport, listener->trid);
+		}
+	}
+
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		if (ctrlr->listener == listener) {
+			ctrlr->listener = NULL;
 		}
 	}
 
