@@ -433,6 +433,9 @@ struct spdk_nvme_qpair {
 
 	uint8_t					first_fused_submitted: 1;
 
+	uint8_t					transport_failure_reason: 2;
+	uint8_t					last_transport_failure_reason: 2;
+
 	enum spdk_nvme_transport_type		trtype;
 
 	STAILQ_HEAD(, nvme_request)		free_req;
@@ -462,9 +465,6 @@ struct spdk_nvme_qpair {
 	void					*req_buf;
 
 	const struct spdk_nvme_transport	*transport;
-
-	uint8_t					transport_failure_reason: 2;
-	uint8_t					last_transport_failure_reason: 2;
 };
 
 struct spdk_nvme_poll_group {
