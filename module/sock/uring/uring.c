@@ -1023,7 +1023,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				if (sock->base.cb_fn != NULL &&
 				    sock->pending_recv == false) {
 					sock->pending_recv = true;
-					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
+					TAILQ_INSERT_HEAD(&group->pending_recv, sock, link);
 				}
 			}
 			break;
@@ -1093,9 +1093,21 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 		/* Capture pointers to the elements we need */
 		ud = sock;
-		uc = TAILQ_PREV(ud, pending_recv_list, link);
+
 		ua = TAILQ_FIRST(&group->pending_recv);
+		if (ua == ud) {
+			goto end;
+		}
+
 		uf = TAILQ_LAST(&group->pending_recv, pending_recv_list);
+		if (uf == ud) {
+			TAILQ_REMOVE(&group->pending_recv, ud, link);
+			TAILQ_INSERT_HEAD(&group->pending_recv, ud, link);
+			goto end;
+		}
+
+		uc = TAILQ_PREV(ud, pending_recv_list, link);
+		assert(uc != NULL);
 
 		/* Break the link between C and D */
 		uc->link.tqe_next = NULL;
@@ -1112,6 +1124,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 		ud->link.tqe_prev = &group->pending_recv.tqh_first;
 	}
 
+end:
 	return count;
 }
 
