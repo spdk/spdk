@@ -175,7 +175,7 @@ struct job_config {
 	int				iodepth;
 	int				rwmixread;
 	int64_t				offset;
-	int				length;
+	uint64_t			length;
 	enum job_config_rw		rw;
 	TAILQ_ENTRY(job_config)	link;
 };
@@ -1486,7 +1486,7 @@ bdevperf_construct_config_jobs(void)
 }
 
 static int
-make_cli_job_config(const char *filename, int64_t offset, int range)
+make_cli_job_config(const char *filename, int64_t offset, uint64_t range)
 {
 	struct job_config *config = calloc(1, sizeof(*config));
 
@@ -1519,7 +1519,7 @@ bdevperf_construct_multithread_jobs(void)
 	struct spdk_bdev *bdev;
 	uint32_t i;
 	uint32_t num_cores;
-	uint32_t blocks_per_job;
+	uint64_t blocks_per_job;
 	int64_t offset;
 
 	num_cores = 0;
@@ -1698,6 +1698,7 @@ read_job_config(void)
 	const char *rw;
 	bool is_global;
 	int n = 0;
+	int val;
 
 	if (g_bdevperf_conf_file == NULL) {
 		return 0;
@@ -1813,10 +1814,11 @@ read_job_config(void)
 			goto error;
 		}
 
-		config->length = parse_uint_option(s, "length", global_config.length);
-		if (config->length == BDEVPERF_CONFIG_ERROR) {
+		val = parse_uint_option(s, "length", global_config.length);
+		if (val == BDEVPERF_CONFIG_ERROR) {
 			goto error;
 		}
+		config->length = val;
 
 		rw = spdk_conf_section_get_val(s, "rw");
 		config->rw = parse_rw(rw, global_config.rw);
