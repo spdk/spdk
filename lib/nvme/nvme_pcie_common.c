@@ -43,6 +43,9 @@
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 
+static void
+nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr);
+
 static inline uint64_t
 nvme_pcie_vtophys(struct spdk_nvme_ctrlr *ctrlr, const void *buf, uint64_t *size)
 {
@@ -935,6 +938,18 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 
+	if (spdk_unlikely(pqpair->flags.has_pending_vtophys_failures)) {
+		struct nvme_tracker *tr, *tmp;
+
+		TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
+			if (tr->bad_vtophys) {
+				tr->bad_vtophys = 0;
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			}
+		}
+		pqpair->flags.has_pending_vtophys_failures = 0;
+	}
+
 	return num_completions;
 }
 
@@ -1090,10 +1105,19 @@ free:
 static void
 nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
 {
+	if (!qpair->in_completion_context) {
+		struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+
+		tr->bad_vtophys = 1;
+		pqpair->flags.has_pending_vtophys_failures = 1;
+		return;
+	}
+
 	/*
 	 * Bad vtophys translation, so abort this request and return
 	 *  immediately.
 	 */
+	SPDK_ERRLOG("vtophys or other payload buffer related error\n");
 	nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 						SPDK_NVME_SC_INVALID_FIELD,
 						1 /* do not retry */, true);
@@ -1582,13 +1606,22 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		if (sgl_supported && !(ctrlr->flags & SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT)) {
 			dword_aligned = false;
 		}
+
+		/* If we fail to build the request or the metadata, do not return the -EFAULT back up
+		 * the stack.  This ensures that we always fail these types of requests via a
+		 * completion callback, and never in the context of the submission.
+		 */
 		rc = g_nvme_pcie_build_req_table[payload_type][sgl_supported](qpair, req, tr, dword_aligned);
 		if (rc < 0) {
+			assert(rc == -EFAULT);
+			rc = 0;
 			goto exit;
 		}
 
 		rc = nvme_pcie_qpair_build_metadata(qpair, tr, sgl_supported, dword_aligned);
 		if (rc < 0) {
+			assert(rc == -EFAULT);
+			rc = 0;
 			goto exit;
 		}
 	}

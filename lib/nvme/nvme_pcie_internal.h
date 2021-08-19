@@ -110,7 +110,8 @@ struct nvme_tracker {
 	struct nvme_request		*req;
 	uint16_t			cid;
 
-	uint16_t			rsvd0;
+	uint16_t			bad_vtophys : 1;
+	uint16_t			rsvd0 : 15;
 	uint32_t			rsvd1;
 
 	spdk_nvme_cmd_cb		cb_fn;
@@ -184,6 +185,7 @@ struct nvme_pcie_qpair {
 		uint8_t phase			: 1;
 		uint8_t delay_cmd_submit	: 1;
 		uint8_t has_shadow_doorbell	: 1;
+		uint8_t has_pending_vtophys_failures : 1;
 	} flags;
 
 	/*
