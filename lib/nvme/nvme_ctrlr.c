@@ -2739,7 +2739,6 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			return 0;
 		}
 
-		SPDK_NOTICELOG("nn %u, mem size %lu\n", nn, nn * sizeof(struct spdk_nvme_ns));
 		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64, NULL,
 					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
