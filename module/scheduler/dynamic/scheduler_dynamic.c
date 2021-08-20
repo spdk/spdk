@@ -232,12 +232,14 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 		if (!_can_core_fit_thread(thread_info, i) || i == current_lcore) {
 			continue;
 		}
-
-		if (i < current_lcore) {
+		if (i == g_main_lcore) {
+			/* First consider g_main_lcore, consolidate threads on main lcore if possible. */
+			return i;
+		} else if (i < current_lcore && current_lcore != g_main_lcore) {
 			/* Lower core id was found, move to consolidate threads on lowest core ids. */
 			return i;
 		} else if (core_at_limit) {
-			/* When core is over the limit, even higher core ids are better than current one. */
+			/* When core is over the limit, any core id is better than current one. */
 			return i;
 		}
 	}
