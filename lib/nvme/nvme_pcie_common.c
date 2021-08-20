@@ -835,6 +835,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		if (rc < 0) {
 			return rc;
+		} else if (pqpair->pcie_state == NVME_PCIE_QPAIR_FAILED) {
+			return -ENXIO;
 		}
 		return 0;
 	}
