@@ -465,6 +465,17 @@ nvme_completion_create_sq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(ctrlr);
 	int rc;
 
+	if (pqpair->flags.defer_destruction) {
+		/* This qpair was deleted by the application while the
+		 * connection was still in progress.  We had to wait
+		 * to free the qpair resources until this outstanding
+		 * command was completed.  Now that we have the completion
+		 * free it now.
+		 */
+		nvme_pcie_qpair_destroy(qpair);
+		return;
+	}
+
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_ERRLOG("nvme_create_io_sq failed, deleting cq!\n");
 		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_sq_error_delete_cq_cb,
@@ -501,6 +512,17 @@ nvme_completion_create_cq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct spdk_nvme_qpair *qpair = arg;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	int rc;
+
+	if (pqpair->flags.defer_destruction) {
+		/* This qpair was deleted by the application while the
+		 * connection was still in progress.  We had to wait
+		 * to free the qpair resources until this outstanding
+		 * command was completed.  Now that we have the completion
+		 * free it now.
+		 */
+		nvme_pcie_qpair_destroy(qpair);
+		return;
+	}
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
@@ -1047,6 +1069,13 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		goto free;
 	}
 
+	if (ctrlr->prepare_for_reset) {
+		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
+			pqpair->flags.defer_destruction = true;
+		}
+		goto clear_shadow_doorbells;
+	}
+
 	/* If attempting to delete a qpair that's still being connected, we have to wait until it's
 	 * finished, so that we don't free it while it's waiting for the create cq/sq callbacks.
 	 */
@@ -1098,6 +1127,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 	free(status);
 
+clear_shadow_doorbells:
 	if (pqpair->flags.has_shadow_doorbell) {
 		*pqpair->shadow_doorbell.sq_tdbl = 0;
 		*pqpair->shadow_doorbell.cq_hdbl = 0;
@@ -1110,7 +1140,9 @@ free:
 		nvme_pcie_qpair_abort_trackers(qpair, 1);
 	}
 
-	nvme_pcie_qpair_destroy(qpair);
+	if (!pqpair->flags.defer_destruction) {
+		nvme_pcie_qpair_destroy(qpair);
+	}
 	return 0;
 }
 

@@ -801,6 +801,12 @@ struct spdk_nvme_ctrlr {
 
 	bool				timeout_enabled;
 
+	/* The application is preparing to reset the controller.  Transports
+	 * can use this to skip unnecessary parts of the qpair deletion process
+	 * for example, like the DELETE_SQ/CQ commands.
+	 */
+	bool				prepare_for_reset;
+
 	uint16_t			max_sges;
 
 	uint16_t			cntlid;

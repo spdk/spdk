@@ -1440,6 +1440,7 @@ nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_qpair	*qpair;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	ctrlr->prepare_for_reset = false;
 
 	if (ctrlr->is_resetting || ctrlr->is_removed) {
 		/*
@@ -1627,6 +1628,14 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	return rc;
+}
+
+void
+spdk_nvme_ctrlr_prepare_for_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	ctrlr->prepare_for_reset = true;
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 int
