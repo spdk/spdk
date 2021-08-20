@@ -1014,9 +1014,11 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 		switch (task->type) {
 		case SPDK_SOCK_TASK_POLLIN:
+#ifdef SPDK_ZEROCOPY
 			if ((status & POLLERR) == POLLERR) {
 				_sock_prep_recv(&sock->base);
 			}
+#endif
 			if ((status & POLLIN) == POLLIN) {
 				if (sock->base.cb_fn != NULL &&
 				    sock->pending_recv == false) {
