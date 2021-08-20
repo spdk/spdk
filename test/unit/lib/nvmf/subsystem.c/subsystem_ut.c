@@ -1501,6 +1501,83 @@ test_spdk_nvmf_subsystem_add_host(void)
 	free(tgt.subsystems);
 }
 
+static void
+test_nvmf_ns_reservation_report(void)
+{
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
+	struct spdk_nvme_reservation_status_extended_data *status_data;
+	struct spdk_nvmf_registrant *reg;
+
+	req.data = calloc(1, sizeof(*status_data) + sizeof(*ctrlr_data) * 2);
+	reg = calloc(2, sizeof(struct spdk_nvmf_registrant));
+	SPDK_CU_ASSERT_FATAL(req.data != NULL && reg != NULL);
+
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+	ns.gen = 1;
+	ns.rtype = SPDK_NVME_RESERVE_WRITE_EXCLUSIVE;
+	ns.ptpl_activated = true;
+	cmd.nvme_cmd.cdw11_bits.resv_report.eds = true;
+	cmd.nvme_cmd.cdw10 = 100;
+	reg[0].rkey = 0xa;
+	reg[1].rkey = 0xb;
+	spdk_uuid_generate(&reg[0].hostid);
+	spdk_uuid_generate(&reg[1].hostid);
+	TAILQ_INIT(&ns.registrants);
+	TAILQ_INSERT_TAIL(&ns.registrants, &reg[0], link);
+	TAILQ_INSERT_TAIL(&ns.registrants, &reg[1], link);
+
+	nvmf_ns_reservation_report(&ns, &ctrlr, &req);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	/* Get ctrlr data and status data pointers */
+	ctrlr_data = (void *)((uint64_t)req.data + sizeof(*status_data));
+	status_data = (void *)req.data;
+	SPDK_CU_ASSERT_FATAL(status_data != NULL && ctrlr_data != NULL);
+	CU_ASSERT(status_data->data.gen == 1);
+	CU_ASSERT(status_data->data.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+	CU_ASSERT(status_data->data.ptpls == true);
+	CU_ASSERT(status_data->data.regctl == 2);
+	CU_ASSERT(ctrlr_data->cntlid == 0xffff);
+	CU_ASSERT(ctrlr_data->rcsts.status == false);
+	CU_ASSERT(ctrlr_data->rkey ==  0xa);
+	CU_ASSERT(!spdk_uuid_compare((struct spdk_uuid *)ctrlr_data->hostid, &reg[0].hostid));
+	/* Check second ctrlr data */
+	ctrlr_data++;
+	CU_ASSERT(ctrlr_data->cntlid == 0xffff);
+	CU_ASSERT(ctrlr_data->rcsts.status == false);
+	CU_ASSERT(ctrlr_data->rkey ==  0xb);
+	CU_ASSERT(!spdk_uuid_compare((struct spdk_uuid *)ctrlr_data->hostid, &reg[1].hostid));
+
+	/* extended controller data structure */
+	memset(req.data, 0, sizeof(*status_data) + sizeof(*ctrlr_data) * 2);
+	memset(req.rsp, 0, sizeof(*req.rsp));
+	cmd.nvme_cmd.cdw11_bits.resv_report.eds = false;
+
+	nvmf_ns_reservation_report(&ns, &ctrlr, &req);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_HOSTID_INCONSISTENT_FORMAT);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+
+	/* Transfer length invalid */
+	memset(req.data, 0, sizeof(*status_data) + sizeof(*ctrlr_data) * 2);
+	memset(req.rsp, 0, sizeof(*req.rsp));
+	cmd.nvme_cmd.cdw11_bits.resv_report.eds = true;
+	cmd.nvme_cmd.cdw10 = 0;
+
+	nvmf_ns_reservation_report(&ns, &ctrlr, &req);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+
+	free(req.data);
+	free(reg);
+}
+
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1528,6 +1605,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_remove_registrant);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_host);
+	CU_ADD_TEST(suite, test_nvmf_ns_reservation_report);
 
 	allocate_threads(1);
 	set_thread(0);
