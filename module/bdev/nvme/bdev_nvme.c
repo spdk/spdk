@@ -622,6 +622,7 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 
 	nvme_ctrlr->resetting = true;
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+	spdk_nvme_ctrlr_prepare_for_reset(nvme_ctrlr->ctrlr);
 
 	/* First, delete all NVMe I/O queue pairs. */
 	spdk_for_each_channel(nvme_ctrlr,
