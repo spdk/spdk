@@ -35,7 +35,6 @@
 
 #include "env_internal.h"
 
-#include <rte_dev.h>
 #include <rte_config.h>
 #include <rte_memory.h>
 #include <rte_eal_memconfig.h>
@@ -1219,95 +1218,6 @@ vfio_noiommu_enabled(void)
 }
 
 static void
-vtophys_iommu_device_event(const char *device_name,
-			   enum rte_dev_event_type event,
-			   void *cb_arg)
-{
-	struct rte_dev_iterator dev_iter;
-	struct rte_device *dev;
-
-	pthread_mutex_lock(&g_vfio.mutex);
-
-	switch (event) {
-	default:
-	case RTE_DEV_EVENT_ADD:
-		RTE_DEV_FOREACH(dev, "bus=pci", &dev_iter) {
-			if (strcmp(dev->name, device_name) == 0) {
-				struct rte_pci_device *pci_dev = RTE_DEV_TO_PCI(dev);
-#if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
-				if (pci_dev->kdrv == RTE_KDRV_VFIO) {
-#else
-				if (pci_dev->kdrv == RTE_PCI_KDRV_VFIO) {
-#endif
-					/* This is a new PCI device using vfio */
-					g_vfio.device_ref++;
-				}
-				break;
-			}
-		}
-
-		if (g_vfio.device_ref == 1) {
-			struct spdk_vfio_dma_map *dma_map;
-			int ret;
-
-			/* This is the first device registered. This means that the first
-			 * IOMMU group might have been just been added to the DPDK vfio container.
-			 * From this point it is certain that the memory can be mapped now.
-			 */
-			TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
-				ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
-				if (ret) {
-					DEBUG_PRINT("Cannot update DMA mapping, error %d\n", errno);
-					break;
-				}
-			}
-		}
-		break;
-	case RTE_DEV_EVENT_REMOVE:
-		RTE_DEV_FOREACH(dev, "bus=pci", &dev_iter) {
-			if (strcmp(dev->name, device_name) == 0) {
-				struct rte_pci_device *pci_dev = RTE_DEV_TO_PCI(dev);
-#if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
-				if (pci_dev->kdrv == RTE_KDRV_VFIO) {
-#else
-				if (pci_dev->kdrv == RTE_PCI_KDRV_VFIO) {
-#endif
-					/* This is a PCI device using vfio */
-					g_vfio.device_ref--;
-				}
-				break;
-			}
-		}
-
-		if (g_vfio.device_ref == 0) {
-			struct spdk_vfio_dma_map *dma_map;
-			int ret;
-
-			/* If DPDK doesn't have any additional devices using it's vfio container,
-			 * all the mappings will be automatically removed by the Linux vfio driver.
-			 * We unmap the memory manually to be able to easily re-map it later regardless
-			 * of other, external factors.
-			 */
-			TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
-				struct vfio_iommu_type1_dma_unmap unmap = {};
-				unmap.argsz = sizeof(unmap);
-				unmap.flags = 0;
-				unmap.iova = dma_map->map.iova;
-				unmap.size = dma_map->map.size;
-				ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &unmap);
-				if (ret) {
-					DEBUG_PRINT("Cannot unmap DMA memory, error %d\n", errno);
-					break;
-				}
-			}
-		}
-		break;
-	}
-
-	pthread_mutex_unlock(&g_vfio.mutex);
-}
-
-static void
 vtophys_iommu_init(void)
 {
 	char proc_fd_path[PATH_MAX + 1];
@@ -1315,9 +1225,6 @@ vtophys_iommu_init(void)
 	const char vfio_path[] = "/dev/vfio/vfio";
 	DIR *dir;
 	struct dirent *d;
-	struct rte_dev_iterator dev_iter;
-	struct rte_device *dev;
-	int rc;
 
 	if (!vfio_enabled()) {
 		return;
@@ -1358,49 +1265,9 @@ vtophys_iommu_init(void)
 		return;
 	}
 
-	/* If the IOMMU is enabled, we need to track whether there are any devices present because
-	 * it's only valid to perform vfio IOCTLs to the containers when there is at least
-	 * one device. The device may be a DPDK device that SPDK doesn't otherwise know about, but
-	 * that's ok.
-	 */
-	RTE_DEV_FOREACH(dev, "bus=pci", &dev_iter) {
-		struct rte_pci_device *pci_dev = RTE_DEV_TO_PCI(dev);
-
-#if RTE_VERSION < RTE_VERSION_NUM(20, 11, 0, 0)
-		if (pci_dev->kdrv == RTE_KDRV_VFIO) {
-#else
-		if (pci_dev->kdrv == RTE_PCI_KDRV_VFIO) {
-#endif
-			/* This is a PCI device using vfio */
-			g_vfio.device_ref++;
-		}
-	}
-
-	if (spdk_process_is_primary()) {
-		rc = rte_dev_event_callback_register(NULL, vtophys_iommu_device_event, NULL);
-		if (rc) {
-			DEBUG_PRINT("Failed to register device event callback\n");
-			return;
-		}
-		rc = rte_dev_event_monitor_start();
-		if (rc) {
-			DEBUG_PRINT("Failed to start device event monitoring.\n");
-			return;
-		}
-	}
-
 	g_vfio.enabled = true;
 
 	return;
-}
-
-static void
-vtophys_iommu_fini(void)
-{
-	if (spdk_process_is_primary()) {
-		rte_dev_event_callback_unregister(NULL, vtophys_iommu_device_event, NULL);
-		rte_dev_event_monitor_stop();
-	}
 }
 
 #endif
@@ -1420,6 +1287,35 @@ vtophys_pci_device_added(struct rte_pci_device *pci_device)
 		DEBUG_PRINT("Memory allocation error\n");
 	}
 	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
+
+#if VFIO_ENABLED
+	struct spdk_vfio_dma_map *dma_map;
+	int ret;
+
+	if (!g_vfio.enabled) {
+		return;
+	}
+
+	pthread_mutex_lock(&g_vfio.mutex);
+	g_vfio.device_ref++;
+	if (g_vfio.device_ref > 1) {
+		pthread_mutex_unlock(&g_vfio.mutex);
+		return;
+	}
+
+	/* This is the first SPDK device using DPDK vfio. This means that the first
+	 * IOMMU group might have been just been added to the DPDK vfio container.
+	 * From this point it is certain that the memory can be mapped now.
+	 */
+	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
+		ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+		if (ret) {
+			DEBUG_PRINT("Cannot update DMA mapping, error %d\n", errno);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_vfio.mutex);
+#endif
 }
 
 void
@@ -1436,6 +1332,43 @@ vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 		}
 	}
 	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
+
+#if VFIO_ENABLED
+	struct spdk_vfio_dma_map *dma_map;
+	int ret;
+
+	if (!g_vfio.enabled) {
+		return;
+	}
+
+	pthread_mutex_lock(&g_vfio.mutex);
+	assert(g_vfio.device_ref > 0);
+	g_vfio.device_ref--;
+	if (g_vfio.device_ref > 0) {
+		pthread_mutex_unlock(&g_vfio.mutex);
+		return;
+	}
+
+	/* This is the last SPDK device using DPDK vfio. If DPDK doesn't have
+	 * any additional devices using it's vfio container, all the mappings
+	 * will be automatically removed by the Linux vfio driver. We unmap
+	 * the memory manually to be able to easily re-map it later regardless
+	 * of other, external factors.
+	 */
+	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
+		struct vfio_iommu_type1_dma_unmap unmap = {};
+		unmap.argsz = sizeof(unmap);
+		unmap.flags = 0;
+		unmap.iova = dma_map->map.iova;
+		unmap.size = dma_map->map.size;
+		ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &unmap);
+		if (ret) {
+			DEBUG_PRINT("Cannot unmap DMA memory, error %d\n", errno);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_vfio.mutex);
+#endif
 }
 
 int
@@ -1468,14 +1401,6 @@ vtophys_init(void)
 		return -ENOMEM;
 	}
 	return 0;
-}
-
-void
-vtophys_fini(void)
-{
-#if VFIO_ENABLED
-	vtophys_iommu_fini();
-#endif
 }
 
 uint64_t

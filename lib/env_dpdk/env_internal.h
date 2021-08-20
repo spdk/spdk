@@ -80,7 +80,6 @@ void pci_env_reinit(void);
 void pci_env_fini(void);
 int mem_map_init(bool legacy_mem);
 int vtophys_init(void);
-void vtophys_fini(void);
 
 /**
  * Report a DMA-capable PCI device to the vtophys translation code.

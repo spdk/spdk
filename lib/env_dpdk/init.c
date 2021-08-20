@@ -531,8 +531,6 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 void
 spdk_env_dpdk_post_fini(void)
 {
-	vtophys_fini();
-
 	pci_env_fini();
 
 	free_args(g_eal_cmdline, g_eal_cmdline_argcount);
