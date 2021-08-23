@@ -313,7 +313,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 	 */
 	rc = spdk_nvme_ctrlr_reconnect_io_qpair(qpair);
 	if (rc != 0) {
-		SPDK_WARNLOG("Failed to reconnect to qpair %p, errno %d\n", qpair, -rc);
+		SPDK_DEBUGLOG(bdev_nvme, "Failed to reconnect to qpair %p, errno %d\n", qpair, -rc);
 	}
 }
 
