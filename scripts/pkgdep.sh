@@ -89,9 +89,13 @@ if [[ ${ID,,} == *"suse"* ]]; then
 	ID="sles"
 fi
 
-if [[ -e $scriptsdir/pkgdep/$ID.sh ]]; then
-	source "$scriptsdir/pkgdep/$ID.sh"
-	source "$scriptsdir/pkgdep/common.sh"
-else
-	printf 'Not supported platform detected (%s), aborting\n' "$ID" >&2
-fi
+for id in $ID $ID_LIKE; do
+	if [[ -e $scriptsdir/pkgdep/$id.sh ]]; then
+		source "$scriptsdir/pkgdep/$id.sh"
+		source "$scriptsdir/pkgdep/common.sh"
+		exit 0
+	fi
+done
+
+printf 'Not supported platform detected (%s), aborting\n' "$ID" >&2
+exit 1

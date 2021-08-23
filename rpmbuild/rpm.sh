@@ -8,7 +8,13 @@ rootdir=$(readlink -f "$specdir/../")
 [[ -e /etc/os-release ]]
 source /etc/os-release
 
-if [[ $ID != fedora && $ID != centos && $ID != rhel ]]; then
+id_ok=no
+
+for id in $ID $ID_LIKE; do
+	[[ "$id" =~ ^(fedora|centos|rhel) ]] && id_ok=yes
+done
+
+if [[ "$id_ok" != "yes" ]]; then
 	printf '%s not supported\n' "$ID" >&2
 	exit 1
 fi

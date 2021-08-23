@@ -16,7 +16,16 @@ bins=("$rootdir/"build/{bin,examples}/*)
 ((${#bins[@]} > 0)) || exit 0
 
 source /etc/os-release
-[[ $ID == fedora || $ID == centos || $ID == rhel ]] || exit 0
+
+id_ok=no
+
+for id in $ID $ID_LIKE; do
+	[[ "$id" =~ ^(fedora|centos|rhel) ]] && id_ok=yes
+done
+
+if [[ "$id_ok" != "yes" ]]; then
+	exit 0
+fi
 
 declare -A deps=()
 for bin in "${bins[@]}"; do
