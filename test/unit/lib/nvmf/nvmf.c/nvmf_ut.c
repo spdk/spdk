@@ -169,6 +169,7 @@ test_nvmf_tgt_create_poll_group(void)
 	struct spdk_nvmf_ns		ns = {};
 	struct spdk_bdev		bdev = {};
 	struct spdk_io_channel		ch = {};
+	struct spdk_nvmf_transport_poll_group transport_pg = {};
 
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
@@ -202,7 +203,9 @@ test_nvmf_tgt_create_poll_group(void)
 	transport.tgt = &tgt;
 	TAILQ_INSERT_TAIL(&tgt.transports, &transport, link);
 
+	MOCK_SET(nvmf_transport_poll_group_create, &transport_pg);
 	rc = nvmf_tgt_create_poll_group((void *)&tgt, (void *)&group);
+	MOCK_SET(nvmf_transport_poll_group_create, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(group.num_sgroups == 1);
 	CU_ASSERT(group.sgroups != NULL);

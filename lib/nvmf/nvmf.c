@@ -116,6 +116,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_transport *transport;
 	struct spdk_thread *thread = spdk_get_thread();
 	uint32_t sid;
+	int rc;
 
 	SPDK_DTRACE_PROBE1(nvmf_create_poll_group, spdk_thread_get_id(thread));
 
@@ -123,7 +124,10 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&group->qpairs);
 
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
-		nvmf_poll_group_add_transport(group, transport);
+		rc = nvmf_poll_group_add_transport(group, transport);
+		if (rc != 0) {
+			return rc;
+		}
 	}
 
 	group->num_sgroups = tgt->max_subsystems;
@@ -714,6 +718,9 @@ _nvmf_tgt_add_transport_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_tgt_add_transport_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 
+	if (status) {
+		TAILQ_REMOVE(&ctx->tgt->transports, ctx->transport, link);
+	}
 	ctx->cb_fn(ctx->cb_arg, status);
 
 	free(ctx);

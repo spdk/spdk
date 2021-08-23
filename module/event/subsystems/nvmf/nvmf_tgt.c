@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -166,12 +167,22 @@ nvmf_tgt_create_poll_group_done(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg = ctx;
 
+	assert(pg);
+
+	if (!pg->group) {
+		SPDK_ERRLOG("Failed to create nvmf poll group\n");
+		/* Change the state to error but wait for completions from all other threads */
+		g_tgt_state = NVMF_TGT_ERROR;
+	}
+
 	TAILQ_INSERT_TAIL(&g_poll_groups, pg, link);
 
 	assert(g_num_poll_groups < nvmf_get_cpuset_count());
 
 	if (++g_num_poll_groups == nvmf_get_cpuset_count()) {
-		g_tgt_state = NVMF_TGT_INIT_START_SUBSYSTEMS;
+		if (g_tgt_state != NVMF_TGT_ERROR) {
+			g_tgt_state = NVMF_TGT_INIT_START_SUBSYSTEMS;
+		}
 		nvmf_tgt_advance_state();
 	}
 }
