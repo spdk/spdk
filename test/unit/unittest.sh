@@ -68,6 +68,10 @@ function unittest_json() {
 	$valgrind $testdir/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 }
 
+function unittest_rpc() {
+	$valgrind $testdir/lib/rpc/rpc.c/rpc_ut
+}
+
 function unittest_nvme() {
 	$valgrind $testdir/lib/nvme/nvme.c/nvme_ut
 	$valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
@@ -209,6 +213,7 @@ if grep -q '#define SPDK_CONFIG_IDXD 1' $rootdir/include/spdk/config.h; then
 fi
 run_test "unittest_iscsi" unittest_iscsi
 run_test "unittest_json" unittest_json
+run_test "unittest_rpc" unittest_rpc
 run_test "unittest_notify" $valgrind $testdir/lib/notify/notify.c/notify_ut
 run_test "unittest_nvme" unittest_nvme
 run_test "unittest_log" $valgrind $testdir/lib/log/log.c/log_ut
