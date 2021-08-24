@@ -222,16 +222,18 @@ test_spdk_accel_submit_copy(void)
 	int rc;
 	struct spdk_accel_task task;
 	struct spdk_accel_task *expected_accel_task = NULL;
+	int flags = 0;
 
 	TAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* Fail with no tasks on _get_task() */
-	rc = spdk_accel_submit_copy(g_ch, src, dst, nbytes, dummy_submit_cb_fn, cb_arg);
+	rc = spdk_accel_submit_copy(g_ch, src, dst, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
+	task.flags = 1;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -239,12 +241,13 @@ test_spdk_accel_submit_copy(void)
 	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
 
 	/* HW accel submission OK. */
-	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, dummy_submit_cb_fn, cb_arg);
+	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst);
 	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMMOVE);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(g_dummy_submit_called == true);
 
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
@@ -255,14 +258,16 @@ test_spdk_accel_submit_copy(void)
 	task.src = 0;
 	task.op_code = 0xff;
 	task.nbytes = 0;
+	task.flags = 1;
 
 	/* SW engine does copy. */
-	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, dummy_submit_cb_fn, cb_arg);
+	rc = spdk_accel_submit_copy(g_ch, dst, src, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst);
 	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMMOVE);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(g_dummy_submit_cb_called == false);
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
@@ -282,6 +287,7 @@ test_spdk_accel_submit_dualcast(void)
 	int rc;
 	struct spdk_accel_task task;
 	struct spdk_accel_task *expected_accel_task = NULL;
+	int flags = 0;
 
 	/* Dualcast requires 4K alignment on dst addresses,
 	 * hence using the hard coded address to test the buffer alignment
@@ -295,14 +301,14 @@ test_spdk_accel_submit_dualcast(void)
 	TAILQ_INIT(&g_accel_ch->task_pool);
 
 	/* This should fail since dst2 is not 4k aligned */
-	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, dummy_submit_cb_fn,
 					cb_arg);
 	CU_ASSERT(rc == -EINVAL);
 
 	dst1 = (void *)0x7010;
 	dst2 = (void *)0x6000;
 	/* This should fail since dst1 is not 4k aligned */
-	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, dummy_submit_cb_fn,
 					cb_arg);
 	CU_ASSERT(rc == -EINVAL);
 
@@ -310,7 +316,7 @@ test_spdk_accel_submit_dualcast(void)
 	dst1 = (void *)0x7000;
 	dst2 = (void *)0x6000;
 	/* Fail with no tasks on _get_task() */
-	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, dummy_submit_cb_fn,
 					cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
@@ -324,7 +330,7 @@ test_spdk_accel_submit_dualcast(void)
 	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
 
 	/* HW accel submission OK. */
-	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, dummy_submit_cb_fn,
 					cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst1);
@@ -332,6 +338,7 @@ test_spdk_accel_submit_dualcast(void)
 	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_DUALCAST);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(g_dummy_submit_called == true);
 
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
@@ -343,6 +350,7 @@ test_spdk_accel_submit_dualcast(void)
 	task.src = 0;
 	task.op_code = 0xff;
 	task.nbytes = 0;
+	task.flags = 1;
 	/* Since we test the SW path next, need to use valid memory addresses
 	 * cannot hardcode them anymore
 	 */
@@ -351,7 +359,7 @@ test_spdk_accel_submit_dualcast(void)
 	dst2 = spdk_dma_zmalloc(nbytes, align, NULL);
 	SPDK_CU_ASSERT_FATAL(dst2 != NULL);
 	/* SW engine does the dualcast. */
-	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, dummy_submit_cb_fn,
 					cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst1);
@@ -359,6 +367,7 @@ test_spdk_accel_submit_dualcast(void)
 	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_DUALCAST);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(g_dummy_submit_cb_called == false);
 	CU_ASSERT(memcmp(dst1, src, TEST_SUBMIT_SIZE) == 0);
 	CU_ASSERT(memcmp(dst2, src, TEST_SUBMIT_SIZE) == 0);
@@ -450,6 +459,7 @@ test_spdk_accel_submit_fill(void)
 	int rc;
 	struct spdk_accel_task task;
 	struct spdk_accel_task *expected_accel_task = NULL;
+	int flags = 0;
 
 	dst = calloc(1, TEST_SUBMIT_SIZE);
 	SPDK_CU_ASSERT_FATAL(dst != NULL);
@@ -458,7 +468,7 @@ test_spdk_accel_submit_fill(void)
 	memset(src, fill, TEST_SUBMIT_SIZE);
 
 	/* Fail with no tasks on _get_task() */
-	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, dummy_submit_cb_fn, cb_arg);
+	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
 	TAILQ_INIT(&g_accel_ch->task_pool);
@@ -472,12 +482,13 @@ test_spdk_accel_submit_fill(void)
 	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
 
 	/* HW accel submission OK. */
-	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, dummy_submit_cb_fn, cb_arg);
+	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst);
 	CU_ASSERT(task.fill_pattern == fill);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMFILL);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(g_dummy_submit_called == true);
 
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
@@ -488,14 +499,16 @@ test_spdk_accel_submit_fill(void)
 	task.fill_pattern = 0;
 	task.op_code = 0xff;
 	task.nbytes = 0;
+	task.flags = 1;
 
 	/* SW engine does the fill. */
-	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, dummy_submit_cb_fn, cb_arg);
+	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst);
 	CU_ASSERT(task.fill_pattern == fill);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMFILL);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(g_dummy_submit_cb_called == false);
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
@@ -696,9 +709,11 @@ test_spdk_accel_submit_copy_crc32c(void)
 	int rc;
 	struct spdk_accel_task task;
 	struct spdk_accel_task *expected_accel_task = NULL;
+	int flags = 0;
 
 	/* Fail with no tasks on _get_task() */
-	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
+					   dummy_submit_cb_fn,
 					   cb_arg);
 	CU_ASSERT(rc == -ENOMEM);
 
@@ -713,7 +728,8 @@ test_spdk_accel_submit_copy_crc32c(void)
 	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
 
 	/* HW accel submission OK. */
-	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
+					   dummy_submit_cb_fn,
 					   cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst);
@@ -722,6 +738,7 @@ test_spdk_accel_submit_copy_crc32c(void)
 	CU_ASSERT(task.v.iovcnt == 0);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_COPY_CRC32C);
 	CU_ASSERT(g_dummy_submit_called == true);
 
@@ -733,12 +750,14 @@ test_spdk_accel_submit_copy_crc32c(void)
 	task.v.iovcnt = 0;
 	task.seed = 0;
 	task.nbytes = 0;
+	task.flags = 1;
 	task.op_code = 0xff;
 	g_accel_ch->engine->capabilities = 0;
 	memset(src, 0x5A, TEST_SUBMIT_SIZE);
 
 	/* SW engine does copy crc. */
-	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, dummy_submit_cb_fn,
+	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, flags,
+					   dummy_submit_cb_fn,
 					   cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
@@ -748,6 +767,7 @@ test_spdk_accel_submit_copy_crc32c(void)
 	CU_ASSERT(task.v.iovcnt == 0);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.flags == 0);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_COPY_CRC32C);
 	CU_ASSERT(g_dummy_submit_cb_called == false);
 	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);

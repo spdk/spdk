@@ -350,18 +350,19 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 {
 	int random_num;
 	int rc = 0;
+	int flags = 0;
 
 	assert(worker);
 
 	switch (g_workload_selection) {
 	case ACCEL_COPY:
 		rc = spdk_accel_submit_copy(worker->ch, task->dst, task->src,
-					    g_xfer_size_bytes, accel_done, task);
+					    g_xfer_size_bytes, flags, accel_done, task);
 		break;
 	case ACCEL_FILL:
 		/* For fill use the first byte of the task->dst buffer */
 		rc = spdk_accel_submit_fill(worker->ch, task->dst, *(uint8_t *)task->src,
-					    g_xfer_size_bytes, accel_done, task);
+					    g_xfer_size_bytes, flags, accel_done, task);
 		break;
 	case ACCEL_CRC32C:
 		rc = spdk_accel_submit_crc32cv(worker->ch, &task->crc_dst,
@@ -370,7 +371,7 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		break;
 	case ACCEL_COPY_CRC32C:
 		rc = spdk_accel_submit_copy_crc32cv(worker->ch, task->dst, task->iovs, task->iov_cnt,
-						    &task->crc_dst, g_crc32c_seed, accel_done, task);
+						    &task->crc_dst, g_crc32c_seed, flags, accel_done, task);
 		break;
 	case ACCEL_COMPARE:
 		random_num = rand() % 100;
@@ -386,7 +387,7 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		break;
 	case ACCEL_DUALCAST:
 		rc = spdk_accel_submit_dualcast(worker->ch, task->dst, task->dst2,
-						task->src, g_xfer_size_bytes, accel_done, task);
+						task->src, g_xfer_size_bytes, flags, accel_done, task);
 		break;
 	default:
 		assert(false);

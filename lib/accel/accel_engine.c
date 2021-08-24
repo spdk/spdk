@@ -168,7 +168,7 @@ _add_to_comp_list(struct accel_io_channel *accel_ch, struct spdk_accel_task *acc
 /* Accel framework public API for copy function */
 int
 spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-		       spdk_accel_completion_cb cb_fn, void *cb_arg)
+		       int flags, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
@@ -182,6 +182,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_
 	accel_task->src = src;
 	accel_task->op_code = ACCEL_OPCODE_MEMMOVE;
 	accel_task->nbytes = nbytes;
+	accel_task->flags = flags;
 
 	if (_is_supported(accel_ch->engine, ACCEL_COPY)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
@@ -195,7 +196,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_
 /* Accel framework public API for dual cast copy function */
 int
 spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, void *src,
-			   uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
+			   uint64_t nbytes, int flags, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
@@ -214,6 +215,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, v
 	accel_task->dst = dst1;
 	accel_task->dst2 = dst2;
 	accel_task->nbytes = nbytes;
+	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPCODE_DUALCAST;
 
 	if (_is_supported(accel_ch->engine, ACCEL_DUALCAST)) {
@@ -256,7 +258,7 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1, void *src2, ui
 /* Accel framework public API for fill function */
 int
 spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
-		       spdk_accel_completion_cb cb_fn, void *cb_arg)
+		       int flags, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
@@ -269,6 +271,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint
 	accel_task->dst = dst;
 	accel_task->fill_pattern = fill;
 	accel_task->nbytes = nbytes;
+	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPCODE_MEMFILL;
 
 	if (_is_supported(accel_ch->engine, ACCEL_FILL)) {
@@ -353,7 +356,7 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst, struct 
 /* Accel framework public API for copy with CRC-32C function */
 int
 spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
-			      uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+			      uint32_t *crc_dst, uint32_t seed, uint64_t nbytes, int flags,
 			      spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
@@ -370,6 +373,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
 	accel_task->v.iovcnt = 0;
 	accel_task->seed = seed;
 	accel_task->nbytes = nbytes;
+	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPCODE_COPY_CRC32C;
 
 	if (_is_supported(accel_ch->engine, ACCEL_COPY_CRC32C)) {
@@ -385,7 +389,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
 /* Accel framework public API for chained copy + CRC-32C function */
 int
 spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iovec *src_iovs,
-			       uint32_t iov_cnt, uint32_t *crc_dst, uint32_t seed,
+			       uint32_t iov_cnt, uint32_t *crc_dst, uint32_t seed, int flags,
 			       spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch;
@@ -414,6 +418,7 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iov
 	accel_task->dst = (void *)dst;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
+	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPCODE_COPY_CRC32C;
 
 	if (_is_supported(accel_ch->engine, ACCEL_COPY_CRC32C)) {

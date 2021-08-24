@@ -176,7 +176,7 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	for (i = 0; i < iovcnt; i++) {
 		task->num_outstanding++;
 		res = spdk_accel_submit_copy(ch, iov[i].iov_base,
-					     src, iov[i].iov_len, malloc_done, task);
+					     src, iov[i].iov_len, 0, malloc_done, task);
 
 		if (res != 0) {
 			malloc_done(task, res);
@@ -212,7 +212,7 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 	for (i = 0; i < iovcnt; i++) {
 		task->num_outstanding++;
 		res = spdk_accel_submit_copy(ch, dst, iov[i].iov_base,
-					     iov[i].iov_len, malloc_done, task);
+					     iov[i].iov_len, 0, malloc_done, task);
 
 		if (res != 0) {
 			malloc_done(task, res);
@@ -234,7 +234,7 @@ bdev_malloc_unmap(struct malloc_disk *mdisk,
 	task->num_outstanding = 1;
 
 	return spdk_accel_submit_fill(ch, mdisk->malloc_buf + offset, 0,
-				      byte_count, malloc_done, task);
+				      byte_count, 0, malloc_done, task);
 }
 
 static int _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)

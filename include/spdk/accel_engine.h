@@ -114,13 +114,14 @@ uint64_t spdk_accel_get_capabilities(struct spdk_io_channel *ch);
  * \param dst Destination to copy to.
  * \param src Source to copy from.
  * \param nbytes Length in bytes to copy.
+ * \param flags Accel framework flags for operations.
  * \param cb_fn Called when this copy operation completes.
  * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
 int spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-			   spdk_accel_completion_cb cb_fn, void *cb_arg);
+			   int flags, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a dual cast copy request.
@@ -130,13 +131,14 @@ int spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uin
  * \param dst2 Second destination to copy to (must be 4K aligned).
  * \param src Source to copy from.
  * \param nbytes Length in bytes to copy.
+ * \param flags Accel framework flags for operations.
  * \param cb_fn Called when this copy operation completes.
  * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
 int spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, void *src,
-			       uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
+			       uint64_t nbytes, int flags, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a compare request.
@@ -162,13 +164,14 @@ int spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1, void *src2
  * \param dst Destination to fill.
  * \param fill Constant byte to fill to the destination.
  * \param nbytes Length in bytes to fill.
+ * \param flags Accel framework flags for operations.
  * \param cb_fn Called when this fill operation completes.
  * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
 int spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
-			   spdk_accel_completion_cb cb_fn, void *cb_arg);
+			   int flags, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a CRC-32C calculation request.
@@ -218,13 +221,14 @@ int spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst, str
  * \param crc_dst Destination to write the CRC-32C to.
  * \param seed Four byte seed value.
  * \param nbytes Length in bytes.
+ * \param flags Accel framework flags for operations.
  * \param cb_fn Called when this CRC-32C operation completes.
  * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
 int spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
-				  uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+				  uint32_t *crc_dst, uint32_t seed, uint64_t nbytes, int flags,
 				  spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
@@ -238,13 +242,15 @@ int spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *s
  * \param iovcnt The size of the io vectors.
  * \param crc_dst Destination to write the CRC-32C to.
  * \param seed Four byte seed value.
+ * \param flags Accel framework flags for operations.
  * \param cb_fn Called when this CRC-32C operation completes.
  * \param cb_arg Callback argument.
  *
  * \return 0 on success, negative errno on failure.
  */
 int spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iovec *src_iovs,
-				   uint32_t iovcnt, uint32_t *crc_dst, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg);
+				   uint32_t iovcnt, uint32_t *crc_dst, uint32_t seed,
+				   int flags, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 
 struct spdk_json_write_ctx;

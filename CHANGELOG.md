@@ -11,6 +11,16 @@ Removed deprecated spdk_bdev_module_finish_done(). Use spdk_bdev_module_fini_don
 A new parameter `flags` was added to all low level submission and preparation
 APIs to enable the caller to pass operation flags per the DSA specification.
 
+### accel_fw
+
+A new parameter `flags` was added to accel API.
+The APIs include:
+`spdk_accel_submit_copy`
+`spdk_accel_submit_dualcast`
+`spdk_accel_submit_fill`
+`spdk_accel_submit_copy_crc32c`
+`spdk_accel_submit_copy_crc32cv`
+
 ### bdev_nvme
 
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and

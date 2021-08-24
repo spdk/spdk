@@ -89,6 +89,7 @@ struct spdk_accel_task {
 	uint32_t			*crc_dst;
 	enum accel_opcode		op_code;
 	uint64_t			nbytes;
+	int				flags;
 	int				status;
 	TAILQ_ENTRY(spdk_accel_task)	link;
 };
