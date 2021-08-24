@@ -2271,11 +2271,12 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	struct nvme_tcp_poll_group *group = nvme_tcp_poll_group(tgroup);
 	struct spdk_nvme_qpair *qpair, *tmp_qpair;
 	struct nvme_tcp_qpair *tqpair, *tmp_tqpair;
+	int num_events;
 
 	group->completions_per_qpair = completions_per_qpair;
 	group->num_completions = 0;
 
-	spdk_sock_group_poll(group->sock_group);
+	num_events = spdk_sock_group_poll(group->sock_group);
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
 		disconnected_qpair_cb(qpair, tgroup->group->ctx);
@@ -2285,6 +2286,10 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	 * and they weren't polled as a consequence of calling spdk_sock_group_poll above, poll them now. */
 	TAILQ_FOREACH_SAFE(tqpair, &group->needs_poll, link, tmp_tqpair) {
 		nvme_tcp_qpair_sock_cb(&tqpair->qpair, group->sock_group, tqpair->sock);
+	}
+
+	if (spdk_unlikely(num_events < 0)) {
+		return num_events;
 	}
 
 	return group->num_completions;
