@@ -1047,6 +1047,16 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		goto free;
 	}
 
+	/* If attempting to delete a qpair that's still being connected, we have to wait until it's
+	 * finished, so that we don't free it while it's waiting for the create cq/sq callbacks.
+	 */
+	while (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
+		rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+		if (rc < 0) {
+			break;
+		}
+	}
+
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		SPDK_ERRLOG("Failed to allocate status tracker\n");
