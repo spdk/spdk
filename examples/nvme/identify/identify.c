@@ -1573,6 +1573,15 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	} else {
 		printf("  Not Supported\n");
 	}
+	if (cdata->crdt[0]) {
+		printf("Command Retry Delay Time 1:  %u milliseconds\n", cdata->crdt[0] * 100);
+	}
+	if (cdata->crdt[1]) {
+		printf("Command Retry Delay Time 2:  %u milliseconds\n", cdata->crdt[1] * 100);
+	}
+	if (cdata->crdt[2]) {
+		printf("Command Retry Delay Time 3:  %u milliseconds\n", cdata->crdt[2] * 100);
+	}
 	printf("\n");
 
 	printf("Firmware Slot Information\n");
