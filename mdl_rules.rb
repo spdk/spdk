@@ -8,7 +8,6 @@ rule 'MD029', :style => "ordered"
 exclude_rule 'MD031'
 exclude_rule 'MD033'
 exclude_rule 'MD034'
-exclude_rule 'MD038'
 exclude_rule 'MD040'
 exclude_rule 'MD041'
 exclude_rule 'MD046'

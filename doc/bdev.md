@@ -492,7 +492,7 @@ Example command
 
 `rpc.py bdev_pmem_delete_pool /path/to/pmem_pool`
 
-To create bdev based on pmemblk pool file user should use `bdev_pmem_create ` RPC
+To create bdev based on pmemblk pool file user should use `bdev_pmem_create` RPC
 command.
 
 Example command
