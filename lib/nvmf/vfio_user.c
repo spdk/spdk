@@ -1328,7 +1328,9 @@ handle_cmd_rsp(struct nvmf_vfio_user_req *vu_req, void *cb_arg)
 	assert(vu_req != NULL);
 	assert(vu_ctrlr != NULL);
 
-	vfu_unmap_sg(vu_ctrlr->endpoint->vfu_ctx, vu_req->sg, vu_req->iov, vu_req->iovcnt);
+	if (spdk_likely(vu_req->iovcnt)) {
+		vfu_unmap_sg(vu_ctrlr->endpoint->vfu_ctx, vu_req->sg, vu_req->iov, vu_req->iovcnt);
+	}
 	sqid = vu_qpair->qpair.qid;
 	cqid = vu_ctrlr->qp[sqid]->sq.cqid;
 
