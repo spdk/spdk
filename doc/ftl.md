@@ -199,8 +199,8 @@ $ /path/to/qemu [OTHER PARAMETERS] -drive format=raw,file=/path/to/data/file,if=
 
 In the above example, a device is created with 1 channel, 8 parallel units, 512 chunks per parallel
 unit, 24576 (`lnum_pln` * `lpgs_per_blk` * `lsecs_per_pg`) logical blocks in each chunk with logical
-block being 4096B. Therefore the data file needs to be at least 384G (8 * 512 * 24576 * 4096B) of
-size and can be created with the following command:
+block being 4096B. Therefore the data file needs to be at least 384G `(8 * 512 * 24576 * 4096B)`
+of size and can be created with the following command:
 
 ```
 fallocate -l 384G /path/to/data/file
