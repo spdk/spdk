@@ -25,6 +25,6 @@ script for targeted debugging on a subsequent run.
 
 At the end of each test run, a summary is printed in the following format:
 
-~~~
+~~~bash
 device 0x11c3b90 stats: Sent 1543 valid opcode PDUs, 16215 invalid opcode PDUs.
 ~~~

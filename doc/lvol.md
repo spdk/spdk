@@ -97,7 +97,7 @@ logical volumes is kept on block devices.
 
 RPC regarding lvolstore:
 
-```
+```bash
 bdev_lvol_create_lvstore [-h] [-c CLUSTER_SZ] bdev_name lvs_name
     Constructs lvolstore on specified bdev with specified name. During
     construction bdev is unmapped at initialization and all data is
@@ -129,7 +129,7 @@ bdev_lvol_rename_lvstore [-h] old_name new_name
 
 RPC regarding lvol and spdk bdev:
 
-```
+```bash
 bdev_lvol_create [-h] [-u UUID] [-l LVS_NAME] [-t] [-c CLEAR_METHOD] lvol_name size
     Creates lvol with specified size and name on lvolstore specified by its uuid
     or name. Then constructs spdk bdev on top of that lvol and presents it as spdk bdev.

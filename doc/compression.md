@@ -88,7 +88,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
 
 ### Initial Creation
 
-```
+```text
                   +--------------------+
   Backing Device  |                    |
                   +--------------------+
@@ -123,7 +123,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
   store the 16KB of data.
 * Write the chunk map index to entry 2 in the logical map.
 
-```
+```text
                   +--------------------+
   Backing Device  |01                  |
                   +--------------------+
@@ -157,7 +157,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
 * Write (2, X, X, X) to the chunk map.
 * Write the chunk map index to entry 0 in the logical map.
 
-```
+```text
                   +--------------------+
   Backing Device  |012                 |
                   +--------------------+
@@ -205,7 +205,7 @@ In these examples, the value "X" will represent the special value (2^64-1) descr
 * Free chunk map 1 back to the free chunk map list.
 * Free backing IO unit 2 back to the free backing IO unit list.
 
-```
+```text
                   +--------------------+
   Backing Device  |01 34               |
                   +--------------------+

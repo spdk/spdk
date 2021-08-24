@@ -156,7 +156,7 @@ To verify that the drive is emulated correctly, one can check the output of the 
 (assuming that `scripts/setup.sh` was called before and the driver has been changed for that
 device):
 
-```
+```bash
 $ build/examples/identify
 =====================================================
 NVMe Controller at 0000:00:0a.0 [1d1d:1f1f]

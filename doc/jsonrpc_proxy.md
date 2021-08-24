@@ -31,7 +31,7 @@ Status 200 with resultant JSON object included on success.
 Below is a sample python script acting as a client side. It sends `bdev_get_bdevs` method with optional `name`
 parameter and prints JSON object returned from remote_rpc script.
 
-~~~
+~~~python
 import json
 import requests
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
 Output:
 
-~~~
+~~~python
 python client.py
 [{u'num_blocks': 2621440, u'name': u'Malloc0', u'uuid': u'fb57e59c-599d-42f1-8b89-3e46dbe12641', u'claimed': True,
 u'driver_specific': {}, u'supported_io_types': {u'reset': True, u'nvme_admin': False, u'unmap': True, u'read': True,

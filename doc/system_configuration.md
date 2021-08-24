@@ -115,7 +115,7 @@ shared by its vhost clients as described in the
 
 Open the `/etc/security/limits.conf` file as root and append the following:
 
-```
+```bash
 spdk     hard   memlock           unlimited
 spdk     soft   memlock           unlimited
 ```

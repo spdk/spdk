@@ -129,7 +129,9 @@ Boolean (on/off) options are configured with a 'y' (yes) or 'n' (no). For
 example, this line of `CONFIG` controls whether the optional RDMA (libibverbs)
 support is enabled:
 
-	CONFIG_RDMA?=n
+~~~{.sh}
+CONFIG_RDMA?=n
+~~~
 
 To enable RDMA, this line may be added to `mk/config.mk` with a 'y' instead of
 'n'. For the majority of options this can be done using the `configure` script.

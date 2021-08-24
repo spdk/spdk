@@ -131,7 +131,7 @@ E.g. To send fused compare and write operation user must call spdk_nvme_ns_cmd_c
 followed with spdk_nvme_ns_cmd_write and make sure no other operations are submitted
 in between on the same queue, like in example below:
 
-~~~
+~~~c
 	rc = spdk_nvme_ns_cmd_compare(ns, qpair, cmp_buf, 0, 1, nvme_fused_first_cpl_cb,
 			NULL, SPDK_NVME_CMD_FUSE_FIRST);
 	if (rc != 0) {

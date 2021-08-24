@@ -151,7 +151,7 @@ Whenever the `CPU mask` is mentioned it is a string in one of the following form
 
 The following CPU masks are equal and correspond to CPUs 0, 1, 2, 8, 9, 10, 11 and 12:
 
-~~~
+~~~bash
 0x1f07
 0x1F07
 1f07

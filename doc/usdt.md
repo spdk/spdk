@@ -28,7 +28,7 @@ flex
 We have found issues with the packaged bpftrace on both Ubuntu 20.04
 and Fedora 33.  So bpftrace should be built and installed from source.
 
-```
+```bash
 git clone https://github.com/iovisor/bpftrace.git
 mkdir bpftrace/build
 cd bpftrace/build
@@ -42,7 +42,7 @@ sudo make install
 bpftrace.sh is a helper script that facilitates running bpftrace scripts
 against a running SPDK application.  Here is a typical usage:
 
-```
+```bash
 scripts/bpftrace.sh `pidof spdk_tgt` scripts/bpf/nvmf.bt
 ```
 
@@ -58,7 +58,7 @@ that string with the PID provided to the script.
 
 ## Configuring SPDK Build
 
-```
+```bash
 ./configure --with-usdt
 ```
 
@@ -66,13 +66,13 @@ that string with the PID provided to the script.
 
 From first terminal:
 
-```
+```bash
 build/bin/spdk_tgt -m 0xC
 ```
 
 From second terminal:
 
-```
+```bash
 scripts/bpftrace.sh `pidof spdk_tgt` scripts/bpf/nvmf.bt
 ```
 
@@ -81,7 +81,7 @@ group info state transitions.
 
 From third terminal:
 
-```
+```bash
 scripts/rpc.py <<EOF
 nvmf_create_transport -t tcp
 nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 10
@@ -96,7 +96,7 @@ port, and a null bdev which is added as a namespace to the new nvmf subsystem.
 
 You will see output from the second terminal that looks like this:
 
-```
+```bash
 2110.935735: nvmf_tgt reached state NONE
 2110.954316: nvmf_tgt reached state CREATE_TARGET
 2110.967905: nvmf_tgt reached state CREATE_POLL_GROUPS
@@ -145,14 +145,14 @@ it again with the send_msg.bt script.  This script keeps a count of
 functions executed as part of an spdk_for_each_channel or
 spdk_thread_send_msg function call.
 
-```
+```bash
 scripts/bpftrace.sh `pidof spdk_tgt` scripts/bpf/send_msg.bt
 ```
 
 From the third terminal, create another null bdev and add it as a
 namespace to the cnode1 subsystem.
 
-```
+```bash
 scripts/rpc.py <<EOF
 bdev_null_create null1 1000 512
 nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 null1
@@ -162,7 +162,7 @@ EOF
 Now Ctrl-C the bpftrace.sh in the second terminal, and it will
 print the final results of the maps.
 
-```
+```bash
 @for_each_channel[subsystem_state_change_on_pg]: 2
 
 @send_msg[_finish_unregister]: 1

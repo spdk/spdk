@@ -17,14 +17,14 @@ Tracepoints are placed in groups. They are enabled and disabled as a group. To e
 the instrumentation of all the tracepoints group in an SPDK target application, start the
 target with -e parameter set to 0xFFFF:
 
-~~~
+~~~bash
 build/bin/nvmf_tgt -e 0xFFFF
 ~~~
 
 To enable the instrumentation of just the NVMe-oF RDMA tracepoints in an SPDK target
 application, start the target with the -e parameter set to 0x10:
 
-~~~
+~~~bash
 build/bin/nvmf_tgt -e 0x10
 ~~~
 
@@ -32,7 +32,7 @@ When the target starts, a message is logged with the information you need to vie
 the tracepoints in a human-readable format using the spdk_trace application. The target
 will also log information about the shared memory file.
 
-~~~{.sh}
+~~~bash
 app.c: 527:spdk_app_setup_trace: *NOTICE*: Tracepoint Group Mask 0xFFFF specified.
 app.c: 531:spdk_app_setup_trace: *NOTICE*: Use 'spdk_trace -s nvmf -p 24147' to capture a snapshot of events at runtime.
 app.c: 533:spdk_app_setup_trace: *NOTICE*: Or copy /dev/shm/nvmf_trace.pid24147 for offline analysis/debug.
@@ -49,14 +49,14 @@ Send I/Os to the SPDK target application to generate events. The following is
 an example usage of perf to send I/Os to the NVMe-oF target over an RDMA network
 interface for 10 minutes.
 
-~~~
+~~~bash
 ./perf -q 128 -s 4096 -w randread -t 600 -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.2 trsvcid:4420'
 ~~~
 
 The spdk_trace program can be found in the app/trace directory.  To analyze the tracepoints on the same
 system running the NVMe-oF target, simply execute the command line shown in the log:
 
-~~~{.sh}
+~~~bash
 build/bin/spdk_trace -s nvmf -p 24147
 ~~~
 
@@ -64,13 +64,13 @@ To analyze the tracepoints on a different system, first prepare the tracepoint f
 tracepoint file can be large, but usually compresses very well.  This step can also be used to prepare
 a tracepoint file to attach to a GitHub issue for debugging NVMe-oF application crashes.
 
-~~~{.sh}
+~~~bash
 bzip2 -c /dev/shm/nvmf_trace.pid24147 > /tmp/trace.bz2
 ~~~
 
 After transferring the /tmp/trace.bz2 tracepoint file to a different system:
 
-~~~{.sh}
+~~~bash
 bunzip2 /tmp/trace.bz2
 build/bin/spdk_trace -f /tmp/trace
 ~~~
@@ -79,7 +79,7 @@ The following is sample trace capture showing the cumulative time that each
 I/O spends at each RDMA state. All the trace captures with the same id are for
 the same I/O.
 
-~~~
+~~~bash
 28:   6026.658 ( 12656064)     RDMA_REQ_NEED_BUFFER                                      id:    r3622            time:  0.019
 28:   6026.694 ( 12656140)     RDMA_REQ_RDY_TO_EXECUTE                                   id:    r3622            time:  0.055
 28:   6026.820 ( 12656406)     RDMA_REQ_EXECUTING                                        id:    r3622            time:  0.182
@@ -135,20 +135,20 @@ spdk_trace_record is used to poll the spdk tracepoint shared memory, record new 
 and store all entries into specified output file at its shutdown on SIGINT or SIGTERM.
 After SPDK nvmf target is launched, simply execute the command line shown in the log:
 
-~~~{.sh}
+~~~bash
 build/bin/spdk_trace_record -q -s nvmf -p 24147 -f /tmp/spdk_nvmf_record.trace
 ~~~
 
 Also send I/Os to the SPDK target application to generate events by previous perf example for 10 minutes.
 
-~~~{.sh}
+~~~bash
 ./perf -q 128 -s 4096 -w randread -t 600 -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.2 trsvcid:4420'
 ~~~
 
 After the completion of perf example, shut down spdk_trace_record by signal SIGINT (Ctrl + C).
 To analyze the tracepoints output file from spdk_trace_record, simply run spdk_trace program by:
 
-~~~{.sh}
+~~~bash
 build/bin/spdk_trace -f /tmp/spdk_nvmf_record.trace
 ~~~
 
@@ -159,7 +159,7 @@ tracepoints to the existing trace groups. For example, to add a new tracepoints
 to the SPDK RDMA library (lib/nvmf/rdma.c) trace group TRACE_GROUP_NVMF_RDMA,
 define the tracepoints and assigning them a unique ID using the SPDK_TPOINT_ID macro:
 
-~~~
+~~~c
 #define	TRACE_GROUP_NVMF_RDMA	0x4
 #define TRACE_RDMA_REQUEST_STATE_NEW	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x0)
 ...
@@ -170,7 +170,7 @@ You also need to register the new trace points in the SPDK_TRACE_REGISTER_FN mac
 within the application/library using the spdk_trace_register_description function
 as shown below:
 
-~~~
+~~~c
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
@@ -191,7 +191,7 @@ application/library to record the current trace state for the new trace points.
 The following example shows the usage of the spdk_trace_record function to
 record the current trace state of several tracepoints.
 
-~~~
+~~~c
 	case RDMA_REQUEST_STATE_NEW:
 		spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEW, 0, 0, (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 		...

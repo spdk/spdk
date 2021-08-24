@@ -8,7 +8,7 @@ This directory also contains a convenient test script, test_make.sh, which autom
 and testing all six of these linker options. It takes a single argument, the path to an SPDK
 repository and should be run as follows:
 
-~~~
+~~~bash
 sudo ./test_make.sh /path/to/spdk
 ~~~
 

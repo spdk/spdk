@@ -26,7 +26,7 @@ This can be overridden with the -V flag. if -V is specified, each command will b
 it is completed in the JSON format specified above.
 At the end of each test run, a summary is printed for each namespace in the following format:
 
-~~~
+~~~bash
 NS: 0x200079262300 admin qp, Total commands completed: 462459, total successful commands: 1960, random_seed: 4276918833
 ~~~
 

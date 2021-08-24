@@ -62,19 +62,19 @@ that 'rpc.py' imports for definitions of each SPDK library's or module's methods
 
 Example:
 
-~~~
+~~~bash
 scripts/rpc.py bdev_nvme_attach_controller -b nvme0 -a 00:02.0 -t pcie
 ~~~
 
 A brief description of each of the RPC methods and optional 'rpc.py' arguments can be viewed with:
 
-~~~
+~~~bash
 scripts/rpc.py --help
 ~~~
 
 A detailed description of each RPC method and its parameters is also available.  For example:
 
-~~~
+~~~bash
 scripts/rpc.py bdev_nvme_attach_controller --help
 ~~~
 
@@ -85,7 +85,7 @@ The configuration file is a JSON file containing all of the JSON-RPC method invo
 for the desired configuration. Writing these files by hand is extremely tedious however, so 'rpc.py'
 provides a mechanism to generate a JSON-RPC file based on the current configuration.
 
-~~~
+~~~bash
 scripts/rpc.py save_config > config.json
 ~~~
 
@@ -97,7 +97,7 @@ to reproduce the same configuration.
 'rpc.py' also supports batching of multiple JSON-RPC methods with one invocation.  So instead of
 calling 'rpc.py' once for each JSON-RPC method, such as:
 
-~~~
+~~~bash
 scripts/rpc.py bdev_malloc_create -b malloc0 64 512
 scripts/rpc.py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a
 scripts/rpc.py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0
@@ -107,7 +107,7 @@ scripts/rpc.py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp -a 
 
 you can put the following into a text file:
 
-~~~
+~~~bash
 bdev_malloc_create -b malloc0 64 512
 nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a
 nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0
@@ -117,7 +117,7 @@ nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp -a 127.0.0.1 -s 44
 
 and then just do:
 
-~~~
+~~~bash
 scripts/rpc.py < rpc.txt
 ~~~
 
@@ -129,7 +129,7 @@ methods as follows:
 
 If PYTHONPATH doesn't include the location of the external RPC python script, it should be updated:
 
-~~~
+~~~bash
 export PYTHONPATH=/home/user/plugin_example/
 ~~~
 
@@ -138,7 +138,7 @@ spdk_rpc_plugin_initialize() method that will be called when the plugin is loade
 argument that adds new RPC calls (subparsers.add_parser()).  The new parsers should use the client.call() method to call RPC
 functions registered within the external module using the SPDK_RPC_REGISTER() macro.  Example:
 
-~~~
+~~~python
 from rpc.client import print_json
 
 
@@ -202,7 +202,7 @@ def spdk_rpc_plugin_initialize(subparsers):
 
 Finally, call the rpc.py script with '--plugin' parameter to provide above python module name:
 
-~~~
+~~~bash
 ./scripts/rpc.py --plugin rpc_plugin bdev_example_create 10 4096
 ~~~
 
@@ -214,7 +214,8 @@ can [generate JSON-RPC for current configuration](@ref jsonrpc_generate).
 
 If binary for deploying the application is unavailable, the legacy configuration
 file can be converted to JSON-RPC using python tool:
-~~~
+
+~~~bash
 ./scripts/config_converter.py < config.ini > config.json
 ~~~
 
@@ -234,7 +235,7 @@ sig_name                | Required | string      | Signal to send (SIGINT, SIGTE
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -247,7 +248,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -275,7 +276,7 @@ enabled                 | boolean     | The current state of context switch moni
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -288,7 +289,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -316,7 +317,7 @@ Completion status of SPDK subsystem initialization is returned as a boolean.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -326,7 +327,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -351,7 +352,7 @@ Returns True when subsystems have been initialized.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -361,7 +362,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -387,7 +388,7 @@ The response is an array of supported RPC methods.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -397,7 +398,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -498,7 +499,7 @@ The response is an array of name and dependency relationship of SPDK subsystems 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -508,7 +509,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -586,7 +587,7 @@ Null is returned if it is not retrievable by the framework_get_config method and
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -599,7 +600,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -665,7 +666,8 @@ The response is an array of all reactors.
 #### Example
 
 Example request:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "framework_get_reactors",
@@ -674,7 +676,8 @@ Example request:
 ~~~
 
 Example response:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -719,7 +722,7 @@ Completion status of the operation is returned as a boolean.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "framework_set_scheduler",
@@ -733,7 +736,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -761,7 +764,7 @@ governor_name           | Governor name
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "framework_set_scheduler",
@@ -771,7 +774,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -798,7 +801,8 @@ The response is an array of objects containing threads statistics.
 #### Example
 
 Example request:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "thread_get_stats",
@@ -807,7 +811,8 @@ Example request:
 ~~~
 
 Example response:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -850,7 +855,7 @@ Completion status of the operation is returned as a boolean.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "thread_set_cpumask",
@@ -864,7 +869,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -887,7 +892,7 @@ name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, bl
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "trace_enable_tpoint_group",
@@ -900,7 +905,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -923,7 +928,7 @@ name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, bl
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "trace_disable_tpoint_group",
@@ -936,7 +941,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -956,7 +961,7 @@ No parameters required
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "trace_get_tpoint_group_mask",
@@ -966,7 +971,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1015,7 +1020,7 @@ level                   | Required | string      | ERROR, WARNING, NOTICE, INFO,
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_set_print_level",
@@ -1028,7 +1033,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1045,7 +1050,7 @@ sent to the current console.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_get_print_level",
@@ -1055,7 +1060,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1077,7 +1082,7 @@ level                   | Required | string      | ERROR, WARNING, NOTICE, INFO,
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_set_level",
@@ -1090,7 +1095,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1106,7 +1111,7 @@ Get the current logging level output by the `log` module.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_get_level",
@@ -1116,7 +1121,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1140,7 +1145,7 @@ flag                    | Required | string      | A log flag, or 'all'
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_set_flag",
@@ -1153,7 +1158,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1177,7 +1182,7 @@ flag                    | Required | string      | A log flag, or 'all'
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_clear_flag",
@@ -1190,7 +1195,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1207,7 +1212,7 @@ they are currently enabled.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_get_flags",
@@ -1217,7 +1222,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1244,7 +1249,7 @@ enabled                 | Required | boolean     | on or off
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "log_enable_timestamps",
@@ -1257,7 +1262,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1280,7 +1285,8 @@ The response is an array of objects containing pollers of all the threads.
 #### Example
 
 Example request:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "thread_get_pollers",
@@ -1289,7 +1295,8 @@ Example request:
 ~~~
 
 Example response:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1331,7 +1338,8 @@ The response is an array of objects containing IO channels of all the threads.
 #### Example
 
 Example request:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "thread_get_io_channels",
@@ -1340,7 +1348,8 @@ Example request:
 ~~~
 
 Example response:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1377,7 +1386,7 @@ The response is a pathname to a text file containing the memory stats.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "env_dpdk_get_mem_stats",
@@ -1387,7 +1396,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1415,7 +1424,7 @@ config_kernel_mode      | Optional | Boolean     | If set, will use kernel idxd 
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "config_number": 0,
@@ -1429,7 +1438,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1449,7 +1458,7 @@ None
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "ioat_scan_accel_engine",
@@ -1459,7 +1468,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1486,7 +1495,7 @@ bdev_auto_examine       | Optional | boolean     | If set to false, the bdev lay
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1500,7 +1509,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1529,7 +1538,7 @@ The response is an array of objects containing information about the requested b
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1542,7 +1551,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1591,7 +1600,7 @@ The response is an array of objects containing I/O statistics of the requested b
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1604,7 +1613,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1628,7 +1637,7 @@ The response is sent when all bdev modules had a chance to examine every bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_wait_for_examine",
@@ -1638,7 +1647,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1667,7 +1676,7 @@ The response is an array of objects containing I/O statistics of the requested b
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1680,7 +1689,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1723,7 +1732,7 @@ enable                  | Required | boolean     | Enable or disable histogram o
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1737,7 +1746,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1767,7 +1776,7 @@ tsc_rate                | Ticks per second
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1781,7 +1790,7 @@ Example request:
 Example response:
 Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1811,7 +1820,7 @@ w_mbytes_per_sec        | Optional | number      | Number of Write megabytes per
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1828,7 +1837,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1851,7 +1860,7 @@ period                  | Required | int         | period (in microseconds).If s
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_set_qd_sampling_period",
@@ -1865,7 +1874,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1893,7 +1902,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "base_bdev_name": "Nvme0n1",
@@ -1920,7 +1929,7 @@ name                    | Required | string      | Name of the compress bdev
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "COMP_Nvme0n1"
@@ -1933,7 +1942,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1955,7 +1964,7 @@ name                    | Required | string      | Name of the compress bdev
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "COMP_Nvme0n1"
@@ -1968,7 +1977,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -1991,7 +2000,7 @@ pmd                     | Required | int         | pmd selection
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "pmd": 1
@@ -2004,7 +2013,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2035,7 +2044,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "base_bdev_name": "Nvme0n1",
@@ -2052,7 +2061,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
 
   "jsonrpc": "2.0",
@@ -2075,7 +2084,7 @@ name                    | Required | string      | Name of the crypto bdev
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "my_crypto_bdev"
@@ -2088,7 +2097,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2120,7 +2129,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "ocf0",
@@ -2137,7 +2146,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2159,7 +2168,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "ocf0"
@@ -2172,7 +2181,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2198,7 +2207,7 @@ Statistics as json object.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_ocf_get_stats",
@@ -2208,7 +2217,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2402,7 +2411,7 @@ Array of OCF devices with their current status, along with core and cache bdevs.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_ocf_get_bdevs",
@@ -2412,7 +2421,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2452,7 +2461,7 @@ New cache mode name.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "ocf0",
@@ -2466,7 +2475,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2495,7 +2504,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "block_size": 4096,
@@ -2511,7 +2520,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2533,7 +2542,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Malloc0"
@@ -2546,7 +2555,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2578,7 +2587,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "block_size": 4104,
@@ -2597,7 +2606,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2619,7 +2628,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Null0"
@@ -2632,7 +2641,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2655,7 +2664,7 @@ new_size                | Required | number      | Bdev new capacity in MB
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Null0",
@@ -2669,7 +2678,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2697,7 +2706,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "block_size": 4096,
@@ -2712,7 +2721,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2734,7 +2743,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Aio0"
@@ -2747,7 +2756,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2782,7 +2791,7 @@ delay_cmd_submit           | Optional | boolean     | Enable delaying NVMe comma
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -2807,7 +2816,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2831,7 +2840,7 @@ period_us               | Optional | number      | How often to poll for hot-ins
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -2846,7 +2855,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2888,7 +2897,7 @@ fabrics_connect_timeout_us | Optional | bool        | Timeout for fabrics connec
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "trtype": "pcie",
@@ -2903,7 +2912,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2934,7 +2943,7 @@ The response is an array of objects containing information about the requested N
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2947,7 +2956,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -2989,7 +2998,7 @@ subnqn                  | Optional | string      | NVMe-oF target subnqn
 
 Example requests:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Nvme0"
@@ -3002,7 +3011,7 @@ Example requests:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3026,7 +3035,7 @@ name                    | Required | string      | NVMe controller name
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3039,7 +3048,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3063,7 +3072,7 @@ dev_path                | Required | string      | Path to the CUSE controller d
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "dev_path": "spdk/nvme0",
@@ -3077,7 +3086,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3100,7 +3109,7 @@ name                    | Required | string      | Name of the NVMe controller
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Nvme0"
@@ -3113,7 +3122,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3138,7 +3147,7 @@ optimal_open_zones      | Required | number      | Number of zones required to r
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_zone_block_create",
@@ -3154,7 +3163,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3176,7 +3185,7 @@ name                    | Required | string      | Name of the Zone device
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_zone_block_delete",
@@ -3189,7 +3198,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3212,7 +3221,7 @@ bdev_name               | Required | string      | Name of the NVMe block device
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_nvme_apply_firmware",
@@ -3240,7 +3249,7 @@ The response is an array of objects containing information about transport stati
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3250,7 +3259,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3363,7 +3372,7 @@ The response is the object containing information about health log of the NVMe c
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_nvme_get_controller_health_info",
@@ -3376,7 +3385,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "model_number": "INTEL SSDPE2KX020T8",
   "serial_number": "BTLJ72430ARH2P0BGN",
@@ -3582,7 +3591,7 @@ Name of newly created bdev.
 
 Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
 
-~~~
+~~~json
 {
   "params": {
     "pool_name": "rbd",
@@ -3601,7 +3610,7 @@ Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
 
 Example response:
 
-~~~
+~~~json
 response:
 {
   "jsonrpc": "2.0",
@@ -3657,7 +3666,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Rbd0"
@@ -3670,7 +3679,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3699,7 +3708,7 @@ new_size                | Required | int         | New bdev size for resize oper
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Rbd0"
@@ -3713,7 +3722,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3745,7 +3754,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "base_bdev_name": "Null0",
@@ -3763,7 +3772,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3785,7 +3794,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Delay0"
@@ -3799,7 +3808,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3828,7 +3837,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "delay_bdev_name": "Delay0",
@@ -3843,7 +3852,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "result": "true"
 }
@@ -3863,7 +3872,7 @@ base_name               | Required | string      | Base bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "base_name": "Malloc0"
@@ -3876,7 +3885,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3902,7 +3911,7 @@ name                    | Required | string      | Error bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "EE_Malloc0"
@@ -3915,7 +3924,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3941,7 +3950,7 @@ num                     | Optional | int         | the number of commands you wa
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_error_inject_error",
@@ -3957,7 +3966,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -3987,7 +3996,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "url": "iscsi://127.0.0.1/iqn.2016-06.io.spdk:disk1/0",
@@ -4002,7 +4011,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4026,7 +4035,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "iSCSI0"
@@ -4039,7 +4048,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4072,7 +4081,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "nvme0"
@@ -4089,7 +4098,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4116,7 +4125,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "nvme0"
@@ -4129,7 +4138,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4141,7 +4150,7 @@ Example response:
 
 Create a @ref bdev_config_pmem blk pool file. It is equivalent of following `pmempool create` command:
 
-~~~
+~~~bash
 pmempool create -s $((num_blocks * block_size)) blk $block_size $pmem_file
 ~~~
 
@@ -4159,7 +4168,7 @@ block_size              | Required | number      | Size of each block in bytes
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "block_size": 512,
@@ -4174,7 +4183,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4207,7 +4216,7 @@ block_size              | number      | Size of each block in bytes
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -4221,7 +4230,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4251,7 +4260,7 @@ pmem_file               | Required | string      | Path to new pmem file
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "pmem_file": "/tmp/pmem_file"
@@ -4264,7 +4273,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4293,7 +4302,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "pmem_file": "/tmp/pmem_file",
@@ -4307,7 +4316,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4335,7 +4344,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Pmem0"
@@ -4348,7 +4357,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4376,7 +4385,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "base_bdev_name": "Malloc0",
@@ -4390,7 +4399,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4412,7 +4421,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "Passsthru0"
@@ -4426,7 +4435,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4462,7 +4471,7 @@ Array of names of newly created bdevs.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "VirtioScsi0",
@@ -4480,7 +4489,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4504,7 +4513,7 @@ Array of Virtio SCSI information objects.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_virtio_scsi_get_devices",
@@ -4514,7 +4523,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4546,7 +4555,7 @@ name                    | Required | string      | Virtio name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "VirtioUser0"
@@ -4560,7 +4569,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4590,7 +4599,7 @@ True the rpc is successful otherwise false
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "enable": "true",
@@ -4604,7 +4613,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4657,7 +4666,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters 
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "allow_duplicated_isid": true,
@@ -4680,7 +4689,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4700,7 +4709,7 @@ This method has no parameters.
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "jsonrpc": "2.0",
@@ -4711,7 +4720,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4751,7 +4760,7 @@ This method has no parameters.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "scsi_get_devices",
@@ -4761,7 +4770,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4793,7 +4802,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -4809,7 +4818,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4841,7 +4850,7 @@ msecret                     | Optional | string  | Bidirectional CHAP secret
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "secrets": [
@@ -4862,7 +4871,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4884,7 +4893,7 @@ tag                         | Required | number  | Authentication group tag (uni
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "tag": 2
@@ -4897,7 +4906,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4926,16 +4935,17 @@ secrets                     | array   | Array of @ref rpc_iscsi_create_auth_grou
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "iscsi_get_auth_groups",
   "id": 1
 }
 ~~~
+
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -4982,7 +4992,7 @@ msecret                     | Optional | string  | Bidirectional CHAP secret
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "muser": "mu3",
@@ -4995,11 +5005,11 @@ Example request:
   "method": "iscsi_auth_group_add_secret",
   "id": 1
 }
-~~~
+~~~json
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5022,7 +5032,7 @@ user                        | Required | string  | Unidirectional CHAP name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "tag": 2,
@@ -5036,7 +5046,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5066,7 +5076,7 @@ netmasks                    | array   | Array of initiator netmasks
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "iscsi_get_initiator_groups",
@@ -5076,7 +5086,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5111,7 +5121,7 @@ netmasks                    | Required | array   | Not empty array of initiator 
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "initiators": [
@@ -5131,7 +5141,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 response:
 {
   "jsonrpc": "2.0",
@@ -5154,7 +5164,7 @@ tag                         | Required | number  | Initiator group tag (unique, 
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "tag": 1
@@ -5167,7 +5177,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5191,7 +5201,7 @@ netmasks                    | Optional | array   | Array of initiator netmasks
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -5211,7 +5221,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 response:
 {
   "jsonrpc": "2.0",
@@ -5236,7 +5246,7 @@ netmasks                    | Optional | array   | Array of initiator netmasks
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -5256,7 +5266,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 response:
 {
   "jsonrpc": "2.0",
@@ -5295,7 +5305,7 @@ data_digest                 | boolean | Data Digest should be required for this 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "iscsi_get_target_nodes",
@@ -5305,7 +5315,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5363,7 +5373,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "luns": [
@@ -5398,7 +5408,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5426,7 +5436,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "chap_group": 1,
@@ -5442,7 +5452,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5472,7 +5482,7 @@ pg_tag                      | Required | number  | Existing portal group tag
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "pg_ig_maps": [
@@ -5499,7 +5509,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5529,7 +5539,7 @@ pg_tag                      | Required | number  | Existing portal group tag
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "pg_ig_maps": [
@@ -5556,7 +5566,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5578,7 +5588,7 @@ name                        | Required | string  | Target node name (ASCII)
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "iqn.2016-06.io.spdk:target1"
@@ -5591,7 +5601,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5611,7 +5621,7 @@ This method has no parameters.
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "jsonrpc": "2.0",
@@ -5622,7 +5632,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5665,7 +5675,7 @@ port                        | Required | string  | Port number
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "portals": [
@@ -5684,7 +5694,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5707,7 +5717,7 @@ tag                         | Required | number  | Existing portal group tag
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "tag": 1
@@ -5720,7 +5730,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5742,7 +5752,7 @@ tag                         | Required | number  | Existing portal group tag
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "tag": 1
@@ -5755,7 +5765,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5783,7 +5793,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -5800,7 +5810,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5834,7 +5844,7 @@ target_node_name            | string  | Target node name (ASCII) without prefix
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "iscsi_get_connections",
@@ -5844,7 +5854,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5878,7 +5888,7 @@ lun_id                      | Optional | number  | LUN ID (default: first free I
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "lun_id": 2,
@@ -5893,7 +5903,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5920,7 +5930,7 @@ If both redirect_host and redirect_port are omitted, clear the redirect portal.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "iqn.2016-06.io.spdk:target1",
@@ -5936,7 +5946,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -5960,7 +5970,7 @@ pg_tag                      | Optional | number  | Existing portal group tag
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "name": "iqn.2016-06.io.spdk:target1",
@@ -5974,7 +5984,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6017,7 +6027,7 @@ no_wr_batching              | Optional | boolean | Disable work requests batchin
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "nvmf_create_transport",
@@ -6031,7 +6041,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6051,7 +6061,7 @@ tgt_name                    | Optional | string      | Parent NVMe-oF target nam
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6061,7 +6071,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6121,7 +6131,7 @@ max_cntlid              | Optional | number      | Maximum controller ID. Defaul
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6137,7 +6147,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6160,7 +6170,7 @@ tgt_name               | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6173,7 +6183,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6206,7 +6216,7 @@ trsvcid                 | Optional | string      | Transport service ID (require
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6225,7 +6235,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6249,7 +6259,7 @@ listen_address          | Required | object      | @ref rpc_nvmf_listen_address 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6268,7 +6278,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6295,7 +6305,7 @@ anagrpid                | Optional | number      | ANA group ID
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6315,7 +6325,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6351,7 +6361,7 @@ anagrpid                | Optional | number      | ANA group ID. Default: Namesp
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6369,7 +6379,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6393,7 +6403,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6407,7 +6417,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6431,7 +6441,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6445,7 +6455,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6469,7 +6479,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6483,7 +6493,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6507,7 +6517,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6521,7 +6531,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6542,7 +6552,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6555,7 +6565,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6583,7 +6593,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6596,7 +6606,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6640,7 +6650,7 @@ tgt_name                | Optional | string      | Parent NVMe-oF target name.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6653,7 +6663,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6686,7 +6696,7 @@ max_subsystems          | Required | number      | Maximum number of NVMe-oF sub
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6699,7 +6709,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6730,7 +6740,7 @@ identify_ctrlr          | Required | bool        | If true, enables custom ident
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6743,7 +6753,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6763,7 +6773,7 @@ tgt_name                    | Optional | string      | Parent NVMe-oF target nam
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6773,7 +6783,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6810,7 +6820,8 @@ In the response, `admin_qpairs` and `io_qpairs` are reflecting cumulative queue 
 #### Example
 
 Example request:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "nvmf_get_stats",
@@ -6819,7 +6830,8 @@ Example request:
 ~~~
 
 Example response:
-~~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6920,7 +6932,7 @@ iops_threshold          | Required | number      | Coalescing activation level g
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "iops_threshold": 100000,
@@ -6935,7 +6947,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -6958,7 +6970,7 @@ cpumask                 | Optional | string      | @ref cpu_mask for this contro
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "cpumask": "0x2",
@@ -6972,7 +6984,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7000,7 +7012,7 @@ SCSI target ID.
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "scsi_target_num": 1,
@@ -7015,7 +7027,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 response:
 {
   "jsonrpc": "2.0",
@@ -7041,7 +7053,7 @@ scsi_target_num         | Required | number      | SCSI target ID between 0 and 
 
 Example request:
 
-~~~
+~~~json
 request:
 {
   "params": {
@@ -7056,7 +7068,7 @@ request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7084,7 +7096,7 @@ cpumask                 | Optional | string      | @ref cpu_mask for this contro
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "dev_name": "Malloc0",
@@ -7098,7 +7110,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7173,7 +7185,7 @@ bdev                    | string      | Backing bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "vhost_get_controllers",
@@ -7183,7 +7195,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7271,7 +7283,7 @@ ctrlr                   | Required | string      | Controller name
 
 Example request:
 
-~~~
+~~~json
 {
   "params": {
     "ctrlr": "VhostNvme0"
@@ -7284,7 +7296,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7329,7 +7341,7 @@ UUID of the created logical volume store is returned.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7344,7 +7356,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7369,7 +7381,7 @@ Either uuid or lvs_name must be specified, but not both.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_delete_lvstore",
@@ -7382,7 +7394,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7408,7 +7420,7 @@ If both uuid and lvs_name are omitted, information about all logical volume stor
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_get_lvstores",
@@ -7421,7 +7433,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7454,7 +7466,7 @@ new_name                | Required | string      | New logical volume store name
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_rename_lvstore",
@@ -7468,7 +7480,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7502,7 +7514,7 @@ UUID of the created logical volume is returned.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_create",
@@ -7519,7 +7531,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7546,7 +7558,7 @@ UUID of the created logical volume snapshot is returned.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_snapshot",
@@ -7560,7 +7572,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7587,7 +7599,7 @@ UUID of the created logical volume clone is returned.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0"
   "method": "bdev_lvol_clone",
@@ -7601,7 +7613,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7624,7 +7636,7 @@ new_name                | Required | string      | New logical volume name
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_rename",
@@ -7638,7 +7650,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7661,7 +7673,7 @@ size                    | Required | number      | Desired size of the logical v
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_resize",
@@ -7675,7 +7687,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7697,7 +7709,7 @@ name                    | Required | string      | UUID or alias of the logical 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_set_read_only",
@@ -7710,7 +7722,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7732,7 +7744,7 @@ name                    | Required | string      | UUID or alias of the logical 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_delete",
@@ -7745,7 +7757,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7768,7 +7780,7 @@ name                    | Required | string      | UUID or alias of the logical 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_inflate",
@@ -7781,7 +7793,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7805,7 +7817,7 @@ name                    | Required | string      | UUID or alias of the logical 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_lvol_decouple_parent",
@@ -7818,7 +7830,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7847,7 +7859,7 @@ category                | Required | string      | all or online or configuring 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_raid_get_bdevs",
@@ -7860,7 +7872,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7887,7 +7899,7 @@ base_bdevs              | Required | string      | Base bdevs name, whitespace s
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_raid_create",
@@ -7908,7 +7920,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7930,7 +7942,7 @@ name                    | Required | string      | RAID bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_raid_delete",
@@ -7943,7 +7955,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -7969,7 +7981,7 @@ split_size_mb           | Optional | number      | size in MB to restrict the si
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_split_create",
@@ -7983,7 +7995,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8010,7 +8022,7 @@ base_bdev               | Required | string      | base bdev name
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_split_delete",
@@ -8023,7 +8035,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8049,7 +8061,7 @@ block_size              | Optional | number      | block size of device (If omit
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_uring_create",
@@ -8064,7 +8076,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8086,7 +8098,7 @@ name                    | Required | string      | name of uring bdev to delete
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_uring_delete",
@@ -8099,7 +8111,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8124,7 +8136,7 @@ password                | Required | string      | admin password of OPAL
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_nvme_opal_init",
@@ -8138,7 +8150,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8161,7 +8173,7 @@ password                | Required | string      | admin password of OPAL
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_nvme_opal_revert",
@@ -8175,7 +8187,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8206,7 +8218,7 @@ The response is the name of created OPAL virtual bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_opal_create",
@@ -8224,7 +8236,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8251,7 +8263,7 @@ The response is the locking info of OPAL virtual bdev.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_opal_get_info",
@@ -8265,7 +8277,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8296,7 +8308,7 @@ password                | Required | string      | admin password
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_opal_delete",
@@ -8310,7 +8322,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8336,7 +8348,7 @@ user_password           | Required | string      | user password
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_opal_new_user",
@@ -8352,7 +8364,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8377,7 +8389,7 @@ lock_state              | Required | string      | lock state
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_opal_set_lock_state",
@@ -8393,7 +8405,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8419,7 +8431,7 @@ The response is an array of strings - supported RPC notification types.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "notify_get_types",
@@ -8429,7 +8441,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "id": 1,
   "result": [
@@ -8468,7 +8480,7 @@ ctx                     | Optional | string      | Event context.
 
 Example request:
 
-~~~
+~~~json
 {
   "id": 1,
   "jsonrpc": "2.0",
@@ -8483,7 +8495,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8528,7 +8540,7 @@ Path of exported NBD disk
 
 Example request:
 
-~~~
+~~~json
 {
  "params": {
     "nbd_device": "/dev/nbd1",
@@ -8542,7 +8554,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8564,7 +8576,7 @@ nbd_device              | Required | string      | NBD device name to stop
 
 Example request:
 
-~~~
+~~~json
 {
  "params": {
     "nbd_device": "/dev/nbd1",
@@ -8577,7 +8589,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8603,7 +8615,7 @@ The response is an array of exported NBD devices and their corresponding SPDK bd
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "nbd_get_disks",
@@ -8613,7 +8625,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8650,7 +8662,7 @@ True if a blobfs exists on the bdev; False otherwise.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8663,7 +8675,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8686,7 +8698,7 @@ cluster_sz              | Optional | number      | Size of cluster in bytes. Mus
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8700,7 +8712,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8723,7 +8735,7 @@ mountpoint              | Required | string      | Mountpoint path in host to mo
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8737,7 +8749,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8766,7 +8778,7 @@ True if cache size is set successfully; False if failed to set.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8779,7 +8791,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8807,7 +8819,7 @@ Response is an object with current socket layer options for requested implementa
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "sock_impl_get_options",
@@ -8820,7 +8832,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8861,7 +8873,7 @@ True if socket layer options were set successfully.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "sock_impl_set_options",
@@ -8881,7 +8893,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8907,7 +8919,7 @@ True if the default socket layer configuration was set successfully.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "sock_set_default_impl",
@@ -8920,7 +8932,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -8963,7 +8975,7 @@ metadata                | string      | Metadata transferred from controller to 
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "bdev_nvme_send_cmd",
@@ -8980,7 +8992,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -9008,7 +9020,7 @@ Completion status of enumeration is returned as a boolean.
 
 Example request:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "method": "enable_vmd",
@@ -9018,7 +9030,7 @@ Example request:
 
 Example response:
 
-~~~
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,

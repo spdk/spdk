@@ -18,12 +18,10 @@ reference.
 Reading from the
 [Virtio specification](http://docs.oasis-open.org/virtio/virtio/v1.0/virtio-v1.0.html):
 
-```
-The purpose of virtio and [virtio] specification is that virtual environments
-and guests should have a straightforward, efficient, standard and extensible
-mechanism for virtual devices, rather than boutique per-environment or per-OS
-mechanisms.
-```
+> The purpose of virtio and [virtio] specification is that virtual environments
+> and guests should have a straightforward, efficient, standard and extensible
+> mechanism for virtual devices, rather than boutique per-environment or per-OS
+> mechanisms.
 
 Virtio devices use virtqueues to transport data efficiently. Virtqueue is a set
 of three different single-producer, single-consumer ring structures designed to
@@ -47,23 +45,21 @@ SPDK to expose a vhost device is Vhost-user protocol.
 The [Vhost-user specification](https://git.qemu.org/?p=qemu.git;a=blob_plain;f=docs/interop/vhost-user.txt;hb=HEAD)
 describes the protocol as follows:
 
-```
-[Vhost-user protocol] is aiming to complement the ioctl interface used to
-control the vhost implementation in the Linux kernel. It implements the control
-plane needed to establish virtqueue sharing with a user space process on the
-same host. It uses communication over a Unix domain socket to share file
-descriptors in the ancillary data of the message.
-
-The protocol defines 2 sides of the communication, master and slave. Master is
-the application that shares its virtqueues, in our case QEMU. Slave is the
-consumer of the virtqueues.
-
-In the current implementation QEMU is the Master, and the Slave is intended to
-be a software Ethernet switch running in user space, such as Snabbswitch.
-
-Master and slave can be either a client (i.e. connecting) or server (listening)
-in the socket communication.
-```
+> [Vhost-user protocol] is aiming to complement the ioctl interface used to
+> control the vhost implementation in the Linux kernel. It implements the control
+> plane needed to establish virtqueue sharing with a user space process on the
+> same host. It uses communication over a Unix domain socket to share file
+> descriptors in the ancillary data of the message.
+>
+> The protocol defines 2 sides of the communication, master and slave. Master is
+> the application that shares its virtqueues, in our case QEMU. Slave is the
+> consumer of the virtqueues.
+>
+> In the current implementation QEMU is the Master, and the Slave is intended to
+> be a software Ethernet switch running in user space, such as Snabbswitch.
+>
+> Master and slave can be either a client (i.e. connecting) or server (listening)
+> in the socket communication.
 
 SPDK vhost is a Vhost-user slave server. It exposes Unix domain sockets and
 allows external applications to connect.
@@ -125,7 +121,7 @@ the request data, and putting guest addresses of those buffers into virtqueues.
 
 A Virtio-Block request looks as follows.
 
-```
+```c
 struct virtio_blk_req {
         uint32_t type; // READ, WRITE, FLUSH (read-only)
         uint64_t offset; // offset in the disk (read-only)
@@ -135,7 +131,7 @@ struct virtio_blk_req {
 ```
 And a Virtio-SCSI request as follows.
 
-```
+```c
 struct virtio_scsi_req_cmd {
   struct virtio_scsi_cmd_req *req; // request data (read-only)
   struct iovec read_only_buffers[]; // scatter-gatter list for WRITE I/Os
@@ -149,7 +145,7 @@ to be converted into a chain of such descriptors. A single descriptor can be
 either readable or writable, so each I/O request consists of at least two
 (request + response).
 
-```
+```c
 struct virtq_desc {
         /* Address (guest-physical). */
         le64 addr;

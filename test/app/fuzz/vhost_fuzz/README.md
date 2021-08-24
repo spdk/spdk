@@ -38,7 +38,7 @@ submitted to the proper block devices.
 The vhost fuzzer differs from the NVMe fuzzer in that it expects devices to be configured via rpc. The fuzzer should
 always be started with the --wait-for-rpc argument. Please see below for an example of starting the fuzzer.
 
-~~~
+~~~bash
 ./test/app/fuzz/vhost_fuzz/vhost_fuzz -t 30 --wait-for-rpc &
 ./scripts/rpc.py fuzz_vhost_create_dev -s ./Vhost.1 -b -V
 ./scripts/rpc.py fuzz_vhost_create_dev -s ./naa.VhostScsi0.1 -l -V

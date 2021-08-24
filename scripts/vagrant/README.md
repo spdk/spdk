@@ -22,7 +22,7 @@ Quick start instructions for OSX:
 * Note: The extension pack has different licensing than main VirtualBox, please
   review them carefully as the evaluation license is for personal use only.
 
-```
+```bash
    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
    brew doctor
    brew update
@@ -69,7 +69,7 @@ If you are behind a corporate firewall, configure the following proxy settings.
 1. Set the http_proxy and https_proxy
 2. Install the proxyconf plugin
 
-```
+```bash
   $ export http_proxy=....
   $ export https_proxy=....
   $ vagrant plugin install vagrant-proxyconf
@@ -93,7 +93,7 @@ Use the `spdk/scripts/vagrant/create_vbox.sh` script to create a VM of your choi
 - fedora28
 - freebsd11
 
-```
+```bash
 $ spdk/scripts/vagrant/create_vbox.sh -h
  Usage: create_vbox.sh [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrld] <distro>
 
@@ -124,7 +124,7 @@ It is recommended that you call the `create_vbox.sh` script from outside of the 
 Call this script from a parent directory. This will allow the creation of multiple VMs in separate
 <distro> directories, all using the same spdk repository.  For example:
 
-```
+```bash
    $ spdk/scripts/vagrant/create_vbox.sh -s 2048 -n 2 fedora26
 ```
 
@@ -141,7 +141,7 @@ This script will:
 This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using thesame
 spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initialization.
 
-```
+```bash
   $ cd <distro>
   $ vagrant ssh
 ```
@@ -152,7 +152,7 @@ A copy of the `spdk` repository you cloned will exist in the `spdk_repo` directo
 account. After using `vagrant ssh` to enter your VM you must complete the initialization of your VM by running
 the `scripts/vagrant/update.sh` script. For example:
 
-```
+```bash
    $ script -c 'sudo spdk_repo/spdk/scripts/vagrant/update.sh' update.log
 ```
 
@@ -175,14 +175,14 @@ Following VM initialization you must:
 
 ### Verify you have an emulated NVMe device
 
-```
+```bash
   $ lspci | grep "Non-Volatile"
   00:0e.0 Non-Volatile memory controller: InnoTek Systemberatung GmbH Device 4e56
 ```
 
 ### Compile SPDK
 
-```
+```bash
   $ cd spdk_repo/spdk
   $ git submodule update --init
   $ ./configure --enable-debug
@@ -191,7 +191,7 @@ Following VM initialization you must:
 
 ### Run the hello_world example script
 
-```
+```bash
   $ sudo scripts/setup.sh
   $ sudo scripts/gen_nvme.sh --json-with-subsystems > ./build/examples/hello_bdev.json
   $ sudo ./build/examples/hello_bdev --json ./build/examples/hello_bdev.json -b Nvme0n1
@@ -202,7 +202,7 @@ Following VM initialization you must:
 After running vm_setup.sh the `run-autorun.sh` can be used to run `spdk/autorun.sh` on a Fedora vagrant machine.
 Note that the `spdk/scripts/vagrant/autorun-spdk.conf` should be copied to `~/autorun-spdk.conf` before starting your tests.
 
-```
+```bash
    $ cp spdk/scripts/vagrant/autorun-spdk.conf ~/
    $ spdk/scripts/vagrant/run-autorun.sh -h
      Usage: scripts/vagrant/run-autorun.sh -d <path_to_spdk_tree> [-h] | [-q] | [-n]
@@ -224,7 +224,7 @@ Note that the `spdk/scripts/vagrant/autorun-spdk.conf` should be copied to `~/au
 
 The following steps are done by the `update.sh` script. It is recommended that you capture the output of `update.sh` with a typescript. E.g.:
 
-```
+```bash
   $ script update.log sudo spdk_repo/spdk/scripts/vagrant/update.sh
 ```
 
@@ -232,7 +232,7 @@ The following steps are done by the `update.sh` script. It is recommended that y
 1. Installs the needed FreeBSD packages on the system by calling pkgdep.sh
 2. Installs the FreeBSD source in /usr/src
 
-```
+```bash
    $ sudo pkg upgrade -f
    $ sudo spdk_repo/spdk/scripts/pkgdep.sh --all
    $ sudo git clone --depth 10 -b releases/11.1.0 https://github.com/freebsd/freebsd.git /usr/src
@@ -240,7 +240,7 @@ The following steps are done by the `update.sh` script. It is recommended that y
 
 To build spdk on FreeBSD use `gmake MAKE=gmake`.  E.g.:
 
-```
+```bash
     $ cd spdk_repo/spdk
     $ git submodule update --init
     $ ./configure --enable-debug

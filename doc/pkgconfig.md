@@ -8,21 +8,21 @@ when SPDK adds or modifies library dependencies.
 If your application is using the SPDK nvme library, you would use the following
 to get the list of required SPDK libraries:
 
-~~~
+~~~bash
 PKG_CONFIG_PATH=/path/to/spdk/build/lib/pkgconfig pkg-config --libs spdk_nvme
 ~~~
 
 To get the list of required SPDK and DPDK libraries to use the DPDK-based
 environment layer:
 
-~~~
+~~~bash
 PKG_CONFIG_PATH=/path/to/spdk/build/lib/pkgconfig pkg-config --libs spdk_env_dpdk
 ~~~
 
 When linking with static libraries, the dependent system libraries must also be
 specified. To get the list of required system libraries:
 
-~~~
+~~~bash
 PKG_CONFIG_PATH=/path/to/spdk/build/lib/pkgconfig pkg-config --libs spdk_syslibs
 ~~~
 
@@ -33,7 +33,7 @@ the `-Wl,--no-as-needed` parameters while with static libraries `-Wl,--whole-arc
 is used. Here is an example Makefile snippet that shows how to use pkg-config to link
 an application that uses the SPDK nvme shared library:
 
-~~~
+~~~bash
 PKG_CONFIG_PATH = $(SPDK_DIR)/build/lib/pkgconfig
 SPDK_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_nvme
 DPDK_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_env_dpdk
@@ -44,7 +44,7 @@ app:
 
 If using the SPDK nvme static library:
 
-~~~
+~~~bash
 PKG_CONFIG_PATH = $(SPDK_DIR)/build/lib/pkgconfig
 SPDK_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_nvme
 DPDK_LIB := $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --libs spdk_env_dpdk

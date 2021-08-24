@@ -32,7 +32,7 @@ To ensure the SPDK iSCSI target has the best performance, place the NICs and the
 same NUMA node and configure the target to run on CPU cores associated with that node. The following
 command line option is used to configure the SPDK iSCSI target:
 
-~~~
+~~~bash
 -m 0xF000000
 ~~~
 
@@ -51,7 +51,7 @@ The iSCSI target is configured via JSON-RPC calls. See @ref jsonrpc for details.
 - iscsi_target_node_remove_pg_ig_maps -- Delete initiator group to portal group mappings from an existing iSCSI target node.
 - iscsi_get_portal_groups -- Show information about all available portal groups.
 
-~~~
+~~~bash
 /path/to/spdk/scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
 ~~~
 
@@ -62,7 +62,7 @@ The iSCSI target is configured via JSON-RPC calls. See @ref jsonrpc for details.
 - iscsi_initiator_group_add_initiators -- Add initiators to an existing initiator group.
 - iscsi_get_initiator_groups -- Show information about all available initiator groups.
 
-~~~
+~~~bash
 /path/to/spdk/scripts/rpc.py iscsi_create_initiator_group 2 ANY 10.0.0.2/32
 ~~~
 
@@ -73,7 +73,7 @@ The iSCSI target is configured via JSON-RPC calls. See @ref jsonrpc for details.
 - iscsi_target_node_add_lun -- Add a LUN to an existing iSCSI target node.
 - iscsi_get_target_nodes -- Show information about all available iSCSI target nodes.
 
-~~~
+~~~bash
 /path/to/spdk/scripts/rpc.py iscsi_create_target_node Target3 Target3_alias MyBdev:0 1:2 64 -d
 ~~~
 
@@ -83,30 +83,30 @@ The Linux initiator is open-iscsi.
 
 Installing open-iscsi package
 Fedora:
-~~~
+~~~bash
 yum install -y iscsi-initiator-utils
 ~~~
 
 Ubuntu:
-~~~
+~~~bash
 apt-get install -y open-iscsi
 ~~~
 
 ### Setup
 
 Edit /etc/iscsi/iscsid.conf
-~~~
+~~~bash
 node.session.cmds_max = 4096
 node.session.queue_depth = 128
 ~~~
 
 iscsid must be restarted or receive SIGHUP for changes to take effect. To send SIGHUP, run:
-~~~
+~~~bash
 killall -HUP iscsid
 ~~~
 
 Recommended changes to /etc/sysctl.conf
-~~~
+~~~bash
 net.ipv4.tcp_timestamps = 1
 net.ipv4.tcp_sack = 0
 
@@ -124,13 +124,14 @@ net.core.netdev_max_backlog = 300000
 ### Discovery
 
 Assume target is at 10.0.0.1
-~~~
+
+~~~bash
 iscsiadm -m discovery -t sendtargets -p 10.0.0.1
 ~~~
 
 ### Connect to target
 
-~~~
+~~~bash
 iscsiadm -m node --login
 ~~~
 
@@ -139,13 +140,13 @@ they came up as.
 
 ### Disconnect from target
 
-~~~
+~~~bash
 iscsiadm -m node --logout
 ~~~
 
 ### Deleting target node cache
 
-~~~
+~~~bash
 iscsiadm -m node -o delete
 ~~~
 
@@ -153,7 +154,7 @@ This will cause the initiator to forget all previously discovered iSCSI target n
 
 ### Finding /dev/sdX nodes for iSCSI LUNs
 
-~~~
+~~~bash
 iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}'
 ~~~
 
@@ -165,19 +166,19 @@ After the targets are connected, they can be tuned. For example if /dev/sdc is
 an iSCSI disk then the following can be done:
 Set noop to scheduler
 
-~~~
+~~~bash
 echo noop > /sys/block/sdc/queue/scheduler
 ~~~
 
 Disable merging/coalescing (can be useful for precise workload measurements)
 
-~~~
+~~~bash
 echo "2" > /sys/block/sdc/queue/nomerges
 ~~~
 
 Increase requests for block queue
 
-~~~
+~~~bash
 echo "1024" > /sys/block/sdc/queue/nr_requests
 ~~~
 
@@ -191,33 +192,34 @@ Assuming we have one iSCSI Target server with portal at 10.0.0.1:3200, two LUNs 
 #### Configure iSCSI Target
 
 Start iscsi_tgt application:
-```
+
+```bash
 ./build/bin/iscsi_tgt
 ```
 
 Construct two 64MB Malloc block devices with 512B sector size "Malloc0" and "Malloc1":
 
-```
+```bash
 ./scripts/rpc.py bdev_malloc_create -b Malloc0 64 512
 ./scripts/rpc.py bdev_malloc_create -b Malloc1 64 512
 ```
 
 Create new portal group with id 1, and address 10.0.0.1:3260:
 
-```
+```bash
 ./scripts/rpc.py iscsi_create_portal_group 1 10.0.0.1:3260
 ```
 
 Create one initiator group with id 2 to accept any connection from 10.0.0.2/32:
 
-```
+```bash
 ./scripts/rpc.py iscsi_create_initiator_group 2 ANY 10.0.0.2/32
 ```
 
 Finally construct one target using previously created bdevs as LUN0 (Malloc0) and LUN1 (Malloc1)
 with a name "disk1" and alias "Data Disk1" using portal group 1 and initiator group 2.
 
-```
+```bash
 ./scripts/rpc.py iscsi_create_target_node disk1 "Data Disk1" "Malloc0:0 Malloc1:1" 1:2 64 -d
 ```
 
@@ -225,14 +227,14 @@ with a name "disk1" and alias "Data Disk1" using portal group 1 and initiator gr
 
 Discover target
 
-~~~
+~~~bash
 $ iscsiadm -m discovery -t sendtargets -p 10.0.0.1
 10.0.0.1:3260,1 iqn.2016-06.io.spdk:disk1
 ~~~
 
 Connect to the target
 
-~~~
+~~~bash
 iscsiadm -m node --login
 ~~~
 
@@ -240,7 +242,7 @@ At this point the iSCSI target should show up as SCSI disks.
 
 Check dmesg to see what they came up as. In this example it can look like below:
 
-~~~
+~~~bash
 ...
 [630111.860078] scsi host68: iSCSI Initiator over TCP/IP
 [630112.124743] scsi 68:0:0:0: Direct-Access     INTEL    Malloc disk      0001 PQ: 0 ANSI: 5
@@ -263,7 +265,7 @@ Check dmesg to see what they came up as. In this example it can look like below:
 You may also use simple bash command to find /dev/sdX nodes for each iSCSI LUN
 in all logged iSCSI sessions:
 
-~~~
+~~~bash
 $ iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}'
 sdd
 sde

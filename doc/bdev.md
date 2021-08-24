@@ -236,7 +236,7 @@ Example command
 
 ### Creating a GPT partition table using NBD {#bdev_ug_gpt_create_part}
 
-~~~
+~~~bash
 # Expose bdev Nvme0n1 as kernel block device /dev/nbd0 by JSON-RPC
 rpc.py nbd_start_disk Nvme0n1 /dev/nbd0
 
