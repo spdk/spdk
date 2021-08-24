@@ -295,19 +295,23 @@ contribute to the Blobstore effort itself.
 The Blobstore owns the entire storage device. The device is divided into clusters starting from the beginning, such
 that cluster 0 begins at the first logical block.
 
-    LBA 0                                   LBA N
-    +-----------+-----------+-----+-----------+
-    | Cluster 0 | Cluster 1 | ... | Cluster N |
-    +-----------+-----------+-----+-----------+
+```text
+LBA 0                                   LBA N
++-----------+-----------+-----+-----------+
+| Cluster 0 | Cluster 1 | ... | Cluster N |
++-----------+-----------+-----+-----------+
+```
 
 Cluster 0 is special and has the following format, where page 0 is the first page of the cluster:
 
-    +--------+-------------------+
-    | Page 0 | Page 1 ... Page N |
-    +--------+-------------------+
-    | Super  |  Metadata Region  |
-    | Block  |                   |
-    +--------+-------------------+
+```text
++--------+-------------------+
+| Page 0 | Page 1 ... Page N |
++--------+-------------------+
+| Super  |  Metadata Region  |
+| Block  |                   |
++--------+-------------------+
+```
 
 The super block is a single page located at the beginning of the partition. It contains basic information about
 the Blobstore. The metadata region is the remainder of cluster 0 and may extend to additional clusters. Refer

@@ -27,6 +27,7 @@ well as their validity, as some of the data will be invalidated by subsequent wr
 logical address. The L2P mapping can be restored from the SSD by reading this information in order
 from the oldest band to the youngest.
 
+```text
              +--------------+        +--------------+                        +--------------+
     band 1   |   zone 1     +--------+    zone 1    +---- --- --- --- --- ---+     zone 1   |
              +--------------+        +--------------+                        +--------------+
@@ -42,16 +43,19 @@ from the oldest band to the youngest.
              +--------------+        +--------------+                        +--------------+
 
               parallel unit 1              pu 2                                    pu n
+```
 
 The address map and valid map are, along with a several other things (e.g. UUID of the device it's
 part of, number of surfaced LBAs, band's sequence number, etc.), parts of the band's metadata. The
 metadata is split in two parts:
 
+```text
        head metadata               band's data               tail metadata
     +-------------------+-------------------------------+------------------------+
     |zone 1 |...|zone n |...|...|zone 1 |...|           | ... |zone  m-1 |zone  m|
     |block 1|   |block 1|   |   |block x|   |           |     |block y   |block y|
     +-------------------+-------------+-----------------+------------------------+
+```
 
 - the head part, containing information already known when opening the band (device's UUID, band's
   sequence number, etc.), located at the beginning blocks of the band,
@@ -73,6 +77,7 @@ support writes to a single block, the data needs to be buffered. The write buffe
 this problem. It consists of a number of pre-allocated buffers called batches, each of size allowing
 for a single transfer to the SSD. A single batch is divided into block-sized buffer entries.
 
+```text
                  write buffer
     +-----------------------------------+
     |batch 1                            |
@@ -89,6 +94,7 @@ for a single transfer to the SSD. A single batch is divided into block-sized buf
     |   |entry 1|entry 2|     |entry n| |
     |   +-----------------------------+ |
     +-----------------------------------+
+```
 
 When a write is scheduled, it needs to acquire an entry for each of its blocks and copy the data
 onto this buffer. Once all blocks are copied, the write can be signalled as completed to the user.
@@ -108,12 +114,14 @@ situation in which all of the bands contain some valid data and no band can be e
 can be executed anymore. Therefore a mechanism is needed to move valid data and invalidate whole
 bands, so that they can be reused.
 
+```text
                     band                                             band
     +-----------------------------------+            +-----------------------------------+
     | ** *    * ***      *    *** * *   |            |                                   |
     |**  *       *    *    * *     *   *|   +---->   |                                   |
     |*     ***  *      *            *   |            |                                   |
     +-----------------------------------+            +-----------------------------------+
+```
 
 Valid blocks are marked with an asterisk '\*'.
 

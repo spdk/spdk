@@ -4,33 +4,45 @@
 
 First, clone the fio source repository from https://github.com/axboe/fio
 
+```bash
     git clone https://github.com/axboe/fio
+```
 
 Then check out the latest fio version and compile the code:
 
+```bash
     make
+```
 
 ## Compiling SPDK
 
 First, clone the SPDK source repository from https://github.com/spdk/spdk
 
+```bash
     git clone https://github.com/spdk/spdk
     git submodule update --init
+```
 
 Then, run the SPDK configure script to enable fio (point it to the root of the fio repository):
 
+```bash
     cd spdk
     ./configure --with-fio=/path/to/fio/repo <other configuration options>
+```
 
 Finally, build SPDK:
 
+```bash
     make
+```
 
 **Note to advanced users**: These steps assume you're using the DPDK submodule. If you are using your
 own version of DPDK, the fio plugin requires that DPDK be compiled with -fPIC. You can compile DPDK
 with -fPIC by modifying your DPDK configuration file and adding the line:
 
-    EXTRA_CFLAGS=-fPIC
+```bash
+EXTRA_CFLAGS=-fPIC
+```
 
 ## Usage
 
@@ -38,20 +50,28 @@ To use the SPDK fio plugin with fio, specify the plugin binary using LD_PRELOAD 
 fio and set ioengine=spdk in the fio configuration file (see example_config.fio in the same
 directory as this README).
 
-    LD_PRELOAD=<path to spdk repo>/build/fio/spdk_nvme fio
+```bash
+LD_PRELOAD=<path to spdk repo>/build/fio/spdk_nvme fio
+```
 
 To select NVMe devices, you pass an SPDK Transport Identifier string as the filename. These are in the
 form:
 
-    filename=key=value [key=value] ... ns=value
+```bash
+filename=key=value [key=value] ... ns=value
+```
 
 Specifically, for local PCIe NVMe devices it will look like this:
 
-    filename=trtype=PCIe traddr=0000.04.00.0 ns=1
+```bash
+filename=trtype=PCIe traddr=0000.04.00.0 ns=1
+```
 
 And remote devices accessed via NVMe over Fabrics will look like this:
 
-    filename=trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1
+```bash
+filename=trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1
+```
 
 **Note**: The specification of the PCIe address should not use the normal ':'
 and instead only use '.'. This is a limitation in fio - it splits filenames on
@@ -83,17 +103,23 @@ but it is not good to use one thread against many I/O devices.
 Running with PI setting, following settings steps are required.
 First, format device namespace with proper PI setting. For example:
 
+```bash
     nvme format /dev/nvme0n1 -l 1 -i 1 -p 0 -m 1
+```
 
 In fio configure file, add PRACT and set PRCHK by flags(GUARD|REFTAG|APPTAG) properly. For example:
 
-    pi_act=0
-    pi_chk=GUARD
+```bash
+pi_act=0
+pi_chk=GUARD
+```
 
 Blocksize should be set as the sum of data and metadata. For example, if data blocksize is 512 Byte, host generated
 PI metadata is 8 Byte, then blocksize in fio configure file should be 520 Byte:
 
-    bs=520
+```bash
+bs=520
+```
 
 The storage device may use a block format that requires separate metadata (DIX). In this scenario, the fio_plugin
 will automatically allocate an extra 4KiB buffer per I/O to hold this metadata. For some cases, such as 512 byte
@@ -108,18 +134,24 @@ tag mask are set to 0x1234 and 0xFFFF by default.
 
 To enable VMD enumeration add enable_vmd flag in fio configuration file:
 
-    enable_vmd=1
+```bash
+enable_vmd=1
+```
 
 ## ZNS
 
 To use Zoned Namespaces then build the io-engine against, and run using, a fio version >= 3.23 and add:
 
-    zonemode=zbd
+```bash
+zonemode=zbd
+```
 
 To your fio-script, also have a look at script-examples provided with fio:
 
-    fio/examples/zbd-seq-read.fio
-    fio/examples/zbd-rand-write.fio
+```bash
+fio/examples/zbd-seq-read.fio
+fio/examples/zbd-rand-write.fio
+```
 
 ### Maximum Open Zones
 
@@ -140,7 +172,9 @@ When running with the SPDK/NVMe fio io-engine you can be exposed to error messag
 completion errors, with the NVMe status code of 0xbd ("Too Many Active Zones"). To work around this,
 then you can reset all zones before fio start running its jobs by using the engine option:
 
-    --initial_zone_reset=1
+```bash
+--initial_zone_reset=1
+```
 
 ### Zone Append
 
@@ -148,7 +182,9 @@ When running FIO against a Zoned Namespace you need to specify --iodepth=1 to av
 "Zone Invalid Write: The write to a zone was not at the write pointer." I/O errors.
 However, if your controller supports Zone Append, you can use the engine option:
 
-    --zone_append=1
+```bash
+--zone_append=1
+```
 
 To send zone append commands instead of write commands to the controller.
 When using zone append, you will be able to specify a --iodepth greater than 1.
@@ -157,7 +193,9 @@ When using zone append, you will be able to specify a --iodepth greater than 1.
 
 If your device has a lot of zones, fio can give you errors such as:
 
-    smalloc: OOM. Consider using --alloc-size to increase the shared memory available.
+```bash
+smalloc: OOM. Consider using --alloc-size to increase the shared memory available.
+```
 
 This is because fio needs to allocate memory for the zone-report, that is, retrieve the state of
 zones on the device including auxiliary accounting information. To solve this, then you can follow

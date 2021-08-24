@@ -8,36 +8,48 @@ the GPL license.
 
 Clone the fio source repository from https://github.com/axboe/fio
 
+```bash
     git clone https://github.com/axboe/fio
     cd fio
+```
 
 Compile the fio code and install:
 
+```bash
     make
     make install
+```
 
 ## Compiling SPDK
 
 Clone the SPDK source repository from https://github.com/spdk/spdk
 
+```bash
     git clone https://github.com/spdk/spdk
     cd spdk
     git submodule update --init
+```
 
 Then, run the SPDK configure script to enable fio (point it to the root of the fio repository):
 
+```bash
     cd spdk
     ./configure --with-fio=/path/to/fio/repo <other configuration options>
+```
 
 Finally, build SPDK:
 
+```bash
     make
+```
 
 **Note to advanced users**: These steps assume you're using the DPDK submodule. If you are using your
 own version of DPDK, the fio plugin requires that DPDK be compiled with -fPIC. You can compile DPDK
 with -fPIC by modifying your DPDK configuration file and adding the line:
 
-    EXTRA_CFLAGS=-fPIC
+```bash
+EXTRA_CFLAGS=-fPIC
+```
 
 ## Usage
 
@@ -45,20 +57,28 @@ To use the SPDK fio plugin with fio, specify the plugin binary using LD_PRELOAD 
 fio and set ioengine=spdk_bdev in the fio configuration file (see example_config.fio in the same
 directory as this README).
 
-    LD_PRELOAD=<path to spdk repo>/build/fio/spdk_bdev fio
+```bash
+LD_PRELOAD=<path to spdk repo>/build/fio/spdk_bdev fio
+```
 
 The fio configuration file must contain one new parameter:
 
-    spdk_json_conf=./examples/bdev/fio_plugin/bdev.json
+```bash
+spdk_json_conf=./examples/bdev/fio_plugin/bdev.json
+```
 
 You can specify which block device to run against by setting the filename parameter
 to the block device name:
 
-    filename=Malloc0
+```bash
+filename=Malloc0
+```
 
 Or for NVMe devices:
 
-    filename=Nvme0n1
+```bash
+filename=Nvme0n1
+```
 
 fio by default forks a separate process for every job. It also supports just spawning a separate
 thread in the same process for every job. The SPDK fio plugin is limited to this latter thread
@@ -79,7 +99,9 @@ NVMe Zoned Namespaces (ZNS), and the virtual zoned block device SPDK module.
 
 If you wish to run fio against a SPDK zoned block device, you can use the fio option:
 
-    zonemode=zbd
+```bash
+zonemode=zbd
+```
 
 It is recommended to use a fio version newer than version 3.26, if using --numjobs > 1.
 If using --numjobs=1, fio version >= 3.23 should suffice.
@@ -108,7 +130,9 @@ zones limit, the easiest way to work around that fio does not manage this constr
 with a clean state each run (except for read-only workloads), by resetting all zones before fio
 starts running its jobs by using the engine option:
 
-    --initial_zone_reset=1
+```bash
+--initial_zone_reset=1
+```
 
 ### Zone Append
 
@@ -116,7 +140,9 @@ When running fio against a zoned block device you need to specify --iodepth=1 to
 "Zone Invalid Write: The write to a zone was not at the write pointer." I/O errors.
 However, if your zoned block device supports Zone Append, you can use the engine option:
 
-    --zone_append=1
+```bash
+--zone_append=1
+```
 
 To send zone append commands instead of write commands to the zoned block device.
 When using zone append, you will be able to specify a --iodepth greater than 1.

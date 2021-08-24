@@ -140,6 +140,7 @@ function `foo` performs some asynchronous operation and when that completes
 function `bar` is called, then function `bar` performs some operation that
 calls function `baz` on completion, a good way to write it is as such:
 
+```c
     void baz(void *ctx) {
             ...
     }
@@ -151,6 +152,7 @@ calls function `baz` on completion, a good way to write it is as such:
     void foo(void *ctx) {
             async_op(bar, ctx);
     }
+```
 
 Don't split these functions up - keep them as a nice unit that can be read from bottom to top.
 
@@ -162,6 +164,7 @@ them in C we can still write them out by hand. As an example, here's a
 callback chain that performs `foo` 5 times and then calls `bar` - effectively
 an asynchronous for loop.
 
+```c
     enum states {
             FOO_START = 0,
             FOO_END,
@@ -244,6 +247,7 @@ an asynchronous for loop.
 
             run_state_machine(sm);
     }
+```
 
 This is complex, of course, but the `run_state_machine` function can be read
 from top to bottom to get a clear overview of what's happening in the code

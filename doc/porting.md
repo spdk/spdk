@@ -18,4 +18,6 @@ a new version of the *env* library.  The new implementation can be
 integrated into the SPDK build by updating the following line
 in CONFIG:
 
-    CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
+```bash
+CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
+```
