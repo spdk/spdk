@@ -573,16 +573,24 @@ class Target(Server):
 
     def measure_sar(self, results_dir, sar_file_name):
         self.log_print("Waiting %d delay before measuring SAR stats" % self.sar_delay)
+        cpu_number = os.cpu_count()
+        sar_idle_sum = 0
         time.sleep(self.sar_delay)
         out = self.exec_cmd(["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count])
         with open(os.path.join(results_dir, sar_file_name), "w") as fh:
             for line in out.split("\n"):
-                if "Average" in line and "CPU" in line:
-                    self.log_print("Summary CPU utilization from SAR:")
-                    self.log_print(line)
-                if "Average" in line and "all" in line:
-                    self.log_print(line)
+                if "Average" in line:
+                    if "CPU" in line:
+                        self.log_print("Summary CPU utilization from SAR:")
+                        self.log_print(line)
+                    elif "all" in line:
+                        self.log_print(line)
+                    else:
+                        sar_idle_sum += line.split()[7]
             fh.write(out)
+        sar_cpu_usage = cpu_number * 100 - sar_idle_sum
+        with open(os.path.join(results_dir, sar_file_name), "a") as f:
+            f.write("Total CPU used: %s", % sar_cpu_usage)
 
     def measure_pcm_memory(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
