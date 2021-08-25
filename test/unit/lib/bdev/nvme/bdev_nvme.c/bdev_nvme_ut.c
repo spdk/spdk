@@ -1734,7 +1734,6 @@ test_attach_ctrlr(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 	CU_ASSERT(nvme_ctrlr->ctrlr == ctrlr);
-	CU_ASSERT(nvme_ctrlr->num_ns == 0);
 
 	rc = bdev_nvme_delete("nvme0", &g_any_path);
 	CU_ASSERT(rc == 0);
@@ -1763,7 +1762,6 @@ test_attach_ctrlr(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 	CU_ASSERT(nvme_ctrlr->ctrlr == ctrlr);
-	CU_ASSERT(nvme_ctrlr->num_ns == 1);
 
 	CU_ASSERT(attached_names[0] != NULL && strcmp(attached_names[0], "nvme0n1") == 0);
 	attached_names[0] = NULL;
@@ -1800,7 +1798,6 @@ test_attach_ctrlr(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 	CU_ASSERT(nvme_ctrlr->ctrlr == ctrlr);
-	CU_ASSERT(nvme_ctrlr->num_ns == 1);
 
 	CU_ASSERT(attached_names[0] == NULL);
 
@@ -1858,7 +1855,6 @@ test_aer_cb(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	CU_ASSERT(nvme_ctrlr->num_ns == 4);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) == NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3) != NULL);
@@ -2656,7 +2652,6 @@ test_init_ana_log_page(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	CU_ASSERT(nvme_ctrlr->num_ns == 5);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3) != NULL);
@@ -3093,7 +3088,6 @@ test_add_multi_ns_to_bdev(void)
 	nvme_ctrlr1 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid);
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr1 != NULL);
 
-	CU_ASSERT(nvme_ctrlr1->num_ns == 5);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr1, 1) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr1, 2) == NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr1, 3) != NULL);
@@ -3103,7 +3097,6 @@ test_add_multi_ns_to_bdev(void)
 	nvme_ctrlr2 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid);
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr2 != NULL);
 
-	CU_ASSERT(nvme_ctrlr2->num_ns == 5);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr2, 1) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr2, 2) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr2, 3) == NULL);

@@ -75,6 +75,7 @@ struct nvme_ns {
 	enum spdk_nvme_ana_state	ana_state;
 	struct nvme_async_probe_ctx	*probe_ctx;
 	TAILQ_ENTRY(nvme_ns)		tailq;
+	RB_ENTRY(nvme_ns)		node;
 };
 
 struct nvme_bdev_io;
@@ -107,9 +108,7 @@ struct nvme_ctrlr {
 	 * NVMe controllers are not included.
 	 */
 	uint32_t				prchk_flags;
-	uint32_t				num_ns;
-	/** Array of pointers to namespaces indexed by nsid - 1 */
-	struct nvme_ns				**namespaces;
+	RB_HEAD(nvme_ns_tree, nvme_ns)		namespaces;
 
 	struct spdk_opal_dev			*opal_dev;
 

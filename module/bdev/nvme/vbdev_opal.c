@@ -326,6 +326,7 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 	struct vbdev_opal_part_base *opal_part_base = NULL;
 	struct spdk_bdev_part *part_bdev;
 	struct nvme_bdev *nvme_bdev;
+	struct nvme_ns *nvme_ns;
 
 	if (nsid != NSID_SUPPORTED) {
 		SPDK_ERRLOG("nsid %d not supported", nsid);
@@ -356,8 +357,13 @@ vbdev_opal_create(const char *nvme_ctrlr_name, uint32_t nsid, uint8_t locking_ra
 	opal_bdev->nvme_ctrlr = nvme_ctrlr;
 	opal_bdev->opal_dev = nvme_ctrlr->opal_dev;
 
-	assert(nsid <= nvme_ctrlr->num_ns);
-	nvme_bdev = nvme_ctrlr_get_ns(nvme_ctrlr, nsid)->bdev;
+	nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
+	if (nvme_ns == NULL) {
+		free(opal_bdev);
+		return -ENODEV;
+	}
+
+	nvme_bdev = nvme_ns->bdev;
 	assert(nvme_bdev != NULL);
 	base_bdev_name = nvme_bdev->disk.name;
 
