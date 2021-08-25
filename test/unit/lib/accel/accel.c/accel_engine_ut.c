@@ -348,6 +348,108 @@ test_spdk_accel_submit_copy(void)
 	CU_ASSERT(expected_accel_task == &task);
 }
 
+static void
+test_spdk_accel_submit_dualcast(void)
+{
+	void *dst1;
+	void *dst2;
+	void *src;
+	uint32_t align = ALIGN_4K;
+	uint64_t nbytes = TEST_SUBMIT_SIZE;
+	void *cb_arg = NULL;
+	int rc;
+	struct spdk_accel_task task;
+	struct spdk_accel_task *expected_accel_task = NULL;
+
+	/* Dualcast requires 4K alignment on dst addresses,
+	 * hence using the hard coded address to test the buffer alignment
+	 */
+	dst1 = (void *)0x5000;
+	dst2 = (void *)0x60f0;
+	src = calloc(1, TEST_SUBMIT_SIZE);
+	SPDK_CU_ASSERT_FATAL(src != NULL);
+	memset(src, 0x5A, TEST_SUBMIT_SIZE);
+
+	TAILQ_INIT(&g_accel_ch->task_pool);
+
+	/* This should fail since dst2 is not 4k aligned */
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+					cb_arg);
+	CU_ASSERT(rc == -EINVAL);
+
+	dst1 = (void *)0x7010;
+	dst2 = (void *)0x6000;
+	/* This should fail since dst1 is not 4k aligned */
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+					cb_arg);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Dualcast requires 4K alignment on dst addresses */
+	dst1 = (void *)0x7000;
+	dst2 = (void *)0x6000;
+	/* Fail with no tasks on _get_task() */
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+					cb_arg);
+	CU_ASSERT(rc == -ENOMEM);
+
+	task.cb_fn = dummy_submit_cb_fn;
+	task.cb_arg = cb_arg;
+	task.accel_ch = g_accel_ch;
+	task.batch = NULL;
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+
+	g_accel_ch->engine = &g_accel_engine;
+	g_accel_ch->engine->capabilities = ACCEL_DUALCAST;
+	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
+
+	/* HW accel submission OK. */
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+					cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.dst == dst1);
+	CU_ASSERT(task.dst2 == dst2);
+	CU_ASSERT(task.src == src);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_DUALCAST);
+	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(g_dummy_submit_called == true);
+
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	/* Reset values before next case */
+	g_dummy_submit_called = false;
+	g_accel_ch->engine->capabilities = 0;
+	task.dst = 0;
+	task.dst2 = 0;
+	task.src = 0;
+	task.op_code = 0xff;
+	task.nbytes = 0;
+	/* Since we test the SW path next, need to use valid memory addresses
+	 * cannot hardcode them anymore
+	 */
+	dst1 = spdk_dma_zmalloc(nbytes, align, NULL);
+	SPDK_CU_ASSERT_FATAL(dst1 != NULL);
+	dst2 = spdk_dma_zmalloc(nbytes, align, NULL);
+	SPDK_CU_ASSERT_FATAL(dst2 != NULL);
+	/* SW engine does the dualcast. */
+	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, dummy_submit_cb_fn,
+					cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.dst == dst1);
+	CU_ASSERT(task.dst2 == dst2);
+	CU_ASSERT(task.src == src);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_DUALCAST);
+	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(g_dummy_submit_cb_called == false);
+	CU_ASSERT(memcmp(dst1, src, TEST_SUBMIT_SIZE) == 0);
+	CU_ASSERT(memcmp(dst2, src, TEST_SUBMIT_SIZE) == 0);
+	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &task);
+
+	free(src);
+	spdk_free(dst1);
+	spdk_free(dst2);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -367,6 +469,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_is_batch_valid);
 	CU_ADD_TEST(suite, test_get_task);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy);
+	CU_ADD_TEST(suite, test_spdk_accel_submit_dualcast);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
