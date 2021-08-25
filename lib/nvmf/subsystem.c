@@ -36,6 +36,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk/assert.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
@@ -1362,8 +1363,76 @@ nvmf_ns_event(enum spdk_bdev_event_type type,
 void
 spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 {
-	/* All current fields are set to 0 by default. */
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL.\n");
+		return;
+	}
+
+	if (!opts_size) {
+		SPDK_ERRLOG("opts_size should not be zero.\n");
+		return;
+	}
+
 	memset(opts, 0, opts_size);
+	opts->opts_size = opts_size;
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_nvmf_ns_opts, field) + sizeof(opts->field) <= opts_size
+
+#define SET_FIELD(field, value) \
+	if (FIELD_OK(field)) { \
+		opts->field = value; \
+	} \
+
+	/* All current fields are set to 0 by default. */
+	SET_FIELD(nsid, 0);
+	if (FIELD_OK(nguid)) {
+		memset(opts->nguid, 0, sizeof(opts->nguid));
+	}
+	if (FIELD_OK(eui64)) {
+		memset(opts->eui64, 0, sizeof(opts->eui64));
+	}
+	if (FIELD_OK(uuid)) {
+		memset(&opts->uuid, 0, sizeof(opts->uuid));
+	}
+
+#undef FIELD_OK
+#undef SET_FIELD
+}
+
+static void
+nvmf_ns_opts_copy(struct spdk_nvmf_ns_opts *opts,
+		  const struct spdk_nvmf_ns_opts *user_opts,
+		  size_t opts_size)
+{
+#define FIELD_OK(field)	\
+	offsetof(struct spdk_nvmf_ns_opts, field) + sizeof(opts->field) <= user_opts->opts_size
+
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		opts->field = user_opts->field;	\
+	} \
+
+	SET_FIELD(nsid);
+	if (FIELD_OK(nguid)) {
+		memcpy(opts->nguid, user_opts->nguid, sizeof(opts->nguid));
+	}
+	if (FIELD_OK(eui64)) {
+		memcpy(opts->eui64, user_opts->eui64, sizeof(opts->eui64));
+	}
+	if (FIELD_OK(uuid)) {
+		memcpy(&opts->uuid, &user_opts->uuid, sizeof(opts->uuid));
+	}
+
+	opts->opts_size = user_opts->opts_size;
+
+	/* We should not remove this statement, but need to update the assert statement
+	 * if we add a new field, and also add a corresponding SET_FIELD statement.
+	 */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 56, "Incorrect size");
+
+#undef FIELD_OK
+#undef SET_FIELD
 }
 
 /* Dummy bdev module used to to claim bdevs. */
@@ -1394,7 +1463,7 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
 	if (user_opts) {
-		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
+		nvmf_ns_opts_copy(&opts, user_opts, opts_size);
 	}
 
 	if (opts.nsid == SPDK_NVME_GLOBAL_NS_TAG) {

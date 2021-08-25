@@ -721,6 +721,14 @@ struct spdk_nvmf_ns_opts {
 	 * Fill with 0s if not specified.
 	 */
 	struct spdk_uuid uuid;
+
+	/**
+	 * The size of spdk_nvmf_ns_opts according to the caller of this library is used for ABI
+	 * compatibility.  The library uses this field to know how many fields in this structure
+	 * are valid.  And the library will populate any remaining fields with default values.
+	 * New added fields should be put at the end of the struct.
+	 */
+	size_t opts_size;
 };
 
 /**

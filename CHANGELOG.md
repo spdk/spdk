@@ -7,6 +7,9 @@
 Added `oncs` to `struct spdk_nvmf_ctrlr_data` so that the transport layer
 can decide support RESERVATION feature or not.
 
+An `opts_size` element was added in the `spdk_nvmf_ns_opts` structure to solve the
+ABI compatibility issue between different SPDK version.
+
 ### bdev
 
 New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.
