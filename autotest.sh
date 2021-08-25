@@ -208,7 +208,9 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
 		run_test "blockdev_nvme" test/bdev/blockdev.sh "nvme"
-		run_test "blockdev_nvme_gpt" test/bdev/blockdev.sh "gpt"
+		if [[ $(uname -s) == Linux ]]; then
+			run_test "blockdev_nvme_gpt" test/bdev/blockdev.sh "gpt"
+		fi
 		run_test "nvme" test/nvme/nvme.sh
 		if [[ $SPDK_TEST_NVME_PMR -eq 1 ]]; then
 			run_test "nvme_pmr" test/nvme/nvme_pmr.sh

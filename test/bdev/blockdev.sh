@@ -18,6 +18,13 @@ function cleanup() {
 	if [[ $test_type == rbd ]]; then
 		rbd_cleanup
 	fi
+
+	if [[ "$test_type" = "gpt" ]]; then
+		"$rootdir/scripts/setup.sh" reset
+		if [[ -b $gpt_nvme ]]; then
+			wipefs --all "$gpt_nvme"
+		fi
+	fi
 }
 
 function start_spdk_tgt() {
@@ -55,44 +62,35 @@ function setup_nvme_conf() {
 }
 
 function setup_gpt_conf() {
-	if [[ $(uname -s) = Linux ]] && hash sgdisk; then
-		$rootdir/scripts/setup.sh reset
-		# Get nvme devices by following drivers' links towards nvme class
-		local nvme_devs=(/sys/bus/pci/drivers/nvme/*/nvme/nvme*/nvme*n*) nvme_dev
-		gpt_nvme=""
-		# Pick first device which doesn't have any valid partition table
-		for nvme_dev in "${nvme_devs[@]}"; do
-			dev=/dev/${nvme_dev##*/}
-			if ! pt=$(parted "$dev" -ms print 2>&1); then
-				[[ $pt == *"$dev: unrecognised disk label"* ]] || continue
-				gpt_nvme=$dev
-				break
-			fi
-		done
-		if [[ -n $gpt_nvme ]]; then
-			# Create gpt partition table
-			parted -s "$gpt_nvme" mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
-			# change the GUID to SPDK GUID value
-			# FIXME: Hardcode this in some common place, this value should not be changed much
-			IFS="()" read -r _ SPDK_GPT_GUID _ < <(grep SPDK_GPT_PART_TYPE_GUID module/bdev/gpt/gpt.h)
-			SPDK_GPT_GUID=${SPDK_GPT_GUID//, /-} SPDK_GPT_GUID=${SPDK_GPT_GUID//0x/}
-			sgdisk -t "1:$SPDK_GPT_GUID" "$gpt_nvme"
-			sgdisk -t "2:$SPDK_GPT_GUID" "$gpt_nvme"
-			"$rootdir/scripts/setup.sh"
-			"$rpc_py" bdev_get_bdevs
-			setup_nvme_conf
-		else
-			printf 'Did not find any nvme block devices to work with, aborting the test\n' >&2
-			"$rootdir/scripts/setup.sh"
-			return 1
+	$rootdir/scripts/setup.sh reset
+	# Get nvme devices by following drivers' links towards nvme class
+	local nvme_devs=(/sys/bus/pci/drivers/nvme/*/nvme/nvme*/nvme*n*) nvme_dev
+	gpt_nvme=""
+	# Pick first device which doesn't have any valid partition table
+	for nvme_dev in "${nvme_devs[@]}"; do
+		dev=/dev/${nvme_dev##*/}
+		if ! pt=$(parted "$dev" -ms print 2>&1); then
+			[[ $pt == *"$dev: unrecognised disk label"* ]] || continue
+			gpt_nvme=$dev
+			break
 		fi
+	done
+	if [[ -n $gpt_nvme ]]; then
+		# Create gpt partition table
+		parted -s "$gpt_nvme" mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+		# change the GUID to SPDK GUID value
+		# FIXME: Hardcode this in some common place, this value should not be changed much
+		IFS="()" read -r _ SPDK_GPT_GUID _ < <(grep SPDK_GPT_PART_TYPE_GUID module/bdev/gpt/gpt.h)
+		SPDK_GPT_GUID=${SPDK_GPT_GUID//, /-} SPDK_GPT_GUID=${SPDK_GPT_GUID//0x/}
+		sgdisk -t "1:$SPDK_GPT_GUID" "$gpt_nvme"
+		sgdisk -t "2:$SPDK_GPT_GUID" "$gpt_nvme"
+		"$rootdir/scripts/setup.sh"
+		"$rpc_py" bdev_get_bdevs
+		setup_nvme_conf
 	else
-		# Not supported platform or missing tooling, nothing to be done, simply exit the test
-		# in a graceful manner.
-		trap - SIGINT SIGTERM EXIT
-		killprocess "$spdk_tgt_pid"
-		cleanup
-		exit 0
+		printf 'Did not find any nvme block devices to work with, aborting the test\n' >&2
+		"$rootdir/scripts/setup.sh"
+		return 1
 	fi
 }
 
@@ -139,7 +137,7 @@ function setup_rbd_conf() {
 function bdev_bounds() {
 	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM --json "$conf_file" &
 	bdevio_pid=$!
-	trap 'killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
+	trap 'cleanup; killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
 	echo "Process bdevio pid: $bdevio_pid"
 	waitforlisten $bdevio_pid
 	$testdir/bdevio/tests.py perform_tests
@@ -171,7 +169,7 @@ function nbd_function_test() {
 		modprobe nbd
 		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 --json "$conf" &
 		nbd_pid=$!
-		trap 'killprocess $nbd_pid; exit 1' SIGINT SIGTERM EXIT
+		trap 'cleanup; killprocess $nbd_pid; exit 1' SIGINT SIGTERM EXIT
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid $rpc_server
 
@@ -291,7 +289,7 @@ function qos_test_suite() {
 	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
 	QOS_PID=$!
 	echo "Process qos testing pid: $QOS_PID"
-	trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
+	trap 'cleanup; killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $QOS_PID
 
 	$rpc_py bdev_malloc_create -b $QOS_DEV_1 128 512
@@ -370,6 +368,8 @@ killprocess "$spdk_tgt_pid"
 # End bdev configuration
 #-----------------------------------------------------
 
+trap "cleanup" SIGINT SIGTERM EXIT
+
 run_test "bdev_hello_world" $SPDK_EXAMPLE_DIR/hello_bdev --json "$conf_file" -b "$hello_world_bdev"
 run_test "bdev_bounds" bdev_bounds
 run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
@@ -385,6 +385,8 @@ else
 	exit 1
 fi
 
+trap "cleanup" SIGINT SIGTERM EXIT
+
 run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3
 run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1
 
@@ -399,11 +401,6 @@ fi
 
 # Bdev and configuration cleanup below this line
 #-----------------------------------------------------
-if [ "$test_type" = "gpt" ]; then
-	"$rootdir/scripts/setup.sh" reset
-	if [[ -b $gpt_nvme ]]; then
-		dd if=/dev/zero of="$gpt_nvme" bs=4096 count=8 oflag=direct
-	fi
-fi
 
+trap - SIGINT SIGTERM EXIT
 cleanup
