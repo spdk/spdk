@@ -1545,6 +1545,9 @@ nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
 
 	NVME_CTRLR_NOTICELOG(ctrlr, "resetting controller\n");
 
+	/* Disable keep-alive, it'll be re-enabled as part of the init process */
+	ctrlr->keep_alive_interval_ticks = 0;
+
 	/* Abort all of the queued abort requests */
 	nvme_ctrlr_abort_queued_aborts(ctrlr);
 
