@@ -170,6 +170,7 @@ struct spdk_nvmf_registrant {
 
 struct spdk_nvmf_ns {
 	uint32_t nsid;
+	uint32_t anagrpid;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
@@ -316,6 +317,11 @@ struct spdk_nvmf_subsystem {
 	char						sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 	char						mn[SPDK_NVME_CTRLR_MN_LEN + 1];
 	char						subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+
+	/* Array of namespace count per ANA group of size max_nsid indexed anagrpid - 1
+	 * It will be enough for ANA group to use the same size as namespaces.
+	 */
+	uint32_t					*ana_group;
 };
 
 int nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,

@@ -300,7 +300,7 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	struct spdk_nvmf_subsystem subsystem = {
 		.max_nsid = 1024,
 		.ns = NULL,
-		.tgt = &tgt
+		.tgt = &tgt,
 	};
 	struct spdk_nvmf_ns_opts ns_opts;
 	uint32_t nsid;
@@ -308,6 +308,8 @@ test_spdk_nvmf_subsystem_add_ns(void)
 
 	subsystem.ns = calloc(subsystem.max_nsid, sizeof(struct spdk_nvmf_subsystem_ns *));
 	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
+	subsystem.ana_group = calloc(subsystem.max_nsid, sizeof(uint32_t));
+	SPDK_CU_ASSERT_FATAL(subsystem.ana_group != NULL);
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
@@ -340,6 +342,7 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	CU_ASSERT(rc == 0);
 
 	free(subsystem.ns);
+	free(subsystem.ana_group);
 	free(tgt.subsystems);
 }
 
@@ -1341,7 +1344,7 @@ test_spdk_nvmf_ns_event(void)
 	struct spdk_nvmf_subsystem subsystem = {
 		.max_nsid = 1024,
 		.ns = NULL,
-		.tgt = &tgt
+		.tgt = &tgt,
 	};
 	struct spdk_nvmf_ctrlr ctrlr = {
 		.subsys = &subsystem
@@ -1352,6 +1355,8 @@ test_spdk_nvmf_ns_event(void)
 
 	subsystem.ns = calloc(subsystem.max_nsid, sizeof(struct spdk_nvmf_subsystem_ns *));
 	SPDK_CU_ASSERT_FATAL(subsystem.ns != NULL);
+	subsystem.ana_group = calloc(subsystem.max_nsid, sizeof(uint32_t));
+	SPDK_CU_ASSERT_FATAL(subsystem.ana_group != NULL);
 
 	tgt.max_subsystems = 1024;
 	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
@@ -1408,6 +1413,7 @@ test_spdk_nvmf_ns_event(void)
 	poll_threads();
 
 	free(subsystem.ns);
+	free(subsystem.ana_group);
 	free(tgt.subsystems);
 }
 

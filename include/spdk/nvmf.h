@@ -729,6 +729,13 @@ struct spdk_nvmf_ns_opts {
 	 * New added fields should be put at the end of the struct.
 	 */
 	size_t opts_size;
+
+	/**
+	 * ANA group ID
+	 *
+	 * Set to be equal with the NSID if not specified.
+	 */
+	uint32_t anagrpid;
 };
 
 /**

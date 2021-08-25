@@ -1935,37 +1935,35 @@ nvmf_ctrlr_mask_aen(struct spdk_nvmf_ctrlr *ctrlr,
 	}
 }
 
-#define SPDK_NVMF_ANA_DESC_SIZE	(sizeof(struct spdk_nvme_ana_group_descriptor) +	\
-				 sizeof(uint32_t))
 static void
 nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iovcnt,
 		      uint64_t offset, uint32_t length, uint32_t rae)
 {
 	struct spdk_nvme_ana_page ana_hdr;
-	char _ana_desc[SPDK_NVMF_ANA_DESC_SIZE];
-	struct spdk_nvme_ana_group_descriptor *ana_desc;
+	struct spdk_nvme_ana_group_descriptor ana_desc;
 	size_t copy_len, copied_len;
-	uint32_t num_ns = 0;
+	uint32_t num_anagrp = 0, anagrpid;
 	struct spdk_nvmf_ns *ns;
 	struct copy_iovs_ctx copy_ctx;
 
 	_init_copy_iovs_ctx(&copy_ctx, iovs, iovcnt);
 
 	if (length == 0) {
-		return;
+		goto done;
 	}
 
 	if (offset >= sizeof(ana_hdr)) {
 		offset -= sizeof(ana_hdr);
 	} else {
-		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
-		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
-			num_ns++;
+		for (anagrpid = 1; anagrpid <= ctrlr->subsys->max_nsid; anagrpid++) {
+			if (ctrlr->subsys->ana_group[anagrpid - 1] > 0) {
+				num_anagrp++;
+			}
 		}
 
 		memset(&ana_hdr, 0, sizeof(ana_hdr));
 
-		ana_hdr.num_ana_group_desc = num_ns;
+		ana_hdr.num_ana_group_desc = num_anagrp;
 		/* TODO: Support Change Count. */
 		ana_hdr.change_count = 0;
 
@@ -1977,35 +1975,59 @@ nvmf_get_ana_log_page(struct spdk_nvmf_ctrlr *ctrlr, struct iovec *iovs, int iov
 	}
 
 	if (length == 0) {
-		return;
+		goto done;
 	}
 
-	ana_desc = (void *)_ana_desc;
-
-	for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
-	     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
-		if (offset >= SPDK_NVMF_ANA_DESC_SIZE) {
-			offset -= SPDK_NVMF_ANA_DESC_SIZE;
+	for (anagrpid = 1; anagrpid <= ctrlr->subsys->max_nsid; anagrpid++) {
+		if (ctrlr->subsys->ana_group[anagrpid - 1] == 0) {
 			continue;
 		}
 
-		memset(ana_desc, 0, SPDK_NVMF_ANA_DESC_SIZE);
+		if (offset >= sizeof(ana_desc)) {
+			offset -= sizeof(ana_desc);
+		} else {
+			memset(&ana_desc, 0, sizeof(ana_desc));
 
-		ana_desc->ana_group_id = ns->nsid;
-		ana_desc->num_of_nsid = 1;
-		ana_desc->ana_state = ctrlr->listener->ana_state;
-		ana_desc->nsid[0] = ns->nsid;
-		/* TODO: Support Change Count. */
-		ana_desc->change_count = 0;
+			ana_desc.ana_group_id = anagrpid;
+			ana_desc.num_of_nsid = ctrlr->subsys->ana_group[anagrpid - 1];
+			ana_desc.ana_state = ctrlr->listener->ana_state;
 
-		copy_len = spdk_min(SPDK_NVMF_ANA_DESC_SIZE - offset, length);
-		copied_len = _copy_buf_to_iovs(&copy_ctx, (const char *)ana_desc + offset, copy_len);
-		assert(copied_len == copy_len);
-		length -= copied_len;
-		offset = 0;
+			copy_len = spdk_min(sizeof(ana_desc) - offset, length);
+			copied_len = _copy_buf_to_iovs(&copy_ctx, (const char *)&ana_desc + offset,
+						       copy_len);
+			assert(copied_len == copy_len);
+			length -= copied_len;
+			offset = 0;
 
-		if (length == 0) {
-			goto done;
+			if (length == 0) {
+				goto done;
+			}
+		}
+
+		/* TODO: Revisit here about O(n^2) cost if we have subsystem with
+		 * many namespaces in the future.
+		 */
+		for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
+		     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+			if (ns->anagrpid != anagrpid) {
+				continue;
+			}
+
+			if (offset >= sizeof(uint32_t)) {
+				offset -= sizeof(uint32_t);
+				continue;
+			}
+
+			copy_len = spdk_min(sizeof(uint32_t) - offset, length);
+			copied_len = _copy_buf_to_iovs(&copy_ctx, (const char *)&ns->nsid + offset,
+						       copy_len);
+			assert(copied_len == copy_len);
+			length -= copied_len;
+			offset = 0;
+
+			if (length == 0) {
+				goto done;
+			}
 		}
 	}
 
@@ -2296,8 +2318,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 	}
 
 	if (subsystem->flags.ana_reporting) {
-		/* ANA group ID matches NSID. */
-		nsdata->anagrpid = ns->nsid;
+		nsdata->anagrpid = ns->anagrpid;
 
 		if (ctrlr->listener->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE ||
 		    ctrlr->listener->ana_state == SPDK_NVME_ANA_PERSISTENT_LOSS_STATE) {

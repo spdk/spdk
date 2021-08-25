@@ -303,6 +303,14 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 			free(subsystem);
 			return NULL;
 		}
+		subsystem->ana_group = calloc(num_ns, sizeof(uint32_t));
+		if (subsystem->ana_group == NULL) {
+			SPDK_ERRLOG("ANA group memory allocation failed\n");
+			pthread_mutex_destroy(&subsystem->mutex);
+			free(subsystem->ns);
+			free(subsystem);
+			return NULL;
+		}
 	}
 
 	memset(subsystem->sn, '0', sizeof(subsystem->sn) - 1);
@@ -381,6 +389,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	free(subsystem->ns);
+	free(subsystem->ana_group);
 
 	subsystem->tgt->subsystems[subsystem->id] = NULL;
 	nvmf_update_discovery_log(subsystem->tgt, NULL);
@@ -1199,6 +1208,11 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 
 	subsystem->ns[nsid - 1] = NULL;
 
+	assert(ns->anagrpid - 1 < subsystem->max_nsid);
+	assert(subsystem->ana_group[ns->anagrpid - 1] > 0);
+
+	subsystem->ana_group[ns->anagrpid - 1]--;
+
 	free(ns->ptpl_file);
 	nvmf_ns_reservation_clear_all_registrants(ns);
 	spdk_bdev_module_release_bdev(ns->bdev);
@@ -1395,6 +1409,7 @@ spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
 	if (FIELD_OK(uuid)) {
 		memset(&opts->uuid, 0, sizeof(opts->uuid));
 	}
+	SET_FIELD(anagrpid, 0);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -1423,13 +1438,14 @@ nvmf_ns_opts_copy(struct spdk_nvmf_ns_opts *opts,
 	if (FIELD_OK(uuid)) {
 		memcpy(&opts->uuid, &user_opts->uuid, sizeof(opts->uuid));
 	}
+	SET_FIELD(anagrpid);
 
 	opts->opts_size = user_opts->opts_size;
 
 	/* We should not remove this statement, but need to update the assert statement
 	 * if we add a new field, and also add a corresponding SET_FIELD statement.
 	 */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 56, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 64, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -1495,6 +1511,15 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 		return 0;
 	}
 
+	if (opts.anagrpid == 0) {
+		opts.anagrpid = opts.nsid;
+	}
+
+	if (opts.anagrpid > subsystem->max_nsid) {
+		SPDK_ERRLOG("ANAGRPID greater than maximum NSID not allowed\n");
+		return 0;
+	}
+
 	ns = calloc(1, sizeof(*ns));
 	if (ns == NULL) {
 		SPDK_ERRLOG("Namespace allocation failed\n");
@@ -1542,6 +1567,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 	ns->subsystem = subsystem;
 	subsystem->ns[opts.nsid - 1] = ns;
 	ns->nsid = opts.nsid;
+	ns->anagrpid = opts.anagrpid;
+	subsystem->ana_group[ns->anagrpid - 1]++;
 	TAILQ_INIT(&ns->registrants);
 
 	if (ptpl_file) {

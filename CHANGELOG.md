@@ -8,7 +8,8 @@ Added `oncs` to `struct spdk_nvmf_ctrlr_data` so that the transport layer
 can decide support RESERVATION feature or not.
 
 An `opts_size` element was added in the `spdk_nvmf_ns_opts` structure to solve the
-ABI compatibility issue between different SPDK version.
+ABI compatibility issue between different SPDK version. An new option `anagrpid` was
+added in the `spdk_nvmf_ns_opts` structure.
 
 ### bdev
 
