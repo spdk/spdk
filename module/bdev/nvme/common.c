@@ -38,6 +38,53 @@ struct nvme_ctrlrs g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 bool g_bdev_nvme_module_finish;
 
+struct nvme_ns *
+nvme_ctrlr_get_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
+{
+	assert(nsid > 0);
+	assert(nsid <= nvme_ctrlr->num_ns);
+	if (nsid == 0 || nsid > nvme_ctrlr->num_ns) {
+		return NULL;
+	}
+
+	return nvme_ctrlr->namespaces[nsid - 1];
+}
+
+struct nvme_ns *
+nvme_ctrlr_get_first_active_ns(struct nvme_ctrlr *nvme_ctrlr)
+{
+	uint32_t i;
+
+	for (i = 0; i < nvme_ctrlr->num_ns; i++) {
+		if (nvme_ctrlr->namespaces[i] != NULL) {
+			return nvme_ctrlr->namespaces[i];
+		}
+	}
+
+	return NULL;
+}
+
+struct nvme_ns *
+nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns)
+{
+	uint32_t i;
+
+	if (ns == NULL) {
+		return NULL;
+	}
+
+	/* ns->id is a 1's based value and we want to start at the next
+	 * entry in this array, so we start at ns->id and don't subtract to
+	 * convert to 0's based. */
+	for (i = ns->id; i < nvme_ctrlr->num_ns; i++) {
+		if (nvme_ctrlr->namespaces[i] != NULL) {
+			return nvme_ctrlr->namespaces[i];
+		}
+	}
+
+	return NULL;
+}
+
 struct nvme_ctrlr *
 nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 {

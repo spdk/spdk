@@ -177,4 +177,8 @@ void nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr);
 int bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf);
 void bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf);
 
+struct nvme_ns *nvme_ctrlr_get_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
+struct nvme_ns *nvme_ctrlr_get_first_active_ns(struct nvme_ctrlr *nvme_ctrlr);
+struct nvme_ns *nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns);
+
 #endif /* SPDK_COMMON_BDEV_NVME_H */

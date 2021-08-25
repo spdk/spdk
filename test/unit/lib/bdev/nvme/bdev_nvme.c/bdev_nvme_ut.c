@@ -1516,7 +1516,7 @@ test_pending_reset(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	bdev = nvme_ctrlr->namespaces[0]->bdev;
+	bdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
 	ch1 = spdk_get_io_channel(bdev);
@@ -1689,7 +1689,7 @@ test_attach_ctrlr(void)
 	CU_ASSERT(attached_names[0] != NULL && strcmp(attached_names[0], "nvme0n1") == 0);
 	attached_names[0] = NULL;
 
-	nbdev = nvme_ctrlr->namespaces[0]->bdev;
+	nbdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
 	CU_ASSERT(bdev_nvme_get_ctrlr(&nbdev->disk) == ctrlr);
 
@@ -1834,12 +1834,12 @@ test_aer_cb(void)
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
 	CU_ASSERT(nvme_ctrlr->num_ns == 4);
-	CU_ASSERT(nvme_ctrlr->namespaces[0] == NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[1] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[2] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[3] != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) == NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4) != NULL);
 
-	bdev = nvme_ctrlr->namespaces[3]->bdev;
+	bdev = nvme_ctrlr_get_ns(nvme_ctrlr, 4)->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 	CU_ASSERT(bdev->disk.blockcnt == 1024);
 
@@ -1856,10 +1856,10 @@ test_aer_cb(void)
 
 	aer_cb(nvme_ctrlr, &cpl);
 
-	CU_ASSERT(nvme_ctrlr->namespaces[0] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[1] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[2] == NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[3] != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3) == NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4) != NULL);
 	CU_ASSERT(bdev->disk.blockcnt == 2048);
 
 	/* Change ANA state of active namespaces. */
@@ -1876,9 +1876,9 @@ test_aer_cb(void)
 	spdk_delay_us(10000);
 	poll_threads();
 
-	CU_ASSERT(nvme_ctrlr->namespaces[0]->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
-	CU_ASSERT(nvme_ctrlr->namespaces[1]->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
-	CU_ASSERT(nvme_ctrlr->namespaces[3]->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1)->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2)->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
 
 	rc = bdev_nvme_delete("nvme0", NULL);
 	CU_ASSERT(rc == 0);
@@ -2027,7 +2027,7 @@ test_submit_nvme_cmd(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	bdev = nvme_ctrlr->namespaces[0]->bdev;
+	bdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
 	set_thread(0);
@@ -2279,7 +2279,7 @@ test_abort(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	bdev = nvme_ctrlr->namespaces[0]->bdev;
+	bdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
 	write_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, NULL);
@@ -2492,13 +2492,13 @@ test_bdev_unregister(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	nvme_ns1 = nvme_ctrlr->namespaces[0];
+	nvme_ns1 = nvme_ctrlr_get_ns(nvme_ctrlr, 1);
 	SPDK_CU_ASSERT_FATAL(nvme_ns1 != NULL);
 
 	bdev1 = nvme_ns1->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev1 != NULL);
 
-	nvme_ns2 = nvme_ctrlr->namespaces[1];
+	nvme_ns2 = nvme_ctrlr_get_ns(nvme_ctrlr, 2);
 	SPDK_CU_ASSERT_FATAL(nvme_ns2 != NULL);
 
 	bdev2 = nvme_ns2->bdev;
@@ -2611,21 +2611,21 @@ test_init_ana_log_page(void)
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
 	CU_ASSERT(nvme_ctrlr->num_ns == 5);
-	CU_ASSERT(nvme_ctrlr->namespaces[0] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[1] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[2] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[3] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[4] != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[0]->ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
-	CU_ASSERT(nvme_ctrlr->namespaces[1]->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
-	CU_ASSERT(nvme_ctrlr->namespaces[2]->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
-	CU_ASSERT(nvme_ctrlr->namespaces[3]->ana_state == SPDK_NVME_ANA_PERSISTENT_LOSS_STATE);
-	CU_ASSERT(nvme_ctrlr->namespaces[4]->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
-	CU_ASSERT(nvme_ctrlr->namespaces[0]->bdev != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[1]->bdev != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[2]->bdev != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[3]->bdev != NULL);
-	CU_ASSERT(nvme_ctrlr->namespaces[4]->bdev != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 5) != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1)->ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2)->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3)->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->ana_state == SPDK_NVME_ANA_PERSISTENT_LOSS_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 5)->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2)->bdev != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3)->bdev != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->bdev != NULL);
+	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 5)->bdev != NULL);
 
 	rc = bdev_nvme_delete("nvme0", NULL);
 	CU_ASSERT(rc == 0);
