@@ -300,7 +300,8 @@ def nvmf_subsystem_listener_set_ana_state(
         traddr,
         trsvcid,
         adrfam,
-        tgt_name=None):
+        tgt_name=None,
+        anagrpid=None):
     """Set ANA state of a listener for an NVMe-oF subsystem.
 
     Args:
@@ -311,6 +312,7 @@ def nvmf_subsystem_listener_set_ana_state(
         trsvcid: Transport service ID.
         tgt_name: name of the parent NVMe-oF target (optional).
         adrfam: Address family ("IPv4", "IPv6", "IB", or "FC").
+        anagrpid: ANA group ID (optional)
 
     Returns:
             True or False
@@ -328,6 +330,9 @@ def nvmf_subsystem_listener_set_ana_state(
 
     if tgt_name:
         params['tgt_name'] = tgt_name
+
+    if anagrpid:
+        params['anagrpid'] = anagrpid
 
     return client.call('nvmf_subsystem_listener_set_ana_state', params)
 

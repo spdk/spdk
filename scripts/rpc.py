@@ -2035,7 +2035,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                        traddr=args.traddr,
                                                        tgt_name=args.tgt_name,
                                                        adrfam=args.adrfam,
-                                                       trsvcid=args.trsvcid)
+                                                       trsvcid=args.trsvcid,
+                                                       anagrpid=args.anagrpid)
 
     p = subparsers.add_parser('nvmf_subsystem_listener_set_ana_state', help='Set ANA state of a listener for an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
@@ -2045,6 +2046,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-p', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
+    p.add_argument('-g', '--anagrpid', help='ANA group ID (optional)', type=int)
     p.set_defaults(func=nvmf_subsystem_listener_set_ana_state)
 
     def nvmf_subsystem_add_ns(args):

@@ -6278,7 +6278,8 @@ Example response:
 
 ### nvmf_subsystem_listener_set_ana_state  method {#rpc_nvmf_subsystem_listener_set_ana_state}
 
-Set ANA state of a listener for an NVMe-oF subsystem.
+Set ANA state of a listener for an NVMe-oF subsystem. Only the ANA state of the specified ANA
+group is updated, or ANA states of all ANA groups if ANA group is not specified.
 
 #### Parameters
 
@@ -6288,6 +6289,7 @@ nqn                     | Required | string      | Subsystem NQN
 tgt_name                | Optional | string      | Parent NVMe-oF target name.
 listen_address          | Required | object      | @ref rpc_nvmf_listen_address object
 ana_state               | Required | string      | ANA state to set ("optimized", "non_optimized", or "inaccessible")
+anagrpid                | Optional | number      | ANA group ID
 
 #### Example
 

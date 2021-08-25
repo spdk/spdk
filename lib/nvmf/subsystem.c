@@ -3024,7 +3024,7 @@ subsystem_listener_update_on_pg(struct spdk_io_channel_iter *i)
 void
 nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 			     const struct spdk_nvme_transport_id *trid,
-			     enum spdk_nvme_ana_state ana_state,
+			     enum spdk_nvme_ana_state ana_state, uint32_t anagrpid,
 			     spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_subsystem_listener *listener;
@@ -3052,10 +3052,21 @@ nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
+	if (anagrpid > subsystem->max_nsid) {
+		SPDK_ERRLOG("ANA group ID %" PRIu32 " is more than maximum\n", anagrpid);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
 	listener = nvmf_subsystem_find_listener(subsystem, trid);
 	if (!listener) {
 		SPDK_ERRLOG("Unable to find listener.\n");
 		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	if (anagrpid != 0 && listener->ana_state[anagrpid - 1] == ana_state) {
+		cb_fn(cb_arg, 0);
 		return;
 	}
 
@@ -3066,8 +3077,10 @@ nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	for (i = 0; i < subsystem->max_nsid; i++) {
-		listener->ana_state[i] = ana_state;
+	for (i = 1; i <= subsystem->max_nsid; i++) {
+		if (anagrpid == 0 || i == anagrpid) {
+			listener->ana_state[i - 1] = ana_state;
+		}
 	}
 	listener->ana_state_change_count++;
 
