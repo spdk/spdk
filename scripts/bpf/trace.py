@@ -502,7 +502,20 @@ class QPair(SPDKObject):
             'RDMA_REQ_RDY_TO_COMPL',
             'RDMA_REQ_COMPLETING_C2H',
             'RDMA_REQ_COMPLETING',
-            'RDMA_REQ_COMPLETED'])
+            'RDMA_REQ_COMPLETED',
+            'TCP_REQ_NEW',
+            'TCP_REQ_NEED_BUFFER',
+            'TCP_REQ_TX_H_TO_C',
+            'TCP_REQ_RDY_TO_EXECUTE',
+            'TCP_REQ_EXECUTING',
+            'TCP_REQ_EXECUTED',
+            'TCP_REQ_RDY_TO_COMPLETE',
+            'TCP_REQ_TRANSFER_C2H',
+            'TCP_REQ_COMPLETED',
+            'TCP_WRITE_START',
+            'TCP_WRITE_DONE',
+            'TCP_READ_DONE',
+            'TCP_REQ_AWAIT_R2T_ACK'])
         self._objects = []
         self._find_objects(dtrace.entries)
 
