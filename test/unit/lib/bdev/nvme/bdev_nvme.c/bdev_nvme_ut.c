@@ -59,9 +59,6 @@ DEFINE_STUB(spdk_nvme_transport_id_trtype_str, const char *, (enum spdk_nvme_tra
 
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 
-DEFINE_STUB_V(spdk_nvme_ctrlr_get_default_ctrlr_opts, (struct spdk_nvme_ctrlr_opts *opts,
-		size_t opts_size));
-
 DEFINE_STUB(spdk_nvme_ctrlr_set_trid, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_transport_id *trid), 0);
 
@@ -500,6 +497,11 @@ nvme_ctrlr_poll_internal(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_probe_c
 		return;
 	}
 
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctrlr->opts, sizeof(ctrlr->opts));
+	if (probe_ctx->cb_ctx) {
+		ctrlr->opts = *(struct spdk_nvme_ctrlr_opts *)probe_ctx->cb_ctx;
+	}
+
 	TAILQ_INSERT_TAIL(&g_ut_attached_ctrlrs, ctrlr, tailq);
 
 	if (probe_ctx->attach_cb) {
@@ -556,6 +558,15 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	return 0;
+}
+
+void
+spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
+{
+	memset(opts, 0, opts_size);
+
+	snprintf(opts->hostnqn, sizeof(opts->hostnqn),
+		 "nqn.2014-08.org.nvmexpress:uuid:7391e776-0716-11ec-9a03-0242ac130003");
 }
 
 const struct spdk_nvme_ctrlr_data *
