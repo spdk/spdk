@@ -1,5 +1,4 @@
 all
-exclude_rule 'MD003'
 exclude_rule 'MD004'
 exclude_rule 'MD010'
 rule 'MD013', :line_length => 170
