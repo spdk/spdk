@@ -347,10 +347,13 @@ bdev_nvme_destruct(void *ctx)
 
 	nvme_ns->bdev = NULL;
 
-	if (!nvme_ns->populated) {
+	assert(nvme_ns->id > 0);
+
+	if (nvme_ns->ctrlr->namespaces[nvme_ns->id - 1] == NULL) {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 
 		nvme_ctrlr_release(nvme_ns->ctrlr);
+		free(nvme_ns);
 	} else {
 		pthread_mutex_unlock(&nvme_ns->ctrlr->mutex);
 	}
@@ -1699,7 +1702,6 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 	}
 
 	nvme_ns->ns = ns;
-	nvme_ns->populated = true;
 	nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 
 	if (nvme_ctrlr->ana_log_page != NULL) {
@@ -1714,7 +1716,8 @@ done:
 		nvme_ctrlr->ref++;
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 	} else {
-		memset(nvme_ns, 0, sizeof(*nvme_ns));
+		nvme_ctrlr->namespaces[nvme_ns->id - 1] = NULL;
+		free(nvme_ns);
 	}
 
 	if (ctx) {
@@ -1737,12 +1740,14 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 
-	nvme_ns->populated = false;
+	nvme_ctrlr->namespaces[nvme_ns->id - 1] = NULL;
 
 	if (nvme_ns->bdev != NULL) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
 	}
+
+	free(nvme_ns);
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	nvme_ctrlr_release(nvme_ctrlr);
@@ -1774,7 +1779,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		nvme_ns = nvme_ctrlr->namespaces[i];
 		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
 
-		if (nvme_ns->populated && ns_is_active) {
+		if (nvme_ns != NULL && ns_is_active) {
 			/* NS is still there but attributes may have changed */
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
@@ -1794,7 +1799,16 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			}
 		}
 
-		if (!nvme_ns->populated && ns_is_active) {
+		if (nvme_ns == NULL && ns_is_active) {
+			nvme_ns = calloc(1, sizeof(struct nvme_ns));
+			if (nvme_ns == NULL) {
+				SPDK_ERRLOG("Failed to allocate namespace\n");
+				/* This just fails to attach the namespace. It may work on a future attempt. */
+				continue;
+			}
+
+			nvme_ctrlr->namespaces[nsid - 1] = nvme_ns;
+
 			nvme_ns->id = nsid;
 			nvme_ns->ctrlr = nvme_ctrlr;
 
@@ -1806,7 +1820,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns, ctx);
 		}
 
-		if (nvme_ns->populated && !ns_is_active) {
+		if (nvme_ns != NULL && !ns_is_active) {
 			nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
 		}
 	}
@@ -1835,7 +1849,7 @@ nvme_ctrlr_depopulate_namespaces(struct nvme_ctrlr *nvme_ctrlr)
 		uint32_t nsid = i + 1;
 
 		nvme_ns = nvme_ctrlr->namespaces[nsid - 1];
-		if (nvme_ns->populated) {
+		if (nvme_ns != NULL) {
 			assert(nvme_ns->id == nsid);
 			nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
 		}
@@ -1870,9 +1884,10 @@ nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 		}
 
 		nvme_ns = nvme_ctrlr->namespaces[nsid - 1];
-		assert(nvme_ns != NULL);
 
-		if (!nvme_ns->populated) {
+		assert(nvme_ns != NULL);
+		if (nvme_ns == NULL) {
+			/* Target told us that an inactive namespace had an ANA change */
 			continue;
 		}
 
@@ -2047,7 +2062,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_ctrlr_trid *trid_entry;
-	uint32_t i, num_ns;
+	uint32_t num_ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	int rc;
 
@@ -2074,17 +2089,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 			goto err;
 		}
 
-		for (i = 0; i < num_ns; i++) {
-			nvme_ctrlr->namespaces[i] = calloc(1, sizeof(struct nvme_ns));
-			if (nvme_ctrlr->namespaces[i] == NULL) {
-				SPDK_ERRLOG("Failed to allocate block namespace struct\n");
-				rc = -ENOMEM;
-				goto err;
-			}
-			nvme_ctrlr->num_ns++;
-		}
-
-		assert(num_ns == nvme_ctrlr->num_ns);
+		nvme_ctrlr->num_ns = num_ns;
 	}
 
 	trid_entry = calloc(1, sizeof(*trid_entry));
@@ -2383,7 +2388,7 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 	for (i = 0; i < nvme_ctrlr->num_ns; i++) {
 		nsid = i + 1;
 		nvme_ns = nvme_ctrlr->namespaces[nsid - 1];
-		if (!nvme_ns->populated) {
+		if (nvme_ns == NULL) {
 			continue;
 		}
 		assert(nvme_ns->id == nsid);
@@ -2450,7 +2455,7 @@ bdev_nvme_compare_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		nsid = i + 1;
 
 		nvme_ns = nvme_ctrlr->namespaces[i];
-		if (!nvme_ns->populated) {
+		if (nvme_ns == NULL) {
 			continue;
 		}
 

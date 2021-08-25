@@ -727,6 +727,10 @@ ut_create_ana_log_page(struct spdk_nvme_ctrlr *ctrlr, char *buf, uint32_t length
 	for (i = 0; i < ctrlr->num_ns; i++) {
 		ns = &ctrlr->ns[i];
 
+		if (!ns->is_active) {
+			continue;
+		}
+
 		memset(ana_desc, 0, UT_ANA_DESC_SIZE);
 
 		ana_desc->ana_group_id = ns->id;
@@ -1830,10 +1834,10 @@ test_aer_cb(void)
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
 	CU_ASSERT(nvme_ctrlr->num_ns == 4);
-	CU_ASSERT(nvme_ctrlr->namespaces[0]->populated == false);
-	CU_ASSERT(nvme_ctrlr->namespaces[1]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[2]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[3]->populated == true);
+	CU_ASSERT(nvme_ctrlr->namespaces[0] == NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[1] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[2] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[3] != NULL);
 
 	bdev = nvme_ctrlr->namespaces[3]->bdev;
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -1852,10 +1856,10 @@ test_aer_cb(void)
 
 	aer_cb(nvme_ctrlr, &cpl);
 
-	CU_ASSERT(nvme_ctrlr->namespaces[0]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[1]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[2]->populated == false);
-	CU_ASSERT(nvme_ctrlr->namespaces[3]->populated == true);
+	CU_ASSERT(nvme_ctrlr->namespaces[0] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[1] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[2] == NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[3] != NULL);
 	CU_ASSERT(bdev->disk.blockcnt == 2048);
 
 	/* Change ANA state of active namespaces. */
@@ -2607,11 +2611,11 @@ test_init_ana_log_page(void)
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
 	CU_ASSERT(nvme_ctrlr->num_ns == 5);
-	CU_ASSERT(nvme_ctrlr->namespaces[0]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[1]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[2]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[3]->populated == true);
-	CU_ASSERT(nvme_ctrlr->namespaces[4]->populated == true);
+	CU_ASSERT(nvme_ctrlr->namespaces[0] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[1] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[2] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[3] != NULL);
+	CU_ASSERT(nvme_ctrlr->namespaces[4] != NULL);
 	CU_ASSERT(nvme_ctrlr->namespaces[0]->ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
 	CU_ASSERT(nvme_ctrlr->namespaces[1]->ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
 	CU_ASSERT(nvme_ctrlr->namespaces[2]->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
