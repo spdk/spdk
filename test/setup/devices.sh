@@ -175,15 +175,7 @@ min_disk_size=$((1024 ** 3 * 2)) # 2GB
 for block in "/sys/block/nvme"*; do
 	pci=$(readlink -f "$block/device/device")
 	pci=${pci##*/}
-	# Skip devices that are in use - simple blkid it to see if
-	# there's any metadata (pt, fs, etc.) present on the drive.
-	# If the drive's size is less than 2G, skip it as we need
-	# something bigger for the tests.
-	# FIXME: Special case to ignore atari as a potential false
-	# positive:
-	# https://github.com/spdk/spdk/issues/2079
-	pt=$(blkid -s PTTYPE -o value "/dev/${block##*/}") || pt=none
-	if [[ $pt == none || $pt == atari ]] && (($(sec_size_to_bytes "${block##*/}") >= min_disk_size)); then
+	if ! block_in_use "${block##*/}" && (($(sec_size_to_bytes "${block##*/}") >= min_disk_size)); then
 		blocks+=("${block##*/}")
 		blocks_to_pci["${block##*/}"]=$pci
 	fi

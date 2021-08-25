@@ -87,6 +87,17 @@ rm -f /var/tmp/spdk*.sock
 # Load the kernel driver
 ./scripts/setup.sh reset
 
+# Delete all leftover lvols and gpt partitions
+# Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
+# Filter out nvme with partitions - the "p*" suffix
+for dev in $(ls /dev/nvme*n* | grep -v p || true); do
+	if ! block_in_use "$dev"; then
+		dd if=/dev/zero of="$dev" bs=1M count=1
+	fi
+done
+
+sync
+
 if [ $(uname -s) = Linux ]; then
 	# OCSSD devices drivers don't support IO issues by kernel so
 	# detect OCSSD devices and block them (unbind from any driver).
@@ -129,15 +140,6 @@ if [[ $(uname -s) == Linux ]]; then
 	# Revert NVMe namespaces to default state
 	nvme_namespace_revert
 fi
-
-# Delete all leftover lvols and gpt partitions
-# Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
-# Filter out nvme with partitions - the "p*" suffix
-for dev in $(ls /dev/nvme*n* | grep -v p || true); do
-	dd if=/dev/zero of="$dev" bs=1M count=1
-done
-
-sync
 
 timing_exit cleanup
 

@@ -316,6 +316,35 @@ ge() { cmp_versions "$1" ">=" "$2"; }
 eq() { cmp_versions "$1" "==" "$2"; }
 neq() { ! eq "$1" "$2"; }
 
+block_in_use() {
+	local block=$1 data pt
+	# Skip devices that are in use - simple blkid it to see if
+	# there's any metadata (pt, fs, etc.) present on the drive.
+	# FIXME: Special case to ignore atari as a potential false
+	# positive:
+	# https://github.com/spdk/spdk/issues/2079
+	# Devices with SPDK's GPT part type are not considered to
+	# be in use.
+
+	if "$rootdir/scripts/spdk-gpt.py" "$block"; then
+		return 1
+	fi
+
+	data=$(blkid "/dev/${block##*/}") || data=none
+
+	if [[ $data == none ]]; then
+		return 1
+	fi
+
+	pt=$(blkid -s PTTYPE -o value "/dev/${block##*/}") || pt=none
+
+	if [[ $pt == none || $pt == atari ]]; then
+		return 1
+	fi
+
+	return 0
+}
+
 if [[ -e "$CONFIG_WPDK_DIR/bin/wpdk_common.sh" ]]; then
 	# Adjust uname to report the operating system as WSL, Msys or Cygwin
 	# and the kernel name as Windows. Define kill() to invoke the SIGTERM
