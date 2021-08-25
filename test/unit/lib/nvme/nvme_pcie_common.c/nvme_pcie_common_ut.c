@@ -72,6 +72,7 @@ DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
 
 DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t cid,
 		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 0);
+DEFINE_STUB(spdk_strerror, const char *, (int errnum), NULL);
 
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,

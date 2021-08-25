@@ -62,7 +62,7 @@ DEPDIRS-rdma := log util
 DEPDIRS-reduce := log util
 DEPDIRS-thread := log util trace
 
-DEPDIRS-nvme := log sock util
+DEPDIRS-nvme := log sock util trace
 ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvme += rdma dma
 endif

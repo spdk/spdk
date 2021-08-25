@@ -40,6 +40,14 @@
 #include "spdk/string.h"
 #include "nvme_internal.h"
 #include "nvme_pcie_internal.h"
+#include "spdk/trace.h"
+
+#define OBJECT_NVME_PCIE_TR	0x3
+#define OWNER_NVME_PCIE_QP	0x3
+
+#define TRACE_GROUP_NVME_PCIE	0xB
+#define TRACE_NVME_PCIE_SUBMIT		SPDK_TPOINT_ID(TRACE_GROUP_NVME_PCIE, 0x0)
+#define TRACE_NVME_PCIE_COMPLETE	SPDK_TPOINT_ID(TRACE_GROUP_NVME_PCIE, 0x1)
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 
@@ -646,6 +654,9 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	req = tr->req;
 	assert(req != NULL);
 
+	spdk_trace_record(TRACE_NVME_PCIE_SUBMIT, qpair->id, 0, (uintptr_t)req,
+			  req->cmd.cid, req->cmd.opc, req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12);
+
 	if (req->cmd.fuse == SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
 		/* This is first cmd of two fused commands - don't ring doorbell */
 		qpair->first_fused_submitted = 1;
@@ -685,6 +696,8 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	bool				print_error;
 
 	req = tr->req;
+
+	spdk_trace_record(TRACE_NVME_PCIE_COMPLETE, qpair->id, 0, (uintptr_t)req, req->cmd.cid);
 
 	assert(req != NULL);
 
@@ -1753,4 +1766,29 @@ nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 	free(tgroup);
 
 	return 0;
+}
+
+SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
+{
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"NVME_PCIE_SUBMIT", TRACE_NVME_PCIE_SUBMIT,
+			OWNER_NVME_PCIE_QP, OBJECT_NVME_PCIE_TR, 1,
+			{	{ "cid", SPDK_TRACE_ARG_TYPE_INT, 8 },
+				{ "opc", SPDK_TRACE_ARG_TYPE_INT, 8 },
+				{ "dw10", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+				{ "dw11", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+				{ "dw12", SPDK_TRACE_ARG_TYPE_PTR, 8 }
+			}
+		},
+		{
+			"NVME_PCIE_COMPLETE", TRACE_NVME_PCIE_COMPLETE,
+			OWNER_NVME_PCIE_QP, OBJECT_NVME_PCIE_TR, 0,
+			{{ "cid", SPDK_TRACE_ARG_TYPE_INT, 8 }}
+		},
+	};
+
+	spdk_trace_register_object(OBJECT_NVME_PCIE_TR, 'p');
+	spdk_trace_register_owner(OWNER_NVME_PCIE_QP, 'q');
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
