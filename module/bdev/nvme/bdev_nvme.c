@@ -153,14 +153,14 @@ static void bdev_nvme_library_fini(void);
 static int bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   struct nvme_bdev_io *bio,
 			   struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
-			   uint32_t flags);
+			   uint32_t flags, struct spdk_bdev_ext_io_opts *ext_opts);
 static int bdev_nvme_no_pi_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				 struct nvme_bdev_io *bio,
 				 struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba);
 static int bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			    struct nvme_bdev_io *bio,
 			    struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
-			    uint32_t flags);
+			    uint32_t flags, struct spdk_bdev_ext_io_opts *ext_opts);
 static int bdev_nvme_zone_appendv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				  struct nvme_bdev_io *bio,
 				  struct iovec *iov, int iovcnt, void *md, uint64_t lba_count,
@@ -831,7 +831,8 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bdev_io->u.bdev.md_buf,
 			      bdev_io->u.bdev.num_blocks,
 			      bdev_io->u.bdev.offset_blocks,
-			      bdev->dif_check_flags);
+			      bdev->dif_check_flags,
+			      bdev_io->internal.ext_opts);
 
 exit:
 	if (spdk_unlikely(ret != 0)) {
@@ -866,7 +867,8 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					     bdev_io->u.bdev.md_buf,
 					     bdev_io->u.bdev.num_blocks,
 					     bdev_io->u.bdev.offset_blocks,
-					     bdev->dif_check_flags);
+					     bdev->dif_check_flags,
+					     bdev_io->internal.ext_opts);
 		} else {
 			spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
 					     bdev_io->u.bdev.num_blocks * bdev->blocklen);
@@ -882,7 +884,8 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				      bdev_io->u.bdev.md_buf,
 				      bdev_io->u.bdev.num_blocks,
 				      bdev_io->u.bdev.offset_blocks,
-				      bdev->dif_check_flags);
+				      bdev->dif_check_flags,
+				      bdev_io->internal.ext_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_COMPARE:
 		rc = bdev_nvme_comparev(ns,
@@ -3293,10 +3296,10 @@ bdev_nvme_no_pi_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 static int
 bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
-		void *md, uint64_t lba_count, uint64_t lba, uint32_t flags)
+		void *md, uint64_t lba_count, uint64_t lba, uint32_t flags,
+		struct spdk_bdev_ext_io_opts *ext_opts)
 {
 	int rc;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	SPDK_DEBUGLOG(bdev_nvme, "read %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
@@ -3306,10 +3309,10 @@ bdev_nvme_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	if (bdev_io->internal.ext_opts) {
+	if (ext_opts) {
 		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
-		bio->ext_opts.memory_domain = bdev_io->internal.ext_opts->memory_domain;
-		bio->ext_opts.memory_domain_ctx = bdev_io->internal.ext_opts->memory_domain_ctx;
+		bio->ext_opts.memory_domain = ext_opts->memory_domain;
+		bio->ext_opts.memory_domain_ctx = ext_opts->memory_domain_ctx;
 		bio->ext_opts.io_flags = flags;
 		bio->ext_opts.metadata = md;
 
@@ -3340,10 +3343,9 @@ static int
 bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		 struct nvme_bdev_io *bio,
 		 struct iovec *iov, int iovcnt, void *md, uint64_t lba_count, uint64_t lba,
-		 uint32_t flags)
+		 uint32_t flags, struct spdk_bdev_ext_io_opts *ext_opts)
 {
 	int rc;
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	SPDK_DEBUGLOG(bdev_nvme, "write %" PRIu64 " blocks with offset %#" PRIx64 "\n",
 		      lba_count, lba);
@@ -3353,10 +3355,10 @@ bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
 
-	if (bdev_io->internal.ext_opts) {
+	if (ext_opts) {
 		bio->ext_opts.size = sizeof(struct spdk_nvme_ns_cmd_ext_io_opts);
-		bio->ext_opts.memory_domain = bdev_io->internal.ext_opts->memory_domain;
-		bio->ext_opts.memory_domain_ctx = bdev_io->internal.ext_opts->memory_domain_ctx;
+		bio->ext_opts.memory_domain = ext_opts->memory_domain;
+		bio->ext_opts.memory_domain_ctx = ext_opts->memory_domain_ctx;
 		bio->ext_opts.io_flags = flags;
 		bio->ext_opts.metadata = md;
 
