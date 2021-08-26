@@ -43,6 +43,7 @@ waitforserial "$NVMF_SERIAL"
 $rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t write -r 1 -v
 
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+waitforserial_disconnect "$NVMF_SERIAL"
 
 trap - SIGINT SIGTERM EXIT
 

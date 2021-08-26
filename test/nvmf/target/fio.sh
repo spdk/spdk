@@ -67,6 +67,7 @@ fio_status=0
 wait $fio_pid || fio_status=$?
 
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+waitforserial_disconnect "$NVMF_SERIAL"
 
 if [ $fio_status -eq 0 ]; then
 	echo "nvmf hotplug test: fio successful - expected failure"

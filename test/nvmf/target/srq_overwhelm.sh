@@ -16,7 +16,7 @@ nvmfappstart -m 0xF
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -s 1024
 
 for i in $(seq 0 5); do
-	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s SPDK00000000000001
+	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$i -a -s "SPDK0000000000000${i}"
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc$i
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i Malloc$i
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$i -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
@@ -35,6 +35,7 @@ sync
 
 for i in $(seq 0 5); do
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}"
+	waitforserial_disconnect "SPDK0000000000000${i}"
 	$rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode$i
 done
 

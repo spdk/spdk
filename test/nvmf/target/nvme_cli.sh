@@ -60,6 +60,7 @@ done
 
 devs=($(get_nvme_devs)) nvme_num=${#devs[@]}
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+waitforserial_disconnect "$NVMF_SERIAL"
 if ((nvme_num <= nvme_num_before_connection)); then
 	echo "nvme-cli connect target devices failed"
 	exit 1
