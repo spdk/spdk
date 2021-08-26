@@ -1684,6 +1684,9 @@ nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 		SPDK_WARNLOG("Abort failed. Resetting controller. sc is %u, sct is %u.\n", cpl->status.sc,
 			     cpl->status.sct);
 		bdev_nvme_reset(nvme_ctrlr);
+	} else if (cpl->cdw0 & 0x1) {
+		SPDK_WARNLOG("Specified command could not be aborted.\n");
+		bdev_nvme_reset(nvme_ctrlr);
 	}
 }
 
