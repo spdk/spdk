@@ -1943,22 +1943,24 @@ static void
 _free_ctrlr(void *ctx)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
-	int i;
-
-	for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
-		free_qp(ctrlr, i);
-	}
 
 	spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 	free(ctrlr);
 }
 
 static void
-free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr, bool free_qps)
 {
+	int i;
 	assert(ctrlr != NULL);
 
 	SPDK_DEBUGLOG(nvmf_vfio, "free %s\n", ctrlr_id(ctrlr));
+
+	if (free_qps) {
+		for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
+			free_qp(ctrlr, i);
+		}
+	}
 
 	if (ctrlr->thread == spdk_get_thread()) {
 		_free_ctrlr(ctrlr);
@@ -1972,7 +1974,7 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 			    struct nvmf_vfio_user_endpoint *endpoint)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr;
-	int err;
+	int err = 0;
 
 	/* First, construct a vfio-user CUSTOM transport controller */
 	ctrlr = calloc(1, sizeof(*ctrlr));
@@ -1989,6 +1991,7 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 	/* Then, construct an admin queue pair */
 	err = init_qp(ctrlr, &transport->transport, NVMF_VFIO_USER_DEFAULT_AQ_DEPTH, 0);
 	if (err != 0) {
+		free(ctrlr);
 		goto out;
 	}
 	endpoint->ctrlr = ctrlr;
@@ -2000,7 +2003,6 @@ out:
 	if (err != 0) {
 		SPDK_ERRLOG("%s: failed to create vfio-user controller: %s\n",
 			    endpoint_id(endpoint), strerror(-err));
-		free_ctrlr(ctrlr);
 	}
 }
 
@@ -2112,7 +2114,10 @@ nvmf_vfio_user_stop_listen(struct spdk_nvmf_transport *transport,
 		if (strcmp(trid->traddr, endpoint->trid.traddr) == 0) {
 			TAILQ_REMOVE(&vu_transport->endpoints, endpoint, link);
 			if (endpoint->ctrlr) {
-				free_ctrlr(endpoint->ctrlr);
+				/* Users may kill NVMeoF target while VM
+				 * is connected, free all resources.
+				 */
+				free_ctrlr(endpoint->ctrlr, true);
 			}
 			nvmf_vfio_user_destroy_endpoint(endpoint);
 			pthread_mutex_unlock(&vu_transport->lock);
@@ -2265,7 +2270,7 @@ vfio_user_qpair_disconnect_cb(void *ctx)
 
 	if (TAILQ_EMPTY(&ctrlr->connected_qps)) {
 		endpoint->ctrlr = NULL;
-		free_ctrlr(ctrlr);
+		free_ctrlr(ctrlr, false);
 		pthread_mutex_unlock(&endpoint->lock);
 		return;
 	}
@@ -2286,7 +2291,7 @@ vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	pthread_mutex_lock(&endpoint->lock);
 	if (TAILQ_EMPTY(&ctrlr->connected_qps)) {
 		endpoint->ctrlr = NULL;
-		free_ctrlr(ctrlr);
+		free_ctrlr(ctrlr, false);
 		pthread_mutex_unlock(&endpoint->lock);
 		return 0;
 	}
@@ -2347,7 +2352,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	if (spdk_nvme_cpl_is_error(&req->req.rsp->nvme_cpl)) {
 		SPDK_ERRLOG("SC %u, SCT %u\n", req->req.rsp->nvme_cpl.status.sc, req->req.rsp->nvme_cpl.status.sct);
 		endpoint->ctrlr = NULL;
-		free_ctrlr(ctrlr);
+		free_ctrlr(ctrlr, true);
 		return -1;
 	}
 
