@@ -1119,6 +1119,8 @@ resize_interface(enum tabs tab)
 static void
 switch_tab(enum tabs tab)
 {
+	wclear(g_tabs[tab]);
+	draw_tabs(tab, g_current_sort_col[tab]);
 	top_panel(g_panels[tab]);
 	update_panels();
 	doupdate();
