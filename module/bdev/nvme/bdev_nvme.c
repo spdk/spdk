@@ -1758,13 +1758,12 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			       struct nvme_async_probe_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
-	struct nvme_ns	*nvme_ns;
+	struct nvme_ns	*nvme_ns, *next;
 	struct spdk_nvme_ns	*ns;
 	struct nvme_bdev	*bdev;
-	uint32_t		i;
+	uint32_t		nsid;
 	int			rc;
 	uint64_t		num_sectors;
-	bool			ns_is_active;
 
 	if (ctx) {
 		/* Initialize this count to 1 to handle the populate functions
@@ -1773,21 +1772,21 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		ctx->populates_in_progress = 1;
 	}
 
-	for (i = 0; i < nvme_ctrlr->num_ns; i++) {
-		uint32_t	nsid = i + 1;
+	/* First loop over our existing namespaces and see if they have been
+	 * removed. */
+	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
+	while (nvme_ns != NULL) {
+		next = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns);
 
-		nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
-		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
-
-		if (nvme_ns != NULL && ns_is_active) {
+		if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
 			/* NS is still there but attributes may have changed */
-			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
 			bdev = nvme_ns->bdev;
 			assert(bdev != NULL);
 			if (bdev->disk.blockcnt != num_sectors) {
 				SPDK_NOTICELOG("NSID %u is resized: bdev name %s, old size %" PRIu64 ", new size %" PRIu64 "\n",
-					       nsid,
+					       nvme_ns->id,
 					       bdev->disk.name,
 					       bdev->disk.blockcnt,
 					       num_sectors);
@@ -1797,9 +1796,21 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 						    bdev->disk.name, rc);
 				}
 			}
+		} else {
+			/* Namespace was removed */
+			nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
 		}
 
-		if (nvme_ns == NULL && ns_is_active) {
+		nvme_ns = next;
+	}
+
+	/* Loop through all of the namespaces at the nvme level and see if any of them are new */
+	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	while (nsid != 0) {
+		nvme_ns = nvme_ctrlr_get_ns(nvme_ctrlr, nsid);
+
+		if (nvme_ns == NULL) {
+			/* Found a new one */
 			nvme_ns = calloc(1, sizeof(struct nvme_ns));
 			if (nvme_ns == NULL) {
 				SPDK_ERRLOG("Failed to allocate namespace\n");
@@ -1820,9 +1831,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns, ctx);
 		}
 
-		if (nvme_ns != NULL && !ns_is_active) {
-			nvme_ctrlr_depopulate_namespace(nvme_ctrlr, nvme_ns);
-		}
+		nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid);
 	}
 
 	if (ctx) {

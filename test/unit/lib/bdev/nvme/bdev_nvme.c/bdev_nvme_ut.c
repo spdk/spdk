@@ -271,6 +271,32 @@ struct spdk_nvme_ctrlr_reset_ctx {
 	struct spdk_nvme_ctrlr		*ctrlr;
 };
 
+uint32_t
+spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t nsid;
+
+	for (nsid = 1; nsid <= ctrlr->num_ns; nsid++) {
+		if (ctrlr->ns[nsid - 1].is_active) {
+			return nsid;
+		}
+	}
+
+	return 0;
+}
+
+uint32_t
+spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	for (nsid = nsid + 1; nsid <= ctrlr->num_ns; nsid++) {
+		if (ctrlr->ns[nsid - 1].is_active) {
+			return nsid;
+		}
+	}
+
+	return 0;
+}
+
 static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_ut_init_ctrlrs);
 static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_attached_ctrlrs = TAILQ_HEAD_INITIALIZER(
 			g_ut_attached_ctrlrs);
