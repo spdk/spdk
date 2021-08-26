@@ -345,6 +345,17 @@ block_in_use() {
 	return 0
 }
 
+get_spdk_gpt() {
+	local spdk_guid
+
+	[[ -e $rootdir/module/bdev/gpt/gpt.h ]] || return 1
+
+	IFS="()" read -r _ spdk_guid _ < <(grep SPDK_GPT_PART_TYPE_GUID "$rootdir/module/bdev/gpt/gpt.h")
+	spdk_guid=${spdk_guid//, /-} spdk_guid=${spdk_guid//0x/}
+
+	echo "$spdk_guid"
+}
+
 if [[ -e "$CONFIG_WPDK_DIR/bin/wpdk_common.sh" ]]; then
 	# Adjust uname to report the operating system as WSL, Msys or Cygwin
 	# and the kernel name as Windows. Define kill() to invoke the SIGTERM

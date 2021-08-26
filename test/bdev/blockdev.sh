@@ -79,9 +79,7 @@ function setup_gpt_conf() {
 		# Create gpt partition table
 		parted -s "$gpt_nvme" mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
 		# change the GUID to SPDK GUID value
-		# FIXME: Hardcode this in some common place, this value should not be changed much
-		IFS="()" read -r _ SPDK_GPT_GUID _ < <(grep SPDK_GPT_PART_TYPE_GUID module/bdev/gpt/gpt.h)
-		SPDK_GPT_GUID=${SPDK_GPT_GUID//, /-} SPDK_GPT_GUID=${SPDK_GPT_GUID//0x/}
+		SPDK_GPT_GUID=$(get_spdk_gpt)
 		sgdisk -t "1:$SPDK_GPT_GUID" "$gpt_nvme"
 		sgdisk -t "2:$SPDK_GPT_GUID" "$gpt_nvme"
 		"$rootdir/scripts/setup.sh"
