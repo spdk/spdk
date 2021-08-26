@@ -545,6 +545,7 @@ rpc_send_req(char *rpc_name, struct spdk_jsonrpc_client_response **resp)
 
 	/* Check for error response */
 	if (json_resp->error != NULL) {
+		spdk_jsonrpc_client_free_response(json_resp);
 		return -1;
 	}
 
@@ -2733,8 +2734,6 @@ wait_init(pthread_t *data_thread)
 	print_in_middle(stdscr, FIRST_DATA_ROW, 1, max_col, uninit_log, COLOR_PAIR(5));
 	rc = rpc_send_req("framework_wait_init", &json_resp);
 	if (rc) {
-		spdk_jsonrpc_client_free_response(json_resp);
-
 		while (1) {
 			print_in_middle(stdscr, FIRST_DATA_ROW, 1, max_col, uninit_error, COLOR_PAIR(8));
 			c = getch();
@@ -2762,8 +2761,11 @@ wait_init(pthread_t *data_thread)
 	}
 
 	if (rpc_decode_tick_rate(json_resp->result, &tick_rate)) {
+		spdk_jsonrpc_client_free_response(json_resp);
 		return -EINVAL;
 	}
+
+	spdk_jsonrpc_client_free_response(json_resp);
 
 	g_tick_rate = tick_rate;
 
