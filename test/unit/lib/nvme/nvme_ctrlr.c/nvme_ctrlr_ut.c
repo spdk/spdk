@@ -3017,6 +3017,7 @@ test_nvme_ctrlr_ana_resize(void)
 	uint32_t i;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 4;
@@ -3073,6 +3074,7 @@ test_nvme_ctrlr_ana_resize(void)
 	g_active_ns_list_length = 0;
 	g_ana_hdr = NULL;
 	g_ana_descs = NULL;
+	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
