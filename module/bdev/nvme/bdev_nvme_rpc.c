@@ -365,6 +365,11 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		goto conflicting_arguments;
 	}
 
+	if (ctx->req.hostnqn) {
+		snprintf(ctx->req.opts.hostnqn, sizeof(ctx->req.opts.hostnqn), "%s",
+			 ctx->req.hostnqn);
+	}
+
 	if (ctx->req.hostaddr) {
 		maxlen = sizeof(hostid.hostaddr);
 		len = strnlen(ctx->req.hostaddr, maxlen);
@@ -397,7 +402,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
-	rc = bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, ctx->count, ctx->req.hostnqn,
+	rc = bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, ctx->count,
 			      prchk_flags, rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

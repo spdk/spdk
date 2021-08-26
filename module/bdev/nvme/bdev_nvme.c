@@ -2669,7 +2669,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		 const char *base_name,
 		 const char **names,
 		 uint32_t count,
-		 const char *hostnqn,
 		 uint32_t prchk_flags,
 		 spdk_bdev_create_nvme_fn cb_fn,
 		 void *cb_ctx,
@@ -2718,10 +2717,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->opts.transport_retry_count = g_opts.retry_count;
 	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 	ctx->opts.disable_read_ana_log_page = true;
-
-	if (hostnqn) {
-		snprintf(ctx->opts.hostnqn, sizeof(ctx->opts.hostnqn), "%s", hostnqn);
-	}
 
 	if (hostid->hostaddr[0] != '\0') {
 		snprintf(ctx->opts.src_addr, sizeof(ctx->opts.src_addr), "%s", hostid->hostaddr);
