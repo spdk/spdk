@@ -943,6 +943,154 @@ test_nvmf_tcp_icreq_handle(void)
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 }
 
+static void
+test_nvmf_tcp_check_xfer_type(void)
+{
+	const uint16_t cid = 0xAA;
+	struct spdk_nvmf_tcp_transport ttransport = {};
+	struct spdk_nvmf_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu_in_progress = {};
+	union nvmf_c2h_msg rsp0 = {};
+
+	struct spdk_nvmf_tcp_req tcp_req = {};
+	struct nvme_tcp_pdu rsp_pdu = {};
+
+	struct spdk_nvme_tcp_cmd *capsule_data;
+	struct spdk_nvme_sgl_descriptor *sgl;
+
+	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_nvmf_tcp_poll_group tcp_group = {};
+	struct spdk_sock_group grp = {};
+
+	tqpair.pdu_in_progress = &pdu_in_progress;
+	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
+	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
+
+	tcp_group.sock_group = &grp;
+	TAILQ_INIT(&tcp_group.qpairs);
+	group = &tcp_group.group;
+	group->transport = &ttransport.transport;
+	STAILQ_INIT(&group->pending_buf_queue);
+	tqpair.group = &tcp_group;
+
+	TAILQ_INIT(&tqpair.tcp_req_free_queue);
+	TAILQ_INIT(&tqpair.tcp_req_working_queue);
+
+	tqpair.qpair.transport = &ttransport.transport;
+	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
+	tqpair.qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+
+	/* init tcp_req */
+	tcp_req.req.qpair = &tqpair.qpair;
+	tcp_req.pdu = &rsp_pdu;
+	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
+	tcp_req.req.rsp = &rsp0;
+	tcp_req.state = TCP_REQUEST_STATE_NEW;
+
+	TAILQ_INSERT_TAIL(&tqpair.tcp_req_working_queue, &tcp_req, state_link);
+	tqpair.state_cntr[TCP_REQUEST_STATE_NEW]++;
+
+	/* init pdu, make pdu need sgl buff */
+	capsule_data = &tqpair.pdu_in_progress->hdr.capsule_cmd;
+	sgl = &capsule_data->ccsqe.dptr.sgl1;
+
+	capsule_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
+	capsule_data->common.hlen = sizeof(*capsule_data);
+	capsule_data->common.plen = 1096;
+	capsule_data->ccsqe.opc = 0x10 | SPDK_NVME_DATA_BIDIRECTIONAL;
+	/* Need to set to a non zero valid to check it gets copied to the response */
+	capsule_data->ccsqe.cid = cid;
+
+	/* Set up SGL to ensure nvmf_tcp_req_parse_sgl returns an error */
+	sgl->unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_TRANSPORT;
+	sgl->generic.type = SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK;
+	sgl->unkeyed.length = UT_IO_UNIT_SIZE;
+
+	/* Process a command and ensure that it fails and the request is set up to return an error */
+	nvmf_tcp_req_process(&ttransport, &tcp_req);
+	CU_ASSERT(STAILQ_EMPTY(&group->pending_buf_queue));
+	CU_ASSERT(tcp_req.state == TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.cid == cid);
+	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+}
+
+static void
+test_nvmf_tcp_invalid_sgl(void)
+{
+	const uint16_t cid = 0xAABB;
+	struct spdk_nvmf_tcp_transport ttransport = {};
+	struct spdk_nvmf_tcp_qpair tqpair = {};
+	struct nvme_tcp_pdu pdu_in_progress = {};
+	union nvmf_c2h_msg rsp0 = {};
+
+	struct spdk_nvmf_tcp_req tcp_req = {};
+	struct nvme_tcp_pdu rsp_pdu = {};
+
+	struct spdk_nvme_tcp_cmd *capsule_data;
+	struct spdk_nvme_sgl_descriptor *sgl;
+
+	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_nvmf_tcp_poll_group tcp_group = {};
+	struct spdk_sock_group grp = {};
+
+	tqpair.pdu_in_progress = &pdu_in_progress;
+	ttransport.transport.opts.max_io_size = UT_MAX_IO_SIZE;
+	ttransport.transport.opts.io_unit_size = UT_IO_UNIT_SIZE;
+
+	tcp_group.sock_group = &grp;
+	TAILQ_INIT(&tcp_group.qpairs);
+	group = &tcp_group.group;
+	group->transport = &ttransport.transport;
+	STAILQ_INIT(&group->pending_buf_queue);
+	tqpair.group = &tcp_group;
+
+	TAILQ_INIT(&tqpair.tcp_req_free_queue);
+	TAILQ_INIT(&tqpair.tcp_req_working_queue);
+
+	tqpair.qpair.transport = &ttransport.transport;
+	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
+	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH;
+	tqpair.qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+
+	/* init tcp_req */
+	tcp_req.req.qpair = &tqpair.qpair;
+	tcp_req.pdu = &rsp_pdu;
+	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
+	tcp_req.req.rsp = &rsp0;
+	tcp_req.state = TCP_REQUEST_STATE_NEW;
+
+	TAILQ_INSERT_TAIL(&tqpair.tcp_req_working_queue, &tcp_req, state_link);
+	tqpair.state_cntr[TCP_REQUEST_STATE_NEW]++;
+
+	/* init pdu, make pdu need sgl buff */
+	capsule_data = &tqpair.pdu_in_progress->hdr.capsule_cmd;
+	sgl = &capsule_data->ccsqe.dptr.sgl1;
+
+	capsule_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD;
+	capsule_data->common.hlen = sizeof(*capsule_data);
+	capsule_data->common.plen = 1096;
+	capsule_data->ccsqe.opc = SPDK_NVME_OPC_WRITE;
+	/* Need to set to a non zero valid to check it gets copied to the response */
+	capsule_data->ccsqe.cid = cid;
+
+	/* Set up SGL to ensure nvmf_tcp_req_parse_sgl returns an error */
+	sgl->unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_TRANSPORT;
+	sgl->generic.type = SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK;
+	sgl->unkeyed.length = UT_MAX_IO_SIZE + 1;
+
+	/* Process a command and ensure that it fails and the request is set up to return an error */
+	nvmf_tcp_req_process(&ttransport, &tcp_req);
+	CU_ASSERT(STAILQ_EMPTY(&group->pending_buf_queue));
+	CU_ASSERT(tcp_req.state == TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.cid == cid);
+	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -963,6 +1111,8 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_term_req);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_capsule_resp_pdu);
 	CU_ADD_TEST(suite, test_nvmf_tcp_icreq_handle);
+	CU_ADD_TEST(suite, test_nvmf_tcp_check_xfer_type);
+	CU_ADD_TEST(suite, test_nvmf_tcp_invalid_sgl);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
