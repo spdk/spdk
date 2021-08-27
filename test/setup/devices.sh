@@ -175,11 +175,6 @@ min_disk_size=$((1024 ** 3 * 2)) # 2GB
 for block in "/sys/block/nvme"*; do
 	pci=$(readlink -f "$block/device/device")
 	pci=${pci##*/}
-	# Skip OCSSD drives if somehow some are still bound to the
-	# nvme driver.
-	for ocssd in $OCSSD_PCI_DEVICES; do
-		[[ $pci == "$ocssd" ]] && continue 2
-	done
 	# Skip devices that are in use - simple blkid it to see if
 	# there's any metadata (pt, fs, etc.) present on the drive.
 	# If the drive's size is less than 2G, skip it as we need

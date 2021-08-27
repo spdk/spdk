@@ -84,13 +84,11 @@ struct nvme_ns {
 	struct spdk_nvme_ns	*ns;
 	struct nvme_ctrlr	*ctrlr;
 	struct nvme_bdev	*bdev;
-	void			*type_ctx;
 	uint32_t		ana_group_id;
 	enum spdk_nvme_ana_state ana_state;
 };
 
 struct nvme_bdev_io;
-struct ocssd_bdev_ctrlr;
 
 struct nvme_ctrlr_trid {
 	struct spdk_nvme_transport_id		trid;
@@ -129,8 +127,6 @@ struct nvme_ctrlr {
 	struct spdk_poller			*adminq_timer_poller;
 	struct spdk_thread			*thread;
 
-	struct ocssd_bdev_ctrlr			*ocssd_ctrlr;
-
 	bdev_nvme_reset_cb			reset_cb_fn;
 	void					*reset_cb_arg;
 	struct spdk_nvme_ctrlr_reset_ctx	*reset_ctx;
@@ -166,14 +162,11 @@ struct nvme_poll_group {
 	uint64_t				end_ticks;
 };
 
-struct ocssd_io_channel;
-
 struct nvme_ctrlr_channel {
 	struct nvme_ctrlr		*ctrlr;
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_poll_group		*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
-	struct ocssd_io_channel		*ocssd_ch;
 };
 
 struct nvme_bdev_channel {

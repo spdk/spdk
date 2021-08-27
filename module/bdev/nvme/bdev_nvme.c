@@ -35,7 +35,6 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
-#include "bdev_ocssd.h"
 
 #include "spdk/accel_engine.h"
 #include "spdk/config.h"
@@ -203,7 +202,6 @@ static void nvme_ctrlr_populate_standard_namespace(struct nvme_ctrlr *nvme_ctrlr
 static populate_namespace_fn g_populate_namespace_fn[] = {
 	NULL,
 	nvme_ctrlr_populate_standard_namespace,
-	bdev_ocssd_populate_namespace,
 };
 
 typedef void (*depopulate_namespace_fn)(struct nvme_ns *nvme_ns);
@@ -212,7 +210,6 @@ static void nvme_ctrlr_depopulate_standard_namespace(struct nvme_ns *nvme_ns);
 static depopulate_namespace_fn g_depopulate_namespace_fn[] = {
 	NULL,
 	nvme_ctrlr_depopulate_standard_namespace,
-	bdev_ocssd_depopulate_namespace,
 };
 
 typedef void (*config_json_namespace_fn)(struct spdk_json_write_ctx *w,
@@ -223,7 +220,6 @@ static void nvme_ctrlr_config_json_standard_namespace(struct spdk_json_write_ctx
 static config_json_namespace_fn g_config_json_namespace_fn[] = {
 	NULL,
 	nvme_ctrlr_config_json_standard_namespace,
-	bdev_ocssd_namespace_config_json,
 };
 
 struct spdk_nvme_qpair *
@@ -1083,13 +1079,6 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&ctrlr_ch->pending_resets);
 
-	if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_ctrlr->ctrlr)) {
-		rc = bdev_ocssd_create_io_channel(ctrlr_ch);
-		if (rc != 0) {
-			goto err_ocssd_ch;
-		}
-	}
-
 	ctrlr_ch->ctrlr = nvme_ctrlr;
 
 	rc = bdev_nvme_create_qpair(ctrlr_ch);
@@ -1100,10 +1089,6 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	return 0;
 
 err_qpair:
-	if (ctrlr_ch->ocssd_ch) {
-		bdev_ocssd_destroy_io_channel(ctrlr_ch);
-	}
-err_ocssd_ch:
 	spdk_put_io_channel(pg_ch);
 
 	return rc;
@@ -1115,10 +1100,6 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	struct nvme_ctrlr_channel *ctrlr_ch = ctx_buf;
 
 	assert(ctrlr_ch->group != NULL);
-
-	if (ctrlr_ch->ocssd_ch != NULL) {
-		bdev_ocssd_destroy_io_channel(ctrlr_ch);
-	}
 
 	bdev_nvme_destroy_qpair(ctrlr_ch);
 
@@ -1852,11 +1833,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		if (!nvme_ns->populated && ns_is_active) {
 			nvme_ns->id = nsid;
 			nvme_ns->ctrlr = nvme_ctrlr;
-			if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-				nvme_ns->type = NVME_NS_OCSSD;
-			} else {
-				nvme_ns->type = NVME_NS_STANDARD;
-			}
+			nvme_ns->type = NVME_NS_STANDARD;
 
 			nvme_ns->bdev = NULL;
 
@@ -1996,10 +1973,6 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
 		nvme_ctrlr_populate_namespaces(nvme_ctrlr, NULL);
-	} else if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_VENDOR) &&
-		   (event.bits.log_page_identifier == SPDK_OCSSD_LOG_CHUNK_NOTIFICATION) &&
-		   spdk_nvme_ctrlr_is_ocssd_supported(nvme_ctrlr->ctrlr)) {
-		bdev_ocssd_handle_chunk_notification(nvme_ctrlr);
 	} else if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 		   (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_ANA_CHANGE)) {
 		nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
@@ -2172,11 +2145,9 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	if (spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-		rc = bdev_ocssd_init_ctrlr(nvme_ctrlr);
-		if (spdk_unlikely(rc != 0)) {
-			SPDK_ERRLOG("Unable to initialize OCSSD controller\n");
-			goto err;
-		}
+		SPDK_ERRLOG("OCSSDs are not supported");
+		rc = -ENOTSUP;
+		goto err;
 	}
 
 	nvme_ctrlr->prchk_flags = prchk_flags;

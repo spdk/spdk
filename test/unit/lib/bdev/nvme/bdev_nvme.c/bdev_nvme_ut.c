@@ -207,24 +207,6 @@ DEFINE_STUB(spdk_opal_dev_construct, struct spdk_opal_dev *, (struct spdk_nvme_c
 
 DEFINE_STUB_V(spdk_opal_dev_destruct, (struct spdk_opal_dev *dev));
 
-DEFINE_STUB_V(bdev_ocssd_populate_namespace, (struct nvme_ctrlr *nvme_ctrlr,
-		struct nvme_ns *nvme_ns, struct nvme_async_probe_ctx *ctx));
-
-DEFINE_STUB_V(bdev_ocssd_depopulate_namespace, (struct nvme_ns *nvme_ns));
-
-DEFINE_STUB_V(bdev_ocssd_namespace_config_json, (struct spdk_json_write_ctx *w,
-		struct nvme_ns *nvme_ns));
-
-DEFINE_STUB(bdev_ocssd_create_io_channel, int, (struct nvme_ctrlr_channel *ioch), 0);
-
-DEFINE_STUB_V(bdev_ocssd_destroy_io_channel, (struct nvme_ctrlr_channel *ioch));
-
-DEFINE_STUB(bdev_ocssd_init_ctrlr, int, (struct nvme_ctrlr *nvme_ctrlr), 0);
-
-DEFINE_STUB_V(bdev_ocssd_fini_ctrlr, (struct nvme_ctrlr *nvme_ctrlr));
-
-DEFINE_STUB_V(bdev_ocssd_handle_chunk_notification, (struct nvme_ctrlr *nvme_ctrlr));
-
 DEFINE_STUB(spdk_accel_submit_crc32cv, int, (struct spdk_io_channel *ch, uint32_t *dst,
 		struct iovec *iov,
 		uint32_t iov_cnt, uint32_t seed, spdk_accel_completion_cb cb_fn, void *cb_arg), 0);

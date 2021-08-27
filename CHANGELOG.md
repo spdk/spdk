@@ -22,6 +22,10 @@ with new `spdk_bdev_module_fini_start_done` API.
 Deprecated `spdk_bdev_module_finish_done()` API, which will be removed in SPDK 22.01.
 Bdev modules should use `spdk_bdev_module_fini_done()` instead.
 
+The `ocssd` bdev has been removed. The Open Channel specification has been largely superceded by
+zoned namespaces, few if any devices have been brough to market, and there is little reason to
+continue to support this. OCSSD support in the nvme driver will remain for now.
+
 ### dma
 
 A new library, lib/dma, has been added. This library provides the necessary infrastructure for

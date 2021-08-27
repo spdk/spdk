@@ -32,7 +32,6 @@
  */
 
 #include "spdk/env.h"
-#include "bdev_ocssd.h"
 #include "common.h"
 
 struct nvme_ctrlrs g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
@@ -128,10 +127,6 @@ nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 	if (nvme_ctrlr->opal_dev) {
 		spdk_opal_dev_destruct(nvme_ctrlr->opal_dev);
 		nvme_ctrlr->opal_dev = NULL;
-	}
-
-	if (nvme_ctrlr->ocssd_ctrlr) {
-		bdev_ocssd_fini_ctrlr(nvme_ctrlr);
 	}
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);

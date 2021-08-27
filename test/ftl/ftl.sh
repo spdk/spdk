@@ -5,6 +5,9 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/common.sh
 
+# The FTL tests are currently disabled, pending conversion to ZNS from OCSSD.
+exit 0
+
 function at_ftl_exit() {
 	# restore original driver
 	PCI_ALLOWED="$device" PCI_BLOCKED="" DRIVER_OVERRIDE="$ocssd_original_dirver" $rootdir/scripts/setup.sh

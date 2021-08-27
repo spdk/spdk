@@ -150,62 +150,6 @@ Both interfaces require the same arguments which are described by the `--help` o
 - base bdev's name (base bdev must implement bdev_zone API)
 - UUID of the FTL device (if the FTL is to be restored from the SSD)
 
-### FTL usage with OCSSD nvme bdev {#ftl_ocssd}
-
-This option requires an Open Channel SSD, which can be emulated using QEMU.
-
-The QEMU with the patches providing Open Channel support can be found on the SPDK's QEMU fork
-on [spdk-3.0.0](https://github.com/spdk/qemu/tree/spdk-3.0.0) branch.
-
-## Configuring QEMU {#ftl_qemu_config}
-
-To emulate an Open Channel device, QEMU expects parameters describing the characteristics and
-geometry of the SSD:
-
-- `serial` - serial number,
-- `lver` - version of the OCSSD standard (0 - disabled, 1 - "1.2", 2 - "2.0"), libftl only supports
-  2.0,
-- `lba_index` - default LBA format. Possible values can be found in the table below (libftl only supports lba_index >= 3):
-- `lnum_ch` - number of groups,
-- `lnum_lun` - number of parallel units
-- `lnum_pln` - number of planes (logical blocks from all planes constitute a chunk)
-- `lpgs_per_blk` - number of pages (smallest programmable unit) per chunk
-- `lsecs_per_pg` - number of sectors in a page
-- `lblks_per_pln` - number of chunks in a parallel unit
-- `laer_thread_sleep` - timeout in ms between asynchronous events requesting the host to relocate
-  the data based on media feedback
-- `lmetadata` - metadata file
-
-        |lba_index| data| metadata|
-        |---------|-----|---------|
-        |    0    | 512B|    0B   |
-        |    1    | 512B|    8B   |
-        |    2    | 512B|   16B   |
-        |    3    |4096B|    0B   |
-        |    4    |4096B|   64B   |
-        |    5    |4096B|  128B   |
-        |    6    |4096B|   16B   |
-
-For more detailed description of the available options, consult the `hw/block/nvme.c` file in
-the QEMU repository.
-
-Example:
-
-```
-$ /path/to/qemu [OTHER PARAMETERS] -drive format=raw,file=/path/to/data/file,if=none,id=myocssd0
-        -device nvme,drive=myocssd0,serial=deadbeef,lver=2,lba_index=3,lnum_ch=1,lnum_lun=8,lnum_pln=4,
-        lpgs_per_blk=1536,lsecs_per_pg=4,lblks_per_pln=512,lmetadata=/path/to/md/file
-```
-
-In the above example, a device is created with 1 channel, 8 parallel units, 512 chunks per parallel
-unit, 24576 (`lnum_pln` * `lpgs_per_blk` * `lsecs_per_pg`) logical blocks in each chunk with logical
-block being 4096B. Therefore the data file needs to be at least 384G `(8 * 512 * 24576 * 4096B)`
-of size and can be created with the following command:
-
-```
-fallocate -l 384G /path/to/data/file
-```
-
 ## Configuring SPDK {#ftl_spdk_config}
 
 To verify that the drive is emulated correctly, one can check the output of the NVMe identify app
@@ -226,40 +170,6 @@ Model Number:                          QEMU NVMe Ctrl
 
 ... other info ...
 
-Namespace OCSSD Geometry
-=======================
-OC version: maj:2 min:0
-
-... other info ...
-
-Groups (channels): 1
-PUs (LUNs) per group: 8
-Chunks per LUN: 512
-Logical blks per chunk: 24576
-
-... other info ...
-
-```
-
-In order to create FTL on top Open Channel SSD, the following steps are required:
-
-1) Attach OCSSD NVMe controller
-2) Create OCSSD bdev on the controller attached in step 1 (user could specify parallel unit range
-and create multiple OCSSD bdevs on single OCSSD NVMe controller)
-3) Create FTL bdev on top of bdev created in step 2
-
-Example:
-```
-$ scripts/rpc.py bdev_nvme_attach_controller -b nvme0 -a 00:0a.0 -t pcie
-
-$ scripts/rpc.py bdev_ocssd_create -c nvme0 -b nvme0n1
-	nvme0n1
-
-$ scripts/rpc.py bdev_ftl_create -b ftl0 -d nvme0n1
-{
-	"name": "ftl0",
-	"uuid": "3b469565-1fa5-4bfb-8341-747ec9fca9b9"
-}
 ```
 
 ## FTL usage with zone block bdev {#ftl_zone_block}
