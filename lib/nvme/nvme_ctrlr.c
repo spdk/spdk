@@ -3700,6 +3700,12 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		case NVME_QPAIR_ENABLED:
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READ_VS,
 					     NVME_TIMEOUT_INFINITE);
+			/* Abort any queued requests that were sent while the adminq was connecting
+			 * to avoid stalling the init process during a reset, as requests don't get
+			 * resubmitted while the controller is resetting and subsequent commands
+			 * would get queued too.
+			 */
+			nvme_qpair_abort_queued_reqs(ctrlr->adminq, 0);
 			break;
 		default:
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
