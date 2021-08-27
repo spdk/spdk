@@ -749,22 +749,35 @@ _reactors_scheduler_update_core_mode(void *ctx)
 }
 
 static void
+_reactors_scheduler_cancel(void *arg1, void *arg2)
+{
+	struct spdk_scheduler_core_info *core;
+	uint32_t i;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		core = &g_core_infos[i];
+		core->threads_count = 0;
+		free(core->thread_infos);
+		core->thread_infos = NULL;
+	}
+
+	g_scheduling_in_progress = false;
+}
+
+static void
 _reactors_scheduler_balance(void *arg1, void *arg2)
 {
 	struct spdk_scheduler *scheduler = _spdk_scheduler_get();
 
-	if (g_reactor_state == SPDK_REACTOR_STATE_RUNNING && scheduler != NULL) {
-		scheduler->balance(g_core_infos, g_reactor_count);
-
-		g_scheduler_core_number = spdk_env_get_first_core();
-		_reactors_scheduler_update_core_mode(NULL);
+	if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING || scheduler == NULL) {
+		_reactors_scheduler_cancel(NULL, NULL);
+		return;
 	}
-}
 
-static void
-_reactors_scheduler_cancel(void *arg1, void *arg2)
-{
-	g_scheduling_in_progress = false;
+	scheduler->balance(g_core_infos, g_reactor_count);
+
+	g_scheduler_core_number = spdk_env_get_first_core();
+	_reactors_scheduler_update_core_mode(NULL);
 }
 
 /* Phase 1 of thread scheduling is to gather metrics on the existing threads */
