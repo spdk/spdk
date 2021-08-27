@@ -76,7 +76,7 @@ static struct spdk_scheduler_core_info *g_core_infos = NULL;
 TAILQ_HEAD(, spdk_governor) g_governor_list
 	= TAILQ_HEAD_INITIALIZER(g_governor_list);
 
-static struct spdk_governor *g_governor;
+static struct spdk_governor *g_governor = NULL;
 
 static int reactor_interrupt_init(struct spdk_reactor *reactor);
 static void reactor_interrupt_fini(struct spdk_reactor *reactor);

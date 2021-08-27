@@ -41,7 +41,6 @@
 #include "spdk_internal/event.h"
 
 static uint32_t g_main_lcore;
-static bool g_core_mngmnt_available;
 
 struct core_stats {
 	uint64_t busy;
@@ -223,12 +222,11 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 static int
 init(void)
 {
-	int rc;
-
 	g_main_lcore = spdk_env_get_current_core();
 
-	rc = _spdk_governor_set("dpdk_governor");
-	g_core_mngmnt_available = !rc;
+	if (_spdk_governor_set("dpdk_governor") != 0) {
+		SPDK_NOTICELOG("Unable to initialize dpdk governor\n");
+	}
 
 	g_cores = calloc(spdk_env_get_last_core() + 1, sizeof(struct core_stats));
 	if (g_cores == NULL) {
@@ -314,12 +312,10 @@ balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 		}
 	}
 
-	if (!g_core_mngmnt_available) {
+	governor = _spdk_governor_get();
+	if (governor == NULL) {
 		return;
 	}
-
-	governor = _spdk_governor_get();
-	assert(governor != NULL);
 
 	/* Change main core frequency if needed */
 	if (busy_threads_present) {
