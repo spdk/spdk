@@ -195,26 +195,6 @@ nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr_unregister(nvme_ctrlr);
 }
 
-void
-nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
-{
-	struct nvme_ctrlr *nvme_ctrlr = nvme_ns->ctrlr;
-
-	assert(nvme_ctrlr != NULL);
-
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
-	nvme_ns->populated = false;
-
-	if (nvme_ns->bdev != NULL) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return;
-	}
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-	nvme_ctrlr_release(nvme_ctrlr);
-}
-
 int
 bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 {

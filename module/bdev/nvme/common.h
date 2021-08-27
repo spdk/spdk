@@ -174,10 +174,6 @@ struct nvme_bdev_channel {
 	struct nvme_ctrlr_channel	*ctrlr_ch;
 };
 
-void nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
-					struct nvme_ns *nvme_ns, int rc);
-void nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns);
-
 struct nvme_ctrlr *nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
 

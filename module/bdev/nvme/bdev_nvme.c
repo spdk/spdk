@@ -1702,31 +1702,8 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 	}
 
 	rc = nvme_bdev_create(nvme_ctrlr, nvme_ns);
+
 done:
-	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
-}
-
-static void
-nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *ctrlr, struct nvme_ns *nvme_ns)
-{
-	struct nvme_bdev *bdev;
-
-	bdev = nvme_ns->bdev;
-	if (bdev != NULL) {
-		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
-	}
-
-	nvme_ctrlr_depopulate_namespace_done(nvme_ns);
-}
-
-void
-nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
-				   struct nvme_ns *nvme_ns, int rc)
-{
-	struct nvme_ctrlr *nvme_ctrlr = nvme_ns->ctrlr;
-
-	assert(nvme_ctrlr != NULL);
-
 	if (rc == 0) {
 		pthread_mutex_lock(&nvme_ctrlr->mutex);
 		nvme_ctrlr->ref++;
@@ -1741,6 +1718,29 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 			nvme_ctrlr_populate_namespaces_done(nvme_ctrlr, ctx);
 		}
 	}
+}
+
+static void
+nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+{
+	struct nvme_bdev *bdev;
+
+	bdev = nvme_ns->bdev;
+	if (bdev != NULL) {
+		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
+	}
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+
+	nvme_ns->populated = false;
+
+	if (nvme_ns->bdev != NULL) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		return;
+	}
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	nvme_ctrlr_release(nvme_ctrlr);
 }
 
 static void
