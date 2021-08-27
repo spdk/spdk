@@ -39,6 +39,7 @@
 
 #include "spdk/bdev_module.h"
 #include "nvmf/subsystem.c"
+#include <uuid/uuid.h>
 
 SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
@@ -1583,6 +1584,59 @@ test_nvmf_ns_reservation_report(void)
 	free(reg);
 }
 
+static void
+test_nvmf_valid_nqn(void)
+{
+	bool rc;
+	char uuid[SPDK_NVMF_UUID_STRING_LEN + 1] = {};
+	char nqn[SPDK_NVMF_NQN_MAX_LEN + 1] = {};
+	struct spdk_uuid s_uuid = {};
+
+	spdk_uuid_generate(&s_uuid);
+	uuid_unparse((void *)&s_uuid, uuid);
+
+	/* discovery nqn */
+	snprintf(nqn, sizeof(nqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	rc = nvmf_valid_nqn(nqn);
+	CU_ASSERT(rc == true);
+
+	/* nqn with uuid */
+	memset(nqn, 0xff, sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "%s%s", SPDK_NVMF_NQN_UUID_PRE, uuid);
+
+	rc = nvmf_valid_nqn(nqn);
+	CU_ASSERT(rc == true);
+
+	/* Check nqn valid reverse domain */
+	memset(nqn, 0xff, sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "%s", "nqn.2016-06.io.spdk:cnode1");
+
+	rc = nvmf_valid_nqn(nqn);
+	CU_ASSERT(rc == true);
+
+	/* Invalid nqn length */
+	memset(nqn, 0xff, sizeof(nqn));
+	snprintf(nqn, sizeof(nqn), "%s", "nqn.");
+
+	rc = nvmf_valid_nqn(nqn);
+	CU_ASSERT(rc == false);
+
+	/* Copy uuid to the nqn string, but omit the last character to make it invalid */
+	memset(nqn, 0, SPDK_NVMF_NQN_MAX_LEN + 1);
+	snprintf(nqn, sizeof(nqn), "%s", SPDK_NVMF_NQN_UUID_PRE);
+	memcpy(&nqn[SPDK_NVMF_NQN_UUID_PRE_LEN], uuid, SPDK_NVMF_UUID_STRING_LEN - 1);
+
+	rc = nvmf_valid_nqn(nqn);
+	CU_ASSERT(rc == false);
+
+	/* Invalid domain */
+	memset(nqn, 0xff, SPDK_NVMF_NQN_MAX_LEN + 1);
+	snprintf(nqn, sizeof(nqn), "%s", "nqn.2016-06.io...spdk:cnode1");
+
+	rc = nvmf_valid_nqn(nqn);
+	CU_ASSERT(rc == false);
+}
 
 int main(int argc, char **argv)
 {
@@ -1612,6 +1666,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_subsystem_add_ctrlr);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_host);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_report);
+	CU_ADD_TEST(suite, test_nvmf_valid_nqn);
 
 	allocate_threads(1);
 	set_thread(0);
