@@ -590,7 +590,7 @@ _nvme_qpair_complete_abort_queued_reqs(struct spdk_nvme_qpair *qpair)
 }
 
 uint32_t
-nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, void *cmd_cb_arg)
+nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd_cb_arg)
 {
 	struct nvme_request	*req, *tmp;
 	uint32_t		aborting = 0;

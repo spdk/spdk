@@ -76,7 +76,7 @@ DEFINE_STUB(nvme_transport_qpair_iterate_requests, int,
 	     int (*iter_fn)(struct nvme_request *req, void *arg),
 	     void *arg), 0);
 
-DEFINE_STUB(nvme_qpair_abort_queued_reqs, uint32_t,
+DEFINE_STUB(nvme_qpair_abort_queued_reqs_with_cbarg, uint32_t,
 	    (struct spdk_nvme_qpair *qpair, void *cmd_cb_arg), 0);
 
 static void verify_firmware_log_page(struct nvme_request *req)

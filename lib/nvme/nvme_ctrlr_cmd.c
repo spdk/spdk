@@ -789,7 +789,7 @@ spdk_nvme_ctrlr_cmd_abort_ext(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 		 * Hence abort queued requests which has cmd_cb_arg as its callback
 		 * context next.
 		 */
-		aborted = nvme_qpair_abort_queued_reqs(qpair, cmd_cb_arg);
+		aborted = nvme_qpair_abort_queued_reqs_with_cbarg(qpair, cmd_cb_arg);
 		if (parent->num_children == 0) {
 			/* There was no outstanding request to abort. */
 			if (aborted > 0) {
