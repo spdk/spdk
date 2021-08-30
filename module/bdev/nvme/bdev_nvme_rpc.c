@@ -427,6 +427,7 @@ rpc_dump_nvme_controller_info(struct nvme_ctrlr *nvme_ctrlr, void *ctx)
 {
 	struct spdk_json_write_ctx	*w = ctx;
 	struct spdk_nvme_transport_id	*trid;
+	const struct spdk_nvme_ctrlr_opts *opts;
 
 	trid = nvme_ctrlr->connected_trid;
 
@@ -447,6 +448,13 @@ rpc_dump_nvme_controller_info(struct nvme_ctrlr *nvme_ctrlr, void *ctx)
 	nvme_bdev_dump_trid_json(trid, w);
 	spdk_json_write_object_end(w);
 
+	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
+
+	spdk_json_write_named_object_begin(w, "host");
+	spdk_json_write_named_string(w, "nqn", opts->hostnqn);
+	spdk_json_write_named_string(w, "addr", opts->src_addr);
+	spdk_json_write_named_string(w, "svcid", opts->src_svcid);
+	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 }
 
