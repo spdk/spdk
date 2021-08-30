@@ -390,6 +390,16 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		/* This controller already exists. Verify the parameters match sufficiently. */
 		opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
 
+		if (strncmp(trid.subnqn,
+			    spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr)->subnqn,
+			    SPDK_NVMF_NQN_MAX_LEN) != 0) {
+			/* Different SUBNQN is not allowed when specifying the same controller name. */
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+							     "A controller named %s already exists, but uses a different subnqn (%s)\n",
+							     ctx->req.name, spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr)->subnqn);
+			goto cleanup;
+		}
+
 		if (strncmp(ctx->req.opts.hostnqn, opts->hostnqn, SPDK_NVMF_NQN_MAX_LEN) != 0) {
 			/* Different HOSTNQN is not allowed when specifying the same controller name. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
