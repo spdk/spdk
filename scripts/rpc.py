@@ -526,7 +526,8 @@ if __name__ == "__main__":
                                                          prchk_guard=args.prchk_guard,
                                                          hdgst=args.hdgst,
                                                          ddgst=args.ddgst,
-                                                         fabrics_timeout=args.fabrics_timeout))
+                                                         fabrics_timeout=args.fabrics_timeout,
+                                                         multipath=args.multipath))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', aliases=['construct_nvme_bdev'],
                               help='Add bdevs with nvme backend')
@@ -556,6 +557,7 @@ if __name__ == "__main__":
     p.add_argument('-d', '--ddgst',
                    help='Enable TCP data digest.', action='store_true')
     p.add_argument('--fabrics-timeout', type=int, help='Fabrics connect timeout in microseconds')
+    p.add_argument('-x', '--multipath', help='Set multipath behavior (disable, failover)')
     p.set_defaults(func=bdev_nvme_attach_controller)
 
     def bdev_nvme_get_controllers(args):

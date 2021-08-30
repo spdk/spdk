@@ -180,6 +180,7 @@ struct rpc_bdev_nvme_attach_controller {
 	bool prchk_reftag;
 	bool prchk_guard;
 	uint64_t fabrics_connect_timeout_us;
+	char *multipath;
 	struct spdk_nvme_ctrlr_opts opts;
 };
 
@@ -196,6 +197,7 @@ free_rpc_bdev_nvme_attach_controller(struct rpc_bdev_nvme_attach_controller *req
 	free(req->hostnqn);
 	free(req->hostaddr);
 	free(req->hostsvcid);
+	free(req->multipath);
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_decoders[] = {
@@ -216,6 +218,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"hdgst", offsetof(struct rpc_bdev_nvme_attach_controller, opts.header_digest), spdk_json_decode_bool, true},
 	{"ddgst", offsetof(struct rpc_bdev_nvme_attach_controller, opts.data_digest), spdk_json_decode_bool, true},
 	{"fabrics_connect_timeout_us", offsetof(struct rpc_bdev_nvme_attach_controller, opts.fabrics_connect_timeout_us), spdk_json_decode_uint64, true},
+	{"multipath", offsetof(struct rpc_bdev_nvme_attach_controller, multipath), spdk_json_decode_string, true},
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -387,8 +390,31 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
 
 	if (ctrlr) {
-		/* This controller already exists. Verify the parameters match sufficiently. */
-		opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
+		if (ctx->req.multipath == NULL) {
+			/* For now, this means add a failover path. This maintains backward compatibility
+			 * with past behavior. In the future, this behavior will change to "disable". */
+			SPDK_ERRLOG("The multipath parameter was not specified to bdev_nvme_attach_controller but "
+				    "it was used to add a failover path. This behavior will default to rejecting "
+				    "the request in the future. Specify the 'multipath' parameter to control the behavior");
+			ctx->req.multipath = strdup("failover");
+		}
+
+		/* This controller already exists. Check what the user wants to do. */
+		if (strcasecmp(ctx->req.multipath, "disable") == 0) {
+			/* The user does not want to do any form of multipathing. */
+			spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
+							     "A controller named %s already exists and multipath is disabled\n",
+							     ctx->req.name);
+			goto cleanup;
+		} else if (strcasecmp(ctx->req.multipath, "failover") == 0) {
+			/* The user wants to add this as a failover path. */
+		} else {
+			/* Invalid multipath option */
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+							     "Invalid multipath parameter: %s\n",
+							     ctx->req.multipath);
+			goto cleanup;
+		}
 
 		if (strncmp(trid.subnqn,
 			    spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr)->subnqn,
@@ -399,6 +425,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 							     ctx->req.name, spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr)->subnqn);
 			goto cleanup;
 		}
+
+		opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
 
 		if (strncmp(ctx->req.opts.hostnqn, opts->hostnqn, SPDK_NVMF_NQN_MAX_LEN) != 0) {
 			/* Different HOSTNQN is not allowed when specifying the same controller name. */

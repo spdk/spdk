@@ -64,6 +64,11 @@ NOT $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_
 NOT $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode2 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_FIRST_PORT
 
+# try to attach with the same controller name and multipathing disabled. Should fail
+NOT $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_FIRST_PORT \
+	-x disable
+
 # Add a second path without specifying the host information. Should pass.
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
