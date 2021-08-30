@@ -271,6 +271,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_nvme_attach_controller_ctx *ctx;
 	struct spdk_nvme_transport_id trid = {};
+	const struct spdk_nvme_ctrlr_opts *opts;
 	uint32_t prchk_flags = 0;
 	struct nvme_ctrlr *ctrlr = NULL;
 	size_t len, maxlen;
@@ -385,9 +386,24 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
 
-	if (ctrlr && (ctx->req.hostaddr || ctx->req.hostnqn || ctx->req.hostsvcid || ctx->req.prchk_guard ||
-		      ctx->req.prchk_reftag)) {
-		goto conflicting_arguments;
+	if (ctrlr) {
+		/* This controller already exists. Verify the parameters match sufficiently. */
+		opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
+
+		if (strncmp(ctx->req.opts.hostnqn, opts->hostnqn, SPDK_NVMF_NQN_MAX_LEN) != 0) {
+			/* Different HOSTNQN is not allowed when specifying the same controller name. */
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+							     "A controller named %s already exists, but uses a different hostnqn (%s)\n",
+							     ctx->req.name, opts->hostnqn);
+			goto cleanup;
+		}
+
+		if (ctx->req.prchk_guard || ctx->req.prchk_reftag) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+							     "A controller named %s already exists. To add a path, do not specify PI options.\n",
+							     ctx->req.name);
+			goto cleanup;
+		}
 	}
 
 	if (ctx->req.prchk_reftag) {
@@ -410,9 +426,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	return;
 
-conflicting_arguments:
-	spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
-					     "Invalid agrgument list. Existing controller name cannot be combined with host information or PI options.\n");
 cleanup:
 	free_rpc_bdev_nvme_attach_controller(&ctx->req);
 	free(ctx);

@@ -46,9 +46,10 @@ while ! $rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -c NVMe; 
 	sleep 1s
 done
 
-# try to attach to the second port with a different hostsvcid (this should fail).
+# try to attach with same controller name but different hostnqn. Should fail.
 NOT $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
-	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_SECOND_PORT
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_FIRST_PORT \
+	-q nqn.2021-09-7.io.spdk:00001
 
 # Add a second path without specifying the host information. Should pass.
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
@@ -58,9 +59,9 @@ $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRAN
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_detach_controller NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
 
-# Add a second controller by attaching to the same subsystem from a different hostid.
+# Add a second controller by attaching to the same subsystem with a different controller name
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
-	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_SECOND_PORT
+	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_FIRST_PORT
 
 if [ "$($rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -c NVMe)" != "2" ]; then
 	echo "actual number of controllers is not equal to expected count."
