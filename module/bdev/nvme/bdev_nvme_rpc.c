@@ -271,7 +271,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_nvme_attach_controller_ctx *ctx;
 	struct spdk_nvme_transport_id trid = {};
-	struct spdk_nvme_host_id hostid = {};
 	uint32_t prchk_flags = 0;
 	struct nvme_ctrlr *ctrlr = NULL;
 	size_t len, maxlen;
@@ -363,25 +362,25 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	if (ctx->req.hostaddr) {
-		maxlen = sizeof(hostid.hostaddr);
+		maxlen = sizeof(ctx->req.opts.src_addr);
 		len = strnlen(ctx->req.hostaddr, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostaddr too long: %s",
 							     ctx->req.hostaddr);
 			goto cleanup;
 		}
-		memcpy(hostid.hostaddr, ctx->req.hostaddr, len + 1);
+		snprintf(ctx->req.opts.src_addr, maxlen, "%s", ctx->req.hostaddr);
 	}
 
 	if (ctx->req.hostsvcid) {
-		maxlen = sizeof(hostid.hostsvcid);
+		maxlen = sizeof(ctx->req.opts.src_svcid);
 		len = strnlen(ctx->req.hostsvcid, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostsvcid too long: %s",
 							     ctx->req.hostsvcid);
 			goto cleanup;
 		}
-		memcpy(hostid.hostsvcid, ctx->req.hostsvcid, len + 1);
+		snprintf(ctx->req.opts.src_svcid, maxlen, "%s", ctx->req.hostsvcid);
 	}
 
 	ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
@@ -401,8 +400,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
-	rc = bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, ctx->count,
-			      prchk_flags, rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts);
+	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->count, prchk_flags,
+			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

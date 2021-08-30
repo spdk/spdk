@@ -2863,7 +2863,6 @@ bdev_nvme_async_poll(void *arg)
 
 int
 bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-		 struct spdk_nvme_host_id *hostid,
 		 const char *base_name,
 		 const char **names,
 		 uint32_t count,
@@ -2915,14 +2914,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->opts.transport_retry_count = g_opts.retry_count;
 	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 	ctx->opts.disable_read_ana_log_page = true;
-
-	if (hostid->hostaddr[0] != '\0') {
-		snprintf(ctx->opts.src_addr, sizeof(ctx->opts.src_addr), "%s", hostid->hostaddr);
-	}
-
-	if (hostid->hostsvcid[0] != '\0') {
-		snprintf(ctx->opts.src_svcid, sizeof(ctx->opts.src_svcid), "%s", hostid->hostsvcid);
-	}
 
 	if (nvme_ctrlr_get_by_name(base_name) == NULL) {
 		attach_cb = connect_attach_cb;

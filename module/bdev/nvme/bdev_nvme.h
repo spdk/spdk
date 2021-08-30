@@ -203,7 +203,6 @@ int bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
 
 int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-		     struct spdk_nvme_host_id *hostid,
 		     const char *base_name,
 		     const char **names,
 		     uint32_t count,
