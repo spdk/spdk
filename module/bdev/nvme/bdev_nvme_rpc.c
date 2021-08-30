@@ -308,8 +308,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, ctx->req.trtype);
 	assert(rc == 0);
 
-	ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
-
 	/* Parse traddr */
 	maxlen = sizeof(trid.traddr);
 	len = strnlen(ctx->req.traddr, maxlen);
@@ -360,11 +358,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		memcpy(trid.subnqn, ctx->req.subnqn, len + 1);
 	}
 
-	if (ctrlr && (ctx->req.hostaddr || ctx->req.hostnqn || ctx->req.hostsvcid || ctx->req.prchk_guard ||
-		      ctx->req.prchk_reftag)) {
-		goto conflicting_arguments;
-	}
-
 	if (ctx->req.hostnqn) {
 		snprintf(ctx->req.opts.hostnqn, sizeof(ctx->req.opts.hostnqn), "%s",
 			 ctx->req.hostnqn);
@@ -390,6 +383,13 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 		memcpy(hostid.hostsvcid, ctx->req.hostsvcid, len + 1);
+	}
+
+	ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
+
+	if (ctrlr && (ctx->req.hostaddr || ctx->req.hostnqn || ctx->req.hostsvcid || ctx->req.prchk_guard ||
+		      ctx->req.prchk_reftag)) {
+		goto conflicting_arguments;
 	}
 
 	if (ctx->req.prchk_reftag) {
