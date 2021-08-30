@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 4
 SO_MINOR := 0
 
-C_SRCS = bdev_nvme.c bdev_nvme_rpc.c nvme_rpc.c common.c
+C_SRCS = bdev_nvme.c bdev_nvme_rpc.c nvme_rpc.c
 C_SRCS-$(CONFIG_NVME_CUSE) += bdev_nvme_cuse_rpc.c
 
 ifeq ($(OS),Linux)

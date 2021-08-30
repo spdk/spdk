@@ -40,7 +40,147 @@
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
 
-#include "common.h"
+TAILQ_HEAD(nvme_ctrlrs, nvme_ctrlr);
+extern struct nvme_ctrlrs g_nvme_ctrlrs;
+extern pthread_mutex_t g_bdev_nvme_mutex;
+extern bool g_bdev_nvme_module_finish;
+
+#define NVME_MAX_CONTROLLERS 1024
+
+typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
+
+struct nvme_async_probe_ctx {
+	struct spdk_nvme_probe_ctx *probe_ctx;
+	const char *base_name;
+	const char **names;
+	uint32_t count;
+	uint32_t prchk_flags;
+	struct spdk_poller *poller;
+	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_ctrlr_opts opts;
+	spdk_bdev_create_nvme_fn cb_fn;
+	void *cb_ctx;
+	uint32_t populates_in_progress;
+	bool ctrlr_attached;
+	bool probe_done;
+	bool namespaces_populated;
+};
+
+struct nvme_ns {
+	uint32_t		id;
+	struct spdk_nvme_ns	*ns;
+	struct nvme_ctrlr	*ctrlr;
+	struct nvme_bdev	*bdev;
+	uint32_t		ana_group_id;
+	enum spdk_nvme_ana_state ana_state;
+};
+
+struct nvme_bdev_io;
+
+struct nvme_ctrlr_trid {
+	struct spdk_nvme_transport_id		trid;
+	TAILQ_ENTRY(nvme_ctrlr_trid)		link;
+	bool					is_failed;
+};
+
+typedef void (*bdev_nvme_reset_cb)(void *cb_arg, int rc);
+
+struct nvme_ctrlr {
+	/**
+	 * points to pinned, physically contiguous memory region;
+	 * contains 4KB IDENTIFY structure for controller which is
+	 *  target for CONTROLLER IDENTIFY command during initialization
+	 */
+	struct spdk_nvme_ctrlr			*ctrlr;
+	struct spdk_nvme_transport_id		*connected_trid;
+	char					*name;
+	int					ref;
+	bool					resetting;
+	bool					failover_in_progress;
+	bool					destruct;
+	bool					destruct_after_reset;
+	/**
+	 * PI check flags. This flags is set to NVMe controllers created only
+	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added
+	 * NVMe controllers are not included.
+	 */
+	uint32_t				prchk_flags;
+	uint32_t				num_ns;
+	/** Array of pointers to namespaces indexed by nsid - 1 */
+	struct nvme_ns				**namespaces;
+
+	struct spdk_opal_dev			*opal_dev;
+
+	struct spdk_poller			*adminq_timer_poller;
+	struct spdk_thread			*thread;
+
+	bdev_nvme_reset_cb			reset_cb_fn;
+	void					*reset_cb_arg;
+	struct spdk_nvme_ctrlr_reset_ctx	*reset_ctx;
+	struct spdk_poller			*reset_poller;
+
+	/** linked list pointer for device list */
+	TAILQ_ENTRY(nvme_ctrlr)			tailq;
+
+	TAILQ_HEAD(, nvme_ctrlr_trid)		trids;
+
+	uint32_t				ana_log_page_size;
+	struct spdk_nvme_ana_page		*ana_log_page;
+	struct spdk_nvme_ana_group_descriptor	*copied_ana_desc;
+
+	struct nvme_async_probe_ctx		*probe_ctx;
+
+	pthread_mutex_t				mutex;
+};
+
+struct nvme_bdev {
+	struct spdk_bdev	disk;
+	struct nvme_ns		*nvme_ns;
+	bool			opal;
+};
+
+struct nvme_poll_group {
+	struct spdk_nvme_poll_group		*group;
+	struct spdk_io_channel			*accel_channel;
+	struct spdk_poller			*poller;
+	bool					collect_spin_stat;
+	uint64_t				spin_ticks;
+	uint64_t				start_ticks;
+	uint64_t				end_ticks;
+};
+
+struct nvme_ctrlr_channel {
+	struct nvme_ctrlr		*ctrlr;
+	struct spdk_nvme_qpair		*qpair;
+	struct nvme_poll_group		*group;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
+};
+
+struct nvme_bdev_channel {
+	struct nvme_ns			*nvme_ns;
+	struct nvme_ctrlr_channel	*ctrlr_ch;
+};
+
+struct nvme_ctrlr *nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
+struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
+
+typedef void (*nvme_ctrlr_for_each_fn)(struct nvme_ctrlr *nvme_ctrlr, void *ctx);
+
+void nvme_ctrlr_for_each(nvme_ctrlr_for_each_fn fn, void *ctx);
+
+void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
+			      struct spdk_json_write_ctx *w);
+
+void nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr);
+void nvme_ctrlr_unregister(void *ctx);
+void nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr);
+
+int bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf);
+void bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf);
+
+struct nvme_ns *nvme_ctrlr_get_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
+struct nvme_ns *nvme_ctrlr_get_first_active_ns(struct nvme_ctrlr *nvme_ctrlr);
+struct nvme_ns *nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns);
 
 enum spdk_bdev_timeout_action {
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,

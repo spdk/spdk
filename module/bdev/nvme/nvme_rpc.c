@@ -39,7 +39,6 @@
 #include "spdk/log.h"
 
 #include "bdev_nvme.h"
-#include "common.h"
 #include "spdk/base64.h"
 
 enum spdk_nvme_rpc_type {

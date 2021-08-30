@@ -35,6 +35,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/opal.h"
 
 #include "vbdev_opal.h"
 

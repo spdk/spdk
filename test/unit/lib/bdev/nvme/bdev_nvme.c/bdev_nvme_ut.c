@@ -41,7 +41,6 @@
 #include "common/lib/ut_multithread.c"
 
 #include "bdev/nvme/bdev_nvme.c"
-#include "bdev/nvme/common.c"
 
 #include "unit/lib/json_mock.c"
 
