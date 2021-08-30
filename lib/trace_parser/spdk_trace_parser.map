@@ -1,0 +1,9 @@
+{
+	global:
+
+	# public functions
+	spdk_trace_parser_init;
+	spdk_trace_parser_cleanup;
+
+	local: *;
+};
