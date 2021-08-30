@@ -37,8 +37,6 @@
 
 #include <rbd/librbd.h>
 #include <rados/librados.h>
-#include <sys/eventfd.h>
-#include <sys/epoll.h>
 
 #include "spdk/env.h"
 #include "spdk/bdev.h"
@@ -50,9 +48,6 @@
 
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
-
-#define SPDK_RBD_QUEUE_DEPTH 128
-#define MAX_EVENTS_PER_POLL 128
 
 static int bdev_rbd_count = 0;
 
@@ -69,23 +64,17 @@ struct bdev_rbd {
 
 	rados_ioctx_t io_ctx;
 	rbd_image_t image;
-	int pfd;
 
 	rbd_image_info_t info;
 	pthread_mutex_t mutex;
 	struct spdk_thread *main_td;
 	struct spdk_thread *destruct_td;
 	uint32_t ch_count;
-	struct bdev_rbd_group_channel *group_ch;
+	struct spdk_io_channel *group_ch;
 
 	TAILQ_ENTRY(bdev_rbd) tailq;
 	struct spdk_poller *reset_timer;
 	struct spdk_bdev_io *reset_bdev_io;
-};
-
-struct bdev_rbd_group_channel {
-	struct spdk_poller *poller;
-	int epoll_fd;
 };
 
 struct bdev_rbd_io_channel {
@@ -380,12 +369,6 @@ bdev_rbd_exit(rbd_image_t image)
 }
 
 static void
-bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
-{
-	/* Doing nothing here */
-}
-
-static void
 _bdev_rbd_io_complete(void *_rbd_io)
 {
 	struct bdev_rbd_io *rbd_io = _rbd_io;
@@ -406,6 +389,35 @@ bdev_rbd_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status stat
 	} else {
 		_bdev_rbd_io_complete(rbd_io);
 	}
+}
+
+static void
+bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
+{
+	int io_status;
+	struct spdk_bdev_io *bdev_io;
+	struct bdev_rbd_io *rbd_io;
+	enum spdk_bdev_io_status bio_status;
+
+	bdev_io = rbd_aio_get_arg(cb);
+	rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
+	io_status = rbd_aio_get_return_value(cb);
+	bio_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		if ((int)rbd_io->total_len != io_status) {
+			bio_status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
+	} else {
+		/* For others, 0 means success */
+		if (io_status != 0) {
+			bio_status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
+	}
+
+	rbd_aio_release(cb);
+
+	bdev_rbd_io_complete(bdev_io, bio_status);
 }
 
 static void
@@ -451,7 +463,6 @@ err:
 }
 
 static int bdev_rbd_library_init(void);
-
 static void bdev_rbd_library_fini(void);
 
 static int
@@ -642,61 +653,15 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static void
-bdev_rbd_io_poll(struct bdev_rbd *disk)
-{
-	int i, io_status, rc;
-	rbd_completion_t comps[SPDK_RBD_QUEUE_DEPTH];
-	struct spdk_bdev_io *bdev_io;
-	struct bdev_rbd_io *rbd_io;
-	enum spdk_bdev_io_status bio_status;
-
-	rc = rbd_poll_io_events(disk->image, comps, SPDK_RBD_QUEUE_DEPTH);
-	for (i = 0; i < rc; i++) {
-		bdev_io = rbd_aio_get_arg(comps[i]);
-		rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
-		io_status = rbd_aio_get_return_value(comps[i]);
-		bio_status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			if ((int)rbd_io->total_len != io_status) {
-				bio_status = SPDK_BDEV_IO_STATUS_FAILED;
-			}
-		} else {
-			/* For others, 0 means success */
-			if (io_status != 0) {
-				bio_status = SPDK_BDEV_IO_STATUS_FAILED;
-			}
-		}
-
-		rbd_aio_release(comps[i]);
-
-		bdev_rbd_io_complete(bdev_io, bio_status);
-	}
-}
-
-static void
 bdev_rbd_free_channel_resources(struct bdev_rbd *disk)
 {
-	int rc;
-
 	assert(disk != NULL);
 	assert(disk->main_td == spdk_get_thread());
 	assert(disk->ch_count == 0);
-	assert(disk->group_ch != NULL);
-	rc = epoll_ctl(disk->group_ch->epoll_fd, EPOLL_CTL_DEL,
-		       disk->pfd, NULL);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to remove fd on disk=%p from the polling group=%p\n",
-			    disk, disk->group_ch);
-	}
-	spdk_put_io_channel(spdk_io_channel_from_ctx(disk->group_ch));
 
+	spdk_put_io_channel(disk->group_ch);
 	if (disk->image) {
 		bdev_rbd_exit(disk->image);
-	}
-
-	if (disk->pfd >= 0) {
-		close(disk->pfd);
 	}
 
 	disk->main_td = NULL;
@@ -720,42 +685,15 @@ bdev_rbd_handle(void *arg)
 static int
 _bdev_rbd_create_cb(struct bdev_rbd *disk)
 {
-	int ret;
-	struct epoll_event event = {};
-
-	disk->group_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(&rbd_if));
+	disk->group_ch = spdk_get_io_channel(&rbd_if);
 	assert(disk->group_ch != NULL);
-	event.events = EPOLLIN;
-	event.data.ptr = disk;
 
 	if (spdk_call_unaffinitized(bdev_rbd_handle, disk) == NULL) {
-		goto err;
-	}
-
-	disk->pfd = eventfd(0, EFD_NONBLOCK);
-	if (disk->pfd < 0) {
-		SPDK_ERRLOG("Failed to get eventfd\n");
-		goto err;
-	}
-
-	ret = rbd_set_image_notification(disk->image, disk->pfd, EVENT_TYPE_EVENTFD);
-	if (ret < 0) {
-		SPDK_ERRLOG("Failed to set rbd image notification\n");
-		goto err;
-	}
-
-	ret = epoll_ctl(disk->group_ch->epoll_fd, EPOLL_CTL_ADD, disk->pfd, &event);
-	if (ret < 0) {
-		SPDK_ERRLOG("Failed to add the fd of disk=%p to the epoll group from group_ch=%p\n", disk,
-			    disk->group_ch);
-		goto err;
+		bdev_rbd_free_channel_resources(disk);
+		return -1;
 	}
 
 	return 0;
-
-err:
-	bdev_rbd_free_channel_resources(disk);
-	return -1;
 }
 
 static int
@@ -1212,7 +1150,6 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		return ret;
 	}
 
-	rbd->pfd = -1;
 	rbd->rbd_name = strdup(rbd_name);
 	if (!rbd->rbd_name) {
 		bdev_rbd_free(rbd);
@@ -1340,59 +1277,21 @@ bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
 }
 
 static int
-bdev_rbd_group_poll(void *arg)
-{
-	struct bdev_rbd_group_channel *group_ch = arg;
-	struct epoll_event events[MAX_EVENTS_PER_POLL];
-	int num_events, i;
-
-	num_events = epoll_wait(group_ch->epoll_fd, events, MAX_EVENTS_PER_POLL, 0);
-
-	if (num_events <= 0) {
-		return SPDK_POLLER_IDLE;
-	}
-
-	for (i = 0; i < num_events; i++) {
-		bdev_rbd_io_poll((struct bdev_rbd *)events[i].data.ptr);
-	}
-
-	return SPDK_POLLER_BUSY;
-}
-
-static int
 bdev_rbd_group_create_cb(void *io_device, void *ctx_buf)
 {
-	struct bdev_rbd_group_channel *ch = ctx_buf;
-
-	ch->epoll_fd = epoll_create1(0);
-	if (ch->epoll_fd < 0) {
-		SPDK_ERRLOG("Could not create epoll fd on io device=%p\n", io_device);
-		return -1;
-	}
-
-	ch->poller = SPDK_POLLER_REGISTER(bdev_rbd_group_poll, ch, 0);
-
 	return 0;
 }
 
 static void
 bdev_rbd_group_destroy_cb(void *io_device, void *ctx_buf)
 {
-	struct bdev_rbd_group_channel *ch = ctx_buf;
-
-	if (ch->epoll_fd >= 0) {
-		close(ch->epoll_fd);
-	}
-
-	spdk_poller_unregister(&ch->poller);
 }
 
 static int
 bdev_rbd_library_init(void)
 {
 	spdk_io_device_register(&rbd_if, bdev_rbd_group_create_cb, bdev_rbd_group_destroy_cb,
-				sizeof(struct bdev_rbd_group_channel), "bdev_rbd_poll_groups");
-
+				0, "bdev_rbd_poll_groups");
 	return 0;
 }
 
