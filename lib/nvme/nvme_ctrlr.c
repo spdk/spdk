@@ -234,6 +234,12 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 #undef SET_FIELD
 }
 
+const struct spdk_nvme_ctrlr_opts *
+spdk_nvme_ctrlr_get_opts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return &ctrlr->opts;
+}
+
 /**
  * This function will be called when the process allocates the IO qpair.
  * Note: the ctrlr_lock must be held when calling this function.

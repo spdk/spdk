@@ -33,6 +33,7 @@
 	spdk_nvme_ctrlr_is_discovery;
 	spdk_nvme_ctrlr_is_fabrics;
 	spdk_nvme_ctrlr_get_default_ctrlr_opts;
+	spdk_nvme_ctrlr_get_opts;
 	spdk_nvme_ctrlr_set_trid;
 	spdk_nvme_ctrlr_reset_subsystem;
 	spdk_nvme_ctrlr_reset;

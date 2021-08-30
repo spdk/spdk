@@ -63,6 +63,8 @@ Added new functions `spdk_nvme_ctrlr_write_boot_partition`,
 `spdk_nvme_ctrlr_read_boot_partition_start` and `spdk_nvme_ctrlr_read_boot_partition_poll`
 to write and read the boot partitions of a controller.
 
+Added `spdk_nvme_ctrlr_get_opts` to retrieve the current controller options.
+
 ### dpdk
 
 Updated DPDK submodule to DPDK 21.08.

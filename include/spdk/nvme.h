@@ -142,7 +142,7 @@ struct spdk_nvme_ctrlr_opts {
 	/**
 	 * The host NQN to use when connecting to NVMe over Fabrics controllers.
 	 *
-	 * Unused for local PCIe-attached NVMe devices.
+	 * If empty, a default value will be used.
 	 */
 	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
@@ -323,6 +323,13 @@ bool spdk_nvme_ctrlr_is_fabrics(struct spdk_nvme_ctrlr *ctrlr);
  */
 void spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts,
 		size_t opts_size);
+
+/*
+ * Get the options in use for a given controller.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ */
+const struct spdk_nvme_ctrlr_opts *spdk_nvme_ctrlr_get_opts(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Reason for qpair disconnect at the transport layer.
