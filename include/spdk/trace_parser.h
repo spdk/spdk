@@ -102,6 +102,39 @@ const struct spdk_trace_flags *spdk_trace_parser_get_flags(const struct spdk_tra
  */
 uint64_t spdk_trace_parser_get_tsc_offset(const struct spdk_trace_parser *parser);
 
+/** Describes a parsed trace entry */
+struct spdk_trace_parser_entry {
+	/** Pointer to trace entry */
+	struct spdk_trace_entry	*entry;
+	/**
+	 * Index of an object this entry is a part of.  It's only available for tracepoints with
+	 * object_type != OBJECT_NONE.  If unavailable, it'll be assigned to UINT64_MAX.
+	 */
+	uint64_t		object_index;
+	/** The tsc of when the object tied to this entry was created */
+	uint64_t		object_start;
+	/** Logical core number */
+	uint16_t		lcore;
+	/** Tracepoint arguments */
+	union {
+		uint64_t	integer;
+		void		*pointer;
+		char		string[UINT8_MAX + 1];
+	} args[SPDK_TRACE_MAX_ARGS_COUNT];
+};
+
+/**
+ * Return next parsed trace entry.  Once no more traces are available, this will return false and
+ * entry won't be touched.
+ *
+ * \param parser Parser object to be used.
+ * \param entry Tracepoint entry.
+ *
+ * \return True if a trace entry was available, false otherwise.
+ */
+bool spdk_trace_parser_next_entry(struct spdk_trace_parser *parser,
+				  struct spdk_trace_parser_entry *entry);
+
 #ifdef __cplusplus
 }
 #endif

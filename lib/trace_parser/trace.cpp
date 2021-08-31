@@ -68,6 +68,7 @@ struct spdk_trace_parser {
 	spdk_trace_parser &operator=(const spdk_trace_parser &) = delete;
 	const spdk_trace_flags *flags() const { return &_histories->flags; }
 	uint64_t tsc_offset() const { return _tsc_offset; }
+	bool next_entry(spdk_trace_parser_entry *entry);
 private:
 	void populate_events(spdk_trace_history *history, int num_entries);
 	bool init(const spdk_trace_parser_opts *opts);
@@ -78,7 +79,22 @@ private:
 	int			_fd;
 	uint64_t		_tsc_offset;
 	entry_map		_entries;
+	entry_map::iterator	_iter;
 };
+
+bool
+spdk_trace_parser::next_entry(spdk_trace_parser_entry *entry)
+{
+	if (_iter == _entries.end()) {
+		return false;
+	}
+
+	entry->entry = _iter->second;
+	entry->lcore = _iter->first.lcore;
+
+	_iter++;
+	return true;
+}
 
 void
 spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries)
@@ -212,6 +228,7 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 		}
 	}
 
+	_iter = _entries.begin();
 	return true;
 }
 
@@ -270,4 +287,11 @@ uint64_t
 spdk_trace_parser_get_tsc_offset(const struct spdk_trace_parser *parser)
 {
 	return parser->tsc_offset();
+}
+
+bool
+spdk_trace_parser_next_entry(struct spdk_trace_parser *parser,
+			     struct spdk_trace_parser_entry *entry)
+{
+	return parser->next_entry(entry);
 }
