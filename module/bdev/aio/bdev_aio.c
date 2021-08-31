@@ -165,7 +165,7 @@ bdev_aio_close(struct file_disk *disk)
 	return 0;
 }
 
-static int64_t
+static void
 bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	       struct bdev_aio_task *aio_task,
 	       struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
@@ -186,20 +186,19 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		      iovcnt, nbytes, offset);
 
 	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
-	if (rc < 0) {
+	if (spdk_unlikely(rc < 0)) {
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
 			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
 			SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		}
-		return -1;
+	} else {
+		aio_ch->io_inflight++;
 	}
-	aio_ch->io_inflight++;
-	return nbytes;
 }
 
-static int64_t
+static void
 bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		struct bdev_aio_task *aio_task,
 		struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
@@ -220,17 +219,16 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		      iovcnt, len, offset);
 
 	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
-	if (rc < 0) {
+	if (spdk_unlikely(rc < 0)) {
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
 		} else {
 			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), rc);
 			SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		}
-		return -1;
+	} else {
+		aio_ch->io_inflight++;
 	}
-	aio_ch->io_inflight++;
-	return len;
 }
 
 static void
