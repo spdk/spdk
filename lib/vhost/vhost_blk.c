@@ -1037,7 +1037,7 @@ vhost_blk_session_unregister_interrupts(struct spdk_vhost_blk_session *bvsession
 
 static int
 vhost_blk_session_register_interrupts(struct spdk_vhost_blk_session *bvsession,
-				      spdk_interrupt_fn fn)
+				      spdk_interrupt_fn fn, const char *name)
 {
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	struct spdk_vhost_virtqueue *vq = NULL;
@@ -1049,7 +1049,7 @@ vhost_blk_session_register_interrupts(struct spdk_vhost_blk_session *bvsession,
 		SPDK_DEBUGLOG(vhost_blk, "Register vq[%d]'s kickfd is %d\n",
 			      i, vq->vring.kickfd);
 
-		vq->intr = SPDK_INTERRUPT_REGISTER(vq->vring.kickfd, fn, vq);
+		vq->intr = spdk_interrupt_register(vq->vring.kickfd, fn, vq, name);
 		if (vq->intr == NULL) {
 			SPDK_ERRLOG("Fail to register req notifier handler.\n");
 			goto err;
@@ -1140,7 +1140,8 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 		spdk_poller_unregister(&bvsession->requestq_poller);
 		if (vsession->virtqueue[0].intr) {
 			vhost_blk_session_unregister_interrupts(bvsession);
-			rc = vhost_blk_session_register_interrupts(bvsession, no_bdev_vdev_vq_worker);
+			rc = vhost_blk_session_register_interrupts(bvsession, no_bdev_vdev_vq_worker,
+					"no_bdev_vdev_vq_worker");
 			if (rc) {
 				SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
 				return rc;
@@ -1296,8 +1297,16 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	}
 
 	if (spdk_interrupt_mode_is_enabled()) {
-		rc = vhost_blk_session_register_interrupts(bvsession,
-				bvdev->bdev ? vdev_vq_worker : no_bdev_vdev_vq_worker);
+		if (bvdev->bdev) {
+			rc = vhost_blk_session_register_interrupts(bvsession,
+					vdev_vq_worker,
+					"vdev_vq_worker");
+		} else {
+			rc = vhost_blk_session_register_interrupts(bvsession,
+					no_bdev_vdev_vq_worker,
+					"no_bdev_vdev_vq_worker");
+		}
+
 		if (rc) {
 			SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
 			goto out;
