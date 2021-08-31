@@ -6,8 +6,10 @@ SPDK has a tracing framework for capturing low-level event information at runtim
 Tracepoints provide a high-performance tracing mechanism that is accessible at runtime.
 They are implemented as a circular buffer in shared memory that is accessible from other
 processes. The NVMe-oF target is instrumented with tracepoints to enable analysis of
-both performance and application crashes. (Note: the SPDK tracing framework should still
-be considered experimental.  Work to formalize and document the framework is in progress.)
+both performance and application crashes and it has to be configured beforehand using
+this [guide](https://spdk.io/doc/nvmf.html).
+(Note: the SPDK tracing framework should still be considered experimental.
+Work to formalize and document the framework is in progress.)
 
 ## Enabling Tracepoints {#enable_tracepoints}
 
