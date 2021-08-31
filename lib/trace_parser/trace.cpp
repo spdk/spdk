@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/log.h"
 #include "spdk/trace_parser.h"
+#include "spdk/util.h"
 
 #include <exception>
 #include <new>
@@ -43,6 +44,7 @@ struct spdk_trace_parser {
 	~spdk_trace_parser();
 	spdk_trace_parser(const spdk_trace_parser &) = delete;
 	spdk_trace_parser &operator=(const spdk_trace_parser &) = delete;
+	const spdk_trace_flags *flags() const { return &_histories->flags; }
 private:
 	bool init(const spdk_trace_parser_opts *opts);
 	void cleanup();
@@ -157,4 +159,10 @@ void
 spdk_trace_parser_cleanup(struct spdk_trace_parser *parser)
 {
 	delete parser;
+}
+
+const struct spdk_trace_flags *
+spdk_trace_parser_get_flags(const struct spdk_trace_parser *parser)
+{
+	return parser->flags();
 }
