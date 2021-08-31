@@ -1769,7 +1769,7 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		nvme_ns = nvme_ctrlr->namespaces[i];
 		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
 
-		if (nvme_ns->populated && ns_is_active && nvme_ns->type == NVME_NS_STANDARD) {
+		if (nvme_ns->populated && ns_is_active) {
 			/* NS is still there but attributes may have changed */
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 			num_sectors = spdk_nvme_ns_get_num_sectors(ns);
@@ -1792,7 +1792,6 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		if (!nvme_ns->populated && ns_is_active) {
 			nvme_ns->id = nsid;
 			nvme_ns->ctrlr = nvme_ctrlr;
-			nvme_ns->type = NVME_NS_STANDARD;
 
 			nvme_ns->bdev = NULL;
 
@@ -2384,10 +2383,6 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 		}
 		assert(nvme_ns->id == nsid);
 		nvme_bdev = nvme_ns->bdev;
-		if (nvme_bdev == NULL) {
-			assert(nvme_ns->type == NVME_NS_OCSSD);
-			continue;
-		}
 		if (j < ctx->count) {
 			ctx->names[j] = nvme_bdev->disk.name;
 			j++;
