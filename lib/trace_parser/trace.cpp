@@ -67,6 +67,7 @@ struct spdk_trace_parser {
 	spdk_trace_parser(const spdk_trace_parser &) = delete;
 	spdk_trace_parser &operator=(const spdk_trace_parser &) = delete;
 	const spdk_trace_flags *flags() const { return &_histories->flags; }
+	uint64_t tsc_offset() const { return _tsc_offset; }
 private:
 	void populate_events(spdk_trace_history *history, int num_entries);
 	bool init(const spdk_trace_parser_opts *opts);
@@ -263,4 +264,10 @@ const struct spdk_trace_flags *
 spdk_trace_parser_get_flags(const struct spdk_trace_parser *parser)
 {
 	return parser->flags();
+}
+
+uint64_t
+spdk_trace_parser_get_tsc_offset(const struct spdk_trace_parser *parser)
+{
+	return parser->tsc_offset();
 }
