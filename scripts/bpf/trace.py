@@ -165,19 +165,33 @@ class TraceEntry:
     args: Dict[str, TypeVar('ArgumentType', str, int)]
 
 
-class Trace:
-    """Stores, parses, and prints out SPDK traces"""
+class TraceProvider:
+    """Defines interface for objects providing traces and tracepoint definitions"""
+
+    def tpoints(self):
+        """Returns tracepoint definitions as a dict of (tracepoint_name, tracepoint)"""
+        raise NotImplementedError()
+
+    def entries(self):
+        """Generator returning subsequent trace entries"""
+        raise NotImplementedError()
+
+    def tsc_rate(self):
+        """Returns the TSC rate that was in place when traces were collected"""
+        raise NotImplementedError()
+
+
+class JsonProvider(TraceProvider):
+    """Trace provider based on JSON-formatted output produced by spdk_trace app"""
     def __init__(self, file):
         self._parser = ijson.parse(file)
-        self._objects = []
-        self._argfmt = {TracepointArgument.TYPE_PTR: lambda a: f'0x{a:x}'}
-        self.tpoints = {}
+        self._tpoints = {}
         self._parse_defs()
 
     def _parse_tpoints(self, tpoints):
         for tpoint in tpoints:
             tpoint_id = tpoint['id']
-            self.tpoints[tpoint_id] = Tracepoint(
+            self._tpoints[tpoint_id] = Tracepoint(
                 name=tpoint['name'], id=tpoint_id,
                 new_object=tpoint['new_object'],
                 args=[TracepointArgument(name=a['name'],
@@ -191,7 +205,7 @@ class Trace:
             if prefix == 'entries':
                 break
             elif prefix == 'tsc_rate':
-                self.tsc_rate = value
+                self._tsc_rate = value
                 continue
 
             if (prefix, event) == ('tpoints', 'start_array'):
@@ -203,7 +217,7 @@ class Trace:
                 builder = None
 
     def _parse_entry(self, entry):
-        tpoint = self.tpoints[entry['tpoint']]
+        tpoint = self._tpoints[entry['tpoint']]
         obj = entry.get('object', {})
         return TraceEntry(tpoint=tpoint, lcore=entry['lcore'], tsc=entry['tsc'],
                           size=entry.get('size'), object_id=obj.get('id'),
@@ -211,7 +225,13 @@ class Trace:
                           poller=entry.get('poller'),
                           args={n.name: v for n, v in zip(tpoint.args, entry.get('args', []))})
 
-    def _entries(self):
+    def tsc_rate(self):
+        return self._tsc_rate
+
+    def tpoints(self):
+        return self._tpoints
+
+    def entries(self):
         builder = None
         for prefix, event, value in self._parser:
             if (prefix, event) == ('entries.item', 'start_map'):
@@ -221,6 +241,15 @@ class Trace:
             if (prefix, event) == ('entries.item', 'end_map'):
                 yield self._parse_entry(builder.value)
                 builder = None
+
+
+class Trace:
+    """Stores, parses, and prints out SPDK traces"""
+    def __init__(self, file):
+        self._provider = JsonProvider(file)
+        self._objects = []
+        self._argfmt = {TracepointArgument.TYPE_PTR: lambda a: f'0x{a:x}'}
+        self.tpoints = self._provider.tpoints()
 
     def _annotate_args(self, entry):
         annotations = {}
@@ -248,10 +277,10 @@ class Trace:
 
     def print(self):
         def get_us(tsc, off):
-            return ((tsc - off) * 10 ** 6) / self.tsc_rate
+            return ((tsc - off) * 10 ** 6) / self._provider.tsc_rate()
 
         offset = None
-        for e in self._entries():
+        for e in self._provider.entries():
             offset = e.tsc if offset is None else offset
             timestamp = get_us(e.tsc, offset)
             diff = get_us(e.time, 0) if e.time is not None else None
