@@ -96,6 +96,33 @@ spdk_nvmf_get_transport_opts(struct spdk_nvmf_transport *transport)
 	return &transport->opts;
 }
 
+void
+nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_write_ctx *w,
+			 bool named)
+{
+	const struct spdk_nvmf_transport_opts *opts = spdk_nvmf_get_transport_opts(transport);
+
+	named ? spdk_json_write_named_object_begin(w, "params") : spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "trtype", spdk_nvmf_get_transport_name(transport));
+	spdk_json_write_named_uint32(w, "max_queue_depth", opts->max_queue_depth);
+	spdk_json_write_named_uint32(w, "max_io_qpairs_per_ctrlr", opts->max_qpairs_per_ctrlr - 1);
+	spdk_json_write_named_uint32(w, "in_capsule_data_size", opts->in_capsule_data_size);
+	spdk_json_write_named_uint32(w, "max_io_size", opts->max_io_size);
+	spdk_json_write_named_uint32(w, "io_unit_size", opts->io_unit_size);
+	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
+	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
+	spdk_json_write_named_uint32(w, "buf_cache_size", opts->buf_cache_size);
+	spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
+
+	if (transport->ops->dump_opts) {
+		transport->ops->dump_opts(transport, w);
+	}
+
+	spdk_json_write_named_uint32(w, "abort_timeout_sec", opts->abort_timeout_sec);
+	spdk_json_write_object_end(w);
+}
+
 spdk_nvme_transport_type_t
 spdk_nvmf_get_transport_type(struct spdk_nvmf_transport *transport)
 {

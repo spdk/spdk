@@ -128,6 +128,8 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_type, enum spdk_nvmf_subtype,
 	    (struct spdk_nvmf_subsystem *subsystem), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first, struct spdk_nvmf_subsystem *,
 	    (struct spdk_nvmf_tgt *tgt), NULL);
+DEFINE_STUB_V(nvmf_transport_dump_opts, (struct spdk_nvmf_transport *transport,
+		struct spdk_json_write_ctx *w, bool named));
 
 struct spdk_io_channel {
 	struct spdk_thread		*thread;
