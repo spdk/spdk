@@ -40,7 +40,7 @@ ifeq ($(OS),Linux)
 DIRS-y += nbd
 endif
 
-DIRS-$(CONFIG_VHOST) += vhost
+DIRS-$(CONFIG_VHOST) += vhost_blk vhost_scsi
 
 # These dependencies are not based specifically on symbols, but rather
 # the subsystem dependency tree defined within the event subsystem C files
@@ -51,7 +51,7 @@ DEPDIRS-iscsi := scsi
 DEPDIRS-nbd := bdev
 DEPDIRS-nvmf := bdev
 DEPDIRS-scsi := bdev
-DEPDIRS-vhost := scsi
+DEPDIRS-vhost_scsi := scsi
 
 .PHONY: all clean $(DIRS-y)
 

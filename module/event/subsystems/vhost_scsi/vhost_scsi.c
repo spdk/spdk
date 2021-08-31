@@ -38,35 +38,35 @@
 #include "spdk_internal/init.h"
 
 static void
-vhost_subsystem_init_done(int rc)
+vhost_scsi_subsystem_init_done(int rc)
 {
 	spdk_subsystem_init_next(rc);
 }
 
 static void
-vhost_subsystem_init(void)
+vhost_scsi_subsystem_init(void)
 {
-	spdk_vhost_init(vhost_subsystem_init_done);
+	spdk_vhost_scsi_init(vhost_scsi_subsystem_init_done);
 }
 
 static void
-vhost_subsystem_fini_done(void)
+vhost_scsi_subsystem_fini_done(void)
 {
 	spdk_subsystem_fini_next();
 }
 
 static void
-vhost_subsystem_fini(void)
+vhost_scsi_subsystem_fini(void)
 {
-	spdk_vhost_fini(vhost_subsystem_fini_done);
+	spdk_vhost_scsi_fini(vhost_scsi_subsystem_fini_done);
 }
 
-static struct spdk_subsystem g_spdk_subsystem_vhost = {
-	.name = "vhost",
-	.init = vhost_subsystem_init,
-	.fini = vhost_subsystem_fini,
-	.write_config_json = spdk_vhost_config_json,
+static struct spdk_subsystem g_spdk_subsystem_vhost_scsi = {
+	.name = "vhost_scsi",
+	.init = vhost_scsi_subsystem_init,
+	.fini = vhost_scsi_subsystem_fini,
+	.write_config_json = spdk_vhost_scsi_config_json,
 };
 
-SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_vhost);
-SPDK_SUBSYSTEM_DEPEND(vhost, scsi)
+SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_vhost_scsi);
+SPDK_SUBSYSTEM_DEPEND(vhost_scsi, scsi)

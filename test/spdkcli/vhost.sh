@@ -74,7 +74,8 @@ timing_exit spdkcli_check_match
 timing_enter spdkcli_save_config
 $spdkcli_job "'save_config $testdir/config.json'
 'save_subsystem_config $testdir/config_bdev.json bdev'
-'save_subsystem_config $testdir/config_vhost.json vhost'
+'save_subsystem_config $testdir/config_vhost_scsi.json vhost_scsi'
+'save_subsystem_config $testdir/config_vhost_blk.json vhost_blk'
 "
 timing_exit spdkcli_save_config
 
@@ -130,7 +131,8 @@ $spdk_clear_config_py clear_config
 # FIXME: remove this sleep when NVMe driver will be fixed to wait for reset to complete
 sleep 2
 $spdkcli_job "'load_subsystem_config $testdir/config_bdev.json'
-'load_subsystem_config $testdir/config_vhost.json'
+'load_subsystem_config $testdir/config_vhost_scsi.json'
+'load_subsystem_config $testdir/config_vhost_blk.json'
 '/lvol_stores create lvs0 Malloc0' 'lvs0' True
 '/lvol_stores create lvs1 Malloc5' 'lvs1' True
 '/bdevs/logical_volume create lvol0 16 lvs0' 'lvs0/lvol0' True
@@ -140,7 +142,8 @@ check_match
 $spdk_clear_config_py clear_config
 rm -f $testdir/config.json
 rm -f $testdir/config_bdev.json
-rm -f $testdir/config_vhost.json
+rm -f $testdir/config_vhost_scsi.json
+rm -f $testdir/config_vhost_blk.json
 rm -f "$sample_aio" "$sample_aio2"
 timing_exit spdkcli_load_config
 

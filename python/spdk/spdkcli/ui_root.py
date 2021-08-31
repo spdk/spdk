@@ -37,7 +37,7 @@ class UIRoot(UINode):
         self._children = set([])
         UIBdevs(self)
         UILvolStores(self)
-        if self.has_subsystem("vhost"):
+        if self.has_subsystem("vhost_scsi") or self.has_subsystem("vhost_blk"):
             UIVhosts(self)
         if self.has_subsystem("nvmf"):
             UINVMf(self)

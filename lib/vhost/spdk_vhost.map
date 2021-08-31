@@ -3,9 +3,12 @@
 
 	# public functions
 	spdk_vhost_set_socket_path;
-	spdk_vhost_init;
-	spdk_vhost_fini;
-	spdk_vhost_config_json;
+	spdk_vhost_scsi_init;
+	spdk_vhost_scsi_fini;
+	spdk_vhost_scsi_config_json;
+	spdk_vhost_blk_init;
+	spdk_vhost_blk_fini;
+	spdk_vhost_blk_config_json;
 	spdk_vhost_shutdown_cb;
 	spdk_vhost_lock;
 	spdk_vhost_trylock;

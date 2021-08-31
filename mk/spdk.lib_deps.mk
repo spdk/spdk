@@ -183,5 +183,6 @@ DEPDIRS-event_nvmf := init nvmf event_bdev event_scheduler event_sock thread log
 DEPDIRS-event_scsi := init scsi event_bdev
 
 DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock
-DEPDIRS-event_vhost := init vhost event_scheduler event_scsi
+DEPDIRS-event_vhost_blk := init vhost
+DEPDIRS-event_vhost_scsi := init vhost event_scheduler event_scsi
 DEPDIRS-event_sock := init sock

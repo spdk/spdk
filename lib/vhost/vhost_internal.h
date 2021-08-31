@@ -531,8 +531,7 @@ int vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name,
 			    struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend);
 int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
-typedef void (*vhost_fini_cb)(void *ctx);
-void vhost_user_fini(vhost_fini_cb vhost_cb);
+void vhost_user_fini(spdk_vhost_fini_cb vhost_cb);
 
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;

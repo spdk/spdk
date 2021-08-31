@@ -75,22 +75,42 @@ int spdk_vhost_set_socket_path(const char *basename);
  *
  * \param init_cb Function to be called when the initialization is complete.
  */
-void spdk_vhost_init(spdk_vhost_init_cb init_cb);
+void spdk_vhost_scsi_init(spdk_vhost_init_cb init_cb);
 
 /**
  * Clean up the environment of vhost.
  *
  * \param fini_cb Function to be called when the cleanup is complete.
  */
-void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
-
+void spdk_vhost_scsi_fini(spdk_vhost_fini_cb fini_cb);
 
 /**
  * Write vhost subsystem configuration into provided JSON context.
  *
  * \param w JSON write context
  */
-void spdk_vhost_config_json(struct spdk_json_write_ctx *w);
+void spdk_vhost_scsi_config_json(struct spdk_json_write_ctx *w);
+
+/**
+ * Init vhost environment.
+ *
+ * \param init_cb Function to be called when the initialization is complete.
+ */
+void spdk_vhost_blk_init(spdk_vhost_init_cb init_cb);
+
+/**
+ * Clean up the environment of vhost.
+ *
+ * \param fini_cb Function to be called when the cleanup is complete.
+ */
+void spdk_vhost_blk_fini(spdk_vhost_fini_cb fini_cb);
+
+/**
+ * Write vhost subsystem configuration into provided JSON context.
+ *
+ * \param w JSON write context
+ */
+void spdk_vhost_blk_config_json(struct spdk_json_write_ctx *w);
 
 /**
  * Deinit vhost application. This is called once by SPDK app layer.

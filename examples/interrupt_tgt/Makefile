@@ -42,7 +42,7 @@ C_SRCS := interrupt_tgt.c
 SPDK_LIB_LIST = $(INTR_BLOCKDEV_MODULES_LIST) event event_bdev conf
 
 SPDK_LIB_LIST += event_nbd
-SPDK_LIB_LIST += event_vhost
+SPDK_LIB_LIST += event_vhost_blk event_vhost_scsi
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 SPDK_LIB_LIST += env_dpdk_rpc

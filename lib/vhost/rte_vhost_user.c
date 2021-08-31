@@ -1839,12 +1839,19 @@ vhost_user_init(void)
 	return 0;
 }
 
+static void
+vhost_user_session_shutdown_on_init(void *vhost_cb)
+{
+	spdk_vhost_fini_cb fn = vhost_cb;
+
+	fn();
+}
+
 static void *
-vhost_user_session_shutdown(void *arg)
+vhost_user_session_shutdown(void *vhost_cb)
 {
 	struct spdk_vhost_dev *vdev = NULL;
 	struct spdk_vhost_session *vsession;
-	vhost_fini_cb vhost_cb = arg;
 
 	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
 	     vdev = spdk_vhost_dev_next(vdev)) {
@@ -1860,18 +1867,18 @@ vhost_user_session_shutdown(void *arg)
 	}
 
 	SPDK_INFOLOG(vhost, "Exiting\n");
-	spdk_thread_send_msg(g_vhost_user_init_thread, vhost_cb, NULL);
+	spdk_thread_send_msg(g_vhost_user_init_thread, vhost_user_session_shutdown_on_init, vhost_cb);
 	return NULL;
 }
 
 void
-vhost_user_fini(vhost_fini_cb vhost_cb)
+vhost_user_fini(spdk_vhost_fini_cb vhost_cb)
 {
 	pthread_t tid;
 	int rc;
 
 	if (!g_vhost_user_started) {
-		vhost_cb(NULL);
+		vhost_cb();
 		return;
 	}
 

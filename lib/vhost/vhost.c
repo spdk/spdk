@@ -221,7 +221,7 @@ spdk_vhost_unlock(void)
 }
 
 void
-spdk_vhost_init(spdk_vhost_init_cb init_cb)
+spdk_vhost_scsi_init(spdk_vhost_init_cb init_cb)
 {
 	uint32_t i;
 	int ret = 0;
@@ -242,7 +242,7 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 static spdk_vhost_fini_cb g_fini_cb;
 
 static void
-vhost_fini(void *arg1)
+vhost_fini(void)
 {
 	struct spdk_vhost_dev *vdev, *tmp;
 
@@ -260,7 +260,34 @@ vhost_fini(void *arg1)
 }
 
 void
-spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
+spdk_vhost_blk_init(spdk_vhost_init_cb init_cb)
+{
+	uint32_t i;
+	int ret = 0;
+
+	ret = vhost_user_init();
+	if (ret != 0) {
+		goto out;
+	}
+
+	spdk_cpuset_zero(&g_vhost_core_mask);
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&g_vhost_core_mask, i, true);
+	}
+out:
+	init_cb(ret);
+}
+
+void
+spdk_vhost_scsi_fini(spdk_vhost_fini_cb fini_cb)
+{
+	g_fini_cb = fini_cb;
+
+	vhost_user_fini(vhost_fini);
+}
+
+void
+spdk_vhost_blk_fini(spdk_vhost_fini_cb fini_cb)
 {
 	g_fini_cb = fini_cb;
 
@@ -291,7 +318,7 @@ vhost_user_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *
 }
 
 void
-spdk_vhost_config_json(struct spdk_json_write_ctx *w)
+spdk_vhost_scsi_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_vhost_dev *vdev;
 
@@ -300,7 +327,28 @@ spdk_vhost_config_json(struct spdk_json_write_ctx *w)
 	spdk_vhost_lock();
 	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
 	     vdev = spdk_vhost_dev_next(vdev)) {
-		vhost_user_config_json(vdev, w);
+		if (vdev->backend->type == VHOST_BACKEND_SCSI) {
+			vhost_user_config_json(vdev, w);
+		}
+	}
+	spdk_vhost_unlock();
+
+	spdk_json_write_array_end(w);
+}
+
+void
+spdk_vhost_blk_config_json(struct spdk_json_write_ctx *w)
+{
+	struct spdk_vhost_dev *vdev;
+
+	spdk_json_write_array_begin(w);
+
+	spdk_vhost_lock();
+	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
+	     vdev = spdk_vhost_dev_next(vdev)) {
+		if (vdev->backend->type == VHOST_BACKEND_BLK) {
+			vhost_user_config_json(vdev, w);
+		}
 	}
 	spdk_vhost_unlock();
 

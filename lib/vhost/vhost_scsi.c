@@ -885,7 +885,6 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 	rc = vhost_dev_register(&svdev->vdev, name, cpumask,
 				&spdk_vhost_scsi_device_backend,
 				&spdk_vhost_scsi_user_device_backend);
-
 	if (rc) {
 		free(svdev);
 		spdk_vhost_unlock();
