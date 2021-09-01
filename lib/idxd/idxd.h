@@ -168,6 +168,7 @@ struct spdk_idxd_impl {
 struct spdk_idxd_device {
 	struct spdk_idxd_impl		*impl;
 	void				*portals;
+	uint32_t                        socket_id;
 	int				wq_id;
 	uint32_t			num_channels;
 	uint32_t			total_wq_size;

@@ -81,6 +81,12 @@ struct device_config g_dev_cfg1 = {
 	.total_engines = 4,
 };
 
+uint32_t
+spdk_idxd_get_socket(struct spdk_idxd_device *idxd)
+{
+	return idxd->socket_id;
+}
+
 static inline void
 _submit_to_hw(struct spdk_idxd_io_channel *chan, struct idxd_ops *op)
 {

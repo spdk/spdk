@@ -16,6 +16,7 @@
 	spdk_idxd_batch_create;
 	spdk_idxd_batch_cancel;
 	spdk_idxd_batch_get_max;
+	spdk_idxd_get_socket;
 	spdk_idxd_set_config;
 	spdk_idxd_submit_compare;
 	spdk_idxd_submit_crc32c;

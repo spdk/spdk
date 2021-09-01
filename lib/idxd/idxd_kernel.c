@@ -140,6 +140,7 @@ dsa_setup_single_wq(struct spdk_kernel_idxd_device *kernel_idxd, struct accfg_wq
 	/* Update the active_wq_num of the kernel device */
 	kernel_idxd->wq_active_num++;
 	kernel_idxd->idxd.total_wq_size += wq_ctx->wq_size;
+	kernel_idxd->idxd.socket_id = accfg_device_get_numa_node(dev);
 
 	return 0;
 }

@@ -62,6 +62,14 @@ struct spdk_idxd_device;
 struct idxd_batch;
 
 /**
+ * Get the socket that this device is on
+ *
+ * \param idxd device to query
+ * \return socket number.
+ */
+uint32_t spdk_idxd_get_socket(struct spdk_idxd_device *idxd);
+
+/**
  * Signature for configuring a channel
  *
  * \param chan IDXD channel to be configured

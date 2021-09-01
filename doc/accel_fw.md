@@ -86,6 +86,15 @@ of service parameters on the work queues that are not currently utilized by
 the module. Specialized use of DSA may require different configurations that
 can be added to the module as needed.
 
+When a new channel starts, a DSA device will be assigned to the channel. The accel
+idxd module has been tuned for the most likely best performance case. The result
+is that there is a limited number of channels that can be supported based on the
+number of DSA devices in the system.  Additionally, for best performance, the accel
+idxd module will only use DSA devices on the same socket as the requesting
+channel/thread.  If an error occurs on initialization indicating that there are no
+more DSA devices available either try fewer threads or, if on a 2 socket system,
+try spreading threads across cores if possible.
+
 ### Software Module {#accel_sw}
 
 The software module is enabled by default. If no hardware engine is explicitly

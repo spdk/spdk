@@ -85,6 +85,7 @@ idxd_select_device(struct idxd_io_channel *chan)
 {
 	uint32_t count = 0;
 	struct idxd_device *dev;
+	uint32_t socket_id = spdk_env_get_socket_id(spdk_env_get_current_core());
 
 	/*
 	 * We allow channels to share underlying devices,
@@ -101,6 +102,10 @@ idxd_select_device(struct idxd_io_channel *chan)
 		dev = g_next_dev;
 		pthread_mutex_unlock(&g_dev_lock);
 
+		if (socket_id != spdk_idxd_get_socket(dev->idxd)) {
+			continue;
+		}
+
 		/*
 		 * Now see if a channel is available on this one. We only
 		 * allow a specific number of channels to share a device
@@ -109,12 +114,18 @@ idxd_select_device(struct idxd_io_channel *chan)
 		chan->chan = spdk_idxd_get_channel(dev->idxd);
 		if (chan->chan != NULL) {
 			chan->max_outstanding = spdk_idxd_chan_get_max_operations(chan->chan);
+			SPDK_DEBUGLOG(accel_idxd, "On socket %d using device on socket %d\n",
+				      socket_id, spdk_idxd_get_socket(dev->idxd));
 			return dev;
 		}
 	} while (count++ < g_num_devices);
 
-	/* we are out of available channels and devices. */
-	SPDK_ERRLOG("No more DSA devices available!\n");
+	/* We are out of available channels and/or devices for the local socket. We fix the number
+	 * of channels that we allocate per device and only allocate devices on the same socket
+	 * that the current thread is on. If on a 2 socket system it may be possible to avoid
+	 * this situation by spreading threads across the sockets.
+	 */
+	SPDK_ERRLOG("No more DSA devices available on the local socket.\n");
 	return NULL;
 }
 

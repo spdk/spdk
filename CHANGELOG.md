@@ -2,6 +2,11 @@
 
 ## v21.10: (Upcoming Release)
 
+### idxd
+
+Added `spdk_idxd_get_socket` to query the socket that the idxd device
+is on.
+
 ### nvmf
 
 Added `oncs` to `struct spdk_nvmf_ctrlr_data` so that the transport layer

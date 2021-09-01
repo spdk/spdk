@@ -567,6 +567,7 @@ idxd_attach(struct spdk_pci_device *device)
 	idxd = &user_idxd->idxd;
 	user_idxd->device = device;
 	idxd->impl = &g_user_idxd_impl;
+	idxd->socket_id = device->socket_id;
 	pthread_mutex_init(&idxd->num_channels_lock, NULL);
 
 	/* Enable PCI busmaster. */
