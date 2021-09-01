@@ -1942,10 +1942,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nvmf_create_transport)
 
     def nvmf_get_transports(args):
-        print_dict(rpc.nvmf.nvmf_get_transports(args.client, tgt_name=args.tgt_name))
+        print_dict(rpc.nvmf.nvmf_get_transports(args.client, trtype=args.trtype, tgt_name=args.tgt_name))
 
     p = subparsers.add_parser('nvmf_get_transports', aliases=['get_nvmf_transports'],
-                              help='Display nvmf transports')
+                              help='Display nvmf transports or required transport')
+    p.add_argument('--trtype', help='Transport type (optional)')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_transports)
 

@@ -6767,9 +6767,13 @@ Example response:
 
 #### Parameters
 
+The user may specify no parameters in order to list all transports, or a transport may be
+specified by type.
+
 Name                        | Optional | Type        | Description
 --------------------------- | -------- | ------------| -----------
 tgt_name                    | Optional | string      | Parent NVMe-oF target name.
+trtype                      | Optional | string      | Transport type.
 
 #### Example
 

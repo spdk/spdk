@@ -2009,10 +2009,12 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_create_transport", rpc_nvmf_create_transport, SPDK_RPC_RUNTIME)
 
 struct rpc_get_transport {
+	char *trtype;
 	char *tgt_name;
 };
 
 static const struct spdk_json_object_decoder rpc_get_transport_decoders[] = {
+	{"trtype", offsetof(struct rpc_get_transport, trtype), spdk_json_decode_string, true},
 	{"tgt_name", offsetof(struct rpc_get_transport, tgt_name), spdk_json_decode_string, true},
 };
 
@@ -2022,7 +2024,7 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_get_transport req = { 0 };
 	struct spdk_json_write_ctx *w;
-	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_transport *transport = NULL;
 	struct spdk_nvmf_tgt *tgt;
 
 	if (params) {
@@ -2039,19 +2041,37 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 	if (!tgt) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
+		free(req.trtype);
 		free(req.tgt_name);
 		return;
 	}
 
+	if (req.trtype) {
+		transport = spdk_nvmf_tgt_get_transport(tgt, req.trtype);
+		if (transport == NULL) {
+			SPDK_ERRLOG("transport '%s' does not exist\n", req.trtype);
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			free(req.trtype);
+			free(req.tgt_name);
+			return;
+		}
+	}
+
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	transport = spdk_nvmf_transport_get_first(tgt);
-	while (transport) {
+
+	if (transport) {
 		nvmf_transport_dump_opts(transport, w, false);
-		transport = spdk_nvmf_transport_get_next(transport);
+	} else {
+		for (transport = spdk_nvmf_transport_get_first(tgt); transport != NULL;
+		     transport = spdk_nvmf_transport_get_next(transport)) {
+			nvmf_transport_dump_opts(transport, w, false);
+		}
 	}
+
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
+	free(req.trtype);
 	free(req.tgt_name);
 }
 SPDK_RPC_REGISTER("nvmf_get_transports", rpc_nvmf_get_transports, SPDK_RPC_RUNTIME)

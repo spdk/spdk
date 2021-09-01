@@ -134,9 +134,10 @@ def nvmf_create_transport(client, **params):
 
 
 @deprecated_alias('get_nvmf_transports')
-def nvmf_get_transports(client, tgt_name=None):
+def nvmf_get_transports(client, trtype=None, tgt_name=None):
     """Get list of NVMe-oF transports.
     Args:
+        trtype: Transport type (optional; if omitted, query all transports).
         tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
@@ -146,9 +147,10 @@ def nvmf_get_transports(client, tgt_name=None):
     params = {}
 
     if tgt_name:
-        params = {
-            'tgt_name': tgt_name,
-        }
+        params['tgt_name'] = tgt_name
+
+    if trtype:
+        params['trtype'] = trtype
 
     return client.call('nvmf_get_transports', params)
 
