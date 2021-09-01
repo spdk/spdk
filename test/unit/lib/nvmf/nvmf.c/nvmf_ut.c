@@ -130,6 +130,8 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_first, struct spdk_nvmf_subsystem *,
 	    (struct spdk_nvmf_tgt *tgt), NULL);
 DEFINE_STUB_V(nvmf_transport_dump_opts, (struct spdk_nvmf_transport *transport,
 		struct spdk_json_write_ctx *w, bool named));
+DEFINE_STUB_V(nvmf_transport_listen_dump_opts, (struct spdk_nvmf_transport *transport,
+		const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w));
 
 struct spdk_io_channel {
 	struct spdk_thread		*thread;

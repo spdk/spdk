@@ -123,6 +123,22 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_object_end(w);
 }
 
+void
+nvmf_transport_listen_dump_opts(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
+{
+	const char *adrfam = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
+
+	spdk_json_write_named_object_begin(w, "listen_address");
+
+	spdk_json_write_named_string(w, "trtype", trid->trstring);
+	spdk_json_write_named_string(w, "adrfam", adrfam ? adrfam : "unknown");
+	spdk_json_write_named_string(w, "traddr", trid->traddr);
+	spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+
+	spdk_json_write_object_end(w);
+}
+
 spdk_nvme_transport_type_t
 spdk_nvmf_get_transport_type(struct spdk_nvmf_transport *transport)
 {

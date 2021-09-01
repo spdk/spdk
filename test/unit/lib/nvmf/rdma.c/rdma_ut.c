@@ -76,6 +76,7 @@ DEFINE_STUB_V(spdk_nvme_trid_populate_transport, (struct spdk_nvme_transport_id 
 		enum spdk_nvme_transport_type trtype));
 DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_qpair *qpair));
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
+DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 
 int ibv_query_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
 		 int attr_mask, struct ibv_qp_init_attr *init_attr)

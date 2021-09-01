@@ -110,6 +110,7 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int, (struct spdk_nvmf_qpair *qpair
 		struct spdk_nvme_transport_id *trid), 0);
 DEFINE_STUB(ibv_reg_mr_iova2, struct ibv_mr *, (struct ibv_pd *pd, void *addr, size_t length,
 		uint64_t iova, unsigned int access), NULL);
+DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr

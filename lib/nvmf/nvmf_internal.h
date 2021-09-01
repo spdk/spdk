@@ -391,6 +391,8 @@ struct spdk_nvmf_listener *nvmf_transport_find_listener(
 	const struct spdk_nvme_transport_id *trid);
 void nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_write_ctx *w,
 			      bool named);
+void nvmf_transport_listen_dump_opts(struct spdk_nvmf_transport *transport,
+				     const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w);
 void nvmf_subsystem_set_ana_state(struct spdk_nvmf_subsystem *subsystem,
 				  const struct spdk_nvme_transport_id *trid,
 				  enum spdk_nvme_ana_state ana_state, uint32_t anagrpid,
