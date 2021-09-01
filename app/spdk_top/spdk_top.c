@@ -2068,7 +2068,7 @@ show_core(uint8_t current_page)
 	uint64_t core_number = current_page * g_max_data_rows + g_selected_row;
 	struct rpc_core_info *core_info = &g_cores_info[core_number];
 	uint64_t threads_count, i;
-	uint64_t thread_id;
+	uint64_t thread_id = 0;
 	uint16_t current_threads_row;
 	int c;
 	char core_win_title[25];
@@ -2166,9 +2166,13 @@ show_core(uint8_t current_page)
 		switch (c) {
 		case 10: /* ENTER */
 			pthread_mutex_lock(&g_thread_lock);
-			thread_id = core_info->threads.thread[current_threads_row].id;
+			if (core_info->threads.threads_count > 0) {
+				thread_id = core_info->threads.thread[current_threads_row].id;
+			}
 			pthread_mutex_unlock(&g_thread_lock);
-			show_single_thread(thread_id);
+			if (thread_id != 0) {
+				show_single_thread(thread_id);
+			}
 			break;
 		case 27: /* ESC */
 			stop_loop = true;
