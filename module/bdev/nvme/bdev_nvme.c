@@ -1163,7 +1163,11 @@ bdev_nvme_get_module_ctx(void *ctx)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
 
-	return bdev_nvme_get_ctrlr(&nvme_bdev->disk);
+	if (!nvme_bdev || nvme_bdev->disk.module != &nvme_if || !nvme_bdev->nvme_ns) {
+		return NULL;
+	}
+
+	return nvme_bdev->nvme_ns->ns;
 }
 
 static const char *
