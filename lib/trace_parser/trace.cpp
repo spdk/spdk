@@ -81,6 +81,14 @@ struct argument_context {
 	}
 };
 
+struct object_stats {
+	std::map<uint64_t, uint64_t>	index;
+	std::map<uint64_t, uint64_t>	start;
+	uint64_t			counter;
+
+	object_stats() : counter(0) {}
+};
+
 struct spdk_trace_parser {
 	spdk_trace_parser(const spdk_trace_parser_opts *opts);
 	~spdk_trace_parser();
@@ -104,6 +112,7 @@ private:
 	uint64_t		_tsc_offset;
 	entry_map		_entries;
 	entry_map::iterator	_iter;
+	object_stats		_stats[SPDK_TRACE_MAX_OBJECT];
 };
 
 uint64_t
@@ -176,6 +185,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 {
 	spdk_trace_tpoint *tpoint;
 	spdk_trace_entry *entry;
+	object_stats *stats;
 
 	if (_iter == _entries.end()) {
 		return false;
@@ -184,6 +194,22 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 	pe->entry = entry = _iter->second;
 	pe->lcore = _iter->first.lcore;
 	tpoint = &_histories->flags.tpoint[entry->tpoint_id];
+	stats = &_stats[tpoint->object_type];
+
+	if (tpoint->new_object) {
+		stats->index[entry->object_id] = stats->counter++;
+		stats->start[entry->object_id] = entry->tsc;
+	}
+
+	if (tpoint->object_type != OBJECT_NONE) {
+		if (spdk_likely(stats->start.find(entry->object_id) != stats->start.end())) {
+			pe->object_index = stats->index[entry->object_id];
+			pe->object_start = stats->start[entry->object_id];
+		} else {
+			pe->object_index = UINT64_MAX;
+			pe->object_start = UINT64_MAX;
+		}
+	}
 
 	argument_context argctx(entry, pe->lcore);
 	for (uint8_t i = 0; i < tpoint->num_args; ++i) {
