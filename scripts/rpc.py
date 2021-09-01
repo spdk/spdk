@@ -1948,10 +1948,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=nvmf_get_transports)
 
     def nvmf_get_subsystems(args):
-        print_dict(rpc.nvmf.nvmf_get_subsystems(args.client, tgt_name=args.tgt_name))
+        print_dict(rpc.nvmf.nvmf_get_subsystems(args.client, nqn=args.nqn, tgt_name=args.tgt_name))
 
     p = subparsers.add_parser('nvmf_get_subsystems', aliases=['get_nvmf_subsystems'],
-                              help='Display nvmf subsystems')
+                              help='Display nvmf subsystems or required subsystem')
+    p.add_argument('nqn', help='Subsystem NQN (optional)', nargs="?", default=None)
     p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_subsystems)
 

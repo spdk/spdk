@@ -153,9 +153,10 @@ def nvmf_get_transports(client, tgt_name=None):
 
 
 @deprecated_alias('get_nvmf_subsystems')
-def nvmf_get_subsystems(client, tgt_name=None):
+def nvmf_get_subsystems(client, nqn=None, tgt_name=None):
     """Get list of NVMe-oF subsystems.
     Args:
+        nqn: Subsystem NQN (optional; if omitted, query all subsystems).
         tgt_name: name of the parent NVMe-oF target (optional).
 
     Returns:
@@ -165,9 +166,10 @@ def nvmf_get_subsystems(client, tgt_name=None):
     params = {}
 
     if tgt_name:
-        params = {
-            'tgt_name': tgt_name,
-        }
+        params['tgt_name'] = tgt_name
+
+    if nqn:
+        params['nqn'] = nqn
 
     return client.call('nvmf_get_subsystems', params)
 

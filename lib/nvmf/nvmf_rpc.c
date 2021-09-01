@@ -185,10 +185,12 @@ decode_ns_uuid(const struct spdk_json_val *val, void *out)
 }
 
 struct rpc_get_subsystem {
+	char *nqn;
 	char *tgt_name;
 };
 
 static const struct spdk_json_object_decoder rpc_get_subsystem_decoders[] = {
+	{"nqn", offsetof(struct rpc_get_subsystem, nqn), spdk_json_decode_string, true},
 	{"tgt_name", offsetof(struct rpc_get_subsystem, tgt_name), spdk_json_decode_string, true},
 };
 
@@ -308,7 +310,7 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_get_subsystem req = { 0 };
 	struct spdk_json_write_ctx *w;
-	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem *subsystem = NULL;
 	struct spdk_nvmf_tgt *tgt;
 
 	if (params) {
@@ -326,19 +328,37 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
 		free(req.tgt_name);
+		free(req.nqn);
 		return;
+	}
+
+	if (req.nqn) {
+		subsystem = spdk_nvmf_tgt_find_subsystem(tgt, req.nqn);
+		if (!subsystem) {
+			SPDK_ERRLOG("subsystem '%s' does not exist\n", req.nqn);
+			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+			free(req.tgt_name);
+			free(req.nqn);
+			return;
+		}
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
-	subsystem = spdk_nvmf_subsystem_get_first(tgt);
-	while (subsystem) {
+
+	if (subsystem) {
 		dump_nvmf_subsystem(w, subsystem);
-		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+	} else {
+		for (subsystem = spdk_nvmf_subsystem_get_first(tgt); subsystem != NULL;
+		     subsystem = spdk_nvmf_subsystem_get_next(subsystem)) {
+			dump_nvmf_subsystem(w, subsystem);
+		}
 	}
+
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	free(req.tgt_name);
+	free(req.nqn);
 }
 SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_get_subsystems, get_nvmf_subsystems)
