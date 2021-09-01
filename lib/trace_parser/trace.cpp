@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/likely.h"
 #include "spdk/log.h"
 #include "spdk/trace_parser.h"
 #include "spdk/util.h"
@@ -61,6 +62,25 @@ public:
 
 typedef std::map<entry_key, spdk_trace_entry *, compare_entry_key> entry_map;
 
+struct argument_context {
+	spdk_trace_entry	*entry;
+	spdk_trace_entry_buffer	*buffer;
+	uint16_t		lcore;
+	size_t			offset;
+
+	argument_context(spdk_trace_entry *entry, uint16_t lcore) :
+		entry(entry), lcore(lcore)
+	{
+		buffer = reinterpret_cast<spdk_trace_entry_buffer *>(entry);
+
+		/* The first argument resides within the spdk_trace_entry structure, so the initial
+		 * offset needs to be adjusted to the start of the spdk_trace_entry.args array
+		 */
+		offset = offsetof(spdk_trace_entry, args) -
+			 offsetof(spdk_trace_entry_buffer, data);
+	}
+};
+
 struct spdk_trace_parser {
 	spdk_trace_parser(const spdk_trace_parser_opts *opts);
 	~spdk_trace_parser();
@@ -70,6 +90,9 @@ struct spdk_trace_parser {
 	uint64_t tsc_offset() const { return _tsc_offset; }
 	bool next_entry(spdk_trace_parser_entry *entry);
 private:
+	spdk_trace_entry_buffer *get_next_buffer(spdk_trace_entry_buffer *buf, uint16_t lcore);
+	bool build_arg(argument_context *argctx, const spdk_trace_argument *arg, int argid,
+		       spdk_trace_parser_entry *pe);
 	void populate_events(spdk_trace_history *history, int num_entries);
 	bool init(const spdk_trace_parser_opts *opts);
 	void cleanup();
@@ -82,15 +105,77 @@ private:
 	entry_map::iterator	_iter;
 };
 
-bool
-spdk_trace_parser::next_entry(spdk_trace_parser_entry *entry)
+spdk_trace_entry_buffer *
+spdk_trace_parser::get_next_buffer(spdk_trace_entry_buffer *buf, uint16_t lcore)
 {
+	spdk_trace_history *history;
+
+	history = spdk_get_per_lcore_history(_histories, lcore);
+	assert(history);
+
+	if (spdk_unlikely(static_cast<void *>(buf) ==
+			  static_cast<void *>(&history->entries[history->num_entries - 1]))) {
+		return reinterpret_cast<spdk_trace_entry_buffer *>(&history->entries[0]);
+	} else {
+		return buf + 1;
+	}
+}
+
+bool
+spdk_trace_parser::build_arg(argument_context *argctx, const spdk_trace_argument *arg, int argid,
+			     spdk_trace_parser_entry *pe)
+{
+	spdk_trace_entry *entry = argctx->entry;
+	spdk_trace_entry_buffer *buffer = argctx->buffer;
+	size_t curlen, argoff;
+
+	argoff = 0;
+	while (argoff < arg->size) {
+		if (argctx->offset == sizeof(buffer->data)) {
+			buffer = get_next_buffer(buffer, argctx->lcore);
+			if (spdk_unlikely(buffer->tpoint_id != SPDK_TRACE_MAX_TPOINT_ID ||
+					  buffer->tsc != entry->tsc)) {
+				return false;
+			}
+
+			argctx->offset = 0;
+			argctx->buffer = buffer;
+		}
+
+		curlen = spdk_min(sizeof(buffer->data) - argctx->offset, arg->size - argoff);
+		if (argoff < sizeof(pe->args[0])) {
+			memcpy(&pe->args[argid].string[argoff], &buffer->data[argctx->offset],
+			       spdk_min(curlen, sizeof(pe->args[0]) - argoff));
+		}
+
+		argctx->offset += curlen;
+		argoff += curlen;
+	}
+
+	return true;
+}
+
+bool
+spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
+{
+	spdk_trace_tpoint *tpoint;
+	spdk_trace_entry *entry;
+
 	if (_iter == _entries.end()) {
 		return false;
 	}
 
-	entry->entry = _iter->second;
-	entry->lcore = _iter->first.lcore;
+	pe->entry = entry = _iter->second;
+	pe->lcore = _iter->first.lcore;
+	tpoint = &_histories->flags.tpoint[entry->tpoint_id];
+
+	argument_context argctx(entry, pe->lcore);
+	for (uint8_t i = 0; i < tpoint->num_args; ++i) {
+		if (!build_arg(&argctx, &tpoint->args[i], i, pe)) {
+			SPDK_ERRLOG("Failed to parse tracepoint argument\n");
+			return false;
+		}
+	}
 
 	_iter++;
 	return true;
