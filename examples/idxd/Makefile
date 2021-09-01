@@ -31,15 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += accel bdev blob ioat nvme sock vmd nvmf util
-DIRS-$(CONFIG_IDXD) += idxd
-
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += interrupt_tgt
-endif
+DIRS-y += perf
 
 .PHONY: all clean $(DIRS-y)
 
