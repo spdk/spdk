@@ -368,6 +368,12 @@ spdk_mempool_get(struct spdk_mempool *_mp)
 int
 spdk_mempool_get_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count)
 {
+	struct test_mempool *test_mp = (struct test_mempool *)mp;
+
+	if (test_mp && test_mp->count < count) {
+		return -1;
+	}
+
 	for (size_t i = 0; i < count; i++) {
 		ele_arr[i] = spdk_mempool_get(mp);
 		if (ele_arr[i] == NULL) {

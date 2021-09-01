@@ -40,6 +40,7 @@
 SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
 #define RDMA_UT_UNITS_IN_MAX_IO 16
+#define SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE 32
 
 struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.max_queue_depth = SPDK_NVMF_RDMA_DEFAULT_MAX_QUEUE_DEPTH,
@@ -174,6 +175,57 @@ test_spdk_nvmf_transport_create(void)
 	MOCK_CLEAR(ut_transport_create);
 }
 
+static struct spdk_nvmf_transport_poll_group *
+ut_poll_group_create(struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_transport_poll_group *group;
+
+	group = calloc(1, sizeof(*group));
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	return group;
+}
+
+static void
+ut_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
+{
+	free(group);
+}
+
+static void
+test_nvmf_transport_poll_group_create(void)
+{
+	struct spdk_nvmf_transport_poll_group *poll_group = NULL;
+	struct spdk_nvmf_transport transport = {};
+	struct spdk_nvmf_transport_ops ops = {};
+
+	ops.poll_group_create = ut_poll_group_create;
+	ops.poll_group_destroy = ut_poll_group_destroy;
+	transport.ops = &ops;
+	transport.opts.buf_cache_size = SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE;
+	transport.data_buf_pool = spdk_mempool_create("buf_pool", 32, 4096, 0, 0);
+
+	poll_group = nvmf_transport_poll_group_create(&transport);
+	SPDK_CU_ASSERT_FATAL(poll_group != NULL);
+	CU_ASSERT(poll_group->transport == &transport);
+	CU_ASSERT(poll_group->buf_cache_size == SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE);
+	CU_ASSERT(poll_group->buf_cache_count == SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE);
+
+	nvmf_transport_poll_group_destroy(poll_group);
+	spdk_mempool_free(transport.data_buf_pool);
+
+	/* Mempool members insufficient */
+	transport.data_buf_pool = spdk_mempool_create("buf_pool", 31, 4096, 0, 0);
+
+	poll_group = nvmf_transport_poll_group_create(&transport);
+	SPDK_CU_ASSERT_FATAL(poll_group != NULL);
+	CU_ASSERT(poll_group->transport == &transport);
+	CU_ASSERT(poll_group->buf_cache_size == 31);
+	CU_ASSERT(poll_group->buf_cache_count == 31);
+
+	nvmf_transport_poll_group_destroy(poll_group);
+	spdk_mempool_free(transport.data_buf_pool);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -185,6 +237,7 @@ int main(int argc, char **argv)
 	suite = CU_add_suite("nvmf", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_spdk_nvmf_transport_create);
+	CU_ADD_TEST(suite, test_nvmf_transport_poll_group_create);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
