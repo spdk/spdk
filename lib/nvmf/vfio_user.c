@@ -1518,6 +1518,22 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		      (uintptr_t)info->mapping.iov_base,
 		      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
 
+	map_start = info->mapping.iov_base;
+	map_end = info->mapping.iov_base + info->mapping.iov_len;
+
+	pthread_mutex_lock(&endpoint->lock);
+	TAILQ_FOREACH(qpair, &ctrlr->connected_qps, tailq) {
+		if ((qpair->cq.addr >= map_start && qpair->cq.addr <= map_end) ||
+		    (qpair->sq.addr >= map_start && qpair->sq.addr <= map_end)) {
+			/* TODO: Ideally we should disconnect this queue pair
+			 * before returning to caller.
+			 */
+			unmap_qp(qpair);
+			qpair->state = VFIO_USER_QPAIR_INACTIVE;
+		}
+	}
+	pthread_mutex_unlock(&endpoint->lock);
+
 	if (info->prot == (PROT_WRITE | PROT_READ)) {
 		ret = spdk_mem_unregister(info->mapping.iov_base, info->mapping.iov_len);
 		if (ret) {
@@ -1527,19 +1543,6 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 				    ret);
 		}
 	}
-
-	map_start = info->mapping.iov_base;
-	map_end = info->mapping.iov_base + info->mapping.iov_len;
-
-	pthread_mutex_lock(&endpoint->lock);
-	TAILQ_FOREACH(qpair, &ctrlr->connected_qps, tailq) {
-		if ((qpair->cq.addr >= map_start && qpair->cq.addr < map_end) ||
-		    (qpair->sq.addr >= map_start && qpair->sq.addr < map_end)) {
-			unmap_qp(qpair);
-			qpair->state = VFIO_USER_QPAIR_INACTIVE;
-		}
-	}
-	pthread_mutex_unlock(&endpoint->lock);
 
 	return 0;
 }
