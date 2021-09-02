@@ -44,6 +44,10 @@ SoC may be running SPDK on the SoC. That SoC has its own local memory, but SPDK 
 devices that can also access the host system memory. This library provides infrastructure to enumerate
 the memory domains and request hardware perform DMA transfers between them.
 
+### event
+
+Added the `disable_signal_handlers` flag to the `spdk_app_opts` struct.
+
 ### log
 
 Added API `spdk_log_to_syslog_level` to return syslog level based on SPDK's

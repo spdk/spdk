@@ -137,6 +137,16 @@ struct spdk_app_opts {
 	 * After that, new added fields should be put after opts_size.
 	 */
 	size_t opts_size;
+
+	/**
+	 * Disable default signal handlers.
+	 * If set to `true`, the shutdown process is not started implicitly by
+	 * process signals, hence the application is responsible for calling
+	 * spdk_app_start_shutdown().
+	 *
+	 * Default is `false`.
+	 */
+	bool disable_signal_handlers;
 };
 
 /**
