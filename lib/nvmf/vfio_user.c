@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2019, Nutanix Inc. All rights reserved.
+ *   Copyright (c) 2019-2022, Nutanix Inc. All rights reserved.
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -2048,6 +2048,13 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	assert(ctrlr != NULL);
 	assert(buf != NULL);
 
+	if (!is_write) {
+		SPDK_WARNLOG("%s: host tried to read BAR0 doorbell %#lx\n",
+			     ctrlr_id(ctrlr), pos);
+		errno = EPERM;
+		return -1;
+	}
+
 	if (count != sizeof(uint32_t)) {
 		SPDK_ERRLOG("%s: bad doorbell buffer size %ld\n",
 			    ctrlr_id(ctrlr), count);
@@ -2073,13 +2080,9 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 		return -1;
 	}
 
-	if (is_write) {
-		ctrlr->doorbells[pos] = *buf;
-		spdk_wmb();
-	} else {
-		spdk_rmb();
-		*buf = ctrlr->doorbells[pos];
-	}
+	ctrlr->doorbells[pos] = *buf;
+	spdk_wmb();
+
 	return 0;
 }
 
