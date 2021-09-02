@@ -279,7 +279,7 @@ generate_data(void *buf, int buf_len, int block_size, void *md_buf, int md_size,
 	while (offset_blocks < num_blocks) {
 		inner_offset = 0;
 		while (inner_offset < data_block_size) {
-			*(uint32_t *)buf = offset_blocks;
+			*(uint32_t *)buf = offset_blocks + inner_offset;
 			inner_offset += sizeof(uint32_t);
 			buf += sizeof(uint32_t);
 		}
