@@ -15,6 +15,9 @@ formatter, shfmt, was introduced to help keep the .sh code consistent
 across the entire repo. For more details on the tool itself, please see
 [shfmt](https://github.com/mvdan/sh).
 
+We also advise to use 4.4 Bash as a minimum version to make sure scripts
+across the whole repo work as intended.
+
 ## Usage {#shfmt_usage}
 
 On the CI pool, the shfmt is run against all the updated .sh files that
