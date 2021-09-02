@@ -839,6 +839,7 @@ iscsi_bdev_conn_poll(void *arg)
 	struct iscsi_context *context;
 
 	if (TAILQ_EMPTY(&g_iscsi_conn_req)) {
+		spdk_poller_unregister(&g_conn_poller);
 		return SPDK_POLLER_IDLE;
 	}
 
