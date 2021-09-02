@@ -260,6 +260,12 @@ struct spdk_nvmf_transport_ops {
 		      struct spdk_nvmf_listen_opts *opts);
 
 	/**
+	 * Dump transport-specific listen opts into JSON
+	 */
+	void (*listen_dump_opts)(struct spdk_nvmf_transport *transport,
+				 const struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w);
+
+	/**
 	  * Stop accepting new connections at the given address.
 	  */
 	void (*stop_listen)(struct spdk_nvmf_transport *transport,
