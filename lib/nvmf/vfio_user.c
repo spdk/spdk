@@ -1785,41 +1785,6 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 	return count;
 }
 
-static int
-enable_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
-{
-	int err;
-
-	assert(ctrlr != NULL);
-
-	err = acq_setup(ctrlr);
-	if (err != 0) {
-		return err;
-	}
-
-	err = asq_setup(ctrlr);
-	if (err != 0) {
-		return err;
-	}
-
-	return 0;
-}
-
-static void
-disable_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
-{
-	assert(ctrlr->sqs[0] != NULL);
-	assert(ctrlr->cqs[0] != NULL);
-
-	unmap_q(ctrlr, &ctrlr->sqs[0]->mapping);
-	unmap_q(ctrlr, &ctrlr->cqs[0]->mapping);
-
-	ctrlr->sqs[0]->size = 0;
-	*sq_headp(ctrlr->sqs[0]) = 0;
-	ctrlr->cqs[0]->size = 0;
-	*cq_dbl_headp(ctrlr, ctrlr->cqs[0]) = 0;
-}
-
 static void
 memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 {
@@ -1957,6 +1922,62 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	}
 }
 
+/* Used to initiate a controller-level reset or a controller shutdown. */
+static void
+disable_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
+{
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: disabling controller\n",
+		      ctrlr_id(vu_ctrlr));
+
+	/* Unmap Admin queue. */
+
+	assert(vu_ctrlr->sqs[0] != NULL);
+	assert(vu_ctrlr->cqs[0] != NULL);
+
+	unmap_q(vu_ctrlr, &vu_ctrlr->sqs[0]->mapping);
+	unmap_q(vu_ctrlr, &vu_ctrlr->cqs[0]->mapping);
+
+	vu_ctrlr->sqs[0]->size = 0;
+	*sq_headp(vu_ctrlr->sqs[0]) = 0;
+
+	vu_ctrlr->sqs[0]->sq_state = VFIO_USER_SQ_INACTIVE;
+
+	vu_ctrlr->cqs[0]->size = 0;
+	*cq_tailp(vu_ctrlr->cqs[0]) = 0;
+
+	/*
+	 * For PCIe controller reset or shutdown, we will drop all AER
+	 * responses.
+	 */
+	nvmf_ctrlr_abort_aer(vu_ctrlr->ctrlr);
+}
+
+/* Used to re-enable the controller after a controller-level reset. */
+static int
+enable_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
+{
+	int err;
+
+	assert(vu_ctrlr != NULL);
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: enabling controller\n",
+		      ctrlr_id(vu_ctrlr));
+
+	err = acq_setup(vu_ctrlr);
+	if (err != 0) {
+		return err;
+	}
+
+	err = asq_setup(vu_ctrlr);
+	if (err != 0) {
+		return err;
+	}
+
+	vu_ctrlr->sqs[0]->sq_state = VFIO_USER_SQ_ACTIVE;
+
+	return 0;
+}
+
 static int
 nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
@@ -1987,13 +2008,11 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 			if (diff.bits.en) {
 				if (cc.bits.en) {
-					SPDK_DEBUGLOG(nvmf_vfio, "%s: MAP Admin queue\n", ctrlr_id(vu_ctrlr));
-					ret = enable_admin_queue(vu_ctrlr);
+					ret = enable_ctrlr(vu_ctrlr);
 					if (ret) {
-						SPDK_ERRLOG("%s: failed to map Admin queue\n", ctrlr_id(vu_ctrlr));
+						SPDK_ERRLOG("%s: failed to enable ctrlr\n", ctrlr_id(vu_ctrlr));
 						return ret;
 					}
-					sq->sq_state = VFIO_USER_SQ_ACTIVE;
 					vu_ctrlr->reset_shn = false;
 				} else {
 					vu_ctrlr->reset_shn = true;
@@ -2007,13 +2026,7 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 			}
 
 			if (vu_ctrlr->reset_shn) {
-				SPDK_DEBUGLOG(nvmf_vfio,
-					      "%s: UNMAP Admin queue\n",
-					      ctrlr_id(vu_ctrlr));
-				sq->sq_state = VFIO_USER_SQ_INACTIVE;
-				disable_admin_queue(vu_ctrlr);
-				/* For PCIe controller reset or shutdown, we will drop all AER responses */
-				nvmf_ctrlr_abort_aer(vu_ctrlr->ctrlr);
+				disable_ctrlr(vu_ctrlr);
 			}
 		}
 	}
