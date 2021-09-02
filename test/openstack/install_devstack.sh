@@ -58,10 +58,15 @@ python3 ./setup.py install
 
 cp $rootdir/scripts/vagrant/local.conf /opt/stack/devstack/local.conf
 
+# unset PYTHONPATH set by autotest_common.sh - keystone calls to stevedore's caching api and hits sys.path. In
+# our case the list includes $rootdir/scripts which stack user can't access due to lack of permissions.
+# Setting FORCE=yes allows stack.sh to run under distro versions which are not included in SUPPORTED_DISTROS.
+# This allows us to be more relaxed and run under a bit newer|older versions of the same distro (e.g. ubuntu)
+# in our CI.
 cd /opt/stack/devstack
 ./tools/create-stack-user.sh
 chown -R stack:stack /opt/stack
-su -c "./stack.sh" -s /bin/bash stack
+su -c "PYTHONPATH= FORCE=yes ./stack.sh" -s /bin/bash stack
 source openrc admin admin
 openstack volume type create SPDK --public
 
