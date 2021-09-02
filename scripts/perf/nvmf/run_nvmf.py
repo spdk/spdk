@@ -893,9 +893,8 @@ registerfiles=1
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
                 try:
-                    output = self.exec_cmd(["sudo", self.fio_bin,
-                                            fio_config_file, "--output-format=json",
-                                            "--output=%s" % output_filename], True)
+                    output = self.exec_cmd(["sudo", self.fio_bin, fio_config_file, "--output-format=json",
+                                            "--output=%s" % output_filename, "--eta=never"], True)
                     self.log_print(output)
                 except subprocess.CalledProcessError as e:
                     self.log_print("ERROR: Fio process failed!")
