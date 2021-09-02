@@ -148,6 +148,8 @@ class Tracepoint:
     name: str
     id: int
     new_object: bool
+    object_type: int
+    owner_type: int
     args: List[TracepointArgument]
 
 
@@ -193,7 +195,8 @@ class JsonProvider(TraceProvider):
             tpoint_id = tpoint['id']
             self._tpoints[tpoint_id] = Tracepoint(
                 name=tpoint['name'], id=tpoint_id,
-                new_object=tpoint['new_object'],
+                new_object=tpoint['new_object'], object_type=OBJECT_NONE,
+                owner_type=OWNER_NONE,
                 args=[TracepointArgument(name=a['name'],
                                          argtype=a['type'])
                       for a in tpoint.get('args', [])])
