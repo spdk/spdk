@@ -591,4 +591,14 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    # In order for the changes to LD_LIBRARY_PATH to be visible to the loader,
+    # they need to be applied before starting a process, so we need to
+    # re-execute the script after updating it.
+    if os.environ.get('SPDK_BPF_TRACE_PY') is None:
+        rootdir = f'{os.path.dirname(__file__)}/../..'
+        os.environ['LD_LIBRARY_PATH'] = ':'.join([os.environ.get('LD_LIBRARY_PATH', ''),
+                                                  f'{rootdir}/build/lib'])
+        os.environ['SPDK_BPF_TRACE_PY'] = '1'
+        os.execv(sys.argv[0], sys.argv)
+    else:
+        main(sys.argv[1:])
