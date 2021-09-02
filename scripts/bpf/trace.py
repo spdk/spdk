@@ -4,7 +4,9 @@ from argparse import ArgumentParser
 from dataclasses import dataclass, field
 from itertools import islice
 from typing import Dict, List, TypeVar
+import ctypes as ct
 import ijson
+import magic
 import os
 import re
 import subprocess
@@ -12,6 +14,14 @@ import sys
 import tempfile
 
 TSC_MAX = (1 << 64) - 1
+UCHAR_MAX = (1 << 8) - 1
+TRACE_MAX_LCORE = 128
+TRACE_MAX_GROUP_ID = 16
+TRACE_MAX_TPOINT_ID = TRACE_MAX_GROUP_ID * 64
+TRACE_MAX_ARGS_COUNT = 5
+TRACE_INVALID_OBJECT = (1 << 64) - 1
+OBJECT_NONE = 0
+OWNER_NONE = 0
 
 
 @dataclass
@@ -246,10 +256,158 @@ class JsonProvider(TraceProvider):
                 builder = None
 
 
+class CParserOpts(ct.Structure):
+    _fields_ = [('filename', ct.c_char_p),
+                ('mode', ct.c_int),
+                ('lcore', ct.c_uint16)]
+
+
+class CTraceOwner(ct.Structure):
+    _fields_ = [('type', ct.c_uint8),
+                ('id_prefix', ct.c_char)]
+
+
+class CTraceObject(ct.Structure):
+    _fields_ = [('type', ct.c_uint8),
+                ('id_prefix', ct.c_char)]
+
+
+class CTpointArgument(ct.Structure):
+    _fields_ = [('name', ct.c_char * 14),
+                ('type', ct.c_uint8),
+                ('size', ct.c_uint8)]
+
+
+class CTracepoint(ct.Structure):
+    _fields_ = [('name', ct.c_char * 24),
+                ('tpoint_id', ct.c_uint16),
+                ('owner_type', ct.c_uint8),
+                ('object_type', ct.c_uint8),
+                ('new_object', ct.c_uint8),
+                ('num_args', ct.c_uint8),
+                ('args', CTpointArgument * TRACE_MAX_ARGS_COUNT)]
+
+
+class CTraceFlags(ct.Structure):
+    _fields_ = [('tsc_rate', ct.c_uint64),
+                ('tpoint_mask', ct.c_uint64 * TRACE_MAX_GROUP_ID),
+                ('owner', CTraceOwner * (UCHAR_MAX + 1)),
+                ('object', CTraceObject * (UCHAR_MAX + 1)),
+                ('tpoint', CTracepoint * TRACE_MAX_TPOINT_ID)]
+
+
+class CTraceEntry(ct.Structure):
+    _fields_ = [('tsc', ct.c_uint64),
+                ('tpoint_id', ct.c_uint16),
+                ('poller_id', ct.c_uint16),
+                ('size', ct.c_uint32),
+                ('object_id', ct.c_uint64)]
+
+
+class CTraceParserArgument(ct.Union):
+    _fields_ = [('integer', ct.c_uint64),
+                ('pointer', ct.c_void_p),
+                ('string', ct.c_char * (UCHAR_MAX + 1))]
+
+
+class CTraceParserEntry(ct.Structure):
+    _fields_ = [('entry', ct.POINTER(CTraceEntry)),
+                ('object_index', ct.c_uint64),
+                ('object_start', ct.c_uint64),
+                ('lcore', ct.c_uint16),
+                ('args', CTraceParserArgument * TRACE_MAX_ARGS_COUNT)]
+
+
+class NativeProvider(TraceProvider):
+    """Trace provider based on SPDK's trace library"""
+    def __init__(self, file):
+        self._setup_binding(file.name)
+        self._parse_defs()
+
+    def __del__(self):
+        if hasattr(self, '_parser'):
+            self._lib.spdk_trace_parser_cleanup(self._parser)
+
+    def _setup_binding(self, filename):
+        self._lib = ct.CDLL('build/lib/libspdk_trace_parser.so')
+        self._lib.spdk_trace_parser_init.restype = ct.c_void_p
+        self._lib.spdk_trace_parser_init.errcheck = lambda r, *_: ct.c_void_p(r)
+        self._lib.spdk_trace_parser_get_flags.restype = ct.POINTER(CTraceFlags)
+        opts = CParserOpts(filename=bytes(filename, 'ascii'), mode=0,
+                           lcore=TRACE_MAX_LCORE)
+        self._parser = self._lib.spdk_trace_parser_init(ct.byref(opts))
+        if not self._parser:
+            raise ValueError('Failed to construct SPDK trace parser')
+
+    def _parse_tpoints(self, tpoints):
+        self._tpoints = {}
+        for tpoint in tpoints:
+            if len(tpoint.name) == 0:
+                continue
+            self._tpoints[tpoint.tpoint_id] = Tracepoint(
+                name=str(tpoint.name, 'ascii'), object_type=tpoint.object_type,
+                owner_type=tpoint.owner_type, id=tpoint.tpoint_id,
+                new_object=bool(tpoint.new_object),
+                args=[TracepointArgument(name=str(a.name, 'ascii'), argtype=a.type)
+                      for a in tpoint.args[:tpoint.num_args]])
+
+    def _parse_defs(self):
+        flags = self._lib.spdk_trace_parser_get_flags(self._parser)
+        self._tsc_rate = flags.contents.tsc_rate
+        self._parse_tpoints(flags.contents.tpoint)
+
+        def conv_objs(arr):
+            return {int(o.type): str(o.id_prefix, 'ascii') for o in arr if o.id_prefix != b'\x00'}
+        self._owners = conv_objs(flags.contents.owner)
+        self._objects = conv_objs(flags.contents.object)
+
+    def tsc_rate(self):
+        return self._tsc_rate
+
+    def tpoints(self):
+        return self._tpoints
+
+    def entries(self):
+        pe = CTraceParserEntry()
+        argconv = {TracepointArgument.TYPE_INT: lambda a: a.integer,
+                   TracepointArgument.TYPE_PTR: lambda a: int(a.pointer or 0),
+                   TracepointArgument.TYPE_STR: lambda a: str(a.string, 'ascii')}
+
+        while self._lib.spdk_trace_parser_next_entry(self._parser, ct.byref(pe)):
+            entry = pe.entry.contents
+            lcore = pe.lcore
+            tpoint = self._tpoints[entry.tpoint_id]
+            args = {a.name: argconv[a.argtype](pe.args[i]) for i, a in enumerate(tpoint.args)}
+
+            if tpoint.object_type != OBJECT_NONE:
+                if pe.object_index != TRACE_INVALID_OBJECT:
+                    object_id = '{}{}'.format(self._objects[tpoint.object_type], pe.object_index)
+                    ts = entry.tsc - pe.object_start
+                else:
+                    object_id, ts = 'n/a', None
+            elif entry.object_id != 0:
+                object_id, ts = '{:x}'.format(entry.object_id), None
+            else:
+                object_id, ts = None, None
+
+            if tpoint.owner_type != OWNER_NONE:
+                poller_id = '{}{:02}'.format(self._owners[tpoint.owner_type], entry.poller_id)
+            else:
+                poller_id = None
+
+            yield TraceEntry(tpoint=tpoint, lcore=lcore, tsc=entry.tsc,
+                             size=entry.size, object_id=object_id,
+                             object_ptr=entry.object_id, poller=poller_id, time=ts,
+                             args=args)
+
+
 class Trace:
     """Stores, parses, and prints out SPDK traces"""
     def __init__(self, file):
-        self._provider = JsonProvider(file)
+        if file == sys.stdin or magic.from_file(file.name, mime=True) == 'application/json':
+            self._provider = JsonProvider(file)
+        else:
+            self._provider = NativeProvider(file)
         self._objects = []
         self._argfmt = {TracepointArgument.TYPE_PTR: lambda a: f'0x{a:x}'}
         self.tpoints = self._provider.tpoints()
@@ -293,7 +451,7 @@ class Trace:
                 f'{timestamp:16.3f}',
                 f'{e.poller:3}' if e.poller is not None else ' ' * 3,
                 f'{e.tpoint.name:24}',
-                f'size: {e.size:6}' if e.size is not None else ' ' * (len('size: ') + 6),
+                f'size: {e.size:6}' if e.size else ' ' * (len('size: ') + 6),
                 f'id: {e.object_id:8}' if e.object_id is not None else None,
                 f'time: {diff:<8.3f}' if diff is not None else None,
                 args
@@ -416,7 +574,8 @@ def print_trace(trace_file, dtrace_file):
 def main(argv):
     parser = ArgumentParser(description='SPDK trace annotation script')
     parser.add_argument('-i', '--input',
-                        help='JSON-formatted trace file produced by spdk_trace app')
+                        help='Trace file to annotate (either JSON generated by spdk_trace or ' +
+                             'raw binary produced by the SPDK application itself)')
     parser.add_argument('-g', '--generate', help='Generate bpftrace script', action='store_true')
     parser.add_argument('-r', '--record', help='Record BPF traces on PID', metavar='PID', type=int)
     parser.add_argument('-b', '--bpftrace', help='BPF trace script to use for annotations')
