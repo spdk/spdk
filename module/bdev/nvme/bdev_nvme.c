@@ -1929,6 +1929,29 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
+nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
+				   struct nvme_ns *nvme_ns, int rc)
+{
+	struct nvme_ctrlr *nvme_ctrlr = nvme_ns->ctrlr;
+
+	if (rc == 0) {
+		pthread_mutex_lock(&nvme_ctrlr->mutex);
+		nvme_ctrlr->ref++;
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+	} else {
+		nvme_ctrlr->namespaces[nvme_ns->id - 1] = NULL;
+		free(nvme_ns);
+	}
+
+	if (ctx) {
+		ctx->populates_in_progress--;
+		if (ctx->populates_in_progress == 0) {
+			nvme_ctrlr_populate_namespaces_done(nvme_ctrlr, ctx);
+		}
+	}
+}
+
+static void
 nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns,
 			      struct nvme_async_probe_ctx *ctx)
 {
@@ -1953,32 +1976,15 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 	rc = nvme_bdev_create(nvme_ctrlr, nvme_ns);
 
 done:
-	if (rc == 0) {
-		pthread_mutex_lock(&nvme_ctrlr->mutex);
-		nvme_ctrlr->ref++;
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-	} else {
-		nvme_ctrlr->namespaces[nvme_ns->id - 1] = NULL;
-		free(nvme_ns);
-	}
-
-	if (ctx) {
-		ctx->populates_in_progress--;
-		if (ctx->populates_in_progress == 0) {
-			nvme_ctrlr_populate_namespaces_done(nvme_ctrlr, ctx);
-		}
-	}
+	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
 }
 
 static void
-nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+nvme_ctrlr_depopulate_namespace_done(struct nvme_ns *nvme_ns)
 {
-	struct nvme_bdev *bdev;
+	struct nvme_ctrlr *nvme_ctrlr = nvme_ns->ctrlr;
 
-	bdev = nvme_ns->bdev;
-	if (bdev != NULL) {
-		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
-	}
+	assert(nvme_ctrlr != NULL);
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 
@@ -1993,6 +1999,19 @@ nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *n
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	nvme_ctrlr_release(nvme_ctrlr);
+}
+
+static void
+nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
+{
+	struct nvme_bdev *bdev;
+
+	bdev = nvme_ns->bdev;
+	if (bdev != NULL) {
+		spdk_bdev_unregister(&bdev->disk, NULL, NULL);
+	}
+
+	nvme_ctrlr_depopulate_namespace_done(nvme_ns);
 }
 
 static void
