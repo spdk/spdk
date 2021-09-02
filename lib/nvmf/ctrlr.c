@@ -2611,6 +2611,8 @@ static void
 nvmf_ctrlr_populate_oacs(struct spdk_nvmf_ctrlr *ctrlr,
 			 struct spdk_nvme_ctrlr_data *cdata)
 {
+	cdata->oacs = ctrlr->cdata.oacs;
+
 	cdata->oacs.virtualization_management =
 		g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT].hdlr != NULL;
 	cdata->oacs.nvme_mi = g_nvmf_custom_admin_cmd_hdlrs[SPDK_NVME_OPC_NVME_MI_SEND].hdlr != NULL

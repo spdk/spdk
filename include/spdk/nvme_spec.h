@@ -1872,6 +1872,40 @@ struct spdk_nvme_cdata_oncs {
 	uint16_t	reserved9: 7;
 };
 
+struct spdk_nvme_cdata_oacs {
+	/* supports security send/receive commands */
+	uint16_t	security  : 1;
+
+	/* supports format nvm command */
+	uint16_t	format    : 1;
+
+	/* supports firmware activate/download commands */
+	uint16_t	firmware  : 1;
+
+	/* supports ns manage/ns attach commands */
+	uint16_t	ns_manage  : 1;
+
+	/** Supports device self-test command (SPDK_NVME_OPC_DEVICE_SELF_TEST) */
+	uint16_t	device_self_test : 1;
+
+	/** Supports SPDK_NVME_OPC_DIRECTIVE_SEND and SPDK_NVME_OPC_DIRECTIVE_RECEIVE */
+	uint16_t	directives : 1;
+
+	/** Supports NVMe-MI (SPDK_NVME_OPC_NVME_MI_SEND, SPDK_NVME_OPC_NVME_MI_RECEIVE) */
+	uint16_t	nvme_mi : 1;
+
+	/** Supports SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT */
+	uint16_t	virtualization_management : 1;
+
+	/** Supports SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG */
+	uint16_t	doorbell_buffer_config : 1;
+
+	/** Supports SPDK_NVME_OPC_GET_LBA_STATUS */
+	uint16_t	get_lba_status : 1;
+
+	uint16_t	oacs_rsvd : 6;
+};
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -1966,39 +2000,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 256-511: admin command set attributes */
 
 	/** optional admin command support */
-	struct {
-		/* supports security send/receive commands */
-		uint16_t	security  : 1;
-
-		/* supports format nvm command */
-		uint16_t	format    : 1;
-
-		/* supports firmware activate/download commands */
-		uint16_t	firmware  : 1;
-
-		/* supports ns manage/ns attach commands */
-		uint16_t	ns_manage  : 1;
-
-		/** Supports device self-test command (SPDK_NVME_OPC_DEVICE_SELF_TEST) */
-		uint16_t	device_self_test : 1;
-
-		/** Supports SPDK_NVME_OPC_DIRECTIVE_SEND and SPDK_NVME_OPC_DIRECTIVE_RECEIVE */
-		uint16_t	directives : 1;
-
-		/** Supports NVMe-MI (SPDK_NVME_OPC_NVME_MI_SEND, SPDK_NVME_OPC_NVME_MI_RECEIVE) */
-		uint16_t	nvme_mi : 1;
-
-		/** Supports SPDK_NVME_OPC_VIRTUALIZATION_MANAGEMENT */
-		uint16_t	virtualization_management : 1;
-
-		/** Supports SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG */
-		uint16_t	doorbell_buffer_config : 1;
-
-		/** Supports SPDK_NVME_OPC_GET_LBA_STATUS */
-		uint16_t	get_lba_status : 1;
-
-		uint16_t	oacs_rsvd : 6;
-	} oacs;
+	struct spdk_nvme_cdata_oacs oacs;
 
 	/** abort command limit */
 	uint8_t			acl;

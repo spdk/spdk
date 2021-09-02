@@ -203,6 +203,7 @@ struct spdk_nvmf_ctrlr_data {
 	uint16_t ssvid;
 	/** ieee oui identifier */
 	uint8_t ieee[3];
+	struct spdk_nvme_cdata_oacs oacs;
 	struct spdk_nvme_cdata_oncs oncs;
 	struct spdk_nvme_cdata_sgls sgls;
 	struct spdk_nvme_cdata_nvmf_specific nvmf_specific;
