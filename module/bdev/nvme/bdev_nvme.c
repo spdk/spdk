@@ -1929,12 +1929,13 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
-nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
-				   struct nvme_ns *nvme_ns, int rc)
+nvme_ctrlr_populate_namespace_done(struct nvme_ns *nvme_ns, int rc)
 {
 	struct nvme_ctrlr *nvme_ctrlr = nvme_ns->ctrlr;
+	struct nvme_async_probe_ctx *ctx = nvme_ns->probe_ctx;
 
 	if (rc == 0) {
+		nvme_ns->probe_ctx = NULL;
 		pthread_mutex_lock(&nvme_ctrlr->mutex);
 		nvme_ctrlr->ref++;
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -1952,8 +1953,7 @@ nvme_ctrlr_populate_namespace_done(struct nvme_async_probe_ctx *ctx,
 }
 
 static void
-nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns,
-			      struct nvme_async_probe_ctx *ctx)
+nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct spdk_nvme_ns	*ns;
@@ -1976,7 +1976,7 @@ nvme_ctrlr_populate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvm
 	rc = nvme_bdev_create(nvme_ctrlr, nvme_ns);
 
 done:
-	nvme_ctrlr_populate_namespace_done(ctx, nvme_ns, rc);
+	nvme_ctrlr_populate_namespace_done(nvme_ns, rc);
 }
 
 static void
@@ -2089,7 +2089,9 @@ nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 			if (ctx) {
 				ctx->populates_in_progress++;
 			}
-			nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns, ctx);
+			nvme_ns->probe_ctx = ctx;
+
+			nvme_ctrlr_populate_namespace(nvme_ctrlr, nvme_ns);
 		}
 
 		nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid);

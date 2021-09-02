@@ -67,12 +67,13 @@ struct nvme_async_probe_ctx {
 };
 
 struct nvme_ns {
-	uint32_t		id;
-	struct spdk_nvme_ns	*ns;
-	struct nvme_ctrlr	*ctrlr;
-	struct nvme_bdev	*bdev;
-	uint32_t		ana_group_id;
-	enum spdk_nvme_ana_state ana_state;
+	uint32_t			id;
+	struct spdk_nvme_ns		*ns;
+	struct nvme_ctrlr		*ctrlr;
+	struct nvme_bdev		*bdev;
+	uint32_t			ana_group_id;
+	enum spdk_nvme_ana_state	ana_state;
+	struct nvme_async_probe_ctx	*probe_ctx;
 };
 
 struct nvme_bdev_io;
