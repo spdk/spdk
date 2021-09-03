@@ -2497,6 +2497,7 @@ spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 {
 	struct spdk_thread *thread;
 	struct spdk_interrupt *intr;
+	int ret;
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -2509,7 +2510,11 @@ spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 		return NULL;
 	}
 
-	if (spdk_fd_group_add(thread->fgrp, efd, fn, arg)) {
+	ret = spdk_fd_group_add(thread->fgrp, efd, fn, arg);
+
+	if (ret != 0) {
+		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",
+			    thread->name, efd, spdk_strerror(-ret));
 		return NULL;
 	}
 
