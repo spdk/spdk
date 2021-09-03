@@ -570,17 +570,19 @@ function check_changelog() {
 }
 
 function check_json_rpc() {
-	local rc=1
+	local rc=0
 
+	echo -n "Checking that all RPCs are documented..."
 	while IFS='"' read -r _ rpc _; do
 		if ! grep -q "^### $rpc" doc/jsonrpc.md; then
 			echo "Missing JSON-RPC documentation for ${rpc}"
 			rc=1
-			continue
 		fi
-		rc=0
 	done < <(git grep -h -E "^SPDK_RPC_REGISTER\(" ':!test/*')
 
+	if [ $rc -eq 0 ]; then
+		echo " OK"
+	fi
 	return $rc
 }
 
