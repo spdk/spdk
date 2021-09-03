@@ -16,6 +16,7 @@ busy() {
 	local selected_cpus cpu
 	local reactor_framework
 	local threads thread
+	local sched_period=1 # default, 1s
 
 	# Create two busy threads with two cpus (not including main cpu) and check if either of
 	# them is moved to either of the selected cpus. Expected load is ~100% on each thread and
@@ -26,11 +27,13 @@ busy() {
 	thread0=$(create_thread -n "thread0" -m "$(mask_cpus "${selected_cpus[@]}")" -a 100)
 	thread1=$(create_thread -n "thread1" -m "$(mask_cpus "${selected_cpus[@]}")" -a 100)
 
+	sleep $((10 * sched_period))
+
 	local samples=0
 
 	xtrace_disable
 	while ((samples++ < 5)); do
-		sleep 0.5s
+		sleep $sched_period
 
 		all_set=0
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
