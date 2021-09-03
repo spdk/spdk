@@ -94,6 +94,7 @@ struct spdk_poller {
 	spdk_poller_fn			fn;
 	void				*arg;
 	struct spdk_thread		*thread;
+	/* Native interruptfd for period or busy poller */
 	int				interruptfd;
 	spdk_poller_set_interrupt_mode_cb set_intr_cb_fn;
 	void				*set_intr_cb_arg;
@@ -153,6 +154,7 @@ struct spdk_thread {
 
 	/* Indicates whether this spdk_thread currently runs in interrupt. */
 	bool				in_interrupt;
+	bool				poller_unregistered;
 	struct spdk_fd_group		*fgrp;
 
 	/* User context allocated at the end */
@@ -737,7 +739,6 @@ poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller, uint
 	}
 }
 
-#ifdef __linux__
 static inline void
 poller_remove_timer(struct spdk_thread *thread, struct spdk_poller *poller)
 {
@@ -753,7 +754,6 @@ poller_remove_timer(struct spdk_thread *thread, struct spdk_poller *poller)
 		thread->first_timed_poller = RB_MIN(timed_pollers_tree, &thread->timed_pollers);
 	}
 }
-#endif
 
 static void
 thread_insert_poller(struct spdk_thread *thread, struct spdk_poller *poller)
@@ -995,6 +995,28 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 			if (rc < 0 && errno != EAGAIN) {
 				SPDK_ERRLOG("failed to acknowledge msg queue: %s.\n", spdk_strerror(errno));
 			}
+		}
+
+		/* Reap unregistered pollers out of poller execution in intr mode */
+		if (spdk_unlikely(thread->poller_unregistered)) {
+			struct spdk_poller *poller, *tmp;
+
+			TAILQ_FOREACH_REVERSE_SAFE(poller, &thread->active_pollers,
+						   active_pollers_head, tailq, tmp) {
+				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+					TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
+					free(poller);
+				}
+			}
+
+			RB_FOREACH_SAFE(poller, timed_pollers_tree, &thread->timed_pollers, tmp) {
+				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+					poller_remove_timer(thread, poller);
+					free(poller);
+				}
+			}
+
+			thread->poller_unregistered = false;
 		}
 	}
 
@@ -1582,8 +1604,16 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 		return;
 	}
 
-	if (spdk_interrupt_mode_is_enabled() && poller->interruptfd >= 0) {
-		poller_interrupt_fini(poller);
+	if (spdk_interrupt_mode_is_enabled()) {
+		/* Release the interrupt resource for period or busy poller */
+		if (poller->interruptfd >= 0) {
+			poller_interrupt_fini(poller);
+		}
+
+		/* Mark there is poller unregistered. Then unregistered pollers will
+		 * get reaped by spdk_thread_poll also in intr mode.
+		 */
+		thread->poller_unregistered = true;
 	}
 
 	/* If the poller was paused, put it on the active_pollers list so that

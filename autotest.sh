@@ -188,6 +188,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "bdevperf_config" test/bdev/bdevperf/test_config.sh
 		if [[ $(uname -s) == Linux ]]; then
 			run_test "reactor_set_interrupt" test/interrupt/reactor_set_interrupt.sh
+			run_test "reap_unregistered_poller" test/interrupt/reap_unregistered_poller.sh
 		fi
 	fi
 
