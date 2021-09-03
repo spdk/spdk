@@ -2613,7 +2613,10 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 	}
 
 	/* ADMIN command will not use SGL */
-	assert(req->cmd->nvme_cmd.psdt == 0);
+	if (req->cmd->nvme_cmd.psdt != 0) {
+		return -EINVAL;
+	}
+
 	iovcnt = vfio_user_map_cmd(ctrlr, req, req->iov, len);
 	if (iovcnt < 0) {
 		SPDK_ERRLOG("%s: map Admin Opc %x failed\n",
