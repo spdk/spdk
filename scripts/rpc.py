@@ -39,7 +39,7 @@ if __name__ == "__main__":
                         help='Set verbose mode to INFO', default="ERROR")
     parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
                         help="""Set verbose level. """)
-    parser.add_argument('--dry_run', dest='dry_run', action='store_true', help="Display request and exit")
+    parser.add_argument('--dry-run', dest='dry_run', action='store_true', help="Display request and exit")
     parser.set_defaults(dry_run=False)
     parser.add_argument('--server', dest='is_server', action='store_true',
                         help="Start listening on stdin, parse each line as a regular rpc.py execution and create \
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC.""")
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
-    p.add_argument('-j', '--json_conf', help='Valid JSON configuration', default=sys.stdin)
+    p.add_argument('-j', '--json-conf', help='Valid JSON configuration', default=sys.stdin)
     p.set_defaults(func=load_config)
 
     def save_subsystem_config(args):
@@ -122,7 +122,7 @@ if __name__ == "__main__":
                                   args.json_conf)
 
     p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC.""")
-    p.add_argument('-j', '--json_conf', help='Valid JSON configuration', default=sys.stdin)
+    p.add_argument('-j', '--json-conf', help='Valid JSON configuration', default=sys.stdin)
     p.set_defaults(func=load_subsystem_config)
 
     # app
@@ -220,9 +220,9 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('bdev_compress_create', aliases=['construct_compress_bdev'],
                               help='Add a compress vbdev')
-    p.add_argument('-b', '--base_bdev_name', help="Name of the base bdev")
-    p.add_argument('-p', '--pm_path', help="Path to persistent memory")
-    p.add_argument('-l', '--lb_size', help="Compressed vol logical block size (optional, if used must be 512 or 4096)", type=int, default=0)
+    p.add_argument('-b', '--base-bdev-name', help="Name of the base bdev")
+    p.add_argument('-p', '--pm-path', help="Path to persistent memory")
+    p.add_argument('-l', '--lb-size', help="Compressed vol logical block size (optional, if used must be 512 or 4096)", type=int, default=0)
     p.set_defaults(func=bdev_compress_create)
 
     def bdev_compress_delete(args):
@@ -661,9 +661,9 @@ if __name__ == "__main__":
                               help='Add a Rados cluster with ceph rbd backend')
     p.add_argument('name', help="Name of the Rados cluster only known to rbd bdev")
     p.add_argument('--user', help="Ceph user name (i.e. admin, not client.admin)", required=False)
-    p.add_argument('--config_param', action='append', metavar='key=value',
+    p.add_argument('--config-param', action='append', metavar='key=value',
                    help="adds a key=value configuration option for rados_conf_set (default: rely on config file)")
-    p.add_argument('--config_file', help="The file path of the Rados configuration file", required=False)
+    p.add_argument('--config-file', help="The file path of the Rados configuration file", required=False)
     p.set_defaults(func=bdev_rbd_register_cluster)
 
     def bdev_rbd_unregister_cluster(args):
@@ -709,7 +709,7 @@ if __name__ == "__main__":
     p.add_argument('pool_name', help='rbd pool name')
     p.add_argument('rbd_name', help='rbd image name')
     p.add_argument('block_size', help='rbd block size', type=int)
-    p.add_argument('-c', '--cluster_name', help="cluster name to identify the Rados cluster", required=False)
+    p.add_argument('-c', '--cluster-name', help="cluster name to identify the Rados cluster", required=False)
     p.set_defaults(func=bdev_rbd_create)
 
     def bdev_rbd_delete(args):
@@ -918,16 +918,16 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_set_qos_limit', aliases=['set_bdev_qos_limit'],
                               help='Set QoS rate limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
-    p.add_argument('--rw_ios_per_sec',
+    p.add_argument('--rw-ios-per-sec',
                    help='R/W IOs per second limit (>=1000, example: 20000). 0 means unlimited.',
                    type=int, required=False)
-    p.add_argument('--rw_mbytes_per_sec',
+    p.add_argument('--rw-mbytes-per-sec',
                    help="R/W megabytes per second limit (>=10, example: 100). 0 means unlimited.",
                    type=int, required=False)
-    p.add_argument('--r_mbytes_per_sec',
+    p.add_argument('--r-mbytes-per-sec',
                    help="Read megabytes per second limit (>=10, example: 100). 0 means unlimited.",
                    type=int, required=False)
-    p.add_argument('--w_mbytes_per_sec',
+    p.add_argument('--w-mbytes-per-sec',
                    help="Write megabytes per second limit (>=10, example: 100). 0 means unlimited.",
                    type=int, required=False)
     p.set_defaults(func=bdev_set_qos_limit)
@@ -1027,7 +1027,7 @@ if __name__ == "__main__":
     p.add_argument('-x', '--max-large-datain-per-connection', help='Max number of outstanding split read I/Os per connection', type=int)
     p.add_argument('-k', '--max-r2t-per-connection', help='Max number of outstanding R2Ts per connection', type=int)
     p.add_argument('-u', '--pdu-pool-size', help='Number of PDUs in the pool', type=int)
-    p.add_argument('-j', '--immediate_data-pool-size', help='Number of immediate data buffers in the pool', type=int)
+    p.add_argument('-j', '--immediate-data-pool-size', help='Number of immediate data buffers in the pool', type=int)
     p.add_argument('-z', '--data-out-pool-size', help='Number of data out buffers in the pool', type=int)
     p.set_defaults(func=iscsi_set_options)
 
@@ -1276,8 +1276,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Omit redirect host and port to clear previously set redirect settings.""")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_tag', help='Portal group tag (unique, integer > 0)', type=int)
-    p.add_argument('-a', '--redirect_host', help='Numeric IP address for redirect portal', required=False)
-    p.add_argument('-p', '--redirect_port', help='Numeric TCP port for redirect portal', required=False)
+    p.add_argument('-a', '--redirect-host', help='Numeric IP address for redirect portal', required=False)
+    p.add_argument('-p', '--redirect-port', help='Numeric TCP port for redirect portal', required=False)
     p.set_defaults(func=iscsi_target_node_set_redirect)
 
     def iscsi_target_node_request_logout(args):
@@ -1817,18 +1817,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('bdev_ftl_create', aliases=['construct_ftl_bdev'], help='Add FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-d', '--base_bdev', help='Name of zoned bdev used as underlying device',
+    p.add_argument('-d', '--base-bdev', help='Name of zoned bdev used as underlying device',
                    required=True)
     p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
                    'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
     p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')
-    p.add_argument('-o', '--allow_open_bands', help='Restoring after dirty shutdown without cache will'
+    p.add_argument('-o', '--allow-open-bands', help='Restoring after dirty shutdown without cache will'
                    ' result in partial data recovery, instead of error', action='store_true')
     p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
                    ' to user (optional)', type=int)
-    p.add_argument('--l2p_path', help='Path to persistent memory file or device to store l2p onto, '
+    p.add_argument('--l2p-path', help='Path to persistent memory file or device to store l2p onto, '
                                       'by default l2p is kept in DRAM and is volatile (optional)')
-    p.add_argument('--use_append', help='Use appends instead of writes', action='store_true')
+    p.add_argument('--use-append', help='Use appends instead of writes', action='store_true')
 
     limits = p.add_argument_group('Defrag limits', 'Configures defrag limits and thresholds for'
                                   ' levels ' + str(ftl_valid_limits)[1:-1])
@@ -1914,7 +1914,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('nvmf_create_transport', help='Create NVMf transport')
     p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
-    p.add_argument('-g', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-g', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
     p.add_argument('-p', '--max-qpairs-per-ctrlr', help="""Max number of SQ and CQ per controller.
     Deprecated, use max-io-qpairs-per-ctrlr""", type=int)
@@ -1925,17 +1925,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
     p.add_argument('-n', '--num-shared-buffers', help='The number of pooled data buffers available to the transport', type=int)
     p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to reserve for each poll group', type=int)
-    p.add_argument('-d', '--num_cqe', help="""The number of CQ entires. Only used when no_srq=true.
+    p.add_argument('-d', '--num-cqe', help="""The number of CQ entires. Only used when no_srq=true.
     Relevant only for RDMA transport""", type=int)
     p.add_argument('-s', '--max-srq-depth', help='Max number of outstanding I/O per SRQ. Relevant only for RDMA transport', type=int)
     p.add_argument('-r', '--no-srq', action='store_true', help='Disable per-thread shared receive queue. Relevant only for RDMA transport')
     p.add_argument('-o', '--c2h-success', action='store_false', help='Disable C2H success optimization. Relevant only for TCP transport')
     p.add_argument('-f', '--dif-insert-or-strip', action='store_true', help='Enable DIF insert/strip. Relevant only for TCP transport')
     p.add_argument('-y', '--sock-priority', help='The sock priority of the tcp connection. Relevant only for TCP transport', type=int)
-    p.add_argument('-l', '--acceptor_backlog', help='Pending connections allowed at one time. Relevant only for RDMA transport', type=int)
+    p.add_argument('-l', '--acceptor-backlog', help='Pending connections allowed at one time. Relevant only for RDMA transport', type=int)
     p.add_argument('-x', '--abort-timeout-sec', help='Abort execution timeout value, in seconds', type=int)
     p.add_argument('-w', '--no-wr-batching', action='store_true', help='Disable work requests batching. Relevant only for RDMA transport')
-    p.add_argument('-e', '--control_msg_num', help="""The number of control messages per poll group.
+    p.add_argument('-e', '--control-msg-num', help="""The number of control messages per poll group.
     Relevant only for TCP transport""", type=int)
     p.set_defaults(func=nvmf_create_transport)
 
@@ -1944,7 +1944,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('nvmf_get_transports', aliases=['get_nvmf_transports'],
                               help='Display nvmf transports')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_transports)
 
     def nvmf_get_subsystems(args):
@@ -1953,7 +1953,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_get_subsystems', aliases=['get_nvmf_subsystems'],
                               help='Display nvmf subsystems or required subsystem')
     p.add_argument('nqn', help='Subsystem NQN (optional)', nargs="?", default=None)
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_subsystems)
 
     def nvmf_create_subsystem(args):
@@ -1971,7 +1971,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_create_subsystem', aliases=['nvmf_subsystem_create'],
                               help='Create an NVMe-oF subsystem')
     p.add_argument('nqn', help='Subsystem NQN (ASCII)')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument("-s", "--serial-number", help="""
     Format:  'sn' etc
     Example: 'SPDK00000000000001'""", default='00000000000000000000')
@@ -1995,7 +1995,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Delete a nvmf subsystem')
     p.add_argument('subsystem_nqn',
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_delete_subsystem)
 
     def nvmf_subsystem_add_listener(args):
@@ -2005,7 +2005,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
     p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
-    p.add_argument('-p', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number (required for RDMA or TCP)')
     p.set_defaults(func=nvmf_subsystem_add_listener)
@@ -2023,7 +2023,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
     p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
-    p.add_argument('-p', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.set_defaults(func=nvmf_subsystem_remove_listener)
@@ -2044,7 +2044,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-n', '--ana-state', help='ANA state to set: optimized, non-optimized, or inaccessible', required=True)
     p.add_argument('-t', '--trtype', help='NVMe-oF transport type: e.g., rdma', required=True)
     p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
-    p.add_argument('-p', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
     p.add_argument('-g', '--anagrpid', help='ANA group ID (optional)', type=int)
@@ -2065,7 +2065,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('bdev_name', help='The name of the bdev that will back this namespace')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-p', '--ptpl-file', help='The persistent reservation storage location (optional)', type=str)
     p.add_argument('-n', '--nsid', help='The requested NSID (optional)', type=int)
     p.add_argument('-g', '--nguid', help='Namespace globally unique identifier (optional)')
@@ -2083,7 +2083,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_remove_ns', help='Remove a namespace to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('nsid', help='The requested NSID', type=int)
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_remove_ns)
 
     def nvmf_subsystem_add_host(args):
@@ -2095,7 +2095,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_add_host', help='Add a host to an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to allow')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_add_host)
 
     def nvmf_subsystem_remove_host(args):
@@ -2107,7 +2107,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('nvmf_subsystem_remove_host', help='Remove a host from an NVMe-oF subsystem')
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to remove')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_remove_host)
 
     def nvmf_subsystem_allow_any_host(args):
@@ -2120,7 +2120,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('-e', '--enable', action='store_true', help='Enable allowing any host')
     p.add_argument('-d', '--disable', action='store_true', help='Disable allowing any host')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_subsystem_allow_any_host)
 
     def nvmf_subsystem_get_controllers(args):
@@ -2161,7 +2161,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser(
         'nvmf_get_stats', help='Display current statistics for NVMf subsystem')
-    p.add_argument('-t', '--tgt_name', help='The name of the parent NVMe-oF target (optional)', type=str)
+    p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_stats)
 
     def nvmf_set_crdt(args):
@@ -2586,7 +2586,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('blobfs_create', help='Build a blobfs on bdev')
     p.add_argument('bdev_name', help='Blockdev name to build blobfs. Example: Malloc0.')
-    p.add_argument('-c', '--cluster_sz',
+    p.add_argument('-c', '--cluster-sz',
                    help="""Size of cluster in bytes (Optional). Must be multiple of 4KB page size. Default and minimal value is 1M.""")
     p.set_defaults(func=blobfs_create)
 
@@ -2710,7 +2710,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             except ModuleNotFoundError:
                 print("Module %s not found" % rpc_module)
 
+    def replace_arg_underscores(args):
+        # All option names are defined with dashes only - for example: --tgt-name
+        # But if user used underscores, convert them to dashes (--tgt_name => --tgt-name)
+        # SPDK was inconsistent previously and had some options with underscores, so
+        # doing this conversion ensures backward compatibility with older scripts.
+        for i in range(len(args)):
+            arg = args[i]
+            if arg.startswith('--') and "_" in arg:
+                args[i] = arg.replace('_', '-')
+
     load_plugin(None)
+
+    replace_arg_underscores(sys.argv)
 
     args = parser.parse_args()
 
@@ -2721,6 +2733,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     if args.is_server:
         for input in sys.stdin:
             cmd = shlex.split(input)
+            replace_arg_underscores(cmd)
             try:
                 load_plugin(cmd)
                 tmp_args = parser.parse_args(cmd)
