@@ -446,18 +446,13 @@ class Trace:
             timestamp = get_us(e.tsc, offset)
             diff = get_us(e.time, 0) if e.time is not None else None
             args = ', '.join(self._format_args(e))
-            fields = [
-                f'{e.lcore:3}',
-                f'{timestamp:16.3f}',
-                f'{e.poller:3}' if e.poller is not None else ' ' * 3,
-                f'{e.tpoint.name:24}',
-                f'size: {e.size:6}' if e.size else ' ' * (len('size: ') + 6),
-                f'id: {e.object_id:8}' if e.object_id is not None else None,
-                f'time: {diff:<8.3f}' if diff is not None else None,
-                args
-            ]
 
-            print(' '.join([*filter(lambda f: f is not None, fields)]).rstrip())
+            print(('{:3} {:16.3f} {:3} {:24} {:12}'.format(
+                e.lcore, timestamp, e.poller if e.poller is not None else '',
+                e.tpoint.name, f'size: {e.size}' if e.size else '') +
+                (f'id: {e.object_id:8} ' if e.object_id is not None else '') +
+                (f'time: {diff:<8.3f} ' if diff is not None else '') +
+                args).rstrip())
 
 
 class SPDKObject:
