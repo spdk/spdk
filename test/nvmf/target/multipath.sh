@@ -14,7 +14,10 @@ function check_ana_state() {
 	local subsys_id=$1
 	local ctrl_id=$2
 	local ana_state=$3
-	local timeout=3
+	# Very rarely a connection is lost and Linux NVMe host tries reconnecting
+	# after 10 seconds delay. For this case, set a sufficienntly long timeout.
+	# Linux NVMe host usually recognizes the new ANA state within 2 seconds.
+	local timeout=20
 
 	while [ $(cat /sys/block/nvme"$subsys_id"c"$ctrl_id"n1/ana_state) != "$ana_state" ]; do
 		sleep 1
