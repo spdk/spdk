@@ -291,6 +291,41 @@ map_cpufreq() {
 					fi
 				done
 				;;
+			cppc_cpufreq)
+				cpufreq_setspeed[cpu_idx]=$(< "$cpu/cpufreq/scaling_setspeed")
+				scaling_min_freqs[cpu_idx]=$(< "$cpu/cpufreq/scaling_min_freq")
+				scaling_max_freqs[cpu_idx]=$(< "$cpu/cpufreq/scaling_max_freq")
+				cpuinfo_max_freqs[cpu_idx]=$(< "$cpu/cpufreq/cpuinfo_max_freq")
+				nominal_perf[cpu_idx]=$(< "$cpu/acpi_cppc/nominal_perf")
+				highest_perf[cpu_idx]=$(< "$cpu/acpi_cppc/highest_perf")
+
+				#the unit of highest_perf and nominal_perf differs on different arm platforms.
+				#For highest_perf, it maybe 300 or 3000000, both means 3.0GHz.
+				if ((highest_perf[cpu_idx] > nominal_perf[cpu_idx] && (\
+					highest_perf[cpu_idx] == cpuinfo_max_freqs[cpu_idx] || \
+					highest_perf[cpu_idx] * 10000 == cpuinfo_max_freqs[cpu_idx]))); then
+					cpufreq_is_turbo[cpu_idx]=1
+				else
+					cpufreq_is_turbo[cpu_idx]=0
+				fi
+
+				if ((nominal_perf[cpu_idx] < 10000)); then
+					nominal_perf[cpu_idx]=$((nominal_perf[cpu_idx] * 10000))
+				fi
+
+				num_freqs=$(((nominal_perf[cpu_idx] - scaling_min_freqs[cpu_idx]) / 100000 + 1 + \
+					cpufreq_is_turbo[cpu_idx]))
+
+				available_freqs=()
+				for ((freq = 0; freq < num_freqs; freq++)); do
+					if ((freq == 0 && cpufreq_is_turbo[cpu_idx] == 1)); then
+						available_freqs[freq]=$((scaling_max_freqs[cpu_idx]))
+					else
+						available_freqs[freq]=$((nominal_perf[cpu_idx] - (\
+							freq - cpufreq_is_turbo[cpu_idx]) * 100000))
+					fi
+				done
+				;;
 		esac
 	done
 	if [[ -e $sysfs_cpu/cpufreq/boost ]]; then

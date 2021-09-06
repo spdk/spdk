@@ -38,6 +38,7 @@ update_main_core_cpufreq() {
 	case "$main_core_driver" in
 		acpi-cpufreq) main_core_setspeed=${cpufreq_setspeed[spdk_main_core]} ;;
 		intel_pstate | intel_cpufreq) main_core_setspeed=$main_core_set_max_freq ;;
+		cppc_cpufreq) main_core_setspeed=${cpufreq_setspeed[spdk_main_core]} ;;
 	esac
 }
 
@@ -56,6 +57,10 @@ verify_dpdk_governor() {
 	#    - governor set to performance
 	#    - lowering max_freq and min_freq for the main core
 	#    - having max_freq and min_freq at lowest supported frequency
+	#  - cppc_cpufreq:
+	#    - governor set to userspace
+	#    - lowering setspeed for the main core
+	#    - having setspeed at lowest supported frequency
 
 	local -g cpus
 
@@ -103,6 +108,12 @@ verify_dpdk_governor() {
 					&& [[ -n ${main_core_freqs_map[main_core_setspeed]} ]] \
 					&& ((main_core_setspeed == main_core_freqs[-1])) \
 					&& ((main_core_set_max_freq == main_core_set_min_freq)) \
+					&& ((dir == 0))
+				;;
+			cppc_cpufreq)
+				[[ $main_core_governor == userspace ]] \
+					&& [[ -n ${main_core_freqs_map[main_core_setspeed]} ]] \
+					&& ((main_core_setspeed == main_core_freqs[-1])) \
 					&& ((dir == 0))
 				;;
 		esac && all_set=1
