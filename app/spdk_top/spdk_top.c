@@ -1071,6 +1071,7 @@ draw_tabs(enum tabs tab_index, uint8_t sort_col)
 	WINDOW *tab = g_tabs[tab_index];
 	int i, j;
 	uint16_t offset, draw_offset;
+	uint16_t tab_height = g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - 3;
 
 	for (i = 0; col_desc[i].name != NULL; i++) {
 		if (col_desc[i].disabled) {
@@ -1101,8 +1102,12 @@ draw_tabs(enum tabs tab_index, uint8_t sort_col)
 	}
 
 	print_max_len(tab, 2, 1, 0, ALIGN_LEFT, ""); /* Move to next line */
-	whline(tab, ACS_HLINE, MAX_STRING_LEN);
-	box(tab, 0, 0);
+	whline(tab, ACS_HLINE, g_max_col - 2);
+
+	/* Border lines */
+	mvwhline(tab, 0, 1, ACS_HLINE, g_max_col - 2);
+	mvwhline(tab, tab_height, 1, ACS_HLINE, g_max_col - 2);
+
 	wrefresh(tab);
 }
 
