@@ -1108,6 +1108,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 	struct idxd_ops *op, *tmp;
 	int status = 0;
 	int rc = 0;
+	void *cb_arg;
+	spdk_idxd_req_cb cb_fn;
 
 	assert(chan != NULL);
 
@@ -1144,17 +1146,21 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				break;
 			}
 
-			if (op->cb_fn) {
-				op->cb_fn(op->cb_arg, status);
-			}
-
-			op->hw.status = status = 0;
-
+			cb_fn = op->cb_fn;
+			cb_arg = op->cb_arg;
+			op->hw.status = 0;
 			if (op->desc->opcode == IDXD_OPCODE_BATCH) {
 				_free_batch(op->batch, chan);
 			} else if (op->batch == NULL) {
 				TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 			}
+
+			if (cb_fn) {
+				cb_fn(cb_arg, status);
+			}
+
+			/* reset the status */
+			status = 0;
 		} else {
 			/*
 			 * oldest locations are at the head of the list so if
