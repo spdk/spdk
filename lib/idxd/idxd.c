@@ -321,7 +321,8 @@ spdk_idxd_set_config(uint32_t config_num, bool kernel_mode)
 	}
 
 	if (g_idxd_impl == NULL) {
-		SPDK_ERRLOG("Cannot set the idxd implementation");
+		SPDK_ERRLOG("Cannot set the idxd implementation with %s mode\n",
+			    kernel_mode ? KERNEL_DRIVER_NAME : USERSPACE_DRIVER_NAME);
 		return;
 	}
 
