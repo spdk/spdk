@@ -357,6 +357,8 @@ trap - SIGINT SIGTERM EXIT
 # catch any stray core files
 process_core
 
+[[ -f "$output_dir/udev.log" ]] && rm -f "$output_dir/udev.log"
+
 if hash lcov && ! [[ "$CC_TYPE" == *"clang"* ]]; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o $out/cov_test.info
