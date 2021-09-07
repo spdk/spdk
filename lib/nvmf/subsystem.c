@@ -539,6 +539,11 @@ nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 		    state == SPDK_NVMF_SUBSYSTEM_PAUSING) {
 			expected_old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
 		}
+		/* This is for the case when stopping paused subsystem */
+		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_PAUSED &&
+		    state == SPDK_NVMF_SUBSYSTEM_DEACTIVATING) {
+			expected_old_state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+		}
 		actual_old_state = expected_old_state;
 		__atomic_compare_exchange_n(&subsystem->state, &actual_old_state, state, false,
 					    __ATOMIC_RELAXED, __ATOMIC_RELAXED);
