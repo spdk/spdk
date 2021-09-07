@@ -161,7 +161,6 @@ struct nvme_bdev_channel {
 	struct nvme_ctrlr_channel	*ctrlr_ch;
 };
 
-struct nvme_ctrlr *nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
 
 typedef void (*nvme_ctrlr_for_each_fn)(struct nvme_ctrlr *nvme_ctrlr, void *ctx);
@@ -170,13 +169,6 @@ void nvme_ctrlr_for_each(nvme_ctrlr_for_each_fn fn, void *ctx);
 
 void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
-
-void nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr);
-void nvme_ctrlr_unregister(void *ctx);
-void nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr);
-
-int bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf);
-void bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf);
 
 struct nvme_ns *nvme_ctrlr_get_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
 struct nvme_ns *nvme_ctrlr_get_first_active_ns(struct nvme_ctrlr *nvme_ctrlr);
@@ -208,7 +200,6 @@ struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_
 void bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
-int bdev_nvme_remove_trid(const char *name, struct spdk_nvme_transport_id *trid);
 
 int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     struct spdk_nvme_host_id *hostid,

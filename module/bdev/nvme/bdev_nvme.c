@@ -276,7 +276,7 @@ nvme_ctrlr_get_next_active_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *ns)
 	return NULL;
 }
 
-struct nvme_ctrlr *
+static struct nvme_ctrlr *
 nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_ctrlr	*nvme_ctrlr;
@@ -353,7 +353,7 @@ nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid, struct spdk_
 	}
 }
 
-void
+static void
 nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct nvme_ctrlr_trid *trid, *tmp_trid;
@@ -406,7 +406,7 @@ nvme_ctrlr_unregister_cb(void *io_device)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-void
+static void
 nvme_ctrlr_unregister(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
@@ -414,7 +414,7 @@ nvme_ctrlr_unregister(void *ctx)
 	spdk_io_device_unregister(nvme_ctrlr, nvme_ctrlr_unregister_cb);
 }
 
-void
+static void
 nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 {
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
@@ -433,7 +433,7 @@ nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr_unregister(nvme_ctrlr);
 }
 
-int
+static int
 bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_channel *nbdev_ch = ctx_buf;
@@ -455,7 +455,7 @@ bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-void
+static void
 bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_channel *nbdev_ch = ctx_buf;
