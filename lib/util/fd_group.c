@@ -31,8 +31,12 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/queue.h"
+#include "spdk_internal/usdt.h"
+
+#include "spdk/env.h"
 #include "spdk/log.h"
+#include "spdk/queue.h"
+
 #include "spdk/fd_group.h"
 
 #ifdef __linux__
@@ -297,6 +301,9 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 			free(ehdlr);
 			continue;
 		}
+
+		SPDK_DTRACE_PROBE4(interrupt_fd_process, ehdlr->name, ehdlr->fd,
+				   ehdlr->fn, ehdlr->fn_arg);
 
 		/* call the interrupt response function */
 		ehdlr->fn(ehdlr->fn_arg);

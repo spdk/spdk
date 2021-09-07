@@ -1,0 +1,60 @@
+/*
+ * Trace reasons for SPDK to wake up in interrupt mode.
+ *
+ * You'll probably need bpftrace from https://github.com/fbs/el7-bpf-specs
+ *
+ * Usage:
+ * scripts/bpftrace.sh `pidof spdk_tgt` [all]
+ *     all: show every event, not just the first after waking up
+ */
+
+tracepoint:sched:sched_switch /comm == "reactor_0"/
+{
+	if (str($1) == "all") {
+		printf("%llums: %s is off-cpu\n", elapsed / 1000000, comm);
+	}
+	@off = 1;
+}
+
+/*
+ * We explicitly filter out the framework-level handlers here in favour of the
+ * more specific tracepoints below.
+ */
+usdt:__EXE__:spdk:interrupt_fd_process /
+	@off == 1 &&
+	strncmp(str(arg1), "event_queue_run_batch", 40) != 0 &&
+	strncmp(str(arg1), "interrupt_timerfd_process", 40) != 0 &&
+	strncmp(str(arg1), "thread_interrupt_msg_process", 40) != 0 &&
+	strncmp(str(arg1), "thread_process_interrupts", 40) != 0
+/
+{
+	printf("%llums:%s: fd:%d %s(%p)\n", elapsed / 1000000, probe, arg2, usym(arg3), arg4);
+	if (str($1) != "all") {
+	    @off = 0;
+	}
+}
+
+usdt:__EXE__:spdk:timerfd_exec /@off == 1/
+{
+	printf("%llums:%s: %s(%p)\n", elapsed / 1000000, probe, usym(arg1), arg2);
+	if (str($1) != "all") {
+	    @off = 0;
+	}
+}
+
+usdt:__EXE__:spdk:msg_exec /@off == 1/
+{
+	printf("%llums:%s: %s(%p)\n", elapsed / 1000000, probe, usym(arg1), arg2);
+	if (str($1) != "all") {
+	    @off = 0;
+	}
+}
+
+usdt:__EXE__:spdk:event_exec /@off == 1/
+{
+	printf("%llums:%s: %s(%p, %p)\n", elapsed / 1000000, probe, usym(arg1),
+           arg2, arg3);
+	if (str($1) != "all") {
+	    @off = 0;
+	}
+}

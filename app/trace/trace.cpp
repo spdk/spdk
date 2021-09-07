@@ -68,6 +68,12 @@ extern "C" {
 	{
 		assert(false);
 	}
+
+	uint64_t
+	spdk_get_ticks(void)
+	{
+		return 0;
+	}
 } /* extern "C" */
 
 static void usage(void);

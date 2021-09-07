@@ -44,6 +44,7 @@
 
 #include "spdk/log.h"
 #include "spdk_internal/thread.h"
+#include "spdk_internal/usdt.h"
 #include "thread_internal.h"
 
 #include "spdk_internal/trace_defs.h"
@@ -709,6 +710,9 @@ msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 		struct spdk_msg *msg = messages[i];
 
 		assert(msg != NULL);
+
+		SPDK_DTRACE_PROBE2(msg_exec, msg->fn, msg->arg);
+
 		msg->fn(msg->arg);
 
 		if (thread->msg_cache_count < SPDK_MSG_MEMPOOL_CACHE_SIZE) {
@@ -1275,6 +1279,8 @@ interrupt_timerfd_process(void *arg)
 
 		return rc;
 	}
+
+	SPDK_DTRACE_PROBE2(timerfd_exec, poller->fn, poller->arg);
 
 	return poller->fn(poller->arg);
 }

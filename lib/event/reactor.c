@@ -35,6 +35,7 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/usdt.h"
 
 #include "spdk/log.h"
 #include "spdk/thread.h"
@@ -596,6 +597,9 @@ event_queue_run_batch(void *arg)
 
 		assert(event != NULL);
 		spdk_set_thread(thread);
+
+		SPDK_DTRACE_PROBE3(event_exec, event->fn,
+				   event->arg1, event->arg2);
 		event->fn(event->arg1, event->arg2);
 		spdk_set_thread(NULL);
 	}
