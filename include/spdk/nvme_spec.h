@@ -3572,6 +3572,23 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_streams_status) == 131072, "Incorr
 #define spdk_nvme_cpl_is_abort_success(cpl)	\
 	(spdk_nvme_cpl_is_success(cpl) && !((cpl)->cdw0 & 1U))
 
+#define spdk_nvme_cpl_is_path_error(cpl)	\
+	((cpl)->status.sct == SPDK_NVME_SCT_PATH)
+
+#define spdk_nvme_cpl_is_ana_error(cpl)						\
+	((cpl)->status.sct == SPDK_NVME_SCT_PATH &&				\
+	 ((cpl)->status.sc == SPDK_NVME_SC_ASYMMETRIC_ACCESS_PERSISTENT_LOSS ||	\
+	  (cpl)->status.sc == SPDK_NVME_SC_ASYMMETRIC_ACCESS_INACCESSIBLE ||	\
+	  (cpl)->status.sc == SPDK_NVME_SC_ASYMMETRIC_ACCESS_TRANSITION))
+
+#define spdk_nvme_cpl_is_aborted_sq_deletion(cpl)		\
+	((cpl)->status.sct == SPDK_NVME_SCT_GENERIC &&		\
+	 (cpl)->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION)
+
+#define spdk_nvme_cpl_is_aborted_by_request(cpl)            \
+	((cpl)->status.sct == SPDK_NVME_SCT_GENERIC &&          \
+	 (cpl)->status.sc == SPDK_NVME_SC_ABORTED_BY_REQUEST)
+
 /** Set fused operation */
 #define SPDK_NVME_IO_FLAGS_FUSE_FIRST (SPDK_NVME_CMD_FUSE_FIRST << 0)
 #define SPDK_NVME_IO_FLAGS_FUSE_SECOND (SPDK_NVME_CMD_FUSE_SECOND << 0)
