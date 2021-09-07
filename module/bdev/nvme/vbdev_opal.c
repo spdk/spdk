@@ -126,7 +126,7 @@ vbdev_opal_delete_all_base_config(struct vbdev_opal_part_base *base)
 	struct opal_vbdev *bdev, *tmp_bdev;
 
 	TAILQ_FOREACH_SAFE(bdev, &g_opal_vbdev, tailq, tmp_bdev) {
-		if (!strcmp(nvme_ctrlr_name, bdev->nvme_ctrlr->name)) {
+		if (!strcmp(nvme_ctrlr_name, bdev->nvme_ctrlr->nbdev_ctrlr->name)) {
 			vbdev_opal_delete(bdev);
 		}
 	}

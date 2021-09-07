@@ -40,8 +40,8 @@
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
 
-TAILQ_HEAD(nvme_ctrlrs, nvme_ctrlr);
-extern struct nvme_ctrlrs g_nvme_ctrlrs;
+TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
+extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
 extern pthread_mutex_t g_bdev_nvme_mutex;
 extern bool g_bdev_nvme_module_finish;
 
@@ -77,6 +77,7 @@ struct nvme_ns {
 };
 
 struct nvme_bdev_io;
+struct nvme_bdev_ctrlr;
 
 struct nvme_ctrlr_trid {
 	struct spdk_nvme_transport_id		trid;
@@ -94,7 +95,6 @@ struct nvme_ctrlr {
 	 */
 	struct spdk_nvme_ctrlr			*ctrlr;
 	struct spdk_nvme_transport_id		*connected_trid;
-	char					*name;
 	int					ref;
 	bool					resetting;
 	bool					failover_in_progress;
@@ -122,6 +122,7 @@ struct nvme_ctrlr {
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
+	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
 
 	TAILQ_HEAD(, nvme_ctrlr_trid)		trids;
 
@@ -132,6 +133,12 @@ struct nvme_ctrlr {
 	struct nvme_async_probe_ctx		*probe_ctx;
 
 	pthread_mutex_t				mutex;
+};
+
+struct nvme_bdev_ctrlr {
+	char				*name;
+	TAILQ_HEAD(, nvme_ctrlr)	ctrlrs;
+	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
 
 struct nvme_bdev {
@@ -213,7 +220,8 @@ int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     uint32_t prchk_flags,
 		     spdk_bdev_create_nvme_fn cb_fn,
 		     void *cb_ctx,
-		     struct spdk_nvme_ctrlr_opts *opts);
+		     struct spdk_nvme_ctrlr_opts *opts,
+		     bool multipath);
 struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 /**

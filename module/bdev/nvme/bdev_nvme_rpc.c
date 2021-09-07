@@ -401,7 +401,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
 	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->count, prchk_flags,
-			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts);
+			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts,
+			      false);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
@@ -430,7 +431,7 @@ rpc_dump_nvme_controller_info(struct nvme_ctrlr *nvme_ctrlr, void *ctx)
 	trid = nvme_ctrlr->connected_trid;
 
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", nvme_ctrlr->name);
+	spdk_json_write_named_string(w, "name", nvme_ctrlr->nbdev_ctrlr->name);
 
 #ifdef SPDK_CONFIG_NVME_CUSE
 	size_t cuse_name_size = 128;
@@ -1098,7 +1099,7 @@ rpc_bdev_nvme_get_transport_statistics(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
 
-	spdk_for_each_channel(&g_nvme_ctrlrs,
+	spdk_for_each_channel(&g_nvme_bdev_ctrlrs,
 			      rpc_bdev_nvme_stats_per_channel,
 			      ctx,
 			      rpc_bdev_nvme_stats_done);
