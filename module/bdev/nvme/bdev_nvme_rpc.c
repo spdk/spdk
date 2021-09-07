@@ -275,6 +275,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_nvme_attach_controller_ctx *ctx;
 	struct spdk_nvme_transport_id trid = {};
 	const struct spdk_nvme_ctrlr_opts *opts;
+	const struct spdk_nvme_transport_id *ctrlr_trid;
 	uint32_t prchk_flags = 0;
 	struct nvme_ctrlr *ctrlr = NULL;
 	size_t len, maxlen;
@@ -399,6 +400,9 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			ctx->req.multipath = strdup("failover");
 		}
 
+		opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
+		ctrlr_trid = spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr);
+
 		/* This controller already exists. Check what the user wants to do. */
 		if (strcasecmp(ctx->req.multipath, "disable") == 0) {
 			/* The user does not want to do any form of multipathing. */
@@ -408,6 +412,17 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		} else if (strcasecmp(ctx->req.multipath, "failover") == 0) {
 			/* The user wants to add this as a failover path. */
+
+			if (strncmp(trid.traddr, ctrlr_trid->traddr, sizeof(trid.traddr)) == 0 &&
+			    strncmp(trid.trsvcid, ctrlr_trid->trsvcid, sizeof(trid.trsvcid)) == 0 &&
+			    strncmp(ctx->req.opts.src_addr, opts->src_addr, sizeof(opts->src_addr)) == 0 &&
+			    strncmp(ctx->req.opts.src_svcid, opts->src_svcid, sizeof(opts->src_svcid)) == 0) {
+				/* Exactly same network path can't be added a second time */
+				spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
+								     "A controller named %s already exists with the specified network path\n",
+								     ctx->req.name);
+				goto cleanup;
+			}
 		} else {
 			/* Invalid multipath option */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
@@ -417,16 +432,16 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		}
 
 		if (strncmp(trid.subnqn,
-			    spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr)->subnqn,
+			    ctrlr_trid->subnqn,
 			    SPDK_NVMF_NQN_MAX_LEN) != 0) {
 			/* Different SUBNQN is not allowed when specifying the same controller name. */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 							     "A controller named %s already exists, but uses a different subnqn (%s)\n",
-							     ctx->req.name, spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr)->subnqn);
+							     ctx->req.name, ctrlr_trid->subnqn);
 			goto cleanup;
 		}
 
-		opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
+
 
 		if (strncmp(ctx->req.opts.hostnqn, opts->hostnqn, SPDK_NVMF_NQN_MAX_LEN) != 0) {
 			/* Different HOSTNQN is not allowed when specifying the same controller name. */
