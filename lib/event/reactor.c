@@ -1150,7 +1150,8 @@ _schedule_thread(void *arg1, void *arg2)
 		int rc;
 
 		efd = spdk_thread_get_interrupt_fd(thread);
-		rc = spdk_fd_group_add(reactor->fgrp, efd, thread_process_interrupts, thread);
+		rc = SPDK_FD_GROUP_ADD(reactor->fgrp, efd,
+				       thread_process_interrupts, thread);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to schedule spdk_thread: %s.\n", spdk_strerror(-rc));
 		}
@@ -1413,7 +1414,7 @@ reactor_interrupt_init(struct spdk_reactor *reactor)
 		goto err;
 	}
 
-	rc = spdk_fd_group_add(reactor->fgrp, reactor->resched_fd, reactor_schedule_thread_event,
+	rc = SPDK_FD_GROUP_ADD(reactor->fgrp, reactor->resched_fd, reactor_schedule_thread_event,
 			       reactor);
 	if (rc) {
 		close(reactor->resched_fd);
@@ -1429,7 +1430,7 @@ reactor_interrupt_init(struct spdk_reactor *reactor)
 		goto err;
 	}
 
-	rc = spdk_fd_group_add(reactor->fgrp, reactor->events_fd,
+	rc = SPDK_FD_GROUP_ADD(reactor->fgrp, reactor->events_fd,
 			       event_queue_run_batch, reactor);
 	if (rc) {
 		spdk_fd_group_remove(reactor->fgrp, reactor->resched_fd);

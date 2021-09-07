@@ -76,6 +76,10 @@ Added `spdk_nvme_ctrlr_get_opts` to retrieve the current controller options.
 
 Updated DPDK submodule to DPDK 21.08.
 
+### util
+
+The `spdk_fd_group_add` API now takes a `name` parameter.
+
 ## v21.07
 
 ### accel_fw

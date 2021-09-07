@@ -1263,8 +1263,7 @@ period_poller_interrupt_init(struct spdk_poller *poller)
 		return -errno;
 	}
 
-	rc = spdk_fd_group_add(fgrp, timerfd,
-			       interrupt_timerfd_process, poller);
+	rc = SPDK_FD_GROUP_ADD(fgrp, timerfd, interrupt_timerfd_process, poller);
 	if (rc < 0) {
 		close(timerfd);
 		return rc;
@@ -1352,7 +1351,8 @@ busy_poller_interrupt_init(struct spdk_poller *poller)
 		return -errno;
 	}
 
-	rc = spdk_fd_group_add(poller->thread->fgrp, busy_efd, poller->fn, poller->arg);
+	rc = spdk_fd_group_add(poller->thread->fgrp, busy_efd,
+			       poller->fn, poller->arg, poller->name);
 	if (rc < 0) {
 		close(busy_efd);
 		return rc;
@@ -2487,7 +2487,8 @@ thread_interrupt_create(struct spdk_thread *thread)
 		return rc;
 	}
 
-	return spdk_fd_group_add(thread->fgrp, thread->msg_fd, thread_interrupt_msg_process, thread);
+	return SPDK_FD_GROUP_ADD(thread->fgrp, thread->msg_fd,
+				 thread_interrupt_msg_process, thread);
 }
 #else
 static int
@@ -2516,7 +2517,7 @@ spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 		return NULL;
 	}
 
-	ret = spdk_fd_group_add(thread->fgrp, efd, fn, arg);
+	ret = spdk_fd_group_add(thread->fgrp, efd, fn, arg, name);
 
 	if (ret != 0) {
 		SPDK_ERRLOG("thread %s: failed to add fd %d: %s\n",

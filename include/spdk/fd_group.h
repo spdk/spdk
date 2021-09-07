@@ -110,11 +110,19 @@ int spdk_fd_group_get_fd(struct spdk_fd_group *fgrp);
  * \param efd File descriptor of the event source.
  * \param fn Called each time there are events in event source.
  * \param arg Function argument for fn.
+ * \param name Name of the event source.
  *
  * \return 0 if success or -errno if failed
  */
-int spdk_fd_group_add(struct spdk_fd_group *fgrp,
-		      int efd, spdk_fd_fn fn, void *arg);
+int spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd,
+		      spdk_fd_fn fn, void *arg, const char *name);
+
+/*
+ * \brief Register an event source with the name set to the string of the
+ * callback function.
+ */
+#define SPDK_FD_GROUP_ADD(fgrp, efd, fn, arg) \
+	spdk_fd_group_add(fgrp, efd, fn, arg, #fn)
 
 /**
  * Unregister one event source from one fgrp.

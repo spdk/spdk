@@ -39,6 +39,8 @@
 #include <sys/epoll.h>
 #endif
 
+#define SPDK_MAX_EVENT_NAME_LEN 256
+
 enum event_handler_state {
 	/* The event_handler is added into an fd_group waiting for event,
 	 * but not currently in the execution of a wait loop.
@@ -63,6 +65,7 @@ struct event_handler {
 	void				*fn_arg;
 	/* file descriptor of the interrupt event */
 	int				fd;
+	char				name[SPDK_MAX_EVENT_NAME_LEN + 1];
 };
 
 struct spdk_fd_group {
@@ -82,8 +85,8 @@ spdk_fd_group_get_fd(struct spdk_fd_group *fgrp)
 #ifdef __linux__
 
 int
-spdk_fd_group_add(struct spdk_fd_group *fgrp,
-		  int efd, spdk_fd_fn fn, void *arg)
+spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,
+		  void *arg, const char *name)
 {
 	struct event_handler *ehdlr = NULL;
 	struct epoll_event epevent = {0};
@@ -111,6 +114,7 @@ spdk_fd_group_add(struct spdk_fd_group *fgrp,
 	ehdlr->fn = fn;
 	ehdlr->fn_arg = arg;
 	ehdlr->state = EVENT_HANDLER_STATE_WAITING;
+	snprintf(ehdlr->name, sizeof(ehdlr->name), "%s", name);
 
 	epevent.events = EPOLLIN;
 	epevent.data.ptr = ehdlr;
@@ -313,8 +317,8 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 #else
 
 int
-spdk_fd_group_add(struct spdk_fd_group *fgrp,
-		  int efd, spdk_fd_fn fn, void *arg)
+spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,
+		  void *arg, const char *name)
 {
 	return -ENOTSUP;
 }
