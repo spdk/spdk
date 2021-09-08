@@ -2089,6 +2089,7 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 	uint32_t i;
 	struct spdk_nvmf_registrant *reg, *holder = NULL;
 	struct spdk_uuid bdev_uuid, holder_uuid;
+	bool rkey_flag = false;
 
 	SPDK_DEBUGLOG(nvmf, "NSID %u, PTPL %u, Number of registrants %u\n",
 		      ns->nsid, info->ptpl_activated, info->num_regs);
@@ -2096,6 +2097,16 @@ nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservatio
 	/* it's not an error */
 	if (!info->ptpl_activated || !info->num_regs) {
 		return 0;
+	}
+
+	/* Check info->crkey exist or not in info->registrants[i].rkey */
+	for (i = 0; i < info->num_regs; i++) {
+		if (info->crkey == info->registrants[i].rkey) {
+			rkey_flag = true;
+		}
+	}
+	if (!rkey_flag) {
+		return -EINVAL;
 	}
 
 	spdk_uuid_parse(&bdev_uuid, info->bdev_uuid);

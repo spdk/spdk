@@ -1651,6 +1651,72 @@ test_nvmf_valid_nqn(void)
 	CU_ASSERT(rc == false);
 }
 
+static void
+test_nvmf_ns_reservation_restore(void)
+{
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_nvmf_reservation_info info = {};
+	struct spdk_bdev bdev = {};
+	struct spdk_uuid s_uuid = {};
+	struct spdk_nvmf_registrant *reg0, *reg1;
+	char uuid[SPDK_UUID_STRING_LEN] = {};
+	int rc;
+
+	ns.bdev = &bdev;
+	TAILQ_INIT(&ns.registrants);
+	info.ptpl_activated = true;
+	info.num_regs = 2;
+	info.rtype = SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS;
+	info.registrants[0].rkey = 0xb;
+	info.registrants[1].rkey = 0xc;
+
+	/* Generate and prepare uuids, make sure bdev and info uuid are the same */
+	spdk_uuid_generate(&s_uuid);
+	uuid_unparse((void *)&s_uuid, uuid);
+	snprintf(info.holder_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
+	snprintf(info.bdev_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
+	snprintf(info.registrants[0].host_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
+	spdk_uuid_copy(&bdev.uuid, &s_uuid);
+	spdk_uuid_generate(&s_uuid);
+	uuid_unparse((void *)&s_uuid, uuid);
+	snprintf(info.registrants[1].host_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
+
+	/* info->rkey not exist in registrants */
+	info.crkey = 0xa;
+
+	rc = nvmf_ns_reservation_restore(&ns, &info);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* info->rkey exists in registrants */
+	info.crkey = 0xb;
+
+	rc = nvmf_ns_reservation_restore(&ns, &info);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ns.crkey == 0xb);
+	CU_ASSERT(ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS);
+	CU_ASSERT(ns.ptpl_activated == true);
+	/* Check two registrant`s rkey */
+	reg0 = TAILQ_FIRST(&ns.registrants);
+	reg1 = TAILQ_NEXT(reg0, link);
+	CU_ASSERT(ns.holder == reg0);
+	CU_ASSERT(reg0->rkey = 0xb);
+	CU_ASSERT(reg1->rkey = 0xc);
+
+	rc = nvmf_ns_reservation_clear_all_registrants(&ns);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(TAILQ_EMPTY(&ns.registrants));
+
+	/* Existing bdev UUID is different with configuration */
+	spdk_uuid_generate(&s_uuid);
+	uuid_unparse((void *)&s_uuid, uuid);
+	snprintf(info.bdev_uuid, SPDK_UUID_STRING_LEN, "%s", uuid);
+	spdk_uuid_generate(&s_uuid);
+	spdk_uuid_copy(&bdev.uuid, &s_uuid);
+
+	rc = nvmf_ns_reservation_restore(&ns, &info);
+	CU_ASSERT(rc == -EINVAL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1680,6 +1746,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_host);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_report);
 	CU_ADD_TEST(suite, test_nvmf_valid_nqn);
+	CU_ADD_TEST(suite, test_nvmf_ns_reservation_restore);
 
 	allocate_threads(1);
 	set_thread(0);
