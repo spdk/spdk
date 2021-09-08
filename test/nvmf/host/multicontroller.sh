@@ -54,6 +54,10 @@ NOT $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
 
+# Remove the second path
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_detach_controller NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
+
 # Add a second controller by attaching to the same subsystem from a different hostid.
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -i $NVMF_FIRST_TARGET_IP -c $NVMF_HOST_SECOND_PORT
@@ -64,6 +68,9 @@ if [ "$($rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -c NVMe)"
 fi
 
 $rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests
+
+# Remove the second controller
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_detach_controller NVMe1
 
 killprocess $bdevperf_pid
 
