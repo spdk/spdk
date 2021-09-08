@@ -3436,15 +3436,15 @@ struct spdk_nvme_zns_zone_desc {
 			/** Zone Finished by controller */
 			uint8_t zfc: 1;
 
-			/** Zone Finish Recommended */
-			uint8_t zfr: 1;
+			/** Finish Zone Recommended */
+			uint8_t fzr: 1;
 
 			/** Reset Zone Recommended */
 			uint8_t rzr: 1;
 
 			uint8_t rsvd3 : 4;
 
-			/** Zone Descriptor Valid */
+			/** Zone Descriptor Extension Valid */
 			uint8_t zdev: 1;
 		} bits;
 	} za;
