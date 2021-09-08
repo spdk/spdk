@@ -43,6 +43,10 @@
 #include "spdk/crc32.h"
 #include "spdk/util.h"
 
+#ifdef SPDK_CONFIG_PMDK
+#include "libpmem.h"
+#endif
+
 /* Accelerator Engine Framework: The following provides a top level
  * generic API for the accelerator functions defined here. Modules,
  * such as the one in /module/accel/ioat, supply the implementation
@@ -66,12 +70,12 @@ static void *g_fini_cb_arg = NULL;
 static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_accel_module_list);
 
-static void _sw_accel_dualcast(void *dst1, void *dst2, void *src, uint64_t nbytes);
-static void _sw_accel_copy(void *dst, void *src, uint64_t nbytes);
-static void _sw_accel_copyv(void *dst, struct iovec *iov, uint32_t iovcnt);
-static int _sw_accel_compare(void *src1, void *src2, uint64_t nbytes);
-static void _sw_accel_fill(void *dst, uint8_t fill, uint64_t nbytes);
-static void _sw_accel_crc32c(uint32_t *dst, void *src, uint32_t seed, uint64_t nbytes);
+static void _sw_accel_dualcast(void *dst1, void *dst2, void *src, size_t nbytes, int flags);
+static void _sw_accel_copy(void *dst, void *src, size_t nbytes, int flags);
+static void _sw_accel_copyv(void *dst, struct iovec *iov, uint32_t iovcnt, int flags);
+static int _sw_accel_compare(void *src1, void *src2, size_t nbytes);
+static void _sw_accel_fill(void *dst, uint8_t fill, size_t nbytes, int flags);
+static void _sw_accel_crc32c(uint32_t *dst, void *src, uint32_t seed, size_t nbytes);
 static void _sw_accel_crc32cv(uint32_t *dst, struct iovec *iov, uint32_t iovcnt, uint32_t seed);
 
 /* Registration of hw modules (currently supports only 1 at a time) */
@@ -165,6 +169,20 @@ _add_to_comp_list(struct accel_io_channel *accel_ch, struct spdk_accel_task *acc
 	TAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
 }
 
+/* Used when the SW engine is selected and the durable flag is set. */
+inline static int
+_check_flags(int flags)
+{
+	if (flags & ACCEL_FLAG_PERSISTENT) {
+#ifndef SPDK_CONFIG_PMDK
+		/* PMDK is required to use this flag. */
+		SPDK_ERRLOG("ACCEL_FLAG_PERSISTENT set but PMDK not configured. Configure PMDK or do not use this flag.\n");
+		return -EINVAL;
+#endif
+	}
+	return 0;
+}
+
 /* Accel framework public API for copy function */
 int
 spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
@@ -172,6 +190,7 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
+	int rc;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
 	if (accel_task == NULL) {
@@ -187,7 +206,11 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_
 	if (_is_supported(accel_ch->engine, ACCEL_COPY)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		_sw_accel_copy(dst, src, nbytes);
+		rc = _check_flags(flags);
+		if (rc) {
+			return rc;
+		}
+		_sw_accel_copy(dst, src, (size_t)nbytes, flags);
 		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
@@ -200,6 +223,7 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, v
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
+	int rc;
 
 	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
 		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
@@ -221,7 +245,11 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, v
 	if (_is_supported(accel_ch->engine, ACCEL_DUALCAST)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		_sw_accel_dualcast(dst1, dst2, src, nbytes);
+		rc = _check_flags(flags);
+		if (rc) {
+			return rc;
+		}
+		_sw_accel_dualcast(dst1, dst2, src, (size_t)nbytes, flags);
 		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
@@ -249,7 +277,7 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1, void *src2, ui
 	if (_is_supported(accel_ch->engine, ACCEL_COMPARE)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		rc = _sw_accel_compare(src1, src2, nbytes);
+		rc = _sw_accel_compare(src1, src2, (size_t)nbytes);
 		_add_to_comp_list(accel_ch, accel_task, rc);
 		return 0;
 	}
@@ -262,6 +290,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
+	int rc;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
 	if (accel_task == NULL) {
@@ -277,7 +306,11 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint
 	if (_is_supported(accel_ch->engine, ACCEL_FILL)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		_sw_accel_fill(dst, fill, nbytes);
+		rc = _check_flags(flags);
+		if (rc) {
+			return rc;
+		}
+		_sw_accel_fill(dst, fill, (size_t)nbytes, flags);
 		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
@@ -306,7 +339,7 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst, void *sr
 	if (_is_supported(accel_ch->engine, ACCEL_CRC32C)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		_sw_accel_crc32c(crc_dst, src, seed, nbytes);
+		_sw_accel_crc32c(crc_dst, src, seed, (size_t)nbytes);
 		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
@@ -361,6 +394,7 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
+	int rc;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
 	if (accel_task == NULL) {
@@ -379,8 +413,12 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
 	if (_is_supported(accel_ch->engine, ACCEL_COPY_CRC32C)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		_sw_accel_copy(dst, src, nbytes);
-		_sw_accel_crc32c(crc_dst, src, seed, nbytes);
+		rc = _check_flags(flags);
+		if (rc) {
+			return rc;
+		}
+		_sw_accel_copy(dst, src, (size_t)nbytes, flags);
+		_sw_accel_crc32c(crc_dst, src, seed, (size_t)nbytes);
 		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
 	}
@@ -394,6 +432,7 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iov
 {
 	struct accel_io_channel *accel_ch;
 	struct spdk_accel_task *accel_task;
+	int rc;
 
 	if (src_iovs == NULL) {
 		SPDK_ERRLOG("iov should not be NULL");
@@ -424,7 +463,11 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iov
 	if (_is_supported(accel_ch->engine, ACCEL_COPY_CRC32C)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
-		_sw_accel_copyv(dst, src_iovs, iov_cnt);
+		rc = _check_flags(flags);
+		if (rc) {
+			return rc;
+		}
+		_sw_accel_copyv(dst, src_iovs, iov_cnt, flags);
 		_sw_accel_crc32cv(crc_dst, src_iovs, iov_cnt, seed);
 		_add_to_comp_list(accel_ch, accel_task, 0);
 		return 0;
@@ -596,41 +639,89 @@ sw_accel_get_capabilities(void)
 	return 0;
 }
 
-static void
-_sw_accel_dualcast(void *dst1, void *dst2, void *src, uint64_t nbytes)
+static inline void
+_pmem_memcpy(void *dst, const void *src, size_t len)
 {
-	memcpy(dst1, src, (size_t)nbytes);
-	memcpy(dst2, src, (size_t)nbytes);
+#ifdef SPDK_CONFIG_PMDK
+	int is_pmem = pmem_is_pmem(dst, len);
+
+	if (is_pmem) {
+		pmem_memcpy_persist(dst, src, len);
+	} else {
+		memcpy(dst, src, len);
+		pmem_msync(dst, len);
+	}
+#else
+	SPDK_ERRLOG("Function not defined without SPDK_CONFIG_PMDK enabled.\n");
+	assert(0);
+#endif
 }
 
 static void
-_sw_accel_copy(void *dst, void *src, uint64_t nbytes)
+_sw_accel_dualcast(void *dst1, void *dst2, void *src, size_t nbytes, int flags)
 {
-	memcpy(dst, src, (size_t)nbytes);
+	if (flags & ACCEL_FLAG_PERSISTENT) {
+		_pmem_memcpy(dst1, src, nbytes);
+		_pmem_memcpy(dst2, src, nbytes);
+	} else {
+		memcpy(dst1, src, nbytes);
+		memcpy(dst2, src, nbytes);
+	}
 }
 
 static void
-_sw_accel_copyv(void *dst, struct iovec *iov, uint32_t iovcnt)
+_sw_accel_copy(void *dst, void *src, size_t nbytes, int flags)
+{
+
+	if (flags & ACCEL_FLAG_PERSISTENT) {
+		_pmem_memcpy(dst, src, nbytes);
+	} else {
+		memcpy(dst, src, nbytes);
+	}
+}
+
+static void
+_sw_accel_copyv(void *dst, struct iovec *iov, uint32_t iovcnt, int flags)
 {
 	uint32_t i;
 
 	for (i = 0; i < iovcnt; i++) {
 		assert(iov[i].iov_base != NULL);
-		memcpy(dst, iov[i].iov_base, iov[i].iov_len);
+		if (flags & ACCEL_FLAG_PERSISTENT) {
+			_pmem_memcpy(dst, iov[i].iov_base, (size_t)iov[i].iov_len);
+		} else {
+			memcpy(dst, iov[i].iov_base, (size_t)iov[i].iov_len);
+		}
 		dst += iov[i].iov_len;
 	}
 }
 
 static int
-_sw_accel_compare(void *src1, void *src2, uint64_t nbytes)
+_sw_accel_compare(void *src1, void *src2, size_t nbytes)
 {
-	return memcmp(src1, src2, (size_t)nbytes);
+	return memcmp(src1, src2, nbytes);
 }
 
 static void
-_sw_accel_fill(void *dst, uint8_t fill, uint64_t nbytes)
+_sw_accel_fill(void *dst, uint8_t fill, size_t nbytes, int flags)
 {
-	memset(dst, fill, nbytes);
+	if (flags & ACCEL_FLAG_PERSISTENT) {
+#ifdef SPDK_CONFIG_PMDK
+		int is_pmem = pmem_is_pmem(dst, nbytes);
+
+		if (is_pmem) {
+			pmem_memset_persist(dst, fill, nbytes);
+		} else {
+			memset(dst, fill, nbytes);
+			pmem_msync(dst, nbytes);
+		}
+#else
+		SPDK_ERRLOG("Function not defined without SPDK_CONFIG_PMDK enabled.\n");
+		assert(0);
+#endif
+	} else {
+		memset(dst, fill, nbytes);
+	}
 }
 
 static void

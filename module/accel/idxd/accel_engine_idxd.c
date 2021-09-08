@@ -158,9 +158,17 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
+		if (task->flags & ACCEL_FLAG_PERSISTENT) {
+			flags |= SPDK_IDXD_FLAG_PERSISTENT;
+			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
+		}
 		rc = spdk_idxd_submit_copy(chan->chan, &diov, 1, &siov, 1, flags, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_DUALCAST:
+		if (task->flags & ACCEL_FLAG_PERSISTENT) {
+			flags |= SPDK_IDXD_FLAG_PERSISTENT;
+			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
+		}
 		rc = spdk_idxd_submit_dualcast(chan->chan, task->dst, task->dst2, task->src, task->nbytes,
 					       flags, idxd_done, task);
 		break;
@@ -175,6 +183,10 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		memset(&task->fill_pattern, fill_pattern, sizeof(uint64_t));
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
+		if (task->flags & ACCEL_FLAG_PERSISTENT) {
+			flags |= SPDK_IDXD_FLAG_PERSISTENT;
+			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
+		}
 		rc = spdk_idxd_submit_fill(chan->chan, &diov, 1, task->fill_pattern, flags, idxd_done,
 					   task);
 		break;
@@ -203,6 +215,10 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		}
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
+		if (task->flags & ACCEL_FLAG_PERSISTENT) {
+			flags |= SPDK_IDXD_FLAG_PERSISTENT;
+			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
+		}
 		rc = spdk_idxd_submit_copy_crc32c(chan->chan, &diov, 1, iov, iovcnt,
 						  task->seed, task->crc_dst, flags,
 						  idxd_done, task);

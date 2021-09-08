@@ -11,6 +11,9 @@ Removed deprecated spdk_bdev_module_finish_done(). Use spdk_bdev_module_fini_don
 A new parameter `flags` was added to all low level submission and preparation
 APIs to enable the caller to pass operation flags per the DSA specification.
 
+A new flag 'SPDK_IDXD_FLAG_PERSISTENT' was added to let DSA know that
+the destination is persistent.
+
 ### accel_fw
 
 A new parameter `flags` was added to accel API.
@@ -20,6 +23,8 @@ The APIs include:
 `spdk_accel_submit_fill`
 `spdk_accel_submit_copy_crc32c`
 `spdk_accel_submit_copy_crc32cv`
+
+A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PMEM.
 
 ### bdev_nvme
 

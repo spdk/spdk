@@ -44,6 +44,9 @@
 extern "C" {
 #endif
 
+/* Flags for accel operations */
+#define ACCEL_FLAG_PERSISTENT (1 << 0)
+
 enum accel_capability {
 	ACCEL_COPY		= 1 << 0,
 	ACCEL_FILL		= 1 << 1,

@@ -39,6 +39,13 @@
 #include "accel/accel_engine.c"
 #include "unit/lib/json_mock.c"
 
+#ifdef SPDK_CONFIG_PMDK
+DEFINE_STUB(pmem_msync, int, (const void *addr, size_t len), 0);
+DEFINE_STUB(pmem_memcpy_persist, void *, (void *pmemdest, const void *src, size_t len), NULL);
+DEFINE_STUB(pmem_is_pmem, int, (const void *addr, size_t len), 0);
+DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NULL);
+#endif
+
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_accel_engine g_accel_engine = {};
 struct spdk_io_channel *g_ch = NULL;
