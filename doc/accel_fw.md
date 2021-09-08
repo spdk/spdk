@@ -49,7 +49,7 @@ functions exposed by the individual low level libraries. Thus, code written this
 way needs to be certain that the underlying hardware exists everywhere that it runs.
 
 The low level library for IOAT is located in `/lib/ioat`.  The low level library
-for DSA is in `/liv/idxd` (IDXD stands for Intel(R) Data Acceleration Driver).
+for DSA is in `/lib/idxd` (IDXD stands for Intel(R) Data Acceleration Driver).
 
 ## Acceleration Plug-In Modules {#accel_modules}
 
