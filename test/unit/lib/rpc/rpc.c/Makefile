@@ -33,6 +33,8 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+
 TEST_FILE = rpc_ut.c
+LDFLAGS +=-Wl,--wrap,open -Wl,--wrap,close -Wl,--wrap,unlink -Wl,--wrap,flock
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

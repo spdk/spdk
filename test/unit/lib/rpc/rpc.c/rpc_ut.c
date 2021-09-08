@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "spdk/jsonrpc.h"
+#include "spdk_internal/mock.h"
 #include "common/lib/test_env.c"
 #include "spdk/log.h"
 
@@ -64,6 +65,13 @@ DEFINE_STUB(spdk_jsonrpc_server_listen, struct spdk_jsonrpc_server *, (int domai
 	    (struct spdk_jsonrpc_server *)0Xdeaddead);
 DEFINE_STUB(spdk_jsonrpc_server_poll, int, (struct spdk_jsonrpc_server *server), 0);
 DEFINE_STUB_V(spdk_jsonrpc_server_shutdown, (struct spdk_jsonrpc_server *server));
+
+DECLARE_WRAPPER(open, int, (const char *pathname, int flags, mode_t mode));
+DECLARE_WRAPPER(close, int, (int fd));
+DECLARE_WRAPPER(flock, int, (int fd, int operation));
+DEFINE_WRAPPER(open, int, (const char *pathname, int flags, mode_t mode), (pathname, flags, mode));
+DEFINE_WRAPPER(close, int, (int fd), (fd));
+DEFINE_WRAPPER(flock, int, (int fd, int operation), (fd, operation));
 
 int spdk_json_decode_object(const struct spdk_json_val *values,
 			    const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
@@ -235,8 +243,12 @@ test_rpc_spdk_get_version(void)
 static void
 test_spdk_rpc_listen_close(void)
 {
-	const char listen_addr[128] = "10.67.12.34";
+	const char listen_addr[128] = "/var/tmp/spdk-rpc-ut.sock";
 	char rpc_lock_path[128] = {};
+
+	MOCK_SET(open, 1);
+	MOCK_SET(close, 0);
+	MOCK_SET(flock, 0);
 
 	spdk_rpc_listen(listen_addr);
 	snprintf(rpc_lock_path, sizeof(g_rpc_lock_path), "%s.lock",
@@ -253,6 +265,10 @@ test_spdk_rpc_listen_close(void)
 	CU_ASSERT(g_jsonrpc_server == NULL);
 	CU_ASSERT(g_rpc_lock_fd == -1);
 	CU_ASSERT(g_rpc_lock_path[0] == '\0');
+
+	MOCK_CLEAR(open);
+	MOCK_CLEAR(close);
+	MOCK_CLEAR(flock);
 }
 
 int main(int argc, char **argv)
