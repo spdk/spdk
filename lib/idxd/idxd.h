@@ -39,8 +39,7 @@
 #include "spdk/idxd.h"
 #include "spdk/queue.h"
 #include "spdk/mmio.h"
-
-#include "idxd_spec.h"
+#include "spdk/idxd_spec.h"
 
 #ifdef __cplusplus
 extern "C" {

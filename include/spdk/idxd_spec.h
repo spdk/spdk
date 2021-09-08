@@ -226,18 +226,18 @@ struct idxd_hw_desc {
 	uint16_t	rsvd1;
 	union {
 		uint8_t		expected_res;
-		struct delta {
+		struct {
 			uint64_t	addr;
 			uint32_t	max_size;
 		} delta;
 		uint32_t	delta_rec_size;
 		uint64_t	dest2;
-		struct crc32c {
+		struct {
 			uint32_t	seed;
 			uint32_t	rsvd;
 			uint64_t	addr;
 		} crc32c;
-		struct dif_chk {
+		struct {
 			uint8_t		src_flags;
 			uint8_t		rsvd1;
 			uint8_t		flags;
@@ -246,7 +246,7 @@ struct idxd_hw_desc {
 			uint16_t	app_tag_mask;
 			uint16_t	app_tag_seed;
 		} dif_chk;
-		struct dif_ins {
+		struct {
 			uint8_t		rsvd1;
 			uint8_t		dest_flag;
 			uint8_t		flags;
@@ -255,7 +255,7 @@ struct idxd_hw_desc {
 			uint16_t	app_tag_mask;
 			uint16_t	app_tag_seed;
 		} dif_ins;
-		struct dif_upd {
+		struct {
 			uint8_t		src_flags;
 			uint8_t		dest_flags;
 			uint8_t		flags;
@@ -289,13 +289,13 @@ struct idxd_hw_comp_record {
 			uint16_t	dif_chk_app_tag_mask;
 			uint16_t	dif_chk_app_tag;
 		};
-		struct dif_ins_comp {
+		struct {
 			uint64_t	rsvd;
 			uint32_t	ref_tag;
 			uint16_t	app_tag_mask;
 			uint16_t	app_tag;
 		} dif_ins_comp;
-		struct dif_upd_comp {
+		struct {
 			uint32_t	src_ref_tag;
 			uint16_t	src_app_tag_mask;
 			uint16_t	src_app_tag;
