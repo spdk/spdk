@@ -94,6 +94,9 @@ rpc_pid=$!
 
 wait $rpc_pid
 
+cat $testdir/try.txt
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -q NVMe0
+
 # No need to wait here since we are deleting a TRID we aren't connected to.
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_detach_controller NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_THIRD_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -q NVMe0

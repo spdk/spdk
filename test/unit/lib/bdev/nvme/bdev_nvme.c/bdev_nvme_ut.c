@@ -301,6 +301,7 @@ static int g_ut_attach_ctrlr_status;
 static size_t g_ut_attach_bdev_count;
 static int g_ut_register_bdev_status;
 static uint16_t g_ut_cntlid;
+static struct spdk_nvme_transport_id g_any_trid = {};
 
 static void
 ut_init_trid(struct spdk_nvme_transport_id *trid)
@@ -1180,7 +1181,7 @@ test_create_ctrlr(void)
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
@@ -1290,7 +1291,7 @@ test_reset_ctrlr(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1336,7 +1337,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 	/* Try destructing ctrlr while ctrlr is being reset, but it will be deferred. */
 	set_thread(0);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 	CU_ASSERT(nvme_ctrlr->destruct == true);
@@ -1504,7 +1505,7 @@ test_failover_ctrlr(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1633,7 +1634,7 @@ test_pending_reset(void)
 
 	set_thread(0);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1697,7 +1698,7 @@ test_attach_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr->ctrlr == ctrlr);
 	CU_ASSERT(nvme_ctrlr->num_ns == 0);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1731,7 +1732,7 @@ test_attach_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(nbdev != NULL);
 	CU_ASSERT(bdev_nvme_get_ctrlr(&nbdev->disk) == ctrlr);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1761,7 +1762,7 @@ test_attach_ctrlr(void)
 
 	CU_ASSERT(attached_names[0] == NULL);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -1860,7 +1861,7 @@ test_aer_cb(void)
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2)->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2054,7 +2055,7 @@ test_submit_nvme_cmd(void)
 
 	set_thread(1);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2207,7 +2208,7 @@ test_add_remove_trid(void)
 	CU_ASSERT(ctrid != NULL);
 
 	/* If trid is not specified, nvme_ctrlr itself is removed. */
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == nvme_ctrlr);
 
@@ -2384,7 +2385,7 @@ test_abort(void)
 
 	set_thread(1);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2424,7 +2425,7 @@ test_get_io_qpair(void)
 
 	spdk_put_io_channel(ch);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2602,7 +2603,7 @@ test_init_ana_log_page(void)
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->bdev != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 5)->bdev != NULL);
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2763,7 +2764,7 @@ test_reconnect_qpair(void)
 
 	poll_threads();
 
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -2843,7 +2844,7 @@ test_create_bdev_ctrlr(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &trid2) != NULL);
 
 	/* Delete two ctrlrs at once. */
-	rc = bdev_nvme_delete("nvme0", NULL);
+	rc = bdev_nvme_delete("nvme0", &g_any_trid);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == nbdev_ctrlr);

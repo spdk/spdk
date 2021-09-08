@@ -3101,7 +3101,7 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 	struct nvme_ctrlr_trid	*ctrlr_trid, *tmp_trid;
 	int			rc = -ENXIO;
 
-	if (name == NULL) {
+	if (name == NULL || trid == NULL) {
 		return -EINVAL;
 	}
 
@@ -3116,16 +3116,6 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 	 */
 
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
-		if (trid == NULL) {
-			/* Remove all nvme_ctrlrs of the nvme_bdev_ctrlr. */
-			rc = _bdev_nvme_delete(nvme_ctrlr, false);
-			if (rc != 0) {
-				return rc;
-			}
-
-			continue;
-		}
-
 		TAILQ_FOREACH_REVERSE_SAFE(ctrlr_trid, &nvme_ctrlr->trids, nvme_paths, link, tmp_trid) {
 			if (trid->trtype != 0) {
 				if (trid->trtype == SPDK_NVME_TRANSPORT_CUSTOM) {

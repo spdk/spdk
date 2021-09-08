@@ -553,7 +553,6 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 	struct spdk_nvme_transport_id trid = {};
 	size_t len, maxlen;
 	int rc = 0;
-	bool all_trid_entries, one_trid_entry;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_detach_controller_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_detach_controller_decoders),
@@ -563,18 +562,8 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	all_trid_entries = req.trtype && req.traddr && req.adrfam && req.trsvcid && req.subnqn;
-	one_trid_entry = req.trtype || req.traddr || req.adrfam || req.trsvcid || req.subnqn;
-
-	if (all_trid_entries ^ one_trid_entry) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "trtype, traddr, adrfam, trsvcid, subnqn must all be provided together or not at all.");
-		goto cleanup;
-	}
-
-	if (all_trid_entries) {
-		/* Parse trtype */
-		rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, req.trtype);
+	if (req.trtype != NULL) {
+		rc = spdk_nvme_transport_id_populate_trstring(&trid, req.trtype);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to parse trtype: %s\n", req.trtype);
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
@@ -582,7 +571,16 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 
-		/* Parse traddr */
+		rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, req.trtype);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to parse trtype: %s\n", req.trtype);
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
+							     req.trtype);
+			goto cleanup;
+		}
+	}
+
+	if (req.traddr != NULL) {
 		maxlen = sizeof(trid.traddr);
 		len = strnlen(req.traddr, maxlen);
 		if (len == maxlen) {
@@ -591,7 +589,9 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 		memcpy(trid.traddr, req.traddr, len + 1);
+	}
 
+	if (req.adrfam != NULL) {
 		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, req.adrfam);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to parse adrfam: %s\n", req.adrfam);
@@ -599,7 +599,9 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 							     req.adrfam);
 			goto cleanup;
 		}
+	}
 
+	if (req.trsvcid != NULL) {
 		maxlen = sizeof(trid.trsvcid);
 		len = strnlen(req.trsvcid, maxlen);
 		if (len == maxlen) {
@@ -608,7 +610,10 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 		memcpy(trid.trsvcid, req.trsvcid, len + 1);
+	}
 
+	/* Parse subnqn */
+	if (req.subnqn != NULL) {
 		maxlen = sizeof(trid.subnqn);
 		len = strnlen(req.subnqn, maxlen);
 		if (len == maxlen) {
@@ -617,10 +622,9 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 		memcpy(trid.subnqn, req.subnqn, len + 1);
-		rc = bdev_nvme_delete(req.name, &trid);
-	} else {
-		rc = bdev_nvme_delete(req.name, NULL);
 	}
+
+	rc = bdev_nvme_delete(req.name, &trid);
 
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
