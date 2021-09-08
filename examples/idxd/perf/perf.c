@@ -520,6 +520,7 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 	int rc = 0;
 	struct iovec siov = {};
 	struct iovec diov = {};
+	int flags = 0;
 
 	assert(t);
 
@@ -536,7 +537,7 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 		siov.iov_len = g_xfer_size_bytes;
 		diov.iov_base = task->dst;
 		diov.iov_len = g_xfer_size_bytes;
-		rc = spdk_idxd_submit_copy(t->ch, &diov, 1, &siov, 1,
+		rc = spdk_idxd_submit_copy(t->ch, &diov, 1, &siov, 1, flags,
 					   idxd_done, task);
 		break;
 	case IDXD_FILL:
@@ -544,14 +545,14 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 		diov.iov_base = task->dst;
 		diov.iov_len = g_xfer_size_bytes;
 		rc = spdk_idxd_submit_fill(t->ch, &diov, 1, *(uint8_t *)task->src,
-					   idxd_done, task);
+					   flags, idxd_done, task);
 		break;
 	case IDXD_CRC32C:
 		assert(task->iovs != NULL);
 		assert(task->iov_cnt > 0);
 		rc = spdk_idxd_submit_crc32c(t->ch, task->iovs, task->iov_cnt,
 					     g_crc32c_seed, &task->crc_dst,
-					     idxd_done, task);
+					     flags, idxd_done, task);
 		break;
 	case IDXD_COMPARE:
 		random_num = rand() % 100;
@@ -567,11 +568,11 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 		siov.iov_len = g_xfer_size_bytes;
 		diov.iov_base = task->dst;
 		diov.iov_len = g_xfer_size_bytes;
-		rc = spdk_idxd_submit_compare(t->ch, &siov, 1, &diov, 1, idxd_done, task);
+		rc = spdk_idxd_submit_compare(t->ch, &siov, 1, &diov, 1, flags, idxd_done, task);
 		break;
 	case IDXD_DUALCAST:
 		rc = spdk_idxd_submit_dualcast(t->ch, task->dst, task->dst2,
-					       task->src, g_xfer_size_bytes, idxd_done, task);
+					       task->src, g_xfer_size_bytes, flags, idxd_done, task);
 		break;
 	default:
 		assert(false);

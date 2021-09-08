@@ -150,6 +150,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	uint32_t iovcnt;
 	struct iovec siov = {};
 	struct iovec diov = {};
+	int flags = 0;
 
 	switch (task->op_code) {
 	case ACCEL_OPCODE_MEMMOVE:
@@ -157,24 +158,24 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
-		rc = spdk_idxd_submit_copy(chan->chan, &diov, 1, &siov, 1, idxd_done, task);
+		rc = spdk_idxd_submit_copy(chan->chan, &diov, 1, &siov, 1, flags, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_DUALCAST:
 		rc = spdk_idxd_submit_dualcast(chan->chan, task->dst, task->dst2, task->src, task->nbytes,
-					       idxd_done, task);
+					       flags, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_COMPARE:
 		siov.iov_base = task->src;
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
-		rc = spdk_idxd_submit_compare(chan->chan, &siov, 1, &diov, 1, idxd_done, task);
+		rc = spdk_idxd_submit_compare(chan->chan, &siov, 1, &diov, 1, flags, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_MEMFILL:
 		memset(&task->fill_pattern, fill_pattern, sizeof(uint64_t));
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
-		rc = spdk_idxd_submit_fill(chan->chan, &diov, 1, task->fill_pattern, idxd_done,
+		rc = spdk_idxd_submit_fill(chan->chan, &diov, 1, task->fill_pattern, flags, idxd_done,
 					   task);
 		break;
 	case ACCEL_OPCODE_CRC32C:
@@ -188,7 +189,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 			iovcnt = task->v.iovcnt;
 		}
 		rc = spdk_idxd_submit_crc32c(chan->chan, iov, iovcnt, task->seed, task->crc_dst,
-					     idxd_done, task);
+					     flags, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_COPY_CRC32C:
 		if (task->v.iovcnt == 0) {
@@ -203,7 +204,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
 		rc = spdk_idxd_submit_copy_crc32c(chan->chan, &diov, 1, iov, iovcnt,
-						  task->seed, task->crc_dst,
+						  task->seed, task->crc_dst, flags,
 						  idxd_done, task);
 		break;
 	default:

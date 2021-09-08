@@ -354,8 +354,8 @@ spdk_idxd_detach(struct spdk_idxd_device *idxd)
 }
 
 static int
-_idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
-		   void *cb_arg, struct idxd_hw_desc **_desc, struct idxd_ops **_op)
+_idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn, void *cb_arg,
+		   int flags, struct idxd_hw_desc **_desc, struct idxd_ops **_op)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -373,7 +373,10 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 		return -EBUSY;
 	}
 
-	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	flags |= IDXD_FLAG_COMPLETION_ADDR_VALID;
+	flags |= IDXD_FLAG_REQUEST_COMPLETION;
+
+	desc->flags = flags;
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb_fn;
 	op->batch = NULL;
@@ -389,7 +392,7 @@ _is_batch_valid(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 
 static int
 _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
-		     void *cb_arg, struct idxd_batch *batch,
+		     void *cb_arg, struct idxd_batch *batch, int flags,
 		     struct idxd_hw_desc **_desc, struct idxd_ops **_op)
 {
 	struct idxd_hw_desc *desc;
@@ -417,8 +420,9 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	comp_addr = desc->completion_addr;
 	memset(desc, 0, sizeof(*desc));
 	desc->completion_addr = comp_addr;
-
-	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	flags |= IDXD_FLAG_COMPLETION_ADDR_VALID;
+	flags |= IDXD_FLAG_REQUEST_COMPLETION;
+	desc->flags = flags;
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb_fn;
 	op->batch = batch;
@@ -501,7 +505,7 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
-	int i, rc;
+	int i, rc, flags = 0;
 
 	assert(chan != NULL);
 	assert(batch != NULL);
@@ -516,7 +520,7 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 	}
 
 	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, flags, &desc, &op);
 	if (rc) {
 		return rc;
 	}
@@ -600,7 +604,7 @@ _idxd_flush_batch(struct spdk_idxd_io_channel *chan)
 
 static inline int
 _idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
-			 uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+			 uint64_t nbytes, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -617,7 +621,7 @@ _idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const voi
 	}
 
 	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, flags, &desc, &op);
 	if (rc) {
 		return rc;
 	}
@@ -650,7 +654,7 @@ int
 spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 		      struct iovec *diov, uint32_t diovcnt,
 		      struct iovec *siov, uint32_t siovcnt,
-		      spdk_idxd_req_cb cb_fn, void *cb_arg)
+		      int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -673,7 +677,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 
 		return _idxd_submit_copy_single(chan, diov[0].iov_base,
 						siov[0].iov_base, siov[0].iov_len,
-						cb_fn, cb_arg);
+						flags, cb_fn, cb_arg);
 	}
 
 	if (chan->batch) {
@@ -696,7 +700,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
 	     len > 0;
 	     len = spdk_ioviter_next(&iter, &src, &dst)) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, flags, &desc, &op);
 		if (rc) {
 			goto err;
 		}
@@ -732,7 +736,8 @@ err:
 /* Dual-cast copies the same source to two separate destination buffers. */
 int
 spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *dst2,
-			  const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+			  const void *src, uint64_t nbytes, int flags,
+			  spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -750,7 +755,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	}
 
 	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, flags, &desc, &op);
 	if (rc) {
 		return rc;
 	}
@@ -789,7 +794,7 @@ error:
 
 static inline int
 _idxd_submit_compare_single(struct spdk_idxd_io_channel *chan, void *src1, const void *src2,
-			    uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+			    uint64_t nbytes, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -806,7 +811,7 @@ _idxd_submit_compare_single(struct spdk_idxd_io_channel *chan, void *src1, const
 	}
 
 	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, flags, &desc, &op);
 	if (rc) {
 		return rc;
 	}
@@ -838,7 +843,7 @@ int
 spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 			 struct iovec *siov1, size_t siov1cnt,
 			 struct iovec *siov2, size_t siov2cnt,
-			 spdk_idxd_req_cb cb_fn, void *cb_arg)
+			 int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -856,7 +861,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 		}
 
 		return _idxd_submit_compare_single(chan, siov1[0].iov_base, siov2[0].iov_base, siov1[0].iov_len,
-						   cb_fn, cb_arg);
+						   flags, cb_fn, cb_arg);
 	}
 
 	if (chan->batch) {
@@ -879,7 +884,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 	for (len = spdk_ioviter_first(&iter, siov1, siov1cnt, siov2, siov2cnt, &src1, &src2);
 	     len > 0;
 	     len = spdk_ioviter_next(&iter, &src1, &src2)) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, flags, &desc, &op);
 		if (rc) {
 			goto err;
 		}
@@ -914,7 +919,7 @@ err:
 
 static inline int
 _idxd_submit_fill_single(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fill_pattern,
-			 uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+			 uint64_t nbytes, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -930,7 +935,7 @@ _idxd_submit_fill_single(struct spdk_idxd_io_channel *chan, void *dst, uint64_t 
 	}
 
 	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, flags, &desc, &op);
 	if (rc) {
 		return rc;
 	}
@@ -957,7 +962,8 @@ error:
 int
 spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 		      struct iovec *diov, size_t diovcnt,
-		      uint64_t fill_pattern, spdk_idxd_req_cb cb_fn, void *cb_arg)
+		      uint64_t fill_pattern, int flags,
+		      spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -969,7 +975,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 	if (diovcnt == 1) {
 		/* Simple case - filling one buffer */
 		return _idxd_submit_fill_single(chan, diov[0].iov_base, fill_pattern,
-						diov[0].iov_len, cb_fn, cb_arg);
+						diov[0].iov_len, flags, cb_fn, cb_arg);
 	}
 
 	if (chan->batch) {
@@ -990,7 +996,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 	}
 
 	for (i = 0; i < diovcnt; i++) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, flags, &desc, &op);
 		if (rc) {
 			goto err;
 		}
@@ -1021,7 +1027,7 @@ err:
 
 static inline int
 _idxd_submit_crc32c_single(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, void *src,
-			   uint32_t seed, uint64_t nbytes,
+			   uint32_t seed, uint64_t nbytes, int flags,
 			   spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
@@ -1039,7 +1045,7 @@ _idxd_submit_crc32c_single(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst,
 	}
 
 	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, flags, &desc, &op);
 	if (rc) {
 		return rc;
 	}
@@ -1067,7 +1073,7 @@ error:
 int
 spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 			struct iovec *siov, size_t siovcnt,
-			uint32_t seed, uint32_t *crc_dst,
+			uint32_t seed, uint32_t *crc_dst, int flags,
 			spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
@@ -1081,7 +1087,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 	if (siovcnt == 1) {
 		/* Simple case - crc on one buffer */
 		return _idxd_submit_crc32c_single(chan, crc_dst, siov[0].iov_base,
-						  seed, siov[0].iov_len, cb_fn, cb_arg);
+						  seed, siov[0].iov_len, flags, cb_fn, cb_arg);
 	}
 
 	if (chan->batch) {
@@ -1103,7 +1109,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 
 	prev_crc = NULL;
 	for (i = 0; i < siovcnt; i++) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, flags, &desc, &op);
 		if (rc) {
 			goto err;
 		}
@@ -1146,7 +1152,7 @@ err:
 static inline int
 _idxd_submit_copy_crc32c_single(struct spdk_idxd_io_channel *chan, void *dst, void *src,
 				uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
-				spdk_idxd_req_cb cb_fn, void *cb_arg)
+				int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -1164,7 +1170,7 @@ _idxd_submit_copy_crc32c_single(struct spdk_idxd_io_channel *chan, void *dst, vo
 	}
 
 	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, flags, &desc, &op);
 	if (rc) {
 		return rc;
 	}
@@ -1199,7 +1205,7 @@ int
 spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 			     struct iovec *diov, size_t diovcnt,
 			     struct iovec *siov, size_t siovcnt,
-			     uint32_t seed, uint32_t *crc_dst,
+			     uint32_t seed, uint32_t *crc_dst, int flags,
 			     spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
@@ -1219,7 +1225,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 	if (siovcnt == 1 && diovcnt == 1) {
 		/* Simple case - crc on one buffer */
 		return _idxd_submit_copy_crc32c_single(chan, diov[0].iov_base, siov[0].iov_base,
-						       crc_dst, seed, siov[0].iov_len, cb_fn, cb_arg);
+						       crc_dst, seed, siov[0].iov_len, flags, cb_fn, cb_arg);
 	}
 
 	if (chan->batch) {
@@ -1243,7 +1249,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
 	     len > 0;
 	     len = spdk_ioviter_next(&iter, &src, &dst)) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, flags, &desc, &op);
 		if (rc) {
 			goto err;
 		}

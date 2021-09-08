@@ -127,6 +127,7 @@ void spdk_idxd_set_config(uint32_t config_number, bool kernel_mode);
  * \param diovcnt Number of elements in diov
  * \param siov Source iovec
  * \param siovcnt Number of elements in siov
+ * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in
  * the completion callback.
@@ -136,7 +137,7 @@ void spdk_idxd_set_config(uint32_t config_number, bool kernel_mode);
 int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 			  struct iovec *diov, uint32_t diovcnt,
 			  struct iovec *siov, uint32_t siovcnt,
-			  spdk_idxd_req_cb cb_fn, void *cb_arg);
+			  int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
  * Build and submit an idxd dualcast request.
@@ -149,6 +150,7 @@ int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
  * \param dst2 Second destination virtual address (must be 4K aligned).
  * \param src Source virtual address.
  * \param nbytes Number of bytes to copy.
+ * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in
  * the completion callback.
@@ -156,7 +158,7 @@ int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
  * \return 0 on success, negative errno on failure.
  */
 int spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan,
-			      void *dst1, void *dst2, const void *src, uint64_t nbytes,
+			      void *dst1, void *dst2, const void *src, uint64_t nbytes, int flags,
 			      spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
@@ -170,6 +172,7 @@ int spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan,
  * \param siov1cnt Number of elements in siov1
  * \param siov2 Second source iovec
  * \param siov2cnt Number of elements in siov2
+ * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in
  * the completion callback.
@@ -179,7 +182,7 @@ int spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan,
 int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 			     struct iovec *siov1, size_t siov1cnt,
 			     struct iovec *siov2, size_t siov2cnt,
-			     spdk_idxd_req_cb cb_fn, void *cb_arg);
+			     int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
  * Build and submit a idxd memory fill request.
@@ -191,6 +194,7 @@ int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
  * \param diov Destination iovec
  * \param diovcnt Number of elements in diov
  * \param fill_pattern Repeating eight-byte pattern to use for memory fill.
+ * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
  * in the completion callback.
@@ -199,7 +203,7 @@ int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
  */
 int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 			  struct iovec *diov, size_t diovcnt,
-			  uint64_t fill_pattern, spdk_idxd_req_cb cb_fn, void *cb_arg);
+			  uint64_t fill_pattern, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
  * Build and submit a memory CRC32-C request.
@@ -212,6 +216,7 @@ int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
  * \param siovcnt Number of elements in siov
  * \param seed Four byte CRC-32C seed value.
  * \param crc_dst Resulting calculation.
+ * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
  * in the completion callback.
@@ -220,7 +225,7 @@ int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
  */
 int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 			    struct iovec *siov, size_t siovcnt,
-			    uint32_t seed, uint32_t *crc_dst,
+			    uint32_t seed, uint32_t *crc_dst, int flags,
 			    spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
@@ -236,6 +241,7 @@ int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
  * \param siovcnt Number of elements in siov
  * \param seed Four byte CRC-32C seed value.
  * \param crc_dst Resulting calculation.
+ * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
  * in the completion callback.
@@ -245,7 +251,7 @@ int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 int spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 				 struct iovec *diov, size_t diovcnt,
 				 struct iovec *siov, size_t siovcnt,
-				 uint32_t seed, uint32_t *crc_dst,
+				 uint32_t seed, uint32_t *crc_dst, int flags,
 				 spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
