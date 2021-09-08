@@ -85,6 +85,12 @@ ifeq ($(SPDK_NO_LIB_DEPS),)
 SPDK_DEP_LIBS = $(call spdk_lib_list_to_shared_libs,$(DEPDIRS-$(LIBNAME)))
 endif
 
+ifeq ($(CXX_SRCS),)
+COMPILER=$(CC)
+else
+COMPILER=$(CXX)
+endif
+
 MODULES-bdev = spdk_bdev_modules
 MODULES-sock = spdk_sock_modules
 MODULES-accel = spdk_accel_modules
@@ -106,7 +112,7 @@ $(SHARED_LINKED_LIB): $(SHARED_REALNAME_LIB)
 
 $(SHARED_REALNAME_LIB): $(LIB)
 	$(Q)echo "  SO $(notdir $@)"; \
-	$(call spdk_build_realname_shared_lib,$^,$(SPDK_MAP_FILE),$(LOCAL_SYS_LIBS),$(SPDK_DEP_LIBS))
+	$(call spdk_build_realname_shared_lib,$(COMPILER),$^,$(SPDK_MAP_FILE),$(LOCAL_SYS_LIBS),$(SPDK_DEP_LIBS))
 
 define pkgconfig_create
 	$(Q)$(SPDK_ROOT_DIR)/scripts/pc.sh $(1) $(LIBNAME) $(SO_SUFFIX) \
