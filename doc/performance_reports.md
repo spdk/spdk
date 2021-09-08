@@ -2,6 +2,7 @@
 
 ## Release 21.07
 
+- [SPDK 21.07 NVMe-oF RDMA Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_rdma_perf_report_2107.pdf)
 - [SPDK 21.07 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2107.pdf)
 
 ## Release 21.04
