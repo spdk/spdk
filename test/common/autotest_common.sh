@@ -1239,8 +1239,6 @@ function autotest_cleanup() {
 	shopt -u nullglob
 
 	if ((${#storage_fallback_purge[@]} > 0)); then
-		printf '* Purging old temporary test storage (%s)\n' \
-			"${storage_fallback_purge[*]}" >&2
 		rm -rf "${storage_fallback_purge[@]}"
 	fi
 }
