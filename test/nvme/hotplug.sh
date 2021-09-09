@@ -4,136 +4,64 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-if [ -z "${DEPENDENCY_DIR}" ]; then
-	echo DEPENDENCY_DIR not defined!
-	exit 1
-fi
+[[ $(uname -s) == Linux ]] || exit 0
 
-function ssh_vm() {
-	xtrace_disable
-	sshpass -p "$password" ssh -o PubkeyAuthentication=no \
-		-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 10022 root@localhost "$@"
-	xtrace_restore
+cleanup() {
+	[[ -e /proc/$hotplug_pid/status ]] || return 0
+	kill "$hotplug_pid"
 }
 
-function monitor_cmd() {
-	echo "$@" | nc localhost 4444 | tail --lines=+2 | (grep -v '^(qemu) ' || true)
-}
+remove_attach_helper() {
+	local hotplug_events=$1
+	local hotplug_wait=$2
+	local dev
 
-function get_online_devices_count() {
-	ssh_vm "lspci | grep -c NVM"
-}
+	# We need to make sure we wait long enough for hotplug to initialize the devices
+	# and start IO - if we start removing devices before that happens we will end up
+	# stepping on hotplug's toes forcing it to fail to report proper count of given
+	# events.
+	sleep "$hotplug_wait"
 
-function wait_for_devices_ready() {
-	count=$(get_online_devices_count)
+	while ((hotplug_events--)); do
+		for dev in "${nvmes[@]}"; do
+			echo 1 > "/sys/bus/pci/devices/$dev/remove"
+		done
 
-	while [ $count -ne 4 ]; do
-		echo "waitting for all devices online"
-		count=$(get_online_devices_count)
+		echo 1 > "/sys/bus/pci/rescan"
+
+		# setup.sh masks failures while writing to sysfs interfaces so let's do
+		# this on our own to make sure there's anything for the hotplug to reattach
+		# to.
+		for dev in "${nvmes[@]}"; do
+			echo "$dev" > "/sys/bus/pci/devices/$dev/driver/unbind"
+			echo "$dev" > "/sys/bus/pci/drivers/${pci_bus_driver["$dev"]}/bind"
+		done
+		# Wait now for hotplug to reattach to the devices
+		sleep "$hotplug_wait"
 	done
 }
 
-function insert_devices() {
-	for i in {0..3}; do
-		monitor_cmd "device_add nvme,drive=drive$i,id=nvme$i,serial=nvme$i"
-	done
-	wait_for_devices_ready
-	ssh_vm "scripts/setup.sh"
+hotplug() {
+	local hotplug_events=3
+	local hotplug_wait=6 # This should be enough for more stubborn nvmes in the CI
+
+	remove_attach_helper "$hotplug_events" "$hotplug_wait" &
+	hotplug_pid=$!
+
+	"$SPDK_EXAMPLE_DIR/hotplug" \
+		-i 0 \
+		-t $((hotplug_events * hotplug_wait + hotplug_wait)) \
+		-n $((hotplug_events * nvme_count)) \
+		-r $((hotplug_events * nvme_count))
 }
 
-function remove_devices() {
-	for i in {0..3}; do
-		monitor_cmd "device_del nvme$i"
-	done
-}
+"$rootdir/scripts/setup.sh"
+nvmes=($(nvme_in_userspace)) nvme_count=${#nvmes[@]}
 
-function devices_delete() {
-	for i in {0..3}; do
-		rm "$SPDK_TEST_STORAGE/nvme$i.img"
-	done
-}
+xtrace_disable
+cache_pci_bus_sysfs
+xtrace_restore
 
-password=$1
-base_img=$DEPENDENCY_DIR/spdk_test_image.qcow2
-qemu_pidfile=$HOME/qemupid
+trap "cleanup" EXIT
 
-if [ ! -e "$base_img" ]; then
-	echo "Hotplug VM image not found; skipping test"
-	exit 0
-fi
-
-timing_enter start_qemu
-
-for i in {0..3}; do
-	dd if=/dev/zero of="$SPDK_TEST_STORAGE/nvme$i.img" bs=1M count=1024
-done
-
-qemu-system-x86_64 \
-	-daemonize -display none -m 8192 \
-	-pidfile "$qemu_pidfile" \
-	-hda "$base_img" \
-	-net user,hostfwd=tcp::10022-:22 \
-	-net nic \
-	-cpu host \
-	-smp cores=16,sockets=1 \
-	--enable-kvm \
-	-chardev socket,id=mon0,host=localhost,port=4444,server,nowait \
-	-mon chardev=mon0,mode=readline \
-	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme0.img",if=none,id=drive0 \
-	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme1.img",if=none,id=drive1 \
-	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme2.img",if=none,id=drive2 \
-	-drive format=raw,file="$SPDK_TEST_STORAGE/nvme3.img",if=none,id=drive3 \
-	-snapshot
-
-timing_exit start_qemu
-
-timing_enter wait_for_vm
-ssh_vm 'echo ready'
-timing_exit wait_for_vm
-
-timing_enter copy_repo
-files_to_copy="scripts "
-files_to_copy+="include/spdk/pci_ids.h "
-files_to_copy+="build/examples/hotplug "
-files_to_copy+="build/lib "
-
-# Select which dpdk libs to copy in case we're not building with
-# spdk/dpdk submodule
-if [[ -n "$SPDK_RUN_EXTERNAL_DPDK" ]]; then
-	files_to_copy+="-C $SPDK_RUN_EXTERNAL_DPDK/../.. dpdk/build/lib"
-else
-	files_to_copy+="dpdk/build/lib "
-fi
-
-(
-	cd "$rootdir"
-	tar -cf - $files_to_copy
-) | (ssh_vm "tar -xf -")
-timing_exit copy_repo
-
-insert_devices
-
-timing_enter hotplug_test
-
-ssh_vm "LD_LIBRARY_PATH=/root//build/lib:/root/dpdk/build/lib:$LD_LIBRARY_PATH build/examples/hotplug -i 0 -t 25 -n 4 -r 8" &
-example_pid=$!
-
-sleep 6
-remove_devices
-sleep 4
-insert_devices
-sleep 6
-remove_devices
-devices_delete
-
-timing_enter wait_for_example
-wait $example_pid
-timing_exit wait_for_example
-
-trap - SIGINT SIGTERM EXIT
-
-qemupid=$(awk '{printf $0}' "$qemu_pidfile")
-kill -9 $qemupid
-rm "$qemu_pidfile"
-
-timing_exit hotplug_test
+hotplug
