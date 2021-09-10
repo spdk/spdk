@@ -267,7 +267,15 @@ struct nvmf_vfio_user_sq {
 	struct nvme_q				sq;
 	enum nvmf_vfio_user_sq_state		sq_state;
 
-	/* Copy of Create IO SQ command */
+	/* handle_queue_connect_rsp() can be used both for CREATE IO SQ response
+	 * and SQ re-connect response in the destination VM, for the prior case,
+	 * we will post a NVMe completion to VM, we will not set this flag when
+	 * re-connecting SQs in the destination VM.
+	 */
+	bool					post_create_io_sq_completion;
+	/* Copy of Create IO SQ command, this field is used together with
+	 * `post_create_io_sq_completion` flag.
+	 */
 	struct spdk_nvme_cmd			create_io_sq_cmd;
 
 	TAILQ_HEAD(, nvmf_vfio_user_req)	reqs;
@@ -1463,6 +1471,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		 * then eventually completed via handle_queue_connect_rsp().
 		 */
 		vu_sq->create_io_sq_cmd = *cmd;
+		vu_sq->post_create_io_sq_completion = true;
 		spdk_nvmf_tgt_new_qpair(ctrlr->transport->transport.tgt,
 					&vu_sq->qpair);
 		return 0;
@@ -2927,27 +2936,29 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
 		 * been completed. Complete it now.
 		 */
+		if (vu_sq->post_create_io_sq_completion) {
+			assert(vu_cq->thread != NULL);
+			if (vu_cq->thread != spdk_get_thread()) {
+				struct vfio_user_post_cpl_ctx *cpl_ctx;
 
-		assert(vu_cq->thread != NULL);
-		if (vu_cq->thread != spdk_get_thread()) {
-			struct vfio_user_post_cpl_ctx *cpl_ctx;
+				cpl_ctx = calloc(1, sizeof(*cpl_ctx));
+				if (!cpl_ctx) {
+					return -ENOMEM;
+				}
+				cpl_ctx->ctrlr = vu_ctrlr;
+				cpl_ctx->cq = vu_cq;
+				cpl_ctx->cpl.sqid = 0;
+				cpl_ctx->cpl.cdw0 = 0;
+				cpl_ctx->cpl.cid = vu_sq->create_io_sq_cmd.cid;
+				cpl_ctx->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+				cpl_ctx->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 
-			cpl_ctx = calloc(1, sizeof(*cpl_ctx));
-			if (!cpl_ctx) {
-				return -ENOMEM;
+				spdk_thread_send_msg(vu_cq->thread, _post_completion_msg, cpl_ctx);
+			} else {
+				post_completion(vu_ctrlr, vu_cq, 0, 0,
+						vu_sq->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 			}
-			cpl_ctx->ctrlr = vu_ctrlr;
-			cpl_ctx->cq = vu_cq;
-			cpl_ctx->cpl.sqid = 0;
-			cpl_ctx->cpl.cdw0 = 0;
-			cpl_ctx->cpl.cid = vu_sq->create_io_sq_cmd.cid;
-			cpl_ctx->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
-			cpl_ctx->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-
-			spdk_thread_send_msg(vu_cq->thread, _post_completion_msg, cpl_ctx);
-		} else {
-			post_completion(vu_ctrlr, vu_cq, 0, 0,
-					vu_sq->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
+			vu_sq->post_create_io_sq_completion = false;
 		}
 	}
 
