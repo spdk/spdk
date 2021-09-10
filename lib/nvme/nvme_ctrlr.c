@@ -1213,7 +1213,6 @@ nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-#ifdef DEBUG
 static const char *
 nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 {
@@ -1299,7 +1298,6 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 	}
 	return "unknown";
 };
-#endif /* DEBUG */
 
 static void
 nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
@@ -3642,7 +3640,8 @@ init_timeout:
 	 */
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
 	    ticks > ctrlr->state_timeout_tsc) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Initialization timed out in state %d\n", ctrlr->state);
+		NVME_CTRLR_ERRLOG(ctrlr, "Initialization timed out in state %d (%s)\n",
+				  ctrlr->state, nvme_ctrlr_state_string(ctrlr->state));
 		return -1;
 	}
 
