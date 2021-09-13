@@ -1550,6 +1550,16 @@ spdk_poller_register_named(spdk_poller_fn fn,
 	return poller_register(fn, arg, period_microseconds, name);
 }
 
+static void
+wrong_thread(const char *func, const char *name, struct spdk_thread *thread,
+	     struct spdk_thread *curthread)
+{
+	SPDK_ERRLOG("%s(%s) called from wrong thread %s:%lu (should be "
+		    "%s:%lu)\n", func, name, curthread->name, curthread->id,
+		    thread->name, thread->id);
+	assert(false);
+}
+
 void
 spdk_poller_unregister(struct spdk_poller **ppoller)
 {
@@ -1570,8 +1580,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	}
 
 	if (poller->thread != thread) {
-		SPDK_ERRLOG("different from the thread that called spdk_poller_register()\n");
-		assert(false);
+		wrong_thread(__func__, poller->name, poller->thread, thread);
 		return;
 	}
 
@@ -1606,8 +1615,7 @@ spdk_poller_pause(struct spdk_poller *poller)
 	}
 
 	if (poller->thread != thread) {
-		SPDK_ERRLOG("different from the thread that called spdk_poller_pause()\n");
-		assert(false);
+		wrong_thread(__func__, poller->name, poller->thread, thread);
 		return;
 	}
 
@@ -1643,8 +1651,7 @@ spdk_poller_resume(struct spdk_poller *poller)
 	}
 
 	if (poller->thread != thread) {
-		SPDK_ERRLOG("different from the thread that called spdk_poller_resume()\n");
-		assert(false);
+		wrong_thread(__func__, poller->name, poller->thread, thread);
 		return;
 	}
 
@@ -2199,8 +2206,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 	}
 
 	if (ch->thread != thread) {
-		SPDK_ERRLOG("different from the thread that called get_io_channel()\n");
-		assert(false);
+		wrong_thread(__func__, "ch", ch->thread, thread);
 		return;
 	}
 
@@ -2556,8 +2562,7 @@ spdk_interrupt_unregister(struct spdk_interrupt **pintr)
 	}
 
 	if (intr->thread != thread) {
-		SPDK_ERRLOG("different from the thread that called spdk_interrupt_register()\n");
-		assert(false);
+		wrong_thread(__func__, intr->name, intr->thread, thread);
 		return;
 	}
 
@@ -2578,8 +2583,7 @@ spdk_interrupt_set_event_types(struct spdk_interrupt *intr,
 	}
 
 	if (intr->thread != thread) {
-		SPDK_ERRLOG("different from the thread that called spdk_interrupt_register()\n");
-		assert(false);
+		wrong_thread(__func__, intr->name, intr->thread, thread);
 		return -EINVAL;
 	}
 
