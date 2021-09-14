@@ -3383,11 +3383,13 @@ enum spdk_nvme_zns_zone_send_action {
 	SPDK_NVME_ZONE_OPEN	= 0x3,
 	SPDK_NVME_ZONE_RESET	= 0x4,
 	SPDK_NVME_ZONE_OFFLINE	= 0x5,
+	SPDK_NVME_ZONE_SET_ZDE	= 0x10,
 };
 
 /* ZNS Zone Receive Action (ZRA) cdw13 */
 enum spdk_nvme_zns_zone_receive_action {
-	SPDK_NVME_ZONE_REPORT	= 0x0,
+	SPDK_NVME_ZONE_REPORT		= 0x0,
+	SPDK_NVME_ZONE_EXTENDED_REPORT	= 0x1,
 };
 
 enum spdk_nvme_zns_zra_report_opts {
