@@ -79,9 +79,9 @@ struct nvme_ns {
 struct nvme_bdev_io;
 struct nvme_bdev_ctrlr;
 
-struct nvme_ctrlr_trid {
+struct nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
-	TAILQ_ENTRY(nvme_ctrlr_trid)		link;
+	TAILQ_ENTRY(nvme_path_id)		link;
 	bool					is_failed;
 };
 
@@ -94,7 +94,7 @@ struct nvme_ctrlr {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr			*ctrlr;
-	struct nvme_ctrlr_trid			*connected_trid;
+	struct nvme_path_id			*connected_trid;
 	int					ref;
 	bool					resetting;
 	bool					failover_in_progress;
@@ -126,7 +126,7 @@ struct nvme_ctrlr {
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
 
-	TAILQ_HEAD(nvme_paths, nvme_ctrlr_trid)	trids;
+	TAILQ_HEAD(nvme_paths, nvme_path_id)	trids;
 
 	uint32_t				ana_log_page_size;
 	struct spdk_nvme_ana_page		*ana_log_page;
