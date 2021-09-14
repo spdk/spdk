@@ -2209,7 +2209,7 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 		} else {
 			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
 			if (bdev_io->u.bdev.split_outstanding == 0) {
-				spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io);
+				spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
 				TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 				bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 			}
@@ -2324,7 +2324,7 @@ _bdev_rw_split(void *_bdev_io)
 							if (bdev_io->u.bdev.split_outstanding == 0) {
 								SPDK_ERRLOG("The first child io was less than a block size\n");
 								bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-								spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io);
+								spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, bdev_io->internal.caller_ctx);
 								TAILQ_REMOVE(&bdev_io->internal.ch->io_submitted, bdev_io, internal.ch_link);
 								bdev_io->internal.cb(bdev_io, false, bdev_io->internal.caller_ctx);
 							}
@@ -2425,7 +2425,7 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 */
 	if (parent_io->u.bdev.split_remaining_num_blocks == 0) {
 		assert(parent_io->internal.cb != bdev_io_split_done);
-		spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)parent_io);
+		spdk_trace_record(TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)parent_io, bdev_io->internal.caller_ctx);
 		TAILQ_REMOVE(&parent_io->internal.ch->io_submitted, parent_io, internal.ch_link);
 		parent_io->internal.cb(parent_io, parent_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS,
 				       parent_io->internal.caller_ctx);
@@ -2511,7 +2511,8 @@ _bdev_io_submit(void *ctx)
 
 	tsc = spdk_get_ticks();
 	bdev_io->internal.submit_tsc = tsc;
-	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type);
+	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type,
+			      bdev_io->internal.caller_ctx);
 
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		bdev_io_do_submit(bdev_ch, bdev_io);
@@ -2617,7 +2618,7 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	if (bdev_io_should_split(bdev_io)) {
 		bdev_io->internal.submit_tsc = spdk_get_ticks();
 		spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, 0, 0,
-				      (uintptr_t)bdev_io, bdev_io->type);
+				      (uintptr_t)bdev_io, bdev_io->type, bdev_io->internal.caller_ctx);
 		bdev_io_split(NULL, bdev_io);
 		return;
 	}
@@ -5325,7 +5326,8 @@ bdev_io_complete(void *ctx)
 
 	tsc = spdk_get_ticks();
 	tsc_diff = tsc - bdev_io->internal.submit_tsc;
-	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io);
+	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io,
+			      bdev_io->internal.caller_ctx);
 
 	TAILQ_REMOVE(&bdev_ch->io_submitted, bdev_io, internal.ch_link);
 
@@ -7126,12 +7128,24 @@ SPDK_LOG_REGISTER_COMPONENT(bdev)
 
 SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 {
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"BDEV_IO_START", TRACE_BDEV_IO_START,
+			OWNER_BDEV, OBJECT_BDEV_IO, 1,
+			{
+				{ "type", SPDK_TRACE_ARG_TYPE_INT, 8 },
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }
+			}
+		},
+		{
+			"BDEV_IO_DONE", TRACE_BDEV_IO_DONE,
+			OWNER_BDEV, OBJECT_BDEV_IO, 0,
+			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
+		},
+	};
+
+
 	spdk_trace_register_owner(OWNER_BDEV, 'b');
 	spdk_trace_register_object(OBJECT_BDEV_IO, 'i');
-	spdk_trace_register_description("BDEV_IO_START", TRACE_BDEV_IO_START, OWNER_BDEV,
-					OBJECT_BDEV_IO, 1,
-					SPDK_TRACE_ARG_TYPE_INT, "type");
-	spdk_trace_register_description("BDEV_IO_DONE", TRACE_BDEV_IO_DONE, OWNER_BDEV,
-					OBJECT_BDEV_IO, 0,
-					SPDK_TRACE_ARG_TYPE_INT, "");
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }
