@@ -19,9 +19,6 @@ scheduler_subsystem_init(void)
 	if (spdk_scheduler_get() == NULL) {
 		rc = spdk_scheduler_set("static");
 	}
-	if (spdk_scheduler_get_period() == 0) {
-		spdk_scheduler_set_period(SPDK_SEC_TO_USEC);
-	}
 
 	spdk_subsystem_init_next(rc);
 }

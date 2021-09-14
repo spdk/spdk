@@ -244,6 +244,11 @@ init(void)
 		return -ENOMEM;
 	}
 
+	if (spdk_scheduler_get_period() == 0) {
+		/* set default scheduling period to one second */
+		spdk_scheduler_set_period(SPDK_SEC_TO_USEC);
+	}
+
 	return 0;
 }
 
