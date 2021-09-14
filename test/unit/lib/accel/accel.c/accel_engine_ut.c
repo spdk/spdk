@@ -35,7 +35,6 @@
 #include "spdk_internal/mock.h"
 #include "thread/thread_internal.h"
 #include "common/lib/test_env.c"
-
 #include "accel/accel_engine.c"
 
 DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
@@ -650,6 +649,80 @@ test_spdk_accel_submit_crc32c(void)
 	CU_ASSERT(expected_accel_task == &task);
 }
 
+static void
+test_spdk_accel_submit_crc32cv(void)
+{
+	uint32_t crc_dst;
+	uint32_t seed = 0;
+	uint32_t iov_cnt = 32;
+	void *cb_arg = NULL;
+	int rc;
+	uint32_t i = 0;
+	struct spdk_accel_task task;
+	struct iovec iov[32];
+	struct spdk_accel_task *expected_accel_task = NULL;
+
+	for (i = 0; i < iov_cnt; i++) {
+		iov[i].iov_base = calloc(1, TEST_SUBMIT_SIZE);
+		SPDK_CU_ASSERT_FATAL(iov[i].iov_base != NULL);
+		iov[i].iov_len = TEST_SUBMIT_SIZE;
+	}
+
+	TAILQ_INIT(&g_accel_ch->task_pool);
+	task.cb_fn = dummy_submit_cb_fn;
+	task.cb_arg = cb_arg;
+	task.accel_ch = g_accel_ch;
+	task.batch = NULL;
+	task.nbytes = TEST_SUBMIT_SIZE;
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+
+	g_accel_ch->engine = &g_accel_engine;
+	g_accel_ch->engine->capabilities = ACCEL_CRC32C;
+	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
+
+	/* HW accel submission OK. */
+	rc = spdk_accel_submit_crc32cv(g_ch, &crc_dst, iov, iov_cnt, seed, dummy_submit_cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.v.iovs == iov);
+	CU_ASSERT(task.v.iovcnt == iov_cnt);
+	CU_ASSERT(task.crc_dst == &crc_dst);
+	CU_ASSERT(task.seed == seed);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_CRC32C);
+	CU_ASSERT(g_dummy_submit_called == true);
+	CU_ASSERT(task.cb_fn == crc32cv_done);
+	CU_ASSERT(task.cb_arg == &task);
+	CU_ASSERT(task.nbytes == iov[0].iov_len);
+	CU_ASSERT(task.chained.cb_fn == dummy_submit_cb_fn);
+	CU_ASSERT(task.chained.cb_arg == cb_arg);
+
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	g_dummy_submit_called = false;
+	g_accel_ch->engine->capabilities = 0;
+	task.v.iovs = 0;
+	task.v.iovcnt = 0;
+	task.crc_dst = 0;
+	task.seed = 0;
+	task.op_code = 0xff;
+
+	/* SW engine submit crc. */
+	rc = spdk_accel_submit_crc32cv(g_ch, &crc_dst, iov, iov_cnt, seed, dummy_submit_cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.v.iovs == iov);
+	CU_ASSERT(task.v.iovcnt == iov_cnt);
+	CU_ASSERT(task.crc_dst == &crc_dst);
+	CU_ASSERT(task.seed == seed);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_CRC32C);
+	CU_ASSERT(g_dummy_submit_cb_called == false);
+
+	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &task);
+
+	for (i = 0; i < iov_cnt; i++) {
+		free(iov[i].iov_base);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -673,6 +746,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_submit_compare);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_fill);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32c);
+	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32cv);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
