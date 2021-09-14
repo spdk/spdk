@@ -38,6 +38,7 @@ if [[ $ID == centos || $ID == rhel ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm")
 		[[ $ID == centos ]] && repos+=("centos-release-ceph-nautilus.noarch")
+		[[ $ID == centos ]] && repos+=("centos-release-scl-rh")
 		# Disable liburing, see https://github.com/spdk/spdk/issues/1564
 		if [[ $INSTALL_LIBURING == true ]]; then
 			echo "Liburing not supported on ${ID}$VERSION_ID, disabling"
