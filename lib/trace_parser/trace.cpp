@@ -89,6 +89,7 @@ struct spdk_trace_parser {
 	const spdk_trace_flags *flags() const { return &_histories->flags; }
 	uint64_t tsc_offset() const { return _tsc_offset; }
 	bool next_entry(spdk_trace_parser_entry *entry);
+	uint64_t entry_count(uint16_t lcore) const;
 private:
 	spdk_trace_entry_buffer *get_next_buffer(spdk_trace_entry_buffer *buf, uint16_t lcore);
 	bool build_arg(argument_context *argctx, const spdk_trace_argument *arg, int argid,
@@ -104,6 +105,21 @@ private:
 	entry_map		_entries;
 	entry_map::iterator	_iter;
 };
+
+uint64_t
+spdk_trace_parser::entry_count(uint16_t lcore) const
+{
+	spdk_trace_history *history;
+
+	if (lcore >= SPDK_TRACE_MAX_LCORE) {
+		return 0;
+	}
+
+	history = spdk_get_per_lcore_history(_histories, lcore);
+	assert(history);
+
+	return history->num_entries;
+}
 
 spdk_trace_entry_buffer *
 spdk_trace_parser::get_next_buffer(spdk_trace_entry_buffer *buf, uint16_t lcore)
@@ -379,4 +395,10 @@ spdk_trace_parser_next_entry(struct spdk_trace_parser *parser,
 			     struct spdk_trace_parser_entry *entry)
 {
 	return parser->next_entry(entry);
+}
+
+uint64_t
+spdk_trace_parser_get_entry_count(const struct spdk_trace_parser *parser, uint16_t lcore)
+{
+	return parser->entry_count(lcore);
 }

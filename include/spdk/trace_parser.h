@@ -135,6 +135,16 @@ struct spdk_trace_parser_entry {
 bool spdk_trace_parser_next_entry(struct spdk_trace_parser *parser,
 				  struct spdk_trace_parser_entry *entry);
 
+/**
+ * Return the number of entries recorded on a given core.
+ *
+ * \param parser Parser object to be used.
+ * \param lcore Logical core number.
+ *
+ * \return Number of entries.
+ */
+uint64_t spdk_trace_parser_get_entry_count(const struct spdk_trace_parser *parser, uint16_t lcore);
+
 #ifdef __cplusplus
 }
 #endif

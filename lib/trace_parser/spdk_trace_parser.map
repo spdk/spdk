@@ -7,6 +7,7 @@
 	spdk_trace_parser_get_flags;
 	spdk_trace_parser_get_tsc_offset;
 	spdk_trace_parser_next_entry;
+	spdk_trace_parser_get_entry_count;
 
 	local: *;
 };
