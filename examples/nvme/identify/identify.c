@@ -816,24 +816,51 @@ print_ocssd_geometry(struct spdk_ocssd_geometry_data *geometry_data)
 }
 
 static void
-print_zns_zone(struct spdk_nvme_zns_zone_desc *desc)
+print_zns_zone(uint8_t *report, uint32_t index, uint32_t zdes)
 {
+	struct spdk_nvme_zns_zone_desc *desc;
+	uint32_t i, zds, zrs, zd_index;
+
+	zrs = sizeof(struct spdk_nvme_zns_zone_report);
+	zds = sizeof(struct spdk_nvme_zns_zone_desc);
+	zd_index = zrs + index * (zds + zdes);
+
+	desc = (struct spdk_nvme_zns_zone_desc *)(report + zd_index);
+
 	printf("ZSLBA: 0x%016"PRIx64" ZCAP: 0x%016"PRIx64" WP: 0x%016"PRIx64" ZS: %x ZT: %x ZA: %x\n",
 	       desc->zslba, desc->zcap, desc->wp, desc->zs, desc->zt, desc->za.raw);
+
+	for (i = 0; i < zdes; i += 8) {
+		printf("zone_desc_ext[%d] : 0x%"PRIx64"\n", i,
+		       *(uint64_t *)(report + zd_index + zds + i));
+	}
 }
 
 static void
 get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair)
 {
-	struct spdk_nvme_zns_zone_report *report_buf;
+	const struct spdk_nvme_ns_data *nsdata;
+	const struct spdk_nvme_zns_ns_data *nsdata_zns;
+	uint8_t *report_buf;
 	size_t report_bufsize;
 	uint64_t zone_size_lba = spdk_nvme_zns_ns_get_zone_size_sectors(ns);
 	uint64_t total_zones = spdk_nvme_zns_ns_get_num_zones(ns);
 	uint64_t max_zones_per_buf, zones_to_print, i;
+	uint64_t nr_zones = 0;
 	uint64_t handled_zones = 0;
 	uint64_t slba = 0;
+	size_t zdes = 0;
+	uint32_t zds, zrs;
+	int rc = 0;
 
 	outstanding_commands = 0;
+
+	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata_zns = spdk_nvme_zns_ns_get_data(ns);
+
+	zrs = sizeof(struct spdk_nvme_zns_zone_report);
+	zds = sizeof(struct spdk_nvme_zns_zone_desc);
+	zdes = nsdata_zns->lbafe[nsdata->flbas.format].zdes * 64;
 
 	report_bufsize = spdk_nvme_ns_get_max_io_xfer_size(ns);
 	report_buf = calloc(1, report_bufsize);
@@ -850,10 +877,20 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	while (handled_zones < zones_to_print) {
 		memset(report_buf, 0, report_bufsize);
 
-		if (spdk_nvme_zns_report_zones(ns, qpair, report_buf, report_bufsize,
-					       slba, SPDK_NVME_ZRA_LIST_ALL, true,
-					       get_zns_zone_report_completion, NULL)) {
-			fprintf(stderr, "spdk_nvme_zns_report_zones() failed\n");
+		if (zdes) {
+			max_zones_per_buf = (report_bufsize - zrs) / (zds + zdes);
+			rc = spdk_nvme_zns_ext_report_zones(ns, qpair, report_buf, report_bufsize,
+							    slba, SPDK_NVME_ZRA_LIST_ALL, true,
+							    get_zns_zone_report_completion, NULL);
+		} else {
+			max_zones_per_buf = (report_bufsize - zrs) / zds;
+			rc = spdk_nvme_zns_report_zones(ns, qpair, report_buf, report_bufsize,
+							slba, SPDK_NVME_ZRA_LIST_ALL, true,
+							get_zns_zone_report_completion, NULL);
+		}
+
+		if (rc) {
+			fprintf(stderr, "Report zones failed\n");
 			exit(1);
 		} else {
 			outstanding_commands++;
@@ -863,18 +900,18 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 			spdk_nvme_qpair_process_completions(qpair, 0);
 		}
 
-		max_zones_per_buf = (report_bufsize - sizeof(*report_buf)) / sizeof(report_buf->descs[0]);
-		if (report_buf->nr_zones > max_zones_per_buf) {
+		nr_zones = report_buf[0];
+		if (nr_zones > max_zones_per_buf) {
 			fprintf(stderr, "nr_zones too big\n");
 			exit(1);
 		}
 
-		if (!report_buf->nr_zones) {
+		if (!nr_zones) {
 			break;
 		}
 
-		for (i = 0; i < report_buf->nr_zones && handled_zones < zones_to_print; i++) {
-			print_zns_zone(&report_buf->descs[i]);
+		for (i = 0; i < nr_zones && handled_zones < zones_to_print; i++) {
+			print_zns_zone(report_buf, i, zdes);
 			slba += zone_size_lba;
 			handled_zones++;
 		}
