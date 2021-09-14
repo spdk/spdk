@@ -360,6 +360,23 @@ int spdk_nvme_zns_offline_zone(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 			       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * Submit a Set Zone Descriptor Extension operation to the specified NVMe namespace.
+ *
+ * \param ns Namespace.
+ * \param qpair I/O queue pair to submit the request.
+ * \param slba starting LBA of the zone to operate on.
+ * \param buffer Virtual address pointer to the data payload buffer.
+ * \param payload_size Payload buffer size.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_zns_set_zone_desc_ext(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				    uint64_t slba, void *buffer, uint32_t payload_size,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * Get a zone report from the specified NVMe namespace.
  *
  * \param ns Namespace.
@@ -380,6 +397,28 @@ int spdk_nvme_zns_report_zones(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 			       void *payload, uint32_t payload_size, uint64_t slba,
 			       enum spdk_nvme_zns_zra_report_opts report_opts, bool partial_report,
 			       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
+ * Get a extended zone report from the specified NVMe namespace.
+ *
+ * \param ns Namespace.
+ * \param qpair I/O queue pair to submit the request.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param slba starting LBA of the zone to operate on.
+ * \param report_opts Filter on which zone states to include in the extended zone report.
+ * \param partial_report If true, nr_zones field in the extended zone report indicates the number of zone
+ * descriptors that were successfully written to the extended zone report. If false, nr_zones field in the
+ * extended zone report indicates the number of zone descriptors that match the report_opts criteria.
+ * \param cb_fn Callback function invoked when the I/O command completes.
+ * \param cb_arg Argument passed to callback function.
+ *
+ * \return 0 on success. Negated errno on failure.
+ */
+int spdk_nvme_zns_ext_report_zones(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				   void *payload, uint32_t payload_size, uint64_t slba,
+				   enum spdk_nvme_zns_zra_report_opts report_opts, bool partial_report,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 #ifdef __cplusplus
 }

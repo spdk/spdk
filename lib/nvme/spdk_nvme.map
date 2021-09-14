@@ -207,7 +207,9 @@
 	spdk_nvme_zns_open_zone;
 	spdk_nvme_zns_reset_zone;
 	spdk_nvme_zns_offline_zone;
+	spdk_nvme_zns_set_zone_desc_ext;
 	spdk_nvme_zns_report_zones;
+	spdk_nvme_zns_ext_report_zones;
 
 	# public functions from nvme_ocssd.h
 	spdk_nvme_ctrlr_is_ocssd_supported;

@@ -55,6 +55,9 @@ log level.
 
 ### nvme
 
+Added new functions `spdk_nvme_zns_set_zone_desc_ext` and `spdk_nvme_zns_ext_report_zones`
+to set zone descriptor extension and to get extended zone report respectively.
+
 New API `spdk_nvme_ctrlr_get_memory_domain` has been added, it allows to get SPDK memory domain used by nvme controller.
 
 New API functions `spdk_nvme_ns_cmd_readv_ext` and `spdk_nvme_ns_cmd_writev_ext`
