@@ -35,8 +35,14 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPOR
 $rpc_py bdev_nvme_attach_controller -b $nvme_bdev -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-f ipv4 -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode0
 
+# Make sure the bdev was created successfully
+$rpc_py bdev_get_bdevs -b ${nvme_bdev}n1
+
 # Make sure the reset is also asynchronous
 $rpc_py bdev_nvme_reset_controller $nvme_bdev
+
+# And that the bdev is still available after a reset
+$rpc_py bdev_get_bdevs -b ${nvme_bdev}n1
 
 # Finally, detach the controller to verify the detach path
 $rpc_py bdev_nvme_detach_controller $nvme_bdev
