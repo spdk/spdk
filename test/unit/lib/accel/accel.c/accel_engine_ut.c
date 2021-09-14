@@ -723,6 +723,78 @@ test_spdk_accel_submit_crc32cv(void)
 	}
 }
 
+static void
+test_spdk_accel_submit_copy_crc32c(void)
+{
+	const uint64_t nbytes = TEST_SUBMIT_SIZE;
+	uint32_t crc_dst;
+	uint8_t dst[TEST_SUBMIT_SIZE];
+	uint8_t src[TEST_SUBMIT_SIZE];
+	uint32_t seed = 0;
+	void *cb_arg = NULL;
+	int rc;
+	struct spdk_accel_task task;
+	struct spdk_accel_task *expected_accel_task = NULL;
+
+	/* Fail with no tasks on _get_task() */
+	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, dummy_submit_cb_fn,
+					   cb_arg);
+	CU_ASSERT(rc == -ENOMEM);
+
+	TAILQ_INIT(&g_accel_ch->task_pool);
+	task.cb_fn = dummy_submit_cb_fn;
+	task.cb_arg = cb_arg;
+	task.accel_ch = g_accel_ch;
+	task.batch = NULL;
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+
+	g_accel_ch->engine = &g_accel_engine;
+	g_accel_ch->engine->capabilities = ACCEL_COPY_CRC32C;
+	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
+
+	/* HW accel submission OK. */
+	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, dummy_submit_cb_fn,
+					   cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.dst == dst);
+	CU_ASSERT(task.src == src);
+	CU_ASSERT(task.crc_dst == &crc_dst);
+	CU_ASSERT(task.v.iovcnt == 0);
+	CU_ASSERT(task.seed == seed);
+	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_COPY_CRC32C);
+	CU_ASSERT(g_dummy_submit_called == true);
+
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+	g_dummy_submit_called = false;
+	task.dst = 0;
+	task.src = 0;
+	task.crc_dst = 0;
+	task.v.iovcnt = 0;
+	task.seed = 0;
+	task.nbytes = 0;
+	task.op_code = 0xff;
+	g_accel_ch->engine->capabilities = 0;
+	memset(src, 0x5A, TEST_SUBMIT_SIZE);
+
+	/* SW engine does copy crc. */
+	rc = spdk_accel_submit_copy_crc32c(g_ch, dst, src, &crc_dst, seed, nbytes, dummy_submit_cb_fn,
+					   cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(memcmp(dst, src, TEST_SUBMIT_SIZE) == 0);
+	CU_ASSERT(task.dst == dst);
+	CU_ASSERT(task.src == src);
+	CU_ASSERT(task.crc_dst == &crc_dst);
+	CU_ASSERT(task.v.iovcnt == 0);
+	CU_ASSERT(task.seed == seed);
+	CU_ASSERT(task.nbytes == nbytes);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_COPY_CRC32C);
+	CU_ASSERT(g_dummy_submit_cb_called == false);
+	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &task);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -747,6 +819,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_submit_fill);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32c);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32cv);
+	CU_ADD_TEST(suite, test_spdk_accel_submit_copy_crc32c);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
