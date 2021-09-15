@@ -193,6 +193,7 @@ static int bdev_nvme_io_passthru_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qp
 static int bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch,
 			   struct nvme_bdev_io *bio, struct nvme_bdev_io *bio_to_abort);
 static int bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio);
+static int bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
@@ -503,19 +504,47 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), io_status);
 }
 
+static struct nvme_ctrlr_channel *
+nvme_poll_group_get_ctrlr_channel(struct nvme_poll_group *group,
+				  struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_ctrlr_channel *ctrlr_ch;
+
+	TAILQ_FOREACH(ctrlr_ch, &group->ctrlr_ch_list, tailq) {
+		if (ctrlr_ch->qpair == qpair) {
+			break;
+		}
+	}
+
+	return ctrlr_ch;
+}
+
+static void
+bdev_nvme_destroy_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
+{
+	if (ctrlr_ch->qpair != NULL) {
+		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
+		ctrlr_ch->qpair = NULL;
+	}
+}
+
 static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
-	int rc;
+	struct nvme_poll_group *group = poll_group_ctx;
+	struct nvme_ctrlr_channel *ctrlr_ch;
+	struct nvme_ctrlr *nvme_ctrlr;
 
-	SPDK_DEBUGLOG(bdev_nvme, "qpair %p is disconnected, attempting reconnect.\n", qpair);
+	SPDK_NOTICELOG("qpair %p is disconnected, free the qpair and reset controller.\n", qpair);
 	/*
-	 * Currently, just try to reconnect indefinitely. If we are doing a reset, the reset will
-	 * reconnect a qpair and we will stop getting a callback for this one.
+	 * Free the I/O qpair and reset the nvme_ctrlr.
 	 */
-	rc = spdk_nvme_ctrlr_reconnect_io_qpair(qpair);
-	if (rc != 0) {
-		SPDK_DEBUGLOG(bdev_nvme, "Failed to reconnect to qpair %p, errno %d\n", qpair, -rc);
+	ctrlr_ch = nvme_poll_group_get_ctrlr_channel(group, qpair);
+	if (ctrlr_ch != NULL) {
+		bdev_nvme_destroy_qpair(ctrlr_ch);
+
+		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
+		bdev_nvme_reset(nvme_ctrlr);
 	}
 }
 
@@ -650,15 +679,6 @@ err:
 	spdk_nvme_ctrlr_free_io_qpair(qpair);
 
 	return rc;
-}
-
-static void
-bdev_nvme_destroy_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
-{
-	if (ctrlr_ch->qpair != NULL) {
-		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
-		ctrlr_ch->qpair = NULL;
-	}
 }
 
 static void

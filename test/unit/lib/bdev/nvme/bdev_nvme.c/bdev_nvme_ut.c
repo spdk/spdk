@@ -1768,63 +1768,6 @@ test_attach_ctrlr(void)
 }
 
 static void
-test_reconnect_qpair(void)
-{
-	struct spdk_nvme_transport_id trid = {};
-	struct spdk_nvme_ctrlr ctrlr = {};
-	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_io_channel *ch;
-	struct nvme_ctrlr_channel *ctrlr_ch;
-	int rc;
-
-	set_thread(0);
-
-	ut_init_trid(&trid);
-	TAILQ_INIT(&ctrlr.active_io_qpairs);
-
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
-	CU_ASSERT(rc == 0);
-
-	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
-	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
-
-	ch = spdk_get_io_channel(nvme_ctrlr);
-	SPDK_CU_ASSERT_FATAL(ch != NULL);
-
-	ctrlr_ch = spdk_io_channel_get_ctx(ch);
-	CU_ASSERT(ctrlr_ch->qpair != NULL);
-	CU_ASSERT(ctrlr_ch->group != NULL);
-	CU_ASSERT(ctrlr_ch->group->group != NULL);
-	CU_ASSERT(ctrlr_ch->group->poller != NULL);
-
-	/* Test if the disconnected qpair is reconnected. */
-	ctrlr_ch->qpair->is_connected = false;
-
-	poll_threads();
-
-	CU_ASSERT(ctrlr_ch->qpair->is_connected == true);
-
-	/* If the ctrlr is failed, reconnecting qpair should fail too. */
-	ctrlr_ch->qpair->is_connected = false;
-	ctrlr.is_failed = true;
-
-	poll_threads();
-
-	CU_ASSERT(ctrlr_ch->qpair->is_connected == false);
-
-	spdk_put_io_channel(ch);
-
-	poll_threads();
-
-	rc = bdev_nvme_delete("nvme0", NULL);
-	CU_ASSERT(rc == 0);
-
-	poll_threads();
-
-	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
-}
-
-static void
 test_aer_cb(void)
 {
 	struct spdk_nvme_transport_id trid = {};
@@ -2710,6 +2653,133 @@ test_get_memory_domains(void)
 	MOCK_CLEAR(spdk_nvme_ctrlr_get_memory_domain);
 }
 
+static void
+test_reconnect_qpair(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct spdk_io_channel *ch1, *ch2;
+	struct nvme_bdev_channel *nbdev_ch1, *nbdev_ch2;
+	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&trid);
+
+	set_thread(0);
+
+	ctrlr = ut_attach_ctrlr(&trid, 1, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	rc = bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
+
+	bdev = nvme_ctrlr_get_ns(nvme_ctrlr, 1)->bdev;
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	ch1 = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+
+	nbdev_ch1 = spdk_io_channel_get_ctx(ch1);
+	ctrlr_ch1 = nbdev_ch1->ctrlr_ch;
+	SPDK_CU_ASSERT_FATAL(ctrlr_ch1 != NULL);
+
+	set_thread(1);
+
+	ch2 = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+
+	nbdev_ch2 = spdk_io_channel_get_ctx(ch2);
+	ctrlr_ch2 = nbdev_ch2->ctrlr_ch;
+	SPDK_CU_ASSERT_FATAL(ctrlr_ch2 != NULL);
+
+	/* If a qpair is disconnected, it is freed and then reconnected via
+	 * resetting the corresponding nvme_ctrlr.
+	 */
+	ctrlr_ch2->qpair->is_connected = false;
+	ctrlr->is_failed = true;
+
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr_ch1->qpair != NULL);
+	CU_ASSERT(ctrlr_ch2->qpair == NULL);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr_ch1->qpair == NULL);
+	CU_ASSERT(ctrlr_ch2->qpair == NULL);
+	CU_ASSERT(ctrlr->is_failed == true);
+
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr->is_failed == false);
+
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr_ch1->qpair != NULL);
+	CU_ASSERT(ctrlr_ch2->qpair != NULL);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+
+	poll_thread_times(1, 1);
+	CU_ASSERT(nvme_ctrlr->resetting == false);
+
+	poll_threads();
+
+	/* If a qpair is disconnected and resetting the corresponding nvme_ctrlr
+	 * fails, the qpair is just freed.
+	 */
+	ctrlr_ch2->qpair->is_connected = false;
+	ctrlr->is_failed = true;
+	ctrlr->fail_reset = true;
+
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr_ch1->qpair != NULL);
+	CU_ASSERT(ctrlr_ch2->qpair == NULL);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr_ch1->qpair == NULL);
+	CU_ASSERT(ctrlr_ch2->qpair == NULL);
+	CU_ASSERT(ctrlr->is_failed == true);
+
+	poll_thread_times(1, 1);
+	CU_ASSERT(ctrlr->is_failed == true);
+	CU_ASSERT(nvme_ctrlr->resetting == false);
+	CU_ASSERT(ctrlr_ch1->qpair == NULL);
+	CU_ASSERT(ctrlr_ch2->qpair == NULL);
+
+	poll_threads();
+
+	spdk_put_io_channel(ch2);
+
+	set_thread(0);
+
+	spdk_put_io_channel(ch1);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", NULL);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -2727,7 +2797,6 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_failover_ctrlr);
 	CU_ADD_TEST(suite, test_pending_reset);
 	CU_ADD_TEST(suite, test_attach_ctrlr);
-	CU_ADD_TEST(suite, test_reconnect_qpair);
 	CU_ADD_TEST(suite, test_aer_cb);
 	CU_ADD_TEST(suite, test_submit_nvme_cmd);
 	CU_ADD_TEST(suite, test_add_remove_trid);
@@ -2737,6 +2806,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_compare_ns);
 	CU_ADD_TEST(suite, test_init_ana_log_page);
 	CU_ADD_TEST(suite, test_get_memory_domains);
+	CU_ADD_TEST(suite, test_reconnect_qpair);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
