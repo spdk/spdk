@@ -883,7 +883,10 @@ posix_sock_read(struct spdk_posix_sock *sock)
 #endif
 
 	sock->pipe_has_data = true;
-	sock->socket_has_data = false;
+	if (bytes_recvd < bytes_avail) {
+		/* We drained the kernel socket entirely. */
+		sock->socket_has_data = false;
+	}
 
 	return bytes_recvd;
 }
@@ -1376,7 +1379,6 @@ posix_sock_group_impl_poll(struct spdk_sock_group_impl *_group, int max_events,
 		if (!psock->socket_has_data && !psock->pipe_has_data) {
 			TAILQ_INSERT_TAIL(&group->socks_with_data, psock, link);
 		}
-
 		psock->socket_has_data = true;
 	}
 
