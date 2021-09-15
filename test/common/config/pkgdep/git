@@ -489,6 +489,14 @@ function install_ice() {
 	)
 }
 
+function install_lcov() {
+	local lcov_version=v1.15
+
+	rm -rf /usr/src/lcov
+	sudo git clone "$GIT_REPO_LCOV" --branch "$lcov_version" /usr/src/lcov
+	(cd /usr/src/lcov; sudo make install)
+}
+
 function install_sources() {
 	if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
 		# install proper version of the git first
@@ -514,6 +522,7 @@ function install_sources() {
 			install_qemu
 			install_igb_uio
 			install_ice
+			install_lcov
 		)
 		install_extra_pkgs
 	fi
@@ -576,6 +585,8 @@ export GIT_REPO_DPDK_KMODS
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
+: ${GIT_REPO_LCOV=https://github.com/linux-test-project/lcov}
+export GIT_REPO_LCOV
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
