@@ -2746,7 +2746,16 @@ nvmf_vfio_user_qpair_poll(struct nvmf_vfio_user_qpair *qpair)
 
 	ctrlr = qpair->ctrlr;
 
+	/* Load-Acquire. */
 	new_tail = *tdbl(ctrlr, &qpair->sq);
+
+	/*
+	 * Ensure that changes to the queue are visible to us.
+	 * The host driver should write the queue first, do a wmb(), and then
+	 * update the SQ tail doorbell (their Store-Release).
+	 */
+	spdk_rmb();
+
 	if (sq_head(qpair) == new_tail) {
 		return 0;
 	}
