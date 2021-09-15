@@ -140,20 +140,11 @@ struct nvme_bdev {
 	bool			opal;
 };
 
-struct nvme_poll_group {
-	struct spdk_nvme_poll_group		*group;
-	struct spdk_io_channel			*accel_channel;
-	struct spdk_poller			*poller;
-	bool					collect_spin_stat;
-	uint64_t				spin_ticks;
-	uint64_t				start_ticks;
-	uint64_t				end_ticks;
-};
-
 struct nvme_ctrlr_channel {
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_poll_group		*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
+	TAILQ_ENTRY(nvme_ctrlr_channel)	tailq;
 };
 
 #define nvme_ctrlr_channel_get_ctrlr(ctrlr_ch)	\
@@ -162,6 +153,17 @@ struct nvme_ctrlr_channel {
 struct nvme_bdev_channel {
 	struct nvme_ns			*nvme_ns;
 	struct nvme_ctrlr_channel	*ctrlr_ch;
+};
+
+struct nvme_poll_group {
+	struct spdk_nvme_poll_group		*group;
+	struct spdk_io_channel			*accel_channel;
+	struct spdk_poller			*poller;
+	bool					collect_spin_stat;
+	uint64_t				spin_ticks;
+	uint64_t				start_ticks;
+	uint64_t				end_ticks;
+	TAILQ_HEAD(, nvme_ctrlr_channel)	ctrlr_ch_list;
 };
 
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);

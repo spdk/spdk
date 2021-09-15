@@ -1284,6 +1284,7 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	}
 
 	ctrlr_ch->group = spdk_io_channel_get_ctx(pg_ch);
+	TAILQ_INSERT_TAIL(&ctrlr_ch->group->ctrlr_ch_list, ctrlr_ch, tailq);
 
 #ifdef SPDK_CONFIG_VTUNE
 	ctrlr_ch->group->collect_spin_stat = true;
@@ -1314,6 +1315,8 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	assert(ctrlr_ch->group != NULL);
 
 	bdev_nvme_destroy_qpair(ctrlr_ch);
+
+	TAILQ_REMOVE(&ctrlr_ch->group->ctrlr_ch_list, ctrlr_ch, tailq);
 
 	spdk_put_io_channel(spdk_io_channel_from_ctx(ctrlr_ch->group));
 }
@@ -1349,6 +1352,8 @@ bdev_nvme_create_poll_group_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_poll_group *group = ctx_buf;
 
+	TAILQ_INIT(&group->ctrlr_ch_list);
+
 	group->group = spdk_nvme_poll_group_create(group, &g_bdev_nvme_accel_fn_table);
 	if (group->group == NULL) {
 		return -1;
@@ -1377,6 +1382,8 @@ static void
 bdev_nvme_destroy_poll_group_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_poll_group *group = ctx_buf;
+
+	assert(TAILQ_EMPTY(&group->ctrlr_ch_list));
 
 	if (group->accel_channel) {
 		spdk_put_io_channel(group->accel_channel);
