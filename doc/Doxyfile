@@ -814,6 +814,7 @@ INPUT                  += \
                          concurrency.md \
                          containers.md \
                          ../deprecation.md \
+                         distributions.md \
                          event.md \
                          ftl.md \
                          gdb_macros.md \
