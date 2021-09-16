@@ -303,22 +303,13 @@ posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 	return 0;
 }
 
-static struct spdk_posix_sock *
-posix_sock_alloc(int fd, bool enable_zero_copy)
+static void
+posix_sock_init(struct spdk_posix_sock *sock, bool enable_zero_copy)
 {
-	struct spdk_posix_sock *sock;
 #if defined(SPDK_ZEROCOPY) || defined(__linux__)
 	int flag;
 	int rc;
 #endif
-
-	sock = calloc(1, sizeof(*sock));
-	if (sock == NULL) {
-		SPDK_ERRLOG("sock allocation failed\n");
-		return NULL;
-	}
-
-	sock->fd = fd;
 
 #if defined(SPDK_ZEROCOPY)
 	flag = 1;
@@ -350,8 +341,83 @@ posix_sock_alloc(int fd, bool enable_zero_copy)
 		spdk_sock_map_insert(&g_map, sock->placement_id, NULL);
 	}
 #endif
+}
+
+static struct spdk_posix_sock *
+posix_sock_alloc(int fd, bool enable_zero_copy)
+{
+	struct spdk_posix_sock *sock;
+
+	sock = calloc(1, sizeof(*sock));
+	if (sock == NULL) {
+		SPDK_ERRLOG("sock allocation failed\n");
+		return NULL;
+	}
+
+	sock->fd = fd;
+	posix_sock_init(sock, enable_zero_copy);
 
 	return sock;
+}
+
+static int
+posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts)
+{
+	int fd;
+	int val = 1;
+	int rc, sz;
+
+	fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (fd < 0) {
+		/* error */
+		return -1;
+	}
+
+	sz = g_spdk_posix_sock_impl_opts.recv_buf_size;
+	rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
+	if (rc) {
+		/* Not fatal */
+	}
+
+	sz = g_spdk_posix_sock_impl_opts.send_buf_size;
+	rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
+	if (rc) {
+		/* Not fatal */
+	}
+
+	rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
+	if (rc != 0) {
+		close(fd);
+		/* error */
+		return -1;
+	}
+	rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
+	if (rc != 0) {
+		close(fd);
+		/* error */
+		return -1;
+	}
+
+#if defined(SO_PRIORITY)
+	if (opts->priority) {
+		rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
+		if (rc != 0) {
+			close(fd);
+			/* error */
+			return -1;
+		}
+	}
+#endif
+
+	if (res->ai_family == AF_INET6) {
+		rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
+		if (rc != 0) {
+			close(fd);
+			/* error */
+			return -1;
+		}
+	}
+	return fd;
 }
 
 static struct spdk_sock *
@@ -365,8 +431,7 @@ posix_sock_create(const char *ip, int port,
 	char *p;
 	struct addrinfo hints, *res, *res0;
 	int fd, flag;
-	int val = 1;
-	int rc, sz;
+	int rc;
 	bool enable_zcopy_user_opts = true;
 	bool enable_zcopy_impl_opts = true;
 
@@ -401,61 +466,10 @@ posix_sock_create(const char *ip, int port,
 	fd = -1;
 	for (res = res0; res != NULL; res = res->ai_next) {
 retry:
-		fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		fd = posix_fd_create(res, opts);
 		if (fd < 0) {
-			/* error */
 			continue;
 		}
-
-		sz = g_spdk_posix_sock_impl_opts.recv_buf_size;
-		rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
-		if (rc) {
-			/* Not fatal */
-		}
-
-		sz = g_spdk_posix_sock_impl_opts.send_buf_size;
-		rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
-		if (rc) {
-			/* Not fatal */
-		}
-
-		rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			fd = -1;
-			/* error */
-			continue;
-		}
-		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof val);
-		if (rc != 0) {
-			close(fd);
-			fd = -1;
-			/* error */
-			continue;
-		}
-
-#if defined(SO_PRIORITY)
-		if (opts->priority) {
-			rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);
-			if (rc != 0) {
-				close(fd);
-				fd = -1;
-				/* error */
-				continue;
-			}
-		}
-#endif
-
-		if (res->ai_family == AF_INET6) {
-			rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val);
-			if (rc != 0) {
-				close(fd);
-				fd = -1;
-				/* error */
-				continue;
-			}
-		}
-
 		if (type == SPDK_SOCK_CREATE_LISTEN) {
 			rc = bind(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
