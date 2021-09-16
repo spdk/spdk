@@ -3747,6 +3747,58 @@ test_reset_bdev_ctrlr(void)
 	free(second_bdev_io);
 }
 
+static void
+test_find_io_path(void)
+{
+	struct nvme_bdev_channel nbdev_ch = {
+		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
+	};
+	struct nvme_ctrlr_channel ctrlr_ch1 = {}, ctrlr_ch2 = {};
+	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {};
+	struct nvme_io_path io_path1 = { .ctrlr_ch = &ctrlr_ch1, .nvme_ns = &nvme_ns1, };
+	struct nvme_io_path io_path2 = { .ctrlr_ch = &ctrlr_ch2, .nvme_ns = &nvme_ns2, };
+
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path1, stailq);
+
+	/* Test if io_path whose ANA state is not accessible is excluded. */
+
+	ctrlr_ch1.qpair = (struct spdk_nvme_qpair *)0x1;
+	nvme_ns1.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == NULL);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_PERSISTENT_LOSS_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == NULL);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_CHANGE_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == NULL);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+
+	/* Test if io_path whose qpair is resetting is excluced. */
+
+	ctrlr_ch1.qpair = NULL;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == NULL);
+
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path2, stailq);
+
+	/* Test if ANA optimized state or the first found ANA non-optimized state
+	 * is prioritized.
+	 */
+
+	ctrlr_ch1.qpair = (struct spdk_nvme_qpair *)0x1;
+	nvme_ns1.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	ctrlr_ch2.qpair = (struct spdk_nvme_qpair *)0x1;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	nvme_ns2.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -3779,6 +3831,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_add_multi_io_paths_to_nbdev_ch);
 	CU_ADD_TEST(suite, test_admin_path);
 	CU_ADD_TEST(suite, test_reset_bdev_ctrlr);
+	CU_ADD_TEST(suite, test_find_io_path);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
