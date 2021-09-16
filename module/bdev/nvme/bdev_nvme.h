@@ -104,6 +104,7 @@ struct nvme_ctrlr {
 	uint32_t				resetting : 1;
 	uint32_t				failover_in_progress : 1;
 	uint32_t				destruct : 1;
+	uint32_t				ana_log_page_updating : 1;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
 	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added

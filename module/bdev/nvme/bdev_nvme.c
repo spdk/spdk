@@ -532,7 +532,7 @@ nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->ref--;
 
 	if (nvme_ctrlr->ref > 0 || !nvme_ctrlr->destruct ||
-	    nvme_ctrlr->resetting) {
+	    nvme_ctrlr->resetting || nvme_ctrlr->ana_log_page_updating) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
 	}
@@ -1149,7 +1149,8 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 
 	path_id->is_failed = !success;
 
-	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct) {
+	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct &&
+	    !nvme_ctrlr->ana_log_page_updating) {
 		/* Complete pending destruct after reset completes. */
 		complete_pending_destruct = true;
 	}
@@ -2716,19 +2717,6 @@ nvme_ctrlr_depopulate_namespaces(struct nvme_ctrlr *nvme_ctrlr)
 	}
 }
 
-static bool
-nvme_ctrlr_acquire(struct nvme_ctrlr *nvme_ctrlr)
-{
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	if (nvme_ctrlr->destruct || nvme_ctrlr->resetting) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return false;
-	}
-	nvme_ctrlr->ref++;
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-	return true;
-}
-
 static int
 nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 			  void *cb_arg)
@@ -2763,12 +2751,25 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
-	if (spdk_nvme_cpl_is_success(cpl)) {
+	if (cpl != NULL && spdk_nvme_cpl_is_success(cpl)) {
 		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ctrlr_set_ana_states,
 					     nvme_ctrlr);
 	}
 
-	nvme_ctrlr_release(nvme_ctrlr);
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+
+	assert(nvme_ctrlr->ana_log_page_updating == true);
+	nvme_ctrlr->ana_log_page_updating = false;
+
+	if (nvme_ctrlr->ref > 0 || !nvme_ctrlr->destruct ||
+	    nvme_ctrlr->resetting) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		return;
+	}
+
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	nvme_ctrlr_unregister(nvme_ctrlr);
 }
 
 static void
@@ -2780,9 +2781,15 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 		return;
 	}
 
-	if (!nvme_ctrlr_acquire(nvme_ctrlr)) {
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	if (nvme_ctrlr->destruct || nvme_ctrlr->resetting ||
+	    nvme_ctrlr->ana_log_page_updating) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
 	}
+
+	nvme_ctrlr->ana_log_page_updating = true;
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(nvme_ctrlr->ctrlr,
 					      SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
@@ -2792,7 +2799,7 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 					      nvme_ctrlr_read_ana_log_page_done,
 					      nvme_ctrlr);
 	if (rc != 0) {
-		nvme_ctrlr_release(nvme_ctrlr);
+		nvme_ctrlr_read_ana_log_page_done(nvme_ctrlr, NULL);
 	}
 }
 

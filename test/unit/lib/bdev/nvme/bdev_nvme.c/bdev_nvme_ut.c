@@ -4392,6 +4392,90 @@ test_retry_io_count(void)
 	g_opts.bdev_retry_count = 0;
 }
 
+static void
+test_concurrent_read_ana_log_page(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&trid);
+
+	set_thread(0);
+
+	ctrlr = ut_attach_ctrlr(&trid, 1, true, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	ctrlr->ns[0].ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	rc = bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL, false);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
+
+	nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
+
+	CU_ASSERT(nvme_ctrlr->ana_log_page_updating == true);
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
+
+	/* Following read request should be rejected. */
+	nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
+
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
+
+	set_thread(1);
+
+	nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
+
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
+
+	/* Reset request while reading ANA log page should not be rejected. */
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr->ana_log_page_updating == false);
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
+
+	/* Read ANA log page while resetting ctrlr should be rejected. */
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+
+	nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
+
+	CU_ASSERT(nvme_ctrlr->ana_log_page_updating == false);
+
+	set_thread(0);
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -4428,6 +4512,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_retry_io_if_ctrlr_is_resetting);
 	CU_ADD_TEST(suite, test_retry_io_for_io_path_error);
 	CU_ADD_TEST(suite, test_retry_io_count);
+	CU_ADD_TEST(suite, test_concurrent_read_ana_log_page);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
