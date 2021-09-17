@@ -31,6 +31,10 @@
  */
 
 
+/** \file
+ * SPDK DMA device framework
+ */
+
 #ifndef SPDK_DMA_H
 #define SPDK_DMA_H
 

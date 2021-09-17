@@ -208,7 +208,7 @@ struct spdk_bdev_ext_io_opts {
 	/** Size of this structure in bytes */
 	size_t size;
 	/** Memory domain which describes payload in this IO request. bdev must support DMA device type that
-	 * can access this memory domain, refer to \ref spdk_bdev_get_memory_domains and \erf spdk_memory_domain_get_dma_device_type
+	 * can access this memory domain, refer to \ref spdk_bdev_get_memory_domains and \ref spdk_memory_domain_get_dma_device_type
 	 * If set, that means that data buffers can't be accessed directly and the memory domain must
 	 * be used to fetch data to local buffers or to translate data to another memory domain */
 	struct spdk_memory_domain *memory_domain;
@@ -929,7 +929,6 @@ int spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_c
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be read into.
  * \param iovcnt The number of elements in iov.
- * \param md Metadata buffer, optional.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks to read.
  * \param cb Called when the request is complete.
@@ -1132,7 +1131,6 @@ int spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be written from.
  * \param iovcnt The number of elements in iov.
- * \param md Metadata buffer, optional.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks to write.
  * \param cb Called when the request is complete.
