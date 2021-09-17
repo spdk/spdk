@@ -267,33 +267,40 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 	vhost_user_fini(vhost_fini);
 }
 
+static void
+vhost_user_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	uint32_t delay_base_us;
+	uint32_t iops_threshold;
+
+	vdev->backend->write_config_json(vdev, w);
+
+	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
+	if (delay_base_us) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "vhost_controller_set_coalescing");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "ctrlr", vdev->name);
+		spdk_json_write_named_uint32(w, "delay_base_us", delay_base_us);
+		spdk_json_write_named_uint32(w, "iops_threshold", iops_threshold);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+}
+
 void
 spdk_vhost_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_vhost_dev *vdev;
-	uint32_t delay_base_us;
-	uint32_t iops_threshold;
 
 	spdk_json_write_array_begin(w);
 
 	spdk_vhost_lock();
 	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
 	     vdev = spdk_vhost_dev_next(vdev)) {
-		vdev->backend->write_config_json(vdev, w);
-
-		spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
-		if (delay_base_us) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_named_string(w, "method", "vhost_controller_set_coalescing");
-
-			spdk_json_write_named_object_begin(w, "params");
-			spdk_json_write_named_string(w, "ctrlr", vdev->name);
-			spdk_json_write_named_uint32(w, "delay_base_us", delay_base_us);
-			spdk_json_write_named_uint32(w, "iops_threshold", iops_threshold);
-			spdk_json_write_object_end(w);
-
-			spdk_json_write_object_end(w);
-		}
+		vhost_user_config_json(vdev, w);
 	}
 	spdk_vhost_unlock();
 
