@@ -62,6 +62,8 @@
 #define SPDK_VHOST_BLK_PROTOCOL_FEATURES ((1ULL << VHOST_USER_PROTOCOL_F_CONFIG) | \
 		(1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD))
 
+#define VIRTIO_BLK_DEFAULT_TRANSPORT "vhost_user_blk"
+
 struct spdk_vhost_user_blk_task {
 	struct spdk_vhost_blk_task blk_task;
 	struct spdk_vhost_blk_session *bvsession;
@@ -80,6 +82,8 @@ struct spdk_vhost_blk_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *bdev_desc;
+	const struct spdk_virtio_blk_transport_ops *ops;
+
 	/* dummy_io_channel is used to hold a bdev reference */
 	struct spdk_io_channel *dummy_io_channel;
 	bool readonly;
@@ -94,24 +98,11 @@ struct spdk_vhost_blk_session {
 	struct spdk_poller *stop_poller;
 };
 
-struct rpc_vhost_blk {
-	bool readonly;
-	bool packed_ring;
-	bool packed_ring_recovery;
-};
-
-static const struct spdk_json_object_decoder rpc_construct_vhost_blk[] = {
-	{"readonly", offsetof(struct rpc_vhost_blk, readonly), spdk_json_decode_bool, true},
-	{"packed_ring", offsetof(struct rpc_vhost_blk, packed_ring), spdk_json_decode_bool, true},
-	{"packed_ring_recovery", offsetof(struct rpc_vhost_blk, packed_ring_recovery), spdk_json_decode_bool, true},
-};
-
 /* forward declaration */
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
 
-static int
-virtio_blk_process_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
-			   struct spdk_vhost_blk_task *task);
+static void
+vhost_user_blk_request_finish(uint8_t status, struct spdk_vhost_blk_task *task, void *cb_arg);
 
 static int
 vhost_user_process_blk_request(struct spdk_vhost_user_blk_task *user_task)
@@ -119,7 +110,8 @@ vhost_user_process_blk_request(struct spdk_vhost_user_blk_task *user_task)
 	struct spdk_vhost_blk_session *bvsession = user_task->bvsession;
 	struct spdk_vhost_dev *vdev = &bvsession->bvdev->vdev;
 
-	return virtio_blk_process_request(vdev, bvsession->io_channel, &user_task->blk_task);
+	return virtio_blk_process_request(vdev, bvsession->io_channel, &user_task->blk_task,
+					  vhost_user_blk_request_finish, NULL);
 }
 
 static struct spdk_vhost_blk_dev *
@@ -189,7 +181,7 @@ blk_task_enqueue(struct spdk_vhost_user_blk_task *task)
 }
 
 static void
-vhost_user_blk_request_finish(uint8_t status, struct spdk_vhost_blk_task *task)
+vhost_user_blk_request_finish(uint8_t status, struct spdk_vhost_blk_task *task, void *cb_arg)
 {
 	struct spdk_vhost_user_blk_task *user_task;
 
@@ -210,7 +202,7 @@ blk_request_finish(uint8_t status, struct spdk_vhost_blk_task *task)
 		*task->status = status;
 	}
 
-	vhost_user_blk_request_finish(status, task);
+	task->cb(status, task, task->cb_arg);
 }
 
 /*
@@ -457,7 +449,8 @@ blk_request_resubmit(void *arg)
 	struct spdk_vhost_blk_task *task = arg;
 	int rc = 0;
 
-	rc = virtio_blk_process_request(task->bdev_io_wait_vdev, task->bdev_io_wait_ch, task);
+	rc = virtio_blk_process_request(task->bdev_io_wait_vdev, task->bdev_io_wait_ch, task,
+					task->cb, task->cb_arg);
 	if (rc == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p resubmitted ======\n", task);
 	} else {
@@ -484,9 +477,9 @@ blk_request_queue_io(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 	}
 }
 
-static int
+int
 virtio_blk_process_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
-			   struct spdk_vhost_blk_task *task)
+			   struct spdk_vhost_blk_task *task, virtio_blk_request_cb cb, void *cb_arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 	struct virtio_blk_outhdr req;
@@ -497,6 +490,9 @@ virtio_blk_process_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *
 	uint32_t payload_len;
 	uint16_t iovcnt;
 	int rc;
+
+	task->cb = cb;
+	task->cb_arg = cb_arg;
 
 	iov = &task->iovs[0];
 	if (spdk_unlikely(iov->iov_len != sizeof(req))) {
@@ -693,7 +689,7 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 	if (rc) {
 		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
-		vhost_user_blk_request_finish(VIRTIO_BLK_S_UNSUPP, blk_task);
+		vhost_user_blk_request_finish(VIRTIO_BLK_S_UNSUPP, blk_task, NULL);
 		return;
 	}
 
@@ -758,7 +754,7 @@ process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 	if (rc) {
 		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
-		vhost_user_blk_request_finish(VIRTIO_BLK_S_UNSUPP, blk_task);
+		vhost_user_blk_request_finish(VIRTIO_BLK_S_UNSUPP, blk_task, NULL);
 		return;
 	}
 
@@ -819,7 +815,7 @@ process_packed_inflight_blk_task(struct spdk_vhost_virtqueue *vq,
 	if (rc) {
 		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
-		vhost_user_blk_request_finish(VIRTIO_BLK_S_UNSUPP, blk_task);
+		vhost_user_blk_request_finish(VIRTIO_BLK_S_UNSUPP, blk_task, NULL);
 		return;
 	}
 
@@ -1134,8 +1130,6 @@ vhost_blk_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bo
 	vhost_user_session_set_interrupt_mode(&bvsession->vsession, interrupt_mode);
 }
 
-typedef void (*bdev_event_cb_complete)(struct spdk_vhost_dev *vdev, void *ctx);
-
 static void
 bdev_event_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
 {
@@ -1240,6 +1234,7 @@ bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	      void *event_ctx)
 {
 	struct spdk_vhost_dev *vdev = (struct spdk_vhost_dev *)event_ctx;
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
 	SPDK_DEBUGLOG(vhost_blk, "Bdev event: type %d, name %s\n",
 		      type,
@@ -1248,7 +1243,7 @@ bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
 	case SPDK_BDEV_EVENT_RESIZE:
-		vhost_user_bdev_event_cb(type, vdev, bdev_event_cpl_cb, (void *)type);
+		bvdev->ops->bdev_event(type, vdev, bdev_event_cpl_cb, (void *)type);
 		break;
 	default:
 		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
@@ -1484,6 +1479,7 @@ vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx
 	} else {
 		spdk_json_write_null(w);
 	}
+	spdk_json_write_named_string(w, "transport", bvdev->ops->name);
 
 	spdk_json_write_object_end(w);
 }
@@ -1509,6 +1505,7 @@ vhost_blk_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 	spdk_json_write_named_string(w, "cpumask",
 				     spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)));
 	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
+	spdk_json_write_named_string(w, "transport", bvdev->ops->name);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -1593,28 +1590,41 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 };
 
 int
-spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
-			 const struct spdk_json_val *params)
+virtio_blk_construct_ctrlr(struct spdk_vhost_dev *vdev, const char *address,
+			   struct spdk_cpuset *cpumask, const struct spdk_json_val *params,
+			   const struct spdk_vhost_user_dev_backend *user_backend)
 {
-	struct rpc_vhost_blk req = {0};
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	return bvdev->ops->create_ctrlr(vdev, cpumask, address, params, (void *)user_backend);
+}
+
+int
+spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
+			 const char *transport, const struct spdk_json_val *params)
+{
 	struct spdk_vhost_blk_dev *bvdev = NULL;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_bdev *bdev;
+	const char *transport_name = VIRTIO_BLK_DEFAULT_TRANSPORT;
 	int ret = 0;
 
 	spdk_vhost_lock();
 
-	if (spdk_json_decode_object_relaxed(params, rpc_construct_vhost_blk,
-					    SPDK_COUNTOF(rpc_construct_vhost_blk),
-					    &req)) {
-		SPDK_DEBUGLOG(vhost_blk, "spdk_json_decode_object failed\n");
-		ret = -EINVAL;
-		goto out;
-	}
-
 	bvdev = calloc(1, sizeof(*bvdev));
 	if (bvdev == NULL) {
 		ret = -ENOMEM;
+		goto out;
+	}
+
+	if (transport != NULL) {
+		transport_name = transport;
+	}
+
+	bvdev->ops = virtio_blk_get_transport_ops(transport_name);
+	if (!bvdev->ops) {
+		ret = -EINVAL;
+		SPDK_ERRLOG("Transport type '%s' unavailable.\n", transport_name);
 		goto out;
 	}
 
@@ -1630,12 +1640,6 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	vdev->virtio_features = SPDK_VHOST_BLK_FEATURES_BASE;
 	vdev->disabled_features = SPDK_VHOST_BLK_DISABLED_FEATURES;
 	vdev->protocol_features = SPDK_VHOST_BLK_PROTOCOL_FEATURES;
-	vdev->packed_ring_recovery = false;
-
-	if (req.packed_ring) {
-		vdev->virtio_features |= (uint64_t)req.packed_ring << VIRTIO_F_RING_PACKED;
-		vdev->packed_ring_recovery = req.packed_ring_recovery;
-	}
 
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_DISCARD);
@@ -1643,9 +1647,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_WRITE_ZEROES);
 	}
-	if (req.readonly) {
-		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_RO);
-	}
+
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_FLUSH);
 	}
@@ -1663,8 +1665,8 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	bvdev->dummy_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
 
 	bvdev->bdev = bdev;
-	bvdev->readonly = req.readonly;
-	ret = vhost_dev_register(vdev, name, cpumask, &vhost_blk_device_backend,
+	bvdev->readonly = false;
+	ret = vhost_dev_register(vdev, name, cpumask, params, &vhost_blk_device_backend,
 				 &vhost_blk_user_device_backend);
 	if (ret != 0) {
 		spdk_put_io_channel(bvdev->dummy_io_channel);
@@ -1679,6 +1681,14 @@ out:
 	}
 	spdk_vhost_unlock();
 	return ret;
+}
+
+int
+virtio_blk_destroy_ctrlr(struct spdk_vhost_dev *vdev)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	return bvdev->ops->destroy_ctrlr(vdev);
 }
 
 static int
@@ -1722,6 +1732,97 @@ vhost_blk_put_io_channel(struct spdk_io_channel *ch)
 {
 	spdk_put_io_channel(ch);
 }
+
+static struct spdk_virtio_blk_transport *
+vhost_user_blk_create(const struct spdk_json_val *params)
+{
+	int ret;
+	struct spdk_virtio_blk_transport *vhost_user_blk;
+
+	vhost_user_blk = calloc(1, sizeof(*vhost_user_blk));
+	if (!vhost_user_blk) {
+		return NULL;
+	}
+
+	ret = vhost_user_init();
+	if (ret != 0) {
+		free(vhost_user_blk);
+		return NULL;
+	}
+
+	return vhost_user_blk;
+}
+
+static int
+vhost_user_blk_destroy(struct spdk_virtio_blk_transport *transport,
+		       spdk_vhost_fini_cb cb_fn)
+{
+	vhost_user_fini(cb_fn);
+	free(transport);
+	return 0;
+}
+
+struct rpc_vhost_blk {
+	bool readonly;
+	bool packed_ring;
+	bool packed_ring_recovery;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_vhost_blk[] = {
+	{"readonly", offsetof(struct rpc_vhost_blk, readonly), spdk_json_decode_bool, true},
+	{"packed_ring", offsetof(struct rpc_vhost_blk, packed_ring), spdk_json_decode_bool, true},
+	{"packed_ring_recovery", offsetof(struct rpc_vhost_blk, packed_ring_recovery), spdk_json_decode_bool, true},
+};
+
+static int
+vhost_user_blk_create_ctrlr(struct spdk_vhost_dev *vdev, struct spdk_cpuset *cpumask,
+			    const char *address, const struct spdk_json_val *params, void *custom_opts)
+{
+	struct rpc_vhost_blk req = {0};
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	if (spdk_json_decode_object_relaxed(params, rpc_construct_vhost_blk,
+					    SPDK_COUNTOF(rpc_construct_vhost_blk),
+					    &req)) {
+		SPDK_DEBUGLOG(vhost_blk, "spdk_json_decode_object failed\n");
+		return -EINVAL;
+	}
+
+	vdev->packed_ring_recovery = false;
+
+	if (req.packed_ring) {
+		vdev->virtio_features |= (uint64_t)req.packed_ring << VIRTIO_F_RING_PACKED;
+		vdev->packed_ring_recovery = req.packed_ring_recovery;
+	}
+	if (req.readonly) {
+		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_RO);
+		bvdev->readonly = req.readonly;
+	}
+
+	return vhost_user_dev_register(vdev, address, cpumask, custom_opts);
+}
+
+static int
+vhost_user_blk_destroy_ctrlr(struct spdk_vhost_dev *vdev)
+{
+	return vhost_user_dev_unregister(vdev);
+}
+
+static const struct spdk_virtio_blk_transport_ops vhost_user_blk = {
+	.name = "vhost_user_blk",
+
+	.dump_opts = NULL,
+
+	.create = vhost_user_blk_create,
+	.destroy = vhost_user_blk_destroy,
+
+	.create_ctrlr = vhost_user_blk_create_ctrlr,
+	.destroy_ctrlr = vhost_user_blk_destroy_ctrlr,
+
+	.bdev_event = vhost_user_bdev_event_cb,
+};
+
+SPDK_VIRTIO_BLK_TRANSPORT_REGISTER(vhost_user_blk, &vhost_user_blk);
 
 SPDK_LOG_REGISTER_COMPONENT(vhost_blk)
 SPDK_LOG_REGISTER_COMPONENT(vhost_blk_data)

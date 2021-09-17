@@ -2417,6 +2417,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('iops_threshold', help='IOPS threshold when coalescing is enabled', type=int)
     p.set_defaults(func=vhost_controller_set_coalescing)
 
+    def virtio_blk_create_transport(args):
+        rpc.vhost.virtio_blk_create_transport(args.client,
+                                              name=args.name,
+                                              opts=args.opts)
+
+    p = subparsers.add_parser('virtio_blk_create_transport',
+                              help='Create virtio blk transport')
+    p.add_argument('name', help='transport name')
+    p.set_defaults(func=virtio_blk_create_transport)
+
     def vhost_create_scsi_controller(args):
         rpc.vhost.vhost_create_scsi_controller(args.client,
                                                ctrlr=args.ctrlr,
@@ -2455,6 +2465,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                               ctrlr=args.ctrlr,
                                               dev_name=args.dev_name,
                                               cpumask=args.cpumask,
+                                              transport=args.transport,
                                               readonly=args.readonly,
                                               packed_ring=args.packed_ring,
                                               packed_ring_recovery=args.packed_ring_recovery)
@@ -2463,6 +2474,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('dev_name', help='device name')
     p.add_argument('--cpumask', help='cpu mask for this controller')
+    p.add_argument('--transport', help='virtio blk transport name (default: vhost_user_blk)')
     p.add_argument("-r", "--readonly", action='store_true', help='Set controller as read-only')
     p.add_argument("-p", "--packed_ring", action='store_true', help='Set controller as packed ring supported')
     p.add_argument("-l", "--packed_ring_recovery", action='store_true', help='Enable packed ring live recovery')

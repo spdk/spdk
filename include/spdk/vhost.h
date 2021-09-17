@@ -332,6 +332,7 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  * is allowed but not required. The mask itself can be constructed as:
  * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
  * \param dev_name bdev name to associate with this vhost device
+ * \param transport virtio blk transport name (default: vhost_user_blk)
  * \param params JSON value object containing variables:
  * readonly if set, all writes to the device will fail with
  * \c VIRTIO_BLK_S_IOERR error code.
@@ -341,7 +342,7 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
-			     const struct spdk_json_val *params);
+			     const char *transport, const struct spdk_json_val *params);
 
 /**
  * Remove a vhost device. The device must not have any open connections on it's socket.

@@ -16,6 +16,15 @@ def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold
     return client.call('vhost_controller_set_coalescing', params)
 
 
+def virtio_blk_create_transport(client, name, opts):
+    """Create virtio blk transport.
+    Args:
+        name: transport name
+    """
+    params = {'name': name}
+    return client.call('virtio_blk_create_transport', params)
+
+
 def vhost_create_scsi_controller(client, ctrlr, cpumask=None):
     """Create a vhost scsi controller.
     Args:
@@ -58,12 +67,14 @@ def vhost_scsi_controller_remove_target(client, ctrlr, scsi_target_num):
     return client.call('vhost_scsi_controller_remove_target', params)
 
 
-def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None, packed_ring=None, packed_ring_recovery=None):
+def vhost_create_blk_controller(
+        client, ctrlr, dev_name, cpumask=None, transport=None, readonly=None, packed_ring=None, packed_ring_recovery=None):
     """Create vhost BLK controller.
     Args:
         ctrlr: controller name
         dev_name: device name to add to controller
         cpumask: cpu mask for this controller
+        transport: virtio blk transport name (default: vhost_user_blk)
         readonly: set controller as read-only
         packed_ring: support controller packed_ring
         packed_ring_recovery: enable packed ring live recovery
@@ -74,6 +85,8 @@ def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=
     }
     if cpumask:
         params['cpumask'] = cpumask
+    if transport:
+        params['transport'] = transport
     if readonly:
         params['readonly'] = readonly
     if packed_ring:

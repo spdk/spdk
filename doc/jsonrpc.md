@@ -7576,6 +7576,41 @@ Example response:
 }
 ~~~
 
+### virtio_blk_create_transport {#rpc_virtio_blk_create_transport}
+
+Create virtio blk transport.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Transport name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vhost_user_blk"
+  },
+  "jsonrpc": "2.0",
+  "method": "virtio_blk_create_transport",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### vhost_create_blk_controller {#rpc_vhost_create_blk_controller}
 
 Create vhost block controller
@@ -7591,6 +7626,7 @@ ctrlr                   | Required | string      | Controller name
 bdev_name               | Required | string      | Name of bdev to expose block device
 readonly                | Optional | boolean     | If true, this target will be read only (default: false)
 cpumask                 | Optional | string      | @ref cpu_mask for this controller
+transport               | Optional | string      | virtio blk transport name (default: vhost_user_blk)
 
 #### Example
 

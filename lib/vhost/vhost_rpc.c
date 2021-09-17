@@ -232,12 +232,14 @@ struct rpc_vhost_blk_ctrlr {
 	char *ctrlr;
 	char *dev_name;
 	char *cpumask;
+	char *transport;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_vhost_blk_ctrlr[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_blk_ctrlr, ctrlr), spdk_json_decode_string },
 	{"dev_name", offsetof(struct rpc_vhost_blk_ctrlr, dev_name), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_blk_ctrlr, cpumask), spdk_json_decode_string, true},
+	{"transport", offsetof(struct rpc_vhost_blk_ctrlr, transport), spdk_json_decode_string, true},
 };
 
 static void
@@ -246,6 +248,7 @@ free_rpc_vhost_blk_ctrlr(struct rpc_vhost_blk_ctrlr *req)
 	free(req->ctrlr);
 	free(req->dev_name);
 	free(req->cpumask);
+	free(req->transport);
 }
 
 static void
@@ -263,7 +266,7 @@ rpc_vhost_create_blk_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name, params);
+	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name, req.transport, params);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -495,6 +498,53 @@ invalid:
 					 spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("vhost_controller_set_coalescing", rpc_vhost_controller_set_coalescing,
+		  SPDK_RPC_RUNTIME)
+
+struct rpc_virtio_blk_create_transport {
+	char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_create_virtio_blk_transport[] = {
+	{"name", offsetof(struct rpc_virtio_blk_create_transport, name), spdk_json_decode_string},
+};
+
+static void
+free_rpc_virtio_blk_create_transport(struct rpc_virtio_blk_create_transport *req)
+{
+	free(req->name);
+}
+
+static void
+rpc_virtio_blk_create_transport(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct rpc_virtio_blk_create_transport req = {0};
+	int rc;
+
+	if (spdk_json_decode_object_relaxed(params, rpc_create_virtio_blk_transport,
+					    SPDK_COUNTOF(rpc_create_virtio_blk_transport), &req)) {
+		SPDK_DEBUGLOG(vhost_rpc, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	spdk_vhost_lock();
+	rc = virtio_blk_transport_create(req.name, params);
+	spdk_vhost_unlock();
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	free_rpc_virtio_blk_create_transport(&req);
+	spdk_jsonrpc_send_bool_response(request, true);
+	return;
+
+invalid:
+	free_rpc_virtio_blk_create_transport(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("virtio_blk_create_transport", rpc_virtio_blk_create_transport,
 		  SPDK_RPC_RUNTIME)
 
 SPDK_LOG_REGISTER_COMPONENT(vhost_rpc)

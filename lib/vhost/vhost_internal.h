@@ -424,6 +424,7 @@ vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
 }
 
 int vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
+		       const struct spdk_json_val *params,
 		       const struct spdk_vhost_dev_backend *backend,
 		       const struct spdk_vhost_user_dev_backend *user_backend);
 int vhost_dev_unregister(struct spdk_vhost_dev *vdev);
@@ -537,8 +538,20 @@ int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 void vhost_user_fini(spdk_vhost_fini_cb vhost_cb);
 
+int virtio_blk_construct_ctrlr(struct spdk_vhost_dev *vdev, const char *address,
+			       struct spdk_cpuset *cpumask, const struct spdk_json_val *params,
+			       const struct spdk_vhost_user_dev_backend *user_backend);
+int virtio_blk_destroy_ctrlr(struct spdk_vhost_dev *vdev);
+
+struct spdk_vhost_blk_task;
+
+typedef void (*virtio_blk_request_cb)(uint8_t status, struct spdk_vhost_blk_task *task,
+				      void *cb_arg);
+
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
+	virtio_blk_request_cb cb;
+	void *cb_arg;
 
 	volatile uint8_t *status;
 
@@ -555,5 +568,81 @@ struct spdk_vhost_blk_task {
 	/** Size of whole payload in bytes */
 	uint32_t payload_size;
 };
+
+int virtio_blk_process_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
+			       struct spdk_vhost_blk_task *task, virtio_blk_request_cb cb, void *cb_arg);
+
+typedef void (*bdev_event_cb_complete)(struct spdk_vhost_dev *vdev, void *ctx);
+
+#define SPDK_VIRTIO_BLK_TRSTRING_MAX_LEN 32
+
+struct spdk_virtio_blk_transport_ops {
+	/**
+	 * Transport name
+	 */
+	char name[SPDK_VIRTIO_BLK_TRSTRING_MAX_LEN];
+
+	/**
+	 * Create a transport for the given transport opts
+	 */
+	struct spdk_virtio_blk_transport *(*create)(const struct spdk_json_val *params);
+
+	/**
+	 * Dump transport-specific opts into JSON
+	 */
+	void (*dump_opts)(struct spdk_virtio_blk_transport *transport, struct spdk_json_write_ctx *w);
+
+	/**
+	 * Destroy the transport
+	 */
+	int (*destroy)(struct spdk_virtio_blk_transport *transport,
+		       spdk_vhost_fini_cb cb_fn);
+
+	/**
+	 * Create vhost block controller
+	 */
+	int (*create_ctrlr)(struct spdk_vhost_dev *vdev, struct spdk_cpuset *cpumask,
+			    const char *address, const struct spdk_json_val *params,
+			    void *custom_opts);
+
+	/**
+	 * Destroy vhost block controller
+	 */
+	int (*destroy_ctrlr)(struct spdk_vhost_dev *vdev);
+
+	/*
+	 * Signal removal of the bdev.
+	 */
+	void (*bdev_event)(enum spdk_bdev_event_type type, struct spdk_vhost_dev *vdev,
+			   bdev_event_cb_complete cb, void *cb_arg);
+};
+
+struct spdk_virtio_blk_transport {
+	const struct spdk_virtio_blk_transport_ops	*ops;
+	TAILQ_ENTRY(spdk_virtio_blk_transport)		tailq;
+};
+
+struct virtio_blk_transport_ops_list_element {
+	struct spdk_virtio_blk_transport_ops			ops;
+	TAILQ_ENTRY(virtio_blk_transport_ops_list_element)	link;
+};
+
+void virtio_blk_transport_register(const struct spdk_virtio_blk_transport_ops *ops);
+int virtio_blk_transport_create(const char *transport_name, const struct spdk_json_val *params);
+int virtio_blk_transport_destroy(struct spdk_virtio_blk_transport *transport,
+				 spdk_vhost_fini_cb cb_fn);
+
+const struct spdk_virtio_blk_transport_ops *
+virtio_blk_get_transport_ops(const char *transport_name);
+
+
+/*
+ * Macro used to register new transports.
+ */
+#define SPDK_VIRTIO_BLK_TRANSPORT_REGISTER(name, transport_ops) \
+static void __attribute__((constructor)) _virtio_blk_transport_register_##name(void) \
+{ \
+	virtio_blk_transport_register(transport_ops); \
+}\
 
 #endif /* SPDK_VHOST_INTERNAL_H */

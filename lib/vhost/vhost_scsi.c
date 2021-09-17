@@ -882,7 +882,7 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 	svdev->vdev.protocol_features = SPDK_VHOST_SCSI_PROTOCOL_FEATURES;
 
 	spdk_vhost_lock();
-	rc = vhost_dev_register(&svdev->vdev, name, cpumask,
+	rc = vhost_dev_register(&svdev->vdev, name, cpumask, NULL,
 				&spdk_vhost_scsi_device_backend,
 				&spdk_vhost_scsi_user_device_backend);
 	if (rc) {
