@@ -4,21 +4,17 @@ install_liburing() {
 	local GIT_REPO_LIBURING=https://github.com/axboe/liburing.git
 	local liburing_dir=/usr/local/src/liburing
 
-	if [[ $(ldconfig -p) == *liburing.so* ]]; then
-		echo "liburing is already installed. skipping"
+	if [[ -d $liburing_dir ]]; then
+		echo "liburing source already present, not cloning"
 	else
-		if [[ -d $liburing_dir ]]; then
-			echo "liburing source already present, not cloning"
-		else
-			mkdir -p $liburing_dir
-			git clone "${GIT_REPO_LIBURING}" "$liburing_dir"
-		fi
-		# Use commit we know we can compile against. See #1673 as a reference.
-		git -C "$liburing_dir" checkout liburing-2.0
-		(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
-		echo /usr/lib64 > /etc/ld.so.conf.d/spdk-liburing.conf
-		ldconfig
+		mkdir -p $liburing_dir
+		git clone "${GIT_REPO_LIBURING}" "$liburing_dir"
 	fi
+	# Use commit we know we can compile against. See #1673 as a reference.
+	git -C "$liburing_dir" checkout liburing-2.0
+	(cd "$liburing_dir" && ./configure --libdir=/usr/lib64 && make install)
+	echo /usr/lib64 > /etc/ld.so.conf.d/spdk-liburing.conf
+	ldconfig
 }
 
 install_shfmt() {
