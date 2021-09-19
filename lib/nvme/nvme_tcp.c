@@ -383,7 +383,7 @@ _pdu_write_done(void *cb_arg, int err)
 {
 	struct nvme_tcp_pdu *pdu = cb_arg;
 	struct nvme_tcp_qpair *tqpair = pdu->qpair;
-	struct nvme_tcp_poll_group *pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+	struct nvme_tcp_poll_group *pgroup;
 
 	/* If there are queued requests, we assume they are queued because they are waiting
 	 * for resources to be released. Those resources are almost certainly released in
@@ -391,7 +391,10 @@ _pdu_write_done(void *cb_arg, int err)
 	 * the qpair needs to be polled and we can't rely on another network event to make
 	 * that happen. Add it to a list of qpairs to poll regardless of network activity
 	 * here. */
-	if (pgroup && !STAILQ_EMPTY(&tqpair->qpair.queued_req) && !tqpair->needs_poll) {
+	if (tqpair->qpair.poll_group && !STAILQ_EMPTY(&tqpair->qpair.queued_req) &&
+	    !tqpair->needs_poll) {
+		pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
+
 		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
 		tqpair->needs_poll = true;
 	}
@@ -1073,7 +1076,7 @@ tcp_data_recv_crc32_done(void *cb_arg, int status)
 	tqpair = tcp_req->tqpair;
 	assert(tqpair != NULL);
 
-	if (!tqpair->needs_poll) {
+	if (tqpair->qpair.poll_group && !tqpair->needs_poll) {
 		pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
 		tqpair->needs_poll = true;
