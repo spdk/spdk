@@ -5100,8 +5100,9 @@ spdk_nvme_ctrlr_free_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid)
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
-struct spdk_memory_domain *
-spdk_nvme_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr)
+int
+spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
+				   struct spdk_memory_domain **domains, int array_size)
 {
-	return nvme_transport_ctrlr_get_memory_domain(ctrlr);
+	return nvme_transport_ctrlr_get_memory_domains(ctrlr, domains, array_size);
 }

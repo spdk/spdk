@@ -1220,18 +1220,31 @@ test_nvme_rdma_memory_domain(void)
 }
 
 static void
-test_rdma_ctrlr_get_memory_domain(void)
+test_rdma_ctrlr_get_memory_domains(void)
 {
 	struct nvme_rdma_ctrlr rctrlr = {};
 	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_memory_domain *domain = (struct spdk_memory_domain *)0xbaadbeef;
 	struct nvme_rdma_memory_domain rdma_domain = { .domain = domain };
+	struct spdk_memory_domain *domains[1] = {NULL};
 
 	rqpair.memory_domain = &rdma_domain;
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rctrlr.ctrlr.adminq = &rqpair.qpair;
 
-	CU_ASSERT(nvme_rdma_ctrlr_get_memory_domain(&rctrlr.ctrlr) == domain);
+	/* Test 1, input domains pointer is NULL */
+	CU_ASSERT(nvme_rdma_ctrlr_get_memory_domains(&rctrlr.ctrlr, NULL, 1) == 1);
+
+	/* Test 2, input array_size is 0 */
+	CU_ASSERT(nvme_rdma_ctrlr_get_memory_domains(&rctrlr.ctrlr, domains, 0) == 1);
+	CU_ASSERT(domains[0] == NULL);
+
+	/* Test 3, both input domains pointer and array_size are NULL/0 */
+	CU_ASSERT(nvme_rdma_ctrlr_get_memory_domains(&rctrlr.ctrlr, NULL, 0) == 1);
+
+	/* Test 2, input parameters are valid */
+	CU_ASSERT(nvme_rdma_ctrlr_get_memory_domains(&rctrlr.ctrlr, domains, 1) == 1);
+	CU_ASSERT(domains[0] == domain);
 }
 
 static void
@@ -1362,7 +1375,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);
-	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domain);
+	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domains);
 	CU_ADD_TEST(suite, test_rdma_get_memory_translation);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_qpair_by_id);
 

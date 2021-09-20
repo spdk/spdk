@@ -3779,12 +3779,23 @@ int spdk_nvme_cuse_register(struct spdk_nvme_ctrlr *ctrlr);
 int spdk_nvme_cuse_unregister(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * Get SPDK memory domain used by the given nvme controller.
+ * Get SPDK memory domains used by the given nvme controller.
+ *
+ * The user can call this function with \b domains set to NULL and \b array_size set to 0 to get the
+ * number of memory domains used by nvme controller
  *
  * \param ctrlr Opaque handle to the NVMe controller.
- * \return Pointer to memory domain used by this controller or NULL
+ * \param domains Pointer to an array of memory domains to be filled by this function. The user should allocate big enough
+ * array to keep all memory domains used by nvme controller
+ * \param array_size size of \b domains array
+ * \return the number of entries in \b domains array or negated errno. If returned value is bigger than \b array_size passed by the user
+ * then the user should increase the size of \b domains array and call this function again. There is no guarantees that
+ * the content of \b domains array is valid in that case.
+ *         -EINVAL if input parameters were invalid
+
  */
-struct spdk_memory_domain *spdk_nvme_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr);
+int spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
+				       struct spdk_memory_domain **domains, int array_size);
 
 /**
  * Opaque handle for a transport poll group. Used by the transport function table.
@@ -3912,7 +3923,9 @@ struct spdk_nvme_transport_ops {
 	void (*poll_group_free_stats)(struct spdk_nvme_transport_poll_group *tgroup,
 				      struct spdk_nvme_transport_poll_group_stat *stats);
 
-	struct spdk_memory_domain *(*ctrlr_get_memory_domain)(const struct spdk_nvme_ctrlr *ctrlr);
+	int (*ctrlr_get_memory_domains)(const struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_memory_domain **domains,
+					int array_size);
 };
 
 /**

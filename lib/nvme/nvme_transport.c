@@ -540,17 +540,18 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 }
 
-struct spdk_memory_domain *
-nvme_transport_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr)
+int
+nvme_transport_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_memory_domain **domains, int array_size)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
-	if (transport->ops.ctrlr_get_memory_domain) {
-		return transport->ops.ctrlr_get_memory_domain(ctrlr);
+	if (transport->ops.ctrlr_get_memory_domains) {
+		return transport->ops.ctrlr_get_memory_domains(ctrlr, domains, array_size);
 	}
 
-	return NULL;
+	return 0;
 }
 
 void

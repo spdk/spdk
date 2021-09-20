@@ -82,12 +82,14 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_security_send, int, (struct spdk_nvme_ctrlr *ctr
 		uint8_t secp, uint16_t spsp, uint8_t nssf, void *payload,
 		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domain, struct spdk_memory_domain *);
-struct spdk_memory_domain *
-nvme_transport_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr)
+DEFINE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domains, int);
+int
+nvme_transport_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_memory_domain **domains, int array_size)
 {
-	HANDLE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domain);
-	return NULL;
+	HANDLE_RETURN_MOCK(nvme_transport_ctrlr_get_memory_domains);
+
+	return 0;
 }
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
@@ -3142,18 +3144,17 @@ test_nvme_ctrlr_ana_resize(void)
 }
 
 static void
-test_nvme_ctrlr_get_memory_domain(void)
+test_nvme_ctrlr_get_memory_domains(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
-	struct spdk_memory_domain *domain = (struct spdk_memory_domain *)0xbaadbeef;
 
-	MOCK_SET(nvme_transport_ctrlr_get_memory_domain, domain);
-	CU_ASSERT(spdk_nvme_ctrlr_get_memory_domain(&ctrlr) == domain);
+	MOCK_SET(nvme_transport_ctrlr_get_memory_domains, 1);
+	CU_ASSERT(spdk_nvme_ctrlr_get_memory_domains(&ctrlr, NULL, 0) == 1);
 
-	MOCK_SET(nvme_transport_ctrlr_get_memory_domain, NULL);
-	CU_ASSERT(spdk_nvme_ctrlr_get_memory_domain(&ctrlr) == NULL);
+	MOCK_SET(nvme_transport_ctrlr_get_memory_domains, 0);
+	CU_ASSERT(spdk_nvme_ctrlr_get_memory_domains(&ctrlr, NULL, 0) == 0);
 
-	MOCK_CLEAR(nvme_transport_ctrlr_get_memory_domain);
+	MOCK_CLEAR(nvme_transport_ctrlr_get_memory_domains);
 }
 
 int main(int argc, char **argv)
@@ -3208,7 +3209,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_supported_log_pages);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_parse_ana_log_page);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ana_resize);
-	CU_ADD_TEST(suite, test_nvme_ctrlr_get_memory_domain);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_get_memory_domains);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

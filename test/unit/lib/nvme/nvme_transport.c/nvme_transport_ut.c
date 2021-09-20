@@ -220,17 +220,15 @@ test_nvme_transport_poll_group_add_remove(void)
 	CU_ASSERT(rc == -ENOENT);
 }
 
-static struct spdk_memory_domain *g_ut_ctrlr_memory_domain = (struct spdk_memory_domain *)
-		0xfeedbeef;
-
-static struct spdk_memory_domain *
-g_ut_ctrlr_get_memory_domain(const struct spdk_nvme_ctrlr *ctrlr)
+static int
+g_ut_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
+			      struct spdk_memory_domain **domains, int array_size)
 {
-	return g_ut_ctrlr_memory_domain;
+	return 1;
 }
 
 static void
-test_ctrlr_get_memory_domain(void)
+test_ctrlr_get_memory_domains(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {
 		.trid = {
@@ -238,17 +236,17 @@ test_ctrlr_get_memory_domain(void)
 		}
 	};
 	struct spdk_nvme_transport new_transport = {
-		.ops = { .ctrlr_get_memory_domain = g_ut_ctrlr_get_memory_domain }
+		.ops = { .ctrlr_get_memory_domains = g_ut_ctrlr_get_memory_domains }
 	};
 
 	ut_construct_transport(&new_transport, "new_transport");
 
 	/* transport contains necessary op */
-	CU_ASSERT(nvme_transport_ctrlr_get_memory_domain(&ctrlr) == g_ut_ctrlr_memory_domain);
+	CU_ASSERT(nvme_transport_ctrlr_get_memory_domains(&ctrlr, NULL, 0) == 1);
 
 	/* transport doesn't contain necessary op */
-	new_transport.ops.ctrlr_get_memory_domain = NULL;
-	CU_ASSERT(nvme_transport_ctrlr_get_memory_domain(&ctrlr) == NULL);
+	new_transport.ops.ctrlr_get_memory_domains = NULL;
+	CU_ASSERT(nvme_transport_ctrlr_get_memory_domains(&ctrlr, NULL, 0) == 0);
 
 	TAILQ_REMOVE(&g_spdk_nvme_transports, &new_transport, link);
 }
@@ -266,7 +264,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_disconnect_qpair);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_add_remove);
-	CU_ADD_TEST(suite, test_ctrlr_get_memory_domain);
+	CU_ADD_TEST(suite, test_ctrlr_get_memory_domains);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

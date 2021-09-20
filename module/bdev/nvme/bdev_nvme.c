@@ -1513,18 +1513,8 @@ static int
 bdev_nvme_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
 {
 	struct nvme_bdev *nbdev = ctx;
-	struct spdk_memory_domain *domain;
 
-	domain = spdk_nvme_ctrlr_get_memory_domain(nbdev->nvme_ns->ctrlr->ctrlr);
-
-	if (domain) {
-		if (array_size > 0 && domains) {
-			domains[0] = domain;
-		}
-		return 1;
-	}
-
-	return 0;
+	return spdk_nvme_ctrlr_get_memory_domains(nbdev->nvme_ns->ctrlr->ctrlr, domains, array_size);
 }
 
 static int
