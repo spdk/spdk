@@ -612,8 +612,8 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	min_shared_buffers = spdk_env_get_core_count() * opts->buf_cache_size;
 	if (min_shared_buffers > opts->num_shared_buffers) {
-		SPDK_ERRLOG("There are not enough buffers to satisfy"
-			    "per-poll group caches for each thread. (%" PRIu32 ")"
+		SPDK_ERRLOG("There are not enough buffers to satisfy "
+			    "per-poll group caches for each thread. (%" PRIu32 ") "
 			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
 		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
 		free(ttransport);
