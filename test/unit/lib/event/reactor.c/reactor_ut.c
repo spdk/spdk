@@ -39,7 +39,7 @@
 #include "spdk/thread.h"
 #include "spdk_internal/thread.h"
 #include "event/scheduler_static.c"
-#include "../module/scheduler/scheduler_dynamic/scheduler_dynamic.c"
+#include "../module/scheduler/dynamic/scheduler_dynamic.c"
 
 struct spdk_thread *
 _spdk_get_app_thread(void)

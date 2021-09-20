@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = scheduler_dynamic
+DIRS-y = dynamic
 
 # Do not compile schedulers and governors based on DPDK env
 # if non-DPDK env is used.
