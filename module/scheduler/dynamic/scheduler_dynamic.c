@@ -52,7 +52,7 @@ struct core_stats {
 static struct core_stats *g_cores;
 
 #define SCHEDULER_LOAD_LIMIT 20
-#define SCHEDULER_CORE_LIMIT 95
+#define SCHEDULER_CORE_LIMIT 80
 #define SCHEDULER_CORE_BUSY 95
 
 static uint8_t
