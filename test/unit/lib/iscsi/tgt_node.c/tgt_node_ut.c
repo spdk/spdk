@@ -110,6 +110,16 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_
 	}
 }
 
+DEFINE_STUB(spdk_scsi_dev_get_first_lun,
+	    struct spdk_scsi_lun *,
+	    (struct spdk_scsi_dev *dev),
+	    NULL);
+
+DEFINE_STUB(spdk_scsi_dev_get_next_lun,
+	    struct spdk_scsi_lun *,
+	    (struct spdk_scsi_lun *prev_lun),
+	    NULL);
+
 static void
 add_lun_test_cases(void)
 {

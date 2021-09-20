@@ -1226,16 +1226,11 @@ int
 iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 			    struct spdk_iscsi_tgt_node *target)
 {
-	int i;
+	struct spdk_scsi_lun *lun;
 	struct spdk_iscsi_task *task;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
-
-		if (!lun) {
-			continue;
-		}
-
+	for (lun = spdk_scsi_dev_get_first_lun(target->dev); lun != NULL;
+	     lun = spdk_scsi_dev_get_next_lun(lun)) {
 		/* we create a fake management task per LUN to cleanup */
 		task = iscsi_task_get(conn, NULL, iscsi_task_mgmt_cpl);
 		if (!task) {
@@ -1329,7 +1324,7 @@ iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
 {
 	struct spdk_iscsi_pg_map *pg_map;
 	struct spdk_iscsi_ig_map *ig_map;
-	int i;
+	struct spdk_scsi_lun *lun;
 
 	spdk_json_write_object_begin(w);
 
@@ -1351,15 +1346,12 @@ iscsi_tgt_node_info_json(struct spdk_iscsi_tgt_node *target,
 	spdk_json_write_array_end(w);
 
 	spdk_json_write_named_array_begin(w, "luns");
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
-
-		if (lun) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_named_string(w, "bdev_name", spdk_scsi_lun_get_bdev_name(lun));
-			spdk_json_write_named_int32(w, "lun_id", spdk_scsi_lun_get_id(lun));
-			spdk_json_write_object_end(w);
-		}
+	for (lun = spdk_scsi_dev_get_first_lun(target->dev); lun != NULL;
+	     lun = spdk_scsi_dev_get_next_lun(lun)) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "bdev_name", spdk_scsi_lun_get_bdev_name(lun));
+		spdk_json_write_named_int32(w, "lun_id", spdk_scsi_lun_get_id(lun));
+		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
 
