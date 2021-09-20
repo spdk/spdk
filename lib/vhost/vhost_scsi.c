@@ -1527,7 +1527,6 @@ vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ct
 	struct spdk_scsi_dev *sdev;
 	struct spdk_scsi_lun *lun;
 	uint32_t dev_idx;
-	uint32_t lun_idx;
 
 	assert(vdev != NULL);
 	spdk_json_write_named_array_begin(w, "scsi");
@@ -1547,12 +1546,8 @@ vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ct
 
 		spdk_json_write_named_array_begin(w, "luns");
 
-		for (lun_idx = 0; lun_idx < SPDK_SCSI_DEV_MAX_LUN; lun_idx++) {
-			lun = spdk_scsi_dev_get_lun(sdev, lun_idx);
-			if (!lun) {
-				continue;
-			}
-
+		for (lun = spdk_scsi_dev_get_first_lun(sdev); lun != NULL;
+		     lun = spdk_scsi_dev_get_next_lun(lun)) {
 			spdk_json_write_object_begin(w);
 
 			spdk_json_write_named_int32(w, "id", spdk_scsi_lun_get_id(lun));
