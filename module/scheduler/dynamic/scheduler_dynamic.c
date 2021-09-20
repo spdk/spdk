@@ -98,7 +98,6 @@ _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 	struct core_stats *dst = &g_cores[dst_core];
 	struct core_stats *src = &g_cores[thread_info->lcore];
 	uint64_t busy_tsc = thread_info->current_stats.busy_tsc;
-	uint64_t idle_tsc = thread_info->current_stats.idle_tsc;
 
 	if (src == dst) {
 		/* Don't modify stats if thread is already on that core. */
@@ -109,10 +108,11 @@ _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 	dst->idle -= spdk_min(dst->idle, busy_tsc);
 	dst->thread_count++;
 
-	/* Decrease busy/idle from core as if thread was not present on it.
-	 * Core load will reflect the sum of all other threads on it. */
+	/* Adjust busy/idle from core as if thread was not present on it.
+	 * Core load will reflect the sum of all remaining threads on it. */
 	src->busy -= spdk_min(src->busy, busy_tsc);
-	src->idle -= spdk_min(src->idle, idle_tsc);
+	src->idle += spdk_min(UINT64_MAX - src->idle, busy_tsc);
+
 	assert(src->thread_count > 0);
 	src->thread_count--;
 

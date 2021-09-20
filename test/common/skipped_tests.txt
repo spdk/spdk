@@ -77,3 +77,8 @@ vhost_scsi_fs_integrity
 vhost_scsi_integrity
 vhost_scsi_nightly
 vhost_scsi_cores_2ctrl
+
+# Temporarily disabled as part of dynamic scheduler patch set
+busy
+balanced
+core_load
