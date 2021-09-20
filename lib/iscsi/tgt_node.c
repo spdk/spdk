@@ -1283,8 +1283,8 @@ iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 		return -1;
 	}
 
-	if (lun_id < -1 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
-		SPDK_ERRLOG("Specified LUN ID (%d) is invalid\n", lun_id);
+	if (lun_id < -1) {
+		SPDK_ERRLOG("Specified LUN ID (%d) is negative\n", lun_id);
 		return -1;
 	}
 

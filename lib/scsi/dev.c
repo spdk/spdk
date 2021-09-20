@@ -153,6 +153,11 @@ spdk_scsi_dev_add_lun_ext(struct spdk_scsi_dev *dev, const char *bdev_name, int 
 {
 	struct spdk_scsi_lun *lun;
 
+	if (lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
+		SPDK_ERRLOG("LUN ID %d is more than the maximum.\n", lun_id);
+		return -1;
+	}
+
 	/* Search the lowest free LUN ID if LUN ID is default */
 	if (lun_id == -1) {
 		lun_id = scsi_dev_find_lowest_free_lun_id(dev);
