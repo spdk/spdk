@@ -753,16 +753,21 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		fi
 	else
 		# Check DPDK version to determine if mlx5_pci driver is supported
-		if [ ! -f "${CONFIG[DPDK_DIR]}"/../VERSION ]; then
-			echo "Can get DPDK version, so disabling DPDK mlx5_pci compress PMD"
-			CONFIG[REDUCE_MLX5]="n"
+		dpdk_ver=""
+		if [[ "${CONFIG[DPDK_DIR]}" == "$rootdir/dpdk/build" ]]; then
+			# DPDK_DIR points at our submodule so ./build may not exist yet. Use
+			# absolute path to lookup the version.
+			dpdk_ver=$(< "$rootdir/dpdk/VERSION")
+		elif [[ -f "${CONFIG[DPDK_DIR]}"/../VERSION ]]; then
+			dpdk_ver=$(< "${CONFIG[DPDK_DIR]}"/../VERSION)
 		else
-			# mlx5_pci is supported by DPDK >- 21.02.0
-			dpdk_ver=$(cat "${CONFIG[DPDK_DIR]}"/../VERSION)
-			if lt "$dpdk_ver" 21.02.0; then
-				echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci compress PMD"
-				CONFIG[REDUCE_MLX5]="n"
-			fi
+			echo "Cannot get DPDK version, so disabling DPDK mlx5_pci compress PMD"
+			CONFIG[REDUCE_MLX5]="n"
+		fi
+		# mlx5_pci is supported by DPDK >- 21.02.0
+		if [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 21.02.0; then
+			echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci compress PMD"
+			CONFIG[REDUCE_MLX5]="n"
 		fi
 	fi
 fi
