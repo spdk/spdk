@@ -17,10 +17,12 @@ from collections import OrderedDict
 
 import paramiko
 import pandas as pd
-
-import rpc
-import rpc.client
 from common import *
+
+sys.path.append(os.path.dirname(__file__) + '/../../../python')
+
+import spdk.rpc as rpc  # noqa
+import spdk.rpc.client as rpc_client  # noqa
 
 
 class Server:
@@ -1101,7 +1103,7 @@ class SPDKTarget(Target):
                                        dif_insert_or_strip=self.dif_insert_strip,
                                        sock_priority=self.adq_priority)
         self.log_print("SPDK NVMeOF transport layer:")
-        rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
+        rpc_client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
         if self.null_block:
             self.spdk_tgt_add_nullblock(self.null_block)
@@ -1124,7 +1126,7 @@ class SPDKTarget(Target):
             rpc.bdev.bdev_null_create(self.client, 102400, block_size + md_size, "Nvme{}n1".format(i),
                                       dif_type=self.null_block_dif_type, md_size=md_size)
         self.log_print("SPDK Bdevs configuration:")
-        rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
+        rpc_client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 
     def spdk_tgt_add_nvme_conf(self, req_num_disks=None):
         self.log_print("Adding NVMe bdevs to config via RPC")
@@ -1143,7 +1145,7 @@ class SPDKTarget(Target):
             rpc.bdev.bdev_nvme_attach_controller(self.client, name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
 
         self.log_print("SPDK Bdevs configuration:")
-        rpc.client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
+        rpc_client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
         self.log_print("Adding subsystems to config")
@@ -1182,7 +1184,7 @@ class SPDKTarget(Target):
 
                 self.subsystem_info_list.append([port, nqn, ip])
         self.log_print("SPDK NVMeOF subsystem configuration:")
-        rpc.client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
+        rpc_client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
 
     def bpf_start(self):
         self.log_print("Starting BPF Trace scripts: %s" % self.bpf_scripts)
@@ -1216,13 +1218,13 @@ class SPDKTarget(Target):
             if os.path.exists("/var/tmp/spdk.sock"):
                 break
             time.sleep(1)
-        self.client = rpc.client.JSONRPCClient("/var/tmp/spdk.sock")
+        self.client = rpc_client.JSONRPCClient("/var/tmp/spdk.sock")
 
         if self.enable_zcopy:
             rpc.sock.sock_impl_set_options(self.client, impl_name="posix",
                                            enable_zerocopy_send_server=True)
             self.log_print("Target socket options:")
-            rpc.client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
+            rpc_client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
 
         if self.enable_adq:
             rpc.sock.sock_impl_set_options(self.client, impl_name="posix", enable_placement_id=1)

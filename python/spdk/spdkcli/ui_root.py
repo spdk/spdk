@@ -1,8 +1,7 @@
 from .ui_node import UINode, UIBdevs, UILvolStores, UIVhosts
 from .ui_node_nvmf import UINVMf
 from .ui_node_iscsi import UIISCSI
-import rpc.client
-import rpc
+from .. import rpc
 from functools import wraps
 
 

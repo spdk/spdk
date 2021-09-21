@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+import os
 import sys
 import argparse
 from configshell_fb import ConfigShell, shell, ExecutionError
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
                        removeQuotes, dblQuotedString, OneOrMore)
-from rpc.client import JSONRPCException, JSONRPCClient
-from spdkcli import UIRoot
+
+sys.path.append(os.path.dirname(__file__) + '/../python')
+
+from spdk.rpc.client import JSONRPCException, JSONRPCClient  # noqa
+from spdk.spdkcli import UIRoot  # noqa
 
 
 def add_quotes_to_shell(spdk_shell):

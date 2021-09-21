@@ -4,9 +4,8 @@ import os
 import sys
 import argparse
 import logging
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../scripts"))
-import rpc   # noqa
-from rpc.client import print_dict, JSONRPCException  # noqa
+import spdk.rpc as rpc
+from spdk.rpc.client import print_dict, JSONRPCException
 
 
 def get_bdev_name_key(bdev):

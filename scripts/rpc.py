@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
-from rpc.client import print_dict, print_json, JSONRPCException
-from rpc.helpers import deprecated_aliases
-
 import logging
 import argparse
 import importlib
-import rpc
+import os
 import sys
 import shlex
 import json
@@ -15,6 +12,12 @@ try:
     from shlex import quote
 except ImportError:
     from pipes import quote
+
+sys.path.append(os.path.dirname(__file__) + '/../python')
+
+import spdk.rpc as rpc  # noqa
+from spdk.rpc.client import print_dict, print_json, JSONRPCException  # noqa
+from spdk.rpc.helpers import deprecated_aliases  # noqa
 
 
 def print_array(a):

@@ -42,7 +42,7 @@ spdk_pid=$!
 trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
-export PYTHONPATH=$testdir
+export PYTHONPATH=$PYTHONPATH:$testdir
 
 # basic integrity test
 rpc=rpc_cmd

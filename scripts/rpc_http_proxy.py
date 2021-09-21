@@ -4,6 +4,7 @@ import argparse
 import base64
 import errno
 import json
+import os
 import socket
 import ssl
 import sys
@@ -12,7 +13,10 @@ try:
 except ImportError:
     from http.server import HTTPServer
     from http.server import BaseHTTPRequestHandler
-from rpc.client import print_json
+
+sys.path.append(os.path.dirname(__file__) + '/../python')
+
+from spdk.rpc.client import print_json  # noqa
 
 rpc_sock = None
 

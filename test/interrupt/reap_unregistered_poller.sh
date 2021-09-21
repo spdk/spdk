@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/interrupt_common.sh
 
-export PYTHONPATH=$rootdir/examples/interrupt_tgt
+export PYTHONPATH=$PYTHONPATH:$rootdir/examples/interrupt_tgt
 
 # Set reactors with intr_tgt in intr mode
 start_intr_tgt

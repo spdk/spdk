@@ -5,7 +5,7 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/interrupt_common.sh
 
-export PYTHONPATH=$rootdir/examples/interrupt_tgt
+export PYTHONPATH=$PYTHONPATH:$rootdir/examples/interrupt_tgt
 
 function reactor_set_intr_mode() {
 	local spdk_pid=$1

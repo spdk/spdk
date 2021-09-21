@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from rpc.client import print_dict, JSONRPCException
+from spdk.rpc.client import print_dict, JSONRPCException
 
 import logging
 import argparse
-import rpc
+import spdk.rpc as rpc
 import sys
 import shlex
 

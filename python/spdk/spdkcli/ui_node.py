@@ -1,6 +1,6 @@
 from configshell_fb import ConfigNode, ExecutionError
 from uuid import UUID
-from rpc.client import JSONRPCException
+from ..rpc.client import JSONRPCException
 import json
 
 

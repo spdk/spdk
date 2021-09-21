@@ -1,4 +1,4 @@
-from rpc.client import print_json
+from spdk.rpc.client import print_json
 
 
 def thread_create(args):

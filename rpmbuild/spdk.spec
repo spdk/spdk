@@ -33,6 +33,8 @@ Requires: zlib
 Requires: %(echo "%{requirements_list}")
 %endif
 
+BuildRequires: python3-devel
+
 %if %{build_requirements}
 BuildRequires: %(echo "%{build_requirements_list}")
 %endif
@@ -82,6 +84,7 @@ mkdir -p %{buildroot}/usr/libexec/spdk
 mkdir -p %{buildroot}/etc/bash_completion.d
 mkdir -p %{buildroot}/etc/profile.d
 mkdir -p %{buildroot}/etc/ld.so.conf.d
+mkdir -p %{buildroot}%{python3_sitelib}
 
 cat <<-EOF > %{buildroot}/etc/ld.so.conf.d/spdk.conf
 /usr/local/lib
@@ -96,6 +99,7 @@ export PATH
 EOF
 
 cp -a scripts %{buildroot}/usr/libexec/spdk/scripts
+cp -a python/spdk %{buildroot}%{python3_sitelib}
 ln -s /usr/libexec/spdk/scripts/bash-completion/spdk %{buildroot}/etc/bash_completion.d/
 
 # We need to take into the account the fact that most of the scripts depend on being
@@ -111,6 +115,7 @@ ln -s /usr/local/include %{buildroot}/usr/libexec/spdk
 /etc/bash_completion.d/*
 /usr/libexec/spdk/*
 /usr/local/bin/*
+%{python3_sitelib}/spdk/*
 
 
 %package devel

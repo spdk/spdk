@@ -1,4 +1,4 @@
-from rpc.client import print_json
+from spdk.rpc.client import print_json
 
 
 def reactor_set_interrupt_mode(args):

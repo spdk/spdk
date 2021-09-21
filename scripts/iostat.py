@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
 import logging
+import os
 import sys
 import argparse
 import time
-import rpc
+
+sys.path.append(os.path.dirname(__file__) + '/../python')
+
+import spdk.rpc as rpc  # noqa
 
 
 SPDK_CPU_STAT = "/proc/stat"

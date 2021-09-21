@@ -5,8 +5,8 @@ import sys
 import shlex
 
 try:
-    from rpc.client import print_dict, JSONRPCException
-    import rpc
+    from spdk.rpc.client import print_dict, JSONRPCException
+    import spdk.rpc as rpc
 except ImportError:
     print("SPDK RPC library missing. Please add spdk/scripts/ directory to PYTHONPATH:")
     print("'export PYTHONPATH=$PYTHONPATH:./spdk/scripts/'")
