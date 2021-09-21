@@ -825,9 +825,14 @@ nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
-	spdk_nvme_trid_populate_transport(&probe_ctx->trid, probe_ctx->trid.trtype);
+	if (strlen(probe_ctx->trid.trstring) == 0) {
+		/* If user didn't provide trstring, derive it from trtype */
+		spdk_nvme_trid_populate_transport(&probe_ctx->trid, probe_ctx->trid.trtype);
+	}
+
 	if (!spdk_nvme_transport_available_by_name(probe_ctx->trid.trstring)) {
-		SPDK_ERRLOG("NVMe trtype %u not available\n", probe_ctx->trid.trtype);
+		SPDK_ERRLOG("NVMe trtype %u (%s) not available\n",
+			    probe_ctx->trid.trtype, probe_ctx->trid.trstring);
 		return -1;
 	}
 
