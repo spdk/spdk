@@ -616,7 +616,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_detach_controller req = {NULL};
-	struct spdk_nvme_transport_id trid = {};
+	struct nvme_path_id path = {};
 	size_t len, maxlen;
 	int rc = 0;
 
@@ -629,7 +629,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.trtype != NULL) {
-		rc = spdk_nvme_transport_id_populate_trstring(&trid, req.trtype);
+		rc = spdk_nvme_transport_id_populate_trstring(&path.trid, req.trtype);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to parse trtype: %s\n", req.trtype);
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
@@ -637,7 +637,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 
-		rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, req.trtype);
+		rc = spdk_nvme_transport_id_parse_trtype(&path.trid.trtype, req.trtype);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to parse trtype: %s\n", req.trtype);
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse trtype: %s",
@@ -647,18 +647,18 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.traddr != NULL) {
-		maxlen = sizeof(trid.traddr);
+		maxlen = sizeof(path.trid.traddr);
 		len = strnlen(req.traddr, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "traddr too long: %s",
 							     req.traddr);
 			goto cleanup;
 		}
-		memcpy(trid.traddr, req.traddr, len + 1);
+		memcpy(path.trid.traddr, req.traddr, len + 1);
 	}
 
 	if (req.adrfam != NULL) {
-		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, req.adrfam);
+		rc = spdk_nvme_transport_id_parse_adrfam(&path.trid.adrfam, req.adrfam);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to parse adrfam: %s\n", req.adrfam);
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "Failed to parse adrfam: %s",
@@ -668,29 +668,29 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.trsvcid != NULL) {
-		maxlen = sizeof(trid.trsvcid);
+		maxlen = sizeof(path.trid.trsvcid);
 		len = strnlen(req.trsvcid, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "trsvcid too long: %s",
 							     req.trsvcid);
 			goto cleanup;
 		}
-		memcpy(trid.trsvcid, req.trsvcid, len + 1);
+		memcpy(path.trid.trsvcid, req.trsvcid, len + 1);
 	}
 
 	/* Parse subnqn */
 	if (req.subnqn != NULL) {
-		maxlen = sizeof(trid.subnqn);
+		maxlen = sizeof(path.trid.subnqn);
 		len = strnlen(req.subnqn, maxlen);
 		if (len == maxlen) {
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "subnqn too long: %s",
 							     req.subnqn);
 			goto cleanup;
 		}
-		memcpy(trid.subnqn, req.subnqn, len + 1);
+		memcpy(path.trid.subnqn, req.subnqn, len + 1);
 	}
 
-	rc = bdev_nvme_delete(req.name, &trid);
+	rc = bdev_nvme_delete(req.name, &path.trid);
 
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
