@@ -3530,11 +3530,12 @@ nvme_ctrlr_process_init_wait_for_ready_1(void *ctx, uint64_t value, const struct
 		/* While a device is resetting, it may be unable to service MMIO reads
 		 * temporarily. Allow for this case.
 		 */
-		NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to read the CSTS register\n");
 		if (!ctrlr->is_failed && ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to read the CSTS register\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1,
 					     NVME_TIMEOUT_KEEP_EXISTING);
 		} else {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CSTS register\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		}
 
@@ -3563,11 +3564,12 @@ nvme_ctrlr_process_init_wait_for_ready_0(void *ctx, uint64_t value, const struct
 		/* While a device is resetting, it may be unable to service MMIO reads
 		 * temporarily. Allow for this case.
 		 */
-		NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to read the CSTS register\n");
 		if (!ctrlr->is_failed && ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to read the CSTS register\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
 					     NVME_TIMEOUT_KEEP_EXISTING);
 		} else {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to read the CSTS register\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		}
 
