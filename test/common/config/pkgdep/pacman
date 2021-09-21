@@ -11,7 +11,7 @@ install() {
 }
 
 pre_install() {
-	if [[ $INTSALL_TSOCKS == true ]]; then
+	if [[ $INSTALL_TSOCKS == true ]]; then
 		install tsocks
 	fi
 }

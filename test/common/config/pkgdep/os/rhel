@@ -1,8 +1,7 @@
 pre_install() {
-	if [[ $INTSALL_TSOCKS == true ]]; then
-		# currently, tsocks package is retired in fedora 31, so don't exit in case
-		# installation failed
-		# FIXME: Review when fedora starts to successfully build this package again.
+	if [[ $INSTALL_TSOCKS == true ]]; then
+		# tsocks package is not available in latest fedora releases, so don't exit in case
+		# installation failed.
 		install tsocks || echo "Installation of the tsocks package failed, proxy may not be available"
 	fi
         if [[ $ID == centos ]] && (( VERSION_ID == 8 )); then
