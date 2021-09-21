@@ -94,7 +94,7 @@ struct nvme_ctrlr {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr			*ctrlr;
-	struct nvme_path_id			*connected_trid;
+	struct nvme_path_id			*active_path_id;
 	int					ref;
 	bool					resetting;
 	bool					failover_in_progress;

@@ -251,7 +251,7 @@ nvme_bdev_ctrlr_get_ctrlr(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 	struct nvme_ctrlr *nvme_ctrlr;
 
 	TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->connected_trid->trid) == 0) {
+		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->active_path_id->trid) == 0) {
 			break;
 		}
 	}
@@ -859,7 +859,7 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 
 	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
 	assert(path_id != NULL);
-	assert(path_id == nvme_ctrlr->connected_trid);
+	assert(path_id == nvme_ctrlr->active_path_id);
 
 	path_id->is_failed = rc != 0 ? true : false;
 
@@ -1057,7 +1057,7 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
 	assert(path_id);
-	assert(path_id == nvme_ctrlr->connected_trid);
+	assert(path_id == nvme_ctrlr->active_path_id);
 	next_path = TAILQ_NEXT(path_id, link);
 
 	if (nvme_ctrlr->resetting) {
@@ -1082,7 +1082,7 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 		nvme_ctrlr->failover_in_progress = true;
 		spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
-		nvme_ctrlr->connected_trid = next_path;
+		nvme_ctrlr->active_path_id = next_path;
 		rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_path->trid);
 		assert(rc == 0);
 		TAILQ_REMOVE(&nvme_ctrlr->trids, path_id, link);
@@ -1985,7 +1985,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	 * would submit another fabrics cmd on the admin queue to read CSTS and check for its
 	 * completion recursively.
 	 */
-	if (nvme_ctrlr->connected_trid->trid.trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
+	if (nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
 		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 		if (csts.bits.cfs) {
 			SPDK_ERRLOG("Controller Fatal Status, reset required\n");
@@ -2550,7 +2550,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	path_id->trid = *trid;
-	nvme_ctrlr->connected_trid = path_id;
+	nvme_ctrlr->active_path_id = path_id;
 	TAILQ_INSERT_HEAD(&nvme_ctrlr->trids, path_id, link);
 
 	nvme_ctrlr->thread = spdk_get_thread();
@@ -2662,13 +2662,13 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 	}
 
 	if (!hotplug &&
-	    nvme_ctrlr->connected_trid->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+	    nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		entry = calloc(1, sizeof(*entry));
 		if (!entry) {
 			pthread_mutex_unlock(&nvme_ctrlr->mutex);
 			return -ENOMEM;
 		}
-		entry->trid = nvme_ctrlr->connected_trid->trid;
+		entry->trid = nvme_ctrlr->active_path_id->trid;
 		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
 	}
 
@@ -2862,12 +2862,12 @@ bdev_nvme_compare_trids(struct nvme_ctrlr *nvme_ctrlr,
 	}
 
 	/* Currently we only support failover to the same transport type. */
-	if (nvme_ctrlr->connected_trid->trid.trtype != trid->trtype) {
+	if (nvme_ctrlr->active_path_id->trid.trtype != trid->trtype) {
 		return -EINVAL;
 	}
 
 	/* Currently we only support failover to the same NQN. */
-	if (strncmp(trid->subnqn, nvme_ctrlr->connected_trid->trid.subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
+	if (strncmp(trid->subnqn, nvme_ctrlr->active_path_id->trid.subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
 		return -EINVAL;
 	}
 
@@ -3113,7 +3113,7 @@ bdev_nvme_delete_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 {
 	struct nvme_path_id	*path_id, *tmp_path;
 
-	if (!spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->connected_trid->trid)) {
+	if (!spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->active_path_id->trid)) {
 		return -EBUSY;
 	}
 
@@ -3189,7 +3189,7 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 			}
 
 			/* If we made it here, then this path is a match! Now we need to remove it. */
-			if (path_id == nvme_ctrlr->connected_trid) {
+			if (path_id == nvme_ctrlr->active_path_id) {
 				/* This is the active path in use right now. The active path is always the first in the list. */
 
 				if (!TAILQ_NEXT(path_id, link)) {
@@ -4216,7 +4216,7 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 {
 	struct spdk_nvme_transport_id	*trid;
 
-	trid = &nvme_ctrlr->connected_trid->trid;
+	trid = &nvme_ctrlr->active_path_id->trid;
 
 	spdk_json_write_object_begin(w);
 

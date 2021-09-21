@@ -494,7 +494,7 @@ rpc_dump_nvme_controller_info(struct nvme_ctrlr *nvme_ctrlr, void *ctx)
 	struct spdk_nvme_transport_id	*trid;
 	const struct spdk_nvme_ctrlr_opts *opts;
 
-	trid = &nvme_ctrlr->connected_trid->trid;
+	trid = &nvme_ctrlr->active_path_id->trid;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", nvme_ctrlr->nbdev_ctrlr->name);

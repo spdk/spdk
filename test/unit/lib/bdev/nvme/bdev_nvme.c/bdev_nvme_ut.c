@@ -1479,7 +1479,7 @@ test_failover_ctrlr(void)
 
 	curr_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
 	SPDK_CU_ASSERT_FATAL(curr_trid != NULL);
-	CU_ASSERT(curr_trid == nvme_ctrlr->connected_trid);
+	CU_ASSERT(curr_trid == nvme_ctrlr->active_path_id);
 	CU_ASSERT(spdk_nvme_transport_id_compare(&curr_trid->trid, &trid1) == 0);
 
 	/* Failover starts from thread 1. */
@@ -1510,7 +1510,7 @@ test_failover_ctrlr(void)
 	next_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
 	SPDK_CU_ASSERT_FATAL(next_trid != NULL);
 	CU_ASSERT(next_trid != curr_trid);
-	CU_ASSERT(next_trid == nvme_ctrlr->connected_trid);
+	CU_ASSERT(next_trid == nvme_ctrlr->active_path_id);
 	CU_ASSERT(spdk_nvme_transport_id_compare(&next_trid->trid, &trid2) == 0);
 
 	poll_threads();
@@ -2132,7 +2132,7 @@ test_add_remove_trid(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->connected_trid->trid, &trid1) == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->active_path_id->trid, &trid1) == 0);
 
 	ctrlr2 = ut_attach_ctrlr(&trid2, 0, false, false);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -2144,7 +2144,7 @@ test_add_remove_trid(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->connected_trid->trid, &trid1) == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->active_path_id->trid, &trid1) == 0);
 	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
 		if (spdk_nvme_transport_id_compare(&ctrid->trid, &trid2) == 0) {
 			break;
@@ -2174,7 +2174,7 @@ test_add_remove_trid(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->connected_trid->trid, &trid1) == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->active_path_id->trid, &trid1) == 0);
 	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
 		if (spdk_nvme_transport_id_compare(&ctrid->trid, &trid3) == 0) {
 			break;
@@ -2192,7 +2192,7 @@ test_add_remove_trid(void)
 	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
 		CU_ASSERT(spdk_nvme_transport_id_compare(&ctrid->trid, &trid1) != 0);
 	}
-	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->connected_trid->trid, &trid3) == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->active_path_id->trid, &trid3) == 0);
 
 	poll_threads();
 
@@ -2224,7 +2224,7 @@ test_add_remove_trid(void)
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
 
-	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->connected_trid->trid, &trid1) == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->active_path_id->trid, &trid1) == 0);
 
 	ctrlr2 = ut_attach_ctrlr(&trid2, 0, false, false);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
@@ -2236,7 +2236,7 @@ test_add_remove_trid(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->connected_trid->trid, &trid1) == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&nvme_ctrlr->active_path_id->trid, &trid1) == 0);
 	TAILQ_FOREACH(ctrid, &nvme_ctrlr->trids, link) {
 		if (spdk_nvme_transport_id_compare(&ctrid->trid, &trid2) == 0) {
 			break;
