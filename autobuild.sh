@@ -118,6 +118,14 @@ function build_native_dpdk() {
 		DPDK_DRIVERS+=("compress/isal")
 		DPDK_DRIVERS+=("compress/qat")
 		DPDK_DRIVERS+=("common/qat")
+		if ge "$(< "$external_dpdk_base_dir/VERSION")" 21.02.0; then
+			# SPDK enables REDUCE_MLX in case supported version of DPDK is detected
+			# so make sure proper libs are built.
+			DPDK_DRIVERS+=("bus/auxiliary")
+			DPDK_DRIVERS+=("common/mlx5")
+			DPDK_DRIVERS+=("common/mlx5/linux")
+			DPDK_DRIVERS+=("compress/mlx5")
+		fi
 		export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$isal_dir/build/lib/pkgconfig"
 		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$isal_dir/build/lib"
 	fi
