@@ -729,11 +729,7 @@ test_scheduler(void)
 	for (i = 0; i < 3; i++) {
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
-		if (i == 2) {
-			CU_ASSERT(TAILQ_EMPTY(&reactor->threads));
-		} else {
-			CU_ASSERT(!TAILQ_EMPTY(&reactor->threads));
-		}
+		CU_ASSERT(!TAILQ_EMPTY(&reactor->threads));
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;

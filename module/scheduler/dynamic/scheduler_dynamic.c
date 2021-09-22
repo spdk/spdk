@@ -53,6 +53,7 @@ static struct core_stats *g_cores;
 
 #define SCHEDULER_LOAD_LIMIT 20
 #define SCHEDULER_CORE_LIMIT 95
+#define SCHEDULER_CORE_BUSY 95
 
 static uint8_t
 _busy_pct(uint64_t busy, uint64_t idle)
@@ -98,6 +99,8 @@ _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 	struct core_stats *dst = &g_cores[dst_core];
 	struct core_stats *src = &g_cores[thread_info->lcore];
 	uint64_t busy_tsc = thread_info->current_stats.busy_tsc;
+	uint8_t busy_pct = _busy_pct(src->busy, src->idle);
+	uint64_t tsc;
 
 	if (src == dst) {
 		/* Don't modify stats if thread is already on that core. */
@@ -113,6 +116,22 @@ _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 	src->busy -= spdk_min(src->busy, busy_tsc);
 	src->idle += spdk_min(UINT64_MAX - src->idle, busy_tsc);
 
+	if (busy_pct >= SCHEDULER_CORE_BUSY &&
+	    _busy_pct(src->busy, src->idle) < SCHEDULER_CORE_LIMIT) {
+		/* This core was so busy that we cannot assume all of busy_tsc
+		 * consumed by the moved thread will now be idle_tsc - it's
+		 * very possible the remaining threads will use these cycles
+		 * as busy_tsc.
+		 *
+		 * So make sure we don't drop the updated estimate below
+		 * SCHEDULER_CORE_LIMIT, so that other cores can't
+		 * move threads to this core during this scheduling
+		 * period.
+		 */
+		tsc = src->busy + src->idle;
+		src->busy = tsc * SCHEDULER_CORE_LIMIT / 100;
+		src->idle = tsc - src->busy;
+	}
 	assert(src->thread_count > 0);
 	src->thread_count--;
 
