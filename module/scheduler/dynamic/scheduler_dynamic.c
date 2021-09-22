@@ -55,6 +55,16 @@ static struct core_stats *g_cores;
 #define SCHEDULER_CORE_LIMIT 95
 
 static uint8_t
+_busy_pct(uint64_t busy, uint64_t idle)
+{
+	if ((busy + idle) == 0) {
+		return 0;
+	}
+
+	return busy * 100 / (busy + idle);
+}
+
+static uint8_t
 _get_thread_load(struct spdk_scheduler_thread_info *thread_info)
 {
 	uint64_t busy, idle;
@@ -62,12 +72,8 @@ _get_thread_load(struct spdk_scheduler_thread_info *thread_info)
 	busy = thread_info->current_stats.busy_tsc;
 	idle = thread_info->current_stats.idle_tsc;
 
-	if (busy == 0) {
-		/* No work was done, exit before possible division by 0. */
-		return 0;
-	}
 	/* return percentage of time thread was busy */
-	return busy  * 100 / (busy + idle);
+	return _busy_pct(busy, idle);
 }
 
 typedef void (*_foreach_fn)(struct spdk_scheduler_thread_info *thread_info);
@@ -133,7 +139,7 @@ _is_core_over_limit(uint32_t core_id)
 	}
 
 	/* Work done was less than the limit */
-	if (busy * 100 / (busy + idle) < SCHEDULER_CORE_LIMIT) {
+	if (_busy_pct(busy, idle) < SCHEDULER_CORE_LIMIT) {
 		return false;
 	}
 
