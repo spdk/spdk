@@ -3726,7 +3726,7 @@ bdev_nvme_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 		bio->ext_opts.metadata = md;
 
 		rc = spdk_nvme_ns_cmd_writev_ext(ns, qpair, lba, lba_count,
-						 bdev_nvme_readv_done, bio,
+						 bdev_nvme_writev_done, bio,
 						 bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge,
 						 &bio->ext_opts);
 	} else if (iovcnt == 1) {
