@@ -251,7 +251,7 @@ nvme_bdev_ctrlr_get_ctrlr(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 	struct nvme_ctrlr *nvme_ctrlr;
 
 	TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(trid, nvme_ctrlr->connected_trid) == 0) {
+		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->connected_trid->trid) == 0) {
 			break;
 		}
 	}
@@ -815,7 +815,7 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 
 	curr_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
 	assert(curr_trid != NULL);
-	assert(&curr_trid->trid == nvme_ctrlr->connected_trid);
+	assert(curr_trid == nvme_ctrlr->connected_trid);
 
 	curr_trid->is_failed = rc != 0 ? true : false;
 
@@ -1013,7 +1013,7 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 	curr_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
 	assert(curr_trid);
-	assert(&curr_trid->trid == nvme_ctrlr->connected_trid);
+	assert(curr_trid == nvme_ctrlr->connected_trid);
 	next_trid = TAILQ_NEXT(curr_trid, link);
 
 	if (nvme_ctrlr->resetting) {
@@ -1038,7 +1038,7 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 		nvme_ctrlr->failover_in_progress = true;
 		spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
-		nvme_ctrlr->connected_trid = &next_trid->trid;
+		nvme_ctrlr->connected_trid = next_trid;
 		rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_trid->trid);
 		assert(rc == 0);
 		TAILQ_REMOVE(&nvme_ctrlr->trids, curr_trid, link);
@@ -1950,7 +1950,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	 * would submit another fabrics cmd on the admin queue to read CSTS and check for its
 	 * completion recursively.
 	 */
-	if (nvme_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
+	if (nvme_ctrlr->connected_trid->trid.trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
 		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 		if (csts.bits.cfs) {
 			SPDK_ERRLOG("Controller Fatal Status, reset required\n");
@@ -2515,7 +2515,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	trid_entry->trid = *trid;
-	nvme_ctrlr->connected_trid = &trid_entry->trid;
+	nvme_ctrlr->connected_trid = trid_entry;
 	TAILQ_INSERT_HEAD(&nvme_ctrlr->trids, trid_entry, link);
 
 	nvme_ctrlr->thread = spdk_get_thread();
@@ -2627,13 +2627,13 @@ _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 	}
 
 	if (!hotplug &&
-	    nvme_ctrlr->connected_trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+	    nvme_ctrlr->connected_trid->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		entry = calloc(1, sizeof(*entry));
 		if (!entry) {
 			pthread_mutex_unlock(&nvme_ctrlr->mutex);
 			return -ENOMEM;
 		}
-		entry->trid = *nvme_ctrlr->connected_trid;
+		entry->trid = nvme_ctrlr->connected_trid->trid;
 		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
 	}
 
@@ -2827,12 +2827,12 @@ bdev_nvme_compare_trids(struct nvme_ctrlr *nvme_ctrlr,
 	}
 
 	/* Currently we only support failover to the same transport type. */
-	if (nvme_ctrlr->connected_trid->trtype != trid->trtype) {
+	if (nvme_ctrlr->connected_trid->trid.trtype != trid->trtype) {
 		return -EINVAL;
 	}
 
 	/* Currently we only support failover to the same NQN. */
-	if (strncmp(trid->subnqn, nvme_ctrlr->connected_trid->subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
+	if (strncmp(trid->subnqn, nvme_ctrlr->connected_trid->trid.subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
 		return -EINVAL;
 	}
 
@@ -3078,7 +3078,7 @@ bdev_nvme_delete_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 {
 	struct nvme_ctrlr_trid	*ctrlr_trid, *tmp_trid;
 
-	if (!spdk_nvme_transport_id_compare(trid, nvme_ctrlr->connected_trid)) {
+	if (!spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->connected_trid->trid)) {
 		return -EBUSY;
 	}
 
@@ -3122,9 +3122,9 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 			if (rc != 0) {
 				return rc;
 			}
-		} else if (!spdk_nvme_transport_id_compare(trid, nvme_ctrlr->connected_trid)) {
+		} else if (!spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->connected_trid->trid)) {
 			ctrlr_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
-			assert(nvme_ctrlr->connected_trid == &ctrlr_trid->trid);
+			assert(nvme_ctrlr->connected_trid == ctrlr_trid);
 			if (!TAILQ_NEXT(ctrlr_trid, link)) {
 				/* Case 2A: The current path is the only path. */
 				return _bdev_nvme_delete(nvme_ctrlr, false);
@@ -4145,7 +4145,7 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 {
 	struct spdk_nvme_transport_id	*trid;
 
-	trid = nvme_ctrlr->connected_trid;
+	trid = &nvme_ctrlr->connected_trid->trid;
 
 	spdk_json_write_object_begin(w);
 
