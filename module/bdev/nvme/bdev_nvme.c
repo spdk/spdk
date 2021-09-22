@@ -3098,8 +3098,8 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr, *tmp_nvme_ctrlr;
-	struct nvme_ctrlr_trid	*ctrlr_trid;
-	int			rc = 0;
+	struct nvme_ctrlr_trid	*ctrlr_trid, *tmp_trid;
+	int			rc = -ENXIO;
 
 	if (name == NULL) {
 		return -EINVAL;
@@ -3117,27 +3117,73 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
 		if (trid == NULL) {
-			/* Case 1: Remove all nvme_ctrlrs of the nvme_bdev_ctrlr. */
+			/* Remove all nvme_ctrlrs of the nvme_bdev_ctrlr. */
 			rc = _bdev_nvme_delete(nvme_ctrlr, false);
 			if (rc != 0) {
 				return rc;
 			}
-		} else if (!spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->connected_trid->trid)) {
-			ctrlr_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
-			assert(nvme_ctrlr->connected_trid == ctrlr_trid);
-			if (!TAILQ_NEXT(ctrlr_trid, link)) {
-				/* Case 2A: The current path is the only path. */
-				return _bdev_nvme_delete(nvme_ctrlr, false);
-			} else {
-				/* Case 2B: There is an alternative path. */
-				return bdev_nvme_failover(nvme_ctrlr, true);
+
+			continue;
+		}
+
+		TAILQ_FOREACH_REVERSE_SAFE(ctrlr_trid, &nvme_ctrlr->trids, nvme_paths, link, tmp_trid) {
+			if (trid->trtype != 0) {
+				if (trid->trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
+					if (strcasecmp(trid->trstring, ctrlr_trid->trid.trstring) != 0) {
+						continue;
+					}
+				} else {
+					if (trid->trtype != ctrlr_trid->trid.trtype) {
+						continue;
+					}
+				}
 			}
-		} else {
-			/* Case 3: We are not using the specified path. */
-			rc = bdev_nvme_delete_secondary_trid(nvme_ctrlr, trid);
-			if (rc != -ENXIO) {
+
+			if (!spdk_mem_all_zero(trid->traddr, sizeof(trid->traddr))) {
+				if (strcasecmp(trid->traddr, ctrlr_trid->trid.traddr) != 0) {
+					continue;
+				}
+			}
+
+			if (trid->adrfam != 0) {
+				if (trid->adrfam != ctrlr_trid->trid.adrfam) {
+					continue;
+				}
+			}
+
+			if (!spdk_mem_all_zero(trid->trsvcid, sizeof(trid->trsvcid))) {
+				if (strcasecmp(trid->trsvcid, ctrlr_trid->trid.trsvcid) != 0) {
+					continue;
+				}
+			}
+
+			if (!spdk_mem_all_zero(trid->subnqn, sizeof(trid->subnqn))) {
+				if (strcmp(trid->subnqn, ctrlr_trid->trid.subnqn) != 0) {
+					continue;
+				}
+			}
+
+			/* If we made it here, then this path is a match! Now we need to remove it. */
+			if (ctrlr_trid == nvme_ctrlr->connected_trid) {
+				/* This is the active path in use right now. The active path is always the first in the list. */
+
+				if (!TAILQ_NEXT(ctrlr_trid, link)) {
+					/* The current path is the only path. */
+					rc = _bdev_nvme_delete(nvme_ctrlr, false);
+				} else {
+					/* There is an alternative path. */
+					rc = bdev_nvme_failover(nvme_ctrlr, true);
+				}
+			} else {
+				/* We are not using the specified path. */
+				rc = bdev_nvme_delete_secondary_trid(nvme_ctrlr, &ctrlr_trid->trid);
+			}
+
+			if (rc < 0 && rc != -ENXIO) {
 				return rc;
 			}
+
+
 		}
 	}
 
