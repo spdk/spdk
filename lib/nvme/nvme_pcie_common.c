@@ -42,12 +42,7 @@
 #include "nvme_pcie_internal.h"
 #include "spdk/trace.h"
 
-#define OBJECT_NVME_PCIE_TR	0x3
-#define OWNER_NVME_PCIE_QP	0x3
-
-#define TRACE_GROUP_NVME_PCIE	0xB
-#define TRACE_NVME_PCIE_SUBMIT		SPDK_TPOINT_ID(TRACE_GROUP_NVME_PCIE, 0x0)
-#define TRACE_NVME_PCIE_COMPLETE	SPDK_TPOINT_ID(TRACE_GROUP_NVME_PCIE, 0x1)
+#include "spdk_internal/trace_defs.h"
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 

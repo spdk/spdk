@@ -44,6 +44,8 @@
 #include "spdk/log.h"
 #include "spdk/trace.h"
 
+#include "spdk_internal/trace_defs.h"
+
 #define BLOBFS_TRACE(file, str, args...) \
 	SPDK_DEBUGLOG(blobfs, "file=%s " str, file->name, ##args)
 
@@ -63,14 +65,6 @@ static struct spdk_thread *g_cache_pool_thread;
 #define BLOBFS_CACHE_POOL_POLL_PERIOD_IN_US 1000ULL
 static int g_fs_count = 0;
 static pthread_mutex_t g_cache_init_lock = PTHREAD_MUTEX_INITIALIZER;
-
-#define TRACE_GROUP_BLOBFS	0x7
-#define TRACE_BLOBFS_XATTR_START	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x0)
-#define TRACE_BLOBFS_XATTR_END		SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x1)
-#define TRACE_BLOBFS_OPEN		SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x2)
-#define TRACE_BLOBFS_CLOSE		SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x3)
-#define TRACE_BLOBFS_DELETE_START	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x4)
-#define TRACE_BLOBFS_DELETE_DONE	SPDK_TPOINT_ID(TRACE_GROUP_BLOBFS, 0x5)
 
 SPDK_TRACE_REGISTER_FN(blobfs_trace, "blobfs", TRACE_GROUP_BLOBFS)
 {

@@ -38,10 +38,9 @@
 #include "ftl_io.h"
 #include "ftl_band.h"
 
-#if defined(DEBUG)
+#include "spdk_internal/trace_defs.h"
 
-#define OWNER_FTL	0x20
-#define TRACE_GROUP_FTL	0x6
+#if defined(DEBUG)
 
 enum ftl_trace_source {
 	FTL_TRACE_SOURCE_INTERNAL,

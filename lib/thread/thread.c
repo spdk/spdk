@@ -46,6 +46,8 @@
 #include "spdk_internal/thread.h"
 #include "thread_internal.h"
 
+#include "spdk_internal/trace_defs.h"
+
 #ifdef __linux__
 #include <sys/timerfd.h>
 #include <sys/eventfd.h>
@@ -217,10 +219,6 @@ static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
 static uint32_t g_thread_count = 0;
 
 static __thread struct spdk_thread *tls_thread = NULL;
-
-#define TRACE_GROUP_THREAD		0xa
-#define TRACE_THREAD_IOCH_GET   SPDK_TPOINT_ID(TRACE_GROUP_THREAD, 0x0)
-#define TRACE_THREAD_IOCH_PUT   SPDK_TPOINT_ID(TRACE_GROUP_THREAD, 0x1)
 
 SPDK_TRACE_REGISTER_FN(thread_trace, "thread", TRACE_GROUP_THREAD)
 {

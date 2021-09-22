@@ -52,6 +52,7 @@
 #include "spdk/string.h"
 
 #include "bdev_internal.h"
+#include "spdk_internal/trace_defs.h"
 
 #ifdef SPDK_CONFIG_VTUNE
 #include "ittnotify.h"
@@ -66,14 +67,6 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_LARGE_POOL_SIZE			1023
 #define NOMEM_THRESHOLD_COUNT			8
 #define ZERO_BUFFER_SIZE			0x100000
-
-#define OWNER_BDEV		0x2
-
-#define OBJECT_BDEV_IO		0x2
-
-#define TRACE_GROUP_BDEV	0x3
-#define TRACE_BDEV_IO_START	SPDK_TPOINT_ID(TRACE_GROUP_BDEV, 0x0)
-#define TRACE_BDEV_IO_DONE	SPDK_TPOINT_ID(TRACE_GROUP_BDEV, 0x1)
 
 #define SPDK_BDEV_QOS_TIMESLICE_IN_USEC		1000
 #define SPDK_BDEV_QOS_MIN_IO_PER_TIMESLICE	1

@@ -49,6 +49,8 @@
 #include "nvmf_fc.h"
 #include "fc_lld.h"
 
+#include "spdk_internal/trace_defs.h"
+
 #ifndef DEV_VERIFY
 #define DEV_VERIFY assert
 #endif
@@ -87,26 +89,6 @@ static char *fc_req_state_strs[] = {
 	"SPDK_NVMF_FC_REQ_PENDING",
 	"SPDK_NVMF_FC_REQ_FUSED_WAITING"
 };
-
-#define OBJECT_NVMF_FC_IO				0xA0
-
-#define TRACE_GROUP_NVMF_FC				0x8
-#define TRACE_FC_REQ_INIT                       SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x01)
-#define TRACE_FC_REQ_READ_BDEV                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x02)
-#define TRACE_FC_REQ_READ_XFER                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x03)
-#define TRACE_FC_REQ_READ_RSP                   SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x04)
-#define TRACE_FC_REQ_WRITE_BUFFS                SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x05)
-#define TRACE_FC_REQ_WRITE_XFER                 SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x06)
-#define TRACE_FC_REQ_WRITE_BDEV                 SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x07)
-#define TRACE_FC_REQ_WRITE_RSP                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x08)
-#define TRACE_FC_REQ_NONE_BDEV                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x09)
-#define TRACE_FC_REQ_NONE_RSP                   SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0A)
-#define TRACE_FC_REQ_SUCCESS                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0B)
-#define TRACE_FC_REQ_FAILED                     SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0C)
-#define TRACE_FC_REQ_ABORTED                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0D)
-#define TRACE_FC_REQ_BDEV_ABORTED               SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0E)
-#define TRACE_FC_REQ_PENDING                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x0F)
-#define TRACE_FC_REQ_FUSED_WAITING		SPDK_TPOINT_ID(TRACE_GROUP_NVMF_FC, 0x10)
 
 #define HWQP_CONN_TABLE_SIZE			8192
 #define HWQP_RPI_TABLE_SIZE			4096
