@@ -139,7 +139,7 @@ _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 }
 
 static bool
-_is_core_over_limit(uint32_t core_id)
+_is_core_at_limit(uint32_t core_id)
 {
 	struct core_stats *core = &g_cores[core_id];
 	uint64_t busy, idle;
@@ -208,7 +208,7 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 	uint32_t least_busy_lcore = thread_info->lcore;
 	struct spdk_thread *thread;
 	struct spdk_cpuset *cpumask;
-	bool core_over_limit = _is_core_over_limit(current_lcore);
+	bool core_at_limit = _is_core_at_limit(current_lcore);
 
 	thread = spdk_thread_get_by_id(thread_info->thread_id);
 	if (thread == NULL) {
@@ -236,7 +236,7 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 		if (i < current_lcore) {
 			/* Lower core id was found, move to consolidate threads on lowest core ids. */
 			return i;
-		} else if (core_over_limit) {
+		} else if (core_at_limit) {
 			/* When core is over the limit, even higher core ids are better than current one. */
 			return i;
 		}
@@ -244,7 +244,7 @@ _find_optimal_core(struct spdk_scheduler_thread_info *thread_info)
 
 	/* For cores over the limit, place the thread on least busy core
 	 * to balance threads. */
-	if (core_over_limit) {
+	if (core_at_limit) {
 		return least_busy_lcore;
 	}
 
