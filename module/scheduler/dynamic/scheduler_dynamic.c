@@ -169,6 +169,7 @@ static bool
 _can_core_fit_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 {
 	struct core_stats *dst = &g_cores[dst_core];
+	uint64_t new_busy_tsc, new_idle_tsc;
 
 	/* Thread can always fit on the core it's currently on. */
 	if (thread_info->lcore == dst_core) {
@@ -186,10 +187,17 @@ _can_core_fit_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t ds
 		return true;
 	}
 
-	if (thread_info->current_stats.busy_tsc <= dst->idle) {
-		return true;
+	/* Core doesn't have enough idle_tsc to take this thread. */
+	if (dst->idle < thread_info->current_stats.busy_tsc) {
+		return false;
 	}
-	return false;
+
+	new_busy_tsc = dst->busy + thread_info->current_stats.busy_tsc;
+	new_idle_tsc = dst->idle - thread_info->current_stats.busy_tsc;
+
+	/* Core cannot fit this thread if it would put it over the
+	 * SCHEDULER_CORE_LIMIT. */
+	return _busy_pct(new_busy_tsc, new_idle_tsc) < SCHEDULER_CORE_LIMIT;
 }
 
 static uint32_t
