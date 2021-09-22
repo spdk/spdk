@@ -321,6 +321,9 @@ struct nvmf_vfio_user_endpoint {
 	int					devmem_fd;
 	volatile uint32_t			*doorbells;
 
+	int					migr_fd;
+	void					*migr_data;
+
 	struct spdk_nvme_transport_id		trid;
 	const struct spdk_nvmf_subsystem	*subsystem;
 
@@ -362,6 +365,24 @@ nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
 
 static struct nvmf_vfio_user_req *
 get_nvmf_vfio_user_req(struct nvmf_vfio_user_sq *vu_sq);
+
+static inline size_t
+vfio_user_migr_data_len(void)
+{
+	size_t len = 0;
+
+	len = NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * (sizeof(struct nvme_migr_sq_state) + sizeof(
+				struct nvme_migr_cq_state));
+	len += sizeof(struct nvme_migr_device_state);
+	len += NVME_REG_BAR0_SIZE;
+	len += NVME_REG_CFG_SIZE;
+	/* BAR4 */
+	len += NVME_BAR4_SIZE;
+	/* BAR5 */
+	len += NVME_BAR5_SIZE;
+
+	return SPDK_ALIGN_CEIL(len, PAGE_SIZE);
+}
 
 static int
 nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
@@ -628,6 +649,14 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 
 	if (endpoint->devmem_fd > 0) {
 		close(endpoint->devmem_fd);
+	}
+
+	if (endpoint->migr_data) {
+		munmap(endpoint->migr_data, vfio_user_migr_data_len());
+	}
+
+	if (endpoint->migr_fd > 0) {
+		close(endpoint->migr_fd);
 	}
 
 	if (endpoint->vfu_ctx) {
@@ -2449,12 +2478,45 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
+	ret = snprintf(path, PATH_MAX, "%s/migr", endpoint_id(endpoint));
+	if (ret < 0 || ret >= PATH_MAX) {
+		SPDK_ERRLOG("%s: error to get migration file path: %s.\n", endpoint_id(endpoint),
+			    spdk_strerror(errno));
+		ret = -1;
+		goto out;
+	}
+	ret = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	if (ret == -1) {
+		SPDK_ERRLOG("%s: failed to open device memory at %s: %s.\n",
+			    endpoint_id(endpoint), path, spdk_strerror(errno));
+		goto out;
+	}
+
+	endpoint->migr_fd = ret;
+	ret = ftruncate(endpoint->migr_fd,
+			vfu_get_migr_register_area_size() + vfio_user_migr_data_len());
+	if (ret != 0) {
+		SPDK_ERRLOG("%s: error to ftruncate migration file %s: %s.\n", endpoint_id(endpoint), path,
+			    spdk_strerror(errno));
+		goto out;
+	}
+
+	endpoint->migr_data = mmap(NULL, vfio_user_migr_data_len(),
+				   PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->migr_fd, vfu_get_migr_register_area_size());
+	if (endpoint->migr_data == MAP_FAILED) {
+		SPDK_ERRLOG("%s: error to mmap file %s: %s.\n", endpoint_id(endpoint), path, spdk_strerror(errno));
+		endpoint->migr_data = NULL;
+		ret = -1;
+		goto out;
+	}
+
 	ret = snprintf(uuid, PATH_MAX, "%s/cntrl", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
 		SPDK_ERRLOG("%s: error to get ctrlr file path: %s\n", endpoint_id(endpoint), spdk_strerror(errno));
 		ret = -1;
 		goto out;
 	}
+
 	endpoint->vfu_ctx = vfu_create_ctx(VFU_TRANS_SOCK, uuid, LIBVFIO_USER_FLAG_ATTACH_NB,
 					   endpoint, VFU_DEV_TYPE_PCI);
 	if (endpoint->vfu_ctx == NULL) {
