@@ -6022,6 +6022,7 @@ sock_priority               | Optional | number  | The socket priority of the co
 acceptor_backlog            | Optional | number  | The number of pending connections allowed in backlog before failing new connection attempts (RDMA only)
 abort_timeout_sec           | Optional | number  | Abort execution timeout value, in seconds
 no_wr_batching              | Optional | boolean | Disable work requests batching (RDMA only)
+control_msg_num             | Optional | number  | The number of control messages per poll group (TCP only)
 
 #### Example
 
