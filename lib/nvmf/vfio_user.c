@@ -2767,6 +2767,19 @@ nvmf_vfio_user_qpair_poll(struct nvmf_vfio_user_qpair *qpair)
 	 */
 	spdk_rmb();
 
+	new_tail = new_tail & 0xffffu;
+	if (spdk_unlikely(new_tail >= qpair->sq.size)) {
+		union spdk_nvme_async_event_completion event = {};
+
+		SPDK_DEBUGLOG(nvmf_vfio, "%s: invalid SQ%u doorbell value %u\n", ctrlr_id(ctrlr), qpair->qpair.qid,
+			      new_tail);
+		event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_ERROR;
+		event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_INVALID_DB_WRITE;
+		nvmf_ctrlr_async_event_error_event(qpair->qpair.ctrlr, event);
+
+		return 0;
+	}
+
 	if (sq_head(qpair) == new_tail) {
 		return 0;
 	}
