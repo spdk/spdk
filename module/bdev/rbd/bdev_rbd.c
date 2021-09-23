@@ -396,9 +396,11 @@ static void
 bdev_rbd_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
 	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
+	struct spdk_thread *current_thread = spdk_get_thread();
 
 	rbd_io->status = status;
-	if (rbd_io->submit_td != NULL) {
+	assert(rbd_io->submit_td != NULL);
+	if (rbd_io->submit_td != current_thread) {
 		spdk_thread_send_msg(rbd_io->submit_td, _bdev_rbd_io_complete, rbd_io);
 	} else {
 		_bdev_rbd_io_complete(rbd_io);
@@ -617,11 +619,10 @@ bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 	struct bdev_rbd_io *rbd_io = (struct bdev_rbd_io *)bdev_io->driver_ctx;
 	struct bdev_rbd *disk = (struct bdev_rbd *)bdev_io->bdev->ctxt;
 
+	rbd_io->submit_td = submit_td;
 	if (disk->main_td != submit_td) {
-		rbd_io->submit_td = submit_td;
 		spdk_thread_send_msg(disk->main_td, _bdev_rbd_submit_request, bdev_io);
 	} else {
-		rbd_io->submit_td = NULL;
 		_bdev_rbd_submit_request(bdev_io);
 	}
 }
