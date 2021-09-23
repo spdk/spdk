@@ -906,7 +906,7 @@ lookup_io_q(struct nvmf_vfio_user_ctrlr *ctrlr, const uint16_t qid, const bool i
 
 	assert(ctrlr != NULL);
 
-	if (qid > NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
+	if (qid == 0 || qid >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
 		return NULL;
 	}
 
@@ -1110,7 +1110,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	assert(cmd != NULL);
 
 	qid = cmd->cdw10_bits.create_io_q.qid;
-	if (qid >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
+	if (qid == 0 || qid >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
 		SPDK_ERRLOG("%s: invalid QID=%d, max=%d\n", ctrlr_id(ctrlr),
 			    qid, NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -1263,7 +1263,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		      cmd->cdw10_bits.delete_io_q.qid);
 
 	if (lookup_io_q(ctrlr, cmd->cdw10_bits.delete_io_q.qid, is_cq) == NULL) {
-		SPDK_ERRLOG("%s: %cQ%d does not exist\n", ctrlr_id(ctrlr),
+		SPDK_ERRLOG("%s: I/O %cQ%d does not exist\n", ctrlr_id(ctrlr),
 			    is_cq ? 'C' : 'S', cmd->cdw10_bits.delete_io_q.qid);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
@@ -1641,7 +1641,7 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	/* convert byte offset to array index */
 	pos >>= 2;
 
-	if (pos > NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR * 2) {
+	if (pos >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR * 2) {
 		SPDK_ERRLOG("%s: bad doorbell index %#lx\n", ctrlr_id(ctrlr), pos);
 		errno = EINVAL;
 		return -1;
