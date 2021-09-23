@@ -2727,11 +2727,16 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	}
 
 	if (spdk_unlikely(err < 0)) {
+		struct nvmf_vfio_user_qpair *vu_qpair;
+
 		SPDK_ERRLOG("%s: process NVMe command opc 0x%x failed\n",
 			    ctrlr_id(ctrlr), cmd->opc);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-		return handle_cmd_rsp(vu_req, vu_req->cb_arg);
+		err = handle_cmd_rsp(vu_req, vu_req->cb_arg);
+		vu_qpair = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
+		_nvmf_vfio_user_req_free(vu_qpair, vu_req);
+		return err;
 	}
 
 	vu_req->state = VFIO_USER_REQUEST_STATE_EXECUTING;
