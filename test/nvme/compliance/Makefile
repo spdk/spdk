@@ -31,17 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
-DIRS-y = aer reset sgl e2edp overhead deallocated_value err_injection \
-	startup reserve simple_copy connect_stress boot_partition \
-	compliance
-DIRS-$(CONFIG_NVME_CUSE) += cuse
+APP = nvme_compliance
 
-.PHONY: all clean $(DIRS-y)
+# spdk_cunit.h
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+LIBS += -lcunit
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
