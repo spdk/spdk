@@ -46,7 +46,6 @@
 #define UNIQUE_OPCODES 256
 
 const char g_nvme_cmd_json_name[] = "struct spdk_nvme_cmd";
-char *g_conf_file;
 char *g_json_file = NULL;
 uint64_t g_runtime_ticks;
 unsigned int g_seed_value = 0;
@@ -784,70 +783,12 @@ out:
 	spdk_app_stop(rc);
 }
 
-static int
-parse_trids(void)
-{
-	struct spdk_conf *config = NULL;
-	struct spdk_conf_section *sp;
-	const char *trid_char;
-	struct nvme_fuzz_trid *current_trid;
-	int num_subsystems = 0;
-	int rc = 0;
-
-	if (g_conf_file) {
-		config = spdk_conf_allocate();
-		if (!config) {
-			fprintf(stderr, "Unable to allocate an spdk_conf object\n");
-			return -1;
-		}
-
-		rc = spdk_conf_read(config, g_conf_file);
-		if (rc) {
-			fprintf(stderr, "Unable to convert the conf file into a readable system\n");
-			rc = -1;
-			goto exit;
-		}
-
-		sp = spdk_conf_find_section(config, "Nvme");
-
-		if (sp == NULL) {
-			fprintf(stderr, "No Nvme configuration in conf file\n");
-			goto exit;
-		}
-
-		while ((trid_char = spdk_conf_section_get_nmval(sp, "TransportID", num_subsystems, 0)) != NULL) {
-			current_trid = malloc(sizeof(struct nvme_fuzz_trid));
-			if (!current_trid) {
-				fprintf(stderr, "Unable to allocate memory for transport ID\n");
-				rc = -1;
-				goto exit;
-			}
-			rc = spdk_nvme_transport_id_parse(&current_trid->trid, trid_char);
-
-			if (rc < 0) {
-				fprintf(stderr, "failed to parse transport ID: %s\n", trid_char);
-				free(current_trid);
-				rc = -1;
-				goto exit;
-			}
-			TAILQ_INSERT_TAIL(&g_trid_list, current_trid, tailq);
-			num_subsystems++;
-		}
-	}
-
-exit:
-	if (config != NULL) {
-		spdk_conf_free(config);
-	}
-	return rc;
-}
-
 static void
 nvme_fuzz_usage(void)
 {
 	fprintf(stderr, " -a                        Perform admin commands. if -j is specified, \
 only admin commands will run. Otherwise they will be run in tandem with I/O commands.\n");
-	fprintf(stderr, " -C <path>                 Path to a configuration file.\n");
+	fprintf(stderr, " -F                        Transport ID for subsystem that should be fuzzed.\n");
 	fprintf(stderr,
 		" -j <path>                 Path to a json file containing named objects of type spdk_nvme_cmd. If this option is specified, -t will be ignored.\n");
 	fprintf(stderr, " -N                        Target only valid namespace with commands. \
@@ -861,14 +802,27 @@ This helps dig deeper into other errors besides invalid namespace.\n");
 static int
 nvme_fuzz_parse(int ch, char *arg)
 {
+	struct nvme_fuzz_trid *trid;
 	int64_t error_test;
+	int rc;
 
 	switch (ch) {
 	case 'a':
 		g_run_admin_commands = true;
 		break;
-	case 'C':
-		g_conf_file = optarg;
+	case 'F':
+		trid = malloc(sizeof(*trid));
+		if (!trid) {
+			fprintf(stderr, "Unable to allocate memory for transport ID\n");
+			return -1;
+		}
+		rc = spdk_nvme_transport_id_parse(&trid->trid, optarg);
+		if (rc < 0) {
+			fprintf(stderr, "failed to parse transport ID: %s\n", optarg);
+			free(trid);
+			return -1;
+		}
+		TAILQ_INSERT_TAIL(&g_trid_list, trid, tailq);
 		break;
 	case 'j':
 		g_json_file = optarg;
@@ -914,13 +868,9 @@ main(int argc, char **argv)
 	g_runtime = DEFAULT_RUNTIME;
 	g_run = true;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "aC:j:NS:t:V", NULL, nvme_fuzz_parse,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "aF:j:NS:t:V", NULL, nvme_fuzz_parse,
 				      nvme_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {
 		return rc;
-	}
-
-	if (g_conf_file) {
-		parse_trids();
 	}
 
 	if (g_json_file != NULL) {
