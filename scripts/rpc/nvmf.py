@@ -118,6 +118,7 @@ def nvmf_create_transport(client, **params):
         abort_timeout_sec: Abort execution timeout value, in seconds (optional)
         no_wr_batching: Boolean flag to disable work requests batching - RDMA specific (optional)
         control_msg_num: The number of control messages per poll group - TCP specific (optional)
+        disable_mappable_bar0: disable client mmap() of BAR0 - VFIO-USER specific (optional)
     Returns:
         True or False
     """

@@ -1937,6 +1937,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-w', '--no-wr-batching', action='store_true', help='Disable work requests batching. Relevant only for RDMA transport')
     p.add_argument('-e', '--control-msg-num', help="""The number of control messages per poll group.
     Relevant only for TCP transport""", type=int)
+    p.add_argument('-M', '--disable-mappable-bar0', action='store_true', help="""Disable mmap() of BAR0.
+    Relevant only for VFIO-USER transport""")
     p.set_defaults(func=nvmf_create_transport)
 
     def nvmf_get_transports(args):

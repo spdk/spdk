@@ -543,7 +543,7 @@ nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 
 static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] = {
 	{
-		"disable-mappable-bar0",
+		"disable_mappable_bar0",
 		offsetof(struct nvmf_vfio_user_transport, transport_opts.disable_mappable_bar0),
 		spdk_json_decode_bool, true
 	},
