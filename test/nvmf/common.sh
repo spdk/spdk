@@ -351,7 +351,7 @@ function nvmf_tcp_init() {
 	NVMF_INITIATOR_IP=10.0.0.1
 	NVMF_FIRST_TARGET_IP=10.0.0.2
 	TCP_INTERFACE_LIST=($(get_tcp_if_list_by_driver))
-	if ((${#TCP_INTERFACE_LIST[@]} == 0)); then
+	if ((${#TCP_INTERFACE_LIST[@]} == 0)) || [ "$TEST_MODE" == "iso" ]; then
 		nvmf_veth_init
 		return 0
 	fi
