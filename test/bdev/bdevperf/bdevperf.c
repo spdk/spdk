@@ -1077,7 +1077,7 @@ bdevperf_test(void)
 
 	/* Start a timer to dump performance numbers */
 	g_shutdown_tsc = spdk_get_ticks();
-	if (g_show_performance_real_time) {
+	if (g_show_performance_real_time && !g_perf_timer) {
 		g_perf_timer = SPDK_POLLER_REGISTER(performance_statistics_thread, NULL,
 						    g_show_performance_period_in_usec);
 	}
