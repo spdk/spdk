@@ -596,7 +596,7 @@ test_scheduler(void)
 		reactor = spdk_reactor_get(i);
 		CU_ASSERT(reactor != NULL);
 		MOCK_SET(spdk_env_get_current_core, i);
-		CU_ASSERT(event_queue_run_batch(reactor) == 1);
+		event_queue_run_batch(reactor);
 		CU_ASSERT(!TAILQ_EMPTY(&reactor->threads));
 	}
 
@@ -632,7 +632,7 @@ test_scheduler(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 	_reactors_scheduler_gather_metrics(NULL, NULL);
 
-	CU_ASSERT(_run_events_till_completion(3) == 3);
+	_run_events_till_completion(3);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	/* Threads were idle, so all of them should be placed on core 0.
@@ -657,7 +657,7 @@ test_scheduler(void)
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
 	MOCK_SET(spdk_env_get_current_core, 0);
-	CU_ASSERT(event_queue_run_batch(reactor) == 2);
+	event_queue_run_batch(reactor);
 
 	reactor = spdk_reactor_get(0);
 	CU_ASSERT(reactor != NULL);
@@ -698,7 +698,7 @@ test_scheduler(void)
 	MOCK_SET(spdk_env_get_current_core, 0);
 	_reactors_scheduler_gather_metrics(NULL, NULL);
 
-	CU_ASSERT(_run_events_till_completion(3) == 3);
+	_run_events_till_completion(3);
 	MOCK_SET(spdk_env_get_current_core, 0);
 
 	/* Threads were busy, so they should be distributed evenly across cores */
