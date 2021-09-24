@@ -129,6 +129,7 @@ struct nvme_tcp_req {
 	uint16_t				cid;
 	uint16_t				ttag;
 	uint32_t				datao;
+	uint32_t				expected_datao;
 	uint32_t				r2tl_remain;
 	uint32_t				active_r2ts;
 	/* Used to hold a value received from subsequent R2T while we are still
@@ -204,6 +205,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->state = NVME_TCP_REQ_ACTIVE;
 	TAILQ_REMOVE(&tqpair->free_reqs, tcp_req, link);
 	tcp_req->datao = 0;
+	tcp_req->expected_datao = 0;
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
 	tcp_req->pdu_in_use = false;
@@ -1120,9 +1122,12 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 
 	SPDK_DEBUGLOG(nvme, "enter\n");
 
+	tcp_req = pdu->req;
+	/* Increase the expected data offset */
+	tcp_req->expected_datao += pdu->data_len;
+
 	/* check data digest if need */
 	if (pdu->ddgst_enable) {
-		tcp_req = pdu->req;
 		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 		/* Only suport this limitated case for the first step */
 		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
@@ -1329,8 +1334,8 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 	}
 
-	SPDK_DEBUGLOG(nvme, "tcp_req(%p) on tqpair(%p): datao=%u, payload_size=%u\n",
-		      tcp_req, tqpair, tcp_req->datao, tcp_req->req->payload_size);
+	SPDK_DEBUGLOG(nvme, "tcp_req(%p) on tqpair(%p): expected_datao=%u, payload_size=%u\n",
+		      tcp_req, tqpair, tcp_req->expected_datao, tcp_req->req->payload_size);
 
 	if (spdk_unlikely((flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_SUCCESS) &&
 			  !(flags & SPDK_NVME_TCP_C2H_DATA_FLAGS_LAST_PDU))) {
@@ -1347,9 +1352,9 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 		goto end;
 	}
 
-	if (tcp_req->datao != c2h_data->datao) {
-		SPDK_ERRLOG("Invalid datao for tcp_req(%p), received datal(%u) != datao(%u) in tcp_req\n",
-			    tcp_req, c2h_data->datao, tcp_req->datao);
+	if (tcp_req->expected_datao != c2h_data->datao) {
+		SPDK_ERRLOG("Invalid datao for tcp_req(%p), received datal(%u) != expected datao(%u) in tcp_req\n",
+			    tcp_req, c2h_data->datao, tcp_req->expected_datao);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 		error_offset = offsetof(struct spdk_nvme_tcp_c2h_data_hdr, datao);
 		goto end;

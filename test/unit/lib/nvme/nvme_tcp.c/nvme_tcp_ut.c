@@ -1338,6 +1338,7 @@ test_nvme_tcp_pdu_payload_handle(void)
 	tcp_req.state = NVME_TCP_REQ_ACTIVE;
 	tcp_req.ordering.bits.send_ack = 1;
 
+	recv_pdu.req = &tcp_req;
 	nvme_tcp_pdu_payload_handle(&tqpair, &reaped);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	CU_ASSERT(tcp_req.rsp.status.p == 0);
@@ -1351,6 +1352,7 @@ test_nvme_tcp_pdu_payload_handle(void)
 	recv_pdu.hdr.term_req.fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD;
 
+	recv_pdu.req = &tcp_req;
 	nvme_tcp_pdu_payload_handle(&tqpair, &reaped);
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
 }
