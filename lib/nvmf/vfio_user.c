@@ -130,7 +130,7 @@ struct nvme_q {
 enum nvmf_vfio_user_qpair_state {
 	VFIO_USER_QPAIR_UNINITIALIZED = 0,
 	VFIO_USER_QPAIR_ACTIVE,
-	VFIO_USER_QPAIR_DELETED,
+	VFIO_USER_QPAIR_SQ_DELETED,
 	VFIO_USER_QPAIR_INACTIVE,
 	VFIO_USER_QPAIR_ERROR,
 };
@@ -915,13 +915,15 @@ lookup_io_q(struct nvmf_vfio_user_ctrlr *ctrlr, const uint16_t qid, const bool i
 	}
 
 	if (is_cq) {
+		/* CQ is always exist if the queue pair wasn't null */
 		q = &ctrlr->qp[qid]->cq;
+		return q;
 	} else {
+		if (ctrlr->qp[qid]->state == VFIO_USER_QPAIR_SQ_DELETED ||
+		    ctrlr->qp[qid]->state == VFIO_USER_QPAIR_UNINITIALIZED) {
+			return NULL;
+		}
 		q = &ctrlr->qp[qid]->sq;
-	}
-
-	if (q->addr == NULL) {
-		return NULL;
 	}
 
 	return q;
@@ -1208,19 +1210,25 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	if (is_cq) {
 		*hdbl(ctrlr, io_q) = 0;
 	} else {
-		/*
-		 * Create our new I/O qpair. This asynchronously invokes, on a
-		 * suitable poll group, the nvmf_vfio_user_poll_group_add()
-		 * callback, which will call spdk_nvmf_request_exec_fabrics()
-		 * with a generated fabrics connect command. This command is
-		 * then eventually completed via handle_queue_connect_rsp().
-		 */
 		vu_qpair = ctrlr->qp[qid];
-		vu_qpair->create_io_sq_cmd = *cmd;
-		spdk_nvmf_tgt_new_qpair(ctrlr->transport->transport.tgt,
-					&vu_qpair->qpair);
 		*tdbl(ctrlr, io_q) = 0;
-		return 0;
+		vu_qpair->sq.head = 0;
+
+		if (vu_qpair->state == VFIO_USER_QPAIR_SQ_DELETED) {
+			vu_qpair->state = VFIO_USER_QPAIR_ACTIVE;
+		} else {
+			/*
+			 * Create our new I/O qpair. This asynchronously invokes, on a
+			 * suitable poll group, the nvmf_vfio_user_poll_group_add()
+			 * callback, which will call spdk_nvmf_request_exec_fabrics()
+			 * with a generated fabrics connect command. This command is
+			 * then eventually completed via handle_queue_connect_rsp().
+			 */
+			vu_qpair->create_io_sq_cmd = *cmd;
+			spdk_nvmf_tgt_new_qpair(ctrlr->transport->transport.tgt,
+						&vu_qpair->qpair);
+			return 0;
+		}
 	}
 
 out:
@@ -1273,7 +1281,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	vu_qpair = ctrlr->qp[cmd->cdw10_bits.delete_io_q.qid];
 	if (is_cq) {
 		/* SQ must have been deleted first */
-		if (vu_qpair->state != VFIO_USER_QPAIR_DELETED) {
+		if (vu_qpair->state != VFIO_USER_QPAIR_SQ_DELETED) {
 			SPDK_ERRLOG("%s: the associated SQ must be deleted first\n", ctrlr_id(ctrlr));
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			sc = SPDK_NVME_SC_INVALID_QUEUE_DELETION;
@@ -1290,7 +1298,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		spdk_nvmf_qpair_disconnect(&vu_qpair->qpair, vfio_user_qpair_delete_cb, ctx);
 		return 0;
 	} else {
-		if (vu_qpair->state == VFIO_USER_QPAIR_DELETED) {
+		if (vu_qpair->state == VFIO_USER_QPAIR_SQ_DELETED) {
 			SPDK_DEBUGLOG(nvmf_vfio, "%s: SQ%u is already deleted\n", ctrlr_id(ctrlr),
 				      cmd->cdw10_bits.delete_io_q.qid);
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -1303,7 +1311,9 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		 * function to skip checking this SQ.  The queue pair will be disconnected in Delete
 		 * IO CQ command.
 		 */
-		vu_qpair->state = VFIO_USER_QPAIR_DELETED;
+		vu_qpair->state = VFIO_USER_QPAIR_SQ_DELETED;
+		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, vu_qpair->sq.sg, &vu_qpair->sq.iov, 1);
+		vu_qpair->sq.addr = NULL;
 	}
 
 out:
