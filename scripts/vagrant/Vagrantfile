@@ -164,21 +164,6 @@ def setup_nvme_disk(libvirt, disk, index)
   end
 end
 
-def setup_ocssd_disk(libvirt, disk, index)
-  nvme_disk_id = disk + '-' + index.to_s
-  nvme_disk = get_nvme_disk(disk, index)
-
-  libvirt.qemuargs :value => "-drive"
-  libvirt.qemuargs :value => "format=raw,file=#{nvme_disk},if=none,id=#{nvme_disk_id}"
-  libvirt.qemuargs :value => "-device"
-  # create ocssd drive with special parameters
-  # lba_index=4 it is LBA namespace format, 4 means that block size is 4K and have 64B metadata
-  # lnum_lun, lnum_pln, lpgs_per_blk, lsecs_per_pg, lblks_per_pln this are parameters describing the device geometry
-  # we need to multiply these parameters by ourselves to have backend file minimal size:
-  # in our case: 4K * 8 * 2 * 1536 * 2 * 45 = 8640 MB
-  libvirt.qemuargs :value => "nvme,drive=#{nvme_disk_id},serial=deadbeef,oacs=0,namespaces=1,lver=2,lba_index=4,mdts=10,lnum_lun=8,lnum_pln=2,lpgs_per_blk=1536,lsecs_per_pg=2,lblks_per_pln=45,metadata=#{nvme_disk}_ocssd_md,nsdatafile=#{nvme_disk}_ocssd_blknvme.ns,laer_thread_sleep=3000,stride=4"
-end
-
 def setup_ssh(config)
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -268,8 +253,6 @@ def setup_libvirt(config, vmcpu, vmram, distro)
     emulated_nvme_types.each_with_index { |disk, index|
       if disk == "nvme"
         setup_nvme_disk(libvirt, disk, index)
-      elsif disk == "ocssd"
-        setup_ocssd_disk(libvirt, disk, index)
       end
     }
 

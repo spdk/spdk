@@ -31,7 +31,7 @@ display_help() {
 	echo "                                  NVMe with 1 namespace and assumes path: /var/lib/libvirt/images/nvme_disk.img"
 	echo "                                  -b option can be used multiple times for attaching multiple files to the VM"
 	echo "                                  Parameters for -b option: <path>,<type>,<namespaces>,<cmb>,<pmr_file[:pmr_size]>"
-	echo "                                  Available types: nvme, ocssd."
+	echo "                                  Available types: nvme"
 	echo "                                  Default pmr size: 16M"
 	echo "                                  Default cmb: false"
 	echo "  -c                              Create all above disk, default 0"
@@ -56,8 +56,7 @@ display_help() {
 	echo "  $0 -rv freebsd"
 	echo "  $0 fedora33"
 	echo "  $0 -b /var/lib/libvirt/images/nvme1.img,nvme,1 fedora33"
-	echo "  $0 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora33"
-	echo "  $0 -b /var/lib/libvirt/images/nvme5.img,nvme,5 -b /var/lib/libvirt/images/ocssd.img,ocssd fedora33"
+	echo "  $0 -b /var/lib/libvirt/images/nvme5.img,nvme,5 fedora33"
 	echo
 }
 
