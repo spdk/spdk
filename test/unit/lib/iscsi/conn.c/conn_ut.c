@@ -156,6 +156,12 @@ spdk_scsi_task_put(struct spdk_scsi_task *scsi_task)
 DEFINE_STUB(spdk_scsi_dev_get_lun, struct spdk_scsi_lun *,
 	    (struct spdk_scsi_dev *dev, int lun_id), NULL);
 
+DEFINE_STUB(spdk_scsi_dev_get_first_lun, struct spdk_scsi_lun *,
+	    (struct spdk_scsi_dev *dev), NULL);
+
+DEFINE_STUB(spdk_scsi_dev_get_next_lun, struct spdk_scsi_lun *,
+	    (struct spdk_scsi_lun *prev_lun), NULL);
+
 DEFINE_STUB(spdk_scsi_dev_has_pending_tasks, bool,
 	    (const struct spdk_scsi_dev *dev, const struct spdk_scsi_port *initiator_port),
 	    true);

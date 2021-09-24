@@ -525,15 +525,8 @@ _iscsi_conn_hotremove_lun(void *ctx)
 static void
 iscsi_conn_hotremove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 {
-	struct spdk_iscsi_conn *conn = remove_ctx;
-	int lun_id = spdk_scsi_lun_get_id(lun);
-	struct spdk_iscsi_lun *iscsi_lun;
-
-	iscsi_lun = conn->luns[lun_id];
-	if (iscsi_lun == NULL) {
-		SPDK_ERRLOG("LUN hotplug was notified to the unallocated LUN %d.\n", lun_id);
-		return;
-	}
+	struct spdk_iscsi_lun *iscsi_lun = remove_ctx;
+	struct spdk_iscsi_conn *conn = iscsi_lun->conn;
 
 	spdk_thread_send_msg(spdk_io_channel_get_thread(spdk_io_channel_from_ctx(conn->pg)),
 			     _iscsi_conn_hotremove_lun, iscsi_lun);
@@ -554,7 +547,7 @@ iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, int lun_id,
 	iscsi_lun->conn = conn;
 	iscsi_lun->lun = lun;
 
-	rc = spdk_scsi_lun_open(lun, iscsi_conn_hotremove_lun, conn, &iscsi_lun->desc);
+	rc = spdk_scsi_lun_open(lun, iscsi_conn_hotremove_lun, iscsi_lun, &iscsi_lun->desc);
 	if (rc != 0) {
 		free(iscsi_lun);
 		return rc;
