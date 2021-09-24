@@ -1922,7 +1922,6 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_create_transport_ctx *ctx;
-	enum spdk_nvme_transport_type trtype;
 	struct spdk_nvmf_tgt *tgt;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -1946,14 +1945,6 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("Unable to find a target object.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Unable to find a target.");
-		nvmf_rpc_create_transport_ctx_free(ctx);
-		return;
-	}
-
-	if (spdk_nvme_transport_id_parse_trtype(&trtype, ctx->trtype)) {
-		SPDK_ERRLOG("Invalid transport type '%s'\n", ctx->trtype);
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid transport type '%s'", ctx->trtype);
 		nvmf_rpc_create_transport_ctx_free(ctx);
 		return;
 	}
