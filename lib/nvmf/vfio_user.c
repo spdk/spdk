@@ -1290,12 +1290,19 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		spdk_nvmf_qpair_disconnect(&vu_qpair->qpair, vfio_user_qpair_delete_cb, ctx);
 		return 0;
 	} else {
+		if (vu_qpair->state == VFIO_USER_QPAIR_DELETED) {
+			SPDK_DEBUGLOG(nvmf_vfio, "%s: SQ%u is already deleted\n", ctrlr_id(ctrlr),
+				      cmd->cdw10_bits.delete_io_q.qid);
+			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
+			goto out;
+		}
+
 		/*
 		 * This doesn't actually delete the SQ, We're merely telling the poll_group_poll
 		 * function to skip checking this SQ.  The queue pair will be disconnected in Delete
 		 * IO CQ command.
 		 */
-		assert(vu_qpair->state == VFIO_USER_QPAIR_ACTIVE);
 		vu_qpair->state = VFIO_USER_QPAIR_DELETED;
 	}
 
