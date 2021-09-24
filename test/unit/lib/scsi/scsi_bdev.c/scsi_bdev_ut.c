@@ -120,6 +120,12 @@ DEFINE_STUB_V(scsi_lun_complete_reset_task,
 
 DEFINE_STUB(spdk_scsi_lun_id_int_to_fmt, uint64_t, (int lun_id), 0);
 
+DEFINE_STUB(spdk_scsi_dev_get_first_lun, struct spdk_scsi_lun *,
+	    (struct spdk_scsi_dev *dev), NULL);
+
+DEFINE_STUB(spdk_scsi_dev_get_next_lun, struct spdk_scsi_lun *,
+	    (struct spdk_scsi_lun *prev_lun), NULL);
+
 static void
 ut_put_task(struct spdk_scsi_task *task)
 {
