@@ -89,6 +89,7 @@ struct spdk_iscsi_lun {
 	struct spdk_scsi_lun		*lun;
 	struct spdk_scsi_lun_desc	*desc;
 	struct spdk_poller		*remove_poller;
+	TAILQ_ENTRY(spdk_iscsi_lun)	tailq;
 };
 
 struct spdk_iscsi_conn {
@@ -205,7 +206,7 @@ struct spdk_iscsi_conn {
 	TAILQ_HEAD(active_r2t_tasks, spdk_iscsi_task)	active_r2t_tasks;
 	TAILQ_HEAD(queued_datain_tasks, spdk_iscsi_task)	queued_datain_tasks;
 
-	struct spdk_iscsi_lun	*luns[SPDK_SCSI_DEV_MAX_LUN];
+	TAILQ_HEAD(, spdk_iscsi_lun)	luns;
 
 	TAILQ_ENTRY(spdk_iscsi_conn)	conn_link;
 };

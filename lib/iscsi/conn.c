@@ -248,7 +248,7 @@ iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	TAILQ_INIT(&conn->queued_r2t_tasks);
 	TAILQ_INIT(&conn->active_r2t_tasks);
 	TAILQ_INIT(&conn->queued_datain_tasks);
-	memset(&conn->luns, 0, sizeof(conn->luns));
+	TAILQ_INIT(&conn->luns);
 
 	rc = spdk_sock_getaddr(sock, conn->target_addr, sizeof conn->target_addr, NULL,
 			       conn->initiator_addr, sizeof conn->initiator_addr, NULL);
@@ -424,11 +424,9 @@ end:
 }
 
 static void
-iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
+iscsi_conn_close_lun(struct spdk_iscsi_conn *conn,
+		     struct spdk_iscsi_lun *iscsi_lun)
 {
-	struct spdk_iscsi_lun *iscsi_lun;
-
-	iscsi_lun = conn->luns[lun_id];
 	if (iscsi_lun == NULL) {
 		return;
 	}
@@ -436,18 +434,20 @@ iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
 	spdk_scsi_lun_free_io_channel(iscsi_lun->desc);
 	spdk_scsi_lun_close(iscsi_lun->desc);
 	spdk_poller_unregister(&iscsi_lun->remove_poller);
+
+	TAILQ_REMOVE(&conn->luns, iscsi_lun, tailq);
+
 	free(iscsi_lun);
 
-	conn->luns[lun_id] = NULL;
 }
 
 static void
 iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 {
-	int i;
+	struct spdk_iscsi_lun *iscsi_lun, *tmp;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		iscsi_conn_close_lun(conn, i);
+	TAILQ_FOREACH_SAFE(iscsi_lun, &conn->luns, tailq, tmp) {
+		iscsi_conn_close_lun(conn, iscsi_lun);
 	}
 }
 
@@ -492,12 +492,11 @@ iscsi_conn_remove_lun(void *ctx)
 	struct spdk_iscsi_lun *iscsi_lun = ctx;
 	struct spdk_iscsi_conn *conn = iscsi_lun->conn;
 	struct spdk_scsi_lun *lun = iscsi_lun->lun;
-	int lun_id = spdk_scsi_lun_get_id(lun);
 
 	if (!iscsi_conn_check_tasks_for_lun(conn, lun)) {
 		return SPDK_POLLER_BUSY;
 	}
-	iscsi_conn_close_lun(conn, lun_id);
+	iscsi_conn_close_lun(conn, iscsi_lun);
 	return SPDK_POLLER_BUSY;
 }
 
@@ -533,8 +532,7 @@ iscsi_conn_hotremove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 }
 
 static int
-iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, int lun_id,
-		    struct spdk_scsi_lun *lun)
+iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun)
 {
 	int rc;
 	struct spdk_iscsi_lun *iscsi_lun;
@@ -560,7 +558,7 @@ iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, int lun_id,
 		return rc;
 	}
 
-	conn->luns[lun_id] = iscsi_lun;
+	TAILQ_INSERT_TAIL(&conn->luns, iscsi_lun, tailq);
 
 	return 0;
 }
@@ -568,16 +566,12 @@ iscsi_conn_open_lun(struct spdk_iscsi_conn *conn, int lun_id,
 static void
 iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 {
-	int i, rc;
+	int rc;
 	struct spdk_scsi_lun *lun;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		lun = spdk_scsi_dev_get_lun(conn->dev, i);
-		if (lun == NULL) {
-			continue;
-		}
-
-		rc = iscsi_conn_open_lun(conn, i, lun);
+	for (lun = spdk_scsi_dev_get_first_lun(conn->dev); lun != NULL;
+	     lun = spdk_scsi_dev_get_next_lun(lun)) {
+		rc = iscsi_conn_open_lun(conn, lun);
 		if (rc != 0) {
 			goto error;
 		}
