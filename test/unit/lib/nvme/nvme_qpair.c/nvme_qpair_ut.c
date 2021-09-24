@@ -191,6 +191,7 @@ static void test_nvme_qpair_process_completions(void)
 
 	TAILQ_INIT(&ctrlr.active_io_qpairs);
 	TAILQ_INIT(&ctrlr.active_procs);
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
 	nvme_qpair_init(&qpair, 1, &ctrlr, 0, 32, false);
 	nvme_qpair_init(&admin_qp, 0, &ctrlr, 0, 32, false);
 
