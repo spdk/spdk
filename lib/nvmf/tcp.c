@@ -185,6 +185,9 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 	spdk_trace_register_description("TCP_QP_RECV_STATE_CHANGE", TRACE_TCP_QP_RECV_STATE_CHANGE,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "state");
+
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_START, OBJECT_NVMF_TCP_IO, 1);
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_IO_DONE, OBJECT_NVMF_TCP_IO, 0);
 }
 
 struct spdk_nvmf_tcp_req  {
