@@ -1123,9 +1123,8 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	}
 
 	qsize = cmd->cdw10_bits.create_io_q.qsize + 1;
-	if (qsize > max_queue_size(ctrlr)) {
-		SPDK_ERRLOG("%s: queue too big, want=%u, max=%u\n", ctrlr_id(ctrlr),
-			    qsize, max_queue_size(ctrlr));
+	if (qsize == 1 || qsize > max_queue_size(ctrlr)) {
+		SPDK_ERRLOG("%s: invalid I/O queue size %u\n", ctrlr_id(ctrlr), qsize);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		sc = SPDK_NVME_SC_INVALID_QUEUE_SIZE;
 		goto out;
