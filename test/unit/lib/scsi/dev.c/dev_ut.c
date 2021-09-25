@@ -151,7 +151,7 @@ dev_destruct_null_lun(void)
 	struct spdk_scsi_dev dev = { .is_allocated = 1 };
 
 	/* pass null for the lun */
-	dev.lun[0] = NULL;
+	TAILQ_INIT(&dev.luns);
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(&dev, NULL, NULL);
@@ -160,7 +160,10 @@ dev_destruct_null_lun(void)
 static void
 dev_destruct_success(void)
 {
-	struct spdk_scsi_dev dev = { .is_allocated = 1 };
+	struct spdk_scsi_dev dev = {
+		.is_allocated = 1,
+		.luns = TAILQ_HEAD_INITIALIZER(dev.luns),
+	};
 	int rc;
 
 	/* dev with a single lun */
@@ -543,11 +546,11 @@ static void
 dev_add_lun_bdev_not_found(void)
 {
 	int rc;
-	struct spdk_scsi_dev dev = {0};
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
 
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc3", 0, NULL, NULL);
 
-	SPDK_CU_ASSERT_FATAL(dev.lun[0] == NULL);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&dev.luns));
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 }
 
@@ -556,11 +559,12 @@ dev_add_lun_no_free_lun_id(void)
 {
 	int rc;
 	int i;
-	struct spdk_scsi_dev dev = {0};
-	struct spdk_scsi_lun lun;
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
+	struct spdk_scsi_lun lun[SPDK_SCSI_DEV_MAX_LUN] = { 0 };
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		dev.lun[i] = &lun;
+		lun[i].id = i;
+		TAILQ_INSERT_TAIL(&dev.luns, &lun[i], tailq);
 	}
 
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", -1, NULL, NULL);
@@ -572,7 +576,7 @@ static void
 dev_add_lun_success1(void)
 {
 	int rc;
-	struct spdk_scsi_dev dev = {0};
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
 
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", -1, NULL, NULL);
 
@@ -585,7 +589,7 @@ static void
 dev_add_lun_success2(void)
 {
 	int rc;
-	struct spdk_scsi_dev dev = {0};
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
 
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", 0, NULL, NULL);
 
@@ -597,8 +601,8 @@ dev_add_lun_success2(void)
 static void
 dev_check_pending_tasks(void)
 {
-	struct spdk_scsi_dev dev = {};
-	struct spdk_scsi_lun lun = {};
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
+	struct spdk_scsi_lun lun = { .id = SPDK_SCSI_DEV_MAX_LUN - 1, };
 	struct spdk_scsi_port initiator_port = {};
 
 	g_initiator_port_with_pending_tasks = NULL;
@@ -606,7 +610,7 @@ dev_check_pending_tasks(void)
 
 	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, NULL) == false);
 
-	dev.lun[SPDK_SCSI_DEV_MAX_LUN - 1] = &lun;
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
 	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, NULL) == true);
 	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, &initiator_port) == false);
@@ -651,6 +655,150 @@ dev_iterate_luns(void)
 	spdk_scsi_dev_destruct(dev, NULL, NULL);
 }
 
+static void
+dev_find_free_lun(void)
+{
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
+	struct spdk_scsi_lun *lun, *prev_lun;
+	int i, rc;
+
+	lun = calloc(SPDK_SCSI_DEV_MAX_LUN, sizeof(*lun));
+	SPDK_CU_ASSERT_FATAL(lun != NULL);
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		lun[i].id = i;
+	}
+
+	/* LUN ID 0, 1, 15, 16, 17, SPDK_SCSI_DEV_MAX_LUN - 2, and SPDK_SCSI_DEV_MAX_LUN - 1
+	 * are free first. LUNs are required to be sorted by LUN ID.
+	 */
+	for (i = 2; i < 15; i++) {
+		TAILQ_INSERT_TAIL(&dev.luns, &lun[i], tailq);
+	}
+
+	for (i = 18; i < SPDK_SCSI_DEV_MAX_LUN - 2; i++) {
+		TAILQ_INSERT_TAIL(&dev.luns, &lun[i], tailq);
+	}
+
+	rc = scsi_dev_find_free_lun(&dev, -1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == NULL);
+
+	rc = scsi_dev_find_free_lun(&dev, 0, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == NULL);
+
+	rc = scsi_dev_find_free_lun(&dev, 1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == NULL);
+
+	rc = scsi_dev_find_free_lun(&dev, 2, &prev_lun);
+	CU_ASSERT(rc == -EEXIST);
+
+	TAILQ_INSERT_HEAD(&dev.luns, &lun[0], tailq);
+
+	rc = scsi_dev_find_free_lun(&dev, 0, &prev_lun);
+	CU_ASSERT(rc == -EEXIST);
+
+	rc = scsi_dev_find_free_lun(&dev, -1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[0]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, 1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[0]);
+	prev_lun = NULL;
+
+	TAILQ_INSERT_AFTER(&dev.luns, &lun[0], &lun[1], tailq);
+
+	rc = scsi_dev_find_free_lun(&dev, 1, &prev_lun);
+	CU_ASSERT(rc == -EEXIST);
+
+	rc = scsi_dev_find_free_lun(&dev, -1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[14]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, 15, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[14]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, 16, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[14]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, 17, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[14]);
+	prev_lun = NULL;
+
+	TAILQ_INSERT_AFTER(&dev.luns, &lun[14], &lun[15], tailq);
+	TAILQ_INSERT_AFTER(&dev.luns, &lun[15], &lun[16], tailq);
+	TAILQ_INSERT_AFTER(&dev.luns, &lun[16], &lun[17], tailq);
+
+	rc = scsi_dev_find_free_lun(&dev, 15, &prev_lun);
+	CU_ASSERT(rc == -EEXIST);
+
+	rc = scsi_dev_find_free_lun(&dev, 16, &prev_lun);
+	CU_ASSERT(rc == -EEXIST);
+
+	rc = scsi_dev_find_free_lun(&dev, 17, &prev_lun);
+	CU_ASSERT(rc == -EEXIST);
+
+	rc = scsi_dev_find_free_lun(&dev, -1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[SPDK_SCSI_DEV_MAX_LUN - 3]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, SPDK_SCSI_DEV_MAX_LUN - 2, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[SPDK_SCSI_DEV_MAX_LUN - 3]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, SPDK_SCSI_DEV_MAX_LUN - 1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[SPDK_SCSI_DEV_MAX_LUN - 3]);
+	prev_lun = NULL;
+
+	TAILQ_INSERT_AFTER(&dev.luns, &lun[SPDK_SCSI_DEV_MAX_LUN - 3],
+			   &lun[SPDK_SCSI_DEV_MAX_LUN - 1], tailq);
+
+	rc = scsi_dev_find_free_lun(&dev, -1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[SPDK_SCSI_DEV_MAX_LUN - 3]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, SPDK_SCSI_DEV_MAX_LUN - 2, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[SPDK_SCSI_DEV_MAX_LUN - 3]);
+	prev_lun = NULL;
+
+	TAILQ_INSERT_AFTER(&dev.luns, &lun[SPDK_SCSI_DEV_MAX_LUN - 3],
+			   &lun[SPDK_SCSI_DEV_MAX_LUN - 2], tailq);
+
+	rc = scsi_dev_find_free_lun(&dev, -1, &prev_lun);
+	CU_ASSERT(rc == -ENOSPC);
+
+	/* LUN ID 20 and 21 were freed. */
+	TAILQ_REMOVE(&dev.luns, &lun[20], tailq);
+	TAILQ_REMOVE(&dev.luns, &lun[21], tailq);
+
+	rc = scsi_dev_find_free_lun(&dev, -1, &prev_lun);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prev_lun == &lun[19]);
+	prev_lun = NULL;
+
+	rc = scsi_dev_find_free_lun(&dev, 21, &prev_lun);
+	CU_ASSERT(rc  == 0);
+	CU_ASSERT(prev_lun == &lun[19]);
+	prev_lun = NULL;
+
+	free(lun);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -690,6 +838,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dev_add_lun_success2);
 	CU_ADD_TEST(suite, dev_check_pending_tasks);
 	CU_ADD_TEST(suite, dev_iterate_luns);
+	CU_ADD_TEST(suite, dev_find_free_lun);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

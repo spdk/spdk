@@ -131,11 +131,15 @@ DEFINE_STUB(spdk_scsi_lun_is_removing, bool, (const struct spdk_scsi_lun *lun),
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
-	if (lun_id < 0 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
-		return NULL;
+	struct spdk_scsi_lun *lun;
+
+	TAILQ_FOREACH(lun, &dev->luns, tailq) {
+		if (lun->id == lun_id) {
+			break;
+		}
 	}
 
-	return dev->lun[lun_id];
+	return lun;
 }
 
 DEFINE_STUB(spdk_scsi_lun_id_int_to_fmt, uint64_t, (int lun_id), 0);
@@ -294,7 +298,8 @@ maxburstlength_test(void)
 
 	lun.id = 0;
 
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
 	conn.full_feature = 1;
 	conn.sess = &sess;
@@ -380,7 +385,8 @@ underflow_for_read_transfer_test(void)
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
 
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 	conn.dev = &dev;
 
 	pdu = iscsi_get_pdu(&conn);
@@ -443,7 +449,8 @@ underflow_for_zero_read_transfer_test(void)
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
 
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 	conn.dev = &dev;
 
 	pdu = iscsi_get_pdu(&conn);
@@ -508,7 +515,8 @@ underflow_for_request_sense_test(void)
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
 
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 	conn.dev = &dev;
 
 	pdu1 = iscsi_get_pdu(&conn);
@@ -598,7 +606,8 @@ underflow_for_check_condition_test(void)
 	conn.sess = &sess;
 	conn.MaxRecvDataSegmentLength = 8192;
 
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 	conn.dev = &dev;
 
 	pdu = iscsi_get_pdu(&conn);
@@ -1627,7 +1636,8 @@ pdu_hdr_op_scsi_test(void)
 	CU_ASSERT(pdu.task == NULL);
 
 	/* Case 5 - SCSI read command PDU is correct, and the configured iSCSI task is set to the PDU. */
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
 	rc = iscsi_pdu_hdr_op_scsi(&conn, &pdu);
 	CU_ASSERT(rc == 0);
@@ -1750,7 +1760,8 @@ pdu_hdr_op_task_mgmt_test(void)
 	check_iscsi_task_mgmt_response(ISCSI_TASK_FUNC_RESP_LUN_NOT_EXIST, 1234, 0, 0, 1);
 
 	/* Case 3 - Unassigned function is specified.  "Function rejected" response is sent. */
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 	task_reqh->flags = 0;
 
 	rc = iscsi_pdu_hdr_op_task(&conn, &pdu);
@@ -1960,7 +1971,8 @@ pdu_hdr_op_data_test(void)
 	/* Case 10 - SCSI Data-Out PDU is correct and processed. Its F bit is 0 and hence
 	 * R2T is not sent.
 	 */
-	dev.lun[0] = &lun;
+	TAILQ_INIT(&dev.luns);
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 	to_be32(&data_reqh->data_sn, primary.r2t_datasn);
 	to_be32(&data_reqh->buffer_offset, primary.next_expected_r2t_offset);
 
@@ -2179,7 +2191,7 @@ static void
 data_out_pdu_sequence_test(void)
 {
 	struct spdk_scsi_lun lun = { .tasks = TAILQ_HEAD_INITIALIZER(lun.tasks), };
-	struct spdk_scsi_dev dev = { .lun[0] = &lun,    };
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
 	struct spdk_iscsi_sess sess = {
 		.session_type = SESSION_TYPE_NORMAL,
 		.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH,
@@ -2196,6 +2208,8 @@ data_out_pdu_sequence_test(void)
 	struct spdk_mobj mobj1 = {}, mobj2 = {}, mobj3 = {};
 	struct iscsi_bhs_data_out *data_reqh;
 	int rc;
+
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
 
 	mobj1.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
 	SPDK_CU_ASSERT_FATAL(mobj1.buf != NULL);

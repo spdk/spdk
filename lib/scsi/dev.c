@@ -54,6 +54,7 @@ allocate_dev(void)
 			memset(dev, 0, sizeof(*dev));
 			dev->id = i;
 			dev->is_allocated = 1;
+			TAILQ_INIT(&dev->luns);
 			return dev;
 		}
 	}
@@ -79,8 +80,7 @@ void
 spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev,
 		       spdk_scsi_dev_destruct_cb_t cb_fn, void *cb_arg)
 {
-	int lun_cnt;
-	int i;
+	struct spdk_scsi_lun *lun, *tmp_lun;
 
 	if (dev == NULL) {
 		if (cb_fn) {
@@ -99,39 +99,62 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev,
 	dev->removed = true;
 	dev->remove_cb = cb_fn;
 	dev->remove_ctx = cb_arg;
-	lun_cnt = 0;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		if (dev->lun[i] == NULL) {
-			continue;
-		}
+	if (TAILQ_EMPTY(&dev->luns)) {
+		free_dev(dev);
+		return;
+	}
 
+	TAILQ_FOREACH_SAFE(lun, &dev->luns, tailq, tmp_lun) {
 		/*
 		 * LUN will remove itself from this dev when all outstanding IO
 		 * is done. When no more LUNs, dev will be deleted.
 		 */
-		scsi_lun_destruct(dev->lun[i]);
-		lun_cnt++;
-	}
-
-	if (lun_cnt == 0) {
-		free_dev(dev);
-		return;
+		scsi_lun_destruct(lun);
 	}
 }
 
+/*
+ * Search the lowest free LUN ID if the LUN ID is default, or check if the LUN ID is free otherwise,
+ * and also return the LUN which comes just before where we want to insert an new LUN.
+ */
 static int
-scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
+scsi_dev_find_free_lun(struct spdk_scsi_dev *dev, int lun_id,
+		       struct spdk_scsi_lun **prev_lun)
 {
-	int i;
+	struct spdk_scsi_lun *lun, *_prev_lun = NULL;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		if (dev->lun[i] == NULL) {
-			return i;
+	if (prev_lun == NULL) {
+		return -EINVAL;
+	}
+
+	if (lun_id == -1) {
+		lun_id = 0;
+
+		TAILQ_FOREACH(lun, &dev->luns, tailq) {
+			if (lun->id > lun_id) {
+				break;
+			}
+			lun_id = lun->id + 1;
+			_prev_lun = lun;
+		}
+
+		if (lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
+			return -ENOSPC;
+		}
+	} else {
+		TAILQ_FOREACH(lun, &dev->luns, tailq) {
+			if (lun->id == lun_id) {
+				return -EEXIST;
+			} else if (lun->id > lun_id) {
+				break;
+			}
+			_prev_lun = lun;
 		}
 	}
 
-	return -1;
+	*prev_lun = _prev_lun;
+	return 0;
 }
 
 int
@@ -151,20 +174,18 @@ spdk_scsi_dev_add_lun_ext(struct spdk_scsi_dev *dev, const char *bdev_name, int 
 			  void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 			  void *hotremove_ctx)
 {
-	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_lun *lun, *prev_lun = NULL;
+	int rc;
 
 	if (lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
 		SPDK_ERRLOG("LUN ID %d is more than the maximum.\n", lun_id);
 		return -1;
 	}
 
-	/* Search the lowest free LUN ID if LUN ID is default */
-	if (lun_id == -1) {
-		lun_id = scsi_dev_find_lowest_free_lun_id(dev);
-		if (lun_id == -1) {
-			SPDK_ERRLOG("Free LUN ID is not found\n");
-			return -1;
-		}
+	rc = scsi_dev_find_free_lun(dev, lun_id, &prev_lun);
+	if (rc != 0) {
+		SPDK_ERRLOG("%s\n", rc == -EEXIST ? "LUN ID is duplicated" : "Free LUN ID is not found");
+		return rc;
 	}
 
 	lun = scsi_lun_construct(bdev_name, resize_cb, resize_ctx, hotremove_cb, hotremove_ctx);
@@ -172,9 +193,21 @@ spdk_scsi_dev_add_lun_ext(struct spdk_scsi_dev *dev, const char *bdev_name, int 
 		return -1;
 	}
 
-	lun->id = lun_id;
 	lun->dev = dev;
-	dev->lun[lun_id] = lun;
+
+	if (lun_id != -1) {
+		lun->id = lun_id;
+	} else if (prev_lun == NULL) {
+		lun->id = 0;
+	} else {
+		lun->id = prev_lun->id + 1;
+	}
+
+	if (prev_lun == NULL) {
+		TAILQ_INSERT_HEAD(&dev->luns, lun, tailq);
+	} else {
+		TAILQ_INSERT_AFTER(&dev->luns, prev_lun, lun, tailq);
+	}
 	return 0;
 }
 
@@ -182,20 +215,9 @@ void
 spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 			 struct spdk_scsi_lun *lun)
 {
-	int lun_cnt = 0;
-	int i;
+	TAILQ_REMOVE(&dev->luns, lun, tailq);
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		if (dev->lun[i] == lun) {
-			dev->lun[i] = NULL;
-		}
-
-		if (dev->lun[i]) {
-			lun_cnt++;
-		}
-	}
-
-	if (dev->removed == true && lun_cnt == 0) {
+	if (dev->removed && TAILQ_EMPTY(&dev->luns)) {
 		free_dev(dev);
 	}
 }
@@ -382,26 +404,21 @@ spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id)
 void
 spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev)
 {
-	int i;
+	struct spdk_scsi_lun *lun, *tmp_lun;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		if (dev->lun[i] == NULL) {
-			continue;
-		}
-		scsi_lun_free_io_channel(dev->lun[i]);
+	TAILQ_FOREACH_SAFE(lun, &dev->luns, tailq, tmp_lun) {
+		scsi_lun_free_io_channel(lun);
 	}
 }
 
 int
 spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev)
 {
-	int i, rc;
+	struct spdk_scsi_lun *lun, *tmp_lun;
+	int rc;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		if (dev->lun[i] == NULL) {
-			continue;
-		}
-		rc = scsi_lun_allocate_io_channel(dev->lun[i]);
+	TAILQ_FOREACH_SAFE(lun, &dev->luns, tailq, tmp_lun) {
+		rc = scsi_lun_allocate_io_channel(lun);
 		if (rc < 0) {
 			spdk_scsi_dev_free_io_channels(dev);
 			return -1;
@@ -428,28 +445,26 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
 	struct spdk_scsi_lun *lun;
 
-	if (lun_id < 0 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
-		return NULL;
+	TAILQ_FOREACH(lun, &dev->luns, tailq) {
+		if (lun->id == lun_id) {
+			if (!spdk_scsi_lun_is_removing(lun)) {
+				return lun;
+			} else {
+				return NULL;
+			}
+		}
 	}
 
-	lun = dev->lun[lun_id];
-
-	if (lun != NULL && !spdk_scsi_lun_is_removing(lun)) {
-		return lun;
-	} else {
-		return NULL;
-	}
+	return NULL;
 }
 
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_first_lun(struct spdk_scsi_dev *dev)
 {
 	struct spdk_scsi_lun *lun;
-	int lun_id;
 
-	for (lun_id = 0; lun_id < SPDK_SCSI_DEV_MAX_LUN; lun_id++) {
-		lun = dev->lun[lun_id];
-		if (lun != NULL && !spdk_scsi_lun_is_removing(lun)) {
+	TAILQ_FOREACH(lun, &dev->luns, tailq) {
+		if (!spdk_scsi_lun_is_removing(lun)) {
 			return lun;
 		}
 	}
@@ -462,7 +477,6 @@ spdk_scsi_dev_get_next_lun(struct spdk_scsi_lun *prev_lun)
 {
 	struct spdk_scsi_dev *dev;
 	struct spdk_scsi_lun *lun;
-	int lun_id;
 
 	if (prev_lun == NULL) {
 		return NULL;
@@ -470,26 +484,29 @@ spdk_scsi_dev_get_next_lun(struct spdk_scsi_lun *prev_lun)
 
 	dev = prev_lun->dev;
 
-	for (lun_id = prev_lun->id + 1; lun_id < SPDK_SCSI_DEV_MAX_LUN; lun_id++) {
-		lun = dev->lun[lun_id];
-		if (lun != NULL && !spdk_scsi_lun_is_removing(lun)) {
-			return lun;
+	lun = TAILQ_NEXT(prev_lun, tailq);
+	if (lun == NULL) {
+		return NULL;
+	}
+
+	TAILQ_FOREACH_FROM(lun, &dev->luns, tailq) {
+		if (!spdk_scsi_lun_is_removing(lun)) {
+			break;
 		}
 	}
 
-	return NULL;
+	return lun;
 }
 
 bool
 spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev,
 				const struct spdk_scsi_port *initiator_port)
 {
-	int i;
+	struct spdk_scsi_lun *lun;
 
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
-		if (dev->lun[i] &&
-		    (scsi_lun_has_pending_tasks(dev->lun[i], initiator_port) ||
-		     scsi_lun_has_pending_mgmt_tasks(dev->lun[i], initiator_port))) {
+	TAILQ_FOREACH(lun, &dev->luns, tailq) {
+		if (scsi_lun_has_pending_tasks(lun, initiator_port) ||
+		    scsi_lun_has_pending_mgmt_tasks(lun, initiator_port)) {
 			return true;
 		}
 	}

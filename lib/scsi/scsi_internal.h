@@ -92,7 +92,7 @@ struct spdk_scsi_dev {
 
 	char					name[SPDK_SCSI_DEV_MAX_NAME + 1];
 
-	struct spdk_scsi_lun			*lun[SPDK_SCSI_DEV_MAX_LUN];
+	TAILQ_HEAD(, spdk_scsi_lun)		luns;
 
 	int					num_ports;
 	struct spdk_scsi_port			port[SPDK_SCSI_DEV_MAX_PORTS];
@@ -173,6 +173,9 @@ struct spdk_scsi_lun {
 
 	/** poller to check completion of tasks prior to reset */
 	struct spdk_poller *reset_poller;
+
+	/** A structure to connect LUNs in a list. */
+	TAILQ_ENTRY(spdk_scsi_lun) tailq;
 };
 
 struct spdk_scsi_lun *scsi_lun_construct(const char *bdev_name,

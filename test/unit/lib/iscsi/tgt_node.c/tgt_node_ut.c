@@ -91,11 +91,15 @@ DEFINE_STUB(iscsi_portal_grp_find_portal_by_addr,
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
-	if (lun_id < 0 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
-		return NULL;
+	struct spdk_scsi_lun *lun;
+
+	TAILQ_FOREACH(lun, &dev->luns, tailq) {
+		if (lun->id == lun_id) {
+			break;
+		}
 	}
 
-	return dev->lun[lun_id];
+	return lun;
 }
 
 int

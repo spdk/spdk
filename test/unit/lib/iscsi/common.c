@@ -113,9 +113,12 @@ DEFINE_STUB_V(spdk_scsi_task_process_abort, (struct spdk_scsi_task *task));
 void
 spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task)
 {
-	assert(dev->lun[0] != NULL);
+	struct spdk_scsi_lun *lun;
 
-	TAILQ_INSERT_TAIL(&dev->lun[0]->tasks, task, scsi_link);
+	lun = TAILQ_FIRST(&dev->luns);
+	SPDK_CU_ASSERT_FATAL(lun != NULL);
+
+	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 }
 
 DEFINE_STUB(spdk_scsi_dev_find_port_by_id, struct spdk_scsi_port *,
