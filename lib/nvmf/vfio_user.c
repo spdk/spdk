@@ -140,7 +140,7 @@ struct nvmf_vfio_user_qpair {
 	struct spdk_nvmf_transport_poll_group	*group;
 	struct nvmf_vfio_user_ctrlr		*ctrlr;
 	struct nvmf_vfio_user_req		*reqs_internal;
-	uint16_t				qsize;
+	uint32_t				qsize;
 	struct nvme_q				cq;
 	struct nvme_q				sq;
 	enum nvmf_vfio_user_qpair_state		state;
@@ -589,7 +589,7 @@ err:
 	return NULL;
 }
 
-static uint16_t
+static uint32_t
 max_queue_size(struct nvmf_vfio_user_ctrlr const *ctrlr)
 {
 	assert(ctrlr != NULL);
@@ -1016,9 +1016,9 @@ free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 /* This function can only fail because of memory allocation errors. */
 static int
 init_qp(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_transport *transport,
-	const uint16_t qsize, const uint16_t id)
+	const uint32_t qsize, const uint16_t id)
 {
-	uint16_t i;
+	uint32_t i;
 	struct nvmf_vfio_user_qpair *qpair;
 	struct nvmf_vfio_user_req *vu_req, *tmp;
 	struct spdk_nvmf_request *req;
@@ -1094,7 +1094,8 @@ static int
 handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		   struct spdk_nvme_cmd *cmd, const bool is_cq)
 {
-	uint16_t qid, qsize;
+	uint16_t qid;
+	uint32_t qsize;
 	uint16_t sc = SPDK_NVME_SC_SUCCESS;
 	uint16_t sct = SPDK_NVME_SCT_GENERIC;
 	int err = 0;
@@ -1123,7 +1124,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	qsize = cmd->cdw10_bits.create_io_q.qsize + 1;
 	if (qsize > max_queue_size(ctrlr)) {
-		SPDK_ERRLOG("%s: queue too big, want=%d, max=%d\n", ctrlr_id(ctrlr),
+		SPDK_ERRLOG("%s: queue too big, want=%u, max=%u\n", ctrlr_id(ctrlr),
 			    qsize, max_queue_size(ctrlr));
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		sc = SPDK_NVME_SC_INVALID_QUEUE_SIZE;
@@ -2580,8 +2581,8 @@ get_nvmf_req(struct nvmf_vfio_user_qpair *qpair)
 static int
 get_nvmf_io_req_length(struct spdk_nvmf_request *req)
 {
-	uint16_t nlb, nr;
-	uint32_t nsid;
+	uint16_t nr;
+	uint32_t nlb, nsid;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvmf_ns *ns;
@@ -2882,7 +2883,8 @@ nvmf_vfio_user_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 {
 	struct nvmf_vfio_user_qpair *vu_qpair;
 	struct nvmf_vfio_user_req *vu_req, *vu_req_to_abort = NULL;
-	uint16_t i, cid;
+	uint32_t i;
+	uint16_t cid;
 
 	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
 
