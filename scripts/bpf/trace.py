@@ -176,6 +176,7 @@ class TraceEntry:
     object_ptr: int
     time: int
     args: Dict[str, TypeVar('ArgumentType', str, int)]
+    related: str
 
 
 class TraceProvider:
@@ -235,8 +236,8 @@ class JsonProvider(TraceProvider):
         obj = entry.get('object', {})
         return TraceEntry(tpoint=tpoint, lcore=entry['lcore'], tsc=entry['tsc'],
                           size=entry.get('size'), object_id=obj.get('id'),
-                          object_ptr=obj.get('value'), time=obj.get('time'),
-                          poller=entry.get('poller'),
+                          object_ptr=obj.get('value'), related=entry.get('related'),
+                          time=obj.get('time'), poller=entry.get('poller'),
                           args={n.name: v for n, v in zip(tpoint.args, entry.get('args', []))})
 
     def tsc_rate(self):
@@ -407,7 +408,7 @@ class NativeProvider(TraceProvider):
             yield TraceEntry(tpoint=tpoint, lcore=lcore, tsc=entry.tsc,
                              size=entry.size, object_id=object_id,
                              object_ptr=entry.object_id, poller=poller_id, time=ts,
-                             args=args)
+                             args=args, related=None)
 
 
 class Trace:
@@ -455,11 +456,12 @@ class Trace:
             timestamp = get_us(e.tsc, offset)
             diff = get_us(e.time, 0) if e.time is not None else None
             args = ', '.join(self._format_args(e))
+            related = ' (' + e.related + ')' if e.related is not None else ''
 
             print(('{:3} {:16.3f} {:3} {:24} {:12}'.format(
                 e.lcore, timestamp, e.poller if e.poller is not None else '',
                 e.tpoint.name, f'size: {e.size}' if e.size else '') +
-                (f'id: {e.object_id:8} ' if e.object_id is not None else '') +
+                (f'id: {e.object_id + related:12} ' if e.object_id is not None else '') +
                 (f'time: {diff:<8.3f} ' if diff is not None else '') +
                 args).rstrip())
 
