@@ -243,6 +243,14 @@ print_event_json(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint6
 		spdk_json_write_named_uint64(g_json, "value", e->object_id);
 		spdk_json_write_object_end(g_json);
 	}
+
+	/* Print related objects array */
+	if (entry->related_index != UINT64_MAX) {
+		spdk_json_write_named_string_fmt(g_json, "related", "%c%" PRIu64,
+						 g_flags->object[entry->related_type].id_prefix,
+						 entry->related_index);
+	}
+
 	if (d->num_args > 0) {
 		spdk_json_write_named_array_begin(g_json, "args");
 		for (i = 0; i < d->num_args; ++i) {
