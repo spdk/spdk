@@ -45,16 +45,13 @@
 
 static bool g_is_running = true;
 pthread_mutex_t g_sched_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define TIMESLICE_US 100 /* Execution time of single busy thread poll in us. */
-static uint64_t g_core_time_period;
-static uint64_t g_timeslice_tsc;
+#define TIMESLICE_US 100 * 1000
 
 struct sched_thread {
 	struct spdk_thread *thread;
 	struct spdk_poller *poller;
+	struct spdk_poller *idle_poller;
 	int active_percent;
-	uint64_t next_period_tsc;
-	uint64_t remaining_tsc;
 	struct spdk_jsonrpc_request *request;
 	TAILQ_ENTRY(sched_thread) link;
 };
@@ -94,6 +91,7 @@ static void
 thread_delete(struct sched_thread *sched_thread)
 {
 	spdk_poller_unregister(&sched_thread->poller);
+	spdk_poller_unregister(&sched_thread->idle_poller);
 	spdk_thread_exit(sched_thread->thread);
 
 	TAILQ_REMOVE(&g_sched_threads, sched_thread, link);
@@ -105,10 +103,9 @@ thread_delete(struct sched_thread *sched_thread)
 }
 
 static int
-poller_run(void *arg)
+poller_run_busy(void *arg)
 {
 	struct sched_thread *sched_thread = arg;
-	uint64_t now;
 
 	if (spdk_unlikely(!g_is_running)) {
 		pthread_mutex_lock(&g_sched_list_mutex);
@@ -117,21 +114,40 @@ poller_run(void *arg)
 		return SPDK_POLLER_IDLE;
 	}
 
-	now = spdk_get_ticks();
+	spdk_delay_us(TIMESLICE_US * sched_thread->active_percent / 100);
+	return SPDK_POLLER_BUSY;
+}
 
-	/* Reset the timers once we go over single core time period */
-	if (sched_thread->next_period_tsc <= now) {
-		sched_thread->next_period_tsc = now + g_core_time_period;
-		sched_thread->remaining_tsc = (g_core_time_period / 100) * sched_thread->active_percent;
+static int
+poller_run_idle(void *arg)
+{
+	struct sched_thread *sched_thread = arg;
+
+	if (spdk_unlikely(!g_is_running)) {
+		pthread_mutex_lock(&g_sched_list_mutex);
+		thread_delete(sched_thread);
+		pthread_mutex_unlock(&g_sched_list_mutex);
+		return SPDK_POLLER_IDLE;
 	}
 
-	if (sched_thread->remaining_tsc > 0) {
-		spdk_delay_us(TIMESLICE_US);
-		sched_thread->remaining_tsc -= spdk_min(sched_thread->remaining_tsc, g_timeslice_tsc);
-		return SPDK_POLLER_BUSY;
-	}
-
+	spdk_delay_us(10);
 	return SPDK_POLLER_IDLE;
+}
+
+static void
+update_pollers(struct sched_thread *sched_thread)
+{
+	spdk_poller_unregister(&sched_thread->poller);
+	if (sched_thread->active_percent > 0) {
+		sched_thread->poller = spdk_poller_register_named(poller_run_busy, sched_thread, TIMESLICE_US,
+				       spdk_thread_get_name(sched_thread->thread));
+		assert(sched_thread->poller != NULL);
+	}
+	if (sched_thread->idle_poller == NULL) {
+		sched_thread->idle_poller = spdk_poller_register_named(poller_run_idle, sched_thread, 0,
+					    "idle_poller");
+		assert(sched_thread->idle_poller != NULL);
+	}
 }
 
 static void
@@ -139,9 +155,7 @@ rpc_register_poller(void *arg)
 {
 	struct sched_thread *sched_thread = arg;
 
-	sched_thread->poller = spdk_poller_register_named(poller_run, sched_thread, 0,
-			       spdk_thread_get_name(sched_thread->thread));
-	assert(sched_thread->poller != NULL);
+	update_pollers(sched_thread);
 
 	if (sched_thread->request != NULL) {
 		rpc_scheduler_thread_create_cb(sched_thread->request, spdk_thread_get_id(sched_thread->thread));
@@ -195,7 +209,6 @@ rpc_scheduler_thread_create(struct spdk_jsonrpc_request *request,
 
 	sched_thread->request = request;
 	sched_thread->active_percent = req.active_percent;
-	sched_thread->next_period_tsc = 0;
 
 	spdk_thread_send_msg(sched_thread->thread, rpc_register_poller, sched_thread);
 
@@ -237,9 +250,8 @@ rpc_scheduler_thread_set_active_cb(void *arg)
 	pthread_mutex_lock(&g_sched_list_mutex);
 	TAILQ_FOREACH(sched_thread, &g_sched_threads, link) {
 		if (spdk_thread_get_id(sched_thread->thread) == thread_id) {
-			/* Reset next_period_tsc to force recalculation of remaining_tsc. */
-			sched_thread->next_period_tsc = 0;
 			sched_thread->active_percent = ctx->active_percent;
+			update_pollers(sched_thread);
 			pthread_mutex_unlock(&g_sched_list_mutex);
 			spdk_jsonrpc_send_bool_response(ctx->request, true);
 			free(ctx);
@@ -381,11 +393,6 @@ test_shutdown(void)
 static void
 test_start(void *arg1)
 {
-	/* Hardcode g_core_time_period as 100ms. */
-	g_core_time_period = spdk_get_ticks_hz() / 10;
-	/* Hardcode g_timeslice_tsc as 100us. */
-	g_timeslice_tsc = spdk_get_ticks_hz() / SPDK_SEC_TO_USEC * TIMESLICE_US;
-
 	SPDK_NOTICELOG("Scheduler test application started.\n");
 }
 
