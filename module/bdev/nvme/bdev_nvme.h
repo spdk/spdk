@@ -74,10 +74,12 @@ struct nvme_ns {
 	uint32_t			ana_group_id;
 	enum spdk_nvme_ana_state	ana_state;
 	struct nvme_async_probe_ctx	*probe_ctx;
+	TAILQ_ENTRY(nvme_ns)		tailq;
 };
 
 struct nvme_bdev_io;
 struct nvme_bdev_ctrlr;
+struct nvme_bdev;
 
 struct nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
@@ -140,13 +142,19 @@ struct nvme_ctrlr {
 struct nvme_bdev_ctrlr {
 	char				*name;
 	TAILQ_HEAD(, nvme_ctrlr)	ctrlrs;
+	TAILQ_HEAD(, nvme_bdev)		bdevs;
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
 
 struct nvme_bdev {
 	struct spdk_bdev	disk;
-	struct nvme_ns		*nvme_ns;
+	uint32_t		nsid;
+	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
+	pthread_mutex_t		mutex;
+	int			ref;
+	TAILQ_HEAD(, nvme_ns)	nvme_ns_list;
 	bool			opal;
+	TAILQ_ENTRY(nvme_bdev)	tailq;
 };
 
 struct nvme_ctrlr_channel {
@@ -159,9 +167,14 @@ struct nvme_ctrlr_channel {
 #define nvme_ctrlr_channel_get_ctrlr(ctrlr_ch)	\
 	(struct nvme_ctrlr *)spdk_io_channel_get_io_device(spdk_io_channel_from_ctx(ctrlr_ch))
 
-struct nvme_bdev_channel {
+struct nvme_io_path {
 	struct nvme_ns			*nvme_ns;
 	struct nvme_ctrlr_channel	*ctrlr_ch;
+	STAILQ_ENTRY(nvme_io_path)	stailq;
+};
+
+struct nvme_bdev_channel {
+	STAILQ_HEAD(, nvme_io_path)	io_path_list;
 };
 
 struct nvme_poll_group {
