@@ -30,12 +30,13 @@ docker-compose build --build-arg PROXY=$http_proxy
 ## How-To
 
 `docker-compose.yaml` shows an example deployment of the storage containers based on SPDK.
-Running `docker-compose build` creates 4 docker images:
+Running `docker-compose build` creates 5 docker images:
 
 - build_base
 - storage-target
 - proxy-container
-- traffic-generator
+- traffic-generator-nvme
+- traffic-generator-virtio
 
 The `build_base` image provides the core components required to containerize SPDK
 applications. The fedora:33 image from the Fedora Container Registry is used and then SPDK is installed. SPDK is installed out of `build_base/spdk.tar.gz` provided.
@@ -46,8 +47,11 @@ Running `docker-compose up` creates 3 docker containers:
 -- storage-target: Contains SPDK NVMe-oF target exposing single subsystem to
 `proxy-container` based on malloc bdev.
 -- proxy-container: Contains SPDK NVMe-oF target connecting to `storage-target`
-and then exposing the same subsystem to `traffic-generator`.
--- traffic-generator: Contains FIO using SPDK plugin to connect to `proxy-container`
+and then exposing the same devices to `traffic-generator-nvme` using NVMe-oF and
+to `traffic-generator-virtio` using Virtio.
+-- traffic-generator-nvme: Contains FIO using SPDK plugin to connect to `proxy-container`
+and runs a sample workload.
+-- traffic-generator-virtio: Contains FIO using SPDK plugin to connect to `proxy-container`
 and runs a sample workload.
 
 Each container is connected to a separate "spdk" network which is created before
@@ -63,11 +67,12 @@ docker-compose up
 ~~~
 
 The `storage-target` and `proxy-container` can be started as services.
-Allowing for multiple `traffic-generator` containers to connect.
+Allowing for multiple traffic generator containers to connect.
 
 ~~~{.sh}
 docker-compose up -d proxy-container
-docker-compose run traffic-generator
+docker-compose run traffic-generator-nvme
+docker-compose run traffic-generator-virtio
 ~~~
 
 Enviroment variables to containers can be passed as shown in
@@ -75,7 +80,7 @@ Enviroment variables to containers can be passed as shown in
 For example extra arguments to fio can be passed as so:
 
 ~~~{.sh}
-docker-compose run -e FIO_ARGS="--minimal" traffic-generator
+docker-compose run -e FIO_ARGS="--minimal" traffic-generator-nvme
 ~~~
 
 As each container includes SPDK installation it is possible to use rpc.py to

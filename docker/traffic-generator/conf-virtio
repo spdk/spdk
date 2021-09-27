@@ -1,0 +1,18 @@
+{
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "method": "bdev_virtio_attach_controller",
+          "params": {
+            "name": "VirtioBlk0",
+            "trtype": "user",
+            "traddr": "/vhost-user/VirtioBlk0",
+            "dev_type": "blk"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -36,6 +36,7 @@ dnf install -y rpm-build
 # Deploy SPDK inside the container
 DEPS="no" "$spdk_repo/rpmbuild/rpm.sh" \
 	--with-shared \
+	--with-virtio \
 	--with-fio
 
 mv "$HOME/rpmbuild/rpm/x86_64/"*.rpm /tmp
