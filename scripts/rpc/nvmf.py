@@ -291,8 +291,10 @@ def nvmf_subsystem_remove_listener(
             True or False
     """
     listen_address = {'trtype': trtype,
-                      'traddr': traddr,
-                      'trsvcid': trsvcid}
+                      'traddr': traddr}
+
+    if trsvcid:
+        listen_address['trsvcid'] = trsvcid
 
     if adrfam:
         listen_address['adrfam'] = adrfam
