@@ -1096,8 +1096,15 @@ static void
 bdev_nvme_reset_io_complete(void *cb_arg, int rc)
 {
 	struct nvme_bdev_io *bio = cb_arg;
+	enum spdk_bdev_io_status io_status;
 
-	bdev_nvme_io_complete(bio, rc);
+	if (rc == 0) {
+		io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else {
+		io_status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), io_status);
 }
 
 static int
