@@ -4305,18 +4305,23 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 {
 	struct nvme_io_path *io_path;
 	struct nvme_ctrlr *nvme_ctrlr;
+	struct spdk_nvme_ctrlr *ctrlr = NULL;
 	uint32_t max_xfer_size;
 
-	/* Admin commands are submitted only to the first nvme_ctrlr for now.
-	 *
-	 * TODO: This limitation will be removed in the following patches.
-	 */
-	io_path = STAILQ_FIRST(&nbdev_ch->io_path_list);
-	assert(io_path != NULL);
+	/* Choose the first ctrlr which is not failed. */
+	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(io_path->ctrlr_ch);
+		if (!spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
+			ctrlr = nvme_ctrlr->ctrlr;
+			break;
+		}
+	}
 
-	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(io_path->ctrlr_ch);
+	if (ctrlr == NULL) {
+		return -ENXIO;
+	}
 
-	max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ctrlr->ctrlr);
+	max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(ctrlr);
 
 	if (nbytes > max_xfer_size) {
 		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
@@ -4325,8 +4330,8 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 
 	bio->orig_thread = spdk_get_thread();
 
-	return spdk_nvme_ctrlr_cmd_admin_raw(nvme_ctrlr->ctrlr, cmd, buf,
-					     (uint32_t)nbytes, bdev_nvme_admin_passthru_done, bio);
+	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, cmd, buf, (uint32_t)nbytes,
+					     bdev_nvme_admin_passthru_done, bio);
 }
 
 static int
@@ -4390,6 +4395,8 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 	struct nvme_io_path *io_path;
 	struct nvme_ctrlr *nvme_ctrlr;
 	int rc = 0;
+
+	bio->io_path = NULL;
 
 	bio->orig_thread = spdk_get_thread();
 

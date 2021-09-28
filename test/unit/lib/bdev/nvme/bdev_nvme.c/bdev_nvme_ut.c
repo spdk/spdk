@@ -758,6 +758,12 @@ spdk_nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_failed = true;
 }
 
+bool
+spdk_nvme_ctrlr_is_failed(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->is_failed;
+}
+
 #define UT_ANA_DESC_SIZE	(sizeof(struct spdk_nvme_ana_group_descriptor) +	\
 				 sizeof(uint32_t))
 static void
@@ -3361,6 +3367,115 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
 }
 
+static void
+test_admin_path(void)
+{
+	struct nvme_path_id path1 = {}, path2 = {};
+	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct spdk_io_channel *ch;
+	struct spdk_bdev_io *bdev_io;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	set_thread(0);
+
+	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	memset(&ctrlr1->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+
+	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	memset(&ctrlr2->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+
+	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_NVME_ADMIN, bdev, ch);
+	bdev_io->u.nvme_passthru.cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+
+	/* ctrlr1 is failed but ctrlr2 is not failed. admin command is
+	 * submitted to ctrlr2.
+	 */
+	ctrlr1->is_failed = true;
+	bdev_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, bdev_io);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(ctrlr2->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr2->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == false);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* both ctrlr1 and ctrlr2 are failed. admin command is failed to submit. */
+	ctrlr2->is_failed = true;
+	bdev_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, bdev_io);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(ctrlr2->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == false);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
+
+	free(bdev_io);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -3391,6 +3506,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_create_bdev_ctrlr);
 	CU_ADD_TEST(suite, test_add_multi_ns_to_bdev);
 	CU_ADD_TEST(suite, test_add_multi_io_paths_to_nbdev_ch);
+	CU_ADD_TEST(suite, test_admin_path);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
