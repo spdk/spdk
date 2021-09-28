@@ -40,6 +40,7 @@
 #include "spdk/thread.h"
 #include "spdk_internal/event.h"
 #include "spdk/scheduler.h"
+#include "spdk_internal/usdt.h"
 
 static uint32_t g_main_lcore;
 
@@ -101,6 +102,8 @@ _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 	uint64_t busy_tsc = thread_info->current_stats.busy_tsc;
 	uint8_t busy_pct = _busy_pct(src->busy, src->idle);
 	uint64_t tsc;
+
+	SPDK_DTRACE_PROBE2(dynsched_move, thread_info, dst_core);
 
 	if (src == dst) {
 		/* Don't modify stats if thread is already on that core. */
@@ -315,10 +318,13 @@ balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 	int rc;
 	bool busy_threads_present = false;
 
+	SPDK_DTRACE_PROBE1(dynsched_balance, cores_count);
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		g_cores[i].thread_count = cores_info[i].threads_count;
 		g_cores[i].busy = cores_info[i].current_busy_tsc;
 		g_cores[i].idle = cores_info[i].current_idle_tsc;
+		SPDK_DTRACE_PROBE2(dynsched_core_info, i, &cores_info[i]);
 	}
 	main_core = &g_cores[g_main_lcore];
 

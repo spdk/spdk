@@ -1,0 +1,62 @@
+
+struct spdk_thread_stats {
+	uint64_t busy_tsc;
+	uint64_t idle_tsc;
+};
+
+struct spdk_scheduler_thread_info {
+	uint32_t lcore;
+	uint64_t thread_id;
+	/* Defining these as a 1-element array here allows us to
+	 * create local variables for these members when accessing
+	 * them which improves readability.
+	 */
+	struct spdk_thread_stats total_stats[1];
+	struct spdk_thread_stats current_stats[1];
+};
+
+struct spdk_scheduler_core_info {
+	uint64_t total_idle_tsc;
+	uint64_t total_busy_tsc;
+	uint64_t current_idle_tsc;
+	uint64_t current_busy_tsc;
+	uint32_t lcore;
+	uint32_t threads_count;
+	bool interrupt_mode;
+	struct spdk_scheduler_thread_info *thread_infos;
+};
+
+usdt:__EXE__:dynsched_move {
+	$info = (struct spdk_scheduler_thread_info *)arg1;
+	$stats = (struct spdk_thread_stats *)$info->current_stats;
+	if ($stats->busy_tsc > 0) {
+		$thread_pct = $stats->busy_tsc * 100 / ($stats->busy_tsc + $stats->idle_tsc);
+		$core_pct = $stats->busy_tsc * 100 / (@cores_busy_tsc[$info->lcore] + @cores_idle_tsc[$info->lcore]);
+	} else {
+		$thread_pct = 0;
+		$core_pct = 0;
+	}
+	printf("td:%2d old:%2d new:%2d td_busy:%2d% core_busy:%2d%\n",
+	       $info->thread_id, $info->lcore, arg2, $thread_pct, $core_pct);
+}
+
+usdt:__EXE__:dynsched_balance {
+	printf("\n");
+	clear(@cores_busy_tsc);
+	clear(@cores_idle_tsc);
+	printf("Starting balance across %d cores\n", arg1);
+}
+
+usdt:__EXE__:dynsched_core_info {
+	$info = (struct spdk_scheduler_core_info *)arg2;
+	$busy = $info->current_busy_tsc;
+	$idle = $info->current_idle_tsc;
+	if ($busy > 0) {
+		$pct = $busy * 100 / ($busy + $idle);
+	} else {
+		$pct = 0;
+	}
+	printf("core:%2d busy:%10d idle:%10d pct:%2d% td_count:%2d\n", arg1, $busy, $idle, $pct, $info->threads_count);
+	@cores_busy_tsc[arg1] = $busy;
+	@cores_idle_tsc[arg1] = $idle;
+}
