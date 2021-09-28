@@ -34,8 +34,8 @@ print_clear() { printf '  clear(@%s);\n' "${!state_enums[@]}"; }
 
 declare -A state_enums=() state_prefix=()
 
-state_enums["target"]="enum nvmf_tgt_state {"
-state_enums["subsystem"]="enum spdk_nvmf_subsystem_state {"
+state_enums["target"]="enum nvmf_tgt_state \{"
+state_enums["subsystem"]="enum spdk_nvmf_subsystem_state \{"
 state_prefix["target"]=NVMF_TGT_
 state_prefix["subsystem"]=SPDK_NVMF_SUBSYSTEM_
 
