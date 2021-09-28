@@ -640,6 +640,21 @@ bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf)
 }
 
 static inline bool
+bdev_nvme_io_type_is_admin(enum spdk_bdev_io_type io_type)
+{
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_ABORT:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+static inline bool
 nvme_io_path_is_available(struct nvme_io_path *io_path)
 {
 	return io_path->ctrlr_ch->qpair != NULL;
@@ -1285,8 +1300,14 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	nbdev_io->io_path = bdev_nvme_find_io_path(nbdev_ch);
 	if (spdk_unlikely(!nbdev_io->io_path)) {
-		rc = -ENXIO;
-		goto exit;
+		if (!bdev_nvme_io_type_is_admin(bdev_io->type)) {
+			rc = -ENXIO;
+			goto exit;
+		}
+
+		/* Admin commands do not use the optimal I/O path.
+		 * Simply fall through even if it is not found.
+		 */
 	}
 
 	switch (bdev_io->type) {
@@ -1347,6 +1368,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					     bdev_io->u.bdev.num_blocks);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
+		nbdev_io->io_path = NULL;
 		bdev_nvme_reset_io(nbdev_ch, nbdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
@@ -1375,6 +1397,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					       bdev_io->u.zone_mgmt.zone_action);
 		break;
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+		nbdev_io->io_path = NULL;
 		rc = bdev_nvme_admin_passthru(nbdev_ch,
 					      nbdev_io,
 					      &bdev_io->u.nvme_passthru.cmd,
@@ -1396,6 +1419,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					      bdev_io->u.nvme_passthru.md_len);
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
+		nbdev_io->io_path = NULL;
 		nbdev_io_to_abort = (struct nvme_bdev_io *)bdev_io->u.abort.bio_to_abort->driver_ctx;
 		bdev_nvme_abort(nbdev_ch,
 				nbdev_io,
