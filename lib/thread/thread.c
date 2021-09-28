@@ -1554,8 +1554,8 @@ static void
 wrong_thread(const char *func, const char *name, struct spdk_thread *thread,
 	     struct spdk_thread *curthread)
 {
-	SPDK_ERRLOG("%s(%s) called from wrong thread %s:%lu (should be "
-		    "%s:%lu)\n", func, name, curthread->name, curthread->id,
+	SPDK_ERRLOG("%s(%s) called from wrong thread %s:%" PRIu64 " (should be "
+		    "%s:%" PRIu64 ")\n", func, name, curthread->name, curthread->id,
 		    thread->name, thread->id);
 	assert(false);
 }
