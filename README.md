@@ -223,6 +223,13 @@ configuring 8192MB memory.
 sudo HUGEMEM=8192 scripts/setup.sh
 ~~~
 
+There are a lot of other environment variables that can be set to configure
+setup.sh for advanced users. To see the full list, run:
+
+~~~{.sh}
+scripts/setup.sh --help
+~~~
+
 <a id="examples"></a>
 ## Example Code
 
