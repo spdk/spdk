@@ -71,7 +71,9 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
-	/** I/O path the current I/O is submitted on. */
+	/** I/O path the current I/O is submitted on, or the I/O path being reset
+	 *  in a reset I/O.
+	 */
 	struct nvme_io_path *io_path;
 
 	/** array of iovecs to transfer. */
@@ -1080,10 +1082,11 @@ bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, voi
 	return rc;
 }
 
+static int _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio);
+
 static void
-bdev_nvme_reset_io_complete(void *cb_arg, bool success)
+bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio, bool success)
 {
-	struct nvme_bdev_io *bio = cb_arg;
 	enum spdk_bdev_io_status io_status;
 
 	if (success) {
@@ -1093,6 +1096,36 @@ bdev_nvme_reset_io_complete(void *cb_arg, bool success)
 	}
 
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), io_status);
+}
+
+static void
+bdev_nvme_reset_io_continue(void *cb_arg, bool success)
+{
+	struct nvme_bdev_io *bio = cb_arg;
+	struct nvme_io_path *prev_io_path, *next_io_path;
+	int rc;
+
+	prev_io_path = bio->io_path;
+	bio->io_path = NULL;
+
+	if (!success) {
+		goto complete;
+	}
+
+	next_io_path = STAILQ_NEXT(prev_io_path, stailq);
+	if (next_io_path == NULL) {
+		goto complete;
+	}
+
+	rc = _bdev_nvme_reset_io(next_io_path, bio);
+	if (rc == 0) {
+		return;
+	}
+
+	success = false;
+
+complete:
+	bdev_nvme_reset_io_complete(bio, success);
 }
 
 static int
@@ -1107,9 +1140,12 @@ _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio)
 
 	rc = bdev_nvme_reset(nvme_ctrlr);
 	if (rc == 0) {
+		assert(bio->io_path == NULL);
+		bio->io_path = io_path;
+
 		assert(nvme_ctrlr->reset_cb_fn == NULL);
 		assert(nvme_ctrlr->reset_cb_arg == NULL);
-		nvme_ctrlr->reset_cb_fn = bdev_nvme_reset_io_complete;
+		nvme_ctrlr->reset_cb_fn = bdev_nvme_reset_io_continue;
 		nvme_ctrlr->reset_cb_arg = bio;
 	} else if (rc == -EBUSY) {
 		/*
