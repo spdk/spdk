@@ -82,6 +82,64 @@ test_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	s->cpl = *cpl;
 }
 
+/* Test that target correctly handles various IDENTIFY CNS=1 requests. */
+static void
+identify_ctrlr(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_cmd cmd;
+	struct spdk_nvme_ctrlr_data *ctrlr_data;
+	struct status s;
+	int rc;
+
+	/* Allocate data buffer with 4KiB alignment, since we need to test some
+	 * very specific PRP cases.
+	 */
+	ctrlr_data = spdk_dma_zmalloc(sizeof(*ctrlr_data), 4096, NULL);
+	SPDK_CU_ASSERT_FATAL(ctrlr_data != NULL);
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_CTRLR;
+
+	/* Test a properly formed IDENTIFY CNS=1 request. */
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, ctrlr_data,
+					   sizeof(*ctrlr_data), test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+	/* Confirm the target fails an IDENTIFY CNS=1 request with incorrect
+	 * DPTR lengths.
+	 */
+	s.done = false;
+
+	/* Only specify 1KiB of data, and make sure it specifies a PRP offset
+	 * that's 1KiB before the end of the buffer previously allocated.
+	 *
+	 * The controller needs to recognize that a full 4KiB of data was not
+	 * specified in the PRPs, and should fail the command.
+	 */
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd,
+					   ((uint8_t *)ctrlr_data) + (4096 - 1024),
+					   1024, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(spdk_nvme_cpl_is_error(&s.cpl));
+
+	spdk_dma_free(ctrlr_data);
+	spdk_nvme_detach(ctrlr);
+}
+
 /* Test that target correctly handles requests to delete admin SQ/CQ (QID = 0).
  * Associated with issue #2172.
  */
@@ -245,6 +303,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+	CU_ADD_TEST(suite, identify_ctrlr);
 	CU_ADD_TEST(suite, delete_admin_queue);
 	CU_ADD_TEST(suite, delete_io_sq_twice);
 
