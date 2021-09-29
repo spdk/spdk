@@ -45,6 +45,7 @@ run_test "nvmf_delete_subsystem" test/nvmf/target/delete_subsystem.sh "${TEST_AR
 
 if [ $SPDK_TEST_VFIOUSER -eq 1 ]; then
 	run_test "nvmf_vfio_user" test/nvmf/target/nvmf_vfio_user.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_vfio_user_nvme_compliance" test/nvme/compliance/compliance.sh "${TEST_ARGS[@]}"
 fi
 
 if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then

@@ -118,8 +118,11 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 {
 	char op;
 
-	while ((op = getopt(argc, argv, "r:")) != -1) {
+	while ((op = getopt(argc, argv, "gr:")) != -1) {
 		switch (op) {
+		case 'g':
+			opts->hugepage_single_segments = true;
+			break;
 		case 'r':
 			g_trid_str = optarg;
 			break;
