@@ -2761,7 +2761,6 @@ add_transfer_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	conn->pending_r2t++;
 
 	task->next_expected_r2t_offset = data_len;
-	task->current_data_offset = data_len;
 	task->current_r2t_length = 0;
 	task->R2TSN = 0;
 	/* According to RFC3720 10.8.5, 0xffffffff is
@@ -3325,6 +3324,8 @@ iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_
 			spdk_scsi_task_set_data(&subtask->scsi, pdu->data, scsi_data_len);
 			subtask->scsi.length = pdu->data_segment_len;
 			iscsi_task_associate_pdu(subtask, pdu);
+
+			task->current_data_offset = pdu->data_segment_len;
 
 			iscsi_queue_task(conn, subtask);
 		}
