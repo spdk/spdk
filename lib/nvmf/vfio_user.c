@@ -1322,6 +1322,13 @@ consume_admin_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
 
+	if (cmd->fuse != 0) {
+		/* Fused admin commands are not supported. */
+		return post_completion(ctrlr, &ctrlr->qp[0]->cq, 0, 0, cmd->cid,
+				       SPDK_NVME_SC_INVALID_FIELD,
+				       SPDK_NVME_SCT_GENERIC);
+	}
+
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_CREATE_IO_CQ:
 	case SPDK_NVME_OPC_CREATE_IO_SQ:

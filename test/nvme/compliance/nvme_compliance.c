@@ -140,6 +140,53 @@ identify_ctrlr(void)
 	spdk_nvme_detach(ctrlr);
 }
 
+/* Test that target correctly fails admin commands with fuse != 0 */
+static void
+admin_fused(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_cmd cmd;
+	struct spdk_nvme_ctrlr_data *ctrlr_data;
+	struct status s, s2;
+	int rc;
+
+	ctrlr_data = spdk_dma_zmalloc(sizeof(*ctrlr_data), 0, NULL);
+	SPDK_CU_ASSERT_FATAL(ctrlr_data != NULL);
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	/* The nvme driver waits until it sees both fused commands before submitting
+	 * both to the queue - so construct two commands here and then check the
+	 * both are completed with error status.
+	 */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.fuse = 0x1;
+	cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_CTRLR;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, ctrlr_data,
+					   sizeof(*ctrlr_data), test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	cmd.fuse = 0x2;
+	s2.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, ctrlr_data,
+					   sizeof(*ctrlr_data), test_cb, &s2);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	wait_for_admin_completion(&s2, ctrlr);
+
+	CU_ASSERT(spdk_nvme_cpl_is_error(&s.cpl));
+	CU_ASSERT(spdk_nvme_cpl_is_error(&s2.cpl));
+
+	spdk_nvme_detach(ctrlr);
+	spdk_free(ctrlr_data);
+}
+
 /* Test that target correctly handles requests to delete admin SQ/CQ (QID = 0).
  * Associated with issue #2172.
  */
@@ -304,6 +351,7 @@ int main(int argc, char **argv)
 	}
 
 	CU_ADD_TEST(suite, identify_ctrlr);
+	CU_ADD_TEST(suite, admin_fused);
 	CU_ADD_TEST(suite, delete_admin_queue);
 	CU_ADD_TEST(suite, delete_io_sq_twice);
 

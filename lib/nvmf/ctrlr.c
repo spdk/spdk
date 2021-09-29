@@ -3057,6 +3057,13 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	if (cmd->fuse != 0) {
+		/* Fused admin commands are not supported. */
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	if (ctrlr->vcprop.cc.bits.en != 1) {
 		SPDK_ERRLOG("Admin command sent to disabled controller\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
