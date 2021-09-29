@@ -899,34 +899,27 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *cq,
 	return 0;
 }
 
-static struct nvme_q *
-lookup_io_q(struct nvmf_vfio_user_ctrlr *ctrlr, const uint16_t qid, const bool is_cq)
+static bool
+io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const bool is_cq)
 {
-	struct nvme_q *q;
-
-	assert(ctrlr != NULL);
+	assert(vu_ctrlr != NULL);
 
 	if (qid == 0 || qid >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
-		return NULL;
+		return false;
 	}
 
-	if (ctrlr->qp[qid] == NULL) {
-		return NULL;
+	if (vu_ctrlr->qp[qid] == NULL) {
+		return false;
 	}
 
-	if (is_cq) {
-		/* CQ is always exist if the queue pair wasn't null */
-		q = &ctrlr->qp[qid]->cq;
-		return q;
-	} else {
-		if (ctrlr->qp[qid]->state == VFIO_USER_QPAIR_SQ_DELETED ||
-		    ctrlr->qp[qid]->state == VFIO_USER_QPAIR_UNINITIALIZED) {
-			return NULL;
+	if (!is_cq) {
+		if (vu_ctrlr->qp[qid]->state == VFIO_USER_QPAIR_SQ_DELETED ||
+		    vu_ctrlr->qp[qid]->state == VFIO_USER_QPAIR_UNINITIALIZED) {
+			return false;
 		}
-		q = &ctrlr->qp[qid]->sq;
 	}
 
-	return q;
+	return true;
 }
 
 static void
@@ -1120,7 +1113,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		goto out;
 	}
 
-	if (lookup_io_q(ctrlr, qid, is_cq)) {
+	if (io_q_exists(ctrlr, qid, is_cq)) {
 		SPDK_ERRLOG("%s: %cQ%d already exists\n", ctrlr_id(ctrlr),
 			    is_cq ? 'C' : 'S', qid);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -1166,7 +1159,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 		}
 		/* CQ must be created before SQ */
-		if (!lookup_io_q(ctrlr, cmd->cdw11_bits.create_io_sq.cqid, true)) {
+		if (!io_q_exists(ctrlr, cmd->cdw11_bits.create_io_sq.cqid, true)) {
 			SPDK_ERRLOG("%s: CQ%d does not exist\n", ctrlr_id(ctrlr),
 				    cmd->cdw11_bits.create_io_sq.cqid);
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -1270,7 +1263,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		      ctrlr_id(ctrlr), is_cq ? 'C' : 'S',
 		      cmd->cdw10_bits.delete_io_q.qid);
 
-	if (lookup_io_q(ctrlr, cmd->cdw10_bits.delete_io_q.qid, is_cq) == NULL) {
+	if (!io_q_exists(ctrlr, cmd->cdw10_bits.delete_io_q.qid, is_cq)) {
 		SPDK_ERRLOG("%s: I/O %cQ%d does not exist\n", ctrlr_id(ctrlr),
 			    is_cq ? 'C' : 'S', cmd->cdw10_bits.delete_io_q.qid);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
