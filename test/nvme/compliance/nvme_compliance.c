@@ -59,6 +59,21 @@ wait_for_admin_completion(struct status *s, struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
+wait_for_io_completion(struct status *s, struct spdk_nvme_qpair *qpair)
+{
+	/* Timeout if command does not complete within 1 second. */
+	uint64_t timeout = spdk_get_ticks() + spdk_get_ticks_hz();
+
+	while (!s->done && spdk_get_ticks() < timeout) {
+		spdk_nvme_qpair_process_completions(qpair, 0);
+	}
+
+	if (!s->done) {
+		CU_ASSERT(false && "completion timeout");
+	}
+}
+
+static void
 test_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct status *s = ctx;
@@ -94,7 +109,7 @@ delete_admin_queue(void)
 	wait_for_admin_completion(&s, ctrlr);
 
 	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
-	CU_ASSERT(s.cpl.status.sc == 1); /* Invalid Queue Identifier */
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 
 	/* Try deleting CQ for QID 0 (admin queue).  This is invalid. */
 	memset(&cmd, 0, sizeof(cmd));
@@ -108,8 +123,75 @@ delete_admin_queue(void)
 	wait_for_admin_completion(&s, ctrlr);
 
 	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
-	CU_ASSERT(s.cpl.status.sc == 1); /* Invalid Queue Identifier */
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 
+	spdk_nvme_detach(ctrlr);
+}
+
+static void
+delete_io_sq_twice(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_io_qpair_opts opts;
+	struct spdk_nvme_qpair *qpair;
+	struct spdk_nvme_ns *ns;
+	uint32_t nsid;
+	struct spdk_nvme_cmd cmd;
+	struct status s;
+	void *buf;
+	uint32_t nlbas;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(qpair);
+
+	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	SPDK_CU_ASSERT_FATAL(ns != NULL);
+
+	/* READ command should execute successfully. */
+	nlbas = 1;
+	buf = spdk_dma_zmalloc(nlbas * spdk_nvme_ns_get_sector_size(ns), 0x1000,  NULL);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+	s.done = false;
+	rc = spdk_nvme_ns_cmd_read_with_md(ns, qpair, buf, NULL, 0, nlbas, test_cb, &s, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	wait_for_io_completion(&s, qpair);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Delete SQ 1, this is valid. */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_DELETE_IO_SQ;
+	cmd.cdw10_bits.delete_io_q.qid = 1;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Try deleting SQ 1 again, this is invalid. */
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
+
+	spdk_dma_free(buf);
 	spdk_nvme_detach(ctrlr);
 }
 
@@ -164,6 +246,7 @@ int main(int argc, char **argv)
 	}
 
 	CU_ADD_TEST(suite, delete_admin_queue);
+	CU_ADD_TEST(suite, delete_io_sq_twice);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
