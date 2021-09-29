@@ -2382,6 +2382,230 @@ data_out_pdu_sequence_test(void)
 	free(mobj3.buf);
 }
 
+static void
+immediate_data_and_data_out_pdu_sequence_test(void)
+{
+	struct spdk_scsi_lun lun = { .tasks = TAILQ_HEAD_INITIALIZER(lun.tasks), };
+	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
+	struct spdk_iscsi_sess sess = {
+		.session_type = SESSION_TYPE_NORMAL,
+		.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH,
+		.ImmediateData = true,
+		.FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH,
+	};
+	struct spdk_iscsi_conn conn = {
+		.full_feature = true,
+		.state = ISCSI_CONN_STATE_RUNNING,
+		.sess = &sess,
+		.dev = &dev,
+		.active_r2t_tasks = TAILQ_HEAD_INITIALIZER(conn.active_r2t_tasks),
+		.ttt = 1,
+	};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_mobj mobj = {};
+	struct spdk_iscsi_task *primary;
+	struct iscsi_bhs_scsi_req *scsi_reqh;
+	struct iscsi_bhs_data_out *data_reqh;
+	int rc;
+
+	TAILQ_INSERT_TAIL(&dev.luns, &lun, tailq);
+
+	mobj.buf = calloc(1, SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH));
+	SPDK_CU_ASSERT_FATAL(mobj.buf != NULL);
+
+	/* Test scenario is as follows.
+	 *
+	 * Some iSCSI initiator sends an immediate data and more solicited data
+	 * through R2T within the same SCSI write such that the size of the data
+	 * segment of a SCSI Write PDU or any Data-OUT PDU is not block size multiples.
+	 * Test if such complex SCSI write is processed correctly.
+	 *
+	 * Desired Data Transfer Length of a SCSI Write is 65536.
+	 * PDU sequences are:
+	 *     Host sent SCSI Write with 5792 bytes and F = 1
+	 *     Target sent a R2T
+	 *     Host sent Data-OUT with 15880 bytes
+	 *     Host sent Data-OUT with 11536 bytes
+	 *     Host sent Data-OUT with 2848 bytes
+	 *     Host sent Data-OUT with 11536 bytes
+	 *     Host sent Data-OUT with 5744 bytes
+	 *     Host sent Data-OUT with 12200 bytes and F = 1
+	 *
+	 * One data buffer should be used and one subtask should be created and submitted.
+	 *
+	 * The test scenario assume that a iscsi_conn_read_data() call could read
+	 * the required length of the data and all read lengths are 4 bytes multiples.
+	 * The latter is to verify data is copied to the correct offset by using data patterns.
+	 */
+
+	g_conn_read_len = 0;
+
+	/* SCSI Write PDU with immediate data */
+	scsi_reqh = (struct iscsi_bhs_scsi_req *)&pdu.bhs;
+	scsi_reqh->opcode = ISCSI_OP_SCSI;
+	scsi_reqh->write_bit = 1;
+	scsi_reqh->final_bit = 1;
+	pdu.data_segment_len = 5792;
+	to_be32(&scsi_reqh->expected_data_xfer_len, 65536);
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+
+	primary = pdu.task;
+	SPDK_CU_ASSERT_FATAL(primary != NULL);
+
+	CU_ASSERT(primary->scsi.transfer_len == 65536);
+	CU_ASSERT(primary->scsi.dxfer_dir == SPDK_SCSI_DIR_TO_DEV);
+	CU_ASSERT(pdu.data_buf_len == 65536);
+
+	MOCK_SET(spdk_mempool_get, &mobj);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj, rc, 0, 0);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(primary->next_expected_r2t_offset == 5792);
+	CU_ASSERT(primary->current_r2t_length == 0);
+	CU_ASSERT(primary->next_r2t_offset == 65536);
+	CU_ASSERT(primary->ttt == 2);
+	CU_ASSERT(primary == TAILQ_FIRST(&conn.active_r2t_tasks));
+
+	check_pdu_payload_handle(&pdu, primary, NULL, NULL, &mobj, 0);
+
+	data_reqh = (struct iscsi_bhs_data_out *)&pdu.bhs;
+
+	/* The 1st Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	data_reqh->opcode = ISCSI_OP_SCSI_DATAOUT;
+	to_be32(&data_reqh->ttt, 2);
+	to_be32(&data_reqh->buffer_offset, 5792);
+	pdu.data_segment_len = 15880;
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj, 5792, primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj, rc, 0, 5792);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, primary, NULL, NULL, &mobj, 0);
+
+	/* The 2nd Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	data_reqh->opcode = ISCSI_OP_SCSI_DATAOUT;
+	to_be32(&data_reqh->ttt, 2);
+	to_be32(&data_reqh->buffer_offset, 21672);
+	to_be32(&data_reqh->data_sn, 1);
+	pdu.data_segment_len = 11536;
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj, 21672, primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj, rc, 0, 21672);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, primary, NULL, NULL, &mobj, 0);
+
+	/* The 3rd Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	data_reqh->opcode = ISCSI_OP_SCSI_DATAOUT;
+	to_be32(&data_reqh->ttt, 2);
+	to_be32(&data_reqh->buffer_offset, 33208);
+	to_be32(&data_reqh->data_sn, 2);
+	pdu.data_segment_len = 2848;
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj, 33208, primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj, rc, 0, 33208);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, primary, NULL, NULL, &mobj, 0);
+
+	/* The 4th Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	data_reqh->opcode = ISCSI_OP_SCSI_DATAOUT;
+	to_be32(&data_reqh->ttt, 2);
+	to_be32(&data_reqh->buffer_offset, 36056);
+	to_be32(&data_reqh->data_sn, 3);
+	pdu.data_segment_len = 11536;
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj, 36056, primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj, rc, 0, 36056);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, primary, NULL, NULL, &mobj, 0);
+
+	/* The 5th Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	data_reqh->opcode = ISCSI_OP_SCSI_DATAOUT;
+	to_be32(&data_reqh->ttt, 2);
+	to_be32(&data_reqh->buffer_offset, 47592);
+	to_be32(&data_reqh->data_sn, 4);
+	pdu.data_segment_len = 5744;
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj, 47592, primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj, rc, 0, 47592);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, primary, NULL, NULL, &mobj, 0);
+
+	/* The 6th and final Data-OUT PDU */
+	memset(&pdu, 0, sizeof(pdu));
+	pdu.bhs.opcode = ISCSI_OP_SCSI_DATAOUT;
+	data_reqh->flags |= ISCSI_FLAG_FINAL;
+	to_be32(&data_reqh->ttt, 2);
+	to_be32(&data_reqh->buffer_offset, 53336);
+	to_be32(&data_reqh->data_sn, 5);
+	pdu.data_segment_len = 12200;
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_hdr_handle(&pdu, &mobj, 53336, primary);
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_read(&pdu, &mobj, rc, 0, 53336);
+
+	rc = iscsi_pdu_payload_handle(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	check_pdu_payload_handle(&pdu, primary, &mobj, NULL, NULL, 65536);
+
+	check_write_subtask_submit(&lun, &mobj, &pdu, 0, 0, 65536);
+
+	CU_ASSERT(TAILQ_EMPTY(&lun.tasks));
+
+	MOCK_CLEAR(spdk_mempool_get);
+
+	free(primary);
+	free(mobj.buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2416,6 +2640,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, empty_text_with_cbit_test);
 	CU_ADD_TEST(suite, pdu_payload_read_test);
 	CU_ADD_TEST(suite, data_out_pdu_sequence_test);
+	CU_ADD_TEST(suite, immediate_data_and_data_out_pdu_sequence_test);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

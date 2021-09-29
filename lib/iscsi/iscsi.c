@@ -3290,6 +3290,7 @@ iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *reqh;
 	uint32_t transfer_len;
+	struct spdk_mobj *mobj;
 	int rc;
 
 	pdu = iscsi_task_get_pdu(task);
@@ -3307,13 +3308,23 @@ iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
-		/* Non-immediate writes */
+		/* immediate writes */
 		if (pdu->data_segment_len != 0) {
-			/* we are doing the first partial write task */
-			rc = iscsi_submit_write_subtask(conn, task, pdu, pdu->mobj[0]);
-			if (rc < 0) {
-				iscsi_task_put(task);
-				return SPDK_ISCSI_CONNECTION_FATAL;
+			mobj = pdu->mobj[0];
+			assert(mobj != NULL);
+
+			if (!pdu->dif_insert_or_strip &&
+			    mobj->data_len < SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+				/* continue aggregation until the first data buffer is full. */
+				iscsi_task_set_mobj(task, mobj);
+				pdu->mobj[0] = NULL;
+			} else {
+				/* we are doing the first partial write task */
+				rc = iscsi_submit_write_subtask(conn, task, pdu, mobj);
+				if (rc < 0) {
+					iscsi_task_put(task);
+					return SPDK_ISCSI_CONNECTION_FATAL;
+				}
 			}
 		}
 		return 0;
@@ -3430,6 +3441,9 @@ iscsi_pdu_hdr_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 		if (spdk_unlikely(spdk_scsi_lun_get_dif_ctx(task->scsi.lun, &task->scsi, &pdu->dif_ctx))) {
 			pdu->dif_insert_or_strip = true;
+		} else if (reqh->final_bit && pdu->data_segment_len < transfer_len) {
+			pdu->data_buf_len = spdk_min(transfer_len,
+						     SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 		}
 	} else {
 		/* neither R nor W bit set */
@@ -4277,10 +4291,10 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	mobj = iscsi_task_get_mobj(task);
 	if (mobj == NULL) {
-		if (!F_bit && !pdu->dif_insert_or_strip) {
-			/* More Data-OUT PDUs will follow in this sequence. Increase the buffer
-			 * size up to SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH to merge them
-			 * into a single subtask.
+		if (!pdu->dif_insert_or_strip) {
+			/* More Data-OUT PDUs may follow. Increase the buffer size up to
+			 * SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH to merge them into a
+			 * single subtask.
 			 */
 			pdu->data_buf_len = spdk_min(task->desired_data_transfer_length,
 						     SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
