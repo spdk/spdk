@@ -43,6 +43,17 @@ struct status {
 	struct spdk_nvme_cpl	cpl;
 };
 
+static inline uint64_t
+nvme_vtophys(struct spdk_nvme_transport_id *trid, const void *buf, uint64_t *size)
+{
+	/* vfio-user address translation with IOVA=VA mode */
+	if (trid->trtype != SPDK_NVME_TRANSPORT_VFIOUSER) {
+		return spdk_vtophys(buf, size);
+	} else {
+		return (uint64_t)(uintptr_t)buf;
+	}
+}
+
 static void
 wait_for_admin_completion(struct status *s, struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -300,6 +311,113 @@ delete_io_sq_twice(void)
 	spdk_nvme_detach(ctrlr);
 }
 
+static void
+delete_create_io_sq(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_io_qpair_opts opts;
+	struct spdk_nvme_qpair *qpair;
+	union spdk_nvme_cap_register cap;
+	struct spdk_nvme_ns *ns;
+	uint32_t nsid, mqes;
+	struct spdk_nvme_cmd cmd;
+	struct status s;
+	void *buf;
+	uint32_t nlbas;
+	uint64_t dma_addr;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(qpair);
+
+	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	SPDK_CU_ASSERT_FATAL(ns != NULL);
+
+	/* READ command should execute successfully. */
+	nlbas = 1;
+	buf = spdk_dma_zmalloc(nlbas * spdk_nvme_ns_get_sector_size(ns), 0x1000,  NULL);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+	s.done = false;
+	rc = spdk_nvme_ns_cmd_read_with_md(ns, qpair, buf, NULL, 0, nlbas, test_cb, &s, 0, 0, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	wait_for_io_completion(&s, qpair);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	spdk_dma_free(buf);
+
+	/* Delete SQ 1, this is valid. */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_DELETE_IO_SQ;
+	cmd.cdw10_bits.delete_io_q.qid = 1;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
+	mqes = cap.bits.mqes + 1;
+	buf = spdk_dma_zmalloc(mqes * sizeof(cmd), 0x1000,  NULL);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+
+	/* Create SQ 1 again, qsize is 0, this is invalid. */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_CREATE_IO_SQ;
+	cmd.cdw10_bits.create_io_q.qid = 1;
+	cmd.cdw10_bits.create_io_q.qsize = 0; /* 0 based value */
+	cmd.cdw11_bits.create_io_sq.pc = 1;
+	cmd.cdw11_bits.create_io_sq.cqid = 1;
+	dma_addr = nvme_vtophys(&g_trid, buf, NULL);
+	SPDK_CU_ASSERT_FATAL(dma_addr != SPDK_VTOPHYS_ERROR);
+	cmd.dptr.prp.prp1 = dma_addr;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_SIZE);
+
+	/* Create SQ 1 again, qsize is MQES + 1, this is invalid. */
+	cmd.cdw10_bits.create_io_q.qsize = (uint16_t)mqes; /* 0 based value */
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_SIZE);
+
+	/* Create SQ 1 again, qsize is MQES, this is valid. */
+	cmd.cdw10_bits.create_io_q.qsize = cap.bits.mqes; /* 0 based value */
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	spdk_dma_free(buf);
+	spdk_nvme_detach(ctrlr);
+}
+
 static int
 parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 {
@@ -354,6 +472,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, admin_fused);
 	CU_ADD_TEST(suite, delete_admin_queue);
 	CU_ADD_TEST(suite, delete_io_sq_twice);
+	CU_ADD_TEST(suite, delete_create_io_sq);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
