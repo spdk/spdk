@@ -3290,20 +3290,12 @@ iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_
 	struct spdk_iscsi_pdu *pdu;
 	struct iscsi_bhs_scsi_req *reqh;
 	uint32_t transfer_len;
-	uint32_t scsi_data_len;
-	struct spdk_iscsi_task *subtask;
 	int rc;
 
 	pdu = iscsi_task_get_pdu(task);
 	reqh = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
 
 	transfer_len = task->scsi.transfer_len;
-
-	if (spdk_likely(!pdu->dif_insert_or_strip)) {
-		scsi_data_len = pdu->data_segment_len;
-	} else {
-		scsi_data_len = pdu->data_buf_len;
-	}
 
 	if (reqh->final_bit &&
 	    pdu->data_segment_len < transfer_len) {
@@ -3318,23 +3310,22 @@ iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_
 		/* Non-immediate writes */
 		if (pdu->data_segment_len != 0) {
 			/* we are doing the first partial write task */
-			subtask = iscsi_task_get(conn, task, iscsi_task_cpl);
-			assert(subtask != NULL);
-
-			spdk_scsi_task_set_data(&subtask->scsi, pdu->data, scsi_data_len);
-			subtask->scsi.length = pdu->data_segment_len;
-			iscsi_task_associate_pdu(subtask, pdu);
-
-			task->current_data_offset = pdu->data_segment_len;
-
-			iscsi_queue_task(conn, subtask);
+			rc = iscsi_submit_write_subtask(conn, task, pdu, pdu->mobj[0]);
+			if (rc < 0) {
+				iscsi_task_put(task);
+				return SPDK_ISCSI_CONNECTION_FATAL;
+			}
 		}
 		return 0;
 	}
 
 	if (pdu->data_segment_len == transfer_len) {
 		/* we are doing small writes with no R2T */
-		spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
+		if (spdk_likely(!pdu->dif_insert_or_strip)) {
+			spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_segment_len);
+		} else {
+			spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_buf_len);
+		}
 		task->scsi.length = transfer_len;
 	}
 
