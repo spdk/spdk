@@ -3259,6 +3259,33 @@ iscsi_pdu_payload_op_scsi_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_t
 }
 
 static int
+iscsi_submit_write_subtask(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task,
+			   struct spdk_iscsi_pdu *pdu, struct spdk_mobj *mobj)
+{
+	struct spdk_iscsi_task *subtask;
+
+	subtask = iscsi_task_get(conn, task, iscsi_task_cpl);
+	if (subtask == NULL) {
+		SPDK_ERRLOG("Unable to acquire subtask\n");
+		return SPDK_ISCSI_CONNECTION_FATAL;
+	}
+	subtask->scsi.offset = task->current_data_offset;
+	subtask->scsi.length = mobj->data_len;
+	iscsi_task_associate_pdu(subtask, pdu);
+
+	task->current_data_offset += mobj->data_len;
+
+	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+		spdk_scsi_task_set_data(&subtask->scsi, mobj->buf, mobj->data_len);
+	} else {
+		spdk_scsi_task_set_data(&subtask->scsi, mobj->buf, pdu->data_buf_len);
+	}
+
+	iscsi_queue_task(conn, subtask);
+	return 0;
+}
+
+static int
 iscsi_pdu_payload_op_scsi_write(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 {
 	struct spdk_iscsi_pdu *pdu;
@@ -4276,33 +4303,6 @@ iscsi_pdu_hdr_op_data(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		iscsi_task_set_mobj(task, NULL);
 	}
 
-	return 0;
-}
-
-static int
-iscsi_submit_write_subtask(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task,
-			   struct spdk_iscsi_pdu *pdu, struct spdk_mobj *mobj)
-{
-	struct spdk_iscsi_task *subtask;
-
-	subtask = iscsi_task_get(conn, task, iscsi_task_cpl);
-	if (subtask == NULL) {
-		SPDK_ERRLOG("Unable to acquire subtask\n");
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-	subtask->scsi.offset = task->current_data_offset;
-	subtask->scsi.length = mobj->data_len;
-	iscsi_task_associate_pdu(subtask, pdu);
-
-	task->current_data_offset += mobj->data_len;
-
-	if (spdk_likely(!pdu->dif_insert_or_strip)) {
-		spdk_scsi_task_set_data(&subtask->scsi, mobj->buf, mobj->data_len);
-	} else {
-		spdk_scsi_task_set_data(&subtask->scsi, mobj->buf, pdu->data_buf_len);
-	}
-
-	iscsi_queue_task(conn, subtask);
 	return 0;
 }
 
