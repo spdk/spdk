@@ -141,6 +141,7 @@ class Server:
             self.log_print(" ".join(tc_qdisc_map_cmd))
             self.exec_cmd(tc_qdisc_map_cmd)
 
+            time.sleep(5)
             tc_qdisc_ingress_cmd = ["sudo", "tc", "qdisc", "add", "dev", nic_name, "ingress"]
             self.log_print(" ".join(tc_qdisc_ingress_cmd))
             self.exec_cmd(tc_qdisc_ingress_cmd)
@@ -151,6 +152,13 @@ class Server:
                              "skip_sw", "hw_tc", "1"]
             self.log_print(" ".join(tc_filter_cmd))
             self.exec_cmd(tc_filter_cmd)
+
+            # show tc configuration
+            self.log_print("Show tc configuration for %s NIC..." % nic_name)
+            tc_disk_out = self.exec_cmd(["sudo", "tc", "qdisc", "show", "dev", nic_name])
+            tc_filter_out = self.exec_cmd(["sudo", "tc", "filter", "show", "dev", nic_name, "ingress"])
+            self.log_print("%s" % tc_disk_out)
+            self.log_print("%s" % tc_filter_out)
 
             # Ethtool coalese settings must be applied after configuring traffic classes
             self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-rx", "off", "rx-usecs", "0"])
@@ -1060,6 +1068,9 @@ class SPDKTarget(Target):
     def spdk_tgt_configure(self):
         self.log_print("Configuring SPDK NVMeOF target via RPC")
 
+        if self.enable_adq:
+            self.adq_configure_tc()
+
         # Create RDMA transport layer
         rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport,
                                        num_shared_buffers=self.num_shared_buffers,
@@ -1068,16 +1079,14 @@ class SPDKTarget(Target):
         self.log_print("SPDK NVMeOF transport layer:")
         rpc.client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
-        if self.enable_adq:
-            self.adq_configure_tc()
-            self.log_print("Done configuring SPDK NVMeOF Target")
-
         if self.null_block:
             self.spdk_tgt_add_nullblock(self.null_block)
             self.spdk_tgt_add_subsystem_conf(self.nic_ips, self.null_block)
         else:
             self.spdk_tgt_add_nvme_conf()
             self.spdk_tgt_add_subsystem_conf(self.nic_ips)
+
+        self.log_print("Done configuring SPDK NVMeOF Target")
 
     def spdk_tgt_add_nullblock(self, null_block_count):
         md_size = 0
