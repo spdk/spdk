@@ -69,7 +69,7 @@ DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *device));
 DEFINE_STUB(spdk_memory_domain_pull_data, int, (struct spdk_memory_domain *src_domain,
 		void *src_domain_ctx, struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov,
-		uint32_t dst_iov_cnt, spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
+		uint32_t dst_iov_cnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
 
 DEFINE_RETURN_MOCK(spdk_memory_domain_create, int);
 int

@@ -42,6 +42,7 @@ TAILQ_HEAD(, spdk_memory_domain) g_dma_memory_domains = TAILQ_HEAD_INITIALIZER(
 struct spdk_memory_domain {
 	enum spdk_dma_device_type type;
 	spdk_memory_domain_pull_data_cb pull_cb;
+	spdk_memory_domain_push_data_cb push_cb;
 	spdk_memory_domain_translate_memory_cb translate_cb;
 	TAILQ_ENTRY(spdk_memory_domain) link;
 	struct spdk_memory_domain_ctx *ctx;
@@ -126,6 +127,17 @@ spdk_memory_domain_set_pull(struct spdk_memory_domain *domain,
 	domain->pull_cb = pull_cb;
 }
 
+void
+spdk_memory_domain_set_push(struct spdk_memory_domain *domain,
+			    spdk_memory_domain_push_data_cb push_cb)
+{
+	if (!domain) {
+		return;
+	}
+
+	domain->push_cb = push_cb;
+}
+
 struct spdk_memory_domain_ctx *
 spdk_memory_domain_get_context(struct spdk_memory_domain *domain)
 {
@@ -168,7 +180,7 @@ spdk_memory_domain_destroy(struct spdk_memory_domain *domain)
 int
 spdk_memory_domain_pull_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 			     struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov, uint32_t dst_iov_cnt,
-			     spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+			     spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
 {
 	assert(src_domain);
 	assert(src_iov);
@@ -179,6 +191,23 @@ spdk_memory_domain_pull_data(struct spdk_memory_domain *src_domain, void *src_do
 	}
 
 	return src_domain->pull_cb(src_domain, src_domain_ctx, src_iov, src_iov_cnt, dst_iov, dst_iov_cnt,
+				   cpl_cb, cpl_cb_arg);
+}
+
+int
+spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			     struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+			     spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	assert(dst_domain);
+	assert(dst_iov);
+	assert(src_iov);
+
+	if (spdk_unlikely(!dst_domain->push_cb)) {
+		return -ENOTSUP;
+	}
+
+	return dst_domain->push_cb(dst_domain, dst_domain_ctx, dst_iov, dst_iovcnt, src_iov, src_iovcnt,
 				   cpl_cb, cpl_cb_arg);
 }
 

@@ -63,12 +63,12 @@ enum spdk_dma_device_type {
 struct spdk_memory_domain;
 
 /**
- * Definition of completion callback to be called by pull function.
+ * Definition of completion callback to be called by pull or push functions.
  *
- * \param ctx User context passed to pull function
- * \param rc Result of asynchronous pull function
+ * \param ctx User context passed to pull of push functions
+ * \param rc Result of asynchronous data pull or push function
  */
-typedef void (*spdk_memory_domain_pull_data_cpl_cb)(void *ctx, int rc);
+typedef void (*spdk_memory_domain_data_cpl_cb)(void *ctx, int rc);
 
 /**
  * Definition of function which asynchronously pulles data from src_domain to local memory domain.
@@ -88,7 +88,26 @@ typedef void (*spdk_memory_domain_pull_data_cpl_cb)(void *ctx, int rc);
 typedef int (*spdk_memory_domain_pull_data_cb)(struct spdk_memory_domain *src_domain,
 		void *src_domain_ctx,
 		struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov, uint32_t dst_iovcnt,
-		spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+		spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+
+/**
+ * Definition of function which asynchronously pushes data from local memory to destination memory domain.
+ * Implementation of this function must call \b cpl_cb only when it returns 0. All other return codes mean failure.
+ *
+ * \param dst_domain Memory domain to which the data should be pushed
+ * \param dst_domain_ctx Optional context passed by upper layer with IO request
+ * \param dst_iov Iov vector in dst_domain space
+ * \param dst_iovcnt dst_iov array size
+ * \param src_iov Iov vector in local memory
+ * \param src_iovcnt src_iov array size
+ * \param cpl_cb A callback to be called when push operation completes
+ * \param cpl_cb_arg Optional argument to be passed to \b cpl_cb
+ * \return 0 on success, negated errno on failure
+ */
+typedef int (*spdk_memory_domain_push_data_cb)(struct spdk_memory_domain *dst_domain,
+		void *dst_domain_ctx,
+		struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+		spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 struct spdk_memory_domain_translation_result {
 	/** size of this structure in bytes */
@@ -182,6 +201,15 @@ void spdk_memory_domain_set_pull(struct spdk_memory_domain *domain,
 				 spdk_memory_domain_pull_data_cb pull_cb);
 
 /**
+ * Set push function for memory domain. Overwrites existing push function.
+ *
+ * \param domain Memory domain
+ * \param push_cb push function
+ */
+void spdk_memory_domain_set_push(struct spdk_memory_domain *domain,
+				 spdk_memory_domain_push_data_cb push_cb);
+
+/**
  * Get the context passed by the user in \ref spdk_memory_domain_create
  *
  * \param domain Memory domain
@@ -228,7 +256,25 @@ void spdk_memory_domain_destroy(struct spdk_memory_domain *domain);
  */
 int spdk_memory_domain_pull_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 				 struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov, uint32_t dst_iov_cnt,
-				 spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+				 spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+
+/**
+ * Asynchronously push data located in local memory to \b dst_domain
+ *
+ * \param dst_domain Memory domain to which the data should be pushed
+ * \param dst_domain_ctx Optional context passed by upper layer with IO request
+ * \param dst_iov Iov vector in dst_domain space
+ * \param dst_iovcnt dst_iov array size
+ * \param src_iov Iov vector in local memory
+ * \param src_iovcnt src_iov array size
+ * \param cpl_cb Completion callback
+ * \param cpl_cb_arg Completion callback argument
+ * \return 0 on success, negated errno on failure. push_cb implementation must only call the callback when 0
+ * is returned
+ */
+int spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+				 struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+				 spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 /**
  * Translate data located in \b src_domain space at address \b addr with size \b len into an equivalent
