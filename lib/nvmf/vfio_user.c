@@ -2614,6 +2614,7 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint32_t len = 0;
+	uint8_t fid;
 	int iovcnt;
 
 	req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
@@ -2631,17 +2632,39 @@ map_admin_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
 		len = (((cmd->cdw11_bits.get_log_page.numdu << 16) | cmd->cdw10_bits.get_log_page.numdl) + 1) * 4;
 		break;
+	case SPDK_NVME_OPC_GET_FEATURES:
+	case SPDK_NVME_OPC_SET_FEATURES:
+		fid = cmd->cdw10_bits.set_features.fid;
+		switch (fid) {
+		case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
+			len = 4096;
+			break;
+		case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
+			len = 256;
+			break;
+		case SPDK_NVME_FEAT_TIMESTAMP:
+			len = 8;
+			break;
+		case SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT:
+			len = 512;
+			break;
+		case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+			if (cmd->cdw11_bits.feat_host_identifier.bits.exhid) {
+				len = 16;
+			} else {
+				len = 8;
+			}
+			break;
+		default:
+			return 0;
+		}
+		break;
 	default:
-		/*
-		 * CREATE IO SQ/CQ are processed separately in handle_create_io_q().
-		 * GET/SET FEATURES: no need to support Host Identifier for vfio-user transport.
-		 * Let the NVMf library to decide other commands.
-		 */
 		return 0;
 	}
 
 	/* ADMIN command will not use SGL */
-	if (req->cmd->nvme_cmd.psdt != 0) {
+	if (cmd->psdt != 0) {
 		return -EINVAL;
 	}
 
