@@ -426,6 +426,27 @@ out:
 	return rc;
 }
 
+static bool
+fio_redirected_to_dev_null(void)
+{
+	char path[PATH_MAX] = "";
+	ssize_t ret;
+
+	ret = readlink("/proc/self/fd/1", path, sizeof(path));
+
+	if (ret == -1 || strcmp(path, "/dev/null") != 0) {
+		return false;
+	}
+
+	ret = readlink("/proc/self/fd/2", path, sizeof(path));
+
+	if (ret == -1 || strcmp(path, "/dev/null") != 0) {
+		return false;
+	}
+
+	return true;
+}
+
 /* Called for each thread to fill in the 'real_file_size' member for
  * each file associated with this thread. This is called prior to
  * the init operation (spdk_fio_init()) below. This call will occur
@@ -439,16 +460,18 @@ spdk_fio_setup(struct thread_data *td)
 	unsigned int i;
 	struct fio_file *f;
 
-	/* we might be running in a daemonized FIO instance where standard
-	 * input and output were closed and fds 0, 1, and 2 are reused
-	 * for something important by FIO. We can't ensure we won't print
-	 * anything (and so will our dependencies, e.g. DPDK), so abort early.
-	 * (is_backend is an fio global variable)
+	/*
+	 * If we're running in a daemonized FIO instance, it's possible
+	 * fd 1/2 were re-used for something important by FIO. Newer fio
+	 * versions are careful to redirect those to /dev/null, but if we're
+	 * not, we'll abort early, so we don't accidentally write messages to
+	 * an important file, etc.
 	 */
-	if (is_backend) {
+	if (is_backend && !fio_redirected_to_dev_null()) {
 		char buf[1024];
 		snprintf(buf, sizeof(buf),
-			 "SPDK FIO plugin won't work with daemonized FIO server.");
+			 "SPDK FIO plugin is in daemon mode, but stdout/stderr "
+			 "aren't redirected to /dev/null. Aborting.");
 		fio_server_text_output(FIO_LOG_ERR, buf, sizeof(buf));
 		return -1;
 	}
