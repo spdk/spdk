@@ -790,12 +790,18 @@ static void nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 		enum nvme_tcp_pdu_recv_state state);
 
 static void
+nvmf_tcp_qpair_set_state(struct spdk_nvmf_tcp_qpair *tqpair, enum nvme_tcp_qpair_state state)
+{
+	tqpair->state = state;
+}
+
+static void
 nvmf_tcp_qpair_disconnect(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	SPDK_DEBUGLOG(nvmf_tcp, "Disconnecting qpair %p\n", tqpair);
 
 	if (tqpair->state <= NVME_TCP_QPAIR_STATE_RUNNING) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
+		nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_EXITING);
 		nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 		spdk_poller_unregister(&tqpair->timeout_poller);
 
@@ -1724,7 +1730,7 @@ nvmf_tcp_send_icresp_complete(void *cb_arg)
 {
 	struct spdk_nvmf_tcp_qpair *tqpair = cb_arg;
 
-	tqpair->state = NVME_TCP_QPAIR_STATE_RUNNING;
+	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_RUNNING);
 }
 
 static void
@@ -1785,7 +1791,7 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	SPDK_DEBUGLOG(nvmf_tcp, "host_hdgst_enable: %u\n", tqpair->host_hdgst_enable);
 	SPDK_DEBUGLOG(nvmf_tcp, "host_ddgst_enable: %u\n", tqpair->host_ddgst_enable);
 
-	tqpair->state = NVME_TCP_QPAIR_STATE_INITIALIZING;
+	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_INITIALIZING);
 	nvmf_tcp_qpair_write_pdu(tqpair, rsp_pdu, nvmf_tcp_send_icresp_complete, tqpair);
 	nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 	return;
@@ -2682,7 +2688,7 @@ nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	}
 
 	tqpair->group = tgroup;
-	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
+	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_INVALID);
 	TAILQ_INSERT_TAIL(&tgroup->qpairs, tqpair, link);
 
 	return 0;
@@ -2741,7 +2747,7 @@ nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair,
 	SPDK_DEBUGLOG(nvmf_tcp, "Qpair: %p\n", qpair);
 
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
-	tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
+	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_EXITED);
 	nvmf_tcp_qpair_destroy(tqpair);
 
 	if (cb_fn) {
