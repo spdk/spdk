@@ -45,9 +45,13 @@ timing_exit hotplug_hw_cfg
 
 timing_enter hotplug_hw_test
 
-$SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 2>&1 | tee -a log.txt &
-example_pid=$!
-trap 'killprocess $example_pid; exit 1' SIGINT SIGTERM EXIT
+exec {log}> >(tee -a "$testdir/log.txt")
+exec >&$log 2>&1
+
+$SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 &
+hotplug_pid=$!
+
+trap 'killprocess $hotplug_pid; exit 1' SIGINT SIGTERM EXIT
 
 i=0
 while ! grep "Starting I/O" log.txt; do
@@ -71,7 +75,12 @@ insert_device
 sleep $io_time
 
 timing_enter wait_for_example
-wait $example_pid
+
+if ! wait $hotplug_pid; then
+	echo "Hotplug example returned error!"
+	return 1
+fi
+
 timing_exit wait_for_example
 
 trap - SIGINT SIGTERM EXIT
