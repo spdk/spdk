@@ -221,7 +221,8 @@ if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 fi
 
 if [ "$(uname -s)" = "Linux" ]; then
-	export HUGEMEM=4096 CLEAR_HUGE=yes
+	HUGEMEM=${HUGEMEM:-4096}
+	export CLEAR_HUGE=yes
 	if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
 		# Make sure that memory is distributed across all NUMA nodes - by default, all goes to
 		# node0, but if QAT devices are attached to a different node, all of their VFs will end
@@ -240,16 +241,18 @@ elif [ "$(uname -s)" = "FreeBSD" ]; then
 	MAKE="gmake"
 	MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | grep -E -i 'hw.ncpu' | awk '{print $2}')}
 	# FreeBSD runs a much more limited set of tests, so keep the default 2GB.
-	export HUGEMEM=2048
+	HUGEMEM=${HUGEMEM:-2048}
 elif [ "$(uname -s)" = "Windows" ]; then
 	MAKE="make"
 	MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 	# Keep the default 2GB for Windows.
-	export HUGEMEM=2048
+	HUGEMEM=${HUGEMEM:-2048}
 else
 	echo "Unknown OS \"$(uname -s)\""
 	exit 1
 fi
+
+export HUGEMEM=$HUGEMEM
 
 if [ -z "$output_dir" ]; then
 	mkdir -p "$rootdir/../output"
