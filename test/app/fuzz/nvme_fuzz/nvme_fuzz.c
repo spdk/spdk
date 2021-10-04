@@ -613,22 +613,6 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
-{
-	register_ctrlr(ctrlr);
-}
-
-static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid, struct spdk_nvme_ctrlr_opts *opts)
-{
-	printf("Controller trtype %s\ttraddr %s\n", spdk_nvme_transport_id_trtype_str(trid->trtype),
-	       trid->traddr);
-
-	return true;
-}
-
 static int
 prep_qpair(struct nvme_fuzz_ns *ns, struct nvme_fuzz_qp *qp, uint32_t max_qdepth)
 {
@@ -726,6 +710,7 @@ begin_fuzz(void *ctx)
 {
 	struct nvme_fuzz_ns *ns_entry;
 	struct nvme_fuzz_trid *trid;
+	struct spdk_nvme_ctrlr *ctrlr;
 	int rc;
 
 	if (!spdk_iommu_is_enabled()) {
@@ -736,12 +721,14 @@ begin_fuzz(void *ctx)
 	}
 
 	TAILQ_FOREACH(trid, &g_trid_list, tailq) {
-		if (spdk_nvme_probe(&trid->trid, trid, probe_cb, attach_cb, NULL) != 0) {
-			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
+		ctrlr = spdk_nvme_connect(&trid->trid, NULL, 0);
+		if (ctrlr == NULL) {
+			fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",
 				trid->trid.traddr);
 			rc = -1;
 			goto out;
 		}
+		register_ctrlr(ctrlr);
 	}
 
 	if (TAILQ_EMPTY(&g_ns_list)) {
