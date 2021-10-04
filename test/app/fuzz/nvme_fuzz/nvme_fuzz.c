@@ -580,11 +580,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns, uint32_t nsi
 
 	TAILQ_INIT(&ns_entry->io_qp.free_ctx_objs);
 	TAILQ_INIT(&ns_entry->io_qp.outstanding_ctx_objs);
-	if (g_run_admin_commands) {
-		ns_entry->a_qp.qpair = NULL;
-		TAILQ_INIT(&ns_entry->a_qp.free_ctx_objs);
-		TAILQ_INIT(&ns_entry->a_qp.outstanding_ctx_objs);
-	}
+	TAILQ_INIT(&ns_entry->a_qp.free_ctx_objs);
+	TAILQ_INIT(&ns_entry->a_qp.outstanding_ctx_objs);
 	TAILQ_INSERT_TAIL(&g_ns_list, ns_entry, tailq);
 }
 
