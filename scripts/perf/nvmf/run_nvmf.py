@@ -128,7 +128,7 @@ class Server:
         num_queues_tc0 = 2  # 2 is minimum number of queues for TC0
         num_queues_tc1 = self.num_cores
         port_param = "dst_port" if isinstance(self, Target) else "src_port"
-        ports = set([p[0] for p in self.subsystem_info_list])
+        port = "4420"
         xps_script_path = os.path.join(self.spdk_dir, "scripts", "perf", "nvmf", "set_xps_rxqs")
 
         for nic_ip in self.nic_ips:
@@ -145,13 +145,12 @@ class Server:
             self.log_print(" ".join(tc_qdisc_ingress_cmd))
             self.exec_cmd(tc_qdisc_ingress_cmd)
 
-            for port in ports:
-                tc_filter_cmd = ["sudo", "tc", "filter", "add", "dev", nic_name,
-                                 "protocol", "ip", "ingress", "prio", "1", "flower",
-                                 "dst_ip", "%s/32" % nic_ip, "ip_proto", "tcp", port_param, port,
-                                 "skip_sw", "hw_tc", "1"]
-                self.log_print(" ".join(tc_filter_cmd))
-                self.exec_cmd(tc_filter_cmd)
+            tc_filter_cmd = ["sudo", "tc", "filter", "add", "dev", nic_name,
+                             "protocol", "ip", "ingress", "prio", "1", "flower",
+                             "dst_ip", "%s/32" % nic_ip, "ip_proto", "tcp", port_param, port,
+                             "skip_sw", "hw_tc", "1"]
+            self.log_print(" ".join(tc_filter_cmd))
+            self.exec_cmd(tc_filter_cmd)
 
             # Ethtool coalese settings must be applied after configuring traffic classes
             self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-rx", "off", "rx-usecs", "0"])
