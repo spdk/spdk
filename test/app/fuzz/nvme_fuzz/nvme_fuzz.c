@@ -54,6 +54,7 @@ int g_runtime;
 int g_num_active_threads = 0;
 uint32_t g_admin_depth = 16;
 uint32_t g_io_depth = 128;
+bool g_check_iommu = true;
 
 bool g_valid_ns_only = false;
 bool g_verbose_mode = false;
@@ -713,7 +714,7 @@ begin_fuzz(void *ctx)
 	struct spdk_nvme_ctrlr *ctrlr;
 	int rc;
 
-	if (!spdk_iommu_is_enabled()) {
+	if (g_check_iommu && !spdk_iommu_is_enabled()) {
 		/* Don't set rc to an error code here. We don't want to fail an automated test based on this. */
 		fprintf(stderr, "The IOMMU must be enabled to run this program to avoid unsafe memory accesses.\n");
 		rc = 0;
@@ -783,6 +784,7 @@ This helps dig deeper into other errors besides invalid namespace.\n");
 	fprintf(stderr, " -S <integer>              Seed value for test.\n");
 	fprintf(stderr,
 		" -t <integer>              Time in seconds to run the fuzz test. Only valid if -j is not specified.\n");
+	fprintf(stderr, " -U                        Do not check if IOMMU is enabled.\n");
 	fprintf(stderr, " -V                        Enable logging of each submitted command.\n");
 }
 
@@ -833,6 +835,9 @@ nvme_fuzz_parse(int ch, char *arg)
 			return -1;
 		}
 		break;
+	case 'U':
+		g_check_iommu = false;
+		break;
 	case 'V':
 		g_verbose_mode = true;
 		break;
@@ -855,7 +860,7 @@ main(int argc, char **argv)
 	g_runtime = DEFAULT_RUNTIME;
 	g_run = true;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "aF:j:NS:t:V", NULL, nvme_fuzz_parse,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "aF:j:NS:t:UV", NULL, nvme_fuzz_parse,
 				      nvme_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {
 		return rc;
 	}
