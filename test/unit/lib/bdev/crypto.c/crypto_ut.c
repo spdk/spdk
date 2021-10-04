@@ -40,7 +40,6 @@
 
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
-#include <rte_cryptodev_pmd.h>
 
 #define MAX_TEST_BLOCKS 8192
 struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
@@ -191,6 +190,7 @@ DEFINE_STUB(rte_cryptodev_sym_session_pool_create, struct rte_mempool *, (const 
 		int socket_id), (struct rte_mempool *)1);
 DEFINE_STUB(rte_cryptodev_start, int, (uint8_t dev_id), 0);
 DEFINE_STUB_V(rte_cryptodev_stop, (uint8_t dev_id));
+DEFINE_STUB(rte_cryptodev_close, int, (uint8_t dev_id), 0);
 DEFINE_STUB(rte_cryptodev_sym_session_create, struct rte_cryptodev_sym_session *,
 	    (struct rte_mempool *mempool), (struct rte_cryptodev_sym_session *)1);
 DEFINE_STUB(rte_cryptodev_sym_session_init, int, (uint8_t dev_id,
