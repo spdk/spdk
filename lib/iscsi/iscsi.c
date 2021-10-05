@@ -4644,24 +4644,26 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		pdu->data = mobj->buf;
 		pdu->data_from_mempool = true;
 	} else if (mobj->data_len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-		/* The first data buffer ran out. Allocate the second data buffer and
-		 * continue reading the data segment.
-		 */
-		assert(pdu->mobj[1] == NULL);
-		assert(pdu->data_from_mempool == true);
-		assert(!pdu->dif_insert_or_strip);
-
-		if (conn->data_digest) {
-			iscsi_pdu_calc_partial_data_digest(pdu);
-		}
-		mobj = iscsi_datapool_get(g_iscsi.pdu_data_out_pool);
+		mobj = pdu->mobj[1];
 		if (mobj == NULL) {
-			return 1;
+			/* The first data buffer just ran out. Allocate the second data buffer and
+			 * continue reading the data segment.
+			 */
+			assert(pdu->data_from_mempool == true);
+			assert(!pdu->dif_insert_or_strip);
+
+			if (conn->data_digest) {
+				iscsi_pdu_calc_partial_data_digest(pdu);
+			}
+			mobj = iscsi_datapool_get(g_iscsi.pdu_data_out_pool);
+			if (mobj == NULL) {
+				return 1;
+			}
+			pdu->mobj[1] = mobj;
+			pdu->data = mobj->buf;
+			pdu->data_offset = pdu->data_valid_bytes;
+			pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 		}
-		pdu->mobj[1] = mobj;
-		pdu->data = mobj->buf;
-		pdu->data_offset = pdu->data_valid_bytes;
-		pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 	}
 
 	/* copy the actual data into local buffer */
