@@ -1207,6 +1207,13 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		return;
 	}
 
+	if (g_io_size_bytes % sector_size != 0) {
+		printf("WARNING: IO size %u (-o) is not a multiple of nsid %u sector size %u."
+		       " Removing this ns from test\n", g_io_size_bytes, spdk_nvme_ns_get_id(ns), sector_size);
+		g_warn = true;
+		return;
+	}
+
 	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	/* NVMe driver may add additional entries based on
