@@ -3828,8 +3828,15 @@ bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* The length of the mask (in bits) must not be greater than the length of the buffer (converted to bits) */
 	assert(ctx->mask->length <= (ctx->super->used_cluster_mask_len * sizeof(
 					     struct spdk_blob_md_page) * 8));
-	/* The length of the mask must be exactly equal to the total number of clusters */
-	assert(ctx->mask->length == ctx->bs->total_clusters);
+	/*
+	 * The length of the mask must be equal to or larger than the total number of clusters. It may be
+	 * larger than the total nubmer of clusters due to a failure spdk_bs_grow.
+	 */
+	assert(ctx->mask->length >= ctx->bs->total_clusters);
+	if (ctx->mask->length > ctx->bs->total_clusters) {
+		SPDK_WARNLOG("Shrink the used_custers mask length to total_clusters");
+		ctx->mask->length = ctx->bs->total_clusters;
+	}
 
 	rc = spdk_bit_array_resize(&ctx->used_clusters, ctx->mask->length);
 	if (rc < 0) {
@@ -8041,6 +8048,257 @@ spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_
 	}
 
 	return 0;
+}
+
+static void
+bs_load_grow_continue(struct spdk_bs_load_ctx *ctx)
+{
+	int rc;
+
+	if (ctx->super->size == 0) {
+		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
+	}
+
+	if (ctx->super->io_unit_size == 0) {
+		ctx->super->io_unit_size = SPDK_BS_PAGE_SIZE;
+	}
+
+	/* Parse the super block */
+	ctx->bs->clean = 1;
+	ctx->bs->cluster_sz = ctx->super->cluster_size;
+	ctx->bs->total_clusters = ctx->super->size / ctx->super->cluster_size;
+	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	if (spdk_u32_is_pow2(ctx->bs->pages_per_cluster)) {
+		ctx->bs->pages_per_cluster_shift = spdk_u32log2(ctx->bs->pages_per_cluster);
+	}
+	ctx->bs->io_unit_size = ctx->super->io_unit_size;
+	rc = spdk_bit_array_resize(&ctx->used_clusters, ctx->bs->total_clusters);
+	if (rc < 0) {
+		bs_load_ctx_fail(ctx, -ENOMEM);
+		return;
+	}
+	ctx->bs->md_start = ctx->super->md_start;
+	ctx->bs->md_len = ctx->super->md_len;
+	rc = spdk_bit_array_resize(&ctx->bs->open_blobids, ctx->bs->md_len);
+	if (rc < 0) {
+		bs_load_ctx_fail(ctx, -ENOMEM);
+		return;
+	}
+
+	ctx->bs->total_data_clusters = ctx->bs->total_clusters - spdk_divide_round_up(
+					       ctx->bs->md_start + ctx->bs->md_len, ctx->bs->pages_per_cluster);
+	ctx->bs->super_blob = ctx->super->super_blob;
+	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
+
+	if (ctx->super->used_blobid_mask_len == 0 || ctx->super->clean == 0) {
+		SPDK_ERRLOG("Can not grow an unclean blobstore, please load it normally to clean it.\n");
+		bs_load_ctx_fail(ctx, -EIO);
+		return;
+	} else {
+		bs_load_read_used_pages(ctx);
+	}
+}
+
+static void
+bs_load_grow_super_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	if (bserrno != 0) {
+		bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
+	bs_load_grow_continue(ctx);
+}
+
+static void
+bs_load_grow_used_clusters_write_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	if (bserrno != 0) {
+		bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
+
+	spdk_free(ctx->mask);
+
+	bs_sequence_write_dev(ctx->seq, ctx->super, bs_page_to_lba(ctx->bs, 0),
+			      bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
+			      bs_load_grow_super_write_cpl, ctx);
+}
+
+static void
+bs_load_grow_used_clusters_read_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint64_t		lba, lba_count;
+	uint64_t		dev_size;
+	uint64_t		total_clusters;
+
+	if (bserrno != 0) {
+		bs_load_ctx_fail(ctx, bserrno);
+		return;
+	}
+
+	/* The type must be correct */
+	assert(ctx->mask->type == SPDK_MD_MASK_TYPE_USED_CLUSTERS);
+	/* The length of the mask (in bits) must not be greater than the length of the buffer (converted to bits) */
+	assert(ctx->mask->length <= (ctx->super->used_cluster_mask_len * sizeof(
+					     struct spdk_blob_md_page) * 8));
+	dev_size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
+	total_clusters = dev_size / ctx->super->cluster_size;
+	ctx->mask->length = total_clusters;
+
+	lba = bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_start);
+	lba_count = bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_len);
+	bs_sequence_write_dev(ctx->seq, ctx->mask, lba, lba_count,
+			      bs_load_grow_used_clusters_write_cpl, ctx);
+}
+
+static void
+bs_load_try_to_grow(struct spdk_bs_load_ctx *ctx)
+{
+	uint64_t dev_size, total_clusters, used_cluster_mask_len, max_used_cluster_mask;
+	uint64_t lba, lba_count, mask_size;
+
+	dev_size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
+	total_clusters = dev_size / ctx->super->cluster_size;
+	used_cluster_mask_len = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
+				spdk_divide_round_up(total_clusters, 8),
+				SPDK_BS_PAGE_SIZE);
+	max_used_cluster_mask = ctx->super->used_blobid_mask_start - ctx->super->used_cluster_mask_start;
+	/* No necessary to grow or no space to grow */
+	if (ctx->super->size >= dev_size || used_cluster_mask_len > max_used_cluster_mask) {
+		SPDK_DEBUGLOG(blob, "No grow\n");
+		bs_load_grow_continue(ctx);
+		return;
+	}
+
+	SPDK_DEBUGLOG(blob, "Resize blobstore\n");
+
+	ctx->super->size = dev_size;
+	ctx->super->used_cluster_mask_len = used_cluster_mask_len;
+	ctx->super->crc = blob_md_page_calc_crc(ctx->super);
+
+	mask_size = used_cluster_mask_len * SPDK_BS_PAGE_SIZE;
+	ctx->mask = spdk_zmalloc(mask_size, 0x1000, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				 SPDK_MALLOC_DMA);
+	if (!ctx->mask) {
+		bs_load_ctx_fail(ctx, -ENOMEM);
+		return;
+	}
+	lba = bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_start);
+	lba_count = bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_len);
+	bs_sequence_read_dev(ctx->seq, ctx->mask, lba, lba_count,
+			     bs_load_grow_used_clusters_read_cpl, ctx);
+}
+
+static void
+bs_grow_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint32_t	crc;
+	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
+
+	if (ctx->super->version > SPDK_BS_VERSION ||
+	    ctx->super->version < SPDK_BS_INITIAL_VERSION) {
+		bs_load_ctx_fail(ctx, -EILSEQ);
+		return;
+	}
+
+	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
+		   sizeof(ctx->super->signature)) != 0) {
+		bs_load_ctx_fail(ctx, -EILSEQ);
+		return;
+	}
+
+	crc = blob_md_page_calc_crc(ctx->super);
+	if (crc != ctx->super->crc) {
+		bs_load_ctx_fail(ctx, -EILSEQ);
+		return;
+	}
+
+	if (memcmp(&ctx->bs->bstype, &ctx->super->bstype, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
+		SPDK_DEBUGLOG(blob, "Bstype matched - loading blobstore\n");
+	} else if (memcmp(&ctx->bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
+		SPDK_DEBUGLOG(blob, "Bstype wildcard used - loading blobstore regardless bstype\n");
+	} else {
+		SPDK_DEBUGLOG(blob, "Unexpected bstype\n");
+		SPDK_LOGDUMP(blob, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		SPDK_LOGDUMP(blob, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		bs_load_ctx_fail(ctx, -ENXIO);
+		return;
+	}
+
+	if (ctx->super->size > ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen) {
+		SPDK_NOTICELOG("Size mismatch, dev size: %" PRIu64 ", blobstore size: %" PRIu64 "\n",
+			       ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen, ctx->super->size);
+		bs_load_ctx_fail(ctx, -EILSEQ);
+		return;
+	}
+
+	bs_load_try_to_grow(ctx);
+
+}
+
+void
+spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_store	*bs;
+	struct spdk_bs_cpl	cpl;
+	struct spdk_bs_load_ctx *ctx;
+	struct spdk_bs_opts	opts = {};
+	int err;
+
+	SPDK_DEBUGLOG(blob, "Loading blobstore from dev %p\n", dev);
+
+	if ((SPDK_BS_PAGE_SIZE % dev->blocklen) != 0) {
+		SPDK_DEBUGLOG(blob, "unsupported dev block length of %d\n", dev->blocklen);
+		dev->destroy(dev);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	if (o) {
+		if (bs_opts_copy(o, &opts)) {
+			return;
+		}
+	}
+
+	if (opts.max_md_ops == 0 || opts.max_channel_ops == 0) {
+		dev->destroy(dev);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
+	err = bs_alloc(dev, &opts, &bs, &ctx);
+	if (err) {
+		dev->destroy(dev);
+		cb_fn(cb_arg, NULL, err);
+		return;
+	}
+
+	cpl.type = SPDK_BS_CPL_TYPE_BS_HANDLE;
+	cpl.u.bs_handle.cb_fn = cb_fn;
+	cpl.u.bs_handle.cb_arg = cb_arg;
+	cpl.u.bs_handle.bs = bs;
+
+	ctx->seq = bs_sequence_start(bs->md_channel, &cpl);
+	if (!ctx->seq) {
+		spdk_free(ctx->super);
+		free(ctx);
+		bs_free(bs);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	/* Read the super block */
+	bs_sequence_read_dev(ctx->seq, ctx->super, bs_page_to_lba(bs, 0),
+			     bs_byte_to_lba(bs, sizeof(*ctx->super)),
+			     bs_grow_load_super_cpl, ctx);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(blob)

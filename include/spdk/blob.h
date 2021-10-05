@@ -258,6 +258,17 @@ void spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
+ * Grow a blobstore to fill the underlying device
+ *
+ * \param dev Blobstore block device.
+ * \param opts The structure which contains the option values for the blobstore.
+ * \param cb_fn Called when the loading is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
+		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
  * Initialize a blobstore on the given device.
  *
  * \param dev Blobstore block device.

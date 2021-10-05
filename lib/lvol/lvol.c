@@ -1488,3 +1488,34 @@ spdk_lvol_decouple_parent(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, v
 	spdk_bs_blob_decouple_parent(lvol->lvol_store->blobstore, req->channel, blob_id,
 				     lvol_inflate_cb, req);
 }
+
+void
+spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_with_handle_req *req;
+	struct spdk_bs_opts opts = {};
+
+	assert(cb_fn != NULL);
+
+	if (bs_dev == NULL) {
+		SPDK_ERRLOG("Blobstore device does not exist\n");
+		cb_fn(cb_arg, NULL, -ENODEV);
+		return;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for request structure\n");
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->bs_dev = bs_dev;
+
+	lvs_bs_opts_init(&opts);
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
+
+	spdk_bs_grow(bs_dev, &opts, lvs_load_cb, req);
+}

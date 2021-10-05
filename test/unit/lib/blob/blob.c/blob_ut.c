@@ -2544,6 +2544,132 @@ bs_load_custom_cluster_size(void)
 }
 
 static void
+bs_load_after_failed_grow(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_super_block *super_block;
+	struct spdk_bs_opts opts;
+	struct spdk_bs_md_mask *mask;
+	struct spdk_blob_opts blob_opts;
+	struct spdk_blob *blob, *snapshot;
+	spdk_blob_id blobid, snapshotid;
+	uint64_t total_data_clusters;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	/*
+	 * The bdev_size is 64M, cluster_sz is 1M, so there are 64 clusters. The
+	 * blobstore will create 64 md pages by defualt. We set num_md_pages to 128,
+	 * thus the blobstore could grow to the double size.
+	 */
+	opts.num_md_pages = 128;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create blob */
+	ut_spdk_blob_opts_init(&blob_opts);
+	blob_opts.num_clusters = 10;
+
+	blob = ut_blob_create_and_open(bs, &blob_opts);
+	blobid = spdk_blob_get_id(blob);
+
+	/* Create snapshot */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snapshotid = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	total_data_clusters = bs->total_data_clusters;
+	CU_ASSERT(bs->num_free_clusters + 10 == total_data_clusters);
+
+	/* Unload the blob store */
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_block->clean == 1);
+
+	mask = (struct spdk_bs_md_mask *)(g_dev_buffer + super_block->used_cluster_mask_start * 4096);
+	CU_ASSERT(mask->type == SPDK_MD_MASK_TYPE_USED_CLUSTERS);
+	CU_ASSERT(mask->length == super_block->size / super_block->cluster_size);
+
+	/*
+	 * We change the mask->length to emulate this scenario: A spdk_bs_grow failed after it changed
+	 * the used_cluster bitmap length, but it didn't change the super block yet.
+	 */
+	mask->length *= 2;
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	dev->blockcnt *= 2;
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	opts.clear_method = BS_CLEAR_WITH_NONE;
+	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "TESTTYPE");
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Check the capacity is the same as before */
+	CU_ASSERT(bs->total_data_clusters == total_data_clusters);
+	CU_ASSERT(bs->num_free_clusters + 10 == total_data_clusters);
+
+	/* Check the blob and the snapshot are still available */
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(super_block->clean == 1);
+	g_bs = NULL;
+}
+
+static void
 bs_type(void)
 {
 	struct spdk_blob_store *bs;
@@ -2736,6 +2862,84 @@ bs_test_recover_cluster_count(void)
 	bs = g_bs;
 	CU_ASSERT(bs->num_free_clusters == bs->total_clusters - (super_block.md_start +
 			super_block.md_len));
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
+bs_test_grow(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_super_block super_block;
+	struct spdk_bs_opts opts;
+	struct spdk_bs_md_mask mask;
+	uint64_t bdev_size;
+
+	dev = init_dev();
+	bdev_size = dev->blockcnt * dev->blocklen;
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/*
+	 * To make sure all the metadata are updated to the disk,
+	 * we check the g_dev_buffer after spdk_bs_unload.
+	 */
+	memcpy(&super_block, g_dev_buffer, sizeof(struct spdk_bs_super_block));
+	CU_ASSERT(super_block.size == bdev_size);
+
+	/*
+	 * Make sure the used_cluster mask is correct.
+	 */
+	memcpy(&mask, g_dev_buffer + super_block.used_cluster_mask_start * 4096,
+	       sizeof(struct spdk_bs_md_mask));
+	CU_ASSERT(mask.type == SPDK_MD_MASK_TYPE_USED_CLUSTERS);
+	CU_ASSERT(mask.length == bdev_size / (1 * 1024 * 1024));
+
+	/*
+	 * The default dev size is 64M, here we set the dev size to 128M,
+	 * then the blobstore will adjust the metadata according to the new size.
+	 * The dev size is larger than the g_dev_buffer size, so we set clear_method
+	 * to NONE, or the blobstore will try to clear the dev and will write beyond
+	 * the end of g_dev_buffer.
+	 */
+	dev = init_dev();
+	dev->blockcnt = (128L * 1024L * 1024L) / dev->blocklen;
+	bdev_size = dev->blockcnt * dev->blocklen;
+	spdk_bs_opts_init(&opts, sizeof(opts));
+	opts.clear_method = BS_CLEAR_WITH_NONE;
+	spdk_bs_grow(dev, &opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/*
+	 * After spdk_bs_grow, all metadata are updated to the disk.
+	 * So we can check g_dev_buffer now.
+	 */
+	memcpy(&super_block, g_dev_buffer, sizeof(struct spdk_bs_super_block));
+	CU_ASSERT(super_block.size == bdev_size);
+
+	/*
+	 * Make sure the used_cluster mask has been updated according to the bdev size
+	 */
+	memcpy(&mask, g_dev_buffer + super_block.used_cluster_mask_start * 4096,
+	       sizeof(struct spdk_bs_md_mask));
+	CU_ASSERT(mask.type == SPDK_MD_MASK_TYPE_USED_CLUSTERS);
+	CU_ASSERT(mask.length == bdev_size / (1 * 1024 * 1024));
 
 	spdk_bs_unload(bs, bs_op_complete, NULL);
 	poll_threads();
@@ -7238,6 +7442,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bs_load);
 	CU_ADD_TEST(suite_bs, bs_load_pending_removal);
 	CU_ADD_TEST(suite, bs_load_custom_cluster_size);
+	CU_ADD_TEST(suite, bs_load_after_failed_grow);
 	CU_ADD_TEST(suite_bs, bs_unload);
 	CU_ADD_TEST(suite, bs_cluster_sz);
 	CU_ADD_TEST(suite_bs, bs_usable_clusters);
@@ -7246,6 +7451,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bs_type);
 	CU_ADD_TEST(suite, bs_super_block);
 	CU_ADD_TEST(suite, bs_test_recover_cluster_count);
+	CU_ADD_TEST(suite, bs_test_grow);
 	CU_ADD_TEST(suite, blob_serialize_test);
 	CU_ADD_TEST(suite_bs, blob_crc);
 	CU_ADD_TEST(suite, super_block_crc);

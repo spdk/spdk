@@ -8024,6 +8024,44 @@ Example response:
 }
 ~~~
 
+### bdev_lvol_grow_lvstore {#rpc_bdev_lvol_grow_lvstore}
+
+Grow the logical volume store to fill the underlying bdev
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+uuid                    | Optional | string      | UUID of the logical volume store to grow
+lvs_name                | Optional | string      | Name of the logical volume store to grow
+
+Either uuid or lvs_name must be specified, but not both.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_lvol_grow_lvstore",
+  "id": 1
+  "params": {
+    "uuid": "a9959197-b5e2-4f2d-8095-251ffb6985a5"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_lvol_create {#rpc_bdev_lvol_create}
 
 Create a logical volume on a logical volume store.

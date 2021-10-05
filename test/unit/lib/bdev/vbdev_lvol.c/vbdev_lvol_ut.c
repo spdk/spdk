@@ -114,6 +114,12 @@ spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 }
 
 void
+spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, NULL, -EINVAL);
+}
+
+void
 spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
 		spdk_lvs_op_complete cb_fn, void *cb_arg)
 {

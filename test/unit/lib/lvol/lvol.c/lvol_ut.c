@@ -156,6 +156,13 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 	cb_fn(cb_arg, bs, ut_dev->load_status);
 }
 
+void
+spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, NULL, -EINVAL);
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	if (g_io_channel == NULL) {

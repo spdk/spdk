@@ -1461,4 +1461,213 @@ vbdev_lvol_get_from_bdev(struct spdk_bdev *bdev)
 	return (struct spdk_lvol *)bdev->ctxt;
 }
 
+static void
+_vbdev_lvs_grow_finish(void *arg, int lvserrno)
+{
+	struct spdk_lvs_grow_req *req = arg;
+	req->cb_fn(req->cb_arg, req->lvserrno);
+	free(req);
+}
+
+static void
+_vbdev_lvs_grow_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvs_grow_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+
+	if (lvolerrno != 0) {
+		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
+		TAILQ_REMOVE(&lvs->lvols, lvol, link);
+		assert(lvs->lvol_count > 0);
+		lvs->lvol_count--;
+		free(lvol);
+		goto end;
+	}
+
+	if (_create_lvol_disk(lvol, false)) {
+		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->unique_id);
+		assert(lvs->lvol_count > 0);
+		lvs->lvol_count--;
+		SPDK_INFOLOG(vbdev_lvol, "Opening lvol %s failed\n", lvol->unique_id);
+		goto end;
+	}
+
+	lvs->lvols_opened++;
+	SPDK_INFOLOG(vbdev_lvol, "Opening lvol %s succeeded\n", lvol->unique_id);
+
+end:
+	if (lvs->lvols_opened >= lvs->lvol_count) {
+		SPDK_INFOLOG(vbdev_lvol, "Opening lvols finished\n");
+		_vbdev_lvs_grow_finish(req, 0);
+	}
+}
+
+static void
+_vbdev_lvs_grow_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrno)
+{
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)arg;
+	struct spdk_lvol *lvol, *tmp;
+	struct spdk_lvs_grow_req *ori_req = req->cb_arg;
+
+	if (lvserrno == -EEXIST) {
+		SPDK_INFOLOG(vbdev_lvol,
+			     "Name for lvolstore on device %s conflicts with name for already loaded lvs\n",
+			     req->base_bdev->name);
+		ori_req->lvserrno = lvserrno;
+		_vbdev_lvs_grow_finish(ori_req, lvserrno);
+		goto end;
+	} else if (lvserrno != 0) {
+		SPDK_INFOLOG(vbdev_lvol, "Lvol store not found on %s\n", req->base_bdev->name);
+		/* On error blobstore destroys bs_dev itself */
+		ori_req->lvserrno = lvserrno;
+		_vbdev_lvs_grow_finish(ori_req, lvserrno);
+		goto end;
+	}
+
+	lvserrno = spdk_bs_bdev_claim(lvol_store->bs_dev, &g_lvol_if);
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(vbdev_lvol, "Lvol store base bdev already claimed by another bdev\n");
+		ori_req->lvserrno = lvserrno;
+		spdk_lvs_unload(lvol_store, _vbdev_lvs_grow_finish, ori_req);
+		goto end;
+	}
+
+	lvs_bdev = calloc(1, sizeof(*lvs_bdev));
+	if (!lvs_bdev) {
+		SPDK_ERRLOG("Cannot alloc memory for lvs_bdev\n");
+		ori_req->lvserrno = -ENOMEM;
+		spdk_lvs_unload(lvol_store, _vbdev_lvs_grow_finish, ori_req);
+		goto end;
+	}
+
+	lvs_bdev->lvs = lvol_store;
+	lvs_bdev->bdev = req->base_bdev;
+
+	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	SPDK_INFOLOG(vbdev_lvol, "Lvol store found on %s - begin parsing\n",
+		     req->base_bdev->name);
+
+	lvol_store->lvols_opened = 0;
+
+	ori_req->lvol_store = lvol_store;
+	ori_req->lvserrno = 0;
+	if (TAILQ_EMPTY(&lvol_store->lvols)) {
+		SPDK_INFOLOG(vbdev_lvol, "Lvol store examination done\n");
+		_vbdev_lvs_grow_finish(ori_req, 0);
+	} else {
+		/* Open all lvols */
+		TAILQ_FOREACH_SAFE(lvol, &lvol_store->lvols, link, tmp) {
+			spdk_lvol_open(lvol, _vbdev_lvs_grow_examine_finish, ori_req);
+		}
+	}
+
+end:
+	free(req);
+}
+
+static void
+_vbdev_lvs_grow_examine(struct spdk_bdev *bdev, struct spdk_lvs_grow_req *ori_req)
+{
+	struct spdk_bs_dev *bs_dev;
+	struct spdk_lvs_with_handle_req *req;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		ori_req->lvserrno = -ENOMEM;
+		_vbdev_lvs_grow_finish(ori_req, -ENOMEM);
+		return;
+	}
+
+	rc = spdk_bdev_create_bs_dev_ext(bdev->name, vbdev_lvs_base_bdev_event_cb,
+					 NULL, &bs_dev);
+	if (rc < 0) {
+		SPDK_INFOLOG(vbdev_lvol, "Cannot create bs dev on %s\n", bdev->name);
+		ori_req->lvserrno = rc;
+		_vbdev_lvs_grow_finish(ori_req, rc);
+		free(req);
+		return;
+	}
+
+	req->base_bdev = bdev;
+	req->cb_arg = ori_req;
+
+	spdk_lvs_grow(bs_dev, _vbdev_lvs_grow_examine_cb, req);
+}
+
+static void
+_vbdev_lvs_grow_unload_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvs_grow_req *req = cb_arg;
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_bdev *bdev;
+
+	if (lvserrno != 0) {
+		req->cb_fn(req->cb_arg, lvserrno);
+		free(req);
+		return;
+	}
+
+	lvs_bdev = req->lvs_bdev;
+	bdev = lvs_bdev->bdev;
+	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	_vbdev_lvs_grow_examine(bdev, req);
+	free(lvs_bdev);
+}
+
+static void
+_vbdev_lvs_grow_remove_bdev_unregistered_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_lvs_grow_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+
+	if (bdeverrno != 0) {
+		SPDK_DEBUGLOG(vbdev_lvol, "Lvol unregistered with errno %d\n", bdeverrno);
+	}
+
+	req->lvol_cnt--;
+
+	if (req->lvol_cnt == 0) {
+		/* Lvol store can be unloaded once all lvols are closed. */
+		if (_vbdev_lvs_are_lvols_closed(lvs)) {
+			spdk_lvs_unload(lvs, _vbdev_lvs_grow_unload_cb, req);
+		} else {
+			req->cb_fn(req->cb_arg, -EINVAL);
+			free(req);
+		}
+	}
+}
+
+void
+vbdev_lvs_grow(struct spdk_lvol_store *lvs,
+	       spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_grow_req *req;
+	struct spdk_lvol *lvol, *tmp;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->lvol_store = lvs;
+	req->lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+
+	if (_vbdev_lvs_are_lvols_closed(lvs)) {
+		spdk_lvs_unload(lvs, _vbdev_lvs_grow_unload_cb, req);
+	} else {
+		lvs->destruct = false;
+		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+			req->lvol_cnt++;
+			spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_grow_remove_bdev_unregistered_cb, req);
+		}
+		assert(req->lvol_cnt > 0);
+	}
+}
+
 SPDK_LOG_REGISTER_COMPONENT(vbdev_lvol)

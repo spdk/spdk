@@ -15,6 +15,7 @@
 	spdk_bs_get_io_unit_size;
 	spdk_bs_free_cluster_count;
 	spdk_bs_total_data_cluster_count;
+	spdk_bs_grow;
 	spdk_blob_get_id;
 	spdk_blob_get_num_pages;
 	spdk_blob_get_num_io_units;
