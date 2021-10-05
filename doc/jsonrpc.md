@@ -7862,12 +7862,27 @@ Construct a logical volume store.
 
 #### Parameters
 
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-bdev_name               | Required | string      | Bdev on which to construct logical volume store
-lvs_name                | Required | string      | Name of the logical volume store to create
-cluster_sz              | Optional | number      | Cluster size of the logical volume store in bytes
-clear_method            | Optional | string      | Change clear method for data region. Available: none, unmap (default), write_zeroes
+Name                          | Optional | Type        | Description
+----------------------------- | -------- | ----------- | -----------
+bdev_name                     | Required | string      | Bdev on which to construct logical volume store
+lvs_name                      | Required | string      | Name of the logical volume store to create
+cluster_sz                    | Optional | number      | Cluster size of the logical volume store in bytes (Default: 4MiB)
+clear_method                  | Optional | string      | Change clear method for data region. Available: none, unmap (default), write_zeroes
+num_md_pages_per_cluster_ratio| Optional | number      | Reserved metadata pages per cluster (Default: 100)
+
+The num_md_pages_per_cluster_ratio defines the amount of metadata to
+allocate when the logical volume store is created. The default value
+is '100', which translates to 1 4KiB per cluster. For the default 4MiB
+cluster size, this equates to about 0.1% of the underlying block
+device allocated for metadata. Logical volume stores can be grown, if
+the size of the underlying block device grows in the future, but only
+if enough metadata pages were allocated to support the growth. So
+num_md_pages_per_cluster_ratio should be set to a higher value if
+wanting to support future growth. For example,
+num_md_pages_per_cluster_ratio = 200 would support future 2x growth of
+the logical volume store, and would result in 0.2% of the underlying
+block device allocated for metadata (with a default 4MiB cluster
+size).
 
 #### Response
 

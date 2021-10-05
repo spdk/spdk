@@ -1,4 +1,5 @@
-def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None, clear_method=None):
+def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None,
+                             clear_method=None, num_md_pages_per_cluster_ratio=None):
     """Construct a logical volume store.
 
     Args:
@@ -6,6 +7,7 @@ def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None, clear
         lvs_name: name of the logical volume store to create
         cluster_sz: cluster size of the logical volume store in bytes (optional)
         clear_method: Change clear method for data region. Available: none, unmap, write_zeroes (optional)
+        num_md_pages_per_cluster_ratio: metadata pages per cluster (optional)
 
     Returns:
         UUID of created logical volume store.
@@ -15,6 +17,8 @@ def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None, clear
         params['cluster_sz'] = cluster_sz
     if clear_method:
         params['clear_method'] = clear_method
+    if num_md_pages_per_cluster_ratio:
+        params['num_md_pages_per_cluster_ratio'] = num_md_pages_per_cluster_ratio
     return client.call('bdev_lvol_create_lvstore', params)
 
 
@@ -30,6 +34,23 @@ def bdev_lvol_rename_lvstore(client, old_name, new_name):
         'new_name': new_name
     }
     return client.call('bdev_lvol_rename_lvstore', params)
+
+
+def bdev_lvol_grow_lvstore(client, uuid=None, lvs_name=None):
+    """Grow the logical volume store to fill the underlying bdev
+
+    Args:
+        uuid: UUID of logical volume store to resize (optional)
+        lvs_name: name of logical volume store to resize (optional)
+    """
+    if (uuid and lvs_name):
+        raise ValueError("Exactly one of uuid or lvs_name may be specified")
+    params = {}
+    if uuid:
+        params['uuid'] = uuid
+    if lvs_name:
+        params['lvs_name'] = lvs_name
+    return client.call('bdev_lvol_grow_lvstore', params)
 
 
 def bdev_lvol_create(client, lvol_name, size, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):

@@ -1767,7 +1767,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                      bdev_name=args.bdev_name,
                                                      lvs_name=args.lvs_name,
                                                      cluster_sz=args.cluster_sz,
-                                                     clear_method=args.clear_method))
+                                                     clear_method=args.clear_method,
+                                                     num_md_pages_per_cluster_ratio=args.md_pages_per_cluster_ratio))
 
     p = subparsers.add_parser('bdev_lvol_create_lvstore', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
@@ -1775,6 +1776,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
     p.add_argument('--clear-method', help="""Change clear method for data region.
         Available: none, unmap, write_zeroes""", required=False)
+    p.add_argument('-m', '--md-pages-per-cluster-ratio', help='reserved metadata pages for each cluster', type=int, required=False)
     p.set_defaults(func=bdev_lvol_create_lvstore)
 
     def bdev_lvol_rename_lvstore(args):
@@ -1786,6 +1788,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('old_name', help='old name')
     p.add_argument('new_name', help='new name')
     p.set_defaults(func=bdev_lvol_rename_lvstore)
+
+    def bdev_lvol_grow_lvstore(args):
+        print_dict(rpc.lvol.bdev_lvol_grow_lvstore(args.client,
+                                                   uuid=args.uuid,
+                                                   lvs_name=args.lvs_name))
+
+    p = subparsers.add_parser('bdev_lvol_grow_lvstore',
+                              help='Grow the lvstore size to the underlying bdev size')
+    p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+    p.add_argument('-l', '--lvs-name', help='lvol store name', required=False)
+    p.set_defaults(func=bdev_lvol_grow_lvstore)
 
     def bdev_lvol_create(args):
         print_json(rpc.lvol.bdev_lvol_create(args.client,
