@@ -1149,6 +1149,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			op->hw.status = 0;
 			if (op->desc->opcode == IDXD_OPCODE_BATCH) {
 				_free_batch(op->batch, chan);
+				TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 			} else if (op->batch == NULL) {
 				TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
 			}
