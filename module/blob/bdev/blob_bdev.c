@@ -195,7 +195,7 @@ bdev_blob_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 
 static void
 bdev_blob_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64_t lba,
-		       uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
+		       uint64_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
 {
 	int rc;
 
@@ -211,7 +211,7 @@ bdev_blob_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 
 static void
 bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64_t lba,
-		uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
+		uint64_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
 {
 	struct blob_bdev *blob_bdev = (struct blob_bdev *)dev;
 	int rc;

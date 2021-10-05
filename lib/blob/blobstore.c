@@ -1607,7 +1607,7 @@ struct spdk_blob_persist_ctx {
 
 static void
 bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, uint64_t lba,
-		   uint32_t lba_count)
+		   uint64_t lba_count)
 {
 	switch (ctx->blob->clear_method) {
 	case BLOB_CLEAR_WITH_DEFAULT:
@@ -1715,7 +1715,7 @@ blob_persist_clear_extents(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ctx
 	struct spdk_blob_store		*bs = blob->bs;
 	size_t				i;
 	uint64_t                        lba;
-	uint32_t                        lba_count;
+	uint64_t                        lba_count;
 	spdk_bs_batch_t                 *batch;
 
 	batch = bs_sequence_to_batch(seq, blob_persist_clear_extents_cpl, ctx);
@@ -1787,7 +1787,7 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 	spdk_bs_batch_t			*batch;
 	size_t				i;
 	uint64_t			lba;
-	uint32_t			lba_count;
+	uint64_t			lba_count;
 
 	/* Clusters don't move around in blobs. The list shrinks or grows
 	 * at the end, but no changes ever occur in the middle of the list.
@@ -1800,7 +1800,7 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 	lba_count = 0;
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint64_t next_lba = blob->active.clusters[i];
-		uint32_t next_lba_count = bs_cluster_to_lba(bs, 1);
+		uint64_t next_lba_count = bs_cluster_to_lba(bs, 1);
 
 		if (next_lba > 0 && (lba + lba_count) == next_lba) {
 			/* This cluster is contiguous with the previous one. */
@@ -1873,7 +1873,7 @@ blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob		*blob = ctx->blob;
 	struct spdk_blob_store		*bs = blob->bs;
 	uint64_t			lba;
-	uint32_t			lba_count;
+	uint64_t			lba_count;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
 
@@ -2499,7 +2499,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 static inline bool
 blob_calculate_lba_and_lba_count(struct spdk_blob *blob, uint64_t io_unit, uint64_t length,
-				 uint64_t *lba,	uint32_t *lba_count)
+				 uint64_t *lba,	uint64_t *lba_count)
 {
 	*lba_count = length;
 
@@ -2624,7 +2624,7 @@ blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blob *blo
 {
 	struct spdk_bs_cpl cpl;
 	uint64_t lba;
-	uint32_t lba_count;
+	uint64_t lba_count;
 	bool is_allocated;
 
 	assert(blob != NULL);
@@ -2894,7 +2894,7 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 	 *  when the batch was completed, to allow for freeing the memory for the iov arrays.
 	 */
 	if (spdk_likely(length <= bs_num_io_units_to_cluster_boundary(blob, offset))) {
-		uint32_t lba_count;
+		uint64_t lba_count;
 		uint64_t lba;
 		bool is_allocated;
 
@@ -4952,22 +4952,19 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	bs_batch_write_zeroes_dev(batch, 0, num_md_lba);
 
 	lba = num_md_lba;
-	while (lba < ctx->bs->dev->blockcnt) {
-		lba_count = spdk_min(UINT32_MAX, ctx->bs->dev->blockcnt - lba);
-		switch (opts.clear_method) {
-		case BS_CLEAR_WITH_UNMAP:
-			/* Trim data clusters */
-			bs_batch_unmap_dev(batch, lba, lba_count);
-			break;
-		case BS_CLEAR_WITH_WRITE_ZEROES:
-			/* Write_zeroes to data clusters */
-			bs_batch_write_zeroes_dev(batch, lba, lba_count);
-			break;
-		case BS_CLEAR_WITH_NONE:
-		default:
-			break;
-		}
-		lba += lba_count;
+	lba_count = ctx->bs->dev->blockcnt - lba;
+	switch (opts.clear_method) {
+	case BS_CLEAR_WITH_UNMAP:
+		/* Trim data clusters */
+		bs_batch_unmap_dev(batch, lba, lba_count);
+		break;
+	case BS_CLEAR_WITH_WRITE_ZEROES:
+		/* Write_zeroes to data clusters */
+		bs_batch_write_zeroes_dev(batch, lba, lba_count);
+		break;
+	case BS_CLEAR_WITH_NONE:
+	default:
+		break;
 	}
 
 	bs_batch_close(batch);

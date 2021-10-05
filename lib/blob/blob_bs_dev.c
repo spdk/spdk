@@ -57,7 +57,7 @@ blob_bs_dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 
 static void
 blob_bs_dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
-			 uint64_t lba, uint32_t lba_count,
+			 uint64_t lba, uint64_t lba_count,
 			 struct spdk_bs_dev_cb_args *cb_args)
 {
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EPERM);
@@ -66,7 +66,7 @@ blob_bs_dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channe
 
 static void
 blob_bs_dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
-		  uint64_t lba, uint32_t lba_count,
+		  uint64_t lba, uint64_t lba_count,
 		  struct spdk_bs_dev_cb_args *cb_args)
 {
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EPERM);

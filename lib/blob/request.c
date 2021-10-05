@@ -231,13 +231,13 @@ bs_sequence_writev_dev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 
 void
 bs_sequence_write_zeroes_dev(spdk_bs_sequence_t *seq,
-			     uint64_t lba, uint32_t lba_count,
+			     uint64_t lba, uint64_t lba_count,
 			     spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(blob_rw, "writing zeroes to %" PRIu32 " blocks at LBA %" PRIu64 "\n",
+	SPDK_DEBUGLOG(blob_rw, "writing zeroes to %" PRIu64 " blocks at LBA %" PRIu64 "\n",
 		      lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
@@ -360,12 +360,12 @@ bs_batch_write_dev(spdk_bs_batch_t *batch, void *payload,
 
 void
 bs_batch_unmap_dev(spdk_bs_batch_t *batch,
-		   uint64_t lba, uint32_t lba_count)
+		   uint64_t lba, uint64_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(blob_rw, "Unmapping %" PRIu32 " blocks at LBA %" PRIu64 "\n", lba_count,
+	SPDK_DEBUGLOG(blob_rw, "Unmapping %" PRIu64 " blocks at LBA %" PRIu64 "\n", lba_count,
 		      lba);
 
 	set->u.batch.outstanding_ops++;
@@ -375,12 +375,12 @@ bs_batch_unmap_dev(spdk_bs_batch_t *batch,
 
 void
 bs_batch_write_zeroes_dev(spdk_bs_batch_t *batch,
-			  uint64_t lba, uint32_t lba_count)
+			  uint64_t lba, uint64_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(blob_rw, "Zeroing %" PRIu32 " blocks at LBA %" PRIu64 "\n", lba_count, lba);
+	SPDK_DEBUGLOG(blob_rw, "Zeroing %" PRIu64 " blocks at LBA %" PRIu64 "\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->write_zeroes(channel->dev, channel->dev_channel, lba, lba_count,

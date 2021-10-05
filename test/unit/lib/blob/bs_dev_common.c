@@ -314,7 +314,7 @@ dev_flush(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 
 static void
 dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
-	  uint64_t lba, uint32_t lba_count,
+	  uint64_t lba, uint64_t lba_count,
 	  struct spdk_bs_dev_cb_args *cb_args)
 {
 	uint64_t offset, length;
@@ -344,7 +344,7 @@ dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 
 static void
 dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
-		 uint64_t lba, uint32_t lba_count,
+		 uint64_t lba, uint64_t lba_count,
 		 struct spdk_bs_dev_cb_args *cb_args)
 {
 	uint64_t offset, length;
