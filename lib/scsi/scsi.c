@@ -62,12 +62,12 @@ spdk_scsi_lun_id_int_to_fmt(int lun_id)
 {
 	uint64_t fmt_lun, method;
 
-	if (SPDK_SCSI_DEV_MAX_LUN <= 0x0100) {
+	if (lun_id < 0x0100) {
 		/* below 256 */
 		method = 0x00U;
 		fmt_lun = (method & 0x03U) << 62;
 		fmt_lun |= ((uint64_t)lun_id & 0x00ffU) << 48;
-	} else if (SPDK_SCSI_DEV_MAX_LUN <= 0x4000) {
+	} else if (lun_id < 0x4000) {
 		/* below 16384 */
 		method = 0x01U;
 		fmt_lun = (method & 0x03U) << 62;
