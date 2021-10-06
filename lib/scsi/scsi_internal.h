@@ -45,6 +45,8 @@
 
 #include "spdk/log.h"
 
+#define SPDK_SCSI_DEV_MAX_LUN	256
+
 enum {
 	SPDK_SCSI_TASK_UNKNOWN = -1,
 	SPDK_SCSI_TASK_COMPLETE,

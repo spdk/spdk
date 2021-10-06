@@ -86,6 +86,9 @@ Updated DPDK submodule to DPDK 21.08.
 New functions, `spdk_scsi_dev_get_first_lun` and `spdk_scsi_dev_get_next_lun`
 have been added to iterate LUNs of a SCSI device.
 
+Each SCSI device supports 256 LUNs at the maximum now and the macro constant
+`SPDK_SCSI_DEV_MAX_LUN` was removed.
+
 ### util
 
 The `spdk_fd_group_add` API now takes a `name` parameter.

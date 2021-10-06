@@ -560,7 +560,10 @@ dev_add_lun_no_free_lun_id(void)
 	int rc;
 	int i;
 	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
-	struct spdk_scsi_lun lun[SPDK_SCSI_DEV_MAX_LUN] = { 0 };
+	struct spdk_scsi_lun *lun;
+
+	lun = calloc(SPDK_SCSI_DEV_MAX_LUN, sizeof(*lun));
+	SPDK_CU_ASSERT_FATAL(lun != NULL);
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		lun[i].id = i;
@@ -570,6 +573,8 @@ dev_add_lun_no_free_lun_id(void)
 	rc = spdk_scsi_dev_add_lun(&dev, "malloc0", -1, NULL, NULL);
 
 	CU_ASSERT_NOT_EQUAL(rc, 0);
+
+	free(lun);
 }
 
 static void
