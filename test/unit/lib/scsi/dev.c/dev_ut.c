@@ -49,6 +49,8 @@ DEFINE_STUB(spdk_scsi_lun_is_removing, bool,
 static char *g_bdev_names[] = {
 	"malloc0",
 	"malloc1",
+	"malloc2",
+	"malloc4",
 };
 
 static struct spdk_scsi_port *g_initiator_port_with_pending_tasks = NULL;
@@ -543,7 +545,7 @@ dev_add_lun_bdev_not_found(void)
 	int rc;
 	struct spdk_scsi_dev dev = {0};
 
-	rc = spdk_scsi_dev_add_lun(&dev, "malloc2", 0, NULL, NULL);
+	rc = spdk_scsi_dev_add_lun(&dev, "malloc3", 0, NULL, NULL);
 
 	SPDK_CU_ASSERT_FATAL(dev.lun[0] == NULL);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
@@ -619,6 +621,36 @@ dev_check_pending_tasks(void)
 	CU_ASSERT(spdk_scsi_dev_has_pending_tasks(&dev, &initiator_port) == true);
 }
 
+static void
+dev_iterate_luns(void)
+{
+	struct spdk_scsi_dev *dev;
+	struct spdk_scsi_lun *lun;
+	const char *bdev_name_list[3] = {"malloc0", "malloc2", "malloc4"};
+	int lun_id_list[3] = {0, 2, 4};
+
+	dev = spdk_scsi_dev_construct("Name", bdev_name_list, lun_id_list, 3,
+				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+
+	/* Successfully constructs and returns a dev */
+	CU_ASSERT_TRUE(dev != NULL);
+
+	lun = spdk_scsi_dev_get_first_lun(dev);
+	CU_ASSERT(lun != NULL);
+	CU_ASSERT(lun->id == 0);
+	lun = spdk_scsi_dev_get_next_lun(lun);
+	CU_ASSERT(lun != NULL);
+	CU_ASSERT(lun->id == 2);
+	lun = spdk_scsi_dev_get_next_lun(lun);
+	CU_ASSERT(lun != NULL);
+	CU_ASSERT(lun->id == 4);
+	lun = spdk_scsi_dev_get_next_lun(lun);
+	CU_ASSERT(lun == NULL);
+
+	/* free the dev */
+	spdk_scsi_dev_destruct(dev, NULL, NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -657,6 +689,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, dev_add_lun_success1);
 	CU_ADD_TEST(suite, dev_add_lun_success2);
 	CU_ADD_TEST(suite, dev_check_pending_tasks);
+	CU_ADD_TEST(suite, dev_iterate_luns);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

@@ -436,6 +436,45 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	}
 }
 
+struct spdk_scsi_lun *
+spdk_scsi_dev_get_first_lun(struct spdk_scsi_dev *dev)
+{
+	struct spdk_scsi_lun *lun;
+	int lun_id;
+
+	for (lun_id = 0; lun_id < SPDK_SCSI_DEV_MAX_LUN; lun_id++) {
+		lun = dev->lun[lun_id];
+		if (lun != NULL && !spdk_scsi_lun_is_removing(lun)) {
+			return lun;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_scsi_lun *
+spdk_scsi_dev_get_next_lun(struct spdk_scsi_lun *prev_lun)
+{
+	struct spdk_scsi_dev *dev;
+	struct spdk_scsi_lun *lun;
+	int lun_id;
+
+	if (prev_lun == NULL) {
+		return NULL;
+	}
+
+	dev = prev_lun->dev;
+
+	for (lun_id = prev_lun->id + 1; lun_id < SPDK_SCSI_DEV_MAX_LUN; lun_id++) {
+		lun = dev->lun[lun_id];
+		if (lun != NULL && !spdk_scsi_lun_is_removing(lun)) {
+			return lun;
+		}
+	}
+
+	return NULL;
+}
+
 bool
 spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev,
 				const struct spdk_scsi_port *initiator_port)

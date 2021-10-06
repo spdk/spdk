@@ -81,6 +81,11 @@ Added `spdk_nvme_ctrlr_get_opts` to retrieve the current controller options.
 
 Updated DPDK submodule to DPDK 21.08.
 
+### scsi
+
+New functions, `spdk_scsi_dev_get_first_lun` and `spdk_scsi_dev_get_next_lun`
+have been added to iterate LUNs of a SCSI device.
+
 ### util
 
 The `spdk_fd_group_add` API now takes a `name` parameter.

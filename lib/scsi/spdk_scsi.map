@@ -11,6 +11,8 @@
 	spdk_scsi_dev_get_name;
 	spdk_scsi_dev_get_id;
 	spdk_scsi_dev_get_lun;
+	spdk_scsi_dev_get_first_lun;
+	spdk_scsi_dev_get_next_lun;
 	spdk_scsi_dev_has_pending_tasks;
 	spdk_scsi_dev_destruct;
 	spdk_scsi_dev_queue_mgmt_task;

@@ -230,6 +230,24 @@ int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
 struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id);
 
 /**
+ * Get the first logical unit of the given SCSI device.
+ *
+ * \param dev SCSI device.
+ *
+ * \return the first logical unit on success, or NULL if there is no logical unit.
+ */
+struct spdk_scsi_lun *spdk_scsi_dev_get_first_lun(struct spdk_scsi_dev *dev);
+
+/**
+ * Get the next logical unit of a SCSI device.
+ *
+ * \param lun Previous logical unit.
+ *
+ * \return the next logical unit of a SCSI device, or NULL if the prev_lun was the last.
+ */
+struct spdk_scsi_lun *spdk_scsi_dev_get_next_lun(struct spdk_scsi_lun *prev_lun);
+
+/**
  * Check whether the SCSI device has any pending task.
  *
  * \param dev SCSI device.
