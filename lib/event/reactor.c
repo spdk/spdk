@@ -527,10 +527,11 @@ spdk_event_call(struct spdk_event *event)
 	}
 }
 
-static inline uint32_t
-event_queue_run_batch(struct spdk_reactor *reactor)
+static inline int
+event_queue_run_batch(void *arg)
 {
-	unsigned count, i;
+	struct spdk_reactor *reactor = arg;
+	size_t count, i;
 	void *events[SPDK_EVENT_BATCH_SIZE];
 	struct spdk_thread *thread;
 	struct spdk_lw_thread *lw_thread;
@@ -598,7 +599,7 @@ event_queue_run_batch(struct spdk_reactor *reactor)
 
 	spdk_mempool_put_bulk(g_spdk_event_mempool, events, count);
 
-	return count;
+	return (int)count;
 }
 
 /* 1s */
@@ -1429,7 +1430,7 @@ reactor_interrupt_init(struct spdk_reactor *reactor)
 	}
 
 	rc = spdk_fd_group_add(reactor->fgrp, reactor->events_fd,
-			       (spdk_fd_fn)event_queue_run_batch, reactor);
+			       event_queue_run_batch, reactor);
 	if (rc) {
 		spdk_fd_group_remove(reactor->fgrp, reactor->resched_fd);
 		close(reactor->resched_fd);
