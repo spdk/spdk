@@ -57,7 +57,15 @@ enum spdk_dma_device_type {
 	SPDK_DMA_DEVICE_TYPE_RDMA,
 	/** DMA devices are capable of performing DMA operations on memory domains using physical or
 	 *  I/O virtual addresses. */
-	SPDK_DMA_DEVICE_TYPE_DMA
+	SPDK_DMA_DEVICE_TYPE_DMA,
+	/**
+	 * Start of the range of vendor-specific DMA device types
+	 */
+	SPDK_DMA_DEVICE_VENDOR_SPECIFIC_TYPE_START = 1000,
+	/**
+	 * End of the range of vendor-specific DMA device types
+	 */
+	SPDK_DMA_DEVICE_VENDOR_SPECIFIC_TYPE_END = SPDK_DMA_DEVICE_VENDOR_SPECIFIC_TYPE_START + 999
 };
 
 struct spdk_memory_domain;
