@@ -94,8 +94,9 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 		return -1;
 	}
 
-	result->len = len;
-	result->addr = addr;
+	result->iov.iov_base = addr;
+	result->iov.iov_len = len;
+	result->iov_count = 1;
 	result->rdma.lkey = ctx->mr->lkey;
 	result->rdma.rkey = ctx->mr->rkey;
 	result->dst_domain = dst_domain;

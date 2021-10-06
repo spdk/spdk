@@ -1375,15 +1375,15 @@ nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpai
 						       req->payload.opts->memory_domain_ctx,
 						       rqpair->memory_domain->domain, &ctx, _ctx->addr,
 						       _ctx->length, &dma_translation);
-		if (spdk_unlikely(rc)) {
-			SPDK_ERRLOG("DMA memory translation failed, rc %d\n", rc);
+		if (spdk_unlikely(rc) || dma_translation.iov_count != 1) {
+			SPDK_ERRLOG("DMA memory translation failed, rc %d, iov count %u\n", rc, dma_translation.iov_count);
 			return rc;
 		}
 
 		_ctx->lkey = dma_translation.rdma.lkey;
 		_ctx->rkey = dma_translation.rdma.rkey;
-		_ctx->addr = dma_translation.addr;
-		_ctx->length = dma_translation.len;
+		_ctx->addr = dma_translation.iov.iov_base;
+		_ctx->length = dma_translation.iov.iov_len;
 	} else {
 		rc = spdk_rdma_get_translation(rqpair->mr_map, _ctx->addr, _ctx->length, &rdma_translation);
 		if (spdk_unlikely(rc)) {

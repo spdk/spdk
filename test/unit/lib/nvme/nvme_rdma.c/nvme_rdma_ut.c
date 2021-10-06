@@ -1274,12 +1274,18 @@ test_rdma_get_memory_translation(void)
 	MOCK_CLEAR(spdk_memory_domain_translate_data);
 
 	/* Test 2 - expect pass */
+	g_memory_translation_translation.iov_count = 1;
+	g_memory_translation_translation.iov.iov_base = ctx.addr + 1;
+	g_memory_translation_translation.iov.iov_len = ctx.length;
 	g_memory_translation_translation.rdma.lkey = 123;
 	g_memory_translation_translation.rdma.rkey = 321;
+
 	rc = nvme_rdma_get_memory_translation(&req, &rqpair, &ctx);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ctx.lkey == g_memory_translation_translation.rdma.lkey);
 	CU_ASSERT(ctx.rkey == g_memory_translation_translation.rdma.rkey);
+	CU_ASSERT(ctx.addr == g_memory_translation_translation.iov.iov_base);
+	CU_ASSERT(ctx.length == g_memory_translation_translation.iov.iov_len);
 
 	/* case 2, using rdma translation
 	 * Test 1 - spdk_rdma_get_translation error, expect fail */

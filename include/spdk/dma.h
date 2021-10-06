@@ -120,10 +120,14 @@ typedef int (*spdk_memory_domain_push_data_cb)(struct spdk_memory_domain *dst_do
 struct spdk_memory_domain_translation_result {
 	/** size of this structure in bytes */
 	size_t size;
-	/** Address of data buffer translated into destination memory domain space */
-	void *addr;
-	/** Size of the data buffer */
-	size_t len;
+	/** Number of elements in iov */
+	uint32_t iov_count;
+	/** Translation results, holds single address, length pair. Should only be used if \b iov_count is 1 */
+	struct iovec iov;
+	/** Translation results, array of addresses and lengths. Should only be used if \b iov_count is
+	 * bigger than 1. The implementer of the translation callback is responsible for allocating and
+	 * storing of this array until IO request completes */
+	struct iovec *iovs;
 	/** Destination domain passed to translation function */
 	struct spdk_memory_domain *dst_domain;
 	union {
