@@ -43,8 +43,8 @@ function install_refspdk() {
 	if ((gcc_version >= 11)) && le "${release#v}" 21.04; then
 		git -C "$output_dir" config --global user.name "spdk"
 		git -C "$output_dir" config --global user.email "hotpatch@spdk.io"
-		curl -s https://github.com/spdk/spdk/commit/36b5a69bb0699694b53a2f08a13cc0de620450a9.patch | git -C "$output_dir" am
-		curl -s https://github.com/spdk/spdk/commit/2ac152158116a17b863270a4731977d9ddedf50d.patch | git -C "$output_dir" am
+		git -C "$output_dir" cherry-pick 36b5a69bb0699694b53a2f08a13cc0de620450a9
+		git -C "$output_dir" cherry-pick 2ac152158116a17b863270a4731977d9ddedf50d
 	fi
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
