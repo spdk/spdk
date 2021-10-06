@@ -72,6 +72,7 @@ static int g_expected_removal_times = -1;
 static int g_insert_times;
 static int g_removal_times;
 static int g_shm_id = -1;
+static const char *g_iova_mode = NULL;
 static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC;
 static struct spdk_nvme_detach_ctx *g_detach_ctx;
 
@@ -425,6 +426,7 @@ static void usage(char *program_name)
 	printf("\t[-n expected hot insert times]\n");
 	printf("\t[-r expected hot removal times]\n");
 	printf("\t[-t time in seconds]\n");
+	printf("\t[-m iova mode: pa or va (optional)\n");
 }
 
 static int
@@ -436,10 +438,15 @@ parse_args(int argc, char **argv)
 	/* default value */
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "c:i:n:r:t:")) != -1) {
+	while ((op = getopt(argc, argv, "c:i:m:n:r:t:")) != -1) {
 		if (op == '?') {
 			usage(argv[0]);
 			return 1;
+		}
+
+		if (op == 'm') {
+			g_iova_mode = optarg;
+			continue;
 		}
 
 		val = spdk_strtol(optarg, 10);
@@ -507,6 +514,9 @@ int main(int argc, char **argv)
 	opts.core_mask = "0x1";
 	if (g_shm_id > -1) {
 		opts.shm_id = g_shm_id;
+	}
+	if (g_iova_mode) {
+		opts.iova_mode = g_iova_mode;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");

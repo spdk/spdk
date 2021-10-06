@@ -45,10 +45,15 @@ timing_exit hotplug_hw_cfg
 
 timing_enter hotplug_hw_test
 
+mode=""
+if [ "$driver" = "uio_pci_generic" ]; then
+	mode="-m pa"
+fi
+
 exec {log}> >(tee -a "$testdir/log.txt")
 exec >&$log 2>&1
 
-$SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 &
+$SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 $mode &
 hotplug_pid=$!
 
 trap 'killprocess $hotplug_pid; exit 1' SIGINT SIGTERM EXIT
