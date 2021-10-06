@@ -81,9 +81,8 @@ test_dma(void)
 	void *test_ibv_pd = (void *)0xdeadbeaf;
 	struct iovec src_iov = {}, dst_iov = {};
 	struct spdk_memory_domain *domain = NULL, *domain_2 = NULL, *domain_3 = NULL;
-	struct spdk_memory_domain_ctx memory_domain_ctx = {
-		.rdma = { .ibv_pd = test_ibv_pd }
-	};
+	struct spdk_memory_domain_rdma_ctx rdma_ctx = { .ibv_pd = test_ibv_pd };
+	struct spdk_memory_domain_ctx memory_domain_ctx = { .user_ctx = &rdma_ctx };
 	struct spdk_memory_domain_ctx *stored_memory_domain_ctx;
 	struct spdk_memory_domain_translation_result translation_result;
 	const char *id;
@@ -107,7 +106,9 @@ test_dma(void)
 	/* Get context. Expect pass */
 	stored_memory_domain_ctx = spdk_memory_domain_get_context(domain);
 	SPDK_CU_ASSERT_FATAL(stored_memory_domain_ctx != NULL);
-	CU_ASSERT(stored_memory_domain_ctx->rdma.ibv_pd == test_ibv_pd);
+	CU_ASSERT(stored_memory_domain_ctx->user_ctx == &rdma_ctx);
+	CU_ASSERT(((struct spdk_memory_domain_rdma_ctx *)stored_memory_domain_ctx->user_ctx)->ibv_pd ==
+		  rdma_ctx.ibv_pd);
 
 	/* Get DMA device type. Expect pass */
 	CU_ASSERT(spdk_memory_domain_get_dma_device_type(domain) == SPDK_DMA_DEVICE_TYPE_RDMA);

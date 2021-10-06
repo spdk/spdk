@@ -162,15 +162,21 @@ typedef int (*spdk_memory_domain_translate_memory_cb)(struct spdk_memory_domain 
 		struct spdk_memory_domain_translation_ctx *dst_domain_ctx, void *addr, size_t len,
 		struct spdk_memory_domain_translation_result *result);
 
+/** Context of memory domain of RDMA type */
+struct spdk_memory_domain_rdma_ctx {
+	/** size of this structure in bytes */
+	size_t size;
+	/** Opaque handle for ibv_pd */
+	void *ibv_pd;
+};
+
 struct spdk_memory_domain_ctx {
 	/** size of this structure in bytes */
 	size_t size;
-	union {
-		struct {
-			/* Opaque handle for ibv_pd */
-			void *ibv_pd;
-		} rdma;
-	};
+	/** Optional user context
+	 * Depending on memory domain type, this pointer can be cast to a specific structure,
+	 * e.g. to spdk_memory_domain_rdma_ctx structure for RDMA memory domain */
+	void *user_ctx;
 };
 
 /**
@@ -183,7 +189,8 @@ struct spdk_memory_domain_ctx {
  *
  * \param domain Double pointer to memory domain to be allocated by this function
  * \param type Type of the DMA device which can access this memory domain
- * \param ctx Optional memory domain context
+ * \param ctx Optional memory domain context to be copied by this function. Later \b ctx can be
+ * retrieved using \ref spdk_memory_domain_get_context function
  * \param id String identifier representing the DMA device that can access this memory domain.
  * \return 0 on success, negated errno on failure
  */

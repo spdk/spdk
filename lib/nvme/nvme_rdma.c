@@ -112,6 +112,7 @@ struct nvme_rdma_memory_domain {
 	uint32_t ref;
 	struct ibv_pd *pd;
 	struct spdk_memory_domain *domain;
+	struct spdk_memory_domain_rdma_ctx rdma_ctx;
 };
 
 enum nvme_rdma_wr_type {
@@ -318,7 +319,7 @@ static struct nvme_rdma_memory_domain *
 nvme_rdma_get_memory_domain(struct ibv_pd *pd)
 {
 	struct nvme_rdma_memory_domain *domain = NULL;
-	struct spdk_memory_domain_ctx dev_ctx;
+	struct spdk_memory_domain_ctx ctx;
 	int rc;
 
 	pthread_mutex_lock(&g_memory_domains_lock);
@@ -338,10 +339,12 @@ nvme_rdma_get_memory_domain(struct ibv_pd *pd)
 		return NULL;
 	}
 
-	dev_ctx.size = sizeof(dev_ctx);
-	dev_ctx.rdma.ibv_pd = pd;
+	domain->rdma_ctx.size = sizeof(domain->rdma_ctx);
+	domain->rdma_ctx.ibv_pd = pd;
+	ctx.size = sizeof(ctx);
+	ctx.user_ctx = &domain->rdma_ctx;
 
-	rc = spdk_memory_domain_create(&domain->domain, SPDK_DMA_DEVICE_TYPE_RDMA, &dev_ctx,
+	rc = spdk_memory_domain_create(&domain->domain, SPDK_DMA_DEVICE_TYPE_RDMA, &ctx,
 				       SPDK_RDMA_DMA_DEVICE);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create memory domain\n");
