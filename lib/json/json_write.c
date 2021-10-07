@@ -218,6 +218,30 @@ spdk_json_write_bool(struct spdk_json_write_ctx *w, bool val)
 }
 
 int
+spdk_json_write_uint8(struct spdk_json_write_ctx *w, uint8_t val)
+{
+	char buf[32];
+	int count;
+
+	if (begin_value(w)) { return fail(w); }
+	count = snprintf(buf, sizeof(buf), "%" PRIu8, val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) { return fail(w); }
+	return emit(w, buf, count);
+}
+
+int
+spdk_json_write_uint16(struct spdk_json_write_ctx *w, uint16_t val)
+{
+	char buf[32];
+	int count;
+
+	if (begin_value(w)) { return fail(w); }
+	count = snprintf(buf, sizeof(buf), "%" PRIu16, val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) { return fail(w); }
+	return emit(w, buf, count);
+}
+
+int
 spdk_json_write_int32(struct spdk_json_write_ctx *w, int32_t val)
 {
 	char buf[32];
@@ -650,6 +674,20 @@ int spdk_json_write_named_bool(struct spdk_json_write_ctx *w, const char *name, 
 	return rc ? rc : spdk_json_write_bool(w, val);
 }
 
+int spdk_json_write_named_uint8(struct spdk_json_write_ctx *w, const char *name, uint8_t val)
+{
+	int rc = spdk_json_write_name(w, name);
+
+	return rc ? rc : spdk_json_write_uint8(w, val);
+}
+
+int spdk_json_write_named_uint16(struct spdk_json_write_ctx *w, const char *name, uint16_t val)
+{
+	int rc = spdk_json_write_name(w, name);
+
+	return rc ? rc : spdk_json_write_uint16(w, val);
+}
+
 int spdk_json_write_named_int32(struct spdk_json_write_ctx *w, const char *name, int32_t val)
 {
 	int rc = spdk_json_write_name(w, name);
@@ -664,18 +702,18 @@ int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name
 	return rc ? rc : spdk_json_write_uint32(w, val);
 }
 
-int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
-{
-	int rc = spdk_json_write_name(w, name);
-
-	return rc ? rc : spdk_json_write_uint64(w, val);
-}
-
 int spdk_json_write_named_int64(struct spdk_json_write_ctx *w, const char *name, int64_t val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_int64(w, val);
+}
+
+int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
+{
+	int rc = spdk_json_write_name(w, name);
+
+	return rc ? rc : spdk_json_write_uint64(w, val);
 }
 
 int spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val)

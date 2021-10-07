@@ -209,6 +209,8 @@ struct spdk_json_write_ctx *spdk_json_write_begin(spdk_json_write_cb write_cb, v
 int spdk_json_write_end(struct spdk_json_write_ctx *w);
 int spdk_json_write_null(struct spdk_json_write_ctx *w);
 int spdk_json_write_bool(struct spdk_json_write_ctx *w, bool val);
+int spdk_json_write_uint8(struct spdk_json_write_ctx *w, uint8_t val);
+int spdk_json_write_uint16(struct spdk_json_write_ctx *w, uint16_t val);
 int spdk_json_write_int32(struct spdk_json_write_ctx *w, int32_t val);
 int spdk_json_write_uint32(struct spdk_json_write_ctx *w, uint32_t val);
 int spdk_json_write_int64(struct spdk_json_write_ctx *w, int64_t val);
@@ -260,12 +262,14 @@ int spdk_json_write_val_raw(struct spdk_json_write_ctx *w, const void *data, siz
 /* Utility functions */
 int spdk_json_write_named_null(struct spdk_json_write_ctx *w, const char *name);
 int spdk_json_write_named_bool(struct spdk_json_write_ctx *w, const char *name, bool val);
+int spdk_json_write_named_uint8(struct spdk_json_write_ctx *w, const char *name, uint8_t val);
+int spdk_json_write_named_uint16(struct spdk_json_write_ctx *w, const char *name, uint16_t val);
 int spdk_json_write_named_int32(struct spdk_json_write_ctx *w, const char *name, int32_t val);
 int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val);
+int spdk_json_write_named_int64(struct spdk_json_write_ctx *w, const char *name, int64_t val);
 int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val);
 int spdk_json_write_named_uint128(struct spdk_json_write_ctx *w, const char *name,
 				  uint64_t low_val, uint64_t high_val);
-int spdk_json_write_named_int64(struct spdk_json_write_ctx *w, const char *name, int64_t val);
 int spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val);
 int spdk_json_write_named_string_fmt(struct spdk_json_write_ctx *w, const char *name,
 				     const char *fmt, ...) __attribute__((__format__(__printf__, 3, 4)));

@@ -30,6 +30,8 @@
 	spdk_json_write_end;
 	spdk_json_write_null;
 	spdk_json_write_bool;
+	spdk_json_write_uint8;
+	spdk_json_write_uint16;
 	spdk_json_write_int32;
 	spdk_json_write_uint32;
 	spdk_json_write_int64;
@@ -52,10 +54,12 @@
 
 	spdk_json_write_named_null;
 	spdk_json_write_named_bool;
+	spdk_json_write_named_uint8;
+	spdk_json_write_named_uint16;
 	spdk_json_write_named_int32;
 	spdk_json_write_named_uint32;
-	spdk_json_write_named_uint64;
 	spdk_json_write_named_int64;
+	spdk_json_write_named_uint64;
 	spdk_json_write_named_uint128;
 	spdk_json_write_named_string;
 	spdk_json_write_named_string_fmt;
