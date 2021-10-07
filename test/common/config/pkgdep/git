@@ -81,14 +81,14 @@ function install_refspdk() {
 		# Prepare separate, fixed, cmdline for the FreeBSD, Issue #1397.
 		if [[ $OSID == freebsd ]]; then
 			config_params="--enable-debug"
-			config_params+=" --without-isal --with-fio=/usr/src/fio"
+			config_params+=" --without-isal"
 			config_params+=" --with-idxd --disable-unit-tests"
 
 			MAKE=gmake
 		else
 			config_params="$(get_config_params)"
 		fi
-		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g')
+		$output_dir/configure $(echo $config_params | sed 's/--enable-coverage//g') --without-fio
 		if [[ $OSID != freebsd ]]; then
 			$MAKE -C $output_dir $MAKEFLAGS include/spdk/config.h
 			CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/ocf.a
