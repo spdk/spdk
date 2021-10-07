@@ -153,6 +153,7 @@ int spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_
 			   void *out, size_t max_size, size_t *out_size, size_t stride);
 
 int spdk_json_decode_bool(const struct spdk_json_val *val, void *out);
+int spdk_json_decode_uint8(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_uint16(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_int32(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_uint32(const struct spdk_json_val *val, void *out);
@@ -191,6 +192,7 @@ bool spdk_json_strequal(const struct spdk_json_val *val, const char *str);
  */
 char *spdk_json_strdup(const struct spdk_json_val *val);
 
+int spdk_json_number_to_uint8(const struct spdk_json_val *val, uint8_t *num);
 int spdk_json_number_to_uint16(const struct spdk_json_val *val, uint16_t *num);
 int spdk_json_number_to_int32(const struct spdk_json_val *val, int32_t *num);
 int spdk_json_number_to_uint32(const struct spdk_json_val *val, uint32_t *num);

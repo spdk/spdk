@@ -205,6 +205,28 @@ json_number_split(const struct spdk_json_val *val, struct spdk_json_num *num)
 }
 
 int
+spdk_json_number_to_uint8(const struct spdk_json_val *val, uint8_t *num)
+{
+	struct spdk_json_num split_num;
+	int rc;
+
+	rc = json_number_split(val, &split_num);
+	if (rc) {
+		return rc;
+	}
+
+	if (split_num.exponent || split_num.negative) {
+		return -ERANGE;
+	}
+
+	if (split_num.significand > UINT8_MAX) {
+		return -ERANGE;
+	}
+	*num = (uint8_t)split_num.significand;
+	return 0;
+}
+
+int
 spdk_json_number_to_uint16(const struct spdk_json_val *val, uint16_t *num)
 {
 	struct spdk_json_num split_num;
@@ -446,6 +468,14 @@ spdk_json_decode_bool(const struct spdk_json_val *val, void *out)
 
 	*f = val->type == SPDK_JSON_VAL_TRUE;
 	return 0;
+}
+
+int
+spdk_json_decode_uint8(const struct spdk_json_val *val, void *out)
+{
+	uint8_t *i = out;
+
+	return spdk_json_number_to_uint8(val, i);
 }
 
 int
