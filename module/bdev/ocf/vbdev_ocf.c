@@ -1162,18 +1162,15 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 {
 	struct vbdev_ocf_config *cfg = &vbdev->cfg;
 
+	/* Initialize OCF defaults first */
+	ocf_mngt_cache_device_config_set_default(&cfg->device);
+	ocf_mngt_cache_config_set_default(&cfg->cache);
+	ocf_mngt_core_config_set_default(&cfg->core);
+
 	snprintf(cfg->cache.name, sizeof(cfg->cache.name), "%s", vbdev->name);
 	snprintf(cfg->core.name, sizeof(cfg->core.name), "%s", vbdev->core.name);
 
-	/* TODO [metadata]: make configurable with persistent
-	 * metadata support */
-	cfg->cache.metadata_volatile = false;
-
-	/* This are suggested values that
-	 * should be sufficient for most use cases */
-	cfg->cache.backfill.max_queue_size = 65536;
-	cfg->cache.backfill.queue_unblock_size = 60000;
-
+	cfg->device.open_cores = false;
 	cfg->device.perform_test = false;
 	cfg->device.discard_on_start = false;
 
@@ -1229,10 +1226,28 @@ init_vbdev(const char *vbdev_name,
 		goto error_mem;
 	}
 
+	vbdev->name = strdup(vbdev_name);
+	if (!vbdev->name) {
+		goto error_mem;
+	}
+
+	vbdev->cache.name = strdup(cache_name);
+	if (!vbdev->cache.name) {
+		goto error_mem;
+	}
+
+	vbdev->core.name = strdup(core_name);
+	if (!vbdev->core.name) {
+		goto error_mem;
+	}
+
 	vbdev->cache.parent = vbdev;
 	vbdev->core.parent = vbdev;
 	vbdev->cache.is_cache = true;
 	vbdev->core.is_cache = false;
+	vbdev->cfg.loadq = loadq;
+
+	init_vbdev_config(vbdev);
 
 	if (cache_mode_name) {
 		vbdev->cfg.cache.cache_mode
@@ -1259,23 +1274,6 @@ init_vbdev(const char *vbdev_name,
 	vbdev->cfg.device.cache_line_size = set_cache_line_size;
 	vbdev->cfg.cache.cache_line_size = set_cache_line_size;
 
-	vbdev->name = strdup(vbdev_name);
-	if (!vbdev->name) {
-		goto error_mem;
-	}
-
-	vbdev->cache.name = strdup(cache_name);
-	if (!vbdev->cache.name) {
-		goto error_mem;
-	}
-
-	vbdev->core.name = strdup(core_name);
-	if (!vbdev->core.name) {
-		goto error_mem;
-	}
-
-	vbdev->cfg.loadq = loadq;
-	init_vbdev_config(vbdev);
 	TAILQ_INSERT_TAIL(&g_ocf_vbdev_head, vbdev, tailq);
 	return rc;
 
