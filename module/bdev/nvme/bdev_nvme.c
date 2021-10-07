@@ -104,6 +104,9 @@ struct nvme_bdev_io {
 
 	/** Keep track of how many zones that have been copied to the spdk_bdev_zone_info struct */
 	uint64_t handled_zones;
+
+	/** Expiration value in ticks to retry the current I/O. */
+	uint64_t retry_ticks;
 };
 
 struct nvme_probe_ctx {
@@ -156,6 +159,8 @@ static void nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 		struct nvme_async_probe_ctx *ctx);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
+static void bdev_nvme_submit_request(struct spdk_io_channel *ch,
+				     struct spdk_bdev_io *bdev_io);
 static int bdev_nvme_readv(struct nvme_bdev_io *bio, struct iovec *iov, int iovcnt,
 			   void *md, uint64_t lba_count, uint64_t lba,
 			   uint32_t flags, struct spdk_bdev_ext_io_opts *ext_opts);
@@ -605,6 +610,7 @@ bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 	int rc;
 
 	STAILQ_INIT(&nbdev_ch->io_path_list);
+	TAILQ_INIT(&nbdev_ch->retry_io_list);
 
 	pthread_mutex_lock(&nbdev->mutex);
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
@@ -622,10 +628,24 @@ bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 }
 
 static void
+bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch)
+{
+	struct spdk_bdev_io *bdev_io, *tmp_io;
+
+	TAILQ_FOREACH_SAFE(bdev_io, &nbdev_ch->retry_io_list, module_link, tmp_io) {
+		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
+	}
+
+	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
+}
+
+static void
 bdev_nvme_destroy_bdev_channel_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_bdev_channel *nbdev_ch = ctx_buf;
 
+	bdev_nvme_abort_retry_ios(nbdev_ch);
 	_bdev_nvme_delete_io_paths(nbdev_ch);
 }
 
@@ -678,6 +698,16 @@ nvme_io_path_is_available(struct nvme_io_path *io_path)
 	return true;
 }
 
+static bool
+nvme_io_path_is_failed(struct nvme_io_path *io_path)
+{
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(io_path->ctrlr_ch);
+
+	return spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr);
+}
+
 static inline struct nvme_io_path *
 bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
@@ -705,6 +735,98 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 	return non_optimized;
 }
 
+/* Return true if there is any io_path whose qpair is active or ctrlr is not failed,
+ * or false otherwise.
+ *
+ * If any io_path has an active qpair but find_io_path() returned NULL, its namespace
+ * is likely to be non-accessible now but may become accessible.
+ *
+ * If any io_path has an unfailed ctrlr but find_io_path() returned NULL, the ctrlr
+ * is likely to be resetting now but the reset may succeeed. A ctrlr is set to unfailed
+ * when starting to reset it but it is set to failed when the reset failed. Hence, if
+ * a ctrlr is unfailed, it is likely that it works fine or is resetting.
+ */
+static bool
+any_io_path_may_become_available(struct nvme_bdev_channel *nbdev_ch)
+{
+	struct nvme_io_path *io_path;
+
+	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+		if (nvme_io_path_is_connected(io_path) ||
+		    !nvme_io_path_is_failed(io_path)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static int
+bdev_nvme_retry_ios(void *arg)
+{
+	struct nvme_bdev_channel *nbdev_ch = arg;
+	struct spdk_io_channel *ch = spdk_io_channel_from_ctx(nbdev_ch);
+	struct spdk_bdev_io *bdev_io, *tmp_bdev_io;
+	struct nvme_bdev_io *bio;
+	uint64_t now, delay_us;
+
+	now = spdk_get_ticks();
+
+	TAILQ_FOREACH_SAFE(bdev_io, &nbdev_ch->retry_io_list, module_link, tmp_bdev_io) {
+		bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+		if (bio->retry_ticks > now) {
+			break;
+		}
+
+		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
+
+		bdev_nvme_submit_request(ch, bdev_io);
+	}
+
+	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
+
+	bdev_io = TAILQ_FIRST(&nbdev_ch->retry_io_list);
+	if (bdev_io != NULL) {
+		bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+
+		delay_us = (bio->retry_ticks - now) * SPDK_SEC_TO_USEC / spdk_get_ticks_hz();
+
+		nbdev_ch->retry_io_poller = SPDK_POLLER_REGISTER(bdev_nvme_retry_ios, nbdev_ch,
+					    delay_us);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+bdev_nvme_queue_retry_io(struct nvme_bdev_channel *nbdev_ch,
+			 struct nvme_bdev_io *bio, uint64_t delay_ms)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct spdk_bdev_io *tmp_bdev_io;
+	struct nvme_bdev_io *tmp_bio;
+
+	bio->retry_ticks = spdk_get_ticks() + delay_ms * spdk_get_ticks_hz() / 1000ULL;
+
+	TAILQ_FOREACH_REVERSE(tmp_bdev_io, &nbdev_ch->retry_io_list, retry_io_head, module_link) {
+		tmp_bio = (struct nvme_bdev_io *)tmp_bdev_io->driver_ctx;
+
+		if (tmp_bio->retry_ticks <= bio->retry_ticks) {
+			TAILQ_INSERT_AFTER(&nbdev_ch->retry_io_list, tmp_bdev_io, bdev_io,
+					   module_link);
+			return;
+		}
+	}
+
+	/* No earlier I/Os were found. This I/O must be the new head. */
+	TAILQ_INSERT_HEAD(&nbdev_ch->retry_io_list, bdev_io, module_link);
+
+	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
+
+	nbdev_ch->retry_io_poller = SPDK_POLLER_REGISTER(bdev_nvme_retry_ios, nbdev_ch,
+				    delay_ms * 1000ULL);
+}
+
 static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
@@ -716,17 +838,33 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 static inline void
 bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 {
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct nvme_bdev_channel *nbdev_ch;
 	enum spdk_bdev_io_status io_status;
 
-	if (rc == 0) {
+	switch (rc) {
+	case 0:
 		io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	} else if (rc == -ENOMEM) {
+		break;
+	case -ENOMEM:
 		io_status = SPDK_BDEV_IO_STATUS_NOMEM;
-	} else {
+		break;
+	case -ENXIO:
+		nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+
+		if (!bdev_nvme_io_type_is_admin(bdev_io->type) &&
+		    any_io_path_may_become_available(nbdev_ch)) {
+			bdev_nvme_queue_retry_io(nbdev_ch, bio, 1000ULL);
+			return;
+		}
+
+	/* fallthrough */
+	default:
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
+		break;
 	}
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), io_status);
+	spdk_bdev_io_complete(bdev_io, io_status);
 }
 
 static struct nvme_ctrlr_channel *
