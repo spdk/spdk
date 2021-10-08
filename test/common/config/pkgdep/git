@@ -483,6 +483,12 @@ function install_ice() {
 	rm -rf "$GIT_REPOS/ice-$ICE_VERSION"
 
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
+
+	if [[ $OSID == ubuntu && $OSVERSION == 18.04 ]]; then
+		if ge "$(< /proc/sys/kernel/osrelease)" 4.15.0-159; then
+			patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
+		fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-undef-skb-frag-off.patch"
+	fi
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
 		sudo make -j"$(nproc)" install

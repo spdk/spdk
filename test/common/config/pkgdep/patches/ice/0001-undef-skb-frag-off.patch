@@ -1,0 +1,29 @@
+Current versions of the ice driver redifine skb_frag_off*() on older kernels
+(< 5.4.0). Unfortunately, ubuntu1804 kernel builds, 4.15, include this change
+hence gcc complains with:
+
+   kcompat_impl.h:46:28: error: redefinition of ‘skb_frag_off’
+
+This patch is meant to be used on a particular version of ubuntu to make sure
+the driver can be built against the shipped kernel.
+
+Details:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7240b60c98d6
+
+---
+ src/kcompat_impl.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/kcompat_impl.h b/src/kcompat_impl.h
+index 10d268c..715ce2a 100644
+--- a/src/kcompat_impl.h
++++ b/src/kcompat_impl.h
+@@ -42,6 +42,7 @@ static inline void net_prefetch(void *p)
+  * Implementing the wrappers directly for older kernels which still have the
+  * old implementation of skb_frag_t is trivial.
+  */
++#undef NEED_SKB_FRAG_OFF_ACCESSORS
+ #ifdef NEED_SKB_FRAG_OFF_ACCESSORS
+ static inline unsigned int skb_frag_off(const skb_frag_t *frag)
+ {
+--
