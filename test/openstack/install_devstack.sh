@@ -44,6 +44,8 @@ r=0
 until ((++r >= 20)); do
 	if [[ $branch == "master" ]]; then
 		git clone --depth 1 https://opendev.org/openstack-dev/devstack /opt/stack/devstack && break
+		# FIXME: Workaround for broken requirements with suds-jurko<->setuptools
+		export REQUIREMENTS_BRANCH=stable/xena
 	else
 		git clone --depth 1 https://opendev.org/openstack-dev/devstack -b "stable/$branch" /opt/stack/devstack && break
 	fi
