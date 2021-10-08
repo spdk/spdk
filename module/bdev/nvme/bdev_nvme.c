@@ -942,7 +942,7 @@ bdev_nvme_abort_pending_resets(struct spdk_io_channel_iter *i)
 }
 
 static void
-bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
+bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 {
 	struct nvme_path_id *path_id;
 	bdev_nvme_reset_cb reset_cb_fn = nvme_ctrlr->reset_cb_fn;
@@ -951,7 +951,7 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 	nvme_ctrlr->reset_cb_fn = NULL;
 	nvme_ctrlr->reset_cb_arg = NULL;
 
-	if (rc) {
+	if (!success) {
 		SPDK_ERRLOG("Resetting controller failed.\n");
 	} else {
 		SPDK_NOTICELOG("Resetting controller successful.\n");
@@ -965,7 +965,7 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 	assert(path_id != NULL);
 	assert(path_id == nvme_ctrlr->active_path_id);
 
-	path_id->is_failed = rc != 0 ? true : false;
+	path_id->is_failed = !success;
 
 	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct) {
 		/* Destruct ctrlr after clearing pending resets. */
@@ -975,12 +975,12 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, int rc)
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	if (reset_cb_fn) {
-		reset_cb_fn(reset_cb_arg, rc);
+		reset_cb_fn(reset_cb_arg, success);
 	}
 
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_ctrlr,
-			      rc == 0 ? bdev_nvme_complete_pending_resets :
+			      success ? bdev_nvme_complete_pending_resets :
 			      bdev_nvme_abort_pending_resets,
 			      NULL,
 			      bdev_nvme_check_pending_destruct);
@@ -991,7 +991,7 @@ bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
-	bdev_nvme_reset_complete(nvme_ctrlr, status);
+	bdev_nvme_reset_complete(nvme_ctrlr, status == 0);
 }
 
 static void
@@ -1025,7 +1025,7 @@ bdev_nvme_ctrlr_reset_poll(void *arg)
 				      NULL,
 				      bdev_nvme_reset_create_qpairs_done);
 	} else {
-		bdev_nvme_reset_complete(nvme_ctrlr, rc);
+		bdev_nvme_reset_complete(nvme_ctrlr, false);
 	}
 	return SPDK_POLLER_BUSY;
 }
@@ -1037,7 +1037,6 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 	int rc;
 
 	if (status) {
-		rc = status;
 		goto err;
 	}
 
@@ -1053,7 +1052,7 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 	return;
 
 err:
-	bdev_nvme_reset_complete(nvme_ctrlr, rc);
+	bdev_nvme_reset_complete(nvme_ctrlr, false);
 }
 
 static void
@@ -1108,12 +1107,12 @@ bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, voi
 }
 
 static void
-bdev_nvme_reset_io_complete(void *cb_arg, int rc)
+bdev_nvme_reset_io_complete(void *cb_arg, bool success)
 {
 	struct nvme_bdev_io *bio = cb_arg;
 	enum spdk_bdev_io_status io_status;
 
-	if (rc == 0) {
+	if (success) {
 		io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -1169,7 +1168,7 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 
 	rc = _bdev_nvme_reset_io(io_path, bio);
 	if (rc != 0) {
-		bdev_nvme_reset_io_complete(bio, rc);
+		bdev_nvme_reset_io_complete(bio, false);
 	}
 }
 

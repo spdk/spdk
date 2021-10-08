@@ -87,7 +87,7 @@ struct nvme_path_id {
 	bool					is_failed;
 };
 
-typedef void (*bdev_nvme_reset_cb)(void *cb_arg, int rc);
+typedef void (*bdev_nvme_reset_cb)(void *cb_arg, bool success);
 
 struct nvme_ctrlr {
 	/**

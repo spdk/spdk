@@ -1211,11 +1211,11 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_reset_controller_req_
 };
 
 static void
-_rpc_bdev_nvme_reset_controller_cb(void *cb_arg, int rc)
+_rpc_bdev_nvme_reset_controller_cb(void *cb_arg, bool success)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 
-	spdk_jsonrpc_send_bool_response(request, rc == 0);
+	spdk_jsonrpc_send_bool_response(request, success);
 }
 
 static void
