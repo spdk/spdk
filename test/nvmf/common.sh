@@ -219,11 +219,6 @@ function get_tcp_if_list_by_driver() {
 	local driver
 	driver=${1:-ice}
 
-	# If we are called right after netns is deleted we need to wait a
-	# bit to make sure all net devices are visible in the main netns
-	# again.
-	sleep 1
-
 	shopt -s nullglob
 	tcp_if_list=(/sys/bus/pci/drivers/$driver/0000*/net/*)
 	shopt -u nullglob
@@ -266,7 +261,7 @@ function nvmf_veth_init() {
 	NVMF_BRIDGE="nvmf_br"
 	NVMF_INITIATOR_INTERFACE="nvmf_init_if"
 	NVMF_INITIATOR_BRIDGE="nvmf_init_br"
-	NVMF_TARGET_NAMESPACE="nvmf_tgt_ns"
+	NVMF_TARGET_NAMESPACE="nvmf_tgt_ns_spdk"
 	NVMF_TARGET_NS_CMD=(ip netns exec "$NVMF_TARGET_NAMESPACE")
 	NVMF_TARGET_INTERFACE="nvmf_tgt_if"
 	NVMF_TARGET_INTERFACE2="nvmf_tgt_if2"
@@ -283,7 +278,6 @@ function nvmf_veth_init() {
 	ip link delete $NVMF_INITIATOR_INTERFACE || true
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE || true
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE2 || true
-	ip netns del $NVMF_TARGET_NAMESPACE || true
 
 	# Create network namespace
 	ip netns add $NVMF_TARGET_NAMESPACE
@@ -344,7 +338,7 @@ function nvmf_veth_fini() {
 	ip link delete $NVMF_INITIATOR_INTERFACE
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE
 	"${NVMF_TARGET_NS_CMD[@]}" ip link delete $NVMF_TARGET_INTERFACE2
-	ip netns del $NVMF_TARGET_NAMESPACE
+	remove_spdk_ns
 }
 
 function nvmf_tcp_init() {
@@ -365,9 +359,8 @@ function nvmf_tcp_init() {
 	# Skip case nvmf_multipath in nvmf_tcp_init(), it will be covered by nvmf_veth_init().
 	NVMF_SECOND_TARGET_IP=""
 
-	NVMF_TARGET_NAMESPACE=$NVMF_TARGET_INTERFACE"_ns"
+	NVMF_TARGET_NAMESPACE="${NVMF_TARGET_INTERFACE}_ns_spdk"
 	NVMF_TARGET_NS_CMD=(ip netns exec "$NVMF_TARGET_NAMESPACE")
-	ip netns del $NVMF_TARGET_NAMESPACE || true
 	ip -4 addr flush $NVMF_TARGET_INTERFACE || true
 	ip -4 addr flush $NVMF_INITIATOR_INTERFACE || true
 
@@ -402,9 +395,7 @@ function nvmf_tcp_fini() {
 		nvmf_veth_fini
 		return 0
 	fi
-	if [[ -n $NVMF_TARGET_NAMESPACE && -e /var/run/netns/$NVMF_TARGET_NAMESPACE ]]; then
-		ip netns del $NVMF_TARGET_NAMESPACE
-	fi
+	remove_spdk_ns
 	ip -4 addr flush $NVMF_INITIATOR_INTERFACE || :
 }
 
@@ -436,6 +427,7 @@ function nvmftestinit() {
 			exit 0
 		fi
 	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
+		remove_spdk_ns
 		nvmf_tcp_init
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
@@ -581,4 +573,14 @@ function gen_nvmf_target_json() {
 		  ]
 		}
 	JSON
+}
+
+function remove_spdk_ns() {
+	local ns
+	while read -r ns _; do
+		[[ $ns == *_spdk ]] || continue
+		ip netns delete "$ns"
+	done < <(ip netns list)
+	# Let it settle
+	sleep 1
 }
