@@ -92,7 +92,7 @@ function install_refspdk() {
 		if [[ $OSID != freebsd ]]; then
 			$MAKE -C $output_dir $MAKEFLAGS include/spdk/config.h
 			CONFIG_OCF_PATH="$output_dir/ocf" $MAKE -C $output_dir/lib/env_ocf $MAKEFLAGS exportlib O=$output_dir/ocf.a
-			$output_dir/configure $config_params --with-ocf=$output_dir/ocf.a --with-shared
+			$output_dir/configure $config_params --with-ocf=$output_dir/ocf.a --with-shared --without-fio
 		fi
 		$MAKE -C $output_dir $MAKEFLAGS
 	)
