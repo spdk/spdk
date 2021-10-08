@@ -100,9 +100,10 @@ struct nvme_ctrlr {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	struct nvme_path_id			*active_path_id;
 	int					ref;
-	bool					resetting;
-	bool					failover_in_progress;
-	bool					destruct;
+
+	uint32_t				resetting : 1;
+	uint32_t				failover_in_progress : 1;
+	uint32_t				destruct : 1;
 	/**
 	 * PI check flags. This flags is set to NVMe controllers created only
 	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added
