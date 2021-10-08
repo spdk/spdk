@@ -715,24 +715,18 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 }
 
 int
-spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
-{
-	if (ctrlr->fail_reset) {
-		return -EIO;
-	}
-
-	ctrlr->is_failed = false;
-
-	return 0;
-}
-
-int
 spdk_nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ctrlr_reset_ctx->ctrlr;
 
 	free(ctrlr_reset_ctx);
-	return spdk_nvme_ctrlr_reset(ctrlr);
+
+	if (ctrlr->fail_reset) {
+		ctrlr->is_failed = true;
+		return -EIO;
+	}
+
+	return 0;
 }
 
 int
@@ -745,6 +739,8 @@ spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
 	if (!ctrlr_reset_ctx) {
 		return -ENOMEM;
 	}
+
+	ctrlr->is_failed = false;
 
 	ctrlr_reset_ctx->ctrlr = ctrlr;
 	*reset_ctx = ctrlr_reset_ctx;
