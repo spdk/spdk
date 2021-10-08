@@ -10,7 +10,7 @@ if [ $# -lt 2 ]; then
 fi
 SCRIPTS_DIR=$(readlink -f $(dirname $0))
 BIN_PATH=$(readlink -f /proc/$1/exe)
-BPF_SCRIPT=$(sed "s#__EXE__#${BIN_PATH}#g" "${@:2}" | sed "s#__PID__#${1}#g")
+BPF_SCRIPT=$($SCRIPTS_DIR/bpf/gen.py -p $1 "${@:2}")
 BPF_SCRIPT+=$($SCRIPTS_DIR/bpf/gen_enums.sh)
 if [ -n "$ECHO_SCRIPT" ]; then
 	echo "$BPF_SCRIPT"
