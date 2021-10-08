@@ -831,8 +831,33 @@ static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
 {
-	spdk_bdev_io_complete_nvme_status(spdk_bdev_io_from_ctx(bio), cpl->cdw0,
-					  cpl->status.sct, cpl->status.sc);
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct nvme_bdev_channel *nbdev_ch;
+
+	if (spdk_likely(spdk_nvme_cpl_is_success(cpl))) {
+		goto complete;
+	}
+
+	if (cpl->status.dnr != 0 || bdev_nvme_io_type_is_admin(bdev_io->type)) {
+		goto complete;
+	}
+
+	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+
+	assert(bio->io_path != NULL);
+
+	if (spdk_nvme_cpl_is_path_error(cpl) ||
+	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
+	    !nvme_io_path_is_available(bio->io_path) ||
+	    nvme_io_path_is_failed(bio->io_path)) {
+		if (any_io_path_may_become_available(nbdev_ch)) {
+			bdev_nvme_queue_retry_io(nbdev_ch, bio, 0);
+			return;
+		}
+	}
+
+complete:
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 
 static inline void
