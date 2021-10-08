@@ -884,29 +884,6 @@ err:
 }
 
 static void
-_bdev_nvme_check_pending_destruct(struct nvme_ctrlr *nvme_ctrlr)
-{
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	if (nvme_ctrlr->destruct_after_reset) {
-		assert(nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct);
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-		spdk_thread_send_msg(nvme_ctrlr->thread, nvme_ctrlr_unregister,
-				     nvme_ctrlr);
-	} else {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-	}
-}
-
-static void
-bdev_nvme_check_pending_destruct(struct spdk_io_channel_iter *i, int status)
-{
-	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
-
-	_bdev_nvme_check_pending_destruct(nvme_ctrlr);
-}
-
-static void
 bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 {
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
@@ -928,11 +905,14 @@ bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 }
 
 static void
-bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
+_bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
+	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
+	bool success = spdk_io_channel_iter_get_ctx(i) == NULL;
 	struct nvme_path_id *path_id;
 	bdev_nvme_reset_cb reset_cb_fn = nvme_ctrlr->reset_cb_fn;
 	void *reset_cb_arg = nvme_ctrlr->reset_cb_arg;
+	bool complete_pending_destruct = false;
 
 	nvme_ctrlr->reset_cb_fn = NULL;
 	nvme_ctrlr->reset_cb_arg = NULL;
@@ -954,8 +934,8 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	path_id->is_failed = !success;
 
 	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct) {
-		/* Destruct ctrlr after clearing pending resets. */
-		nvme_ctrlr->destruct_after_reset = true;
+		/* Complete pending destruct after reset completes. */
+		complete_pending_destruct = true;
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -964,11 +944,20 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		reset_cb_fn(reset_cb_arg, success);
 	}
 
+	if (complete_pending_destruct) {
+		spdk_thread_send_msg(nvme_ctrlr->thread, nvme_ctrlr_unregister,
+				     nvme_ctrlr);
+	}
+}
+
+static void
+bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
+{
 	/* Make sure we clear any pending resets before returning. */
 	spdk_for_each_channel(nvme_ctrlr,
 			      bdev_nvme_complete_pending_resets,
 			      success ? NULL : (void *)0x1,
-			      bdev_nvme_check_pending_destruct);
+			      _bdev_nvme_reset_complete);
 }
 
 static void

@@ -1303,6 +1303,12 @@ test_reset_ctrlr(void)
 	CU_ASSERT(curr_trid->is_failed == true);
 
 	poll_thread_times(1, 1);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	poll_thread_times(0, 1);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	poll_thread_times(1, 1);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+	poll_thread_times(1, 1);
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 	CU_ASSERT(curr_trid->is_failed == false);
 
@@ -2803,6 +2809,9 @@ test_reconnect_qpair(void)
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 
 	poll_thread_times(1, 1);
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
+	poll_thread_times(1, 1);
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 
 	poll_threads();
@@ -2825,6 +2834,9 @@ test_reconnect_qpair(void)
 	CU_ASSERT(ctrlr_ch2->qpair == NULL);
 	CU_ASSERT(ctrlr->is_failed == true);
 
+	poll_thread_times(1, 1);
+	poll_thread_times(0, 1);
+	poll_thread_times(1, 1);
 	poll_thread_times(1, 1);
 	CU_ASSERT(ctrlr->is_failed == true);
 	CU_ASSERT(nvme_ctrlr->resetting == false);
