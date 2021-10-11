@@ -1680,6 +1680,28 @@ nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
 }
 
 static int
+nvmf_ctrlr_get_features_host_behavior_support(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvme_host_behavior host_behavior = {};
+
+	SPDK_DEBUGLOG(nvmf, "Get Features - Host Behavior Support\n");
+
+	if (req->data == NULL || req->length < sizeof(struct spdk_nvme_host_behavior)) {
+		SPDK_ERRLOG("invalid data buffer for Host Behavior Support\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	host_behavior.acre = ctrlr->acre_enabled;
+	memcpy(req->data, &host_behavior, sizeof(host_behavior));
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 nvmf_ctrlr_set_features_host_behavior_support(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -2909,6 +2931,8 @@ nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		return nvmf_ctrlr_get_features_reservation_notification_mask(req);
 	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
 		return nvmf_ctrlr_get_features_reservation_persistence(req);
+	case SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT:
+		return nvmf_ctrlr_get_features_host_behavior_support(req);
 	default:
 		SPDK_INFOLOG(nvmf, "Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
