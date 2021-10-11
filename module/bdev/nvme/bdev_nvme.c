@@ -3129,14 +3129,14 @@ bdev_nvme_delete_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 }
 
 int
-bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
+bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 {
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr, *tmp_nvme_ctrlr;
-	struct nvme_path_id	*path_id, *tmp_path;
+	struct nvme_path_id	*p, *t;
 	int			rc = -ENXIO;
 
-	if (name == NULL || trid == NULL) {
+	if (name == NULL || path_id == NULL) {
 		return -EINVAL;
 	}
 
@@ -3151,48 +3151,48 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 	 */
 
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
-		TAILQ_FOREACH_REVERSE_SAFE(path_id, &nvme_ctrlr->trids, nvme_paths, link, tmp_path) {
-			if (trid->trtype != 0) {
-				if (trid->trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
-					if (strcasecmp(trid->trstring, path_id->trid.trstring) != 0) {
+		TAILQ_FOREACH_REVERSE_SAFE(p, &nvme_ctrlr->trids, nvme_paths, link, t) {
+			if (path_id->trid.trtype != 0) {
+				if (path_id->trid.trtype == SPDK_NVME_TRANSPORT_CUSTOM) {
+					if (strcasecmp(path_id->trid.trstring, p->trid.trstring) != 0) {
 						continue;
 					}
 				} else {
-					if (trid->trtype != path_id->trid.trtype) {
+					if (path_id->trid.trtype != p->trid.trtype) {
 						continue;
 					}
 				}
 			}
 
-			if (!spdk_mem_all_zero(trid->traddr, sizeof(trid->traddr))) {
-				if (strcasecmp(trid->traddr, path_id->trid.traddr) != 0) {
+			if (!spdk_mem_all_zero(path_id->trid.traddr, sizeof(path_id->trid.traddr))) {
+				if (strcasecmp(path_id->trid.traddr, p->trid.traddr) != 0) {
 					continue;
 				}
 			}
 
-			if (trid->adrfam != 0) {
-				if (trid->adrfam != path_id->trid.adrfam) {
+			if (path_id->trid.adrfam != 0) {
+				if (path_id->trid.adrfam != p->trid.adrfam) {
 					continue;
 				}
 			}
 
-			if (!spdk_mem_all_zero(trid->trsvcid, sizeof(trid->trsvcid))) {
-				if (strcasecmp(trid->trsvcid, path_id->trid.trsvcid) != 0) {
+			if (!spdk_mem_all_zero(path_id->trid.trsvcid, sizeof(path_id->trid.trsvcid))) {
+				if (strcasecmp(path_id->trid.trsvcid, p->trid.trsvcid) != 0) {
 					continue;
 				}
 			}
 
-			if (!spdk_mem_all_zero(trid->subnqn, sizeof(trid->subnqn))) {
-				if (strcmp(trid->subnqn, path_id->trid.subnqn) != 0) {
+			if (!spdk_mem_all_zero(path_id->trid.subnqn, sizeof(path_id->trid.subnqn))) {
+				if (strcmp(path_id->trid.subnqn, p->trid.subnqn) != 0) {
 					continue;
 				}
 			}
 
 			/* If we made it here, then this path is a match! Now we need to remove it. */
-			if (path_id == nvme_ctrlr->active_path_id) {
+			if (p == nvme_ctrlr->active_path_id) {
 				/* This is the active path in use right now. The active path is always the first in the list. */
 
-				if (!TAILQ_NEXT(path_id, link)) {
+				if (!TAILQ_NEXT(p, link)) {
 					/* The current path is the only path. */
 					rc = _bdev_nvme_delete(nvme_ctrlr, false);
 				} else {
@@ -3201,7 +3201,7 @@ bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid)
 				}
 			} else {
 				/* We are not using the specified path. */
-				rc = bdev_nvme_delete_secondary_trid(nvme_ctrlr, &path_id->trid);
+				rc = bdev_nvme_delete_secondary_trid(nvme_ctrlr, &p->trid);
 			}
 
 			if (rc < 0 && rc != -ENXIO) {

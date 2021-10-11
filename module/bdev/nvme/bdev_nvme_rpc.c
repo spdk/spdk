@@ -690,7 +690,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 		memcpy(path.trid.subnqn, req.subnqn, len + 1);
 	}
 
-	rc = bdev_nvme_delete(req.name, &path.trid);
+	rc = bdev_nvme_delete(req.name, &path);
 
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

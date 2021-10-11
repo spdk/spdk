@@ -231,10 +231,10 @@ struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
  * if there is any alternative path. Requires to pass name of NVMe controller.
  *
  * \param name NVMe controller name
- * \param trid The specified transport ID to remove (optional)
+ * \param path_id The specified path to remove (optional)
  * \return zero on success, -EINVAL on wrong parameters or -ENODEV if controller is not found
  */
-int bdev_nvme_delete(const char *name, const struct spdk_nvme_transport_id *trid);
+int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id);
 
 /**
  * Reset NVMe controller.
