@@ -2375,6 +2375,10 @@ vfio_user_poll_vfu_ctx(void *ctx)
 	 * to the portion of the BAR that is not mmap'd */
 	ret = vfu_run_ctx(ctrlr->endpoint->vfu_ctx);
 	if (spdk_unlikely(ret == -1)) {
+		if (errno == EBUSY) {
+			return SPDK_POLLER_BUSY;
+		}
+
 		spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 
 		/* initiator shutdown or reset, waiting for another re-connect */
