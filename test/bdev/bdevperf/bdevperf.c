@@ -1887,6 +1887,9 @@ rpc_perform_tests_cb(void)
 
 	/* Reset g_run_rc to 0 for the next test run. */
 	g_run_rc = 0;
+
+	/* Reset g_stats to 0 for the next test run. */
+	memset(&g_stats, 0, sizeof(g_stats));
 }
 
 static void
@@ -1905,7 +1908,12 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	}
 	g_request = request;
 
-	bdevperf_construct_job_configs();
+	/* Only construct job configs at the first test run.  */
+	if (TAILQ_EMPTY(&job_config_list)) {
+		bdevperf_construct_job_configs();
+	} else {
+		bdevperf_construct_jobs();
+	}
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
