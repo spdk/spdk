@@ -2994,6 +2994,8 @@ traddr                  | Optional | string      | NVMe-oF target address: ip or
 adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
 trsvcid                 | Optional | string      | NVMe-oF target trsvcid: port number
 subnqn                  | Optional | string      | NVMe-oF target subnqn
+hostaddr                | Optional | string      | NVMe-oF host address: ip
+hostsvcid               | Optional | string      | NVMe-oF host svcid: port number
 
 #### Example
 

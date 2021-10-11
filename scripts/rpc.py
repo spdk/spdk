@@ -577,7 +577,9 @@ if __name__ == "__main__":
                                              traddr=args.traddr,
                                              adrfam=args.adrfam,
                                              trsvcid=args.trsvcid,
-                                             subnqn=args.subnqn)
+                                             subnqn=args.subnqn,
+                                             hostaddr=args.hostaddr,
+                                             hostsvcid=args.hostsvcid)
 
     p = subparsers.add_parser('bdev_nvme_detach_controller', aliases=['delete_nvme_controller'],
                               help='Detach an NVMe controller and delete any associated bdevs')
@@ -591,6 +593,10 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid',
                    help='NVMe-oF target trsvcid: e.g., a port number')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
+    p.add_argument('-i', '--hostaddr',
+                   help='NVMe-oF host address: e.g., an ip address')
+    p.add_argument('-c', '--hostsvcid',
+                   help='NVMe-oF host svcid: e.g., a port number')
     p.set_defaults(func=bdev_nvme_detach_controller)
 
     def bdev_nvme_reset_controller(args):

@@ -84,6 +84,7 @@ struct nvme_bdev;
 
 struct nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
+	struct spdk_nvme_host_id		hostid;
 	TAILQ_ENTRY(nvme_path_id)		link;
 	bool					is_failed;
 };

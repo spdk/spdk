@@ -2995,6 +2995,10 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	path_id->trid = *trid;
+	if (ctx != NULL) {
+		memcpy(path_id->hostid.hostaddr, ctx->opts.src_addr, sizeof(path_id->hostid.hostaddr));
+		memcpy(path_id->hostid.hostsvcid, ctx->opts.src_svcid, sizeof(path_id->hostid.hostsvcid));
+	}
 	nvme_ctrlr->active_path_id = path_id;
 	TAILQ_INSERT_HEAD(&nvme_ctrlr->trids, path_id, link);
 
@@ -3600,6 +3604,18 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 
 			if (!spdk_mem_all_zero(path_id->trid.subnqn, sizeof(path_id->trid.subnqn))) {
 				if (strcmp(path_id->trid.subnqn, p->trid.subnqn) != 0) {
+					continue;
+				}
+			}
+
+			if (!spdk_mem_all_zero(path_id->hostid.hostaddr, sizeof(path_id->hostid.hostaddr))) {
+				if (strcmp(path_id->hostid.hostaddr, p->hostid.hostaddr) != 0) {
+					continue;
+				}
+			}
+
+			if (!spdk_mem_all_zero(path_id->hostid.hostsvcid, sizeof(path_id->hostid.hostsvcid))) {
+				if (strcmp(path_id->hostid.hostsvcid, p->hostid.hostsvcid) != 0) {
 					continue;
 				}
 			}

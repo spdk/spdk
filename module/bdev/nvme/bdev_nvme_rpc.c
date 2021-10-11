@@ -593,6 +593,8 @@ struct rpc_bdev_nvme_detach_controller {
 	char *traddr;
 	char *trsvcid;
 	char *subnqn;
+	char *hostaddr;
+	char *hostsvcid;
 };
 
 static void
@@ -604,6 +606,8 @@ free_rpc_bdev_nvme_detach_controller(struct rpc_bdev_nvme_detach_controller *req
 	free(req->traddr);
 	free(req->trsvcid);
 	free(req->subnqn);
+	free(req->hostaddr);
+	free(req->hostsvcid);
 }
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_detach_controller_decoders[] = {
@@ -613,6 +617,8 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_detach_controller_dec
 	{"adrfam", offsetof(struct rpc_bdev_nvme_detach_controller, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_bdev_nvme_detach_controller, trsvcid), spdk_json_decode_string, true},
 	{"subnqn", offsetof(struct rpc_bdev_nvme_detach_controller, subnqn), spdk_json_decode_string, true},
+	{"hostaddr", offsetof(struct rpc_bdev_nvme_detach_controller, hostaddr), spdk_json_decode_string, true},
+	{"hostsvcid", offsetof(struct rpc_bdev_nvme_detach_controller, hostsvcid), spdk_json_decode_string, true},
 };
 
 static void
@@ -692,6 +698,28 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 			goto cleanup;
 		}
 		memcpy(path.trid.subnqn, req.subnqn, len + 1);
+	}
+
+	if (req.hostaddr) {
+		maxlen = sizeof(path.hostid.hostaddr);
+		len = strnlen(req.hostaddr, maxlen);
+		if (len == maxlen) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostaddr too long: %s",
+							     req.hostaddr);
+			goto cleanup;
+		}
+		snprintf(path.hostid.hostaddr, maxlen, "%s", req.hostaddr);
+	}
+
+	if (req.hostsvcid) {
+		maxlen = sizeof(path.hostid.hostsvcid);
+		len = strnlen(req.hostsvcid, maxlen);
+		if (len == maxlen) {
+			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL, "hostsvcid too long: %s",
+							     req.hostsvcid);
+			goto cleanup;
+		}
+		snprintf(path.hostid.hostsvcid, maxlen, "%s", req.hostsvcid);
 	}
 
 	rc = bdev_nvme_delete(req.name, &path);
