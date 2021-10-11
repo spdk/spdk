@@ -193,6 +193,8 @@ leak:$CONFIG_FIO_SOURCE_DIR/init.c
 leak:$CONFIG_FIO_SOURCE_DIR/filesetup.c
 leak:fio_memalign
 leak:spdk_fio_io_u_init
+# Suppress leaks in gperftools-libs from fio
+leak:libtcmalloc_minimal.so
 
 # Suppress leaks in libiscsi
 leak:libiscsi.so
