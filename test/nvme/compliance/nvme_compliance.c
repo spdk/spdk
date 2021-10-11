@@ -524,6 +524,174 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 	return 0;
 }
 
+/* Test the mandatory features with Get Features command:
+ * 01h Arbitration.
+ * 02h Power Management.
+ * 04h Temperature Threshold.
+ * 05h Error Recovery.
+ * 07h Number of Queues.
+ * 08h Interrupt Coalescing.
+ * 09h Interrupt Vector Configuration.
+ * 0Ah Write Atomicity Normal.
+ * 0Bh Asynchronous Event Configuration.
+ * 0Fh Keep Alive Timer.
+ * 16h Host Behavior Support.
+ */
+static void
+get_features(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_cmd cmd;
+	struct status s;
+	void *buf;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	/* Arbitration */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_ARBITRATION;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Power Management */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_POWER_MANAGEMENT;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Temperature Threshold */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Error Recovery */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_ERROR_RECOVERY;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Number of Queues */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Interrupt Coalescing */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_INTERRUPT_COALESCING;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Interrupt Vector Configuration */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Write Atomicity Normal */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_WRITE_ATOMICITY;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Asynchronous Event Configuration */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Keep Alive Timer */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_KEEP_ALIVE_TIMER;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Host Behavior Support */
+	buf = spdk_dma_zmalloc(sizeof(struct spdk_nvme_host_behavior), 0x1000,  NULL);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_HOST_BEHAVIOR_SUPPORT;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, buf, sizeof(struct spdk_nvme_host_behavior),
+					   test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	spdk_dma_free(buf);
+	spdk_nvme_detach(ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	struct spdk_env_opts	opts;
@@ -558,6 +726,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, delete_io_sq_twice);
 	CU_ADD_TEST(suite, delete_create_io_sq);
 	CU_ADD_TEST(suite, delete_io_cq);
+	CU_ADD_TEST(suite, get_features);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
