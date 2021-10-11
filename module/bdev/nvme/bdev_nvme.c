@@ -3107,27 +3107,6 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
-static int
-bdev_nvme_delete_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
-				const struct spdk_nvme_transport_id *trid)
-{
-	struct nvme_path_id	*path_id, *tmp_path;
-
-	if (!spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->active_path_id->trid)) {
-		return -EBUSY;
-	}
-
-	TAILQ_FOREACH_SAFE(path_id, &nvme_ctrlr->trids, link, tmp_path) {
-		if (!spdk_nvme_transport_id_compare(&path_id->trid, trid)) {
-			TAILQ_REMOVE(&nvme_ctrlr->trids, path_id, link);
-			free(path_id);
-			return 0;
-		}
-	}
-
-	return -ENXIO;
-}
-
 int
 bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 {
@@ -3145,10 +3124,6 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 		SPDK_ERRLOG("Failed to find NVMe bdev controller\n");
 		return -ENODEV;
 	}
-
-	/* The following is based on an assumption that one trid can be registered
-	 * to only one nvme_ctrlr.
-	 */
 
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq, tmp_nvme_ctrlr) {
 		TAILQ_FOREACH_REVERSE_SAFE(p, &nvme_ctrlr->trids, nvme_paths, link, t) {
@@ -3201,7 +3176,9 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 				}
 			} else {
 				/* We are not using the specified path. */
-				rc = bdev_nvme_delete_secondary_trid(nvme_ctrlr, &p->trid);
+				TAILQ_REMOVE(&nvme_ctrlr->trids, p, link);
+				free(p);
+				rc = 0;
 			}
 
 			if (rc < 0 && rc != -ENXIO) {
