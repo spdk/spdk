@@ -2342,7 +2342,7 @@ rpc_nvmf_get_qpairs(struct spdk_io_channel_iter *i)
 	struct spdk_nvmf_poll_group *group;
 	struct spdk_nvmf_qpair *qpair;
 
-	ch = spdk_get_io_channel(ctx->subsystem->tgt);
+	ch = spdk_io_channel_iter_get_channel(i);
 	group = spdk_io_channel_get_ctx(ch);
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
