@@ -7,17 +7,6 @@
 	spdk_accel_engine_module_finish;
 	spdk_accel_engine_get_io_channel;
 	spdk_accel_get_capabilities;
-	spdk_accel_batch_get_max;
-	spdk_accel_batch_create;
-	spdk_accel_batch_prep_copy;
-	spdk_accel_batch_prep_dualcast;
-	spdk_accel_batch_prep_compare;
-	spdk_accel_batch_prep_fill;
-	spdk_accel_batch_prep_crc32c;
-	spdk_accel_batch_prep_crc32cv;
-	spdk_accel_batch_prep_copy_crc32c;
-	spdk_accel_batch_submit;
-	spdk_accel_batch_cancel;
 	spdk_accel_submit_copy;
 	spdk_accel_submit_dualcast;
 	spdk_accel_submit_compare;

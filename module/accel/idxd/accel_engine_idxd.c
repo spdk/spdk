@@ -51,7 +51,6 @@
 static bool g_idxd_enable = false;
 static bool g_kernel_mode = false;
 uint32_t g_config_number;
-static uint32_t g_batch_max;
 
 enum channel_state {
 	IDXD_CHANNEL_ACTIVE,
@@ -285,16 +284,9 @@ idxd_get_capabilities(void)
 	       ACCEL_DUALCAST | ACCEL_COPY_CRC32C;
 }
 
-static uint32_t
-idxd_batch_get_max(struct spdk_io_channel *ch)
-{
-	return spdk_idxd_batch_get_max();
-}
-
 static struct spdk_accel_engine idxd_accel_engine = {
 	.get_capabilities	= idxd_get_capabilities,
 	.get_io_channel		= idxd_get_io_channel,
-	.batch_get_max		= idxd_batch_get_max,
 	.submit_tasks		= idxd_submit_tasks,
 };
 
@@ -396,7 +388,6 @@ accel_engine_idxd_init(void)
 	}
 
 	g_idxd_initialized = true;
-	g_batch_max = spdk_idxd_batch_get_max();
 	SPDK_NOTICELOG("Accel engine updated to use IDXD DSA engine.\n");
 	spdk_accel_hw_engine_register(&idxd_accel_engine);
 	spdk_io_device_register(&idxd_accel_engine, idxd_create_cb, idxd_destroy_cb,

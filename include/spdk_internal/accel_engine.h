@@ -49,27 +49,11 @@ struct accel_io_channel {
 	struct spdk_io_channel		*sw_engine_ch;
 	void				*task_pool_base;
 	TAILQ_HEAD(, spdk_accel_task)	task_pool;
-	void				*batch_pool_base;
-	TAILQ_HEAD(, spdk_accel_batch)	batch_pool;
-	TAILQ_HEAD(, spdk_accel_batch)	batches;
 };
 
 struct sw_accel_io_channel {
 	struct spdk_poller		*completion_poller;
 	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
-};
-
-struct spdk_accel_batch {
-	/* Lists of commands in the batch. */
-	TAILQ_HEAD(, spdk_accel_task)	hw_tasks;
-	TAILQ_HEAD(, spdk_accel_task)	sw_tasks;
-	/* Specific to the batch task itself. */
-	int				status;
-	uint32_t			count;
-	spdk_accel_completion_cb	cb_fn;
-	void				*cb_arg;
-	struct accel_io_channel		*accel_ch;
-	TAILQ_ENTRY(spdk_accel_batch)	link;
 };
 
 enum accel_opcode {
@@ -83,18 +67,17 @@ enum accel_opcode {
 };
 
 struct spdk_accel_task {
-	struct accel_io_channel		*accel_ch;
-	struct spdk_accel_batch		*batch;
-	spdk_accel_completion_cb	cb_fn;
-	void				*cb_arg;
+	struct accel_io_channel			*accel_ch;
+	spdk_accel_completion_cb		cb_fn;
+	void					*cb_arg;
 	struct {
 		spdk_accel_completion_cb	cb_fn;
 		void				*cb_arg;
 	} chained;
 	union {
 		struct {
-			struct iovec			*iovs; /* iovs passed by the caller */
-			uint32_t			iovcnt; /* iovcnt passed by the caller */
+			struct iovec		*iovs; /* iovs passed by the caller */
+			uint32_t		iovcnt; /* iovcnt passed by the caller */
 		} v;
 		void				*src;
 	};
@@ -118,7 +101,6 @@ struct spdk_accel_engine {
 	uint64_t capabilities;
 	uint64_t (*get_capabilities)(void);
 	struct spdk_io_channel *(*get_io_channel)(void);
-	uint32_t (*batch_get_max)(struct spdk_io_channel *ch);
 	int (*submit_tasks)(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
 };
 

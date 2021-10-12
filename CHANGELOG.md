@@ -2,6 +2,11 @@
 
 ## v22.01: (Upcoming Release)
 
+### accel
+
+The batching capability was removed. Batching is now considered an implementation
+detail of the low level drivers.
+
 ### nvme
 
 API `spdk_nvme_trtype_is_fabrics` was added to return existing transport type

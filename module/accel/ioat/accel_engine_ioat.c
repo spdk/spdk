@@ -132,14 +132,6 @@ ioat_get_capabilities(void)
 	return ACCEL_COPY | ACCEL_FILL;
 }
 
-static uint32_t
-ioat_batch_get_max(struct spdk_io_channel *ch)
-{
-	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
-
-	return spdk_ioat_get_max_descriptors(ioat_ch->ioat_dev->ioat);
-}
-
 static int
 ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task)
 {
@@ -180,7 +172,6 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 static struct spdk_accel_engine ioat_accel_engine = {
 	.get_capabilities	= ioat_get_capabilities,
 	.get_io_channel		= ioat_get_io_channel,
-	.batch_get_max		= ioat_batch_get_max,
 	.submit_tasks		= ioat_submit_tasks,
 };
 

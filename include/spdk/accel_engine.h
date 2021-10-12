@@ -123,91 +123,6 @@ int spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uin
 			   spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
- * Synchronous call to get batch size. This is the maximum number of
- *  descriptors that a batch can contain. Once this limit is reached the batch
- *  should be processed with spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- *
- * \return max number of descriptors per batch.
- */
-uint32_t spdk_accel_batch_get_max(struct spdk_io_channel *ch);
-
-/**
- * Synchronous call to create a batch sequence.
- *
- * \param ch I/O channel associated with this call.
- *
- * \return handle to use for subsequent batch requests, NULL on failure.
- */
-struct spdk_accel_batch *spdk_accel_batch_create(struct spdk_io_channel *ch);
-
-/**
- * Asynchronous call to submit a batch sequence.
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_submit(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-			    spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
- * Synchronous call to cancel a batch sequence. In some cases prepared commands will be
- * processed if they cannot be cancelled.
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *batch);
-
-/**
- * Synchronous call to prepare a copy request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the copy
- *  completes after the batch has been submitted by an asynchronous call to
- *  spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param dst Destination to copy to.
- * \param src Source to copy from.
- * \param nbytes Length in bytes to copy.
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_prep_copy(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-			       void *dst, void *src, uint64_t nbytes, spdk_accel_completion_cb cb_fn,
-			       void *cb_arg);
-
-/**
- * Synchronous call to prepare a dualcast request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the dualcast
- *  completes after the batch has been submitted by an asynchronous call to
- *  spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param dst1 First destination to copy to (must be 4K aligned).
- * \param dst2 Second destination to copy to (must be 4K aligned).
- * \param src Source to copy from.
- * \param nbytes Length in bytes to copy.
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_prep_dualcast(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				   void *dst1, void *dst2, void *src, uint64_t nbytes,
-				   spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
  * Submit a dual cast copy request.
  *
  * \param ch I/O channel associated with this call.
@@ -222,26 +137,6 @@ int spdk_accel_batch_prep_dualcast(struct spdk_io_channel *ch, struct spdk_accel
  */
 int spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, void *src,
 			       uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
- * Synchronous call to prepare a compare request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the compare
- *  completes after the batch has been submitted by an asynchronous call to
- *  spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param src1 First location to perform compare on.
- * \param src2 Second location to perform compare on.
- * \param nbytes Length in bytes to compare.
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_prep_compare(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				  void *src1, void *src2, uint64_t nbytes, spdk_accel_completion_cb cb_fn,
-				  void *cb_arg);
 
 /**
  * Submit a compare request.
@@ -259,26 +154,6 @@ int spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1, void *src2
 			      spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
- * Synchronous call to prepare a fill request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the fill
- *  completes after the batch has been submitted by an asynchronous call to
- *  spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param dst Destination to fill.
- * \param fill Constant byte to fill to the destination.
- * \param nbytes Length in bytes to fill.
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_prep_fill(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-			       void *dst, uint8_t fill, uint64_t nbytes,
-			       spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
  * Submit a fill request.
  *
  * This operation will fill the destination buffer with the specified value.
@@ -294,70 +169,6 @@ int spdk_accel_batch_prep_fill(struct spdk_io_channel *ch, struct spdk_accel_bat
  */
 int spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
 			   spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
- * Synchronous call to prepare a crc32c request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the crc32c
- *  completes after the batch has been submitted by an asynchronous call to
- *  spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param crc_dst Destination to write the CRC-32C to.
- * \param src The source address for the data.
- * \param seed Four byte seed value.
- * \param nbytes Length in bytes.
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_prep_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				 uint32_t *crc_dst, void *src, uint32_t seed, uint64_t nbytes,
-				 spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
- * Synchronous call to prepare a chained crc32c request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the crc32c
- *  completes after the batch has been submitted by an asynchronous call to
- *  spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param crc_dst Destination to write the CRC-32C to.
- * \param iovs The io vector array which stores the src data and len.
- * \param iovcnt The size of the iov.
- * \param seed Four byte seed value.
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_prep_crc32cv(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				  uint32_t *crc_dst, struct iovec *iovs, uint32_t iovcnt, uint32_t seed,
-				  spdk_accel_completion_cb cb_fn, void *cb_arg);
-
-/**
- * Synchronous call to prepare a copy + crc32c request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the operation
- *  completes after the batch has been submitted by an asynchronous call to
- *  spdk_accel_batch_submit().
- *
- * \param ch I/O channel associated with this call.
- * \param batch Handle provided when the batch was started with spdk_accel_batch_create().
- * \param dst Destination to write the data to.
- * \param src The source address for the data.
- * \param crc_dst Destination to write the CRC-32C to.
- * \param seed Four byte seed value.
- * \param nbytes Length in bytes.
- * \param cb_fn Called when this operation completes.
- * \param cb_arg Callback argument.
- *
- * \return 0 on success, negative errno on failure.
- */
-int spdk_accel_batch_prep_copy_crc32c(struct spdk_io_channel *ch, struct spdk_accel_batch *batch,
-				      void *dst, void *src, uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
-				      spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Submit a CRC-32C calculation request.

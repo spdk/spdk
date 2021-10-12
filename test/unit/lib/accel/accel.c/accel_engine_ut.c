@@ -134,22 +134,11 @@ dummy_cb_fn(void *cb_arg, int status)
 	g_dummy_cb_called = true;
 }
 
-static bool g_dummy_batch_cb_called = false;
-static void
-dummy_batch_cb_fn(void *cb_arg, int status)
-{
-	CU_ASSERT(*(uint32_t *)cb_arg == DUMMY_ARG);
-	CU_ASSERT(status == 0);
-	g_dummy_batch_cb_called = true;
-}
-
 static void
 test_spdk_accel_task_complete(void)
 {
 	struct spdk_accel_task accel_task = {};
 	struct spdk_accel_task *expected_accel_task = NULL;
-	struct spdk_accel_batch	batch = {};
-	struct spdk_accel_batch	*expected_batch = NULL;
 	uint32_t cb_arg = DUMMY_ARG;
 	int status = 0;
 
@@ -158,49 +147,12 @@ test_spdk_accel_task_complete(void)
 	accel_task.cb_arg = &cb_arg;
 	TAILQ_INIT(&g_accel_ch->task_pool);
 
-	/* W/o batch, confirm cb is called and task added to list. */
+	/* Confirm cb is called and task added to list. */
 	spdk_accel_task_complete(&accel_task, status);
 	CU_ASSERT(g_dummy_cb_called == true);
 	expected_accel_task = TAILQ_FIRST(&g_accel_ch->task_pool);
 	TAILQ_REMOVE(&g_accel_ch->task_pool, expected_accel_task, link);
 	CU_ASSERT(expected_accel_task == &accel_task);
-
-	TAILQ_INIT(&g_accel_ch->task_pool);
-	TAILQ_INIT(&g_accel_ch->batches);
-	TAILQ_INIT(&g_accel_ch->batch_pool);
-	batch.count = 2;
-	batch.cb_fn = dummy_batch_cb_fn;
-	batch.cb_arg = &cb_arg;
-	accel_task.batch = &batch;
-
-	/* W/batch, confirm task cb is called and task added to list.
-	 * but batch not completed yet. */
-	spdk_accel_task_complete(&accel_task, status);
-	CU_ASSERT(batch.count == 1);
-	CU_ASSERT(false == g_dummy_batch_cb_called);
-
-	expected_accel_task = TAILQ_FIRST(&g_accel_ch->task_pool);
-	TAILQ_REMOVE(&g_accel_ch->task_pool, expected_accel_task, link);
-	CU_ASSERT(expected_accel_task == &accel_task);
-	CU_ASSERT(true == TAILQ_EMPTY(&g_accel_ch->batch_pool));
-	CU_ASSERT(true == TAILQ_EMPTY(&g_accel_ch->batches));
-
-	TAILQ_INIT(&g_accel_ch->task_pool);
-	TAILQ_INSERT_TAIL(&g_accel_ch->batches, &batch, link);
-
-	/* Call it again and the batch should complete and lists updated accordingly. */
-	spdk_accel_task_complete(&accel_task, status);
-	CU_ASSERT(batch.count == 0);
-	CU_ASSERT(true == g_dummy_batch_cb_called);
-	CU_ASSERT(true == TAILQ_EMPTY(&g_accel_ch->batches));
-
-	expected_accel_task = TAILQ_FIRST(&g_accel_ch->task_pool);
-	TAILQ_REMOVE(&g_accel_ch->task_pool, expected_accel_task, link);
-	CU_ASSERT(expected_accel_task == &accel_task);
-
-	expected_batch = TAILQ_FIRST(&g_accel_ch->batch_pool);
-	TAILQ_REMOVE(&g_accel_ch->batch_pool, expected_batch, link);
-	CU_ASSERT(expected_batch == &batch);
 }
 
 static void
@@ -217,59 +169,31 @@ test_spdk_accel_get_capabilities(void)
 	CU_ASSERT(cap == expected_cap);
 }
 
-static void
-test_is_batch_valid(void)
-{
-	struct spdk_accel_batch batch = {};
-	bool rc;
-
-	/* This batch doesn't go with this channel. */
-	batch.accel_ch = (struct accel_io_channel *)0xDEADBEEF;
-	rc = _is_batch_valid(&batch, g_accel_ch);
-	CU_ASSERT(rc == false);
-
-	/* This one does. */
-	batch.accel_ch = g_accel_ch;
-	rc = _is_batch_valid(&batch, g_accel_ch);
-	CU_ASSERT(rc == true);
-}
 
 static void
 test_get_task(void)
 {
-	struct spdk_accel_batch batch = {};
 	struct spdk_accel_task *task;
 	struct spdk_accel_task _task;
 	void *cb_arg = NULL;
 
-	/* NULL batch should return NULL task. */
-	task = _get_task(g_accel_ch, NULL, dummy_cb_fn, cb_arg);
-	CU_ASSERT(task == NULL);
-
-	/* valid batch with bogus accel_ch should return NULL task. */
-	task = _get_task(g_accel_ch, &batch, dummy_cb_fn, cb_arg);
-	CU_ASSERT(task == NULL);
-
 	TAILQ_INIT(&g_accel_ch->task_pool);
-	batch.accel_ch = g_accel_ch;
 
 	/* no tasks left, return NULL. */
-	task = _get_task(g_accel_ch, &batch, dummy_cb_fn, cb_arg);
+	task = _get_task(g_accel_ch, dummy_cb_fn, cb_arg);
 	CU_ASSERT(task == NULL);
 
 	_task.cb_fn = dummy_cb_fn;
 	_task.cb_arg = cb_arg;
 	_task.accel_ch = g_accel_ch;
-	_task.batch = &batch;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &_task, link);
 
 	/* Get a valid task. */
-	task = _get_task(g_accel_ch, &batch, dummy_cb_fn, cb_arg);
+	task = _get_task(g_accel_ch, dummy_cb_fn, cb_arg);
 	CU_ASSERT(task == &_task);
 	CU_ASSERT(_task.cb_fn == dummy_cb_fn);
 	CU_ASSERT(_task.cb_arg == cb_arg);
 	CU_ASSERT(_task.accel_ch == g_accel_ch);
-	CU_ASSERT(_task.batch->count == 1);
 }
 
 static bool g_dummy_submit_called = false;
@@ -309,7 +233,6 @@ test_spdk_accel_submit_copy(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -395,7 +318,6 @@ test_spdk_accel_submit_dualcast(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -474,7 +396,6 @@ test_spdk_accel_submit_compare(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -545,7 +466,6 @@ test_spdk_accel_submit_fill(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -607,7 +527,6 @@ test_spdk_accel_submit_crc32c(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -670,7 +589,6 @@ test_spdk_accel_submit_crc32c_hw_engine_unsupported(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -719,7 +637,6 @@ test_spdk_accel_submit_crc32cv(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	task.nbytes = TEST_SUBMIT_SIZE;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
@@ -792,7 +709,6 @@ test_spdk_accel_submit_copy_crc32c(void)
 	task.cb_fn = dummy_submit_cb_fn;
 	task.cb_arg = cb_arg;
 	task.accel_ch = g_accel_ch;
-	task.batch = NULL;
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 
 	g_accel_ch->engine = &g_accel_engine;
@@ -858,7 +774,6 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_is_supported);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
 	CU_ADD_TEST(suite, test_spdk_accel_get_capabilities);
-	CU_ADD_TEST(suite, test_is_batch_valid);
 	CU_ADD_TEST(suite, test_get_task);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_dualcast);
