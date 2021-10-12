@@ -53,7 +53,6 @@ static int g_queue_depth = 32;
  * be at least as much as the queue depth.
  */
 static int g_allocate_depth = 0;
-static int g_ops_per_batch = 0;
 static int g_threads_per_core = 1;
 static int g_time_in_sec = 5;
 static uint32_t g_crc32c_seed = 0;
@@ -87,13 +86,6 @@ struct ap_task {
 	TAILQ_ENTRY(ap_task)	link;
 };
 
-struct accel_batch {
-	int				cmd_count;
-	struct spdk_accel_batch		*batch;
-	struct worker_thread		*worker;
-	TAILQ_ENTRY(accel_batch)	link;
-};
-
 struct worker_thread {
 	struct spdk_io_channel		*ch;
 	uint64_t			xfer_completed;
@@ -108,11 +100,7 @@ struct worker_thread {
 	struct spdk_poller		*is_draining_poller;
 	struct spdk_poller		*stop_poller;
 	void				*task_base;
-	struct accel_batch		*batch_base;
 	struct display_info		display;
-	TAILQ_HEAD(, accel_batch)	in_prep_batches;
-	TAILQ_HEAD(, accel_batch)	in_use_batches;
-	TAILQ_HEAD(, accel_batch)	to_submit_batches;
 };
 
 static void
@@ -140,11 +128,6 @@ dump_user_config(struct spdk_app_opts *opts)
 	printf("Allocate depth: %u\n", g_allocate_depth);
 	printf("# threads/core: %u\n", g_threads_per_core);
 	printf("Run time:       %u seconds\n", g_time_in_sec);
-	if (g_ops_per_batch > 0) {
-		printf("Batching:       %u operations\n", g_ops_per_batch);
-	} else {
-		printf("Batching:       Disabled\n");
-	}
 	printf("Verify:         %s\n\n", g_verify ? "Yes" : "No");
 }
 
@@ -164,7 +147,6 @@ usage(void)
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-f for fill workload, use this BYTE value (default 255)\n");
 	printf("\t[-y verify result if this switch is on]\n");
-	printf("\t[-b batch this number of operations at a time (default 0 = disabled)]\n");
 	printf("\t[-a tasks to allocate per core (default: same value as -q)]\n");
 	printf("\t\tCan be used to spread operations across a wider range of memory.\n");
 }
@@ -176,7 +158,6 @@ parse_args(int argc, char *argv)
 
 	switch (argc) {
 	case 'a':
-	case 'b':
 	case 'C':
 	case 'f':
 	case 'T':
@@ -199,9 +180,6 @@ parse_args(int argc, char *argv)
 	switch (argc) {
 	case 'a':
 		g_allocate_depth = argval;
-		break;
-	case 'b':
-		g_ops_per_batch = argval;
 		break;
 	case 'C':
 		g_crc32c_chained_count = argval;
@@ -261,7 +239,6 @@ unregister_worker(void *arg1)
 	struct worker_thread *worker = arg1;
 
 	free(worker->task_base);
-	free(worker->batch_base);
 	spdk_put_io_channel(worker->ch);
 	pthread_mutex_lock(&g_workers_lock);
 	assert(g_num_workers >= 1);
@@ -422,50 +399,6 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 	}
 }
 
-static int
-_batch_prep_cmd(struct worker_thread *worker, struct ap_task *task,
-		struct accel_batch *worker_batch)
-{
-	struct spdk_accel_batch *batch = worker_batch->batch;
-	int rc = 0;
-
-	worker_batch->cmd_count++;
-	assert(worker_batch->cmd_count <= g_ops_per_batch);
-
-	switch (g_workload_selection) {
-	case ACCEL_COPY:
-		rc = spdk_accel_batch_prep_copy(worker->ch, batch, task->dst,
-						task->src, g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_DUALCAST:
-		rc = spdk_accel_batch_prep_dualcast(worker->ch, batch, task->dst, task->dst2,
-						    task->src, g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_COMPARE:
-		rc = spdk_accel_batch_prep_compare(worker->ch, batch, task->dst, task->src,
-						   g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_FILL:
-		rc = spdk_accel_batch_prep_fill(worker->ch, batch, task->dst,
-						*(uint8_t *)task->src,
-						g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_COPY_CRC32C:
-		rc = spdk_accel_batch_prep_copy_crc32c(worker->ch, batch, task->dst, task->src, &task->crc_dst,
-						       g_crc32c_seed, g_xfer_size_bytes, accel_done, task);
-		break;
-	case ACCEL_CRC32C:
-		rc = spdk_accel_batch_prep_crc32cv(worker->ch, batch, &task->crc_dst,
-						   task->iovs, task->iov_cnt, g_crc32c_seed, accel_done, task);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	return rc;
-}
-
 static void
 _free_task_buffers(struct ap_task *task)
 {
@@ -487,116 +420,6 @@ _free_task_buffers(struct ap_task *task)
 	spdk_dma_free(task->dst);
 	if (g_workload_selection == ACCEL_DUALCAST) {
 		spdk_dma_free(task->dst2);
-	}
-}
-
-static void
-_build_batch(struct worker_thread *worker, struct ap_task *task)
-{
-	struct accel_batch *worker_batch = NULL;
-	int rc;
-
-	assert(!TAILQ_EMPTY(&worker->in_prep_batches));
-
-	worker_batch = TAILQ_FIRST(&worker->in_prep_batches);
-
-	/* If an accel batch hasn't been created yet do so now. */
-	if (worker_batch->batch == NULL) {
-		worker_batch->batch = spdk_accel_batch_create(worker->ch);
-		if (worker_batch->batch == NULL) {
-			fprintf(stderr, "error unable to create new batch\n");
-			return;
-		}
-	}
-
-	/* Prep the command re-using the last completed command's task */
-	rc = _batch_prep_cmd(worker, task, worker_batch);
-	if (rc) {
-		fprintf(stderr, "error prepping command for batch\n");
-		goto error;
-	}
-
-	/* If this batch is full move it to the to_submit list so it gets
-	 * submitted as batches complete.
-	 */
-	if (worker_batch->cmd_count == g_ops_per_batch) {
-		TAILQ_REMOVE(&worker->in_prep_batches, worker_batch, link);
-		TAILQ_INSERT_TAIL(&worker->to_submit_batches, worker_batch, link);
-	}
-
-	return;
-error:
-	spdk_accel_batch_cancel(worker->ch, worker_batch->batch);
-
-}
-
-static void batch_done(void *cb_arg, int status);
-static void
-_drain_batch(struct worker_thread *worker)
-{
-	struct accel_batch *worker_batch, *tmp;
-	int rc;
-
-	/* submit any batches that were being built up. */
-	TAILQ_FOREACH_SAFE(worker_batch, &worker->in_prep_batches, link, tmp) {
-		if (worker_batch->cmd_count == 0) {
-			continue;
-		}
-		worker->current_queue_depth += worker_batch->cmd_count + 1;
-
-		TAILQ_REMOVE(&worker->in_prep_batches, worker_batch, link);
-		TAILQ_INSERT_TAIL(&worker->in_use_batches, worker_batch, link);
-		rc = spdk_accel_batch_submit(worker->ch, worker_batch->batch, batch_done, worker_batch);
-		if (rc == 0) {
-			worker_batch->cmd_count = 0;
-		} else {
-			fprintf(stderr, "error sending final batch\n");
-			worker->current_queue_depth -= worker_batch->cmd_count + 1;
-			break;
-		}
-	}
-}
-
-static void
-batch_done(void *arg1, int status)
-{
-	struct accel_batch *worker_batch = (struct accel_batch *)arg1;
-	struct worker_thread *worker = worker_batch->worker;
-	int rc;
-
-	assert(worker);
-	assert(TAILQ_EMPTY(&worker->in_use_batches) == 0);
-
-	if (status) {
-		SPDK_ERRLOG("error %d\n", status);
-	}
-
-	worker->current_queue_depth--;
-	TAILQ_REMOVE(&worker->in_use_batches, worker_batch, link);
-	TAILQ_INSERT_TAIL(&worker->in_prep_batches, worker_batch, link);
-	worker_batch->batch = NULL;
-	worker_batch->cmd_count = 0;
-
-	if (!worker->is_draining) {
-		worker_batch = TAILQ_FIRST(&worker->to_submit_batches);
-		if (worker_batch != NULL) {
-
-			assert(worker_batch->cmd_count == g_ops_per_batch);
-
-			/* Add one for the batch command itself. */
-			worker->current_queue_depth += g_ops_per_batch + 1;
-			TAILQ_REMOVE(&worker->to_submit_batches, worker_batch, link);
-			TAILQ_INSERT_TAIL(&worker->in_use_batches, worker_batch, link);
-
-			rc = spdk_accel_batch_submit(worker->ch, worker_batch->batch, batch_done, worker_batch);
-			if (rc) {
-				fprintf(stderr, "error ending batch\n");
-				worker->current_queue_depth -= g_ops_per_batch + 1;
-				return;
-			}
-		}
-	} else {
-		_drain_batch(worker);
 	}
 }
 
@@ -696,14 +519,8 @@ accel_done(void *arg1, int status)
 	if (!worker->is_draining) {
 		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task = _get_task(worker);
-		if (g_ops_per_batch == 0) {
-			_submit_single(worker, task);
-			worker->current_queue_depth++;
-		} else {
-			_build_batch(worker, task);
-		}
-	} else if (g_ops_per_batch > 0) {
-		_drain_batch(worker);
+		_submit_single(worker, task);
+		worker->current_queue_depth++;
 	} else {
 		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 	}
@@ -799,12 +616,7 @@ _init_thread(void *arg1)
 {
 	struct worker_thread *worker;
 	struct ap_task *task;
-	int i, rc, num_batches;
-	int max_per_batch;
-	int remaining = g_queue_depth;
-	int num_tasks = g_allocate_depth;
-	struct accel_batch *tmp;
-	struct accel_batch *worker_batch = NULL;
+	int i, num_tasks = g_allocate_depth;
 	struct display_info *display = arg1;
 
 	worker = calloc(1, sizeof(*worker));
@@ -828,49 +640,6 @@ _init_thread(void *arg1)
 
 	TAILQ_INIT(&worker->tasks_pool);
 
-	if (g_ops_per_batch > 0) {
-
-		max_per_batch = spdk_accel_batch_get_max(worker->ch);
-		assert(max_per_batch > 0);
-
-		if (g_ops_per_batch > max_per_batch) {
-			fprintf(stderr, "Reducing requested batch amount to max supported of %d\n", max_per_batch);
-			g_ops_per_batch = max_per_batch;
-		}
-
-		if (g_ops_per_batch > g_queue_depth) {
-			fprintf(stderr, "Batch amount > queue depth, resetting to %d\n", g_queue_depth);
-			g_ops_per_batch = g_queue_depth;
-		}
-
-		TAILQ_INIT(&worker->in_prep_batches);
-		TAILQ_INIT(&worker->to_submit_batches);
-		TAILQ_INIT(&worker->in_use_batches);
-
-		/* A worker_batch will live on one of 3 lists:
-		 * IN_PREP: as individual IOs complete new ones are built on on a
-		 *          worker_batch on this list until it reaches g_ops_per_batch.
-		 * TO_SUBMIT: as batches are built up on IO completion they are moved
-		 *	      to this list once they are full.  This list is used in
-		 *	      batch completion to start new batches.
-		 * IN_USE: the worker_batch is outstanding and will be moved to in prep
-		 *         list when the batch is completed.
-		 *
-		 * So we need enough to cover Q depth loading and then one to replace
-		 * each one of those and for when everything is outstanding there needs
-		 * to be one extra batch to build up while the last batch is completing
-		 * IO but before it's completed the batch command.
-		 */
-		num_batches = (g_queue_depth / g_ops_per_batch * 2) + 1;
-		worker->batch_base = calloc(num_batches, sizeof(struct accel_batch));
-		worker_batch = worker->batch_base;
-		for (i = 0; i < num_batches; i++) {
-			worker_batch->worker = worker;
-			TAILQ_INSERT_TAIL(&worker->in_prep_batches, worker_batch, link);
-			worker_batch++;
-		}
-	}
-
 	worker->task_base = calloc(num_tasks, sizeof(struct ap_task));
 	if (worker->task_base == NULL) {
 		fprintf(stderr, "Could not allocate task base.\n");
@@ -892,54 +661,8 @@ _init_thread(void *arg1)
 	worker->stop_poller = SPDK_POLLER_REGISTER(_worker_stop, worker,
 			      g_time_in_sec * 1000000ULL);
 
-	/* If batching is enabled load up to the full Q depth before
-	 * processing any completions, then ping pong between two batches,
-	 * one processing and one being built up for when the other completes.
-	 */
-	if (g_ops_per_batch > 0) {
-		do {
-			worker_batch = TAILQ_FIRST(&worker->in_prep_batches);
-			if (worker_batch == NULL) {
-				goto error;
-			}
-
-			worker_batch->batch = spdk_accel_batch_create(worker->ch);
-			if (worker_batch->batch == NULL) {
-				raise(SIGINT);
-				break;
-			}
-
-			for (i = 0; i < g_ops_per_batch; i++) {
-				task = _get_task(worker);
-				worker->current_queue_depth++;
-				if (task == NULL) {
-					goto error;
-				}
-
-				rc = _batch_prep_cmd(worker, task, worker_batch);
-				if (rc) {
-					fprintf(stderr, "error prepping command\n");
-					goto error;
-				}
-			}
-
-			/* for the batch operation itself. */
-			task->worker->current_queue_depth++;
-			TAILQ_REMOVE(&worker->in_prep_batches, worker_batch, link);
-			TAILQ_INSERT_TAIL(&worker->in_use_batches, worker_batch, link);
-
-			rc = spdk_accel_batch_submit(worker->ch, worker_batch->batch, batch_done, worker_batch);
-			if (rc) {
-				fprintf(stderr, "error ending batch\n");
-				goto error;
-			}
-			assert(remaining >= g_ops_per_batch);
-			remaining -= g_ops_per_batch;
-		} while (remaining > 0);
-	}
-
-	/* Submit as singles when no batching is enabled or we ran out of batches. */
-	for (i = 0; i < remaining; i++) {
+	/* Load up queue depth worth of operations. */
+	for (i = 0; i < g_queue_depth; i++) {
 		task = _get_task(worker);
 		worker->current_queue_depth++;
 		if (task == NULL) {
@@ -950,15 +673,8 @@ _init_thread(void *arg1)
 	}
 	return;
 error:
-	if (worker_batch && worker_batch->batch) {
-		TAILQ_FOREACH_SAFE(worker_batch, &worker->in_use_batches, link, tmp) {
-			spdk_accel_batch_cancel(worker->ch, worker_batch->batch);
-			TAILQ_REMOVE(&worker->in_use_batches, worker_batch, link);
-		}
-	}
 
 	_free_task_buffers_in_pool(worker);
-	free(worker->batch_base);
 	free(worker->task_base);
 	free(worker);
 	spdk_app_stop(-1);
@@ -1029,7 +745,7 @@ main(int argc, char **argv)
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.reactor_mask = "0x1";
-	if (spdk_app_parse_args(argc, argv, &opts, "a:C:o:q:t:yw:P:f:b:T:", NULL, parse_args,
+	if (spdk_app_parse_args(argc, argv, &opts, "a:C:o:q:t:yw:P:f:T:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		g_rc = -1;
 		goto cleanup;
@@ -1041,13 +757,6 @@ main(int argc, char **argv)
 	    (g_workload_selection != ACCEL_COPY_CRC32C) &&
 	    (g_workload_selection != ACCEL_COMPARE) &&
 	    (g_workload_selection != ACCEL_DUALCAST)) {
-		usage();
-		g_rc = -1;
-		goto cleanup;
-	}
-
-	if (g_ops_per_batch > 0 && (g_queue_depth % g_ops_per_batch > 0)) {
-		fprintf(stdout, "batch size must be a multiple of queue depth\n");
 		usage();
 		g_rc = -1;
 		goto cleanup;
