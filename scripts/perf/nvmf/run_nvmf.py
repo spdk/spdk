@@ -585,11 +585,11 @@ class Target(Server):
                     elif "all" in line:
                         self.log_print(line)
                     else:
-                        sar_idle_sum += line.split()[7]
+                        sar_idle_sum += float(line.split()[7])
             fh.write(out)
         sar_cpu_usage = cpu_number * 100 - sar_idle_sum
         with open(os.path.join(results_dir, sar_file_name), "a") as f:
-            f.write("Total CPU used: ".join(sar_cpu_usage))
+            f.write("Total CPU used: " + str(sar_cpu_usage))
 
     def measure_pcm_memory(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
