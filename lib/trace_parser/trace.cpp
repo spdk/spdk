@@ -342,6 +342,7 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 	if (opts->lcore == SPDK_TRACE_MAX_LCORE) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = spdk_get_per_lcore_history(_histories, i);
+			assert(history);
 			if (history->num_entries == 0 || history->entries[0].tsc == 0) {
 				continue;
 			}
@@ -350,6 +351,7 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 		}
 	} else {
 		history = spdk_get_per_lcore_history(_histories, opts->lcore);
+		assert(history);
 		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
 			populate_events(history, history->num_entries);
 		}
