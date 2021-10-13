@@ -816,12 +816,9 @@ vfio_user_map_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 			    length, 4096, _map_one);
 }
 
-static struct spdk_nvmf_request *
-get_nvmf_req(struct nvmf_vfio_user_qpair *qp);
-
 static int
 handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
-	       struct spdk_nvmf_request *req);
+	       struct nvmf_vfio_user_qpair *vu_qpair);
 
 /*
  * Posts a CQE in the completion queue.
@@ -1339,7 +1336,7 @@ consume_admin_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd)
 		return handle_del_io_q(ctrlr, cmd,
 				       cmd->opc == SPDK_NVME_OPC_DELETE_IO_CQ);
 	default:
-		return handle_cmd_req(ctrlr, cmd, get_nvmf_req(ctrlr->qp[0]));
+		return handle_cmd_req(ctrlr, cmd, ctrlr->qp[0]);
 	}
 }
 
@@ -1377,7 +1374,7 @@ consume_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_qpair *qpa
 		return consume_admin_cmd(ctrlr, cmd);
 	}
 
-	return handle_cmd_req(ctrlr, cmd, get_nvmf_req(qpair));
+	return handle_cmd_req(ctrlr, cmd, qpair);
 }
 
 /* Returns the number of commands processed, or a negative value on error. */
@@ -2573,17 +2570,6 @@ get_nvmf_vfio_user_req(struct nvmf_vfio_user_qpair *qpair)
 	return req;
 }
 
-static struct spdk_nvmf_request *
-get_nvmf_req(struct nvmf_vfio_user_qpair *qpair)
-{
-	struct nvmf_vfio_user_req *req = get_nvmf_vfio_user_req(qpair);
-
-	if (req == NULL) {
-		return NULL;
-	}
-	return &req->req;
-}
-
 static int
 get_nvmf_io_req_length(struct spdk_nvmf_request *req)
 {
@@ -2723,29 +2709,28 @@ map_io_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *req
 
 static int
 handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
-	       struct spdk_nvmf_request *req)
+	       struct nvmf_vfio_user_qpair *vu_qpair)
 {
 	int err;
 	struct nvmf_vfio_user_req *vu_req;
+	struct spdk_nvmf_request *req;
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
 
-	/*
-	 * TODO: this means that there are no free requests available,
-	 * returning -1 will fail the controller. Theoretically this error can
-	 * be avoided completely by ensuring we have as many requests as slots
-	 * in the SQ, plus one for the the property request.
-	 */
-	if (spdk_unlikely(req == NULL)) {
-		return -1;
+	vu_req = get_nvmf_vfio_user_req(vu_qpair);
+	if (spdk_unlikely(vu_req == NULL)) {
+		SPDK_ERRLOG("%s: no request for NVMe command opc 0x%x\n", ctrlr_id(ctrlr), cmd->opc);
+		return post_completion(ctrlr, &vu_qpair->cq, 0, 0, cmd->cid,
+				       SPDK_NVME_SC_INTERNAL_DEVICE_ERROR, SPDK_NVME_SCT_GENERIC);
+
 	}
+	req = &vu_req->req;
 
 	assert(req->qpair != NULL);
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: handle qid%u, req opc=%#x cid=%d\n",
 		      ctrlr_id(ctrlr), req->qpair->qid, cmd->opc, cmd->cid);
 
-	vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
 	vu_req->cb_fn = handle_cmd_rsp;
 	vu_req->cb_arg = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
 	req->cmd->nvme_cmd = *cmd;
@@ -2767,14 +2752,11 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	}
 
 	if (spdk_unlikely(err < 0)) {
-		struct nvmf_vfio_user_qpair *vu_qpair;
-
 		SPDK_ERRLOG("%s: process NVMe command opc 0x%x failed\n",
 			    ctrlr_id(ctrlr), cmd->opc);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		err = handle_cmd_rsp(vu_req, vu_req->cb_arg);
-		vu_qpair = SPDK_CONTAINEROF(req->qpair, struct nvmf_vfio_user_qpair, qpair);
 		_nvmf_vfio_user_req_free(vu_qpair, vu_req);
 		return err;
 	}
