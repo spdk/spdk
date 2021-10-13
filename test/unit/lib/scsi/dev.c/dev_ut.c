@@ -664,7 +664,7 @@ static void
 dev_find_free_lun(void)
 {
 	struct spdk_scsi_dev dev = { .luns = TAILQ_HEAD_INITIALIZER(dev.luns), };
-	struct spdk_scsi_lun *lun, *prev_lun;
+	struct spdk_scsi_lun *lun, *prev_lun = NULL;
 	int i, rc;
 
 	lun = calloc(SPDK_SCSI_DEV_MAX_LUN, sizeof(*lun));
