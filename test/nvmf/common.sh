@@ -309,10 +309,12 @@ function gather_supported_nvmf_pci_devs() {
 	fi
 
 	# Try to respect what CI wants to test and override pci_devs[]
-	if [[ $SPDK_TEST_NVMF_DRIVER == mlx5_ib ]]; then
+	if [[ $SPDK_TEST_NVMF_NICS == mlx5 ]]; then
 		pci_devs=("${mlx[@]}")
-	elif [[ $SPDK_TEST_NVMF_DRIVER == ice ]]; then
+	elif [[ $SPDK_TEST_NVMF_NICS == e810 ]]; then
 		pci_devs=("${e810[@]}")
+	elif [[ $SPDK_TEST_NVMF_NICS == x722 ]]; then
+		pci_devs=("${x722[@]}")
 	fi
 
 	if ((${#pci_devs[@]} == 0)); then
