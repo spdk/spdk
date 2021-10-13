@@ -1783,11 +1783,18 @@ static int
 nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint32_t count;
 
 	SPDK_DEBUGLOG(nvmf, "Set Features - Number of Queues, cdw11 0x%x\n",
 		      req->cmd->nvme_cmd.cdw11);
+
+	if (cmd->cdw11_bits.feat_num_of_queues.bits.ncqr == UINT16_MAX ||
+	    cmd->cdw11_bits.feat_num_of_queues.bits.nsqr == UINT16_MAX) {
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	/* verify that the controller is ready to process commands */

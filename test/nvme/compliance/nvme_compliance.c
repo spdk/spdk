@@ -524,6 +524,54 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 	return 0;
 }
 
+static void
+set_features_number_of_queues(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_io_qpair_opts opts;
+	struct spdk_nvme_qpair *qpair;
+	struct spdk_nvme_cmd cmd;
+	struct status s;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	/* NCQR and NSQR are 65535, invalid */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.cdw10_bits.set_features.fid = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+	cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = UINT16_MAX;
+	cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = UINT16_MAX;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(qpair);
+
+	/* After the IO queue is created, invalid */
+	cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = 128;
+	cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = 128;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+
+	spdk_nvme_detach(ctrlr);
+}
+
 /* Test the mandatory features with Get Features command:
  * 01h Arbitration.
  * 02h Power Management.
@@ -727,6 +775,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, delete_create_io_sq);
 	CU_ADD_TEST(suite, delete_io_cq);
 	CU_ADD_TEST(suite, get_features);
+	CU_ADD_TEST(suite, set_features_number_of_queues);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
