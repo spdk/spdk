@@ -1147,7 +1147,7 @@ draw_tab_win(enum tabs tab)
 }
 
 static void
-draw_tabs(enum tabs tab_index, uint8_t sort_col)
+draw_tabs(enum tabs tab_index, uint8_t sort_col, uint8_t sort_col2)
 {
 	struct col_desc *col_desc = g_col_desc[tab_index];
 	WINDOW *tab = g_tabs[tab_index];
@@ -1171,6 +1171,10 @@ draw_tabs(enum tabs tab_index, uint8_t sort_col)
 		draw_offset = offset + (col_desc[i].max_data_string / 2) - (col_desc[i].name_len / 2);
 
 		if (i == sort_col) {
+			wattron(tab, COLOR_PAIR(4));
+			print_max_len(tab, 1, draw_offset, 0, ALIGN_LEFT, col_desc[i].name);
+			wattroff(tab, COLOR_PAIR(4));
+		} else if (i == sort_col2) {
 			wattron(tab, COLOR_PAIR(3));
 			print_max_len(tab, 1, draw_offset, 0, ALIGN_LEFT, col_desc[i].name);
 			wattroff(tab, COLOR_PAIR(3));
@@ -1208,9 +1212,10 @@ resize_interface(enum tabs tab)
 		wclear(g_tabs[i]);
 		wresize(g_tabs[i], g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - 2, g_max_col);
 		mvwin(g_tabs[i], TABS_LOCATION_ROW, TABS_LOCATION_COL);
+		draw_tabs(i, g_current_sort_col[i], g_current_sort_col2[i]);
 	}
 
-	draw_tabs(tab, g_current_sort_col[tab]);
+	draw_tabs(tab, g_current_sort_col[tab], g_current_sort_col2[tab]);
 
 	for (i = 0; i < NUMBER_OF_TABS; i++) {
 		wclear(g_tab_win[i]);
@@ -1228,7 +1233,7 @@ static void
 switch_tab(enum tabs tab)
 {
 	wclear(g_tabs[tab]);
-	draw_tabs(tab, g_current_sort_col[tab]);
+	draw_tabs(tab, g_current_sort_col[tab], g_current_sort_col2[tab]);
 	top_panel(g_panels[tab]);
 	update_panels();
 	doupdate();
@@ -1635,7 +1640,7 @@ static void
 apply_filters(enum tabs tab)
 {
 	wclear(g_tabs[tab]);
-	draw_tabs(tab, g_current_sort_col[tab]);
+	draw_tabs(tab, g_current_sort_col[tab], g_current_sort_col2[tab]);
 }
 
 static ITEM **
@@ -1841,18 +1846,23 @@ static void
 sort_type(enum tabs tab, int item_index)
 {
 	g_current_sort_col[tab] = item_index;
-	wclear(g_tabs[tab]);
-	draw_tabs(tab, g_current_sort_col[tab]);
 }
 
 static void
-change_sorting(uint8_t tab)
+sort_type2(enum tabs tab, int item_index)
+{
+	g_current_sort_col2[tab] = item_index;
+}
+
+static void
+change_sorting(uint8_t tab, int winnum, bool *pstop_loop)
 {
 	const int WINDOW_HEADER_LEN = 4;
 	const int WINDOW_BORDER_LEN = 3;
 	const int WINDOW_START_X = 1;
-	const int WINDOW_START_Y = 3;
-	const int WINDOW_HEADER_END_LINE = 2;
+	const int WINDOW_START_Y = 4;
+	const int WINDOW_HEADER_END_LINE = 3;
+	const int WINDOW_MIN_WIDTH = 31;
 	PANEL *sort_panel;
 	WINDOW *sort_win;
 	ITEM **my_items;
@@ -1860,8 +1870,10 @@ change_sorting(uint8_t tab)
 	int i, c, elements;
 	bool stop_loop = false;
 	ITEM *cur;
+	char *name;
+	char *help;
 	void (*p)(enum tabs tab, int item_index);
-	uint8_t len = 0;
+	uint8_t len = WINDOW_MIN_WIDTH;
 
 	for (i = 0; g_col_desc[tab][i].name != NULL; ++i) {
 		len = spdk_max(len, g_col_desc[tab][i].name_len);
@@ -1877,15 +1889,16 @@ change_sorting(uint8_t tab)
 
 	for (i = 0; i < elements; ++i) {
 		my_items[i] = new_item(g_col_desc[tab][i].name, NULL);
-		set_item_userptr(my_items[i], sort_type);
+		set_item_userptr(my_items[i], (winnum == 0) ? sort_type : sort_type2);
 	}
 
 	my_menu = new_menu((ITEM **)my_items);
 
 	menu_opts_off(my_menu, O_SHOWDESC);
 
-	sort_win = newwin(elements + WINDOW_HEADER_LEN, len + WINDOW_BORDER_LEN, (g_max_row - elements) / 2,
-			  (g_max_col - len) / 2);
+	sort_win = newwin(elements + WINDOW_HEADER_LEN + 1, len + WINDOW_BORDER_LEN,
+			  (g_max_row - elements) / 2,
+			  (g_max_col - len) / 2 - len + len * winnum);
 	assert(sort_win != NULL);
 	keypad(sort_win, TRUE);
 	sort_panel = new_panel(sort_win);
@@ -1899,7 +1912,16 @@ change_sorting(uint8_t tab)
 	set_menu_sub(my_menu, derwin(sort_win, elements, len + 1, WINDOW_START_Y, WINDOW_START_X));
 	box(sort_win, 0, 0);
 
-	print_in_middle(sort_win, 1, 0, len + WINDOW_BORDER_LEN, "Sorting", COLOR_PAIR(3));
+	if (winnum == 0) {
+		name = "Sorting #1";
+		help = "Right key for second sorting";
+	} else {
+		name = "Sorting #2";
+		help = "Left key for first sorting";
+	}
+
+	print_in_middle(sort_win, 1, 0, len + WINDOW_BORDER_LEN, name, COLOR_PAIR(3));
+	print_in_middle(sort_win, 2, 0, len + WINDOW_BORDER_LEN, help, COLOR_PAIR(3));
 	mvwaddch(sort_win, WINDOW_HEADER_END_LINE, 0, ACS_LTEE);
 	mvwhline(sort_win, WINDOW_HEADER_END_LINE, 1, ACS_HLINE, len + 1);
 	mvwaddch(sort_win, WINDOW_HEADER_END_LINE, len + WINDOW_BORDER_LEN - 1, ACS_RTEE);
@@ -1910,7 +1932,17 @@ change_sorting(uint8_t tab)
 
 	while (!stop_loop) {
 		c = wgetch(sort_win);
-
+		/*
+		 * First sorting window:
+		 * Up/Down - select first sorting column;
+		 * Enter - apply current column;
+		 * Right - open second sorting window.
+		 * Second sorting window:
+		 * Up/Down - select second sorting column;
+		 * Enter - apply current column of both sorting windows;
+		 * Left - exit second window and reset second sorting key;
+		 * Right - do nothing.
+		 */
 		switch (c) {
 		case KEY_DOWN:
 			menu_driver(my_menu, REQ_DOWN_ITEM);
@@ -1918,17 +1950,49 @@ change_sorting(uint8_t tab)
 		case KEY_UP:
 			menu_driver(my_menu, REQ_UP_ITEM);
 			break;
+		case KEY_RIGHT:
+			if (winnum > 0) {
+				break;
+			}
+			change_sorting(tab, winnum + 1, &stop_loop);
+			/* Restore input. */
+			keypad(sort_win, TRUE);
+			post_menu(my_menu);
+			refresh();
+			wrefresh(sort_win);
+			redrawwin(sort_win);
+			if (winnum == 0) {
+				cur = current_item(my_menu);
+				p = item_userptr(cur);
+				p(tab, item_index(cur));
+			}
+			break;
 		case 27: /* ESC */
 			stop_loop = true;
 			break;
+		case KEY_LEFT:
+			if (winnum > 0) {
+				sort_type2(tab, COL_THREADS_NONE);
+			}
+		/* FALLTHROUGH */
 		case 10: /* Enter */
 			stop_loop = true;
-			cur = current_item(my_menu);
-			p = item_userptr(cur);
-			p(tab, item_index(cur));
+			if (winnum > 0 && c == 10) {
+				*pstop_loop = true;
+			}
+			if (c == 10) {
+				cur = current_item(my_menu);
+				p = item_userptr(cur);
+				p(tab, item_index(cur));
+			}
 			break;
 		}
 		wrefresh(sort_win);
+	}
+
+	if (winnum == 0) {
+		wclear(g_tabs[tab]);
+		draw_tabs(tab, g_current_sort_col[tab], g_current_sort_col2[tab]);
 	}
 
 	unpost_menu(my_menu);
@@ -1943,8 +2007,10 @@ change_sorting(uint8_t tab)
 	del_panel(sort_panel);
 	delwin(sort_win);
 
-	wclear(g_menu_win);
-	draw_menu_win();
+	if (winnum == 0) {
+		wclear(g_menu_win);
+		draw_menu_win();
+	}
 }
 
 static void
@@ -2632,7 +2698,8 @@ show_stats(pthread_t *data_thread)
 			switch_tab(active_tab);
 			break;
 		case 's':
-			change_sorting(active_tab);
+			sort_type2(active_tab, COL_THREADS_NONE);
+			change_sorting(active_tab, 0, NULL);
 			break;
 		case 'c':
 			filter_columns(active_tab);
@@ -2649,7 +2716,7 @@ show_stats(pthread_t *data_thread)
 			}
 			wclear(g_tabs[active_tab]);
 			g_selected_row = 0;
-			draw_tabs(active_tab, g_current_sort_col[active_tab]);
+			draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
 			break;
 		case KEY_PPAGE: /* PgUp */
 			if (current_page > 0) {
@@ -2657,7 +2724,7 @@ show_stats(pthread_t *data_thread)
 			}
 			wclear(g_tabs[active_tab]);
 			g_selected_row = 0;
-			draw_tabs(active_tab, g_current_sort_col[active_tab]);
+			draw_tabs(active_tab, g_current_sort_col[active_tab], g_current_sort_col2[active_tab]);
 			break;
 		case KEY_UP: /* Arrow up */
 			if (g_selected_row > 0) {
@@ -2725,7 +2792,7 @@ draw_interface(void)
 
 		g_tabs[i] = newwin(g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - 2, g_max_col, TABS_LOCATION_ROW,
 				   TABS_LOCATION_COL);
-		draw_tabs(i, g_current_sort_col[i]);
+		draw_tabs(i, g_current_sort_col[i], g_current_sort_col2[i]);
 		g_panels[i] = new_panel(g_tabs[i]);
 		assert(g_panels[i] != NULL);
 	}
