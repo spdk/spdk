@@ -2573,6 +2573,10 @@ help_window_display(void)
 	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
 		   "[Down] Arrow key	- go to next data row", COLOR_PAIR(10));
 	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[Right] Arrow key	- go to second sorting window", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[Left] Arrow key	- close second sorting window", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
 		   "[c] Columns		- choose data columns to display", COLOR_PAIR(10));
 	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
 		   "[s] Sorting		- change sorting by column", COLOR_PAIR(10));
