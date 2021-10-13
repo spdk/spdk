@@ -6,6 +6,7 @@ NVMF_IP_LEAST_ADDR=8
 NVMF_TCP_IP_ADDRESS="127.0.0.1"
 NVMF_TRANSPORT_OPTS=""
 NVMF_SERIAL=SPDK00000000000001
+NET_TYPE=${NET_TYPE:-phy-fallback}
 
 function build_nvmf_app_args() {
 	if [ $SPDK_RUN_NON_ROOT -eq 1 ]; then
@@ -222,10 +223,6 @@ function nvmf_tcp_init() {
 	NVMF_INITIATOR_IP=10.0.0.1
 	NVMF_FIRST_TARGET_IP=10.0.0.2
 	TCP_INTERFACE_LIST=("${net_devs[@]}")
-	if ((${#TCP_INTERFACE_LIST[@]} == 0)); then
-		nvmf_veth_init
-		return 0
-	fi
 
 	# We need two net devs at minimum
 	((${#TCP_INTERFACE_LIST[@]} > 1))
@@ -319,12 +316,7 @@ function gather_supported_nvmf_pci_devs() {
 	fi
 
 	if ((${#pci_devs[@]} == 0)); then
-		if [[ $TEST_TRANSPORT == rdma ]]; then
-			echo "WARNING: No pci devices found for the $TEST_TRANSPORT test, falling back to Soft-RoCE"
-			detect_soft_roce_nics
-		fi
-		# tcp fallbacks to veth setup
-		return 0
+		return 1
 	fi
 
 	# Load proper kernel modules if necessary
@@ -368,9 +360,38 @@ function gather_supported_nvmf_pci_devs() {
 	done
 
 	if ((${#net_devs[@]} == 0)); then
-		echo "ERROR: No net devices were found for: ${pci_devs[*]}. Cannot run the $TEST_TRANSPORT test"
 		return 1
 	fi
+}
+
+prepare_net_devs() {
+	local -g is_hw=no
+
+	remove_spdk_ns
+
+	[[ $NET_TYPE == virt ]] || gather_supported_nvmf_pci_devs && is_hw=yes
+
+	if [[ $is_hw == yes ]]; then
+		if [[ $TEST_TRANSPORT == tcp ]]; then
+			nvmf_tcp_init
+		elif [[ $TEST_TRANSPORT == rdma ]]; then
+			rdma_device_init
+		fi
+		return 0
+	elif [[ $NET_TYPE == phy ]]; then
+		echo "ERROR: No supported devices were found, cannot run the $TEST_TRANSPORT test"
+		return 1
+	elif [[ $NET_TYPE == phy-fallback ]]; then
+		echo "WARNING: No supported devices were found, fallback requested for $TEST_TRANSPORT test"
+	fi
+
+	# NET_TYPE == virt or phy-fallback
+	if [[ $TEST_TRANSPORT == rdma ]]; then
+		detect_soft_roce_nics
+	elif [[ $TEST_TRANSPORT == tcp ]]; then
+		nvmf_veth_init
+	fi
+
 }
 
 function nvmftestinit() {
@@ -381,7 +402,7 @@ function nvmftestinit() {
 
 	trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini' SIGINT SIGTERM EXIT
 
-	gather_supported_nvmf_pci_devs
+	prepare_net_devs
 
 	if [ "$TEST_MODE" == "iso" ]; then
 		$rootdir/scripts/setup.sh
@@ -389,7 +410,6 @@ function nvmftestinit() {
 
 	NVMF_TRANSPORT_OPTS="-t $TEST_TRANSPORT"
 	if [[ "$TEST_TRANSPORT" == "rdma" ]]; then
-		rdma_device_init
 		RDMA_IP_LIST=$(get_available_rdma_ips)
 		NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
@@ -398,8 +418,6 @@ function nvmftestinit() {
 			exit 0
 		fi
 	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
-		remove_spdk_ns
-		nvmf_tcp_init
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
 	fi
 
