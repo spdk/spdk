@@ -303,7 +303,7 @@ delete_io_sq_twice(void)
 static int
 parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 {
-	char op;
+	int op;
 
 	while ((op = getopt(argc, argv, "gr:")) != -1) {
 		switch (op) {
