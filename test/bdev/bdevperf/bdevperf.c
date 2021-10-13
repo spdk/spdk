@@ -1449,7 +1449,7 @@ config_filename_next(const char *filename, char *out)
 }
 
 static void
-bdevperf_construct_config_jobs(void)
+bdevperf_construct_jobs(void)
 {
 	char filename[BDEVPERF_CONFIG_MAX_FILENAME];
 	struct spdk_thread *thread;
@@ -1515,7 +1515,7 @@ make_cli_job_config(const char *filename, int64_t offset, uint64_t range)
 }
 
 static void
-bdevperf_construct_multithread_jobs(void)
+bdevperf_construct_multithread_job_configs(void)
 {
 	struct spdk_bdev *bdev;
 	uint32_t i;
@@ -1573,7 +1573,7 @@ bdevperf_construct_multithread_jobs(void)
 }
 
 static void
-bdevperf_construct_jobs(void)
+bdevperf_construct_job_configs(void)
 {
 	struct spdk_bdev *bdev;
 
@@ -1590,15 +1590,10 @@ bdevperf_construct_jobs(void)
 	 * which is different from other modes in that they only support global options.
 	 */
 
-	/* Increment initial construct_jobs count so that it will never reach 0 in the middle
-	 * of iteration.
-	 */
-	g_construct_job_count = 1;
-
 	if (g_bdevperf_conf) {
 		goto end;
 	} else if (g_multithread_mode) {
-		bdevperf_construct_multithread_jobs();
+		bdevperf_construct_multithread_job_configs();
 		goto end;
 	}
 
@@ -1625,8 +1620,13 @@ bdevperf_construct_jobs(void)
 	}
 
 end:
+	/* Increment initial construct_jobs count so that it will never reach 0 in the middle
+	 * of iteration.
+	 */
+	g_construct_job_count = 1;
+
 	if (g_run_rc == 0) {
-		bdevperf_construct_config_jobs();
+		bdevperf_construct_jobs();
 	}
 
 	_bdevperf_construct_job_done(NULL);
@@ -1865,7 +1865,7 @@ bdevperf_run(void *arg1)
 		return;
 	}
 
-	bdevperf_construct_jobs();
+	bdevperf_construct_job_configs();
 }
 
 static void
@@ -1905,7 +1905,7 @@ rpc_perform_tests(struct spdk_jsonrpc_request *request, const struct spdk_json_v
 	}
 	g_request = request;
 
-	bdevperf_construct_jobs();
+	bdevperf_construct_job_configs();
 }
 SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME)
 
