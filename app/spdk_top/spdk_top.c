@@ -119,6 +119,7 @@ enum column_threads_type {
 	COL_THREADS_PAUSED_POLLERS,
 	COL_THREADS_IDLE_TIME,
 	COL_THREADS_BUSY_TIME,
+	COL_THREADS_NONE = 255,
 };
 
 enum column_pollers_type {
@@ -128,6 +129,7 @@ enum column_pollers_type {
 	COL_POLLERS_RUN_COUNTER,
 	COL_POLLERS_PERIOD,
 	COL_POLLERS_BUSY_COUNT,
+	COL_POLLERS_NONE = 255,
 };
 
 enum column_cores_type {
@@ -138,6 +140,7 @@ enum column_cores_type {
 	COL_CORES_BUSY_TIME,
 	COL_CORES_CORE_FREQ,
 	COL_CORES_INTR,
+	COL_CORES_NONE = 255,
 };
 
 enum spdk_poller_type {
@@ -177,6 +180,7 @@ uint16_t g_max_row, g_max_col;
 uint16_t g_data_win_size, g_max_data_rows;
 uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
 uint8_t g_current_sort_col[NUMBER_OF_TABS] = {COL_THREADS_NAME, COL_POLLERS_NAME, COL_CORES_CORE};
+uint8_t g_current_sort_col2[NUMBER_OF_TABS] = {COL_THREADS_NONE, COL_POLLERS_NONE, COL_CORES_NONE};
 bool g_interval_data = true;
 bool g_quit_app = false;
 pthread_mutex_t g_thread_lock;
@@ -587,13 +591,13 @@ rpc_send_req(char *rpc_name, struct spdk_jsonrpc_client_response **resp)
 
 
 static int
-sort_threads(const void *p1, const void *p2)
+subsort_threads(enum column_threads_type sort_column, const void *p1, const void *p2)
 {
 	const struct rpc_thread_info thread_info1 = *(struct rpc_thread_info *)p1;
 	const struct rpc_thread_info thread_info2 = *(struct rpc_thread_info *)p2;
 	uint64_t count1, count2;
 
-	switch (g_current_sort_col[THREADS_TAB]) {
+	switch (sort_column) {
 	case COL_THREADS_NAME:
 		return strcmp(thread_info1.name, thread_info2.name);
 	case COL_THREADS_CORE:
@@ -630,6 +634,7 @@ sort_threads(const void *p1, const void *p2)
 			count2 = thread_info2.busy;
 		}
 		break;
+	case COL_THREADS_NONE:
 	default:
 		return 0;
 	}
@@ -641,6 +646,18 @@ sort_threads(const void *p1, const void *p2)
 	} else {
 		return 0;
 	}
+}
+
+static int
+sort_threads(const void *p1, const void *p2)
+{
+	int res;
+
+	res = subsort_threads(g_current_sort_col[THREADS_TAB], p1, p2);
+	if (res == 0) {
+		res = subsort_threads(g_current_sort_col2[THREADS_TAB], p1, p2);
+	}
+	return res;
 }
 
 static void
@@ -778,19 +795,14 @@ get_last_busy_counter(const char *poller_name, uint64_t thread_id)
 }
 
 static int
-#ifdef __FreeBSD__
-sort_pollers(void *arg, const void *p1, const void *p2)
-#else
-sort_pollers(const void *p1, const void *p2, void *arg)
-#endif
+subsort_pollers(enum column_pollers_type sort_column, const void *p1, const void *p2)
 {
 	const struct rpc_poller_info *poller1 = (struct rpc_poller_info *)p1;
 	const struct rpc_poller_info *poller2 = (struct rpc_poller_info *)p2;
-	enum column_pollers_type sorting = *(enum column_pollers_type *)arg;
 	uint64_t count1, count2;
 	uint64_t last_busy_counter1, last_busy_counter2;
 
-	switch (sorting) {
+	switch (sort_column) {
 	case COL_POLLERS_NAME:
 		return strcmp(poller1->name, poller2->name);
 	case COL_POLLERS_TYPE:
@@ -824,6 +836,7 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 			}
 		}
 		break;
+	case COL_POLLERS_NONE:
 	default:
 		return 0;
 	}
@@ -835,6 +848,22 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 	} else {
 		return 0;
 	}
+}
+
+static int
+#ifdef __FreeBSD__
+sort_pollers(void *arg, const void *p1, const void *p2)
+#else
+sort_pollers(const void *p1, const void *p2, void *arg)
+#endif
+{
+	int rc;
+
+	rc = subsort_pollers(g_current_sort_col[POLLERS_TAB], p1, p2);
+	if (rc == 0) {
+		rc = subsort_pollers(g_current_sort_col2[POLLERS_TAB], p1, p2);
+	}
+	return rc;
 }
 
 static int
@@ -894,13 +923,13 @@ end:
 }
 
 static int
-sort_cores(const void *p1, const void *p2)
+subsort_cores(enum column_cores_type sort_column, const void *p1, const void *p2)
 {
 	const struct rpc_core_info core_info1 = *(struct rpc_core_info *)p1;
 	const struct rpc_core_info core_info2 = *(struct rpc_core_info *)p2;
 	uint64_t count1, count2;
 
-	switch (g_current_sort_col[CORES_TAB]) {
+	switch (sort_column) {
 	case COL_CORES_CORE:
 		count1 = core_info2.lcore;
 		count2 = core_info1.lcore;
@@ -939,6 +968,7 @@ sort_cores(const void *p1, const void *p2)
 		count1 = core_info1.in_interrupt;
 		count2 = core_info2.in_interrupt;
 		break;
+	case COL_CORES_NONE:
 	default:
 		return 0;
 	}
@@ -950,6 +980,18 @@ sort_cores(const void *p1, const void *p2)
 	} else {
 		return 0;
 	}
+}
+
+static int
+sort_cores(const void *p1, const void *p2)
+{
+	int rc;
+
+	rc = subsort_cores(g_current_sort_col[CORES_TAB], p1, p2);
+	if (rc == 0) {
+		return subsort_cores(g_current_sort_col[CORES_TAB], p1, p2);
+	}
+	return rc;
 }
 
 static int
