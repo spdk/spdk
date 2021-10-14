@@ -63,15 +63,15 @@ enum spdk_dma_device_type {
 struct spdk_memory_domain;
 
 /**
- * Definition of completion callback to be called by fetch function.
+ * Definition of completion callback to be called by pull function.
  *
- * \param ctx User context passed to fetch function
- * \param rc Result of asynchronous fetch function
+ * \param ctx User context passed to pull function
+ * \param rc Result of asynchronous pull function
  */
-typedef void (*spdk_memory_domain_fetch_data_cpl_cb)(void *ctx, int rc);
+typedef void (*spdk_memory_domain_pull_data_cpl_cb)(void *ctx, int rc);
 
 /**
- * Definition of function which asynchronously fetches data from src_domain to local memory domain.
+ * Definition of function which asynchronously pulles data from src_domain to local memory domain.
  * Implementation of this function must call \b cpl_cb only when it returns 0. All other return codes mean failure.
  *
  * \param src_domain Memory domain to which the data buffer belongs
@@ -81,14 +81,14 @@ typedef void (*spdk_memory_domain_fetch_data_cpl_cb)(void *ctx, int rc);
  * \param dst_iov Iov vector in local memory domain space, data buffers must be allocated by the caller of
  * this function, total size of data buffers must not be less than the size of data in \b src_iov.
  * \param dst_iovcnt dst_iov array size
- * \param cpl_cb A callback to be called when fetch operation completes
+ * \param cpl_cb A callback to be called when pull operation completes
  * \param cpl_cb_arg Optional argument to be passed to \b cpl_cb
  * \return 0 on success, negated errno on failure
  */
-typedef int (*spdk_memory_domain_fetch_data_cb)(struct spdk_memory_domain *src_domain,
+typedef int (*spdk_memory_domain_pull_data_cb)(struct spdk_memory_domain *src_domain,
 		void *src_domain_ctx,
 		struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov, uint32_t dst_iovcnt,
-		spdk_memory_domain_fetch_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+		spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 struct spdk_memory_domain_translation_result {
 	/** size of this structure in bytes */
@@ -173,13 +173,13 @@ void spdk_memory_domain_set_translation(struct spdk_memory_domain *domain,
 					spdk_memory_domain_translate_memory_cb translate_cb);
 
 /**
- * Set fetch function for memory domain. Overwrites existing fetch function.
+ * Set pull function for memory domain. Overwrites existing pull function.
  *
  * \param domain Memory domain
- * \param fetch_cb Fetch function
+ * \param pull_cb pull function
  */
-void spdk_memory_domain_set_fetch(struct spdk_memory_domain *domain,
-				  spdk_memory_domain_fetch_data_cb fetch_cb);
+void spdk_memory_domain_set_pull(struct spdk_memory_domain *domain,
+				 spdk_memory_domain_pull_data_cb pull_cb);
 
 /**
  * Get the context passed by the user in \ref spdk_memory_domain_create
@@ -212,7 +212,7 @@ const char *spdk_memory_domain_get_dma_device_id(struct spdk_memory_domain *doma
 void spdk_memory_domain_destroy(struct spdk_memory_domain *domain);
 
 /**
- * Asynchronously fetch data which is described by \b src_domain and located in \b src_iov to a location
+ * Asynchronously pull data which is described by \b src_domain and located in \b src_iov to a location
  * \b dst_iov local memory space.
  *
  * \param src_domain Memory domain in which space data buffer is located
@@ -223,12 +223,12 @@ void spdk_memory_domain_destroy(struct spdk_memory_domain *domain);
  * \param dst_iov_cnt The number of elements in \b dst_iov
  * \param cpl_cb Completion callback
  * \param cpl_cb_arg Completion callback argument
- * \return 0 on success, negated errno on failure. fetch_cb implementation must only call the callback when 0
+ * \return 0 on success, negated errno on failure. pull_cb implementation must only call the callback when 0
  * is returned
  */
-int spdk_memory_domain_fetch_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
-				  struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov, uint32_t dst_iov_cnt,
-				  spdk_memory_domain_fetch_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+int spdk_memory_domain_pull_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+				 struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov, uint32_t dst_iov_cnt,
+				 spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 /**
  * Translate data located in \b src_domain space at address \b addr with size \b len into an equivalent

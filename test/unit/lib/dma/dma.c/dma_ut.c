@@ -36,20 +36,20 @@
 #include "unit/lib/json_mock.c"
 #include "dma/dma.c"
 
-static bool g_memory_domain_fetch_called;
+static bool g_memory_domain_pull_called;
 static bool g_memory_domain_translate_called;
 static int g_memory_domain_cb_rc = 123;
 
 static void
-test_memory_domain_fetch_data_cpl_cb(void *ctx, int rc)
+test_memory_domain_pull_data_cpl_cb(void *ctx, int rc)
 {
 }
 
-static int test_memory_domain_fetch_data_cb(struct spdk_memory_domain *src_device,
+static int test_memory_domain_pull_data_cb(struct spdk_memory_domain *src_device,
 		void *src_device_ctx, struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov,
-		uint32_t dst_iovcnt, spdk_memory_domain_fetch_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+		uint32_t dst_iovcnt, spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg)
 {
-	g_memory_domain_fetch_called = true;
+	g_memory_domain_pull_called = true;
 
 	return g_memory_domain_cb_rc;
 }
@@ -105,21 +105,21 @@ test_dma(void)
 	id = spdk_memory_domain_get_dma_device_id(domain);
 	CU_ASSERT((!strcmp(id, domain->id)));
 
-	/* Fetch data, callback is NULL. Expect fail */
-	g_memory_domain_fetch_called = false;
-	rc = spdk_memory_domain_fetch_data(domain, NULL, &src_iov, 1, &dst_iov, 1,
-					   test_memory_domain_fetch_data_cpl_cb, NULL);
+	/* pull data, callback is NULL. Expect fail */
+	g_memory_domain_pull_called = false;
+	rc = spdk_memory_domain_pull_data(domain, NULL, &src_iov, 1, &dst_iov, 1,
+					  test_memory_domain_pull_data_cpl_cb, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
-	CU_ASSERT(g_memory_domain_fetch_called == false);
+	CU_ASSERT(g_memory_domain_pull_called == false);
 
-	/* Set fetch callback */
-	spdk_memory_domain_set_fetch(domain, test_memory_domain_fetch_data_cb);
+	/* Set pull callback */
+	spdk_memory_domain_set_pull(domain, test_memory_domain_pull_data_cb);
 
-	/* Fetch data. Expect pass */
-	rc = spdk_memory_domain_fetch_data(domain, NULL, &src_iov, 1, &dst_iov, 1,
-					   test_memory_domain_fetch_data_cpl_cb, NULL);
+	/* pull data. Expect pass */
+	rc = spdk_memory_domain_pull_data(domain, NULL, &src_iov, 1, &dst_iov, 1,
+					  test_memory_domain_pull_data_cpl_cb, NULL);
 	CU_ASSERT(rc == g_memory_domain_cb_rc);
-	CU_ASSERT(g_memory_domain_fetch_called == true);
+	CU_ASSERT(g_memory_domain_pull_called == true);
 
 	/* Translate data, callback is NULL. Expect fail */
 	g_memory_domain_translate_called = false;
@@ -146,13 +146,13 @@ test_dma(void)
 	spdk_memory_domain_set_translation(domain, test_memory_domain_translate_memory_cb);
 	CU_ASSERT(domain->translate_cb == test_memory_domain_translate_memory_cb);
 
-	/* Set fetch callback to NULL. Expect pass */
-	spdk_memory_domain_set_fetch(domain, NULL);
-	CU_ASSERT(domain->fetch_cb == NULL);
+	/* Set pull callback to NULL. Expect pass */
+	spdk_memory_domain_set_pull(domain, NULL);
+	CU_ASSERT(domain->pull_cb == NULL);
 
 	/* Set translation_callback. Expect pass */
-	spdk_memory_domain_set_fetch(domain, test_memory_domain_fetch_data_cb);
-	CU_ASSERT(domain->fetch_cb == test_memory_domain_fetch_data_cb);
+	spdk_memory_domain_set_pull(domain, test_memory_domain_pull_data_cb);
+	CU_ASSERT(domain->pull_cb == test_memory_domain_pull_data_cb);
 
 	/* Create 2nd and 3rd memory domains with equal id to test enumeration */
 	rc = spdk_memory_domain_create(&domain_2, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test_2");

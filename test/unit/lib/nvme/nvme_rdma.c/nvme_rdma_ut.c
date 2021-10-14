@@ -67,9 +67,9 @@ DEFINE_STUB(spdk_memory_domain_get_context, struct spdk_memory_domain_ctx *,
 DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
 	    (struct spdk_memory_domain *device), SPDK_DMA_DEVICE_TYPE_RDMA);
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *device));
-DEFINE_STUB(spdk_memory_domain_fetch_data, int, (struct spdk_memory_domain *src_domain,
+DEFINE_STUB(spdk_memory_domain_pull_data, int, (struct spdk_memory_domain *src_domain,
 		void *src_domain_ctx, struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov,
-		uint32_t dst_iov_cnt, spdk_memory_domain_fetch_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
+		uint32_t dst_iov_cnt, spdk_memory_domain_pull_data_cpl_cb cpl_cb, void *cpl_cb_arg), 0);
 
 DEFINE_RETURN_MOCK(spdk_memory_domain_create, int);
 int

@@ -4,12 +4,12 @@
 	# public functions
 	spdk_memory_domain_create;
 	spdk_memory_domain_set_translation;
-	spdk_memory_domain_set_fetch;
+	spdk_memory_domain_set_pull;
 	spdk_memory_domain_get_context;
 	spdk_memory_domain_get_dma_device_type;
 	spdk_memory_domain_get_dma_device_id;
 	spdk_memory_domain_destroy;
-	spdk_memory_domain_fetch_data;
+	spdk_memory_domain_pull_data;
 	spdk_memory_domain_translate_data;
 	spdk_memory_domain_get_first;
 	spdk_memory_domain_get_next;
