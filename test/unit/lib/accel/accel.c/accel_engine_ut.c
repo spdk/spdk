@@ -63,7 +63,8 @@ test_setup(void)
 		return -1;
 	}
 	g_accel_ch->engine_ch = g_engine_ch;
-	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_accel_ch->engine_ch + sizeof(
+	g_accel_ch->sw_engine_ch = g_engine_ch;
+	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_accel_ch->sw_engine_ch + sizeof(
 				struct spdk_io_channel));
 	TAILQ_INIT(&g_sw_ch->tasks_to_complete);
 	return 0;
@@ -650,6 +651,52 @@ test_spdk_accel_submit_crc32c(void)
 }
 
 static void
+test_spdk_accel_submit_crc32c_hw_engine_unsupported(void)
+{
+	const uint64_t nbytes = TEST_SUBMIT_SIZE;
+	uint32_t crc_dst;
+	uint8_t src[TEST_SUBMIT_SIZE];
+	uint32_t seed = 1;
+	void *cb_arg = NULL;
+	int rc;
+	struct spdk_accel_task task;
+	struct spdk_accel_task *expected_accel_task = NULL;
+
+	/* Fail with no tasks on _get_task() */
+	rc = spdk_accel_submit_crc32c(g_ch, &crc_dst, src, seed, nbytes, dummy_submit_cb_fn, cb_arg);
+	CU_ASSERT(rc == -ENOMEM);
+
+	TAILQ_INIT(&g_accel_ch->task_pool);
+	task.cb_fn = dummy_submit_cb_fn;
+	task.cb_arg = cb_arg;
+	task.accel_ch = g_accel_ch;
+	task.batch = NULL;
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+
+	g_accel_ch->engine = &g_accel_engine;
+	/* HW engine only supports COPY and does not support CRC */
+	g_accel_ch->engine->capabilities = ACCEL_COPY;
+	g_accel_ch->engine->submit_tasks = dummy_submit_tasks;
+
+	/* Summit to HW engine while eventually handled by SW engine. */
+	rc = spdk_accel_submit_crc32c(g_ch, &crc_dst, src, seed, nbytes, dummy_submit_cb_fn, cb_arg);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.crc_dst == &crc_dst);
+	CU_ASSERT(task.src == src);
+	CU_ASSERT(task.v.iovcnt == 0);
+	CU_ASSERT(task.seed == seed);
+	CU_ASSERT(task.op_code == ACCEL_OPCODE_CRC32C);
+	CU_ASSERT(task.nbytes == nbytes);
+	/* Not set in HW engine callback while handled by SW engine instead. */
+	CU_ASSERT(g_dummy_submit_called == false);
+
+	/* SW engine does crc. */
+	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &task);
+}
+
+static void
 test_spdk_accel_submit_crc32cv(void)
 {
 	uint32_t crc_dst;
@@ -818,6 +865,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_submit_compare);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_fill);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32c);
+	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32c_hw_engine_unsupported);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32cv);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy_crc32c);
 

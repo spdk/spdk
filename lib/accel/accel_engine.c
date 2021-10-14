@@ -190,7 +190,7 @@ _get_task(struct accel_io_channel *accel_ch, struct spdk_accel_batch *batch,
 inline static void
 _add_to_comp_list(struct accel_io_channel *accel_ch, struct spdk_accel_task *accel_task, int status)
 {
-	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(accel_ch->engine_ch);
+	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(accel_ch->sw_engine_ch);
 
 	accel_task->status = status;
 	TAILQ_INSERT_TAIL(&sw_ch->tasks_to_complete, accel_task, link);
@@ -958,12 +958,16 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 		batch++;
 	}
 
+	/* Set sw engine channel for operations where hw engine does not support. */
+	accel_ch->sw_engine_ch = g_sw_accel_engine->get_io_channel();
+	assert(accel_ch->sw_engine_ch != NULL);
+
 	if (g_hw_accel_engine != NULL) {
 		accel_ch->engine_ch = g_hw_accel_engine->get_io_channel();
 		accel_ch->engine = g_hw_accel_engine;
 	} else {
 		/* No hw engine enabled, use sw. */
-		accel_ch->engine_ch = g_sw_accel_engine->get_io_channel();
+		accel_ch->engine_ch = accel_ch->sw_engine_ch;
 		accel_ch->engine = g_sw_accel_engine;
 	}
 	assert(accel_ch->engine_ch != NULL);
@@ -979,6 +983,9 @@ accel_engine_destroy_cb(void *io_device, void *ctx_buf)
 	struct accel_io_channel	*accel_ch = ctx_buf;
 
 	free(accel_ch->batch_pool_base);
+	if (accel_ch->sw_engine_ch != accel_ch->engine_ch) {
+		spdk_put_io_channel(accel_ch->sw_engine_ch);
+	}
 	spdk_put_io_channel(accel_ch->engine_ch);
 	free(accel_ch->task_pool_base);
 }
