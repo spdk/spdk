@@ -66,11 +66,9 @@ struct spdk_memory_domain;
  * Definition of completion callback to be called by fetch function.
  *
  * \param ctx User context passed to fetch function
- * \param iov Pointer to iovs that hold result of fetch function
- * \param iovcnt iov array size
- * \param rc Result of asynchronous fetch function. Data in iov is valid only when rc is 0
+ * \param rc Result of asynchronous fetch function
  */
-typedef void (*spdk_memory_domain_fetch_data_cpl_cb)(void *ctx, void *iov, uint32_t iovcnt, int rc);
+typedef void (*spdk_memory_domain_fetch_data_cpl_cb)(void *ctx, int rc);
 
 /**
  * Definition of function which asynchronously fetches data from src_domain to local memory domain.

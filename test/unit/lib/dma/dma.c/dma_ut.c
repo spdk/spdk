@@ -41,7 +41,7 @@ static bool g_memory_domain_translate_called;
 static int g_memory_domain_cb_rc = 123;
 
 static void
-test_memory_domain_fetch_data_cpl_cb(void *ctx, void *iov, uint32_t iovcnt, int rc)
+test_memory_domain_fetch_data_cpl_cb(void *ctx, int rc)
 {
 }
 
