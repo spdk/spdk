@@ -564,7 +564,7 @@ if __name__ == "__main__":
     p.add_argument('-d', '--ddgst',
                    help='Enable TCP data digest.', action='store_true')
     p.add_argument('--fabrics-timeout', type=int, help='Fabrics connect timeout in microseconds')
-    p.add_argument('-x', '--multipath', help='Set multipath behavior (disable, failover)')
+    p.add_argument('-x', '--multipath', help='Set multipath behavior (disable, failover, multipath)')
     p.set_defaults(func=bdev_nvme_attach_controller)
 
     def bdev_nvme_get_controllers(args):

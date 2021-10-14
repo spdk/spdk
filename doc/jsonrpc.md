@@ -2894,7 +2894,7 @@ prchk_guard                | Optional | bool        | Enable checking of PI guar
 hdgst                      | Optional | bool        | Enable TCP header digest
 ddgst                      | Optional | bool        | Enable TCP data digest
 fabrics_connect_timeout_us | Optional | bool        | Timeout for fabrics connect (in microseconds)
-multipath                  | Optional | string      | Multipathing behavior: disable, failover. Default is failover.
+multipath                  | Optional | string      | Multipathing behavior: disable, failover, multipath. Default is failover.
 
 #### Example
 

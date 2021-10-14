@@ -281,6 +281,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	uint32_t prchk_flags = 0;
 	struct nvme_ctrlr *ctrlr = NULL;
 	size_t len, maxlen;
+	bool multipath = false;
 	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -416,8 +417,9 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 							     "A controller named %s already exists and multipath is disabled\n",
 							     ctx->req.name);
 			goto cleanup;
-		} else if (strcasecmp(ctx->req.multipath, "failover") == 0) {
-			/* The user wants to add this as a failover path. */
+		} else if (strcasecmp(ctx->req.multipath, "failover") == 0 ||
+			   strcasecmp(ctx->req.multipath, "multipath") == 0) {
+			/* The user wants to add this as a failover path or add this to create multipath. */
 
 			if (strncmp(trid.traddr, ctrlr_trid->traddr, sizeof(trid.traddr)) == 0 &&
 			    strncmp(trid.trsvcid, ctrlr_trid->trsvcid, sizeof(trid.trsvcid)) == 0 &&
@@ -473,11 +475,15 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 		prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 	}
 
+	if (ctx->req.multipath != NULL && strcasecmp(ctx->req.multipath, "multipath") == 0) {
+		multipath = true;
+	}
+
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
 	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->count, prchk_flags,
 			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts,
-			      false);
+			      multipath);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

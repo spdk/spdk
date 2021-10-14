@@ -539,7 +539,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         hdgst: Enable TCP header digest (optional)
         ddgst: Enable TCP data digest (optional)
         fabrics_timeout: Fabrics connect timeout in us (optional)
-        multipath: The behavior when multiple paths are created ("disable", "failover"; failover if not specified)
+        multipath: The behavior when multiple paths are created ("disable", "failover", or "multipath"; failover if not specified)
 
     Returns:
         Names of created block devices.
