@@ -189,8 +189,10 @@ class Server:
                 self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
                                "channel-inline-flow-director", "on"])  # Enable Intel Flow Director
                 self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic, "fw-lldp-agent", "off"])  # Disable LLDP
+                # As temporary workaround for ADQ, channel packet inspection optimization is turned on during connection establishment.
+                # Then turned off before fio ramp_up expires in ethtool_after_fio_ramp().
                 self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
-                               "channel-pkt-inspect-optimize", "off"])  # Disable channel packet inspection optimization
+                               "channel-pkt-inspect-optimize", "on"])
             except CalledProcessError as e:
                 self.log_print("ERROR: failed to configure NIC port using ethtool!")
                 self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
@@ -598,6 +600,14 @@ class Target(Server):
         sar_cpu_usage = cpu_number * 100 - sar_idle_sum
         with open(os.path.join(results_dir, sar_file_name), "a") as f:
             f.write("Total CPU used: " + str(sar_cpu_usage))
+
+    def ethtool_after_fio_ramp(self, fio_ramp_time):
+        time.sleep(fio_ramp_time//2)
+        nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
+        for nic in nic_names:
+            self.log_print(nic)
+            self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
+                           "channel-pkt-inspect-optimize", "off"])  # Disable channel packet inspection optimization
 
     def measure_pcm_memory(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
@@ -1506,6 +1516,10 @@ if __name__ == "__main__":
         if target_obj.enable_dpdk_memory:
             t = threading.Thread(target=target_obj.measure_dpdk_memory, args=(args.results))
             threads.append(t)
+
+        if target_obj.enable_adq:
+            ethtool_thread = threading.Thread(target=target_obj.ethtool_after_fio_ramp, args=(fio_ramp_time))
+            threads.append(ethtool_thread)
 
         for t in threads:
             t.start()
