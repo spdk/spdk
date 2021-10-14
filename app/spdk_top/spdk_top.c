@@ -934,21 +934,19 @@ get_cores_data(void)
 	}
 
 	pthread_mutex_lock(&g_thread_lock);
-
-	for (i = 0; i < current_cores_count; i++) {
-		cores_info[i].last_busy = g_cores_info[i].busy;
-		cores_info[i].last_idle = g_cores_info[i].idle;
-	}
-
 	for (i = 0; i < current_cores_count; i++) {
 		for (j = 0; j < g_last_cores_count; j++) {
+			if (cores_info[i].lcore == g_cores_info[j].lcore) {
+				cores_info[i].last_busy = g_cores_info[j].busy;
+				cores_info[i].last_idle = g_cores_info[j].idle;
+			}
 			/* Do not consider threads which changed cores when issuing
 			 * RPCs to get_core_data and get_thread_data and threads
 			 * not currently assigned to this core. */
-			if ((int)cores_info[j].lcore == g_threads_info[i].core_num) {
-				cores_info[j].pollers_count += g_threads_info[i].active_pollers_count +
-							       g_threads_info[i].timed_pollers_count +
-							       g_threads_info[i].paused_pollers_count;
+			if ((int)cores_info[i].lcore == g_threads_info[j].core_num) {
+				cores_info[i].pollers_count += g_threads_info[j].active_pollers_count +
+							       g_threads_info[j].timed_pollers_count +
+							       g_threads_info[j].paused_pollers_count;
 			}
 		}
 	}
