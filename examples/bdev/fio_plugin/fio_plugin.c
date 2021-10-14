@@ -66,6 +66,7 @@ struct spdk_fio_options {
 	void *pad;
 	char *conf;
 	char *json_conf;
+	char *log_flags;
 	unsigned mem_mb;
 	int mem_single_seg;
 	int initial_zone_reset;
@@ -285,6 +286,21 @@ spdk_init_thread_poll(void *arg)
 		goto err_exit;
 	}
 	spdk_unaffinitize_thread();
+
+	if (eo->log_flags) {
+		char *tok = strtok(eo->log_flags, ",");
+		do {
+			rc = spdk_log_set_flag(tok);
+			if (rc < 0) {
+				SPDK_ERRLOG("unknown spdk log flag %s\n", tok);
+				rc = EINVAL;
+				goto err_exit;
+			}
+		} while ((tok = strtok(NULL, ",")) != NULL);
+#ifdef DEBUG
+		spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#endif
+	}
 
 	spdk_thread_lib_init(NULL, 0);
 
@@ -1197,6 +1213,15 @@ static struct fio_option options[] = {
 		.def            = "0",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "log_flags",
+		.lname          = "log flags",
+		.type           = FIO_OPT_STR_STORE,
+		.off1           = offsetof(struct spdk_fio_options, log_flags),
+		.help           = "SPDK log flags to enable",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
 	},
 	{
 		.name		= "initial_zone_reset",
