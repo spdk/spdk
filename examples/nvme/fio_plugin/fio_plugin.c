@@ -62,6 +62,7 @@
 #define NVME_IO_ALIGN		4096
 
 static bool g_spdk_env_initialized;
+static bool g_log_flag_error;
 static int g_spdk_enable_sgl = 0;
 static uint32_t g_spdk_sge_size = 4096;
 static uint32_t g_spdk_bit_bucket_data_len = 0;
@@ -95,6 +96,7 @@ struct spdk_fio_options {
 	int	initial_zone_reset;
 	int	zone_append;
 	int	print_qid_mappings;
+	char	*log_flags;
 };
 
 struct spdk_fio_request {
@@ -561,6 +563,13 @@ static int spdk_fio_setup(struct thread_data *td)
 		return 1;
 	}
 
+	if (g_log_flag_error) {
+		/* The first thread found an error when parsing log flags, so
+		 * just return error immediately for all of the other threads.
+		 */
+		return 1;
+	}
+
 	pthread_mutex_lock(&g_mutex);
 
 	fio_thread = calloc(1, sizeof(*fio_thread));
@@ -596,6 +605,22 @@ static int spdk_fio_setup(struct thread_data *td)
 			pthread_mutex_unlock(&g_mutex);
 			return 1;
 		}
+
+		if (fio_options->log_flags) {
+			char *tok = strtok(fio_options->log_flags, ",");
+			do {
+				rc = spdk_log_set_flag(tok);
+				if (rc < 0) {
+					SPDK_ERRLOG("unknown log flag %s\n", tok);
+					g_log_flag_error = true;
+					return 1;
+				}
+			} while ((tok = strtok(NULL, ",")) != NULL);
+#ifdef DEBUG
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#endif
+		}
+
 		g_spdk_env_initialized = true;
 		spdk_unaffinitize_thread();
 
@@ -1656,6 +1681,15 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, print_qid_mappings),
 		.def		= "0",
 		.help		= "Print job-to-qid mappings (0=disable, 1=enable)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "log_flags",
+		.lname		= "log_flags",
+		.type		= FIO_OPT_STR_STORE,
+		.off1		= offsetof(struct spdk_fio_options, log_flags),
+		.help		= "Enable log flags (comma-separated list)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
