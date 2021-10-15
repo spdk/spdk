@@ -574,9 +574,13 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 	}
 
 	io_path->ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	TAILQ_INSERT_TAIL(&io_path->ctrlr_ch->io_path_list, io_path, tailq);
+
 	io_path->nvme_ns = nvme_ns;
 
+	io_path->nbdev_ch = nbdev_ch;
 	STAILQ_INSERT_TAIL(&nbdev_ch->io_path_list, io_path, stailq);
+
 	return 0;
 }
 
@@ -587,6 +591,7 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 
 	STAILQ_REMOVE(&nbdev_ch->io_path_list, io_path, nvme_io_path, stailq);
 
+	TAILQ_REMOVE(&io_path->ctrlr_ch->io_path_list, io_path, tailq);
 	ch = spdk_io_channel_from_ctx(io_path->ctrlr_ch);
 	spdk_put_io_channel(ch);
 
@@ -1750,6 +1755,7 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 #endif
 
 	TAILQ_INIT(&ctrlr_ch->pending_resets);
+	TAILQ_INIT(&ctrlr_ch->io_path_list);
 
 	rc = bdev_nvme_create_qpair(ctrlr_ch);
 	if (rc != 0) {

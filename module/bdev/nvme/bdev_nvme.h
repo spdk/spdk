@@ -82,6 +82,7 @@ struct nvme_ns {
 struct nvme_bdev_io;
 struct nvme_bdev_ctrlr;
 struct nvme_bdev;
+struct nvme_io_path;
 
 struct nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
@@ -164,6 +165,10 @@ struct nvme_ctrlr_channel {
 	struct nvme_poll_group		*group;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
 	TAILQ_ENTRY(nvme_ctrlr_channel)	tailq;
+
+	/* The following is used to update io_path cache of nvme_bdev_channels. */
+	TAILQ_HEAD(, nvme_io_path)	io_path_list;
+
 };
 
 #define nvme_ctrlr_channel_get_ctrlr(ctrlr_ch)	\
@@ -173,6 +178,10 @@ struct nvme_io_path {
 	struct nvme_ns			*nvme_ns;
 	struct nvme_ctrlr_channel	*ctrlr_ch;
 	STAILQ_ENTRY(nvme_io_path)	stailq;
+
+	/* The following are used to update io_path cache of the nvme_bdev_channel. */
+	struct nvme_bdev_channel	*nbdev_ch;
+	TAILQ_ENTRY(nvme_io_path)	tailq;
 };
 
 struct nvme_bdev_channel {
