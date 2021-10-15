@@ -581,6 +581,8 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 	io_path->nbdev_ch = nbdev_ch;
 	STAILQ_INSERT_TAIL(&nbdev_ch->io_path_list, io_path, stailq);
 
+	nbdev_ch->current_io_path = NULL;
+
 	return 0;
 }
 
@@ -588,6 +590,8 @@ static void
 _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_path *io_path)
 {
 	struct spdk_io_channel *ch;
+
+	nbdev_ch->current_io_path = NULL;
 
 	STAILQ_REMOVE(&nbdev_ch->io_path_list, io_path, nvme_io_path, stailq);
 
@@ -724,6 +728,10 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
 	struct nvme_io_path *io_path, *non_optimized = NULL;
 
+	if (spdk_likely(nbdev_ch->current_io_path != NULL)) {
+		return nbdev_ch->current_io_path;
+	}
+
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
 		if (spdk_unlikely(!nvme_io_path_is_connected(io_path))) {
 			/* The device is currently resetting. */
@@ -736,6 +744,7 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 
 		switch (io_path->nvme_ns->ana_state) {
 		case SPDK_NVME_ANA_OPTIMIZED_STATE:
+			nbdev_ch->current_io_path = io_path;
 			return io_path;
 		case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
 			if (non_optimized == NULL) {
@@ -870,6 +879,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
 	    !nvme_io_path_is_available(bio->io_path) ||
 	    nvme_io_path_is_failed(bio->io_path)) {
+		nbdev_ch->current_io_path = NULL;
 		if (spdk_nvme_cpl_is_ana_error(cpl)) {
 			bio->io_path->nvme_ns->ana_state_updating = true;
 			nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
@@ -916,6 +926,8 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 	case -ENXIO:
 		nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
+		nbdev_ch->current_io_path = NULL;
+
 		if (!bdev_nvme_io_type_is_admin(bdev_io->type) &&
 		    any_io_path_may_become_available(nbdev_ch)) {
 			bdev_nvme_queue_retry_io(nbdev_ch, bio, 1000ULL);
@@ -930,6 +942,16 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 
 	bio->retry_count = 0;
 	spdk_bdev_io_complete(bdev_io, io_status);
+}
+
+static void
+_bdev_nvme_clear_io_path_cache(struct nvme_ctrlr_channel *ctrlr_ch)
+{
+	struct nvme_io_path *io_path;
+
+	TAILQ_FOREACH(io_path, &ctrlr_ch->io_path_list, tailq) {
+		io_path->nbdev_ch->current_io_path = NULL;
+	}
 }
 
 static struct nvme_ctrlr_channel *
@@ -954,6 +976,8 @@ bdev_nvme_destroy_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
 		ctrlr_ch->qpair = NULL;
 	}
+
+	_bdev_nvme_clear_io_path_cache(ctrlr_ch);
 }
 
 static void
@@ -2766,14 +2790,20 @@ nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 }
 
 static void
-nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
+bdev_nvme_clear_io_path_cache(struct spdk_io_channel_iter *i)
 {
-	struct nvme_ctrlr *nvme_ctrlr = ctx;
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(_ch);
 
-	if (cpl != NULL && spdk_nvme_cpl_is_success(cpl)) {
-		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ctrlr_set_ana_states,
-					     nvme_ctrlr);
-	}
+	_bdev_nvme_clear_io_path_cache(ctrlr_ch);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdev_nvme_clear_io_path_cache_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 
@@ -2789,6 +2819,22 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	nvme_ctrlr_unregister(nvme_ctrlr);
+}
+
+static void
+nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_ctrlr *nvme_ctrlr = ctx;
+
+	if (cpl != NULL && spdk_nvme_cpl_is_success(cpl)) {
+		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ctrlr_set_ana_states,
+					     nvme_ctrlr);
+	}
+
+	spdk_for_each_channel(nvme_ctrlr,
+			      bdev_nvme_clear_io_path_cache,
+			      NULL,
+			      bdev_nvme_clear_io_path_cache_done);
 }
 
 static void

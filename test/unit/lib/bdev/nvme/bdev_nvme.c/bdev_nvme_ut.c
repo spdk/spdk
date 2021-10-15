@@ -3778,8 +3778,12 @@ test_find_io_path(void)
 	nvme_ns1.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
 
+	nbdev_ch.current_io_path = NULL;
+
 	nvme_ns1.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+
+	nbdev_ch.current_io_path = NULL;
 
 	/* Test if io_path whose qpair is resetting is excluced. */
 
@@ -3798,8 +3802,12 @@ test_find_io_path(void)
 	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
 
+	nbdev_ch.current_io_path = NULL;
+
 	nvme_ns2.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+
+	nbdev_ch.current_io_path = NULL;
 }
 
 static void
@@ -3947,6 +3955,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 
 	/* If ANA state of namespace is inaccessible, I/O should be queued. */
 	nvme_ns->ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	nbdev_ch->current_io_path = NULL;
 
 	bdev_io1->internal.in_submit_request = true;
 

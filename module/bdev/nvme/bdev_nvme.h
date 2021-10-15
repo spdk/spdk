@@ -185,6 +185,7 @@ struct nvme_io_path {
 };
 
 struct nvme_bdev_channel {
+	struct nvme_io_path			*current_io_path;
 	STAILQ_HEAD(, nvme_io_path)		io_path_list;
 	TAILQ_HEAD(retry_io_head, spdk_bdev_io)	retry_io_list;
 	struct spdk_poller			*retry_io_poller;
