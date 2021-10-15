@@ -2062,6 +2062,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 			      nvme_ns->ns, nvme_ctrlr->prchk_flags, bdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create NVMe disk\n");
+		pthread_mutex_destroy(&bdev->mutex);
 		free(bdev);
 		return rc;
 	}
