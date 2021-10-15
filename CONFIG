@@ -65,6 +65,10 @@ CONFIG_ASAN=n
 # Build with Undefined Behavior Sanitizer enabled
 CONFIG_UBSAN=n
 
+# Build with LLVM fuzzing enabled
+CONFIG_FUZZER=n
+CONFIG_FUZZER_LIB=
+
 # Build with Thread Sanitizer enabled
 CONFIG_TSAN=n
 

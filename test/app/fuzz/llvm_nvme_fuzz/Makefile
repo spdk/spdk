@@ -1,6 +1,4 @@
 #
-#  BSD LICENSE
-#
 #  Copyright (c) Intel Corporation.
 #  All rights reserved.
 #
@@ -31,22 +29,16 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += nvme_fuzz
-DIRS-y += iscsi_fuzz
+APP = llvm_nvme_fuzz
 
-ifeq ($(CONFIG_FUZZER),y)
-DIRS-y += llvm_nvme_fuzz
-endif
+C_SRCS := llvm_nvme_fuzz.c
 
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VIRTIO) += vhost_fuzz
-endif
-.PHONY: all clean $(DIRS-y)
+LDFLAGS+= -lstdc++
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_nvmf
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

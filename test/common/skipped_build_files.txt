@@ -41,3 +41,7 @@ test/external_code/passthru/vbdev_passthru
 test/external_code/passthru/vbdev_passthru_rpc
 test/external_code/nvme/nvme
 test/external_code/nvme/identify
+
+# This file requires some additional work in CI and test scripts before it can
+# be part of autotest.
+test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz

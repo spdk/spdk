@@ -101,6 +101,10 @@ function usage() {
 	echo " --without-wpdk            The argument must be a directory containing lib and include."
 	echo " --with-usdt               Build with userspace DTrace probes enabled."
 	echo " --without-usdt            No path required."
+	echo " --with-fuzzer             Build with LLVM fuzzing enabled."
+	echo "                           Path to clang_rt.fuzzer_no_main library required."
+	echo "                           Requires setting CC and CXX to clang."
+	echo "                           (Typically /usr/lib/llvm-VER/lib/clang/VER/lib/linux/libclang_rt.fuzzer_no_main-ARCH.a)"
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -481,6 +485,19 @@ for i in "$@"; do
 			;;
 		--without-usdt)
 			CONFIG[USDT]=n
+			;;
+		--with-fuzzer)
+			echo "Must specify fuzzer library path with --with-fuzzer"
+			usage
+			exit 1
+			;;
+		--with-fuzzer=*)
+			CONFIG[FUZZER]=y
+			CONFIG[FUZZER_LIB]=$(readlink -f ${i#*=})
+			;;
+		--without-fuzzer)
+			CONFIG[FUZZER]=n
+			CONFIG[FUZZER_LIB]=
 			;;
 		--)
 			break
@@ -886,6 +903,11 @@ if [ "${CONFIG[CET]}" = "y" ]; then
 		echo "Please install then re-run this script."
 		exit 1
 	fi
+fi
+
+if [[ "${CONFIG[FUZZER]}" = "y" && "$CC_TYPE" != "clang" ]]; then
+	echo "--with-fuzzer requires setting CC and CXX to clang."
+	exit 1
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then

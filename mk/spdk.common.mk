@@ -279,6 +279,12 @@ COMMON_CFLAGS += -fsanitize=thread
 LDFLAGS += -fsanitize=thread
 endif
 
+ifeq ($(CONFIG_FUZZER),y)
+COMMON_CFLAGS += -fsanitize=fuzzer-no-link
+LDFLAGS += -fsanitize=fuzzer-no-link
+SYS_LIBS += $(CONFIG_FUZZER_LIB)
+endif
+
 SPDK_GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
 ifneq (, $(SPDK_GIT_COMMIT))
 COMMON_CFLAGS += -DSPDK_GIT_COMMIT=$(SPDK_GIT_COMMIT)
