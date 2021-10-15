@@ -441,6 +441,9 @@ prep_nvme_cmd(struct nvme_fuzz_ns *ns_entry, struct nvme_fuzz_qp *qp, struct nvm
 			ctx->cmd.nsid = ns_entry->nsid;
 		}
 	}
+
+	/* Fuzzing test not support sequential FUSE commands. */
+	ctx->cmd.fuse = 0;
 }
 
 static int
