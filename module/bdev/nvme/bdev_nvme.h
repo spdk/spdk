@@ -213,7 +213,8 @@ struct spdk_bdev_nvme_opts {
 	uint64_t timeout_us;
 	uint64_t timeout_admin_us;
 	uint32_t keep_alive_timeout_ms;
-	uint32_t retry_count;
+	/* The number of attempts per I/O in the transport layer before an I/O fails. */
+	uint32_t transport_retry_count;
 	uint32_t arbitration_burst;
 	uint32_t low_priority_weight;
 	uint32_t medium_priority_weight;

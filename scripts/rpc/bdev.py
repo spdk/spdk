@@ -429,7 +429,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           keep_alive_timeout_ms=None, retry_count=None, arbitration_burst=None,
                           low_priority_weight=None, medium_priority_weight=None, high_priority_weight=None,
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None,
-                          delay_cmd_submit=None):
+                          delay_cmd_submit=None, transport_retry_count=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -437,7 +437,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         timeout_us: Timeout for each command, in microseconds. If 0, don't track timeouts (optional)
         timeout_admin_us: Timeout for each admin command, in microseconds. If 0, treat same as io timeouts (optional)
         keep_alive_timeout_ms: Keep alive timeout period in millisecond, default is 10s (optional)
-        retry_count: The number of attempts per I/O when an I/O fails (optional)
+        retry_count: The number of attempts per I/O when an I/O fails (deprecated) (optional)
         arbitration_burst: The value is expressed as a power of two (optional)
         low_prioity_weight: The number of commands that may be executed from the low priority queue at one time (optional)
         medium_prioity_weight: The number of commands that may be executed from the medium priority queue at one time (optional)
@@ -446,6 +446,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         nvme_ioq_poll_period_us: How often to poll I/O queues for completions in microseconds (optional)
         io_queue_requests: The number of requests allocated for each NVMe I/O queue. Default: 512 (optional)
         delay_cmd_submit: Enable delayed NVMe command submission to allow batching of multiple commands (optional)
+        transport_retry_count: The number of attempts per I/O in the transport layer when an I/O fails (optional)
     """
     params = {}
 
@@ -462,6 +463,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         params['keep_alive_timeout_ms'] = keep_alive_timeout_ms
 
     if retry_count is not None:
+        print("WARNING: retry_count is deprecated, please use transport_retry_count.")
         params['retry_count'] = retry_count
 
     if arbitration_burst is not None:
@@ -487,6 +489,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
 
     if delay_cmd_submit is not None:
         params['delay_cmd_submit'] = delay_cmd_submit
+
+    if transport_retry_count is not None:
+        params['transport_retry_count'] = transport_retry_count
 
     return client.call('bdev_nvme_set_options', params)
 

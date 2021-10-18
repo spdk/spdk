@@ -2,6 +2,11 @@
 
 ## v22.01: (Upcoming Release)
 
+### bdev
+
+The parameter `retry_count` of the RPC `bdev_nvme_set_options` was deprecated and will be
+removed in SPDK 22.01, and the parameter `transport_retry_count` is added and used instead.
+
 ## v21.10
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify

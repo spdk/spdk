@@ -131,7 +131,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.timeout_us = 0,
 	.timeout_admin_us = 0,
 	.keep_alive_timeout_ms = SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS,
-	.retry_count = 4,
+	.transport_retry_count = 4,
 	.arbitration_burst = 0,
 	.low_priority_weight = 0,
 	.medium_priority_weight = 0,
@@ -3531,7 +3531,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
 	}
 
-	ctx->opts.transport_retry_count = g_opts.retry_count;
+	ctx->opts.transport_retry_count = g_opts.transport_retry_count;
 	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 	ctx->opts.disable_read_ana_log_page = true;
 
@@ -4653,7 +4653,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "timeout_us", g_opts.timeout_us);
 	spdk_json_write_named_uint64(w, "timeout_admin_us", g_opts.timeout_admin_us);
 	spdk_json_write_named_uint32(w, "keep_alive_timeout_ms", g_opts.keep_alive_timeout_ms);
-	spdk_json_write_named_uint32(w, "retry_count", g_opts.retry_count);
+	spdk_json_write_named_uint32(w, "transport_retry_count", g_opts.transport_retry_count);
 	spdk_json_write_named_uint32(w, "arbitration_burst", g_opts.arbitration_burst);
 	spdk_json_write_named_uint32(w, "low_priority_weight", g_opts.low_priority_weight);
 	spdk_json_write_named_uint32(w, "medium_priority_weight", g_opts.medium_priority_weight);
