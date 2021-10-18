@@ -4588,11 +4588,6 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 
 	assert(nsid > 0);
 
-	res = nvme_ctrlr_construct_namespace(ctrlr, nsid);
-	if (res) {
-		return 0;
-	}
-
 	/* Return the namespace ID that was created */
 	return nsid;
 }
