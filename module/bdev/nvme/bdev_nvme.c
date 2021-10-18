@@ -187,9 +187,9 @@ static int bdev_nvme_get_zone_info(struct nvme_bdev_io *bio, uint64_t zone_id,
 				   uint32_t num_zones, struct spdk_bdev_zone_info *info);
 static int bdev_nvme_zone_management(struct nvme_bdev_io *bio, uint64_t zone_id,
 				     enum spdk_bdev_zone_action action);
-static int bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch,
-				    struct nvme_bdev_io *bio,
-				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
+static void bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch,
+				     struct nvme_bdev_io *bio,
+				     struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
 static int bdev_nvme_io_passthru(struct nvme_bdev_io *bio, struct spdk_nvme_cmd *cmd,
 				 void *buf, size_t nbytes);
 static int bdev_nvme_io_passthru_md(struct nvme_bdev_io *bio, struct spdk_nvme_cmd *cmd,
@@ -861,12 +861,14 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	const struct spdk_nvme_ctrlr_data *cdata;
 	uint64_t delay_ms;
 
+	assert(!bdev_nvme_io_type_is_admin(bdev_io->type));
+
 	if (spdk_likely(spdk_nvme_cpl_is_success(cpl))) {
 		goto complete;
 	}
 
-	if (cpl->status.dnr != 0 || bdev_nvme_io_type_is_admin(bdev_io->type) ||
-	    (g_opts.bdev_retry_count != -1 && bio->retry_count >= g_opts.bdev_retry_count)) {
+	if (cpl->status.dnr != 0 || (g_opts.bdev_retry_count != -1 &&
+				     bio->retry_count >= g_opts.bdev_retry_count)) {
 		goto complete;
 	}
 
@@ -928,8 +930,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 
 		nbdev_ch->current_io_path = NULL;
 
-		if (!bdev_nvme_io_type_is_admin(bdev_io->type) &&
-		    any_io_path_may_become_available(nbdev_ch)) {
+		if (any_io_path_may_become_available(nbdev_ch)) {
 			bdev_nvme_queue_retry_io(nbdev_ch, bio, 1000ULL);
 			return;
 		}
@@ -941,6 +942,27 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 	}
 
 	bio->retry_count = 0;
+	spdk_bdev_io_complete(bdev_io, io_status);
+}
+
+static inline void
+bdev_nvme_admin_passthru_complete(struct nvme_bdev_io *bio, int rc)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	enum spdk_bdev_io_status io_status;
+
+	switch (rc) {
+	case 0:
+		io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		break;
+	case -ENOMEM:
+		io_status = SPDK_BDEV_IO_STATUS_NOMEM;
+		break;
+	default:
+		io_status = SPDK_BDEV_IO_STATUS_FAILED;
+		break;
+	}
+
 	spdk_bdev_io_complete(bdev_io, io_status);
 }
 
@@ -1661,11 +1683,11 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		break;
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 		nbdev_io->io_path = NULL;
-		rc = bdev_nvme_admin_passthru(nbdev_ch,
-					      nbdev_io,
-					      &bdev_io->u.nvme_passthru.cmd,
-					      bdev_io->u.nvme_passthru.buf,
-					      bdev_io->u.nvme_passthru.nbytes);
+		bdev_nvme_admin_passthru(nbdev_ch,
+					 nbdev_io,
+					 &bdev_io->u.nvme_passthru.cmd,
+					 bdev_io->u.nvme_passthru.buf,
+					 bdev_io->u.nvme_passthru.nbytes);
 		break;
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
 		rc = bdev_nvme_io_passthru(nbdev_io,
@@ -4103,15 +4125,17 @@ bdev_nvme_zone_management_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-bdev_nvme_admin_passthru_completion(void *ctx)
+bdev_nvme_admin_passthru_complete_nvme_status(void *ctx)
 {
 	struct nvme_bdev_io *bio = ctx;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	const struct spdk_nvme_cpl *cpl = &bio->cpl;
 
-	bdev_nvme_io_complete_nvme_status(bio, &bio->cpl);
+	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 
 static void
-bdev_nvme_abort_completion(void *ctx)
+bdev_nvme_abort_complete(void *ctx)
 {
 	struct nvme_bdev_io *bio = ctx;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
@@ -4129,7 +4153,7 @@ bdev_nvme_abort_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct nvme_bdev_io *bio = ref;
 
 	bio->cpl = *cpl;
-	spdk_thread_send_msg(bio->orig_thread, bdev_nvme_abort_completion, bio);
+	spdk_thread_send_msg(bio->orig_thread, bdev_nvme_abort_complete, bio);
 }
 
 static void
@@ -4138,7 +4162,8 @@ bdev_nvme_admin_passthru_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct nvme_bdev_io *bio = ref;
 
 	bio->cpl = *cpl;
-	spdk_thread_send_msg(bio->orig_thread, bdev_nvme_admin_passthru_completion, bio);
+	spdk_thread_send_msg(bio->orig_thread,
+			     bdev_nvme_admin_passthru_complete_nvme_status, bio);
 }
 
 static void
@@ -4594,39 +4619,42 @@ bdev_nvme_zone_management(struct nvme_bdev_io *bio, uint64_t zone_id,
 	}
 }
 
-static int
+static void
 bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
 	struct nvme_io_path *io_path;
 	struct nvme_ctrlr *nvme_ctrlr;
-	struct spdk_nvme_ctrlr *ctrlr = NULL;
 	uint32_t max_xfer_size;
+	int rc = -ENXIO;
 
 	/* Choose the first ctrlr which is not failed. */
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
 		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(io_path->ctrlr_ch);
-		if (!spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
-			ctrlr = nvme_ctrlr->ctrlr;
-			break;
+
+		if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
+			continue;
+		}
+
+		max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(nvme_ctrlr->ctrlr);
+
+		if (nbytes > max_xfer_size) {
+			SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
+			rc = -EINVAL;
+			goto err;
+		}
+
+		bio->orig_thread = spdk_get_thread();
+
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(nvme_ctrlr->ctrlr, cmd, buf, (uint32_t)nbytes,
+						   bdev_nvme_admin_passthru_done, bio);
+		if (rc == 0) {
+			return;
 		}
 	}
 
-	if (ctrlr == NULL) {
-		return -ENXIO;
-	}
-
-	max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(ctrlr);
-
-	if (nbytes > max_xfer_size) {
-		SPDK_ERRLOG("nbytes is greater than MDTS %" PRIu32 ".\n", max_xfer_size);
-		return -EINVAL;
-	}
-
-	bio->orig_thread = spdk_get_thread();
-
-	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, cmd, buf, (uint32_t)nbytes,
-					     bdev_nvme_admin_passthru_done, bio);
+err:
+	bdev_nvme_admin_passthru_complete(bio, rc);
 }
 
 static int
