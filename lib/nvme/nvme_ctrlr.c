@@ -2214,7 +2214,11 @@ nvme_ctrlr_destruct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		return -EINVAL;
 	}
 
-	ns = &ctrlr->ns[nsid - 1];
+	ns = ctrlr->ns[nsid - 1];
+	if (ns == NULL) {
+		return 0;
+	}
+
 	nvme_ns_destruct(ns);
 
 	return 0;
@@ -2225,13 +2229,17 @@ nvme_ctrlr_construct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct spdk_nvme_ns *ns;
 
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-
-	if (ns == NULL) {
+	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return -EINVAL;
 	}
 
-	return nvme_ns_construct(ns, nsid, ctrlr);
+	/* Namespaces are constructed on demand, so simply request it. */
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	if (ns == NULL) {
+		return -ENOMEM;
+	}
+
+	return 0;
 }
 
 static void
@@ -2240,10 +2248,48 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t **new
 {
 	uint32_t active_ns_count = 0;
 	size_t i;
+	uint32_t nsid, n;
+	int rc;
 
+	/* First, remove namespaces that no longer exist */
+	for (i = 0; i < ctrlr->active_ns_count; i++) {
+		nsid = ctrlr->active_ns_list[i];
+
+		assert(nsid != 0);
+
+		n = (*new_ns_list)[0];
+		active_ns_count = 0;
+		while (n != 0) {
+			if (n == nsid) {
+				break;
+			}
+
+			n = (*new_ns_list)[active_ns_count++];
+		}
+
+		if (n != nsid) {
+			/* Did not find this namespace id in the new list. */
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", nsid);
+			nvme_ctrlr_destruct_namespace(ctrlr, nsid);
+		}
+	}
+
+	/* Next, add new namespaces */
+	active_ns_count = 0;
 	for (i = 0; i < max_entries; i++) {
-		if ((*new_ns_list)[active_ns_count] == 0) {
+		nsid = (*new_ns_list)[active_ns_count];
+
+		if (nsid == 0) {
 			break;
+		}
+
+		/* If the namespace already exists, this will not construct it a second time. */
+		rc = nvme_ctrlr_construct_namespace(ctrlr, nsid);
+		if (rc != 0) {
+			/* We can't easily handle a failure here. But just move on. */
+			assert(false);
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to allocate a namespace object.\n");
+			continue;
 		}
 
 		active_ns_count++;
@@ -2955,6 +3001,7 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 
 		for (i = 1; i <= num_ns; i++) {
 			nvme_ctrlr_destruct_namespace(ctrlr, i);
+			spdk_free(ctrlr->ns[i - 1]);
 		}
 
 		spdk_free(ctrlr->ns);
@@ -2966,29 +3013,13 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint32_t i, nn = ctrlr->cdata.nn;
-	struct spdk_nvme_ns_data *nsdata;
-	bool ns_is_active;
+	uint32_t nsid;
+	struct spdk_nvme_ns *ns;
 
-	for (i = 0; i < nn; i++) {
-		uint32_t		nsid = i + 1;
-		struct spdk_nvme_ns	*ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-
-		assert(ns != NULL);
-		nsdata = &ns->nsdata;
-		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
-
-		if (ns_is_active) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
-			if (nvme_ctrlr_construct_namespace(ctrlr, nsid) != 0) {
-				continue;
-			}
-		}
-
-		if (nsdata->ncap && !ns_is_active) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", nsid);
-			nvme_ctrlr_destruct_namespace(ctrlr, nsid);
-		}
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		nvme_ns_construct(ns, nsid, ctrlr);
 	}
 }
 
@@ -2997,32 +3028,34 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	uint32_t i, nn = ctrlr->cdata.nn;
-	struct spdk_nvme_ns *tmp;
+	struct spdk_nvme_ns **tmp;
+	struct spdk_nvme_ns *ns;
 
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
 	 */
 	if (nn != ctrlr->num_ns) {
-		tmp = spdk_realloc(ctrlr->ns, nn * sizeof(struct spdk_nvme_ns), 64);
+
+		tmp = spdk_realloc(ctrlr->ns, nn * sizeof(struct spdk_nvme_ns *), 64);
+
 		if (tmp == NULL) {
 			rc = -ENOMEM;
 			goto fail;
 		}
 
 		if (nn > ctrlr->num_ns) {
-			memset(tmp + ctrlr->num_ns, 0, (nn - ctrlr->num_ns) * sizeof(struct spdk_nvme_ns));
+			memset(tmp + ctrlr->num_ns, 0, (nn - ctrlr->num_ns) * sizeof(struct spdk_nvme_ns *));
 		}
 
 		ctrlr->ns = tmp;
 		ctrlr->num_ns = nn;
 	}
 
-	/*
-	 * The controller could have been reset with the same number of namespaces.
-	 * If so, we still need to free the iocs specific data, to get a clean slate.
-	 */
 	for (i = 0; i < ctrlr->num_ns; i++) {
-		nvme_ns_free_iocs_specific_data(&ctrlr->ns[i]);
+		ns = ctrlr->ns[i];
+		if (ns != NULL) {
+			nvme_ns_free_iocs_specific_data(ns);
+		}
 	}
 
 	return 0;
@@ -4459,11 +4492,30 @@ spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns *ns;
+
 	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return NULL;
 	}
 
-	return &ctrlr->ns[nsid - 1];
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	ns = ctrlr->ns[nsid - 1];
+
+	if (ns == NULL) {
+		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		if (ns == NULL) {
+			nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+			return NULL;
+		}
+
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
+		ctrlr->ns[nsid - 1] = ns;
+	}
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return ns;
 }
 
 struct spdk_pci_device *
@@ -4547,6 +4599,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			  struct spdk_nvme_ctrlr_list *payload)
 {
 	struct nvme_completion_poll_status	*status;
+	struct spdk_nvme_ns			*ns;
 	int					res;
 
 	if (nsid == 0) {
@@ -4579,7 +4632,8 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return res;
 	}
 
-	return nvme_ctrlr_construct_namespace(ctrlr, nsid);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	return nvme_ns_construct(ns, nsid, ctrlr);
 }
 
 int

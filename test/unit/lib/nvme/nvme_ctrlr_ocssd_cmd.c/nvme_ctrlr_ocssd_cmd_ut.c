@@ -59,14 +59,24 @@ verify_request_fn_t verify_fn;
 
 static const uint32_t expected_geometry_ns = 1;
 
+static struct spdk_nvme_ns g_inactive_ns = {};
+
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns *ns;
+
 	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return NULL;
 	}
 
-	return &ctrlr->ns[nsid - 1];
+	ns = ctrlr->ns[nsid - 1];
+
+	if (ns == NULL) {
+		return &g_inactive_ns;
+	}
+
+	return ns;
 }
 
 int
@@ -111,10 +121,13 @@ test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns ns = {};
+	struct spdk_nvme_ns *ns_array;
 	bool rc;
 
+	ns_array = &ns;
+
 	ns.nsdata.vendor_specific[0] = 1;
-	ctrlr.ns = &ns;
+	ctrlr.ns = &ns_array;
 	ctrlr.quirks |= NVME_QUIRK_OCSSD;
 	ctrlr.cdata.vid = SPDK_PCI_VID_CNEXLABS;
 	ctrlr.num_ns = 1;

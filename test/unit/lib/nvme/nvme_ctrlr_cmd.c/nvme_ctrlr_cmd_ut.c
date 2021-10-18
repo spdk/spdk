@@ -368,14 +368,24 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_reque
 	return 0;
 }
 
+static struct spdk_nvme_ns g_inactive_ns = {};
+
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns *ns;
+
 	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return NULL;
 	}
 
-	return &ctrlr->ns[nsid - 1];
+	ns = ctrlr->ns[nsid - 1];
+
+	if (ns == NULL) {
+		return &g_inactive_ns;
+	}
+
+	return ns;
 }
 
 #define DECLARE_AND_CONSTRUCT_CTRLR()		\

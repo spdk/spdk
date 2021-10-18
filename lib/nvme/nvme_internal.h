@@ -857,8 +857,8 @@ struct nvme_register_completion {
 struct spdk_nvme_ctrlr {
 	/* Hot data (accessed in I/O path) starts here. */
 
-	/** Array of namespaces indexed by nsid - 1 */
-	struct spdk_nvme_ns		*ns;
+	/** Array of namespace pointers indexed by nsid - 1 */
+	struct spdk_nvme_ns		**ns;
 
 	uint32_t			num_ns;
 
