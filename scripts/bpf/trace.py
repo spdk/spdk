@@ -405,10 +405,15 @@ class NativeProvider(TraceProvider):
             else:
                 poller_id = None
 
+            if pe.related_type != OBJECT_NONE:
+                related = '{}{}'.format(self._objects[pe.related_type], pe.related_index)
+            else:
+                related = None
+
             yield TraceEntry(tpoint=tpoint, lcore=lcore, tsc=entry.tsc,
                              size=entry.size, object_id=object_id,
                              object_ptr=entry.object_id, poller=poller_id, time=ts,
-                             args=args, related=None)
+                             args=args, related=related)
 
 
 class Trace:
