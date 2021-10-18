@@ -200,6 +200,7 @@ static void bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_b
 static int bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
+static void nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
 
 static int
 nvme_ns_cmp(struct nvme_ns *ns1, struct nvme_ns *ns2)
@@ -671,6 +672,10 @@ bdev_nvme_io_type_is_admin(enum spdk_bdev_io_type io_type)
 static inline bool
 nvme_ns_is_accessible(struct nvme_ns *nvme_ns)
 {
+	if (spdk_unlikely(nvme_ns->ana_state_updating)) {
+		return false;
+	}
+
 	switch (nvme_ns->ana_state) {
 	case SPDK_NVME_ANA_OPTIMIZED_STATE:
 	case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
@@ -720,6 +725,10 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
 		if (spdk_unlikely(!nvme_io_path_is_connected(io_path))) {
 			/* The device is currently resetting. */
+			continue;
+		}
+
+		if (spdk_unlikely(io_path->nvme_ns->ana_state_updating)) {
 			continue;
 		}
 
@@ -851,6 +860,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	}
 
 	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(bio->io_path->ctrlr_ch);
 
 	assert(bio->io_path != NULL);
 
@@ -858,13 +868,16 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
 	    !nvme_io_path_is_available(bio->io_path) ||
 	    nvme_io_path_is_failed(bio->io_path)) {
+		if (spdk_nvme_cpl_is_ana_error(cpl)) {
+			bio->io_path->nvme_ns->ana_state_updating = true;
+			nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
+		}
 		delay_ms = 0;
 	} else if (spdk_nvme_cpl_is_aborted_by_request(cpl)) {
 		goto complete;
 	} else {
 		bio->retry_count++;
 
-		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(bio->io_path->ctrlr_ch);
 		cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
 
 		if (cpl->status.crd != 0) {
@@ -2741,6 +2754,7 @@ nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 
 		nvme_ns->ana_group_id = desc->ana_group_id;
 		nvme_ns->ana_state = desc->ana_state;
+		nvme_ns->ana_state_updating = false;
 	}
 
 	return 0;
