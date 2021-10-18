@@ -2155,6 +2155,20 @@ nvme_ctrlr_destruct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	return 0;
 }
 
+static int
+nvme_ctrlr_construct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_ns *ns;
+
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+
+	if (ns == NULL) {
+		return -EINVAL;
+	}
+
+	return nvme_ns_construct(ns, nsid, ctrlr);
+}
+
 static void
 nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t **new_ns_list,
 				   size_t max_entries)
@@ -2900,7 +2914,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 
 		if ((nsdata->ncap == 0) && ns_is_active) {
 			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
-			if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
+			if (nvme_ctrlr_construct_namespace(ctrlr, nsid) != 0) {
 				continue;
 			}
 		}
@@ -4469,7 +4483,6 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 {
 	struct nvme_completion_poll_status	*status;
 	int					res;
-	struct spdk_nvme_ns			*ns;
 
 	if (nsid == 0) {
 		return -EINVAL;
@@ -4501,9 +4514,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return res;
 	}
 
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-	assert(ns != NULL);
-	return nvme_ns_construct(ns, nsid, ctrlr);
+	return nvme_ctrlr_construct_namespace(ctrlr, nsid);
 }
 
 int
@@ -4552,7 +4563,6 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 	struct nvme_completion_poll_status	*status;
 	int					res;
 	uint32_t				nsid;
-	struct spdk_nvme_ns			*ns;
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
@@ -4578,10 +4588,7 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 
 	assert(nsid > 0);
 
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-	assert(ns != NULL);
-	/* Inactive NS */
-	res = nvme_ns_construct(ns, nsid, ctrlr);
+	res = nvme_ctrlr_construct_namespace(ctrlr, nsid);
 	if (res) {
 		return 0;
 	}
