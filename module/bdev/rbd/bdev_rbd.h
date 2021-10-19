@@ -54,7 +54,7 @@ typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
 int bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		    const char *pool_name,
 		    const char *const *config,
-		    const char *rbd_name, uint32_t block_size, const char *cluster_name);
+		    const char *rbd_name, uint32_t block_size, const char *cluster_name, const struct spdk_uuid *uuid);
 /**
  * Delete rbd bdev.
  *

@@ -852,6 +852,7 @@ static void
 bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
 	struct bdev_rbd *rbd = bdev->ctxt;
+	char uuid_str[SPDK_UUID_STRING_LEN];
 
 	spdk_json_write_object_begin(w);
 
@@ -876,6 +877,9 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 		}
 		spdk_json_write_object_end(w);
 	}
+
+	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
+	spdk_json_write_named_string(w, "uuid", uuid_str);
 
 	spdk_json_write_object_end(w);
 
@@ -1128,7 +1132,8 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		const char *const *config,
 		const char *rbd_name,
 		uint32_t block_size,
-		const char *cluster_name)
+		const char *cluster_name,
+		const struct spdk_uuid *uuid)
 {
 	struct bdev_rbd *rbd;
 	int ret;
@@ -1187,6 +1192,12 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 		bdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
 		return ret;
+	}
+
+	if (uuid) {
+		rbd->disk.uuid = *uuid;
+	} else {
+		spdk_uuid_generate(&rbd->disk.uuid);
 	}
 
 	if (name) {

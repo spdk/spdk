@@ -3569,6 +3569,7 @@ rbd_name                | Required | string      | Image name
 block_size              | Required | number      | Block size
 config                  | Optional | string map  | Explicit librados configuration
 cluster_name            | Optional | string      | Rados cluster object name created in this module.
+uuid                    | Optional | string      | UUID of new bdev
 
 If no config is specified, Ceph configuration files must exist with
 all relevant settings for accessing the pool. If a config map is
@@ -3601,7 +3602,8 @@ Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
       "mon_host": "192.168.7.1:6789,192.168.7.2:6789",
       "key": "AQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ==",
     }
-    "block_size": 4096
+    "block_size": 4096,
+    "uuid": "76210ea4-7920-40a0-a07b-8992a7443c76"
   },
   "jsonrpc": "2.0",
   "method": "bdev_rbd_create",

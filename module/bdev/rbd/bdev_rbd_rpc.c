@@ -33,6 +33,7 @@
 
 #include "bdev_rbd.h"
 #include "spdk/util.h"
+#include "spdk/uuid.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
 
@@ -44,6 +45,7 @@ struct rpc_create_rbd {
 	uint32_t block_size;
 	char **config;
 	char *cluster_name;
+	char *uuid;
 };
 
 static void
@@ -55,6 +57,7 @@ free_rpc_create_rbd(struct rpc_create_rbd *req)
 	free(req->rbd_name);
 	bdev_rbd_free_config(req->config);
 	free(req->cluster_name);
+	free(req->uuid);
 }
 
 static int
@@ -106,7 +109,8 @@ static const struct spdk_json_object_decoder rpc_create_rbd_decoders[] = {
 	{"rbd_name", offsetof(struct rpc_create_rbd, rbd_name), spdk_json_decode_string},
 	{"block_size", offsetof(struct rpc_create_rbd, block_size), spdk_json_decode_uint32},
 	{"config", offsetof(struct rpc_create_rbd, config), bdev_rbd_decode_config, true},
-	{"cluster_name", offsetof(struct rpc_create_rbd, cluster_name), spdk_json_decode_string, true}
+	{"cluster_name", offsetof(struct rpc_create_rbd, cluster_name), spdk_json_decode_string, true},
+	{"uuid", offsetof(struct rpc_create_rbd, uuid), spdk_json_decode_string, true}
 };
 
 static void
@@ -117,6 +121,8 @@ rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 	int rc = 0;
+	struct spdk_uuid *uuid = NULL;
+	struct spdk_uuid decoded_uuid;
 
 	if (spdk_json_decode_object(params, rpc_create_rbd_decoders,
 				    SPDK_COUNTOF(rpc_create_rbd_decoders),
@@ -127,10 +133,19 @@ rpc_bdev_rbd_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	if (req.uuid) {
+		if (spdk_uuid_parse(&decoded_uuid, req.uuid)) {
+			spdk_jsonrpc_send_error_response(request, -EINVAL,
+							 "Failed to parse bdev UUID");
+			goto cleanup;
+		}
+		uuid = &decoded_uuid;
+	}
+
 	rc = bdev_rbd_create(&bdev, req.name, req.user_id, req.pool_name,
 			     (const char *const *)req.config,
 			     req.rbd_name,
-			     req.block_size, req.cluster_name);
+			     req.block_size, req.cluster_name, uuid);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
