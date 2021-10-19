@@ -82,6 +82,9 @@ static struct spdk_governor *g_governor = NULL;
 static int reactor_interrupt_init(struct spdk_reactor *reactor);
 static void reactor_interrupt_fini(struct spdk_reactor *reactor);
 
+static pthread_mutex_t g_stopping_reactors_mtx = PTHREAD_MUTEX_INITIALIZER;
+static bool g_stopping_reactors = false;
+
 static struct spdk_scheduler *
 _scheduler_find(const char *name)
 {
@@ -1030,6 +1033,8 @@ spdk_reactors_start(void)
 
 	g_rusage_period = (CONTEXT_SWITCH_MONITOR_PERIOD * spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC;
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
+	/* Reinitialize to false, in case the app framework is restarting in the same process. */
+	g_stopping_reactors = false;
 
 	current_core = spdk_env_get_current_core();
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -1059,8 +1064,8 @@ spdk_reactors_start(void)
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
 }
 
-void
-spdk_reactors_stop(void *arg1)
+static void
+_reactors_stop(void *arg1, void *arg2)
 {
 	uint32_t i;
 	int rc;
@@ -1086,6 +1091,17 @@ spdk_reactors_stop(void *arg1)
 			}
 		}
 	}
+}
+
+static void
+nop(void *arg1, void *arg2)
+{
+}
+
+void
+spdk_reactors_stop(void *arg1)
+{
+	spdk_for_each_reactor(nop, NULL, NULL, _reactors_stop);
 }
 
 static pthread_mutex_t g_scheduler_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -1352,6 +1368,21 @@ spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cp
 {
 	struct call_reactor *cr;
 	struct spdk_event *evt;
+
+	/* When the application framework is shutting down, we will send one
+	 * final for_each_reactor operation with completion callback _reactors_stop,
+	 * to flush any existing for_each_reactor operations to avoid any memory
+	 * leaks. We use a mutex here to protect a boolean flag that will ensure
+	 * we don't start any more operations once we've started shutting down.
+	 */
+	pthread_mutex_lock(&g_stopping_reactors_mtx);
+	if (g_stopping_reactors) {
+		pthread_mutex_unlock(&g_stopping_reactors_mtx);
+		return;
+	} else if (cpl == _reactors_stop) {
+		g_stopping_reactors = true;
+	}
+	pthread_mutex_unlock(&g_stopping_reactors_mtx);
 
 	cr = calloc(1, sizeof(*cr));
 	if (!cr) {
