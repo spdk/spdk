@@ -71,8 +71,8 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
-	/** I/O path the current I/O is submitted on, or the I/O path being reset
-	 *  in a reset I/O.
+	/** I/O path the current I/O or admin passthrough is submitted on, or the I/O path
+	 *  being reset in a reset I/O.
 	 */
 	struct nvme_io_path *io_path;
 
@@ -4154,7 +4154,33 @@ bdev_nvme_admin_passthru_complete_nvme_status(void *ctx)
 	struct nvme_bdev_io *bio = ctx;
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	const struct spdk_nvme_cpl *cpl = &bio->cpl;
+	struct nvme_bdev_channel *nbdev_ch;
+	struct nvme_ctrlr *nvme_ctrlr;
 
+	assert(bdev_nvme_io_type_is_admin(bdev_io->type));
+
+	if (spdk_likely(spdk_nvme_cpl_is_success(cpl))) {
+		goto complete;
+	}
+
+	if (cpl->status.dnr != 0) {
+		goto complete;
+	}
+
+	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(bio->io_path->ctrlr_ch);
+
+	if (spdk_nvme_cpl_is_path_error(cpl) ||
+	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
+	    spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr) ||
+	    nvme_ctrlr->resetting) {
+		if (any_ctrlr_may_become_available(nbdev_ch)) {
+			bdev_nvme_queue_retry_io(nbdev_ch, bio, 0);
+			return;
+		}
+	}
+
+complete:
 	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 
@@ -4674,6 +4700,7 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 			goto err;
 		}
 
+		bio->io_path = io_path;
 		bio->orig_thread = spdk_get_thread();
 
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(nvme_ctrlr->ctrlr, cmd, buf, (uint32_t)nbytes,

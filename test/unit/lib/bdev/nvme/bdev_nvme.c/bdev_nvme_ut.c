@@ -4779,6 +4779,184 @@ test_retry_admin_passthru_if_ctrlr_is_resetting(void)
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+static void
+test_retry_admin_passthru_for_path_error(void)
+{
+	struct nvme_path_id path1 = {}, path2 = {};
+	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr1, *nvme_ctrlr2;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct spdk_bdev_io *admin_io;
+	struct spdk_io_channel *ch;
+	struct ut_nvme_req *req;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+
+	g_opts.bdev_retry_count = 1;
+
+	set_thread(0);
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	memset(&ctrlr1->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+
+	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	nvme_ctrlr1 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid);
+	CU_ASSERT(nvme_ctrlr1 != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	CU_ASSERT(bdev != NULL);
+
+	admin_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_NVME_ADMIN, bdev, NULL);
+	admin_io->u.nvme_passthru.cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	admin_io->internal.ch = (struct spdk_bdev_channel *)ch;
+
+	/* Admin passthrough got a path error, but it should not retry if DNR is set. */
+	admin_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, admin_io);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(admin_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(&ctrlr1->adminq, admin_io->driver_ctx);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_INTERNAL_PATH_ERROR;
+	req->cpl.status.sct = SPDK_NVME_SCT_PATH;
+	req->cpl.status.dnr = 1;
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_thread_times(0, 2);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(admin_io->internal.in_submit_request == false);
+	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR);
+
+	/* Admin passthrough got a path error, but it should succeed after retry. */
+	admin_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, admin_io);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(admin_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(&ctrlr1->adminq, admin_io->driver_ctx);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_INTERNAL_PATH_ERROR;
+	req->cpl.status.sct = SPDK_NVME_SCT_PATH;
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_thread_times(0, 2);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(admin_io->internal.in_submit_request == true);
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(admin_io->internal.in_submit_request == false);
+	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Add ctrlr2 dynamically, and create a multipath configuration. */
+	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	memset(&ctrlr2->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+
+	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	nvme_ctrlr2 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid);
+	CU_ASSERT(nvme_ctrlr2 != NULL);
+
+	/* Admin passthrough was submitted to ctrlr1, but ctrlr1 was failed.
+	 * Hence the admin passthrough was aborted. But ctrlr2 is avaialble.
+	 * So after a retry, the admin passthrough is submitted to ctrlr2 and
+	 * should succeed.
+	 */
+	admin_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, admin_io);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(ctrlr2->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(admin_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(&ctrlr1->adminq, admin_io->driver_ctx);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	ctrlr1->is_failed = true;
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_thread_times(0, 2);
+
+	CU_ASSERT(ctrlr1->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(ctrlr2->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(admin_io->internal.in_submit_request == true);
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr2->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(admin_io->internal.in_submit_request == false);
+	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(admin_io);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+
+	g_opts.bdev_retry_count = 0;
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -4818,6 +4996,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_concurrent_read_ana_log_page);
 	CU_ADD_TEST(suite, test_retry_io_for_ana_error);
 	CU_ADD_TEST(suite, test_retry_admin_passthru_if_ctrlr_is_resetting);
+	CU_ADD_TEST(suite, test_retry_admin_passthru_for_path_error);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
