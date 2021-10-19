@@ -268,6 +268,8 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_poller		*association_timer;
 
+	struct spdk_poller		*cc_timer;
+
 	bool				dif_insert_or_strip;
 	bool				in_destruct;
 	bool				disconnect_in_progress;
