@@ -123,9 +123,21 @@ print_size(uint32_t size)
 }
 
 static void
-print_object_id(uint8_t type, uint64_t id)
+print_object_id(const struct spdk_trace_tpoint *d, struct spdk_trace_parser_entry *entry)
 {
-	printf("id:    %c%-15jd ", g_flags->object[type].id_prefix, id);
+	/* Set size to 128 and 256 bytes to make sure we can fit all the characters we need */
+	char related_id[128] = {'\0'};
+	char ids[256] = {'\0'};
+
+	if (entry->related_type != OBJECT_NONE) {
+		snprintf(related_id, sizeof(related_id), " (%c%jd)",
+			 g_flags->object[entry->related_type].id_prefix,
+			 entry->related_index);
+	}
+
+	snprintf(ids, sizeof(ids), "%c%jd%s", g_flags->object[d->object_type].id_prefix,
+		 entry->object_index, related_id);
+	printf("id:    %-17s", ids);
 }
 
 static void
@@ -159,11 +171,11 @@ print_event(struct spdk_trace_parser_entry *entry, uint64_t tsc_rate, uint64_t t
 	print_size(e->size);
 
 	if (d->new_object) {
-		print_object_id(d->object_type, entry->object_index);
+		print_object_id(d, entry);
 	} else if (d->object_type != OBJECT_NONE) {
 		if (entry->object_index != UINT64_MAX) {
 			us = get_us_from_tsc(e->tsc - entry->object_start, tsc_rate);
-			print_object_id(d->object_type, entry->object_index);
+			print_object_id(d, entry);
 			print_float("time", us);
 		} else {
 			printf("id:    N/A");

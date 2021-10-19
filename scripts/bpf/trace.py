@@ -19,6 +19,7 @@ TRACE_MAX_LCORE = 128
 TRACE_MAX_GROUP_ID = 16
 TRACE_MAX_TPOINT_ID = TRACE_MAX_GROUP_ID * 64
 TRACE_MAX_ARGS_COUNT = 5
+TRACE_MAX_RELATIONS = 16
 TRACE_INVALID_OBJECT = (1 << 64) - 1
 OBJECT_NONE = 0
 OWNER_NONE = 0
@@ -278,6 +279,11 @@ class CTpointArgument(ct.Structure):
                 ('size', ct.c_uint8)]
 
 
+class CTpointRelatedObject(ct.Structure):
+    _fields_ = [('object_type', ct.c_uint8),
+                ('arg_index', ct.c_uint8)]
+
+
 class CTracepoint(ct.Structure):
     _fields_ = [('name', ct.c_char * 24),
                 ('tpoint_id', ct.c_uint16),
@@ -285,7 +291,8 @@ class CTracepoint(ct.Structure):
                 ('object_type', ct.c_uint8),
                 ('new_object', ct.c_uint8),
                 ('num_args', ct.c_uint8),
-                ('args', CTpointArgument * TRACE_MAX_ARGS_COUNT)]
+                ('args', CTpointArgument * TRACE_MAX_ARGS_COUNT),
+                ('related_objects', CTpointRelatedObject * TRACE_MAX_RELATIONS)]
 
 
 class CTraceFlags(ct.Structure):
@@ -315,6 +322,8 @@ class CTraceParserEntry(ct.Structure):
                 ('object_index', ct.c_uint64),
                 ('object_start', ct.c_uint64),
                 ('lcore', ct.c_uint16),
+                ('related_index', ct.c_uint64),
+                ('related_type', ct.c_uint8),
                 ('args', CTraceParserArgument * TRACE_MAX_ARGS_COUNT)]
 
 

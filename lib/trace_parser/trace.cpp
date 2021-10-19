@@ -186,6 +186,7 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 	spdk_trace_tpoint *tpoint;
 	spdk_trace_entry *entry;
 	object_stats *stats;
+	std::map<uint64_t, uint64_t>::iterator related_kv;
 
 	if (_iter == _entries.end()) {
 		return false;
@@ -193,6 +194,9 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 
 	pe->entry = entry = _iter->second;
 	pe->lcore = _iter->first.lcore;
+	/* Set related index to the max value to indicate "empty" state */
+	pe->related_index = UINT64_MAX;
+	pe->related_type = OBJECT_NONE;
 	tpoint = &_histories->flags.tpoint[entry->tpoint_id];
 	stats = &_stats[tpoint->object_type];
 
@@ -216,6 +220,24 @@ spdk_trace_parser::next_entry(spdk_trace_parser_entry *pe)
 		if (!build_arg(&argctx, &tpoint->args[i], i, pe)) {
 			SPDK_ERRLOG("Failed to parse tracepoint argument\n");
 			return false;
+		}
+	}
+
+	for (uint8_t i = 0; i < SPDK_TRACE_MAX_RELATIONS; ++i) {
+		/* The relations are stored inside a tpoint, which means there might be
+		 * multiple objects bound to a single tpoint. */
+		if (tpoint->related_objects[i].object_type == OBJECT_NONE) {
+			break;
+		}
+		stats = &_stats[tpoint->related_objects[i].object_type];
+		related_kv = stats->index.find(reinterpret_cast<uint64_t>
+					       (pe->args[tpoint->related_objects[i].arg_index].pointer));
+		/* To avoid parsing the whole array, object index and type are stored
+		 * directly inside spdk_trace_parser_entry. */
+		if (related_kv != stats->index.end()) {
+			pe->related_index = related_kv->second;
+			pe->related_type = tpoint->related_objects[i].object_type;
+			break;
 		}
 	}
 

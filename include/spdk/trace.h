@@ -91,6 +91,7 @@ struct spdk_trace_object {
 #define SPDK_TRACE_ARG_TYPE_STR 2
 
 #define SPDK_TRACE_MAX_ARGS_COUNT 5
+#define SPDK_TRACE_MAX_RELATIONS 16
 
 struct spdk_trace_argument {
 	char	name[14];
@@ -106,6 +107,11 @@ struct spdk_trace_tpoint {
 	uint8_t				new_object;
 	uint8_t				num_args;
 	struct spdk_trace_argument	args[SPDK_TRACE_MAX_ARGS_COUNT];
+	/** Relations between tracepoint and trace object */
+	struct {
+		uint8_t object_type;
+		uint8_t arg_index;
+	} related_objects[SPDK_TRACE_MAX_RELATIONS];
 };
 
 struct spdk_trace_history {
@@ -374,6 +380,17 @@ struct spdk_trace_register_fn *spdk_trace_get_first_register_fn(void);
 
 struct spdk_trace_register_fn *spdk_trace_get_next_register_fn(struct spdk_trace_register_fn
 		*register_fn);
+
+/**
+ * Bind trace type to a given trace object. This allows for matching traces
+ * with the same parent trace object.
+ *
+ * \param tpoint_id Type of trace to be bound
+ * \param object_type Tracepoint object type to bind to
+ * \param arg_index Index of argument containing context information
+ */
+void spdk_trace_tpoint_register_relation(uint16_t tpoint_id, uint8_t object_type,
+		uint8_t arg_index);
 
 /**
  * Enable trace on specific tpoint group

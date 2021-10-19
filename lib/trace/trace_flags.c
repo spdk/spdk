@@ -36,6 +36,7 @@
 #include "spdk/env.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
+#include "spdk/util.h"
 
 struct spdk_trace_flags *g_trace_flags = NULL;
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
@@ -368,6 +369,36 @@ spdk_trace_register_description(const char *name, uint16_t tpoint_id, uint8_t ow
 	};
 
 	spdk_trace_register_description_ext(&opts, 1);
+}
+
+void
+spdk_trace_tpoint_register_relation(uint16_t tpoint_id, uint8_t object_type, uint8_t arg_index)
+{
+	struct spdk_trace_tpoint *tpoint;
+	uint16_t i;
+
+	assert(object_type != OBJECT_NONE);
+	assert(tpoint_id != OBJECT_NONE);
+
+	if (g_trace_flags == NULL) {
+		SPDK_ERRLOG("trace is not initialized\n");
+		return;
+	}
+
+	/* We do not check whether a tpoint_id exists here, because
+	 * there is no order in which trace definitions are registered.
+	 * This way we can create relations between tpoint and objects
+	 * that will be declared later. */
+	tpoint = &g_trace_flags->tpoint[tpoint_id];
+	for (i = 0; i < SPDK_COUNTOF(tpoint->related_objects); ++i) {
+		if (tpoint->related_objects[i].object_type == OBJECT_NONE) {
+			tpoint->related_objects[i].object_type = object_type;
+			tpoint->related_objects[i].arg_index = arg_index;
+			return;
+		}
+	}
+	SPDK_ERRLOG("Unable to register new relation for tpoint %" PRIu16 ", object %" PRIu8 "\n",
+		    tpoint_id, object_type);
 }
 
 void

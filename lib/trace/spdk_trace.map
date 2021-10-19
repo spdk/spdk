@@ -22,6 +22,7 @@
 	spdk_trace_disable_tpoint_group;
 	spdk_trace_mask_usage;
 	spdk_trace_add_register_fn;
+	spdk_trace_tpoint_register_relation;
 
 	# public variables
 	g_trace_histories;

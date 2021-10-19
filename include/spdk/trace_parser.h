@@ -115,6 +115,10 @@ struct spdk_trace_parser_entry {
 	uint64_t		object_start;
 	/** Logical core number */
 	uint16_t		lcore;
+	/** Related object index */
+	uint64_t		related_index;
+	/** Related object type */
+	uint8_t			related_type;
 	/** Tracepoint arguments */
 	union {
 		uint64_t	integer;
