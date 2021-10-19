@@ -930,14 +930,22 @@ nvmf_ctrlr_association_remove(void *ctx)
 	return SPDK_POLLER_BUSY;
 }
 
-static void
-nvmf_ctrlr_cc_reset_shn_done(struct spdk_io_channel_iter *i, int status)
+static int
+_nvmf_ctrlr_cc_reset_shn_done(void *ctx)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	uint32_t count;
 
-	if (status < 0) {
-		SPDK_ERRLOG("Fail to disconnect io ctrlr qpairs\n");
-		assert(false);
+	if (ctrlr->cc_timer) {
+		spdk_poller_unregister(&ctrlr->cc_timer);
+	}
+
+	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
+	SPDK_DEBUGLOG(nvmf, "ctrlr %p active queue count %u\n", ctrlr, count);
+
+	if (count > 1) {
+		ctrlr->cc_timer = SPDK_POLLER_REGISTER(_nvmf_ctrlr_cc_reset_shn_done, ctrlr, 100 * 1000);
+		return SPDK_POLLER_IDLE;
 	}
 
 	if (ctrlr->disconnect_is_shn) {
@@ -960,6 +968,20 @@ nvmf_ctrlr_cc_reset_shn_done(struct spdk_io_channel_iter *i, int status)
 					   ctrlr->association_timeout * 1000);
 	}
 	ctrlr->disconnect_in_progress = false;
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+nvmf_ctrlr_cc_reset_shn_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
+
+	if (status < 0) {
+		SPDK_ERRLOG("Fail to disconnect io ctrlr qpairs\n");
+		assert(false);
+	}
+
+	_nvmf_ctrlr_cc_reset_shn_done((void *)ctrlr);
 }
 
 const struct spdk_nvmf_registers *
