@@ -43,6 +43,8 @@
 #include "spdk/thread.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/event.h"
+
 static bool g_is_running = true;
 pthread_mutex_t g_sched_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define TIMESLICE_US 100 * 1000
@@ -391,9 +393,27 @@ test_shutdown(void)
 }
 
 static void
+for_each_nop(void *arg1, void *arg2)
+{
+}
+
+static void
+for_each_done(void *arg1, void *arg2)
+{
+	spdk_for_each_reactor(for_each_nop, NULL, NULL, for_each_done);
+}
+
+static void
 test_start(void *arg1)
 {
 	SPDK_NOTICELOG("Scheduler test application started.\n");
+	/* Start an spdk_for_each_reactor operation that just keeps
+	 * running over and over again until the app exits.  This
+	 * serves as a regression test for SPDK issue #2206, ensuring
+	 * that any pending spdk_for_each_reactor operations are
+	 * completed before reactors are shut down.
+	 */
+	for_each_done(NULL, NULL);
 }
 
 int
