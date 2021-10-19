@@ -53,6 +53,10 @@
 #define KAS_TIME_UNIT_IN_MS 100
 #define KAS_DEFAULT_VALUE (MIN_KEEP_ALIVE_TIMEOUT_IN_MS / KAS_TIME_UNIT_IN_MS)
 
+#define NVMF_CC_RESET_SHN_TIMEOUT_IN_MS	10000
+
+#define NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS	(NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + 5000)
+
 /*
  * Report the SPDK version as the firmware revision.
  * SPDK_VERSION_STRING won't fit into FR (only 8 bytes), so try to fit the most important parts.
@@ -431,7 +435,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->vcprop.cap.bits.mqes = transport->opts.max_queue_depth -
 				      1; /* max queue depth */
 	ctrlr->vcprop.cap.bits.ams = 0; /* optional arb mechanisms */
-	ctrlr->vcprop.cap.bits.to = 1; /* ready timeout - 500 msec units */
+	/* ready timeout - 500 msec units */
+	ctrlr->vcprop.cap.bits.to = NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS / 500;
 	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
 	ctrlr->vcprop.cap.bits.css = SPDK_NVME_CAP_CSS_NVM; /* NVM command set */
 	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
@@ -946,6 +951,7 @@ static int
 _nvmf_ctrlr_cc_reset_shn_done(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	uint64_t now = spdk_get_ticks();
 	uint32_t count;
 
 	if (ctrlr->cc_timer) {
@@ -956,9 +962,18 @@ _nvmf_ctrlr_cc_reset_shn_done(void *ctx)
 	SPDK_DEBUGLOG(nvmf, "ctrlr %p active queue count %u\n", ctrlr, count);
 
 	if (count > 1) {
-		ctrlr->cc_timer = SPDK_POLLER_REGISTER(_nvmf_ctrlr_cc_reset_shn_done, ctrlr, 100 * 1000);
-		return SPDK_POLLER_IDLE;
+		if (now < ctrlr->cc_timeout_tsc) {
+			/* restart cc timer */
+			ctrlr->cc_timer = SPDK_POLLER_REGISTER(_nvmf_ctrlr_cc_reset_shn_done, ctrlr, 100 * 1000);
+			return SPDK_POLLER_IDLE;
+		} else {
+			/* controller fatal status */
+			SPDK_WARNLOG("IO timeout, ctrlr %p is in fatal status\n", ctrlr);
+			ctrlr->vcprop.csts.bits.cfs = 1;
+		}
 	}
+
+	spdk_poller_unregister(&ctrlr->cc_timeout_timer);
 
 	if (ctrlr->disconnect_is_shn) {
 		ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
@@ -996,6 +1011,40 @@ nvmf_ctrlr_cc_reset_shn_done(struct spdk_io_channel_iter *i, int status)
 	_nvmf_ctrlr_cc_reset_shn_done((void *)ctrlr);
 }
 
+static void
+nvmf_bdev_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	SPDK_NOTICELOG("Resetting bdev done with %s\n", success ? "success" : "failure");
+
+	spdk_bdev_free_io(bdev_io);
+}
+
+
+static int
+nvmf_ctrlr_cc_timeout(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct spdk_nvmf_poll_group *group = ctrlr->admin_qpair->group;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+
+	assert(group != NULL && group->sgroups != NULL);
+	spdk_poller_unregister(&ctrlr->cc_timeout_timer);
+	SPDK_DEBUGLOG(nvmf, "Ctrlr %p reset or shutdown timeout\n", ctrlr);
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(ctrlr->subsys); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(ctrlr->subsys, ns)) {
+		if (ns->bdev == NULL) {
+			continue;
+		}
+		ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[ns->opts.nsid - 1];
+		SPDK_NOTICELOG("Ctrlr %p resetting NSID %u\n", ctrlr, ns->opts.nsid);
+		spdk_bdev_reset(ns->desc, ns_info->channel, nvmf_bdev_complete_reset, NULL);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
 const struct spdk_nvmf_registers *
 spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr)
 {
@@ -1024,6 +1073,7 @@ static bool
 nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 {
 	union spdk_nvme_cc_register cc, diff;
+	uint32_t cc_timeout_ms;
 
 	cc.raw = value;
 
@@ -1050,6 +1100,12 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 				return true;
 			}
 
+			ctrlr->cc_timeout_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_cc_timeout, ctrlr,
+						  NVMF_CC_RESET_SHN_TIMEOUT_IN_MS * 1000);
+			/* Make sure cc_timeout_ms is between cc_timeout_timer and Host reset/shutdown timeout */
+			cc_timeout_ms = (NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS) / 2;
+			ctrlr->cc_timeout_tsc = spdk_get_ticks() + cc_timeout_ms * spdk_get_ticks_hz() / (uint64_t)1000;
+
 			ctrlr->vcprop.cc.bits.en = 0;
 			ctrlr->disconnect_in_progress = true;
 			ctrlr->disconnect_is_shn = false;
@@ -1070,6 +1126,12 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 				SPDK_DEBUGLOG(nvmf, "Disconnect in progress\n");
 				return true;
 			}
+
+			ctrlr->cc_timeout_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_cc_timeout, ctrlr,
+						  NVMF_CC_RESET_SHN_TIMEOUT_IN_MS * 1000);
+			/* Make sure cc_timeout_ms is between cc_timeout_timer and Host reset/shutdown timeout */
+			cc_timeout_ms = (NVMF_CC_RESET_SHN_TIMEOUT_IN_MS + NVMF_CTRLR_RESET_SHN_TIMEOUT_IN_MS) / 2;
+			ctrlr->cc_timeout_tsc = spdk_get_ticks() + cc_timeout_ms * spdk_get_ticks_hz() / (uint64_t)1000;
 
 			ctrlr->vcprop.cc.bits.shn = cc.bits.shn;
 			ctrlr->disconnect_in_progress = true;

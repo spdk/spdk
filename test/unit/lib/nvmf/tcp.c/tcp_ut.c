@@ -240,6 +240,9 @@ DEFINE_STUB(nvmf_transport_req_free,
 
 DEFINE_STUB(accel_engine_create_cb, int, (void *io_device, void *ctx_buf), 0);
 DEFINE_STUB_V(accel_engine_destroy_cb, (void *io_device, void *ctx_buf));
+DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
 struct spdk_io_channel *
 spdk_accel_engine_get_io_channel(void)
