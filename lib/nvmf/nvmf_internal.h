@@ -269,6 +269,8 @@ struct spdk_nvmf_ctrlr {
 	bool				dif_insert_or_strip;
 	bool				in_destruct;
 	bool				disconnect_in_progress;
+	/* valid only when disconnect_in_progress is true */
+	bool				disconnect_is_shn;
 	bool				acre_enabled;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;

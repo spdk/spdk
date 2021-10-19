@@ -931,7 +931,7 @@ nvmf_ctrlr_association_remove(void *ctx)
 }
 
 static void
-nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
+nvmf_ctrlr_cc_reset_shn_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
 
@@ -940,34 +940,14 @@ nvmf_ctrlr_cc_shn_done(struct spdk_io_channel_iter *i, int status)
 		assert(false);
 	}
 
-	ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
-
-	/* After CC.EN transitions to 0 (due to shutdown or reset), the association
-	 * between the host and controller shall be preserved for at least 2 minutes */
-	if (ctrlr->association_timer) {
-		SPDK_DEBUGLOG(nvmf, "Association timer already set\n");
-		nvmf_ctrlr_stop_association_timer(ctrlr);
+	if (ctrlr->disconnect_is_shn) {
+		ctrlr->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+		ctrlr->disconnect_is_shn = false;
+	} else {
+		/* Only a subset of the registers are cleared out on a reset */
+		ctrlr->vcprop.cc.raw = 0;
+		ctrlr->vcprop.csts.raw = 0;
 	}
-	if (ctrlr->association_timeout) {
-		ctrlr->association_timer = SPDK_POLLER_REGISTER(nvmf_ctrlr_association_remove, ctrlr,
-					   ctrlr->association_timeout * 1000);
-	}
-	ctrlr->disconnect_in_progress = false;
-}
-
-static void
-nvmf_ctrlr_cc_reset_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct spdk_nvmf_ctrlr *ctrlr = spdk_io_channel_iter_get_ctx(i);
-
-	if (status < 0) {
-		SPDK_ERRLOG("Fail to disconnect io ctrlr qpairs\n");
-		assert(false);
-	}
-
-	/* Only a subset of the registers are cleared out on a reset */
-	ctrlr->vcprop.cc.raw = 0;
-	ctrlr->vcprop.csts.raw = 0;
 
 	/* After CC.EN transitions to 0 (due to shutdown or reset), the association
 	 * between the host and controller shall be preserved for at least 2 minutes */
@@ -1031,12 +1011,18 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 			ctrlr->vcprop.csts.bits.rdy = 1;
 		} else {
 			SPDK_DEBUGLOG(nvmf, "Property Set CC Disable!\n");
+			if (ctrlr->disconnect_in_progress) {
+				SPDK_DEBUGLOG(nvmf, "Disconnect in progress\n");
+				return true;
+			}
+
 			ctrlr->vcprop.cc.bits.en = 0;
 			ctrlr->disconnect_in_progress = true;
+			ctrlr->disconnect_is_shn = false;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
 					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
 					      ctrlr,
-					      nvmf_ctrlr_cc_reset_done);
+					      nvmf_ctrlr_cc_reset_shn_done);
 		}
 		diff.bits.en = 0;
 	}
@@ -1046,12 +1032,18 @@ nvmf_prop_set_cc(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 		    cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
 			SPDK_DEBUGLOG(nvmf, "Property Set CC Shutdown %u%ub!\n",
 				      cc.bits.shn >> 1, cc.bits.shn & 1);
+			if (ctrlr->disconnect_in_progress) {
+				SPDK_DEBUGLOG(nvmf, "Disconnect in progress\n");
+				return true;
+			}
+
 			ctrlr->vcprop.cc.bits.shn = cc.bits.shn;
 			ctrlr->disconnect_in_progress = true;
+			ctrlr->disconnect_is_shn = true;
 			spdk_for_each_channel(ctrlr->subsys->tgt,
 					      nvmf_ctrlr_disconnect_io_qpairs_on_pg,
 					      ctrlr,
-					      nvmf_ctrlr_cc_shn_done);
+					      nvmf_ctrlr_cc_reset_shn_done);
 
 			/* From the time a shutdown is initiated the controller shall disable
 			 * Keep Alive timer */
