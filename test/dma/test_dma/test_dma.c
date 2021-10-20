@@ -81,6 +81,11 @@ struct dma_test_task {
 	TAILQ_ENTRY(dma_test_task) link;
 };
 
+struct dma_test_data_cpl_ctx {
+	spdk_memory_domain_data_cpl_cb data_cpl;
+	void *data_cpl_arg;
+};
+
 TAILQ_HEAD(, dma_test_task) g_tasks = TAILQ_HEAD_INITIALIZER(g_tasks);
 
 /* User's input */
@@ -272,6 +277,55 @@ dma_test_task_is_read(struct dma_test_task *task)
 		return true;
 	}
 	return false;
+}
+
+static void
+dma_test_data_cpl(void *ctx)
+{
+	struct dma_test_data_cpl_ctx *cpl_ctx = ctx;
+
+	cpl_ctx->data_cpl(cpl_ctx->data_cpl_arg, 0);
+	free(cpl_ctx);
+}
+
+static int
+dma_test_copy_memory(struct dma_test_req *req, struct iovec *dst_iov, uint32_t dst_iovcnt,
+		     struct iovec *src_iov, uint32_t src_iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_data_cpl_ctx *cpl_ctx;
+
+	cpl_ctx = calloc(1, sizeof(*cpl_ctx));
+	if (!cpl_ctx) {
+		return -ENOMEM;
+	}
+
+	cpl_ctx->data_cpl = cpl_cb;
+	cpl_ctx->data_cpl_arg = cpl_cb_arg;
+
+	spdk_iovcpy(src_iov, src_iovcnt, dst_iov, dst_iovcnt);
+	spdk_thread_send_msg(req->task->thread, dma_test_data_cpl, cpl_ctx);
+
+	return 0;
+}
+
+static int dma_test_push_memory_cb(struct spdk_memory_domain *dst_domain,
+				   void *dst_domain_ctx,
+				   struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+				   spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_req *req = dst_domain_ctx;
+
+	return dma_test_copy_memory(req, dst_iov, dst_iovcnt, src_iov, src_iovcnt, cpl_cb, cpl_cb_arg);
+}
+
+static int dma_test_pull_memory_cb(struct spdk_memory_domain *src_domain,
+				   void *src_domain_ctx,
+				   struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov, uint32_t dst_iovcnt,
+				   spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_req *req = src_domain_ctx;
+
+	return dma_test_copy_memory(req, dst_iov, dst_iovcnt, src_iov, src_iovcnt, cpl_cb, cpl_cb_arg);
 }
 
 static int
@@ -666,6 +720,8 @@ dma_test_start(void *arg)
 		return;
 	}
 	spdk_memory_domain_set_translation(g_domain, dma_test_translate_memory_cb);
+	spdk_memory_domain_set_pull(g_domain, dma_test_pull_memory_cb);
+	spdk_memory_domain_set_push(g_domain, dma_test_push_memory_cb);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		rc = allocate_task(i, g_bdev_name);

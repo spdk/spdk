@@ -45,6 +45,34 @@
 
 DEFINE_STUB(spdk_notify_send, uint64_t, (const char *type, const char *ctx), 0);
 DEFINE_STUB(spdk_notify_type_register, struct spdk_notify_type *, (const char *type), NULL);
+DEFINE_STUB(spdk_memory_domain_get_dma_device_id, const char *, (struct spdk_memory_domain *domain),
+	    "test_domain");
+DEFINE_STUB(spdk_memory_domain_get_dma_device_type, enum spdk_dma_device_type,
+	    (struct spdk_memory_domain *domain), 0);
+
+DEFINE_RETURN_MOCK(spdk_memory_domain_pull_data, int);
+int
+spdk_memory_domain_pull_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			     struct iovec *src_iov, uint32_t src_iov_cnt, struct iovec *dst_iov, uint32_t dst_iov_cnt,
+			     spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	HANDLE_RETURN_MOCK(spdk_memory_domain_pull_data);
+
+	cpl_cb(cpl_cb_arg, 0);
+	return 0;
+}
+
+DEFINE_RETURN_MOCK(spdk_memory_domain_push_data, int);
+int
+spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+			     struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+			     spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	HANDLE_RETURN_MOCK(spdk_memory_domain_push_data);
+
+	cpl_cb(cpl_cb_arg, 0);
+	return 0;
+}
 
 static void
 _part_cleanup(struct spdk_bdev_part *part)
