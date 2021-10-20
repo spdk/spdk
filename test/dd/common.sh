@@ -38,6 +38,10 @@ gen_conf() {
 	# of the values is done here. extra_subsystems[] can store extra
 	# json configuration for different subsystems, other than bdev.
 
+	if (($# == 0)) && [[ -z ${!method_@} ]]; then
+		return 1
+	fi
+
 	methods=("${@:-${!method_@}}")
 	local IFS=","
 
