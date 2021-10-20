@@ -6,7 +6,7 @@ rootdir=$(git rev-parse --show-toplevel)
 _print_enums() {
 	local enum_type=$1 enum_string=$2 enum_prefix=$3 enum output
 
-	output=$(< "$rootdir/$(git -C "$rootdir" grep -l "$enum_string" -- lib module)")
+	output=$(< "$rootdir/$(git -C "$rootdir" grep -G -l "$enum_string" -- lib module)")
 
 	# Isolate the enum block
 	output=${output#*$enum_string$'\n'} output=${output%%$'\n'\};*}
@@ -34,8 +34,8 @@ print_clear() { printf '  clear(@%s);\n' "${!state_enums[@]}"; }
 
 declare -A state_enums=() state_prefix=()
 
-state_enums["target"]="enum nvmf_tgt_state \{"
-state_enums["subsystem"]="enum spdk_nvmf_subsystem_state \{"
+state_enums["target"]="enum nvmf_tgt_state {"
+state_enums["subsystem"]="enum spdk_nvmf_subsystem_state {"
 state_prefix["target"]=NVMF_TGT_
 state_prefix["subsystem"]=SPDK_NVMF_SUBSYSTEM_
 
