@@ -32,7 +32,7 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test "nvmf_fuzz" test/nvmf/target/fuzz.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_fuzz" test/nvmf/target/fabrics_fuzz.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_multiconnection" test/nvmf/target/multiconnection.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_initiator_timeout" test/nvmf/target/initiator_timeout.sh "${TEST_ARGS[@]}"
 fi
@@ -52,6 +52,7 @@ fi
 if [[ $SPDK_TEST_VFIOUSER -eq 1 && $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_vfio_user" test/nvmf/target/nvmf_vfio_user.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_vfio_user_nvme_compliance" test/nvme/compliance/compliance.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_vfio_user_fuzz" test/nvmf/target/vfio_user_fuzz.sh "${TEST_ARGS[@]}"
 fi
 
 if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
