@@ -397,6 +397,11 @@ int main(int argc, char **argv)
 		g_config.cmb.ctrlr = g_config.write.ctrlr;
 	}
 
+	if (!g_config.read.ctrlr || !g_config.write.ctrlr) {
+		fprintf(stderr, "No NVMe controller that support CMB was found!\n");
+		return -1;
+	}
+
 	/*
 	 * Call the cmb_copy() function which performs the CMB
 	 * based copy or returns an error code if it fails.
