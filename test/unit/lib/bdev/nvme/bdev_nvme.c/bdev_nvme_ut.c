@@ -2445,6 +2445,37 @@ test_abort(void)
 
 	set_thread(0);
 
+	/* If qpair is disconnected, it is freed and then reconnected via resetting
+	 * the corresponding nvme_ctrlr. I/O should be queued if it is submitted
+	 * while resetting the nvme_ctrlr.
+	 */
+	ctrlr_ch1->qpair->is_connected = false;
+
+	poll_thread_times(0, 3);
+
+	CU_ASSERT(ctrlr_ch1->qpair == NULL);
+	CU_ASSERT(nvme_ctrlr->resetting == true);
+
+	write_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch1, write_io);
+
+	CU_ASSERT(write_io->internal.in_submit_request == true);
+	CU_ASSERT(write_io == TAILQ_FIRST(&nbdev_ch1->retry_io_list));
+
+	/* Aborting the queued write request should succeed immediately. */
+	abort_io->internal.ch = (struct spdk_bdev_channel *)ch1;
+	abort_io->u.abort.bio_to_abort = write_io;
+	abort_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch1, abort_io);
+
+	CU_ASSERT(abort_io->internal.in_submit_request == false);
+	CU_ASSERT(abort_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(write_io->internal.in_submit_request == false);
+	CU_ASSERT(write_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
+
 	spdk_put_io_channel(ch1);
 
 	set_thread(1);
