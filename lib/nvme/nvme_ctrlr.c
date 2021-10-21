@@ -2095,7 +2095,7 @@ typedef void (*nvme_active_ns_ctx_deleter)(struct nvme_active_ns_ctx *);
 
 struct nvme_active_ns_ctx {
 	struct spdk_nvme_ctrlr *ctrlr;
-	uint32_t page;
+	uint32_t page_count;
 	uint32_t next_nsid;
 	uint32_t *new_ns_list;
 	nvme_active_ns_ctx_deleter deleter;
@@ -2123,6 +2123,7 @@ nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr, nvme_active_ns_ctx_dele
 		return NULL;
 	}
 
+	ctx->page_count = 1;
 	ctx->new_ns_list = new_ns_list;
 	ctx->ctrlr = ctrlr;
 	ctx->deleter = deleter;
@@ -2138,11 +2139,18 @@ nvme_active_ns_ctx_destroy(struct nvme_active_ns_ctx *ctx)
 }
 
 static void
-nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t **new_ns_list)
+nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t **new_ns_list,
+				   size_t max_entries)
 {
 	uint32_t max_active_ns_idx = 0;
+	size_t i;
 
-	while ((*new_ns_list)[max_active_ns_idx++]);
+	for (i = 0; i < max_entries; i++) {
+		if ((*new_ns_list)[max_active_ns_idx++] == 0) {
+			break;
+		}
+	}
+
 	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = *new_ns_list;
 	ctrlr->max_active_ns_idx = max_active_ns_idx;
@@ -2160,15 +2168,15 @@ nvme_ctrlr_identify_active_ns_async_done(void *arg, const struct spdk_nvme_cpl *
 		goto out;
 	}
 
-	ctx->next_nsid = ctx->new_ns_list[1024 * ctx->page + 1023];
+	ctx->next_nsid = ctx->new_ns_list[1024 * ctx->page_count - 1];
 	if (ctx->next_nsid == 0) {
 		ctx->state = NVME_ACTIVE_NS_STATE_DONE;
 		goto out;
 	}
 
-	ctx->page++;
+	ctx->page_count++;
 	new_ns_list = spdk_realloc(ctx->new_ns_list,
-				   (ctx->page + 1) * sizeof(struct spdk_nvme_ns_list),
+				   ctx->page_count * sizeof(struct spdk_nvme_ns_list),
 				   ctx->ctrlr->page_size);
 	if (!new_ns_list) {
 		SPDK_ERRLOG("Failed to reallocate active_ns_list!\n");
@@ -2206,16 +2214,15 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 	 */
 	if (ctrlr->vs.raw < SPDK_NVME_VERSION(1, 1, 0) || ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS) {
 		uint32_t *new_ns_list;
-		uint32_t num_pages;
 
 		/*
 		 * Active NS list must always end with zero element.
 		 * So, we allocate for cdata.nn+1.
 		 */
-		num_pages = spdk_divide_round_up(ctrlr->cdata.nn + 1,
-						 sizeof(struct spdk_nvme_ns_list) / sizeof(new_ns_list[0]));
+		ctx->page_count = spdk_divide_round_up(ctrlr->cdata.nn + 1,
+						       sizeof(struct spdk_nvme_ns_list) / sizeof(new_ns_list[0]));
 		new_ns_list = spdk_realloc(ctx->new_ns_list,
-					   num_pages * sizeof(struct spdk_nvme_ns_list),
+					   ctx->page_count * sizeof(struct spdk_nvme_ns_list),
 					   ctx->ctrlr->page_size);
 		if (!new_ns_list) {
 			SPDK_ERRLOG("Failed to reallocate active_ns_list!\n");
@@ -2235,7 +2242,7 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 
 	ctx->state = NVME_ACTIVE_NS_STATE_PROCESSING;
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST, 0, ctx->next_nsid, 0,
-				     &ctx->new_ns_list[1024 * ctx->page], sizeof(struct spdk_nvme_ns_list),
+				     &ctx->new_ns_list[1024 * (ctx->page_count - 1)], sizeof(struct spdk_nvme_ns_list),
 				     nvme_ctrlr_identify_active_ns_async_done, ctx);
 	if (rc != 0) {
 		ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
@@ -2274,7 +2281,7 @@ _nvme_active_ns_ctx_deleter(struct nvme_active_ns_ctx *ctx)
 		return;
 	}
 
-	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list);
+	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list, ctx->page_count * 1024);
 	nvme_active_ns_ctx_destroy(ctx);
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS, ctrlr->opts.admin_timeout_ms);
 }
@@ -2321,7 +2328,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
-	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list);
+	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list, ctx->page_count * 1024);
 	nvme_active_ns_ctx_destroy(ctx);
 
 	return 0;
