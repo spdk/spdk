@@ -2127,7 +2127,7 @@ test_nvme_ctrlr_test_active_ns(void)
 		nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
 		CU_ASSERT(nsid == 0);
 
-		memset(ctrlr.active_ns_list, 0, ctrlr.num_ns);
+		memset(ctrlr.active_ns_list, 0, sizeof(uint32_t) * ctrlr.num_ns);
 		for (nsid = 0; nsid < ctrlr.num_ns; nsid++) {
 			ctrlr.active_ns_list[nsid] = nsid + 1;
 		}
