@@ -42,6 +42,17 @@ Added the `disable_signal_handlers` flag to the `spdk_app_opts` struct.
 Added `spdk_idxd_get_socket` to query the socket that the idxd device
 is on.
 
+### json
+
+Added API to allow for writing and decoding of new types:
+
+- `spdk_json_write_named_uint16`
+- `spdk_json_write_named_uint8`
+- `spdk_json_write_uint16`
+- `spdk_json_write_uint8`
+- `spdk_json_number_to_uint8`
+- `spdk_json_decode_uint8`
+
 ### log
 
 Added API `spdk_log_to_syslog_level` to return syslog level based on SPDK's
@@ -66,6 +77,17 @@ to write and read the boot partitions of a controller.
 
 Added `spdk_nvme_ctrlr_get_opts` to retrieve the current controller options.
 
+Added `async_mode` to `spdk_nvme_io_qpair_opts` to enable creation of submission and completion
+queues asynchronously. This mode is currently supported at PCIe layer,
+which tracks the qpair creation with state machine and returns to the user immediately.
+Default mode is set to false to create io qpairs synchronously.
+
+Added `spdk_nvme_ctrlr_get_regs_cc` to retrieve NVMe controller CC (Configuration) register.
+
+Added `spdk_nvme_ctrlr_prepare_for_reset` to inform the driver that the application is preparing
+to reset the specified NVMe controller. This function allows the driver to make decisions
+knowing that a reset is about to happen.
+
 ### nvmf
 
 Added `oncs` to `struct spdk_nvmf_ctrlr_data` so that the transport layer
@@ -85,6 +107,21 @@ A new parameter, `poll_groups_mask` was added to the `nvmf_set_config` RPC that 
 a subset of cores for the nvmf poll groups. This helps to avoid imbalances when some cores are
 busy with periodic timer tasks that run very frequently.
 
+A new parameter, `commit` was added to `nvmf_bdev_ctrlr_end_zcopy` that allows indicating whether
+the buffers should be committed.
+
+Added `listen_dump_opts` to `spdk_nvmf_transport_ops` so that the transport layer can display
+listen opts.
+
+Added `fabrics_connect_timeout_us` to `bdev_nvme_attach_controller` RPC to allow specifying
+timeout for connect operation.
+
+Added `multipath` to `bdev_nvme_attach_controller` RPC to allow specifying multipath behavior.
+
+### scheduler
+
+New API for implementing schedulers and governors. Please see `include/spdk/scheduler.h` for details.
+
 ### scsi
 
 New functions, `spdk_scsi_dev_get_first_lun` and `spdk_scsi_dev_get_next_lun`
@@ -92,6 +129,12 @@ have been added to iterate LUNs of a SCSI device.
 
 Each SCSI device supports 256 LUNs at the maximum now and the macro constant
 `SPDK_SCSI_DEV_MAX_LUN` was removed.
+
+### trace_parser
+
+A new library, lib/trace_parser, has been added. This library provides functions that parse traces
+recorded by an SPDK application. That includes merging traces from multiple cores,
+sorting them by their timestamp and constructing trace entries spanning across multiple buffers.
 
 ### util
 
