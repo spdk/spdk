@@ -139,6 +139,9 @@ DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_strerror, const char *, (int errnum), NULL);
 DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct spdk_bdev_io_wait_entry *entry), 0);
+DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
+		struct spdk_memory_domain **domains,	int array_size), 0);
+DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test_bdev");
 
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
