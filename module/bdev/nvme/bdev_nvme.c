@@ -4725,11 +4725,7 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		/* If no command was found or there was any error, complete the abort
 		 * request with failure.
 		 */
-		bio->cpl.cdw0 |= 1U;
-		bio->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
-		bio->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-
-		bdev_nvme_abort_completion(bio);
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
