@@ -2,26 +2,6 @@
 
 ## v21.10: (Upcoming Release)
 
-### idxd
-
-Added `spdk_idxd_get_socket` to query the socket that the idxd device
-is on.
-
-### nvmf
-
-Added `oncs` to `struct spdk_nvmf_ctrlr_data` so that the transport layer
-can decide support RESERVATION feature or not.
-
-An `opts_size` element was added in the `spdk_nvmf_ns_opts` structure to solve the
-ABI compatibility issue between different SPDK version. An new option `anagrpid` was
-added in the `spdk_nvmf_ns_opts` structure.
-
-An new parameter `anagrpid` was added to the RPC `nvmf_subsystem_add_ns`.
-
-An new parameter `anagrpid` was added to the RPC `nvmf_subsystem_listener_set_ana_state`.
-
-`spdk_nvmf_subsystem_destroy` is now can be asynchronous, it accepts a callback and callback argument.
-
 ### bdev
 
 New API `spdk_bdev_get_memory_domains` has been added, it allows to get SPDK memory domains used by bdev.
@@ -37,8 +17,8 @@ with new `spdk_bdev_module_fini_start_done` API.
 Deprecated `spdk_bdev_module_finish_done()` API, which will be removed in SPDK 22.01.
 Bdev modules should use `spdk_bdev_module_fini_done()` instead.
 
-The `ocssd` bdev has been removed. The Open Channel specification has been largely superceded by
-zoned namespaces, few if any devices have been brough to market, and there is little reason to
+The `ocssd` bdev has been removed. The Open Channel specification has been largely superseded by
+zoned namespaces, few if any devices have been brought to market, and there is little reason to
 continue to support this. OCSSD support in the nvme driver will remain for now.
 
 ### dma
@@ -49,9 +29,18 @@ SoC may be running SPDK on the SoC. That SoC has its own local memory, but SPDK 
 devices that can also access the host system memory. This library provides infrastructure to enumerate
 the memory domains and request hardware perform DMA transfers between them.
 
+### dpdk
+
+Updated DPDK submodule to DPDK 21.08.
+
 ### event
 
 Added the `disable_signal_handlers` flag to the `spdk_app_opts` struct.
+
+### idxd
+
+Added `spdk_idxd_get_socket` to query the socket that the idxd device
+is on.
 
 ### log
 
@@ -77,9 +66,24 @@ to write and read the boot partitions of a controller.
 
 Added `spdk_nvme_ctrlr_get_opts` to retrieve the current controller options.
 
-### dpdk
+### nvmf
 
-Updated DPDK submodule to DPDK 21.08.
+Added `oncs` to `struct spdk_nvmf_ctrlr_data` so that the transport layer
+can decide support RESERVATION feature or not.
+
+An `opts_size` element was added in the `spdk_nvmf_ns_opts` structure to solve the
+ABI compatibility issue between different SPDK version. An new option `anagrpid` was
+added in the `spdk_nvmf_ns_opts` structure.
+
+An new parameter `anagrpid` was added to the RPC `nvmf_subsystem_add_ns`.
+
+An new parameter `anagrpid` was added to the RPC `nvmf_subsystem_listener_set_ana_state`.
+
+`spdk_nvmf_subsystem_destroy` is now can be asynchronous, it accepts a callback and callback argument.
+
+A new parameter, `poll_groups_mask` was added to the `nvmf_set_config` RPC that allows specifying
+a subset of cores for the nvmf poll groups. This helps to avoid imbalances when some cores are
+busy with periodic timer tasks that run very frequently.
 
 ### scsi
 
@@ -206,10 +210,6 @@ is associated with a fabrics controller.
 
 Added `min_cntlid` and `max_cntlid` to `nvmf_create_subsystem` to limit the controller ID range.
 Added `spdk_nvmf_subsystem_get_min_cntlid` and `spdk_nvmf_subsystem_get_max_cntlid` to request those values.
-
-A new parameter, `poll_groups_mask` was added to the nvmf_set_config RPC that allows specifying
-a subset of cores for the nvmf poll groups. This helps to avoid imbalances when some cores are
-busy with periodic timer tasks that run very frequently.
 
 `spdk_nvmf_request_get_buffers_multi` API is removed.
 
