@@ -61,7 +61,7 @@ num_vfs=16
 qat_pci_bdfs=($(lspci -Dd:37c8 | awk '{print $1}'))
 if [ ${#qat_pci_bdfs[@]} -eq 0 ]; then
 	echo "No QAT devices found. Exiting"
-	exit 0
+	exit 1
 fi
 
 if [ -n "$1" ]; then

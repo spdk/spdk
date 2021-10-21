@@ -148,14 +148,6 @@ timing_enter afterboot
 ./scripts/setup.sh
 timing_exit afterboot
 
-if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
-	if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
-		./scripts/qat_setup.sh igb_uio
-	else
-		./scripts/qat_setup.sh
-	fi
-fi
-
 # Revert existing OPAL to factory settings that may have been left from earlier failed tests.
 # This ensures we won't hit any unexpected failures due to NVMe SSDs being locked.
 opal_revert_cleanup
@@ -170,6 +162,13 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 fi
 
 if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
+	if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
+		if [[ $SPDK_TEST_USE_IGB_UIO -eq 1 ]]; then
+			./scripts/qat_setup.sh igb_uio
+		else
+			./scripts/qat_setup.sh
+		fi
+	fi
 	timing_enter lib
 
 	run_test "rpc" test/rpc/rpc.sh
