@@ -456,7 +456,6 @@ nvme_completion_sq_error_delete_cq_cb(void *arg, const struct spdk_nvme_cpl *cpl
 	}
 
 	pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
-	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 }
 
 static void
@@ -486,12 +485,10 @@ nvme_completion_create_sq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to send request to delete_io_cq with rc=%d\n", rc);
 			pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
-			nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 		}
 		return;
 	}
 	pqpair->pcie_state = NVME_PCIE_QPAIR_READY;
-	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 	if (ctrlr->shadow_doorbell) {
 		pqpair->shadow_doorbell.sq_tdbl = ctrlr->shadow_doorbell + (2 * qpair->id + 0) *
 						  pctrlr->doorbell_stride_u32;
@@ -529,7 +526,6 @@ nvme_completion_create_cq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
-		nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
 		return;
 	}
@@ -543,7 +539,6 @@ nvme_completion_create_cq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to send request to delete_io_cq with rc=%d\n", rc);
 			pqpair->pcie_state = NVME_PCIE_QPAIR_FAILED;
-			nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 		}
 		return;
 	}
@@ -861,12 +856,27 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return -ENXIO;
 	}
 
-	if (spdk_unlikely(pqpair->pcie_state != NVME_PCIE_QPAIR_READY)) {
-		rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-		if (rc < 0) {
-			return rc;
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING)) {
+		if (pqpair->pcie_state == NVME_PCIE_QPAIR_READY) {
+			/* It is possible that another thread set the pcie_state to
+			 * QPAIR_READY, if it polled the adminq and processed the SQ
+			 * completion for this qpair.  So check for that condition
+			 * here and then update the qpair's state to CONNECTED, since
+			 * we can only set the qpair state from the qpair's thread.
+			 * (Note: this fixed issue #2157.)
+			 */
+			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 		} else if (pqpair->pcie_state == NVME_PCIE_QPAIR_FAILED) {
+			nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 			return -ENXIO;
+		} else {
+			rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+			if (rc < 0) {
+				return rc;
+			} else if (pqpair->pcie_state == NVME_PCIE_QPAIR_FAILED) {
+				nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
+				return -ENXIO;
+			}
 		}
 		return 0;
 	}

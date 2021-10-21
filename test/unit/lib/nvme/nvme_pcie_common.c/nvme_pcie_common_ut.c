@@ -367,10 +367,12 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
 	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
 
+	pqpair.qpair.state = NVME_QPAIR_CONNECTING;
 	/* Complete the second request */
 	req[1].cb_fn(req[1].cb_arg, &cpl);
 	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_READY);
-	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_CONNECTED);
+	/* State is still CONNECTING until the thread is polled again. */
+	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_CONNECTING);
 
 	/* doorbell stride and qid are 1 */
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == pctrlr.ctrlr.shadow_doorbell + 2);
@@ -419,10 +421,12 @@ test_nvme_pcie_ctrlr_connect_qpair(void)
 	CU_ASSERT(req[1].cmd.cdw11_bits.create_io_sq.cqid = 1);
 	CU_ASSERT(req[1].cmd.dptr.prp.prp1 == 0xDDADBEEF);
 
+	pqpair.qpair.state = NVME_QPAIR_CONNECTING;
 	/* Complete the second request */
 	req[1].cb_fn(req[1].cb_arg, &cpl);
 	CU_ASSERT(pqpair.pcie_state == NVME_PCIE_QPAIR_READY);
-	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_CONNECTED);
+	/* State is still CONNECTING until the thread is polled again. */
+	CU_ASSERT(pqpair.qpair.state == NVME_QPAIR_CONNECTING);
 
 	CU_ASSERT(pqpair.shadow_doorbell.sq_tdbl == NULL);
 	CU_ASSERT(pqpair.shadow_doorbell.sq_eventidx == NULL);
