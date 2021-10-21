@@ -5591,6 +5591,17 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
 	assert(sc != NULL);
 	assert(cdw0 != NULL);
 
+	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_ABORT)) {
+		*sct = SPDK_NVME_SCT_GENERIC;
+		*sc = SPDK_NVME_SC_SUCCESS;
+		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+			*cdw0 = 0;
+		} else {
+			*cdw0 = 1U;
+		}
+		return;
+	}
+
 	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
 		*sct = bdev_io->internal.error.nvme.sct;
 		*sc = bdev_io->internal.error.nvme.sc;
