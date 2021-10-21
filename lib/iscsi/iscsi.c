@@ -4622,6 +4622,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int rc;
 
 	data_len = pdu->data_segment_len;
+	read_len = data_len - pdu->data_valid_bytes;
 
 	mobj = pdu->mobj[0];
 	if (mobj == NULL) {
@@ -4643,7 +4644,7 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		pdu->mobj[0] = mobj;
 		pdu->data = mobj->buf;
 		pdu->data_from_mempool = true;
-	} else if (mobj->data_len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+	} else if (mobj->data_len == SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH && read_len > 0) {
 		mobj = pdu->mobj[1];
 		if (mobj == NULL) {
 			/* The first data buffer just ran out. Allocate the second data buffer and
@@ -4667,8 +4668,8 @@ iscsi_pdu_payload_read(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	/* copy the actual data into local buffer */
-	read_len = spdk_min(data_len - pdu->data_valid_bytes,
-			    SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - mobj->data_len);
+	read_len = spdk_min(read_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH - mobj->data_len);
+
 	if (read_len > 0) {
 		rc = iscsi_conn_read_data_segment(conn,
 						  pdu,

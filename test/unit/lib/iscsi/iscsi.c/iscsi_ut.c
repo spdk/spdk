@@ -2130,6 +2130,35 @@ pdu_payload_read_test(void)
 	rc = iscsi_pdu_payload_read(&conn, &pdu);
 	check_pdu_payload_read(&pdu, &mobj2, rc, 1, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 
+	/* Case 5: data segment size is SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH, data digest
+	 * is enabled, and reading PDU data is split between data segment and data digest.
+	 */
+	conn.data_digest = true;
+	memset(&pdu, 0, sizeof(pdu));
+	pdu.crc32c = SPDK_CRC32C_INITIAL;
+	pdu.data = mobj1.buf;
+	pdu.data_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	pdu.mobj[0] = &mobj1;
+	pdu.data_valid_bytes = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	mobj1.data_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+
+	/* generate data digest. */
+	g_data_digest = spdk_crc32c_update(mobj1.buf, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH,
+					   SPDK_CRC32C_INITIAL);
+	g_data_digest ^= SPDK_CRC32C_XOR;
+	g_conn_read_data_digest = true;
+
+	rc = iscsi_pdu_payload_read(&conn, &pdu);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(pdu.ddigest_valid_bytes == ISCSI_DIGEST_LEN);
+	CU_ASSERT(pdu.mobj[1] == NULL);
+
+	g_conn_read_data_digest = false;
+	g_conn_read_len = 0;
+	MOCK_SET(spdk_mempool_get, &mobj1);
+	mobj1.data_len = 0;
+
+	g_conn_read_len = 0;
 	MOCK_CLEAR(spdk_mempool_get);
 
 	free(mobj1.buf);

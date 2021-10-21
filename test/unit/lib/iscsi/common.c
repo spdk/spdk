@@ -18,6 +18,8 @@ TAILQ_HEAD(, spdk_iscsi_pdu) g_write_pdu_list = TAILQ_HEAD_INITIALIZER(g_write_p
 static bool g_task_pool_is_empty = false;
 static bool g_pdu_pool_is_empty = false;
 static uint32_t g_conn_read_len;
+static bool g_conn_read_data_digest = false;
+static uint32_t g_data_digest;
 
 struct spdk_iscsi_task *
 iscsi_task_get(struct spdk_iscsi_conn *conn,
@@ -181,11 +183,22 @@ iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 
 DEFINE_STUB_V(iscsi_task_mgmt_cpl, (struct spdk_scsi_task *scsi_task));
 
+#define MAKE_DIGEST_WORD(BUF, CRC32C) \
+        (   ((*((uint8_t *)(BUF)+0)) = (uint8_t)((uint32_t)(CRC32C) >> 0)), \
+            ((*((uint8_t *)(BUF)+1)) = (uint8_t)((uint32_t)(CRC32C) >> 8)), \
+            ((*((uint8_t *)(BUF)+2)) = (uint8_t)((uint32_t)(CRC32C) >> 16)), \
+            ((*((uint8_t *)(BUF)+3)) = (uint8_t)((uint32_t)(CRC32C) >> 24)))
+
 int
 iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes, void *buf)
 {
 	uint32_t *data = buf;
 	int i;
+
+	if (g_conn_read_data_digest) {
+		MAKE_DIGEST_WORD(buf, g_data_digest);
+		return ISCSI_DIGEST_LEN;
+	}
 
 	/* Limit the length to 4 bytes multiples. */
 	SPDK_CU_ASSERT_FATAL((bytes % 4) == 0);
