@@ -96,67 +96,67 @@ static char *fc_req_state_strs[] = {
 SPDK_TRACE_REGISTER_FN(nvmf_fc_trace, "nvmf_fc", TRACE_GROUP_NVMF_FC)
 {
 	spdk_trace_register_object(OBJECT_NVMF_FC_IO, 'r');
-	spdk_trace_register_description("FC_REQ_NEW",
+	spdk_trace_register_description("FC_NEW",
 					TRACE_FC_REQ_INIT,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 1,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_READ_SUBMIT_TO_BDEV",
+	spdk_trace_register_description("FC_READ_SBMT_TO_BDEV",
 					TRACE_FC_REQ_READ_BDEV,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_READ_XFER_DATA",
+	spdk_trace_register_description("FC_READ_XFER_DATA",
 					TRACE_FC_REQ_READ_XFER,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_READ_RSP",
+	spdk_trace_register_description("FC_READ_RSP",
 					TRACE_FC_REQ_READ_RSP,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_WRITE_NEED_BUFFER",
+	spdk_trace_register_description("FC_WRITE_NEED_BUFFER",
 					TRACE_FC_REQ_WRITE_BUFFS,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_WRITE_XFER_DATA",
+	spdk_trace_register_description("FC_WRITE_XFER_DATA",
 					TRACE_FC_REQ_WRITE_XFER,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_WRITE_SUBMIT_TO_BDEV",
+	spdk_trace_register_description("FC_WRITE_SBMT_TO_BDEV",
 					TRACE_FC_REQ_WRITE_BDEV,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_WRITE_RSP",
+	spdk_trace_register_description("FC_WRITE_RSP",
 					TRACE_FC_REQ_WRITE_RSP,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_NONE_SUBMIT_TO_BDEV",
+	spdk_trace_register_description("FC_NONE_SBMT_TO_BDEV",
 					TRACE_FC_REQ_NONE_BDEV,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_NONE_RSP",
+	spdk_trace_register_description("FC_NONE_RSP",
 					TRACE_FC_REQ_NONE_RSP,
 					OWNER_NONE, OBJECT_NVMF_FC_IO, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_SUCCESS",
+	spdk_trace_register_description("FC_SUCCESS",
 					TRACE_FC_REQ_SUCCESS,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_FAILED",
+	spdk_trace_register_description("FC_FAILED",
 					TRACE_FC_REQ_FAILED,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_ABORTED",
+	spdk_trace_register_description("FC_ABRT",
 					TRACE_FC_REQ_ABORTED,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_ABORTED_SUBMIT_TO_BDEV",
+	spdk_trace_register_description("FC_ABRT_SBMT_TO_BDEV",
 					TRACE_FC_REQ_BDEV_ABORTED,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_PENDING",
+	spdk_trace_register_description("FC_PENDING",
 					TRACE_FC_REQ_PENDING,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("FC_REQ_FUSED_WAITING",
+	spdk_trace_register_description("FC_FUSED_WAITING",
 					TRACE_FC_REQ_FUSED_WAITING,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");

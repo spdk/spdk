@@ -182,7 +182,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 	spdk_trace_register_description("TCP_QP_ABORT_REQ", TRACE_TCP_QP_ABORT_REQ,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "");
-	spdk_trace_register_description("TCP_QP_RECV_STATE_CHANGE", TRACE_TCP_QP_RECV_STATE_CHANGE,
+	spdk_trace_register_description("TCP_QP_RCV_STATE_CHANGE", TRACE_TCP_QP_RCV_STATE_CHANGE,
 					OWNER_NONE, OBJECT_NONE, 0,
 					SPDK_TRACE_ARG_TYPE_INT, "state");
 
@@ -1271,7 +1271,7 @@ nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 	SPDK_DEBUGLOG(nvmf_tcp, "tqpair(%p) recv state=%d\n", tqpair, state);
 	tqpair->recv_state = state;
 
-	spdk_trace_record(TRACE_TCP_QP_RECV_STATE_CHANGE, 0, 0, (uintptr_t)tqpair, tqpair->recv_state);
+	spdk_trace_record(TRACE_TCP_QP_RCV_STATE_CHANGE, 0, 0, (uintptr_t)tqpair, tqpair->recv_state);
 
 	switch (state) {
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
