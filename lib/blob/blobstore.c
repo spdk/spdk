@@ -1765,7 +1765,7 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 	spdk_bs_batch_t			*batch;
 	size_t				i;
 	uint64_t			lba;
-	uint32_t			lba_count;
+	uint64_t			lba_count;
 
 	/* Clusters don't move around in blobs. The list shrinks or grows
 	 * at the end, but no changes ever occur in the middle of the list.
@@ -1778,9 +1778,10 @@ blob_persist_clear_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_persist_ct
 	lba_count = 0;
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint64_t next_lba = blob->active.clusters[i];
-		uint32_t next_lba_count = bs_cluster_to_lba(bs, 1);
+		uint64_t next_lba_count = bs_cluster_to_lba(bs, 1);
 
-		if (next_lba > 0 && (lba + lba_count) == next_lba) {
+		if (next_lba > 0 && (lba + lba_count) == next_lba &&
+		    (lba_count + next_lba_count <= UINT32_MAX)) {
 			/* This cluster is contiguous with the previous one. */
 			lba_count += next_lba_count;
 			continue;
