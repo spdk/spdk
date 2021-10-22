@@ -4917,7 +4917,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	lba = num_md_lba;
 	while (lba < ctx->bs->dev->blockcnt) {
-		lba_count = spdk_min(UINT32_MAX, ctx->bs->dev->blockcnt - lba);
+		lba_count = spdk_min(UINT32_MAX - 127, ctx->bs->dev->blockcnt - lba);
 		switch (opts.clear_method) {
 		case BS_CLEAR_WITH_UNMAP:
 			/* Trim data clusters */
