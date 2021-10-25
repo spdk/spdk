@@ -85,6 +85,14 @@ DEFINE_STUB(pthread_join, int, (pthread_t tid, void **val), 0);
 
 DEFINE_STUB_V(nvme_ctrlr_update_namespaces, (struct spdk_nvme_ctrlr *ctrlr));
 
+static int
+nvme_ns_cmp(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
+{
+	return ns1->id - ns2->id;
+}
+
+RB_GENERATE_STATIC(nvme_ns_tree, spdk_nvme_ns, node, nvme_ns_cmp);
+
 struct cuse_io_ctx *g_ut_ctx;
 struct spdk_nvme_ctrlr *g_ut_ctrlr;
 uint32_t g_ut_nsid;
@@ -135,13 +143,15 @@ static struct spdk_nvme_ns g_inactive_ns = {};
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
 	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return NULL;
 	}
 
-	ns = ctrlr->ns[nsid - 1];
+	tmp.id = nsid;
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
 
 	if (ns == NULL) {
 		return &g_inactive_ns;
@@ -291,7 +301,6 @@ test_cuse_nvme_submit_io(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct fuse_file_info fi = {};
 	struct spdk_nvme_ns ns = {};
-	struct spdk_nvme_ns *ns_array;
 	struct nvme_user_io *user_io = NULL;
 	char arg[1024] = {};
 	fuse_req_t req = (void *)0xDEEACDFF;
@@ -300,10 +309,11 @@ test_cuse_nvme_submit_io(void)
 	user_io = calloc(3, 4096);
 	SPDK_CU_ASSERT_FATAL(user_io != NULL);
 
-	ns_array = &ns;
+	RB_INIT(&ctrlr.ns);
+	ns.id = 1;
+	RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns);
 
 	cuse_device.ctrlr = &ctrlr;
-	ctrlr.ns = &ns_array;
 	ctrlr.num_ns = 1;
 	ns.sector_size = 4096;
 	ns.id = 1;

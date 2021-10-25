@@ -2103,8 +2103,7 @@ test_nvme_ctrlr_test_active_ns(void)
 		ctrlr.vs.bits.ter = 0;
 		ctrlr.cdata.nn = 1531;
 
-		ctrlr.ns = calloc(ctrlr.cdata.nn, sizeof(struct spdk_nvme_ns *));
-		SPDK_CU_ASSERT_FATAL(ctrlr.ns != NULL);
+		RB_INIT(&ctrlr.ns);
 		ctrlr.num_ns = ctrlr.cdata.nn;
 
 		nvme_ctrlr_identify_active_ns(&ctrlr);
@@ -2145,7 +2144,6 @@ test_nvme_ctrlr_test_active_ns(void)
 		for (nsid = 0; nsid < ctrlr.num_ns; nsid++) {
 			ctrlr.active_ns_list[nsid] = nsid + 1;
 		}
-		ctrlr.active_ns_list[ctrlr.active_ns_count] = 0;
 
 		ns_id_count = 0;
 		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(&ctrlr);
@@ -2901,22 +2899,22 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	uint32_t prev_nsid;
 	uint32_t active_ns_list[5] = {1, 2, 3, 4, 5};
 	struct spdk_nvme_ns ns[5] = {};
-	struct spdk_nvme_ns *ns_array[5];
 	struct spdk_nvme_ctrlr ns_ctrlr[5] = {};
 	int rc = 0;
 	int i;
 
+	RB_INIT(&ctrlr.ns);
 	for (i = 0; i < 5; i++) {
-		ns_array[i] = &ns[i];
+		ns[i].id = i + 1;
+		RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns[i]);
 	}
 
-	ctrlr.ns = ns_array;
 	ctrlr.cdata.nn = 5;
-	ctrlr.active_ns_count = 5;
 	ctrlr.num_ns = 5;
 	/* case 1: No first/next active NS, move on to the next state, expect: pass */
 	prev_nsid = 0;
 	ctrlr.active_ns_list = NULL;
+	ctrlr.active_ns_count = 0;
 	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
 	CU_ASSERT(rc == 0);
@@ -2928,6 +2926,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	memset(&ctrlr.state_timeout_tsc, 0x00, sizeof(ctrlr.state_timeout_tsc));
 	prev_nsid = 1;
 	ctrlr.active_ns_list = active_ns_list;
+	ctrlr.active_ns_count = 5;
 	ns[1].csi = SPDK_NVME_CSI_NVM;
 	ns[1].id = 2;
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
@@ -2941,6 +2940,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
 	prev_nsid = 0;
 	ctrlr.active_ns_list = active_ns_list;
+	ctrlr.active_ns_count = 5;
 
 	for (int i = 0; i < 5; i++) {
 		ns[i].csi = SPDK_NVME_CSI_NVM;
@@ -2966,6 +2966,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	memset(&ctrlr.state_timeout_tsc, 0x00, sizeof(ctrlr.state_timeout_tsc));
 	prev_nsid = 1;
 	ctrlr.active_ns_list = active_ns_list;
+	ctrlr.active_ns_count = 5;
 	ns[1].csi = SPDK_NVME_CSI_ZNS;
 	g_fail_next_identify = true;
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
@@ -3037,17 +3038,17 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	int rc, i;
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns ns[3] = {};
-	struct spdk_nvme_ns *ns_array[3];
 	struct spdk_nvme_ana_page ana_hdr;
 	char _ana_desc[UT_ANA_DESC_SIZE];
 	struct spdk_nvme_ana_group_descriptor *ana_desc;
 	uint32_t offset;
 
+	RB_INIT(&ctrlr.ns);
 	for (i = 0; i < 3; i++) {
-		ns_array[i] = &ns[i];
+		ns[i].id = i + 1;
+		RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns[i]);
 	}
 
-	ctrlr.ns = ns_array;
 	ctrlr.cdata.nn = 3;
 	ctrlr.cdata.nanagrpid = 3;
 	ctrlr.num_ns = 3;

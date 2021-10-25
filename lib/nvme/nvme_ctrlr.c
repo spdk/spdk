@@ -54,6 +54,20 @@ static void nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr);
 static void nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 				 uint64_t timeout_in_ms);
 
+static int
+nvme_ns_cmp(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
+{
+	if (ns1->id < ns2->id) {
+		return -1;
+	} else if (ns1->id > ns2->id) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+RB_GENERATE_STATIC(nvme_ns_tree, spdk_nvme_ns, node, nvme_ns_cmp);
+
 #define CTRLR_STRING(ctrlr) \
 	((ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP || ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) ? \
 	ctrlr->trid.subnqn : ctrlr->trid.traddr)
@@ -2206,17 +2220,14 @@ nvme_active_ns_ctx_destroy(struct nvme_active_ns_ctx *ctx)
 static int
 nvme_ctrlr_destruct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_ns tmp, *ns;
 
 	assert(ctrlr != NULL);
 
-	if (nsid < 1 || nsid > ctrlr->num_ns) {
-		return -EINVAL;
-	}
-
-	ns = ctrlr->ns[nsid - 1];
+	tmp.id = nsid;
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
 	if (ns == NULL) {
-		return 0;
+		return -EINVAL;
 	}
 
 	nvme_ns_destruct(ns);
@@ -2996,18 +3007,15 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (ctrlr->ns) {
-		uint32_t i, num_ns = ctrlr->num_ns;
+	struct spdk_nvme_ns *ns, *tmp_ns;
 
-		for (i = 1; i <= num_ns; i++) {
-			nvme_ctrlr_destruct_namespace(ctrlr, i);
-			spdk_free(ctrlr->ns[i - 1]);
-		}
-
-		spdk_free(ctrlr->ns);
-		ctrlr->ns = NULL;
-		ctrlr->num_ns = 0;
+	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
+		nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
+		RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
+		spdk_free(ns);
 	}
+
+	ctrlr->num_ns = 0;
 }
 
 void
@@ -3026,45 +3034,15 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int rc = 0;
-	uint32_t i, nn = ctrlr->cdata.nn;
-	struct spdk_nvme_ns **tmp;
 	struct spdk_nvme_ns *ns;
 
-	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
-	 * so check if we need to reallocate.
-	 */
-	if (nn != ctrlr->num_ns) {
+	ctrlr->num_ns = ctrlr->cdata.nn;
 
-		tmp = spdk_realloc(ctrlr->ns, nn * sizeof(struct spdk_nvme_ns *), 64);
-
-		if (tmp == NULL) {
-			rc = -ENOMEM;
-			goto fail;
-		}
-
-		if (nn > ctrlr->num_ns) {
-			memset(tmp + ctrlr->num_ns, 0, (nn - ctrlr->num_ns) * sizeof(struct spdk_nvme_ns *));
-		}
-
-		ctrlr->ns = tmp;
-		ctrlr->num_ns = nn;
-	}
-
-	for (i = 0; i < ctrlr->num_ns; i++) {
-		ns = ctrlr->ns[i];
-		if (ns != NULL) {
-			nvme_ns_free_iocs_specific_data(ns);
-		}
+	RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
+		nvme_ns_free_iocs_specific_data(ns);
 	}
 
 	return 0;
-
-fail:
-	nvme_ctrlr_destruct_namespaces(ctrlr);
-	NVME_CTRLR_ERRLOG(ctrlr, "Failed to construct namespaces, err %d\n", rc);
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-	return rc;
 }
 
 static int
@@ -4146,6 +4124,8 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_INIT(&ctrlr->active_procs);
 	STAILQ_INIT(&ctrlr->register_operations);
 
+	RB_INIT(&ctrlr->ns);
+
 	return rc;
 }
 
@@ -4492,6 +4472,7 @@ spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
 	if (nsid < 1 || nsid > ctrlr->num_ns) {
@@ -4500,7 +4481,8 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	ns = ctrlr->ns[nsid - 1];
+	tmp.id = nsid;
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
 
 	if (ns == NULL) {
 		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
@@ -4510,7 +4492,8 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		}
 
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
-		ctrlr->ns[nsid - 1] = ns;
+		ns->id = nsid;
+		RB_INSERT(nvme_ns_tree, &ctrlr->ns, ns);
 	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);

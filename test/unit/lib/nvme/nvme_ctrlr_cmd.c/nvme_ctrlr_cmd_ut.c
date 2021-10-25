@@ -79,6 +79,14 @@ DEFINE_STUB(nvme_transport_qpair_iterate_requests, int,
 DEFINE_STUB(nvme_qpair_abort_queued_reqs_with_cbarg, uint32_t,
 	    (struct spdk_nvme_qpair *qpair, void *cmd_cb_arg), 0);
 
+static int
+nvme_ns_cmp(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
+{
+	return ns1->id - ns2->id;
+}
+
+RB_GENERATE_STATIC(nvme_ns_tree, spdk_nvme_ns, node, nvme_ns_cmp);
+
 static void verify_firmware_log_page(struct nvme_request *req)
 {
 	uint32_t temp_cdw10;
@@ -373,13 +381,15 @@ static struct spdk_nvme_ns g_inactive_ns = {};
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
 	if (nsid < 1 || nsid > ctrlr->num_ns) {
 		return NULL;
 	}
 
-	ns = ctrlr->ns[nsid - 1];
+	tmp.id = nsid;
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
 
 	if (ns == NULL) {
 		return &g_inactive_ns;
