@@ -304,8 +304,8 @@ static void
 vbdev_delay_reset_dev(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct delay_io_channel *delay_ch = spdk_io_channel_get_ctx(ch);
+	struct delay_bdev_io *io_ctx = (struct delay_bdev_io *)bdev_io->driver_ctx;
+	struct delay_io_channel *delay_ch = spdk_io_channel_get_ctx(io_ctx->ch);
 	struct vbdev_delay *delay_node = spdk_io_channel_iter_get_io_device(i);
 	int rc;
 
