@@ -29,9 +29,7 @@ remaining_pollers+=$(jq -r '.timed_pollers[].name' <<< $app_thread)
 
 # Since bdev_aio created pollers were already unregistered, so
 # remaining_pollers should be same with native_pollers.
-if [[ "$remaining_pollers" != "$native_pollers" ]]; then
-	return 1
-fi
+[[ "$remaining_pollers" == "$native_pollers" ]]
 
 trap - SIGINT SIGTERM EXIT
 killprocess $intr_tgt_pid
