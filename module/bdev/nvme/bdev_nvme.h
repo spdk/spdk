@@ -223,6 +223,8 @@ struct spdk_bdev_nvme_opts {
 	uint64_t nvme_ioq_poll_period_us;
 	uint32_t io_queue_requests;
 	bool delay_cmd_submit;
+	/* The number of attempts per I/O in the bdev layer before an I/O fails. */
+	int32_t bdev_retry_count;
 };
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);

@@ -2787,6 +2787,7 @@ nvme_ioq_poll_period_us    | Optional | number      | How often I/O queues are p
 io_queue_requests          | Optional | number      | The number of requests allocated for each NVMe I/O queue. Default: 512.
 delay_cmd_submit           | Optional | boolean     | Enable delaying NVMe command submission to allow batching of multiple commands. Default: `true`.
 transport_retry_count      | Optional | number      | The number of attempts per I/O in the transport layer before an I/O fails.
+bdev_retry_count           | Optional | number      | The number of attempts per I/O in the bdev layer before an I/O fails. -1 means infinite retries.
 
 #### Example
 

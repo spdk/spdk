@@ -467,7 +467,8 @@ if __name__ == "__main__":
                                        nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us,
                                        io_queue_requests=args.io_queue_requests,
                                        delay_cmd_submit=args.delay_cmd_submit,
-                                       transport_retry_count=args.transport_retry_count)
+                                       transport_retry_count=args.transport_retry_count,
+                                       bdev_retry_count=args.bdev_retry_count)
 
     p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -500,6 +501,9 @@ if __name__ == "__main__":
                    action='store_false', dest='delay_cmd_submit', default=True)
     p.add_argument('-c', '--transport-retry-count',
                    help='the number of attempts per I/O in the transport layer when an I/O fails.', type=int)
+    p.add_argument('-r', '--bdev-retry-count',
+                   help='the number of attempts per I/O in the bdev layer when an I/O fails. -1 means infinite retries.', type=int)
+
     p.set_defaults(func=bdev_nvme_set_options)
 
     def bdev_nvme_set_hotplug(args):

@@ -4014,6 +4014,8 @@ test_retry_io_for_io_path_error(void)
 	ut_init_trid(&path1.trid);
 	ut_init_trid2(&path2.trid);
 
+	g_opts.bdev_retry_count = 1;
+
 	set_thread(0);
 
 	g_ut_attach_ctrlr_status = 0;
@@ -4192,6 +4194,202 @@ test_retry_io_for_io_path_error(void)
 	poll_threads();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+
+	g_opts.bdev_retry_count = 0;
+}
+
+static void
+test_retry_io_count(void)
+{
+	struct nvme_path_id path = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct nvme_ns *nvme_ns;
+	struct spdk_bdev_io *bdev_io;
+	struct nvme_bdev_io *bio;
+	struct spdk_io_channel *ch;
+	struct nvme_bdev_channel *nbdev_ch;
+	struct nvme_io_path *io_path;
+	struct nvme_ctrlr_channel *ctrlr_ch;
+	struct ut_nvme_req *req;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path.trid);
+
+	set_thread(0);
+
+	ctrlr = ut_attach_ctrlr(&path.trid, 1, false, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	rc = bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL, false);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path.trid);
+	CU_ASSERT(nvme_ctrlr != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	CU_ASSERT(bdev != NULL);
+
+	nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
+	CU_ASSERT(nvme_ns != NULL);
+
+	bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, NULL);
+	ut_bdev_io_set_buf(bdev_io);
+
+	bio = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	nbdev_ch = spdk_io_channel_get_ctx(ch);
+
+	io_path = ut_get_io_path_by_ctrlr(nbdev_ch, nvme_ctrlr);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	ctrlr_ch = io_path->ctrlr_ch;
+	SPDK_CU_ASSERT_FATAL(ctrlr_ch != NULL);
+	SPDK_CU_ASSERT_FATAL(ctrlr_ch->qpair != NULL);
+
+	bdev_io->internal.ch = (struct spdk_bdev_channel *)ch;
+
+	/* If I/O is aborted by request, it should not be retried. */
+	g_opts.bdev_retry_count = 1;
+
+	bdev_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, bdev_io);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 1);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(ctrlr_ch->qpair, bio);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == false);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
+
+	/* If bio->retry_count is not less than g_opts.bdev_retry_count,
+	 * the failed I/O should not be retried.
+	 */
+	g_opts.bdev_retry_count = 4;
+
+	bdev_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, bdev_io);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 1);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(ctrlr_ch->qpair, bio);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	bio->retry_count = 4;
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == false);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR);
+
+	/* If g_opts.bdev_retry_count is -1, the failed I/O always should be retried. */
+	g_opts.bdev_retry_count = -1;
+
+	bdev_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, bdev_io);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 1);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(ctrlr_ch->qpair, bio);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	bio->retry_count = 4;
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
+
+	poll_threads();
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == false);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* If bio->retry_count is less than g_opts.bdev_retry_count,
+	 * the failed I/O should be retried.
+	 */
+	g_opts.bdev_retry_count = 4;
+
+	bdev_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, bdev_io);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 1);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(ctrlr_ch->qpair, bio);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	bio->retry_count = 3;
+
+	poll_thread_times(0, 1);
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == true);
+	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
+
+	poll_threads();
+
+	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(bdev_io->internal.in_submit_request == false);
+	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(bdev_io);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+
+	g_opts.bdev_retry_count = 0;
 }
 
 int
@@ -4229,6 +4427,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_find_io_path);
 	CU_ADD_TEST(suite, test_retry_io_if_ctrlr_is_resetting);
 	CU_ADD_TEST(suite, test_retry_io_for_io_path_error);
+	CU_ADD_TEST(suite, test_retry_io_count);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

@@ -107,6 +107,9 @@ struct nvme_bdev_io {
 
 	/** Expiration value in ticks to retry the current I/O. */
 	uint64_t retry_ticks;
+
+	/* How many times the current I/O was retried. */
+	int32_t retry_count;
 };
 
 struct nvme_probe_ctx {
@@ -140,6 +143,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.nvme_ioq_poll_period_us = 0,
 	.io_queue_requests = 0,
 	.delay_cmd_submit = SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT,
+	.bdev_retry_count = 0,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -833,12 +837,16 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev_channel *nbdev_ch;
+	struct nvme_ctrlr *nvme_ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	uint64_t delay_ms;
 
 	if (spdk_likely(spdk_nvme_cpl_is_success(cpl))) {
 		goto complete;
 	}
 
-	if (cpl->status.dnr != 0 || bdev_nvme_io_type_is_admin(bdev_io->type)) {
+	if (cpl->status.dnr != 0 || bdev_nvme_io_type_is_admin(bdev_io->type) ||
+	    (g_opts.bdev_retry_count != -1 && bio->retry_count >= g_opts.bdev_retry_count)) {
 		goto complete;
 	}
 
@@ -850,13 +858,29 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
 	    !nvme_io_path_is_available(bio->io_path) ||
 	    nvme_io_path_is_failed(bio->io_path)) {
-		if (any_io_path_may_become_available(nbdev_ch)) {
-			bdev_nvme_queue_retry_io(nbdev_ch, bio, 0);
-			return;
+		delay_ms = 0;
+	} else if (spdk_nvme_cpl_is_aborted_by_request(cpl)) {
+		goto complete;
+	} else {
+		bio->retry_count++;
+
+		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(bio->io_path->ctrlr_ch);
+		cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+
+		if (cpl->status.crd != 0) {
+			delay_ms = cdata->crdt[cpl->status.crd] * 100;
+		} else {
+			delay_ms = 0;
 		}
 	}
 
+	if (any_io_path_may_become_available(nbdev_ch)) {
+		bdev_nvme_queue_retry_io(nbdev_ch, bio, delay_ms);
+		return;
+	}
+
 complete:
+	bio->retry_count = 0;
 	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 
@@ -889,6 +913,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 		break;
 	}
 
+	bio->retry_count = 0;
 	spdk_bdev_io_complete(bdev_io, io_status);
 }
 
@@ -3191,6 +3216,11 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 		return -EINVAL;
 	}
 
+	if (opts->bdev_retry_count < -1) {
+		SPDK_WARNLOG("Invalid option: bdev_retry_count can't be less than -1.\n");
+		return -EINVAL;
+	}
+
 	return 0;
 }
 
@@ -4662,6 +4692,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "nvme_ioq_poll_period_us", g_opts.nvme_ioq_poll_period_us);
 	spdk_json_write_named_uint32(w, "io_queue_requests", g_opts.io_queue_requests);
 	spdk_json_write_named_bool(w, "delay_cmd_submit", g_opts.delay_cmd_submit);
+	spdk_json_write_named_int32(w, "bdev_retry_count", g_opts.bdev_retry_count);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
