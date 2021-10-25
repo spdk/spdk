@@ -931,6 +931,26 @@ _nvmf_ctrlr_destruct(void *ctx)
 }
 
 static void
+_nvmf_transport_qpair_fini_complete(void *cb_ctx)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = cb_ctx;
+
+	if (qpair_ctx->cb_fn) {
+		spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+	}
+	free(qpair_ctx);
+}
+
+static void
+_nvmf_transport_qpair_fini(void *ctx)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+
+	spdk_nvmf_poll_group_remove(qpair_ctx->qpair);
+	nvmf_transport_qpair_fini(qpair_ctx->qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
+}
+
+static void
 _nvmf_ctrlr_free_from_qpair(void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
@@ -941,47 +961,11 @@ _nvmf_ctrlr_free_from_qpair(void *ctx)
 	count = spdk_bit_array_count_set(ctrlr->qpair_mask);
 	if (count == 0) {
 		assert(!ctrlr->in_destruct);
-		SPDK_DEBUGLOG(nvmf, "Last qpair %u, destroy ctrlr %hx\n", qpair_ctx->qid, ctrlr->cntlid);
 		ctrlr->in_destruct = true;
 		spdk_thread_send_msg(ctrlr->subsys->thread, _nvmf_ctrlr_destruct, ctrlr);
 	}
-	free(qpair_ctx);
-}
 
-static void
-_nvmf_transport_qpair_fini_complete(void *cb_ctx)
-{
-	struct nvmf_qpair_disconnect_ctx *qpair_ctx = cb_ctx;
-	struct spdk_nvmf_ctrlr *ctrlr;
-	/* Store cb args since cb_ctx can be freed in _nvmf_ctrlr_free_from_qpair */
-	nvmf_qpair_disconnect_cb cb_fn = qpair_ctx->cb_fn;
-	void *cb_arg = qpair_ctx->ctx;
-	struct spdk_thread *cb_thread = qpair_ctx->thread;
-
-	ctrlr = qpair_ctx->ctrlr;
-
-	SPDK_DEBUGLOG(nvmf, "Finish destroying qid %u\n", qpair_ctx->qid);
-
-	if (ctrlr) {
-		if (qpair_ctx->qid == 0) {
-			/* Admin qpair is removed, so set the pointer to NULL.
-			 * This operation is safe since we are on ctrlr thread now, admin qpair's thread is the same
-			 * as controller's thread */
-			ctrlr->admin_qpair = NULL;
-		}
-		/* Free qpair id from controller's bit mask and destroy the controller if it is the last qpair */
-		if (ctrlr->thread) {
-			spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_free_from_qpair, qpair_ctx);
-		} else {
-			_nvmf_ctrlr_free_from_qpair(qpair_ctx);
-		}
-	} else {
-		free(qpair_ctx);
-	}
-
-	if (cb_fn) {
-		spdk_thread_send_msg(cb_thread, cb_fn, cb_arg);
-	}
+	spdk_thread_send_msg(qpair_ctx->thread, _nvmf_transport_qpair_fini, qpair_ctx);
 }
 
 void
@@ -1042,9 +1026,14 @@ _nvmf_qpair_destroy(void *ctx, int status)
 		}
 	}
 
+	if (!ctrlr || !ctrlr->thread) {
+		spdk_nvmf_poll_group_remove(qpair);
+		nvmf_transport_qpair_fini(qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
+		return;
+	}
+
 	qpair_ctx->ctrlr = ctrlr;
-	spdk_nvmf_poll_group_remove(qpair);
-	nvmf_transport_qpair_fini(qpair, _nvmf_transport_qpair_fini_complete, qpair_ctx);
+	spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_free_from_qpair, qpair_ctx);
 }
 
 static void
