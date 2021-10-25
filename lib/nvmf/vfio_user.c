@@ -555,6 +555,12 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 	struct nvmf_vfio_user_transport *vu_transport;
 	int err;
 
+	if (opts->max_qpairs_per_ctrlr > NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
+		SPDK_ERRLOG("Invalid max_qpairs_per_ctrlr=%d, supported max_qpairs_per_ctrlr=%d\n",
+			    opts->max_qpairs_per_ctrlr, NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR);
+		return NULL;
+	}
+
 	vu_transport = calloc(1, sizeof(*vu_transport));
 	if (vu_transport == NULL) {
 		SPDK_ERRLOG("Transport alloc fail: %m\n");
@@ -1098,14 +1104,15 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	int err = 0;
 	struct nvmf_vfio_user_qpair *vu_qpair;
 	struct nvme_q *io_q;
+	struct nvmf_vfio_user_transport *vu_transport = ctrlr->transport;
 
 	assert(ctrlr != NULL);
 	assert(cmd != NULL);
 
 	qid = cmd->cdw10_bits.create_io_q.qid;
-	if (qid == 0 || qid >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
+	if (qid == 0 || qid >= vu_transport->transport.opts.max_qpairs_per_ctrlr) {
 		SPDK_ERRLOG("%s: invalid QID=%d, max=%d\n", ctrlr_id(ctrlr),
-			    qid, NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR);
+			    qid, vu_transport->transport.opts.max_qpairs_per_ctrlr);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		goto out;
