@@ -25,17 +25,28 @@ install_shfmt() {
 	local shfmt_dir_out=${SHFMT_DIR_OUT:-/usr/bin}
 	local shfmt_url
 	local os
+	local arch
 
 	if hash "$shfmt" && [[ $("$shfmt" --version) == "v$shfmt_version" ]]; then
 		echo "$shfmt already installed"
 		return 0
 	fi 2> /dev/null
 
+	arch=$(uname -m)
 	os=$(uname -s)
 
+	case "$arch" in
+		x86_64) arch="amd64" ;;
+		aarch64) arch="arm" ;;
+		*)
+			echo "Not supported arch (${arch:-Unknown}), skipping"
+			return 0
+			;;
+	esac
+
 	case "$os" in
-		Linux) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_linux_amd64 ;;
-		FreeBSD) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_freebsd_amd64 ;;
+		Linux) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_linux_${arch} ;;
+		FreeBSD) shfmt_url=https://github.com/mvdan/sh/releases/download/v$shfmt_version/shfmt_v${shfmt_version}_freebsd_${arch} ;;
 		*)
 			echo "Not supported OS (${os:-Unknown}), skipping"
 			return 0
