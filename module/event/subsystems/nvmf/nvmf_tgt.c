@@ -48,8 +48,9 @@ enum nvmf_tgt_state {
 	NVMF_TGT_INIT_START_SUBSYSTEMS,
 	NVMF_TGT_RUNNING,
 	NVMF_TGT_FINI_STOP_SUBSYSTEMS,
+	NVMF_TGT_FINI_DESTROY_SUBSYSTEMS,
 	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
-	NVMF_TGT_FINI_FREE_RESOURCES,
+	NVMF_TGT_FINI_DESTROY_TARGET,
 	NVMF_TGT_STOPPED,
 	NVMF_TGT_ERROR,
 };
@@ -93,7 +94,7 @@ nvmf_shutdown_cb(void *arg1)
 
 	if (g_tgt_state == NVMF_TGT_ERROR) {
 		/* Parse configuration error */
-		g_tgt_state = NVMF_TGT_FINI_FREE_RESOURCES;
+		g_tgt_state = NVMF_TGT_FINI_DESTROY_TARGET;
 	} else {
 		g_tgt_state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 	}
@@ -112,7 +113,7 @@ _nvmf_tgt_destroy_poll_group_done(void *ctx)
 	assert(g_num_poll_groups > 0);
 
 	if (--g_num_poll_groups == 0) {
-		g_tgt_state = NVMF_TGT_FINI_FREE_RESOURCES;
+		g_tgt_state = NVMF_TGT_FINI_DESTROY_TARGET;
 		nvmf_tgt_advance_state();
 	}
 }
@@ -263,6 +264,33 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 			nvmf_tgt_subsystem_stopped(subsystem, NULL, 0);
 		}
 		return;
+	}
+
+	g_tgt_state = NVMF_TGT_FINI_DESTROY_SUBSYSTEMS;
+	nvmf_tgt_advance_state();
+}
+
+static void
+_nvmf_tgt_subsystem_destroy(void *cb_arg)
+{
+	struct spdk_nvmf_subsystem *subsystem, *next_subsystem;
+	int rc;
+
+	subsystem = spdk_nvmf_subsystem_get_first(g_spdk_nvmf_tgt);
+
+	while (subsystem != NULL) {
+		next_subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+		rc = spdk_nvmf_subsystem_destroy(subsystem, _nvmf_tgt_subsystem_destroy, NULL);
+		if (rc) {
+			if (rc == -EINPROGRESS) {
+				/* If ret is -EINPROGRESS, nvmf_tgt_subsystem_destroyed will be called when subsystem
+				 * is destroyed, _nvmf_tgt_subsystem_destroy will continue to destroy other subsystems if any */
+				return;
+			} else {
+				SPDK_ERRLOG("Unable to destroy NVMe-oF subsystem, rc %d. Trying others.\n", rc);
+			}
+		}
+		subsystem = next_subsystem;
 	}
 
 	g_tgt_state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
@@ -455,15 +483,20 @@ nvmf_tgt_advance_state(void)
 					nvmf_tgt_subsystem_stopped(subsystem, NULL, 0);
 				}
 			} else {
-				g_tgt_state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
+				g_tgt_state = NVMF_TGT_FINI_DESTROY_SUBSYSTEMS;
 			}
 			break;
 		}
+		case NVMF_TGT_FINI_DESTROY_SUBSYSTEMS:
+			_nvmf_tgt_subsystem_destroy(NULL);
+			/* Function above can be asynchronous, it will call nvmf_tgt_advance_state() once done.
+			 * So just return here */
+			return;
 		case NVMF_TGT_FINI_DESTROY_POLL_GROUPS:
 			/* Send a message to each poll group thread, and terminate the thread */
 			nvmf_tgt_destroy_poll_groups();
 			break;
-		case NVMF_TGT_FINI_FREE_RESOURCES:
+		case NVMF_TGT_FINI_DESTROY_TARGET:
 			spdk_nvmf_tgt_destroy(g_spdk_nvmf_tgt, nvmf_tgt_destroy_done, NULL);
 			break;
 		case NVMF_TGT_STOPPED:
