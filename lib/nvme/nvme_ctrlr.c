@@ -43,7 +43,6 @@
 
 struct nvme_active_ns_ctx;
 
-static void nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr);
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 static void nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx);
@@ -2412,13 +2411,11 @@ out:
 	}
 }
 
-static int nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr);
-
 static void
 _nvme_active_ns_ctx_deleter(struct nvme_active_ns_ctx *ctx)
 {
-	int rc;
 	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
+	struct spdk_nvme_ns *ns;
 
 	if (ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
 		nvme_active_ns_ctx_destroy(ctx);
@@ -2428,12 +2425,10 @@ _nvme_active_ns_ctx_deleter(struct nvme_active_ns_ctx *ctx)
 
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
 
-	rc = nvme_ctrlr_construct_namespaces(ctrlr);
-	if (rc) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Unable to construct namespace array!\n");
-		nvme_active_ns_ctx_destroy(ctx);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-		return;
+	ctrlr->num_ns = ctrlr->cdata.nn;
+
+	RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
+		nvme_ns_free_iocs_specific_data(ns);
 	}
 
 	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list, ctx->page_count * 1024);
@@ -3004,20 +2999,6 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-static void
-nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
-{
-	struct spdk_nvme_ns *ns, *tmp_ns;
-
-	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
-		nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
-		RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
-		spdk_free(ns);
-	}
-
-	ctrlr->num_ns = 0;
-}
-
 void
 nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -3029,20 +3010,6 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		nvme_ns_construct(ns, nsid, ctrlr);
 	}
-}
-
-static int
-nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
-{
-	struct spdk_nvme_ns *ns;
-
-	ctrlr->num_ns = ctrlr->cdata.nn;
-
-	RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
-		nvme_ns_free_iocs_specific_data(ns);
-	}
-
-	return 0;
 }
 
 static int
@@ -4192,6 +4159,7 @@ int
 nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 			       struct nvme_ctrlr_detach_ctx *ctx)
 {
+	struct spdk_nvme_ns *ns, *tmp_ns;
 	int rc = 0;
 
 	if (!ctx->shutdown_complete) {
@@ -4206,7 +4174,13 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		ctx->cb_fn(ctrlr);
 	}
 
-	nvme_ctrlr_destruct_namespaces(ctrlr);
+	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
+		nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
+		RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
+		spdk_free(ns);
+	}
+
+	ctrlr->num_ns = 0;
 	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = NULL;
 	ctrlr->active_ns_count = 0;
