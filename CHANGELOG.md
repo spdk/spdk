@@ -1,5 +1,7 @@
 # Changelog
 
+## v21.10.1: (Upcoming Release)
+
 ## v21.10: DMA lib, Async NVMe driver, Container scripts
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify
