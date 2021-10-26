@@ -2481,13 +2481,9 @@ nvmf_vfio_user_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_vfio_user_qpair *vu_qpair;
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
-	struct nvmf_vfio_user_endpoint *endpoint;
 	struct nvmf_vfio_user_poll_group *vu_group;
 
 	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
-	vu_ctrlr = vu_qpair->ctrlr;
-	endpoint = vu_ctrlr->endpoint;
 
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: remove NVMf QP%d=%p from NVMf poll_group=%p\n",
@@ -2496,10 +2492,6 @@ nvmf_vfio_user_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 
 	vu_group = SPDK_CONTAINEROF(group, struct nvmf_vfio_user_poll_group, group);
 	TAILQ_REMOVE(&vu_group->qps, vu_qpair, link);
-
-	pthread_mutex_lock(&endpoint->lock);
-	TAILQ_REMOVE(&vu_ctrlr->connected_qps, vu_qpair, tailq);
-	pthread_mutex_unlock(&endpoint->lock);
 
 	return 0;
 }
@@ -2558,10 +2550,17 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 			   spdk_nvmf_transport_qpair_fini_cb cb_fn, void *cb_arg)
 {
 	struct nvmf_vfio_user_qpair *vu_qpair;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
 
 	assert(qpair != NULL);
 	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
-	free_qp(vu_qpair->ctrlr, qpair->qid);
+	vu_ctrlr = vu_qpair->ctrlr;
+
+	pthread_mutex_lock(&vu_ctrlr->endpoint->lock);
+	TAILQ_REMOVE(&vu_ctrlr->connected_qps, vu_qpair, tailq);
+	pthread_mutex_unlock(&vu_ctrlr->endpoint->lock);
+
+	free_qp(vu_ctrlr, qpair->qid);
 
 	if (cb_fn) {
 		cb_fn(cb_arg);
