@@ -1974,7 +1974,8 @@ nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 
 	assert(spdk_get_thread() == subsystem->thread);
 	assert(subsystem == ctrlr->subsys);
-	SPDK_DEBUGLOG(nvmf, "remove ctrlr %p from subsys %p %s\n", ctrlr, subsystem, subsystem->subnqn);
+	SPDK_DEBUGLOG(nvmf, "remove ctrlr %p id 0x%x from subsys %p %s\n", ctrlr, ctrlr->cntlid, subsystem,
+		      subsystem->subnqn);
 	TAILQ_REMOVE(&subsystem->ctrlrs, ctrlr, link);
 }
 
@@ -3154,7 +3155,7 @@ subsystem_listener_update_on_pg(struct spdk_io_channel_iter *i)
 	group = spdk_io_channel_get_ctx(spdk_io_channel_iter_get_channel(i));
 
 	TAILQ_FOREACH(ctrlr, &listener->subsystem->ctrlrs, link) {
-		if (ctrlr->admin_qpair->group == group && ctrlr->listener == listener) {
+		if (ctrlr->admin_qpair && ctrlr->admin_qpair->group == group && ctrlr->listener == listener) {
 			nvmf_ctrlr_async_event_ana_change_notice(ctrlr);
 		}
 	}

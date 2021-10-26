@@ -497,6 +497,7 @@ _nvmf_ctrlr_destruct(void *ctx)
 	assert(spdk_get_thread() == ctrlr->thread);
 	assert(ctrlr->in_destruct);
 
+	SPDK_DEBUGLOG(nvmf, "Destroy ctrlr 0x%hx\n", ctrlr->cntlid);
 	if (ctrlr->disconnect_in_progress) {
 		SPDK_ERRLOG("freeing ctrlr with disconnect in progress\n");
 		spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_destruct, ctrlr);
@@ -938,10 +939,12 @@ nvmf_ctrlr_association_remove(void *ctx)
 	SPDK_DEBUGLOG(nvmf, "Disconnecting host from subsystem %s due to association timeout.\n",
 		      ctrlr->subsys->subnqn);
 
-	rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair, NULL, NULL);
-	if (rc < 0) {
-		SPDK_ERRLOG("Fail to disconnect admin ctrlr qpair\n");
-		assert(false);
+	if (ctrlr->admin_qpair) {
+		rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair, NULL, NULL);
+		if (rc < 0) {
+			SPDK_ERRLOG("Fail to disconnect admin ctrlr qpair\n");
+			assert(false);
+		}
 	}
 
 	return SPDK_POLLER_BUSY;
@@ -2501,6 +2504,7 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 
 	nvmf_bdev_ctrlr_identify_ns(ns, nsdata, ctrlr->dif_insert_or_strip);
 
+	assert(ctrlr->admin_qpair);
 	/* Due to bug in the Linux kernel NVMe driver we have to set noiob no larger than mdts */
 	max_num_blocks = ctrlr->admin_qpair->transport->opts.max_io_size /
 			 (1U << nsdata->lbaf[nsdata->flbas.format].lbads);
@@ -2556,11 +2560,13 @@ int
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
-	struct spdk_nvmf_transport *transport = ctrlr->admin_qpair->transport;
+	struct spdk_nvmf_transport *transport;
 
 	/*
 	 * Common fields for discovery and NVM subsystems
 	 */
+	assert(ctrlr->admin_qpair);
+	transport = ctrlr->admin_qpair->transport;
 	spdk_strcpy_pad(cdata->fr, FW_VERSION, sizeof(cdata->fr), ' ');
 	assert((transport->opts.max_io_size % 4096) == 0);
 	cdata->mdts = spdk_u32log2(transport->opts.max_io_size / 4096);
