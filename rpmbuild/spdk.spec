@@ -68,7 +68,7 @@ make DESTDIR=%{buildroot} install
 mkdir -p %{buildroot}/usr/local/lib/dpdk
 cp -a %{dpdk_build_path}/lib/* %{buildroot}/usr/local/lib/dpdk/
 # Special case for SPDK_RUN_EXTERNAL_DPDK setup
-[[ -e %{dpdk_path}/intel-ipsec-mb ]] && cp -a %{dpdk_path}/intel-ipsec-mb/*.so* %{buildroot}/usr/local/lib/dpdk/
+[[ -e %{dpdk_path}/intel-ipsec-mb ]] && find %{dpdk_path}/intel-ipsec-mb/ -name '*.so*' -exec cp -a {} %{buildroot}/usr/local/lib/dpdk/ ';'
 [[ -e %{dpdk_path}/isa-l/build/lib ]] && cp -a %{dpdk_path}/isa-l/build/lib/*.so* %{buildroot}/usr/local/lib/dpdk/
 %endif
 

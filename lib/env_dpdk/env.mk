@@ -78,11 +78,17 @@ DPDK_FRAMEWORK=n
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
 DPDK_LIB_LIST += rte_reorder
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_ipsec_mb.*))
+# PMD name as of DPDK 21.11
+DPDK_LIB_LIST += rte_crypto_ipsec_mb
+else
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_aesni_mb.*))
+# PMD name for DPDK 21.08 and earlier
 DPDK_LIB_LIST += rte_crypto_aesni_mb
 else
 # PMD name for DPDK 20.08 and earlier
 DPDK_LIB_LIST += rte_pmd_aesni_mb
+endif
 endif
 endif
 

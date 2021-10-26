@@ -81,6 +81,7 @@ function build_native_dpdk() {
 
 	dpdk_cflags="-fPIC -g -fcommon"
 	dpdk_ldflags=""
+	dpdk_ver=$(< "$external_dpdk_base_dir/VERSION")
 
 	if [[ $compiler == *gcc* && $compiler_version -ge 5 ]]; then
 		dpdk_cflags+=" -Werror"
@@ -98,17 +99,29 @@ function build_native_dpdk() {
 	DPDK_ALL_DRIVERS=($(find "$external_dpdk_base_dir/drivers" -mindepth 1 -type d | sed -n "s#^$external_dpdk_base_dir/drivers/##p"))
 
 	if [[ "$SPDK_TEST_CRYPTO" -eq 1 ]]; then
-		git clone --branch v0.54 --depth 1 https://github.com/intel/intel-ipsec-mb.git "$external_dpdk_base_dir/intel-ipsec-mb"
+		intel_ipsec_mb_ver=v0.54
+		intel_ipsec_mb_drv=crypto/aesni_mb
+		intel_ipsec_lib=""
+		if ge "$dpdk_ver" 21.11.0; then
+			# Minimum supported version of intel-ipsec-mb, for DPDK >= 21.11, is 1.0.
+			# Source of the aesni_mb driver was moved to ipsec_mb. .{h,so,a} were moved
+			# to ./lib.
+			# https://github.com/dpdk/dpdk/commit/918fd2f1466b0e3b21a033df7012a77a83665582.
+			intel_ipsec_mb_ver=v1.0
+			intel_ipsec_mb_drv=crypto/ipsec_mb
+			intel_ipsec_lib=lib
+		fi
+		git clone --branch "$intel_ipsec_mb_ver" --depth 1 https://github.com/intel/intel-ipsec-mb.git "$external_dpdk_base_dir/intel-ipsec-mb"
 		cd "$external_dpdk_base_dir/intel-ipsec-mb"
 		$MAKE $MAKEFLAGS all SHARED=y EXTRA_CFLAGS=-fPIC
 		DPDK_DRIVERS+=("crypto")
-		DPDK_DRIVERS+=("crypto/aesni_mb")
+		DPDK_DRIVERS+=("$intel_ipsec_mb_drv")
 		DPDK_DRIVERS+=("crypto/qat")
 		DPDK_DRIVERS+=("compress/qat")
 		DPDK_DRIVERS+=("common/qat")
-		dpdk_cflags+=" -I$external_dpdk_base_dir/intel-ipsec-mb"
-		dpdk_ldflags+=" -L$external_dpdk_base_dir/intel-ipsec-mb"
-		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$external_dpdk_base_dir/intel-ipsec-mb
+		dpdk_cflags+=" -I$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
+		dpdk_ldflags+=" -L$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
+		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
 	fi
 
 	if [[ "$SPDK_TEST_REDUCE" -eq 1 ]]; then
@@ -125,7 +138,7 @@ function build_native_dpdk() {
 		DPDK_DRIVERS+=("compress/isal")
 		DPDK_DRIVERS+=("compress/qat")
 		DPDK_DRIVERS+=("common/qat")
-		if ge "$(< "$external_dpdk_base_dir/VERSION")" 21.02.0; then
+		if ge "$dpdk_ver" 21.02.0; then
 			# SPDK enables REDUCE_MLX in case supported version of DPDK is detected
 			# so make sure proper libs are built.
 			DPDK_DRIVERS+=("bus/auxiliary")
