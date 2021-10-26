@@ -2303,10 +2303,21 @@ vfio_user_qpair_disconnect_cb(void *ctx)
 	if (TAILQ_EMPTY(&ctrlr->connected_qps)) {
 		endpoint->ctrlr = NULL;
 		free_ctrlr(ctrlr, false);
-		pthread_mutex_unlock(&endpoint->lock);
-		return;
 	}
 	pthread_mutex_unlock(&endpoint->lock);
+}
+
+static void
+_vfio_user_qpair_disconnect(void *ctx)
+{
+	struct nvmf_vfio_user_qpair *vu_qpair = ctx;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+	struct nvmf_vfio_user_endpoint *endpoint;
+
+	vu_ctrlr = vu_qpair->ctrlr;
+	endpoint = vu_ctrlr->endpoint;
+
+	spdk_nvmf_qpair_disconnect(&vu_qpair->qpair, vfio_user_qpair_disconnect_cb, endpoint);
 }
 
 static int
@@ -2329,7 +2340,8 @@ vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	}
 
 	TAILQ_FOREACH(qpair, &ctrlr->connected_qps, tailq) {
-		spdk_nvmf_qpair_disconnect(&qpair->qpair, vfio_user_qpair_disconnect_cb, endpoint);
+		/* add another round thread poll to avoid recursive endpoint lock */
+		spdk_thread_send_msg(ctrlr->thread, _vfio_user_qpair_disconnect, qpair);
 	}
 	pthread_mutex_unlock(&endpoint->lock);
 
