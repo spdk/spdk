@@ -2426,6 +2426,11 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_ctrlr *ctrlr,
 		nsdata->noiob = max_num_blocks;
 	}
 
+	/* Set NOWS equal to Controller MDTS */
+	if (nsdata->nsfeat.optperf) {
+		nsdata->nows = max_num_blocks - 1;
+	}
+
 	if (subsystem->flags.ana_reporting) {
 		assert(ns->anagrpid - 1 < subsystem->max_nsid);
 		nsdata->anagrpid = ns->anagrpid;

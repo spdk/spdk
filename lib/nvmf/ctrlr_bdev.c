@@ -190,6 +190,9 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->nsfeat.ns_atomic_write_unit = 1;
 	nsdata->npwg = (phys_blocklen >> nsdata->lbaf[0].lbads) - 1;
 	nsdata->nawupf = nsdata->npwg;
+	nsdata->npwa = nsdata->npwg;
+	nsdata->npdg = nsdata->npwg;
+	nsdata->npda = nsdata->npwg;
 
 	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 	nsdata->nmic.can_share = 1;
