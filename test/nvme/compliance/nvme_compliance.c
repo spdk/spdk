@@ -502,6 +502,40 @@ delete_io_cq(void)
 	spdk_nvme_detach(ctrlr);
 }
 
+static void
+property_get(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvmf_fabric_prop_set_cmd cmd;
+	struct status s;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
+	cmd.ofst = 0; /* CAP */
+	cmd.attrib.size = SPDK_NVMF_PROP_SIZE_8;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	/* Non-fabrics controllers should fail an SPDK_NVME_OPC_FABRIC. */
+	if (spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
+		CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+	} else {
+		CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+	}
+
+	spdk_nvme_detach(ctrlr);
+}
+
 static int
 parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 {
@@ -776,6 +810,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, delete_io_cq);
 	CU_ADD_TEST(suite, get_features);
 	CU_ADD_TEST(suite, set_features_number_of_queues);
+	CU_ADD_TEST(suite, property_get);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
