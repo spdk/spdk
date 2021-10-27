@@ -864,6 +864,9 @@ struct spdk_nvme_ctrlr {
 	/* Tree of namespaces */
 	RB_HEAD(nvme_ns_tree, spdk_nvme_ns)	ns;
 
+	/* The number of active namespaces */
+	uint32_t			active_ns_count;
+
 	bool				is_removed;
 
 	bool				is_resetting;
@@ -945,11 +948,6 @@ struct spdk_nvme_ctrlr {
 	 * Zoned Namespace Command Set Specific Identify Controller data.
 	 */
 	struct spdk_nvme_zns_ctrlr_data	*cdata_zns;
-
-	/**
-	 * Keep track of active namespaces
-	 */
-	uint32_t			active_ns_count;
 
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
