@@ -33,6 +33,7 @@
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "spdk/log.h"
+#include "spdk/util.h"
 #include "spdk/nvme.h"
 
 static struct spdk_nvme_transport_id g_trid;
@@ -774,6 +775,54 @@ get_features(void)
 	spdk_nvme_detach(ctrlr);
 }
 
+static void
+create_max_io_qpairs(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_cmd cmd;
+	struct spdk_nvme_io_qpair_opts opts;
+	struct spdk_nvme_qpair *qpair;
+	struct status s;
+	uint32_t ncqr, nsqr, i, num_of_queues;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	/* Number of Queues */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+	nsqr = s.cpl.cdw0 & 0xffffu;
+	ncqr = (s.cpl.cdw0 & 0xffff0000u) >> 16;
+
+	num_of_queues = spdk_min(nsqr, ncqr) + 1;
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	/* choose a small value to save memory */
+	opts.io_queue_size = 2;
+
+	/* create all the IO queue pairs, valid */
+	for (i = 0; i < num_of_queues; i++) {
+		qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+		CU_ASSERT(qpair != NULL);
+	}
+
+	/* create one more, invalid */
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+	CU_ASSERT(qpair == NULL);
+
+	spdk_nvme_detach(ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	struct spdk_env_opts	opts;
@@ -811,6 +860,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, get_features);
 	CU_ADD_TEST(suite, set_features_number_of_queues);
 	CU_ADD_TEST(suite, property_get);
+	CU_ADD_TEST(suite, create_max_io_qpairs);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
