@@ -2200,8 +2200,13 @@ get_position_for_window(uint64_t window_size, uint64_t max_size)
 }
 
 static void
-print_bottom_error_message(char *msg)
+print_bottom_message(char *msg)
 {
+	uint64_t i;
+
+	for (i = 1; i < (uint64_t)g_max_col - 1; i++) {
+		mvprintw(g_max_row - 1, i, " ");
+	}
 	mvprintw(g_max_row - 1, g_max_col - strlen(msg) - 2, "%s", msg);
 }
 
@@ -2616,16 +2621,16 @@ data_thread_routine(void *arg)
 		 * Start with cores since their number should not change. */
 		rc = get_cores_data();
 		if (rc) {
-			print_bottom_error_message("ERROR occurred while getting cores data");
+			print_bottom_message("ERROR occurred while getting cores data");
 		}
 		rc = get_thread_data();
 		if (rc) {
-			print_bottom_error_message("ERROR occurred while getting threads data");
+			print_bottom_message("ERROR occurred while getting threads data");
 		}
 
 		rc = get_pollers_data();
 		if (rc) {
-			print_bottom_error_message("ERROR occurred while getting pollers data");
+			print_bottom_message("ERROR occurred while getting pollers data");
 		}
 
 		usleep(g_sleep_time * SPDK_SEC_TO_USEC);
