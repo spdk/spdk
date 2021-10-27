@@ -1259,7 +1259,7 @@ nvmf_property_get(struct spdk_nvmf_request *req)
 		size = 8;
 		break;
 	default:
-		SPDK_ERRLOG("Invalid size value %d\n", cmd->attrib.size);
+		SPDK_DEBUGLOG(nvmf, "Invalid size value %d\n", cmd->attrib.size);
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -1317,7 +1317,7 @@ nvmf_property_set(struct spdk_nvmf_request *req)
 		size = 8;
 		break;
 	default:
-		SPDK_ERRLOG("Invalid size value %d\n", cmd->attrib.size);
+		SPDK_DEBUGLOG(nvmf, "Invalid size value %d\n", cmd->attrib.size);
 		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2299,7 +2299,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	uint8_t lid;
 
 	if (req->data == NULL) {
-		SPDK_ERRLOG("get log command with no buffer\n");
+		SPDK_DEBUGLOG(nvmf, "get log command with no buffer\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2685,7 +2685,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 
 	if (req->data == NULL || req->length < 4096) {
-		SPDK_ERRLOG("identify command with invalid buffer\n");
+		SPDK_DEBUGLOG(nvmf, "identify command with invalid buffer\n");
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
