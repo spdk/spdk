@@ -100,7 +100,7 @@ uint32_t g_ut_nsid;
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return ctrlr->num_ns;
+	return ctrlr->cdata.nn;
 }
 
 uint32_t
@@ -112,7 +112,7 @@ spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 uint32_t
 spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	if (nsid > ctrlr->num_ns) {
+	if (nsid > ctrlr->cdata.nn) {
 		return 0;
 	}
 
@@ -146,7 +146,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
-	if (nsid < 1 || nsid > ctrlr->num_ns) {
+	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
 		return NULL;
 	}
 
@@ -272,7 +272,7 @@ test_nvme_cuse_get_cuse_ns_device(void)
 	struct cuse_device ns_device = { .nsid = 1 };
 	struct cuse_device *cuse_dev = NULL;
 
-	ctrlr.num_ns = 3;
+	ctrlr.cdata.nn = 3;
 	ctrlr_device.ctrlr = &ctrlr;
 	TAILQ_INIT(&ctrlr_device.ns_devices);
 	TAILQ_INSERT_TAIL(&ctrlr_device.ns_devices, &ns_device, tailq);
@@ -314,7 +314,7 @@ test_cuse_nvme_submit_io(void)
 	RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns);
 
 	cuse_device.ctrlr = &ctrlr;
-	ctrlr.num_ns = 1;
+	ctrlr.cdata.nn = 1;
 	ns.sector_size = 4096;
 	ns.id = 1;
 	user_io->slba = 1024;
@@ -408,7 +408,7 @@ test_nvme_cuse_stop(void)
 
 	TAILQ_INSERT_TAIL(&ctrlr_device->ns_devices, ns_dev1, tailq);
 	TAILQ_INSERT_TAIL(&ctrlr_device->ns_devices, ns_dev2, tailq);
-	ctrlr.num_ns = 2;
+	ctrlr.cdata.nn = 2;
 	ctrlr_device->ctrlr = &ctrlr;
 	pthread_mutex_init(&g_cuse_mtx, NULL);
 	TAILQ_INSERT_TAIL(&g_ctrlr_ctx_head, ctrlr_device, tailq);

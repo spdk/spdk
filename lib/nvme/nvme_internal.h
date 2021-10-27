@@ -518,6 +518,7 @@ struct spdk_nvme_ns {
 	uint32_t			sectors_per_stripe;
 	uint32_t			id;
 	uint16_t			flags;
+	bool				active;
 
 	/* Command Set Identifier */
 	enum spdk_nvme_csi		csi;
@@ -863,8 +864,6 @@ struct spdk_nvme_ctrlr {
 	/* Tree of namespaces */
 	RB_HEAD(nvme_ns_tree, spdk_nvme_ns)	ns;
 
-	uint32_t			num_ns;
-
 	bool				is_removed;
 
 	bool				is_resetting;
@@ -951,7 +950,6 @@ struct spdk_nvme_ctrlr {
 	 * Keep track of active namespaces
 	 */
 	uint32_t			active_ns_count;
-	uint32_t			*active_ns_list;
 
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;

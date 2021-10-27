@@ -2230,6 +2230,7 @@ nvme_ctrlr_destruct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	}
 
 	nvme_ns_destruct(ns);
+	ns->active = false;
 
 	return 0;
 }
@@ -2239,7 +2240,7 @@ nvme_ctrlr_construct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct spdk_nvme_ns *ns;
 
-	if (nsid < 1 || nsid > ctrlr->num_ns) {
+	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
 		return -EINVAL;
 	}
 
@@ -2249,45 +2250,44 @@ nvme_ctrlr_construct_namespace(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		return -ENOMEM;
 	}
 
+	ns->active = true;
+
 	return 0;
 }
 
 static void
-nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t **new_ns_list,
+nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_ns_list,
 				   size_t max_entries)
 {
 	uint32_t active_ns_count = 0;
 	size_t i;
-	uint32_t nsid, n;
+	uint32_t nsid;
+	struct spdk_nvme_ns *ns, *tmp_ns;
 	int rc;
 
 	/* First, remove namespaces that no longer exist */
-	for (i = 0; i < ctrlr->active_ns_count; i++) {
-		nsid = ctrlr->active_ns_list[i];
-
-		assert(nsid != 0);
-
-		n = (*new_ns_list)[0];
+	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
+		nsid = new_ns_list[0];
 		active_ns_count = 0;
-		while (n != 0) {
-			if (n == nsid) {
+		while (nsid != 0) {
+			if (nsid == ns->id) {
 				break;
 			}
 
-			n = (*new_ns_list)[active_ns_count++];
+			nsid = new_ns_list[active_ns_count++];
 		}
 
-		if (n != nsid) {
+		if (nsid != ns->id) {
 			/* Did not find this namespace id in the new list. */
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", nsid);
-			nvme_ctrlr_destruct_namespace(ctrlr, nsid);
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", ns->id);
+			nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
 		}
 	}
 
 	/* Next, add new namespaces */
 	active_ns_count = 0;
 	for (i = 0; i < max_entries; i++) {
-		nsid = (*new_ns_list)[active_ns_count];
+		nsid = new_ns_list[active_ns_count];
 
 		if (nsid == 0) {
 			break;
@@ -2305,10 +2305,7 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t **new
 		active_ns_count++;
 	}
 
-	spdk_free(ctrlr->active_ns_list);
-	ctrlr->active_ns_list = *new_ns_list;
 	ctrlr->active_ns_count = active_ns_count;
-	*new_ns_list = NULL;
 }
 
 static void
@@ -2425,13 +2422,11 @@ _nvme_active_ns_ctx_deleter(struct nvme_active_ns_ctx *ctx)
 
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
 
-	ctrlr->num_ns = ctrlr->cdata.nn;
-
 	RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
 		nvme_ns_free_iocs_specific_data(ns);
 	}
 
-	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list, ctx->page_count * 1024);
+	nvme_ctrlr_identify_active_ns_swap(ctrlr, ctx->new_ns_list, ctx->page_count * 1024);
 	nvme_active_ns_ctx_destroy(ctx);
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS, ctrlr->opts.admin_timeout_ms);
 }
@@ -2478,7 +2473,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
-	nvme_ctrlr_identify_active_ns_swap(ctrlr, &ctx->new_ns_list, ctx->page_count * 1024);
+	nvme_ctrlr_identify_active_ns_swap(ctrlr, ctx->new_ns_list, ctx->page_count * 1024);
 	nvme_active_ns_ctx_destroy(ctx);
 
 	return 0;
@@ -4180,9 +4175,6 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_free(ns);
 	}
 
-	ctrlr->num_ns = 0;
-	spdk_free(ctrlr->active_ns_list);
-	ctrlr->active_ns_list = NULL;
 	ctrlr->active_ns_count = 0;
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
@@ -4384,62 +4376,65 @@ spdk_nvme_ctrlr_get_pmrsz(struct spdk_nvme_ctrlr *ctrlr)
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return ctrlr->num_ns;
-}
-
-static int32_t
-nvme_ctrlr_active_ns_idx(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
-{
-	int32_t result = -1;
-
-	if (ctrlr->active_ns_list == NULL ||
-	    ctrlr->active_ns_count == 0 ||
-	    nsid == 0 ||
-	    nsid > ctrlr->cdata.nn) {
-		return result;
-	}
-
-	int32_t lower = 0;
-	int32_t upper = ctrlr->active_ns_count - 1;
-	int32_t mid;
-
-	while (lower <= upper) {
-		mid = lower + (upper - lower) / 2;
-		if (ctrlr->active_ns_list[mid] == nsid) {
-			result = mid;
-			break;
-		} else {
-			if (ctrlr->active_ns_list[mid] != 0 && ctrlr->active_ns_list[mid] < nsid) {
-				lower = mid + 1;
-			} else {
-				upper = mid - 1;
-			}
-
-		}
-	}
-
-	return result;
+	return ctrlr->cdata.nn;
 }
 
 bool
 spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	return nvme_ctrlr_active_ns_idx(ctrlr, nsid) != -1;
+	struct spdk_nvme_ns tmp, *ns;
+
+	tmp.id = nsid;
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
+
+	if (ns != NULL) {
+		return ns->active;
+	}
+
+	return false;
 }
 
 uint32_t
 spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return ctrlr->active_ns_list ? ctrlr->active_ns_list[0] : 0;
+	struct spdk_nvme_ns *ns;
+
+	ns = RB_MIN(nvme_ns_tree, &ctrlr->ns);
+	if (ns == NULL) {
+		return 0;
+	}
+
+	while (ns != NULL) {
+		if (ns->active) {
+			return ns->id;
+		}
+
+		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+	}
+
+	return 0;
 }
 
 uint32_t
 spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
-	int32_t nsid_idx = nvme_ctrlr_active_ns_idx(ctrlr, prev_nsid);
-	if (nsid_idx >= 0 && (uint32_t)(nsid_idx + 1) < ctrlr->active_ns_count) {
-		return ctrlr->active_ns_list[nsid_idx + 1];
+	struct spdk_nvme_ns tmp, *ns;
+
+	tmp.id = prev_nsid;
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
+	if (ns == NULL) {
+		return 0;
 	}
+
+	ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+	while (ns != NULL) {
+		if (ns->active) {
+			return ns->id;
+		}
+
+		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+	}
+
 	return 0;
 }
 
@@ -4449,7 +4444,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
-	if (nsid < 1 || nsid > ctrlr->num_ns) {
+	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
 		return NULL;
 	}
 
@@ -4625,12 +4620,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	}
 	free(status);
 
-	res = nvme_ctrlr_identify_active_ns(ctrlr);
-	if (res) {
-		return res;
-	}
-
-	return nvme_ctrlr_destruct_namespace(ctrlr, nsid);
+	return nvme_ctrlr_identify_active_ns(ctrlr);
 }
 
 uint32_t
@@ -4698,12 +4688,7 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	}
 	free(status);
 
-	res = nvme_ctrlr_identify_active_ns(ctrlr);
-	if (res) {
-		return res;
-	}
-
-	return nvme_ctrlr_destruct_namespace(ctrlr, nsid);
+	return nvme_ctrlr_identify_active_ns(ctrlr);
 }
 
 int

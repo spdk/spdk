@@ -75,7 +75,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
-	if (nsid < 1 || nsid > ctrlr->num_ns) {
+	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
 		return NULL;
 	}
 
@@ -140,7 +140,7 @@ test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 	ns.nsdata.vendor_specific[0] = 1;
 	ctrlr.quirks |= NVME_QUIRK_OCSSD;
 	ctrlr.cdata.vid = SPDK_PCI_VID_CNEXLABS;
-	ctrlr.num_ns = 1;
+	ctrlr.cdata.nn = 1;
 
 	rc = spdk_nvme_ctrlr_is_ocssd_supported(&ctrlr);
 	CU_ASSERT(rc == true);
@@ -152,7 +152,7 @@ test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 	CU_ASSERT(rc == false);
 
 	/* NS count is 0. */
-	ctrlr.num_ns = 0;
+	ctrlr.cdata.nn = 0;
 
 	rc = spdk_nvme_ctrlr_is_ocssd_supported(&ctrlr);
 	CU_ASSERT(rc == false);

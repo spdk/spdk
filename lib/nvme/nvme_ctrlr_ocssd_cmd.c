@@ -46,9 +46,15 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 		 * Current QEMU OpenChannel Device needs to check nsdata->vs[0].
 		 * Here check nsdata->vs[0] of the first namespace.
 		 */
-		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS && ctrlr->num_ns) {
+		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS) {
 			uint32_t nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-			struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			struct spdk_nvme_ns *ns;
+
+			if (nsid == 0) {
+				return false;
+			}
+
+			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 
 			if (ns && ns->nsdata.vendor_specific[0] == 0x1) {
 				return true;

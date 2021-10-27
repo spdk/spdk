@@ -384,7 +384,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
-	if (nsid < 1 || nsid > ctrlr->num_ns) {
+	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
 		return NULL;
 	}
 
