@@ -449,6 +449,8 @@ void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
  * the host to send a subsequent AER.
  */
 void nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
+int nvmf_ctrlr_save_aers(struct spdk_nvmf_ctrlr *ctrlr, uint16_t *aer_cids,
+			 uint16_t max_aers);
 
 /*
  * Abort zero-copy requests that already got the buffer (received zcopy_start cb), but haven't
