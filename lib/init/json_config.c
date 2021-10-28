@@ -41,6 +41,7 @@
 #include "spdk/thread.h"
 #include "spdk/jsonrpc.h"
 #include "spdk/rpc.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/event.h"
 
@@ -528,7 +529,8 @@ app_json_config_read(const char *config_file, struct load_json_config_ctx *ctx)
 
 	json = read_file(config_file, &json_size);
 	if (!json) {
-		SPDK_ERRLOG("Read JSON configuration file %s failed\n", config_file);
+		SPDK_ERRLOG("Read JSON configuration file %s failed: %s\n",
+			    config_file, spdk_strerror(errno));
 		return -errno;
 	}
 
