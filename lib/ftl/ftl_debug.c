@@ -94,7 +94,7 @@ ftl_band_validate_md(struct ftl_band *band)
 void
 ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 {
-	size_t i, total = 0;
+	size_t i;
 
 	if (!dev->bands) {
 		return;
@@ -112,7 +112,6 @@ ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 			continue;
 		}
 
-		total += dev->bands[i].lba_map.num_vld;
 		ftl_debug(" Band %3zu: %8zu / %zu \tnum_zones: %zu \twr_cnt: %"PRIu64"\tmerit:"
 			  "%10.3f\tstate: %s\n",
 			  i + 1, dev->bands[i].lba_map.num_vld,
