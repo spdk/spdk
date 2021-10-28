@@ -630,7 +630,6 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 	uint64_t pd_lba;
 	uint64_t pd_blocks;
 	uint32_t index = 0;
-	uint8_t *buf = bdev_io->u.bdev.iovs->iov_base;
 	struct io_output *output;
 
 	if (io_status == INVALID_IO_SUBMIT) {
@@ -666,7 +665,6 @@ verify_io(struct spdk_bdev_io *bdev_io, uint8_t num_base_drives,
 		CU_ASSERT(ch_ctx->base_channel[pd_idx] == output->ch);
 		CU_ASSERT(raid_bdev->base_bdev_info[pd_idx].desc == output->desc);
 		CU_ASSERT(bdev_io->type == output->iotype);
-		buf += (pd_blocks << spdk_u32log2(g_block_len));
 	}
 	CU_ASSERT(g_io_comp_status == io_status);
 }
