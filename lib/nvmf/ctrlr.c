@@ -1903,6 +1903,25 @@ nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+int
+nvmf_ctrlr_save_aers(struct spdk_nvmf_ctrlr *ctrlr, uint16_t *aer_cids,
+		     uint16_t max_aers)
+{
+	struct spdk_nvmf_request *req;
+	uint16_t i;
+
+	if (!aer_cids || max_aers < ctrlr->nr_aer_reqs) {
+		return -EINVAL;
+	}
+
+	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
+		req = ctrlr->aer_req[i];
+		aer_cids[i] = req->cmd->nvme_cmd.cid;
+	}
+
+	return ctrlr->nr_aer_reqs;
+}
+
 static int
 nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
