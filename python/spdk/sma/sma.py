@@ -28,18 +28,44 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
         self._server.start()
         self._server.wait_for_termination()
 
-    def _find_device(self, name):
+    def _find_device_by_name(self, name):
         return self._devices.get(name)
+
+    def _find_device_by_handle(self, handle):
+        for device in self._devices.values():
+            try:
+                if device.owns_device(handle):
+                    return device
+            except NotImplementedError:
+                pass
+        return None
 
     @_grpc_method
     def CreateDevice(self, request, context):
         response = pb2.CreateDeviceResponse()
         try:
-            manager = self._find_device(request.WhichOneof('params'))
+            manager = self._find_device_by_name(request.WhichOneof('params'))
             if manager is None:
                 raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
                                       'Unsupported device type')
             response = manager.create_device(request)
+        except DeviceException as ex:
+            context.set_details(ex.message)
+            context.set_code(ex.code)
+        except NotImplementedError:
+            context.set_details('Method is not implemented by selected device type')
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return response
+
+    @_grpc_method
+    def DeleteDevice(self, request, context):
+        response = pb2.DeleteDeviceResponse()
+        try:
+            device = self._find_device_by_handle(request.handle)
+            if device is None:
+                raise DeviceException(grpc.StatusCode.NOT_FOUND,
+                                      'Invalid device handle')
+            device.delete_device(request)
         except DeviceException as ex:
             context.set_details(ex.message)
             context.set_code(ex.code)

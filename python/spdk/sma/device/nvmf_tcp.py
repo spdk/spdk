@@ -50,6 +50,9 @@ class NvmfTcpDeviceManager(DeviceManager):
             a['traddr'].lower() == addr['traddr'].lower() and
             a['trsvcid'].lower() == addr['trsvcid'].lower()), addrlist), None) is not None
 
+    def _get_nqn_from_handle(self, handle):
+        return handle[len('nvmf-tcp:'):]
+
     @_check_transport
     def create_device(self, request):
         params = request.nvmf_tcp
@@ -104,3 +107,22 @@ class NvmfTcpDeviceManager(DeviceManager):
                                       'Failed to create NVMe/TCP device')
 
         return sma_pb2.CreateDeviceResponse(handle=f'nvmf-tcp:{params.subnqn}')
+
+    @_check_transport
+    def delete_device(self, request):
+        with self._client() as client:
+            nqn = self._get_nqn_from_handle(request.handle)
+            subsystems = client.call('nvmf_get_subsystems')
+            for subsystem in subsystems:
+                if subsystem['nqn'] == nqn:
+                    result = client.call('nvmf_delete_subsystem',
+                                         {'nqn': nqn})
+                    if not result:
+                        raise DeviceException(grpc.StatusCode.INTERNAL,
+                                              'Failed to delete device')
+                    break
+            else:
+                logging.info(f'Tried to delete a non-existing device: {nqn}')
+
+    def owns_device(self, handle):
+        return handle.startswith('nvmf-tcp')
