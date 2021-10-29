@@ -150,7 +150,7 @@ struct nvme_migr_device_state {
 
 	uint16_t	reserved2[3];
 	uint16_t	nr_aers;
-	uint16_t	aer_cids[256];
+	uint16_t	aer_cids[NVMF_MIGR_MAX_PENDING_AERS];
 
 	/* Controller private data offset and length if exist, starting at
 	 * the beginning of this data structure.
@@ -390,6 +390,7 @@ vfio_user_migr_data_len(void)
 	len = NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * (sizeof(struct nvme_migr_sq_state) + sizeof(
 				struct nvme_migr_cq_state));
 	len += sizeof(struct nvme_migr_device_state);
+	len += sizeof(struct nvmf_ctrlr_migr_data);
 	len += NVME_REG_BAR0_SIZE;
 	len += NVME_REG_CFG_SIZE;
 	/* BAR4 */

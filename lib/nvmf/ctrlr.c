@@ -1922,6 +1922,51 @@ nvmf_ctrlr_save_aers(struct spdk_nvmf_ctrlr *ctrlr, uint16_t *aer_cids,
 	return ctrlr->nr_aer_reqs;
 }
 
+int
+nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data)
+{
+	uint32_t num_async_events = 0;
+	struct spdk_nvmf_async_event_completion *event, *event_tmp;
+
+	memcpy(&data->feat, &ctrlr->feat, sizeof(struct spdk_nvmf_ctrlr_feat));
+	data->cntlid = ctrlr->cntlid;
+	data->acre_enabled = ctrlr->acre_enabled;
+	data->notice_aen_mask = ctrlr->notice_aen_mask;
+
+	STAILQ_FOREACH_SAFE(event, &ctrlr->async_events, link, event_tmp) {
+		data->async_events[num_async_events++].raw = event->event.raw;
+		if (num_async_events == NVMF_MIGR_MAX_PENDING_AERS) {
+			SPDK_ERRLOG("%p has too many pending AERs\n", ctrlr);
+			break;
+		}
+	}
+	data->num_async_events = num_async_events;
+
+	return 0;
+}
+
+int
+nvmf_ctrlr_restore_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data)
+{
+	struct spdk_nvmf_async_event_completion *event;
+	uint32_t i;
+
+	memcpy(&ctrlr->feat, &data->feat, sizeof(struct spdk_nvmf_ctrlr_feat));
+	ctrlr->acre_enabled = data->acre_enabled;
+	ctrlr->notice_aen_mask = data->notice_aen_mask;
+
+	for (i = 0; i < data->num_async_events; i++) {
+		event = calloc(1, sizeof(struct spdk_nvmf_async_event_completion));
+		if (!event) {
+			return -ENOMEM;
+		}
+		event->event.raw = data->async_events[i].raw;
+		STAILQ_INSERT_TAIL(&ctrlr->async_events, event, link);
+	}
+
+	return 0;
+}
+
 static int
 nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
