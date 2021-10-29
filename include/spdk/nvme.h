@@ -387,6 +387,14 @@ enum spdk_nvme_transport_type {
 	SPDK_NVME_TRANSPORT_CUSTOM = 4096,
 };
 
+static inline bool spdk_nvme_trtype_is_fabrics(enum spdk_nvme_transport_type trtype)
+{
+	/* We always define non-fabrics trtypes outside of the 8-bit range
+	 * of NVMe-oF trtype.
+	 */
+	return trtype <= UINT8_MAX;
+}
+
 /* typedef added for coding style reasons */
 typedef enum spdk_nvme_transport_type spdk_nvme_transport_type_t;
 

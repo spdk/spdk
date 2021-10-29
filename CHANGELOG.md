@@ -2,6 +2,11 @@
 
 ## v22.01: (Upcoming Release)
 
+### nvme
+
+API `spdk_nvme_trtype_is_fabrics` was added to return existing transport type
+is fabric or not.
+
 ### bdev
 
 The parameter `retry_count` of the RPC `bdev_nvme_set_options` was deprecated and will be

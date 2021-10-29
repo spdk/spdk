@@ -5039,10 +5039,7 @@ spdk_nvme_ctrlr_is_fabrics(struct spdk_nvme_ctrlr *ctrlr)
 {
 	assert(ctrlr);
 
-	/* We always define non-fabrics trtypes outside of the 8-bit range
-	 * of NVMe-oF trtype.
-	 */
-	return ctrlr->trid.trtype < UINT8_MAX;
+	return spdk_nvme_trtype_is_fabrics(ctrlr->trid.trtype);
 }
 
 int
