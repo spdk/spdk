@@ -275,6 +275,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "vhost" ./test/vhost/vhost.sh
 	fi
 
+	if [ $SPDK_TEST_VFIOUSER_QEMU -eq 1 ]; then
+		run_test "vfio_user_qemu" ./test/vfio_user/vfio_user.sh
+	fi
+
 	if [ $SPDK_TEST_LVOL -eq 1 ]; then
 		run_test "lvol" ./test/lvol/lvol.sh
 		run_test "blob_io_wait" ./test/blobstore/blob_io_wait/blob_io_wait.sh

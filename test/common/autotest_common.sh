@@ -101,6 +101,8 @@ export SPDK_TEST_NVME_CUSE
 export SPDK_TEST_NVMF
 : ${SPDK_TEST_VFIOUSER=0}
 export SPDK_TEST_VFIOUSER
+: ${SPDK_TEST_VFIOUSER_QEMU=0}
+export SPDK_TEST_VFIOUSER_QEMU
 : ${SPDK_TEST_NVMF_TRANSPORT="rdma"}
 export SPDK_TEST_NVMF_TRANSPORT
 : ${SPDK_TEST_RBD=0}
@@ -450,7 +452,7 @@ function get_config_params() {
 		config_params+=' --with-raid5'
 	fi
 
-	if [ $SPDK_TEST_VFIOUSER -eq 1 ]; then
+	if [ $SPDK_TEST_VFIOUSER -eq 1 ] || [ $SPDK_TEST_VFIOUSER_QEMU -eq 1 ]; then
 		config_params+=' --with-vfio-user'
 	fi
 
