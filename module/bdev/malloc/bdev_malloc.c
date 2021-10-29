@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -361,6 +362,7 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
 	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
 	spdk_json_write_named_string(w, "uuid", uuid_str);
+	spdk_json_write_named_uint32(w, "optimal_io_boundary", bdev->optimal_io_boundary);
 
 	spdk_json_write_object_end(w);
 
@@ -377,7 +379,7 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 
 int
 create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
-		   uint64_t num_blocks, uint32_t block_size)
+		   uint64_t num_blocks, uint32_t block_size, uint32_t optimal_io_boundary)
 {
 	struct malloc_disk	*mdisk;
 	int rc;
@@ -428,6 +430,10 @@ create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
 	mdisk->disk.blockcnt = num_blocks;
+	if (optimal_io_boundary) {
+		mdisk->disk.optimal_io_boundary = optimal_io_boundary;
+		mdisk->disk.split_on_optimal_io_boundary = true;
+	}
 	if (uuid) {
 		mdisk->disk.uuid = *uuid;
 	} else {

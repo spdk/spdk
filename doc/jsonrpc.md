@@ -2496,6 +2496,7 @@ name                    | Optional | string      | Bdev name to use
 block_size              | Required | number      | Block size in bytes -must be multiple of 512
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
+optimal_io_boundary     | Optional | number      | Split on optimal IO boundary, in number of blocks, default 0
 
 #### Result
 
@@ -2511,7 +2512,8 @@ Example request:
     "block_size": 4096,
     "num_blocks": 16384,
     "name": "Malloc0",
-    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90"
+    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90",
+    "optimal_io_boundary": 16
   },
   "jsonrpc": "2.0",
   "method": "bdev_malloc_create",

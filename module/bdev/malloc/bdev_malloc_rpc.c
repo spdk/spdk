@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -43,6 +44,7 @@ struct rpc_construct_malloc {
 	char *uuid;
 	uint64_t num_blocks;
 	uint32_t block_size;
+	uint32_t optimal_io_boundary;
 };
 
 static void
@@ -57,6 +59,7 @@ static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 	{"uuid", offsetof(struct rpc_construct_malloc, uuid), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
+	{"optimal_io_boundary", offsetof(struct rpc_construct_malloc, optimal_io_boundary), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -94,7 +97,8 @@ rpc_bdev_malloc_create(struct spdk_jsonrpc_request *request,
 		uuid = &decoded_uuid;
 	}
 
-	rc = create_malloc_disk(&bdev, req.name, uuid, req.num_blocks, req.block_size);
+	rc = create_malloc_disk(&bdev, req.name, uuid, req.num_blocks, req.block_size,
+				req.optimal_io_boundary);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

@@ -341,7 +341,8 @@ if __name__ == "__main__":
                                                num_blocks=int(num_blocks),
                                                block_size=args.block_size,
                                                name=args.name,
-                                               uuid=args.uuid))
+                                               uuid=args.uuid,
+                                               optimal_io_boundary=args.optimal_io_boundary))
     p = subparsers.add_parser('bdev_malloc_create', aliases=['construct_malloc_bdev'],
                               help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
@@ -349,6 +350,8 @@ if __name__ == "__main__":
     p.add_argument(
         'total_size', help='Size of malloc bdev in MB (float > 0)', type=float)
     p.add_argument('block_size', help='Block size for this bdev', type=int)
+    p.add_argument('-o', '--optimal-io-boundary', help="""Split on optimal IO boundary, in number of
+    blocks, default 0 (disabled)""", type=int)
     p.set_defaults(func=bdev_malloc_create)
 
     def bdev_malloc_delete(args):
