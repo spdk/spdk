@@ -1250,12 +1250,30 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_reset_controller_req_
 	{"name", offsetof(struct rpc_bdev_nvme_reset_controller_req, name), spdk_json_decode_string},
 };
 
-static void
-_rpc_bdev_nvme_reset_controller_cb(void *cb_arg, bool success)
-{
-	struct spdk_jsonrpc_request *request = cb_arg;
+struct rpc_bdev_nvme_reset_controller_ctx {
+	struct spdk_jsonrpc_request *request;
+	bool success;
+	struct spdk_thread *orig_thread;
+};
 
-	spdk_jsonrpc_send_bool_response(request, success);
+static void
+_rpc_bdev_nvme_reset_controller_cb(void *_ctx)
+{
+	struct rpc_bdev_nvme_reset_controller_ctx *ctx = _ctx;
+
+	spdk_jsonrpc_send_bool_response(ctx->request, ctx->success);
+
+	free(ctx);
+}
+
+static void
+rpc_bdev_nvme_reset_controller_cb(void *cb_arg, bool success)
+{
+	struct rpc_bdev_nvme_reset_controller_ctx *ctx = cb_arg;
+
+	ctx->success = success;
+
+	spdk_thread_send_msg(ctx->orig_thread, _rpc_bdev_nvme_reset_controller_cb, ctx);
 }
 
 static void
@@ -1263,32 +1281,49 @@ rpc_bdev_nvme_reset_controller(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_reset_controller_req req = {NULL};
+	struct rpc_bdev_nvme_reset_controller_ctx *ctx;
 	struct nvme_ctrlr *nvme_ctrlr;
 	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Memory allocation failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation failed");
+		return;
+	}
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_reset_controller_req_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_reset_controller_req_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(EINVAL));
-		goto cleanup;
+		goto err;
 	}
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name(req.name);
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed at device lookup\n");
 		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-		goto cleanup;
+		goto err;
 	}
 
-	rc = bdev_nvme_reset_rpc(nvme_ctrlr, _rpc_bdev_nvme_reset_controller_cb, request);
+	ctx->request = request;
+	ctx->orig_thread = spdk_get_thread();
+
+	rc = bdev_nvme_reset_rpc(nvme_ctrlr, rpc_bdev_nvme_reset_controller_cb, ctx);
 	if (rc != 0) {
 		SPDK_NOTICELOG("Failed at bdev_nvme_reset_rpc\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(-rc));
+		goto err;
 	}
 
-cleanup:
 	free_rpc_bdev_nvme_reset_controller_req(&req);
+	return;
+
+err:
+	free_rpc_bdev_nvme_reset_controller_req(&req);
+	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_reset_controller", rpc_bdev_nvme_reset_controller, SPDK_RPC_RUNTIME)
 
