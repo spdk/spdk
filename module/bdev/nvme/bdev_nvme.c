@@ -515,10 +515,8 @@ nvme_ctrlr_unregister_cb(void *io_device)
 }
 
 static void
-nvme_ctrlr_unregister(void *ctx)
+nvme_ctrlr_unregister(struct nvme_ctrlr *nvme_ctrlr)
 {
-	struct nvme_ctrlr *nvme_ctrlr = ctx;
-
 	spdk_io_device_unregister(nvme_ctrlr, nvme_ctrlr_unregister_cb);
 }
 
@@ -1217,6 +1215,8 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 	void *reset_cb_arg = nvme_ctrlr->reset_cb_arg;
 	bool complete_pending_destruct = false;
 
+	assert(nvme_ctrlr->thread == spdk_get_thread());
+
 	nvme_ctrlr->reset_cb_fn = NULL;
 	nvme_ctrlr->reset_cb_arg = NULL;
 
@@ -1249,8 +1249,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 	}
 
 	if (complete_pending_destruct) {
-		spdk_thread_send_msg(nvme_ctrlr->thread, nvme_ctrlr_unregister,
-				     nvme_ctrlr);
+		nvme_ctrlr_unregister(nvme_ctrlr);
 	}
 }
 
@@ -1343,6 +1342,23 @@ bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, 0);
 }
 
+static void
+_bdev_nvme_reset(void *ctx)
+{
+	struct nvme_ctrlr *nvme_ctrlr = ctx;
+
+	assert(nvme_ctrlr->resetting == true);
+	assert(nvme_ctrlr->thread == spdk_get_thread());
+
+	spdk_nvme_ctrlr_prepare_for_reset(nvme_ctrlr->ctrlr);
+
+	/* First, delete all NVMe I/O queue pairs. */
+	spdk_for_each_channel(nvme_ctrlr,
+			      bdev_nvme_reset_destroy_qpair,
+			      NULL,
+			      bdev_nvme_reset_ctrlr);
+}
+
 static int
 bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 {
@@ -1360,14 +1376,8 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 
 	nvme_ctrlr->resetting = true;
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-	spdk_nvme_ctrlr_prepare_for_reset(nvme_ctrlr->ctrlr);
 
-	/* First, delete all NVMe I/O queue pairs. */
-	spdk_for_each_channel(nvme_ctrlr,
-			      bdev_nvme_reset_destroy_qpair,
-			      NULL,
-			      bdev_nvme_reset_ctrlr);
-
+	spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
 	return 0;
 }
 
@@ -1563,11 +1573,7 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 	rc = bdev_nvme_failover_start(nvme_ctrlr, remove);
 	if (rc == 0) {
-		/* First, delete all NVMe I/O queue pairs. */
-		spdk_for_each_channel(nvme_ctrlr,
-				      bdev_nvme_reset_destroy_qpair,
-				      NULL,
-				      bdev_nvme_reset_ctrlr);
+		spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
 	} else if (rc != -EALREADY) {
 		return rc;
 	}
