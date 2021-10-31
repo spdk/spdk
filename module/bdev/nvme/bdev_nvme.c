@@ -90,6 +90,7 @@ struct nvme_bdev_io {
 
 	/** Saved status for admin passthru completion event, PI error verification, or intermediate compare-and-write status */
 	struct spdk_nvme_cpl cpl;
+
 	/** Extended IO opts passed by the user to bdev layer and mapped to NVME format */
 	struct spdk_nvme_ns_cmd_ext_io_opts ext_opts;
 
@@ -1386,11 +1387,11 @@ bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, voi
 static int _bdev_nvme_reset_io(struct nvme_io_path *io_path, struct nvme_bdev_io *bio);
 
 static void
-bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio, bool success)
+bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio)
 {
 	enum spdk_bdev_io_status io_status;
 
-	if (success) {
+	if (bio->cpl.cdw0 == 0) {
 		io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	} else {
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
@@ -1400,16 +1401,16 @@ bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio, bool success)
 }
 
 static void
-bdev_nvme_reset_io_continue(void *cb_arg, bool success)
+_bdev_nvme_reset_io_continue(void *ctx)
 {
-	struct nvme_bdev_io *bio = cb_arg;
+	struct nvme_bdev_io *bio = ctx;
 	struct nvme_io_path *prev_io_path, *next_io_path;
 	int rc;
 
 	prev_io_path = bio->io_path;
 	bio->io_path = NULL;
 
-	if (!success) {
+	if (bio->cpl.cdw0 != 0) {
 		goto complete;
 	}
 
@@ -1423,10 +1424,20 @@ bdev_nvme_reset_io_continue(void *cb_arg, bool success)
 		return;
 	}
 
-	success = false;
+	bio->cpl.cdw0 = 1;
 
 complete:
-	bdev_nvme_reset_io_complete(bio, success);
+	bdev_nvme_reset_io_complete(bio);
+}
+
+static void
+bdev_nvme_reset_io_continue(void *cb_arg, bool success)
+{
+	struct nvme_bdev_io *bio = cb_arg;
+
+	bio->cpl.cdw0 = !success;
+
+	spdk_thread_send_msg(bio->orig_thread, _bdev_nvme_reset_io_continue, bio);
 }
 
 static int
@@ -1469,6 +1480,9 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 	struct nvme_io_path *io_path;
 	int rc;
 
+	bio->cpl.cdw0 = 0;
+	bio->orig_thread = spdk_get_thread();
+
 	/* Reset only the first nvme_ctrlr in the nvme_bdev_ctrlr for now.
 	 *
 	 * TODO: Reset all nvme_ctrlrs in the nvme_bdev_ctrlr sequentially.
@@ -1479,7 +1493,8 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 
 	rc = _bdev_nvme_reset_io(io_path, bio);
 	if (rc != 0) {
-		bdev_nvme_reset_io_complete(bio, false);
+		bio->cpl.cdw0 = 1;
+		bdev_nvme_reset_io_complete(bio);
 	}
 }
 

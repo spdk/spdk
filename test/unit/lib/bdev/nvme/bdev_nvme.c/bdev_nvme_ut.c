@@ -3680,7 +3680,7 @@ test_reset_bdev_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr1->resetting == true);
 	poll_thread_times(1, 1);
 	CU_ASSERT(nvme_ctrlr1->resetting == true);
-	poll_thread_times(0, 1);
+	poll_thread_times(0, 2);
 	CU_ASSERT(nvme_ctrlr1->resetting == false);
 	CU_ASSERT(curr_path1->is_failed == false);
 	CU_ASSERT(first_bio->io_path == io_path12);
@@ -3712,7 +3712,7 @@ test_reset_bdev_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr2->resetting == true);
 	poll_thread_times(1, 1);
 	CU_ASSERT(nvme_ctrlr2->resetting == true);
-	poll_thread_times(0, 1);
+	poll_thread_times(0, 2);
 	CU_ASSERT(first_bio->io_path == NULL);
 	CU_ASSERT(nvme_ctrlr2->resetting == false);
 	CU_ASSERT(curr_path2->is_failed == false);
