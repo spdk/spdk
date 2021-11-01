@@ -1240,13 +1240,20 @@ union spdk_nvme_bpinfo_register spdk_nvme_ctrlr_get_regs_bpinfo(struct spdk_nvme
 uint64_t spdk_nvme_ctrlr_get_pmrsz(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * Get the number of namespaces for the given NVMe controller.
+ * Get the maximum NSID value that will ever be used for the given controller
  *
  * This function is thread safe and can be called at any point while the
  * controller is attached to the SPDK NVMe driver.
  *
  * This is equivalent to calling spdk_nvme_ctrlr_get_data() to get the
  * spdk_nvme_ctrlr_data and then reading the nn field.
+ *
+ * The NN field in the NVMe specification represents the maximum value that a
+ * namespace ID can ever have. Prior to NVMe 1.2, this was also the number of
+ * active namespaces, but from 1.2 onward the list of namespaces may be
+ * sparsely populated. Unfortunately, the meaning of this field is often
+ * misinterpreted by drive manufacturers and NVMe-oF implementers so it is
+ * not considered reliable. AVOID USING THIS FUNCTION WHENEVER POSSIBLE.
  *
  * \param ctrlr Opaque handle to NVMe controller.
  *
