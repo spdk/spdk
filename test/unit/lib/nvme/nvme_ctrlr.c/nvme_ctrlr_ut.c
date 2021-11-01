@@ -2118,14 +2118,18 @@ test_nvme_ctrlr_test_active_ns(void)
 		nsid = spdk_nvme_ctrlr_get_first_active_ns(&ctrlr);
 		CU_ASSERT(nsid == 1);
 
-		ctrlr.active_ns_list[1] = 3;
-		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1) == true);
-		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 2) == false);
-		CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 3) == true);
-		nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
-		CU_ASSERT(nsid == 3);
-		nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
-		CU_ASSERT(nsid == 0);
+		if (minor >= 2) {
+			/* For NVMe 1.2 and newer, the namespace list can have "holes" where
+			 * some namespaces are not active. Test this. */
+			ctrlr.active_ns_list[1] = 3;
+			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 1) == true);
+			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 2) == false);
+			CU_ASSERT(spdk_nvme_ctrlr_is_active_ns(&ctrlr, 3) == true);
+			nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
+			CU_ASSERT(nsid == 3);
+			nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
+			CU_ASSERT(nsid == 0);
+		}
 
 		memset(ctrlr.active_ns_list, 0, sizeof(uint32_t) * ctrlr.num_ns);
 		for (nsid = 0; nsid < ctrlr.num_ns; nsid++) {
