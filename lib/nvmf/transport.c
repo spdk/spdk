@@ -699,7 +699,7 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	 *  Fail it.
 	 */
 	num_buffers = SPDK_CEIL_DIV(length, io_unit_size);
-	if (num_buffers + req->iovcnt > NVMF_REQ_MAX_BUFFERS) {
+	if (num_buffers > NVMF_REQ_MAX_BUFFERS) {
 		return -EINVAL;
 	}
 
