@@ -32,7 +32,7 @@ $rpc_py nvmf_create_transport -t $TEST_TRANSPORT
 mkdir -p $traddr
 
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b malloc0
-$rpc_py nvmf_create_subsystem $nqn -a -s spdk
+$rpc_py nvmf_create_subsystem $nqn -a -s spdk -m 32
 $rpc_py nvmf_subsystem_add_ns $nqn malloc0
 $rpc_py nvmf_subsystem_add_listener $nqn -t $TEST_TRANSPORT -a $traddr -s 0
 

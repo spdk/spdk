@@ -35,6 +35,7 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/nvme.h"
+#include "spdk/string.h"
 
 static struct spdk_nvme_transport_id g_trid;
 static const char *g_trid_str;
@@ -823,6 +824,97 @@ create_max_io_qpairs(void)
 	spdk_nvme_detach(ctrlr);
 }
 
+static void
+identify_ns(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_cmd cmd;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	struct spdk_nvme_ns_data *ns_data;
+	uint32_t i, active_nsid, inactive_nsid;
+	struct status s;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	/* Find active NSID and inactive NSID if exist */
+	active_nsid = inactive_nsid = 0;
+	for (i = 1; i <= cdata->nn; i++) {
+		if (spdk_nvme_ctrlr_is_active_ns(ctrlr, i)) {
+			active_nsid = i;
+		} else {
+			inactive_nsid = i;
+		}
+
+		if (active_nsid && inactive_nsid) {
+			break;
+		}
+	}
+
+	ns_data = spdk_dma_zmalloc(sizeof(*ns_data), 0x1000, NULL);
+	SPDK_CU_ASSERT_FATAL(ns_data != NULL);
+
+	/* NSID is 0, invalid */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.nsid = 0;
+	cmd.cdw10_bits.identify.cns = SPDK_NVME_IDENTIFY_NS;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, ns_data,
+					   sizeof(*ns_data), test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+
+	/* NSID is 0xffffffff, up to OACS can support NS MANAGE or not */
+	cmd.nsid = 0xffffffff;
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, ns_data,
+					   sizeof(*ns_data), test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	if (!cdata->oacs.ns_manage) {
+		CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
+	} else {
+		CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+	}
+
+	/* NSID is active, valid */
+	if (active_nsid) {
+		cmd.nsid = active_nsid;
+		s.done = false;
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, ns_data,
+						   sizeof(*ns_data), test_cb, &s);
+		CU_ASSERT(rc == 0);
+
+		wait_for_admin_completion(&s, ctrlr);
+		CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+	}
+
+	/* NSID is inactive, valid and should contain zeroed data */
+	if (inactive_nsid) {
+		memset(ns_data, 0x5A, sizeof(*ns_data));
+		cmd.nsid = inactive_nsid;
+		s.done = false;
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, ns_data,
+						   sizeof(*ns_data), test_cb, &s);
+		CU_ASSERT(rc == 0);
+
+		wait_for_admin_completion(&s, ctrlr);
+		CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+		CU_ASSERT(spdk_mem_all_zero(ns_data, sizeof(*ns_data)));
+	}
+
+	spdk_dma_free(ns_data);
+	spdk_nvme_detach(ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	struct spdk_env_opts	opts;
@@ -861,6 +953,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, set_features_number_of_queues);
 	CU_ADD_TEST(suite, property_get);
 	CU_ADD_TEST(suite, create_max_io_qpairs);
+	CU_ADD_TEST(suite, identify_ns);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
