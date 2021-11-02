@@ -720,7 +720,7 @@ nvme_ctrlr_alloc_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t ana_log_page_size;
 
 	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + ctrlr->cdata.nanagrpid *
-			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->max_active_ns_idx *
+			    sizeof(struct spdk_nvme_ana_group_descriptor) + ctrlr->active_ns_count *
 			    sizeof(uint32_t);
 
 	/* Number of active namespaces may have changed.
@@ -2142,18 +2142,20 @@ static void
 nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t **new_ns_list,
 				   size_t max_entries)
 {
-	uint32_t max_active_ns_idx = 0;
+	uint32_t active_ns_count = 0;
 	size_t i;
 
 	for (i = 0; i < max_entries; i++) {
-		if ((*new_ns_list)[max_active_ns_idx++] == 0) {
+		if ((*new_ns_list)[active_ns_count] == 0) {
 			break;
 		}
+
+		active_ns_count++;
 	}
 
 	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = *new_ns_list;
-	ctrlr->max_active_ns_idx = max_active_ns_idx;
+	ctrlr->active_ns_count = active_ns_count;
 	*new_ns_list = NULL;
 }
 
@@ -4098,7 +4100,7 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr_destruct_namespaces(ctrlr);
 	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = NULL;
-	ctrlr->max_active_ns_idx = 0;
+	ctrlr->active_ns_count = 0;
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
@@ -4307,12 +4309,15 @@ nvme_ctrlr_active_ns_idx(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	int32_t result = -1;
 
-	if (ctrlr->active_ns_list == NULL || nsid == 0 || nsid > ctrlr->cdata.nn) {
+	if (ctrlr->active_ns_list == NULL ||
+	    ctrlr->active_ns_count == 0 ||
+	    nsid == 0 ||
+	    nsid > ctrlr->cdata.nn) {
 		return result;
 	}
 
 	int32_t lower = 0;
-	int32_t upper = ctrlr->max_active_ns_idx;
+	int32_t upper = ctrlr->active_ns_count - 1;
 	int32_t mid;
 
 	while (lower <= upper) {
@@ -4349,7 +4354,7 @@ uint32_t
 spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
 	int32_t nsid_idx = nvme_ctrlr_active_ns_idx(ctrlr, prev_nsid);
-	if (nsid_idx >= 0 && (uint32_t)nsid_idx < ctrlr->max_active_ns_idx) {
+	if (nsid_idx >= 0 && (uint32_t)(nsid_idx + 1) < ctrlr->active_ns_count) {
 		return ctrlr->active_ns_list[nsid_idx + 1];
 	}
 	return 0;

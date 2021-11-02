@@ -937,7 +937,7 @@ struct spdk_nvme_ctrlr {
 	/**
 	 * Keep track of active namespaces
 	 */
-	uint32_t			max_active_ns_idx;
+	uint32_t			active_ns_count;
 	uint32_t			*active_ns_list;
 
 	struct spdk_bit_array		*free_io_qids;

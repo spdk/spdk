@@ -2870,7 +2870,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 
 	ctrlr.ns = ns;
 	ctrlr.cdata.nn = 5;
-	ctrlr.max_active_ns_idx = 5;
+	ctrlr.active_ns_count = 5;
 	ctrlr.num_ns = 5;
 	/* case 1: No first/next active NS, move on to the next state, expect: pass */
 	prev_nsid = 0;
@@ -2971,7 +2971,7 @@ test_nvme_ctrlr_set_supported_log_pages(void)
 	ctrlr.cdata.cmic.ana_reporting = true;
 	ctrlr.cdata.lpa.celp = 1;
 	ctrlr.cdata.nanagrpid = 1;
-	ctrlr.max_active_ns_idx = 1;
+	ctrlr.active_ns_count = 1;
 
 	rc = nvme_ctrlr_set_supported_log_pages(&ctrlr);
 	CU_ASSERT(rc == 0);
@@ -3002,7 +3002,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	ctrlr.cdata.nn = 3;
 	ctrlr.cdata.nanagrpid = 3;
 	ctrlr.num_ns = 3;
-	ctrlr.max_active_ns_idx = 3;
+	ctrlr.active_ns_count = 3;
 
 	rc = nvme_ctrlr_init_ana_log_page(&ctrlr);
 	CU_ASSERT(rc == 0);
