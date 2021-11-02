@@ -62,7 +62,6 @@
 
 #define NVME_REG_CFG_SIZE       0x1000
 #define NVME_REG_BAR0_SIZE      0x4000
-#define NVME_IRQ_INTX_NUM       1
 #define NVME_IRQ_MSIX_NUM	NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR
 
 struct nvmf_vfio_user_req;
@@ -1139,6 +1138,18 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		      is_cq ? 'C' : 'S', qid, qsize);
 
 	if (is_cq) {
+		if (cmd->cdw11_bits.create_io_cq.pc != 0x1) {
+			SPDK_ERRLOG("%s: non-PC CQ not supporred\n", ctrlr_id(ctrlr));
+			sc = SPDK_NVME_SC_INVALID_FIELD;
+			goto out;
+		}
+		if (cmd->cdw11_bits.create_io_cq.iv > NVME_IRQ_MSIX_NUM - 1) {
+			SPDK_ERRLOG("%s: IV is too big\n", ctrlr_id(ctrlr));
+			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			sc = SPDK_NVME_SC_INVALID_INTERRUPT_VECTOR;
+			goto out;
+		}
+
 		err = init_qp(ctrlr, ctrlr->qp[0]->qpair.transport, qsize, qid);
 		if (err != 0) {
 			sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -1146,11 +1157,6 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		}
 
 		io_q = &ctrlr->qp[qid]->cq;
-		if (cmd->cdw11_bits.create_io_cq.pc != 0x1) {
-			SPDK_ERRLOG("%s: non-PC CQ not supporred\n", ctrlr_id(ctrlr));
-			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
-			goto out;
-		}
 		io_q->ien = cmd->cdw11_bits.create_io_cq.ien;
 		io_q->iv = cmd->cdw11_bits.create_io_cq.iv;
 		io_q->phase = true;
@@ -1173,7 +1179,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 		if (cmd->cdw11_bits.create_io_sq.pc != 0x1) {
 			SPDK_ERRLOG("%s: non-PC SQ not supported\n", ctrlr_id(ctrlr));
-			sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
+			sc = SPDK_NVME_SC_INVALID_FIELD;
 			goto out;
 		}
 		/* TODO: support shared IO CQ */
@@ -1277,6 +1283,11 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	vu_qpair = ctrlr->qp[cmd->cdw10_bits.delete_io_q.qid];
 	if (is_cq) {
+		if (vu_qpair->state == VFIO_USER_QPAIR_UNINITIALIZED) {
+			free_qp(ctrlr, cmd->cdw10_bits.delete_io_q.qid);
+			goto out;
+		}
+
 		/* SQ must have been deleted first */
 		if (vu_qpair->state != VFIO_USER_QPAIR_SQ_DELETED) {
 			SPDK_ERRLOG("%s: the associated SQ must be deleted first\n", ctrlr_id(ctrlr));
