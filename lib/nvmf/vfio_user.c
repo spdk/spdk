@@ -1884,7 +1884,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		SPDK_ERRLOG("vfu_ctx %p failed to initialize PCI\n", vfu_ctx);
 		return ret;
 	}
-	vfu_pci_set_id(vfu_ctx, 0x4e58, 0x0001, 0, 0);
+	vfu_pci_set_id(vfu_ctx, 0x4e58, 0x0001, 0x4e58, 0);
 	/*
 	 * 0x02, controller uses the NVM Express programming interface
 	 * 0x08, non-volatile memory controller
@@ -2185,6 +2185,11 @@ nvmf_vfio_user_cdata_init(struct spdk_nvmf_transport *transport,
 			  struct spdk_nvmf_subsystem *subsystem,
 			  struct spdk_nvmf_ctrlr_data *cdata)
 {
+	cdata->vid = 0x4e58;
+	cdata->ssvid = 0x4e58;
+	cdata->ieee[0] = 0x8d;
+	cdata->ieee[1] = 0x6b;
+	cdata->ieee[2] = 0x50;
 	memset(&cdata->sgls, 0, sizeof(struct spdk_nvme_cdata_sgls));
 	cdata->sgls.supported = SPDK_NVME_SGLS_SUPPORTED_DWORD_ALIGNED;
 	/* libvfio-user can only support 1 connection for now */

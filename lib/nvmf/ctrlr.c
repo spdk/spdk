@@ -305,6 +305,12 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 		      struct spdk_nvmf_ctrlr_data *cdata)
 {
 	cdata->kas = KAS_DEFAULT_VALUE;
+	cdata->vid = SPDK_PCI_VID_INTEL;
+	cdata->ssvid = SPDK_PCI_VID_INTEL;
+	/* INTEL OUI */
+	cdata->ieee[0] = 0xe4;
+	cdata->ieee[1] = 0xd2;
+	cdata->ieee[2] = 0x5c;
 	cdata->oncs.reservations = 1;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
@@ -2514,6 +2520,12 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		 */
 		cdata->oaes.discovery_log_change_notices = 1;
 	} else {
+		cdata->vid = ctrlr->cdata.vid;
+		cdata->ssvid = ctrlr->cdata.ssvid;
+		cdata->ieee[0] = ctrlr->cdata.ieee[0];
+		cdata->ieee[1] = ctrlr->cdata.ieee[1];
+		cdata->ieee[2] = ctrlr->cdata.ieee[2];
+
 		/*
 		 * NVM subsystem fields (reserved for discovery subsystems)
 		 */
