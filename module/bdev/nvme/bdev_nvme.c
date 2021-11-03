@@ -1264,11 +1264,38 @@ bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 }
 
 static void
+bdev_nvme_reset_create_qpairs_failed(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
+
+	bdev_nvme_reset_complete(nvme_ctrlr, false);
+}
+
+static void
+bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+
+	bdev_nvme_destroy_qpair(ctrlr_ch);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
 bdev_nvme_reset_create_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
-	bdev_nvme_reset_complete(nvme_ctrlr, status == 0);
+	if (status == 0) {
+		bdev_nvme_reset_complete(nvme_ctrlr, true);
+	} else {
+		/* Delete the added qpairs and quiesce ctrlr to make the states clean. */
+		spdk_for_each_channel(nvme_ctrlr,
+				      bdev_nvme_reset_destroy_qpair,
+				      NULL,
+				      bdev_nvme_reset_create_qpairs_failed);
+	}
 }
 
 static void
@@ -1327,17 +1354,6 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 	assert(nvme_ctrlr->reset_detach_poller == NULL);
 	nvme_ctrlr->reset_detach_poller = SPDK_POLLER_REGISTER(bdev_nvme_ctrlr_reset_poll,
 					  nvme_ctrlr, 0);
-}
-
-static void
-bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
-
-	bdev_nvme_destroy_qpair(ctrlr_ch);
-
-	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
