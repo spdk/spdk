@@ -111,6 +111,35 @@ enum tabs {
 	NUMBER_OF_TABS,
 };
 
+enum column_threads_type {
+	COL_THREADS_NAME,
+	COL_THREADS_CORE,
+	COL_THREADS_ACTIVE_POLLERS,
+	COL_THREADS_TIMED_POLLERS,
+	COL_THREADS_PAUSED_POLLERS,
+	COL_THREADS_IDLE_TIME,
+	COL_THREADS_BUSY_TIME,
+};
+
+enum column_pollers_type {
+	COL_POLLERS_NAME,
+	COL_POLLERS_TYPE,
+	COL_POLLERS_THREAD_NAME,
+	COL_POLLERS_RUN_COUNTER,
+	COL_POLLERS_PERIOD,
+	COL_POLLERS_BUSY_COUNT,
+};
+
+enum column_cores_type {
+	COL_CORES_CORE,
+	COL_CORES_THREADS,
+	COL_CORES_POLLERS,
+	COL_CORES_IDLE_TIME,
+	COL_CORES_BUSY_TIME,
+	COL_CORES_CORE_FREQ,
+	COL_CORES_INTR,
+};
+
 enum spdk_poller_type {
 	SPDK_ACTIVE_POLLER,
 	SPDK_TIMED_POLLER,
@@ -147,7 +176,7 @@ PANEL *g_panels[NUMBER_OF_TABS];
 uint16_t g_max_row, g_max_col;
 uint16_t g_data_win_size, g_max_data_rows;
 uint32_t g_last_threads_count, g_last_pollers_count, g_last_cores_count;
-uint8_t g_current_sort_col[NUMBER_OF_TABS] = {0, 0, 0};
+uint8_t g_current_sort_col[NUMBER_OF_TABS] = {COL_THREADS_NAME, COL_POLLERS_NAME, COL_CORES_CORE};
 bool g_interval_data = true;
 bool g_quit_app = false;
 pthread_mutex_t g_thread_lock;
@@ -565,25 +594,25 @@ sort_threads(const void *p1, const void *p2)
 	uint64_t count1, count2;
 
 	switch (g_current_sort_col[THREADS_TAB]) {
-	case 0: /* Sort by name */
+	case COL_THREADS_NAME:
 		return strcmp(thread_info1.name, thread_info2.name);
-	case 1: /* Sort by core */
+	case COL_THREADS_CORE:
 		count2 = thread_info1.core_num;
 		count1 = thread_info2.core_num;
 		break;
-	case 2: /* Sort by active pollers number */
+	case COL_THREADS_ACTIVE_POLLERS:
 		count1 = thread_info1.active_pollers_count;
 		count2 = thread_info2.active_pollers_count;
 		break;
-	case 3: /* Sort by timed pollers number */
+	case COL_THREADS_TIMED_POLLERS:
 		count1 = thread_info1.timed_pollers_count;
 		count2 = thread_info2.timed_pollers_count;
 		break;
-	case 4: /* Sort by paused pollers number */
+	case COL_THREADS_PAUSED_POLLERS:
 		count1 = thread_info1.paused_pollers_count;
 		count2 = thread_info2.paused_pollers_count;
 		break;
-	case 5: /* Sort by idle time */
+	case COL_THREADS_IDLE_TIME:
 		if (g_interval_data) {
 			count1 = thread_info1.idle - thread_info1.last_idle;
 			count2 = thread_info2.idle - thread_info2.last_idle;
@@ -592,7 +621,7 @@ sort_threads(const void *p1, const void *p2)
 			count2 = thread_info2.idle;
 		}
 		break;
-	case 6: /* Sort by busy time */
+	case COL_THREADS_BUSY_TIME:
 		if (g_interval_data) {
 			count1 = thread_info1.busy - thread_info1.last_busy;
 			count2 = thread_info2.busy - thread_info2.last_busy;
@@ -748,11 +777,6 @@ get_last_busy_counter(const char *poller_name, uint64_t thread_id)
 	return 0;
 }
 
-enum sort_type {
-	BY_NAME,
-	USE_GLOBAL,
-};
-
 static int
 #ifdef __FreeBSD__
 sort_pollers(void *arg, const void *p1, const void *p2)
@@ -762,52 +786,46 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 {
 	const struct rpc_poller_info *poller1 = (struct rpc_poller_info *)p1;
 	const struct rpc_poller_info *poller2 = (struct rpc_poller_info *)p2;
-	enum sort_type sorting = *(enum sort_type *)arg;
+	enum column_pollers_type sorting = *(enum column_pollers_type *)arg;
 	uint64_t count1, count2;
 	uint64_t last_busy_counter1, last_busy_counter2;
 
-	if (sorting == BY_NAME) {
-		/* Sorting by name requested explicitly */
+	switch (sorting) {
+	case COL_POLLERS_NAME:
 		return strcmp(poller1->name, poller2->name);
-	} else {
-		/* Use globaly set sorting */
-		switch (g_current_sort_col[POLLERS_TAB]) {
-		case 0: /* Sort by name */
-			return strcmp(poller1->name, poller2->name);
-		case 1: /* Sort by type */
-			return poller1->type - poller2->type;
-		case 2: /* Sort by thread */
-			return strcmp(poller1->thread_name, poller2->thread_name);
-		case 3: /* Sort by run counter */
-			if (g_interval_data) {
-				count1 = poller1->run_count - get_last_run_counter(poller1->name, poller1->thread_id);
-				count2 = poller2->run_count - get_last_run_counter(poller2->name, poller2->thread_id);
-			} else {
-				count1 = poller1->run_count;
-				count2 = poller2->run_count;
-			}
-			break;
-		case 4: /* Sort by period */
-			count1 = poller1->period_ticks;
-			count2 = poller2->period_ticks;
-			break;
-		case 5: /* Sort by busy count */
-			count1 = poller1->busy_count;
-			count2 = poller2->busy_count;
-			if (g_interval_data) {
-				last_busy_counter1 = get_last_busy_counter(poller1->name, poller1->thread_id);
-				last_busy_counter2 = get_last_busy_counter(poller2->name, poller2->thread_id);
-				if (count1 > last_busy_counter1) {
-					count1 -= last_busy_counter1;
-				}
-				if (count2 > last_busy_counter2) {
-					count2 -= last_busy_counter2;
-				}
-			}
-			break;
-		default:
-			return 0;
+	case COL_POLLERS_TYPE:
+		return poller1->type - poller2->type;
+	case COL_POLLERS_THREAD_NAME:
+		return strcmp(poller1->thread_name, poller2->thread_name);
+	case COL_POLLERS_RUN_COUNTER:
+		if (g_interval_data) {
+			count1 = poller1->run_count - get_last_run_counter(poller1->name, poller1->thread_id);
+			count2 = poller2->run_count - get_last_run_counter(poller2->name, poller2->thread_id);
+		} else {
+			count1 = poller1->run_count;
+			count2 = poller2->run_count;
 		}
+		break;
+	case COL_POLLERS_PERIOD:
+		count1 = poller1->period_ticks;
+		count2 = poller2->period_ticks;
+		break;
+	case COL_POLLERS_BUSY_COUNT:
+		count1 = poller1->busy_count;
+		count2 = poller2->busy_count;
+		if (g_interval_data) {
+			last_busy_counter1 = get_last_busy_counter(poller1->name, poller1->thread_id);
+			last_busy_counter2 = get_last_busy_counter(poller2->name, poller2->thread_id);
+			if (count1 > last_busy_counter1) {
+				count1 -= last_busy_counter1;
+			}
+			if (count2 > last_busy_counter2) {
+				count2 -= last_busy_counter2;
+			}
+		}
+		break;
+	default:
+		return 0;
 	}
 
 	if (count2 > count1) {
@@ -827,7 +845,7 @@ get_pollers_data(void)
 	uint64_t i = 0;
 	uint32_t current_pollers_count;
 	struct rpc_poller_info pollers_info[RPC_MAX_POLLERS];
-	enum sort_type sorting;
+	enum column_pollers_type column_sort;
 
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
@@ -859,12 +877,12 @@ get_pollers_data(void)
 
 	g_last_pollers_count = current_pollers_count;
 
-	sorting = BY_NAME;
+	column_sort = COL_POLLERS_NAME;
 	qsort_r(&pollers_info, g_last_pollers_count, sizeof(struct rpc_poller_info), sort_pollers,
-		(void *)&sorting);
-	sorting = USE_GLOBAL;
+		(void *)&column_sort);
+	column_sort = g_current_sort_col[POLLERS_TAB];
 	qsort_r(&pollers_info, g_last_pollers_count, sizeof(struct rpc_poller_info), sort_pollers,
-		(void *)&sorting);
+		(void *)&column_sort);
 
 	memcpy(&g_pollers_info, &pollers_info, sizeof(struct rpc_poller_info) * g_last_pollers_count);
 
@@ -883,19 +901,19 @@ sort_cores(const void *p1, const void *p2)
 	uint64_t count1, count2;
 
 	switch (g_current_sort_col[CORES_TAB]) {
-	case 0: /* Sort by core */
+	case COL_CORES_CORE:
 		count1 = core_info2.lcore;
 		count2 = core_info1.lcore;
 		break;
-	case 1: /* Sort by threads number */
+	case COL_CORES_THREADS:
 		count1 = core_info1.threads.threads_count;
 		count2 = core_info2.threads.threads_count;
 		break;
-	case 2: /* Sort by pollers number */
+	case COL_CORES_POLLERS:
 		count1 = core_info1.pollers_count;
 		count2 = core_info2.pollers_count;
 		break;
-	case 3: /* Sort by idle time */
+	case COL_CORES_IDLE_TIME:
 		if (g_interval_data) {
 			count1 = core_info1.last_idle - core_info1.idle;
 			count2 = core_info2.last_idle - core_info2.idle;
@@ -904,7 +922,7 @@ sort_cores(const void *p1, const void *p2)
 			count2 = core_info2.idle;
 		}
 		break;
-	case 4: /* Sort by busy time */
+	case COL_CORES_BUSY_TIME:
 		if (g_interval_data) {
 			count1 = core_info1.last_busy - core_info1.busy;
 			count2 = core_info2.last_busy - core_info2.busy;
@@ -913,11 +931,11 @@ sort_cores(const void *p1, const void *p2)
 			count2 = core_info2.busy;
 		}
 		break;
-	case 5: /* Sort by core frequency */
+	case COL_CORES_CORE_FREQ:
 		count1 = core_info1.core_freq;
 		count2 = core_info2.core_freq;
 		break;
-	case 6: /* Sort by in interrupt */
+	case COL_CORES_INTR:
 		count1 = core_info1.in_interrupt;
 		count2 = core_info2.in_interrupt;
 		break;
@@ -1230,59 +1248,62 @@ refresh_threads_tab(uint8_t current_page)
 
 		draw_row_background(item_index, THREADS_TAB);
 
-		if (!col_desc[0].disabled) {
+		if (!col_desc[COL_THREADS_NAME].disabled) {
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[0].max_data_string, ALIGN_LEFT, g_threads_info[i].name);
-			col += col_desc[0].max_data_string;
+				      col_desc[COL_THREADS_NAME].max_data_string, ALIGN_LEFT, g_threads_info[i].name);
+			col += col_desc[COL_THREADS_NAME].max_data_string;
 		}
 
-		if (!col_desc[1].disabled) {
+		if (!col_desc[COL_THREADS_CORE].disabled) {
 			snprintf(core_str, MAX_CORE_STR_LEN, "%d", g_threads_info[i].core_num);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
-				      col, col_desc[1].max_data_string, ALIGN_RIGHT, core_str);
-			col += col_desc[1].max_data_string + 2;
+				      col, col_desc[COL_THREADS_CORE].max_data_string, ALIGN_RIGHT, core_str);
+			col += col_desc[COL_THREADS_CORE].max_data_string + 2;
 		}
 
-		if (!col_desc[2].disabled) {
+		if (!col_desc[COL_THREADS_ACTIVE_POLLERS].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", g_threads_info[i].active_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
-				      col + (col_desc[2].name_len / 2), col_desc[2].max_data_string, ALIGN_LEFT, pollers_number);
-			col += col_desc[2].max_data_string + 2;
+				      col + (col_desc[COL_THREADS_ACTIVE_POLLERS].name_len / 2),
+				      col_desc[COL_THREADS_ACTIVE_POLLERS].max_data_string, ALIGN_LEFT, pollers_number);
+			col += col_desc[COL_THREADS_ACTIVE_POLLERS].max_data_string + 2;
 		}
 
-		if (!col_desc[3].disabled) {
+		if (!col_desc[COL_THREADS_TIMED_POLLERS].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", g_threads_info[i].timed_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
-				      col + (col_desc[3].name_len / 2), col_desc[3].max_data_string, ALIGN_LEFT, pollers_number);
-			col += col_desc[3].max_data_string + 1;
+				      col + (col_desc[COL_THREADS_TIMED_POLLERS].name_len / 2),
+				      col_desc[COL_THREADS_TIMED_POLLERS].max_data_string, ALIGN_LEFT, pollers_number);
+			col += col_desc[COL_THREADS_TIMED_POLLERS].max_data_string + 1;
 		}
 
-		if (!col_desc[4].disabled) {
+		if (!col_desc[COL_THREADS_PAUSED_POLLERS].disabled) {
 			snprintf(pollers_number, MAX_POLLER_COUNT_STR_LEN, "%ld", g_threads_info[i].paused_pollers_count);
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index,
-				      col + (col_desc[4].name_len / 2), col_desc[4].max_data_string, ALIGN_LEFT, pollers_number);
-			col += col_desc[4].max_data_string + 2;
+				      col + (col_desc[COL_THREADS_PAUSED_POLLERS].name_len / 2),
+				      col_desc[COL_THREADS_PAUSED_POLLERS].max_data_string, ALIGN_LEFT, pollers_number);
+			col += col_desc[COL_THREADS_PAUSED_POLLERS].max_data_string + 2;
 		}
 
-		if (!col_desc[5].disabled) {
+		if (!col_desc[COL_THREADS_IDLE_TIME].disabled) {
 			if (g_interval_data == true) {
 				get_time_str(g_threads_info[i].idle - g_threads_info[i].last_idle, idle_time);
 			} else {
 				get_time_str(g_threads_info[i].idle, idle_time);
 			}
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[5].max_data_string, ALIGN_RIGHT, idle_time);
-			col += col_desc[5].max_data_string;
+				      col_desc[COL_THREADS_IDLE_TIME].max_data_string, ALIGN_RIGHT, idle_time);
+			col += col_desc[COL_THREADS_IDLE_TIME].max_data_string;
 		}
 
-		if (!col_desc[6].disabled) {
+		if (!col_desc[COL_THREADS_BUSY_TIME].disabled) {
 			if (g_interval_data == true) {
 				get_time_str(g_threads_info[i].busy - g_threads_info[i].last_busy, busy_time);
 			} else {
 				get_time_str(g_threads_info[i].busy, busy_time);
 			}
 			print_max_len(g_tabs[THREADS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[6].max_data_string, ALIGN_RIGHT, busy_time);
+				      col_desc[COL_THREADS_BUSY_TIME].max_data_string, ALIGN_RIGHT, busy_time);
 		}
 
 		if (item_index == g_selected_row) {
@@ -1330,25 +1351,25 @@ refresh_pollers_tab(uint8_t current_page)
 
 		draw_row_background(item_index, POLLERS_TAB);
 
-		if (!col_desc[0].disabled) {
+		if (!col_desc[COL_POLLERS_NAME].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col + 1,
-				      col_desc[0].max_data_string, ALIGN_LEFT, g_pollers_info[i].name);
-			col += col_desc[0].max_data_string + 2;
+				      col_desc[COL_POLLERS_NAME].max_data_string, ALIGN_LEFT, g_pollers_info[i].name);
+			col += col_desc[COL_POLLERS_NAME].max_data_string + 2;
 		}
 
-		if (!col_desc[1].disabled) {
+		if (!col_desc[COL_POLLERS_TYPE].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[1].max_data_string, ALIGN_LEFT, poller_type_str[g_pollers_info[i].type]);
-			col += col_desc[1].max_data_string + 2;
+				      col_desc[COL_POLLERS_TYPE].max_data_string, ALIGN_LEFT, poller_type_str[g_pollers_info[i].type]);
+			col += col_desc[COL_POLLERS_TYPE].max_data_string + 2;
 		}
 
-		if (!col_desc[2].disabled) {
+		if (!col_desc[COL_POLLERS_THREAD_NAME].disabled) {
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[2].max_data_string, ALIGN_LEFT, g_pollers_info[i].thread_name);
-			col += col_desc[2].max_data_string + 1;
+				      col_desc[COL_POLLERS_THREAD_NAME].max_data_string, ALIGN_LEFT, g_pollers_info[i].thread_name);
+			col += col_desc[COL_POLLERS_THREAD_NAME].max_data_string + 1;
 		}
 
-		if (!col_desc[3].disabled) {
+		if (!col_desc[COL_POLLERS_RUN_COUNTER].disabled) {
 			last_run_counter = get_last_run_counter(g_pollers_info[i].name, g_pollers_info[i].thread_id);
 			if (g_interval_data == true) {
 				snprintf(run_count, MAX_POLLER_RUN_COUNT, "%" PRIu64,
@@ -1357,20 +1378,20 @@ refresh_pollers_tab(uint8_t current_page)
 				snprintf(run_count, MAX_POLLER_RUN_COUNT, "%" PRIu64, g_pollers_info[i].run_count);
 			}
 			print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-				      col_desc[3].max_data_string, ALIGN_RIGHT, run_count);
-			col += col_desc[3].max_data_string;
+				      col_desc[COL_POLLERS_RUN_COUNTER].max_data_string, ALIGN_RIGHT, run_count);
+			col += col_desc[COL_POLLERS_RUN_COUNTER].max_data_string;
 		}
 
-		if (!col_desc[4].disabled) {
+		if (!col_desc[COL_POLLERS_PERIOD].disabled) {
 			if (g_pollers_info[i].period_ticks != 0) {
 				get_time_str(g_pollers_info[i].period_ticks, period_ticks);
 				print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-					      col_desc[4].max_data_string, ALIGN_RIGHT, period_ticks);
+					      col_desc[COL_POLLERS_PERIOD].max_data_string, ALIGN_RIGHT, period_ticks);
 			}
-			col += col_desc[4].max_data_string + 7;
+			col += col_desc[COL_POLLERS_PERIOD].max_data_string + 7;
 		}
 
-		if (!col_desc[5].disabled) {
+		if (!col_desc[COL_POLLERS_BUSY_COUNT].disabled) {
 			if (g_pollers_info[i].busy_count > last_busy_counter) {
 				if (g_interval_data == true) {
 					snprintf(status, MAX_POLLER_IND_STR_LEN, "Busy (%" PRIu64 ")",
@@ -1382,12 +1403,12 @@ refresh_pollers_tab(uint8_t current_page)
 				if (item_index != g_selected_row) {
 					wattron(g_tabs[POLLERS_TAB], COLOR_PAIR(6));
 					print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-						      col_desc[5].max_data_string, ALIGN_LEFT, status);
+						      col_desc[COL_POLLERS_BUSY_COUNT].max_data_string, ALIGN_LEFT, status);
 					wattroff(g_tabs[POLLERS_TAB], COLOR_PAIR(6));
 				} else {
 					wattron(g_tabs[POLLERS_TAB], COLOR_PAIR(8));
 					print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-						      col_desc[5].max_data_string, ALIGN_LEFT, status);
+						      col_desc[COL_POLLERS_BUSY_COUNT].max_data_string, ALIGN_LEFT, status);
 					wattroff(g_tabs[POLLERS_TAB], COLOR_PAIR(8));
 				}
 			} else {
@@ -1400,12 +1421,12 @@ refresh_pollers_tab(uint8_t current_page)
 				if (item_index != g_selected_row) {
 					wattron(g_tabs[POLLERS_TAB], COLOR_PAIR(7));
 					print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-						      col_desc[5].max_data_string, ALIGN_LEFT, status);
+						      col_desc[COL_POLLERS_BUSY_COUNT].max_data_string, ALIGN_LEFT, status);
 					wattroff(g_tabs[POLLERS_TAB], COLOR_PAIR(7));
 				} else {
 					wattron(g_tabs[POLLERS_TAB], COLOR_PAIR(9));
 					print_max_len(g_tabs[POLLERS_TAB], TABS_DATA_START_ROW + item_index, col,
-						      col_desc[5].max_data_string, ALIGN_LEFT, status);
+						      col_desc[COL_POLLERS_BUSY_COUNT].max_data_string, ALIGN_LEFT, status);
 					wattroff(g_tabs[POLLERS_TAB], COLOR_PAIR(9));
 				}
 			}
@@ -1449,48 +1470,50 @@ refresh_cores_tab(uint8_t current_page)
 
 		draw_row_background(item_index, CORES_TAB);
 
-		if (!col_desc[0].disabled) {
+		if (!col_desc[COL_CORES_CORE].disabled) {
 			snprintf(core, MAX_CORE_STR_LEN, "%d", g_cores_info[i].lcore);
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
-				      col_desc[0].max_data_string, ALIGN_RIGHT, core);
-			offset += col_desc[0].max_data_string + 2;
+				      col_desc[COL_CORES_CORE].max_data_string, ALIGN_RIGHT, core);
+			offset += col_desc[COL_CORES_CORE].max_data_string + 2;
 		}
 
-		if (!col_desc[1].disabled) {
+		if (!col_desc[COL_CORES_THREADS].disabled) {
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index,
-				      offset + (col_desc[1].name_len / 2), col_desc[1].max_data_string, ALIGN_LEFT, threads_number);
-			offset += col_desc[1].max_data_string + 2;
+				      offset + (col_desc[COL_CORES_THREADS].name_len / 2), col_desc[COL_CORES_THREADS].max_data_string,
+				      ALIGN_LEFT, threads_number);
+			offset += col_desc[COL_CORES_THREADS].max_data_string + 2;
 		}
 
-		if (!col_desc[2].disabled) {
+		if (!col_desc[COL_CORES_POLLERS].disabled) {
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index,
-				      offset + (col_desc[2].name_len / 2), col_desc[2].max_data_string, ALIGN_LEFT, pollers_number);
-			offset += col_desc[2].max_data_string;
+				      offset + (col_desc[COL_CORES_POLLERS].name_len / 2), col_desc[COL_CORES_POLLERS].max_data_string,
+				      ALIGN_LEFT, pollers_number);
+			offset += col_desc[COL_CORES_POLLERS].max_data_string;
 		}
 
-		if (!col_desc[3].disabled) {
+		if (!col_desc[COL_CORES_IDLE_TIME].disabled) {
 			if (g_interval_data == true) {
 				get_time_str(g_cores_info[i].idle - g_cores_info[i].last_idle, idle_time);
 			} else {
 				get_time_str(g_cores_info[i].idle, idle_time);
 			}
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
-				      col_desc[3].max_data_string, ALIGN_RIGHT, idle_time);
-			offset += col_desc[3].max_data_string + 2;
+				      col_desc[COL_CORES_IDLE_TIME].max_data_string, ALIGN_RIGHT, idle_time);
+			offset += col_desc[COL_CORES_IDLE_TIME].max_data_string + 2;
 		}
 
-		if (!col_desc[4].disabled) {
+		if (!col_desc[COL_CORES_BUSY_TIME].disabled) {
 			if (g_interval_data == true) {
 				get_time_str(g_cores_info[i].busy - g_cores_info[i].last_busy, busy_time);
 			} else {
 				get_time_str(g_cores_info[i].busy, busy_time);
 			}
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
-				      col_desc[4].max_data_string, ALIGN_RIGHT, busy_time);
-			offset += col_desc[4].max_data_string + 2;
+				      col_desc[COL_CORES_BUSY_TIME].max_data_string, ALIGN_RIGHT, busy_time);
+			offset += col_desc[COL_CORES_BUSY_TIME].max_data_string + 2;
 		}
 
-		if (!col_desc[5].disabled) {
+		if (!col_desc[COL_CORES_CORE_FREQ].disabled) {
 			if (!g_cores_info[i].core_freq) {
 				snprintf(core_freq,  MAX_CORE_FREQ_STR_LEN, "%s", "N/A");
 			} else {
@@ -1498,14 +1521,15 @@ refresh_cores_tab(uint8_t current_page)
 					 g_cores_info[i].core_freq);
 			}
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, offset,
-				      col_desc[5].max_data_string, ALIGN_RIGHT, core_freq);
-			offset += col_desc[5].max_data_string + 2;
+				      col_desc[COL_CORES_CORE_FREQ].max_data_string, ALIGN_RIGHT, core_freq);
+			offset += col_desc[COL_CORES_CORE_FREQ].max_data_string + 2;
 		}
 
-		if (!col_desc[6].disabled) {
+		if (!col_desc[COL_CORES_INTR].disabled) {
 			snprintf(in_interrupt, MAX_INTR_LEN, "%s", g_cores_info[i].in_interrupt ? "Yes" : "No");
 			print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index,
-				      offset + (col_desc[6].name_len / 2), col_desc[6].max_data_string, ALIGN_LEFT, in_interrupt);
+				      offset + (col_desc[COL_CORES_INTR].name_len / 2), col_desc[COL_CORES_INTR].max_data_string,
+				      ALIGN_LEFT, in_interrupt);
 		}
 
 		if (item_index == g_selected_row) {
