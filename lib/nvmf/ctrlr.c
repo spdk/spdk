@@ -2348,6 +2348,14 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			goto invalid_log_page;
 		}
 	} else {
+		if (offset > len) {
+			SPDK_ERRLOG("Get log page: offset (%" PRIu64 ") > len (%" PRIu64 ")\n",
+				    offset, len);
+			response->status.sct = SPDK_NVME_SCT_GENERIC;
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+
 		switch (lid) {
 		case SPDK_NVME_LOG_ERROR:
 			nvmf_get_error_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
