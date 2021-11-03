@@ -764,6 +764,7 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 	const struct rpc_poller_info *poller2 = (struct rpc_poller_info *)p2;
 	enum sort_type sorting = *(enum sort_type *)arg;
 	uint64_t count1, count2;
+	uint64_t last_busy_counter1, last_busy_counter2;
 
 	if (sorting == BY_NAME) {
 		/* Sorting by name requested explicitly */
@@ -789,6 +790,20 @@ sort_pollers(const void *p1, const void *p2, void *arg)
 		case 4: /* Sort by period */
 			count1 = poller1->period_ticks;
 			count2 = poller2->period_ticks;
+			break;
+		case 5: /* Sort by busy count */
+			count1 = poller1->busy_count;
+			count2 = poller2->busy_count;
+			if (g_interval_data) {
+				last_busy_counter1 = get_last_busy_counter(poller1->name, poller1->thread_id);
+				last_busy_counter2 = get_last_busy_counter(poller2->name, poller2->thread_id);
+				if (count1 > last_busy_counter1) {
+					count1 -= last_busy_counter1;
+				}
+				if (count2 > last_busy_counter2) {
+					count2 -= last_busy_counter2;
+				}
+			}
 			break;
 		default:
 			return 0;
@@ -897,6 +912,14 @@ sort_cores(const void *p1, const void *p2)
 			count1 = core_info1.busy;
 			count2 = core_info2.busy;
 		}
+		break;
+	case 5: /* Sort by core frequency */
+		count1 = core_info1.core_freq;
+		count2 = core_info2.core_freq;
+		break;
+	case 6: /* Sort by in interrupt */
+		count1 = core_info1.in_interrupt;
+		count2 = core_info2.in_interrupt;
 		break;
 	default:
 		return 0;
