@@ -1714,6 +1714,7 @@ nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
 int
 spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 {
+	struct spdk_nvme_ns *ns, *tmp_ns;
 	struct spdk_nvme_qpair	*qpair;
 	int rc = 0, rc_tmp = 0;
 	bool async;
@@ -1751,6 +1752,17 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 				qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 				continue;
 			}
+		}
+	}
+
+	/*
+	 * Take this opportunity to remove inactive namespaces. During a reset namespace
+	 * handles can be invalidated.
+	 */
+	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
+		if (!ns->active) {
+			RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
+			spdk_free(ns);
 		}
 	}
 
