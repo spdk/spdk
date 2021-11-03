@@ -851,11 +851,7 @@ subsort_pollers(enum column_pollers_type sort_column, const void *p1, const void
 }
 
 static int
-#ifdef __FreeBSD__
-sort_pollers(void *arg, const void *p1, const void *p2)
-#else
-sort_pollers(const void *p1, const void *p2, void *arg)
-#endif
+sort_pollers(const void *p1, const void *p2)
 {
 	int rc;
 
@@ -874,7 +870,6 @@ get_pollers_data(void)
 	uint64_t i = 0;
 	uint32_t current_pollers_count;
 	struct rpc_poller_info pollers_info[RPC_MAX_POLLERS];
-	enum column_pollers_type column_sort;
 
 	rc = rpc_send_req("thread_get_pollers", &json_resp);
 	if (rc) {
@@ -906,12 +901,7 @@ get_pollers_data(void)
 
 	g_last_pollers_count = current_pollers_count;
 
-	column_sort = COL_POLLERS_NAME;
-	qsort_r(&pollers_info, g_last_pollers_count, sizeof(struct rpc_poller_info), sort_pollers,
-		(void *)&column_sort);
-	column_sort = g_current_sort_col[POLLERS_TAB];
-	qsort_r(&pollers_info, g_last_pollers_count, sizeof(struct rpc_poller_info), sort_pollers,
-		(void *)&column_sort);
+	qsort(&pollers_info, g_last_pollers_count, sizeof(struct rpc_poller_info), sort_pollers);
 
 	memcpy(&g_pollers_info, &pollers_info, sizeof(struct rpc_poller_info) * g_last_pollers_count);
 
