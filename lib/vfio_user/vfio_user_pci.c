@@ -44,7 +44,6 @@
 
 #include "vfio_user_internal.h"
 
-static TAILQ_HEAD(, vfio_device) g_vfio_devices = TAILQ_HEAD_INITIALIZER(g_vfio_devices);
 static uint32_t g_vfio_dev_id;
 
 int
@@ -407,7 +406,6 @@ spdk_vfio_user_setup(const char *path)
 	}
 
 	SPDK_DEBUGLOG(vfio_pci, "Device %s, Path %s Setup Successfully\n", device->name, device->path);
-	TAILQ_INSERT_TAIL(&g_vfio_devices, device, link);
 
 	return device;
 
