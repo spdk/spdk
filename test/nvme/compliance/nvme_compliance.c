@@ -915,7 +915,9 @@ identify_ns(void)
 	struct spdk_nvme_cmd cmd;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	struct spdk_nvme_ns_data *ns_data;
+	struct spdk_nvme_ns *ns;
 	uint32_t i, active_nsid, inactive_nsid;
+	uint32_t nows, npwg, max_xfer_size;
 	struct status s;
 	int rc;
 
@@ -979,6 +981,19 @@ identify_ns(void)
 
 		wait_for_admin_completion(&s, ctrlr);
 		CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+		max_xfer_size = spdk_nvme_ctrlr_get_max_xfer_size(ctrlr);
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, active_nsid);
+		SPDK_CU_ASSERT_FATAL(ns != NULL);
+
+		if (ns_data->nsfeat.optperf) {
+			npwg = ns_data->npwg + 1;
+			nows = ns_data->nows + 1;
+
+			CU_ASSERT(npwg * spdk_nvme_ns_get_sector_size(ns) <= max_xfer_size);
+			CU_ASSERT(nows * spdk_nvme_ns_get_sector_size(ns) <= max_xfer_size);
+			CU_ASSERT(nows % npwg == 0);
+		}
 	}
 
 	/* NSID is inactive, valid and should contain zeroed data */
