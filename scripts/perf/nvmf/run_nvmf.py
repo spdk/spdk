@@ -519,7 +519,7 @@ class Target(Server):
             # If "_CPU" exists in name - ignore it
             # Initiators for the same job could have diffrent num_cores parameter
             job_name = re.sub(r"_\d+CPU", "", job_name)
-            job_result_files = [x for x in json_files if job_name in x]
+            job_result_files = [x for x in json_files if x.startswith(job_name)]
             self.log_print("Matching result files for current fio config:")
             for j in job_result_files:
                 self.log_print("\t %s" % j)
