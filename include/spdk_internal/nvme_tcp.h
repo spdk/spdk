@@ -304,7 +304,8 @@ static int
 nvme_tcp_build_iovs(struct iovec *iov, int iovcnt, struct nvme_tcp_pdu *pdu,
 		    bool hdgst_enable, bool ddgst_enable, uint32_t *_mapped_length)
 {
-	uint32_t hlen, plen;
+	uint32_t hlen;
+	uint32_t plen __attribute__((unused));
 	struct spdk_iov_sgl *sgl;
 
 	if (iovcnt == 0) {
