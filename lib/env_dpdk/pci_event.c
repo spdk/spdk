@@ -50,6 +50,8 @@ spdk_pci_event_listen(void)
 	struct sockaddr_nl addr;
 	int netlink_fd;
 	int size = SPDK_UEVENT_RECVBUF_SIZE;
+	int buf_size;
+	socklen_t opt_size;
 	int flag, rc;
 
 	memset(&addr, 0, sizeof(addr));
@@ -64,35 +66,49 @@ spdk_pci_event_listen(void)
 	}
 
 	if (setsockopt(netlink_fd, SOL_SOCKET, SO_RCVBUFFORCE, &size, sizeof(size)) < 0) {
-		rc = errno;
-		SPDK_ERRLOG("Failed to set socket option\n");
-		close(netlink_fd);
-		return -rc;
+		if (setsockopt(netlink_fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)) < 0) {
+			rc = errno;
+			SPDK_ERRLOG("Failed to set socket option SO_RCVBUF\n");
+			goto error;
+		}
+		opt_size = sizeof(buf_size);
+		if (getsockopt(netlink_fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &opt_size) < 0) {
+			rc = errno;
+			SPDK_ERRLOG("Failed to get socket option SO_RCVBUF\n");
+			goto error;
+		}
+		if (buf_size < SPDK_UEVENT_RECVBUF_SIZE) {
+			SPDK_ERRLOG("Socket recv buffer is too small (< %d), see SO_RCVBUF "
+				    "section in socket(7) man page for specifics on how to "
+				    "adjust the system setting.", SPDK_UEVENT_RECVBUF_SIZE);
+			rc = ENOSPC;
+			goto error;
+		}
 	}
 
 	flag = fcntl(netlink_fd, F_GETFL);
 	if (flag < 0) {
 		rc = errno;
 		SPDK_ERRLOG("Failed to get socket flag, fd: %d\n", netlink_fd);
-		close(netlink_fd);
-		return -rc;
+		goto error;
 	}
 
 	if (fcntl(netlink_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
 		rc = errno;
 		SPDK_ERRLOG("Fcntl can't set nonblocking mode for socket, fd: %d\n", netlink_fd);
-		close(netlink_fd);
-		return -rc;
+		goto error;
 	}
 
 	if (bind(netlink_fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		rc = errno;
 		SPDK_ERRLOG("Failed to bind the netlink\n");
-		close(netlink_fd);
-		return -rc;
+		goto error;
 	}
 
 	return netlink_fd;
+error:
+	close(netlink_fd);
+	return -rc;
 }
 
 /* Note: We parse the event from uio and vfio subsystem and will ignore
