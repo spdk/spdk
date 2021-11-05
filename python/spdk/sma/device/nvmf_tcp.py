@@ -1,5 +1,6 @@
 import grpc
 import logging
+import uuid
 from spdk.rpc.client import JSONRPCException
 from .device import DeviceManager, DeviceException
 from ..common import format_volume_id
@@ -123,6 +124,81 @@ class NvmfTcpDeviceManager(DeviceManager):
                     break
             else:
                 logging.info(f'Tried to delete a non-existing device: {nqn}')
+
+    def _find_bdev(self, client, guid):
+        try:
+            return client.call('bdev_get_bdevs', {'name': guid})[0]
+        except JSONRPCException:
+            return None
+
+    @_check_transport
+    def attach_volume(self, request):
+        nqn = self._get_nqn_from_handle(request.device_handle)
+        volume_id = format_volume_id(request.volume.volume_id)
+        if volume_id is None:
+            raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                  'Invalid volume ID')
+        try:
+            with self._client() as client:
+                bdev = self._find_bdev(client, volume_id)
+                if bdev is None:
+                    raise DeviceException(grpc.StatusCode.NOT_FOUND,
+                                          'Invalid volume GUID')
+                subsystems = client.call('nvmf_get_subsystems')
+                for subsys in subsystems:
+                    if subsys['nqn'] == nqn:
+                        break
+                else:
+                    raise DeviceException(grpc.StatusCode.NOT_FOUND,
+                                          'Invalid device handle')
+                if bdev['name'] not in [ns['name'] for ns in subsys['namespaces']]:
+                    result = client.call('nvmf_subsystem_add_ns',
+                                         {'nqn': nqn,
+                                          'namespace': {
+                                              'bdev_name': bdev['name']}})
+                    if not result:
+                        raise DeviceException(grpc.StatusCode.INTERNAL,
+                                              'Failed to attach volume')
+        except JSONRPCException:
+            raise DeviceException(grpc.StatusCode.INTERNAL,
+                                  'Failed to attach volume')
+
+    @_check_transport
+    def detach_volume(self, request):
+        nqn = self._get_nqn_from_handle(request.device_handle)
+        volume = format_volume_id(request.volume_id)
+        if volume is None:
+            raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                  'Invalid volume ID')
+        try:
+            with self._client() as client:
+                bdev = self._find_bdev(client, volume)
+                if bdev is None:
+                    logging.info(f'Tried to detach non-existing volume: {volume}')
+                    return
+
+                subsystems = client.call('nvmf_get_subsystems')
+                for subsys in subsystems:
+                    if subsys['nqn'] == nqn:
+                        break
+                else:
+                    logging.info(f'Tried to detach volume: {volume} from non-existing ' +
+                                 f'device: {nqn}')
+                    return
+
+                for ns in subsys['namespaces']:
+                    if ns['name'] != bdev['name']:
+                        continue
+                    result = client.call('nvmf_subsystem_remove_ns',
+                                         {'nqn': nqn,
+                                          'nsid': ns['nsid']})
+                    if not result:
+                        raise DeviceException(grpc.StatusCode.INTERNAL,
+                                              'Failed to detach volume')
+                    break
+        except JSONRPCException:
+            raise DeviceException(grpc.StatusCode.INTERNAL,
+                                  'Failed to detach volume')
 
     def owns_device(self, handle):
         return handle.startswith('nvmf-tcp')
