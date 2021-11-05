@@ -173,9 +173,9 @@ function build_native_dpdk() {
 		git config --local user.name "spdk"
 		git config --local user.email "nomail@all.com"
 		if [[ -f dpdk-pci.patch ]]; then
-			git am dpdk-pci.patch
+			patch -p1 < dpdk-pci.patch
 		fi
-		git am dpdk-qat.patch
+		patch -p1 < dpdk-qat.patch
 	fi
 
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
