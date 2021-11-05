@@ -205,10 +205,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		fi
 	fi
 
-	if [ $SPDK_TEST_JSON -eq 1 ]; then
-		run_test "test_converter" test/config_converter/test_converter.sh
-	fi
-
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
 		run_test "blockdev_nvme" test/bdev/blockdev.sh "nvme"
 		if [[ $(uname -s) == Linux ]]; then
