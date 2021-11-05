@@ -17,7 +17,7 @@ SPDK_DIR="$(cd "${DIR}/../../" && pwd)"
 # The command line help
 display_help() {
 	echo
-	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcu] <distro>"
+	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcuf] <distro>"
 	echo
 	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 | ubuntu2004 |"
 	echo "            fedora32 | fedora33 | fedora34 | freebsd11 | freebsd12 | arch | clearlinux>"
@@ -48,7 +48,7 @@ display_help() {
 	echo "  -r dry-run"
 	echo "  -h help"
 	echo "  -v verbose"
-	echo
+	echo "  -f                             Force use of given distro, regardless if it's supported by the script or not."
 	echo " Examples:"
 	echo
 	echo "  $0 -x http://user:password@host:port fedora33"
@@ -86,8 +86,9 @@ VAGRANT_PASSWORD_AUTH=0
 VAGRANT_PACKAGE_BOX=0
 VAGRANT_HUGE_MEM=0
 VAGRANTFILE=$DIR/Vagrantfile
+FORCE_DISTRO=false
 
-while getopts ":b:n:s:x:p:uvcraldoHh-:" opt; do
+while getopts ":b:n:s:x:p:uvcraldoHhf-:" opt; do
 	case "${opt}" in
 		-)
 			case "${OPTARG}" in
@@ -146,6 +147,9 @@ while getopts ":b:n:s:x:p:uvcraldoHh-:" opt; do
 		H)
 			VAGRANT_HUGE_MEM=1
 			;;
+		f)
+			FORCE_DISTRO=true
+			;;
 		*)
 			echo "  Invalid argument: -$OPTARG" >&2
 			echo "  Try: \"$0 -h\"" >&2
@@ -163,15 +167,16 @@ case "${SPDK_VAGRANT_DISTRO}" in
 	ubuntu1[68]04 | ubuntu2004) ;&
 	fedora3[2-4]) ;&
 	freebsd1[12]) ;&
-	arch | clearlinux)
-		export SPDK_VAGRANT_DISTRO
-		;;
+	arch | clearlinux) ;;
 	*)
-		echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\"" >&2
-		echo "  Try: \"$0 -h\"" >&2
-		exit 1
+		if [[ $FORCE_DISTRO == false ]]; then
+			echo "  Invalid argument \"${SPDK_VAGRANT_DISTRO}\"" >&2
+			echo "  Try: \"$0 -h\"" >&2
+			exit 1
+		fi
 		;;
 esac
+export SPDK_VAGRANT_DISTRO
 
 if [ -z "$NVME_FILE" ]; then
 	TMP="/var/lib/libvirt/images/nvme_disk.img"
@@ -225,6 +230,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_OPENSTACK_NETWORK=$SPDK_OPENSTACK_NETWORK
 	echo VAGRANT_PACKAGE_BOX=$VAGRANT_PACKAGE_BOX
 	echo VAGRANTFILE=$VAGRANTFILE
+	echo FORCE_DISTRO=$FORCE_DISTRO
 	echo
 fi
 
@@ -243,6 +249,7 @@ export NVME_DISKS_NAMESPACES
 export NVME_FILE
 export VAGRANT_PASSWORD_AUTH
 export VAGRANT_HUGE_MEM
+export FORCE_DISTRO
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
 	provider="--provider=${SPDK_VAGRANT_PROVIDER}"
@@ -271,6 +278,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv SPDK_DIR
 	printenv VAGRANT_HUGE_MEM
 	printenv VAGRANTFILE
+	printenv FORCE_DISTRO
 fi
 if [ -z "$VAGRANTFILE_DIR" ]; then
 	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"

@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 require 'open3'
-def get_box_type(distro)
+def get_box_type(distro, force_distro)
   spdk_distro = 'spdk/' + distro
   localboxes, stderr, status = Open3.capture3("vagrant box list")
   return spdk_distro if localboxes.include?(spdk_distro)
@@ -19,9 +19,9 @@ def get_box_type(distro)
     'arch'       => 'generic/arch',
     'freebsd12'  => 'generic/freebsd12',
   }
-  abort("Invalid argument! #{distro}") unless distro_to_type.key?(distro)
+  abort("Invalid argument! #{distro}") unless distro_to_type.key?(distro) || force_distro
 
-  return distro_to_type[distro]
+  return distro_to_type[distro] ? distro_to_type[distro] : distro
 end
 
 def setup_proxy(config,distro)
@@ -287,7 +287,10 @@ vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
 # pre-installed, so use it.
 # generic/fedora boxes on the other hand have problems running NFS
 # service so use sshfs+rsync combo instead.
-if (get_box_type(distro).include?("generic/freebsd"))
+force_distro = ENV['FORCE_DISTRO'] == "true" ? true : false
+
+distro_to_use = get_box_type(distro, force_distro)
+if (distro_to_use.include?("generic/freebsd"))
   files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
   plugins_sync_backend = {type: :nfs, nfs_udp: false}
 else
@@ -300,7 +303,7 @@ else
 end
 
 Vagrant.configure(2) do |config|
-  config.vm.box = get_box_type(distro)
+  config.vm.box = distro_to_use
   config.vm.box_check_update = false
   config.vm.synced_folder '.', '/vagrant', disabled: true
 
