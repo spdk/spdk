@@ -306,6 +306,9 @@ Vagrant.configure(2) do |config|
   config.vm.box = distro_to_use
   config.vm.box_check_update = false
   config.vm.synced_folder '.', '/vagrant', disabled: true
+  if ENV['VAGRANT_BOX_VERSION']
+    config.vm.box_version = ENV['VAGRANT_BOX_VERSION']
+  end
 
   # Copy in the .gitconfig if it exists
   copy_gitconfig(config)

@@ -49,6 +49,7 @@ display_help() {
 	echo "  -h help"
 	echo "  -v verbose"
 	echo "  -f                             Force use of given distro, regardless if it's supported by the script or not."
+	echo "  --box-version                  Version of the vagrant box to select for given distro."
 	echo " Examples:"
 	echo
 	echo "  $0 -x http://user:password@host:port fedora33"
@@ -87,6 +88,7 @@ VAGRANT_PACKAGE_BOX=0
 VAGRANT_HUGE_MEM=0
 VAGRANTFILE=$DIR/Vagrantfile
 FORCE_DISTRO=false
+VAGRANT_BOX_VERSION=""
 
 while getopts ":b:n:s:x:p:uvcraldoHhf-:" opt; do
 	case "${opt}" in
@@ -96,6 +98,7 @@ while getopts ":b:n:s:x:p:uvcraldoHhf-:" opt; do
 				qemu-emulator=*) SPDK_QEMU_EMULATOR="${OPTARG#*=}" ;;
 				vagrantfiles-dir=*) VAGRANTFILE_DIR="${OPTARG#*=}" ;;
 				vagrantfile=*) [[ -n ${OPTARG#*=} ]] && VAGRANTFILE="${OPTARG#*=}" ;;
+				box-version=*) [[ -n ${OPTARG#*=} ]] && VAGRANT_BOX_VERSION="${OPTARG#*=}" ;;
 				*) echo "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
@@ -231,6 +234,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo VAGRANT_PACKAGE_BOX=$VAGRANT_PACKAGE_BOX
 	echo VAGRANTFILE=$VAGRANTFILE
 	echo FORCE_DISTRO=$FORCE_DISTRO
+	echo VAGRANT_BOX_VERSION=$VAGRANT_BOX_VERSION
 	echo
 fi
 
@@ -250,6 +254,7 @@ export NVME_FILE
 export VAGRANT_PASSWORD_AUTH
 export VAGRANT_HUGE_MEM
 export FORCE_DISTRO
+export VAGRANT_BOX_VERSION
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
 	provider="--provider=${SPDK_VAGRANT_PROVIDER}"
@@ -279,6 +284,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv VAGRANT_HUGE_MEM
 	printenv VAGRANTFILE
 	printenv FORCE_DISTRO
+	printenv VAGRANT_BOX_VERSION
 fi
 if [ -z "$VAGRANTFILE_DIR" ]; then
 	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
