@@ -3820,6 +3820,10 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	SPDK_DTRACE_PROBE3(nvmf_request_io_exec_path, req,
+			   req->qpair->ctrlr->listener->trid->traddr,
+			   req->qpair->ctrlr->listener->trid->trsvcid);
+
 	/* scan-build falsely reporting dereference of null pointer */
 	assert(group != NULL && group->sgroups != NULL);
 	ns_info = &group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1];
