@@ -205,8 +205,7 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 		state->remove_cb(&svdev->vdev, state->remove_ctx);
 		state->remove_cb = NULL;
 	}
-	SPDK_INFOLOG(vhost, "%s: removed target 'Target %u'\n",
-		     svdev->vdev.name, scsi_tgt_num);
+	SPDK_INFOLOG(vhost, "removed target 'Target %u'\n", scsi_tgt_num);
 
 	if (--svdev->ref == 0 && svdev->registered == false) {
 		free(svdev);
