@@ -825,7 +825,7 @@ opal_discovery0_end(struct spdk_opal_dev *dev, void *payload, uint32_t payload_s
 	}
 
 	if (supported == false) {
-		SPDK_ERRLOG("Opal Not Supported.\n");
+		SPDK_INFOLOG(opal, "Opal Not Supported.\n");
 		return -ENOTSUP;
 	}
 
