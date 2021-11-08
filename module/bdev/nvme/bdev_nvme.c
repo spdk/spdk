@@ -1931,7 +1931,7 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 	trid = spdk_nvme_ctrlr_get_transport_id(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
 
-	spdk_json_write_named_object_begin(w, "nvme");
+	spdk_json_write_object_begin(w);
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		spdk_json_write_named_string(w, "pci_address", trid->traddr);
@@ -2025,9 +2025,11 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct nvme_ns *nvme_ns;
 
 	pthread_mutex_lock(&nvme_bdev->mutex);
+	spdk_json_write_named_array_begin(w, "nvme");
 	TAILQ_FOREACH(nvme_ns, &nvme_bdev->nvme_ns_list, tailq) {
 		nvme_namespace_info_json(w, nvme_ns);
 	}
+	spdk_json_write_array_end(w);
 	pthread_mutex_unlock(&nvme_bdev->mutex);
 
 	return 0;
