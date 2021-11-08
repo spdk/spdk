@@ -1213,7 +1213,6 @@ _stop_session(struct spdk_vhost_session *vsession)
 	rc = vdev->backend->stop_session(vsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
-		pthread_mutex_unlock(&g_vhost_mutex);
 		return rc;
 	}
 
