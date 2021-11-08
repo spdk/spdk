@@ -1658,8 +1658,16 @@ static void *
 session_shutdown(void *arg)
 {
 	struct spdk_vhost_dev *vdev = NULL;
+	struct spdk_vhost_session *vsession;
 
 	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
+		pthread_mutex_lock(&g_vhost_mutex);
+		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+			if (vsession->started) {
+				_stop_session(vsession);
+			}
+		}
+		pthread_mutex_unlock(&g_vhost_mutex);
 		vhost_driver_unregister(vdev->path);
 		vdev->registered = false;
 	}
