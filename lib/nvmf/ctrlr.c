@@ -334,8 +334,8 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		  struct spdk_nvmf_fabric_connect_cmd *connect_cmd,
 		  struct spdk_nvmf_fabric_connect_data *connect_data)
 {
-	struct spdk_nvmf_ctrlr	*ctrlr;
-	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_transport *transport = req->qpair->transport;
 	struct spdk_nvme_transport_id listen_trid = {};
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
@@ -344,13 +344,18 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
+	if (spdk_nvme_trtype_is_fabrics(transport->ops->type)) {
+		ctrlr->dynamic_ctrlr = true;
+	} else {
+		ctrlr->cntlid = connect_data->cntlid;
+	}
+
 	STAILQ_INIT(&ctrlr->async_events);
 	TAILQ_INIT(&ctrlr->log_head);
 	ctrlr->subsys = subsystem;
 	ctrlr->thread = req->qpair->group->thread;
 	ctrlr->disconnect_in_progress = false;
 
-	transport = req->qpair->transport;
 	ctrlr->qpair_mask = spdk_bit_array_create(transport->opts.max_qpairs_per_ctrlr);
 	if (!ctrlr->qpair_mask) {
 		SPDK_ERRLOG("Failed to allocate controller qpair mask\n");
@@ -743,7 +748,7 @@ _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	if (cmd->qid == 0) {
 		SPDK_DEBUGLOG(nvmf, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
 
-		if (data->cntlid != 0xFFFF) {
+		if (spdk_nvme_trtype_is_fabrics(transport->ops->type) && data->cntlid != 0xFFFF) {
 			/* This NVMf target only supports dynamic mode. */
 			SPDK_ERRLOG("The NVMf target only supports dynamic mode (CNTLID = 0x%x).\n", data->cntlid);
 			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);

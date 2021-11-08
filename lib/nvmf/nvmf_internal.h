@@ -275,6 +275,7 @@ struct spdk_nvmf_ctrlr {
 	/* valid only when disconnect_in_progress is true */
 	bool				disconnect_is_shn;
 	bool				acre_enabled;
+	bool				dynamic_ctrlr;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };

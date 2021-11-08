@@ -1471,6 +1471,7 @@ test_nvmf_subsystem_add_ctrlr(void)
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	ctrlr.subsys = subsystem;
 
+	ctrlr.dynamic_ctrlr = true;
 	rc = nvmf_subsystem_add_ctrlr(subsystem, &ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&subsystem->ctrlrs));

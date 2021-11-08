@@ -1928,11 +1928,17 @@ nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
 {
-	ctrlr->cntlid = nvmf_subsystem_gen_cntlid(subsystem);
-	if (ctrlr->cntlid == 0xFFFF) {
-		/* Unable to get a cntlid */
-		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
-		return -EBUSY;
+
+	if (ctrlr->dynamic_ctrlr) {
+		ctrlr->cntlid = nvmf_subsystem_gen_cntlid(subsystem);
+		if (ctrlr->cntlid == 0xFFFF) {
+			/* Unable to get a cntlid */
+			SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
+			return -EBUSY;
+		}
+	} else if (nvmf_subsystem_get_ctrlr(subsystem, ctrlr->cntlid) != NULL) {
+		SPDK_ERRLOG("Ctrlr with cntlid %u already exist\n", ctrlr->cntlid);
+		return -EEXIST;
 	}
 
 	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
