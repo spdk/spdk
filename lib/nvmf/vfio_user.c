@@ -2035,7 +2035,8 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 		err = -ENOMEM;
 		goto out;
 	}
-	ctrlr->cntlid = 0xffff;
+	/* We can only support one connection for now */
+	ctrlr->cntlid = 0x1;
 	ctrlr->transport = transport;
 	ctrlr->endpoint = endpoint;
 	ctrlr->doorbells = endpoint->doorbells;
@@ -2512,7 +2513,7 @@ nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	}
 
 	data = (struct spdk_nvmf_fabric_connect_data *)req->data;
-	data->cntlid = admin ? 0xFFFF : ctrlr->cntlid;
+	data->cntlid = ctrlr->cntlid;
 	snprintf(data->subnqn, sizeof(data->subnqn), "%s",
 		 spdk_nvmf_subsystem_get_nqn(ctrlr->endpoint->subsystem));
 
