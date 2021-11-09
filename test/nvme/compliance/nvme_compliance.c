@@ -473,6 +473,80 @@ admin_create_io_sq_verify_qsize_cqid(void)
 }
 
 static void
+admin_create_io_sq_verify_pc(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	union spdk_nvme_cap_register cap;
+	struct spdk_nvme_io_qpair_opts opts;
+	struct spdk_nvme_qpair *qpair;
+	struct spdk_nvme_cmd cmd;
+	struct status s;
+	void *buf;
+	uint64_t dma_addr;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
+	/* exit the rest of test case if CAP.CQR is 0 */
+	if (!cap.bits.cqr) {
+		spdk_nvme_detach(ctrlr);
+		return;
+	}
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(qpair);
+
+	/* Delete SQ 1 first, this is valid. */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_DELETE_IO_SQ;
+	cmd.cdw10_bits.delete_io_q.qid = 1;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+	buf = spdk_dma_zmalloc((cap.bits.mqes + 1) * sizeof(cmd), 0x1000,  NULL);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+
+	/* Create SQ 1, PC is 0, this is invalid */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_CREATE_IO_SQ;
+	cmd.cdw10_bits.create_io_q.qid = 1;
+	cmd.cdw10_bits.create_io_q.qsize = cap.bits.mqes;
+	cmd.cdw11_bits.create_io_sq.pc = 0;
+	cmd.cdw11_bits.create_io_sq.cqid = 1;
+	dma_addr = nvme_vtophys(&g_trid, buf, NULL);
+	SPDK_CU_ASSERT_FATAL(dma_addr != SPDK_VTOPHYS_ERROR);
+	cmd.dptr.prp.prp1 = dma_addr;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Create SQ 1 again, PC is 1, this is valid. */
+	s.done = false;
+	cmd.cdw11_bits.create_io_sq.pc = 1;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+	spdk_dma_free(buf);
+	spdk_nvme_detach(ctrlr);
+}
+
+static void
 admin_delete_io_cq_delete_cq_first(void)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -1181,6 +1255,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, admin_delete_io_cq_delete_cq_first);
 	CU_ADD_TEST(suite, admin_create_io_cq_verify_iv_pc);
 	CU_ADD_TEST(suite, admin_create_io_sq_verify_qsize_cqid);
+	CU_ADD_TEST(suite, admin_create_io_sq_verify_pc);
 	CU_ADD_TEST(suite, admin_create_io_qp_max_qps);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
