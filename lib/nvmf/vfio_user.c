@@ -1105,7 +1105,7 @@ static int
 handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		   struct spdk_nvme_cmd *cmd, const bool is_cq)
 {
-	uint16_t qid;
+	uint16_t qid, cqid;
 	uint32_t qsize;
 	uint16_t sc = SPDK_NVME_SC_SUCCESS;
 	uint16_t sct = SPDK_NVME_SCT_GENERIC;
@@ -1170,17 +1170,17 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		io_q->iv = cmd->cdw11_bits.create_io_cq.iv;
 		io_q->phase = true;
 	} else {
-		if (cmd->cdw11_bits.create_io_sq.cqid == 0) {
-			SPDK_ERRLOG("%s: invalid CQID 0\n", ctrlr_id(ctrlr));
+		cqid = cmd->cdw11_bits.create_io_sq.cqid;
+		if (cqid == 0 || cqid >= vu_transport->transport.opts.max_qpairs_per_ctrlr) {
+			SPDK_ERRLOG("%s: invalid CQID %u\n", ctrlr_id(ctrlr), cqid);
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 			goto out;
 
 		}
 		/* CQ must be created before SQ */
-		if (!io_q_exists(ctrlr, cmd->cdw11_bits.create_io_sq.cqid, true)) {
-			SPDK_ERRLOG("%s: CQ%d does not exist\n", ctrlr_id(ctrlr),
-				    cmd->cdw11_bits.create_io_sq.cqid);
+		if (!io_q_exists(ctrlr, cqid, true)) {
+			SPDK_ERRLOG("%s: CQ%u does not exist\n", ctrlr_id(ctrlr), cqid);
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			sc = SPDK_NVME_SC_COMPLETION_QUEUE_INVALID;
 			goto out;
@@ -1192,14 +1192,14 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			goto out;
 		}
 		/* TODO: support shared IO CQ */
-		if (qid != cmd->cdw11_bits.create_io_sq.cqid) {
+		if (qid != cqid) {
 			SPDK_ERRLOG("%s: doesn't support shared CQ now\n", ctrlr_id(ctrlr));
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		}
 
 		io_q = &ctrlr->qp[qid]->sq;
-		io_q->cqid = cmd->cdw11_bits.create_io_sq.cqid;
+		io_q->cqid = cqid;
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: SQ%d CQID=%d\n", ctrlr_id(ctrlr),
 			      qid, io_q->cqid);
 	}

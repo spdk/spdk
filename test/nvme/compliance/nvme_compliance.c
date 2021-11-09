@@ -327,6 +327,7 @@ delete_create_io_sq(void)
 	void *buf;
 	uint32_t nlbas;
 	uint64_t dma_addr;
+	uint32_t ncqr;
 	int rc;
 
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
@@ -354,6 +355,19 @@ delete_create_io_sq(void)
 	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
 	spdk_dma_free(buf);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	/* Get Maximum Number of CQs */
+	cmd.cdw10_bits.get_features.fid = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+	ncqr = ((s.cpl.cdw0 & 0xffff0000u) >> 16) + 1;
 
 	/* Delete SQ 1, this is valid. */
 	memset(&cmd, 0, sizeof(cmd));
@@ -405,9 +419,32 @@ delete_create_io_sq(void)
 	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
 	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_SIZE);
 
-	/* Create SQ 1 again, qsize is MQES, this is valid. */
-	cmd.cdw10_bits.create_io_q.qsize = cap.bits.mqes; /* 0 based value */
+	/* Create SQ 1 again, CQID is 0, this is invalid. */
+	cmd.cdw10_bits.create_io_q.qsize = cap.bits.mqes; /* 0 based value, valid */
+	cmd.cdw11_bits.create_io_sq.cqid = 0;
 	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
+
+	/* Create SQ 1 again, CQID is NCQR + 1, this is invalid. */
+	cmd.cdw11_bits.create_io_sq.cqid = ncqr + 1;
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
+
+	/* Create SQ 1 again, CQID is 1, this is valid. */
+	s.done = false;
+	cmd.cdw11_bits.create_io_sq.cqid = 1;
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
 	CU_ASSERT(rc == 0);
 
