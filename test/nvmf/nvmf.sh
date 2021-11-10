@@ -18,18 +18,31 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_discovery" test/nvmf/target/discovery.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_connect_disconnect" test/nvmf/target/connect_disconnect.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_create_transport" test/nvmf/target/create_transport.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_multitarget" test/nvmf/target/multitarget.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_rpc" test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_invalid" test/nvmf/target/invalid.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_abort" test/nvmf/target/abort.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_ns_hotplug_stress" test/nvmf/target/ns_hotplug_stress.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_connect_stress" test/nvmf/target/connect_stress.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_delete_subsystem" test/nvmf/target/delete_subsystem.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_multicontroller" test/nvmf/host/multicontroller.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_aer" test/nvmf/host/aer.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_async_init" test/nvmf/host/async_init.sh "${TEST_ARGS[@]}"
+	run_test "dma" test/nvmf/host/dma.sh "${TEST_ARGS[@]}"
+	if [[ $SPDK_TEST_NVME_CLI -eq 1 ]]; then
+		run_test "nvmf_nvme_cli" test/nvmf/target/nvme_cli.sh "${TEST_ARGS[@]}"
+	fi
+	if [[ $SPDK_TEST_VFIOUSER -eq 1 ]]; then
+		run_test "nvmf_vfio_user" test/nvmf/target/nvmf_vfio_user.sh "${TEST_ARGS[@]}"
+		run_test "nvmf_vfio_user_nvme_compliance" test/nvme/compliance/compliance.sh "${TEST_ARGS[@]}"
+		run_test "nvmf_vfio_user_fuzz" test/nvmf/target/vfio_user_fuzz.sh "${TEST_ARGS[@]}"
+	fi
 fi
 run_test "nvmf_host_management" test/nvmf/target/host_management.sh "${TEST_ARGS[@]}"
-if [[ $SPDK_TEST_NVME_CLI -eq 1 && $SPDK_TEST_URING -eq 0 ]]; then
-	run_test "nvmf_nvme_cli" test/nvmf/target/nvme_cli.sh "${TEST_ARGS[@]}"
-fi
 run_test "nvmf_lvol" test/nvmf/target/nvmf_lvol.sh "${TEST_ARGS[@]}"
 run_test "nvmf_vhost" test/nvmf/target/nvmf_vhost.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdev_io_wait" test/nvmf/target/bdev_io_wait.sh "${TEST_ARGS[@]}"
-if [[ $SPDK_TEST_URING -eq 0 ]]; then
-	run_test "nvmf_create_transport" test/nvmf/target/create_transport.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_multitarget" test/nvmf/target/multitarget.sh "${TEST_ARGS[@]}"
-fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test "nvmf_fuzz" test/nvmf/target/fabrics_fuzz.sh "${TEST_ARGS[@]}"
@@ -40,20 +53,6 @@ fi
 run_test "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
-if [[ $SPDK_TEST_URING -eq 0 ]]; then
-	run_test "nvmf_rpc" test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_invalid" test/nvmf/target/invalid.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_abort" test/nvmf/target/abort.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_ns_hotplug_stress" test/nvmf/target/ns_hotplug_stress.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_connect_stress" test/nvmf/target/connect_stress.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_delete_subsystem" test/nvmf/target/delete_subsystem.sh "${TEST_ARGS[@]}"
-fi
-
-if [[ $SPDK_TEST_VFIOUSER -eq 1 && $SPDK_TEST_URING -eq 0 ]]; then
-	run_test "nvmf_vfio_user" test/nvmf/target/nvmf_vfio_user.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_vfio_user_nvme_compliance" test/nvme/compliance/compliance.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_vfio_user_fuzz" test/nvmf/target/vfio_user_fuzz.sh "${TEST_ARGS[@]}"
-fi
 
 if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	# Soft-RoCE will return invalid values in the WC field after a qp has been
@@ -71,12 +70,6 @@ run_test "nvmf_identify" test/nvmf/host/identify.sh "${TEST_ARGS[@]}"
 run_test "nvmf_perf" test/nvmf/host/perf.sh "${TEST_ARGS[@]}"
 run_test "nvmf_multipath" test/nvmf/host/multipath.sh "${TEST_ARGS[@]}"
 
-if [[ $SPDK_TEST_URING -eq 0 ]]; then
-	run_test "nvmf_multicontroller" test/nvmf/host/multicontroller.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_aer" test/nvmf/host/aer.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_async_init" test/nvmf/host/async_init.sh "${TEST_ARGS[@]}"
-fi
-
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 run_test "nvmf_fio" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
@@ -88,10 +81,6 @@ if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 	run_test "nvmf_bdevperf" test/nvmf/host/bdevperf.sh "${TEST_ARGS[@]}"
 	# GitHub issue #1043
 	run_test "nvmf_target_disconnect" test/nvmf/host/target_disconnect.sh "${TEST_ARGS[@]}"
-fi
-
-if [[ $SPDK_TEST_URING -eq 0 ]]; then
-	run_test "dma" test/nvmf/host/dma.sh "${TEST_ARGS[@]}"
 fi
 
 timing_exit host
