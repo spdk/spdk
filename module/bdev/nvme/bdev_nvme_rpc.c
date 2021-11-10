@@ -500,38 +500,42 @@ SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_bdev)
 
 static void
-rpc_dump_nvme_controller_info(struct nvme_ctrlr *nvme_ctrlr, void *ctx)
+rpc_dump_nvme_bdev_controller_info(struct nvme_bdev_ctrlr *nbdev_ctrlr, void *ctx)
 {
 	struct spdk_json_write_ctx	*w = ctx;
-	struct spdk_nvme_transport_id	*trid;
+	struct spdk_nvme_transport_id   *trid;
+	struct nvme_ctrlr		*nvme_ctrlr;
 	const struct spdk_nvme_ctrlr_opts *opts;
 
-	trid = &nvme_ctrlr->active_path_id->trid;
-
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", nvme_ctrlr->nbdev_ctrlr->name);
+	spdk_json_write_named_string(w, "name", nbdev_ctrlr->name);
 
+	spdk_json_write_named_array_begin(w, "ctrlrs");
+	TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
+		spdk_json_write_object_begin(w);
 #ifdef SPDK_CONFIG_NVME_CUSE
-	size_t cuse_name_size = 128;
-	char cuse_name[cuse_name_size];
+		size_t cuse_name_size = 128;
+		char cuse_name[cuse_name_size];
 
-	int rc = spdk_nvme_cuse_get_ctrlr_name(nvme_ctrlr->ctrlr, cuse_name, &cuse_name_size);
-	if (rc == 0) {
-		spdk_json_write_named_string(w, "cuse_device", cuse_name);
-	}
+		int rc = spdk_nvme_cuse_get_ctrlr_name(nvme_ctrlr->ctrlr, cuse_name, &cuse_name_size);
+		if (rc == 0) {
+			spdk_json_write_named_string(w, "cuse_device", cuse_name);
+		}
 #endif
+		trid = &nvme_ctrlr->active_path_id->trid;
+		spdk_json_write_named_object_begin(w, "trid");
+		nvme_bdev_dump_trid_json(trid, w);
+		spdk_json_write_object_end(w);
 
-	spdk_json_write_named_object_begin(w, "trid");
-	nvme_bdev_dump_trid_json(trid, w);
-	spdk_json_write_object_end(w);
-
-	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
-
-	spdk_json_write_named_object_begin(w, "host");
-	spdk_json_write_named_string(w, "nqn", opts->hostnqn);
-	spdk_json_write_named_string(w, "addr", opts->src_addr);
-	spdk_json_write_named_string(w, "svcid", opts->src_svcid);
-	spdk_json_write_object_end(w);
+		opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
+		spdk_json_write_named_object_begin(w, "host");
+		spdk_json_write_named_string(w, "nqn", opts->hostnqn);
+		spdk_json_write_named_string(w, "addr", opts->src_addr);
+		spdk_json_write_named_string(w, "svcid", opts->src_svcid);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
 	spdk_json_write_object_end(w);
 }
 
@@ -555,7 +559,7 @@ rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_bdev_nvme_get_controllers req = {};
 	struct spdk_json_write_ctx *w;
-	struct nvme_ctrlr *ctrlr = NULL;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr = NULL;
 
 	if (params && spdk_json_decode_object(params, rpc_bdev_nvme_get_controllers_decoders,
 					      SPDK_COUNTOF(rpc_bdev_nvme_get_controllers_decoders),
@@ -567,8 +571,8 @@ rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.name) {
-		ctrlr = nvme_ctrlr_get_by_name(req.name);
-		if (ctrlr == NULL) {
+		nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
+		if (nbdev_ctrlr == NULL) {
 			SPDK_ERRLOG("ctrlr '%s' does not exist\n", req.name);
 			spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Controller %s does not exist", req.name);
 			goto cleanup;
@@ -578,10 +582,10 @@ rpc_bdev_nvme_get_controllers(struct spdk_jsonrpc_request *request,
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
 
-	if (ctrlr != NULL) {
-		rpc_dump_nvme_controller_info(ctrlr, w);
+	if (nbdev_ctrlr != NULL) {
+		rpc_dump_nvme_bdev_controller_info(nbdev_ctrlr, w);
 	} else {
-		nvme_ctrlr_for_each(rpc_dump_nvme_controller_info, w);
+		nvme_bdev_ctrlr_for_each(rpc_dump_nvme_bdev_controller_info, w);
 	}
 
 	spdk_json_write_array_end(w);

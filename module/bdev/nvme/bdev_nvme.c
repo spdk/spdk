@@ -243,8 +243,8 @@ struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 bool g_bdev_nvme_module_finish;
 
-static struct nvme_bdev_ctrlr *
-nvme_bdev_ctrlr_get(const char *name)
+struct nvme_bdev_ctrlr *
+nvme_bdev_ctrlr_get_by_name(const char *name)
 {
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 
@@ -344,7 +344,7 @@ nvme_ctrlr_get_by_name(const char *name)
 	}
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	nbdev_ctrlr = nvme_bdev_ctrlr_get(name);
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr != NULL) {
 		nvme_ctrlr = TAILQ_FIRST(&nbdev_ctrlr->ctrlrs);
 	}
@@ -354,16 +354,13 @@ nvme_ctrlr_get_by_name(const char *name)
 }
 
 void
-nvme_ctrlr_for_each(nvme_ctrlr_for_each_fn fn, void *ctx)
+nvme_bdev_ctrlr_for_each(nvme_bdev_ctrlr_for_each_fn fn, void *ctx)
 {
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
-	struct nvme_ctrlr *nvme_ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-			fn(nvme_ctrlr, ctx);
-		}
+		fn(nbdev_ctrlr, ctx);
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
@@ -2977,7 +2974,7 @@ nvme_bdev_ctrlr_create(const char *name, struct nvme_ctrlr *nvme_ctrlr)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get(name);
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr != NULL) {
 		if (!bdev_nvme_check_multipath(nbdev_ctrlr, ctrlr)) {
 			rc = -EINVAL;
@@ -3588,7 +3585,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 	ctx->opts.disable_read_ana_log_page = true;
 
-	if (nvme_bdev_ctrlr_get(base_name) == NULL || multipath) {
+	if (nvme_bdev_ctrlr_get_by_name(base_name) == NULL || multipath) {
 		attach_cb = connect_attach_cb;
 	} else {
 		attach_cb = connect_set_failover_cb;
@@ -3617,7 +3614,7 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 		return -EINVAL;
 	}
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get(name);
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nbdev_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed to find NVMe bdev controller\n");
 		return -ENODEV;

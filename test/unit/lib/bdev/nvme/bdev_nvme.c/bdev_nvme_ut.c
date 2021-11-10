@@ -2897,7 +2897,7 @@ test_create_bdev_ctrlr(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) != NULL);
 
@@ -2943,7 +2943,7 @@ test_create_bdev_ctrlr(void)
 	rc = bdev_nvme_delete("nvme0", &g_any_path);
 	CU_ASSERT(rc == 0);
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == nbdev_ctrlr);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) != NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) != NULL);
 
@@ -2951,7 +2951,7 @@ test_create_bdev_ctrlr(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
 	/* Add two ctrlrs and delete one by one. */
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 0, true, true);
@@ -2980,13 +2980,13 @@ test_create_bdev_ctrlr(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	rc = bdev_nvme_delete("nvme0", &path1);
 	CU_ASSERT(rc == 0);
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == nbdev_ctrlr);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) != NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) != NULL);
 
@@ -2994,14 +2994,14 @@ test_create_bdev_ctrlr(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == nbdev_ctrlr);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) == NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) != NULL);
 
 	rc = bdev_nvme_delete("nvme0", &path2);
 	CU_ASSERT(rc == 0);
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == nbdev_ctrlr);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) == NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) != NULL);
 
@@ -3009,7 +3009,7 @@ test_create_bdev_ctrlr(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
 static struct nvme_ns *
@@ -3096,7 +3096,7 @@ test_add_multi_ns_to_bdev(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	nvme_ctrlr1 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid);
@@ -3140,7 +3140,7 @@ test_add_multi_ns_to_bdev(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == nbdev_ctrlr);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == nbdev_ctrlr);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid) == NULL);
 	CU_ASSERT(nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path2.trid) == nvme_ctrlr2);
 
@@ -3151,7 +3151,7 @@ test_add_multi_ns_to_bdev(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
 	/* Test if a nvme_bdev which has a shared namespace between two ctrlrs
 	 * can be deleted when the bdev subsystem shutdown.
@@ -3190,7 +3190,7 @@ test_add_multi_ns_to_bdev(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	bdev1 = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
@@ -3233,7 +3233,7 @@ test_add_multi_ns_to_bdev(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
 static void
@@ -3291,7 +3291,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	nvme_ctrlr1 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid);
@@ -3379,7 +3379,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
 static void
@@ -3433,7 +3433,7 @@ test_admin_path(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
@@ -3488,7 +3488,7 @@ test_admin_path(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
 static struct nvme_io_path *
@@ -3560,7 +3560,7 @@ test_reset_bdev_ctrlr(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	nvme_ctrlr1 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid);
@@ -3744,7 +3744,7 @@ test_reset_bdev_ctrlr(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
 	free(first_bdev_io);
 	free(second_bdev_io);
@@ -3838,7 +3838,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path.trid);
@@ -3987,7 +3987,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 }
 
 static void
@@ -4036,7 +4036,7 @@ test_retry_io_for_io_path_error(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	nvme_ctrlr1 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid);
@@ -4193,7 +4193,7 @@ test_retry_io_for_io_path_error(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
 	g_opts.bdev_retry_count = 0;
 }
@@ -4236,7 +4236,7 @@ test_retry_io_count(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path.trid);
@@ -4387,7 +4387,7 @@ test_retry_io_count(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
 	g_opts.bdev_retry_count = 0;
 }
@@ -4520,7 +4520,7 @@ test_retry_io_for_ana_error(void)
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
 	poll_threads();
 
-	nbdev_ctrlr = nvme_bdev_ctrlr_get("nvme0");
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
 	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
 
 	nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path.trid);
@@ -4620,7 +4620,7 @@ test_retry_io_for_ana_error(void)
 	spdk_delay_us(1000);
 	poll_threads();
 
-	CU_ASSERT(nvme_bdev_ctrlr_get("nvme0") == NULL);
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
 
 	g_opts.bdev_retry_count = 0;
 }

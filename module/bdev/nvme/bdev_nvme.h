@@ -194,9 +194,11 @@ struct nvme_poll_group {
 
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
 
-typedef void (*nvme_ctrlr_for_each_fn)(struct nvme_ctrlr *nvme_ctrlr, void *ctx);
+struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
 
-void nvme_ctrlr_for_each(nvme_ctrlr_for_each_fn fn, void *ctx);
+typedef void (*nvme_bdev_ctrlr_for_each_fn)(struct nvme_bdev_ctrlr *nbdev_ctrlr, void *ctx);
+
+void nvme_bdev_ctrlr_for_each(nvme_bdev_ctrlr_for_each_fn fn, void *ctx);
 
 void nvme_bdev_dump_trid_json(const struct spdk_nvme_transport_id *trid,
 			      struct spdk_json_write_ctx *w);
