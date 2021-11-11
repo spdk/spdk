@@ -93,6 +93,16 @@ uint64_t spdk_bdev_get_zone_size(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_num_zones(const struct spdk_bdev *bdev);
 
 /**
+ * Get the first logical block of a zone (known as zone_id or zslba)
+ * for a given offset.
+ *
+ * \param bdev Block device to query.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \return The zone_id (also known as zslba) for the given offset.
+ */
+uint64_t spdk_bdev_get_zone_id(const struct spdk_bdev *bdev, uint64_t offset_blocks);
+
+/**
  * Get device maximum zone append data transfer size in logical blocks.
  *
  * If this value is 0, there is no limit.

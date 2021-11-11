@@ -35,6 +35,7 @@
 
 #include "spdk/bdev_zone.h"
 #include "spdk/bdev_module.h"
+#include "spdk/likely.h"
 
 #include "bdev_internal.h"
 
@@ -48,6 +49,22 @@ uint64_t
 spdk_bdev_get_num_zones(const struct spdk_bdev *bdev)
 {
 	return bdev->zone_size ? bdev->blockcnt / bdev->zone_size : 0;
+}
+
+uint64_t
+spdk_bdev_get_zone_id(const struct spdk_bdev *bdev, uint64_t offset_blocks)
+{
+	uint64_t zslba;
+
+	if (spdk_likely(spdk_u64_is_pow2(bdev->zone_size))) {
+		uint64_t zone_mask = bdev->zone_size - 1;
+		zslba = offset_blocks & ~zone_mask;
+	} else {
+		/* integer division */
+		zslba = (offset_blocks / bdev->zone_size) * bdev->zone_size;
+	}
+
+	return zslba;
 }
 
 uint32_t
