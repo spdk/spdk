@@ -2836,6 +2836,18 @@ nvmf_vfio_user_qpair_poll(struct nvmf_vfio_user_qpair *qpair)
 
 	ctrlr = qpair->ctrlr;
 
+	/* On aarch64 platforms, doorbells update from guest VM may not be seen
+	 * on SPDK target side. This is because there is memory type mismatch
+	 * situation here. That is on guest VM side, the doorbells are treated as
+	 * device memory while on SPDK target side, it is treated as normal
+	 * memory. And this situation cause problem on ARM platform.
+	 * Refer to "https://developer.arm.com/documentation/102376/0100/
+	 * Memory-aliasing-and-mismatched-memory-types". Only using spdk_mb()
+	 * cannot fix this. Use "dc civac" to invalidate cache may solve
+	 * this.
+	 */
+	spdk_ivdt_dcache(tdbl(ctrlr, &qpair->sq));
+
 	/* Load-Acquire. */
 	new_tail = *tdbl(ctrlr, &qpair->sq);
 

@@ -66,6 +66,9 @@ extern "C" {
 /** SMP read/write memory barrier. */
 #define spdk_smp_mb()	_spdk_smp_mb()
 
+/** Invalidate data cache, input is data pointer */
+#define spdk_ivdt_dcache(pdata)	_spdk_ivdt_dcache(pdata)
+
 #ifdef __PPC64__
 
 #define _spdk_rmb()	__asm volatile("sync" ::: "memory")
@@ -74,6 +77,7 @@ extern "C" {
 #define _spdk_smp_rmb()	__asm volatile("lwsync" ::: "memory")
 #define _spdk_smp_wmb()	__asm volatile("lwsync" ::: "memory")
 #define _spdk_smp_mb()	spdk_mb()
+#define _spdk_ivdt_dcache(pdata)
 
 #elif defined(__aarch64__)
 
@@ -83,6 +87,7 @@ extern "C" {
 #define _spdk_smp_rmb()	__asm volatile("dmb ishld" ::: "memory")
 #define _spdk_smp_wmb()	__asm volatile("dmb ishst" ::: "memory")
 #define _spdk_smp_mb()	__asm volatile("dmb ish" ::: "memory")
+#define _spdk_ivdt_dcache(pdata)	asm volatile("dc civac, %0" : : "r"(pdata) : "memory");
 
 #elif defined(__i386__) || defined(__x86_64__)
 
@@ -96,6 +101,7 @@ extern "C" {
 #elif defined(__i386__)
 #define _spdk_smp_mb()	__asm volatile("lock addl $0, -128(%%esp); " ::: "memory");
 #endif
+#define _spdk_ivdt_dcache(pdata)
 
 #else
 
@@ -105,6 +111,7 @@ extern "C" {
 #define _spdk_smp_rmb()
 #define _spdk_smp_wmb()
 #define _spdk_smp_mb()
+#define _spdk_ivdt_dcache(pdata)
 #error Unknown architecture
 
 #endif
