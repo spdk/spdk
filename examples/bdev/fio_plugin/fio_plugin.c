@@ -745,8 +745,7 @@ spdk_fio_zone_bytes_to_blocks(struct spdk_bdev *bdev, uint64_t offset_bytes, uin
 			      uint64_t num_bytes, uint64_t *num_blocks)
 {
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
-	*zone_start = (offset_bytes / (spdk_bdev_get_zone_size(bdev) * block_size)) *
-		      spdk_bdev_get_zone_size(bdev);
+	*zone_start = spdk_bdev_get_zone_id(bdev, offset_bytes / block_size);
 	*num_blocks = num_bytes / block_size;
 	return (offset_bytes % block_size) | (num_bytes % block_size);
 }
