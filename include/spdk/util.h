@@ -110,6 +110,19 @@ spdk_u32_is_pow2(uint32_t x)
 	return (x & (x - 1)) == 0;
 }
 
+/**
+ * Check if a uint64_t is a power of 2.
+ */
+static inline bool
+spdk_u64_is_pow2(uint64_t x)
+{
+	if (x == 0) {
+		return false;
+	}
+
+	return (x & (x - 1)) == 0;
+}
+
 static inline uint64_t
 spdk_divide_round_up(uint64_t num, uint64_t divisor)
 {
