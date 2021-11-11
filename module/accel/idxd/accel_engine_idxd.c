@@ -45,6 +45,8 @@
 #include "spdk/idxd.h"
 #include "spdk/util.h"
 #include "spdk/json.h"
+#include "spdk/trace.h"
+#include "spdk_internal/trace_defs.h"
 
 static bool g_idxd_enable = false;
 static bool g_kernel_mode = false;
@@ -136,6 +138,7 @@ idxd_done(void *cb_arg, int status)
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(accel_task->accel_ch->engine_ch);
 
 	assert(chan->num_outstanding > 0);
+	spdk_trace_record(TRACE_IDXD_OP_COMPLETE, 0, 0, 0, chan->num_outstanding - 1);
 	if (chan->num_outstanding-- == chan->max_outstanding) {
 		chan->state = IDXD_CHANNEL_ACTIVE;
 	}
@@ -190,6 +193,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 
 	if (rc == 0) {
 		chan->num_outstanding++;
+		spdk_trace_record(TRACE_IDXD_OP_SUBMIT, 0, 0, 0, chan->num_outstanding);
 	}
 
 	return rc;
@@ -431,6 +435,14 @@ accel_engine_idxd_write_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
+}
+
+SPDK_TRACE_REGISTER_FN(idxd_trace, "idxd", TRACE_GROUP_IDXD)
+{
+	spdk_trace_register_description("IDXD_OP_SUBMIT", TRACE_IDXD_OP_SUBMIT, OWNER_NONE, OBJECT_NONE, 0,
+					SPDK_TRACE_ARG_TYPE_INT, "count");
+	spdk_trace_register_description("IDXD_OP_COMPLETE", TRACE_IDXD_OP_COMPLETE, OWNER_NONE, OBJECT_NONE,
+					0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
 
 SPDK_ACCEL_MODULE_REGISTER(accel_engine_idxd_init, accel_engine_idxd_exit,
