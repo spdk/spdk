@@ -122,7 +122,7 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	 * the accel task list is exhausted when there is recursive call to
 	 * allocate accel_task in user's call back function (cb_fn)
 	 */
-	TAILQ_INSERT_TAIL(&accel_ch->task_pool, accel_task, link);
+	TAILQ_INSERT_HEAD(&accel_ch->task_pool, accel_task, link);
 
 	cb_fn(cb_arg, status);
 	/* If this task is part of a batch, check for completion of the batch. */
