@@ -44,6 +44,8 @@
 #define MAX_TOKENS 0x40
 #define MAX_ARRAY_SIZE 0x20
 
+SPDK_LOG_REGISTER_COMPONENT(idxd);
+
 DEFINE_STUB(spdk_pci_idxd_get_driver, struct spdk_pci_driver *, (void), NULL);
 DEFINE_STUB_V(idxd_impl_register, (struct spdk_idxd_impl *impl));
 DEFINE_STUB_V(spdk_pci_device_detach, (struct spdk_pci_device *device));

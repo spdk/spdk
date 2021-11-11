@@ -266,8 +266,8 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
 	u_int32_t wq_size = user_idxd->registers.wqcap.total_wq_size / g_user_dev_cfg.total_wqs;
 
-	SPDK_NOTICELOG("Total ring slots available space 0x%x, so per work queue is 0x%x\n",
-		       user_idxd->registers.wqcap.total_wq_size, wq_size);
+	SPDK_DEBUGLOG(idxd, "Total ring slots available space 0x%x, so per work queue is 0x%x\n",
+		      user_idxd->registers.wqcap.total_wq_size, wq_size);
 	assert(g_user_dev_cfg.total_wqs <= IDXD_MAX_QUEUES);
 	assert(g_user_dev_cfg.total_wqs <= user_idxd->registers.wqcap.num_wqs);
 	assert(LOG2_WQ_MAX_BATCH <= user_idxd->registers.gencap.max_batch_shift);
@@ -401,9 +401,9 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	}
 
 	if ((rc == 0) && (genstatus_reg.state == IDXD_DEVICE_STATE_ENABLED)) {
-		SPDK_NOTICELOG("Device enabled, version 0x%x gencap: 0x%lx\n",
-			       user_idxd->registers.version,
-			       user_idxd->registers.gencap.raw);
+		SPDK_DEBUGLOG(idxd, "Device enabled, version 0x%x gencap: 0x%lx\n",
+			      user_idxd->registers.version,
+			      user_idxd->registers.gencap.raw);
 
 	}
 
@@ -465,16 +465,18 @@ idxd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
-	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
+	struct spdk_pci_addr pci_addr __attribute__((unused));
 
-	SPDK_NOTICELOG(
-		" Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
-		pci_addr.domain,
-		pci_addr.bus,
-		pci_addr.dev,
-		pci_addr.func,
-		spdk_pci_device_get_vendor_id(pci_dev),
-		spdk_pci_device_get_device_id(pci_dev));
+	pci_addr = spdk_pci_device_get_addr(pci_dev);
+
+	SPDK_DEBUGLOG(idxd,
+		      " Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
+		      pci_addr.domain,
+		      pci_addr.bus,
+		      pci_addr.dev,
+		      pci_addr.func,
+		      spdk_pci_device_get_vendor_id(pci_dev),
+		      spdk_pci_device_get_device_id(pci_dev));
 
 	/* Claim the device in case conflict with other process */
 	if (spdk_pci_device_claim(pci_dev) < 0) {
