@@ -788,6 +788,7 @@ if [[ $os == Linux ]]; then
 		configure_linux
 	elif [ "$mode" == "cleanup" ]; then
 		cleanup_linux
+		clear_hugepages
 	elif [ "$mode" == "reset" ]; then
 		reset_linux
 	elif [ "$mode" == "status" ]; then
