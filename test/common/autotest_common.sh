@@ -1237,7 +1237,6 @@ function autotest_cleanup() {
 	if [[ -e /proc/$udevadm_pid/status ]]; then
 		kill "$udevadm_pid" || :
 	fi
-	revert_soft_roce
 
 	shopt -s nullglob
 	local storage_fallback_purge=("${TMPDIR:-/tmp}/spdk."??????)

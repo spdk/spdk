@@ -45,7 +45,7 @@ if [ $(uname -s) = Linux ]; then
 	fi
 fi
 
-trap "process_core || :; autotest_cleanup; exit 1" SIGINT SIGTERM EXIT
+trap "process_core || :; autotest_cleanup || :; revert_soft_roce; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
@@ -353,6 +353,7 @@ fi
 
 timing_enter cleanup
 autotest_cleanup
+revert_soft_roce
 timing_exit cleanup
 
 timing_exit autotest
