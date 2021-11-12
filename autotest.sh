@@ -45,7 +45,7 @@ if [ $(uname -s) = Linux ]; then
 	fi
 fi
 
-trap "process_core || :; autotest_cleanup || :; revert_soft_roce; exit 1" SIGINT SIGTERM EXIT
+trap "autotest_cleanup || :; revert_soft_roce; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
@@ -360,9 +360,6 @@ timing_exit autotest
 chmod a+r $output_dir/timing.txt
 
 trap - SIGINT SIGTERM EXIT
-
-# catch any stray core files
-process_core
 
 [[ -f "$output_dir/udev.log" ]] && rm -f "$output_dir/udev.log"
 

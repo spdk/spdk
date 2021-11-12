@@ -656,8 +656,7 @@ function process_core() {
 	# potential cores. If we are called just for cleanup at the very end,
 	# don't wait since all the tests ended successfully, hence having any
 	# critical cores lying around is unlikely.
-	local es=$?
-	((es != 0)) && sleep 5
+	((autotest_es != 0)) && sleep 5
 
 	local coredumps core
 
@@ -1221,6 +1220,16 @@ function get_bdev_size() {
 }
 
 function autotest_cleanup() {
+	local autotest_es=$?
+	xtrace_disable
+
+	# catch any stray core files and kill all remaining SPDK processes. Update
+	# autotest_es in case autotest reported success but cores and/or processes
+	# were left behind regardless.
+
+	process_core || autotest_es=1
+	reap_spdk_processes || autotest_es=1
+
 	$rootdir/scripts/setup.sh reset
 	$rootdir/scripts/setup.sh cleanup
 	if [ $(uname -s) = "Linux" ]; then
@@ -1245,6 +1254,9 @@ function autotest_cleanup() {
 	if ((${#storage_fallback_purge[@]} > 0)); then
 		rm -rf "${storage_fallback_purge[@]}"
 	fi
+
+	xtrace_restore
+	return $autotest_es
 }
 
 function freebsd_update_contigmem_mod() {
@@ -1401,6 +1413,55 @@ function pap() {
 		FILE
 		rm -f "$file"
 	done < <(find "$@" -type f | sort -u)
+}
+
+function get_proc_paths() {
+	local procs proc
+	if [[ $(uname -s) == Linux ]]; then
+		for proc in /proc/[0-9]*; do
+			[[ -e $proc/exe ]] || continue
+			procs[${proc##*/}]=$(readlink -f "$proc/exe")
+		done
+	elif [[ $(uname -s) == FreeBSD ]]; then
+		while read -r proc _ _ path; do
+			[[ -e $path ]] || continue
+			procs[proc]=$path
+		done < <(procstat -ab)
+	fi
+
+	for proc in "${!procs[@]}"; do
+		echo "$proc" "${procs[proc]}"
+	done
+}
+
+is_exec_file() { [[ -f $1 && $(file "$1") =~ ELF.+executable ]]; }
+
+function reap_spdk_processes() {
+	local bins bin
+	local misc_bins
+
+	while read -r bin; do
+		is_exec_file "$bin" && misc_bins+=("$bin")
+	done < <(find "$rootdir"/test/{app,env,event} -type f)
+
+	mapfile -t bins < <(readlink -f "$SPDK_BIN_DIR/"* "$SPDK_EXAMPLE_DIR/"* "${misc_bins[@]}")
+
+	local spdk_pid spdk_pids path
+	while read -r spdk_pid path; do
+		if [[ ${bins[*]/$path/} != "${bins[*]}" ]]; then
+			echo "$path is still up ($spdk_pid), killing"
+			spdk_pids[spdk_pid]=$path
+		fi
+	done < <(get_proc_paths)
+
+	((${#spdk_pids[@]} > 0)) || return 0
+
+	kill -SIGTERM "${!spdk_pids[@]}" 2> /dev/null || :
+	# Wait a bit and then use the stick
+	sleep 2
+	kill -SIGKILL "${!spdk_pids[@]}" 2> /dev/null || :
+
+	return 1
 }
 
 # Define temp storage for all the tests. Look for 2GB at minimum
