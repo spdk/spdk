@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev accel iscsi nvmf scsi vmd scheduler sock
+DIRS-y += bdev accel scheduler iscsi nvmf scsi vmd sock
 
 ifeq ($(OS),Linux)
 DIRS-y += nbd
