@@ -174,6 +174,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "rpc" test/rpc/rpc.sh
 	run_test "rpc_client" test/rpc_client/rpc_client.sh
 	run_test "json_config" ./test/json_config/json_config.sh
+	run_test "json_config_extra_key" ./test/json_config/json_config_extra_key.sh
 	run_test "alias_rpc" test/json_config/alias_rpc/alias_rpc.sh
 	run_test "spdkcli_tcp" test/spdkcli/tcp.sh
 	run_test "dpdk_mem_utility" test/dpdk_memory_utility/test_dpdk_mem_info.sh

@@ -1,0 +1,31 @@
+{
+  "extrakey": [
+    {
+      "foo": "bar"
+    }
+  ],
+  "subsystems": [
+    {
+      "subsystem": "bdev",
+      "config": [
+        {
+          "params": {
+            "bdev_io_pool_size": 65536,
+            "bdev_io_cache_size": 256
+          },
+          "method": "bdev_set_options"
+        },
+        {
+          "params": {
+            "retry_count": 4,
+            "timeout_us": 0,
+            "nvme_adminq_poll_period_us": 100000,
+            "action_on_timeout": "none",
+            "nvme_ioq_poll_period_us": 0
+          },
+          "method": "bdev_nvme_set_options"
+        }
+      ]
+    }
+  ]
+}
