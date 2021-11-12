@@ -873,9 +873,9 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	}
 
 	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
-	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(bio->io_path->ctrlr_ch);
 
 	assert(bio->io_path != NULL);
+	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(bio->io_path->ctrlr_ch);
 
 	if (spdk_nvme_cpl_is_path_error(cpl) ||
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
