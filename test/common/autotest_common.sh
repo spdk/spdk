@@ -657,7 +657,7 @@ function process_core() {
 	# don't wait since all the tests ended successfully, hence having any
 	# critical cores lying around is unlikely.
 	local es=$?
-	((es != 0)) && sleep 5s
+	((es != 0)) && sleep 5
 
 	local coredumps core
 
