@@ -846,7 +846,9 @@ cuse_nvme_ns_start(struct cuse_device *ctrlr_device, uint32_t nsid)
 static void
 cuse_nvme_ns_stop(struct cuse_device *ctrlr_device, struct cuse_device *ns_device)
 {
-	fuse_session_exit(ns_device->session);
+	if (ns_device->session != NULL) {
+		fuse_session_exit(ns_device->session);
+	}
 	pthread_join(ns_device->tid, NULL);
 	TAILQ_REMOVE(&ctrlr_device->ns_devices, ns_device, tailq);
 	free(ns_device);
