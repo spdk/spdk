@@ -1175,20 +1175,9 @@ admin_get_log_page_mandatory_logs(void)
 	wait_for_admin_completion(&s, ctrlr);
 	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
 
-	/* Log Page Offset Lower is greater than spdk_nvme_error_information_entry, invalid */
-	cmd.cdw12 = sizeof(struct spdk_nvme_error_information_entry) + 4;
-	s.done = false;
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, buf,
-					   sizeof(struct spdk_nvme_error_information_entry), test_cb, &s);
-	CU_ASSERT(rc == 0);
-
-	wait_for_admin_completion(&s, ctrlr);
-	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
-
 	/* 02h SMART / Health Information, valid */
 	cmd.cdw10_bits.get_log_page.numdl = sizeof(struct spdk_nvme_health_information_page) / 4 - 1;
 	cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_HEALTH_INFORMATION;
-	cmd.cdw12 = 0;
 
 	s.done = false;
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, buf,
@@ -1202,6 +1191,60 @@ admin_get_log_page_mandatory_logs(void)
 	cmd.cdw10_bits.get_log_page.numdl = sizeof(struct spdk_nvme_firmware_page) / 4 - 1;
 	cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_FIRMWARE_SLOT;
 
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, buf,
+					   sizeof(struct spdk_nvme_firmware_page), test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+	spdk_dma_free(buf);
+	spdk_nvme_detach(ctrlr);
+}
+
+static void
+admin_get_log_page_with_lpo(void)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_cmd cmd;
+	void *buf;
+	struct status s;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_transport_id_parse(&g_trid, g_trid_str) == 0);
+	ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(ctrlr);
+
+	buf = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
+
+	/* 03h Firmware Slot Information, valid */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.cdw10_bits.get_log_page.numdl = sizeof(struct spdk_nvme_firmware_page) / 4 - 1;
+	cmd.cdw10_bits.get_log_page.lid = SPDK_NVME_LOG_FIRMWARE_SLOT;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, buf,
+					   sizeof(struct spdk_nvme_firmware_page), test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(!spdk_nvme_cpl_is_error(&s.cpl));
+
+	/* Log Page Offset Lower is greater than spdk_nvme_firmware_page, invalid */
+	cmd.cdw12 = sizeof(struct spdk_nvme_firmware_page) + 4;
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, buf,
+					   sizeof(struct spdk_nvme_firmware_page), test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Log Page Offset Lower is less than spdk_nvme_firmware_page, but greater than 0, valid */
+	cmd.cdw12 = 4;
 	s.done = false;
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, buf,
 					   sizeof(struct spdk_nvme_firmware_page), test_cb, &s);
@@ -1248,6 +1291,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, admin_get_features_mandatory_features);
 	CU_ADD_TEST(suite, admin_set_features_number_of_queues);
 	CU_ADD_TEST(suite, admin_get_log_page_mandatory_logs);
+	CU_ADD_TEST(suite, admin_get_log_page_with_lpo);
 	CU_ADD_TEST(suite, fabric_property_get);
 	CU_ADD_TEST(suite, admin_delete_io_sq_use_admin_qid);
 	CU_ADD_TEST(suite, admin_delete_io_sq_delete_sq_twice);
