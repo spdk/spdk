@@ -48,7 +48,6 @@ packages=(
 	sshfs
 	sshpass
 	python3-pandas
-	btrfs-progs
 	rpm-build
 	iptables
 	clang-analyzer
@@ -62,6 +61,10 @@ packages=(
 	ruby-devel
 	llvm
 )
+
+if [[ $OSID != centos ]] || ((OSVERSION != 8)); then
+	packages+=(btrfs-progs)
+fi
 
 pre_install() { :; }
 
