@@ -350,6 +350,9 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		ctrlr->cntlid = connect_data->cntlid;
 	}
 
+	SPDK_DTRACE_PROBE3(nvmf_ctrlr_create, ctrlr, subsystem->subnqn,
+			   spdk_thread_get_id(req->qpair->group->thread));
+
 	STAILQ_INIT(&ctrlr->async_events);
 	TAILQ_INIT(&ctrlr->log_head);
 	ctrlr->subsys = subsystem;
@@ -483,6 +486,9 @@ _nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 	struct spdk_nvmf_async_event_completion *event, *event_tmp;
 
+	SPDK_DTRACE_PROBE3(nvmf_ctrlr_destruct, ctrlr, ctrlr->subsys->subnqn,
+			   spdk_thread_get_id(ctrlr->thread));
+
 	assert(spdk_get_thread() == ctrlr->thread);
 	assert(ctrlr->in_destruct);
 
@@ -523,6 +529,9 @@ nvmf_ctrlr_add_io_qpair(void *ctx)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_qpair *admin_qpair = ctrlr->admin_qpair;
+
+	SPDK_DTRACE_PROBE4(nvmf_ctrlr_add_io_qpair, ctrlr, req->qpair, req->qpair->qid,
+			   spdk_thread_get_id(ctrlr->thread));
 
 	/* Unit test will check qpair->ctrlr after calling spdk_nvmf_ctrlr_connect.
 	  * For error case, the value should be NULL. So set it to NULL at first.

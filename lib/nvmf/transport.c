@@ -501,6 +501,7 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		free(bufs);
 	}
+
 	return group;
 }
 
@@ -544,6 +545,9 @@ nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		qpair->transport = group->transport;
 	}
 
+	SPDK_DTRACE_PROBE3(nvmf_transport_poll_group_add, qpair, qpair->qid,
+			   spdk_thread_get_id(group->group->thread));
+
 	return group->transport->ops->poll_group_add(group, qpair);
 }
 
@@ -552,6 +556,9 @@ nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair)
 {
 	int rc = ENOTSUP;
+
+	SPDK_DTRACE_PROBE3(nvmf_transport_poll_group_remove, qpair, qpair->qid,
+			   spdk_thread_get_id(group->group->thread));
 
 	assert(qpair->transport == group->transport);
 	if (group->transport->ops->poll_group_remove) {

@@ -333,6 +333,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 
 	tgt->subsystems[sid] = subsystem;
 
+	SPDK_DTRACE_PROBE1(nvmf_subsystem_create, subsystem->subnqn);
+
 	return subsystem;
 }
 
@@ -440,6 +442,8 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 	if (!subsystem) {
 		return -EINVAL;
 	}
+
+	SPDK_DTRACE_PROBE1(nvmf_subsystem_destroy, subsystem->subnqn);
 
 	assert(spdk_get_thread() == subsystem->thread);
 
@@ -847,6 +851,8 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 
 	snprintf(host->nqn, sizeof(host->nqn), "%s", hostnqn);
 
+	SPDK_DTRACE_PROBE2(nvmf_subsystem_add_host, subsystem->subnqn, host->nqn);
+
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 
 	if (!TAILQ_EMPTY(&subsystem->listeners)) {
@@ -870,6 +876,8 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 		pthread_mutex_unlock(&subsystem->mutex);
 		return -ENOENT;
 	}
+
+	SPDK_DTRACE_PROBE2(nvmf_subsystem_remove_host, subsystem->subnqn, host->nqn);
 
 	nvmf_subsystem_remove_host(subsystem, host);
 
@@ -1150,6 +1158,9 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		rc = transport->ops->listen_associate(transport, subsystem, trid);
 	}
 
+	SPDK_DTRACE_PROBE4(nvmf_subsystem_add_listener, subsystem->subnqn, listener->trid->trtype,
+			   listener->trid->traddr, listener->trid->trsvcid);
+
 	_nvmf_subsystem_add_listener_done(listener, rc);
 }
 
@@ -1168,6 +1179,9 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (listener == NULL) {
 		return -ENOENT;
 	}
+
+	SPDK_DTRACE_PROBE4(nvmf_subsystem_remove_listener, subsystem->subnqn, listener->trid->trtype,
+			   listener->trid->traddr, listener->trid->trsvcid);
 
 	_nvmf_subsystem_remove_listener(subsystem, listener, false);
 
@@ -1370,6 +1384,8 @@ nvmf_ns_change_msg(void *ns_ctx)
 {
 	struct subsystem_ns_change_ctx *ctx = ns_ctx;
 	int rc;
+
+	SPDK_DTRACE_PROBE2(nvmf_ns_change, ctx->nsid, ctx->subsystem->subnqn);
 
 	rc = spdk_nvmf_subsystem_pause(ctx->subsystem, ctx->nsid, ctx->cb_fn, ctx);
 	if (rc) {
@@ -1715,6 +1731,8 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	nvmf_subsystem_ns_changed(subsystem, opts.nsid);
 
+	SPDK_DTRACE_PROBE2(nvmf_subsystem_add_ns, subsystem->subnqn, ns->nsid);
+
 	return opts.nsid;
 
 err_subsystem_add_ns:
@@ -1726,8 +1744,8 @@ err_ns_reservation_restore:
 	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
 	free(ns);
-	return 0;
 
+	return 0;
 }
 
 static uint32_t
@@ -1943,6 +1961,8 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf
 
 	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
 
+	SPDK_DTRACE_PROBE3(nvmf_subsystem_add_ctrlr, subsystem->subnqn, ctrlr, ctrlr->hostnqn);
+
 	return 0;
 }
 
@@ -1950,6 +1970,8 @@ void
 nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			    struct spdk_nvmf_ctrlr *ctrlr)
 {
+	SPDK_DTRACE_PROBE3(nvmf_subsystem_remove_ctrlr, subsystem->subnqn, ctrlr, ctrlr->hostnqn);
+
 	assert(spdk_get_thread() == subsystem->thread);
 	assert(subsystem == ctrlr->subsys);
 	SPDK_DEBUGLOG(nvmf, "remove ctrlr %p from subsys %p %s\n", ctrlr, subsystem, subsystem->subnqn);
