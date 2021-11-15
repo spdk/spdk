@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package sma.nvme;
 
+option go_package = "spdk.io/sma/nvme";
+
 message DeviceParameters {
   // Physical function index
   uint32 physical_id = 1;

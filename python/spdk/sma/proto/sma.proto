@@ -11,6 +11,8 @@ import "nvmf.proto";
 
 package sma;
 
+option go_package = "spdk.io/sma";
+
 // Parameters describing a volume
 message VolumeParameters {
   // Volume GUID/UUID
