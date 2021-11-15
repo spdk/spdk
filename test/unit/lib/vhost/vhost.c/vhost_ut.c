@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -41,6 +42,7 @@
 #include "unit/lib/json_mock.c"
 
 #include "vhost/vhost.c"
+#include <rte_version.h>
 
 DEFINE_STUB(rte_vhost_set_vring_base, int, (int vid, uint16_t queue_id,
 		uint16_t last_avail_idx, uint16_t last_used_idx), 0);
@@ -65,8 +67,13 @@ DEFINE_STUB(rte_vhost_enable_guest_notification, int,
 	    (int vid, uint16_t queue_id, int enable), 0);
 DEFINE_STUB(rte_vhost_get_ifname, int, (int vid, char *buf, size_t len), 0);
 DEFINE_STUB(rte_vhost_driver_start, int, (const char *name), 0);
+#if RTE_VERSION >= RTE_VERSION_NUM(21, 11, 0, 0)
+DEFINE_STUB(rte_vhost_driver_callback_register, int,
+	    (const char *path, struct rte_vhost_device_ops const *const ops), 0);
+#else
 DEFINE_STUB(rte_vhost_driver_callback_register, int,
 	    (const char *path, struct vhost_device_ops const *const ops), 0);
+#endif
 DEFINE_STUB(rte_vhost_driver_disable_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_set_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_register, int, (const char *path, uint64_t flags), 0);

@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -134,7 +135,11 @@ destroy_connection(int vid)
 	vhost_destroy_connection_cb(vid);
 }
 
+#if RTE_VERSION >= RTE_VERSION_NUM(21, 11, 0, 0)
+static const struct rte_vhost_device_ops g_spdk_vhost_ops = {
+#else
 static const struct vhost_device_ops g_spdk_vhost_ops = {
+#endif
 	.new_device =  start_device,
 	.destroy_device = stop_device,
 	.new_connection = new_connection,
