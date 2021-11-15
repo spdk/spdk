@@ -1375,7 +1375,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
-    enclosed in quotes.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""")
+    enclosed in quotes.  Example: 'ANY' or 'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
     p.add_argument('netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_create_initiator_group)
@@ -1403,7 +1403,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
-    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""", required=False)
+    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
+    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""", required=False)
     p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
     p.set_defaults(func=iscsi_initiator_group_add_initiators)
@@ -1431,7 +1432,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
-    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""", required=False)
+    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
+    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""", required=False)
     p.add_argument('-m', dest='netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
     This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""", required=False)
     p.set_defaults(func=iscsi_initiator_group_remove_initiators)
