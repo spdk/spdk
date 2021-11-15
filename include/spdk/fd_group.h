@@ -89,7 +89,7 @@ void spdk_fd_group_destroy(struct spdk_fd_group *fgrp);
  * \param timeout Specifies the number of milliseconds that will block.
  * -1 causes indefinitedly blocking; 0 causes immediately return.
  *
- * \return 0 if any events get processed
+ * \return the number of processed events
  * or -errno if failed
  */
 int spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout);
