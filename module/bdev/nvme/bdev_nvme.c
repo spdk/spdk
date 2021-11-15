@@ -987,6 +987,7 @@ bdev_nvme_admin_passthru_complete(struct nvme_bdev_io *bio, int rc)
 		break;
 	}
 
+	bio->retry_count = 0;
 	spdk_bdev_io_complete(bdev_io, io_status);
 }
 
@@ -4156,6 +4157,8 @@ bdev_nvme_admin_passthru_complete_nvme_status(void *ctx)
 	const struct spdk_nvme_cpl *cpl = &bio->cpl;
 	struct nvme_bdev_channel *nbdev_ch;
 	struct nvme_ctrlr *nvme_ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	uint64_t delay_ms;
 
 	assert(bdev_nvme_io_type_is_admin(bdev_io->type));
 
@@ -4163,7 +4166,8 @@ bdev_nvme_admin_passthru_complete_nvme_status(void *ctx)
 		goto complete;
 	}
 
-	if (cpl->status.dnr != 0) {
+	if (cpl->status.dnr != 0 || (g_opts.bdev_retry_count != -1 &&
+				     bio->retry_count >= g_opts.bdev_retry_count)) {
 		goto complete;
 	}
 
@@ -4174,13 +4178,28 @@ bdev_nvme_admin_passthru_complete_nvme_status(void *ctx)
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
 	    spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr) ||
 	    nvme_ctrlr->resetting) {
-		if (any_ctrlr_may_become_available(nbdev_ch)) {
-			bdev_nvme_queue_retry_io(nbdev_ch, bio, 0);
-			return;
+		delay_ms = 0;
+	} else if (spdk_nvme_cpl_is_aborted_by_request(cpl)) {
+		goto complete;
+	} else {
+		bio->retry_count++;
+
+		cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+
+		if (cpl->status.crd != 0) {
+			delay_ms = cdata->crdt[cpl->status.crd] * 100;
+		} else {
+			delay_ms = 0;
 		}
 	}
 
+	if (any_ctrlr_may_become_available(nbdev_ch)) {
+		bdev_nvme_queue_retry_io(nbdev_ch, bio, delay_ms);
+		return;
+	}
+
 complete:
+	bio->retry_count = 0;
 	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 }
 

@@ -4683,6 +4683,8 @@ test_retry_admin_passthru_if_ctrlr_is_resetting(void)
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
 	ut_init_trid(&path.trid);
 
+	g_opts.bdev_retry_count = 1;
+
 	set_thread(0);
 
 	ctrlr = ut_attach_ctrlr(&path.trid, 1, false, false);
@@ -4777,6 +4779,8 @@ test_retry_admin_passthru_if_ctrlr_is_resetting(void)
 	poll_threads();
 
 	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+
+	g_opts.bdev_retry_count = 0;
 }
 
 static void
@@ -4957,6 +4961,126 @@ test_retry_admin_passthru_for_path_error(void)
 	g_opts.bdev_retry_count = 0;
 }
 
+static void
+test_retry_admin_passthru_by_count(void)
+{
+	struct nvme_path_id path = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct spdk_bdev_io *admin_io;
+	struct nvme_bdev_io *admin_bio;
+	struct spdk_io_channel *ch;
+	struct ut_nvme_req *req;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path.trid);
+
+	set_thread(0);
+
+	ctrlr = ut_attach_ctrlr(&path.trid, 1, false, false);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	rc = bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE, 0,
+			      attach_ctrlr_done, NULL, NULL, false);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path.trid);
+	CU_ASSERT(nvme_ctrlr != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	CU_ASSERT(bdev != NULL);
+
+	admin_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_NVME_ADMIN, bdev, NULL);
+	admin_io->u.nvme_passthru.cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+
+	admin_bio = (struct nvme_bdev_io *)admin_io->driver_ctx;
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	admin_io->internal.ch = (struct spdk_bdev_channel *)ch;
+
+	/* If admin passthrough is aborted by request, it should not be retried. */
+	g_opts.bdev_retry_count = 1;
+
+	admin_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, admin_io);
+
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(admin_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(&ctrlr->adminq, admin_bio);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_thread_times(0, 2);
+
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(admin_io->internal.in_submit_request == false);
+	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
+
+	/* If bio->retry_count is not less than g_opts.bdev_retry_count,
+	 * the failed admin passthrough should not be retried.
+	 */
+	g_opts.bdev_retry_count = 4;
+
+	admin_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch, admin_io);
+
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
+	CU_ASSERT(admin_io->internal.in_submit_request == true);
+
+	req = ut_get_outstanding_nvme_request(&ctrlr->adminq, admin_bio);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	req->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	admin_bio->retry_count = 4;
+
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_thread_times(0, 2);
+
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(admin_io->internal.in_submit_request == false);
+	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_NVME_ERROR);
+
+	free(admin_io);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
+
+	g_opts.bdev_retry_count = 0;
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -4997,6 +5121,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_retry_io_for_ana_error);
 	CU_ADD_TEST(suite, test_retry_admin_passthru_if_ctrlr_is_resetting);
 	CU_ADD_TEST(suite, test_retry_admin_passthru_for_path_error);
+	CU_ADD_TEST(suite, test_retry_admin_passthru_by_count);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
