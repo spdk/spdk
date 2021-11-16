@@ -1521,11 +1521,6 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 	}
 
 	sgroup = &group->sgroups[subsystem->id];
-	if (sgroup == NULL) {
-		rc = -1;
-		goto fini;
-	}
-
 	if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSED) {
 		goto fini;
 	}
