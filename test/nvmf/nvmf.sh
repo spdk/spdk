@@ -69,7 +69,7 @@ timing_enter host
 
 run_test "nvmf_identify" test/nvmf/host/identify.sh "${TEST_ARGS[@]}"
 run_test "nvmf_perf" test/nvmf/host/perf.sh "${TEST_ARGS[@]}"
-run_test "nvmf_multipath" test/nvmf/host/multipath.sh "${TEST_ARGS[@]}"
+run_test "nvmf_failover" test/nvmf/host/failover.sh "${TEST_ARGS[@]}"
 run_test "nvmf_discovery" test/nvmf/host/discovery.sh "${TEST_ARGS[@]}"
 
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
