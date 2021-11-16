@@ -393,6 +393,70 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	return 0;
 }
 
+static bool
+_is_batch_valid(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
+{
+	return batch->chan == chan;
+}
+
+static int
+_idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
+		     void *cb_arg, struct idxd_batch *batch,
+		     struct idxd_hw_desc **_desc, struct idxd_ops **_op)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+
+	if (_is_batch_valid(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to add to an invalid batch.\n");
+		return -EINVAL;
+	}
+
+	assert(batch != NULL); /* suppress scan-build warning. */
+	if (batch->index == DESC_PER_BATCH) {
+		SPDK_ERRLOG("Attempt to add to a batch that is already full.\n");
+		return -EINVAL;
+	}
+
+	desc = *_desc = &batch->user_desc[batch->index];
+	op = *_op = &batch->user_ops[batch->index];
+
+	op->desc = desc;
+	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->index);
+
+	batch->index++;
+
+	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
+	op->cb_arg = cb_arg;
+	op->cb_fn = cb_fn;
+	op->batch = batch;
+
+	return 0;
+}
+
+static int
+_idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	int rc;
+
+	/* Common prep. */
+	rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+	if (rc) {
+		return rc;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_NOOP;
+
+	if (chan->idxd->impl->nop_check && chan->idxd->impl->nop_check(chan->idxd)) {
+		desc->xfer_size = 1;
+	}
+	return 0;
+}
+
+
 int
 spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
 		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
@@ -694,12 +758,6 @@ spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
 	return batch;
 }
 
-static bool
-_is_batch_valid(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
-{
-	return batch->chan == chan;
-}
-
 static void
 _free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 {
@@ -786,63 +844,6 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	_submit_to_hw(chan, op);
 	SPDK_DEBUGLOG(idxd, "Submitted batch %p\n", batch);
 
-	return 0;
-}
-
-static int
-_idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
-		     void *cb_arg, struct idxd_batch *batch,
-		     struct idxd_hw_desc **_desc, struct idxd_ops **_op)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-
-	if (_is_batch_valid(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to add to an invalid batch.\n");
-		return -EINVAL;
-	}
-
-	assert(batch != NULL); /* suppress scan-build warning. */
-	if (batch->index == DESC_PER_BATCH) {
-		SPDK_ERRLOG("Attempt to add to a batch that is already full.\n");
-		return -EINVAL;
-	}
-
-	desc = *_desc = &batch->user_desc[batch->index];
-	op = *_op = &batch->user_ops[batch->index];
-
-	op->desc = desc;
-	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->index);
-
-	batch->index++;
-
-	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
-	op->cb_arg = cb_arg;
-	op->cb_fn = cb_fn;
-	op->batch = batch;
-
-	return 0;
-}
-
-static int
-_idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	int rc;
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_NOOP;
-
-	if (chan->idxd->impl->nop_check && chan->idxd->impl->nop_check(chan->idxd)) {
-		desc->xfer_size = 1;
-	}
 	return 0;
 }
 
