@@ -124,6 +124,8 @@
 	spdk_u32log2;
 	spdk_u64log2;
 	spdk_iovcpy;
+	spdk_ioviter_first;
+	spdk_ioviter_next;
 
 	# resolvers for functions in util.h
 	spdk_u32log2.resolver;

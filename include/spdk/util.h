@@ -136,6 +136,44 @@ spdk_divide_round_up(uint64_t num, uint64_t divisor)
  */
 size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovcnt);
 
+/**
+ * An iovec iterator. Can be allocated on the stack.
+ */
+struct spdk_ioviter {
+	struct iovec	*siov;
+	size_t		siovcnt;
+
+	struct iovec	*diov;
+	size_t		diovcnt;
+
+	size_t		sidx;
+	size_t		didx;
+	int		siov_len;
+	uint8_t		*siov_base;
+	int		diov_len;
+	uint8_t		*diov_base;
+};
+
+/**
+ * Initialize and move to the first common segment of the two given
+ * iovecs. See spdk_ioviter_next().
+ */
+size_t spdk_ioviter_first(struct spdk_ioviter *iter,
+			  struct iovec *siov, size_t siovcnt,
+			  struct iovec *diov, size_t diovcnt,
+			  void **src, void **dst);
+
+/**
+ * Move to the next segment in the iterator.
+ *
+ * This will iterate through the segments of the source and destination
+ * and return the individual segments, one by one. For example, if the
+ * source consists of one element of length 4k and the destination
+ * consists of 4 elements each of length 1k, this function will return
+ * 4 1k src+dst pairs of buffers, and then return 0 bytes to indicate
+ * the iteration is complete on the fifth call.
+ */
+size_t spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst);
 
 /**
  * Scan build is really pessimistic and assumes that mempool functions can
