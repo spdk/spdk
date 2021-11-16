@@ -151,6 +151,8 @@ export SPDK_AUTOTEST_X
 export SPDK_TEST_RAID5
 : ${SPDK_TEST_URING=0}
 export SPDK_TEST_URING
+: ${SPDK_TEST_USDT=0}
+export SPDK_TEST_USDT
 : ${SPDK_TEST_USE_IGB_UIO:=0}
 export SPDK_TEST_USE_IGB_UIO
 : ${SPDK_TEST_SCHEDULER:=0}
@@ -368,6 +370,10 @@ function get_config_params() {
 	# for options with dependencies but no test flag, set them here
 	if [ -f /usr/include/infiniband/verbs.h ]; then
 		config_params+=' --with-rdma'
+	fi
+
+	if [ $SPDK_TEST_USDT -eq 1 ]; then
+		config_params+=" --with-usdt"
 	fi
 
 	if [ $(uname -s) == "FreeBSD" ]; then
