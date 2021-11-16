@@ -1357,7 +1357,7 @@ nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpai
 				 struct nvme_rdma_memory_translation_ctx *_ctx)
 {
 	struct spdk_memory_domain_translation_ctx ctx;
-	struct spdk_memory_domain_translation_result dma_translation;
+	struct spdk_memory_domain_translation_result dma_translation = {.iov_count = 0};
 	struct spdk_rdma_memory_translation rdma_translation;
 	int rc;
 
