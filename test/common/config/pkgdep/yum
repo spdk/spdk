@@ -58,6 +58,7 @@ packages=(
 	xfsprogs
 	rpmdevtools
 	ruby-devel
+	llvm
 )
 
 pre_install() { :; }

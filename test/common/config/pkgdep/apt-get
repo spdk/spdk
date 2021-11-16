@@ -72,6 +72,7 @@ packages=(
 	ibverbs-utils
 	rdmacm-utils
 	ruby-dev
+	llvm
 )
 
 install_vagrant_dependencies() {
