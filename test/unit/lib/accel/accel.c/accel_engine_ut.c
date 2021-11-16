@@ -217,8 +217,8 @@ static void
 test_spdk_accel_submit_copy(void)
 {
 	const uint64_t nbytes = TEST_SUBMIT_SIZE;
-	uint8_t dst[TEST_SUBMIT_SIZE];
-	uint8_t src[TEST_SUBMIT_SIZE];
+	uint8_t dst[TEST_SUBMIT_SIZE] = {0};
+	uint8_t src[TEST_SUBMIT_SIZE] = {0};
 	void *cb_arg = NULL;
 	int rc;
 	struct spdk_accel_task task;
