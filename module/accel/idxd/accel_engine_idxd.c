@@ -152,6 +152,8 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	int rc = 0;
 	uint8_t fill_pattern = (uint8_t)task->fill_pattern;
 	void *src;
+	struct iovec siov = {};
+	struct iovec diov = {};
 
 	if (chan->num_outstanding == chan->max_outstanding) {
 		chan->state = IDXD_CHANNEL_PAUSED;
@@ -160,7 +162,11 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 
 	switch (task->op_code) {
 	case ACCEL_OPCODE_MEMMOVE:
-		rc = spdk_idxd_submit_copy(chan->chan, task->dst, task->src, task->nbytes, idxd_done, task);
+		siov.iov_base = task->src;
+		siov.iov_len = task->nbytes;
+		diov.iov_base = task->dst;
+		diov.iov_len = task->nbytes;
+		rc = spdk_idxd_submit_copy(chan->chan, &diov, 1, &siov, 1, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_DUALCAST:
 		rc = spdk_idxd_submit_dualcast(chan->chan, task->dst, task->dst2, task->src, task->nbytes,

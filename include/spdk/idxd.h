@@ -217,9 +217,10 @@ int spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd
  * by writing to the proper device portal.
  *
  * \param chan IDXD channel to submit request.
- * \param dst Destination virtual address.
- * \param src Source virtual address.
- * \param nbytes Number of bytes to copy.
+ * \param diov Destination iovec
+ * \param diovcnt Number of elements in diov
+ * \param siov Source iovec
+ * \param siovcnt Number of elements in siov
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in
  * the completion callback.
@@ -227,7 +228,8 @@ int spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd
  * \return 0 on success, negative errno on failure.
  */
 int spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
-			  void *dst, const void *src, uint64_t nbytes,
+			  struct iovec *diov, uint32_t diovcnt,
+			  struct iovec *siov, uint32_t siovcnt,
 			  spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**

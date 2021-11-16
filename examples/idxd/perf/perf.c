@@ -609,6 +609,8 @@ _submit_ops(struct idxd_chan_entry *t, struct idxd_task *task)
 {
 	int random_num;
 	int rc = 0;
+	struct iovec siov = {};
+	struct iovec diov = {};
 
 	assert(t);
 	t->current_queue_depth++;
@@ -621,8 +623,12 @@ _submit_ops(struct idxd_chan_entry *t, struct idxd_task *task)
 
 		switch (g_workload_selection) {
 		case IDXD_COPY:
-			rc = spdk_idxd_submit_copy(t->ch, task->dst, task->src,
-						   g_xfer_size_bytes, idxd_done, task);
+			siov.iov_base = task->src;
+			siov.iov_len = g_xfer_size_bytes;
+			diov.iov_base = task->dst;
+			diov.iov_len = g_xfer_size_bytes;
+			rc = spdk_idxd_submit_copy(t->ch, &diov, 1, &siov, 1,
+						   idxd_done, task);
 			break;
 		case IDXD_FILL:
 			/* For fill use the first byte of the task->dst buffer */

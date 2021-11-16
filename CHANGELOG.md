@@ -7,6 +7,10 @@
 The batching capability was removed. Batching is now considered an implementation
 detail of the low level drivers.
 
+### idxd
+
+Many APIs are now vectored rather than scalar, meaning they take iovecs instead of individual pointers.
+
 ### nvme
 
 API `spdk_nvme_trtype_is_fabrics` was added to return existing transport type
