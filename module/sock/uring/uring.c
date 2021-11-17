@@ -1283,13 +1283,13 @@ uring_sock_is_connected(struct spdk_sock *_sock)
 }
 
 static struct spdk_sock_group_impl *
-uring_sock_group_impl_get_optimal(struct spdk_sock *_sock)
+uring_sock_group_impl_get_optimal(struct spdk_sock *_sock, struct spdk_sock_group_impl *hint)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_sock_group_impl *group;
 
 	if (sock->placement_id != -1) {
-		spdk_sock_map_lookup(&g_map, sock->placement_id, &group);
+		spdk_sock_map_lookup(&g_map, sock->placement_id, &group, hint);
 		return group;
 	}
 

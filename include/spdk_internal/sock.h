@@ -114,7 +114,8 @@ struct spdk_net_impl {
 	bool (*is_ipv4)(struct spdk_sock *sock);
 	bool (*is_connected)(struct spdk_sock *sock);
 
-	struct spdk_sock_group_impl *(*group_impl_get_optimal)(struct spdk_sock *sock);
+	struct spdk_sock_group_impl *(*group_impl_get_optimal)(struct spdk_sock *sock,
+			struct spdk_sock_group_impl *hint);
 	struct spdk_sock_group_impl *(*group_impl_create)(void);
 	int (*group_impl_add_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
 	int (*group_impl_remove_sock)(struct spdk_sock_group_impl *group, struct spdk_sock *sock);
@@ -323,7 +324,7 @@ void spdk_sock_map_release(struct spdk_sock_map *map, int placement_id);
  * Look up the group for the given placement_id.
  */
 int spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
-			 struct spdk_sock_group_impl **group_impl);
+			 struct spdk_sock_group_impl **group_impl, struct spdk_sock_group_impl *hint);
 
 /**
  * Find a placement id with no associated group

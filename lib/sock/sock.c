@@ -38,6 +38,7 @@
 #include "spdk_internal/sock.h"
 #include "spdk/log.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true
@@ -151,10 +152,9 @@ spdk_sock_map_release(struct spdk_sock_map *map, int placement_id)
 
 int
 spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
-		     struct spdk_sock_group_impl **group)
+		     struct spdk_sock_group_impl **group, struct spdk_sock_group_impl *hint)
 {
 	struct spdk_sock_placement_id_entry *entry;
-	int rc = -EINVAL;
 
 	*group = NULL;
 	pthread_mutex_lock(&map->mtx);
@@ -162,14 +162,33 @@ spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
 		if (placement_id == entry->placement_id) {
 			*group = entry->group;
 			if (*group != NULL) {
-				rc = 0;
+				/* Return previously assigned sock_group */
+				pthread_mutex_unlock(&map->mtx);
+				return 0;
 			}
 			break;
 		}
 	}
+
+	/* No entry with assigned sock_group, nor hint to use */
+	if (hint == NULL) {
+		pthread_mutex_unlock(&map->mtx);
+		return -EINVAL;
+	}
+
+	/* Create new entry if there is none with matching placement_id */
+	if (entry == NULL) {
+		entry = _sock_map_entry_alloc(map, placement_id);
+		if (entry == NULL) {
+			pthread_mutex_unlock(&map->mtx);
+			return -ENOMEM;
+		}
+	}
+
+	entry->group = hint;
 	pthread_mutex_unlock(&map->mtx);
 
-	return rc;
+	return 0;
 }
 
 void
@@ -205,13 +224,22 @@ spdk_sock_map_find_free(struct spdk_sock_map *map)
 }
 
 int
-spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group)
+spdk_sock_get_optimal_sock_group(struct spdk_sock *sock, struct spdk_sock_group **group,
+				 struct spdk_sock_group *hint)
 {
 	struct spdk_sock_group_impl *group_impl;
+	struct spdk_sock_group_impl *hint_group_impl = NULL;
 
 	assert(group != NULL);
 
-	group_impl = sock->net_impl->group_impl_get_optimal(sock);
+	if (hint != NULL) {
+		hint_group_impl = sock_get_group_impl_from_group(sock, hint);
+		if (hint_group_impl == NULL) {
+			return -EINVAL;
+		}
+	}
+
+	group_impl = sock->net_impl->group_impl_get_optimal(sock, hint_group_impl);
 
 	if (group_impl) {
 		*group = group_impl->group;

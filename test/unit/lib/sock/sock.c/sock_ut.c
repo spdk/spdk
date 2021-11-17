@@ -267,7 +267,7 @@ spdk_ut_sock_is_connected(struct spdk_sock *_sock)
 }
 
 static struct spdk_sock_group_impl *
-spdk_ut_sock_group_impl_get_optimal(struct spdk_sock *_sock)
+spdk_ut_sock_group_impl_get_optimal(struct spdk_sock *_sock, struct spdk_sock_group_impl *hint)
 {
 	return NULL;
 }
@@ -976,7 +976,7 @@ ut_sock_map(void)
 	CU_ASSERT(test_id == -1);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(test_group == NULL);
 
@@ -986,7 +986,7 @@ ut_sock_map(void)
 	CU_ASSERT(rc == 0);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_1);
 
@@ -1013,14 +1013,14 @@ ut_sock_map(void)
 	/* Release entry once and see that it still exists. */
 	spdk_sock_map_release(&map, 1);
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_1);
 
 	/* Release entry second and final time. */
 	spdk_sock_map_release(&map, 1);
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(test_group == NULL);
 
@@ -1032,7 +1032,7 @@ ut_sock_map(void)
 	CU_ASSERT(rc == 0);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_1);
 
@@ -1040,7 +1040,7 @@ ut_sock_map(void)
 	CU_ASSERT(rc == 0);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 2, &test_group);
+	rc = spdk_sock_map_lookup(&map, 2, &test_group, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_2);
 
@@ -1052,7 +1052,7 @@ ut_sock_map(void)
 	CU_ASSERT(rc == 0);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_1);
 
@@ -1060,7 +1060,7 @@ ut_sock_map(void)
 	CU_ASSERT(rc == -EINVAL);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_1);
 
@@ -1072,7 +1072,7 @@ ut_sock_map(void)
 	CU_ASSERT(rc == 0);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(test_group == NULL);
 
@@ -1083,9 +1083,32 @@ ut_sock_map(void)
 	CU_ASSERT(rc == 0);
 
 	test_group = NULL;
-	rc = spdk_sock_map_lookup(&map, test_id, &test_group);
+	rc = spdk_sock_map_lookup(&map, test_id, &test_group, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_1);
+
+	spdk_sock_map_cleanup(&map);
+
+	/* Test 6
+	 * Use hint sock_group for for placement_id */
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, group_1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == NULL);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_1);
+
+	test_id = spdk_sock_map_find_free(&map);
+	CU_ASSERT(test_id == -1);
+
+	rc = spdk_sock_map_insert(&map, 1, group_2);
+	CU_ASSERT(rc == -EINVAL);
+
+	rc = spdk_sock_map_insert(&map, 1, group_1);
+	CU_ASSERT(rc == 0);
 
 	spdk_sock_map_cleanup(&map);
 

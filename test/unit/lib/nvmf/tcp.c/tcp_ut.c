@@ -206,7 +206,7 @@ DEFINE_STUB_V(spdk_nvmf_request_free_buffers,
 
 DEFINE_STUB(spdk_sock_get_optimal_sock_group,
 	    int,
-	    (struct spdk_sock *sock, struct spdk_sock_group **group),
+	    (struct spdk_sock *sock, struct spdk_sock_group **group, struct spdk_sock_group *hint),
 	    0);
 
 DEFINE_STUB(spdk_sock_group_get_ctx,

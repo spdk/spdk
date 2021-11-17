@@ -199,6 +199,11 @@ individual traces.
 Added `spdk_ioviter_first` and `spdk_ioviter_next` to iterate over two iovecs and
 yield pointers to common length segments.
 
+### sock
+
+A new parameter `hint` is added to `spdk_sock_get_optimal_sock_group`. It allows to suggest
+a poll group when no optimal poll group is found.
+
 ## v21.10
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify

@@ -2235,7 +2235,7 @@ nvme_tcp_qpair_get_optimal_poll_group(struct spdk_nvme_qpair *qpair)
 	struct spdk_sock_group *group = NULL;
 	int rc;
 
-	rc = spdk_sock_get_optimal_sock_group(tqpair->sock, &group);
+	rc = spdk_sock_get_optimal_sock_group(tqpair->sock, &group, NULL);
 	if (!rc && group != NULL) {
 		return spdk_sock_group_get_ctx(group);
 	}

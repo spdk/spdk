@@ -45,7 +45,7 @@ DEFINE_STUB(spdk_sock_map_insert, int, (struct spdk_sock_map *map, int placement
 					struct spdk_sock_group_impl *group), 0);
 DEFINE_STUB_V(spdk_sock_map_release, (struct spdk_sock_map *map, int placement_id));
 DEFINE_STUB(spdk_sock_map_lookup, int, (struct spdk_sock_map *map, int placement_id,
-					struct spdk_sock_group_impl **group), 0);
+					struct spdk_sock_group_impl **group, struct spdk_sock_group_impl *hint), 0);
 DEFINE_STUB(spdk_sock_map_find_free, int, (struct spdk_sock_map *map), -1);
 DEFINE_STUB_V(spdk_sock_map_cleanup, (struct spdk_sock_map *map));
 

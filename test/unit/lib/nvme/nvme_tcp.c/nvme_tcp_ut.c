@@ -53,7 +53,7 @@ DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *grou
 		struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB(spdk_sock_get_optimal_sock_group,
 	    int,
-	    (struct spdk_sock *sock, struct spdk_sock_group **group),
+	    (struct spdk_sock *sock, struct spdk_sock_group **group, struct spdk_sock_group *hint),
 	    0);
 
 DEFINE_STUB(spdk_sock_group_get_ctx,
