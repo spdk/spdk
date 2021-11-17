@@ -80,12 +80,16 @@ OS=$(uname -s)
 
 if [[ -e /etc/os-release ]]; then
 	source /etc/os-release
+elif [[ $OS == FreeBSD ]]; then
+	ID=freebsd
+else
+	ID=unknown
 fi
 
-ID=${ID:-$OS} ID=${ID,,}
+ID=${ID,,}
 
 #Link suse related OS to sles
-if [[ ${ID,,} == *"suse"* ]]; then
+if [[ $ID == *"suse"* ]]; then
 	ID="sles"
 fi
 
@@ -97,5 +101,5 @@ for id in $ID $ID_LIKE; do
 	fi
 done
 
-printf 'Not supported platform detected (%s), aborting\n' "$ID" >&2
+printf 'Not supported distribution detected (%s), aborting\n' "$ID" >&2
 exit 1
