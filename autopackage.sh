@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xe
+set -e
 
 # If the configuration of tests is not provided, no tests will be carried out.
 if [[ ! -f $1 ]]; then
