@@ -67,13 +67,9 @@ enum accel_opcode {
 };
 
 struct spdk_accel_task {
-	struct accel_io_channel			*accel_ch;
-	spdk_accel_completion_cb		cb_fn;
-	void					*cb_arg;
-	struct {
-		spdk_accel_completion_cb	cb_fn;
-		void				*cb_arg;
-	} chained;
+	struct accel_io_channel		*accel_ch;
+	spdk_accel_completion_cb	cb_fn;
+	void				*cb_arg;
 	union {
 		struct {
 			struct iovec		*iovs; /* iovs passed by the caller */

@@ -653,11 +653,9 @@ test_spdk_accel_submit_crc32cv(void)
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_CRC32C);
 	CU_ASSERT(g_dummy_submit_called == true);
-	CU_ASSERT(task.cb_fn == crc32cv_done);
-	CU_ASSERT(task.cb_arg == &task);
+	CU_ASSERT(task.cb_fn == dummy_submit_cb_fn);
+	CU_ASSERT(task.cb_arg == cb_arg);
 	CU_ASSERT(task.nbytes == iov[0].iov_len);
-	CU_ASSERT(task.chained.cb_fn == dummy_submit_cb_fn);
-	CU_ASSERT(task.chained.cb_arg == cb_arg);
 
 	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
 	g_dummy_submit_called = false;
