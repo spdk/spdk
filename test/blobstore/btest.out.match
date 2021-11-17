@@ -13,14 +13,14 @@ List bdevs:
 
 
 SCRIPT NOW PROCESSING: -n 1
-New blob id $(N)
+New blob id $(XX)
 blob now has USED clusters of 1
 
 SCRIPT NOW PROCESSING: -p $B0
 Super Blob ID has been set.
 
 SCRIPT NOW PROCESSING: -n 1
-New blob id $(N)
+New blob id $(XX)
 blob now has USED clusters of 1
 
 SCRIPT NOW PROCESSING: -m $B1 test.pattern
@@ -38,7 +38,7 @@ SCRIPT NOW PROCESSING: -s bs
 Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: $(N)
-	super blob ID: $(N)
+	super blob ID: $(XX)
 	page size: $(N)
 	io unit size: $(N)
 	cluster size: 1048576
@@ -52,7 +52,7 @@ Blobstore Private Info:
 
 SCRIPT NOW PROCESSING: -s $B1
 Blob Public Info:
-blob ID: $(N)
+blob ID: $(XX)
 # of clusters: 1
 # of bytes: 1048576
 # of pages: 256
@@ -75,7 +75,7 @@ SCRIPT NOW PROCESSING: -s bs
 Blobstore Public Info:
 	Using bdev Product Name: NVMe disk
 	API Version: 3
-	super blob ID: $(N)
+	super blob ID: $(XX)
 	page size: $(N)
 	io unit size: $(N)
 	cluster size: 1048576

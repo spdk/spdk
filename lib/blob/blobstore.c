@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -4684,7 +4685,7 @@ bs_dump_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	if (ctx->super->super_blob == SPDK_BLOBID_INVALID) {
 		fprintf(ctx->fp, "(None)\n");
 	} else {
-		fprintf(ctx->fp, "%" PRIu64 "\n", ctx->super->super_blob);
+		fprintf(ctx->fp, "0x%" PRIx64 "\n", ctx->super->super_blob);
 	}
 	fprintf(ctx->fp, "Clean: %" PRIu32 "\n", ctx->super->clean);
 	fprintf(ctx->fp, "Used Metadata Page Mask Start: %" PRIu32 "\n", ctx->super->used_page_mask_start);
