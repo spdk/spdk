@@ -84,6 +84,8 @@ extern "C" {
 #define IDXD_FLAG_REQUEST_COMPLETION    (1 << 3)
 #define IDXD_FLAG_CACHE_CONTROL         (1 << 8)
 
+#define IDXD_FLAG_CRC_READ_CRC_SEED		(1 << 16)
+
 /*
  * IDXD is a family of devices, DSA is the only currently
  * supported one.

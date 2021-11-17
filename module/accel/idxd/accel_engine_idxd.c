@@ -152,6 +152,8 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	int rc = 0;
 	uint8_t fill_pattern = (uint8_t)task->fill_pattern;
 	void *src;
+	struct iovec *iov;
+	uint32_t iovcnt;
 	struct iovec siov = {};
 	struct iovec diov = {};
 
@@ -187,9 +189,17 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 					   task);
 		break;
 	case ACCEL_OPCODE_CRC32C:
-		src = (task->v.iovcnt == 0) ? task->src : task->v.iovs[0].iov_base;
-		rc = spdk_idxd_submit_crc32c(chan->chan, task->crc_dst, src, task->seed, task->nbytes, idxd_done,
-					     task);
+		if (task->v.iovcnt == 0) {
+			siov.iov_base = task->src;
+			siov.iov_len = task->nbytes;
+			iov = &siov;
+			iovcnt = 1;
+		} else {
+			iov = task->v.iovs;
+			iovcnt = task->v.iovcnt;
+		}
+		rc = spdk_idxd_submit_crc32c(chan->chan, iov, iovcnt, task->seed, task->crc_dst,
+					     idxd_done, task);
 		break;
 	case ACCEL_OPCODE_COPY_CRC32C:
 		src = (task->v.iovcnt == 0) ? task->src : task->v.iovs[0].iov_base;

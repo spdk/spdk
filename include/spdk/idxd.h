@@ -365,18 +365,19 @@ int spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_b
  * by writing to the proper device portal.
  *
  * \param chan IDXD channel to submit request.
- * \param crc_dst Resulting calculation.
- * \param src Source virtual address.
+ * \param siov Source iovec
+ * \param siovcnt Number of elements in siov
  * \param seed Four byte CRC-32C seed value.
- * \param nbytes Number of bytes to calculate on.
+ * \param crc_dst Resulting calculation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
  * in the completion callback.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, void *src,
-			    uint32_t seed, uint64_t nbytes,
+int spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
+			    struct iovec *siov, size_t siovcnt,
+			    uint32_t seed, uint32_t *crc_dst,
 			    spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**

@@ -815,10 +815,10 @@ err:
 	return rc;
 }
 
-int
-spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, void *src,
-			uint32_t seed, uint64_t nbytes,
-			spdk_idxd_req_cb cb_fn, void *cb_arg)
+static inline int
+_idxd_submit_crc32c_single(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, void *src,
+			   uint32_t seed, uint64_t nbytes,
+			   spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -854,6 +854,64 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, vo
 	_submit_to_hw(chan, op);
 
 	return 0;
+}
+
+int
+spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
+			struct iovec *siov, size_t siovcnt,
+			uint32_t seed, uint32_t *crc_dst,
+			spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	uint64_t src_addr;
+	int rc;
+	size_t i;
+	struct idxd_batch *batch;
+	void *prev_crc;
+
+	if (siovcnt == 1) {
+		/* Simple case - crc on one buffer */
+		return _idxd_submit_crc32c_single(chan, crc_dst, siov[0].iov_base,
+						  seed, siov[0].iov_len, cb_fn, cb_arg);
+	}
+
+	batch = spdk_idxd_batch_create(chan);
+	if (!batch) {
+		return -EBUSY;
+	}
+
+	for (i = 0; i < siovcnt; i++) {
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		if (rc) {
+			goto err;
+		}
+
+		rc = _vtophys(siov[i].iov_base, &src_addr, siov[i].iov_len);
+		if (rc) {
+			goto err;
+		}
+
+		desc->opcode = IDXD_OPCODE_CRC32C_GEN;
+		desc->dst_addr = 0; /* Per spec, needs to be clear. */
+		desc->src_addr = src_addr;
+		if (i == 0) {
+			desc->crc32c.seed = seed;
+		} else {
+			desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
+			desc->crc32c.addr = (uint64_t)prev_crc;
+		}
+
+		desc->xfer_size = siov[i].iov_len;
+		prev_crc = &op->hw.crc32c_val;
+		op->crc_dst = crc_dst;
+	}
+
+	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+
+err:
+	spdk_idxd_batch_cancel(chan, batch);
+	return rc;
 }
 
 int

@@ -640,8 +640,8 @@ _submit_ops(struct idxd_chan_entry *t, struct idxd_task *task)
 		case IDXD_CRC32C:
 			assert(task->iovs != NULL);
 			assert(task->iov_cnt > 0);
-			rc = spdk_idxd_submit_crc32c(t->ch, &task->crc_dst,
-						     task->iovs[0].iov_base, g_crc32c_seed, task->iovs[0].iov_len,
+			rc = spdk_idxd_submit_crc32c(t->ch, task->iovs, task->iov_cnt,
+						     g_crc32c_seed, &task->crc_dst,
 						     idxd_done, task);
 			break;
 		case IDXD_COMPARE:
