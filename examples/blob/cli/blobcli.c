@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -897,7 +897,7 @@ static void
 base_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 		   void *event_ctx)
 {
-	printf("Unsupported bdev event: type %d\n", type);
+	printf("Unsupported bdev event: type %d on bdev %s\n", type, spdk_bdev_get_name(bdev));
 }
 
 /*
