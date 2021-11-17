@@ -210,7 +210,7 @@ function get_traddr() {
 	local nvme
 
 	nvme="$($rootdir/scripts/gen_nvme.sh)"
-	traddr=$(jq -r ".config[] | select(.params.name == \"$nvme_name\") | .params.trtype" <<< "$nvme")
+	traddr=$(jq -r ".config[] | select(.params.name == \"$nvme_name\") | .params.traddr" <<< "$nvme")
 	[[ -n $traddr ]] || return 1
 }
 
