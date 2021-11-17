@@ -297,6 +297,8 @@ struct spdk_nvmf_tcp_poll_group {
 
 	struct spdk_io_channel			*accel_channel;
 	struct spdk_nvmf_tcp_control_msg_list	*control_msg_list;
+
+	TAILQ_ENTRY(spdk_nvmf_tcp_poll_group)	link;
 };
 
 struct spdk_nvmf_tcp_port {
@@ -315,9 +317,12 @@ struct spdk_nvmf_tcp_transport {
 	struct spdk_nvmf_transport		transport;
 	struct tcp_transport_opts               tcp_opts;
 
+	struct spdk_nvmf_tcp_poll_group		*next_pg;
+
 	pthread_mutex_t				lock;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
+	TAILQ_HEAD(, spdk_nvmf_tcp_poll_group)	poll_groups;
 };
 
 static const struct spdk_json_object_decoder tcp_transport_opts_decoder[] = {
@@ -558,6 +563,7 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	TAILQ_INIT(&ttransport->ports);
+	TAILQ_INIT(&ttransport->poll_groups);
 
 	ttransport->transport.ops = &spdk_nvmf_transport_tcp;
 
@@ -1211,6 +1217,13 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 		goto cleanup;
 	}
 
+	pthread_mutex_lock(&ttransport->lock);
+	TAILQ_INSERT_TAIL(&ttransport->poll_groups, tgroup, link);
+	if (ttransport->next_pg == NULL) {
+		ttransport->next_pg = tgroup;
+	}
+	pthread_mutex_unlock(&ttransport->lock);
+
 	return &tgroup->group;
 
 cleanup:
@@ -1221,6 +1234,9 @@ cleanup:
 static struct spdk_nvmf_transport_poll_group *
 nvmf_tcp_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
+	struct spdk_nvmf_tcp_transport *ttransport;
+	struct spdk_nvmf_transport_poll_group *result;
+	struct spdk_nvmf_tcp_poll_group **pg;
 	struct spdk_nvmf_tcp_qpair *tqpair;
 	struct spdk_sock_group *group = NULL;
 	int rc;
@@ -1231,13 +1247,34 @@ nvmf_tcp_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		return spdk_sock_group_get_ctx(group);
 	}
 
-	return NULL;
+	ttransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_tcp_transport, transport);
+
+	pthread_mutex_lock(&ttransport->lock);
+
+	if (TAILQ_EMPTY(&ttransport->poll_groups)) {
+		pthread_mutex_unlock(&ttransport->lock);
+		return NULL;
+	}
+
+	pg = &ttransport->next_pg;
+	assert(*pg != NULL);
+
+	result = &(*pg)->group;
+
+	*pg = TAILQ_NEXT(*pg, link);
+	if (*pg == NULL) {
+		*pg = TAILQ_FIRST(&ttransport->poll_groups);
+	}
+
+	pthread_mutex_unlock(&ttransport->lock);
+	return result;
 }
 
 static void
 nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
-	struct spdk_nvmf_tcp_poll_group *tgroup;
+	struct spdk_nvmf_tcp_poll_group *tgroup, *next_tgroup;
+	struct spdk_nvmf_tcp_transport *ttransport;
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	spdk_sock_group_close(&tgroup->sock_group);
@@ -1248,6 +1285,19 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	if (tgroup->accel_channel) {
 		spdk_put_io_channel(tgroup->accel_channel);
 	}
+
+	ttransport = SPDK_CONTAINEROF(tgroup->group.transport, struct spdk_nvmf_tcp_transport, transport);
+
+	pthread_mutex_lock(&ttransport->lock);
+	next_tgroup = TAILQ_NEXT(tgroup, link);
+	TAILQ_REMOVE(&ttransport->poll_groups, tgroup, link);
+	if (next_tgroup == NULL) {
+		next_tgroup = TAILQ_FIRST(&ttransport->poll_groups);
+	}
+	if (ttransport->next_pg == tgroup) {
+		ttransport->next_pg = next_tgroup;
+	}
+	pthread_mutex_unlock(&ttransport->lock);
 
 	free(tgroup);
 }
