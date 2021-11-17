@@ -730,9 +730,9 @@ err:
 	return rc;
 }
 
-int
-spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fill_pattern,
-		      uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+static inline int
+_idxd_submit_fill_single(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fill_pattern,
+			 uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -765,6 +765,54 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fil
 	_submit_to_hw(chan, op);
 
 	return 0;
+}
+
+int
+spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
+		      struct iovec *diov, size_t diovcnt,
+		      uint64_t fill_pattern, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	uint64_t dst_addr;
+	int rc;
+	size_t i;
+	struct idxd_batch *batch;
+
+	if (diovcnt == 1) {
+		/* Simple case - filling one buffer */
+		return _idxd_submit_fill_single(chan, diov[0].iov_base, fill_pattern,
+						diov[0].iov_len, cb_fn, cb_arg);
+	}
+
+	batch = spdk_idxd_batch_create(chan);
+	if (!batch) {
+		return -EBUSY;
+	}
+
+	for (i = 0; i < diovcnt; i++) {
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		if (rc) {
+			goto err;
+		}
+
+		rc = _vtophys(diov[i].iov_base, &dst_addr, diov[i].iov_len);
+		if (rc) {
+			goto err;
+		}
+
+		desc->opcode = IDXD_OPCODE_MEMFILL;
+		desc->pattern = fill_pattern;
+		desc->dst_addr = dst_addr;
+		desc->xfer_size = diov[i].iov_len;
+		desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+	}
+
+	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+
+err:
+	spdk_idxd_batch_cancel(chan, batch);
+	return rc;
 }
 
 int

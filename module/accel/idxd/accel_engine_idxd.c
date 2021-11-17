@@ -181,7 +181,9 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		break;
 	case ACCEL_OPCODE_MEMFILL:
 		memset(&task->fill_pattern, fill_pattern, sizeof(uint64_t));
-		rc = spdk_idxd_submit_fill(chan->chan, task->dst, task->fill_pattern, task->nbytes, idxd_done,
+		diov.iov_base = task->dst;
+		diov.iov_len = task->nbytes;
+		rc = spdk_idxd_submit_fill(chan->chan, &diov, 1, task->fill_pattern, idxd_done,
 					   task);
 		break;
 	case ACCEL_OPCODE_CRC32C:

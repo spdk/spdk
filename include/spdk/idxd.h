@@ -323,9 +323,9 @@ int spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_bat
  * by writing to the proper device portal.
  *
  * \param chan IDXD channel to submit request.
- * \param dst Destination virtual address.
+ * \param diov Destination iovec
+ * \param diovcnt Number of elements in diov
  * \param fill_pattern Repeating eight-byte pattern to use for memory fill.
- * \param nbytes Number of bytes to fill.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
  * in the completion callback.
@@ -333,8 +333,8 @@ int spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_bat
  * \return 0 on success, negative errno on failure.
  */
 int spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
-			  void *dst, uint64_t fill_pattern, uint64_t nbytes,
-			  spdk_idxd_req_cb cb_fn, void *cb_arg);
+			  struct iovec *diov, size_t diovcnt,
+			  uint64_t fill_pattern, spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
  * Synchronous call to prepare a crc32c request into a previously initialized batch

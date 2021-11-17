@@ -632,8 +632,10 @@ _submit_ops(struct idxd_chan_entry *t, struct idxd_task *task)
 			break;
 		case IDXD_FILL:
 			/* For fill use the first byte of the task->dst buffer */
-			rc = spdk_idxd_submit_fill(t->ch, task->dst, *(uint8_t *)task->src,
-						   g_xfer_size_bytes, idxd_done, task);
+			diov.iov_base = task->dst;
+			diov.iov_len = g_xfer_size_bytes;
+			rc = spdk_idxd_submit_fill(t->ch, &diov, 1, *(uint8_t *)task->src,
+						   idxd_done, task);
 			break;
 		case IDXD_CRC32C:
 			assert(task->iovs != NULL);
