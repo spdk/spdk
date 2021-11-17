@@ -914,10 +914,10 @@ err:
 	return rc;
 }
 
-int
-spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void *src,
-			     uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
-			     spdk_idxd_req_cb cb_fn, void *cb_arg)
+static inline int
+_idxd_submit_copy_crc32c_single(struct spdk_idxd_io_channel *chan, void *dst, void *src,
+				uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
+				spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -960,6 +960,79 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan, void *dst, void 
 	return 0;
 error:
 	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
+}
+
+int
+spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
+			     struct iovec *diov, size_t diovcnt,
+			     struct iovec *siov, size_t siovcnt,
+			     uint32_t seed, uint32_t *crc_dst,
+			     spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	void *src, *dst;
+	uint64_t src_addr, dst_addr;
+	int rc;
+	uint64_t len;
+	struct idxd_batch *batch;
+	struct spdk_ioviter iter;
+	void *prev_crc;
+
+	assert(chan != NULL);
+	assert(diov != NULL);
+	assert(siov != NULL);
+
+	if (siovcnt == 1 && diovcnt == 1) {
+		/* Simple case - crc on one buffer */
+		return _idxd_submit_copy_crc32c_single(chan, diov[0].iov_base, siov[0].iov_base,
+						       crc_dst, seed, siov[0].iov_len, cb_fn, cb_arg);
+	}
+
+	batch = spdk_idxd_batch_create(chan);
+	if (!batch) {
+		return -EBUSY;
+	}
+
+	prev_crc = NULL;
+	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
+	     len > 0;
+	     len = spdk_ioviter_next(&iter, &src, &dst)) {
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		if (rc) {
+			goto err;
+		}
+
+		rc = _vtophys(src, &src_addr, len);
+		if (rc) {
+			goto err;
+		}
+
+		rc = _vtophys(dst, &dst_addr, len);
+		if (rc) {
+			goto err;
+		}
+
+		desc->opcode = IDXD_OPCODE_COPY_CRC;
+		desc->dst_addr = dst_addr;
+		desc->src_addr = src_addr;
+		if (prev_crc == NULL) {
+			desc->crc32c.seed = seed;
+		} else {
+			desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
+			desc->crc32c.addr = (uint64_t)prev_crc;
+		}
+
+		desc->xfer_size = len;
+		prev_crc = &op->hw.crc32c_val;
+		op->crc_dst = crc_dst;
+	}
+
+	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+
+err:
+	spdk_idxd_batch_cancel(chan, batch);
 	return rc;
 }
 
