@@ -23,4 +23,5 @@ packages=(
 	socat
 	sshpass
 	wget
+	llvm-devel
 )
