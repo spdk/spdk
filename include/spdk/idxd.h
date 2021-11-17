@@ -281,9 +281,10 @@ int spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_
  * by writing to the proper device portal.
  *
  * \param chan IDXD channel to submit request.
- * \param src1 First source to compare.
- * \param src2 Second source to compare.
- * \param nbytes Number of bytes to compare.
+ * \param siov1 First source iovec
+ * \param siov1cnt Number of elements in siov1
+ * \param siov2 Second source iovec
+ * \param siov2cnt Number of elements in siov2
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in
  * the completion callback.
@@ -291,7 +292,8 @@ int spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_
  * \return 0 on success, negative errno on failure.
  */
 int spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
-			     void *src1, const void *src2, uint64_t nbytes,
+			     struct iovec *siov1, size_t siov1cnt,
+			     struct iovec *siov2, size_t siov2cnt,
 			     spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**

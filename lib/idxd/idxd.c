@@ -625,9 +625,9 @@ error:
 	return rc;
 }
 
-int
-spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const void *src2,
-			 uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
+static inline int
+_idxd_submit_compare_single(struct spdk_idxd_io_channel *chan, void *src1, const void *src2,
+			    uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -666,6 +666,67 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan, void *src1, const vo
 	return 0;
 error:
 	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
+}
+
+int
+spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
+			 struct iovec *siov1, size_t siov1cnt,
+			 struct iovec *siov2, size_t siov2cnt,
+			 spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	void *src1, *src2;
+	uint64_t src1_addr, src2_addr;
+	int rc;
+	size_t len;
+	struct idxd_batch *batch;
+	struct spdk_ioviter iter;
+
+	if (siov1cnt == 1 && siov2cnt == 1) {
+		/* Simple case - comparing one buffer to another */
+		if (siov1[0].iov_len != siov2[0].iov_len) {
+			return -EINVAL;
+		}
+
+		return _idxd_submit_compare_single(chan, siov1[0].iov_base, siov2[0].iov_base, siov1[0].iov_len,
+						   cb_fn, cb_arg);
+	}
+
+	batch = spdk_idxd_batch_create(chan);
+	if (!batch) {
+		return -EBUSY;
+	}
+
+	for (len = spdk_ioviter_first(&iter, siov1, siov1cnt, siov2, siov2cnt, &src1, &src2);
+	     len > 0;
+	     len = spdk_ioviter_next(&iter, &src1, &src2)) {
+		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
+		if (rc) {
+			goto err;
+		}
+
+		rc = _vtophys(src1, &src1_addr, len);
+		if (rc) {
+			goto err;
+		}
+
+		rc = _vtophys(src2, &src2_addr, len);
+		if (rc) {
+			goto err;
+		}
+
+		desc->opcode = IDXD_OPCODE_COMPARE;
+		desc->src_addr = src1_addr;
+		desc->src2_addr = src2_addr;
+		desc->xfer_size = len;
+	}
+
+	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+
+err:
+	spdk_idxd_batch_cancel(chan, batch);
 	return rc;
 }
 

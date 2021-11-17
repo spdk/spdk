@@ -652,8 +652,11 @@ _submit_ops(struct idxd_chan_entry *t, struct idxd_task *task)
 				task->expected_status = 0;
 				*(uint8_t *)task->dst = DATA_PATTERN;
 			}
-			rc = spdk_idxd_submit_compare(t->ch, task->dst, task->src,
-						      g_xfer_size_bytes, idxd_done, task);
+			siov.iov_base = task->src;
+			siov.iov_len = g_xfer_size_bytes;
+			diov.iov_base = task->dst;
+			diov.iov_len = g_xfer_size_bytes;
+			rc = spdk_idxd_submit_compare(t->ch, &siov, 1, &diov, 1, idxd_done, task);
 			break;
 		case IDXD_DUALCAST:
 			rc = spdk_idxd_submit_dualcast(t->ch, task->dst, task->dst2,

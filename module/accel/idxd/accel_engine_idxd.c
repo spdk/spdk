@@ -173,7 +173,11 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 					       idxd_done, task);
 		break;
 	case ACCEL_OPCODE_COMPARE:
-		rc = spdk_idxd_submit_compare(chan->chan, task->src, task->src2, task->nbytes, idxd_done, task);
+		siov.iov_base = task->src;
+		siov.iov_len = task->nbytes;
+		diov.iov_base = task->dst;
+		diov.iov_len = task->nbytes;
+		rc = spdk_idxd_submit_compare(chan->chan, &siov, 1, &diov, 1, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_MEMFILL:
 		memset(&task->fill_pattern, fill_pattern, sizeof(uint64_t));
