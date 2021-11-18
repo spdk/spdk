@@ -9,10 +9,6 @@
 Function                                | Description
 --------------------------------------- | -----------
 spdk_idxd_probe()                       | @copybrief spdk_idxd_probe()
-spdk_idxd_batch_get_max()               | @copybrief spdk_idxd_batch_get_max()
-spdk_idxd_batch_create()                | @copybrief spdk_idxd_batch_create()
-spdk_idxd_batch_prep_copy()             | @copybrief spdk_idxd_batch_prep_copy()
-spdk_idxd_batch_submit()                | @copybrief spdk_idxd_batch_submit()
 spdk_idxd_submit_copy()                 | @copybrief spdk_idxd_submit_copy()
 spdk_idxd_submit_compare()              | @copybrief spdk_idxd_submit_compare()
 spdk_idxd_submit_crc32c()               | @copybrief spdk_idxd_submit_crc32c()

@@ -464,8 +464,8 @@ _idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch
 	return 0;
 }
 
-struct idxd_batch *
-spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
+static struct idxd_batch *
+idxd_batch_create(struct spdk_idxd_io_channel *chan)
 {
 	struct idxd_batch *batch;
 
@@ -493,8 +493,8 @@ _free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
 }
 
-int
-spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
+static int
+idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
 {
 	assert(chan != NULL);
 	assert(batch != NULL);
@@ -514,9 +514,9 @@ spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 	return 0;
 }
 
-int
-spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-		       spdk_idxd_req_cb cb_fn, void *cb_arg)
+static int
+idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+		  spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
@@ -638,7 +638,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 						cb_fn, cb_arg);
 	}
 
-	batch = spdk_idxd_batch_create(chan);
+	batch = idxd_batch_create(chan);
 	if (!batch) {
 		return -EBUSY;
 	}
@@ -667,10 +667,10 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 		desc->xfer_size = len;
 	}
 
-	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+	return idxd_batch_submit(chan, batch, cb_fn, cb_arg);
 
 err:
-	spdk_idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch);
 	return rc;
 }
 
@@ -801,7 +801,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 						   cb_fn, cb_arg);
 	}
 
-	batch = spdk_idxd_batch_create(chan);
+	batch = idxd_batch_create(chan);
 	if (!batch) {
 		return -EBUSY;
 	}
@@ -830,10 +830,10 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 		desc->xfer_size = len;
 	}
 
-	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+	return idxd_batch_submit(chan, batch, cb_fn, cb_arg);
 
 err:
-	spdk_idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch);
 	return rc;
 }
 
@@ -892,7 +892,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 						diov[0].iov_len, cb_fn, cb_arg);
 	}
 
-	batch = spdk_idxd_batch_create(chan);
+	batch = idxd_batch_create(chan);
 	if (!batch) {
 		return -EBUSY;
 	}
@@ -915,10 +915,10 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 		desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 	}
 
-	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+	return idxd_batch_submit(chan, batch, cb_fn, cb_arg);
 
 err:
-	spdk_idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch);
 	return rc;
 }
 
@@ -983,7 +983,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 						  seed, siov[0].iov_len, cb_fn, cb_arg);
 	}
 
-	batch = spdk_idxd_batch_create(chan);
+	batch = idxd_batch_create(chan);
 	if (!batch) {
 		return -EBUSY;
 	}
@@ -1018,10 +1018,10 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 		op->crc_dst = crc_dst;
 	}
 
-	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+	return idxd_batch_submit(chan, batch, cb_fn, cb_arg);
 
 err:
-	spdk_idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch);
 	return rc;
 }
 
@@ -1101,7 +1101,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 						       crc_dst, seed, siov[0].iov_len, cb_fn, cb_arg);
 	}
 
-	batch = spdk_idxd_batch_create(chan);
+	batch = idxd_batch_create(chan);
 	if (!batch) {
 		return -EBUSY;
 	}
@@ -1144,262 +1144,11 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 		op->crc_dst = crc_dst;
 	}
 
-	return spdk_idxd_batch_submit(chan, batch, cb_fn, cb_arg);
+	return idxd_batch_submit(chan, batch, cb_fn, cb_arg);
 
 err:
-	spdk_idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch);
 	return rc;
-}
-
-uint32_t
-spdk_idxd_batch_get_max(void)
-{
-	/* TODO: consider setting this via RPC. */
-	return DESC_PER_BATCH;
-}
-
-int
-spdk_idxd_batch_prep_copy(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-			  void *dst, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src_addr, dst_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(batch != NULL);
-	assert(dst != NULL);
-	assert(src != NULL);
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(dst, &dst_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_MEMMOVE;
-	desc->src_addr = src_addr;
-	desc->dst_addr = dst_addr;
-	desc->xfer_size = nbytes;
-
-	return 0;
-}
-
-int
-spdk_idxd_batch_prep_fill(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-			  void *dst, uint64_t fill_pattern, uint64_t nbytes,
-			  spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t dst_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(batch != NULL);
-	assert(dst != NULL);
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(dst, &dst_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_MEMFILL;
-	desc->pattern = fill_pattern;
-	desc->dst_addr = dst_addr;
-	desc->xfer_size = nbytes;
-
-	return 0;
-}
-
-int
-spdk_idxd_batch_prep_dualcast(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-			      void *dst1, void *dst2, const void *src, uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src_addr, dst1_addr, dst2_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(batch != NULL);
-	assert(dst1 != NULL);
-	assert(dst2 != NULL);
-	assert(src != NULL);
-
-	if ((uintptr_t)dst1 & (ALIGN_4K - 1) || (uintptr_t)dst2 & (ALIGN_4K - 1)) {
-		SPDK_ERRLOG("Dualcast requires 4K alignment on dst addresses\n");
-		return -EINVAL;
-	}
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(dst1, &dst1_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(dst2, &dst2_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	desc->opcode = IDXD_OPCODE_DUALCAST;
-	desc->src_addr = src_addr;
-	desc->dst_addr = dst1_addr;
-	desc->dest2 = dst2_addr;
-	desc->xfer_size = nbytes;
-
-	return 0;
-}
-
-int
-spdk_idxd_batch_prep_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-			    uint32_t *crc_dst, void *src, uint32_t seed, uint64_t nbytes,
-			    spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(batch != NULL);
-	assert(crc_dst != NULL);
-	assert(src != NULL);
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-	desc->dst_addr = 0; /* per specification */
-	desc->src_addr = src_addr;
-	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
-	desc->crc32c.seed = seed;
-	desc->xfer_size = nbytes;
-	op->crc_dst = crc_dst;
-
-	return 0;
-}
-
-int
-spdk_idxd_batch_prep_copy_crc32c(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-				 void *dst, void *src, uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
-				 spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src_addr, dst_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(batch != NULL);
-	assert(crc_dst != NULL);
-	assert(src != NULL);
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(dst, &dst_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_COPY_CRC;
-	desc->dst_addr = dst_addr;
-	desc->src_addr = src_addr;
-	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
-	desc->crc32c.seed = seed;
-	desc->xfer_size = nbytes;
-	op->crc_dst = crc_dst;
-
-	return 0;
-}
-
-int
-spdk_idxd_batch_prep_compare(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-			     void *src1, void *src2, uint64_t nbytes, spdk_idxd_req_cb cb_fn,
-			     void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src1_addr, src2_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(batch != NULL);
-	assert(src1 != NULL);
-	assert(src2 != NULL);
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src1, &src1_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src2, &src2_addr, nbytes);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_COMPARE;
-	desc->src_addr = src1_addr;
-	desc->src2_addr = src2_addr;
-	desc->xfer_size = nbytes;
-
-	return 0;
 }
 
 static inline void
