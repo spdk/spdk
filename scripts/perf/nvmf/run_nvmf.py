@@ -1054,6 +1054,7 @@ class SPDKTarget(Target):
         self.num_shared_buffers = 4096
         self.bpf_proc = None
         self.bpf_scripts = []
+        self.enable_idxd = False
 
         if "num_shared_buffers" in target_config:
             self.num_shared_buffers = target_config["num_shared_buffers"]
@@ -1063,6 +1064,11 @@ class SPDKTarget(Target):
             self.dif_insert_strip = target_config["dif_insert_strip"]
         if "bpf_scripts" in target_config:
             self.bpf_scripts = target_config["bpf_scripts"]
+        if "idxd_settings" in target_config:
+            self.enable_idxd = target_config["idxd_settings"]
+
+        self.log_print("====IDXD settings:====")
+        self.log_print("IDXD enabled: %s" % (self.enable_idxd))
 
     def get_num_cores(self, core_mask):
         if "0x" in core_mask:
@@ -1219,8 +1225,11 @@ class SPDKTarget(Target):
             rpc.bdev.bdev_nvme_set_options(self.client, timeout_us=0, action_on_timeout=None,
                                            nvme_adminq_poll_period_us=100000, retry_count=4)
 
-        rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
+        if self.enable_idxd:
+            rpc.idxd.idxd_scan_accel_engine(self.client, config_number=0, config_kernel_mode=None)
+            self.log_print("Target IDXD accel engine enabled")
 
+        rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
         rpc.framework_start_init(self.client)
 
         if self.bpf_scripts:
@@ -1340,6 +1349,11 @@ class SPDKInitiator(Initiator):
         # Required fields
         self.num_cores = initiator_config["num_cores"]
 
+        # Optional fields
+        self.enable_data_digest = False
+        if "enable_data_digest" in initiator_config:
+            self.enable_data_digest = initiator_config["enable_data_digest"]
+
     def install_spdk(self):
         self.log_print("Using fio binary %s" % self.fio_bin)
         self.exec_cmd(["git", "-C", self.spdk_dir, "submodule", "update", "--init"])
@@ -1377,6 +1391,9 @@ class SPDKInitiator(Initiator):
 
             if self.enable_adq:
                 nvme_ctrl["params"].update({"priority": "1"})
+
+            if self.enable_data_digest:
+                nvme_ctrl["params"].update({"ddgst": self.enable_data_digest})
 
             bdev_cfg_section["subsystems"][0]["config"].append(nvme_ctrl)
 
