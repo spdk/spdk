@@ -785,6 +785,20 @@ any_io_path_may_become_available(struct nvme_bdev_channel *nbdev_ch)
 	return false;
 }
 
+static bool
+any_ctrlr_may_become_available(struct nvme_bdev_channel *nbdev_ch)
+{
+	struct nvme_io_path *io_path;
+
+	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+		if (!nvme_io_path_is_failed(io_path)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static int
 bdev_nvme_retry_ios(void *arg)
 {
@@ -949,6 +963,7 @@ static inline void
 bdev_nvme_admin_passthru_complete(struct nvme_bdev_io *bio, int rc)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	struct nvme_bdev_channel *nbdev_ch;
 	enum spdk_bdev_io_status io_status;
 
 	switch (rc) {
@@ -958,6 +973,15 @@ bdev_nvme_admin_passthru_complete(struct nvme_bdev_io *bio, int rc)
 	case -ENOMEM:
 		io_status = SPDK_BDEV_IO_STATUS_NOMEM;
 		break;
+	case -ENXIO:
+		nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
+
+		if (any_ctrlr_may_become_available(nbdev_ch)) {
+			bdev_nvme_queue_retry_io(nbdev_ch, bio, 1000ULL);
+			return;
+		}
+
+	/* fallthrough */
 	default:
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
 		break;
@@ -4632,7 +4656,13 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
 		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(io_path->ctrlr_ch);
 
-		if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
+		/* When resetting a ctrlr, its adminq is disconnected first.
+		 * spdk_nvme_ctrlr_cmd_admin_raw() returns -ENXIO if the ctrlr is
+		 * failed or its adminq is disconnected. We should skip any ctrlr
+		 * which is failed or resetting rather than checking if the return
+		 * value of spdk_nvme_ctrlr_cmd_admin_raw() is -ENXIO.
+		 */
+		if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr) || nvme_ctrlr->resetting) {
 			continue;
 		}
 
