@@ -863,7 +863,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 			spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
+	struct idxd_ops *op = NULL;
 	uint64_t src_addr;
 	int rc;
 	size_t i;
@@ -904,6 +904,10 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 
 		desc->xfer_size = siov[i].iov_len;
 		prev_crc = &op->hw.crc32c_val;
+	}
+
+	/* Only the last op copies the crc to the destination */
+	if (op) {
 		op->crc_dst = crc_dst;
 	}
 
@@ -971,7 +975,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 			     spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
+	struct idxd_ops *op = NULL;
 	void *src, *dst;
 	uint64_t src_addr, dst_addr;
 	int rc;
@@ -1026,6 +1030,10 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 
 		desc->xfer_size = len;
 		prev_crc = &op->hw.crc32c_val;
+	}
+
+	/* Only the last op copies the crc to the destination */
+	if (op) {
 		op->crc_dst = crc_dst;
 	}
 
@@ -1437,7 +1445,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 				break;
 			case IDXD_OPCODE_CRC32C_GEN:
 			case IDXD_OPCODE_COPY_CRC:
-				if (spdk_likely(status == 0)) {
+				if (spdk_likely(status == 0 && op->crc_dst != NULL)) {
 					*op->crc_dst = op->hw.crc32c_val;
 					*op->crc_dst ^= ~0;
 				}
