@@ -65,14 +65,6 @@ struct spdk_idxd_device;
 uint32_t spdk_idxd_get_socket(struct spdk_idxd_device *idxd);
 
 /**
- * Signature for configuring a channel
- *
- * \param chan IDXD channel to be configured
- * \return 0 on success, negative errno on failure.
- */
-int spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan);
-
-/**
  * Signature for callback function invoked when a request is completed.
  *
  * \param arg User-specified opaque value corresponding to cb_arg from the

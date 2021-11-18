@@ -327,7 +327,6 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
 	struct idxd_device *dev;
-	int rc;
 
 	dev = idxd_select_device(chan);
 	if (dev == NULL) {
@@ -338,15 +337,6 @@ idxd_create_cb(void *io_device, void *ctx_buf)
 	chan->dev = dev;
 	chan->poller = SPDK_POLLER_REGISTER(idxd_poll, chan, 0);
 	TAILQ_INIT(&chan->queued_tasks);
-
-	rc = spdk_idxd_configure_chan(chan->chan);
-	if (rc) {
-		SPDK_ERRLOG("Failed to configure new channel rc = %d\n", rc);
-		chan->state = IDXD_CHANNEL_ERROR;
-		spdk_poller_unregister(&chan->poller);
-		return rc;
-	}
-
 	chan->num_outstanding = 0;
 	chan->state = IDXD_CHANNEL_ACTIVE;
 
