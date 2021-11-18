@@ -310,6 +310,7 @@ static const char *rdma_cm_event_str[] = {
 
 struct nvme_rdma_qpair *nvme_rdma_poll_group_get_qpair_by_id(struct nvme_rdma_poll_group *group,
 		uint32_t qp_num);
+static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 
 static TAILQ_HEAD(, nvme_rdma_memory_domain) g_memory_domains = TAILQ_HEAD_INITIALIZER(
 			g_memory_domains);
@@ -1795,12 +1796,33 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 	struct nvme_rdma_ctrlr *rctrlr = NULL;
-	struct nvme_rdma_cm_event_entry *entry, *tmp;
 	int rc;
 
-	spdk_rdma_free_mem_map(&rqpair->mr_map);
-	nvme_rdma_unregister_reqs(rqpair);
-	nvme_rdma_unregister_rsps(rqpair);
+	if (rqpair->rdma_qp) {
+		rc = spdk_rdma_qp_disconnect(rqpair->rdma_qp);
+		rctrlr = nvme_rdma_ctrlr(qpair->ctrlr);
+		if (rctrlr != NULL && rc == 0) {
+			if (nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_DISCONNECTED)) {
+				SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
+			}
+		}
+	}
+}
+
+static int
+nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_rdma_qpair *rqpair;
+	struct nvme_rdma_ctrlr *rctrlr = NULL;
+	struct nvme_rdma_cm_event_entry *entry, *tmp;
+
+	assert(qpair != NULL);
+	rqpair = nvme_rdma_qpair(qpair);
+
+	if (rqpair->defer_deletion_to_pg) {
+		nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
+		return 0;
+	}
 
 	if (rqpair->evt) {
 		rdma_ack_cm_event(rqpair->evt);
@@ -1822,42 +1844,9 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		}
 	}
 
-	if (rqpair->cm_id) {
-		if (rqpair->rdma_qp) {
-			rc = spdk_rdma_qp_disconnect(rqpair->rdma_qp);
-			if ((rctrlr != NULL) && (rc == 0)) {
-				if (nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_DISCONNECTED)) {
-					SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
-				}
-			}
-			spdk_rdma_qp_destroy(rqpair->rdma_qp);
-			rqpair->rdma_qp = NULL;
-		}
-
-		rdma_destroy_id(rqpair->cm_id);
-		rqpair->cm_id = NULL;
-	}
-
-	if (rqpair->cq) {
-		ibv_destroy_cq(rqpair->cq);
-		rqpair->cq = NULL;
-	}
-}
-
-static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
-
-static int
-nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_rdma_qpair *rqpair;
-
-	assert(qpair != NULL);
-	rqpair = nvme_rdma_qpair(qpair);
-
-	if (rqpair->defer_deletion_to_pg) {
-		nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
-		return 0;
-	}
+	spdk_rdma_free_mem_map(&rqpair->mr_map);
+	nvme_rdma_unregister_reqs(rqpair);
+	nvme_rdma_unregister_rsps(rqpair);
 
 	nvme_rdma_qpair_abort_reqs(qpair, 1);
 	nvme_qpair_deinit(qpair);
@@ -1866,6 +1855,22 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 
 	nvme_rdma_free_reqs(rqpair);
 	nvme_rdma_free_rsps(rqpair);
+
+	if (rqpair->cm_id) {
+		if (rqpair->rdma_qp) {
+			/* qpair is already disconnected at this stage */
+			spdk_rdma_qp_destroy(rqpair->rdma_qp);
+			rqpair->rdma_qp = NULL;
+		}
+		rdma_destroy_id(rqpair->cm_id);
+		rqpair->cm_id = NULL;
+	}
+
+	if (rqpair->cq) {
+		ibv_destroy_cq(rqpair->cq);
+		rqpair->cq = NULL;
+	}
+
 	nvme_rdma_free(rqpair);
 
 	return 0;
@@ -2177,14 +2182,22 @@ nvme_rdma_log_wc_status(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 	if (wc->status == IBV_WC_WR_FLUSH_ERR) {
 		/* If qpair is in ERR state, we will receive completions for all posted and not completed
 		 * Work Requests with IBV_WC_WR_FLUSH_ERR status. Don't log an error in that case */
-		SPDK_DEBUGLOG(nvme, "WC error, qid %u, qp state %d, request 0x%lu type %d, status: (%d): %s\n",
+		SPDK_DEBUGLOG(nvme,
+			      "WC error, qid %u, qp state %d, request 0x%"PRIx64" type %d, status: (%d): %s\n",
 			      rqpair->qpair.id, rqpair->qpair.state, wc->wr_id, rdma_wr->type, wc->status,
 			      ibv_wc_status_str(wc->status));
 	} else {
-		SPDK_ERRLOG("WC error, qid %u, qp state %d, request 0x%lu type %d, status: (%d): %s\n",
+		SPDK_ERRLOG("WC error, qid %u, qp state %d, request 0x%"PRIx64" type %d, status: (%d): %s\n",
 			    rqpair->qpair.id, rqpair->qpair.state, wc->wr_id, rdma_wr->type, wc->status,
 			    ibv_wc_status_str(wc->status));
 	}
+}
+
+static inline bool
+nvme_rdma_is_rxe_device(struct ibv_device_attr *dev_attr)
+{
+	return dev_attr->vendor_id == SPDK_RDMA_RXE_VENDOR_ID_OLD ||
+	       dev_attr->vendor_id == SPDK_RDMA_RXE_VENDOR_ID_NEW;
 }
 
 static int
@@ -2262,12 +2275,7 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 							wc[i].qp_num);
 				}
 				if (!rqpair) {
-					/* When poll_group is used, several qpairs share the same CQ and it is possible to
-					 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
-					 * That happens due to qpair is destroyed while there are submitted but not completed send/receive
-					 * Work Requests
-					 * TODO: ibv qpair must be destroyed only when all submitted Work Requests are completed */
-					assert(group);
+					assert(0);
 					continue;
 				}
 				assert(rqpair->current_num_sends > 0);
@@ -2275,6 +2283,26 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 				nvme_rdma_log_wc_status(rqpair, &wc[i]);
 				nvme_rdma_conditional_fail_qpair(rqpair, group);
 				completion_rc = -ENXIO;
+				continue;
+			}
+
+			if (spdk_unlikely(rdma_req->req == NULL)) {
+				struct ibv_device_attr dev_attr;
+				int query_status;
+
+				/* Bug in Soft Roce - we may receive a completion without error status when qpair is disconnected/destroyed.
+				 * As sanity check - log an error if we use a real HW (it should never happen) */
+				query_status = ibv_query_device(cq->context, &dev_attr);
+				if (query_status == 0) {
+					if (!nvme_rdma_is_rxe_device(&dev_attr)) {
+						SPDK_ERRLOG("Received malformed completion: request 0x%"PRIx64" type %d\n", wc->wr_id,
+							    rdma_wr->type);
+						assert(0);
+					}
+				} else {
+					SPDK_ERRLOG("Failed to query ib device\n");
+					assert(0);
+				}
 				continue;
 			}
 
@@ -2635,12 +2663,14 @@ nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 		nvme_ctrlr_disconnect_qpair(qpair);
 	}
 
-	/*
-	 * If this fails, the system is in serious trouble,
-	 * just let the qpair get cleaned up immediately.
-	 */
+	/* qpair has requests submitted to HW, need to wait for their completion.
+	 * Allocate a tracker and attach it to poll group */
 	destroyed_qpair = calloc(1, sizeof(*destroyed_qpair));
 	if (destroyed_qpair == NULL) {
+		/*
+		 * If this fails, the system is in serious trouble,
+		 * just let the qpair get cleaned up immediately.
+		 */
 		return 0;
 	}
 
