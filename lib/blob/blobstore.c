@@ -3303,6 +3303,7 @@ struct spdk_bs_load_ctx {
 	spdk_blob_id				blobid;
 
 	/* These fields are used in the spdk_bs_dump path. */
+	bool					dumping;
 	FILE					*fp;
 	spdk_bs_dump_print_xattr		print_xattr_fn;
 	char					xattr_name[4096];
@@ -3716,10 +3717,16 @@ bs_load_iter(void *arg, struct spdk_blob *blob, int bserrno)
 	free(ctx);
 }
 
+static void bs_dump_read_md_page(spdk_bs_sequence_t *seq, void *cb_arg);
+
 static void
 bs_load_complete(struct spdk_bs_load_ctx *ctx)
 {
 	ctx->bs->used_clusters = spdk_bit_pool_create_from_array(ctx->used_clusters);
+	if (ctx->dumping) {
+		bs_dump_read_md_page(ctx->seq, ctx);
+		return;
+	}
 	spdk_bs_iter_first(ctx->bs, bs_load_iter, ctx);
 }
 
@@ -4313,6 +4320,46 @@ bs_recover(struct spdk_bs_load_ctx *ctx)
 	bs_load_replay_md(ctx);
 }
 
+static int
+bs_parse_super(struct spdk_bs_load_ctx *ctx)
+{
+	int rc;
+
+	if (ctx->super->size == 0) {
+		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
+	}
+
+	if (ctx->super->io_unit_size == 0) {
+		ctx->super->io_unit_size = SPDK_BS_PAGE_SIZE;
+	}
+
+	ctx->bs->clean = 1;
+	ctx->bs->cluster_sz = ctx->super->cluster_size;
+	ctx->bs->total_clusters = ctx->super->size / ctx->super->cluster_size;
+	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	if (spdk_u32_is_pow2(ctx->bs->pages_per_cluster)) {
+		ctx->bs->pages_per_cluster_shift = spdk_u32log2(ctx->bs->pages_per_cluster);
+	}
+	ctx->bs->io_unit_size = ctx->super->io_unit_size;
+	rc = spdk_bit_array_resize(&ctx->used_clusters, ctx->bs->total_clusters);
+	if (rc < 0) {
+		return -ENOMEM;
+	}
+	ctx->bs->md_start = ctx->super->md_start;
+	ctx->bs->md_len = ctx->super->md_len;
+	rc = spdk_bit_array_resize(&ctx->bs->open_blobids, ctx->bs->md_len);
+	if (rc < 0) {
+		return -ENOMEM;
+	}
+
+	ctx->bs->total_data_clusters = ctx->bs->total_clusters - spdk_divide_round_up(
+					       ctx->bs->md_start + ctx->bs->md_len, ctx->bs->pages_per_cluster);
+	ctx->bs->super_blob = ctx->super->super_blob;
+	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
+
+	return 0;
+}
+
 static void
 bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -4358,40 +4405,11 @@ bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	if (ctx->super->size == 0) {
-		ctx->super->size = ctx->bs->dev->blockcnt * ctx->bs->dev->blocklen;
-	}
-
-	if (ctx->super->io_unit_size == 0) {
-		ctx->super->io_unit_size = SPDK_BS_PAGE_SIZE;
-	}
-
-	/* Parse the super block */
-	ctx->bs->clean = 1;
-	ctx->bs->cluster_sz = ctx->super->cluster_size;
-	ctx->bs->total_clusters = ctx->super->size / ctx->super->cluster_size;
-	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
-	if (spdk_u32_is_pow2(ctx->bs->pages_per_cluster)) {
-		ctx->bs->pages_per_cluster_shift = spdk_u32log2(ctx->bs->pages_per_cluster);
-	}
-	ctx->bs->io_unit_size = ctx->super->io_unit_size;
-	rc = spdk_bit_array_resize(&ctx->used_clusters, ctx->bs->total_clusters);
+	rc = bs_parse_super(ctx);
 	if (rc < 0) {
-		bs_load_ctx_fail(ctx, -ENOMEM);
+		bs_load_ctx_fail(ctx, rc);
 		return;
 	}
-	ctx->bs->md_start = ctx->super->md_start;
-	ctx->bs->md_len = ctx->super->md_len;
-	rc = spdk_bit_array_resize(&ctx->bs->open_blobids, ctx->bs->md_len);
-	if (rc < 0) {
-		bs_load_ctx_fail(ctx, -ENOMEM);
-		return;
-	}
-
-	ctx->bs->total_data_clusters = ctx->bs->total_clusters - spdk_divide_round_up(
-					       ctx->bs->md_start + ctx->bs->md_len, ctx->bs->pages_per_cluster);
-	ctx->bs->super_blob = ctx->super->super_blob;
-	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
 
 	if (ctx->super->used_blobid_mask_len == 0 || ctx->super->clean == 0) {
 		bs_recover(ctx);
@@ -4522,8 +4540,6 @@ bs_dump_finish(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrn
 	free(ctx);
 }
 
-static void bs_dump_read_md_page(spdk_bs_sequence_t *seq, void *cb_arg);
-
 static void
 bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 {
@@ -4536,6 +4552,14 @@ bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 	fprintf(ctx->fp, "=========\n");
 	fprintf(ctx->fp, "Metadata Page Index: %" PRIu32 " (0x%" PRIx32 ")\n", page_idx, page_idx);
 	fprintf(ctx->fp, "Blob ID: 0x%" PRIx64 "\n", page->id);
+	fprintf(ctx->fp, "In used bit array%s:", ctx->super->clean ? "" : " (not clean: dubious)");
+	if (spdk_bit_array_get(ctx->bs->used_md_pages, page_idx)) {
+		fprintf(ctx->fp, " md");
+	}
+	if (spdk_bit_array_get(ctx->bs->used_blobids, page_idx)) {
+		fprintf(ctx->fp, " blob");
+	}
+	fprintf(ctx->fp, "\n");
 
 	crc = blob_md_page_calc_crc(page);
 	fprintf(ctx->fp, "CRC: 0x%" PRIx32 " (%s)\n", page->crc, crc == page->crc ? "OK" : "Mismatch");
@@ -4666,6 +4690,7 @@ static void
 bs_dump_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
+	int rc;
 
 	fprintf(ctx->fp, "Signature: \"%.8s\" ", ctx->super->signature);
 	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
@@ -4704,7 +4729,14 @@ bs_dump_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		bs_dump_finish(seq, ctx, -ENOMEM);
 		return;
 	}
-	bs_dump_read_md_page(seq, ctx);
+
+	rc = bs_parse_super(ctx);
+	if (rc < 0) {
+		bs_load_ctx_fail(ctx, rc);
+		return;
+	}
+
+	bs_load_read_used_pages(ctx);
 }
 
 void
@@ -4713,7 +4745,6 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 {
 	struct spdk_blob_store	*bs;
 	struct spdk_bs_cpl	cpl;
-	spdk_bs_sequence_t	*seq;
 	struct spdk_bs_load_ctx *ctx;
 	struct spdk_bs_opts	opts = {};
 	int err;
@@ -4729,6 +4760,7 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 		return;
 	}
 
+	ctx->dumping = true;
 	ctx->fp = fp;
 	ctx->print_xattr_fn = print_xattr_fn;
 
@@ -4736,8 +4768,8 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 	cpl.u.bs_basic.cb_fn = cb_fn;
 	cpl.u.bs_basic.cb_arg = cb_arg;
 
-	seq = bs_sequence_start(bs->md_channel, &cpl);
-	if (!seq) {
+	ctx->seq = bs_sequence_start(bs->md_channel, &cpl);
+	if (!ctx->seq) {
 		spdk_free(ctx->super);
 		free(ctx);
 		bs_free(bs);
@@ -4746,7 +4778,7 @@ spdk_bs_dump(struct spdk_bs_dev *dev, FILE *fp, spdk_bs_dump_print_xattr print_x
 	}
 
 	/* Read the super block */
-	bs_sequence_read_dev(seq, ctx->super, bs_page_to_lba(bs, 0),
+	bs_sequence_read_dev(ctx->seq, ctx->super, bs_page_to_lba(bs, 0),
 			     bs_byte_to_lba(bs, sizeof(*ctx->super)),
 			     bs_dump_super_cpl, ctx);
 }
