@@ -53,7 +53,6 @@
 
 #define NVMF_VFIO_USER_DEFAULT_MAX_QUEUE_DEPTH 256
 #define NVMF_VFIO_USER_DEFAULT_AQ_DEPTH 32
-#define NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
 #define NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE ((NVMF_REQ_MAX_BUFFERS - 1) << SHIFT_4KB)
 #define NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE
 
@@ -61,8 +60,15 @@
 #define NVMF_VFIO_USER_DOORBELLS_SIZE 0x1000
 
 #define NVME_REG_CFG_SIZE       0x1000
-#define NVME_REG_BAR0_SIZE      0x4000
-#define NVME_IRQ_MSIX_NUM	NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR
+#define NVME_REG_BAR0_SIZE      (NVMF_VFIO_USER_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE)
+#define NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR ((NVMF_VFIO_USER_DOORBELLS_SIZE) / 8)
+#define NVME_IRQ_MSIX_NUM	NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR
+/* MSIX Table Size */
+#define NVME_BAR4_SIZE		SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM * 16), 0x1000)
+/* MSIX Pending Bit Array Size */
+#define NVME_BAR5_SIZE		SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM / 8), 0x1000)
+
+#define NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR (NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR / 4)
 
 struct nvmf_vfio_user_req;
 struct nvmf_vfio_user_qpair;
@@ -172,7 +178,7 @@ struct nvmf_vfio_user_ctrlr {
 	uint16_t				cntlid;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 
-	struct nvmf_vfio_user_qpair		*qp[NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR];
+	struct nvmf_vfio_user_qpair		*qp[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR];
 
 	TAILQ_ENTRY(nvmf_vfio_user_ctrlr)	link;
 
@@ -557,9 +563,9 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 	struct nvmf_vfio_user_transport *vu_transport;
 	int err;
 
-	if (opts->max_qpairs_per_ctrlr > NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
+	if (opts->max_qpairs_per_ctrlr > NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR) {
 		SPDK_ERRLOG("Invalid max_qpairs_per_ctrlr=%d, supported max_qpairs_per_ctrlr=%d\n",
-			    opts->max_qpairs_per_ctrlr, NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR);
+			    opts->max_qpairs_per_ctrlr, NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR);
 		return NULL;
 	}
 
@@ -909,7 +915,7 @@ io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const boo
 {
 	assert(vu_ctrlr != NULL);
 
-	if (qid == 0 || qid >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR) {
+	if (qid == 0 || qid >= NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR) {
 		return false;
 	}
 
@@ -1679,7 +1685,7 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	/* convert byte offset to array index */
 	pos >>= 2;
 
-	if (pos >= NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR * 2) {
+	if (pos >= NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * 2) {
 		SPDK_ERRLOG("%s: bad doorbell index %#lx\n", ctrlr_id(ctrlr), pos);
 		errno = EINVAL;
 		return -1;
@@ -1926,14 +1932,14 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		return ret;
 	}
 
-	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR4_REGION_IDX, PAGE_SIZE,
+	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR4_REGION_IDX, NVME_BAR4_SIZE,
 			       NULL, VFU_REGION_FLAG_RW, NULL, 0, -1, 0);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup bar 4\n", vfu_ctx);
 		return ret;
 	}
 
-	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR5_REGION_IDX, PAGE_SIZE,
+	ret = vfu_setup_region(vfu_ctx, VFU_PCI_DEV_BAR5_REGION_IDX, NVME_BAR5_SIZE,
 			       NULL, VFU_REGION_FLAG_RW, NULL, 0, -1, 0);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup bar 5\n", vfu_ctx);
@@ -1992,7 +1998,7 @@ free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr, bool free_qps)
 	SPDK_DEBUGLOG(nvmf_vfio, "free %s\n", ctrlr_id(ctrlr));
 
 	if (free_qps) {
-		for (i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; i++) {
+		for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
 			free_qp(ctrlr, i);
 		}
 	}
