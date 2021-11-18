@@ -86,6 +86,7 @@ enum cli_action_type {
 	CLI_SHELL_EXIT,
 	CLI_HELP,
 	CLI_RECOVER,
+	CLI_DELETE_BLOB,
 };
 
 #define BUFSIZE 255
@@ -165,6 +166,7 @@ print_cmds(void)
 	printf("\t-s <blobid> | bs - show blob info or blobstore info\n");
 	printf("\t-S - enter interactive shell mode\n");
 	printf("\t-T <filename> - automated script mode\n");
+	printf("\t-w <blobid> - delete (whack) a blob\n");
 	printf("\t-x <blobid> name value - set xattr name/value pair\n");
 	printf("\t-X - exit when in interactive shell mode\n");
 	printf("\n");
@@ -803,6 +805,24 @@ fill_blob_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 }
 
 /*
+ * Callback for deleting a blob
+ */
+static void
+delete_blob_cb(void *arg1, int bserrno)
+{
+	struct cli_context_t *cli_context = arg1;
+
+	if (bserrno) {
+		unload_bs(cli_context, "Error in delete_blob callback",
+			  bserrno);
+		return;
+	}
+
+	printf("Blob 0x%lx has been deleted.\n", cli_context->blobid);
+	unload_bs(cli_context, "", 0);
+}
+
+/*
  * Multiple actions require us to open the bs first so here we use
  * a common callback to set a bunch of values and then move on to
  * the next step saved off via function pointer.
@@ -860,6 +880,10 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 		break;
 	case CLI_RECOVER:
 		unload_bs(cli_context, "", 0);
+		break;
+	case CLI_DELETE_BLOB:
+		spdk_bs_delete_blob(cli_context->bs, cli_context->blobid,
+				    delete_blob_cb, cli_context);
 		break;
 
 	default:
@@ -1054,7 +1078,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int cmd_chosen = 0;
 	char resp;
 
-	while ((op = getopt(argc, argv, "b:d:f:hij:l:m:n:p:r:s:DRST:Xx:")) != -1) {
+	while ((op = getopt(argc, argv, "b:d:f:hij:l:m:n:p:r:s:w:DRST:Xx:")) != -1) {
 		switch (op) {
 		case 'b':
 			if (strcmp(cli_context->bdev_name, "") == 0) {
@@ -1196,6 +1220,11 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			} else {
 				cli_context->action = CLI_NONE;
 			}
+			break;
+		case 'w':
+			cmd_chosen++;
+			cli_context->action = CLI_DELETE_BLOB;
+			cli_context->blobid = spdk_strtoll(optarg, 0);
 			break;
 		case 'X':
 			cmd_chosen++;
@@ -1471,6 +1500,7 @@ cli_start(void *arg1)
 	case CLI_IMPORT_BLOB:
 	case CLI_FILL:
 	case CLI_RECOVER:
+	case CLI_DELETE_BLOB:
 		load_bs(cli_context);
 		break;
 	case CLI_INIT_BS:
