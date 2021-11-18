@@ -994,11 +994,14 @@ bsdump_print_xattr(FILE *fp, const char *bstype, const char *name, const void *v
 	} else if (strncmp(bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
 		if (strcmp(name, "name") == 0) {
 			fprintf(fp, "%s", (char *)value);
-		} else if (strcmp(name, "uuid") == 0 && value_len == sizeof(struct spdk_uuid)) {
-			char uuid[SPDK_UUID_STRING_LEN];
+		} else if (strcmp(name, "uuid") == 0) {
+			struct spdk_uuid uuid;
 
-			spdk_uuid_fmt_lower(uuid, sizeof(uuid), (struct spdk_uuid *)value);
-			fprintf(fp, "%s", uuid);
+			if (spdk_uuid_parse(&uuid, (const char *)value) == 0) {
+				fprintf(fp, "%s", (const char *)value);
+			} else {
+				fprintf(fp, "? Invalid UUID");
+			}
 		} else {
 			fprintf(fp, "?");
 		}
