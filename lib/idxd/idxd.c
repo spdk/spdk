@@ -255,6 +255,14 @@ spdk_idxd_configure_chan(struct spdk_idxd_io_channel *chan)
 			goto err_user_desc_or_op;
 		}
 
+		rc = _vtophys(batch->user_desc, &batch->user_desc_addr,
+			      DESC_PER_BATCH * sizeof(struct idxd_hw_desc));
+		if (rc) {
+			SPDK_ERRLOG("Failed to translate batch descriptor memory\n");
+			rc = -ENOMEM;
+			goto err_user_desc_or_op;
+		}
+
 		batch->user_ops = op = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_ops),
 						    0x40, NULL,
 						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -1109,7 +1117,6 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
-	uint64_t desc_addr;
 	int i, rc;
 
 	assert(chan != NULL);
@@ -1133,16 +1140,9 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		return rc;
 	}
 
-	/* TODO: pre-translate these when allocated for max batch size. */
-	rc = _vtophys(batch->user_desc, &desc_addr, batch->index * sizeof(struct idxd_hw_desc));
-	if (rc) {
-		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
-		return rc;
-	}
-
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_BATCH;
-	desc->desc_list_addr = desc_addr;
+	desc->desc_list_addr = batch->user_desc_addr;
 	desc->desc_count = batch->index;
 	op->batch = batch;
 	assert(batch->index <= DESC_PER_BATCH);
