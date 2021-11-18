@@ -2087,7 +2087,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
-	ret = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+	ret = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (ret == -1) {
 		SPDK_ERRLOG("%s: failed to open device memory at %s: %s.\n",
 			    endpoint_id(endpoint), path, spdk_strerror(errno));
