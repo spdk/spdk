@@ -515,6 +515,22 @@ SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_bdev)
 
+static const char *
+nvme_ctrlr_get_state_str(struct nvme_ctrlr *nvme_ctrlr)
+{
+	if (nvme_ctrlr->destruct) {
+		return "deleting";
+	} else if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
+		return "failed";
+	} else if (nvme_ctrlr->resetting) {
+		return "resetting";
+	} else if (nvme_ctrlr->reconnect_is_delayed > 0) {
+		return "reconnect_is_delayed";
+	} else {
+		return "enabled";
+	}
+}
+
 static void
 rpc_dump_nvme_bdev_controller_info(struct nvme_bdev_ctrlr *nbdev_ctrlr, void *ctx)
 {
@@ -529,6 +545,9 @@ rpc_dump_nvme_bdev_controller_info(struct nvme_bdev_ctrlr *nbdev_ctrlr, void *ct
 	spdk_json_write_named_array_begin(w, "ctrlrs");
 	TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "state", nvme_ctrlr_get_state_str(nvme_ctrlr));
+
 #ifdef SPDK_CONFIG_NVME_CUSE
 		size_t cuse_name_size = 128;
 		char cuse_name[cuse_name_size];
