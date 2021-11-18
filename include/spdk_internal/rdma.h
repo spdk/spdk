@@ -111,6 +111,11 @@ struct spdk_rdma_srq {
 	bool shared_stats;
 };
 
+enum spdk_rdma_memory_map_role {
+	SPDK_RDMA_MEMORY_MAP_ROLE_TARGET,
+	SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR
+};
+
 /**
  * Create RDMA SRQ
  *
@@ -232,10 +237,12 @@ int spdk_rdma_qp_flush_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_re
  *
  * \param pd Protection Domain which will be used to create Memory Regions
  * \param hooks Optional hooks which are used to create Protection Domain or ger RKey
+ * \param role Specifies whether this map is used by RDMA target or initiator, determines access flags of registered MRs
  * \return Pointer to memory map or NULL on failure
  */
-struct spdk_rdma_mem_map *spdk_rdma_create_mem_map(struct ibv_pd *pd,
-		struct spdk_nvme_rdma_hooks *hooks);
+struct spdk_rdma_mem_map *
+spdk_rdma_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *hooks,
+			 enum spdk_rdma_memory_map_role role);
 
 /**
  * Free previously allocated memory map

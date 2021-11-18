@@ -46,6 +46,7 @@ struct spdk_rdma_mem_map {
 	struct ibv_pd			*pd;
 	struct spdk_nvme_rdma_hooks	*hooks;
 	uint32_t ref_count;
+	enum spdk_rdma_memory_map_role role;
 	LIST_ENTRY(spdk_rdma_mem_map) link;
 };
 
@@ -60,6 +61,7 @@ rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 	struct spdk_rdma_mem_map *rmap = cb_ctx;
 	struct ibv_pd *pd = rmap->pd;
 	struct ibv_mr *mr;
+	uint32_t access_flags = 0;
 	int rc;
 
 	switch (action) {
@@ -68,10 +70,17 @@ rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, rmap->hooks->get_rkey(pd, vaddr,
 							  size));
 		} else {
-			mr = ibv_reg_mr(pd, vaddr, size,
-					IBV_ACCESS_LOCAL_WRITE |
-					IBV_ACCESS_REMOTE_READ |
-					IBV_ACCESS_REMOTE_WRITE);
+			switch (rmap->role) {
+			case SPDK_RDMA_MEMORY_MAP_ROLE_TARGET:
+				access_flags = IBV_ACCESS_LOCAL_WRITE;
+				break;
+			case SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR:
+				access_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
+				break;
+			default:
+				SPDK_UNREACHABLE();
+			}
+			mr = ibv_reg_mr(pd, vaddr, size, access_flags);
 			if (mr == NULL) {
 				SPDK_ERRLOG("ibv_reg_mr() failed\n");
 				return -1;
@@ -121,14 +130,15 @@ _rdma_free_mem_map(struct spdk_rdma_mem_map *map)
 }
 
 struct spdk_rdma_mem_map *
-spdk_rdma_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *hooks)
+spdk_rdma_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *hooks,
+			 enum spdk_rdma_memory_map_role role)
 {
 	struct spdk_rdma_mem_map *map;
 
 	pthread_mutex_lock(&g_rdma_mr_maps_mutex);
 	/* Look up existing mem map registration for this pd */
 	LIST_FOREACH(map, &g_rdma_mr_maps, link) {
-		if (map->pd == pd) {
+		if (map->pd == pd && map->role == role) {
 			map->ref_count++;
 			pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 			return map;
@@ -148,6 +158,7 @@ spdk_rdma_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *hooks)
 	map->pd = pd;
 	map->ref_count = 1;
 	map->hooks = hooks;
+	map->role = role;
 	map->map = spdk_mem_map_alloc(0, &g_rdma_map_ops, map);
 	if (!map->map) {
 		SPDK_ERRLOG("Unable to create memory map\n");

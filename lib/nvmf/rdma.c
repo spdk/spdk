@@ -2409,7 +2409,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 		assert(device->map == NULL);
 
-		device->map = spdk_rdma_create_mem_map(device->pd, &g_nvmf_hooks);
+		device->map = spdk_rdma_create_mem_map(device->pd, &g_nvmf_hooks, SPDK_RDMA_MEMORY_MAP_ROLE_TARGET);
 		if (!device->map) {
 			SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
 			rc = -ENOMEM;
