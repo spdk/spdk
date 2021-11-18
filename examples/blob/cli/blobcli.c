@@ -701,6 +701,12 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 			return;
 		}
 
+		if (cli_context->blob->active.num_clusters == 0) {
+			fclose(cli_context->fp);
+			spdk_blob_close(cli_context->blob, close_cb, cli_context);
+			return;
+		}
+
 		/* read a io_unit of data from the blob */
 		spdk_blob_io_read(cli_context->blob, cli_context->channel,
 				  cli_context->buff, cli_context->io_unit_count,
