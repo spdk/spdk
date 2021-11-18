@@ -4552,6 +4552,12 @@ bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 	fprintf(ctx->fp, "=========\n");
 	fprintf(ctx->fp, "Metadata Page Index: %" PRIu32 " (0x%" PRIx32 ")\n", page_idx, page_idx);
 	fprintf(ctx->fp, "Blob ID: 0x%" PRIx64 "\n", page->id);
+	fprintf(ctx->fp, "Sequence: %" PRIu32 "\n", page->sequence_num);
+	if (page->next == SPDK_INVALID_MD_PAGE) {
+		fprintf(ctx->fp, "Next: None\n");
+	} else {
+		fprintf(ctx->fp, "Next: %" PRIu32 "\n", page->next);
+	}
 	fprintf(ctx->fp, "In used bit array%s:", ctx->super->clean ? "" : " (not clean: dubious)");
 	if (spdk_bit_array_get(ctx->bs->used_md_pages, page_idx)) {
 		fprintf(ctx->fp, " md");
