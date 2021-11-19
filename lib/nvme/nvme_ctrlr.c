@@ -1355,6 +1355,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify controller";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 		return "wait for identify controller";
+	case NVME_CTRLR_STATE_CONFIGURE_AER:
+		return "configure AER";
+	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
+		return "wait for configure aer";
 	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
 		return "set keep alive timeout";
 	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
@@ -1387,10 +1391,6 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify ns iocs specific";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC:
 		return "wait for identify ns iocs specific";
-	case NVME_CTRLR_STATE_CONFIGURE_AER:
-		return "configure AER";
-	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
-		return "wait for configure aer";
 	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
 		return "set supported log pages";
 	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
@@ -1945,7 +1945,7 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED;
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
 			     ctrlr->opts.admin_timeout_ms);
 }
 
@@ -2480,7 +2480,7 @@ nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr,
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 	if (ns == NULL) {
 		/* No first/next active NS, move on to the next state */
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
@@ -2491,7 +2491,7 @@ nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr,
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		if (ns == NULL) {
 			/* no namespace with (supported) iocs specific data found */
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
 					     ctrlr->opts.admin_timeout_ms);
 			return 0;
 		}
@@ -2562,7 +2562,7 @@ nvme_ctrlr_identify_namespaces_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (!nvme_ctrlr_multi_iocs_enabled(ctrlr)) {
 		/* Multi IOCS not supported/enabled, move on to the next state */
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CONFIGURE_AER,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
@@ -3227,8 +3227,7 @@ nvme_ctrlr_configure_aer_done(void *arg, const struct spdk_nvme_cpl *cpl)
 			return;
 		}
 	}
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
-			     ctrlr->opts.admin_timeout_ms);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT, ctrlr->opts.admin_timeout_ms);
 }
 
 static int
@@ -3903,6 +3902,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		rc = nvme_ctrlr_identify(ctrlr);
 		break;
 
+	case NVME_CTRLR_STATE_CONFIGURE_AER:
+		rc = nvme_ctrlr_configure_aer(ctrlr);
+		break;
+
 	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
 		rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
 		break;
@@ -3934,10 +3937,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC:
 		rc = nvme_ctrlr_identify_namespaces_iocs_specific(ctrlr);
-		break;
-
-	case NVME_CTRLR_STATE_CONFIGURE_AER:
-		rc = nvme_ctrlr_configure_aer(ctrlr);
 		break;
 
 	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
@@ -3977,6 +3976,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC:
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
+	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
 	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:
@@ -3985,7 +3985,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC:
-	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
 	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
