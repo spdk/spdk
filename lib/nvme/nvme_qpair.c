@@ -630,7 +630,8 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 		 */
 		if (qpair->ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE &&
 		    !qpair->is_new_qpair) {
-			nvme_qpair_abort_reqs(qpair, 0);
+			nvme_qpair_abort_all_queued_reqs(qpair, 0);
+			nvme_transport_qpair_abort_reqs(qpair, 0);
 		}
 
 		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
@@ -720,7 +721,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	if (spdk_unlikely(qpair->ctrlr->is_failed)) {
 		if (qpair->ctrlr->is_removed) {
 			nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
-			nvme_qpair_abort_reqs(qpair, 1 /* Do not retry */);
+			nvme_qpair_abort_all_queued_reqs(qpair, 1 /* Do not retry */);
+			nvme_transport_qpair_abort_reqs(qpair, 1);
 		}
 		return -ENXIO;
 	}
@@ -1057,12 +1059,11 @@ nvme_qpair_resubmit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *
 }
 
 void
-nvme_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
+nvme_qpair_abort_all_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	nvme_qpair_complete_error_reqs(qpair);
 	nvme_qpair_abort_queued_reqs(qpair, dnr);
 	_nvme_qpair_complete_abort_queued_reqs(qpair);
-	nvme_transport_qpair_abort_reqs(qpair, dnr);
 }
 
 int

@@ -620,7 +620,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	 * with that qpair, since the callbacks will also be foreign to this process.
 	 */
 	if (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr)) {
-		nvme_qpair_abort_reqs(qpair, 1);
+		nvme_qpair_abort_all_queued_reqs(qpair, 1);
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
