@@ -31,17 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
-DIRS-y += hello_world identify perf reconnect nvme_manage arbitration \
-	hotplug cmb_copy abort pmr_persistence discovery_aer
+APP = discovery_aer
 
-DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
 
-.PHONY: all clean $(DIRS-y)
+install: $(APP)
+	$(INSTALL_EXAMPLE)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+uninstall:
+	$(UNINSTALL_EXAMPLE)
