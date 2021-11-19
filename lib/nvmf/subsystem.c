@@ -358,6 +358,7 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	TAILQ_REMOVE(&subsystem->listeners, listener, link);
+	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
 	free(listener->ana_state);
 	free(listener);
 }
