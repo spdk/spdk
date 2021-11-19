@@ -1132,7 +1132,7 @@ print_max_len(WINDOW *win, int row, uint16_t col, uint16_t max_len, enum str_ali
 		snprintf(&tmp_str[max_str - DOTS_STR_LEN - 2], DOTS_STR_LEN, "%s", dots);
 	}
 
-	mvwprintw(win, row, col, tmp_str);
+	mvwprintw(win, row, col, "%s", tmp_str);
 
 	refresh();
 	wrefresh(win);
@@ -2208,19 +2208,19 @@ display_thread(struct rpc_thread_info *thread_info)
 
 	print_left(thread_win, 3, THREAD_WIN_FIRST_COL, THREAD_WIN_WIDTH,
 		   "Core:                Idle [us]:            Busy [us]:", COLOR_PAIR(5));
-	mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 6, "%" PRIu64,
+	mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 6, "%d",
 		  thread_info->core_num);
 
 	if (g_interval_data) {
 		get_time_str(thread_info->idle - thread_info->last_idle, idle_time);
-		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 32, idle_time);
+		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 32, "%s", idle_time);
 		get_time_str(thread_info->busy - thread_info->last_busy, busy_time);
-		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 54, busy_time);
+		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 54, "%s", busy_time);
 	} else {
 		get_time_str(thread_info->idle, idle_time);
-		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 32, idle_time);
+		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 32, "%s", idle_time);
 		get_time_str(thread_info->busy, busy_time);
-		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 54, busy_time);
+		mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 54, "%s", busy_time);
 	}
 
 	print_left(thread_win, 4, THREAD_WIN_FIRST_COL, THREAD_WIN_WIDTH,
@@ -2379,20 +2379,20 @@ show_core(uint8_t current_page)
 		get_time_str(core_info->idle, idle_time);
 		get_time_str(core_info->busy, busy_time);
 	}
-	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL + 20, idle_time);
+	mvwprintw(core_win, 5, CORE_WIN_FIRST_COL + 20, "%s", idle_time);
 	mvwhline(core_win, 6, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 
 	print_left(core_win, 7, 1, CORE_WIN_WIDTH, "Poller count:          Busy time:", COLOR_PAIR(5));
 	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL, "%" PRIu64,
 		  core_info->pollers_count);
 
-	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL + 20, busy_time);
+	mvwprintw(core_win, 7, CORE_WIN_FIRST_COL + 20, "%s", busy_time);
 
 	mvwhline(core_win, 8, 1, ACS_HLINE, CORE_WIN_WIDTH - 2);
 	print_left(core_win, 9, 1, CORE_WIN_WIDTH, "Threads on this core", COLOR_PAIR(5));
 
 	for (i = 0; i < core_info->threads.threads_count; i++) {
-		mvwprintw(core_win, i + 10, 1, core_info->threads.thread[i].name);
+		mvwprintw(core_win, i + 10, 1, "%s", core_info->threads.thread[i].name);
 	}
 	pthread_mutex_unlock(&g_thread_lock);
 
@@ -2405,7 +2405,7 @@ show_core(uint8_t current_page)
 		pthread_mutex_lock(&g_thread_lock);
 		for (i = 0; i < core_info->threads.threads_count; i++) {
 			if (i != current_threads_row) {
-				mvwprintw(core_win, i + 10, 1, core_info->threads.thread[i].name);
+				mvwprintw(core_win, i + 10, 1, "%s", core_info->threads.thread[i].name);
 			} else {
 				print_left(core_win, i + 10, 1, CORE_WIN_WIDTH - 2,
 					   core_info->threads.thread[i].name, COLOR_PAIR(2));
@@ -2486,9 +2486,9 @@ show_poller(uint8_t current_page)
 	mvwaddch(poller_win, 2, POLLER_WIN_WIDTH, ACS_RTEE);
 
 	print_left(poller_win, 3, 2, POLLER_WIN_WIDTH, "Type:                  On thread:", COLOR_PAIR(5));
-	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL,
+	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL, "%s",
 		  poller_type_str[poller->type]);
-	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL + 23, poller->thread_name);
+	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL + 23, "%s", poller->thread_name);
 
 	print_left(poller_win, 4, 2, POLLER_WIN_WIDTH, "Run count:", COLOR_PAIR(5));
 
@@ -2503,7 +2503,7 @@ show_poller(uint8_t current_page)
 	if (poller->period_ticks != 0) {
 		print_left(poller_win, 4, 28, POLLER_WIN_WIDTH, "Period:", COLOR_PAIR(5));
 		get_time_str(poller->period_ticks, poller_period);
-		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL + 23, poller_period);
+		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL + 23, "%s", poller_period);
 	}
 	mvwhline(poller_win, 5, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
 
@@ -2545,7 +2545,7 @@ show_poller(uint8_t current_page)
 static void
 print_bottom_error_message(char *msg)
 {
-	mvprintw(g_max_row - 1, g_max_col - strlen(msg) - 2, msg);
+	mvprintw(g_max_row - 1, g_max_col - strlen(msg) - 2, "%s", msg);
 }
 
 static void *
@@ -2719,7 +2719,7 @@ show_stats(pthread_t *data_thread)
 			pthread_mutex_unlock(&g_thread_lock);
 
 			snprintf(current_page_str, CURRENT_PAGE_STR_LEN - 1, "Page: %d/%d", current_page + 1, max_pages);
-			mvprintw(g_max_row - 1, 1, current_page_str);
+			mvprintw(g_max_row - 1, 1, "%s", current_page_str);
 
 			refresh();
 		}
