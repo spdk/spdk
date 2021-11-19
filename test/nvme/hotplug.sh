@@ -52,7 +52,8 @@ hotplug() {
 		-i 0 \
 		-t $((hotplug_events * hotplug_wait + hotplug_wait)) \
 		-n $((hotplug_events * nvme_count)) \
-		-r $((hotplug_events * nvme_count))
+		-r $((hotplug_events * nvme_count)) \
+		-l warning
 }
 
 "$rootdir/scripts/setup.sh"

@@ -37,6 +37,7 @@
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/log.h"
 
 struct dev_ctx {
 	TAILQ_ENTRY(dev_ctx)	tailq;
@@ -427,6 +428,9 @@ static void usage(char *program_name)
 	printf("\t[-r expected hot removal times]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-m iova mode: pa or va (optional)\n");
+	printf("\t[-l log level]\n");
+	printf("\t Available log levels:\n");
+	printf("\t  disabled, error, warning, notice, info, debug\n");
 }
 
 static int
@@ -438,7 +442,7 @@ parse_args(int argc, char **argv)
 	/* default value */
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "c:i:m:n:r:t:")) != -1) {
+	while ((op = getopt(argc, argv, "c:i:l:m:n:r:t:")) != -1) {
 		if (op == '?') {
 			usage(argv[0]);
 			return 1;
@@ -475,6 +479,24 @@ parse_args(int argc, char **argv)
 			break;
 		case 'm':
 			g_iova_mode = optarg;
+			break;
+		case 'l':
+			if (!strcmp(optarg, "disabled")) {
+				spdk_log_set_print_level(SPDK_LOG_DISABLED);
+			} else if (!strcmp(optarg, "error")) {
+				spdk_log_set_print_level(SPDK_LOG_ERROR);
+			} else if (!strcmp(optarg, "warning")) {
+				spdk_log_set_print_level(SPDK_LOG_WARN);
+			} else if (!strcmp(optarg, "notice")) {
+				spdk_log_set_print_level(SPDK_LOG_NOTICE);
+			} else if (!strcmp(optarg, "info")) {
+				spdk_log_set_print_level(SPDK_LOG_INFO);
+			} else if (!strcmp(optarg, "debug")) {
+				spdk_log_set_print_level(SPDK_LOG_DEBUG);
+			} else {
+				fprintf(stderr, "Unrecognized log level: %s\n", optarg);
+				return 1;
+			}
 			break;
 		default:
 			usage(argv[0]);

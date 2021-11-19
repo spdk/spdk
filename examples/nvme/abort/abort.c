@@ -565,6 +565,9 @@ usage(char *program_name)
 #else
 	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
 #endif
+	printf("\t[-l log level]\n");
+	printf("\t Available log levels:\n");
+	printf("\t  disabled, error, warning, notice, info, debug\n");
 }
 
 static void
@@ -642,7 +645,7 @@ parse_args(int argc, char **argv)
 	long int val;
 	int rc;
 
-	while ((op = getopt(argc, argv, "a:c:i:o:q:r:s:t:w:GM:T:")) != -1) {
+	while ((op = getopt(argc, argv, "a:c:i:l:o:q:r:s:t:w:GM:T:")) != -1) {
 		switch (op) {
 		case 'a':
 		case 'i':
@@ -714,6 +717,24 @@ parse_args(int argc, char **argv)
 #ifdef DEBUG
 			spdk_log_set_print_level(SPDK_LOG_DEBUG);
 #endif
+			break;
+		case 'l':
+			if (!strcmp(optarg, "disabled")) {
+				spdk_log_set_print_level(SPDK_LOG_DISABLED);
+			} else if (!strcmp(optarg, "error")) {
+				spdk_log_set_print_level(SPDK_LOG_ERROR);
+			} else if (!strcmp(optarg, "warning")) {
+				spdk_log_set_print_level(SPDK_LOG_WARN);
+			} else if (!strcmp(optarg, "notice")) {
+				spdk_log_set_print_level(SPDK_LOG_NOTICE);
+			} else if (!strcmp(optarg, "info")) {
+				spdk_log_set_print_level(SPDK_LOG_INFO);
+			} else if (!strcmp(optarg, "debug")) {
+				spdk_log_set_print_level(SPDK_LOG_DEBUG);
+			} else {
+				fprintf(stderr, "Unrecognized log level: %s\n", optarg);
+				return 1;
+			}
 			break;
 		default:
 			usage(argv[0]);
