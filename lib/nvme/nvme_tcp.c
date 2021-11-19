@@ -350,7 +350,6 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	struct nvme_tcp_qpair *tqpair;
 
 	assert(qpair != NULL);
-	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 	nvme_tcp_qpair_abort_reqs(qpair, 1);
 	nvme_qpair_deinit(qpair);
 	tqpair = nvme_tcp_qpair(qpair);
