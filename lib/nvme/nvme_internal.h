@@ -654,6 +654,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY,
 
 	/**
+	 * Set Keep Alive Timeout of the controller.
+	 */
+	NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
+
+	/**
+	 * Waiting for Set Keep Alive Timeout to be completed.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT,
+
+	/**
 	 * Get Identify I/O Command Set Specific Controller data structure.
 	 */
 	NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
@@ -753,16 +763,6 @@ enum nvme_ctrlr_state {
 	 * Waiting for Doorbell Buffer Config to be completed.
 	 */
 	NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG,
-
-	/**
-	 * Set Keep Alive Timeout of the controller.
-	 */
-	NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
-
-	/**
-	 * Waiting for Set Keep Alive Timeout to be completed.
-	 */
-	NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT,
 
 	/**
 	 * Set Host ID of the controller.

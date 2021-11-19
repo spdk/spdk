@@ -1355,6 +1355,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "identify controller";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
 		return "wait for identify controller";
+	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
+		return "set keep alive timeout";
+	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
+		return "wait for set keep alive timeout";
 	case NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC:
 		return "identify controller iocs specific";
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
@@ -1395,10 +1399,6 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set doorbell buffer config";
 	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
 		return "wait for doorbell buffer config";
-	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
-		return "set keep alive timeout";
-	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
-		return "wait for set keep alive timeout";
 	case NVME_CTRLR_STATE_SET_HOST_ID:
 		return "set host ID";
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
@@ -1490,7 +1490,7 @@ nvme_ctrlr_set_doorbell_buffer_config_done(void *arg, const struct spdk_nvme_cpl
 	} else {
 		NVME_CTRLR_INFOLOG(ctrlr, "Doorbell buffer config enabled\n");
 	}
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
 			     ctrlr->opts.admin_timeout_ms);
 }
 
@@ -1501,13 +1501,13 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	uint64_t prp1, prp2, len;
 
 	if (!ctrlr->cdata.oacs.doorbell_buffer_config) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
 
 	if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
@@ -1925,7 +1925,7 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->flags |= SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED;
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
 			     ctrlr->opts.admin_timeout_ms);
 }
 
@@ -2768,8 +2768,12 @@ nvme_ctrlr_set_keep_alive_timeout_done(void *arg, const struct spdk_nvme_cpl *cp
 		ctrlr->next_keep_alive_tick = spdk_get_ticks();
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
-			     ctrlr->opts.admin_timeout_ms);
+	if (spdk_nvme_ctrlr_is_discovery(ctrlr)) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+	} else {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
+				     ctrlr->opts.admin_timeout_ms);
+	}
 }
 
 static int
@@ -2778,15 +2782,20 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	int rc;
 
 	if (ctrlr->opts.keep_alive_timeout_ms == 0) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
-				     ctrlr->opts.admin_timeout_ms);
+		if (spdk_nvme_ctrlr_is_discovery(ctrlr)) {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
+					     ctrlr->opts.admin_timeout_ms);
+		}
 		return 0;
 	}
 
-	if (ctrlr->cdata.kas == 0) {
+	/* Note: Discovery controller identify data does not populate KAS according to spec. */
+	if (!spdk_nvme_ctrlr_is_discovery(ctrlr) && ctrlr->cdata.kas == 0) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Controller KAS is 0 - not enabling Keep Alive\n");
 		ctrlr->opts.keep_alive_timeout_ms = 0;
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_HOST_ID,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
@@ -3864,15 +3873,15 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_RESET_ADMIN_QUEUE:
 		nvme_transport_qpair_reset(ctrlr->adminq);
-		if (spdk_nvme_ctrlr_is_discovery(ctrlr)) {
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
-		} else {
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY, ctrlr->opts.admin_timeout_ms);
-		}
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY, NVME_TIMEOUT_INFINITE);
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY:
 		rc = nvme_ctrlr_identify(ctrlr);
+		break;
+
+	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
+		rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC:
@@ -3924,10 +3933,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		rc = nvme_ctrlr_set_doorbell_buffer_config(ctrlr);
 		break;
 
-	case NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT:
-		rc = nvme_ctrlr_set_keep_alive_timeout(ctrlr);
-		break;
-
 	case NVME_CTRLR_STATE_SET_HOST_ID:
 		rc = nvme_ctrlr_set_host_id(ctrlr);
 		break;
@@ -3949,6 +3954,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC:
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY:
+	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_GET_ZNS_CMD_EFFECTS_LOG:
 	case NVME_CTRLR_STATE_WAIT_FOR_SET_NUM_QUEUES:
@@ -3958,7 +3964,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC:
 	case NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER:
 	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
-	case NVME_CTRLR_STATE_WAIT_FOR_KEEP_ALIVE_TIMEOUT:
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		break;
