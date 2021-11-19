@@ -1,5 +1,9 @@
 # Performance Reports {#performance_reports}
 
+## Release 21.10
+
+- [SPDK 21.10 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2110.pdf)
+
 ## Release 21.07
 
 - [SPDK 21.07 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2107.pdf)
