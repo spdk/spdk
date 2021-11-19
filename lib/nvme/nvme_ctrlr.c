@@ -3238,25 +3238,30 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	int						rc;
 
 	config.raw = 0;
-	config.bits.crit_warn.bits.available_spare = 1;
-	config.bits.crit_warn.bits.temperature = 1;
-	config.bits.crit_warn.bits.device_reliability = 1;
-	config.bits.crit_warn.bits.read_only = 1;
-	config.bits.crit_warn.bits.volatile_memory_backup = 1;
 
-	if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 2, 0)) {
-		if (ctrlr->cdata.oaes.ns_attribute_notices) {
-			config.bits.ns_attr_notice = 1;
+	if (spdk_nvme_ctrlr_is_discovery(ctrlr)) {
+		config.bits.discovery_log_change_notice = 1;
+	} else {
+		config.bits.crit_warn.bits.available_spare = 1;
+		config.bits.crit_warn.bits.temperature = 1;
+		config.bits.crit_warn.bits.device_reliability = 1;
+		config.bits.crit_warn.bits.read_only = 1;
+		config.bits.crit_warn.bits.volatile_memory_backup = 1;
+
+		if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 2, 0)) {
+			if (ctrlr->cdata.oaes.ns_attribute_notices) {
+				config.bits.ns_attr_notice = 1;
+			}
+			if (ctrlr->cdata.oaes.fw_activation_notices) {
+				config.bits.fw_activation_notice = 1;
+			}
+			if (ctrlr->cdata.oaes.ana_change_notices) {
+				config.bits.ana_change_notice = 1;
+			}
 		}
-		if (ctrlr->cdata.oaes.fw_activation_notices) {
-			config.bits.fw_activation_notice = 1;
+		if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0) && ctrlr->cdata.lpa.telemetry) {
+			config.bits.telemetry_log_notice = 1;
 		}
-		if (ctrlr->cdata.oaes.ana_change_notices) {
-			config.bits.ana_change_notice = 1;
-		}
-	}
-	if (ctrlr->vs.raw >= SPDK_NVME_VERSION(1, 3, 0) && ctrlr->cdata.lpa.telemetry) {
-		config.bits.telemetry_log_notice = 1;
 	}
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_CONFIGURE_AER,
