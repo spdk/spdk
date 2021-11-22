@@ -156,20 +156,12 @@ function build_native_dpdk() {
 
 	cd $external_dpdk_base_dir
 	if [ "$(uname -s)" = "Linux" ]; then
-		# Fix for freeing device if not kernel driver configured.
-		# TODO: Remove once this is merged in upstream DPDK
 		if [[ $dpdk_ver == 20.11* ]]; then
-			wget https://github.com/karlatec/dpdk/commit/3219c0cfc38803aec10c809dde16e013b370bda9.patch -O dpdk-pci.patch
-			wget https://github.com/karlatec/dpdk/commit/adf8f7638de29bc4bf9ba3faf12bbdae73acda0c.patch -O dpdk-qat.patch
+			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/20.11/dpdk_pci.patch"
+			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/20.11/dpdk_qat.patch"
 		elif [[ $dpdk_ver == 21.08* ]]; then
-			wget https://github.com/karlatec/dpdk/commit/6fd2fa906ffdcee04e6ce5da40e61cb841be9827.patch -O dpdk-qat.patch
+			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/21.08/dpdk_qat.patch"
 		fi
-		git config --local user.name "spdk"
-		git config --local user.email "nomail@all.com"
-		if [[ -f dpdk-pci.patch ]]; then
-			patch -p1 < dpdk-pci.patch
-		fi
-		patch -p1 < dpdk-qat.patch
 	fi
 
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
