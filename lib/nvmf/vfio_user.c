@@ -110,6 +110,8 @@ struct nvme_migr_cq_state {
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_cq_state) == 0x20, "Incorrect size");
 
+#define VFIO_USER_NVME_MIGR_MAGIC	0xAFEDBC23
+
 /* The device state is in VFIO MIGRATION BAR(9) region, keep the device state page aligned.
  *
  * NVMe device migration region is defined as below:
@@ -164,6 +166,20 @@ struct nvme_migr_device_state {
 	uint8_t		unused[3356];
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_device_state) == 0x1000, "Incorrect size");
+
+struct vfio_user_nvme_migr_qp {
+	struct nvme_migr_sq_state	sq;
+	struct nvme_migr_cq_state	cq;
+};
+
+/* NVMe state definition used temporarily to load/restore from/to NVMe migration BAR region */
+struct vfio_user_nvme_migr_state {
+	struct nvme_migr_device_state	ctrlr_data;
+	struct nvmf_ctrlr_migr_data	private_data;
+	struct vfio_user_nvme_migr_qp	qps[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR];
+	uint8_t				bar0[NVME_REG_BAR0_SIZE];
+	uint8_t				cfg[NVME_REG_CFG_SIZE];
+};
 
 struct nvmf_vfio_user_req  {
 	struct spdk_nvmf_request		req;
@@ -2213,6 +2229,196 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 
 	errno = EBUSY;
 	return -1;
+}
+
+static void
+vfio_user_ctrlr_dump_migr_data(const char *name, struct vfio_user_nvme_migr_state *migr_data)
+{
+	struct spdk_nvme_registers *regs;
+	struct nvme_migr_sq_state *sq;
+	struct nvme_migr_cq_state *cq;
+	uint32_t *doorbell_base;
+	uint32_t i;
+
+	SPDK_NOTICELOG("Dump %s\n", name);
+
+	regs = (struct spdk_nvme_registers *)migr_data->bar0;
+	doorbell_base = (uint32_t *)&regs->doorbell[0].sq_tdbl;
+
+	SPDK_NOTICELOG("Registers\n");
+	SPDK_NOTICELOG("CSTS 0x%x\n", regs->csts.raw);
+	SPDK_NOTICELOG("CAP  0x%"PRIx64"\n", regs->cap.raw);
+	SPDK_NOTICELOG("VS   0x%x\n", regs->vs.raw);
+	SPDK_NOTICELOG("CC   0x%x\n", regs->cc.raw);
+	SPDK_NOTICELOG("AQA  0x%x\n", regs->aqa.raw);
+	SPDK_NOTICELOG("ASQ  0x%"PRIx64"\n", regs->asq);
+	SPDK_NOTICELOG("ACQ  0x%"PRIx64"\n", regs->acq);
+
+	SPDK_NOTICELOG("Number of IO Queues %u\n", migr_data->ctrlr_data.num_io_queues);
+	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
+		sq = &migr_data->qps[i].sq;
+		cq = &migr_data->qps[i].cq;
+
+		if (sq->size) {
+			SPDK_NOTICELOG("SQID %u, SQ DOORBELL %u\n", sq->sqid, doorbell_base[i * 2]);
+			SPDK_NOTICELOG("SQ SQID %u, CQID %u, HEAD %u, SIZE %u, DMA ADDR 0x%"PRIx64"\n",
+				       sq->sqid, sq->cqid, sq->head, sq->size, sq->dma_addr);
+		}
+
+		if (cq->size) {
+			SPDK_NOTICELOG("CQID %u, CQ DOORBELL %u\n", cq->cqid, doorbell_base[i * 2 + 1]);
+			SPDK_NOTICELOG("CQ CQID %u, PHASE %u, TAIL %u, SIZE %u, IV %u, IEN %u, DMA ADDR 0x%"PRIx64"\n",
+				       cq->cqid, cq->phase, cq->tail, cq->size, cq->iv, cq->ien, cq->dma_addr);
+		}
+	}
+
+	SPDK_NOTICELOG("%s Dump Done\n", name);
+}
+
+static __attribute__((unused)) int
+vfio_user_migr_stream_to_data(struct nvmf_vfio_user_endpoint *endpoint,
+			      struct vfio_user_nvme_migr_state *migr_state)
+{
+	void *data_ptr = endpoint->migr_data;
+
+	/* Load nvme_migr_device_state first */
+	memcpy(&migr_state->ctrlr_data, data_ptr, sizeof(struct nvme_migr_device_state));
+	/* TODO: version check */
+	if (migr_state->ctrlr_data.magic != VFIO_USER_NVME_MIGR_MAGIC) {
+		SPDK_ERRLOG("%s: bad magic number %x\n", endpoint_id(endpoint), migr_state->ctrlr_data.magic);
+		return -EINVAL;
+	}
+
+	/* Load private controller data */
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.private_data_offset;
+	memcpy(&migr_state->private_data, data_ptr, migr_state->ctrlr_data.private_data_len);
+
+	/* Load queue pairs */
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.qp_offset;
+	memcpy(&migr_state->qps, data_ptr, migr_state->ctrlr_data.qp_len);
+
+	/* Load BAR0 */
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX];
+	memcpy(&migr_state->bar0, data_ptr, migr_state->ctrlr_data.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX]);
+
+	/* Load CFG */
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX];
+	memcpy(&migr_state->cfg, data_ptr, migr_state->ctrlr_data.bar_len[VFU_PCI_DEV_CFG_REGION_IDX]);
+
+	return 0;
+}
+
+static __attribute__((unused)) void
+vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = vu_ctrlr->ctrlr;
+	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
+	struct nvmf_vfio_user_sq *vu_sq;
+	struct nvmf_vfio_user_cq *vu_cq;
+	struct vfio_user_nvme_migr_state migr_state = {};
+	uint64_t data_offset;
+	void *data_ptr;
+	int num_aers;
+	struct spdk_nvme_registers *regs;
+	uint32_t *doorbell_base;
+	uint32_t i = 0;
+	uint16_t sqid, cqid;
+
+	/* Save all data to vfio_user_nvme_migr_state first, then we will
+	 * copy it to device migration region at last.
+	 */
+
+	/* save magic number */
+	migr_state.ctrlr_data.magic = VFIO_USER_NVME_MIGR_MAGIC;
+
+	/* save controller data */
+	num_aers = nvmf_ctrlr_save_aers(ctrlr, migr_state.ctrlr_data.aer_cids,
+					256);
+	assert(num_aers >= 0);
+	migr_state.ctrlr_data.nr_aers = num_aers;
+
+	/* save controller private data */
+	nvmf_ctrlr_save_migr_data(ctrlr, (struct nvmf_ctrlr_migr_data *)&migr_state.private_data);
+
+	/* save queue pairs */
+	TAILQ_FOREACH(vu_sq, &vu_ctrlr->connected_sqs, tailq) {
+		/* save sq */
+		sqid = vu_sq->sq.qid;
+		migr_state.qps[sqid].sq.sqid = vu_sq->sq.qid;
+		migr_state.qps[sqid].sq.cqid = vu_sq->sq.cqid;
+		migr_state.qps[sqid].sq.head = vu_sq->sq.head;
+		migr_state.qps[sqid].sq.size = vu_sq->sq.size;
+		migr_state.qps[sqid].sq.dma_addr = vu_sq->sq.prp1;
+
+		/* save cq, for shared cq case, cq may be saved multiple times */
+		cqid = vu_sq->sq.cqid;
+		vu_cq = vu_ctrlr->cqs[cqid];
+		migr_state.qps[cqid].cq.cqid = cqid;
+		migr_state.qps[cqid].cq.tail = vu_cq->cq.tail;
+		migr_state.qps[cqid].cq.ien = vu_cq->cq.ien;
+		migr_state.qps[cqid].cq.iv = vu_cq->cq.iv;
+		migr_state.qps[cqid].cq.size = vu_cq->cq.size;
+		migr_state.qps[cqid].cq.phase = vu_cq->cq.phase;
+		migr_state.qps[cqid].cq.dma_addr = vu_cq->cq.prp1;
+		i++;
+	}
+
+	assert(i > 0);
+	migr_state.ctrlr_data.num_io_queues = i - 1;
+
+	regs = (struct spdk_nvme_registers *)&migr_state.bar0;
+	/* Save mandarory registers to bar0 */
+	regs->cap.raw = ctrlr->vcprop.cap.raw;
+	regs->vs.raw = ctrlr->vcprop.vs.raw;
+	regs->cc.raw = ctrlr->vcprop.cc.raw;
+	regs->aqa.raw = ctrlr->vcprop.aqa.raw;
+	regs->asq = ctrlr->vcprop.asq;
+	regs->acq = ctrlr->vcprop.acq;
+	/* Save doorbells */
+	doorbell_base = (uint32_t *)&regs->doorbell[0].sq_tdbl;
+	memcpy(doorbell_base, (void *)vu_ctrlr->doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
+
+	/* Save PCI configuration space */
+	memcpy(&migr_state.cfg, (void *)endpoint->pci_config_space, NVME_REG_CFG_SIZE);
+
+	/* Save all data to device migration region */
+	data_ptr = endpoint->migr_data;
+
+	/* Copy private controller data */
+	data_offset = sizeof(struct nvme_migr_device_state);
+	data_ptr += data_offset;
+	migr_state.ctrlr_data.private_data_offset = data_offset;
+	migr_state.ctrlr_data.private_data_len = sizeof(struct nvmf_ctrlr_migr_data);
+	memcpy(data_ptr, &migr_state.private_data, sizeof(struct nvmf_ctrlr_migr_data));
+
+	/* Copy queue pairs */
+	data_offset += sizeof(struct nvmf_ctrlr_migr_data);
+	data_ptr += sizeof(struct nvmf_ctrlr_migr_data);
+	migr_state.ctrlr_data.qp_offset = data_offset;
+	migr_state.ctrlr_data.qp_len = i * (sizeof(struct nvme_migr_sq_state) + sizeof(
+			struct nvme_migr_cq_state));
+	memcpy(data_ptr, &migr_state.qps, migr_state.ctrlr_data.qp_len);
+
+	/* Copy BAR0 */
+	data_offset += migr_state.ctrlr_data.qp_len;
+	data_ptr += migr_state.ctrlr_data.qp_len;
+	migr_state.ctrlr_data.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX] = data_offset;
+	migr_state.ctrlr_data.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX] = NVME_REG_BAR0_SIZE;
+	memcpy(data_ptr, &migr_state.bar0, NVME_REG_BAR0_SIZE);
+
+	/* Copy CFG */
+	data_offset += NVME_REG_BAR0_SIZE;
+	data_ptr += NVME_REG_BAR0_SIZE;
+	migr_state.ctrlr_data.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX] = data_offset;
+	migr_state.ctrlr_data.bar_len[VFU_PCI_DEV_CFG_REGION_IDX] = NVME_REG_CFG_SIZE;
+	memcpy(data_ptr, &migr_state.cfg, NVME_REG_CFG_SIZE);
+
+	/* Copy device state finally */
+	memcpy(endpoint->migr_data, &migr_state.ctrlr_data, sizeof(struct nvme_migr_device_state));
+
+	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
+		vfio_user_ctrlr_dump_migr_data("SAVE", &migr_state);
+	}
 }
 
 static int
