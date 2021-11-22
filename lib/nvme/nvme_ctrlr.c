@@ -670,49 +670,54 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 	}
 }
 
+struct intel_log_pages_ctx {
+	struct spdk_nvme_intel_log_page_directory log_page_directory;
+	struct spdk_nvme_ctrlr *ctrlr;
+};
+
+static void
+nvme_ctrlr_set_intel_support_log_pages_done(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct intel_log_pages_ctx *ctx = arg;
+	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
+
+	if (!spdk_nvme_cpl_is_error(cpl)) {
+		nvme_ctrlr_construct_intel_support_log_page_list(ctrlr, &ctx->log_page_directory);
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
+			     ctrlr->opts.admin_timeout_ms);
+	free(ctx);
+}
+
 static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	struct nvme_completion_poll_status	*status;
-	struct spdk_nvme_intel_log_page_directory *log_page_directory;
+	struct intel_log_pages_ctx *ctx;
 
-	log_page_directory = spdk_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
-					  64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-	if (log_page_directory == NULL) {
-		NVME_CTRLR_ERRLOG(ctrlr, "could not allocate log_page_directory\n");
-		return -ENXIO;
-	}
-
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		spdk_free(log_page_directory);
-		return -ENOMEM;
-	}
-
-	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY,
-					      SPDK_NVME_GLOBAL_NS_TAG, log_page_directory,
-					      sizeof(struct spdk_nvme_intel_log_page_directory),
-					      0, nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		spdk_free(log_page_directory);
-		free(status);
-		return rc;
-	}
-
-	if (nvme_wait_for_completion_timeout(ctrlr->adminq, status,
-					     ctrlr->opts.admin_timeout_ms * 1000)) {
-		spdk_free(log_page_directory);
-		NVME_CTRLR_WARNLOG(ctrlr, "Intel log pages not supported on Intel drive!\n");
-		if (!status->timed_out) {
-			free(status);
-		}
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
+				     ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
 
-	nvme_ctrlr_construct_intel_support_log_page_list(ctrlr, log_page_directory);
-	spdk_free(log_page_directory);
-	free(status);
+	ctx->ctrlr = ctrlr;
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY,
+					      SPDK_NVME_GLOBAL_NS_TAG, &ctx->log_page_directory,
+					      sizeof(struct spdk_nvme_intel_log_page_directory),
+					      0, nvme_ctrlr_set_intel_support_log_pages_done, ctx);
+	if (rc != 0) {
+		free(ctx);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
+				     ctrlr->opts.admin_timeout_ms);
+		return 0;
+	}
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_SUPPORTED_INTEL_LOG_PAGES,
+			     ctrlr->opts.admin_timeout_ms);
+
 	return 0;
 }
 
@@ -886,12 +891,7 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	if (ctrlr->cdata.lpa.celp) {
 		ctrlr->log_page_supported[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] = true;
 	}
-	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL && !(ctrlr->quirks & NVME_INTEL_QUIRK_NO_LOG_PAGES)) {
-		rc = nvme_ctrlr_set_intel_support_log_pages(ctrlr);
-		if (rc != 0) {
-			goto out;
-		}
-	}
+
 	if (ctrlr->cdata.cmic.ana_reporting) {
 		ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
 		if (!ctrlr->opts.disable_read_ana_log_page) {
@@ -903,7 +903,16 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-out:
+	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL && !(ctrlr->quirks & NVME_INTEL_QUIRK_NO_LOG_PAGES)) {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_INTEL_LOG_PAGES,
+				     ctrlr->opts.admin_timeout_ms);
+
+	} else {
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
+				     ctrlr->opts.admin_timeout_ms);
+
+	}
+
 	return rc;
 }
 
@@ -1393,6 +1402,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "wait for identify ns iocs specific";
 	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
 		return "set supported log pages";
+	case NVME_CTRLR_STATE_SET_SUPPORTED_INTEL_LOG_PAGES:
+		return "set supported INTEL log pages";
+	case NVME_CTRLR_STATE_WAIT_FOR_SUPPORTED_INTEL_LOG_PAGES:
+		return "wait for supported INTEL log pages";
 	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
 		return "set supported features";
 	case NVME_CTRLR_STATE_SET_DB_BUF_CFG:
@@ -3941,8 +3954,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES:
 		rc = nvme_ctrlr_set_supported_log_pages(ctrlr);
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
-				     ctrlr->opts.admin_timeout_ms);
+		break;
+
+	case NVME_CTRLR_STATE_SET_SUPPORTED_INTEL_LOG_PAGES:
+		rc = nvme_ctrlr_set_intel_support_log_pages(ctrlr);
 		break;
 
 	case NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES:
@@ -3985,6 +4000,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS:
 	case NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC:
+	case NVME_CTRLR_STATE_WAIT_FOR_SUPPORTED_INTEL_LOG_PAGES:
 	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);

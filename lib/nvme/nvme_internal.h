@@ -750,6 +750,16 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
 
 	/**
+	 * Set supported log pages of INTEL controller.
+	 */
+	NVME_CTRLR_STATE_SET_SUPPORTED_INTEL_LOG_PAGES,
+
+	/**
+	 * Waiting for supported log pages of INTEL controller.
+	 */
+	NVME_CTRLR_STATE_WAIT_FOR_SUPPORTED_INTEL_LOG_PAGES,
+
+	/**
 	 * Set supported features of the controller.
 	 */
 	NVME_CTRLR_STATE_SET_SUPPORTED_FEATURES,
