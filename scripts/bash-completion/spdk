@@ -268,3 +268,8 @@ _spdk_apps() {
 }
 
 _spdk_apps
+
+# Look for _configure(). If it exists, include default completions for path lookups
+if [[ $(type -t _configure) == function ]]; then
+	complete -o default -F _configure configure
+fi
