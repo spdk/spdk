@@ -664,7 +664,7 @@ if __name__ == "__main__":
         config_param = None
         if args.config_param:
             config_param = {}
-            for entry in args.config:
+            for entry in args.config_param:
                 parts = entry.split('=', 1)
                 if len(parts) != 2:
                     raise Exception('--config %s not in key=value form' % entry)
