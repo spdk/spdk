@@ -53,6 +53,19 @@ struct spdk_sock_placement_id_entry {
 	STAILQ_ENTRY(spdk_sock_placement_id_entry) link;
 };
 
+static inline struct spdk_sock_group_impl *
+sock_get_group_impl_from_group(struct spdk_sock *sock, struct spdk_sock_group *group)
+{
+	struct spdk_sock_group_impl *group_impl = NULL;
+
+	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
+		if (sock->net_impl == group_impl->net_impl) {
+			return group_impl;
+		}
+	}
+	return NULL;
+}
+
 int
 spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id,
 		     struct spdk_sock_group_impl *group)
@@ -541,12 +554,7 @@ spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
 		return -1;
 	}
 
-	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
-		if (sock->net_impl == group_impl->net_impl) {
-			break;
-		}
-	}
-
+	group_impl = sock_get_group_impl_from_group(sock, group);
 	if (group_impl == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -571,12 +579,7 @@ spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *soc
 	struct spdk_sock_group_impl *group_impl = NULL;
 	int rc;
 
-	STAILQ_FOREACH_FROM(group_impl, &group->group_impls, link) {
-		if (sock->net_impl == group_impl->net_impl) {
-			break;
-		}
-	}
-
+	group_impl = sock_get_group_impl_from_group(sock, group);
 	if (group_impl == NULL) {
 		errno = EINVAL;
 		return -1;
