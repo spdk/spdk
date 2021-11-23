@@ -56,11 +56,11 @@
 #define NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE ((NVMF_REQ_MAX_BUFFERS - 1) << SHIFT_4KB)
 #define NVMF_VFIO_USER_DEFAULT_IO_UNIT_SIZE NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE
 
-#define NVMF_VFIO_USER_DOORBELLS_OFFSET	0x1000
+#define NVME_DOORBELLS_OFFSET	0x1000
 #define NVMF_VFIO_USER_DOORBELLS_SIZE 0x1000
 
 #define NVME_REG_CFG_SIZE       0x1000
-#define NVME_REG_BAR0_SIZE      (NVMF_VFIO_USER_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE)
+#define NVME_REG_BAR0_SIZE      (NVME_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE)
 #define NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR ((NVMF_VFIO_USER_DOORBELLS_SIZE) / 8)
 #define NVME_IRQ_MSIX_NUM	NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR
 /* MSIX Table Size */
@@ -1673,7 +1673,7 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 		return -1;
 	}
 
-	pos -= NVMF_VFIO_USER_DOORBELLS_OFFSET;
+	pos -= NVME_DOORBELLS_OFFSET;
 
 	/* pos must be dword aligned */
 	if ((pos & 0x3) != 0) {
@@ -1718,7 +1718,7 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 		      endpoint_id(endpoint), is_write ? "write" : "read",
 		      ctrlr, count, pos);
 
-	if (pos >= NVMF_VFIO_USER_DOORBELLS_OFFSET) {
+	if (pos >= NVME_DOORBELLS_OFFSET) {
 		/*
 		 * The fact that the doorbells can be memory mapped doesn't mean
 		 * that the client (VFIO in QEMU) is obliged to memory map them,
@@ -1874,7 +1874,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 
 	struct iovec sparse_mmap[] = {
 		{
-			.iov_base = (void *)NVMF_VFIO_USER_DOORBELLS_OFFSET,
+			.iov_base = (void *)NVME_DOORBELLS_OFFSET,
 			.iov_len = NVMF_VFIO_USER_DOORBELLS_SIZE,
 		},
 	};
@@ -2096,7 +2096,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 
 	endpoint->devmem_fd = ret;
 	ret = ftruncate(endpoint->devmem_fd,
-			NVMF_VFIO_USER_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE);
+			NVME_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE);
 	if (ret != 0) {
 		SPDK_ERRLOG("%s: error to ftruncate file %s: %s.\n", endpoint_id(endpoint), path,
 			    spdk_strerror(errno));
@@ -2104,7 +2104,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	}
 
 	endpoint->doorbells = mmap(NULL, NVMF_VFIO_USER_DOORBELLS_SIZE,
-				   PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->devmem_fd, NVMF_VFIO_USER_DOORBELLS_OFFSET);
+				   PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->devmem_fd, NVME_DOORBELLS_OFFSET);
 	if (endpoint->doorbells == MAP_FAILED) {
 		SPDK_ERRLOG("%s: error to mmap file %s: %s.\n", endpoint_id(endpoint), path, spdk_strerror(errno));
 		endpoint->doorbells = NULL;
