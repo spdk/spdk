@@ -1866,7 +1866,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		.mpba = {.pbir = 0x5, .pbao = 0x0}
 	};
 
-	static struct iovec sparse_mmap[] = {
+	struct iovec sparse_mmap[] = {
 		{
 			.iov_base = (void *)NVMF_VFIO_USER_DOORBELLS_OFFSET,
 			.iov_len = NVMF_VFIO_USER_DOORBELLS_SIZE,
