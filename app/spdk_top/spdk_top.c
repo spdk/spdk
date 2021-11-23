@@ -2215,7 +2215,7 @@ display_thread(struct rpc_thread_info *thread_info)
 
 	print_left(thread_win, 3, THREAD_WIN_FIRST_COL, THREAD_WIN_WIDTH,
 		   "Core:                Idle [us]:            Busy [us]:", COLOR_PAIR(5));
-	mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 6, "%" PRIu64,
+	mvwprintw(thread_win, 3, THREAD_WIN_FIRST_COL + 6, "%d",
 		  thread_info->core_num);
 
 	if (g_interval_data) {
