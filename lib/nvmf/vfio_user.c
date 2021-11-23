@@ -59,7 +59,7 @@
 #define NVME_DOORBELLS_OFFSET	0x1000
 #define NVMF_VFIO_USER_DOORBELLS_SIZE 0x1000
 
-#define NVME_REG_CFG_SIZE       0x1000
+#define NVME_REG_CFG_SIZE       PCI_CFG_SPACE_EXP_SIZE
 #define NVME_REG_BAR0_SIZE      (NVME_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE)
 #define NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR ((NVMF_VFIO_USER_DOORBELLS_SIZE) / 8)
 #define NVME_IRQ_MSIX_NUM	NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR
@@ -1784,10 +1784,10 @@ access_pci_config(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t offset,
 		return -1;
 	}
 
-	if (offset + count > PCI_CFG_SPACE_EXP_SIZE) {
+	if (offset + count > NVME_REG_CFG_SIZE) {
 		SPDK_ERRLOG("%s: access past end of extended PCI configuration space, want=%ld+%ld, max=%d\n",
 			    endpoint_id(endpoint), offset, count,
-			    PCI_CFG_SPACE_EXP_SIZE);
+			    NVME_REG_CFG_SIZE);
 		errno = ERANGE;
 		return -1;
 	}
