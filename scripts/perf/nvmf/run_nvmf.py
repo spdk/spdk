@@ -1518,7 +1518,7 @@ if __name__ == "__main__":
             threads.append(t)
 
         if target_obj.enable_adq:
-            ethtool_thread = threading.Thread(target=target_obj.ethtool_after_fio_ramp, args=(fio_ramp_time))
+            ethtool_thread = threading.Thread(target=target_obj.ethtool_after_fio_ramp, args=(fio_ramp_time,))
             threads.append(ethtool_thread)
 
         for t in threads:
