@@ -900,6 +900,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	dev->pci.addr.bus = dev->bus->bus_number;
 	dev->pci.addr.dev = dev->devfn;
 	dev->pci.addr.func = 0;
+	dev->pci.socket_id = spdk_pci_device_get_socket_id(dev->bus->vmd->pci);
 	dev->pci.id.vendor_id = dev->header->common.vendor_id;
 	dev->pci.id.device_id = dev->header->common.device_id;
 	dev->pci.type = "vmd";
