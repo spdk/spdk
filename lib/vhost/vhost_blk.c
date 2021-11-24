@@ -785,19 +785,24 @@ static void
 submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 		     struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_session *vsession = &bvsession->vsession;
-	spdk_vhost_resubmit_info *resubmit = vq->vring_inflight.resubmit_inflight;
+	struct spdk_vhost_session *vsession;
+	spdk_vhost_resubmit_info *resubmit;
 	spdk_vhost_resubmit_desc *resubmit_list;
 	uint16_t req_idx;
+	int i;
 
-	if (spdk_likely(resubmit == NULL || resubmit->resubmit_list == NULL)) {
+	resubmit = vq->vring_inflight.resubmit_inflight;
+	if (spdk_likely(resubmit == NULL || resubmit->resubmit_list == NULL ||
+			resubmit->resubmit_num == 0)) {
 		return;
 	}
 
 	resubmit_list = resubmit->resubmit_list;
-	while (resubmit->resubmit_num-- > 0) {
-		req_idx = resubmit_list[resubmit->resubmit_num].index;
-		SPDK_DEBUGLOG(vhost_blk, "====== Start processing request idx %"PRIu16"======\n",
+	vsession = &bvsession->vsession;
+
+	for (i = resubmit->resubmit_num - 1; i >= 0; --i) {
+		req_idx = resubmit_list[i].index;
+		SPDK_DEBUGLOG(vhost_blk, "====== Start processing resubmit request idx %"PRIu16"======\n",
 			      req_idx);
 
 		if (spdk_unlikely(req_idx >= vq->vring.size)) {
@@ -813,9 +818,7 @@ submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 			process_blk_task(vq, req_idx);
 		}
 	}
-
-	free(resubmit_list);
-	resubmit->resubmit_list = NULL;
+	resubmit->resubmit_num = 0;
 }
 
 static void
