@@ -108,7 +108,7 @@ channel/thread.  If an error occurs on initialization indicating that there are 
 more DSA devices available either try fewer threads or, if on a 2 socket system,
 try spreading threads across cores if possible.
 
-### How to use kernel idxd driver (#accel_idxd_kernel)
+### How to use kernel idxd driver {#accel_idxd_kernel}
 
 There are several dependencies to leverage kernel idxd driver for driving DSA devices.
 
