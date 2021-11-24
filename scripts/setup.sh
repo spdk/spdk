@@ -448,6 +448,12 @@ configure_linux_hugepages() {
 		nodes[${node##*node}]=$node/hugepages/hugepages-${HUGEPGSZ}kB/nr_hugepages
 	done
 
+	if ((${#nodes[@]} == 0)); then
+		# No NUMA support? Fallback to common interface
+		check_hugepages_alloc /proc/sys/vm/nr_hugepages
+		return 0
+	fi
+
 	IFS="," read -ra nodes_to_use <<< "$HUGENODE"
 	if ((${#nodes_to_use[@]} == 0)); then
 		nodes_to_use[0]=0
