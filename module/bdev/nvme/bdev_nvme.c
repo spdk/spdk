@@ -712,14 +712,48 @@ nvme_io_path_is_available(struct nvme_io_path *io_path)
 	return true;
 }
 
-static bool
+static inline bool
 nvme_io_path_is_failed(struct nvme_io_path *io_path)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 
 	nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(io_path->ctrlr_ch);
 
-	return spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr);
+	if (nvme_ctrlr->destruct) {
+		return true;
+	}
+
+	/* In a full reset sequence, ctrlr is set to unfailed but it is after
+	 * destroying all qpairs. Ctrlr may be still failed even after starting
+	 * a full reset sequence. Hence we check the resetting flag first.
+	 */
+	if (nvme_ctrlr->resetting) {
+		return false;
+	}
+
+	if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static bool
+nvme_ctrlr_is_available(struct nvme_ctrlr *nvme_ctrlr)
+{
+	if (nvme_ctrlr->destruct) {
+		return false;
+	}
+
+	if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
+		return false;
+	}
+
+	if (nvme_ctrlr->resetting) {
+		return false;
+	}
+
+	return true;
 }
 
 static inline struct nvme_io_path *
@@ -893,7 +927,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	if (spdk_nvme_cpl_is_path_error(cpl) ||
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
 	    !nvme_io_path_is_available(bio->io_path) ||
-	    nvme_io_path_is_failed(bio->io_path)) {
+	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
 		nbdev_ch->current_io_path = NULL;
 		if (spdk_nvme_cpl_is_ana_error(cpl)) {
 			bio->io_path->nvme_ns->ana_state_updating = true;
@@ -2488,11 +2522,11 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	switch (g_opts.action_on_timeout) {
 	case SPDK_BDEV_NVME_TIMEOUT_ACTION_ABORT:
 		if (qpair) {
-			/* Don't send abort to ctrlr when reset is running. */
+			/* Don't send abort to ctrlr when ctrlr is not available. */
 			pthread_mutex_lock(&nvme_ctrlr->mutex);
-			if (nvme_ctrlr->resetting) {
+			if (!nvme_ctrlr_is_available(nvme_ctrlr)) {
 				pthread_mutex_unlock(&nvme_ctrlr->mutex);
-				SPDK_NOTICELOG("Quit abort. Ctrlr is in the process of reseting.\n");
+				SPDK_NOTICELOG("Quit abort. Ctrlr is not available.\n");
 				return;
 			}
 			pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -2936,7 +2970,7 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 	}
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
-	if (nvme_ctrlr->destruct || nvme_ctrlr->resetting ||
+	if (!nvme_ctrlr_is_available(nvme_ctrlr) ||
 	    nvme_ctrlr->ana_log_page_updating) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
@@ -4218,8 +4252,7 @@ bdev_nvme_admin_passthru_complete_nvme_status(void *ctx)
 
 	if (spdk_nvme_cpl_is_path_error(cpl) ||
 	    spdk_nvme_cpl_is_aborted_sq_deletion(cpl) ||
-	    spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr) ||
-	    nvme_ctrlr->resetting) {
+	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
 		delay_ms = 0;
 	} else if (spdk_nvme_cpl_is_aborted_by_request(cpl)) {
 		goto complete;
@@ -4743,13 +4776,10 @@ bdev_nvme_admin_passthru(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
 		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(io_path->ctrlr_ch);
 
-		/* When resetting a ctrlr, its adminq is disconnected first.
-		 * spdk_nvme_ctrlr_cmd_admin_raw() returns -ENXIO if the ctrlr is
-		 * failed or its adminq is disconnected. We should skip any ctrlr
-		 * which is failed or resetting rather than checking if the return
-		 * value of spdk_nvme_ctrlr_cmd_admin_raw() is -ENXIO.
+		/* We should skip any unavailable nvme_ctrlr rather than checking
+		 * if the return value of spdk_nvme_ctrlr_cmd_admin_raw() is -ENXIO.
 		 */
-		if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr) || nvme_ctrlr->resetting) {
+		if (!nvme_ctrlr_is_available(nvme_ctrlr)) {
 			continue;
 		}
 
