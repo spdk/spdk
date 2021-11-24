@@ -236,7 +236,7 @@ struct spdk_scsi_lun *spdk_scsi_dev_get_first_lun(struct spdk_scsi_dev *dev);
 /**
  * Get the next logical unit of a SCSI device.
  *
- * \param lun Previous logical unit.
+ * \param prev_lun Previous logical unit.
  *
  * \return the next logical unit of a SCSI device, or NULL if the prev_lun was the last.
  */
