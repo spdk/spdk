@@ -553,7 +553,7 @@ struct spdk_nvme_ns_cmd_ext_io_opts {
 	/** size of this structure in bytes */
 	size_t size;
 	/** Memory domain which describes data payload in IO request. The controller must support
-	 * the corresponding memory domain type, refer to \ref spdk_nvme_ctrlr_get_memory_domain */
+	 * the corresponding memory domain type, refer to \ref spdk_nvme_ctrlr_get_memory_domains */
 	struct spdk_memory_domain *memory_domain;
 	/** User context to be passed to memory domain operations */
 	void *memory_domain_ctx;
