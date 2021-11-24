@@ -166,6 +166,9 @@ struct spdk_vhost_session {
 	/* Interval used for event coalescing checking. */
 	uint64_t stats_check_interval;
 
+	/* Session's stop poller will only try limited times to destroy the session. */
+	uint32_t stop_retry_count;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
 	TAILQ_ENTRY(spdk_vhost_session) tailq;

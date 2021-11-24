@@ -1443,11 +1443,16 @@ destroy_session_poller_cb(void *arg)
 	struct spdk_scsi_dev_session_state *state;
 	uint32_t i;
 
-	if (vsession->task_cnt > 0) {
-		return SPDK_POLLER_BUSY;
-	}
+	if (vsession->task_cnt > 0 || spdk_vhost_trylock() != 0) {
+		assert(vsession->stop_retry_count > 0);
+		vsession->stop_retry_count--;
+		if (vsession->stop_retry_count == 0) {
+			SPDK_ERRLOG("%s: Timedout when destroy session (task_cnt %d)\n", vsession->name,
+				    vsession->task_cnt);
+			spdk_poller_unregister(&svsession->stop_poller);
+			vhost_session_stop_done(vsession, -ETIMEDOUT);
+		}
 
-	if (spdk_vhost_trylock() != 0) {
 		return SPDK_POLLER_BUSY;
 	}
 
@@ -1505,6 +1510,9 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 	 * will be finalized by the stop_poller below.
 	 */
 	spdk_poller_unregister(&svsession->mgmt_poller);
+
+	/* vhost_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
+	svsession->vsession.stop_retry_count = 4000;
 
 	/* Wait for all pending I/Os to complete, then process all the
 	 * remaining hotremove events one last time.

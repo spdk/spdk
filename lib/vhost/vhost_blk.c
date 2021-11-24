@@ -1346,11 +1346,16 @@ destroy_session_poller_cb(void *arg)
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	int i;
 
-	if (vsession->task_cnt > 0) {
-		return SPDK_POLLER_BUSY;
-	}
+	if (vsession->task_cnt > 0 || spdk_vhost_trylock() != 0) {
+		assert(vsession->stop_retry_count > 0);
+		vsession->stop_retry_count--;
+		if (vsession->stop_retry_count == 0) {
+			SPDK_ERRLOG("%s: Timedout when destroy session (task_cnt %d)\n", vsession->name,
+				    vsession->task_cnt);
+			spdk_poller_unregister(&bvsession->stop_poller);
+			vhost_session_stop_done(vsession, -ETIMEDOUT);
+		}
 
-	if (spdk_vhost_trylock() != 0) {
 		return SPDK_POLLER_BUSY;
 	}
 
@@ -1387,6 +1392,8 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 		vhost_blk_session_unregister_interrupts(bvsession);
 	}
 
+	/* vhost_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
+	bvsession->vsession.stop_retry_count = 4000;
 	bvsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
 				 bvsession, 1000);
 	return 0;

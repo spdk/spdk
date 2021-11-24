@@ -1564,6 +1564,10 @@ vhost_destroy_connection_cb(int vid)
 
 	if (vsession->started) {
 		rc = _stop_session(vsession);
+		if (rc != 0) {
+			pthread_mutex_unlock(&g_vhost_mutex);
+			return rc;
+		}
 	}
 
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
@@ -1571,7 +1575,7 @@ vhost_destroy_connection_cb(int vid)
 	free(vsession);
 	pthread_mutex_unlock(&g_vhost_mutex);
 
-	return rc;
+	return 0;
 }
 
 void
