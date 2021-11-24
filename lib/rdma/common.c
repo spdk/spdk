@@ -73,6 +73,10 @@ rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			switch (rmap->role) {
 			case SPDK_RDMA_MEMORY_MAP_ROLE_TARGET:
 				access_flags = IBV_ACCESS_LOCAL_WRITE;
+				if (pd->context->device->transport_type == IBV_TRANSPORT_IWARP) {
+					/* IWARP requires REMOTE_WRITE permission for RDMA_READ operation */
+					access_flags |= IBV_ACCESS_REMOTE_WRITE;
+				}
 				break;
 			case SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR:
 				access_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
