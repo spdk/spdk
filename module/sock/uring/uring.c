@@ -842,7 +842,8 @@ _sock_check_zcopy(struct spdk_sock *_sock, int status)
 	}
 
 	cm = CMSG_FIRSTHDR(&sock->recv_task.msg);
-	if (cm->cmsg_level != SOL_IP || cm->cmsg_type != IP_RECVERR) {
+	if (!((cm->cmsg_level == SOL_IP && cm->cmsg_type == IP_RECVERR) ||
+	      (cm->cmsg_level == SOL_IPV6 && cm->cmsg_type == IPV6_RECVERR))) {
 		SPDK_WARNLOG("Unexpected cmsg level or type!\n");
 		return 0;
 	}
