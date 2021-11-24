@@ -1074,9 +1074,6 @@ typedef void (*spdk_nvmf_tgt_add_transport_done_fn)(void *cb_arg, int status);
  * \param transport The transport to add
  * \param cb_fn A callback that will be called once the transport is created
  * \param cb_arg A context argument passed to cb_fn.
- *
- * \return void. The callback status argument will be 0 on success
- *	   or a negated errno on failure.
  */
 void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 				 struct spdk_nvmf_transport *transport,

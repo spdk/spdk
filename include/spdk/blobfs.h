@@ -419,8 +419,6 @@ int spdk_file_get_id(struct spdk_file *file, void *id, size_t size);
  * \param length The size in bytes of data to read.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * \return None.
  */
 void spdk_file_readv_async(struct spdk_file *file, struct spdk_io_channel *channel,
 			   struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
@@ -437,8 +435,6 @@ void spdk_file_readv_async(struct spdk_file *file, struct spdk_io_channel *chann
  * \param length The size in bytes of data to write.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * \return None.
  */
 void spdk_file_writev_async(struct spdk_file *file, struct spdk_io_channel *channel,
 			    struct iovec *iovs, uint32_t iovcnt, uint64_t offset, uint64_t length,
@@ -451,8 +447,6 @@ void spdk_file_writev_async(struct spdk_file *file, struct spdk_io_channel *chan
  * \param name The file name used to look up the matched file in the blobstore filesystem.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_fs_file_stat_async(struct spdk_filesystem *fs, const char *name,
 			     spdk_file_stat_op_complete cb_fn, void *cb_arg);
@@ -464,8 +458,6 @@ void spdk_fs_file_stat_async(struct spdk_filesystem *fs, const char *name,
  * \param name The file name for this new file.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 			       spdk_file_op_complete cb_fn, void *cb_arg);
@@ -478,8 +470,6 @@ void spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
  * \param flags This flags will be used to control the open mode.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_fs_open_file_async(struct spdk_filesystem *fs, const char *name, uint32_t flags,
 			     spdk_file_op_with_handle_complete cb_fn, void *cb_arg);
@@ -490,8 +480,6 @@ void spdk_fs_open_file_async(struct spdk_filesystem *fs, const char *name, uint3
  * \param file File to close.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_file_close_async(struct spdk_file *file, spdk_file_op_complete cb_fn, void *cb_arg);
 
@@ -507,8 +495,6 @@ void spdk_file_close_async(struct spdk_file *file, spdk_file_op_complete cb_fn, 
  * \param new_name New name of the file.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_fs_rename_file_async(struct spdk_filesystem *fs, const char *old_name,
 			       const char *new_name, spdk_fs_op_complete cb_fn,
@@ -521,9 +507,6 @@ void spdk_fs_rename_file_async(struct spdk_filesystem *fs, const char *old_name,
  * \param name The name of the file to be deleted.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
- *
  */
 void spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 			       spdk_file_op_complete cb_fn, void *cb_arg);
@@ -535,8 +518,6 @@ void spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
  * \param length New size in bytes of the file.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
 			      spdk_file_op_complete cb_fn, void *cb_arg);
@@ -551,8 +532,6 @@ void spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
  * \param length The size in bytes of data to write.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_file_write_async(struct spdk_file *file, struct spdk_io_channel *channel,
 			   void *payload, uint64_t offset, uint64_t length,
@@ -568,8 +547,6 @@ void spdk_file_write_async(struct spdk_file *file, struct spdk_io_channel *chann
  * \param length The size in bytes of data to read.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_file_read_async(struct spdk_file *file, struct spdk_io_channel *channel,
 			  void *payload, uint64_t offset, uint64_t length,
@@ -586,8 +563,6 @@ void spdk_file_read_async(struct spdk_file *file, struct spdk_io_channel *channe
  * \param channel I/O channel for asynchronous operations.
  * \param cb_fn Called when the request is complete.
  * \param cb_arg Argument passed to cb_fn.
- *
- * return None.
  */
 void spdk_file_sync_async(struct spdk_file *file, struct spdk_io_channel *channel,
 			  spdk_file_op_complete cb_fn, void *cb_arg);
