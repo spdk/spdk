@@ -2604,6 +2604,13 @@ static int
 nvme_bdev_add_ns(struct nvme_bdev *bdev, struct nvme_ns *nvme_ns)
 {
 	struct nvme_ns *tmp_ns;
+	const struct spdk_nvme_ns_data *nsdata;
+
+	nsdata = spdk_nvme_ns_get_data(nvme_ns->ns);
+	if (!nsdata->nmic.can_share) {
+		SPDK_ERRLOG("Namespace cannot be shared.\n");
+		return -EINVAL;
+	}
 
 	pthread_mutex_lock(&bdev->mutex);
 

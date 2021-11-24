@@ -371,7 +371,7 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 
 static struct spdk_nvme_ctrlr *
 ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns,
-		bool ana_reporting, bool multi_ctrlr)
+		bool ana_reporting, bool multipath)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 	uint32_t i;
@@ -413,6 +413,7 @@ ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns,
 			ctrlr->ns[i].is_active = true;
 			ctrlr->ns[i].ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 			ctrlr->nsdata[i].nsze = 1024;
+			ctrlr->nsdata[i].nmic.can_share = multipath;
 		}
 
 		ctrlr->cdata.nn = num_ns;
@@ -420,7 +421,7 @@ ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns,
 	}
 
 	ctrlr->cdata.cntlid = ++g_ut_cntlid;
-	ctrlr->cdata.cmic.multi_ctrlr = multi_ctrlr;
+	ctrlr->cdata.cmic.multi_ctrlr = multipath;
 	ctrlr->cdata.cmic.ana_reporting = ana_reporting;
 	ctrlr->trid = *trid;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
