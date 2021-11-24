@@ -114,6 +114,7 @@ nvmf_transport_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json
 	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
 	spdk_json_write_named_uint32(w, "buf_cache_size", opts->buf_cache_size);
 	spdk_json_write_named_bool(w, "dif_insert_or_strip", opts->dif_insert_or_strip);
+	spdk_json_write_named_bool(w, "zcopy", opts->zcopy);
 
 	if (transport->ops->dump_opts) {
 		transport->ops->dump_opts(transport, w);
@@ -182,6 +183,7 @@ static void nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(association_timeout);
 	SET_FIELD(transport_specific);
 	SET_FIELD(acceptor_poll_rate);
+	SET_FIELD(zcopy);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */

@@ -3695,9 +3695,14 @@ nvmf_ctrlr_process_io_fused_cmd(struct spdk_nvmf_request *req, struct spdk_bdev 
 bool
 nvmf_ctrlr_use_zcopy(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_transport *transport = req->qpair->transport;
 	struct spdk_nvmf_ns *ns;
 
 	req->zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
+
+	if (!transport->opts.zcopy) {
+		return false;
+	}
 
 	if (nvmf_qpair_is_admin_queue(req->qpair)) {
 		/* Admin queue */

@@ -114,6 +114,7 @@ def nvmf_create_transport(client, **params):
         max_aq_depth: Max size admin queue per controller (optional)
         num_shared_buffers: The number of pooled data buffers available to the transport (optional)
         buf_cache_size: The number of shared buffers to reserve for each poll group (optional)
+        zcopy: Use zero-copy operations if the underlying bdev supports them (optional)
         num_cqe: The number of CQ entries to configure CQ size. Only used when no_srq=true - RDMA specific (optional)
         max_srq_depth: Max number of outstanding I/O per shared receive queue - RDMA specific (optional)
         no_srq: Boolean flag to disable SRQ even for devices that support it - RDMA specific (optional)

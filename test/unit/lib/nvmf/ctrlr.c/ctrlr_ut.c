@@ -2291,6 +2291,7 @@ static void
 test_nvmf_ctrlr_use_zcopy(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_transport transport = {};
 	struct spdk_nvmf_request req = {};
 	struct spdk_nvmf_qpair qpair = {};
 	struct spdk_nvmf_ctrlr ctrlr = {};
@@ -2314,10 +2315,13 @@ test_nvmf_ctrlr_use_zcopy(void)
 
 	ctrlr.subsys = &subsystem;
 
+	transport.opts.zcopy = true;
+
 	qpair.ctrlr = &ctrlr;
 	qpair.group = &group;
 	qpair.qid = 1;
 	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	qpair.transport = &transport;
 
 	group.thread = spdk_get_thread();
 	group.num_sgroups = 1;
@@ -2360,9 +2364,14 @@ test_nvmf_ctrlr_use_zcopy(void)
 
 	/* ZCOPY Not supported */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req) == false);
+	ns.zcopy = true;
+
+	/* ZCOPY disabled on transport level */
+	transport.opts.zcopy = false;
+	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req) == false);
+	transport.opts.zcopy = true;
 
 	/* Success */
-	ns.zcopy = true;
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 }
 
@@ -2371,6 +2380,7 @@ test_spdk_nvmf_request_zcopy_start(void)
 {
 	struct spdk_nvmf_request req = {};
 	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_transport transport = {};
 	struct spdk_nvme_cmd cmd = {};
 	union nvmf_c2h_msg rsp = {};
 	struct spdk_nvmf_ctrlr ctrlr = {};
@@ -2402,6 +2412,8 @@ test_spdk_nvmf_request_zcopy_start(void)
 	ctrlr.subsys = (struct spdk_nvmf_subsystem *)&subsystem;
 	ctrlr.listener = &listener;
 
+	transport.opts.zcopy = true;
+
 	group.thread = spdk_get_thread();
 	group.num_sgroups = 1;
 	sgroups.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
@@ -2415,6 +2427,7 @@ test_spdk_nvmf_request_zcopy_start(void)
 
 	qpair.ctrlr = &ctrlr;
 	qpair.group = &group;
+	qpair.transport = &transport;
 	qpair.qid = 1;
 	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 
@@ -2496,6 +2509,7 @@ test_zcopy_read(void)
 {
 	struct spdk_nvmf_request req = {};
 	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_transport transport = {};
 	struct spdk_nvme_cmd cmd = {};
 	union nvmf_c2h_msg rsp = {};
 	struct spdk_nvmf_ctrlr ctrlr = {};
@@ -2527,6 +2541,8 @@ test_zcopy_read(void)
 	ctrlr.subsys = (struct spdk_nvmf_subsystem *)&subsystem;
 	ctrlr.listener = &listener;
 
+	transport.opts.zcopy = true;
+
 	group.thread = spdk_get_thread();
 	group.num_sgroups = 1;
 	sgroups.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
@@ -2540,6 +2556,7 @@ test_zcopy_read(void)
 
 	qpair.ctrlr = &ctrlr;
 	qpair.group = &group;
+	qpair.transport = &transport;
 	qpair.qid = 1;
 	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 
@@ -2583,6 +2600,7 @@ test_zcopy_write(void)
 {
 	struct spdk_nvmf_request req = {};
 	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_transport transport = {};
 	struct spdk_nvme_cmd cmd = {};
 	union nvmf_c2h_msg rsp = {};
 	struct spdk_nvmf_ctrlr ctrlr = {};
@@ -2614,6 +2632,8 @@ test_zcopy_write(void)
 	ctrlr.subsys = (struct spdk_nvmf_subsystem *)&subsystem;
 	ctrlr.listener = &listener;
 
+	transport.opts.zcopy = true;
+
 	group.thread = spdk_get_thread();
 	group.num_sgroups = 1;
 	sgroups.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
@@ -2627,6 +2647,7 @@ test_zcopy_write(void)
 
 	qpair.ctrlr = &ctrlr;
 	qpair.group = &group;
+	qpair.transport = &transport;
 	qpair.qid = 1;
 	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 

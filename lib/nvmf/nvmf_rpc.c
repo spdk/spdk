@@ -1929,6 +1929,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		spdk_json_decode_uint32, true
 	},
 	{
+		"zcopy", offsetof(struct nvmf_rpc_create_transport_ctx, opts.zcopy),
+		spdk_json_decode_bool, true
+	},
+	{
 		"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name),
 		spdk_json_decode_string, true
 	},

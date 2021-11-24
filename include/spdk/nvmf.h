@@ -114,6 +114,8 @@ struct spdk_nvmf_transport_opts {
 	 */
 	size_t opts_size;
 	uint32_t acceptor_poll_rate;
+	/* Use zero-copy operations if the underlying bdev supports them */
+	bool zcopy;
 };
 
 struct spdk_nvmf_listen_opts {
