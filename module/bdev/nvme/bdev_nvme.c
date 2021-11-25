@@ -1576,9 +1576,9 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 }
 
 static int
-bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
+bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 {
-	struct nvme_path_id *path_id = NULL, *next_path = NULL;
+	struct nvme_path_id *path_id, *next_path;
 	int rc __attribute__((unused));
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
@@ -1624,20 +1624,9 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
 	return 0;
-}
-
-static int
-bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
-{
-	int rc;
-
-	rc = bdev_nvme_failover_start(nvme_ctrlr, remove);
-	if (rc == 0) {
-		spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
-	}
-
-	return rc;
 }
 
 static int bdev_nvme_unmap(struct nvme_bdev_io *bio, uint64_t offset_blocks,
