@@ -204,7 +204,7 @@ NVMe transports.
 Due to the lack of versioning semantics, it is not recommended to install static libraries system wide.
 Instead the path to these static libraries should be added as argument at compile time using
 `-L/path/to/static/libs`. The use of static objects instead of shared objects can also be forced
-through `-Wl,-Bsatic`, otherwise some compilers might prefer to use the shared objects if both
+through `-Wl,-Bstatic`, otherwise some compilers might prefer to use the shared objects if both
 are available.
 
 ~~~{.sh}

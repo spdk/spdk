@@ -160,7 +160,7 @@ starting gdb is type "spdk_load_macros".
 .gdbinit can also be used in order to run automatically run the manual steps
 above prior to starting gdb.
 
-Exmaple .gdbinit:
+Example .gdbinit:
 
 ~~~{.sh}
 source /opt/km/install/tools/gdb_macros/gdb_macros.py

@@ -51,7 +51,7 @@ way needs to be certain that the underlying hardware exists everywhere that it r
 The low level library for IOAT is located in `/lib/ioat`.  The low level library
 for DSA is in `/lib/idxd` (IDXD stands for Intel(R) Data Acceleration Driver).
 In `/lib/idxd` folder, SPDK supports to leverage both user space and kernel space driver
-to drive DSA devices. And the following describes each usage scenerio:
+to drive DSA devices. And the following describes each usage scenario:
 
 Leveraging user space idxd driver: The DSA devices are managed by the user space
 driver in a dedicated SPDK process, then the device cannot be shared by another
@@ -59,7 +59,7 @@ process. The benefit of this usage is no kernel dependency.
 
 Leveraging kernel space driver: The DSA devices are managed by kernel
 space drivers. And the Work queues inside the DSA device can be shared among
-different processes. Naturally, it can be used in cloud native scenerio. The drawback of
+different processes. Naturally, it can be used in cloud native scenario. The drawback of
 this usage is the kernel dependency, i.e., idxd driver must be supported and loaded
 in the kernel.
 

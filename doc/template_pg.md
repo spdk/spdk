@@ -47,7 +47,7 @@ Some questions to consider when authoring this section:
 
 Here is where you want to highlight things they need to think about in *their* design. If you have written test code
 for this module think about the things that you needed to go learn about to properly interact with this module. Think
-about how they need to consider initialization options, threading, limitations, any sort of quirky or non-obious
+about how they need to consider initialization options, threading, limitations, any sort of quirky or non-obvious
 interactions or module behaviors that might save them some time and effort by thinking about before they start their
 design.
 

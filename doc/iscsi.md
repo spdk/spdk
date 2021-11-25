@@ -316,7 +316,7 @@ portal group may optionally have a redirect portal for non-discovery logins for
 each associated target. This redirect portal must be from a private portal group.
 
 Initiators configure portals in public portal groups as target portals. When an
-initator logs in to a target through a portal in an associated public portal group,
+initiator logs in to a target through a portal in an associated public portal group,
 the target sends a temporary redirection response with a redirect portal. Then the
 initiator logs in to the target again through the redirect portal.
 

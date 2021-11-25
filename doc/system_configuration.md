@@ -21,7 +21,7 @@ version they are using has a bug where `uio_pci_generic` [fails to bind to NVMe 
 In these cases, users can build the `igb_uio` kernel module which can be found in dpdk-kmods repository.
 To ensure that the driver is properly bound, users should specify `DRIVER_OVERRIDE=/path/to/igb_uio.ko`.
 
-## Running SPDK as non-priviledged user {#system_configuration_nonroot}
+## Running SPDK as non-privileged user {#system_configuration_nonroot}
 
 One of the benefits of using the `VFIO` Linux kernel driver is the ability to
 perform DMA operations with peripheral devices as unprivileged user. The

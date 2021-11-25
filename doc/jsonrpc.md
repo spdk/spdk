@@ -8473,7 +8473,7 @@ Example response:
 
 Request notifications. Returns array of notifications that happend since the specified id (or first that is available).
 
-Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccesible
+Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccessible
 due to being overwritten by new ones.
 
 #### Parameters
