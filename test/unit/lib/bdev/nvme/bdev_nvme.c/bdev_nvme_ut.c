@@ -2265,7 +2265,7 @@ test_submit_nvme_cmd(void)
 	ut_test_submit_fused_nvme_cmd(ch, bdev_io);
 
 	/* Verify that ext NVME API is called if bdev_io ext_opts is set */
-	bdev_io->internal.ext_opts = &ext_io_opts;
+	bdev_io->u.bdev.ext_opts = &ext_io_opts;
 	g_ut_readv_ext_called = false;
 	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_READ);
 	CU_ASSERT(g_ut_readv_ext_called == true);
@@ -2275,7 +2275,7 @@ test_submit_nvme_cmd(void)
 	ut_test_submit_nvme_cmd(ch, bdev_io, SPDK_BDEV_IO_TYPE_WRITE);
 	CU_ASSERT(g_ut_writev_ext_called == true);
 	g_ut_writev_ext_called = false;
-	bdev_io->internal.ext_opts = NULL;
+	bdev_io->u.bdev.ext_opts = NULL;
 
 	ut_test_submit_admin_cmd(ch, bdev_io, ctrlr);
 

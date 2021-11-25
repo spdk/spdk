@@ -607,6 +607,9 @@ struct spdk_bdev_io {
 			/** Starting offset (in blocks) of the bdev for this I/O. */
 			uint64_t offset_blocks;
 
+			/** Pointer to user's ext opts to be used by bdev modules */
+			struct spdk_bdev_ext_io_opts *ext_opts;
+
 			/** stored user callback in case we split the I/O and use a temporary callback */
 			spdk_bdev_io_completion_cb stored_user_cb;
 
