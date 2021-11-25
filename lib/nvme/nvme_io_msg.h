@@ -66,7 +66,7 @@ int nvme_io_msg_send(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_io_
  * This call process requests from the ring, send IO to an allocated qpair or
  * admin commands in its context. This call is non-blocking and intended to be
  * polled by SPDK thread to provide safe environment for NVMe request
- * completition sent by external module to controller.
+ * completion sent by external module to controller.
  *
  * The caller must ensure that each controller is polled by only one thread at
  * a time.

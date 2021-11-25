@@ -459,7 +459,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		assert(ev);
 		spdk_event_call(ev);
 	} else {
-		/* For race caces, when setting the reactor to interrupt mode, first set the
+		/* For race cases, when setting the reactor to interrupt mode, first set the
 		 * corresponding bit of the notify_cpuset of each reactor and then change the mode.
 		 */
 		spdk_for_each_reactor(_reactor_set_notify_cpuset, target, NULL, _reactor_set_notify_cpuset_cpl);

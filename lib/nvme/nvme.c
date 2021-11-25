@@ -170,7 +170,7 @@ spdk_nvme_detach_async(struct spdk_nvme_ctrlr *ctrlr,
 		return -EINVAL;
 	}
 
-	/* Use a context header to poll detachement for multiple controllers.
+	/* Use a context header to poll detachment for multiple controllers.
 	 * Allocate an new one if not allocated yet, or use the passed one otherwise.
 	 */
 	detach_ctx = *_detach_ctx;

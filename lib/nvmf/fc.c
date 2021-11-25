@@ -1758,7 +1758,7 @@ nvmf_fc_hwqp_process_pending_reqs(struct spdk_nvmf_fc_hwqp *hwqp)
 	STAILQ_FOREACH_SAFE(req, &hwqp->fgroup->group.pending_buf_queue, buf_link, tmp) {
 		fc_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_fc_request, req);
 		if (!nvmf_fc_request_execute(fc_req)) {
-			/* Succesfuly posted, Delete from pending. */
+			/* Successfully posted, Delete from pending. */
 			nvmf_fc_request_remove_from_pending(fc_req);
 		}
 
@@ -1833,7 +1833,7 @@ nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *fc_req)
 	fc_conn->rsp_count++;
 
 	if (nvmf_fc_send_ersp_required(fc_req, fc_conn->rsp_count,
-				       fc_req->transfered_len)) {
+				       fc_req->transferred_len)) {
 		/* Fill ERSP Len */
 		to_be16(&ersp_len, (sizeof(struct spdk_nvmf_fc_ersp_iu) /
 				    sizeof(uint32_t)));
@@ -1844,7 +1844,7 @@ nvmf_fc_handle_rsp(struct spdk_nvmf_fc_request *fc_req)
 		fc_conn->rsn++;
 
 		/* Fill transfer length */
-		to_be32(&fc_req->ersp.transferred_data_len, fc_req->transfered_len);
+		to_be32(&fc_req->ersp.transferred_data_len, fc_req->transferred_len);
 
 		SPDK_DEBUGLOG(nvmf_fc, "Posting ERSP.\n");
 		rc = nvmf_fc_xmt_rsp(fc_req, (uint8_t *)&fc_req->ersp,
@@ -3440,7 +3440,7 @@ out:
 
 	} else {
 		SPDK_DEBUGLOG(nvmf_fc_adm_api,
-			      "NPort %d delete done succesfully, fc port:%d. "
+			      "NPort %d delete done successfully, fc port:%d. "
 			      "rport_cnt:%d\n",
 			      args->nport_handle, args->port_handle, rport_cnt);
 	}

@@ -230,7 +230,7 @@ iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 
 	imask = calloc(1, sizeof(*imask));
 	if (imask == NULL) {
-		SPDK_ERRLOG("malloc() failed for inititator mask str\n");
+		SPDK_ERRLOG("malloc() failed for initiator mask str\n");
 		return -ENOMEM;
 	}
 

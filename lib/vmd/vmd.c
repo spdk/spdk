@@ -694,7 +694,7 @@ vmd_create_new_bus(struct vmd_pci_bus *parent, struct vmd_pci_device *bridge, ui
 /*
  * Assigns a bus number from the list of available
  * bus numbers. If the device is downstream of a hot plug port,
- * assign the bus number from thiose assigned to the HP port. Otherwise,
+ * assign the bus number from those assigned to the HP port. Otherwise,
  * assign the next bus number from the vmd bus number list.
  */
 static uint8_t
@@ -915,7 +915,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 
 	if (vmd_is_supported_device(dev)) {
 		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
-		SPDK_DEBUGLOG(vmd, "Initalizing NVMe device at %s\n", bdf);
+		SPDK_DEBUGLOG(vmd, "Initializing NVMe device at %s\n", bdf);
 		dev->pci.parent = dev->bus->vmd->pci;
 		spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
 	}
@@ -934,7 +934,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
  * The bus number is scanned and if a device is found, based on the header_type, create
  * either PciBridge(1) or PciDevice(0).
  *
- * If a PciBridge, assign bus numbers and rescan new bus. The currenty PciBridge being
+ * If a PciBridge, assign bus numbers and rescan new bus. The currently PciBridge being
  * scanned becomes the passed in parent_bridge with the new bus number.
  *
  * The linked list becomes list of pciBridges with PciDevices attached.

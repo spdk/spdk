@@ -45,8 +45,8 @@
 
 /* Accelerator Engine Framework: The following provides a top level
  * generic API for the accelerator functions defined here. Modules,
- * such as the one in /module/accel/ioat, supply the implemention
- * with the exception of the pure software implemention contained
+ * such as the one in /module/accel/ioat, supply the implementation
+ * with the exception of the pure software implementation contained
  * later in this file.
  */
 
@@ -895,7 +895,7 @@ spdk_accel_batch_cancel(struct spdk_io_channel *ch, struct spdk_accel_batch *bat
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
 
-	/* Cancel anything currently oustanding for this batch. */
+	/* Cancel anything currently outstanding for this batch. */
 	while ((batch = TAILQ_FIRST(&accel_ch->batches))) {
 		TAILQ_REMOVE(&accel_ch->batches, batch, link);
 		while ((accel_task = TAILQ_FIRST(&batch->hw_tasks))) {

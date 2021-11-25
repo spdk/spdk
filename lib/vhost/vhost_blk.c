@@ -168,7 +168,7 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 /*
  * Process task's descriptor chain and setup data related fields.
  * Return
- *   total size of suplied buffers
+ *   total size of supplied buffers
  *
  *   FIXME: Make this function return to rd_cnt and wr_cnt
  */
@@ -487,7 +487,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 
 	type = req->type;
 #ifdef VIRTIO_BLK_T_BARRIER
-	/* Don't care about barier for now (as QEMU's virtio-blk do). */
+	/* Don't care about barrier for now (as QEMU's virtio-blk do). */
 	type &= ~VIRTIO_BLK_T_BARRIER;
 #endif
 
@@ -562,7 +562,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		}
 
 		/* Unmap this range, SPDK doesn't support it, kernel will enable this flag by default
-		 * without checking unmap feature is negociated or not, the flag isn't mandatory, so
+		 * without checking unmap feature is negotiated or not, the flag isn't mandatory, so
 		 * just print a warning.
 		 */
 		if (desc->flags & VIRTIO_BLK_WRITE_ZEROES_FLAG_UNMAP) {
@@ -1233,7 +1233,7 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 		task_cnt = vq->vring.size;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
-			SPDK_ERRLOG("%s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
+			SPDK_ERRLOG("%s: virtqueue %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
 				    vsession->name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
 			free_task_pool(bvsession);
 			return -1;

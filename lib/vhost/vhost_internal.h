@@ -184,7 +184,7 @@ struct spdk_vhost_dev {
 
 	const struct spdk_vhost_dev_backend *backend;
 
-	/* Saved orginal values used to setup coalescing to avoid integer
+	/* Saved original values used to setup coalescing to avoid integer
 	 * rounding issues during save/load config.
 	 */
 	uint32_t coalescing_delay_us;
@@ -251,7 +251,7 @@ uint16_t vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs
 /**
  * Get a virtio split descriptor at given index in given virtqueue.
  * The descriptor will provide access to the entire descriptor
- * chain. The subsequent descriptors are accesible via
+ * chain. The subsequent descriptors are accessible via
  * \c spdk_vhost_vring_desc_get_next.
  * \param vsession vhost session
  * \param vq virtqueue
@@ -272,7 +272,7 @@ int vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_vir
 /**
  * Get a virtio packed descriptor at given index in given virtqueue.
  * The descriptor will provide access to the entire descriptor
- * chain. The subsequent descriptors are accesible via
+ * chain. The subsequent descriptors are accessible via
  * \c vhost_vring_packed_desc_get_next.
  * \param vsession vhost session
  * \param vq virtqueue

@@ -121,7 +121,7 @@ struct spdk_nvmf_fc_buffer_desc {
 };
 
 /*
- * ABTS hadling context
+ * ABTS handling context
  */
 struct spdk_nvmf_fc_abts_ctx {
 	bool handled;
@@ -250,7 +250,7 @@ struct spdk_nvmf_fc_conn {
 	/* for association's connection list */
 	TAILQ_ENTRY(spdk_nvmf_fc_conn) assoc_link;
 
-	/* for assocations's available connection list */
+	/* for associations's available connection list */
 	TAILQ_ENTRY(spdk_nvmf_fc_conn) assoc_avail_link;
 
 	/* for hwqp's rport connection list link  */
@@ -375,7 +375,7 @@ struct spdk_nvmf_fc_request {
 	struct spdk_nvmf_fc_conn *fc_conn;
 	struct spdk_nvmf_fc_hwqp *hwqp;
 	int state;
-	uint32_t transfered_len;
+	uint32_t transferred_len;
 	bool is_aborted;
 	uint32_t magic;
 	uint32_t s_id;

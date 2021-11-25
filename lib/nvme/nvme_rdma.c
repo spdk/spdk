@@ -1953,7 +1953,7 @@ static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_
 	STAILQ_INIT(&rctrlr->free_cm_events);
 	rctrlr->cm_events = nvme_rdma_calloc(NVME_RDMA_NUM_CM_EVENTS, sizeof(*rctrlr->cm_events));
 	if (rctrlr->cm_events == NULL) {
-		SPDK_ERRLOG("unable to allocat buffers to hold CM events.\n");
+		SPDK_ERRLOG("unable to allocate buffers to hold CM events.\n");
 		goto destruct_ctrlr;
 	}
 

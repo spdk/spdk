@@ -2208,7 +2208,7 @@ blob_persist_start(struct spdk_blob_persist_ctx *ctx)
 		assert(blob->clean.num_extent_pages >= blob->active.num_extent_pages);
 		ctx->next_extent_page = spdk_max(1, blob->active.num_extent_pages) - 1;
 	} else {
-		/* No change in size occured */
+		/* No change in size occurred */
 		blob_persist_generate_new_md(ctx);
 		return;
 	}
@@ -3591,7 +3591,7 @@ bs_delete_corrupted_blob(void *cb_arg, int bserrno)
 	}
 
 	/* Snapshot and clone have the same copy of cluster map and extent pages
-	 * at this point. Let's clear both for snpashot now,
+	 * at this point. Let's clear both for snapshot now,
 	 * so that it won't be cleared for clone later when we remove snapshot.
 	 * Also set thin provision to pass data corruption check */
 	for (i = 0; i < ctx->blob->active.num_clusters; i++) {
@@ -3646,11 +3646,11 @@ bs_examine_clone(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	}
 
 	if (blob->parent_id == ctx->blob->id) {
-		/* Power failure occured before updating clone (snapshot delete case)
+		/* Power failure occurred before updating clone (snapshot delete case)
 		 * or after updating clone (creating snapshot case) - keep snapshot */
 		spdk_blob_close(blob, bs_update_corrupted_blob, ctx);
 	} else {
-		/* Power failure occured after updating clone (snapshot delete case)
+		/* Power failure occurred after updating clone (snapshot delete case)
 		 * or before updating clone (creating snapshot case) - remove snapshot */
 		spdk_blob_close(blob, bs_delete_corrupted_blob, ctx);
 	}
@@ -5727,7 +5727,7 @@ bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 		bs_snapshot_swap_cluster_maps(newblob, origblob);
 
 		/* Newblob md sync failed. Valid clusters are only present in origblob.
-		 * Since I/O is frozen on origblob, not changes to zeroed out cluster map should have occured.
+		 * Since I/O is frozen on origblob, not changes to zeroed out cluster map should have occurred.
 		 * Newblob needs to be reverted to thin_provisioned state at creation to properly close. */
 		blob_set_thin_provision(newblob);
 		assert(spdk_mem_all_zero(newblob->active.clusters,
@@ -6628,7 +6628,7 @@ delete_snapshot_update_extent_pages(void *cb_arg, int bserrno)
 			continue;
 		}
 
-		/* Clone and snapshot both contain partialy filled matching extent pages.
+		/* Clone and snapshot both contain partially filled matching extent pages.
 		 * Update the clone extent page in place with cluster map containing the mix of both. */
 		ctx->next_extent_page = i + 1;
 

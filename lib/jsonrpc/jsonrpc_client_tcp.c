@@ -125,7 +125,7 @@ jsonrpc_client_recv(struct spdk_jsonrpc_client *client)
 	rc = recv(client->sockfd, client->recv_buf + client->recv_offset,
 		  client->recv_buf_size - client->recv_offset - 1, 0);
 	if (rc < 0) {
-		/* For EINTR we pretend that nothing was reveived. */
+		/* For EINTR we pretend that nothing was received. */
 		if (errno == EINTR) {
 			return 0;
 		} else {
@@ -308,7 +308,7 @@ spdk_jsonrpc_client_connect(const char *addr, int addr_family)
 
 		rc = getaddrinfo(host, port, &hints, &res);
 		if (rc != 0) {
-			SPDK_ERRLOG("Unable to look up RPC connnect address '%s' (%d): %s\n", addr, rc, gai_strerror(rc));
+			SPDK_ERRLOG("Unable to look up RPC connect address '%s' (%d): %s\n", addr, rc, gai_strerror(rc));
 			rc = -EINVAL;
 			goto err;
 		}

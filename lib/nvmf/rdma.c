@@ -2956,7 +2956,7 @@ nvmf_process_cm_event(struct spdk_nvmf_transport *transport)
 			 * which triggers RDMA_CM_EVENT_DEVICE_REMOVAL on all cma_id’s.
 			 * Once these events are sent to SPDK, we should release all IB resources and
 			 * don't make attempts to call any ibv_query/modify/create functions. We can only call
-			 * ibv_destory* functions to release user space memory allocated by IB. All kernel
+			 * ibv_destroy* functions to release user space memory allocated by IB. All kernel
 			 * resources are already cleaned. */
 			if (event->id->qp) {
 				/* If rdma_cm event has a valid `qp` pointer then the event refers to the

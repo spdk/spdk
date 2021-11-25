@@ -178,7 +178,7 @@ struct spdk_nvmf_ns {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_nvmf_ns_opts opts;
-	/* reservation notificaton mask */
+	/* reservation notification mask */
 	uint32_t mask;
 	/* generation code */
 	uint32_t gen;
@@ -212,7 +212,7 @@ struct spdk_nvmf_ctrlr_feat {
 };
 
 /*
- * NVMf reservation notificaton log page.
+ * NVMf reservation notification log page.
  */
 struct spdk_nvmf_reservation_log {
 	struct spdk_nvme_reservation_notification_log	log;
@@ -492,7 +492,7 @@ int nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
  * Ends a zcopy operation
  *
  * \param req The NVMe-oF request
- * \param commit Flag indicating whether the buffers shoule be committed
+ * \param commit Flag indicating whether the buffers should be committed
  *
  * \return 0 upon success
  * \return <0 on error

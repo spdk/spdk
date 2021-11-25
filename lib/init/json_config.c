@@ -64,7 +64,7 @@
  *    << MORE "subsystems" ARRAY ENTRIES >>
  *  ]
  *
- *  << ANYTHING ELSE IS IGNORRED IN ROOT OBJECT>>
+ *  << ANYTHING ELSE IS IGNORED IN ROOT OBJECT>>
  * }
  *
  */

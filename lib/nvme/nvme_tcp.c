@@ -572,7 +572,7 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	struct spdk_nvme_ctrlr *ctrlr = tqpair->qpair.ctrlr;
 	int rc = 0;
 	enum spdk_nvme_data_transfer xfer;
-	uint32_t max_incapsule_data_size;
+	uint32_t max_in_capsule_data_size;
 
 	tcp_req->req = req;
 	req->cmd.cid = tcp_req->cid;
@@ -601,12 +601,12 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 	}
 	if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-		max_incapsule_data_size = ctrlr->ioccsz_bytes;
+		max_in_capsule_data_size = ctrlr->ioccsz_bytes;
 		if ((req->cmd.opc == SPDK_NVME_OPC_FABRIC) || nvme_qpair_is_admin_queue(&tqpair->qpair)) {
-			max_incapsule_data_size = SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE;
+			max_in_capsule_data_size = SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE;
 		}
 
-		if (req->payload_size <= max_incapsule_data_size) {
+		if (req->payload_size <= max_in_capsule_data_size) {
 			req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 			req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
 			req->cmd.dptr.sgl1.address = 0;
@@ -898,7 +898,7 @@ nvme_tcp_pdu_ch_handle(struct nvme_tcp_qpair *tqpair)
 		}
 	} else {
 		if (spdk_unlikely(!nvme_tcp_qpair_recv_state_valid(tqpair))) {
-			SPDK_ERRLOG("The TCP/IP tqpair connection is not negotitated\n");
+			SPDK_ERRLOG("The TCP/IP tqpair connection is not negotiated\n");
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
 			goto err;
 		}
@@ -1172,7 +1172,7 @@ nvme_tcp_send_icreq_complete(void *cb_arg)
 	tqpair->flags.icreq_send_ack = true;
 
 	if (tqpair->state == NVME_TCP_QPAIR_STATE_INITIALIZING) {
-		SPDK_DEBUGLOG(nvme, "tqpair %p %u, finilize icresp\n", tqpair, tqpair->qpair.id);
+		SPDK_DEBUGLOG(nvme, "tqpair %p %u, finalize icresp\n", tqpair, tqpair->qpair.id);
 		tqpair->state = NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND;
 	}
 }
@@ -1297,7 +1297,7 @@ nvme_tcp_c2h_term_req_hdr_handle(struct nvme_tcp_qpair *tqpair,
 	enum spdk_nvme_tcp_term_req_fes fes;
 
 	if (c2h_term_req->fes > SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER) {
-		SPDK_ERRLOG("Fatal Error Stauts(FES) is unknown for c2h_term_req pdu=%p\n", pdu);
+		SPDK_ERRLOG("Fatal Error Status(FES) is unknown for c2h_term_req pdu=%p\n", pdu);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
 		error_offset = offsetof(struct spdk_nvme_tcp_term_req_hdr, fes);
 		goto end;
@@ -2127,7 +2127,7 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 static uint32_t
 nvme_tcp_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	/* TCP transport doens't limit maximum IO transfer size. */
+	/* TCP transport doesn't limit maximum IO transfer size. */
 	return UINT32_MAX;
 }
 

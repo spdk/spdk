@@ -170,7 +170,7 @@ struct spdk_blob {
 	TAILQ_HEAD(, spdk_blob_persist_ctx) pending_persists;
 	TAILQ_HEAD(, spdk_blob_persist_ctx) persists_to_complete;
 
-	/* Number of data clusters retrived from extent table,
+	/* Number of data clusters retrieved from extent table,
 	 * that many have to be read from extent pages. */
 	uint64_t	remaining_clusters_in_et;
 };

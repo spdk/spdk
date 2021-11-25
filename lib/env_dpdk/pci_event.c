@@ -203,7 +203,7 @@ parse_subsystem_event(const char *buf, struct spdk_pci_event *event)
 			 * VFIO hotplug interface is "pci.c:pci_device_rte_dev_event".
 			 * VFIO informs the userspace hotplug through vfio req notifier interrupt.
 			 * The app needs to free the device userspace driver resource first then
-			 * the OS remove the device VFIO driver and boardcast the VFIO uevent.
+			 * the OS remove the device VFIO driver and broadcast the VFIO uevent.
 			 */
 			return 0;
 		}

@@ -185,19 +185,19 @@ nvmf_fc_ls_format_rjt(void *buf, uint16_t buflen, uint8_t ls_cmd,
 	return sizeof(struct spdk_nvmf_fc_ls_rjt);
 }
 
-/* ************************************************** */
-/* Allocators/Deallocators (assocations, connections, */
-/* poller API data)                                   */
+/* *************************************************** */
+/* Allocators/Deallocators (associations, connections, */
+/* poller API data)                                    */
 
 static inline void
 nvmf_fc_ls_free_association(struct spdk_nvmf_fc_association *assoc)
 {
-	/* free assocation's send disconnect buffer */
+	/* free association's send disconnect buffer */
 	if (assoc->snd_disconn_bufs) {
 		nvmf_fc_free_srsr_bufs(assoc->snd_disconn_bufs);
 	}
 
-	/* free assocation's connections */
+	/* free association's connections */
 	free(assoc->conns_buf);
 
 	/* free the association */
@@ -366,9 +366,9 @@ nvmf_fc_ls_new_connection(struct spdk_nvmf_fc_association *assoc, uint16_t qid,
 	return fc_conn;
 }
 
-/* End - Allocators/Deallocators (assocations, connections, */
-/*       poller API data)                                   */
-/* ******************************************************** */
+/* End - Allocators/Deallocators (associations, connections, */
+/*       poller API data)                                    */
+/* ********************************************************* */
 
 static inline struct spdk_nvmf_fc_association *
 nvmf_fc_ls_find_assoc(struct spdk_nvmf_fc_nport *tgtport, uint64_t assoc_id)
@@ -883,7 +883,7 @@ nvmf_fc_ls_validate_host(struct spdk_nvmf_subsystem *subsystem, const char *host
 }
 
 /* **************************** */
-/* LS Reqeust Handler Functions */
+/* LS Request Handler Functions */
 
 static void
 nvmf_fc_ls_process_cass(uint32_t s_id,

@@ -1144,7 +1144,7 @@ ftl_read_next_logical_addr(struct ftl_io *io, struct ftl_addr *addr)
 	SPDK_DEBUGLOG(ftl_core, "Read addr:%lx, lba:%lu\n",
 		      addr->offset, ftl_io_current_lba(io));
 
-	/* If the address is invalid, skip it (the buffer should already be zero'ed) */
+	/* If the address is invalid, skip it (the buffer should already be zeroed) */
 	if (ftl_addr_invalid(*addr)) {
 		return -EFAULT;
 	}

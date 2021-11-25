@@ -1015,7 +1015,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	if (spdk_unlikely(!STAILQ_EMPTY(&qpair->queued_req) && req->num_children == 0)) {
 		/*
 		 * Requests that have no children should be sent to the transport after all
-		 * currently queued requests. Requests with chilren will be split and go back
+		 * currently queued requests. Requests with children will be split and go back
 		 * through this path.  We need to make an exception for the fabrics commands
 		 * while the qpair is connecting to be able to send the connect command
 		 * asynchronously.

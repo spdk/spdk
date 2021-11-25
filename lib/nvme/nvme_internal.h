@@ -235,7 +235,7 @@ struct nvme_payload {
 	spdk_nvme_req_next_sge_cb next_sge_fn;
 
 	/**
-	 * Exended IO options passed by the user
+	 * Extended IO options passed by the user
 	 */
 	struct spdk_nvme_ns_cmd_ext_io_opts *opts;
 	/**
@@ -780,7 +780,7 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_READY,
 
 	/**
-	 * Controller inilialization has an error.
+	 * Controller initialization has an error.
 	 */
 	NVME_CTRLR_STATE_ERROR
 };

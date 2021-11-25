@@ -65,7 +65,7 @@ static sem_t g_dpdk_sem;
 static int g_dpdk_response;
 
 struct vhost_session_fn_ctx {
-	/** Device pointer obtained before enqueuing the event */
+	/** Device pointer obtained before enqueueing the event */
 	struct spdk_vhost_dev *vdev;
 
 	/** ID of the session to send event to. */

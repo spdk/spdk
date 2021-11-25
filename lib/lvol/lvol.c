@@ -652,7 +652,7 @@ lvs_rename_cb(void *cb_arg, int lvolerrno)
 	if (req->lvserrno != 0) {
 		SPDK_ERRLOG("Lvol store rename operation failed\n");
 		/* Lvs renaming failed, so we should 'clear' new_name.
-		 * Otherwise it could cause a failure on the next attepmt to change the name to 'new_name'  */
+		 * Otherwise it could cause a failure on the next attempt to change the name to 'new_name'  */
 		snprintf(req->lvol_store->new_name,
 			 sizeof(req->lvol_store->new_name),
 			 "%s", req->lvol_store->name);

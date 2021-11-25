@@ -1584,7 +1584,7 @@ nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_request *
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_ns *ns;
 
-	SPDK_DEBUGLOG(nvmf, "get Features - Reservation Notificaton Mask\n");
+	SPDK_DEBUGLOG(nvmf, "get Features - Reservation Notification Mask\n");
 
 	if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("get Features - Invalid Namespace ID\n");
@@ -1612,7 +1612,7 @@ nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_request *
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_ns *ns;
 
-	SPDK_DEBUGLOG(nvmf, "Set Features - Reservation Notificaton Mask\n");
+	SPDK_DEBUGLOG(nvmf, "Set Features - Reservation Notification Mask\n");
 
 	if (cmd->nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
@@ -1960,7 +1960,7 @@ nvmf_get_firmware_slot_log_page(struct iovec *iovs, int iovcnt, uint64_t offset,
  * Asynchronous Event Mask Bit
  */
 enum spdk_nvme_async_event_mask_bit {
-	/* Mask Namespace Change Notificaton */
+	/* Mask Namespace Change Notification */
 	SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGE_MASK_BIT		= 0,
 	/* Mask Asymmetric Namespace Access Change Notification */
 	SPDK_NVME_ASYNC_EVENT_ANA_CHANGE_MASK_BIT		= 1,
@@ -3159,7 +3159,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	if (g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr && cmd->opc != SPDK_NVME_OPC_ABORT) {
 		rc = g_nvmf_custom_admin_cmd_hdlrs[cmd->opc].hdlr(req);
 		if (rc >= SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
-			/* The handler took care of this commmand */
+			/* The handler took care of this command */
 			return rc;
 		}
 	}

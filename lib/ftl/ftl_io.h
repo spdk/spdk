@@ -127,7 +127,7 @@ struct ftl_io_init_opts {
 struct ftl_io_channel;
 
 struct ftl_wbuf_entry {
-	/* IO channel that owns the write bufer entry */
+	/* IO channel that owns the write buffer entry */
 	struct ftl_io_channel			*ioch;
 	/* Data payload (single block) */
 	void					*payload;

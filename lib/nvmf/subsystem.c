@@ -2699,7 +2699,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 			/* do nothing */
 			update_sgroup = false;
 		} else if (ns->holder == NULL) {
-			/* fisrt time to acquire the reservation */
+			/* first time to acquire the reservation */
 			nvmf_ns_reservation_acquire_reservation(ns, key.crkey, rtype, reg);
 		} else {
 			SPDK_ERRLOG("Invalid rtype or current registrant is not holder\n");

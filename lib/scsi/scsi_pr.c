@@ -203,7 +203,7 @@ scsi_pr_out_reserve(struct spdk_scsi_task *task,
 
 	/* TODO: don't support now */
 	if (spec_i_pt || all_tg_pt || aptpl) {
-		SPDK_ERRLOG("Unspported spec_i_pt/all_tg_pt fields "
+		SPDK_ERRLOG("Unsupported spec_i_pt/all_tg_pt fields "
 			    "or invalid aptpl field\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,

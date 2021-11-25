@@ -148,7 +148,7 @@ struct hugepage_file_info {
  * We choose option 2.
  */
 static int
-get_hugepage_file_info(struct hugepage_file_info huges[], int max)
+get_hugepage_file_info(struct hugepage_file_info hugepages[], int max)
 {
 	int idx, rc;
 	FILE *f;
@@ -210,15 +210,15 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 		}
 
 		if (idx > 0 &&
-		    strncmp(tmp, huges[idx - 1].path, PATH_MAX) == 0 &&
-		    v_start == huges[idx - 1].addr + huges[idx - 1].size) {
-			huges[idx - 1].size += (v_end - v_start);
+		    strncmp(tmp, hugepages[idx - 1].path, PATH_MAX) == 0 &&
+		    v_start == hugepages[idx - 1].addr + hugepages[idx - 1].size) {
+			hugepages[idx - 1].size += (v_end - v_start);
 			continue;
 		}
 
-		huges[idx].addr = v_start;
-		huges[idx].size = v_end - v_start;
-		snprintf(huges[idx].path, PATH_MAX, "%s", tmp);
+		hugepages[idx].addr = v_start;
+		hugepages[idx].size = v_end - v_start;
+		snprintf(hugepages[idx].path, PATH_MAX, "%s", tmp);
 		idx++;
 	}
 
@@ -232,9 +232,9 @@ static int
 prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 {
 	int i, num;
-	struct hugepage_file_info huges[VHOST_USER_MEMORY_MAX_NREGIONS];
+	struct hugepage_file_info hugepages[VHOST_USER_MEMORY_MAX_NREGIONS];
 
-	num = get_hugepage_file_info(huges, VHOST_USER_MEMORY_MAX_NREGIONS);
+	num = get_hugepage_file_info(hugepages, VHOST_USER_MEMORY_MAX_NREGIONS);
 	if (num < 0) {
 		SPDK_ERRLOG("Failed to prepare memory for vhost-user\n");
 		return num;
@@ -242,11 +242,11 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 
 	for (i = 0; i < num; ++i) {
 		/* the memory regions are unaligned */
-		msg->payload.memory.regions[i].guest_phys_addr = huges[i].addr; /* use vaddr! */
-		msg->payload.memory.regions[i].userspace_addr = huges[i].addr;
-		msg->payload.memory.regions[i].memory_size = huges[i].size;
+		msg->payload.memory.regions[i].guest_phys_addr = hugepages[i].addr; /* use vaddr! */
+		msg->payload.memory.regions[i].userspace_addr = hugepages[i].addr;
+		msg->payload.memory.regions[i].memory_size = hugepages[i].size;
 		msg->payload.memory.regions[i].flags_padding = 0;
-		fds[i] = open(huges[i].path, O_RDWR);
+		fds[i] = open(hugepages[i].path, O_RDWR);
 	}
 
 	msg->payload.memory.nregions = num;

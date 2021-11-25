@@ -367,7 +367,7 @@ iscsi_send_tgt_portals(struct spdk_iscsi_conn *conn,
 				      host, p->port, pg->tag);
 
 			memset(tmp_buf, 0, sizeof(tmp_buf));
-			/* Caculate the whole string size */
+			/* Calculate the whole string size */
 			len = snprintf(NULL, 0, "TargetAddress=%s:%s,%d", host, p->port, pg->tag);
 			assert(len < MAX_TMPBUF);
 
@@ -431,7 +431,7 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 		len = snprintf(NULL, 0, "TargetName=%s", target->name);
 		assert(len < MAX_TMPBUF);
 
-		/* String contents are not copyied */
+		/* String contents are not copied */
 		if (previous_completed_size < len) {
 			/* Copy the string into the temporary buffer */
 			snprintf(tmp_buf, len + 1, "TargetName=%s", target->name);
@@ -451,7 +451,7 @@ iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 	}
 	pthread_mutex_unlock(&g_iscsi.mutex);
 
-	/* Only set it when it is not succesufully completed */
+	/* Only set it when it is not successfully completed */
 	if (no_buf_space) {
 		conn->send_tgt_completed_size += total;
 	} else {

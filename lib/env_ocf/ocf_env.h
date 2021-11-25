@@ -145,7 +145,7 @@ static inline void *env_vmalloc(size_t size)
 static inline void *env_vzalloc(size_t size)
 {
 	/* TODO: raw_ram init can request huge amount of memory to store
-	 * hashtable in it. need to ensure that allocation succedds */
+	 * hashtable in it. need to ensure that allocation succeeds */
 	return spdk_zmalloc(size, 0, NULL, SPDK_ENV_LCORE_ID_ANY,
 			    SPDK_MALLOC_DMA);
 }

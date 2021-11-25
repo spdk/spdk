@@ -42,7 +42,7 @@
 /* Maximum memory regions supported */
 #define VFIO_MAXIMUM_MEMORY_REGIONS		128
 /* Maximum sparse memory regions in one BAR region */
-#define VFIO_MAXIMUM_SPARSE_MMAP_REGISONS	8
+#define VFIO_MAXIMUM_SPARSE_MMAP_REGIONS	8
 
 struct vfio_memory_region {
 	uint64_t iova;
@@ -64,7 +64,7 @@ struct vfio_pci_region {
 	size_t size;
 	uint64_t flags;
 	uint32_t nr_mmaps;
-	struct vfio_sparse_mmaps mmaps[VFIO_MAXIMUM_SPARSE_MMAP_REGISONS];
+	struct vfio_sparse_mmaps mmaps[VFIO_MAXIMUM_SPARSE_MMAP_REGIONS];
 };
 
 struct vfio_device {

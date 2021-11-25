@@ -543,7 +543,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
 	if ((rc = spdk_reactors_init()) != 0) {
-		SPDK_ERRLOG("Reactor Initilization failed: rc = %d\n", rc);
+		SPDK_ERRLOG("Reactor Initialization failed: rc = %d\n", rc);
 		return 1;
 	}
 

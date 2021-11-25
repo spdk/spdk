@@ -208,7 +208,7 @@ struct spdk_nvmf_tcp_req  {
 	 * twice at the same time, add a debug flag here for init/fini.
 	 */
 	bool					pdu_in_use;
-	bool					has_incapsule_data;
+	bool					has_in_capsule_data;
 
 	/* transfer_tag */
 	uint16_t				ttag;
@@ -394,7 +394,7 @@ nvmf_tcp_req_get(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
 	tcp_req->h2c_offset = 0;
-	tcp_req->has_incapsule_data = false;
+	tcp_req->has_in_capsule_data = false;
 	tcp_req->req.dif_enabled = false;
 
 	TAILQ_REMOVE(&tqpair->tcp_req_free_queue, tcp_req, state_link);
@@ -972,7 +972,7 @@ nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 		}
 	}
 
-	/* Add addtional 2 members, which will be used for mgmt_pdu and pdu_in_progress owned by the tqpair */
+	/* Add additional 2 members, which will be used for mgmt_pdu and pdu_in_progress owned by the tqpair */
 	tqpair->pdus = spdk_dma_zmalloc((tqpair->resource_count + 2) * sizeof(*tqpair->pdus), 0x1000, NULL);
 	if (!tqpair->pdus) {
 		SPDK_ERRLOG("Unable to allocate pdu pool on tqpair =%p.\n", tqpair);
@@ -1542,7 +1542,7 @@ nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	if ((h2c_data->datao + h2c_data->datal) > tcp_req->req.length) {
 		SPDK_DEBUGLOG(nvmf_tcp,
-			      "tcp_req(%p), tqpair=%p,  (datao=%u + datal=%u) execeeds requested length=%u\n",
+			      "tcp_req(%p), tqpair=%p,  (datao=%u + datal=%u) exceeds requested length=%u\n",
 			      tcp_req, tqpair, h2c_data->datao, h2c_data->datal, tcp_req->req.length);
 		fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE;
 		goto err;
@@ -1683,7 +1683,7 @@ nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	 * acknowledged before moving on. */
 	if (tcp_req->h2c_offset == tcp_req->req.length &&
 	    tcp_req->state == TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER) {
-		/* After receving all the h2c data, we need to check whether there is
+		/* After receiving all the h2c data, we need to check whether there is
 		 * transient transport error */
 		rsp = &tcp_req->req.rsp->nvme_cpl;
 		if (spdk_unlikely(rsp->status.sc == SPDK_NVME_SC_COMMAND_TRANSIENT_TRANSPORT_ERROR)) {
@@ -1946,7 +1946,7 @@ nvmf_tcp_pdu_ch_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 		}
 	} else {
 		if (tqpair->state != NVME_TCP_QPAIR_STATE_RUNNING) {
-			SPDK_ERRLOG("The TCP/IP connection is not negotitated\n");
+			SPDK_ERRLOG("The TCP/IP connection is not negotiated\n");
 			fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
 			goto err;
 		}
@@ -2228,7 +2228,7 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 		uint64_t offset = sgl->address;
 		uint32_t max_len = transport->opts.in_capsule_data_size;
-		assert(tcp_req->has_incapsule_data);
+		assert(tcp_req->has_in_capsule_data);
 
 		SPDK_DEBUGLOG(nvmf_tcp, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, length);
@@ -2474,8 +2474,8 @@ request_transfer_out(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_tcp_set_incapsule_data(struct spdk_nvmf_tcp_qpair *tqpair,
-			    struct spdk_nvmf_tcp_req *tcp_req)
+nvmf_tcp_set_in_capsule_data(struct spdk_nvmf_tcp_qpair *tqpair,
+			     struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct nvme_tcp_pdu *pdu;
 	uint32_t plen = 0;
@@ -2488,7 +2488,7 @@ nvmf_tcp_set_incapsule_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	}
 
 	if (pdu->hdr.common.plen != plen) {
-		tcp_req->has_incapsule_data = true;
+		tcp_req->has_in_capsule_data = true;
 	}
 }
 
@@ -2554,15 +2554,15 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			/* If no data to transfer, ready to execute. */
 			if (tcp_req->req.xfer == SPDK_NVME_DATA_NONE) {
-				/* Reset the tqpair receving pdu state */
+				/* Reset the tqpair receiving pdu state */
 				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 				break;
 			}
 
-			nvmf_tcp_set_incapsule_data(tqpair, tcp_req);
+			nvmf_tcp_set_in_capsule_data(tqpair, tcp_req);
 
-			if (!tcp_req->has_incapsule_data) {
+			if (!tcp_req->has_in_capsule_data) {
 				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 			}
 
@@ -2574,7 +2574,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 
 			assert(tcp_req->req.xfer != SPDK_NVME_DATA_NONE);
 
-			if (!tcp_req->has_incapsule_data && (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue))) {
+			if (!tcp_req->has_in_capsule_data && (&tcp_req->req != STAILQ_FIRST(&group->pending_buf_queue))) {
 				SPDK_DEBUGLOG(nvmf_tcp,
 					      "Not the first element to wait for the buf for tcp_req(%p) on tqpair=%p\n",
 					      tcp_req, tqpair);
@@ -2586,7 +2586,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			rc = nvmf_tcp_req_parse_sgl(tcp_req, transport, group);
 			if (rc < 0) {
 				STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
-				/* Reset the tqpair receving pdu state */
+				/* Reset the tqpair receiving pdu state */
 				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
 				tcp_req->req.rsp->nvme_cpl.cid = tcp_req->req.cmd->nvme_cmd.cid;
@@ -2680,8 +2680,9 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, tqpair);
 			if (tcp_req->req.data_from_pool) {
 				spdk_nvmf_request_free_buffers(&tcp_req->req, group, transport);
-			} else if (spdk_unlikely(tcp_req->has_incapsule_data && (tcp_req->cmd.opc == SPDK_NVME_OPC_FABRIC ||
-						 tqpair->qpair.qid == 0) && tcp_req->req.length > transport->opts.in_capsule_data_size)) {
+			} else if (spdk_unlikely(tcp_req->has_in_capsule_data &&
+						 (tcp_req->cmd.opc == SPDK_NVME_OPC_FABRIC ||
+						  tqpair->qpair.qid == 0) && tcp_req->req.length > transport->opts.in_capsule_data_size)) {
 				tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 				assert(tgroup->control_msg_list);
 				SPDK_DEBUGLOG(nvmf_tcp, "Put buf to control msg list\n");

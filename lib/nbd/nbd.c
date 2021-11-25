@@ -1037,7 +1037,7 @@ nbd_enable_kernel(void *arg)
 							 NBD_BUSY_POLLING_INTERVAL_US);
 				return SPDK_POLLER_BUSY;
 			} else if (ctx->nbd->retry_count-- > 0) {
-				/* Repeatedly unregiter and register retry poller to avoid scan-build error */
+				/* Repeatedly unregister and register retry poller to avoid scan-build error */
 				spdk_poller_unregister(&ctx->nbd->retry_poller);
 				ctx->nbd->retry_poller = SPDK_POLLER_REGISTER(nbd_enable_kernel, ctx,
 							 NBD_BUSY_POLLING_INTERVAL_US);

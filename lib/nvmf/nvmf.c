@@ -950,7 +950,7 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 		}
 	}
 
-	/* We add the qpair to the group only it is succesfully added into the tgroup */
+	/* We add the qpair to the group only it is successfully added into the tgroup */
 	if (rc == 0) {
 		SPDK_DTRACE_PROBE2(nvmf_poll_group_add_qpair, qpair, spdk_thread_get_id(group->thread));
 		TAILQ_INSERT_TAIL(&group->qpairs, qpair, link);

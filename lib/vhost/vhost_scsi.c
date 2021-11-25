@@ -1027,7 +1027,7 @@ vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 
 	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
 	if (rc != 0) {
-		SPDK_ERRLOG("%s: Couldn't allocate io channnel for SCSI target %u.\n",
+		SPDK_ERRLOG("%s: Couldn't allocate io channel for SCSI target %u.\n",
 			    vsession->name, scsi_tgt_num);
 
 		/* unset the SCSI target so that all I/O to it will be rejected */
@@ -1337,7 +1337,7 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 		task_cnt = vq->vring.size;
 		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
 			/* sanity check */
-			SPDK_ERRLOG("%s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
+			SPDK_ERRLOG("%s: virtqueue %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
 				    vsession->name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
 			free_task_pool(svsession);
 			return -1;

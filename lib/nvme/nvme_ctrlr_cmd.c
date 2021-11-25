@@ -91,7 +91,7 @@ spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 
 	payload = NVME_PAYLOAD_CONTIG(buf, md_buf);
 
-	/* Caculate metadata length */
+	/* Calculate metadata length */
 	if (md_buf) {
 		struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, cmd->nsid);
 

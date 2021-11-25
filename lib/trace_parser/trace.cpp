@@ -277,7 +277,7 @@ spdk_trace_parser::populate_events(spdk_trace_history *history, int num_entries)
 
 	/*
 	 * We keep track of the highest first TSC out of all reactors.
-	 *  We will ignore any events that occured before this TSC on any
+	 *  We will ignore any events that occurred before this TSC on any
 	 *  other reactors.  This will ensure we only print data for the
 	 *  subset of time where we have data across all reactors.
 	 */

@@ -762,7 +762,7 @@ spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *bat
 		return rc;
 	}
 
-	/* TODO: pre-tranlate these when allocated for max batch size. */
+	/* TODO: pre-translate these when allocated for max batch size. */
 	rc = _vtophys(batch->user_desc, &desc_addr, batch->index * sizeof(struct idxd_hw_desc));
 	if (rc) {
 		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);

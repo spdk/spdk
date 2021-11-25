@@ -53,7 +53,7 @@ static const char base64_enc_table[] =
 	"abcdefghijklmnopqrstuvwxyz"
 	"0123456789+/";
 
-static const char base64_urfsafe_enc_table[] =
+static const char base64_urlsafe_enc_table[] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	"abcdefghijklmnopqrstuvwxyz"
 	"0123456789-_";
@@ -156,7 +156,7 @@ spdk_base64_encode(char *dst, const void *src, size_t src_len)
 int
 spdk_base64_urlsafe_encode(char *dst, const void *src, size_t src_len)
 {
-	return base64_encode(dst, base64_urfsafe_enc_table, src, src_len);
+	return base64_encode(dst, base64_urlsafe_enc_table, src, src_len);
 }
 
 #if defined(__aarch64__) && !defined(__ARM_FEATURE_SVE)

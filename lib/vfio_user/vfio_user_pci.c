@@ -297,7 +297,7 @@ vfio_device_map_bars_and_config_region(struct vfio_device *device)
 	uint32_t i;
 	int ret;
 	size_t len = 4096;
-	int fds[VFIO_MAXIMUM_SPARSE_MMAP_REGISONS];
+	int fds[VFIO_MAXIMUM_SPARSE_MMAP_REGIONS];
 	struct vfio_region_info *info;
 	uint8_t *buf;
 
@@ -312,7 +312,7 @@ vfio_device_map_bars_and_config_region(struct vfio_device *device)
 		memset(fds, 0, sizeof(fds));
 
 		info->index = i;
-		ret = vfio_user_get_dev_region_info(device, info, len, fds, VFIO_MAXIMUM_SPARSE_MMAP_REGISONS);
+		ret = vfio_user_get_dev_region_info(device, info, len, fds, VFIO_MAXIMUM_SPARSE_MMAP_REGIONS);
 		if (ret) {
 			SPDK_ERRLOG("Device setup bar %d failed\n", ret);
 			free(buf);

@@ -939,7 +939,7 @@ bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		/* Obsolete (Medium Types Supported) */
 		break;
 	case 0x0c:
-		/* Obsolete (Notch And Partitio) */
+		/* Obsolete (Notch And Partition) */
 		break;
 	case 0x0d:
 		/* Obsolete */
@@ -1117,14 +1117,14 @@ bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
 		hdr[0] = total - 1;            /* Mode Data Length */
 		hdr[1] = 0;                    /* Medium Type */
 		hdr[2] = 0;                    /* Device-Specific Parameter */
-		hdr[3] = blen;                 /* Block Descripter Length */
+		hdr[3] = blen;                 /* Block Descriptor Length */
 	} else {
 		to_be16(&hdr[0], total - 2);   /* Mode Data Length */
 		hdr[2] = 0;                    /* Medium Type */
 		hdr[3] = 0;                    /* Device-Specific Parameter */
 		hdr[4] = llbaa ? 0x1 : 0;      /* Long/short LBA */
 		hdr[5] = 0;                    /* Reserved */
-		to_be16(&hdr[6], blen);        /* Block Descripter Length */
+		to_be16(&hdr[6], blen);        /* Block Descriptor Length */
 	}
 
 	bdesc = &data[hlen];

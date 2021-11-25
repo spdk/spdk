@@ -494,7 +494,7 @@ iscsi_get_max_immediate_data_size(void)
 	 *  account for a header digest, data digest and additional header
 	 *  segments (AHS).  These are not normally used but they do not
 	 *  take up much space and we need to make sure the worst-case scenario
-	 *  can be satisified by the size returned here.
+	 *  can be satisfied by the size returned here.
 	 */
 	return g_iscsi.FirstBurstLength +
 	       ISCSI_DIGEST_LEN + /* data digest */

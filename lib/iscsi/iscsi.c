@@ -1448,7 +1448,7 @@ iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 	}
 	if (iscsi_tgt_node_is_redirected(conn, *target, buf, MAX_TMPBUF)) {
-		SPDK_INFOLOG(iscsi, "target %s is redirectd\n", target_name);
+		SPDK_INFOLOG(iscsi, "target %s is redirected\n", target_name);
 		rsp_pdu->data_segment_len = iscsi_append_text("TargetAddress",
 					    buf,
 					    rsp_pdu->data,

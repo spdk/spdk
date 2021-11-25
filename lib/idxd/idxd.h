@@ -103,7 +103,7 @@ struct spdk_idxd_io_channel {
 	 */
 	void					*desc_base;
 	TAILQ_HEAD(, idxd_ops)			ops_pool;
-	/* Current list of oustanding operations to poll. */
+	/* Current list of outstanding operations to poll. */
 	TAILQ_HEAD(op_head, idxd_ops)		ops_outstanding;
 	void					*ops_base;
 
@@ -159,7 +159,7 @@ struct spdk_idxd_impl {
 	void (*destruct)(struct spdk_idxd_device *idxd);
 	void (*dump_sw_error)(struct spdk_idxd_device *idxd, void *portal);
 	char *(*portal_get_addr)(struct spdk_idxd_device *idxd);
-	/* It is a workround for simulator */
+	/* It is a workaround for simulator */
 	bool (*nop_check)(struct spdk_idxd_device *idxd);
 
 	STAILQ_ENTRY(spdk_idxd_impl) link;

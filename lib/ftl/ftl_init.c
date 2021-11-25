@@ -1322,7 +1322,7 @@ ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev, const char *bdev_name)
 	}
 
 	if (!spdk_bdev_is_zoned(bdev)) {
-		SPDK_ERRLOG("Bdev dosen't support zone capabilities: %s\n",
+		SPDK_ERRLOG("Bdev doesn't support zone capabilities: %s\n",
 			    spdk_bdev_get_name(bdev));
 		return -1;
 	}
@@ -1358,7 +1358,7 @@ ftl_dev_init_base_bdev(struct spdk_ftl_dev *dev, const char *bdev_name)
 
 	if (ftl_is_append_supported(dev) &&
 	    !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZONE_APPEND)) {
-		SPDK_ERRLOG("Bdev dosen't support append: %s\n",
+		SPDK_ERRLOG("Bdev doesn't support append: %s\n",
 			    spdk_bdev_get_name(bdev));
 		return -1;
 	}

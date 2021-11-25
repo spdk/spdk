@@ -42,7 +42,7 @@
  * It depends on memory usage of OCF which
  * in itself depends on the workload
  * It is a big number because OCF uses allocators
- * for every request it sends and recieves
+ * for every request it sends and receives
  */
 #define ENV_ALLOCATOR_NBUFS 32767
 #define GET_ELEMENTS_COUNT(_limit) (_limit < 0 ? ENV_ALLOCATOR_NBUFS : _limit)
@@ -160,7 +160,7 @@ static void __attribute__((destructor)) deinit_execution_context(void)
 	free(exec_context_mutex);
 }
 
-/* get_execuction_context must assure that after the call finishes, the caller
+/* get_execution_context must assure that after the call finishes, the caller
  * will not get preempted from current execution context. For userspace env
  * we simulate this behavior by acquiring per execution context mutex. As a
  * result the caller might actually get preempted, but no other thread will

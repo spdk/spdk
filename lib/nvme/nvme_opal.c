@@ -538,7 +538,7 @@ opal_response_get_u16(const struct spdk_opal_resp_parsed *resp, int index)
 {
 	uint64_t i = opal_response_get_u64(resp, index);
 	if (i > 0xffffull) {
-		SPDK_ERRLOG("parse reponse u16 failed. Overflow\n");
+		SPDK_ERRLOG("parse response u16 failed. Overflow\n");
 		return 0;
 	}
 	return (uint16_t) i;
@@ -549,7 +549,7 @@ opal_response_get_u8(const struct spdk_opal_resp_parsed *resp, int index)
 {
 	uint64_t i = opal_response_get_u64(resp, index);
 	if (i > 0xffull) {
-		SPDK_ERRLOG("parse reponse u8 failed. Overflow\n");
+		SPDK_ERRLOG("parse response u8 failed. Overflow\n");
 		return 0;
 	}
 	return (uint8_t) i;
@@ -1207,7 +1207,7 @@ opal_activate(struct spdk_opal_dev *dev, struct opal_session *sess)
 		return err;
 	}
 
-	/* TODO: Single User Mode for activatation */
+	/* TODO: Single User Mode for activation */
 
 	ret = opal_cmd_finalize(sess, sess->hsn, sess->tsn, true);
 	if (ret) {

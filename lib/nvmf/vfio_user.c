@@ -895,7 +895,7 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *cq,
 
 	/*
 	 * this function now executes at SPDK thread context, we
-	 * might be triggerring interrupts from vfio-user thread context so
+	 * might be triggering interrupts from vfio-user thread context so
 	 * check for race conditions.
 	 */
 	if (ctrlr_interrupt_enabled(ctrlr) && cq->ien) {

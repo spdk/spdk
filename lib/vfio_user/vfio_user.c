@@ -47,7 +47,7 @@ struct vfio_user_request {
 	struct vfio_user_header hdr;
 #define VFIO_USER_MAX_PAYLOAD_SIZE	(4096)
 	uint8_t payload[VFIO_USER_MAX_PAYLOAD_SIZE];
-	int fds[VFIO_MAXIMUM_SPARSE_MMAP_REGISONS];
+	int fds[VFIO_MAXIMUM_SPARSE_MMAP_REGIONS];
 	int fd_num;
 };
 
@@ -75,7 +75,7 @@ vfio_user_write(int fd, void *buf, int len, int *fds, int num_fds)
 	struct msghdr msgh;
 	struct iovec iov;
 	size_t fd_size = num_fds * sizeof(int);
-	char control[CMSG_SPACE(VFIO_MAXIMUM_SPARSE_MMAP_REGISONS * sizeof(int))];
+	char control[CMSG_SPACE(VFIO_MAXIMUM_SPARSE_MMAP_REGIONS * sizeof(int))];
 	struct cmsghdr *cmsg;
 
 	memset(&msgh, 0, sizeof(msgh));
@@ -87,7 +87,7 @@ vfio_user_write(int fd, void *buf, int len, int *fds, int num_fds)
 	msgh.msg_iov = &iov;
 	msgh.msg_iovlen = 1;
 
-	assert(num_fds <= VFIO_MAXIMUM_SPARSE_MMAP_REGISONS);
+	assert(num_fds <= VFIO_MAXIMUM_SPARSE_MMAP_REGIONS);
 
 	if (fds && num_fds) {
 		msgh.msg_control = control;
@@ -119,7 +119,7 @@ read_fd_message(int sockfd, char *buf, int buflen, int *fds, int *fd_num)
 {
 	struct iovec iov;
 	struct msghdr msgh;
-	char control[CMSG_SPACE(VFIO_MAXIMUM_SPARSE_MMAP_REGISONS * sizeof(int))];
+	char control[CMSG_SPACE(VFIO_MAXIMUM_SPARSE_MMAP_REGIONS * sizeof(int))];
 	struct cmsghdr *cmsg;
 	int got_fds = 0;
 	int ret;
@@ -148,7 +148,7 @@ read_fd_message(int sockfd, char *buf, int buflen, int *fds, int *fd_num)
 		    (cmsg->cmsg_type == SCM_RIGHTS)) {
 			got_fds = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
 			*fd_num = got_fds;
-			assert(got_fds <= VFIO_MAXIMUM_SPARSE_MMAP_REGISONS);
+			assert(got_fds <= VFIO_MAXIMUM_SPARSE_MMAP_REGIONS);
 			memcpy(fds, CMSG_DATA(cmsg), got_fds * sizeof(int));
 			break;
 		}

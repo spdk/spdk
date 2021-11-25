@@ -320,7 +320,7 @@ _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id)
 	 */
 	rc = config_wqs(kernel_idxd, dev_id, 0);
 	if (rc) {
-		SPDK_ERRLOG("Failed to probe requsted wqs on kernel device context=%p\n", ctx);
+		SPDK_ERRLOG("Failed to probe requested wqs on kernel device context=%p\n", ctx);
 		return -ENODEV;
 	}
 

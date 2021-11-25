@@ -104,7 +104,7 @@ struct spdk_poller {
 };
 
 enum spdk_thread_state {
-	/* The thread is pocessing poller and message by spdk_thread_poll(). */
+	/* The thread is processing poller and message by spdk_thread_poll(). */
 	SPDK_THREAD_STATE_RUNNING,
 
 	/* The thread is in the process of termination. It reaps unregistering
@@ -1547,7 +1547,7 @@ poller_register(spdk_poller_fn fn,
 			spdk_poller_register_interrupt(poller, period_poller_set_interrupt_mode, NULL);
 		} else {
 			/* If the poller doesn't have a period, create interruptfd that's always
-			 * busy automatically when runnning in interrupt mode.
+			 * busy automatically when running in interrupt mode.
 			 */
 			rc = busy_poller_interrupt_init(poller);
 			if (rc > 0) {
@@ -2652,7 +2652,7 @@ spdk_interrupt_mode_enable(void)
 	 * g_spdk_msg_mempool will be valid if thread library is initialized.
 	 */
 	if (g_spdk_msg_mempool) {
-		SPDK_ERRLOG("Failed due to threading library is already initailzied.\n");
+		SPDK_ERRLOG("Failed due to threading library is already initialized.\n");
 		return -1;
 	}
 

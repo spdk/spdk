@@ -407,7 +407,7 @@ _alloc_zero_buff(void)
 {
 	int rc = 0;
 
-	/* The zero buffer is shared between all volumnes and just used
+	/* The zero buffer is shared between all volumes and just used
 	 * for reads so allocate one global instance here if not already
 	 * allocated when another vol init'd or loaded.
 	 */
