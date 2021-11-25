@@ -5,7 +5,7 @@
 This document details the policy for maintaining stability of SPDK ABI and API.
 
 Major ABI version can change at most once for each quarterly SPDK release.
-ABI versions are managed separately for each library and follow [Semantic Versoning](https://semver.org/).
+ABI versions are managed separately for each library and follow [Semantic Versioning](https://semver.org/).
 
 API and ABI deprecation notices shall be posted in the next section.
 Each entry must describe what will be removed and can suggest the future use or alternative.
