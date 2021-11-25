@@ -399,7 +399,7 @@ nvmf_init_threads(void)
 		return -1;
 	}
 
-	fprintf(stdout, "nvmf threads initlize successfully\n");
+	fprintf(stdout, "nvmf threads initialize successfully\n");
 	return 0;
 
 err_exit:
@@ -765,7 +765,7 @@ nvmf_target_advance_state(void)
 
 		switch (g_target_state) {
 		case NVMF_INIT_SUBSYSTEM:
-			/* initlize the bdev layer */
+			/* initialize the bdev layer */
 			spdk_subsystem_init(nvmf_subsystem_init_done, NULL);
 			return;
 		case NVMF_INIT_TARGET:

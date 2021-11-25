@@ -1445,7 +1445,7 @@ opal_revert_tper(struct dev *iter)
 			return;
 		}
 		printf("Please be noted this operation will erase ALL DATA on this drive\n");
-		printf("Please don't ternminate this excecution. Otherwise undefined error may occur\n");
+		printf("Please don't terminate this execution. Otherwise undefined error may occur\n");
 		printf("Please input password for revert TPer:");
 		while ((ch = getchar()) != '\n' && ch != EOF);
 		passwd_p = get_line(passwd, SPDK_OPAL_MAX_PASSWORD_SIZE, stdin, true);

@@ -1162,7 +1162,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			spdk_nvme_qpair_process_completions(fio_qpair->qpair, max - fio_thread->iocq_count);
 
 			if (fio_thread->iocq_count >= min) {
-				/* reset the currrent handling qpair */
+				/* reset the current handling qpair */
 				fio_thread->fio_qpair_current = fio_qpair;
 				return fio_thread->iocq_count;
 			}
@@ -1182,7 +1182,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 	}
 
-	/* reset the currrent handling qpair */
+	/* reset the current handling qpair */
 	fio_thread->fio_qpair_current = fio_qpair;
 	return fio_thread->iocq_count;
 }

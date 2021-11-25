@@ -251,7 +251,7 @@ blob_write(struct hello_context_t *hello_context)
 }
 
 /*
- * Callback function for sync'ing metadata.
+ * Callback function for syncing metadata.
  */
 static void
 sync_complete(void *arg1, int bserrno)
@@ -372,7 +372,7 @@ bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
 
 	SPDK_NOTICELOG("entry\n");
 	if (bserrno) {
-		unload_bs(hello_context, "Error init'ing the blobstore",
+		unload_bs(hello_context, "Error initing the blobstore",
 			  bserrno);
 		return;
 	}
@@ -468,7 +468,7 @@ main(int argc, char **argv)
 	 * can pass in an spdk_bs_opts if we want something other than
 	 * the defaults (cluster size, etc), but here we'll just take the
 	 * defaults.  We'll also pass in a struct that we'll use for
-	 * callbacks so we've got efficient bookeeping of what we're
+	 * callbacks so we've got efficient bookkeeping of what we're
 	 * creating. This is an async operation and bs_init_complete()
 	 * will be called when it is complete.
 	 */

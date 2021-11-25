@@ -824,7 +824,7 @@ init_idxd_chan_entry(struct idxd_chan_entry *t, struct spdk_idxd_device *idxd)
 	local_qd = spdk_idxd_chan_get_max_operations(t->ch);
 	if (g_queue_depth > local_qd) {
 		fprintf(stdout,
-			"g_queue_depth is changed from %d to %d because of idxd (%p)'s max operatons per chan=%d\n",
+			"g_queue_depth is changed from %d to %d because of idxd (%p)'s max operations per chan=%d\n",
 			g_queue_depth, local_qd, idxd, local_qd);
 		g_queue_depth = local_qd;
 	}

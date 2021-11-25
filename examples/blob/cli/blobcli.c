@@ -45,7 +45,7 @@
 
 /*
  * The following is not a public header file, but the CLI does expose
- * some internals of blobstore for dev/debug puposes so we
+ * some internals of blobstore for dev/debug purposes so we
  * include it here.
  */
 #include "../lib/blob/blobstore.h"
@@ -277,7 +277,7 @@ close_cb(void *arg1, int bserrno)
 }
 
 /*
- * Callback function for sync'ing metadata.
+ * Callback function for syncing metadata.
  */
 static void
 sync_cb(void *arg1, int bserrno)

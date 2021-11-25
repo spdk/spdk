@@ -512,7 +512,7 @@ _build_batch(struct worker_thread *worker, struct ap_task *task)
 	/* Prep the command re-using the last completed command's task */
 	rc = _batch_prep_cmd(worker, task, worker_batch);
 	if (rc) {
-		fprintf(stderr, "error preping command for batch\n");
+		fprintf(stderr, "error prepping command for batch\n");
 		goto error;
 	}
 
@@ -918,7 +918,7 @@ _init_thread(void *arg1)
 
 				rc = _batch_prep_cmd(worker, task, worker_batch);
 				if (rc) {
-					fprintf(stderr, "error preping command\n");
+					fprintf(stderr, "error prepping command\n");
 					goto error;
 				}
 			}

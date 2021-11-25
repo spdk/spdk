@@ -94,7 +94,7 @@ When testing FIO on multiple NVMe SSDs with SPDK plugin, it is recommended to us
 It has been observed that there are some performance gap between FIO(with SPDK plugin enabled) and SPDK perf
 (examples/nvme/perf/perf) on testing multiple NVMe SSDs. If you use one job(i.e., use one CPU core) configured for
 FIO test, the performance is worse than SPDK perf (also using one CPU core) against many NVMe SSDs. But if you use
-multiple jobs for FIO test, the performance of FIO is similiar with SPDK perf. After analyzing this phenomenon, we
+multiple jobs for FIO test, the performance of FIO is similar with SPDK perf. After analyzing this phenomenon, we
 think that is caused by the FIO architecture. Mainly FIO can scale with multiple threads (i.e., using CPU cores),
 but it is not good to use one thread against many I/O devices.
 

@@ -2270,8 +2270,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"io-unit-size",			required_argument,	NULL, PERF_IO_UNIT_SIZE},
 #define PERF_IO_QUEUES_PER_NS	'P'
 	{"num-qpairs", required_argument, NULL, PERF_IO_QUEUES_PER_NS},
-#define PERF_SKIP_ERRRORS	'Q'
-	{"skip-errors",			required_argument,	NULL, PERF_SKIP_ERRRORS},
+#define PERF_SKIP_ERRORS	'Q'
+	{"skip-errors",			required_argument,	NULL, PERF_SKIP_ERRORS},
 #define PERF_ENABLE_URING	'R'
 	{"enable-uring", no_argument, NULL, PERF_ENABLE_URING},
 #define PERF_DEFAULT_SOCK_IMPL	'S'
@@ -2315,7 +2315,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_TIME:
 		case PERF_RW_MIXREAD:
 		case PERF_NUM_UNUSED_IO_QPAIRS:
-		case PERF_SKIP_ERRRORS:
+		case PERF_SKIP_ERRORS:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
@@ -2356,7 +2356,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				g_rw_percentage = val;
 				g_mix_specified = true;
 				break;
-			case PERF_SKIP_ERRRORS:
+			case PERF_SKIP_ERRORS:
 				g_quiet_count = val;
 				break;
 			case PERF_NUM_UNUSED_IO_QPAIRS:
@@ -2959,7 +2959,7 @@ cleanup:
 	pthread_mutex_destroy(&g_stats_mutex);
 
 	if (rc != 0) {
-		fprintf(stderr, "%s: errors occured\n", argv[0]);
+		fprintf(stderr, "%s: errors occurred\n", argv[0]);
 	}
 
 	return rc;
