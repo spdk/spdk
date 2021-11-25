@@ -227,7 +227,7 @@ dd_show_progress(uint64_t offset, uint64_t length, bool finish)
 		return;
 	}
 
-	/* Find the rigth unit for size displaying (B vs kB vs MB vs GB vs TB) */
+	/* Find the right unit for size displaying (B vs kB vs MB vs GB vs TB) */
 	while (size > 1024 * 10) {
 		size >>= 10;
 		size_unit <<= 10;
@@ -247,7 +247,7 @@ dd_show_progress(uint64_t offset, uint64_t length, bool finish)
 
 	i = 0;
 
-	/* Find the rigth unit for speed displaying (Bps vs kBps vs MBps vs GBps vs TBps) */
+	/* Find the right unit for speed displaying (Bps vs kBps vs MBps vs GBps vs TBps) */
 	while (tmp_speed > 1024) {
 		tmp_speed >>= 10;
 		speed_unit <<= 10;
@@ -1000,7 +1000,7 @@ usage(void)
 	printf(" --of Output file. Must specify either --of or --ob.\n");
 	printf(" --ob Output bdev. Must specify either --of or --ob.\n");
 	printf(" --iflag Input file flags.\n");
-	printf(" --oflag Onput file flags.\n");
+	printf(" --oflag Output file flags.\n");
 	printf(" --bs I/O unit size (default: %" PRId64 ")\n", g_opts.io_unit_size);
 	printf(" --qd Queue depth (default: %d)\n", g_opts.queue_depth);
 	printf(" --count I/O unit count. The number of I/O units to copy. (default: all)\n");
@@ -1167,7 +1167,7 @@ main(int argc, char **argv)
 
 	rc = spdk_app_start(&opts, dd_run, NULL);
 	if (rc) {
-		SPDK_ERRLOG("Error occured while performing copy\n");
+		SPDK_ERRLOG("Error occurred while performing copy\n");
 	}
 
 	dd_free();

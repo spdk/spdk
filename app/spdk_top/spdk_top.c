@@ -2896,7 +2896,7 @@ setup_ncurses(void)
 		exit(1);
 	}
 
-	/* Handle signals to exit gracfully cleaning up ncurses */
+	/* Handle signals to exit gracefully cleaning up ncurses */
 	(void) signal(SIGINT, finish);
 	(void) signal(SIGPIPE, finish);
 	(void) signal(SIGABRT, finish);
