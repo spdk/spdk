@@ -520,6 +520,28 @@ nvme_ctrlr_unregister(struct nvme_ctrlr *nvme_ctrlr)
 	spdk_io_device_unregister(nvme_ctrlr, nvme_ctrlr_unregister_cb);
 }
 
+static bool
+nvme_ctrlr_can_be_unregistered(struct nvme_ctrlr *nvme_ctrlr)
+{
+	if (!nvme_ctrlr->destruct) {
+		return false;
+	}
+
+	if (nvme_ctrlr->ref > 0) {
+		return false;
+	}
+
+	if (nvme_ctrlr->resetting) {
+		return false;
+	}
+
+	if (nvme_ctrlr->ana_log_page_updating) {
+		return false;
+	}
+
+	return true;
+}
+
 static void
 nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 {
@@ -528,8 +550,7 @@ nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 	assert(nvme_ctrlr->ref > 0);
 	nvme_ctrlr->ref--;
 
-	if (nvme_ctrlr->ref > 0 || !nvme_ctrlr->destruct ||
-	    nvme_ctrlr->resetting || nvme_ctrlr->ana_log_page_updating) {
+	if (!nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
 	}
@@ -1270,8 +1291,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 
 	path_id->is_failed = !success;
 
-	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct &&
-	    !nvme_ctrlr->ana_log_page_updating) {
+	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
 		/* Complete pending destruct after reset completes. */
 		complete_pending_destruct = true;
 	}
@@ -2933,8 +2953,7 @@ bdev_nvme_clear_io_path_cache_done(struct spdk_io_channel_iter *i, int status)
 	assert(nvme_ctrlr->ana_log_page_updating == true);
 	nvme_ctrlr->ana_log_page_updating = false;
 
-	if (nvme_ctrlr->ref > 0 || !nvme_ctrlr->destruct ||
-	    nvme_ctrlr->resetting) {
+	if (!nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		return;
 	}
