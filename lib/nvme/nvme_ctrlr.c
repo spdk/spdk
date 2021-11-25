@@ -1412,15 +1412,17 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 };
 
 static void
-nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
-		     uint64_t timeout_in_ms)
+_nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
+		      uint64_t timeout_in_ms, bool quiet)
 {
 	uint64_t ticks_per_ms, timeout_in_ticks, now_ticks;
 
 	ctrlr->state = state;
 	if (timeout_in_ms == NVME_TIMEOUT_KEEP_EXISTING) {
-		NVME_CTRLR_DEBUGLOG(ctrlr, "setting state to %s (keeping existing timeout)\n",
-				    nvme_ctrlr_state_string(ctrlr->state));
+		if (!quiet) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "setting state to %s (keeping existing timeout)\n",
+					    nvme_ctrlr_state_string(ctrlr->state));
+		}
 		return;
 	}
 
@@ -1444,13 +1446,31 @@ nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 	}
 
 	ctrlr->state_timeout_tsc = timeout_in_ticks + now_ticks;
-	NVME_CTRLR_DEBUGLOG(ctrlr, "setting state to %s (timeout %" PRIu64 " ms)\n",
-			    nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
+	if (!quiet) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "setting state to %s (timeout %" PRIu64 " ms)\n",
+				    nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
+	}
 	return;
 inf:
-	NVME_CTRLR_DEBUGLOG(ctrlr, "setting state to %s (no timeout)\n",
-			    nvme_ctrlr_state_string(ctrlr->state));
+	if (!quiet) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "setting state to %s (no timeout)\n",
+				    nvme_ctrlr_state_string(ctrlr->state));
+	}
 	ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
+}
+
+static void
+nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
+		     uint64_t timeout_in_ms)
+{
+	_nvme_ctrlr_set_state(ctrlr, state, timeout_in_ms, false);
+}
+
+static void
+nvme_ctrlr_set_state_quiet(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
+			   uint64_t timeout_in_ms)
+{
+	_nvme_ctrlr_set_state(ctrlr, state, timeout_in_ms, true);
 }
 
 static void
@@ -3652,8 +3672,8 @@ nvme_ctrlr_process_init_wait_for_ready_1(void *ctx, uint64_t value, const struct
 				     nvme_ctrlr_get_ready_timeout(ctrlr));
 	} else {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 1 && CSTS.RDY = 0 - waiting for reset to complete\n");
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1,
-				     NVME_TIMEOUT_KEEP_EXISTING);
+		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1,
+					   NVME_TIMEOUT_KEEP_EXISTING);
 	}
 }
 
@@ -3691,8 +3711,8 @@ nvme_ctrlr_process_init_wait_for_ready_0(void *ctx, uint64_t value, const struct
 		 */
 		spdk_delay_us(100);
 	} else {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
-				     NVME_TIMEOUT_KEEP_EXISTING);
+		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
+					   NVME_TIMEOUT_KEEP_EXISTING);
 	}
 }
 
@@ -3730,8 +3750,8 @@ nvme_ctrlr_process_init_enable_wait_for_ready_1(void *ctx, uint64_t value,
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_RESET_ADMIN_QUEUE,
 				     ctrlr->opts.admin_timeout_ms);
 	} else {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
-				     NVME_TIMEOUT_KEEP_EXISTING);
+		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
+					   NVME_TIMEOUT_KEEP_EXISTING);
 	}
 }
 
@@ -3839,8 +3859,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		 * If CC.EN = 1 && CSTS.RDY = 0, the controller is in the process of becoming ready.
 		 *  Wait for the ready bit to be 1 before disabling the controller.
 		 */
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS,
-				     NVME_TIMEOUT_KEEP_EXISTING);
+		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS,
+					   NVME_TIMEOUT_KEEP_EXISTING);
 		rc = nvme_ctrlr_get_csts_async(ctrlr, nvme_ctrlr_process_init_wait_for_ready_1, ctrlr);
 		break;
 
@@ -3851,8 +3871,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS,
-				     NVME_TIMEOUT_KEEP_EXISTING);
+		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS,
+					   NVME_TIMEOUT_KEEP_EXISTING);
 		rc = nvme_ctrlr_get_csts_async(ctrlr, nvme_ctrlr_process_init_wait_for_ready_0, ctrlr);
 		break;
 
@@ -3863,8 +3883,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS,
-				     NVME_TIMEOUT_KEEP_EXISTING);
+		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1_WAIT_FOR_CSTS,
+					   NVME_TIMEOUT_KEEP_EXISTING);
 		rc = nvme_ctrlr_get_csts_async(ctrlr, nvme_ctrlr_process_init_enable_wait_for_ready_1,
 					       ctrlr);
 		break;
