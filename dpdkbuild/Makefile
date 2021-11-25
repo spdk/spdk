@@ -112,7 +112,7 @@ ifeq ($(shell test $(GCC_MAJOR) -ge 10 && echo 1), 1)
 #1. gcc 10 complains on operations with zero size arrays in rte_cryptodev.c, so
 #disable this warning
 #2. gcc 10 disables fcommon by default and complains on multiple definition of
-#aesni_mb_logtype_driver symbol which is defined in header file and presented in sevral
+#aesni_mb_logtype_driver symbol which is defined in header file and presented in several
 #translation units
 DPDK_CFLAGS += -Wno-stringop-overflow -fcommon
 endif
@@ -136,7 +136,7 @@ endif
 # Some ninja versions come with a (broken?) jobserver which defaults to use
 # only 1 thread for the build. We workaround this by specifying -j to ninja
 # with the same value as top-makefile. This is OK as long as DPDK is not built
-# in parralel with anything else, which is the case for now.
+# in parallel with anything else, which is the case for now.
 ifeq ($(MAKE_PID),)
 MAKE_PID := $(shell echo $$PPID)
 endif
