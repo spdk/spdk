@@ -30,7 +30,7 @@ dnf install -y rpm-build
 # HACK: In case we received a .tar with built SPDK we need to overwrite the
 # configuration to update all the paths make would need to lookup - this is
 # needed since we execute inside a different mount namespace so we won't be
-# able to find any absoulte paths that were used prior creating the .tar.
+# able to find any absolute paths that were used prior creating the .tar.
 "$spdk_repo/configure" > /dev/null
 
 # Deploy SPDK inside the container
