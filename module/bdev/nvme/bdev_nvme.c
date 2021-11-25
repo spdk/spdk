@@ -1261,6 +1261,41 @@ bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 }
 
 static void
+bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove)
+{
+	struct nvme_path_id *path_id, *next_path;
+	int rc __attribute__((unused));
+
+	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
+	assert(path_id);
+	assert(path_id == nvme_ctrlr->active_path_id);
+	next_path = TAILQ_NEXT(path_id, link);
+
+	path_id->is_failed = true;
+
+	if (next_path) {
+		assert(path_id->trid.trtype != SPDK_NVME_TRANSPORT_PCIE);
+
+		SPDK_NOTICELOG("Start failover from %s:%s to %s:%s\n", path_id->trid.traddr,
+			       path_id->trid.trsvcid,	next_path->trid.traddr, next_path->trid.trsvcid);
+
+		spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
+		nvme_ctrlr->active_path_id = next_path;
+		rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_path->trid);
+		assert(rc == 0);
+		TAILQ_REMOVE(&nvme_ctrlr->trids, path_id, link);
+		if (!remove) {
+			/** Shuffle the old trid to the end of the list and use the new one.
+			 * Allows for round robin through multiple connections.
+			 */
+			TAILQ_INSERT_TAIL(&nvme_ctrlr->trids, path_id, link);
+		} else {
+			free(path_id);
+		}
+	}
+}
+
+static void
 _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
@@ -1578,9 +1613,6 @@ bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio)
 static int
 bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 {
-	struct nvme_path_id *path_id, *next_path;
-	int rc __attribute__((unused));
-
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->destruct) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
@@ -1588,40 +1620,15 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		return -ENXIO;
 	}
 
-	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
-	assert(path_id);
-	assert(path_id == nvme_ctrlr->active_path_id);
-	next_path = TAILQ_NEXT(path_id, link);
-
 	if (nvme_ctrlr->resetting) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
 		return -EBUSY;
 	}
 
+	bdev_nvme_failover_trid(nvme_ctrlr, remove);
+
 	nvme_ctrlr->resetting = true;
-	path_id->is_failed = true;
-
-	if (next_path) {
-		assert(path_id->trid.trtype != SPDK_NVME_TRANSPORT_PCIE);
-
-		SPDK_NOTICELOG("Start failover from %s:%s to %s:%s\n", path_id->trid.traddr,
-			       path_id->trid.trsvcid,	next_path->trid.traddr, next_path->trid.trsvcid);
-
-		spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
-		nvme_ctrlr->active_path_id = next_path;
-		rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_path->trid);
-		assert(rc == 0);
-		TAILQ_REMOVE(&nvme_ctrlr->trids, path_id, link);
-		if (!remove) {
-			/** Shuffle the old trid to the end of the list and use the new one.
-			 * Allows for round robin through multiple connections.
-			 */
-			TAILQ_INSERT_TAIL(&nvme_ctrlr->trids, path_id, link);
-		} else {
-			free(path_id);
-		}
-	}
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
