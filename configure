@@ -115,7 +115,7 @@ function usage() {
 }
 
 # Load default values
-# Convert config to sourcable configuration file
+# Convert config to sourceable configuration file
 sed -r 's/CONFIG_([[:alnum:]_]+)=(.*)/CONFIG[\1]=\2/g' $rootdir/CONFIG > $rootdir/CONFIG.sh
 declare -A CONFIG
 source $rootdir/CONFIG.sh
@@ -526,7 +526,7 @@ if [[ "${CONFIG[IDXD]}" = "y" ]]; then
 		cpu_vendor=$(grep -i 'vendor' /proc/cpuinfo --max-count=1)
 	fi
 	if [[ "$cpu_vendor" != *"$intel"* ]]; then
-		echo "ERROR: IDXD cannot be used due to CPU incompatiblity."
+		echo "ERROR: IDXD cannot be used due to CPU incompatibility."
 		exit 1
 	fi
 	if [ -e /usr/include/accel-config/libaccel_config.h ]; then
@@ -538,7 +538,7 @@ fi
 # Detect architecture and force no ISA-L if non-x86 or non-aarch64 architecture
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	if [[ $arch != x86_64* ]] && [[ $arch != aarch64* ]]; then
-		echo "ERROR: ISA-L cannot be used due to CPU incompatiblity."
+		echo "ERROR: ISA-L cannot be used due to CPU incompatibility."
 		exit 1
 	fi
 fi
