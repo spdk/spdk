@@ -280,7 +280,7 @@ int spdk_json_write_named_array_begin(struct spdk_json_write_ctx *w, const char 
 int spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char *name);
 
 /**
- * Return JSON value asociated with key \c key_name. Subobjects won't be searched.
+ * Return JSON value associated with key \c key_name. Subobjects won't be searched.
  *
  * \param object JSON object to be examined
  * \param key_name name of the key

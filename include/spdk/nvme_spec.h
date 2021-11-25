@@ -385,7 +385,7 @@ union spdk_nvme_pmrebs_register {
 	uint32_t	raw;
 	struct {
 		/**
-		 * pmr elasicity buffer size units
+		 * pmr elasticity buffer size units
 		 * 0h: Bytes
 		 * 1h: 1 KiB
 		 * 2h: 1 MiB
@@ -836,7 +836,7 @@ union spdk_nvme_feat_interrupt_coalescing {
 		/** Aggregation Threshold */
 		uint32_t thr : 8;
 
-		/** Aggregration time */
+		/** Aggregation time */
 		uint32_t time : 8;
 
 		uint32_t reserved : 16;
@@ -1331,7 +1331,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cpl) == 16, "Incorrect size");
 struct spdk_nvme_dsm_range {
 	union {
 		struct {
-			uint32_t af		: 4; /**< access frequencey */
+			uint32_t af		: 4; /**< access frequency */
 			uint32_t al		: 2; /**< access latency */
 			uint32_t reserved0	: 2;
 
@@ -2789,7 +2789,7 @@ struct spdk_nvme_reservation_notification_log {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_notification_log) == 64, "Incorrect size");
 
-/* Mask Registration Preempted Notificaton */
+/* Mask Registration Preempted Notification */
 #define SPDK_NVME_REGISTRATION_PREEMPTED_MASK	(1U << 1)
 /* Mask Reservation Released Notification */
 #define SPDK_NVME_RESERVATION_RELEASED_MASK	(1U << 2)
@@ -3098,7 +3098,7 @@ enum spdk_nvme_async_event_info_notice {
  * Asynchronous Event Information for NVM Command Set Specific Status
  */
 enum spdk_nvme_async_event_info_nvm_command_set {
-	/* Reservation Log Page Avaiable */
+	/* Reservation Log Page Available */
 	SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL	= 0x0,
 	/* Sanitize Operation Completed */
 	SPDK_NVME_ASYNC_EVENT_SANITIZE_COMPLETED	= 0x1,
@@ -3139,7 +3139,7 @@ struct spdk_nvme_firmware_page {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_firmware_page) == 512, "Incorrect size");
 
 /**
- * Asymmetric Namespace Acccess page (\ref SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS)
+ * Asymmetric Namespace Access page (\ref SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS)
  */
 struct spdk_nvme_ana_page {
 	uint64_t change_count;

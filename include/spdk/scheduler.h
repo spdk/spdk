@@ -130,7 +130,7 @@ struct spdk_governor {
 /**
  * Set the current governor.
  *
- * Always deinitalizes previously set governor.
+ * Always deinitializes previously set governor.
  * No governor will be set if name parameter is NULL.
  * This function should be invoked on scheduling reactor.
  *
@@ -229,7 +229,7 @@ struct spdk_scheduler {
 
 /**
  * Change current scheduler. If another scheduler was used prior,
- * it will be deinitalized. No scheduler will be set if name parameter
+ * it will be deinitialized. No scheduler will be set if name parameter
  * is NULL.
  * This function should be invoked from scheduling reactor.
  *

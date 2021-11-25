@@ -360,7 +360,7 @@ typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
  * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
- * \param obj_init User provided object calllback initialization function.
+ * \param obj_init User provided object callback initialization function.
  * \param obj_init_arg User provided callback initialization function argument.
  *
  * \return a pointer to the created memory pool.
@@ -516,7 +516,7 @@ typedef int (*thread_start_fn)(void *);
  *
  * \param core The core to pin the thread to.
  * \param fn Entry point on the new thread.
- * \param arg Argument apssed to thread_start_fn
+ * \param arg Argument passed to thread_start_fn
  *
  * \return 0 on success, negative errno on failure.
  */
@@ -1133,7 +1133,7 @@ int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_
 /**
  * Convert a string representation of a PCI address into a struct spdk_pci_addr.
  *
- * \param addr PCI adddress output on success.
+ * \param addr PCI address output on success.
  * \param bdf PCI address in domain:bus:device.function format or
  *	domain.bus.device.function format.
  *

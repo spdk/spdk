@@ -148,10 +148,10 @@ void spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_
  *
  * \param lcore CPU core index of specified reactor.
  * \param new_in_interrupt Set interrupt mode for true, or poll mode for false.
- * \param cb_fn This will be called on spdk application thread after setting interupt mode.
+ * \param cb_fn This will be called on spdk application thread after setting interrupt mode.
  * \param cb_arg Argument will be passed to cb_fn when called.
  *
- * \return 0 on success, negtive errno on failure.
+ * \return 0 on success, negative errno on failure.
  */
 int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 				    spdk_reactor_set_interrupt_mode_cb cb_fn, void *cb_arg);

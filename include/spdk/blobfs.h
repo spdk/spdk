@@ -120,7 +120,7 @@ typedef void (*fs_send_request_fn)(fs_request_fn fn, void *arg);
 /**
  * Initialize a spdk_blobfs_opts structure to the default option values.
  *
- * \param opts spdk_blobf_opts struture to intialize.
+ * \param opts spdk_blobf_opts structure to initialize.
  */
 void spdk_fs_opts_init(struct spdk_blobfs_opts *opts);
 
@@ -237,7 +237,7 @@ int spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *c
  * \param ctx The thread context for this operation
  * \param name The file name used to look up the matched file in the blobstore filesystem.
  * \param flags This flags will be used to control the open mode.
- * \param file It will point to the open file if sccessful or NULL otherwirse.
+ * \param file It will point to the open file if successful or NULL otherwise.
  *
  * \return 0 on success, negative errno on failure.
  */

@@ -97,7 +97,7 @@ typedef void (*spdk_jsonrpc_conn_closed_fn)(struct spdk_jsonrpc_server_conn *con
  * Function for specific RPC method response parsing handlers.
  *
  * \param parser_ctx context where analysis are put.
- * \param result json values responsed to this method.
+ * \param result json values responded to this method.
  *
  * \return 0 on success.
  *         SPDK_JSON_PARSE_INVALID on failure.
@@ -154,7 +154,7 @@ struct spdk_jsonrpc_server_conn *spdk_jsonrpc_get_conn(struct spdk_jsonrpc_reque
  * \note Current implementation allow only one close callback per connection.
  *
  * \param conn JSON RPC server connection
- * \param cb calback function
+ * \param cb callback function
  * \param ctx argument for \c cb
  *
  * \return 0 on success, or negated errno code:
@@ -169,7 +169,7 @@ int spdk_jsonrpc_conn_add_close_cb(struct spdk_jsonrpc_server_conn *conn,
  * Remove registered close callback.
  *
  * \param conn JSON RPC server connection
- * \param cb calback function
+ * \param cb callback function
  * \param ctx argument for \c cb
  *
  * \return 0 on success, or negated errno code:
@@ -319,7 +319,7 @@ int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
  * a time while no other threads are actively \c client object.
  *
  * \param client JSON-RPC client.
- * \param timeout Time in miliseconds this function will block. -1 block forever, 0 don't block.
+ * \param timeout Time in milliseconds this function will block. -1 block forever, 0 don't block.
  *
  * \return If no error occurred, this function returns a non-negative number indicating how
  * many ready responses can be retrieved. If an error occurred, this function returns one of

@@ -132,7 +132,7 @@ void spdk_idxd_set_config(uint32_t config_number, bool kernel_mode);
 /**
  * Return the max number of descriptors per batch for IDXD.
  *
- * \return max number of desciptors per batch.
+ * \return max number of descriptors per batch.
  */
 uint32_t spdk_idxd_batch_get_max(void);
 

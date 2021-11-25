@@ -112,7 +112,7 @@ uint64_t spdk_notify_send(const char *type, const char *ctx);
  *
  * \param start_idx First event index
  * \param cb_fn User callback function. Return non-zero to break iteration.
- * \param max Maximum number of invocations of user calback function.
+ * \param max Maximum number of invocations of user callback function.
  * \param ctx User context
  * \return Number of user callback invocations
  */

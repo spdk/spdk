@@ -88,7 +88,7 @@
 		} \
 	}
 
-/* DEFINE_STUB is for defining the implmentation of stubs for SPDK funcs. */
+/* DEFINE_STUB is for defining the implementation of stubs for SPDK funcs. */
 #define DEFINE_STUB(fn, ret, dargs, val) \
 	bool ut_ ## fn ## _mocked = true; \
 	ret ut_ ## fn = val; \

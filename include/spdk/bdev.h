@@ -381,7 +381,7 @@ void spdk_bdev_close(struct spdk_bdev_desc *desc);
 /**
  * Get the bdev associated with a bdev descriptor.
  *
- * \param desc Open block device desciptor
+ * \param desc Open block device descriptor
  * \return bdev associated with the descriptor
  */
 struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
@@ -592,7 +592,7 @@ bool spdk_bdev_is_md_separate(const struct spdk_bdev *bdev);
  * Checks if bdev supports zoned namespace semantics.
  *
  * \param bdev Block device to query.
- * \return true if device supports zoned namespace sementics.
+ * \return true if device supports zoned namespace semantics.
  */
 bool spdk_bdev_is_zoned(const struct spdk_bdev *bdev);
 
@@ -1826,7 +1826,7 @@ void spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data 
  * devices exposing raw access to the physical medium (e.g. Open Channel SSD).
  *
  * \param bdev_desc Block device descriptor
- * \param events Array of media mangement event descriptors
+ * \param events Array of media management event descriptors
  * \param max_events Size of the events array
  *
  * \return number of events retrieved

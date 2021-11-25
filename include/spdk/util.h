@@ -140,7 +140,7 @@ size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_
 /**
  * Scan build is really pessimistic and assumes that mempool functions can
  * dequeue NULL buffers even if they return success. This is obviously a false
- * possitive, but the mempool dequeue can be done in a DPDK inline function that
+ * positive, but the mempool dequeue can be done in a DPDK inline function that
  * we can't decorate with usual assert(buf != NULL). Instead, we'll
  * preinitialize the dequeued buffer array with some dummy objects.
  */
@@ -154,7 +154,7 @@ size_t spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_
 	} while (0)
 
 /**
- * Add two sequece numbers s1 and s2
+ * Add two sequence numbers s1 and s2
  *
  * \param s1 First sequence number
  * \param s2 Second sequence number

@@ -225,7 +225,7 @@ int spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst
 
 /**
  * Synchronous call to prepare a compare request into a previously initialized batch
- *  created with spdk_accel_batch_create(). The callback will be called when the comapre
+ *  created with spdk_accel_batch_create(). The callback will be called when the compare
  *  completes after the batch has been submitted by an asynchronous call to
  *  spdk_accel_batch_submit().
  *

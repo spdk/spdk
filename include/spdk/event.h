@@ -77,7 +77,7 @@ struct spdk_poller;
 typedef void (*spdk_app_shutdown_cb)(void);
 
 /**
- * Signal handler fucntion.
+ * Signal handler function.
  *
  * \param signal Signal number.
  */
@@ -175,7 +175,7 @@ void spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size);
  * allows start_fn to be finally called.
  *
  * This call will block until spdk_app_stop() is called. If an error
- * condition occurs during the intialization code within spdk_app_start(),
+ * condition occurs during the initialization code within spdk_app_start(),
  * this function will immediately return before invoking start_fn.
  *
  * \param opts_user Initialization options used for this application. It should not be

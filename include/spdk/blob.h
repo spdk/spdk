@@ -305,7 +305,7 @@ void spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void 
 /**
  * Set a super blob on the given blobstore.
  *
- * This will be retrievable immediately after spdk_bs_load() on the next initializaiton.
+ * This will be retrievable immediately after spdk_bs_load() on the next initialization.
  *
  * \param bs blobstore.
  * \param blobid The id of the blob which will be set as the super blob.
@@ -780,7 +780,7 @@ void spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
 
 /**
  * Unmap 'length' io_units beginning at 'offset' io_units on the blob as unused. Unmapped
- * io_units may allow the underlying storage media to behave more effciently.
+ * io_units may allow the underlying storage media to behave more efficiently.
  *
  * \param blob Blob to unmap.
  * \param channel I/O channel used to submit requests.

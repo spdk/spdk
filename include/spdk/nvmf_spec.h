@@ -646,7 +646,7 @@ enum spdk_nvme_tcp_term_req_fes {
 struct spdk_nvme_tcp_cmd {
 	struct spdk_nvme_tcp_common_pdu_hdr	common;
 	struct spdk_nvme_cmd			ccsqe;
-	/**< icdoff hdgest padding + in-capsule data + ddgst (if enabled) */
+	/**< icdoff hdgst padding + in-capsule data + ddgst (if enabled) */
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_tcp_cmd) == 72, "Incorrect size");
 SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_cmd, ccsqe) == 8, "Incorrect offset");

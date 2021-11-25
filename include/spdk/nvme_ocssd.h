@@ -59,7 +59,7 @@ bool spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr);
 /**
  * \brief Identify geometry of the given namespace.
  * \param ctrlr NVMe controller to query.
- * \param nsid Id of the given namesapce.
+ * \param nsid Id of the given namespace.
  * \param payload The pointer to the payload buffer.
  * \param payload_size The size of payload buffer. Shall be multiple of 4K.
  * \param cb_fn Callback function to invoke when the feature has been retrieved.

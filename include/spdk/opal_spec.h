@@ -179,7 +179,7 @@ enum spdk_opal_token {
 	/* life cycle */
 	SPDK_OPAL_LIFECYCLE		= 0x06,
 
-	/* Autority table */
+	/* Authority table */
 	SPDK_OPAL_AUTH_ENABLE		= 0x05,
 
 	/* ACE table */

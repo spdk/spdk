@@ -385,11 +385,11 @@ typedef void (*nvmf_subsystem_destroy_cb)(void *cb_arg);
  * return value is -EINPROGRESS
  * \param cpl_cb_arg Optional user context to be passed to \b cpl_cb
  *
- * \retval 0 if sybsystem is destroyed, \b cpl_cb is not called is that case
+ * \retval 0 if subsystem is destroyed, \b cpl_cb is not called is that case
  * \retval -EINVAl if \b subsystem is a NULL pointer
  * \retval -EAGAIN if \b subsystem is not in INACTIVE state
  * \retval -EALREADY if subsystem destruction is already started
- * \retval -EINPROGRESS if subsystem is destroyed asyncronously, cpl_cb will be called in that case
+ * \retval -EINPROGRESS if subsystem is destroyed asynchronously, cpl_cb will be called in that case
  */
 int
 spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsystem_destroy_cb cpl_cb,
@@ -795,7 +795,7 @@ uint32_t spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem,
 					const char *ptpl_file);
 
 /**
- * Remove a namespace from a subsytem.
+ * Remove a namespace from a subsystem.
  *
  * May only be performed on subsystems in the PAUSED or INACTIVE states.
  * Additionally, the namespace must be paused.
@@ -993,7 +993,7 @@ typedef void (*spdk_nvmf_transport_destroy_done_cb)(void *cb_arg);
 /**
  * Destroy a protocol transport
  *
- * \param transport The transport to destory
+ * \param transport The transport to destroy
  * \param cb_fn A callback that will be called once the transport is destroyed
  * \param cb_arg A context argument passed to cb_fn.
  *

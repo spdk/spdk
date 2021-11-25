@@ -553,7 +553,7 @@ typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_
  *
  * \param ch The I/O channel the bdev I/O was handled on.
  * \param bdev_io The bdev I/O
- * \param aux_buf Pointer to the allocated buffer.  NULL if there was a failuer such as
+ * \param aux_buf Pointer to the allocated buffer.  NULL if there was a failure such as
  * the size of the buffer to allocate is greater than the permitted maximum.
  */
 typedef void (*spdk_bdev_io_get_aux_buf_cb)(struct spdk_io_channel *ch,
@@ -1170,7 +1170,7 @@ void spdk_bdev_part_base_hotremove(struct spdk_bdev_part_base *part_base,
  * \param channel_size Channel size in bytes.
  * \param ch_create_cb Called after a new channel is allocated.
  * \param ch_destroy_cb Called upon channel deletion.
- * \param base output parameter for the part object when operation is succssful.
+ * \param base output parameter for the part object when operation is successful.
  *
  * \return 0 if operation is successful, or suitable errno value otherwise.
  */

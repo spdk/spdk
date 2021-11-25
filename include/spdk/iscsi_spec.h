@@ -484,7 +484,7 @@ struct iscsi_bhs_text_resp {
 #define ISCSI_TEXT_CONTINUE			0x40
 
 /* datain flags */
-#define ISCSI_DATAIN_ACKNOLWEDGE		0x40
+#define ISCSI_DATAIN_ACKNOWLEDGE		0x40
 #define ISCSI_DATAIN_OVERFLOW			0x04
 #define ISCSI_DATAIN_UNDERFLOW			0x02
 #define ISCSI_DATAIN_STATUS			0x01

@@ -184,7 +184,7 @@ const struct spdk_cpuset *spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev
  * high IOPS this prove to be inefficient both for guest kernel that have to
  * handle a lot more IO completions and for SPDK vhost that need to make more
  * syscalls. If enabled, limit amount of events (IRQs) sent to initiator by SPDK
- * vhost effectively coalescing couple of completions. This of cource introduce
+ * vhost effectively coalescing couple of completions. This of course introduce
  * IO latency penalty proportional to event delay time.
  *
  * Actual events delay time when is calculated according to below formula:

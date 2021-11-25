@@ -309,7 +309,7 @@ int spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *ds
  * \param src_domain_ctx User defined context
  * \param dst_domain Memory domain in which memory space data buffer should be translated
  * \param dst_domain_ctx Ancillary data for dst_domain
- * \param addr Addres in \b src_domain memory space
+ * \param addr Address in \b src_domain memory space
  * \param len Length of the data
  * \param result Translation result. The content of the translation result is only valid if this
  * function returns 0.

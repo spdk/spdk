@@ -135,7 +135,7 @@ int spdk_conf_section_get_num(const struct spdk_conf_section *sp);
  *
  * If key appears multiple times, idx1 will control which version to retrieve.
  * Indices will start from the top of the configuration file at 0 and increment
- * by one for each new apperarance. If the configuration key contains multiple
+ * by one for each new appearance. If the configuration key contains multiple
  * whitespace delimited values, idx2 controls which value is returned. The index
  * begins at 0.
  *

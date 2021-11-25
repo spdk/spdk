@@ -273,7 +273,7 @@ struct spdk_nvmf_fc_lsdesc_conn_id {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_lsdesc_conn_id) == 16, "size_mismatch");
 
 /*
- * LS decriptor association id
+ * LS descriptor association id
  */
 struct spdk_nvmf_fc_lsdesc_assoc_id {
 	FCNVME_BE32 desc_tag;
@@ -302,7 +302,7 @@ struct spdk_nvmf_fc_lsdesc_cr_assoc_cmd {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_lsdesc_cr_assoc_cmd) == 1016, "size_mismatch");
 
 /*
- * LS Create Association reqeust payload
+ * LS Create Association request payload
  */
 struct spdk_nvmf_fc_ls_cr_assoc_rqst {
 	struct spdk_nvmf_fc_ls_rqst_w0 w0;
