@@ -69,7 +69,7 @@ class UIRoot(UINode):
             if f.__name__ in self.methods:
                 r = f(self, **kwargs)
                 return r
-            # If given method is not avaialble return empty list
+            # If given method is not available return empty list
             # similar to real get_* like rpc
             return []
         return w

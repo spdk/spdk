@@ -119,7 +119,7 @@ class Server:
                 self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
 
     def adq_configure_tc(self):
-        self.log_print("Configuring ADQ Traffic classess and filters...")
+        self.log_print("Configuring ADQ Traffic classes and filters...")
 
         if self.mode == "kernel":
             self.log_print("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
@@ -160,7 +160,7 @@ class Server:
             self.log_print("%s" % tc_disk_out)
             self.log_print("%s" % tc_filter_out)
 
-            # Ethtool coalese settings must be applied after configuring traffic classes
+            # Ethtool coalesce settings must be applied after configuring traffic classes
             self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-rx", "off", "rx-usecs", "0"])
             self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-tx", "off", "tx-usecs", "500"])
 
@@ -256,7 +256,7 @@ class Server:
 
     def configure_tuned(self):
         if not self.tuned_profile:
-            self.log_print("WARNING: Tuned profile not set in configration file. Skipping configuration.")
+            self.log_print("WARNING: Tuned profile not set in configuration file. Skipping configuration.")
             return
 
         self.log_print("Configuring tuned-adm profile to %s." % self.tuned_profile)
@@ -517,7 +517,7 @@ class Target(Server):
                 rw_mixread = float(re.search(r"m_(\d+)", job_name).group(1)) / 100
 
             # If "_CPU" exists in name - ignore it
-            # Initiators for the same job could have diffrent num_cores parameter
+            # Initiators for the same job could have different num_cores parameter
             job_name = re.sub(r"_\d+CPU", "", job_name)
             job_result_files = [x for x in json_files if x.startswith(job_name)]
             self.log_print("Matching result files for current fio config:")
@@ -1193,7 +1193,7 @@ class SPDKTarget(Target):
             fh.write(str(proc.pid))
         self.nvmf_proc = proc
         self.log_print("SPDK NVMeOF Target PID=%s" % self.pid)
-        self.log_print("Waiting for spdk to initilize...")
+        self.log_print("Waiting for spdk to initialize...")
         while True:
             if os.path.exists("/var/tmp/spdk.sock"):
                 break

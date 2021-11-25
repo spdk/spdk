@@ -782,7 +782,7 @@ fi
 
 if [[ $os == Linux ]]; then
 	if [[ -n $HUGEPGSZ && ! -e /sys/kernel/mm/hugepages/hugepages-${HUGEPGSZ}kB ]]; then
-		echo "${HUGEPGSZ}kB is not supported by the running kernel, ingoring" >&2
+		echo "${HUGEPGSZ}kB is not supported by the running kernel, ignoring" >&2
 		unset -v HUGEPGSZ
 	fi
 

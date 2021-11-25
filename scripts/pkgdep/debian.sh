@@ -37,7 +37,7 @@ if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 		abigail-tools bash-completion ruby-dev
 	# Additional python style checker not available on ubuntu 16.04 or earlier.
 	apt-get install -y pycodestyle || true
-	# Additional dependecies for nvmf performance test script
+	# Additional dependencies for nvmf performance test script
 	apt-get install -y python3-paramiko
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then

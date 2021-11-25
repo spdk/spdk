@@ -14,7 +14,7 @@ _get_help_pos() {
 
 	# Fetch all the positional parameters, i.e. get first word prefixed
 	# with 20h x 2. This may not be 100% accurate. Also, it won't return
-	# any usuable strings, it's just meant to point out what type of
+	# any usable strings, it's just meant to point out what type of
 	# mandatory argument given method depends on, like bdev_name, etc.
 	# TODO: separate completion for such arguments, e.g., get all bdevs
 	# for parameter like bdev_name?

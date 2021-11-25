@@ -297,7 +297,7 @@ if __name__ == "__main__":
         default=0,
     )
     p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
-    p.add_argument('core_bdev_name', help='Name of unerlying core bdev')
+    p.add_argument('core_bdev_name', help='Name of underlying core bdev')
     p.set_defaults(func=bdev_ocf_create)
 
     def bdev_ocf_delete(args):
@@ -476,7 +476,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
     p.add_argument('-a', '--action-on-timeout',
-                   help="Action to take on command time out. Valid valies are: none, reset, abort")
+                   help="Action to take on command time out. Valid values are: none, reset, abort")
     p.add_argument('-t', '--timeout-us',
                    help="Timeout for each command, in microseconds. If 0, don't track timeouts.", type=int)
     p.add_argument('--timeout-admin-us',
@@ -2289,7 +2289,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('vhost_scsi_controller_add_target',
                               aliases=['add_vhost_scsi_lun'],
                               help='Add lun to vhost controller')
-    p.add_argument('ctrlr', help='conntroller name where add lun')
+    p.add_argument('ctrlr', help='controller name where add lun')
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
     p.add_argument('bdev_name', help='bdev name')
     p.set_defaults(func=vhost_scsi_controller_add_target)
@@ -2323,7 +2323,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--cpumask', help='cpu mask for this controller')
     p.add_argument("-r", "--readonly", action='store_true', help='Set controller as read-only')
     p.add_argument("-p", "--packed_ring", action='store_true', help='Set controller as packed ring supported')
-    p.add_argument("-l", "--packed_ring_recovery", action='store_true', help='Enable packed ring live reocvery')
+    p.add_argument("-l", "--packed_ring_recovery", action='store_true', help='Enable packed ring live recovery')
     p.set_defaults(func=vhost_create_blk_controller)
 
     def vhost_get_controllers(args):

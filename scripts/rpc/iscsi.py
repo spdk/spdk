@@ -443,7 +443,7 @@ def iscsi_create_portal_group(client, portals, tag, private, wait):
         portals: List of portals, e.g. [{'host': ip, 'port': port}]
         tag: Initiator group tag (unique, integer > 0)
         private: Public (false) or private (true) portal group for login redirection.
-        wait: Do not listen on portals until it is allowed explictly.
+        wait: Do not listen on portals until it is allowed explicitly.
 
     Returns:
         True or False

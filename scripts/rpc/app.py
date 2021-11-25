@@ -56,7 +56,7 @@ def framework_get_scheduler(client):
     """Query currently set scheduler.
 
     Returns:
-        Name, period (in microseconds) of currently set scheduler and name of curently set governor.
+        Name, period (in microseconds) of currently set scheduler and name of currently set governor.
     """
     return client.call('framework_get_scheduler')
 

@@ -179,7 +179,7 @@ def deploy_test_vm(config, distro, plugins_sync_backend)
   return unless ENV['COPY_SPDK_DIR'] == "1"
   return unless ENV['SPDK_DIR']
 
-  # use http proxy if avaiable
+  # use http proxy if available
   setup_proxy(config, distro)
 
   # Copy the tsocks configuration file for use when installing some spdk test pool dependencies

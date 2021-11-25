@@ -269,7 +269,7 @@ if [ -n "$SPDK_QEMU_EMULATOR" ] && [ "$SPDK_VAGRANT_PROVIDER" == "libvirt" ]; th
 fi
 
 if [ ${DRY_RUN} = 1 ]; then
-	echo "Environemnt Variables"
+	echo "Environment Variables"
 	printenv SPDK_VAGRANT_DISTRO
 	printenv SPDK_VAGRANT_VMRAM
 	printenv SPDK_VAGRANT_VMCPU

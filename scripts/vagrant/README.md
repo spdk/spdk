@@ -138,7 +138,7 @@ This script will:
 6. rsync a copy of the `~/vagrant_tools` directory to `/home/vagrant/tools` (optional)
 7. execute vm_setup.sh on the guest to install all spdk dependencies (optional)
 
-This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using thesame
+This arrangement allows the provisioning of multiple, different VMs within that same directory hierarchy using the same
 spdk repository. Following the creation of the vm you'll need to ssh into your virtual box and finish the VM initialization.
 
 ```bash

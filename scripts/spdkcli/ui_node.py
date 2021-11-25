@@ -575,7 +575,7 @@ class UIVirtioScsiBdev(UIBdev):
 class UIBdevObj(UINode):
     def __init__(self, bdev, parent):
         self.bdev = bdev
-        # Using bdev name also for lvol bdevs, which results in displying
+        # Using bdev name also for lvol bdevs, which results in displaying
         # UUID instead of alias. This is because alias naming convention
         # (lvol_store_name/lvol_bdev_name) conflicts with configshell paths
         # ("/" as separator).

@@ -76,7 +76,7 @@ class UINVMfSubsystems(UINode):
 
     def ui_command_create(self, nqn, serial_number=None,
                           max_namespaces=None, allow_any_host="false"):
-        """Create subsystem with given parameteres.
+        """Create subsystem with given parameters.
 
         Arguments:
             nqn - Target nqn(ASCII).
@@ -96,7 +96,7 @@ class UINVMfSubsystems(UINode):
         """Delete subsystem with given nqn.
 
         Arguments:
-            nqn_subsystem - Name of susbsytem to delete
+            nqn_subsystem - Name of subsystem to delete
         """
         self.delete(subsystem_nqn)
 

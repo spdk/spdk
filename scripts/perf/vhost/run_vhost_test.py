@@ -111,7 +111,7 @@ def gen_qemu_cpu_mask_config(spdk_cpu_list, vm_count, vm_cpu_num):
 
 
 def create_fio_cfg(template_dir, output_dir, **kwargs):
-    fio_tempalte = os.path.join(template_dir, "fio_test.conf")
+    fio_template = os.path.join(template_dir, "fio_test.conf")
     with open("scripts/perf/vhost/fio_test.conf", "r") as fh:
         cfg = fh.read()
     cfg = cfg.format(**kwargs)

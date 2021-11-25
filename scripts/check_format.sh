@@ -70,7 +70,7 @@ function check_permissions() {
 						rc=1
 					fi
 				else
-					# If the file doesnot have execute permissions, it should not start with a shebang.
+					# If the file does not have execute permissions, it should not start with a shebang.
 					if [ "$shebang" = "#!/" ]; then
 						echo "ERROR: $path is not marked executable but starts with a shebang."
 						rc=1
