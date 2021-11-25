@@ -746,6 +746,7 @@ struct spdk_bdev_io {
 
 		/** if the request is double buffered, store original request iovs here */
 		struct iovec  bounce_iov;
+		struct iovec  bounce_md_iov;
 		struct iovec  orig_md_iov;
 		struct iovec *orig_iovs;
 		int           orig_iovcnt;
@@ -770,6 +771,9 @@ struct spdk_bdev_io {
 
 		/** Pointer to a structure passed by the user in ext API */
 		struct spdk_bdev_ext_io_opts *ext_opts;
+
+		/** Data transfer completion callback */
+		void (*data_transfer_cpl)(void *ctx, int rc);
 	} internal;
 
 	/**

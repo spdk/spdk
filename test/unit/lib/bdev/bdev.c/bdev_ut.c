@@ -256,8 +256,12 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 
 	CU_ASSERT(expected_io->iovcnt == bdev_io->u.bdev.iovcnt);
 	for (i = 0; i < expected_io->iovcnt; i++) {
-		iov = &bdev_io->u.bdev.iovs[i];
 		expected_iov = &expected_io->iov[i];
+		if (bdev_io->internal.orig_iovcnt == 0) {
+			iov = &bdev_io->u.bdev.iovs[i];
+		} else {
+			iov = bdev_io->internal.orig_iovs;
+		}
 		CU_ASSERT(iov->iov_len == expected_iov->iov_len);
 		CU_ASSERT(iov->iov_base == expected_iov->iov_base);
 	}
