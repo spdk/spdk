@@ -104,7 +104,6 @@ struct nvme_ctrlr {
 	int					ref;
 
 	uint32_t				resetting : 1;
-	uint32_t				failover_in_progress : 1;
 	uint32_t				destruct : 1;
 	uint32_t				ana_log_page_updating : 1;
 	/**

@@ -1451,18 +1451,10 @@ test_failover_ctrlr(void)
 	nvme_ctrlr->resetting = true;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EBUSY);
 
-	/* Case 3: failover is in progress. */
-	nvme_ctrlr->failover_in_progress = true;
-
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(curr_trid->is_failed == false);
-
-	/* Case 4: reset completes successfully. */
+	/* Case 3: reset completes successfully. */
 	nvme_ctrlr->resetting = false;
-	nvme_ctrlr->failover_in_progress = false;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
 	CU_ASSERT(rc == 0);
@@ -1492,27 +1484,19 @@ test_failover_ctrlr(void)
 	/* Failover starts from thread 1. */
 	set_thread(1);
 
-	/* Case 5: reset is in progress. */
+	/* Case 4: reset is in progress. */
 	nvme_ctrlr->resetting = true;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
 	CU_ASSERT(rc == -EBUSY);
 
-	/* Case 5: failover is in progress. */
-	nvme_ctrlr->failover_in_progress = true;
-
-	rc = bdev_nvme_failover(nvme_ctrlr, false);
-	CU_ASSERT(rc == 0);
-
-	/* Case 6: failover completes successfully. */
+	/* Case 5: failover completes successfully. */
 	nvme_ctrlr->resetting = false;
-	nvme_ctrlr->failover_in_progress = false;
 
 	rc = bdev_nvme_failover(nvme_ctrlr, false);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
-	CU_ASSERT(nvme_ctrlr->failover_in_progress == true);
 
 	next_trid = TAILQ_FIRST(&nvme_ctrlr->trids);
 	SPDK_CU_ASSERT_FATAL(next_trid != NULL);
@@ -1523,7 +1507,6 @@ test_failover_ctrlr(void)
 	poll_threads();
 
 	CU_ASSERT(nvme_ctrlr->resetting == false);
-	CU_ASSERT(nvme_ctrlr->failover_in_progress == false);
 
 	spdk_put_io_channel(ch2);
 

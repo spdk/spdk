@@ -1283,7 +1283,6 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	nvme_ctrlr->resetting = false;
-	nvme_ctrlr->failover_in_progress = false;
 
 	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
 	assert(path_id != NULL);
@@ -1580,7 +1579,7 @@ static int
 bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 {
 	struct nvme_path_id *path_id = NULL, *next_path = NULL;
-	int rc;
+	int rc __attribute__((unused));
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (nvme_ctrlr->destruct) {
@@ -1595,14 +1594,9 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	next_path = TAILQ_NEXT(path_id, link);
 
 	if (nvme_ctrlr->resetting) {
-		if (next_path && !nvme_ctrlr->failover_in_progress) {
-			rc = -EBUSY;
-		} else {
-			rc = -EALREADY;
-		}
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
 		SPDK_NOTICELOG("Unable to perform reset, already in progress.\n");
-		return rc;
+		return -EBUSY;
 	}
 
 	nvme_ctrlr->resetting = true;
@@ -1614,7 +1608,6 @@ bdev_nvme_failover_start(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		SPDK_NOTICELOG("Start failover from %s:%s to %s:%s\n", path_id->trid.traddr,
 			       path_id->trid.trsvcid,	next_path->trid.traddr, next_path->trid.trsvcid);
 
-		nvme_ctrlr->failover_in_progress = true;
 		spdk_nvme_ctrlr_fail(nvme_ctrlr->ctrlr);
 		nvme_ctrlr->active_path_id = next_path;
 		rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_path->trid);
@@ -1642,11 +1635,9 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	rc = bdev_nvme_failover_start(nvme_ctrlr, remove);
 	if (rc == 0) {
 		spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
-	} else if (rc != -EALREADY) {
-		return rc;
 	}
 
-	return 0;
+	return rc;
 }
 
 static int bdev_nvme_unmap(struct nvme_bdev_io *bio, uint64_t offset_blocks,
