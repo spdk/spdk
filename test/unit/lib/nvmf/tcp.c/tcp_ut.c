@@ -396,7 +396,7 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.io_unit_size == UT_IO_UNIT_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->transport.data_buf_pool);
-	free(ttransport);
+	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
 
 	/* case 2 */
 	memset(&opts, 0, sizeof(opts));
@@ -419,7 +419,7 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.io_unit_size == UT_MAX_IO_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->transport.data_buf_pool);
-	free(ttransport);
+	CU_ASSERT(nvmf_tcp_destroy(transport, NULL, NULL) == 0);
 
 	/* case 3 */
 	memset(&opts, 0, sizeof(opts));

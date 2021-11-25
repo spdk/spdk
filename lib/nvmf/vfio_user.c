@@ -211,6 +211,7 @@ struct nvmf_vfio_user_transport_opts {
 struct nvmf_vfio_user_transport {
 	struct spdk_nvmf_transport		transport;
 	struct nvmf_vfio_user_transport_opts    transport_opts;
+	struct spdk_poller			*accept_poller;
 	pthread_mutex_t				lock;
 	TAILQ_HEAD(, nvmf_vfio_user_endpoint)	endpoints;
 };
@@ -533,6 +534,7 @@ nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
 					transport);
 
+	spdk_poller_unregister(&vu_transport->accept_poller);
 	(void)pthread_mutex_destroy(&vu_transport->lock);
 
 	TAILQ_FOREACH_SAFE(endpoint, &vu_transport->endpoints, link, tmp) {
@@ -556,6 +558,9 @@ static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] 
 		spdk_json_decode_bool, true
 	},
 };
+
+static int
+nvmf_vfio_user_accept(void *ctx);
 
 static struct spdk_nvmf_transport *
 nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
@@ -588,6 +593,13 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 					    SPDK_COUNTOF(vfio_user_transport_opts_decoder),
 					    vu_transport)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
+		free(vu_transport);
+		return NULL;
+	}
+
+	vu_transport->accept_poller = SPDK_POLLER_REGISTER(nvmf_vfio_user_accept, &vu_transport->transport,
+				      vu_transport->transport.opts.acceptor_poll_rate);
+	if (!vu_transport->accept_poller) {
 		free(vu_transport);
 		return NULL;
 	}
@@ -2231,12 +2243,11 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
  *
  * This poller also takes care of handling the creation of any pending new
  * qpairs.
- *
- * Returns the number of events handled.
  */
-static uint32_t
-nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
+static int
+nvmf_vfio_user_accept(void *ctx)
 {
+	struct spdk_nvmf_transport *transport = ctx;
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_endpoint *endpoint;
 	uint32_t count = 0;
@@ -2259,7 +2270,7 @@ nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 			}
 
 			pthread_mutex_unlock(&vu_transport->lock);
-			return 1;
+			return SPDK_POLLER_BUSY;
 		}
 
 		count++;
@@ -2270,7 +2281,7 @@ nvmf_vfio_user_accept(struct spdk_nvmf_transport *transport)
 
 	pthread_mutex_unlock(&vu_transport->lock);
 
-	return count;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void
@@ -3010,7 +3021,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
 
 	.listen = nvmf_vfio_user_listen,
 	.stop_listen = nvmf_vfio_user_stop_listen,
-	.accept = nvmf_vfio_user_accept,
 	.cdata_init = nvmf_vfio_user_cdata_init,
 	.listen_associate = nvmf_vfio_user_listen_associate,
 

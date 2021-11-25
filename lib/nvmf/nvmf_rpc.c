@@ -1932,6 +1932,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		"tgt_name", offsetof(struct nvmf_rpc_create_transport_ctx, tgt_name),
 		spdk_json_decode_string, true
 	},
+	{
+		"acceptor_poll_rate", offsetof(struct nvmf_rpc_create_transport_ctx, opts.acceptor_poll_rate),
+		spdk_json_decode_uint32, true
+	},
 };
 
 static void

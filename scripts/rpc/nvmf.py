@@ -21,7 +21,6 @@ def nvmf_set_max_subsystems(client,
 
 @deprecated_alias('set_nvmf_target_config')
 def nvmf_set_config(client,
-                    acceptor_poll_rate=None,
                     conn_sched=None,
                     passthru_identify_ctrlr=None,
                     poll_groups_mask=None,
@@ -29,7 +28,6 @@ def nvmf_set_config(client,
     """Set NVMe-oF target subsystem configuration.
 
     Args:
-        acceptor_poll_rate: Acceptor poll period in microseconds (optional)
         conn_sched: (Deprecated) Ignored
         discovery_filter: Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`
@@ -39,8 +37,6 @@ def nvmf_set_config(client,
     """
     params = {}
 
-    if acceptor_poll_rate:
-        params['acceptor_poll_rate'] = acceptor_poll_rate
     if conn_sched:
         print("WARNING: conn_sched is deprecated and ignored.")
     if passthru_identify_ctrlr:
@@ -128,6 +124,7 @@ def nvmf_create_transport(client, **params):
         no_wr_batching: Boolean flag to disable work requests batching - RDMA specific (optional)
         control_msg_num: The number of control messages per poll group - TCP specific (optional)
         disable_mappable_bar0: disable client mmap() of BAR0 - VFIO-USER specific (optional)
+        acceptor_poll_rate: Acceptor poll period in microseconds (optional)
     Returns:
         True or False
     """

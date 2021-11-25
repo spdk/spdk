@@ -61,7 +61,6 @@ struct nvmf_tgt_poll_group {
 };
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf = {
-	.acceptor_poll_rate = ACCEPT_TIMEOUT_US,
 	.admin_passthru.identify_ctrlr = false
 };
 
@@ -303,7 +302,6 @@ nvmf_tgt_create_target(void)
 	};
 
 	opts.max_subsystems = g_spdk_nvmf_tgt_max_subsystems;
-	opts.acceptor_poll_rate = g_spdk_nvmf_tgt_conf.acceptor_poll_rate;
 	opts.crdt[0] = g_spdk_nvmf_tgt_crdt[0];
 	opts.crdt[1] = g_spdk_nvmf_tgt_crdt[1];
 	opts.crdt[2] = g_spdk_nvmf_tgt_crdt[2];
@@ -520,7 +518,6 @@ nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "method", "nvmf_set_config");
 
 	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_uint32(w, "acceptor_poll_rate", g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 	nvmf_subsystem_dump_discover_filter(w);
 	spdk_json_write_named_object_begin(w, "admin_cmd_passthru");
 	spdk_json_write_named_bool(w, "identify_ctrlr",

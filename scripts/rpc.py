@@ -1919,7 +1919,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def nvmf_set_config(args):
         rpc.nvmf.nvmf_set_config(args.client,
-                                 acceptor_poll_rate=args.acceptor_poll_rate,
                                  conn_sched=args.conn_sched,
                                  passthru_identify_ctrlr=args.passthru_identify_ctrlr,
                                  poll_groups_mask=args.poll_groups_mask,
@@ -1927,7 +1926,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('nvmf_set_config', aliases=['set_nvmf_target_config'],
                               help='Set NVMf target config')
-    p.add_argument('-r', '--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.add_argument('-s', '--conn-sched', help='(Deprecated). Ignored.')
     p.add_argument('-i', '--passthru-identify-ctrlr', help="""Passthrough fields like serial number and model number
     when the controller has a single namespace that is an NVMe bdev""", action='store_true')
@@ -1966,6 +1964,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Relevant only for TCP transport""", type=int)
     p.add_argument('-M', '--disable-mappable-bar0', action='store_true', help="""Disable mmap() of BAR0.
     Relevant only for VFIO-USER transport""")
+    p.add_argument('--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.set_defaults(func=nvmf_create_transport)
 
     def nvmf_get_transports(args):

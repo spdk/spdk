@@ -56,6 +56,8 @@
 #define NVMF_DATA_BUFFER_ALIGNMENT	VALUE_4KB
 #define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1LL)
 
+#define SPDK_NVMF_DEFAULT_ACCEPT_POLL_RATE_US 10000
+
 union nvmf_h2c_msg {
 	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
 	struct spdk_nvme_cmd				nvme_cmd;
@@ -303,11 +305,6 @@ struct spdk_nvmf_transport_ops {
 	 */
 	void (*subsystem_remove_ns)(struct spdk_nvmf_transport *transport,
 				    const struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
-
-	/**
-	 * Check for new connections on the transport.
-	 */
-	uint32_t (*accept)(struct spdk_nvmf_transport *transport);
 
 	/**
 	 * Initialize subset of identify controller data.

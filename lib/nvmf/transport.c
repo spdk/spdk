@@ -181,10 +181,11 @@ static void nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
 	SET_FIELD(abort_timeout_sec);
 	SET_FIELD(association_timeout);
 	SET_FIELD(transport_specific);
+	SET_FIELD(acceptor_poll_rate);
 
 	/* Do not remove this statement, you should always update this statement when you adding a new field,
 	 * and do not forget to add the SET_FIELD statement for your added field. */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 56, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 64, "Incorrect size");
 
 #undef SET_FIELD
 #undef FILED_CHECK
@@ -438,12 +439,6 @@ spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-uint32_t
-nvmf_transport_accept(struct spdk_nvmf_transport *transport)
-{
-	return transport->ops->accept(transport);
-}
-
 void
 nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 				 struct spdk_nvme_transport_id *trid,
@@ -640,6 +635,7 @@ spdk_nvmf_transport_opts_init(const char *transport_name,
 	}
 
 	opts_local.association_timeout = NVMF_TRANSPORT_DEFAULT_ASSOCIATION_TIMEOUT_IN_MS;
+	opts_local.acceptor_poll_rate = SPDK_NVMF_DEFAULT_ACCEPT_POLL_RATE_US;
 	ops->opts_init(&opts_local);
 
 	nvmf_transport_opts_copy(opts, &opts_local, opts_size);

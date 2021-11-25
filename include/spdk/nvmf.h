@@ -84,7 +84,6 @@ enum spdk_nvmf_tgt_discovery_filter {
 struct spdk_nvmf_target_opts {
 	char		name[NVMF_TGT_NAME_MAX_LENGTH];
 	uint32_t	max_subsystems;
-	uint32_t	acceptor_poll_rate;
 	uint16_t	crdt[3];
 	enum spdk_nvmf_tgt_discovery_filter discovery_filter;
 };
@@ -114,6 +113,7 @@ struct spdk_nvmf_transport_opts {
 	 * New added fields should be put at the end of the struct.
 	 */
 	size_t opts_size;
+	uint32_t acceptor_poll_rate;
 };
 
 struct spdk_nvmf_listen_opts {

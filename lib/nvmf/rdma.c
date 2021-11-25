@@ -485,6 +485,7 @@ struct spdk_nvmf_rdma_transport {
 
 	struct spdk_mempool		*data_wr_pool;
 
+	struct spdk_poller		*accept_poller;
 	pthread_mutex_t			lock;
 
 	/* fields used to poll RDMA/IB events */
@@ -2194,6 +2195,9 @@ nvmf_rdma_is_rxe_device(struct spdk_nvmf_rdma_device *device)
 	       device->attr.vendor_id == NVMF_RXE_VENDOR_ID_NEW;
 }
 
+static int
+nvmf_rdma_accept(void *ctx);
+
 static struct spdk_nvmf_transport *
 nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 {
@@ -2458,6 +2462,13 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		rtransport->poll_fds[i++].events = POLLIN;
 	}
 
+	rtransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_rdma_accept, &rtransport->transport,
+				    rtransport->transport.opts.acceptor_poll_rate);
+	if (!rtransport->accept_poller) {
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
+		return NULL;
+	}
+
 	return &rtransport->transport;
 }
 
@@ -2523,6 +2534,7 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 
 	spdk_mempool_free(rtransport->data_wr_pool);
 
+	spdk_poller_unregister(&rtransport->accept_poller);
 	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
 
@@ -3143,10 +3155,11 @@ nvmf_process_ib_events(struct spdk_nvmf_rdma_device *device, uint32_t max_events
 	SPDK_DEBUGLOG(rdma, "Device %s: %u events processed\n", device->context->device->name, i);
 }
 
-static uint32_t
-nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
+static int
+nvmf_rdma_accept(void *ctx)
 {
 	int	nfds, i = 0;
+	struct spdk_nvmf_transport *transport = ctx;
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device *device, *tmp;
 	uint32_t count;
@@ -3155,7 +3168,7 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 	count = nfds = poll(rtransport->poll_fds, rtransport->npoll_fds, 0);
 
 	if (nfds <= 0) {
-		return 0;
+		return SPDK_POLLER_IDLE;
 	}
 
 	/* The first poll descriptor is RDMA CM event */
@@ -3165,7 +3178,7 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 	}
 
 	if (nfds == 0) {
-		return count;
+		return SPDK_POLLER_BUSY;
 	}
 
 	/* Second and subsequent poll descriptors are IB async events */
@@ -3178,7 +3191,7 @@ nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 	/* check all flagged fd's have been served */
 	assert(nfds == 0);
 
-	return count;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void
@@ -4217,7 +4230,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 
 	.listen = nvmf_rdma_listen,
 	.stop_listen = nvmf_rdma_stop_listen,
-	.accept = nvmf_rdma_accept,
 	.cdata_init = nvmf_rdma_cdata_init,
 
 	.listener_discover = nvmf_rdma_discover,

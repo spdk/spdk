@@ -229,6 +229,7 @@ struct spdk_nvmf_fc_adm_hw_port_reset_ctx {
 
 struct spdk_nvmf_fc_transport {
 	struct spdk_nvmf_transport transport;
+	struct spdk_poller *accept_poller;
 	pthread_mutex_t lock;
 };
 
@@ -1957,6 +1958,9 @@ nvmf_fc_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->num_shared_buffers =   SPDK_NVMF_FC_DEFAULT_NUM_SHARED_BUFFERS;
 }
 
+static int
+nvmf_fc_accept(void *ctx);
+
 static struct spdk_nvmf_transport *
 nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 {
@@ -2005,6 +2009,14 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
+	g_nvmf_ftransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_fc_accept,
+					   &g_nvmf_ftransport->transport, g_nvmf_ftransport->transport.opts.acceptor_poll_rate);
+	if (!g_nvmf_ftransport->accept_poller) {
+		free(g_nvmf_ftransport);
+		g_nvmf_ftransport = NULL;
+		return NULL;
+	}
+
 	/* initialize the low level FC driver */
 	nvmf_fc_lld_init();
 
@@ -2033,6 +2045,8 @@ nvmf_fc_destroy(struct spdk_nvmf_transport *transport,
 			TAILQ_REMOVE(&g_nvmf_fgroups, fgroup, link);
 			free(fgroup);
 		}
+
+		spdk_poller_unregister(&g_nvmf_ftransport->accept_poller);
 		g_nvmf_fgroup_count = 0;
 		g_transport_destroy_done_cb = cb_fn;
 
@@ -2056,9 +2070,10 @@ nvmf_fc_stop_listen(struct spdk_nvmf_transport *transport,
 {
 }
 
-static uint32_t
-nvmf_fc_accept(struct spdk_nvmf_transport *transport)
+static int
+nvmf_fc_accept(void *ctx)
 {
+	struct spdk_nvmf_transport *transport = ctx;
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 	uint32_t count = 0;
 	static bool start_lld = false;
@@ -2075,7 +2090,7 @@ nvmf_fc_accept(struct spdk_nvmf_transport *transport)
 		}
 	}
 
-	return count;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void
@@ -2323,7 +2338,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
 
 	.listen = nvmf_fc_listen,
 	.stop_listen = nvmf_fc_stop_listen,
-	.accept = nvmf_fc_accept,
 
 	.listener_discover = nvmf_fc_discover,
 

@@ -43,14 +43,11 @@
 #include "spdk_internal/init.h"
 #include "spdk/log.h"
 
-#define ACCEPT_TIMEOUT_US	10000 /* 10ms */
-
 struct spdk_nvmf_admin_passthru_conf {
 	bool identify_ctrlr;
 };
 
 struct spdk_nvmf_tgt_conf {
-	uint32_t acceptor_poll_rate;
 	uint32_t conn_sched; /* Deprecated. */
 	struct spdk_nvmf_admin_passthru_conf admin_passthru;
 	enum spdk_nvmf_tgt_discovery_filter discovery_filter;

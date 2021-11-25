@@ -319,6 +319,7 @@ struct spdk_nvmf_tcp_transport {
 
 	struct spdk_nvmf_tcp_poll_group		*next_pg;
 
+	struct spdk_poller			*accept_poller;
 	pthread_mutex_t				lock;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
@@ -541,6 +542,7 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
+	spdk_poller_unregister(&ttransport->accept_poller);
 	pthread_mutex_destroy(&ttransport->lock);
 	free(ttransport);
 
@@ -549,6 +551,9 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	}
 	return 0;
 }
+
+static int
+nvmf_tcp_accept(void *ctx);
 
 static struct spdk_nvmf_transport *
 nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
@@ -639,6 +644,13 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	pthread_mutex_init(&ttransport->lock, NULL);
+
+	ttransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_tcp_accept, &ttransport->transport,
+				    ttransport->transport.opts.acceptor_poll_rate);
+	if (!ttransport->accept_poller) {
+		free(ttransport);
+		return NULL;
+	}
 
 	return &ttransport->transport;
 }
@@ -1106,9 +1118,10 @@ nvmf_tcp_port_accept(struct spdk_nvmf_transport *transport, struct spdk_nvmf_tcp
 	return count;
 }
 
-static uint32_t
-nvmf_tcp_accept(struct spdk_nvmf_transport *transport)
+static int
+nvmf_tcp_accept(void *ctx)
 {
+	struct spdk_nvmf_transport *transport = ctx;
 	struct spdk_nvmf_tcp_transport *ttransport;
 	struct spdk_nvmf_tcp_port *port;
 	uint32_t count = 0;
@@ -1119,7 +1132,7 @@ nvmf_tcp_accept(struct spdk_nvmf_transport *transport)
 		count += nvmf_tcp_port_accept(transport, port);
 	}
 
-	return count;
+	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void
@@ -3052,7 +3065,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 
 	.listen = nvmf_tcp_listen,
 	.stop_listen = nvmf_tcp_stop_listen,
-	.accept = nvmf_tcp_accept,
 
 	.listener_discover = nvmf_tcp_discover,
 

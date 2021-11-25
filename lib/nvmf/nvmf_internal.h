@@ -72,8 +72,6 @@ struct spdk_nvmf_tgt {
 
 	uint64_t				discovery_genctr;
 
-	struct spdk_poller			*accept_poller;
-
 	uint32_t				max_subsystems;
 
 	enum spdk_nvmf_tgt_discovery_filter	discovery_filter;

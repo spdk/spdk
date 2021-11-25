@@ -40,8 +40,6 @@
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_transport.h"
 
-uint32_t nvmf_transport_accept(struct spdk_nvmf_transport *transport);
-
 void nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 				      struct spdk_nvme_transport_id *trid,
 				      struct spdk_nvmf_discovery_log_page_entry *entry);

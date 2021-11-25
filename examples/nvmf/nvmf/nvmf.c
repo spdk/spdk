@@ -46,10 +46,8 @@
 #include "spdk_internal/event.h"
 
 #define NVMF_DEFAULT_SUBSYSTEMS		32
-#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
 static const char *g_rpc_addr = SPDK_DEFAULT_RPC_ADDR;
-static uint32_t g_acceptor_poll_rate = ACCEPT_TIMEOUT_US;
 
 enum nvmf_target_state {
 	NVMF_INIT_SUBSYSTEM = 0,
@@ -122,7 +120,6 @@ usage(char *program_name)
 	printf("\t[-i shared memory ID (optional)]\n");
 	printf("\t[-m core mask for DPDK]\n");
 	printf("\t[-n max subsystems for target(default: 32)]\n");
-	printf("\t[-p acceptor poller rate in us for target(default: 10000us)]\n");
 	printf("\t[-r RPC listen address (default /var/tmp/spdk.sock)]\n");
 	printf("\t[-s memory size in MB for DPDK (default: 0MB)]\n");
 	printf("\t[-u disable PCI access]\n");
@@ -161,14 +158,6 @@ parse_args(int argc, char **argv, struct spdk_env_opts *opts)
 				fprintf(stderr, "converting a string to integer failed\n");
 				return -EINVAL;
 			}
-			break;
-		case 'p':
-			value = spdk_strtol(optarg, 10);
-			if (value < 0) {
-				fprintf(stderr, "converting a string to integer failed\n");
-				return -EINVAL;
-			}
-			g_acceptor_poll_rate = value;
 			break;
 		case 'r':
 			g_rpc_addr = optarg;
