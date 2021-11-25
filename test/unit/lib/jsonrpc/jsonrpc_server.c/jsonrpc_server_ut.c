@@ -371,7 +371,7 @@ test_parse_request_streaming(void)
 		CU_ASSERT(rc == 0);
 		CU_ASSERT(g_request == NULL);
 
-		/* In case of faile, don't fload console with ussless CU assert fails. */
+		/* In case of failed, don't fload console with useless CU assert fails. */
 		FREE_REQUEST();
 	}
 
@@ -403,7 +403,7 @@ int main(int argc, char **argv)
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 
-	/* This is for ASAN. Don't know why but if pointer is left in global varaible
+	/* This is for ASAN. Don't know why but if pointer is left in global variable
 	 * it won't be detected as leak. */
 	g_request = NULL;
 	return num_failures;

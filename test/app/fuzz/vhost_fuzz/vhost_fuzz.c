@@ -771,7 +771,7 @@ craft_virtio_scsi_tmf_req(struct fuzz_vhost_dev_ctx *dev_ctx, struct fuzz_vhost_
 		io_ctx->req.scsi_tmf_req.lun[1] = 0;
 	}
 
-	/* Valid controlqueue commands have to be of type 0, 1, or 2. Any others just return immediately from the target. */
+	/* Valid controlq commands have to be of type 0, 1, or 2. Any others just return immediately from the target. */
 	/* Try to only test the opcodes that will exercise extra paths in the target side. But allow for at least one invalid value. */
 	io_ctx->req.scsi_tmf_req.type = rand() % 4;
 }

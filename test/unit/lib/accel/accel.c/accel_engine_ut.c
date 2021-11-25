@@ -208,7 +208,7 @@ test_spdk_accel_get_capabilities(void)
 {
 	uint64_t cap, expected_cap;
 
-	/* Setup a few capabilites and make sure they are reported as expected. */
+	/* Setup a few capabilities and make sure they are reported as expected. */
 	g_accel_ch->engine = &g_accel_engine;
 	expected_cap = ACCEL_COPY | ACCEL_DUALCAST | ACCEL_CRC32C;
 	g_accel_ch->engine->capabilities = expected_cap;

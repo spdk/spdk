@@ -377,7 +377,7 @@ function bdev_pmem_delete_pool_tc1() {
 	pmem_clean_pool_file
 
 	if $rpc_py bdev_pmem_delete_pool $default_pool_file; then
-		error "bdev_pmem_delete_pool deleted inexistant pool file!"
+		error "bdev_pmem_delete_pool deleted nonexistent pool file!"
 	fi
 
 	return 0

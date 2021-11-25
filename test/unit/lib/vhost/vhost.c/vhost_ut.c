@@ -276,7 +276,7 @@ create_controller_test(void)
 
 	spdk_cpuset_parse(&g_vhost_core_mask, "0xf");
 
-	/* Create device with cpumask implcitly matching whole application */
+	/* Create device with cpumask implicitly matching whole application */
 	ret = alloc_vdev(&vdev, "vdev_name_0", NULL);
 	SPDK_CU_ASSERT_FATAL(ret == 0 && vdev);
 	SPDK_CU_ASSERT_FATAL(!strcmp(spdk_cpuset_fmt(spdk_thread_get_cpumask(vdev->thread)), "f"));

@@ -210,7 +210,7 @@ function test_construct_lvol_fio_clear_method_none() {
 	offset=$((last_cluster_of_metadata * jq_out["cluster_size"]))
 	size_metadata_end=$((offset - offset_metadata_end))
 
-	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchaged.
+	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchanged.
 	run_fio_test "$nbd_name" "$offset_metadata_end" "$size_metadata_end" "read" 0x00
 	# Check if data on first lvol bdevs remains unchanged.
 	run_fio_test "$nbd_name" "$offset" "${jq_out["cluster_size"]}" "read" 0xdd
@@ -269,7 +269,7 @@ function test_construct_lvol_fio_clear_method_unmap() {
 	offset=$((last_cluster_of_metadata * jq_out["cluster_size"]))
 	size_metadata_end=$((offset - offset_metadata_end))
 
-	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchaged.
+	# Check if data on area between end of metadata and first cluster of lvol bdev remained unchanged.
 	run_fio_test "$nbd_name" "$offset_metadata_end" "$size_metadata_end" "read" 0xdd
 	# Check if data on lvol bdev was zeroed. Malloc bdev should zero any data that is unmapped.
 	run_fio_test "$nbd_name" "$offset" "${jq_out["cluster_size"]}" "read" 0x00

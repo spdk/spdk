@@ -87,9 +87,9 @@ dev_reset_power_failure_counters(void)
 
 /**
  * Set power failure event. Power failure will occur after given number
- * of IO operations. It may occure after number of particular operations
+ * of IO operations. It may occur after number of particular operations
  * (read, write, unmap, write zero or flush) or after given number of
- * any IO operations (general_treshold). Value 0 means that the treshold
+ * any IO operations (general_threshold). Value 0 means that the threshold
  * is disabled. Any other value is the number of operation starting from
  * which power failure event will happen.
  */

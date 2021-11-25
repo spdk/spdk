@@ -801,7 +801,7 @@ char ut_json_text[] =
 	"{"
 	"	\"string\": \"Some string data\","
 	"	\"object\": { "
-	"		\"another_string\": \"Yet anoter string data\","
+	"		\"another_string\": \"Yet another string data\","
 	"		\"array name with space\": [1, [], {} ]"
 	"	},"
 	"	\"array\": [ \"Text\", 2, {} ]"

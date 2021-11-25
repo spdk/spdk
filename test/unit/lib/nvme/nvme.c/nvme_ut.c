@@ -46,7 +46,7 @@ DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB_V(nvme_ctrlr_fail, (struct spdk_nvme_ctrlr *ctrlr, bool hotremove));
 DEFINE_STUB(spdk_nvme_transport_available_by_name, bool,
 	    (const char *transport_name), true);
-/* return anything non-NULL, this won't be deferenced anywhere in this test */
+/* return anything non-NULL, this won't be dereferenced anywhere in this test */
 DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
 DEFINE_STUB(nvme_ctrlr_process_init, int,
@@ -689,7 +689,7 @@ test_nvme_allocate_request_null(void)
 	req = nvme_allocate_request_null(&qpair, cb_fn, cb_arg);
 
 	/*
-	 * Compare the req with the parmaters that we passed in
+	 * Compare the req with the parameters that we passed in
 	 * as well as what the function is supposed to update.
 	 */
 	SPDK_CU_ASSERT_FATAL(req != NULL);

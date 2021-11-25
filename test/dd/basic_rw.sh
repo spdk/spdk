@@ -44,7 +44,7 @@ basic_rw() {
 }
 
 basic_offset() {
-	# Check if offseting works - using default io size of 4k
+	# Check if offsetting works - using default io size of 4k
 	local count seek skip data data_check
 
 	gen_bytes 4096 > "$test_file0"

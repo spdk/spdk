@@ -38,7 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP = app_repeat
 C_SRCS := app_repeat.c
 
-# Some of the modules and libaries are not repeatable yet, only organize
+# Some of the modules and libraries are not repeatable yet, only organize
 # the repeatable ones.
 SPDK_LIB_LIST = event_bdev event_accel event_vmd event_sock
 SPDK_LIB_LIST += event_nbd

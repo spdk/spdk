@@ -6609,7 +6609,7 @@ blob_io_unit(void)
 }
 
 static void
-blob_io_unit_compatiblity(void)
+blob_io_unit_compatibility(void)
 {
 	struct spdk_bs_opts bsopts;
 	struct spdk_blob_store *bs;
@@ -6864,7 +6864,7 @@ blob_persist_test(void)
 	SPDK_CU_ASSERT_FATAL(blob->active.num_pages + blob->active.num_extent_pages == page_count_xattr);
 	SPDK_CU_ASSERT_FATAL(blob->clean.num_pages + blob->clean.num_extent_pages == page_count_xattr);
 
-	/* Add xattr to a blob and sync it. While sync is occuring, remove the xattr and sync again.
+	/* Add xattr to a blob and sync it. While sync is occurring, remove the xattr and sync again.
 	 * Interrupt the first sync after increasing number of poller iterations, until it succeeds.
 	 * Expectation is that after second sync completes no xattr is saved in metadata. */
 	poller_iterations = 1;
@@ -7161,7 +7161,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_operation_split_rw);
 	CU_ADD_TEST(suite_bs, blob_operation_split_rw_iov);
 	CU_ADD_TEST(suite, blob_io_unit);
-	CU_ADD_TEST(suite, blob_io_unit_compatiblity);
+	CU_ADD_TEST(suite, blob_io_unit_compatibility);
 	CU_ADD_TEST(suite_bs, blob_simultaneous_operations);
 	CU_ADD_TEST(suite_bs, blob_persist_test);
 	CU_ADD_TEST(suite_bs, blob_decouple_snapshot);

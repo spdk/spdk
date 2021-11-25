@@ -253,7 +253,7 @@ function vhost_rpc() {
 function assert_number() {
 	[[ "$1" =~ [0-9]+ ]] && return 0
 
-	error "Invalid or missing paramter: need number but got '$1'"
+	error "Invalid or missing parameter: need number but got '$1'"
 	return 1
 }
 
@@ -281,7 +281,7 @@ function vm_sshpass() {
 function vm_num_is_valid() {
 	[[ "$1" =~ ^[0-9]+$ ]] && return 0
 
-	error "Invalid or missing paramter: vm number '$1'"
+	error "Invalid or missing parameter: vm number '$1'"
 	return 1
 }
 
@@ -1205,7 +1205,7 @@ function parse_fio_results() {
 			lat_divisor=1000
 		fi
 
-		# Horrific bash float point arithmetic oprations below.
+		# Horrific bash float point arithmetic operations below.
 		# Viewer discretion is advised.
 		iops=$(jq -r '[.read["iops"],.write["iops"]] | add' <<< $client_stats)
 		bw=$(jq -r '[.read["bw"],.write["bw"]] | add' <<< $client_stats)

@@ -1014,7 +1014,7 @@ identify_ns(void)
 	spdk_nvme_detach(ctrlr);
 }
 
-/* Mandatory Log Page Identidfiers
+/* Mandatory Log Page Identifiers
  * 01h Error Information
  * 02h SMART / Health Information
  * 03h Firmware Slot Information

@@ -15,7 +15,7 @@ function check_ana_state() {
 	local ctrl_id=$2
 	local ana_state=$3
 	# Very rarely a connection is lost and Linux NVMe host tries reconnecting
-	# after 10 seconds delay. For this case, set a sufficienntly long timeout.
+	# after 10 seconds delay. For this case, set a sufficiently long timeout.
 	# Linux NVMe host usually recognizes the new ANA state within 2 seconds.
 	local timeout=20
 

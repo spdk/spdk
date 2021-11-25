@@ -429,7 +429,7 @@ test_nvmf_tcp_create(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = 16;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
-	/* expect failse */
+	/* expect fails */
 	transport = nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NULL(transport);
 
@@ -669,7 +669,7 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 
 
 static void
-test_nvmf_tcp_incapsule_data_handle(void)
+test_nvmf_tcp_in_capsule_data_handle(void)
 {
 	struct spdk_nvmf_tcp_transport ttransport = {};
 	struct spdk_nvmf_tcp_qpair tqpair = {};
@@ -1107,7 +1107,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tcp_poll_group_create);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_data);
 	CU_ADD_TEST(suite, test_nvmf_tcp_h2c_data_hdr_handle);
-	CU_ADD_TEST(suite, test_nvmf_tcp_incapsule_data_handle);
+	CU_ADD_TEST(suite, test_nvmf_tcp_in_capsule_data_handle);
 	CU_ADD_TEST(suite, test_nvmf_tcp_qpair_init_mem_resource);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_c2h_term_req);
 	CU_ADD_TEST(suite, test_nvmf_tcp_send_capsule_resp_pdu);

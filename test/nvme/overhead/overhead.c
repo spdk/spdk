@@ -725,7 +725,7 @@ int main(int argc, char **argv)
 	cleanup();
 
 	if (rc != 0) {
-		fprintf(stderr, "%s: errors occured\n", argv[0]);
+		fprintf(stderr, "%s: errors occurred\n", argv[0]);
 	}
 
 	return rc;

@@ -63,7 +63,7 @@ alone_static:
 	$(CC) $(COMMON_CFLAGS) -o hello_bdev ./hello_bdev.c -pthread -Wl,--whole-archive,-Bstatic \
 	$(SPDK_DPDK_LIB) -Wl,--no-whole-archive,-Bdynamic $(SYS_LIB)
 
-# Shows how to compile and external bdev and application sgainst the SPDK archives.
+# Shows how to compile and external bdev and application against the SPDK archives.
 bdev_static:
 	$(CC) $(COMMON_CFLAGS) -L../passthru -o hello_bdev ./hello_bdev.c -pthread -Wl,--whole-archive,-Bstatic -lpassthru_external $(SPDK_DPDK_LIB) \
 	-Wl,--no-whole-archive,-Bdynamic $(SYS_LIB)

@@ -108,7 +108,7 @@ get_pm_file_size(void)
 	expected_pm_size = sizeof(struct spdk_reduce_vol_superblock);
 	/* 100 chunks in logical map * 8 bytes per chunk */
 	expected_pm_size += 100 * sizeof(uint64_t);
-	/* 100 chunks * (chunk stuct size + 4 backing io units per chunk * 8 bytes per backing io unit) */
+	/* 100 chunks * (chunk struct size + 4 backing io units per chunk * 8 bytes per backing io unit) */
 	expected_pm_size += 100 * (sizeof(struct spdk_reduce_chunk_map) + 4 * sizeof(uint64_t));
 	/* reduce allocates some extra chunks too for in-flight writes when logical map
 	 * is full.  REDUCE_EXTRA_CHUNKS is a private #ifdef in reduce.c Here we need the num chunks

@@ -72,6 +72,6 @@ interrupt() {
 	done
 }
 
-exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
+exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpumask" --main-core "$spdk_main_core"
 
 interrupt

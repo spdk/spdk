@@ -159,7 +159,7 @@ function test_rename_lvs_negative() {
 	done
 
 	# Clean up
-	for bdev in "${bdev_aliases_1[@]}" "${bdev_alisaes_2[@]}"; do
+	for bdev in "${bdev_aliases_1[@]}" "${bdev_aliases_2[@]}"; do
 		rpc_cmd bdev_lvol_delete "$bdev"
 	done
 	rpc_cmd bdev_lvol_delete_lvstore -u "$lvs_uuid1"

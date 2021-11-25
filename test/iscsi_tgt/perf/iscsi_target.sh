@@ -19,7 +19,7 @@ CPUMASK=0x02
 NUM_JOBS=1
 ISCSI_TGT_CM=0x02
 
-# Performance test for iscsi_tgt, run on devices with proper hardware support (target and inititator)
+# Performance test for iscsi_tgt, run on devices with proper hardware support (target and initiator)
 function usage() {
 	[[ -n $2 ]] && (
 		echo "$2"

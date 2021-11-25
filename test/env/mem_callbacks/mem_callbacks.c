@@ -141,7 +141,7 @@ test(void)
 	verify_buffer(buf2, len2);
 
 	/* Allocate a 4MB buffer.  This should trigger a new hugepage allocation
-	 * just for thie 4MB buffer.
+	 * just for this 4MB buffer.
 	 */
 	len3 = 4 * 1024 * 1024;
 	printf("malloc %ju\n", len3);

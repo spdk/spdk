@@ -16,7 +16,7 @@ bdfs=$(get_nvme_bdfs)
 
 $rootdir/scripts/setup.sh reset
 
-# Find bdf that supports Namespace Managment
+# Find bdf that supports Namespace Management
 for bdf in $bdfs; do
 	nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
 	if [[ -z "$nvme_name" ]]; then
@@ -33,7 +33,7 @@ for bdf in $bdfs; do
 done
 
 if [[ "${nvme_name}" == "" ]] || [[ "$oacs_ns_manage" -eq 0 ]]; then
-	echo "No NVMe device supporting Namespace managment found"
+	echo "No NVMe device supporting Namespace management found"
 	$rootdir/scripts/setup.sh
 	exit 1
 fi
@@ -57,7 +57,7 @@ function clean_up() {
 	# This assumes every NVMe controller contains single namespace,
 	# encompassing Total NVM Capacity and formatted as 512 block size.
 	# 512 block size is needed for test/vhost/vhost_boot.sh to
-	# succesfully run.
+	# successfully run.
 
 	tnvmcap=$($NVME_CMD id-ctrl ${nvme_dev} | grep tnvmcap | cut -d: -f2)
 	blksize=512

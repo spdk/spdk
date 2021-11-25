@@ -3812,7 +3812,7 @@ test_find_io_path(void)
 
 	nbdev_ch.current_io_path = NULL;
 
-	/* Test if io_path whose qpair is resetting is excluced. */
+	/* Test if io_path whose qpair is resetting is excluded. */
 
 	ctrlr_ch1.qpair = NULL;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == NULL);

@@ -99,7 +99,7 @@ function install_refspdk() {
 }
 
 function install_qat() {
-	# Disect the kernel version into maj, min, release and local version
+	# Dissect the kernel version into maj, min, release and local version
 	local kernel_maj kernel_min kernel_rel kernel_loc
 	local kernel_ver
 

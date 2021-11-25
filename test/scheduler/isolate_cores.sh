@@ -21,7 +21,7 @@ allowed_list "$NUM_CPUS" 0
 # Assign proper resources to the cpuset/spdk
 spdk_cpus=("${allowed[@]}")
 spdk_cpus_csv=$(fold_array_onto_string "${spdk_cpus[@]}")
-spdk_cpusmask=$(mask_cpus "${spdk_cpus[@]}")
+spdk_cpumask=$(mask_cpus "${spdk_cpus[@]}")
 spdk_main_core=${spdk_cpus[0]}
 spdk_cpus_mems=0
 
@@ -32,14 +32,14 @@ filter_allowed_list
 
 all_cpus=("${allowed[@]}")
 all_cpus_csv=$(fold_array_onto_string "${all_cpus[@]}")
-all_cpusmask=$(mask_cpus "${all_cpus[@]}")
+all_cpumask=$(mask_cpus "${all_cpus[@]}")
 
 export \
-	"spdk_cpusmask=$spdk_cpusmask" \
+	"spdk_cpumask=$spdk_cpumask" \
 	"spdk_cpus_csv=$spdk_cpus_csv" \
 	"spdk_cpus_no=${#spdk_cpus[@]}" \
 	"spdk_main_core=$spdk_main_core" \
-	"all_cpusmask=$all_cpusmask" \
+	"all_cpumask=$all_cpumask" \
 	"all_cpus_csv=$all_cpus_csv"
 
 xtrace_restore

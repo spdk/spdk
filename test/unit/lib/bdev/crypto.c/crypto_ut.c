@@ -1028,7 +1028,7 @@ test_assign_device_qp(void)
 	/* QAT testing is more complex as the code under test load balances by
 	 * assigning each subsequent device/qp to every QAT_VF_SPREAD modulo
 	 * g_qat_total_qp. For the current latest QAT we'll have 48 virtual functions
-	 * each with 2 qp so the "spread" betwen assignments is 32.
+	 * each with 2 qp so the "spread" between assignments is 32.
 	 */
 	g_qat_total_qp = 96;
 	for (i = 0; i < g_qat_total_qp; i++) {

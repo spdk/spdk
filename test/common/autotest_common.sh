@@ -1344,7 +1344,7 @@ function nvme_namespace_revert() {
 			# This assumes every NVMe controller contains single namespace,
 			# encompassing Total NVM Capacity and formatted as 512 block size.
 			# 512 block size is needed for test/vhost/vhost_boot.sh to
-			# succesfully run.
+			# successfully run.
 
 			unvmcap=$(nvme id-ctrl ${nvme_ctrlr} | grep unvmcap | cut -d: -f2)
 			if [[ "$unvmcap" -eq 0 ]]; then

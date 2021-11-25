@@ -435,7 +435,7 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 	/* case 2: ns.csi == SPDK_NVME_CSI_ZNS. Expect: true */
 	ns.csi = SPDK_NVME_CSI_ZNS;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
-	/* case 3: defult ns.csi == SPDK_NVME_CSI_KV. Expect: false */
+	/* case 3: default ns.csi == SPDK_NVME_CSI_KV. Expect: false */
 	ns.csi = SPDK_NVME_CSI_KV;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == false);
 }

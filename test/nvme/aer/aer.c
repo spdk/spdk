@@ -445,7 +445,7 @@ spdk_aer_changed_ns_test(void)
 
 	g_aer_done = 0;
 
-	printf("Starting namespce attribute notice tests for all controllers...\n");
+	printf("Starting namespace attribute notice tests for all controllers...\n");
 
 	foreach_dev(dev) {
 		get_feature_test(dev);

@@ -929,7 +929,7 @@ test_reservation_acquire_preempt_1(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.gen == gen);
 
 	/* TEST CASE: g_ctrlr1_A holds the reservation, g_ctrlr_B preempt g_ctrl1_A,
-	 * g_ctrl1_A registrant is unregistred.
+	 * g_ctrl1_A registrant is unregistered.
 	 */
 	gen = g_ns.gen;
 	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_PREEMPT, 0,
@@ -1311,7 +1311,7 @@ test_reservation_preempt_notification(void)
 	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
 
 	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_C preempt g_ctrlr_B,
-	 * g_ctrlr_B registrant is unregistred, and reservation is preempted.
+	 * g_ctrlr_B registrant is unregistered, and reservation is preempted.
 	 * Registration Preempted notification sends to g_ctrlr_B.
 	 * Reservation Preempted notification sends to g_ctrlr1_A/g_ctrlr2_A.
 	 */

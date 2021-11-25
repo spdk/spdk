@@ -1441,7 +1441,7 @@ cache_closest_timed_poller(void)
 	CU_ASSERT(RB_MIN(timed_pollers_tree, &thread->timed_pollers) == poller2);
 
 	/* If we unregister a timed poller by spdk_poller_unregister()
-	 * when it is waiting, it is marked as being unregistereed and
+	 * when it is waiting, it is marked as being unregistered and
 	 * is actually unregistered when it is expired.
 	 *
 	 * Hence if we unregister the closest timed poller when it is waiting,

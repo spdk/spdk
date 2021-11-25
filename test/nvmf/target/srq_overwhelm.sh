@@ -29,7 +29,7 @@ done
 # by running 6 different FIO jobs, each with 13 subjobs, we end up with 78 fio threads trying to write to
 # our target at once. This completely overwhelms the target SRQ, but allows us to verify that rnr_retry is
 # working even at very high queue depths because the rdma qpair doesn't fail.
-# It is normal to see the initiator timeout and reconnect waiting for completions from an overwhelmmed target,
+# It is normal to see the initiator timeout and reconnect waiting for completions from an overwhelmed target,
 # but the connection should come up and FIO should complete without errors.
 $rootdir/scripts/fio-wrapper -p nvmf -i 1048576 -d 128 -t read -r 10 -n 13
 

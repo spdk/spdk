@@ -16,13 +16,13 @@ run_test "nvme_cuse_rpc" $testdir/nvme_cuse_rpc.sh
 run_test "nvme_cli_cuse" $testdir/spdk_nvme_cli_cuse.sh
 run_test "nvme_smartctl_cuse" $testdir/spdk_smartctl_cuse.sh
 
-# Only run Namespace managment test case when such device is present
+# Only run Namespace management test case when such device is present
 bdfs=$(get_nvme_bdfs)
 
 $rootdir/scripts/setup.sh reset
 sleep 1
 
-# Find bdf that supports Namespace managment
+# Find bdf that supports Namespace management
 for bdf in $bdfs; do
 	nvme_name=$(get_nvme_ctrlr_from_bdf ${bdf})
 	if [[ -z "$nvme_name" ]]; then

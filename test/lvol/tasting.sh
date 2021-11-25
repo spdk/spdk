@@ -147,7 +147,7 @@ function test_delete_lvol_store_persistent_positive() {
 	rpc_cmd bdev_aio_create "$aio0" "$bdev_aio_name" "$bdev_block_size"
 	# Wait 1 second to allow time for lvolstore tasting
 	sleep 1
-	# bdev_lvol_get_lvstores should not report any existsing lvol stores in configuration
+	# bdev_lvol_get_lvstores should not report any existing lvol stores in configuration
 	# after deleting and adding NVMe bdev, thus check if destroyed lvol store does not exist
 	# on aio bdev anymore.
 	rpc_cmd bdev_lvol_get_lvstores -u "$lvstore_uuid" && false

@@ -142,7 +142,7 @@ core_load() {
 	# Re-exec the scheduler app to make sure rr balancer won't affect threads without
 	# configured cpumask from the previous test suites.
 
-	exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
+	exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpumask" --main-core "$spdk_main_core"
 
 	# Create thread0 with 90% activity no cpumask, expecting it to remain on main cpu
 	thread0=$(create_thread -n "thread0" -a 90)
@@ -201,7 +201,7 @@ core_load() {
 	thread5=$(create_thread -n "thread5" -a 25)
 
 	# Three iterations are needed, as all threads look active on first iteration since they are on the main core.
-	# Second iteraion will have them spread out over cores and only third will collapse to the expected scenario.
+	# Second iteration will have them spread out over cores and only third will collapse to the expected scenario.
 	sleep $((3 * sched_period))
 	update_thread_cpus_map
 
@@ -233,7 +233,7 @@ core_load() {
 	((on_main_core == 5 && on_next_core == 1))
 }
 
-exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
+exec_under_dynamic_scheduler "$scheduler" -m "$spdk_cpumask" --main-core "$spdk_main_core"
 
 run_test "busy" busy
 run_test "balanced" balanced

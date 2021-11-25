@@ -1088,7 +1088,7 @@ enomem(void)
 	CU_ASSERT(bdev_io_tailq_cnt(&shared_resource->nomem_io) == nomem_cnt);
 
 	/*
-	 * Complete enough I/O to hit the nomem_theshold.  This should trigger retrying nomem_io,
+	 * Complete enough I/O to hit the nomem_threshold.  This should trigger retrying nomem_io,
 	 *  and we should see I/O get resubmitted to the test bdev module.
 	 */
 	stub_complete_io(g_bdev.io_target, NOMEM_THRESHOLD_COUNT - 1);

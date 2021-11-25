@@ -15,7 +15,7 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py bdev_null_create NULL1 1000 512
 # Subsystem destruction process waits for all controllers to be destroyed which in turn wait
-# for all qpairs to be deleted. A qpair can only be deleted when all outstaind requests are completed
+# for all qpairs to be deleted. A qpair can only be deleted when all outstanding requests are completed
 # bdev_delay is used in this test to make a situation when qpair has outstanding requests when disconnect
 # starts. It allows to trigger async qpair/controller/subsystem destruction path
 $rpc_py bdev_delay_create -b NULL1 -d Delay0 -r 1000000 -t 1000000 -w 1000000 -n 1000000

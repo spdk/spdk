@@ -18,7 +18,7 @@ responses to specific keys that explicitly allow repeated key
 declarations (e.g., TargetAddress)
 
 The spec didn't make it clear what other keys could be re-declare
-Disscussed this with UNH and get the conclusion that TargetName/
+Discussed this with UNH and get the conclusion that TargetName/
 TargetAddress/MaxRecvDataSegmentLength could be re-declare.
 '''
 '''

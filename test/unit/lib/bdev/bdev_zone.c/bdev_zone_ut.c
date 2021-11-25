@@ -93,7 +93,7 @@ static uint64_t g_unexpected_bdev_blocklen;
 static bool g_append_with_md;
 static int g_unexpected_iovcnt;
 static void *g_md_buf;
-static void *g_unexpetced_md_buf;
+static void *g_unexpected_md_buf;
 static void *g_buf;
 static void *g_unexpected_buf;
 
@@ -114,7 +114,7 @@ test_setup(void)
 	g_append_with_md = false;
 	g_unexpected_iovcnt = 1000;
 	g_md_buf = (void *)0xEFDCFEDE;
-	g_unexpetced_md_buf = (void *)0xFECDEFDC;
+	g_unexpected_md_buf = (void *)0xFECDEFDC;
 	g_buf = (void *)0xFEEDBEEF;
 	g_unexpected_buf = (void *)0xDEADBEEF;
 
@@ -139,7 +139,7 @@ start_operation(void)
 		g_zone_op->bdev.iovs[0].iov_base = g_unexpected_buf;
 		g_zone_op->bdev.iovs[0].iov_len = g_unexpected_num_blocks * g_unexpected_bdev_blocklen;
 		g_zone_op->bdev.iovcnt = g_unexpected_iovcnt;
-		g_zone_op->bdev.md_buf = g_unexpetced_md_buf;
+		g_zone_op->bdev.md_buf = g_unexpected_md_buf;
 		g_zone_op->bdev.num_blocks = g_unexpected_num_blocks;
 		g_zone_op->bdev.offset_blocks = g_unexpected_zone_id;
 		g_zone_op->bdev.start_lba = g_unexpected_start_lba;

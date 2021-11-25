@@ -478,7 +478,7 @@ get_cpu_time() {
 
 	cpu_time=${cpu_time_map["$cpu_time"]:-3}
 	interval=$((interval <= 0 ? 1 : interval))
-	# We skip first sample to have min 2 for stat comparision
+	# We skip first sample to have min 2 for stat comparison
 	interval=$((interval + 1)) interval_count=0
 	while ((interval_count++, --interval >= 0)); do
 		for cpu in "${cpus[@]}"; do

@@ -114,7 +114,7 @@ function cleanup_parted_config() {
 }
 
 function cleanup_kernel_vhost() {
-	notice "Cleaning kernel vhost configration"
+	notice "Cleaning kernel vhost configuration"
 	targetcli clearconfig confirm=True
 	cleanup_parted_config
 }

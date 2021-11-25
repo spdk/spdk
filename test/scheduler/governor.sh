@@ -75,7 +75,7 @@ verify_dpdk_governor() {
 
 	local samples=0 all_set=0 dir=-1 old_main_core_setspeed=0
 
-	exec_under_dynamic_scheduler "${SPDK_APP[@]}" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
+	exec_under_dynamic_scheduler "${SPDK_APP[@]}" -m "$spdk_cpumask" --main-core "$spdk_main_core"
 
 	while ((all_set == 0 && samples++ <= 50)); do
 		update_main_core_cpufreq

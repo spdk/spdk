@@ -5,7 +5,7 @@
 The link time optimization (lto) gcc flag allows the linker to run a post-link optimization pass on the code. During
 that pass the linker inlines thin wrappers such as those around DPDK calls which results in a shallow call stack and
 significantly improves performance. Therefore, we recommend compiling SPDK with the lto flag prior to running this
-benchmark script to archieve optimal performance.
+benchmark script to achieve optimal performance.
 Link time optimization can be enabled in SPDK by doing the following:
 
 ~{.sh}
@@ -95,7 +95,7 @@ Specifies how many times run each workload. End results are averages of these wo
 #### --no-preconditioning
 
 By default disks are preconditioned before test using fio with parameters: size=100%, loops=2, bs=1M, w=write,
-iodepth=32, ioengine=spdk. It can be skiped when this option is set.
+iodepth=32, ioengine=spdk. It can be skipped when this option is set.
 
 #### "--no-io-scaling"
 
@@ -104,6 +104,6 @@ For SPDK fio plugin iodepth is multiplied by number of devices. When this option
 ## Results
 
 Results are stored in "results" folder. After each workload, to this folder are copied files with:
-fio configuration file, json files with fio results and logs with latiencies with sampling interval 250 ms.
-Number of copied files depends from number of repeats of each workload. Additionall csv file is created with averaged
+fio configuration file, json files with fio results and logs with latencies with sampling interval 250 ms.
+Number of copied files depends from number of repeats of each workload. Additionally csv file is created with averaged
 results of all workloads.

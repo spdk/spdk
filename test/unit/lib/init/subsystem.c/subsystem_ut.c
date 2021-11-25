@@ -60,10 +60,10 @@ set_up_subsystem(struct spdk_subsystem *subsystem, const char *name)
 
 static void
 set_up_depends(struct spdk_subsystem_depend *depend, const char *subsystem_name,
-	       const char *dpends_on_name)
+	       const char *depends_on_name)
 {
 	depend->name = subsystem_name;
-	depend->depends_on = dpends_on_name;
+	depend->depends_on = depends_on_name;
 }
 
 static void

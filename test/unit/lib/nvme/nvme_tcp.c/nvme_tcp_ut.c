@@ -963,7 +963,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.common.plen == tqpair.send_pdu->hdr.term_req.common.hlen);
 	CU_ASSERT(tqpair.send_pdu->hdr.term_req.fei[0] == 2);
 
-	/* case 3: The TCP/IP tqpair connection is not negotitated. Expect: fail */
+	/* case 3: The TCP/IP tqpair connection is not negotiated. Expect: fail */
 	tqpair.recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_CAPSULE_RESP;
 	tqpair.state = NVME_TCP_QPAIR_STATE_INVALID;
 	tqpair.recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);

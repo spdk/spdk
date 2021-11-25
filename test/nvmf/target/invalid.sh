@@ -55,7 +55,7 @@ out=$("$rpc" nvmf_create_subsystem -s "$(gen_random_s 21)" "$nqn$RANDOM" 2>&1) &
 out=$("$rpc" nvmf_create_subsystem -d "$(gen_random_s 41)" "$nqn$RANDOM" 2>&1) && false
 [[ $out == *"Invalid MN"* ]]
 
-# Attempt to delete non-existing subsytem listener
+# Attempt to delete non-existing subsystem listener
 $rpc nvmf_create_transport --trtype "$TEST_TRANSPORT"
 $rpc nvmf_create_subsystem $nqn -s SPDK001 -a
 if [[ $TEST_TRANSPORT == "TCP" ]]; then

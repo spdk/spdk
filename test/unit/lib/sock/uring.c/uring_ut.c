@@ -206,7 +206,7 @@ flush_server(void)
 	req2->cb_arg = &cb_arg2;
 
 	/* we should not call _sock_flush directly, since it will finally
-	 * call liburing related funtions  */
+	 * call liburing related functions  */
 
 	/* Simple test - a request with a 2 element iovec
 	 * that is fully completed. */

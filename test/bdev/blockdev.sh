@@ -238,7 +238,7 @@ function run_qos_test() {
 	lower_limit=$((qos_limit * 9 / 10))
 	upper_limit=$((qos_limit * 11 / 10))
 
-	# QoS realization is related with bytes transfered. It currently has some variation.
+	# QoS realization is related with bytes transferred. It currently has some variation.
 	if [ $qos_result -lt $lower_limit ] || [ $qos_result -gt $upper_limit ]; then
 		echo "Failed to limit the io read rate of NULL bdev by qos"
 		$rpc_py bdev_malloc_delete $QOS_DEV_1

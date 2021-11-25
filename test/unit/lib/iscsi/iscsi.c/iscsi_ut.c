@@ -255,14 +255,14 @@ op_login_session_normal_test(void)
 	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
 	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_CONN_ADD_FAIL);
 
-	/* expect suceess: drop the session */
+	/* expect success: drop the session */
 	rsph->tsih = 0; /* to create the session */
 	g_iscsi.AllowDuplicateIsid = false;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,
 					   &param, 0);
 	CU_ASSERT(rc == 0);
 
-	/* expect suceess: create the session */
+	/* expect success: create the session */
 	rsph->tsih = 0; /* to create the session */
 	g_iscsi.AllowDuplicateIsid = true;
 	rc = iscsi_op_login_session_normal(&conn, &rsp_pdu, UT_INITIATOR_NAME1,

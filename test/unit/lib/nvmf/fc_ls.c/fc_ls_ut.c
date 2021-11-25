@@ -346,7 +346,7 @@ run_create_conn_test(struct spdk_nvmf_host *host,
 		to_be32(&cc_rqst.assoc_id.desc_len,
 			sizeof(struct spdk_nvmf_fc_lsdesc_assoc_id) -
 			(2 * sizeof(uint32_t)));
-	cc_rqst.assoc_id.association_id = assoc_id; /* alreday be64 */
+	cc_rqst.assoc_id.association_id = assoc_id; /* already be64 */
 
 	ls_rqst.rqstbuf.virt = &cc_rqst;
 	ls_rqst.rspbuf.virt = respbuf;
@@ -390,7 +390,7 @@ run_disconn_test(struct spdk_nvmf_fc_nport *tgt_port,
 		to_be32(&dc_rqst.assoc_id.desc_len,
 			sizeof(struct spdk_nvmf_fc_lsdesc_assoc_id) -
 			(2 * sizeof(uint32_t)));
-	dc_rqst.assoc_id.association_id = assoc_id; /* alreday be64 */
+	dc_rqst.assoc_id.association_id = assoc_id; /* already be64 */
 
 	ls_rqst.rqstbuf.virt = &dc_rqst;
 	ls_rqst.rspbuf.virt = respbuf;

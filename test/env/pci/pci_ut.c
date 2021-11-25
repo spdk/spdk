@@ -139,7 +139,7 @@ pci_hook_test(void)
 	ut_dev.pci.id.vendor_id = 0x4;
 	ut_dev.pci.id.device_id = 0x8;
 
-	/* Use add parse for initilization */
+	/* Use add parse for initialization */
 	spdk_pci_addr_parse(&ut_dev.pci.addr, "10000:00:01.0");
 	CU_ASSERT(ut_dev.pci.addr.domain == 0x10000);
 	CU_ASSERT(ut_dev.pci.addr.bus == 0x0);

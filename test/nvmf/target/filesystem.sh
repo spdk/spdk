@@ -42,11 +42,11 @@ function nvmf_filesystem_create() {
 }
 
 function nvmf_filesystem_part() {
-	incapsule=$1
+	in_capsule=$1
 
 	nvmfappstart -m 0xF
 
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c $incapsule
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c $in_capsule
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc1
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
@@ -63,14 +63,14 @@ function nvmf_filesystem_part() {
 	partprobe
 	sleep 1
 
-	if [ $incapsule -eq 0 ]; then
+	if [ $in_capsule -eq 0 ]; then
 		run_test "filesystem_ext4" nvmf_filesystem_create "ext4" ${nvme_name}
 		run_test "filesystem_btrfs" nvmf_filesystem_create "btrfs" ${nvme_name}
 		run_test "filesystem_xfs" nvmf_filesystem_create "xfs" ${nvme_name}
 	else
-		run_test "filesystem_incapsule_ext4" nvmf_filesystem_create "ext4" ${nvme_name}
-		run_test "filesystem_incapsule_btrfs" nvmf_filesystem_create "btrfs" ${nvme_name}
-		run_test "filesystem_incapsule_xfs" nvmf_filesystem_create "xfs" ${nvme_name}
+		run_test "filesystem_in_capsule_ext4" nvmf_filesystem_create "ext4" ${nvme_name}
+		run_test "filesystem_in_capsule_btrfs" nvmf_filesystem_create "btrfs" ${nvme_name}
+		run_test "filesystem_in_capsule_xfs" nvmf_filesystem_create "xfs" ${nvme_name}
 	fi
 
 	parted -s /dev/${nvme_name} rm 1
@@ -86,7 +86,7 @@ function nvmf_filesystem_part() {
 	nvmfpid=
 }
 
-run_test "nvmf_filesystem_no_incapsule" nvmf_filesystem_part 0
-run_test "nvmf_filesystem_incapsule" nvmf_filesystem_part 4096
+run_test "nvmf_filesystem_no_in_capsule" nvmf_filesystem_part 0
+run_test "nvmf_filesystem_in_capsule" nvmf_filesystem_part 4096
 
 nvmftestfini

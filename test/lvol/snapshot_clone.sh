@@ -17,7 +17,7 @@ function test_snapshot_compare_with_lvol_bdev() {
 	lvol_uuid1=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test1 "$lvol_size_mb" -t)
 	lvol_uuid2=$(rpc_cmd bdev_lvol_create -u "$lvs_uuid" lvol_test2 "$lvol_size_mb")
 
-	# Fill thin provisoned lvol bdev with 50% of its space
+	# Fill thin provisioned lvol bdev with 50% of its space
 	nbd_start_disks "$DEFAULT_RPC_ADDR" "$lvol_uuid1" /dev/nbd0
 	count=$((lvol_size / LVS_DEFAULT_CLUSTER_SIZE / 2))
 	dd if=/dev/urandom of=/dev/nbd0 oflag=direct bs="$LVS_DEFAULT_CLUSTER_SIZE" count=$count

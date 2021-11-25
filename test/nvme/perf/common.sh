@@ -209,7 +209,7 @@ function create_fio_config() {
 	cores_numa=($(get_cores_numa_node "${cores[*]}"))
 
 	# Following part of this function still leverages global variables a lot.
-	# It's a mix of local variables passed as aruments to function with global variables. This is messy.
+	# It's a mix of local variables passed as arguments to function with global variables. This is messy.
 	# TODO: Modify this to be consistent with how variables are used here. Aim for using only
 	# local variables to get rid of globals as much as possible.
 	desc="\"Test io_plugin=$PLUGIN Blocksize=${BLK_SIZE} Workload=$RW MIX=${MIX} qd=${IODEPTH}\""

@@ -30,10 +30,10 @@ thread_stats() {
 idle() {
 	local reactor_framework
 	local reactors thread
-	local cpusmask thread_cpumask
+	local cpumask thread_cpumask
 	local threads
 
-	exec_under_dynamic_scheduler "${SPDK_APP[@]}" -m "$spdk_cpusmask" --main-core "$spdk_main_core"
+	exec_under_dynamic_scheduler "${SPDK_APP[@]}" -m "$spdk_cpumask" --main-core "$spdk_main_core"
 
 	# The expectation here is that when SPDK app is idle the following is true:
 	# - all threads are assigned to main lcore
@@ -41,7 +41,7 @@ idle() {
 
 	xtrace_disable
 	while ((samples++ < 5)); do
-		cpusmask=0
+		cpumask=0
 		reactor_framework=$(rpc_cmd framework_get_reactors | jq -r '.reactors[]')
 		threads=($(
 			jq -r "select(.lcore == $spdk_main_core) | .lw_threads[].name" <<< "$reactor_framework"
@@ -49,10 +49,10 @@ idle() {
 
 		for thread in "${threads[@]}"; do
 			thread_cpumask=0x$(jq -r "select(.lcore == $spdk_main_core) | .lw_threads[] | select(.name == \"$thread\") | .cpumask" <<< "$reactor_framework")
-			((cpusmask |= thread_cpumask))
+			((cpumask |= thread_cpumask))
 		done
 
-		printf 'SPDK cpumask: %x Threads cpumask: %x\n' "$spdk_cpusmask" "$cpusmask"
+		printf 'SPDK cpumask: %x Threads cpumask: %x\n' "$spdk_cpumask" "$cpumask"
 		thread_stats
 	done
 

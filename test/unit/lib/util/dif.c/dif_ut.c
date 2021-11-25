@@ -1739,7 +1739,7 @@ set_md_interleave_iovs_alignment_test(void)
 	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 5, iovs, 3, 0, 2048, &mapped_len, &ctx);
 	CU_ASSERT(rc == -ERANGE);
 
-	/* The folllowing are the normal cases. */
+	/* The following are the normal cases. */
 	_iov_set_buf(&iovs[2], (uint8_t *)0xC0FFEE, 32);
 
 	/* data length is less than a data block size. */

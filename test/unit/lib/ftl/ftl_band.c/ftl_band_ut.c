@@ -300,7 +300,7 @@ test_next_xfer_addr(void)
 	struct ftl_addr addr, result, expect;
 
 	setup_band();
-	/* Verify simple one block incremention */
+	/* Verify simple one block increment */
 	addr = addr_from_punit(0);
 	addr.offset += TEST_BAND_IDX * ftl_get_num_blocks_in_band(g_dev);
 	expect = addr;

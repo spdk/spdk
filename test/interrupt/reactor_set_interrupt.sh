@@ -14,7 +14,7 @@ function reactor_set_intr_mode() {
 	thd0_ids=($(reactor_get_thread_ids $r0_mask))
 	thd2_ids=($(reactor_get_thread_ids $r2_mask))
 
-	# Nubmer of thd0_ids shouldn't be zero
+	# Number of thd0_ids shouldn't be zero
 	if [[ ${#thd0_ids[*]} -eq 0 ]]; then
 		echo "spdk_thread is expected in reactor 0."
 		return 1

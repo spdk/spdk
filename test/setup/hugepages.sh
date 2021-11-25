@@ -7,12 +7,12 @@ shopt -s extglob nullglob
 
 declare -a nodes_sys=()
 
-declare -i default_huges=0
+declare -i default_hugepages=0
 declare -i no_nodes=0
 declare -i nr_hugepages=0
 
-default_huges=$(get_meminfo Hugepagesize)
-default_huge_nr=/sys/kernel/mm/hugepages/hugepages-${default_huges}kB/nr_hugepages
+default_hugepages=$(get_meminfo Hugepagesize)
+default_huge_nr=/sys/kernel/mm/hugepages/hugepages-${default_hugepages}kB/nr_hugepages
 global_huge_nr=/proc/sys/vm/nr_hugepages
 
 # Make sure environment doesn't affect the tests
@@ -25,7 +25,7 @@ get_nodes() {
 	local node
 
 	for node in /sys/devices/system/node/node+([0-9]); do
-		nodes_sys[${node##*node}]=$(< "$node/hugepages/hugepages-${default_huges}kB/nr_hugepages")
+		nodes_sys[${node##*node}]=$(< "$node/hugepages/hugepages-${default_hugepages}kB/nr_hugepages")
 	done
 	no_nodes=${#nodes_sys[@]}
 	((no_nodes > 0))
@@ -50,9 +50,9 @@ get_test_nr_hugepages() {
 		local node_ids=("$@")
 	fi
 
-	((size >= default_huges))
+	((size >= default_hugepages))
 
-	nr_hugepages=$(((size + default_huges - 1) / default_huges))
+	nr_hugepages=$(((size + default_hugepages - 1) / default_hugepages))
 	get_test_nr_hugepages_per_node "${node_ids[@]}"
 }
 
@@ -98,7 +98,7 @@ verify_nr_hugepages() {
 	# There's no obvious way of determining which NUMA node is going to end
 	# up with an odd number of hugepages in case such number was actually
 	# allocated by the kernel. Considering that, let's simply check if our
-	# expaction is met by sorting and comparing it with nr of hugepages that
+	# expectation is met by sorting and comparing it with nr of hugepages that
 	# was actually allocated on each node.
 
 	for node in "${!nodes_test[@]}"; do
@@ -176,7 +176,7 @@ hp_status() {
 
 	while read -r node size free _ total; do
 		size=${size/kB/} node=${node#node}
-		((size == default_huges)) || continue
+		((size == default_hugepages)) || continue
 		((free == nodes_test[node]))
 		((total == nodes_test[node]))
 	done < <(setup output status |& grep "node[0-9]")
