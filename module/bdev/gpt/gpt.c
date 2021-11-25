@@ -202,7 +202,7 @@ gpt_read_header(struct spdk_gpt *gpt)
 	to_le32(&head->header_crc32, original_crc);
 
 	if (new_crc != original_crc) {
-		SPDK_ERRLOG("head crc32 does not match, provided=%u, caculated=%u\n",
+		SPDK_ERRLOG("head crc32 does not match, provided=%u, calculated=%u\n",
 			    original_crc, new_crc);
 		return -1;
 	}

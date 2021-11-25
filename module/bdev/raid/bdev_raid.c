@@ -1253,7 +1253,7 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
 	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 	assert(raid_bdev->num_base_bdevs_discovered);
 	TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
-	SPDK_DEBUGLOG(bdev_raid, "raid bdev state chaning from online to offline\n");
+	SPDK_DEBUGLOG(bdev_raid, "raid bdev state changing from online to offline\n");
 
 	spdk_bdev_unregister(&raid_bdev->bdev, cb_fn, cb_arg);
 }

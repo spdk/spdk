@@ -269,7 +269,7 @@ _zone_block_complete_unmap(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
 	/* Complete the original IO and then free the one that we created here
-	 * as a result of issuing an IO via submit_reqeust.
+	 * as a result of issuing an IO via submit_request.
 	 */
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
@@ -376,7 +376,7 @@ _zone_block_complete_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 	}
 
 	/* Complete the original IO and then free the one that we created here
-	 * as a result of issuing an IO via submit_reqeust.
+	 * as a result of issuing an IO via submit_request.
 	 */
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
@@ -471,7 +471,7 @@ _zone_block_complete_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_a
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
 	/* Complete the original IO and then free the one that we created here
-	 * as a result of issuing an IO via submit_reqeust.
+	 * as a result of issuing an IO via submit_request.
 	 */
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);

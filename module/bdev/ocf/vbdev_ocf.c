@@ -1323,7 +1323,7 @@ vbdev_ocf_module_fini(void)
 	vbdev_ocf_ctx_cleanup();
 }
 
-/* When base device gets unpluged this is called
+/* When base device gets unplugged this is called
  * We will unregister cache vbdev here
  * When cache device is removed, we delete every OCF bdev that used it */
 static void

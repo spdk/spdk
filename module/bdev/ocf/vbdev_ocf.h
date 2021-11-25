@@ -67,7 +67,7 @@ struct vbdev_ocf_state {
 	bool                         doing_clean_delete;
 	/* From the moment when finish started */
 	bool                         doing_finish;
-	/* From the moment when reset IO recieved, until it is completed */
+	/* From the moment when reset IO received, until it is completed */
 	bool                         doing_reset;
 	/* From the moment when exp_bdev is registered */
 	bool                         started;

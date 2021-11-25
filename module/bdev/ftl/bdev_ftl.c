@@ -472,7 +472,7 @@ bdev_ftl_finish(void)
 }
 
 static void
-bdev_ftl_create_defered_cb(const struct ftl_bdev_info *info, void *ctx, int status)
+bdev_ftl_create_deferred_cb(const struct ftl_bdev_info *info, void *ctx, int status)
 {
 	struct ftl_deferred_init *opts = ctx;
 
@@ -501,8 +501,8 @@ bdev_ftl_examine(struct spdk_bdev *bdev)
 
 		LIST_REMOVE(opts, entry);
 
-		/* spdk_bdev_module_examine_done will be called by bdev_ftl_create_defered_cb */
-		if (bdev_ftl_create_bdev(&opts->opts, bdev_ftl_create_defered_cb, opts)) {
+		/* spdk_bdev_module_examine_done will be called by bdev_ftl_create_deferred_cb */
+		if (bdev_ftl_create_bdev(&opts->opts, bdev_ftl_create_deferred_cb, opts)) {
 			SPDK_ERRLOG("Failed to initialize FTL bdev '%s'\n", opts->opts.name);
 			bdev_ftl_defer_free(opts);
 			break;

@@ -767,7 +767,7 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
  * is likely to be non-accessible now but may become accessible.
  *
  * If any io_path has an unfailed ctrlr but find_io_path() returned NULL, the ctrlr
- * is likely to be resetting now but the reset may succeeed. A ctrlr is set to unfailed
+ * is likely to be resetting now but the reset may succeed. A ctrlr is set to unfailed
  * when starting to reset it but it is set to failed when the reset failed. Hence, if
  * a ctrlr is unfailed, it is likely that it works fine or is resetting.
  */

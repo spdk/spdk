@@ -546,7 +546,7 @@ delay_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 
 /* We provide this callback for the SPDK channel code to destroy a channel
  * created with our create callback. We just need to undo anything we did
- * when we created. If this bdev used its own poller, we'd unregsiter it here.
+ * when we created. If this bdev used its own poller, we'd unregister it here.
  */
 static void
 delay_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)

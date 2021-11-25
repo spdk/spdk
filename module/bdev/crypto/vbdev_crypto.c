@@ -583,7 +583,7 @@ crypto_dev_poller(void *args)
 	for (i = 0; i < num_dequeued_ops; i++) {
 
 		/* We don't know the order or association of the crypto ops wrt any
-		 * partiular bdev_io so need to look at each and determine if it's
+		 * particular bdev_io so need to look at each and determine if it's
 		 * the last one for it's bdev_io or not.
 		 */
 		bdev_io = (struct spdk_bdev_io *)*RTE_MBUF_DYNFIELD(dequeued_ops[i]->sym->m_src, g_mbuf_offset,

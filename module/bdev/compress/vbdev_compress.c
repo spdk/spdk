@@ -99,7 +99,7 @@ static TAILQ_HEAD(, compress_dev) g_compress_devs = TAILQ_HEAD_INITIALIZER(g_com
 struct comp_device_qp {
 	struct compress_dev		*device;	/* ptr to compression device */
 	uint8_t				qp;		/* queue pair for this node */
-	struct spdk_thread		*thread;	/* thead that this qp is assigned to */
+	struct spdk_thread		*thread;	/* thread that this qp is assigned to */
 	TAILQ_ENTRY(comp_device_qp)	link;
 };
 static TAILQ_HEAD(, comp_device_qp) g_comp_device_qp = TAILQ_HEAD_INITIALIZER(g_comp_device_qp);
@@ -982,7 +982,7 @@ _delete_vol_unload_cb(void *ctx)
 {
 	struct vbdev_compress *comp_bdev = ctx;
 
-	/* FIXME: Assert if these conditions are not satisified for now. */
+	/* FIXME: Assert if these conditions are not satisfied for now. */
 	assert(!comp_bdev->reduce_thread ||
 	       comp_bdev->reduce_thread == spdk_get_thread());
 
