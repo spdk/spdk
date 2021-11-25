@@ -201,6 +201,7 @@ struct spdk_nvmf_listener {
  * A subset of struct spdk_nvme_ctrlr_data that are emulated by a fabrics device.
  */
 struct spdk_nvmf_ctrlr_data {
+	uint8_t aerl;
 	uint16_t kas;
 	/** pci vendor id */
 	uint16_t vid;

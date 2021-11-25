@@ -304,6 +304,7 @@ static void
 nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
 		      struct spdk_nvmf_ctrlr_data *cdata)
 {
+	cdata->aerl = NVMF_MAX_ASYNC_EVENTS - 1;
 	cdata->kas = KAS_DEFAULT_VALUE;
 	cdata->vid = SPDK_PCI_VID_INTEL;
 	cdata->ssvid = SPDK_PCI_VID_INTEL;
@@ -2498,7 +2499,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	cdata->mdts = spdk_u32log2(transport->opts.max_io_size / 4096);
 	cdata->cntlid = ctrlr->cntlid;
 	cdata->ver = ctrlr->vcprop.vs;
-	cdata->aerl = NVMF_MAX_ASYNC_EVENTS - 1;
+	cdata->aerl = ctrlr->cdata.aerl;
 	cdata->lpa.edlp = 1;
 	cdata->elpe = 127;
 	cdata->maxcmd = transport->opts.max_queue_depth;
