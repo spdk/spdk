@@ -2,7 +2,7 @@
 # This script simply iterates over all libs SPDK binaries link
 # to and returns a list of .rpm packages SPDK may depend on. At
 # the end, the list strictly relates to how the SPDK build was
-# ./configure'ed.
+# ./configure'd.
 
 shopt -s nullglob
 
