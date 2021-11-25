@@ -732,7 +732,7 @@ This allows the initiator to create persistent connection to discovery controlle
 be notified of any discovery log changes.
 
 An `opts_size` element was added in the `spdk_nvmf_transport_opts` structure
-to solve the ABI compatiblity issue between different SPDK version. And also add
+to solve the ABI compatibility issue between different SPDK version. And also add
 `opts_size` parameter in `spdk_nvmf_transport_opts_init` function.
 
 Added a new custom vfio-user transport implementation in NVMe-oF which can provide
@@ -1004,11 +1004,11 @@ query the capabilities of the currently enabled accel engine back-end.
 
 A new capability, CRC-32C, was added via `spdk_accel_submit_crc32c`.
 
-The software accel engine implemenation has added support for CRC-32C.
+The software accel engine implementation has added support for CRC-32C.
 
 A new capability, compare, was added via `spdk_accel_submit_compare`.
 
-The software accel engine implemenation has added support for compare.
+The software accel engine implementation has added support for compare.
 
 Several APIs were added to `accel_engine.h` to support batched submission
 of operations.
@@ -1063,7 +1063,7 @@ A new API `spdk_ioat_get_max_descriptors` was added.
 ### nvme
 
 An `opts_size`element was added in the  `spdk_nvme_ctrlr_opts` structure
-to solve the ABI compatiblity issue between different SPDK version.
+to solve the ABI compatibility issue between different SPDK version.
 
 A new API `spdk_nvme_ctrlr_cmd_abort_ext` has been added to abort previously submitted
 commands whose callback argument match.
@@ -1444,7 +1444,7 @@ log page requests.
 ### nvmf
 
 Add SockPriority option in [Transport] section, this can be used for NVMe-oF target
-on TCP transport to set sock priority for the incomming TCP connections.
+on TCP transport to set sock priority for the incoming TCP connections.
 
 The NVMe-oF target now supports plugging out of tree NVMe-oF transports. In order
 to facilitate this feature, several small API changes have been made:
@@ -1562,7 +1562,7 @@ to blobfs.
 Added new parameter `cdw0` to `spdk_bdev_io_complete_nvme_status()` and
 `spdk_bdev_io_get_nvme_status()` that allows setting/getting
 the NVMe completion queue DW0 entry. This allows vendor specific IO commands
-to return commmand specific completion info back to the initiator.
+to return command specific completion info back to the initiator.
 
 Added `spdk_bdev_get_write_unit_size()` function for retrieving required number
 of logical blocks for write operation.
@@ -1796,8 +1796,8 @@ A new file API `spdk_posix_file_load` was added to load file content into a data
 New APIs `spdk_dif_ctx_set_data_offset`, `spdk_dif_verify_stream`,
 `spdk_dif_get_range_with_md`, `spdk_dif_get_length_with_md` have been added,
 and existing APIs `spdk_dif_ctx_init`, `spdk_dif_set_md_interleave_iovs`, and
-`spdk_dif_generate_stream` have been refined to insert or strip DIF by stream
-fasion with any alignment.
+`spdk_dif_generate_stream` have been refined to insert or strip DIF into iovs
+windows of any alignment.
 
 New APIs `spdk_dif_ctx_set_remapped_init_ref_tag`, `spdk_dif_remap_ref_tag`,
 and `spdk_dix_remap_ref_tag` have been added to remap DIF reference tag.
@@ -1834,7 +1834,7 @@ while some compatibility fixes make their way down the pipeline for 5.1.x kernel
 
 The sock priority setting of the TCP connection owned by the tcp transport is added. It is
 used to optimize the TCP connection performance under designated traffic classes. And the
-priority is used to differeniate the sock priority between SPDK NVMe-oF TCP target application
+priority is used to differentiate the sock priority between SPDK NVMe-oF TCP target application
 and other TCP based applications.
 
 Shared receive queue can now be disabled even for NICs that support it using the
@@ -1886,7 +1886,7 @@ modules. When using partition type virtual bdevs, block address space is
 remapped during I/O processing and DIF reference tag is remapped accordingly.
 
 Added spdk_bdev_*_with_md() functions allowing for IO with metadata being transferred in
-separate buffer. To check support for separatate metadata, use spdk_bdev_is_md_separate().
+separate buffer. To check support for separate metadata, use spdk_bdev_is_md_separate().
 
 All bdevs now have a UUID. For devices whose backing hardware does not provide a UUID,
 one is automatically generated. Across runs of SPDK, bdevs whose UUID is automatically
@@ -1905,7 +1905,7 @@ limited requests in NVMe driver layer.
 Added spdk_nvme_ctrlr_get_transport_id() to get the transport ID from a
 previously attached controller.
 
-Nvme Opal library spdk_opal_cmd deprecated. Adding seperate command APIs.
+Nvme Opal library spdk_opal_cmd deprecated. Adding separate command APIs.
 NVMe Opal library add support for activating locking SP which will make the transaction
 from "Manufactured-Inactive" state to "Manufactured" state. Upon successfully invoking
 of this method, lock and unlock features will be enabled.
@@ -1973,7 +1973,7 @@ spdk_sock_set_priority() is added to set the priority of the socket.
 
 Added thread_get_stats RPC method to retrieve existing statistics.
 
-Added nvmf_get_stats RPC method to retrieve NVMf susbsystem statistics.
+Added nvmf_get_stats RPC method to retrieve NVMf subsystem statistics.
 
 Response buffers for RPC requests are now always pre-allocated, which implies
 that all spdk_jsonrpc_begin_result() calls always succeed and return a valid
@@ -2258,7 +2258,7 @@ be combined with link time optimization which has been available under the
 ### compression bdev/reduce library
 
 Added "reduce" block compression scheme based on using SSDs for storing
-compressed blocks of storage and presistent memory for metadata. Please see
+compressed blocks of storage and persistent memory for metadata. Please see
 [compression](https://spdk.io/doc/bdev.html) for more details.
 
 ## v19.01: NVMe-oF TCP/IP Transport, Open Channel SSD Flash Translation Layer, Caching bdev based on OCF, ISA-L Support, DIF/DIX library
@@ -2386,7 +2386,7 @@ configure the shared buffer numbers of the transport used by RDMA or TCP transpo
 
 ### nvmf
 
-Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
+Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this transport,
 the SPDK NVMe-oF target can have a new transport, and can serve the NVMe-oF
 protocol via TCP/IP from the host.
 
@@ -2414,7 +2414,7 @@ for the bdev type to be removed (i.e. delete_malloc_bdev).
 
 Added support for separate bandwidth rate limits for read and write to QoS in bdev layer.
 
-Bdev I/O statistics now track unmap opertations.
+Bdev I/O statistics now track unmap operations.
 
 ### logical volumes
 
@@ -2513,7 +2513,7 @@ RPC `wait_subsystem_init` has been added to allow clients to block untill all su
 ### json rpc
 
 JSON RPC client is now running in non-blocking mode. Requests are sent and received during spdk_jsonrpc_client_poll.
-JSON RPC server can now recieve a callback on connection termination or server shutdown using `spdk_jsonrpc_conn_add_close_cb`
+JSON RPC server can now receive a callback on connection termination or server shutdown using `spdk_jsonrpc_conn_add_close_cb`
 and `spdk_jsonrpc_conn_del_close_cb`.
 
 ## v18.10: Dynamic memory allocation, Crypto Virtual Bdev, jsonrpc-client, SPDKCLI iSCSI and NVMe-oF support
@@ -2654,7 +2654,7 @@ for Python 2 up to the EOL which is year 2020.
 Invoking interpreter explicitly is forbidden for executable scripts. There
 is no need to use syntax like "python ./scripts/rpc.py". All executable
 scripts must contain proper shebang pointing to the right interpreter.
-Scripts without shebang musn't be executable.
+Scripts without shebang mustn't be executable.
 
 A Python script has been added to enable conversion of old INI config file
 to new JSON-RPC config file format. This script can be found at
@@ -3030,7 +3030,7 @@ framework (include/spdk/event.h) to the I/O channel library
 framework to request registration and unregistration of pollers.
 
 spdk_for_each_channel() now allows asynchronous operations during iteration.
-Instead of immediately continuing the interation upon returning from the iteration
+Instead of immediately continuing the interaction upon returning from the iteration
 callback, the user must call spdk_for_each_channel_continue() to resume iteration.
 
 ### Block Device Abstraction Layer (bdev)
@@ -3174,7 +3174,7 @@ The NVMe-oF target no longer requires any in-capsule data buffers to run, and
 the feature is now entirely optional. Previously, at least 4 KiB in-capsule
 data buffers were required.
 
-NVMe-oF subsytems have a new configuration option, AllowAnyHost, to control
+NVMe-oF subsystems have a new configuration option, AllowAnyHost, to control
 whether the host NQN whitelist is enforced when accepting new connections.
 If no Host options have been specified and AllowAnyHost is disabled, the
 connection will be denied; this is a behavior change from previous releases,
