@@ -611,6 +611,19 @@ _worker_stop(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
+static inline void
+identify_accel_engine_usage(struct spdk_io_channel *ch)
+{
+	uint64_t capabilities;
+
+	assert(ch != NULL);
+	capabilities = spdk_accel_get_capabilities(ch);
+	if ((capabilities & g_workload_selection) != g_workload_selection) {
+		SPDK_WARNLOG("The selected workload is not natively supported by the current engine\n");
+		SPDK_WARNLOG("The software engine will be used instead.\n\n");
+	}
+}
+
 static void
 _init_thread(void *arg1)
 {
@@ -632,11 +645,16 @@ _init_thread(void *arg1)
 	worker->core = spdk_env_get_current_core();
 	worker->thread = spdk_get_thread();
 	pthread_mutex_lock(&g_workers_lock);
+	i = g_num_workers;
 	g_num_workers++;
 	worker->next = g_workers;
 	g_workers = worker;
 	pthread_mutex_unlock(&g_workers_lock);
 	worker->ch = spdk_accel_engine_get_io_channel();
+
+	if (i == 0) {
+		identify_accel_engine_usage(worker->ch);
+	}
 
 	TAILQ_INIT(&worker->tasks_pool);
 
@@ -680,24 +698,6 @@ error:
 	spdk_app_stop(-1);
 }
 
-static inline void
-identify_accel_engine_usage(void)
-{
-	struct spdk_io_channel *ch;
-	uint64_t capabilities;
-
-	ch = spdk_accel_engine_get_io_channel();
-	assert(ch != NULL);
-
-	capabilities = spdk_accel_get_capabilities(ch);
-	if ((capabilities & g_workload_selection) != g_workload_selection) {
-		SPDK_WARNLOG("The selected workload is not natively supported by the current engine\n");
-		SPDK_WARNLOG("The software engine will be used instead.\n\n");
-	}
-
-	spdk_put_io_channel(ch);
-}
-
 static void
 accel_perf_start(void *arg1)
 {
@@ -707,8 +707,6 @@ accel_perf_start(void *arg1)
 	int j;
 	struct spdk_thread *thread;
 	struct display_info *display;
-
-	identify_accel_engine_usage();
 
 	g_tsc_rate = spdk_get_ticks_hz();
 	g_tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
