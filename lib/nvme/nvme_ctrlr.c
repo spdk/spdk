@@ -1610,8 +1610,8 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static int
-nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
+int
+spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair	*qpair;
 
@@ -1657,10 +1657,34 @@ nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	return 0;
+}
+
+void
+spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
-	/* Return without releasing ctrlr_lock. ctrlr_lock will be released when spdk_nvme_ctrlr_reset_poll_async() returns 0. */
+	/* Return without releasing ctrlr_lock. ctrlr_lock will be released when
+	 * spdk_nvme_ctrlr_reset_poll_async() returns 0.
+	 */
+}
+
+static int
+nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	rc = spdk_nvme_ctrlr_disconnect(ctrlr);
+	if (rc != 0) {
+		return rc;
+	}
+
+	spdk_nvme_ctrlr_reconnect_async(ctrlr);
 	return 0;
 }
 
@@ -1668,8 +1692,8 @@ nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
  * This function will be called when the controller is being reinitialized.
  * Note: the ctrlr_lock must be held when calling this function.
  */
-static int
-nvme_ctrlr_reinit_on_reset(struct spdk_nvme_ctrlr *ctrlr)
+int
+spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair	*qpair;
 	int rc = 0, rc_tmp = 0;
@@ -1742,7 +1766,7 @@ nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ctrlr_reset_ctx->ctrlr;
 
-	return nvme_ctrlr_reinit_on_reset(ctrlr);
+	return spdk_nvme_ctrlr_reconnect_poll_async(ctrlr);
 }
 
 int

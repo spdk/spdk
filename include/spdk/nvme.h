@@ -1079,6 +1079,8 @@ struct spdk_nvme_ctrlr_reset_ctx;
 
 /**
  * Create a context object that can be polled to perform a full hardware reset of the NVMe controller.
+ * (Deprecated, please use spdk_nvme_ctrlr_disconnect(), spdk_nvme_ctrlr_reconnect_async(), and
+ * spdk_nvme_ctrlr_reconnect_poll_async() instead.)
  *
  * The function will set the controller reset context on success, user must call
  * spdk_nvme_ctrlr_reset_poll_async() until it returns a value other than -EAGAIN.
@@ -1097,6 +1099,8 @@ int spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
 
 /**
  * Proceed with resetting controller associated with the controller reset context.
+ * (Deprecated, please use spdk_nvme_ctrlr_disconnect(), spdk_nvme_ctrlr_reconnect_async(), and
+ * spdk_nvme_ctrlr_reconnect_poll_async() instead.)
  *
  * The controller reset context is one returned from a previous call to
  * spdk_nvme_ctrlr_reset_async().  Users must call this function on the
@@ -1110,6 +1114,37 @@ int spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
  * spdk_nvme_ctrlr_reset_poll_async again to continue progress.
  */
 int spdk_nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx);
+
+/**
+ * Disconnect the given NVMe controller.
+ *
+ * This function is used as the first operation of a full reset sequence of the given NVMe
+ * controller. The NVMe controller is ready to reconnect after completing this function.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return 0 on success, -EBUSY if controller is already resetting, or -ENXIO if controller
+ * has been removed.
+ */
+int spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Start re-enabling the given NVMe controller in a full reset sequence
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ */
+void spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Proceed with re-enabling the given NVMe controller.
+ *
+ * Users must call this function in a full reset sequence until it returns a value other
+ * than -EAGAIN.
+ *
+ * \return 0 if the given NVMe controller is enabled, or -EBUSY if there are still
+ * pending operations to enable it.
+ */
+int spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Perform a NVMe subsystem reset.

@@ -19,6 +19,13 @@ removed in SPDK 22.04, and the parameter `transport_retry_count` is added and us
 
 An new parameter `bdev_retry_count` is added to the RPC `bdev_nvme_set_options`.
 
+### nvme
+
+New APIs, `spdk_nvme_ctrlr_disconnect`, `spdk_nvme_ctrlr_reconnect_async`, and
+`spdk_nvme_ctrlr_reconnect_poll_async`, have been added to improve error recovery, and
+the existing APIs,`spdk_nvme_ctrlr_reset_async` and `spdk_nvme_ctrlr_reset_poll_async`
+were deprecated.
+
 ## v21.10
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify
