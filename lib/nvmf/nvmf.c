@@ -717,18 +717,52 @@ struct spdk_nvmf_tgt_add_transport_ctx {
 	struct spdk_nvmf_transport *transport;
 	spdk_nvmf_tgt_add_transport_done_fn cb_fn;
 	void *cb_arg;
+	int status;
 };
+
+static void
+_nvmf_tgt_remove_transport_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_tgt_add_transport_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb_fn(ctx->cb_arg, ctx->status);
+	free(ctx);
+}
+
+static void
+_nvmf_tgt_remove_transport(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_tgt_add_transport_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+
+	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
+		if (tgroup->transport == ctx->transport) {
+			TAILQ_REMOVE(&group->tgroups, tgroup, link);
+			nvmf_transport_poll_group_destroy(tgroup);
+		}
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
 
 static void
 _nvmf_tgt_add_transport_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_tgt_add_transport_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 
-	if (!status) {
-		ctx->transport->tgt = ctx->tgt;
-		TAILQ_INSERT_TAIL(&ctx->tgt->transports, ctx->transport, link);
+	if (status) {
+		ctx->status = status;
+		spdk_for_each_channel(ctx->tgt,
+				      _nvmf_tgt_remove_transport,
+				      ctx,
+				      _nvmf_tgt_remove_transport_done);
+		return;
 	}
 
+	ctx->transport->tgt = ctx->tgt;
+	TAILQ_INSERT_TAIL(&ctx->tgt->transports, ctx->transport, link);
 	ctx->cb_fn(ctx->cb_arg, status);
 	free(ctx);
 }
