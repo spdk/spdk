@@ -869,11 +869,6 @@ struct spdk_vhost_dev *
 spdk_vhost_dev_find(const char *ctrlr_name)
 {
 	struct spdk_vhost_dev *vdev;
-	size_t dev_dirname_len = strlen(dev_dirname);
-
-	if (strncmp(ctrlr_name, dev_dirname, dev_dirname_len) == 0) {
-		ctrlr_name += dev_dirname_len;
-	}
 
 	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
 		if (strcmp(vdev->name, ctrlr_name) == 0) {
@@ -1498,8 +1493,14 @@ vhost_new_connection_cb(int vid, const char *ifname)
 {
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
+	size_t dev_dirname_len;
 
 	pthread_mutex_lock(&g_vhost_mutex);
+
+	dev_dirname_len = strlen(dev_dirname);
+	if (strncmp(ifname, dev_dirname, dev_dirname_len) == 0) {
+		ifname += dev_dirname_len;
+	}
 
 	vdev = spdk_vhost_dev_find(ifname);
 	if (vdev == NULL) {
