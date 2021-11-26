@@ -724,11 +724,12 @@ _nvmf_tgt_add_transport_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_nvmf_tgt_add_transport_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 
-	if (status) {
-		TAILQ_REMOVE(&ctx->tgt->transports, ctx->transport, link);
+	if (!status) {
+		ctx->transport->tgt = ctx->tgt;
+		TAILQ_INSERT_TAIL(&ctx->tgt->transports, ctx->transport, link);
 	}
-	ctx->cb_fn(ctx->cb_arg, status);
 
+	ctx->cb_fn(ctx->cb_arg, status);
 	free(ctx);
 }
 
@@ -755,9 +756,6 @@ void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
 		cb_fn(cb_arg, -EEXIST);
 		return; /* transport already created */
 	}
-
-	transport->tgt = tgt;
-	TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
