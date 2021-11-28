@@ -221,6 +221,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"ddgst", offsetof(struct rpc_bdev_nvme_attach_controller, opts.data_digest), spdk_json_decode_bool, true},
 	{"fabrics_connect_timeout_us", offsetof(struct rpc_bdev_nvme_attach_controller, opts.fabrics_connect_timeout_us), spdk_json_decode_uint64, true},
 	{"multipath", offsetof(struct rpc_bdev_nvme_attach_controller, multipath), spdk_json_decode_string, true},
+	{"num_io_queues", offsetof(struct rpc_bdev_nvme_attach_controller, opts.num_io_queues), spdk_json_decode_uint32, true},
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -477,6 +478,13 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	if (ctx->req.multipath != NULL && strcasecmp(ctx->req.multipath, "multipath") == 0) {
 		multipath = true;
+	}
+
+	if (ctx->req.opts.num_io_queues == 0 || ctx->req.opts.num_io_queues > UINT16_MAX + 1) {
+		spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
+						     "num_io_queues out of bounds, min: %u max: %u\n",
+						     1, UINT16_MAX + 1);
+		goto cleanup;
 	}
 
 	ctx->request = request;

@@ -523,7 +523,7 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
 def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                                 priority=None, subnqn=None, hostnqn=None, hostaddr=None,
                                 hostsvcid=None, prchk_reftag=None, prchk_guard=None,
-                                hdgst=None, ddgst=None, fabrics_timeout=None, multipath=None):
+                                hdgst=None, ddgst=None, fabrics_timeout=None, multipath=None, num_io_queues=None):
     """Construct block device for each NVMe namespace in the attached controller.
 
     Args:
@@ -543,6 +543,7 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         ddgst: Enable TCP data digest (optional)
         fabrics_timeout: Fabrics connect timeout in us (optional)
         multipath: The behavior when multiple paths are created ("disable", "failover", or "multipath"; failover if not specified)
+        num_io_queues: The number of IO queues to request during initialization. (optional)
 
     Returns:
         Names of created block devices.
@@ -589,6 +590,9 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
 
     if multipath:
         params['multipath'] = multipath
+
+    if num_io_queues:
+        params['num_io_queues'] = num_io_queues
 
     return client.call('bdev_nvme_attach_controller', params)
 
