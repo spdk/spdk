@@ -113,15 +113,6 @@ struct nvme_bdev_io {
 	int32_t retry_count;
 };
 
-struct nvme_probe_ctx {
-	size_t count;
-	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
-	struct spdk_nvme_host_id hostids[NVME_MAX_CONTROLLERS];
-	const char *names[NVME_MAX_CONTROLLERS];
-	uint32_t prchk_flags[NVME_MAX_CONTROLLERS];
-	const char *hostnqn;
-};
-
 struct nvme_probe_skip_entry {
 	struct spdk_nvme_transport_id		trid;
 	TAILQ_ENTRY(nvme_probe_skip_entry)	tailq;
@@ -3286,22 +3277,9 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct nvme_probe_ctx *ctx = cb_ctx;
-	char *name = NULL;
-	uint32_t prchk_flags = 0;
-	size_t i;
+	char *name;
 
-	if (ctx) {
-		for (i = 0; i < ctx->count; i++) {
-			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
-				prchk_flags = ctx->prchk_flags[i];
-				name = strdup(ctx->names[i]);
-				break;
-			}
-		}
-	} else {
-		name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
-	}
+	name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
 	if (!name) {
 		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
 		return;
@@ -3309,7 +3287,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(bdev_nvme, "Attached to %s (%s)\n", trid->traddr, name);
 
-	nvme_ctrlr_create(ctrlr, name, trid, prchk_flags, NULL);
+	nvme_ctrlr_create(ctrlr, name, trid, 0, NULL);
 
 	free(name);
 }
