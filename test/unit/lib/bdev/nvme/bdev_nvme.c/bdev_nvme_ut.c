@@ -1194,7 +1194,7 @@ test_create_ctrlr(void)
 
 	ut_init_trid(&trid);
 
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, NULL);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") != NULL);
@@ -1227,7 +1227,7 @@ test_reset_ctrlr(void)
 
 	set_thread(0);
 
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, NULL);
 	CU_ASSERT(rc == 0);
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
@@ -1339,7 +1339,7 @@ test_race_between_reset_and_destruct_ctrlr(void)
 
 	set_thread(0);
 
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, NULL);
 	CU_ASSERT(rc == 0);
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
@@ -1418,7 +1418,7 @@ test_failover_ctrlr(void)
 
 	set_thread(0);
 
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid1, 0, NULL);
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid1, NULL);
 	CU_ASSERT(rc == 0);
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
@@ -2484,7 +2484,7 @@ test_get_io_qpair(void)
 
 	set_thread(0);
 
-	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, 0, NULL);
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid, NULL);
 	CU_ASSERT(rc == 0);
 
 	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");

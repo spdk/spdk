@@ -3180,7 +3180,6 @@ static int
 nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		  const char *name,
 		  const struct spdk_nvme_transport_id *trid,
-		  uint32_t prchk_flags,
 		  struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
@@ -3229,7 +3228,9 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		goto err;
 	}
 
-	nvme_ctrlr->prchk_flags = prchk_flags;
+	if (ctx != NULL) {
+		nvme_ctrlr->prchk_flags = ctx->prchk_flags;
+	}
 
 	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_ctrlr,
 					  g_opts.nvme_adminq_poll_period_us);
@@ -3287,7 +3288,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(bdev_nvme, "Attached to %s (%s)\n", trid->traddr, name);
 
-	nvme_ctrlr_create(ctrlr, name, trid, 0, NULL);
+	nvme_ctrlr_create(ctrlr, name, trid, NULL);
 
 	free(name);
 }
@@ -3631,7 +3632,7 @@ connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
 	ctx->ctrlr_attached = true;
 
-	rc = nvme_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx->prchk_flags, ctx);
+	rc = nvme_ctrlr_create(ctrlr, ctx->base_name, &ctx->trid, ctx);
 	if (rc != 0) {
 		populate_namespaces_cb(ctx, 0, rc);
 	}
