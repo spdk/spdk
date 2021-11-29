@@ -59,8 +59,9 @@ DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
 ifeq ($(CONFIG_CRYPTO),y)
-# crypto/qat is just a stub, the compress/qat pmd is used instead
-DPDK_DRIVERS += crypto crypto/aesni_mb
+DPDK_DRIVERS += crypto crypto/ipsec_mb
+# aesni_mb is name of the PMD in DPDK 21.08 and earlier
+DPDK_DRIVERS += crypto/aesni_mb
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
