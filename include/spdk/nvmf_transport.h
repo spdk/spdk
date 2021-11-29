@@ -89,12 +89,6 @@ enum spdk_nvmf_zcopy_phase {
 	NVMF_ZCOPY_PHASE_INIT_FAILED  /* Failed to get the buffers */
 };
 
-static inline bool
-spdk_nvmf_using_zcopy(enum spdk_nvmf_zcopy_phase phase)
-{
-	return (phase != NVMF_ZCOPY_PHASE_NONE);
-}
-
 struct spdk_nvmf_request {
 	struct spdk_nvmf_qpair		*qpair;
 	uint32_t			length;
@@ -456,6 +450,12 @@ int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req, bool commit);
+
+static inline bool
+spdk_nvmf_request_using_zcopy(const struct spdk_nvmf_request *req)
+{
+	return req->zcopy_phase != NVMF_ZCOPY_PHASE_NONE;
+}
 
 /**
  * Remove the given qpair from the poll group.

@@ -311,7 +311,7 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	assert(!spdk_nvmf_using_zcopy(req->zcopy_phase));
+	assert(!spdk_nvmf_request_using_zcopy(req));
 
 	rc = spdk_bdev_readv_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
 				    nvmf_bdev_ctrlr_complete_cmd, req);
@@ -362,7 +362,7 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	assert(!spdk_nvmf_using_zcopy(req->zcopy_phase));
+	assert(!spdk_nvmf_request_using_zcopy(req));
 
 	rc = spdk_bdev_writev_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
 				     nvmf_bdev_ctrlr_complete_cmd, req);

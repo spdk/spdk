@@ -801,7 +801,7 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 static void
 nvmf_add_to_outstanding_queue(struct spdk_nvmf_request *req)
 {
-	if (!spdk_nvmf_using_zcopy(req->zcopy_phase)) {
+	if (!spdk_nvmf_request_using_zcopy(req)) {
 		/* if using zcopy then request has been added when the start zcopy was actioned */
 		struct spdk_nvmf_qpair *qpair = req->qpair;
 		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
@@ -4170,7 +4170,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_transport *transport = qpair->transport;
 	enum spdk_nvmf_request_exec_status status;
 
-	if (!spdk_nvmf_using_zcopy(req->zcopy_phase)) {
+	if (!spdk_nvmf_request_using_zcopy(req)) {
 		if (!nvmf_check_subsystem_active(req)) {
 			return;
 		}
