@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
+#include "spdk/string.h"
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
@@ -89,6 +90,7 @@ struct arb_context {
 	int					queue_depth;
 	int					time_in_sec;
 	int					io_count;
+	bool					hugepage_single_segments;
 	uint8_t					latency_tracking_enable;
 	uint8_t					arbitration_mechanism;
 	uint8_t					arbitration_config;
@@ -111,6 +113,7 @@ static TAILQ_HEAD(, ns_entry) g_namespaces	= TAILQ_HEAD_INITIALIZER(g_namespaces
 static TAILQ_HEAD(, worker_thread) g_workers	= TAILQ_HEAD_INITIALIZER(g_workers);
 
 static struct feature features[SPDK_NVME_FEAT_ARBITRATION + 1] = {};
+static struct spdk_nvme_transport_id g_trid = {};
 
 static struct arb_context g_arbitration = {
 	.shm_id					= -1,
@@ -498,6 +501,8 @@ usage(char *program_name)
 	printf("\t\t(0 - disabled; 1 - enabled)\n");
 	printf("\t[-n subjected IOs for performance comparison]\n");
 	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-r remote NVMe over Fabrics target address]\n");
+	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
 }
 
 static const char *
@@ -650,13 +655,25 @@ parse_args(int argc, char **argv)
 	bool mix_specified		= false;
 	long int val;
 
-	while ((op = getopt(argc, argv, "c:l:i:m:q:s:t:w:M:a:b:n:h")) != -1) {
+	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
+	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	while ((op = getopt(argc, argv, "a:b:c:ghi:l:m:n:q:r:s:t:w:M:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_arbitration.core_mask = optarg;
 			break;
 		case 'w':
 			g_arbitration.workload_type = optarg;
+			break;
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
+			break;
+		case 'g':
+			g_arbitration.hugepage_single_segments = true;
 			break;
 		case 'h':
 		case '?':
@@ -850,7 +867,7 @@ register_controllers(void)
 {
 	printf("Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
