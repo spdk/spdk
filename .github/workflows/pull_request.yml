@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'doc/**'
+      - '*.md'
+    branches:
+      # on pull requests to master and release branches
+      - master
+      - 'v*'
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y astyle libcunit1-dev libaio-dev libssl-dev \
+           libnuma-dev uuid-dev lcov nasm meson ninja-build python3-pyelftools
+          git submodule update --init
+          export MAKEFLAGS="-j$(nproc)"
+
+      - name: Lint
+        run: ./scripts/check_format.sh
+
+      - name: Build
+        run: |
+          ./configure --enable-werror --without-isal --enable-debug --enable-coverage --enable-asan --with-crypto
+          make
+
+      - name: Running Tests
+        run: ./test/unit/unittest.sh
