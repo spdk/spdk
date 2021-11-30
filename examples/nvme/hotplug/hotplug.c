@@ -444,31 +444,37 @@ parse_args(int argc, char **argv)
 			return 1;
 		}
 
-		if (op == 'm') {
-			g_iova_mode = optarg;
-			continue;
-		}
-
-		val = spdk_strtol(optarg, 10);
-		if (val < 0) {
-			fprintf(stderr, "Converting a string to integer failed\n");
-			return val;
-		}
 		switch (op) {
 		case 'c':
-			g_timeout_in_us = val * SPDK_SEC_TO_USEC;
-			break;
 		case 'i':
-			g_shm_id = val;
-			break;
 		case 'n':
-			g_expected_insert_times = val;
-			break;
 		case 'r':
-			g_expected_removal_times = val;
-			break;
 		case 't':
-			g_time_in_sec = val;
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val;
+			}
+			switch (op) {
+			case 'c':
+				g_timeout_in_us = val * SPDK_SEC_TO_USEC;
+				break;
+			case 'i':
+				g_shm_id = val;
+				break;
+			case 'n':
+				g_expected_insert_times = val;
+				break;
+			case 'r':
+				g_expected_removal_times = val;
+				break;
+			case 't':
+				g_time_in_sec = val;
+				break;
+			}
+			break;
+		case 'm':
+			g_iova_mode = optarg;
 			break;
 		default:
 			usage(argv[0]);
