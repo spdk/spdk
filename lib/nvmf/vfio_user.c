@@ -136,12 +136,18 @@ struct nvme_q {
 	};
 };
 
-enum nvmf_vfio_user_qpair_state {
-	VFIO_USER_QPAIR_UNINITIALIZED = 0,
-	VFIO_USER_QPAIR_ACTIVE,
-	VFIO_USER_QPAIR_SQ_DELETED,
-	VFIO_USER_QPAIR_INACTIVE,
-	VFIO_USER_QPAIR_ERROR,
+enum nvmf_vfio_user_sq_state {
+	VFIO_USER_SQ_UNUSED = 0,
+	VFIO_USER_SQ_CREATED,
+	VFIO_USER_SQ_DELETED,
+	VFIO_USER_SQ_ACTIVE,
+	VFIO_USER_SQ_INACTIVE
+};
+
+enum nvmf_vfio_user_cq_state {
+	VFIO_USER_CQ_UNUSED = 0,
+	VFIO_USER_CQ_CREATED,
+	VFIO_USER_CQ_DELETED,
 };
 
 struct nvmf_vfio_user_qpair {
@@ -150,9 +156,12 @@ struct nvmf_vfio_user_qpair {
 	struct nvmf_vfio_user_ctrlr		*ctrlr;
 	struct nvmf_vfio_user_req		*reqs_internal;
 	uint32_t				qsize;
+
 	struct nvme_q				cq;
+	enum nvmf_vfio_user_cq_state		cq_state;
+
 	struct nvme_q				sq;
-	enum nvmf_vfio_user_qpair_state		state;
+	enum nvmf_vfio_user_sq_state		sq_state;
 
 	/* Copy of Create IO SQ command */
 	struct spdk_nvme_cmd			create_io_sq_cmd;
@@ -940,8 +949,8 @@ io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const boo
 	}
 
 	if (!is_cq) {
-		if (vu_ctrlr->qp[qid]->state == VFIO_USER_QPAIR_SQ_DELETED ||
-		    vu_ctrlr->qp[qid]->state == VFIO_USER_QPAIR_UNINITIALIZED) {
+		if (vu_ctrlr->qp[qid]->sq_state == VFIO_USER_SQ_DELETED ||
+		    vu_ctrlr->qp[qid]->sq_state == VFIO_USER_SQ_UNUSED) {
 			return false;
 		}
 	}
@@ -1242,8 +1251,8 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		*tdbl(ctrlr, io_q) = 0;
 		vu_qpair->sq.head = 0;
 
-		if (vu_qpair->state == VFIO_USER_QPAIR_SQ_DELETED) {
-			vu_qpair->state = VFIO_USER_QPAIR_ACTIVE;
+		if (vu_qpair->sq_state == VFIO_USER_SQ_DELETED) {
+			vu_qpair->sq_state = VFIO_USER_SQ_ACTIVE;
 		} else {
 			/*
 			 * Create our new I/O qpair. This asynchronously invokes, on a
@@ -1308,13 +1317,13 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	vu_qpair = ctrlr->qp[cmd->cdw10_bits.delete_io_q.qid];
 	if (is_cq) {
-		if (vu_qpair->state == VFIO_USER_QPAIR_UNINITIALIZED) {
+		if (vu_qpair->sq_state == VFIO_USER_SQ_UNUSED) {
 			free_qp(ctrlr, cmd->cdw10_bits.delete_io_q.qid);
 			goto out;
 		}
 
 		/* SQ must have been deleted first */
-		if (vu_qpair->state != VFIO_USER_QPAIR_SQ_DELETED) {
+		if (vu_qpair->sq_state != VFIO_USER_SQ_DELETED) {
 			SPDK_ERRLOG("%s: the associated SQ must be deleted first\n", ctrlr_id(ctrlr));
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			sc = SPDK_NVME_SC_INVALID_QUEUE_DELETION;
@@ -1331,7 +1340,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		spdk_nvmf_qpair_disconnect(&vu_qpair->qpair, vfio_user_qpair_delete_cb, ctx);
 		return 0;
 	} else {
-		if (vu_qpair->state == VFIO_USER_QPAIR_SQ_DELETED) {
+		if (vu_qpair->sq_state == VFIO_USER_SQ_DELETED) {
 			SPDK_DEBUGLOG(nvmf_vfio, "%s: SQ%u is already deleted\n", ctrlr_id(ctrlr),
 				      cmd->cdw10_bits.delete_io_q.qid);
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -1344,7 +1353,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		 * function to skip checking this SQ.  The queue pair will be disconnected in Delete
 		 * IO CQ command.
 		 */
-		vu_qpair->state = VFIO_USER_QPAIR_SQ_DELETED;
+		vu_qpair->sq_state = VFIO_USER_SQ_DELETED;
 		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, vu_qpair->sq.sg, &vu_qpair->sq.iov, 1);
 		vu_qpair->sq.addr = NULL;
 	}
@@ -1530,7 +1539,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 
 	pthread_mutex_lock(&endpoint->lock);
 	TAILQ_FOREACH(qpair, &ctrlr->connected_qps, tailq) {
-		if (qpair->state != VFIO_USER_QPAIR_INACTIVE) {
+		if (qpair->sq_state != VFIO_USER_SQ_INACTIVE) {
 			continue;
 		}
 
@@ -1538,7 +1547,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		if (ret) {
 			continue;
 		}
-		qpair->state = VFIO_USER_QPAIR_ACTIVE;
+		qpair->sq_state = VFIO_USER_SQ_ACTIVE;
 		SPDK_DEBUGLOG(nvmf_vfio, "Remap QP %u successfully\n", qpair->qpair.qid);
 	}
 	pthread_mutex_unlock(&endpoint->lock);
@@ -1586,7 +1595,7 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 			 * before returning to caller.
 			 */
 			unmap_qp(qpair);
-			qpair->state = VFIO_USER_QPAIR_INACTIVE;
+			qpair->sq_state = VFIO_USER_SQ_INACTIVE;
 		}
 	}
 	pthread_mutex_unlock(&endpoint->lock);
@@ -1641,7 +1650,7 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 						SPDK_ERRLOG("%s: failed to map Admin queue\n", ctrlr_id(vu_ctrlr));
 						return ret;
 					}
-					vu_qpair->state = VFIO_USER_QPAIR_ACTIVE;
+					vu_qpair->sq_state = VFIO_USER_SQ_ACTIVE;
 				} else {
 					disable_admin = true;
 				}
@@ -1657,7 +1666,7 @@ nvmf_vfio_user_prop_req_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 				SPDK_DEBUGLOG(nvmf_vfio,
 					      "%s: UNMAP Admin queue\n",
 					      ctrlr_id(vu_ctrlr));
-				vu_qpair->state = VFIO_USER_QPAIR_INACTIVE;
+				vu_qpair->sq_state = VFIO_USER_SQ_INACTIVE;
 				disable_admin_queue(vu_ctrlr);
 				/* For PCIe controller reset or shutdown, we will drop all AER responses */
 				nvmf_ctrlr_abort_aer(vu_qpair->qpair.ctrlr);
@@ -2441,7 +2450,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 	vu_group = SPDK_CONTAINEROF(vu_qpair->group, struct nvmf_vfio_user_poll_group, group);
 	TAILQ_INSERT_TAIL(&vu_group->qps, vu_qpair, link);
-	vu_qpair->state = VFIO_USER_QPAIR_ACTIVE;
+	vu_qpair->sq_state = VFIO_USER_SQ_ACTIVE;
 
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&vu_qpair->qpair)) {
@@ -2918,7 +2927,7 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	TAILQ_FOREACH_SAFE(vu_qpair, &vu_group->qps, link, tmp) {
 		int ret;
 
-		if (spdk_unlikely(vu_qpair->state != VFIO_USER_QPAIR_ACTIVE || !vu_qpair->sq.size)) {
+		if (spdk_unlikely(vu_qpair->sq_state != VFIO_USER_SQ_ACTIVE || !vu_qpair->sq.size)) {
 			continue;
 		}
 
