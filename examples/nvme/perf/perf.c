@@ -5,7 +5,7 @@
  *   All rights reserved.
  *
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -991,7 +991,6 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 
 		if (spdk_nvme_ctrlr_connect_io_qpair(entry->u.nvme.ctrlr, qpair)) {
 			printf("ERROR: unable to connect I/O qpair.\n");
-			spdk_nvme_poll_group_remove(group, qpair);
 			spdk_nvme_ctrlr_free_io_qpair(qpair);
 			goto qpair_failed;
 		}
@@ -1001,7 +1000,6 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 
 qpair_failed:
 	for (; i > 0; --i) {
-		spdk_nvme_poll_group_remove(ns_ctx->u.nvme.group, ns_ctx->u.nvme.qpair[i - 1]);
 		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair[i - 1]);
 	}
 
@@ -1017,7 +1015,6 @@ nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	int i;
 
 	for (i = 0; i < ns_ctx->u.nvme.num_all_qpairs; i++) {
-		spdk_nvme_poll_group_remove(ns_ctx->u.nvme.group, ns_ctx->u.nvme.qpair[i]);
 		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair[i]);
 	}
 
