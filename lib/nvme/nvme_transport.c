@@ -752,7 +752,7 @@ int
 nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
-	int rc;
+	int rc __attribute__((unused));
 
 	tgroup = qpair->poll_group;
 
@@ -762,16 +762,13 @@ nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 
 	if (qpair->poll_group_tailq_head == &tgroup->connected_qpairs) {
 		rc = tgroup->transport->ops.poll_group_disconnect_qpair(qpair);
-		if (rc == 0) {
-			qpair->poll_group_tailq_head = &tgroup->disconnected_qpairs;
-			STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
-			STAILQ_INSERT_TAIL(&tgroup->disconnected_qpairs, qpair, poll_group_stailq);
-			/* EINPROGRESS indicates that a call has already been made to this function.
-			 * It just keeps us from segfaulting on a double removal/insert.
-			 */
-		}
+		assert(rc == 0);
 
-		return rc == -EINPROGRESS ? 0 : rc;
+		qpair->poll_group_tailq_head = &tgroup->disconnected_qpairs;
+		STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
+		STAILQ_INSERT_TAIL(&tgroup->disconnected_qpairs, qpair, poll_group_stailq);
+
+		return 0;
 	}
 
 	return -EINVAL;
