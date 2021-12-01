@@ -44,6 +44,7 @@ struct cluster_register_info {
 	char *user_id;
 	char **config_param;
 	char *config_file;
+	char *key_file;
 };
 
 void bdev_rbd_free_config(char **config);

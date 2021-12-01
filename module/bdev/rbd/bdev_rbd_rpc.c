@@ -269,13 +269,15 @@ free_rpc_register_cluster(struct cluster_register_info *req)
 	free(req->user_id);
 	bdev_rbd_free_config(req->config_param);
 	free(req->config_file);
+	free(req->key_file);
 }
 
 static const struct spdk_json_object_decoder rpc_register_cluster_decoders[] = {
 	{"name", offsetof(struct cluster_register_info, name), spdk_json_decode_string, true},
 	{"user_id", offsetof(struct cluster_register_info, user_id), spdk_json_decode_string, true},
 	{"config_param", offsetof(struct cluster_register_info, config_param), bdev_rbd_decode_config, true},
-	{"config_file", offsetof(struct cluster_register_info, config_file), spdk_json_decode_string, true}
+	{"config_file", offsetof(struct cluster_register_info, config_file), spdk_json_decode_string, true},
+	{"key_file", offsetof(struct cluster_register_info, key_file), spdk_json_decode_string, true}
 };
 
 static void

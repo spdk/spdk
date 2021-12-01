@@ -93,6 +93,7 @@ struct bdev_rbd_cluster {
 	char *user_id;
 	char **config_param;
 	char *config_file;
+	char *key_file;
 	rados_t cluster;
 	uint32_t ref;
 	STAILQ_ENTRY(bdev_rbd_cluster) link;
@@ -109,6 +110,7 @@ bdev_rbd_cluster_free(struct bdev_rbd_cluster *entry)
 
 	bdev_rbd_free_config(entry->config_param);
 	free(entry->config_file);
+	free(entry->key_file);
 	free(entry->user_id);
 	free(entry->name);
 	free(entry);
@@ -803,6 +805,9 @@ bdev_rbd_cluster_dump_entry(const char *cluster_name, struct spdk_json_write_ctx
 		} else if (entry->config_file) {
 			spdk_json_write_named_string(w, "config_file", entry->config_file);
 		}
+		if (entry->key_file) {
+			spdk_json_write_named_string(w, "key_file", entry->key_file);
+		}
 
 		pthread_mutex_unlock(&g_map_bdev_rbd_cluster_mutex);
 		return;
@@ -910,6 +915,9 @@ dump_single_cluster_entry(struct bdev_rbd_cluster *entry, struct spdk_json_write
 	} else if (entry->config_file) {
 		spdk_json_write_named_string(w, "config_file", entry->config_file);
 	}
+	if (entry->key_file) {
+		spdk_json_write_named_string(w, "key_file", entry->key_file);
+	}
 
 	spdk_json_write_object_end(w);
 }
@@ -967,7 +975,7 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 
 static int
 rbd_register_cluster(const char *name, const char *user_id, const char *const *config_param,
-		     const char *config_file)
+		     const char *config_file, const char *key_file)
 {
 	struct bdev_rbd_cluster *entry;
 	int rc;
@@ -1017,6 +1025,14 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 		}
 	}
 
+	if (key_file) {
+		entry->key_file = strdup(key_file);
+		if (entry->key_file == NULL) {
+			SPDK_ERRLOG("Failed to save the key_file=%s on entry = %p\n", key_file, entry);
+			goto err_handle;
+		}
+	}
+
 	rc = rados_create(&entry->cluster, user_id);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to create rados_t struct\n");
@@ -1038,6 +1054,15 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 		rc = rados_conf_read_file(entry->cluster, entry->config_file);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to read conf file\n");
+			rados_shutdown(entry->cluster);
+			goto err_handle;
+		}
+	}
+
+	if (key_file) {
+		rc = rados_conf_set(entry->cluster, "keyring", key_file);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to set keyring = %s\n", key_file);
 			rados_shutdown(entry->cluster);
 			goto err_handle;
 		}
@@ -1104,7 +1129,8 @@ _bdev_rbd_register_cluster(void *arg)
 	int rc;
 
 	rc = rbd_register_cluster((const char *)info->name, (const char *)info->user_id,
-				  (const char *const *)info->config_param, (const char *)info->config_file);
+				  (const char *const *)info->config_param, (const char *)info->config_file,
+				  (const char *)info->key_file);
 	if (rc) {
 		ret = NULL;
 	}

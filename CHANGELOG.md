@@ -28,6 +28,9 @@ removed in SPDK 22.04, and the parameter `transport_retry_count` is added and us
 
 An new parameter `bdev_retry_count` is added to the RPC `bdev_nvme_set_options`.
 
+Added 'key_file' parameter to the 'rbd_register_cluster' RPC.  It is an optional parameter to
+specify a keyring file to connect to a RADOS cluster.
+
 ### nvme
 
 New APIs, `spdk_nvme_ctrlr_disconnect`, `spdk_nvme_ctrlr_reconnect_async`, and

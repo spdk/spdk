@@ -3606,20 +3606,26 @@ name                    | Required | string      | Registerd Rados cluster objec
 user_id                 | Optional | string      | Ceph ID (i.e. admin, not client.admin)
 config_param            | Optional | string map  | Explicit librados configuration
 config_file             | Optional | string      | File path of libraodos configuration file
+key_file                | Optional | string      | File path of libraodos key file
 
 This RPC registers a Rados Cluster object handle which is only known
-to rbd module, it uses user_id + config_param or user_id + config_file to
-identify a Rados cluster object.
-
-If no config_param is specified, Ceph configuration files must exist with
-all relevant settings for accessing the Ceph cluster. If a config map is
-passed, the configuration files are ignored and instead all key/value
-pairs are passed to rados_conf_set to configure cluster access. In
-practice, "mon_host" (= list of monitor address+port) and "key" (= the
-secret key stored in Ceph keyrings) are enough.
+to rbd module, it uses user_id + config_param or user_id + config_file +
+key_file or user_id + config_param + config_file + key_file to identify
+a Rados cluster object.
 
 When accessing the Ceph cluster as some user other than "admin" (the
 default), the "user_id" has to be set.
+
+The configuration items and secret key can be specified by setting config_param,
+config_file and key_file, all of them, or none of them. If only config_param is
+passed, all key/value pairs are passed to rados_conf_set to configure cluster access.
+In practice, "mon_host" (= list of monitor address+port) and "key" (= the secret key
+stored in Ceph keyrings) are enough. If config_file and key_file are specified, they must
+exist with all relevant settings for accessing the Ceph cluster. If config_param, config_file
+and key_file are specified, get the key/value pairs from config_file first and set to
+rados_conf_set function, then set pairs in config_param and keyring in key_file. If nothing
+is specified, it will get configuration file and key file from the default location
+/etc/ceph/ceph.conf and /etc/ceph/ceph.client.user_id.keyring.
 
 #### Result
 
@@ -3627,16 +3633,15 @@ Name of newly created Rados cluster object.
 
 #### Example
 
-Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
+Example request:
 
 ~~
 {
   "params": {
     "name": "rbd_cluster",
-    "config_param": {
-      "mon_host": "192.168.7.1:6789,192.168.7.2:6789",
-      "key": "AQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ==",
-    }
+    "user_id": cinder,
+    "config_file": "/root/ceph_conf/ceph.conf",
+    "key_file": "/root/ceph_conf/ceph.client.cinder.keyring"
   },
   "jsonrpc": "2.0",
   "method": "bdev_rbd_register_cluster",
