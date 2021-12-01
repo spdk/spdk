@@ -159,6 +159,7 @@ struct nvmf_vfio_user_qpair {
 
 	struct nvme_q				cq;
 	enum nvmf_vfio_user_cq_state		cq_state;
+	uint32_t				cq_ref;
 
 	struct nvme_q				sq;
 	enum nvmf_vfio_user_sq_state		sq_state;
@@ -1225,6 +1226,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 		io_q = &ctrlr->qp[qid]->sq;
 		io_q->cqid = cqid;
+		ctrlr->qp[io_q->cqid]->cq_ref++;
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: SQ%d CQID=%d\n", ctrlr_id(ctrlr),
 			      qid, io_q->cqid);
 	}
@@ -1322,13 +1324,13 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			goto out;
 		}
 
-		/* SQ must have been deleted first */
-		if (vu_qpair->sq_state != VFIO_USER_SQ_DELETED) {
+		if (vu_qpair->cq_ref) {
 			SPDK_ERRLOG("%s: the associated SQ must be deleted first\n", ctrlr_id(ctrlr));
 			sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			sc = SPDK_NVME_SC_INVALID_QUEUE_DELETION;
 			goto out;
 		}
+
 		ctx = calloc(1, sizeof(*ctx));
 		if (!ctx) {
 			sct = SPDK_NVME_SCT_GENERIC;
@@ -1356,6 +1358,9 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		vu_qpair->sq_state = VFIO_USER_SQ_DELETED;
 		vfu_unmap_sg(ctrlr->endpoint->vfu_ctx, vu_qpair->sq.sg, &vu_qpair->sq.iov, 1);
 		vu_qpair->sq.addr = NULL;
+
+		assert(ctrlr->qp[vu_qpair->sq.cqid]->cq_ref);
+		ctrlr->qp[vu_qpair->sq.cqid]->cq_ref--;
 	}
 
 out:
