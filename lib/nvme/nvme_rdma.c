@@ -209,8 +209,6 @@ struct nvme_rdma_qpair {
 
 	bool					delay_cmd_submit;
 
-	bool					poll_group_disconnect_in_progress;
-
 	uint32_t				num_completions;
 
 	/* Parallel arrays of response buffers + response SGLs of size num_entries */
@@ -2633,24 +2631,10 @@ nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	struct nvme_rdma_qpair			*rqpair = nvme_rdma_qpair(qpair);
 	struct nvme_rdma_poll_group		*group;
 	struct nvme_rdma_destroyed_qpair	*destroyed_qpair;
-	enum nvme_qpair_state			state;
 
-	if (rqpair->poll_group_disconnect_in_progress) {
-		return -EINPROGRESS;
-	}
-
-	rqpair->poll_group_disconnect_in_progress = true;
-	state = nvme_qpair_get_state(qpair);
 	group = nvme_rdma_poll_group(qpair->poll_group);
-	rqpair->cq = NULL;
 
-	/*
-	 * We want to guard against an endless recursive loop while making
-	 * sure the qpair is disconnected before we disconnect it from the qpair.
-	 */
-	if (state > NVME_QPAIR_DISCONNECTING && state != NVME_QPAIR_DESTROYING) {
-		nvme_ctrlr_disconnect_qpair(qpair);
-	}
+	rqpair->cq = NULL;
 
 	/* qpair has requests submitted to HW, need to wait for their completion.
 	 * Allocate a tracker and attach it to poll group */
@@ -2671,7 +2655,6 @@ nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 
 	rqpair->defer_deletion_to_pg = true;
 
-	rqpair->poll_group_disconnect_in_progress = false;
 	return 0;
 }
 

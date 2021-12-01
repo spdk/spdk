@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1038,7 +1038,6 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair->qpair);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rqpair->defer_deletion_to_pg == true);
-	CU_ASSERT(rqpair->poll_group_disconnect_in_progress == false);
 	CU_ASSERT(rqpair->cq == NULL);
 	CU_ASSERT(!STAILQ_EMPTY(&group.destroyed_qpairs));
 
@@ -1068,11 +1067,6 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(rqpair->cq == NULL);
 
-	/* Poll group disconnect in progress */
-	rqpair->poll_group_disconnect_in_progress = true;
-
-	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair->qpair);
-	CU_ASSERT(rc == -EINPROGRESS);
 	free(rqpair);
 }
 
