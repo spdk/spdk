@@ -367,9 +367,9 @@ static int
 app_setup_trace(struct spdk_app_opts *opts)
 {
 	char		shm_name[64];
-	uint64_t	tpoint_group_mask;
-	char		*end = NULL, *tpoint_group_mask_str;
-	char		*tpoint_group_str, *tp_g_str;
+	uint64_t	tpoint_group_mask, tpoint_mask = -1ULL;
+	char		*end = NULL, *tpoint_group_mask_str, *tpoint_group_str = NULL;
+	char		*tp_g_str, *tpoint_group, *tpoints;
 
 	if (opts->shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
@@ -394,13 +394,41 @@ app_setup_trace(struct spdk_app_opts *opts)
 	 * to free later, because spdk_strsepq() modifies given char*. */
 	tp_g_str = tpoint_group_mask_str;
 	while ((tpoint_group_str = spdk_strsepq(&tpoint_group_mask_str, ",")) != NULL) {
-		errno = 0;
-		tpoint_group_mask = strtoull(tpoint_group_str, &end, 16);
-		if (*end != '\0' || errno) {
-			break;
+		if (strchr(tpoint_group_str, ':')) {
+			/* Get the tpoint group mask */
+			tpoint_group = spdk_strsepq(&tpoint_group_str, ":");
+			/* Get the tpoint mask inside that group */
+			tpoints = spdk_strsepq(&tpoint_group_str, ":");
+
+			errno = 0;
+			tpoint_group_mask = strtoull(tpoint_group, &end, 16);
+			if (*end != '\0' || errno) {
+				break;
+			}
+			/* Check if tpoint group mask has only one bit set.
+			 * This is to avoid enabling individual tpoints in
+			 * more than one tracepoint group at once. */
+			if (!spdk_u64_is_pow2(tpoint_group_mask)) {
+				SPDK_ERRLOG("Tpoint group mask: %s contains multiple tpoint groups.\n", tpoint_group);
+				SPDK_ERRLOG("This is not supported, to prevent from activating tpoints by mistake.\n");
+				break;
+			}
+
+			errno = 0;
+			tpoint_mask = strtoull(tpoints, &end, 16);
+			if (*end != '\0' || errno) {
+				break;
+			}
+		} else {
+			errno = 0;
+			tpoint_group_mask = strtoull(tpoint_group_str, &end, 16);
+			if (*end != '\0' || errno) {
+				break;
+			}
+			tpoint_mask = -1ULL;
 		}
 
-		spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
+		spdk_trace_set_tpoints(spdk_u64log2(tpoint_group_mask), tpoint_mask);
 	}
 
 	if (tpoint_group_str != NULL) {

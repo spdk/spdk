@@ -222,8 +222,9 @@ spdk_trace_mask_usage(FILE *f, const char *tmask_arg)
 {
 	struct spdk_trace_register_fn *register_fn;
 
-	fprintf(f, " %s, --tpoint-group-mask <mask>\n", tmask_arg);
-	fprintf(f, "                           tracepoint group mask for spdk trace buffers (default 0x0");
+	fprintf(f, " %s, --tpoint-group-mask <group-mask>[:<tpoint_mask>]\n", tmask_arg);
+	fprintf(f, "                           group_mask - tracepoint group mask ");
+	fprintf(f, "for spdk trace buffers (default 0x0");
 
 	register_fn = g_reg_fn_head;
 	while (register_fn) {
@@ -232,6 +233,13 @@ spdk_trace_mask_usage(FILE *f, const char *tmask_arg)
 	}
 
 	fprintf(f, ", all 0xffff)\n");
+	fprintf(f, "                           tpoint_mask - tracepoint mask for enabling individual");
+	fprintf(f, " tpoints inside a tracepoint group.");
+	fprintf(f, " First tpoint inside a group can be");
+	fprintf(f, " enabled by setting tpoint_mask to 1 (e.g. 0x8:1).\n");
+	fprintf(f, "                            Masks can be combined (e.g. 0x400,0x8:1).\n");
+	fprintf(f, "                            All available tpoints can be found in");
+	fprintf(f, " /include/spdk_internal/trace_defs.h\n");
 }
 
 void
