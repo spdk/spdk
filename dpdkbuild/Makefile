@@ -54,6 +54,12 @@ endif
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
+# Core DPDK libs
+DPDK_LIBS = eal ring mempool pci
+DPDK_LIBS += kvargs telemetry
+# Governor required libs
+DPDK_LIBS += power timer ethdev net
+
 # common crypto/reduce drivers
 ifeq ($(findstring y,$(CONFIG_CRYPTO)$(CONFIG_REDUCE)),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
@@ -75,6 +81,17 @@ endif
 DPDK_CFLAGS += -I$(ISAL_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal
 endif
+
+# crypto & compress deps
+DPDK_LIBS += reorder cryptodev
+DPDK_LIBS += compressdev
+DPDK_LIBS += security
+
+# vhost and deps
+DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost
+
+# raid5 deps
+DPDK_LIBS += hash rcu
 
 DPDK_OPTS += -Dmachine=$(TARGET_ARCHITECTURE)
 
@@ -123,6 +140,10 @@ endif
 # Force-disable scan-build
 SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
 
+DPDK_ALL_LIB_DIRS = $(shell find $(SPDK_ROOT_DIR)/dpdk/lib -mindepth 1 -maxdepth 1 -type d)
+DPDK_ALL_LIBS = $(DPDK_ALL_LIB_DIRS:$(SPDK_ROOT_DIR)/dpdk/lib/%=%)
+DPDK_DISABLED_LIBS = $(filter-out $(DPDK_LIBS),$(DPDK_ALL_LIBS))
+
 ifneq ($(OS),FreeBSD)
 SED_INPLACE_FLAG = "-i"
 MESON_PREFIX = $(SPDK_ROOT_DIR)/dpdk/build
@@ -163,7 +184,7 @@ all: $(SPDK_ROOT_DIR)/dpdk/build-tmp
 
 $(SPDK_ROOT_DIR)/dpdk/build-tmp: $(SPDK_ROOT_DIR)/mk/cc.mk $(SPDK_ROOT_DIR)/include/spdk/config.h
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build $(SPDK_ROOT_DIR)/dpdk/build-tmp
-	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")" build-tmp
+	$(Q)cd "$(SPDK_ROOT_DIR)/dpdk"; CC="$(SUB_CC)" meson --prefix="$(MESON_PREFIX)" --libdir lib -Dc_args="$(DPDK_CFLAGS)" -Dc_link_args="$(DPDK_LDFLAGS)" $(DPDK_OPTS) -Denable_drivers="$(shell echo $(DPDK_DRIVERS) | sed -E "s/ +/,/g")" -Ddisable_libs="$(shell echo $(DPDK_DISABLED_LIBS) | sed -E "s/ +/,/g")" build-tmp
 	$(Q)sed $(SED_INPLACE_FLAG) 's/#define RTE_EAL_PMD_PATH .*/#define RTE_EAL_PMD_PATH ""/g' $(SPDK_ROOT_DIR)/dpdk/build-tmp/rte_build_config.h
 	$(Q) \
 	# TODO Meson build adds libbsd dependency when it's available. This means any app will be \
