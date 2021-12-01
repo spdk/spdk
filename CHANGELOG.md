@@ -16,6 +16,9 @@ Many APIs are now vectored rather than scalar, meaning they take iovecs instead 
 API `spdk_nvme_trtype_is_fabrics` was added to return existing transport type
 is fabric or not.
 
+API `spdk_nvme_poll_group_remove` was limited to be available only for a
+disconnected qpair in the group.
+
 ### bdev_nvme
 
 Added `num_io_queues` to `bdev_nvme_attach_controller` RPC to allow specifying amount

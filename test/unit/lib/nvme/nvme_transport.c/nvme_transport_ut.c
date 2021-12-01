@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -209,9 +209,9 @@ test_nvme_transport_poll_group_add_remove(void)
 	STAILQ_INSERT_TAIL(&tgroup.connected_qpairs, &qpair, poll_group_stailq);
 
 	rc = nvme_transport_poll_group_remove(&tgroup, &qpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(qpair.poll_group == NULL);
-	CU_ASSERT(qpair.poll_group_tailq_head == NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	STAILQ_REMOVE(&tgroup.connected_qpairs, &qpair, spdk_nvme_qpair, poll_group_stailq);
 
 	/* Invalid qpair */
 	qpair.poll_group_tailq_head = NULL;

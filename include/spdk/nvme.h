@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2634,12 +2634,13 @@ struct spdk_nvme_poll_group *spdk_nvme_qpair_get_optimal_poll_group(struct spdk_
 int spdk_nvme_poll_group_add(struct spdk_nvme_poll_group *group, struct spdk_nvme_qpair *qpair);
 
 /**
- * Remove an spdk_nvme_qpair from a poll group.
+ * Remove a disconnected spdk_nvme_qpair from a poll group.
  *
  * \param group The group from which to remove the qpair.
  * \param qpair The qpair to remove from the poll group.
  *
- * return 0 on success, -ENOENT if the qpair is not found in the group, or -EPROTO on a protocol (transport) specific failure.
+ * return 0 on success, -ENOENT if the qpair is not found in the group, -EINVAL if the qpair is not
+ * disconnected in the group, or -EPROTO on a protocol (transport) specific failure.
  */
 int spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group, struct spdk_nvme_qpair *qpair);
 
