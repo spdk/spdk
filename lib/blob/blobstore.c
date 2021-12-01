@@ -669,22 +669,24 @@ blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *blob)
 				return -EINVAL;
 			}
 
-			blob->extent_table_found = true;
-
 			if (desc_extent_table->length == 0 ||
 			    (extent_pages_length % sizeof(desc_extent_table->extent_page[0]) != 0)) {
 				return -EINVAL;
 			}
 
+			blob->extent_table_found = true;
+
 			for (i = 0; i < extent_pages_length / sizeof(desc_extent_table->extent_page[0]); i++) {
 				num_extent_pages += desc_extent_table->extent_page[i].num_pages;
 			}
 
-			tmp = realloc(blob->active.extent_pages, num_extent_pages * sizeof(uint32_t));
-			if (tmp == NULL) {
-				return -ENOMEM;
+			if (num_extent_pages > 0) {
+				tmp = realloc(blob->active.extent_pages, num_extent_pages * sizeof(uint32_t));
+				if (tmp == NULL) {
+					return -ENOMEM;
+				}
+				blob->active.extent_pages = tmp;
 			}
-			blob->active.extent_pages = tmp;
 			blob->active.extent_pages_array_size = num_extent_pages;
 
 			blob->remaining_clusters_in_et = desc_extent_table->num_clusters;

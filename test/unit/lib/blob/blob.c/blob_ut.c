@@ -442,6 +442,57 @@ blob_create(void)
 	CU_ASSERT(g_bserrno == -ENOSPC);
 }
 
+static void
+blob_create_zero_extent(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid;
+
+	/* Create blob with default options (opts == NULL) */
+	spdk_bs_create_blob_ext(bs, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
+	CU_ASSERT(blob->extent_table_found == true);
+	CU_ASSERT(blob->active.extent_pages_array_size == 0);
+	CU_ASSERT(blob->active.extent_pages == NULL);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create blob with NULL internal options  */
+	bs_create_blob(bs, NULL, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(TAILQ_FIRST(&blob->xattrs_internal) == NULL);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0);
+	CU_ASSERT(blob->extent_table_found == true);
+	CU_ASSERT(blob->active.extent_pages_array_size == 0);
+	CU_ASSERT(blob->active.extent_pages == NULL);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+}
+
 /*
  * Create and delete one blob in a loop over and over again.  This helps ensure
  * that the internal bit masks tracking used clusters and md_pages are being
@@ -588,6 +639,7 @@ blob_create_internal(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	CU_ASSERT(TAILQ_FIRST(&g_blob->xattrs_internal) == NULL);
+	CU_ASSERT(spdk_blob_get_num_clusters(g_blob) == 0);
 
 	blob = g_blob;
 
@@ -627,6 +679,16 @@ blob_thin_provision(void)
 	blob = ut_blob_create_and_open(bs, &opts);
 	blobid = spdk_blob_get_id(blob);
 	CU_ASSERT(blob->invalid_flags & SPDK_BLOB_THIN_PROV);
+	/* In thin provisioning with num_clusters is set, if not using the
+	 * extent table, there is no allocation. If extent table is used,
+	 * there is related allocation happened. */
+	if (blob->extent_table_found == true) {
+		CU_ASSERT(blob->active.extent_pages_array_size > 0);
+		CU_ASSERT(blob->active.extent_pages != NULL);
+	} else {
+		CU_ASSERT(blob->active.extent_pages_array_size == 0);
+		CU_ASSERT(blob->active.extent_pages == NULL);
+	}
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -7104,6 +7166,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_create_loop);
 	CU_ADD_TEST(suite_bs, blob_create_fail);
 	CU_ADD_TEST(suite_bs, blob_create_internal);
+	CU_ADD_TEST(suite_bs, blob_create_zero_extent);
 	CU_ADD_TEST(suite, blob_thin_provision);
 	CU_ADD_TEST(suite_bs, blob_snapshot);
 	CU_ADD_TEST(suite_bs, blob_clone);
