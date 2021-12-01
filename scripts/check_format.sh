@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
 
-rootdir=$(readlink -f "$(dirname "$0")")/..
+if [[ $(uname -s) == Darwin ]]; then
+	# SPDK is not supported on MacOS, but as a developer
+	# convenience we support running the check_format.sh
+	# script on MacOS.
+	# Running "brew install bash greadlink ggrep" should be
+	# sufficient to get the correct versions of these utilities.
+	if [[ $(type -t mapfile) != builtin ]]; then
+		# We need bash version >= 4.0 for mapfile builtin
+		echo "Please install bash version >= 4.0"
+		exit 1
+	fi
+	if ! hash greadlink 2> /dev/null; then
+		# We need GNU readlink for -f option
+		echo "Please install GNU readlink"
+		exit 1
+	fi
+	if ! hash ggrep 2> /dev/null; then
+		# We need GNU grep for -P option
+		echo "Please install GNU grep"
+		exit 1
+	fi
+	GNU_READLINK="greadlink"
+	GNU_GREP="ggrep"
+else
+	GNU_READLINK="readlink"
+	GNU_GREP="grep"
+fi
+
+rootdir=$($GNU_READLINK -f "$(dirname "$0")")/..
 source "$rootdir/scripts/common.sh"
 
 cd "$rootdir"
@@ -611,7 +639,7 @@ function check_rpc_args() {
 	local rc=0
 
 	echo -n "Checking rpc.py argument option names..."
-	grep add_argument scripts/rpc.py | grep -oP "(?<=--)[a-z0-9\-\_]*(?=\')" | grep "_" > badargs.log
+	grep add_argument scripts/rpc.py | $GNU_GREP -oP "(?<=--)[a-z0-9\-\_]*(?=\')" | grep "_" > badargs.log
 
 	if [[ -s badargs.log ]]; then
 		echo "rpc.py arguments with underscores detected!"
