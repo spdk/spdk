@@ -44,6 +44,9 @@ they did not account for PCI devices being inserted or removed while the caller 
 returned from these APIs.  Existing users of these APIs should switch to spdk_pci_for_each_device
 instead.
 
+Added 3 experimental APIs to handle PCI device interrupts (`spdk_pci_device_enable_interrupt`,
+`spdk_pci_device_disable_interrupt`, `spdk_pci_device_get_interrupt_efd`).
+
 ### nvmf
 
 Added a 'subsystem' parameter to spdk_nvmf_transport_stop_listen_async. When not NULL,

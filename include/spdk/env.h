@@ -824,6 +824,34 @@ int spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar,
 			      void *mapped_addr);
 
 /**
+ * Enable PCI device interrupts. (Experimental)
+ *
+ * \param dev PCI device.
+ *
+ * \return 0 on success, negative value on error.
+ */
+int spdk_pci_device_enable_interrupt(struct spdk_pci_device *dev);
+
+/**
+ * Disable PCI device interrupts. (Experimental)
+ *
+ * \param dev PCI device.
+ *
+ * \return 0 on success, negative value on error.
+ */
+int spdk_pci_device_disable_interrupt(struct spdk_pci_device *dev);
+
+/**
+ * Get an event file descriptor assosiated with a PCI device interrupt.
+ * (Experimental)
+ *
+ * \param dev PCI device.
+ *
+ * \return Event file descriptor on success, negative value on error.
+ */
+int spdk_pci_device_get_interrupt_efd(struct spdk_pci_device *dev);
+
+/**
  * Get the domain of a PCI device.
  *
  * \param dev PCI device.

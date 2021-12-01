@@ -62,6 +62,9 @@
 	spdk_pci_for_each_device;
 	spdk_pci_device_map_bar;
 	spdk_pci_device_unmap_bar;
+	spdk_pci_device_enable_interrupt;
+	spdk_pci_device_disable_interrupt;
+	spdk_pci_device_get_interrupt_efd;
 	spdk_pci_device_get_domain;
 	spdk_pci_device_get_bus;
 	spdk_pci_device_get_dev;
