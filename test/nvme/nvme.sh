@@ -27,7 +27,7 @@ function nvme_fio_test() {
 	PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 	ran_fio=false
 	for bdf in $(get_nvme_bdfs); do
-		if $SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" | grep -E "^Number of Namespaces" - | grep -q "0" -; then
+		if ! "$SPDK_EXAMPLE_DIR/identify" -r "trtype:PCIe traddr:${bdf}" | grep -qE "^Namespace ID:[0-9]+"; then
 			continue
 		fi
 		if $SPDK_EXAMPLE_DIR/identify -r "trtype:PCIe traddr:${bdf}" | grep -q "Extended Data LBA"; then
