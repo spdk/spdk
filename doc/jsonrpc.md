@@ -949,6 +949,87 @@ Example response:
 }
 ~~~
 
+### trace_set_tpoint_mask {#rpc_trace_set_tpoint_mask}
+
+Enable tracepoint mask on a specific tpoint group. For example "bdev" for bdev trace group,
+and 0x1 to enable the first tracepoint inside the group (BDEV_IO_START). This command will not
+disable already active tracepoints or those not specified in the mask. For a full description
+of all available trace groups, see
+[tracepoint documentation](https://spdk.io/doc/nvmf_tgt_tracepoints.html).
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, blobfs, scsi, iscsi_conn, ftl
+tpoint_mask             | Required | number      | mask to enable tracepoints inside a group
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "trace_set_tpoint_mask",
+  "id": 1,
+  "params": {
+    "name": "bdev",
+    "tpoint_mask": 0x1
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### trace_clear_tpoint_mask {#rpc_trace_clear_tpoint_mask}
+
+Disable tracepoint mask on a specific tpoint group. For example "bdev" for bdev trace group,
+and 0x1 to disable the first tracepoint inside the group (BDEV_IO_START). For a full description
+of all available trace groups, see
+[tracepoint documentation](https://spdk.io/doc/nvmf_tgt_tracepoints.html).
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | bdev, nvmf_rdma, nvmf_tcp, blobfs, scsi, iscsi_conn, ftl
+tpoint_mask             | Required | number      | mask to diesable tracepoints inside a group
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "trace_clear_tpoint_mask",
+  "id": 1,
+  "params": {
+    "name": "bdev",
+    "tpoint_mask": 0x1
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### trace_get_tpoint_group_mask {#rpc_trace_get_tpoint_group_mask}
 
 Display mask info for every group.

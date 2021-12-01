@@ -1563,6 +1563,34 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         (for example "bdev" for bdev trace group, "all" for all trace groups).""")
     p.set_defaults(func=trace_disable_tpoint_group)
 
+    def trace_set_tpoint_mask(args):
+        rpc.trace.trace_set_tpoint_mask(args.client, name=args.name, tpoint_mask=args.tpoint_mask)
+
+    p = subparsers.add_parser('trace_set_tpoint_mask',
+                              help='enable tracepoint mask on a specific tpoint group')
+    p.add_argument(
+        'name', help="""trace group name we want to enable in tpoint_group_mask.
+        (for example "bdev" for bdev trace group)""")
+    p.add_argument(
+        'tpoint_mask', help="""tracepoints to be enabled inside a given trace group.
+        (for example value of "0x3" will enable only the first two tpoints in this group)""",
+        type=lambda m: int(m, 16))
+    p.set_defaults(func=trace_set_tpoint_mask)
+
+    def trace_clear_tpoint_mask(args):
+        rpc.trace.trace_clear_tpoint_mask(args.client, name=args.name, tpoint_mask=args.tpoint_mask)
+
+    p = subparsers.add_parser('trace_clear_tpoint_mask',
+                              help='disable tracepoint mask on a specific tpoint group')
+    p.add_argument(
+        'name', help="""trace group name we want to disable in tpoint_group_mask.
+        (for example "bdev" for bdev trace group)""")
+    p.add_argument(
+        'tpoint_mask', help="""tracepoints to be disabled inside a given trace group.
+        (for example value of "0x3" will disable the first two tpoints in this group)""",
+        type=lambda m: int(m, 16))
+    p.set_defaults(func=trace_clear_tpoint_mask)
+
     def trace_get_tpoint_group_mask(args):
         print_dict(rpc.trace.trace_get_tpoint_group_mask(args.client))
 
