@@ -13,20 +13,63 @@ Work to formalize and document the framework is in progress.)
 
 ## Enabling Tracepoints {#enable_tracepoints}
 
-Tracepoints are placed in groups. They are enabled and disabled as a group. To enable
-the instrumentation of all the tracepoints group in an SPDK target application, start the
-target with -e parameter set to 0xFFFF:
+Tracepoints are placed in groups. They are enabled and disabled as a group or individually
+inside a group.
+
+### Enabling Tracepoints in Groups
+
+To enable the instrumentation of all the tracepoints groups in an SPDK target
+application, start the target with `-e` parameter set to `0xFFFF` or `all`:
 
 ~~~bash
 build/bin/nvmf_tgt -e 0xFFFF
 ~~~
 
-To enable the instrumentation of just the NVMe-oF RDMA tracepoints in an SPDK target
-application, start the target with the -e parameter set to 0x10:
+or
+
+~~~bash
+build/bin/nvmf_tgt -e all
+~~~
+
+To enable the instrumentation of just the `NVMe-oF RDMA` tracepoints in an SPDK target
+application, start the target with the `-e` parameter set to `0x10`:
 
 ~~~bash
 build/bin/nvmf_tgt -e 0x10
 ~~~
+
+### Enabling Individual Tracepoints
+
+To enable individual tracepoints inside a group:
+
+~~~bash
+build/bin/nvmf_tgt -e 0x10:B
+~~~
+
+or
+
+~~~bash
+build/bin/nvmf_tgt -e nvmf_rdma:B
+~~~
+
+where `:` is a separator and `B` is the tracepoint mask. This will enable only the first, second and fourth (binary: 1011) tracepoint inside `NVMe-oF RDMA` group.
+
+### Combining Tracepoint Masks
+
+It is also possible to combine enabling whole groups of tpoints and individual ones:
+
+~~~bash
+build/bin/nvmf_tgt -e 0x10:2,0x400
+~~~
+
+This will enable the second tracepoint inside `NVMe-oF RDMA` group (0x10) and all of the tracepoints defined by the `thread` group (0x400).
+
+### Tracepoint Group Values
+
+iscsi (0x2), scsi (0x4), bdev (0x8), nvmf_rdma (0x10), nvmf_tcp (0x20), ftl (0x40), blobfs (0x80), nvmf_fc (0x100),
+idxd (0x200), thread (0x400), nvme_pcie (0x800)
+
+### Starting the SPDK Target
 
 When the target starts, a message is logged with the information you need to view
 the tracepoints in a human-readable format using the spdk_trace application. The target
