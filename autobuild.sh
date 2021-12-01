@@ -95,8 +95,6 @@ function build_native_dpdk() {
 	# net/i40e driver is not really needed by us, but it's built as a workaround
 	# for DPDK issue: https://bugs.dpdk.org/show_bug.cgi?id=576
 	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring" "net/i40e" "net/i40e/base")
-	# all possible DPDK drivers
-	DPDK_ALL_DRIVERS=($(find "$external_dpdk_base_dir/drivers" -mindepth 1 -type d | sed -n "s#^$external_dpdk_base_dir/drivers/##p"))
 
 	if [[ "$SPDK_TEST_CRYPTO" -eq 1 ]]; then
 		intel_ipsec_mb_ver=v0.54
@@ -150,10 +148,6 @@ function build_native_dpdk() {
 		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$isal_dir/build/lib"
 	fi
 
-	# Use difference between DPDK_ALL_DRIVERS and DPDK_DRIVERS as a set of DPDK drivers we don't want or
-	# don't need to build.
-	DPDK_DISABLED_DRIVERS=($(sort <(printf "%s\n" "${DPDK_DRIVERS[@]}") <(printf "%s\n" "${DPDK_ALL_DRIVERS[@]}") | uniq -u))
-
 	cd $external_dpdk_base_dir
 	if [ "$(uname -s)" = "Linux" ]; then
 		if [[ $dpdk_ver == 20.11* ]]; then
@@ -167,7 +161,7 @@ function build_native_dpdk() {
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
 		-Denable_docs=false -Denable_kmods=false -Dtests=false \
 		-Dc_link_args="$dpdk_ldflags" -Dc_args="$dpdk_cflags" \
-		-Dmachine=native -Ddisable_drivers=$(printf "%s," "${DPDK_DISABLED_DRIVERS[@]}")
+		-Dmachine=native -Denable_drivers=$(printf "%s," "${DPDK_DRIVERS[@]}")
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
 
