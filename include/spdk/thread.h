@@ -748,7 +748,8 @@ void *spdk_io_channel_get_io_device(struct spdk_io_channel *ch);
  * Helper function to iterate all channels for spdk_for_each_channel().
  *
  * \param i I/O channel iterator.
- * \param status Status for the I/O channel iterator.
+ * \param status Status for the I/O channel iterator;
+ * for non 0 status remaining iterations are terminated.
  */
 void spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status);
 
