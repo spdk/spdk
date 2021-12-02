@@ -2579,13 +2579,7 @@ test_zcopy_read(void)
 	CU_ASSERT(req.zcopy_bdev_io == zcopy_start_bdev_io_read);
 	CU_ASSERT(qpair.outstanding.tqh_first == &req);
 	CU_ASSERT(ns_info.io_outstanding == 1);
-
-	/* Execute the request */
-	spdk_nvmf_request_exec(&req);
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
-	CU_ASSERT(req.zcopy_bdev_io == zcopy_start_bdev_io_read);
-	CU_ASSERT(qpair.outstanding.tqh_first == &req);
-	CU_ASSERT(ns_info.io_outstanding == 1);
 
 	/* Perform the zcopy end */
 	spdk_nvmf_request_zcopy_end(&req, false);
@@ -2593,6 +2587,7 @@ test_zcopy_read(void)
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_COMPLETE);
 	CU_ASSERT(qpair.outstanding.tqh_first == NULL);
 	CU_ASSERT(ns_info.io_outstanding == 0);
+	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 }
 
 static void
@@ -2670,13 +2665,7 @@ test_zcopy_write(void)
 	CU_ASSERT(req.zcopy_bdev_io == zcopy_start_bdev_io_write);
 	CU_ASSERT(qpair.outstanding.tqh_first == &req);
 	CU_ASSERT(ns_info.io_outstanding == 1);
-
-	/* Execute the request */
-	spdk_nvmf_request_exec(&req);
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
-	CU_ASSERT(req.zcopy_bdev_io == zcopy_start_bdev_io_write);
-	CU_ASSERT(qpair.outstanding.tqh_first == &req);
-	CU_ASSERT(ns_info.io_outstanding == 1);
 
 	/* Perform the zcopy end */
 	spdk_nvmf_request_zcopy_end(&req, true);
@@ -2684,6 +2673,7 @@ test_zcopy_write(void)
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_COMPLETE);
 	CU_ASSERT(qpair.outstanding.tqh_first == NULL);
 	CU_ASSERT(ns_info.io_outstanding == 0);
+	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 }
 
 static void

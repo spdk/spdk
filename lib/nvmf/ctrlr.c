@@ -4170,10 +4170,8 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_transport *transport = qpair->transport;
 	enum spdk_nvmf_request_exec_status status;
 
-	if (!spdk_nvmf_request_using_zcopy(req)) {
-		if (!nvmf_check_subsystem_active(req)) {
-			return;
-		}
+	if (!nvmf_check_subsystem_active(req)) {
+		return;
 	}
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf")) {
