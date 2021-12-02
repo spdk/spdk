@@ -45,7 +45,7 @@
 
 static int g_rpc_err;
 void fn_rpc_method_handler(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params);
+			   const struct spdk_json_val *params, void *ctx);
 
 DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
@@ -106,7 +106,7 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 }
 
 void fn_rpc_method_handler(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+			   const struct spdk_json_val *params, void *ctx)
 {
 	g_rpc_err = 0;
 }
