@@ -562,6 +562,7 @@ spdk_lvs_opts_init(struct spdk_lvs_opts *o)
 {
 	o->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
 	o->clear_method = LVS_CLEAR_WITH_UNMAP;
+	o->uuid = NULL;
 	memset(o->name, 0, sizeof(o->name));
 }
 
@@ -611,7 +612,14 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -ENOMEM;
 	}
 
-	spdk_uuid_generate(&lvs->uuid);
+	if (o->uuid == NULL) {
+		spdk_uuid_generate(&lvs->uuid);
+	} else if (spdk_uuid_parse(&lvs->uuid, o->uuid) != 0) {
+		lvs_free(lvs);
+		SPDK_ERRLOG("Invalid lvs uuid provided\n");
+		return -EINVAL;
+	}
+
 	snprintf(lvs->name, sizeof(lvs->name), "%s", o->name);
 
 	rc = add_lvs_to_list(lvs);

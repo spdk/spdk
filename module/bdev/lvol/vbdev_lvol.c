@@ -231,6 +231,16 @@ int
 vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
 		 enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
+	/* set uuid as NULL */
+	return vbdev_lvs_create_with_uuid(base_bdev_name, name, NULL, cluster_sz, clear_method, cb_fn,
+					  cb_arg);
+}
+
+int
+vbdev_lvs_create_with_uuid(const char *base_bdev_name, const char *name, const char *uuid,
+			   uint32_t cluster_sz,
+			   enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_lvs_opts opts;
@@ -249,6 +259,10 @@ vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_
 
 	if (clear_method != 0) {
 		opts.clear_method = clear_method;
+	}
+
+	if (uuid != NULL) {
+		opts.uuid = uuid;
 	}
 
 	if (name == NULL) {
