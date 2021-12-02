@@ -133,7 +133,7 @@ DPDK_LIB_LIST += rte_cryptodev
 endif
 endif
 
-ifeq ($(CONFIG_RAID5),y)
+ifeq ($(CONFIG_FC),y)
 LINK_HASH=y
 endif
 
