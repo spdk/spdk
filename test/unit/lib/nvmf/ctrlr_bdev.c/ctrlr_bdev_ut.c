@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -249,9 +250,6 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct sp
 	return NULL;
 }
 
-DEFINE_STUB_V(spdk_bdev_io_get_nvme_status,
-	      (const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct, int *sc));
-
 int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
@@ -263,6 +261,25 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 	ctx->init_ref_tag = init_ref_tag;
 
 	return 0;
+}
+
+static uint32_t g_bdev_nvme_status_cdw0;
+static uint32_t g_bdev_nvme_status_sct = SPDK_NVME_SCT_GENERIC;
+static uint32_t g_bdev_nvme_status_sc = SPDK_NVME_SC_SUCCESS;
+
+static void reset_bdev_nvme_status(void)
+{
+	g_bdev_nvme_status_cdw0 = 0;
+	g_bdev_nvme_status_sct = SPDK_NVME_SCT_GENERIC;
+	g_bdev_nvme_status_sc = SPDK_NVME_SC_SUCCESS;
+}
+
+void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct,
+				  int *sc)
+{
+	*cdw0 = g_bdev_nvme_status_cdw0;
+	*sct = g_bdev_nvme_status_sct;
+	*sc = g_bdev_nvme_status_sc;
 }
 
 static void
@@ -774,6 +791,107 @@ test_nvmf_bdev_ctrlr_read_write_cmd(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
 }
 
+static void
+test_nvmf_bdev_ctrlr_nvme_passthru(void)
+{
+	int rc;
+	struct spdk_bdev bdev = {};
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel ch = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_poll_group group = {};
+
+	struct spdk_nvmf_request req = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvme_cmd cmd = {};
+	struct spdk_bdev_io bdev_io;
+
+	bdev.blocklen = 512;
+	bdev.blockcnt = 10;
+
+	qpair.group = &group;
+
+	req.qpair = &qpair;
+	req.cmd = (union nvmf_h2c_msg *)&cmd;
+	req.rsp = &rsp;
+
+	cmd.nsid = 1;
+	cmd.opc = 0xFF;
+
+	cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
+	cmd.cdw12 = 1;	/* NLB: CDW12 bits 15:00, 0's based */
+
+	/* NVME_IO success */
+	memset(&rsp, 0, sizeof(rsp));
+	rc = nvmf_bdev_ctrlr_nvme_passthru_io(&bdev, desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	nvmf_bdev_ctrlr_complete_cmd(&bdev_io, true, &req);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* NVME_IO fail */
+	memset(&rsp, 0, sizeof(rsp));
+	rc = nvmf_bdev_ctrlr_nvme_passthru_io(&bdev, desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	g_bdev_nvme_status_sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	nvmf_bdev_ctrlr_complete_cmd(&bdev_io, false, &req);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	reset_bdev_nvme_status();
+
+	/* NVME_IO not supported */
+	memset(&rsp, 0, sizeof(rsp));
+	MOCK_SET(spdk_bdev_nvme_io_passthru, -ENOTSUP);
+	rc = nvmf_bdev_ctrlr_nvme_passthru_io(&bdev, desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+
+	/* NVME_IO no channel - queue IO */
+	memset(&rsp, 0, sizeof(rsp));
+	MOCK_SET(spdk_bdev_nvme_io_passthru, -ENOMEM);
+	rc = nvmf_bdev_ctrlr_nvme_passthru_io(&bdev, desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT(group.stat.pending_bdev_io == 1);
+
+	MOCK_SET(spdk_bdev_nvme_io_passthru, 0);
+
+	/* NVME_ADMIN success */
+	memset(&rsp, 0, sizeof(rsp));
+	rc = spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(&bdev, desc, &ch, &req, NULL);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	nvmf_bdev_ctrlr_complete_admin_cmd(&bdev_io, true, &req);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* NVME_ADMIN fail */
+	memset(&rsp, 0, sizeof(rsp));
+	rc = spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(&bdev, desc, &ch, &req, NULL);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	g_bdev_nvme_status_sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	nvmf_bdev_ctrlr_complete_admin_cmd(&bdev_io, true, &req);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	reset_bdev_nvme_status();
+
+	/* NVME_ADMIN not supported */
+	memset(&rsp, 0, sizeof(rsp));
+	MOCK_SET(spdk_bdev_nvme_admin_passthru, -ENOTSUP);
+	rc = spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(&bdev, desc, &ch, &req, NULL);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+
+	/* NVME_ADMIN no channel - queue IO */
+	memset(&rsp, 0, sizeof(rsp));
+	MOCK_SET(spdk_bdev_nvme_admin_passthru, -ENOMEM);
+	rc = spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(&bdev, desc, &ch, &req, NULL);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT(group.stat.pending_bdev_io == 2);
+
+	MOCK_SET(spdk_bdev_nvme_admin_passthru, 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -792,6 +910,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_start_zcopy);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_cmd);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_read_write_cmd);
+	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_nvme_passthru);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
