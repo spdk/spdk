@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -90,7 +91,6 @@ struct arb_context {
 	int					queue_depth;
 	int					time_in_sec;
 	int					io_count;
-	bool					hugepage_single_segments;
 	uint8_t					latency_tracking_enable;
 	uint8_t					arbitration_mechanism;
 	uint8_t					arbitration_config;
@@ -133,6 +133,9 @@ static struct arb_context g_arbitration = {
 	.core_mask				= "0xf",
 	.workload_type				= "randrw",
 };
+
+static int g_dpdk_mem = 0;
+static bool g_dpdk_mem_single_seg = false;
 
 /*
  * For weighted round robin arbitration mechanism, the smaller value between
@@ -479,12 +482,19 @@ static void
 usage(char *program_name)
 {
 	printf("%s options", program_name);
-	printf("\n");
+	printf("\t\n");
+	printf("\t[-d DPDK huge memory size in MB]\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-s io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
+#ifdef DEBUG
+	printf("\t[-L enable debug logging]\n");
+#else
+	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+#endif
+	spdk_log_usage(stdout, "\t\t-L");
 	printf("\t[-l enable latency tracking, default: disabled]\n");
 	printf("\t\t(0 - disabled; 1 - enabled)\n");
 	printf("\t[-t time in seconds]\n");
@@ -653,15 +663,23 @@ parse_args(int argc, char **argv)
 	const char *workload_type	= NULL;
 	int op				= 0;
 	bool mix_specified		= false;
+	int				rc;
 	long int val;
 
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "a:b:c:ghi:l:m:n:q:r:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "a:b:c:d:ghi:l:m:n:q:r:s:t:w:M:L:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_arbitration.core_mask = optarg;
+			break;
+		case 'd':
+			g_dpdk_mem = spdk_strtol(optarg, 10);
+			if (g_dpdk_mem < 0) {
+				fprintf(stderr, "Invalid DPDK memory size\n");
+				return g_dpdk_mem;
+			}
 			break;
 		case 'w':
 			g_arbitration.workload_type = optarg;
@@ -673,12 +691,23 @@ parse_args(int argc, char **argv)
 			}
 			break;
 		case 'g':
-			g_arbitration.hugepage_single_segments = true;
+			g_dpdk_mem_single_seg = true;
 			break;
 		case 'h':
 		case '?':
 			usage(argv[0]);
 			return 1;
+		case 'L':
+			rc = spdk_log_set_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifdef DEBUG
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#endif
+			break;
 		default:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
@@ -1074,6 +1103,8 @@ main(int argc, char **argv)
 
 	spdk_env_opts_init(&opts);
 	opts.name = "arb";
+	opts.mem_size = g_dpdk_mem;
+	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	opts.core_mask = g_arbitration.core_mask;
 	opts.shm_id = g_arbitration.shm_id;
 	if (spdk_env_init(&opts) < 0) {
