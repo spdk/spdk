@@ -324,6 +324,20 @@ admin_delete_io_sq_delete_sq_twice(void)
 	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
 	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER);
 
+	/* Delete CQ 1, this is valid. */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_DELETE_IO_CQ;
+	cmd.cdw10_bits.delete_io_q.qid = 1;
+
+	s.done = false;
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, test_cb, &s);
+	CU_ASSERT(rc == 0);
+
+	wait_for_admin_completion(&s, ctrlr);
+
+	CU_ASSERT(s.cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(s.cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
 	spdk_dma_free(buf);
 	spdk_nvme_detach(ctrlr);
 }
