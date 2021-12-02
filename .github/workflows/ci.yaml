@@ -9,6 +9,14 @@ on:
       # on pull requests to master and release branches
       - master
       - 'v*'
+  push:
+    paths-igonre:
+      - 'doc/**'
+      - '*.md'
+    branches:
+      # on pull requests to master and release branches
+      - master
+      - 'v*'
 
 jobs:
   tests:
