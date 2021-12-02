@@ -2,6 +2,7 @@
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
+nvmeappdir=$(readlink -f $rootdir/test/nvme)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
@@ -52,6 +53,8 @@ for i in $(seq 1 $NUM_DEVICES); do
 	$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
 	sleep 1
 	$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+	sleep 1
+	$nvmeappdir/deallocated_value/deallocated_value -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
 	sleep 1
 done
 
