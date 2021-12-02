@@ -122,7 +122,7 @@ run_test "nvme_sgl" $testdir/sgl/sgl
 run_test "nvme_e2edp" $testdir/e2edp/nvme_dp
 run_test "nvme_reserve" $testdir/reserve/reserve
 run_test "nvme_err_injection" $testdir/err_injection/err_injection
-run_test "nvme_overhead" $testdir/overhead/overhead -s 4096 -t 1 -H
+run_test "nvme_overhead" $testdir/overhead/overhead -s 4096 -t 1 -H -i 0
 run_test "nvme_arbitration" $SPDK_EXAMPLE_DIR/arbitration -t 3 -i 0
 
 if [ $(uname) != "FreeBSD" ]; then

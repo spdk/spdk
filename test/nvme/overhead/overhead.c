@@ -40,6 +40,8 @@
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/histogram_data.h"
+#include "spdk/string.h"
+#include "spdk/log.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -113,6 +115,8 @@ uint64_t g_tsc_complete = 0;
 uint64_t g_tsc_complete_min = UINT64_MAX;
 uint64_t g_tsc_complete_max = 0;
 uint64_t g_io_completed = 0;
+
+static struct spdk_nvme_transport_id g_trid = {};
 
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
@@ -482,11 +486,21 @@ static void usage(char *program_name)
 #if HAVE_LIBAIO
 	printf(" [AIO device(s)]...");
 #endif
-	printf("\n");
+	printf("\t\n");
+	printf("\t[-d DPDK huge memory size in MB]\n");
 	printf("\t[-s io size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t\t(default: 1)]\n");
 	printf("\t[-H enable histograms]\n");
+	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
+	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-r remote NVMe over Fabrics target address]\n");
+#ifdef DEBUG
+	printf("\t[-L enable debug logging]\n");
+#else
+	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+#endif
+	spdk_log_usage(stdout, "\t\t-L");
 }
 
 static void
@@ -541,16 +555,19 @@ print_stats(void)
 }
 
 static int
-parse_args(int argc, char **argv)
+parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
-	int op;
+	int op, rc;
 	long int val;
 
 	/* default value */
 	g_io_size_bytes = 0;
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "hs:t:H")) != -1) {
+	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
+	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	while ((op = getopt(argc, argv, "d:ghi:r:s:t:HL:")) != -1) {
 		switch (op) {
 		case 'h':
 			usage(argv[0]);
@@ -573,6 +590,40 @@ parse_args(int argc, char **argv)
 			break;
 		case 'H':
 			g_enable_histogram = true;
+			break;
+		case 'i':
+			env_opts->shm_id = spdk_strtol(optarg, 10);
+			if (env_opts->shm_id < 0) {
+				fprintf(stderr, "Invalid shared memory ID\n");
+				return env_opts->shm_id;
+			}
+			break;
+		case 'g':
+			env_opts->hugepage_single_segments = true;
+			break;
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
+			break;
+		case 'd':
+			env_opts->mem_size = spdk_strtol(optarg, 10);
+			if (env_opts->mem_size < 0) {
+				fprintf(stderr, "Invalid DPDK memory size\n");
+				return env_opts->mem_size;
+			}
+			break;
+		case 'L':
+			rc = spdk_log_set_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifdef DEBUG
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#endif
 			break;
 		default:
 			usage(argv[0]);
@@ -627,7 +678,7 @@ register_controllers(void)
 {
 	printf("Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
@@ -672,15 +723,14 @@ int main(int argc, char **argv)
 	int			rc;
 	struct spdk_env_opts	opts;
 
-	rc = parse_args(argc, argv);
+	spdk_env_opts_init(&opts);
+	rc = parse_args(argc, argv, &opts);
 	if (rc != 0) {
 		return rc;
 	}
 
-	spdk_env_opts_init(&opts);
 	opts.name = "overhead";
 	opts.core_mask = "0x1";
-	opts.shm_id = 0;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
