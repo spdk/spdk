@@ -798,21 +798,12 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 	return &req->qpair->group->sgroups[subsystem->id];
 }
 
-static void
-nvmf_add_to_outstanding_queue(struct spdk_nvmf_request *req)
-{
-	if (!spdk_nvmf_request_using_zcopy(req)) {
-		/* if using zcopy then request has been added when the start zcopy was actioned */
-		struct spdk_nvmf_qpair *qpair = req->qpair;
-		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-	}
-}
-
 int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
 	enum spdk_nvmf_request_exec_status status;
 
 	sgroup = nvmf_subsystem_pg_from_connect_cmd(req);
@@ -823,7 +814,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	}
 
 	sgroup->mgmt_io_outstanding++;
-	nvmf_add_to_outstanding_queue(req);
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
 	status = _nvmf_ctrlr_connect(req);
 
@@ -4080,7 +4071,7 @@ spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 	sgroup->mgmt_io_outstanding++;
 
 	/* Place the request on the outstanding list so we can keep track of it */
-	nvmf_add_to_outstanding_queue(req);
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
 	assert(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC);
 	status = nvmf_ctrlr_process_fabrics_cmd(req);
@@ -4122,7 +4113,7 @@ static bool nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 				req->rsp->nvme_cpl.status.dnr = 1;
-				nvmf_add_to_outstanding_queue(req);
+				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 				_nvmf_request_complete(req);
 				return false;
 			}
@@ -4136,7 +4127,7 @@ static bool nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 				req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 				req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 				req->rsp->nvme_cpl.status.dnr = 1;
-				nvmf_add_to_outstanding_queue(req);
+				TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 				ns_info->io_outstanding++;
 				_nvmf_request_complete(req);
 				return false;
@@ -4154,7 +4145,7 @@ static bool nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 		if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
 			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-			nvmf_add_to_outstanding_queue(req);
+			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 			_nvmf_request_complete(req);
 			return false;
 		}
@@ -4179,7 +4170,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	}
 
 	/* Place the request on the outstanding list so we can keep track of it */
-	nvmf_add_to_outstanding_queue(req);
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 
 	if (spdk_unlikely((req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC) &&
 			  spdk_nvme_trtype_is_fabrics(transport->ops->type))) {
