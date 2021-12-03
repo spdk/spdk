@@ -481,7 +481,7 @@ function check_bash_static_analysis() {
 	local rc=0
 
 	if hash shellcheck 2> /dev/null; then
-		echo -n "Checking Bash style..."
+		echo -n "Checking Bash static analysis with shellcheck..."
 
 		shellcheck_v=$(shellcheck --version | grep -P "version: [0-9\.]+" | cut -d " " -f2)
 
@@ -534,7 +534,7 @@ SC2119,SC2120,SC2128,SC2148,SC2153,SC2154,SC2164,SC2174,SC2178,SC2001,SC2206,SC2
 
 		get_bash_files | xargs -P$(nproc) -n1 shellcheck $SHCH_ARGS &> shellcheck.log
 		if [[ -s shellcheck.log ]]; then
-			echo " Bash formatting errors detected!"
+			echo " Bash shellcheck errors detected!"
 
 			cat shellcheck.log
 			if $SHCK_APPLY; then
@@ -548,7 +548,7 @@ SC2119,SC2120,SC2128,SC2148,SC2153,SC2154,SC2164,SC2174,SC2178,SC2001,SC2206,SC2
 		fi
 		rm -f shellcheck.log
 	else
-		echo "You do not have shellcheck installed so your Bash style is not being checked!"
+		echo "You do not have shellcheck installed so your Bash static analysis is not being performed!"
 	fi
 
 	return $rc
