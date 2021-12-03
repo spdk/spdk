@@ -1493,6 +1493,10 @@ disable_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
 	assert(ctrlr->qp[0] != NULL);
 
 	unmap_qp(ctrlr->qp[0]);
+	ctrlr->qp[0]->sq.size = 0;
+	ctrlr->qp[0]->sq.head = 0;
+	ctrlr->qp[0]->cq.size = 0;
+	ctrlr->qp[0]->cq.tail = 0;
 }
 
 static void
