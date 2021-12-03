@@ -417,6 +417,9 @@ nvme_fabric_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	}
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&discovery_opts, sizeof(discovery_opts));
+	if (direct_connect && probe_ctx->probe_cb) {
+		probe_ctx->probe_cb(probe_ctx->cb_ctx, &probe_ctx->trid, &discovery_opts);
+	}
 
 	discovery_ctrlr = nvme_transport_ctrlr_construct(&probe_ctx->trid, &discovery_opts, NULL);
 	if (discovery_ctrlr == NULL) {
