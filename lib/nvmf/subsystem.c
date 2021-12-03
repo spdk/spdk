@@ -837,7 +837,9 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 
-	nvmf_update_discovery_log(subsystem->tgt, hostnqn);
+	if (!TAILQ_EMPTY(&subsystem->listeners)) {
+		nvmf_update_discovery_log(subsystem->tgt, hostnqn);
+	}
 
 	pthread_mutex_unlock(&subsystem->mutex);
 
@@ -946,7 +948,9 @@ spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bo
 {
 	pthread_mutex_lock(&subsystem->mutex);
 	subsystem->flags.allow_any_host = allow_any_host;
-	nvmf_update_discovery_log(subsystem->tgt, NULL);
+	if (!TAILQ_EMPTY(&subsystem->listeners)) {
+		nvmf_update_discovery_log(subsystem->tgt, NULL);
+	}
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	return 0;

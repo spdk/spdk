@@ -313,8 +313,18 @@ test_discovery_log(void)
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
-	subsystem->flags.allow_any_host = true;
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+
+	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn);
+	CU_ASSERT(rc == 0);
+
+	/* Get only genctr (first field in the header) */
+	memset(buffer, 0xCC, sizeof(buffer));
+	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
+	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, sizeof(disc_log->genctr),
+				    &trid);
+	/* No listeners yet on new subsystem, so genctr should still be 0. */
+	CU_ASSERT(disc_log->genctr == 0);
 
 	test_gen_trid(&trid, SPDK_NVME_TRANSPORT_RDMA, SPDK_NVMF_ADRFAM_IPV4, "1234", "5678");
 	spdk_nvmf_subsystem_add_listener(subsystem, &trid, _subsystem_add_listen_done, NULL);
