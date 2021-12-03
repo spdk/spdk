@@ -323,7 +323,6 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		 MODEL_NUMBER_DEFAULT);
 
 	tgt->subsystems[sid] = subsystem;
-	nvmf_update_discovery_log(tgt, NULL);
 
 	return subsystem;
 }
@@ -403,7 +402,6 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem->ana_group);
 
 	subsystem->tgt->subsystems[subsystem->id] = NULL;
-	nvmf_update_discovery_log(subsystem->tgt, NULL);
 
 	pthread_mutex_destroy(&subsystem->mutex);
 

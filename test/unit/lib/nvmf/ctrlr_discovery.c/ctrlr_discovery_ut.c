@@ -324,14 +324,14 @@ test_discovery_log(void)
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(disc_log->genctr),
 				    &trid);
-	CU_ASSERT(disc_log->genctr == 2); /* one added subsystem and listener */
+	CU_ASSERT(disc_log->genctr == 1); /* one added subsystem and listener */
 
 	/* Get only the header, no entries */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	nvmf_get_discovery_log_page(&tgt, "nqn.2016-06.io.spdk:host1", &iov, 1, 0, sizeof(*disc_log),
 				    &trid);
-	CU_ASSERT(disc_log->genctr == 2);
+	CU_ASSERT(disc_log->genctr == 1);
 	CU_ASSERT(disc_log->numrec == 1);
 
 	/* Offset 0, exact size match */
