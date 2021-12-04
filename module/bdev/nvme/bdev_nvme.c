@@ -3872,6 +3872,212 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 	return rc;
 }
 
+struct discovery_ctx {
+	spdk_bdev_nvme_start_discovery_fn	start_cb_fn;
+	spdk_bdev_nvme_stop_discovery_fn	stop_cb_fn;
+	void					*cb_ctx;
+	struct spdk_nvme_probe_ctx		*probe_ctx;
+	struct spdk_nvme_detach_ctx		*detach_ctx;
+	struct spdk_nvme_ctrlr			*ctrlr;
+	struct spdk_poller			*poller;
+	struct spdk_nvme_ctrlr_opts		opts;
+	TAILQ_ENTRY(discovery_ctx)		tailq;
+	int					rc;
+	/* Denotes if a discovery is currently in progress for this context.
+	 * That includes connecting to newly discovered subsystems.  Used to
+	 * ensure we do not start a new discovery until an existing one is
+	 * complete.
+	 */
+	bool					in_progress;
+
+	/* Denotes if another discovery is needed after the one in progress
+	 * completes.  Set when we receive an AER completion while a discovery
+	 * is already in progress.
+	 */
+	bool					pending;
+
+	/* Signal to the discovery context poller that it should detach from
+	 * the discovery controller.
+	 */
+	bool					detach;
+
+	struct spdk_thread			*calling_thread;
+};
+
+TAILQ_HEAD(discovery_ctxs, discovery_ctx);
+static struct discovery_ctxs g_discovery_ctxs = TAILQ_HEAD_INITIALIZER(g_discovery_ctxs);
+
+static void get_discovery_log_page(struct discovery_ctx *ctx);
+
+static void
+discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
+		      struct spdk_nvmf_discovery_log_page *log_page)
+{
+	struct discovery_ctx *ctx = cb_arg;
+
+	if (rc || spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("could not get discovery log page\n");
+		return;
+	}
+
+	free(log_page);
+
+	ctx->in_progress = false;
+	if (ctx->pending) {
+		ctx->pending = false;
+		get_discovery_log_page(ctx);
+	}
+}
+
+static void
+get_discovery_log_page(struct discovery_ctx *ctx)
+{
+	int rc;
+
+	assert(ctx->in_progress == false);
+	ctx->in_progress = true;
+	rc = spdk_nvme_ctrlr_get_discovery_log_page(ctx->ctrlr, discovery_log_page_cb, ctx);
+	if (rc != 0) {
+		SPDK_ERRLOG("could not get discovery log page\n");
+	}
+}
+
+static void
+discovery_aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct discovery_ctx *ctx = arg;
+	uint32_t log_page_id = (cpl->cdw0 & 0xFF0000) >> 16;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("aer failed\n");
+		return;
+	}
+
+	if (log_page_id != SPDK_NVME_LOG_DISCOVERY) {
+		SPDK_ERRLOG("unexpected log page 0x%x\n", log_page_id);
+		return;
+	}
+
+	SPDK_DEBUGLOG(bdev_nvme, "got aer\n");
+	if (ctx->in_progress) {
+		ctx->pending = true;
+		return;
+	}
+
+	get_discovery_log_page(ctx);
+}
+
+static void
+start_discovery_done(void *cb_ctx)
+{
+	struct discovery_ctx *ctx = cb_ctx;
+
+	SPDK_DEBUGLOG(bdev_nvme, "start discovery done\n");
+	ctx->start_cb_fn(ctx->cb_ctx, ctx->rc);
+	if (ctx->rc != 0) {
+		SPDK_ERRLOG("could not connect to discovery ctrlr\n");
+		TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
+		free(ctx);
+	}
+}
+
+static int
+discovery_poller(void *arg)
+{
+	struct discovery_ctx *ctx = arg;
+	int rc;
+
+	if (ctx->probe_ctx) {
+		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
+		if (rc != -EAGAIN) {
+			ctx->rc = rc;
+			spdk_thread_send_msg(ctx->calling_thread, start_discovery_done, ctx);
+			if (rc == 0) {
+				get_discovery_log_page(ctx);
+			}
+		}
+	} else if (ctx->detach) {
+		bool detach_done = false;
+
+		if (ctx->detach_ctx == NULL) {
+			rc = spdk_nvme_detach_async(ctx->ctrlr, &ctx->detach_ctx);
+			if (rc != 0) {
+				SPDK_ERRLOG("could not detach discovery ctrlr\n");
+				detach_done = true;
+			}
+		} else {
+			rc = spdk_nvme_detach_poll_async(ctx->detach_ctx);
+			if (rc != -EAGAIN) {
+				detach_done = true;
+			}
+		}
+		if (detach_done) {
+			spdk_poller_unregister(&ctx->poller);
+			TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
+			ctx->stop_cb_fn(ctx->cb_ctx);
+			free(ctx);
+		}
+	} else {
+		spdk_nvme_ctrlr_process_admin_completions(ctx->ctrlr);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+discovery_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+		    struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
+	struct discovery_ctx *ctx;
+
+	ctx = SPDK_CONTAINEROF(user_opts, struct discovery_ctx, opts);
+
+	SPDK_DEBUGLOG(bdev_nvme, "discovery ctrlr attached\n");
+	ctx->probe_ctx = NULL;
+	ctx->ctrlr = ctrlr;
+	spdk_nvme_ctrlr_register_aer_callback(ctx->ctrlr, discovery_aer_cb, ctx);
+}
+
+static void
+start_discovery_poller(void *arg)
+{
+	struct discovery_ctx *ctx = arg;
+
+	TAILQ_INSERT_TAIL(&g_discovery_ctxs, ctx, tailq);
+	ctx->poller = SPDK_POLLER_REGISTER(discovery_poller, ctx, 1000);
+}
+
+int
+bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
+			  const char *base_name,
+			  struct spdk_nvme_ctrlr_opts *opts,
+			  spdk_bdev_nvme_start_discovery_fn cb_fn,
+			  void *cb_ctx)
+{
+	struct discovery_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->start_cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+	memcpy(&ctx->opts, opts, sizeof(*opts));
+	ctx->calling_thread = spdk_get_thread();
+	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, discovery_attach_cb);
+	if (ctx->probe_ctx == NULL) {
+		SPDK_ERRLOG("could not start discovery connect\n");
+		free(ctx);
+		return -EIO;
+	}
+
+	spdk_thread_send_msg(g_bdev_nvme_init_thread, start_discovery_poller, ctx);
+	return 0;
+}
+
 static int
 bdev_nvme_library_init(void)
 {
@@ -3921,9 +4127,18 @@ bdev_nvme_fini_destruct_ctrlrs(void)
 }
 
 static void
+check_discovery_fini(void *arg)
+{
+	if (TAILQ_EMPTY(&g_discovery_ctxs)) {
+		bdev_nvme_fini_destruct_ctrlrs();
+	}
+}
+
+static void
 bdev_nvme_library_fini(void)
 {
 	struct nvme_probe_skip_entry *entry, *entry_tmp;
+	struct discovery_ctx *ctx;
 
 	spdk_poller_unregister(&g_hotplug_poller);
 	free(g_hotplug_probe_ctx);
@@ -3934,7 +4149,15 @@ bdev_nvme_library_fini(void)
 		free(entry);
 	}
 
-	bdev_nvme_fini_destruct_ctrlrs();
+	assert(spdk_get_thread() == g_bdev_nvme_init_thread);
+	if (TAILQ_EMPTY(&g_discovery_ctxs)) {
+		bdev_nvme_fini_destruct_ctrlrs();
+	} else {
+		TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
+			ctx->detach = true;
+			ctx->stop_cb_fn = check_discovery_fini;
+		}
+	}
 }
 
 static void

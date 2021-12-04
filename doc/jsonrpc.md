@@ -3065,6 +3065,64 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_start_discovery {#rpc_bdev_nvme_start_discovery}
+
+Start a discovery service for the discovery subsystem of the specified transport ID.
+
+The discovery service will read the discovery log page for the specified
+discovery subsystem, and automatically attach to any subsystems found in the
+log page. When determining a controller name to use when attaching, it will use
+the 'name' parameter as a prefix, followed by a unique integer for that discovery
+service. If the discovery service identifies a subsystem that has been previously
+attached but is listed with a different path, it will use the same controller name
+as the previous entry, and connect as a multipath.
+
+When the discovery service sees that a subsystem entry has been removed
+from the log page, it will automatically detach from that controller as well.
+
+The 'name' is also used to later stop the discovery service.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+name                       | Required | string      | Prefix for NVMe controllers
+trtype                     | Required | string      | NVMe-oF target trtype: rdma or tcp
+traddr                     | Required | string      | NVMe-oF target address: ip
+adrfam                     | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6
+trsvcid                    | Optional | string      | NVMe-oF target trsvcid: port number
+hostnqn                    | Optional | string      | NVMe-oF target hostnqn
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_start_discovery",
+  "id": 1,
+  "params": {
+    "name": "nvme_auto",
+    "trtype": "tcp",
+    "traddr": "127.0.0.1",
+    "hostnqn": "nqn.2021-12.io.spdk:host1",
+    "adrfam": "ipv4",
+    "trsvcid": "4420"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.

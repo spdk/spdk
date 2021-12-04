@@ -619,6 +619,28 @@ if __name__ == "__main__":
     p.add_argument('name', help="Name of the NVMe controller")
     p.set_defaults(func=bdev_nvme_reset_controller)
 
+    def bdev_nvme_start_discovery(args):
+        rpc.bdev.bdev_nvme_start_discovery(args.client,
+                                           name=args.name,
+                                           trtype=args.trtype,
+                                           traddr=args.traddr,
+                                           adrfam=args.adrfam,
+                                           trsvcid=args.trsvcid,
+                                           hostnqn=args.hostnqn)
+
+    p = subparsers.add_parser('bdev_nvme_start_discovery', help='Start automatic discovery')
+    p.add_argument('-b', '--name', help="Name of the NVMe controller prefix for each bdev name", required=True)
+    p.add_argument('-t', '--trtype',
+                   help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
+    p.add_argument('-a', '--traddr',
+                   help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
+    p.add_argument('-f', '--adrfam',
+                   help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+    p.add_argument('-s', '--trsvcid',
+                   help='NVMe-oF target trsvcid: e.g., a port number')
+    p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
+    p.set_defaults(func=bdev_nvme_start_discovery)
+
     def bdev_nvme_cuse_register(args):
         rpc.bdev.bdev_nvme_cuse_register(args.client,
                                          name=args.name)

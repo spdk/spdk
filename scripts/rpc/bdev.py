@@ -656,6 +656,34 @@ def bdev_nvme_reset_controller(client, name):
     return client.call('bdev_nvme_reset_controller', params)
 
 
+def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid=None,
+                              hostnqn=None):
+    """Start discovery with the specified discovery subsystem
+
+    Args:
+        name: bdev name prefix; "n" + namespace ID will be appended to create unique names
+        trtype: transport type ("PCIe", "RDMA", "FC", "TCP")
+        traddr: transport address (PCI BDF or IP address)
+        adrfam: address family ("IPv4", "IPv6", "IB", or "FC")
+        trsvcid: transport service ID (port number for IP-based addresses)
+        hostnqn: NQN to connect from (optional)
+    """
+    params = {'name': name,
+              'trtype': trtype,
+              'traddr': traddr}
+
+    if hostnqn:
+        params['hostnqn'] = hostnqn
+
+    if adrfam:
+        params['adrfam'] = adrfam
+
+    if trsvcid:
+        params['trsvcid'] = trsvcid
+
+    return client.call('bdev_nvme_start_discovery', params)
+
+
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 

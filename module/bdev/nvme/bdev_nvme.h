@@ -48,6 +48,8 @@ extern bool g_bdev_nvme_module_finish;
 #define NVME_MAX_CONTROLLERS 1024
 
 typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
+typedef void (*spdk_bdev_nvme_start_discovery_fn)(void *ctx, int rc);
+typedef void (*spdk_bdev_nvme_stop_discovery_fn)(void *ctx);
 
 struct nvme_async_probe_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
@@ -254,6 +256,11 @@ int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     void *cb_ctx,
 		     struct spdk_nvme_ctrlr_opts *opts,
 		     bool multipath);
+
+int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,
+			      struct spdk_nvme_ctrlr_opts *opts,
+			      spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx);
+
 struct spdk_nvme_ctrlr *bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 /**

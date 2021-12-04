@@ -72,6 +72,9 @@ DEFINE_STUB_V(accel_engine_destroy_cb, (void *io_device, void *ctx_buf));
 
 DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domain, int);
 
+DEFINE_STUB(spdk_nvme_ctrlr_get_discovery_log_page, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, spdk_nvme_discovery_cb cb_fn, void *cb_arg), 0);
+
 int spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 				       struct spdk_memory_domain **domains, int array_size)
 {
