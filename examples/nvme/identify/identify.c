@@ -378,94 +378,26 @@ get_intel_md_log_page(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
-get_discovery_log_page_header_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+get_discovery_log_page_cb(void *ctx, int rc, const struct spdk_nvme_cpl *cpl,
+			  struct spdk_nvmf_discovery_log_page *log_page)
 {
-	struct spdk_nvmf_discovery_log_page *new_discovery_page;
-	struct spdk_nvme_ctrlr *ctrlr = cb_arg;
-	uint16_t recfmt;
-	uint64_t remaining;
-	uint64_t offset;
+	if (rc || spdk_nvme_cpl_is_error(cpl)) {
+		printf("get discovery log page failed\n");
+		exit(1);
+	}
 
+	g_discovery_page = log_page;
+	g_discovery_page_numrec = from_le64(&log_page->numrec);
+	g_discovery_page_size = sizeof(struct spdk_nvmf_discovery_log_page);
+	g_discovery_page_size += g_discovery_page_numrec *
+				 sizeof(struct spdk_nvmf_discovery_log_page_entry);
 	outstanding_commands--;
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		/* Return without printing anything - this may not be a discovery controller */
-		free(g_discovery_page);
-		g_discovery_page = NULL;
-		return;
-	}
-
-	/* Got the first 4K of the discovery log page */
-	recfmt = from_le16(&g_discovery_page->recfmt);
-	if (recfmt != 0) {
-		printf("Unrecognized discovery log record format %" PRIu16 "\n", recfmt);
-		return;
-	}
-
-	g_discovery_page_numrec = from_le64(&g_discovery_page->numrec);
-
-	/* Pick an arbitrary limit to avoid ridiculously large buffer size. */
-	if (g_discovery_page_numrec > MAX_DISCOVERY_LOG_ENTRIES) {
-		printf("Discovery log has %" PRIu64 " entries - limiting to %" PRIu64 ".\n",
-		       g_discovery_page_numrec, MAX_DISCOVERY_LOG_ENTRIES);
-		g_discovery_page_numrec = MAX_DISCOVERY_LOG_ENTRIES;
-	}
-
-	/*
-	 * Now that we now how many entries should be in the log page, we can allocate
-	 * the full log page buffer.
-	 */
-	g_discovery_page_size += g_discovery_page_numrec * sizeof(struct
-				 spdk_nvmf_discovery_log_page_entry);
-	new_discovery_page = realloc(g_discovery_page, g_discovery_page_size);
-	if (new_discovery_page == NULL) {
-		free(g_discovery_page);
-		printf("Discovery page allocation failed!\n");
-		return;
-	}
-
-	g_discovery_page = new_discovery_page;
-
-	/* Retrieve the rest of the discovery log page */
-	offset = offsetof(struct spdk_nvmf_discovery_log_page, entries);
-	remaining = g_discovery_page_size - offset;
-	while (remaining) {
-		uint32_t size;
-
-		/* Retrieve up to 4 KB at a time */
-		size = spdk_min(remaining, 4096);
-
-		if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY,
-						     0, (char *)g_discovery_page + offset, size, offset,
-						     get_log_page_completion, NULL)) {
-			printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
-			exit(1);
-		}
-
-		offset += size;
-		remaining -= size;
-		outstanding_commands++;
-	}
 }
 
 static int
 get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
-	/* Allocate the initial discovery log page buffer - this will be resized later. */
-	g_discovery_page_size = sizeof(*g_discovery_page);
-	g_discovery_page = calloc(1, g_discovery_page_size);
-	if (g_discovery_page == NULL) {
-		printf("Discovery log page allocation failed!\n");
-		exit(1);
-	}
-
-	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY,
-					     0, g_discovery_page, g_discovery_page_size, 0,
-					     get_discovery_log_page_header_completion, ctrlr)) {
-		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
-		exit(1);
-	}
-
-	return 0;
+	return spdk_nvme_ctrlr_get_discovery_log_page(ctrlr, get_discovery_log_page_cb, NULL);
 }
 
 static void

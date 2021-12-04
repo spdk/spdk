@@ -1466,6 +1466,42 @@ void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_nvme_timeout_cb cb_fn, void *cb_arg);
 
 /**
+ * Signature for the callback function when a
+ * \ref spdk_nvme_ctrlr_get_discovery_log_page operation is completed.
+ *
+ * \param cb_arg Argument passed to callback function.
+ * \param rc Status of operation. 0 means success, and that the cpl argument is valid.
+ *           Failure indicated by negative errno value.
+ * \param cpl NVMe completion status of the operation. NULL if rc != 0. If multiple
+ *            completions with error status occurred during the operation, the cpl
+ *            value for the first error will be used here.
+ * \param log_page Pointer to the full discovery log page. The application is
+ *                 responsible for freeing this buffer using free().
+ */
+typedef void (*spdk_nvme_discovery_cb)(void *cb_arg, int rc,
+				       const struct spdk_nvme_cpl *cpl,
+				       struct spdk_nvmf_discovery_log_page *log_page);
+
+/**
+ * Get a full discovery log page from the specified controller.
+ *
+ * This function will first read the discovery log header to determine the
+ * total number of valid entries in the discovery log, then it will allocate
+ * a buffer to hold the entire log and issue multiple GET_LOG_PAGE commands to
+ * get all of the entries.
+ *
+ * The application is responsible for calling
+ * \ref spdk_nvme_ctrlr_process_admin_completions to trigger processing of
+ * completions submitted by this function.
+ *
+ * \param ctrlr Pointer to the discovery controller.
+ * \param cb_fn Function to call when the operation is complete.
+ * \param cb_arg Argument to pass to cb_fn.
+ */
+int spdk_nvme_ctrlr_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_discovery_cb cb_fn, void *cb_arg);
+
+/**
  * NVMe I/O queue pair initialization options.
  *
  * These options may be passed to spdk_nvme_ctrlr_alloc_io_qpair() to configure queue pair
