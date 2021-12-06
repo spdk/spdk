@@ -606,7 +606,9 @@ test_nvmf_bdev_ctrlr_zcopy_start(void)
 
 	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, desc, &ch, &write_req);
 
-	CU_ASSERT(rc == 0);
+	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
 
 	/* 2. SPDK_NVME_SC_LBA_OUT_OF_RANGE */
 	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
@@ -615,7 +617,9 @@ test_nvmf_bdev_ctrlr_zcopy_start(void)
 
 	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, desc, &ch, &write_req);
 
-	CU_ASSERT(rc < 0);
+	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sc, SPDK_NVME_SC_LBA_OUT_OF_RANGE);
 
 	/* 3. SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID */
 	write_cmd.cdw10 = 1;	/* SLBA: CDW10 and CDW11 */
@@ -624,7 +628,9 @@ test_nvmf_bdev_ctrlr_zcopy_start(void)
 
 	rc = nvmf_bdev_ctrlr_zcopy_start(&bdev, desc, &ch, &write_req);
 
-	CU_ASSERT(rc < 0);
+	CU_ASSERT_EQUAL(rc, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(write_rsp.nvme_cpl.status.sc, SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
 }
 
 static void

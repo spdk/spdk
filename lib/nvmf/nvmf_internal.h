@@ -483,8 +483,10 @@ nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
  * \param ch The \ref spdk_io_channel
  * \param req The \ref spdk_nvmf_request passed to the bdev for processing
  *
- * \return 0 upon success
- * \return <0 if the zcopy operation could not be started
+ * \return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE if the command was completed immediately or
+ *         SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS if the command was submitted and will be
+ *         completed asynchronously.  Asynchronous completions are notified through
+ *         spdk_nvmf_request_complete().
  */
 int nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 				struct spdk_bdev_desc *desc,
@@ -497,8 +499,10 @@ int nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
  * \param req The NVMe-oF request
  * \param commit Flag indicating whether the buffers should be committed
  *
- * \return 0 upon success
- * \return <0 on error
+ * \return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE if the command was completed immediately or
+ *         SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS if the command was submitted and will be
+ *         completed asynchronously.  Asynchronous completions are notified through
+ *         spdk_nvmf_request_complete().
  */
 int nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit);
 
