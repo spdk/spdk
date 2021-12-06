@@ -50,6 +50,10 @@ DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair,
 DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
+DEFINE_STUB(spdk_nvmf_subsystem_pause, int, (struct spdk_nvmf_subsystem *subsystem,
+		uint32_t nsid, spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg), 0);
+DEFINE_STUB(spdk_nvmf_subsystem_resume, int, (struct spdk_nvmf_subsystem *subsystem,
+		spdk_nvmf_subsystem_state_change_done cb_fn, void *cb_arg), 0);
 DEFINE_STUB_V(nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB(nvmf_ctrlr_async_event_error_event, int, (struct spdk_nvmf_ctrlr *ctrlr,
 		union spdk_nvme_async_event_completion event), 0);
@@ -58,6 +62,8 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int, (struct spdk_nvmf_qpair *qpair
 		struct spdk_nvme_transport_id *trid), 0);
 DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transport_id *trid1,
 		const struct spdk_nvme_transport_id *trid2), 0);
+DEFINE_STUB(nvmf_subsystem_get_ctrlr, struct spdk_nvmf_ctrlr *,
+	    (struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid), NULL);
 
 static void *
 gpa_to_vva(void *prv, uint64_t addr, uint64_t len, int prot)

@@ -214,6 +214,8 @@ struct nvmf_vfio_user_ctrlr {
 	struct spdk_thread			*thread;
 	struct spdk_poller			*vfu_ctx_poller;
 
+	bool					queued_quiesce;
+
 	bool					reset_shn;
 
 	uint16_t				cntlid;
@@ -1622,7 +1624,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	pthread_mutex_unlock(&endpoint->lock);
 }
 
-static int
+static void
 memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
@@ -1632,7 +1634,7 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	int ret = 0;
 
 	if (!info->vaddr) {
-		return 0;
+		return;
 	}
 
 	if (((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
@@ -1640,7 +1642,7 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
 			      (uintptr_t)info->mapping.iov_base,
 			      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
-		return 0;
+		return;
 	}
 
 	assert(endpoint != NULL);
@@ -1678,8 +1680,6 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 				    ret);
 		}
 	}
-
-	return 0;
 }
 
 static int
@@ -1943,6 +1943,125 @@ init_pci_config_space(vfu_pci_config_space_t *p)
 	p->hdr.intr.ipin = 0x1;
 }
 
+static void
+vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
+			   void *cb_arg, int status);
+
+static void
+vfio_user_dev_quiesce_resume_done(struct spdk_nvmf_subsystem *subsystem,
+				  void *cb_arg, int status)
+{
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
+	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
+	int ret;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s resumed done with status %d\n", ctrlr_id(vu_ctrlr), status);
+
+	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+
+	/* Basically, once we call `vfu_device_quiesced` the device is unquiesced from
+	 * libvfio-user's perspective so from the moment `vfio_user_dev_quiesce_done` returns
+	 * libvfio-user might quiesce the device again. However, because the NVMf subsytem is
+	 * an asynchronous operation, this quiesce might come _before_ the NVMf subsystem has
+	 * been resumed, so in the callback of `spdk_nvmf_subsystem_resume` we need to check
+	 * whether a quiesce was requested.
+	 */
+	if (vu_ctrlr->queued_quiesce) {
+		SPDK_DEBUGLOG(nvmf_vfio, "%s has queued quiesce event, pause again\n", ctrlr_id(vu_ctrlr));
+		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
+		ret = spdk_nvmf_subsystem_pause((struct spdk_nvmf_subsystem *)endpoint->subsystem, 0,
+						vfio_user_dev_quiesce_done, vu_ctrlr);
+		if (ret < 0) {
+			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+			SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
+		}
+	}
+}
+
+static void
+vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
+			   void *cb_arg, int status)
+{
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
+	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
+	int ret;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s paused done with status %d\n", ctrlr_id(vu_ctrlr), status);
+
+	assert(vu_ctrlr->state == VFIO_USER_CTRLR_PAUSING);
+	vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
+	vfu_device_quiesced(endpoint->vfu_ctx, status);
+	vu_ctrlr->queued_quiesce = false;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s start to resume\n", ctrlr_id(vu_ctrlr));
+	vu_ctrlr->state = VFIO_USER_CTRLR_RESUMING;
+	ret = spdk_nvmf_subsystem_resume((struct spdk_nvmf_subsystem *)endpoint->subsystem,
+					 vfio_user_dev_quiesce_resume_done, vu_ctrlr);
+	if (ret < 0) {
+		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
+		SPDK_ERRLOG("%s: failed to resume, ret=%d\n", endpoint_id(endpoint), ret);
+	}
+}
+
+static int
+vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
+	int ret;
+
+	if (!vu_ctrlr) {
+		return 0;
+	}
+
+	/* NVMf library will destruct controller when no
+	 * connected queue pairs.
+	 */
+	if (!nvmf_subsystem_get_ctrlr((struct spdk_nvmf_subsystem *)endpoint->subsystem,
+				      vu_ctrlr->cntlid)) {
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s starts to quiesce\n", ctrlr_id(vu_ctrlr));
+
+	/* There is no race condition here as device quiesce callback
+	 * and nvmf_prop_set_cc() are running in the same thread context.
+	 */
+	if (!vu_ctrlr->ctrlr->vcprop.cc.bits.en) {
+		return 0;
+	} else if (!vu_ctrlr->ctrlr->vcprop.csts.bits.rdy) {
+		return 0;
+	} else if (vu_ctrlr->ctrlr->vcprop.csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
+		return 0;
+	}
+
+	switch (vu_ctrlr->state) {
+	case VFIO_USER_CTRLR_PAUSED:
+		return 0;
+	case VFIO_USER_CTRLR_RUNNING:
+		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
+		ret = spdk_nvmf_subsystem_pause((struct spdk_nvmf_subsystem *)endpoint->subsystem, 0,
+						vfio_user_dev_quiesce_done, vu_ctrlr);
+		if (ret < 0) {
+			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+			SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
+			return 0;
+		}
+		break;
+	case VFIO_USER_CTRLR_RESUMING:
+		vu_ctrlr->queued_quiesce = true;
+		SPDK_DEBUGLOG(nvmf_vfio, "%s is busy to quiesce, current state %u\n", ctrlr_id(vu_ctrlr),
+			      vu_ctrlr->state);
+		break;
+	default:
+		assert(vu_ctrlr->state != VFIO_USER_CTRLR_PAUSING);
+		break;
+	}
+
+	errno = EBUSY;
+	return -1;
+}
+
 static int
 vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 			struct nvmf_vfio_user_endpoint *endpoint)
@@ -2057,6 +2176,8 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		SPDK_ERRLOG("vfu_ctx %p failed to setup MSIX\n", vfu_ctx);
 		return ret;
 	}
+
+	vfu_setup_device_quiesce_cb(vfu_ctx, vfio_user_dev_quiesce_cb);
 
 	ret = vfu_realize_ctx(vfu_ctx);
 	if (ret < 0) {
