@@ -242,16 +242,24 @@ static void
 nvmf_ctrlr_process_io_cmd_resubmit(void *arg)
 {
 	struct spdk_nvmf_request *req = arg;
+	int rc;
 
-	nvmf_ctrlr_process_io_cmd(req);
+	rc = nvmf_ctrlr_process_io_cmd(req);
+	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
 }
 
 static void
 nvmf_ctrlr_process_admin_cmd_resubmit(void *arg)
 {
 	struct spdk_nvmf_request *req = arg;
+	int rc;
 
-	nvmf_ctrlr_process_admin_cmd(req);
+	rc = nvmf_ctrlr_process_admin_cmd(req);
+	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
 }
 
 static void
