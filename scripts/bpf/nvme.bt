@@ -1,0 +1,29 @@
+usdt:__EXE__:bdev_nvme_ctrlr_delete {
+	printf("%d.%06d: delete bdev controller %s\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1));
+}
+
+usdt:__EXE__:bdev_nvme_ctrlr_release {
+	printf("%d.%06d: release controller %s with ref %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg2);
+}
+
+usdt:__EXE__:bdev_nvme_destroy_qpair {
+	printf("%d.%06d: controller: %s delete qpair with ID: %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg2);
+}
+
+usdt:__EXE__:bdev_nvme_destruct {
+	printf("%d.%06d: delete nvme disk: %s, with nsid: %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg2);
+}
+
+usdt:__EXE__:bdev_nvme_create_qpair {
+	printf("%d.%06d: controller: %s create qpair with ID: %d on thread: %d\n",
+	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
+	       str(arg1), arg2, arg3);
+}

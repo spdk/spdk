@@ -53,6 +53,8 @@
 #include "spdk/bdev_module.h"
 #include "spdk/log.h"
 
+#include "spdk_internal/usdt.h"
+
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
 #define SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
 
@@ -390,6 +392,7 @@ static void
 nvme_bdev_ctrlr_delete(struct nvme_bdev_ctrlr *nbdev_ctrlr,
 		       struct nvme_ctrlr *nvme_ctrlr)
 {
+	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_delete, nvme_ctrlr->nbdev_ctrlr->name);
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 
 	TAILQ_REMOVE(&nbdev_ctrlr->ctrlrs, nvme_ctrlr, tailq);
@@ -539,6 +542,7 @@ static void
 nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 {
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
+	SPDK_DTRACE_PROBE2(bdev_nvme_ctrlr_release, nvme_ctrlr->nbdev_ctrlr->name, nvme_ctrlr->ref);
 
 	assert(nvme_ctrlr->ref > 0);
 	nvme_ctrlr->ref--;
@@ -1074,7 +1078,12 @@ nvme_poll_group_get_ctrlr_channel(struct nvme_poll_group *group,
 static void
 bdev_nvme_destroy_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 {
+	struct nvme_ctrlr *nvme_ctrlr __attribute__((unused));
+
 	if (ctrlr_ch->qpair != NULL) {
+		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
+		SPDK_DTRACE_PROBE2(bdev_nvme_destroy_qpair, nvme_ctrlr->nbdev_ctrlr->name,
+				   spdk_nvme_qpair_get_id(ctrlr_ch->qpair));
 		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
 		ctrlr_ch->qpair = NULL;
 	}
@@ -1160,6 +1169,8 @@ bdev_nvme_destruct(void *ctx)
 	struct nvme_bdev *nvme_disk = ctx;
 	struct nvme_ns *nvme_ns, *tmp_nvme_ns;
 
+	SPDK_DTRACE_PROBE2(bdev_nvme_destruct, nvme_disk->nbdev_ctrlr->name, nvme_disk->nsid);
+
 	TAILQ_FOREACH_SAFE(nvme_ns, &nvme_disk->nvme_ns_list, tailq, tmp_nvme_ns) {
 		pthread_mutex_lock(&nvme_ns->ctrlr->mutex);
 
@@ -1215,6 +1226,9 @@ bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 	if (qpair == NULL) {
 		return -1;
 	}
+
+	SPDK_DTRACE_PROBE3(bdev_nvme_create_qpair, nvme_ctrlr->nbdev_ctrlr->name,
+			   spdk_nvme_qpair_get_id(ctrlr_ch->qpair), spdk_thread_get_id(nvme_ctrlr->thread));
 
 	assert(ctrlr_ch->group != NULL);
 
