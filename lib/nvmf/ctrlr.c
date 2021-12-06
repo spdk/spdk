@@ -3720,68 +3720,15 @@ nvmf_ctrlr_use_zcopy(struct spdk_nvmf_request *req)
 	return true;
 }
 
-/* If this function returns a non-zero value the request
- * reverts to using SPDK buffers
- */
-int
+void
 spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
-	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
-	uint32_t nsid;
-	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
-	struct spdk_io_channel *ch;
-	int rc;
+	assert(req->zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 
-	if (!qpair->ctrlr) {
-		goto end;
-	}
-
-	if (qpair->group->sgroups == NULL) {
-		goto end;
-	}
-
-	rc = spdk_nvmf_request_get_bdev(req->cmd->nvme_cmd.nsid, req,
-					&bdev, &desc, &ch);
-	if (rc != 0) {
-		goto end;
-	}
-
-	if (ch == NULL) {
-		goto end;
-	}
-
-	nsid = req->cmd->nvme_cmd.nsid;
-	sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
-	ns_info = &sgroup->ns_info[nsid - 1];
-	if (ns_info->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-		goto end;
-	}
-
-	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
-		goto end;
-	}
-
-	/* Set iovcnt to be the maximum number of
-	 * iovs that the ZCOPY can use
-	 */
+	/* Set iovcnt to be the maximum number of iovs that the ZCOPY can use */
 	req->iovcnt = NVMF_REQ_MAX_BUFFERS;
-	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-	rc = nvmf_bdev_ctrlr_zcopy_start(bdev, desc, ch, req);
-	if (rc == 0) {
-		ns_info->io_outstanding++;
-		return 0;
-	}
-	TAILQ_REMOVE(&qpair->outstanding, req, link);
 
-end:
-	/* An error occurred, the subsystem is paused, or the qpair is not active.
-	 * Revert to using SPDK buffers
-	 */
-	req->zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
-	return -1;
+	spdk_nvmf_request_exec(req);
 }
 
 int

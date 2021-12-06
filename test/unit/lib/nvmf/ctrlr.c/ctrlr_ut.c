@@ -269,6 +269,7 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 			    struct spdk_io_channel *ch,
 			    struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint64_t start_lba;
 	uint64_t num_blocks;
 
@@ -276,7 +277,9 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 	num_blocks = (from_le32(&req->cmd->nvme_cmd.cdw12) & 0xFFFFu) + 1;
 
 	if ((start_lba + num_blocks) > bdev->blockcnt) {
-		return -ENXIO;
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	if (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_WRITE) {
@@ -288,8 +291,7 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 	}
 
 
-	spdk_nvmf_request_complete(req);
-	return 0;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 int
@@ -297,7 +299,7 @@ nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 {
 	req->zcopy_bdev_io = NULL;
 	spdk_nvmf_request_complete(req);
-	return 0;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static void
@@ -2376,6 +2378,11 @@ test_nvmf_ctrlr_use_zcopy(void)
 }
 
 static void
+qpair_state_change_done(void *cb_arg, int status)
+{
+}
+
+static void
 test_spdk_nvmf_request_zcopy_start(void)
 {
 	struct spdk_nvmf_request req = {};
@@ -2442,49 +2449,51 @@ test_spdk_nvmf_request_zcopy_start(void)
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 	qpair.ctrlr = NULL;
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) < 0);
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
+	spdk_nvmf_request_zcopy_start(&req);
+	CU_ASSERT_EQUAL(req.zcopy_phase, NVMF_ZCOPY_PHASE_INIT_FAILED);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
 	qpair.ctrlr = &ctrlr;
-
-	/* Fail because no sgroup */
-	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
-	group.sgroups = NULL;
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) < 0);
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
-	group.sgroups = &sgroups;
 
 	/* Fail because bad NSID */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 	cmd.nsid = 0;
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) < 0);
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
+	spdk_nvmf_request_zcopy_start(&req);
+	CU_ASSERT_EQUAL(req.zcopy_phase, NVMF_ZCOPY_PHASE_INIT_FAILED);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
 	cmd.nsid = 1;
 
 	/* Fail because bad Channel */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 	ns_info.channel = NULL;
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) < 0);
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
+	spdk_nvmf_request_zcopy_start(&req);
+	CU_ASSERT_EQUAL(req.zcopy_phase, NVMF_ZCOPY_PHASE_INIT_FAILED);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT);
 	ns_info.channel = &io_ch;
 
-	/* Fail because NSID is not active */
+	/* Queue the requet because NSID is not active */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 	ns_info.state = SPDK_NVMF_SUBSYSTEM_PAUSING;
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) < 0);
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
+	spdk_nvmf_request_zcopy_start(&req);
+	CU_ASSERT_EQUAL(req.zcopy_phase, NVMF_ZCOPY_PHASE_INIT);
+	CU_ASSERT_EQUAL(TAILQ_FIRST(&sgroups.queued), &req);
 	ns_info.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	TAILQ_REMOVE(&sgroups.queued, &req, link);
 
 	/* Fail because QPair is not active */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 	qpair.state = SPDK_NVMF_QPAIR_DEACTIVATING;
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) < 0);
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
+	qpair.state_cb = qpair_state_change_done;
+	spdk_nvmf_request_zcopy_start(&req);
+	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT_FAILED);
 	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	qpair.state_cb = NULL;
 
 	/* Fail because nvmf_bdev_ctrlr_zcopy_start fails */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
@@ -2492,15 +2501,15 @@ test_spdk_nvmf_request_zcopy_start(void)
 	cmd.cdw10 = bdev.blockcnt;	/* SLBA: CDW10 and CDW11 */
 	cmd.cdw12 = 100;	/* NLB: CDW12 bits 15:00, 0's based */
 	req.length = (cmd.cdw12 + 1) * bdev.blocklen;
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) < 0);
-	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
+	spdk_nvmf_request_zcopy_start(&req);
+	CU_ASSERT_EQUAL(req.zcopy_phase, NVMF_ZCOPY_PHASE_INIT_FAILED);
 	cmd.cdw10 = 0;
 	cmd.cdw12 = 0;
 
 	/* Success */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) == 0);
+	spdk_nvmf_request_zcopy_start(&req);
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_EXECUTE);
 }
 
@@ -2574,7 +2583,7 @@ test_zcopy_read(void)
 	CU_ASSERT(ns_info.io_outstanding == 0);
 
 	/* Perform the zcopy start */
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) == 0);
+	spdk_nvmf_request_zcopy_start(&req);
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_EXECUTE);
 	CU_ASSERT(req.zcopy_bdev_io == zcopy_start_bdev_io_read);
 	CU_ASSERT(qpair.outstanding.tqh_first == &req);
@@ -2660,7 +2669,7 @@ test_zcopy_write(void)
 	CU_ASSERT(ns_info.io_outstanding == 0);
 
 	/* Perform the zcopy start */
-	CU_ASSERT(spdk_nvmf_request_zcopy_start(&req) == 0);
+	spdk_nvmf_request_zcopy_start(&req);
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_EXECUTE);
 	CU_ASSERT(req.zcopy_bdev_io == zcopy_start_bdev_io_write);
 	CU_ASSERT(qpair.outstanding.tqh_first == &req);
