@@ -192,13 +192,13 @@ DEFINE_STUB(nvmf_bdev_zcopy_enabled,
 	    (struct spdk_bdev *bdev),
 	    false);
 
-DEFINE_STUB(nvmf_bdev_ctrlr_start_zcopy,
+DEFINE_STUB(nvmf_bdev_ctrlr_zcopy_start,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(nvmf_bdev_ctrlr_end_zcopy,
+DEFINE_STUB(nvmf_bdev_ctrlr_zcopy_end,
 	    int,
 	    (struct spdk_nvmf_request *req, bool commit),
 	    0);

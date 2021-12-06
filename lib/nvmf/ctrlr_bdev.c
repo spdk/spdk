@@ -792,7 +792,7 @@ nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 }
 
 static void
-nvmf_bdev_ctrlr_start_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
+nvmf_bdev_ctrlr_zcopy_start_complete(struct spdk_bdev_io *bdev_io, bool success,
 				     void *cb_arg)
 {
 	struct spdk_nvmf_request	*req = cb_arg;
@@ -833,7 +833,7 @@ nvmf_bdev_ctrlr_start_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 int
-nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
+nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 			    struct spdk_bdev_desc *desc,
 			    struct spdk_io_channel *ch,
 			    struct spdk_nvmf_request *req)
@@ -859,11 +859,11 @@ nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
 	bool populate = (req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_READ) ? true : false;
 
 	return spdk_bdev_zcopy_start(desc, ch, req->iov, req->iovcnt, start_lba,
-				     num_blocks, populate, nvmf_bdev_ctrlr_start_zcopy_complete, req);
+				     num_blocks, populate, nvmf_bdev_ctrlr_zcopy_start_complete, req);
 }
 
 static void
-nvmf_bdev_ctrlr_end_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
+nvmf_bdev_ctrlr_zcopy_end_complete(struct spdk_bdev_io *bdev_io, bool success,
 				   void *cb_arg)
 {
 	struct spdk_nvmf_request	*req = cb_arg;
@@ -885,7 +885,7 @@ nvmf_bdev_ctrlr_end_zcopy_complete(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 int
-nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req, bool commit)
+nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 {
-	return spdk_bdev_zcopy_end(req->zcopy_bdev_io, commit, nvmf_bdev_ctrlr_end_zcopy_complete, req);
+	return spdk_bdev_zcopy_end(req->zcopy_bdev_io, commit, nvmf_bdev_ctrlr_zcopy_end_complete, req);
 }

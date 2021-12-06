@@ -264,7 +264,7 @@ nvmf_bdev_zcopy_enabled(struct spdk_bdev *bdev)
 }
 
 int
-nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
+nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 			    struct spdk_bdev_desc *desc,
 			    struct spdk_io_channel *ch,
 			    struct spdk_nvmf_request *req)
@@ -293,7 +293,7 @@ nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
 }
 
 int
-nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req, bool commit)
+nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 {
 	req->zcopy_bdev_io = NULL;
 	spdk_nvmf_request_complete(req);
@@ -2486,7 +2486,7 @@ test_spdk_nvmf_request_zcopy_start(void)
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
 	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
 
-	/* Fail because nvmf_bdev_ctrlr_start_zcopy fails */
+	/* Fail because nvmf_bdev_ctrlr_zcopy_start fails */
 	CU_ASSERT(nvmf_ctrlr_use_zcopy(&req));
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 	cmd.cdw10 = bdev.blockcnt;	/* SLBA: CDW10 and CDW11 */

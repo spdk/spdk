@@ -3769,7 +3769,7 @@ spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req)
 	 */
 	req->iovcnt = NVMF_REQ_MAX_BUFFERS;
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
-	rc = nvmf_bdev_ctrlr_start_zcopy(bdev, desc, ch, req);
+	rc = nvmf_bdev_ctrlr_zcopy_start(bdev, desc, ch, req);
 	if (rc == 0) {
 		ns_info->io_outstanding++;
 		return 0;
@@ -3788,7 +3788,7 @@ int
 spdk_nvmf_request_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 {
 	req->zcopy_phase = NVMF_ZCOPY_PHASE_END_PENDING;
-	return nvmf_bdev_ctrlr_end_zcopy(req, commit);
+	return nvmf_bdev_ctrlr_zcopy_end(req, commit);
 }
 
 int
@@ -3875,7 +3875,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	if (spdk_nvmf_request_using_zcopy(req)) {
 		assert(req->zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
-		return nvmf_bdev_ctrlr_start_zcopy(bdev, desc, ch, req);
+		return nvmf_bdev_ctrlr_zcopy_start(bdev, desc, ch, req);
 	} else {
 		switch (cmd->opc) {
 		case SPDK_NVME_OPC_READ:

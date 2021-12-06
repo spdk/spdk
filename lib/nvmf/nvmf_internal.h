@@ -486,7 +486,7 @@ nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
  * \return 0 upon success
  * \return <0 if the zcopy operation could not be started
  */
-int nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
+int nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 				struct spdk_bdev_desc *desc,
 				struct spdk_io_channel *ch,
 				struct spdk_nvmf_request *req);
@@ -500,6 +500,6 @@ int nvmf_bdev_ctrlr_start_zcopy(struct spdk_bdev *bdev,
  * \return 0 upon success
  * \return <0 on error
  */
-int nvmf_bdev_ctrlr_end_zcopy(struct spdk_nvmf_request *req, bool commit);
+int nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit);
 
 #endif /* __NVMF_INTERNAL_H__ */
