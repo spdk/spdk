@@ -51,6 +51,8 @@ for i in $(seq 1 $NUM_DEVICES); do
 	sleep 1
 	$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
 	sleep 1
+	$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+	sleep 1
 done
 
 killprocess $nvmfpid

@@ -37,6 +37,8 @@
 #include "spdk/vmd.h"
 #include "spdk/nvme_zns.h"
 #include "spdk/env.h"
+#include "spdk/string.h"
+#include "spdk/log.h"
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr		*ctrlr;
@@ -53,6 +55,7 @@ struct ns_entry {
 
 static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
 static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces);
+static struct spdk_nvme_transport_id g_trid = {};
 
 static bool g_vmd = false;
 
@@ -394,20 +397,66 @@ static void
 usage(const char *program_name)
 {
 	printf("%s [options]", program_name);
-	printf("\n");
+	printf("\t\n");
 	printf("options:\n");
-	printf(" -V         enumerate VMD\n");
+	printf("\t[-d DPDK huge memory size in MB]\n");
+	printf("\t[-g use single file descriptor for DPDK memory segments]\n");
+	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-r remote NVMe over Fabrics target address]\n");
+	printf("\t[-V enumerate VMD]\n");
+#ifdef DEBUG
+	printf("\t[-L enable debug logging]\n");
+#else
+	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+#endif
 }
 
 static int
-parse_args(int argc, char **argv)
+parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
-	int op;
+	int op, rc;
 
-	while ((op = getopt(argc, argv, "V")) != -1) {
+	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
+	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	while ((op = getopt(argc, argv, "d:gi:r:L:V")) != -1) {
 		switch (op) {
 		case 'V':
 			g_vmd = true;
+			break;
+		case 'i':
+			env_opts->shm_id = spdk_strtol(optarg, 10);
+			if (env_opts->shm_id < 0) {
+				fprintf(stderr, "Invalid shared memory ID\n");
+				return env_opts->shm_id;
+			}
+			break;
+		case 'g':
+			env_opts->hugepage_single_segments = true;
+			break;
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
+			break;
+		case 'd':
+			env_opts->mem_size = spdk_strtol(optarg, 10);
+			if (env_opts->mem_size < 0) {
+				fprintf(stderr, "Invalid DPDK memory size\n");
+				return env_opts->mem_size;
+			}
+			break;
+		case 'L':
+			rc = spdk_log_set_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifdef DEBUG
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#endif
 			break;
 		default:
 			usage(argv[0]);
@@ -423,11 +472,6 @@ int main(int argc, char **argv)
 	int rc;
 	struct spdk_env_opts opts;
 
-	rc = parse_args(argc, argv);
-	if (rc != 0) {
-		return rc;
-	}
-
 	/*
 	 * SPDK relies on an abstraction around the local environment
 	 * named env that handles memory allocation and PCI device operations.
@@ -435,8 +479,12 @@ int main(int argc, char **argv)
 	 *
 	 */
 	spdk_env_opts_init(&opts);
+	rc = parse_args(argc, argv, &opts);
+	if (rc != 0) {
+		return rc;
+	}
+
 	opts.name = "hello_world";
-	opts.shm_id = 0;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
@@ -456,7 +504,7 @@ int main(int argc, char **argv)
 	 *  called for each controller after the SPDK NVMe driver has completed
 	 *  initializing the controller we chose to attach.
 	 */
-	rc = spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL);
+	rc = spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		cleanup();
