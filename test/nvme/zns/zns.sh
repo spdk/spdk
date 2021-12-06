@@ -84,7 +84,7 @@ spdk_app_pid=$!
 waitforlisten "$spdk_app_pid"
 
 rpc_cmd bdev_nvme_attach_controller -t pcie -a "$bdf" -b "$bdev"
-zoned_bdevs=($(rpc_cmd bdev_get_bdevs | jq -r ".[] | select(.zoned == true) | select(.driver_specific.nvme.pci_address == \"$bdf\") | .name"))
+zoned_bdevs=($(rpc_cmd bdev_get_bdevs | jq -r ".[] | select(.zoned == true) | select(.driver_specific.nvme[].pci_address == \"$bdf\") | .name"))
 
 killprocess "$spdk_app_pid"
 
