@@ -2,6 +2,7 @@
 
 ## Release 21.10
 
+- [SPDK 21.10 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2110.pdf)
 - [SPDK 21.10 NVMe-oF TCP Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_tcp_perf_report_2110.pdf)
 - [SPDK 21.10 NVMe-oF RDMA Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_rdma_perf_report_2110.pdf)
 - [SPDK 21.10 Vhost Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_vhost_perf_report_2110.pdf)
