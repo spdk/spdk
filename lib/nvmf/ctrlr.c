@@ -3873,27 +3873,32 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		req->qpair->first_fused_req = NULL;
 	}
 
-	switch (cmd->opc) {
-	case SPDK_NVME_OPC_READ:
-		return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
-	case SPDK_NVME_OPC_WRITE:
-		return nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
-	case SPDK_NVME_OPC_COMPARE:
-		return nvmf_bdev_ctrlr_compare_cmd(bdev, desc, ch, req);
-	case SPDK_NVME_OPC_WRITE_ZEROES:
-		return nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
-	case SPDK_NVME_OPC_FLUSH:
-		return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
-	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
-		return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
-	case SPDK_NVME_OPC_RESERVATION_REGISTER:
-	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
-	case SPDK_NVME_OPC_RESERVATION_RELEASE:
-	case SPDK_NVME_OPC_RESERVATION_REPORT:
-		spdk_thread_send_msg(ctrlr->subsys->thread, nvmf_ns_reservation_request, req);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
-	default:
-		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+	if (spdk_nvmf_request_using_zcopy(req)) {
+		assert(req->zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
+		return nvmf_bdev_ctrlr_start_zcopy(bdev, desc, ch, req);
+	} else {
+		switch (cmd->opc) {
+		case SPDK_NVME_OPC_READ:
+			return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_WRITE:
+			return nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_COMPARE:
+			return nvmf_bdev_ctrlr_compare_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_WRITE_ZEROES:
+			return nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_FLUSH:
+			return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_DATASET_MANAGEMENT:
+			return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
+		case SPDK_NVME_OPC_RESERVATION_REGISTER:
+		case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+		case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		case SPDK_NVME_OPC_RESERVATION_REPORT:
+			spdk_thread_send_msg(ctrlr->subsys->thread, nvmf_ns_reservation_request, req);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+		default:
+			return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+		}
 	}
 }
 
