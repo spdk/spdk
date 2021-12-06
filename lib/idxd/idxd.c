@@ -265,6 +265,12 @@ idxd_get_impl_by_name(const char *impl_name)
 void
 spdk_idxd_set_config(bool kernel_mode)
 {
+	if (g_idxd_impl != NULL) {
+		SPDK_ERRLOG("Cannot change idxd implementation after devices are initialized\n");
+		assert(false);
+		return;
+	}
+
 	if (kernel_mode) {
 		g_idxd_impl = idxd_get_impl_by_name(KERNEL_DRIVER_NAME);
 	} else {
