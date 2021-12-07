@@ -45,6 +45,7 @@
 #include "spdk/uuid.h"
 #include "spdk/json.h"
 #include "spdk/file.h"
+#include "spdk/bit_array.h"
 
 #define __SPDK_BDEV_MODULE_ONLY
 #include "spdk/bdev_module.h"
@@ -297,12 +298,19 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
+	subsystem->used_listener_ids = spdk_bit_array_create(NVMF_MAX_LISTENERS_PER_SUBSYSTEM);
+	if (subsystem->used_listener_ids == NULL) {
+		pthread_mutex_destroy(&subsystem->mutex);
+		free(subsystem);
+		return NULL;
+	}
 
 	if (num_ns != 0) {
 		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns *));
 		if (subsystem->ns == NULL) {
 			SPDK_ERRLOG("Namespace memory allocation failed\n");
 			pthread_mutex_destroy(&subsystem->mutex);
+			spdk_bit_array_free(&subsystem->used_listener_ids);
 			free(subsystem);
 			return NULL;
 		}
@@ -311,6 +319,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 			SPDK_ERRLOG("ANA group memory allocation failed\n");
 			pthread_mutex_destroy(&subsystem->mutex);
 			free(subsystem->ns);
+			spdk_bit_array_free(&subsystem->used_listener_ids);
 			free(subsystem);
 			return NULL;
 		}
@@ -359,6 +368,7 @@ _nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 	TAILQ_REMOVE(&subsystem->listeners, listener, link);
 	nvmf_update_discovery_log(listener->subsystem->tgt, NULL);
 	free(listener->ana_state);
+	spdk_bit_array_clear(subsystem->used_listener_ids, listener->id);
 	free(listener);
 }
 
@@ -404,6 +414,8 @@ _nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	subsystem->tgt->subsystems[subsystem->id] = NULL;
 
 	pthread_mutex_destroy(&subsystem->mutex);
+
+	spdk_bit_array_free(&subsystem->used_listener_ids);
 
 	if (subsystem->async_destroy) {
 		async_destroy_cb = subsystem->async_destroy_cb;
@@ -1068,6 +1080,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_nvmf_subsystem_listener *listener;
 	struct spdk_nvmf_listener *tr_listener;
 	uint32_t i;
+	uint32_t id;
 	int rc = 0;
 
 	assert(cb_fn != NULL);
@@ -1116,6 +1129,18 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
+
+	id = spdk_bit_array_find_first_clear(subsystem->used_listener_ids, 0);
+	if (id == UINT32_MAX) {
+		SPDK_ERRLOG("Cannot add any more listeners\n");
+		free(listener->ana_state);
+		free(listener);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	spdk_bit_array_set(subsystem->used_listener_ids, id);
+	listener->id = id;
 
 	for (i = 0; i < subsystem->max_nsid; i++) {
 		listener->ana_state[i] = SPDK_NVME_ANA_OPTIMIZED_STATE;

@@ -168,7 +168,7 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 
 			entry = &disc_log->entries[numrec];
 			memset(entry, 0, sizeof(*entry));
-			entry->portid = numrec;
+			entry->portid = listener->id;
 			entry->cntlid = 0xffff;
 			entry->asqsz = listener->transport->opts.max_aq_depth;
 			entry->subtype = subsystem->subtype;

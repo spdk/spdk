@@ -106,6 +106,7 @@ struct spdk_nvmf_subsystem_listener {
 	struct spdk_nvmf_transport			*transport;
 	enum spdk_nvme_ana_state			*ana_state;
 	uint64_t					ana_state_change_count;
+	uint16_t					id;
 	TAILQ_ENTRY(spdk_nvmf_subsystem_listener)	link;
 };
 
@@ -278,6 +279,8 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
 
+#define NVMF_MAX_LISTENERS_PER_SUBSYSTEM	16
+
 struct spdk_nvmf_subsystem {
 	struct spdk_thread				*thread;
 
@@ -319,6 +322,7 @@ struct spdk_nvmf_subsystem {
 	pthread_mutex_t					mutex;
 	TAILQ_HEAD(, spdk_nvmf_host)			hosts;
 	TAILQ_HEAD(, spdk_nvmf_subsystem_listener)	listeners;
+	struct spdk_bit_array				*used_listener_ids;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem)		entries;
 
