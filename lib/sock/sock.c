@@ -320,6 +320,8 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 	struct spdk_sock *sock;
 	struct spdk_sock_opts opts_local;
 	const char *impl_name = NULL;
+	struct spdk_sock_impl_opts impl_opts = {};
+	size_t len;
 
 	if (opts == NULL) {
 		SPDK_ERRLOG("the opts should not be NULL pointer\n");
@@ -346,6 +348,10 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 			sock->net_impl = impl;
 			TAILQ_INIT(&sock->queued_reqs);
 			TAILQ_INIT(&sock->pending_reqs);
+
+			len = sizeof(struct spdk_sock_impl_opts);
+			spdk_sock_impl_get_opts(impl->name, &impl_opts, &len);
+			sock->zerocopy_threshold = impl_opts.zerocopy_threshold;
 			return sock;
 		}
 	}
@@ -407,6 +413,8 @@ struct spdk_sock *
 spdk_sock_accept(struct spdk_sock *sock)
 {
 	struct spdk_sock *new_sock;
+	struct spdk_sock_impl_opts impl_opts = {};
+	size_t len;
 
 	new_sock = sock->net_impl->accept(sock);
 	if (new_sock != NULL) {
@@ -416,6 +424,10 @@ spdk_sock_accept(struct spdk_sock *sock)
 		new_sock->net_impl = sock->net_impl;
 		TAILQ_INIT(&new_sock->queued_reqs);
 		TAILQ_INIT(&new_sock->pending_reqs);
+
+		len = sizeof(struct spdk_sock_impl_opts);
+		spdk_sock_impl_get_opts(sock->net_impl->name, &impl_opts, &len);
+		new_sock->zerocopy_threshold = impl_opts.zerocopy_threshold;
 	}
 
 	return new_sock;
@@ -850,6 +862,7 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_uint32(w, "enable_placement_id", opts.enable_placement_id);
 			spdk_json_write_named_bool(w, "enable_zerocopy_send_server", opts.enable_zerocopy_send_server);
 			spdk_json_write_named_bool(w, "enable_zerocopy_send_client", opts.enable_zerocopy_send_client);
+			spdk_json_write_named_uint32(w, "zerocopy_threshold", opts.zerocopy_threshold);
 			spdk_json_write_object_end(w);
 			spdk_json_write_object_end(w);
 		} else {

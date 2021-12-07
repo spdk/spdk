@@ -66,6 +66,7 @@ struct spdk_sock {
 	int				cb_cnt;
 	spdk_sock_cb			cb_fn;
 	void				*cb_arg;
+	uint32_t			zerocopy_threshold;
 	struct {
 		uint8_t		closed		: 1;
 		uint8_t		reserved	: 7;
@@ -174,6 +175,7 @@ spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int
 #endif
 
 	req->internal.offset = 0;
+	req->internal.is_zcopy = 0;
 
 	closed = sock->flags.closed;
 	sock->cb_cnt++;
@@ -245,11 +247,12 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 
 static inline int
 spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
-		    struct spdk_sock_request **last_req)
+		    struct spdk_sock_request **last_req, int *flags)
 {
 	int iovcnt, i;
 	struct spdk_sock_request *req;
 	unsigned int offset;
+	uint64_t total = 0;
 
 	/* Gather an iov */
 	iovcnt = index;
@@ -275,8 +278,9 @@ spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
 
 			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
 			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-			iovcnt++;
 
+			total += iovs[iovcnt].iov_len;
+			iovcnt++;
 			offset = 0;
 
 			if (iovcnt >= IOV_BATCH_SIZE) {
@@ -294,6 +298,14 @@ spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
 	}
 
 end:
+
+#if defined(MSG_ZEROCOPY)
+	/* if data size < zerocopy_threshold, remove MSG_ZEROCOPY flag */
+	if (total < _sock->zerocopy_threshold && flags != NULL) {
+		*flags = *flags & (~MSG_ZEROCOPY);
+	}
+#endif
+
 	return iovcnt;
 }
 

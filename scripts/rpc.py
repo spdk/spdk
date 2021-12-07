@@ -2838,7 +2838,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        enable_quickack=args.enable_quickack,
                                        enable_placement_id=args.enable_placement_id,
                                        enable_zerocopy_send_server=args.enable_zerocopy_send_server,
-                                       enable_zerocopy_send_client=args.enable_zerocopy_send_client)
+                                       enable_zerocopy_send_client=args.enable_zerocopy_send_client,
+                                       zerocopy_threshold=args.zerocopy_threshold)
 
     p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
@@ -2861,8 +2862,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_zerocopy_send_client')
     p.add_argument('--disable-zerocopy-send-client', help='Disable zerocopy on send for client sockets',
                    action='store_false', dest='enable_zerocopy_send_client')
+    p.add_argument('--zerocopy-threshold', help='Set zerocopy_threshold in bytes',
+                   action='store_true', dest='zerocopy_threshold')
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_quickack=None,
-                   enable_placement_id=None, enable_zerocopy_send_server=None, enable_zerocopy_send_client=None)
+                   enable_placement_id=None, enable_zerocopy_send_server=None, enable_zerocopy_send_client=None,
+                   zerocopy_threshold=None)
 
     def sock_set_default_impl(args):
         print_json(rpc.sock.sock_set_default_impl(args.client,

@@ -108,6 +108,17 @@ bdevs is one after another. The concat bdev is extendable. When the free space o
 concat bdev is not enough, the user can deconstruct the concat bdev, then reconstruct it
 with an additional underlying bdev.
 
+### sock
+
+Allow MSG_ZEROCOPY flag to be set or not according to data size, which can be enabled and
+set by setting "zerocopy_threshold". zerocopy_threshold = 0 means disable this function;
+zerocopy_threshold > 0 means enable it and use this value as the threshold.
+
+### rpc
+
+Introduced `zerocopy_threshold` to enable zerocopy on send for server sockets according to
+data size to be flushed.
+
 ## v22.01
 
 ### accel

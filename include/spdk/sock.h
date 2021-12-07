@@ -75,6 +75,9 @@ struct spdk_sock_request {
 		void				*curr_list;
 #endif
 		uint32_t			offset;
+
+		/* Indicate if the whole req or part of it is sent with zerocopy */
+		bool				is_zcopy;
 	} internal;
 
 	int				iovcnt;
@@ -139,6 +142,12 @@ struct spdk_sock_impl_opts {
 	 * Enable or disable use of zero copy flow on send for client sockets. Used by posix socket module.
 	 */
 	bool enable_zerocopy_send_client;
+
+	/**
+	 * Set zerocopy threshold in bytes. A consecutive sequence of requests' iovecs that fall below this
+	 * threshold may be sent without zerocopy flag set.
+	 */
+	uint32_t zerocopy_threshold;
 };
 
 /**

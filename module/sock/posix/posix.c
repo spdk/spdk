@@ -95,7 +95,8 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_quickack = false,
 	.enable_placement_id = PLACEMENT_NONE,
 	.enable_zerocopy_send_server = true,
-	.enable_zerocopy_send_client = false
+	.enable_zerocopy_send_client = false,
+	.zerocopy_threshold = 0
 };
 
 static struct spdk_sock_map g_map = {
@@ -698,14 +699,18 @@ _sock_check_zcopy(struct spdk_sock *sock)
 		for (idx = serr->ee_info; idx <= serr->ee_data; idx++) {
 			found = false;
 			TAILQ_FOREACH_SAFE(req, &sock->pending_reqs, internal.link, treq) {
-				if (req->internal.offset == idx) {
-					found = true;
-
+				if (!req->internal.is_zcopy) {
+					/* This wasn't a zcopy request. It was just waiting in line to complete */
 					rc = spdk_sock_request_put(sock, req, 0);
 					if (rc < 0) {
 						return rc;
 					}
-
+				} else if (req->internal.offset == idx) {
+					found = true;
+					rc = spdk_sock_request_put(sock, req, 0);
+					if (rc < 0) {
+						return rc;
+					}
 				} else if (found) {
 					break;
 				}
@@ -731,21 +736,13 @@ _sock_flush(struct spdk_sock *sock)
 	ssize_t rc;
 	unsigned int offset;
 	size_t len;
+	bool is_zcopy = false;
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (sock->cb_cnt > 0) {
 		return 0;
 	}
 
-	iovcnt = spdk_sock_prep_reqs(sock, iovs, 0, NULL);
-
-	if (iovcnt == 0) {
-		return 0;
-	}
-
-	/* Perform the vectored write */
-	msg.msg_iov = iovs;
-	msg.msg_iovlen = iovcnt;
 #ifdef SPDK_ZEROCOPY
 	if (psock->zcopy) {
 		flags = MSG_ZEROCOPY | MSG_NOSIGNAL;
@@ -754,6 +751,20 @@ _sock_flush(struct spdk_sock *sock)
 	{
 		flags = MSG_NOSIGNAL;
 	}
+
+	iovcnt = spdk_sock_prep_reqs(sock, iovs, 0, NULL, &flags);
+	if (iovcnt == 0) {
+		return 0;
+	}
+
+#ifdef SPDK_ZEROCOPY
+	is_zcopy = flags & MSG_ZEROCOPY;
+#endif
+
+	/* Perform the vectored write */
+	msg.msg_iov = iovs;
+	msg.msg_iovlen = iovcnt;
+
 	rc = sendmsg(psock->fd, &msg, flags);
 	if (rc <= 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK || (errno == ENOBUFS && psock->zcopy)) {
@@ -762,7 +773,7 @@ _sock_flush(struct spdk_sock *sock)
 		return rc;
 	}
 
-	if (psock->zcopy) {
+	if (is_zcopy) {
 		/* Handling overflow case, because we use psock->sendmsg_idx - 1 for the
 		 * req->internal.offset, so sendmsg_idx should not be zero  */
 		if (spdk_unlikely(psock->sendmsg_idx == UINT32_MAX)) {
@@ -776,6 +787,9 @@ _sock_flush(struct spdk_sock *sock)
 	req = TAILQ_FIRST(&sock->queued_reqs);
 	while (req) {
 		offset = req->internal.offset;
+
+		/* req->internal.is_zcopy is true when the whole req or part of it is sent with zerocopy */
+		req->internal.is_zcopy = is_zcopy;
 
 		for (i = 0; i < req->iovcnt; i++) {
 			/* Advance by the offset first */
@@ -801,7 +815,7 @@ _sock_flush(struct spdk_sock *sock)
 		/* Handled a full request. */
 		spdk_sock_request_pend(sock, req);
 
-		if (!psock->zcopy) {
+		if (!req->internal.is_zcopy && req == TAILQ_FIRST(&sock->pending_reqs)) {
 			/* The sendmsg syscall above isn't currently asynchronous,
 			* so it's already done. */
 			retval = spdk_sock_request_put(sock, req, 0);
@@ -1514,6 +1528,7 @@ posix_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 	GET_FIELD(enable_placement_id);
 	GET_FIELD(enable_zerocopy_send_server);
 	GET_FIELD(enable_zerocopy_send_client);
+	GET_FIELD(zerocopy_threshold);
 
 #undef GET_FIELD
 #undef FIELD_OK
@@ -1546,6 +1561,7 @@ posix_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 	SET_FIELD(enable_placement_id);
 	SET_FIELD(enable_zerocopy_send_server);
 	SET_FIELD(enable_zerocopy_send_client);
+	SET_FIELD(zerocopy_threshold);
 
 #undef SET_FIELD
 #undef FIELD_OK
