@@ -2055,7 +2055,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-a', '--traddr', help='NVMe-oF transport address: e.g., an ip address', required=True)
     p.add_argument('-p', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument('-f', '--adrfam', help='NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
-    p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number')
+    p.add_argument('-s', '--trsvcid', help='NVMe-oF transport service id: e.g., a port number (required for TCP and RDMA transport types)')
     p.set_defaults(func=nvmf_subsystem_remove_listener)
 
     def nvmf_subsystem_listener_set_ana_state(args):
