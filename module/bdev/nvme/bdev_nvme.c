@@ -3484,6 +3484,11 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 
 	assert(nvme_ctrlr != NULL);
 
+	if (ctx->names == NULL) {
+		populate_namespaces_cb(ctx, 0, 0);
+		return;
+	}
+
 	/*
 	 * Report the new bdevs that were created in this call.
 	 * There can be more than one bdev per NVMe controller.
