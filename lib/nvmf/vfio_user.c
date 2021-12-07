@@ -151,6 +151,28 @@ enum nvmf_vfio_user_cq_state {
 	VFIO_USER_CQ_DELETED,
 };
 
+enum nvmf_vfio_user_ctrlr_state {
+	VFIO_USER_CTRLR_CREATING = 0,
+	VFIO_USER_CTRLR_RUNNING,
+	/* Quiesce requested by libvfio-user */
+	VFIO_USER_CTRLR_PAUSING,
+	/* NVMf subsystem is paused, it's safe to do PCI reset, memory register,
+	 * memory unergister, and vfio migration state transition in this state.
+	 */
+	VFIO_USER_CTRLR_PAUSED,
+	/*
+	 * Implies that the NVMf subsystem is paused. Device will be unquiesced (PCI
+	 * reset, memory register and unregister, controller in destination VM has
+	 * been restored).  NVMf subsystem resume has been requested.
+	 */
+	VFIO_USER_CTRLR_RESUMING,
+	/*
+	 * Implies that the NVMf subsystem is paused. Both controller in source VM and
+	 * destinatiom VM is in this state when doing live migration.
+	 */
+	VFIO_USER_CTRLR_MIGRATING
+};
+
 struct nvmf_vfio_user_qpair {
 	struct spdk_nvmf_qpair			qpair;
 	struct spdk_nvmf_transport_poll_group	*group;
@@ -187,6 +209,7 @@ struct nvmf_vfio_user_ctrlr {
 
 	/* Connected queue pairs list */
 	TAILQ_HEAD(, nvmf_vfio_user_qpair)	connected_qps;
+	enum nvmf_vfio_user_ctrlr_state		state;
 
 	struct spdk_thread			*thread;
 	struct spdk_poller			*vfu_ctx_poller;
@@ -2555,6 +2578,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		vu_ctrlr->cntlid = vu_qpair->qpair.ctrlr->cntlid;
 		vu_ctrlr->thread = spdk_get_thread();
 		vu_ctrlr->ctrlr = vu_qpair->qpair.ctrlr;
+		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 		vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx, vu_ctrlr, 0);
 	} else {
 		/* For I/O queues this command was generated in response to an
