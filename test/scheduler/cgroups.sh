@@ -142,5 +142,11 @@ kill_in_cgroup() {
 	fi
 }
 
+remove_cpuset_cgroup() {
+	if ((cgroup_version == 2)); then
+		remove_cgroup /cpuset
+	fi
+}
+
 declare -r sysfs_cgroup=/sys/fs/cgroup
 cgroup_version=$(check_cgroup)

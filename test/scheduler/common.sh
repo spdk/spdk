@@ -379,7 +379,7 @@ exec_under_dynamic_scheduler() {
 	if [[ -e /proc/$spdk_pid/status ]]; then
 		killprocess "$spdk_pid"
 	fi
-	"$@" --wait-for-rpc &
+	exec_in_cgroup "/cpuset/spdk" "$@" --wait-for-rpc &
 	spdk_pid=$!
 	# Give some time for the app to init itself
 	waitforlisten "$spdk_pid"
