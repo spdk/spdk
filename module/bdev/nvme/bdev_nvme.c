@@ -3880,7 +3880,17 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 	return rc;
 }
 
+struct discovery_ctrlr_ctx {
+	char						name[128];
+	struct spdk_nvme_transport_id			trid;
+	struct spdk_nvme_ctrlr_opts			opts;
+	struct spdk_nvmf_discovery_log_page_entry	entry;
+	TAILQ_ENTRY(discovery_ctrlr_ctx)		tailq;
+	struct discovery_ctx				*ctx;
+};
+
 struct discovery_ctx {
+	char					*name;
 	spdk_bdev_nvme_start_discovery_fn	start_cb_fn;
 	spdk_bdev_nvme_stop_discovery_fn	stop_cb_fn;
 	void					*cb_ctx;
@@ -3890,6 +3900,7 @@ struct discovery_ctx {
 	struct spdk_poller			*poller;
 	struct spdk_nvme_ctrlr_opts		opts;
 	TAILQ_ENTRY(discovery_ctx)		tailq;
+	TAILQ_HEAD(, discovery_ctrlr_ctx)	ctrlr_ctxs;
 	int					rc;
 	/* Denotes if a discovery is currently in progress for this context.
 	 * That includes connecting to newly discovered subsystems.  Used to
@@ -3910,6 +3921,9 @@ struct discovery_ctx {
 	bool					detach;
 
 	struct spdk_thread			*calling_thread;
+	uint32_t				index;
+	uint32_t				attach_in_progress;
+	char					*hostnqn;
 };
 
 TAILQ_HEAD(discovery_ctxs, discovery_ctx);
@@ -3918,22 +3932,156 @@ static struct discovery_ctxs g_discovery_ctxs = TAILQ_HEAD_INITIALIZER(g_discove
 static void get_discovery_log_page(struct discovery_ctx *ctx);
 
 static void
+free_discovery_ctx(struct discovery_ctx *ctx)
+{
+	free(ctx->hostnqn);
+	free(ctx->name);
+	free(ctx);
+}
+
+static void
+discovery_complete(struct discovery_ctx *ctx)
+{
+	ctx->in_progress = false;
+	if (ctx->pending) {
+		ctx->pending = false;
+		get_discovery_log_page(ctx);
+	}
+}
+
+static void
+build_trid_from_log_page_entry(struct spdk_nvme_transport_id *trid,
+			       struct spdk_nvmf_discovery_log_page_entry *entry)
+{
+	char *space;
+
+	trid->trtype = entry->trtype;
+	trid->adrfam = entry->adrfam;
+	memcpy(trid->traddr, entry->traddr, sizeof(trid->traddr));
+	memcpy(trid->trsvcid, entry->trsvcid, sizeof(trid->trsvcid));
+	memcpy(trid->subnqn, entry->subnqn, sizeof(trid->subnqn));
+
+	/* We want the traddr, trsvcid and subnqn fields to be NULL-terminated.
+	 * But the log page entries typically pad them with spaces, not zeroes.
+	 * So add a NULL terminator to each of these fields at the appropriate
+	 * location.
+	 */
+	space = strchr(trid->traddr, ' ');
+	if (space) {
+		*space = 0;
+	}
+	space = strchr(trid->trsvcid, ' ');
+	if (space) {
+		*space = 0;
+	}
+	space = strchr(trid->subnqn, ' ');
+	if (space) {
+		*space = 0;
+	}
+}
+
+static void
+discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
+{
+	struct discovery_ctrlr_ctx *ctrlr_ctx = cb_ctx;
+	struct discovery_ctx *ctx = ctrlr_ctx->ctx;;
+
+	SPDK_DEBUGLOG(bdev_nvme, "attach %s done\n", ctrlr_ctx->name);
+	ctx->attach_in_progress--;
+	if (ctx->attach_in_progress == 0) {
+		discovery_complete(ctx);
+	}
+}
+
+static void
 discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		      struct spdk_nvmf_discovery_log_page *log_page)
 {
 	struct discovery_ctx *ctx = cb_arg;
+	struct discovery_ctrlr_ctx *ctrlr_ctx, *tmp;
+	struct spdk_nvmf_discovery_log_page_entry *new_entry, *old_entry;
+	uint64_t numrec, i;
+	bool found;
 
 	if (rc || spdk_nvme_cpl_is_error(cpl)) {
 		SPDK_ERRLOG("could not get discovery log page\n");
 		return;
 	}
 
+	assert(ctx->attach_in_progress == 0);
+	numrec = from_le64(&log_page->numrec);
+	TAILQ_FOREACH_SAFE(ctrlr_ctx, &ctx->ctrlr_ctxs, tailq, tmp) {
+		found = false;
+		old_entry = &ctrlr_ctx->entry;
+		for (i = 0; i < numrec; i++) {
+			new_entry = &log_page->entries[i];
+			if (!memcmp(old_entry, new_entry, sizeof(*old_entry))) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			struct nvme_path_id path = {};
+
+			SPDK_DEBUGLOG(bdev_nvme, "detach controller\n");
+
+			path.trid = ctrlr_ctx->trid;
+			bdev_nvme_delete(ctrlr_ctx->name, &path);
+			TAILQ_REMOVE(&ctx->ctrlr_ctxs, ctrlr_ctx, tailq);
+			free(ctrlr_ctx);
+		}
+	}
+	for (i = 0; i < numrec; i++) {
+		found = false;
+		new_entry = &log_page->entries[i];
+		TAILQ_FOREACH(ctrlr_ctx, &ctx->ctrlr_ctxs, tailq) {
+			old_entry = &ctrlr_ctx->entry;
+			if (!memcmp(new_entry, old_entry, sizeof(*new_entry))) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			struct discovery_ctrlr_ctx *subnqn_ctx, *new_ctx;
+
+			TAILQ_FOREACH(subnqn_ctx, &ctx->ctrlr_ctxs, tailq) {
+				if (!memcmp(subnqn_ctx->entry.subnqn, new_entry->subnqn,
+					    sizeof(new_entry->subnqn))) {
+					break;
+				}
+			}
+
+			new_ctx = calloc(1, sizeof(*ctrlr_ctx));
+			if (new_ctx == NULL) {
+				SPDK_ERRLOG("could not allocate new ctrlr_ctx\n");
+				break;
+			}
+
+			new_ctx->ctx = ctx;
+			memcpy(&new_ctx->entry, new_entry, sizeof(*new_entry));
+			build_trid_from_log_page_entry(&new_ctx->trid, new_entry);
+			if (subnqn_ctx) {
+				snprintf(new_ctx->name, sizeof(new_ctx->name), "%s", subnqn_ctx->name);
+			} else {
+				snprintf(new_ctx->name, sizeof(new_ctx->name), "%s%d", ctx->name, ctx->index++);
+			}
+			spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->opts, sizeof(new_ctx->opts));
+			snprintf(new_ctx->opts.hostnqn, sizeof(new_ctx->opts.hostnqn), "%s", ctx->hostnqn);
+			rc = bdev_nvme_create(&new_ctx->trid, new_ctx->name, NULL, 0, 0,
+					      discovery_attach_controller_done, new_ctx,
+					      &new_ctx->opts, true);
+			if (rc == 0) {
+				TAILQ_INSERT_TAIL(&ctx->ctrlr_ctxs, new_ctx, tailq);
+				ctx->attach_in_progress++;
+			} else {
+				SPDK_ERRLOG("bdev_nvme_create failed (%s)\n", spdk_strerror(-rc));
+			}
+		}
+	}
 	free(log_page);
 
-	ctx->in_progress = false;
-	if (ctx->pending) {
-		ctx->pending = false;
-		get_discovery_log_page(ctx);
+	if (ctx->attach_in_progress == 0) {
+		discovery_complete(ctx);
 	}
 }
 
@@ -3948,6 +4096,7 @@ get_discovery_log_page(struct discovery_ctx *ctx)
 	if (rc != 0) {
 		SPDK_ERRLOG("could not get discovery log page\n");
 	}
+	SPDK_DEBUGLOG(bdev_nvme, "sent discovery log page command\n");
 }
 
 static void
@@ -3985,7 +4134,7 @@ start_discovery_done(void *cb_ctx)
 	if (ctx->rc != 0) {
 		SPDK_ERRLOG("could not connect to discovery ctrlr\n");
 		TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
-		free(ctx);
+		free_discovery_ctx(ctx);
 	}
 }
 
@@ -4023,7 +4172,7 @@ discovery_poller(void *arg)
 			spdk_poller_unregister(&ctx->poller);
 			TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
 			ctx->stop_cb_fn(ctx->cb_ctx);
-			free(ctx);
+			free_discovery_ctx(ctx);
 		}
 	} else {
 		spdk_nvme_ctrlr_process_admin_completions(ctx->ctrlr);
@@ -4070,15 +4219,27 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 		return -ENOMEM;
 	}
 
+	ctx->name = strdup(base_name);
+	if (ctx->name == NULL) {
+		free_discovery_ctx(ctx);
+		return -ENOMEM;
+	}
 	ctx->start_cb_fn = cb_fn;
 	ctx->cb_ctx = cb_ctx;
 	memcpy(&ctx->opts, opts, sizeof(*opts));
 	ctx->calling_thread = spdk_get_thread();
+	TAILQ_INIT(&ctx->ctrlr_ctxs);
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	/* Even if user did not specify hostnqn, we can still strdup("\0"); */
+	ctx->hostnqn = strdup(ctx->opts.hostnqn);
+	if (ctx->hostnqn == NULL) {
+		free_discovery_ctx(ctx);
+		return -ENOMEM;
+	}
 	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, discovery_attach_cb);
 	if (ctx->probe_ctx == NULL) {
 		SPDK_ERRLOG("could not start discovery connect\n");
-		free(ctx);
+		free_discovery_ctx(ctx);
 		return -EIO;
 	}
 
