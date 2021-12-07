@@ -294,12 +294,11 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+void
 nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 {
 	req->zcopy_bdev_io = NULL;
 	spdk_nvmf_request_complete(req);
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static void

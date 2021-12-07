@@ -198,10 +198,7 @@ DEFINE_STUB(nvmf_bdev_ctrlr_zcopy_start,
 	     struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(nvmf_bdev_ctrlr_zcopy_end,
-	    int,
-	    (struct spdk_nvmf_request *req, bool commit),
-	    0);
+DEFINE_STUB_V(nvmf_bdev_ctrlr_zcopy_end, (struct spdk_nvmf_request *req, bool commit));
 
 DEFINE_STUB_V(spdk_nvmf_request_free_buffers,
 	      (struct spdk_nvmf_request *req, struct spdk_nvmf_transport_poll_group *group,

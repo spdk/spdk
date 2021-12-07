@@ -909,7 +909,7 @@ nvmf_bdev_ctrlr_zcopy_end_complete(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_nvmf_request_complete(req);
 }
 
-int
+void
 nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 {
 	int rc __attribute__((unused));
@@ -918,6 +918,4 @@ nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit)
 
 	/* The only way spdk_bdev_zcopy_end() can fail is if we pass a bdev_io type that isn't ZCOPY */
 	assert(rc == 0);
-
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }

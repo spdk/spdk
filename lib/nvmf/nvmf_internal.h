@@ -498,12 +498,7 @@ int nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
  *
  * \param req The NVMe-oF request
  * \param commit Flag indicating whether the buffers should be committed
- *
- * \return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE if the command was completed immediately or
- *         SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS if the command was submitted and will be
- *         completed asynchronously.  Asynchronous completions are notified through
- *         spdk_nvmf_request_complete().
  */
-int nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit);
+void nvmf_bdev_ctrlr_zcopy_end(struct spdk_nvmf_request *req, bool commit);
 
 #endif /* __NVMF_INTERNAL_H__ */

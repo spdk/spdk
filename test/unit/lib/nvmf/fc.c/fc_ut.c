@@ -133,7 +133,7 @@ DEFINE_STUB_V(rte_hash_free, (struct rte_hash *h));
 DEFINE_STUB(nvmf_fc_lld_port_add, int, (struct spdk_nvmf_fc_port *fc_port), 0);
 DEFINE_STUB(nvmf_fc_lld_port_remove, int, (struct spdk_nvmf_fc_port *fc_port), 0);
 
-DEFINE_STUB(spdk_nvmf_request_zcopy_end, int, (struct spdk_nvmf_request *req, bool commit), 0);
+DEFINE_STUB_V(spdk_nvmf_request_zcopy_end, (struct spdk_nvmf_request *req, bool commit));
 
 const char *
 spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
