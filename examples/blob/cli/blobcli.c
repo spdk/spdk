@@ -1202,7 +1202,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	 * We don't check the local boolean because in some modes it will have been set
 	 * on and earlier command.
 	 */
-	if (strcmp(cli_context->bdev_name, "") == 0) {
+	if ((strcmp(cli_context->bdev_name, "") == 0) && (cli_context->action != CLI_HELP)) {
 		usage(cli_context, "Error: -b option is required.\n");
 		cmd_chosen = 0;
 	}
