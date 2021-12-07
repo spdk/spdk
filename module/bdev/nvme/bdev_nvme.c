@@ -3873,20 +3873,10 @@ bdev_nvme_library_init(void)
 }
 
 static void
-bdev_nvme_library_fini(void)
+bdev_nvme_fini_destruct_ctrlrs(void)
 {
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nvme_ctrlr;
-	struct nvme_probe_skip_entry *entry, *entry_tmp;
-
-	spdk_poller_unregister(&g_hotplug_poller);
-	free(g_hotplug_probe_ctx);
-	g_hotplug_probe_ctx = NULL;
-
-	TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, entry_tmp) {
-		TAILQ_REMOVE(&g_skipped_nvme_ctrlrs, entry, tailq);
-		free(entry);
-	}
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
@@ -3916,6 +3906,23 @@ bdev_nvme_library_fini(void)
 	}
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
+
+static void
+bdev_nvme_library_fini(void)
+{
+	struct nvme_probe_skip_entry *entry, *entry_tmp;
+
+	spdk_poller_unregister(&g_hotplug_poller);
+	free(g_hotplug_probe_ctx);
+	g_hotplug_probe_ctx = NULL;
+
+	TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, entry_tmp) {
+		TAILQ_REMOVE(&g_skipped_nvme_ctrlrs, entry, tailq);
+		free(entry);
+	}
+
+	bdev_nvme_fini_destruct_ctrlrs();
 }
 
 static void
