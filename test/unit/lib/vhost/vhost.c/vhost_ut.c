@@ -313,10 +313,10 @@ create_controller_test(void)
 	/* Create device with too long name and path */
 	memset(long_name, 'x', sizeof(long_name));
 	long_name[PATH_MAX - 1] = 0;
-	snprintf(dev_dirname, sizeof(dev_dirname), "some_path/");
+	snprintf(g_vhost_user_dev_dirname, sizeof(g_vhost_user_dev_dirname), "some_path/");
 	ret = alloc_vdev(&vdev, long_name, NULL);
 	CU_ASSERT(ret != 0);
-	dev_dirname[0] = 0;
+	g_vhost_user_dev_dirname[0] = 0;
 
 	/* Create device when device name is already taken */
 	ret = alloc_vdev(&vdev, "vdev_name_0", NULL);

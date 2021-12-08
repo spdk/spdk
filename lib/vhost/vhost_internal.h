@@ -90,6 +90,9 @@ typedef struct rte_vhost_resubmit_desc spdk_vhost_resubmit_desc;
 typedef struct rte_vhost_resubmit_info spdk_vhost_resubmit_info;
 typedef struct rte_vhost_inflight_desc_packed	spdk_vhost_inflight_desc;
 
+/* Path to folder where character device will be created. Can be set by user. */
+extern char g_vhost_user_dev_dirname[PATH_MAX];
+
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	struct rte_vhost_ring_inflight vring_inflight;

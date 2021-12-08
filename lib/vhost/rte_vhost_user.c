@@ -46,6 +46,8 @@
 
 #include "spdk_internal/vhost_user.h"
 
+char g_vhost_user_dev_dirname[PATH_MAX] = "";
+
 static inline void
 vhost_session_mem_region_calc(uint64_t *previous_start, uint64_t *start, uint64_t *end,
 			      uint64_t *len, struct rte_vhost_mem_region *region)
@@ -445,4 +447,28 @@ spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
 	if (iops_threshold) {
 		*iops_threshold = vdev->coalescing_iops_threshold;
 	}
+}
+
+int
+spdk_vhost_set_socket_path(const char *basename)
+{
+	int ret;
+
+	if (basename && strlen(basename) > 0) {
+		ret = snprintf(g_vhost_user_dev_dirname, sizeof(g_vhost_user_dev_dirname) - 2, "%s", basename);
+		if (ret <= 0) {
+			return -EINVAL;
+		}
+		if ((size_t)ret >= sizeof(g_vhost_user_dev_dirname) - 2) {
+			SPDK_ERRLOG("Char dev dir path length %d is too long\n", ret);
+			return -EINVAL;
+		}
+
+		if (g_vhost_user_dev_dirname[ret - 1] != '/') {
+			g_vhost_user_dev_dirname[ret] = '/';
+			g_vhost_user_dev_dirname[ret + 1]  = '\0';
+		}
+	}
+
+	return 0;
 }

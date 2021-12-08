@@ -46,9 +46,6 @@ bool g_packed_ring_recovery = false;
 
 static struct spdk_cpuset g_vhost_core_mask;
 
-/* Path to folder where character device will be created. Can be set by user. */
-static char dev_dirname[PATH_MAX] = "";
-
 /* Thread performing all vhost management operations */
 static struct spdk_thread *g_vhost_init_thread;
 
@@ -892,9 +889,9 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		return -EEXIST;
 	}
 
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname,
-			    name);
+	if (snprintf(path, sizeof(path), "%s%s", g_vhost_user_dev_dirname, name) >= (int)sizeof(path)) {
+		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n",
+			    name, g_vhost_user_dev_dirname,  name);
 		return -EINVAL;
 	}
 
@@ -1387,30 +1384,6 @@ vhost_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool inter
 	}
 }
 
-int
-spdk_vhost_set_socket_path(const char *basename)
-{
-	int ret;
-
-	if (basename && strlen(basename) > 0) {
-		ret = snprintf(dev_dirname, sizeof(dev_dirname) - 2, "%s", basename);
-		if (ret <= 0) {
-			return -EINVAL;
-		}
-		if ((size_t)ret >= sizeof(dev_dirname) - 2) {
-			SPDK_ERRLOG("Char dev dir path length %d is too long\n", ret);
-			return -EINVAL;
-		}
-
-		if (dev_dirname[ret - 1] != '/') {
-			dev_dirname[ret] = '/';
-			dev_dirname[ret + 1]  = '\0';
-		}
-	}
-
-	return 0;
-}
-
 void
 vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
@@ -1437,8 +1410,8 @@ vhost_new_connection_cb(int vid, const char *ifname)
 
 	pthread_mutex_lock(&g_vhost_mutex);
 
-	dev_dirname_len = strlen(dev_dirname);
-	if (strncmp(ifname, dev_dirname, dev_dirname_len) == 0) {
+	dev_dirname_len = strlen(g_vhost_user_dev_dirname);
+	if (strncmp(ifname, g_vhost_user_dev_dirname, dev_dirname_len) == 0) {
 		ifname += dev_dirname_len;
 	}
 
@@ -1547,17 +1520,17 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 	g_vhost_init_thread = spdk_get_thread();
 	assert(g_vhost_init_thread != NULL);
 
-	if (dev_dirname[0] == '\0') {
-		if (getcwd(dev_dirname, sizeof(dev_dirname) - 1) == NULL) {
+	if (g_vhost_user_dev_dirname[0] == '\0') {
+		if (getcwd(g_vhost_user_dev_dirname, sizeof(g_vhost_user_dev_dirname) - 1) == NULL) {
 			SPDK_ERRLOG("getcwd failed (%d): %s\n", errno, spdk_strerror(errno));
 			ret = -1;
 			goto out;
 		}
 
-		len = strlen(dev_dirname);
-		if (dev_dirname[len - 1] != '/') {
-			dev_dirname[len] = '/';
-			dev_dirname[len + 1] = '\0';
+		len = strlen(g_vhost_user_dev_dirname);
+		if (g_vhost_user_dev_dirname[len - 1] != '/') {
+			g_vhost_user_dev_dirname[len] = '/';
+			g_vhost_user_dev_dirname[len + 1] = '\0';
 		}
 	}
 
