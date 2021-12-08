@@ -3927,7 +3927,6 @@ _nvmf_request_complete(void *ctx)
 		break;
 	case NVMF_ZCOPY_PHASE_INIT:
 		if (spdk_unlikely(spdk_nvme_cpl_is_error(rsp))) {
-			/* The START failed or was aborted so revert to a normal IO */
 			req->zcopy_phase = NVMF_ZCOPY_PHASE_INIT_FAILED;
 			TAILQ_REMOVE(&qpair->outstanding, req, link);
 		} else {
@@ -3956,8 +3955,9 @@ _nvmf_request_complete(void *ctx)
 			assert(sgroup->mgmt_io_outstanding > 0);
 			sgroup->mgmt_io_outstanding--;
 		} else {
-			if ((req->zcopy_phase == NVMF_ZCOPY_PHASE_NONE) ||
-			    (req->zcopy_phase == NVMF_ZCOPY_PHASE_COMPLETE)) {
+			if (req->zcopy_phase == NVMF_ZCOPY_PHASE_NONE ||
+			    req->zcopy_phase == NVMF_ZCOPY_PHASE_COMPLETE ||
+			    req->zcopy_phase == NVMF_ZCOPY_PHASE_INIT_FAILED) {
 				/* End of request */
 
 				/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
