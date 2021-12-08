@@ -2919,7 +2919,6 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 	vu_group = SPDK_CONTAINEROF(vu_sq->group, struct nvmf_vfio_user_poll_group, group);
 	TAILQ_INSERT_TAIL(&vu_group->sqs, vu_sq, link);
-	vu_sq->sq_state = VFIO_USER_SQ_ACTIVE;
 
 	vu_cq = vu_ctrlr->cqs[0];
 	assert(vu_cq != NULL);
@@ -2961,6 +2960,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 			}
 			vu_sq->post_create_io_sq_completion = false;
 		}
+		vu_sq->sq_state = VFIO_USER_SQ_ACTIVE;
 	}
 
 	TAILQ_INSERT_TAIL(&vu_ctrlr->connected_sqs, vu_sq, tailq);
