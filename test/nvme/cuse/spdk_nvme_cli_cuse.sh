@@ -45,6 +45,10 @@ ${NVME_CMD} error-log $ctrlr > ${KERNEL_OUT}.7
 ${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100 > ${KERNEL_OUT}.8
 ${NVME_CMD} get-log $ctrlr -i 1 -l 100 > ${KERNEL_OUT}.9
 ${NVME_CMD} reset $ctrlr > ${KERNEL_OUT}.10
+# Negative test to make sure status message is the same on failures
+# FID 2 is power management. It should be constrained to the whole system
+# Attempting to apply it to a namespace should result in a failure
+${NVME_CMD} set-feature $ctrlr -n 1 -f 2 -v 0 2> ${KERNEL_OUT}.11 || true
 
 $rootdir/scripts/setup.sh
 
@@ -78,8 +82,9 @@ ${NVME_CMD} error-log $ctrlr > ${CUSE_OUT}.7
 ${NVME_CMD} get-feature $ctrlr -f 1 -s 1 -l 100 > ${CUSE_OUT}.8
 ${NVME_CMD} get-log $ctrlr -i 1 -l 100 > ${CUSE_OUT}.9
 ${NVME_CMD} reset $ctrlr > ${CUSE_OUT}.10
+${NVME_CMD} set-feature $ctrlr -n 1 -f 2 -v 0 2> ${CUSE_OUT}.11 || true
 
-for i in {1..10}; do
+for i in {1..11}; do
 	if [ -f "${KERNEL_OUT}.${i}" ] && [ -f "${CUSE_OUT}.${i}" ]; then
 		sed -i "s/${nvme_name}/nvme0/g" ${KERNEL_OUT}.${i}
 		diff --suppress-common-lines ${KERNEL_OUT}.${i} ${CUSE_OUT}.${i}
