@@ -68,7 +68,7 @@ get_version() {
 build_rpm() (
 	local macros=() dir
 
-	macros+=(-D "configure $configure")
+	macros+=(-D "configure ${configure:-"%{nil}"}")
 	macros+=(-D "make $make")
 	macros+=(-D "release $release")
 	macros+=(-D "version $version")
@@ -128,7 +128,7 @@ build_rpm() (
 )
 
 # .spec defaults
-configure=${*:-"%{nil}"}
+configure=$*
 deps=${DEPS:-yes}
 make="${MAKEFLAGS:--j $(nproc)}"
 release=${RPM_RELEASE:-1}
