@@ -363,6 +363,7 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 struct nvmf_stop_listen_ctx {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvme_transport_id trid;
+	struct spdk_nvmf_subsystem *subsystem;
 	spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn;
 	void *cb_arg;
 };
@@ -409,7 +410,10 @@ nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
 		}
 
 		if (!spdk_nvme_transport_id_compare(&ctx->trid, &tmp_trid)) {
-			spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+			if (ctx->subsystem == NULL ||
+			    ctx->subsystem == qpair->ctrlr->subsys) {
+				spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+			}
 		}
 	}
 	spdk_for_each_channel_continue(i, 0);
@@ -418,6 +422,7 @@ nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
 int
 spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 				      const struct spdk_nvme_transport_id *trid,
+				      struct spdk_nvmf_subsystem *subsystem,
 				      spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 				      void *cb_arg)
 {
@@ -429,6 +434,7 @@ spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 	}
 
 	ctx->trid = *trid;
+	ctx->subsystem = subsystem;
 	ctx->transport = transport;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;

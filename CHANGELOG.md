@@ -40,6 +40,11 @@ they did not account for PCI devices being inserted or removed while the caller 
 returned from these APIs.  Existing users of these APIs should switch to spdk_pci_for_each_device
 instead.
 
+### nvmf
+
+Added a 'subsystem' parameter to spdk_nvmf_transport_stop_listen_async. When not NULL,
+it will only disconnect qpairs for controllers associated with the specified subsystem.
+
 ## v21.10
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify

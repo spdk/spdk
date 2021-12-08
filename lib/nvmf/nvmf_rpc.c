@@ -792,8 +792,8 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 	} else if (ctx->op == NVMF_RPC_LISTEN_REMOVE) {
 		rc = spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid);
 		if (rc == 0) {
-			spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, nvmf_rpc_stop_listen_async_done,
-							      ctx);
+			spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, subsystem,
+							      nvmf_rpc_stop_listen_async_done, ctx);
 			return;
 		}
 		SPDK_ERRLOG("Unable to remove listener, rc %d\n", rc);

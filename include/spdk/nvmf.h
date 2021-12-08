@@ -1109,12 +1109,15 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
  * Stop accepting new connections at the provided address.
  *
  * This is a counterpart to spdk_nvmf_tgt_listen_ext(). It differs
- * from spdk_nvmf_transport_stop_listen() in that it also destroys all
+ * from spdk_nvmf_transport_stop_listen() in that it also destroys
  * qpairs that are connected to the specified listener. Because
  * this function disconnects the qpairs, it has to be asynchronous.
  *
  * \param transport The transport associated with the listen address.
  * \param trid The address to stop listening at.
+ * \param subsystem The subsystem to match for qpairs with the specified
+ *                  trid. If NULL, it will disconnect all qpairs with the
+ *                  specified trid.
  * \param cb_fn The function to call on completion.
  * \param cb_arg The argument to pass to the cb_fn.
  *
@@ -1122,6 +1125,7 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
  */
 int spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 		const struct spdk_nvme_transport_id *trid,
+		struct spdk_nvmf_subsystem *subsystem,
 		spdk_nvmf_tgt_subsystem_listen_done_fn cb_fn,
 		void *cb_arg);
 
