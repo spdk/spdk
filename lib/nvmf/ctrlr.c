@@ -3709,7 +3709,7 @@ nvmf_ctrlr_use_zcopy(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_transport *transport = req->qpair->transport;
 	struct spdk_nvmf_ns *ns;
 
-	req->zcopy_phase = NVMF_ZCOPY_PHASE_NONE;
+	assert(req->zcopy_phase == NVMF_ZCOPY_PHASE_NONE);
 
 	if (!transport->opts.zcopy) {
 		return false;
