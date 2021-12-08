@@ -484,66 +484,6 @@ vhost_session_used_signal(struct spdk_vhost_session *vsession)
 	}
 }
 
-static int
-vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
-			     struct spdk_vhost_session *vsession, void *ctx)
-{
-	vsession->coalescing_delay_time_base =
-		vdev->coalescing_delay_us * spdk_get_ticks_hz() / 1000000ULL;
-	vsession->coalescing_io_rate_threshold =
-		vdev->coalescing_iops_threshold * SPDK_VHOST_STATS_CHECK_INTERVAL_MS / 1000U;
-	return 0;
-}
-
-static int
-vhost_dev_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
-			 uint32_t iops_threshold)
-{
-	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
-	uint32_t io_rate = iops_threshold * SPDK_VHOST_STATS_CHECK_INTERVAL_MS / 1000U;
-
-	if (delay_time_base >= UINT32_MAX) {
-		SPDK_ERRLOG("Delay time of %"PRIu32" is to big\n", delay_base_us);
-		return -EINVAL;
-	} else if (io_rate == 0) {
-		SPDK_ERRLOG("IOPS rate of %"PRIu32" is too low. Min is %u\n", io_rate,
-			    1000U / SPDK_VHOST_STATS_CHECK_INTERVAL_MS);
-		return -EINVAL;
-	}
-
-	vdev->coalescing_delay_us = delay_base_us;
-	vdev->coalescing_iops_threshold = iops_threshold;
-	return 0;
-}
-
-int
-spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
-			  uint32_t iops_threshold)
-{
-	int rc;
-
-	rc = vhost_dev_set_coalescing(vdev, delay_base_us, iops_threshold);
-	if (rc != 0) {
-		return rc;
-	}
-
-	vhost_dev_foreach_session(vdev, vhost_session_set_coalescing, NULL, NULL);
-	return 0;
-}
-
-void
-spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
-			  uint32_t *iops_threshold)
-{
-	if (delay_base_us) {
-		*delay_base_us = vdev->coalescing_delay_us;
-	}
-
-	if (iops_threshold) {
-		*iops_threshold = vdev->coalescing_iops_threshold;
-	}
-}
-
 /*
  * Enqueue id and len to used ring.
  */
@@ -976,8 +916,8 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 	vdev->backend = backend;
 	TAILQ_INIT(&vdev->vsessions);
 
-	vhost_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
-				 SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
+	vhost_user_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
+				      SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
 	if (vhost_register_unix_socket(path, name, vdev->virtio_features, vdev->disabled_features,
 				       vdev->protocol_features)) {
@@ -1384,7 +1324,7 @@ vhost_start_device_cb(int vid)
 		}
 	}
 
-	vhost_session_set_coalescing(vdev, vsession, NULL);
+	vhost_user_session_set_coalescing(vdev, vsession, NULL);
 	vhost_session_mem_register(vsession->mem);
 	vsession->initialized = true;
 	rc = vdev->backend->start_session(vsession);

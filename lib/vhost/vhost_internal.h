@@ -506,4 +506,11 @@ int vhost_get_negotiated_features(int vid, uint64_t *negotiated_features);
 
 int remove_vhost_controller(struct spdk_vhost_dev *vdev);
 
+/* Function calls from vhost.c to rte_vhost_user.c,
+ * shall removed once virtio transport abstraction is complete. */
+int vhost_user_session_set_coalescing(struct spdk_vhost_dev *vdev,
+				      struct spdk_vhost_session *vsession, void *ctx);
+int vhost_user_dev_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+				  uint32_t iops_threshold);
+
 #endif /* SPDK_VHOST_INTERNAL_H */
