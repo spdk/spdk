@@ -1617,31 +1617,30 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	}
 
 	assert(endpoint != NULL);
-	if (endpoint->ctrlr == NULL) {
-		return 0;
-	}
-	ctrlr = endpoint->ctrlr;
+	if (endpoint->ctrlr != NULL) {
+		ctrlr = endpoint->ctrlr;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap IOVA %#lx-%#lx\n", ctrlr_id(ctrlr),
-		      (uintptr_t)info->mapping.iov_base,
-		      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+		SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap IOVA %#lx-%#lx\n", ctrlr_id(ctrlr),
+			      (uintptr_t)info->mapping.iov_base,
+			      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
 
-	map_start = info->mapping.iov_base;
-	map_end = info->mapping.iov_base + info->mapping.iov_len;
+		map_start = info->mapping.iov_base;
+		map_end = info->mapping.iov_base + info->mapping.iov_len;
 
-	pthread_mutex_lock(&endpoint->lock);
-	TAILQ_FOREACH(qpair, &ctrlr->connected_qps, tailq) {
-		if (qpair->sq.addr >= map_start && qpair->sq.addr <= map_end) {
-			unmap_q(ctrlr, &qpair->sq);
-			qpair->sq_state = VFIO_USER_SQ_INACTIVE;
+		pthread_mutex_lock(&endpoint->lock);
+		TAILQ_FOREACH(qpair, &ctrlr->connected_qps, tailq) {
+			if (qpair->sq.addr >= map_start && qpair->sq.addr <= map_end) {
+				unmap_q(ctrlr, &qpair->sq);
+				qpair->sq_state = VFIO_USER_SQ_INACTIVE;
+			}
+
+			cqpair = ctrlr->qp[qpair->sq.cqid];
+			if (cqpair->cq.addr >= map_start && cqpair->cq.addr <= map_end) {
+				unmap_q(ctrlr, &cqpair->cq);
+			}
 		}
-
-		cqpair = ctrlr->qp[qpair->sq.cqid];
-		if (cqpair->cq.addr >= map_start && cqpair->cq.addr <= map_end) {
-			unmap_q(ctrlr, &cqpair->cq);
-		}
+		pthread_mutex_unlock(&endpoint->lock);
 	}
-	pthread_mutex_unlock(&endpoint->lock);
 
 	if (info->prot == (PROT_WRITE | PROT_READ)) {
 		ret = spdk_mem_unregister(info->mapping.iov_base, info->mapping.iov_len);
