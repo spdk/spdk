@@ -589,7 +589,7 @@ export GIT_REPO_GIT
 export GIT_REPO_DPDK_KMODS
 : ${IRDMA_DRIVER=https://downloadmirror.intel.com/29751/eng/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
-: ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
+: ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
 : ${GIT_REPO_LCOV=https://github.com/linux-test-project/lcov}
 export GIT_REPO_LCOV
