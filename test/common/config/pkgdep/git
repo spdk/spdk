@@ -489,6 +489,11 @@ function install_ice() {
 			patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
 		fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-undef-skb-frag-off.patch"
 	fi
+
+	if ge "$(< /proc/sys/kernel/osrelease)" 5.15.0; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-devlink.patch"
+
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
 		sudo make -j"$(nproc)" install

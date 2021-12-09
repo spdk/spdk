@@ -1,0 +1,87 @@
+Various fixes addressing changes in recent linux kernels. Mainly:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d7907a2b1a3b89bea136025f885035a083525e41
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=919d13a7e455c2e7676042d7a5f94c164e859d8a
+
+---
+ src/ice_devlink.c | 4 ++--
+ src/ice_ethtool.c | 8 ++++----
+ src/ice_repr.c    | 2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/src/ice_devlink.c b/src/ice_devlink.c
+index 8b7fcbc..61d6134 100644
+--- a/src/ice_devlink.c
++++ b/src/ice_devlink.c
+@@ -713,7 +713,7 @@ struct ice_pf *ice_allocate_pf(struct device *dev)
+ {
+ 	struct devlink *devlink;
+ 
+-	devlink = devlink_alloc(&ice_devlink_ops, sizeof(struct ice_pf));
++	devlink = devlink_alloc(&ice_devlink_ops, sizeof(struct ice_pf), dev);
+ 	if (!devlink)
+ 		return NULL;
+ 
+@@ -740,7 +740,7 @@ int ice_devlink_register(struct ice_pf *pf)
+ 	struct device *dev = ice_pf_to_dev(pf);
+ 	int err;
+ 
+-	err = devlink_register(devlink, dev);
++	err = devlink_register(devlink);
+ 	if (err) {
+ 		dev_err(dev, "devlink registration failed: %d\n", err);
+ 		return err;
+diff --git a/src/ice_ethtool.c b/src/ice_ethtool.c
+index 6ac736f..bd21d74 100644
+--- a/src/ice_ethtool.c
++++ b/src/ice_ethtool.c
+@@ -5451,7 +5451,7 @@ __ice_get_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec,
+ }
+ 
+ static int
+-ice_get_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec)
++ice_get_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec, struct kernel_ethtool_coalesce *, struct netlink_ext_ack *)
+ {
+ 	return __ice_get_coalesce(netdev, ec, -1);
+ }
+@@ -5704,7 +5704,7 @@ set_complete:
+ }
+ 
+ static int
+-ice_set_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec)
++ice_set_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec, struct kernel_ethtool_coalesce *, struct netlink_ext_ack *)
+ {
+ 	return __ice_set_coalesce(netdev, ec, -1);
+ }
+@@ -5755,7 +5755,7 @@ ice_repr_is_coalesce_param_invalid(struct ethtool_coalesce *ec)
+  * Return 0 on success, negative otherwise.
+  */
+ static int
+-ice_repr_set_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec)
++ice_repr_set_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec, struct kernel_ethtool_coalesce *, struct netlink_ext_ack *)
+ {
+ 	struct ice_netdev_priv *np = netdev_priv(netdev);
+ 	struct ice_vsi *vsi = np->vsi;
+@@ -5796,7 +5796,7 @@ ice_repr_set_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec)
+  * Return 0 on success, negative otherwise.
+  */
+ static int
+-ice_repr_get_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec)
++ice_repr_get_coalesce(struct net_device *netdev, struct ethtool_coalesce *ec, struct kernel_ethtool_coalesce *, struct netlink_ext_ack *)
+ {
+ 	struct ice_netdev_priv *np = netdev_priv(netdev);
+ 	struct ice_vsi *vsi = np->vsi;
+diff --git a/src/ice_repr.c b/src/ice_repr.c
+index 0f4d9b6..0e52b14 100644
+--- a/src/ice_repr.c
++++ b/src/ice_repr.c
+@@ -34,7 +34,7 @@ ice_repr_get_phys_port_name(struct net_device *netdev, char *buf, size_t len)
+ 
+ #if IS_ENABLED(CONFIG_NET_DEVLINK)
+ 	/* Devlink port is registered and devlink core is taking care of name formatting. */
+-	if (repr->vf->devlink_port.registered)
++	if (repr->vf->devlink_port.devlink)
+ 		return -EOPNOTSUPP;
+ #endif /* CONFIG_NET_DEVLINK */
+
+---
