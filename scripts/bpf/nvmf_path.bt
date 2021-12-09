@@ -1,3 +1,8 @@
 usdt:__EXE__:nvmf_request_io_exec_path {
-	printf("traddr:%s trsvcid:%s\n", str(arg2), str(arg3));
+	@path[str(arg2), str(arg3)] = count();
+}
+
+interval:s:1 {
+	print(@path);
+	clear(@path);
 }
