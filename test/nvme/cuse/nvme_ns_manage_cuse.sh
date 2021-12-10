@@ -51,13 +51,24 @@ function reset_nvme_if_aer_unsupported() {
 	fi
 }
 
+function remove_all_namespaces() {
+	info_print "delete all namespaces"
+	active_nsids=$($NVME_CMD list-ns ${nvme_dev} | cut -f2 -d:)
+	# Cant globally detach all namespaces ... must do so one by one
+	for n in ${active_nsids}; do
+		info_print "removing nsid=${n}"
+		$NVME_CMD detach-ns ${nvme_dev} -n ${n} -c 0 || true
+		$NVME_CMD delete-ns ${nvme_dev} -n ${n} || true
+	done
+}
+
 function clean_up() {
 	$rootdir/scripts/setup.sh reset
 
 	# This assumes every NVMe controller contains single namespace,
 	# encompassing Total NVM Capacity and formatted as 512 block size.
 	# 512 block size is needed for test/vhost/vhost_boot.sh to
-	# successfully run.
+	# succesfully run.
 
 	tnvmcap=$($NVME_CMD id-ctrl ${nvme_dev} | grep tnvmcap | cut -d: -f2)
 	blksize=512
@@ -65,10 +76,9 @@ function clean_up() {
 	size=$((tnvmcap / blksize))
 
 	echo "Restoring $nvme_dev..."
-	$NVME_CMD detach-ns ${nvme_dev} -n 0xffffffff -c 0 || true
-	$NVME_CMD delete-ns ${nvme_dev} -n 0xffffffff || true
-	$NVME_CMD create-ns ${nvme_dev} -s ${size} -c ${size} -b ${blksize}
-	$NVME_CMD attach-ns ${nvme_dev} -n 1 -c 0
+	remove_all_namespaces
+	nsid=$($NVME_CMD create-ns ${nvme_dev} -s ${size} -c ${size} -b ${blksize} | grep -o 'nsid:[0-9].*' | cut -f2 -d:)
+	$NVME_CMD attach-ns ${nvme_dev} -n ${nsid} -c 0
 	$NVME_CMD reset ${nvme_dev}
 
 	$rootdir/scripts/setup.sh
@@ -81,9 +91,7 @@ function info_print() {
 }
 
 # Prepare controller
-info_print "delete all namespaces"
-$NVME_CMD detach-ns ${nvme_dev} -n 0xffffffff -c 0 || true
-$NVME_CMD delete-ns ${nvme_dev} -n 0xffffffff || true
+remove_all_namespaces
 
 reset_nvme_if_aer_unsupported ${nvme_dev}
 sleep 1
@@ -99,64 +107,52 @@ waitforlisten $spdk_tgt_pid
 $rpc_py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a ${bdf}
 $rpc_py bdev_nvme_cuse_register -n Nvme0
 
-sleep 1
-[[ -c /dev/spdk/nvme0 ]]
+ctrlr="/dev/spdk/nvme0"
 
-for dev in /dev/spdk/nvme0n*; do
+sleep 1
+[[ -c $ctrlr ]]
+
+for dev in "${ctrlr}"n*; do
 	[[ ! -c ${dev} ]]
 done
-
-info_print "create ns: nsze=10000 ncap=10000 flbias=0"
-$NVME_CMD create-ns /dev/spdk/nvme0 -s 10000 -c 10000 -f 0
-
-info_print "attach ns: nsid=1 controller=0"
-$NVME_CMD attach-ns /dev/spdk/nvme0 -n 1 -c 0
-
-reset_nvme_if_aer_unsupported /dev/spdk/nvme0
 sleep 1
+nsids=()
 
-[[ -c /dev/spdk/nvme0n1 ]]
+for i in {1..2}; do
+	info_print "create ns: nsze=10000 ncap=10000 flbias=0"
+	nsid=$($NVME_CMD create-ns ${ctrlr} -s 10000 -c 10000 -f 0 | grep -o 'nsid:[0-9].*' | cut -f2 -d:)
+	nsids+=(${nsid})
+	info_print "attach ns: nsid=${nsid} controller=0"
+	$NVME_CMD attach-ns ${ctrlr} -n ${nsid} -c 0
 
-info_print "create ns: nsze=10000 ncap=10000 flbias=0"
-$NVME_CMD create-ns /dev/spdk/nvme0 -s 10000 -c 10000 -f 0
+	reset_nvme_if_aer_unsupported ${ctrlr}
+	sleep 1
 
-info_print "attach ns: nsid=2 controller=0"
-$NVME_CMD attach-ns /dev/spdk/nvme0 -n 2 -c 0
+	[[ -c "${ctrlr}n${nsid}" ]]
+done
 
-reset_nvme_if_aer_unsupported /dev/spdk/nvme0
-sleep 1
+for n in "${nsids[@]}"; do
+	info_print "detach ns: nsid=${n} controller=0"
+	$NVME_CMD detach-ns ${ctrlr} -n ${n} -c 0 || true
 
-[[ -c /dev/spdk/nvme0n2 ]]
+	info_print "delete ns: nsid=${n}"
+	$NVME_CMD delete-ns ${ctrlr} -n ${n} || true
 
-info_print "detach ns: nsid=2 controller=0"
-$NVME_CMD detach-ns /dev/spdk/nvme0 -n 2 -c 0 || true
+	reset_nvme_if_aer_unsupported ${ctrlr}
+	sleep 1
 
-info_print "delete ns: nsid=2"
-$NVME_CMD delete-ns /dev/spdk/nvme0 -n 2 || true
-
-reset_nvme_if_aer_unsupported /dev/spdk/nvme0
-sleep 1
-
-[[ ! -c /dev/spdk/nvme0n2 ]]
-
-info_print "detach ns: nsid=1 controller=0"
-$NVME_CMD detach-ns /dev/spdk/nvme0 -n 1 -c 0 || true
-
-info_print "delete ns: nsid=1"
-$NVME_CMD delete-ns /dev/spdk/nvme0 -n 1 || true
-
-reset_nvme_if_aer_unsupported /dev/spdk/nvme0
-sleep 1
+	[[ ! -c "${ctrlr}n${n}" ]]
+done
 
 # Here we should not have any cuse devices
-for dev in /dev/spdk/nvme0n*; do
+for dev in "${ctrlr}"n*; do
 	[[ ! -c ${dev} ]]
 done
 
 $rpc_py bdev_nvme_detach_controller Nvme0
 
 sleep 1
-[[ ! -c /dev/spdk/nvme0 ]]
+[[ ! -c ${ctrlr} ]]
 
 trap - SIGINT SIGTERM EXIT
 killprocess $spdk_tgt_pid

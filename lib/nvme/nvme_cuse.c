@@ -99,26 +99,21 @@ cuse_nvme_passthru_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct cuse_io_ctx *ctx = arg;
 	struct iovec out_iov[2];
 	struct spdk_nvme_cpl _cpl;
+	int out_iovcnt = 0;
 	uint16_t status_field = cpl->status_raw >> 1; /* Drop out phase bit */
 
-	if (ctx->data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ||
-	    ctx->data_transfer == SPDK_NVME_DATA_NONE) {
-		fuse_reply_ioctl_iov(ctx->req, status_field, NULL, 0);
-	} else {
-		memcpy(&_cpl, cpl, sizeof(struct spdk_nvme_cpl));
+	memcpy(&_cpl, cpl, sizeof(struct spdk_nvme_cpl));
+	out_iov[out_iovcnt].iov_base = &_cpl.cdw0;
+	out_iov[out_iovcnt].iov_len = sizeof(_cpl.cdw0);
+	out_iovcnt += 1;
 
-		out_iov[0].iov_base = &_cpl.cdw0;
-		out_iov[0].iov_len = sizeof(_cpl.cdw0);
-
-		if (ctx->data_len > 0) {
-			out_iov[1].iov_base = ctx->data;
-			out_iov[1].iov_len = ctx->data_len;
-			fuse_reply_ioctl_iov(ctx->req, status_field, out_iov, 2);
-		} else {
-			fuse_reply_ioctl_iov(ctx->req, status_field, out_iov, 1);
-		}
+	if (ctx->data_transfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST && ctx->data_len > 0) {
+		out_iov[out_iovcnt].iov_base = ctx->data;
+		out_iov[out_iovcnt].iov_len = ctx->data_len;
+		out_iovcnt += 1;
 	}
 
+	fuse_reply_ioctl_iov(ctx->req, status_field, out_iov, out_iovcnt);
 	cuse_io_ctx_free(ctx);
 }
 
@@ -206,52 +201,58 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 {
 	struct nvme_passthru_cmd *passthru_cmd;
 	struct iovec in_iov[2], out_iov[2];
+	int in_iovcnt = 0, out_iovcnt = 0;
+	const void *dptr = NULL;
+	enum spdk_nvme_data_transfer data_transfer;
 
-	in_iov[0].iov_base = (void *)arg;
-	in_iov[0].iov_len = sizeof(*passthru_cmd);
+	in_iov[in_iovcnt].iov_base = (void *)arg;
+	in_iov[in_iovcnt].iov_len = sizeof(*passthru_cmd);
+	in_iovcnt += 1;
 	if (in_bufsz == 0) {
-		fuse_reply_ioctl_retry(req, in_iov, 1, NULL, 0);
+		fuse_reply_ioctl_retry(req, in_iov, in_iovcnt, NULL, out_iovcnt);
 		return;
 	}
 
 	passthru_cmd = (struct nvme_passthru_cmd *)in_buf;
+	data_transfer = spdk_nvme_opc_get_data_transfer(passthru_cmd->opcode);
 
-	switch (spdk_nvme_opc_get_data_transfer(passthru_cmd->opcode)) {
-	case SPDK_NVME_DATA_HOST_TO_CONTROLLER:
+	if (data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		/* Make data pointer accessible (RO) */
 		if (passthru_cmd->addr != 0) {
-			in_iov[1].iov_base = (void *)passthru_cmd->addr;
-			in_iov[1].iov_len = passthru_cmd->data_len;
-			if (in_bufsz == sizeof(*passthru_cmd)) {
-				fuse_reply_ioctl_retry(req, in_iov, 2, NULL, 0);
-				return;
-			}
-			cuse_nvme_passthru_cmd_send(req, passthru_cmd, in_buf + sizeof(*passthru_cmd), cmd);
-		} else {
-			cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, cmd);
+			in_iov[in_iovcnt].iov_base = (void *)passthru_cmd->addr;
+			in_iov[in_iovcnt].iov_len = passthru_cmd->data_len;
+			in_iovcnt += 1;
 		}
-		return;
-	case SPDK_NVME_DATA_NONE:
-	case SPDK_NVME_DATA_CONTROLLER_TO_HOST:
-		if (out_bufsz == 0) {
-			out_iov[0].iov_base = &((struct nvme_passthru_cmd *)arg)->result;
-			out_iov[0].iov_len = sizeof(uint32_t);
-			if (passthru_cmd->data_len > 0) {
-				out_iov[1].iov_base = (void *)passthru_cmd->addr;
-				out_iov[1].iov_len = passthru_cmd->data_len;
-				fuse_reply_ioctl_retry(req, in_iov, 1, out_iov, 2);
-			} else {
-				fuse_reply_ioctl_retry(req, in_iov, 1, out_iov, 1);
-			}
-			return;
+	}
+
+	/* Always make result field writable regardless of data transfer bits */
+	out_iov[out_iovcnt].iov_base = &((struct nvme_passthru_cmd *)arg)->result;
+	out_iov[out_iovcnt].iov_len = sizeof(uint32_t);
+	out_iovcnt += 1;
+
+	if (data_transfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		if (passthru_cmd->data_len > 0) {
+			out_iov[out_iovcnt].iov_base = (void *)passthru_cmd->addr;
+			out_iov[out_iovcnt].iov_len = passthru_cmd->data_len;
+			out_iovcnt += 1;
 		}
+	}
 
-		cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, cmd);
-
+	if (out_bufsz == 0) {
+		fuse_reply_ioctl_retry(req, in_iov, in_iovcnt, out_iov, out_iovcnt);
 		return;
-	case SPDK_NVME_DATA_BIDIRECTIONAL:
+	}
+
+	if (data_transfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
 		fuse_reply_err(req, EINVAL);
 		return;
 	}
+
+	if (data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		dptr = (passthru_cmd->addr == 0) ? NULL : in_buf + sizeof(*passthru_cmd);
+	}
+
+	cuse_nvme_passthru_cmd_send(req, passthru_cmd, dptr, cmd);
 }
 
 static void
