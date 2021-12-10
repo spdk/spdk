@@ -49,7 +49,7 @@ pci_enum_cb(void *ctx, struct spdk_pci_device *dev)
 }
 
 static void
-print_pci_dev(struct spdk_pci_device *dev)
+print_pci_dev(void *ctx, struct spdk_pci_device *dev)
 {
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(dev);
 	char addr[32] = { 0 };
@@ -76,7 +76,6 @@ main(int argc, char **argv)
 {
 	int op;
 	struct spdk_env_opts opts;
-	struct spdk_pci_device *dev;
 
 	while ((op = getopt(argc, argv, "h")) != -1) {
 		switch (op) {
@@ -106,16 +105,8 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	dev = spdk_pci_get_first_device();
-	if (!dev) {
-		printf("\nLack of PCI devices available for SPDK!\n");
-	}
-
 	printf("\nList of available PCI devices:\n");
-	while (dev) {
-		print_pci_dev(dev);
-		dev = spdk_pci_get_next_device(dev);
-	}
+	spdk_pci_for_each_device(NULL, print_pci_dev);
 
 	spdk_vmd_fini();
 
