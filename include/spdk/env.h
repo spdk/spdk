@@ -789,6 +789,14 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
+ * Call the provided function pointer for every enumerated PCI device.
+ *
+ * \param ctx Context parameter to pass to fn.
+ * \param fn Function to call for each PCI device
+ */
+void spdk_pci_for_each_device(void *ctx, void (*fn)(void *ctx, struct spdk_pci_device *dev));
+
+/**
  * Begin iterating over enumerated PCI device by calling this function to get
  * the first PCI device. If there no PCI devices enumerated, return NULL
  *

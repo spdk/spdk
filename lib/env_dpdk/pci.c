@@ -762,6 +762,18 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 	return 0;
 }
 
+void
+spdk_pci_for_each_device(void *ctx, void (*fn)(void *ctx, struct spdk_pci_device *dev))
+{
+	struct spdk_pci_device *dev;
+
+	pthread_mutex_lock(&g_pci_mutex);
+	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
+		fn(ctx, dev);
+	}
+	pthread_mutex_unlock(&g_pci_mutex);
+}
+
 struct spdk_pci_device *
 spdk_pci_get_first_device(void)
 {

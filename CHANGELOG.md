@@ -31,6 +31,10 @@ New APIs, `spdk_nvme_ctrlr_disconnect`, `spdk_nvme_ctrlr_reconnect_async`, and
 the existing APIs,`spdk_nvme_ctrlr_reset_async` and `spdk_nvme_ctrlr_reset_poll_async`
 were deprecated.
 
+### env
+
+Added spdk_pci_for_each_device.
+
 ## v21.10
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify
