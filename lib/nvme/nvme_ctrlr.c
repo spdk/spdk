@@ -3858,6 +3858,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Setting CC.EN = 1\n");
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC, ready_timeout_in_ms);
 		rc = nvme_ctrlr_enable(ctrlr);
+		if (rc) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Ctrlr enable failed with error: %d", rc);
+		}
 		return rc;
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
@@ -3970,6 +3973,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	default:
 		assert(0);
 		return -1;
+	}
+
+	if (rc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Ctrlr operation failed with error: %d, ctrlr state: %d",
+				  rc, ctrlr->state);
 	}
 
 	/* Note: we use the ticks captured when we entered this function.
