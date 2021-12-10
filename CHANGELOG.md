@@ -35,6 +35,11 @@ were deprecated.
 
 Added spdk_pci_for_each_device.
 
+Removed spdk_pci_get_first_device and spdk_pci_get_next_device.  These APIs were unsafe, because
+they did not account for PCI devices being inserted or removed while the caller was using handles
+returned from these APIs.  Existing users of these APIs should switch to spdk_pci_for_each_device
+instead.
+
 ## v21.10
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify

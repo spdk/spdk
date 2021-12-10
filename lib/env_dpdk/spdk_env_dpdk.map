@@ -60,8 +60,6 @@
 	spdk_pci_virtio_get_driver;
 	spdk_pci_enumerate;
 	spdk_pci_for_each_device;
-	spdk_pci_get_first_device;
-	spdk_pci_get_next_device;
 	spdk_pci_device_map_bar;
 	spdk_pci_device_unmap_bar;
 	spdk_pci_device_get_domain;

@@ -774,18 +774,6 @@ spdk_pci_for_each_device(void *ctx, void (*fn)(void *ctx, struct spdk_pci_device
 	pthread_mutex_unlock(&g_pci_mutex);
 }
 
-struct spdk_pci_device *
-spdk_pci_get_first_device(void)
-{
-	return TAILQ_FIRST(&g_pci_devices);
-}
-
-struct spdk_pci_device *
-spdk_pci_get_next_device(struct spdk_pci_device *prev)
-{
-	return TAILQ_NEXT(prev, internal.tailq);
-}
-
 int
 spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
 			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
