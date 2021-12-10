@@ -63,6 +63,7 @@ if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
 fi
 
 run_test "nvmf_multipath" test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
+run_test "nvmf_zcopy" test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
 
 timing_enter host
 
