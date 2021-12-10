@@ -133,6 +133,7 @@ DEFINE_STUB_V(rte_hash_free, (struct rte_hash *h));
 DEFINE_STUB(nvmf_fc_lld_port_add, int, (struct spdk_nvmf_fc_port *fc_port), 0);
 DEFINE_STUB(nvmf_fc_lld_port_remove, int, (struct spdk_nvmf_fc_port *fc_port), 0);
 
+DEFINE_STUB_V(spdk_nvmf_request_zcopy_start, (struct spdk_nvmf_request *req));
 DEFINE_STUB_V(spdk_nvmf_request_zcopy_end, (struct spdk_nvmf_request *req, bool commit));
 
 const char *

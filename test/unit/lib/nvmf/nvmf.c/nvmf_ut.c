@@ -121,6 +121,7 @@ DEFINE_STUB(nvmf_transport_qpair_get_listen_trid, int,
 	    (struct spdk_nvmf_qpair *qpair,
 	     struct spdk_nvme_transport_id *trid), 0);
 DEFINE_STUB_V(spdk_nvmf_request_exec, (struct spdk_nvmf_request *req));
+DEFINE_STUB_V(spdk_nvmf_request_zcopy_start, (struct spdk_nvmf_request *req));
 DEFINE_STUB(spdk_nvmf_get_transport_name, const char *,
 	    (struct spdk_nvmf_transport *transport), NULL);
 DEFINE_STUB(spdk_nvmf_transport_destroy, int, (struct spdk_nvmf_transport *transport,
