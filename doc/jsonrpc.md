@@ -9095,3 +9095,47 @@ Example response:
   }
 }
 ~~
+
+### framework_get_pci_devices
+
+List PCIe devices attached to an SPDK application and the contents of their config space.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Response
+
+The response is an array of attached PCIe devices.
+
+#### Example
+
+Example request:
+~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "framework_get_pci_devices"
+}
+~~
+
+Example response:
+Note that the config space buffer was trimmed.
+~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    [
+      {
+        "address": "0000:00:04.0",
+        "config_space": "8680455807051000...0000000000000000"
+      },
+      {
+        "address": "0000:00:03.0",
+        "config_space": "8680455807051000...0000000000000000"
+      }
+    ]
+  }
+}
+~~

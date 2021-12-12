@@ -35,6 +35,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/env.h"
+#include "spdk/log.h"
 
 #include "spdk_internal/init.h"
 
@@ -119,3 +120,55 @@ rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("framework_get_config", rpc_framework_get_config, SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_config, get_subsystem_config)
+
+static void
+dump_pci_device(void *ctx, struct spdk_pci_device *dev)
+{
+	struct spdk_json_write_ctx *w = ctx;
+	struct spdk_pci_addr addr;
+	char config[4096], bdf[14];
+	int rc;
+
+	addr = spdk_pci_device_get_addr(dev);
+	spdk_pci_addr_fmt(bdf, sizeof(bdf), &addr);
+
+	rc = spdk_pci_device_cfg_read(dev, config, sizeof(config), 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to read config space of device: %s\n", bdf);
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "address", bdf);
+
+	/* Don't write the extended config space if it's all zeroes */
+	if (spdk_mem_all_zero(&config[256], sizeof(config) - 256)) {
+		spdk_json_write_named_bytearray(w, "config_space", config, 256);
+	} else {
+		spdk_json_write_named_bytearray(w, "config_space", config, sizeof(config));
+	}
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+rpc_framework_get_pci_devices(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "framework_get_pci_devices doesn't accept any parameters.\n");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_array_begin(w);
+	spdk_pci_for_each_device(w, dump_pci_device);
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("framework_get_pci_devices", rpc_framework_get_pci_devices, SPDK_RPC_RUNTIME)

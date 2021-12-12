@@ -2690,6 +2690,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-i', '--impl', help='Socket implementation name, e.g. posix', required=True)
     p.set_defaults(func=sock_set_default_impl)
 
+    def framework_get_pci_devices(args):
+        print_json(rpc.subsystem.framework_get_pci_devices(args.client))
+
+    p = subparsers.add_parser('framework_get_pci_devices', help='''Get a list of attached PCI devices''')
+    p.set_defaults(func=framework_get_pci_devices)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)
