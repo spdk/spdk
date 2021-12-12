@@ -43,6 +43,7 @@
 	spdk_json_write_string_utf16le_raw;
 	spdk_json_write_string_fmt;
 	spdk_json_write_string_fmt_v;
+	spdk_json_write_bytearray;
 	spdk_json_write_array_begin;
 	spdk_json_write_array_end;
 	spdk_json_write_object_begin;
@@ -64,6 +65,7 @@
 	spdk_json_write_named_string;
 	spdk_json_write_named_string_fmt;
 	spdk_json_write_named_string_fmt_v;
+	spdk_json_write_named_bytearray;
 	spdk_json_write_named_array_begin;
 	spdk_json_write_named_object_begin;
 

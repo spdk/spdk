@@ -338,15 +338,20 @@ spdk_json_write_named_uint128(struct spdk_json_write_ctx *w, const char *name,
 }
 
 static void
-write_hex_4(void *dest, uint16_t val)
+write_hex_2(void *dest, uint8_t val)
 {
-	uint8_t *p = dest;
+	char *p = dest;
 	char hex[] = "0123456789ABCDEF";
 
-	p[0] = hex[(val >> 12)];
-	p[1] = hex[(val >> 8) & 0xF];
-	p[2] = hex[(val >> 4) & 0xF];
-	p[3] = hex[val & 0xF];
+	p[0] = hex[val >> 4];
+	p[1] = hex[val & 0xf];
+}
+
+static void
+write_hex_4(void *dest, uint16_t val)
+{
+	write_hex_2(dest, (uint8_t)(val >> 8));
+	write_hex_2((char *)dest + 2, (uint8_t)(val & 0xff));
 }
 
 static inline int
@@ -523,6 +528,29 @@ spdk_json_write_string_fmt_v(struct spdk_json_write_ctx *w, const char *fmt, va_
 	if (s == NULL) {
 		return -1;
 	}
+
+	rc = spdk_json_write_string(w, s);
+	free(s);
+	return rc;
+}
+
+int
+spdk_json_write_bytearray(struct spdk_json_write_ctx *w, const void *val, size_t len)
+{
+	const uint8_t *v = val;
+	size_t i;
+	char *s;
+	int rc;
+
+	s = malloc(2 * len + 1);
+	if (s == NULL) {
+		return -1;
+	}
+
+	for (i = 0; i < len; ++i) {
+		write_hex_2(&s[2 * i], *v++);
+	}
+	s[2 * len] = '\0';
 
 	rc = spdk_json_write_string(w, s);
 	free(s);
@@ -756,6 +784,15 @@ int spdk_json_write_named_string_fmt_v(struct spdk_json_write_ctx *w, const char
 	rc = spdk_json_write_string(w, s);
 	free(s);
 	return rc;
+}
+
+int
+spdk_json_write_named_bytearray(struct spdk_json_write_ctx *w, const char *name, const void *val,
+				size_t len)
+{
+	int rc = spdk_json_write_name(w, name);
+
+	return rc ? rc : spdk_json_write_bytearray(w, val, len);
 }
 
 int spdk_json_write_named_array_begin(struct spdk_json_write_ctx *w, const char *name)
