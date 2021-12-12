@@ -2691,9 +2691,22 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=sock_set_default_impl)
 
     def framework_get_pci_devices(args):
-        print_json(rpc.subsystem.framework_get_pci_devices(args.client))
+        def splitbuf(buf, step):
+            return [buf[i:i+step] for i in range(0, len(buf), step)]
+
+        devices = rpc.subsystem.framework_get_pci_devices(args.client)
+        if not args.format_lspci:
+            print_json(devices)
+        else:
+            for devid, dev in enumerate(devices):
+                print('{} device #{}'.format(dev['address'], devid))
+                for lineid, line in enumerate(splitbuf(dev['config_space'], 32)):
+                    print('{:02x}: {}'.format(lineid * 16, ' '.join(splitbuf(line.lower(), 2))))
+                print()
 
     p = subparsers.add_parser('framework_get_pci_devices', help='''Get a list of attached PCI devices''')
+    p.add_argument('--format-lspci', help='Format the output in a way to be consumed by lspci -F',
+                   action='store_true')
     p.set_defaults(func=framework_get_pci_devices)
 
     def check_called_name(name):
