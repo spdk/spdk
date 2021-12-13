@@ -3274,7 +3274,11 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 		if (rtransport->rdma_opts.no_srq == false && device->num_srq < device->attr.max_srq) {
-			poller->max_srq_depth = rtransport->rdma_opts.max_srq_depth;
+			if ((int)rtransport->rdma_opts.max_srq_depth > device->attr.max_srq_wr) {
+				SPDK_WARNLOG("Requested SRQ depth %u, max supported by dev %s is %d\n",
+					     rtransport->rdma_opts.max_srq_depth, device->context->device->name, device->attr.max_srq_wr);
+			}
+			poller->max_srq_depth = spdk_min((int)rtransport->rdma_opts.max_srq_depth, device->attr.max_srq_wr);
 
 			device->num_srq++;
 			memset(&srq_init_attr, 0, sizeof(srq_init_attr));
