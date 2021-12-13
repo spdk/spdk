@@ -66,11 +66,26 @@ parse_args(int argc, char **argv)
 	return 0;
 }
 
+static void
+print_device(void *ctx, struct spdk_pci_device *pci_device)
+{
+	char addr_buf[128];
+	int rc;
+
+	if (strcmp(spdk_pci_device_get_type(pci_device), "vmd") == 0) {
+		rc = spdk_pci_addr_fmt(addr_buf, sizeof(addr_buf), &pci_device->addr);
+		if (rc != 0) {
+			fprintf(stderr, "Failed to format VMD's PCI address\n");
+			return;
+		}
+
+		printf("%s\n", addr_buf);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	struct spdk_env_opts opts;
-	struct spdk_pci_device *pci_device;
-	char addr_buf[128];
 	int rc;
 
 	rc = parse_args(argc, argv);
@@ -91,18 +106,7 @@ int main(int argc, char **argv)
 		SPDK_ERRLOG("No VMD Controllers found\n");
 	}
 
-	for (pci_device = spdk_pci_get_first_device(); pci_device != NULL;
-	     pci_device = spdk_pci_get_next_device(pci_device)) {
-		if (strcmp(spdk_pci_device_get_type(pci_device), "vmd") == 0) {
-			rc = spdk_pci_addr_fmt(addr_buf, sizeof(addr_buf), &pci_device->addr);
-			if (rc != 0) {
-				fprintf(stderr, "Failed to format VMD's PCI address\n");
-				continue;
-			}
-
-			printf("%s\n", addr_buf);
-		}
-	}
+	spdk_pci_for_each_device(NULL, print_device);
 
 	spdk_vmd_fini();
 
