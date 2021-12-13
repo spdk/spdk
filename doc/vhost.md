@@ -65,15 +65,6 @@ the following command to confirm your QEMU supports userspace vhost-blk.
 qemu-system-x86_64 -device vhost-user-blk-pci,help
 ~~~
 
-Userspace vhost-nvme target was added as experimental feature for SPDK 18.04
-release, patches for QEMU are available in SPDK's QEMU repository only.
-
-Run the following command to confirm your QEMU supports userspace vhost-nvme.
-
-~~~{.sh}
-qemu-system-x86_64 -device vhost-user-nvme,help
-~~~
-
 ## Starting SPDK vhost target {#vhost_start}
 
 First, run the SPDK setup.sh script to setup some hugepages for the SPDK vhost target
@@ -373,12 +364,6 @@ scripts/rpc.py bdev_malloc_delete Malloc0
 ~~~
 
 ## Known bugs and limitations {#vhost_bugs}
-
-### Vhost-NVMe (experimental) can only be supported with latest Linux kernel
-
-Vhost-NVMe target was designed for one new feature of NVMe 1.3 specification, Doorbell
-Buffer Config Admin command, which is used for emulated NVMe controller only. Linux 4.12
-added this feature, so a new Guest kernel later than 4.12 is required to test this feature.
 
 ### Windows virtio-blk driver before version 0.1.130-1 only works with 512-byte sectors
 
