@@ -37,6 +37,8 @@
 #include "spdk/env.h"
 #include "spdk/vmd.h"
 
+int g_status;
+
 enum app_action {
 	APP_ACTION_SET,
 	APP_ACTION_GET,
@@ -138,14 +140,54 @@ parse_args(int argc, char **argv)
 	return 0;
 }
 
+static void
+led_device_action(void *ctx, struct spdk_pci_device *pci_device)
+{
+	enum spdk_vmd_led_state led_state;
+	char addr_buf[128];
+	int rc;
+
+	if (strcmp(spdk_pci_device_get_type(pci_device), "vmd") != 0) {
+		return;
+	}
+
+	if (!g_opts.all_devices &&
+	    spdk_pci_addr_compare(&g_opts.pci_addr, &pci_device->addr) != 0) {
+		return;
+	}
+
+	rc = spdk_pci_addr_fmt(addr_buf, sizeof(addr_buf), &pci_device->addr);
+	if (rc != 0) {
+		fprintf(stderr, "Failed to format VMD's PCI address\n");
+		g_status = 1;
+		return;
+	}
+
+	if (g_opts.action == APP_ACTION_GET) {
+		rc = spdk_vmd_get_led_state(pci_device, &led_state);
+		if (spdk_unlikely(rc != 0)) {
+			fprintf(stderr, "Failed to retrieve the state of the LED on %s\n",
+				addr_buf);
+			g_status = 1;
+			return;
+		}
+
+		printf("%s: %s\n", addr_buf, g_led_states[led_state]);
+	} else {
+		rc = spdk_vmd_set_led_state(pci_device, g_opts.led_state);
+		if (spdk_unlikely(rc != 0)) {
+			fprintf(stderr, "Failed to set LED state on %s\n", addr_buf);
+			g_status = 1;
+			return;
+		}
+	}
+}
+
 int
 main(int argc, char **argv)
 {
 	struct spdk_env_opts opts;
-	struct spdk_pci_device *pci_device;
-	enum spdk_vmd_led_state led_state;
-	char addr_buf[128];
-	int rc, status = 0;
+	int rc;
 
 	if (parse_args(argc, argv) != 0) {
 		usage();
@@ -170,45 +212,9 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	for (pci_device = spdk_pci_get_first_device(); pci_device != NULL;
-	     pci_device = spdk_pci_get_next_device(pci_device)) {
-		if (strcmp(spdk_pci_device_get_type(pci_device), "vmd") != 0) {
-			continue;
-		}
-
-		if (!g_opts.all_devices &&
-		    spdk_pci_addr_compare(&g_opts.pci_addr, &pci_device->addr) != 0) {
-			continue;
-		}
-
-		rc = spdk_pci_addr_fmt(addr_buf, sizeof(addr_buf), &pci_device->addr);
-		if (rc != 0) {
-			fprintf(stderr, "Failed to format VMD's PCI address\n");
-			status = 1;
-			break;
-		}
-
-		if (g_opts.action == APP_ACTION_GET) {
-			rc = spdk_vmd_get_led_state(pci_device, &led_state);
-			if (spdk_unlikely(rc != 0)) {
-				fprintf(stderr, "Failed to retrieve the state of the LED on %s\n",
-					addr_buf);
-				status = 1;
-				break;
-			}
-
-			printf("%s: %s\n", addr_buf, g_led_states[led_state]);
-		} else {
-			rc = spdk_vmd_set_led_state(pci_device, g_opts.led_state);
-			if (spdk_unlikely(rc != 0)) {
-				fprintf(stderr, "Failed to set LED state on %s\n", addr_buf);
-				status = 1;
-				break;
-			}
-		}
-	}
+	spdk_pci_for_each_device(NULL, led_device_action);
 
 	spdk_vmd_fini();
 
-	return status;
+	return g_status;
 }
