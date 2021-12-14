@@ -114,7 +114,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_fc = {
 
 	.listen = NULL,
 	.stop_listen = NULL,
-	.accept = NULL,
 
 	.listener_discover = NULL,
 
