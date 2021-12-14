@@ -956,6 +956,116 @@ posix_sock_impl_get_set_opts(void)
 	CU_ASSERT(opts.recv_buf_size == 5);
 }
 
+static void
+ut_sock_map(void)
+{
+	struct spdk_sock_map map = {
+		.entries = STAILQ_HEAD_INITIALIZER(map.entries),
+		.mtx = PTHREAD_MUTEX_INITIALIZER
+	};
+	struct spdk_sock_group_impl *group_1, *group_2, *test_group;
+	int rc;
+	int test_id;
+
+	group_1 = spdk_ut_sock_group_impl_create();
+	group_2 = spdk_ut_sock_group_impl_create();
+
+	/* Test 1
+	 * Sanity check when sock_map is empty */
+	test_id = spdk_sock_map_find_free(&map);
+	CU_ASSERT(test_id == -1);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(test_group == NULL);
+
+	/* Test 2
+	 * Insert single entry */
+	rc = spdk_sock_map_insert(&map, 1, group_1);
+	CU_ASSERT(rc == 0);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_1);
+
+	/* There is single entry allocated, but it is not free */
+	test_id = spdk_sock_map_find_free(&map);
+	CU_ASSERT(test_id == -1);
+
+	/* Free the entry and verify */
+	spdk_sock_map_release(&map, 1);
+	test_id = spdk_sock_map_find_free(&map);
+	CU_ASSERT(test_id == 1);
+
+	spdk_sock_map_cleanup(&map);
+
+	/* Test 3
+	 * Insert sock_group into placement_id multiple times */
+	rc = spdk_sock_map_insert(&map, 1, group_1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(STAILQ_FIRST(&map.entries)->ref == 1);
+	rc = spdk_sock_map_insert(&map, 1, group_1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(STAILQ_FIRST(&map.entries)->ref == 2);
+
+	/* Release entry once and see that it still exists. */
+	spdk_sock_map_release(&map, 1);
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_1);
+
+	/* Release entry second and final time. */
+	spdk_sock_map_release(&map, 1);
+
+	spdk_sock_map_cleanup(&map);
+
+	/* Test 4
+	 * Test multiple entries */
+	rc = spdk_sock_map_insert(&map, 1, group_1);
+	CU_ASSERT(rc == 0);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_1);
+
+	rc = spdk_sock_map_insert(&map, 2, group_2);
+	CU_ASSERT(rc == 0);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 2, &test_group);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_2);
+
+	spdk_sock_map_cleanup(&map);
+
+	/* Test 5
+	 * Attempt inserting multiple entries into single placement_id */
+	rc = spdk_sock_map_insert(&map, 1, group_1);
+	CU_ASSERT(rc == 0);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_1);
+
+	rc = spdk_sock_map_insert(&map, 1, group_2);
+	CU_ASSERT(rc == -EINVAL);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_1);
+
+	spdk_sock_map_cleanup(&map);
+
+	spdk_ut_sock_group_impl_close(group_2);
+	spdk_ut_sock_group_impl_close(group_1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -976,6 +1086,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, sock_get_default_opts);
 	CU_ADD_TEST(suite, ut_sock_impl_get_set_opts);
 	CU_ADD_TEST(suite, posix_sock_impl_get_set_opts);
+	CU_ADD_TEST(suite, ut_sock_map);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
