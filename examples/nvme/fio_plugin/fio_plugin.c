@@ -711,6 +711,7 @@ static int spdk_fio_open(struct thread_data *td, struct fio_file *f)
 	struct spdk_fio_options *fio_options = td->eo;
 	struct spdk_nvme_io_qpair_opts	qpopts;
 
+	assert(fio_qpair->qpair == NULL);
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
 	qpopts.delay_cmd_submit = true;
 	if (fio_options->enable_wrr) {
@@ -735,6 +736,11 @@ static int spdk_fio_open(struct thread_data *td, struct fio_file *f)
 
 static int spdk_fio_close(struct thread_data *td, struct fio_file *f)
 {
+	struct spdk_fio_qpair *fio_qpair = f->engine_data;
+
+	assert(fio_qpair->qpair != NULL);
+	spdk_nvme_ctrlr_free_io_qpair(fio_qpair->qpair);
+	fio_qpair->qpair = NULL;
 	return 0;
 }
 
@@ -1426,7 +1432,6 @@ static void spdk_fio_cleanup(struct thread_data *td)
 
 	TAILQ_FOREACH_SAFE(fio_qpair, &fio_thread->fio_qpair, link, fio_qpair_tmp) {
 		TAILQ_REMOVE(&fio_thread->fio_qpair, fio_qpair, link);
-		spdk_nvme_ctrlr_free_io_qpair(fio_qpair->qpair);
 		free(fio_qpair);
 	}
 
