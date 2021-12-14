@@ -2073,7 +2073,6 @@ nvmf_fc_stop_listen(struct spdk_nvmf_transport *transport,
 static int
 nvmf_fc_accept(void *ctx)
 {
-	struct spdk_nvmf_transport *transport = ctx;
 	struct spdk_nvmf_fc_port *fc_port = NULL;
 	uint32_t count = 0;
 	static bool start_lld = false;
