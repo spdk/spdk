@@ -66,46 +66,46 @@ enum spdk_nvmf_tcp_req_state {
 	TCP_REQUEST_STATE_FREE = 0,
 
 	/* Initial state when request first received */
-	TCP_REQUEST_STATE_NEW,
+	TCP_REQUEST_STATE_NEW = 1,
 
 	/* The request is queued until a data buffer is available. */
-	TCP_REQUEST_STATE_NEED_BUFFER,
+	TCP_REQUEST_STATE_NEED_BUFFER = 2,
 
 	/* The request is waiting for zcopy_start to finish */
-	TCP_REQUEST_STATE_AWAITING_ZCOPY_START,
+	TCP_REQUEST_STATE_AWAITING_ZCOPY_START = 3,
 
 	/* The request has received a zero-copy buffer */
-	TCP_REQUEST_STATE_ZCOPY_START_COMPLETED,
+	TCP_REQUEST_STATE_ZCOPY_START_COMPLETED = 4,
 
 	/* The request is currently transferring data from the host to the controller. */
-	TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
+	TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER = 5,
 
 	/* The request is waiting for the R2T send acknowledgement. */
-	TCP_REQUEST_STATE_AWAITING_R2T_ACK,
+	TCP_REQUEST_STATE_AWAITING_R2T_ACK = 6,
 
 	/* The request is ready to execute at the block device */
-	TCP_REQUEST_STATE_READY_TO_EXECUTE,
+	TCP_REQUEST_STATE_READY_TO_EXECUTE = 7,
 
 	/* The request is currently executing at the block device */
-	TCP_REQUEST_STATE_EXECUTING,
+	TCP_REQUEST_STATE_EXECUTING = 8,
 
 	/* The request is waiting for zcopy buffers to be commited */
-	TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT,
+	TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT = 9,
 
 	/* The request finished executing at the block device */
-	TCP_REQUEST_STATE_EXECUTED,
+	TCP_REQUEST_STATE_EXECUTED = 10,
 
 	/* The request is ready to send a completion */
-	TCP_REQUEST_STATE_READY_TO_COMPLETE,
+	TCP_REQUEST_STATE_READY_TO_COMPLETE = 11,
 
 	/* The request is currently transferring final pdus from the controller to the host. */
-	TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
+	TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST = 12,
 
 	/* The request is waiting for zcopy buffers to be released (without committing) */
-	TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE,
+	TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE = 13,
 
 	/* The request completed and can be marked free. */
-	TCP_REQUEST_STATE_COMPLETED,
+	TCP_REQUEST_STATE_COMPLETED = 14,
 
 	/* Terminator */
 	TCP_REQUEST_NUM_STATES,
