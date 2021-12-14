@@ -860,6 +860,11 @@ spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, const cha
 	}
 
 	nvmf_subsystem_remove_host(subsystem, host);
+
+	if (!TAILQ_EMPTY(&subsystem->listeners)) {
+		nvmf_update_discovery_log(subsystem->tgt, hostnqn);
+	}
+
 	pthread_mutex_unlock(&subsystem->mutex);
 
 	return 0;

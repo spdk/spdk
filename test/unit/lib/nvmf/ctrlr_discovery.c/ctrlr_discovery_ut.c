@@ -370,9 +370,32 @@ test_discovery_log(void)
 	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1,
 				    offsetof(struct spdk_nvmf_discovery_log_page, entries[0]), sizeof(*entry), &trid);
 	CU_ASSERT(entry->trtype == 42);
+
+	/* remove the host and verify that the discovery log contains nothing */
+	rc = spdk_nvmf_subsystem_remove_host(subsystem, hostnqn);
+	CU_ASSERT(rc == 0);
+
+	/* Get only the header, no entries */
+	memset(buffer, 0xCC, sizeof(buffer));
+	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
+	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, sizeof(*disc_log),
+				    &trid);
+	CU_ASSERT(disc_log->genctr != 0);
+	CU_ASSERT(disc_log->numrec == 0);
+
+	/* destroy the subsystem and verify that the discovery log contains nothing */
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	CU_ASSERT(rc == 0);
+
+	/* Get only the header, no entries */
+	memset(buffer, 0xCC, sizeof(buffer));
+	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
+	nvmf_get_discovery_log_page(&tgt, hostnqn, &iov, 1, 0, sizeof(*disc_log),
+				    &trid);
+	CU_ASSERT(disc_log->genctr != 0);
+	CU_ASSERT(disc_log->numrec == 0);
+
 	free(tgt.subsystems);
 }
 
