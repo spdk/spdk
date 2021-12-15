@@ -352,7 +352,9 @@ struct nvmf_vfio_user_ctrlr {
 };
 
 struct nvmf_vfio_user_endpoint {
+	struct nvmf_vfio_user_transport		*transport;
 	vfu_ctx_t				*vfu_ctx;
+	struct spdk_poller			*accept_poller;
 	struct msixcap				*msix;
 	vfu_pci_config_space_t			*pci_config_space;
 	int					devmem_fd;
@@ -379,7 +381,6 @@ struct nvmf_vfio_user_transport_opts {
 struct nvmf_vfio_user_transport {
 	struct spdk_nvmf_transport		transport;
 	struct nvmf_vfio_user_transport_opts    transport_opts;
-	struct spdk_poller			*accept_poller;
 	pthread_mutex_t				lock;
 	TAILQ_HEAD(, nvmf_vfio_user_endpoint)	endpoints;
 
@@ -765,6 +766,8 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 {
 	SPDK_DEBUGLOG(nvmf_vfio, "destroy endpoint %s\n", endpoint_id(endpoint));
 
+	spdk_poller_unregister(&endpoint->accept_poller);
+
 	if (endpoint->doorbells) {
 		munmap((void *)endpoint->doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
 	}
@@ -802,7 +805,6 @@ nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
 					transport);
 
-	spdk_poller_unregister(&vu_transport->accept_poller);
 	pthread_mutex_destroy(&vu_transport->lock);
 	pthread_mutex_destroy(&vu_transport->pg_lock);
 
@@ -827,9 +829,6 @@ static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] 
 		spdk_json_decode_bool, true
 	},
 };
-
-static int
-nvmf_vfio_user_accept(void *ctx);
 
 static struct spdk_nvmf_transport *
 nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
@@ -869,12 +868,6 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 					    SPDK_COUNTOF(vfio_user_transport_opts_decoder),
 					    vu_transport)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
-		goto cleanup;
-	}
-
-	vu_transport->accept_poller = SPDK_POLLER_REGISTER(nvmf_vfio_user_accept, &vu_transport->transport,
-				      opts->acceptor_poll_rate);
-	if (!vu_transport->accept_poller) {
 		goto cleanup;
 	}
 
@@ -3124,6 +3117,9 @@ out:
 }
 
 static int
+nvmf_vfio_user_accept(void *ctx);
+
+static int
 nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		      const struct spdk_nvme_transport_id *trid,
 		      struct spdk_nvmf_listen_opts *listen_opts)
@@ -3155,6 +3151,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 	pthread_mutex_init(&endpoint->lock, NULL);
 	endpoint->devmem_fd = -1;
 	memcpy(&endpoint->trid, trid, sizeof(endpoint->trid));
+	endpoint->transport = vu_transport;
 
 	ret = snprintf(path, PATH_MAX, "%s/bar0", endpoint_id(endpoint));
 	if (ret < 0 || ret >= PATH_MAX) {
@@ -3242,11 +3239,17 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
+	endpoint->accept_poller = SPDK_POLLER_REGISTER(nvmf_vfio_user_accept,
+				  endpoint,
+				  vu_transport->transport.opts.acceptor_poll_rate);
+	if (!endpoint->accept_poller) {
+		ret = -1;
+		goto out;
+	}
+
 	pthread_mutex_lock(&vu_transport->lock);
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
 	pthread_mutex_unlock(&vu_transport->lock);
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: doorbells %p\n", uuid, endpoint->doorbells);
 
 out:
 	if (ret != 0) {
@@ -3345,51 +3348,35 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
  * Executed periodically at a default SPDK_NVMF_DEFAULT_ACCEPT_POLL_RATE_US
  * frequency.
  *
- * For each transport endpoint (which at the libvfio-user level corresponds to
- * a socket), if we don't currently have a controller set up, peek to see if the
- * socket is able to accept a new connection.
- *
- * This poller also takes care of handling the creation of any pending new
- * qpairs.
+ * For this endpoint (which at the libvfio-user level corresponds to a socket),
+ * if we don't currently have a controller set up, peek to see if the socket is
+ * able to accept a new connection.
  */
 static int
 nvmf_vfio_user_accept(void *ctx)
 {
-	struct spdk_nvmf_transport *transport = ctx;
+	struct nvmf_vfio_user_endpoint *endpoint = ctx;
 	struct nvmf_vfio_user_transport *vu_transport;
-	struct nvmf_vfio_user_endpoint *endpoint;
-	uint32_t count = 0;
 	int err;
 
-	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
-					transport);
+	vu_transport = endpoint->transport;
 
-	pthread_mutex_lock(&vu_transport->lock);
-
-	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
-		if (endpoint->ctrlr != NULL) {
-			continue;
-		}
-
-		err = vfu_attach_ctx(endpoint->vfu_ctx);
-		if (err != 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				continue;
-			}
-
-			pthread_mutex_unlock(&vu_transport->lock);
-			return SPDK_POLLER_BUSY;
-		}
-
-		count++;
-
-		/* Construct a controller */
-		nvmf_vfio_user_create_ctrlr(vu_transport, endpoint);
+	if (endpoint->ctrlr != NULL) {
+		return SPDK_POLLER_IDLE;
 	}
 
-	pthread_mutex_unlock(&vu_transport->lock);
+	err = vfu_attach_ctx(endpoint->vfu_ctx);
 
-	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+	if (err == 0) {
+		nvmf_vfio_user_create_ctrlr(vu_transport, endpoint);
+		return SPDK_POLLER_BUSY;
+	}
+
+	if (errno == EAGAIN || errno == EWOULDBLOCK) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	return SPDK_POLLER_BUSY;
 }
 
 static void
