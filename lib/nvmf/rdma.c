@@ -2206,6 +2206,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	int				flag;
 	uint32_t			sge_count;
 	uint32_t			min_shared_buffers;
+	uint32_t			min_in_capsule_data_size;
 	int				max_device_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
 	pthread_mutexattr_t		attr;
 
@@ -2309,6 +2310,13 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
+	}
+
+	min_in_capsule_data_size = sizeof(struct spdk_nvme_sgl_descriptor) * SPDK_NVMF_MAX_SGL_ENTRIES;
+	if (min_in_capsule_data_size < opts->in_capsule_data_size) {
+		SPDK_WARNLOG("In capsule data size is set to %u, this is minimum size required to support msdbd=16\n",
+			     min_in_capsule_data_size);
+		opts->in_capsule_data_size = min_in_capsule_data_size;
 	}
 
 	rtransport->event_channel = rdma_create_event_channel();
