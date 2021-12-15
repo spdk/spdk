@@ -355,6 +355,7 @@ struct nvmf_vfio_user_endpoint {
 	struct nvmf_vfio_user_transport		*transport;
 	vfu_ctx_t				*vfu_ctx;
 	struct spdk_poller			*accept_poller;
+	struct spdk_thread			*accept_thread;
 	struct msixcap				*msix;
 	vfu_pci_config_space_t			*pci_config_space;
 	int					devmem_fd;
@@ -3031,6 +3032,42 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 	return 0;
 }
 
+static int nvmf_vfio_user_accept(void *ctx);
+
+/*
+ * Register an "accept" poller: this is polling for incoming vfio-user socket
+ * connections (on the listening socket).
+ *
+ * We need to do this on first listening, and also after destroying a
+ * controller, so we can accept another connection.
+ */
+static int
+vfio_user_register_accept_poller(struct nvmf_vfio_user_endpoint *endpoint)
+{
+	uint64_t poll_rate_us = endpoint->transport->transport.opts.acceptor_poll_rate;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "registering accept poller\n");
+
+	endpoint->accept_poller = SPDK_POLLER_REGISTER(nvmf_vfio_user_accept,
+				  endpoint, poll_rate_us);
+
+	if (!endpoint->accept_poller) {
+		return -1;
+	}
+
+	endpoint->accept_thread = spdk_get_thread();
+
+	return 0;
+}
+
+static void
+_vfio_user_relisten(void *ctx)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = ctx;
+
+	vfio_user_register_accept_poller(endpoint);
+}
+
 static void
 _free_ctrlr(void *ctx)
 {
@@ -3038,10 +3075,18 @@ _free_ctrlr(void *ctx)
 	struct nvmf_vfio_user_endpoint *endpoint = ctrlr->endpoint;
 
 	spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
+
 	free(ctrlr);
 
-	if (endpoint && endpoint->need_async_destroy) {
+	if (endpoint == NULL) {
+		return;
+	}
+
+	if (endpoint->need_async_destroy) {
 		nvmf_vfio_user_destroy_endpoint(endpoint);
+	} else {
+		spdk_thread_send_msg(endpoint->accept_thread,
+				     _vfio_user_relisten, endpoint);
 	}
 }
 
@@ -3064,7 +3109,7 @@ free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	}
 }
 
-static void
+static int
 nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 			    struct nvmf_vfio_user_endpoint *endpoint)
 {
@@ -3114,10 +3159,9 @@ out:
 		SPDK_ERRLOG("%s: failed to create vfio-user controller: %s\n",
 			    endpoint_id(endpoint), strerror(-err));
 	}
-}
 
-static int
-nvmf_vfio_user_accept(void *ctx);
+	return err;
+}
 
 static int
 nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
@@ -3239,11 +3283,9 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
-	endpoint->accept_poller = SPDK_POLLER_REGISTER(nvmf_vfio_user_accept,
-				  endpoint,
-				  vu_transport->transport.opts.acceptor_poll_rate);
-	if (!endpoint->accept_poller) {
-		ret = -1;
+	ret = vfio_user_register_accept_poller(endpoint);
+
+	if (ret != 0) {
 		goto out;
 	}
 
@@ -3368,7 +3410,20 @@ nvmf_vfio_user_accept(void *ctx)
 	err = vfu_attach_ctx(endpoint->vfu_ctx);
 
 	if (err == 0) {
-		nvmf_vfio_user_create_ctrlr(vu_transport, endpoint);
+		SPDK_DEBUGLOG(nvmf_vfio, "attach succeeded\n");
+
+		err = nvmf_vfio_user_create_ctrlr(vu_transport, endpoint);
+
+		if (err == 0) {
+			/*
+			 * Unregister ourselves: now we've accepted a
+			 * connection, there is nothing for us to poll for, and
+			 * we will poll the connection via vfu_run_ctx()
+			 * instead.
+			 */
+			spdk_poller_unregister(&endpoint->accept_poller);
+		}
+
 		return SPDK_POLLER_BUSY;
 	}
 
