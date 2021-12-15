@@ -332,6 +332,8 @@ struct nvmf_vfio_user_ctrlr {
 
 	struct spdk_thread			*thread;
 	struct spdk_poller			*vfu_ctx_poller;
+	struct spdk_interrupt			*intr;
+	int					intr_fd;
 
 	bool					queued_quiesce;
 
@@ -385,6 +387,7 @@ struct nvmf_vfio_user_transport_opts {
 struct nvmf_vfio_user_transport {
 	struct spdk_nvmf_transport		transport;
 	struct nvmf_vfio_user_transport_opts    transport_opts;
+	bool					intr_mode_supported;
 	pthread_mutex_t				lock;
 	TAILQ_HEAD(, nvmf_vfio_user_endpoint)	endpoints;
 
@@ -878,6 +881,15 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_DEBUGLOG(nvmf_vfio, "vfio_user transport: disable_mappable_bar0=%d\n",
 		      vu_transport->transport_opts.disable_mappable_bar0);
+
+	/*
+	 * To support interrupt mode, the transport must be configured with
+	 * mappable BAR0 disabled: we need a vfio-user message to wake us up
+	 * when a client writes new doorbell values to BAR0, via the
+	 * libvfio-user socket fd.
+	 */
+	vu_transport->intr_mode_supported =
+		vu_transport->transport_opts.disable_mappable_bar0;
 
 	return &vu_transport->transport;
 
@@ -2522,6 +2534,31 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	}
 }
 
+/*
+ * If we are about to close the connection, we need to unregister the interrupt,
+ * as the library will subsequently close the file descriptor we registered.
+ */
+static int
+vfio_user_device_reset(vfu_ctx_t *vfu_ctx, vfu_reset_type_t type)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
+	struct nvmf_vfio_user_ctrlr *ctrlr = endpoint->ctrlr;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "Device reset type %u\n", type);
+
+	if (type == VFU_RESET_LOST_CONN) {
+		if (ctrlr != NULL) {
+			spdk_interrupt_unregister(&ctrlr->intr);
+			ctrlr->intr_fd = -1;
+		}
+		return 0;
+	}
+
+	/* FIXME: much more needed here. */
+
+	return 0;
+}
+
 static int
 vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 				   struct vfio_user_nvme_migr_state *migr_state)
@@ -2988,6 +3025,12 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		return ret;
 	}
 
+	ret = vfu_setup_device_reset_cb(vfu_ctx, vfio_user_device_reset);
+	if (ret < 0) {
+		SPDK_ERRLOG("vfu_ctx %p failed to setup reset callback\n", vfu_ctx);
+		return ret;
+	}
+
 	ret = vfu_setup_device_nr_irqs(vfu_ctx, VFU_DEV_INTX_IRQ, 1);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup INTX\n", vfu_ctx);
@@ -3039,8 +3082,7 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 static int nvmf_vfio_user_accept(void *ctx);
 
 static void
-accept_poller_set_intr_mode(struct spdk_poller *poller, void *arg,
-			    bool interrupt_mode)
+set_intr_mode_noop(struct spdk_poller *poller, void *arg, bool interrupt_mode)
 {
 	/* Nothing for us to do here. */
 }
@@ -3081,8 +3123,7 @@ vfio_user_register_accept_poller(struct nvmf_vfio_user_endpoint *endpoint)
 	assert(endpoint->accept_intr != NULL);
 
 	spdk_poller_register_interrupt(endpoint->accept_poller,
-				       accept_poller_set_intr_mode,
-				       NULL);
+				       set_intr_mode_noop, NULL);
 	return 0;
 }
 
@@ -3100,6 +3141,8 @@ _free_ctrlr(void *ctx)
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	struct nvmf_vfio_user_endpoint *endpoint = ctrlr->endpoint;
 
+	spdk_interrupt_unregister(&ctrlr->intr);
+	ctrlr->intr_fd = -1;
 	spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 
 	free(ctrlr);
@@ -3138,6 +3181,8 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 	struct nvmf_vfio_user_ctrlr *ctrlr;
 	int err = 0;
 
+	SPDK_DEBUGLOG(nvmf_vfio, "%s\n", endpoint_id(endpoint));
+
 	/* First, construct a vfio-user CUSTOM transport controller */
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -3146,6 +3191,7 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 	}
 	/* We can only support one connection for now */
 	ctrlr->cntlid = 0x1;
+	ctrlr->intr_fd = -1;
 	ctrlr->transport = transport;
 	ctrlr->endpoint = endpoint;
 	ctrlr->doorbells = endpoint->doorbells;
@@ -3489,6 +3535,35 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 	}
 	pthread_mutex_unlock(&vu_transport->pg_lock);
 
+	if (!spdk_interrupt_mode_is_enabled()) {
+		return &vu_group->group;
+	}
+
+	/*
+	 * Only allow the poll group to work in interrupt mode if the transport
+	 * supports it. It's our responsibility to register the actual interrupt
+	 * later (in handle_queue_connect_rsp()) that processes everything in
+	 * the poll group: for us, that's the libvfio-user context, and the
+	 * actual qpairs.
+	 *
+	 * Note that this only works in the case that nothing else shares the
+	 * spdk_nvmf_poll_group.
+	 *
+	 * If not supported, this will effectively always wake up to poll the
+	 * poll group.
+	 */
+
+	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
+					transport);
+
+	if (!vu_transport->intr_mode_supported) {
+		SPDK_WARNLOG("vfio-user interrupt mode not supported\n");
+		return &vu_group->group;
+	}
+
+	spdk_poller_register_interrupt(group->poller, set_intr_mode_noop,
+				       NULL);
+
 	return &vu_group->group;
 }
 
@@ -3500,7 +3575,7 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
 
-	struct spdk_nvmf_transport_poll_group *result;
+	struct spdk_nvmf_transport_poll_group *result = NULL;
 
 	sq = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_sq, qpair);
 	cq = sq->ctrlr->cqs[sq->cqid];
@@ -3509,16 +3584,31 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
 	if (TAILQ_EMPTY(&vu_transport->poll_groups)) {
-		pthread_mutex_unlock(&vu_transport->pg_lock);
-		return NULL;
+		goto out;
 	}
 
-	/* If this is shared IO CQ case, just return the used CQ's poll group */
 	if (!nvmf_qpair_is_admin_queue(qpair)) {
-		if (cq->group) {
-			pthread_mutex_unlock(&vu_transport->pg_lock);
-			return cq->group;
+		/*
+		 * If this is shared IO CQ case, just return the used CQ's poll
+		 * group, so I/O completions don't have to use
+		 * spdk_thread_send_msg().
+		 */
+		if (cq->group != NULL) {
+			result = cq->group;
+			goto out;
 		}
+
+		/*
+		 * If we're in interrupt mode, align all qpairs for a controller
+		 * on the same poll group, to avoid complications in
+		 * vfio_user_handle_intr().
+		 */
+		if (spdk_interrupt_mode_is_enabled() &&
+		    vu_transport->intr_mode_supported) {
+			result = sq->ctrlr->sqs[0]->group;
+			goto out;
+		}
+
 	}
 
 	vu_group = &vu_transport->next_pg;
@@ -3534,6 +3624,7 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		cq->group = result;
 	}
 
+out:
 	pthread_mutex_unlock(&vu_transport->pg_lock);
 	return result;
 }
@@ -3623,12 +3714,21 @@ vfio_user_poll_vfu_ctx(void *ctx)
 
 		spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 
-		/* initiator shutdown or reset, waiting for another re-connect */
+		/*
+		 * We lost the client; the reset callback will already have
+		 * unregistered the interrupt.
+		 */
 		if (errno == ENOTCONN) {
 			vfio_user_destroy_ctrlr(ctrlr);
 			return SPDK_POLLER_BUSY;
 		}
 
+		/*
+		 * We might not have got a reset callback in this case, so
+		 * explicitly unregister the interrupt here.
+		 */
+		spdk_interrupt_unregister(&ctrlr->intr);
+		ctrlr->intr_fd = -1;
 		fail_ctrlr(ctrlr);
 	}
 
@@ -3649,6 +3749,29 @@ _post_completion_msg(void *ctx)
 	post_completion(cpl_ctx->ctrlr, cpl_ctx->cq, cpl_ctx->cpl.cdw0, cpl_ctx->cpl.sqid,
 			cpl_ctx->cpl.cid, cpl_ctx->cpl.status.sc, cpl_ctx->cpl.status.sct);
 	free(cpl_ctx);
+}
+
+static int nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
+
+static int
+vfio_user_handle_intr(void *ctx)
+{
+	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
+	int ret;
+
+	assert(ctrlr != NULL);
+	assert(ctrlr->sqs[0] != NULL);
+	assert(ctrlr->sqs[0]->group != NULL);
+
+	vfio_user_poll_vfu_ctx(ctrlr);
+
+	/*
+	 * See nvmf_vfio_user_get_optimal_poll_group() fo why it's OK to only
+	 * poll this poll group.
+	 */
+	ret = nvmf_vfio_user_poll_group_poll(ctrlr->sqs[0]->group);
+
+	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int
@@ -3688,7 +3811,24 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		vu_ctrlr->ctrlr = sq->qpair.ctrlr;
 		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 		vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx, vu_ctrlr, 0);
+
 		cq->thread = spdk_get_thread();
+
+		if (spdk_interrupt_mode_is_enabled() &&
+		    endpoint->transport->intr_mode_supported) {
+			vu_ctrlr->intr_fd = vfu_get_poll_fd(vu_ctrlr->endpoint->vfu_ctx);
+			assert(vu_ctrlr->intr_fd != -1);
+
+			vu_ctrlr->intr = SPDK_INTERRUPT_REGISTER(vu_ctrlr->intr_fd,
+					 vfio_user_handle_intr,
+					 vu_ctrlr);
+
+			assert(vu_ctrlr->intr != NULL);
+
+			spdk_poller_register_interrupt(vu_ctrlr->vfu_ctx_poller,
+						       set_intr_mode_noop,
+						       vu_ctrlr);
+		}
 	} else {
 		/* For I/O queues this command was generated in response to an
 		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
@@ -3732,8 +3872,9 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 /*
  * Add the given qpair to the given poll group. New qpairs are added via
- * spdk_nvmf_tgt_new_qpair(), which picks a poll group, then calls back
- * here via nvmf_transport_poll_group_add().
+ * spdk_nvmf_tgt_new_qpair(), which picks a poll group via
+ * nvmf_vfio_user_get_optimal_poll_group(), then calls back here via
+ * nvmf_transport_poll_group_add().
  */
 static int
 nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
