@@ -2991,34 +2991,32 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	uint32_t i, nn = ctrlr->cdata.nn;
+	struct spdk_nvme_ns *tmp;
 
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
 	 */
 	if (nn != ctrlr->num_ns) {
-		nvme_ctrlr_destruct_namespaces(ctrlr);
-
-		if (nn == 0) {
-			NVME_CTRLR_WARNLOG(ctrlr, "controller has 0 namespaces\n");
-			return 0;
-		}
-
-		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64, NULL,
-					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
-		if (ctrlr->ns == NULL) {
+		tmp = spdk_realloc(ctrlr->ns, nn * sizeof(struct spdk_nvme_ns), 64);
+		if (tmp == NULL) {
 			rc = -ENOMEM;
 			goto fail;
 		}
 
-		ctrlr->num_ns = nn;
-	} else {
-		/*
-		 * The controller could have been reset with the same number of namespaces.
-		 * If so, we still need to free the iocs specific data, to get a clean slate.
-		 */
-		for (i = 0; i < ctrlr->num_ns; i++) {
-			nvme_ns_free_iocs_specific_data(&ctrlr->ns[i]);
+		if (nn > ctrlr->num_ns) {
+			memset(tmp + ctrlr->num_ns, 0, (nn - ctrlr->num_ns) * sizeof(struct spdk_nvme_ns));
 		}
+
+		ctrlr->ns = tmp;
+		ctrlr->num_ns = nn;
+	}
+
+	/*
+	 * The controller could have been reset with the same number of namespaces.
+	 * If so, we still need to free the iocs specific data, to get a clean slate.
+	 */
+	for (i = 0; i < ctrlr->num_ns; i++) {
+		nvme_ns_free_iocs_specific_data(&ctrlr->ns[i]);
 	}
 
 	return 0;
