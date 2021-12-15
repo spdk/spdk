@@ -51,7 +51,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 run_test "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
-run_test "nvmf_fio" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
+run_test "nvmf_fio_target" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
 
 if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
@@ -72,7 +72,7 @@ run_test "nvmf_multipath" test/nvmf/host/multipath.sh "${TEST_ARGS[@]}"
 
 # TODO: disabled due to intermittent failures (RDMA_CM_EVENT_UNREACHABLE/ETIMEDOUT)
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
-run_test "nvmf_fio" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
+run_test "nvmf_fio_host" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
 
 # There is an intermittent error relating to those tests and Soft-RoCE.
 # Skip those tests if we are using rxe.
