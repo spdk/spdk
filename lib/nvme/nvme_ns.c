@@ -580,8 +580,3 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 	ns->flags = 0;
 	ns->csi = SPDK_NVME_CSI_NVM;
 }
-
-int nvme_ns_update(struct spdk_nvme_ns *ns)
-{
-	return nvme_ctrlr_identify_ns(ns);
-}

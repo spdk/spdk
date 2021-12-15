@@ -2972,15 +2972,7 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		nsdata = &ns->nsdata;
 		ns_is_active = spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid);
 
-		if (nsdata->ncap && ns_is_active) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was updated\n", nsid);
-			if (nvme_ns_update(ns) != 0) {
-				NVME_CTRLR_ERRLOG(ctrlr, "Failed to update active NS %u\n", nsid);
-				continue;
-			}
-		}
-
-		if ((nsdata->ncap == 0) && ns_is_active) {
+		if (ns_is_active) {
 			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
 			if (nvme_ctrlr_construct_namespace(ctrlr, nsid) != 0) {
 				continue;
