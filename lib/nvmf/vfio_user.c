@@ -359,6 +359,9 @@ struct nvmf_vfio_user_endpoint {
 	struct msixcap				*msix;
 	vfu_pci_config_space_t			*pci_config_space;
 	int					devmem_fd;
+	int					accept_intr_fd;
+	struct spdk_interrupt			*accept_intr;
+
 	volatile uint32_t			*doorbells;
 
 	int					migr_fd;
@@ -767,6 +770,7 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 {
 	SPDK_DEBUGLOG(nvmf_vfio, "destroy endpoint %s\n", endpoint_id(endpoint));
 
+	spdk_interrupt_unregister(&endpoint->accept_intr);
 	spdk_poller_unregister(&endpoint->accept_poller);
 
 	if (endpoint->doorbells) {
@@ -3034,6 +3038,13 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 
 static int nvmf_vfio_user_accept(void *ctx);
 
+static void
+accept_poller_set_intr_mode(struct spdk_poller *poller, void *arg,
+			    bool interrupt_mode)
+{
+	/* Nothing for us to do here. */
+}
+
 /*
  * Register an "accept" poller: this is polling for incoming vfio-user socket
  * connections (on the listening socket).
@@ -3057,6 +3068,21 @@ vfio_user_register_accept_poller(struct nvmf_vfio_user_endpoint *endpoint)
 
 	endpoint->accept_thread = spdk_get_thread();
 
+	if (!spdk_interrupt_mode_is_enabled()) {
+		return 0;
+	}
+
+	endpoint->accept_intr_fd = vfu_get_poll_fd(endpoint->vfu_ctx);
+	assert(endpoint->accept_intr_fd != -1);
+
+	endpoint->accept_intr = SPDK_INTERRUPT_REGISTER(endpoint->accept_intr_fd,
+				nvmf_vfio_user_accept, endpoint);
+
+	assert(endpoint->accept_intr != NULL);
+
+	spdk_poller_register_interrupt(endpoint->accept_poller,
+				       accept_poller_set_intr_mode,
+				       NULL);
 	return 0;
 }
 
@@ -3421,6 +3447,7 @@ nvmf_vfio_user_accept(void *ctx)
 			 * we will poll the connection via vfu_run_ctx()
 			 * instead.
 			 */
+			spdk_interrupt_unregister(&endpoint->accept_intr);
 			spdk_poller_unregister(&endpoint->accept_poller);
 		}
 
