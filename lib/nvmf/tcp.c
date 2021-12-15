@@ -131,6 +131,14 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					TRACE_TCP_REQUEST_STATE_NEED_BUFFER,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+	spdk_trace_register_description("TCP_REQ_WAIT_ZCPY_START",
+					TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_START,
+					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+	spdk_trace_register_description("TCP_REQ_ZCPY_START_CPL",
+					TRACE_TCP_REQUEST_STATE_ZCOPY_START_COMPLETED,
+					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("TCP_REQ_TX_H_TO_C",
 					TRACE_TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
@@ -143,6 +151,10 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					TRACE_TCP_REQUEST_STATE_EXECUTING,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+	spdk_trace_register_description("TCP_REQ_WAIT_ZCPY_CMT",
+					TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_COMMIT,
+					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("TCP_REQ_EXECUTED",
 					TRACE_TCP_REQUEST_STATE_EXECUTED,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
@@ -153,6 +165,10 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("TCP_REQ_TRANSFER_C2H",
 					TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
+					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+	spdk_trace_register_description("TCP_REQ_AWAIT_ZCPY_RLS",
+					TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_RELEASE,
 					OWNER_NONE, OBJECT_NVMF_TCP_IO, 0,
 					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
 	spdk_trace_register_description("TCP_REQ_COMPLETED",
@@ -2681,10 +2697,14 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 			break;
 		case TCP_REQUEST_STATE_AWAITING_ZCOPY_START:
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_START, 0, 0,
+					  (uintptr_t)tcp_req, tqpair);
 			/* Some external code must kick a request into  TCP_REQUEST_STATE_ZCOPY_START_COMPLETED
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_ZCOPY_START_COMPLETED:
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_ZCOPY_START_COMPLETED, 0, 0,
+					  (uintptr_t)tcp_req, tqpair);
 			if (spdk_unlikely(spdk_nvme_cpl_is_error(&tcp_req->req.rsp->nvme_cpl))) {
 				SPDK_DEBUGLOG(nvmf_tcp, "Zero-copy start failed for tcp_req(%p) on tqpair=%p\n",
 					      tcp_req, tqpair);
@@ -2736,6 +2756,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT:
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_COMMIT, 0, 0,
+					  (uintptr_t)tcp_req, tqpair);
 			/* Some external code must kick a request into TCP_REQUEST_STATE_EXECUTED
 			 * to escape this state. */
 			break;
@@ -2761,6 +2783,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			 * to escape this state. */
 			break;
 		case TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE:
+			spdk_trace_record(TRACE_TCP_REQUEST_STATE_AWAIT_ZCOPY_RELEASE, 0, 0,
+					  (uintptr_t)tcp_req, tqpair);
 			/* Some external code must kick a request into TCP_REQUEST_STATE_COMPLETED
 			 * to escape this state. */
 			break;
