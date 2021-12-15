@@ -802,7 +802,8 @@ bdev_rbd_cluster_dump_entry(const char *cluster_name, struct spdk_json_write_ctx
 				config_entry += 2;
 			}
 			spdk_json_write_object_end(w);
-		} else if (entry->config_file) {
+		}
+		if (entry->config_file) {
 			spdk_json_write_named_string(w, "config_file", entry->config_file);
 		}
 		if (entry->key_file) {
@@ -912,7 +913,8 @@ dump_single_cluster_entry(struct bdev_rbd_cluster *entry, struct spdk_json_write
 			config_entry += 2;
 		}
 		spdk_json_write_object_end(w);
-	} else if (entry->config_file) {
+	}
+	if (entry->config_file) {
 		spdk_json_write_named_string(w, "config_file", entry->config_file);
 	}
 	if (entry->key_file) {
@@ -1010,14 +1012,16 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 		}
 	}
 
-	/* The first priority is the config_param, then we use the config_file */
+	/* Support specify config_param or config_file separately, or both of them. */
 	if (config_param) {
 		entry->config_param = bdev_rbd_dup_config(config_param);
 		if (entry->config_param == NULL) {
 			SPDK_ERRLOG("Failed to save the config_param=%p on entry = %p\n", config_param, entry);
 			goto err_handle;
 		}
-	} else if (config_file) {
+	}
+
+	if (config_file) {
 		entry->config_file = strdup(config_file);
 		if (entry->config_file == NULL) {
 			SPDK_ERRLOG("Failed to save the config_file=%s on entry = %p\n", config_file, entry);
@@ -1039,6 +1043,14 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 		goto err_handle;
 	}
 
+	/* Try default location when entry->config_file is NULL, but ignore failure when it is NULL */
+	rc = rados_conf_read_file(entry->cluster, entry->config_file);
+	if (entry->config_file && rc < 0) {
+		SPDK_ERRLOG("Failed to read conf file %s\n", entry->config_file);
+		rados_shutdown(entry->cluster);
+		goto err_handle;
+	}
+
 	if (config_param) {
 		const char *const *config_entry = config_param;
 		while (*config_entry) {
@@ -1049,13 +1061,6 @@ rbd_register_cluster(const char *name, const char *user_id, const char *const *c
 				goto err_handle;
 			}
 			config_entry += 2;
-		}
-	} else {
-		rc = rados_conf_read_file(entry->cluster, entry->config_file);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to read conf file\n");
-			rados_shutdown(entry->cluster);
-			goto err_handle;
 		}
 	}
 
