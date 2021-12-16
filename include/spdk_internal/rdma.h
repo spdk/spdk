@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -40,6 +41,10 @@
 
 /* Contains hooks definition */
 #include "spdk/nvme.h"
+
+/* rxe driver vendor_id has been changed from 0 to 0XFFFFFF in 0184afd15a141d7ce24c32c0d86a1e3ba6bc0eb3 */
+#define SPDK_RDMA_RXE_VENDOR_ID_OLD 0
+#define SPDK_RDMA_RXE_VENDOR_ID_NEW 0XFFFFFF
 
 struct spdk_rdma_wr_stats {
 	/* Total number of submitted requests */

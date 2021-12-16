@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -62,10 +63,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 /* The RDMA completion queue size */
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
 #define MAX_WR_PER_QP(queue_depth)	(queue_depth * 3 + 2)
-
-/* rxe driver vendor_id has been changed from 0 to 0XFFFFFF in 0184afd15a141d7ce24c32c0d86a1e3ba6bc0eb3 */
-#define NVMF_RXE_VENDOR_ID_OLD 0
-#define NVMF_RXE_VENDOR_ID_NEW 0XFFFFFF
 
 static int g_spdk_nvmf_ibv_query_mask =
 	IBV_QP_STATE |
@@ -2191,8 +2188,8 @@ static int nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 static inline bool
 nvmf_rdma_is_rxe_device(struct spdk_nvmf_rdma_device *device)
 {
-	return device->attr.vendor_id == NVMF_RXE_VENDOR_ID_OLD ||
-	       device->attr.vendor_id == NVMF_RXE_VENDOR_ID_NEW;
+	return device->attr.vendor_id == SPDK_RDMA_RXE_VENDOR_ID_OLD ||
+	       device->attr.vendor_id == SPDK_RDMA_RXE_VENDOR_ID_NEW;
 }
 
 static int
