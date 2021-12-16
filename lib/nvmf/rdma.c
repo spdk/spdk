@@ -3242,7 +3242,8 @@ static void
 nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
 static struct spdk_nvmf_transport_poll_group *
-nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
+nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
+			    struct spdk_nvmf_poll_group *group)
 {
 	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;

@@ -3399,7 +3399,8 @@ nvmf_vfio_user_discover(struct spdk_nvmf_transport *transport,
 { }
 
 static struct spdk_nvmf_transport_poll_group *
-nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport)
+nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
+				 struct spdk_nvmf_poll_group *group)
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_poll_group *vu_group;

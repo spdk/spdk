@@ -317,7 +317,8 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Create a new poll group
 	 */
-	struct spdk_nvmf_transport_poll_group *(*poll_group_create)(struct spdk_nvmf_transport *transport);
+	struct spdk_nvmf_transport_poll_group *(*poll_group_create)(struct spdk_nvmf_transport *transport,
+			struct spdk_nvmf_poll_group *group);
 
 	/**
 	 * Get the polling group of the queue pair optimal for the specific transport

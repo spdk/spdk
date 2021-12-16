@@ -464,53 +464,54 @@ nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 }
 
 struct spdk_nvmf_transport_poll_group *
-nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
+nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
+				 struct spdk_nvmf_poll_group *group)
 {
-	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_nvmf_transport_poll_group *tgroup;
 	struct spdk_nvmf_transport_pg_cache_buf **bufs;
 	uint32_t i;
 
-	group = transport->ops->poll_group_create(transport);
-	if (!group) {
+	tgroup = transport->ops->poll_group_create(transport, group);
+	if (!tgroup) {
 		return NULL;
 	}
-	group->transport = transport;
+	tgroup->transport = transport;
 
-	STAILQ_INIT(&group->pending_buf_queue);
-	STAILQ_INIT(&group->buf_cache);
+	STAILQ_INIT(&tgroup->pending_buf_queue);
+	STAILQ_INIT(&tgroup->buf_cache);
 
 	if (transport->opts.buf_cache_size) {
-		group->buf_cache_size = transport->opts.buf_cache_size;
-		bufs = calloc(group->buf_cache_size, sizeof(struct spdk_nvmf_transport_pg_cache_buf *));
+		tgroup->buf_cache_size = transport->opts.buf_cache_size;
+		bufs = calloc(tgroup->buf_cache_size, sizeof(struct spdk_nvmf_transport_pg_cache_buf *));
 
 		if (!bufs) {
 			SPDK_ERRLOG("Memory allocation failed, can't reserve buffers for the pg buffer cache\n");
-			return group;
+			return tgroup;
 		}
 
-		if (spdk_mempool_get_bulk(transport->data_buf_pool, (void **)bufs, group->buf_cache_size)) {
-			group->buf_cache_size = (uint32_t)spdk_mempool_count(transport->data_buf_pool);
+		if (spdk_mempool_get_bulk(transport->data_buf_pool, (void **)bufs, tgroup->buf_cache_size)) {
+			tgroup->buf_cache_size = (uint32_t)spdk_mempool_count(transport->data_buf_pool);
 			SPDK_NOTICELOG("Unable to reserve the full number of buffers for the pg buffer cache. "
 				       "Decrease the number of cached buffers from %u to %u\n",
-				       transport->opts.buf_cache_size, group->buf_cache_size);
+				       transport->opts.buf_cache_size, tgroup->buf_cache_size);
 			/* Sanity check */
-			assert(group->buf_cache_size <= transport->opts.buf_cache_size);
+			assert(tgroup->buf_cache_size <= transport->opts.buf_cache_size);
 			/* Try again with less number of buffers */
-			if (spdk_mempool_get_bulk(transport->data_buf_pool, (void **)bufs, group->buf_cache_size)) {
-				SPDK_NOTICELOG("Failed to reserve %u buffers\n", group->buf_cache_size);
-				group->buf_cache_size = 0;
+			if (spdk_mempool_get_bulk(transport->data_buf_pool, (void **)bufs, tgroup->buf_cache_size)) {
+				SPDK_NOTICELOG("Failed to reserve %u buffers\n", tgroup->buf_cache_size);
+				tgroup->buf_cache_size = 0;
 			}
 		}
 
-		for (i = 0; i < group->buf_cache_size; i++) {
-			STAILQ_INSERT_HEAD(&group->buf_cache, bufs[i], link);
+		for (i = 0; i < tgroup->buf_cache_size; i++) {
+			STAILQ_INSERT_HEAD(&tgroup->buf_cache, bufs[i], link);
 		}
-		group->buf_cache_count = group->buf_cache_size;
+		tgroup->buf_cache_count = tgroup->buf_cache_size;
 
 		free(bufs);
 	}
 
-	return group;
+	return tgroup;
 }
 
 struct spdk_nvmf_transport_poll_group *

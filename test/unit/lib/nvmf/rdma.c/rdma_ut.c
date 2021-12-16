@@ -817,7 +817,7 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 	TAILQ_INIT(&rtransport.poll_groups);
 
 	for (i = 0; i < TEST_GROUPS_COUNT; i++) {
-		groups[i] = nvmf_rdma_poll_group_create(transport);
+		groups[i] = nvmf_rdma_poll_group_create(transport, NULL);
 		CU_ASSERT(groups[i] != NULL);
 		rgroups[i] = SPDK_CONTAINEROF(groups[i], struct spdk_nvmf_rdma_poll_group, group);
 		groups[i]->transport = transport;

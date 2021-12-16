@@ -45,7 +45,7 @@ void nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 				      struct spdk_nvmf_discovery_log_page_entry *entry);
 
 struct spdk_nvmf_transport_poll_group *nvmf_transport_poll_group_create(
-	struct spdk_nvmf_transport *transport);
+	struct spdk_nvmf_transport *transport, struct spdk_nvmf_poll_group *group);
 struct spdk_nvmf_transport_poll_group *nvmf_transport_get_optimal_poll_group(
 	struct spdk_nvmf_transport *transport, struct spdk_nvmf_qpair *qpair);
 

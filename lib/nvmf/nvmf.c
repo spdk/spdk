@@ -178,6 +178,10 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&group->qpairs);
 	group->thread = thread;
 
+	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
+
+	SPDK_DTRACE_PROBE1(nvmf_create_poll_group, spdk_thread_get_id(thread));
+
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
 		rc = nvmf_poll_group_add_transport(group, transport);
 		if (rc != 0) {
@@ -210,10 +214,6 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&tgt->mutex);
 	TAILQ_INSERT_TAIL(&tgt->poll_groups, group, link);
 	pthread_mutex_unlock(&tgt->mutex);
-
-	group->poller = SPDK_POLLER_REGISTER(nvmf_poll_group_poll, group, 0);
-
-	SPDK_DTRACE_PROBE1(nvmf_create_poll_group, spdk_thread_get_id(thread));
 
 	return 0;
 }
@@ -1184,7 +1184,7 @@ nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 		}
 	}
 
-	tgroup = nvmf_transport_poll_group_create(transport);
+	tgroup = nvmf_transport_poll_group_create(transport, group);
 	if (!tgroup) {
 		SPDK_ERRLOG("Unable to create poll group for transport\n");
 		return -1;

@@ -514,7 +514,7 @@ test_nvmf_tcp_poll_group_create(void)
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
 	MOCK_SET(spdk_sock_group_create, &grp);
-	group = nvmf_tcp_poll_group_create(transport);
+	group = nvmf_tcp_poll_group_create(transport, NULL);
 	MOCK_CLEAR_P(spdk_sock_group_create);
 	SPDK_CU_ASSERT_FATAL(group);
 	if (opts.in_capsule_data_size < SPDK_NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE) {

@@ -176,13 +176,14 @@ test_spdk_nvmf_transport_create(void)
 }
 
 static struct spdk_nvmf_transport_poll_group *
-ut_poll_group_create(struct spdk_nvmf_transport *transport)
+ut_poll_group_create(struct spdk_nvmf_transport *transport,
+		     struct spdk_nvmf_poll_group *group)
 {
-	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_nvmf_transport_poll_group *tgroup;
 
-	group = calloc(1, sizeof(*group));
-	SPDK_CU_ASSERT_FATAL(group != NULL);
-	return group;
+	tgroup = calloc(1, sizeof(*tgroup));
+	SPDK_CU_ASSERT_FATAL(tgroup != NULL);
+	return tgroup;
 }
 
 static void
@@ -204,7 +205,7 @@ test_nvmf_transport_poll_group_create(void)
 	transport.opts.buf_cache_size = SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE;
 	transport.data_buf_pool = spdk_mempool_create("buf_pool", 32, 4096, 0, 0);
 
-	poll_group = nvmf_transport_poll_group_create(&transport);
+	poll_group = nvmf_transport_poll_group_create(&transport, NULL);
 	SPDK_CU_ASSERT_FATAL(poll_group != NULL);
 	CU_ASSERT(poll_group->transport == &transport);
 	CU_ASSERT(poll_group->buf_cache_size == SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE);
@@ -216,7 +217,7 @@ test_nvmf_transport_poll_group_create(void)
 	/* Mempool members insufficient */
 	transport.data_buf_pool = spdk_mempool_create("buf_pool", 31, 4096, 0, 0);
 
-	poll_group = nvmf_transport_poll_group_create(&transport);
+	poll_group = nvmf_transport_poll_group_create(&transport, NULL);
 	SPDK_CU_ASSERT_FATAL(poll_group != NULL);
 	CU_ASSERT(poll_group->transport == &transport);
 	CU_ASSERT(poll_group->buf_cache_size == 31);

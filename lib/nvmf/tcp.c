@@ -1225,7 +1225,8 @@ nvmf_tcp_control_msg_list_free(struct spdk_nvmf_tcp_control_msg_list *list)
 }
 
 static struct spdk_nvmf_transport_poll_group *
-nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
+nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
+			   struct spdk_nvmf_poll_group *group)
 {
 	struct spdk_nvmf_tcp_transport	*ttransport;
 	struct spdk_nvmf_tcp_poll_group *tgroup;
