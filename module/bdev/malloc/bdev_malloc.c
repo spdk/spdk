@@ -58,6 +58,10 @@ struct malloc_task {
 	enum spdk_bdev_io_status	status;
 };
 
+struct malloc_channel {
+	struct spdk_io_channel		*accel_channel;
+};
+
 static void
 malloc_done(void *ref, int status)
 {
@@ -81,6 +85,7 @@ static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_mallo
 int malloc_disk_count = 0;
 
 static int bdev_malloc_initialize(void);
+static void bdev_malloc_deinitialize(void);
 
 static int
 bdev_malloc_get_ctx_size(void)
@@ -91,6 +96,7 @@ bdev_malloc_get_ctx_size(void)
 static struct spdk_bdev_module malloc_if = {
 	.name = "malloc",
 	.module_init = bdev_malloc_initialize,
+	.module_fini = bdev_malloc_deinitialize,
 	.get_ctx_size = bdev_malloc_get_ctx_size,
 
 };
@@ -235,6 +241,7 @@ bdev_malloc_reset(struct malloc_disk *mdisk, struct malloc_task *task)
 
 static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct malloc_channel *mch = spdk_io_channel_get_ctx(ch);
 	uint32_t block_size = bdev_io->bdev->blocklen;
 
 	switch (bdev_io->type) {
@@ -250,7 +257,7 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 		}
 
 		bdev_malloc_readv((struct malloc_disk *)bdev_io->bdev->ctxt,
-				  ch,
+				  mch->accel_channel,
 				  (struct malloc_task *)bdev_io->driver_ctx,
 				  bdev_io->u.bdev.iovs,
 				  bdev_io->u.bdev.iovcnt,
@@ -260,7 +267,7 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		bdev_malloc_writev((struct malloc_disk *)bdev_io->bdev->ctxt,
-				   ch,
+				   mch->accel_channel,
 				   (struct malloc_task *)bdev_io->driver_ctx,
 				   bdev_io->u.bdev.iovs,
 				   bdev_io->u.bdev.iovcnt,
@@ -280,7 +287,7 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
-					 ch,
+					 mch->accel_channel,
 					 (struct malloc_task *)bdev_io->driver_ctx,
 					 bdev_io->u.bdev.offset_blocks * block_size,
 					 bdev_io->u.bdev.num_blocks * block_size);
@@ -288,7 +295,7 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		/* bdev_malloc_unmap is implemented with a call to mem_cpy_fill which zeroes out all of the requested bytes. */
 		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
-					 ch,
+					 mch->accel_channel,
 					 (struct malloc_task *)bdev_io->driver_ctx,
 					 bdev_io->u.bdev.offset_blocks * block_size,
 					 bdev_io->u.bdev.num_blocks * block_size);
@@ -344,7 +351,7 @@ bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 static struct spdk_io_channel *
 bdev_malloc_get_io_channel(void *ctx)
 {
-	return spdk_accel_engine_get_io_channel();
+	return spdk_get_io_channel(&g_malloc_disks);
 }
 
 static void
@@ -468,13 +475,46 @@ delete_malloc_disk(struct spdk_bdev *bdev, spdk_delete_malloc_complete cb_fn, vo
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
+static int
+malloc_create_channel_cb(void *io_device, void *ctx)
+{
+	struct malloc_channel *ch = ctx;
+
+	ch->accel_channel = spdk_accel_engine_get_io_channel();
+	if (!ch->accel_channel) {
+		SPDK_ERRLOG("Failed to get accel engine's IO channel\n");
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static void
+malloc_destroy_channel_cb(void *io_device, void *ctx)
+{
+	struct malloc_channel *ch = ctx;
+
+	spdk_put_io_channel(ch->accel_channel);
+}
+
 static int bdev_malloc_initialize(void)
 {
 	/* This needs to be reset for each reinitialization of submodules.
 	 * Otherwise after enough devices or reinitializations the value gets too high.
 	 * TODO: Make malloc bdev name mandatory and remove this counter. */
 	malloc_disk_count = 0;
+
+	spdk_io_device_register(&g_malloc_disks, malloc_create_channel_cb,
+				malloc_destroy_channel_cb, sizeof(struct malloc_channel),
+				"bdev_malloc");
+
 	return 0;
+}
+
+static void
+bdev_malloc_deinitialize(void)
+{
+	spdk_io_device_unregister(&g_malloc_disks, NULL);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_malloc)
