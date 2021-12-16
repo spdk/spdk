@@ -1019,6 +1019,10 @@ ut_sock_map(void)
 
 	/* Release entry second and final time. */
 	spdk_sock_map_release(&map, 1);
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(test_group == NULL);
 
 	spdk_sock_map_cleanup(&map);
 
@@ -1057,6 +1061,29 @@ ut_sock_map(void)
 
 	test_group = NULL;
 	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(test_group == group_1);
+
+	spdk_sock_map_cleanup(&map);
+
+	/* Test 6
+	 * Insert single entry without a sock_group */
+	rc = spdk_sock_map_insert(&map, 1, NULL);
+	CU_ASSERT(rc == 0);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, 1, &test_group);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(test_group == NULL);
+
+	test_id = spdk_sock_map_find_free(&map);
+	CU_ASSERT(test_id == 1);
+
+	rc = spdk_sock_map_insert(&map, test_id, group_1);
+	CU_ASSERT(rc == 0);
+
+	test_group = NULL;
+	rc = spdk_sock_map_lookup(&map, test_id, &test_group);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(test_group == group_1);
 

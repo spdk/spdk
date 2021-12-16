@@ -145,9 +145,10 @@ spdk_sock_map_lookup(struct spdk_sock_map *map, int placement_id,
 	pthread_mutex_lock(&map->mtx);
 	STAILQ_FOREACH(entry, &map->entries, link) {
 		if (placement_id == entry->placement_id) {
-			assert(entry->group != NULL);
 			*group = entry->group;
-			rc = 0;
+			if (*group != NULL) {
+				rc = 0;
+			}
 			break;
 		}
 	}
