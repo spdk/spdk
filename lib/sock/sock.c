@@ -66,51 +66,66 @@ sock_get_group_impl_from_group(struct spdk_sock *sock, struct spdk_sock_group *g
 	return NULL;
 }
 
+/* Called under map->mtx lock */
+static struct spdk_sock_placement_id_entry *
+_sock_map_entry_alloc(struct spdk_sock_map *map, int placement_id)
+{
+	struct spdk_sock_placement_id_entry *entry;
+
+	entry = calloc(1, sizeof(*entry));
+	if (!entry) {
+		SPDK_ERRLOG("Cannot allocate an entry for placement_id=%u\n", placement_id);
+		return NULL;
+	}
+
+	entry->placement_id = placement_id;
+
+	STAILQ_INSERT_TAIL(&map->entries, entry, link);
+
+	return entry;
+}
+
 int
 spdk_sock_map_insert(struct spdk_sock_map *map, int placement_id,
 		     struct spdk_sock_group_impl *group)
 {
 	struct spdk_sock_placement_id_entry *entry;
+	int rc = 0;
 
 	pthread_mutex_lock(&map->mtx);
 	STAILQ_FOREACH(entry, &map->entries, link) {
 		if (placement_id == entry->placement_id) {
 			/* Can't set group to NULL if it is already not-NULL */
 			if (group == NULL) {
-				pthread_mutex_unlock(&map->mtx);
-				return (entry->group == NULL) ? 0 : -EINVAL;
+				rc = (entry->group == NULL) ? 0 : -EINVAL;
+				goto end;
 			}
 
 			if (entry->group == NULL) {
 				entry->group = group;
 			} else if (entry->group != group) {
-				pthread_mutex_unlock(&map->mtx);
-				return -EINVAL;
+				rc = -EINVAL;
+				goto end;
 			}
 
 			entry->ref++;
-			pthread_mutex_unlock(&map->mtx);
-			return 0;
+			goto end;
 		}
 	}
 
-	entry = calloc(1, sizeof(*entry));
-	if (!entry) {
-		SPDK_ERRLOG("Cannot allocate an entry for placement_id=%u\n", placement_id);
-		pthread_mutex_unlock(&map->mtx);
-		return -ENOMEM;
+	entry = _sock_map_entry_alloc(map, placement_id);
+	if (entry == NULL) {
+		rc = -ENOMEM;
+		goto end;
 	}
-
-	entry->placement_id = placement_id;
 	if (group) {
 		entry->group = group;
 		entry->ref++;
 	}
-
-	STAILQ_INSERT_TAIL(&map->entries, entry, link);
+end:
 	pthread_mutex_unlock(&map->mtx);
 
-	return 0;
+	return rc;
 }
 
 void
