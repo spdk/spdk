@@ -56,10 +56,13 @@ struct malloc_disk {
 struct malloc_task {
 	int				num_outstanding;
 	enum spdk_bdev_io_status	status;
+	TAILQ_ENTRY(malloc_task)	tailq;
 };
 
 struct malloc_channel {
 	struct spdk_io_channel		*accel_channel;
+	struct spdk_poller		*completion_poller;
+	TAILQ_HEAD(, malloc_task)	completed_tasks;
 };
 
 static void
@@ -476,6 +479,27 @@ delete_malloc_disk(struct spdk_bdev *bdev, spdk_delete_malloc_complete cb_fn, vo
 }
 
 static int
+malloc_completion_poller(void *ctx)
+{
+	struct malloc_channel *ch = ctx;
+	struct malloc_task *task;
+	TAILQ_HEAD(, malloc_task) completed_tasks;
+	uint32_t num_completions = 0;
+
+	TAILQ_INIT(&completed_tasks);
+	TAILQ_SWAP(&completed_tasks, &ch->completed_tasks, malloc_task, tailq);
+
+	while (!TAILQ_EMPTY(&completed_tasks)) {
+		task = TAILQ_FIRST(&completed_tasks);
+		TAILQ_REMOVE(&completed_tasks, task, tailq);
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), task->status);
+		num_completions++;
+	}
+
+	return num_completions > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+}
+
+static int
 malloc_create_channel_cb(void *io_device, void *ctx)
 {
 	struct malloc_channel *ch = ctx;
@@ -486,6 +510,15 @@ malloc_create_channel_cb(void *io_device, void *ctx)
 		return -ENOMEM;
 	}
 
+	ch->completion_poller = SPDK_POLLER_REGISTER(malloc_completion_poller, ch, 0);
+	if (!ch->completion_poller) {
+		SPDK_ERRLOG("Failed to register malloc completion poller\n");
+		spdk_put_io_channel(ch->accel_channel);
+		return -ENOMEM;
+	}
+
+	TAILQ_INIT(&ch->completed_tasks);
+
 	return 0;
 }
 
@@ -494,7 +527,10 @@ malloc_destroy_channel_cb(void *io_device, void *ctx)
 {
 	struct malloc_channel *ch = ctx;
 
+	assert(TAILQ_EMPTY(&ch->completed_tasks));
+
 	spdk_put_io_channel(ch->accel_channel);
+	spdk_poller_unregister(&ch->completion_poller);
 }
 
 static int bdev_malloc_initialize(void)
