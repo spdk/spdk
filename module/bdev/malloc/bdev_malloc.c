@@ -83,6 +83,14 @@ malloc_done(void *ref, int status)
 	}
 }
 
+static void
+malloc_complete_task(struct malloc_task *task, struct malloc_channel *mch,
+		     enum spdk_bdev_io_status status)
+{
+	task->status = status;
+	TAILQ_INSERT_TAIL(&mch->completed_tasks, task, tailq);
+}
+
 static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_malloc_disks);
 
 int malloc_disk_count = 0;
@@ -225,9 +233,8 @@ bdev_malloc_unmap(struct malloc_disk *mdisk,
 				      byte_count, malloc_done, task);
 }
 
-static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static int _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
 {
-	struct malloc_channel *mch = spdk_io_channel_get_ctx(ch);
 	uint32_t block_size = bdev_io->bdev->blocklen;
 
 	switch (bdev_io->type) {
@@ -238,7 +245,8 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 				((struct malloc_disk *)bdev_io->bdev->ctxt)->malloc_buf +
 				bdev_io->u.bdev.offset_blocks * block_size;
 			bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * block_size;
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+			malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
+					     SPDK_BDEV_IO_STATUS_SUCCESS);
 			return 0;
 		}
 
@@ -262,11 +270,13 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
+				     SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
+				     SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -295,10 +305,12 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 			spdk_bdev_io_set_buf(bdev_io, buf, len);
 
 		}
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
+				     SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_ABORT:
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
+				     SPDK_BDEV_IO_STATUS_FAILED);
 		return 0;
 	default:
 		return -1;
@@ -308,8 +320,11 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 
 static void bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_bdev_malloc_submit_request(ch, bdev_io) != 0) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	struct malloc_channel *mch = spdk_io_channel_get_ctx(ch);
+
+	if (_bdev_malloc_submit_request(mch, bdev_io) != 0) {
+		malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
+				     SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
