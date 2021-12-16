@@ -59,7 +59,11 @@
 #define NVME_DOORBELLS_OFFSET	0x1000
 #define NVMF_VFIO_USER_DOORBELLS_SIZE 0x1000
 
-#define NVME_REG_CFG_SIZE       PCI_CFG_SPACE_EXP_SIZE
+/*
+ * NVMe driver reads 4096 bytes, which is the extended PCI configuration space
+ * available on PCI-X 2.0 and PCI Express buses
+ */
+#define NVME_REG_CFG_SIZE       0x1000
 #define NVME_REG_BAR0_SIZE      (NVME_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE)
 #define NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR ((NVMF_VFIO_USER_DOORBELLS_SIZE) / 8)
 #define NVME_IRQ_MSIX_NUM	NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR
@@ -1779,10 +1783,6 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 	return count;
 }
 
-/*
- * NVMe driver reads 4096 bytes, which is the extended PCI configuration space
- * available on PCI-X 2.0 and PCI Express buses
- */
 static ssize_t
 access_pci_config(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t offset,
 		  bool is_write)
