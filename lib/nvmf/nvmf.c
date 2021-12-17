@@ -1110,6 +1110,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 		SPDK_DTRACE_PROBE2(nvmf_poll_group_drain_qpair, qpair, spdk_thread_get_id(group->thread));
 		qpair->state_cb = _nvmf_qpair_destroy;
 		qpair->state_cb_arg = qpair_ctx;
+		nvmf_qpair_abort_pending_zcopy_reqs(qpair);
 		nvmf_qpair_free_aer(qpair);
 		return 0;
 	}

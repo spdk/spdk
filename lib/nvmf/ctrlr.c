@@ -2777,6 +2777,26 @@ nvmf_qpair_abort_aer(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 	return false;
 }
 
+void
+nvmf_qpair_abort_pending_zcopy_reqs(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_request *req, *tmp;
+
+	TAILQ_FOREACH_SAFE(req, &qpair->outstanding, link, tmp) {
+		if (req->zcopy_phase == NVMF_ZCOPY_PHASE_EXECUTE) {
+			/* Zero-copy requests are kept on the outstanding queue from the moment
+			 * zcopy_start is sent until a zcopy_end callback is received.  Therefore,
+			 * we can't remove them from the outstanding queue here, but need to rely on
+			 * the transport to do a zcopy_end to release their buffers and, in turn,
+			 * remove them from the queue.
+			 */
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+			nvmf_transport_req_free(req);
+		}
+	}
+}
+
 static void
 nvmf_qpair_abort_request(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req)
 {
