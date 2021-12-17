@@ -1210,7 +1210,6 @@ class SPDKTarget(Target):
             rpc.sock.sock_impl_set_options(self.client, impl_name="posix", enable_placement_id=1)
             rpc.bdev.bdev_nvme_set_options(self.client, timeout_us=0, action_on_timeout=None,
                                            nvme_adminq_poll_period_us=100000, retry_count=4)
-            rpc.nvmf.nvmf_set_config(self.client, acceptor_poll_rate=10000)
 
         rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
 
