@@ -429,13 +429,15 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 	/* Ensure that no trace point group IDs and names are ever duplicated */
 	for (_reg_fn = g_reg_fn_head; _reg_fn; _reg_fn = _reg_fn->next) {
 		if (reg_fn->tgroup_id == _reg_fn->tgroup_id) {
-			SPDK_ERRLOG("duplicate tgroup_id (%d) with %s\n", _reg_fn->tgroup_id, _reg_fn->name);
+			SPDK_ERRLOG("group %d, %s has duplicate tgroup_id with %s\n",
+				    reg_fn->tgroup_id, reg_fn->name, _reg_fn->name);
 			assert(false);
 			return;
 		}
 
 		if (strcmp(reg_fn->name, _reg_fn->name) == 0) {
-			SPDK_ERRLOG("duplicate name with %s\n", _reg_fn->name);
+			SPDK_ERRLOG("name %s is duplicated between groups with ids %d and %d\n",
+				    reg_fn->name, reg_fn->tgroup_id, _reg_fn->tgroup_id);
 			assert(false);
 			return;
 		}
