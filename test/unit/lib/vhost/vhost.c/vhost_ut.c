@@ -43,16 +43,12 @@
 
 #include "vhost/vhost.c"
 #include <rte_version.h>
+#include "vhost/rte_vhost_user.c"
 
 DEFINE_STUB(rte_vhost_set_vring_base, int, (int vid, uint16_t queue_id,
 		uint16_t last_avail_idx, uint16_t last_used_idx), 0);
 DEFINE_STUB(rte_vhost_get_vring_base, int, (int vid, uint16_t queue_id,
 		uint16_t *last_avail_idx, uint16_t *last_used_idx), 0);
-DEFINE_STUB_V(vhost_session_install_rte_compat_hooks,
-	      (struct spdk_vhost_session *vsession));
-DEFINE_STUB(vhost_register_unix_socket, int, (const char *path, const char *name,
-		uint64_t virtio_features, uint64_t disabled_features, uint64_t protocol_features), 0);
-DEFINE_STUB(vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
@@ -77,6 +73,11 @@ DEFINE_STUB(rte_vhost_driver_callback_register, int,
 DEFINE_STUB(rte_vhost_driver_disable_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_set_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_register, int, (const char *path, uint64_t flags), 0);
+DEFINE_STUB(rte_vhost_driver_unregister, int, (const char *path), 0);
+DEFINE_STUB(rte_vhost_driver_get_protocol_features, int,
+	    (const char *path, uint64_t *protocol_features), 0);
+DEFINE_STUB(rte_vhost_driver_set_protocol_features, int,
+	    (const char *path, uint64_t protocol_features), 0);
 
 DEFINE_STUB(rte_vhost_set_last_inflight_io_split, int,
 	    (int vid, uint16_t vring_idx, uint16_t idx), 0);
@@ -87,15 +88,12 @@ DEFINE_STUB(rte_vhost_set_last_inflight_io_packed, int,
 DEFINE_STUB(rte_vhost_clr_inflight_desc_packed, int,
 	    (int vid, uint16_t vring_idx, uint16_t head), 0);
 DEFINE_STUB_V(rte_vhost_log_write, (int vid, uint64_t addr, uint64_t len));
-DEFINE_STUB_V(vhost_session_mem_register, (struct rte_vhost_memory *mem));
-DEFINE_STUB_V(vhost_session_mem_unregister, (struct rte_vhost_memory *mem));
-DEFINE_STUB(vhost_get_negotiated_features, int,
-	    (int vid, uint64_t *negotiated_features), 0);
 DEFINE_STUB(rte_vhost_get_vhost_ring_inflight, int,
 	    (int vid, uint16_t vring_idx, struct rte_vhost_ring_inflight *vring), 0);
 DEFINE_STUB(rte_vhost_get_vring_base_from_inflight, int,
 	    (int vid, uint16_t queue_id, uint16_t *last_avail_idx, uint16_t *last_used_idx), 0);
-DEFINE_STUB(vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
+DEFINE_STUB(rte_vhost_extern_callback_register, int,
+	    (int vid, struct rte_vhost_user_extern_ops const *const ops, void *ctx), 0);
 
 void *
 spdk_call_unaffinitized(void *cb(void *arg), void *arg)
