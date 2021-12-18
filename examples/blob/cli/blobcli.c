@@ -161,10 +161,10 @@ print_cmds(void)
 	printf("\t-p <blobid> - set the superblob to the ID provided\n");
 	printf("\t-r <blobid> name - remove xattr name/value pair\n");
 	printf("\t-s <blobid> | bs - show blob info or blobstore info\n");
-	printf("\t-x <blobid> name value - set xattr name/value pair\n");
-	printf("\t-X - exit when in interactive shell mode\n");
 	printf("\t-S - enter interactive shell mode\n");
 	printf("\t-T <filename> - automated script mode\n");
+	printf("\t-x <blobid> name value - set xattr name/value pair\n");
+	printf("\t-X - exit when in interactive shell mode\n");
 	printf("\n");
 }
 
