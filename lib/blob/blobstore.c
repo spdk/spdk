@@ -4713,6 +4713,30 @@ bs_dump_print_type_flags(struct spdk_bs_load_ctx *ctx, struct spdk_blob_md_descr
 }
 
 static void
+bs_dump_print_extent_table(struct spdk_bs_load_ctx *ctx, struct spdk_blob_md_descriptor *desc)
+{
+	struct spdk_blob_md_descriptor_extent_table *et_desc;
+	uint64_t num_extent_pages;
+	uint32_t et_idx;
+
+	et_desc = (struct spdk_blob_md_descriptor_extent_table *)desc;
+	num_extent_pages = (et_desc->length - sizeof(et_desc->num_clusters)) /
+			   sizeof(et_desc->extent_page[0]);
+
+	fprintf(ctx->fp, "Extent table:\n");
+	for (et_idx = 0; et_idx < num_extent_pages; et_idx++) {
+		if (et_desc->extent_page[et_idx].page_idx == 0) {
+			/* Zeroes represent unallocated extent pages. */
+			continue;
+		}
+		fprintf(ctx->fp, "\tExtent page: %5" PRIu32 " length %3" PRIu32
+			" at LBA %" PRIu64 "\n", et_desc->extent_page[et_idx].page_idx,
+			et_desc->extent_page[et_idx].num_pages,
+			bs_md_page_to_lba(ctx->bs, et_desc->extent_page[et_idx].page_idx));
+	}
+}
+
+static void
 bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 {
 	uint32_t page_idx = ctx->cur_page;
@@ -4786,6 +4810,8 @@ bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 			bs_dump_print_xattr(ctx, desc);
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
 			bs_dump_print_type_flags(ctx, desc);
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT_TABLE) {
+			bs_dump_print_extent_table(ctx, desc);
 		} else {
 			/* Error */
 			fprintf(ctx->fp, "Unknown descriptor type %" PRIu8 "\n", desc->type);
