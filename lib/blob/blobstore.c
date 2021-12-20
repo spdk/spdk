@@ -4788,6 +4788,7 @@ bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 			bs_dump_print_type_flags(ctx, desc);
 		} else {
 			/* Error */
+			fprintf(ctx->fp, "Unknown descriptor type %" PRIu8 "\n", desc->type);
 		}
 		/* Advance to the next descriptor */
 		cur_desc += sizeof(*desc) + desc->length;
