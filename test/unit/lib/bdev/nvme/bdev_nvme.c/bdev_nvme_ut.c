@@ -233,6 +233,8 @@ struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	bool				is_failed;
 	bool				is_connected;
+	bool				in_completion_context;
+	bool				delete_after_completion_context;
 	TAILQ_HEAD(, ut_nvme_req)	outstanding_reqs;
 	uint32_t			num_outstanding_reqs;
 	TAILQ_ENTRY(spdk_nvme_qpair)	poll_group_tailq;
@@ -261,6 +263,8 @@ struct spdk_nvme_poll_group {
 	struct spdk_nvme_accel_fn_table	accel_fn_table;
 	TAILQ_HEAD(, spdk_nvme_qpair)	connected_qpairs;
 	TAILQ_HEAD(, spdk_nvme_qpair)	disconnected_qpairs;
+	bool				in_completion_context;
+	uint64_t			num_qpairs_to_delete;
 };
 
 struct spdk_nvme_probe_ctx {
@@ -738,6 +742,17 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	SPDK_CU_ASSERT_FATAL(qpair->ctrlr != NULL);
 
+	if (qpair->in_completion_context) {
+		qpair->delete_after_completion_context = true;
+		return 0;
+	}
+
+	if (qpair->poll_group && qpair->poll_group->in_completion_context) {
+		qpair->poll_group->num_qpairs_to_delete++;
+		qpair->delete_after_completion_context = true;
+		return 0;
+	}
+
 	spdk_nvme_ctrlr_disconnect_io_qpair(qpair);
 
 	if (qpair->poll_group != NULL) {
@@ -1077,6 +1092,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	struct ut_nvme_req *req, *tmp;
 	uint32_t num_completions = 0;
 
+	qpair->in_completion_context = true;
+
 	TAILQ_FOREACH_SAFE(req, &qpair->outstanding_reqs, tailq, tmp) {
 		TAILQ_REMOVE(&qpair->outstanding_reqs, req, tailq);
 		qpair->num_outstanding_reqs--;
@@ -1085,6 +1102,11 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 
 		free(req);
 		num_completions++;
+	}
+
+	qpair->in_completion_context = false;
+	if (qpair->delete_after_completion_context) {
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
 	return num_completions;
@@ -1104,6 +1126,8 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 		return -EINVAL;
 	}
 
+	group->in_completion_context = true;
+
 	TAILQ_FOREACH_SAFE(qpair, &group->disconnected_qpairs, poll_group_tailq, tmp_qpair) {
 		disconnected_qpair_cb(qpair, group->ctx);
 	}
@@ -1122,6 +1146,28 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 			num_completions += local_completions;
 			assert(num_completions >= 0);
 		}
+	}
+
+	group->in_completion_context = false;
+
+	if (group->num_qpairs_to_delete > 0) {
+		TAILQ_FOREACH_SAFE(qpair, &group->disconnected_qpairs, poll_group_tailq, tmp_qpair) {
+			if (qpair->delete_after_completion_context) {
+				spdk_nvme_ctrlr_free_io_qpair(qpair);
+				CU_ASSERT(group->num_qpairs_to_delete > 0);
+				group->num_qpairs_to_delete--;
+			}
+		}
+
+		TAILQ_FOREACH_SAFE(qpair, &group->connected_qpairs, poll_group_tailq, tmp_qpair) {
+			if (qpair->delete_after_completion_context) {
+				spdk_nvme_ctrlr_free_io_qpair(qpair);
+				CU_ASSERT(group->num_qpairs_to_delete > 0);
+				group->num_qpairs_to_delete--;
+			}
+		}
+
+		CU_ASSERT(group->num_qpairs_to_delete == 0);
 	}
 
 	return error_reason ? error_reason : num_completions;
