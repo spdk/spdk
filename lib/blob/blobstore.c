@@ -4747,6 +4747,7 @@ bs_dump_print_md_page(struct spdk_bs_load_ctx *ctx)
 
 	fprintf(ctx->fp, "=========\n");
 	fprintf(ctx->fp, "Metadata Page Index: %" PRIu32 " (0x%" PRIx32 ")\n", page_idx, page_idx);
+	fprintf(ctx->fp, "Start LBA: %" PRIu64 "\n", bs_md_page_to_lba(ctx->bs, page_idx));
 	fprintf(ctx->fp, "Blob ID: 0x%" PRIx64 "\n", page->id);
 	fprintf(ctx->fp, "Sequence: %" PRIu32 "\n", page->sequence_num);
 	if (page->next == SPDK_INVALID_MD_PAGE) {
