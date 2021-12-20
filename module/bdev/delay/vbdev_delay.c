@@ -101,6 +101,8 @@ struct delay_bdev_io {
 
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 
+	struct spdk_bdev_io *zcopy_bdev_io;
+
 	STAILQ_ENTRY(delay_bdev_io) link;
 };
 
@@ -219,7 +221,14 @@ _delay_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct delay_io_channel *delay_ch = spdk_io_channel_get_ctx(io_ctx->ch);
 
 	io_ctx->status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	spdk_bdev_free_io(bdev_io);
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ZCOPY && bdev_io->u.bdev.zcopy.start && success) {
+		io_ctx->zcopy_bdev_io = bdev_io;
+	} else {
+		assert(io_ctx->zcopy_bdev_io == NULL || io_ctx->zcopy_bdev_io == bdev_io);
+		io_ctx->zcopy_bdev_io = NULL;
+		spdk_bdev_free_io(bdev_io);
+	}
 
 	/* Put the I/O into the proper list for processing by the channel poller. */
 	switch (io_ctx->type) {
@@ -322,6 +331,12 @@ vbdev_delay_reset_dev(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+abort_zcopy_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
 _abort_all_delayed_io(void *arg)
 {
 	STAILQ_HEAD(, delay_bdev_io) *head = arg;
@@ -329,6 +344,9 @@ _abort_all_delayed_io(void *arg)
 
 	STAILQ_FOREACH_SAFE(io_ctx, head, link, tmp) {
 		STAILQ_REMOVE(head, io_ctx, delay_bdev_io, link);
+		if (io_ctx->zcopy_bdev_io != NULL) {
+			spdk_bdev_zcopy_end(io_ctx->zcopy_bdev_io, false, abort_zcopy_io, NULL);
+		}
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(io_ctx), SPDK_BDEV_IO_STATUS_ABORTED);
 	}
 }
@@ -357,6 +375,9 @@ abort_delayed_io(void *_head, struct spdk_bdev_io *bio_to_abort)
 	STAILQ_FOREACH(io_ctx, head, link) {
 		if (io_ctx == io_ctx_to_abort) {
 			STAILQ_REMOVE(head, io_ctx_to_abort, delay_bdev_io, link);
+			if (io_ctx->zcopy_bdev_io != NULL) {
+				spdk_bdev_zcopy_end(io_ctx->zcopy_bdev_io, false, abort_zcopy_io, NULL);
+			}
 			spdk_bdev_io_complete(bio_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
 			return true;
 		}
@@ -396,6 +417,9 @@ vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	io_ctx->ch = ch;
 	io_ctx->type = DELAY_NONE;
+	if (bdev_io->type != SPDK_BDEV_IO_TYPE_ZCOPY || bdev_io->u.bdev.zcopy.start) {
+		io_ctx->zcopy_bdev_io = NULL;
+	}
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -438,6 +462,24 @@ vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_ABORT:
 		rc = vbdev_delay_abort(delay_node, delay_ch, bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		if (bdev_io->u.bdev.zcopy.commit) {
+			io_ctx->type = is_p99 ? DELAY_P99_WRITE : DELAY_AVG_WRITE;
+		} else if (bdev_io->u.bdev.zcopy.populate) {
+			io_ctx->type = is_p99 ? DELAY_P99_READ : DELAY_AVG_READ;
+		}
+		if (bdev_io->u.bdev.zcopy.start) {
+			rc = spdk_bdev_zcopy_start(delay_node->base_desc, delay_ch->base_ch,
+						   bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						   bdev_io->u.bdev.offset_blocks,
+						   bdev_io->u.bdev.num_blocks,
+						   bdev_io->u.bdev.zcopy.populate,
+						   _delay_complete_io, bdev_io);
+		} else {
+			rc = spdk_bdev_zcopy_end(io_ctx->zcopy_bdev_io, bdev_io->u.bdev.zcopy.commit,
+						 _delay_complete_io, bdev_io);
+		}
+		break;
 	default:
 		SPDK_ERRLOG("delay: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -458,11 +500,7 @@ vbdev_delay_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	struct vbdev_delay *delay_node = (struct vbdev_delay *)ctx;
 
-	if (io_type == SPDK_BDEV_IO_TYPE_ZCOPY) {
-		return false;
-	} else {
-		return spdk_bdev_io_type_supported(delay_node->base_bdev, io_type);
-	}
+	return spdk_bdev_io_type_supported(delay_node->base_bdev, io_type);
 }
 
 static struct spdk_io_channel *
