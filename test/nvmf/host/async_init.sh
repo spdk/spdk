@@ -16,11 +16,6 @@ nvme_bdev=nvme0
 # registering the bdev during bdev_nvme_attach_controller
 nguid=$(uuidgen | tr -d '-')
 
-if [ "$TEST_TRANSPORT" != "tcp" ]; then
-	echo "This test can only be executed with TCP for now"
-	exit 0
-fi
-
 nvmftestinit
 nvmfappstart -m 0x1
 
