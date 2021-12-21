@@ -403,7 +403,10 @@ app_setup_trace(struct spdk_app_opts *opts)
 			errno = 0;
 			tpoint_group_mask = strtoull(tpoint_group, &end, 16);
 			if (*end != '\0' || errno) {
-				break;
+				tpoint_group_mask = spdk_trace_create_tpoint_group_mask(tpoint_group);
+				if (tpoint_group_mask == 0) {
+					break;
+				}
 			}
 			/* Check if tpoint group mask has only one bit set.
 			 * This is to avoid enabling individual tpoints in
@@ -423,7 +426,10 @@ app_setup_trace(struct spdk_app_opts *opts)
 			errno = 0;
 			tpoint_group_mask = strtoull(tpoint_group_str, &end, 16);
 			if (*end != '\0' || errno) {
-				break;
+				tpoint_group_mask = spdk_trace_create_tpoint_group_mask(tpoint_group_str);
+				if (tpoint_group_mask == 0) {
+					break;
+				}
 			}
 			tpoint_mask = -1ULL;
 		}
