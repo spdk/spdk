@@ -316,6 +316,7 @@ function nvmf_veth_init() {
 
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $NVMF_INITIATOR_INTERFACE -p tcp --dport $NVMF_PORT -j ACCEPT
+	iptables -A FORWARD -i $NVMF_BRIDGE -o $NVMF_BRIDGE -j ACCEPT
 
 	# Verify connectivity
 	ping -c 1 $NVMF_FIRST_TARGET_IP
