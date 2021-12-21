@@ -2950,6 +2950,8 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 			struct spdk_nvmf_tcp_req, req);
 	struct spdk_nvmf_tcp_qpair *tqpair = SPDK_CONTAINEROF(req->req_to_abort->qpair,
 					     struct spdk_nvmf_tcp_qpair, qpair);
+	struct spdk_nvmf_tcp_transport *ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport,
+			struct spdk_nvmf_tcp_transport, transport);
 	int rc;
 
 	spdk_poller_unregister(&req->poller);
@@ -2967,6 +2969,7 @@ _nvmf_tcp_qpair_abort_request(void *ctx)
 			      &tcp_req_to_abort->req, spdk_nvmf_request, buf_link);
 
 		nvmf_tcp_req_set_abort_status(req, tcp_req_to_abort);
+		nvmf_tcp_req_process(ttransport, tcp_req_to_abort);
 		break;
 
 	case TCP_REQUEST_STATE_AWAITING_R2T_ACK:
