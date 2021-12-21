@@ -57,56 +57,17 @@ The Blobstore defines a hierarchy of storage abstractions as follows.
   Blobstore owns the entire underlying device which is made up of a private Blobstore metadata region and the collection of
   blobs as managed by the application.
 
-@htmlonly
-
-  <div id="blob_hierarchy"></div>
-
-  <script>
-    let elem = document.getElementById('blob_hierarchy');
-
-    let canvasWidth = 800;
-    let canvasHeight = 200;
-    var two = new Two({ width: 800, height: 200 }).appendTo(elem);
-
-    var blobRect = two.makeRectangle(canvasWidth / 2, canvasHeight / 2, canvasWidth, canvasWidth);
-    blobRect.fill = '#7ED3F7';
-
-    var blobText = two.makeText('Blob', canvasWidth / 2, 10, { alignment: 'center'});
-
-    for (var i = 0; i < 2; i++) {
-        let clusterWidth = 400;
-        let clusterHeight = canvasHeight;
-        var clusterRect = two.makeRectangle((clusterWidth / 2) + (i * clusterWidth),
-                                            clusterHeight / 2,
-                                            clusterWidth - 10,
-                                            clusterHeight - 50);
-        clusterRect.fill = '#00AEEF';
-
-        var clusterText =  two.makeText('Cluster',
-                                        (clusterWidth / 2) + (i * clusterWidth),
-                                        35,
-                                        { alignment: 'center', fill: 'white' });
-
-        for (var j = 0; j < 4; j++) {
-            let pageWidth = 100;
-            let pageHeight = canvasHeight;
-            var pageRect = two.makeRectangle((pageWidth / 2) + (j * pageWidth) + (i * clusterWidth),
-                                             pageHeight / 2,
-                                             pageWidth - 20,
-                                             pageHeight - 100);
-            pageRect.fill = '#003C71';
-
-            var pageText =  two.makeText('Page',
-                                         (pageWidth / 2) + (j * pageWidth) + (i * clusterWidth),
-                                         pageHeight / 2,
-                                         { alignment: 'center', fill: 'white' });
-        }
-    }
-
-    two.update();
-  </script>
-
-@endhtmlonly
+```text
++-----------------------------------------------------------------+
+|                              Blob                               |
+| +-----------------------------+ +-----------------------------+ |
+| |           Cluster           | |           Cluster           | |
+| | +----+ +----+ +----+ +----+ | | +----+ +----+ +----+ +----+ | |
+| | |Page| |Page| |Page| |Page| | | |Page| |Page| |Page| |Page| | |
+| | +----+ +----+ +----+ +----+ | | +----+ +----+ +----+ +----+ | |
+| +-----------------------------+ +-----------------------------+ |
++-----------------------------------------------------------------+
+```
 
 ### Atomicity
 
