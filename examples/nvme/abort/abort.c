@@ -1096,6 +1096,7 @@ int main(int argc, char **argv)
 
 	if (g_num_namespaces == 0) {
 		fprintf(stderr, "No valid NVMe controllers found\n");
+		rc = -1;
 		goto cleanup;
 	}
 
