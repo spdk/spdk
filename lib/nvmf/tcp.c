@@ -2936,6 +2936,7 @@ nvmf_tcp_req_set_abort_status(struct spdk_nvmf_request *req,
 {
 	tcp_req_to_abort->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	tcp_req_to_abort->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+	tcp_req_to_abort->req.rsp->nvme_cpl.cid = tcp_req_to_abort->req.cmd->nvme_cmd.cid;
 
 	nvmf_tcp_req_set_state(tcp_req_to_abort, TCP_REQUEST_STATE_READY_TO_COMPLETE);
 
