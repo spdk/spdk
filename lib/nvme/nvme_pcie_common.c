@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -45,6 +46,8 @@
 #include "spdk_internal/trace_defs.h"
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
+
+static struct spdk_nvme_pcie_stat g_dummy_stat = {};
 
 static void
 nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr);
@@ -1735,6 +1738,9 @@ int
 nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			    struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+
+	pqpair->stat = &g_dummy_stat;
 	return 0;
 }
 
