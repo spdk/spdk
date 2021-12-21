@@ -115,6 +115,8 @@ struct nvme_tcp_qpair {
 	bool					needs_poll;
 
 	uint64_t				icreq_timeout_tsc;
+
+	bool					shared_stats;
 };
 
 enum nvme_tcp_req_state {
@@ -165,6 +167,8 @@ struct nvme_tcp_req {
 	TAILQ_ENTRY(nvme_tcp_req)		link;
 	struct spdk_nvme_cpl			rsp;
 };
+
+static struct spdk_nvme_tcp_stat g_dummy_stats = {};
 
 static void nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
 static int64_t nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group
@@ -354,7 +358,9 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	nvme_qpair_deinit(qpair);
 	tqpair = nvme_tcp_qpair(qpair);
 	nvme_tcp_free_reqs(tqpair);
-	free(tqpair->stats);
+	if (!tqpair->shared_stats) {
+		free(tqpair->stats);
+	}
 	free(tqpair);
 
 	return 0;
@@ -2012,6 +2018,7 @@ nvme_tcp_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		}
 		tgroup = nvme_tcp_poll_group(qpair->poll_group);
 		tqpair->stats = &tgroup->stats;
+		tqpair->shared_stats = true;
 	} else {
 		tqpair->stats = calloc(1, sizeof(*tqpair->stats));
 		if (!tqpair->stats) {
@@ -2284,9 +2291,9 @@ nvme_tcp_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 	}
 
 	tqpair = nvme_tcp_qpair(qpair);
-	/* When qpair is deleted, stats are freed. free(NULL) is valid case, so just set
-	 * stats pointer to NULL */
-	tqpair->stats = NULL;
+
+	assert(tqpair->shared_stats == true);
+	tqpair->stats = &g_dummy_stats;
 
 	return rc;
 }
