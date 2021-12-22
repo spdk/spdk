@@ -641,6 +641,13 @@ if __name__ == "__main__":
     p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
     p.set_defaults(func=bdev_nvme_start_discovery)
 
+    def bdev_nvme_stop_discovery(args):
+        rpc.bdev.bdev_nvme_stop_discovery(args.client, name=args.name)
+
+    p = subparsers.add_parser('bdev_nvme_stop_discovery', help='Stop automatic discovery')
+    p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
+    p.set_defaults(func=bdev_nvme_stop_discovery)
+
     def bdev_nvme_cuse_register(args):
         rpc.bdev.bdev_nvme_cuse_register(args.client,
                                          name=args.name)

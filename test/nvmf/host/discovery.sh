@@ -103,7 +103,7 @@ $rpc_py nvmf_subsystem_remove_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST
 [[ "$(get_bdev_list)" == "nvme0n1 nvme0n2" ]]
 [[ "$(get_subsystem_paths nvme0)" == "$NVMF_SECOND_PORT" ]]
 
-$rpc_py nvmf_delete_subsystem ${NQN}0
+$rpc_py -s $HOST_SOCK bdev_nvme_stop_discovery -b nvme
 [[ "$(get_subsystem_names)" == "" ]]
 [[ "$(get_bdev_list)" == "" ]]
 

@@ -1696,3 +1696,64 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_start_discovery", rpc_bdev_nvme_start_discovery,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_nvme_stop_discovery {
+	char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_stop_discovery_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_nvme_stop_discovery, name), spdk_json_decode_string},
+};
+
+struct rpc_bdev_nvme_stop_discovery_ctx {
+	struct rpc_bdev_nvme_stop_discovery req;
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+rpc_bdev_nvme_stop_discovery_done(void *cb_ctx)
+{
+	struct rpc_bdev_nvme_stop_discovery_ctx *ctx = cb_ctx;
+
+	spdk_jsonrpc_send_bool_response(ctx->request, true);
+	free(ctx->req.name);
+	free(ctx);
+}
+
+static void
+rpc_bdev_nvme_stop_discovery(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	struct rpc_bdev_nvme_stop_discovery_ctx *ctx;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_stop_discovery_decoders,
+				    SPDK_COUNTOF(rpc_bdev_nvme_stop_discovery_decoders),
+				    &ctx->req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	ctx->request = request;
+	rc = bdev_nvme_stop_discovery(ctx->req.name, rpc_bdev_nvme_stop_discovery_done, ctx);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		goto cleanup;
+	}
+
+	return;
+
+cleanup:
+	free(ctx->req.name);
+	free(ctx);
+}
+SPDK_RPC_REGISTER("bdev_nvme_stop_discovery", rpc_bdev_nvme_stop_discovery,
+		  SPDK_RPC_RUNTIME)

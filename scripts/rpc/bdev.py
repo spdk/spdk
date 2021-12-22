@@ -684,6 +684,17 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
     return client.call('bdev_nvme_start_discovery', params)
 
 
+def bdev_nvme_stop_discovery(client, name):
+    """Stop a previously started discovery service
+
+    Args:
+        name: name of discovery service to start
+    """
+    params = {'name': name}
+
+    return client.call('bdev_nvme_stop_discovery', params)
+
+
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 

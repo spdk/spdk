@@ -3123,6 +3123,42 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_stop_discovery {#rpc_bdev_nvme_stop_discovery}
+
+Stop a discovery service. This includes detaching any controllers that were
+discovered via the service that is being stopped.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+name                       | Required | string      | Name of service to stop
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_stop_discovery",
+  "id": 1,
+  "params": {
+    "name": "nvme_auto"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.

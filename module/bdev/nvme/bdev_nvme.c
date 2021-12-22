@@ -4247,6 +4247,36 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
+int
+bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_fn, void *cb_ctx)
+{
+	struct discovery_ctx *ctx;
+
+	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
+		if (strcmp(name, ctx->name) == 0) {
+			if (ctx->detach) {
+				return -EALREADY;
+			}
+			ctx->detach = true;
+			ctx->stop_cb_fn = cb_fn;
+			ctx->cb_ctx = cb_ctx;
+			while (!TAILQ_EMPTY(&ctx->ctrlr_ctxs)) {
+				struct discovery_ctrlr_ctx *ctrlr_ctx;
+				struct nvme_path_id path = {};
+
+				ctrlr_ctx = TAILQ_FIRST(&ctx->ctrlr_ctxs);
+				path.trid = ctrlr_ctx->trid;
+				bdev_nvme_delete(ctrlr_ctx->name, &path);
+				TAILQ_REMOVE(&ctx->ctrlr_ctxs, ctrlr_ctx, tailq);
+				free(ctrlr_ctx);
+			}
+			return 0;
+		}
+	}
+
+	return -ENOENT;
+}
+
 static int
 bdev_nvme_library_init(void)
 {
