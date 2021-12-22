@@ -1874,6 +1874,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 static int
 bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 {
+	struct nvme_ctrlr *nvme_ctrlr = io_device;
 	struct nvme_ctrlr_channel *ctrlr_ch = ctx_buf;
 	struct spdk_io_channel *pg_ch;
 	int rc;
@@ -1897,7 +1898,12 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 
 	rc = bdev_nvme_create_qpair(ctrlr_ch);
 	if (rc != 0) {
-		goto err_qpair;
+		/* nvme ctrlr can't create IO qpair during reset. In that case ctrlr_ch->qpair
+		 * pointer will be NULL and IO qpair will be created when reset completes.
+		 * If the user submits IO requests during reset, they will be queued and resubmitted later */
+		if (!nvme_ctrlr->resetting) {
+			goto err_qpair;
+		}
 	}
 
 	return 0;
