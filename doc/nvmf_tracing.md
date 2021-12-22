@@ -205,6 +205,7 @@ define the tracepoints and assigning them a unique ID using the SPDK_TPOINT_ID m
 ~~~c
 #define	TRACE_GROUP_NVMF_RDMA	0x4
 #define TRACE_RDMA_REQUEST_STATE_NEW	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x0)
+#define TRACE_RDMA_REQUEST_STATE_NEED_BUFFER	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x1)
 ...
 #define NEW_TRACE_POINT_NAME	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, UNIQUE_ID)
 ~~~
@@ -214,18 +215,16 @@ within the application/library using the spdk_trace_register_description functio
 as shown below:
 
 ~~~c
-SPDK_TRACE_REGISTER_FN(nvmf_trace)
+SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
-	spdk_trace_register_description("RDMA_REQ_NEW", "",
-					TRACE_RDMA_REQUEST_STATE_NEW,
+	spdk_trace_register_description("RDMA_REQ_NEW", TRACE_RDMA_REQUEST_STATE_NEW,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 1,
-					SPDK_TRACE_ARG_TYPE_PTR, "cmid:	");
-	...
-	spdk_trace_register_description("NEW_RDMA_REQ_NAME", "",
-					NEW_TRACE_POINT_NAME,
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+	spdk_trace_register_description("RDMA_REQ_NEED_BUFFER", TRACE_RDMA_REQUEST_STATE_NEED_BUFFER,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0,
-					SPDK_TRACE_ARG_TYPE_PTR, "cmid:	");
+					SPDK_TRACE_ARG_TYPE_PTR, "qpair");
+	...
 }
 ~~~
 
@@ -236,16 +235,16 @@ record the current trace state of several tracepoints.
 
 ~~~c
 	case RDMA_REQUEST_STATE_NEW:
-		spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEW, 0, 0, (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
+		spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEW, 0, 0, (uintptr_t)rdma_req, (uintptr_t)rqpair);
 		...
 		break;
 	case RDMA_REQUEST_STATE_NEED_BUFFER:
-		spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEED_BUFFER, 0, 0, (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
+		spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEED_BUFFER, 0, 0, (uintptr_t)rdma_req, (uintptr_t)rqpair);
 		...
 		break;
-	case RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER:
-		spdk_trace_record(TRACE_RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER, 0, 0,
-			(uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
+	case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING:
+		spdk_trace_record(RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING, 0, 0,
+			(uintptr_t)rdma_req, (uintptr_t)rqpair);
 		...
 ~~~
 
