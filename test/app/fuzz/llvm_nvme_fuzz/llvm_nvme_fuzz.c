@@ -224,6 +224,7 @@ begin_fuzz(void *ctx)
 static void
 nvme_fuzz_usage(void)
 {
+	fprintf(stderr, " -D                        Path of corpus directory.\n");
 	fprintf(stderr, " -F                        Transport ID for subsystem that should be fuzzed.\n");
 	fprintf(stderr, " -t                        Time to run fuzz tests (in seconds). Default: 10\n");
 	fprintf(stderr, " -Z                        Fuzzer to run (0 to %lu)\n", NUM_FUZZERS - 1);
