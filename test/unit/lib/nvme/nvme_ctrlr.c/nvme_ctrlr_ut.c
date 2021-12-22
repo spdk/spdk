@@ -1503,6 +1503,7 @@ setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 	ctrlr->page_size = 0x1000;
 	ctrlr->opts.num_io_queues = num_io_queues;
 	ctrlr->free_io_qids = spdk_bit_array_create(num_io_queues + 1);
+	ctrlr->state = NVME_CTRLR_STATE_READY;
 	SPDK_CU_ASSERT_FATAL(ctrlr->free_io_qids != NULL);
 
 	spdk_bit_array_clear(ctrlr->free_io_qids, 0);
@@ -1566,6 +1567,13 @@ test_alloc_io_qpair_rr_1(void)
 	/* Only 0 ~ 3 qprio is acceptable */
 	opts.qprio = 4;
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts)) == NULL);
+	opts.qprio = 0;
+
+	/* IO qpair can only be created when ctrlr is in READY state */
+	ctrlr.state = NVME_CTRLR_STATE_ENABLE;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(q0 == NULL);
+	ctrlr.state = NVME_CTRLR_STATE_READY;
 
 	cleanup_qpairs(&ctrlr);
 }

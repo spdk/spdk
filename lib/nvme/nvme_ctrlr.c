@@ -460,6 +460,12 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_io_qpair_opts	opts;
 	int				rc;
 
+	if (spdk_unlikely(ctrlr->state != NVME_CTRLR_STATE_READY)) {
+		/* When controller is resetting or initializing, free_io_qids is deleted or not created yet.
+		 * We can't create IO qpair in that case */
+		return NULL;
+	}
+
 	/*
 	 * Get the default options, then overwrite them with the user-provided options
 	 * up to opts_size.
@@ -5202,6 +5208,7 @@ spdk_nvme_ctrlr_alloc_qid(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t qid;
 
+	assert(ctrlr->free_io_qids);
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
 	if (qid > ctrlr->opts.num_io_queues) {
