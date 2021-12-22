@@ -186,7 +186,7 @@ def get_malloc_bdev_json(config, section):
         malloc_json.append({
             "params": {
                 "block_size": params[2][3],
-                "num_blocks": params[1][3] * 1024 * 1024 / params[2][3],
+                "num_blocks": params[1][3] * 1024 * 1024 // params[2][3],
                 "name": "Malloc%s" % lun
             },
             "method": "bdev_malloc_create"
