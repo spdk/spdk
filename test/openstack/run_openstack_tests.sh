@@ -39,11 +39,8 @@ $rpc_py bdev_get_bdevs
 timing_exit configure_spdk
 
 timing_enter restart_cinder
-sudo systemctl restart devstack@c-*
-sleep 10
-# Make sure neutron is restarted as well
-sudo systemctl restart devstack@q-*
-sleep 10
+sudo systemctl restart devstack@*
+sleep 20
 timing_exit restart_cinder
 
 rxe_cfg status
