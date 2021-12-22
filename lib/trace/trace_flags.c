@@ -151,8 +151,8 @@ spdk_trace_get_next_register_fn(struct spdk_trace_register_fn *register_fn)
 	return register_fn->next;
 }
 
-static uint64_t
-trace_create_tpoint_group_mask(const char *group_name)
+uint64_t
+spdk_trace_create_tpoint_group_mask(const char *group_name)
 {
 	uint64_t tpoint_group_mask = 0;
 	struct spdk_trace_register_fn *register_fn;
@@ -190,7 +190,7 @@ spdk_trace_enable_tpoint_group(const char *group_name)
 		return -1;
 	}
 
-	tpoint_group_mask = trace_create_tpoint_group_mask(group_name);
+	tpoint_group_mask = spdk_trace_create_tpoint_group_mask(group_name);
 	if (tpoint_group_mask == 0) {
 		return -1;
 	}
@@ -208,7 +208,7 @@ spdk_trace_disable_tpoint_group(const char *group_name)
 		return -1;
 	}
 
-	tpoint_group_mask = trace_create_tpoint_group_mask(group_name);
+	tpoint_group_mask = spdk_trace_create_tpoint_group_mask(group_name);
 	if (tpoint_group_mask == 0) {
 		return -1;
 	}

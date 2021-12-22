@@ -416,6 +416,14 @@ int spdk_trace_disable_tpoint_group(const char *group_name);
  */
 void spdk_trace_mask_usage(FILE *f, const char *tmask_arg);
 
+/**
+ * Create a tracepoint group mask from tracepoint group name
+ *
+ * \param group_name tracepoint group name string
+ * \return tpoint group mask on success, 0 on failure
+ */
+uint64_t spdk_trace_create_tpoint_group_mask(const char *group_name);
+
 struct spdk_trace_register_fn {
 	const char *name;
 	uint8_t tgroup_id;
