@@ -77,7 +77,7 @@ fuzz_admin_command(struct fuzz_command *cmd)
 }
 
 static void
-fuzz_log_page_command(struct fuzz_command *cmd)
+fuzz_admin_get_log_page_command(struct fuzz_command *cmd)
 {
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 
@@ -106,9 +106,31 @@ fuzz_log_page_command(struct fuzz_command *cmd)
 	g_data += 6;
 }
 
+static void
+fuzz_admin_identify_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+
+	cmd->cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+
+	cmd->cmd.cdw10_bits.raw = 0;
+	cmd->cmd.cdw10_bits.identify.cns = g_data[0];
+	cmd->cmd.cdw10_bits.identify.cntid = (g_data[1] << 8) + g_data[2];
+
+	cmd->cmd.cdw11_bits.raw = 0;
+	cmd->cmd.cdw11_bits.identify.nvmsetid = (g_data[3] << 8) + g_data[4];
+	cmd->cmd.cdw11_bits.identify.csi = g_data[5];
+
+	/* UUID index, bits 0-6 are used */
+	cmd->cmd.cdw14 = (g_data[6] & 0x7f);
+
+	g_data += 7;
+}
+
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd) },
-	{ .fn = fuzz_log_page_command, .bytes_per_cmd = 6 },
+	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6 },
+	{ .fn = fuzz_admin_identify_command, .bytes_per_cmd = 7 },
 	{ .fn = NULL, .bytes_per_cmd = 0 }
 };
 
@@ -216,6 +238,8 @@ begin_fuzz(void *ctx)
 
 	for (i = 0; i < MAX_COMMANDS; i++) {
 		g_cmds[i].buf = spdk_malloc(4096, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		assert(g_cmds[i].buf);
+		g_cmds[i].len = 4096;
 	}
 
 	pthread_create(&g_fuzz_td, NULL, start_fuzzer, NULL);
