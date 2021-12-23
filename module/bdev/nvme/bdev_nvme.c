@@ -1909,6 +1909,7 @@ bdev_nvme_create_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	return 0;
 
 err_qpair:
+	TAILQ_REMOVE(&ctrlr_ch->group->ctrlr_ch_list, ctrlr_ch, tailq);
 	spdk_put_io_channel(pg_ch);
 
 	return rc;
