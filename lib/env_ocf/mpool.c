@@ -36,8 +36,6 @@
 
 #include "mpool.h"
 
-#define MEMPOOL_SIZE 24
-
 struct env_mpool {
 	env_allocator *allocator[env_mpool_max];
 	/* Handles to memory pools */
@@ -58,10 +56,10 @@ struct env_mpool {
 struct env_mpool *env_mpool_create(uint32_t hdr_size, uint32_t elem_size,
 				   int flags, int mpool_max, bool fallback,
 				   const uint32_t limits[env_mpool_max],
-				   const char *name_perfix, bool zero)
+				   const char *name_prefix, bool zero)
 {
 	int i;
-	char name[MEMPOOL_SIZE] = {};
+	char name[OCF_ALLOCATOR_NAME_MAX] = {};
 	int ret;
 	int size;
 
@@ -76,7 +74,7 @@ struct env_mpool *env_mpool_create(uint32_t hdr_size, uint32_t elem_size,
 	mpool->fallback = fallback;
 
 	for (i = 0; i < min(env_mpool_max, mpool_max + 1); i++) {
-		ret = snprintf(name, sizeof(name), "%s_%u", name, (1 << i));
+		ret = snprintf(name, sizeof(name), "%s_%u", name_prefix, (1 << i));
 		if (ret < 0 || ret >= (int)sizeof(name)) {
 			goto err;
 		}

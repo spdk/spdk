@@ -43,8 +43,16 @@
  * in itself depends on the workload
  * It is a big number because OCF uses allocators
  * for every request it sends and receives
+ *
+ * The value of 16383 is tested to work on 24 caches
+ * running IO of io_size=512 and io_depth=512, which
+ * should be more than enough for any real life scenario.
+ * Increase this value if needed. It will result in
+ * more memory being used initially on SPDK app start,
+ * when compiled with OCF support.
  */
-#define ENV_ALLOCATOR_NBUFS 32767
+#define ENV_ALLOCATOR_NBUFS 16383
+
 #define GET_ELEMENTS_COUNT(_limit) (_limit < 0 ? ENV_ALLOCATOR_NBUFS : _limit)
 
 /* Use unique index for env allocators */
@@ -76,9 +84,10 @@ env_allocator *
 env_allocator_create_extended(uint32_t size, const char *name, int limit, bool zero)
 {
 	env_allocator *allocator;
-	char qualified_name[128] = {0};
+	char qualified_name[OCF_ALLOCATOR_NAME_MAX] = {0};
 
-	snprintf(qualified_name, 128, "ocf_env_%d", env_atomic_inc_return(&g_env_allocator_index));
+	snprintf(qualified_name, OCF_ALLOCATOR_NAME_MAX, "ocf_env_%d:%s",
+		 env_atomic_inc_return(&g_env_allocator_index), name);
 
 	allocator = calloc(1, sizeof(*allocator));
 	if (!allocator) {

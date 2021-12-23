@@ -178,7 +178,7 @@ static inline uint64_t env_get_free_memory(void)
 
 /* *** ALLOCATOR *** */
 
-#define OCF_ALLOCATOR_NAME_MAX 128
+#define OCF_ALLOCATOR_NAME_MAX 24
 
 typedef struct {
 	struct spdk_mempool *mempool;

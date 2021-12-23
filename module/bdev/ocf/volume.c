@@ -407,7 +407,7 @@ vbdev_ocf_volume_get_max_io_size(ocf_volume_t volume)
 }
 
 static struct ocf_volume_properties vbdev_volume_props = {
-	.name = "SPDK block device",
+	.name = "SPDK_block_device",
 	.io_priv_size = sizeof(struct ocf_io_ctx),
 	.volume_priv_size = sizeof(struct vbdev_ocf_base *),
 	.caps = {
