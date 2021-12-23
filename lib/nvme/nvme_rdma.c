@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1848,7 +1848,7 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	nvme_rdma_unregister_reqs(rqpair);
 	nvme_rdma_unregister_rsps(rqpair);
 
-	nvme_rdma_qpair_abort_reqs(qpair, 1);
+	nvme_rdma_qpair_abort_reqs(qpair, 0);
 	nvme_qpair_deinit(qpair);
 
 	nvme_rdma_put_memory_domain(rqpair->memory_domain);

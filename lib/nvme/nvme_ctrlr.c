@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -641,7 +641,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	 * with that qpair, since the callbacks will also be foreign to this process.
 	 */
 	if (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr)) {
-		nvme_qpair_abort_all_queued_reqs(qpair, 1);
+		nvme_qpair_abort_all_queued_reqs(qpair, 0);
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);

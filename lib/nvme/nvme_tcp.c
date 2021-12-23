@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -350,7 +350,7 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 	struct nvme_tcp_qpair *tqpair;
 
 	assert(qpair != NULL);
-	nvme_tcp_qpair_abort_reqs(qpair, 1);
+	nvme_tcp_qpair_abort_reqs(qpair, 0);
 	nvme_qpair_deinit(qpair);
 	tqpair = nvme_tcp_qpair(qpair);
 	nvme_tcp_free_reqs(tqpair);
