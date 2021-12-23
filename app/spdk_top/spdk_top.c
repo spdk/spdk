@@ -2305,7 +2305,7 @@ display_thread(uint64_t thread_id, uint8_t current_page)
 
 	/* We did not find this thread, so we cannot show its information. */
 	if (i == g_last_threads_count) {
-		print_bottom_error_message("This thread does not exist.");
+		print_bottom_message("This thread does not exist.");
 		pthread_mutex_unlock(&g_thread_lock);
 		return;
 	}
