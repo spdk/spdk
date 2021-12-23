@@ -167,18 +167,20 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	SPDK_DEBUGLOG(bdev_malloc, "read %zu bytes from offset %#" PRIx64 "\n",
-		      len, offset);
+	SPDK_DEBUGLOG(bdev_malloc, "read %zu bytes from offset %#" PRIx64 ", iovcnt=%d\n",
+		      len, offset, iovcnt);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	task->num_outstanding = iovcnt;
+	task->num_outstanding = 0;
 
 	for (i = 0; i < iovcnt; i++) {
+		task->num_outstanding++;
 		res = spdk_accel_submit_copy(ch, iov[i].iov_base,
 					     src, iov[i].iov_len, malloc_done, task);
 
 		if (res != 0) {
 			malloc_done(task, res);
+			break;
 		}
 
 		src += iov[i].iov_len;
@@ -201,18 +203,20 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	SPDK_DEBUGLOG(bdev_malloc, "wrote %zu bytes to offset %#" PRIx64 "\n",
-		      len, offset);
+	SPDK_DEBUGLOG(bdev_malloc, "wrote %zu bytes to offset %#" PRIx64 ", iovcnt=%d\n",
+		      len, offset, iovcnt);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	task->num_outstanding = iovcnt;
+	task->num_outstanding = 0;
 
 	for (i = 0; i < iovcnt; i++) {
+		task->num_outstanding++;
 		res = spdk_accel_submit_copy(ch, dst, iov[i].iov_base,
 					     iov[i].iov_len, malloc_done, task);
 
 		if (res != 0) {
 			malloc_done(task, res);
+			break;
 		}
 
 		dst += iov[i].iov_len;
