@@ -2686,9 +2686,7 @@ static int
 nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			    struct spdk_nvme_qpair *qpair)
 {
-	if (qpair->poll_group_tailq_head == &tgroup->connected_qpairs) {
-		return nvme_poll_group_disconnect_qpair(qpair);
-	}
+	assert(qpair->poll_group_tailq_head == &tgroup->disconnected_qpairs);
 
 	return 0;
 }

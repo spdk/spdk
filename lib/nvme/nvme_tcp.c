@@ -2284,18 +2284,15 @@ nvme_tcp_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			   struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair;
-	int rc = 0;
 
-	if (qpair->poll_group_tailq_head == &tgroup->connected_qpairs) {
-		rc = nvme_poll_group_disconnect_qpair(qpair);
-	}
+	assert(qpair->poll_group_tailq_head == &tgroup->disconnected_qpairs);
 
 	tqpair = nvme_tcp_qpair(qpair);
 
 	assert(tqpair->shared_stats == true);
 	tqpair->stats = &g_dummy_stats;
 
-	return rc;
+	return 0;
 }
 
 static int64_t
