@@ -602,6 +602,7 @@ nvme_pcie_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 void
 nvme_pcie_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
+	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 }
 
 /* Used when dst points to MMIO (i.e. CMB) in a virtual machine - in these cases we must

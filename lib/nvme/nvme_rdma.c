@@ -1849,6 +1849,8 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		ibv_destroy_cq(rqpair->cq);
 		rqpair->cq = NULL;
 	}
+
+	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 }
 
 static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
