@@ -813,7 +813,7 @@ function make_filesystem() {
 function killprocess() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
-		exit 1
+		return 1
 	fi
 
 	if kill -0 $1; then
@@ -840,7 +840,6 @@ function killprocess() {
 	else
 		# the process is not there anymore
 		echo "Process with pid $1 is not found"
-		exit 1
 	fi
 }
 
