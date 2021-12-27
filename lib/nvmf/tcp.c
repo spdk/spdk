@@ -2749,14 +2749,6 @@ nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
-	rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock,
-				      nvmf_tcp_sock_cb, tqpair);
-	if (rc != 0) {
-		SPDK_ERRLOG("Could not add sock to sock_group: %s (%d)\n",
-			    spdk_strerror(errno), errno);
-		return -1;
-	}
-
 	rc =  nvmf_tcp_qpair_sock_init(tqpair);
 	if (rc != 0) {
 		SPDK_ERRLOG("Cannot set sock opt for tqpair=%p\n", tqpair);
@@ -2772,6 +2764,14 @@ nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	rc = nvmf_tcp_qpair_init_mem_resource(tqpair);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot init memory resource info for tqpair=%p\n", tqpair);
+		return -1;
+	}
+
+	rc = spdk_sock_group_add_sock(tgroup->sock_group, tqpair->sock,
+				      nvmf_tcp_sock_cb, tqpair);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not add sock to sock_group: %s (%d)\n",
+			    spdk_strerror(errno), errno);
 		return -1;
 	}
 
