@@ -74,6 +74,11 @@ fuzz_admin_command(struct fuzz_command *cmd)
 	if (cmd->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 		cmd->cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	}
+
+	/* NVME_OPC_FABRIC is special for fabric transport, so pick a different opcode. */
+	if (cmd->cmd.opc == SPDK_NVME_OPC_FABRIC) {
+		cmd->cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	}
 }
 
 static void
