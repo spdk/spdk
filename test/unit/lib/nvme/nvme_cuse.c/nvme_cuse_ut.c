@@ -45,26 +45,30 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_admin_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw_with_md, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf, uint32_t len, void *md_buf,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
 DEFINE_STUB(spdk_nvme_ctrlr_reset, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
-DEFINE_STUB(spdk_nvme_ns_cmd_read, int,
-	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-	     void *payload, uint64_t lba, uint32_t lba_count,
-	     spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags), 0);
+DEFINE_STUB(spdk_nvme_ns_cmd_read_with_md, int, (struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *payload, void *metadata,
+		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag), 0);
 
-DEFINE_STUB(spdk_nvme_ns_cmd_write, int,
-	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-	     void *payload, uint64_t lba, uint32_t lba_count,
-	     spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags), 0);
+DEFINE_STUB(spdk_nvme_ns_cmd_write_with_md, int, (struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *payload, void *metadata,
+		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag), 0);
 
 DEFINE_STUB(spdk_nvme_ns_get_num_sectors, uint64_t,
 	    (struct spdk_nvme_ns *ns), 0);
+
+DEFINE_STUB(spdk_nvme_ns_get_md_size, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
 DEFINE_STUB_V(spdk_unaffinitize_thread, (void));
 
@@ -178,6 +182,7 @@ test_cuse_nvme_submit_io_read_write(void)
 	fuse_req_t req = (void *)0xDEEACDFF;
 	unsigned flags = FUSE_IOCTL_DIR;
 	uint32_t block_size = 4096;
+	uint32_t md_size = 0;
 	size_t in_bufsz = 4096;
 	size_t out_bufsz = 4096;
 
@@ -192,7 +197,7 @@ test_cuse_nvme_submit_io_read_write(void)
 
 	/* Submit IO read */
 	cuse_nvme_submit_io_read(&cuse_device, req, 0, arg, &fi, flags,
-				 block_size, user_io, in_bufsz, out_bufsz);
+				 block_size, md_size, user_io, in_bufsz, out_bufsz);
 	CU_ASSERT(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_ctx->req == req);
 	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
@@ -200,13 +205,17 @@ test_cuse_nvme_submit_io_read_write(void)
 	CU_ASSERT(g_ut_ctx->data_len ==
 		  (int)((user_io->nblocks + 1) * block_size));
 	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata_len == 0);
+	CU_ASSERT(g_ut_ctx->metadata == NULL);
+	CU_ASSERT(g_ut_ctx->appmask == 0);
+	CU_ASSERT(g_ut_ctx->apptag == 0);
 	cuse_io_ctx_free(g_ut_ctx);
 
 	/* Submit IO write */
 	g_ut_ctx = NULL;
 
 	cuse_nvme_submit_io_write(&cuse_device, req, 0, arg, &fi, flags,
-				  block_size, user_io, in_bufsz, out_bufsz);
+				  block_size, md_size, user_io, in_bufsz, out_bufsz);
 	CU_ASSERT(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_ctx->req == req);
 	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
@@ -214,6 +223,74 @@ test_cuse_nvme_submit_io_read_write(void)
 	CU_ASSERT(g_ut_ctx->data_len ==
 		  (int)((user_io->nblocks + 1) * block_size));
 	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata_len == 0);
+	CU_ASSERT(g_ut_ctx->metadata == NULL);
+	CU_ASSERT(g_ut_ctx->appmask == 0);
+	CU_ASSERT(g_ut_ctx->apptag == 0);
+	cuse_io_ctx_free(g_ut_ctx);
+	free(user_io);
+}
+
+static void
+test_cuse_nvme_submit_io_read_write_with_md(void)
+{
+	struct cuse_device cuse_device = {};
+	struct fuse_file_info fi = {};
+	struct nvme_user_io *user_io = NULL;
+	char arg[1024] = {};
+	fuse_req_t req = (void *)0xDEEACDFF;
+	unsigned flags = FUSE_IOCTL_DIR;
+	uint32_t block_size = 4096;
+	uint32_t md_size = 8;
+	size_t in_bufsz = 4096;
+	size_t out_bufsz = 4096;
+
+	/* Allocate memory to avoid stack buffer overflow */
+	user_io = calloc(4, 4096);
+	SPDK_CU_ASSERT_FATAL(user_io != NULL);
+	cuse_device.ctrlr = (void *)0xDEADBEEF;
+	cuse_device.nsid = 1;
+	user_io->slba = 1024;
+	user_io->nblocks = 1;
+	user_io->appmask = 0xF00D;
+	user_io->apptag = 0xC0DE;
+	user_io->metadata = 0xDEADDEAD;
+	g_ut_ctx = NULL;
+
+	/* Submit IO read */
+	cuse_nvme_submit_io_read(&cuse_device, req, 0, arg, &fi, flags,
+				 block_size, md_size, user_io, in_bufsz, out_bufsz);
+	CU_ASSERT(g_ut_ctx != NULL);
+	CU_ASSERT(g_ut_ctx->req == req);
+	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
+	CU_ASSERT(g_ut_ctx->lba_count == (uint32_t)(user_io->nblocks + 1));
+	CU_ASSERT(g_ut_ctx->data_len ==
+		  (int)((user_io->nblocks + 1) * block_size));
+	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata_len ==
+		  (int)((user_io->nblocks + 1) * md_size));
+	CU_ASSERT(g_ut_ctx->metadata != NULL);
+	CU_ASSERT(g_ut_ctx->appmask == 0xF00D);
+	CU_ASSERT(g_ut_ctx->apptag == 0xC0DE);
+	cuse_io_ctx_free(g_ut_ctx);
+
+	/* Submit IO write */
+	g_ut_ctx = NULL;
+
+	cuse_nvme_submit_io_write(&cuse_device, req, 0, arg, &fi, flags,
+				  block_size, md_size, user_io, in_bufsz, out_bufsz);
+	CU_ASSERT(g_ut_ctx != NULL);
+	CU_ASSERT(g_ut_ctx->req == req);
+	CU_ASSERT(g_ut_ctx->lba = user_io->slba);
+	CU_ASSERT(g_ut_ctx->lba_count == (uint32_t)(user_io->nblocks + 1));
+	CU_ASSERT(g_ut_ctx->data_len ==
+		  (int)((user_io->nblocks + 1) * block_size));
+	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata_len ==
+		  (int)((user_io->nblocks + 1) * md_size));
+	CU_ASSERT(g_ut_ctx->metadata != NULL);
+	CU_ASSERT(g_ut_ctx->appmask == 0xF00D);
+	CU_ASSERT(g_ut_ctx->apptag == 0xC0DE);
 	cuse_io_ctx_free(g_ut_ctx);
 	free(user_io);
 }
@@ -234,22 +311,74 @@ test_cuse_nvme_submit_passthru_cmd(void)
 
 	g_ut_ctx = NULL;
 	/* Passthrough command */
-	passthru_cmd->opcode   = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
-	passthru_cmd->nsid     = 1;
-	passthru_cmd->data_len = 512;
-	passthru_cmd->cdw10    = 0xc0de1010;
-	passthru_cmd->cdw11    = 0xc0de1111;
-	passthru_cmd->cdw12    = 0xc0de1212;
-	passthru_cmd->cdw13    = 0xc0de1313;
-	passthru_cmd->cdw14    = 0xc0de1414;
-	passthru_cmd->cdw15    = 0xc0de1515;
+	passthru_cmd->opcode       = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
+	passthru_cmd->nsid         = 1;
+	passthru_cmd->data_len     = 512;
+	passthru_cmd->metadata_len = 0;
+	passthru_cmd->cdw10        = 0xc0de1010;
+	passthru_cmd->cdw11        = 0xc0de1111;
+	passthru_cmd->cdw12        = 0xc0de1212;
+	passthru_cmd->cdw13        = 0xc0de1313;
+	passthru_cmd->cdw14        = 0xc0de1414;
+	passthru_cmd->cdw15        = 0xc0de1515;
 
 	/* Send IO Command IOCTL */
-	cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, NVME_IOCTL_IO_CMD);
+	cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, NULL, NVME_IOCTL_IO_CMD);
 	SPDK_CU_ASSERT_FATAL(g_ut_ctx != NULL);
 	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata == NULL);
 	CU_ASSERT(g_ut_ctx->req               == req);
 	CU_ASSERT(g_ut_ctx->data_len          == 512);
+	CU_ASSERT(g_ut_ctx->metadata_len      == 0);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.opc      == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.nsid     == 1);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw10    == 0xc0de1010);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw11    == 0xc0de1111);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw12    == 0xc0de1212);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw13    == 0xc0de1313);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw14    == 0xc0de1414);
+	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw15    == 0xc0de1515);
+
+	cuse_io_ctx_free(g_ut_ctx);
+	free(passthru_cmd);
+	free(g_cuse_device);
+}
+
+static void
+test_cuse_nvme_submit_passthru_cmd_with_md(void)
+{
+	struct nvme_passthru_cmd *passthru_cmd = NULL;
+	fuse_req_t req = (void *)0xDEEACDFF;
+
+	passthru_cmd = calloc(1, sizeof(struct nvme_passthru_cmd));
+	g_cuse_device = calloc(1, sizeof(struct cuse_device));
+
+	/* Use fatal or we'll segfault if we didn't get memory */
+	SPDK_CU_ASSERT_FATAL(passthru_cmd != NULL);
+	SPDK_CU_ASSERT_FATAL(g_cuse_device != NULL);
+	g_cuse_device->ctrlr = (void *)0xDEADBEEF;
+
+	g_ut_ctx = NULL;
+	/* Passthrough command */
+	passthru_cmd->opcode       = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
+	passthru_cmd->nsid         = 1;
+	passthru_cmd->data_len     = 512;
+	passthru_cmd->metadata_len = 8;
+	passthru_cmd->cdw10        = 0xc0de1010;
+	passthru_cmd->cdw11        = 0xc0de1111;
+	passthru_cmd->cdw12        = 0xc0de1212;
+	passthru_cmd->cdw13        = 0xc0de1313;
+	passthru_cmd->cdw14        = 0xc0de1414;
+	passthru_cmd->cdw15        = 0xc0de1515;
+
+	/* Send IO Command IOCTL */
+	cuse_nvme_passthru_cmd_send(req, passthru_cmd, NULL, NULL, NVME_IOCTL_IO_CMD);
+	SPDK_CU_ASSERT_FATAL(g_ut_ctx != NULL);
+	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata != NULL);
+	CU_ASSERT(g_ut_ctx->req               == req);
+	CU_ASSERT(g_ut_ctx->data_len          == 512);
+	CU_ASSERT(g_ut_ctx->metadata_len      == 8);
 	CU_ASSERT(g_ut_ctx->nvme_cmd.opc      == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
 	CU_ASSERT(g_ut_ctx->nvme_cmd.nsid     == 1);
 	CU_ASSERT(g_ut_ctx->nvme_cmd.cdw10    == 0xc0de1010);
@@ -334,6 +463,11 @@ test_cuse_nvme_submit_io(void)
 	CU_ASSERT(g_ut_ctx->lba_count == 2);
 	CU_ASSERT(g_ut_ctx->data_len == 2 * 4096);
 	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata_len == 0);
+	CU_ASSERT(g_ut_ctx->metadata == NULL);
+	CU_ASSERT(g_ut_ctx->appmask == 0);
+	CU_ASSERT(g_ut_ctx->apptag == 0);
+
 	cuse_io_ctx_free(g_ut_ctx);
 
 	/* Write */
@@ -348,6 +482,10 @@ test_cuse_nvme_submit_io(void)
 	CU_ASSERT(g_ut_ctx->lba_count == 2);
 	CU_ASSERT(g_ut_ctx->data_len == 2 * 4096);
 	CU_ASSERT(g_ut_ctx->data != NULL);
+	CU_ASSERT(g_ut_ctx->metadata_len == 0);
+	CU_ASSERT(g_ut_ctx->metadata == NULL);
+	CU_ASSERT(g_ut_ctx->appmask == 0);
+	CU_ASSERT(g_ut_ctx->apptag == 0);
 	cuse_io_ctx_free(g_ut_ctx);
 
 	/* Invalid */
@@ -428,7 +566,9 @@ int main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_cuse", NULL, NULL);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_io_read_write);
+	CU_ADD_TEST(suite, test_cuse_nvme_submit_io_read_write_with_md);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_passthru_cmd);
+	CU_ADD_TEST(suite, test_cuse_nvme_submit_passthru_cmd_with_md);
 	CU_ADD_TEST(suite, test_nvme_cuse_get_cuse_ns_device);
 	CU_ADD_TEST(suite, test_cuse_nvme_submit_io);
 	CU_ADD_TEST(suite, test_cuse_nvme_reset);

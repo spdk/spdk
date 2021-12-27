@@ -47,8 +47,8 @@ DEFINE_STUB(spdk_nvme_ctrlr_cmd_admin_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf, uint32_t len,
+DEFINE_STUB(spdk_nvme_ctrlr_cmd_io_raw_with_md, int, (struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd, void *buf, uint32_t len, void *md_buf,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
 DEFINE_STUB(spdk_nvme_ctrlr_get_num_ns, uint32_t, (struct spdk_nvme_ctrlr *ctrlr), 128);
@@ -84,19 +84,23 @@ DEFINE_STUB(spdk_nvme_ctrlr_reset, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
-DEFINE_STUB(spdk_nvme_ns_cmd_read, int, (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-		void *payload,
+DEFINE_STUB(spdk_nvme_ns_cmd_read_with_md, int, (struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *payload, void *metadata,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
-		uint32_t io_flags), 0);
+		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag), 0);
 
-DEFINE_STUB(spdk_nvme_ns_cmd_write, int, (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-		void *payload,
+DEFINE_STUB(spdk_nvme_ns_cmd_write_with_md, int, (struct spdk_nvme_ns *ns,
+		struct spdk_nvme_qpair *qpair,
+		void *payload, void *metadata,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
-		uint32_t io_flags), 0);
+		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag), 0);
 
 DEFINE_STUB(spdk_nvme_ns_get_num_sectors, uint64_t, (struct spdk_nvme_ns *ns), 0);
 
 DEFINE_STUB(spdk_nvme_ns_get_sector_size, uint32_t, (struct spdk_nvme_ns *ns), 0);
+
+DEFINE_STUB(spdk_nvme_ns_get_md_size, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
 DEFINE_STUB_V(spdk_unaffinitize_thread, (void));
 

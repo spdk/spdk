@@ -70,9 +70,14 @@ struct cuse_io_ctx {
 
 	uint64_t			lba;
 	uint32_t			lba_count;
+	uint16_t			apptag;
+	uint16_t			appmask;
 
 	void				*data;
+	void				*metadata;
+
 	int				data_len;
+	int				metadata_len;
 
 	fuse_req_t			req;
 };
@@ -81,6 +86,7 @@ static void
 cuse_io_ctx_free(struct cuse_io_ctx *ctx)
 {
 	spdk_free(ctx->data);
+	spdk_free(ctx->metadata);
 	free(ctx);
 }
 
@@ -97,7 +103,7 @@ static void
 cuse_nvme_passthru_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct cuse_io_ctx *ctx = arg;
-	struct iovec out_iov[2];
+	struct iovec out_iov[3];
 	struct spdk_nvme_cpl _cpl;
 	int out_iovcnt = 0;
 	uint16_t status_field = cpl->status_raw >> 1; /* Drop out phase bit */
@@ -107,10 +113,17 @@ cuse_nvme_passthru_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	out_iov[out_iovcnt].iov_len = sizeof(_cpl.cdw0);
 	out_iovcnt += 1;
 
-	if (ctx->data_transfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST && ctx->data_len > 0) {
-		out_iov[out_iovcnt].iov_base = ctx->data;
-		out_iov[out_iovcnt].iov_len = ctx->data_len;
-		out_iovcnt += 1;
+	if (ctx->data_transfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		if (ctx->data_len > 0) {
+			out_iov[out_iovcnt].iov_base = ctx->data;
+			out_iov[out_iovcnt].iov_len = ctx->data_len;
+			out_iovcnt += 1;
+		}
+		if (ctx->metadata_len > 0) {
+			out_iov[out_iovcnt].iov_base = ctx->metadata;
+			out_iov[out_iovcnt].iov_len = ctx->metadata_len;
+			out_iovcnt += 1;
+		}
 	}
 
 	fuse_reply_ioctl_iov(ctx->req, status_field, out_iov, out_iovcnt);
@@ -124,8 +137,9 @@ cuse_nvme_passthru_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, voi
 	struct cuse_io_ctx *ctx = arg;
 
 	if (nsid != 0) {
-		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, ctrlr->external_io_msgs_qpair, &ctx->nvme_cmd, ctx->data,
-						ctx->data_len, cuse_nvme_passthru_cmd_cb, (void *)ctx);
+		rc = spdk_nvme_ctrlr_cmd_io_raw_with_md(ctrlr, ctrlr->external_io_msgs_qpair, &ctx->nvme_cmd,
+							ctx->data,
+							ctx->data_len, ctx->metadata, cuse_nvme_passthru_cmd_cb, (void *)ctx);
 	} else {
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &ctx->nvme_cmd, ctx->data, ctx->data_len,
 						   cuse_nvme_passthru_cmd_cb, (void *)ctx);
@@ -138,7 +152,7 @@ cuse_nvme_passthru_cmd_execute(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, voi
 
 static void
 cuse_nvme_passthru_cmd_send(fuse_req_t req, struct nvme_passthru_cmd *passthru_cmd,
-			    const void *data, int cmd)
+			    const void *data, const void *metadata, int cmd)
 {
 	struct cuse_io_ctx *ctx;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
@@ -165,6 +179,7 @@ cuse_nvme_passthru_cmd_send(fuse_req_t req, struct nvme_passthru_cmd *passthru_c
 	ctx->nvme_cmd.cdw15 = passthru_cmd->cdw15;
 
 	ctx->data_len = passthru_cmd->data_len;
+	ctx->metadata_len = passthru_cmd->metadata_len;
 
 	if (ctx->data_len > 0) {
 		ctx->data = spdk_malloc(ctx->data_len, 4096, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -176,6 +191,19 @@ cuse_nvme_passthru_cmd_send(fuse_req_t req, struct nvme_passthru_cmd *passthru_c
 		}
 		if (data != NULL) {
 			memcpy(ctx->data, data, ctx->data_len);
+		}
+	}
+
+	if (ctx->metadata_len > 0) {
+		ctx->metadata = spdk_malloc(ctx->metadata_len, 4096, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (!ctx->metadata) {
+			SPDK_ERRLOG("Cannot allocate memory for metadata\n");
+			fuse_reply_err(req, ENOMEM);
+			cuse_io_ctx_free(ctx);
+			return;
+		}
+		if (metadata != NULL) {
+			memcpy(ctx->metadata, metadata, ctx->metadata_len);
 		}
 	}
 
@@ -200,9 +228,9 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 		       const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	struct nvme_passthru_cmd *passthru_cmd;
-	struct iovec in_iov[2], out_iov[2];
+	struct iovec in_iov[3], out_iov[3];
 	int in_iovcnt = 0, out_iovcnt = 0;
-	const void *dptr = NULL;
+	const void *dptr = NULL, *mdptr = NULL;
 	enum spdk_nvme_data_transfer data_transfer;
 
 	in_iov[in_iovcnt].iov_base = (void *)arg;
@@ -223,17 +251,30 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 			in_iov[in_iovcnt].iov_len = passthru_cmd->data_len;
 			in_iovcnt += 1;
 		}
+		/* Make metadata pointer accessible (RO) */
+		if (passthru_cmd->metadata != 0) {
+			in_iov[in_iovcnt].iov_base = (void *)passthru_cmd->metadata;
+			in_iov[in_iovcnt].iov_len = passthru_cmd->metadata_len;
+			in_iovcnt += 1;
+		}
 	}
 
-	/* Always make result field writable regardless of data transfer bits */
+	/* Always make result field writeable regardless of data transfer bits */
 	out_iov[out_iovcnt].iov_base = &((struct nvme_passthru_cmd *)arg)->result;
 	out_iov[out_iovcnt].iov_len = sizeof(uint32_t);
 	out_iovcnt += 1;
 
 	if (data_transfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		/* Make data pointer accessible (WO) */
 		if (passthru_cmd->data_len > 0) {
 			out_iov[out_iovcnt].iov_base = (void *)passthru_cmd->addr;
 			out_iov[out_iovcnt].iov_len = passthru_cmd->data_len;
+			out_iovcnt += 1;
+		}
+		/* Make metadata pointer accessible (WO) */
+		if (passthru_cmd->metadata_len > 0) {
+			out_iov[out_iovcnt].iov_base = (void *)passthru_cmd->metadata;
+			out_iov[out_iovcnt].iov_len = passthru_cmd->metadata_len;
 			out_iovcnt += 1;
 		}
 	}
@@ -250,9 +291,11 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 
 	if (data_transfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 		dptr = (passthru_cmd->addr == 0) ? NULL : in_buf + sizeof(*passthru_cmd);
+		mdptr = (passthru_cmd->metadata == 0) ? NULL : in_buf + sizeof(*passthru_cmd) +
+			passthru_cmd->data_len;
 	}
 
-	cuse_nvme_passthru_cmd_send(req, passthru_cmd, dptr, cmd);
+	cuse_nvme_passthru_cmd_send(req, passthru_cmd, dptr, mdptr, cmd);
 }
 
 static void
@@ -365,10 +408,11 @@ cuse_nvme_submit_io_write_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void 
 	struct cuse_io_ctx *ctx = arg;
 	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 
-	rc = spdk_nvme_ns_cmd_write(ns, ctrlr->external_io_msgs_qpair, ctx->data,
-				    ctx->lba, /* LBA start */
-				    ctx->lba_count, /* number of LBAs */
-				    cuse_nvme_submit_io_write_done, ctx, 0);
+	rc = spdk_nvme_ns_cmd_write_with_md(ns, ctrlr->external_io_msgs_qpair, ctx->data, ctx->metadata,
+					    ctx->lba, /* LBA start */
+					    ctx->lba_count, /* number of LBAs */
+					    cuse_nvme_submit_io_write_done, ctx, 0,
+					    ctx->appmask, ctx->apptag);
 
 	if (rc != 0) {
 		SPDK_ERRLOG("write failed: rc = %d\n", rc);
@@ -380,7 +424,7 @@ cuse_nvme_submit_io_write_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void 
 
 static void
 cuse_nvme_submit_io_write(struct cuse_device *cuse_device, fuse_req_t req, int cmd, void *arg,
-			  struct fuse_file_info *fi, unsigned flags, uint32_t block_size,
+			  struct fuse_file_info *fi, unsigned flags, uint32_t block_size, uint32_t md_size,
 			  const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	const struct nvme_user_io *user_io = in_buf;
@@ -410,6 +454,25 @@ cuse_nvme_submit_io_write(struct cuse_device *cuse_device, fuse_req_t req, int c
 
 	memcpy(ctx->data, in_buf + sizeof(*user_io), ctx->data_len);
 
+	if (user_io->metadata) {
+		ctx->apptag = user_io->apptag;
+		ctx->appmask = user_io->appmask;
+		ctx->metadata_len = md_size * ctx->lba_count;
+		ctx->metadata = spdk_zmalloc(ctx->metadata_len, 4096, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+
+		if (ctx->metadata == NULL) {
+			SPDK_ERRLOG("Cannot allocate memory for metadata\n");
+			if (ctx->metadata_len == 0) {
+				SPDK_ERRLOG("Device format does not support metadata\n");
+			}
+			fuse_reply_err(req, ENOMEM);
+			cuse_io_ctx_free(ctx);
+			return;
+		}
+
+		memcpy(ctx->metadata, in_buf + sizeof(*user_io) + ctx->data_len, ctx->metadata_len);
+	}
+
 	rc = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_submit_io_write_cb,
 			      ctx);
 	if (rc < 0) {
@@ -423,13 +486,21 @@ static void
 cuse_nvme_submit_io_read_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct cuse_io_ctx *ctx = (struct cuse_io_ctx *)ref;
-	struct iovec iov;
+	struct iovec iov[2];
+	int iovcnt = 0;
 	uint16_t status_field = cpl->status_raw >> 1; /* Drop out phase bit */
 
-	iov.iov_base = ctx->data;
-	iov.iov_len = ctx->data_len;
+	iov[iovcnt].iov_base = ctx->data;
+	iov[iovcnt].iov_len = ctx->data_len;
+	iovcnt += 1;
 
-	fuse_reply_ioctl_iov(ctx->req, status_field, &iov, 1);
+	if (ctx->metadata) {
+		iov[iovcnt].iov_base = ctx->metadata;
+		iov[iovcnt].iov_len = ctx->metadata_len;
+		iovcnt += 1;
+	}
+
+	fuse_reply_ioctl_iov(ctx->req, status_field, iov, iovcnt);
 
 	cuse_io_ctx_free(ctx);
 }
@@ -441,10 +512,11 @@ cuse_nvme_submit_io_read_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *
 	struct cuse_io_ctx *ctx = arg;
 	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 
-	rc = spdk_nvme_ns_cmd_read(ns, ctrlr->external_io_msgs_qpair, ctx->data,
-				   ctx->lba, /* LBA start */
-				   ctx->lba_count, /* number of LBAs */
-				   cuse_nvme_submit_io_read_done, ctx, 0);
+	rc = spdk_nvme_ns_cmd_read_with_md(ns, ctrlr->external_io_msgs_qpair, ctx->data, ctx->metadata,
+					   ctx->lba, /* LBA start */
+					   ctx->lba_count, /* number of LBAs */
+					   cuse_nvme_submit_io_read_done, ctx, 0,
+					   ctx->appmask, ctx->apptag);
 
 	if (rc != 0) {
 		SPDK_ERRLOG("read failed: rc = %d\n", rc);
@@ -456,7 +528,7 @@ cuse_nvme_submit_io_read_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *
 
 static void
 cuse_nvme_submit_io_read(struct cuse_device *cuse_device, fuse_req_t req, int cmd, void *arg,
-			 struct fuse_file_info *fi, unsigned flags, uint32_t block_size,
+			 struct fuse_file_info *fi, unsigned flags, uint32_t block_size, uint32_t md_size,
 			 const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	int rc;
@@ -484,6 +556,23 @@ cuse_nvme_submit_io_read(struct cuse_device *cuse_device, fuse_req_t req, int cm
 		return;
 	}
 
+	if (user_io->metadata) {
+		ctx->apptag = user_io->apptag;
+		ctx->appmask = user_io->appmask;
+		ctx->metadata_len = md_size * ctx->lba_count;
+		ctx->metadata = spdk_zmalloc(ctx->metadata_len, 4096, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+
+		if (ctx->metadata == NULL) {
+			SPDK_ERRLOG("Cannot allocate memory for metadata\n");
+			if (ctx->metadata_len == 0) {
+				SPDK_ERRLOG("Device format does not support metadata\n");
+			}
+			fuse_reply_err(req, ENOMEM);
+			cuse_io_ctx_free(ctx);
+			return;
+		}
+	}
+
 	rc = nvme_io_msg_send(cuse_device->ctrlr, cuse_device->nsid, cuse_nvme_submit_io_read_cb, ctx);
 	if (rc < 0) {
 		SPDK_ERRLOG("Cannot send read io\n");
@@ -499,15 +588,18 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 		    const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	const struct nvme_user_io *user_io;
-	struct iovec in_iov[2], out_iov;
+	struct iovec in_iov[3], out_iov[2];
+	int in_iovcnt = 0, out_iovcnt = 0;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
 	struct spdk_nvme_ns *ns;
 	uint32_t block_size;
+	uint32_t md_size;
 
-	in_iov[0].iov_base = (void *)arg;
-	in_iov[0].iov_len = sizeof(*user_io);
+	in_iov[in_iovcnt].iov_base = (void *)arg;
+	in_iov[in_iovcnt].iov_len = sizeof(*user_io);
+	in_iovcnt += 1;
 	if (in_bufsz == 0) {
-		fuse_reply_ioctl_retry(req, in_iov, 1, NULL, 0);
+		fuse_reply_ioctl_retry(req, in_iov, in_iovcnt, NULL, 0);
 		return;
 	}
 
@@ -515,29 +607,42 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 
 	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
 	block_size = spdk_nvme_ns_get_sector_size(ns);
+	md_size = spdk_nvme_ns_get_md_size(ns);
 
 	switch (user_io->opcode) {
 	case SPDK_NVME_OPC_READ:
-		out_iov.iov_base = (void *)user_io->addr;
-		out_iov.iov_len = (user_io->nblocks + 1) * block_size;
+		out_iov[out_iovcnt].iov_base = (void *)user_io->addr;
+		out_iov[out_iovcnt].iov_len = (user_io->nblocks + 1) * block_size;
+		out_iovcnt += 1;
+		if (user_io->metadata != 0) {
+			out_iov[out_iovcnt].iov_base = (void *)user_io->metadata;
+			out_iov[out_iovcnt].iov_len = (user_io->nblocks + 1) * md_size;
+			out_iovcnt += 1;
+		}
 		if (out_bufsz == 0) {
-			fuse_reply_ioctl_retry(req, in_iov, 1, &out_iov, 1);
+			fuse_reply_ioctl_retry(req, in_iov, in_iovcnt, out_iov, out_iovcnt);
 			return;
 		}
 
 		cuse_nvme_submit_io_read(cuse_device, req, cmd, arg, fi, flags,
-					 block_size, in_buf, in_bufsz, out_bufsz);
+					 block_size, md_size, in_buf, in_bufsz, out_bufsz);
 		break;
 	case SPDK_NVME_OPC_WRITE:
-		in_iov[1].iov_base = (void *)user_io->addr;
-		in_iov[1].iov_len = (user_io->nblocks + 1) * block_size;
+		in_iov[in_iovcnt].iov_base = (void *)user_io->addr;
+		in_iov[in_iovcnt].iov_len = (user_io->nblocks + 1) * block_size;
+		in_iovcnt += 1;
+		if (user_io->metadata != 0) {
+			in_iov[in_iovcnt].iov_base = (void *)user_io->metadata;
+			in_iov[in_iovcnt].iov_len = (user_io->nblocks + 1) * md_size;
+			in_iovcnt += 1;
+		}
 		if (in_bufsz == sizeof(*user_io)) {
-			fuse_reply_ioctl_retry(req, in_iov, 2, NULL, 0);
+			fuse_reply_ioctl_retry(req, in_iov, in_iovcnt, NULL, out_iovcnt);
 			return;
 		}
 
 		cuse_nvme_submit_io_write(cuse_device, req, cmd, arg, fi, flags,
-					  block_size, in_buf, in_bufsz, out_bufsz);
+					  block_size, md_size, in_buf, in_bufsz, out_bufsz);
 		break;
 	default:
 		SPDK_ERRLOG("SUBMIT_IO: opc:%d not valid\n", user_io->opcode);
