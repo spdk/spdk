@@ -99,6 +99,23 @@ cuse_io_ctx_free(struct cuse_io_ctx *ctx)
 		return;							\
 	}
 
+#define FUSE_MAX_SIZE 128*1024
+
+static bool
+fuse_check_req_size(fuse_req_t req, struct iovec iov[], int iovcnt)
+{
+	int total_iov_len = 0;
+	for (int i = 0; i < iovcnt; i++) {
+		total_iov_len += iov[i].iov_len;
+		if (total_iov_len > FUSE_MAX_SIZE) {
+			fuse_reply_err(req, ENOMEM);
+			SPDK_ERRLOG("FUSE request cannot be larger that %d\n", FUSE_MAX_SIZE);
+			return false;
+		}
+	}
+	return true;
+}
+
 static void
 cuse_nvme_passthru_cmd_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -259,6 +276,9 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 		}
 	}
 
+	if (!fuse_check_req_size(req, in_iov, in_iovcnt)) {
+		return;
+	}
 	/* Always make result field writeable regardless of data transfer bits */
 	out_iov[out_iovcnt].iov_base = &((struct nvme_passthru_cmd *)arg)->result;
 	out_iov[out_iovcnt].iov_len = sizeof(uint32_t);
@@ -277,6 +297,10 @@ cuse_nvme_passthru_cmd(fuse_req_t req, int cmd, void *arg,
 			out_iov[out_iovcnt].iov_len = passthru_cmd->metadata_len;
 			out_iovcnt += 1;
 		}
+	}
+
+	if (!fuse_check_req_size(req, out_iov, out_iovcnt)) {
+		return;
 	}
 
 	if (out_bufsz == 0) {
@@ -619,6 +643,9 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 			out_iov[out_iovcnt].iov_len = (user_io->nblocks + 1) * md_size;
 			out_iovcnt += 1;
 		}
+		if (!fuse_check_req_size(req, out_iov, out_iovcnt)) {
+			return;
+		}
 		if (out_bufsz == 0) {
 			fuse_reply_ioctl_retry(req, in_iov, in_iovcnt, out_iov, out_iovcnt);
 			return;
@@ -635,6 +662,9 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 			in_iov[in_iovcnt].iov_base = (void *)user_io->metadata;
 			in_iov[in_iovcnt].iov_len = (user_io->nblocks + 1) * md_size;
 			in_iovcnt += 1;
+		}
+		if (!fuse_check_req_size(req, in_iov, in_iovcnt)) {
+			return;
 		}
 		if (in_bufsz == sizeof(*user_io)) {
 			fuse_reply_ioctl_retry(req, in_iov, in_iovcnt, NULL, out_iovcnt);
