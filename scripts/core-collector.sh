@@ -55,9 +55,6 @@ if ((rlimit == 0xffffffffffffffff || rlimit > max_core)); then
 	rlimit=$max_core
 fi
 
-# Nothing to do
-((rlimit == 0)) && exit 0
-
 # Clear path for lz
 rm -f "$core"{,.{bin,bt,gz,json}}
 

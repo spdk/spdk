@@ -652,11 +652,11 @@ function process_core() {
 	# to see if there's any core queued up for writing. We could check if
 	# collector is running and wait for it explicitly, but it doesn't seem
 	# to be worth the effort. So assume that if we are being called via
-	# trap, as in, when some error has occurred, wait up to 5s for any
+	# trap, as in, when some error has occurred, wait up to 10s for any
 	# potential cores. If we are called just for cleanup at the very end,
 	# don't wait since all the tests ended successfully, hence having any
 	# critical cores lying around is unlikely.
-	((autotest_es != 0)) && sleep 5
+	((autotest_es != 0)) && sleep 10
 
 	local coredumps core
 
