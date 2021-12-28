@@ -410,7 +410,7 @@ nvmf_stop_listen_disconnect_qpairs(struct spdk_io_channel_iter *i)
 		}
 
 		if (!spdk_nvme_transport_id_compare(&ctx->trid, &tmp_trid)) {
-			if (ctx->subsystem == NULL ||
+			if (ctx->subsystem == NULL || qpair->ctrlr == NULL ||
 			    ctx->subsystem == qpair->ctrlr->subsys) {
 				spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 			}
