@@ -24,10 +24,11 @@ function build_rpms() (
 		rpms=("$builddir/rpm/x86_64/"*.rpm)
 
 		sudo rpm -i "${rpms[@]}"
-		rpms=("${rpms[@]##*/}") rpms=("${rpms[@]%.rpm}")
 		# Check if we can find one of the apps in the PATH now and verify if it doesn't miss
 		# any libs.
 		LIST_LIBS=yes "$rootdir/rpmbuild/rpm-deps.sh" "${SPDK_APP[@]##*/}"
+		rm "${rpms[@]}"
+		rpms=("${rpms[@]##*/}") rpms=("${rpms[@]%.rpm}")
 		sudo rpm -e "${rpms[@]}"
 	}
 
