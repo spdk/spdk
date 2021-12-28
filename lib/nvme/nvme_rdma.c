@@ -2193,13 +2193,6 @@ nvme_rdma_log_wc_status(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 	}
 }
 
-static inline bool
-nvme_rdma_is_rxe_device(struct ibv_device_attr *dev_attr)
-{
-	return dev_attr->vendor_id == SPDK_RDMA_RXE_VENDOR_ID_OLD ||
-	       dev_attr->vendor_id == SPDK_RDMA_RXE_VENDOR_ID_NEW;
-}
-
 static int
 nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 				 struct nvme_rdma_poll_group *group,
@@ -2290,15 +2283,11 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 				struct ibv_device_attr dev_attr;
 				int query_status;
 
-				/* Bug in Soft Roce - we may receive a completion without error status when qpair is disconnected/destroyed.
-				 * As sanity check - log an error if we use a real HW (it should never happen) */
+				/* We may receive a completion without error status when qpair is disconnected/destroyed. */
 				query_status = ibv_query_device(cq->context, &dev_attr);
 				if (query_status == 0) {
-					if (!nvme_rdma_is_rxe_device(&dev_attr)) {
-						SPDK_ERRLOG("Received malformed completion: request 0x%"PRIx64" type %d\n", wc->wr_id,
-							    rdma_wr->type);
-						assert(0);
-					}
+					SPDK_INFOLOG(nvme, "Received malformed completion: request 0x%"PRIx64" type %d\n",
+						     wc->wr_id, rdma_wr->type);
 				} else {
 					SPDK_ERRLOG("Failed to query ib device\n");
 					assert(0);
