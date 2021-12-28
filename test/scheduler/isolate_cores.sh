@@ -7,8 +7,8 @@ restore_cgroups() {
 	xtrace_disable
 	kill_in_cgroup "/cpuset/spdk"
 	remove_cgroup "/cpuset/spdk"
-	remove_cgroup "/cpuset/all"
-	remove_cpuset_cgroup
+	remove_cgroup "/cpuset/all" || true
+	remove_cpuset_cgroup || true
 	xtrace_restore
 }
 
