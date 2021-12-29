@@ -209,6 +209,7 @@ main(int argc, char **argv)
 	rc = spdk_vmd_init();
 	if (rc) {
 		fprintf(stderr, "Unable to initialize VMD subsystem\n");
+		spdk_env_fini();
 		return 1;
 	}
 
@@ -216,5 +217,6 @@ main(int argc, char **argv)
 
 	spdk_vmd_fini();
 
+	spdk_env_fini();
 	return g_status;
 }

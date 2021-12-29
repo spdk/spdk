@@ -110,5 +110,6 @@ int main(int argc, char **argv)
 
 	spdk_vmd_fini();
 
+	spdk_env_fini();
 	return rc;
 }
