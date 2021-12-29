@@ -38,7 +38,7 @@
 #include "spdk_cunit.h"
 #include "spdk/thread.h"
 #include "spdk_internal/mock.h"
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"
 
 #include "vhost/vhost.c"
@@ -95,6 +95,17 @@ DEFINE_STUB(rte_vhost_get_vring_base_from_inflight, int,
 DEFINE_STUB(rte_vhost_extern_callback_register, int,
 	    (int vid, struct rte_vhost_user_extern_ops const *const ops, void *ctx), 0);
 
+/* rte_vhost_user.c shutdowns vhost_user sessions in a separte pthread */
+DECLARE_WRAPPER(pthread_create, int, (pthread_t *thread, const pthread_attr_t *attr,
+				      void *(*start_routine)(void *), void *arg));
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *),
+		   void *arg)
+{
+	start_routine(arg);
+	return 0;
+}
+DEFINE_STUB(pthread_detach, int, (pthread_t thread), 0);
+
 void *
 spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 {
@@ -104,9 +115,54 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 static struct spdk_vhost_dev_backend g_vdev_backend;
 static struct spdk_vhost_user_dev_backend g_vdev_user_backend;
 
+static bool g_init_fail;
+static void
+init_cb(int rc)
+{
+	g_init_fail = rc;
+}
+
 static int
 test_setup(void)
 {
+	allocate_cores(1);
+	allocate_threads(1);
+	set_thread(0);
+
+	g_init_fail = true;
+	spdk_vhost_scsi_init(init_cb);
+	assert(g_init_fail == false);
+
+	g_init_fail = true;
+	spdk_vhost_blk_init(init_cb);
+	assert(g_init_fail == false);
+
+	return 0;
+}
+
+static bool g_fini_fail;
+static void
+fini_cb(void)
+{
+	g_fini_fail = false;
+}
+
+static int
+test_cleanup(void)
+{
+	g_fini_fail = true;
+	spdk_vhost_scsi_fini(fini_cb);
+	poll_threads();
+	assert(g_fini_fail == false);
+
+	g_fini_fail = true;
+	spdk_vhost_blk_fini(fini_cb);
+	poll_threads();
+	assert(g_fini_fail == false);
+
+	free_threads();
+	free_cores();
+
 	return 0;
 }
 
@@ -582,7 +638,7 @@ main(int argc, char **argv)
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
-	suite = CU_add_suite("vhost_suite", test_setup, NULL);
+	suite = CU_add_suite("vhost_suite", test_setup, test_cleanup);
 
 	CU_ADD_TEST(suite, desc_to_iov_test);
 	CU_ADD_TEST(suite, create_controller_test);
