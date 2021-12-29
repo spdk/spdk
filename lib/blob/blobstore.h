@@ -38,6 +38,7 @@
 #include "spdk/blob.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/tree.h"
 
 #include "request.h"
 
@@ -157,7 +158,7 @@ struct spdk_blob {
 	struct spdk_xattr_tailq xattrs;
 	struct spdk_xattr_tailq xattrs_internal;
 
-	TAILQ_ENTRY(spdk_blob) link;
+	RB_ENTRY(spdk_blob) link;
 
 	uint32_t frozen_refcnt;
 	bool locked_operation_in_progress;
@@ -207,7 +208,7 @@ struct spdk_blob_store {
 	struct spdk_bs_cpl		unload_cpl;
 	int				unload_err;
 
-	TAILQ_HEAD(, spdk_blob)		blobs;
+	RB_HEAD(spdk_blob_tree, spdk_blob) open_blobs;
 	TAILQ_HEAD(, spdk_blob_list)	snapshots;
 
 	bool                            clean;

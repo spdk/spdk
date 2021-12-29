@@ -66,6 +66,14 @@ static int blob_remove_xattr(struct spdk_blob *blob, const char *name, bool inte
 static void blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
 				   spdk_blob_op_complete cb_fn, void *cb_arg);
 
+static int
+blob_id_cmp(struct spdk_blob *blob1, struct spdk_blob *blob2)
+{
+	return (blob1->id < blob2->id ? -1 : blob1->id > blob2->id);
+}
+
+RB_GENERATE_STATIC(spdk_blob_tree, spdk_blob, link, blob_id_cmp);
+
 static void
 blob_verify_md_op(struct spdk_blob *blob)
 {
@@ -2991,19 +2999,14 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 static struct spdk_blob *
 blob_lookup(struct spdk_blob_store *bs, spdk_blob_id blobid)
 {
-	struct spdk_blob *blob;
+	struct spdk_blob find;
 
 	if (spdk_bit_array_get(bs->open_blobids, blobid) == 0) {
 		return NULL;
 	}
 
-	TAILQ_FOREACH(blob, &bs->blobs, link) {
-		if (blob->id == blobid) {
-			return blob;
-		}
-	}
-
-	return NULL;
+	find.id = blobid;
+	return RB_FIND(spdk_blob_tree, &bs->open_blobs, &find);
 }
 
 static void
@@ -3103,8 +3106,8 @@ bs_dev_destroy(void *io_device)
 
 	bs->dev->destroy(bs->dev);
 
-	TAILQ_FOREACH_SAFE(blob, &bs->blobs, link, blob_tmp) {
-		TAILQ_REMOVE(&bs->blobs, blob, link);
+	RB_FOREACH_SAFE(blob, spdk_blob_tree, &bs->open_blobs, blob_tmp) {
+		RB_REMOVE(spdk_blob_tree, &bs->open_blobs, blob);
 		spdk_bit_array_clear(bs->open_blobids, blob->id);
 		blob_free(blob);
 	}
@@ -3349,7 +3352,7 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 		return -ENOMEM;
 	}
 
-	TAILQ_INIT(&bs->blobs);
+	RB_INIT(&bs->open_blobs);
 	TAILQ_INIT(&bs->snapshots);
 	bs->dev = dev;
 	bs->md_thread = spdk_get_thread();
@@ -5006,7 +5009,7 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 
 	SPDK_DEBUGLOG(blob, "Destroying blobstore\n");
 
-	if (!TAILQ_EMPTY(&bs->blobs)) {
+	if (!RB_EMPTY(&bs->open_blobs)) {
 		SPDK_ERRLOG("Blobstore still has open blobs\n");
 		cb_fn(cb_arg, -EBUSY);
 		return;
@@ -5141,7 +5144,7 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 
 	SPDK_DEBUGLOG(blob, "Syncing blobstore\n");
 
-	if (!TAILQ_EMPTY(&bs->blobs)) {
+	if (!RB_EMPTY(&bs->open_blobs)) {
 		SPDK_ERRLOG("Blobstore still has open blobs\n");
 		cb_fn(cb_arg, -EBUSY);
 		return;
@@ -6449,7 +6452,7 @@ delete_snapshot_cleanup_snapshot(void *cb_arg, int bserrno)
 
 	if (ctx->bserrno != 0) {
 		assert(blob_lookup(ctx->snapshot->bs, ctx->snapshot->id) == NULL);
-		TAILQ_INSERT_HEAD(&ctx->snapshot->bs->blobs, ctx->snapshot, link);
+		RB_INSERT(spdk_blob_tree, &ctx->snapshot->bs->open_blobs, ctx->snapshot);
 		spdk_bit_array_set(ctx->snapshot->bs->open_blobids, ctx->snapshot->id);
 	}
 
@@ -6876,7 +6879,7 @@ bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 *  get returned after this point by blob_lookup().
 	 */
 	spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
-	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+	RB_REMOVE(spdk_blob_tree, &blob->bs->open_blobs, blob);
 
 	if (update_clone) {
 		/* This blob is a snapshot with active clone - update clone first */
@@ -6942,7 +6945,7 @@ bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	blob->open_ref++;
 
 	spdk_bit_array_set(blob->bs->open_blobids, blob->id);
-	TAILQ_INSERT_HEAD(&blob->bs->blobs, blob, link);
+	RB_INSERT(spdk_blob_tree, &blob->bs->open_blobs, blob);
 
 	bs_sequence_finish(seq, bserrno);
 }
@@ -7276,7 +7279,7 @@ blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			 */
 			if (blob->active.num_pages > 0) {
 				spdk_bit_array_clear(blob->bs->open_blobids, blob->id);
-				TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+				RB_REMOVE(spdk_blob_tree, &blob->bs->open_blobs, blob);
 			}
 			blob_free(blob);
 		}
