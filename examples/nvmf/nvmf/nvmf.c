@@ -901,5 +901,8 @@ int main(int argc, char **argv)
 
 	spdk_env_thread_wait_all();
 	nvmf_destroy_threads();
+
+	spdk_env_fini();
+
 	return rc;
 }
