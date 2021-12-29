@@ -994,5 +994,6 @@ cleanup:
 	unregister_workers();
 	idxd_exit();
 
+	spdk_env_fini();
 	return rc;
 }
