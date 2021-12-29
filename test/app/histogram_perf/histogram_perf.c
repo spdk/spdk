@@ -98,5 +98,6 @@ main(int argc, char **argv)
 	printf("count = %ju\n", count);
 	spdk_histogram_data_free(h);
 
+	spdk_env_fini();
 	return rc;
 }

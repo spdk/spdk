@@ -1141,5 +1141,8 @@ main(int argc, char **argv)
 		}
 	}
 
-	spdk_app_start(&opts, begin_fuzz, NULL);
+	rc = spdk_app_start(&opts, begin_fuzz, NULL);
+
+	spdk_app_fini();
+	return rc;
 }

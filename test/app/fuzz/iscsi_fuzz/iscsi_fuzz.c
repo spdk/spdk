@@ -1085,5 +1085,6 @@ main(int argc, char **argv)
 
 	rc = spdk_app_start(&opts, begin_iscsi_fuzz, NULL);
 
+	spdk_app_fini();
 	return rc;
 }
