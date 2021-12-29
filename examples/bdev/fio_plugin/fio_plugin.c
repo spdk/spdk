@@ -1299,6 +1299,7 @@ spdk_fio_finish_env(void)
 	pthread_join(g_init_thread_id, NULL);
 
 	spdk_thread_lib_fini();
+	spdk_env_fini();
 }
 
 static void fio_exit spdk_fio_unregister(void)
