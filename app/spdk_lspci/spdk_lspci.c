@@ -74,7 +74,7 @@ print_pci_dev(void *ctx, struct spdk_pci_device *dev)
 int
 main(int argc, char **argv)
 {
-	int op;
+	int op, rc = 0;
 	struct spdk_env_opts opts;
 
 	while ((op = getopt(argc, argv, "h")) != -1) {
@@ -102,13 +102,16 @@ main(int argc, char **argv)
 
 	if (spdk_pci_enumerate(spdk_pci_nvme_get_driver(), pci_enum_cb, NULL)) {
 		printf("Unable to enumerate PCI nvme driver\n");
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	printf("\nList of available PCI devices:\n");
 	spdk_pci_for_each_device(NULL, print_pci_dev);
 
+exit:
 	spdk_vmd_fini();
+	spdk_env_fini();
 
-	return 0;
+	return rc;
 }
