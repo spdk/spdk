@@ -2246,7 +2246,8 @@ int main(int argc, char **argv)
 		ctrlr = spdk_nvme_connect(&g_trid, &opts, sizeof(opts));
 		if (!ctrlr) {
 			fprintf(stderr, "spdk_nvme_connect() failed\n");
-			return 1;
+			rc = 1;
+			goto exit;
 		}
 
 		g_controllers_found++;
@@ -2254,7 +2255,8 @@ int main(int argc, char **argv)
 		spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
 	} else if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	if (g_detach_ctx) {
@@ -2265,9 +2267,12 @@ int main(int argc, char **argv)
 		fprintf(stderr, "No NVMe controllers found.\n");
 	}
 
+exit:
 	if (g_vmd) {
 		spdk_vmd_fini();
 	}
 
-	return 0;
+	spdk_env_fini();
+
+	return rc;
 }

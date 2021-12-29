@@ -2860,12 +2860,13 @@ int main(int argc, char **argv)
 	rc = pthread_mutex_init(&g_stats_mutex, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "Failed to init mutex\n");
-		goto cleanup;
+		return -1;
 	}
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
-		rc = -1;
-		goto cleanup;
+		unregister_trids();
+		pthread_mutex_destroy(&g_stats_mutex);
+		return -1;
 	}
 
 	rc = setup_sig_handlers();
@@ -2955,6 +2956,8 @@ cleanup:
 	unregister_namespaces();
 	unregister_controllers();
 	unregister_workers();
+
+	spdk_env_fini();
 
 	pthread_mutex_destroy(&g_stats_mutex);
 

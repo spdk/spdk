@@ -327,5 +327,7 @@ int main(int argc, char **argv)
 		spdk_nvme_detach_poll(detach_ctx);
 	}
 
+	spdk_env_fini();
+
 	return 0;
 }

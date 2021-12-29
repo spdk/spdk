@@ -555,7 +555,8 @@ int main(int argc, char **argv)
 
 	/* Detect the controllers that are plugged in at startup. */
 	if (register_controllers() != 0) {
-		return 1;
+		rc = 1;
+		goto cleanup;
 	}
 
 	fprintf(stderr, "Initialization complete. Starting I/O...\n");
@@ -564,14 +565,17 @@ int main(int argc, char **argv)
 	if (g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) {
 		fprintf(stderr, "Expected inserts %d != actual inserts %d\n",
 			g_expected_insert_times, g_insert_times);
-		return 1;
+		rc = 1;
+		goto cleanup;
 	}
 
 	if (g_expected_removal_times != -1 && g_removal_times != g_expected_removal_times) {
 		fprintf(stderr, "Expected removals %d != actual removals %d\n",
 			g_expected_removal_times, g_removal_times);
-		return 1;
+		rc = 1;
 	}
 
-	return 0;
+cleanup:
+	spdk_env_fini();
+	return rc;
 }

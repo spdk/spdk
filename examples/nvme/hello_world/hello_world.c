@@ -507,14 +507,14 @@ int main(int argc, char **argv)
 	rc = spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		cleanup();
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	if (TAILQ_EMPTY(&g_controllers)) {
 		fprintf(stderr, "no NVMe controllers found\n");
-		cleanup();
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	printf("Initialization complete.\n");
@@ -524,5 +524,8 @@ int main(int argc, char **argv)
 		spdk_vmd_fini();
 	}
 
-	return 0;
+exit:
+	cleanup();
+	spdk_env_fini();
+	return rc;
 }

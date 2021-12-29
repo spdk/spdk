@@ -1093,7 +1093,7 @@ main(int argc, char **argv)
 	struct worker_thread *worker, *main_worker;
 	unsigned main_core;
 	char task_pool_name[30];
-	uint32_t task_count;
+	uint32_t task_count = 0;
 	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
@@ -1114,15 +1114,18 @@ main(int argc, char **argv)
 	g_arbitration.tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	if (register_controllers() != 0) {
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	if (associate_workers_with_ns() != 0) {
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", getpid());
@@ -1140,7 +1143,8 @@ main(int argc, char **argv)
 					sizeof(struct arb_task), 0, SPDK_ENV_SOCKET_ID_ANY);
 	if (task_pool == NULL) {
 		fprintf(stderr, "could not initialize task pool\n");
-		return 1;
+		rc = 1;
+		goto exit;
 	}
 
 	print_configuration(argv[0]);
@@ -1166,9 +1170,11 @@ main(int argc, char **argv)
 
 	print_stats();
 
+exit:
 	unregister_controllers();
-
 	cleanup(task_count);
+
+	spdk_env_fini();
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occurred\n", argv[0]);

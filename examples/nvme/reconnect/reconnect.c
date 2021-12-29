@@ -1095,8 +1095,8 @@ int main(int argc, char **argv)
 	opts.hugepage_single_segments = g_dpdk_mem_single_seg;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
-		rc = 1;
-		goto cleanup;
+		unregister_trids();
+		return 1;
 	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
@@ -1158,6 +1158,8 @@ cleanup:
 	unregister_namespaces();
 	unregister_controllers();
 	unregister_workers();
+
+	spdk_env_fini();
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occurred\n", argv[0]);
