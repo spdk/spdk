@@ -518,5 +518,6 @@ cleanup:
 	ioat_exit();
 	free(threads);
 
+	spdk_env_fini();
 	return rc;
 }

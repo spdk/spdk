@@ -590,5 +590,6 @@ cleanup:
 	unregister_workers();
 	ioat_exit();
 
+	spdk_env_fini();
 	return rc;
 }
