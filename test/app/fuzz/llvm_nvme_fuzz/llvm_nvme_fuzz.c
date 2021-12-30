@@ -127,10 +127,24 @@ fuzz_admin_identify_command(struct fuzz_command *cmd)
 	g_data += 7;
 }
 
+static void
+fuzz_admin_abort_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_ABORT;
+
+	cmd->cmd.cdw10_bits.raw = 0;
+	cmd->cmd.cdw10_bits.abort.sqid = (g_data[0] << 8) + g_data[1];
+	cmd->cmd.cdw10_bits.abort.cid = (g_data[2] << 8) + g_data[3];
+
+	g_data += 4;
+}
+
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd) },
 	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6 },
 	{ .fn = fuzz_admin_identify_command, .bytes_per_cmd = 7 },
+	{ .fn = fuzz_admin_abort_command, .bytes_per_cmd = 4},
 	{ .fn = NULL, .bytes_per_cmd = 0 }
 };
 
