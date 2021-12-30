@@ -48,8 +48,36 @@ static const char *const spdk_level_names[] = {
 static logfunc *g_log = NULL;
 static bool g_log_timestamps = true;
 
-extern enum spdk_log_level g_spdk_log_level;
-extern enum spdk_log_level g_spdk_log_print_level;
+enum spdk_log_level g_spdk_log_level;
+enum spdk_log_level g_spdk_log_print_level;
+
+SPDK_LOG_REGISTER_COMPONENT(log)
+
+void
+spdk_log_set_level(enum spdk_log_level level)
+{
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
+	g_spdk_log_level = level;
+}
+
+enum spdk_log_level
+spdk_log_get_level(void) {
+	return g_spdk_log_level;
+}
+
+void
+spdk_log_set_print_level(enum spdk_log_level level)
+{
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
+	g_spdk_log_print_level = level;
+}
+
+enum spdk_log_level
+spdk_log_get_print_level(void) {
+	return g_spdk_log_print_level;
+}
 
 void
 spdk_log_open(logfunc *logf)
