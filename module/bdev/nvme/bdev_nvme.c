@@ -3588,7 +3588,7 @@ _bdev_nvme_add_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 	new_trid->is_failed = false;
 
 	TAILQ_FOREACH(tmp_trid, &nvme_ctrlr->trids, link) {
-		if (tmp_trid->is_failed) {
+		if (tmp_trid->is_failed && tmp_trid != nvme_ctrlr->active_path_id) {
 			TAILQ_INSERT_BEFORE(tmp_trid, new_trid, link);
 			return 0;
 		}

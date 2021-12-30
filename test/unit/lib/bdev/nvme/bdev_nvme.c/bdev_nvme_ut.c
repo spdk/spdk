@@ -1529,6 +1529,112 @@ test_failover_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+/* We had a bug when running test/nvmf/host/multipath.sh. The bug was the following.
+ *
+ * A nvme_ctrlr had trid1 and trid2 first. trid1 was active. A connection to trid1 was
+ * disconnected and reset ctrlr failed repeatedly before starting failover from trid1
+ * to trid2. While processing the failed reset, trid3 was added. trid1 should
+ * have been active, i.e., the head of the list until the failover completed.
+ * However trid3 was inserted to the head of the list by mistake.
+ *
+ * I/O qpairs have smaller polling period than admin qpair. When a connection is
+ * detected, I/O qpair may detect the error earlier than admin qpair. I/O qpair error
+ * invokes reset ctrlr and admin qpair error invokes failover ctrlr. Hence reset ctrlr
+ * may be executed repeatedly before failover is executed. Hence this bug is real.
+ *
+ * The following test verifies the fix.
+ */
+static void
+test_race_between_failover_and_add_secondary_trid(void)
+{
+	struct spdk_nvme_transport_id trid1 = {}, trid2 = {}, trid3 = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_ctrlr *nvme_ctrlr = NULL;
+	struct nvme_path_id *path_id1, *path_id2, *path_id3;
+	struct spdk_io_channel *ch1, *ch2;
+	int rc;
+
+	ut_init_trid(&trid1);
+	ut_init_trid2(&trid2);
+	ut_init_trid3(&trid3);
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
+
+	set_thread(0);
+
+	rc = nvme_ctrlr_create(&ctrlr, "nvme0", &trid1, NULL);
+	CU_ASSERT(rc == 0);
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
+
+	ch1 = spdk_get_io_channel(nvme_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
+
+	set_thread(1);
+
+	ch2 = spdk_get_io_channel(nvme_ctrlr);
+	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
+
+	set_thread(0);
+
+	rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, &ctrlr, &trid2);
+	CU_ASSERT(rc == 0);
+
+	path_id1 = TAILQ_FIRST(&nvme_ctrlr->trids);
+	SPDK_CU_ASSERT_FATAL(path_id1 != NULL);
+	CU_ASSERT(path_id1 == nvme_ctrlr->active_path_id);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&path_id1->trid, &trid1) == 0);
+	path_id2 = TAILQ_NEXT(path_id1, link);
+	SPDK_CU_ASSERT_FATAL(path_id2 != NULL);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&path_id2->trid, &trid2) == 0);
+
+	ctrlr.fail_reset = true;
+
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+
+	CU_ASSERT(path_id1->is_failed == true);
+	CU_ASSERT(path_id1 == nvme_ctrlr->active_path_id);
+
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+
+	rc = bdev_nvme_add_secondary_trid(nvme_ctrlr, &ctrlr, &trid3);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(path_id1 == TAILQ_FIRST(&nvme_ctrlr->trids));
+	CU_ASSERT(path_id1 == nvme_ctrlr->active_path_id);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&path_id1->trid, &trid1) == 0);
+	CU_ASSERT(path_id2 == TAILQ_NEXT(path_id1, link));
+	CU_ASSERT(spdk_nvme_transport_id_compare(&path_id2->trid, &trid2) == 0);
+	path_id3 = TAILQ_NEXT(path_id2, link);
+	SPDK_CU_ASSERT_FATAL(path_id3 != NULL);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&path_id3->trid, &trid3) == 0);
+
+	poll_threads();
+
+	spdk_put_io_channel(ch1);
+
+	set_thread(1);
+
+	spdk_put_io_channel(ch2);
+
+	poll_threads();
+
+	set_thread(0);
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 static void
 attach_ctrlr_done(void *cb_ctx, size_t bdev_count, int rc)
 {
@@ -5065,6 +5171,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_reset_ctrlr);
 	CU_ADD_TEST(suite, test_race_between_reset_and_destruct_ctrlr);
 	CU_ADD_TEST(suite, test_failover_ctrlr);
+	CU_ADD_TEST(suite, test_race_between_failover_and_add_secondary_trid);
 	CU_ADD_TEST(suite, test_pending_reset);
 	CU_ADD_TEST(suite, test_attach_ctrlr);
 	CU_ADD_TEST(suite, test_aer_cb);
