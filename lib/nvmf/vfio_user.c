@@ -1967,14 +1967,54 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 	return 0;
 }
 
+static size_t
+vfio_user_property_access(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
+			  char *buf, size_t count, loff_t pos,
+			  bool is_write)
+{
+	struct nvmf_vfio_user_req *req;
+	const struct spdk_nvmf_registers *regs;
+
+	/* Construct a Fabric Property Get/Set command and send it */
+	req = get_nvmf_vfio_user_req(vu_ctrlr->sqs[0]);
+	if (req == NULL) {
+		errno = ENOBUFS;
+		return -1;
+	}
+	regs = spdk_nvmf_ctrlr_get_regs(vu_ctrlr->ctrlr);
+	req->cc.raw = regs->cc.raw;
+
+	req->cb_fn = nvmf_vfio_user_prop_req_rsp;
+	req->cb_arg = vu_ctrlr->sqs[0];
+	req->req.cmd->prop_set_cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	req->req.cmd->prop_set_cmd.cid = 0;
+	req->req.cmd->prop_set_cmd.attrib.size = (count / 4) - 1;
+	req->req.cmd->prop_set_cmd.ofst = pos;
+	if (is_write) {
+		req->req.cmd->prop_set_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET;
+		if (req->req.cmd->prop_set_cmd.attrib.size) {
+			req->req.cmd->prop_set_cmd.value.u64 = *(uint64_t *)buf;
+		} else {
+			req->req.cmd->prop_set_cmd.value.u32.high = 0;
+			req->req.cmd->prop_set_cmd.value.u32.low = *(uint32_t *)buf;
+		}
+	} else {
+		req->req.cmd->prop_get_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
+	}
+	req->req.length = count;
+	req->req.data = buf;
+
+	spdk_nvmf_request_exec_fabrics(&req->req);
+
+	return count;
+}
+
 static ssize_t
 access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 	       bool is_write)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
 	struct nvmf_vfio_user_ctrlr *ctrlr;
-	struct nvmf_vfio_user_req *req;
-	const struct spdk_nvmf_registers *regs;
 	int ret;
 
 	ctrlr = endpoint->ctrlr;
@@ -2003,38 +2043,7 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 		return ret;
 	}
 
-	/* Construct a Fabric Property Get/Set command and send it */
-	req = get_nvmf_vfio_user_req(ctrlr->sqs[0]);
-	if (req == NULL) {
-		errno = ENOBUFS;
-		return -1;
-	}
-	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->ctrlr);
-	req->cc.raw = regs->cc.raw;
-
-	req->cb_fn = nvmf_vfio_user_prop_req_rsp;
-	req->cb_arg = ctrlr->sqs[0];
-	req->req.cmd->prop_set_cmd.opcode = SPDK_NVME_OPC_FABRIC;
-	req->req.cmd->prop_set_cmd.cid = 0;
-	req->req.cmd->prop_set_cmd.attrib.size = (count / 4) - 1;
-	req->req.cmd->prop_set_cmd.ofst = pos;
-	if (is_write) {
-		req->req.cmd->prop_set_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET;
-		if (req->req.cmd->prop_set_cmd.attrib.size) {
-			req->req.cmd->prop_set_cmd.value.u64 = *(uint64_t *)buf;
-		} else {
-			req->req.cmd->prop_set_cmd.value.u32.high = 0;
-			req->req.cmd->prop_set_cmd.value.u32.low = *(uint32_t *)buf;
-		}
-	} else {
-		req->req.cmd->prop_get_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
-	}
-	req->req.length = count;
-	req->req.data = buf;
-
-	spdk_nvmf_request_exec_fabrics(&req->req);
-
-	return count;
+	return vfio_user_property_access(ctrlr, buf, count, pos, is_write);
 }
 
 static ssize_t
