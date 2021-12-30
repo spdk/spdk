@@ -15,14 +15,6 @@ rpc_py="$rootdir/scripts/rpc.py"
 nvmftestinit
 nvmfappstart -m 0xF
 
-# SoftRoce does not have enough queues available for
-# multiconnection tests. Detect if we're using software RDMA.
-# If so - lower the number of subsystems for test.
-if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
-	echo "Using software RDMA, lowering number of NVMeOF subsystems."
-	NVMF_SUBSYS=1
-fi
-
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 for i in $(seq 1 $NVMF_SUBSYS); do

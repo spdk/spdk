@@ -11,18 +11,14 @@ MALLOC_BLOCK_SIZE=512
 rpc_py="$rootdir/scripts/rpc.py"
 
 function starttarget() {
+	nvmftestinit
+
 	# Start the target
 	nvmfappstart -m 0x1E
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 
 	num_subsystems=({1..10})
-	# SoftRoce does not have enough queues available for
-	# this test. Detect if we're using software RDMA.
-	# If so, only use two subsystem.
-	if check_ip_is_soft_roce "$NVMF_FIRST_TARGET_IP"; then
-		num_subsystems=({1..2})
-	fi
 
 	timing_enter create_subsystems
 	# Create subsystems
@@ -145,8 +141,6 @@ function nvmf_shutdown_tc3() {
 
 	stoptarget
 }
-
-nvmftestinit
 
 run_test "nvmf_shutdown_tc1" nvmf_shutdown_tc1
 run_test "nvmf_shutdown_tc2" nvmf_shutdown_tc2

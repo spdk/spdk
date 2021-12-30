@@ -9,7 +9,7 @@ source $rootdir/test/nvmf/common.sh
 MATCH_FILE="spdkcli_nvmf.test"
 SPDKCLI_BRANCH="/nvmf"
 
-trap 'on_error_exit; revert_soft_roce' ERR
+trap 'on_error_exit' ERR
 
 timing_enter run_nvmf_tgt
 run_nvmf_tgt
@@ -84,4 +84,3 @@ $spdkcli_job "'/nvmf/subsystem/nqn.2014-08.org.spdk:cnode1/namespaces delete nsi
 timing_exit spdkcli_clear_nvmf_config
 
 killprocess $nvmf_tgt_pid
-#revert_soft_roce

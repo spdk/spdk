@@ -14,12 +14,6 @@ bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 
 nvmftestinit
 
-# This issue brings up a weird error in soft roce where the RDMA WC doesn't point to the correct qpair.
-if check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP && [ "$TEST_TRANSPORT" == "rdma" ]; then
-	echo "Using software RDMA, not running this test due to a known issue."
-	exit 0
-fi
-
 nvmfappstart -m 0xF
 
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192

@@ -41,7 +41,7 @@ if [ $(uname -s) = Linux ]; then
 	fi
 fi
 
-trap "autotest_cleanup || :; revert_soft_roce; exit 1" SIGINT SIGTERM EXIT
+trap "autotest_cleanup || :; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
@@ -240,6 +240,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_NVMF -eq 1 ]; then
+		export NET_TYPE
 		# The NVMe-oF run test cases are split out like this so that the parser that compiles the
 		# list of all tests can properly differentiate them. Please do not merge them into one line.
 		if [ "$SPDK_TEST_NVMF_TRANSPORT" = "rdma" ]; then
@@ -330,7 +331,6 @@ fi
 
 timing_enter cleanup
 autotest_cleanup
-revert_soft_roce
 timing_exit cleanup
 
 timing_exit autotest

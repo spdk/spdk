@@ -53,10 +53,7 @@ fi
 run_test "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"
 run_test "nvmf_fio_target" test/nvmf/target/fio.sh "${TEST_ARGS[@]}"
 run_test "nvmf_bdevio" test/nvmf/target/bdevio.sh "${TEST_ARGS[@]}"
-
-if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
-	# Soft-RoCE will return invalid values in the WC field after a qp has been
-	# destroyed which lead to NULL pointer references not seen in real hardware.
+if [[ $NET_TYPE == phy ]]; then
 	run_test "nvmf_shutdown" test/nvmf/target/shutdown.sh "${TEST_ARGS[@]}"
 	#TODO: disabled due to intermittent failures. Need to triage.
 	# run_test "nvmf_srq_overwhelm" test/nvmf/target/srq_overwhelm.sh $TEST_ARGS
@@ -76,9 +73,7 @@ run_test "nvmf_discovery" test/nvmf/host/discovery.sh "${TEST_ARGS[@]}"
 #run_test test/nvmf/host/identify_kernel_nvmf.sh $TEST_ARGS
 run_test "nvmf_fio_host" test/nvmf/host/fio.sh "${TEST_ARGS[@]}"
 
-# There is an intermittent error relating to those tests and Soft-RoCE.
-# Skip those tests if we are using rxe.
-if ! check_ip_is_soft_roce $NVMF_FIRST_TARGET_IP; then
+if [[ $NET_TYPE == phy ]]; then
 	# GitHub issue #1165
 	run_test "nvmf_bdevperf" test/nvmf/host/bdevperf.sh "${TEST_ARGS[@]}"
 	# GitHub issue #1043
@@ -88,4 +83,3 @@ fi
 timing_exit host
 
 trap - SIGINT SIGTERM EXIT
-revert_soft_roce
