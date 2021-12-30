@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1390,7 +1390,7 @@ bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 }
 
 static int
-bdev_nvme_ctrlr_reset_poll(void *arg)
+bdev_nvme_reconnect_ctrlr_poll(void *arg)
 {
 	struct nvme_ctrlr *nvme_ctrlr = arg;
 	int rc;
@@ -1414,6 +1414,16 @@ bdev_nvme_ctrlr_reset_poll(void *arg)
 }
 
 static void
+bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
+{
+	spdk_nvme_ctrlr_reconnect_async(nvme_ctrlr->ctrlr);
+
+	assert(nvme_ctrlr->reset_detach_poller == NULL);
+	nvme_ctrlr->reset_detach_poller = SPDK_POLLER_REGISTER(bdev_nvme_reconnect_ctrlr_poll,
+					  nvme_ctrlr, 0);
+}
+
+static void
 bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
@@ -1428,11 +1438,7 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 	rc = spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
 	assert(rc == 0);
 
-	spdk_nvme_ctrlr_reconnect_async(nvme_ctrlr->ctrlr);
-
-	assert(nvme_ctrlr->reset_detach_poller == NULL);
-	nvme_ctrlr->reset_detach_poller = SPDK_POLLER_REGISTER(bdev_nvme_ctrlr_reset_poll,
-					  nvme_ctrlr, 0);
+	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 }
 
 static void
