@@ -294,12 +294,9 @@ function install_qemu() {
 	# use-cases:
 	#  - Packed QEMU: version provided by given distro. Used to boot VMs
 	#    from within vhost tests.
-	#  - SPDK QEMU: A special fork to test OCSSDs. Most jobs on CI use
-	#    this version for booting the VMs.
 	#  - vfio-user QEMU: A special fork to test libvfio-user components.
-	#  - Vanilla QEMU: Used for the upstream PMR support.
+	#  - Vanilla QEMU: Used by the CI to boot the testing VMs.
 
-	_install_qemu $GIT_REPO_QEMU_SPDK $SPDK_QEMU_BRANCH
 	_install_qemu $GIT_REPO_QEMU_VFIO $VFIO_QEMU_BRANCH
 	_install_qemu "$GIT_REPO_QEMU" "$VANILLA_QEMU_BRANCH" vanilla
 }
@@ -564,7 +561,6 @@ function install_sources() {
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.7.72
 ICE_VERSION=1.7.16
-SPDK_QEMU_BRANCH=${SPDK_QEMU_BRANCH:-spdk-5.0.0}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-v0.93}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v6.0.0}
 
@@ -580,8 +576,6 @@ export GIT_REPO_FIO
 export GIT_REPO_FLAMEGRAPH
 : ${GIT_REPO_QEMU=https://github.com/qemu/qemu}
 export GIT_REPO_QEMU
-: ${GIT_REPO_QEMU_SPDK=https://github.com/spdk/qemu}
-export GIT_REPO_QEMU_SPDK
 : ${GIT_REPO_QEMU_VFIO=https://github.com/oracle/qemu}
 export GIT_REPO_QEMU_VFIO
 : ${GIT_REPO_LIBISCSI=https://github.com/sahlberg/libiscsi}
