@@ -409,7 +409,7 @@ function install_igb_uio() {
 }
 
 function install_irdma() {
-	local RDMA_CORE_VERSION=27.0
+	local RDMA_CORE_VERSION=35.0
 	local RDMA_CORE=https://github.com/linux-rdma/rdma-core/releases/download/v$RDMA_CORE_VERSION/rdma-core-$RDMA_CORE_VERSION.tar.gz
 
 	if [[ $ID != fedora ]]; then
@@ -417,8 +417,8 @@ function install_irdma() {
 		return 0
 	fi
 
-	# Install extra dependencies needed by the rdma-core-27.0
-	install ninja-build pandoc perl-generators valgrind-devel python-docutils libnl3 libnl3-devel
+	# Install extra dependencies needed by the rdma-core-35.0
+	install ninja-build pandoc perl-generators valgrind-devel python-docutils libnl3 libnl3-devel python3-Cython
 
 	rm -rf "$GIT_REPOS/irdma-$IRDMA_VERSION"
 	rm -rf "$GIT_REPOS/rdma-core-$RDMA_CORE_VERSION"
@@ -560,8 +560,8 @@ function install_sources() {
 }
 
 GIT_VERSION=2.25.1
-IRDMA_VERSION=1.5.2
-ICE_VERSION=1.6.4
+IRDMA_VERSION=1.7.72
+ICE_VERSION=1.7.16
 SPDK_QEMU_BRANCH=${SPDK_QEMU_BRANCH:-spdk-5.0.0}
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-v0.93}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v6.0.0}
@@ -592,7 +592,7 @@ export DRIVER_LOCATION_QAT
 export GIT_REPO_GIT
 : ${GIT_REPO_DPDK_KMODS=http://dpdk.org/git/dpdk-kmods}
 export GIT_REPO_DPDK_KMODS
-: ${IRDMA_DRIVER=https://downloadmirror.intel.com/29751/eng/irdma-$IRDMA_VERSION.tgz}
+: ${IRDMA_DRIVER=https://downloadmirror.intel.com/709709/irdma-$IRDMA_VERSION.tgz}
 export IRDMA_DRIVER
 : ${ICE_DRIVER="https://sourceforge.net/projects/e1000/files/ice%20stable/$ICE_VERSION/ice-$ICE_VERSION.tar.gz"}
 export ICE_DRIVER
