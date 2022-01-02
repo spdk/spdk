@@ -199,7 +199,7 @@ else
 			NVME_DISKS_TYPE+="$type,"
 			NVME_DISKS_NAMESPACES+="$namespace,"
 			if [ ${NVME_AUTO_CREATE} = 1 ]; then
-				$SPDK_DIR/scripts/vagrant/create_nvme_img.sh -t $type -n $path
+				$SPDK_DIR/scripts/vagrant/create_nvme_img.sh -n $path
 			fi
 		done <<< $args
 	done
