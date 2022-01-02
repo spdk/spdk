@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -180,12 +180,13 @@ struct spdk_bdev_module {
 };
 
 /**
- * Called by a bdev module to lay exclusive write claim to a bdev.
+ * Called by a bdev module to lay exclusive claim to a bdev.
  *
- * Also upgrades that bdev's descriptor to have write access.
+ * Also upgrades that bdev's descriptor to have write access if desc
+ * is not NULL.
  *
  * \param bdev Block device to be claimed.
- * \param desc Descriptor for the above block device.
+ * \param desc Descriptor for the above block device or NULL.
  * \param module Bdev module attempting to claim bdev.
  *
  * \return 0 on success
