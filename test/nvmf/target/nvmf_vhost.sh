@@ -5,11 +5,6 @@ rootdir=$testdir/../../..
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-if [ ! -d "/usr/local/qemu/spdk-3.0.0" ]; then
-	echo "Qemu not installed on this machine. It may be a VM. Skipping nvmf_vhost test."
-	exit 0
-fi
-
 source $rootdir/test/vhost/common.sh
 
 MALLOC_BDEV_SIZE=128
@@ -21,6 +16,7 @@ VHOST_SOCK="/tmp/vhost_rpc.sock"
 VHOST_APP+=(-p 0 -r "$VHOST_SOCK" -u)
 VHOST_RPC="$rootdir/scripts/rpc.py -s $VHOST_SOCK"
 
+vhosttestinit
 nvmftestinit
 
 # Start Apps
