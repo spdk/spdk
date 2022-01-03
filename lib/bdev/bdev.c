@@ -3003,6 +3003,9 @@ bdev_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
+	spdk_trace_record(TRACE_BDEV_IOCH_CREATE, 0, 0, 0, ch->bdev->name,
+			  spdk_thread_get_id(spdk_io_channel_get_thread(ch->channel)));
+
 	assert(ch->histogram == NULL);
 	if (bdev->internal.histogram_enabled) {
 		ch->histogram = spdk_histogram_data_alloc();
@@ -3272,6 +3275,9 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	SPDK_DEBUGLOG(bdev, "Destroying channel %p for bdev %s on thread %p\n", ch, ch->bdev->name,
 		      spdk_get_thread());
+
+	spdk_trace_record(TRACE_BDEV_IOCH_DESTROY, 0, 0, 0, ch->bdev->name,
+			  spdk_thread_get_id(spdk_io_channel_get_thread(ch->channel)));
 
 	/* This channel is going away, so add its statistics into the bdev so that they don't get lost. */
 	pthread_mutex_lock(&ch->bdev->internal.mutex);
@@ -7164,6 +7170,22 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 			"BDEV_IO_DONE", TRACE_BDEV_IO_DONE,
 			OWNER_BDEV, OBJECT_BDEV_IO, 0,
 			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
+		},
+		{
+			"BDEV_IOCH_CREATE", TRACE_BDEV_IOCH_CREATE,
+			OWNER_BDEV, OBJECT_NONE, 1,
+			{
+				{ "name", SPDK_TRACE_ARG_TYPE_STR, 40 },
+				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
+			}
+		},
+		{
+			"BDEV_IOCH_DESTROY", TRACE_BDEV_IOCH_DESTROY,
+			OWNER_BDEV, OBJECT_NONE, 0,
+			{
+				{ "name", SPDK_TRACE_ARG_TYPE_STR, 40 },
+				{ "thread_id", SPDK_TRACE_ARG_TYPE_INT, 8}
+			}
 		},
 	};
 
