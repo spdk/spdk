@@ -211,7 +211,7 @@ struct spdk_blob_store {
 	RB_HEAD(spdk_blob_tree, spdk_blob) open_blobs;
 	TAILQ_HEAD(, spdk_blob_list)	snapshots;
 
-	bool                            clean;
+	bool				clean;
 };
 
 struct spdk_bs_channel {
@@ -308,8 +308,8 @@ struct spdk_blob_md_descriptor_extent_rle {
 	uint32_t	length;
 
 	struct {
-		uint32_t        cluster_idx;
-		uint32_t        length; /* In units of clusters */
+		uint32_t	cluster_idx;
+		uint32_t	length; /* In units of clusters */
 	} extents[0];
 };
 
@@ -333,7 +333,7 @@ struct spdk_blob_md_descriptor_extent_page {
 	/* First cluster index in this extent page */
 	uint32_t	start_cluster_idx;
 
-	uint32_t        cluster_idx[0];
+	uint32_t	cluster_idx[0];
 };
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
@@ -365,7 +365,7 @@ struct spdk_blob_md_descriptor_flags {
 	uint64_t	data_ro_flags;
 
 	/*
-	 * If a flag in md_ro_flags is set the the application is not aware of,
+	 * If a flag in md_ro_flags is set the application is not aware of,
 	 *  allow the blob to be opened in md_read_only mode.
 	 */
 	uint64_t	md_ro_flags;
@@ -381,7 +381,7 @@ struct spdk_blob_md_descriptor {
 struct spdk_blob_md_page {
 	spdk_blob_id     id;
 
-	uint32_t        sequence_num;
+	uint32_t	sequence_num;
 	uint32_t	reserved0;
 
 	/* Descriptors here */
@@ -404,8 +404,8 @@ SPDK_STATIC_ASSERT(SPDK_BS_PAGE_SIZE == sizeof(struct spdk_blob_md_page), "Inval
 
 struct spdk_bs_super_block {
 	uint8_t		signature[8];
-	uint32_t        version;
-	uint32_t        length;
+	uint32_t	version;
+	uint32_t	length;
 	uint32_t	clean; /* If there was a clean shutdown, this is 1. */
 	spdk_blob_id	super_blob;
 
@@ -425,10 +425,10 @@ struct spdk_bs_super_block {
 	uint32_t	used_blobid_mask_start; /* Offset from beginning of disk, in pages */
 	uint32_t	used_blobid_mask_len; /* Count, in pages */
 
-	uint64_t        size; /* size of blobstore in bytes */
-	uint32_t        io_unit_size; /* Size of io unit in bytes */
+	uint64_t	size; /* size of blobstore in bytes */
+	uint32_t	io_unit_size; /* Size of io unit in bytes */
 
-	uint8_t         reserved[4000];
+	uint8_t		reserved[4000];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
@@ -619,7 +619,7 @@ static inline uint32_t
 bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	io_units_per_cluster;
-	uint8_t         shift = blob->bs->pages_per_cluster_shift;
+	uint8_t		shift = blob->bs->pages_per_cluster_shift;
 
 	if (shift != 0) {
 		io_units_per_cluster = bs_io_unit_per_page(blob->bs) << shift;
