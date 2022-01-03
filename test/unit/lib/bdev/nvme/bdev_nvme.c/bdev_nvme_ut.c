@@ -401,6 +401,7 @@ ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns,
 	ctrlr->attached = true;
 	ctrlr->adminq.ctrlr = ctrlr;
 	TAILQ_INIT(&ctrlr->adminq.outstanding_reqs);
+	ctrlr->adminq.is_connected = true;
 
 	if (num_ns != 0) {
 		ctrlr->num_ns = num_ns;
@@ -776,6 +777,7 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 		return -EIO;
 	}
 
+	ctrlr->adminq.is_connected = true;
 	return 0;
 }
 
@@ -787,6 +789,7 @@ spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr)
 int
 spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
+	ctrlr->adminq.is_connected = false;
 	ctrlr->is_failed = false;
 
 	return 0;
@@ -1091,6 +1094,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 {
 	struct ut_nvme_req *req, *tmp;
 	uint32_t num_completions = 0;
+
+	if (!qpair->is_connected) {
+		return -ENXIO;
+	}
 
 	qpair->in_completion_context = true;
 
