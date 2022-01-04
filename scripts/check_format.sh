@@ -293,25 +293,25 @@ function check_naming_conventions() {
 	changed_c_libs=()
 	declared_symbols=()
 
-	# Build an array of all the modified C files.
-	mapfile -t changed_c_libs < <(git diff --name-only HEAD $commit_to_compare -- lib/**/*.c module/**/*.c)
+	# Build an array of all the modified C libraries.
+	mapfile -t changed_c_libs < <(git diff --name-only HEAD $commit_to_compare -- lib/**/*.c module/**/*.c | xargs -r dirname | sort | uniq)
 	# Matching groups are 1. qualifiers / return type. 2. function name 3. argument list / comments and stuff after that.
 	# Capture just the names of newly added (or modified) function definitions.
 	mapfile -t declared_symbols < <(git diff -U0 $commit_to_compare HEAD -- include/spdk*/*.h | sed -En 's/(^[+].*)(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
 
-	for c_file in "${changed_c_libs[@]}"; do
+	for c_lib in "${changed_c_libs[@]}"; do
 		lib_map_file="mk/spdk_blank.map"
 		defined_symbols=()
 		removed_symbols=()
 		exported_symbols=()
-		if ls "$(dirname $c_file)"/*.map &> /dev/null; then
-			lib_map_file="$(ls "$(dirname $c_file)"/*.map)"
+		if ls "$c_lib"/*.map &> /dev/null; then
+			lib_map_file="$(ls "$c_lib"/*.map)"
 		fi
 		# Matching groups are 1. leading +sign. 2, function name 3. argument list / anything after that.
 		# Capture just the names of newly added (or modified) functions that start with "spdk_"
-		mapfile -t defined_symbols < <(git diff -U0 $commit_to_compare HEAD -- $c_file | sed -En 's/(^[+])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+		mapfile -t defined_symbols < <(git diff -U0 $commit_to_compare HEAD -- $c_lib | sed -En 's/(^[+])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
 		# Capture the names of removed symbols to catch edge cases where we just move definitions around.
-		mapfile -t removed_symbols < <(git diff -U0 $commit_to_compare HEAD -- $c_file | sed -En 's/(^[-])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
+		mapfile -t removed_symbols < <(git diff -U0 $commit_to_compare HEAD -- $c_lib | sed -En 's/(^[-])(spdk[a-z,A-Z,0-9,_]*)(\(.*)/\2/p')
 		for symbol in "${removed_symbols[@]}"; do
 			for i in "${!defined_symbols[@]}"; do
 				if [[ ${defined_symbols[i]} = "$symbol" ]]; then
