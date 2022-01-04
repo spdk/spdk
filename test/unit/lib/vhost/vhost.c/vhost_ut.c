@@ -42,6 +42,7 @@
 #include "unit/lib/json_mock.c"
 
 #include "vhost/vhost.c"
+#include "vhost/vhost_blk.c"
 #include <rte_version.h>
 #include "vhost/rte_vhost_user.c"
 
@@ -105,6 +106,60 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 	return 0;
 }
 DEFINE_STUB(pthread_detach, int, (pthread_t thread), 0);
+
+DEFINE_STUB(spdk_bdev_writev, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct iovec *iov, int iovcnt, uint64_t offset, uint64_t len,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+
+DEFINE_STUB(spdk_bdev_unmap, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset, uint64_t nbytes,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+
+DEFINE_STUB(spdk_bdev_write_zeroes, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset, uint64_t nbytes,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+
+DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 0);
+
+DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
+DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
+DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 64);
+DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
+		enum spdk_bdev_io_type io_type), true);
+DEFINE_STUB(spdk_bdev_open_ext, int,
+	    (const char *bdev_name, bool write,	spdk_bdev_event_cb_t event_cb,
+	     void *event_ctx, struct spdk_bdev_desc **desc), 0);
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *,
+	    (struct spdk_bdev_desc *desc), NULL);
+DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
+DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct spdk_bdev_io_wait_entry *entry), 0);
+DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
+DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc), 0);
+DEFINE_STUB(spdk_bdev_readv, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+DEFINE_STUB(spdk_bdev_flush, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t offset, uint64_t nbytes,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+DEFINE_STUB(rte_vhost_set_inflight_desc_split, int, (int vid, uint16_t vring_idx, uint16_t idx), 0);
+DEFINE_STUB(rte_vhost_set_inflight_desc_packed, int, (int vid, uint16_t vring_idx, uint16_t head,
+		uint16_t last, uint16_t *inflight_entry), 0);
+DEFINE_STUB(rte_vhost_slave_config_change, int, (int vid, bool need_reply), 0);
+DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);
+DEFINE_STUB(spdk_json_decode_object_relaxed, int,
+	    (const struct spdk_json_val *values, const struct spdk_json_object_decoder *decoders,
+	     size_t num_decoders, void *out), 0);
 
 void *
 spdk_call_unaffinitized(void *cb(void *arg), void *arg)
