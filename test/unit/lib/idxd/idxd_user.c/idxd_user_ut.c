@@ -172,7 +172,7 @@ test_idxd_group_config(void)
 	user_idxd.registers.groupcap.num_groups = g_user_dev_cfg.num_groups;
 	user_idxd.registers.enginecap.num_engines = g_user_dev_cfg.total_engines;
 	user_idxd.registers.wqcap.num_wqs = g_user_dev_cfg.total_wqs;
-	user_idxd.registers.groupcap.total_tokens = MAX_TOKENS;
+	user_idxd.registers.groupcap.read_bufs = MAX_TOKENS;
 	user_idxd.grpcfg_offset = GRP_CFG_OFFSET;
 
 	rc = idxd_group_config(idxd);

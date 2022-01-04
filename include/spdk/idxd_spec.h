@@ -316,17 +316,16 @@ union idxd_gencap_register {
 		uint64_t overlap_copy: 1;
 		uint64_t cache_control_mem: 1;
 		uint64_t cache_control_cache: 1;
+		uint64_t command_cap: 1;
 		uint64_t rsvd: 3;
-		uint64_t int_handle_req: 1;
 		uint64_t dest_readback: 1;
 		uint64_t drain_readback: 1;
 		uint64_t rsvd2: 6;
 		uint64_t max_xfer_shift: 5;
 		uint64_t max_batch_shift: 4;
 		uint64_t max_ims_mult: 6;
-		uint64_t config_en: 1;
-		uint64_t max_descs_per_engine: 8;
-		uint64_t rsvd3: 24;
+		uint64_t config_support: 1;
+		uint64_t rsvd3: 32;
 	} __attribute__((packed));
 	uint64_t raw;
 };
@@ -340,11 +339,11 @@ union idxd_wqcap_register {
 		uint64_t rsvd: 20;
 		uint64_t shared_mode: 1;
 		uint64_t dedicated_mode: 1;
-		uint64_t rsvd2: 1;
+		uint64_t ats_support: 1;
 		uint64_t priority: 1;
 		uint64_t occupancy: 1;
 		uint64_t occupancy_int: 1;
-		uint64_t rsvd3: 10;
+		uint64_t rsvd1: 10;
 	} __attribute__((packed));
 	uint64_t raw;
 };
@@ -353,9 +352,9 @@ SPDK_STATIC_ASSERT(sizeof(union idxd_wqcap_register) == 8, "size mismatch");
 union idxd_groupcap_register {
 	struct {
 		uint64_t num_groups: 8;
-		uint64_t total_tokens: 8;
-		uint64_t token_en: 1;
-		uint64_t token_limit: 1;
+		uint64_t read_bufs: 8;
+		uint64_t read_bufs_ctrl: 1;
+		uint64_t read_bus_limit: 1;
 		uint64_t rsvd: 46;
 	} __attribute__((packed));
 	uint64_t raw;
