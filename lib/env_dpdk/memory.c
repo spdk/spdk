@@ -252,10 +252,10 @@ err_unregister:
 		}
 
 		for (; idx_1gb < UINT64_MAX; idx_1gb--) {
+			/* Rebuild the virtual address from the indexes */
+			uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 			if ((map_1gb->map[idx_1gb].translation_2mb & REG_MAP_REGISTERED) &&
 			    (contig_end == UINT64_MAX || (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) == 0)) {
-				/* Rebuild the virtual address from the indexes */
-				uint64_t vaddr = (idx_256tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
 				if (contig_end == UINT64_MAX) {
 					contig_end = vaddr;
@@ -263,12 +263,14 @@ err_unregister:
 				contig_start = vaddr;
 			} else {
 				if (contig_end != UINT64_MAX) {
+					if (map_1gb->map[idx_1gb].translation_2mb & REG_MAP_NOTIFY_START) {
+						contig_start = vaddr;
+					}
 					/* End of of a virtually contiguous range */
 					map->ops.notify_cb(map->cb_ctx, map,
 							   SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 							   (void *)contig_start,
 							   contig_end - contig_start + VALUE_2MB);
-					idx_1gb++;
 				}
 				contig_end = UINT64_MAX;
 			}
@@ -285,6 +287,7 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 {
 	struct spdk_mem_map *map;
 	int rc;
+	size_t i;
 
 	map = calloc(1, sizeof(*map));
 	if (map == NULL) {
@@ -309,6 +312,9 @@ spdk_mem_map_alloc(uint64_t default_translation, const struct spdk_mem_map_ops *
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 			DEBUG_PRINT("Initial mem_map notify failed\n");
 			pthread_mutex_destroy(&map->mutex);
+			for (i = 0; i < sizeof(map->map_256tb.map) / sizeof(map->map_256tb.map[0]); i++) {
+				free(map->map_256tb.map[i]);
+			}
 			free(map);
 			return NULL;
 		}
