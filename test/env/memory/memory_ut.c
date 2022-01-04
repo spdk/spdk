@@ -100,6 +100,8 @@ test_mem_map_notify_fail(void *cb_ctx, struct spdk_mem_map *map,
 			 enum spdk_mem_map_notify_action action, void *vaddr, size_t size)
 {
 	struct spdk_mem_map *reg_map = cb_ctx;
+	uint64_t reg_addr;
+	uint64_t reg_size = size;
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
@@ -107,8 +109,16 @@ test_mem_map_notify_fail(void *cb_ctx, struct spdk_mem_map *map,
 			/* Test the error handling. */
 			return -1;
 		}
+
+		CU_ASSERT(spdk_mem_map_set_translation(map, (uint64_t)vaddr, (uint64_t)size, (uint64_t)vaddr) == 0);
+
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		/* validate the start address */
+		reg_addr = spdk_mem_map_translate(map, (uint64_t)vaddr, &reg_size);
+		CU_ASSERT(reg_addr == (uint64_t)vaddr);
+		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
+
 		/* Clear the same region in the other mem_map to be able to
 		 * verify that there was no memory left still registered after
 		 * the mem_map creation failure.
