@@ -52,6 +52,7 @@ extern "C" {
 #define WQ_TOTAL_PORTAL_SIZE		(PORTAL_SIZE * 4)
 #define PORTAL_STRIDE			0x40
 #define PORTAL_MASK			(PORTAL_SIZE - 1)
+#define WQCFG_SHIFT			5
 
 #define CFG_ENGINE_OFFSET		0x20
 #define CFG_FLAG_OFFSET			0x28

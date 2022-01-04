@@ -261,10 +261,11 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 static int
 idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 {
-	int i, j;
+	uint32_t i, j;
 	struct idxd_wq *queue;
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
-	u_int32_t wq_size = user_idxd->registers.wqcap.total_wq_size / g_user_dev_cfg.total_wqs;
+	uint32_t wq_size = user_idxd->registers.wqcap.total_wq_size / g_user_dev_cfg.total_wqs;
+	uint32_t wqcap_size = 1 << (WQCFG_SHIFT + user_idxd->registers.wqcap.wqcfg_size);
 
 	SPDK_DEBUGLOG(idxd, "Total ring slots available space 0x%x, so per work queue is 0x%x\n",
 		      user_idxd->registers.wqcap.total_wq_size, wq_size);
@@ -303,8 +304,8 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 */
 	for (i = 0 ; i < user_idxd->registers.wqcap.num_wqs; i++) {
 		queue = &idxd->queues[i];
-		for (j = 0 ; j < WQCFG_NUM_DWORDS; j++) {
-			_idxd_write_4(idxd, user_idxd->wqcfg_offset + i * 32 + j * 4,
+		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
+			_idxd_write_4(idxd, user_idxd->wqcfg_offset + i * wqcap_size + j * sizeof(uint32_t),
 				      queue->wqcfg.raw[j]);
 		}
 	}

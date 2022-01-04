@@ -66,7 +66,6 @@ static inline void movdir64b(void *dst, const void *src)
 #define DESC_PER_BATCH		(1 << LOG2_WQ_MAX_BATCH)
 
 #define LOG2_WQ_MAX_XFER	30 /* 2^30 = 1073741824 */
-#define WQCFG_NUM_DWORDS	8
 #define WQ_PRIORITY_1		1
 #define IDXD_MAX_QUEUES		64
 
