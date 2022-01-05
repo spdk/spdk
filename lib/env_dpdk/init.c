@@ -620,6 +620,15 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	return rc;
 }
 
+__attribute__((destructor)) static void
+dpdk_cleanup(void)
+{
+	/* Only call rte_eal_cleanup if the SPDK env library called rte_eal_init. */
+	if (!g_external_init) {
+		rte_eal_cleanup();
+	}
+}
+
 void
 spdk_env_fini(void)
 {
