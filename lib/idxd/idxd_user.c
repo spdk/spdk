@@ -180,6 +180,18 @@ idxd_map_pci_bars(struct spdk_idxd_device *idxd)
 	return 0;
 }
 
+static void
+idxd_disable_dev(struct spdk_idxd_device *idxd)
+{
+	int rc;
+
+	_idxd_write_4(idxd, IDXD_CMD_OFFSET, IDXD_DISABLE_DEV << IDXD_CMD_SHIFT);
+	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
+	if (rc < 0) {
+		SPDK_ERRLOG("Error disabling device %u\n", rc);
+	}
+}
+
 static int
 idxd_reset_dev(struct spdk_idxd_device *idxd)
 {
@@ -426,6 +438,8 @@ static void
 user_idxd_device_destruct(struct spdk_idxd_device *idxd)
 {
 	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
+
+	idxd_disable_dev(idxd);
 
 	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
 	idxd_unmap_pci_bar(idxd, IDXD_WQ_BAR);
