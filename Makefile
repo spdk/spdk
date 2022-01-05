@@ -47,6 +47,7 @@ DIRS-y += test
 DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
 DIRS-$(CONFIG_ISAL) += isalbuild
 DIRS-$(CONFIG_VFIO_USER) += vfiouserbuild
+DIRS-y += python
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk \
 	cc_version cxx_version .libs_only_other .ldflags ldflags install \
