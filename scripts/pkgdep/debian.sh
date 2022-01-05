@@ -15,6 +15,8 @@ fi
 pip3 install pyelftools
 pip3 install ijson
 pip3 install python-magic
+pip3 install grpcio
+pip3 install grpcio-tools
 # Additional dependencies for SPDK CLI - not available on older Ubuntus
 apt-get install -y python3-configshell-fb python3-pexpect || echo \
 	"Note: Some SPDK CLI dependencies could not be installed."

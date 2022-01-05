@@ -103,6 +103,8 @@ pip3 install meson
 pip3 install pyelftools
 pip3 install ijson
 pip3 install python-magic
+pip3 install grpcio
+pip3 install grpcio-tools
 
 # Additional dependencies for SPDK CLI - not available in rhel and centos
 if ! echo "$ID $VERSION_ID" | grep -E -q 'rhel 7|centos 7'; then

@@ -40,8 +40,7 @@ $(1)/%_pb2.py $(1)/%_pb2_grpc.py: $(1)/%.proto
 		--grpc_python_out=$(1) --proto_path=$(1) $$^
 endef
 
-# Check for the required modules here until there's a configure option for SMA
-ifeq ($(shell python3 -c 'import grpc; import grpc_tools' && echo 0),0)
+ifeq ($(CONFIG_SMA),y)
 protodirs = spdk/sma/proto
 protodefs = $(foreach protodir,$(protodirs),$(wildcard $(protodir)/*.proto))
 protopy = $(foreach proto,$(basename $(protodefs)),$(addprefix $(proto),_pb2.py _pb2_grpc.py))

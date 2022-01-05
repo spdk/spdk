@@ -106,6 +106,8 @@ function usage() {
 	echo "                           Path to clang_rt.fuzzer_no_main library required."
 	echo "                           Requires setting CC and CXX to clang."
 	echo "                           (Typically /usr/lib/llvm-VER/lib/clang/VER/lib/linux/libclang_rt.fuzzer_no_main-ARCH.a)"
+	echo " --with-sma                Generate Storage Management Agent's protobuf interface"
+	echo " --without-sma             No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -623,6 +625,12 @@ for i in "$@"; do
 			CONFIG[FUZZER]=n
 			CONFIG[FUZZER_LIB]=
 			;;
+		--with-sma)
+			CONFIG[SMA]=y
+			;;
+		--without-sma)
+			CONFIG[SMA]=n
+			;;
 		--)
 			break
 			;;
@@ -1107,6 +1115,14 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	./configure CFLAGS="-fPIC -g -O2" "${ISAL_OPTS[@]}" --enable-shared=no >> $ISAL_LOG 2>&1
 	echo "done."
 	cd $rootdir
+fi
+
+if [[ "${CONFIG[SMA]}" = "y" ]]; then
+	if ! python3 -c 'import grpc; import grpc_tools' 2> /dev/null; then
+		echo "--with-sma requires grpcio and grpcio-tools python packages."
+		echo "Please install then re-run this script."
+		exit 1
+	fi
 fi
 
 # For ARM Neoverse-N1 platform, debug build needs gcc version newer than 8.4

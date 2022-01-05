@@ -204,3 +204,6 @@ CONFIG_HAVE_LIBBSD=n
 
 # Path to IPSEC_MB used by DPDK
 CONFIG_IPSEC_MB_DIR=
+
+# Generate Storage Management Agent's protobuf interface
+CONFIG_SMA=n
