@@ -59,13 +59,13 @@ hotplug_pid=$!
 trap 'killprocess $hotplug_pid; exit 1' SIGINT SIGTERM EXIT
 
 i=0
-while ! grep "Starting I/O" log.txt; do
+while ! grep "Starting I/O" $testdir/log.txt; do
 	[ $i -lt 20 ] || break
 	i=$((i + 1))
 	sleep 1
 done
 
-if ! grep "Starting I/O" log.txt; then
+if ! grep "Starting I/O" $testdir/log.txt; then
 	return 1
 fi
 
