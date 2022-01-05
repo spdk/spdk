@@ -291,14 +291,21 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 * and achieve optimal performance for common cases.
 	 */
 	idxd->chan_per_device = (idxd->total_wq_size >= 128) ? 8 : 4;
-	idxd->queues = calloc(1, user_idxd->registers.wqcap.num_wqs * sizeof(struct idxd_wq));
+	idxd->queues = calloc(1, g_user_dev_cfg.total_wqs * sizeof(struct idxd_wq));
 	if (idxd->queues == NULL) {
 		SPDK_ERRLOG("Failed to allocate queue memory\n");
 		return -ENOMEM;
 	}
 
 	for (i = 0; i < g_user_dev_cfg.total_wqs; i++) {
-		queue = &user_idxd->idxd.queues[i];
+		queue = &idxd->queues[i];
+		/* Per spec we need to read in existing values first so we don't zero out something we
+		 * didn't touch when we write the cfg register out below.
+		 */
+		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
+			queue->wqcfg.raw[j] = _idxd_read_4(idxd,
+							   user_idxd->wqcfg_offset + i * wqcap_size + j * sizeof(uint32_t));
+		}
 		queue->wqcfg.wq_size = wq_size;
 		queue->wqcfg.mode = WQ_MODE_DEDICATED;
 		queue->wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
@@ -307,14 +314,14 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 		queue->wqcfg.priority = WQ_PRIORITY_1;
 
 		/* Not part of the config struct */
-		queue->idxd = &user_idxd->idxd;
+		queue->idxd = idxd;
 		queue->group = &idxd->groups[i % g_user_dev_cfg.num_groups];
 	}
 
 	/*
-	 * Now write the work queue config to the device for all wq space
+	 * Now write the work queue config to the device for configured queues
 	 */
-	for (i = 0 ; i < user_idxd->registers.wqcap.num_wqs; i++) {
+	for (i = 0 ; i < g_user_dev_cfg.total_wqs; i++) {
 		queue = &idxd->queues[i];
 		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
 			_idxd_write_4(idxd, user_idxd->wqcfg_offset + i * wqcap_size + j * sizeof(uint32_t),
