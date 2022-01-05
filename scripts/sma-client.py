@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from argparse import ArgumentParser
 import grpc
 import google.protobuf.json_format as json_format
 import json
@@ -38,8 +39,18 @@ class Client:
                                              preserving_proto_field_name=True)
 
 
+def parse_argv():
+    parser = ArgumentParser(description='Storage Management Agent client')
+    parser.add_argument('--address', '-a', default='localhost',
+                        help='IP address of SMA instance to connect to')
+    parser.add_argument('--port', '-p', default=8080, type=int,
+                        help='Port number of SMA instance to connect to')
+    return parser.parse_args()
+
+
 def main(args):
-    client = Client('localhost', 8080)
+    argv = parse_argv()
+    client = Client(argv.address, argv.port)
     request = json.loads(sys.stdin.read())
     result = client.call(request['method'], request.get('params', {}))
     print(json.dumps(result, indent=2))
