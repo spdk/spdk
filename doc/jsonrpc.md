@@ -9364,3 +9364,102 @@ Note that the config space buffer was trimmed.
   }
 }
 ~~
+
+### bdev_nvme_add_error_injection {#rpc_bdev_nvme_add_error_injection}
+
+Add a NVMe command error injection for a bdev nvme controller.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the operating NVMe controller
+cmd_type                | Required | string      | Type of NVMe command. Valid values are: admin, io
+opc                     | Required | number      | Opcode for which the error injection is applied
+do_not_submit           | Optional | boolean     | Set to true if request should not be submitted to the controller (default false)
+timeout_in_us           | Optional | number      | Wait specified microseconds when do_not_submit is true
+err_count               | Optional | number      | Number of matching NVMe commands to inject errors
+sct                     | Optional | number      | Status code type (default 0)
+sc                      | Optional | number      | Status code (default 0)
+
+#### Response
+
+true on success
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_add_error_injection",
+  "id": 1,
+  "params": {
+    "name": "HotInNvme0",
+    "opc": 2,
+    "cmd_type": "io",
+    "err_count": 1111111,
+    "sct": 11,
+    "sc": 33
+  }
+}
+
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+
+~~~
+
+### bdev_nvme_remove_error_injection {#rpc_bdev_nvme_remove_error_injection}
+
+Remove a NVMe command error injection.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the operating NVMe controller
+cmd_type                | Required | string      | Type of NVMe command. Valid values are: admin, io
+opc                     | Required | number      | Opcode for which the error injection is applied
+
+#### Response
+
+true on success
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_remove_error_injection",
+  "id": 1,
+  "params": {
+    "name": "HotInNvme0",
+    "opc": 2,
+    "cmd_type": "io"
+  }
+}
+
+
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+
+~~~

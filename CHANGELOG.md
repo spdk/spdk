@@ -2,6 +2,11 @@
 
 ## v22.05: (Upcoming Release)
 
+### bdev_nvme
+
+Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and
+remove NVMe error injections.
+
 ## v22.01
 
 ### accel

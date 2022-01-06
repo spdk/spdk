@@ -85,3 +85,56 @@ def bdev_nvme_opal_revert(client, nvme_ctrlr_name, password):
     }
 
     return client.call('bdev_nvme_opal_revert', params)
+
+
+def bdev_nvme_add_error_injection(client, name, opc, cmd_type, do_not_submit, timeout_in_us,
+                                  err_count, sct, sc):
+    """Add error injection
+
+    Args:
+        name: Name of the operating NVMe controller
+        opc: Opcode of the NVMe command
+        cmd_type: Type of NVMe command. Valid values are: admin, io
+        do_not_submit: Do not submit commands to the controller
+        timeout_in_us: Wait specified microseconds when do_not_submit is true
+        err_count: Number of matching NVMe commands to inject errors
+        sct: NVMe status code type
+        sc: NVMe status code
+
+    Returns:
+        True on success, RPC error otherwise
+    """
+    params = {'name': name,
+              'opc': opc,
+              'cmd_type': cmd_type}
+
+    if do_not_submit:
+        params['do_not_submit'] = do_not_submit
+    if timeout_in_us:
+        params['timeout_in_us'] = timeout_in_us
+    if err_count:
+        params['err_count'] = err_count
+    if sct:
+        params['sct'] = sct
+    if sc:
+        params['sc'] = sc
+
+    return client.call('bdev_nvme_add_error_injection', params)
+
+
+def bdev_nvme_remove_error_injection(client, name, opc, cmd_type):
+    """Remove error injection
+
+    Args:
+        name: Name of the operating NVMe controller
+        opc: Opcode of the NVMe command
+        cmd_type: Type of NVMe command. Valid values are: admin, io
+
+    Returns:
+        True on success, RPC error otherwise
+    """
+    params = {'name': name,
+              'opc': opc,
+              'cmd_type': cmd_type}
+
+    return client.call('bdev_nvme_remove_error_injection', params)

@@ -1785,3 +1785,257 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_stop_discovery", rpc_bdev_nvme_stop_discovery,
 		  SPDK_RPC_RUNTIME)
+
+enum error_injection_cmd_type {
+	NVME_ADMIN_CMD = 1,
+	NVME_IO_CMD,
+};
+
+struct rpc_add_error_injection {
+	char *name;
+	enum error_injection_cmd_type cmd_type;
+	uint8_t opc;
+	bool do_not_submit;
+	uint64_t timeout_in_us;
+	uint32_t err_count;
+	uint8_t sct;
+	uint8_t sc;
+};
+
+static void
+free_rpc_add_error_injection(struct rpc_add_error_injection *req)
+{
+	free(req->name);
+}
+
+static int
+rpc_error_injection_decode_cmd_type(const struct spdk_json_val *val, void *out)
+{
+	int *cmd_type = out;
+
+	if (spdk_json_strequal(val, "admin")) {
+		*cmd_type = NVME_ADMIN_CMD;
+	} else if (spdk_json_strequal(val, "io")) {
+		*cmd_type = NVME_IO_CMD;
+	} else {
+		SPDK_ERRLOG("Invalid parameter value: cmd_type\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static const struct spdk_json_object_decoder rpc_add_error_injection_decoders[] = {
+	{ "name", offsetof(struct rpc_add_error_injection, name), spdk_json_decode_string },
+	{ "cmd_type", offsetof(struct rpc_add_error_injection, cmd_type), rpc_error_injection_decode_cmd_type },
+	{ "opc", offsetof(struct rpc_add_error_injection, opc), spdk_json_decode_uint8 },
+	{ "do_not_submit", offsetof(struct rpc_add_error_injection, do_not_submit), spdk_json_decode_bool, true },
+	{ "timeout_in_us", offsetof(struct rpc_add_error_injection, timeout_in_us), spdk_json_decode_uint64, true },
+	{ "err_count", offsetof(struct rpc_add_error_injection, err_count), spdk_json_decode_uint32, true },
+	{ "sct", offsetof(struct rpc_add_error_injection, sct), spdk_json_decode_uint8, true},
+	{ "sc", offsetof(struct rpc_add_error_injection, sc), spdk_json_decode_uint8, true},
+};
+
+struct rpc_add_error_injection_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct rpc_add_error_injection rpc;
+};
+
+static void
+rpc_add_error_injection_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct rpc_add_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (status) {
+		spdk_jsonrpc_send_error_response(ctx->request, status,
+						 "Failed to add the error injection.");
+	} else {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	}
+
+	free_rpc_add_error_injection(&ctx->rpc);
+	free(ctx);
+}
+
+static void
+rpc_add_error_injection_per_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct rpc_add_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_ctrlr *nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
+	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair;
+	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+	int rc = 0;
+
+	if (qpair != NULL) {
+		rc = spdk_nvme_qpair_add_cmd_error_injection(ctrlr, qpair, ctx->rpc.opc,
+				ctx->rpc.do_not_submit, ctx->rpc.timeout_in_us, ctx->rpc.err_count,
+				ctx->rpc.sct, ctx->rpc.sc);
+	}
+
+	spdk_for_each_channel_continue(i, rc);
+}
+
+static void
+rpc_bdev_nvme_add_error_injection(
+	struct spdk_jsonrpc_request *request,
+	const struct spdk_json_val *params)
+{
+	struct rpc_add_error_injection_ctx *ctx;
+	struct nvme_ctrlr *nvme_ctrlr;
+	int rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+	ctx->rpc.err_count = 1;
+	ctx->request = request;
+
+	if (spdk_json_decode_object(params,
+				    rpc_add_error_injection_decoders,
+				    SPDK_COUNTOF(rpc_add_error_injection_decoders),
+				    &ctx->rpc)) {
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "Failed to parse the request");
+		goto cleanup;
+	}
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name(ctx->rpc.name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("No controller with specified name was found.\n");
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	if (ctx->rpc.cmd_type == NVME_IO_CMD) {
+		spdk_for_each_channel(nvme_ctrlr,
+				      rpc_add_error_injection_per_channel,
+				      ctx,
+				      rpc_add_error_injection_done);
+
+		return;
+	} else {
+		rc = spdk_nvme_qpair_add_cmd_error_injection(nvme_ctrlr->ctrlr, NULL, ctx->rpc.opc,
+				ctx->rpc.do_not_submit, ctx->rpc.timeout_in_us, ctx->rpc.err_count,
+				ctx->rpc.sct, ctx->rpc.sc);
+		if (rc) {
+			spdk_jsonrpc_send_error_response(request, -rc,
+							 "Failed to add the error injection");
+		} else {
+			spdk_jsonrpc_send_bool_response(ctx->request, true);
+		}
+	}
+
+cleanup:
+	free_rpc_add_error_injection(&ctx->rpc);
+	free(ctx);
+}
+SPDK_RPC_REGISTER("bdev_nvme_add_error_injection", rpc_bdev_nvme_add_error_injection,
+		  SPDK_RPC_RUNTIME)
+
+struct rpc_remove_error_injection {
+	char *name;
+	enum error_injection_cmd_type cmd_type;
+	uint8_t opc;
+};
+
+static void
+free_rpc_remove_error_injection(struct rpc_remove_error_injection *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_remove_error_injection_decoders[] = {
+	{ "name", offsetof(struct rpc_remove_error_injection, name), spdk_json_decode_string },
+	{ "cmd_type", offsetof(struct rpc_remove_error_injection, cmd_type), rpc_error_injection_decode_cmd_type },
+	{ "opc", offsetof(struct rpc_remove_error_injection, opc), spdk_json_decode_uint8 },
+};
+
+struct rpc_remove_error_injection_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct rpc_remove_error_injection rpc;
+};
+
+static void
+rpc_remove_error_injection_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct rpc_remove_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (status) {
+		spdk_jsonrpc_send_error_response(ctx->request, status,
+						 "Failed to remove the error injection.");
+	} else {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	}
+
+	free_rpc_remove_error_injection(&ctx->rpc);
+	free(ctx);
+}
+
+static void
+rpc_remove_error_injection_per_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct rpc_remove_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
+	struct nvme_ctrlr *nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
+	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair;
+	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+
+	if (ctrlr_ch->qpair != NULL) {
+		spdk_nvme_qpair_remove_cmd_error_injection(ctrlr, qpair, ctx->rpc.opc);
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+rpc_bdev_nvme_remove_error_injection(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
+{
+	struct rpc_remove_error_injection_ctx *ctx;
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+	ctx->request = request;
+
+	if (spdk_json_decode_object(params,
+				    rpc_remove_error_injection_decoders,
+				    SPDK_COUNTOF(rpc_remove_error_injection_decoders),
+				    &ctx->rpc)) {
+		spdk_jsonrpc_send_error_response(request, -EINVAL,
+						 "Failed to parse the request");
+		goto cleanup;
+	}
+
+	nvme_ctrlr = nvme_ctrlr_get_by_name(ctx->rpc.name);
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("No controller with specified name was found.\n");
+		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+		goto cleanup;
+	}
+
+	if (ctx->rpc.cmd_type == NVME_IO_CMD) {
+		spdk_for_each_channel(nvme_ctrlr,
+				      rpc_remove_error_injection_per_channel,
+				      ctx,
+				      rpc_remove_error_injection_done);
+		return;
+	} else {
+		spdk_nvme_qpair_remove_cmd_error_injection(nvme_ctrlr->ctrlr, NULL, ctx->rpc.opc);
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	}
+
+cleanup:
+	free_rpc_remove_error_injection(&ctx->rpc);
+	free(ctx);
+}
+SPDK_RPC_REGISTER("bdev_nvme_remove_error_injection", rpc_bdev_nvme_remove_error_injection,
+		  SPDK_RPC_RUNTIME)
