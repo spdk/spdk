@@ -342,7 +342,13 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 	/* unlink hugepages after initialization */
-	if (opts->unlink_hugepage) {
+	/* Note: Automatically unlink hugepage when shm_id < 0, since it means we're not using
+	 * multi-process so we don't need the hugepage links anymore.  But we need to make sure
+	 * we don't specify --huge-unlink implicitly if --single-file-segments was specified since
+	 * DPDK doesn't support that.
+	 */
+	if (opts->unlink_hugepage ||
+	    (opts->shm_id < 0 && !opts->hugepage_single_segments)) {
 		args = push_arg(args, &argcount, _sprintf_alloc("--huge-unlink"));
 		if (args == NULL) {
 			return -1;
