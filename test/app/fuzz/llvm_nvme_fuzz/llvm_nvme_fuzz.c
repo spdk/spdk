@@ -184,6 +184,30 @@ fuzz_admin_create_io_submission_queue_command(struct fuzz_command *cmd)
 	g_data += 9;
 }
 
+static void
+fuzz_admin_delete_io_completion_queue_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_DELETE_IO_CQ;
+
+	cmd->cmd.cdw10_bits.raw = 0;
+	cmd->cmd.cdw10_bits.delete_io_q.qid = (g_data[0] << 8) + g_data[1];
+
+	g_data += 2;
+}
+
+static void
+fuzz_admin_delete_io_submission_queue_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_DELETE_IO_SQ;
+
+	cmd->cmd.cdw10_bits.raw = 0;
+	cmd->cmd.cdw10_bits.delete_io_q.qid = (g_data[0] << 8) + g_data[1];
+
+	g_data += 2;
+}
+
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd) },
 	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6 },
@@ -191,6 +215,8 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_abort_command, .bytes_per_cmd = 4},
 	{ .fn = fuzz_admin_create_io_completion_queue_command, .bytes_per_cmd = 7},
 	{ .fn = fuzz_admin_create_io_submission_queue_command, .bytes_per_cmd = 9},
+	{ .fn = fuzz_admin_delete_io_completion_queue_command, .bytes_per_cmd = 2},
+	{ .fn = fuzz_admin_delete_io_submission_queue_command, .bytes_per_cmd = 2},
 	{ .fn = NULL, .bytes_per_cmd = 0 }
 };
 
