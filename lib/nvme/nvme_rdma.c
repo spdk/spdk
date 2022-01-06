@@ -585,11 +585,10 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 		}
 	}
 
-	if (errno == EAGAIN || errno == EWOULDBLOCK) {
-		return 0;
-	} else {
-		return errno;
-	}
+	/* rdma_get_cm_event() returns -1 on error. If an error occurs, errno
+	 * will be set to indicate the failure reason. So return negated errno here.
+	 */
+	return -errno;
 }
 
 static int
@@ -652,11 +651,14 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
 	assert(rctrlr != NULL);
 
-	while (!rqpair->evt && spdk_get_ticks() < timeout_ticks && rc == 0) {
+	while (!rqpair->evt && spdk_get_ticks() < timeout_ticks) {
 		rc = nvme_rdma_poll_events(rctrlr);
+		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
+			continue;
+		}
 	}
 
-	if (rc) {
+	if (rc != 0 && rc != -EAGAIN && rc != -EWOULDBLOCK) {
 		goto exit;
 	}
 
