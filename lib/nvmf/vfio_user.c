@@ -219,6 +219,8 @@ struct nvmf_vfio_user_endpoint {
 	struct nvmf_vfio_user_ctrlr		*ctrlr;
 	pthread_mutex_t				lock;
 
+	bool					need_async_destroy;
+
 	TAILQ_ENTRY(nvmf_vfio_user_endpoint)	link;
 };
 
@@ -527,6 +529,8 @@ ctrlr_interrupt_enabled(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 static void
 nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 {
+	SPDK_DEBUGLOG(nvmf_vfio, "destroy endpoint %s\n", endpoint_id(endpoint));
+
 	if (endpoint->doorbells) {
 		munmap((void *)endpoint->doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
 	}
@@ -1779,6 +1783,10 @@ access_bar0_fn(vfu_ctx_t *vfu_ctx, char *buf, size_t count, loff_t pos,
 	int ret;
 
 	ctrlr = endpoint->ctrlr;
+	if (endpoint->need_async_destroy || !ctrlr) {
+		errno = EIO;
+		return -1;
+	}
 
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: bar0 %s ctrlr: %p, count=%zu, pos=%"PRIX64"\n",
@@ -2047,9 +2055,14 @@ static void
 _free_ctrlr(void *ctx)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
+	struct nvmf_vfio_user_endpoint *endpoint = ctrlr->endpoint;
 
 	spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
 	free(ctrlr);
+
+	if (endpoint && endpoint->need_async_destroy) {
+		nvmf_vfio_user_destroy_endpoint(endpoint);
+	}
 }
 
 static void
@@ -2234,15 +2247,21 @@ nvmf_vfio_user_stop_listen(struct spdk_nvmf_transport *transport,
 	TAILQ_FOREACH_SAFE(endpoint, &vu_transport->endpoints, link, tmp) {
 		if (strcmp(trid->traddr, endpoint->trid.traddr) == 0) {
 			TAILQ_REMOVE(&vu_transport->endpoints, endpoint, link);
+			/* Defer to free endpoint resources until the controller
+			 * is freed.  There are two cases when running here:
+			 * 1. kill nvmf target while VM is connected
+			 * 2. remove listener via RPC call
+			 * nvmf library will disconnect all queue paris.
+			 */
 			if (endpoint->ctrlr) {
-				/* Users may kill NVMeoF target while VM
-				 * is connected, free all resources.
-				 */
-				free_ctrlr(endpoint->ctrlr);
+				assert(!endpoint->need_async_destroy);
+				endpoint->need_async_destroy = true;
+				pthread_mutex_unlock(&vu_transport->lock);
+				return;
 			}
+
 			nvmf_vfio_user_destroy_endpoint(endpoint);
 			pthread_mutex_unlock(&vu_transport->lock);
-
 			return;
 		}
 	}
@@ -2435,38 +2454,14 @@ nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 }
 
 static void
-vfio_user_qpair_disconnect_cb(void *ctx)
-{
-	struct nvmf_vfio_user_endpoint *endpoint = ctx;
-	struct nvmf_vfio_user_ctrlr *ctrlr;
-
-	pthread_mutex_lock(&endpoint->lock);
-	ctrlr = endpoint->ctrlr;
-	if (!ctrlr) {
-		pthread_mutex_unlock(&endpoint->lock);
-		return;
-	}
-
-	if (TAILQ_EMPTY(&ctrlr->connected_qps)) {
-		endpoint->ctrlr = NULL;
-		free_ctrlr(ctrlr);
-	}
-	pthread_mutex_unlock(&endpoint->lock);
-}
-
-static void
 _vfio_user_qpair_disconnect(void *ctx)
 {
 	struct nvmf_vfio_user_qpair *vu_qpair = ctx;
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
-	struct nvmf_vfio_user_endpoint *endpoint;
 
-	vu_ctrlr = vu_qpair->ctrlr;
-	endpoint = vu_ctrlr->endpoint;
-
-	spdk_nvmf_qpair_disconnect(&vu_qpair->qpair, vfio_user_qpair_disconnect_cb, endpoint);
+	spdk_nvmf_qpair_disconnect(&vu_qpair->qpair, NULL, NULL);
 }
 
+/* The function is used when socket connection is destroyed */
 static int
 vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
@@ -2715,16 +2710,21 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 {
 	struct nvmf_vfio_user_qpair *vu_qpair;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+	struct nvmf_vfio_user_endpoint *endpoint;
 
 	assert(qpair != NULL);
 	vu_qpair = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_qpair, qpair);
 	vu_ctrlr = vu_qpair->ctrlr;
+	endpoint = vu_ctrlr->endpoint;
 
-	pthread_mutex_lock(&vu_ctrlr->endpoint->lock);
+	pthread_mutex_lock(&endpoint->lock);
 	TAILQ_REMOVE(&vu_ctrlr->connected_qps, vu_qpair, tailq);
-	pthread_mutex_unlock(&vu_ctrlr->endpoint->lock);
-
 	delete_sq_done(vu_ctrlr, vu_qpair);
+	if (TAILQ_EMPTY(&vu_ctrlr->connected_qps)) {
+		endpoint->ctrlr = NULL;
+		free_ctrlr(vu_ctrlr);
+	}
+	pthread_mutex_unlock(&endpoint->lock);
 
 	if (cb_fn) {
 		cb_fn(cb_arg);
@@ -2739,7 +2739,9 @@ get_nvmf_vfio_user_req(struct nvmf_vfio_user_qpair *qpair)
 {
 	struct nvmf_vfio_user_req *req;
 
-	assert(qpair != NULL);
+	if (qpair == NULL) {
+		return NULL;
+	}
 
 	if (TAILQ_EMPTY(&qpair->reqs)) {
 		return NULL;
