@@ -98,6 +98,9 @@ struct spdk_idxd_io_channel {
 	void					*portal;
 	uint32_t				portal_offset;
 
+	/* The currently open batch */
+	struct idxd_batch			*batch;
+
 	/*
 	 * User descriptors (those included in a batch) are managed independently from
 	 * data descriptors and are located in the batch structure.

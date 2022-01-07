@@ -249,12 +249,19 @@ err_chan:
 	return NULL;
 }
 
+static int idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch);
+
 void
 spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 {
 	struct idxd_batch *batch;
 
 	assert(chan != NULL);
+
+	if (chan->batch) {
+		idxd_batch_cancel(chan, chan->batch);
+		chan->batch = NULL;
+	}
 
 	pthread_mutex_lock(&chan->idxd->num_channels_lock);
 	assert(chan->idxd->num_channels > 0);
@@ -498,6 +505,10 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 		return -EINVAL;
 	}
 
+	if (batch->index == 0) {
+		return idxd_batch_cancel(chan, batch);
+	}
+
 	if (batch->index < MIN_USER_DESC_COUNT) {
 		/* DSA needs at least MIN_USER_DESC_COUNT for a batch, add a NOP to make it so. */
 		if (_idxd_batch_prep_nop(chan, batch)) {
@@ -531,6 +542,40 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 	return 0;
 }
 
+static int
+_idxd_setup_batch(struct spdk_idxd_io_channel *chan)
+{
+	struct idxd_batch *batch;
+
+	if (chan->batch == NULL) {
+		/* Open a new batch */
+		batch = idxd_batch_create(chan);
+		if (batch == NULL) {
+			return -EBUSY;
+		}
+		chan->batch = batch;
+	}
+
+	return 0;
+}
+
+static int
+_idxd_flush_batch(struct spdk_idxd_io_channel *chan)
+{
+	int rc;
+
+	if (chan->batch != NULL && chan->batch->index >= DESC_PER_BATCH) {
+		/* Close out the full batch */
+		rc = idxd_batch_submit(chan, chan->batch, NULL, NULL);
+		if (rc < 0) {
+			return rc;
+		}
+		chan->batch = NULL;
+	}
+
+	return 0;
+}
+
 static inline int
 _idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
 			 uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
@@ -544,10 +589,15 @@ _idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const voi
 	assert(dst != NULL);
 	assert(src != NULL);
 
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
+	}
+
+	/* Common prep. */
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	if (rc) {
+		goto error;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -567,12 +617,11 @@ _idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const voi
 	desc->xfer_size = nbytes;
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
-	/* Submit operation. */
-	_submit_to_hw(chan, op);
+	return _idxd_flush_batch(chan);
 
-	return 0;
 error:
-	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	idxd_batch_cancel(chan, chan->batch);
+	chan->batch = NULL;
 	return rc;
 }
 
@@ -604,6 +653,12 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 		return _idxd_submit_copy_single(chan, diov[0].iov_base,
 						siov[0].iov_base, siov[0].iov_len,
 						cb_fn, cb_arg);
+	}
+
+	if (chan->batch) {
+		/* Close out existing batch */
+		idxd_batch_submit(chan, chan->batch, NULL, NULL);
+		chan->batch = NULL;
 	}
 
 	batch = idxd_batch_create(chan);
@@ -713,10 +768,15 @@ _idxd_submit_compare_single(struct spdk_idxd_io_channel *chan, void *src1, const
 	assert(src1 != NULL);
 	assert(src2 != NULL);
 
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
+	}
+
+	/* Common prep. */
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	if (rc) {
+		goto error;
 	}
 
 	rc = _vtophys(src1, &src1_addr, nbytes);
@@ -735,12 +795,11 @@ _idxd_submit_compare_single(struct spdk_idxd_io_channel *chan, void *src1, const
 	desc->src2_addr = src2_addr;
 	desc->xfer_size = nbytes;
 
-	/* Submit operation. */
-	_submit_to_hw(chan, op);
+	return _idxd_flush_batch(chan);
 
-	return 0;
 error:
-	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	idxd_batch_cancel(chan, chan->batch);
+	chan->batch = NULL;
 	return rc;
 }
 
@@ -767,6 +826,12 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 
 		return _idxd_submit_compare_single(chan, siov1[0].iov_base, siov2[0].iov_base, siov1[0].iov_len,
 						   cb_fn, cb_arg);
+	}
+
+	if (chan->batch) {
+		/* Close out existing batch */
+		idxd_batch_submit(chan, chan->batch, NULL, NULL);
+		chan->batch = NULL;
 	}
 
 	batch = idxd_batch_create(chan);
@@ -817,16 +882,20 @@ _idxd_submit_fill_single(struct spdk_idxd_io_channel *chan, void *dst, uint64_t 
 	assert(chan != NULL);
 	assert(dst != NULL);
 
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
 	}
 
+	/* Common prep. */
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	if (rc) {
+		goto error;
+	}
+
 	rc = _vtophys(dst, &dst_addr, nbytes);
 	if (rc) {
-		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
-		return rc;
+		goto error;
 	}
 
 	/* Command specific. */
@@ -836,10 +905,12 @@ _idxd_submit_fill_single(struct spdk_idxd_io_channel *chan, void *dst, uint64_t 
 	desc->xfer_size = nbytes;
 	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
 
-	/* Submit operation. */
-	_submit_to_hw(chan, op);
+	return _idxd_flush_batch(chan);
 
-	return 0;
+error:
+	idxd_batch_cancel(chan, chan->batch);
+	chan->batch = NULL;
+	return rc;
 }
 
 int
@@ -858,6 +929,12 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 		/* Simple case - filling one buffer */
 		return _idxd_submit_fill_single(chan, diov[0].iov_base, fill_pattern,
 						diov[0].iov_len, cb_fn, cb_arg);
+	}
+
+	if (chan->batch) {
+		/* Close out existing batch */
+		idxd_batch_submit(chan, chan->batch, NULL, NULL);
+		chan->batch = NULL;
 	}
 
 	batch = idxd_batch_create(chan);
@@ -904,16 +981,20 @@ _idxd_submit_crc32c_single(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst,
 	assert(crc_dst != NULL);
 	assert(src != NULL);
 
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
 	}
 
+	/* Common prep. */
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	if (rc) {
+		goto error;
+	}
+
 	rc = _vtophys(src, &src_addr, nbytes);
 	if (rc) {
-		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
-		return rc;
+		goto error;
 	}
 
 	/* Command specific. */
@@ -925,10 +1006,12 @@ _idxd_submit_crc32c_single(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst,
 	desc->xfer_size = nbytes;
 	op->crc_dst = crc_dst;
 
-	/* Submit operation. */
-	_submit_to_hw(chan, op);
+	return _idxd_flush_batch(chan);
 
-	return 0;
+error:
+	idxd_batch_cancel(chan, chan->batch);
+	chan->batch = NULL;
+	return rc;
 }
 
 int
@@ -949,6 +1032,12 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 		/* Simple case - crc on one buffer */
 		return _idxd_submit_crc32c_single(chan, crc_dst, siov[0].iov_base,
 						  seed, siov[0].iov_len, cb_fn, cb_arg);
+	}
+
+	if (chan->batch) {
+		/* Close out existing batch */
+		idxd_batch_submit(chan, chan->batch, NULL, NULL);
+		chan->batch = NULL;
 	}
 
 	batch = idxd_batch_create(chan);
@@ -1009,10 +1098,15 @@ _idxd_submit_copy_crc32c_single(struct spdk_idxd_io_channel *chan, void *dst, vo
 	assert(src != NULL);
 	assert(crc_dst != NULL);
 
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
+	}
+
+	/* Common prep. */
+	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, chan->batch, &desc, &op);
+	if (rc) {
+		goto error;
 	}
 
 	rc = _vtophys(src, &src_addr, nbytes);
@@ -1034,12 +1128,11 @@ _idxd_submit_copy_crc32c_single(struct spdk_idxd_io_channel *chan, void *dst, vo
 	desc->xfer_size = nbytes;
 	op->crc_dst = crc_dst;
 
-	/* Submit operation. */
-	_submit_to_hw(chan, op);
+	return _idxd_flush_batch(chan);
 
-	return 0;
 error:
-	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	idxd_batch_cancel(chan, chan->batch);
+	chan->batch = NULL;
 	return rc;
 }
 
@@ -1068,6 +1161,12 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 		/* Simple case - crc on one buffer */
 		return _idxd_submit_copy_crc32c_single(chan, diov[0].iov_base, siov[0].iov_base,
 						       crc_dst, seed, siov[0].iov_len, cb_fn, cb_arg);
+	}
+
+	if (chan->batch) {
+		/* Close out existing batch */
+		idxd_batch_submit(chan, chan->batch, NULL, NULL);
+		chan->batch = NULL;
 	}
 
 	batch = idxd_batch_create(chan);
@@ -1178,7 +1277,8 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			op->hw.status = 0;
 			if (op->desc->opcode == IDXD_OPCODE_BATCH) {
 				_free_batch(op->batch, chan);
-			} else if (op->batch == NULL) {
+				TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
+			} else if (!op->batch) {
 				TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
 			}
 
@@ -1197,6 +1297,13 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			break;
 		}
 	}
+
+	/* Submit any built-up batch */
+	if (chan->batch) {
+		idxd_batch_submit(chan, chan->batch, NULL, NULL);
+		chan->batch = NULL;
+	}
+
 	return rc;
 }
 
