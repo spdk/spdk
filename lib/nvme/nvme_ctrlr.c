@@ -1622,12 +1622,11 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-int
-spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
+static int
+nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair	*qpair;
 
-	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	ctrlr->prepare_for_reset = false;
 
 	if (ctrlr->is_resetting || ctrlr->is_removed) {
@@ -1636,7 +1635,6 @@ spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 		 *  immediately since there is no need to kick off another
 		 *  reset in these cases.
 		 */
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return ctrlr->is_resetting ? -EBUSY : -ENXIO;
 	}
 
@@ -1661,6 +1659,12 @@ spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 
+	return 0;
+}
+
+static void
+nvme_ctrlr_disconnect_done(struct spdk_nvme_ctrlr *ctrlr)
+{
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 
@@ -1668,9 +1672,22 @@ spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_free_iocs_specific_data(ctrlr);
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
+}
+
+int
+spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	rc = nvme_ctrlr_disconnect(ctrlr);
+	if (rc == 0) {
+		nvme_ctrlr_disconnect_done(ctrlr);
+	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-	return 0;
+	return rc;
 }
 
 void
@@ -1769,7 +1786,15 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 
-	rc = spdk_nvme_ctrlr_disconnect(ctrlr);
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	rc = nvme_ctrlr_disconnect(ctrlr);
+	if (rc == 0) {
+		nvme_ctrlr_disconnect_done(ctrlr);
+	}
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
 	if (rc != 0) {
 		if (rc == -EBUSY) {
 			rc = 0;
