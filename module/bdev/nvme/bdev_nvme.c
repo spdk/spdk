@@ -1222,6 +1222,8 @@ bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 
 	ctrlr_ch->qpair = qpair;
 
+	_bdev_nvme_clear_io_path_cache(ctrlr_ch);
+
 	return 0;
 
 err:
