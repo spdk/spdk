@@ -54,7 +54,6 @@ uint32_t g_config_number;
 
 enum channel_state {
 	IDXD_CHANNEL_ACTIVE,
-	IDXD_CHANNEL_PAUSED,
 	IDXD_CHANNEL_ERROR,
 };
 
@@ -75,7 +74,6 @@ struct idxd_io_channel {
 	enum channel_state		state;
 	struct spdk_poller		*poller;
 	uint32_t			num_outstanding;
-	uint32_t			max_outstanding;
 	TAILQ_HEAD(, spdk_accel_task)	queued_tasks;
 };
 
@@ -114,7 +112,6 @@ idxd_select_device(struct idxd_io_channel *chan)
 		 */
 		chan->chan = spdk_idxd_get_channel(dev->idxd);
 		if (chan->chan != NULL) {
-			chan->max_outstanding = spdk_idxd_chan_get_max_operations(chan->chan);
 			SPDK_DEBUGLOG(accel_idxd, "On socket %d using device on socket %d\n",
 				      socket_id, spdk_idxd_get_socket(dev->idxd));
 			return dev;
@@ -138,9 +135,7 @@ idxd_done(void *cb_arg, int status)
 
 	assert(chan->num_outstanding > 0);
 	spdk_trace_record(TRACE_IDXD_OP_COMPLETE, 0, 0, 0, chan->num_outstanding - 1);
-	if (chan->num_outstanding-- == chan->max_outstanding) {
-		chan->state = IDXD_CHANNEL_ACTIVE;
-	}
+	chan->num_outstanding--;
 
 	spdk_accel_task_complete(accel_task, status);
 }
@@ -155,11 +150,6 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	uint32_t iovcnt;
 	struct iovec siov = {};
 	struct iovec diov = {};
-
-	if (chan->num_outstanding == chan->max_outstanding) {
-		chan->state = IDXD_CHANNEL_PAUSED;
-		return -EBUSY;
-	}
 
 	switch (task->op_code) {
 	case ACCEL_OPCODE_MEMMOVE:
@@ -239,15 +229,17 @@ idxd_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task
 
 	task = first_task;
 
-	if (chan->state == IDXD_CHANNEL_PAUSED) {
-		goto queue_tasks;
-	} else if (chan->state == IDXD_CHANNEL_ERROR) {
+	if (chan->state == IDXD_CHANNEL_ERROR) {
 		while (task) {
 			tmp = TAILQ_NEXT(task, link);
 			spdk_accel_task_complete(task, -EINVAL);
 			task = tmp;
 		}
 		return 0;
+	}
+
+	if (!TAILQ_EMPTY(&chan->queued_tasks)) {
+		goto queue_tasks;
 	}
 
 	/* The caller will either submit a single task or a group of tasks that are
