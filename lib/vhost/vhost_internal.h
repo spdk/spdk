@@ -100,9 +100,6 @@ typedef struct rte_vhost_resubmit_desc spdk_vhost_resubmit_desc;
 typedef struct rte_vhost_resubmit_info spdk_vhost_resubmit_info;
 typedef struct rte_vhost_inflight_desc_packed	spdk_vhost_inflight_desc;
 
-/* Path to folder where character device will be created. Can be set by user. */
-extern char g_vhost_user_dev_dirname[PATH_MAX];
-
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	struct rte_vhost_ring_inflight vring_inflight;
@@ -424,15 +421,6 @@ int vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 /*
- * Vhost callbacks for vhost_device_ops interface
- */
-
-int vhost_new_connection_cb(int vid, const char *ifname);
-int vhost_start_device_cb(int vid);
-int vhost_stop_device_cb(int vid);
-int vhost_destroy_connection_cb(int vid);
-
-/*
  * Set vhost session to run in interrupt or poll mode
  */
 void vhost_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool interrupt_mode);
@@ -531,6 +519,5 @@ int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 typedef void (*vhost_fini_cb)(void *ctx);
 void vhost_user_fini(vhost_fini_cb vhost_cb);
-int _stop_session(struct spdk_vhost_session *vsession);
 
 #endif /* SPDK_VHOST_INTERNAL_H */

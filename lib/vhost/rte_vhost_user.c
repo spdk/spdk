@@ -46,7 +46,8 @@
 
 #include "spdk_internal/vhost_user.h"
 
-char g_vhost_user_dev_dirname[PATH_MAX] = "";
+/* Path to folder where character device will be created. Can be set by user. */
+static char g_vhost_user_dev_dirname[PATH_MAX] = "";
 sem_t g_dpdk_sem;
 
 static void __attribute__((constructor))
@@ -117,7 +118,7 @@ vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 	}
 }
 
-int
+static int
 _stop_session(struct spdk_vhost_session *vsession)
 {
 	struct spdk_vhost_dev *vdev = vsession->vdev;
@@ -163,32 +164,254 @@ _stop_session(struct spdk_vhost_session *vsession)
 static int
 new_connection(int vid)
 {
+	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
+	size_t dev_dirname_len;
 	char ifname[PATH_MAX];
+	char *ctrlr_name;
 
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device with vid %d\n", vid);
 		return -1;
 	}
 
-	return vhost_new_connection_cb(vid, ifname);
+	spdk_vhost_lock();
+
+	ctrlr_name = &ifname[0];
+	dev_dirname_len = strlen(g_vhost_user_dev_dirname);
+	if (strncmp(ctrlr_name, g_vhost_user_dev_dirname, dev_dirname_len) == 0) {
+		ctrlr_name += dev_dirname_len;
+	}
+
+	vdev = spdk_vhost_dev_find(ctrlr_name);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
+		spdk_vhost_unlock();
+		return -1;
+	}
+
+	/* We expect sessions inside vdev->vsessions to be sorted in ascending
+	 * order in regard of vsession->id. For now we always set id = vsessions_cnt++
+	 * and append each session to the very end of the vsessions list.
+	 * This is required for spdk_vhost_dev_foreach_session() to work.
+	 */
+	if (vdev->vsessions_num == UINT_MAX) {
+		assert(false);
+		return -EINVAL;
+	}
+
+	if (posix_memalign((void **)&vsession, SPDK_CACHE_LINE_SIZE, sizeof(*vsession) +
+			   vdev->backend->session_ctx_size)) {
+		SPDK_ERRLOG("vsession alloc failed\n");
+		spdk_vhost_unlock();
+		return -1;
+	}
+	memset(vsession, 0, sizeof(*vsession) + vdev->backend->session_ctx_size);
+
+	vsession->vdev = vdev;
+	vsession->vid = vid;
+	vsession->id = vdev->vsessions_num++;
+	vsession->name = spdk_sprintf_alloc("%ss%u", vdev->name, vsession->vid);
+	if (vsession->name == NULL) {
+		SPDK_ERRLOG("vsession alloc failed\n");
+		spdk_vhost_unlock();
+		free(vsession);
+		return -1;
+	}
+	vsession->started = false;
+	vsession->initialized = false;
+	vsession->next_stats_check_time = 0;
+	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
+					 spdk_get_ticks_hz() / 1000UL;
+	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);
+
+	vhost_session_install_rte_compat_hooks(vsession);
+	spdk_vhost_unlock();
+	return 0;
 }
 
 static int
 start_device(int vid)
 {
-	return vhost_start_device_cb(vid);
+	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
+	int rc = -1;
+	uint16_t i;
+	bool packed_ring;
+
+	spdk_vhost_lock();
+
+	vsession = vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
+		goto out;
+	}
+
+	vdev = vsession->vdev;
+	if (vsession->started) {
+		/* already started, nothing to do */
+		rc = 0;
+		goto out;
+	}
+
+	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
+		goto out;
+	}
+
+	packed_ring = ((vsession->negotiated_features & (1ULL << VIRTIO_F_RING_PACKED)) != 0);
+
+	vsession->max_queues = 0;
+	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
+	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
+		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
+
+		q->vsession = vsession;
+		q->vring_idx = -1;
+		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
+			continue;
+		}
+		q->vring_idx = i;
+		rte_vhost_get_vhost_ring_inflight(vid, i, &q->vring_inflight);
+
+		/* vring.desc and vring.desc_packed are in a union struct
+		 * so q->vring.desc can replace q->vring.desc_packed.
+		 */
+		if (q->vring.desc == NULL || q->vring.size == 0) {
+			continue;
+		}
+
+		if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
+			q->vring.desc = NULL;
+			continue;
+		}
+
+		if (packed_ring) {
+			/* Use the inflight mem to restore the last_avail_idx and last_used_idx.
+			 * When the vring format is packed, there is no used_idx in the
+			 * used ring, so VM can't resend the used_idx to VHOST when reconnect.
+			 * QEMU version 5.2.0 supports the packed inflight before that it only
+			 * supports split ring inflight because it doesn't send negotiated features
+			 * before get inflight fd. Users can use RPC to enable this function.
+			 */
+			if (spdk_unlikely(g_packed_ring_recovery)) {
+				rte_vhost_get_vring_base_from_inflight(vsession->vid, i,
+								       &q->last_avail_idx,
+								       &q->last_used_idx);
+			}
+
+			/* Packed virtqueues support up to 2^15 entries each
+			 * so left one bit can be used as wrap counter.
+			 */
+			q->packed.avail_phase = q->last_avail_idx >> 15;
+			q->last_avail_idx = q->last_avail_idx & 0x7FFF;
+			q->packed.used_phase = q->last_used_idx >> 15;
+			q->last_used_idx = q->last_used_idx & 0x7FFF;
+
+			if (!vsession->interrupt_mode) {
+				/* Disable I/O submission notifications, we'll be polling. */
+				q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
+			}
+		} else {
+			if (!vsession->interrupt_mode) {
+				/* Disable I/O submission notifications, we'll be polling. */
+				q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+			}
+		}
+
+		q->packed.packed_ring = packed_ring;
+		vsession->max_queues = i + 1;
+	}
+
+	if (vhost_get_mem_table(vid, &vsession->mem) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
+		goto out;
+	}
+
+	/*
+	 * Not sure right now but this look like some kind of QEMU bug and guest IO
+	 * might be frozed without kicking all queues after live-migration. This look like
+	 * the previous vhost instance failed to effectively deliver all interrupts before
+	 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
+	 * should be ignored by guest virtio driver.
+	 *
+	 * Tested on QEMU 2.10.91 and 2.11.50.
+	 */
+	for (i = 0; i < vsession->max_queues; i++) {
+		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
+
+		/* vring.desc and vring.desc_packed are in a union struct
+		 * so q->vring.desc can replace q->vring.desc_packed.
+		 */
+		if (q->vring.desc != NULL && q->vring.size > 0) {
+			rte_vhost_vring_call(vsession->vid, q->vring_idx);
+		}
+	}
+
+	vhost_user_session_set_coalescing(vdev, vsession, NULL);
+	vhost_session_mem_register(vsession->mem);
+	vsession->initialized = true;
+	rc = vdev->backend->start_session(vsession);
+	if (rc != 0) {
+		vhost_session_mem_unregister(vsession->mem);
+		free(vsession->mem);
+		goto out;
+	}
+
+out:
+	spdk_vhost_unlock();
+	return rc;
 }
 
 static void
 stop_device(int vid)
 {
-	vhost_stop_device_cb(vid);
+	struct spdk_vhost_session *vsession;
+
+	spdk_vhost_lock();
+	vsession = vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
+		spdk_vhost_unlock();
+		return;
+	}
+
+	if (!vsession->started) {
+		/* already stopped, nothing to do */
+		spdk_vhost_unlock();
+		return;
+	}
+
+	_stop_session(vsession);
+	spdk_vhost_unlock();
+
+	return;
 }
 
 static void
 destroy_connection(int vid)
 {
-	vhost_destroy_connection_cb(vid);
+	struct spdk_vhost_session *vsession;
+
+	spdk_vhost_lock();
+	vsession = vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
+		spdk_vhost_unlock();
+		return;
+	}
+
+	if (vsession->started) {
+		if (_stop_session(vsession) != 0) {
+			spdk_vhost_unlock();
+			return;
+		}
+	}
+
+	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
+	free(vsession->name);
+	free(vsession);
+	spdk_vhost_unlock();
 }
 
 #if RTE_VERSION >= RTE_VERSION_NUM(21, 11, 0, 0)
