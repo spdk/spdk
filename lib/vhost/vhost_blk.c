@@ -1072,7 +1072,7 @@ vhost_blk_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bo
 {
 	struct spdk_vhost_blk_session *bvsession = cb_arg;
 
-	vhost_session_set_interrupt_mode(&bvsession->vsession, interrupt_mode);
+	vhost_user_session_set_interrupt_mode(&bvsession->vsession, interrupt_mode);
 }
 
 static struct spdk_vhost_blk_dev *

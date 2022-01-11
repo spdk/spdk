@@ -423,7 +423,8 @@ void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ct
 /*
  * Set vhost session to run in interrupt or poll mode
  */
-void vhost_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool interrupt_mode);
+void vhost_user_session_set_interrupt_mode(struct spdk_vhost_session *vsession,
+		bool interrupt_mode);
 
 /*
  * Memory registration functions used in start/stop device callbacks
