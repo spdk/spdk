@@ -150,7 +150,10 @@ function vhost_run() {
 		return 1
 	fi
 
-	local cmd="$vhost_app -r $vhost_dir/rpc.sock -S $vhost_dir $vhost_args"
+	local cmd="$vhost_app -r $vhost_dir/rpc.sock $vhost_args"
+	if [[ "$vhost_bin" =~ vhost ]]; then
+		cmd+=" -S $vhost_dir"
+	fi
 
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
