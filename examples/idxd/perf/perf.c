@@ -53,9 +53,6 @@ enum idxd_capability {
 #define DATA_PATTERN 0x5a
 #define ALIGN_4K 0x1000
 
-#define MAX_BATCH_SIZE			0x10
-#define MAX_NUM_BATCHES_PER_CHANNEL	(MAX_TASKS_PER_CHANNEL / MAX_BATCH_SIZE)
-
 static int g_xfer_size_bytes = 4096;
 
 /* g_allocate_depth indicates how many tasks we allocate per work_chan. It will
@@ -66,7 +63,6 @@ static int g_idxd_max_per_core = 1;
 static char *g_core_mask = "0x1";
 static bool g_idxd_kernel_mode = false;
 static int g_allocate_depth = 0;
-static int g_ops_per_batch = 0;
 static int g_time_in_sec = 5;
 static uint32_t g_crc32c_seed = 0;
 static uint32_t g_crc32c_chained_count = 1;
@@ -102,9 +98,6 @@ struct idxd_task {
 	int			status;
 	int			expected_status; /* used for the compare operation */
 	TAILQ_ENTRY(idxd_task)	link;
-	struct idxd_batch		*batch;
-	struct worker_thread		*worker;
-	TAILQ_HEAD(, idxd_task)		tasks;
 };
 
 struct idxd_chan_entry {
@@ -152,11 +145,6 @@ dump_user_config(void)
 	printf("Queue depth:     %u\n", g_queue_depth);
 	printf("Allocated depth: %u\n", g_allocate_depth);
 	printf("Run time:        %u seconds\n", g_time_in_sec);
-	if (g_ops_per_batch > 0) {
-		printf("Batching:       %u operations/batch\n", g_ops_per_batch);
-	} else {
-		printf("Batching:       Disabled\n");
-	}
 	printf("Verify:          %s\n\n", g_verify ? "Yes" : "No");
 }
 
@@ -217,12 +205,11 @@ usage(void)
 	printf("\t[-m core mask for distributing I/O submission/completion work]\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
-	printf("\t[-q queue depth per core, when batching is disabled this is the number of operations, when enabled it is the number of batches]\n");
+	printf("\t[-q queue depth per core]\n");
 	printf("\t[-R max idxd devices per core can drive (default 1)]\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, dualcast\n");
-	printf("\t[-b batch this number of operations at a time (default 0 = disabled)]\n");
 	printf("\t[-y verify result if this switch is on]\n");
 	printf("\t\tCan be used to spread operations across a wider range of memory.\n");
 }
@@ -233,10 +220,9 @@ parse_args(int argc, char **argv)
 	int argval = 0;
 	int op;
 
-	while ((op = getopt(argc, argv, "a:b:C:f:hkm:o:P:q:r:t:yw:")) != -1) {
+	while ((op = getopt(argc, argv, "a:C:f:hkm:o:P:q:r:t:yw:")) != -1) {
 		switch (op) {
 		case 'a':
-		case 'b':
 		case 'C':
 		case 'f':
 		case 'o':
@@ -259,9 +245,6 @@ parse_args(int argc, char **argv)
 		switch (op) {
 		case 'a':
 			g_allocate_depth = argval;
-			break;
-		case 'b':
-			g_ops_per_batch = argval;
 			break;
 		case 'C':
 			g_crc32c_chained_count = argval;
@@ -526,86 +509,9 @@ drain_io(struct idxd_chan_entry *t)
 	}
 }
 
-static int
-_batch_prep_cmd(struct idxd_chan_entry *t, struct idxd_task *batch_task, struct idxd_task *task)
-{
-	struct idxd_batch *batch = batch_task->batch;
-	int rc = 0;
-
-	assert(t);
-
-	switch (g_workload_selection) {
-	case IDXD_COPY:
-		rc = spdk_idxd_batch_prep_copy(t->ch, batch, task->dst,
-					       task->src, g_xfer_size_bytes, idxd_done, task);
-		break;
-	case IDXD_DUALCAST:
-		rc = spdk_idxd_batch_prep_dualcast(t->ch, batch, task->dst, task->dst2,
-						   task->src, g_xfer_size_bytes, idxd_done, task);
-		break;
-	case IDXD_COMPARE:
-		rc = spdk_idxd_batch_prep_compare(t->ch, batch, task->dst, task->src,
-						  g_xfer_size_bytes, idxd_done, task);
-		break;
-	case IDXD_FILL:
-		rc = spdk_idxd_batch_prep_fill(t->ch, batch, task->dst,
-					       *(uint8_t *)task->src,
-					       g_xfer_size_bytes, idxd_done, task);
-		break;
-	case IDXD_COPY_CRC32C:
-		rc = spdk_idxd_batch_prep_copy_crc32c(t->ch, batch, task->dst, task->src, &task->crc_dst,
-						      g_crc32c_seed, g_xfer_size_bytes, idxd_done, task);
-		break;
-	case IDXD_CRC32C:
-		rc = spdk_idxd_batch_prep_crc32c(t->ch, batch, &task->crc_dst,
-						 task->iovs, task->iov_cnt, g_crc32c_seed, idxd_done, task);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	return rc;
-}
-
-static void batch_submit(struct idxd_chan_entry *chan, struct idxd_task *batch_task)
-{
-	struct idxd_task *task;
-	int rc;
-	batch_task->batch = spdk_idxd_batch_create(chan->ch);
-	if (batch_task->batch == NULL) {
-		fprintf(stderr, "unable to create batch\n");
-		return;
-	}
-
-	TAILQ_FOREACH(task, &batch_task->tasks, link) {
-		if (task == NULL) {
-			goto error;
-		}
-		rc = _batch_prep_cmd(chan, batch_task, task);
-		if (rc) {
-			fprintf(stderr, "error preping command\n");
-			goto error;
-		}
-	}
-
-	rc = spdk_idxd_batch_submit(chan->ch, batch_task->batch, idxd_done, batch_task);
-	if (rc) {
-		fprintf(stderr, "error ending batch\n");
-		chan->current_queue_depth--;
-		return;
-	}
-	return;
-error:
-	if (batch_task && batch_task->batch) {
-		spdk_idxd_batch_cancel(chan->ch, batch_task->batch);
-	}
-
-}
-
-/* Submit operations using the same idxd task that just completed. */
+/* Submit one operation using the same idxd task that just completed. */
 static void
-_submit_ops(struct idxd_chan_entry *t, struct idxd_task *task)
+_submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 {
 	int random_num;
 	int rc = 0;
@@ -613,65 +519,60 @@ _submit_ops(struct idxd_chan_entry *t, struct idxd_task *task)
 	struct iovec diov = {};
 
 	assert(t);
+
 	t->current_queue_depth++;
 
-	if (g_ops_per_batch > 0) {
-		/* Submit as batch task */
-		batch_submit(t, task);
-
-	} else {
-
-		switch (g_workload_selection) {
-		case IDXD_COPY:
-			siov.iov_base = task->src;
-			siov.iov_len = g_xfer_size_bytes;
-			diov.iov_base = task->dst;
-			diov.iov_len = g_xfer_size_bytes;
-			rc = spdk_idxd_submit_copy(t->ch, &diov, 1, &siov, 1,
-						   idxd_done, task);
-			break;
-		case IDXD_FILL:
-			/* For fill use the first byte of the task->dst buffer */
-			diov.iov_base = task->dst;
-			diov.iov_len = g_xfer_size_bytes;
-			rc = spdk_idxd_submit_fill(t->ch, &diov, 1, *(uint8_t *)task->src,
-						   idxd_done, task);
-			break;
-		case IDXD_CRC32C:
-			assert(task->iovs != NULL);
-			assert(task->iov_cnt > 0);
-			rc = spdk_idxd_submit_crc32c(t->ch, task->iovs, task->iov_cnt,
-						     g_crc32c_seed, &task->crc_dst,
-						     idxd_done, task);
-			break;
-		case IDXD_COMPARE:
-			random_num = rand() % 100;
-			assert(task->dst != NULL);
-			if (random_num < g_fail_percent_goal) {
-				task->expected_status = -EILSEQ;
-				*(uint8_t *)task->dst = ~DATA_PATTERN;
-			} else {
-				task->expected_status = 0;
-				*(uint8_t *)task->dst = DATA_PATTERN;
-			}
-			siov.iov_base = task->src;
-			siov.iov_len = g_xfer_size_bytes;
-			diov.iov_base = task->dst;
-			diov.iov_len = g_xfer_size_bytes;
-			rc = spdk_idxd_submit_compare(t->ch, &siov, 1, &diov, 1, idxd_done, task);
-			break;
-		case IDXD_DUALCAST:
-			rc = spdk_idxd_submit_dualcast(t->ch, task->dst, task->dst2,
-						       task->src, g_xfer_size_bytes, idxd_done, task);
-			break;
-		default:
-			assert(false);
-			break;
-
+	switch (g_workload_selection) {
+	case IDXD_COPY:
+		siov.iov_base = task->src;
+		siov.iov_len = g_xfer_size_bytes;
+		diov.iov_base = task->dst;
+		diov.iov_len = g_xfer_size_bytes;
+		rc = spdk_idxd_submit_copy(t->ch, &diov, 1, &siov, 1,
+					   idxd_done, task);
+		break;
+	case IDXD_FILL:
+		/* For fill use the first byte of the task->dst buffer */
+		diov.iov_base = task->dst;
+		diov.iov_len = g_xfer_size_bytes;
+		rc = spdk_idxd_submit_fill(t->ch, &diov, 1, *(uint8_t *)task->src,
+					   idxd_done, task);
+		break;
+	case IDXD_CRC32C:
+		assert(task->iovs != NULL);
+		assert(task->iov_cnt > 0);
+		rc = spdk_idxd_submit_crc32c(t->ch, task->iovs, task->iov_cnt,
+					     g_crc32c_seed, &task->crc_dst,
+					     idxd_done, task);
+		break;
+	case IDXD_COMPARE:
+		random_num = rand() % 100;
+		assert(task->dst != NULL);
+		if (random_num < g_fail_percent_goal) {
+			task->expected_status = -EILSEQ;
+			*(uint8_t *)task->dst = ~DATA_PATTERN;
+		} else {
+			task->expected_status = 0;
+			*(uint8_t *)task->dst = DATA_PATTERN;
 		}
-	}
-	if (rc) {
+		siov.iov_base = task->src;
+		siov.iov_len = g_xfer_size_bytes;
+		diov.iov_base = task->dst;
+		diov.iov_len = g_xfer_size_bytes;
+		rc = spdk_idxd_submit_compare(t->ch, &siov, 1, &diov, 1, idxd_done, task);
+		break;
+	case IDXD_DUALCAST:
+		rc = spdk_idxd_submit_dualcast(t->ch, task->dst, task->dst2,
+					       task->src, g_xfer_size_bytes, idxd_done, task);
+		break;
+	default:
 		assert(false);
+		break;
+
+	}
+
+	if (rc) {
+		idxd_done(task, rc);
 	}
 }
 
@@ -767,8 +668,9 @@ idxd_done(void *arg1, int status)
 
 	chan->xfer_completed++;
 	chan->current_queue_depth--;
+
 	if (!chan->is_draining) {
-		_submit_ops(chan, task);
+		_submit_single(chan, task);
 	} else {
 		TAILQ_INSERT_TAIL(&chan->tasks_pool_head, task, link);
 	}
@@ -789,13 +691,6 @@ dump_result(void)
 	while (worker != NULL) {
 		t = worker->ctx;
 		while (t) {
-			if (g_ops_per_batch != 0) {
-				/* One batch counts as an one outstanding operation to the DSA device
-				 *for flow control but for performance the total IOs for batch size
-				 *are calculated.
-				 */
-				t->xfer_completed = t->xfer_completed * g_ops_per_batch;
-			}
 			uint64_t xfer_per_sec = t->xfer_completed / g_time_in_sec;
 			uint64_t bw_in_MiBps = (t->xfer_completed * g_xfer_size_bytes) /
 					       (g_time_in_sec * 1024 * 1024);
@@ -829,29 +724,19 @@ dump_result(void)
 static int
 submit_all(struct idxd_chan_entry *t)
 {
-	int i, j;
-	struct idxd_task *submit_task, *task;
+	int i;
+	int remaining = g_queue_depth;
+	struct idxd_task *task;
 
-	for (j = 0; j < g_queue_depth; j++) {
-		submit_task = _get_task(t);
-		if (submit_task == NULL) {
+	for (i = 0; i < remaining; i++) {
+		task = _get_task(t);
+		if (task == NULL) {
 			_free_task_buffers_in_pool(t);
 			return -1;
 		}
-		TAILQ_INIT(&submit_task->tasks);
-		for (i = 0; i < g_ops_per_batch; i++) {
-			task = _get_task(t);
-			TAILQ_INSERT_TAIL(&submit_task->tasks, task, link);
-			if (task == NULL) {
-				_free_task_buffers_in_pool(t);
-				return -1;
-			}
-		}
-	}
 
-	for (j = 0; j < g_queue_depth; j++) {
-		/* Submit single task or a batch here */
-		_submit_ops(t, submit_task);
+		/* Submit as single task */
+		_submit_single(t, task);
 	}
 
 	return 0;
@@ -934,16 +819,16 @@ static int
 init_idxd_chan_entry(struct idxd_chan_entry *t, struct spdk_idxd_device *idxd)
 {
 	int local_qd;
+	int num_tasks = g_allocate_depth;
 	struct idxd_task *task;
-	int max_per_batch;
 	int i;
 
 	assert(t != NULL);
 
 	TAILQ_INIT(&t->tasks_pool_head);
 	t->ch = spdk_idxd_get_channel(idxd);
-	if (spdk_idxd_configure_chan(t->ch)) {
-		fprintf(stderr, "Failed to configure ch=%p\n", t->ch);
+	if (t->ch == NULL) {
+		fprintf(stderr, "Failed to get channel\n");
 		goto err;
 	}
 
@@ -955,16 +840,6 @@ init_idxd_chan_entry(struct idxd_chan_entry *t, struct spdk_idxd_device *idxd)
 		g_queue_depth = local_qd;
 	}
 
-	if (g_ops_per_batch > 0) {
-		max_per_batch = spdk_idxd_batch_get_max();
-		assert(max_per_batch > 0);
-
-		if (g_ops_per_batch > max_per_batch) {
-			fprintf(stderr, "Reducing requested batch amount to max supported of %d\n", max_per_batch);
-			g_ops_per_batch = max_per_batch;
-		}
-		g_allocate_depth = (g_queue_depth * (g_ops_per_batch + 1));
-	}
 
 	t->task_base = calloc(g_allocate_depth, sizeof(struct idxd_task));
 	if (t->task_base == NULL) {
@@ -973,7 +848,7 @@ init_idxd_chan_entry(struct idxd_chan_entry *t, struct spdk_idxd_device *idxd)
 	}
 
 	task = t->task_base;
-	for (i = 0; i < g_allocate_depth; i++) {
+	for (i = 0; i < num_tasks; i++) {
 		TAILQ_INSERT_TAIL(&t->tasks_pool_head, task, link);
 		task->worker_chan = t;
 		if (_get_task_data_bufs(task)) {
