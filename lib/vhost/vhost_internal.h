@@ -50,13 +50,6 @@ extern bool g_packed_ring_recovery;
 /* Thread performing all vhost management operations */
 extern struct spdk_thread *g_vhost_init_thread;
 
-/**
- * DPDK calls our callbacks synchronously but the work those callbacks
- * perform needs to be async. Luckily, all DPDK callbacks are called on
- * a DPDK-internal pthread, so we'll just wait on a semaphore in there.
- */
-extern sem_t g_dpdk_sem;
-
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
 
@@ -443,14 +436,14 @@ void vhost_session_mem_unregister(struct rte_vhost_memory *mem);
  * Optional, can be NULL.
  * \param arg additional argument to the both callbacks
  */
-void vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
-			       spdk_vhost_session_fn fn,
-			       spdk_vhost_dev_fn cpl_fn,
-			       void *arg);
+void vhost_user_dev_foreach_session(struct spdk_vhost_dev *dev,
+				    spdk_vhost_session_fn fn,
+				    spdk_vhost_dev_fn cpl_fn,
+				    void *arg);
 
 /**
  * Call a function on the provided lcore and block until either
- * spdk_vhost_session_start_done() or spdk_vhost_session_stop_done()
+ * vhost_user_session_start_done() or vhost_user_session_stop_done()
  * is called.
  *
  * This must be called under the global vhost mutex, which this function
@@ -465,28 +458,28 @@ void vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * \param errmsg error message to print once the timeout expires
  * \return return the code passed to spdk_vhost_session_event_done().
  */
-int vhost_session_send_event(struct spdk_vhost_session *vsession,
-			     spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
-			     const char *errmsg);
+int vhost_user_session_send_event(struct spdk_vhost_session *vsession,
+				  spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
+				  const char *errmsg);
 
 /**
- * Finish a blocking spdk_vhost_session_send_event() call and finally
+ * Finish a blocking spdk_vhost_user_session_send_event() call and finally
  * start the session. This must be called on the target lcore, which
  * will now receive all session-related messages (e.g. from
- * spdk_vhost_dev_foreach_session()).
+ * vhost_user_dev_foreach_session()).
  *
  * Must be called under the global vhost lock.
  *
  * \param vsession vhost session
  * \param response return code
  */
-void vhost_session_start_done(struct spdk_vhost_session *vsession, int response);
+void vhost_user_session_start_done(struct spdk_vhost_session *vsession, int response);
 
 /**
- * Finish a blocking spdk_vhost_session_send_event() call and finally
+ * Finish a blocking spdk_vhost_user_session_send_event() call and finally
  * stop the session. This must be called on the session's lcore which
  * used to receive all session-related messages (e.g. from
- * spdk_vhost_dev_foreach_session()). After this call, the session-
+ * vhost_user_dev_foreach_session()). After this call, the session-
  * related messages will be once again processed by any arbitrary thread.
  *
  * Must be called under the global vhost lock.
@@ -496,7 +489,7 @@ void vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
  * \param vsession vhost session
  * \param response return code
  */
-void vhost_session_stop_done(struct spdk_vhost_session *vsession, int response);
+void vhost_user_session_stop_done(struct spdk_vhost_session *vsession, int response);
 
 struct spdk_vhost_session *vhost_session_find_by_vid(int vid);
 void vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession);

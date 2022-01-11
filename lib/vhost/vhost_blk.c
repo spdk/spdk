@@ -1111,8 +1111,8 @@ blk_resize_cb(void *resize_ctx)
 	struct spdk_vhost_blk_dev *bvdev = resize_ctx;
 
 	spdk_vhost_lock();
-	vhost_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_resize_cb,
-				  NULL, NULL);
+	vhost_user_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_resize_cb,
+				       NULL, NULL);
 	spdk_vhost_unlock();
 }
 
@@ -1168,8 +1168,8 @@ bdev_remove_cb(void *remove_ctx)
 		     bvdev->vdev.name);
 
 	spdk_vhost_lock();
-	vhost_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_remove_cb,
-				  vhost_dev_bdev_remove_cpl_cb, NULL);
+	vhost_user_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_remove_cb,
+				       vhost_dev_bdev_remove_cpl_cb, NULL);
 	spdk_vhost_unlock();
 }
 
@@ -1328,15 +1328,15 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 				       bvsession);
 
 out:
-	vhost_session_start_done(vsession, rc);
+	vhost_user_session_start_done(vsession, rc);
 	return rc;
 }
 
 static int
 vhost_blk_start(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession, vhost_blk_start_cb,
-					3, "start session");
+	return vhost_user_session_send_event(vsession, vhost_blk_start_cb,
+					     3, "start session");
 }
 
 static int
@@ -1353,7 +1353,7 @@ destroy_session_poller_cb(void *arg)
 			SPDK_ERRLOG("%s: Timedout when destroy session (task_cnt %d)\n", vsession->name,
 				    vsession->task_cnt);
 			spdk_poller_unregister(&bvsession->stop_poller);
-			vhost_session_stop_done(vsession, -ETIMEDOUT);
+			vhost_user_session_stop_done(vsession, -ETIMEDOUT);
 		}
 
 		return SPDK_POLLER_BUSY;
@@ -1374,7 +1374,7 @@ destroy_session_poller_cb(void *arg)
 
 	free_task_pool(bvsession);
 	spdk_poller_unregister(&bvsession->stop_poller);
-	vhost_session_stop_done(vsession, 0);
+	vhost_user_session_stop_done(vsession, 0);
 
 	spdk_vhost_unlock();
 	return SPDK_POLLER_BUSY;
@@ -1392,7 +1392,7 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 		vhost_blk_session_unregister_interrupts(bvsession);
 	}
 
-	/* vhost_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
+	/* vhost_user_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
 	bvsession->vsession.stop_retry_count = 4000;
 	bvsession->stop_poller = SPDK_POLLER_REGISTER(destroy_session_poller_cb,
 				 bvsession, 1000);
@@ -1402,8 +1402,8 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 vhost_blk_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession, vhost_blk_stop_cb,
-					3, "stop session");
+	return vhost_user_session_send_event(vsession, vhost_blk_stop_cb,
+					     3, "stop session");
 }
 
 static void

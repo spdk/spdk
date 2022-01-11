@@ -267,10 +267,10 @@ process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 			state->status = VHOST_SCSI_DEV_REMOVED;
 			/* try to detach it globally */
 			spdk_vhost_lock();
-			vhost_dev_foreach_session(&svsession->svdev->vdev,
-						  vhost_scsi_session_process_removed,
-						  vhost_scsi_dev_process_removed_cpl_cb,
-						  (void *)(uintptr_t)i);
+			vhost_user_dev_foreach_session(&svsession->svdev->vdev,
+						       vhost_scsi_session_process_removed,
+						       vhost_scsi_dev_process_removed_cpl_cb,
+						       (void *)(uintptr_t)i);
 			spdk_vhost_unlock();
 		}
 	}
@@ -1127,9 +1127,9 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	SPDK_INFOLOG(vhost, "%s: added SCSI target %u using bdev '%s'\n",
 		     vdev->name, scsi_tgt_num, bdev_name);
 
-	vhost_dev_foreach_session(vdev, vhost_scsi_session_add_tgt,
-				  vhost_scsi_dev_add_tgt_cpl_cb,
-				  (void *)(uintptr_t)scsi_tgt_num);
+	vhost_user_dev_foreach_session(vdev, vhost_scsi_session_add_tgt,
+				       vhost_scsi_dev_add_tgt_cpl_cb,
+				       (void *)(uintptr_t)scsi_tgt_num);
 	return scsi_tgt_num;
 }
 
@@ -1228,8 +1228,8 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	scsi_dev_state->remove_ctx = cb_arg;
 	scsi_dev_state->status = VHOST_SCSI_DEV_REMOVING;
 
-	vhost_dev_foreach_session(vdev, vhost_scsi_session_remove_tgt,
-				  vhost_scsi_dev_remove_tgt_cpl_cb, ctx);
+	vhost_user_dev_foreach_session(vdev, vhost_scsi_session_remove_tgt,
+				       vhost_scsi_dev_remove_tgt_cpl_cb, ctx);
 	return 0;
 }
 
@@ -1295,8 +1295,8 @@ vhost_scsi_dev_param_changed(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num)
 
 	assert(scsi_dev_state->status != VHOST_SCSI_DEV_EMPTY);
 
-	vhost_dev_foreach_session(vdev, vhost_scsi_session_param_changed,
-				  NULL, (void *)(uintptr_t)scsi_tgt_num);
+	vhost_user_dev_foreach_session(vdev, vhost_scsi_session_param_changed,
+				       NULL, (void *)(uintptr_t)scsi_tgt_num);
 	return 0;
 }
 
@@ -1417,7 +1417,7 @@ vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 	svsession->mgmt_poller = SPDK_POLLER_REGISTER(vdev_mgmt_worker, svsession,
 				 MGMT_POLL_PERIOD_US);
 out:
-	vhost_session_start_done(vsession, rc);
+	vhost_user_session_start_done(vsession, rc);
 	return rc;
 }
 
@@ -1431,8 +1431,8 @@ vhost_scsi_start(struct spdk_vhost_session *vsession)
 	assert(svdev != NULL);
 	svsession->svdev = svdev;
 
-	return vhost_session_send_event(vsession, vhost_scsi_start_cb,
-					3, "start session");
+	return vhost_user_session_send_event(vsession, vhost_scsi_start_cb,
+					     3, "start session");
 }
 
 static int
@@ -1450,7 +1450,7 @@ destroy_session_poller_cb(void *arg)
 			SPDK_ERRLOG("%s: Timedout when destroy session (task_cnt %d)\n", vsession->name,
 				    vsession->task_cnt);
 			spdk_poller_unregister(&svsession->stop_poller);
-			vhost_session_stop_done(vsession, -ETIMEDOUT);
+			vhost_user_session_stop_done(vsession, -ETIMEDOUT);
 		}
 
 		return SPDK_POLLER_BUSY;
@@ -1477,10 +1477,10 @@ destroy_session_poller_cb(void *arg)
 
 		if (prev_status == VHOST_SCSI_DEV_REMOVING) {
 			/* try to detach it globally */
-			vhost_dev_foreach_session(vsession->vdev,
-						  vhost_scsi_session_process_removed,
-						  vhost_scsi_dev_process_removed_cpl_cb,
-						  (void *)(uintptr_t)i);
+			vhost_user_dev_foreach_session(vsession->vdev,
+						       vhost_scsi_session_process_removed,
+						       vhost_scsi_dev_process_removed_cpl_cb,
+						       (void *)(uintptr_t)i);
 		}
 	}
 
@@ -1490,7 +1490,7 @@ destroy_session_poller_cb(void *arg)
 	free_task_pool(svsession);
 
 	spdk_poller_unregister(&svsession->stop_poller);
-	vhost_session_stop_done(vsession, 0);
+	vhost_user_session_stop_done(vsession, 0);
 
 	spdk_vhost_unlock();
 	return SPDK_POLLER_BUSY;
@@ -1511,7 +1511,7 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 	 */
 	spdk_poller_unregister(&svsession->mgmt_poller);
 
-	/* vhost_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
+	/* vhost_user_session_send_event timeout is 3 seconds, here set retry within 4 seconds */
 	svsession->vsession.stop_retry_count = 4000;
 
 	/* Wait for all pending I/Os to complete, then process all the
@@ -1526,8 +1526,8 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	return vhost_session_send_event(vsession, vhost_scsi_stop_cb,
-					3, "stop session");
+	return vhost_user_session_send_event(vsession, vhost_scsi_stop_cb,
+					     3, "stop session");
 }
 
 static void

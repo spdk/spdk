@@ -48,7 +48,36 @@
 
 /* Path to folder where character device will be created. Can be set by user. */
 static char g_vhost_user_dev_dirname[PATH_MAX] = "";
-sem_t g_dpdk_sem;
+
+/**
+ * DPDK calls our callbacks synchronously but the work those callbacks
+ * perform needs to be async. Luckily, all DPDK callbacks are called on
+ * a DPDK-internal pthread, so we'll just wait on a semaphore in there.
+ */
+static sem_t g_dpdk_sem;
+
+/** Return code for the current DPDK callback */
+static int g_dpdk_response;
+
+struct vhost_session_fn_ctx {
+	/** Device pointer obtained before enqueueing the event */
+	struct spdk_vhost_dev *vdev;
+
+	/** ID of the session to send event to. */
+	uint32_t vsession_id;
+
+	/** User provided function to be executed on session's thread. */
+	spdk_vhost_session_fn cb_fn;
+
+	/**
+	 * User provided function to be called on the init thread
+	 * after iterating through all sessions.
+	 */
+	spdk_vhost_dev_fn cpl_fn;
+
+	/** Custom user context */
+	void *user_ctx;
+};
 
 static void __attribute__((constructor))
 _vhost_user_sem_init(void)
@@ -193,7 +222,7 @@ new_connection(int vid)
 	/* We expect sessions inside vdev->vsessions to be sorted in ascending
 	 * order in regard of vsession->id. For now we always set id = vsessions_cnt++
 	 * and append each session to the very end of the vsessions list.
-	 * This is required for spdk_vhost_dev_foreach_session() to work.
+	 * This is required for vhost_user_dev_foreach_session() to work.
 	 */
 	if (vdev->vsessions_num == UINT_MAX) {
 		assert(false);
@@ -424,6 +453,199 @@ static const struct vhost_device_ops g_spdk_vhost_ops = {
 	.new_connection = new_connection,
 	.destroy_connection = destroy_connection,
 };
+
+static struct spdk_vhost_session *
+vhost_session_find_by_id(struct spdk_vhost_dev *vdev, unsigned id)
+{
+	struct spdk_vhost_session *vsession;
+
+	TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+		if (vsession->id == id) {
+			return vsession;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_vhost_session *
+vhost_session_find_by_vid(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
+
+	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
+	     vdev = spdk_vhost_dev_next(vdev)) {
+		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+			if (vsession->vid == vid) {
+				return vsession;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+static void
+wait_for_semaphore(int timeout_sec, const char *errmsg)
+{
+	struct timespec timeout;
+	int rc;
+
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
+	rc = sem_timedwait(&g_dpdk_sem, &timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
+		sem_wait(&g_dpdk_sem);
+	}
+}
+
+static void
+vhost_session_cb_done(int rc)
+{
+	g_dpdk_response = rc;
+	sem_post(&g_dpdk_sem);
+}
+
+void
+vhost_user_session_start_done(struct spdk_vhost_session *vsession, int response)
+{
+	if (response == 0) {
+		vsession->started = true;
+
+		assert(vsession->vdev->active_session_num < UINT32_MAX);
+		vsession->vdev->active_session_num++;
+	}
+
+	vhost_session_cb_done(response);
+}
+
+void
+vhost_user_session_stop_done(struct spdk_vhost_session *vsession, int response)
+{
+	if (response == 0) {
+		vsession->started = false;
+
+		assert(vsession->vdev->active_session_num > 0);
+		vsession->vdev->active_session_num--;
+	}
+
+	vhost_session_cb_done(response);
+}
+
+static void
+vhost_event_cb(void *arg1)
+{
+	struct vhost_session_fn_ctx *ctx = arg1;
+	struct spdk_vhost_session *vsession;
+
+	if (spdk_vhost_trylock() != 0) {
+		spdk_thread_send_msg(spdk_get_thread(), vhost_event_cb, arg1);
+		return;
+	}
+
+	vsession = vhost_session_find_by_id(ctx->vdev, ctx->vsession_id);
+	ctx->cb_fn(ctx->vdev, vsession, NULL);
+	spdk_vhost_unlock();
+}
+
+int
+vhost_user_session_send_event(struct spdk_vhost_session *vsession,
+			 spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
+			 const char *errmsg)
+{
+	struct vhost_session_fn_ctx ev_ctx = {0};
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+
+	ev_ctx.vdev = vdev;
+	ev_ctx.vsession_id = vsession->id;
+	ev_ctx.cb_fn = cb_fn;
+
+	spdk_thread_send_msg(vdev->thread, vhost_event_cb, &ev_ctx);
+
+	spdk_vhost_unlock();
+	wait_for_semaphore(timeout_sec, errmsg);
+	spdk_vhost_lock();
+
+	return g_dpdk_response;
+}
+
+static void
+foreach_session_finish_cb(void *arg1)
+{
+	struct vhost_session_fn_ctx *ev_ctx = arg1;
+	struct spdk_vhost_dev *vdev = ev_ctx->vdev;
+
+	if (spdk_vhost_trylock() != 0) {
+		spdk_thread_send_msg(spdk_get_thread(),
+				     foreach_session_finish_cb, arg1);
+		return;
+	}
+
+	assert(vdev->pending_async_op_num > 0);
+	vdev->pending_async_op_num--;
+	if (ev_ctx->cpl_fn != NULL) {
+		ev_ctx->cpl_fn(vdev, ev_ctx->user_ctx);
+	}
+
+	spdk_vhost_unlock();
+	free(ev_ctx);
+}
+
+static void
+foreach_session(void *arg1)
+{
+	struct vhost_session_fn_ctx *ev_ctx = arg1;
+	struct spdk_vhost_session *vsession;
+	struct spdk_vhost_dev *vdev = ev_ctx->vdev;
+	int rc;
+
+	if (spdk_vhost_trylock() != 0) {
+		spdk_thread_send_msg(spdk_get_thread(), foreach_session, arg1);
+		return;
+	}
+
+	TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+		if (vsession->initialized) {
+			rc = ev_ctx->cb_fn(vdev, vsession, ev_ctx->user_ctx);
+			if (rc < 0) {
+				goto out;
+			}
+		}
+	}
+
+out:
+	spdk_vhost_unlock();
+
+	spdk_thread_send_msg(g_vhost_init_thread, foreach_session_finish_cb, arg1);
+}
+
+void
+vhost_user_dev_foreach_session(struct spdk_vhost_dev *vdev,
+			  spdk_vhost_session_fn fn,
+			  spdk_vhost_dev_fn cpl_fn,
+			  void *arg)
+{
+	struct vhost_session_fn_ctx *ev_ctx;
+
+	ev_ctx = calloc(1, sizeof(*ev_ctx));
+	if (ev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc vhost event.\n");
+		assert(false);
+		return;
+	}
+
+	ev_ctx->vdev = vdev;
+	ev_ctx->cb_fn = fn;
+	ev_ctx->cpl_fn = cpl_fn;
+	ev_ctx->user_ctx = arg;
+
+	assert(vdev->pending_async_op_num < UINT32_MAX);
+	vdev->pending_async_op_num++;
+
+	spdk_thread_send_msg(vdev->thread, foreach_session, ev_ctx);
+}
 
 void
 vhost_user_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool interrupt_mode)
@@ -763,7 +985,7 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 		return rc;
 	}
 
-	vhost_dev_foreach_session(vdev, vhost_user_session_set_coalescing, NULL, NULL);
+	vhost_user_dev_foreach_session(vdev, vhost_user_session_set_coalescing, NULL, NULL);
 	return 0;
 }
 
