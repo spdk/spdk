@@ -271,14 +271,6 @@ struct spdk_idxd_io_channel *spdk_idxd_get_channel(struct spdk_idxd_device *idxd
  */
 void spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan);
 
-/**
- * Get the max number of outstanding operations supported by this channel.
- *
- * \param chan IDXD channel to communicate on.
- * \return max number of operations supported.
- */
-int spdk_idxd_chan_get_max_operations(struct spdk_idxd_io_channel *chan);
-
 #ifdef __cplusplus
 }
 #endif

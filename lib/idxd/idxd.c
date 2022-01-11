@@ -272,15 +272,6 @@ spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 	free(chan);
 }
 
-/* returns the total max operations for channel. */
-int
-spdk_idxd_chan_get_max_operations(struct spdk_idxd_io_channel *chan)
-{
-	assert(chan != NULL);
-
-	return chan->idxd->total_wq_size / chan->idxd->chan_per_device;
-}
-
 static inline struct spdk_idxd_impl *
 idxd_get_impl_by_name(const char *impl_name)
 {
