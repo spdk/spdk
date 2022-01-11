@@ -781,7 +781,8 @@ vhost_session_find_by_vid(int vid)
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
 
-	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
+	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
+	     vdev = spdk_vhost_dev_next(vdev)) {
 		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
 			if (vsession->vid == vid) {
 				return vsession;
@@ -1578,7 +1579,8 @@ session_shutdown(void *arg)
 	struct spdk_vhost_dev *vdev = NULL;
 	struct spdk_vhost_session *vsession;
 
-	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
+	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
+	     vdev = spdk_vhost_dev_next(vdev)) {
 		spdk_vhost_lock();
 		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
 			if (vsession->started) {
@@ -1626,8 +1628,8 @@ spdk_vhost_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_begin(w);
 
 	spdk_vhost_lock();
-	vdev = spdk_vhost_dev_next(NULL);
-	while (vdev != NULL) {
+	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
+	     vdev = spdk_vhost_dev_next(vdev)) {
 		vdev->backend->write_config_json(vdev, w);
 
 		spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
@@ -1643,7 +1645,6 @@ spdk_vhost_config_json(struct spdk_json_write_ctx *w)
 
 			spdk_json_write_object_end(w);
 		}
-		vdev = spdk_vhost_dev_next(vdev);
 	}
 	spdk_vhost_unlock();
 
