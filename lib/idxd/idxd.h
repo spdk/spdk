@@ -61,8 +61,8 @@ static inline void movdir64b(void *dst, const void *src)
 
 /* TODO: consider setting the max per batch limit via RPC. */
 
-/* The following sets up a max desc count per batch of 16 */
-#define LOG2_WQ_MAX_BATCH	4  /* 2^4 = 16 */
+/* The following sets up a max desc count per batch of 32 */
+#define LOG2_WQ_MAX_BATCH	5  /* 2^5 = 32 */
 #define DESC_PER_BATCH		(1 << LOG2_WQ_MAX_BATCH)
 #define MIN_USER_DESC_COUNT	2
 

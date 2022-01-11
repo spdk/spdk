@@ -107,7 +107,7 @@ test_idxd_wq_config(void)
 	struct spdk_user_idxd_device user_idxd = {};
 	struct spdk_idxd_device *idxd = &user_idxd.idxd;
 	union idxd_wqcfg wqcfg = {};
-	uint32_t expected[8] = {0x40, 0, 0x11, 0x9e, 0, 0, 0x40000000, 0};
+	uint32_t expected[8] = {0x40, 0, 0x11, 0xbe, 0, 0, 0x40000000, 0};
 	uint32_t wq_size;
 	int rc, i, j;
 
