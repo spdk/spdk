@@ -1027,14 +1027,14 @@ vhost_event_cb(void *arg1)
 	struct vhost_session_fn_ctx *ctx = arg1;
 	struct spdk_vhost_session *vsession;
 
-	if (pthread_mutex_trylock(&g_vhost_mutex) != 0) {
+	if (spdk_vhost_trylock() != 0) {
 		spdk_thread_send_msg(spdk_get_thread(), vhost_event_cb, arg1);
 		return;
 	}
 
 	vsession = vhost_session_find_by_id(ctx->vdev, ctx->vsession_id);
 	ctx->cb_fn(ctx->vdev, vsession, NULL);
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 }
 
 int
@@ -1051,9 +1051,9 @@ vhost_session_send_event(struct spdk_vhost_session *vsession,
 
 	spdk_thread_send_msg(vdev->thread, vhost_event_cb, &ev_ctx);
 
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 	wait_for_semaphore(timeout_sec, errmsg);
-	pthread_mutex_lock(&g_vhost_mutex);
+	spdk_vhost_lock();
 
 	return g_dpdk_response;
 }
@@ -1064,7 +1064,7 @@ foreach_session_finish_cb(void *arg1)
 	struct vhost_session_fn_ctx *ev_ctx = arg1;
 	struct spdk_vhost_dev *vdev = ev_ctx->vdev;
 
-	if (pthread_mutex_trylock(&g_vhost_mutex) != 0) {
+	if (spdk_vhost_trylock() != 0) {
 		spdk_thread_send_msg(spdk_get_thread(),
 				     foreach_session_finish_cb, arg1);
 		return;
@@ -1076,7 +1076,7 @@ foreach_session_finish_cb(void *arg1)
 		ev_ctx->cpl_fn(vdev, ev_ctx->user_ctx);
 	}
 
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 	free(ev_ctx);
 }
 
@@ -1088,7 +1088,7 @@ foreach_session(void *arg1)
 	struct spdk_vhost_dev *vdev = ev_ctx->vdev;
 	int rc;
 
-	if (pthread_mutex_trylock(&g_vhost_mutex) != 0) {
+	if (spdk_vhost_trylock() != 0) {
 		spdk_thread_send_msg(spdk_get_thread(), foreach_session, arg1);
 		return;
 	}
@@ -1103,7 +1103,7 @@ foreach_session(void *arg1)
 	}
 
 out:
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 
 	spdk_thread_send_msg(g_vhost_init_thread, foreach_session_finish_cb, arg1);
 }
@@ -1183,22 +1183,22 @@ vhost_stop_device_cb(int vid)
 	struct spdk_vhost_session *vsession;
 	int rc;
 
-	pthread_mutex_lock(&g_vhost_mutex);
+	spdk_vhost_lock();
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
-		pthread_mutex_unlock(&g_vhost_mutex);
+		spdk_vhost_unlock();
 		return -EINVAL;
 	}
 
 	if (!vsession->started) {
 		/* already stopped, nothing to do */
-		pthread_mutex_unlock(&g_vhost_mutex);
+		spdk_vhost_unlock();
 		return -EALREADY;
 	}
 
 	rc = _stop_session(vsession);
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 
 	return rc;
 }
@@ -1212,7 +1212,7 @@ vhost_start_device_cb(int vid)
 	uint16_t i;
 	bool packed_ring;
 
-	pthread_mutex_lock(&g_vhost_mutex);
+	spdk_vhost_lock();
 
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
@@ -1332,7 +1332,7 @@ vhost_start_device_cb(int vid)
 	}
 
 out:
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 	return rc;
 }
 
@@ -1408,7 +1408,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	struct spdk_vhost_session *vsession;
 	size_t dev_dirname_len;
 
-	pthread_mutex_lock(&g_vhost_mutex);
+	spdk_vhost_lock();
 
 	dev_dirname_len = strlen(g_vhost_user_dev_dirname);
 	if (strncmp(ifname, g_vhost_user_dev_dirname, dev_dirname_len) == 0) {
@@ -1418,7 +1418,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	vdev = spdk_vhost_dev_find(ifname);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
-		pthread_mutex_unlock(&g_vhost_mutex);
+		spdk_vhost_unlock();
 		return -1;
 	}
 
@@ -1435,7 +1435,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	if (posix_memalign((void **)&vsession, SPDK_CACHE_LINE_SIZE, sizeof(*vsession) +
 			   vdev->backend->session_ctx_size)) {
 		SPDK_ERRLOG("vsession alloc failed\n");
-		pthread_mutex_unlock(&g_vhost_mutex);
+		spdk_vhost_unlock();
 		return -1;
 	}
 	memset(vsession, 0, sizeof(*vsession) + vdev->backend->session_ctx_size);
@@ -1446,7 +1446,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	vsession->name = spdk_sprintf_alloc("%ss%u", vdev->name, vsession->vid);
 	if (vsession->name == NULL) {
 		SPDK_ERRLOG("vsession alloc failed\n");
-		pthread_mutex_unlock(&g_vhost_mutex);
+		spdk_vhost_unlock();
 		free(vsession);
 		return -1;
 	}
@@ -1458,7 +1458,7 @@ vhost_new_connection_cb(int vid, const char *ifname)
 	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);
 
 	vhost_session_install_rte_compat_hooks(vsession);
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 	return 0;
 }
 
@@ -1468,18 +1468,18 @@ vhost_destroy_connection_cb(int vid)
 	struct spdk_vhost_session *vsession;
 	int rc = 0;
 
-	pthread_mutex_lock(&g_vhost_mutex);
+	spdk_vhost_lock();
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
-		pthread_mutex_unlock(&g_vhost_mutex);
+		spdk_vhost_unlock();
 		return -EINVAL;
 	}
 
 	if (vsession->started) {
 		rc = _stop_session(vsession);
 		if (rc != 0) {
-			pthread_mutex_unlock(&g_vhost_mutex);
+			spdk_vhost_unlock();
 			return rc;
 		}
 	}
@@ -1487,7 +1487,7 @@ vhost_destroy_connection_cb(int vid)
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
 	free(vsession->name);
 	free(vsession);
-	pthread_mutex_unlock(&g_vhost_mutex);
+	spdk_vhost_unlock();
 
 	return 0;
 }
@@ -1579,13 +1579,13 @@ session_shutdown(void *arg)
 	struct spdk_vhost_session *vsession;
 
 	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
-		pthread_mutex_lock(&g_vhost_mutex);
+		spdk_vhost_lock();
 		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
 			if (vsession->started) {
 				_stop_session(vsession);
 			}
 		}
-		pthread_mutex_unlock(&g_vhost_mutex);
+		spdk_vhost_unlock();
 		vhost_driver_unregister(vdev->path);
 		vdev->registered = false;
 	}
