@@ -719,7 +719,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	int32_t ret;
 	struct nvme_request *req, *tmp;
 
-	if (spdk_unlikely(qpair->ctrlr->is_failed)) {
+	if (spdk_unlikely(qpair->ctrlr->is_failed &&
+			  nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTING)) {
 		if (qpair->ctrlr->is_removed) {
 			nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
 			nvme_qpair_abort_all_queued_reqs(qpair, 0);
@@ -729,7 +730,8 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (spdk_unlikely(!nvme_qpair_check_enabled(qpair) &&
-			  !(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING))) {
+			  !(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING ||
+			    nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING))) {
 		/*
 		 * qpair is not enabled, likely because a controller reset is
 		 *  in progress.
@@ -752,9 +754,14 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	qpair->in_completion_context = 1;
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	if (ret < 0) {
-		SPDK_ERRLOG("CQ transport error %d (%s) on qpair id %hu\n", ret, spdk_strerror(-ret), qpair->id);
-		if (nvme_qpair_is_admin_queue(qpair)) {
-			nvme_ctrlr_fail(qpair->ctrlr, false);
+		if (ret == -ENXIO && nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
+			ret = 0;
+		} else {
+			SPDK_ERRLOG("CQ transport error %d (%s) on qpair id %hu\n",
+				    ret, spdk_strerror(-ret), qpair->id);
+			if (nvme_qpair_is_admin_queue(qpair)) {
+				nvme_ctrlr_fail(qpair->ctrlr, false);
+			}
 		}
 	}
 	qpair->in_completion_context = 0;
