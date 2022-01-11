@@ -464,6 +464,105 @@ _idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch
 	return 0;
 }
 
+struct idxd_batch *
+spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
+{
+	struct idxd_batch *batch;
+
+	assert(chan != NULL);
+
+	if (!TAILQ_EMPTY(&chan->batch_pool)) {
+		batch = TAILQ_FIRST(&chan->batch_pool);
+		batch->index = 0;
+		batch->chan = chan;
+		TAILQ_REMOVE(&chan->batch_pool, batch, link);
+	} else {
+		/* The application needs to handle this. */
+		return NULL;
+	}
+
+	return batch;
+}
+
+static void
+_free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
+{
+	SPDK_DEBUGLOG(idxd, "Free batch %p\n", batch);
+	batch->index = 0;
+	batch->chan = NULL;
+	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
+}
+
+int
+spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
+{
+	assert(chan != NULL);
+	assert(batch != NULL);
+
+	if (_is_batch_valid(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to cancel an invalid batch.\n");
+		return -EINVAL;
+	}
+
+	if (batch->index > 0) {
+		SPDK_ERRLOG("Cannot cancel batch, already submitted to HW.\n");
+		return -EINVAL;
+	}
+
+	_free_batch(batch, chan);
+
+	return 0;
+}
+
+int
+spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+		       spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	int i, rc;
+
+	assert(chan != NULL);
+	assert(batch != NULL);
+
+	if (_is_batch_valid(batch, chan) == false) {
+		SPDK_ERRLOG("Attempt to submit an invalid batch.\n");
+		return -EINVAL;
+	}
+
+	if (batch->index < MIN_USER_DESC_COUNT) {
+		/* DSA needs at least MIN_USER_DESC_COUNT for a batch, add a NOP to make it so. */
+		if (_idxd_batch_prep_nop(chan, batch)) {
+			return -EINVAL;
+		}
+	}
+
+	/* Common prep. */
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
+	if (rc) {
+		return rc;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_BATCH;
+	desc->desc_list_addr = batch->user_desc_addr;
+	desc->desc_count = batch->index;
+	op->batch = batch;
+	assert(batch->index <= DESC_PER_BATCH);
+
+	/* Add the batch elements completion contexts to the outstanding list to be polled. */
+	for (i = 0 ; i < batch->index; i++) {
+		TAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
+				  link);
+	}
+
+	/* Submit operation. */
+	_submit_to_hw(chan, op);
+	SPDK_DEBUGLOG(idxd, "Submitted batch %p\n", batch);
+
+	return 0;
+}
+
 static inline int
 _idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
 			 uint64_t nbytes, spdk_idxd_req_cb cb_fn, void *cb_arg)
@@ -1057,107 +1156,6 @@ spdk_idxd_batch_get_max(void)
 {
 	/* TODO: consider setting this via RPC. */
 	return DESC_PER_BATCH;
-}
-
-struct idxd_batch *
-spdk_idxd_batch_create(struct spdk_idxd_io_channel *chan)
-{
-	struct idxd_batch *batch;
-
-	assert(chan != NULL);
-
-	if (!TAILQ_EMPTY(&chan->batch_pool)) {
-		batch = TAILQ_FIRST(&chan->batch_pool);
-		batch->index = 0;
-		batch->chan = chan;
-		TAILQ_REMOVE(&chan->batch_pool, batch, link);
-	} else {
-		/* The application needs to handle this. */
-		return NULL;
-	}
-
-	return batch;
-}
-
-static void
-_free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
-{
-	SPDK_DEBUGLOG(idxd, "Free batch %p\n", batch);
-	batch->index = 0;
-	batch->chan = NULL;
-	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
-}
-
-int
-spdk_idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
-{
-	assert(chan != NULL);
-	assert(batch != NULL);
-
-	if (_is_batch_valid(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to cancel an invalid batch.\n");
-		return -EINVAL;
-	}
-
-	if (batch->index > 0) {
-		SPDK_ERRLOG("Cannot cancel batch, already submitted to HW.\n");
-		return -EINVAL;
-	}
-
-	_free_batch(batch, chan);
-
-	return 0;
-}
-
-static int _idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch);
-
-int
-spdk_idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
-		       spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	int i, rc;
-
-	assert(chan != NULL);
-	assert(batch != NULL);
-
-	if (_is_batch_valid(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to submit an invalid batch.\n");
-		return -EINVAL;
-	}
-
-	if (batch->index < MIN_USER_DESC_COUNT) {
-		/* DSA needs at least MIN_USER_DESC_COUNT for a batch, add a NOP to make it so. */
-		if (_idxd_batch_prep_nop(chan, batch)) {
-			return -EINVAL;
-		}
-	}
-
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_BATCH;
-	desc->desc_list_addr = batch->user_desc_addr;
-	desc->desc_count = batch->index;
-	op->batch = batch;
-	assert(batch->index <= DESC_PER_BATCH);
-
-	/* Add the batch elements completion contexts to the outstanding list to be polled. */
-	for (i = 0 ; i < batch->index; i++) {
-		TAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
-				  link);
-	}
-
-	/* Submit operation. */
-	_submit_to_hw(chan, op);
-	SPDK_DEBUGLOG(idxd, "Submitted batch %p\n", batch);
-
-	return 0;
 }
 
 int
