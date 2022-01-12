@@ -51,13 +51,6 @@ static struct spdk_thread *g_vhost_init_thread;
 
 static spdk_vhost_fini_cb g_fini_cpl_cb;
 
-/**
- * DPDK calls our callbacks synchronously but the work those callbacks
- * perform needs to be async. Luckily, all DPDK callbacks are called on
- * a DPDK-internal pthread, so we'll just wait on a semaphore in there.
- */
-static sem_t g_dpdk_sem;
-
 /** Return code for the current DPDK callback */
 static int g_dpdk_response;
 
@@ -1524,8 +1517,8 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 	if (g_vhost_user_dev_dirname[0] == '\0') {
 		if (getcwd(g_vhost_user_dev_dirname, sizeof(g_vhost_user_dev_dirname) - 1) == NULL) {
 			SPDK_ERRLOG("getcwd failed (%d): %s\n", errno, spdk_strerror(errno));
-			ret = -1;
-			goto out;
+			init_cb(-1);
+			return;
 		}
 
 		len = strlen(g_vhost_user_dev_dirname);
@@ -1535,18 +1528,10 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 		}
 	}
 
-	ret = sem_init(&g_dpdk_sem, 0, 0);
-	if (ret != 0) {
-		SPDK_ERRLOG("Failed to initialize semaphore for rte_vhost pthread.\n");
-		ret = -1;
-		goto out;
-	}
-
 	spdk_cpuset_zero(&g_vhost_core_mask);
 	SPDK_ENV_FOREACH_CORE(i) {
 		spdk_cpuset_set_cpu(&g_vhost_core_mask, i, true);
 	}
-out:
 	init_cb(ret);
 }
 
@@ -1564,9 +1549,6 @@ vhost_fini(void *arg1)
 		vdev = tmp;
 	}
 	spdk_vhost_unlock();
-
-	/* All devices are removed now. */
-	sem_destroy(&g_dpdk_sem);
 
 	g_fini_cpl_cb();
 }

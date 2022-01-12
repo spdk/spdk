@@ -47,6 +47,13 @@
 
 extern bool g_packed_ring_recovery;
 
+/**
+ * DPDK calls our callbacks synchronously but the work those callbacks
+ * perform needs to be async. Luckily, all DPDK callbacks are called on
+ * a DPDK-internal pthread, so we'll just wait on a semaphore in there.
+ */
+extern sem_t g_dpdk_sem;
+
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
 

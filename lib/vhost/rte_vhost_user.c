@@ -47,6 +47,22 @@
 #include "spdk_internal/vhost_user.h"
 
 char g_vhost_user_dev_dirname[PATH_MAX] = "";
+sem_t g_dpdk_sem;
+
+static void __attribute__((constructor))
+_vhost_user_sem_init(void)
+{
+	if (sem_init(&g_dpdk_sem, 0, 0) != 0) {
+		SPDK_ERRLOG("Failed to initialize semaphore for rte_vhost pthread.\n");
+		abort();
+	}
+}
+
+static void __attribute__((destructor))
+_vhost_user_sem_destroy(void)
+{
+	sem_destroy(&g_dpdk_sem);
+}
 
 static inline void
 vhost_session_mem_region_calc(uint64_t *previous_start, uint64_t *start, uint64_t *end,
