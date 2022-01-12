@@ -108,6 +108,7 @@ struct idxd_chan_entry {
 	uint64_t			injected_miscompares;
 	uint64_t			current_queue_depth;
 	TAILQ_HEAD(, idxd_task)		tasks_pool_head;
+	TAILQ_HEAD(, idxd_task)		resubmits;
 	unsigned			core;
 	bool				is_draining;
 	void				*task_base;
@@ -522,6 +523,11 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 
 	t->current_queue_depth++;
 
+	if (!TAILQ_EMPTY(&t->resubmits)) {
+		rc = -EBUSY;
+		goto queue;
+	}
+
 	switch (g_workload_selection) {
 	case IDXD_COPY:
 		siov.iov_base = task->src;
@@ -571,8 +577,14 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 
 	}
 
+queue:
 	if (rc) {
-		idxd_done(task, rc);
+		/* Queue the task to be resubmitted on the next poll. */
+		if (rc != -EBUSY && rc != -EAGAIN) {
+			t->xfer_failed++;
+		}
+
+		TAILQ_INSERT_TAIL(&t->resubmits, task, link);
 	}
 }
 
@@ -743,6 +755,35 @@ submit_all(struct idxd_chan_entry *t)
 }
 
 static int
+idxd_chan_poll(struct idxd_chan_entry *chan)
+{
+	int			rc;
+	struct idxd_task	*task, *tmp;
+	TAILQ_HEAD(, idxd_task)	swap;
+
+	rc = spdk_idxd_process_events(chan->ch);
+	if (rc < 0) {
+		return rc;
+	}
+
+	if (!TAILQ_EMPTY(&chan->resubmits)) {
+		TAILQ_INIT(&swap);
+		TAILQ_SWAP(&swap, &chan->resubmits, idxd_task, link);
+		TAILQ_FOREACH_SAFE(task, &swap, link, tmp) {
+			TAILQ_REMOVE(&swap, task, link);
+			chan->current_queue_depth--;
+			if (!chan->is_draining) {
+				_submit_single(chan, task);
+			} else {
+				TAILQ_INSERT_TAIL(&chan->tasks_pool_head, task, link);
+			}
+		}
+	}
+
+	return rc;
+}
+
+static int
 work_fn(void *arg)
 {
 	uint64_t tsc_end;
@@ -764,7 +805,7 @@ work_fn(void *arg)
 	while (1) {
 		t = worker->ctx;
 		while (t != NULL) {
-			spdk_idxd_process_events(t->ch);
+			idxd_chan_poll(t);
 			t = t->next;
 		}
 
@@ -818,7 +859,6 @@ get_next_idxd(void)
 static int
 init_idxd_chan_entry(struct idxd_chan_entry *t, struct spdk_idxd_device *idxd)
 {
-	int local_qd;
 	int num_tasks = g_allocate_depth;
 	struct idxd_task *task;
 	int i;
@@ -826,20 +866,12 @@ init_idxd_chan_entry(struct idxd_chan_entry *t, struct spdk_idxd_device *idxd)
 	assert(t != NULL);
 
 	TAILQ_INIT(&t->tasks_pool_head);
+	TAILQ_INIT(&t->resubmits);
 	t->ch = spdk_idxd_get_channel(idxd);
 	if (t->ch == NULL) {
 		fprintf(stderr, "Failed to get channel\n");
 		goto err;
 	}
-
-	local_qd = spdk_idxd_chan_get_max_operations(t->ch);
-	if (g_queue_depth > local_qd) {
-		fprintf(stdout,
-			"g_queue_depth is changed from %d to %d because of idxd (%p)'s max operations per chan=%d\n",
-			g_queue_depth, local_qd, idxd, local_qd);
-		g_queue_depth = local_qd;
-	}
-
 
 	t->task_base = calloc(g_allocate_depth, sizeof(struct idxd_task));
 	if (t->task_base == NULL) {
