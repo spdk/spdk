@@ -1565,8 +1565,6 @@ vhost_fini(void *arg1)
 	}
 	spdk_vhost_unlock();
 
-	spdk_cpuset_zero(&g_vhost_core_mask);
-
 	/* All devices are removed now. */
 	sem_destroy(&g_dpdk_sem);
 
