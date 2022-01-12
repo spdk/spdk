@@ -47,9 +47,7 @@ bool g_packed_ring_recovery = false;
 static struct spdk_cpuset g_vhost_core_mask;
 
 /* Thread performing all vhost management operations */
-static struct spdk_thread *g_vhost_init_thread;
-
-static spdk_vhost_fini_cb g_fini_cpl_cb;
+struct spdk_thread *g_vhost_init_thread = NULL;
 
 /** Return code for the current DPDK callback */
 static int g_dpdk_response;
@@ -852,17 +850,10 @@ vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
-static void
-vhost_dev_thread_exit(void *arg1)
-{
-	spdk_thread_exit(spdk_get_thread());
-}
-
 int
 vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 		   const struct spdk_vhost_dev_backend *backend)
 {
-	char path[PATH_MAX];
 	struct spdk_cpuset cpumask = {};
 	int rc;
 
@@ -883,72 +874,36 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		return -EEXIST;
 	}
 
-	if (snprintf(path, sizeof(path), "%s%s", g_vhost_user_dev_dirname, name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n",
-			    name, g_vhost_user_dev_dirname,  name);
-		return -EINVAL;
-	}
-
 	vdev->name = strdup(name);
-	vdev->path = strdup(path);
-	if (vdev->name == NULL || vdev->path == NULL) {
-		rc = -EIO;
-		goto out;
+	if (vdev->name == NULL) {
+		return -EIO;
 	}
 
-	vdev->thread = spdk_thread_create(vdev->name, &cpumask);
-	if (vdev->thread == NULL) {
-		SPDK_ERRLOG("Failed to create thread for vhost controller %s.\n", name);
-		rc = -EIO;
-		goto out;
-	}
-
-	vdev->registered = true;
-	vdev->backend = backend;
-	TAILQ_INIT(&vdev->vsessions);
-
-	vhost_user_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
-				      SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
-
-	if (vhost_register_unix_socket(path, name, vdev->virtio_features, vdev->disabled_features,
-				       vdev->protocol_features)) {
-		spdk_thread_send_msg(vdev->thread, vhost_dev_thread_exit, NULL);
-		rc = -EIO;
-		goto out;
+	rc = vhost_user_dev_register(vdev, name, &cpumask, backend);
+	if (rc != 0) {
+		free(vdev->name);
+		return rc;
 	}
 
 	TAILQ_INSERT_TAIL(&g_vhost_devices, vdev, tailq);
 
 	SPDK_INFOLOG(vhost, "Controller %s: new controller added\n", vdev->name);
 	return 0;
-
-out:
-	free(vdev->name);
-	free(vdev->path);
-	return rc;
 }
 
 int
 vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	if (!TAILQ_EMPTY(&vdev->vsessions)) {
-		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
-		return -EBUSY;
-	}
+	int rc;
 
-	if (vdev->registered && vhost_driver_unregister(vdev->path) != 0) {
-		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
-			    "Check if domain socket %s still exists\n",
-			    vdev->name, vdev->path);
-		return -EIO;
+	rc = vhost_user_dev_unregister(vdev);
+	if (rc != 0) {
+		return rc;
 	}
 
 	SPDK_INFOLOG(vhost, "Controller %s: removed\n", vdev->name);
 
-	spdk_thread_send_msg(vdev->thread, vhost_dev_thread_exit, NULL);
-
 	free(vdev->name);
-	free(vdev->path);
 	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
 	return 0;
 }
@@ -1126,49 +1081,6 @@ vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 	vdev->pending_async_op_num++;
 
 	spdk_thread_send_msg(vdev->thread, foreach_session, ev_ctx);
-}
-
-static int
-_stop_session(struct spdk_vhost_session *vsession)
-{
-	struct spdk_vhost_dev *vdev = vsession->vdev;
-	struct spdk_vhost_virtqueue *q;
-	int rc;
-	uint16_t i;
-
-	rc = vdev->backend->stop_session(vsession);
-	if (rc != 0) {
-		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
-		return rc;
-	}
-
-	for (i = 0; i < vsession->max_queues; i++) {
-		q = &vsession->virtqueue[i];
-
-		/* vring.desc and vring.desc_packed are in a union struct
-		 * so q->vring.desc can replace q->vring.desc_packed.
-		 */
-		if (q->vring.desc == NULL) {
-			continue;
-		}
-
-		/* Packed virtqueues support up to 2^15 entries each
-		 * so left one bit can be used as wrap counter.
-		 */
-		if (q->packed.packed_ring) {
-			q->last_avail_idx = q->last_avail_idx |
-					    ((uint16_t)q->packed.avail_phase << 15);
-			q->last_used_idx = q->last_used_idx |
-					   ((uint16_t)q->packed.used_phase << 15);
-		}
-
-		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
-	}
-
-	vhost_session_mem_unregister(vsession->mem);
-	free(vsession->mem);
-
-	return 0;
 }
 
 int
@@ -1507,25 +1419,16 @@ spdk_vhost_unlock(void)
 void
 spdk_vhost_init(spdk_vhost_init_cb init_cb)
 {
-	size_t len;
 	uint32_t i;
 	int ret = 0;
 
 	g_vhost_init_thread = spdk_get_thread();
 	assert(g_vhost_init_thread != NULL);
 
-	if (g_vhost_user_dev_dirname[0] == '\0') {
-		if (getcwd(g_vhost_user_dev_dirname, sizeof(g_vhost_user_dev_dirname) - 1) == NULL) {
-			SPDK_ERRLOG("getcwd failed (%d): %s\n", errno, spdk_strerror(errno));
-			init_cb(-1);
-			return;
-		}
-
-		len = strlen(g_vhost_user_dev_dirname);
-		if (g_vhost_user_dev_dirname[len - 1] != '/') {
-			g_vhost_user_dev_dirname[len] = '/';
-			g_vhost_user_dev_dirname[len + 1] = '\0';
-		}
+	ret = vhost_user_init();
+	if (ret != 0) {
+		init_cb(ret);
+		return;
 	}
 
 	spdk_cpuset_zero(&g_vhost_core_mask);
@@ -1534,6 +1437,8 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 	}
 	init_cb(ret);
 }
+
+static spdk_vhost_fini_cb g_fini_cb;
 
 static void
 vhost_fini(void *arg1)
@@ -1550,52 +1455,17 @@ vhost_fini(void *arg1)
 	}
 	spdk_vhost_unlock();
 
-	g_fini_cpl_cb();
-}
-
-static void *
-session_shutdown(void *arg)
-{
-	struct spdk_vhost_dev *vdev = NULL;
-	struct spdk_vhost_session *vsession;
-
-	for (vdev = spdk_vhost_dev_next(NULL); vdev != NULL;
-	     vdev = spdk_vhost_dev_next(vdev)) {
-		spdk_vhost_lock();
-		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
-			if (vsession->started) {
-				_stop_session(vsession);
-			}
-		}
-		spdk_vhost_unlock();
-		vhost_driver_unregister(vdev->path);
-		vdev->registered = false;
-	}
-
-	SPDK_INFOLOG(vhost, "Exiting\n");
-	spdk_thread_send_msg(g_vhost_init_thread, vhost_fini, NULL);
-	return NULL;
+	g_fini_cb();
 }
 
 void
 spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 {
-	pthread_t tid;
-	int rc;
-
 	assert(spdk_get_thread() == g_vhost_init_thread);
-	g_fini_cpl_cb = fini_cb;
 
-	/* rte_vhost API for removing sockets is not asynchronous. Since it may call SPDK
-	 * ops for stopping a device or removing a connection, we need to call it from
-	 * a separate thread to avoid deadlock.
-	 */
-	rc = pthread_create(&tid, NULL, &session_shutdown, NULL);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, spdk_strerror(rc));
-		abort();
-	}
-	pthread_detach(tid);
+	g_fini_cb = fini_cb;
+
+	vhost_user_fini(vhost_fini);
 }
 
 void

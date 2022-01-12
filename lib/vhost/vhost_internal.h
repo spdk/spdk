@@ -47,6 +47,9 @@
 
 extern bool g_packed_ring_recovery;
 
+/* Thread performing all vhost management operations */
+extern struct spdk_thread *g_vhost_init_thread;
+
 /**
  * DPDK calls our callbacks synchronously but the work those callbacks
  * perform needs to be async. Luckily, all DPDK callbacks are called on
@@ -522,5 +525,12 @@ int vhost_user_session_set_coalescing(struct spdk_vhost_dev *vdev,
 				      struct spdk_vhost_session *vsession, void *ctx);
 int vhost_user_dev_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 				  uint32_t iops_threshold);
+int vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name,
+			    struct spdk_cpuset *cpumask, const struct spdk_vhost_dev_backend *backend);
+int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
+int vhost_user_init(void);
+typedef void (*vhost_fini_cb)(void *ctx);
+void vhost_user_fini(vhost_fini_cb vhost_cb);
+int _stop_session(struct spdk_vhost_session *vsession);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
