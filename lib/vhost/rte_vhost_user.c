@@ -32,11 +32,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Set of workarounds for rte_vhost to make it work with device types
- * other than vhost-net.
- */
-
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
