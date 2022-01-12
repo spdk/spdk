@@ -2202,7 +2202,10 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
+	pthread_mutex_lock(&vu_transport->lock);
 	TAILQ_INSERT_TAIL(&vu_transport->endpoints, endpoint, link);
+	pthread_mutex_unlock(&vu_transport->lock);
+
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: doorbells %p\n", uuid, endpoint->doorbells);
 
 out:
@@ -2275,11 +2278,13 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 
 	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport, transport);
 
+	pthread_mutex_lock(&vu_transport->lock);
 	TAILQ_FOREACH(endpoint, &vu_transport->endpoints, link) {
 		if (strncmp(endpoint->trid.traddr, trid->traddr, sizeof(endpoint->trid.traddr)) == 0) {
 			break;
 		}
 	}
+	pthread_mutex_unlock(&vu_transport->lock);
 
 	if (endpoint == NULL) {
 		return -ENOENT;
