@@ -46,9 +46,6 @@ bool g_packed_ring_recovery = false;
 
 static struct spdk_cpuset g_vhost_core_mask;
 
-/* Thread performing all vhost management operations */
-struct spdk_thread *g_vhost_init_thread = NULL;
-
 static TAILQ_HEAD(, spdk_vhost_dev) g_vhost_devices = TAILQ_HEAD_INITIALIZER(
 			g_vhost_devices);
 static pthread_mutex_t g_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -908,9 +905,6 @@ spdk_vhost_init(spdk_vhost_init_cb init_cb)
 	uint32_t i;
 	int ret = 0;
 
-	g_vhost_init_thread = spdk_get_thread();
-	assert(g_vhost_init_thread != NULL);
-
 	ret = vhost_user_init();
 	if (ret != 0) {
 		init_cb(ret);
@@ -947,8 +941,6 @@ vhost_fini(void *arg1)
 void
 spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 {
-	assert(spdk_get_thread() == g_vhost_init_thread);
-
 	g_fini_cb = fini_cb;
 
 	vhost_user_fini(vhost_fini);

@@ -47,9 +47,6 @@
 
 extern bool g_packed_ring_recovery;
 
-/* Thread performing all vhost management operations */
-extern struct spdk_thread *g_vhost_init_thread;
-
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
 

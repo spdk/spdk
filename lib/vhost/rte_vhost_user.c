@@ -49,6 +49,8 @@
 /* Path to folder where character device will be created. Can be set by user. */
 static char g_vhost_user_dev_dirname[PATH_MAX] = "";
 
+static struct spdk_thread *g_vhost_user_init_thread;
+
 /**
  * DPDK calls our callbacks synchronously but the work those callbacks
  * perform needs to be async. Luckily, all DPDK callbacks are called on
@@ -618,7 +620,7 @@ foreach_session(void *arg1)
 out:
 	spdk_vhost_unlock();
 
-	spdk_thread_send_msg(g_vhost_init_thread, foreach_session_finish_cb, arg1);
+	spdk_thread_send_msg(g_vhost_user_init_thread, foreach_session_finish_cb, arg1);
 }
 
 void
@@ -1120,6 +1122,9 @@ vhost_user_init(void)
 
 	g_vhost_user_started = true;
 
+	g_vhost_user_init_thread = spdk_get_thread();
+	assert(g_vhost_user_init_thread != NULL);
+
 	return 0;
 }
 
@@ -1144,7 +1149,7 @@ vhost_user_session_shutdown(void *arg)
 	}
 
 	SPDK_INFOLOG(vhost, "Exiting\n");
-	spdk_thread_send_msg(g_vhost_init_thread, vhost_cb, NULL);
+	spdk_thread_send_msg(g_vhost_user_init_thread, vhost_cb, NULL);
 	return NULL;
 }
 
