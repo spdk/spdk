@@ -939,9 +939,11 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *cq,
 	cpl->status.dnr = 0x0;
 	cpl->status.m = 0x0;
 	cpl->status.sct = sct;
-	cpl->status.p = cq->phase;
 	cpl->status.sc = sc;
+	cpl->status.p = cq->phase;
 
+	/* Ensure the Completion Queue Entry is visible. */
+	spdk_wmb();
 	cq_tail_advance(cq);
 
 	/*
