@@ -135,7 +135,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.nvme_ioq_poll_period_us = 0,
 	.io_queue_requests = 0,
 	.delay_cmd_submit = SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT,
-	.bdev_retry_count = 0,
+	.bdev_retry_count = 3,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
