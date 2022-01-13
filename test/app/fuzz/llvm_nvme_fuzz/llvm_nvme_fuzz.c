@@ -293,6 +293,233 @@ fuzz_admin_directive_receive_command(struct fuzz_command *cmd)
 	g_data += 8;
 }
 
+static void feat_arbitration(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_arbitration.bits.hpw = g_data[2];
+	cmd->cmd.cdw11_bits.feat_arbitration.bits.mpw = g_data[3];
+	cmd->cmd.cdw11_bits.feat_arbitration.bits.lpw = g_data[4];
+	cmd->cmd.cdw11_bits.feat_arbitration.bits.ab = g_data[5] & 0x07;
+}
+
+static void feat_power_management(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_power_management.bits.wh = g_data[2] & 0x07;
+	cmd->cmd.cdw11_bits.feat_power_management.bits.ps = (g_data[2] >> 3) & 0x1f;
+}
+
+static void feat_lba_range_type(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_lba_range_type.bits.num = (g_data[2] >> 2) & 0x3f;
+}
+
+static void feat_temperature_threshold(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.thsel = g_data[2] & 0x03;
+	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.tmpsel = (g_data[2] >> 2) & 0x0f;
+	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.tmpth = (g_data[3] << 8) + g_data[4];
+}
+
+static void feat_error_recover(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_error_recovery.bits.dulbe = g_data[2] & 0x01;
+	cmd->cmd.cdw11_bits.feat_error_recovery.bits.tler = (g_data[3] << 8) + g_data[4];
+}
+
+static void feat_volatile_write_cache(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_volatile_write_cache.bits.wce = g_data[2] & 0x01;
+}
+
+static void feat_number_of_queues(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = (g_data[4] << 8) + g_data[5];
+}
+
+static void feat_interrupt_coalescing(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_interrupt_coalescing.bits.time = g_data[2];
+	cmd->cmd.cdw11_bits.feat_interrupt_coalescing.bits.thr = g_data[3];
+}
+
+static void feat_interrupt_vector_configuration(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_interrupt_vector_configuration.bits.cd = g_data[2] & 0x01;
+	cmd->cmd.cdw11_bits.feat_interrupt_vector_configuration.bits.iv = (g_data[3] << 8) + g_data[4];
+}
+
+static void feat_write_atomicity(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_write_atomicity.bits.dn = g_data[2] & 0x01;
+}
+
+static void feat_async_event_cfg(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.ana_change_notice = g_data[2] & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.discovery_log_change_notice = (g_data[2] >> 1) & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.fw_activation_notice = (g_data[2] >> 2) & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.ns_attr_notice = (g_data[2] >> 3) & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.telemetry_log_notice = (g_data[2] >> 4) & 0x01;
+
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.crit_warn.bits.available_spare = g_data[3] & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.crit_warn.bits.device_reliability =
+		(g_data[3] >> 1) & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.crit_warn.bits.read_only = (g_data[3] >> 2) & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.crit_warn.bits.temperature = (g_data[3] >> 3) & 0x01;
+	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.crit_warn.bits.volatile_memory_backup =
+		(g_data[3] >> 4) & 0x01;
+}
+
+static void feat_keep_alive_timer(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_keep_alive_timer.bits.kato = (g_data[2] << 24) + (g_data[3] << 16) +
+			(g_data[4] << 8) + g_data[5];
+}
+
+static void feat_host_identifier(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_host_identifier.bits.exhid = g_data[2] & 0x01;
+}
+
+static void feat_rsv_notification_mask(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_rsv_notification_mask.bits.regpre = g_data[2] & 0x01;
+	cmd->cmd.cdw11_bits.feat_rsv_notification_mask.bits.respre = (g_data[2] >> 1) & 0x01;
+	cmd->cmd.cdw11_bits.feat_rsv_notification_mask.bits.resrel = (g_data[2] >> 2) & 0x01;
+}
+
+static void feat_rsv_persistence(struct fuzz_command *cmd)
+{
+	cmd->cmd.cdw11_bits.feat_rsv_persistence.bits.ptpl = g_data[2] & 0x01;
+}
+
+static void
+fuzz_admin_set_features_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+
+	cmd->cmd.cdw10_bits.set_features.fid = g_data[0];
+	cmd->cmd.cdw10_bits.set_features.sv = (g_data[1] >> 7) & 0x01;
+
+	switch (cmd->cmd.cdw10_bits.set_features.fid) {
+	case SPDK_NVME_FEAT_ARBITRATION:
+		feat_arbitration(cmd);
+		break;
+	case SPDK_NVME_FEAT_POWER_MANAGEMENT:
+		feat_power_management(cmd);
+		break;
+	case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
+		feat_lba_range_type(cmd);
+		break;
+	case SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD:
+		feat_temperature_threshold(cmd);
+		break;
+	case SPDK_NVME_FEAT_ERROR_RECOVERY:
+		feat_error_recover(cmd);
+		break;
+	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
+		feat_volatile_write_cache(cmd);
+		break;
+	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
+		feat_number_of_queues(cmd);
+		break;
+	case SPDK_NVME_FEAT_INTERRUPT_COALESCING:
+		feat_interrupt_coalescing(cmd);
+		break;
+	case SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION:
+		feat_interrupt_vector_configuration(cmd);
+		break;
+	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
+		feat_write_atomicity(cmd);
+		break;
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		feat_async_event_cfg(cmd);
+		break;
+	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+		feat_keep_alive_timer(cmd);
+		break;
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		feat_host_identifier(cmd);
+		break;
+	case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
+		feat_rsv_notification_mask(cmd);
+		break;
+	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+		feat_rsv_persistence(cmd);
+		break;
+
+	default:
+		break;
+	}
+
+	/* Use g_data[2] through g_data[5] for feature-specific
+	   bits and set g_data[6] for cdw14 every iteration
+	   UUID index, bits 0-6 are used */
+	cmd->cmd.cdw14 = (g_data[6] & 0x7f);
+
+	g_data += 7;
+}
+
+static void
+fuzz_admin_get_features_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+
+	cmd->cmd.cdw10_bits.get_features.fid = g_data[0];
+	cmd->cmd.cdw10_bits.get_features.sel = (g_data[1] >> 5) & 0x07;
+
+	switch (cmd->cmd.cdw10_bits.set_features.fid) {
+	case SPDK_NVME_FEAT_ARBITRATION:
+		feat_arbitration(cmd);
+		break;
+	case SPDK_NVME_FEAT_POWER_MANAGEMENT:
+		feat_power_management(cmd);
+		break;
+	case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
+		feat_lba_range_type(cmd);
+		break;
+	case SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD:
+		feat_temperature_threshold(cmd);
+		break;
+	case SPDK_NVME_FEAT_ERROR_RECOVERY:
+		feat_error_recover(cmd);
+		break;
+	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
+		feat_volatile_write_cache(cmd);
+		break;
+	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
+		feat_number_of_queues(cmd);
+		break;
+	case SPDK_NVME_FEAT_INTERRUPT_COALESCING:
+		feat_interrupt_coalescing(cmd);
+		break;
+	case SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION:
+		feat_interrupt_vector_configuration(cmd);
+		break;
+	case SPDK_NVME_FEAT_WRITE_ATOMICITY:
+		feat_write_atomicity(cmd);
+		break;
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		feat_async_event_cfg(cmd);
+		break;
+	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+		feat_keep_alive_timer(cmd);
+		break;
+
+	default:
+		break;
+	}
+
+	/* Use g_data[2] through g_data[5] for feature-specific
+	   bits and set g_data[6] for cdw14 every iteration
+	   UUID index, bits 0-6 are used */
+	cmd->cmd.cdw14 = (g_data[6] & 0x7f);
+
+	g_data += 7;
+}
+
 static void
 fuzz_nvm_read_command(struct fuzz_command *cmd)
 {
@@ -494,6 +721,8 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_security_send_command, .bytes_per_cmd = 8, .is_admin = true},
 	{ .fn = fuzz_admin_directive_send_command, .bytes_per_cmd = 8, .is_admin = true},
 	{ .fn = fuzz_admin_directive_receive_command, .bytes_per_cmd = 8, .is_admin = true},
+	{ .fn = fuzz_admin_set_features_command, .bytes_per_cmd = 7, .is_admin = true},
+	{ .fn = fuzz_admin_get_features_command, .bytes_per_cmd = 7, .is_admin = true},
 	{ .fn = fuzz_nvm_read_command, .bytes_per_cmd = 21, .is_admin = false},
 	{ .fn = fuzz_nvm_write_command, .bytes_per_cmd = 24, .is_admin = false},
 	{ .fn = fuzz_nvm_write_zeroes_command, .bytes_per_cmd = 20, .is_admin = false},
