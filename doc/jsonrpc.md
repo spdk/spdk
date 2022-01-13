@@ -2956,6 +2956,10 @@ multipathing. This is done by specifying the `name` parameter as an existing con
 path, the hostnqn, hostsvcid, hostaddr, prchk_reftag, and prchk_guard_arguments must not be specified and are assumed
 to have the same value as the existing path.
 
+The parameters, `ctrlr_loss_timeout_sec` and `reconnect_delay_sec`, are mutually dependent.
+If `reconnect_delay_sec` is non-zero, `ctrlr_loss_timeout_sec` has to be -1 or not less than `reconnect_delay_sec`.
+If `reconnect_delay_sec` is zero, `ctrlr_loss_timeout_sec` has to be zero.
+
 #### Result
 
 Array of names of newly created bdevs.
@@ -2980,6 +2984,8 @@ ddgst                      | Optional | bool        | Enable TCP data digest
 fabrics_connect_timeout_us | Optional | bool        | Timeout for fabrics connect (in microseconds)
 multipath                  | Optional | string      | Multipathing behavior: disable, failover, multipath. Default is failover.
 num_io_queues              | Optional | uint32_t    | The number of IO queues to request during initialization. Range: (0, UINT16_MAX + 1], Default is 1024.
+ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
 
 #### Example
 

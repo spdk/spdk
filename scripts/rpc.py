@@ -538,7 +538,9 @@ if __name__ == "__main__":
                                                          ddgst=args.ddgst,
                                                          fabrics_timeout=args.fabrics_timeout,
                                                          multipath=args.multipath,
-                                                         num_io_queues=args.num_io_queues))
+                                                         num_io_queues=args.num_io_queues,
+                                                         ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
+                                                         reconnect_delay_sec=args.reconnect_delay_sec))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', aliases=['construct_nvme_bdev'],
                               help='Add bdevs with nvme backend')
@@ -570,6 +572,20 @@ if __name__ == "__main__":
     p.add_argument('--fabrics-timeout', type=int, help='Fabrics connect timeout in microseconds')
     p.add_argument('-x', '--multipath', help='Set multipath behavior (disable, failover, multipath)')
     p.add_argument('--num-io-queues', type=int, help='Set the number of IO queues to request during initialization.')
+    p.add_argument('-l', '--ctrlr-loss-timeout-sec',
+                   help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
+                   -1 means infinite reconnect retries. 0 means no reconnect retry.
+                   If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+                   If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than
+                   reconnect_delay_sec.""",
+                   type=int)
+    p.add_argument('-o', '--reconnect-delay-sec',
+                   help="""Time to delay a reconnect retry.
+                   If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+                   If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+                   If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero and
+                   less than ctrlr_loss_timeout_sec.""",
+                   type=int)
     p.set_defaults(func=bdev_nvme_attach_controller)
 
     def bdev_nvme_get_controllers(args):

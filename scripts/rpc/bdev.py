@@ -523,7 +523,8 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
 def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                                 priority=None, subnqn=None, hostnqn=None, hostaddr=None,
                                 hostsvcid=None, prchk_reftag=None, prchk_guard=None,
-                                hdgst=None, ddgst=None, fabrics_timeout=None, multipath=None, num_io_queues=None):
+                                hdgst=None, ddgst=None, fabrics_timeout=None, multipath=None, num_io_queues=None,
+                                ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None):
     """Construct block device for each NVMe namespace in the attached controller.
 
     Args:
@@ -544,6 +545,16 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
         fabrics_timeout: Fabrics connect timeout in us (optional)
         multipath: The behavior when multiple paths are created ("disable", "failover", or "multipath"; failover if not specified)
         num_io_queues: The number of IO queues to request during initialization. (optional)
+        ctrlr_loss_timeout_sec: Time to wait until ctrlr is reconnected before deleting ctrlr.
+        -1 means infinite reconnect retries. 0 means no reconnect retry.
+        If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+        If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.
+        (optional)
+        reconnect_delay_sec: Time to delay a reconnect retry.
+        If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+        If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+        If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_sec has to be non-zero and less than ctrlr_loss_timeout_sec.
+        (optional)
 
     Returns:
         Names of created block devices.
@@ -593,6 +604,12 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
 
     if num_io_queues:
         params['num_io_queues'] = num_io_queues
+
+    if ctrlr_loss_timeout_sec is not None:
+        params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
+
+    if reconnect_delay_sec is not None:
+        params['reconnect_delay_sec'] = reconnect_delay_sec
 
     return client.call('bdev_nvme_attach_controller', params)
 

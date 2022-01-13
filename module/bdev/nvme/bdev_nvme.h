@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -57,6 +58,8 @@ struct nvme_async_probe_ctx {
 	const char **names;
 	uint32_t count;
 	uint32_t prchk_flags;
+	int32_t ctrlr_loss_timeout_sec;
+	uint32_t reconnect_delay_sec;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
 	struct spdk_nvme_ctrlr_opts opts;
@@ -106,6 +109,7 @@ struct nvme_ctrlr {
 	int					ref;
 
 	uint32_t				resetting : 1;
+	uint32_t				reconnect_is_delayed : 1;
 	uint32_t				destruct : 1;
 	uint32_t				ana_log_page_updating : 1;
 	/**
@@ -127,6 +131,9 @@ struct nvme_ctrlr {
 	struct spdk_poller			*reset_detach_poller;
 	struct spdk_nvme_detach_ctx		*detach_ctx;
 
+	uint64_t				reset_start_tsc;
+	struct spdk_poller			*reconnect_delay_timer;
+
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
@@ -138,6 +145,9 @@ struct nvme_ctrlr {
 	struct spdk_nvme_ana_group_descriptor	*copied_ana_desc;
 
 	struct nvme_async_probe_ctx		*probe_ctx;
+
+	uint32_t				reconnect_delay_sec;
+	int32_t					ctrlr_loss_timeout_sec;
 
 	pthread_mutex_t				mutex;
 };
@@ -255,7 +265,9 @@ int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     spdk_bdev_create_nvme_fn cb_fn,
 		     void *cb_ctx,
 		     struct spdk_nvme_ctrlr_opts *opts,
-		     bool multipath);
+		     bool multipath,
+		     int32_t ctrlr_loss_timeout_sec,
+		     uint32_t reconnect_delay_sec);
 
 int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,
 			      struct spdk_nvme_ctrlr_opts *opts,

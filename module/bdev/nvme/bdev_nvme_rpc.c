@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -183,6 +184,8 @@ struct rpc_bdev_nvme_attach_controller {
 	bool prchk_guard;
 	uint64_t fabrics_connect_timeout_us;
 	char *multipath;
+	int32_t ctrlr_loss_timeout_sec;
+	uint32_t reconnect_delay_sec;
 	struct spdk_nvme_ctrlr_opts opts;
 };
 
@@ -222,6 +225,8 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"fabrics_connect_timeout_us", offsetof(struct rpc_bdev_nvme_attach_controller, opts.fabrics_connect_timeout_us), spdk_json_decode_uint64, true},
 	{"multipath", offsetof(struct rpc_bdev_nvme_attach_controller, multipath), spdk_json_decode_string, true},
 	{"num_io_queues", offsetof(struct rpc_bdev_nvme_attach_controller, opts.num_io_queues), spdk_json_decode_uint32, true},
+	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
+	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_attach_controller, reconnect_delay_sec), spdk_json_decode_uint32, true},
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -491,7 +496,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
 	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->count, prchk_flags,
 			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts,
-			      multipath);
+			      multipath, ctx->req.ctrlr_loss_timeout_sec,
+			      ctx->req.reconnect_delay_sec);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

@@ -470,6 +470,8 @@ nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 {
 	int rc;
 
+	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
+
 	/* First, unregister the adminq poller, as the driver will poll adminq if necessary */
 	spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
 
@@ -735,9 +737,16 @@ nvme_io_path_is_failed(struct nvme_io_path *io_path)
 		return true;
 	}
 
-	/* TODO: Regard path as unfailed only if the reset is throttoled. */
 	if (nvme_ctrlr->resetting) {
-		return true;
+		if (nvme_ctrlr->reconnect_delay_sec != 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	if (nvme_ctrlr->reconnect_is_delayed) {
+		return false;
 	}
 
 	if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
@@ -758,7 +767,7 @@ nvme_ctrlr_is_available(struct nvme_ctrlr *nvme_ctrlr)
 		return false;
 	}
 
-	if (nvme_ctrlr->resetting) {
+	if (nvme_ctrlr->resetting || nvme_ctrlr->reconnect_is_delayed) {
 		return false;
 	}
 
@@ -1285,9 +1294,29 @@ bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	}
 }
 
+static bool
+bdev_nvme_check_ctrlr_loss_timeout(struct nvme_ctrlr *nvme_ctrlr)
+{
+	int32_t elapsed;
+
+	if (nvme_ctrlr->ctrlr_loss_timeout_sec == 0 ||
+	    nvme_ctrlr->ctrlr_loss_timeout_sec == -1) {
+		return false;
+	}
+
+	elapsed = (spdk_get_ticks() - nvme_ctrlr->reset_start_tsc) / spdk_get_ticks_hz();
+	if (elapsed >= nvme_ctrlr->ctrlr_loss_timeout_sec) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 enum bdev_nvme_op_after_reset {
 	OP_NONE,
 	OP_COMPLETE_PENDING_DESTRUCT,
+	OP_DESTRUCT,
+	OP_DELAYED_RECONNECT,
 };
 
 typedef enum bdev_nvme_op_after_reset _bdev_nvme_op_after_reset;
@@ -1298,9 +1327,60 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
 		/* Complete pending destruct after reset completes. */
 		return OP_COMPLETE_PENDING_DESTRUCT;
+	} else if (success || nvme_ctrlr->reconnect_delay_sec == 0) {
+		nvme_ctrlr->reset_start_tsc = 0;
+		return OP_NONE;
+	} else if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
+		return OP_DESTRUCT;
+	} else {
+		bdev_nvme_failover_trid(nvme_ctrlr, false);
+		return OP_DELAYED_RECONNECT;
+	}
+}
+
+static int _bdev_nvme_delete(struct nvme_ctrlr *nvme_ctrlr, bool hotplug);
+static void bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
+
+static int
+bdev_nvme_reconnect_delay_timer_expired(void *ctx)
+{
+	struct nvme_ctrlr *nvme_ctrlr = ctx;
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+
+	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
+
+	assert(nvme_ctrlr->reconnect_is_delayed == true);
+	nvme_ctrlr->reconnect_is_delayed = false;
+
+	if (nvme_ctrlr->destruct) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		return SPDK_POLLER_BUSY;
 	}
 
-	return OP_NONE;
+	assert(nvme_ctrlr->resetting == false);
+	nvme_ctrlr->resetting = true;
+
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	spdk_poller_resume(nvme_ctrlr->adminq_timer_poller);
+
+	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+bdev_nvme_start_reconnect_delay_timer(struct nvme_ctrlr *nvme_ctrlr)
+{
+	spdk_poller_pause(nvme_ctrlr->adminq_timer_poller);
+
+	assert(nvme_ctrlr->reconnect_is_delayed == false);
+	nvme_ctrlr->reconnect_is_delayed = true;
+
+	assert(nvme_ctrlr->reconnect_delay_timer == NULL);
+	nvme_ctrlr->reconnect_delay_timer = SPDK_POLLER_REGISTER(bdev_nvme_reconnect_delay_timer_expired,
+					    nvme_ctrlr,
+					    nvme_ctrlr->reconnect_delay_sec * SPDK_SEC_TO_USEC);
 }
 
 static void
@@ -1344,6 +1424,13 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 	switch (op_after_reset) {
 	case OP_COMPLETE_PENDING_DESTRUCT:
 		nvme_ctrlr_unregister(nvme_ctrlr);
+		break;
+	case OP_DESTRUCT:
+		_bdev_nvme_delete(nvme_ctrlr, false);
+		break;
+	case OP_DELAYED_RECONNECT:
+		spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
+		bdev_nvme_start_reconnect_delay_timer(nvme_ctrlr);
 		break;
 	default:
 		break;
@@ -1411,11 +1498,13 @@ static int
 bdev_nvme_reconnect_ctrlr_poll(void *arg)
 {
 	struct nvme_ctrlr *nvme_ctrlr = arg;
-	int rc;
+	int rc = -ETIMEDOUT;
 
-	rc = spdk_nvme_ctrlr_reconnect_poll_async(nvme_ctrlr->ctrlr);
-	if (rc == -EAGAIN) {
-		return SPDK_POLLER_BUSY;
+	if (!bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
+		rc = spdk_nvme_ctrlr_reconnect_poll_async(nvme_ctrlr->ctrlr);
+		if (rc == -EAGAIN) {
+			return SPDK_POLLER_BUSY;
+		}
 	}
 
 	spdk_poller_unregister(&nvme_ctrlr->reset_detach_poller);
@@ -1491,7 +1580,17 @@ bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr)
 		return -EBUSY;
 	}
 
+	if (nvme_ctrlr->reconnect_is_delayed) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		SPDK_NOTICELOG("Reconnect is already scheduled.\n");
+		return -EBUSY;
+	}
+
 	nvme_ctrlr->resetting = true;
+
+	assert(nvme_ctrlr->reset_start_tsc == 0);
+	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
+
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
@@ -1642,6 +1741,14 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	}
 
 	bdev_nvme_failover_trid(nvme_ctrlr, remove);
+
+	if (nvme_ctrlr->reconnect_is_delayed) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		SPDK_NOTICELOG("Reconnect is already scheduled.\n");
+
+		/* We rely on the next reconnect for the failover. */
+		return 0;
+	}
 
 	nvme_ctrlr->resetting = true;
 
@@ -3261,6 +3368,8 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (ctx != NULL) {
 		nvme_ctrlr->prchk_flags = ctx->prchk_flags;
+		nvme_ctrlr->ctrlr_loss_timeout_sec = ctx->ctrlr_loss_timeout_sec;
+		nvme_ctrlr->reconnect_delay_sec = ctx->reconnect_delay_sec;
 	}
 
 	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_ctrlr,
@@ -3726,6 +3835,34 @@ bdev_nvme_async_poll(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
+static bool
+bdev_nvme_check_multipath_params(int32_t ctrlr_loss_timeout_sec,
+				 uint32_t reconnect_delay_sec)
+{
+	if (ctrlr_loss_timeout_sec < -1) {
+		SPDK_ERRLOG("ctrlr_loss_timeout_sec can't be less than -1.\n");
+		return false;
+	} else if (ctrlr_loss_timeout_sec == -1) {
+		if (reconnect_delay_sec == 0) {
+			SPDK_ERRLOG("reconnect_delay_sec can't be 0 if ctrlr_loss_timeout_sec is not 0.\n");
+			return false;
+		}
+	} else if (ctrlr_loss_timeout_sec != 0) {
+		if (reconnect_delay_sec == 0) {
+			SPDK_ERRLOG("reconnect_delay_sec can't be 0 if ctrlr_loss_timeout_sec is not 0.\n");
+			return false;
+		} else if (reconnect_delay_sec > (uint32_t)ctrlr_loss_timeout_sec) {
+			SPDK_ERRLOG("reconnect_delay_sec can't be more than ctrlr_loss_timeout_sec.\n");
+			return false;
+		}
+	} else if (reconnect_delay_sec != 0) {
+		SPDK_ERRLOG("reconnect_delay_sec must be 0 if ctrlr_loss_timeout_sec is 0.\n");
+		return false;
+	}
+
+	return true;
+}
+
 int
 bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		 const char *base_name,
@@ -3735,7 +3872,9 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		 spdk_bdev_create_nvme_fn cb_fn,
 		 void *cb_ctx,
 		 struct spdk_nvme_ctrlr_opts *opts,
-		 bool multipath)
+		 bool multipath,
+		 int32_t ctrlr_loss_timeout_sec,
+		 uint32_t reconnect_delay_sec)
 {
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
@@ -3749,6 +3888,10 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -EEXIST;
 	}
 
+	if (!bdev_nvme_check_multipath_params(ctrlr_loss_timeout_sec, reconnect_delay_sec)) {
+		return -EINVAL;
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		return -ENOMEM;
@@ -3760,6 +3903,8 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->cb_ctx = cb_ctx;
 	ctx->prchk_flags = prchk_flags;
 	ctx->trid = *trid;
+	ctx->ctrlr_loss_timeout_sec = ctrlr_loss_timeout_sec;
+	ctx->reconnect_delay_sec = reconnect_delay_sec;
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, tmp) {
@@ -4085,7 +4230,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			snprintf(new_ctx->opts.hostnqn, sizeof(new_ctx->opts.hostnqn), "%s", ctx->hostnqn);
 			rc = bdev_nvme_create(&new_ctx->trid, new_ctx->name, NULL, 0, 0,
 					      discovery_attach_controller_done, new_ctx,
-					      &new_ctx->opts, true);
+					      &new_ctx->opts, true, 0, 0);
 			if (rc == 0) {
 				TAILQ_INSERT_TAIL(&ctx->ctrlr_ctxs, new_ctx, tailq);
 				ctx->attach_in_progress++;
@@ -5414,6 +5559,8 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 				   (nvme_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) != 0);
 	spdk_json_write_named_bool(w, "prchk_guard",
 				   (nvme_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) != 0);
+	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", nvme_ctrlr->ctrlr_loss_timeout_sec);
+	spdk_json_write_named_uint32(w, "reconnect_delay_sec", nvme_ctrlr->reconnect_delay_sec);
 
 	spdk_json_write_object_end(w);
 
