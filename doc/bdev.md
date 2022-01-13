@@ -375,12 +375,12 @@ This command will remove NVMe bdev named Nvme0.
 
 ### NVMe bdev character device {#bdev_config_nvme_cuse}
 
-This feature is considered as experimental. You must configure with --with-nvme-cuse
+This feature is considered as experimental. You must configure with `--with-nvme-cuse`
 option to enable this RPC.
 
 Example commands
 
-`rpc.py bdev_nvme_cuse_register -n Nvme3
+`rpc.py bdev_nvme_cuse_register -n Nvme3`
 
 This command will register a character device under /dev/spdk associated with Nvme3
 controller. If there are namespaces created on Nvme3 controller, a namespace
