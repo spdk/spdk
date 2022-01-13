@@ -620,7 +620,12 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	return rc;
 }
 
-__attribute__((destructor)) static void
+/* We use priority 101 which is the highest priority level available
+ * to applications (the toolchains reserve 1 to 100 for internal usage).
+ * This ensures this destructor runs last, after any other destructors
+ * that might still need the environment up and running.
+ */
+__attribute__((destructor(101))) static void
 dpdk_cleanup(void)
 {
 	/* Only call rte_eal_cleanup if the SPDK env library called rte_eal_init. */
