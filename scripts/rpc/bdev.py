@@ -81,7 +81,7 @@ def bdev_compress_set_pmd(client, pmd):
     """Set pmd options for the bdev compress.
 
     Args:
-        pmd: 0 = auto-select, 1 = QAT, 2 = ISAL
+        pmd: 0 = auto-select, 1 = QAT, 2 = ISAL, 3 = mlx5_pci
     """
     params = {'pmd': pmd}
 
