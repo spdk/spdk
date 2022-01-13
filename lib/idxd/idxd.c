@@ -965,6 +965,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 		return -EBUSY;
 	}
 
+	prev_crc = NULL;
 	for (i = 0; i < siovcnt; i++) {
 		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
 		if (rc) {
