@@ -735,12 +735,9 @@ nvme_io_path_is_failed(struct nvme_io_path *io_path)
 		return true;
 	}
 
-	/* In a full reset sequence, ctrlr is set to unfailed but it is after
-	 * destroying all qpairs. Ctrlr may be still failed even after starting
-	 * a full reset sequence. Hence we check the resetting flag first.
-	 */
+	/* TODO: Regard path as unfailed only if the reset is throttoled. */
 	if (nvme_ctrlr->resetting) {
-		return false;
+		return true;
 	}
 
 	if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {

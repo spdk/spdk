@@ -2522,37 +2522,6 @@ test_abort(void)
 
 	set_thread(0);
 
-	/* If qpair is disconnected, it is freed and then reconnected via resetting
-	 * the corresponding nvme_ctrlr. I/O should be queued if it is submitted
-	 * while resetting the nvme_ctrlr.
-	 */
-	ctrlr_ch1->qpair->is_connected = false;
-
-	poll_thread_times(0, 3);
-
-	CU_ASSERT(ctrlr_ch1->qpair == NULL);
-	CU_ASSERT(nvme_ctrlr->resetting == true);
-
-	write_io->internal.in_submit_request = true;
-
-	bdev_nvme_submit_request(ch1, write_io);
-
-	CU_ASSERT(write_io->internal.in_submit_request == true);
-	CU_ASSERT(write_io == TAILQ_FIRST(&nbdev_ch1->retry_io_list));
-
-	/* Aborting the queued write request should succeed immediately. */
-	abort_io->internal.ch = (struct spdk_bdev_channel *)ch1;
-	abort_io->u.abort.bio_to_abort = write_io;
-	abort_io->internal.in_submit_request = true;
-
-	bdev_nvme_submit_request(ch1, abort_io);
-
-	CU_ASSERT(abort_io->internal.in_submit_request == false);
-	CU_ASSERT(abort_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
-	CU_ASSERT(write_io->internal.in_submit_request == false);
-	CU_ASSERT(write_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
-
 	spdk_put_io_channel(ch1);
 
 	set_thread(1);
@@ -3917,7 +3886,7 @@ test_find_io_path(void)
 }
 
 static void
-test_retry_io_if_ctrlr_is_resetting(void)
+test_retry_io_if_ana_state_is_updating(void)
 {
 	struct nvme_path_id path = {};
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -3927,7 +3896,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev;
 	struct nvme_ns *nvme_ns;
-	struct spdk_bdev_io *bdev_io1, *bdev_io2;
+	struct spdk_bdev_io *bdev_io1;
 	struct spdk_io_channel *ch;
 	struct nvme_bdev_channel *nbdev_ch;
 	struct nvme_io_path *io_path;
@@ -3967,9 +3936,6 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	bdev_io1 = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, NULL);
 	ut_bdev_io_set_buf(bdev_io1);
 
-	bdev_io2 = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, NULL);
-	ut_bdev_io_set_buf(bdev_io1);
-
 	ch = spdk_get_io_channel(bdev);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 
@@ -3983,7 +3949,6 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	SPDK_CU_ASSERT_FATAL(ctrlr_ch->qpair != NULL);
 
 	bdev_io1->internal.ch = (struct spdk_bdev_channel *)ch;
-	bdev_io2->internal.ch = (struct spdk_bdev_channel *)ch;
 
 	/* If qpair is connected, I/O should succeed. */
 	bdev_io1->internal.in_submit_request = true;
@@ -3994,70 +3959,6 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	poll_threads();
 	CU_ASSERT(bdev_io1->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io1->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
-
-	/* If qpair is disconnected, it is freed and then reconnected via resetting
-	 * the corresponding nvme_ctrlr. I/O should be queued if it is submitted
-	 * while resetting the nvme_ctrlr.
-	 */
-	ctrlr_ch->qpair->is_connected = false;
-	ctrlr->is_failed = true;
-
-	poll_thread_times(0, 4);
-
-	CU_ASSERT(ctrlr_ch->qpair == NULL);
-	CU_ASSERT(nvme_ctrlr->resetting == true);
-	CU_ASSERT(ctrlr->is_failed == false);
-
-	bdev_io1->internal.in_submit_request = true;
-
-	bdev_nvme_submit_request(ch, bdev_io1);
-
-	spdk_delay_us(1);
-
-	bdev_io2->internal.in_submit_request = true;
-
-	bdev_nvme_submit_request(ch, bdev_io2);
-
-	CU_ASSERT(bdev_io1->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io2->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io1 == TAILQ_FIRST(&nbdev_ch->retry_io_list));
-	CU_ASSERT(bdev_io2 == TAILQ_NEXT(bdev_io1, module_link));
-
-	poll_threads();
-
-	CU_ASSERT(ctrlr_ch->qpair != NULL);
-	CU_ASSERT(nvme_ctrlr->resetting == false);
-
-	spdk_delay_us(999999);
-
-	poll_thread_times(0, 1);
-
-	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 1);
-	CU_ASSERT(bdev_io1->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io2->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io2 == TAILQ_FIRST(&nbdev_ch->retry_io_list));
-
-	poll_threads();
-
-	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
-	CU_ASSERT(bdev_io1->internal.in_submit_request == false);
-	CU_ASSERT(bdev_io1->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-	CU_ASSERT(bdev_io2->internal.in_submit_request == true);
-	CU_ASSERT(bdev_io2 == TAILQ_FIRST(&nbdev_ch->retry_io_list));
-
-	spdk_delay_us(1);
-
-	poll_thread_times(0, 1);
-
-	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 1);
-	CU_ASSERT(bdev_io2->internal.in_submit_request == true);
-	CU_ASSERT(TAILQ_EMPTY(&nbdev_ch->retry_io_list));
-
-	poll_threads();
-
-	CU_ASSERT(ctrlr_ch->qpair->num_outstanding_reqs == 0);
-	CU_ASSERT(bdev_io2->internal.in_submit_request == false);
-	CU_ASSERT(bdev_io2->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/* If ANA state of namespace is inaccessible, I/O should be queued. */
 	nvme_ns->ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
@@ -4089,7 +3990,6 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	CU_ASSERT(bdev_io1->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	free(bdev_io1);
-	free(bdev_io2);
 
 	spdk_put_io_channel(ch);
 
@@ -4741,124 +4641,6 @@ test_retry_io_for_ana_error(void)
 }
 
 static void
-test_retry_admin_passthru_if_ctrlr_is_resetting(void)
-{
-	struct nvme_path_id path = {};
-	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_bdev_ctrlr *nbdev_ctrlr;
-	struct nvme_ctrlr *nvme_ctrlr;
-	const int STRING_SIZE = 32;
-	const char *attached_names[STRING_SIZE];
-	struct nvme_bdev *bdev;
-	struct spdk_bdev_io *admin_io;
-	struct spdk_io_channel *ch;
-	struct nvme_bdev_channel *nbdev_ch;
-	int rc;
-
-	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
-	ut_init_trid(&path.trid);
-
-	g_opts.bdev_retry_count = 1;
-
-	set_thread(0);
-
-	ctrlr = ut_attach_ctrlr(&path.trid, 1, false, false);
-	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
-
-	g_ut_attach_ctrlr_status = 0;
-	g_ut_attach_bdev_count = 1;
-
-	rc = bdev_nvme_create(&path.trid, "nvme0", attached_names, STRING_SIZE, 0,
-			      attach_ctrlr_done, NULL, NULL, false);
-	CU_ASSERT(rc == 0);
-
-	spdk_delay_us(1000);
-	poll_threads();
-
-	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
-	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
-
-	nvme_ctrlr = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path.trid);
-	CU_ASSERT(nvme_ctrlr != NULL);
-
-	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
-	CU_ASSERT(bdev != NULL);
-
-	admin_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_NVME_ADMIN, bdev, NULL);
-	admin_io->u.nvme_passthru.cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-
-	ch = spdk_get_io_channel(bdev);
-	SPDK_CU_ASSERT_FATAL(ch != NULL);
-
-	nbdev_ch = spdk_io_channel_get_ctx(ch);
-
-	admin_io->internal.ch = (struct spdk_bdev_channel *)ch;
-
-	/* If ctrlr is available, admin passthrough should succeed. */
-	admin_io->internal.in_submit_request = true;
-
-	bdev_nvme_submit_request(ch, admin_io);
-
-	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
-	CU_ASSERT(admin_io->internal.in_submit_request == true);
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
-
-	CU_ASSERT(admin_io->internal.in_submit_request == false);
-	CU_ASSERT(admin_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS);
-
-	/* If ctrlr is resetting, admin passthrough request should be queued
-	 * if it is submitted while resetting ctrlr.
-	 */
-	bdev_nvme_reset(nvme_ctrlr);
-
-	poll_thread_times(0, 1);
-
-	admin_io->internal.in_submit_request = true;
-
-	bdev_nvme_submit_request(ch, admin_io);
-
-	CU_ASSERT(admin_io->internal.in_submit_request == true);
-	CU_ASSERT(admin_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
-
-	poll_threads();
-
-	CU_ASSERT(nvme_ctrlr->resetting == false);
-
-	spdk_delay_us(1000000);
-	poll_thread_times(0, 1);
-
-	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
-	CU_ASSERT(admin_io->internal.in_submit_request == true);
-	CU_ASSERT(TAILQ_EMPTY(&nbdev_ch->retry_io_list));
-
-	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
-	poll_threads();
-
-	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
-	CU_ASSERT(admin_io->internal.in_submit_request == false);
-	CU_ASSERT(admin_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
-
-	free(admin_io);
-
-	spdk_put_io_channel(ch);
-
-	poll_threads();
-
-	rc = bdev_nvme_delete("nvme0", &g_any_path);
-	CU_ASSERT(rc == 0);
-
-	poll_threads();
-	spdk_delay_us(1000);
-	poll_threads();
-
-	CU_ASSERT(nvme_bdev_ctrlr_get_by_name("nvme0") == NULL);
-
-	g_opts.bdev_retry_count = 0;
-}
-
-static void
 test_retry_admin_passthru_for_path_error(void)
 {
 	struct nvme_path_id path1 = {}, path2 = {};
@@ -5190,12 +4972,11 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_admin_path);
 	CU_ADD_TEST(suite, test_reset_bdev_ctrlr);
 	CU_ADD_TEST(suite, test_find_io_path);
-	CU_ADD_TEST(suite, test_retry_io_if_ctrlr_is_resetting);
+	CU_ADD_TEST(suite, test_retry_io_if_ana_state_is_updating);
 	CU_ADD_TEST(suite, test_retry_io_for_io_path_error);
 	CU_ADD_TEST(suite, test_retry_io_count);
 	CU_ADD_TEST(suite, test_concurrent_read_ana_log_page);
 	CU_ADD_TEST(suite, test_retry_io_for_ana_error);
-	CU_ADD_TEST(suite, test_retry_admin_passthru_if_ctrlr_is_resetting);
 	CU_ADD_TEST(suite, test_retry_admin_passthru_for_path_error);
 	CU_ADD_TEST(suite, test_retry_admin_passthru_by_count);
 
