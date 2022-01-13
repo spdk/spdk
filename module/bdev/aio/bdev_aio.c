@@ -820,6 +820,38 @@ error_return:
 	return rc;
 }
 
+int
+bdev_aio_rescan(struct spdk_bdev *bdev)
+{
+	struct file_disk *fdisk;
+	uint64_t disk_size, blockcnt;
+	int rc;
+
+	if (!bdev || bdev->module != &aio_if) {
+		return -ENODEV;
+	}
+
+	fdisk = SPDK_CONTAINEROF(bdev, struct file_disk, disk);
+	disk_size = spdk_fd_get_size(fdisk->fd);
+	blockcnt = disk_size / fdisk->disk.blocklen;
+
+	if (fdisk->disk.blockcnt != blockcnt) {
+		SPDK_NOTICELOG("AIO device is resized: bdev name %s, old block count %" PRIu64 ", new block count %"
+			       PRIu64 "\n",
+			       fdisk->filename,
+			       fdisk->disk.blockcnt,
+			       blockcnt);
+		rc = spdk_bdev_notify_blockcnt_change(&fdisk->disk, blockcnt);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not change num blocks for aio bdev: name %s, errno: %d.\n",
+				    fdisk->filename, rc);
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
 struct delete_aio_bdev_ctx {
 	delete_aio_bdev_complete cb_fn;
 	void *cb_arg;

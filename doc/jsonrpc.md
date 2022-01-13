@@ -2813,6 +2813,41 @@ Example response:
 }
 ~~~
 
+### bdev_aio_rescan {#rpc_bdev_aio_rescan}
+
+Rescan the size of @ref bdev_config_aio.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Example
+
+Example request:
+
+~~json
+{
+  "params": {
+    "name": "Aio0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_aio_rescan",
+  "id": 1
+}
+~~
+
+Example response:
+
+~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~
+
 ### bdev_aio_delete {#rpc_bdev_aio_delete}
 
 Delete @ref bdev_config_aio.

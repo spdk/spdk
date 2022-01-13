@@ -386,6 +386,16 @@ def bdev_aio_create(client, filename, name, block_size=None):
     return client.call('bdev_aio_create', params)
 
 
+def bdev_aio_rescan(client, name):
+    """Rescan a Linux AIO block device.
+
+    Args:
+        bdev_name: name of aio bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_aio_rescan', params)
+
+
 @deprecated_alias('delete_aio_bdev')
 def bdev_aio_delete(client, name):
     """Remove aio bdev from the system.

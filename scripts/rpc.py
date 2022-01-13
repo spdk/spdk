@@ -426,6 +426,14 @@ if __name__ == "__main__":
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?', default=0)
     p.set_defaults(func=bdev_aio_create)
 
+    def bdev_aio_rescan(args):
+        print_json(rpc.bdev.bdev_aio_rescan(args.client,
+                                            name=args.name))
+
+    p = subparsers.add_parser('bdev_aio_rescan', help='Rescan a bdev size with aio backend')
+    p.add_argument('name', help='Block device name')
+    p.set_defaults(func=bdev_aio_rescan)
+
     def bdev_aio_delete(args):
         rpc.bdev.bdev_aio_delete(args.client,
                                  name=args.name)

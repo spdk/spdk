@@ -21,6 +21,10 @@ is fabric or not.
 API `spdk_nvme_poll_group_remove` was limited to be available only for a
 disconnected qpair in the group.
 
+### bdev_aio
+
+Added `bdev_aio_rescan` RPC to allow rescaning the size of aio bdev
+
 ### bdev
 
 The NVMe bdev module supports multipath and improved I/O error resiliency.
