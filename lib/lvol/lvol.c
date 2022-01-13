@@ -398,6 +398,15 @@ remove_bs_on_error_cb(void *cb_arg, int bserrno)
 }
 
 static void
+exit_error_lvs_req(struct spdk_lvs_with_handle_req *req, struct spdk_lvol_store *lvs, int lvolerrno)
+{
+	req->cb_fn(req->cb_arg, NULL, lvolerrno);
+	spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
+	lvs_free(lvs);
+	free(req);
+}
+
+static void
 super_create_close_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvs_with_handle_req *req = cb_arg;
@@ -405,10 +414,7 @@ super_create_close_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Lvol store init failed: could not close super blob\n");
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -424,11 +430,8 @@ super_blob_set_cb(void *cb_arg, int lvolerrno)
 	struct spdk_blob *blob = lvs->super_blob;
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not set uuid for super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -444,11 +447,8 @@ super_blob_init_cb(void *cb_arg, int lvolerrno)
 	char uuid[SPDK_UUID_STRING_LEN];
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not set super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -466,11 +466,8 @@ super_blob_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol_store *lvs = req->lvol_store;
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not open super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
@@ -488,11 +485,8 @@ super_blob_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	struct spdk_blob_store *bs;
 
 	if (lvolerrno < 0) {
-		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		SPDK_ERRLOG("Lvol store init failed: could not create super blob\n");
-		spdk_bs_destroy(lvs->blobstore, remove_bs_on_error_cb, NULL);
-		lvs_free(lvs);
-		free(req);
+		exit_error_lvs_req(req, lvs, lvolerrno);
 		return;
 	}
 
