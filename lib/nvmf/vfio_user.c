@@ -195,6 +195,7 @@ struct nvmf_vfio_user_sq {
 
 struct nvmf_vfio_user_cq {
 	struct spdk_nvmf_transport_poll_group	*group;
+	struct spdk_thread			*thread;
 	struct nvme_q				cq;
 	enum nvmf_vfio_user_cq_state		cq_state;
 	uint32_t				cq_ref;
@@ -2722,11 +2723,28 @@ vfio_user_poll_vfu_ctx(void *ctx)
 	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
+struct vfio_user_post_cpl_ctx {
+	struct nvmf_vfio_user_ctrlr	*ctrlr;
+	struct nvmf_vfio_user_cq	*cq;
+	struct spdk_nvme_cpl		cpl;
+};
+
+static void
+_post_completion_msg(void *ctx)
+{
+	struct vfio_user_post_cpl_ctx *cpl_ctx = ctx;
+
+	post_completion(cpl_ctx->ctrlr, cpl_ctx->cq, cpl_ctx->cpl.cdw0, cpl_ctx->cpl.sqid,
+			cpl_ctx->cpl.cid, cpl_ctx->cpl.status.sc, cpl_ctx->cpl.status.sct);
+	free(cpl_ctx);
+}
+
 static int
 handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_poll_group *vu_group;
 	struct nvmf_vfio_user_sq *vu_sq = cb_arg;
+	struct nvmf_vfio_user_cq *vu_cq;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
 	struct nvmf_vfio_user_endpoint *endpoint;
 
@@ -2749,6 +2767,9 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	TAILQ_INSERT_TAIL(&vu_group->sqs, vu_sq, link);
 	vu_sq->sq_state = VFIO_USER_SQ_ACTIVE;
 
+	vu_cq = vu_ctrlr->cqs[0];
+	assert(vu_cq != NULL);
+
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&vu_sq->qpair)) {
 		vu_ctrlr->cntlid = vu_sq->qpair.ctrlr->cntlid;
@@ -2756,14 +2777,36 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		vu_ctrlr->ctrlr = vu_sq->qpair.ctrlr;
 		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 		vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx, vu_ctrlr, 0);
+		vu_cq->thread = spdk_get_thread();
 	} else {
 		/* For I/O queues this command was generated in response to an
 		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
 		 * been completed. Complete it now.
 		 */
-		post_completion(vu_ctrlr, vu_ctrlr->cqs[0], 0, 0,
-				vu_sq->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
+
+		assert(vu_cq->thread != NULL);
+		if (vu_cq->thread != spdk_get_thread()) {
+			struct vfio_user_post_cpl_ctx *cpl_ctx;
+
+			cpl_ctx = calloc(1, sizeof(*cpl_ctx));
+			if (!cpl_ctx) {
+				return -ENOMEM;
+			}
+			cpl_ctx->ctrlr = vu_ctrlr;
+			cpl_ctx->cq = vu_cq;
+			cpl_ctx->cpl.sqid = 0;
+			cpl_ctx->cpl.cdw0 = 0;
+			cpl_ctx->cpl.cid = vu_sq->create_io_sq_cmd.cid;
+			cpl_ctx->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+			cpl_ctx->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+
+			spdk_thread_send_msg(vu_cq->thread, _post_completion_msg, cpl_ctx);
+		} else {
+			post_completion(vu_ctrlr, vu_cq, 0, 0,
+					vu_sq->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
+		}
 	}
+
 	TAILQ_INSERT_TAIL(&vu_ctrlr->connected_sqs, vu_sq, tailq);
 	pthread_mutex_unlock(&endpoint->lock);
 
