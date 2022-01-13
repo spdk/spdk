@@ -1285,6 +1285,24 @@ bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 	}
 }
 
+enum bdev_nvme_op_after_reset {
+	OP_NONE,
+	OP_COMPLETE_PENDING_DESTRUCT,
+};
+
+typedef enum bdev_nvme_op_after_reset _bdev_nvme_op_after_reset;
+
+static _bdev_nvme_op_after_reset
+bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success)
+{
+	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
+		/* Complete pending destruct after reset completes. */
+		return OP_COMPLETE_PENDING_DESTRUCT;
+	}
+
+	return OP_NONE;
+}
+
 static void
 _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
@@ -1293,7 +1311,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 	struct nvme_path_id *path_id;
 	bdev_nvme_reset_cb reset_cb_fn = nvme_ctrlr->reset_cb_fn;
 	void *reset_cb_arg = nvme_ctrlr->reset_cb_arg;
-	bool complete_pending_destruct = false;
+	enum bdev_nvme_op_after_reset op_after_reset;
 
 	assert(nvme_ctrlr->thread == spdk_get_thread());
 
@@ -1315,10 +1333,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 
 	path_id->is_failed = !success;
 
-	if (nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
-		/* Complete pending destruct after reset completes. */
-		complete_pending_destruct = true;
-	}
+	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success);
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
@@ -1326,8 +1341,12 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 		reset_cb_fn(reset_cb_arg, success);
 	}
 
-	if (complete_pending_destruct) {
+	switch (op_after_reset) {
+	case OP_COMPLETE_PENDING_DESTRUCT:
 		nvme_ctrlr_unregister(nvme_ctrlr);
+		break;
+	default:
+		break;
 	}
 }
 
