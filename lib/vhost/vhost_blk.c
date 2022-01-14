@@ -1006,7 +1006,7 @@ _no_bdev_vdev_vq_worker(struct spdk_vhost_virtqueue *vq)
 	vhost_session_vq_used_signal(vq);
 
 	if (vsession->task_cnt == 0 && bvsession->io_channel) {
-		spdk_put_io_channel(bvsession->io_channel);
+		vhost_blk_put_io_channel(bvsession->io_channel);
 		bvsession->io_channel = NULL;
 	}
 
@@ -1307,7 +1307,7 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	}
 
 	if (bvdev->bdev) {
-		bvsession->io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
+		bvsession->io_channel = vhost_blk_get_io_channel(vdev);
 		if (!bvsession->io_channel) {
 			free_task_pool(bvsession);
 			SPDK_ERRLOG("%s: I/O channel allocation failed\n", vsession->name);
@@ -1385,7 +1385,7 @@ destroy_session_poller_cb(void *arg)
 		     vsession->name, spdk_env_get_current_core());
 
 	if (bvsession->io_channel) {
-		spdk_put_io_channel(bvsession->io_channel);
+		vhost_blk_put_io_channel(bvsession->io_channel);
 		bvsession->io_channel = NULL;
 	}
 
@@ -1610,11 +1610,10 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	}
 
 	/*
-	 * When starting qemu with vhost-user-blk multiqueue, the vhost device will
+	 * When starting qemu with multiqueue enable, the vhost device will
 	 * be started/stopped many times, related to the queues num, as the
-	 * vhost-user backend doesn't know the exact number of queues used for this
-	 * device. The target have to stop and start the device once got a valid
-	 * IO queue.
+	 * exact number of queues used for this device is not known at the time.
+	 * The target has to stop and start the device once got a valid IO queue.
 	 * When stoping and starting the vhost device, the backend bdev io device
 	 * will be deleted and created repeatedly.
 	 * Hold a bdev reference so that in the struct spdk_vhost_blk_dev, so that
@@ -1667,6 +1666,20 @@ vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 
 	free(bvdev);
 	return 0;
+}
+
+struct spdk_io_channel *
+vhost_blk_get_io_channel(struct spdk_vhost_dev *vdev)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	return spdk_bdev_get_io_channel(bvdev->bdev_desc);
+}
+
+void
+vhost_blk_put_io_channel(struct spdk_io_channel *ch)
+{
+	spdk_put_io_channel(ch);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(vhost_blk)
