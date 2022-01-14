@@ -2897,6 +2897,8 @@ nvmf_qpair_abort_aer(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 		return false;
 	}
 
+	assert(spdk_get_thread() == ctrlr->thread);
+
 	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
 		if (ctrlr->aer_req[i]->cmd->nvme_cmd.cid == cid) {
 			SPDK_DEBUGLOG(nvmf, "Aborting AER request\n");
@@ -3296,6 +3298,8 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	assert(spdk_get_thread() == ctrlr->thread);
+
 	if (cmd->fuse != 0) {
 		/* Fused admin commands are not supported. */
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -3440,6 +3444,8 @@ nvmf_ctrlr_async_event_notification(struct spdk_nvmf_ctrlr *ctrlr,
 	struct spdk_nvmf_request *req;
 	struct spdk_nvme_cpl *rsp;
 
+	assert(spdk_get_thread() == ctrlr->thread);
+
 	/* If there is no outstanding AER request, queue the event.  Then
 	 * if an AER is later submitted, this event can be sent as a
 	 * response.
@@ -3573,6 +3579,8 @@ nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
+	assert(spdk_get_thread() == ctrlr->thread);
+
 	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
 		spdk_nvmf_request_free(ctrlr->aer_req[i]);
 		ctrlr->aer_req[i] = NULL;
@@ -3586,6 +3594,8 @@ nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	struct spdk_nvmf_request *req;
 	int i;
+
+	assert(spdk_get_thread() == ctrlr->thread);
 
 	if (!ctrlr->nr_aer_reqs) {
 		return;

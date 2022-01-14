@@ -874,6 +874,7 @@ test_get_ns_id_desc_list(void)
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.subsys = &subsystem;
 	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.thread = spdk_get_thread();
 
 	memset(&req, 0, sizeof(req));
 	req.qpair = &qpair;
@@ -1639,6 +1640,7 @@ test_custom_admin_cmd(void)
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.subsys = &subsystem;
 	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.thread = spdk_get_thread();
 
 	memset(&req, 0, sizeof(req));
 	req.qpair = &qpair;
@@ -1796,6 +1798,7 @@ test_multi_async_event_reqs(void)
 
 	ctrlr.subsys = &subsystem;
 	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.thread = spdk_get_thread();
 
 	for (i = 0; i < 5; i++) {
 		cmd[i].nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
@@ -2050,6 +2053,7 @@ test_multi_async_events(void)
 
 	ctrlr.subsys = &subsystem;
 	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.thread = spdk_get_thread();
 	ctrlr.feat.async_event_configuration.bits.ns_attr_notice = 1;
 	ctrlr.feat.async_event_configuration.bits.ana_change_notice = 1;
 	ctrlr.feat.async_event_configuration.bits.discovery_log_change_notice = 1;
@@ -2124,6 +2128,7 @@ test_rae(void)
 
 	ctrlr.subsys = &subsystem;
 	ctrlr.vcprop.cc.bits.en = 1;
+	ctrlr.thread = spdk_get_thread();
 	ctrlr.feat.async_event_configuration.bits.ns_attr_notice = 1;
 	init_pending_async_events(&ctrlr);
 
