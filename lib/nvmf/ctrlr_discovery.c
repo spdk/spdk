@@ -61,7 +61,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn)
 		/** There is a change in discovery log for hosts with given hostnqn */
 		TAILQ_FOREACH(ctrlr, &discovery_subsystem->ctrlrs, link) {
 			if (hostnqn == NULL || strcmp(hostnqn, ctrlr->hostnqn) == 0) {
-				nvmf_ctrlr_async_event_discovery_log_change_notice(ctrlr);
+				spdk_thread_send_msg(ctrlr->thread, nvmf_ctrlr_async_event_discovery_log_change_notice, ctrlr);
 			}
 		}
 	}

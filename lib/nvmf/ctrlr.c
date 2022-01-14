@@ -3522,28 +3522,29 @@ nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
 	nvmf_ctrlr_async_event_notification(ctrlr, &event);
 }
 
-int
-nvmf_ctrlr_async_event_discovery_log_change_notice(struct spdk_nvmf_ctrlr *ctrlr)
+void
+nvmf_ctrlr_async_event_discovery_log_change_notice(void *ctx)
 {
 	union spdk_nvme_async_event_completion event = {0};
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
 
 	/* Users may disable the event notification manually or
 	 * it may not be enabled due to keep alive timeout
 	 * not being set in connect command to discovery controller.
 	 */
 	if (!ctrlr->feat.async_event_configuration.bits.discovery_log_change_notice) {
-		return 0;
+		return;
 	}
 
 	if (!nvmf_ctrlr_mask_aen(ctrlr, SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE_MASK_BIT)) {
-		return 0;
+		return;
 	}
 
 	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
 	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_DISCOVERY_LOG_CHANGE;
 	event.bits.log_page_identifier = SPDK_NVME_LOG_DISCOVERY;
 
-	return nvmf_ctrlr_async_event_notification(ctrlr, &event);
+	nvmf_ctrlr_async_event_notification(ctrlr, &event);
 }
 
 int

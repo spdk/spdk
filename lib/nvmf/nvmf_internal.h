@@ -457,7 +457,7 @@ int nvmf_subsystem_set_cntlid_range(struct spdk_nvmf_subsystem *subsystem,
 
 int nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr);
-int nvmf_ctrlr_async_event_discovery_log_change_notice(struct spdk_nvmf_ctrlr *ctrlr);
+void nvmf_ctrlr_async_event_discovery_log_change_notice(void *ctx);
 void nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr);
 int nvmf_ctrlr_async_event_error_event(struct spdk_nvmf_ctrlr *ctrlr,
 				       union spdk_nvme_async_event_completion event);
