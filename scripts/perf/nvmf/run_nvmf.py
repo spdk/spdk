@@ -969,6 +969,10 @@ class KernelTarget(Target):
         disks_per_ip = int(len(nvme_list) / len(address_list))
         disk_chunks = [nvme_list[i * disks_per_ip:disks_per_ip + disks_per_ip * i] for i in range(0, len(address_list))]
 
+        # Add remaining drives
+        for i, disk in enumerate(nvme_list[disks_per_ip * len(address_list):]):
+            disks_chunks[i].append(disk)
+
         subsys_no = 1
         port_no = 0
         for ip, chunk in zip(address_list, disk_chunks):
@@ -1143,7 +1147,11 @@ class SPDKTarget(Target):
             disks_per_ip = 1
         else:
             disks_per_ip = int(len(num_disks) / len(ips))
-        disk_chunks = [num_disks[i * disks_per_ip:disks_per_ip + disks_per_ip * i] for i in range(0, len(ips))]
+        disk_chunks = [[*num_disks[i * disks_per_ip:disks_per_ip + disks_per_ip * i]] for i in range(0, len(ips))]
+
+        # Add remaining drives
+        for i, disk in enumerate(num_disks[disks_per_ip * len(ips):]):
+            disk_chunks[i].append(disk)
 
         # Create subsystems, add bdevs to namespaces, add listeners
         for ip, chunk in zip(ips, disk_chunks):
