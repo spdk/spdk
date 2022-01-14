@@ -1662,8 +1662,9 @@ work_fn(void *arg)
 
 		if (tsc_current > tsc_end) {
 			if (warmup) {
-				/* Update test end time, clear statistics */
-				tsc_end = tsc_current + g_time_in_sec * g_tsc_rate;
+				/* Update test start and end time, clear statistics */
+				tsc_start = spdk_get_ticks();
+				tsc_end = tsc_start + g_time_in_sec * g_tsc_rate;
 
 				TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 					memset(&ns_ctx->stats, 0, sizeof(ns_ctx->stats));
