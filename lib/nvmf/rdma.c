@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019-2021 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2460,7 +2460,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	rtransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_rdma_accept, &rtransport->transport,
-				    rtransport->transport.opts.acceptor_poll_rate);
+				    opts->acceptor_poll_rate);
 	if (!rtransport->accept_poller) {
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;

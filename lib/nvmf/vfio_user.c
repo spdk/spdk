@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019, Nutanix Inc. All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -612,7 +613,7 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	vu_transport->accept_poller = SPDK_POLLER_REGISTER(nvmf_vfio_user_accept, &vu_transport->transport,
-				      vu_transport->transport.opts.acceptor_poll_rate);
+				      opts->acceptor_poll_rate);
 	if (!vu_transport->accept_poller) {
 		free(vu_transport);
 		return NULL;

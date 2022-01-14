@@ -3,6 +3,7 @@
  *
  *   Copyright (c) 2018-2019 Broadcom.  All Rights Reserved.
  *   The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2010,7 +2011,7 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	g_nvmf_ftransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_fc_accept,
-					   &g_nvmf_ftransport->transport, g_nvmf_ftransport->transport.opts.acceptor_poll_rate);
+					   &g_nvmf_ftransport->transport, opts->acceptor_poll_rate);
 	if (!g_nvmf_ftransport->accept_poller) {
 		free(g_nvmf_ftransport);
 		g_nvmf_ftransport = NULL;
