@@ -445,10 +445,16 @@ test_nvme_qpair_add_cmd_error_injection(void)
 {
 	struct spdk_nvme_qpair qpair = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
+	pthread_mutexattr_t attr;
 	int rc;
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 	ctrlr.adminq = &qpair;
+
+	SPDK_CU_ASSERT_FATAL(pthread_mutexattr_init(&attr) == 0);
+	SPDK_CU_ASSERT_FATAL(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) == 0);
+	SPDK_CU_ASSERT_FATAL(pthread_mutex_init(&ctrlr.ctrlr_lock, &attr) == 0);
+	pthread_mutexattr_destroy(&attr);
 
 	/* Admin error injection at submission path */
 	MOCK_CLEAR(spdk_zmalloc);
@@ -498,6 +504,7 @@ test_nvme_qpair_add_cmd_error_injection(void)
 
 	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
 
+	pthread_mutex_destroy(&ctrlr.ctrlr_lock);
 	cleanup_submit_request_test(&qpair);
 }
 
