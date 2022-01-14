@@ -178,6 +178,9 @@ struct spdk_scsi_lun {
 
 	/** A structure to connect LUNs in a list. */
 	TAILQ_ENTRY(spdk_scsi_lun) tailq;
+
+	/** The LUN is resizing */
+	bool resizing;
 };
 
 struct spdk_scsi_lun *scsi_lun_construct(const char *bdev_name,

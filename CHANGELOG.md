@@ -58,6 +58,11 @@ Added 3 experimental APIs to handle PCI device interrupts (`spdk_pci_device_enab
 Added a 'subsystem' parameter to spdk_nvmf_transport_stop_listen_async. When not NULL,
 it will only disconnect qpairs for controllers associated with the specified subsystem.
 
+### scsi
+
+Structure `spdk_scsi_lun` has been extended with new member `resizing` so that SCSI layer now reports
+unit attention for disk resize.
+
 ## v21.10
 
 Structure `spdk_nvmf_target_opts` has been extended with new member `discovery_filter` which allows to specify

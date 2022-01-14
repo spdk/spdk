@@ -432,6 +432,44 @@ lun_execute_scsi_task_complete(void)
 }
 
 static void
+lun_execute_scsi_task_resize(void)
+{
+	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_task task = { 0 };
+	struct spdk_scsi_dev dev = { 0 };
+	uint8_t cdb = SPDK_SBC_READ_16;
+
+	lun = lun_construct();
+
+	ut_init_task(&task);
+	task.lun = lun;
+	task.cdb = &cdb;
+	lun->dev = &dev;
+	lun->resizing = true;
+
+	/* the tasks list should still be empty since it has not been
+	   executed yet
+	 */
+	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
+
+	scsi_lun_execute_task(lun, &task);
+	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	/* SENSE KEY */
+	CU_ASSERT_EQUAL(task.sense_data[2], SPDK_SCSI_SENSE_UNIT_ATTENTION);
+	/* SCSI_SENSE_ASCQ_CAPACITY_DATA_HAS_CHANGED: 0x2a09 */
+	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_CAPACITY_DATA_HAS_CHANGED);
+	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_CAPACITY_DATA_HAS_CHANGED);
+	CU_ASSERT(lun->resizing == false);
+
+	/* Assert the task has not been added to the tasks queue */
+	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
+
+	lun_destruct(lun);
+
+	CU_ASSERT_EQUAL(g_task_count, 0);
+}
+
+static void
 lun_destruct_success(void)
 {
 	struct spdk_scsi_lun *lun;
@@ -727,6 +765,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lun_append_task_null_lun_not_supported);
 	CU_ADD_TEST(suite, lun_execute_scsi_task_pending);
 	CU_ADD_TEST(suite, lun_execute_scsi_task_complete);
+	CU_ADD_TEST(suite, lun_execute_scsi_task_resize);
 	CU_ADD_TEST(suite, lun_destruct_success);
 	CU_ADD_TEST(suite, lun_construct_null_ctx);
 	CU_ADD_TEST(suite, lun_construct_success);

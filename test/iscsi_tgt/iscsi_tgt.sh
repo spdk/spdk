@@ -64,6 +64,7 @@ fi
 if [ $SPDK_TEST_ISCSI_INITIATOR -eq 1 ]; then
 	run_test "iscsi_tgt_initiator" ./test/iscsi_tgt/initiator/initiator.sh
 	run_test "iscsi_tgt_bdev_io_wait" ./test/iscsi_tgt/bdev_io_wait/bdev_io_wait.sh
+	run_test "iscsi_tgt_resize" ./test/iscsi_tgt/resize/resize.sh
 fi
 
 cleanup_veth_interfaces

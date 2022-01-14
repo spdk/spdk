@@ -72,12 +72,16 @@ struct bdev_iscsi_lun;
 #define BDEV_ISCSI_MAX_UNMAP_BLOCK_DESCS_COUNT (1)
 
 static int bdev_iscsi_initialize(void);
+static void bdev_iscsi_readcapacity16(struct iscsi_context *context, struct bdev_iscsi_lun *lun);
+static void _bdev_iscsi_submit_request(void *_bdev_io);
+
 static TAILQ_HEAD(, bdev_iscsi_conn_req) g_iscsi_conn_req = TAILQ_HEAD_INITIALIZER(
 			g_iscsi_conn_req);
 static struct spdk_poller *g_conn_poller = NULL;
 
 struct bdev_iscsi_io {
 	struct spdk_thread *submit_td;
+	struct bdev_iscsi_lun *lun;
 	enum spdk_bdev_io_status status;
 	int scsi_status;
 	enum spdk_scsi_sense sk;
@@ -217,12 +221,26 @@ bdev_iscsi_io_complete(struct bdev_iscsi_io *iscsi_io, enum spdk_bdev_io_status 
 	}
 }
 
+static bool
+_bdev_iscsi_is_size_change(int status, struct scsi_task *task)
+{
+	if (status == SPDK_SCSI_STATUS_CHECK_CONDITION &&
+	    (uint8_t)task->sense.key == SPDK_SCSI_SENSE_UNIT_ATTENTION &&
+	    task->sense.ascq == 0x2a09) {
+		/* ASCQ: SCSI_SENSE_ASCQ_CAPACITY_DATA_HAS_CHANGED (0x2a09) */
+		return true;
+	}
+
+	return false;
+}
+
 /* Common call back function for read/write/flush command */
 static void
 bdev_iscsi_command_cb(struct iscsi_context *context, int status, void *_task, void *_iscsi_io)
 {
 	struct scsi_task *task = _task;
 	struct bdev_iscsi_io *iscsi_io = _iscsi_io;
+	struct spdk_bdev_io *bdev_io;
 
 	iscsi_io->scsi_status = status;
 	iscsi_io->sk = (uint8_t)task->sense.key;
@@ -230,7 +248,86 @@ bdev_iscsi_command_cb(struct iscsi_context *context, int status, void *_task, vo
 	iscsi_io->ascq = task->sense.ascq & 0xFF;
 
 	scsi_free_scsi_task(task);
-	bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	if (_bdev_iscsi_is_size_change(status, task)) {
+		bdev_iscsi_readcapacity16(context, iscsi_io->lun);
+
+		/* Retry this failed IO immediately */
+		bdev_io = spdk_bdev_io_from_ctx(iscsi_io);
+		if (iscsi_io->submit_td != NULL) {
+			spdk_thread_send_msg(iscsi_io->lun->main_td,
+					     _bdev_iscsi_submit_request, bdev_io);
+		} else {
+			_bdev_iscsi_submit_request(bdev_io);
+		}
+	} else {
+		bdev_iscsi_io_complete(iscsi_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	}
+}
+
+static int
+bdev_iscsi_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_block)
+{
+	int rc;
+
+	assert(bdev->module == &g_iscsi_bdev_module);
+
+	if (new_size_in_block <= bdev->blockcnt) {
+		SPDK_ERRLOG("The new bdev size must be larger than current bdev size.\n");
+		return -EINVAL;
+	}
+
+	rc = spdk_bdev_notify_blockcnt_change(bdev, new_size_in_block);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to notify block cnt change.\n");
+		return rc;
+	}
+
+	return 0;
+}
+
+static void
+bdev_iscsi_readcapacity16_cb(struct iscsi_context *context, int status, void *_task,
+			     void *private_data)
+{
+	struct bdev_iscsi_lun *lun = private_data;
+	struct scsi_readcapacity16 *readcap16;
+	struct scsi_task *task = _task;
+	uint64_t size_in_block = 0;
+	int rc;
+
+	if (status != SPDK_SCSI_STATUS_GOOD) {
+		SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(context));
+		goto ret;
+	}
+
+	readcap16 = scsi_datain_unmarshall(task);
+	if (!readcap16) {
+		SPDK_ERRLOG("Read capacity error\n");
+		goto ret;
+	}
+
+	size_in_block = readcap16->returned_lba + 1;
+
+	rc = bdev_iscsi_resize(&lun->bdev, size_in_block);
+	if (rc != 0) {
+		SPDK_ERRLOG("Bdev (%s) resize error: %d\n", lun->bdev.name, rc);
+	}
+
+ret:
+	scsi_free_scsi_task(task);
+}
+
+static void
+bdev_iscsi_readcapacity16(struct iscsi_context *context, struct bdev_iscsi_lun *lun)
+{
+	struct scsi_task *task;
+
+	task = iscsi_readcapacity16_task(context, lun->lun_id,
+					 bdev_iscsi_readcapacity16_cb, lun);
+	if (task == NULL) {
+		SPDK_ERRLOG("failed to get readcapacity16_task\n");
+	}
 }
 
 static void
@@ -510,6 +607,8 @@ static void bdev_iscsi_submit_request(struct spdk_io_channel *_ch, struct spdk_b
 	struct bdev_iscsi_io *iscsi_io = (struct bdev_iscsi_io *)bdev_io->driver_ctx;
 	struct bdev_iscsi_lun *lun = (struct bdev_iscsi_lun *)bdev_io->bdev->ctxt;
 
+	iscsi_io->lun = lun;
+
 	if (lun->main_td != submit_td) {
 		iscsi_io->submit_td = submit_td;
 		spdk_thread_send_msg(lun->main_td, _bdev_iscsi_submit_request, bdev_io);
@@ -722,9 +821,18 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 	struct scsi_readcapacity16 *readcap16;
 	struct spdk_bdev *bdev = NULL;
 	struct scsi_task *task = command_data;
+	struct scsi_task *retry_task = NULL;
 
 	if (status != SPDK_SCSI_STATUS_GOOD) {
 		SPDK_ERRLOG("iSCSI error: %s\n", iscsi_get_error(iscsi));
+		if (_bdev_iscsi_is_size_change(status, task)) {
+			scsi_free_scsi_task(task);
+			retry_task = iscsi_readcapacity16_task(iscsi, req->lun,
+							       iscsi_readcapacity16_cb, req);
+			if (retry_task) {
+				return;
+			}
+		}
 		goto ret;
 	}
 

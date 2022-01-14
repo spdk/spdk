@@ -125,6 +125,23 @@ scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun,
 	TAILQ_INSERT_TAIL(&lun->pending_mgmt_tasks, task, scsi_link);
 }
 
+static bool
+_scsi_lun_handle_unit_attention(struct spdk_scsi_task *task)
+{
+	uint8_t *cdb = task->cdb;
+
+	assert(task->cdb);
+
+	switch (cdb[0]) {
+	case SPDK_SPC_INQUIRY:
+	case SPDK_SPC_REPORT_LUNS:
+	case SPDK_SPC_REQUEST_SENSE:
+		return false;
+	default:
+		return true;
+	}
+}
+
 static void
 _scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 {
@@ -195,7 +212,17 @@ _scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 	task->status = SPDK_SCSI_STATUS_GOOD;
 	spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task);
 	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
-	if (!lun->removed) {
+	if (spdk_unlikely(lun->removed)) {
+		spdk_scsi_task_process_abort(task);
+		rc = SPDK_SCSI_TASK_COMPLETE;
+	} else if (spdk_unlikely(lun->resizing) && _scsi_lun_handle_unit_attention(task)) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_UNIT_ATTENTION,
+					  SPDK_SCSI_ASC_CAPACITY_DATA_HAS_CHANGED,
+					  SPDK_SCSI_ASCQ_CAPACITY_DATA_HAS_CHANGED);
+		lun->resizing = false;
+		rc = SPDK_SCSI_TASK_COMPLETE;
+	} else {
 		/* Check the command is allowed or not when reservation is exist */
 		if (spdk_unlikely(lun->reservation.flags & SCSI_SPC2_RESERVE)) {
 			rc = scsi2_reserve_check(task);
@@ -208,9 +235,6 @@ _scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 		} else {
 			rc = bdev_scsi_execute(task);
 		}
-	} else {
-		spdk_scsi_task_process_abort(task);
-		rc = SPDK_SCSI_TASK_COMPLETE;
 	}
 
 	switch (rc) {
@@ -405,6 +429,7 @@ bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 		break;
 	case SPDK_BDEV_EVENT_RESIZE:
 		SPDK_NOTICELOG("bdev name (%s) received event(SPDK_BDEV_EVENT_RESIZE)\n", spdk_bdev_get_name(bdev));
+		lun->resizing = true;
 		if (lun->resize_cb) {
 			lun->resize_cb(lun, lun->resize_ctx);
 		}
@@ -466,6 +491,7 @@ struct spdk_scsi_lun *scsi_lun_construct(const char *bdev_name,
 
 	lun->resize_cb = resize_cb;
 	lun->resize_ctx = resize_ctx;
+	lun->resizing = false;
 
 	TAILQ_INIT(&lun->open_descs);
 	TAILQ_INIT(&lun->reg_head);
