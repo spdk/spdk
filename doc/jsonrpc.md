@@ -2956,9 +2956,10 @@ multipathing. This is done by specifying the `name` parameter as an existing con
 path, the hostnqn, hostsvcid, hostaddr, prchk_reftag, and prchk_guard_arguments must not be specified and are assumed
 to have the same value as the existing path.
 
-The parameters, `ctrlr_loss_timeout_sec` and `reconnect_delay_sec`, are mutually dependent.
+The parameters, `ctrlr_loss_timeout_sec`, `reconnect_delay_sec`, and `fast_io_fail_timeout_sec`, are mutually dependent.
 If `reconnect_delay_sec` is non-zero, `ctrlr_loss_timeout_sec` has to be -1 or not less than `reconnect_delay_sec`.
 If `reconnect_delay_sec` is zero, `ctrlr_loss_timeout_sec` has to be zero.
+If `fast_io_fail_timeout_sec` is not zero, it has to be not less than `reconnect_delay_sec` and less than `ctrlr_loss_timeout_sec` if `ctrlr_loss_timeout_sec` is not -1.
 
 #### Result
 
@@ -2986,6 +2987,7 @@ multipath                  | Optional | string      | Multipathing behavior: dis
 num_io_queues              | Optional | uint32_t    | The number of IO queues to request during initialization. Range: (0, UINT16_MAX + 1], Default is 1024.
 ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
 reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
+fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
 
 #### Example
 

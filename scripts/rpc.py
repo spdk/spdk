@@ -540,7 +540,8 @@ if __name__ == "__main__":
                                                          multipath=args.multipath,
                                                          num_io_queues=args.num_io_queues,
                                                          ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
-                                                         reconnect_delay_sec=args.reconnect_delay_sec))
+                                                         reconnect_delay_sec=args.reconnect_delay_sec,
+                                                         fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', aliases=['construct_nvme_bdev'],
                               help='Add bdevs with nvme backend')
@@ -585,6 +586,12 @@ if __name__ == "__main__":
                    If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
                    If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero and
                    less than ctrlr_loss_timeout_sec.""",
+                   type=int)
+    p.add_argument('-u', '--fast-io-fail-timeout-sec',
+                   help="""Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+                   0 means no such timeout.
+                   If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and
+                   less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
                    type=int)
     p.set_defaults(func=bdev_nvme_attach_controller)
 

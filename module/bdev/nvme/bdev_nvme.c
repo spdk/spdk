@@ -737,6 +737,10 @@ nvme_io_path_is_failed(struct nvme_io_path *io_path)
 		return true;
 	}
 
+	if (nvme_ctrlr->fast_io_fail_timedout) {
+		return true;
+	}
+
 	if (nvme_ctrlr->resetting) {
 		if (nvme_ctrlr->reconnect_delay_sec != 0) {
 			return false;
@@ -1312,6 +1316,23 @@ bdev_nvme_check_ctrlr_loss_timeout(struct nvme_ctrlr *nvme_ctrlr)
 	}
 }
 
+static bool
+bdev_nvme_check_fast_io_fail_timeout(struct nvme_ctrlr *nvme_ctrlr)
+{
+	uint32_t elapsed;
+
+	if (nvme_ctrlr->fast_io_fail_timeout_sec == 0) {
+		return false;
+	}
+
+	elapsed = (spdk_get_ticks() - nvme_ctrlr->reset_start_tsc) / spdk_get_ticks_hz();
+	if (elapsed >= nvme_ctrlr->fast_io_fail_timeout_sec) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 enum bdev_nvme_op_after_reset {
 	OP_NONE,
 	OP_COMPLETE_PENDING_DESTRUCT,
@@ -1333,6 +1354,9 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	} else if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
 		return OP_DESTRUCT;
 	} else {
+		if (bdev_nvme_check_fast_io_fail_timeout(nvme_ctrlr)) {
+			nvme_ctrlr->fast_io_fail_timedout = true;
+		}
 		bdev_nvme_failover_trid(nvme_ctrlr, false);
 		return OP_DELAYED_RECONNECT;
 	}
@@ -3370,6 +3394,7 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_ctrlr->prchk_flags = ctx->prchk_flags;
 		nvme_ctrlr->ctrlr_loss_timeout_sec = ctx->ctrlr_loss_timeout_sec;
 		nvme_ctrlr->reconnect_delay_sec = ctx->reconnect_delay_sec;
+		nvme_ctrlr->fast_io_fail_timeout_sec = ctx->fast_io_fail_timeout_sec;
 	}
 
 	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_ctrlr,
@@ -3837,7 +3862,8 @@ bdev_nvme_async_poll(void *arg)
 
 static bool
 bdev_nvme_check_multipath_params(int32_t ctrlr_loss_timeout_sec,
-				 uint32_t reconnect_delay_sec)
+				 uint32_t reconnect_delay_sec,
+				 uint32_t fast_io_fail_timeout_sec)
 {
 	if (ctrlr_loss_timeout_sec < -1) {
 		SPDK_ERRLOG("ctrlr_loss_timeout_sec can't be less than -1.\n");
@@ -3845,6 +3871,10 @@ bdev_nvme_check_multipath_params(int32_t ctrlr_loss_timeout_sec,
 	} else if (ctrlr_loss_timeout_sec == -1) {
 		if (reconnect_delay_sec == 0) {
 			SPDK_ERRLOG("reconnect_delay_sec can't be 0 if ctrlr_loss_timeout_sec is not 0.\n");
+			return false;
+		} else if (fast_io_fail_timeout_sec != 0 &&
+			   fast_io_fail_timeout_sec < reconnect_delay_sec) {
+			SPDK_ERRLOG("reconnect_delay_sec can't be more than fast_io-fail_timeout_sec.\n");
 			return false;
 		}
 	} else if (ctrlr_loss_timeout_sec != 0) {
@@ -3854,9 +3884,17 @@ bdev_nvme_check_multipath_params(int32_t ctrlr_loss_timeout_sec,
 		} else if (reconnect_delay_sec > (uint32_t)ctrlr_loss_timeout_sec) {
 			SPDK_ERRLOG("reconnect_delay_sec can't be more than ctrlr_loss_timeout_sec.\n");
 			return false;
+		} else if (fast_io_fail_timeout_sec != 0) {
+			if (fast_io_fail_timeout_sec < reconnect_delay_sec) {
+				SPDK_ERRLOG("reconnect_delay_sec can't be more than fast_io_fail_timeout_sec.\n");
+				return false;
+			} else if (fast_io_fail_timeout_sec > (uint32_t)ctrlr_loss_timeout_sec) {
+				SPDK_ERRLOG("fast_io_fail_timeout_sec can't be more than ctrlr_loss_timeout_sec.\n");
+				return false;
+			}
 		}
-	} else if (reconnect_delay_sec != 0) {
-		SPDK_ERRLOG("reconnect_delay_sec must be 0 if ctrlr_loss_timeout_sec is 0.\n");
+	} else if (reconnect_delay_sec != 0 || fast_io_fail_timeout_sec != 0) {
+		SPDK_ERRLOG("Both reconnect_delay_sec and fast_io_fail_timeout_sec must be 0 if ctrlr_loss_timeout_sec is 0.\n");
 		return false;
 	}
 
@@ -3874,7 +3912,8 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts,
 		 bool multipath,
 		 int32_t ctrlr_loss_timeout_sec,
-		 uint32_t reconnect_delay_sec)
+		 uint32_t reconnect_delay_sec,
+		 uint32_t fast_io_fail_timeout_sec)
 {
 	struct nvme_probe_skip_entry	*entry, *tmp;
 	struct nvme_async_probe_ctx	*ctx;
@@ -3888,7 +3927,8 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -EEXIST;
 	}
 
-	if (!bdev_nvme_check_multipath_params(ctrlr_loss_timeout_sec, reconnect_delay_sec)) {
+	if (!bdev_nvme_check_multipath_params(ctrlr_loss_timeout_sec, reconnect_delay_sec,
+					      fast_io_fail_timeout_sec)) {
 		return -EINVAL;
 	}
 
@@ -3905,6 +3945,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->trid = *trid;
 	ctx->ctrlr_loss_timeout_sec = ctrlr_loss_timeout_sec;
 	ctx->reconnect_delay_sec = reconnect_delay_sec;
+	ctx->fast_io_fail_timeout_sec = fast_io_fail_timeout_sec;
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, tmp) {
@@ -4230,7 +4271,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			snprintf(new_ctx->opts.hostnqn, sizeof(new_ctx->opts.hostnqn), "%s", ctx->hostnqn);
 			rc = bdev_nvme_create(&new_ctx->trid, new_ctx->name, NULL, 0, 0,
 					      discovery_attach_controller_done, new_ctx,
-					      &new_ctx->opts, true, 0, 0);
+					      &new_ctx->opts, true, 0, 0, 0);
 			if (rc == 0) {
 				TAILQ_INSERT_TAIL(&ctx->ctrlr_ctxs, new_ctx, tailq);
 				ctx->attach_in_progress++;
@@ -5561,6 +5602,7 @@ nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 				   (nvme_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) != 0);
 	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", nvme_ctrlr->ctrlr_loss_timeout_sec);
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", nvme_ctrlr->reconnect_delay_sec);
+	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec", nvme_ctrlr->fast_io_fail_timeout_sec);
 
 	spdk_json_write_object_end(w);
 

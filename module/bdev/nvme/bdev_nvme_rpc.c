@@ -186,6 +186,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *multipath;
 	int32_t ctrlr_loss_timeout_sec;
 	uint32_t reconnect_delay_sec;
+	uint32_t fast_io_fail_timeout_sec;
 	struct spdk_nvme_ctrlr_opts opts;
 };
 
@@ -227,6 +228,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"num_io_queues", offsetof(struct rpc_bdev_nvme_attach_controller, opts.num_io_queues), spdk_json_decode_uint32, true},
 	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
 	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_attach_controller, reconnect_delay_sec), spdk_json_decode_uint32, true},
+	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -497,7 +499,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->count, prchk_flags,
 			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.opts,
 			      multipath, ctx->req.ctrlr_loss_timeout_sec,
-			      ctx->req.reconnect_delay_sec);
+			      ctx->req.reconnect_delay_sec, ctx->req.fast_io_fail_timeout_sec);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
