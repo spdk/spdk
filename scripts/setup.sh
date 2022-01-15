@@ -204,15 +204,24 @@ function get_block_dev_from_bdf() {
 
 function get_mounted_part_dev_from_bdf_block() {
 	local bdf=$1
-	local blocks block dev mount
+	local blocks block blockp dev mount holder
 
 	hash lsblk || return 1
 	blocks=($(get_block_dev_from_bdf "$bdf"))
 
 	for block in "${blocks[@]}"; do
+		# Check if the device is hold by some other, regardless if it's mounted
+		# or not.
+		for holder in "/sys/class/block/$block"*/holders/*; do
+			[[ -e $holder ]] || continue
+			blockp=${holder%/holders*} blockp=${blockp##*/}
+			if [[ -e $holder/slaves/$blockp ]]; then
+				echo "holder@$blockp:${holder##*/}"
+			fi
+		done
 		while read -r dev mount; do
 			if [[ -e $mount ]]; then
-				echo "$block:$dev"
+				echo "mount@$block:$dev"
 			fi
 		done < <(lsblk -l -n -o NAME,MOUNTPOINT "/dev/$block")
 	done
@@ -302,7 +311,7 @@ function verify_bdf_mounts() {
 
 	if ((${#blknames[@]} > 0)); then
 		local IFS=","
-		pci_dev_echo "$bdf" "Active mountpoints on ${blknames[*]}, so not binding PCI dev"
+		pci_dev_echo "$bdf" "Active mountpoints|holders: ${blknames[*]}, so not binding PCI dev"
 		return 1
 	fi
 }
