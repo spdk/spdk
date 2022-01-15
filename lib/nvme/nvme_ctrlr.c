@@ -3793,6 +3793,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 */
 			nvme_qpair_abort_queued_reqs(ctrlr->adminq, 0);
 			break;
+		case NVME_QPAIR_DISCONNECTING:
+			assert(ctrlr->adminq->async == true);
+			break;
+		case NVME_QPAIR_DISCONNECTED:
+		/* fallthrough */
 		default:
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 			break;

@@ -514,6 +514,12 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	return 0;
 err:
 	nvme_transport_connect_qpair_fail(qpair, NULL);
+	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
+		assert(qpair->async == true);
+		/* Let the caller to poll the qpair until it is actually disconnected. */
+		return 0;
+	}
+
 	return rc;
 }
 
