@@ -26,3 +26,8 @@ if [[ $INSTALL_LIBURING == "true" ]]; then
 		"$(freebsd-version)"
 	INSTALL_LIBURING=false
 fi
+
+if [[ $INSTALL_RBD == "true" ]]; then
+	# Additional dependencies for RBD bdev in NVMe over Fabrics
+	pkg install -y ceph
+fi

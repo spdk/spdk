@@ -18,7 +18,6 @@ packages=(
 	gdb
 	fio
 	libaio-devel
-	librbd-devel
 	kernel-devel
 	gflags-devel
 	libasan

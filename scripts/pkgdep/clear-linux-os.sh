@@ -23,6 +23,10 @@ if [[ $INSTALL_FUSE == "true" ]]; then
 	# Additional dependencies for FUSE and NVMe-CUSE
 	swupd bundle-add -y devpkg-fuse
 fi
+if [[ $INSTALL_RBD == "true" ]]; then
+	# Additional dependencies for RBD bdev in NVMe over Fabrics
+	swupd bundle-add -y librados-devel librbd-devel
+fi
 if [[ $INSTALL_RDMA == "true" ]]; then
 	# Additional dependencies for RDMA transport in NVMe over Fabrics
 	swupd bundle-add -y devpkg-rdma-core network-basic-dev
