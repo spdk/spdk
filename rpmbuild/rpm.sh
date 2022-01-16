@@ -112,6 +112,12 @@ build_macros() {
 		fi
 	fi
 
+	if get_config with-rbd; then
+		macros+=(-D "rbd 1")
+		requirements=${requirements:+$requirements, }"librados2, librbd1"
+		build_requirements=${build_requirements:+$build_requirements, }"librados-devel, librbd-devel"
+	fi
+
 	if get_config libdir has-arg; then
 		macros+=(-D "libdir $(get_config libdir print)")
 	fi
