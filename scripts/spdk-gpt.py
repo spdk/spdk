@@ -11,7 +11,7 @@ def block_exists(block):
 
 
 def lbsize(block):
-    if not os.path.exists("/sys/block/%s/queue/logical_block_size"):
+    if not os.path.exists("/sys/block/%s/queue/logical_block_size" % block):
         return 512
 
     with open("/sys/block/%s/queue/logical_block_size" % block) as lbs:
