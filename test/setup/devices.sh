@@ -57,7 +57,7 @@ verify() {
 	local pci status
 	while read -r pci _ _ status; do
 		if [[ $pci == "$dev" && \
-			$status == *"Active mountpoints|holders: "*"$mounts"* ]]; then
+			$status == *"Active devices: "*"$mounts"* ]]; then
 			found=1
 		fi
 	done < <(PCI_ALLOWED="$dev" setup output config)
@@ -115,6 +115,12 @@ nvme_mount() {
 		"$nvme_disk:$nvme_disk" \
 		"$nvme_mount" \
 		"$nvme_dummy_test_file"
+
+	# umount the nvme device and verify again - device should not be touched
+	# when a valid fs is still present.
+	umount "$nvme_mount"
+
+	verify "${blocks_to_pci["$nvme_disk"]}" "data@$nvme_disk" "" ""
 
 	# All done, final cleanup
 	cleanup_nvme

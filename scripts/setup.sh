@@ -202,9 +202,10 @@ function get_block_dev_from_bdf() {
 	done
 }
 
-function get_mounted_part_dev_from_bdf_block() {
+function get_used_bdf_block_devs() {
 	local bdf=$1
 	local blocks block blockp dev mount holder
+	local used
 
 	hash lsblk || return 1
 	blocks=($(get_block_dev_from_bdf "$bdf"))
@@ -216,15 +217,27 @@ function get_mounted_part_dev_from_bdf_block() {
 			[[ -e $holder ]] || continue
 			blockp=${holder%/holders*} blockp=${blockp##*/}
 			if [[ -e $holder/slaves/$blockp ]]; then
-				echo "holder@$blockp:${holder##*/}"
+				used+=("holder@$blockp:${holder##*/}")
 			fi
 		done
 		while read -r dev mount; do
 			if [[ -e $mount ]]; then
-				echo "mount@$block:$dev"
+				used+=("mount@$block:$dev")
 			fi
 		done < <(lsblk -l -n -o NAME,MOUNTPOINT "/dev/$block")
+		if ((${#used[@]} == 0)); then
+			# Make sure we check if there's any valid data present on the target device
+			# regardless if it's being actively used or not. This is mainly done to make
+			# sure we don't miss more complex setups like ZFS pools, etc.
+			if block_in_use "$block" > /dev/null; then
+				used+=("data@$block")
+			fi
+		fi
 	done
+
+	if ((${#used[@]} > 0)); then
+		printf '%s\n' "${used[@]}"
+	fi
 }
 
 function collect_devices() {
@@ -253,7 +266,7 @@ function collect_devices() {
 					in_use=1
 				fi
 				if [[ $dev_type == nvme || $dev_type == virtio ]]; then
-					if ! verify_bdf_mounts "$bdf"; then
+					if ! verify_bdf_block_devs "$bdf"; then
 						in_use=1
 					fi
 				fi
@@ -304,14 +317,14 @@ function collect_driver() {
 	echo "$driver"
 }
 
-function verify_bdf_mounts() {
+function verify_bdf_block_devs() {
 	local bdf=$1
 	local blknames
-	blknames=($(get_mounted_part_dev_from_bdf_block "$bdf")) || return 1
+	blknames=($(get_used_bdf_block_devs "$bdf")) || return 1
 
 	if ((${#blknames[@]} > 0)); then
 		local IFS=","
-		pci_dev_echo "$bdf" "Active mountpoints|holders: ${blknames[*]}, so not binding PCI dev"
+		pci_dev_echo "$bdf" "Active devices: ${blknames[*]}, so not binding PCI dev"
 		return 1
 	fi
 }
