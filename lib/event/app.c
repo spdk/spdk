@@ -370,6 +370,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 	uint64_t	tpoint_group_mask, tpoint_mask = -1ULL;
 	char		*end = NULL, *tpoint_group_mask_str, *tpoint_group_str = NULL;
 	char		*tp_g_str, *tpoint_group, *tpoints;
+	uint64_t	group_id;
 
 	if (opts->shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
@@ -434,7 +435,11 @@ app_setup_trace(struct spdk_app_opts *opts)
 			tpoint_mask = -1ULL;
 		}
 
-		spdk_trace_set_tpoints(spdk_u64log2(tpoint_group_mask), tpoint_mask);
+		for (group_id = 0; group_id < SPDK_TRACE_MAX_GROUP_ID; ++group_id) {
+			if (tpoint_group_mask & (1 << group_id)) {
+				spdk_trace_set_tpoints(group_id, tpoint_mask);
+			}
+		}
 	}
 
 	if (tpoint_group_str != NULL) {
