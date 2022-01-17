@@ -177,6 +177,7 @@ struct nvmf_vfio_user_qpair {
 
 struct nvmf_vfio_user_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
+	TAILQ_ENTRY(nvmf_vfio_user_poll_group)	link;
 	TAILQ_HEAD(, nvmf_vfio_user_qpair)	qps;
 };
 
@@ -229,6 +230,10 @@ struct nvmf_vfio_user_transport {
 	struct spdk_poller			*accept_poller;
 	pthread_mutex_t				lock;
 	TAILQ_HEAD(, nvmf_vfio_user_endpoint)	endpoints;
+
+	pthread_mutex_t				pg_lock;
+	TAILQ_HEAD(, nvmf_vfio_user_poll_group)	poll_groups;
+	struct nvmf_vfio_user_poll_group	*next_pg;
 };
 
 /*
@@ -550,7 +555,8 @@ nvmf_vfio_user_destroy(struct spdk_nvmf_transport *transport,
 					transport);
 
 	spdk_poller_unregister(&vu_transport->accept_poller);
-	(void)pthread_mutex_destroy(&vu_transport->lock);
+	pthread_mutex_destroy(&vu_transport->lock);
+	pthread_mutex_destroy(&vu_transport->pg_lock);
 
 	TAILQ_FOREACH_SAFE(endpoint, &vu_transport->endpoints, link, tmp) {
 		TAILQ_REMOVE(&vu_transport->endpoints, endpoint, link);
@@ -600,23 +606,28 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 		SPDK_ERRLOG("Pthread initialisation failed (%d)\n", err);
 		goto err;
 	}
-
 	TAILQ_INIT(&vu_transport->endpoints);
+
+	err = pthread_mutex_init(&vu_transport->pg_lock, NULL);
+	if (err != 0) {
+		pthread_mutex_destroy(&vu_transport->lock);
+		SPDK_ERRLOG("Pthread initialisation failed (%d)\n", err);
+		goto err;
+	}
+	TAILQ_INIT(&vu_transport->poll_groups);
 
 	if (opts->transport_specific != NULL &&
 	    spdk_json_decode_object_relaxed(opts->transport_specific, vfio_user_transport_opts_decoder,
 					    SPDK_COUNTOF(vfio_user_transport_opts_decoder),
 					    vu_transport)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
-		free(vu_transport);
-		return NULL;
+		goto cleanup;
 	}
 
 	vu_transport->accept_poller = SPDK_POLLER_REGISTER(nvmf_vfio_user_accept, &vu_transport->transport,
 				      opts->acceptor_poll_rate);
 	if (!vu_transport->accept_poller) {
-		free(vu_transport);
-		return NULL;
+		goto cleanup;
 	}
 
 	SPDK_DEBUGLOG(nvmf_vfio, "vfio_user transport: disable_mappable_bar0=%d\n",
@@ -624,9 +635,11 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 
 	return &vu_transport->transport;
 
+cleanup:
+	pthread_mutex_destroy(&vu_transport->lock);
+	pthread_mutex_destroy(&vu_transport->pg_lock);
 err:
 	free(vu_transport);
-
 	return NULL;
 }
 
@@ -2313,6 +2326,7 @@ nvmf_vfio_user_discover(struct spdk_nvmf_transport *transport,
 static struct spdk_nvmf_transport_poll_group *
 nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport)
 {
+	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_poll_group *vu_group;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "create poll group\n");
@@ -2325,18 +2339,69 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport)
 
 	TAILQ_INIT(&vu_group->qps);
 
+	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
+					transport);
+	pthread_mutex_lock(&vu_transport->pg_lock);
+	TAILQ_INSERT_TAIL(&vu_transport->poll_groups, vu_group, link);
+	if (vu_transport->next_pg == NULL) {
+		vu_transport->next_pg = vu_group;
+	}
+	pthread_mutex_unlock(&vu_transport->pg_lock);
+
 	return &vu_group->group;
+}
+
+static struct spdk_nvmf_transport_poll_group *
+nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
+{
+	struct nvmf_vfio_user_transport *vu_transport;
+	struct nvmf_vfio_user_poll_group **vu_group;
+	struct spdk_nvmf_transport_poll_group *result;
+
+	vu_transport = SPDK_CONTAINEROF(qpair->transport, struct nvmf_vfio_user_transport, transport);
+
+	pthread_mutex_lock(&vu_transport->pg_lock);
+	if (TAILQ_EMPTY(&vu_transport->poll_groups)) {
+		pthread_mutex_unlock(&vu_transport->pg_lock);
+		return NULL;
+	}
+
+	vu_group = &vu_transport->next_pg;
+	assert(*vu_group != NULL);
+
+	result = &(*vu_group)->group;
+	*vu_group = TAILQ_NEXT(*vu_group, link);
+	if (*vu_group == NULL) {
+		*vu_group = TAILQ_FIRST(&vu_transport->poll_groups);
+	}
+
+	pthread_mutex_unlock(&vu_transport->pg_lock);
+	return result;
 }
 
 /* called when process exits */
 static void
 nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
-	struct nvmf_vfio_user_poll_group *vu_group;
+	struct nvmf_vfio_user_poll_group *vu_group, *next_tgroup;;
+	struct nvmf_vfio_user_transport *vu_transport;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "destroy poll group\n");
 
 	vu_group = SPDK_CONTAINEROF(group, struct nvmf_vfio_user_poll_group, group);
+	vu_transport = SPDK_CONTAINEROF(vu_group->group.transport, struct nvmf_vfio_user_transport,
+					transport);
+
+	pthread_mutex_lock(&vu_transport->pg_lock);
+	next_tgroup = TAILQ_NEXT(vu_group, link);
+	TAILQ_REMOVE(&vu_transport->poll_groups, vu_group, link);
+	if (next_tgroup == NULL) {
+		next_tgroup = TAILQ_FIRST(&vu_transport->poll_groups);
+	}
+	if (vu_transport->next_pg == vu_group) {
+		vu_transport->next_pg = next_tgroup;
+	}
+	pthread_mutex_unlock(&vu_transport->pg_lock);
 
 	free(vu_group);
 }
@@ -3047,6 +3112,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
 	.listener_discover = nvmf_vfio_user_discover,
 
 	.poll_group_create = nvmf_vfio_user_poll_group_create,
+	.get_optimal_poll_group = nvmf_vfio_user_get_optimal_poll_group,
 	.poll_group_destroy = nvmf_vfio_user_poll_group_destroy,
 	.poll_group_add = nvmf_vfio_user_poll_group_add,
 	.poll_group_remove = nvmf_vfio_user_poll_group_remove,
