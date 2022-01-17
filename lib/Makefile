@@ -11,7 +11,7 @@ DIRS-y += bdev blob blobfs conf dma accel event json jsonrpc \
           log lvol rpc sock thread trace util nvme vmd nvmf scsi \
           ioat ut_mock iscsi notify init trace_parser
 ifeq ($(OS),Linux)
-DIRS-y += nbd ftl
+DIRS-y += nbd
 endif
 
 DIRS-$(CONFIG_OCF) += env_ocf
