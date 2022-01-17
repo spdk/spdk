@@ -304,10 +304,6 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test "ocf" ./test/ocf/ocf.sh
 	fi
 
-	if [ $SPDK_TEST_FTL -eq 1 ]; then
-		run_test "ftl" ./test/ftl/ftl.sh
-	fi
-
 	if [ $SPDK_TEST_VMD -eq 1 ]; then
 		run_test "vmd" ./test/vmd/vmd.sh
 	fi

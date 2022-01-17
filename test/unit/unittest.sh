@@ -43,15 +43,6 @@ function unittest_event() {
 	$valgrind $testdir/lib/event/reactor.c/reactor_ut
 }
 
-function unittest_ftl() {
-	$valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
-	$valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
-	$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
-	$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
-	$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
-	$valgrind $testdir/lib/ftl/ftl_io.c/ftl_io_ut
-}
-
 function unittest_iscsi() {
 	$valgrind $testdir/lib/iscsi/conn.c/conn_ut
 	$valgrind $testdir/lib/iscsi/param.c/param_ut
@@ -201,9 +192,6 @@ fi
 
 run_test "unittest_blob_blobfs" unittest_blob
 run_test "unittest_event" unittest_event
-if [ $(uname -s) = Linux ]; then
-	run_test "unittest_ftl" unittest_ftl
-fi
 
 run_test "unittest_accel" $valgrind $testdir/lib/accel/accel.c/accel_engine_ut
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
