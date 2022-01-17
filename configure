@@ -193,6 +193,27 @@ function check_dir() {
 	fi
 }
 
+# On x86_64 'clang -dumpmachine' produces x86_64-pc-linux-gnu
+# whereas the dpdk might be built with gcc and its libs lie in
+# x86_64-linux-gnu. Let's find the right libdir for dpdkd libs.
+function find_dpdk_arch_libdir() {
+	local dpdk_dir=$1
+
+	# Checking first what we have with $arch, then clang
+	# variant of arch.
+	arches=("$arch" "$(echo $arch | sed 's/-pc//g')")
+	for a in "${arches[@]}"; do
+		local libdir="$dpdk_dir/lib/$a"
+		if [[ -d $libdir ]]; then
+			echo $libdir
+			return
+		fi
+	done
+
+	# Fallback to the libdir without arch component
+	echo "$dpdk_dir/lib"
+}
+
 for i in "$@"; do
 	case "$i" in
 		-h | --help)
@@ -289,9 +310,14 @@ for i in "$@"; do
 			CONFIG[CET]=n
 			;;
 		--with-dpdk)
-			if pkg-config --exists libdpdk; then
-				CONFIG[DPDK_LIB_DIR]=$(pkg-config --variable=libdir libdpdk)
-				CONFIG[DPDK_INC_DIR]=$(pkg-config --variable=includedir libdpdk)
+			# Can we use pkg-config?
+			if command -v "pkg-config" > /dev/null 2>&1 && pkg-config --exists libdpdk; then
+				dpdk_libdir=$(pkg-config --variable=libdir libdpdk)
+				dpdk_libdir=$(readlink -f $dpdk_libdir)
+				dpdk_incdir=$(pkg-config --variable=includedir libdpdk)
+				echo "Using DPDK lib dir $dpdk_libdir"
+				CONFIG[DPDK_LIB_DIR]=$dpdk_libdir
+				CONFIG[DPDK_INC_DIR]=$dpdk_incdir
 				CONFIG[DPDK_PKG_CONFIG]=y
 				CFLAGS="${CFLAGS:+$CFLAGS }$(pkg-config --cflags libdpdk)"
 			else
@@ -301,7 +327,30 @@ for i in "$@"; do
 			;;
 		--with-dpdk=*)
 			check_dir "$i"
-			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
+			dpdk_dir=$(readlink -f ${i#*=})
+			dpdk_libdir=$(find_dpdk_arch_libdir $dpdk_dir)
+			dpdk_incdir="$dpdk_dir/include"
+
+			# Can we use pkg-config?
+			if command -v "pkg-config" > /dev/null 2>&1 && PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --exists libdpdk; then
+				echo "Using $dpdk_libdir/pkgconfig for additional libs..."
+				dpdk_libdir=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --variable=libdir libdpdk)
+				dpdk_libdir=$(readlink -f $dpdk_libdir)
+				if ! echo $dpdk_libdir | grep $dpdk_dir > /dev/null 2>&1; then
+					echo "ERROR: pkg-config reported DPDK libdir $dpdk_libdir is out of the directory specified with --with-dpdk="
+					echo "ERROR: do you have another DPDK installed in the system?"
+					exit 1
+				fi
+
+				CFLAGS="${CFLAGS:+$CFLAGS }$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --cflags libdpdk)"
+				dpdk_incdir=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --variable=includedir libdpdk)
+			fi
+			echo "DPDK libraries: $dpdk_libdir"
+			echo "DPDK includes: $dpdk_incdir"
+			CONFIG[DPDK_DIR]=$dpdk_dir
+			CONFIG[DPDK_LIB_DIR]="$dpdk_libdir"
+			CONFIG[DPDK_INC_DIR]="$dpdk_incdir"
+			CONFIG[DPDK_PKG_CONFIG]=n
 			;;
 		--without-dpdk)
 			CONFIG[DPDK_DIR]=
