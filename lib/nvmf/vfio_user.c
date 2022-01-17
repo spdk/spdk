@@ -194,6 +194,7 @@ struct nvmf_vfio_user_sq {
 };
 
 struct nvmf_vfio_user_cq {
+	struct spdk_nvmf_transport_poll_group	*group;
 	struct nvme_q				cq;
 	enum nvmf_vfio_user_cq_state		cq_state;
 	uint32_t				cq_ref;
@@ -1053,6 +1054,7 @@ delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *
 			unmap_q(vu_ctrlr, &vu_cq->cq);
 			vu_cq->cq.size = 0;
 			vu_cq->cq_state = VFIO_USER_CQ_DELETED;
+			vu_cq->group = NULL;
 		}
 	}
 }
@@ -1408,6 +1410,7 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		unmap_q(ctrlr, &vu_cq->cq);
 		vu_cq->cq.size = 0;
 		vu_cq->cq_state = VFIO_USER_CQ_DELETED;
+		vu_cq->group = NULL;
 	} else {
 		ctx = calloc(1, sizeof(*ctx));
 		if (!ctx) {
@@ -2579,14 +2582,28 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_poll_group **vu_group;
+	struct nvmf_vfio_user_sq *vu_sq;
+	struct nvmf_vfio_user_cq *vu_cq;
+
 	struct spdk_nvmf_transport_poll_group *result;
 
+	vu_sq = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_sq, qpair);
+	vu_cq = vu_sq->ctrlr->cqs[vu_sq->sq.cqid];
+	assert(vu_cq != NULL);
 	vu_transport = SPDK_CONTAINEROF(qpair->transport, struct nvmf_vfio_user_transport, transport);
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
 	if (TAILQ_EMPTY(&vu_transport->poll_groups)) {
 		pthread_mutex_unlock(&vu_transport->pg_lock);
 		return NULL;
+	}
+
+	/* If this is shared IO CQ case, just return the used CQ's poll group */
+	if (!nvmf_qpair_is_admin_queue(qpair)) {
+		if (vu_cq->group) {
+			pthread_mutex_unlock(&vu_transport->pg_lock);
+			return vu_cq->group;
+		}
 	}
 
 	vu_group = &vu_transport->next_pg;
@@ -2596,6 +2613,10 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 	*vu_group = TAILQ_NEXT(*vu_group, link);
 	if (*vu_group == NULL) {
 		*vu_group = TAILQ_FIRST(&vu_transport->poll_groups);
+	}
+
+	if (vu_cq->group == NULL) {
+		vu_cq->group = result;
 	}
 
 	pthread_mutex_unlock(&vu_transport->pg_lock);

@@ -15,7 +15,7 @@ export TEST_TRANSPORT=VFIOUSER
 rm -rf /var/run/vfio-user
 
 # Start the target
-"${NVMF_APP[@]}" -m 0x2 &
+"${NVMF_APP[@]}" -m 0x7 &
 nvmfpid=$!
 echo "Process pid: $nvmfpid"
 
