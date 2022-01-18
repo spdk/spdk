@@ -19,17 +19,20 @@ is fabric or not.
 API `spdk_nvme_poll_group_remove` was limited to be available only for a
 disconnected qpair in the group.
 
-### bdev_nvme
-
-Added `num_io_queues` to `bdev_nvme_attach_controller` RPC to allow specifying amount
-of requested IO queues.
-
 ### bdev
+
+The NVMe bdev module supports multipath and improved I/O error resiliency.
 
 The parameter `retry_count` of the RPC `bdev_nvme_set_options` was deprecated and will be
 removed in SPDK 22.04, and the parameter `transport_retry_count` is added and used instead.
 
 An new parameter `bdev_retry_count` is added to the RPC `bdev_nvme_set_options`.
+
+New parameters, `ctrlr_loss_timeout_sec`, `reconnect_delay_sec`, and `fast_io_fail_timeout_sec`, are
+added to the RPC `bdev_nvme_attach_controller`.
+
+An new parameter `num_io_queues` is added to `bdev_nvme_attach_controller` RPC to allow specifying amount
+of requested IO queues.
 
 Added 'key_file' parameter to the 'rbd_register_cluster' RPC.  It is an optional parameter to
 specify a keyring file to connect to a RADOS cluster.
