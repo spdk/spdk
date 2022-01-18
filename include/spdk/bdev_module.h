@@ -309,6 +309,20 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
+	/**
+	 * Specifies whether the write_unit_size is mandatory or
+	 * only advisory. If set to true, the bdev layer will split
+	 * WRITE I/O that span the write_unit_size before
+	 * submitting them to the bdev module.
+	 *
+	 * This field takes precedence over split_on_optimal_io_boundary
+	 * for WRITE I/O if both are set to true.
+	 *
+	 * Note that this field cannot be used to force splitting of
+	 * UNMAP, WRITE_ZEROES or FLUSH I/O.
+	 */
+	bool split_on_write_unit;
+
 	/** Number of blocks required for write */
 	uint32_t write_unit_size;
 
