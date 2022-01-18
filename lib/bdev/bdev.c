@@ -2166,6 +2166,14 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 		}
 	}
 
+	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE &&
+			  bdev_io->bdev->split_on_write_unit &&
+			  bdev_io->u.bdev.num_blocks < bdev_io->bdev->write_unit_size)) {
+		SPDK_ERRLOG("IO does not match the write_unit_size\n");
+		_bdev_io_complete_in_submit(bdev_ch, bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
 	if (spdk_likely(TAILQ_EMPTY(&shared_resource->nomem_io))) {
 		bdev_ch->io_outstanding++;
 		shared_resource->io_outstanding++;
@@ -2242,11 +2250,18 @@ bdev_queue_io_wait_with_cb(struct spdk_bdev_io *bdev_io, spdk_bdev_io_wait_cb cb
 static bool
 bdev_rw_should_split(struct spdk_bdev_io *bdev_io)
 {
-	uint32_t io_boundary = bdev_io->bdev->optimal_io_boundary;
-	uint32_t max_size = bdev_io->bdev->max_segment_size;
-	int max_segs = bdev_io->bdev->max_num_segments;
+	uint32_t io_boundary;
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	uint32_t max_size = bdev->max_segment_size;
+	int max_segs = bdev->max_num_segments;
 
-	io_boundary = bdev_io->bdev->split_on_optimal_io_boundary ? io_boundary : 0;
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && bdev->split_on_write_unit) {
+		io_boundary = bdev->write_unit_size;
+	} else if (bdev->split_on_optimal_io_boundary) {
+		io_boundary = bdev->optimal_io_boundary;
+	} else {
+		io_boundary = 0;
+	}
 
 	if (spdk_likely(!io_boundary && !max_segs && !max_size)) {
 		return false;
@@ -2449,7 +2464,7 @@ _bdev_rw_split(void *_bdev_io)
 	uint32_t to_next_boundary, to_next_boundary_bytes, to_last_block_bytes;
 	uint32_t iovcnt, iov_len, child_iovsize;
 	uint32_t blocklen = bdev->blocklen;
-	uint32_t io_boundary = bdev->optimal_io_boundary;
+	uint32_t io_boundary;
 	uint32_t max_segment_size = bdev->max_segment_size;
 	uint32_t max_child_iovcnt = bdev->max_num_segments;
 	void *md_buf = NULL;
@@ -2458,7 +2473,14 @@ _bdev_rw_split(void *_bdev_io)
 	max_segment_size = max_segment_size ? max_segment_size : UINT32_MAX;
 	max_child_iovcnt = max_child_iovcnt ? spdk_min(max_child_iovcnt, BDEV_IO_NUM_CHILD_IOV) :
 			   BDEV_IO_NUM_CHILD_IOV;
-	io_boundary = bdev->split_on_optimal_io_boundary ? io_boundary : UINT32_MAX;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE && bdev->split_on_write_unit) {
+		io_boundary = bdev->write_unit_size;
+	} else if (bdev->split_on_optimal_io_boundary) {
+		io_boundary = bdev->optimal_io_boundary;
+	} else {
+		io_boundary = UINT32_MAX;
+	}
 
 	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
 	current_offset = bdev_io->u.bdev.split_current_offset_blocks;

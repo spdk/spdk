@@ -1249,6 +1249,25 @@ bdev_io_spans_split_test(void)
 
 	/* Exceed max_sizes */
 	CU_ASSERT(bdev_io_should_split(&bdev_io) == true);
+
+	bdev.max_segment_size = 0;
+	bdev.write_unit_size = 32;
+	bdev.split_on_write_unit = true;
+	bdev_io.type = SPDK_BDEV_IO_TYPE_WRITE;
+
+	/* This I/O is one write unit */
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == false);
+
+	bdev_io.u.bdev.num_blocks = 32 * 2;
+
+	/* This I/O is more than one write unit */
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == true);
+
+	bdev_io.u.bdev.offset_blocks = 1;
+	bdev_io.u.bdev.num_blocks = 32;
+
+	/* This I/O is not aligned to write unit size */
+	CU_ASSERT(bdev_io_should_split(&bdev_io) == true);
 }
 
 static void
@@ -2838,6 +2857,127 @@ bdev_io_split_with_io_wait(void)
 	CU_ASSERT(g_io_done == true);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_bdev_ut_channel->expected_io));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
+bdev_io_write_unit_split_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {};
+	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 4];
+	struct ut_expected_io *expected_io;
+	uint64_t i;
+	int rc;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 512;
+	bdev_opts.bdev_io_cache_size = 64;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open_ext(bdev->name, true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	/* Write I/O 2x larger than write_unit_size should get split into 2 I/Os */
+	bdev->write_unit_size = 32;
+	bdev->split_on_write_unit = true;
+	g_io_done = false;
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 0, 32, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 32 * 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 32, 32, 1);
+	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 32 * 512), 32 * 512);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 0, 64, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Same as above but with optimal_io_boundary < write_unit_size - the I/O should be split
+	 * based on write_unit_size, not optimal_io_boundary */
+	bdev->split_on_optimal_io_boundary = true;
+	bdev->optimal_io_boundary = 16;
+	g_io_done = false;
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 0, 64, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+	stub_complete_io(2);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Write I/O should fail if it is smaller than write_unit_size */
+	g_io_done = false;
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 0, 31, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+
+	/* Same for I/O not aligned to write_unit_size */
+	g_io_done = false;
+
+	rc = spdk_bdev_write_blocks(desc, io_ch, (void *)0xF000, 1, 32, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
+
+	/* Write should fail if it needs to be split but there are not enough iovs to submit
+	 * an entire write unit */
+	bdev->write_unit_size = SPDK_COUNTOF(iov) / 2;
+	g_io_done = false;
+
+	for (i = 0; i < SPDK_COUNTOF(iov); i++) {
+		iov[i].iov_base = (void *)(0x1000 + 512 * i);
+		iov[i].iov_len = 512;
+	}
+
+	rc = spdk_bdev_writev_blocks(desc, io_ch, iov, SPDK_COUNTOF(iov), 0, SPDK_COUNTOF(iov),
+				     io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_FAILED);
 
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
@@ -5874,6 +6014,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_io_max_size_and_segment_split_test);
 	CU_ADD_TEST(suite, bdev_io_mix_split_test);
 	CU_ADD_TEST(suite, bdev_io_split_with_io_wait);
+	CU_ADD_TEST(suite, bdev_io_write_unit_split_test);
 	CU_ADD_TEST(suite, bdev_io_alignment_with_boundary);
 	CU_ADD_TEST(suite, bdev_io_alignment);
 	CU_ADD_TEST(suite, bdev_histograms);
