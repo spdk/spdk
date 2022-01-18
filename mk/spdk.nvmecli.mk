@@ -73,6 +73,10 @@ override LDFLAGS += \
 	-Wl,--no-whole-archive \
 	-ldl -pthread -lrt -lrdmacm -lnuma -libverbs
 
+ifeq ($(CONFIG_HAVE_LIBBSD),y)
+override LDFLAGS += -lbsd
+endif
+
 ifeq ($(CONFIG_ISAL), y)
 ISAL_DIR=$(SPDK_ROOT_DIR)/isa-l
 override LDFLAGS += -L$(ISAL_DIR)/.libs -lisal

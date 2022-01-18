@@ -144,6 +144,10 @@ ifeq ($(CONFIG_IPSEC_MB),y)
 DPDK_PRIVATE_LINKER_ARGS += -lIPSec_MB -L$(IPSEC_MB_DIR)
 endif
 
+ifeq ($(CONFIG_HAVE_LIBBSD),y)
+DPDK_PRIVATE_LINKER_ARGS += -lbsd
+endif
+
 ifeq ($(CONFIG_REDUCE),y)
 DPDK_PRIVATE_LINKER_ARGS += -lisal -L$(ISAL_DIR)/.libs
 ifeq ($(CONFIG_REDUCE_MLX5),y)

@@ -319,6 +319,9 @@ for i in "$@"; do
 				CONFIG[DPDK_LIB_DIR]=$dpdk_libdir
 				CONFIG[DPDK_INC_DIR]=$dpdk_incdir
 				CONFIG[DPDK_PKG_CONFIG]=y
+				if pkg-config --print-requires libdpdk | grep "libbsd" > /dev/null 2>&1; then
+					CONFIG[HAVE_LIBBSD]=y
+				fi
 				CFLAGS="${CFLAGS:+$CFLAGS }$(pkg-config --cflags libdpdk)"
 			else
 				echo "libdpdk.pc not found, aborting"
@@ -341,9 +344,18 @@ for i in "$@"; do
 					echo "ERROR: do you have another DPDK installed in the system?"
 					exit 1
 				fi
-
+				dpdk_reqs=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --print-requires libdpdk)
+				if echo $dpdk_reqs | grep "libbsd" > /dev/null 2>&1; then
+					CONFIG[HAVE_LIBBSD]=y
+				fi
 				CFLAGS="${CFLAGS:+$CFLAGS }$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --cflags libdpdk)"
 				dpdk_incdir=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --variable=includedir libdpdk)
+			else
+				echo "Using $dpdk_incdir/rte_build_config.h for additional libs..."
+
+				if grep -F "define RTE_USE_LIBBSD 1" $dpdk_incdir/rte_build_config.h > /dev/null 2>&1; then
+					CONFIG[HAVE_LIBBSD]=y
+				fi
 			fi
 			echo "DPDK libraries: $dpdk_libdir"
 			echo "DPDK includes: $dpdk_incdir"
