@@ -4181,6 +4181,8 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		ctx->cb_fn(ctrlr);
 	}
 
+	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
+
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
 		nvme_ctrlr_destruct_namespace(ctrlr, ns->id);
 		RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
