@@ -212,8 +212,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
 		# breaks the hotplug logic.
-		if [ $SPDK_RUN_ASAN -eq 0 ]; then
-			run_test "nvme_hotplug" test/nvme/hotplug.sh
+		if [ $SPDK_RUN_ASAN -eq 0 ] && [ $(uname -s) = Linux ]; then
+			run_test "sw_hotplug" test/nvme/sw_hotplug.sh
 		fi
 	fi
 

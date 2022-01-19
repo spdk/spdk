@@ -2,10 +2,10 @@
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
+source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
-[[ $(uname -s) == Linux ]] || exit 0
-
+# Pci bus hotplug
 cleanup() {
 	[[ -e /proc/$hotplug_pid/status ]] || return 0
 	kill "$hotplug_pid"
@@ -41,9 +41,19 @@ remove_attach_helper() {
 	done
 }
 
-hotplug() {
+run_hotplug() {
+	"$rootdir/scripts/setup.sh"
+
 	local hotplug_events=3
 	local hotplug_wait=6 # This should be enough for more stubborn nvmes in the CI
+	local nvmes=($(nvme_in_userspace))
+	local nvme_count=${#nvmes[@]}
+
+	xtrace_disable
+	cache_pci_bus_sysfs
+	xtrace_restore
+
+	trap "cleanup" EXIT
 
 	remove_attach_helper "$hotplug_events" "$hotplug_wait" &
 	hotplug_pid=$!
@@ -56,13 +66,5 @@ hotplug() {
 		-l warning
 }
 
-"$rootdir/scripts/setup.sh"
-nvmes=($(nvme_in_userspace)) nvme_count=${#nvmes[@]}
-
-xtrace_disable
-cache_pci_bus_sysfs
-xtrace_restore
-
-trap "cleanup" EXIT
-
-hotplug
+# Run pci bus hotplug test
+run_hotplug
