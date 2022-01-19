@@ -86,7 +86,9 @@ endif
 
 ifeq ($(CONFIG_REDUCE),y)
 DPDK_FRAMEWORK=y
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
+endif
 ifeq ($(CONFIG_REDUCE_MLX5),y)
 DPDK_LIB_LIST += rte_common_mlx5 rte_compress_mlx5
 # Introduced in DPDK 21.08
