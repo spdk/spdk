@@ -56,6 +56,8 @@ function usage() {
 	echo " --without-crypto          No path required."
 	echo " --with-fio[=DIR]          Build fio_plugin."
 	echo " --without-fio             default: /usr/src/fio"
+	echo " --with-xnvme              Build xNVMe bdev module."
+	echo " --without-xnvme           No path required."
 	echo " --with-vhost              Build vhost target. Enabled by default."
 	echo " --without-vhost           No path required."
 	echo " --with-virtio             Build vhost initiator and virtio-pci bdev modules."
@@ -540,6 +542,12 @@ for i in "$@"; do
 			;;
 		--without-reduce)
 			CONFIG[REDUCE]=n
+			;;
+		--with-xnvme)
+			CONFIG[XNVME]=y
+			;;
+		--without-xnvme)
+			CONFIG[XNVME]=n
 			;;
 		--with-fio) ;&
 		--with-fio=*)

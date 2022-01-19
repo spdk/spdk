@@ -13,3 +13,6 @@
 [submodule "libvfio-user"]
 	path = libvfio-user
 	url = https://github.com/nutanix/libvfio-user.git
+[submodule "xnvme"]
+	path = xnvme
+	url = https://github.com/OpenMPDK/xNVMe.git

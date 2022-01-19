@@ -440,6 +440,34 @@ def bdev_uring_delete(client, name):
     return client.call('bdev_uring_delete', params)
 
 
+def bdev_xnvme_create(client, filename, name, io_mechanism):
+    """Create a bdev with xNVMe backend.
+
+    Args:
+        filename: path to device or file (ex: /dev/nvme0n1)
+        name: name of xNVMe bdev to create
+        io_mechanism: I/O mechanism to use (ex: io_uring, io_uring_cmd, etc.)
+
+    Returns:
+        Name of created bdev.
+    """
+    params = {'name': name,
+              'filename': filename,
+              'io_mechanism': io_mechanism}
+
+    return client.call('bdev_xnvme_create', params)
+
+
+def bdev_xnvme_delete(client, name):
+    """Delete a xNVMe bdev.
+
+    Args:
+        name: name of xNVMe bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_xnvme_delete', params)
+
+
 def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeout_admin_us=None,
                           keep_alive_timeout_ms=None, retry_count=None, arbitration_burst=None,
                           low_priority_weight=None, medium_priority_weight=None, high_priority_weight=None,

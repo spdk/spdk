@@ -118,6 +118,9 @@ CONFIG_VFIO_USER_DIR=
 CONFIG_PMDK=n
 CONFIG_PMDK_DIR=
 
+# Build with xNVMe
+CONFIG_XNVME=n
+
 # Enable the dependencies for building the compress vbdev
 CONFIG_REDUCE=n
 

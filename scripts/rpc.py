@@ -468,6 +468,26 @@ if __name__ == "__main__":
     p.add_argument('name', help='uring bdev name')
     p.set_defaults(func=bdev_uring_delete)
 
+    def bdev_xnvme_create(args):
+        print_json(rpc.bdev.bdev_xnvme_create(args.client,
+                                              filename=args.filename,
+                                              name=args.name,
+                                              io_mechanism=args.io_mechanism))
+
+    p = subparsers.add_parser('bdev_xnvme_create', help='Create a bdev with xNVMe backend')
+    p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
+    p.add_argument('name', help='name of xNVMe bdev to create')
+    p.add_argument('io_mechanism', help='IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)')
+    p.set_defaults(func=bdev_xnvme_create)
+
+    def bdev_xnvme_delete(args):
+        rpc.bdev.bdev_xnvme_delete(args.client,
+                                   name=args.name)
+
+    p = subparsers.add_parser('bdev_xnvme_delete', help='Delete a xNVMe bdev')
+    p.add_argument('name', help='xNVMe bdev name')
+    p.set_defaults(func=bdev_xnvme_delete)
+
     def bdev_nvme_set_options(args):
         rpc.bdev.bdev_nvme_set_options(args.client,
                                        action_on_timeout=args.action_on_timeout,

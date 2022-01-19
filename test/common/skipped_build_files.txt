@@ -50,3 +50,7 @@ test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz
 # used for the main build and scanbuild tests.
 module/bdev/daos/bdev_daos
 module/bdev/daos/bdev_daos_rpc
+
+# Not configured to test xNVMe bdev
+module/bdev/xnvme/bdev_xnvme
+module/bdev/xnvme/bdev_xnvme_rpc

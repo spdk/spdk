@@ -14,6 +14,10 @@ INTR_BLOCKDEV_MODULES_LIST = bdev_malloc bdev_passthru bdev_error bdev_gpt bdev_
 # Logical volume, blobstore and blobfs can directly run in both interrupt mode and poll mode.
 INTR_BLOCKDEV_MODULES_LIST += bdev_lvol blobfs blobfs_bdev blob_bdev blob lvol
 
+ifeq ($(CONFIG_XNVME),y)
+BLOCKDEV_MODULES_LIST += bdev_xnvme
+endif
+
 ifeq ($(CONFIG_VFIO_USER),y)
 BLOCKDEV_MODULES_LIST += vfio_user
 endif

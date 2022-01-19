@@ -2,6 +2,10 @@
 
 ## v22.09: (Upcoming Release)
 
+### bdev
+
+New RPCs `bdev_xnvme_create` and `bdev_xnvme_delete` were added to support the xNVMe bdev.
+
 ### sock
 
 Added new `ssl` based socket implementation, the code is located in module/sock/posix.

@@ -196,6 +196,16 @@ LDFLAGS += -L$(VFIO_USER_LIBRARY_DIR)
 SYS_LIBS += -lvfio-user -ljson-c
 endif
 
+ifeq ($(CONFIG_XNVME), y)
+XNVME_DIR=$(SPDK_ROOT_DIR)/xnvme
+XNVME_INSTALL_DIR=$(XNVME_DIR)/builddir/lib
+XNVME_INCLUDE_DIR=$(XNVME_DIR)/include
+
+CFLAGS += -I$(XNVME_INCLUDE_DIR)
+LDFLAGS += -L$(XNVME_INSTALL_DIR)
+SYS_LIBS += -lxnvme
+endif
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)

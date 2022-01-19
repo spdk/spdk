@@ -588,6 +588,26 @@ To remove a uring bdev use the `bdev_uring_delete` RPC.
 
 `rpc.py bdev_uring_delete bdev_u0`
 
+## xnvme {#bdev_ug_xnvme}
+
+The xnvme bdev module issues I/O to the underlying NVMe devices through various I/O mechanisms
+such as libaio, io_uring, Asynchronous IOCTL using io_uring passthrough, POSIX aio, emulated aio etc.
+
+This module requires xNVMe library.
+For more information on xNVMe refer to [xNVMe] (https://xnvme.io/docs/latest)
+
+The user needs to configure SPDK to include xNVMe support:
+
+`configure --with-xnvme`
+
+To create a xnvme bdev with given filename, bdev name and I/O mechanism use the `bdev_xnvme_create` RPC.
+
+`rpc.py  bdev_xnvme_create /dev/ng0n1 bdev_ng0n1 io_uring_cmd`
+
+To remove a xnvme bdev use the `bdev_xnvme_delete` RPC.
+
+`rpc.py bdev_xnvme_delete bdev_ng0n1`
+
 ## Virtio Block {#bdev_config_virtio_blk}
 
 The Virtio-Block driver allows creating SPDK bdevs from Virtio-Block devices.
