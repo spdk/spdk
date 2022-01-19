@@ -64,7 +64,6 @@ static inline void movdir64b(void *dst, const void *src)
 /* The following sets up a max desc count per batch of 32 */
 #define LOG2_WQ_MAX_BATCH	5  /* 2^5 = 32 */
 #define DESC_PER_BATCH		(1 << LOG2_WQ_MAX_BATCH)
-#define MIN_USER_DESC_COUNT	2
 
 #define LOG2_WQ_MAX_XFER	30 /* 2^30 = 1073741824 */
 #define WQCFG_NUM_DWORDS	8

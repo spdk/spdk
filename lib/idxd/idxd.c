@@ -417,28 +417,6 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	return 0;
 }
 
-static int
-_idxd_batch_prep_nop(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	int rc;
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, NULL, NULL, batch, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_NOOP;
-
-	if (chan->idxd->impl->nop_check && chan->idxd->impl->nop_check(chan->idxd)) {
-		desc->xfer_size = 1;
-	}
-	return 0;
-}
-
 static struct idxd_batch *
 idxd_batch_create(struct spdk_idxd_io_channel *chan)
 {
@@ -509,30 +487,32 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 		return idxd_batch_cancel(chan, batch);
 	}
 
-	if (batch->index < MIN_USER_DESC_COUNT) {
-		/* DSA needs at least MIN_USER_DESC_COUNT for a batch, add a NOP to make it so. */
-		if (_idxd_batch_prep_nop(chan, batch)) {
-			return -EINVAL;
-		}
-	}
-
 	/* Common prep. */
 	rc = _idxd_prep_command(chan, cb_fn, cb_arg, &desc, &op);
 	if (rc) {
 		return rc;
 	}
 
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_BATCH;
-	desc->desc_list_addr = batch->user_desc_addr;
-	desc->desc_count = batch->index;
-	op->batch = batch;
-	assert(batch->index <= DESC_PER_BATCH);
+	if (batch->index == 1) {
+		uint64_t completion_addr;
 
-	/* Add the batch elements completion contexts to the outstanding list to be polled. */
-	for (i = 0 ; i < batch->index; i++) {
-		TAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
-				  link);
+		/* If there's only one command, convert it away from a batch. */
+		completion_addr = desc->completion_addr;
+		memcpy(desc, &batch->user_desc[0], sizeof(*desc));
+		desc->completion_addr = completion_addr;
+	} else {
+		/* Command specific. */
+		desc->opcode = IDXD_OPCODE_BATCH;
+		desc->desc_list_addr = batch->user_desc_addr;
+		desc->desc_count = batch->index;
+		op->batch = batch;
+		assert(batch->index <= DESC_PER_BATCH);
+
+		/* Add the batch elements completion contexts to the outstanding list to be polled. */
+		for (i = 0 ; i < batch->index; i++) {
+			TAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
+					  link);
+		}
 	}
 
 	/* Submit operation. */
