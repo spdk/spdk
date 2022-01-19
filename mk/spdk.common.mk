@@ -176,7 +176,7 @@ LDFLAGS += -L$(CONFIG_URING_PATH)
 endif
 endif
 
-IPSEC_MB_DIR=$(SPDK_ROOT_DIR)/intel-ipsec-mb/lib
+IPSEC_MB_DIR=$(CONFIG_IPSEC_MB_DIR)
 
 ISAL_DIR=$(SPDK_ROOT_DIR)/isa-l
 ifeq ($(CONFIG_ISAL), y)

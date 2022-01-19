@@ -214,6 +214,65 @@ function find_dpdk_arch_libdir() {
 	echo "$dpdk_dir/lib"
 }
 
+function check_IPSec_mb() {
+	local mode=$1
+	local dpdk_libdir=$2
+	local dpdk_incdir=$3
+	local have_ipsec_mb=n
+
+	if [[ $mode = "pkg-config" ]]; then
+		local dpdk_libs
+
+		# Request libdpdk pkg-config settings to figure out if the IPSec_MB is used
+		# as a dependency.
+		# Due to some reason pkg-config shows -lIPSec_MB only with --static option
+		dpdk_libs=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --libs --static libdpdk)
+		if echo "$dpdk_libs" | grep "\-lIPSec_MB" > /dev/null 2>&1; then
+			have_ipsec_mb=y
+		fi
+	elif [[ $mode = "build-config" ]]; then
+		# Use dpdk build config header to check if the IPSec_MB was used.
+		if grep -F "define RTE_CRYPTO_IPSEC_MB 1" "$dpdk_incdir/rte_build_config.h" > /dev/null 2>&1; then
+			have_ipsec_mb=y
+		fi
+	else
+		echo "ERROR: Invalid IPSec_MB checking mode $mode."
+		echo "ERROR: Only \"pkg-config\" and \"build-config\" available."
+		exit 1
+	fi
+	if [[ $have_ipsec_mb = "n" ]]; then
+		CONFIG[IPSEC_MB]=n
+		return
+	fi
+
+	# Since we don't know the library path where the IPSec_MB is located
+	# let's find it out with the ldd utility. This can be a standard location
+	# or a custom build.
+	local librte_crypto_ipsec_mb="$dpdk_libdir/librte_crypto_ipsec_mb.so"
+	if [[ -f "$librte_crypto_ipsec_mb" ]]; then
+		local ipsec_mb_libdir
+
+		ipsec_mb_libdir=$(ldd "$librte_crypto_ipsec_mb" | grep "libIPSec_MB.so" \
+			| sed -e 's/\s*libIPSec_MB.so.*=>\s//' -e 's/\/libIPSec_MB.so.*$//')
+		if [[ -d $ipsec_mb_libdir ]]; then
+			CONFIG[IPSEC_MB]=y
+			CONFIG[IPSEC_MB_DIR]="$ipsec_mb_libdir"
+		elif [[ $ipsec_mb_libdir = "not found" ]]; then
+			# ldconfig cache is broken, old build with refs to non-existing libs, etc.
+			echo "ERROR: Invalid IPSec_MB installation. Library is not found and/or ldconfig cache is broken!"
+			exit 1
+		else
+			# Failed to check for IPSec_MB lib path. Let's just assume it is lives
+			# in one of the standard locations (/usr/lib, etc.).
+			CONFIG[IPSEC_MB]=y
+		fi
+	else
+		# pkg-config says there is IPSec_mb and dpdk lib does not have it. Let's just
+		# assume it is installed in the system in one of the standard locations.
+		CONFIG[IPSEC_MB]=y
+	fi
+}
+
 for i in "$@"; do
 	case "$i" in
 		-h | --help)
@@ -323,6 +382,7 @@ for i in "$@"; do
 					CONFIG[HAVE_LIBBSD]=y
 				fi
 				CFLAGS="${CFLAGS:+$CFLAGS }$(pkg-config --cflags libdpdk)"
+				check_IPSec_mb "pkg-config" "$dpdk_libdir" "$dpdk_incdir"
 			else
 				echo "libdpdk.pc not found, aborting"
 				exit 1
@@ -350,12 +410,14 @@ for i in "$@"; do
 				fi
 				CFLAGS="${CFLAGS:+$CFLAGS }$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --cflags libdpdk)"
 				dpdk_incdir=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --variable=includedir libdpdk)
+				check_IPSec_mb "pkg-config" "$dpdk_libdir" "$dpdk_incdir"
 			else
 				echo "Using $dpdk_incdir/rte_build_config.h for additional libs..."
 
 				if grep -F "define RTE_USE_LIBBSD 1" $dpdk_incdir/rte_build_config.h > /dev/null 2>&1; then
 					CONFIG[HAVE_LIBBSD]=y
 				fi
+				check_IPSec_mb "build-config" "$dpdk_libdir" "$dpdk_incdir"
 			fi
 			echo "DPDK libraries: $dpdk_libdir"
 			echo "DPDK includes: $dpdk_incdir"
@@ -640,6 +702,11 @@ if [ -z "${CONFIG[ENV]}" ]; then
 			exit 1
 		else
 			CONFIG[DPDK_DIR]="${rootdir}/dpdk/build"
+			# Default ipsec libs
+			if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+				CONFIG[IPSEC_MB]=y
+				CONFIG[IPSEC_MB_DIR]="${rootdir}/intel-ipsec-mb/lib"
+			fi
 			echo "Using default DPDK in ${CONFIG[DPDK_DIR]}"
 		fi
 	fi
@@ -791,10 +858,6 @@ if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 		echo "ERROR: ISA-L, compression & crypto require NASM version 2.14 or newer."
 		echo "Please install or upgrade them re-run this script."
 		exit 1
-	else
-		if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-			CONFIG[IPSEC_MB]=y
-		fi
 	fi
 fi
 
