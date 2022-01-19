@@ -2139,7 +2139,7 @@ spdk_get_io_channel(void *io_device)
 		 */
 		pthread_mutex_unlock(&g_devlist_mutex);
 		spdk_trace_record(TRACE_THREAD_IOCH_GET, 0, 0,
-				  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref, dev->name);
+				  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref);
 		return ch;
 	}
 
@@ -2174,7 +2174,7 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
-	spdk_trace_record(TRACE_THREAD_IOCH_GET, 0, 0, (uint64_t)spdk_io_channel_get_ctx(ch), 1, dev->name);
+	spdk_trace_record(TRACE_THREAD_IOCH_GET, 0, 0, (uint64_t)spdk_io_channel_get_ctx(ch), 1);
 	return ch;
 }
 
@@ -2242,7 +2242,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 	int rc __attribute__((unused));
 
 	spdk_trace_record(TRACE_THREAD_IOCH_PUT, 0, 0,
-			  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref, ch->dev->name);
+			  (uint64_t)spdk_io_channel_get_ctx(ch), ch->ref);
 
 	thread = spdk_get_thread();
 	if (!thread) {
