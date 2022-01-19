@@ -594,7 +594,7 @@ static void
 test_nvme_ns_cmd_write_zeroes(void)
 {
 	struct spdk_nvme_ns	ns = { 0 };
-	struct spdk_nvme_ctrlr	ctrlr = { 0 };
+	struct spdk_nvme_ctrlr	ctrlr = {{0}};
 	struct spdk_nvme_qpair	qpair;
 	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
@@ -621,7 +621,7 @@ static void
 test_nvme_ns_cmd_write_uncorrectable(void)
 {
 	struct spdk_nvme_ns	ns = { 0 };
-	struct spdk_nvme_ctrlr	ctrlr = { 0 };
+	struct spdk_nvme_ctrlr	ctrlr = {{0}};
 	struct spdk_nvme_qpair	qpair;
 	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;

@@ -2266,8 +2266,8 @@ test_nvme_ctrlr_init_delay(void)
 static void
 test_spdk_nvme_ctrlr_set_trid(void)
 {
-	struct spdk_nvme_ctrlr	ctrlr = {0};
-	struct spdk_nvme_transport_id	new_trid = {{0}};
+	struct spdk_nvme_ctrlr ctrlr = {{0}};
+	struct spdk_nvme_transport_id new_trid = {{0}};
 
 	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
 
