@@ -833,6 +833,24 @@ _copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, size_t buf_len)
 }
 
 static void
+bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, bool status)
+{
+	struct spdk_io_channel *ch = spdk_bdev_io_get_io_channel(bdev_io);
+	void *buf;
+
+	if (spdk_unlikely(bdev_io->internal.get_aux_buf_cb != NULL)) {
+		buf = bdev_io->internal.buf;
+		bdev_io->internal.buf = NULL;
+		bdev_io->internal.get_aux_buf_cb(ch, bdev_io, buf);
+		bdev_io->internal.get_aux_buf_cb = NULL;
+	} else {
+		assert(bdev_io->internal.get_buf_cb != NULL);
+		bdev_io->internal.get_buf_cb(ch, bdev_io, status);
+		bdev_io->internal.get_buf_cb = NULL;
+	}
+}
+
+static void
 _bdev_io_set_bounce_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 {
 	/* save original iovec */
@@ -864,22 +882,6 @@ _bdev_io_set_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t le
 }
 
 static void
-bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, void *buf, bool status)
-{
-	struct spdk_io_channel *ch = spdk_bdev_io_get_io_channel(bdev_io);
-
-	if (spdk_unlikely(bdev_io->internal.get_aux_buf_cb != NULL)) {
-		bdev_io->internal.get_aux_buf_cb(ch, bdev_io, buf);
-		bdev_io->internal.get_aux_buf_cb = NULL;
-	} else {
-		assert(bdev_io->internal.get_buf_cb != NULL);
-		bdev_io->internal.buf = buf;
-		bdev_io->internal.get_buf_cb(ch, bdev_io, status);
-		bdev_io->internal.get_buf_cb = NULL;
-	}
-}
-
-static void
 _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
@@ -887,8 +889,10 @@ _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 	uint64_t md_len, alignment;
 	void *aligned_buf;
 
+	bdev_io->internal.buf = buf;
+
 	if (spdk_unlikely(bdev_io->internal.get_aux_buf_cb != NULL)) {
-		bdev_io_get_buf_complete(bdev_io, buf, true);
+		bdev_io_get_buf_complete(bdev_io, true);
 		return;
 	}
 
@@ -914,7 +918,7 @@ _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 			spdk_bdev_io_set_md_buf(bdev_io, aligned_buf, md_len);
 		}
 	}
-	bdev_io_get_buf_complete(bdev_io, buf, true);
+	bdev_io_get_buf_complete(bdev_io, true);
 }
 
 static void
@@ -1060,7 +1064,7 @@ bdev_io_get_buf(struct spdk_bdev_io *bdev_io, uint64_t len)
 	    SPDK_BDEV_POOL_ALIGNMENT) {
 		SPDK_ERRLOG("Length + alignment %" PRIu64 " is larger than allowed\n",
 			    len + alignment);
-		bdev_io_get_buf_complete(bdev_io, NULL, false);
+		bdev_io_get_buf_complete(bdev_io, false);
 		return;
 	}
 
