@@ -52,6 +52,22 @@ function ocf_precompile() {
 	./configure $config_params
 }
 
+function llvm_precompile() {
+	# llvm need clang compiler
+	local clangV
+	local clang_complier
+
+	clangV=$(clang --version | grep version | cut -d" " -f3)
+	clang_complier=$(echo "$clangV" | cut -d"." -f1)
+
+	export CC=clang-$clang_complier
+	export CXX=clang++-$clang_complier
+	# Set config to use precompiled library
+	config_params="$config_params --with-fuzzer=/usr/lib64/clang/$clangV/lib/linux/libclang_rt.fuzzer_no_main-x86_64.a"
+	# need to reconfigure to avoid clearing llvm related files on future make clean.
+	./configure $config_params
+}
+
 function build_native_dpdk() {
 	local external_dpdk_dir
 	local external_dpdk_base_dir
@@ -360,6 +376,10 @@ if [[ $SPDK_TEST_OCF -eq 1 ]]; then
 	run_test "autobuild_ocf_precompile" ocf_precompile
 fi
 
+if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
+	run_test "autobuild_llvm_precompile" llvm_precompile
+fi
+
 if [[ $SPDK_TEST_AUTOBUILD -eq 1 ]]; then
 	run_test "autobuild" autobuild_test_suite $1
 elif [[ $SPDK_TEST_UNITTEST -eq 1 ]]; then
@@ -367,7 +387,12 @@ elif [[ $SPDK_TEST_UNITTEST -eq 1 ]]; then
 elif [[ $SPDK_TEST_SCANBUILD -eq 1 ]]; then
 	run_test "scanbuild_make" scanbuild_make
 else
-	# if we aren't testing the unittests, build with shared objects.
-	./configure $config_params --with-shared
+	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
+		# if we are testing nvmf fuzz with llvm lib, --with-shared will cause lib link fail
+		./configure $config_params
+	else
+		# if we aren't testing the unittests, build with shared objects.
+		./configure $config_params --with-shared
+	fi
 	run_test "make" $MAKE $MAKEFLAGS
 fi

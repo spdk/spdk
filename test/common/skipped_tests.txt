@@ -48,6 +48,9 @@ vmd_hello_world
 vmd_identify
 vmd_perf
 
+# nvmf llvm fuzz build configuration
+autobuild_llvm_precompile
+
 # nightly tests
 bdev_fio_rw_verify_ext
 bdev_fio_trim_ext
@@ -66,6 +69,7 @@ iscsi_tgt_fuzz
 nvmf_fuzz
 nvmf_multiconnection
 nvmf_initiator_timeout
+nvmf_llvm_fuzz
 vhost_blk_cores_2ctrl
 vhost_blk_fs_integrity
 vhost_blk_integrity
