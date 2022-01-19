@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -964,6 +964,40 @@ spdk_bdev_io_put_aux_buf(struct spdk_bdev_io *bdev_io, void *buf)
 
 	assert(buf != NULL);
 	_bdev_io_put_buf(bdev_io, buf, len);
+}
+
+static void
+bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
+{
+	struct spdk_bdev *bdev = bdev_ch->bdev;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+	struct spdk_bdev_io *bdev_io;
+
+	if (shared_resource->io_outstanding > shared_resource->nomem_threshold) {
+		/*
+		 * Allow some more I/O to complete before retrying the nomem_io queue.
+		 *  Some drivers (such as nvme) cannot immediately take a new I/O in
+		 *  the context of a completion, because the resources for the I/O are
+		 *  not released until control returns to the bdev poller.  Also, we
+		 *  may require several small I/O to complete before a larger I/O
+		 *  (that requires splitting) can be submitted.
+		 */
+		return;
+	}
+
+	while (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
+		bdev_io = TAILQ_FIRST(&shared_resource->nomem_io);
+		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, internal.link);
+		bdev_io->internal.ch->io_outstanding++;
+		shared_resource->io_outstanding++;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
+		bdev_io->internal.error.nvme.cdw0 = 0;
+		bdev_io->num_retries++;
+		bdev->fn_table->submit_request(spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
+		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			break;
+		}
+	}
 }
 
 static void
@@ -5296,40 +5330,6 @@ spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	TAILQ_INSERT_TAIL(&mgmt_ch->io_wait_queue, entry, link);
 	return 0;
-}
-
-static void
-bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
-{
-	struct spdk_bdev *bdev = bdev_ch->bdev;
-	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
-	struct spdk_bdev_io *bdev_io;
-
-	if (shared_resource->io_outstanding > shared_resource->nomem_threshold) {
-		/*
-		 * Allow some more I/O to complete before retrying the nomem_io queue.
-		 *  Some drivers (such as nvme) cannot immediately take a new I/O in
-		 *  the context of a completion, because the resources for the I/O are
-		 *  not released until control returns to the bdev poller.  Also, we
-		 *  may require several small I/O to complete before a larger I/O
-		 *  (that requires splitting) can be submitted.
-		 */
-		return;
-	}
-
-	while (!TAILQ_EMPTY(&shared_resource->nomem_io)) {
-		bdev_io = TAILQ_FIRST(&shared_resource->nomem_io);
-		TAILQ_REMOVE(&shared_resource->nomem_io, bdev_io, internal.link);
-		bdev_io->internal.ch->io_outstanding++;
-		shared_resource->io_outstanding++;
-		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
-		bdev_io->internal.error.nvme.cdw0 = 0;
-		bdev_io->num_retries++;
-		bdev->fn_table->submit_request(spdk_bdev_io_get_io_channel(bdev_io), bdev_io);
-		if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM) {
-			break;
-		}
-	}
 }
 
 static inline void
