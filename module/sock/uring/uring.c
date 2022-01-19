@@ -1024,7 +1024,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				if (sock->base.cb_fn != NULL &&
 				    sock->pending_recv == false) {
 					sock->pending_recv = true;
-					TAILQ_INSERT_HEAD(&group->pending_recv, sock, link);
+					TAILQ_INSERT_TAIL(&group->pending_recv, sock, link);
 				}
 			}
 			break;
