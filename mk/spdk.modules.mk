@@ -48,6 +48,9 @@ endif
 
 ifeq ($(CONFIG_CRYPTO),y)
 BLOCKDEV_MODULES_LIST += bdev_crypto
+ifeq ($(CONFIG_CRYPTO_MLX5),y)
+BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5 -libverbs
+endif
 endif
 
 ifeq ($(CONFIG_OCF),y)
@@ -59,7 +62,7 @@ ifeq ($(CONFIG_REDUCE),y)
 BLOCKDEV_MODULES_LIST += bdev_compress reduce
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lpmem
 ifeq ($(CONFIG_REDUCE_MLX5),y)
-BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5
+BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5 -libverbs
 endif
 endif
 

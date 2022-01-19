@@ -65,10 +65,18 @@ ifeq ($(findstring y,$(CONFIG_CRYPTO)$(CONFIG_REDUCE)),y)
 DPDK_DRIVERS += crypto/qat compress/qat common/qat
 endif
 
+# common mlx5 libs
+ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_REDUCE_MLX5)),y)
+DPDK_DRIVERS += common/mlx5 bus/auxiliary
+endif
+
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_DRIVERS += crypto crypto/ipsec_mb
 # aesni_mb is name of the PMD in DPDK 21.08 and earlier
 DPDK_DRIVERS += crypto/aesni_mb
+ifeq ($(CONFIG_CRYPTO_MLX5),y)
+DPDK_DRIVERS += crypto/mlx5
+endif
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
 endif
@@ -76,7 +84,7 @@ endif
 ifeq ($(CONFIG_REDUCE),y)
 DPDK_DRIVERS += compress compress/isal
 ifeq ($(CONFIG_REDUCE_MLX5),y)
-DPDK_DRIVERS += common/mlx5 compress/mlx5 bus/auxiliary
+DPDK_DRIVERS += compress/mlx5
 endif
 DPDK_CFLAGS += -I$(ISAL_DIR)
 DPDK_LDFLAGS += -L$(ISAL_DIR)/.libs -lisal

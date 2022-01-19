@@ -71,6 +71,15 @@ endif
 # here we add the feature specific ones and set a flag to add the common
 # ones after that.
 DPDK_FRAMEWORK=n
+
+ifeq ($(findstring y,$(CONFIG_CRYPTO_MLX5)$(CONFIG_REDUCE_MLX5)),y)
+DPDK_LIB_LIST += rte_common_mlx5
+# Introduced in DPDK 21.08
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_bus_auxiliary.*))
+DPDK_LIB_LIST += rte_bus_auxiliary
+endif
+endif
+
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_FRAMEWORK=y
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_ipsec_mb.*))
@@ -82,6 +91,12 @@ ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_aesni_mb.*))
 DPDK_LIB_LIST += rte_crypto_aesni_mb
 endif
 endif
+
+ifeq ($(CONFIG_CRYPTO_MLX5),y)
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_crypto_mlx5.*))
+DPDK_LIB_LIST += rte_crypto_mlx5
+endif
+endif
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
@@ -90,11 +105,7 @@ ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_compress_isal.*))
 DPDK_LIB_LIST += rte_compress_isal
 endif
 ifeq ($(CONFIG_REDUCE_MLX5),y)
-DPDK_LIB_LIST += rte_common_mlx5 rte_compress_mlx5
-# Introduced in DPDK 21.08
-ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_bus_auxiliary.*))
-DPDK_LIB_LIST += rte_bus_auxiliary
-endif
+DPDK_LIB_LIST += rte_compress_mlx5
 endif
 endif
 
@@ -153,10 +164,16 @@ ifeq ($(CONFIG_HAVE_LIBBSD),y)
 DPDK_PRIVATE_LINKER_ARGS += -lbsd
 endif
 
+ifeq ($(CONFIG_CRYPTO),y)
+ifeq ($(CONFIG_CRYPTO_MLX5),y)
+DPDK_PRIVATE_LINKER_ARGS += -lmlx5 -libverbs
+endif
+endif
+
 ifeq ($(CONFIG_REDUCE),y)
 DPDK_PRIVATE_LINKER_ARGS += -lisal -L$(ISAL_DIR)/.libs
 ifeq ($(CONFIG_REDUCE_MLX5),y)
-DPDK_PRIVATE_LINKER_ARGS += -lmlx5
+DPDK_PRIVATE_LINKER_ARGS += -lmlx5 -libverbs
 endif
 endif
 

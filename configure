@@ -870,6 +870,31 @@ if [[ "${CONFIG[PMDK]}" = "y" ]]; then
 	fi
 fi
 
+function dpdk_version() {
+	# Check DPDK version to determine if mlx5_pci driver is supported
+	local dpdk_ver="none"
+	if [[ "${CONFIG[DPDK_DIR]}" == "$rootdir/dpdk/build" ]]; then
+		# DPDK_DIR points at our submodule so ./build may not exist yet. Use
+		# absolute path to lookup the version.
+		dpdk_ver=$(< "$rootdir/dpdk/VERSION")
+	elif [[ -f "${CONFIG[DPDK_DIR]}"/../VERSION ]]; then
+		dpdk_ver=$(< "${CONFIG[DPDK_DIR]}"/../VERSION)
+	fi
+	echo $dpdk_ver
+}
+
+function mlx5_build() {
+	# Check if libmlx5 exists to enable mlx5_pci compress/crypto PMD
+	if ! echo -e '#include <spdk/stdinc.h>\n' \
+		'#include <infiniband/mlx5dv.h>\n' \
+		'#include <infiniband/verbs.h>\n' \
+		'int main(void) { return 0; }\n' \
+		| "${BUILD_CMD[@]}" -lmlx5 -libverbs -I${rootdir}/include -c - 2> /dev/null; then
+		return 1
+	fi
+	return 0
+}
+
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 	if ! echo -e '#include <libpmem.h>\nint main(void) { return 0; }\n' \
 		| "${BUILD_CMD[@]}" -lpmem - 2> /dev/null; then
@@ -877,41 +902,69 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		echo "Please install then re-run this script."
 		exit 1
 	fi
-
+	# Try to enable mlx5 compress
 	CONFIG[REDUCE_MLX5]="y"
+
 	# Check if libmlx5 exists to enable mlx5_pci compress PMD
-	if ! echo -e '#include <spdk/stdinc.h>\n' \
-		'#include <infiniband/mlx5dv.h>\n' \
-		'#include <infiniband/verbs.h>\n' \
-		'int main(void) { return 0; }\n' \
-		| "${BUILD_CMD[@]}" -lmlx5 -I${rootdir}/include -c - 2> /dev/null; then
+	if ! mlx5_build; then
 		echo "libmlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
 		CONFIG[REDUCE_MLX5]="n"
-	fi
-
-	if [[ "${CONFIG[DPDK_PKG_CONFIG]}" = "y" ]]; then
-		# Check if librte_compress_mlx5 exists in DPDK package
-		if [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_compress_mlx5.so ]; then
-			echo "librte_compress_mlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
-			CONFIG[REDUCE_MLX5]="n"
-		fi
 	else
-		# Check DPDK version to determine if mlx5_pci driver is supported
-		dpdk_ver=""
-		if [[ "${CONFIG[DPDK_DIR]}" == "$rootdir/dpdk/build" ]]; then
-			# DPDK_DIR points at our submodule so ./build may not exist yet. Use
-			# absolute path to lookup the version.
-			dpdk_ver=$(< "$rootdir/dpdk/VERSION")
-		elif [[ -f "${CONFIG[DPDK_DIR]}"/../VERSION ]]; then
-			dpdk_ver=$(< "${CONFIG[DPDK_DIR]}"/../VERSION)
+		if [[ "${CONFIG[DPDK_PKG_CONFIG]}" = "y" ]]; then
+			# Check if librte_compress_mlx5 exists in DPDK package
+			if [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_compress_mlx5.so ]; then
+				echo "librte_compress_mlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
+				CONFIG[REDUCE_MLX5]="n"
+			fi
 		else
-			echo "Cannot get DPDK version, so disabling DPDK mlx5_pci compress PMD"
-			CONFIG[REDUCE_MLX5]="n"
+			# Check DPDK version to determine if mlx5_pci driver is supported
+			dpdk_ver=$(dpdk_version)
+			if [[ $dpdk_ver = "none" ]]; then
+				echo "Cannot get DPDK version, so disabling DPDK mlx5_pci compress PMD"
+				CONFIG[REDUCE_MLX5]="n"
+			elif [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 21.02.0; then
+				# mlx5_pci for compress is supported by DPDK >- 21.02.0
+				echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci compress PMD"
+				CONFIG[REDUCE_MLX5]="n"
+			elif [[ -n ${CONFIG[DPDK_LIB_DIR]} ]] && [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_compress_mlx5.so ]; then
+				# This is only checked when --with-dpdk or --with-dpdk=* is used
+				echo "librte_compress_mlx5 is not found, so disabling DPDK mlx5_pci compress PMD"
+				CONFIG[REDUCE_MLX5]="n"
+			fi
 		fi
-		# mlx5_pci is supported by DPDK >- 21.02.0
-		if [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 21.02.0; then
-			echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci compress PMD"
-			CONFIG[REDUCE_MLX5]="n"
+	fi
+fi
+
+if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+	# Try to enable mlx5 crypto
+	CONFIG[CRYPTO_MLX5]="y"
+
+	# Check if libmlx5 exists to enable mlx5_pci compress PMD
+	if ! mlx5_build; then
+		echo "libmlx5 is not found, so disabling DPDK mlx5_pci crypto PMD"
+		CONFIG[CRYPTO_MLX5]="n"
+	else
+		if [[ "${CONFIG[DPDK_PKG_CONFIG]}" = "y" ]]; then
+			# Check if librte_crypto_mlx5 exists in DPDK package
+			if [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_crypto_mlx5.so ]; then
+				echo "librte_crypto_mlx5 is not found, so disabling DPDK mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			fi
+		else
+			# Check DPDK version to determine if mlx5_pci driver is supported
+			dpdk_ver=$(dpdk_version)
+			if [[ $dpdk_ver = "none" ]]; then
+				echo "Cannot get DPDK version, so disabling DPDK mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			elif [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 22.03.0; then
+				# mlx5_pci for crypto is supported by DPDK >- 22.03.0
+				echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			elif [[ -n ${CONFIG[DPDK_LIB_DIR]} ]] && [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_crypto_mlx5.so ]; then
+				# This is only checked when --with-dpdk or --with-dpdk=* is used
+				echo "librte_crypto_mlx5 is not found, so disabling DPDK mlx5_pci crypto PMD"
+				CONFIG[CRYPTO_MLX5]="n"
+			fi
 		fi
 	fi
 fi

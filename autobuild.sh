@@ -104,6 +104,7 @@ function build_native_dpdk() {
 	# for DPDK issue: https://bugs.dpdk.org/show_bug.cgi?id=576
 	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring" "net/i40e" "net/i40e/base")
 
+	local mlx5_libs_added="n"
 	if [[ "$SPDK_TEST_CRYPTO" -eq 1 ]]; then
 		intel_ipsec_mb_ver=v0.54
 		intel_ipsec_mb_drv=crypto/aesni_mb
@@ -125,6 +126,16 @@ function build_native_dpdk() {
 		DPDK_DRIVERS+=("crypto/qat")
 		DPDK_DRIVERS+=("compress/qat")
 		DPDK_DRIVERS+=("common/qat")
+		# 22.03.0 is version of DPDK with stable support for mlx5 crypto.
+		if ge "$dpdk_ver" 22.03.0; then
+			# SPDK enables CRYPTO_MLX in case supported version of DPDK is detected
+			# so make sure proper libs are built.
+			DPDK_DRIVERS+=("bus/auxiliary")
+			DPDK_DRIVERS+=("common/mlx5")
+			DPDK_DRIVERS+=("common/mlx5/linux")
+			DPDK_DRIVERS+=("crypto/mlx5")
+			mlx5_libs_added="y"
+		fi
 		dpdk_cflags+=" -I$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
 		dpdk_ldflags+=" -L$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
 		export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$external_dpdk_base_dir/intel-ipsec-mb/$intel_ipsec_lib"
@@ -147,9 +158,11 @@ function build_native_dpdk() {
 		if ge "$dpdk_ver" 21.02.0; then
 			# SPDK enables REDUCE_MLX in case supported version of DPDK is detected
 			# so make sure proper libs are built.
-			DPDK_DRIVERS+=("bus/auxiliary")
-			DPDK_DRIVERS+=("common/mlx5")
-			DPDK_DRIVERS+=("common/mlx5/linux")
+			if test $mlx5_libs_added = "n"; then
+				DPDK_DRIVERS+=("bus/auxiliary")
+				DPDK_DRIVERS+=("common/mlx5")
+				DPDK_DRIVERS+=("common/mlx5/linux")
+			fi
 			DPDK_DRIVERS+=("compress/mlx5")
 		fi
 		export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$isal_dir/build/lib/pkgconfig"

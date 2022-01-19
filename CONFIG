@@ -149,6 +149,9 @@ CONFIG_REDUCE=n
 # Enable mlx5_pci dpdk compress PMD, enabled automatically if CONFIG_REDUCE=y and libmlx5 exists
 CONFIG_REDUCE_MLX5=n
 
+# Enable mlx5_pci dpdk crypto PMD, enabled automatically if CONFIG_CRYPTO=y and libmlx5 exists
+CONFIG_CRYPTO_MLX5=n
+
 # Requires libiscsi development libraries.
 CONFIG_ISCSI_INITIATOR=n
 
