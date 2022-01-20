@@ -93,8 +93,9 @@ static TAILQ_HEAD(, compress_dev) g_compress_devs = TAILQ_HEAD_INITIALIZER(g_com
 /* Although ISAL PMD reports 'unlimited' qpairs, it has an unplanned limit of 99 due to
  * the length of the internal ring name that it creates, it breaks a limit in the generic
  * ring code and fails the qp initialization.
+ * FIXME: Reduce number of qpairs to 48, due to issue #2338
  */
-#define MAX_NUM_QP 99
+#define MAX_NUM_QP 48
 /* Global list and lock for unique device/queue pair combos */
 struct comp_device_qp {
 	struct compress_dev		*device;	/* ptr to compression device */
