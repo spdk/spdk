@@ -2313,7 +2313,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	min_in_capsule_data_size = sizeof(struct spdk_nvme_sgl_descriptor) * SPDK_NVMF_MAX_SGL_ENTRIES;
-	if (min_in_capsule_data_size < opts->in_capsule_data_size) {
+	if (opts->in_capsule_data_size < min_in_capsule_data_size) {
 		SPDK_WARNLOG("In capsule data size is set to %u, this is minimum size required to support msdbd=16\n",
 			     min_in_capsule_data_size);
 		opts->in_capsule_data_size = min_in_capsule_data_size;
