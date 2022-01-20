@@ -499,7 +499,7 @@ rpc_decode_cores_lw_threads(const struct spdk_json_val *val, void *out)
 	/* The number of thread entries received from RPC can be calculated using
 	 * above define value (each JSON line = key + value, hence '* 2' ) and JSON
 	 * 'val' value (-2 is to subtract VAL_OBJECT_BEGIN/END). */
-	size_t threads_count = (spdk_json_val_len(val) - 2) / RPC_THREAD_ENTRY_SIZE;
+	uint16_t threads_count = (spdk_json_val_len(val) - 2) / RPC_THREAD_ENTRY_SIZE;
 
 	threads->thread = calloc(threads_count, sizeof(struct rpc_core_thread_info));
 	if (!out) {
