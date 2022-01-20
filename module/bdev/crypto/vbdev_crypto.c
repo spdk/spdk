@@ -309,7 +309,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 			SPDK_ERRLOG("Failed to setup queue pair %u on "
 				    "cryptodev %u\n", j, cdev_id);
 			rc = -EINVAL;
-			goto err;
+			goto err_qp_setup;
 		}
 	}
 
@@ -318,7 +318,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 		SPDK_ERRLOG("Failed to start device %u: error %d\n",
 			    cdev_id, rc);
 		rc = -EINVAL;
-		goto err;
+		goto err_dev_start;
 	}
 
 	/* Select the right device/qp list based on driver name
@@ -329,8 +329,10 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
 		dev_qp_head = (struct device_qps *)&g_device_qp_aesni_mb;
 	} else {
+		SPDK_ERRLOG("Failed to start device %u. Invalid driver name \"%s\"\n",
+			    cdev_id, device->cdev_info.driver_name);
 		rc = -EINVAL;
-		goto err;
+		goto err_invalid_drv_name;
 	}
 
 	/* Build up lists of device/qp combinations per PMD */
@@ -355,9 +357,20 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	return 0;
 err_qp_alloc:
 	TAILQ_FOREACH_SAFE(dev_qp, dev_qp_head, link, tmp_qp) {
+		if (dev_qp->device->cdev_id != device->cdev_id) {
+			continue;
+		}
 		TAILQ_REMOVE(dev_qp_head, dev_qp, link);
+		if (dev_qp_head == (struct device_qps *)&g_device_qp_qat) {
+			g_qat_total_qp--;
+		}
 		free(dev_qp);
 	}
+err_invalid_drv_name:
+	rte_cryptodev_stop(cdev_id);
+err_dev_start:
+err_qp_setup:
+	rte_cryptodev_close(cdev_id);
 err:
 	free(device);
 
