@@ -479,7 +479,8 @@ if __name__ == "__main__":
                                        io_queue_requests=args.io_queue_requests,
                                        delay_cmd_submit=args.delay_cmd_submit,
                                        transport_retry_count=args.transport_retry_count,
-                                       bdev_retry_count=args.bdev_retry_count)
+                                       bdev_retry_count=args.bdev_retry_count,
+                                       transport_ack_timeout=args.transport_ack_timeout)
 
     p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -514,6 +515,9 @@ if __name__ == "__main__":
                    help='the number of attempts per I/O in the transport layer when an I/O fails.', type=int)
     p.add_argument('-r', '--bdev-retry-count',
                    help='the number of attempts per I/O in the bdev layer when an I/O fails. -1 means infinite retries.', type=int)
+    p.add_argument('-e', '--transport-ack-timeout',
+                   help="""Time to wait ack until packet retransmission. RDMA specific.
+                   Range 0-31 where 0 is driver-specific default value.""", type=int)
 
     p.set_defaults(func=bdev_nvme_set_options)
 

@@ -138,6 +138,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.io_queue_requests = 0,
 	.delay_cmd_submit = SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT,
 	.bdev_retry_count = 3,
+	.transport_ack_timeout = 0,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -3980,6 +3981,7 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	}
 
 	ctx->opts.transport_retry_count = g_opts.transport_retry_count;
+	ctx->opts.transport_ack_timeout = g_opts.transport_ack_timeout;
 	ctx->opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 	ctx->opts.disable_read_ana_log_page = true;
 
@@ -5592,6 +5594,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "io_queue_requests", g_opts.io_queue_requests);
 	spdk_json_write_named_bool(w, "delay_cmd_submit", g_opts.delay_cmd_submit);
 	spdk_json_write_named_int32(w, "bdev_retry_count", g_opts.bdev_retry_count);
+	spdk_json_write_named_uint8(w, "transport_ack_timeout", g_opts.transport_ack_timeout);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

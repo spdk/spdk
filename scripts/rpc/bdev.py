@@ -442,7 +442,8 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           keep_alive_timeout_ms=None, retry_count=None, arbitration_burst=None,
                           low_priority_weight=None, medium_priority_weight=None, high_priority_weight=None,
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None,
-                          delay_cmd_submit=None, transport_retry_count=None, bdev_retry_count=None):
+                          delay_cmd_submit=None, transport_retry_count=None, bdev_retry_count=None,
+                          transport_ack_timeout=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -461,6 +462,8 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         delay_cmd_submit: Enable delayed NVMe command submission to allow batching of multiple commands (optional)
         transport_retry_count: The number of attempts per I/O in the transport layer when an I/O fails (optional)
         bdev_retry_count: The number of attempts per I/O in the bdev layer when an I/O fails. -1 means infinite retries. (optional)
+        transport_ack_timeout: Time to wait ack until packet retransmission. RDMA specific.
+        Range 0-31 where 0 is driver-specific default value (optional)
     """
     params = {}
 
@@ -509,6 +512,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
 
     if bdev_retry_count is not None:
         params['bdev_retry_count'] = bdev_retry_count
+
+    if transport_ack_timeout is not None:
+        params['transport_ack_timeout'] = transport_ack_timeout
 
     return client.call('bdev_nvme_set_options', params)
 
