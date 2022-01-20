@@ -293,6 +293,7 @@ struct crypto_io_channel *g_crypto_ch;
 struct spdk_io_channel *g_io_ch;
 struct vbdev_dev g_device;
 struct vbdev_crypto g_crypto_bdev;
+struct vbdev_crypto_opts g_crypto_bdev_opts;
 struct device_qp g_dev_qp;
 
 void
@@ -408,10 +409,12 @@ test_setup(void)
 	g_io_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
 	memset(&g_device, 0, sizeof(struct vbdev_dev));
 	memset(&g_crypto_bdev, 0, sizeof(struct vbdev_crypto));
+	memset(&g_crypto_bdev_opts, 0, sizeof(struct vbdev_crypto_opts));
 	g_dev_qp.device = &g_device;
 	g_io_ctx->crypto_ch = g_crypto_ch;
 	g_io_ctx->crypto_bdev = &g_crypto_bdev;
 	g_io_ctx->crypto_bdev->qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
+	g_io_ctx->crypto_bdev->opts = &g_crypto_bdev_opts;
 	g_crypto_ch->device_qp = &g_dev_qp;
 	TAILQ_INIT(&g_crypto_ch->pending_cry_ios);
 	TAILQ_INIT(&g_crypto_ch->queued_cry_ops);
@@ -1153,7 +1156,7 @@ test_assign_device_qp(void)
 	device_qp = calloc(1, sizeof(struct device_qp));
 	TAILQ_INSERT_TAIL(&g_device_qp_aesni_mb, device_qp, link);
 	g_crypto_ch->device_qp = NULL;
-	g_crypto_bdev.drv_name = AESNI_MB;
+	g_crypto_bdev.opts->drv_name = AESNI_MB;
 	_assign_device_qp(&g_crypto_bdev, device_qp, g_crypto_ch);
 	CU_ASSERT(g_crypto_ch->device_qp != NULL);
 
@@ -1169,7 +1172,7 @@ test_assign_device_qp(void)
 		TAILQ_INSERT_TAIL(&g_device_qp_qat, device_qp, link);
 	}
 	g_crypto_ch->device_qp = NULL;
-	g_crypto_bdev.drv_name = QAT;
+	g_crypto_bdev.opts->drv_name = QAT;
 
 	/* First assignment will assign to 0 and next at 32. */
 	_check_expected_values(&g_crypto_bdev, device_qp, g_crypto_ch,
@@ -1191,7 +1194,7 @@ test_assign_device_qp(void)
 	device_qp = calloc(1, sizeof(struct device_qp));
 	TAILQ_INSERT_TAIL(&g_device_qp_mlx5, device_qp, link);
 	g_crypto_ch->device_qp = NULL;
-	g_crypto_bdev.drv_name = MLX5;
+	g_crypto_bdev.opts->drv_name = MLX5;
 	_assign_device_qp(&g_crypto_bdev, device_qp, g_crypto_ch);
 	CU_ASSERT(g_crypto_ch->device_qp == device_qp);
 

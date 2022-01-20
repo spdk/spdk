@@ -52,22 +52,42 @@
 #define AES_CBC "AES_CBC" /* QAT and AESNI_MB */
 #define AES_XTS "AES_XTS" /* QAT and MLX5 */
 
+/* Specific to AES_CBC. */
+#define AES_CBC_KEY_LENGTH	     16
+
+#define AES_XTS_128_BLOCK_KEY_LENGTH 16 /* AES-XTS-128 block key size. */
+#define AES_XTS_256_BLOCK_KEY_LENGTH 32 /* AES-XTS-256 block key size. */
+#define AES_XTS_512_BLOCK_KEY_LENGTH 64 /* AES-XTS-512 block key size. */
+
+#define AES_XTS_TWEAK_KEY_LENGTH     16 /* XTS part key size is always 128 bit. */
+
+/* Structure to hold crypto options for crypto pmd setup. */
+struct vbdev_crypto_opts {
+	char				*vbdev_name;	/* name of the vbdev to create */
+	char				*bdev_name;	/* base bdev name */
+
+	char				*drv_name;	/* name of the crypto device driver */
+	char				*cipher;	/* AES_CBC or AES_XTS */
+
+	/* Note, for dev/test we allow use of key in the config file, for production
+	 * use, you must use an RPC to specify the key for security reasons.
+	 */
+	uint8_t				*key;		/* key per bdev */
+	uint8_t				key_size;	/* key size */
+	uint8_t				*key2;		/* key #2 for AES_XTS, per bdev */
+	uint8_t				key2_size;	/* key #2 size */
+	uint8_t				*xts_key;	/* key + key 2 */
+};
+
 typedef void (*spdk_delete_crypto_complete)(void *cb_arg, int bdeverrno);
 
 /**
  * Create new crypto bdev.
  *
- * \param bdev_name Name of the bdev on which the crypto vbdev will be created.
- * \param vbdev_name Name of the new crypto vbdev.
- * \param crypto_pmd Name of the polled mode driver to use for this vbdev.
- * \param key The key to use for this vbdev.
- * \param cipher The cipher to use for this vbdev.
- * \param keys The 2nd key to use for AES_XTS cipher.
+ * \param opts Crypto options populated by create_crypto_opts()
  * \return 0 on success, other on failure.
  */
-int create_crypto_disk(const char *bdev_name, const char *vbdev_name,
-		       const char *crypto_pmd, const char *key,
-		       const char *cipher, const char *key2);
+int create_crypto_disk(struct vbdev_crypto_opts *opts);
 
 /**
  * Delete crypto bdev.
@@ -78,6 +98,13 @@ int create_crypto_disk(const char *bdev_name, const char *vbdev_name,
  */
 void delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 			void *cb_arg);
+
+/**
+ * Release crypto opts created with create_crypto_opts()
+ *
+ * \param opts Crypto opts to release
+ */
+void free_crypto_opts(struct vbdev_crypto_opts *opts);
 
 static inline int
 __c2v(char c)

@@ -3,6 +3,8 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
+ *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -65,6 +67,179 @@ static const struct spdk_json_object_decoder rpc_construct_crypto_decoders[] = {
 	{"key2", offsetof(struct rpc_construct_crypto, key2), spdk_json_decode_string, true},
 };
 
+/**
+ * Create crypto opts from rpc @req. Validate req fields and populate the
+ * correspoending fields in @opts.
+ *
+ * \param rpc Pointer to the rpc req.
+ * \param request Pointer to json request.
+ * \return Allocated and populated crypto opts or NULL on failure.
+ */
+static struct vbdev_crypto_opts *
+create_crypto_opts(struct rpc_construct_crypto *rpc,
+		   struct spdk_jsonrpc_request *request)
+{
+	struct vbdev_crypto_opts *opts;
+	int key_size, key2_size;
+
+	if (strcmp(rpc->crypto_pmd, AESNI_MB) == 0 && strcmp(rpc->cipher, AES_XTS) == 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid cipher. AES_XTS is not available on AESNI_MB.");
+		return NULL;
+	}
+
+	if (strcmp(rpc->crypto_pmd, MLX5) == 0 && strcmp(rpc->cipher, AES_XTS) != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid cipher. %s is not available on MLX5.",
+						     rpc->cipher);
+		return NULL;
+	}
+
+	if (strcmp(rpc->cipher, AES_XTS) == 0 && rpc->key2 == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid key. A 2nd key is needed for AES_XTS.");
+		return NULL;
+	}
+
+	if (strcmp(rpc->cipher, AES_CBC) == 0 && rpc->key2 != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid key. A 2nd key is needed only for AES_XTS.");
+		return NULL;
+	}
+
+	opts = calloc(1, sizeof(struct vbdev_crypto_opts));
+	if (!opts) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate memory for crypto_opts.");
+		return NULL;
+	}
+
+	opts->bdev_name = strdup(rpc->base_bdev_name);
+	if (!opts->bdev_name) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate memory for bdev_name.");
+		goto error_alloc_bname;
+	}
+
+	opts->vbdev_name = strdup(rpc->name);
+	if (!opts->vbdev_name) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate memory for vbdev_name.");
+		goto error_alloc_vname;
+	}
+
+	opts->drv_name = strdup(rpc->crypto_pmd);
+	if (!opts->drv_name) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Failed to allocate memory for drv_name.");
+		goto error_alloc_dname;
+	}
+
+	if (strcmp(opts->drv_name, MLX5) == 0) {
+		/* Only AES-XTS supported. */
+
+		/* We cannot use strlen() after unhexlify() because of possible \0 chars
+		 * used in the key. Hexlified version of key is twice as longer. */
+		key_size = strnlen(rpc->key, (AES_XTS_512_BLOCK_KEY_LENGTH * 2) + 1);
+		if (key_size != AES_XTS_256_BLOCK_KEY_LENGTH * 2 &&
+		    key_size != AES_XTS_512_BLOCK_KEY_LENGTH * 2) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Invalid AES_XTS key string length for mlx5: %d. "
+							     "Supported sizes in hex form: %d or %d.",
+							     key_size, AES_XTS_256_BLOCK_KEY_LENGTH * 2,
+							     AES_XTS_512_BLOCK_KEY_LENGTH * 2);
+			goto error_invalid_key;
+		}
+	} else {
+		if (strncmp(rpc->cipher, AES_XTS, sizeof(AES_XTS)) == 0) {
+			/* AES_XTS for qat uses 128bit key. */
+			key_size = strnlen(rpc->key, (AES_XTS_128_BLOCK_KEY_LENGTH * 2) + 1);
+			if (key_size != AES_XTS_128_BLOCK_KEY_LENGTH * 2) {
+				spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+								     "Invalid AES_XTS key string length: %d. "
+								     "Supported size in hex form: %d.",
+								     key_size, AES_XTS_128_BLOCK_KEY_LENGTH * 2);
+				goto error_invalid_key;
+			}
+		} else {
+			key_size = strnlen(rpc->key, (AES_CBC_KEY_LENGTH * 2) + 1);
+			if (key_size != AES_CBC_KEY_LENGTH * 2) {
+				spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+								     "Invalid AES_CBC key string length: %d. "
+								     "Supported size in hex form: %d.",
+								     key_size, AES_CBC_KEY_LENGTH * 2);
+				goto error_invalid_key;
+			}
+		}
+	}
+	opts->key = unhexlify(rpc->key);
+	if (!opts->key) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Failed to unhexlify key.");
+		goto error_alloc_key;
+	}
+	opts->key_size = key_size / 2;
+
+	if (strncmp(rpc->cipher, AES_XTS, sizeof(AES_XTS)) == 0) {
+		opts->cipher = AES_XTS;
+		assert(rpc->key2);
+		key2_size = strnlen(rpc->key2, (AES_XTS_TWEAK_KEY_LENGTH * 2) + 1);
+		if (key2_size != AES_XTS_TWEAK_KEY_LENGTH * 2) {
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Invalid AES_XTS key2 length %d. "
+							     "Supported size in hex form: %d.",
+							     key2_size, AES_XTS_TWEAK_KEY_LENGTH * 2);
+			goto error_invalid_key2;
+		}
+		opts->key2 = unhexlify(rpc->key2);
+		if (!opts->key2) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							 "Failed to unhexlify key2.");
+			goto error_alloc_key2;
+		}
+		opts->key2_size = key2_size / 2;
+
+		/* DPDK expects the keys to be concatenated together. */
+		opts->xts_key = calloc(1, opts->key_size + opts->key2_size + 1);
+		if (opts->xts_key == NULL) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "Failed to allocate memory for XTS key.");
+			goto error_alloc_xts;
+		}
+		memcpy(opts->xts_key, opts->key, opts->key_size);
+		memcpy(opts->xts_key + opts->key_size, opts->key2, opts->key2_size);
+	} else if (strncmp(rpc->cipher, AES_CBC, sizeof(AES_CBC)) == 0) {
+		opts->cipher = AES_CBC;
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid param. Cipher %s is not supported.",
+						     rpc->cipher);
+		goto error_cipher;
+	}
+	return opts;
+
+	/* Error cleanup paths. */
+error_cipher:
+error_alloc_xts:
+error_alloc_key2:
+error_invalid_key2:
+	if (opts->key) {
+		memset(opts->key, 0, opts->key_size);
+		free(opts->key);
+	}
+	opts->key_size = 0;
+error_alloc_key:
+error_invalid_key:
+	free(opts->drv_name);
+error_alloc_dname:
+	free(opts->vbdev_name);
+error_alloc_vname:
+	free(opts->bdev_name);
+error_alloc_bname:
+	free(opts);
+	return NULL;
+}
+
 /* Decode the parameters for this RPC method and properly construct the crypto
  * device. Error status returned in the failed cases.
  */
@@ -73,6 +248,7 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct rpc_construct_crypto req = {NULL};
+	struct vbdev_crypto_opts *crypto_opts;
 	struct spdk_json_write_ctx *w;
 	int rc;
 
@@ -80,7 +256,7 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_construct_crypto_decoders),
 				    &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+						 "Failed to decode crypto disk create parameters.");
 		goto cleanup;
 	}
 
@@ -93,42 +269,15 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 		}
 	}
 
-	if (strcmp(req.cipher, AES_XTS) != 0 && strcmp(req.cipher, AES_CBC) != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid cipher: %s",
-						     req.cipher);
+	crypto_opts = create_crypto_opts(&req, request);
+	if (crypto_opts == NULL) {
 		goto cleanup;
 	}
 
-	if (strcmp(req.crypto_pmd, AESNI_MB) == 0 && strcmp(req.cipher, AES_XTS) == 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid cipher. AES_XTS is only available on QAT.");
-		goto cleanup;
-	}
-
-	if (strcmp(req.crypto_pmd, MLX5) == 0 && strcmp(req.cipher, AES_XTS) != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid cipher. %s is not available on MLX5.",
-						     req.cipher);
-		goto cleanup;
-	}
-
-	if (strcmp(req.cipher, AES_XTS) == 0 && req.key2 == NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid key. A 2nd key is needed for AES_XTS.");
-		goto cleanup;
-	}
-
-	if (strcmp(req.cipher, AES_CBC) == 0 && req.key2 != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid key. A 2nd key is needed only for AES_XTS.");
-		goto cleanup;
-	}
-
-	rc = create_crypto_disk(req.base_bdev_name, req.name,
-				req.crypto_pmd, req.key, req.cipher, req.key2);
+	rc = create_crypto_disk(crypto_opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		free_crypto_opts(crypto_opts);
 		goto cleanup;
 	}
 
