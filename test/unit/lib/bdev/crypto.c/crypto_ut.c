@@ -874,17 +874,8 @@ test_initdrivers(void)
 	CU_ASSERT(g_session_mp == NULL);
 	CU_ASSERT(g_session_mp_priv == NULL);
 
-	/* Test failure of DPDK dev init. */
-	MOCK_SET(rte_cryptodev_count, 2);
-	MOCK_SET(rte_vdev_init, -1);
-	rc = vbdev_crypto_init_crypto_drivers();
-	CU_ASSERT(rc == -EINVAL);
-	CU_ASSERT(g_mbuf_mp == NULL);
-	CU_ASSERT(g_session_mp == NULL);
-	CU_ASSERT(g_session_mp_priv == NULL);
-	MOCK_SET(rte_vdev_init, 0);
-
 	/* Can't create session pool. */
+	MOCK_SET(rte_cryptodev_count, 2);
 	MOCK_SET(spdk_mempool_create, NULL);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == -ENOMEM);
@@ -963,6 +954,22 @@ test_initdrivers(void)
 	CU_ASSERT(g_mbuf_offset == DPDK_DYNFIELD_OFFSET);
 	init_cleanup();
 	CU_ASSERT(rc == 0);
+
+	/* Test failure of DPDK dev init. By now it is not longer an error
+	 * situation for entire crypto framework. */
+	MOCK_SET(rte_cryptodev_count, 2);
+	MOCK_SET(rte_cryptodev_device_count_by_driver, 2);
+	MOCK_SET(rte_vdev_init, -1);
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
+	MOCK_SET(rte_cryptodev_info_get, MOCK_INFO_GET_1QP_QAT);
+	rc = vbdev_crypto_init_crypto_drivers();
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_mbuf_mp != NULL);
+	CU_ASSERT(g_session_mp != NULL);
+	CU_ASSERT(g_session_mp_priv != NULL);
+	init_cleanup();
+	MOCK_SET(rte_vdev_init, 0);
+	MOCK_CLEAR(rte_cryptodev_device_count_by_driver);
 
 	/* restore our initial values. */
 	g_mbuf_mp = orig_mbuf_mp;

@@ -395,7 +395,7 @@ vbdev_crypto_init_crypto_drivers(void)
 {
 	uint8_t cdev_count;
 	uint8_t cdev_id;
-	int i, rc = 0;
+	int i, rc;
 	struct vbdev_dev *device;
 	struct vbdev_dev *tmp_dev;
 	struct device_qp *dev_qp;
@@ -412,8 +412,9 @@ vbdev_crypto_init_crypto_drivers(void)
 	snprintf(aesni_args, sizeof(aesni_args), "max_nb_queue_pairs=%d", AESNI_MB_NUM_QP);
 	rc = rte_vdev_init(AESNI_MB, aesni_args);
 	if (rc) {
-		SPDK_ERRLOG("error creating virtual PMD %s\n", AESNI_MB);
-		return -EINVAL;
+		SPDK_NOTICELOG("Failed to create virtual PMD %s: error %d. "
+			       "Possibly %s is not supported by DPDK library. "
+			       "Keep going...\n", AESNI_MB, rc, AESNI_MB);
 	}
 
 	/* If we have no crypto devices, there's no reason to continue. */
