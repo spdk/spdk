@@ -59,6 +59,13 @@ function build_native_dpdk() {
 	local compiler
 
 	compiler=${CC:-gcc}
+
+	# Export CC to be absolutely sure it's set.
+	# If CC was not set and we defaulted to "gcc" then we need to do the export
+	# so that "meson build" command a few lines below is aware of which compiler
+	# to use.
+	export CC="$compiler"
+
 	if [[ $compiler != *clang* && $compiler != *gcc* ]]; then
 		echo "Unsupported compiler detected ($compiler), failing the test" >&2
 		return 1
