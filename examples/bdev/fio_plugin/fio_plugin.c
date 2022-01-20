@@ -66,6 +66,7 @@ struct spdk_fio_options {
 	void *pad;
 	char *conf;
 	char *json_conf;
+	char *env_context;
 	char *log_flags;
 	unsigned mem_mb;
 	int mem_single_seg;
@@ -299,6 +300,9 @@ spdk_init_thread_poll(void *arg)
 		opts.mem_size = eo->mem_mb;
 	}
 	opts.hugepage_single_segments = eo->mem_single_seg;
+	if (eo->env_context) {
+		opts.env_context = eo->env_context;
+	}
 
 	if (spdk_env_init(&opts) < 0) {
 		SPDK_ERRLOG("Unable to initialize SPDK env\n");
@@ -1266,6 +1270,15 @@ static struct fio_option options[] = {
 		.help		= "Use zone append instead of write (1=zone append, 0=write)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name           = "env_context",
+		.lname          = "Environment context options",
+		.type           = FIO_OPT_STR_STORE,
+		.off1           = offsetof(struct spdk_fio_options, env_context),
+		.help           = "Opaque context for use of the env implementation",
+		.category       = FIO_OPT_C_ENGINE,
+		.group          = FIO_OPT_G_INVALID,
 	},
 	{
 		.name		= NULL,
