@@ -260,6 +260,12 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	cdrv_id = device->cdev_info.driver_id;
 	cdev_id = device->cdev_id = index;
 
+	/* QAT_ASYM devices are not supported at this time. */
+	if (strcmp(device->cdev_info.driver_name, QAT_ASYM) == 0) {
+		free(device);
+		return 0;
+	}
+
 	/* Before going any further, make sure we have enough resources for this
 	 * device type to function.  We need a unique queue pair per core accross each
 	 * device type to remain lockless....

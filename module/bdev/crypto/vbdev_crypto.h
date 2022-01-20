@@ -43,6 +43,7 @@
 
 #define AESNI_MB "crypto_aesni_mb"
 #define QAT "crypto_qat"
+#define QAT_ASYM "crypto_qat_asym"
 
 /* Supported ciphers */
 #define AES_CBC "AES_CBC" /* QAT and AESNI_MB */
