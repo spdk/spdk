@@ -140,6 +140,8 @@ build_rpm() (
 	# the .spec.
 	: > "$_sourcedir/spdk-$version.tar.gz"
 
+	cd "$rootdir"
+
 	printf '* Starting rpmbuild...\n'
 	rpmbuild --clean --nodebuginfo "${macros[@]}" --build-in-place -ba "$spec"
 )
