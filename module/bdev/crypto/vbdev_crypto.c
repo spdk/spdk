@@ -288,7 +288,8 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 
 	rc = rte_cryptodev_configure(cdev_id, &conf);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to configure cryptodev %u\n", cdev_id);
+		SPDK_ERRLOG("Failed to configure cryptodev %u: error %d\n",
+			    cdev_id, rc);
 		rc = -EINVAL;
 		goto err;
 	}
@@ -327,7 +328,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 		rc = rte_cryptodev_queue_pair_setup(cdev_id, j, &qp_conf, SOCKET_ID_ANY);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to setup queue pair %u on "
-				    "cryptodev %u\n", j, cdev_id);
+				    "cryptodev %u: error %d\n", j, cdev_id, rc);
 			rc = -EINVAL;
 			goto err_qp_setup;
 		}
@@ -457,6 +458,7 @@ vbdev_crypto_init_crypto_drivers(void)
 
 	/* If we have no crypto devices, there's no reason to continue. */
 	cdev_count = rte_cryptodev_count();
+	SPDK_NOTICELOG("Found crypto devices: %d\n", (int)cdev_count);
 	if (cdev_count == 0) {
 		return 0;
 	}
@@ -889,7 +891,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	 */
 	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, src_mbufs, cryop_cnt);
 	if (rc) {
-		SPDK_ERRLOG("ERROR trying to get src_mbufs!\n");
+		SPDK_ERRLOG("Failed to get src_mbufs!\n");
 		return -ENOMEM;
 	}
 
@@ -897,7 +899,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
 		rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, dst_mbufs, cryop_cnt);
 		if (rc) {
-			SPDK_ERRLOG("ERROR trying to get dst_mbufs!\n");
+			SPDK_ERRLOG("Failed to get dst_mbufs!\n");
 			rc = -ENOMEM;
 			goto error_get_dst;
 		}
@@ -912,7 +914,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 					     RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 					     crypto_ops, cryop_cnt);
 	if (allocated < cryop_cnt) {
-		SPDK_ERRLOG("ERROR trying to get crypto ops!\n");
+		SPDK_ERRLOG("Failed to allocate crypto ops!\n");
 		rc = -ENOMEM;
 		goto error_get_ops;
 	}
@@ -1199,10 +1201,10 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		if (!_crypto_operation(orig_io, RTE_CRYPTO_CIPHER_OP_DECRYPT, NULL)) {
 			return;
 		} else {
-			SPDK_ERRLOG("ERROR decrypting\n");
+			SPDK_ERRLOG("Failed to decrypt!\n");
 		}
 	} else {
-		SPDK_ERRLOG("ERROR on read prior to decrypting\n");
+		SPDK_ERRLOG("Failed to read prior to decrypting!\n");
 	}
 
 	spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -1264,7 +1266,7 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			io_ctx->ch = ch;
 			vbdev_crypto_queue_io(bdev_io);
 		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			SPDK_ERRLOG("Failed to submit bdev_io!\n");
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -1289,7 +1291,7 @@ crypto_write_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 			io_ctx->ch = ch;
 			vbdev_crypto_queue_io(bdev_io);
 		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			SPDK_ERRLOG("Failed to submit bdev_io!\n");
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -1357,7 +1359,7 @@ vbdev_crypto_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 			io_ctx->ch = ch;
 			vbdev_crypto_queue_io(bdev_io);
 		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			SPDK_ERRLOG("Failed to submit bdev_io!\n");
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -1894,7 +1896,7 @@ vbdev_crypto_claim(const char *bdev_name)
 
 		vbdev = calloc(1, sizeof(struct vbdev_crypto));
 		if (!vbdev) {
-			SPDK_ERRLOG("could not allocate crypto_bdev\n");
+			SPDK_ERRLOG("Failed to allocate memory for crypto_bdev.\n");
 			rc = -ENOMEM;
 			goto error_vbdev_alloc;
 		}
@@ -1902,7 +1904,7 @@ vbdev_crypto_claim(const char *bdev_name)
 
 		vbdev->crypto_bdev.name = strdup(name->opts->vbdev_name);
 		if (!vbdev->crypto_bdev.name) {
-			SPDK_ERRLOG("could not allocate crypto_bdev name\n");
+			SPDK_ERRLOG("Failed to allocate memory for crypto_bdev name.\n");
 			rc = -ENOMEM;
 			goto error_bdev_name;
 		}
@@ -1911,7 +1913,7 @@ vbdev_crypto_claim(const char *bdev_name)
 					NULL, &vbdev->base_desc);
 		if (rc) {
 			if (rc != -ENODEV) {
-				SPDK_ERRLOG("could not open bdev %s\n", bdev_name);
+				SPDK_ERRLOG("Failed to open bdev %s: error %d\n", bdev_name, rc);
 			}
 			goto error_open;
 		}
@@ -1975,7 +1977,7 @@ vbdev_crypto_claim(const char *bdev_name)
 
 		rc = spdk_bdev_module_claim_bdev(bdev, vbdev->base_desc, vbdev->crypto_bdev.module);
 		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
+			SPDK_ERRLOG("Failed to claim bdev %s\n", spdk_bdev_get_name(bdev));
 			goto error_claim;
 		}
 
@@ -1987,7 +1989,7 @@ vbdev_crypto_claim(const char *bdev_name)
 			}
 		}
 		if (found == false) {
-			SPDK_ERRLOG("ERROR can't match crypto device driver to crypto vbdev!\n");
+			SPDK_ERRLOG("Failed to match crypto device driver to crypto vbdev.\n");
 			rc = -EINVAL;
 			goto error_cant_find_devid;
 		}
@@ -1995,14 +1997,14 @@ vbdev_crypto_claim(const char *bdev_name)
 		/* Get sessions. */
 		vbdev->session_encrypt = rte_cryptodev_sym_session_create(g_session_mp);
 		if (NULL == vbdev->session_encrypt) {
-			SPDK_ERRLOG("ERROR trying to create crypto session!\n");
+			SPDK_ERRLOG("Failed to create encrypt crypto session.\n");
 			rc = -EINVAL;
 			goto error_session_en_create;
 		}
 
 		vbdev->session_decrypt = rte_cryptodev_sym_session_create(g_session_mp);
 		if (NULL == vbdev->session_decrypt) {
-			SPDK_ERRLOG("ERROR trying to create crypto session!\n");
+			SPDK_ERRLOG("Failed to create decrypt crypto session.\n");
 			rc = -EINVAL;
 			goto error_session_de_create;
 		}
@@ -2031,7 +2033,7 @@ vbdev_crypto_claim(const char *bdev_name)
 						    &vbdev->cipher_xform,
 						    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
 		if (rc < 0) {
-			SPDK_ERRLOG("ERROR trying to init encrypt session!\n");
+			SPDK_ERRLOG("Failed to init encrypt session: error %d\n", rc);
 			rc = -EINVAL;
 			goto error_session_init;
 		}
@@ -2041,14 +2043,14 @@ vbdev_crypto_claim(const char *bdev_name)
 						    &vbdev->cipher_xform,
 						    g_session_mp_priv ? g_session_mp_priv : g_session_mp);
 		if (rc < 0) {
-			SPDK_ERRLOG("ERROR trying to init decrypt session!\n");
+			SPDK_ERRLOG("Failed to init decrypt session: error %d\n", rc);
 			rc = -EINVAL;
 			goto error_session_init;
 		}
 
 		rc = spdk_bdev_register(&vbdev->crypto_bdev);
 		if (rc < 0) {
-			SPDK_ERRLOG("ERROR trying to register bdev\n");
+			SPDK_ERRLOG("Failed to register vbdev: error %d\n", rc);
 			rc = -EINVAL;
 			goto error_bdev_register;
 		}
