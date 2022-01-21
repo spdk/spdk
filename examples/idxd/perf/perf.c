@@ -502,11 +502,13 @@ _get_task(struct idxd_chan_entry *t)
 	return task;
 }
 
+static int idxd_chan_poll(struct idxd_chan_entry *chan);
+
 static void
 drain_io(struct idxd_chan_entry *t)
 {
 	while (t->current_queue_depth > 0) {
-		spdk_idxd_process_events(t->ch);
+		idxd_chan_poll(t);
 	}
 }
 
