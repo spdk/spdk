@@ -44,10 +44,11 @@
 #define AESNI_MB "crypto_aesni_mb"
 #define QAT "crypto_qat"
 #define QAT_ASYM "crypto_qat_asym"
+#define MLX5 "mlx5_pci"
 
 /* Supported ciphers */
 #define AES_CBC "AES_CBC" /* QAT and AESNI_MB */
-#define AES_XTS "AES_XTS" /* QAT only */
+#define AES_XTS "AES_XTS" /* QAT and MLX5 */
 
 typedef void (*spdk_delete_crypto_complete)(void *cb_arg, int bdeverrno);
 

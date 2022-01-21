@@ -51,7 +51,8 @@ unsigned ut_rte_crypto_op_bulk_alloc;
 int ut_rte_crypto_op_attach_sym_session = 0;
 #define MOCK_INFO_GET_1QP_AESNI 0
 #define MOCK_INFO_GET_1QP_QAT 1
-#define MOCK_INFO_GET_1QP_BOGUS_PMD 2
+#define MOCK_INFO_GET_1QP_MLX5 2
+#define MOCK_INFO_GET_1QP_BOGUS_PMD 3
 int ut_rte_cryptodev_info_get = 0;
 bool ut_rte_cryptodev_info_get_mocked = false;
 
@@ -302,6 +303,8 @@ rte_cryptodev_info_get(uint8_t dev_id, struct rte_cryptodev_info *dev_info)
 		dev_info->driver_name = g_driver_names[0];
 	} else if (ut_rte_cryptodev_info_get == MOCK_INFO_GET_1QP_QAT) {
 		dev_info->driver_name = g_driver_names[1];
+	} else if (ut_rte_cryptodev_info_get == MOCK_INFO_GET_1QP_MLX5) {
+		dev_info->driver_name = g_driver_names[2];
 	} else if (ut_rte_cryptodev_info_get == MOCK_INFO_GET_1QP_BOGUS_PMD) {
 		dev_info->driver_name = "junk";
 	}
@@ -421,14 +424,12 @@ test_setup(void)
 	 * same coverage just calloc them here.
 	 */
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
-		rc = posix_memalign((void **)&g_test_crypto_ops[i], 64,
-				    sizeof(struct rte_crypto_op) + sizeof(struct rte_crypto_sym_op) +
-				    IV_LENGTH + QUEUED_OP_LENGTH);
+		size_t size = IV_OFFSET + IV_LENGTH + QUEUED_OP_LENGTH;
+		rc = posix_memalign((void **)&g_test_crypto_ops[i], 64, size);
 		if (rc != 0) {
 			assert(false);
 		}
-		memset(g_test_crypto_ops[i], 0, sizeof(struct rte_crypto_op) +
-		       sizeof(struct rte_crypto_sym_op) + QUEUED_OP_LENGTH);
+		memset(g_test_crypto_ops[i], 0, IV_OFFSET + QUEUED_OP_LENGTH);
 	}
 	g_mbuf_offset = DPDK_DYNFIELD_OFFSET;
 
@@ -956,6 +957,14 @@ test_initdrivers(void)
 	init_cleanup();
 	CU_ASSERT(rc == 0);
 
+	/* Test happy path MLX5. */
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
+	MOCK_SET(rte_cryptodev_info_get, MOCK_INFO_GET_1QP_MLX5);
+	rc = vbdev_crypto_init_crypto_drivers();
+	CU_ASSERT(g_mbuf_offset == DPDK_DYNFIELD_OFFSET);
+	init_cleanup();
+	CU_ASSERT(rc == 0);
+
 	/* Test failure of DPDK dev init. By now it is not longer an error
 	 * situation for entire crypto framework. */
 	MOCK_SET(rte_cryptodev_count, 2);
@@ -1112,6 +1121,12 @@ _clear_device_qp_lists(void)
 		free(device_qp);
 	}
 	CU_ASSERT(TAILQ_EMPTY(&g_device_qp_aesni_mb) == true);
+	while (!TAILQ_EMPTY(&g_device_qp_mlx5)) {
+		device_qp = TAILQ_FIRST(&g_device_qp_mlx5);
+		TAILQ_REMOVE(&g_device_qp_mlx5, device_qp, link);
+		free(device_qp);
+	}
+	CU_ASSERT(TAILQ_EMPTY(&g_device_qp_mlx5) == true);
 }
 
 /* Helper function for test_assign_device_qp() */
@@ -1171,6 +1186,14 @@ test_assign_device_qp(void)
 	/* Fourth assignment will assign to 1 and next at 33. */
 	_check_expected_values(&g_crypto_bdev, device_qp, g_crypto_ch,
 			       1, QAT_VF_SPREAD + 1);
+
+	/* make sure that one MLX5 qp is found */
+	device_qp = calloc(1, sizeof(struct device_qp));
+	TAILQ_INSERT_TAIL(&g_device_qp_mlx5, device_qp, link);
+	g_crypto_ch->device_qp = NULL;
+	g_crypto_bdev.drv_name = MLX5;
+	_assign_device_qp(&g_crypto_bdev, device_qp, g_crypto_ch);
+	CU_ASSERT(g_crypto_ch->device_qp == device_qp);
 
 	_clear_device_qp_lists();
 }

@@ -3,6 +3,8 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES.
+ *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -59,7 +61,7 @@ static int g_mbuf_offset;
  * Note that the string names are defined by the DPDK PMD in question so be
  * sure to use the exact names.
  */
-#define MAX_NUM_DRV_TYPES 2
+#define MAX_NUM_DRV_TYPES 3
 
 /* The VF spread is the number of queue pairs between virtual functions, we use this to
  * load balance the QAT device.
@@ -68,7 +70,7 @@ static int g_mbuf_offset;
 static uint8_t g_qat_total_qp = 0;
 static uint8_t g_next_qat_index;
 
-const char *g_driver_names[MAX_NUM_DRV_TYPES] = { AESNI_MB, QAT };
+const char *g_driver_names[MAX_NUM_DRV_TYPES] = { AESNI_MB, QAT, MLX5 };
 
 /* Global list of available crypto devices. */
 struct vbdev_dev {
@@ -91,6 +93,7 @@ struct device_qp {
 };
 static TAILQ_HEAD(, device_qp) g_device_qp_qat = TAILQ_HEAD_INITIALIZER(g_device_qp_qat);
 static TAILQ_HEAD(, device_qp) g_device_qp_aesni_mb = TAILQ_HEAD_INITIALIZER(g_device_qp_aesni_mb);
+static TAILQ_HEAD(, device_qp) g_device_qp_mlx5 = TAILQ_HEAD_INITIALIZER(g_device_qp_mlx5);
 static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -135,15 +138,30 @@ uint8_t g_number_of_claimed_volumes = 0;
  */
 #define CRYPTO_QP_DESCRIPTORS	2048
 
+/* At this moment DPDK descriptors allocation for mlx5 has some issues. We use 512
+ * as an compromise value between performance and the time spent for initialization. */
+#define CRYPTO_QP_DESCRIPTORS_MLX5	512
+
 /* Specific to AES_CBC. */
-#define IV_LENGTH		16
 #define AES_CBC_KEY_LENGTH	16
-#define AES_XTS_KEY_LENGTH	16	/* XTS uses 2 keys, each of this size. */
 #define AESNI_MB_NUM_QP		64
 
+/* Key size for qat driver */
+#define AES_XTS_128_BLOCK_KEY_LENGTH 16 /* AES-XTS-128 block key size. */
+
+/* Key sizes for mlx5 driver . */
+#define AES_XTS_256_BLOCK_KEY_LENGTH 32 /* AES-XTS-256 block key size. */
+#define AES_XTS_512_BLOCK_KEY_LENGTH 64 /* AES-XTS-512 block key size. */
+
+#define AES_XTS_TWEAK_KEY_LENGTH     16 /* XTS part key size is always 128 bit. */
+
 /* Common for suported devices. */
-#define IV_OFFSET            (sizeof(struct rte_crypto_op) + \
-				sizeof(struct rte_crypto_sym_op))
+#define DEFAULT_NUM_XFORMS           2
+#define IV_OFFSET (sizeof(struct rte_crypto_op) + \
+                sizeof(struct rte_crypto_sym_op) + \
+                (DEFAULT_NUM_XFORMS * \
+                 sizeof(struct rte_crypto_sym_xform)))
+#define IV_LENGTH		     16
 #define QUEUED_OP_OFFSET (IV_OFFSET + IV_LENGTH)
 
 static void _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
@@ -306,6 +324,9 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
 		dev_qp_head = (struct device_qps *)&g_device_qp_aesni_mb;
 		qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
+	} else if (strcmp(device->cdev_info.driver_name, MLX5) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_mlx5;
+		qp_desc_nr = CRYPTO_QP_DESCRIPTORS_MLX5;
 	} else {
 		SPDK_ERRLOG("Failed to start device %u. Invalid driver name \"%s\"\n",
 			    cdev_id, device->cdev_info.driver_name);
@@ -397,6 +418,8 @@ release_vbdev_dev(struct vbdev_dev *device)
 		dev_qp_head = (struct device_qps *)&g_device_qp_qat;
 	} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
 		dev_qp_head = (struct device_qps *)&g_device_qp_aesni_mb;
+	} else if (strcmp(device->cdev_info.driver_name, MLX5) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_mlx5;
 	}
 	if (dev_qp_head) {
 		TAILQ_FOREACH_SAFE(dev_qp, dev_qp_head, link, tmp_qp) {
@@ -506,13 +529,15 @@ vbdev_crypto_init_crypto_drivers(void)
 		goto error_create_mbuf;
 	}
 
-	/* We use per op private data to store the IV and our own struct
-	 * for queueing ops.
+	/* We use per op private data as suggested by DPDK and to store the IV and
+	 * our own struct for queueing ops.
 	 */
 	g_crypto_op_mp = rte_crypto_op_pool_create("op_mp",
 			 RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 			 NUM_MBUFS,
 			 POOL_CACHE_SIZE,
+			 (DEFAULT_NUM_XFORMS *
+			  sizeof(struct rte_crypto_sym_xform)) +
 			 IV_LENGTH + QUEUED_OP_LENGTH,
 			 rte_socket_id());
 
@@ -1396,15 +1421,15 @@ _device_unregister_cb(void *io_device)
 	rte_cryptodev_sym_session_free(crypto_bdev->session_encrypt);
 	free(crypto_bdev->drv_name);
 	if (crypto_bdev->key) {
-		memset(crypto_bdev->key, 0, strnlen(crypto_bdev->key, (AES_CBC_KEY_LENGTH + 1)));
+		memset(crypto_bdev->key, 0, strlen(crypto_bdev->key));
 		free(crypto_bdev->key);
 	}
 	if (crypto_bdev->key2) {
-		memset(crypto_bdev->key2, 0, strnlen(crypto_bdev->key2, (AES_XTS_KEY_LENGTH + 1)));
+		memset(crypto_bdev->key2, 0, strlen(crypto_bdev->key2));
 		free(crypto_bdev->key2);
 	}
 	if (crypto_bdev->xts_key) {
-		memset(crypto_bdev->xts_key, 0, strnlen(crypto_bdev->xts_key, (AES_XTS_KEY_LENGTH * 2) + 1));
+		memset(crypto_bdev->xts_key, 0, strlen(crypto_bdev->xts_key));
 		free(crypto_bdev->xts_key);
 	}
 	free(crypto_bdev->crypto_bdev.name);
@@ -1545,6 +1570,14 @@ _assign_device_qp(struct vbdev_crypto *crypto_bdev, struct device_qp *device_qp,
 				break;
 			}
 		}
+	} else if (strcmp(crypto_bdev->drv_name, MLX5) == 0) {
+		TAILQ_FOREACH(device_qp, &g_device_qp_mlx5, link) {
+			if (device_qp->in_use == false) {
+				crypto_ch->device_qp = device_qp;
+				device_qp->in_use = true;
+				break;
+			}
+		}
 	}
 	pthread_mutex_unlock(&g_device_qp_lock);
 }
@@ -1606,6 +1639,8 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 	struct bdev_names *name;
 	int rc, j;
 	bool found = false;
+	int key_size;
+	int key2_size;
 
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
 		if (strcmp(vbdev_name, name->vbdev_name) == 0) {
@@ -1652,30 +1687,58 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 		goto error_invalid_pmd;
 	}
 
+	if (strcmp(crypto_pmd, MLX5) == 0) {
+		/* Only AES-XTS supported. */
+		key_size = strnlen(key, AES_XTS_512_BLOCK_KEY_LENGTH + 1);
+		if (key_size != AES_XTS_256_BLOCK_KEY_LENGTH &&
+		    key_size != AES_XTS_512_BLOCK_KEY_LENGTH) {
+			SPDK_ERRLOG("Invalid AES_XTS key string length for mlx5: %d. "
+				    "Supported sizes in hex form: %d or %d.\n",
+				    key_size, AES_XTS_256_BLOCK_KEY_LENGTH,
+				    AES_XTS_512_BLOCK_KEY_LENGTH);
+			rc = -EINVAL;
+			goto error_invalid_key;
+		}
+	} else {
+		if (strncmp(cipher, AES_XTS, sizeof(AES_XTS)) == 0) {
+			/* AES_XTS for qat uses 128bit key. */
+			key_size = strnlen(key, AES_XTS_128_BLOCK_KEY_LENGTH + 1);
+			if (key_size != AES_XTS_128_BLOCK_KEY_LENGTH) {
+				SPDK_ERRLOG("Invalid AES_XTS key string length: %d. "
+					    "Supported size in hex form: %d.\n",
+					    key_size, AES_XTS_128_BLOCK_KEY_LENGTH);
+				rc = -EINVAL;
+				goto error_invalid_key;
+			}
+		} else {
+			key_size = strnlen(key, AES_CBC_KEY_LENGTH + 1);
+			if (key_size != AES_CBC_KEY_LENGTH) {
+				SPDK_ERRLOG("Invalid AES_CBC key string length: %d. "
+					    "Supported size in hex form: %d.\n",
+					    key_size, AES_CBC_KEY_LENGTH);
+				rc = -EINVAL;
+				goto error_invalid_key;
+			}
+		}
+	}
 	name->key = strdup(key);
 	if (!name->key) {
 		SPDK_ERRLOG("could not allocate name->key\n");
 		rc = -ENOMEM;
 		goto error_alloc_key;
 	}
-	if (strnlen(name->key, (AES_CBC_KEY_LENGTH + 1)) != AES_CBC_KEY_LENGTH) {
-		SPDK_ERRLOG("invalid AES_CBC key length\n");
-		rc = -EINVAL;
-		goto error_invalid_key;
-	}
 
 	if (strncmp(cipher, AES_XTS, sizeof(AES_XTS)) == 0) {
-		/* To please scan-build, input validation makes sure we can't
-		 * have this cipher without providing a key2.
-		 */
 		name->cipher = AES_XTS;
 		assert(key2);
-		if (strnlen(key2, (AES_XTS_KEY_LENGTH + 1)) != AES_XTS_KEY_LENGTH) {
-			SPDK_ERRLOG("invalid AES_XTS key length\n");
+		key2_size = strnlen(key2, AES_XTS_TWEAK_KEY_LENGTH + 1);
+		if (key2_size != AES_XTS_TWEAK_KEY_LENGTH) {
+			SPDK_ERRLOG("Invalid AES_XTS key2 length %d. "
+				    "Supported size in hex form: %d.\n",
+				    key2_size, AES_XTS_TWEAK_KEY_LENGTH);
 			rc = -EINVAL;
 			goto error_invalid_key2;
 		}
-
 		name->key2 = strdup(key2);
 		if (!name->key2) {
 			SPDK_ERRLOG("could not allocate name->key2\n");
@@ -1696,18 +1759,14 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 
 	/* Error cleanup paths. */
 error_cipher:
-	if (name->key2) {
-		memset(name->key2, 0, strlen(name->key2));
-		free(name->key2);
-	}
 error_alloc_key2:
 error_invalid_key2:
-error_invalid_key:
 	if (name->key) {
 		memset(name->key, 0, strlen(name->key));
 		free(name->key);
 	}
 error_alloc_key:
+error_invalid_key:
 error_invalid_pmd:
 	free(name->drv_name);
 error_alloc_dname:
@@ -1788,6 +1847,7 @@ vbdev_crypto_finish(void)
 	/* These are removed in release_vbdev_dev() */
 	assert(TAILQ_EMPTY(&g_device_qp_qat));
 	assert(TAILQ_EMPTY(&g_device_qp_aesni_mb));
+	assert(TAILQ_EMPTY(&g_device_qp_mlx5));
 
 	rte_mempool_free(g_crypto_op_mp);
 	rte_mempool_free(g_mbuf_mp);
@@ -1869,6 +1929,8 @@ vbdev_crypto_claim(const char *bdev_name)
 	struct vbdev_dev *device;
 	struct spdk_bdev *bdev;
 	bool found = false;
+	uint8_t key_size = 0;
+	uint8_t key2_size = 0;
 	int rc = 0;
 
 	if (g_number_of_claimed_volumes >= MAX_CRYPTO_VOLUMES) {
@@ -1906,15 +1968,7 @@ vbdev_crypto_claim(const char *bdev_name)
 			rc = -ENOMEM;
 			goto error_alloc_key;
 		}
-
-		if (name->key2) {
-			vbdev->key2 = strdup(name->key2);
-			if (!vbdev->key2) {
-				SPDK_ERRLOG("could not allocate crypto_bdev key2\n");
-				rc = -ENOMEM;
-				goto error_alloc_key2;
-			}
-		}
+		key_size = strlen(vbdev->key);
 
 		vbdev->drv_name = strdup(name->drv_name);
 		if (!vbdev->drv_name) {
@@ -1937,34 +1991,66 @@ vbdev_crypto_claim(const char *bdev_name)
 		bdev = spdk_bdev_desc_get_bdev(vbdev->base_desc);
 		vbdev->base_bdev = bdev;
 
-		vbdev->qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
+		if (strcmp(vbdev->drv_name, MLX5) == 0) {
+			vbdev->qp_desc_nr = CRYPTO_QP_DESCRIPTORS_MLX5;
+		} else {
+			vbdev->qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
+		}
 
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
-		vbdev->cipher = AES_CBC;
 		if (strcmp(vbdev->drv_name, QAT) == 0) {
 			vbdev->crypto_bdev.required_alignment =
 				spdk_max(spdk_u32log2(bdev->blocklen), bdev->required_alignment);
 			SPDK_NOTICELOG("QAT in use: Required alignment set to %u\n",
 				       vbdev->crypto_bdev.required_alignment);
-			if (strcmp(name->cipher, AES_CBC) == 0) {
-				SPDK_NOTICELOG("QAT using cipher: AES_CBC\n");
-			} else {
-				SPDK_NOTICELOG("QAT using cipher: AES_XTS\n");
-				vbdev->cipher = AES_XTS;
-				/* DPDK expects they keys to be concatenated together. */
-				vbdev->xts_key = calloc(1, (AES_XTS_KEY_LENGTH * 2) + 1);
-				if (vbdev->xts_key == NULL) {
-					SPDK_ERRLOG("could not allocate memory for XTS key\n");
-					rc = -ENOMEM;
-					goto error_xts_key;
-				}
-				memcpy(vbdev->xts_key, vbdev->key, AES_XTS_KEY_LENGTH);
-				assert(name->key2);
-				memcpy(vbdev->xts_key + AES_XTS_KEY_LENGTH, name->key2, AES_XTS_KEY_LENGTH + 1);
-			}
+			SPDK_NOTICELOG("QAT using cipher: %s\n", name->cipher);
+		} else if (strcmp(vbdev->drv_name, MLX5) == 0) {
+			vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
+			SPDK_NOTICELOG("MLX5 using cipher: %s\n", name->cipher);
 		} else {
 			vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
+			SPDK_NOTICELOG("AESNI_MB using cipher: %s\n", name->cipher);
 		}
+		/* Init our per vbdev xform with the desired cipher options and key2. */
+		vbdev->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
+		vbdev->cipher_xform.cipher.iv.offset = IV_OFFSET;
+		if (strcmp(name->cipher, AES_XTS) == 0) {
+			vbdev->cipher = AES_XTS;
+
+			assert(name->key2);
+			vbdev->key2 = strdup(name->key2);
+			if (!vbdev->key2) {
+				SPDK_ERRLOG("could not allocate crypto_bdev key2\n");
+				rc = -ENOMEM;
+				goto error_alloc_key2;
+			}
+			key2_size = strlen(vbdev->key2);
+
+			/* DPDK expects the keys to be concatenated together. */
+			vbdev->xts_key = calloc(1, key_size + key2_size + 1);
+			if (vbdev->xts_key == NULL) {
+				SPDK_ERRLOG("Failed to allocate memory for XTS key.\n");
+				rc = -ENOMEM;
+				goto error_xts_key;
+			}
+			memcpy(vbdev->xts_key, vbdev->key, key_size);
+			memcpy(vbdev->xts_key + key_size, name->key2, key2_size);
+
+			vbdev->cipher_xform.cipher.key.data = vbdev->xts_key;
+			vbdev->cipher_xform.cipher.key.length = key_size + key2_size;
+			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_XTS;
+		} else if (strcmp(name->cipher, AES_CBC) == 0) {
+			vbdev->cipher = AES_CBC;
+			vbdev->cipher_xform.cipher.key.data = vbdev->key;
+			vbdev->cipher_xform.cipher.key.length = key_size;
+			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
+		} else {
+			SPDK_ERRLOG("Invalid cipher name %s.\n", name->cipher);
+			rc = -EINVAL;
+			goto error_alloc_key2;
+		}
+		vbdev->cipher_xform.cipher.iv.length = IV_LENGTH;
+
 		/* Note: CRYPTO_MAX_IO is in units of bytes, optimal_io_boundary is
 		 * in units of blocks.
 		 */
@@ -2026,20 +2112,6 @@ vbdev_crypto_claim(const char *bdev_name)
 			goto error_session_de_create;
 		}
 
-		/* Init our per vbdev xform with the desired cipher options. */
-		vbdev->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
-		vbdev->cipher_xform.cipher.iv.offset = IV_OFFSET;
-		if (strcmp(name->cipher, AES_CBC) == 0) {
-			vbdev->cipher_xform.cipher.key.data = vbdev->key;
-			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
-			vbdev->cipher_xform.cipher.key.length = AES_CBC_KEY_LENGTH;
-		} else {
-			vbdev->cipher_xform.cipher.key.data = vbdev->xts_key;
-			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_XTS;
-			vbdev->cipher_xform.cipher.key.length = AES_XTS_KEY_LENGTH * 2;
-		}
-		vbdev->cipher_xform.cipher.iv.length = IV_LENGTH;
-
 		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_ENCRYPT;
 		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_encrypt,
 						    &vbdev->cipher_xform,
@@ -2086,19 +2158,19 @@ error_claim:
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
 	if (vbdev->xts_key) {
-		memset(vbdev->xts_key, 0, AES_XTS_KEY_LENGTH * 2);
+		memset(vbdev->xts_key, 0, strlen(vbdev->xts_key));
 		free(vbdev->xts_key);
 	}
 error_xts_key:
-	spdk_bdev_close(vbdev->base_desc);
-error_open:
-	free(vbdev->drv_name);
-error_drv_name:
 	if (vbdev->key2) {
 		memset(vbdev->key2, 0, strlen(vbdev->key2));
 		free(vbdev->key2);
 	}
 error_alloc_key2:
+	spdk_bdev_close(vbdev->base_desc);
+error_open:
+	free(vbdev->drv_name);
+error_drv_name:
 	if (vbdev->key) {
 		memset(vbdev->key, 0, strlen(vbdev->key));
 		free(vbdev->key);

@@ -106,6 +106,13 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
+	if (strcmp(req.crypto_pmd, MLX5) == 0 && strcmp(req.cipher, AES_XTS) != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid cipher. %s is not available on MLX5.",
+						     req.cipher);
+		goto cleanup;
+	}
+
 	if (strcmp(req.cipher, AES_XTS) == 0 && req.key2 == NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid key. A 2nd key is needed for AES_XTS.");
@@ -128,9 +135,6 @@ rpc_bdev_crypto_create(struct spdk_jsonrpc_request *request,
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_string(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
-	free_rpc_construct_crypto(&req);
-	return;
-
 cleanup:
 	free_rpc_construct_crypto(&req);
 }

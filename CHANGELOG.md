@@ -26,6 +26,10 @@ The APIs include:
 
 A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PMEM.
 
+### crypto
+
+Support for AES_XTS was added for MLX5 polled mode driver (pmd).
+
 ### bdev_nvme
 
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and

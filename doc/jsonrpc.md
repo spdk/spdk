@@ -2116,7 +2116,7 @@ base_bdev_name          | Required | string      | Name of the base bdev
 name                    | Required | string      | Name of the crypto vbdev to create
 crypto_pmd              | Required | string      | Name of the crypto device driver
 key                     | Required | string      | Key
-cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT only)
+cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5)
 key2                    | Required | string      | 2nd key only required for cipher AET_XTS
 
 #### Result

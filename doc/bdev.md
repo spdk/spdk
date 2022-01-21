@@ -139,14 +139,17 @@ all volumes, if used it will return the name or an error that the device does no
 The crypto virtual bdev module can be configured to provide at rest data encryption
 for any underlying bdev. The module relies on the DPDK CryptoDev Framework to provide
 all cryptographic functionality. The framework provides support for many different software
-only cryptographic modules as well hardware assisted support for the Intel QAT board. The
-framework also provides support for cipher, hash, authentication and AEAD functions. At this
-time the SPDK virtual bdev module supports cipher only as follows:
+only cryptographic modules as well hardware assisted support for the Intel QAT board and
+NVIDIA crypto enabled NICs.
+The framework also provides support for cipher, hash, authentication and AEAD functions.
+At this time the SPDK virtual bdev module supports cipher only as follows:
 
 - AESN-NI Multi Buffer Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC
-- Intel(R) QuickAssist (QAT) Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC
+- Intel(R) QuickAssist (QAT) Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC,
+  RTE_CRYPTO_CIPHER_AES128_XTS
   (Note: QAT is functional however is marked as experimental until the hardware has
   been fully integrated with the SPDK CI system.)
+- MLX5 Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES256_XTS, RTE_CRYPTO_CIPHER_AES512_XTS
 
 In order to support using the bdev block offset (LBA) as the initialization vector (IV),
 the crypto module break up all I/O into crypto operations of a size equal to the block
@@ -170,6 +173,12 @@ This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bde
 To remove the vbdev use the bdev_crypto_delete command.
 
 `rpc.py bdev_crypto_delete CryNvmeA`
+
+The MLX5 driver works with crypto enabled Nvidia NICs and requires special configuration of
+DPDK environment to enable crypto function. It can be done via SPDK event library by configuring
+`env_context` member of `spdk_app_opts` structure or by passing corresponding CLI arguments in
+the following form: `--allow=BDF,class=crypto,wcs_file=/full/path/to/wrapped/credentials`, e.g.
+`--allow=0000:01:00.0,class=crypto,wcs_file=/path/credentials.txt`.
 
 ## Delay Bdev Module {#bdev_config_delay}
 
