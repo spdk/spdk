@@ -500,6 +500,10 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 		completion_addr = desc->completion_addr;
 		memcpy(desc, &batch->user_desc[0], sizeof(*desc));
 		desc->completion_addr = completion_addr;
+		op->cb_fn = batch->user_ops[0].cb_fn;
+		op->cb_arg = batch->user_ops[0].cb_arg;
+		op->crc_dst = batch->user_ops[0].crc_dst;
+		_free_batch(batch, chan);
 	} else {
 		/* Command specific. */
 		desc->opcode = IDXD_OPCODE_BATCH;
