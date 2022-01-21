@@ -1,0 +1,13 @@
+diff --git a/config/rte_config.h b/config/rte_config.h
+index cab4390..020b9da 100644
+--- a/config/rte_config.h
++++ b/config/rte_config.h
+@@ -59,7 +59,7 @@
+ #define RTE_MAX_MULTI_HOST_CTRLS 4
+ 
+ /* cryptodev defines */
+-#define RTE_CRYPTO_MAX_DEVS 64
++#define RTE_CRYPTO_MAX_DEVS 128
+ #define RTE_CRYPTODEV_NAME_LEN 64
+ #define RTE_CRYPTO_CALLBACKS 1
+ 
