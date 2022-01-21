@@ -191,8 +191,10 @@ static TAILQ_HEAD(, vbdev_crypto) g_vbdev_crypto = TAILQ_HEAD_INITIALIZER(g_vbde
 /* Shared mempools between all devices on this system */
 static struct rte_mempool *g_session_mp = NULL;
 static struct rte_mempool *g_session_mp_priv = NULL;
-static struct spdk_mempool *g_mbuf_mp = NULL;		/* mbuf mempool */
+static struct rte_mempool *g_mbuf_mp = NULL;            /* mbuf mempool */
 static struct rte_mempool *g_crypto_op_mp = NULL;	/* crypto operations, must be rte* mempool */
+
+static struct rte_mbuf_ext_shared_info g_shinfo = {};   /* used by DPDK mbuf macro */
 
 /* For queueing up crypto operations that we can't submit for some reason */
 struct vbdev_crypto_op {
@@ -377,6 +379,12 @@ err:
 	return rc;
 }
 
+/* Dummy function used by DPDK to free ext attached buffers to mbufs, we free them ourselves but
+ * this callback has to be here. */
+static void shinfo_free_cb(void *arg1, void *arg2)
+{
+}
+
 /* This is called from the module's init function. We setup all crypto devices early on as we are unable
  * to easily dynamically configure queue pairs after the drivers are up and running.  So, here, we
  * configure the max capabilities of each device and assign threads to queue pairs as channels are
@@ -452,9 +460,8 @@ vbdev_crypto_init_crypto_drivers(void)
 		return -ENOMEM;
 	}
 
-	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
-					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					SPDK_ENV_SOCKET_ID_ANY);
+	g_mbuf_mp = rte_pktmbuf_pool_create("mbuf_mp", NUM_MBUFS, POOL_CACHE_SIZE,
+					    0, 0, SPDK_ENV_SOCKET_ID_ANY);
 	if (g_mbuf_mp == NULL) {
 		SPDK_ERRLOG("Cannot create mbuf pool\n");
 		rc = -ENOMEM;
@@ -493,6 +500,7 @@ vbdev_crypto_init_crypto_drivers(void)
 		dev_qp->index = i++;
 	}
 
+	g_shinfo.free_cb = shinfo_free_cb;
 	return 0;
 
 	/* Error cleanup paths. */
@@ -504,7 +512,7 @@ err:
 	rte_mempool_free(g_crypto_op_mp);
 	g_crypto_op_mp = NULL;
 error_create_op:
-	spdk_mempool_free(g_mbuf_mp);
+	rte_mempool_free(g_mbuf_mp);
 	g_mbuf_mp = NULL;
 error_create_mbuf:
 	rte_mempool_free(g_session_mp);
@@ -587,7 +595,7 @@ crypto_dev_poller(void *args)
 	struct spdk_bdev_io *bdev_io = NULL;
 	struct crypto_bdev_io *io_ctx = NULL;
 	struct rte_crypto_op *dequeued_ops[MAX_DEQUEUE_BURST_SIZE];
-	struct rte_crypto_op *mbufs_to_free[2 * MAX_DEQUEUE_BURST_SIZE];
+	struct rte_mbuf *mbufs_to_free[2 * MAX_DEQUEUE_BURST_SIZE];
 	int num_mbufs = 0;
 	struct vbdev_crypto_op *op_to_resubmit;
 
@@ -652,9 +660,7 @@ crypto_dev_poller(void *args)
 				     (void **)dequeued_ops,
 				     num_dequeued_ops);
 		assert(num_mbufs > 0);
-		spdk_mempool_put_bulk(g_mbuf_mp,
-				      (void **)mbufs_to_free,
-				      num_mbufs);
+		rte_pktmbuf_free_bulk(mbufs_to_free, num_mbufs);
 	}
 
 	/* Check if there are any pending crypto ops to process */
@@ -710,7 +716,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	uint32_t allocated = 0;
 	uint8_t *current_iov = NULL;
 	uint64_t total_remaining = 0;
-	uint64_t updated_length, current_iov_remaining = 0;
+	uint64_t current_iov_remaining = 0;
 	uint32_t crypto_index = 0;
 	uint32_t en_offset = 0;
 	struct rte_crypto_op *crypto_ops[MAX_ENQUEUE_ARRAY_SIZE];
@@ -727,7 +733,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	 * LBA as IV, there can be no case where we'd need >1 mbuf per crypto op or the
 	 * op would be > 1 LBA.
 	 */
-	rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], cryop_cnt);
+	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, src_mbufs, cryop_cnt);
 	if (rc) {
 		SPDK_ERRLOG("ERROR trying to get src_mbufs!\n");
 		return -ENOMEM;
@@ -735,7 +741,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 
 	/* Get the same amount but these buffers to describe the encrypted data location (dst). */
 	if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
-		rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&dst_mbufs[0], cryop_cnt);
+		rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, dst_mbufs, cryop_cnt);
 		if (rc) {
 			SPDK_ERRLOG("ERROR trying to get dst_mbufs!\n");
 			rc = -ENOMEM;
@@ -787,16 +793,25 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	current_iov_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
 	do {
 		uint8_t *iv_ptr;
+		uint8_t *buf_addr;
+		uint64_t phys_addr;
 		uint64_t op_block_offset;
+		uint64_t phys_len;
 
-		/* Set the mbuf elements address and length. Null out the next pointer. */
-		src_mbufs[crypto_index]->buf_addr = current_iov;
-		src_mbufs[crypto_index]->data_len = updated_length = crypto_len;
-		/* TODO: Make this assignment conditional on QAT usage and add an assert. */
-		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, &updated_length);
-		src_mbufs[crypto_index]->next = NULL;
 		/* Store context in every mbuf as we don't know anything about completion order */
 		*RTE_MBUF_DYNFIELD(src_mbufs[crypto_index], g_mbuf_offset, uint64_t *) = (uint64_t)bdev_io;
+
+		phys_len = crypto_len;
+		phys_addr = spdk_vtophys((void *)current_iov, &phys_len);
+		if (phys_addr == SPDK_VTOPHYS_ERROR) {
+			rc = -EFAULT;
+			goto error_attach_session;
+		}
+
+		/* Set the mbuf elements address and length. */
+		rte_pktmbuf_attach_extbuf(src_mbufs[crypto_index], current_iov,
+					  phys_addr, crypto_len, &g_shinfo);
+		rte_pktmbuf_append(src_mbufs[crypto_index], crypto_len);
 
 		/* Set the IV - we use the LBA of the crypto_op */
 		iv_ptr = rte_crypto_op_ctod_offset(crypto_ops[crypto_index], uint8_t *,
@@ -811,27 +826,24 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 
 		/* link the mbuf to the crypto op. */
 		crypto_ops[crypto_index]->sym->m_src = src_mbufs[crypto_index];
-		if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
-			crypto_ops[crypto_index]->sym->m_dst = src_mbufs[crypto_index];
-		} else {
-			crypto_ops[crypto_index]->sym->m_dst = NULL;
-		}
 
 		/* For encrypt, point the destination to a buffer we allocate and redirect the bdev_io
 		 * that will be used to process the write on completion to the same buffer. Setting
 		 * up the en_buffer is a little simpler as we know the destination buffer is single IOV.
 		 */
 		if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
+			buf_addr = io_ctx->aux_buf_iov.iov_base + en_offset;
+			phys_addr = spdk_vtophys((void *)buf_addr, NULL);
+			if (phys_addr == SPDK_VTOPHYS_ERROR) {
+				rc = -EFAULT;
+				goto error_attach_session;
+			}
+			rte_pktmbuf_attach_extbuf(dst_mbufs[crypto_index], buf_addr,
+						  phys_addr, crypto_len, &g_shinfo);
+			rte_pktmbuf_append(dst_mbufs[crypto_index], crypto_len);
 
-			/* Set the relevant destination en_mbuf elements. */
-			dst_mbufs[crypto_index]->buf_addr = io_ctx->aux_buf_iov.iov_base + en_offset;
-			dst_mbufs[crypto_index]->data_len = updated_length = crypto_len;
-			/* TODO: Make this assignment conditional on QAT usage and add an assert. */
-			dst_mbufs[crypto_index]->buf_iova = spdk_vtophys(dst_mbufs[crypto_index]->buf_addr,
-							    &updated_length);
 			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
 			en_offset += crypto_len;
-			dst_mbufs[crypto_index]->next = NULL;
 
 			/* Attach the crypto session to the operation */
 			rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index],
@@ -842,6 +854,8 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			}
 
 		} else {
+			crypto_ops[crypto_index]->sym->m_dst = NULL;
+
 			/* Attach the crypto session to the operation */
 			rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index],
 							      io_ctx->crypto_bdev->session_decrypt);
@@ -926,16 +940,14 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 error_attach_session:
 error_get_ops:
 	if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
-		spdk_mempool_put_bulk(g_mbuf_mp, (void **)&dst_mbufs[0],
-				      cryop_cnt);
+		rte_pktmbuf_free_bulk(dst_mbufs, cryop_cnt);
 	}
 	if (allocated > 0) {
 		rte_mempool_put_bulk(g_crypto_op_mp, (void **)crypto_ops,
 				     allocated);
 	}
 error_get_dst:
-	spdk_mempool_put_bulk(g_mbuf_mp, (void **)&src_mbufs[0],
-			      cryop_cnt);
+	rte_pktmbuf_free_bulk(src_mbufs, cryop_cnt);
 	return rc;
 }
 
@@ -1623,7 +1635,7 @@ vbdev_crypto_finish(void)
 	}
 
 	rte_mempool_free(g_crypto_op_mp);
-	spdk_mempool_free(g_mbuf_mp);
+	rte_mempool_free(g_mbuf_mp);
 	rte_mempool_free(g_session_mp);
 	if (g_session_mp_priv != NULL) {
 		rte_mempool_free(g_session_mp_priv);
