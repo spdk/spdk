@@ -28,7 +28,7 @@ function cleanup() {
 }
 
 function start_spdk_tgt() {
-	"$SPDK_BIN_DIR/spdk_tgt" &
+	"$SPDK_BIN_DIR/spdk_tgt" "$env_ctx" &
 	spdk_tgt_pid=$!
 	trap 'killprocess "$spdk_tgt_pid"; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten "$spdk_tgt_pid"
@@ -119,6 +119,38 @@ function setup_crypto_qat_conf() {
 	RPC
 }
 
+function setup_crypto_mlx5_conf() {
+	local key=$1
+	local block_key
+	local tweak_key
+	if [ ${#key} == 96 ]; then
+		# 96 bytes is 64 + 32 - AES_XTS_256 in hexlified format
+		# Copy first 64 chars into the 'key'. This gives 32 in the
+		# binary or 256 bit.
+		block_key=${key:0:64}
+		# Copy the the rest of the key and pass it as the 'key2'.
+		tweak_key=${key:64:32}
+	elif [ ${#key} == 160 ]; then
+		# 160 bytes is 128 + 32 - AES_XTS_512 in hexlified format
+		# Copy first 128 chars into the 'key'. This gives 64 in the
+		# binary or 512 bit.
+		block_key=${key:0:128}
+		# Copy the the rest of the key and pass it as the 'key2'.
+		tweak_key=${key:128:32}
+	else
+		echo "ERROR: Invalid DEK size for MLX5 crypto setup: ${#key}"
+		echo "ERROR: Supported key sizes for MLX5: 96 bytes (AES_XTS_256) and 160 bytes (AES_XTS_512)."
+		return 1
+	fi
+
+	# Malloc0 will use MLX5 AES_XTS
+	"$rpc_py" <<- RPC
+		bdev_malloc_create -b Malloc0 16 512
+		bdev_crypto_create -c AES_XTS -k2 $tweak_key Malloc0 crypto_ram4 mlx5_pci $block_key
+		bdev_get_bdevs -b Malloc0
+	RPC
+}
+
 function setup_pmem_conf() {
 	if hash pmempool; then
 		rm -f "$SPDK_TEST_STORAGE/spdk-pmem-pool"
@@ -138,7 +170,7 @@ function setup_rbd_conf() {
 }
 
 function bdev_bounds() {
-	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM --json "$conf_file" &
+	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM --json "$conf_file" "$env_ctx" &
 	bdevio_pid=$!
 	trap 'cleanup; killprocess $bdevio_pid; exit 1' SIGINT SIGTERM EXIT
 	echo "Process bdevio pid: $bdevio_pid"
@@ -170,7 +202,7 @@ function nbd_function_test() {
 		fi
 
 		modprobe nbd
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 --json "$conf" &
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 --json "$conf" "$env_ctx" &
 		nbd_pid=$!
 		trap 'cleanup; killprocess $nbd_pid; exit 1' SIGINT SIGTERM EXIT
 		echo "Process nbd pid: $nbd_pid"
@@ -187,8 +219,16 @@ function nbd_function_test() {
 }
 
 function fio_test_suite() {
+	local env_context
+
+	# Make sure that state files and anything else produced by fio test will
+	# stay at the testdir.
+	pushd $testdir
+	trap 'rm -f ./*.state; popd; exit 1' SIGINT SIGTERM EXIT
+
 	# Generate the fio config file given the list of all unclaimed bdevs
-	fio_config_gen $testdir/bdev.fio verify AIO
+	env_context=$(echo "$env_ctx" | sed 's/--env-context=//')
+	fio_config_gen $testdir/bdev.fio verify AIO "$env_context"
 	for b in $(echo $bdevs | jq -r '.name'); do
 		echo "[job_$b]" >> $testdir/bdev.fio
 		echo "filename=$b" >> $testdir/bdev.fio
@@ -197,12 +237,12 @@ function fio_test_suite() {
 	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=$conf_file"
 
 	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
-		--output=$output_dir/blockdev_fio_verify.txt
+		--output=$output_dir/blockdev_fio_verify.txt --aux-path=$output_dir
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 
 	# Generate the fio config file given the list of all unclaimed bdevs that support unmap
-	fio_config_gen $testdir/bdev.fio trim
+	fio_config_gen $testdir/bdev.fio trim "" "$env_context"
 	if [ "$(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name')" != "" ]; then
 		for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
 			echo "[job_$b]" >> $testdir/bdev.fio
@@ -210,12 +250,16 @@ function fio_test_suite() {
 		done
 	else
 		rm -f $testdir/bdev.fio
+		popd
+		trap - SIGINT SIGTERM EXIT
 		return 0
 	fi
 
-	run_test "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt
+	run_test "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt --aux-path=$output_dir
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
+	popd
+	trap - SIGINT SIGTERM EXIT
 }
 
 function get_io_result() {
@@ -289,7 +333,7 @@ function qos_function_test() {
 
 function qos_test_suite() {
 	# Run bdevperf with QoS disabled first
-	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 256 -o 4096 -w randread -t 60 &
+	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 256 -o 4096 -w randread -t 60 "$env_ctx" &
 	QOS_PID=$!
 	echo "Process qos testing pid: $QOS_PID"
 	trap 'cleanup; killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
@@ -324,6 +368,21 @@ else
 fi
 
 test_type=${1:-bdev}
+crypto_device=$2
+wcs_file=$3
+dek=$4
+env_ctx=""
+if [ -n "$crypto_device" ] && [ -n "$wcs_file" ]; then
+	# We need full path here since fio perf test does 'pushd' to the test dir
+	# and crypto login of fio plugin test can fail.
+	wcs_file=$(readlink -f $wcs_file)
+	if [ -f $wcs_file ]; then
+		env_ctx="--env-context=--allow=$crypto_device,class=crypto,wcs_file=$wcs_file"
+	else
+		echo "ERROR: Credentials file $3 is not found!"
+		exit 1
+	fi
+fi
 start_spdk_tgt
 case "$test_type" in
 	bdev)
@@ -340,6 +399,9 @@ case "$test_type" in
 		;;
 	crypto_qat)
 		setup_crypto_qat_conf
+		;;
+	crypto_mlx5)
+		setup_crypto_mlx5_conf $dek
 		;;
 	pmem)
 		setup_pmem_conf
@@ -373,15 +435,15 @@ killprocess "$spdk_tgt_pid"
 
 trap "cleanup" SIGINT SIGTERM EXIT
 
-run_test "bdev_hello_world" $SPDK_EXAMPLE_DIR/hello_bdev --json "$conf_file" -b "$hello_world_bdev"
-run_test "bdev_bounds" bdev_bounds
-run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name"
+run_test "bdev_hello_world" $SPDK_EXAMPLE_DIR/hello_bdev --json "$conf_file" -b "$hello_world_bdev" "$env_ctx"
+run_test "bdev_bounds" bdev_bounds "$env_ctx"
+run_test "bdev_nbd" nbd_function_test $conf_file "$bdevs_name" "$env_ctx"
 if [[ $CONFIG_FIO_PLUGIN == y ]]; then
 	if [ "$test_type" = "nvme" ] || [ "$test_type" = "gpt" ]; then
 		# TODO: once we get real multi-ns drives, re-enable this test for NVMe.
 		echo "skipping fio tests on NVMe due to multi-ns failures."
 	else
-		run_test "bdev_fio" fio_test_suite
+		run_test "bdev_fio" fio_test_suite "$env_ctx"
 	fi
 else
 	echo "FIO not available"
@@ -390,16 +452,16 @@ fi
 
 trap "cleanup" SIGINT SIGTERM EXIT
 
-run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3
-run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1
+run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3 "$env_ctx"
+run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx"
 
 if [[ $test_type == bdev ]]; then
-	run_test "bdev_qos" qos_test_suite
+	run_test "bdev_qos" qos_test_suite "$env_ctx"
 fi
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-# run_test "bdev_reset" $testdir/bdevperf/bdevperf --json "$conf_file" -q 16 -w reset -o 4096 -t 60
+# run_test "bdev_reset" $testdir/bdevperf/bdevperf --json "$conf_file" -q 16 -w reset -o 4096 -t 60 "$env_ctx"
 # fi
 
 # Bdev and configuration cleanup below this line

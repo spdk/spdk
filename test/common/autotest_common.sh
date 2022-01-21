@@ -718,7 +718,7 @@ function waitforlisten() {
 	xtrace_disable
 	local ret=0
 	local i
-	for ((i = 40; i != 0; i--)); do
+	for ((i = 100; i != 0; i--)); do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
@@ -1122,6 +1122,7 @@ function fio_config_gen() {
 	local config_file=$1
 	local workload=$2
 	local bdev_type=$3
+	local env_context=$4
 	local fio_dir=$CONFIG_FIO_SOURCE_DIR
 
 	if [ -e "$config_file" ]; then
@@ -1133,11 +1134,16 @@ function fio_config_gen() {
 		workload=randrw
 	fi
 
+	if [ -n "$env_context" ]; then
+		env_context="env_context=$env_context"
+	fi
+
 	touch $1
 
 	cat > $1 << EOL
 [global]
 thread=1
+$env_context
 group_reporting=1
 direct=1
 norandommap=1
