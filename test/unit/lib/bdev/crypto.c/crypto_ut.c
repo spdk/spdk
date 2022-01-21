@@ -55,6 +55,103 @@ int ut_rte_crypto_op_attach_sym_session = 0;
 int ut_rte_cryptodev_info_get = 0;
 bool ut_rte_cryptodev_info_get_mocked = false;
 
+void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt);
+#define rte_pktmbuf_free_bulk mock_rte_pktmbuf_free_bulk
+void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt)
+{
+	spdk_mempool_put_bulk((struct spdk_mempool *)m[0]->pool, (void **)m, cnt);
+}
+
+void mock_rte_pktmbuf_free(struct rte_mbuf *m);
+#define rte_pktmbuf_free mock_rte_pktmbuf_free
+void mock_rte_pktmbuf_free(struct rte_mbuf *m)
+{
+	spdk_mempool_put((struct spdk_mempool *)m->pool, (void *)m);
+}
+
+void rte_mempool_free(struct rte_mempool *mp)
+{
+	spdk_mempool_free((struct spdk_mempool *)mp);
+}
+
+int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
+				unsigned count);
+#define rte_pktmbuf_alloc_bulk mock_rte_pktmbuf_alloc_bulk
+int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
+				unsigned count)
+{
+	int rc;
+
+	rc = spdk_mempool_get_bulk((struct spdk_mempool *)pool, (void **)mbufs, count);
+	if (rc) {
+		return rc;
+	}
+	for (unsigned i = 0; i < count; i++) {
+		rte_pktmbuf_reset(mbufs[i]);
+		mbufs[i]->pool = pool;
+	}
+	return rc;
+}
+
+struct rte_mempool *
+rte_cryptodev_sym_session_pool_create(const char *name, uint32_t nb_elts,
+				      uint32_t elt_size, uint32_t cache_size,
+				      uint16_t priv_size, int socket_id)
+{
+	struct spdk_mempool *tmp;
+
+	tmp = spdk_mempool_create(name, nb_elts, elt_size + priv_size,
+				  cache_size, socket_id);
+
+	return (struct rte_mempool *)tmp;
+
+}
+
+struct rte_mempool *
+rte_pktmbuf_pool_create(const char *name, unsigned n, unsigned cache_size,
+			uint16_t priv_size, uint16_t data_room_size, int socket_id)
+{
+	struct spdk_mempool *tmp;
+
+	tmp = spdk_mempool_create(name, n, sizeof(struct rte_mbuf) + priv_size,
+				  cache_size, socket_id);
+
+	return (struct rte_mempool *)tmp;
+}
+
+struct rte_mempool *
+rte_mempool_create(const char *name, unsigned n, unsigned elt_size,
+		   unsigned cache_size, unsigned private_data_size,
+		   rte_mempool_ctor_t *mp_init, void *mp_init_arg,
+		   rte_mempool_obj_cb_t *obj_init, void *obj_init_arg,
+		   int socket_id, unsigned flags)
+{
+	struct spdk_mempool *tmp;
+
+	tmp = spdk_mempool_create(name, n, elt_size + private_data_size,
+				  cache_size, socket_id);
+
+	return (struct rte_mempool *)tmp;
+}
+
+DEFINE_RETURN_MOCK(rte_crypto_op_pool_create, struct rte_mempool *);
+struct rte_mempool *
+rte_crypto_op_pool_create(const char *name, enum rte_crypto_op_type type,
+			  unsigned nb_elts, unsigned cache_size,
+			  uint16_t priv_size, int socket_id)
+{
+	struct spdk_mempool *tmp;
+
+	HANDLE_RETURN_MOCK(rte_crypto_op_pool_create);
+
+	tmp = spdk_mempool_create(name, nb_elts,
+				  sizeof(struct rte_crypto_op) + priv_size,
+				  cache_size, socket_id);
+
+	return (struct rte_mempool *)tmp;
+
+}
+
 /* Those functions are defined as static inline in DPDK, so we can't
  * mock them straight away. We use defines to redirect them into
  * our custom functions.
@@ -169,25 +266,11 @@ DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *vbdev), 0);
 DEFINE_STUB(rte_mbuf_dynfield_register, int, (const struct rte_mbuf_dynfield *params),
 	    DPDK_DYNFIELD_OFFSET);
 DEFINE_STUB(rte_cryptodev_count, uint8_t, (void), 0);
-DEFINE_STUB_V(rte_mempool_free, (struct rte_mempool *mp));
-DEFINE_STUB(rte_mempool_create, struct rte_mempool *, (const char *name, unsigned n,
-		unsigned elt_size,
-		unsigned cache_size, unsigned private_data_size,
-		rte_mempool_ctor_t *mp_init, void *mp_init_arg,
-		rte_mempool_obj_cb_t *obj_init, void *obj_init_arg,
-		int socket_id, unsigned flags), (struct rte_mempool *)1);
 DEFINE_STUB(rte_socket_id, unsigned, (void), 0);
-DEFINE_STUB(rte_crypto_op_pool_create, struct rte_mempool *,
-	    (const char *name, enum rte_crypto_op_type type, unsigned nb_elts,
-	     unsigned cache_size, uint16_t priv_size, int socket_id), (struct rte_mempool *)1);
 DEFINE_STUB(rte_cryptodev_device_count_by_driver, uint8_t, (uint8_t driver_id), 0);
 DEFINE_STUB(rte_cryptodev_configure, int, (uint8_t dev_id, struct rte_cryptodev_config *config), 0);
 DEFINE_STUB(rte_cryptodev_queue_pair_setup, int, (uint8_t dev_id, uint16_t queue_pair_id,
 		const struct rte_cryptodev_qp_conf *qp_conf, int socket_id), 0);
-DEFINE_STUB(rte_cryptodev_sym_session_pool_create, struct rte_mempool *, (const char *name,
-		uint32_t nb_elts,
-		uint32_t elt_size, uint32_t cache_size, uint16_t priv_size,
-		int socket_id), (struct rte_mempool *)1);
 DEFINE_STUB(rte_cryptodev_start, int, (uint8_t dev_id), 0);
 DEFINE_STUB_V(rte_cryptodev_stop, (uint8_t dev_id));
 DEFINE_STUB(rte_cryptodev_close, int, (uint8_t dev_id), 0);
@@ -330,10 +413,9 @@ test_setup(void)
 	TAILQ_INIT(&g_crypto_ch->queued_cry_ops);
 
 	/* Allocate a real mbuf pool so we can test error paths */
-	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
-					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					SPDK_ENV_SOCKET_ID_ANY);
-
+	g_mbuf_mp = rte_pktmbuf_pool_create("mbuf_mp", NUM_MBUFS,
+					    (unsigned)SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					    0, 0, SPDK_ENV_SOCKET_ID_ANY);
 	/* Instead of allocating real rte mempools for these, it's easier and provides the
 	 * same coverage just calloc them here.
 	 */
@@ -358,7 +440,24 @@ test_cleanup(void)
 {
 	int i;
 
-	spdk_mempool_free(g_mbuf_mp);
+	if (g_crypto_op_mp) {
+		rte_mempool_free(g_crypto_op_mp);
+		g_crypto_op_mp = NULL;
+	}
+	if (g_mbuf_mp) {
+		rte_mempool_free(g_mbuf_mp);
+		g_mbuf_mp = NULL;
+	}
+	if (g_session_mp) {
+		rte_mempool_free(g_session_mp);
+		g_session_mp = NULL;
+	}
+	if (g_session_mp_priv != NULL) {
+		/* g_session_mp_priv may or may not be set depending on the DPDK version */
+		rte_mempool_free(g_session_mp_priv);
+		g_session_mp_priv = NULL;
+	}
+
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
 		free(g_test_crypto_ops[i]);
 	}
@@ -378,6 +477,7 @@ test_error_paths(void)
 	g_bdev_io->u.bdev.iovcnt = 1;
 	g_bdev_io->u.bdev.num_blocks = 1;
 	g_bdev_io->u.bdev.iovs[0].iov_len = 512;
+	g_bdev_io->u.bdev.iovs[0].iov_base = (void *)0xDEADBEEF;
 	g_crypto_bdev.crypto_bdev.blocklen = 512;
 	g_bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	g_enqueue_mock = g_dequeue_mock = ut_rte_crypto_op_bulk_alloc = 1;
@@ -451,8 +551,8 @@ test_simple_write(void)
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->buf_addr != NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->data_len == 512);
 
-	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
-	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_dst);
+	rte_pktmbuf_free(g_test_crypto_ops[0]->sym->m_src);
+	rte_pktmbuf_free(g_test_crypto_ops[0]->sym->m_dst);
 }
 
 static void
@@ -480,7 +580,7 @@ test_simple_read(void)
 				     uint64_t *) == (uint64_t)g_bdev_io);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst == NULL);
 
-	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
+	rte_pktmbuf_free(g_test_crypto_ops[0]->sym->m_src);
 }
 
 static void
@@ -514,7 +614,7 @@ test_large_rw(void)
 		CU_ASSERT(*RTE_MBUF_DYNFIELD(g_test_crypto_ops[i]->sym->m_src, g_mbuf_offset,
 					     uint64_t *) == (uint64_t)g_bdev_io);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst == NULL);
-		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
+		rte_pktmbuf_free(g_test_crypto_ops[i]->sym->m_src);
 	}
 
 	/* Multi block size write, multi-element */
@@ -545,8 +645,8 @@ test_large_rw(void)
 		CU_ASSERT(g_io_ctx->aux_num_blocks == num_blocks);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst->buf_addr != NULL);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst->data_len == block_len);
-		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
-		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
+		rte_pktmbuf_free(g_test_crypto_ops[i]->sym->m_src);
+		rte_pktmbuf_free(g_test_crypto_ops[i]->sym->m_dst);
 	}
 }
 
@@ -600,8 +700,8 @@ test_dev_full(void)
 	CU_ASSERT(*RTE_MBUF_DYNFIELD(sym_op->m_src, g_mbuf_offset, uint64_t *) == (uint64_t)g_bdev_io);
 	CU_ASSERT(sym_op->m_dst == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_crypto_ch->queued_cry_ops) == true);
-	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
-	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[1]->sym->m_src);
+	rte_pktmbuf_free(g_test_crypto_ops[0]->sym->m_src);
+	rte_pktmbuf_free(g_test_crypto_ops[1]->sym->m_src);
 
 	/* Non-busy reason for enqueue failure, all were rejected. */
 	g_enqueue_mock = 0;
@@ -647,7 +747,7 @@ test_crazy_rw(void)
 					     uint64_t *) == (uint64_t)g_bdev_io);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src == g_test_crypto_ops[i]->sym->m_src);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst == NULL);
-		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
+		rte_pktmbuf_free(g_test_crypto_ops[i]->sym->m_src);
 	}
 
 	/* Multi block size write, single element strange IOV makeup */
@@ -682,8 +782,8 @@ test_crazy_rw(void)
 					     uint64_t *) == (uint64_t)g_bdev_io);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src == g_test_crypto_ops[i]->sym->m_src);
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_dst == g_test_crypto_ops[i]->sym->m_dst);
-		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
-		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
+		rte_pktmbuf_free(g_test_crypto_ops[i]->sym->m_src);
+		rte_pktmbuf_free(g_test_crypto_ops[i]->sym->m_dst);
 	}
 }
 
@@ -728,13 +828,22 @@ test_reset(void)
 static void
 init_cleanup(void)
 {
-	spdk_mempool_free(g_mbuf_mp);
-	rte_mempool_free(g_session_mp);
-	g_mbuf_mp = NULL;
-	g_session_mp = NULL;
+	if (g_crypto_op_mp) {
+		rte_mempool_free(g_crypto_op_mp);
+		g_crypto_op_mp = NULL;
+	}
+	if (g_mbuf_mp) {
+		rte_mempool_free(g_mbuf_mp);
+		g_mbuf_mp = NULL;
+	}
+	if (g_session_mp) {
+		rte_mempool_free(g_session_mp);
+		g_session_mp = NULL;
+	}
 	if (g_session_mp_priv != NULL) {
 		/* g_session_mp_priv may or may not be set depending on the DPDK version */
 		rte_mempool_free(g_session_mp_priv);
+		g_session_mp_priv = NULL;
 	}
 }
 
@@ -742,7 +851,7 @@ static void
 test_initdrivers(void)
 {
 	int rc;
-	static struct spdk_mempool *orig_mbuf_mp;
+	static struct rte_mempool *orig_mbuf_mp;
 	static struct rte_mempool *orig_session_mp;
 	static struct rte_mempool *orig_session_mp_priv;
 
@@ -791,7 +900,7 @@ test_initdrivers(void)
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
 	CU_ASSERT(g_session_mp_priv == NULL);
-	MOCK_SET(rte_crypto_op_pool_create, (struct rte_mempool *)1);
+	MOCK_CLEAR(rte_crypto_op_pool_create);
 
 	/* Check resources are not sufficient */
 	MOCK_CLEARED_ASSERT(spdk_mempool_create);
@@ -928,7 +1037,7 @@ test_poller(void)
 
 	/* test regular 1 op to dequeue and complete */
 	g_dequeue_mock = g_enqueue_mock = 1;
-	spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], 1);
+	rte_pktmbuf_alloc_bulk(g_mbuf_mp, src_mbufs, 1);
 	g_test_crypto_ops[0]->sym->m_src = src_mbufs[0];
 	*RTE_MBUF_DYNFIELD(g_test_crypto_ops[0]->sym->m_src, g_mbuf_offset,
 			   uint64_t *) = (uintptr_t)g_bdev_io;
@@ -959,7 +1068,7 @@ test_poller(void)
 	/* 2 to dequeue but 2nd one failed */
 	g_dequeue_mock = g_enqueue_mock = 2;
 	g_io_ctx->cryop_cnt_remaining = 2;
-	spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], 2);
+	rte_pktmbuf_alloc_bulk(g_mbuf_mp, src_mbufs, 2);
 	g_test_crypto_ops[0]->sym->m_src = src_mbufs[0];
 	*RTE_MBUF_DYNFIELD(g_test_crypto_ops[0]->sym->m_src, g_mbuf_offset,
 			   uint64_t *) = (uint64_t)g_bdev_io;
