@@ -21,7 +21,7 @@ resource have no chance to be released by applications, you may need to release 
 The following diagram shows relations between different parts of iSCSI structure described in this
 document.
 
-![iSCSI structure](iscsi.svg)
+![iSCSI structure](img/iscsi.svg)
 
 ### Assigning CPU Cores to the iSCSI Target {#iscsi_config_lcore}
 
