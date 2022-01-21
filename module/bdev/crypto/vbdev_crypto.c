@@ -539,7 +539,11 @@ _crypto_operation_complete(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_io *free_me = io_ctx->read_io;
 	int rc = 0;
 
-	TAILQ_REMOVE(&crypto_ch->pending_cry_ios, bdev_io, module_link);
+	/* Can also be called from the crypto_dev_poller() to fail the stuck re-enqueue ops IO. */
+	if (io_ctx->on_pending_list) {
+		TAILQ_REMOVE(&crypto_ch->pending_cry_ios, bdev_io, module_link);
+		io_ctx->on_pending_list = false;
+	}
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 
@@ -575,6 +579,43 @@ _crypto_operation_complete(struct spdk_bdev_io *bdev_io)
 
 	if (rc) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
+cancel_queued_crypto_ops(struct crypto_io_channel *crypto_ch, struct spdk_bdev_io *bdev_io)
+{
+	struct rte_mbuf *mbufs_to_free[2 * MAX_DEQUEUE_BURST_SIZE];
+	struct rte_crypto_op *dequeued_ops[MAX_DEQUEUE_BURST_SIZE];
+	struct vbdev_crypto_op *op_to_cancel, *tmp_op;
+	struct rte_crypto_op *crypto_op;
+	int num_mbufs, num_dequeued_ops;
+
+	/* Remove all ops from the failed IO. Since we don't know the
+	 * order we have to check them all. */
+	num_mbufs = 0;
+	num_dequeued_ops = 0;
+	TAILQ_FOREACH_SAFE(op_to_cancel, &crypto_ch->queued_cry_ops, link, tmp_op) {
+		/* Checking if this is our op. One IO contains multiple ops. */
+		if (bdev_io == op_to_cancel->bdev_io) {
+			crypto_op = op_to_cancel->crypto_op;
+			TAILQ_REMOVE(&crypto_ch->queued_cry_ops, op_to_cancel, link);
+
+			/* Populating lists for freeing mbufs and ops. */
+			mbufs_to_free[num_mbufs++] = (void *)crypto_op->sym->m_src;
+			if (crypto_op->sym->m_dst) {
+				mbufs_to_free[num_mbufs++] = (void *)crypto_op->sym->m_dst;
+			}
+			dequeued_ops[num_dequeued_ops++] = crypto_op;
+		}
+	}
+
+	/* Now bulk free both mbufs and crypto operations. */
+	if (num_dequeued_ops > 0) {
+		rte_mempool_put_bulk(g_crypto_op_mp, (void **)dequeued_ops,
+				     num_dequeued_ops);
+		assert(num_mbufs > 0);
+		rte_pktmbuf_free_bulk(mbufs_to_free, num_mbufs);
 	}
 }
 
@@ -667,7 +708,8 @@ crypto_dev_poller(void *args)
 	/* Check if there are any pending crypto ops to process */
 	while (!TAILQ_EMPTY(&crypto_ch->queued_cry_ops)) {
 		op_to_resubmit = TAILQ_FIRST(&crypto_ch->queued_cry_ops);
-		io_ctx = (struct crypto_bdev_io *)op_to_resubmit->bdev_io->driver_ctx;
+		bdev_io = op_to_resubmit->bdev_io;
+		io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 		num_enqueued_ops = rte_cryptodev_enqueue_burst(op_to_resubmit->cdev_id,
 				   op_to_resubmit->qp,
 				   &op_to_resubmit->crypto_op,
@@ -677,13 +719,28 @@ crypto_dev_poller(void *args)
 			 * of many crypto ops.
 			 */
 			if (io_ctx->on_pending_list == false) {
-				TAILQ_INSERT_TAIL(&crypto_ch->pending_cry_ios, op_to_resubmit->bdev_io, module_link);
+				TAILQ_INSERT_TAIL(&crypto_ch->pending_cry_ios, bdev_io, module_link);
 				io_ctx->on_pending_list = true;
 			}
 			TAILQ_REMOVE(&crypto_ch->queued_cry_ops, op_to_resubmit, link);
 		} else {
-			/* if we couldn't get one, just break and try again later. */
-			break;
+			if (op_to_resubmit->crypto_op->status == RTE_CRYPTO_OP_STATUS_NOT_PROCESSED) {
+				/* If we couldn't get one, just break and try again later. */
+				break;
+			} else {
+				/* Something is really wrong with the op. Most probably the
+				 * mbuf is broken or the HW is not able to process the request.
+				 * Fail the IO and remove its ops from the queued ops list. */
+				io_ctx->bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+				cancel_queued_crypto_ops(crypto_ch, bdev_io);
+
+				/* Fail the IO if there is nothing left on device. */
+				if (--io_ctx->cryop_cnt_remaining == 0) {
+					_crypto_operation_complete(bdev_io);
+				}
+			}
+
 		}
 	}
 
