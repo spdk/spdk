@@ -169,7 +169,7 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 static int
 idxd_init(void)
 {
-	spdk_idxd_set_config(0, g_idxd_kernel_mode);
+	spdk_idxd_set_config(g_idxd_kernel_mode);
 
 	if (spdk_idxd_probe(NULL, attach_cb) != 0) {
 		fprintf(stderr, "idxd_probe() failed\n");

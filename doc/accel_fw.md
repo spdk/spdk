@@ -78,62 +78,48 @@ To use the IOAT engine, use the RPC [`ioat_scan_accel_engine`](https://spdk.io/d
 
 ### IDXD Module {#accel_idxd}
 
-To use the DSA engine, use the RPC [`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html). With an optional parameter
-of `-c` and providing a configuration number of either 0 or 1, users can determine which pre-defined configuration can be used.
-With an optional parameter of `-k` to use kernel or user space driver. These pre-defined configurations determine how the DSA engine
-will be setup in terms of work queues and engines.  The DSA engine is very flexible allowing for various configurations of
-these elements to either account for different quality of service requirements or to isolate hardware paths where the back
-end media is of varying latency (i.e. persistent memory vs DRAM).  The pre-defined configurations are as follows:
+To use the DSA engine, use the RPC
+[`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html). By default, this
+will attempt to load the SPDK user-space idxd driver. To use the built-in
+kernel driver on Linux, add the `-k` parameter. See the next section for
+details on using the kernel driver.
 
-0: A single work queue backed with four DSA engines.  This is a generic configuration
-that enables the hardware to best determine which engine to use as it pulls in new
-operations.
-
-1: Two separate work queues each backed with two DSA engines. This is another
-generic configuration that is documented in the specification and allows the
-application to partition submissions across two work queues. This would be useful
-when different priorities might be desired per group.
-
-There are several other configurations that are possible that include quality
-of service parameters on the work queues that are not currently utilized by
-the module. Specialized use of DSA may require different configurations that
-can be added to the module as needed.
-
-When a new channel starts, a DSA device will be assigned to the channel. The accel
-idxd module has been tuned for the most likely best performance case. The result
-is that there is a limited number of channels that can be supported based on the
-number of DSA devices in the system.  Additionally, for best performance, the accel
-idxd module will only use DSA devices on the same socket as the requesting
-channel/thread.  If an error occurs on initialization indicating that there are no
-more DSA devices available either try fewer threads or, if on a 2 socket system,
-try spreading threads across cores if possible.
+The DSA hardware supports a limited queue depth and channels. This means that
+only a limited number of `spdk_thread`s will be able to acquire a channel.
+Design software to deal with the inability to get a channel.
 
 ### How to use kernel idxd driver {#accel_idxd_kernel}
 
-There are several dependencies to leverage kernel idxd driver for driving DSA devices.
+There are several dependencies to leverage the Linux idxd driver for driving DSA devices.
 
-1 Linux kernel support: To leverage kernel space idxd driver, you need to have a Linux kernel with
-`idxd` driver loaded with scalable mode. And currently SPDK uses the character device while `idxd` driver is
-enabled in the kernel. So when booting the machine, we need to add additional configuration in
-the grub, i.e, revise the kernel boot commandline `intel_iommu=on,sm_on` with VT-d turned on in BIOS.
+1 Linux kernel support: You need to have a Linux kernel with the `idxd` driver
+loaded. Futher, add the following command line options to the kernel boot
+commands:
 
-2 User library dependency: Users need to install `idxd-config` library. For example, users can
-download the library from [idxd-config repo](https://github.com/intel/idxd-config). After the
-library is installed, users can use the `accel-config` command to configure the work queues(WQs)
-of the idxd devices managed by the kernel with the following steps:
+```bash
+intel_iommu=on,sm_on
+```
+
+2 User library dependency: Users need to install the `accel-config` library.
+This is often packaged, but the source is available on
+[GitHub](https://github.com/intel/idxd-config). After the library is installed,
+users can use the `accel-config` command to configure the work queues(WQs) of
+the idxd devices managed by the kernel with the following steps:
 
 ```bash
 accel-config disable-wq dsa0/wq0.1
 accel-config disable-device dsa0
-accel-config config-wq --group-id=0 --mode=dedicated --wq-size=16 --type=user --name="MyApp1"
+accel-config config-wq --group-id=0 --mode=dedicated --wq-size=128 --type=user --name="MyApp1"
  --priority=10 --block-on-fault=1 dsa0/wq0.1
+accel-config config-engine dsa0/engine0.0 --group-id=0
 accel-config config-engine dsa0/engine0.1 --group-id=0
+accel-config config-engine dsa0/engine0.2 --group-id=0
+accel-config config-engine dsa0/engine0.3 --group-id=0
 accel-config enable-device dsa0
 accel-config enable-wq dsa0/wq0.1
 ```
 
-For more details on the usage of `idxd-config`, please refer to
-[idxd-config usage](https://github.com/intel/idxd-config/tree/master/Documentation/accfg).
+DSA can be configured in many ways, but the above configuration is needed for use with SPDK.
 
 ### Software Module {#accel_sw}
 

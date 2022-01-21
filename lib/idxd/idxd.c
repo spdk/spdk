@@ -51,31 +51,6 @@
 static STAILQ_HEAD(, spdk_idxd_impl) g_idxd_impls = STAILQ_HEAD_INITIALIZER(g_idxd_impls);
 static struct spdk_idxd_impl *g_idxd_impl;
 
-/*
- * g_dev_cfg gives us 2 pre-set configurations of DSA to choose from
- * via RPC.
- */
-struct device_config *g_dev_cfg = NULL;
-
-/*
- * Pre-built configurations. Variations depend on various factors
- * including how many different types of target latency profiles there
- * are, how many different QOS requirements there might be, etc.
- */
-struct device_config g_dev_cfg0 = {
-	.config_num = 0,
-	.num_groups = 1,
-	.total_wqs = 1,
-	.total_engines = 4,
-};
-
-struct device_config g_dev_cfg1 = {
-	.config_num = 1,
-	.num_groups = 2,
-	.total_wqs = 4,
-	.total_engines = 4,
-};
-
 uint32_t
 spdk_idxd_get_socket(struct spdk_idxd_device *idxd)
 {
@@ -146,16 +121,10 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	chan->portal_offset = (idxd->num_channels * PORTAL_STRIDE) & PORTAL_MASK;
 	idxd->num_channels++;
 
-	/* Round robin the WQ selection for the chan on this IDXD device. */
-	idxd->wq_id++;
-	if (idxd->wq_id == g_dev_cfg->total_wqs) {
-		idxd->wq_id = 0;
-	}
-
 	pthread_mutex_unlock(&idxd->num_channels_lock);
 
 	/* Allocate descriptors and completions */
-	num_descriptors = idxd->queues[idxd->wq_id].wqcfg.wq_size / idxd->chan_per_device;
+	num_descriptors = idxd->queues[0].wqcfg.wq_size / idxd->chan_per_device;
 	chan->desc_base = desc = spdk_zmalloc(num_descriptors * sizeof(struct idxd_hw_desc),
 					      0x40, NULL,
 					      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
@@ -295,9 +264,8 @@ idxd_get_impl_by_name(const char *impl_name)
 	return NULL;
 }
 
-/* Called via RPC to select a pre-defined configuration. */
 void
-spdk_idxd_set_config(uint32_t config_num, bool kernel_mode)
+spdk_idxd_set_config(bool kernel_mode)
 {
 	if (kernel_mode) {
 		g_idxd_impl = idxd_get_impl_by_name(KERNEL_DRIVER_NAME);
@@ -310,21 +278,6 @@ spdk_idxd_set_config(uint32_t config_num, bool kernel_mode)
 			    kernel_mode ? KERNEL_DRIVER_NAME : USERSPACE_DRIVER_NAME);
 		return;
 	}
-
-	switch (config_num) {
-	case 0:
-		g_dev_cfg = &g_dev_cfg0;
-		break;
-	case 1:
-		g_dev_cfg = &g_dev_cfg1;
-		break;
-	default:
-		g_dev_cfg = &g_dev_cfg0;
-		SPDK_ERRLOG("Invalid config, using default\n");
-		break;
-	}
-
-	g_idxd_impl->set_config(g_dev_cfg, config_num);
 }
 
 static void

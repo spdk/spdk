@@ -45,8 +45,6 @@
 extern "C" {
 #endif
 
-#define IDXD_MAX_CONFIG_NUM 1
-
 enum dsa_opcode {
 	IDXD_OPCODE_NOOP	= 0,
 	IDXD_OPCODE_BATCH	= 1,

@@ -50,7 +50,6 @@
 
 static bool g_idxd_enable = false;
 static bool g_kernel_mode = false;
-uint32_t g_config_number;
 
 enum channel_state {
 	IDXD_CHANNEL_ACTIVE,
@@ -388,17 +387,11 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 }
 
 void
-accel_engine_idxd_enable_probe(uint32_t config_number, bool kernel_mode)
+accel_engine_idxd_enable_probe(bool kernel_mode)
 {
-	if (config_number > IDXD_MAX_CONFIG_NUM) {
-		SPDK_ERRLOG("Invalid config number, using default of 0\n");
-		config_number = 0;
-	}
-
-	g_config_number = config_number;
 	g_kernel_mode = kernel_mode;
 	g_idxd_enable = true;
-	spdk_idxd_set_config(g_config_number, g_kernel_mode);
+	spdk_idxd_set_config(g_kernel_mode);
 }
 
 static int
@@ -452,7 +445,6 @@ accel_engine_idxd_write_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "idxd_scan_accel_engine");
 		spdk_json_write_named_object_begin(w, "params");
-		spdk_json_write_named_uint32(w, "config_number", g_config_number);
 		spdk_json_write_named_uint32(w, "config_kernel_mode", g_kernel_mode);
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);

@@ -48,7 +48,12 @@
 
 #define MAX_DSA_DEVICE_ID  16
 
-struct device_config g_kernel_dev_cfg = {};
+struct device_config g_kernel_dev_cfg = {
+	.config_num = 0,
+	.num_groups = 1,
+	.total_wqs = 1,
+	.total_engines = 4,
+};
 
 struct spdk_wq_context {
 	struct accfg_wq *wq;
@@ -84,8 +89,6 @@ static uint32_t bsr(uint32_t val)
 	msb = (val == 0) ? 0 : 32 - __builtin_clz(val);
 	return msb - 1;
 }
-
-static void init_idxd_impl(struct spdk_idxd_device *idxd);
 
 static int
 dsa_setup_single_wq(struct spdk_kernel_idxd_device *kernel_idxd, struct accfg_wq *wq, int shared)
@@ -285,6 +288,41 @@ kernel_idxd_wq_config(struct spdk_kernel_idxd_device *kernel_idxd)
 	return 0;
 }
 
+static int _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id);
+
+static int
+kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
+{
+	int i;
+
+	for (i = 0; i < MAX_DSA_DEVICE_ID; i++) {
+		_kernel_idxd_probe(cb_ctx, attach_cb, i);
+	}
+
+	return 0;
+}
+
+static void
+kernel_idxd_dump_sw_error(struct spdk_idxd_device *idxd, void *portal)
+{
+	/* Need to be enhanced later */
+}
+
+static char *
+kernel_idxd_portal_get_addr(struct spdk_idxd_device *idxd)
+{
+	struct spdk_kernel_idxd_device *kernel_idxd = __kernel_idxd(idxd);
+	return (char *)kernel_idxd->wq_ctx[0].wq_reg;
+}
+
+static struct spdk_idxd_impl g_kernel_idxd_impl = {
+	.name			= "kernel",
+	.probe			= kernel_idxd_probe,
+	.destruct		= kernel_idxd_device_destruct,
+	.dump_sw_error		= kernel_idxd_dump_sw_error,
+	.portal_get_addr	= kernel_idxd_portal_get_addr,
+};
+
 static int
 _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id)
 {
@@ -312,7 +350,7 @@ _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id)
 		goto end;
 	}
 
-	init_idxd_impl(&kernel_idxd->idxd);
+	kernel_idxd->idxd.impl = &g_kernel_idxd_impl;
 	kernel_idxd->ctx = ctx;
 
 	/* Supporting non-shared mode first.
@@ -339,53 +377,6 @@ _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id)
 end:
 	kernel_idxd_device_destruct(&kernel_idxd->idxd);
 	return rc;
-}
-
-static int
-kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
-{
-	int i;
-
-	for (i = 0; i < MAX_DSA_DEVICE_ID; i++) {
-		_kernel_idxd_probe(cb_ctx, attach_cb, i);
-	}
-
-	return 0;
-}
-
-static void
-kernel_idxd_dump_sw_error(struct spdk_idxd_device *idxd, void *portal)
-{
-	/* Need to be enhanced later */
-}
-
-static void
-kernel_idxd_set_config(struct device_config *dev_cfg, uint32_t config_num)
-{
-	g_kernel_dev_cfg = *dev_cfg;
-}
-
-static char *
-kernel_idxd_portal_get_addr(struct spdk_idxd_device *idxd)
-{
-	struct spdk_kernel_idxd_device *kernel_idxd = __kernel_idxd(idxd);
-	assert(idxd->wq_id <= (g_kernel_dev_cfg.total_wqs - 1));
-	return (char *)kernel_idxd->wq_ctx[idxd->wq_id].wq_reg;
-}
-
-static struct spdk_idxd_impl g_kernel_idxd_impl = {
-	.name			= "kernel",
-	.set_config		= kernel_idxd_set_config,
-	.probe			= kernel_idxd_probe,
-	.destruct		= kernel_idxd_device_destruct,
-	.dump_sw_error		= kernel_idxd_dump_sw_error,
-	.portal_get_addr	= kernel_idxd_portal_get_addr,
-};
-
-static void
-init_idxd_impl(struct spdk_idxd_device *idxd)
-{
-	idxd->impl = &g_kernel_idxd_impl;
 }
 
 SPDK_IDXD_IMPL_REGISTER(kernel, &g_kernel_idxd_impl);

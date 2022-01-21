@@ -1230,7 +1230,7 @@ class SPDKTarget(Target):
                                            nvme_adminq_poll_period_us=100000, retry_count=4)
 
         if self.enable_idxd:
-            rpc.idxd.idxd_scan_accel_engine(self.client, config_number=0, config_kernel_mode=None)
+            rpc.idxd.idxd_scan_accel_engine(self.client, config_kernel_mode=None)
             self.log_print("Target IDXD accel engine enabled")
 
         rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)

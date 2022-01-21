@@ -157,7 +157,6 @@ struct idxd_wq {
 
 struct spdk_idxd_impl {
 	const char *name;
-	void (*set_config)(struct device_config *g_dev_cfg, uint32_t config_num);
 	int (*probe)(void *cb_ctx, spdk_idxd_attach_cb attach_cb);
 	void (*destruct)(struct spdk_idxd_device *idxd);
 	void (*dump_sw_error)(struct spdk_idxd_device *idxd, void *portal);
@@ -168,9 +167,8 @@ struct spdk_idxd_impl {
 
 struct spdk_idxd_device {
 	struct spdk_idxd_impl		*impl;
-	void				*portals;
-	uint32_t                        socket_id;
-	int				wq_id;
+	void				*portal;
+	uint32_t			socket_id;
 	uint32_t			num_channels;
 	uint32_t			total_wq_size;
 	uint32_t			chan_per_device;

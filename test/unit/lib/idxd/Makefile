@@ -34,11 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = idxd.c idxd_user.c
-
-ifeq ($(CONFIG_IDXD_KERNEL),y)
-DIRS-y += idxd_kernel.c
-endif
+DIRS-y = idxd_user.c
 
 .PHONY: all clean $(DIRS-y)
 

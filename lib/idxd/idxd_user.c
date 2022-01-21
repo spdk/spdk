@@ -62,7 +62,12 @@ typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev
 #define __user_idxd(idxd) (struct spdk_user_idxd_device *)idxd
 
 pthread_mutex_t	g_driver_lock = PTHREAD_MUTEX_INITIALIZER;
-static struct device_config g_user_dev_cfg = {};
+struct device_config g_user_dev_cfg = {
+	.config_num = 0,
+	.num_groups = 1,
+	.total_wqs = 1,
+	.total_engines = 4,
+};
 
 static struct spdk_idxd_device *idxd_attach(struct spdk_pci_device *device);
 
@@ -96,12 +101,6 @@ _idxd_write_8(struct spdk_idxd_device *idxd, uint32_t offset, uint64_t value)
 	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
 	spdk_mmio_write_8((uint64_t *)(user_idxd->reg_base + offset), value);
-}
-
-static void
-user_idxd_set_config(struct device_config *dev_cfg, uint32_t config_num)
-{
-	g_user_dev_cfg = *dev_cfg;
 }
 
 /* Used for control commands, not for descriptor submission. */
@@ -142,7 +141,7 @@ idxd_unmap_pci_bar(struct spdk_idxd_device *idxd, int bar)
 	if (bar == IDXD_MMIO_BAR) {
 		addr = (void *)user_idxd->reg_base;
 	} else if (bar == IDXD_WQ_BAR) {
-		addr = (void *)idxd->portals;
+		addr = (void *)idxd->portal;
 	}
 
 	if (addr) {
@@ -175,7 +174,7 @@ idxd_map_pci_bars(struct spdk_idxd_device *idxd)
 		}
 		return -EINVAL;
 	}
-	idxd->portals = addr;
+	idxd->portal = addr;
 
 	return 0;
 }
@@ -547,12 +546,11 @@ user_idxd_dump_sw_err(struct spdk_idxd_device *idxd, void *portal)
 static char *
 user_idxd_portal_get_addr(struct spdk_idxd_device *idxd)
 {
-	return (char *)idxd->portals + idxd->wq_id * WQ_TOTAL_PORTAL_SIZE;
+	return (char *)idxd->portal;
 }
 
 static struct spdk_idxd_impl g_user_idxd_impl = {
 	.name			= "user",
-	.set_config		= user_idxd_set_config,
 	.probe			= user_idxd_probe,
 	.destruct		= user_idxd_device_destruct,
 	.dump_sw_error		= user_idxd_dump_sw_err,
