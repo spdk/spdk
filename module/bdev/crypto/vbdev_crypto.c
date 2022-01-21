@@ -1861,8 +1861,7 @@ vbdev_crypto_claim(const char *bdev_name)
 
 	if (g_number_of_claimed_volumes >= MAX_CRYPTO_VOLUMES) {
 		SPDK_DEBUGLOG(vbdev_crypto, "Reached max number of claimed volumes\n");
-		rc = -EINVAL;
-		goto error_vbdev_alloc;
+		return -EINVAL;
 	}
 	g_number_of_claimed_volumes++;
 
@@ -2068,18 +2067,28 @@ error_session_de_create:
 	rte_cryptodev_sym_session_free(vbdev->session_encrypt);
 error_session_en_create:
 error_cant_find_devid:
+	spdk_bdev_module_release_bdev(vbdev->base_bdev);
 error_claim:
-	spdk_bdev_close(vbdev->base_desc);
 	TAILQ_REMOVE(&g_vbdev_crypto, vbdev, link);
 	spdk_io_device_unregister(vbdev, NULL);
-	free(vbdev->xts_key);
+	if (vbdev->xts_key) {
+		memset(vbdev->xts_key, 0, AES_XTS_KEY_LENGTH * 2);
+		free(vbdev->xts_key);
+	}
 error_xts_key:
+	spdk_bdev_close(vbdev->base_desc);
 error_open:
 	free(vbdev->drv_name);
 error_drv_name:
-	free(vbdev->key2);
+	if (vbdev->key2) {
+		memset(vbdev->key2, 0, strlen(vbdev->key2));
+		free(vbdev->key2);
+	}
 error_alloc_key2:
-	free(vbdev->key);
+	if (vbdev->key) {
+		memset(vbdev->key, 0, strlen(vbdev->key));
+		free(vbdev->key);
+	}
 error_alloc_key:
 	free(vbdev->crypto_bdev.name);
 error_bdev_name:
