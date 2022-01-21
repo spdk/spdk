@@ -380,6 +380,39 @@ err:
 	return rc;
 }
 
+static void
+release_vbdev_dev(struct vbdev_dev *device)
+{
+	struct device_qp *dev_qp;
+	struct device_qp *tmp_qp;
+	TAILQ_HEAD(device_qps, device_qp) *dev_qp_head = NULL;
+
+	assert(device);
+
+	/* Select the right device/qp list based on driver name. */
+	if (strcmp(device->cdev_info.driver_name, QAT) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_qat;
+	} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_aesni_mb;
+	}
+	if (dev_qp_head) {
+		TAILQ_FOREACH_SAFE(dev_qp, dev_qp_head, link, tmp_qp) {
+			/* Remove only qps of our device even if the driver names matches. */
+			if (dev_qp->device->cdev_id != device->cdev_id) {
+				continue;
+			}
+			TAILQ_REMOVE(dev_qp_head, dev_qp, link);
+			if (dev_qp_head == (struct device_qps *)&g_device_qp_qat) {
+				g_qat_total_qp--;
+			}
+			free(dev_qp);
+		}
+	}
+	rte_cryptodev_stop(device->cdev_id);
+	rte_cryptodev_close(device->cdev_id);
+	free(device);
+}
+
 /* Dummy function used by DPDK to free ext attached buffers to mbufs, we free them ourselves but
  * this callback has to be here. */
 static void shinfo_free_cb(void *arg1, void *arg2)
@@ -509,7 +542,7 @@ vbdev_crypto_init_crypto_drivers(void)
 err:
 	TAILQ_FOREACH_SAFE(device, &g_vbdev_devs, link, tmp_dev) {
 		TAILQ_REMOVE(&g_vbdev_devs, device, link);
-		free(device);
+		release_vbdev_dev(device);
 	}
 	rte_mempool_free(g_crypto_op_mp);
 	g_crypto_op_mp = NULL;
@@ -1723,8 +1756,6 @@ vbdev_crypto_finish(void)
 {
 	struct bdev_names *name;
 	struct vbdev_dev *device;
-	struct device_qp *dev_qp;
-	int rc;
 
 	while ((name = TAILQ_FIRST(&g_bdev_names))) {
 		TAILQ_REMOVE(&g_bdev_names, name, link);
@@ -1738,26 +1769,13 @@ vbdev_crypto_finish(void)
 
 	while ((device = TAILQ_FIRST(&g_vbdev_devs))) {
 		TAILQ_REMOVE(&g_vbdev_devs, device, link);
-		rte_cryptodev_stop(device->cdev_id);
-		rc = rte_cryptodev_close(device->cdev_id);
-		assert(rc == 0);
-		free(device);
+		release_vbdev_dev(device);
 	}
+	rte_vdev_uninit(AESNI_MB);
 
-	rc = rte_vdev_uninit(AESNI_MB);
-	if (rc) {
-		SPDK_ERRLOG("%d from rte_vdev_uninit\n", rc);
-	}
-
-	while ((dev_qp = TAILQ_FIRST(&g_device_qp_qat))) {
-		TAILQ_REMOVE(&g_device_qp_qat, dev_qp, link);
-		free(dev_qp);
-	}
-
-	while ((dev_qp = TAILQ_FIRST(&g_device_qp_aesni_mb))) {
-		TAILQ_REMOVE(&g_device_qp_aesni_mb, dev_qp, link);
-		free(dev_qp);
-	}
+	/* These are removed in release_vbdev_dev() */
+	assert(TAILQ_EMPTY(&g_device_qp_qat));
+	assert(TAILQ_EMPTY(&g_device_qp_aesni_mb));
 
 	rte_mempool_free(g_crypto_op_mp);
 	rte_mempool_free(g_mbuf_mp);
