@@ -46,118 +46,57 @@
 
 #include "idxd.h"
 
-#define MAX_DSA_DEVICE_ID  16
-
-struct device_config g_kernel_dev_cfg = {
-	.config_num = 0,
-	.num_groups = 1,
-	.total_wqs = 1,
-	.total_engines = 4,
-};
-
-struct spdk_wq_context {
-	struct accfg_wq *wq;
-	unsigned int    max_batch_size;
-	unsigned int    max_xfer_size;
-	unsigned int    max_xfer_bits;
-
-	int fd;
-	int wq_idx;
-	void *wq_reg;
-	int wq_size;
-	int dedicated;
-	int bof;
-
-	unsigned int wq_max_batch_size;
-	unsigned long wq_max_xfer_size;
-};
-
 struct spdk_kernel_idxd_device {
-	struct spdk_idxd_device idxd;
-	struct accfg_ctx        *ctx;
-	struct spdk_wq_context  *wq_ctx;
-	uint32_t                wq_active_num;
+	struct spdk_idxd_device	idxd;
+	struct accfg_ctx	*ctx;
+
+	unsigned int		max_batch_size;
+	unsigned int		max_xfer_size;
+	unsigned int		max_xfer_bits;
+
+	/* We only use a single WQ */
+	struct accfg_wq		*wq;
+	int			fd;
+	void			*portal;
 };
 
 #define __kernel_idxd(idxd) SPDK_CONTAINEROF(idxd, struct spdk_kernel_idxd_device, idxd)
 
-/* Bit scan reverse */
-static uint32_t bsr(uint32_t val)
+static void
+kernel_idxd_device_destruct(struct spdk_idxd_device *idxd)
 {
-	uint32_t msb;
+	struct spdk_kernel_idxd_device *kernel_idxd = __kernel_idxd(idxd);
 
-	msb = (val == 0) ? 0 : 32 - __builtin_clz(val);
-	return msb - 1;
+	if (kernel_idxd->portal != NULL) {
+		munmap(kernel_idxd->portal, 0x1000);
+	}
+
+	if (kernel_idxd->fd >= 0) {
+		close(kernel_idxd->fd);
+	}
+
+	accfg_unref(kernel_idxd->ctx);
+	free(kernel_idxd);
 }
 
 static int
-dsa_setup_single_wq(struct spdk_kernel_idxd_device *kernel_idxd, struct accfg_wq *wq, int shared)
+kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 {
-	struct accfg_device *dev;
-	int major, minor;
-	char path[1024];
-	struct spdk_wq_context *wq_ctx = &kernel_idxd->wq_ctx[kernel_idxd->wq_active_num];
-
-	dev = accfg_wq_get_device(wq);
-	major = accfg_device_get_cdev_major(dev);
-	if (major < 0) {
-		return -ENODEV;
-	}
-	minor = accfg_wq_get_cdev_minor(wq);
-	if (minor < 0) {
-		return -ENODEV;
-	}
-
-	snprintf(path, sizeof(path), "/dev/char/%u:%u", major, minor);
-	wq_ctx->fd = open(path, O_RDWR);
-	if (wq_ctx->fd < 0) {
-		SPDK_ERRLOG("Can not open the Working queue file descriptor on path=%s\n",
-			    path);
-		return -errno;
-	}
-
-	wq_ctx->wq_reg = mmap(NULL, 0x1000, PROT_WRITE,
-			      MAP_SHARED | MAP_POPULATE, wq_ctx->fd, 0);
-	if (wq_ctx->wq_reg == MAP_FAILED) {
-		perror("mmap");
-		return -errno;
-	}
-
-	wq_ctx->dedicated = !shared;
-	wq_ctx->wq_size = accfg_wq_get_size(wq);
-	wq_ctx->wq_idx = accfg_wq_get_id(wq);
-	wq_ctx->bof = accfg_wq_get_block_on_fault(wq);
-	wq_ctx->wq_max_batch_size = accfg_wq_get_max_batch_size(wq);
-	wq_ctx->wq_max_xfer_size = accfg_wq_get_max_transfer_size(wq);
-
-	wq_ctx->max_batch_size = accfg_device_get_max_batch_size(dev);
-	wq_ctx->max_xfer_size = accfg_device_get_max_transfer_size(dev);
-	wq_ctx->max_xfer_bits = bsr(wq_ctx->max_xfer_size);
-
-	SPDK_NOTICELOG("alloc wq %d shared %d size %d addr %p batch sz %#x xfer sz %#x\n",
-		       wq_ctx->wq_idx, shared, wq_ctx->wq_size, wq_ctx->wq_reg,
-		       wq_ctx->max_batch_size, wq_ctx->max_xfer_size);
-
-	wq_ctx->wq = wq;
-
-	/* Update the active_wq_num of the kernel device */
-	kernel_idxd->wq_active_num++;
-	kernel_idxd->idxd.total_wq_size += wq_ctx->wq_size;
-	kernel_idxd->idxd.socket_id = accfg_device_get_numa_node(dev);
-
-	return 0;
-}
-
-static int
-config_wqs(struct spdk_kernel_idxd_device *kernel_idxd,
-	   int dev_id, int shared)
-{
-	struct accfg_device *device;
-	struct accfg_wq *wq;
 	int rc;
+	struct accfg_ctx *ctx;
+	struct accfg_device *device;
 
-	accfg_device_foreach(kernel_idxd->ctx, device) {
+	rc = accfg_new(&ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to allocate accel-config context\n");
+		return rc;
+	}
+
+	/* Loop over each IDXD device */
+	accfg_device_foreach(ctx, device) {
 		enum accfg_device_state dstate;
+		struct spdk_kernel_idxd_device *kernel_idxd;
+		struct accfg_wq *wq;
 
 		/* Make sure that the device is enabled */
 		dstate = accfg_device_get_state(device);
@@ -165,92 +104,85 @@ config_wqs(struct spdk_kernel_idxd_device *kernel_idxd,
 			continue;
 		}
 
-		/* Match the device to the id requested */
-		if (accfg_device_get_id(device) != dev_id &&
-		    dev_id != -1) {
-			continue;
+		kernel_idxd = calloc(1, sizeof(struct spdk_kernel_idxd_device));
+		if (kernel_idxd == NULL) {
+			SPDK_ERRLOG("Failed to allocate memory for kernel_idxd device.\n");
+			/* TODO: Goto error cleanup */
+			return -ENOMEM;
 		}
+
+		kernel_idxd->max_batch_size = accfg_device_get_max_batch_size(device);
+		kernel_idxd->max_xfer_size = accfg_device_get_max_transfer_size(device);
+		kernel_idxd->idxd.socket_id = accfg_device_get_numa_node(device);
+		kernel_idxd->fd = -1;
 
 		accfg_wq_foreach(device, wq) {
 			enum accfg_wq_state wstate;
 			enum accfg_wq_mode mode;
 			enum accfg_wq_type type;
+			int major, minor;
+			char path[1024];
 
-			/* Get a workqueue that's enabled */
 			wstate = accfg_wq_get_state(wq);
 			if (wstate != ACCFG_WQ_ENABLED) {
 				continue;
 			}
 
-			/* The wq type should be user */
 			type = accfg_wq_get_type(wq);
 			if (type != ACCFG_WQT_USER) {
 				continue;
 			}
 
-			/* Make sure the mode is correct */
+			/* TODO: For now, only support dedicated WQ */
 			mode = accfg_wq_get_mode(wq);
-			if ((mode == ACCFG_WQ_SHARED && !shared)
-			    || (mode == ACCFG_WQ_DEDICATED && shared)) {
+			if (mode != ACCFG_WQ_DEDICATED) {
 				continue;
 			}
 
-			/* We already config enough work queues */
-			if (kernel_idxd->wq_active_num == g_kernel_dev_cfg.total_wqs) {
-				break;
+			major = accfg_device_get_cdev_major(device);
+			if (major < 0) {
+				continue;
 			}
 
-			rc = dsa_setup_single_wq(kernel_idxd, wq, shared);
-			if (rc < 0) {
-				return -1;
+			minor = accfg_wq_get_cdev_minor(wq);
+			if (minor < 0) {
+				continue;
 			}
+
+			/* Map the portal */
+			snprintf(path, sizeof(path), "/dev/char/%u:%u", major, minor);
+			kernel_idxd->fd = open(path, O_RDWR);
+			if (kernel_idxd->fd < 0) {
+				SPDK_ERRLOG("Can not open the WQ file descriptor on path=%s\n",
+					    path);
+				continue;
+			}
+
+			kernel_idxd->portal = mmap(NULL, 0x1000, PROT_WRITE,
+						   MAP_SHARED | MAP_POPULATE, kernel_idxd->fd, 0);
+			if (kernel_idxd->portal == MAP_FAILED) {
+				perror("mmap");
+				continue;
+			}
+
+			kernel_idxd->wq = wq;
+
+			/* Since we only use a single WQ, the total size is the size of this WQ */
+			kernel_idxd->idxd.total_wq_size = accfg_wq_get_size(wq);
+			kernel_idxd->idxd.chan_per_device = (kernel_idxd->idxd.total_wq_size >= 128) ? 8 : 4;
+			/* TODO: Handle BOF when we add support for shared WQ */
+			/* wq_ctx->bof = accfg_wq_get_block_on_fault(wq); */
+
+			/* We only use a single WQ, so once we've found one we can stop looking. */
+			break;
 		}
-	}
 
-	if ((kernel_idxd->wq_active_num != 0) &&
-	    (kernel_idxd->wq_active_num != g_kernel_dev_cfg.total_wqs)) {
-		SPDK_ERRLOG("Failed to configure the expected wq nums=%d, and get the real wq nums=%d\n",
-			    g_kernel_dev_cfg.total_wqs, kernel_idxd->wq_active_num);
-		return -1;
-	}
-
-	/* Spread the channels we allow per device based on the total number of WQE to try
-	 * and achieve optimal performance for common cases.
-	 */
-	kernel_idxd->idxd.chan_per_device = (kernel_idxd->idxd.total_wq_size >= 128) ? 8 : 4;
-	return 0;
-}
-
-static void
-kernel_idxd_device_destruct(struct spdk_idxd_device *idxd)
-{
-	uint32_t i;
-	struct spdk_kernel_idxd_device *kernel_idxd = __kernel_idxd(idxd);
-
-	if (kernel_idxd->wq_ctx) {
-		for (i = 0; i < kernel_idxd->wq_active_num; i++) {
-			if (munmap(kernel_idxd->wq_ctx[i].wq_reg, 0x1000)) {
-				SPDK_ERRLOG("munmap failed %d on kernel_device=%p on dsa_context with wq_reg=%p\n",
-					    errno, kernel_idxd, kernel_idxd->wq_ctx[i].wq_reg);
-			}
-			close(kernel_idxd->wq_ctx[i].fd);
+		if (kernel_idxd->idxd.total_wq_size > 0) {
+			/* This device has at least 1 WQ available, so ask the user if they want to use it. */
+			attach_cb(cb_ctx, &kernel_idxd->idxd);
+		} else {
+			kernel_idxd_device_destruct(&kernel_idxd->idxd);
 		}
-		free(kernel_idxd->wq_ctx);
-	}
-
-	accfg_unref(kernel_idxd->ctx);
-	free(idxd);
-}
-
-static int _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id);
-
-static int
-kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
-{
-	int i;
-
-	for (i = 0; i < MAX_DSA_DEVICE_ID; i++) {
-		_kernel_idxd_probe(cb_ctx, attach_cb, i);
 	}
 
 	return 0;
@@ -266,7 +198,8 @@ static char *
 kernel_idxd_portal_get_addr(struct spdk_idxd_device *idxd)
 {
 	struct spdk_kernel_idxd_device *kernel_idxd = __kernel_idxd(idxd);
-	return (char *)kernel_idxd->wq_ctx[0].wq_reg;
+
+	return kernel_idxd->portal;
 }
 
 static struct spdk_idxd_impl g_kernel_idxd_impl = {
@@ -276,59 +209,5 @@ static struct spdk_idxd_impl g_kernel_idxd_impl = {
 	.dump_sw_error		= kernel_idxd_dump_sw_error,
 	.portal_get_addr	= kernel_idxd_portal_get_addr,
 };
-
-static int
-_kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id)
-{
-	int rc;
-	struct spdk_kernel_idxd_device *kernel_idxd;
-	struct accfg_ctx *ctx;
-
-	kernel_idxd = calloc(1, sizeof(struct spdk_kernel_idxd_device));
-	if (kernel_idxd == NULL) {
-		SPDK_ERRLOG("Failed to allocate memory for kernel_idxd device.\n");
-		return -ENOMEM;
-	}
-
-	kernel_idxd->wq_ctx = calloc(g_kernel_dev_cfg.total_wqs, sizeof(struct spdk_wq_context));
-	if (kernel_idxd->wq_ctx == NULL) {
-		rc = -ENOMEM;
-		SPDK_ERRLOG("Failed to allocate memory for the work queue contexts on kernel_idxd=%p.\n",
-			    kernel_idxd);
-		goto end;
-	}
-
-	rc = accfg_new(&ctx);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to allocate accfg context when probe kernel_idxd=%p\n", kernel_idxd);
-		goto end;
-	}
-
-	kernel_idxd->idxd.impl = &g_kernel_idxd_impl;
-	kernel_idxd->ctx = ctx;
-
-	/* Supporting non-shared mode first.
-	 * Todo: Add the shared mode support later.
-	 */
-	rc = config_wqs(kernel_idxd, dev_id, 0);
-	if (rc) {
-		SPDK_ERRLOG("Failed to probe requested wqs on kernel device context=%p\n", ctx);
-		return -ENODEV;
-	}
-
-	/* No active work queues */
-	if (kernel_idxd->wq_active_num == 0) {
-		goto end;
-	}
-
-	attach_cb(cb_ctx, &kernel_idxd->idxd);
-
-	SPDK_NOTICELOG("Successfully got an kernel device=%p\n", kernel_idxd);
-	return 0;
-
-end:
-	kernel_idxd_device_destruct(&kernel_idxd->idxd);
-	return rc;
-}
 
 SPDK_IDXD_IMPL_REGISTER(kernel, &g_kernel_idxd_impl);
