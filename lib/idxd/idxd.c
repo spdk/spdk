@@ -249,7 +249,8 @@ err_chan:
 	return NULL;
 }
 
-static int idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch);
+static int idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
+			     int status);
 
 void
 spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
@@ -260,7 +261,7 @@ spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 
 	if (chan->batch) {
 		assert(chan->batch->transparent);
-		idxd_batch_cancel(chan, chan->batch);
+		idxd_batch_cancel(chan, chan->batch, -ECANCELED);
 	}
 
 	pthread_mutex_lock(&chan->idxd->num_channels_lock);
@@ -455,8 +456,11 @@ _free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 }
 
 static int
-idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
+idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch, int status)
 {
+	struct idxd_ops *op;
+	int i;
+
 	assert(chan != NULL);
 	assert(batch != NULL);
 
@@ -472,6 +476,13 @@ idxd_batch_cancel(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch)
 
 	if (batch->transparent) {
 		chan->batch = NULL;
+	}
+
+	for (i = 0; i < batch->index; i++) {
+		op = &batch->user_ops[i];
+		if (op->cb_fn) {
+			op->cb_fn(op->cb_arg, status);
+		}
 	}
 
 	_free_batch(batch, chan);
@@ -496,7 +507,7 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 	}
 
 	if (batch->index == 0) {
-		return idxd_batch_cancel(chan, batch);
+		return idxd_batch_cancel(chan, batch, 0);
 	}
 
 	/* Common prep. */
@@ -516,7 +527,7 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan, struct idxd_batch *batch,
 		op->cb_arg = batch->user_ops[0].cb_arg;
 		op->crc_dst = batch->user_ops[0].crc_dst;
 		batch->index = 0;
-		idxd_batch_cancel(chan, batch);
+		idxd_batch_cancel(chan, batch, 0);
 	} else {
 		/* Command specific. */
 		desc->opcode = IDXD_OPCODE_BATCH;
@@ -709,7 +720,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 
 	return 0;
 err:
-	idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch, rc);
 	return rc;
 }
 
@@ -892,7 +903,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 
 	return 0;
 err:
-	idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch, rc);
 	return rc;
 }
 
@@ -999,7 +1010,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 
 	return 0;
 err:
-	idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch, rc);
 	return rc;
 }
 
@@ -1123,7 +1134,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 
 	return 0;
 err:
-	idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch, rc);
 	return rc;
 }
 
@@ -1269,7 +1280,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 
 	return 0;
 err:
-	idxd_batch_cancel(chan, batch);
+	idxd_batch_cancel(chan, batch, rc);
 	return rc;
 }
 
