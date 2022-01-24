@@ -609,6 +609,12 @@ function rpc_cmd_simple_data_json() {
 		"num_blocks"
 		"uuid"
 		"product_name"
+		"supported_io_types.read"
+		"supported_io_types.write"
+		"driver_specific.lvol.clone"
+		"driver_specific.lvol.base_snapshot"
+		"driver_specific.lvol.esnap_clone"
+		"driver_specific.lvol.external_snapshot_name"
 	)
 
 	[[ -v $elems ]] || return 1

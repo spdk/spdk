@@ -9636,6 +9636,55 @@ Example response:
 }
 ~~~
 
+### bdev_lvol_clone_bdev {#rpc_bdev_lvol_clone_bdev}
+
+Create a logical volume based on an external snapshot bdev. The external snapshot bdev
+is a bdev that will not be written to by any consumer and must not be an lvol in the
+lvstore as the clone.
+
+Regardless of whether the bdev is specified by name or UUID, the bdev UUID will be stored
+in the logical volume's metadata for use while the lvolstore is loading. For this reason,
+it is important that the bdev chosen has a static UUID.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev                    | Required | string      | Name or UUID for bdev that acts as the external snapshot
+lvs_name                | Required | string      | logical volume store name
+clone_name              | Required | string      | Name for the logical volume to create
+
+#### Response
+
+UUID of the created logical volume clone is returned.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_lvol_clone_bdev",
+  "id": 1,
+  "params": {
+    "bdev_uuid": "e4b40d8b-f623-416d-8234-baf5a4c83cbd",
+    "lvs_name": "lvs1",
+    "clone_name": "clone2"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "336f662b-08e5-4006-8e06-e2023f7f9886"
+}
+~~~
+
 ### bdev_lvol_rename {#rpc_bdev_lvol_rename}
 
 Rename a logical volume. New name will rename only the alias of the logical volume.

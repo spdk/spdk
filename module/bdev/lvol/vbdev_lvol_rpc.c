@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/rpc.h"
@@ -539,6 +540,89 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_clone", rpc_bdev_lvol_clone, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_lvol_clone_bdev {
+	/* name or UUID. Whichever is used, the UUID will be stored in the lvol's metadata. */
+	char *bdev_name;
+	char *lvs_name;
+	char *clone_name;
+};
+
+static void
+free_rpc_bdev_lvol_clone_bdev(struct rpc_bdev_lvol_clone_bdev *req)
+{
+	free(req->bdev_name);
+	free(req->lvs_name);
+	free(req->clone_name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_lvol_clone_bdev_decoders[] = {
+	{
+		"bdev", offsetof(struct rpc_bdev_lvol_clone_bdev, bdev_name),
+		spdk_json_decode_string, false
+	},
+	{
+		"lvs_name", offsetof(struct rpc_bdev_lvol_clone_bdev, lvs_name),
+		spdk_json_decode_string, false
+	},
+	{
+		"clone_name", offsetof(struct rpc_bdev_lvol_clone_bdev, clone_name),
+		spdk_json_decode_string, false
+	},
+};
+
+static void
+rpc_bdev_lvol_clone_bdev(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_bdev_lvol_clone_bdev req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_lvol_store *lvs = NULL;
+	struct spdk_lvol *lvol;
+	int rc;
+
+	SPDK_INFOLOG(lvol_rpc, "Cloning bdev\n");
+
+	if (spdk_json_decode_object(params, rpc_bdev_lvol_clone_bdev_decoders,
+				    SPDK_COUNTOF(rpc_bdev_lvol_clone_bdev_decoders), &req)) {
+		SPDK_INFOLOG(lvol_rpc, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(NULL, req.lvs_name, &lvs);
+	if (rc != 0) {
+		SPDK_INFOLOG(lvol_rpc, "lvs_name '%s' not found\n", req.lvs_name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "lvs does not exist");
+		goto cleanup;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.bdev_name);
+	if (bdev == NULL) {
+		SPDK_INFOLOG(lvol_rpc, "bdev '%s' does not exist\n", req.bdev_name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "bdev does not exist");
+		goto cleanup;
+	}
+
+	lvol = vbdev_lvol_get_from_bdev(bdev);
+	if (lvol != NULL && lvol->lvol_store == lvs) {
+		SPDK_INFOLOG(lvol_rpc, "bdev '%s' is an lvol in lvstore '%s\n", req.bdev_name,
+			     req.lvs_name);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "bdev is an lvol in same lvs as clone; "
+						 "use bdev_lvol_clone instead");
+		goto cleanup;
+	}
+
+	vbdev_lvol_create_bdev_clone(req.bdev_name, lvs, req.clone_name,
+				     rpc_bdev_lvol_clone_cb, request);
+cleanup:
+	free_rpc_bdev_lvol_clone_bdev(&req);
+}
+
+SPDK_RPC_REGISTER("bdev_lvol_clone_bdev", rpc_bdev_lvol_clone_bdev, SPDK_RPC_RUNTIME)
 
 struct rpc_bdev_lvol_rename {
 	char *old_name;

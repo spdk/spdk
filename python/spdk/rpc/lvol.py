@@ -1,6 +1,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
+#  Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 
 def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None,
@@ -120,6 +121,30 @@ def bdev_lvol_clone(client, snapshot_name, clone_name):
         'clone_name': clone_name
     }
     return client.call('bdev_lvol_clone', params)
+
+
+def bdev_lvol_clone_bdev(client, bdev, lvs_name, clone_name):
+    """Create a logical volume based on a snapshot.
+
+    Regardless of whether the bdev is specified by name or UUID, the bdev UUID
+    will be stored in the logical volume's metadata for use while the lvolstore
+    is loading. For this reason, it is important that the bdev chosen has a
+    static UUID.
+
+    Args:
+        bdev: bdev to clone; must not be an lvol in same lvstore as clone
+        lvs_name: name of logical volume store to use
+        clone_name: name of logical volume to create
+
+    Returns:
+        Name of created logical volume clone.
+    """
+    params = {
+        'bdev': bdev,
+        'lvs_name': lvs_name,
+        'clone_name': clone_name
+    }
+    return client.call('bdev_lvol_clone_bdev', params)
 
 
 def bdev_lvol_rename(client, old_name, new_name):

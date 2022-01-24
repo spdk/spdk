@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="181.24mm"
+   height="79.375mm"
+   version="1.1"
+   viewBox="0 0 181.24 79.375"
+   id="svg172"
+   sodipodi:docname="lvol_esnap_clone.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <sodipodi:namedview
+     id="namedview174"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.7926966"
+     inkscape:cx="338.59607"
+     inkscape:cy="148.93764"
+     inkscape:window-width="1351"
+     inkscape:window-height="930"
+     inkscape:window-x="762"
+     inkscape:window-y="134"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g170" />
+  <title
+     id="title2">Thin Provisioning</title>
+  <defs
+     id="defs28">
+    <marker
+       id="marker2036"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill-rule="evenodd"
+         stroke="#000"
+         stroke-width="1pt"
+         id="path4" />
+    </marker>
+    <marker
+       id="marker1960"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill-rule="evenodd"
+         stroke="#000"
+         stroke-width="1pt"
+         id="path7" />
+    </marker>
+    <marker
+       id="marker1890"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill-rule="evenodd"
+         stroke="#000"
+         stroke-width="1pt"
+         id="path10" />
+    </marker>
+    <marker
+       id="marker1826"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill-rule="evenodd"
+         stroke="#000"
+         stroke-width="1pt"
+         id="path13" />
+    </marker>
+    <marker
+       id="marker1816"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill-rule="evenodd"
+         stroke="#000"
+         stroke-width="1pt"
+         id="path16" />
+    </marker>
+    <marker
+       id="Arrow1Mend"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill-rule="evenodd"
+         stroke="#000"
+         stroke-width="1pt"
+         id="path19" />
+    </marker>
+    <marker
+       id="marker11771-4-9"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill="#f00"
+         fill-rule="evenodd"
+         stroke="#ff2a2a"
+         stroke-width="1pt"
+         id="path22" />
+    </marker>
+    <marker
+       id="marker1826-2-4-7-1-7"
+       overflow="visible"
+       orient="auto">
+      <path
+         transform="matrix(-.4 0 0 -.4 -4 0)"
+         d="m0 0 5-5-17.5 5 17.5 5z"
+         fill="#00f"
+         fill-rule="evenodd"
+         stroke="#00f"
+         stroke-width="1pt"
+         id="path25" />
+    </marker>
+  </defs>
+  <metadata
+     id="metadata30">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Thin Provisioning</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(2.6458 2.3956)"
+     id="g34">
+    <rect
+       x="-2.6458"
+       y="-2.3956"
+       width="181.24"
+       height="79.375"
+       fill="#fffffe"
+       stroke-width=".26458"
+       id="rect32" />
+  </g>
+  <g
+     transform="translate(-3.9688 -4.6356)"
+     id="g170">
+    <g
+       stroke="#000"
+       id="g52">
+      <g
+         stroke-width=".26458"
+         id="g48">
+        <rect
+           x="44.979"
+           y="32.417"
+           width="22.49"
+           height="6.6146"
+           fill="none"
+           stroke-dasharray="0.52916663, 0.52916663"
+           id="rect36" />
+        <rect
+           x="67.469"
+           y="32.417"
+           width="22.49"
+           height="6.6146"
+           fill="#d7d7f4"
+           id="rect38" />
+        <rect
+           x="89.958"
+           y="32.417"
+           width="22.49"
+           height="6.6146"
+           fill="#d7d7f4"
+           id="rect40" />
+        <rect
+           x="112.45"
+           y="32.417"
+           width="22.49"
+           height="6.6146"
+           fill="none"
+           stroke-dasharray="0.52916663, 0.52916663"
+           id="rect42" />
+        <rect
+           x="134.94"
+           y="32.417"
+           width="22.49"
+           height="6.6146"
+           fill="none"
+           stroke-dasharray="0.52916663, 0.52916663"
+           id="rect44" />
+        <rect
+           x="157.43"
+           y="32.417"
+           width="22.49"
+           height="6.6146"
+           fill="#d7d7f4"
+           id="rect46" />
+      </g>
+      <rect
+         x="44.979"
+         y="46.969"
+         width="22.49"
+         height="6.6146"
+         fill="#f4d7d7"
+         stroke-dasharray="0.52999997, 0.26499999"
+         stroke-width=".265"
+         id="rect50" />
+    </g>
+    <text
+       x="56.412949"
+       y="51.598957"
+       fill="#000000"
+       font-family="sans-serif"
+       font-size="10.583px"
+       letter-spacing="0px"
+       stroke-width="0.26458"
+       word-spacing="0px"
+       style="line-height:1.25"
+       xml:space="preserve"
+       id="text56"><tspan
+         x="56.412949"
+         y="51.598957"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         stroke-width="0.26458"
+         text-align="center"
+         text-anchor="middle"
+         style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         id="tspan54">26f9a7...</tspan></text>
+    <rect
+       x="67.469"
+       y="46.969"
+       width="22.49"
+       height="6.6146"
+       fill="#f4d7d7"
+       stroke="#000"
+       stroke-dasharray="0.52999997, 0.26499999"
+       stroke-width=".265"
+       id="rect58" />
+    <text
+       x="78.902527"
+       y="51.598961"
+       fill="#000000"
+       font-family="sans-serif"
+       font-size="10.583px"
+       letter-spacing="0px"
+       stroke-width="0.26458"
+       word-spacing="0px"
+       style="line-height:1.25"
+       xml:space="preserve"
+       id="text62"><tspan
+         x="78.902527"
+         y="51.598961"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         stroke-width="0.26458"
+         text-align="center"
+         text-anchor="middle"
+         style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         id="tspan60">b44ab3...</tspan></text>
+    <rect
+       x="89.958"
+       y="46.969"
+       width="22.49"
+       height="6.6146"
+       fill="#f4d7d7"
+       stroke="#000"
+       stroke-dasharray="0.52999997, 0.26499999"
+       stroke-width=".265"
+       id="rect64" />
+    <text
+       x="101.39211"
+       y="51.598961"
+       fill="#000000"
+       font-family="sans-serif"
+       font-size="10.583px"
+       letter-spacing="0px"
+       stroke-width="0.26458"
+       word-spacing="0px"
+       style="line-height:1.25"
+       xml:space="preserve"
+       id="text68"><tspan
+         x="101.39211"
+         y="51.598961"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         stroke-width="0.26458"
+         text-align="center"
+         text-anchor="middle"
+         style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         id="tspan66">ee5593...</tspan></text>
+    <rect
+       x="112.45"
+       y="46.969"
+       width="22.49"
+       height="6.6146"
+       fill="#f4d7d7"
+       stroke="#000"
+       stroke-dasharray="0.52999997, 0.26499999"
+       stroke-width=".265"
+       id="rect70" />
+    <text
+       x="123.88169"
+       y="51.598961"
+       fill="#000000"
+       font-family="sans-serif"
+       font-size="10.583px"
+       letter-spacing="0px"
+       stroke-width="0.26458"
+       word-spacing="0px"
+       style="line-height:1.25"
+       xml:space="preserve"
+       id="text74"><tspan
+         x="123.88169"
+         y="51.598961"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         stroke-width="0.26458"
+         text-align="center"
+         text-anchor="middle"
+         style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         id="tspan72">7a3bfe...</tspan></text>
+    <rect
+       x="134.94"
+       y="46.969"
+       width="22.49"
+       height="6.6146"
+       fill="#f4d7d7"
+       stroke="#000"
+       stroke-dasharray="0.52999997, 0.26499999"
+       stroke-width=".265"
+       id="rect76" />
+    <text
+       x="146.37128"
+       y="51.598957"
+       fill="#000000"
+       font-family="sans-serif"
+       font-size="10.583px"
+       letter-spacing="0px"
+       stroke-width="0.26458"
+       word-spacing="0px"
+       style="line-height:1.25"
+       xml:space="preserve"
+       id="text80"><tspan
+         x="146.37128"
+         y="51.598957"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         stroke-width="0.26458"
+         text-align="center"
+         text-anchor="middle"
+         style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         id="tspan78">8f4e15...</tspan></text>
+    <rect
+       x="157.43"
+       y="46.969"
+       width="22.49"
+       height="6.6146"
+       fill="#f4d7d7"
+       stroke="#000"
+       stroke-dasharray="0.52999997, 0.26499999"
+       stroke-width=".265"
+       id="rect82" />
+    <g
+       font-family="sans-serif"
+       letter-spacing="0px"
+       stroke-width=".26458"
+       word-spacing="0px"
+       id="g98">
+      <text
+         x="168.86086"
+         y="51.598961"
+         font-size="10.583px"
+         style="line-height:1.25"
+         xml:space="preserve"
+         id="text86"><tspan
+           x="168.86086"
+           y="51.598961"
+           font-family="sans-serif"
+           font-size="3.5278px"
+           stroke-width="0.26458"
+           text-align="center"
+           text-anchor="middle"
+           style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+           id="tspan84">40c285...</tspan></text>
+      <text
+         x="6.6430736"
+         y="51.680019"
+         font-size="3.5278px"
+         style="line-height:1.25;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         xml:space="preserve"
+         id="text90"><tspan
+           x="6.6430736"
+           y="51.680019"
+           stroke-width="0.26458"
+           id="tspan88">read-only bdev</tspan></text>
+      <text
+         x="6.6296382"
+         y="12.539818"
+         font-size="3.5278px"
+         style="line-height:1.25;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         xml:space="preserve"
+         id="text96"><tspan
+           sodipodi:role="line"
+           id="tspan436"
+           x="6.6296382"
+           y="12.539818">esnap clone</tspan><tspan
+           sodipodi:role="line"
+           x="6.6296382"
+           y="16.949568"
+           id="tspan440">Volume</tspan><tspan
+           sodipodi:role="line"
+           id="tspan438"
+           x="6.6296382"
+           y="21.359318" /></text>
+    </g>
+    <g
+       stroke="#000"
+       id="g118">
+      <path
+         d="m6.6146 24.479 173.3 1e-6"
+         fill="none"
+         stroke-dasharray="1.59, 1.59"
+         stroke-width=".265"
+         id="path100" />
+      <g
+         fill="#f4d7d7"
+         stroke-dasharray="0.52916663, 0.26458332"
+         stroke-width=".26458"
+         id="g108">
+        <rect
+           x="44.979"
+           y="9.9271"
+           width="22.49"
+           height="6.6146"
+           id="rect102" />
+        <rect
+           x="112.45"
+           y="9.9271"
+           width="22.49"
+           height="6.6146"
+           id="rect104" />
+        <rect
+           x="134.94"
+           y="9.9271"
+           width="22.49"
+           height="6.6146"
+           id="rect106" />
+      </g>
+      <g
+         fill="#d7d7f4"
+         stroke-width=".26458"
+         id="g116">
+        <rect
+           x="67.469"
+           y="9.9271"
+           width="22.49"
+           height="6.6146"
+           id="rect110" />
+        <rect
+           x="89.958"
+           y="9.9271"
+           width="22.49"
+           height="6.6146"
+           id="rect112" />
+        <rect
+           x="157.43"
+           y="9.9271"
+           width="22.49"
+           height="6.6146"
+           id="rect114" />
+      </g>
+    </g>
+    <text
+       x="6.614583"
+       y="37.708332"
+       fill="#000000"
+       font-family="sans-serif"
+       font-size="3.5278px"
+       letter-spacing="0px"
+       stroke-width=".26458"
+       word-spacing="0px"
+       style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25"
+       xml:space="preserve"
+       id="text122"><tspan
+         x="6.614583"
+         y="37.708332"
+         stroke-width=".26458"
+         id="tspan120">active clusters</tspan></text>
+    <rect
+       x="37.042"
+       y="7.2812"
+       width="145.52"
+       height="11.906"
+       ry="1.3229"
+       fill="none"
+       stroke="#999"
+       stroke-width=".5"
+       id="rect124" />
+    <rect
+       x="37.042"
+       y="29.771"
+       width="145.52"
+       height="26.458"
+       ry="1.3229"
+       fill="none"
+       stroke="#999"
+       stroke-width=".5"
+       id="rect126" />
+    <g
+       fill="#00f"
+       stroke="#00f"
+       id="g144">
+      <g
+         stroke-width=".26458"
+         id="g140">
+        <path
+           d="m78.052 16.542v15.875"
+           marker-end="url(#marker1960)"
+           id="path128" />
+        <path
+           d="m55.562 16.542v30.427"
+           marker-end="url(#marker2036)"
+           id="path130" />
+        <path
+           d="m100.54 16.542v15.875"
+           marker-end="url(#marker1890)"
+           id="path132" />
+        <path
+           d="m169.33 16.542v15.875"
+           marker-end="url(#Arrow1Mend)"
+           id="path134" />
+        <path
+           d="m124.35 16.542v30.427"
+           marker-end="url(#marker1826)"
+           id="path136" />
+        <path
+           d="m146.84 16.542v30.427"
+           marker-end="url(#marker1816)"
+           id="path138" />
+      </g>
+      <path
+         d="m132.29 61.521 10.583 1e-5"
+         marker-end="url(#marker1826-2-4-7-1-7)"
+         stroke-width=".265"
+         id="path142" />
+    </g>
+    <path
+       d="m132.29 66.813h10.583"
+       fill="#f00"
+       marker-end="url(#marker11771-4-9)"
+       stroke="#ff2a2a"
+       stroke-width=".265"
+       id="path146" />
+    <g
+       stroke-width=".26458"
+       id="g162">
+      <text
+         x="145.52083"
+         y="62.843975"
+         fill="#000000"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         letter-spacing="0px"
+         word-spacing="0px"
+         style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25"
+         xml:space="preserve"
+         id="text150"><tspan
+           x="145.52083"
+           y="62.843975"
+           font-family="sans-serif"
+           font-size="2.8222px"
+           stroke-width=".26458"
+           style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal"
+           id="tspan148">read</tspan></text>
+      <text
+         x="145.52083"
+         y="68.135651"
+         fill="#000000"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         letter-spacing="0px"
+         word-spacing="0px"
+         style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25"
+         xml:space="preserve"
+         id="text154"><tspan
+           x="145.52083"
+           y="68.135651"
+           font-family="sans-serif"
+           font-size="2.8222px"
+           stroke-width=".26458"
+           style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal"
+           id="tspan152">allocate and copy cluster</tspan></text>
+      <rect
+         x="132.29"
+         y="70.781"
+         width="10.583"
+         height="2.6458"
+         fill="none"
+         stroke="#000"
+         stroke-dasharray="0.52916664, 0.52916664"
+         id="rect156" />
+      <text
+         x="145.52083"
+         y="73.427307"
+         fill="#000000"
+         font-family="sans-serif"
+         font-size="3.5278px"
+         letter-spacing="0px"
+         word-spacing="0px"
+         style="line-height:1.25;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+         xml:space="preserve"
+         id="text160"><tspan
+           x="145.52083"
+           y="73.427307"
+           font-family="sans-serif"
+           font-size="2.8222px"
+           stroke-width="0.26458"
+           style="font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal"
+           id="tspan158">external snapshot cluster</tspan></text>
+    </g>
+    <rect
+       x="132.29"
+       y="76.073"
+       width="10.583"
+       height="2.6458"
+       fill="none"
+       stroke="#000"
+       stroke-width=".265"
+       id="rect164" />
+    <text
+       x="145.52083"
+       y="78.718971"
+       fill="#000000"
+       font-family="sans-serif"
+       font-size="3.5278px"
+       letter-spacing="0px"
+       stroke-width=".26458"
+       word-spacing="0px"
+       style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25"
+       xml:space="preserve"
+       id="text168"><tspan
+         x="145.52083"
+         y="78.718971"
+         font-family="sans-serif"
+         font-size="2.8222px"
+         stroke-width=".26458"
+         style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal"
+         id="tspan166">allocated cluster</tspan></text>
+  </g>
+</svg>

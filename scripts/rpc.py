@@ -3,6 +3,7 @@
 #  Copyright (C) 2016 Intel Corporation
 #  All rights reserved.
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
+#  Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
 import logging
@@ -1965,6 +1966,19 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('snapshot_name', help='lvol snapshot name')
     p.add_argument('clone_name', help='lvol clone name')
     p.set_defaults(func=bdev_lvol_clone)
+
+    def bdev_lvol_clone_bdev(args):
+        print_json(rpc.lvol.bdev_lvol_clone_bdev(args.client,
+                                                 bdev=args.bdev,
+                                                 lvs_name=args.lvs_name,
+                                                 clone_name=args.clone_name))
+
+    p = subparsers.add_parser('bdev_lvol_clone_bdev',
+                              help='Create a clone of a non-lvol bdev')
+    p.add_argument('bdev', help='bdev to clone')
+    p.add_argument('lvs_name', help='logical volume store name')
+    p.add_argument('clone_name', help='lvol clone name')
+    p.set_defaults(func=bdev_lvol_clone_bdev)
 
     def bdev_lvol_rename(args):
         rpc.lvol.bdev_lvol_rename(args.client,

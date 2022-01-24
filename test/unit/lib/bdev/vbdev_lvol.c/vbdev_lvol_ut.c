@@ -1826,7 +1826,7 @@ ut_lvol_esnap_clone_bad_args(void)
 	struct spdk_bdev bdev = { 0 };
 	struct spdk_lvol_store *lvs;
 	const char *esnap_uuid = "255f4236-9427-42d0-a9d1-aa17f37dd8db";
-	const char *name_uuid = "5c164b0a-93af-434f-ac35-51af59791f3b";
+	const char *esnap_name = "esnap1";
 	int rc;
 
 	/* Lvol store is successfully created */
@@ -1840,7 +1840,7 @@ ut_lvol_esnap_clone_bad_args(void)
 
 	rc = spdk_uuid_parse(&bdev.uuid, esnap_uuid);
 	CU_ASSERT(rc == 0);
-	bdev.name = strdup(name_uuid);
+	bdev.name = strdup(esnap_name);
 	SPDK_CU_ASSERT_FATAL(bdev.name != NULL);
 	bdev.blocklen = 512;
 	bdev.blockcnt = 8192;
@@ -1852,21 +1852,21 @@ ut_lvol_esnap_clone_bad_args(void)
 	vbdev_lvol_create_bdev_clone(esnap_uuid, NULL, "clone1", vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(g_lvolerrno == -EINVAL);
 
-	/* Error when a uuid-like name is provided and that matches the bdev name but not uuid */
-	g_lvolerrno = 0xbad;
-	vbdev_lvol_create_bdev_clone(name_uuid, lvs, "clone1", vbdev_lvol_create_complete, NULL);
-	CU_ASSERT(g_lvolerrno == -EINVAL);
-
 	/* Error when the bdev does not exist */
 	g_base_bdev = NULL;
 	g_lvolerrno = 0xbad;
 	vbdev_lvol_create_bdev_clone(esnap_uuid, lvs, "clone1", vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(g_lvolerrno == -ENODEV);
 
-	/* Success when the stars all align. */
+	/* Success when creating by bdev UUID */
 	g_base_bdev = &bdev;
 	g_lvolerrno = 0xbad;
 	vbdev_lvol_create_bdev_clone(esnap_uuid, lvs, "clone1", vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	/* Success when creating by bdev name */
+	g_lvolerrno = 0xbad;
+	vbdev_lvol_create_bdev_clone(esnap_name, lvs, "clone2", vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
 	g_lvol_store = lvs;

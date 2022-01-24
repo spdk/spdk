@@ -74,6 +74,18 @@ A snapshot can be removed only if there is a single clone on top of it. The rela
 The cluster map of clone and snapshot will be merged and entries for unallocated clusters in the clone will be updated with
 addresses from the snapshot cluster map. The entire operation modifies metadata only - no data is copied during this process.
 
+### External Snapshots
+
+With the external snapshots feature, clones can be made of any bdev. These clones are commonly called *esnap clones*.
+Esnap clones work very similarly to thin provisioning. Rather than the back device being an zeroes device, the external snapshot
+bdev is used as the back device.
+
+![Clone of External Snapshot](lvol_esnap_clone.svg)
+
+A bdev that is used as an external snapshot cannot be opened for writing by anything else so long as an esnap clone exists.
+
+A bdev may have multiple esnap clones and esnap clones can themselves be snapshotted and cloned.
+
 ### Inflation {#lvol_inflation}
 
 Blobs can be inflated to copy data from backing devices (e.g. snapshots) and allocate all remaining clusters. As a result of this
@@ -153,6 +165,10 @@ bdev_lvol_snapshot [-h] lvol_name snapshot_name
     -h, --help  show help
 bdev_lvol_clone [-h] snapshot_name clone_name
     Create a clone with clone_name of a given lvol snapshot.
+    optional arguments:
+    -h, --help  show help
+bdev_lvol_clone_bdev [-h] bdev_name_or_uuid lvs_name clone_name
+    Create a clone with clone_name of a bdev. The bdev must not be an lvol in the lvs_name lvstore.
     optional arguments:
     -h, --help  show help
 bdev_lvol_rename [-h] old_name new_name

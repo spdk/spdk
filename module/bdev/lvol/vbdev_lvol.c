@@ -1150,7 +1150,7 @@ ignore_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, voi
 }
 
 void
-vbdev_lvol_create_bdev_clone(const char *esnap_uuid,
+vbdev_lvol_create_bdev_clone(const char *esnap_name,
 			     struct spdk_lvol_store *lvs, const char *clone_name,
 			     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
@@ -1158,7 +1158,6 @@ vbdev_lvol_create_bdev_clone(const char *esnap_uuid,
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
 	char bdev_uuid[SPDK_UUID_STRING_LEN];
-	struct spdk_uuid uuid;
 	uint64_t sz;
 	int rc;
 
@@ -1168,16 +1167,9 @@ vbdev_lvol_create_bdev_clone(const char *esnap_uuid,
 		return;
 	}
 
-	rc = spdk_uuid_parse(&uuid, esnap_uuid);
+	rc = spdk_bdev_open_ext(esnap_name, false, ignore_bdev_event_cb, NULL, &desc);
 	if (rc != 0) {
-		SPDK_ERRLOG("Invalid UUID '%s'\n", esnap_uuid);
-		cb_fn(cb_arg, NULL, -EINVAL);
-		return;
-	}
-
-	rc = spdk_bdev_open_ext(esnap_uuid, false, ignore_bdev_event_cb, NULL, &desc);
-	if (rc != 0) {
-		SPDK_ERRLOG("bdev '%s' could not be opened: error %d\n", esnap_uuid, rc);
+		SPDK_ERRLOG("bdev '%s' could not be opened: error %d\n", esnap_name, rc);
 		cb_fn(cb_arg, NULL, rc);
 		return;
 	}
@@ -1186,17 +1178,9 @@ vbdev_lvol_create_bdev_clone(const char *esnap_uuid,
 	rc = spdk_uuid_fmt_lower(bdev_uuid, sizeof(bdev_uuid), spdk_bdev_get_uuid(bdev));
 	if (rc != 0) {
 		spdk_bdev_close(desc);
-		SPDK_ERRLOG("bdev %s: unable to parse UUID\n", esnap_uuid);
+		SPDK_ERRLOG("bdev %s: unable to parse UUID\n", esnap_name);
 		assert(false);
 		cb_fn(cb_arg, NULL, -ENODEV);
-		return;
-	}
-
-	/* Verify the bdev name or alias isn't a UUID that is different from the bdev's UUID. */
-	if (spdk_uuid_compare(&uuid, spdk_bdev_get_uuid(bdev)) != 0) {
-		spdk_bdev_close(desc);
-		SPDK_ERRLOG("bdev with name or alias %s has UUID %s\n", esnap_uuid, bdev_uuid);
-		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
 	}
 
