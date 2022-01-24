@@ -2582,15 +2582,69 @@ show_core(uint8_t current_page, uint8_t active_tab)
 }
 
 static void
+draw_poller_win_content(WINDOW *poller_win, struct rpc_poller_info *poller_info)
+{
+	uint64_t last_run_counter, last_busy_counter, busy_count;
+	char poller_period[MAX_TIME_STR_LEN];
+
+	box(poller_win, 0, 0);
+
+	print_in_middle(poller_win, 1, 0, POLLER_WIN_WIDTH, poller_info->name, COLOR_PAIR(3));
+	mvwhline(poller_win, 2, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
+	mvwaddch(poller_win, 2, POLLER_WIN_WIDTH, ACS_RTEE);
+
+	print_left(poller_win, 3, 2, POLLER_WIN_WIDTH, "Type:                  On thread:", COLOR_PAIR(5));
+	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL, "%s",
+		  poller_type_str[poller_info->type]);
+	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL + 23, "%s", poller_info->thread_name);
+
+	print_left(poller_win, 4, 2, POLLER_WIN_WIDTH, "Run count:", COLOR_PAIR(5));
+
+	last_run_counter = get_last_run_counter(poller_info->id, poller_info->thread_id);
+	last_busy_counter = get_last_busy_counter(poller_info->id, poller_info->thread_id);
+	if (g_interval_data) {
+		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64,
+			  poller_info->run_count - last_run_counter);
+	} else {
+		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64, poller_info->run_count);
+	}
+
+	if (poller_info->period_ticks != 0) {
+		print_left(poller_win, 4, 28, POLLER_WIN_WIDTH, "Period:", COLOR_PAIR(5));
+		get_time_str(poller_info->period_ticks, poller_period);
+		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL + 23, "%s", poller_period);
+	}
+	mvwhline(poller_win, 5, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
+
+	busy_count = g_interval_data ? poller_info->busy_count - last_busy_counter :
+		     poller_info->busy_count;
+	if (busy_count != 0) {
+		print_left(poller_win, 6, 2, POLLER_WIN_WIDTH,  "Status:               Busy count:", COLOR_PAIR(5));
+
+		if (g_interval_data == false && poller_info->busy_count == last_busy_counter) {
+			print_left(poller_win, 6, POLLER_WIN_FIRST_COL, POLLER_WIN_WIDTH, "Idle", COLOR_PAIR(7));
+		} else {
+			print_left(poller_win, 6, POLLER_WIN_FIRST_COL, POLLER_WIN_WIDTH, "Busy", COLOR_PAIR(6));
+		}
+
+		mvwprintw(poller_win, 6, POLLER_WIN_FIRST_COL + 23, "%" PRIu64, busy_count);
+	} else {
+		print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH - 7, "Status:", COLOR_PAIR(5));
+		print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH + 6, "Idle", COLOR_PAIR(7));
+	}
+
+	wnoutrefresh(poller_win);
+	refresh();
+}
+
+static void
 show_poller(uint8_t current_page)
 {
 	PANEL *poller_panel;
 	WINDOW *poller_win;
-	uint64_t last_run_counter, last_busy_counter, busy_count;
 	uint64_t poller_number = current_page * g_max_data_rows + g_selected_row;
 	struct rpc_poller_info *poller;
 	bool stop_loop = false;
-	char poller_period[MAX_TIME_STR_LEN];
 	int c;
 
 	pthread_mutex_lock(&g_thread_lock);
@@ -2608,53 +2662,7 @@ show_poller(uint8_t current_page)
 	top_panel(poller_panel);
 	update_panels();
 	doupdate();
-
-	box(poller_win, 0, 0);
-
-	print_in_middle(poller_win, 1, 0, POLLER_WIN_WIDTH, poller->name, COLOR_PAIR(3));
-	mvwhline(poller_win, 2, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
-	mvwaddch(poller_win, 2, POLLER_WIN_WIDTH, ACS_RTEE);
-
-	print_left(poller_win, 3, 2, POLLER_WIN_WIDTH, "Type:                  On thread:", COLOR_PAIR(5));
-	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL, "%s",
-		  poller_type_str[poller->type]);
-	mvwprintw(poller_win, 3, POLLER_WIN_FIRST_COL + 23, "%s", poller->thread_name);
-
-	print_left(poller_win, 4, 2, POLLER_WIN_WIDTH, "Run count:", COLOR_PAIR(5));
-
-	last_run_counter = get_last_run_counter(poller->id, poller->thread_id);
-	last_busy_counter = get_last_busy_counter(poller->id, poller->thread_id);
-	if (g_interval_data) {
-		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64, poller->run_count - last_run_counter);
-	} else {
-		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL, "%" PRIu64, poller->run_count);
-	}
-
-	if (poller->period_ticks != 0) {
-		print_left(poller_win, 4, 28, POLLER_WIN_WIDTH, "Period:", COLOR_PAIR(5));
-		get_time_str(poller->period_ticks, poller_period);
-		mvwprintw(poller_win, 4, POLLER_WIN_FIRST_COL + 23, "%s", poller_period);
-	}
-	mvwhline(poller_win, 5, 1, ACS_HLINE, POLLER_WIN_WIDTH - 2);
-
-	busy_count = g_interval_data ? poller->busy_count - last_busy_counter : poller->busy_count;
-	if (busy_count != 0) {
-		print_left(poller_win, 6, 2, POLLER_WIN_WIDTH,  "Status:               Busy count:", COLOR_PAIR(5));
-
-		if (g_interval_data == false && poller->busy_count == last_busy_counter) {
-			print_left(poller_win, 6, POLLER_WIN_FIRST_COL, POLLER_WIN_WIDTH, "Idle", COLOR_PAIR(7));
-		} else {
-			print_left(poller_win, 6, POLLER_WIN_FIRST_COL, POLLER_WIN_WIDTH, "Busy", COLOR_PAIR(6));
-		}
-
-		mvwprintw(poller_win, 6, POLLER_WIN_FIRST_COL + 23, "%" PRIu64, busy_count);
-	} else {
-		print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH - 7, "Status:", COLOR_PAIR(5));
-		print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH + 6, "Idle", COLOR_PAIR(7));
-	}
-
-	wnoutrefresh(poller_win);
-	refresh();
+	draw_poller_win_content(poller_win, poller);
 
 	pthread_mutex_unlock(&g_thread_lock);
 	while (!stop_loop) {
