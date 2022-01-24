@@ -42,11 +42,21 @@ function nvme_fio_test() {
 }
 
 function nvme_multi_secondary() {
-	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
+	# Primary process exits last
+	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 5 -c 0x1 &
 	pid0=$!
 	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &
 	pid1=$!
 	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x4
+	wait $pid0
+	wait $pid1
+
+	# Secondary process exits last
+	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
+	pid0=$!
+	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &
+	pid1=$!
+	$SPDK_EXAMPLE_DIR/perf -i 0 -q 16 -w read -o 4096 -t 5 -c 0x4
 	wait $pid0
 	wait $pid1
 }

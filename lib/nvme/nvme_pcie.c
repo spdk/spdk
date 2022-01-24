@@ -830,7 +830,7 @@ nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 		return -1;
 	}
 
-	if (addr) {
+	if (addr && spdk_process_is_primary()) {
 		/* NOTE: addr may have been remapped here. We're relying on DPDK to call
 		 * munmap internally.
 		 */
