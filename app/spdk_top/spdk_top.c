@@ -2634,11 +2634,10 @@ draw_poller_win_content(WINDOW *poller_win, struct rpc_poller_info *poller_info)
 	}
 
 	wnoutrefresh(poller_win);
-	refresh();
 }
 
 static void
-show_poller(uint8_t current_page)
+show_poller(uint8_t current_page, uint8_t active_tab)
 {
 	PANEL *poller_panel;
 	WINDOW *poller_win;
@@ -2646,6 +2645,12 @@ show_poller(uint8_t current_page)
 	struct rpc_poller_info *poller;
 	bool stop_loop = false;
 	int c;
+	long int time_last, time_dif;
+	struct timespec time_now;
+
+	clock_gettime(CLOCK_MONOTONIC, &time_now);
+	time_last = time_now.tv_sec;
+
 
 	pthread_mutex_lock(&g_thread_lock);
 
@@ -2663,16 +2668,29 @@ show_poller(uint8_t current_page)
 	update_panels();
 	doupdate();
 	draw_poller_win_content(poller_win, poller);
+	refresh();
 
 	pthread_mutex_unlock(&g_thread_lock);
 	while (!stop_loop) {
-		c = wgetch(poller_win);
+		c = getch();
 		switch (c) {
 		case 27: /* ESC */
 			stop_loop = true;
 			break;
 		default:
 			break;
+		}
+
+		clock_gettime(CLOCK_MONOTONIC, &time_now);
+		time_dif = time_now.tv_sec - time_last;
+
+		if (time_dif >= g_sleep_time) {
+			time_last = time_now.tv_sec;
+			pthread_mutex_lock(&g_thread_lock);
+			refresh_tab(active_tab, current_page);
+			draw_poller_win_content(poller_win, poller);
+			refresh();
+			pthread_mutex_unlock(&g_thread_lock);
 		}
 	}
 
@@ -2937,7 +2955,7 @@ show_stats(pthread_t *data_thread)
 			} else if (active_tab == CORES_TAB) {
 				show_core(current_page, active_tab);
 			} else if (active_tab == POLLERS_TAB) {
-				show_poller(current_page);
+				show_poller(current_page, active_tab);
 			}
 			break;
 		case 'h':
