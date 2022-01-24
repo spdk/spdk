@@ -342,6 +342,13 @@ block_in_use() {
 		return 1
 	fi
 
+	# Devices used in SPDK tests always create GPT partitions
+	# with label containing SPDK_TEST string. Such devices were
+	# part of the tests before, so are not considered in use.
+	if [[ $pt == gpt ]] && parted "/dev/${block##*/}" -ms print | grep -q "SPDK_TEST"; then
+		return 1
+	fi
+
 	return 0
 }
 
