@@ -1157,8 +1157,7 @@ print_max_len(WINDOW *win, int row, uint16_t col, uint16_t max_len, enum str_ali
 	if (max_str <= DOTS_STR_LEN + 1) {
 		/* No space to print anything, but we have to let a user know about it */
 		mvwprintw(win, row, max_col - DOTS_STR_LEN - 1, "...");
-		refresh();
-		wrefresh(win);
+		wnoutrefresh(win);
 		return;
 	}
 
@@ -1180,8 +1179,7 @@ print_max_len(WINDOW *win, int row, uint16_t col, uint16_t max_len, enum str_ali
 
 	mvwprintw(win, row, col, "%s", tmp_str);
 
-	refresh();
-	wrefresh(win);
+	wnoutrefresh(win);
 }
 
 static void
@@ -1727,10 +1725,9 @@ refresh_tab(enum tabs tab, uint8_t current_page)
 	}
 
 	max_pages = (*refresh_function[tab])(current_page);
-	refresh();
 
 	for (i = 0; i < NUMBER_OF_TABS; i++) {
-		wrefresh(g_tab_win[i]);
+		wnoutrefresh(g_tab_win[i]);
 	}
 	draw_menu_win();
 
@@ -1747,7 +1744,6 @@ print_in_middle(WINDOW *win, int starty, int startx, int width, char *string, ch
 	wattron(win, color);
 	mvwprintw(win, starty, startx + temp, "%s", string);
 	wattroff(win, color);
-	refresh();
 }
 
 static void
@@ -1756,7 +1752,6 @@ print_left(WINDOW *win, int starty, int startx, int width, char *string, chtype 
 	wattron(win, color);
 	mvwprintw(win, starty, startx, "%s", string);
 	wattroff(win, color);
-	refresh();
 }
 
 static void
@@ -2323,8 +2318,7 @@ draw_thread_win_content(WINDOW *thread_win, struct rpc_thread_info *thread_info)
 		}
 	}
 
-	refresh();
-	wrefresh(thread_win);
+	wnoutrefresh(thread_win);
 }
 
 static int
@@ -2408,7 +2402,6 @@ display_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab)
 			pthread_mutex_lock(&g_thread_lock);
 			refresh_tab(active_tab, current_page);
 			draw_thread_win_content(thread_win, &thread_info);
-			wrefresh(thread_win);
 			refresh();
 			pthread_mutex_unlock(&g_thread_lock);
 		}
@@ -2533,8 +2526,7 @@ show_core(uint8_t current_page, uint8_t active_tab)
 	}
 	pthread_mutex_unlock(&g_thread_lock);
 
-	refresh();
-	wrefresh(core_win);
+	wnoutrefresh(core_win);
 
 	current_threads_row = 0;
 
@@ -2661,8 +2653,8 @@ show_poller(uint8_t current_page)
 		print_in_middle(poller_win, 6, 1, POLLER_WIN_WIDTH + 6, "Idle", COLOR_PAIR(7));
 	}
 
+	wnoutrefresh(poller_win);
 	refresh();
-	wrefresh(poller_win);
 
 	pthread_mutex_unlock(&g_thread_lock);
 	while (!stop_loop) {
