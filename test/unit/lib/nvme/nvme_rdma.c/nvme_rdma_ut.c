@@ -58,7 +58,6 @@ DEFINE_STUB(rdma_ack_cm_event, int, (struct rdma_cm_event *event), 0);
 DEFINE_STUB_V(rdma_free_devices, (struct ibv_context **list));
 DEFINE_STUB(fcntl, int, (int fd, int cmd, ...), 0);
 DEFINE_STUB_V(rdma_destroy_event_channel, (struct rdma_event_channel *channel));
-DEFINE_STUB(rdma_destroy_id, int, (struct rdma_cm_id *id), 0);
 
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
 DEFINE_STUB(ibv_resize_cq, int, (struct ibv_cq *cq, int cqe), 0);
