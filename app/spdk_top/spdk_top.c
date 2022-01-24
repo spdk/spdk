@@ -2444,35 +2444,11 @@ show_single_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab)
 }
 
 static void
-show_core(uint8_t current_page, uint8_t active_tab)
+draw_core_win_content(WINDOW *core_win, struct rpc_core_info *core_info)
 {
-	PANEL *core_panel;
-	WINDOW *core_win;
-	uint64_t core_number = current_page * g_max_data_rows + g_selected_row;
-	struct rpc_core_info *core_info = &g_cores_info[core_number];
-	uint64_t threads_count, i;
-	uint64_t thread_id = 0;
-	uint16_t current_threads_row;
-	int c;
+	uint64_t i;
 	char core_win_title[25];
-	bool stop_loop = false;
 	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
-
-	pthread_mutex_lock(&g_thread_lock);
-	assert(core_number < g_last_cores_count);
-
-	threads_count = g_cores_info[core_number].threads.threads_count;
-
-	core_win = newwin(threads_count + CORE_WIN_HEIGHT, CORE_WIN_WIDTH,
-			  get_position_for_window(CORE_WIN_HEIGHT + threads_count, g_max_row),
-			  get_position_for_window(CORE_WIN_WIDTH, g_max_col));
-
-	keypad(core_win, TRUE);
-	core_panel = new_panel(core_win);
-
-	top_panel(core_panel);
-	update_panels();
-	doupdate();
 
 	box(core_win, 0, 0);
 	snprintf(core_win_title, sizeof(core_win_title), "Core %" PRIu32 " details",
@@ -2527,6 +2503,38 @@ show_core(uint8_t current_page, uint8_t active_tab)
 	pthread_mutex_unlock(&g_thread_lock);
 
 	wnoutrefresh(core_win);
+}
+
+static void
+show_core(uint8_t current_page, uint8_t active_tab)
+{
+	PANEL *core_panel;
+	WINDOW *core_win;
+	uint64_t core_number = current_page * g_max_data_rows + g_selected_row;
+	struct rpc_core_info *core_info = &g_cores_info[core_number];
+	uint64_t threads_count, i;
+	uint64_t thread_id = 0;
+	uint16_t current_threads_row;
+	int c;
+
+	bool stop_loop = false;
+
+	pthread_mutex_lock(&g_thread_lock);
+	assert(core_number < g_last_cores_count);
+
+	threads_count = g_cores_info[core_number].threads.threads_count;
+
+	core_win = newwin(threads_count + CORE_WIN_HEIGHT, CORE_WIN_WIDTH,
+			  get_position_for_window(CORE_WIN_HEIGHT + threads_count, g_max_row),
+			  get_position_for_window(CORE_WIN_WIDTH, g_max_col));
+
+	keypad(core_win, TRUE);
+	core_panel = new_panel(core_win);
+
+	top_panel(core_panel);
+	update_panels();
+	doupdate();
+	draw_core_win_content(core_win, core_info);
 
 	current_threads_row = 0;
 
