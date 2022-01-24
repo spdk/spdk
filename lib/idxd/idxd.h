@@ -78,7 +78,6 @@ struct idxd_batch {
 	uint64_t			user_desc_addr;
 	uint8_t				index;
 	struct spdk_idxd_io_channel	*chan;
-	bool				transparent;
 	TAILQ_ENTRY(idxd_batch)		link;
 };
 
