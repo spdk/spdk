@@ -43,7 +43,7 @@ for fs in $fs; do
 			i=$((i + 1))
 			sleep 0.1
 		done
-		$parted_cmd mkpart primary 2048s 100%
+		$parted_cmd mkpart SPDK_TEST 2048s 100%
 
 		mkfs_cmd="mkfs.$fs"
 		if [[ $fs == "ntfs" ]] || [[ $fs == "btrfs" ]]; then
