@@ -1798,6 +1798,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	struct nvmf_vfio_user_ctrlr *ctrlr;
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
+	void *map_start, *map_end;
 	int ret;
 
 	/*
@@ -1808,11 +1809,13 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		return;
 	}
 
+	map_start = info->mapping.iov_base;
+	map_end = info->mapping.iov_base + info->mapping.iov_len;
+
 	if (((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
 	    (info->mapping.iov_len & MASK_2MB)) {
-		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
-			      (uintptr_t)info->mapping.iov_base,
-			      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %p-%p\n",
+			      info->vaddr, map_start, map_end);
 		return;
 	}
 
@@ -1822,9 +1825,8 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	}
 	ctrlr = endpoint->ctrlr;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: map IOVA %#lx-%#lx\n", endpoint_id(endpoint),
-		      (uintptr_t)info->mapping.iov_base,
-		      (uintptr_t)info->mapping.iov_base + info->mapping.iov_len);
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: map IOVA %p-%p\n", endpoint_id(endpoint),
+		      map_start, map_end);
 
 	/* VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE are enabled when registering to VFIO, here we also
 	 * check the protection bits before registering.
@@ -1832,10 +1834,8 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	if (info->prot == (PROT_WRITE | PROT_READ)) {
 		ret = spdk_mem_register(info->mapping.iov_base, info->mapping.iov_len);
 		if (ret) {
-			SPDK_ERRLOG("Memory region register %#lx-%#lx failed, ret=%d\n",
-				    (uintptr_t)info->mapping.iov_base,
-				    (uintptr_t)info->mapping.iov_base + info->mapping.iov_len,
-				    ret);
+			SPDK_ERRLOG("Memory region register %p-%p failed, ret=%d\n",
+				    map_start, map_end, ret);
 		}
 	}
 
@@ -1891,14 +1891,14 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 
 	if (((uintptr_t)info->mapping.iov_base & MASK_2MB) ||
 	    (info->mapping.iov_len & MASK_2MB)) {
-		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %#lx-%#lx\n", info->vaddr,
-			      (uintptr_t)map_start, (uintptr_t)map_end);
+		SPDK_DEBUGLOG(nvmf_vfio, "Invalid memory region vaddr %p, IOVA %p-%p\n",
+			      info->vaddr, map_start, map_end);
 		return;
 	}
 
 	assert(endpoint != NULL);
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap IOVA %#lx-%#lx\n", endpoint_id(endpoint),
-		      (uintptr_t)map_start, (uintptr_t)map_end);
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: unmap IOVA %p-%p\n", endpoint_id(endpoint),
+		      map_start, map_end);
 
 	if (endpoint->ctrlr != NULL) {
 		struct nvmf_vfio_user_ctrlr *ctrlr;
@@ -1922,8 +1922,8 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 	if (info->prot == (PROT_WRITE | PROT_READ)) {
 		ret = spdk_mem_unregister(info->mapping.iov_base, info->mapping.iov_len);
 		if (ret) {
-			SPDK_ERRLOG("Memory region unregister %#lx-%#lx failed, ret=%d\n",
-				    (uintptr_t)map_start, (uintptr_t)map_end, ret);
+			SPDK_ERRLOG("Memory region unregister %p-%p failed, ret=%d\n",
+				    map_start, map_end, ret);
 		}
 	}
 }
