@@ -2327,30 +2327,36 @@ draw_thread_win_content(WINDOW *thread_win, struct rpc_thread_info *thread_info)
 	wrefresh(thread_win);
 }
 
+static int
+get_single_thread_info(uint64_t thread_id, struct rpc_thread_info *thread_info)
+{
+	uint64_t i;
+
+	for (i = 0; i < g_last_threads_count; i++) {
+		if (g_threads_info[i].id == thread_id) {
+			memcpy(thread_info, &g_threads_info[i], sizeof(struct rpc_thread_info));
+			return 0;
+		}
+	}
+
+	print_bottom_message("Selected thread no longer exists. Exiting pop-up.");
+	return -1;
+}
+
 static void
 display_thread(uint64_t thread_id, uint8_t current_page)
 {
 	PANEL *thread_panel;
 	WINDOW *thread_win;
 	struct rpc_thread_info thread_info;
-	uint64_t pollers_count, i;
+	uint64_t pollers_count;
 	int c;
 	bool stop_loop = false;
 
 	memset(&thread_info, 0, sizeof(thread_info));
 	pthread_mutex_lock(&g_thread_lock);
 
-	/* Use local copy of thread_info */
-	for (i = 0; i < g_last_threads_count; i++) {
-		if (g_threads_info[i].id == thread_id) {
-			memcpy(&thread_info, &g_threads_info[i], sizeof(struct rpc_thread_info));
-			break;
-		}
-	}
-
-	/* We did not find this thread, so we cannot show its information. */
-	if (i == g_last_threads_count) {
-		print_bottom_message("This thread does not exist.");
+	if (get_single_thread_info(thread_id, &thread_info)) {
 		pthread_mutex_unlock(&g_thread_lock);
 		return;
 	}
