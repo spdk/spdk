@@ -2,6 +2,7 @@
 SYSTEM=$(uname -s)
 size="1024M"
 nvme_disk="/var/lib/libvirt/images/nvme_disk.img"
+preallocation="falloc"
 
 function usage() {
 	echo "Usage: ${0##*/} [-s <disk_size>] [-n <backing file name>]"
@@ -9,9 +10,11 @@ function usage() {
 	echo "                                    for OCSSD default: 9G"
 	echo "-n <backing file name>        backing file path with name"
 	echo "           default: /var/lib/libvirt/images/nvme_disk.img"
+	echo "-p <mode>              allowed values:[off, falloc, full]"
+	echo "                                          default: falloc"
 }
 
-while getopts "s:n:t:h-:" opt; do
+while getopts "s:n:p:t:h-:" opt; do
 	case "${opt}" in
 		-)
 			echo "  Invalid argument: $OPTARG"
@@ -23,6 +26,9 @@ while getopts "s:n:t:h-:" opt; do
 			;;
 		n)
 			nvme_disk=$OPTARG
+			;;
+		p)
+			preallocation=$OPTARG
 			;;
 		h)
 			usage
@@ -42,7 +48,7 @@ if [ "${SYSTEM}" != "Linux" ]; then
 fi
 
 WHICH_OS=$(lsb_release -i | awk '{print $3}')
-qemu-img create -f raw "$nvme_disk" $size
+qemu-img create -f raw "$nvme_disk" -o preallocation="$preallocation" $size
 
 case $WHICH_OS in
 	"Fedora")
