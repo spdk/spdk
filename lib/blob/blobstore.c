@@ -6662,10 +6662,19 @@ bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 	if (ctx->allocate_all) {
 		/* remove thin provisioning */
 		bs_blob_list_remove(_blob);
+		if (_blob->parent_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT) {
+			blob_remove_xattr(_blob, BLOB_EXTERNAL_SNAPSHOT_ID, true);
+			_blob->invalid_flags &= ~SPDK_BLOB_EXTERNAL_SNAPSHOT;
+		} else {
+			blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
+		}
 		_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
 		blob_back_bs_destroy(_blob);
 		_blob->parent_id = SPDK_BLOBID_INVALID;
 	} else {
+		/* For now, esnap clones always have allocate_all set. */
+		assert(!blob_is_esnap_clone(_blob));
+
 		_parent = ((struct spdk_blob_bs_dev *)(_blob->back_bs_dev))->blob;
 		if (_parent->parent_id != SPDK_BLOBID_INVALID) {
 			/* We must change the parent of the inflated blob */
@@ -6704,6 +6713,10 @@ bs_cluster_needs_allocation(struct spdk_blob *blob, uint64_t cluster, bool alloc
 	if (blob->parent_id == SPDK_BLOBID_INVALID) {
 		/* Blob have no parent blob */
 		return allocate_all;
+	}
+
+	if (blob->parent_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT) {
+		return true;
 	}
 
 	b = (struct spdk_blob_bs_dev *)blob->back_bs_dev;
@@ -6789,6 +6802,16 @@ bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 		/* This is not thin provisioned blob. No need to inflate. */
 		bs_clone_snapshot_origblob_cleanup(ctx, 0);
 		return;
+	}
+
+	if (_blob->parent_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT) {
+		/*
+		 * It would be better to rely on back_bs_dev->is_zeroes(), to determine which
+		 * clusters require allocation. Until there is a blobstore consumer that
+		 * uses esnaps with an spdk_bs_dev that implements a useful is_zeroes() it is not
+		 * worth the effort.
+		 */
+		ctx->allocate_all = true;
 	}
 
 	/* Do two passes - one to verify that we can obtain enough clusters

@@ -7582,7 +7582,7 @@ blob_esnap_verify_contents(struct spdk_blob *blob, struct spdk_io_channel *ch,
 			   uint64_t offset, uint64_t size, uint32_t readsize, const char *how)
 {
 	const uint32_t	bs_blksz = blob->bs->io_unit_size;
-	const uint32_t	esnap_blksz = blob->back_bs_dev->blocklen;
+	const uint32_t	esnap_blksz = blob->back_bs_dev ? blob->back_bs_dev->blocklen : bs_blksz;
 	const uint32_t	start_blk = offset / bs_blksz;
 	const uint32_t	num_blocks = spdk_max(size, readsize) / bs_blksz;
 	const uint32_t	blocks_per_read = spdk_min(size, readsize) / bs_blksz;
@@ -8208,6 +8208,83 @@ blob_esnap_clone_snapshot(void)
 	ut_blob_close_and_delete(bs, blob);
 }
 
+static uint64_t
+_blob_esnap_clone_hydrate(bool inflate)
+{
+	struct spdk_blob_store	*bs = g_bs;
+	struct spdk_blob_opts	opts;
+	struct ut_esnap_opts	esnap_opts;
+	struct spdk_blob	*blob;
+	spdk_blob_id		blobid;
+	struct spdk_io_channel *channel;
+	bool			destroyed = false;
+	const uint32_t		blocklen = spdk_bs_get_io_unit_size(bs);
+	const uint32_t		cluster_sz = spdk_bs_get_cluster_size(bs);
+	const uint64_t		esnap_num_clusters = 4;
+	const uint32_t		esnap_sz = cluster_sz * esnap_num_clusters;
+	const uint64_t		esnap_num_blocks = esnap_sz / blocklen;
+	uint64_t		num_failures = CU_get_number_of_failures();
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(channel != NULL);
+
+	/* Create the esnap clone */
+	ut_spdk_blob_opts_init(&opts);
+	ut_esnap_opts_init(blocklen, esnap_num_blocks, __func__, &destroyed, &esnap_opts);
+	opts.esnap_id = &esnap_opts;
+	opts.esnap_id_len = sizeof(esnap_opts);
+	opts.num_clusters = esnap_num_clusters;
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	/* Open the esnap clone */
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	UT_ASSERT_IS_ESNAP_CLONE(blob, &esnap_opts, sizeof(esnap_opts));
+
+	/*
+	 * Inflate or decouple  the blob then verify that it is no longer an esnap clone and has
+	 * right content
+	 */
+	if (inflate) {
+		spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+	} else {
+		spdk_bs_blob_decouple_parent(bs, channel, blobid, blob_op_complete, NULL);
+	}
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	UT_ASSERT_IS_NOT_ESNAP_CLONE(blob);
+	CU_ASSERT(blob_esnap_verify_contents(blob, channel, 0, esnap_sz, esnap_sz, "read"));
+	ut_blob_close_and_delete(bs, blob);
+
+	/*
+	 * Clean up
+	 */
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
+
+	/* Return number of new failures */
+	return CU_get_number_of_failures() - num_failures;
+}
+
+static void
+blob_esnap_clone_inflate(void)
+{
+	_blob_esnap_clone_hydrate(true);
+}
+
+static void
+blob_esnap_clone_decouple(void)
+{
+	_blob_esnap_clone_hydrate(false);
+}
+
 static void
 suite_bs_setup(void)
 {
@@ -8415,6 +8492,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, blob_esnap_io_512_4096);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_thread_add_remove);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_snapshot);
+	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_inflate);
+	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_decouple);
 
 	allocate_threads(2);
 	set_thread(0);
