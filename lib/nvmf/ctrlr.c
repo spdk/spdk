@@ -65,6 +65,8 @@
 
 #define ANA_TRANSITION_TIME_IN_SEC 10
 
+#define NVMF_ABORT_COMMAND_LIMIT 3
+
 /*
  * Support for custom admin command handlers
  */
@@ -2683,8 +2685,10 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 			cdata->oaes.ana_change_notices = 1;
 		}
 		cdata->ctratt.host_id_exhid_supported = 1;
-		/* TODO: Concurrent execution of multiple abort commands. */
-		cdata->acl = 0;
+		/* We do not have any actual limitation to the number of abort commands.
+		 * We follow the recommendation by the NVMe specification.
+		 */
+		cdata->acl = NVMF_ABORT_COMMAND_LIMIT;
 		cdata->frmw.slot1_ro = 1;
 		cdata->frmw.num_slots = 1;
 
