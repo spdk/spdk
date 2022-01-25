@@ -63,6 +63,42 @@ DEFINE_STUB(spdk_memory_domain_memzero, int, (struct spdk_memory_domain *src_dom
 		void *src_domain_ctx, struct iovec *iov, uint32_t iovcnt, void (*cpl_cb)(void *, int),
 		void *cpl_cb_arg), 0);
 
+static bool
+is_esnap_clone(struct spdk_blob *_blob, const void *id, size_t id_len)
+{
+	const void *val = NULL;
+	size_t len = 0;
+	bool c0, c1, c2, c3;
+
+	CU_ASSERT(blob_get_xattr_value(_blob, BLOB_EXTERNAL_SNAPSHOT_ID, &val, &len,
+				       true) == 0);
+	CU_ASSERT((c0 = (len == id_len)));
+	CU_ASSERT((c1 = (val != NULL && memcmp(val, id, len) == 0)));
+	CU_ASSERT((c2 = !!(_blob->invalid_flags & SPDK_BLOB_EXTERNAL_SNAPSHOT)));
+	CU_ASSERT((c3 = (_blob->parent_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT)));
+
+	return c0 && c1 && c2 && c3;
+}
+
+static bool
+is_not_esnap_clone(struct spdk_blob *_blob)
+{
+	const void *val = NULL;
+	size_t len = 0;
+	bool c1, c2, c3, c4;
+
+	CU_ASSERT((c1 = (blob_get_xattr_value(_blob, BLOB_EXTERNAL_SNAPSHOT_ID, &val, &len,
+					      true) == -ENOENT)));
+	CU_ASSERT((c2 = (val == NULL)));
+	CU_ASSERT((c3 = ((_blob->invalid_flags & SPDK_BLOB_EXTERNAL_SNAPSHOT) == 0)));
+	CU_ASSERT((c4 = (_blob->parent_id != SPDK_BLOBID_EXTERNAL_SNAPSHOT)));
+
+	return c1 && c2 && c3 && c4;
+}
+
+#define UT_ASSERT_IS_ESNAP_CLONE(_blob, _id, _len) CU_ASSERT(is_esnap_clone(_blob, _id, _len))
+#define UT_ASSERT_IS_NOT_ESNAP_CLONE(_blob) CU_ASSERT(is_not_esnap_clone(_blob))
+
 static void
 _get_xattr_value(void *arg, const char *name,
 		 const void **value, size_t *value_len)
@@ -8015,6 +8051,164 @@ blob_ext_md_pages(void)
 }
 
 static void
+blob_esnap_clone_snapshot(void)
+{
+	/*
+	 * When a snapshot is created, the blob that is being snapped becomes
+	 * the leaf node (a clone of the snapshot) and the newly created
+	 * snapshot sits between the snapped blob and the external snapshot.
+	 *
+	 * Before creating snap1
+	 *
+	 *   ,--------.     ,----------.
+	 *   |  blob  |     |  vbdev   |
+	 *   | blob1  |<----| nvme1n42 |
+	 *   |  (rw)  |     |   (ro)   |
+	 *   `--------'     `----------'
+	 *       Figure 1
+	 *
+	 * After creating snap1
+	 *
+	 *   ,--------.     ,--------.     ,----------.
+	 *   |  blob  |     |  blob  |     |  vbdev   |
+	 *   | blob1  |<----| snap1  |<----| nvme1n42 |
+	 *   |  (rw)  |     |  (ro)  |     |   (ro)   |
+	 *   `--------'     `--------'     `----------'
+	 *       Figure 2
+	 *
+	 * Starting from Figure 2, if snap1 is removed, the chain reverts to
+	 * what it looks like in Figure 1.
+	 *
+	 * Starting from Figure 2, if blob1 is removed, the chain becomes:
+	 *
+	 *   ,--------.     ,----------.
+	 *   |  blob  |     |  vbdev   |
+	 *   | snap1  |<----| nvme1n42 |
+	 *   |  (ro)  |     |   (ro)   |
+	 *   `--------'     `----------'
+	 *       Figure 3
+	 *
+	 * In each case, the blob pointed to by the nvme vbdev is considered
+	 * the "esnap clone".  The esnap clone must have:
+	 *
+	 *   - XATTR_INTERNAL for BLOB_EXTERNAL_SNAPSHOT_ID (e.g. name or UUID)
+	 *   - blob->invalid_flags must contain SPDK_BLOB_EXTERNAL_SNAPSHOT
+	 *   - blob->parent_id must be SPDK_BLOBID_EXTERNAL_SNAPSHOT.
+	 *
+	 * No other blob that descends from the esnap clone may have any of
+	 * those set.
+	 */
+	struct spdk_blob_store	*bs = g_bs;
+	const uint32_t		blocklen = bs->io_unit_size;
+	struct spdk_blob_opts	opts;
+	struct ut_esnap_opts	esnap_opts;
+	struct spdk_blob	*blob, *snap_blob;
+	spdk_blob_id		blobid, snap_blobid;
+	bool			destroyed = false;
+
+	/* Create the esnap clone */
+	ut_esnap_opts_init(blocklen, 2048, __func__, &destroyed, &esnap_opts);
+	ut_spdk_blob_opts_init(&opts);
+	opts.esnap_id = &esnap_opts;
+	opts.esnap_id_len = sizeof(esnap_opts);
+	opts.num_clusters = 10;
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	/* Open the blob. */
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+	UT_ASSERT_IS_ESNAP_CLONE(blob, &esnap_opts, sizeof(esnap_opts));
+
+	/*
+	 * Create a snapshot of the blob. The snapshot becomes the esnap clone.
+	 */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snap_blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, snap_blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snap_blob = g_blob;
+
+	UT_ASSERT_IS_NOT_ESNAP_CLONE(blob);
+	UT_ASSERT_IS_ESNAP_CLONE(snap_blob, &esnap_opts, sizeof(esnap_opts));
+
+	/*
+	 * Delete the snapshot.  The original blob becomes the esnap clone.
+	 */
+	ut_blob_close_and_delete(bs, snap_blob);
+	snap_blob = NULL;
+	snap_blobid = SPDK_BLOBID_INVALID;
+	UT_ASSERT_IS_ESNAP_CLONE(blob, &esnap_opts, sizeof(esnap_opts));
+
+	/*
+	 * Create the snapshot again, then delete the original blob.  The
+	 * snapshot should survive as the esnap clone.
+	 */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	snap_blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, snap_blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snap_blob = g_blob;
+
+	UT_ASSERT_IS_NOT_ESNAP_CLONE(blob);
+	UT_ASSERT_IS_ESNAP_CLONE(snap_blob, &esnap_opts, sizeof(esnap_opts));
+
+	ut_blob_close_and_delete(bs, blob);
+	blob = NULL;
+	blobid = SPDK_BLOBID_INVALID;
+	UT_ASSERT_IS_ESNAP_CLONE(snap_blob, &esnap_opts, sizeof(esnap_opts));
+
+	/*
+	 * Clone the snapshot.  The snapshot continues to be the esnap clone.
+	 */
+	spdk_bs_create_clone(bs, snap_blobid, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	UT_ASSERT_IS_NOT_ESNAP_CLONE(blob);
+	UT_ASSERT_IS_ESNAP_CLONE(snap_blob, &esnap_opts, sizeof(esnap_opts));
+
+	/*
+	 * Delete the snapshot. The clone becomes the esnap clone.
+	 */
+	ut_blob_close_and_delete(bs, snap_blob);
+	snap_blob = NULL;
+	snap_blobid = SPDK_BLOBID_INVALID;
+	UT_ASSERT_IS_ESNAP_CLONE(blob, &esnap_opts, sizeof(esnap_opts));
+
+	/*
+	 * Clean up
+	 */
+	ut_blob_close_and_delete(bs, blob);
+}
+
+static void
 suite_bs_setup(void)
 {
 	struct spdk_bs_dev *dev;
@@ -8220,6 +8414,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, blob_esnap_io_4096_512);
 	CU_ADD_TEST(suite, blob_esnap_io_512_4096);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_thread_add_remove);
+	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_snapshot);
 
 	allocate_threads(2);
 	set_thread(0);
