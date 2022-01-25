@@ -57,6 +57,7 @@ function build_native_dpdk() {
 	local external_dpdk_base_dir
 	local compiler_version
 	local compiler
+	local dpdk_kmods
 
 	compiler=${CC:-gcc}
 
@@ -167,8 +168,13 @@ function build_native_dpdk() {
 		fi
 	fi
 
+	dpdk_kmods="false"
+	if [ "$(uname -s)" = "FreeBSD" ]; then
+		dpdk_kmods="true"
+	fi
+
 	meson build-tmp --prefix="$external_dpdk_dir" --libdir lib \
-		-Denable_docs=false -Denable_kmods=false -Dtests=false \
+		-Denable_docs=false -Denable_kmods="$dpdk_kmods" -Dtests=false \
 		-Dc_link_args="$dpdk_ldflags" -Dc_args="$dpdk_cflags" \
 		-Dmachine=native -Denable_drivers=$(printf "%s," "${DPDK_DRIVERS[@]}")
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS

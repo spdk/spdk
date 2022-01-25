@@ -1262,7 +1262,6 @@ function freebsd_update_contigmem_mod() {
 	if [ $(uname) = FreeBSD ]; then
 		kldunload contigmem.ko || true
 		if [ -n "$SPDK_RUN_EXTERNAL_DPDK" ]; then
-			echo "Warning: SPDK only works on FreeBSD with patches that only exist in SPDK's dpdk submodule"
 			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/contigmem.ko" /boot/modules/
 			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/contigmem.ko" /boot/kernel/
 			cp -f "$SPDK_RUN_EXTERNAL_DPDK/kmod/nic_uio.ko" /boot/modules/
