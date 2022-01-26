@@ -140,6 +140,7 @@ Optional, SPDK Target only:
   Default: static.
 - num_shared_buffers - int, number of shared buffers to allocate when
   creating transport layer. Default: 4096.
+- max_queue_depth - int, max number of outstanding I/O per queue. Default: 128.
 - dif_insert_strip - bool. Only for TCP transport. Enable DIF option when
   creating transport layer. Default: false.
 - null_block_dif_type - int, 0-3. Level of DIF type to use when creating

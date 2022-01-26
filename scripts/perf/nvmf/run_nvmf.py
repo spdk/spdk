@@ -1052,12 +1052,15 @@ class SPDKTarget(Target):
         self.dif_insert_strip = False
         self.null_block_dif_type = 0
         self.num_shared_buffers = 4096
+        self.max_queue_depth = 128
         self.bpf_proc = None
         self.bpf_scripts = []
         self.enable_idxd = False
 
         if "num_shared_buffers" in target_config:
             self.num_shared_buffers = target_config["num_shared_buffers"]
+        if "max_queue_depth" in target_config:
+            self.max_queue_depth = target_config["max_queue_depth"]
         if "null_block_dif_type" in target_config:
             self.null_block_dif_type = target_config["null_block_dif_type"]
         if "dif_insert_strip" in target_config:
@@ -1091,9 +1094,10 @@ class SPDKTarget(Target):
         if self.enable_adq:
             self.adq_configure_tc()
 
-        # Create RDMA transport layer
+        # Create transport layer
         rpc.nvmf.nvmf_create_transport(self.client, trtype=self.transport,
                                        num_shared_buffers=self.num_shared_buffers,
+                                       max_queue_depth=self.max_queue_depth,
                                        dif_insert_or_strip=self.dif_insert_strip,
                                        sock_priority=self.adq_priority)
         self.log_print("SPDK NVMeOF transport layer:")
