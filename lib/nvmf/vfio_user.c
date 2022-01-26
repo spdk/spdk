@@ -400,12 +400,6 @@ struct nvmf_vfio_user_transport {
 /*
  * function prototypes
  */
-static volatile uint32_t *
-hdbl(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q);
-
-static volatile uint32_t *
-tdbl(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q);
-
 static int
 nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
 
@@ -419,6 +413,63 @@ static inline void *
 q_addr(struct nvme_q_mapping *mapping)
 {
 	return mapping->iov.iov_base;
+}
+
+static inline int
+queue_index(uint16_t qid, bool is_cq)
+{
+	return (qid * 2) + is_cq;
+}
+
+static inline volatile uint32_t *
+sq_headp(struct nvmf_vfio_user_sq *sq)
+{
+	assert(sq != NULL);
+	return &sq->sq.head;
+}
+
+static inline volatile uint32_t *
+sq_dbl_tailp(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_sq *sq)
+{
+	assert(ctrlr != NULL);
+	assert(sq != NULL);
+	return &ctrlr->doorbells[queue_index(sq->sq.qid, false)];
+}
+
+static inline volatile uint32_t *
+cq_dbl_headp(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
+{
+	assert(ctrlr != NULL);
+	assert(cq != NULL);
+	return &ctrlr->doorbells[queue_index(cq->cq.qid, true)];
+}
+
+static inline volatile uint32_t *
+cq_tailp(struct nvmf_vfio_user_cq *cq)
+{
+	assert(cq != NULL);
+	return &cq->cq.tail;
+}
+
+static inline void
+sq_head_advance(struct nvmf_vfio_user_sq *sq)
+{
+	assert(sq != NULL);
+	*sq_headp(sq) = (*sq_headp(sq) + 1) % sq->sq.size;
+}
+
+static inline void
+cq_tail_advance(struct nvmf_vfio_user_cq *vu_cq)
+{
+	assert(vu_cq != NULL);
+
+	assert(*cq_tailp(vu_cq) < vu_cq->cq.size);
+	(*cq_tailp(vu_cq))++;
+
+	if (spdk_unlikely(*cq_tailp(vu_cq) == vu_cq->cq.size)) {
+		*cq_tailp(vu_cq) = 0;
+		vu_cq->cq.phase = !vu_cq->cq.phase;
+	}
 }
 
 /* TODO: wrapper to data structure */
@@ -858,21 +909,6 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec 
 	return iov->iov_base;
 }
 
-static inline uint32_t
-sq_head(struct nvmf_vfio_user_sq *sq)
-{
-	assert(sq != NULL);
-	return sq->sq.head;
-}
-
-static inline void
-sqhd_advance(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_sq *sq)
-{
-	assert(ctrlr != NULL);
-	assert(sq != NULL);
-	sq->sq.head = (sq->sq.head + 1) % sq->sq.size;
-}
-
 static int
 map_q(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvme_q_mapping *mapping,
       uint32_t q_size, bool is_cq, bool unmap)
@@ -930,7 +966,7 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	sq->qid = 0;
 	sq->size = regs->aqa.bits.asqs + 1;
 	sq->mapping.prp1 = regs->asq;
-	sq->head = 0;
+	*sq_headp(ctrlr->sqs[0]) = 0;
 	sq->cqid = 0;
 	sq->is_cq = false;
 
@@ -939,60 +975,19 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 		return ret;
 	}
 
-	*tdbl(ctrlr, sq) = 0;
+	*sq_dbl_tailp(ctrlr, ctrlr->sqs[0]) = 0;
 
 	return 0;
 }
 
-static inline int
-queue_index(uint16_t qid, bool is_cq)
-{
-	return (qid * 2) + is_cq;
-}
-
-static volatile uint32_t *
-tdbl(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q)
-{
-	assert(ctrlr != NULL);
-	assert(q != NULL);
-	assert(!q->is_cq);
-
-	return &ctrlr->doorbells[queue_index(q->qid, false)];
-}
-
-static volatile uint32_t *
-hdbl(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q)
-{
-	assert(ctrlr != NULL);
-	assert(q != NULL);
-	assert(q->is_cq);
-
-	return &ctrlr->doorbells[queue_index(q->qid, true)];
-}
-
 static inline bool
-cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvme_q *q)
+cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr,
+	   struct nvmf_vfio_user_cq *vu_cq)
 {
 	assert(ctrlr != NULL);
-	assert(q != NULL);
-	assert(q->is_cq);
+	assert(vu_cq != NULL);
 
-	return ((q->tail + 1) % q->size) == *hdbl(ctrlr, q);
-}
-
-static inline void
-cq_tail_advance(struct nvme_q *q)
-{
-	assert(q != NULL);
-	assert(q->is_cq);
-
-	assert(q->tail < q->size);
-	q->tail++;
-
-	if (spdk_unlikely(q->tail == q->size)) {
-		q->tail = 0;
-		q->phase = !q->phase;
-	}
+	return ((*cq_tailp(vu_cq) + 1) % vu_cq->cq.size) == *cq_dbl_headp(ctrlr, vu_cq);
 }
 
 static int
@@ -1012,7 +1007,7 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	cq->qid = 0;
 	cq->size = regs->aqa.bits.acqs + 1;
 	cq->mapping.prp1 = regs->acq;
-	cq->tail = 0;
+	*cq_tailp(ctrlr->cqs[0]) = 0;
 	cq->is_cq = true;
 	cq->ien = true;
 	cq->phase = true;
@@ -1021,7 +1016,8 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	if (ret) {
 		return ret;
 	}
-	*hdbl(ctrlr, cq) = 0;
+
+	*cq_dbl_headp(ctrlr, ctrlr->cqs[0]) = 0;
 
 	return 0;
 }
@@ -1106,21 +1102,22 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *vu
 	}
 
 	cq = &vu_cq->cq;
-	if (cq_is_full(ctrlr, cq)) {
+	if (cq_is_full(ctrlr, vu_cq)) {
 		SPDK_ERRLOG("%s: CQ%d full (tail=%d, head=%d)\n",
-			    ctrlr_id(ctrlr), cq->qid, cq->tail, *hdbl(ctrlr, cq));
+			    ctrlr_id(ctrlr), cq->qid, *cq_tailp(vu_cq),
+			    *cq_dbl_headp(ctrlr, vu_cq));
 		return -1;
 	}
 
-	cpl = ((struct spdk_nvme_cpl *)q_addr(&cq->mapping)) + cq->tail;
+	cpl = ((struct spdk_nvme_cpl *)q_addr(&cq->mapping)) + *cq_tailp(vu_cq);
 
 	assert(ctrlr->sqs[sqid] != NULL);
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: request complete SQ%d cid=%d status=%#x SQ head=%#x CQ tail=%#x\n",
-		      ctrlr_id(ctrlr), sqid, cid, sc, sq_head(ctrlr->sqs[sqid]),
-		      cq->tail);
+		      ctrlr_id(ctrlr), sqid, cid, sc, *sq_headp(ctrlr->sqs[sqid]),
+		      *cq_tailp(vu_cq));
 
-	cpl->sqhd = sq_head(ctrlr->sqs[sqid]);
+	cpl->sqhd = *sq_headp(ctrlr->sqs[sqid]);
 	cpl->sqid = sqid;
 	cpl->cid = cid;
 	cpl->cdw0 = cdw0;
@@ -1132,7 +1129,7 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *vu
 
 	/* Ensure the Completion Queue Entry is visible. */
 	spdk_wmb();
-	cq_tail_advance(cq);
+	cq_tail_advance(vu_cq);
 
 	/*
 	 * this function now executes at SPDK thread context, we
@@ -1492,9 +1489,9 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 		io_q->ien = cmd->cdw11_bits.create_io_cq.ien;
 		io_q->iv = cmd->cdw11_bits.create_io_cq.iv;
 		io_q->phase = true;
-		io_q->tail = 0;
 		vu_cq->cq_state = VFIO_USER_CQ_CREATED;
-		*hdbl(ctrlr, io_q) = 0;
+		*cq_tailp(vu_cq) = 0;
+		*cq_dbl_headp(ctrlr, vu_cq) = 0;
 	} else {
 		err = alloc_sq_reqs(ctrlr, vu_sq, qsize);
 		if (err < 0) {
@@ -1503,10 +1500,10 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 			goto out;
 		}
 		io_q->cqid = cqid;
-		io_q->head = 0;
 		ctrlr->cqs[io_q->cqid]->cq_ref++;
 		vu_sq->sq_state = VFIO_USER_SQ_CREATED;
-		*tdbl(ctrlr, io_q) = 0;
+		*sq_headp(vu_sq) = 0;
+		*sq_dbl_tailp(ctrlr, vu_sq) = 0;
 
 		/*
 		 * Create our new I/O qpair. This asynchronously invokes, on a
@@ -1685,9 +1682,9 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 	assert(vu_sq != NULL);
 
 	queue = q_addr(&vu_sq->sq.mapping);
-	while (sq_head(vu_sq) != new_tail) {
+	while (*sq_headp(vu_sq) != new_tail) {
 		int err;
-		struct spdk_nvme_cmd *cmd = &queue[sq_head(vu_sq)];
+		struct spdk_nvme_cmd *cmd = &queue[*sq_headp(vu_sq)];
 
 		count++;
 
@@ -1695,7 +1692,7 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 		 * SQHD must contain the new head pointer, so we must increase
 		 * it before we generate a completion.
 		 */
-		sqhd_advance(ctrlr, vu_sq);
+		sq_head_advance(vu_sq);
 
 		err = consume_cmd(ctrlr, vu_sq, cmd);
 		if (err != 0) {
@@ -1736,9 +1733,9 @@ disable_admin_queue(struct nvmf_vfio_user_ctrlr *ctrlr)
 	unmap_q(ctrlr, &ctrlr->cqs[0]->cq.mapping);
 
 	ctrlr->sqs[0]->sq.size = 0;
-	ctrlr->sqs[0]->sq.head = 0;
+	*sq_headp(ctrlr->sqs[0]) = 0;
 	ctrlr->cqs[0]->cq.size = 0;
-	ctrlr->cqs[0]->cq.tail = 0;
+	*cq_dbl_headp(ctrlr, ctrlr->cqs[0]) = 0;
 }
 
 static void
@@ -2407,7 +2404,7 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 		sqid = vu_sq->sq.qid;
 		migr_state.qps[sqid].sq.sqid = vu_sq->sq.qid;
 		migr_state.qps[sqid].sq.cqid = vu_sq->sq.cqid;
-		migr_state.qps[sqid].sq.head = vu_sq->sq.head;
+		migr_state.qps[sqid].sq.head = *sq_headp(vu_sq);
 		migr_state.qps[sqid].sq.size = vu_sq->sq.size;
 		migr_state.qps[sqid].sq.dma_addr = vu_sq->sq.mapping.prp1;
 
@@ -2415,7 +2412,7 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 		cqid = vu_sq->sq.cqid;
 		vu_cq = vu_ctrlr->cqs[cqid];
 		migr_state.qps[cqid].cq.cqid = cqid;
-		migr_state.qps[cqid].cq.tail = vu_cq->cq.tail;
+		migr_state.qps[cqid].cq.tail = *cq_tailp(vu_cq);
 		migr_state.qps[cqid].cq.ien = vu_cq->cq.ien;
 		migr_state.qps[cqid].cq.iv = vu_cq->cq.iv;
 		migr_state.qps[cqid].cq.size = vu_cq->cq.size;
@@ -2529,7 +2526,7 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 			q->is_cq = false;
 			q->cqid = migr_qp.sq.cqid;
 			q->size = migr_qp.sq.size;
-			q->head = migr_qp.sq.head;
+			*sq_headp(vu_ctrlr->sqs[sqid]) = migr_qp.sq.head;
 			q->mapping.prp1 = migr_qp.sq.dma_addr;
 			addr = map_one(vu_ctrlr->endpoint->vfu_ctx,
 				       q->mapping.prp1, q->size * 64,
@@ -2560,7 +2557,7 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 			q = &vu_ctrlr->cqs[cqid]->cq;
 			q->is_cq = true;
 			q->size = migr_qp.cq.size;
-			q->tail = migr_qp.cq.tail;
+			*cq_tailp(vu_ctrlr->cqs[cqid]) = migr_qp.cq.tail;
 			q->mapping.prp1 = migr_qp.cq.dma_addr;
 			q->ien = migr_qp.cq.ien;
 			q->iv = migr_qp.cq.iv;
@@ -4010,10 +4007,10 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *vu_sq)
 	 * cannot fix this. Use "dc civac" to invalidate cache may solve
 	 * this.
 	 */
-	spdk_ivdt_dcache(tdbl(ctrlr, &vu_sq->sq));
+	spdk_ivdt_dcache(sq_dbl_tailp(ctrlr, vu_sq));
 
 	/* Load-Acquire. */
-	new_tail = *tdbl(ctrlr, &vu_sq->sq);
+	new_tail = *sq_dbl_tailp(ctrlr, vu_sq);
 
 	/*
 	 * Ensure that changes to the queue are visible to us.
@@ -4035,7 +4032,7 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *vu_sq)
 		return 0;
 	}
 
-	if (sq_head(vu_sq) == new_tail) {
+	if (*sq_headp(vu_sq) == new_tail) {
 		return 0;
 	}
 
