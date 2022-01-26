@@ -264,7 +264,6 @@ struct nvmf_vfio_user_sq {
 	struct spdk_nvmf_transport_poll_group	*group;
 	struct nvmf_vfio_user_ctrlr		*ctrlr;
 
-	uint32_t				qsize;
 	uint32_t				qid;
 	/* Number of entries in queue. */
 	uint32_t				size;
@@ -307,10 +306,10 @@ struct nvmf_vfio_user_cq {
 	enum nvmf_vfio_user_cq_state		cq_state;
 
 	uint32_t				tail;
+	bool					phase;
 
 	uint16_t				iv;
 	bool					ien;
-	bool					phase;
 };
 
 struct nvmf_vfio_user_poll_group {
@@ -1208,8 +1207,8 @@ delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *
 
 	free_sq_reqs(sq);
 
-	sq->qsize = 0;
 	sq->size = 0;
+
 	sq->sq_state = VFIO_USER_SQ_DELETED;
 
 	/* Controller RESET and SHUTDOWN are special cases,
@@ -1323,8 +1322,7 @@ init_cq(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t id)
 }
 
 static int
-alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *sq,
-	      const uint32_t nr_reqs)
+alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *sq)
 {
 	struct nvmf_vfio_user_req *vu_req, *tmp;
 	size_t req_size;
@@ -1333,7 +1331,7 @@ alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *s
 	req_size = sizeof(struct nvmf_vfio_user_req) +
 		   (dma_sg_size() * NVMF_VFIO_USER_MAX_IOVECS);
 
-	for (i = 0; i < nr_reqs; i++) {
+	for (i = 0; i < sq->size; i++) {
 		struct spdk_nvmf_request *req;
 
 		vu_req = calloc(1, req_size);
@@ -1349,7 +1347,6 @@ alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *s
 		TAILQ_INSERT_TAIL(&sq->free_reqs, vu_req, link);
 	}
 
-	sq->qsize = nr_reqs;
 	return 0;
 
 err:
@@ -1420,7 +1417,7 @@ handle_create_io_sq(struct nvmf_vfio_user_ctrlr *ctrlr,
 		      ctrlr_id(ctrlr), qid, cmd->dptr.prp.prp1,
 		      q_addr(&sq->mapping));
 
-	err = alloc_sq_reqs(ctrlr, sq, qsize);
+	err = alloc_sq_reqs(ctrlr, sq);
 	if (err < 0) {
 		SPDK_ERRLOG("%s: failed to allocate SQ requests: %m\n", ctrlr_id(ctrlr));
 		*sct = SPDK_NVME_SCT_GENERIC;
@@ -2560,17 +2557,18 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 				}
 			}
 
-			ret = alloc_sq_reqs(vu_ctrlr, vu_ctrlr->sqs[sqid], qsize);
+			sq = vu_ctrlr->sqs[sqid];
+
+			sq->size = qsize;
+
+			ret = alloc_sq_reqs(vu_ctrlr, sq);
 			if (ret) {
 				SPDK_ERRLOG("Construct sq with qid %u failed\n", sqid);
 				return -EFAULT;
 			}
 
-			sq = vu_ctrlr->sqs[sqid];
-
 			/* restore sq */
 			sq->cqid = migr_qp.sq.cqid;
-			sq->size = migr_qp.sq.size;
 			*sq_headp(sq) = migr_qp.sq.head;
 			sq->mapping.prp1 = migr_qp.sq.dma_addr;
 			addr = map_one(vu_ctrlr->endpoint->vfu_ctx,
@@ -2603,7 +2601,8 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 
 			cq = vu_ctrlr->cqs[cqid];
 
-			cq->size = migr_qp.cq.size;
+			cq->size = qsize;
+
 			*cq_tailp(cq) = migr_qp.cq.tail;
 			cq->mapping.prp1 = migr_qp.cq.dma_addr;
 			cq->ien = migr_qp.cq.ien;
@@ -2754,7 +2753,7 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 		 * allocated based on queue size from source VM.
 		 */
 		free_sq_reqs(sq);
-		sq->qsize = 0;
+		sq->size = 0;
 		break;
 	case VFU_MIGR_STATE_RUNNING:
 		if (vu_ctrlr->state != VFIO_USER_CTRLR_MIGRATING) {
@@ -3091,7 +3090,9 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 		goto out;
 	}
 
-	err = alloc_sq_reqs(ctrlr, ctrlr->sqs[0], NVMF_VFIO_USER_DEFAULT_AQ_DEPTH);
+	ctrlr->sqs[0]->size = NVMF_VFIO_USER_DEFAULT_AQ_DEPTH;
+
+	err = alloc_sq_reqs(ctrlr, ctrlr->sqs[0]);
 	if (err != 0) {
 		free(ctrlr);
 		goto out;
@@ -3685,7 +3686,7 @@ nvmf_vfio_user_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	req->cmd->connect_cmd.cid = 0;
 	req->cmd->connect_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
 	req->cmd->connect_cmd.recfmt = 0;
-	req->cmd->connect_cmd.sqsize = sq->qsize - 1;
+	req->cmd->connect_cmd.sqsize = sq->size - 1;
 	req->cmd->connect_cmd.qid = admin ? 0 : qpair->qid;
 
 	req->length = sizeof(struct spdk_nvmf_fabric_connect_data);
