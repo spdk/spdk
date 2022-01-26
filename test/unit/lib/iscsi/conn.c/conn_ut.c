@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -40,6 +41,8 @@
 
 #include "spdk_internal/mock.h"
 
+#include "unit/lib/json_mock.c"
+
 SPDK_LOG_REGISTER_COMPONENT(iscsi)
 
 DEFINE_STUB(iscsi_get_pdu, struct spdk_iscsi_pdu *,
@@ -47,12 +50,6 @@ DEFINE_STUB(iscsi_get_pdu, struct spdk_iscsi_pdu *,
 DEFINE_STUB(iscsi_param_eq_val, int,
 	    (struct iscsi_param *params, const char *key, const char *val), 0);
 DEFINE_STUB(iscsi_pdu_calc_data_digest, uint32_t, (struct spdk_iscsi_pdu *pdu), 0);
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_named_int32, int, (struct spdk_json_write_ctx *w,
-		const char *name, int32_t val), 0);
-DEFINE_STUB(spdk_json_write_named_string, int, (struct spdk_json_write_ctx *w,
-		const char *name, const char *val), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB_V(spdk_sock_writev_async,
 	      (struct spdk_sock *sock, struct spdk_sock_request *req));
 

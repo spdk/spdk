@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -40,23 +41,14 @@
 
 #include "rpc/rpc.c"
 
+#include "unit/lib/json_mock.c"
+
 static int g_rpc_err;
 void fn_rpc_method_handler(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params);
 
 DEFINE_STUB_V(spdk_jsonrpc_end_result, (struct spdk_jsonrpc_request *request,
 					struct spdk_json_write_ctx *w));
-DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_named_string_fmt, int, (struct spdk_json_write_ctx *w, const char *name,
-		const char *fmt, ...), 0);
-DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
-		const char *name), 0);
-DEFINE_STUB(spdk_json_write_named_uint32, int, (struct spdk_json_write_ctx *w, const char *name,
-		uint32_t val), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_jsonrpc_begin_result, struct spdk_json_write_ctx *,
 	    (struct spdk_jsonrpc_request *request), (void *)1);
 DEFINE_STUB(spdk_json_decode_bool, int, (const struct spdk_json_val *val, void *out), 0);

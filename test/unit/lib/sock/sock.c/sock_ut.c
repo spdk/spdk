@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -44,6 +45,8 @@
 #include "spdk_internal/mock.h"
 #include "common/lib/test_env.c"
 
+#include "unit/lib/json_mock.c"
+
 #define UT_IP	"test_ip"
 #define UT_PORT	1234
 
@@ -69,33 +72,6 @@ struct spdk_ut_sock_group_impl {
 
 #define __ut_sock(sock) (struct spdk_ut_sock *)sock
 #define __ut_group(group) (struct spdk_ut_sock_group_impl *)group
-
-DEFINE_STUB(spdk_json_write_array_begin, int,
-	    (struct spdk_json_write_ctx *w), 0);
-
-DEFINE_STUB(spdk_json_write_object_begin, int,
-	    (struct spdk_json_write_ctx *w), 0);
-
-DEFINE_STUB(spdk_json_write_named_string, int,
-	    (struct spdk_json_write_ctx *w, const char *name,
-	     const char *val), 0);
-
-DEFINE_STUB(spdk_json_write_named_object_begin, int,
-	    (struct spdk_json_write_ctx *w, const char *name), 0);
-
-DEFINE_STUB(spdk_json_write_named_uint32, int,
-	    (struct spdk_json_write_ctx *w, const char *name, uint32_t val),
-	    0);
-
-DEFINE_STUB(spdk_json_write_named_bool, int,
-	    (struct spdk_json_write_ctx *w, const char *name, bool val),
-	    0);
-
-DEFINE_STUB(spdk_json_write_object_end, int,
-	    (struct spdk_json_write_ctx *w), 0);
-
-DEFINE_STUB(spdk_json_write_array_end, int,
-	    (struct spdk_json_write_ctx *w), 0);
 
 static int
 spdk_ut_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,

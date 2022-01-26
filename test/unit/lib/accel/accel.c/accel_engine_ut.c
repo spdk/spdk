@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -36,9 +37,7 @@
 #include "thread/thread_internal.h"
 #include "common/lib/test_env.c"
 #include "accel/accel_engine.c"
-
-DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
+#include "unit/lib/json_mock.c"
 
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_accel_engine g_accel_engine = {};
