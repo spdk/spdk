@@ -2601,6 +2601,8 @@ test_nvme_ctrlr_active_ns_list_v0(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
 
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 0;
 	ctrlr.vs.bits.ter = 0;
@@ -2626,6 +2628,8 @@ test_nvme_ctrlr_active_ns_list_v2(void)
 	uint32_t i;
 	uint32_t active_ns_list[1024];
 	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 2;
@@ -2654,6 +2658,8 @@ test_nvme_ctrlr_active_ns_list_v2(void)
 		active_ns_list[i] = i + 1;
 	}
 
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+
 	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
 	g_active_ns_list = active_ns_list;
 	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list);
@@ -2674,6 +2680,8 @@ test_nvme_ctrlr_active_ns_list_v2(void)
 	for (i = 0; i < 1023; ++i) {
 		active_ns_list[i] = i + 1;
 	}
+
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
 
 	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -2930,6 +2938,8 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 		ns[i].active = true;
 	}
 
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+
 	ctrlr.cdata.nn = 5;
 	/* case 1: No first/next active NS, move on to the next state, expect: pass */
 	prev_nsid = 0;
@@ -2992,6 +3002,8 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
 	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 }
 
 static void
@@ -3069,6 +3081,8 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 		RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns[i]);
 	}
 
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+
 	ctrlr.cdata.nn = 3;
 	ctrlr.cdata.nanagrpid = 3;
 	ctrlr.active_ns_count = 3;
@@ -3126,6 +3140,8 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	CU_ASSERT(ns[1].ana_state == SPDK_NVME_ANA_NON_OPTIMIZED_STATE);
 	CU_ASSERT(ns[2].ana_group_id == 1);
 	CU_ASSERT(ns[2].ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
+
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 
 	free(ctrlr.ana_log_page);
 	free(ctrlr.copied_ana_desc);
