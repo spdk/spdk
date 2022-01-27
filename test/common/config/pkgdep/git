@@ -428,6 +428,8 @@ function install_irdma() {
 
 	(
 		cd "$GIT_REPOS/irdma-$IRDMA_VERSION"
+		sed -i "s/IRDMA_FLUSH_DELAY_MS 1500/IRDMA_FLUSH_DELAY_MS 50/" \
+			"$GIT_REPOS/irdma-$IRDMA_VERSION/src/irdma/verbs.h"
 		"$GIT_REPOS/irdma-$IRDMA_VERSION/build.sh"
 	)
 
