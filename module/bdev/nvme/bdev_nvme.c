@@ -748,6 +748,11 @@ nvme_io_path_is_connected(struct nvme_io_path *io_path)
 		return false;
 	}
 
+	if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(io_path->qpair->ctrlr->ctrlr) !=
+	    SPDK_NVME_QPAIR_FAILURE_NONE) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -1242,6 +1247,9 @@ bdev_nvme_poll_adminq(void *arg)
 		} else {
 			bdev_nvme_failover(nvme_ctrlr, false);
 		}
+	} else if (spdk_nvme_ctrlr_get_admin_qp_failure_reason(nvme_ctrlr->ctrlr) !=
+		   SPDK_NVME_QPAIR_FAILURE_NONE) {
+		bdev_nvme_clear_io_path_caches(nvme_ctrlr, NULL);
 	}
 
 	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;

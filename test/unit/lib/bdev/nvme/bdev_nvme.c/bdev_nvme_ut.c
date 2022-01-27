@@ -797,6 +797,12 @@ spdk_nvme_ctrlr_is_failed(struct spdk_nvme_ctrlr *ctrlr)
 	return ctrlr->is_failed;
 }
 
+spdk_nvme_qp_failure_reason
+spdk_nvme_ctrlr_get_admin_qp_failure_reason(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return spdk_nvme_qpair_get_failure_reason(&ctrlr->adminq);
+}
+
 #define UT_ANA_DESC_SIZE	(sizeof(struct spdk_nvme_ana_group_descriptor) +	\
 				 sizeof(uint32_t))
 static void
@@ -3993,9 +3999,11 @@ test_find_io_path(void)
 		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
 	};
 	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {};
-	struct nvme_ctrlr_channel ctrlr_ch1 = {}, ctrlr_ch2 = {};
-	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, };
-	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, };
+	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {};
+	struct nvme_ctrlr nvme_ctrlr1 = { .ctrlr = &ctrlr1, }, nvme_ctrlr2 = { .ctrlr = &ctrlr2, };
+	struct nvme_ctrlr_channel ctrlr_ch1 = { .ctrlr = &nvme_ctrlr1, }, ctrlr_ch2 = { .ctrlr = &nvme_ctrlr2, };
+	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, .ctrlr = &nvme_ctrlr1, };
+	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, .ctrlr = &nvme_ctrlr2, };
 	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {};
 	struct nvme_io_path io_path1 = { .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
 	struct nvme_io_path io_path2 = { .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
