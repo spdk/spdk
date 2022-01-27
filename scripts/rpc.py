@@ -2088,6 +2088,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     Relevant only for TCP transport""", type=int)
     p.add_argument('-M', '--disable-mappable-bar0', action='store_true', help="""Disable mmap() of BAR0.
     Relevant only for VFIO-USER transport""")
+    p.add_argument('-I', '--disable-adaptive-irq', action='store_true', help="""Disable adaptive interrupt feature.
+    Relevant only for VFIO-USER transport""")
     p.add_argument('--acceptor-poll-rate', help='Polling interval of the acceptor for incoming connections (usec)', type=int)
     p.set_defaults(func=nvmf_create_transport)
 

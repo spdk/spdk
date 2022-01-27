@@ -59,6 +59,9 @@ existing listener. Users should now explicitly add listeners for the discovery s
 Host can still connect to the discovery subsystem as before, but a warning message will be
 emitted if no listener was configured for the transport ID of the incoming connection.
 
+Added adaptive interrupt feature for vfio-user transport. New parameter `disable_adaptive_irq`
+is added to the RPC `nvmf_create_transport`.
+
 ### thread
 
 Added `spdk_thread_exec_msg()` API.

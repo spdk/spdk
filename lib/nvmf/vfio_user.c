@@ -311,6 +311,9 @@ struct nvmf_vfio_user_cq {
 
 	uint16_t				iv;
 	bool					ien;
+
+	uint32_t				last_head;
+	uint32_t				last_trigger_irq_tail;
 };
 
 struct nvmf_vfio_user_poll_group {
@@ -382,6 +385,7 @@ struct nvmf_vfio_user_endpoint {
 
 struct nvmf_vfio_user_transport_opts {
 	bool					disable_mappable_bar0;
+	bool					disable_adaptive_irq;
 };
 
 struct nvmf_vfio_user_transport {
@@ -857,6 +861,11 @@ static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] 
 		offsetof(struct nvmf_vfio_user_transport, transport_opts.disable_mappable_bar0),
 		spdk_json_decode_bool, true
 	},
+	{
+		"disable_adaptive_irq",
+		offsetof(struct nvmf_vfio_user_transport, transport_opts.disable_adaptive_irq),
+		spdk_json_decode_bool, true
+	},
 };
 
 static struct spdk_nvmf_transport *
@@ -902,6 +911,8 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_DEBUGLOG(nvmf_vfio, "vfio_user transport: disable_mappable_bar0=%d\n",
 		      vu_transport->transport_opts.disable_mappable_bar0);
+	SPDK_DEBUGLOG(nvmf_vfio, "vfio_user transport: disable_adaptive_irq=%d\n",
+		      vu_transport->transport_opts.disable_adaptive_irq);
 
 	/*
 	 * To support interrupt mode, the transport must be configured with
@@ -1105,6 +1116,14 @@ static int
 handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	       struct nvmf_vfio_user_sq *sq);
 
+static inline int
+adaptive_irq_enabled(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
+{
+	return (!spdk_interrupt_mode_is_enabled() && cq->qid != 0 &&
+		!ctrlr->transport->transport_opts.disable_adaptive_irq);
+
+}
+
 /*
  * Posts a CQE in the completion queue.
  *
@@ -1179,7 +1198,8 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 	 * might be triggering interrupts from vfio-user thread context so
 	 * check for race conditions.
 	 */
-	if (ctrlr_interrupt_enabled(ctrlr) && cq->ien) {
+	if (!adaptive_irq_enabled(ctrlr, cq) &&
+	    cq->ien && ctrlr_interrupt_enabled(ctrlr)) {
 		err = vfu_irq_trigger(ctrlr->endpoint->vfu_ctx, cq->iv);
 		if (err != 0) {
 			SPDK_ERRLOG("%s: failed to trigger interrupt: %m\n",
@@ -4301,12 +4321,38 @@ static int
 nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr;
+	struct nvmf_vfio_user_cq *cq;
 	uint32_t new_tail;
 	int count = 0;
+	uint32_t cq_head;
+	uint32_t cq_tail;
+	int err;
 
 	assert(sq != NULL);
 
 	ctrlr = sq->ctrlr;
+	cq = ctrlr->cqs[sq->cqid];
+
+	if (cq->ien && ctrlr_interrupt_enabled(ctrlr) &&
+	    adaptive_irq_enabled(ctrlr, cq)) {
+		cq_tail = *cq_tailp(cq);
+
+		if (cq_tail != cq->last_trigger_irq_tail) {
+			spdk_ivdt_dcache(cq_dbl_headp(ctrlr, cq));
+			cq_head = *cq_dbl_headp(ctrlr, cq);
+
+			if (cq_head != cq_tail && cq_head == cq->last_head) {
+				err = vfu_irq_trigger(ctrlr->endpoint->vfu_ctx, cq->iv);
+				if (err != 0) {
+					SPDK_ERRLOG("%s: failed to trigger interrupt: %m\n",
+						    ctrlr_id(ctrlr));
+				} else {
+					cq->last_trigger_irq_tail = cq_tail;
+				}
+			}
+			cq->last_head = cq_head;
+		}
+	}
 
 	/* On aarch64 platforms, doorbells update from guest VM may not be seen
 	 * on SPDK target side. This is because there is memory type mismatch
