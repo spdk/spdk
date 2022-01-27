@@ -27,9 +27,21 @@ of requested IO queues.
 Added `key_file` parameter to the `rbd_register_cluster` RPC.  It is an optional parameter to
 specify a keyring file to connect to a RADOS cluster.
 
+Added `spdk_bdev_get_zone_id` API to retrieve zone_id for a certain LBA.
+
 ### bdev_aio
 
 Added `bdev_aio_rescan` RPC to allow rescanning the size of aio bdev.
+
+### bdev_nvme
+
+Added discovery service to bdev_nvme module, which now can connect to a discovery controller.
+bdev_nvme will connect to all current and future subsystems in the discovery controller.
+Added `bdev_nvme_start_discovery` and `bdev_nvme_stop_discovery` RPC.
+
+### dpdk
+
+Updated DPDK submodule to DPDK 21.11.
 
 ### env
 
@@ -43,9 +55,15 @@ instead.
 Added 3 experimental APIs to handle PCI device interrupts (`spdk_pci_device_enable_interrupt`,
 `spdk_pci_device_disable_interrupt`, `spdk_pci_device_get_interrupt_efd`).
 
+Added `framework_get_pci_devices` RPC to list PCIe devices attached to an SPDK application.
+
 ### idxd
 
 Many APIs are now vectored rather than scalar, meaning they take iovecs instead of individual pointers.
+
+### json
+
+Added `spdk_json_write_bytearray` API to serialize a buffer as a hex string.
 
 ### nvme
 
@@ -60,15 +78,35 @@ New APIs, `spdk_nvme_ctrlr_disconnect`, `spdk_nvme_ctrlr_reconnect_async`, and
 the existing APIs,`spdk_nvme_ctrlr_reset_async` and `spdk_nvme_ctrlr_reset_poll_async`
 were deprecated.
 
+Added `spdk_nvme_ctrlr_get_discovery_log_page` API for getting the full discovery log page
+from a discovery controller.
+
 ### nvmf
 
 Added a `subsystem` parameter to `spdk_nvmf_transport_stop_listen_async`. When not NULL,
 it will only disconnect qpairs for controllers associated with the specified subsystem.
 
+Removed accept poller from transport layer. Each transport can have its own policy of
+handling new connections. To notify transport layer `spdk_nvmf_poll_group_add` and
+`spdk_nvmf_tgt_new_qpair` can be used.
+
 ### scsi
 
 Structure `spdk_scsi_lun` has been extended with new member `resizing` so that SCSI layer now reports
 unit attention for disk resize.
+
+### trace
+
+Added `spdk_trace_create_tpoint_group_mask` to return tracepoint group mask from
+a tracepoint group name.
+
+Added `trace_set_tpoint_mask` and `trace_clear_tpoint_mask` RPC to allow enabling
+individual traces.
+
+### util
+
+Added `spdk_ioviter_first` and `spdk_ioviter_next` to iterate over two iovecs and
+yield pointers to common length segments.
 
 ## v21.10
 
