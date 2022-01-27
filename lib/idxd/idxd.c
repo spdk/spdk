@@ -394,6 +394,7 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
+	uint64_t comp_addr;
 
 	if (_is_batch_valid(batch, chan) == false) {
 		SPDK_ERRLOG("Attempt to add to an invalid batch.\n");
@@ -412,6 +413,10 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	SPDK_DEBUGLOG(idxd, "Prep batch %p index %u\n", batch, batch->index);
 
 	batch->index++;
+
+	comp_addr = desc->completion_addr;
+	memset(desc, 0, sizeof(*desc));
+	desc->completion_addr = comp_addr;
 
 	desc->flags = IDXD_FLAG_COMPLETION_ADDR_VALID | IDXD_FLAG_REQUEST_COMPLETION;
 	op->cb_arg = cb_arg;
