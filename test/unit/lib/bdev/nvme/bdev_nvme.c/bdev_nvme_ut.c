@@ -139,9 +139,6 @@ DEFINE_STUB(spdk_nvme_ns_get_dealloc_logical_block_read_value,
 
 DEFINE_STUB(spdk_nvme_ns_get_optimal_io_boundary, uint32_t, (struct spdk_nvme_ns *ns), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_csi, enum spdk_nvme_csi,
-	    (const struct spdk_nvme_ns *ns), 0);
-
 DEFINE_STUB(spdk_nvme_cuse_get_ns_name, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		char *name, size_t *size), 0);
 
@@ -225,8 +222,9 @@ struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	uint32_t			id;
 	bool				is_active;
-	struct spdk_uuid		uuid;
+	struct spdk_uuid		*uuid;
 	enum spdk_nvme_ana_state	ana_state;
+	enum spdk_nvme_csi		csi;
 };
 
 struct spdk_nvme_qpair {
@@ -958,7 +956,12 @@ spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns)
 const struct spdk_uuid *
 spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 {
-	return &ns->uuid;
+	return ns->uuid;
+}
+
+enum spdk_nvme_csi
+spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
+	return ns->csi;
 }
 
 int
@@ -2777,6 +2780,8 @@ test_compare_ns(void)
 	struct spdk_nvme_ns_data nsdata1 = {}, nsdata2 = {};
 	struct spdk_nvme_ctrlr ctrlr1 = { .nsdata = &nsdata1, }, ctrlr2 = { .nsdata = &nsdata2, };
 	struct spdk_nvme_ns ns1 = { .id = 1, .ctrlr = &ctrlr1, }, ns2 = { .id = 1, .ctrlr = &ctrlr2, };
+	struct spdk_uuid uuid1 = { .u.raw = { 0xAA } };
+	struct spdk_uuid uuid2 = { .u.raw = { 0xAB } };
 
 	/* No IDs are defined. */
 	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
@@ -2804,12 +2809,16 @@ test_compare_ns(void)
 	/* Only UUID are defined and not matched. */
 	nsdata1.nguid[0] = 0x0;
 	nsdata2.nguid[0] = 0x0;
-	ns1.uuid.u.raw[0] = 0xAA;
-	ns2.uuid.u.raw[0] = 0xAB;
+	ns1.uuid = &uuid1;
+	ns2.uuid = &uuid2;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == false);
+
+	/* Only one UUID is defined. */
+	ns1.uuid = NULL;
 	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == false);
 
 	/* Only UUID are defined and matched. */
-	ns1.uuid.u.raw[0] = 0xAB;
+	ns1.uuid = &uuid2;
 	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
 
 	/* All EUI64, NGUID, and UUID are defined and matched. */
@@ -2818,6 +2827,10 @@ test_compare_ns(void)
 	nsdata1.nguid[15] = 0x34;
 	nsdata2.nguid[15] = 0x34;
 	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == true);
+
+	/* CSI are not matched. */
+	ns1.csi = SPDK_NVME_CSI_ZNS;
+	CU_ASSERT(bdev_nvme_compare_ns(&ns1, &ns2) == false);
 }
 
 static void
@@ -3230,6 +3243,11 @@ test_add_multi_ns_to_bdev(void)
 	struct nvme_bdev *bdev1, *bdev2, *bdev3, *bdev4;
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
+	struct spdk_uuid uuid2 = { .u.raw = { 0x2 } };
+	struct spdk_uuid uuid3 = { .u.raw = { 0x3 } };
+	struct spdk_uuid uuid4 = { .u.raw = { 0x4 } };
+	struct spdk_uuid uuid44 = { .u.raw = { 0x44 } };
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -3246,9 +3264,9 @@ test_add_multi_ns_to_bdev(void)
 
 	ctrlr1->ns[1].is_active = false;
 	ctrlr1->ns[4].is_active = false;
-	memset(&ctrlr1->ns[0].uuid, 0x1, sizeof(struct spdk_uuid));
-	memset(&ctrlr1->ns[2].uuid, 0x3, sizeof(struct spdk_uuid));
-	memset(&ctrlr1->ns[3].uuid, 0x4, sizeof(struct spdk_uuid));
+	ctrlr1->ns[0].uuid = &uuid1;
+	ctrlr1->ns[2].uuid = &uuid3;
+	ctrlr1->ns[3].uuid = &uuid4;
 
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 3;
@@ -3272,9 +3290,9 @@ test_add_multi_ns_to_bdev(void)
 
 	ctrlr2->ns[2].is_active = false;
 	ctrlr2->ns[4].is_active = false;
-	memset(&ctrlr2->ns[0].uuid, 0x1, sizeof(struct spdk_uuid));
-	memset(&ctrlr2->ns[1].uuid, 0x2, sizeof(struct spdk_uuid));
-	memset(&ctrlr2->ns[3].uuid, 0x44, sizeof(struct spdk_uuid));
+	ctrlr2->ns[0].uuid = &uuid1;
+	ctrlr2->ns[1].uuid = &uuid2;
+	ctrlr2->ns[3].uuid = &uuid44;
 
 	g_ut_attach_ctrlr_status = 0;
 	g_ut_attach_bdev_count = 2;
@@ -3354,7 +3372,7 @@ test_add_multi_ns_to_bdev(void)
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
-	memset(&ctrlr1->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, 32, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -3371,7 +3389,7 @@ test_add_multi_ns_to_bdev(void)
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
-	memset(&ctrlr2->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, 32, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -3443,6 +3461,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	struct spdk_io_channel *ch;
 	struct nvme_bdev_channel *nbdev_ch;
 	struct nvme_io_path *io_path1, *io_path2, *io_path3;
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -3457,7 +3476,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
-	memset(&ctrlr1->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -3472,7 +3491,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
-	memset(&ctrlr2->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -3520,7 +3539,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 	ctrlr3 = ut_attach_ctrlr(&path3.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr3 != NULL);
 
-	memset(&ctrlr3->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr3->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path3.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -3586,6 +3605,7 @@ test_admin_path(void)
 	struct nvme_bdev *bdev;
 	struct spdk_io_channel *ch;
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -3599,7 +3619,7 @@ test_admin_path(void)
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
-	memset(&ctrlr1->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -3614,7 +3634,7 @@ test_admin_path(void)
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
-	memset(&ctrlr2->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -4141,6 +4161,7 @@ test_retry_io_for_io_path_error(void)
 	struct nvme_io_path *io_path1, *io_path2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
 	struct ut_nvme_req *req;
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -4157,7 +4178,7 @@ test_retry_io_for_io_path_error(void)
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
-	memset(&ctrlr1->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -4252,7 +4273,7 @@ test_retry_io_for_io_path_error(void)
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
-	memset(&ctrlr2->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -4771,6 +4792,7 @@ test_retry_admin_passthru_for_path_error(void)
 	struct spdk_bdev_io *admin_io;
 	struct spdk_io_channel *ch;
 	struct ut_nvme_req *req;
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
 	int rc;
 
 	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
@@ -4787,7 +4809,7 @@ test_retry_admin_passthru_for_path_error(void)
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
 
-	memset(&ctrlr1->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr1->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
@@ -4869,7 +4891,7 @@ test_retry_admin_passthru_for_path_error(void)
 	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
 	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
 
-	memset(&ctrlr2->ns[0].uuid, 1, sizeof(struct spdk_uuid));
+	ctrlr2->ns[0].uuid = &uuid1;
 
 	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE, 0,
 			      attach_ctrlr_done, NULL, NULL, true, 0, 0, 0);
