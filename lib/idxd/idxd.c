@@ -358,10 +358,14 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 {
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
+	uint64_t comp_addr;
 
 	if (!TAILQ_EMPTY(&chan->ops_pool)) {
 		op = *_op = TAILQ_FIRST(&chan->ops_pool);
 		desc = *_desc = op->desc;
+		comp_addr = desc->completion_addr;
+		memset(desc, 0, sizeof(*desc));
+		desc->completion_addr = comp_addr;
 		TAILQ_REMOVE(&chan->ops_pool, op, link);
 	} else {
 		/* The application needs to handle this, violation of flow control */
@@ -983,7 +987,6 @@ _idxd_submit_crc32c_single(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst,
 
 	/* Command specific. */
 	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-	desc->dst_addr = 0; /* Per spec, needs to be clear. */
 	desc->src_addr = src_addr;
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
@@ -1042,7 +1045,6 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 		}
 
 		desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-		desc->dst_addr = 0; /* Per spec, needs to be clear. */
 		desc->src_addr = src_addr;
 		if (i == 0) {
 			desc->crc32c.seed = seed;
