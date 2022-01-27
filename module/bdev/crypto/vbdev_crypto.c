@@ -1297,7 +1297,7 @@ vbdev_crypto_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_string(w, "crypto_pmd", crypto_bdev->drv_name);
 	spdk_json_write_named_string(w, "key", crypto_bdev->key);
 	if (strcmp(crypto_bdev->cipher, AES_XTS) == 0) {
-		spdk_json_write_named_string(w, "key2", crypto_bdev->key);
+		spdk_json_write_named_string(w, "key2", crypto_bdev->key2);
 	}
 	spdk_json_write_named_string(w, "cipher", crypto_bdev->cipher);
 	spdk_json_write_object_end(w);
@@ -1318,7 +1318,7 @@ vbdev_crypto_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "crypto_pmd", crypto_bdev->drv_name);
 		spdk_json_write_named_string(w, "key", crypto_bdev->key);
 		if (strcmp(crypto_bdev->cipher, AES_XTS) == 0) {
-			spdk_json_write_named_string(w, "key2", crypto_bdev->key);
+			spdk_json_write_named_string(w, "key2", crypto_bdev->key2);
 		}
 		spdk_json_write_named_string(w, "cipher", crypto_bdev->cipher);
 		spdk_json_write_object_end(w);
