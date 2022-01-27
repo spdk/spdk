@@ -775,6 +775,9 @@ struct spdk_bdev_io {
 		/** Pointer to a structure passed by the user in ext API */
 		struct spdk_bdev_ext_io_opts *ext_opts;
 
+		/** Copy of user's opts, used when I/O is split */
+		struct spdk_bdev_ext_io_opts ext_opts_copy;
+
 		/** Data transfer completion callback */
 		void (*data_transfer_cpl)(void *ctx, int rc);
 	} internal;

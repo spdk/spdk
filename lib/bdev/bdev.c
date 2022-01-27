@@ -362,13 +362,13 @@ static int
 bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			  struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
 			  uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
-			  struct spdk_bdev_ext_io_opts *opts);
+			  struct spdk_bdev_ext_io_opts *opts, bool copy_opts);
 static int
 bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   struct iovec *iov, int iovcnt, void *md_buf,
 			   uint64_t offset_blocks, uint64_t num_blocks,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg,
-			   struct spdk_bdev_ext_io_opts *opts);
+			   struct spdk_bdev_ext_io_opts *opts, bool copy_opts);
 
 static int
 bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
@@ -1876,6 +1876,10 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		bdev_io_put_buf(bdev_io);
 	}
 
+	if (spdk_unlikely(bdev_io->internal.ext_opts == &bdev_io->internal.ext_opts_copy)) {
+		memset(&bdev_io->internal.ext_opts_copy, 0, sizeof(bdev_io->internal.ext_opts_copy));
+	}
+
 	if (ch->per_thread_cache_count < ch->bdev_io_cache_size) {
 		ch->per_thread_cache_count++;
 		STAILQ_INSERT_HEAD(&ch->per_thread_cache, bdev_io, internal.buf_link);
@@ -2321,7 +2325,7 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 					       iov, iovcnt, md_buf, current_offset,
 					       num_blocks,
 					       bdev_io_split_done, bdev_io,
-					       bdev_io->internal.ext_opts);
+					       bdev_io->internal.ext_opts, true);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = bdev_writev_blocks_with_md(bdev_io->internal.desc,
@@ -2329,7 +2333,7 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 						iov, iovcnt, md_buf, current_offset,
 						num_blocks,
 						bdev_io_split_done, bdev_io,
-						bdev_io->internal.ext_opts);
+						bdev_io->internal.ext_opts, true);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		io_wait_fn = _bdev_unmap_split;
@@ -4084,11 +4088,12 @@ static int
 bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			  struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
 			  uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
-			  struct spdk_bdev_ext_io_opts *opts)
+			  struct spdk_bdev_ext_io_opts *opts, bool copy_opts)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_ext_io_opts *opts_copy;
 
 	if (!bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
@@ -4111,7 +4116,17 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	bdev_io->internal.ext_opts = opts;
 	bdev_io->u.bdev.ext_opts = opts;
 
+	if (opts && copy_opts) {
+		assert(opts->size <= sizeof(*opts));
+		opts_copy = &bdev_io->internal.ext_opts_copy;
+		memcpy(opts_copy, opts, opts->size);
+		bdev_io->internal.ext_opts_copy.metadata = md_buf;
+		bdev_io->internal.ext_opts = opts_copy;
+		bdev_io->u.bdev.ext_opts = opts_copy;
+	}
+
 	bdev_io_submit(bdev_io);
+
 	return 0;
 }
 
@@ -4121,7 +4136,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks,
-					 num_blocks, cb, cb_arg, NULL);
+					 num_blocks, cb, cb_arg, NULL, false);
 }
 
 int
@@ -4139,7 +4154,7 @@ spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 	}
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md_buf, offset_blocks,
-					 num_blocks, cb, cb_arg, NULL);
+					 num_blocks, cb, cb_arg, NULL, false);
 }
 
 int
@@ -4152,6 +4167,9 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	void *md = NULL;
 
 	if (opts) {
+		if (spdk_unlikely(!opts->size || opts->size > sizeof(struct spdk_bdev_ext_io_opts))) {
+			return -EINVAL;
+		}
 		md = opts->metadata;
 	}
 
@@ -4164,7 +4182,7 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	}
 
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks,
-					 num_blocks, cb, cb_arg, opts);
+					 num_blocks, cb, cb_arg, opts, false);
 }
 
 static int
@@ -4256,11 +4274,12 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   struct iovec *iov, int iovcnt, void *md_buf,
 			   uint64_t offset_blocks, uint64_t num_blocks,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg,
-			   struct spdk_bdev_ext_io_opts *opts)
+			   struct spdk_bdev_ext_io_opts *opts, bool copy_opts)
 {
 	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct spdk_bdev_ext_io_opts *opts_copy;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -4287,7 +4306,17 @@ bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->internal.ext_opts = opts;
 	bdev_io->u.bdev.ext_opts = opts;
 
+	if (opts && copy_opts) {
+		assert(opts->size <= sizeof(*opts));
+		opts_copy = &bdev_io->internal.ext_opts_copy;
+		memcpy(opts_copy, opts, opts->size);
+		bdev_io->internal.ext_opts_copy.metadata = md_buf;
+		bdev_io->internal.ext_opts = opts_copy;
+		bdev_io->u.bdev.ext_opts = opts_copy;
+	}
+
 	bdev_io_submit(bdev_io);
+
 	return 0;
 }
 
@@ -4314,7 +4343,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks,
-					  num_blocks, cb, cb_arg, NULL);
+					  num_blocks, cb, cb_arg, NULL, false);
 }
 
 int
@@ -4332,7 +4361,7 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	}
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md_buf, offset_blocks,
-					  num_blocks, cb, cb_arg, NULL);
+					  num_blocks, cb, cb_arg, NULL, false);
 }
 
 int
@@ -4345,6 +4374,9 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 	void *md = NULL;
 
 	if (opts) {
+		if (spdk_unlikely(!opts->size || opts->size > sizeof(struct spdk_bdev_ext_io_opts))) {
+			return -EINVAL;
+		}
 		md = opts->metadata;
 	}
 
@@ -4357,7 +4389,7 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 	}
 
 	return bdev_writev_blocks_with_md(desc, ch, iov, iovcnt, md, offset_blocks,
-					  num_blocks, cb, cb_arg, opts);
+					  num_blocks, cb, cb_arg, opts, false);
 }
 
 static void
