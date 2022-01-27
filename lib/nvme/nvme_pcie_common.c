@@ -1759,11 +1759,12 @@ nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
 		local_completions = spdk_nvme_qpair_process_completions(qpair, completions_per_qpair);
-		if (local_completions < 0) {
+		if (spdk_unlikely(local_completions < 0)) {
 			disconnected_qpair_cb(qpair, tgroup->group->ctx);
-			local_completions = 0;
+			total_completions = -ENXIO;
+		} else if (spdk_likely(total_completions >= 0)) {
+			total_completions += local_completions;
 		}
-		total_completions += local_completions;
 	}
 
 	return total_completions;
