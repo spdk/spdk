@@ -284,6 +284,8 @@ int
 spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 			    spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg)
 {
+	struct spdk_nvmf_listener *listener, *listener_tmp;
+
 	if (transport->data_buf_pool != NULL) {
 		if (spdk_mempool_count(transport->data_buf_pool) !=
 		    transport->opts.num_shared_buffers) {
@@ -292,6 +294,12 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 				    transport->opts.num_shared_buffers);
 		}
 		spdk_mempool_free(transport->data_buf_pool);
+	}
+
+	TAILQ_FOREACH_SAFE(listener, &transport->listeners, link, listener_tmp) {
+		TAILQ_REMOVE(&transport->listeners, listener, link);
+		transport->ops->stop_listen(transport, &listener->trid);
+		free(listener);
 	}
 
 	return transport->ops->destroy(transport, cb_fn, cb_arg);
