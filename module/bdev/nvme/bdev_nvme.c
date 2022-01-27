@@ -2626,7 +2626,9 @@ bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
 
 	return memcmp(nsdata1->nguid, nsdata2->nguid, sizeof(nsdata1->nguid)) == 0 &&
 	       nsdata1->eui64 == nsdata2->eui64 &&
-	       uuid1 != NULL && uuid2 != NULL && spdk_uuid_compare(uuid1, uuid2) == 0;
+	       ((uuid1 == NULL && uuid2 == NULL) ||
+		(uuid1 != NULL && uuid2 != NULL && spdk_uuid_compare(uuid1, uuid2) == 0)) &&
+	       spdk_nvme_ns_get_csi(ns1) == spdk_nvme_ns_get_csi(ns2);
 }
 
 static bool
