@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -976,10 +977,15 @@ lvol_get_xattr_value(void *xattr_ctx, const char *name,
 	if (!strcmp(LVOL_NAME, name)) {
 		*value = lvol->name;
 		*value_len = SPDK_LVOL_NAME_MAX;
-	} else if (!strcmp("uuid", name)) {
+		return;
+	}
+	if (!strcmp("uuid", name)) {
 		*value = lvol->uuid_str;
 		*value_len = sizeof(lvol->uuid_str);
+		return;
 	}
+	*value = NULL;
+	*value_len = 0;
 }
 
 static int

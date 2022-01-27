@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2050,6 +2051,58 @@ lvol_decouple_parent(void)
 	CU_ASSERT(g_io_channel == NULL);
 }
 
+static void
+lvol_get_xattr(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_opts opts;
+	int rc = 0;
+	struct spdk_lvol *lvol;
+	const char *value = NULL;
+	size_t value_len = 0;
+
+	init_dev(&dev);
+
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	spdk_lvol_create(g_lvol_store, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol = g_lvol;
+
+	/* Should be able to look up name */
+	lvol_get_xattr_value(lvol, "name", (const void **)&value, &value_len);
+	CU_ASSERT(value != NULL && strcmp(value, "lvol") == 0);
+	CU_ASSERT(value_len != 0);
+
+	/* Looking up something that doesn't exist should indicate non-existence */
+	lvol_get_xattr_value(lvol, "mumble", (const void **)&value, &value_len);
+	CU_ASSERT(value == NULL);
+	CU_ASSERT(value_len == 0);
+
+	/* Clean up */
+	spdk_lvol_close(lvol, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	spdk_lvol_destroy(lvol, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	free_dev(&dev);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2086,6 +2139,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvs_rename);
 	CU_ADD_TEST(suite, lvol_inflate);
 	CU_ADD_TEST(suite, lvol_decouple_parent);
+	CU_ADD_TEST(suite, lvol_get_xattr);
 
 	allocate_threads(1);
 	set_thread(0);
