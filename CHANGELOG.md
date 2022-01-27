@@ -7,22 +7,6 @@
 The batching capability was removed. Batching is now considered an implementation
 detail of the low level drivers.
 
-### idxd
-
-Many APIs are now vectored rather than scalar, meaning they take iovecs instead of individual pointers.
-
-### nvme
-
-API `spdk_nvme_trtype_is_fabrics` was added to return existing transport type
-is fabric or not.
-
-API `spdk_nvme_poll_group_remove` was limited to be available only for a
-disconnected qpair in the group.
-
-### bdev_aio
-
-Added `bdev_aio_rescan` RPC to allow rescaning the size of aio bdev
-
 ### bdev
 
 The NVMe bdev module supports multipath and improved I/O error resiliency.
@@ -38,31 +22,45 @@ added to the RPC `bdev_nvme_attach_controller`.
 An new parameter `num_io_queues` is added to `bdev_nvme_attach_controller` RPC to allow specifying amount
 of requested IO queues.
 
-Added 'key_file' parameter to the 'rbd_register_cluster' RPC.  It is an optional parameter to
+Added `key_file` parameter to the `rbd_register_cluster` RPC.  It is an optional parameter to
 specify a keyring file to connect to a RADOS cluster.
 
+### bdev_aio
+
+Added `bdev_aio_rescan` RPC to allow rescanning the size of aio bdev.
+
+### env
+
+Added `spdk_pci_for_each_device`.
+
+Removed `spdk_pci_get_first_device` and `spdk_pci_get_next_device`.  These APIs were unsafe, because
+they did not account for PCI devices being inserted or removed while the caller was using handles
+returned from these APIs.  Existing users of these APIs should switch to `spdk_pci_for_each_device`
+instead.
+
+Added 3 experimental APIs to handle PCI device interrupts (`spdk_pci_device_enable_interrupt`,
+`spdk_pci_device_disable_interrupt`, `spdk_pci_device_get_interrupt_efd`).
+
+### idxd
+
+Many APIs are now vectored rather than scalar, meaning they take iovecs instead of individual pointers.
+
 ### nvme
+
+API `spdk_nvme_trtype_is_fabrics` was added to return existing transport type
+is fabric or not.
+
+API `spdk_nvme_poll_group_remove` was limited to be available only for a
+disconnected qpair in the group.
 
 New APIs, `spdk_nvme_ctrlr_disconnect`, `spdk_nvme_ctrlr_reconnect_async`, and
 `spdk_nvme_ctrlr_reconnect_poll_async`, have been added to improve error recovery, and
 the existing APIs,`spdk_nvme_ctrlr_reset_async` and `spdk_nvme_ctrlr_reset_poll_async`
 were deprecated.
 
-### env
-
-Added spdk_pci_for_each_device.
-
-Removed spdk_pci_get_first_device and spdk_pci_get_next_device.  These APIs were unsafe, because
-they did not account for PCI devices being inserted or removed while the caller was using handles
-returned from these APIs.  Existing users of these APIs should switch to spdk_pci_for_each_device
-instead.
-
-Added 3 experimental APIs to handle PCI device interrupts (`spdk_pci_device_enable_interrupt`,
-`spdk_pci_device_disable_interrupt`, `spdk_pci_device_get_interrupt_efd`).
-
 ### nvmf
 
-Added a 'subsystem' parameter to spdk_nvmf_transport_stop_listen_async. When not NULL,
+Added a `subsystem` parameter to `spdk_nvmf_transport_stop_listen_async`. When not NULL,
 it will only disconnect qpairs for controllers associated with the specified subsystem.
 
 ### scsi
