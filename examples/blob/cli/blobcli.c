@@ -85,6 +85,7 @@ enum cli_action_type {
 	CLI_DUMP_BS,
 	CLI_SHELL_EXIT,
 	CLI_HELP,
+	CLI_RECOVER,
 };
 
 #define BUFSIZE 255
@@ -160,6 +161,7 @@ print_cmds(void)
 	printf("\t-n <# clusters> - create new blob\n");
 	printf("\t-p <blobid> - set the superblob to the ID provided\n");
 	printf("\t-r <blobid> name - remove xattr name/value pair\n");
+	printf("\t-R - recover the blobstore: like fsck for the blobstore\n");
 	printf("\t-s <blobid> | bs - show blob info or blobstore info\n");
 	printf("\t-S - enter interactive shell mode\n");
 	printf("\t-T <filename> - automated script mode\n");
@@ -856,6 +858,9 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 		spdk_bs_open_blob(cli_context->bs, cli_context->blobid,
 				  fill_blob_cb, cli_context);
 		break;
+	case CLI_RECOVER:
+		unload_bs(cli_context, "", 0);
+		break;
 
 	default:
 		/* should never get here */
@@ -879,6 +884,8 @@ load_bs(struct cli_context_t *cli_context)
 {
 	struct spdk_bs_dev *bs_dev = NULL;
 	int rc;
+	struct spdk_bs_opts	opts = {};
+	struct spdk_bs_opts	*optsp = NULL;
 
 	rc = spdk_bdev_create_bs_dev_ext(cli_context->bdev_name, base_bdev_event_cb,
 					 NULL, &bs_dev);
@@ -888,7 +895,13 @@ load_bs(struct cli_context_t *cli_context)
 		return;
 	}
 
-	spdk_bs_load(bs_dev, NULL, load_bs_cb, cli_context);
+	if (cli_context->action == CLI_RECOVER) {
+		spdk_bs_opts_init(&opts, sizeof(opts));
+		opts.force_recover = true;
+		optsp = &opts;
+	}
+
+	spdk_bs_load(bs_dev, optsp, load_bs_cb, cli_context);
 }
 
 /*
@@ -1041,7 +1054,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int cmd_chosen = 0;
 	char resp;
 
-	while ((op = getopt(argc, argv, "b:d:f:hij:l:m:n:p:r:s:DST:Xx:")) != -1) {
+	while ((op = getopt(argc, argv, "b:d:f:hij:l:m:n:p:r:s:DRST:Xx:")) != -1) {
 		switch (op) {
 		case 'b':
 			if (strcmp(cli_context->bdev_name, "") == 0) {
@@ -1149,6 +1162,10 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			cmd_chosen++;
 			cli_context->action = CLI_SET_SUPER;
 			cli_context->superid = spdk_strtoll(optarg, 0);
+			break;
+		case 'R':
+			cmd_chosen++;
+			cli_context->action = CLI_RECOVER;
 			break;
 		case 'S':
 			if (cli_context->cli_mode == CLI_MODE_CMD) {
@@ -1453,6 +1470,7 @@ cli_start(void *arg1)
 	case CLI_DUMP_BLOB:
 	case CLI_IMPORT_BLOB:
 	case CLI_FILL:
+	case CLI_RECOVER:
 		load_bs(cli_context);
 		break;
 	case CLI_INIT_BS:
