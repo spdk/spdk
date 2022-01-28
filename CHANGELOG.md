@@ -83,6 +83,10 @@ from a discovery controller.
 
 ### nvmf
 
+Added support for zero-copy operations in the NVMe-oF TCP target. It can be enabled via
+the `zcopy` parameter when creating a transport. The zero-copy operations are only used
+for requests not using in-capsule data.
+
 Added a `subsystem` parameter to `spdk_nvmf_transport_stop_listen_async`. When not NULL,
 it will only disconnect qpairs for controllers associated with the specified subsystem.
 
