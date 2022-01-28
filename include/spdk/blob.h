@@ -809,6 +809,13 @@ void spdk_blob_io_write_zeroes(struct spdk_blob *blob, struct spdk_io_channel *c
  * Get the first blob of the blobstore. The obtained blob will be passed to
  * the callback function.
  *
+ * The user's cb_fn will be called with rc == -ENOENT when the iteration is
+ * complete.
+ *
+ * When the user's cb_fn is called with rc == 0, the associated blob is open.
+ * This means that the cb_fn may not attempt to unload the blobstore.  It
+ * must complete the iteration before attempting to unload.
+ *
  * \param bs blobstore to traverse.
  * \param cb_fn Called when the operation is complete.
  * \param cb_arg Argument passed to function cb_fn.
@@ -819,6 +826,13 @@ void spdk_bs_iter_first(struct spdk_blob_store *bs,
 /**
  * Get the next blob by using the current blob. The obtained blob will be passed
  * to the callback function.
+ *
+ * The user's cb_fn will be called with rc == -ENOENT when the iteration is
+ * complete.
+ *
+ * When the user's cb_fn is called with rc == 0, the associated blob is open.
+ * This means that the cb_fn may not attempt to unload the blobstore.  It
+ * must complete the iteration before attempting to unload.
  *
  * \param bs blobstore to traverse.
  * \param blob The current blob.
