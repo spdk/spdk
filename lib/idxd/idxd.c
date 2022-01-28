@@ -185,7 +185,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	}
 
 	/* Allocate batches */
-	num_batches = idxd->queues[idxd->wq_id].wqcfg.wq_size / idxd->chan_per_device;
+	num_batches = num_descriptors;
 	chan->batch_base = calloc(num_batches, sizeof(struct idxd_batch));
 	if (chan->batch_base == NULL) {
 		SPDK_ERRLOG("Failed to allocate batch pool\n");
