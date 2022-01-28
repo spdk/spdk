@@ -209,18 +209,18 @@ nvmf_tgt_create_poll_group(void *ctx)
 static void
 nvmf_tgt_create_poll_groups(void)
 {
-	uint32_t i;
+	uint32_t cpu, count = 0;
 	char thread_name[32];
 	struct spdk_thread *thread;
 
 	g_tgt_init_thread = spdk_get_thread();
 	assert(g_tgt_init_thread != NULL);
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (g_poll_groups_mask && !spdk_cpuset_get_cpu(g_poll_groups_mask, i)) {
+	SPDK_ENV_FOREACH_CORE(cpu) {
+		if (g_poll_groups_mask && !spdk_cpuset_get_cpu(g_poll_groups_mask, cpu)) {
 			continue;
 		}
-		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", i);
+		snprintf(thread_name, sizeof(thread_name), "nvmf_tgt_poll_group_%u", count++);
 
 		thread = spdk_thread_create(thread_name, g_poll_groups_mask);
 		assert(thread != NULL);
