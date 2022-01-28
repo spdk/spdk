@@ -173,8 +173,17 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	if (lvolerrno == -ENOENT) {
 		/* Finished iterating */
-		req->cb_fn(req->cb_arg, lvs, 0);
-		free(req);
+		if (req->lvserrno == 0) {
+			req->cb_fn(req->cb_arg, lvs, req->lvserrno);
+			free(req);
+		} else {
+			TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+				TAILQ_REMOVE(&lvs->lvols, lvol, link);
+				free(lvol);
+			}
+			lvs_free(lvs);
+			spdk_bs_unload(bs, bs_unload_with_error_cb, req);
+		}
 		return;
 	} else if (lvolerrno < 0) {
 		SPDK_ERRLOG("Failed to fetch blobs list\n");
@@ -235,18 +244,8 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	SPDK_INFOLOG(lvol, "added lvol %s (%s)\n", lvol->unique_id, lvol->uuid_str);
 
-	spdk_bs_iter_next(bs, blob, load_next_lvol, req);
-
-	return;
-
 invalid:
-	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-		TAILQ_REMOVE(&lvs->lvols, lvol, link);
-		free(lvol);
-	}
-
-	lvs_free(lvs);
-	spdk_bs_unload(bs, bs_unload_with_error_cb, req);
+	spdk_bs_iter_next(bs, blob, load_next_lvol, req);
 }
 
 static void
