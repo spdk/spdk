@@ -1179,12 +1179,20 @@ bdev_nvme_poll_adminq(void *arg)
 {
 	int32_t rc;
 	struct nvme_ctrlr *nvme_ctrlr = arg;
+	nvme_ctrlr_disconnected_cb disconnected_cb;
 
 	assert(nvme_ctrlr != NULL);
 
 	rc = spdk_nvme_ctrlr_process_admin_completions(nvme_ctrlr->ctrlr);
 	if (rc < 0) {
-		bdev_nvme_failover(nvme_ctrlr, false);
+		disconnected_cb = nvme_ctrlr->disconnected_cb;
+		nvme_ctrlr->disconnected_cb = NULL;
+
+		if (rc == -ENXIO && disconnected_cb != NULL) {
+			disconnected_cb(nvme_ctrlr);
+		} else {
+			bdev_nvme_failover(nvme_ctrlr, false);
+		}
 	}
 
 	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
@@ -1503,8 +1511,13 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 		_bdev_nvme_delete(nvme_ctrlr, false);
 		break;
 	case OP_DELAYED_RECONNECT:
+		/* spdk_nvme_ctrlr_disconnect() may complete asynchronously later by polling adminq.
+		 * Set callback here to start reconnect delay timer after ctrlr is really disconnected.
+		 */
+		assert(nvme_ctrlr->disconnected_cb == NULL);
+		nvme_ctrlr->disconnected_cb = bdev_nvme_start_reconnect_delay_timer;
+
 		spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
-		bdev_nvme_start_reconnect_delay_timer(nvme_ctrlr);
 		break;
 	default:
 		break;
@@ -1626,14 +1639,18 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 
 	assert(status == 0);
 
+	/* spdk_nvme_ctrlr_disconnect() may complete asynchronously later by polling adminq.
+	 * Set callback here to reconnect after ctrlr is really disconnected.
+	 */
+	assert(nvme_ctrlr->disconnected_cb == NULL);
+	nvme_ctrlr->disconnected_cb = bdev_nvme_reconnect_ctrlr;
+
 	/* Disconnect fails if ctrlr is already resetting or removed. Both cases are
 	 * not possible. Reset is controlled and the callback to hot remove is called
 	 * when ctrlr is hot removed.
 	 */
 	rc = spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
 	assert(rc == 0);
-
-	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 }
 
 static void

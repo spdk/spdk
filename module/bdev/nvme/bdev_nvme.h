@@ -102,6 +102,7 @@ struct nvme_path_id {
 };
 
 typedef void (*bdev_nvme_reset_cb)(void *cb_arg, bool success);
+typedef void (*nvme_ctrlr_disconnected_cb)(struct nvme_ctrlr *nvme_ctrlr);
 
 struct nvme_ctrlr {
 	/**
@@ -136,6 +137,8 @@ struct nvme_ctrlr {
 
 	uint64_t				reset_start_tsc;
 	struct spdk_poller			*reconnect_delay_timer;
+
+	nvme_ctrlr_disconnected_cb		disconnected_cb;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
