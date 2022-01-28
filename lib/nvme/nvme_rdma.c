@@ -507,9 +507,8 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 			if (accept_data == NULL) {
 				rc = -1;
 			} else {
-				SPDK_DEBUGLOG(nvme, "Requested queue depth %d. Actually got queue depth %d.\n",
+				SPDK_DEBUGLOG(nvme, "Requested queue depth %d. Target receive queue depth %d.\n",
 					      rqpair->num_entries, accept_data->crqsize);
-				rqpair->num_entries = spdk_min(rqpair->num_entries, accept_data->crqsize);
 			}
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:

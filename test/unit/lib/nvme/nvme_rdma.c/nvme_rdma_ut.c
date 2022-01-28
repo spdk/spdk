@@ -661,7 +661,7 @@ test_nvme_rdma_qpair_process_cm_event(void)
 	rqpair.num_entries = 1024;
 	rc = nvme_rdma_qpair_process_cm_event(&rqpair);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.num_entries == 512);
+	CU_ASSERT(rqpair.num_entries == 1024);
 
 	/* case6: event == RDMA_CM_EVENT_DISCONNECTED */
 	rqpair.evt = &event;
