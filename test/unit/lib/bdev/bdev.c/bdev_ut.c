@@ -4805,7 +4805,7 @@ static void
 bdev_multi_allocation(void)
 {
 	const int max_bdev_num = 1024 * 16;
-	char name[max_bdev_num][10];
+	char name[max_bdev_num][16];
 	char noexist_name[] = "invalid_bdev";
 	struct spdk_bdev *bdev[max_bdev_num];
 	int i, j;
