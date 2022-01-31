@@ -41,6 +41,9 @@
 uint8_t *g_dev_buffer;
 uint64_t g_dev_write_bytes;
 uint64_t g_dev_read_bytes;
+bool g_dev_writev_ext_called;
+bool g_dev_readv_ext_called;
+struct spdk_blob_ext_io_opts g_blob_ext_io_opts;
 
 struct spdk_power_failure_counters {
 	uint64_t general_counter;
@@ -258,6 +261,8 @@ dev_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	      struct spdk_bs_dev_cb_args *cb_args,
 	      struct spdk_blob_ext_io_opts *io_opts)
 {
+	g_dev_readv_ext_called = true;
+	g_blob_ext_io_opts = *io_opts;
 	dev_readv(dev, channel, iov, iovcnt, lba, lba_count, cb_args);
 }
 
@@ -307,6 +312,8 @@ dev_writev_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	       struct spdk_bs_dev_cb_args *cb_args,
 	       struct spdk_blob_ext_io_opts *io_opts)
 {
+	g_dev_writev_ext_called = true;
+	g_blob_ext_io_opts = *io_opts;
 	dev_writev(dev, channel, iov, iovcnt, lba, lba_count, cb_args);
 }
 

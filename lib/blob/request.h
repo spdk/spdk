@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -139,7 +140,8 @@ struct spdk_bs_request_set {
 			void			*payload; /* cast to iov for readv/writev */
 		} user_op;
 	} u;
-
+	/* Pointer to ext_io_opts passed by the user */
+	struct spdk_blob_ext_io_opts *ext_io_opts;
 	TAILQ_ENTRY(spdk_bs_request_set) link;
 };
 

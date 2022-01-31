@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -56,6 +57,17 @@ blob_bs_dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 }
 
 static void
+blob_bs_dev_writev_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		       struct iovec *iov, int iovcnt,
+		       uint64_t lba, uint32_t lba_count,
+		       struct spdk_bs_dev_cb_args *cb_args,
+		       struct spdk_blob_ext_io_opts *ext_opts)
+{
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EPERM);
+	assert(false);
+}
+
+static void
 blob_bs_dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 			 uint64_t lba, uint64_t lba_count,
 			 struct spdk_bs_dev_cb_args *cb_args)
@@ -102,6 +114,18 @@ blob_bs_dev_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 			   blob_bs_dev_read_cpl, cb_args);
 }
 
+static inline void
+blob_bs_dev_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		      struct iovec *iov, int iovcnt,
+		      uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args,
+		      struct spdk_blob_ext_io_opts *ext_opts)
+{
+	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
+
+	spdk_blob_io_readv_ext(b->blob, channel, iov, iovcnt, lba, lba_count,
+			       blob_bs_dev_read_cpl, cb_args, ext_opts);
+}
+
 static void
 blob_bs_dev_destroy_cpl(void *cb_arg, int bserrno)
 {
@@ -140,8 +164,10 @@ bs_create_blob_bs_dev(struct spdk_blob *blob)
 	b->bs_dev.destroy = blob_bs_dev_destroy;
 	b->bs_dev.write = blob_bs_dev_write;
 	b->bs_dev.writev = blob_bs_dev_writev;
+	b->bs_dev.writev_ext = blob_bs_dev_writev_ext;
 	b->bs_dev.read = blob_bs_dev_read;
 	b->bs_dev.readv = blob_bs_dev_readv;
+	b->bs_dev.readv_ext = blob_bs_dev_readv_ext;
 	b->bs_dev.write_zeroes = blob_bs_dev_write_zeroes;
 	b->bs_dev.unmap = blob_bs_dev_unmap;
 	b->blob = blob;

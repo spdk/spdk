@@ -810,6 +810,44 @@ void spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /**
+ * Write the data described by 'iov' to 'length' io_units beginning at 'offset' io_units
+ * into the blob. Accepts extended IO request options
+ *
+ * \param blob Blob to write.
+ * \param channel I/O channel used to submit requests.
+ * \param iov The pointer points to an array of iovec structures.
+ * \param iovcnt The number of buffers.
+ * \param offset Offset is in io units from the beginning of the blob.
+ * \param length Size of data in io units.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ * \param io_opts Optional extended IO request options
+ */
+void spdk_blob_io_writev_ext(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			     struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			     spdk_blob_op_complete cb_fn, void *cb_arg,
+			     struct spdk_blob_ext_io_opts *io_opts);
+
+/**
+ * Read 'length' io_units starting at 'offset' io_units into the blob into the memory
+ * described by 'iov'. Accepts extended IO request options
+ *
+ * \param blob Blob to read.
+ * \param channel I/O channel used to submit requests.
+ * \param iov The pointer points to an array of iovec structures.
+ * \param iovcnt The number of buffers.
+ * \param offset Offset is in io units from the beginning of the blob.
+ * \param length Size of data in io units.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ * \param io_opts Optional extended IO request options
+ */
+void spdk_blob_io_readv_ext(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			    spdk_blob_op_complete cb_fn, void *cb_arg,
+			    struct spdk_blob_ext_io_opts *io_opts);
+
+/**
  * Unmap 'length' io_units beginning at 'offset' io_units on the blob as unused. Unmapped
  * io_units may allow the underlying storage media to behave more efficiently.
  *

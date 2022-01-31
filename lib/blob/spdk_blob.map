@@ -46,6 +46,8 @@
 	spdk_blob_io_read;
 	spdk_blob_io_writev;
 	spdk_blob_io_readv;
+	spdk_blob_io_readv_ext;
+	spdk_blob_io_writev_ext;
 	spdk_blob_io_unmap;
 	spdk_blob_io_write_zeroes;
 	spdk_bs_iter_first;

@@ -73,6 +73,11 @@ New parameters, `ctrlr_loss_timeout_sec`, `reconnect_delay_sec`, and `fast_io_fa
 added to the RPC `bdev_nvme_set_options`. They can be overridden if they are given by the RPC
 `bdev_nvme_attach_controller`.
 
+### blobstore
+
+New functions `spdk_blob_io_writev_ext` and `spdk_blob_io_readv_ext` are added. The new functions accept
+`spdk_blob_ext_io_opts` structure with extended IO request options.
+
 ### event
 
 Added `msg_mempool_size` parameter to `spdk_reactors_init` and `spdk_thread_lib_init_ext`.
