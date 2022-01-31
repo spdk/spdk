@@ -149,6 +149,21 @@ struct spdk_bs_dev_cb_args {
 	void			*cb_arg;
 };
 
+/**
+ * Structure with optional IO request parameters
+ * The content of this structure must be valid until the IO request is completed
+ */
+struct spdk_blob_ext_io_opts {
+	/** Size of this structure in bytes */
+	size_t size;
+	/** Memory domain which describes payload in this IO request. */
+	struct spdk_memory_domain *memory_domain;
+	/** Context to be passed to memory domain operations */
+	void *memory_domain_ctx;
+	/** Optional user context */
+	void *user_ctx;
+};
+
 struct spdk_bs_dev {
 	/* Create a new channel which is a software construct that is used
 	 * to submit I/O. */
@@ -180,6 +195,18 @@ struct spdk_bs_dev {
 		       struct iovec *iov, int iovcnt,
 		       uint64_t lba, uint32_t lba_count,
 		       struct spdk_bs_dev_cb_args *cb_args);
+
+	void (*readv_ext)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+			  struct iovec *iov, int iovcnt,
+			  uint64_t lba, uint32_t lba_count,
+			  struct spdk_bs_dev_cb_args *cb_args,
+			  struct spdk_blob_ext_io_opts *ext_io_opts);
+
+	void (*writev_ext)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+			   struct iovec *iov, int iovcnt,
+			   uint64_t lba, uint32_t lba_count,
+			   struct spdk_bs_dev_cb_args *cb_args,
+			   struct spdk_blob_ext_io_opts *ext_io_opts);
 
 	void (*flush)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		      struct spdk_bs_dev_cb_args *cb_args);

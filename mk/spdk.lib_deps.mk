@@ -71,7 +71,7 @@ ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-nvme += vfio_user
 endif
 
-DEPDIRS-blob := log util thread
+DEPDIRS-blob := log util thread dma
 DEPDIRS-accel := log util thread json
 DEPDIRS-jsonrpc := log util json
 DEPDIRS-virtio := log util json thread

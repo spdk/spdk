@@ -56,6 +56,10 @@ struct ut_request {
 	volatile int done;
 };
 
+DEFINE_STUB(spdk_memory_domain_memzero, int, (struct spdk_memory_domain *src_domain,
+		void *src_domain_ctx, struct iovec *iov, uint32_t iovcnt, void (*cpl_cb)(void *, int),
+		void *cpl_cb_arg), 0);
+
 static void
 send_request(fs_request_fn fn, void *arg)
 {

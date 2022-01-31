@@ -252,6 +252,16 @@ dev_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 }
 
 static void
+dev_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+	      struct iovec *iov, int iovcnt,
+	      uint64_t lba, uint32_t lba_count,
+	      struct spdk_bs_dev_cb_args *cb_args,
+	      struct spdk_blob_ext_io_opts *io_opts)
+{
+	dev_readv(dev, channel, iov, iovcnt, lba, lba_count, cb_args);
+}
+
+static void
 dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	   struct iovec *iov, int iovcnt,
 	   uint64_t lba, uint32_t lba_count,
@@ -288,6 +298,16 @@ dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	}
 
 	spdk_thread_send_msg(spdk_get_thread(), dev_complete, cb_args);
+}
+
+static void
+dev_writev_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+	       struct iovec *iov, int iovcnt,
+	       uint64_t lba, uint32_t lba_count,
+	       struct spdk_bs_dev_cb_args *cb_args,
+	       struct spdk_blob_ext_io_opts *io_opts)
+{
+	dev_writev(dev, channel, iov, iovcnt, lba, lba_count, cb_args);
 }
 
 static void
@@ -387,6 +407,8 @@ init_dev(void)
 	dev->write = dev_write;
 	dev->readv = dev_readv;
 	dev->writev = dev_writev;
+	dev->readv_ext = dev_readv_ext;
+	dev->writev_ext = dev_writev_ext;
 	dev->flush = dev_flush;
 	dev->unmap = dev_unmap;
 	dev->write_zeroes = dev_write_zeroes;

@@ -194,6 +194,24 @@ bdev_blob_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 }
 
 static void
+bdev_blob_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		    struct iovec *iov, int iovcnt,
+		    uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args,
+		    struct spdk_blob_ext_io_opts *io_opts)
+{
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -ENOTSUP);
+}
+
+static void
+bdev_blob_writev_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		     struct iovec *iov, int iovcnt,
+		     uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args,
+		     struct spdk_blob_ext_io_opts *io_opts)
+{
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -ENOTSUP);
+}
+
+static void
 bdev_blob_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64_t lba,
 		       uint64_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
 {
@@ -345,6 +363,8 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 	b->bs_dev.write = bdev_blob_write;
 	b->bs_dev.readv = bdev_blob_readv;
 	b->bs_dev.writev = bdev_blob_writev;
+	b->bs_dev.readv_ext = bdev_blob_readv_ext;
+	b->bs_dev.writev_ext = bdev_blob_writev_ext;
 	b->bs_dev.write_zeroes = bdev_blob_write_zeroes;
 	b->bs_dev.unmap = bdev_blob_unmap;
 	b->bs_dev.get_base_bdev = bdev_blob_get_base_bdev;
