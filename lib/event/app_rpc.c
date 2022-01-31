@@ -509,7 +509,8 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 end:
 	free_rpc_framework_set_scheduler(&req);
 }
-SPDK_RPC_REGISTER("framework_set_scheduler", rpc_framework_set_scheduler, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("framework_set_scheduler", rpc_framework_set_scheduler,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
 rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
