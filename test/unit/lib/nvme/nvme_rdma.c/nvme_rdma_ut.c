@@ -1052,7 +1052,7 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 	rc = nvme_rdma_poller_create(&group, contexts);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
-	rc = nvme_rdma_poll_group_connect_qpair(&rqpair->qpair);
+	rc = nvme_rdma_poll_group_set_cq(&rqpair->qpair);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rqpair->cq == (void *)0xFEEDBEEF);
 	CU_ASSERT(rqpair->poller != NULL);
@@ -1086,7 +1086,7 @@ test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
 	rqpair->qpair.state = NVME_QPAIR_DESTROYING;
 	cm_id.verbs = (void *)0xDEADBEEF;
 
-	rc = nvme_rdma_poll_group_connect_qpair(&rqpair->qpair);
+	rc = nvme_rdma_poll_group_set_cq(&rqpair->qpair);
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(rqpair->cq == NULL);
 

@@ -713,6 +713,60 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 }
 
 static int
+nvme_rdma_resize_cq(struct nvme_rdma_qpair *rqpair, struct nvme_rdma_poller *poller)
+{
+	int	current_num_wc, required_num_wc;
+
+	required_num_wc = poller->required_num_wc + WC_PER_QPAIR(rqpair->num_entries);
+	current_num_wc = poller->current_num_wc;
+	if (current_num_wc < required_num_wc) {
+		current_num_wc = spdk_max(current_num_wc * 2, required_num_wc);
+	}
+
+	if (poller->current_num_wc != current_num_wc) {
+		SPDK_DEBUGLOG(nvme, "Resize RDMA CQ from %d to %d\n", poller->current_num_wc,
+			      current_num_wc);
+		if (ibv_resize_cq(poller->cq, current_num_wc)) {
+			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));
+			return -1;
+		}
+
+		poller->current_num_wc = current_num_wc;
+	}
+
+	poller->required_num_wc = required_num_wc;
+	return 0;
+}
+
+static int
+nvme_rdma_poll_group_set_cq(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_rdma_qpair          *rqpair = nvme_rdma_qpair(qpair);
+	struct nvme_rdma_poll_group     *group = nvme_rdma_poll_group(qpair->poll_group);
+	struct nvme_rdma_poller         *poller;
+
+	assert(rqpair->cq == NULL);
+
+	STAILQ_FOREACH(poller, &group->pollers, link) {
+		if (poller->device == rqpair->cm_id->verbs) {
+			if (nvme_rdma_resize_cq(rqpair, poller)) {
+				return -EPROTO;
+			}
+			rqpair->cq = poller->cq;
+			rqpair->poller = poller;
+			break;
+		}
+	}
+
+	if (rqpair->cq == NULL) {
+		SPDK_ERRLOG("Unable to find a cq for qpair %p on poll group %p\n", qpair, qpair->poll_group);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int
 nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 {
 	int			rc;
@@ -728,7 +782,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	if (rqpair->qpair.poll_group) {
 		assert(!rqpair->cq);
-		rc = nvme_poll_group_connect_qpair(&rqpair->qpair);
+		rc = nvme_rdma_poll_group_set_cq(&rqpair->qpair);
 		if (rc) {
 			SPDK_ERRLOG("Unable to activate the rdmaqpair.\n");
 			return -1;
@@ -2701,57 +2755,10 @@ nvme_rdma_poll_group_get_qpair_by_id(struct nvme_rdma_poll_group *group, uint32_
 	return NULL;
 }
 
-static int
-nvme_rdma_resize_cq(struct nvme_rdma_qpair *rqpair, struct nvme_rdma_poller *poller)
-{
-	int	current_num_wc, required_num_wc;
-
-	required_num_wc = poller->required_num_wc + WC_PER_QPAIR(rqpair->num_entries);
-	current_num_wc = poller->current_num_wc;
-	if (current_num_wc < required_num_wc) {
-		current_num_wc = spdk_max(current_num_wc * 2, required_num_wc);
-	}
-
-	if (poller->current_num_wc != current_num_wc) {
-		SPDK_DEBUGLOG(nvme, "Resize RDMA CQ from %d to %d\n", poller->current_num_wc,
-			      current_num_wc);
-		if (ibv_resize_cq(poller->cq, current_num_wc)) {
-			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));
-			return -1;
-		}
-
-		poller->current_num_wc = current_num_wc;
-	}
-
-	poller->required_num_wc = required_num_wc;
-	return 0;
-}
 
 static int
 nvme_rdma_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
-	struct nvme_rdma_poll_group	*group = nvme_rdma_poll_group(qpair->poll_group);
-	struct nvme_rdma_poller		*poller;
-
-	assert(rqpair->cq == NULL);
-
-	STAILQ_FOREACH(poller, &group->pollers, link) {
-		if (poller->device == rqpair->cm_id->verbs) {
-			if (nvme_rdma_resize_cq(rqpair, poller)) {
-				return -EPROTO;
-			}
-			rqpair->cq = poller->cq;
-			rqpair->poller = poller;
-			break;
-		}
-	}
-
-	if (rqpair->cq == NULL) {
-		SPDK_ERRLOG("Unable to find a cq for qpair %p on poll group %p\n", qpair, qpair->poll_group);
-		return -EINVAL;
-	}
-
 	return 0;
 }
 
