@@ -64,6 +64,8 @@ bool g_lvs_with_name_already_exists = false;
 bool g_ext_api_called;
 
 DEFINE_STUB_V(spdk_bdev_module_fini_start_done, (void));
+DEFINE_STUB(spdk_bdev_get_memory_domains, int, (struct spdk_bdev *bdev,
+		struct spdk_memory_domain **domains, int array_size), 0);
 
 const struct spdk_bdev_aliases_list *
 spdk_bdev_get_aliases(const struct spdk_bdev *bdev)

@@ -941,6 +941,17 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	return;
 }
 
+static int
+vbdev_lvol_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
+{
+	struct spdk_lvol *lvol = ctx;
+	struct spdk_bdev *base_bdev;
+
+	base_bdev = lvol->lvol_store->bs_dev->get_base_bdev(lvol->lvol_store->bs_dev);
+
+	return spdk_bdev_get_memory_domains(base_bdev, domains, array_size);
+}
+
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.destruct		= vbdev_lvol_unregister,
 	.io_type_supported	= vbdev_lvol_io_type_supported,
@@ -948,6 +959,7 @@ static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.get_io_channel		= vbdev_lvol_get_io_channel,
 	.dump_info_json		= vbdev_lvol_dump_info_json,
 	.write_config_json	= vbdev_lvol_write_config_json,
+	.get_memory_domains	= vbdev_lvol_get_memory_domains,
 };
 
 static void
