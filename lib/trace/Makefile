@@ -34,8 +34,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 5
-SO_MINOR := 1
+SO_VER := 6
+SO_MINOR := 0
 
 C_SRCS = trace.c trace_flags.c trace_rpc.c
 LIBNAME = trace
