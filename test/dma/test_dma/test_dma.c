@@ -75,6 +75,7 @@ struct dma_test_task {
 	struct dma_test_req *reqs;
 	struct spdk_thread *thread;
 	const char *bdev_name;
+	uint64_t num_translations;
 	uint32_t lcore;
 
 	TAILQ_ENTRY(dma_test_task) link;
@@ -91,6 +92,7 @@ static uint32_t g_io_size;
 static uint32_t g_run_time_sec;
 static uint32_t g_run_count;
 static bool g_is_random;
+static bool g_force_memory_domains_support;
 
 static struct spdk_thread *g_main_thread;
 static struct spdk_poller *g_runtime_poller;
@@ -296,6 +298,8 @@ dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_do
 	result->rdma.lkey = req->mr->lkey;
 	result->rdma.rkey = req->mr->rkey;
 	result->dst_domain = dst_domain;
+
+	req->task->num_translations++;
 
 	return 0;
 }
@@ -599,6 +603,22 @@ destroy_tasks(void)
 	}
 }
 
+static int
+verify_tasks(void)
+{
+	struct dma_test_task *task;
+
+	TAILQ_FOREACH(task, &g_tasks, link) {
+		if (task->num_translations < task->stats.io_completed) {
+			fprintf(stderr, "Unexpected number of translations %"PRIu64", must be at least %"PRIu64"\n",
+				task->num_translations, task->stats.io_completed);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 static void
 dma_test_start(void *arg)
 {
@@ -615,7 +635,10 @@ dma_test_start(void *arg)
 		return;
 	}
 	bdev = spdk_bdev_desc_get_bdev(desc);
-	if (!dma_test_check_bdev_supports_rdma_memory_domain(bdev)) {
+	/* This function checks if bdev supports memory domains. Test is not failed if there are
+	 * no memory domains since bdev layer can pull/push data */
+	if (!dma_test_check_bdev_supports_rdma_memory_domain(bdev) && g_force_memory_domains_support) {
+		fprintf(stderr, "Test aborted due to \"-f\" (force memory domains support) option\n");
 		spdk_bdev_close(desc);
 		spdk_app_stop(-ENODEV);
 		return;
@@ -672,6 +695,7 @@ print_usage(void)
 	printf(" -t <val>          run time in seconds\n");
 	printf(" -w <str>          io pattern (read, write, randread, randwrite, randrw)\n");
 	printf(" -M <0-100>        rw percentage (100 for reads, 0 for writes)\n");
+	printf(" -f                force memory domains support - abort test if bdev doesn't report memory domains\n");
 }
 
 static int
@@ -710,6 +734,9 @@ parse_arg(int ch, char *arg)
 		break;
 	case 'b':
 		g_bdev_name = arg;
+		break;
+	case 'f':
+		g_force_memory_domains_support = true;
 		break;
 
 	default:
@@ -777,7 +804,7 @@ main(int argc, char **argv)
 	opts.name = "test_dma";
 	opts.shutdown_cb = dma_test_shutdown_cb;
 
-	rc = spdk_app_parse_args(argc, argv, &opts, "b:q:o:t:w:M:", NULL, parse_arg, print_usage);
+	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:w:M:", NULL, parse_arg, print_usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
@@ -788,6 +815,9 @@ main(int argc, char **argv)
 	}
 
 	rc = spdk_app_start(&opts, dma_test_start, NULL);
+	if (rc == 0 && g_force_memory_domains_support) {
+		rc = verify_tasks();
+	}
 	destroy_tasks();
 	spdk_app_fini();
 

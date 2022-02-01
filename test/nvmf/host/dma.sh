@@ -23,11 +23,9 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode$subsystem -a -s SPDK0000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$subsystem Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$subsystem -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-"$rootdir/test/dma/test_dma/test_dma" -q 16 -o 4096 -w randrw -M 70 -t 5 -m 0xc --json <(gen_nvmf_target_json $subsystem) -b "Nvme${subsystem}n1"
-test_dmapid=$!
-
-wait $test_dmapid
-sync
+# test memory translation
+# test_dma doesn't use RPC, but we change the sock path since nvmf target is already using the default RPC sock
+"$rootdir/test/dma/test_dma/test_dma" -q 16 -o 4096 -w randrw -M 70 -t 5 -m 0xc --json <(gen_nvmf_target_json $subsystem) -b "Nvme${subsystem}n1" -f -r /var/tmp/dma.sock
 
 trap - SIGINT SIGTERM EXIT
 
