@@ -907,6 +907,7 @@ static struct {
 	{ "0", RAID0 },
 	{ "raid5", RAID5 },
 	{ "5", RAID5 },
+	{ "concat", CONCAT },
 	{ }
 };
 

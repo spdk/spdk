@@ -44,8 +44,11 @@ function setup_bdev_conf() {
 		bdev_malloc_create -b Malloc3 32 512
 		bdev_malloc_create -b Malloc4 32 512
 		bdev_malloc_create -b Malloc5 32 512
+		bdev_malloc_create -b Malloc6 32 512
+		bdev_malloc_create -b Malloc7 32 512
 		bdev_passthru_create -p TestPT -b Malloc3
 		bdev_raid_create -n raid0 -z 64 -r 0 -b "Malloc4 Malloc5"
+		bdev_raid_create -n concat0 -z 64 -r concat -b "Malloc6 Malloc7"
 		bdev_set_qos_limit --rw_mbytes_per_sec 100 Malloc3
 		bdev_set_qos_limit --rw_ios_per_sec 20000 Malloc0
 	RPC

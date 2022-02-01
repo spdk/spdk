@@ -60,12 +60,13 @@ function on_error_exit() {
 }
 
 function configure_raid_bdev() {
+	local raid_level=$1
 	rm -rf $testdir/rpcs.txt
 
 	cat <<- EOL >> $testdir/rpcs.txt
 		bdev_malloc_create 32 512 -b Base_1
 		bdev_malloc_create 32 512 -b Base_2
-		bdev_raid_create -z 64 -r 0 -b "Base_1 Base_2" -n raid0
+		bdev_raid_create -z 64 -r $raid_level -b "Base_1 Base_2" -n raid
 	EOL
 	$rpc_py < $testdir/rpcs.txt
 
@@ -73,6 +74,7 @@ function configure_raid_bdev() {
 }
 
 function raid_function_test() {
+	local raid_level=$1
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
 		local nbd=/dev/nbd0
 		local raid_bdev
@@ -83,7 +85,7 @@ function raid_function_test() {
 		echo "Process raid pid: $raid_pid"
 		waitforlisten $raid_pid $rpc_server
 
-		configure_raid_bdev
+		configure_raid_bdev $raid_level
 		raid_bdev=$($rpc_py bdev_raid_get_bdevs online | cut -d ' ' -f 1)
 		if [ $raid_bdev = "" ]; then
 			echo "No raid0 device in SPDK app"
@@ -114,6 +116,7 @@ function raid_function_test() {
 
 trap 'on_error_exit;' ERR
 
-raid_function_test
+raid_function_test raid0
+raid_function_test concat
 
 rm -f $tmp_file

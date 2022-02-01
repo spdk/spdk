@@ -40,6 +40,7 @@ enum raid_level {
 	INVALID_RAID_LEVEL	= -1,
 	RAID0			= 0,
 	RAID5			= 5,
+	CONCAT			= 99,
 };
 
 /*

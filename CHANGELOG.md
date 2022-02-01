@@ -94,6 +94,14 @@ Added `dynamic` scheduler options: load_limit, core_limit, core_busy. Their desc
 are available in JSON-RPC document, in section
 [framework_set_scheduler](jsonrpc.html#rpc_framework_set_scheduler).
 
+### raid
+
+Add concat as a special raid module. The concat module could create a virtual bdev.  The
+virtual bdev combines multiple underlying bdevs together. The layout of the underlying
+bdevs is one after another. The concat bdev is extendable. When the free space of the
+concat bdev is not enough, the user can deconstruct the concat bdev, then reconstruct it
+with an additional underlying bdev.
+
 ## v22.01
 
 ### accel
