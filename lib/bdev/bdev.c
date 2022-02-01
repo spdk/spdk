@@ -5745,6 +5745,11 @@ bdev_register(struct spdk_bdev *bdev)
 	bdev->internal.qd_poller = NULL;
 	bdev->internal.qos = NULL;
 
+	TAILQ_INIT(&bdev->internal.open_descs);
+	TAILQ_INIT(&bdev->internal.locked_ranges);
+	TAILQ_INIT(&bdev->internal.pending_locked_ranges);
+	TAILQ_INIT(&bdev->aliases);
+
 	ret = bdev_name_add(&bdev->internal.bdev_name, bdev, bdev->name);
 	if (ret != 0) {
 		free(bdev_name);
@@ -5779,12 +5784,6 @@ bdev_register(struct spdk_bdev *bdev)
 	if (bdev->phys_blocklen == 0) {
 		bdev->phys_blocklen = spdk_bdev_get_data_block_size(bdev);
 	}
-
-	TAILQ_INIT(&bdev->internal.open_descs);
-	TAILQ_INIT(&bdev->internal.locked_ranges);
-	TAILQ_INIT(&bdev->internal.pending_locked_ranges);
-
-	TAILQ_INIT(&bdev->aliases);
 
 	bdev->internal.reset_in_progress = NULL;
 
