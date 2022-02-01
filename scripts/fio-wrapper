@@ -20,6 +20,7 @@ fio_config() {
 		norandommap=$((verify == 1 ? 0 : 1))
 		numjobs=$numjobs
 		verify_dump=1
+		verify_backlog=512
 	FIO
 
 	if ((verify == 1)); then
