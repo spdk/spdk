@@ -141,22 +141,3 @@ The software module is enabled by default. If no hardware engine is explicitly
 enabled via startup RPC as discussed earlier, the software module will use ISA-L
 if available for functions such as CRC32C. Otherwise, standard glibc calls are
 used to back the framework API.
-
-### Batching {#batching}
-
-Batching is exposed by the acceleration framework and provides an interface to
-batch sets of commands up and then submit them with a single command.  The public
-API is consistent with the implementation however each plug-in module behaves
-differently depending on its capabilities.
-
-The DSA engine has complete support for batching all supported commands together
-into one submission. This is advantageous as it reduces the overhead incurred in
-the submission process to the hardware.
-
-The software engine supports batching only to be consistent with the framework API.
-In software there is no savings by batching sets of commands versus submitting them
-individually.
-
-The IOAT engine supports batching but it is only beneficial for `memmove` and `memfill`
-as these are supported by the hardware.  All other commands can be batched and the
-framework will manage all other commands via software.
