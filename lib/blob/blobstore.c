@@ -2532,6 +2532,9 @@ struct op_split_ctx {
 	void *curr_payload;
 	enum spdk_blob_op_type op_type;
 	spdk_bs_sequence_t *seq;
+	bool in_submit_ctx;
+	bool completed_in_submit_ctx;
+	bool done;
 };
 
 static void
@@ -2541,18 +2544,40 @@ blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 	struct spdk_blob	*blob = ctx->blob;
 	struct spdk_io_channel	*ch = ctx->channel;
 	enum spdk_blob_op_type	op_type = ctx->op_type;
-	uint8_t			*buf = ctx->curr_payload;
-	uint64_t		offset = ctx->io_unit_offset;
-	uint64_t		length = ctx->io_units_remaining;
+	uint8_t			*buf;
+	uint64_t		offset;
+	uint64_t		length;
 	uint64_t		op_length;
 
 	if (bserrno != 0 || ctx->io_units_remaining == 0) {
 		bs_sequence_finish(ctx->seq, bserrno);
-		free(ctx);
+		if (ctx->in_submit_ctx) {
+			/* Defer freeing of the ctx object, since it will be
+			 * accessed when this unwinds back to the submisison
+			 * context.
+			 */
+			ctx->done = true;
+		} else {
+			free(ctx);
+		}
 		return;
 	}
 
-	do {
+	if (ctx->in_submit_ctx) {
+		/* If this split operation completed in the context
+		 * of its submission, mark the flag and return immediately
+		 * to avoid recursion.
+		 */
+		ctx->completed_in_submit_ctx = true;
+		return;
+	}
+
+	while (true) {
+		ctx->completed_in_submit_ctx = false;
+
+		offset = ctx->io_unit_offset;
+		length = ctx->io_units_remaining;
+		buf = ctx->curr_payload;
 		op_length = spdk_min(length, bs_num_io_units_to_cluster_boundary(blob,
 				     offset));
 
@@ -2562,6 +2587,9 @@ blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 		if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_READ) {
 			ctx->curr_payload += op_length * blob->bs->io_unit_size;
 		}
+
+		assert(!ctx->in_submit_ctx);
+		ctx->in_submit_ctx = true;
 
 		switch (op_type) {
 		case SPDK_BLOB_READ:
@@ -2585,9 +2613,33 @@ blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 			SPDK_ERRLOG("readv/write not valid\n");
 			bs_sequence_finish(ctx->seq, -EINVAL);
 			free(ctx);
-			break;
+			return;
 		}
-	} while (false);
+
+#ifndef __clang_analyzer__
+		/* scan-build reports a false positive around accessing the ctx here. It
+		 * forms a path that recursively calls this function, but then says
+		 * "assuming ctx->in_submit_ctx is false", when that isn't possible.
+		 * This path does free(ctx), returns to here, and reports a use-after-free
+		 * bug.  Wrapping this bit of code so that scan-build doesn't see it
+		 * works around the scan-build bug.
+		 */
+		assert(ctx->in_submit_ctx);
+		ctx->in_submit_ctx = false;
+
+		/* If the operation completed immediately, loop back and submit the
+		 * next operation.  Otherwise we can return and the next split
+		 * operation will get submitted when this current operation is
+		 * later completed asynchronously.
+		 */
+		if (ctx->completed_in_submit_ctx) {
+			continue;
+		} else if (ctx->done) {
+			free(ctx);
+		}
+#endif
+		break;
+	}
 }
 
 static void
