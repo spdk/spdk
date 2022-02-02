@@ -389,6 +389,28 @@ union idxd_offsets_register {
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_offsets_register) == 16, "size mismatch");
 
+union idxd_gencfg_register {
+	struct {
+		uint8_t		global_read_buf_limit;
+		uint8_t		reserved0 : 4;
+		uint8_t		user_mode_int_enabled : 1;
+		uint8_t		reserved1 : 3;
+		uint16_t	reserved2;
+	};
+	uint32_t raw;
+};
+SPDK_STATIC_ASSERT(sizeof(union idxd_gencfg_register) == 4, "size mismatch");
+
+union idxd_genctrl_register {
+	struct {
+		uint32_t	sw_err_int_enable : 1;
+		uint32_t	halt_state_int_enable : 1;
+		uint32_t	reserved : 30;
+	};
+	uint32_t raw;
+};
+SPDK_STATIC_ASSERT(sizeof(union idxd_genctrl_register) == 4, "size mismatch");
+
 union idxd_gensts_register {
 	struct {
 		uint32_t state: 2;
@@ -398,6 +420,31 @@ union idxd_gensts_register {
 	uint32_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_gensts_register) == 4, "size mismatch");
+
+union idxd_intcause_register {
+	struct {
+		uint32_t	software_err : 1;
+		uint32_t	command_completion : 1;
+		uint32_t	wq_occupancy_below_limit : 1;
+		uint32_t	perfmon_counter_overflow : 1;
+		uint32_t	halt_state : 1;
+		uint32_t	reserved : 26;
+		uint32_t	int_handles_revoked : 1;
+	};
+	uint32_t raw;
+};
+SPDK_STATIC_ASSERT(sizeof(union idxd_intcause_register) == 4, "size mismatch");
+
+union idxd_cmd_register {
+	struct {
+		uint32_t	operand : 20;
+		uint32_t	command_code : 5;
+		uint32_t	reserved : 6;
+		uint32_t	request_completion_interrupt : 1;
+	};
+	uint32_t raw;
+};
+SPDK_STATIC_ASSERT(sizeof(union idxd_cmd_register) == 4, "size mismatch");
 
 union idxd_cmdsts_register {
 	struct {
@@ -409,6 +456,29 @@ union idxd_cmdsts_register {
 	uint32_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_cmdsts_register) == 4, "size mismatch");
+
+union idxd_cmdcap_register {
+	struct {
+		uint32_t	reserved0 : 1;
+		uint32_t	enable_device : 1;
+		uint32_t	disable_device : 1;
+		uint32_t	drain_all : 1;
+		uint32_t	abort_all : 1;
+		uint32_t	reset_device : 1;
+		uint32_t	enable_wq : 1;
+		uint32_t	disable_wq : 1;
+		uint32_t	drain_wq : 1;
+		uint32_t	abort_wq : 1;
+		uint32_t	reset_wq : 1;
+		uint32_t	drain_pasid : 1;
+		uint32_t	abort_pasid : 1;
+		uint32_t	request_int_handle : 1;
+		uint32_t	release_int_handle : 1;
+		uint32_t	reserved1 : 17;
+	};
+	uint32_t raw;
+};
+SPDK_STATIC_ASSERT(sizeof(union idxd_cmdcap_register) == 4, "size mismatch");
 
 union idxd_swerr_register {
 	struct {
@@ -437,14 +507,36 @@ union idxd_swerr_register {
 SPDK_STATIC_ASSERT(sizeof(union idxd_swerr_register) == 32, "size mismatch");
 
 struct idxd_registers {
-	uint32_t version;
-	union idxd_gencap_register gencap;
-	union idxd_wqcap_register wqcap;
-	union idxd_groupcap_register groupcap;
-	union idxd_enginecap_register enginecap;
-	struct idxd_opcap_register opcap;
+	uint32_t			version;
+	uint32_t			reserved0;
+	uint64_t			reserved1;
+	union idxd_gencap_register	gencap;
+	uint64_t			reserved2;
+	union idxd_wqcap_register	wqcap;
+	uint64_t			reserved3;
+	union idxd_groupcap_register	groupcap;
+	union idxd_enginecap_register	enginecap;
+	struct idxd_opcap_register	opcap;
+	union idxd_offsets_register	offsets;
+	uint64_t			reserved4[2];
+	union idxd_gencfg_register	gencfg;
+	uint32_t			reserved5;
+	union idxd_genctrl_register	genctrl;
+	uint32_t			reserved6;
+	union idxd_gensts_register	gensts;
+	uint32_t			reserved7;
+	union idxd_intcause_register	intcause;
+	uint32_t			reserved8;
+	union idxd_cmd_register		cmd;
+	uint32_t			reserved9;
+	union idxd_cmdsts_register	cmdsts;
+	uint32_t			reserved10;
+	union idxd_cmdcap_register	cmdcap;
+	uint32_t			reserved11;
+	uint64_t			reserved12;
+	union idxd_swerr_register	sw_err;
 };
-SPDK_STATIC_ASSERT(sizeof(struct idxd_registers) == 72, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(struct idxd_registers) == 0xE0, "size mismatch");
 
 union idxd_group_flags {
 	struct {
