@@ -399,7 +399,7 @@ union idxd_gensts_register {
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_gensts_register) == 4, "size mismatch");
 
-union idxd_cmdsts_reg {
+union idxd_cmdsts_register {
 	struct {
 		uint32_t err : 8;
 		uint32_t result : 16;
@@ -408,7 +408,7 @@ union idxd_cmdsts_reg {
 	};
 	uint32_t raw;
 };
-SPDK_STATIC_ASSERT(sizeof(union idxd_cmdsts_reg) == 4, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(union idxd_cmdsts_register) == 4, "size mismatch");
 
 union idxd_swerr_register {
 	struct {

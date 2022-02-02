@@ -200,7 +200,7 @@ static int
 test_idxd_reset_dev(void)
 {
 	struct spdk_user_idxd_device user_idxd = {};
-	union idxd_cmdsts_reg *fake_cmd_status_reg;
+	union idxd_cmdsts_register *fake_cmd_status_reg;
 	int rc;
 
 	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);
@@ -226,7 +226,7 @@ test_idxd_wait_cmd(void)
 {
 	struct spdk_user_idxd_device user_idxd = {};
 	int timeout = 1;
-	union idxd_cmdsts_reg *fake_cmd_status_reg;
+	union idxd_cmdsts_register *fake_cmd_status_reg;
 	int rc;
 
 	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);

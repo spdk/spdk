@@ -109,7 +109,7 @@ static int
 idxd_wait_cmd(struct spdk_idxd_device *idxd, int _timeout)
 {
 	uint32_t timeout = _timeout;
-	union idxd_cmdsts_reg cmd_status = {};
+	union idxd_cmdsts_register cmd_status = {};
 
 	cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
 	while (cmd_status.active && --timeout) {
