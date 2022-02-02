@@ -39,8 +39,8 @@
 #include "idxd/idxd.h"
 #include "idxd/idxd_user.c"
 
-#define FAKE_REG_SIZE 0x800
-#define GRP_CFG_OFFSET 0x400
+#define FAKE_REG_SIZE 0x1000
+#define GRP_CFG_OFFSET (0x800 / IDXD_TABLE_OFFSET_MULT)
 #define MAX_TOKENS 0x40
 #define MAX_ARRAY_SIZE 0x20
 
@@ -99,7 +99,7 @@ spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
 	return 0;
 }
 
-#define WQ_CFG_OFFSET 0x500
+#define WQ_CFG_OFFSET (0x800 / IDXD_TABLE_OFFSET_MULT)
 #define TOTAL_WQE_SIZE 0x40
 static int
 test_idxd_wq_config(void)
@@ -112,18 +112,18 @@ test_idxd_wq_config(void)
 	uint32_t wqcap_size = 32;
 	int rc;
 
-	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(user_idxd.reg_base != NULL);
+	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
+	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
 
 	idxd->groups = calloc(1, sizeof(struct idxd_group));
 	SPDK_CU_ASSERT_FATAL(idxd->groups != NULL);
 
-	user_idxd.registers.wqcap.total_wq_size = TOTAL_WQE_SIZE;
-	user_idxd.registers.wqcap.num_wqs = 1;
-	user_idxd.registers.gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
-	user_idxd.registers.gencap.max_xfer_shift = LOG2_WQ_MAX_XFER;
-	user_idxd.wqcfg_offset = WQ_CFG_OFFSET;
-	wq_size = user_idxd.registers.wqcap.total_wq_size;
+	user_idxd.registers->wqcap.total_wq_size = TOTAL_WQE_SIZE;
+	user_idxd.registers->wqcap.num_wqs = 1;
+	user_idxd.registers->gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
+	user_idxd.registers->gencap.max_xfer_shift = LOG2_WQ_MAX_XFER;
+	user_idxd.registers->offsets.wqcfg = WQ_CFG_OFFSET;
+	wq_size = user_idxd.registers->wqcap.total_wq_size;
 
 	rc = idxd_wq_config(&user_idxd);
 	CU_ASSERT(rc == 0);
@@ -136,16 +136,18 @@ test_idxd_wq_config(void)
 	CU_ASSERT(idxd->queues->idxd == idxd);
 	CU_ASSERT(idxd->queues->group == idxd->groups);
 
-	for (i = 0 ; i < user_idxd.registers.wqcap.num_wqs; i++) {
+	for (i = 0 ; i < user_idxd.registers->wqcap.num_wqs; i++) {
 		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-			wqcfg.raw[j] = spdk_mmio_read_4((uint32_t *)(user_idxd.reg_base +
-							user_idxd.wqcfg_offset + i * wqcap_size + j * sizeof(uint32_t)));
+			wqcfg.raw[j] = spdk_mmio_read_4((uint32_t *)((uint8_t *)user_idxd.registers +
+							(user_idxd.registers->offsets.wqcfg * IDXD_TABLE_OFFSET_MULT) +
+							(i * wqcap_size) +
+							(j * sizeof(uint32_t))));
 			CU_ASSERT(wqcfg.raw[j] == expected[j]);
 		}
 	}
 
 	free(idxd->queues);
-	free(user_idxd.reg_base);
+	free(user_idxd.registers);
 	free(idxd->groups);
 
 	return 0;
@@ -162,23 +164,25 @@ test_idxd_group_config(void)
 	int rc, i;
 	uint64_t base_offset;
 
-	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(user_idxd.reg_base != NULL);
+	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
+	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
 
-	user_idxd.registers.groupcap.num_groups = 1;
-	user_idxd.registers.enginecap.num_engines = 4;
-	user_idxd.registers.wqcap.num_wqs = 1;
-	user_idxd.registers.groupcap.read_bufs = MAX_TOKENS;
-	user_idxd.grpcfg_offset = GRP_CFG_OFFSET;
+	user_idxd.registers->groupcap.num_groups = 1;
+	user_idxd.registers->enginecap.num_engines = 4;
+	user_idxd.registers->wqcap.num_wqs = 1;
+	user_idxd.registers->groupcap.read_bufs = MAX_TOKENS;
+	user_idxd.registers->offsets.grpcfg = GRP_CFG_OFFSET;
 
 	rc = idxd_group_config(idxd);
 	CU_ASSERT(rc == 0);
-	for (i = 0 ; i < user_idxd.registers.groupcap.num_groups; i++) {
-		base_offset = user_idxd.grpcfg_offset + i * 64;
+	for (i = 0 ; i < user_idxd.registers->groupcap.num_groups; i++) {
+		base_offset = (user_idxd.registers->offsets.grpcfg * IDXD_TABLE_OFFSET_MULT) + i * 64;
 
-		wqs[i] = spdk_mmio_read_8((uint64_t *)(user_idxd.reg_base + base_offset));
-		engines[i] = spdk_mmio_read_8((uint64_t *)(user_idxd.reg_base + base_offset + CFG_ENGINE_OFFSET));
-		flags[i].raw = spdk_mmio_read_8((uint64_t *)(user_idxd.reg_base + base_offset + CFG_FLAG_OFFSET));
+		wqs[i] = spdk_mmio_read_8((uint64_t *)((uint8_t *)user_idxd.registers + base_offset));
+		engines[i] = spdk_mmio_read_8((uint64_t *)((uint8_t *)user_idxd.registers + base_offset +
+					      CFG_ENGINE_OFFSET));
+		flags[i].raw = spdk_mmio_read_8((uint64_t *)((uint8_t *)user_idxd.registers + base_offset +
+						CFG_FLAG_OFFSET));
 	}
 	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
 	CU_ASSERT(wqs[0] == 0x1);
@@ -187,7 +191,7 @@ test_idxd_group_config(void)
 
 	/* groups allocated by code under test. */
 	free(idxd->groups);
-	free(user_idxd.reg_base);
+	free(user_idxd.registers);
 
 	return 0;
 }
@@ -199,9 +203,9 @@ test_idxd_reset_dev(void)
 	union idxd_cmdsts_register *fake_cmd_status_reg;
 	int rc;
 
-	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(user_idxd.reg_base != NULL);
-	fake_cmd_status_reg = user_idxd.reg_base + IDXD_CMDSTS_OFFSET;
+	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
+	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
+	fake_cmd_status_reg = &user_idxd.registers->cmdsts;
 
 	/* Test happy path */
 	rc = idxd_reset_dev(&user_idxd.idxd);
@@ -212,7 +216,7 @@ test_idxd_reset_dev(void)
 	rc = idxd_reset_dev(&user_idxd.idxd);
 	CU_ASSERT(rc == -EINVAL);
 
-	free(user_idxd.reg_base);
+	free(user_idxd.registers);
 
 	return 0;
 }
@@ -225,9 +229,9 @@ test_idxd_wait_cmd(void)
 	union idxd_cmdsts_register *fake_cmd_status_reg;
 	int rc;
 
-	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);
-	SPDK_CU_ASSERT_FATAL(user_idxd.reg_base != NULL);
-	fake_cmd_status_reg = user_idxd.reg_base + IDXD_CMDSTS_OFFSET;
+	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
+	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
+	fake_cmd_status_reg = &user_idxd.registers->cmdsts;
 
 	/* Test happy path. */
 	rc = idxd_wait_cmd(&user_idxd.idxd, timeout);
@@ -244,7 +248,7 @@ test_idxd_wait_cmd(void)
 	rc = idxd_wait_cmd(&user_idxd.idxd, timeout);
 	CU_ASSERT(rc == -EBUSY);
 
-	free(user_idxd.reg_base);
+	free(user_idxd.registers);
 
 	return 0;
 }

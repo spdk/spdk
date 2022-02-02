@@ -48,13 +48,7 @@ struct spdk_user_idxd_device {
 	struct spdk_idxd_device	idxd;
 	struct spdk_pci_device	*device;
 	int			sock_id;
-	struct idxd_registers	registers;
-	void			*reg_base;
-	uint32_t		wqcfg_offset;
-	uint32_t		grpcfg_offset;
-	uint32_t		ims_offset;
-	uint32_t		msix_perm_offset;
-	uint32_t		perfmon_offset;
+	struct idxd_registers	*registers;
 };
 
 typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
@@ -65,49 +59,18 @@ pthread_mutex_t	g_driver_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static struct spdk_idxd_device *idxd_attach(struct spdk_pci_device *device);
 
-static uint32_t
-_idxd_read_4(struct spdk_idxd_device *idxd, uint32_t offset)
-{
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
-
-	return spdk_mmio_read_4((uint32_t *)(user_idxd->reg_base + offset));
-}
-
-static void
-_idxd_write_4(struct spdk_idxd_device *idxd, uint32_t offset, uint32_t value)
-{
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
-
-	spdk_mmio_write_4((uint32_t *)(user_idxd->reg_base + offset), value);
-}
-
-static uint64_t
-_idxd_read_8(struct spdk_idxd_device *idxd, uint32_t offset)
-{
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
-
-	return spdk_mmio_read_8((uint64_t *)(user_idxd->reg_base + offset));
-}
-
-static void
-_idxd_write_8(struct spdk_idxd_device *idxd, uint32_t offset, uint64_t value)
-{
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
-
-	spdk_mmio_write_8((uint64_t *)(user_idxd->reg_base + offset), value);
-}
-
 /* Used for control commands, not for descriptor submission. */
 static int
 idxd_wait_cmd(struct spdk_idxd_device *idxd, int _timeout)
 {
 	uint32_t timeout = _timeout;
 	union idxd_cmdsts_register cmd_status = {};
+	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
-	cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
+	cmd_status.raw = spdk_mmio_read_4(&user_idxd->registers->cmdsts.raw);
 	while (cmd_status.active && --timeout) {
 		usleep(1);
-		cmd_status.raw = _idxd_read_4(idxd, IDXD_CMDSTS_OFFSET);
+		cmd_status.raw = spdk_mmio_read_4(&user_idxd->registers->cmdsts.raw);
 	}
 
 	/* Check for timeout */
@@ -133,7 +96,7 @@ idxd_unmap_pci_bar(struct spdk_idxd_device *idxd, int bar)
 	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
 	if (bar == IDXD_MMIO_BAR) {
-		addr = (void *)user_idxd->reg_base;
+		addr = (void *)user_idxd->registers;
 	} else if (bar == IDXD_WQ_BAR) {
 		addr = (void *)idxd->portal;
 	}
@@ -157,7 +120,7 @@ idxd_map_pci_bars(struct spdk_idxd_device *idxd)
 		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n", rc);
 		return -1;
 	}
-	user_idxd->reg_base = addr;
+	user_idxd->registers = (struct idxd_registers *)addr;
 
 	rc = spdk_pci_device_map_bar(user_idxd->device, IDXD_WQ_BAR, &addr, &phys_addr, &size);
 	if (rc != 0 || addr == NULL) {
@@ -177,8 +140,12 @@ static void
 idxd_disable_dev(struct spdk_idxd_device *idxd)
 {
 	int rc;
+	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
+	union idxd_cmd_register cmd = {};
 
-	_idxd_write_4(idxd, IDXD_CMD_OFFSET, IDXD_DISABLE_DEV << IDXD_CMD_SHIFT);
+	cmd.command_code = IDXD_DISABLE_DEV;
+
+	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
 	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
 	if (rc < 0) {
 		SPDK_ERRLOG("Error disabling device %u\n", rc);
@@ -189,8 +156,12 @@ static int
 idxd_reset_dev(struct spdk_idxd_device *idxd)
 {
 	int rc;
+	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
+	union idxd_cmd_register cmd = {};
 
-	_idxd_write_4(idxd, IDXD_CMD_OFFSET, IDXD_RESET_DEVICE << IDXD_CMD_SHIFT);
+	cmd.command_code = IDXD_RESET_DEVICE;
+
+	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
 	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
 	if (rc < 0) {
 		SPDK_ERRLOG("Error resetting device %u\n", rc);
@@ -208,53 +179,68 @@ static int
 idxd_group_config(struct spdk_idxd_device *idxd)
 {
 	int i;
-	uint64_t base_offset;
 	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
+	union idxd_groupcap_register groupcap;
+	union idxd_enginecap_register enginecap;
+	union idxd_wqcap_register wqcap;
+	union idxd_offsets_register table_offsets;
+	struct idxd_grpcfg *grpcfg;
 
-	assert(user_idxd->registers.groupcap.num_groups >= 1);
+	groupcap.raw = spdk_mmio_read_8(&user_idxd->registers->groupcap.raw);
+	enginecap.raw = spdk_mmio_read_8(&user_idxd->registers->enginecap.raw);
+	wqcap.raw = spdk_mmio_read_8(&user_idxd->registers->wqcap.raw);
+
+	if (wqcap.num_wqs < 1) {
+		return -ENOTSUP;
+	}
+
+	assert(groupcap.num_groups >= 1);
 	idxd->groups = calloc(1, sizeof(struct idxd_group));
 	if (idxd->groups == NULL) {
 		SPDK_ERRLOG("Failed to allocate group memory\n");
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < user_idxd->registers.enginecap.num_engines; i++) {
+	for (i = 0; i < enginecap.num_engines; i++) {
 		idxd->groups->grpcfg.engines |= (1 << i);
 	}
 
-	assert(user_idxd->registers.wqcap.num_wqs >= 1);
 	idxd->groups->grpcfg.wqs[0] = 0x1;
-	idxd->groups->grpcfg.flags.read_buffers_allowed = user_idxd->registers.groupcap.read_bufs;
+	idxd->groups->grpcfg.flags.read_buffers_allowed = groupcap.read_bufs;
 
 	idxd->groups->idxd = idxd;
 	idxd->groups->id = 0;
 
-	base_offset = user_idxd->grpcfg_offset;
+	table_offsets.raw[0] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[0]);
+	table_offsets.raw[1] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[1]);
+
+	grpcfg = (struct idxd_grpcfg *)((uint8_t *)user_idxd->registers + (table_offsets.grpcfg *
+					IDXD_TABLE_OFFSET_MULT));
 
 	/* GRPWQCFG, work queues config */
-	_idxd_write_8(idxd, base_offset, idxd->groups->grpcfg.wqs[0]);
+	spdk_mmio_write_8((uint64_t *)&grpcfg->wqs[0], idxd->groups->grpcfg.wqs[0]);
 
 	/* GRPENGCFG, engine config */
-	_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, idxd->groups->grpcfg.engines);
+	spdk_mmio_write_8((uint64_t *)&grpcfg->engines, idxd->groups->grpcfg.engines);
 
 	/* GRPFLAGS, flags config */
-	_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, idxd->groups->grpcfg.flags.raw);
+	spdk_mmio_write_8((uint64_t *)&grpcfg->flags, idxd->groups->grpcfg.flags.raw);
 
 	/*
 	 * Now write the other groups to zero them out
 	 */
-	for (i = 1 ; i < user_idxd->registers.groupcap.num_groups; i++) {
-
-		base_offset = user_idxd->grpcfg_offset + i * 64;
+	for (i = 1 ; i < groupcap.num_groups; i++) {
+		grpcfg = (struct idxd_grpcfg *)((uint8_t *)user_idxd->registers + (table_offsets.grpcfg *
+						IDXD_TABLE_OFFSET_MULT) + (i * 64));
 
 		/* GRPWQCFG, work queues config */
-		_idxd_write_8(idxd, base_offset, 0UL);
+		spdk_mmio_write_8((uint64_t *)&grpcfg->wqs[0], 0UL);
 
 		/* GRPENGCFG, engine config */
-		_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, 0UL);
+		spdk_mmio_write_8((uint64_t *)&grpcfg->engines, 0UL);
 
 		/* GRPFLAGS, flags config */
-		_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, 0UL);
+		spdk_mmio_write_8((uint64_t *)&grpcfg->flags, 0UL);
 	}
 
 	return 0;
@@ -270,14 +256,19 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	uint32_t j;
 	struct idxd_wq *queue;
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
-	uint32_t wq_size = user_idxd->registers.wqcap.total_wq_size;
+	uint32_t wq_size;
+	union idxd_wqcap_register wqcap;
+	union idxd_offsets_register table_offsets;
+	union idxd_wqcfg *wqcfg;
+
+	wqcap.raw = spdk_mmio_read_8(&user_idxd->registers->wqcap.raw);
+
+	wq_size = wqcap.total_wq_size;
 
 	SPDK_DEBUGLOG(idxd, "Total ring slots available space 0x%x, so per work queue is 0x%x\n",
-		      user_idxd->registers.wqcap.total_wq_size, wq_size);
-	assert(LOG2_WQ_MAX_BATCH <= user_idxd->registers.gencap.max_batch_shift);
-	assert(LOG2_WQ_MAX_XFER <= user_idxd->registers.gencap.max_xfer_shift);
+		      wqcap.total_wq_size, wq_size);
 
-	idxd->total_wq_size = user_idxd->registers.wqcap.total_wq_size;
+	idxd->total_wq_size = wqcap.total_wq_size;
 	/* Spread the channels we allow per device based on the total number of WQE to try
 	 * and achieve optimal performance for common cases.
 	 */
@@ -288,14 +279,20 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 		return -ENOMEM;
 	}
 
+	table_offsets.raw[0] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[0]);
+	table_offsets.raw[1] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[1]);
+
 	queue = idxd->queues;
+	wqcfg = (union idxd_wqcfg *)((uint8_t *)user_idxd->registers + (table_offsets.wqcfg *
+				     IDXD_TABLE_OFFSET_MULT));
+
 	/* Per spec we need to read in existing values first so we don't zero out something we
 	 * didn't touch when we write the cfg register out below.
 	 */
 	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		queue->wqcfg.raw[j] = _idxd_read_4(idxd,
-						   user_idxd->wqcfg_offset + j * sizeof(uint32_t));
+		queue->wqcfg.raw[j] = spdk_mmio_read_4(&wqcfg->raw[j]);
 	}
+
 	queue->wqcfg.wq_size = wq_size;
 	queue->wqcfg.mode = WQ_MODE_DEDICATED;
 	queue->wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
@@ -311,8 +308,7 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 * Now write the work queue config to the device for configured queues
 	 */
 	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		_idxd_write_4(idxd, user_idxd->wqcfg_offset + j * sizeof(uint32_t),
-			      queue->wqcfg.raw[j]);
+		spdk_mmio_write_4(&wqcfg->raw[j], queue->wqcfg.raw[j]);
 	}
 
 	return 0;
@@ -321,10 +317,10 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 static int
 idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 {
-	int i, rc = 0;
-	union idxd_offsets_register offsets_reg;
+	int rc = 0;
 	union idxd_gensts_register gensts_reg;
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
+	union idxd_cmd_register cmd = {};
 
 	/*
 	 * Map BAR0 and BAR2
@@ -343,26 +339,6 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	}
 
 	/*
-	 * Read in config registers
-	 */
-	user_idxd->registers.version = _idxd_read_4(idxd, IDXD_VERSION_OFFSET);
-	user_idxd->registers.gencap.raw = _idxd_read_8(idxd, IDXD_GENCAP_OFFSET);
-	user_idxd->registers.wqcap.raw = _idxd_read_8(idxd, IDXD_WQCAP_OFFSET);
-	user_idxd->registers.groupcap.raw = _idxd_read_8(idxd, IDXD_GRPCAP_OFFSET);
-	user_idxd->registers.enginecap.raw = _idxd_read_8(idxd, IDXD_ENGCAP_OFFSET);
-	for (i = 0; i < IDXD_OPCAP_WORDS; i++) {
-		user_idxd->registers.opcap.raw[i] =
-			_idxd_read_8(idxd, i * sizeof(uint64_t) + IDXD_OPCAP_OFFSET);
-	}
-	offsets_reg.raw[0] = _idxd_read_8(idxd, IDXD_TABLE_OFFSET);
-	offsets_reg.raw[1] = _idxd_read_8(idxd, IDXD_TABLE_OFFSET + sizeof(uint64_t));
-	user_idxd->grpcfg_offset = offsets_reg.grpcfg * IDXD_TABLE_OFFSET_MULT;
-	user_idxd->wqcfg_offset = offsets_reg.wqcfg * IDXD_TABLE_OFFSET_MULT;
-	user_idxd->ims_offset = offsets_reg.ims * IDXD_TABLE_OFFSET_MULT;
-	user_idxd->msix_perm_offset = offsets_reg.msix_perm  * IDXD_TABLE_OFFSET_MULT;
-	user_idxd->perfmon_offset = offsets_reg.perfmon * IDXD_TABLE_OFFSET_MULT;
-
-	/*
 	 * Configure groups and work queues.
 	 */
 	rc = idxd_group_config(idxd);
@@ -378,25 +354,27 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	/*
 	 * Enable the device
 	 */
-	gensts_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
+	gensts_reg.raw = spdk_mmio_read_4(&user_idxd->registers->gensts.raw);
 	assert(gensts_reg.state == IDXD_DEVICE_STATE_DISABLED);
 
-	_idxd_write_4(idxd, IDXD_CMD_OFFSET, IDXD_ENABLE_DEV << IDXD_CMD_SHIFT);
+	cmd.command_code = IDXD_ENABLE_DEV;
+
+	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
 	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
-	gensts_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
+	gensts_reg.raw = spdk_mmio_read_4(&user_idxd->registers->gensts.raw);
 	if ((rc < 0) || (gensts_reg.state != IDXD_DEVICE_STATE_ENABLED)) {
 		rc = -EINVAL;
 		SPDK_ERRLOG("Error enabling device %u\n", rc);
 		goto err_device_enable;
 	}
 
-	gensts_reg.raw = spdk_mmio_read_4((uint32_t *)(user_idxd->reg_base + IDXD_GENSTATUS_OFFSET));
-	assert(gensts_reg.state == IDXD_DEVICE_STATE_ENABLED);
-
 	/*
 	 * Enable the work queue that we've configured
 	 */
-	_idxd_write_4(idxd, IDXD_CMD_OFFSET, (IDXD_ENABLE_WQ << IDXD_CMD_SHIFT));
+	cmd.command_code = IDXD_ENABLE_WQ;
+	cmd.operand = 0;
+
+	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
 	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
 	if (rc < 0) {
 		SPDK_ERRLOG("Error enabling work queues 0x%x\n", rc);
@@ -404,10 +382,7 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	}
 
 	if ((rc == 0) && (gensts_reg.state == IDXD_DEVICE_STATE_ENABLED)) {
-		SPDK_DEBUGLOG(idxd, "Device enabled, version 0x%x gencap: 0x%lx\n",
-			      user_idxd->registers.version,
-			      user_idxd->registers.gencap.raw);
-
+		SPDK_DEBUGLOG(idxd, "Device enabled\n");
 	}
 
 	return rc;
@@ -511,20 +486,19 @@ user_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 static void
 user_idxd_dump_sw_err(struct spdk_idxd_device *idxd, void *portal)
 {
-	uint64_t sw_error_0;
+	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
+	union idxd_swerr_register sw_err;
 	uint16_t i;
 
-	sw_error_0 = _idxd_read_8(idxd, IDXD_SWERR_OFFSET);
-
-	SPDK_NOTICELOG("SW Error bits set:");
-	for (i = 0; i < CHAR_BIT; i++) {
-		if ((1ULL << i) & sw_error_0) {
-			SPDK_NOTICELOG("    %d\n", i);
-		}
+	SPDK_NOTICELOG("SW Error Raw:");
+	for (i = 0; i < 4; i++) {
+		sw_err.raw[i] = spdk_mmio_read_8(&user_idxd->registers->sw_err.raw[i]);
+		SPDK_NOTICELOG("    0x%lx\n", sw_err.raw[i]);
 	}
-	SPDK_NOTICELOG("SW Error error code: %#x\n", (uint8_t)(sw_error_0 >> 8));
-	SPDK_NOTICELOG("SW Error WQ index: %u\n", (uint8_t)(sw_error_0 >> 16));
-	SPDK_NOTICELOG("SW Error Operation: %u\n", (uint8_t)(sw_error_0 >> 32));
+
+	SPDK_NOTICELOG("SW Error error code: %#x\n", (uint8_t)(sw_err.error));
+	SPDK_NOTICELOG("SW Error WQ index: %u\n", (uint8_t)(sw_err.wq_idx));
+	SPDK_NOTICELOG("SW Error Operation: %u\n", (uint8_t)(sw_err.operation));
 }
 
 static char *
