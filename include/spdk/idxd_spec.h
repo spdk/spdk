@@ -376,16 +376,6 @@ struct idxd_opcap_register {
 };
 SPDK_STATIC_ASSERT(sizeof(struct idxd_opcap_register) == 32, "size mismatch");
 
-struct idxd_registers {
-	uint32_t version;
-	union idxd_gencap_register gencap;
-	union idxd_wqcap_register wqcap;
-	union idxd_groupcap_register groupcap;
-	union idxd_enginecap_register enginecap;
-	struct idxd_opcap_register opcap;
-};
-SPDK_STATIC_ASSERT(sizeof(struct idxd_registers) == 72, "size mismatch");
-
 union idxd_offsets_register {
 	struct {
 		uint64_t grpcfg: 16;
@@ -445,6 +435,16 @@ union idxd_swerr_register {
 	uint64_t raw[4];
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_swerr_register) == 32, "size mismatch");
+
+struct idxd_registers {
+	uint32_t version;
+	union idxd_gencap_register gencap;
+	union idxd_wqcap_register wqcap;
+	union idxd_groupcap_register groupcap;
+	union idxd_enginecap_register enginecap;
+	struct idxd_opcap_register opcap;
+};
+SPDK_STATIC_ASSERT(sizeof(struct idxd_registers) == 72, "size mismatch");
 
 union idxd_group_flags {
 	struct {
