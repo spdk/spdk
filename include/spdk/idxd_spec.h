@@ -272,7 +272,7 @@ struct idxd_hw_desc {
 		} dif_upd;
 		uint8_t		op_specific[24];
 	};
-} __attribute__((packed)) __attribute((aligned(64)));
+} __attribute((aligned(64)));
 SPDK_STATIC_ASSERT(sizeof(struct idxd_hw_desc) == 64, "size mismatch");
 
 struct idxd_hw_comp_record {
@@ -308,7 +308,7 @@ struct idxd_hw_comp_record {
 		} dif_upd_comp;
 		uint8_t		op_specific[16];
 	};
-} __attribute__((packed));
+};
 SPDK_STATIC_ASSERT(sizeof(struct idxd_hw_comp_record) == 32, "size mismatch");
 
 union idxd_gencap_register {
@@ -327,7 +327,7 @@ union idxd_gencap_register {
 		uint64_t max_ims_mult: 6;
 		uint64_t config_support: 1;
 		uint64_t rsvd3: 32;
-	} __attribute__((packed));
+	};
 	uint64_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_gencap_register) == 8, "size mismatch");
@@ -345,7 +345,7 @@ union idxd_wqcap_register {
 		uint64_t occupancy: 1;
 		uint64_t occupancy_int: 1;
 		uint64_t rsvd1: 10;
-	} __attribute__((packed));
+	};
 	uint64_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_wqcap_register) == 8, "size mismatch");
@@ -357,7 +357,7 @@ union idxd_groupcap_register {
 		uint64_t read_bufs_ctrl: 1;
 		uint64_t read_bus_limit: 1;
 		uint64_t rsvd: 46;
-	} __attribute__((packed));
+	};
 	uint64_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_groupcap_register) == 8, "size mismatch");
@@ -366,7 +366,7 @@ union idxd_enginecap_register {
 	struct {
 		uint64_t num_engines: 8;
 		uint64_t rsvd: 56;
-	} __attribute__((packed));
+	};
 	uint64_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_enginecap_register) == 8, "size mismatch");
@@ -384,7 +384,7 @@ union idxd_offsets_register {
 		uint64_t ims: 16;
 		uint64_t perfmon: 16;
 		uint64_t rsvd: 48;
-	} __attribute__((packed));
+	};
 	uint64_t raw[2];
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_offsets_register) == 16, "size mismatch");
@@ -394,18 +394,18 @@ union idxd_genstatus_register {
 		uint32_t state: 2;
 		uint32_t reset_type: 2;
 		uint32_t rsvd: 28;
-	} __attribute__((packed));
+	};
 	uint32_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_genstatus_register) == 4, "size mismatch");
 
 union idxd_cmdsts_reg {
 	struct {
-		uint8_t err;
-		uint16_t result;
-		uint8_t rsvd: 7;
-		uint8_t active: 1;
-	} __attribute__((packed));
+		uint32_t err : 8;
+		uint32_t result : 16;
+		uint32_t rsvd: 7;
+		uint32_t active: 1;
+	};
 	uint32_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_cmdsts_reg) == 4, "size mismatch");
@@ -431,7 +431,7 @@ union idxd_swerr_register {
 		uint64_t invalid_flags: 32;
 		uint64_t fault_addr;
 		uint64_t rsvd5;
-	} __attribute__((packed));
+	};
 	uint64_t raw[4];
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_swerr_register) == 32, "size mismatch");
@@ -456,7 +456,7 @@ union idxd_group_flags {
 		uint32_t rsvd2: 4;
 		uint32_t tokens_allowed: 8;
 		uint32_t rsvd3: 4;
-	} __attribute__((packed));
+	};
 	uint32_t raw;
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_group_flags) == 4, "size mismatch");
@@ -498,7 +498,7 @@ union idxd_wqcfg {
 		uint16_t mode_support: 1;
 		uint16_t wq_state: 2;
 		uint32_t rsvd8;
-	} __attribute__((packed));
+	};
 	uint32_t raw[8];
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_wqcfg) == 32, "size mismatch");
