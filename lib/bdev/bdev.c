@@ -3371,23 +3371,35 @@ spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 	return 0;
 }
 
-int
-spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
+static int
+bdev_alias_del(struct spdk_bdev *bdev, const char *alias,
+	       void (*alias_del_fn)(struct spdk_bdev_name *n))
 {
 	struct spdk_bdev_alias *tmp;
 
 	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
 		if (strcmp(alias, tmp->alias.name) == 0) {
 			TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
-			bdev_name_del(&tmp->alias);
+			alias_del_fn(&tmp->alias);
 			free(tmp);
 			return 0;
 		}
 	}
 
-	SPDK_INFOLOG(bdev, "Alias %s does not exists\n", alias);
-
 	return -ENOENT;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
+{
+	int rc;
+
+	rc = bdev_alias_del(bdev, alias, bdev_name_del);
+	if (rc == -ENOENT) {
+		SPDK_INFOLOG(bdev, "Alias %s does not exist\n", alias);
+	}
+
+	return rc;
 }
 
 void
