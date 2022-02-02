@@ -337,7 +337,7 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 {
 	int i, rc = 0;
 	union idxd_offsets_register offsets_reg;
-	union idxd_genstatus_register genstatus_reg;
+	union idxd_gensts_register gensts_reg;
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
 
 	/*
@@ -392,20 +392,20 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	/*
 	 * Enable the device
 	 */
-	genstatus_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
-	assert(genstatus_reg.state == IDXD_DEVICE_STATE_DISABLED);
+	gensts_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
+	assert(gensts_reg.state == IDXD_DEVICE_STATE_DISABLED);
 
 	_idxd_write_4(idxd, IDXD_CMD_OFFSET, IDXD_ENABLE_DEV << IDXD_CMD_SHIFT);
 	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
-	genstatus_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
-	if ((rc < 0) || (genstatus_reg.state != IDXD_DEVICE_STATE_ENABLED)) {
+	gensts_reg.raw = _idxd_read_4(idxd, IDXD_GENSTATUS_OFFSET);
+	if ((rc < 0) || (gensts_reg.state != IDXD_DEVICE_STATE_ENABLED)) {
 		rc = -EINVAL;
 		SPDK_ERRLOG("Error enabling device %u\n", rc);
 		goto err_device_enable;
 	}
 
-	genstatus_reg.raw = spdk_mmio_read_4((uint32_t *)(user_idxd->reg_base + IDXD_GENSTATUS_OFFSET));
-	assert(genstatus_reg.state == IDXD_DEVICE_STATE_ENABLED);
+	gensts_reg.raw = spdk_mmio_read_4((uint32_t *)(user_idxd->reg_base + IDXD_GENSTATUS_OFFSET));
+	assert(gensts_reg.state == IDXD_DEVICE_STATE_ENABLED);
 
 	/*
 	 * Enable the work queues that we've configured
@@ -420,7 +420,7 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 		}
 	}
 
-	if ((rc == 0) && (genstatus_reg.state == IDXD_DEVICE_STATE_ENABLED)) {
+	if ((rc == 0) && (gensts_reg.state == IDXD_DEVICE_STATE_ENABLED)) {
 		SPDK_DEBUGLOG(idxd, "Device enabled, version 0x%x gencap: 0x%lx\n",
 			      user_idxd->registers.version,
 			      user_idxd->registers.gencap.raw);

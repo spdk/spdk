@@ -389,7 +389,7 @@ union idxd_offsets_register {
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_offsets_register) == 16, "size mismatch");
 
-union idxd_genstatus_register {
+union idxd_gensts_register {
 	struct {
 		uint32_t state: 2;
 		uint32_t reset_type: 2;
@@ -397,7 +397,7 @@ union idxd_genstatus_register {
 	};
 	uint32_t raw;
 };
-SPDK_STATIC_ASSERT(sizeof(union idxd_genstatus_register) == 4, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(union idxd_gensts_register) == 4, "size mismatch");
 
 union idxd_cmdsts_reg {
 	struct {
