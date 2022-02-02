@@ -550,27 +550,13 @@ user_idxd_portal_get_addr(struct spdk_idxd_device *idxd)
 	return (char *)idxd->portals + idxd->wq_id * WQ_TOTAL_PORTAL_SIZE;
 }
 
-static bool
-user_idxd_nop_check(struct spdk_idxd_device *idxd)
-{
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
-
-	/* TODO: temp workaround for simulator.  Remove this function when fixed or w/silicon. */
-	if (user_idxd->registers.gencap.raw == 0x1833f011f) {
-		return true;
-	}
-
-	return false;
-}
-
 static struct spdk_idxd_impl g_user_idxd_impl = {
 	.name			= "user",
 	.set_config		= user_idxd_set_config,
 	.probe			= user_idxd_probe,
 	.destruct		= user_idxd_device_destruct,
 	.dump_sw_error		= user_idxd_dump_sw_err,
-	.portal_get_addr	= user_idxd_portal_get_addr,
-	.nop_check		= user_idxd_nop_check,
+	.portal_get_addr	= user_idxd_portal_get_addr
 };
 
 /* Caller must hold g_driver_lock */

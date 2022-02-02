@@ -162,8 +162,6 @@ struct spdk_idxd_impl {
 	void (*destruct)(struct spdk_idxd_device *idxd);
 	void (*dump_sw_error)(struct spdk_idxd_device *idxd, void *portal);
 	char *(*portal_get_addr)(struct spdk_idxd_device *idxd);
-	/* It is a workaround for simulator */
-	bool (*nop_check)(struct spdk_idxd_device *idxd);
 
 	STAILQ_ENTRY(spdk_idxd_impl) link;
 };
