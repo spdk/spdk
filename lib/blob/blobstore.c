@@ -6001,6 +6001,9 @@ bs_snapshot_freeze_cpl(void *cb_arg, int rc)
 
 	ctx->frozen = true;
 
+	if (newblob->back_bs_dev) {
+		newblob->back_bs_dev->destroy(newblob->back_bs_dev);
+	}
 	/* set new back_bs_dev for snapshot */
 	newblob->back_bs_dev = origblob->back_bs_dev;
 	/* Set invalid flags from origblob */
