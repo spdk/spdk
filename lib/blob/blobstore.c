@@ -2553,40 +2553,42 @@ blob_request_submit_op_split_next(void *cb_arg, int bserrno)
 		return;
 	}
 
-	op_length = spdk_min(length, bs_num_io_units_to_cluster_boundary(blob,
-			     offset));
+	do {
+		op_length = spdk_min(length, bs_num_io_units_to_cluster_boundary(blob,
+				     offset));
 
-	/* Update length and payload for next operation */
-	ctx->io_units_remaining -= op_length;
-	ctx->io_unit_offset += op_length;
-	if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_READ) {
-		ctx->curr_payload += op_length * blob->bs->io_unit_size;
-	}
+		/* Update length and payload for next operation */
+		ctx->io_units_remaining -= op_length;
+		ctx->io_unit_offset += op_length;
+		if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_READ) {
+			ctx->curr_payload += op_length * blob->bs->io_unit_size;
+		}
 
-	switch (op_type) {
-	case SPDK_BLOB_READ:
-		spdk_blob_io_read(blob, ch, buf, offset, op_length,
-				  blob_request_submit_op_split_next, ctx);
-		break;
-	case SPDK_BLOB_WRITE:
-		spdk_blob_io_write(blob, ch, buf, offset, op_length,
-				   blob_request_submit_op_split_next, ctx);
-		break;
-	case SPDK_BLOB_UNMAP:
-		spdk_blob_io_unmap(blob, ch, offset, op_length,
-				   blob_request_submit_op_split_next, ctx);
-		break;
-	case SPDK_BLOB_WRITE_ZEROES:
-		spdk_blob_io_write_zeroes(blob, ch, offset, op_length,
+		switch (op_type) {
+		case SPDK_BLOB_READ:
+			spdk_blob_io_read(blob, ch, buf, offset, op_length,
 					  blob_request_submit_op_split_next, ctx);
-		break;
-	case SPDK_BLOB_READV:
-	case SPDK_BLOB_WRITEV:
-		SPDK_ERRLOG("readv/write not valid\n");
-		bs_sequence_finish(ctx->seq, -EINVAL);
-		free(ctx);
-		break;
-	}
+			break;
+		case SPDK_BLOB_WRITE:
+			spdk_blob_io_write(blob, ch, buf, offset, op_length,
+					   blob_request_submit_op_split_next, ctx);
+			break;
+		case SPDK_BLOB_UNMAP:
+			spdk_blob_io_unmap(blob, ch, offset, op_length,
+					   blob_request_submit_op_split_next, ctx);
+			break;
+		case SPDK_BLOB_WRITE_ZEROES:
+			spdk_blob_io_write_zeroes(blob, ch, offset, op_length,
+						  blob_request_submit_op_split_next, ctx);
+			break;
+		case SPDK_BLOB_READV:
+		case SPDK_BLOB_WRITEV:
+			SPDK_ERRLOG("readv/write not valid\n");
+			bs_sequence_finish(ctx->seq, -EINVAL);
+			free(ctx);
+			break;
+		}
+	} while (false);
 }
 
 static void
