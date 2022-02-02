@@ -537,12 +537,6 @@ bs_io_unit_to_back_dev_lba(struct spdk_blob *blob, uint64_t io_unit)
 }
 
 static inline uint64_t
-bs_back_dev_lba_to_io_unit(struct spdk_blob *blob, uint64_t lba)
-{
-	return lba * (blob->back_bs_dev->blocklen / blob->bs->io_unit_size);
-}
-
-static inline uint64_t
 bs_cluster_to_extent_table_id(uint64_t cluster_num)
 {
 	return cluster_num / SPDK_EXTENTS_PER_EP;
@@ -628,19 +622,6 @@ bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
 	}
 
 	return io_units_per_cluster - (io_unit % io_units_per_cluster);
-}
-
-/* Given a page offset into a blob, look up the number of pages until the
- * next cluster boundary.
- */
-static inline uint32_t
-bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint64_t page)
-{
-	uint64_t	pages_per_cluster;
-
-	pages_per_cluster = blob->bs->pages_per_cluster;
-
-	return pages_per_cluster - (page % pages_per_cluster);
 }
 
 /* Given an io_unit offset into a blob, look up the number of pages into blob to beginning of current cluster */
