@@ -210,7 +210,7 @@ check_and_remove_raid_bdev(struct raid_bdev_config *raid_cfg)
 		}
 	}
 	assert(raid_bdev->num_base_bdevs_discovered == 0);
-	raid_bdev_cleanup(raid_bdev);
+	raid_bdev_cleanup_and_free(raid_bdev);
 }
 
 /* Reset globals */
@@ -346,13 +346,25 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 void
+spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
+{
+	CU_ASSERT(bdeverrno == 0);
+	SPDK_CU_ASSERT_FATAL(bdev->internal.unregister_cb != NULL);
+	bdev->internal.unregister_cb(bdev->internal.unregister_ctx, bdeverrno);
+}
+
+void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
-	bdev->fn_table->destruct(bdev->ctxt);
+	int ret;
 
-	if (cb_fn) {
-		cb_fn(cb_arg, 0);
-	}
+	bdev->internal.unregister_cb = cb_fn;
+	bdev->internal.unregister_ctx = cb_arg;
+
+	ret = bdev->fn_table->destruct(bdev->ctxt);
+	CU_ASSERT(ret == 1);
+
+	poll_threads();
 }
 
 int
