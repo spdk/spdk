@@ -124,7 +124,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	pthread_mutex_unlock(&idxd->num_channels_lock);
 
 	/* Allocate descriptors and completions */
-	num_descriptors = idxd->queues[0].wqcfg.wq_size / idxd->chan_per_device;
+	num_descriptors = idxd->total_wq_size / idxd->chan_per_device;
 	chan->desc_base = desc = spdk_zmalloc(num_descriptors * sizeof(struct idxd_hw_desc),
 					      0x40, NULL,
 					      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
