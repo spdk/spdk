@@ -170,11 +170,6 @@ idxd_reset_dev(struct spdk_idxd_device *idxd)
 	return rc;
 }
 
-/*
- * Build group config based on getting info from the device combined
- * with the defined configuration. Once built, it is written to the
- * device.
- */
 static int
 idxd_group_config(struct spdk_idxd_device *idxd)
 {
@@ -184,7 +179,9 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 	union idxd_enginecap_register enginecap;
 	union idxd_wqcap_register wqcap;
 	union idxd_offsets_register table_offsets;
+
 	struct idxd_grptbl *grptbl;
+	struct idxd_grpcfg grpcfg = {};
 
 	groupcap.raw = spdk_mmio_read_8(&user_idxd->registers->groupcap.raw);
 	enginecap.raw = spdk_mmio_read_8(&user_idxd->registers->enginecap.raw);
@@ -194,22 +191,12 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 		return -ENOTSUP;
 	}
 
-	assert(groupcap.num_groups >= 1);
-	idxd->groups = calloc(1, sizeof(struct idxd_group));
-	if (idxd->groups == NULL) {
-		SPDK_ERRLOG("Failed to allocate group memory\n");
-		return -ENOMEM;
-	}
-
+	/* Build one group with all of the engines and a single work queue. */
+	grpcfg.wqs[0] = 1;
+	grpcfg.flags.read_buffers_allowed = groupcap.read_bufs;
 	for (i = 0; i < enginecap.num_engines; i++) {
-		idxd->groups->grpcfg.engines |= (1 << i);
+		grpcfg.engines |= (1 << i);
 	}
-
-	idxd->groups->grpcfg.wqs[0] = 0x1;
-	idxd->groups->grpcfg.flags.read_buffers_allowed = groupcap.read_bufs;
-
-	idxd->groups->idxd = idxd;
-	idxd->groups->id = 0;
 
 	table_offsets.raw[0] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[0]);
 	table_offsets.raw[1] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[1]);
@@ -217,42 +204,32 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 	grptbl = (struct idxd_grptbl *)((uint8_t *)user_idxd->registers + (table_offsets.grpcfg *
 					IDXD_TABLE_OFFSET_MULT));
 
-	/* GRPWQCFG, work queues config */
-	spdk_mmio_write_8((uint64_t *)&grptbl->group[0].wqs[0], idxd->groups->grpcfg.wqs[0]);
+	/* Write the group we've configured */
+	spdk_mmio_write_8(&grptbl->group[0].wqs[0], grpcfg.wqs[0]);
+	spdk_mmio_write_8(&grptbl->group[0].wqs[1], 0);
+	spdk_mmio_write_8(&grptbl->group[0].wqs[2], 0);
+	spdk_mmio_write_8(&grptbl->group[0].wqs[3], 0);
+	spdk_mmio_write_8(&grptbl->group[0].engines, grpcfg.engines);
+	spdk_mmio_write_4(&grptbl->group[0].flags.raw, grpcfg.flags.raw);
 
-	/* GRPENGCFG, engine config */
-	spdk_mmio_write_8((uint64_t *)&grptbl->group[0].engines, idxd->groups->grpcfg.engines);
-
-	/* GRPFLAGS, flags config */
-	spdk_mmio_write_8((uint64_t *)&grptbl->group[0].flags, idxd->groups->grpcfg.flags.raw);
-
-	/*
-	 * Now write the other groups to zero them out
-	 */
+	/* Write zeroes to the rest of the groups */
 	for (i = 1 ; i < groupcap.num_groups; i++) {
-		/* GRPWQCFG, work queues config */
-		spdk_mmio_write_8((uint64_t *)&grptbl->group[i].wqs[0], 0UL);
-
-		/* GRPENGCFG, engine config */
-		spdk_mmio_write_8((uint64_t *)&grptbl->group[i].engines, 0UL);
-
-		/* GRPFLAGS, flags config */
-		spdk_mmio_write_8((uint64_t *)&grptbl->group[i].flags, 0UL);
+		spdk_mmio_write_8(&grptbl->group[i].wqs[0], 0L);
+		spdk_mmio_write_8(&grptbl->group[i].wqs[1], 0L);
+		spdk_mmio_write_8(&grptbl->group[i].wqs[2], 0L);
+		spdk_mmio_write_8(&grptbl->group[i].wqs[3], 0L);
+		spdk_mmio_write_8(&grptbl->group[i].engines, 0L);
+		spdk_mmio_write_4(&grptbl->group[i].flags.raw, 0L);
 	}
 
 	return 0;
 }
 
-/*
- * Build work queue (WQ) config based on getting info from the device combined
- * with the defined configuration. Once built, it is written to the device.
- */
 static int
 idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 {
-	uint32_t j;
+	uint32_t i;
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
-	uint32_t wq_size;
 	union idxd_wqcap_register wqcap;
 	union idxd_offsets_register table_offsets;
 	struct idxd_wqtbl *wqtbl;
@@ -260,12 +237,10 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 
 	wqcap.raw = spdk_mmio_read_8(&user_idxd->registers->wqcap.raw);
 
-	wq_size = wqcap.total_wq_size;
-
+	/* If this fires, something in the hardware spec has changed. */
 	assert(sizeof(wqtbl->wq[0]) == 1 << (WQCFG_SHIFT + wqcap.wqcfg_size));
 
-	SPDK_DEBUGLOG(idxd, "Total ring slots available space 0x%x, so per work queue is 0x%x\n",
-		      wqcap.total_wq_size, wq_size);
+	SPDK_DEBUGLOG(idxd, "Total ring slots available 0x%x\n", wqcap.total_wq_size);
 
 	idxd->total_wq_size = wqcap.total_wq_size;
 	/* Spread the channels we allow per device based on the total number of WQE to try
@@ -279,25 +254,19 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	wqtbl = (struct idxd_wqtbl *)((uint8_t *)user_idxd->registers + (table_offsets.wqcfg *
 				      IDXD_TABLE_OFFSET_MULT));
 
-	/* Per spec we need to read in existing values first so we don't zero out something we
-	 * didn't touch when we write the cfg register out below.
-	 */
-	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		wqcfg.raw[j] = spdk_mmio_read_4(&wqtbl->wq[0].raw[j]);
+	for (i = 0 ; i < SPDK_COUNTOF(wqtbl->wq[0].raw); i++) {
+		wqcfg.raw[i] = spdk_mmio_read_4(&wqtbl->wq[0].raw[i]);
 	}
 
-	wqcfg.wq_size = wq_size;
+	wqcfg.wq_size = wqcap.total_wq_size;
 	wqcfg.mode = WQ_MODE_DEDICATED;
 	wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
 	wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
 	wqcfg.wq_state = WQ_ENABLED;
 	wqcfg.priority = WQ_PRIORITY_1;
 
-	/*
-	 * Now write the work queue config to the device for configured queues
-	 */
-	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		spdk_mmio_write_4(&wqtbl->wq[0].raw[j], wqcfg.raw[j]);
+	for (i = 0; i < SPDK_COUNTOF(wqtbl->wq[0].raw); i++) {
+		spdk_mmio_write_4(&wqtbl->wq[0].raw[i], wqcfg.raw[i]);
 	}
 
 	return 0;
@@ -378,7 +347,6 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 err_wq_enable:
 err_device_enable:
 err_wq_cfg:
-	free(idxd->groups);
 err_group_cfg:
 err_reset:
 	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
@@ -396,7 +364,6 @@ user_idxd_device_destruct(struct spdk_idxd_device *idxd)
 
 	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
 	idxd_unmap_pci_bar(idxd, IDXD_WQ_BAR);
-	free(idxd->groups);
 
 	spdk_pci_device_detach(user_idxd->device);
 	free(user_idxd);

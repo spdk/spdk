@@ -105,16 +105,12 @@ static int
 test_idxd_wq_config(void)
 {
 	struct spdk_user_idxd_device user_idxd = {};
-	struct spdk_idxd_device *idxd = &user_idxd.idxd;
 	uint32_t wq_size, i, j;
 	int rc;
 	struct idxd_wqtbl *wqtbl;
 
 	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
-
-	idxd->groups = calloc(1, sizeof(struct idxd_group));
-	SPDK_CU_ASSERT_FATAL(idxd->groups != NULL);
 
 	user_idxd.registers->wqcap.total_wq_size = TOTAL_WQE_SIZE;
 	user_idxd.registers->wqcap.num_wqs = 1;
@@ -135,14 +131,13 @@ test_idxd_wq_config(void)
 	CU_ASSERT(wqtbl->wq[0].wq_state == WQ_ENABLED);
 	CU_ASSERT(wqtbl->wq[0].priority == WQ_PRIORITY_1);
 
-	for (i = 1 ; i < user_idxd.registers->wqcap.num_wqs; i++) {
+	for (i = 1; i < user_idxd.registers->wqcap.num_wqs; i++) {
 		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
 			CU_ASSERT(spdk_mmio_read_4(&wqtbl->wq[i].raw[j]) == 0);
 		}
 	}
 
 	free(user_idxd.registers);
-	free(idxd->groups);
 
 	return 0;
 }
@@ -156,7 +151,7 @@ test_idxd_group_config(void)
 	uint64_t engines[MAX_ARRAY_SIZE] = {};
 	union idxd_group_flags flags[MAX_ARRAY_SIZE] = {};
 	int rc, i;
-	uint64_t base_offset;
+	struct idxd_grptbl *grptbl;
 
 	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
@@ -167,16 +162,15 @@ test_idxd_group_config(void)
 	user_idxd.registers->groupcap.read_bufs = MAX_TOKENS;
 	user_idxd.registers->offsets.grpcfg = GRP_CFG_OFFSET;
 
+	grptbl = (struct idxd_grptbl *)((uint8_t *)user_idxd.registers +
+					(user_idxd.registers->offsets.grpcfg * IDXD_TABLE_OFFSET_MULT));
+
 	rc = idxd_group_config(idxd);
 	CU_ASSERT(rc == 0);
 	for (i = 0 ; i < user_idxd.registers->groupcap.num_groups; i++) {
-		base_offset = (user_idxd.registers->offsets.grpcfg * IDXD_TABLE_OFFSET_MULT) + i * 64;
-
-		wqs[i] = spdk_mmio_read_8((uint64_t *)((uint8_t *)user_idxd.registers + base_offset));
-		engines[i] = spdk_mmio_read_8((uint64_t *)((uint8_t *)user_idxd.registers + base_offset +
-					      CFG_ENGINE_OFFSET));
-		flags[i].raw = spdk_mmio_read_8((uint64_t *)((uint8_t *)user_idxd.registers + base_offset +
-						CFG_FLAG_OFFSET));
+		wqs[i] = spdk_mmio_read_8(&grptbl->group[i].wqs[0]);
+		engines[i] = spdk_mmio_read_8(&grptbl->group[i].engines);
+		flags[i].raw = spdk_mmio_read_4(&grptbl->group[i].flags.raw);
 	}
 	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
 	CU_ASSERT(wqs[0] == 0x1);
@@ -184,7 +178,6 @@ test_idxd_group_config(void)
 	CU_ASSERT(flags[0].read_buffers_allowed == MAX_TOKENS);
 
 	/* groups allocated by code under test. */
-	free(idxd->groups);
 	free(user_idxd.registers);
 
 	return 0;

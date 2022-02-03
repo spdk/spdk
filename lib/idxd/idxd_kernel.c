@@ -242,31 +242,6 @@ kernel_idxd_device_destruct(struct spdk_idxd_device *idxd)
 	free(idxd);
 }
 
-/*
- * Build work queue (WQ) config based on getting info from the device combined
- * with the defined configuration. Once built, it is written to the device.
- */
-static int
-kernel_idxd_wq_config(struct spdk_kernel_idxd_device *kernel_idxd)
-{
-	uint32_t i;
-	struct spdk_idxd_device *idxd = &kernel_idxd->idxd;
-
-	/* initialize the group */
-	idxd->groups = calloc(g_kernel_dev_cfg.num_groups, sizeof(struct idxd_group));
-	if (idxd->groups == NULL) {
-		SPDK_ERRLOG("Failed to allocate group memory\n");
-		return -ENOMEM;
-	}
-
-	for (i = 0; i < g_kernel_dev_cfg.num_groups; i++) {
-		idxd->groups[i].idxd = idxd;
-		idxd->groups[i].id = i;
-	}
-
-	return 0;
-}
-
 static int _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id);
 
 static int
@@ -345,8 +320,6 @@ _kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, int dev_id)
 	if (kernel_idxd->wq_active_num == 0) {
 		goto end;
 	}
-
-	kernel_idxd_wq_config(kernel_idxd);
 
 	attach_cb(cb_ctx, &kernel_idxd->idxd);
 

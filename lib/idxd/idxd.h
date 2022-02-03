@@ -119,20 +119,6 @@ struct pci_dev_id {
 	int device_id;
 };
 
-struct idxd_group {
-	struct spdk_idxd_device	*idxd;
-	struct idxd_grpcfg	grpcfg;
-	struct pci_dev_id	pcidev;
-	int			num_engines;
-	int			num_wqs;
-	int			id;
-	uint8_t			tokens_allowed;
-	bool			use_token_limit;
-	uint8_t			tokens_reserved;
-	int			tc_a;
-	int			tc_b;
-};
-
 /*
  * This struct wraps the hardware completion record which is 32 bytes in
  * size and must be 32 byte aligned.
@@ -167,8 +153,6 @@ struct spdk_idxd_device {
 	uint32_t			total_wq_size;
 	uint32_t			chan_per_device;
 	pthread_mutex_t			num_channels_lock;
-
-	struct idxd_group		*groups;
 };
 
 void idxd_impl_register(struct spdk_idxd_impl *impl);
