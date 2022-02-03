@@ -408,7 +408,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			 * with past behavior. In the future, this behavior will change to "disable". */
 			SPDK_ERRLOG("The multipath parameter was not specified to bdev_nvme_attach_controller but "
 				    "it was used to add a failover path. This behavior will default to rejecting "
-				    "the request in the future. Specify the 'multipath' parameter to control the behavior");
+				    "the request in the future. Specify the 'multipath' parameter to control the behavior\n");
 			ctx->req.multipath = strdup("failover");
 			if (ctx->req.multipath == NULL) {
 				SPDK_ERRLOG("cannot allocate multipath failover string\n");
