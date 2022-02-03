@@ -134,8 +134,6 @@ test_idxd_wq_config(void)
 	CU_ASSERT(wqtbl->wq[0].max_xfer_shift == LOG2_WQ_MAX_XFER);
 	CU_ASSERT(wqtbl->wq[0].wq_state == WQ_ENABLED);
 	CU_ASSERT(wqtbl->wq[0].priority == WQ_PRIORITY_1);
-	CU_ASSERT(idxd->queues->idxd == idxd);
-	CU_ASSERT(idxd->queues->group == idxd->groups);
 
 	for (i = 1 ; i < user_idxd.registers->wqcap.num_wqs; i++) {
 		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
@@ -143,7 +141,6 @@ test_idxd_wq_config(void)
 		}
 	}
 
-	free(idxd->queues);
 	free(user_idxd.registers);
 	free(idxd->groups);
 

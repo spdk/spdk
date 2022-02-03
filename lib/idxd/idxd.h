@@ -149,11 +149,6 @@ struct idxd_ops {
 };
 SPDK_STATIC_ASSERT(sizeof(struct idxd_ops) == 96, "size mismatch");
 
-struct idxd_wq {
-	struct spdk_idxd_device		*idxd;
-	struct idxd_group		*group;
-};
-
 struct spdk_idxd_impl {
 	const char *name;
 	int (*probe)(void *cb_ctx, spdk_idxd_attach_cb attach_cb);
@@ -174,7 +169,6 @@ struct spdk_idxd_device {
 	pthread_mutex_t			num_channels_lock;
 
 	struct idxd_group		*groups;
-	struct idxd_wq			*queues;
 };
 
 void idxd_impl_register(struct spdk_idxd_impl *impl);

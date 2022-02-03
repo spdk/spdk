@@ -251,7 +251,6 @@ static int
 idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 {
 	uint32_t j;
-	struct idxd_wq *queue;
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
 	uint32_t wq_size;
 	union idxd_wqcap_register wqcap;
@@ -273,16 +272,10 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 * and achieve optimal performance for common cases.
 	 */
 	idxd->chan_per_device = (idxd->total_wq_size >= 128) ? 8 : 4;
-	idxd->queues = calloc(1, sizeof(struct idxd_wq));
-	if (idxd->queues == NULL) {
-		SPDK_ERRLOG("Failed to allocate queue memory\n");
-		return -ENOMEM;
-	}
 
 	table_offsets.raw[0] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[0]);
 	table_offsets.raw[1] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[1]);
 
-	queue = idxd->queues;
 	wqtbl = (struct idxd_wqtbl *)((uint8_t *)user_idxd->registers + (table_offsets.wqcfg *
 				      IDXD_TABLE_OFFSET_MULT));
 
@@ -299,10 +292,6 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
 	wqcfg.wq_state = WQ_ENABLED;
 	wqcfg.priority = WQ_PRIORITY_1;
-
-	/* Not part of the config struct */
-	queue->idxd = idxd;
-	queue->group = idxd->groups;
 
 	/*
 	 * Now write the work queue config to the device for configured queues
@@ -388,7 +377,6 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	return rc;
 err_wq_enable:
 err_device_enable:
-	free(idxd->queues);
 err_wq_cfg:
 	free(idxd->groups);
 err_group_cfg:
@@ -409,7 +397,6 @@ user_idxd_device_destruct(struct spdk_idxd_device *idxd)
 	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
 	idxd_unmap_pci_bar(idxd, IDXD_WQ_BAR);
 	free(idxd->groups);
-	free(idxd->queues);
 
 	spdk_pci_device_detach(user_idxd->device);
 	free(user_idxd);

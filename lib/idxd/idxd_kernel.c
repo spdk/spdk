@@ -250,7 +250,6 @@ static int
 kernel_idxd_wq_config(struct spdk_kernel_idxd_device *kernel_idxd)
 {
 	uint32_t i;
-	struct idxd_wq *queue;
 	struct spdk_idxd_device *idxd = &kernel_idxd->idxd;
 
 	/* initialize the group */
@@ -263,20 +262,6 @@ kernel_idxd_wq_config(struct spdk_kernel_idxd_device *kernel_idxd)
 	for (i = 0; i < g_kernel_dev_cfg.num_groups; i++) {
 		idxd->groups[i].idxd = idxd;
 		idxd->groups[i].id = i;
-	}
-
-	idxd->queues = calloc(g_kernel_dev_cfg.total_wqs, sizeof(struct idxd_wq));
-	if (idxd->queues == NULL) {
-		SPDK_ERRLOG("Failed to allocate queue memory\n");
-		return -ENOMEM;
-	}
-
-	for (i = 0; i < g_kernel_dev_cfg.total_wqs; i++) {
-		queue = &idxd->queues[i];
-
-		/* Not part of the config struct */
-		queue->idxd = idxd;
-		queue->group = &idxd->groups[i % g_kernel_dev_cfg.num_groups];
 	}
 
 	return 0;
