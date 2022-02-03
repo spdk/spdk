@@ -184,7 +184,7 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 	union idxd_enginecap_register enginecap;
 	union idxd_wqcap_register wqcap;
 	union idxd_offsets_register table_offsets;
-	struct idxd_grpcfg *grpcfg;
+	struct idxd_grptbl *grptbl;
 
 	groupcap.raw = spdk_mmio_read_8(&user_idxd->registers->groupcap.raw);
 	enginecap.raw = spdk_mmio_read_8(&user_idxd->registers->enginecap.raw);
@@ -214,33 +214,30 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 	table_offsets.raw[0] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[0]);
 	table_offsets.raw[1] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[1]);
 
-	grpcfg = (struct idxd_grpcfg *)((uint8_t *)user_idxd->registers + (table_offsets.grpcfg *
+	grptbl = (struct idxd_grptbl *)((uint8_t *)user_idxd->registers + (table_offsets.grpcfg *
 					IDXD_TABLE_OFFSET_MULT));
 
 	/* GRPWQCFG, work queues config */
-	spdk_mmio_write_8((uint64_t *)&grpcfg->wqs[0], idxd->groups->grpcfg.wqs[0]);
+	spdk_mmio_write_8((uint64_t *)&grptbl->group[0].wqs[0], idxd->groups->grpcfg.wqs[0]);
 
 	/* GRPENGCFG, engine config */
-	spdk_mmio_write_8((uint64_t *)&grpcfg->engines, idxd->groups->grpcfg.engines);
+	spdk_mmio_write_8((uint64_t *)&grptbl->group[0].engines, idxd->groups->grpcfg.engines);
 
 	/* GRPFLAGS, flags config */
-	spdk_mmio_write_8((uint64_t *)&grpcfg->flags, idxd->groups->grpcfg.flags.raw);
+	spdk_mmio_write_8((uint64_t *)&grptbl->group[0].flags, idxd->groups->grpcfg.flags.raw);
 
 	/*
 	 * Now write the other groups to zero them out
 	 */
 	for (i = 1 ; i < groupcap.num_groups; i++) {
-		grpcfg = (struct idxd_grpcfg *)((uint8_t *)user_idxd->registers + (table_offsets.grpcfg *
-						IDXD_TABLE_OFFSET_MULT) + (i * 64));
-
 		/* GRPWQCFG, work queues config */
-		spdk_mmio_write_8((uint64_t *)&grpcfg->wqs[0], 0UL);
+		spdk_mmio_write_8((uint64_t *)&grptbl->group[i].wqs[0], 0UL);
 
 		/* GRPENGCFG, engine config */
-		spdk_mmio_write_8((uint64_t *)&grpcfg->engines, 0UL);
+		spdk_mmio_write_8((uint64_t *)&grptbl->group[i].engines, 0UL);
 
 		/* GRPFLAGS, flags config */
-		spdk_mmio_write_8((uint64_t *)&grpcfg->flags, 0UL);
+		spdk_mmio_write_8((uint64_t *)&grptbl->group[i].flags, 0UL);
 	}
 
 	return 0;
@@ -259,11 +256,13 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	uint32_t wq_size;
 	union idxd_wqcap_register wqcap;
 	union idxd_offsets_register table_offsets;
-	union idxd_wqcfg *wqcfg;
+	struct idxd_wqtbl *wqtbl;
 
 	wqcap.raw = spdk_mmio_read_8(&user_idxd->registers->wqcap.raw);
 
 	wq_size = wqcap.total_wq_size;
+
+	assert(sizeof(wqtbl->wq[0]) == 1 << (WQCFG_SHIFT + wqcap.wqcfg_size));
 
 	SPDK_DEBUGLOG(idxd, "Total ring slots available space 0x%x, so per work queue is 0x%x\n",
 		      wqcap.total_wq_size, wq_size);
@@ -283,14 +282,14 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	table_offsets.raw[1] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[1]);
 
 	queue = idxd->queues;
-	wqcfg = (union idxd_wqcfg *)((uint8_t *)user_idxd->registers + (table_offsets.wqcfg *
-				     IDXD_TABLE_OFFSET_MULT));
+	wqtbl = (struct idxd_wqtbl *)((uint8_t *)user_idxd->registers + (table_offsets.wqcfg *
+				      IDXD_TABLE_OFFSET_MULT));
 
 	/* Per spec we need to read in existing values first so we don't zero out something we
 	 * didn't touch when we write the cfg register out below.
 	 */
 	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		queue->wqcfg.raw[j] = spdk_mmio_read_4(&wqcfg->raw[j]);
+		queue->wqcfg.raw[j] = spdk_mmio_read_4(&wqtbl->wq[0].raw[j]);
 	}
 
 	queue->wqcfg.wq_size = wq_size;
@@ -308,7 +307,7 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 * Now write the work queue config to the device for configured queues
 	 */
 	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		spdk_mmio_write_4(&wqcfg->raw[j], queue->wqcfg.raw[j]);
+		spdk_mmio_write_4(&wqtbl->wq[0].raw[j], queue->wqcfg.raw[j]);
 	}
 
 	return 0;

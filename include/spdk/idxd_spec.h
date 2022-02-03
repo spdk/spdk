@@ -542,8 +542,17 @@ struct idxd_grpcfg {
 	uint64_t wqs[4];
 	uint64_t engines;
 	union idxd_group_flags flags;
+
+	/* This is not part of the definition, but in practice the stride in the table
+	 * is 64 bytes. */
+	uint32_t reserved0;
+	uint64_t reserved1[2];
 };
-SPDK_STATIC_ASSERT(sizeof(struct idxd_grpcfg) == 48, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(struct idxd_grpcfg) == 64, "size mismatch");
+
+struct idxd_grptbl {
+	struct idxd_grpcfg group[1];
+};
 
 union idxd_wqcfg {
 	struct {
@@ -579,6 +588,10 @@ union idxd_wqcfg {
 	uint32_t raw[8];
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_wqcfg) == 32, "size mismatch");
+
+struct idxd_wqtbl {
+	union idxd_wqcfg wq[1];
+};
 
 #ifdef __cplusplus
 }
