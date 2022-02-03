@@ -195,7 +195,7 @@ static void bdev_nvme_reset_io(struct nvme_bdev_channel *nbdev_ch, struct nvme_b
 static int bdev_nvme_reset(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove);
 static void remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
-static void nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
+static int nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
 
 static int
 nvme_ns_cmp(struct nvme_ns *ns1, struct nvme_ns *ns2)
@@ -957,8 +957,9 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	    !nvme_ctrlr_is_available(nvme_ctrlr)) {
 		nbdev_ch->current_io_path = NULL;
 		if (spdk_nvme_cpl_is_ana_error(cpl)) {
-			bio->io_path->nvme_ns->ana_state_updating = true;
-			nvme_ctrlr_read_ana_log_page(nvme_ctrlr);
+			if (nvme_ctrlr_read_ana_log_page(nvme_ctrlr) == 0) {
+				bio->io_path->nvme_ns->ana_state_updating = true;
+			}
 		}
 		delay_ms = 0;
 	} else if (spdk_nvme_cpl_is_aborted_by_request(cpl)) {
@@ -3121,6 +3122,22 @@ bdev_nvme_clear_io_path_cache_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+bdev_nvme_disable_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct nvme_ns *nvme_ns;
+
+	free(nvme_ctrlr->ana_log_page);
+	nvme_ctrlr->ana_log_page = NULL;
+
+	for (nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
+	     nvme_ns != NULL;
+	     nvme_ns = nvme_ctrlr_get_next_active_ns(nvme_ctrlr, nvme_ns)) {
+		nvme_ns->ana_state_updating = false;
+		nvme_ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	}
+}
+
+static void
 nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
@@ -3128,6 +3145,8 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 	if (cpl != NULL && spdk_nvme_cpl_is_success(cpl)) {
 		bdev_nvme_parse_ana_log_page(nvme_ctrlr, nvme_ctrlr_set_ana_states,
 					     nvme_ctrlr);
+	} else {
+		bdev_nvme_disable_read_ana_log_page(nvme_ctrlr);
 	}
 
 	spdk_for_each_channel(nvme_ctrlr,
@@ -3136,20 +3155,20 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 			      bdev_nvme_clear_io_path_cache_done);
 }
 
-static void
+static int
 nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 {
 	int rc;
 
 	if (nvme_ctrlr->ana_log_page == NULL) {
-		return;
+		return -EINVAL;
 	}
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 	if (!nvme_ctrlr_is_available(nvme_ctrlr) ||
 	    nvme_ctrlr->ana_log_page_updating) {
 		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return;
+		return -EBUSY;
 	}
 
 	nvme_ctrlr->ana_log_page_updating = true;
@@ -3165,6 +3184,8 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 	if (rc != 0) {
 		nvme_ctrlr_read_ana_log_page_done(nvme_ctrlr, NULL);
 	}
+
+	return rc;
 }
 
 static void
