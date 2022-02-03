@@ -33,13 +33,13 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 $rootdir/test/bdev/bdevperf/bdevperf -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 -f &> $testdir/try.txt &
 bdevperf_pid=$!
 
-trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+trap 'process_shm --id $NVMF_APP_SHM_ID; cat $testdir/try.txt; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1
 
 $rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
-rpc_pid=$!
+run_test_pid=$!
 
 sleep 1
 
@@ -59,7 +59,7 @@ sleep 1
 
 $rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_THIRD_PORT
 
-wait $rpc_pid
+wait $run_test_pid
 
 killprocess $bdevperf_pid
 
@@ -90,9 +90,9 @@ $rpc_py -s $bdevperf_rpc_sock bdev_nvme_detach_controller NVMe0 -t $TEST_TRANSPO
 sleep 3
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -q NVMe0
 $rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
-rpc_pid=$!
+run_test_pid=$!
 
-wait $rpc_pid
+wait $run_test_pid
 
 cat $testdir/try.txt
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | grep -q NVMe0
