@@ -160,7 +160,7 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 
 /*
  * brief:
- * raid_bdev_cleanup is used to cleanup and free raid_bdev related data
+ * raid_bdev_cleanup is used to cleanup raid_bdev related data
  * structures.
  * params:
  * raid_bdev - pointer to raid_bdev
@@ -181,12 +181,24 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 		assert(0);
 	}
 	TAILQ_REMOVE(&g_raid_bdev_list, raid_bdev, global_link);
-	free(raid_bdev->bdev.name);
 	free(raid_bdev->base_bdev_info);
 	if (raid_bdev->config) {
 		raid_bdev->config->raid_bdev = NULL;
 	}
+}
+
+static void
+raid_bdev_free(struct raid_bdev *raid_bdev)
+{
+	free(raid_bdev->bdev.name);
 	free(raid_bdev);
+}
+
+static void
+raid_bdev_cleanup_and_free(struct raid_bdev *raid_bdev)
+{
+	raid_bdev_cleanup(raid_bdev);
+	raid_bdev_free(raid_bdev);
 }
 
 /*
@@ -232,14 +244,29 @@ raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev,
 	raid_bdev->num_base_bdevs_discovered--;
 }
 
+static void
+raid_bdev_io_device_unregister_cb(void *io_device)
+{
+	struct raid_bdev *raid_bdev = io_device;
+
+	if (raid_bdev->num_base_bdevs_discovered == 0) {
+		/* Free raid_bdev when there are no base bdevs left */
+		SPDK_DEBUGLOG(bdev_raid, "raid bdev base bdevs is 0, going to free all in destruct\n");
+		raid_bdev_cleanup(raid_bdev);
+		spdk_bdev_destruct_done(&raid_bdev->bdev, 0);
+		raid_bdev_free(raid_bdev);
+	} else {
+		spdk_bdev_destruct_done(&raid_bdev->bdev, 0);
+	}
+}
+
 /*
  * brief:
  * raid_bdev_destruct is the destruct function table pointer for raid bdev
  * params:
  * ctxt - pointer to raid_bdev
  * returns:
- * 0 - success
- * non zero - failure
+ * 1 - success (deferred completion)
  */
 static int
 raid_bdev_destruct(void *ctxt)
@@ -272,15 +299,9 @@ raid_bdev_destruct(void *ctxt)
 		raid_bdev->module->stop(raid_bdev);
 	}
 
-	spdk_io_device_unregister(raid_bdev, NULL);
+	spdk_io_device_unregister(raid_bdev, raid_bdev_io_device_unregister_cb);
 
-	if (raid_bdev->num_base_bdevs_discovered == 0) {
-		/* Free raid_bdev when there are no base bdevs left */
-		SPDK_DEBUGLOG(bdev_raid, "raid bdev base bdevs is 0, going to free all in destruct\n");
-		raid_bdev_cleanup(raid_bdev);
-	}
-
-	return 0;
+	return 1;
 }
 
 void
@@ -726,26 +747,6 @@ raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
 	free(raid_cfg);
 }
 
-/*
- * brief:
- * raid_bdev_free is the raid bdev function table function pointer. This is
- * called on bdev free path
- * params:
- * none
- * returns:
- * none
- */
-static void
-raid_bdev_free(void)
-{
-	struct raid_bdev_config *raid_cfg, *tmp;
-
-	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_free\n");
-	TAILQ_FOREACH_SAFE(raid_cfg, &g_raid_config.raid_bdev_config_head, link, tmp) {
-		raid_bdev_config_cleanup(raid_cfg);
-	}
-}
-
 /* brief
  * raid_bdev_config_find_by_name is a helper function to find raid bdev config
  * by name as key.
@@ -945,8 +946,12 @@ raid_bdev_fini_start(void)
 static void
 raid_bdev_exit(void)
 {
+	struct raid_bdev_config *raid_cfg, *tmp;
+
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_exit\n");
-	raid_bdev_free();
+	TAILQ_FOREACH_SAFE(raid_cfg, &g_raid_config.raid_bdev_config_head, link, tmp) {
+		raid_bdev_config_cleanup(raid_cfg);
+	}
 }
 
 /*
@@ -1339,7 +1344,7 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 		raid_bdev_free_base_bdev_resource(raid_bdev, base_info);
 		if (raid_bdev->num_base_bdevs_discovered == 0) {
 			/* There is no base bdev for this raid, so free the raid device. */
-			raid_bdev_cleanup(raid_bdev);
+			raid_bdev_cleanup_and_free(raid_bdev);
 			return;
 		}
 	}
@@ -1430,7 +1435,7 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
 
 	if (raid_bdev->num_base_bdevs_discovered == 0) {
 		/* There is no base bdev for this raid, so free the raid device. */
-		raid_bdev_cleanup(raid_bdev);
+		raid_bdev_cleanup_and_free(raid_bdev);
 		if (cb_fn) {
 			cb_fn(cb_arg, 0);
 		}
