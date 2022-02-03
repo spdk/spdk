@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser
+import importlib
 import logging
 import os
 import sys
@@ -34,9 +35,19 @@ def register_device(agent, device):
     agent.register_device(device)
 
 
+def load_plugins(agent, client, plugins):
+    for plugin in plugins:
+        module = importlib.import_module(plugin)
+        for device in getattr(module, 'devices', []):
+            logging.debug(f'Loading external device: {plugin}.{device.__name__}')
+            register_device(agent, device(client))
+
+
 if __name__ == '__main__':
     argv = parse_argv()
     logging.basicConfig(level=os.environ.get('SMA_LOGLEVEL', 'WARNING').upper())
     agent = sma.StorageManagementAgent(argv.address, argv.port)
     register_device(agent, sma.NvmfTcpDeviceManager(get_build_client(argv.socket)))
+    load_plugins(agent, get_build_client(argv.socket),
+                 filter(None, os.environ.get('SMA_PLUGINS', '').split(':')))
     agent.run()
