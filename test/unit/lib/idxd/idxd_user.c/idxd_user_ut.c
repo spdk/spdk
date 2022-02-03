@@ -106,11 +106,9 @@ test_idxd_wq_config(void)
 {
 	struct spdk_user_idxd_device user_idxd = {};
 	struct spdk_idxd_device *idxd = &user_idxd.idxd;
-	union idxd_wqcfg wqcfg = {};
-	uint32_t expected[8] = {0x40, 0, 0x11, 0xbe, 0, 0, 0x40000000, 0};
 	uint32_t wq_size, i, j;
-	uint32_t wqcap_size = 32;
 	int rc;
+	struct idxd_wqtbl *wqtbl;
 
 	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
@@ -125,24 +123,23 @@ test_idxd_wq_config(void)
 	user_idxd.registers->offsets.wqcfg = WQ_CFG_OFFSET;
 	wq_size = user_idxd.registers->wqcap.total_wq_size;
 
+	wqtbl = (struct idxd_wqtbl *)((uint8_t *)user_idxd.registers +
+				      (user_idxd.registers->offsets.wqcfg * IDXD_TABLE_OFFSET_MULT));
+
 	rc = idxd_wq_config(&user_idxd);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(idxd->queues->wqcfg.wq_size == wq_size);
-	CU_ASSERT(idxd->queues->wqcfg.mode == WQ_MODE_DEDICATED);
-	CU_ASSERT(idxd->queues->wqcfg.max_batch_shift == LOG2_WQ_MAX_BATCH);
-	CU_ASSERT(idxd->queues->wqcfg.max_xfer_shift == LOG2_WQ_MAX_XFER);
-	CU_ASSERT(idxd->queues->wqcfg.wq_state == WQ_ENABLED);
-	CU_ASSERT(idxd->queues->wqcfg.priority == WQ_PRIORITY_1);
+	CU_ASSERT(wqtbl->wq[0].wq_size == wq_size);
+	CU_ASSERT(wqtbl->wq[0].mode == WQ_MODE_DEDICATED);
+	CU_ASSERT(wqtbl->wq[0].max_batch_shift == LOG2_WQ_MAX_BATCH);
+	CU_ASSERT(wqtbl->wq[0].max_xfer_shift == LOG2_WQ_MAX_XFER);
+	CU_ASSERT(wqtbl->wq[0].wq_state == WQ_ENABLED);
+	CU_ASSERT(wqtbl->wq[0].priority == WQ_PRIORITY_1);
 	CU_ASSERT(idxd->queues->idxd == idxd);
 	CU_ASSERT(idxd->queues->group == idxd->groups);
 
-	for (i = 0 ; i < user_idxd.registers->wqcap.num_wqs; i++) {
+	for (i = 1 ; i < user_idxd.registers->wqcap.num_wqs; i++) {
 		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-			wqcfg.raw[j] = spdk_mmio_read_4((uint32_t *)((uint8_t *)user_idxd.registers +
-							(user_idxd.registers->offsets.wqcfg * IDXD_TABLE_OFFSET_MULT) +
-							(i * wqcap_size) +
-							(j * sizeof(uint32_t))));
-			CU_ASSERT(wqcfg.raw[j] == expected[j]);
+			CU_ASSERT(spdk_mmio_read_4(&wqtbl->wq[i].raw[j]) == 0);
 		}
 	}
 

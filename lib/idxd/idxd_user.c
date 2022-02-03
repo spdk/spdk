@@ -257,6 +257,7 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	union idxd_wqcap_register wqcap;
 	union idxd_offsets_register table_offsets;
 	struct idxd_wqtbl *wqtbl;
+	union idxd_wqcfg wqcfg;
 
 	wqcap.raw = spdk_mmio_read_8(&user_idxd->registers->wqcap.raw);
 
@@ -289,15 +290,15 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 * didn't touch when we write the cfg register out below.
 	 */
 	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		queue->wqcfg.raw[j] = spdk_mmio_read_4(&wqtbl->wq[0].raw[j]);
+		wqcfg.raw[j] = spdk_mmio_read_4(&wqtbl->wq[0].raw[j]);
 	}
 
-	queue->wqcfg.wq_size = wq_size;
-	queue->wqcfg.mode = WQ_MODE_DEDICATED;
-	queue->wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
-	queue->wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
-	queue->wqcfg.wq_state = WQ_ENABLED;
-	queue->wqcfg.priority = WQ_PRIORITY_1;
+	wqcfg.wq_size = wq_size;
+	wqcfg.mode = WQ_MODE_DEDICATED;
+	wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
+	wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
+	wqcfg.wq_state = WQ_ENABLED;
+	wqcfg.priority = WQ_PRIORITY_1;
 
 	/* Not part of the config struct */
 	queue->idxd = idxd;
@@ -307,7 +308,7 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 * Now write the work queue config to the device for configured queues
 	 */
 	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-		spdk_mmio_write_4(&wqtbl->wq[0].raw[j], queue->wqcfg.raw[j]);
+		spdk_mmio_write_4(&wqtbl->wq[0].raw[j], wqcfg.raw[j]);
 	}
 
 	return 0;

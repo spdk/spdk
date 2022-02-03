@@ -273,12 +273,6 @@ kernel_idxd_wq_config(struct spdk_kernel_idxd_device *kernel_idxd)
 
 	for (i = 0; i < g_kernel_dev_cfg.total_wqs; i++) {
 		queue = &idxd->queues[i];
-		queue->wqcfg.wq_size = kernel_idxd->wq_ctx[i].wq_size;
-		queue->wqcfg.mode = WQ_MODE_DEDICATED;
-		queue->wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
-		queue->wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
-		queue->wqcfg.wq_state = WQ_ENABLED;
-		queue->wqcfg.priority = WQ_PRIORITY_1;
 
 		/* Not part of the config struct */
 		queue->idxd = idxd;

@@ -152,7 +152,6 @@ SPDK_STATIC_ASSERT(sizeof(struct idxd_ops) == 96, "size mismatch");
 struct idxd_wq {
 	struct spdk_idxd_device		*idxd;
 	struct idxd_group		*group;
-	union idxd_wqcfg		wqcfg;
 };
 
 struct spdk_idxd_impl {
