@@ -4823,7 +4823,7 @@ bdev_multi_allocation(void)
 		for (j = 0; j < bdev_num; j++) {
 			bdev[j] = allocate_bdev(name[j]);
 			height = rb_tree_get_height(&bdev[j]->internal.bdev_name);
-			CU_ASSERT(height <= (int)(spdk_u32log2(j + 1)));
+			CU_ASSERT(height <= (int)(spdk_u32log2(2 * j + 2)));
 		}
 		SPDK_NOTICELOG("alloc bdev num %d takes %" PRIu64 " ms\n", bdev_num,
 			       (get_ns_time() - last_time) / 1000 / 1000);
@@ -4950,6 +4950,73 @@ bdev_writev_readv_ext(void)
 	poll_threads();
 }
 
+static void
+bdev_register_uuid_alias(void)
+{
+	struct spdk_bdev *bdev, *second;
+	char uuid[SPDK_UUID_STRING_LEN];
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	bdev = allocate_bdev("bdev0");
+
+	/* Make sure an UUID was generated  */
+	CU_ASSERT_FALSE(spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid)));
+
+	/* Check that an UUID alias was registered */
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
+	CU_ASSERT_EQUAL(spdk_bdev_get_by_name(uuid), bdev);
+
+	/* Unregister the bdev */
+	spdk_bdev_unregister(bdev, NULL, NULL);
+	poll_threads();
+	CU_ASSERT_PTR_NULL(spdk_bdev_get_by_name(uuid));
+
+	/* Check the same, but this time register the bdev with non-zero UUID */
+	rc = spdk_bdev_register(bdev);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(spdk_bdev_get_by_name(uuid), bdev);
+
+	/* Unregister the bdev */
+	spdk_bdev_unregister(bdev, NULL, NULL);
+	poll_threads();
+	CU_ASSERT_PTR_NULL(spdk_bdev_get_by_name(uuid));
+
+	/* Regiser the bdev using UUID as the name */
+	bdev->name = uuid;
+	rc = spdk_bdev_register(bdev);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(spdk_bdev_get_by_name(uuid), bdev);
+
+	/* Unregister the bdev */
+	spdk_bdev_unregister(bdev, NULL, NULL);
+	poll_threads();
+	CU_ASSERT_PTR_NULL(spdk_bdev_get_by_name(uuid));
+
+	/* Check that it's not possible to register two bdevs with the same UUIDs */
+	bdev->name = "bdev0";
+	second = allocate_bdev("bdev1");
+	spdk_uuid_copy(&bdev->uuid, &second->uuid);
+	rc = spdk_bdev_register(bdev);
+	CU_ASSERT_EQUAL(rc, -EEXIST);
+
+	/* Regenerate the UUID and re-check */
+	spdk_uuid_generate(&bdev->uuid);
+	rc = spdk_bdev_register(bdev);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	/* And check that both bdevs can be retrieved through their UUIDs */
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
+	CU_ASSERT_EQUAL(spdk_bdev_get_by_name(uuid), bdev);
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &second->uuid);
+	CU_ASSERT_EQUAL(spdk_bdev_get_by_name(uuid), second);
+
+	free_bdev(second);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4998,6 +5065,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_multi_allocation);
 	CU_ADD_TEST(suite, bdev_get_memory_domains);
 	CU_ADD_TEST(suite, bdev_writev_readv_ext);
+	CU_ADD_TEST(suite, bdev_register_uuid_alias);
 
 	allocate_cores(1);
 	allocate_threads(1);

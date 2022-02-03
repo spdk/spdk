@@ -5717,6 +5717,7 @@ static int
 bdev_register(struct spdk_bdev *bdev)
 {
 	char *bdev_name;
+	char uuid[SPDK_UUID_STRING_LEN];
 	int ret;
 
 	assert(bdev->module != NULL);
@@ -5759,6 +5760,18 @@ bdev_register(struct spdk_bdev *bdev)
 	/* If the user didn't specify a uuid, generate one. */
 	if (spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
 		spdk_uuid_generate(&bdev->uuid);
+	}
+
+	/* Add the UUID alias only if it's different than the name */
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
+	if (strcmp(bdev->name, uuid) != 0) {
+		ret = spdk_bdev_alias_add(bdev, uuid);
+		if (ret != 0) {
+			SPDK_ERRLOG("Unable to add uuid:%s alias for bdev %s\n", uuid, bdev->name);
+			bdev_name_del(&bdev->internal.bdev_name);
+			free(bdev_name);
+			return ret;
+		}
 	}
 
 	if (spdk_bdev_get_buf_align(bdev) > 1) {
@@ -5889,6 +5902,7 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc = 0;
+	char			uuid[SPDK_UUID_STRING_LEN];
 
 	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
@@ -5909,7 +5923,12 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	if (rc == 0) {
 		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
 		SPDK_DEBUGLOG(bdev, "Removing bdev %s from list done\n", bdev->name);
+
+		/* Delete the name and the UUID alias */
+		spdk_uuid_fmt_lower(uuid, sizeof(uuid), &bdev->uuid);
 		bdev_name_del_unsafe(&bdev->internal.bdev_name);
+		bdev_alias_del(bdev, uuid, bdev_name_del_unsafe);
+
 		spdk_notify_send("bdev_unregister", spdk_bdev_get_name(bdev));
 	}
 

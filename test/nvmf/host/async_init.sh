@@ -12,6 +12,10 @@ null_block_size=512
 null_bdev=null0
 nvme_bdev=nvme0
 
+# Since we're connecting the same bdev, we need to use a different NGUID to avoid errors when
+# registering the bdev during bdev_nvme_attach_controller
+nguid=$(uuidgen | tr -d '-')
+
 if [ "$TEST_TRANSPORT" != "tcp" ]; then
 	echo "This test can only be executed with TCP for now"
 	exit 0
@@ -25,7 +29,7 @@ $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 $rpc_py bdev_null_create $null_bdev $null_bdev_size $null_block_size
 $rpc_py bdev_wait_for_examine
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode0 -a
-$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 $null_bdev
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 $null_bdev -g $nguid
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT \
 	-a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
