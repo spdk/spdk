@@ -52,9 +52,9 @@ struct core_stats {
 
 static struct core_stats *g_cores;
 
-#define SCHEDULER_LOAD_LIMIT 20
-#define SCHEDULER_CORE_LIMIT 80
-#define SCHEDULER_CORE_BUSY 95
+uint8_t g_scheduler_load_limit = 20;
+uint8_t g_scheduler_core_limit = 80;
+uint8_t g_scheduler_core_busy = 95;
 
 static uint8_t
 _busy_pct(uint64_t busy, uint64_t idle)
@@ -119,20 +119,20 @@ _move_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t dst_core)
 	src->busy -= spdk_min(src->busy, busy_tsc);
 	src->idle += spdk_min(UINT64_MAX - src->idle, busy_tsc);
 
-	if (busy_pct >= SCHEDULER_CORE_BUSY &&
-	    _busy_pct(src->busy, src->idle) < SCHEDULER_CORE_LIMIT) {
+	if (busy_pct >= g_scheduler_core_busy &&
+	    _busy_pct(src->busy, src->idle) < g_scheduler_core_limit) {
 		/* This core was so busy that we cannot assume all of busy_tsc
 		 * consumed by the moved thread will now be idle_tsc - it's
 		 * very possible the remaining threads will use these cycles
 		 * as busy_tsc.
 		 *
 		 * So make sure we don't drop the updated estimate below
-		 * SCHEDULER_CORE_LIMIT, so that other cores can't
+		 * g_scheduler_core_limit, so that other cores can't
 		 * move threads to this core during this scheduling
 		 * period.
 		 */
 		tsc = src->busy + src->idle;
-		src->busy = tsc * SCHEDULER_CORE_LIMIT / 100;
+		src->busy = tsc * g_scheduler_core_limit / 100;
 		src->idle = tsc - src->busy;
 	}
 	assert(src->thread_count > 0);
@@ -161,7 +161,7 @@ _is_core_at_limit(uint32_t core_id)
 	}
 
 	/* Work done was less than the limit */
-	if (_busy_pct(busy, idle) < SCHEDULER_CORE_LIMIT) {
+	if (_busy_pct(busy, idle) < g_scheduler_core_limit) {
 		return false;
 	}
 
@@ -199,8 +199,8 @@ _can_core_fit_thread(struct spdk_scheduler_thread_info *thread_info, uint32_t ds
 	new_idle_tsc = dst->idle - thread_info->current_stats.busy_tsc;
 
 	/* Core cannot fit this thread if it would put it over the
-	 * SCHEDULER_CORE_LIMIT. */
-	return _busy_pct(new_busy_tsc, new_idle_tsc) < SCHEDULER_CORE_LIMIT;
+	 * g_scheduler_core_limit. */
+	return _busy_pct(new_busy_tsc, new_idle_tsc) < g_scheduler_core_limit;
 }
 
 static uint32_t
@@ -286,7 +286,7 @@ deinit(void)
 static void
 _balance_idle(struct spdk_scheduler_thread_info *thread_info)
 {
-	if (_get_thread_load(thread_info) >= SCHEDULER_LOAD_LIMIT) {
+	if (_get_thread_load(thread_info) >= g_scheduler_load_limit) {
 		return;
 	}
 	/* This thread is idle, move it to the main core. */
@@ -298,7 +298,7 @@ _balance_active(struct spdk_scheduler_thread_info *thread_info)
 {
 	uint32_t target_lcore;
 
-	if (_get_thread_load(thread_info) < SCHEDULER_LOAD_LIMIT) {
+	if (_get_thread_load(thread_info) < g_scheduler_load_limit) {
 		return;
 	}
 
