@@ -508,7 +508,7 @@ nvme_rdma_qpair_process_cm_event(struct nvme_rdma_qpair *rqpair)
 				rc = -1;
 			} else {
 				SPDK_DEBUGLOG(nvme, "Requested queue depth %d. Target receive queue depth %d.\n",
-					      rqpair->num_entries, accept_data->crqsize);
+					      rqpair->num_entries + 1, accept_data->crqsize);
 			}
 			break;
 		case RDMA_CM_EVENT_DISCONNECTED:
@@ -1151,8 +1151,8 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	assert(rctrlr != NULL);
 
 	request_data.qid = rqpair->qpair.id;
-	request_data.hrqsize = rqpair->num_entries;
-	request_data.hsqsize = rqpair->num_entries - 1;
+	request_data.hrqsize = rqpair->num_entries + 1;
+	request_data.hsqsize = rqpair->num_entries;
 	request_data.cntlid = ctrlr->cntlid;
 
 	param.private_data = &request_data;
@@ -1311,7 +1311,7 @@ _nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 		return -1;
 	}
 
-	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries);
+	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries + 1);
 	if (rc < 0) {
 		rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
@@ -1750,13 +1750,23 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_qpair *qpair;
 	int rc;
 
+	if (qsize < SPDK_NVME_QUEUE_MIN_ENTRIES) {
+		SPDK_ERRLOG("Failed to create qpair with size %u. Minimum queue size is %d.\n",
+			    qsize, SPDK_NVME_QUEUE_MIN_ENTRIES);
+		return NULL;
+	}
+
 	rqpair = nvme_rdma_calloc(1, sizeof(struct nvme_rdma_qpair));
 	if (!rqpair) {
 		SPDK_ERRLOG("failed to get create rqpair\n");
 		return NULL;
 	}
 
-	rqpair->num_entries = qsize;
+	/* Set num_entries one less than queue size. According to NVMe
+	 * and NVMe-oF specs we can not submit queue size requests,
+	 * one slot shall always remain empty.
+	 */
+	rqpair->num_entries = qsize - 1;
 	rqpair->delay_cmd_submit = delay_cmd_submit;
 	qpair = &rqpair->qpair;
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests, false);

@@ -569,7 +569,7 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 	CU_ASSERT(qpair != NULL);
 	rqpair = SPDK_CONTAINEROF(qpair, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(qpair == &rqpair->qpair);
-	CU_ASSERT(rqpair->num_entries == qsize);
+	CU_ASSERT(rqpair->num_entries == qsize - 1);
 	CU_ASSERT(rqpair->delay_cmd_submit == false);
 	CU_ASSERT(rqpair->rsp_sgls != NULL);
 	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
@@ -580,9 +580,33 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 	nvme_rdma_free(rqpair);
 	rqpair = NULL;
 
-	/* Test case 2: queue qsize zero. ExpectL FAIL */
+	/* Test case 2: queue size 2. Expect: PASS */
+	qsize = 2;
+	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
+					     SPDK_NVME_QPRIO_URGENT, 1,
+					     false);
+	CU_ASSERT(qpair != NULL);
+	rqpair = SPDK_CONTAINEROF(qpair, struct nvme_rdma_qpair, qpair);
+	CU_ASSERT(rqpair->num_entries == qsize - 1);
+	CU_ASSERT(rqpair->rsp_sgls != NULL);
+	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
+	CU_ASSERT(rqpair->rsps != NULL);
+
+	nvme_rdma_free_reqs(rqpair);
+	nvme_rdma_free_rsps(rqpair);
+	nvme_rdma_free(rqpair);
+	rqpair = NULL;
+
+	/* Test case 3: queue size zero. Expect: FAIL */
 	qsize = 0;
 
+	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
+					     SPDK_NVME_QPRIO_URGENT, 1,
+					     false);
+	SPDK_CU_ASSERT_FATAL(qpair == NULL);
+
+	/* Test case 4: queue size 1. Expect: FAIL */
+	qsize = 1;
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
 					     false);
@@ -764,7 +788,7 @@ test_nvme_rdma_ctrlr_construct(void)
 
 	SPDK_CU_ASSERT_FATAL(ctrlr->adminq != NULL);
 	rqpair = SPDK_CONTAINEROF(ctrlr->adminq, struct nvme_rdma_qpair, qpair);
-	CU_ASSERT(rqpair->num_entries == opts.admin_queue_size);
+	CU_ASSERT(rqpair->num_entries == opts.admin_queue_size - 1);
 	CU_ASSERT(rqpair->delay_cmd_submit == false);
 	CU_ASSERT(rqpair->rsp_sgls != NULL);
 	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);

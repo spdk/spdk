@@ -1964,7 +1964,7 @@ nvme_tcp_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 		rc = -EAGAIN;
 		break;
 	case NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_SEND:
-		rc = nvme_fabric_qpair_connect_async(&tqpair->qpair, tqpair->num_entries);
+		rc = nvme_fabric_qpair_connect_async(&tqpair->qpair, tqpair->num_entries + 1);
 		if (rc < 0) {
 			SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
 			break;
@@ -2052,13 +2052,23 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_qpair *qpair;
 	int rc;
 
+	if (qsize < SPDK_NVME_QUEUE_MIN_ENTRIES) {
+		SPDK_ERRLOG("Failed to create qpair with size %u. Minimum queue size is %d.\n",
+			    qsize, SPDK_NVME_QUEUE_MIN_ENTRIES);
+		return NULL;
+	}
+
 	tqpair = calloc(1, sizeof(struct nvme_tcp_qpair));
 	if (!tqpair) {
 		SPDK_ERRLOG("failed to get create tqpair\n");
 		return NULL;
 	}
 
-	tqpair->num_entries = qsize;
+	/* Set num_entries one less than queue size. According to NVMe
+	 * and NVMe-oF specs we can not submit queue size requests,
+	 * one slot shall always remain empty.
+	 */
+	tqpair->num_entries = qsize - 1;
 	qpair = &tqpair->qpair;
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests, async);
 	if (rc != 0) {
