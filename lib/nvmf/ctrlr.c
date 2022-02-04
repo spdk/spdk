@@ -2141,6 +2141,10 @@ typedef enum spdk_nvme_ana_state spdk_nvme_ana_state_t;
 static inline spdk_nvme_ana_state_t
 nvmf_ctrlr_get_ana_state(struct spdk_nvmf_ctrlr *ctrlr, uint32_t anagrpid)
 {
+	if (!ctrlr->subsys->flags.ana_reporting) {
+		return SPDK_NVME_ANA_OPTIMIZED_STATE;
+	}
+
 	if (spdk_unlikely(ctrlr->listener == NULL)) {
 		return SPDK_NVME_ANA_INACCESSIBLE_STATE;
 	}
@@ -3967,9 +3971,11 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	SPDK_DTRACE_PROBE3(nvmf_request_io_exec_path, req,
-			   req->qpair->ctrlr->listener->trid->traddr,
-			   req->qpair->ctrlr->listener->trid->trsvcid);
+	if (spdk_likely(ctrlr->listener != NULL)) {
+		SPDK_DTRACE_PROBE3(nvmf_request_io_exec_path, req,
+				   ctrlr->listener->trid->traddr,
+				   ctrlr->listener->trid->trsvcid);
+	}
 
 	/* scan-build falsely reporting dereference of null pointer */
 	assert(group != NULL && group->sgroups != NULL);
