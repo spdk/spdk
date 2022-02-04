@@ -58,6 +58,7 @@
 #	$(OPT)	line is optional (may be missing, matched if found)
 #	$(OPX)	ends a contiguous list of $(OPT)...$(OPX) lines, at least
 #		one of which must match
+#	$(UUID)	universally unique identifier
 #
 # Additionally, if any "X.ignore" file exists, strings or phrases found per
 # line in the file will be ignored if found as a substring in the
@@ -241,6 +242,7 @@ sub match {
 		s/\\\$\\\(W\\\)/\\p{Blank}*/g;
 		s/\\\$\\\(nW\\\)/\\p{Graph}*/g;
 		s/\\\$\\\(DD\\\)/\\d+\\+\\d+ records in\n\\d+\\+\\d+ records out\n\\d+ bytes \\\(\\d+ .B\\\) copied, [.0-9e-]+[^,]*, [.0-9]+ .B.s/g;
+		s/\\\$\\\(UUID\\\)/\\p{XPosixXDigit}{8}-\\p{XPosixXDigit}{4}-\\p{XPosixXDigit}{4}-\\p{XPosixXDigit}{4}-\\p{XPosixXDigit}{12}/g;
 		if (s/\\\$\\\(OPT\\\)//) {
 			$opt = 1;
 		} elsif (s/\\\$\\\(OPX\\\)//) {
