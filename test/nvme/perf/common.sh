@@ -136,7 +136,7 @@ function get_numa_node() {
 		bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf)
 		for name in $disks; do
 			local bdev_bdf
-			bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme.pci_address" <<< $bdevs)
+			bdev_bdf=$(jq -r ".[] | select(.name==\"$name\").driver_specific.nvme[].pci_address" <<< "$bdevs")
 			cat /sys/bus/pci/devices/$bdev_bdf/numa_node
 		done
 	else
