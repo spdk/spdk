@@ -312,7 +312,7 @@ function install_nvmecli() {
 		if [[ ! -d $GIT_REPOS/nvme-cli-cuse ]]; then
 			git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
 		fi
-		git -C "$GIT_REPOS/nvme-cli-cuse" checkout v1.15
+		git -C "$GIT_REPOS/nvme-cli-cuse" checkout v1.16
 		make -C "$GIT_REPOS/nvme-cli-cuse" CPPFLAGS="-Wno-error=maybe-uninitialized"
 		sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
 	fi
