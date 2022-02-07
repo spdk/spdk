@@ -343,12 +343,6 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn, vo
 	return 0;
 }
 
-static bool
-_is_batch_valid(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
-{
-	return batch->chan == chan;
-}
-
 static int
 _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 		     void *cb_arg, int flags,
@@ -360,14 +354,8 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	struct idxd_batch *batch;
 
 	batch = chan->batch;
+
 	assert(batch != NULL);
-
-	if (_is_batch_valid(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to add to an invalid batch.\n");
-		return -EINVAL;
-	}
-
-	assert(batch != NULL); /* suppress scan-build warning. */
 	if (batch->index == DESC_PER_BATCH) {
 		return -EBUSY;
 	}
@@ -436,11 +424,6 @@ idxd_batch_cancel(struct spdk_idxd_io_channel *chan, int status)
 	batch = chan->batch;
 	assert(batch != NULL);
 
-	if (_is_batch_valid(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to cancel an invalid batch.\n");
-		return -EINVAL;
-	}
-
 	if (batch->index == UINT8_MAX) {
 		SPDK_ERRLOG("Cannot cancel batch, already submitted to HW.\n");
 		return -EINVAL;
@@ -473,11 +456,6 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan,
 
 	batch = chan->batch;
 	assert(batch != NULL);
-
-	if (_is_batch_valid(batch, chan) == false) {
-		SPDK_ERRLOG("Attempt to submit an invalid batch.\n");
-		return -EINVAL;
-	}
 
 	if (batch->index == 0) {
 		return idxd_batch_cancel(chan, 0);
