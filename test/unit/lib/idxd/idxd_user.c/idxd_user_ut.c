@@ -146,7 +146,6 @@ static int
 test_idxd_group_config(void)
 {
 	struct spdk_user_idxd_device user_idxd = {};
-	struct spdk_idxd_device *idxd = &user_idxd.idxd;
 	uint64_t wqs[MAX_ARRAY_SIZE] = {};
 	uint64_t engines[MAX_ARRAY_SIZE] = {};
 	union idxd_group_flags flags[MAX_ARRAY_SIZE] = {};
@@ -165,7 +164,7 @@ test_idxd_group_config(void)
 	grptbl = (struct idxd_grptbl *)((uint8_t *)user_idxd.registers +
 					(user_idxd.registers->offsets.grpcfg * IDXD_TABLE_OFFSET_MULT));
 
-	rc = idxd_group_config(idxd);
+	rc = idxd_group_config(&user_idxd);
 	CU_ASSERT(rc == 0);
 	for (i = 0 ; i < user_idxd.registers->groupcap.num_groups; i++) {
 		wqs[i] = spdk_mmio_read_8(&grptbl->group[i].wqs[0]);
@@ -195,12 +194,12 @@ test_idxd_reset_dev(void)
 	fake_cmd_status_reg = &user_idxd.registers->cmdsts;
 
 	/* Test happy path */
-	rc = idxd_reset_dev(&user_idxd.idxd);
+	rc = idxd_reset_dev(&user_idxd);
 	CU_ASSERT(rc == 0);
 
 	/* Test error reported path */
 	fake_cmd_status_reg->err = 1;
-	rc = idxd_reset_dev(&user_idxd.idxd);
+	rc = idxd_reset_dev(&user_idxd);
 	CU_ASSERT(rc == -EINVAL);
 
 	free(user_idxd.registers);
@@ -221,18 +220,18 @@ test_idxd_wait_cmd(void)
 	fake_cmd_status_reg = &user_idxd.registers->cmdsts;
 
 	/* Test happy path. */
-	rc = idxd_wait_cmd(&user_idxd.idxd, timeout);
+	rc = idxd_wait_cmd(&user_idxd, timeout);
 	CU_ASSERT(rc == 0);
 
 	/* Setup up our fake register to set the error bit. */
 	fake_cmd_status_reg->err = 1;
-	rc = idxd_wait_cmd(&user_idxd.idxd, timeout);
+	rc = idxd_wait_cmd(&user_idxd, timeout);
 	CU_ASSERT(rc == -EINVAL);
 	fake_cmd_status_reg->err = 0;
 
 	/* Setup up our fake register to set the active bit. */
 	fake_cmd_status_reg->active = 1;
-	rc = idxd_wait_cmd(&user_idxd.idxd, timeout);
+	rc = idxd_wait_cmd(&user_idxd, timeout);
 	CU_ASSERT(rc == -EBUSY);
 
 	free(user_idxd.registers);

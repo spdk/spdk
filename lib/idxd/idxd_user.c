@@ -61,11 +61,10 @@ static struct spdk_idxd_device *idxd_attach(struct spdk_pci_device *device);
 
 /* Used for control commands, not for descriptor submission. */
 static int
-idxd_wait_cmd(struct spdk_idxd_device *idxd, int _timeout)
+idxd_wait_cmd(struct spdk_user_idxd_device *user_idxd, int _timeout)
 {
 	uint32_t timeout = _timeout;
 	union idxd_cmdsts_register cmd_status = {};
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
 	cmd_status.raw = spdk_mmio_read_4(&user_idxd->registers->cmdsts.raw);
 	while (cmd_status.active && --timeout) {
@@ -89,16 +88,15 @@ idxd_wait_cmd(struct spdk_idxd_device *idxd, int _timeout)
 }
 
 static int
-idxd_unmap_pci_bar(struct spdk_idxd_device *idxd, int bar)
+idxd_unmap_pci_bar(struct spdk_user_idxd_device *user_idxd, int bar)
 {
 	int rc = 0;
 	void *addr = NULL;
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
 	if (bar == IDXD_MMIO_BAR) {
 		addr = (void *)user_idxd->registers;
 	} else if (bar == IDXD_WQ_BAR) {
-		addr = (void *)idxd->portal;
+		addr = (void *)user_idxd->idxd.portal;
 	}
 
 	if (addr) {
@@ -108,12 +106,11 @@ idxd_unmap_pci_bar(struct spdk_idxd_device *idxd, int bar)
 }
 
 static int
-idxd_map_pci_bars(struct spdk_idxd_device *idxd)
+idxd_map_pci_bars(struct spdk_user_idxd_device *user_idxd)
 {
 	int rc;
 	void *addr;
 	uint64_t phys_addr, size;
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
 	rc = spdk_pci_device_map_bar(user_idxd->device, IDXD_MMIO_BAR, &addr, &phys_addr, &size);
 	if (rc != 0 || addr == NULL) {
@@ -125,44 +122,42 @@ idxd_map_pci_bars(struct spdk_idxd_device *idxd)
 	rc = spdk_pci_device_map_bar(user_idxd->device, IDXD_WQ_BAR, &addr, &phys_addr, &size);
 	if (rc != 0 || addr == NULL) {
 		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n", rc);
-		rc = idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
+		rc = idxd_unmap_pci_bar(user_idxd, IDXD_MMIO_BAR);
 		if (rc) {
 			SPDK_ERRLOG("unable to unmap MMIO bar\n");
 		}
 		return -EINVAL;
 	}
-	idxd->portal = addr;
+	user_idxd->idxd.portal = addr;
 
 	return 0;
 }
 
 static void
-idxd_disable_dev(struct spdk_idxd_device *idxd)
+idxd_disable_dev(struct spdk_user_idxd_device *user_idxd)
 {
 	int rc;
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 	union idxd_cmd_register cmd = {};
 
 	cmd.command_code = IDXD_DISABLE_DEV;
 
 	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
-	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
+	rc = idxd_wait_cmd(user_idxd, IDXD_REGISTER_TIMEOUT_US);
 	if (rc < 0) {
 		SPDK_ERRLOG("Error disabling device %u\n", rc);
 	}
 }
 
 static int
-idxd_reset_dev(struct spdk_idxd_device *idxd)
+idxd_reset_dev(struct spdk_user_idxd_device *user_idxd)
 {
 	int rc;
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 	union idxd_cmd_register cmd = {};
 
 	cmd.command_code = IDXD_RESET_DEVICE;
 
 	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
-	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
+	rc = idxd_wait_cmd(user_idxd, IDXD_REGISTER_TIMEOUT_US);
 	if (rc < 0) {
 		SPDK_ERRLOG("Error resetting device %u\n", rc);
 	}
@@ -171,10 +166,9 @@ idxd_reset_dev(struct spdk_idxd_device *idxd)
 }
 
 static int
-idxd_group_config(struct spdk_idxd_device *idxd)
+idxd_group_config(struct spdk_user_idxd_device *user_idxd)
 {
 	int i;
-	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 	union idxd_groupcap_register groupcap;
 	union idxd_enginecap_register enginecap;
 	union idxd_wqcap_register wqcap;
@@ -273,13 +267,12 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 {
 	int rc = 0;
 	union idxd_gensts_register gensts_reg;
-	struct spdk_idxd_device *idxd = &user_idxd->idxd;
 	union idxd_cmd_register cmd = {};
 
 	/*
 	 * Map BAR0 and BAR2
 	 */
-	rc = idxd_map_pci_bars(idxd);
+	rc = idxd_map_pci_bars(user_idxd);
 	if (rc) {
 		return rc;
 	}
@@ -287,7 +280,7 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	/*
 	 * Reset the device
 	 */
-	rc = idxd_reset_dev(idxd);
+	rc = idxd_reset_dev(user_idxd);
 	if (rc) {
 		goto err_reset;
 	}
@@ -295,7 +288,7 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	/*
 	 * Configure groups and work queues.
 	 */
-	rc = idxd_group_config(idxd);
+	rc = idxd_group_config(user_idxd);
 	if (rc) {
 		goto err_group_cfg;
 	}
@@ -314,7 +307,7 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	cmd.command_code = IDXD_ENABLE_DEV;
 
 	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
-	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
+	rc = idxd_wait_cmd(user_idxd, IDXD_REGISTER_TIMEOUT_US);
 	gensts_reg.raw = spdk_mmio_read_4(&user_idxd->registers->gensts.raw);
 	if ((rc < 0) || (gensts_reg.state != IDXD_DEVICE_STATE_ENABLED)) {
 		rc = -EINVAL;
@@ -329,7 +322,7 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	cmd.operand = 0;
 
 	spdk_mmio_write_4(&user_idxd->registers->cmd.raw, cmd.raw);
-	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
+	rc = idxd_wait_cmd(user_idxd, IDXD_REGISTER_TIMEOUT_US);
 	if (rc < 0) {
 		SPDK_ERRLOG("Error enabling work queues 0x%x\n", rc);
 		goto err_wq_enable;
@@ -345,8 +338,8 @@ err_device_enable:
 err_wq_cfg:
 err_group_cfg:
 err_reset:
-	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
-	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
+	idxd_unmap_pci_bar(user_idxd, IDXD_MMIO_BAR);
+	idxd_unmap_pci_bar(user_idxd, IDXD_MMIO_BAR);
 
 	return rc;
 }
@@ -356,10 +349,10 @@ user_idxd_device_destruct(struct spdk_idxd_device *idxd)
 {
 	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
-	idxd_disable_dev(idxd);
+	idxd_disable_dev(user_idxd);
 
-	idxd_unmap_pci_bar(idxd, IDXD_MMIO_BAR);
-	idxd_unmap_pci_bar(idxd, IDXD_WQ_BAR);
+	idxd_unmap_pci_bar(user_idxd, IDXD_MMIO_BAR);
+	idxd_unmap_pci_bar(user_idxd, IDXD_WQ_BAR);
 
 	spdk_pci_device_detach(user_idxd->device);
 	free(user_idxd);
