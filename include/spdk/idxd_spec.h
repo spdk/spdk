@@ -58,10 +58,10 @@ extern "C" {
 
 #define IDXD_CLEAR_CRC_FLAGS		0xFFFFu
 
-#define IDXD_FLAG_FENCE                 (1 << 0)
-#define IDXD_FLAG_COMPLETION_ADDR_VALID (1 << 2)
-#define IDXD_FLAG_REQUEST_COMPLETION    (1 << 3)
-#define IDXD_FLAG_CACHE_CONTROL         (1 << 8)
+#define IDXD_FLAG_FENCE			(1 << 0)
+#define IDXD_FLAG_COMPLETION_ADDR_VALID	(1 << 2)
+#define IDXD_FLAG_REQUEST_COMPLETION	(1 << 3)
+#define IDXD_FLAG_CACHE_CONTROL		(1 << 8)
 #define IDXD_FLAG_DEST_STEERING_TAG	(1 << 15)
 #define IDXD_FLAG_CRC_READ_CRC_SEED	(1 << 16)
 
