@@ -631,7 +631,6 @@ nvme_rdma_validate_cm_event(enum rdma_cm_event_type expected_evt_type,
 
 static int
 nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
-			struct rdma_event_channel *channel,
 			enum rdma_cm_event_type evt)
 {
 	struct nvme_rdma_ctrlr	*rctrlr;
@@ -1081,8 +1080,7 @@ fail:
 static int
 nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		       struct sockaddr *src_addr,
-		       struct sockaddr *dst_addr,
-		       struct rdma_event_channel *cm_channel)
+		       struct sockaddr *dst_addr)
 {
 	int ret;
 
@@ -1093,7 +1091,7 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	ret = nvme_rdma_process_event(rqpair, cm_channel, RDMA_CM_EVENT_ADDR_RESOLVED);
+	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ADDR_RESOLVED);
 	if (ret) {
 		SPDK_ERRLOG("RDMA address resolution error\n");
 		return -1;
@@ -1120,7 +1118,7 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	ret = nvme_rdma_process_event(rqpair, cm_channel, RDMA_CM_EVENT_ROUTE_RESOLVED);
+	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ROUTE_RESOLVED);
 	if (ret) {
 		SPDK_ERRLOG("RDMA route resolution error\n");
 		return -1;
@@ -1137,7 +1135,6 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	struct ibv_device_attr				attr;
 	int						ret;
 	struct spdk_nvme_ctrlr				*ctrlr;
-	struct nvme_rdma_ctrlr				*rctrlr;
 
 	ret = ibv_query_device(rqpair->cm_id->verbs, &attr);
 	if (ret != 0) {
@@ -1151,8 +1148,6 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	if (!ctrlr) {
 		return -1;
 	}
-	rctrlr = nvme_rdma_ctrlr(ctrlr);
-	assert(rctrlr != NULL);
 
 	request_data.qid = rqpair->qpair.id;
 	request_data.hrqsize = rqpair->num_entries + 1;
@@ -1175,7 +1170,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	return nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
+	return nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ESTABLISHED);
 }
 
 static int
@@ -1265,7 +1260,7 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 
 	rc = nvme_rdma_resolve_addr(rqpair,
 				    src_addr_specified ? (struct sockaddr *)&src_addr : NULL,
-				    (struct sockaddr *)&dst_addr, rctrlr->cm_channel);
+				    (struct sockaddr *)&dst_addr);
 	if (rc < 0) {
 		SPDK_ERRLOG("nvme_rdma_resolve_addr() failed\n");
 		return -1;
@@ -1843,7 +1838,7 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		if (rqpair->rdma_qp) {
 			rc = spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 			if ((rctrlr != NULL) && (rc == 0)) {
-				if (nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_DISCONNECTED)) {
+				if (nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_DISCONNECTED)) {
 					SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
 				}
 			}
