@@ -2470,6 +2470,7 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 
 	regs = (struct spdk_nvme_registers *)&migr_state.bar0;
 	/* Save mandarory registers to bar0 */
+	regs->csts.raw = ctrlr->vcprop.csts.raw;
 	regs->cap.raw = ctrlr->vcprop.cap.raw;
 	regs->vs.raw = ctrlr->vcprop.vs.raw;
 	regs->cc.raw = ctrlr->vcprop.cc.raw;
@@ -2659,6 +2660,7 @@ vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	memcpy((void *)vu_ctrlr->doorbells, doorbell_base, NVMF_VFIO_USER_DOORBELLS_SIZE);
 
 	/* restore controller registers after ADMIN queue connection */
+	ctrlr->vcprop.csts.raw = regs->csts.raw;
 	ctrlr->vcprop.cap.raw = regs->cap.raw;
 	ctrlr->vcprop.vs.raw = regs->vs.raw;
 	ctrlr->vcprop.cc.raw = regs->cc.raw;
