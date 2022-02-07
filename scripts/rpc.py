@@ -160,12 +160,18 @@ if __name__ == "__main__":
     def framework_set_scheduler(args):
         rpc.app.framework_set_scheduler(args.client,
                                         name=args.name,
-                                        period=args.period)
+                                        period=args.period,
+                                        load_limit=args.load_limit,
+                                        core_limit=args.core_limit,
+                                        core_busy=args.core_busy)
 
     p = subparsers.add_parser(
         'framework_set_scheduler', help='Select thread scheduler that will be activated and its period (experimental)')
     p.add_argument('name', help="Name of a scheduler")
     p.add_argument('-p', '--period', help="Scheduler period in microseconds", type=int)
+    p.add_argument('--load-limit', help="Scheduler load limit. Reserved for dynamic scheduler", type=int, required=False)
+    p.add_argument('--core-limit', help="Scheduler core limit. Reserved for dynamic scheduler", type=int, required=False)
+    p.add_argument('--core-busy', help="Scheduler core busy limit. Reserved for dynamic schedler", type=int, required=False)
     p.set_defaults(func=framework_set_scheduler)
 
     def framework_get_scheduler(args):

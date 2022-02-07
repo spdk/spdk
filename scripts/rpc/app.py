@@ -37,7 +37,8 @@ def framework_get_reactors(client):
     return client.call('framework_get_reactors')
 
 
-def framework_set_scheduler(client, name, period=None):
+def framework_set_scheduler(client, name, period=None, load_limit=None, core_limit=None,
+                            core_busy=None):
     """Select threads scheduler that will be activated and its period.
 
     Args:
@@ -49,6 +50,12 @@ def framework_set_scheduler(client, name, period=None):
     params = {'name': name}
     if period is not None:
         params['period'] = period
+    if load_limit is not None:
+        params['load_limit'] = load_limit
+    if core_limit is not None:
+        params['core_limit'] = core_limit
+    if core_busy is not None:
+        params['core_busy'] = core_busy
     return client.call('framework_set_scheduler', params)
 
 
