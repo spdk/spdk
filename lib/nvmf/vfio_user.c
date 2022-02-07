@@ -446,7 +446,13 @@ static inline void
 sq_head_advance(struct nvmf_vfio_user_sq *sq)
 {
 	assert(sq != NULL);
-	*sq_headp(sq) = (*sq_headp(sq) + 1) % sq->size;
+
+	assert(*sq_headp(sq) < sq->size);
+	(*sq_headp(sq))++;
+
+	if (spdk_unlikely(*sq_headp(sq) == sq->size)) {
+		*sq_headp(sq) = 0;
+	}
 }
 
 static inline void
