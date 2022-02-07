@@ -2200,17 +2200,6 @@ init_pci_config_space(vfu_pci_config_space_t *p)
 }
 
 static void
-vfio_user_dev_migr_resume_done(struct spdk_nvmf_subsystem *subsystem,
-			       void *cb_arg, int status)
-{
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
-
-	SPDK_DEBUGLOG(nvmf_vfio, "%s resumed done with status %d\n", ctrlr_id(vu_ctrlr), status);
-
-	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
-}
-
-static void
 vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status);
 
@@ -2821,7 +2810,7 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 			/* Rollback source VM */
 			vu_ctrlr->state = VFIO_USER_CTRLR_RESUMING;
 			ret = spdk_nvmf_subsystem_resume((struct spdk_nvmf_subsystem *)endpoint->subsystem,
-							 vfio_user_dev_migr_resume_done, vu_ctrlr);
+							 vfio_user_endpoint_resume_done, endpoint);
 			if (ret < 0) {
 				/* TODO: fail controller with CFS bit set */
 				vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
