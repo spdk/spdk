@@ -53,7 +53,6 @@ SPDK_LOG_REGISTER_COMPONENT(nvmf)
 static TAILQ_HEAD(, spdk_nvmf_tgt) g_nvmf_tgts = TAILQ_HEAD_INITIALIZER(g_nvmf_tgts);
 
 typedef void (*nvmf_qpair_disconnect_cpl)(void *ctx, int status);
-static void nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf);
 
 /* supplied to a single call to nvmf_qpair_disconnect */
 struct nvmf_qpair_disconnect_ctx {
@@ -107,6 +106,48 @@ nvmf_poll_group_poll(void *ctx)
 	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
+static void
+nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_tgt *tgt = io_device;
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t sid, nsid;
+
+	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group, spdk_thread_get_id(group->thread));
+
+	pthread_mutex_lock(&tgt->mutex);
+	TAILQ_REMOVE(&tgt->poll_groups, group, link);
+	pthread_mutex_unlock(&tgt->mutex);
+
+	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
+		TAILQ_REMOVE(&group->tgroups, tgroup, link);
+		nvmf_transport_poll_group_destroy(tgroup);
+	}
+
+	for (sid = 0; sid < group->num_sgroups; sid++) {
+		sgroup = &group->sgroups[sid];
+
+		for (nsid = 0; nsid < sgroup->num_ns; nsid++) {
+			if (sgroup->ns_info[nsid].channel) {
+				spdk_put_io_channel(sgroup->ns_info[nsid].channel);
+				sgroup->ns_info[nsid].channel = NULL;
+			}
+		}
+
+		free(sgroup->ns_info);
+	}
+
+	free(group->sgroups);
+
+	spdk_poller_unregister(&group->poller);
+
+	if (group->destroy_cb_fn) {
+		group->destroy_cb_fn(group->destroy_cb_arg, 0);
+	}
+}
+
 static int
 nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 {
@@ -157,48 +198,6 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	SPDK_DTRACE_PROBE1(nvmf_create_poll_group, spdk_thread_get_id(thread));
 
 	return 0;
-}
-
-static void
-nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
-{
-	struct spdk_nvmf_tgt *tgt = io_device;
-	struct spdk_nvmf_poll_group *group = ctx_buf;
-	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	uint32_t sid, nsid;
-
-	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group, spdk_thread_get_id(group->thread));
-
-	pthread_mutex_lock(&tgt->mutex);
-	TAILQ_REMOVE(&tgt->poll_groups, group, link);
-	pthread_mutex_unlock(&tgt->mutex);
-
-	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
-		TAILQ_REMOVE(&group->tgroups, tgroup, link);
-		nvmf_transport_poll_group_destroy(tgroup);
-	}
-
-	for (sid = 0; sid < group->num_sgroups; sid++) {
-		sgroup = &group->sgroups[sid];
-
-		for (nsid = 0; nsid < sgroup->num_ns; nsid++) {
-			if (sgroup->ns_info[nsid].channel) {
-				spdk_put_io_channel(sgroup->ns_info[nsid].channel);
-				sgroup->ns_info[nsid].channel = NULL;
-			}
-		}
-
-		free(sgroup->ns_info);
-	}
-
-	free(group->sgroups);
-
-	spdk_poller_unregister(&group->poller);
-
-	if (group->destroy_cb_fn) {
-		group->destroy_cb_fn(group->destroy_cb_arg, 0);
-	}
 }
 
 static void
