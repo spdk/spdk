@@ -54,14 +54,7 @@ extern "C" {
 #define PORTAL_MASK			(PORTAL_SIZE - 1)
 #define WQCFG_SHIFT			5
 
-#define CFG_ENGINE_OFFSET		0x20
-#define CFG_FLAG_OFFSET			0x28
-
-#define IDXD_CMD_SHIFT			20
-
 #define IDXD_TABLE_OFFSET_MULT		0x100
-
-#define IDXD_OPCAP_WORDS		0x4
 
 #define IDXD_CLEAR_CRC_FLAGS		0xFFFFu
 
