@@ -2356,9 +2356,9 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
 {
 	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
+	struct nvme_rdma_ctrlr		*rctrlr = nvme_rdma_ctrlr(qpair->ctrlr);
 	int				rc = 0, batch_size;
 	struct ibv_cq			*cq;
-	struct nvme_rdma_ctrlr		*rctrlr;
 	uint64_t			rdma_completions = 0;
 
 	/*
@@ -2377,15 +2377,13 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		max_completions = spdk_min(max_completions, rqpair->num_entries);
 	}
 
-	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
-		rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
+	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_rdma_poll_events(rctrlr);
 	}
 	nvme_rdma_qpair_process_cm_event(rqpair);
 
 	if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE)) {
-		nvme_rdma_fail_qpair(qpair, 0);
-		return -ENXIO;
+		goto failed;
 	}
 
 	cq = rqpair->cq;
@@ -2399,8 +2397,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 			break;
 			/* Handle the case where we fail to poll the cq. */
 		} else if (rc == -ECANCELED) {
-			nvme_rdma_fail_qpair(qpair, 0);
-			return -ENXIO;
+			goto failed;
 		} else if (rc == -ENXIO) {
 			return rc;
 		}
@@ -2408,15 +2405,18 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 
 	if (spdk_unlikely(nvme_rdma_qpair_submit_sends(rqpair) ||
 			  nvme_rdma_qpair_submit_recvs(rqpair))) {
-		nvme_rdma_fail_qpair(qpair, 0);
-		return -ENXIO;
+		goto failed;
 	}
 
-	if (spdk_unlikely(rqpair->qpair.ctrlr->timeout_enabled)) {
+	if (spdk_unlikely(qpair->ctrlr->timeout_enabled)) {
 		nvme_rdma_qpair_check_timeout(qpair);
 	}
 
 	return rqpair->num_completions;
+
+failed:
+	nvme_rdma_fail_qpair(qpair, 0);
+	return -ENXIO;
 }
 
 static uint32_t
@@ -2792,7 +2792,7 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 		nvme_rdma_qpair_submit_sends(rqpair);
 		nvme_rdma_qpair_submit_recvs(rqpair);
 		if (rqpair->num_completions > 0) {
-			nvme_qpair_resubmit_requests(&rqpair->qpair, rqpair->num_completions);
+			nvme_qpair_resubmit_requests(qpair, rqpair->num_completions);
 		}
 	}
 
