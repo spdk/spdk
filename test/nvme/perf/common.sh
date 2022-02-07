@@ -3,7 +3,7 @@
 function discover_bdevs() {
 	local rootdir=$1
 	local config_file=$2
-	local wait_for_spdk_bdev=30
+	local wait_for_spdk_bdev=90
 	local rpc_server=/var/tmp/spdk-discover-bdevs.sock
 
 	if [ ! -e $config_file ]; then
