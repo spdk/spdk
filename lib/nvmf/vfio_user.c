@@ -2205,15 +2205,18 @@ vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status);
 
 static void
-vfio_user_dev_quiesce_resume_done(struct spdk_nvmf_subsystem *subsystem,
-				  void *cb_arg, int status)
+vfio_user_endpoint_resume_done(struct spdk_nvmf_subsystem *subsystem,
+			       void *cb_arg, int status)
 {
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
-	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
+	struct nvmf_vfio_user_endpoint *endpoint = cb_arg;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	int ret;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s resumed done with status %d\n", ctrlr_id(vu_ctrlr), status);
+	SPDK_DEBUGLOG(nvmf_vfio, "%s resumed done with status %d\n", endpoint_id(endpoint), status);
 
+	if (!vu_ctrlr) {
+		return;
+	}
 	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 
 	/* Basically, once we call `vfu_device_quiesced` the device is unquiesced from
@@ -2261,7 +2264,7 @@ vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_DEBUGLOG(nvmf_vfio, "%s start to resume\n", ctrlr_id(vu_ctrlr));
 	vu_ctrlr->state = VFIO_USER_CTRLR_RESUMING;
 	ret = spdk_nvmf_subsystem_resume((struct spdk_nvmf_subsystem *)endpoint->subsystem,
-					 vfio_user_dev_quiesce_resume_done, vu_ctrlr);
+					 vfio_user_endpoint_resume_done, endpoint);
 	if (ret < 0) {
 		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
 		SPDK_ERRLOG("%s: failed to resume, ret=%d\n", endpoint_id(endpoint), ret);
