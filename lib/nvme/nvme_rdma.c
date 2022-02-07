@@ -75,13 +75,6 @@
 #define DEFAULT_NVME_RDMA_CQ_SIZE		4096
 
 /*
- * In the special case of a stale connection we don't expose a mechanism
- * for the user to retry the connection so we need to handle it internally.
- */
-#define NVME_RDMA_STALE_CONN_RETRY_MAX		5
-#define NVME_RDMA_STALE_CONN_RETRY_DELAY_US	10000
-
-/*
  * Maximum value of transport_retry_count used by RDMA controller
  */
 #define NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT	7
@@ -1171,16 +1164,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	ret = nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
-	if (ret == -ESTALE) {
-		SPDK_NOTICELOG("Received a stale connection notice during connection.\n");
-		return -EAGAIN;
-	} else if (ret) {
-		SPDK_ERRLOG("RDMA connect error %d\n", ret);
-		return ret;
-	} else {
-		return 0;
-	}
+	return nvme_rdma_process_event(rqpair, rctrlr->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
 }
 
 static int
@@ -1325,25 +1309,8 @@ static int
 nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	int rc;
-	int retry_count = 0;
 
 	rc = _nvme_rdma_ctrlr_connect_qpair(ctrlr, qpair);
-
-	/*
-	 * -EAGAIN represents the special case where the target side still thought it was connected.
-	 * Most NICs will fail the first connection attempt, and the NICs will clean up whatever
-	 * state they need to. After that, subsequent connection attempts will succeed.
-	 */
-	if (rc == -EAGAIN) {
-		SPDK_NOTICELOG("Detected stale connection on Target side for qpid: %d\n", qpair->id);
-		do {
-			nvme_delay(NVME_RDMA_STALE_CONN_RETRY_DELAY_US);
-			nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
-			rc = _nvme_rdma_ctrlr_connect_qpair(ctrlr, qpair);
-			retry_count++;
-		} while (rc == -EAGAIN && retry_count < NVME_RDMA_STALE_CONN_RETRY_MAX);
-	}
-
 	if (rc == 0) {
 		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
 	}
