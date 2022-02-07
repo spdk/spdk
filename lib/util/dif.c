@@ -1380,6 +1380,11 @@ spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 {
 	struct _dif_sgl data_sgl, md_sgl;
 
+	if (md_iov->iov_base == NULL) {
+		SPDK_ERRLOG("Metadata buffer is NULL.\n");
+		return -EINVAL;
+	}
+
 	_dif_sgl_init(&data_sgl, iovs, iovcnt);
 	_dif_sgl_init(&md_sgl, md_iov, 1);
 
