@@ -56,10 +56,23 @@ balance_static(struct spdk_scheduler_core_info *cores, uint32_t core_count)
 {
 }
 
+static int
+set_opts_static(const struct spdk_json_val *opts)
+{
+	return 0;
+}
+
+static void
+get_opts_static(struct spdk_json_write_ctx *ctx)
+{
+}
+
 static struct spdk_scheduler scheduler = {
 	.name = "static",
 	.init = init_static,
 	.deinit = deinit_static,
 	.balance = balance_static,
+	.set_opts = set_opts_static,
+	.get_opts = get_opts_static,
 };
 SPDK_SCHEDULER_REGISTER(scheduler);

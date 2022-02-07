@@ -40,6 +40,7 @@
 #include "spdk/env.h"
 #include "spdk/scheduler.h"
 #include "spdk/thread.h"
+#include "spdk/json.h"
 
 #include "spdk/log.h"
 #include "spdk_internal/event.h"

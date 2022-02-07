@@ -376,11 +376,60 @@ balance(struct spdk_scheduler_core_info *cores_info, uint32_t cores_count)
 	}
 }
 
+struct json_scheduler_opts {
+	uint8_t load_limit;
+	uint8_t core_limit;
+	uint8_t core_busy;
+};
+
+static const struct spdk_json_object_decoder sched_decoders[] = {
+	{"load_limit", offsetof(struct json_scheduler_opts, load_limit), spdk_json_decode_uint8, true},
+	{"core_limit", offsetof(struct json_scheduler_opts, core_limit), spdk_json_decode_uint8, true},
+	{"core_busy", offsetof(struct json_scheduler_opts, core_busy), spdk_json_decode_uint8, true},
+};
+
+static int
+set_opts(const struct spdk_json_val *opts)
+{
+	struct json_scheduler_opts scheduler_opts;
+
+	scheduler_opts.load_limit = g_scheduler_load_limit;
+	scheduler_opts.core_limit = g_scheduler_core_limit;
+	scheduler_opts.core_busy = g_scheduler_core_busy;
+
+	if (opts != NULL) {
+		if (spdk_json_decode_object_relaxed(opts, sched_decoders,
+						    SPDK_COUNTOF(sched_decoders), &scheduler_opts)) {
+			SPDK_ERRLOG("Decoding scheduler opts JSON failed\n");
+			return -1;
+		}
+	}
+
+	SPDK_NOTICELOG("Setting scheduler load limit to %d\n", scheduler_opts.load_limit);
+	g_scheduler_load_limit = scheduler_opts.load_limit;
+	SPDK_NOTICELOG("Setting scheduler core limit to %d\n", scheduler_opts.core_limit);
+	g_scheduler_core_limit = scheduler_opts.core_limit;
+	SPDK_NOTICELOG("Setting scheduler core busy to %d\n", scheduler_opts.core_busy);
+	g_scheduler_core_busy = scheduler_opts.core_busy;
+
+	return 0;
+}
+
+static void
+get_opts(struct spdk_json_write_ctx *ctx)
+{
+	spdk_json_write_named_uint8(ctx, "load_limit", g_scheduler_load_limit);
+	spdk_json_write_named_uint8(ctx, "core_limit", g_scheduler_core_limit);
+	spdk_json_write_named_uint8(ctx, "core_busy", g_scheduler_core_busy);
+}
+
 static struct spdk_scheduler scheduler_dynamic = {
 	.name = "dynamic",
 	.init = init,
 	.deinit = deinit,
 	.balance = balance,
+	.set_opts = set_opts,
+	.get_opts = get_opts,
 };
 
 SPDK_SCHEDULER_REGISTER(scheduler_dynamic);

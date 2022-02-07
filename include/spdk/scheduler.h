@@ -224,6 +224,21 @@ struct spdk_scheduler {
 	 */
 	void (*balance)(struct spdk_scheduler_core_info *core_info, uint32_t count);
 
+	/**
+	 * Function to set scheduler parameters like load_limit.
+	 *
+	 * \param opts Pointer to spdk_json_val struct containing values of parameters
+	 * to be set in scheduler.
+	 */
+	int (*set_opts)(const struct spdk_json_val *opts);
+
+	/**
+	 * Function to get current scheduler parameters like load_limit.
+	 *
+	 * \param ctx Pointer to spdk_json_write_ctx struct to be filled with current parameters.
+	 */
+	void (*get_opts)(struct spdk_json_write_ctx *ctx);
+
 	TAILQ_ENTRY(spdk_scheduler)	link;
 };
 
