@@ -193,12 +193,13 @@ struct nvmf_vfio_user_req  {
 	/* old CC before prop_set_cc fabric command */
 	union spdk_nvme_cc_register		cc;
 
-	/* placeholder for gpa_to_vva memory map table, the IO buffer doesn't use it */
-	dma_sg_t				*sg;
+	TAILQ_ENTRY(nvmf_vfio_user_req)		link;
+
 	struct iovec				iov[NVMF_VFIO_USER_MAX_IOVECS];
 	uint8_t					iovcnt;
 
-	TAILQ_ENTRY(nvmf_vfio_user_req)		link;
+	/* NVMF_VFIO_USER_MAX_IOVECS worth of dma_sg_t. */
+	uint8_t					sg[];
 };
 
 /*
@@ -262,7 +263,6 @@ struct nvmf_vfio_user_sq {
 	struct spdk_nvmf_qpair			qpair;
 	struct spdk_nvmf_transport_poll_group	*group;
 	struct nvmf_vfio_user_ctrlr		*ctrlr;
-	struct nvmf_vfio_user_req		*reqs_internal;
 
 	uint32_t				qsize;
 	uint32_t				qid;
@@ -287,7 +287,8 @@ struct nvmf_vfio_user_sq {
 	 */
 	struct spdk_nvme_cmd			create_io_sq_cmd;
 
-	TAILQ_HEAD(, nvmf_vfio_user_req)	reqs;
+	/* Currently unallocated reqs. */
+	TAILQ_HEAD(, nvmf_vfio_user_req)	free_reqs;
 	/* Poll group entry */
 	TAILQ_ENTRY(nvmf_vfio_user_sq)		link;
 	/* Connected SQ entry */
@@ -1032,7 +1033,7 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 static inline dma_sg_t *
 vu_req_to_sg_t(struct nvmf_vfio_user_req *vu_req, uint32_t iovcnt)
 {
-	return (dma_sg_t *)((uintptr_t)vu_req->sg + iovcnt * dma_sg_size());
+	return (dma_sg_t *)(vu_req->sg + iovcnt * dma_sg_size());
 }
 
 static void *
@@ -1179,6 +1180,16 @@ io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const boo
 		vu_ctrlr->sqs[qid]->sq_state != VFIO_USER_SQ_UNUSED);
 }
 
+static void
+free_sq_reqs(struct nvmf_vfio_user_sq *sq)
+{
+	while (!TAILQ_EMPTY(&sq->free_reqs)) {
+		struct nvmf_vfio_user_req *vu_req = TAILQ_FIRST(&sq->free_reqs);
+		TAILQ_REMOVE(&sq->free_reqs, vu_req, link);
+		free(vu_req);
+	}
+}
+
 /* Deletes a SQ, if this SQ is the last user of the associated CQ
  * and the controller is being shut down or reset, then the CQ is
  * also deleted.
@@ -1187,9 +1198,7 @@ static void
 delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *sq)
 {
 	struct nvmf_vfio_user_cq *cq;
-	struct nvmf_vfio_user_req *vu_req;
 	uint16_t cqid;
-	uint32_t i;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: delete SQ%d=%p done\n", ctrlr_id(vu_ctrlr),
 		      sq->qid, sq);
@@ -1197,15 +1206,9 @@ delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *
 	/* Free SQ resources */
 	unmap_q(vu_ctrlr, &sq->mapping);
 
-	for (i = 0; i < sq->qsize; i++) {
-		vu_req = &sq->reqs_internal[i];
-		free(vu_req->sg);
-	}
+	free_sq_reqs(sq);
 
-	if (sq->qsize) {
-		sq->qsize = 0;
-		free(sq->reqs_internal);
-	}
+	sq->qsize = 0;
 	sq->size = 0;
 	sq->sq_state = VFIO_USER_SQ_DELETED;
 
@@ -1237,8 +1240,6 @@ free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 {
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
-	struct nvmf_vfio_user_req *vu_req;
-	uint32_t i;
 
 	if (ctrlr == NULL) {
 		return;
@@ -1249,13 +1250,7 @@ free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 		SPDK_DEBUGLOG(nvmf_vfio, "%s: Free SQ %u\n", ctrlr_id(ctrlr), qid);
 		unmap_q(ctrlr, &sq->mapping);
 
-		for (i = 0; i < sq->qsize; i++) {
-			vu_req = &sq->reqs_internal[i];
-			free(vu_req->sg);
-		}
-		if (sq->qsize) {
-			free(sq->reqs_internal);
-		}
+		free_sq_reqs(sq);
 
 		free(sq->mapping.sg);
 		free(sq);
@@ -1298,6 +1293,8 @@ init_sq(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_transport *transpor
 	sq->ctrlr = ctrlr;
 	ctrlr->sqs[id] = sq;
 
+	TAILQ_INIT(&sq->free_reqs);
+
 	return 0;
 }
 
@@ -1327,25 +1324,21 @@ init_cq(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t id)
 
 static int
 alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *sq,
-	      const uint32_t qsize)
+	      const uint32_t nr_reqs)
 {
-	uint32_t i;
 	struct nvmf_vfio_user_req *vu_req, *tmp;
-	struct spdk_nvmf_request *req;
+	size_t req_size;
+	uint32_t i;
 
-	TAILQ_INIT(&sq->reqs);
+	req_size = sizeof(struct nvmf_vfio_user_req) +
+		   (dma_sg_size() * NVMF_VFIO_USER_MAX_IOVECS);
 
-	sq->reqs_internal = calloc(qsize, sizeof(struct nvmf_vfio_user_req));
-	if (sq->reqs_internal == NULL) {
-		SPDK_ERRLOG("%s: error allocating reqs: %m\n", ctrlr_id(vu_ctrlr));
-		return -ENOMEM;
-	}
+	for (i = 0; i < nr_reqs; i++) {
+		struct spdk_nvmf_request *req;
 
-	for (i = 0; i < qsize; i++) {
-		vu_req = &sq->reqs_internal[i];
-		vu_req->sg = calloc(NVMF_VFIO_USER_MAX_IOVECS, dma_sg_size());
-		if (vu_req->sg == NULL) {
-			goto sg_err;
+		vu_req = calloc(1, req_size);
+		if (vu_req == NULL) {
+			goto err;
 		}
 
 		req = &vu_req->req;
@@ -1353,17 +1346,16 @@ alloc_sq_reqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *s
 		req->rsp = (union nvmf_c2h_msg *)&vu_req->rsp;
 		req->cmd = (union nvmf_h2c_msg *)&vu_req->cmd;
 
-		TAILQ_INSERT_TAIL(&sq->reqs, vu_req, link);
+		TAILQ_INSERT_TAIL(&sq->free_reqs, vu_req, link);
 	}
 
-	sq->qsize = qsize;
+	sq->qsize = nr_reqs;
 	return 0;
 
-sg_err:
-	TAILQ_FOREACH_SAFE(vu_req, &sq->reqs, link, tmp) {
-		free(vu_req->sg);
+err:
+	TAILQ_FOREACH_SAFE(vu_req, &sq->free_reqs, link, tmp) {
+		free(vu_req);
 	}
-	free(sq->reqs_internal);
 	return -ENOMEM;
 }
 
@@ -1698,7 +1690,9 @@ handle_cmd_rsp(struct nvmf_vfio_user_req *vu_req, void *cb_arg)
 	assert(vu_ctrlr != NULL);
 
 	if (spdk_likely(vu_req->iovcnt)) {
-		vfu_unmap_sg(vu_ctrlr->endpoint->vfu_ctx, vu_req->sg, vu_req->iov, vu_req->iovcnt);
+		vfu_unmap_sg(vu_ctrlr->endpoint->vfu_ctx,
+			     vu_req_to_sg_t(vu_req, 0),
+			     vu_req->iov, vu_req->iovcnt);
 	}
 	sqid = sq->qid;
 	cqid = sq->cqid;
@@ -2719,9 +2713,7 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	struct nvmf_vfio_user_sq *sq;
-	struct nvmf_vfio_user_req *vu_req;
 	int ret = 0;
-	uint32_t i;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s controller state %u, migration state %u\n", endpoint_id(endpoint),
 		      vu_ctrlr->state, state);
@@ -2761,12 +2753,8 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 		/* Free ADMIN SQ resources first, SQ resources will be
 		 * allocated based on queue size from source VM.
 		 */
-		for (i = 0; i < sq->qsize; i++) {
-			vu_req = &sq->reqs_internal[i];
-			free(vu_req->sg);
-		}
+		free_sq_reqs(sq);
 		sq->qsize = 0;
-		free(sq->reqs_internal);
 		break;
 	case VFU_MIGR_STATE_RUNNING:
 		if (vu_ctrlr->state != VFIO_USER_CTRLR_MIGRATING) {
@@ -3751,7 +3739,7 @@ _nvmf_vfio_user_req_free(struct nvmf_vfio_user_sq *sq, struct nvmf_vfio_user_req
 	vu_req->iovcnt = 0;
 	vu_req->state = VFIO_USER_REQUEST_STATE_FREE;
 
-	TAILQ_INSERT_TAIL(&sq->reqs, vu_req, link);
+	TAILQ_INSERT_TAIL(&sq->free_reqs, vu_req, link);
 }
 
 static int
@@ -3820,7 +3808,7 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 }
 
 /**
- * Returns a preallocated spdk_nvmf_request or NULL if there isn't one available.
+ * Returns a preallocated request, or NULL if there isn't one available.
  */
 static struct nvmf_vfio_user_req *
 get_nvmf_vfio_user_req(struct nvmf_vfio_user_sq *sq)
@@ -3831,12 +3819,12 @@ get_nvmf_vfio_user_req(struct nvmf_vfio_user_sq *sq)
 		return NULL;
 	}
 
-	if (TAILQ_EMPTY(&sq->reqs)) {
+	req = TAILQ_FIRST(&sq->free_reqs);
+	if (req == NULL) {
 		return NULL;
 	}
 
-	req = TAILQ_FIRST(&sq->reqs);
-	TAILQ_REMOVE(&sq->reqs, req, link);
+	TAILQ_REMOVE(&sq->free_reqs, req, link);
 
 	return req;
 }
@@ -4175,28 +4163,28 @@ static void
 nvmf_vfio_user_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 				   struct spdk_nvmf_request *req)
 {
-	struct nvmf_vfio_user_sq *sq;
-	struct nvmf_vfio_user_req *vu_req, *vu_req_to_abort = NULL;
-	uint32_t i;
+	struct spdk_nvmf_request *req_to_abort = NULL;
 	uint16_t cid;
 
-	sq = SPDK_CONTAINEROF(qpair, struct nvmf_vfio_user_sq, qpair);
-
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
-	for (i = 0; i < sq->qsize; i++) {
-		vu_req = &sq->reqs_internal[i];
+
+	TAILQ_FOREACH(req, &qpair->outstanding, link) {
+		struct nvmf_vfio_user_req *vu_req;
+
+		vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
+
 		if (vu_req->state == VFIO_USER_REQUEST_STATE_EXECUTING && vu_req->cmd.cid == cid) {
-			vu_req_to_abort = vu_req;
+			req_to_abort = req;
 			break;
 		}
 	}
 
-	if (vu_req_to_abort == NULL) {
+	if (req_to_abort == NULL) {
 		spdk_nvmf_request_complete(req);
 		return;
 	}
 
-	req->req_to_abort = &vu_req_to_abort->req;
+	req->req_to_abort = req_to_abort;
 	nvmf_ctrlr_abort_request(req);
 }
 
