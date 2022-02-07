@@ -2532,13 +2532,14 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 	uint16_t sqid, cqid;
 	struct vfio_user_nvme_migr_qp migr_qp;
 	void *addr;
+	uint32_t cqs_ref[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR] = {};
 	int ret;
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
 		vfio_user_ctrlr_dump_migr_data("RESUME", migr_state);
 	}
 
-	/* restore connected queue pairs */
+	/* restore submission queues */
 	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
 		migr_qp =  migr_state->qps[i];
 
@@ -2562,7 +2563,6 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 			}
 
 			sq = vu_ctrlr->sqs[sqid];
-
 			sq->size = qsize;
 
 			ret = alloc_sq_reqs(vu_ctrlr, sq);
@@ -2572,6 +2572,7 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 			}
 
 			/* restore sq */
+			sq->sq_state = VFIO_USER_SQ_CREATED;
 			sq->cqid = migr_qp.sq.cqid;
 			*sq_headp(sq) = migr_qp.sq.head;
 			sq->mapping.prp1 = migr_qp.sq.dma_addr;
@@ -2584,7 +2585,13 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 					    sqid, sq->mapping.prp1, sq->size);
 				return -EFAULT;
 			}
+			cqs_ref[sq->cqid]++;
 		}
+	}
+
+	/* restore completion queues */
+	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
+		migr_qp =  migr_state->qps[i];
 
 		qsize = migr_qp.cq.size;
 		if (qsize) {
@@ -2607,6 +2614,8 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 
 			cq->size = qsize;
 
+			cq->cq_state = VFIO_USER_CQ_CREATED;
+			cq->cq_ref = cqs_ref[cqid];
 			*cq_tailp(cq) = migr_qp.cq.tail;
 			cq->mapping.prp1 = migr_qp.cq.dma_addr;
 			cq->ien = migr_qp.cq.ien;
