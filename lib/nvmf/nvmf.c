@@ -106,20 +106,16 @@ nvmf_poll_group_poll(void *ctx)
 	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
+/*
+ * Reset and clean up the poll group (I/O channel code will actually free the
+ * group).
+ */
 static void
-nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+nvmf_tgt_cleanup_poll_group(struct spdk_nvmf_poll_group *group)
 {
-	struct spdk_nvmf_tgt *tgt = io_device;
-	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t sid, nsid;
-
-	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group, spdk_thread_get_id(group->thread));
-
-	pthread_mutex_lock(&tgt->mutex);
-	TAILQ_REMOVE(&tgt->poll_groups, group, link);
-	pthread_mutex_unlock(&tgt->mutex);
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
 		TAILQ_REMOVE(&group->tgroups, tgroup, link);
@@ -128,6 +124,8 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 
 	for (sid = 0; sid < group->num_sgroups; sid++) {
 		sgroup = &group->sgroups[sid];
+
+		assert(sgroup != NULL);
 
 		for (nsid = 0; nsid < sgroup->num_ns; nsid++) {
 			if (sgroup->ns_info[nsid].channel) {
@@ -148,6 +146,24 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	}
 }
 
+/*
+ * Callback to unregister a poll group from the target, and clean up its state.
+ */
+static void
+nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_tgt *tgt = io_device;
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+
+	SPDK_DTRACE_PROBE1(nvmf_destroy_poll_group, spdk_thread_get_id(group->thread));
+
+	pthread_mutex_lock(&tgt->mutex);
+	TAILQ_REMOVE(&tgt->poll_groups, group, link);
+	pthread_mutex_unlock(&tgt->mutex);
+
+	nvmf_tgt_cleanup_poll_group(group);
+}
+
 static int
 nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 {
@@ -165,6 +181,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
 		rc = nvmf_poll_group_add_transport(group, transport);
 		if (rc != 0) {
+			nvmf_tgt_cleanup_poll_group(group);
 			return rc;
 		}
 	}
@@ -172,6 +189,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	group->num_sgroups = tgt->max_subsystems;
 	group->sgroups = calloc(tgt->max_subsystems, sizeof(struct spdk_nvmf_subsystem_poll_group));
 	if (!group->sgroups) {
+		nvmf_tgt_cleanup_poll_group(group);
 		return -ENOMEM;
 	}
 
@@ -184,7 +202,7 @@ nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 		}
 
 		if (nvmf_poll_group_add_subsystem(group, subsystem, NULL, NULL) != 0) {
-			nvmf_tgt_destroy_poll_group(io_device, ctx_buf);
+			nvmf_tgt_cleanup_poll_group(group);
 			return -1;
 		}
 	}
