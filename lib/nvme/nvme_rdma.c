@@ -1077,21 +1077,28 @@ fail:
 	return -ENOMEM;
 }
 
-static int
-nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
-		       struct sockaddr *src_addr,
-		       struct sockaddr *dst_addr)
-{
-	int ret;
+static int nvme_rdma_connect(struct nvme_rdma_qpair *rqpair);
 
-	ret = rdma_resolve_addr(rqpair->cm_id, src_addr, dst_addr,
-				NVME_RDMA_TIME_OUT_IN_MS);
+static int
+nvme_rdma_route_resolved(struct nvme_rdma_qpair *rqpair, int ret)
+{
 	if (ret) {
-		SPDK_ERRLOG("rdma_resolve_addr, %d\n", errno);
-		return ret;
+		SPDK_ERRLOG("RDMA route resolution error\n");
+		return -1;
 	}
 
-	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ADDR_RESOLVED);
+	ret = nvme_rdma_qpair_init(rqpair);
+	if (ret < 0) {
+		SPDK_ERRLOG("nvme_rdma_qpair_init() failed\n");
+		return -1;
+	}
+
+	return nvme_rdma_connect(rqpair);
+}
+
+static int
+nvme_rdma_addr_resolved(struct nvme_rdma_qpair *rqpair, int ret)
+{
 	if (ret) {
 		SPDK_ERRLOG("RDMA address resolution error\n");
 		return -1;
@@ -1111,7 +1118,6 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 #endif
 	}
 
-
 	ret = rdma_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
 		SPDK_ERRLOG("rdma_resolve_route\n");
@@ -1119,10 +1125,61 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 	}
 
 	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ROUTE_RESOLVED);
+
+	return nvme_rdma_route_resolved(rqpair, ret);
+}
+
+static int
+nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
+		       struct sockaddr *src_addr,
+		       struct sockaddr *dst_addr)
+{
+	int ret;
+
+	ret = rdma_resolve_addr(rqpair->cm_id, src_addr, dst_addr,
+				NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
-		SPDK_ERRLOG("RDMA route resolution error\n");
+		SPDK_ERRLOG("rdma_resolve_addr, %d\n", errno);
+		return ret;
+	}
+
+	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ADDR_RESOLVED);
+
+	return nvme_rdma_addr_resolved(rqpair, ret);
+}
+
+static int
+nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
+{
+	if (ret) {
+		SPDK_ERRLOG("RDMA connect error %d\n", ret);
+		return ret;
+	}
+
+	ret = nvme_rdma_register_reqs(rqpair);
+	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
+	if (ret) {
+		SPDK_ERRLOG("Unable to register rqpair RDMA requests\n");
 		return -1;
 	}
+	SPDK_DEBUGLOG(nvme, "RDMA requests registered\n");
+
+	ret = nvme_rdma_register_rsps(rqpair);
+	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
+	if (ret < 0) {
+		SPDK_ERRLOG("Unable to register rqpair RDMA responses\n");
+		return -1;
+	}
+	SPDK_DEBUGLOG(nvme, "RDMA responses registered\n");
+
+	rqpair->mr_map = spdk_rdma_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
+			 SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
+	if (!rqpair->mr_map) {
+		SPDK_ERRLOG("Unable to register RDMA memory translation map\n");
+		return -1;
+	}
+
+	rqpair->state = NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND;
 
 	return 0;
 }
@@ -1170,7 +1227,9 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	return nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ESTABLISHED);
+	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ESTABLISHED);
+
+	return nvme_rdma_connect_established(rqpair, ret);
 }
 
 static int
@@ -1265,43 +1324,6 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 		SPDK_ERRLOG("nvme_rdma_resolve_addr() failed\n");
 		return -1;
 	}
-
-	rc = nvme_rdma_qpair_init(rqpair);
-	if (rc < 0) {
-		SPDK_ERRLOG("nvme_rdma_qpair_init() failed\n");
-		return -1;
-	}
-
-	rc = nvme_rdma_connect(rqpair);
-	if (rc != 0) {
-		SPDK_ERRLOG("Unable to connect the rqpair\n");
-		return rc;
-	}
-
-	rc = nvme_rdma_register_reqs(rqpair);
-	SPDK_DEBUGLOG(nvme, "rc =%d\n", rc);
-	if (rc) {
-		SPDK_ERRLOG("Unable to register rqpair RDMA requests\n");
-		return -1;
-	}
-	SPDK_DEBUGLOG(nvme, "RDMA requests registered\n");
-
-	rc = nvme_rdma_register_rsps(rqpair);
-	SPDK_DEBUGLOG(nvme, "rc =%d\n", rc);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to register rqpair RDMA responses\n");
-		return -1;
-	}
-	SPDK_DEBUGLOG(nvme, "RDMA responses registered\n");
-
-	rqpair->mr_map = spdk_rdma_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
-			 SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
-	if (!rqpair->mr_map) {
-		SPDK_ERRLOG("Unable to register RDMA memory translation map\n");
-		return -1;
-	}
-
-	rqpair->state = NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND;
 
 	return 0;
 }
@@ -1802,6 +1824,29 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	return qpair;
 }
 
+static int
+nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
+{
+	if (rqpair->cm_id) {
+		if (rqpair->rdma_qp) {
+			spdk_rdma_qp_destroy(rqpair->rdma_qp);
+			rqpair->rdma_qp = NULL;
+		}
+
+		rdma_destroy_id(rqpair->cm_id);
+		rqpair->cm_id = NULL;
+	}
+
+	if (rqpair->cq) {
+		ibv_destroy_cq(rqpair->cq);
+		rqpair->cq = NULL;
+	}
+
+	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
+
+	return 0;
+}
+
 static void
 nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -1842,20 +1887,10 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 					SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
 				}
 			}
-			spdk_rdma_qp_destroy(rqpair->rdma_qp);
-			rqpair->rdma_qp = NULL;
 		}
-
-		rdma_destroy_id(rqpair->cm_id);
-		rqpair->cm_id = NULL;
 	}
 
-	if (rqpair->cq) {
-		ibv_destroy_cq(rqpair->cq);
-		rqpair->cq = NULL;
-	}
-
-	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+	nvme_rdma_qpair_disconnected(rqpair, 0);
 }
 
 static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
