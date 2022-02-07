@@ -420,6 +420,11 @@ struct nvmf_vfio_user_endpoint {
 	pthread_mutex_t				lock;
 
 	bool					need_async_destroy;
+	/* The subsystem is in PAUSED state and need to be resumed, TRUE
+	 * only when migration is done successfully and the controller is
+	 * in source VM.
+	 */
+	bool					need_resume;
 
 	TAILQ_ENTRY(nvmf_vfio_user_endpoint)	link;
 };
@@ -2902,6 +2907,7 @@ _vfio_user_endpoint_resume_done_msg(void *ctx)
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	int ret;
 
+	endpoint->need_resume = false;
 	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 
 	/* Basically, once we call `vfu_device_quiesced` the device is unquiesced from
@@ -3553,6 +3559,13 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 		break;
 	case VFU_MIGR_STATE_STOP:
 		vu_ctrlr->state = VFIO_USER_CTRLR_MIGRATING;
+		/* The controller associates with source VM is dead now, we will resume
+		 * the subsystem after destroying the controller data structure, then the
+		 * subsystem can be re-used for another new client.
+		 */
+		if (vu_ctrlr->in_source_vm) {
+			endpoint->need_resume = true;
+		}
 		break;
 	case VFU_MIGR_STATE_PRE_COPY:
 		assert(vu_ctrlr->state == VFIO_USER_CTRLR_PAUSED);
@@ -4266,13 +4279,18 @@ nvmf_vfio_user_accept(void *ctx)
 		return SPDK_POLLER_IDLE;
 	}
 
-	err = vfu_attach_ctx(endpoint->vfu_ctx);
+	/* While we're here, the controller is already destroyed,
+	 * subsystem may still be in RESUMING state, we will wait
+	 * until the subsystem is in RUNNING state.
+	 */
+	if (endpoint->need_resume) {
+		return SPDK_POLLER_IDLE;
+	}
 
+	err = vfu_attach_ctx(endpoint->vfu_ctx);
 	if (err == 0) {
 		SPDK_DEBUGLOG(nvmf_vfio, "attach succeeded\n");
-
 		err = nvmf_vfio_user_create_ctrlr(vu_transport, endpoint);
-
 		if (err == 0) {
 			/*
 			 * Unregister ourselves: now we've accepted a
@@ -4283,7 +4301,6 @@ nvmf_vfio_user_accept(void *ctx)
 			spdk_interrupt_unregister(&endpoint->accept_intr);
 			spdk_poller_unregister(&endpoint->accept_poller);
 		}
-
 		return SPDK_POLLER_BUSY;
 	}
 
@@ -4856,6 +4873,14 @@ nvmf_vfio_user_close_qpair(struct spdk_nvmf_qpair *qpair,
 	delete_sq_done(vu_ctrlr, sq);
 	if (TAILQ_EMPTY(&vu_ctrlr->connected_sqs)) {
 		endpoint->ctrlr = NULL;
+		if (vu_ctrlr->in_source_vm && endpoint->need_resume) {
+			/* The controller will be freed, we can resume the subsystem
+			 * now so that the endpoint can be ready to accept another
+			 * new connection.
+			 */
+			spdk_nvmf_subsystem_resume((struct spdk_nvmf_subsystem *)endpoint->subsystem,
+						   vfio_user_endpoint_resume_done, endpoint);
+		}
 		free_ctrlr(vu_ctrlr);
 	}
 	pthread_mutex_unlock(&endpoint->lock);
