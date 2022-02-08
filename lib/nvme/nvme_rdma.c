@@ -246,6 +246,10 @@ struct nvme_rdma_qpair {
 	struct rdma_cm_event			*evt;
 	struct nvme_rdma_poller			*poller;
 
+	uint64_t				evt_timeout_ticks;
+	nvme_rdma_cm_event_cb			evt_cb;
+	enum rdma_cm_event_type			expected_evt_type;
+
 	enum nvme_rdma_qpair_state		state;
 
 	bool					in_connect_poll;
@@ -631,35 +635,43 @@ nvme_rdma_validate_cm_event(enum rdma_cm_event_type expected_evt_type,
 }
 
 static int
-nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
-			enum rdma_cm_event_type evt,
-			nvme_rdma_cm_event_cb evt_cb)
+nvme_rdma_process_event_start(struct nvme_rdma_qpair *rqpair,
+			      enum rdma_cm_event_type evt,
+			      nvme_rdma_cm_event_cb evt_cb)
 {
-	struct nvme_rdma_ctrlr	*rctrlr;
-	uint64_t timeout_ticks;
-	int	rc = 0, rc2;
+	int	rc;
+
+	assert(evt_cb != NULL);
 
 	if (rqpair->evt != NULL) {
 		rc = nvme_rdma_qpair_process_cm_event(rqpair);
 		if (rc) {
-			goto exit;
+			return rc;
 		}
 	}
 
-	timeout_ticks = (NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US * spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC +
-			spdk_get_ticks();
+	rqpair->expected_evt_type = evt;
+	rqpair->evt_cb = evt_cb;
+	rqpair->evt_timeout_ticks = (NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US * spdk_get_ticks_hz()) /
+				    SPDK_SEC_TO_USEC + spdk_get_ticks();
+
+	return 0;
+}
+
+static int
+nvme_rdma_process_event_poll(struct nvme_rdma_qpair *rqpair)
+{
+	struct nvme_rdma_ctrlr	*rctrlr;
+	int	rc = 0, rc2;
+
 	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
 	assert(rctrlr != NULL);
 
-	while (!rqpair->evt && spdk_get_ticks() < timeout_ticks) {
+	if (!rqpair->evt && spdk_get_ticks() < rqpair->evt_timeout_ticks) {
 		rc = nvme_rdma_poll_events(rctrlr);
 		if (rc == -EAGAIN || rc == -EWOULDBLOCK) {
-			continue;
+			return rc;
 		}
-	}
-
-	if (rc != 0 && rc != -EAGAIN && rc != -EWOULDBLOCK) {
-		goto exit;
 	}
 
 	if (rqpair->evt == NULL) {
@@ -667,15 +679,37 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 		goto exit;
 	}
 
-	rc = nvme_rdma_validate_cm_event(evt, rqpair->evt);
+	rc = nvme_rdma_validate_cm_event(rqpair->expected_evt_type, rqpair->evt);
 
 	rc2 = nvme_rdma_qpair_process_cm_event(rqpair);
 	/* bad message takes precedence over the other error codes from processing the event. */
 	rc = rc == 0 ? rc2 : rc;
 
 exit:
-	assert(evt_cb != NULL);
-	return evt_cb(rqpair, rc);
+	assert(rqpair->evt_cb != NULL);
+	return rqpair->evt_cb(rqpair, rc);
+}
+
+static int
+nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
+			enum rdma_cm_event_type evt,
+			nvme_rdma_cm_event_cb evt_cb)
+{
+	int	rc;
+
+	rc = nvme_rdma_process_event_start(rqpair, evt, evt_cb);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (1) {
+		rc = nvme_rdma_process_event_poll(rqpair);
+		if (rc != -EAGAIN && rc != -EWOULDBLOCK) {
+			break;
+		}
+	}
+
+	return rc;
 }
 
 static int
