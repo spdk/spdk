@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -358,8 +359,7 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 
 			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -aio_errno);
 		} else {
-			SPDK_ERRLOG("failed to complete aio: requested len is %lu, but completed len is %lu.\n",
-				    aio_task->len, io_result);
+			SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
