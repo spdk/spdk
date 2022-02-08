@@ -469,6 +469,23 @@ cq_tail_advance(struct nvmf_vfio_user_cq *cq)
 	}
 }
 
+static inline bool
+cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
+{
+	uint32_t qindex;
+
+	assert(ctrlr != NULL);
+	assert(cq != NULL);
+
+	qindex = *cq_tailp(cq) + 1;
+	if (spdk_unlikely(qindex == cq->size)) {
+		qindex = 0;
+	}
+
+	return qindex == *cq_dbl_headp(ctrlr, cq);
+}
+
+
 /* TODO: wrapper to data structure */
 static inline size_t
 vfio_user_migr_data_len(void)
@@ -976,16 +993,6 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	*sq_dbl_tailp(ctrlr, sq) = 0;
 
 	return 0;
-}
-
-static inline bool
-cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr,
-	   struct nvmf_vfio_user_cq *cq)
-{
-	assert(ctrlr != NULL);
-	assert(cq != NULL);
-
-	return ((*cq_tailp(cq) + 1) % cq->size) == *cq_dbl_headp(ctrlr, cq);
 }
 
 static int
