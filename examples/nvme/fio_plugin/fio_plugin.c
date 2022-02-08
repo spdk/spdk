@@ -1464,10 +1464,6 @@ static void spdk_fio_cleanup(struct thread_data *td)
 			pthread_join(g_ctrlr_thread_id, NULL);
 		}
 	}
-
-	if (g_spdk_env_initialized) {
-		spdk_env_fini();
-	}
 }
 
 /* This function enables addition of SPDK parameters to the fio config
@@ -1743,6 +1739,10 @@ static void fio_init fio_spdk_register(void)
 
 static void fio_exit fio_spdk_unregister(void)
 {
+	if (g_spdk_env_initialized) {
+		spdk_env_fini();
+	}
+
 	unregister_ioengine(&ioengine);
 }
 
