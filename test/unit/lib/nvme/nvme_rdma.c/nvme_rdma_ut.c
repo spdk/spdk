@@ -565,7 +565,7 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	CU_ASSERT(qpair != NULL);
 	rqpair = SPDK_CONTAINEROF(qpair, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(qpair == &rqpair->qpair);
@@ -584,7 +584,7 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 	qsize = 2;
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	CU_ASSERT(qpair != NULL);
 	rqpair = SPDK_CONTAINEROF(qpair, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(rqpair->num_entries == qsize - 1);
@@ -602,14 +602,14 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	SPDK_CU_ASSERT_FATAL(qpair == NULL);
 
 	/* Test case 4: queue size 1. Expect: FAIL */
 	qsize = 1;
 	qpair = nvme_rdma_ctrlr_create_qpair(&ctrlr, qid, qsize,
 					     SPDK_NVME_QPRIO_URGENT, 1,
-					     false);
+					     false, false);
 	SPDK_CU_ASSERT_FATAL(qpair == NULL);
 }
 
