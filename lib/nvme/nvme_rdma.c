@@ -191,6 +191,8 @@ enum nvme_rdma_qpair_state {
 	NVME_RDMA_QPAIR_STATE_RUNNING,
 };
 
+typedef int (*nvme_rdma_cm_event_cb)(struct nvme_rdma_qpair *rqpair, int ret);
+
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
 struct nvme_rdma_qpair {
 	struct spdk_nvme_qpair			qpair;
@@ -631,7 +633,8 @@ nvme_rdma_validate_cm_event(enum rdma_cm_event_type expected_evt_type,
 
 static int
 nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
-			enum rdma_cm_event_type evt)
+			enum rdma_cm_event_type evt,
+			nvme_rdma_cm_event_cb evt_cb)
 {
 	struct nvme_rdma_ctrlr	*rctrlr;
 	uint64_t timeout_ticks;
@@ -640,7 +643,7 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 	if (rqpair->evt != NULL) {
 		rc = nvme_rdma_qpair_process_cm_event(rqpair);
 		if (rc) {
-			return rc;
+			goto exit;
 		}
 	}
 
@@ -654,18 +657,23 @@ nvme_rdma_process_event(struct nvme_rdma_qpair *rqpair,
 	}
 
 	if (rc) {
-		return rc;
+		goto exit;
 	}
 
 	if (rqpair->evt == NULL) {
-		return -EADDRNOTAVAIL;
+		rc = -EADDRNOTAVAIL;
+		goto exit;
 	}
 
 	rc = nvme_rdma_validate_cm_event(evt, rqpair->evt);
 
 	rc2 = nvme_rdma_qpair_process_cm_event(rqpair);
 	/* bad message takes precedence over the other error codes from processing the event. */
-	return rc == 0 ? rc2 : rc;
+	rc = rc == 0 ? rc2 : rc;
+
+exit:
+	assert(evt_cb != NULL);
+	return evt_cb(rqpair, rc);
 }
 
 static int
@@ -1124,9 +1132,8 @@ nvme_rdma_addr_resolved(struct nvme_rdma_qpair *rqpair, int ret)
 		return ret;
 	}
 
-	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ROUTE_RESOLVED);
-
-	return nvme_rdma_route_resolved(rqpair, ret);
+	return nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ROUTE_RESOLVED,
+				       nvme_rdma_route_resolved);
 }
 
 static int
@@ -1143,9 +1150,8 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ADDR_RESOLVED);
-
-	return nvme_rdma_addr_resolved(rqpair, ret);
+	return nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ADDR_RESOLVED,
+				       nvme_rdma_addr_resolved);
 }
 
 static int
@@ -1227,9 +1233,8 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	ret = nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ESTABLISHED);
-
-	return nvme_rdma_connect_established(rqpair, ret);
+	return nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_ESTABLISHED,
+				       nvme_rdma_connect_established);
 }
 
 static int
@@ -1827,6 +1832,10 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 static int
 nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 {
+	if (ret) {
+		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
+	}
+
 	if (rqpair->cm_id) {
 		if (rqpair->rdma_qp) {
 			spdk_rdma_qp_destroy(rqpair->rdma_qp);
@@ -1883,9 +1892,9 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 		if (rqpair->rdma_qp) {
 			rc = spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 			if ((rctrlr != NULL) && (rc == 0)) {
-				if (nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_DISCONNECTED)) {
-					SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
-				}
+				nvme_rdma_process_event(rqpair, RDMA_CM_EVENT_DISCONNECTED,
+							nvme_rdma_qpair_disconnected);
+				return;
 			}
 		}
 	}
