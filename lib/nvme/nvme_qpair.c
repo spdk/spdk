@@ -819,6 +819,9 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	req_size_padded = (sizeof(struct nvme_request) + 63) & ~(size_t)63;
 
+	/* Add one for the reserved_req */
+	num_requests++;
+
 	qpair->req_buf = spdk_zmalloc(req_size_padded * num_requests, 64, NULL,
 				      SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 	if (qpair->req_buf == NULL) {
@@ -831,7 +834,11 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		struct nvme_request *req = qpair->req_buf + i * req_size_padded;
 
 		req->qpair = qpair;
-		STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
+		if (i == 0) {
+			qpair->reserved_req = req;
+		} else {
+			STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
+		}
 	}
 
 	return 0;
