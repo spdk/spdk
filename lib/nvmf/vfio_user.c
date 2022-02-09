@@ -115,14 +115,14 @@ SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_cq_state) == 0x20, "Incorrect size");
 /* The device state is in VFIO MIGRATION BAR(9) region, keep the device state page aligned.
  *
  * NVMe device migration region is defined as below:
- * ----------------------------------------------------------------------
- * | nvme_migr_device_state | private controller data | queue pairs | BARs |
- * ----------------------------------------------------------------------
+ * -------------------------------------------------------------------------
+ * | vfio_user_nvme_migr_header | nvmf controller data | queue pairs | BARs |
+ * -------------------------------------------------------------------------
  *
- * Keep nvme_migr_device_state as a fixed 0x1000 length, all new added fields
+ * Keep vfio_user_nvme_migr_header as a fixed 0x1000 length, all new added fields
  * can use the reserved space at the end of the data structure.
  */
-struct nvme_migr_device_state {
+struct vfio_user_nvme_migr_header {
 	/* Magic value to validate migration data */
 	uint32_t	magic;
 	/* Version to check the data is same from source to destination */
@@ -150,35 +150,36 @@ struct nvme_migr_device_state {
 	uint32_t	num_io_queues;
 	uint32_t	reserved1;
 
+	/* TODO: this part will be moved to common nvmf controller data */
 	uint16_t	reserved2[3];
 	uint16_t	nr_aers;
 	uint16_t	aer_cids[NVMF_MIGR_MAX_PENDING_AERS];
 
-	/* Controller private data offset and length if exist, starting at
+	/* NVMf controller data offset and length if exist, starting at
 	 * the beginning of this data structure.
 	 */
-	uint64_t	private_data_offset;
-	uint64_t	private_data_len;
+	uint64_t	nvmf_data_offset;
+	uint64_t	nvmf_data_len;
 
 	/* Reserved memory space for new added fields, the
 	 * field is always at the end of this data structure.
 	 */
 	uint8_t		unused[3356];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_migr_device_state) == 0x1000, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct vfio_user_nvme_migr_header) == 0x1000, "Incorrect size");
 
 struct vfio_user_nvme_migr_qp {
 	struct nvme_migr_sq_state	sq;
 	struct nvme_migr_cq_state	cq;
 };
 
-/* NVMe state definition used temporarily to load/restore from/to NVMe migration BAR region */
+/* NVMe state definition used to load/restore from/to NVMe migration BAR region */
 struct vfio_user_nvme_migr_state {
-	struct nvme_migr_device_state	ctrlr_data;
-	struct nvmf_ctrlr_migr_data	private_data;
-	struct vfio_user_nvme_migr_qp	qps[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR];
-	uint8_t				bar0[NVME_REG_BAR0_SIZE];
-	uint8_t				cfg[NVME_REG_CFG_SIZE];
+	struct vfio_user_nvme_migr_header	ctrlr_header;
+	struct nvmf_ctrlr_migr_data		nvmf_data;
+	struct vfio_user_nvme_migr_qp		qps[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR];
+	uint8_t					bar0[NVME_REG_BAR0_SIZE];
+	uint8_t					cfg[NVME_REG_CFG_SIZE];
 };
 
 struct nvmf_vfio_user_req  {
@@ -493,25 +494,10 @@ cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
 	return qindex == *cq_dbl_headp(ctrlr, cq);
 }
 
-
-/* TODO: wrapper to data structure */
 static inline size_t
 vfio_user_migr_data_len(void)
 {
-	size_t len = 0;
-
-	len = NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * (sizeof(struct nvme_migr_sq_state) + sizeof(
-				struct nvme_migr_cq_state));
-	len += sizeof(struct nvme_migr_device_state);
-	len += sizeof(struct nvmf_ctrlr_migr_data);
-	len += NVME_REG_BAR0_SIZE;
-	len += NVME_REG_CFG_SIZE;
-	/* BAR4 */
-	len += NVME_BAR4_SIZE;
-	/* BAR5 */
-	len += NVME_BAR5_SIZE;
-
-	return SPDK_ALIGN_CEIL(len, PAGE_SIZE);
+	return SPDK_ALIGN_CEIL(sizeof(struct vfio_user_nvme_migr_state), PAGE_SIZE);
 }
 
 static int
@@ -2353,7 +2339,7 @@ vfio_user_ctrlr_dump_migr_data(const char *name, struct vfio_user_nvme_migr_stat
 	SPDK_NOTICELOG("ASQ  0x%"PRIx64"\n", regs->asq);
 	SPDK_NOTICELOG("ACQ  0x%"PRIx64"\n", regs->acq);
 
-	SPDK_NOTICELOG("Number of IO Queues %u\n", migr_data->ctrlr_data.num_io_queues);
+	SPDK_NOTICELOG("Number of IO Queues %u\n", migr_data->ctrlr_header.num_io_queues);
 	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
 		sq = &migr_data->qps[i].sq;
 		cq = &migr_data->qps[i].cq;
@@ -2381,29 +2367,29 @@ vfio_user_migr_stream_to_data(struct nvmf_vfio_user_endpoint *endpoint,
 {
 	void *data_ptr = endpoint->migr_data;
 
-	/* Load nvme_migr_device_state first */
-	memcpy(&migr_state->ctrlr_data, data_ptr, sizeof(struct nvme_migr_device_state));
+	/* Load vfio_user_nvme_migr_header first */
+	memcpy(&migr_state->ctrlr_header, data_ptr, sizeof(struct vfio_user_nvme_migr_header));
 	/* TODO: version check */
-	if (migr_state->ctrlr_data.magic != VFIO_USER_NVME_MIGR_MAGIC) {
-		SPDK_ERRLOG("%s: bad magic number %x\n", endpoint_id(endpoint), migr_state->ctrlr_data.magic);
+	if (migr_state->ctrlr_header.magic != VFIO_USER_NVME_MIGR_MAGIC) {
+		SPDK_ERRLOG("%s: bad magic number %x\n", endpoint_id(endpoint), migr_state->ctrlr_header.magic);
 		return -EINVAL;
 	}
 
-	/* Load private controller data */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.private_data_offset;
-	memcpy(&migr_state->private_data, data_ptr, migr_state->ctrlr_data.private_data_len);
+	/* Load nvmf controller data */
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.nvmf_data_offset;
+	memcpy(&migr_state->nvmf_data, data_ptr, migr_state->ctrlr_header.nvmf_data_len);
 
 	/* Load queue pairs */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.qp_offset;
-	memcpy(&migr_state->qps, data_ptr, migr_state->ctrlr_data.qp_len);
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.qp_offset;
+	memcpy(&migr_state->qps, data_ptr, migr_state->ctrlr_header.qp_len);
 
 	/* Load BAR0 */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX];
-	memcpy(&migr_state->bar0, data_ptr, migr_state->ctrlr_data.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX]);
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX];
+	memcpy(&migr_state->bar0, data_ptr, migr_state->ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX]);
 
 	/* Load CFG */
-	data_ptr = endpoint->migr_data + migr_state->ctrlr_data.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX];
-	memcpy(&migr_state->cfg, data_ptr, migr_state->ctrlr_data.bar_len[VFU_PCI_DEV_CFG_REGION_IDX]);
+	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX];
+	memcpy(&migr_state->cfg, data_ptr, migr_state->ctrlr_header.bar_len[VFU_PCI_DEV_CFG_REGION_IDX]);
 
 	return 0;
 }
@@ -2430,16 +2416,16 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	 */
 
 	/* save magic number */
-	migr_state.ctrlr_data.magic = VFIO_USER_NVME_MIGR_MAGIC;
+	migr_state.ctrlr_header.magic = VFIO_USER_NVME_MIGR_MAGIC;
 
 	/* save controller data */
-	num_aers = nvmf_ctrlr_save_aers(ctrlr, migr_state.ctrlr_data.aer_cids,
+	num_aers = nvmf_ctrlr_save_aers(ctrlr, migr_state.ctrlr_header.aer_cids,
 					256);
 	assert(num_aers >= 0);
-	migr_state.ctrlr_data.nr_aers = num_aers;
+	migr_state.ctrlr_header.nr_aers = num_aers;
 
-	/* save controller private data */
-	nvmf_ctrlr_save_migr_data(ctrlr, (struct nvmf_ctrlr_migr_data *)&migr_state.private_data);
+	/* save nvmf controller data */
+	nvmf_ctrlr_save_migr_data(ctrlr, (struct nvmf_ctrlr_migr_data *)&migr_state.nvmf_data);
 
 	/* save connected queue pairs */
 	TAILQ_FOREACH(sq, &vu_ctrlr->connected_sqs, tailq) {
@@ -2465,7 +2451,7 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	}
 
 	assert(i > 0);
-	migr_state.ctrlr_data.num_io_queues = i - 1;
+	migr_state.ctrlr_header.num_io_queues = i - 1;
 
 	regs = (struct spdk_nvme_registers *)&migr_state.bar0;
 	/* Save mandarory registers to bar0 */
@@ -2486,37 +2472,37 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	/* Save all data to device migration region */
 	data_ptr = endpoint->migr_data;
 
-	/* Copy private controller data */
-	data_offset = sizeof(struct nvme_migr_device_state);
+	/* Copy nvmf controller data */
+	data_offset = sizeof(struct vfio_user_nvme_migr_header);
 	data_ptr += data_offset;
-	migr_state.ctrlr_data.private_data_offset = data_offset;
-	migr_state.ctrlr_data.private_data_len = sizeof(struct nvmf_ctrlr_migr_data);
-	memcpy(data_ptr, &migr_state.private_data, sizeof(struct nvmf_ctrlr_migr_data));
+	migr_state.ctrlr_header.nvmf_data_offset = data_offset;
+	migr_state.ctrlr_header.nvmf_data_len = sizeof(struct nvmf_ctrlr_migr_data);
+	memcpy(data_ptr, &migr_state.nvmf_data, sizeof(struct nvmf_ctrlr_migr_data));
 
 	/* Copy queue pairs */
 	data_offset += sizeof(struct nvmf_ctrlr_migr_data);
 	data_ptr += sizeof(struct nvmf_ctrlr_migr_data);
-	migr_state.ctrlr_data.qp_offset = data_offset;
-	migr_state.ctrlr_data.qp_len = i * (sizeof(struct nvme_migr_sq_state) + sizeof(
+	migr_state.ctrlr_header.qp_offset = data_offset;
+	migr_state.ctrlr_header.qp_len = i * (sizeof(struct nvme_migr_sq_state) + sizeof(
 			struct nvme_migr_cq_state));
-	memcpy(data_ptr, &migr_state.qps, migr_state.ctrlr_data.qp_len);
+	memcpy(data_ptr, &migr_state.qps, migr_state.ctrlr_header.qp_len);
 
 	/* Copy BAR0 */
-	data_offset += migr_state.ctrlr_data.qp_len;
-	data_ptr += migr_state.ctrlr_data.qp_len;
-	migr_state.ctrlr_data.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX] = data_offset;
-	migr_state.ctrlr_data.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX] = NVME_REG_BAR0_SIZE;
+	data_offset += migr_state.ctrlr_header.qp_len;
+	data_ptr += migr_state.ctrlr_header.qp_len;
+	migr_state.ctrlr_header.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX] = data_offset;
+	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX] = NVME_REG_BAR0_SIZE;
 	memcpy(data_ptr, &migr_state.bar0, NVME_REG_BAR0_SIZE);
 
 	/* Copy CFG */
 	data_offset += NVME_REG_BAR0_SIZE;
 	data_ptr += NVME_REG_BAR0_SIZE;
-	migr_state.ctrlr_data.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX] = data_offset;
-	migr_state.ctrlr_data.bar_len[VFU_PCI_DEV_CFG_REGION_IDX] = NVME_REG_CFG_SIZE;
+	migr_state.ctrlr_header.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX] = data_offset;
+	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_CFG_REGION_IDX] = NVME_REG_CFG_SIZE;
 	memcpy(data_ptr, &migr_state.cfg, NVME_REG_CFG_SIZE);
 
-	/* Copy device state finally */
-	memcpy(endpoint->migr_data, &migr_state.ctrlr_data, sizeof(struct nvme_migr_device_state));
+	/* Copy nvme migration header finally */
+	memcpy(endpoint->migr_data, &migr_state.ctrlr_header, sizeof(struct vfio_user_nvme_migr_header));
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
 		vfio_user_ctrlr_dump_migr_data("SAVE", &migr_state);
@@ -2701,19 +2687,19 @@ vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	ctrlr->vcprop.asq = regs->asq;
 	ctrlr->vcprop.acq = regs->acq;
 
-	/* restore controller private data */
-	rc = nvmf_ctrlr_restore_migr_data(ctrlr, &migr_state.private_data);
+	/* restore nvmf controller data */
+	rc = nvmf_ctrlr_restore_migr_data(ctrlr, &migr_state.nvmf_data);
 	if (rc) {
 		return rc;
 	}
 
 	/* resubmit pending AERs */
-	for (i = 0; i < migr_state.ctrlr_data.nr_aers; i++) {
+	for (i = 0; i < migr_state.ctrlr_header.nr_aers; i++) {
 		SPDK_DEBUGLOG(nvmf_vfio, "%s AER resubmit, CID %u\n", ctrlr_id(vu_ctrlr),
-			      migr_state.ctrlr_data.aer_cids[i]);
+			      migr_state.ctrlr_header.aer_cids[i]);
 		memset(&cmd, 0, sizeof(cmd));
 		cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-		cmd.cid = migr_state.ctrlr_data.aer_cids[i];
+		cmd.cid = migr_state.ctrlr_header.aer_cids[i];
 		rc = handle_cmd_req(vu_ctrlr, &cmd, vu_ctrlr->sqs[0]);
 		if (rc) {
 			break;
