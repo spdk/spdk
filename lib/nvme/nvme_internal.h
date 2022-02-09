@@ -455,7 +455,6 @@ struct spdk_nvme_qpair {
 
 	STAILQ_HEAD(, nvme_request)		free_req;
 	STAILQ_HEAD(, nvme_request)		queued_req;
-	STAILQ_HEAD(, nvme_request)		aborting_queued_req;
 
 	/* List entry for spdk_nvme_transport_poll_group::qpairs */
 	STAILQ_ENTRY(spdk_nvme_qpair)		poll_group_stailq;
@@ -465,23 +464,27 @@ struct spdk_nvme_qpair {
 	/** Requests in this list will return error */
 	STAILQ_HEAD(, nvme_request)		err_req_head;
 
-	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
-	TAILQ_ENTRY(spdk_nvme_qpair)		tailq;
-
-	/* List entry for spdk_nvme_ctrlr_process::allocated_io_qpairs */
-	TAILQ_ENTRY(spdk_nvme_qpair)		per_process_tailq;
-
 	struct spdk_nvme_ctrlr_process		*active_proc;
 
 	struct spdk_nvme_transport_poll_group	*poll_group;
 
 	void					*poll_group_tailq_head;
 
-	void					*req_buf;
-
 	const struct spdk_nvme_transport	*transport;
 
+	/* Entries below here are not touched in the main I/O path. */
+
 	struct nvme_completion_poll_status	*poll_status;
+
+	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
+	TAILQ_ENTRY(spdk_nvme_qpair)		tailq;
+
+	/* List entry for spdk_nvme_ctrlr_process::allocated_io_qpairs */
+	TAILQ_ENTRY(spdk_nvme_qpair)		per_process_tailq;
+
+	STAILQ_HEAD(, nvme_request)		aborting_queued_req;
+
+	void					*req_buf;
 };
 
 struct spdk_nvme_poll_group {
