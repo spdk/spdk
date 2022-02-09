@@ -453,6 +453,9 @@ struct spdk_nvme_qpair {
 
 	enum spdk_nvme_transport_type		trtype;
 
+	/* request object used only for this qpair's FABRICS/CONNECT command (if needed) */
+	struct nvme_request			*reserved_req;
+
 	STAILQ_HEAD(, nvme_request)		free_req;
 	STAILQ_HEAD(, nvme_request)		queued_req;
 
@@ -1356,7 +1359,12 @@ nvme_free_request(struct nvme_request *req)
 	assert(req->num_children == 0);
 	assert(req->qpair != NULL);
 
-	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+	/* The reserved_req does not go in the free_req STAILQ - it is
+	 * saved only for use with a FABRICS/CONNECT command.
+	 */
+	if (spdk_likely(req->qpair->reserved_req != req)) {
+		STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
+	}
 }
 
 static inline void

@@ -533,6 +533,7 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 	struct spdk_nvmf_fabric_connect_cmd cmd;
 	struct spdk_nvmf_fabric_connect_data *nvmf_data;
 	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_request *req;
 	int rc;
 
 	if (num_entries == 0 || num_entries > SPDK_NVME_IO_QUEUE_MAX_ENTRIES) {
@@ -567,6 +568,10 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 	cmd.sqsize = num_entries - 1;
 	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
 
+	assert(qpair->reserved_req != NULL);
+	req = qpair->reserved_req;
+	memcpy(&req->cmd, &cmd, sizeof(cmd));
+
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvmf_data->cntlid = 0xFFFF;
 	} else {
@@ -579,10 +584,10 @@ nvme_fabric_qpair_connect_async(struct spdk_nvme_qpair *qpair, uint32_t num_entr
 	snprintf(nvmf_data->hostnqn, sizeof(nvmf_data->hostnqn), "%s", ctrlr->opts.hostnqn);
 	snprintf(nvmf_data->subnqn, sizeof(nvmf_data->subnqn), "%s", ctrlr->trid.subnqn);
 
-	rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
-					(struct spdk_nvme_cmd *)&cmd,
-					nvmf_data, sizeof(*nvmf_data),
-					nvme_completion_poll_cb, status);
+	NVME_INIT_REQUEST(req, nvme_completion_poll_cb, status, NVME_PAYLOAD_CONTIG(nvmf_data, NULL),
+			  sizeof(*nvmf_data), 0);
+
+	rc = nvme_qpair_submit_request(qpair, req);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to allocate/submit FABRIC_CONNECT command, rc %d\n", rc);
 		spdk_free(status->dma_data);
