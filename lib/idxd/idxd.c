@@ -641,7 +641,7 @@ _idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const voi
 	desc->src_addr = src_addr;
 	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
-	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
 
 	return _idxd_flush_batch(chan);
 
@@ -719,7 +719,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 		desc->src_addr = src_addr;
 		desc->dst_addr = dst_addr;
 		desc->xfer_size = len;
-		desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+		desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
 	}
 
 	rc = idxd_batch_submit(chan, batch, cb_fn, cb_arg);
@@ -782,7 +782,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 	desc->dst_addr = dst1_addr;
 	desc->dest2 = dst2_addr;
 	desc->xfer_size = nbytes;
-	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
 
 	/* Submit operation. */
 	_submit_to_hw(chan, op);
@@ -951,7 +951,7 @@ _idxd_submit_fill_single(struct spdk_idxd_io_channel *chan, void *dst, uint64_t 
 	desc->pattern = fill_pattern;
 	desc->dst_addr = dst_addr;
 	desc->xfer_size = nbytes;
-	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
 
 	return _idxd_flush_batch(chan);
 
@@ -1011,7 +1011,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 		desc->pattern = fill_pattern;
 		desc->dst_addr = dst_addr;
 		desc->xfer_size = diov[i].iov_len;
-		desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+		desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
 	}
 
 	rc = idxd_batch_submit(chan, batch, cb_fn, cb_arg);
@@ -1190,7 +1190,7 @@ _idxd_submit_copy_crc32c_single(struct spdk_idxd_io_channel *chan, void *dst, vo
 	desc->opcode = IDXD_OPCODE_COPY_CRC;
 	desc->dst_addr = dst_addr;
 	desc->src_addr = src_addr;
-	desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
 	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
 	desc->crc32c.seed = seed;
 	desc->xfer_size = nbytes;
@@ -1269,7 +1269,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 		desc->opcode = IDXD_OPCODE_COPY_CRC;
 		desc->dst_addr = dst_addr;
 		desc->src_addr = src_addr;
-		desc->flags |= IDXD_FLAG_CACHE_CONTROL; /* direct IO to CPU cache instead of mem */
+		desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
 		if (prev_crc == NULL) {
 			desc->crc32c.seed = seed;
 		} else {

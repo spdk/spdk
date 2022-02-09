@@ -39,12 +39,29 @@
 #define SPDK_IDXD_H
 
 #include "spdk/stdinc.h"
+#include "spdk/idxd_spec.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "spdk/env.h"
+
+/* The following flags control the behavior of I/O operations to IDXD. These flags
+ * are often mapped to DSA specification values to ensure they have a unique value,
+ * but do not necessarily correspond 1:1 with the hardware-defined flags.
+ */
+
+/* This flag indicates that IDXD should bypass the CPU cache for write operations,
+ * landing the output directly into main memory. This is considered a hint, rather
+ * than a guarantee.
+ *
+ * Note: While the value here is defined to be IDXD_FLAG_CACHE_CONTROL, this is only
+ * to ensure that the flag has a unique value. The meaning here is the reverse of
+ * IDXD_FLAG_CACHE_CONTROL - i.e. not specifying a flag writes data into CPU cache
+ * because writing to cache is a more sensible default behavior.
+ */
+#define SPDK_IDXD_FLAG_NONTEMPORAL IDXD_FLAG_CACHE_CONTROL
 
 /**
  * Opaque handle for a single IDXD channel.
