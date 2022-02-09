@@ -9,15 +9,6 @@ import re
 import pandas as pd
 
 
-def highest_value(inp):
-    ret_value = False
-    for x in inp:
-        if x:
-            return True
-    else:
-        return False
-
-
 def generateTestCompletionTables(output_dir, completion_table):
     data_table = pd.DataFrame(completion_table, columns=["Agent", "Domain", "Test", "With Asan", "With UBsan"])
     data_table.to_html(os.path.join(output_dir, 'completions_table.html'))
@@ -27,9 +18,9 @@ def generateTestCompletionTables(output_dir, completion_table):
     pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_agent.html'))
     pivot_by_test = pd.pivot_table(data_table, index=["Domain", "Test", "Agent"])
     pivot_by_test.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_test.html'))
-    pivot_by_asan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With Asan"], aggfunc=highest_value)
+    pivot_by_asan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With Asan"], aggfunc=any)
     pivot_by_asan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_asan.html'))
-    pivot_by_ubsan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With UBsan"], aggfunc=highest_value)
+    pivot_by_ubsan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With UBsan"], aggfunc=any)
     pivot_by_ubsan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_ubsan.html'))
 
 
