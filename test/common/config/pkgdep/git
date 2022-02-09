@@ -302,17 +302,16 @@ function install_qemu() {
 }
 
 function install_nvmecli() {
-	if [ ! -d "/usr/local/src/nvme-cli" ]; then
-		# Changes required for SPDK are already merged on top of
-		# nvme-cli, however not released yet.
-		# Support for SPDK should be released in nvme-cli >1.11.1
-		if [[ ! -d $GIT_REPOS/nvme-cli-cuse ]]; then
-			git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
-		fi
-		git -C "$GIT_REPOS/nvme-cli-cuse" checkout v1.16
-		make -C "$GIT_REPOS/nvme-cli-cuse" CPPFLAGS="-Wno-error=maybe-uninitialized"
-		sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
+	# nvme-cli >1.11.1 should be used.
+	if [[ ! -d $GIT_REPOS/nvme-cli-cuse ]]; then
+		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
 	fi
+	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v1.16
+	make -C "$GIT_REPOS/nvme-cli-cuse" CPPFLAGS="-Wno-error=maybe-uninitialized"
+	if [ -d "/usr/local/src/nvme-cli" ]; then
+		sudo rm -rf /usr/local/src/nvme-cli
+	fi
+	sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
 }
 
 function install_libiscsi() {
