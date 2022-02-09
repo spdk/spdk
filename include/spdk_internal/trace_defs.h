@@ -41,6 +41,7 @@
 #define OWNER_NVME_PCIE_QP	0x3
 #define OWNER_SCSI_DEV		0x10
 #define OWNER_FTL		0x20
+#define OWNER_NVMF_TCP		0x30
 
 /* Object definitions */
 #define OBJECT_ISCSI_PDU	0x1
