@@ -2863,7 +2863,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             if not rpc_call.strip():
                 continue
             executed_rpc = "\n".join([executed_rpc, rpc_call])
-            args = parser.parse_args(shlex.split(rpc_call))
+            rpc_args = shlex.split(rpc_call)
+            if rpc_args[0][0] == '#':
+                # Ignore lines starting with # - treat them as comments
+                continue
+            args = parser.parse_args(rpc_args)
             args.client = client
             try:
                 call_rpc_func(args)
