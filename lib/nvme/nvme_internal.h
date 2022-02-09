@@ -1245,6 +1245,17 @@ typedef int (*spdk_nvme_parse_ana_log_page_cb)(
 int	nvme_ctrlr_parse_ana_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				      spdk_nvme_parse_ana_log_page_cb cb_fn, void *cb_arg);
 
+#define NVME_INIT_REQUEST(req, _cb_fn, _cb_arg, _payload, _payload_size, _md_size)	\
+	do {						\
+		req->cb_fn = _cb_fn;			\
+		req->cb_arg = _cb_arg;			\
+		req->payload = _payload;		\
+		req->payload_size = _payload_size;	\
+		req->md_size = _md_size;		\
+		req->pid = g_spdk_nvme_pid;		\
+		req->submit_tick = 0;			\
+	} while (0);
+
 static inline struct nvme_request *
 nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		      const struct nvme_payload *payload, uint32_t payload_size, uint32_t md_size,
@@ -1272,13 +1283,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	 */
 	memset(req, 0, offsetof(struct nvme_request, payload_size));
 
-	req->cb_fn = cb_fn;
-	req->cb_arg = cb_arg;
-	req->payload = *payload;
-	req->payload_size = payload_size;
-	req->md_size = md_size;
-	req->pid = g_spdk_nvme_pid;
-	req->submit_tick = 0;
+	NVME_INIT_REQUEST(req, cb_fn, cb_arg, *payload, payload_size, md_size);
 
 	return req;
 }
