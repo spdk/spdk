@@ -4121,12 +4121,12 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 	return rc;
 }
 
-struct discovery_ctrlr_ctx {
+struct discovery_entry_ctx {
 	char						name[128];
 	struct spdk_nvme_transport_id			trid;
 	struct spdk_nvme_ctrlr_opts			opts;
 	struct spdk_nvmf_discovery_log_page_entry	entry;
-	TAILQ_ENTRY(discovery_ctrlr_ctx)		tailq;
+	TAILQ_ENTRY(discovery_entry_ctx)		tailq;
 	struct discovery_ctx				*ctx;
 };
 
@@ -4141,7 +4141,7 @@ struct discovery_ctx {
 	struct spdk_poller			*poller;
 	struct spdk_nvme_ctrlr_opts		opts;
 	TAILQ_ENTRY(discovery_ctx)		tailq;
-	TAILQ_HEAD(, discovery_ctrlr_ctx)	ctrlr_ctxs;
+	TAILQ_HEAD(, discovery_entry_ctx)	nvm_entry_ctxs;
 	int					rc;
 	/* Denotes if a discovery is currently in progress for this context.
 	 * That includes connecting to newly discovered subsystems.  Used to
@@ -4224,10 +4224,10 @@ build_trid_from_log_page_entry(struct spdk_nvme_transport_id *trid,
 static void
 discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 {
-	struct discovery_ctrlr_ctx *ctrlr_ctx = cb_ctx;
-	struct discovery_ctx *ctx = ctrlr_ctx->ctx;;
+	struct discovery_entry_ctx *entry_ctx = cb_ctx;
+	struct discovery_ctx *ctx = entry_ctx->ctx;;
 
-	SPDK_DEBUGLOG(bdev_nvme, "attach %s done\n", ctrlr_ctx->name);
+	SPDK_DEBUGLOG(bdev_nvme, "attach %s done\n", entry_ctx->name);
 	ctx->attach_in_progress--;
 	if (ctx->attach_in_progress == 0) {
 		discovery_complete(ctx);
@@ -4239,7 +4239,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		      struct spdk_nvmf_discovery_log_page *log_page)
 {
 	struct discovery_ctx *ctx = cb_arg;
-	struct discovery_ctrlr_ctx *ctrlr_ctx, *tmp;
+	struct discovery_entry_ctx *entry_ctx, *tmp;
 	struct spdk_nvmf_discovery_log_page_entry *new_entry, *old_entry;
 	uint64_t numrec, i;
 	bool found;
@@ -4251,9 +4251,9 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 
 	assert(ctx->attach_in_progress == 0);
 	numrec = from_le64(&log_page->numrec);
-	TAILQ_FOREACH_SAFE(ctrlr_ctx, &ctx->ctrlr_ctxs, tailq, tmp) {
+	TAILQ_FOREACH_SAFE(entry_ctx, &ctx->nvm_entry_ctxs, tailq, tmp) {
 		found = false;
-		old_entry = &ctrlr_ctx->entry;
+		old_entry = &entry_ctx->entry;
 		for (i = 0; i < numrec; i++) {
 			new_entry = &log_page->entries[i];
 			if (!memcmp(old_entry, new_entry, sizeof(*old_entry))) {
@@ -4266,10 +4266,10 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 
 			SPDK_DEBUGLOG(bdev_nvme, "detach controller\n");
 
-			path.trid = ctrlr_ctx->trid;
-			bdev_nvme_delete(ctrlr_ctx->name, &path);
-			TAILQ_REMOVE(&ctx->ctrlr_ctxs, ctrlr_ctx, tailq);
-			free(ctrlr_ctx);
+			path.trid = entry_ctx->trid;
+			bdev_nvme_delete(entry_ctx->name, &path);
+			TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
+			free(entry_ctx);
 		}
 	}
 	for (i = 0; i < numrec; i++) {
@@ -4278,26 +4278,26 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		if (new_entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			continue;
 		}
-		TAILQ_FOREACH(ctrlr_ctx, &ctx->ctrlr_ctxs, tailq) {
-			old_entry = &ctrlr_ctx->entry;
+		TAILQ_FOREACH(entry_ctx, &ctx->nvm_entry_ctxs, tailq) {
+			old_entry = &entry_ctx->entry;
 			if (!memcmp(new_entry, old_entry, sizeof(*new_entry))) {
 				found = true;
 				break;
 			}
 		}
 		if (!found) {
-			struct discovery_ctrlr_ctx *subnqn_ctx, *new_ctx;
+			struct discovery_entry_ctx *subnqn_ctx, *new_ctx;
 
-			TAILQ_FOREACH(subnqn_ctx, &ctx->ctrlr_ctxs, tailq) {
+			TAILQ_FOREACH(subnqn_ctx, &ctx->nvm_entry_ctxs, tailq) {
 				if (!memcmp(subnqn_ctx->entry.subnqn, new_entry->subnqn,
 					    sizeof(new_entry->subnqn))) {
 					break;
 				}
 			}
 
-			new_ctx = calloc(1, sizeof(*ctrlr_ctx));
+			new_ctx = calloc(1, sizeof(*new_ctx));
 			if (new_ctx == NULL) {
-				SPDK_ERRLOG("could not allocate new ctrlr_ctx\n");
+				SPDK_ERRLOG("could not allocate new entry_ctx\n");
 				break;
 			}
 
@@ -4315,7 +4315,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 					      discovery_attach_controller_done, new_ctx,
 					      &new_ctx->opts, true, 0, 0, 0);
 			if (rc == 0) {
-				TAILQ_INSERT_TAIL(&ctx->ctrlr_ctxs, new_ctx, tailq);
+				TAILQ_INSERT_TAIL(&ctx->nvm_entry_ctxs, new_ctx, tailq);
 				ctx->attach_in_progress++;
 			} else {
 				SPDK_ERRLOG("bdev_nvme_create failed (%s)\n", spdk_strerror(-rc));
@@ -4472,7 +4472,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	ctx->cb_ctx = cb_ctx;
 	memcpy(&ctx->opts, opts, sizeof(*opts));
 	ctx->calling_thread = spdk_get_thread();
-	TAILQ_INIT(&ctx->ctrlr_ctxs);
+	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 	/* Even if user did not specify hostnqn, we can still strdup("\0"); */
 	ctx->hostnqn = strdup(ctx->opts.hostnqn);
@@ -4504,15 +4504,15 @@ bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_f
 			ctx->detach = true;
 			ctx->stop_cb_fn = cb_fn;
 			ctx->cb_ctx = cb_ctx;
-			while (!TAILQ_EMPTY(&ctx->ctrlr_ctxs)) {
-				struct discovery_ctrlr_ctx *ctrlr_ctx;
+			while (!TAILQ_EMPTY(&ctx->nvm_entry_ctxs)) {
+				struct discovery_entry_ctx *entry_ctx;
 				struct nvme_path_id path = {};
 
-				ctrlr_ctx = TAILQ_FIRST(&ctx->ctrlr_ctxs);
-				path.trid = ctrlr_ctx->trid;
-				bdev_nvme_delete(ctrlr_ctx->name, &path);
-				TAILQ_REMOVE(&ctx->ctrlr_ctxs, ctrlr_ctx, tailq);
-				free(ctrlr_ctx);
+				entry_ctx = TAILQ_FIRST(&ctx->nvm_entry_ctxs);
+				path.trid = entry_ctx->trid;
+				bdev_nvme_delete(entry_ctx->name, &path);
+				TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
+				free(entry_ctx);
 			}
 			return 0;
 		}
