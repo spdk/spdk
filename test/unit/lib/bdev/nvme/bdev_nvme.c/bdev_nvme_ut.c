@@ -1183,6 +1183,11 @@ spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group,
 			    struct spdk_nvme_qpair *qpair)
 {
 	CU_ASSERT(!qpair->is_connected);
+
+	if (qpair->poll_group == NULL) {
+		return -ENOENT;
+	}
+
 	CU_ASSERT(qpair->poll_group_tailq_head == &group->disconnected_qpairs);
 
 	TAILQ_REMOVE(&group->disconnected_qpairs, qpair, poll_group_tailq);
