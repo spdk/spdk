@@ -105,7 +105,6 @@
 	spdk_bdev_module_examine_done;
 	spdk_bdev_module_init_done;
 	spdk_bdev_module_fini_done;
-	spdk_bdev_module_finish_done;
 	spdk_bdev_module_fini_start_done;
 	spdk_bdev_module_claim_bdev;
 	spdk_bdev_module_release_bdev;

@@ -1635,14 +1635,6 @@ spdk_bdev_module_fini_done(void)
 	}
 }
 
-/* Deprecated */
-void
-spdk_bdev_module_finish_done(void)
-{
-	SPDK_NOTICELOG("spdk_bdev_module_finish_done() is deprecated, please use spdk_bdev_module_fini_done().\n");
-	spdk_bdev_module_fini_done();
-}
-
 static void
 bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
 {

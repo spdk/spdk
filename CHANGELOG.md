@@ -2,6 +2,10 @@
 
 ## v22.05: (Upcoming Release)
 
+### bdev
+
+Removed deprecated spdk_bdev_module_finish_done(). Use spdk_bdev_module_fini_done() instead.
+
 ### bdev_nvme
 
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and

@@ -843,7 +843,6 @@ void spdk_bdev_module_init_done(struct spdk_bdev_module *module);
  *
  */
 void spdk_bdev_module_fini_done(void);
-void spdk_bdev_module_finish_done(void); /* Deprecated */
 
 /**
  * Indicate that the module fini start has completed.
