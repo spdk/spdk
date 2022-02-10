@@ -851,24 +851,6 @@ bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, bool status)
 }
 
 static void
-_bdev_io_set_bounce_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
-{
-	/* save original iovec */
-	bdev_io->internal.orig_iovs = bdev_io->u.bdev.iovs;
-	bdev_io->internal.orig_iovcnt = bdev_io->u.bdev.iovcnt;
-	/* set bounce iov */
-	bdev_io->u.bdev.iovs = &bdev_io->internal.bounce_iov;
-	bdev_io->u.bdev.iovcnt = 1;
-	/* set bounce buffer for this operation */
-	bdev_io->u.bdev.iovs[0].iov_base = buf;
-	bdev_io->u.bdev.iovs[0].iov_len = len;
-	/* if this is write path, copy data from original buffer to bounce buffer */
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		_copy_iovs_to_buf(buf, len, bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt);
-	}
-}
-
-static void
 _bdev_io_set_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t len)
 {
 	/* save original md_buf */
@@ -903,6 +885,24 @@ _bdev_io_set_md_buf(struct spdk_bdev_io *bdev_io)
 	}
 
 	bdev_io_get_buf_complete(bdev_io, true);
+}
+
+static void
+_bdev_io_set_bounce_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
+{
+	/* save original iovec */
+	bdev_io->internal.orig_iovs = bdev_io->u.bdev.iovs;
+	bdev_io->internal.orig_iovcnt = bdev_io->u.bdev.iovcnt;
+	/* set bounce iov */
+	bdev_io->u.bdev.iovs = &bdev_io->internal.bounce_iov;
+	bdev_io->u.bdev.iovcnt = 1;
+	/* set bounce buffer for this operation */
+	bdev_io->u.bdev.iovs[0].iov_base = buf;
+	bdev_io->u.bdev.iovs[0].iov_len = len;
+	/* if this is write path, copy data from original buffer to bounce buffer */
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		_copy_iovs_to_buf(buf, len, bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt);
+	}
 }
 
 static void
