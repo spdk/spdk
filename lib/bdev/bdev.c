@@ -2598,7 +2598,8 @@ _bdev_io_submit(void *ctx)
 	tsc = spdk_get_ticks();
 	bdev_io->internal.submit_tsc = tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_START, 0, 0, (uintptr_t)bdev_io, bdev_io->type,
-			      bdev_io->internal.caller_ctx);
+			      bdev_io->internal.caller_ctx, bdev_io->u.bdev.offset_blocks,
+			      bdev_io->u.bdev.num_blocks);
 
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		bdev_io_do_submit(bdev_ch, bdev_io);
@@ -2704,7 +2705,8 @@ bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	if (bdev_io_should_split(bdev_io)) {
 		bdev_io->internal.submit_tsc = spdk_get_ticks();
 		spdk_trace_record_tsc(bdev_io->internal.submit_tsc, TRACE_BDEV_IO_START, 0, 0,
-				      (uintptr_t)bdev_io, bdev_io->type, bdev_io->internal.caller_ctx);
+				      (uintptr_t)bdev_io, bdev_io->type, bdev_io->internal.caller_ctx,
+				      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
 		bdev_io_split(NULL, bdev_io);
 		return;
 	}
@@ -7231,7 +7233,9 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 			OWNER_BDEV, OBJECT_BDEV_IO, 1,
 			{
 				{ "type", SPDK_TRACE_ARG_TYPE_INT, 8 },
-				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }
+				{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 },
+				{ "offset", SPDK_TRACE_ARG_TYPE_INT, 8 },
+				{ "len", SPDK_TRACE_ARG_TYPE_INT, 8 }
 			}
 		},
 		{
