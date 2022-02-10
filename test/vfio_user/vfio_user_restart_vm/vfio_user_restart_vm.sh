@@ -38,11 +38,13 @@ vm_wait_for_boot 60 1
 
 vm_exec 1 "lsblk"
 
+# To check target whether core dump when remove subsystem listener while VM is connected, issue #2246
+$rpc_py nvmf_subsystem_remove_listener nqn.2019-07.io.spdk:cnode1 -t vfiouser -a $vm_muser_dir/domain/muser1/1 -s 0
+
 vm_shutdown_all
 
-$rpc_py nvmf_subsystem_remove_listener nqn.2019-07.io.spdk:cnode1 -t vfiouser -a $vm_muser_dir/domain/muser1/1 -s 0
-$rpc_py nvmf_delete_subsystem nqn.2019-07.io.spdk:cnode1
 $rpc_py bdev_nvme_detach_controller Nvme0
+$rpc_py nvmf_delete_subsystem nqn.2019-07.io.spdk:cnode1
 
 vhost_kill 0
 
