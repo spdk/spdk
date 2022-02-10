@@ -23,6 +23,7 @@ $rpc_py bdev_delay_create -b Malloc0 -d Delay0 -r 1000000 -t 1000000 -w 1000000 
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode0 -a -s SPDK0
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode0 Delay0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+$rpc_py nvmf_subsystem_add_listener discovery -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 # Run abort application
 $SPDK_EXAMPLE_DIR/abort -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" \
