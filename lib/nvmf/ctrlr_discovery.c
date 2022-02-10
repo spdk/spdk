@@ -122,16 +122,19 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 			continue;
 		}
 
-		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-			continue;
-		}
-
 		if (!spdk_nvmf_subsystem_host_allowed(subsystem, hostnqn)) {
 			continue;
 		}
 
 		for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 		     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+			if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY &&
+			    !spdk_nvme_transport_id_compare(listener->trid, cmd_source_trid)) {
+				/* Do not generate an entry for the transport ID for the listener
+				 * entry associated with the controller that generated this command.
+				 */
+				continue;
+			}
 
 			if ((tgt->discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE) != 0 &&
 			    !nvmf_discovery_compare_trtype(listener->trid, cmd_source_trid)) {
