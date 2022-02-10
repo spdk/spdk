@@ -882,11 +882,35 @@ _bdev_io_set_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t le
 }
 
 static void
+_bdev_io_set_md_buf(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	uint64_t md_len;
+	void *buf;
+
+	if (spdk_bdev_is_md_separate(bdev)) {
+		buf = (char *)bdev_io->u.bdev.iovs[0].iov_base + bdev_io->u.bdev.iovs[0].iov_len;
+		md_len = bdev_io->u.bdev.num_blocks * bdev->md_len;
+
+		assert(((uintptr_t)buf & (spdk_bdev_get_buf_align(bdev) - 1)) == 0);
+
+		if (bdev_io->u.bdev.md_buf != NULL) {
+			_bdev_io_set_bounce_md_buf(bdev_io, buf, md_len);
+			return;
+		} else {
+			spdk_bdev_io_set_md_buf(bdev_io, buf, md_len);
+		}
+	}
+
+	bdev_io_get_buf_complete(bdev_io, true);
+}
+
+static void
 _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	bool buf_allocated;
-	uint64_t md_len, alignment;
+	uint64_t alignment;
 	void *aligned_buf;
 
 	bdev_io->internal.buf = buf;
@@ -906,19 +930,7 @@ _bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, uint64_t len)
 		spdk_bdev_io_set_buf(bdev_io, aligned_buf, len);
 	}
 
-	if (spdk_bdev_is_md_separate(bdev)) {
-		aligned_buf = (char *)aligned_buf + len;
-		md_len = bdev_io->u.bdev.num_blocks * bdev->md_len;
-
-		assert(((uintptr_t)aligned_buf & (alignment - 1)) == 0);
-
-		if (bdev_io->u.bdev.md_buf != NULL) {
-			_bdev_io_set_bounce_md_buf(bdev_io, aligned_buf, md_len);
-		} else {
-			spdk_bdev_io_set_md_buf(bdev_io, aligned_buf, md_len);
-		}
-	}
-	bdev_io_get_buf_complete(bdev_io, true);
+	_bdev_io_set_md_buf(bdev_io);
 }
 
 static void
