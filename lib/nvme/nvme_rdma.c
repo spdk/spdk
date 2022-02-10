@@ -184,6 +184,13 @@ union nvme_rdma_mr {
 	uint64_t	key;
 };
 
+enum nvme_rdma_qpair_state {
+	NVME_RDMA_QPAIR_STATE_INVALID = 0,
+	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND,
+	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_POLL,
+	NVME_RDMA_QPAIR_STATE_RUNNING,
+};
+
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
 struct nvme_rdma_qpair {
 	struct spdk_nvme_qpair			qpair;
@@ -236,6 +243,10 @@ struct nvme_rdma_qpair {
 	/* Placed at the end of the struct since it is not used frequently */
 	struct rdma_cm_event			*evt;
 	struct nvme_rdma_poller			*poller;
+
+	enum nvme_rdma_qpair_state		state;
+
+	bool					in_connect_poll;
 
 	/* Used by poll group to keep the qpair around until it is ready to remove it. */
 	bool					defer_deletion_to_pg;
@@ -1197,7 +1208,7 @@ nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, 
 }
 
 static int
-_nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct sockaddr_storage dst_addr;
 	struct sockaddr_storage src_addr;
@@ -1295,25 +1306,56 @@ _nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 		return -1;
 	}
 
-	rc = nvme_fabric_qpair_connect(&rqpair->qpair, rqpair->num_entries + 1);
-	if (rc < 0) {
-		rqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
-		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
-		return rc;
-	}
+	rqpair->state = NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND;
 
 	return 0;
 }
 
 static int
-nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
+				   struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 	int rc;
 
-	rc = _nvme_rdma_ctrlr_connect_qpair(ctrlr, qpair);
-	if (rc == 0) {
-		nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+	if (rqpair->in_connect_poll) {
+		return -EAGAIN;
 	}
+
+	rqpair->in_connect_poll = true;
+
+	switch (rqpair->state) {
+	case NVME_RDMA_QPAIR_STATE_INVALID:
+		rc = -EAGAIN;
+		break;
+	case NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND:
+		rc = nvme_fabric_qpair_connect_async(qpair, rqpair->num_entries + 1);
+		if (rc == 0) {
+			rqpair->state = NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_POLL;
+			rc = -EAGAIN;
+		} else {
+			SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
+		}
+		break;
+	case NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_POLL:
+		rc = nvme_fabric_qpair_connect_poll(qpair);
+		if (rc == 0) {
+			rqpair->state = NVME_RDMA_QPAIR_STATE_RUNNING;
+			nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTED);
+		} else if (rc != -EAGAIN) {
+			SPDK_ERRLOG("Failed to poll NVMe-oF Fabric CONNECT command\n");
+		}
+		break;
+	case NVME_RDMA_QPAIR_STATE_RUNNING:
+		rc = 0;
+		break;
+	default:
+		assert(false);
+		rc = -EINVAL;
+		break;
+	}
+
+	rqpair->in_connect_poll = false;
 
 	return rc;
 }
@@ -1735,6 +1777,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	rqpair->num_entries = qsize - 1;
 	rqpair->delay_cmd_submit = delay_cmd_submit;
+	rqpair->state = NVME_RDMA_QPAIR_STATE_INVALID;
 	qpair = &rqpair->qpair;
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests, false);
 	if (rc != 0) {
@@ -2344,6 +2387,17 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		max_completions = spdk_min(max_completions, rqpair->num_entries);
 	}
 
+	if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING)) {
+		rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+		if (rc == 0) {
+			/* Once the connection is completed, we can submit queued requests */
+			nvme_qpair_resubmit_requests(qpair, rqpair->num_entries);
+		} else if (rc != -EAGAIN) {
+			SPDK_ERRLOG("Failed to connect rqpair=%p\n", rqpair);
+			goto failed;
+		}
+	}
+
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_rdma_poll_events(rctrlr);
 	}
@@ -2716,6 +2770,19 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
 		rqpair = nvme_rdma_qpair(qpair);
 		rqpair->num_completions = 0;
+
+		if (spdk_unlikely(nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING)) {
+			rc = nvme_rdma_ctrlr_connect_qpair_poll(qpair->ctrlr, qpair);
+			if (rc == 0) {
+				/* Once the connection is completed, we can submit queued requests */
+				nvme_qpair_resubmit_requests(qpair, rqpair->num_entries);
+			} else if (rc != -EAGAIN) {
+				SPDK_ERRLOG("Failed to connect rqpair=%p\n", rqpair);
+				nvme_rdma_fail_qpair(qpair, 0);
+				continue;
+			}
+		}
+
 		nvme_rdma_qpair_process_cm_event(rqpair);
 
 		if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE)) {
