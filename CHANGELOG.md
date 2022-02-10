@@ -16,6 +16,11 @@ remove NVMe error injections.
 Removed deprecated max_qpairs_per_ctrlr parameter from nvmf_create_transport RPC. Use
 max_io_qpairs_per_ctrlr instead.
 
+Deprecated the ability for hosts to connect to the discovery subsystem automatically on any
+existing listener. Users should now explicitly add listeners for the discovery subsystem.
+Host can still connect to the discovery subsystem as before, but a warning message will be
+emitted if no listener was configured for the transport ID of the incoming connection.
+
 ### thread
 
 Added `spdk_thread_exec_msg()` API.

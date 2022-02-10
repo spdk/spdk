@@ -1205,14 +1205,19 @@ spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_subsystem_listener *listener;
 
-	if (!strcmp(subsystem->subnqn, SPDK_NVMF_DISCOVERY_NQN)) {
-		return true;
-	}
-
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 		if (spdk_nvme_transport_id_compare(listener->trid, trid) == 0) {
 			return true;
 		}
+	}
+
+	if (!strcmp(subsystem->subnqn, SPDK_NVMF_DISCOVERY_NQN)) {
+		SPDK_WARNLOG("Allowing connection to discovery subsystem on %s/%s/%s, "
+			     "even though this listener was not added to the discovery "
+			     "subsystem.  This behavior is deprecated and will be removed "
+			     "in a future release.\n",
+			     spdk_nvme_transport_id_trtype_str(trid->trtype), trid->traddr, trid->trsvcid);
+		return true;
 	}
 
 	return false;
