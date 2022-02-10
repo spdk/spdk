@@ -4275,6 +4275,9 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 	for (i = 0; i < numrec; i++) {
 		found = false;
 		new_entry = &log_page->entries[i];
+		if (new_entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+			continue;
+		}
 		TAILQ_FOREACH(ctrlr_ctx, &ctx->ctrlr_ctxs, tailq) {
 			old_entry = &ctrlr_ctx->entry;
 			if (!memcmp(new_entry, old_entry, sizeof(*new_entry))) {
