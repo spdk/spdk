@@ -502,8 +502,6 @@ struct spdk_nvme_transport_poll_group {
 	STAILQ_HEAD(, spdk_nvme_qpair)			connected_qpairs;
 	STAILQ_HEAD(, spdk_nvme_qpair)			disconnected_qpairs;
 	STAILQ_ENTRY(spdk_nvme_transport_poll_group)	link;
-	bool						in_completion_context;
-	uint64_t					num_qpairs_to_delete;
 };
 
 struct spdk_nvme_ns {

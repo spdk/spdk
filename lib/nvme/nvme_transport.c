@@ -707,39 +707,8 @@ int64_t
 nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
-	struct spdk_nvme_qpair *qpair;
-	int64_t rc;
-
-	tgroup->in_completion_context = true;
-	rc = tgroup->transport->ops.poll_group_process_completions(tgroup, completions_per_qpair,
+	return tgroup->transport->ops.poll_group_process_completions(tgroup, completions_per_qpair,
 			disconnected_qpair_cb);
-	tgroup->in_completion_context = false;
-
-	if (spdk_unlikely(tgroup->num_qpairs_to_delete > 0)) {
-		/* deleted qpairs are more likely to be in the disconnected qpairs list. */
-		STAILQ_FOREACH(qpair, &tgroup->disconnected_qpairs, poll_group_stailq) {
-			if (spdk_unlikely(qpair->delete_after_completion_context)) {
-				spdk_nvme_ctrlr_free_io_qpair(qpair);
-				if (--tgroup->num_qpairs_to_delete == 0) {
-					return rc;
-				}
-			}
-		}
-
-		STAILQ_FOREACH(qpair, &tgroup->connected_qpairs, poll_group_stailq) {
-			if (spdk_unlikely(qpair->delete_after_completion_context)) {
-				spdk_nvme_ctrlr_free_io_qpair(qpair);
-				if (--tgroup->num_qpairs_to_delete == 0) {
-					return rc;
-				}
-			}
-		}
-		/* Just in case. */
-		SPDK_DEBUGLOG(nvme, "Mismatch between qpairs to delete and poll group number.\n");
-		tgroup->num_qpairs_to_delete = 0;
-	}
-
-	return rc;
 }
 
 int
