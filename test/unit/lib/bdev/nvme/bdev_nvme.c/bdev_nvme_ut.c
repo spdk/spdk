@@ -1147,6 +1147,8 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 	TAILQ_FOREACH_SAFE(qpair, &group->connected_qpairs, poll_group_tailq, tmp_qpair) {
 		if (qpair->failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE) {
 			spdk_nvme_ctrlr_disconnect_io_qpair(qpair);
+			/* Bump the number of completions so this counts as "busy" */
+			num_completions++;
 			continue;
 		}
 
