@@ -1016,6 +1016,42 @@ bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	}
 }
 
+static inline void
+_bdev_io_decrement_outstanding(struct spdk_bdev_channel *bdev_ch,
+			       struct spdk_bdev_shared_resource *shared_resource)
+{
+	assert(bdev_ch->io_outstanding > 0);
+	assert(shared_resource->io_outstanding > 0);
+	bdev_ch->io_outstanding--;
+	shared_resource->io_outstanding--;
+}
+
+static inline bool
+_bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev_channel *bdev_ch = bdev_io->internal.ch;
+	struct spdk_bdev_shared_resource *shared_resource = bdev_ch->shared_resource;
+
+	if (spdk_unlikely(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_NOMEM)) {
+		TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
+		/*
+		 * Wait for some of the outstanding I/O to complete before we
+		 *  retry any of the nomem_io.  Normally we will wait for
+		 *  NOMEM_THRESHOLD_COUNT I/O to complete but for low queue
+		 *  depth channels we will instead wait for half to complete.
+		 */
+		shared_resource->nomem_threshold = spdk_max((int64_t)shared_resource->io_outstanding / 2,
+						   (int64_t)shared_resource->io_outstanding - NOMEM_THRESHOLD_COUNT);
+		return true;
+	}
+
+	if (spdk_unlikely(!TAILQ_EMPTY(&shared_resource->nomem_io))) {
+		bdev_ch_retry_io(bdev_ch);
+	}
+
+	return false;
+}
+
 static void
 _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 {
@@ -5510,27 +5546,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		}
 	} else {
 		_bdev_io_unset_bounce_buf(bdev_io);
-
-		assert(bdev_ch->io_outstanding > 0);
-		assert(shared_resource->io_outstanding > 0);
-		bdev_ch->io_outstanding--;
-		shared_resource->io_outstanding--;
-
-		if (spdk_unlikely(status == SPDK_BDEV_IO_STATUS_NOMEM)) {
-			TAILQ_INSERT_HEAD(&shared_resource->nomem_io, bdev_io, internal.link);
-			/*
-			 * Wait for some of the outstanding I/O to complete before we
-			 *  retry any of the nomem_io.  Normally we will wait for
-			 *  NOMEM_THRESHOLD_COUNT I/O to complete but for low queue
-			 *  depth channels we will instead wait for half to complete.
-			 */
-			shared_resource->nomem_threshold = spdk_max((int64_t)shared_resource->io_outstanding / 2,
-							   (int64_t)shared_resource->io_outstanding - NOMEM_THRESHOLD_COUNT);
+		_bdev_io_decrement_outstanding(bdev_ch, shared_resource);
+		if (spdk_unlikely(_bdev_io_handle_no_mem(bdev_io))) {
 			return;
-		}
-
-		if (spdk_unlikely(!TAILQ_EMPTY(&shared_resource->nomem_io))) {
-			bdev_ch_retry_io(bdev_ch);
 		}
 	}
 
