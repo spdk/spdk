@@ -3134,7 +3134,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	g_rpc_client = spdk_jsonrpc_client_connect(socket, AF_UNIX);
+	g_rpc_client = spdk_jsonrpc_client_connect(socket, socket[0] == '/' ? AF_UNIX : AF_INET);
 	if (!g_rpc_client) {
 		fprintf(stderr, "spdk_jsonrpc_client_connect() failed: %d\n", errno);
 		return 1;
