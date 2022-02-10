@@ -48,6 +48,17 @@ CFLAGS += -Wno-error
 endif
 LDFLAGS += -shared -rdynamic -Wl,-z,nodelete
 
+# By default, clang uses static sanitizer libraries, which means that the executable needs to have
+# them linked in.  Since we don't control how the fio binary is compiled, we need to use the shared
+# libraries.
+ifeq ($(CC_TYPE),clang)
+ifneq ($(filter y,$(CONFIG_ASAN) $(CONFIG_UBSAN)),)
+LDFLAGS += -shared-libsan
+# clang's sanitizers aren't in ld's search path by default, so we need to add it manually
+LDFLAGS += -Wl,-rpath=$(shell $(CC) -print-resource-dir)/lib
+endif
+endif
+
 CLEAN_FILES = $(FIO_PLUGIN)
 
 all : $(FIO_PLUGIN)

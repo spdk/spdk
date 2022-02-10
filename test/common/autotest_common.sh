@@ -1173,13 +1173,20 @@ EOL
 function fio_plugin() {
 	# Setup fio binary cmd line
 	local fio_dir=$CONFIG_FIO_SOURCE_DIR
+	# gcc and clang uses different sanitizer libraries
+	local sanitizers=(libasan libclang_rt.asan)
 	local plugin=$1
 	shift
 
-	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
-	local asan_lib
-	asan_lib=$(ldd $plugin | grep libasan | awk '{print $3}')
+	local asan_lib=
+	for sanitizer in "${sanitizers[@]}"; do
+		asan_lib=$(ldd $plugin | grep $sanitizer | awk '{print $3}')
+		if [[ -n "$asan_lib" ]]; then
+			break
+		fi
+	done
 
+	# Preload the sanitizer library to fio if fio_plugin was compiled with it
 	LD_PRELOAD="$asan_lib $plugin" "$fio_dir"/fio "$@"
 }
 
