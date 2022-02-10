@@ -73,15 +73,6 @@ SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_set_max_subsystems, set_nvmf_target_max_subsystems)
 
-static int decode_conn_sched(const struct spdk_json_val *val, void *out)
-{
-	*(uint32_t *)out = 0;
-
-	SPDK_NOTICELOG("conn_sched is no longer a supported parameter. Ignoring.");
-
-	return 0;
-}
-
 static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
 	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool}
 };
@@ -197,7 +188,6 @@ nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
 }
 
 static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_conf_decoder[] = {
-	{"conn_sched", offsetof(struct spdk_nvmf_tgt_conf, conn_sched), decode_conn_sched, true},
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), decode_admin_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, discovery_filter), decode_discovery_filter, true}

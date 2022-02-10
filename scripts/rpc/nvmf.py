@@ -21,14 +21,12 @@ def nvmf_set_max_subsystems(client,
 
 @deprecated_alias('set_nvmf_target_config')
 def nvmf_set_config(client,
-                    conn_sched=None,
                     passthru_identify_ctrlr=None,
                     poll_groups_mask=None,
                     discovery_filter=None):
     """Set NVMe-oF target subsystem configuration.
 
     Args:
-        conn_sched: (Deprecated) Ignored
         discovery_filter: Set discovery filter (optional), possible values are: `match_any` (default) or
          comma separated values: `transport`, `address`, `svcid`
 
@@ -37,8 +35,6 @@ def nvmf_set_config(client,
     """
     params = {}
 
-    if conn_sched:
-        print("WARNING: conn_sched is deprecated and ignored.")
     if passthru_identify_ctrlr:
         admin_cmd_passthru = {}
         admin_cmd_passthru['identify_ctrlr'] = passthru_identify_ctrlr

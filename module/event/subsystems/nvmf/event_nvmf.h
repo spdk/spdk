@@ -48,7 +48,6 @@ struct spdk_nvmf_admin_passthru_conf {
 };
 
 struct spdk_nvmf_tgt_conf {
-	uint32_t conn_sched; /* Deprecated. */
 	struct spdk_nvmf_admin_passthru_conf admin_passthru;
 	enum spdk_nvmf_tgt_discovery_filter discovery_filter;
 };
