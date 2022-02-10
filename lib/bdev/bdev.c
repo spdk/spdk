@@ -1052,29 +1052,9 @@ _bdev_io_handle_no_mem(struct spdk_bdev_io *bdev_io)
 	return false;
 }
 
-static void
-_bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
+static inline void
+_bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 {
-	if (spdk_likely(bdev_io->internal.orig_iovcnt == 0)) {
-		assert(bdev_io->internal.orig_md_buf == NULL);
-		return;
-	}
-
-	/* if this is read path, copy data from bounce buffer to original buffer */
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
-	    bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-		_copy_buf_to_iovs(bdev_io->internal.orig_iovs,
-				  bdev_io->internal.orig_iovcnt,
-				  bdev_io->internal.bounce_iov.iov_base,
-				  bdev_io->internal.bounce_iov.iov_len);
-	}
-	/* set original buffer for this io */
-	bdev_io->u.bdev.iovcnt = bdev_io->internal.orig_iovcnt;
-	bdev_io->u.bdev.iovs = bdev_io->internal.orig_iovs;
-	/* disable bouncing buffer for this io */
-	bdev_io->internal.orig_iovcnt = 0;
-	bdev_io->internal.orig_iovs = NULL;
-
 	/* do the same for metadata buffer */
 	if (spdk_unlikely(bdev_io->internal.orig_md_buf != NULL)) {
 		assert(spdk_bdev_is_md_separate(bdev_io->bdev));
@@ -1093,6 +1073,41 @@ _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 	 * to waiting for the conditional free of internal.buf in spdk_bdev_free_io()).
 	 */
 	bdev_io_put_buf(bdev_io);
+}
+
+static void
+_bdev_io_push_bounce_data_buffer_done(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	/* set original buffer for this io */
+	bdev_io->u.bdev.iovcnt = bdev_io->internal.orig_iovcnt;
+	bdev_io->u.bdev.iovs = bdev_io->internal.orig_iovs;
+	/* disable bouncing buffer for this io */
+	bdev_io->internal.orig_iovcnt = 0;
+	bdev_io->internal.orig_iovs = NULL;
+
+	_bdev_io_push_bounce_md_buffer(bdev_io);
+}
+
+static void
+_bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
+{
+	if (spdk_likely(bdev_io->internal.orig_iovcnt == 0)) {
+		assert(bdev_io->internal.orig_md_buf == NULL);
+		return;
+	}
+
+	/* if this is read path, copy data from bounce buffer to original buffer */
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
+	    bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		_copy_buf_to_iovs(bdev_io->internal.orig_iovs,
+				  bdev_io->internal.orig_iovcnt,
+				  bdev_io->internal.bounce_iov.iov_base,
+				  bdev_io->internal.bounce_iov.iov_len);
+	}
+
+	_bdev_io_push_bounce_data_buffer_done(bdev_io);
 }
 
 static void
