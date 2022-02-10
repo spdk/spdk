@@ -256,6 +256,9 @@ def nvmf_subsystem_add_listener(client, **params):
     group_as(params, 'listen_address', ['trtype', 'traddr', 'trsvcid', 'adrfam'])
     remove_null(params)
 
+    if params['nqn'] == 'discovery':
+        params['nqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
+
     return client.call('nvmf_subsystem_add_listener', params)
 
 
@@ -294,6 +297,9 @@ def nvmf_subsystem_remove_listener(
 
     if tgt_name:
         params['tgt_name'] = tgt_name
+
+    if params['nqn'] == 'discovery':
+        params['nqn'] = 'nqn.2014-08.org.nvmexpress.discovery'
 
     return client.call('nvmf_subsystem_remove_listener', params)
 
