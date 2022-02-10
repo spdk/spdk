@@ -106,7 +106,6 @@ def nvmf_create_transport(client, **params):
     Args:
         trtype: Transport type (ex. RDMA)
         max_queue_depth: Max number of outstanding I/O per queue (optional)
-        max_qpairs_per_ctrlr: Max number of SQ and CQ per controller (optional, deprecated, use max_io_qpairs_per_ctrlr)
         max_io_qpairs_per_ctrlr: Max number of IO qpairs per controller (optional)
         in_capsule_data_size: Maximum in-capsule data size in bytes (optional)
         max_io_size: Maximum I/O data size in bytes (optional)
@@ -133,9 +132,6 @@ def nvmf_create_transport(client, **params):
     strip_globals(params)
     apply_defaults(params, no_srq=False, c2h_success=True)
     remove_null(params)
-
-    if 'max_qpairs_per_ctrlr' in params:
-        print("WARNING: max_qpairs_per_ctrlr is deprecated, please use max_io_qpairs_per_ctrlr.")
 
     return client.call('nvmf_create_transport', params)
 

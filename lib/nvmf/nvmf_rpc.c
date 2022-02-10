@@ -1864,33 +1864,11 @@ nvmf_rpc_decode_max_io_qpairs(const struct spdk_json_val *val, void *out)
 	return rc;
 }
 
-/**
- * This function parses deprecated `max_qpairs_per_ctrlr` and warns the user to use
- * the new parameter `max_io_qpairs_per_ctrlr`
- */
-static int
-nvmf_rpc_decode_max_qpairs(const struct spdk_json_val *val, void *out)
-{
-	uint16_t *i = out;
-	int rc;
-
-	rc = spdk_json_number_to_uint16(val, i);
-	if (rc == 0) {
-		SPDK_WARNLOG("Parameter max_qpairs_per_ctrlr is deprecated, use max_io_qpairs_per_ctrlr instead.\n");
-	}
-
-	return rc;
-}
-
 static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[] = {
 	{	"trtype", offsetof(struct nvmf_rpc_create_transport_ctx, trtype), spdk_json_decode_string},
 	{
 		"max_queue_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_queue_depth),
 		spdk_json_decode_uint16, true
-	},
-	{
-		"max_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr),
-		nvmf_rpc_decode_max_qpairs, true
 	},
 	{
 		"max_io_qpairs_per_ctrlr", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_qpairs_per_ctrlr),

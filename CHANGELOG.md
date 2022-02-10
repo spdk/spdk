@@ -7,6 +7,11 @@
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and
 remove NVMe error injections.
 
+### nvmf
+
+Removed deprecated max_qpairs_per_ctrlr parameter from nvmf_create_transport RPC. Use
+max_io_qpairs_per_ctrlr instead.
+
 ## v22.01
 
 ### accel
