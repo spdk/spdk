@@ -2751,7 +2751,6 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 
 		if (spdk_unlikely(qpair->transport_failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE)) {
 			nvme_rdma_fail_qpair(qpair, 0);
-			disconnected_qpair_cb(qpair, tgroup->group->ctx);
 			continue;
 		}
 		num_qpairs++;
