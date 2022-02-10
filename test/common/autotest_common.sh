@@ -1170,27 +1170,25 @@ EOL
 	fi
 }
 
-function fio_bdev() {
+function fio_plugin() {
 	# Setup fio binary cmd line
 	local fio_dir=$CONFIG_FIO_SOURCE_DIR
-	local bdev_plugin="$rootdir/build/fio/spdk_bdev"
+	local plugin=$1
+	shift
 
 	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
 	local asan_lib
-	asan_lib=$(ldd $bdev_plugin | grep libasan | awk '{print $3}')
+	asan_lib=$(ldd $plugin | grep libasan | awk '{print $3}')
 
-	LD_PRELOAD="$asan_lib $bdev_plugin" "$fio_dir"/fio "$@"
+	LD_PRELOAD="$asan_lib $plugin" "$fio_dir"/fio "$@"
+}
+
+function fio_bdev() {
+	fio_plugin "$rootdir/build/fio/spdk_bdev" "$@"
 }
 
 function fio_nvme() {
-	# Setup fio binary cmd line
-	local fio_dir=$CONFIG_FIO_SOURCE_DIR
-	local nvme_plugin="$rootdir/build/fio/spdk_nvme"
-
-	# Preload AddressSanitizer library to fio if fio_plugin was compiled with it
-	asan_lib=$(ldd $nvme_plugin | grep libasan | awk '{print $3}')
-
-	LD_PRELOAD="$asan_lib $nvme_plugin" "$fio_dir"/fio "$@"
+	fio_plugin "$rootdir/build/fio/spdk_nvme" "$@"
 }
 
 function get_lvs_free_mb() {
