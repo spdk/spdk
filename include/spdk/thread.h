@@ -503,6 +503,32 @@ int spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void 
 int spdk_thread_send_critical_msg(struct spdk_thread *thread, spdk_msg_fn fn);
 
 /**
+ * Run the msg callback on the given thread. If this happens to be the current
+ * thread, the callback is executed immediately; otherwise a message is sent to
+ * the thread, and it's run asynchronously.
+ *
+ * \param thread The target thread.
+ * \param fn This function will be called on the given thread.
+ * \param ctx This context will be passed to fn when called.
+ *
+ * \return 0 on success
+ * \return -ENOMEM if the message could not be allocated
+ * \return -EIO if the message could not be sent to the destination thread
+ */
+static inline int
+spdk_thread_exec_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
+{
+	assert(thread != NULL);
+
+	if (spdk_get_thread() == thread) {
+		fn(ctx);
+		return 0;
+	}
+
+	return spdk_thread_send_msg(thread, fn, ctx);
+}
+
+/**
  * Send a message to each thread, serially.
  *
  * The message is sent asynchronously - i.e. spdk_for_each_thread will return

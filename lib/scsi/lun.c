@@ -302,19 +302,13 @@ static void
 scsi_lun_remove(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_pr_registrant *reg, *tmp;
-	struct spdk_thread *thread;
 
 	TAILQ_FOREACH_SAFE(reg, &lun->reg_head, link, tmp) {
 		TAILQ_REMOVE(&lun->reg_head, reg, link);
 		free(reg);
 	}
 
-	thread = spdk_get_thread();
-	if (thread != lun->thread) {
-		spdk_thread_send_msg(lun->thread, _scsi_lun_remove, lun);
-	} else {
-		_scsi_lun_remove(lun);
-	}
+	spdk_thread_exec_msg(lun->thread, _scsi_lun_remove, lun);
 }
 
 static int

@@ -16,6 +16,10 @@ remove NVMe error injections.
 Removed deprecated max_qpairs_per_ctrlr parameter from nvmf_create_transport RPC. Use
 max_io_qpairs_per_ctrlr instead.
 
+### thread
+
+Added `spdk_thread_exec_msg()` API.
+
 ## v22.01
 
 ### accel

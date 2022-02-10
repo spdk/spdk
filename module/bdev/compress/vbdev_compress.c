@@ -455,11 +455,8 @@ reduce_rw_blocks_cb(void *arg, int reduce_errno)
 
 	/* Send this request to the orig IO thread. */
 	orig_thread = spdk_io_channel_get_thread(ch);
-	if (orig_thread != spdk_get_thread()) {
-		spdk_thread_send_msg(orig_thread, _reduce_rw_blocks_cb, io_ctx);
-	} else {
-		_reduce_rw_blocks_cb(io_ctx);
-	}
+
+	spdk_thread_exec_msg(orig_thread, _reduce_rw_blocks_cb, io_ctx);
 }
 
 static uint64_t

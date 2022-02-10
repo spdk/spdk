@@ -3128,11 +3128,7 @@ free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 		free_qp(ctrlr, i);
 	}
 
-	if (ctrlr->thread == spdk_get_thread()) {
-		_free_ctrlr(ctrlr);
-	} else {
-		spdk_thread_send_msg(ctrlr->thread, _free_ctrlr, ctrlr);
-	}
+	spdk_thread_exec_msg(ctrlr->thread, _free_ctrlr, ctrlr);
 }
 
 static int

@@ -4180,12 +4180,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 
-	if (spdk_likely(qpair->group->thread == spdk_get_thread())) {
-		_nvmf_request_complete(req);
-	} else {
-		spdk_thread_send_msg(qpair->group->thread,
-				     _nvmf_request_complete, req);
-	}
+	spdk_thread_exec_msg(qpair->group->thread, _nvmf_request_complete, req);
 
 	return 0;
 }
