@@ -232,6 +232,42 @@ fuzz_admin_namespace_management_command(struct fuzz_command *cmd)
 	g_data += 1;
 }
 
+static void
+fuzz_admin_security_receive_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_SECURITY_RECEIVE;
+
+	cmd->cmd.cdw10_bits.raw = 0;
+	cmd->cmd.cdw10_bits.sec_send_recv.secp = g_data[0];
+	cmd->cmd.cdw10_bits.sec_send_recv.spsp1 = g_data[1];
+	cmd->cmd.cdw10_bits.sec_send_recv.spsp0 = g_data[2];
+	cmd->cmd.cdw10_bits.sec_send_recv.nssf = g_data[3];
+
+	/* Allocation Length(AL) */
+	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) + (g_data[6] << 8) + g_data[7];
+
+	g_data += 8;
+}
+
+static void
+fuzz_admin_security_send_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_SECURITY_SEND;
+
+	cmd->cmd.cdw10_bits.raw = 0;
+	cmd->cmd.cdw10_bits.sec_send_recv.secp = g_data[0];
+	cmd->cmd.cdw10_bits.sec_send_recv.spsp1 = g_data[1];
+	cmd->cmd.cdw10_bits.sec_send_recv.spsp0 = g_data[2];
+	cmd->cmd.cdw10_bits.sec_send_recv.nssf = g_data[3];
+
+	/* Transfer Length(TL) */
+	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) + (g_data[6] << 8) + g_data[7];
+
+	g_data += 8;
+}
+
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd) },
 	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6 },
@@ -243,6 +279,8 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_delete_io_submission_queue_command, .bytes_per_cmd = 2},
 	{ .fn = fuzz_admin_namespace_attachment_command, .bytes_per_cmd = 1},
 	{ .fn = fuzz_admin_namespace_management_command, .bytes_per_cmd = 1},
+	{ .fn = fuzz_admin_security_receive_command, .bytes_per_cmd = 8},
+	{ .fn = fuzz_admin_security_send_command, .bytes_per_cmd = 8},
 	{ .fn = NULL, .bytes_per_cmd = 0 }
 };
 
