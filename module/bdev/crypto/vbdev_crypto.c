@@ -899,7 +899,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 				/* If nothing was enqueued, but the last one wasn't because of
 				 * busy, fail it now as the poller won't know anything about it.
 				 */
-				_crypto_operation_complete(bdev_io);
 				rc = -EINVAL;
 				goto error_attach_session;
 			}
