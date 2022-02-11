@@ -105,6 +105,11 @@ LINK_HASH=n
 
 ifeq ($(CONFIG_VHOST),y)
 DPDK_LIB_LIST += rte_vhost
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_dmadev.*))
+# Introduced in DPDK 21.11, and rte_vhost became dependent on
+# it shortly thereafter
+DPDK_LIB_LIST += rte_dmadev
+endif
 LINK_HASH=y
 ifneq ($(DPDK_FRAMEWORK),y)
 DPDK_LIB_LIST += rte_cryptodev
@@ -121,6 +126,7 @@ ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_rcu.*))
 DPDK_LIB_LIST += rte_rcu
 endif
 endif
+
 
 DPDK_LIB_LIST_SORTED = $(sort $(DPDK_LIB_LIST))
 
