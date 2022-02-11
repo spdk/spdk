@@ -34,6 +34,7 @@
 #include "vbdev_crypto.h"
 
 #include "spdk/env.h"
+#include "spdk/likely.h"
 #include "spdk/endian.h"
 #include "spdk/thread.h"
 #include "spdk/bdev_module.h"
@@ -615,6 +616,7 @@ cancel_queued_crypto_ops(struct crypto_io_channel *crypto_ch, struct spdk_bdev_i
 		rte_mempool_put_bulk(g_crypto_op_mp, (void **)dequeued_ops,
 				     num_dequeued_ops);
 		assert(num_mbufs > 0);
+		/* This also releases chained mbufs if any. */
 		rte_pktmbuf_free_bulk(mbufs_to_free, num_mbufs);
 	}
 }
@@ -702,6 +704,7 @@ crypto_dev_poller(void *args)
 				     (void **)dequeued_ops,
 				     num_dequeued_ops);
 		assert(num_mbufs > 0);
+		/* This also releases chained mbufs if any. */
 		rte_pktmbuf_free_bulk(mbufs_to_free, num_mbufs);
 	}
 
@@ -755,6 +758,60 @@ crypto_dev_poller(void *args)
 	}
 
 	return num_dequeued_ops;
+}
+
+/* Allocate the new mbuf of @remainder size with data pointed by @addr and attach
+ * it to the @orig_mbuf. */
+static int
+mbuf_chain_remainder(struct spdk_bdev_io *bdev_io, struct rte_mbuf *orig_mbuf,
+		     uint8_t *addr, uint32_t remainder)
+{
+	uint64_t phys_addr, phys_len;
+	struct rte_mbuf *chain_mbuf;
+	int rc;
+
+	phys_len = remainder;
+	phys_addr = spdk_vtophys((void *)addr, &phys_len);
+	if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR || phys_len != remainder)) {
+		return -EFAULT;
+	}
+	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&chain_mbuf, 1);
+	if (spdk_unlikely(rc)) {
+		return -ENOMEM;
+	}
+	/* Store context in every mbuf as we don't know anything about completion order */
+	*RTE_MBUF_DYNFIELD(chain_mbuf, g_mbuf_offset, uint64_t *) = (uint64_t)bdev_io;
+	rte_pktmbuf_attach_extbuf(chain_mbuf, addr, phys_addr, phys_len, &g_shinfo);
+	rte_pktmbuf_append(chain_mbuf, phys_len);
+
+	/* Chained buffer is released by rte_pktbuf_free_bulk() automagicaly. */
+	rte_pktmbuf_chain(orig_mbuf, chain_mbuf);
+	return 0;
+}
+
+/* Attach data buffer pointed by @addr to @mbuf. Return utilized len of the
+ * contiguous space that was physically available. */
+static uint64_t
+mbuf_attach_buf(struct spdk_bdev_io *bdev_io, struct rte_mbuf *mbuf,
+		uint8_t *addr, uint32_t len)
+{
+	uint64_t phys_addr, phys_len;
+
+	/* Store context in every mbuf as we don't know anything about completion order */
+	*RTE_MBUF_DYNFIELD(mbuf, g_mbuf_offset, uint64_t *) = (uint64_t)bdev_io;
+
+	phys_len = len;
+	phys_addr = spdk_vtophys((void *)addr, &phys_len);
+	if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR || phys_len == 0)) {
+		return 0;
+	}
+	assert(phys_len <= len);
+
+	/* Set the mbuf elements address and length. */
+	rte_pktmbuf_attach_extbuf(mbuf, addr, phys_addr, phys_len, &g_shinfo);
+	rte_pktmbuf_append(mbuf, phys_len);
+
+	return phys_len;
 }
 
 /* We're either encrypting on the way down or decrypting on the way back. */
@@ -852,24 +909,26 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	do {
 		uint8_t *iv_ptr;
 		uint8_t *buf_addr;
-		uint64_t phys_addr;
-		uint64_t op_block_offset;
 		uint64_t phys_len;
+		uint32_t remainder;
+		uint64_t op_block_offset;
 
-		/* Store context in every mbuf as we don't know anything about completion order */
-		*RTE_MBUF_DYNFIELD(src_mbufs[crypto_index], g_mbuf_offset, uint64_t *) = (uint64_t)bdev_io;
-
-		phys_len = crypto_len;
-		phys_addr = spdk_vtophys((void *)current_iov, &phys_len);
-		if (phys_addr == SPDK_VTOPHYS_ERROR) {
-			rc = -EFAULT;
+		phys_len = mbuf_attach_buf(bdev_io, src_mbufs[crypto_index],
+					   current_iov, crypto_len);
+		if (spdk_unlikely(phys_len == 0)) {
 			goto error_attach_session;
+			rc = -EFAULT;
 		}
 
-		/* Set the mbuf elements address and length. */
-		rte_pktmbuf_attach_extbuf(src_mbufs[crypto_index], current_iov,
-					  phys_addr, crypto_len, &g_shinfo);
-		rte_pktmbuf_append(src_mbufs[crypto_index], crypto_len);
+		/* Handle the case of page boundary. */
+		remainder = crypto_len - phys_len;
+		if (spdk_unlikely(remainder > 0)) {
+			rc = mbuf_chain_remainder(bdev_io, src_mbufs[crypto_index],
+						  current_iov + phys_len, remainder);
+			if (spdk_unlikely(rc)) {
+				goto error_attach_session;
+			}
+		}
 
 		/* Set the IV - we use the LBA of the crypto_op */
 		iv_ptr = rte_crypto_op_ctod_offset(crypto_ops[crypto_index], uint8_t *,
@@ -891,17 +950,26 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		 */
 		if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
 			buf_addr = io_ctx->aux_buf_iov.iov_base + en_offset;
-			phys_addr = spdk_vtophys((void *)buf_addr, NULL);
-			if (phys_addr == SPDK_VTOPHYS_ERROR) {
+			phys_len = mbuf_attach_buf(bdev_io, dst_mbufs[crypto_index],
+						   buf_addr, crypto_len);
+			if (spdk_unlikely(phys_len == 0)) {
 				rc = -EFAULT;
 				goto error_attach_session;
 			}
-			rte_pktmbuf_attach_extbuf(dst_mbufs[crypto_index], buf_addr,
-						  phys_addr, crypto_len, &g_shinfo);
-			rte_pktmbuf_append(dst_mbufs[crypto_index], crypto_len);
 
 			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
-			en_offset += crypto_len;
+			en_offset += phys_len;
+
+			/* Handle the case of page boundary. */
+			remainder = crypto_len - phys_len;
+			if (spdk_unlikely(remainder > 0)) {
+				rc = mbuf_chain_remainder(bdev_io, dst_mbufs[crypto_index],
+							  buf_addr + phys_len, remainder);
+				if (spdk_unlikely(rc)) {
+					goto error_attach_session;
+				}
+				en_offset += remainder;
+			}
 
 			/* Attach the crypto session to the operation */
 			rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index],
@@ -910,7 +978,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 				rc = -EINVAL;
 				goto error_attach_session;
 			}
-
 		} else {
 			crypto_ops[crypto_index]->sym->m_dst = NULL;
 
@@ -921,8 +988,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 				rc = -EINVAL;
 				goto error_attach_session;
 			}
-
-
 		}
 
 		/* Subtract our running totals for the op in progress and the overall bdev io */
@@ -998,6 +1063,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 error_attach_session:
 error_get_ops:
 	if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
+		/* This also releases chained mbufs if any. */
 		rte_pktmbuf_free_bulk(dst_mbufs, cryop_cnt);
 	}
 	if (allocated > 0) {
@@ -1005,6 +1071,7 @@ error_get_ops:
 				     allocated);
 	}
 error_get_dst:
+	/* This also releases chained mbufs if any. */
 	rte_pktmbuf_free_bulk(src_mbufs, cryop_cnt);
 	return rc;
 }
