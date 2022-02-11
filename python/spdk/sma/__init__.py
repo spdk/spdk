@@ -9,3 +9,4 @@ from .device import DeviceException         # noqa
 from .device import DeviceManager           # noqa
 from .device import NvmfTcpDeviceManager    # noqa
 from .device import VhostBlkDeviceManager   # noqa
+from .device import NvmfVfioDeviceManager   # noqa
