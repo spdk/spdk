@@ -183,7 +183,7 @@ export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1:disabl
 # Export LeakSanitizer option to use suppression file in order to prevent false positives
 # and known leaks in external executables or libraries from showing up.
 asan_suppression_file="/var/tmp/asan_suppression_file"
-sudo rm -rf "$asan_suppression_file"
+rm -rf "$asan_suppression_file" 2> /dev/null || sudo rm -rf "$asan_suppression_file"
 cat << EOL >> "$asan_suppression_file"
 # ASAN has some bugs around thread_local variables.  We have a destructor in place
 # to free the thread contexts, but ASAN complains about the leak before those
