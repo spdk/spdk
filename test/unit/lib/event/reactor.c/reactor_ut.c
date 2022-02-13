@@ -83,7 +83,7 @@ test_init_reactors(void)
 
 	allocate_cores(3);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	CU_ASSERT(g_reactor_state == SPDK_REACTOR_STATE_INITIALIZED);
 	for (core = 0; core < 3; core++) {
@@ -118,7 +118,7 @@ test_event_call(void)
 
 	allocate_cores(1);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	evt = spdk_event_allocate(0, ut_event_fn, &test1, &test2);
 	CU_ASSERT(evt != NULL);
@@ -155,7 +155,7 @@ test_schedule_thread(void)
 
 	allocate_cores(5);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	spdk_cpuset_set_cpu(&cpuset, 3, true);
 	g_next_core = 4;
@@ -207,7 +207,7 @@ test_reschedule_thread(void)
 
 	allocate_cores(3);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	spdk_cpuset_set_cpu(&g_reactor_core_mask, 0, true);
 	spdk_cpuset_set_cpu(&g_reactor_core_mask, 1, true);
@@ -309,7 +309,7 @@ test_for_each_reactor(void)
 
 	allocate_cores(5);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	spdk_for_each_reactor(for_each_reactor_cb, &count, &done, for_each_reactor_done);
 
@@ -404,7 +404,7 @@ test_reactor_stats(void)
 
 	allocate_cores(1);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	spdk_cpuset_set_cpu(&cpuset, 0, true);
 
@@ -577,7 +577,7 @@ test_scheduler(void)
 
 	allocate_cores(3);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	spdk_scheduler_set("dynamic");
 
@@ -816,7 +816,7 @@ test_governor(void)
 
 	allocate_cores(2);
 
-	CU_ASSERT(spdk_reactors_init() == 0);
+	CU_ASSERT(spdk_reactors_init(SPDK_DEFAULT_MSG_MEMPOOL_SIZE) == 0);
 
 	spdk_scheduler_set("dynamic");
 	spdk_governor_set("dpdk_governor");

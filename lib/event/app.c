@@ -225,6 +225,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts, size_t opts_size)
 	SET_FIELD(num_entries, SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	SET_FIELD(delay_subsystem_init, false);
 	SET_FIELD(disable_signal_handlers, false);
+	SET_FIELD(msg_mempool_size, SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
 #undef SET_FIELD
 }
 
@@ -520,10 +521,11 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(log);
 	SET_FIELD(base_virtaddr);
 	SET_FIELD(disable_signal_handlers);
+	SET_FIELD(msg_mempool_size);
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 192, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
 
 #undef SET_FIELD
 }
@@ -600,7 +602,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	spdk_log_open(opts->log);
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
-	if ((rc = spdk_reactors_init()) != 0) {
+	if ((rc = spdk_reactors_init(opts->msg_mempool_size)) != 0) {
 		SPDK_ERRLOG("Reactor Initialization failed: rc = %d\n", rc);
 		return 1;
 	}

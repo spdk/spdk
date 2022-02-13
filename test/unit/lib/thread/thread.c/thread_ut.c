@@ -109,7 +109,8 @@ thread_alloc(void)
 	spdk_thread_lib_fini();
 
 	/* Scheduling callback exists with extended thread library initialization. */
-	spdk_thread_lib_init_ext(_thread_op, _thread_op_supported, 0);
+	spdk_thread_lib_init_ext(_thread_op, _thread_op_supported, 0,
+				 SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
 
 	/* Scheduling succeeds */
 	g_sched_rc = 0;

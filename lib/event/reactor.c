@@ -233,7 +233,7 @@ static int reactor_thread_op(struct spdk_thread *thread, enum spdk_thread_op op)
 static bool reactor_thread_op_supported(enum spdk_thread_op op);
 
 int
-spdk_reactors_init(void)
+spdk_reactors_init(size_t msg_mempool_size)
 {
 	struct spdk_reactor *reactor;
 	int rc;
@@ -274,7 +274,7 @@ spdk_reactors_init(void)
 	memset(g_reactors, 0, (g_reactor_count) * sizeof(struct spdk_reactor));
 
 	spdk_thread_lib_init_ext(reactor_thread_op, reactor_thread_op_supported,
-				 sizeof(struct spdk_lw_thread));
+				 sizeof(struct spdk_lw_thread), msg_mempool_size);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor_construct(&g_reactors[i], i);

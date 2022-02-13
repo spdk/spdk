@@ -31,6 +31,12 @@ A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PM
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and
 remove NVMe error injections.
 
+### event
+
+Added `msg_mempool_size` parameter to `spdk_reactors_init` and `spdk_thread_lib_init_ext`.
+The size of `g_spdk_msg_mempool` can now be controlled through the same-named
+user option of `spdk_app_opts` structure.
+
 ### nvmf
 
 Removed deprecated max_qpairs_per_ctrlr parameter from nvmf_create_transport RPC. Use

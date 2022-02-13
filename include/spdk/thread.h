@@ -213,6 +213,9 @@ typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int st
 
 #define SPDK_IO_CHANNEL_STRUCT_SIZE	96
 
+/* Power of 2 minus 1 is optimal for memory consumption */
+#define SPDK_DEFAULT_MSG_MEMPOOL_SIZE (262144 - 1)
+
 /**
  * Initialize the threading library. Must be called once prior to allocating any threads.
  *
@@ -236,12 +239,13 @@ int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz);
  * \param thread_op_supported_fn Called to check whether the SPDK thread operation is supported.
  * \param ctx_sz For each thread allocated, for use by the thread scheduler. A pointer
  * to this region may be obtained by calling spdk_thread_get_ctx().
+ * \param msg_mempool_size Size of the allocated spdk_msg_mempool.
  *
  * \return 0 on success. Negated errno on failure.
  */
 int spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
 			     spdk_thread_op_supported_fn thread_op_supported_fn,
-			     size_t ctx_sz);
+			     size_t ctx_sz, size_t msg_mempool_size);
 
 /**
  * Release all resources associated with this library.

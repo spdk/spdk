@@ -116,7 +116,7 @@ struct spdk_reactor {
 	int						resched_fd;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
-int spdk_reactors_init(void);
+int spdk_reactors_init(size_t msg_mempool_size);
 void spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);

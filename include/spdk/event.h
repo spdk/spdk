@@ -147,6 +147,13 @@ struct spdk_app_opts {
 	 * Default is `false`.
 	 */
 	bool disable_signal_handlers;
+
+	/**
+	 * The allocated size for the message pool used by the threading library.
+	 *
+	 * Default is `SPDK_DEFAULT_MSG_MEMPOOL_SIZE`.
+	 */
+	size_t msg_mempool_size;
 };
 
 /**

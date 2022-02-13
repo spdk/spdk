@@ -266,18 +266,20 @@ _get_thread(void)
 }
 
 static int
-_thread_lib_init(size_t ctx_sz)
+_thread_lib_init(size_t ctx_sz, size_t msg_mempool_sz)
 {
 	char mempool_name[SPDK_MAX_MEMZONE_NAME_LEN];
 
 	g_ctx_sz = ctx_sz;
 
 	snprintf(mempool_name, sizeof(mempool_name), "msgpool_%d", getpid());
-	g_spdk_msg_mempool = spdk_mempool_create(mempool_name,
-			     262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
+	g_spdk_msg_mempool = spdk_mempool_create(mempool_name, msg_mempool_sz,
 			     sizeof(struct spdk_msg),
 			     0, /* No cache. We do our own. */
 			     SPDK_ENV_SOCKET_ID_ANY);
+
+	SPDK_DEBUGLOG(thread, "spdk_msg_mempool was created with size: %zu\n",
+		      msg_mempool_sz);
 
 	if (!g_spdk_msg_mempool) {
 		SPDK_ERRLOG("spdk_msg_mempool creation failed\n");
@@ -299,13 +301,13 @@ spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 		g_new_thread_fn = new_thread_fn;
 	}
 
-	return _thread_lib_init(ctx_sz);
+	return _thread_lib_init(ctx_sz, SPDK_DEFAULT_MSG_MEMPOOL_SIZE);
 }
 
 int
 spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
 			 spdk_thread_op_supported_fn thread_op_supported_fn,
-			 size_t ctx_sz)
+			 size_t ctx_sz, size_t msg_mempool_sz)
 {
 	assert(g_new_thread_fn == NULL);
 	assert(g_thread_op_fn == NULL);
@@ -323,7 +325,7 @@ spdk_thread_lib_init_ext(spdk_thread_op_fn thread_op_fn,
 		g_thread_op_supported_fn = thread_op_supported_fn;
 	}
 
-	return _thread_lib_init(ctx_sz);
+	return _thread_lib_init(ctx_sz, msg_mempool_sz);
 }
 
 void
