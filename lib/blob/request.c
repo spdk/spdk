@@ -504,18 +504,4 @@ bs_user_op_abort(spdk_bs_user_op_t *op)
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
 }
 
-void
-bs_sequence_to_batch_completion(void *cb_arg, int bserrno)
-{
-	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)cb_arg;
-
-	set->u.batch.outstanding_ops--;
-
-	if (set->u.batch.outstanding_ops == 0 && set->u.batch.batch_closed) {
-		if (set->cb_args.cb_fn) {
-			set->cb_args.cb_fn(set->cb_args.channel, set->cb_args.cb_arg, bserrno);
-		}
-	}
-}
-
 SPDK_LOG_REGISTER_COMPONENT(blob_rw)

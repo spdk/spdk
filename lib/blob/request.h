@@ -212,6 +212,4 @@ void bs_user_op_execute(spdk_bs_user_op_t *op);
 
 void bs_user_op_abort(spdk_bs_user_op_t *op);
 
-void bs_sequence_to_batch_completion(void *cb_arg, int bserrno);
-
 #endif
