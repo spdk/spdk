@@ -63,6 +63,9 @@ endif
 
 ifeq ($(CONFIG_VHOST),y)
 DPDK_LIB_LIST += -lrte_vhost -lrte_net -lrte_cryptodev -lrte_hash
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_dmadev.*))
+DPDK_LIB_LIST += -lrte_dmadev
+endif
 endif
 
 override CFLAGS += -I$(SPDK_ROOT_DIR)/include
