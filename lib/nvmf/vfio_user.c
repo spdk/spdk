@@ -1593,21 +1593,12 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 		uint32_t cdw0, uint16_t sqid, uint16_t cid, uint16_t sc, uint16_t sct)
 {
 	struct spdk_nvme_status cpl_status = { 0 };
-	const struct spdk_nvmf_registers *regs;
 	struct spdk_nvme_cpl *cpl;
 	int err;
 
 	assert(ctrlr != NULL);
 
 	if (spdk_unlikely(cq == NULL || q_addr(&cq->mapping) == NULL)) {
-		return 0;
-	}
-
-	regs = spdk_nvmf_ctrlr_get_regs(ctrlr->ctrlr);
-	if (regs->csts.bits.shst != SPDK_NVME_SHST_NORMAL) {
-		SPDK_DEBUGLOG(nvmf_vfio,
-			      "%s: ignore completion sqid:%d cid=%d status=%#x\n",
-			      ctrlr_id(ctrlr), sqid, cid, sc);
 		return 0;
 	}
 
