@@ -958,12 +958,7 @@ blockdev_test_reset(void)
 
 	execute_spdk_function(__blockdev_reset, &req);
 
-	/* Workaround: NVMe-oF target doesn't support reset yet - so for now
-	 *  don't fail the test if it's an NVMe bdev.
-	 */
-	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_NVME_IO)) {
-		CU_ASSERT_EQUAL(g_completion_success, true);
-	}
+	CU_ASSERT_EQUAL(g_completion_success, true);
 }
 
 struct bdevio_passthrough_request {
