@@ -198,7 +198,7 @@ nvmf_ctrlr_keep_alive_poll(void *ctx)
 			       ctrlr->hostnqn, ctrlr->subsys->subnqn);
 		/* set the Controller Fatal Status bit to '1' */
 		if (ctrlr->vcprop.csts.bits.cfs == 0) {
-			ctrlr->vcprop.csts.bits.cfs = 1;
+			nvmf_ctrlr_set_fatal_status(ctrlr);
 
 			/*
 			 * disconnect qpairs, terminate Transport connection
@@ -974,7 +974,7 @@ _nvmf_ctrlr_cc_reset_shn_done(void *ctx)
 		} else {
 			/* controller fatal status */
 			SPDK_WARNLOG("IO timeout, ctrlr %p is in fatal status\n", ctrlr);
-			ctrlr->vcprop.csts.bits.cfs = 1;
+			nvmf_ctrlr_set_fatal_status(ctrlr);
 		}
 	}
 
@@ -1054,6 +1054,12 @@ const struct spdk_nvmf_registers *
 spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return &ctrlr->vcprop;
+}
+
+void
+nvmf_ctrlr_set_fatal_status(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	ctrlr->vcprop.csts.bits.cfs = 1;
 }
 
 static uint64_t

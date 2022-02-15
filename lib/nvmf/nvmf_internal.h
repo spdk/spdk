@@ -496,6 +496,8 @@ void nvmf_qpair_free_aer(struct spdk_nvmf_qpair *qpair);
 
 int nvmf_ctrlr_abort_request(struct spdk_nvmf_request *req);
 
+void nvmf_ctrlr_set_fatal_status(struct spdk_nvmf_ctrlr *ctrlr);
+
 static inline struct spdk_nvmf_ns *
 _nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
