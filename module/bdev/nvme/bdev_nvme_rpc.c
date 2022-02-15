@@ -901,10 +901,11 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	struct firmware_update_info *firm_ctx = cb_arg;
 	enum spdk_nvme_fw_commit_action commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
 
+	spdk_bdev_free_io(bdev_io);
+
 	if (!success) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "firmware download failed .");
-		spdk_bdev_free_io(bdev_io);
 		apply_firmware_cleanup(firm_ctx);
 		return;
 	}
@@ -927,7 +928,6 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "firmware commit failed.");
-			spdk_bdev_free_io(bdev_io);
 			apply_firmware_cleanup(firm_ctx);
 			return;
 		}
@@ -943,7 +943,6 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "firmware download failed.");
-			spdk_bdev_free_io(bdev_io);
 			apply_firmware_cleanup(firm_ctx);
 			return;
 		}
