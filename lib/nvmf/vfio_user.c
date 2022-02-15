@@ -349,9 +349,6 @@ struct nvmf_vfio_user_ctrlr {
 	TAILQ_ENTRY(nvmf_vfio_user_ctrlr)	link;
 
 	volatile uint32_t			*doorbells;
-
-	/* internal CSTS.CFS register for vfio-user fatal errors */
-	uint32_t				cfs : 1;
 };
 
 struct nvmf_vfio_user_endpoint {
@@ -732,15 +729,19 @@ ctrlr_id(struct nvmf_vfio_user_ctrlr *ctrlr)
 }
 
 static void
-fail_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
+fail_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 {
-	assert(ctrlr != NULL);
+	const struct spdk_nvmf_registers *regs;
 
-	if (ctrlr->cfs == 0) {
-		SPDK_ERRLOG(":%s failing controller\n", ctrlr_id(ctrlr));
+	assert(vu_ctrlr != NULL);
+	assert(vu_ctrlr->ctrlr != NULL);
+
+	regs = spdk_nvmf_ctrlr_get_regs(vu_ctrlr->ctrlr);
+	if (regs->csts.bits.cfs == 0) {
+		SPDK_ERRLOG(":%s failing controller\n", ctrlr_id(vu_ctrlr));
 	}
 
-	ctrlr->cfs = 1U;
+	nvmf_ctrlr_set_fatal_status(vu_ctrlr->ctrlr);
 }
 
 static inline bool

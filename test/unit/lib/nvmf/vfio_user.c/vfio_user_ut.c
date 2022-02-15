@@ -70,6 +70,7 @@ DEFINE_STUB(nvmf_ctrlr_save_migr_data, int, (struct spdk_nvmf_ctrlr *ctrlr,
 		struct nvmf_ctrlr_migr_data *data), 0);
 DEFINE_STUB(nvmf_ctrlr_restore_migr_data, int, (struct spdk_nvmf_ctrlr *ctrlr,
 		struct nvmf_ctrlr_migr_data *data), 0);
+DEFINE_STUB_V(nvmf_ctrlr_set_fatal_status, (struct spdk_nvmf_ctrlr *ctrlr));
 
 static void *
 gpa_to_vva(void *prv, uint64_t addr, uint64_t len, int prot)
