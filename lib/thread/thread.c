@@ -1992,7 +1992,6 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	if (tmp != NULL) {
 		SPDK_ERRLOG("io_device %p already registered (old:%s new:%s)\n",
 			    io_device, tmp->name, dev->name);
-		pthread_mutex_unlock(&g_devlist_mutex);
 		free(dev);
 	}
 
