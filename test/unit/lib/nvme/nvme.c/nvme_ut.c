@@ -740,7 +740,7 @@ static void
 test_nvme_free_request(void)
 {
 	struct nvme_request match_req;
-	struct spdk_nvme_qpair qpair;
+	struct spdk_nvme_qpair qpair = {0};
 	struct nvme_request *req;
 
 	/* put a req on the Q, take it off and compare */
