@@ -225,11 +225,14 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	size_t tmp;
 	unsigned dpdk_flags = 0;
 
+	/* nvmf data_buf_pool must be IOVA-contiguous chunk */
+	if (strncmp(name, "spdk_nvmf", strlen("spdk_nvmf"))) {
 #if RTE_VERSION >= RTE_VERSION_NUM(21, 11, 0, 0)
-	dpdk_flags |= RTE_MEMPOOL_F_NO_IOVA_CONTIG;
+		dpdk_flags |= RTE_MEMPOOL_F_NO_IOVA_CONTIG;
 #else
-	dpdk_flags |= MEMPOOL_F_NO_IOVA_CONTIG;
+		dpdk_flags |= MEMPOOL_F_NO_IOVA_CONTIG;
 #endif
+	}
 
 	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
 		socket_id = SOCKET_ID_ANY;
