@@ -84,13 +84,13 @@ fi
 yum install -y gcc gcc-c++ make cmake CUnit-devel libaio-devel openssl-devel \
 	libuuid-devel libiscsi-devel ncurses-devel json-c-devel libcmocka-devel
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8'; then
-	yum install -y python36
+	yum install -y python36 python36-devel
 	#Create hard link to use in SPDK as python
 	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
 		ln -s /etc/alternatives/python3 /usr/bin/python
 	fi
 else
-	yum install -y python
+	yum install -y python python3-devel
 fi
 yum install -y python3-pip
 pip3 install ninja
