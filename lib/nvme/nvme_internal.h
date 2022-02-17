@@ -1044,10 +1044,6 @@ struct spdk_nvme_detach_ctx {
 	TAILQ_HEAD(, nvme_ctrlr_detach_ctx)	head;
 };
 
-struct spdk_nvme_ctrlr_reset_ctx {
-	struct spdk_nvme_ctrlr			*ctrlr;
-};
-
 struct nvme_driver {
 	pthread_mutex_t			lock;
 

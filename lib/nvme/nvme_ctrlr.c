@@ -1686,20 +1686,6 @@ spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 }
 
-static int
-nvme_ctrlr_reset_pre(struct spdk_nvme_ctrlr *ctrlr)
-{
-	int rc;
-
-	rc = spdk_nvme_ctrlr_disconnect(ctrlr);
-	if (rc != 0) {
-		return rc;
-	}
-
-	spdk_nvme_ctrlr_reconnect_async(ctrlr);
-	return 0;
-}
-
 /**
  * This function will be called when the controller is being reinitialized.
  * Note: the ctrlr_lock must be held when calling this function.
@@ -1778,77 +1764,23 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
-static void
-nvme_ctrlr_reset_ctx_init(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx,
-			  struct spdk_nvme_ctrlr *ctrlr)
-{
-	ctrlr_reset_ctx->ctrlr = ctrlr;
-}
-
-static int
-nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
-{
-	struct spdk_nvme_ctrlr *ctrlr = ctrlr_reset_ctx->ctrlr;
-
-	return spdk_nvme_ctrlr_reconnect_poll_async(ctrlr);
-}
-
-int
-spdk_nvme_ctrlr_reset_poll_async(struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx)
-{
-	int rc;
-	if (!ctrlr_reset_ctx) {
-		return -EINVAL;
-	}
-	rc = nvme_ctrlr_reset_poll_async(ctrlr_reset_ctx);
-	if (rc == -EAGAIN) {
-		return rc;
-	}
-
-	free(ctrlr_reset_ctx);
-	return rc;
-}
-
-int
-spdk_nvme_ctrlr_reset_async(struct spdk_nvme_ctrlr *ctrlr,
-			    struct spdk_nvme_ctrlr_reset_ctx **reset_ctx)
-{
-	struct spdk_nvme_ctrlr_reset_ctx *ctrlr_reset_ctx;
-	int rc;
-
-	ctrlr_reset_ctx = calloc(1, sizeof(*ctrlr_reset_ctx));
-	if (!ctrlr_reset_ctx) {
-		return -ENOMEM;
-	}
-
-	rc = nvme_ctrlr_reset_pre(ctrlr);
-	if (rc != 0) {
-		free(ctrlr_reset_ctx);
-	} else {
-		nvme_ctrlr_reset_ctx_init(ctrlr_reset_ctx, ctrlr);
-		*reset_ctx = ctrlr_reset_ctx;
-	}
-
-	return rc;
-}
-
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_ctrlr_reset_ctx reset_ctx = {};
 	int rc;
 
-	rc = nvme_ctrlr_reset_pre(ctrlr);
+	rc = spdk_nvme_ctrlr_disconnect(ctrlr);
 	if (rc != 0) {
 		if (rc == -EBUSY) {
 			rc = 0;
 		}
 		return rc;
 	}
-	nvme_ctrlr_reset_ctx_init(&reset_ctx, ctrlr);
+
+	spdk_nvme_ctrlr_reconnect_async(ctrlr);
 
 	while (true) {
-		rc = nvme_ctrlr_reset_poll_async(&reset_ctx);
+		rc = spdk_nvme_ctrlr_reconnect_poll_async(ctrlr);
 		if (rc != -EAGAIN) {
 			break;
 		}
