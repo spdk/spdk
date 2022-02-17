@@ -863,7 +863,7 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_error_cmd *cmd, *entry;
 
-	nvme_qpair_abort_queued_reqs(qpair, 1);
+	nvme_qpair_abort_queued_reqs(qpair, 0);
 	_nvme_qpair_complete_abort_queued_reqs(qpair);
 	nvme_qpair_complete_error_reqs(qpair);
 
