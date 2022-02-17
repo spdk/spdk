@@ -1846,6 +1846,7 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->rsp.wr.next = NULL;
 	rdma_req->data.wr.next = NULL;
 	rdma_req->offset = 0;
+	rdma_req->req.dif_enabled = false;
 	memset(&rdma_req->req.dif, 0, sizeof(rdma_req->req.dif));
 	rqpair->qd--;
 
