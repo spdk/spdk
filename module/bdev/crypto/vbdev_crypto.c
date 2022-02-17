@@ -435,8 +435,8 @@ vbdev_crypto_init_crypto_drivers(void)
 			       SOCKET_ID_ANY);
 	if (g_session_mp == NULL) {
 		SPDK_ERRLOG("Cannot create session pool max size 0x%x\n", max_sess_size);
+		rc = -ENOMEM;
 		goto error_create_session_mp;
-		return -ENOMEM;
 	}
 
 	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
