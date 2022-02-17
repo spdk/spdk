@@ -537,8 +537,6 @@ blob_deserialize_xattr(struct spdk_blob *blob,
 		free(xattr);
 		return -ENOMEM;
 	}
-	memcpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
-	xattr->name[desc_xattr->name_length] = '\0';
 
 	xattr->value = malloc(desc_xattr->value_length);
 	if (xattr->value == NULL) {
@@ -546,6 +544,9 @@ blob_deserialize_xattr(struct spdk_blob *blob,
 		free(xattr);
 		return -ENOMEM;
 	}
+
+	memcpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
+	xattr->name[desc_xattr->name_length] = '\0';
 	xattr->value_len = desc_xattr->value_length;
 	memcpy(xattr->value,
 	       (void *)((uintptr_t)desc_xattr->name + desc_xattr->name_length),
