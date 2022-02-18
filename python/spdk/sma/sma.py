@@ -22,7 +22,7 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
         return wrapper
 
     def register_device(self, device_manager):
-        self._devices[device_manager.name] = device_manager
+        self._devices[device_manager.protocol] = device_manager
 
     def run(self):
         self._server.start()

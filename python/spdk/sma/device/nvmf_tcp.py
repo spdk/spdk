@@ -10,7 +10,7 @@ from ..proto import nvmf_tcp_pb2
 
 class NvmfTcpDeviceManager(DeviceManager):
     def __init__(self, client):
-        super().__init__('nvmf_tcp', client)
+        super().__init__('nvmf_tcp', 'nvmf_tcp', client)
 
     def init(self, config):
         self._has_transport = self._create_transport()
