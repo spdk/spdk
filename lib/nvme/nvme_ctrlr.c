@@ -1986,16 +1986,8 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		if (ctrlr->cdata.sgls.supported == 0x2) {
 			ctrlr->flags |= SPDK_NVME_CTRLR_SGL_REQUIRES_DWORD_ALIGNMENT;
 		}
-		/*
-		 * Use MSDBD to ensure our max_sges doesn't exceed what the
-		 *  controller supports.
-		 */
+
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
-		if (ctrlr->cdata.nvmf_specific.msdbd != 0) {
-			ctrlr->max_sges = spdk_min(ctrlr->cdata.nvmf_specific.msdbd, ctrlr->max_sges);
-		} else {
-			/* A value 0 indicates no limit. */
-		}
 		NVME_CTRLR_DEBUGLOG(ctrlr, "transport max_sges %u\n", ctrlr->max_sges);
 	}
 

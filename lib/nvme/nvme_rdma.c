@@ -2434,8 +2434,21 @@ static uint16_t
 nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
+	uint32_t max_sge = rctrlr->max_sge;
+	uint32_t max_in_capsule_sge = (ctrlr->cdata.nvmf_specific.ioccsz * 16 -
+				       sizeof(struct spdk_nvme_cmd)) /
+				      sizeof(struct spdk_nvme_sgl_descriptor);
 
-	return rctrlr->max_sge;
+	/* Max SGE is limited by capsule size */
+	max_sge = spdk_min(max_sge, max_in_capsule_sge);
+	/* Max SGE may be limited by MSDBD */
+	if (ctrlr->cdata.nvmf_specific.msdbd != 0) {
+		max_sge = spdk_min(max_sge, ctrlr->cdata.nvmf_specific.msdbd);
+	}
+
+	/* Max SGE can't be less than 1 */
+	max_sge = spdk_max(1, max_sge);
+	return max_sge;
 }
 
 static int

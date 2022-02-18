@@ -1370,6 +1370,34 @@ test_nvme_rdma_poll_group_get_qpair_by_id(void)
 	STAILQ_REMOVE_HEAD(&group.destroyed_qpairs, link);
 }
 
+static void
+test_nvme_rdma_ctrlr_get_max_sges(void)
+{
+	struct nvme_rdma_ctrlr	rctrlr = {};
+
+	rctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rctrlr.max_sge = NVME_RDMA_MAX_SGL_DESCRIPTORS;
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 16;
+	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 16);
+
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 32;
+	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 16);
+
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 8;
+	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 8);
+
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 16;
+	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4;
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 1);
+
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 16;
+	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 6;
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 2);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1402,6 +1430,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domains);
 	CU_ADD_TEST(suite, test_rdma_get_memory_translation);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_qpair_by_id);
+	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_get_max_sges);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
