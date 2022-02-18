@@ -3,7 +3,9 @@
 from argparse import ArgumentParser
 import grpc
 import google.protobuf.json_format as json_format
+import importlib
 import json
+import logging
 import os
 import sys
 
@@ -39,6 +41,12 @@ class Client:
                                              preserving_proto_field_name=True)
 
 
+def load_plugins(plugins):
+    for plugin in plugins:
+        logging.debug(f'Loading external plugin: {plugin}')
+        module = importlib.import_module(plugin)
+
+
 def parse_argv():
     parser = ArgumentParser(description='Storage Management Agent client')
     parser.add_argument('--address', '-a', default='localhost',
@@ -50,6 +58,8 @@ def parse_argv():
 
 def main(args):
     argv = parse_argv()
+    logging.basicConfig(level=os.environ.get('SMA_LOGLEVEL', 'WARNING').upper())
+    load_plugins(filter(None, os.environ.get('SMA_PLUGINS', '').split(':')))
     client = Client(argv.address, argv.port)
     request = json.loads(sys.stdin.read())
     result = client.call(request['method'], request.get('params', {}))
