@@ -66,6 +66,10 @@ if [[ $OSID != centos ]] || ((OSVERSION != 8)); then
 	packages+=(btrfs-progs)
 fi
 
+if [[ $OSID == fedora ]] && ((OSVERSION >= 34)); then
+	packages+=(bpftrace)
+fi
+
 pre_install() { :; }
 
 if [[ $OSID != fedora ]]; then
