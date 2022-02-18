@@ -12,6 +12,7 @@ check_cgroup() {
 
 init_cpuset_cgroup() {
 	local cgroup
+	local -A cgroups=()
 
 	# For cgroup-v2 we need to prepare cpuset subsystem on our own
 	if ((cgroup_version == 2)); then
@@ -29,8 +30,11 @@ init_cpuset_cgroup() {
 			cgroup=$(< "$cgroup") || continue
 			cgroup=${cgroup##*:}
 			[[ $cgroup != / ]] || continue
-			move_cgroup_procs "${cgroup##*:}" /
+			cgroups["$cgroup"]=$cgroup
 		done 2> /dev/null
+		for cgroup in "${!cgroups[@]}"; do
+			move_cgroup_procs "$cgroup" /
+		done
 		# Now, move all the threads to the cpuset
 		move_cgroup_procs / /cpuset
 	elif ((cgroup_version == 1)); then
