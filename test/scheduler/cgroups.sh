@@ -26,11 +26,11 @@ init_cpuset_cgroup() {
 		# v1, move all the threads from all the existing cgroups to the top
 		# cgroup / and then migrate it to the /cpuset we created above.
 		for cgroup in /proc/+([0-9])/cgroup; do
-			[[ -e $cgroup ]] || continue
-			cgroup=$(< "$cgroup") cgroup=${cgroup##*:}
+			cgroup=$(< "$cgroup") || continue
+			cgroup=${cgroup##*:}
 			[[ $cgroup != / ]] || continue
 			move_cgroup_procs "${cgroup##*:}" /
-		done
+		done 2> /dev/null
 		# Now, move all the threads to the cpuset
 		move_cgroup_procs / /cpuset
 	elif ((cgroup_version == 1)); then
