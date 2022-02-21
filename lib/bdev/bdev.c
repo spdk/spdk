@@ -854,12 +854,13 @@ static void
 _bdev_io_set_bounce_md_buf(struct spdk_bdev_io *bdev_io, void *md_buf, size_t len)
 {
 	/* save original md_buf */
-	bdev_io->internal.orig_md_buf = bdev_io->u.bdev.md_buf;
+	bdev_io->internal.orig_md_iov.iov_base = bdev_io->u.bdev.md_buf;
+	bdev_io->internal.orig_md_iov.iov_len = len;
 	/* set bounce md_buf */
 	bdev_io->u.bdev.md_buf = md_buf;
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		memcpy(md_buf, bdev_io->internal.orig_md_buf, len);
+		memcpy(md_buf, bdev_io->internal.orig_md_iov.iov_base, bdev_io->internal.orig_md_iov.iov_len);
 	}
 }
 
@@ -1056,17 +1057,17 @@ static inline void
 _bdev_io_push_bounce_md_buffer(struct spdk_bdev_io *bdev_io)
 {
 	/* do the same for metadata buffer */
-	if (spdk_unlikely(bdev_io->internal.orig_md_buf != NULL)) {
+	if (spdk_unlikely(bdev_io->internal.orig_md_iov.iov_base != NULL)) {
 		assert(spdk_bdev_is_md_separate(bdev_io->bdev));
 
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
 		    bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-			memcpy(bdev_io->internal.orig_md_buf, bdev_io->u.bdev.md_buf,
-			       bdev_io->u.bdev.num_blocks * spdk_bdev_get_md_size(bdev_io->bdev));
+			memcpy(bdev_io->internal.orig_md_iov.iov_base, bdev_io->u.bdev.md_buf,
+			       bdev_io->internal.orig_md_iov.iov_len);
 		}
 
-		bdev_io->u.bdev.md_buf = bdev_io->internal.orig_md_buf;
-		bdev_io->internal.orig_md_buf = NULL;
+		bdev_io->u.bdev.md_buf = bdev_io->internal.orig_md_iov.iov_base;
+		bdev_io->internal.orig_md_iov.iov_base = NULL;
 	}
 
 	/* We want to free the bounce buffer here since we know we're done with it (as opposed
@@ -1094,7 +1095,7 @@ static void
 _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 {
 	if (spdk_likely(bdev_io->internal.orig_iovcnt == 0)) {
-		assert(bdev_io->internal.orig_md_buf == NULL);
+		assert(bdev_io->internal.orig_md_iov.iov_base == NULL);
 		return;
 	}
 
@@ -2759,7 +2760,7 @@ bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->internal.io_submit_ch = NULL;
 	bdev_io->internal.orig_iovs = NULL;
 	bdev_io->internal.orig_iovcnt = 0;
-	bdev_io->internal.orig_md_buf = NULL;
+	bdev_io->internal.orig_md_iov.iov_base = NULL;
 	bdev_io->internal.error.nvme.cdw0 = 0;
 	bdev_io->num_retries = 0;
 	bdev_io->internal.get_buf_cb = NULL;
