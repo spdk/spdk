@@ -1952,12 +1952,15 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 }
 
 static void
-_nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+_nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+				  nvme_rdma_cm_event_cb disconnected_qpair_cb)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 	struct nvme_rdma_ctrlr *rctrlr = NULL;
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
 	int rc;
+
+	assert(disconnected_qpair_cb != NULL);
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITING;
 
@@ -1990,7 +1993,7 @@ _nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 			rc = spdk_rdma_qp_disconnect(rqpair->rdma_qp);
 			if ((rctrlr != NULL) && (rc == 0)) {
 				rc = nvme_rdma_process_event_start(rqpair, RDMA_CM_EVENT_DISCONNECTED,
-								   nvme_rdma_qpair_disconnected);
+								   disconnected_qpair_cb);
 				if (rc == 0) {
 					return;
 				}
@@ -1998,7 +2001,7 @@ _nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 		}
 	}
 
-	nvme_rdma_qpair_disconnected(rqpair, 0);
+	disconnected_qpair_cb(rqpair, 0);
 }
 
 static int
@@ -2038,7 +2041,7 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 {
 	int rc;
 
-	_nvme_rdma_ctrlr_disconnect_qpair(ctrlr, qpair);
+	_nvme_rdma_ctrlr_disconnect_qpair(ctrlr, qpair, nvme_rdma_qpair_disconnected);
 
 	/* If the qpair is in a poll group, disconnected_qpair_cb has to be called
 	 * asynchronously after the qpair is actually disconnected. Hence let
