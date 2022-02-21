@@ -528,7 +528,9 @@ rpc_framework_get_scheduler(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "scheduler_name", scheduler->name);
+	if (scheduler) {
+		spdk_json_write_named_string(w, "scheduler_name", scheduler->name);
+	}
 	spdk_json_write_named_uint64(w, "scheduler_period", scheduler_period);
 	if (governor != NULL) {
 		spdk_json_write_named_string(w, "governor_name", governor->name);
