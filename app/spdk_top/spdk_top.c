@@ -1273,7 +1273,6 @@ resize_interface(enum tabs tab)
 		wclear(g_tabs[i]);
 		wresize(g_tabs[i], g_max_row - MENU_WIN_HEIGHT - TAB_WIN_HEIGHT - 2, g_max_col);
 		mvwin(g_tabs[i], TABS_LOCATION_ROW, TABS_LOCATION_COL);
-		draw_tabs(i, g_current_sort_col[i], g_current_sort_col2[i]);
 	}
 
 	draw_tabs(tab, g_current_sort_col[tab], g_current_sort_col2[tab]);
