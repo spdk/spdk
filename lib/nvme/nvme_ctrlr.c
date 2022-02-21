@@ -1040,6 +1040,11 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 		return;
 	}
 
+	if (ctrlr->is_disconnecting) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "already disconnecting\n");
+		return;
+	}
+
 	ctrlr->is_failed = true;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
 	NVME_CTRLR_ERRLOG(ctrlr, "in failed state.\n");
@@ -1640,6 +1645,7 @@ nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->is_resetting = true;
 	ctrlr->is_failed = false;
+	ctrlr->is_disconnecting = true;
 
 	NVME_CTRLR_NOTICELOG(ctrlr, "resetting controller\n");
 
@@ -1665,6 +1671,9 @@ nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_disconnect_done(struct spdk_nvme_ctrlr *ctrlr)
 {
+	assert(ctrlr->is_failed == false);
+	ctrlr->is_disconnecting = false;
+
 	/* Doorbell buffer config is invalid during reset */
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 
@@ -1680,13 +1689,9 @@ spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 	int rc;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-
 	rc = nvme_ctrlr_disconnect(ctrlr);
-	if (rc == 0) {
-		nvme_ctrlr_disconnect_done(ctrlr);
-	}
-
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
 	return rc;
 }
 
@@ -1789,9 +1794,6 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	rc = nvme_ctrlr_disconnect(ctrlr);
-	if (rc == 0) {
-		nvme_ctrlr_disconnect_done(ctrlr);
-	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
@@ -1800,6 +1802,13 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 			rc = 0;
 		}
 		return rc;
+	}
+
+	while (1) {
+		rc = spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+		if (rc == -ENXIO) {
+			break;
+		}
 	}
 
 	spdk_nvme_ctrlr_reconnect_async(ctrlr);
@@ -4246,6 +4255,10 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
 		nvme_ctrlr_complete_queued_async_events(ctrlr);
+	}
+
+	if (rc == -ENXIO && ctrlr->is_disconnecting) {
+		nvme_ctrlr_disconnect_done(ctrlr);
 	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);

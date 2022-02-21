@@ -2794,6 +2794,7 @@ test_nvme_ctrlr_reset(void)
 	g_ut_nvme_regs.cc.raw = 0;
 	g_ut_nvme_regs.csts.raw = 0;
 	g_set_reg_cb = check_en_set_rdy;
+	g_wait_for_completion_return_val = -ENXIO;
 	CU_ASSERT(spdk_nvme_ctrlr_reset(&ctrlr) == 0);
 	g_set_reg_cb = NULL;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_READY);
@@ -2807,6 +2808,8 @@ test_nvme_ctrlr_reset(void)
 
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
+
+	g_wait_for_completion_return_val = 0;
 }
 
 static uint32_t g_aer_cb_counter;
