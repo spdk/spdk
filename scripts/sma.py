@@ -50,26 +50,40 @@ def get_build_client(sock):
     return build_client
 
 
-def register_device(agent, device):
-    device.init(None)
-    agent.register_device(device)
+def register_devices(agent, devices, config):
+    for device_config in config.get('devices') or []:
+        name = device_config.get('name')
+        device_manager = next(filter(lambda s: s.name == name, devices), None)
+        if device_manager is None:
+            logging.error(f'Couldn\'t find device: {name}')
+            sys.exit(1)
+        logging.info(f'Registering device: {name}')
+        device_manager.init(device_config.get('params'))
+        agent.register_device(device_manager)
 
 
-def load_plugins(agent, client, plugins):
+def load_plugins(plugins, client):
+    devices = []
     for plugin in plugins:
         module = importlib.import_module(plugin)
         for device in getattr(module, 'devices', []):
             logging.debug(f'Loading external device: {plugin}.{device.__name__}')
-            register_device(agent, device(client))
+            devices.append(device(client))
+    return devices
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=os.environ.get('SMA_LOGLEVEL', 'WARNING').upper())
 
     config = parse_argv()
+    client = get_build_client(config['socket'])
+
     agent = sma.StorageManagementAgent(config['address'], config['port'])
-    register_device(agent, sma.NvmfTcpDeviceManager(get_build_client(config['socket'])))
-    load_plugins(agent, get_build_client(config['socket']), config.get('plugins') or [])
-    load_plugins(agent, get_build_client(config['socket']),
-                 filter(None, os.environ.get('SMA_PLUGINS', '').split(':')))
+
+    devices = [sma.NvmfTcpDeviceManager(client)]
+    devices += load_plugins(config.get('plugins') or [], client)
+    devices += load_plugins(filter(None, os.environ.get('SMA_PLUGINS', '').split(':')),
+                            client)
+    register_devices(agent, devices, config)
+
     agent.run()
