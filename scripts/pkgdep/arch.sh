@@ -11,6 +11,7 @@ pip install ijson
 pip install python-magic
 pip install grpcio
 pip install grpcio-tools
+pip install pyyaml
 # Additional dependencies for DPDK
 pacman -Sy --needed --noconfirm numactl nasm
 # Additional dependencies for ISA-L used in compression
