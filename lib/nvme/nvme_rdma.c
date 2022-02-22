@@ -75,6 +75,13 @@
 #define DEFAULT_NVME_RDMA_CQ_SIZE		4096
 
 /*
+ * In the special case of a stale connection we don't expose a mechanism
+ * for the user to retry the connection so we need to handle it internally.
+ */
+#define NVME_RDMA_STALE_CONN_RETRY_MAX		5
+#define NVME_RDMA_STALE_CONN_RETRY_DELAY_US	10000
+
+/*
  * Maximum value of transport_retry_count used by RDMA controller
  */
 #define NVME_RDMA_CTRLR_MAX_TRANSPORT_RETRY_COUNT	7
@@ -186,6 +193,7 @@ union nvme_rdma_mr {
 
 enum nvme_rdma_qpair_state {
 	NVME_RDMA_QPAIR_STATE_INVALID = 0,
+	NVME_RDMA_QPAIR_STATE_STALE_CONN,
 	NVME_RDMA_QPAIR_STATE_INITIALIZING,
 	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND,
 	NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_POLL,
@@ -259,6 +267,8 @@ struct nvme_rdma_qpair {
 
 	/* Used by poll group to keep the qpair around until it is ready to remove it. */
 	bool					defer_deletion_to_pg;
+
+	uint8_t					stale_conn_retry_count;
 };
 
 enum NVME_RDMA_COMPLETION_FLAGS {
@@ -1225,10 +1235,14 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 					     nvme_rdma_addr_resolved);
 }
 
+static int nvme_rdma_stale_conn_retry(struct nvme_rdma_qpair *rqpair);
+
 static int
 nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 {
-	if (ret) {
+	if (ret == -ESTALE) {
+		return nvme_rdma_stale_conn_retry(rqpair);
+	} else if (ret) {
 		SPDK_ERRLOG("RDMA connect error %d\n", ret);
 		return ret;
 	}
@@ -1407,6 +1421,18 @@ nvme_rdma_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 }
 
 static int
+nvme_rdma_stale_conn_reconnect(struct nvme_rdma_qpair *rqpair)
+{
+	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
+
+	if (spdk_get_ticks() < rqpair->evt_timeout_ticks) {
+		return -EAGAIN;
+	}
+
+	return nvme_rdma_ctrlr_connect_qpair(qpair->ctrlr, qpair);
+}
+
+static int
 nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_nvme_qpair *qpair)
 {
@@ -1425,6 +1451,7 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 		break;
 
 	case NVME_RDMA_QPAIR_STATE_INITIALIZING:
+	case NVME_RDMA_QPAIR_STATE_EXITING:
 		if (!nvme_qpair_is_admin_queue(qpair)) {
 			nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		}
@@ -1442,6 +1469,12 @@ nvme_rdma_ctrlr_connect_qpair_poll(struct spdk_nvme_ctrlr *ctrlr,
 
 		return rc;
 
+	case NVME_RDMA_QPAIR_STATE_STALE_CONN:
+		rc = nvme_rdma_stale_conn_reconnect(rqpair);
+		if (rc == 0) {
+			rc = -EAGAIN;
+		}
+		break;
 	case NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND:
 		rc = nvme_fabric_qpair_connect_async(qpair, rqpair->num_entries + 1);
 		if (rc == 0) {
@@ -2066,6 +2099,52 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 			break;
 		}
 	}
+}
+
+static int
+nvme_rdma_stale_conn_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
+{
+	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
+
+	if (ret) {
+		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
+	}
+
+	nvme_rdma_qpair_destroy(rqpair);
+
+	qpair->last_transport_failure_reason = qpair->transport_failure_reason;
+	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+
+	rqpair->state = NVME_RDMA_QPAIR_STATE_STALE_CONN;
+	rqpair->evt_timeout_ticks = (NVME_RDMA_STALE_CONN_RETRY_DELAY_US * spdk_get_ticks_hz()) /
+				    SPDK_SEC_TO_USEC + spdk_get_ticks();
+
+	return 0;
+}
+
+static int
+nvme_rdma_stale_conn_retry(struct nvme_rdma_qpair *rqpair)
+{
+	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
+
+	if (rqpair->stale_conn_retry_count >= NVME_RDMA_STALE_CONN_RETRY_MAX) {
+		SPDK_ERRLOG("Retry failed %d times, give up stale connection to qpair (cntlid:%u, qid:%u).\n",
+			    NVME_RDMA_STALE_CONN_RETRY_MAX, qpair->ctrlr->cntlid, qpair->id);
+		return -ESTALE;
+	}
+
+	rqpair->stale_conn_retry_count++;
+
+	SPDK_NOTICELOG("%d times, retry stale connnection to qpair (cntlid:%u, qid:%u).\n",
+		       rqpair->stale_conn_retry_count, qpair->ctrlr->cntlid, qpair->id);
+
+	if (qpair->poll_group) {
+		rqpair->cq = NULL;
+	}
+
+	_nvme_rdma_ctrlr_disconnect_qpair(qpair->ctrlr, qpair, nvme_rdma_stale_conn_disconnected);
+
+	return 0;
 }
 
 static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
