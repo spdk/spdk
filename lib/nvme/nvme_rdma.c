@@ -1922,13 +1922,9 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	return qpair;
 }
 
-static int
-nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
+static void
+nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 {
-	if (ret) {
-		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
-	}
-
 	if (rqpair->cm_id) {
 		if (rqpair->rdma_qp) {
 			spdk_rdma_qp_destroy(rqpair->rdma_qp);
@@ -1943,6 +1939,16 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 		ibv_destroy_cq(rqpair->cq);
 		rqpair->cq = NULL;
 	}
+}
+
+static int
+nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
+{
+	if (ret) {
+		SPDK_DEBUGLOG(nvme, "Target did not respond to qpair disconnect.\n");
+	}
+
+	nvme_rdma_qpair_destroy(rqpair);
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
 
