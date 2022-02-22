@@ -1134,7 +1134,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	param.responder_resources = spdk_min(rqpair->num_entries, attr.max_qp_rd_atom);
+	param.responder_resources = attr.max_qp_rd_atom;
 
 	ctrlr = rqpair->qpair.ctrlr;
 	if (!ctrlr) {
