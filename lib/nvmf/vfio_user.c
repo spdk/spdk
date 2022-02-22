@@ -4245,17 +4245,18 @@ nvmf_vfio_user_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 				   struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_request *req_to_abort = NULL;
+	struct spdk_nvmf_request *temp_req = NULL;
 	uint16_t cid;
 
 	cid = req->cmd->nvme_cmd.cdw10_bits.abort.cid;
 
-	TAILQ_FOREACH(req, &qpair->outstanding, link) {
+	TAILQ_FOREACH(temp_req, &qpair->outstanding, link) {
 		struct nvmf_vfio_user_req *vu_req;
 
-		vu_req = SPDK_CONTAINEROF(req, struct nvmf_vfio_user_req, req);
+		vu_req = SPDK_CONTAINEROF(temp_req, struct nvmf_vfio_user_req, req);
 
 		if (vu_req->state == VFIO_USER_REQUEST_STATE_EXECUTING && vu_req->cmd.cid == cid) {
-			req_to_abort = req;
+			req_to_abort = temp_req;
 			break;
 		}
 	}
