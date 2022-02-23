@@ -1586,12 +1586,13 @@ nvmf_fc_hwqp_handle_request(struct spdk_nvmf_fc_hwqp *hwqp, struct spdk_nvmf_fc_
 void
 _nvmf_fc_request_free(struct spdk_nvmf_fc_request *fc_req)
 {
-	struct spdk_nvmf_fc_hwqp *hwqp = fc_req->hwqp;
+	struct spdk_nvmf_fc_hwqp *hwqp;
 	struct spdk_nvmf_transport_poll_group *group;
 
 	if (!fc_req) {
 		return;
 	}
+	hwqp = fc_req->hwqp;
 
 	if (fc_req->xchg) {
 		nvmf_fc_put_xchg(hwqp, fc_req->xchg);
