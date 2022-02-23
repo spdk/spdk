@@ -3126,7 +3126,7 @@ bdev_nvme_disable_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct nvme_ns *nvme_ns;
 
-	free(nvme_ctrlr->ana_log_page);
+	spdk_free(nvme_ctrlr->ana_log_page);
 	nvme_ctrlr->ana_log_page = NULL;
 
 	for (nvme_ns = nvme_ctrlr_get_first_active_ns(nvme_ctrlr);
