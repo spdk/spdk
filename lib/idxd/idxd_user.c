@@ -238,6 +238,10 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 	for (i = 0; i < g_user_dev_cfg.num_groups; i++) {
 		idxd->groups[i].idxd = idxd;
 		idxd->groups[i].id = i;
+
+		/* Divide BW tokens evenly */
+		idxd->groups[i].grpcfg.flags.tokens_allowed =
+			user_idxd->registers.groupcap.read_bufs / g_user_dev_cfg.num_groups;
 	}
 
 	/*

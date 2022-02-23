@@ -41,6 +41,7 @@
 
 #define FAKE_REG_SIZE 0x800
 #define GRP_CFG_OFFSET 0x400
+#define MAX_TOKENS 0x40
 #define MAX_ARRAY_SIZE 0x20
 
 SPDK_LOG_REGISTER_COMPONENT(idxd);
@@ -171,6 +172,7 @@ test_idxd_group_config(void)
 	user_idxd.registers.groupcap.num_groups = g_user_dev_cfg.num_groups;
 	user_idxd.registers.enginecap.num_engines = g_user_dev_cfg.total_engines;
 	user_idxd.registers.wqcap.num_wqs = g_user_dev_cfg.total_wqs;
+	user_idxd.registers.groupcap.read_bufs = MAX_TOKENS;
 	user_idxd.grpcfg_offset = GRP_CFG_OFFSET;
 
 	rc = idxd_group_config(idxd);
@@ -185,7 +187,7 @@ test_idxd_group_config(void)
 	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
 	CU_ASSERT(wqs[0] == 0x1);
 	CU_ASSERT(engines[0] == 0xf);
-	CU_ASSERT(flags[0].raw == 0);
+	CU_ASSERT(flags[0].tokens_allowed == MAX_TOKENS / g_user_dev_cfg.num_groups);
 
 	/* groups allocated by code under test. */
 	free(idxd->groups);
