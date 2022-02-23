@@ -247,12 +247,6 @@ enum nvmf_vfio_user_ctrlr_state {
 	VFIO_USER_CTRLR_MIGRATING
 };
 
-/* Migration region to record NVMe device state data structure */
-struct vfio_user_migration_region {
-	uint64_t last_data_offset;
-	uint64_t pending_bytes;
-};
-
 struct nvmf_vfio_user_sq {
 	struct spdk_nvmf_qpair			qpair;
 	struct spdk_nvmf_transport_poll_group	*group;
@@ -336,7 +330,13 @@ struct nvmf_vfio_user_ctrlr {
 	TAILQ_HEAD(, nvmf_vfio_user_sq)		connected_sqs;
 	enum nvmf_vfio_user_ctrlr_state		state;
 
-	struct vfio_user_migration_region	migr_reg;
+	/*
+	 * Tells whether live migration data have been prepared. This is used
+	 * by the get_pending_bytes callback to tell whether or not the
+	 * previous iteration finished.
+	 */
+	bool migr_data_prepared;
+
 	/* Controller is in source VM when doing live migration */
 	bool					in_source_vm;
 
@@ -3679,6 +3679,7 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 
 	switch (state) {
 	case VFU_MIGR_STATE_STOP_AND_COPY:
+		vu_ctrlr->in_source_vm = true;
 		vu_ctrlr->state = VFIO_USER_CTRLR_MIGRATING;
 		vfio_user_migr_ctrlr_mark_dirty(vu_ctrlr);
 		vfio_user_migr_ctrlr_save_data(vu_ctrlr);
@@ -3695,9 +3696,6 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 		break;
 	case VFU_MIGR_STATE_PRE_COPY:
 		assert(vu_ctrlr->state == VFIO_USER_CTRLR_PAUSED);
-		vu_ctrlr->migr_reg.pending_bytes = vfio_user_migr_data_len();
-		vu_ctrlr->migr_reg.last_data_offset = 0;
-		vu_ctrlr->in_source_vm = true;
 		break;
 	case VFU_MIGR_STATE_RESUME:
 		/*
@@ -3724,6 +3722,7 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 		sq->size = 0;
 		break;
 	case VFU_MIGR_STATE_RUNNING:
+
 		if (vu_ctrlr->state != VFIO_USER_CTRLR_MIGRATING) {
 			break;
 		}
@@ -3738,6 +3737,7 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 			vfio_user_ctrlr_switch_doorbells(vu_ctrlr, false);
 			vfio_user_migr_ctrlr_enable_sqs(vu_ctrlr);
 			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+			/* FIXME where do we resume nvmf? */
 		} else {
 			/* Rollback source VM */
 			vu_ctrlr->state = VFIO_USER_CTRLR_RESUMING;
@@ -3747,9 +3747,10 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 				/* TODO: fail controller with CFS bit set */
 				vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
 				SPDK_ERRLOG("%s: failed to resume, ret=%d\n", endpoint_id(endpoint), ret);
-				break;
 			}
 		}
+		vu_ctrlr->migr_data_prepared = false;
+		vu_ctrlr->in_source_vm = false;
 		break;
 
 	default:
@@ -3764,12 +3765,20 @@ vfio_user_migration_get_pending_bytes(vfu_ctx_t *vfu_ctx)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
 	struct nvmf_vfio_user_ctrlr *ctrlr = endpoint->ctrlr;
-	struct vfio_user_migration_region *migr_reg = &ctrlr->migr_reg;
+	uint64_t pending_bytes;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s current state %u, pending bytes 0x%"PRIx64"\n", endpoint_id(endpoint),
-		      ctrlr->state, migr_reg->pending_bytes);
+	if (ctrlr->migr_data_prepared) {
+		assert(ctrlr->state == VFIO_USER_CTRLR_MIGRATING);
+		pending_bytes = 0;
+	} else {
+		pending_bytes = vfio_user_migr_data_len();
+	}
 
-	return migr_reg->pending_bytes;
+	SPDK_DEBUGLOG(nvmf_vfio,
+		      "%s current state %u, pending bytes 0x%"PRIx64"\n",
+		      endpoint_id(endpoint), ctrlr->state, pending_bytes);
+
+	return pending_bytes;
 }
 
 static int
@@ -3777,24 +3786,29 @@ vfio_user_migration_prepare_data(vfu_ctx_t *vfu_ctx, uint64_t *offset, uint64_t 
 {
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
 	struct nvmf_vfio_user_ctrlr *ctrlr = endpoint->ctrlr;
-	struct vfio_user_migration_region *migr_reg = &ctrlr->migr_reg;
 
-	if (migr_reg->last_data_offset == vfio_user_migr_data_len()) {
-		*offset = vfio_user_migr_data_len();
-		if (size) {
-			*size = 0;
-		}
-		migr_reg->pending_bytes = 0;
-	} else {
+	/*
+	 * When transitioning to pre-copy state we set pending_bytes to 0,
+	 * so the vfio-user client shouldn't attempt to read any migration
+	 * data. This is not yet guaranteed by libvfio-user.
+	 */
+	if (ctrlr->state != VFIO_USER_CTRLR_MIGRATING) {
+		assert(size != NULL);
 		*offset = 0;
-		if (size) {
-			*size = vfio_user_migr_data_len();
-			if (ctrlr->state == VFIO_USER_CTRLR_MIGRATING) {
-				vfio_user_migr_ctrlr_save_data(ctrlr);
-				migr_reg->last_data_offset = vfio_user_migr_data_len();
-			}
-		}
+		*size = 0;
+		return 0;
 	}
+
+	if (ctrlr->in_source_vm) { /* migration source */
+		assert(size != NULL);
+		*size = vfio_user_migr_data_len();
+		vfio_user_migr_ctrlr_save_data(ctrlr);
+	} else { /* migration destination */
+		assert(size == NULL);
+		assert(!ctrlr->migr_data_prepared);
+	}
+	*offset = 0;
+	ctrlr->migr_data_prepared = true;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s current state %u\n", endpoint_id(endpoint), ctrlr->state);
 
