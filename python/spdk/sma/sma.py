@@ -24,9 +24,11 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
     def register_device(self, device_manager):
         self._devices[device_manager.protocol] = device_manager
 
-    def run(self):
+    def start(self):
         self._server.start()
-        self._server.wait_for_termination()
+
+    def stop(self):
+        self._server.stop(None)
 
     def _find_device_by_name(self, name):
         return self._devices.get(name)

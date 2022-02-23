@@ -4,7 +4,9 @@ from argparse import ArgumentParser
 import importlib
 import logging
 import os
+import signal
 import sys
+import threading
 import yaml
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
@@ -72,6 +74,20 @@ def load_plugins(plugins, client):
     return devices
 
 
+def run(agent):
+    event = threading.Event()
+
+    def signal_handler(signum, frame):
+        event.set()
+
+    for signum in [signal.SIGTERM, signal.SIGINT]:
+        signal.signal(signum, signal_handler)
+
+    agent.start()
+    event.wait()
+    agent.stop()
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=os.environ.get('SMA_LOGLEVEL', 'WARNING').upper())
 
@@ -85,5 +101,4 @@ if __name__ == '__main__':
     devices += load_plugins(filter(None, os.environ.get('SMA_PLUGINS', '').split(':')),
                             client)
     register_devices(agent, devices, config)
-
-    agent.run()
+    run(agent)
