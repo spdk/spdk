@@ -1068,27 +1068,24 @@ spdk_nvme_trid_populate_transport(struct spdk_nvme_transport_id *trid,
 int
 spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, const char *trstring)
 {
-	int len, i, rc;
+	int i = 0;
 
-	if (trstring == NULL) {
-		return -EINVAL;
-	}
-
-	len = strnlen(trstring, SPDK_NVMF_TRSTRING_MAX_LEN);
-	if (len == SPDK_NVMF_TRSTRING_MAX_LEN) {
-		return -EINVAL;
-	}
-
-	rc = snprintf(trid->trstring, SPDK_NVMF_TRSTRING_MAX_LEN, "%s", trstring);
-	if (rc < 0) {
-		return rc;
-	}
+	/* Note: gcc-11 has some false positive -Wstringop-overread warnings with LTO builds if we
+	 * use strnlen here.  So do the trstring copy manually instead.  See GitHub issue #2391.
+	 */
 
 	/* cast official trstring to uppercase version of input. */
-	for (i = 0; i < len; i++) {
-		trid->trstring[i] = toupper(trid->trstring[i]);
+	while (i < SPDK_NVMF_TRSTRING_MAX_LEN && trstring[i] != 0) {
+		trid->trstring[i] = toupper(trstring[i]);
+		i++;
 	}
-	return 0;
+
+	if (trstring[i] != 0) {
+		return -EINVAL;
+	} else {
+		trid->trstring[i] = 0;
+		return 0;
+	}
 }
 
 int
