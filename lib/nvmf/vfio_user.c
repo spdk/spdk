@@ -3802,32 +3802,41 @@ vfio_user_migration_prepare_data(vfu_ctx_t *vfu_ctx, uint64_t *offset, uint64_t 
 }
 
 static ssize_t
-vfio_user_migration_read_data(vfu_ctx_t *vfu_ctx, void *buf, uint64_t count, uint64_t offset)
+vfio_user_migration_read_data(vfu_ctx_t *vfu_ctx __attribute__((unused)),
+			      void *buf __attribute__((unused)),
+			      uint64_t count __attribute__((unused)),
+			      uint64_t offset __attribute__((unused)))
 {
-	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
-	struct nvmf_vfio_user_ctrlr *ctrlr = endpoint->ctrlr;
-	struct vfio_user_migration_region *migr_reg = &ctrlr->migr_reg;
-
-	memcpy(buf, endpoint->migr_data, count);
-	migr_reg->pending_bytes = 0;
-
-	return 0;
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: migration read data not supported\n",
+		      endpoint_id(vfu_get_private(vfu_ctx)));
+	errno = ENOTSUP;
+	return -1;
 }
 
 static ssize_t
-vfio_user_migration_write_data(vfu_ctx_t *vfu_ctx, void *buf, uint64_t count, uint64_t offset)
+vfio_user_migration_write_data(vfu_ctx_t *vfu_ctx __attribute__((unused)),
+			       void *buf __attribute__((unused)),
+			       uint64_t count __attribute__((unused)),
+			       uint64_t offset __attribute__((unused)))
 {
-	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
-
-	memcpy(endpoint->migr_data, buf, count);
-
-	return 0;
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: migration write data not supported\n",
+		      endpoint_id(vfu_get_private(vfu_ctx)));
+	errno = ENOTSUP;
+	return -1;
 }
 
 static int
-vfio_user_migration_data_written(vfu_ctx_t *vfu_ctx, uint64_t count)
+vfio_user_migration_data_written(vfu_ctx_t *vfu_ctx __attribute__((unused)),
+				 uint64_t count)
 {
 	SPDK_DEBUGLOG(nvmf_vfio, "write 0x%"PRIx64"\n", (uint64_t)count);
+
+	if (count != vfio_user_migr_data_len()) {
+		SPDK_DEBUGLOG(nvmf_vfio, "%s bad count %#lx\n",
+			      endpoint_id(vfu_get_private(vfu_ctx)), count);
+		errno = EINVAL;
+		return -1;
+	}
 
 	return 0;
 }
