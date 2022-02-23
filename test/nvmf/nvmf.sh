@@ -59,6 +59,7 @@ if [[ $NET_TYPE == phy ]]; then
 	# run_test "nvmf_srq_overwhelm" test/nvmf/target/srq_overwhelm.sh $TEST_ARGS
 fi
 
+run_test "nvmf_queue_depth" test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
 run_test "nvmf_multipath" test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
 run_test "nvmf_zcopy" test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
 
