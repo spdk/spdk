@@ -582,6 +582,7 @@ create_iscsi_sess(struct spdk_iscsi_conn *conn,
 
 	sess->conns = calloc(sess->MaxConnections, sizeof(*sess->conns));
 	if (!sess->conns) {
+		spdk_mempool_put(g_iscsi.session_pool, (void *)sess);
 		SPDK_ERRLOG("calloc() failed for connection array\n");
 		return -ENOMEM;
 	}
