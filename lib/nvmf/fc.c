@@ -1214,7 +1214,7 @@ nvmf_fc_req_bdev_abort(void *arg1)
 	 * Connect -> Special case (async. handling). Not sure how to
 	 * handle at this point. Let it run to completion.
 	 */
-	for (i = 0; i < NVMF_MAX_ASYNC_EVENTS; i++) {
+	for (i = 0; i < SPDK_NVMF_MAX_ASYNC_EVENTS; i++) {
 		if (ctrlr->aer_req[i] == &fc_req->req) {
 			SPDK_NOTICELOG("Abort AER request\n");
 			nvmf_qpair_free_aer(fc_req->req.qpair);

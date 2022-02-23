@@ -143,11 +143,6 @@ struct vfio_user_nvme_migr_header {
 	uint32_t	num_io_queues;
 	uint32_t	reserved1;
 
-	/* TODO: this part will be moved to common nvmf controller data */
-	uint16_t	reserved2[3];
-	uint16_t	nr_aers;
-	uint16_t	aer_cids[NVMF_MIGR_MAX_PENDING_AERS];
-
 	/* NVMf controller data offset and length if exist, starting at
 	 * the beginning of this data structure.
 	 */
@@ -158,7 +153,7 @@ struct vfio_user_nvme_migr_header {
 	 * Whether or not shadow doorbells are used in the source. 0 is a valid DMA
 	 * address.
 	 */
-	bool		sdbl;
+	uint32_t	sdbl;
 
 	/* Shadow doorbell DMA addresses. */
 	uint64_t	shadow_doorbell_buffer;
@@ -167,7 +162,7 @@ struct vfio_user_nvme_migr_header {
 	/* Reserved memory space for new added fields, the
 	 * field is always at the end of this data structure.
 	 */
-	uint8_t		unused[3336];
+	uint8_t		unused[3856];
 };
 SPDK_STATIC_ASSERT(sizeof(struct vfio_user_nvme_migr_header) == 0x1000, "Incorrect size");
 
@@ -179,9 +174,9 @@ struct vfio_user_nvme_migr_qp {
 /* NVMe state definition used to load/restore from/to NVMe migration BAR region */
 struct vfio_user_nvme_migr_state {
 	struct vfio_user_nvme_migr_header	ctrlr_header;
-	struct nvmf_ctrlr_migr_data		nvmf_data;
+	struct spdk_nvmf_ctrlr_migr_data	nvmf_data;
 	struct vfio_user_nvme_migr_qp		qps[NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR];
-	uint8_t					bar0[NVME_REG_BAR0_SIZE];
+	uint8_t					doorbells[NVMF_VFIO_USER_DOORBELLS_SIZE];
 	uint8_t					cfg[NVME_REG_CFG_SIZE];
 };
 
@@ -3179,7 +3174,7 @@ vfio_user_ctrlr_dump_migr_data(const char *name,
 			       struct vfio_user_nvme_migr_state *migr_data,
 			       struct nvmf_vfio_user_shadow_doorbells *sdbl)
 {
-	struct spdk_nvme_registers *regs;
+	struct spdk_nvmf_registers *regs;
 	struct nvme_migr_sq_state *sq;
 	struct nvme_migr_cq_state *cq;
 	uint32_t *doorbell_base;
@@ -3187,8 +3182,8 @@ vfio_user_ctrlr_dump_migr_data(const char *name,
 
 	SPDK_NOTICELOG("Dump %s\n", name);
 
-	regs = (struct spdk_nvme_registers *)migr_data->bar0;
-	doorbell_base = (uint32_t *)&regs->doorbell[0].sq_tdbl;
+	regs = &migr_data->nvmf_data.regs;
+	doorbell_base = (uint32_t *)&migr_data->doorbells;
 
 	SPDK_NOTICELOG("Registers\n");
 	SPDK_NOTICELOG("CSTS 0x%x\n", regs->csts.raw);
@@ -3263,9 +3258,10 @@ vfio_user_migr_stream_to_data(struct nvmf_vfio_user_endpoint *endpoint,
 	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.qp_offset;
 	memcpy(&migr_state->qps, data_ptr, migr_state->ctrlr_header.qp_len);
 
-	/* Load BAR0 */
+	/* Load doorbells */
 	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX];
-	memcpy(&migr_state->bar0, data_ptr, migr_state->ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX]);
+	memcpy(&migr_state->doorbells, data_ptr,
+	       migr_state->ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX]);
 
 	/* Load CFG */
 	data_ptr = endpoint->migr_data + migr_state->ctrlr_header.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX];
@@ -3282,14 +3278,18 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
 	struct nvmf_vfio_user_sq *sq;
 	struct nvmf_vfio_user_cq *cq;
-	struct vfio_user_nvme_migr_state migr_state = {};
 	uint64_t data_offset;
 	void *data_ptr;
-	int num_aers;
-	struct spdk_nvme_registers *regs;
 	uint32_t *doorbell_base;
 	uint32_t i = 0;
 	uint16_t sqid, cqid;
+	struct vfio_user_nvme_migr_state migr_state = {
+		.nvmf_data = {
+			.data_size = offsetof(struct spdk_nvmf_ctrlr_migr_data, unused),
+			.regs_size = sizeof(struct spdk_nvmf_registers),
+			.feat_size = sizeof(struct spdk_nvmf_ctrlr_feat)
+		}
+	};
 
 	/* Save all data to vfio_user_nvme_migr_state first, then we will
 	 * copy it to device migration region at last.
@@ -3299,13 +3299,7 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	migr_state.ctrlr_header.magic = VFIO_USER_NVME_MIGR_MAGIC;
 
 	/* save controller data */
-	num_aers = nvmf_ctrlr_save_aers(ctrlr, migr_state.ctrlr_header.aer_cids,
-					256);
-	assert(num_aers >= 0);
-	migr_state.ctrlr_header.nr_aers = num_aers;
-
-	/* save nvmf controller data */
-	nvmf_ctrlr_save_migr_data(ctrlr, (struct nvmf_ctrlr_migr_data *)&migr_state.nvmf_data);
+	spdk_nvmf_ctrlr_save_migr_data(ctrlr, &migr_state.nvmf_data);
 
 	/* save connected queue pairs */
 	TAILQ_FOREACH(sq, &vu_ctrlr->connected_sqs, tailq) {
@@ -3333,17 +3327,8 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	assert(i > 0);
 	migr_state.ctrlr_header.num_io_queues = i - 1;
 
-	regs = (struct spdk_nvme_registers *)&migr_state.bar0;
-	/* Save mandarory registers to bar0 */
-	regs->csts.raw = ctrlr->vcprop.csts.raw;
-	regs->cap.raw = ctrlr->vcprop.cap.raw;
-	regs->vs.raw = ctrlr->vcprop.vs.raw;
-	regs->cc.raw = ctrlr->vcprop.cc.raw;
-	regs->aqa.raw = ctrlr->vcprop.aqa.raw;
-	regs->asq = ctrlr->vcprop.asq;
-	regs->acq = ctrlr->vcprop.acq;
 	/* Save doorbells */
-	doorbell_base = (uint32_t *)&regs->doorbell[0].sq_tdbl;
+	doorbell_base = (uint32_t *)&migr_state.doorbells;
 	memcpy(doorbell_base, (void *)vu_ctrlr->bar0_doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
 
 	/* Save PCI configuration space */
@@ -3356,27 +3341,27 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	data_offset = sizeof(struct vfio_user_nvme_migr_header);
 	data_ptr += data_offset;
 	migr_state.ctrlr_header.nvmf_data_offset = data_offset;
-	migr_state.ctrlr_header.nvmf_data_len = sizeof(struct nvmf_ctrlr_migr_data);
-	memcpy(data_ptr, &migr_state.nvmf_data, sizeof(struct nvmf_ctrlr_migr_data));
+	migr_state.ctrlr_header.nvmf_data_len = sizeof(struct spdk_nvmf_ctrlr_migr_data);
+	memcpy(data_ptr, &migr_state.nvmf_data, sizeof(struct spdk_nvmf_ctrlr_migr_data));
 
 	/* Copy queue pairs */
-	data_offset += sizeof(struct nvmf_ctrlr_migr_data);
-	data_ptr += sizeof(struct nvmf_ctrlr_migr_data);
+	data_offset += sizeof(struct spdk_nvmf_ctrlr_migr_data);
+	data_ptr += sizeof(struct spdk_nvmf_ctrlr_migr_data);
 	migr_state.ctrlr_header.qp_offset = data_offset;
 	migr_state.ctrlr_header.qp_len = i * (sizeof(struct nvme_migr_sq_state) + sizeof(
 			struct nvme_migr_cq_state));
 	memcpy(data_ptr, &migr_state.qps, migr_state.ctrlr_header.qp_len);
 
-	/* Copy BAR0 */
+	/* Copy doorbells */
 	data_offset += migr_state.ctrlr_header.qp_len;
 	data_ptr += migr_state.ctrlr_header.qp_len;
 	migr_state.ctrlr_header.bar_offset[VFU_PCI_DEV_BAR0_REGION_IDX] = data_offset;
-	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX] = NVME_REG_BAR0_SIZE;
-	memcpy(data_ptr, &migr_state.bar0, NVME_REG_BAR0_SIZE);
+	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_BAR0_REGION_IDX] = NVMF_VFIO_USER_DOORBELLS_SIZE;
+	memcpy(data_ptr, &migr_state.doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
 
 	/* Copy CFG */
-	data_offset += NVME_REG_BAR0_SIZE;
-	data_ptr += NVME_REG_BAR0_SIZE;
+	data_offset += NVMF_VFIO_USER_DOORBELLS_SIZE;
+	data_ptr += NVMF_VFIO_USER_DOORBELLS_SIZE;
 	migr_state.ctrlr_header.bar_offset[VFU_PCI_DEV_CFG_REGION_IDX] = data_offset;
 	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_CFG_REGION_IDX] = NVME_REG_CFG_SIZE;
 	memcpy(data_ptr, &migr_state.cfg, NVME_REG_CFG_SIZE);
@@ -3545,11 +3530,16 @@ vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
 	struct spdk_nvmf_ctrlr *ctrlr = vu_ctrlr->ctrlr;
 	uint32_t *doorbell_base;
-	struct vfio_user_nvme_migr_state migr_state = {};
-	struct spdk_nvme_registers *regs;
 	struct spdk_nvme_cmd cmd;
 	uint16_t i;
 	int rc = 0;
+	struct vfio_user_nvme_migr_state migr_state = {
+		.nvmf_data = {
+			.data_size = offsetof(struct spdk_nvmf_ctrlr_migr_data, unused),
+			.regs_size = sizeof(struct spdk_nvmf_registers),
+			.feat_size = sizeof(struct spdk_nvmf_ctrlr_feat)
+		}
+	};
 
 	assert(endpoint->migr_data != NULL);
 	assert(ctrlr != NULL);
@@ -3585,33 +3575,23 @@ vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	/* restore PCI configuration space */
 	memcpy((void *)endpoint->pci_config_space, &migr_state.cfg, NVME_REG_CFG_SIZE);
 
-	regs = (struct spdk_nvme_registers *)&migr_state.bar0;
-	doorbell_base = (uint32_t *)&regs->doorbell[0].sq_tdbl;
+	doorbell_base = (uint32_t *)&migr_state.doorbells;
 	/* restore doorbells from saved registers */
 	memcpy((void *)vu_ctrlr->bar0_doorbells, doorbell_base, NVMF_VFIO_USER_DOORBELLS_SIZE);
 
-	/* restore controller registers after ADMIN queue connection */
-	ctrlr->vcprop.csts.raw = regs->csts.raw;
-	ctrlr->vcprop.cap.raw = regs->cap.raw;
-	ctrlr->vcprop.vs.raw = regs->vs.raw;
-	ctrlr->vcprop.cc.raw = regs->cc.raw;
-	ctrlr->vcprop.aqa.raw = regs->aqa.raw;
-	ctrlr->vcprop.asq = regs->asq;
-	ctrlr->vcprop.acq = regs->acq;
-
 	/* restore nvmf controller data */
-	rc = nvmf_ctrlr_restore_migr_data(ctrlr, &migr_state.nvmf_data);
+	rc = spdk_nvmf_ctrlr_restore_migr_data(ctrlr, &migr_state.nvmf_data);
 	if (rc) {
 		return rc;
 	}
 
 	/* resubmit pending AERs */
-	for (i = 0; i < migr_state.ctrlr_header.nr_aers; i++) {
+	for (i = 0; i < migr_state.nvmf_data.num_aer_cids; i++) {
 		SPDK_DEBUGLOG(nvmf_vfio, "%s AER resubmit, CID %u\n", ctrlr_id(vu_ctrlr),
-			      migr_state.ctrlr_header.aer_cids[i]);
+			      migr_state.nvmf_data.aer_cids[i]);
 		memset(&cmd, 0, sizeof(cmd));
 		cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-		cmd.cid = migr_state.ctrlr_header.aer_cids[i];
+		cmd.cid = migr_state.nvmf_data.aer_cids[i];
 		rc = handle_cmd_req(vu_ctrlr, &cmd, vu_ctrlr->sqs[0]);
 		if (rc) {
 			break;

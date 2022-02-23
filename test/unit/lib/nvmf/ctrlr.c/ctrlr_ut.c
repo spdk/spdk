@@ -1786,17 +1786,17 @@ test_multi_async_event_reqs(void)
 		TAILQ_INSERT_TAIL(&qpair.outstanding, &req[i], link);
 	}
 
-	/* Target can store NVMF_MAX_ASYNC_EVENTS reqs */
-	sgroups.mgmt_io_outstanding = NVMF_MAX_ASYNC_EVENTS;
-	for (i = 0; i < NVMF_MAX_ASYNC_EVENTS; i++) {
+	/* Target can store SPDK_NVMF_MAX_ASYNC_EVENTS reqs */
+	sgroups.mgmt_io_outstanding = SPDK_NVMF_MAX_ASYNC_EVENTS;
+	for (i = 0; i < SPDK_NVMF_MAX_ASYNC_EVENTS; i++) {
 		CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[i]) == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 		CU_ASSERT(ctrlr.nr_aer_reqs == i + 1);
 	}
 	CU_ASSERT(sgroups.mgmt_io_outstanding == 0);
 
-	/* Exceeding the NVMF_MAX_ASYNC_EVENTS reports error */
+	/* Exceeding the SPDK_NVMF_MAX_ASYNC_EVENTS reports error */
 	CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req[4]) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	CU_ASSERT(ctrlr.nr_aer_reqs == NVMF_MAX_ASYNC_EVENTS);
+	CU_ASSERT(ctrlr.nr_aer_reqs == SPDK_NVMF_MAX_ASYNC_EVENTS);
 	CU_ASSERT(rsp[4].nvme_cpl.status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC);
 	CU_ASSERT(rsp[4].nvme_cpl.status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED);
 

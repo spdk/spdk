@@ -282,7 +282,7 @@ static void
 nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
 		      struct spdk_nvmf_ctrlr_data *cdata)
 {
-	cdata->aerl = NVMF_MAX_ASYNC_EVENTS - 1;
+	cdata->aerl = SPDK_NVMF_MAX_ASYNC_EVENTS - 1;
 	cdata->kas = KAS_DEFAULT_VALUE;
 	cdata->vid = SPDK_PCI_VID_INTEL;
 	cdata->ssvid = SPDK_PCI_VID_INTEL;
@@ -1889,66 +1889,116 @@ nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
-nvmf_ctrlr_save_aers(struct spdk_nvmf_ctrlr *ctrlr, uint16_t *aer_cids,
-		     uint16_t max_aers)
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr) == 4920,
+		   "Please check migration fields that need to be added or not");
+
+static void
+nvmf_ctrlr_migr_data_copy(struct spdk_nvmf_ctrlr_migr_data *data,
+			  const struct spdk_nvmf_ctrlr_migr_data *data_src, size_t data_size)
 {
-	struct spdk_nvmf_request *req;
-	uint16_t i;
+	assert(data);
+	assert(data_src);
+	assert(data_size);
 
-	if (!aer_cids || max_aers < ctrlr->nr_aer_reqs) {
-		return -EINVAL;
-	}
+	memcpy(&data->regs, &data_src->regs, spdk_min(data->regs_size, data_src->regs_size));
+	memcpy(&data->feat, &data_src->feat, spdk_min(data->feat_size, data_src->feat_size));
 
-	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
-		req = ctrlr->aer_req[i];
-		aer_cids[i] = req->cmd->nvme_cmd.cid;
-	}
+#define SET_FIELD(field) \
+    if (offsetof(struct spdk_nvmf_ctrlr_migr_data, field) + sizeof(data->field) <= data_size) { \
+        data->field = data_src->field; \
+    } \
 
-	return ctrlr->nr_aer_reqs;
+	SET_FIELD(cntlid);
+	SET_FIELD(acre);
+	SET_FIELD(num_aer_cids);
+	SET_FIELD(num_async_events);
+	SET_FIELD(notice_aen_mask);
+#undef SET_FIELD
+
+#define SET_ARRAY(arr) \
+    if (offsetof(struct spdk_nvmf_ctrlr_migr_data, arr) + sizeof(data->arr) <= data_size) { \
+        memcpy(&data->arr, &data_src->arr, sizeof(data->arr)); \
+    } \
+
+	SET_ARRAY(async_events);
+	SET_ARRAY(aer_cids);
+#undef SET_ARRAY
 }
 
 int
-nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data)
+spdk_nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
+			       struct spdk_nvmf_ctrlr_migr_data *data)
 {
-	uint32_t num_async_events = 0;
 	struct spdk_nvmf_async_event_completion *event, *event_tmp;
+	uint32_t i;
+	struct spdk_nvmf_ctrlr_migr_data data_local = {
+		.data_size = offsetof(struct spdk_nvmf_ctrlr_migr_data, unused),
+		.regs_size = sizeof(struct spdk_nvmf_registers),
+		.feat_size = sizeof(struct spdk_nvmf_ctrlr_feat)
+	};
 
-	memcpy(&data->feat, &ctrlr->feat, sizeof(struct spdk_nvmf_ctrlr_feat));
-	data->cntlid = ctrlr->cntlid;
-	data->acre_enabled = ctrlr->acre_enabled;
-	data->notice_aen_mask = ctrlr->notice_aen_mask;
+	assert(data->data_size <= sizeof(data_local));
+	assert(spdk_get_thread() == ctrlr->thread);
+
+	memcpy(&data_local.regs, &ctrlr->vcprop, sizeof(struct spdk_nvmf_registers));
+	memcpy(&data_local.feat, &ctrlr->feat, sizeof(struct spdk_nvmf_ctrlr_feat));
+
+	data_local.cntlid = ctrlr->cntlid;
+	data_local.acre = ctrlr->acre_enabled;
+	data_local.num_aer_cids = ctrlr->nr_aer_reqs;
 
 	STAILQ_FOREACH_SAFE(event, &ctrlr->async_events, link, event_tmp) {
-		data->async_events[num_async_events++].raw = event->event.raw;
-		if (num_async_events == NVMF_MIGR_MAX_PENDING_AERS) {
-			SPDK_ERRLOG("%p has too many pending AERs\n", ctrlr);
+		data_local.async_events[data_local.num_async_events++].raw = event->event.raw;
+		if (data_local.num_async_events > SPDK_NVMF_MIGR_MAX_PENDING_AERS) {
+			SPDK_ERRLOG("ctrlr %p has too many pending AERs\n", ctrlr);
 			break;
 		}
 	}
-	data->num_async_events = num_async_events;
 
+	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
+		struct spdk_nvmf_request *req = ctrlr->aer_req[i];
+		data_local.aer_cids[i] = req->cmd->nvme_cmd.cid;
+	}
+	data_local.notice_aen_mask = ctrlr->notice_aen_mask;
+
+	nvmf_ctrlr_migr_data_copy(data, &data_local, spdk_min(data->data_size, data_local.data_size));
 	return 0;
 }
 
 int
-nvmf_ctrlr_restore_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data)
+spdk_nvmf_ctrlr_restore_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
+				  const struct spdk_nvmf_ctrlr_migr_data *data)
 {
-	struct spdk_nvmf_async_event_completion *event;
 	uint32_t i;
+	struct spdk_nvmf_ctrlr_migr_data data_local = {
+		.data_size = offsetof(struct spdk_nvmf_ctrlr_migr_data, unused),
+		.regs_size = sizeof(struct spdk_nvmf_registers),
+		.feat_size = sizeof(struct spdk_nvmf_ctrlr_feat)
+	};
 
-	memcpy(&ctrlr->feat, &data->feat, sizeof(struct spdk_nvmf_ctrlr_feat));
-	ctrlr->acre_enabled = data->acre_enabled;
-	ctrlr->notice_aen_mask = data->notice_aen_mask;
+	assert(data->data_size <= sizeof(data_local));
+	assert(spdk_get_thread() == ctrlr->thread);
 
-	for (i = 0; i < data->num_async_events; i++) {
-		event = calloc(1, sizeof(struct spdk_nvmf_async_event_completion));
+	/* local version of data should have defaults set before copy */
+	nvmf_ctrlr_migr_data_copy(&data_local, data, spdk_min(data->data_size, data_local.data_size));
+	memcpy(&ctrlr->vcprop, &data_local.regs, sizeof(struct spdk_nvmf_registers));
+	memcpy(&ctrlr->feat, &data_local.feat, sizeof(struct spdk_nvmf_ctrlr_feat));
+
+	ctrlr->cntlid = data_local.cntlid;
+	ctrlr->acre_enabled = data_local.acre;
+
+	for (i = 0; i < data_local.num_async_events; i++) {
+		struct spdk_nvmf_async_event_completion *event;
+
+		event = calloc(1, sizeof(*event));
 		if (!event) {
 			return -ENOMEM;
 		}
-		event->event.raw = data->async_events[i].raw;
+
+		event->event.raw = data_local.async_events[i].raw;
 		STAILQ_INSERT_TAIL(&ctrlr->async_events, event, link);
 	}
+	ctrlr->notice_aen_mask = data_local.notice_aen_mask;
 
 	return 0;
 }
@@ -1977,7 +2027,7 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	SPDK_DEBUGLOG(nvmf, "Async Event Request\n");
 
 	/* Four asynchronous events are supported for now */
-	if (ctrlr->nr_aer_reqs >= NVMF_MAX_ASYNC_EVENTS) {
+	if (ctrlr->nr_aer_reqs >= SPDK_NVMF_MAX_ASYNC_EVENTS) {
 		SPDK_DEBUGLOG(nvmf, "AERL exceeded\n");
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED;

@@ -20,8 +20,6 @@
 #include "spdk/util.h"
 #include "spdk/thread.h"
 
-#define NVMF_MAX_ASYNC_EVENTS	(4)
-
 /* The spec reserves cntlid values in the range FFF0h to FFFFh. */
 #define NVMF_MIN_CNTLID 1
 #define NVMF_MAX_CNTLID 0xFFEF
@@ -169,19 +167,6 @@ struct spdk_nvmf_ns {
 	bool zcopy;
 };
 
-struct spdk_nvmf_ctrlr_feat {
-	union spdk_nvme_feat_arbitration arbitration;
-	union spdk_nvme_feat_power_management power_management;
-	union spdk_nvme_feat_error_recovery error_recovery;
-	union spdk_nvme_feat_volatile_write_cache volatile_write_cache;
-	union spdk_nvme_feat_number_of_queues number_of_queues;
-	union spdk_nvme_feat_interrupt_coalescing interrupt_coalescing;
-	union spdk_nvme_feat_interrupt_vector_configuration interrupt_vector_configuration;
-	union spdk_nvme_feat_write_atomicity write_atomicity;
-	union spdk_nvme_feat_async_event_configuration async_event_configuration;
-	union spdk_nvme_feat_keep_alive_timer keep_alive_timer;
-};
-
 /*
  * NVMf reservation notification log page.
  */
@@ -220,7 +205,7 @@ struct spdk_nvmf_ctrlr {
 
 	const struct spdk_nvmf_subsystem_listener	*listener;
 
-	struct spdk_nvmf_request *aer_req[NVMF_MAX_ASYNC_EVENTS];
+	struct spdk_nvmf_request *aer_req[SPDK_NVMF_MAX_ASYNC_EVENTS];
 	STAILQ_HEAD(, spdk_nvmf_async_event_completion) async_events;
 	uint64_t notice_aen_mask;
 	uint8_t nr_aer_reqs;
@@ -253,29 +238,6 @@ struct spdk_nvmf_ctrlr {
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)	link;
 };
-
-/* Maximum pending AERs that can be migrated */
-#define NVMF_MIGR_MAX_PENDING_AERS 256
-
-/* spdk_nvmf_ctrlr private migration data structure used to save/restore a controller */
-struct nvmf_ctrlr_migr_data {
-	uint32_t				opts_size;
-
-	uint16_t				cntlid;
-	uint8_t					reserved1[2];
-
-	struct spdk_nvmf_ctrlr_feat		feat;
-	uint32_t				reserved2[2];
-
-	uint32_t				num_async_events;
-	uint32_t				acre_enabled;
-	uint64_t				notice_aen_mask;
-	union spdk_nvme_async_event_completion	async_events[NVMF_MIGR_MAX_PENDING_AERS];
-
-	/* New fields shouldn't go after reserved3 */
-	uint8_t					reserved3[3000];
-};
-SPDK_STATIC_ASSERT(sizeof(struct nvmf_ctrlr_migr_data) == 0x1000, "Incorrect size");
 
 #define NVMF_MAX_LISTENERS_PER_SUBSYSTEM	16
 
@@ -442,11 +404,6 @@ void nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
  * the host to send a subsequent AER.
  */
 void nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
-int nvmf_ctrlr_save_aers(struct spdk_nvmf_ctrlr *ctrlr, uint16_t *aer_cids,
-			 uint16_t max_aers);
-
-int nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data);
-int nvmf_ctrlr_restore_migr_data(struct spdk_nvmf_ctrlr *ctrlr, struct nvmf_ctrlr_migr_data *data);
 
 /*
  * Abort zero-copy requests that already got the buffer (received zcopy_start cb), but haven't

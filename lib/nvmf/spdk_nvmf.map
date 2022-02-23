@@ -114,6 +114,8 @@
 	spdk_nvmf_request_zcopy_end;
 	spdk_nvmf_ctrlr_get_subsystem;
 	spdk_nvmf_ctrlr_get_id;
+	spdk_nvmf_ctrlr_save_migr_data;
+	spdk_nvmf_ctrlr_restore_migr_data;
 	spdk_nvmf_req_get_xfer;
 	spdk_nvmf_poll_group_remove;
 

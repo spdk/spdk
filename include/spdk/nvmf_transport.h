@@ -22,6 +22,11 @@
 /* The maximum number of buffers per request */
 #define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2 + 1)
 
+/* Maximum pending AERs that can be migrated */
+#define SPDK_NVMF_MIGR_MAX_PENDING_AERS 256
+
+#define SPDK_NVMF_MAX_ASYNC_EVENTS 4
+
 /* AIO backend requires block size aligned data buffers,
  * extra 4KiB aligned data buffer should work for most devices.
  */
@@ -415,6 +420,7 @@ struct spdk_nvmf_registers {
 	uint64_t			asq;
 	uint64_t			acq;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_registers) == 40, "Incorrect size");
 
 const struct spdk_nvmf_registers *spdk_nvmf_ctrlr_get_regs(struct spdk_nvmf_ctrlr *ctrlr);
 
@@ -466,6 +472,95 @@ spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr *ctrlr);
  * \return The NVMe-oF controller ID
  */
 uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
+
+struct spdk_nvmf_ctrlr_feat {
+	union spdk_nvme_feat_arbitration arbitration;
+	union spdk_nvme_feat_power_management power_management;
+	union spdk_nvme_feat_error_recovery error_recovery;
+	union spdk_nvme_feat_volatile_write_cache volatile_write_cache;
+	union spdk_nvme_feat_number_of_queues number_of_queues;
+	union spdk_nvme_feat_interrupt_coalescing interrupt_coalescing;
+	union spdk_nvme_feat_interrupt_vector_configuration interrupt_vector_configuration;
+	union spdk_nvme_feat_write_atomicity write_atomicity;
+	union spdk_nvme_feat_async_event_configuration async_event_configuration;
+	union spdk_nvme_feat_keep_alive_timer keep_alive_timer;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_feat) == 40, "Incorrect size");
+
+/* Migration data structure used to save & restore a NVMe-oF controller. */
+struct spdk_nvmf_ctrlr_migr_data {
+	/* `data_size` is valid size of `spdk_nvmf_ctrlr_migr_data` without counting `unused`.
+	 * We use this field to migrate `spdk_nvmf_ctrlr_migr_data` from source VM and restore
+	 * it in destination VM.
+	 */
+	uint32_t data_size;
+	/* `regs_size` is valid size of `spdk_nvmf_registers`. */
+	uint32_t regs_size;
+	/* `feat_size` is valid size of `spdk_nvmf_ctrlr_feat`. */
+	uint32_t feat_size;
+	uint32_t reserved;
+
+	struct spdk_nvmf_registers regs;
+	uint8_t regs_reserved[216];
+
+	struct spdk_nvmf_ctrlr_feat feat;
+	uint8_t feat_reserved[216];
+
+	uint16_t cntlid;
+	uint8_t acre;
+	uint8_t num_aer_cids;
+	uint32_t num_async_events;
+
+	union spdk_nvme_async_event_completion async_events[SPDK_NVMF_MIGR_MAX_PENDING_AERS];
+	uint16_t aer_cids[SPDK_NVMF_MAX_ASYNC_EVENTS];
+	uint64_t notice_aen_mask;
+
+	uint8_t unused[2516];
+};
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvmf_ctrlr_migr_data,
+			    regs) - offsetof(struct spdk_nvmf_ctrlr_migr_data, data_size) == 16, "Incorrect header size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvmf_ctrlr_migr_data,
+			    feat) - offsetof(struct spdk_nvmf_ctrlr_migr_data, regs) == 256, "Incorrect regs size");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvmf_ctrlr_migr_data,
+			    cntlid) - offsetof(struct spdk_nvmf_ctrlr_migr_data, feat) == 256, "Incorrect feat size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_migr_data) == 4096, "Incorrect size");
+
+/**
+ * Save the NVMe-oF controller state and configuration.
+ *
+ * It is allowed to save the data only when the nvmf subystem is in paused
+ * state i.e. there are no outstanding cmds in nvmf layer (other than aer),
+ * pending async event completions are getting blocked.
+ *
+ * To preserve thread safety this function must be executed on the same thread
+ * the NVMe-OF controller was created.
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param data The NVMe-oF controller state and configuration to be saved
+ *
+ * \return 0 on success or a negated errno on failure.
+ */
+int spdk_nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
+				   struct spdk_nvmf_ctrlr_migr_data *data);
+
+/**
+ * Restore the NVMe-oF controller state and configuration.
+ *
+ * It is allowed to restore the data only when the nvmf subystem is in paused
+ * state.
+ *
+ * To preserve thread safety this function must be executed on the same thread
+ * the NVMe-OF controller was created.
+ *
+ * AERs shall be restored using spdk_nvmf_request_exec after this function is executed.
+ *
+ * \param ctrlr The NVMe-oF controller
+ * \param data The NVMe-oF controller state and configuration to be restored
+ *
+ * \return 0 on success or a negated errno on failure.
+ */
+int spdk_nvmf_ctrlr_restore_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
+				      const struct spdk_nvmf_ctrlr_migr_data *data);
 
 static inline enum spdk_nvme_data_transfer
 spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
