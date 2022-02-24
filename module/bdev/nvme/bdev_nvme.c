@@ -4142,6 +4142,7 @@ struct discovery_ctx {
 	struct spdk_nvme_ctrlr_opts		opts;
 	TAILQ_ENTRY(discovery_ctx)		tailq;
 	TAILQ_HEAD(, discovery_entry_ctx)	nvm_entry_ctxs;
+	TAILQ_HEAD(, discovery_entry_ctx)	discovery_entry_ctxs;
 	int					rc;
 	/* Denotes if a discovery is currently in progress for this context.
 	 * That includes connecting to newly discovered subsystems.  Used to
@@ -4272,10 +4273,28 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			free(entry_ctx);
 		}
 	}
+	TAILQ_FOREACH_SAFE(entry_ctx, &ctx->discovery_entry_ctxs, tailq, tmp) {
+		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, entry_ctx, tailq);
+		free(entry_ctx);
+	}
 	for (i = 0; i < numrec; i++) {
 		found = false;
 		new_entry = &log_page->entries[i];
 		if (new_entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+			struct discovery_entry_ctx *new_ctx;
+
+			new_ctx = calloc(1, sizeof(*new_ctx));
+			if (new_ctx == NULL) {
+				SPDK_ERRLOG("could not allocate new entry_ctx\n");
+				break;
+			}
+
+			new_ctx->ctx = ctx;
+			memcpy(&new_ctx->entry, new_entry, sizeof(*new_entry));
+			build_trid_from_log_page_entry(&new_ctx->trid, new_entry);
+			spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->opts, sizeof(new_ctx->opts));
+			snprintf(new_ctx->opts.hostnqn, sizeof(new_ctx->opts.hostnqn), "%s", ctx->hostnqn);
+			TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, new_ctx, tailq);
 			continue;
 		}
 		TAILQ_FOREACH(entry_ctx, &ctx->nvm_entry_ctxs, tailq) {
@@ -4473,6 +4492,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	memcpy(&ctx->opts, opts, sizeof(*opts));
 	ctx->calling_thread = spdk_get_thread();
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
+	TAILQ_INIT(&ctx->discovery_entry_ctxs);
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 	/* Even if user did not specify hostnqn, we can still strdup("\0"); */
 	ctx->hostnqn = strdup(ctx->opts.hostnqn);
@@ -4512,6 +4532,13 @@ bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_f
 				path.trid = entry_ctx->trid;
 				bdev_nvme_delete(entry_ctx->name, &path);
 				TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
+				free(entry_ctx);
+			}
+			while (!TAILQ_EMPTY(&ctx->discovery_entry_ctxs)) {
+				struct discovery_entry_ctx *entry_ctx;
+
+				entry_ctx = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
+				TAILQ_REMOVE(&ctx->discovery_entry_ctxs, entry_ctx, tailq);
 				free(entry_ctx);
 			}
 			return 0;
