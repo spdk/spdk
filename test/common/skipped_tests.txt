@@ -89,3 +89,6 @@ busy
 balanced
 core_load
 zoned_fio
+
+# SMA tests - disabled in CI for now
+sma_nvmf_tcp
