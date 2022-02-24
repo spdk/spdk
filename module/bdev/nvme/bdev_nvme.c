@@ -4665,12 +4665,12 @@ discovery_poller(void *arg)
 	} else if (ctx->probe_ctx == NULL && ctx->ctrlr == NULL) {
 		assert(ctx->entry_ctx_in_use == NULL);
 		ctx->entry_ctx_in_use = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
+		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
 		trid = &ctx->entry_ctx_in_use->trid;
 		ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->drv_opts, discovery_attach_cb);
-		if (ctx->probe_ctx) {
-			TAILQ_REMOVE(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
-		} else {
+		if (!ctx->probe_ctx) {
 			DISCOVERY_ERRLOG(ctx, "could not start discovery connect\n");
+			TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
 			ctx->entry_ctx_in_use = NULL;
 		}
 	} else if (ctx->probe_ctx) {
@@ -4683,7 +4683,17 @@ discovery_poller(void *arg)
 			}
 		}
 	} else {
-		spdk_nvme_ctrlr_process_admin_completions(ctx->ctrlr);
+		rc = spdk_nvme_ctrlr_process_admin_completions(ctx->ctrlr);
+		if (rc < 0) {
+			TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
+			ctx->entry_ctx_in_use = NULL;
+
+			rc = spdk_nvme_detach_async(ctx->ctrlr, &ctx->detach_ctx);
+			if (rc != 0) {
+				DISCOVERY_ERRLOG(ctx, "could not detach discovery ctrlr\n");
+				ctx->ctrlr = NULL;
+			}
+		}
 	}
 
 	return SPDK_POLLER_BUSY;
