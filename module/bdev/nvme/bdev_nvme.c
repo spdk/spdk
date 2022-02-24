@@ -4138,6 +4138,7 @@ struct discovery_ctx {
 	struct spdk_nvme_probe_ctx		*probe_ctx;
 	struct spdk_nvme_detach_ctx		*detach_ctx;
 	struct spdk_nvme_ctrlr			*ctrlr;
+	struct spdk_nvme_transport_id		trid;
 	struct spdk_poller			*poller;
 	struct spdk_nvme_ctrlr_opts		opts;
 	TAILQ_ENTRY(discovery_ctx)		tailq;
@@ -4494,13 +4495,14 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	TAILQ_INIT(&ctx->discovery_entry_ctxs);
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	memcpy(&ctx->trid, trid, sizeof(*trid));
 	/* Even if user did not specify hostnqn, we can still strdup("\0"); */
 	ctx->hostnqn = strdup(ctx->opts.hostnqn);
 	if (ctx->hostnqn == NULL) {
 		free_discovery_ctx(ctx);
 		return -ENOMEM;
 	}
-	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, discovery_attach_cb);
+	ctx->probe_ctx = spdk_nvme_connect_async(&ctx->trid, &ctx->opts, discovery_attach_cb);
 	if (ctx->probe_ctx == NULL) {
 		SPDK_ERRLOG("could not start discovery connect\n");
 		free_discovery_ctx(ctx);
