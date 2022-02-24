@@ -4249,6 +4249,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 	struct discovery_ctx *ctx = cb_arg;
 	struct discovery_entry_ctx *entry_ctx, *tmp;
 	struct spdk_nvmf_discovery_log_page_entry *new_entry, *old_entry;
+	struct spdk_nvme_transport_id old_trid;
 	uint64_t numrec, i;
 	bool found;
 
@@ -4262,9 +4263,12 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 	TAILQ_FOREACH_SAFE(entry_ctx, &ctx->nvm_entry_ctxs, tailq, tmp) {
 		found = false;
 		old_entry = &entry_ctx->entry;
+		build_trid_from_log_page_entry(&old_trid, old_entry);
 		for (i = 0; i < numrec; i++) {
 			new_entry = &log_page->entries[i];
 			if (!memcmp(old_entry, new_entry, sizeof(*old_entry))) {
+				DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s found again\n",
+						   old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
 				found = true;
 				break;
 			}
@@ -4272,7 +4276,8 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		if (!found) {
 			struct nvme_path_id path = {};
 
-			DISCOVERY_DEBUGLOG(ctx, "detach controller\n");
+			DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s not found\n",
+					   old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
 
 			path.trid = entry_ctx->trid;
 			bdev_nvme_delete(entry_ctx->name, &path);
@@ -4332,8 +4337,14 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			build_trid_from_log_page_entry(&new_ctx->trid, new_entry);
 			if (subnqn_ctx) {
 				snprintf(new_ctx->name, sizeof(new_ctx->name), "%s", subnqn_ctx->name);
+				DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s new path for %s\n",
+						   new_ctx->trid.subnqn, new_ctx->trid.traddr, new_ctx->trid.trsvcid,
+						   new_ctx->name);
 			} else {
 				snprintf(new_ctx->name, sizeof(new_ctx->name), "%s%d", ctx->name, ctx->index++);
+				DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s new subsystem %s\n",
+						   new_ctx->trid.subnqn, new_ctx->trid.traddr, new_ctx->trid.trsvcid,
+						   new_ctx->name);
 			}
 			spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->opts, sizeof(new_ctx->opts));
 			snprintf(new_ctx->opts.hostnqn, sizeof(new_ctx->opts.hostnqn), "%s", ctx->hostnqn);
@@ -4432,6 +4443,7 @@ discovery_poller(void *arg)
 	if (ctx->probe_ctx) {
 		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
 		if (rc != -EAGAIN) {
+			DISCOVERY_DEBUGLOG(ctx, "discovery ctrlr connected\n");
 			ctx->rc = rc;
 			spdk_thread_send_msg(ctx->calling_thread, start_discovery_done, ctx);
 			if (rc == 0) {
