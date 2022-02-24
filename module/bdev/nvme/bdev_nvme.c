@@ -4382,6 +4382,21 @@ start_discovery_done(void *cb_ctx)
 	}
 }
 
+static void
+discovery_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+		    struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
+	struct discovery_ctx *ctx;
+
+	ctx = SPDK_CONTAINEROF(user_opts, struct discovery_ctx, opts);
+
+	SPDK_DEBUGLOG(bdev_nvme, "discovery ctrlr attached\n");
+	ctx->probe_ctx = NULL;
+	ctx->ctrlr = ctrlr;
+	spdk_nvme_ctrlr_register_aer_callback(ctx->ctrlr, discovery_aer_cb, ctx);
+}
+
 static int
 discovery_poller(void *arg)
 {
@@ -4423,21 +4438,6 @@ discovery_poller(void *arg)
 	}
 
 	return SPDK_POLLER_BUSY;
-}
-
-static void
-discovery_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-		    struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
-{
-	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
-	struct discovery_ctx *ctx;
-
-	ctx = SPDK_CONTAINEROF(user_opts, struct discovery_ctx, opts);
-
-	SPDK_DEBUGLOG(bdev_nvme, "discovery ctrlr attached\n");
-	ctx->probe_ctx = NULL;
-	ctx->ctrlr = ctrlr;
-	spdk_nvme_ctrlr_register_aer_callback(ctx->ctrlr, discovery_aer_cb, ctx);
 }
 
 static void
