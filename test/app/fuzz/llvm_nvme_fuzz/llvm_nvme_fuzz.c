@@ -268,6 +268,38 @@ fuzz_admin_security_send_command(struct fuzz_command *cmd)
 	g_data += 8;
 }
 
+static void
+fuzz_admin_directive_send_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_DIRECTIVE_SEND;
+
+	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
+			 (g_data[2] << 8) + g_data[3];
+
+	cmd->cmd.cdw11_bits.directive.dspec = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.directive.dtype = g_data[6];
+	cmd->cmd.cdw11_bits.directive.doper = g_data[7];
+
+	g_data += 8;
+}
+
+static void
+fuzz_admin_directive_receive_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_DIRECTIVE_RECEIVE;
+
+	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
+			 (g_data[2] << 8) + g_data[3];
+
+	cmd->cmd.cdw11_bits.directive.dspec = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.directive.dtype = g_data[6];
+	cmd->cmd.cdw11_bits.directive.doper = g_data[7];
+
+	g_data += 8;
+}
+
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd) },
 	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6 },
@@ -281,6 +313,8 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_namespace_management_command, .bytes_per_cmd = 1},
 	{ .fn = fuzz_admin_security_receive_command, .bytes_per_cmd = 8},
 	{ .fn = fuzz_admin_security_send_command, .bytes_per_cmd = 8},
+	{ .fn = fuzz_admin_directive_send_command, .bytes_per_cmd = 8},
+	{ .fn = fuzz_admin_directive_receive_command, .bytes_per_cmd = 8},
 	{ .fn = NULL, .bytes_per_cmd = 0 }
 };
 
