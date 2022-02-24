@@ -237,6 +237,7 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\n");
 	printf("options:\n");
+	printf(" -g         use single file descriptor for DPDK memory segments]\n");
 	printf(" -T         enable temperature tests\n");
 	printf(" -n         expected Namespace attribute notice ID\n");
 	printf(" -t <file>  touch specified file when ready to receive AER\n");
@@ -257,7 +258,7 @@ usage(const char *program_name)
 }
 
 static int
-parse_args(int argc, char **argv)
+parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, rc;
 	long int val;
@@ -265,7 +266,7 @@ parse_args(int argc, char **argv)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "n:r:t:HL:T")) != -1) {
+	while ((op = getopt(argc, argv, "n:gr:t:HL:T")) != -1) {
 		switch (op) {
 		case 'n':
 			val = spdk_strtol(optarg, 10);
@@ -274,6 +275,9 @@ parse_args(int argc, char **argv)
 				return val;
 			}
 			g_expected_ns_test = (uint32_t)val;
+			break;
+		case 'g':
+			env_opts->hugepage_single_segments = true;
 			break;
 		case 'r':
 			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
@@ -476,7 +480,7 @@ int main(int argc, char **argv)
 	int			rc;
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
-	rc = parse_args(argc, argv);
+	rc = parse_args(argc, argv, &opts);
 	if (rc != 0) {
 		return rc;
 	}

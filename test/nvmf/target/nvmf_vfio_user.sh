@@ -14,6 +14,33 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 export TEST_TRANSPORT=VFIOUSER
 
+function aer_vfio_user() {
+
+	local traddr=$1
+	local subnqn=$2
+	local malloc_num=Malloc$(($3 + NUM_DEVICES))
+	$rpc_py nvmf_get_subsystems
+
+	AER_TOUCH_FILE=/tmp/aer_touch_file
+
+	# Namespace Attribute Notice Tests
+	$rootdir/test/nvme/aer/aer -r "\
+		trtype:$TEST_TRANSPORT \
+		traddr:$traddr \
+		subnqn:$subnqn" -n $NUM_DEVICES -g -t $AER_TOUCH_FILE &
+	aerpid=$!
+
+	# Waiting for aer start to work
+	waitforfile $AER_TOUCH_FILE
+	rm -f $AER_TOUCH_FILE
+	# Add a new namespace
+	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE --name $malloc_num
+	$rpc_py nvmf_subsystem_add_ns $subnqn $malloc_num -n $NUM_DEVICES
+	$rpc_py nvmf_get_subsystems
+
+	wait $aerpid
+}
+
 rm -rf /var/run/vfio-user
 
 # Start the target
@@ -57,6 +84,8 @@ for i in $(seq 1 $NUM_DEVICES); do
 	$nvmeappdir/deallocated_value/deallocated_value -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
 	sleep 1
 	$nvmeappdir/overhead/overhead -s 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+	sleep 1
+	aer_vfio_user $test_traddr $test_subnqn $i
 	sleep 1
 done
 
