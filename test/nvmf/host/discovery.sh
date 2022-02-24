@@ -61,6 +61,14 @@ function get_subsystem_paths() {
 	$rpc_py -s $HOST_SOCK bdev_nvme_get_controllers -n $1 | jq -r '.[].ctrlrs[].trid.trsvcid' | sort -n | xargs
 }
 
+# Note that tests need to call get_notification_count and then check $notification_count,
+# because if we use $(get_notification_count), the notify_id gets updated in the subshell.
+notify_id=0
+function get_notification_count() {
+	notification_count=$($rpc_py -s $HOST_SOCK notify_get_notifications -i $notify_id | jq '. | length')
+	notify_id=$((notify_id + notification_count))
+}
+
 [[ "$(get_subsystem_names)" == "" ]]
 [[ "$(get_bdev_list)" == "" ]]
 
@@ -77,6 +85,8 @@ $rpc_py nvmf_subsystem_add_ns ${NQN}0 null0
 $rpc_py nvmf_subsystem_add_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 [[ "$(get_subsystem_names)" == "" ]]
 [[ "$(get_bdev_list)" == "" ]]
+get_notification_count
+[[ $notification_count == 0 ]]
 
 # Discovery hostnqn is added, so now the host should see the subsystem, with a single path for the
 # port of the single listener on the target.
@@ -84,10 +94,14 @@ $rpc_py nvmf_subsystem_add_host ${NQN}0 $HOST_NQN
 [[ "$(get_subsystem_names)" == "nvme0" ]]
 [[ "$(get_bdev_list)" == "nvme0n1" ]]
 [[ "$(get_subsystem_paths nvme0)" == "$NVMF_PORT" ]]
+get_notification_count
+[[ $notification_count == 1 ]]
 
 # Adding a namespace isn't a discovery function, but do it here anyways just to confirm we see a new bdev.
 $rpc_py nvmf_subsystem_add_ns ${NQN}0 null1
 [[ "$(get_bdev_list)" == "nvme0n1 nvme0n2" ]]
+get_notification_count
+[[ $notification_count == 1 ]]
 
 # Add a second path to the same subsystem.  This shouldn't change the list of subsystems or bdevs, but
 # we should see a second path on the nvme0 subsystem now.
@@ -95,6 +109,8 @@ $rpc_py nvmf_subsystem_add_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TA
 [[ "$(get_subsystem_names)" == "nvme0" ]]
 [[ "$(get_bdev_list)" == "nvme0n1 nvme0n2" ]]
 [[ "$(get_subsystem_paths nvme0)" == "$NVMF_PORT $NVMF_SECOND_PORT" ]]
+get_notification_count
+[[ $notification_count == 0 ]]
 
 # Remove the listener for the first port.  The subsystem and bdevs should stay, but we should see
 # the path to that first port disappear.
@@ -102,10 +118,14 @@ $rpc_py nvmf_subsystem_remove_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST
 [[ "$(get_subsystem_names)" == "nvme0" ]]
 [[ "$(get_bdev_list)" == "nvme0n1 nvme0n2" ]]
 [[ "$(get_subsystem_paths nvme0)" == "$NVMF_SECOND_PORT" ]]
+get_notification_count
+[[ $notification_count == 0 ]]
 
 $rpc_py -s $HOST_SOCK bdev_nvme_stop_discovery -b nvme
 [[ "$(get_subsystem_names)" == "" ]]
 [[ "$(get_bdev_list)" == "" ]]
+get_notification_count
+[[ $notification_count == 2 ]]
 
 trap - SIGINT SIGTERM EXIT
 
