@@ -86,6 +86,10 @@ function usage() {
 # /sys/bus/pci/drivers/ as neither lsmod nor /sys/modules might
 # contain needed info (like in Fedora-like OS).
 function check_for_driver() {
+	if [[ -z $1 ]]; then
+		return 0
+	fi
+
 	if lsmod | grep -q ${1//-/_}; then
 		return 1
 	fi
@@ -165,6 +169,11 @@ function linux_unbind_driver() {
 	local ven_dev_id
 	ven_dev_id="${pci_ids_vendor["$bdf"]#0x} ${pci_ids_device["$bdf"]#0x}"
 	local old_driver_name=${drivers_d["$bdf"]:-no driver}
+
+	if [[ $old_driver_name == "no driver" ]]; then
+		pci_dev_echo "$bdf" "Not bound to any driver"
+		return 0
+	fi
 
 	if [[ -e /sys/bus/pci/drivers/$old_driver_name ]]; then
 		echo "$ven_dev_id" > "/sys/bus/pci/drivers/$old_driver_name/remove_id" 2> /dev/null || true
@@ -256,8 +265,8 @@ function collect_driver() {
 	local bdf=$1
 	local drivers driver
 
-	[[ -e /sys/bus/pci/devices/$bdf/modalias ]] || return 1
-	if drivers=($(modprobe -R "$(< "/sys/bus/pci/devices/$bdf/modalias")")); then
+	if [[ -e /sys/bus/pci/devices/$bdf/modalias ]] \
+		&& drivers=($(modprobe -R "$(< "/sys/bus/pci/devices/$bdf/modalias")")); then
 		# Pick first entry in case multiple aliases are bound to a driver.
 		driver=$(readlink -f "/sys/module/${drivers[0]}/drivers/pci:"*)
 		driver=${driver##*/}
@@ -537,7 +546,7 @@ function reset_linux_pci() {
 		((all_devices_d["$bdf"] == 0)) || continue
 
 		driver=$(collect_driver "$bdf")
-		if ! check_for_driver "$driver"; then
+		if [[ -n $driver ]] && ! check_for_driver "$driver"; then
 			linux_bind_driver "$bdf" "$driver"
 		else
 			linux_unbind_driver "$bdf"
