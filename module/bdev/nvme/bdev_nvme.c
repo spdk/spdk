@@ -4668,7 +4668,10 @@ discovery_poller(void *arg)
 		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
 		trid = &ctx->entry_ctx_in_use->trid;
 		ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->drv_opts, discovery_attach_cb);
-		if (!ctx->probe_ctx) {
+		if (ctx->probe_ctx) {
+			spdk_poller_unregister(&ctx->poller);
+			ctx->poller = SPDK_POLLER_REGISTER(discovery_poller, ctx, 1000);
+		} else {
 			DISCOVERY_ERRLOG(ctx, "could not start discovery connect\n");
 			TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
 			ctx->entry_ctx_in_use = NULL;
@@ -4685,6 +4688,8 @@ discovery_poller(void *arg)
 	} else {
 		rc = spdk_nvme_ctrlr_process_admin_completions(ctx->ctrlr);
 		if (rc < 0) {
+			spdk_poller_unregister(&ctx->poller);
+			ctx->poller = SPDK_POLLER_REGISTER(discovery_poller, ctx, 1000 * 1000);
 			TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
 			ctx->entry_ctx_in_use = NULL;
 
@@ -4705,7 +4710,7 @@ start_discovery_poller(void *arg)
 	struct discovery_ctx *ctx = arg;
 
 	TAILQ_INSERT_TAIL(&g_discovery_ctxs, ctx, tailq);
-	ctx->poller = SPDK_POLLER_REGISTER(discovery_poller, ctx, 1000);
+	ctx->poller = SPDK_POLLER_REGISTER(discovery_poller, ctx, 1000 * 1000);
 }
 
 int
