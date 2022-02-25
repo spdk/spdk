@@ -4329,6 +4329,7 @@ struct discovery_ctx {
 	struct spdk_nvme_detach_ctx		*detach_ctx;
 	struct spdk_nvme_ctrlr			*ctrlr;
 	struct spdk_nvme_transport_id		trid;
+	struct discovery_entry_ctx		*entry_ctx_in_use;
 	struct spdk_poller			*poller;
 	struct spdk_nvme_ctrlr_opts		drv_opts;
 	struct spdk_nvmf_discovery_log_page	*log_page;
@@ -4639,6 +4640,7 @@ static int
 discovery_poller(void *arg)
 {
 	struct discovery_ctx *ctx = arg;
+	struct spdk_nvme_transport_id *trid;
 	int rc;
 
 	if (ctx->detach) {
@@ -4665,9 +4667,15 @@ discovery_poller(void *arg)
 			free_discovery_ctx(ctx);
 		}
 	} else if (ctx->probe_ctx == NULL && ctx->ctrlr == NULL) {
-		ctx->probe_ctx = spdk_nvme_connect_async(&ctx->trid, &ctx->drv_opts, discovery_attach_cb);
-		if (ctx->probe_ctx == NULL) {
+		assert(ctx->entry_ctx_in_use == NULL);
+		ctx->entry_ctx_in_use = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
+		trid = &ctx->entry_ctx_in_use->trid;
+		ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->drv_opts, discovery_attach_cb);
+		if (ctx->probe_ctx) {
+			TAILQ_REMOVE(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
+		} else {
 			DISCOVERY_ERRLOG(ctx, "could not start discovery connect\n");
+			ctx->entry_ctx_in_use = NULL;
 		}
 	} else if (ctx->probe_ctx) {
 		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
@@ -4700,6 +4708,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  struct spdk_nvme_ctrlr_opts *drv_opts)
 {
 	struct discovery_ctx *ctx;
+	struct discovery_entry_ctx *discovery_entry_ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -4723,6 +4732,14 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 		free_discovery_ctx(ctx);
 		return -ENOMEM;
 	}
+	discovery_entry_ctx = create_discovery_entry_ctx(ctx, trid);
+	if (discovery_entry_ctx == NULL) {
+		DISCOVERY_ERRLOG(ctx, "could not allocate new entry_ctx\n");
+		free_discovery_ctx(ctx);
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, discovery_entry_ctx, tailq);
 	spdk_thread_send_msg(g_bdev_nvme_init_thread, start_discovery_poller, ctx);
 	return 0;
 }
