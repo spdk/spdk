@@ -4350,10 +4350,11 @@ struct discovery_ctx {
 	 */
 	bool					pending;
 
-	/* Signal to the discovery context poller that it should detach from
-	 * the discovery controller.
+	/* Signal to the discovery context poller that it should stop the
+	 * discovery service, including detaching from the current discovery
+	 * controller.
 	 */
-	bool					detach;
+	bool					stop;
 
 	struct spdk_thread			*calling_thread;
 	uint32_t				index;
@@ -4643,7 +4644,7 @@ discovery_poller(void *arg)
 	struct spdk_nvme_transport_id *trid;
 	int rc;
 
-	if (ctx->detach) {
+	if (ctx->stop) {
 		bool detach_done = false;
 
 		if (ctx->ctrlr == NULL) {
@@ -4751,10 +4752,10 @@ bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_f
 
 	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
 		if (strcmp(name, ctx->name) == 0) {
-			if (ctx->detach) {
+			if (ctx->stop) {
 				return -EALREADY;
 			}
-			ctx->detach = true;
+			ctx->stop = true;
 			ctx->stop_cb_fn = cb_fn;
 			ctx->cb_ctx = cb_ctx;
 			while (!TAILQ_EMPTY(&ctx->nvm_entry_ctxs)) {
@@ -4857,7 +4858,7 @@ bdev_nvme_library_fini(void)
 		bdev_nvme_fini_destruct_ctrlrs();
 	} else {
 		TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
-			ctx->detach = true;
+			ctx->stop = true;
 			ctx->stop_cb_fn = check_discovery_fini;
 		}
 	}
