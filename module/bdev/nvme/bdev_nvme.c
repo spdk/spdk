@@ -4468,6 +4468,24 @@ discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 	}
 }
 
+static struct discovery_entry_ctx *
+create_discovery_entry_ctx(struct discovery_ctx *ctx, struct spdk_nvme_transport_id *trid)
+{
+	struct discovery_entry_ctx *new_ctx;
+
+	new_ctx = calloc(1, sizeof(*new_ctx));
+	if (new_ctx == NULL) {
+		DISCOVERY_ERRLOG(ctx, "could not allocate new entry_ctx\n");
+		return NULL;
+	}
+
+	new_ctx->ctx = ctx;
+	memcpy(&new_ctx->trid, trid, sizeof(*trid));
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->drv_opts, sizeof(new_ctx->drv_opts));
+	snprintf(new_ctx->drv_opts.hostnqn, sizeof(new_ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
+	return new_ctx;
+}
+
 static void
 discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		      struct spdk_nvmf_discovery_log_page *log_page)
@@ -4495,18 +4513,15 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		new_entry = &log_page->entries[i];
 		if (new_entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			struct discovery_entry_ctx *new_ctx;
+			struct spdk_nvme_transport_id trid;
 
-			new_ctx = calloc(1, sizeof(*new_ctx));
+			build_trid_from_log_page_entry(&trid, new_entry);
+			new_ctx = create_discovery_entry_ctx(ctx, &trid);
 			if (new_ctx == NULL) {
 				DISCOVERY_ERRLOG(ctx, "could not allocate new entry_ctx\n");
 				break;
 			}
 
-			new_ctx->ctx = ctx;
-			memcpy(&new_ctx->entry, new_entry, sizeof(*new_entry));
-			build_trid_from_log_page_entry(&new_ctx->trid, new_entry);
-			spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->drv_opts, sizeof(new_ctx->drv_opts));
-			snprintf(new_ctx->drv_opts.hostnqn, sizeof(new_ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
 			TAILQ_INSERT_TAIL(&ctx->discovery_entry_ctxs, new_ctx, tailq);
 			continue;
 		}
