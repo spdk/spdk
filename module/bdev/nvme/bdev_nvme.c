@@ -4456,17 +4456,7 @@ discovery_poller(void *arg)
 	struct discovery_ctx *ctx = arg;
 	int rc;
 
-	if (ctx->probe_ctx) {
-		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
-		if (rc != -EAGAIN) {
-			DISCOVERY_DEBUGLOG(ctx, "discovery ctrlr connected\n");
-			ctx->rc = rc;
-			spdk_thread_send_msg(ctx->calling_thread, start_discovery_done, ctx);
-			if (rc == 0) {
-				get_discovery_log_page(ctx);
-			}
-		}
-	} else if (ctx->detach) {
+	if (ctx->detach) {
 		bool detach_done = false;
 
 		if (ctx->detach_ctx == NULL) {
@@ -4486,6 +4476,16 @@ discovery_poller(void *arg)
 			TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
 			ctx->stop_cb_fn(ctx->cb_ctx);
 			free_discovery_ctx(ctx);
+		}
+	} else if (ctx->probe_ctx) {
+		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
+		if (rc != -EAGAIN) {
+			DISCOVERY_DEBUGLOG(ctx, "discovery ctrlr connected\n");
+			ctx->rc = rc;
+			spdk_thread_send_msg(ctx->calling_thread, start_discovery_done, ctx);
+			if (rc == 0) {
+				get_discovery_log_page(ctx);
+			}
 		}
 	} else {
 		spdk_nvme_ctrlr_process_admin_completions(ctx->ctrlr);
