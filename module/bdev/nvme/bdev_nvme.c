@@ -4644,29 +4644,24 @@ discovery_poller(void *arg)
 	struct spdk_nvme_transport_id *trid;
 	int rc;
 
-	if (ctx->stop) {
-		bool detach_done = false;
-
-		if (ctx->ctrlr == NULL) {
-			detach_done = true;
-		} else if (ctx->detach_ctx == NULL) {
+	if (ctx->detach_ctx) {
+		rc = spdk_nvme_detach_poll_async(ctx->detach_ctx);
+		if (rc != -EAGAIN) {
+			ctx->detach_ctx = NULL;
+			ctx->ctrlr = NULL;
+		}
+	} else if (ctx->stop) {
+		if (ctx->ctrlr != NULL) {
 			rc = spdk_nvme_detach_async(ctx->ctrlr, &ctx->detach_ctx);
-			if (rc != 0) {
-				DISCOVERY_ERRLOG(ctx, "could not detach discovery ctrlr\n");
-				detach_done = true;
+			if (rc == 0) {
+				return SPDK_POLLER_BUSY;
 			}
-		} else {
-			rc = spdk_nvme_detach_poll_async(ctx->detach_ctx);
-			if (rc != -EAGAIN) {
-				detach_done = true;
-			}
+			DISCOVERY_ERRLOG(ctx, "could not detach discovery ctrlr\n");
 		}
-		if (detach_done) {
-			spdk_poller_unregister(&ctx->poller);
-			TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
-			ctx->stop_cb_fn(ctx->cb_ctx);
-			free_discovery_ctx(ctx);
-		}
+		spdk_poller_unregister(&ctx->poller);
+		TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
+		ctx->stop_cb_fn(ctx->cb_ctx);
+		free_discovery_ctx(ctx);
 	} else if (ctx->probe_ctx == NULL && ctx->ctrlr == NULL) {
 		assert(ctx->entry_ctx_in_use == NULL);
 		ctx->entry_ctx_in_use = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
