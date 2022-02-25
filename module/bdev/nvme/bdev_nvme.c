@@ -4147,6 +4147,7 @@ struct discovery_ctx {
 	struct spdk_nvme_transport_id		trid;
 	struct spdk_poller			*poller;
 	struct spdk_nvme_ctrlr_opts		opts;
+	struct spdk_nvmf_discovery_log_page	*log_page;
 	TAILQ_ENTRY(discovery_ctx)		tailq;
 	TAILQ_HEAD(, discovery_entry_ctx)	nvm_entry_ctxs;
 	TAILQ_HEAD(, discovery_entry_ctx)	discovery_entry_ctxs;
@@ -4230,35 +4231,15 @@ build_trid_from_log_page_entry(struct spdk_nvme_transport_id *trid,
 }
 
 static void
-discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
+discovery_remove_controllers(struct discovery_ctx *ctx)
 {
-	struct discovery_entry_ctx *entry_ctx = cb_ctx;
-	struct discovery_ctx *ctx = entry_ctx->ctx;;
-
-	DISCOVERY_DEBUGLOG(ctx, "attach %s done\n", entry_ctx->name);
-	ctx->attach_in_progress--;
-	if (ctx->attach_in_progress == 0) {
-		discovery_complete(ctx);
-	}
-}
-
-static void
-discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
-		      struct spdk_nvmf_discovery_log_page *log_page)
-{
-	struct discovery_ctx *ctx = cb_arg;
+	struct spdk_nvmf_discovery_log_page *log_page = ctx->log_page;
 	struct discovery_entry_ctx *entry_ctx, *tmp;
 	struct spdk_nvmf_discovery_log_page_entry *new_entry, *old_entry;
 	struct spdk_nvme_transport_id old_trid;
 	uint64_t numrec, i;
 	bool found;
 
-	if (rc || spdk_nvme_cpl_is_error(cpl)) {
-		DISCOVERY_ERRLOG(ctx, "could not get discovery log page\n");
-		return;
-	}
-
-	assert(ctx->attach_in_progress == 0);
 	numrec = from_le64(&log_page->numrec);
 	TAILQ_FOREACH_SAFE(entry_ctx, &ctx->nvm_entry_ctxs, tailq, tmp) {
 		found = false;
@@ -4285,6 +4266,42 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			free(entry_ctx);
 		}
 	}
+	free(log_page);
+	ctx->log_page = NULL;
+	discovery_complete(ctx);
+}
+
+static void
+discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
+{
+	struct discovery_entry_ctx *entry_ctx = cb_ctx;
+	struct discovery_ctx *ctx = entry_ctx->ctx;;
+
+	DISCOVERY_DEBUGLOG(ctx, "attach %s done\n", entry_ctx->name);
+	ctx->attach_in_progress--;
+	if (ctx->attach_in_progress == 0) {
+		discovery_remove_controllers(ctx);
+	}
+}
+
+static void
+discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
+		      struct spdk_nvmf_discovery_log_page *log_page)
+{
+	struct discovery_ctx *ctx = cb_arg;
+	struct discovery_entry_ctx *entry_ctx, *tmp;
+	struct spdk_nvmf_discovery_log_page_entry *new_entry, *old_entry;
+	uint64_t numrec, i;
+	bool found;
+
+	if (rc || spdk_nvme_cpl_is_error(cpl)) {
+		DISCOVERY_ERRLOG(ctx, "could not get discovery log page\n");
+		return;
+	}
+
+	ctx->log_page = log_page;
+	assert(ctx->attach_in_progress == 0);
+	numrec = from_le64(&log_page->numrec);
 	TAILQ_FOREACH_SAFE(entry_ctx, &ctx->discovery_entry_ctxs, tailq, tmp) {
 		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, entry_ctx, tailq);
 		free(entry_ctx);
@@ -4359,10 +4376,9 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			}
 		}
 	}
-	free(log_page);
 
 	if (ctx->attach_in_progress == 0) {
-		discovery_complete(ctx);
+		discovery_remove_controllers(ctx);
 	}
 }
 
