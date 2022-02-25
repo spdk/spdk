@@ -70,6 +70,16 @@ enum nvmf_vfio_user_req_state {
 	VFIO_USER_REQUEST_STATE_EXECUTING,
 };
 
+/*
+ * Support for live migration in NVMf/vfio-user: live migration is implemented
+ * by stopping the NVMf subsystem when the device is instructed to enter the
+ * stop-and-copy state and then trivially, and most importantly safely,
+ * collecting migration state and providing it to the vfio-user client. We
+ * don't provide any migration state at the pre-copy state as that's too
+ * complicated to do, we might support this in the future.
+ */
+
+
 /* NVMe device state representation */
 struct nvme_migr_sq_state {
 	uint16_t	sqid;
