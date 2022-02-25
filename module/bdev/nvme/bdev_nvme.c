@@ -4323,7 +4323,6 @@ struct discovery_entry_ctx {
 
 struct discovery_ctx {
 	char					*name;
-	spdk_bdev_nvme_start_discovery_fn	start_cb_fn;
 	spdk_bdev_nvme_stop_discovery_fn	stop_cb_fn;
 	void					*cb_ctx;
 	struct spdk_nvme_probe_ctx		*probe_ctx;
@@ -4607,20 +4606,6 @@ discovery_aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-start_discovery_done(void *cb_ctx)
-{
-	struct discovery_ctx *ctx = cb_ctx;
-
-	DISCOVERY_INFOLOG(ctx, "start discovery done\n");
-	ctx->start_cb_fn(ctx->cb_ctx, ctx->rc);
-	if (ctx->rc != 0) {
-		DISCOVERY_ERRLOG(ctx, "could not connect to discovery ctrlr\n");
-		TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
-		free_discovery_ctx(ctx);
-	}
-}
-
-static void
 discovery_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		    struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -4644,7 +4629,9 @@ discovery_poller(void *arg)
 	if (ctx->detach) {
 		bool detach_done = false;
 
-		if (ctx->detach_ctx == NULL) {
+		if (ctx->ctrlr == NULL) {
+			detach_done = true;
+		} else if (ctx->detach_ctx == NULL) {
 			rc = spdk_nvme_detach_async(ctx->ctrlr, &ctx->detach_ctx);
 			if (rc != 0) {
 				DISCOVERY_ERRLOG(ctx, "could not detach discovery ctrlr\n");
@@ -4662,12 +4649,16 @@ discovery_poller(void *arg)
 			ctx->stop_cb_fn(ctx->cb_ctx);
 			free_discovery_ctx(ctx);
 		}
+	} else if (ctx->probe_ctx == NULL && ctx->ctrlr == NULL) {
+		ctx->probe_ctx = spdk_nvme_connect_async(&ctx->trid, &ctx->drv_opts, discovery_attach_cb);
+		if (ctx->probe_ctx == NULL) {
+			DISCOVERY_ERRLOG(ctx, "could not start discovery connect\n");
+		}
 	} else if (ctx->probe_ctx) {
 		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
 		if (rc != -EAGAIN) {
 			DISCOVERY_INFOLOG(ctx, "discovery ctrlr connected\n");
 			ctx->rc = rc;
-			spdk_thread_send_msg(ctx->calling_thread, start_discovery_done, ctx);
 			if (rc == 0) {
 				get_discovery_log_page(ctx);
 			}
@@ -4691,9 +4682,7 @@ start_discovery_poller(void *arg)
 int
 bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
-			  struct spdk_nvme_ctrlr_opts *drv_opts,
-			  spdk_bdev_nvme_start_discovery_fn cb_fn,
-			  void *cb_ctx)
+			  struct spdk_nvme_ctrlr_opts *drv_opts)
 {
 	struct discovery_ctx *ctx;
 
@@ -4707,8 +4696,6 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 		free_discovery_ctx(ctx);
 		return -ENOMEM;
 	}
-	ctx->start_cb_fn = cb_fn;
-	ctx->cb_ctx = cb_ctx;
 	memcpy(&ctx->drv_opts, drv_opts, sizeof(*drv_opts));
 	ctx->calling_thread = spdk_get_thread();
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
@@ -4721,13 +4708,6 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 		free_discovery_ctx(ctx);
 		return -ENOMEM;
 	}
-	ctx->probe_ctx = spdk_nvme_connect_async(&ctx->trid, &ctx->drv_opts, discovery_attach_cb);
-	if (ctx->probe_ctx == NULL) {
-		DISCOVERY_ERRLOG(ctx, "could not start discovery connect\n");
-		free_discovery_ctx(ctx);
-		return -EIO;
-	}
-
 	spdk_thread_send_msg(g_bdev_nvme_init_thread, start_discovery_poller, ctx);
 	return 0;
 }

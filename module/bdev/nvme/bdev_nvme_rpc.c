@@ -1635,25 +1635,6 @@ struct rpc_bdev_nvme_start_discovery_ctx {
 };
 
 static void
-rpc_bdev_nvme_start_discovery_done(void *cb_ctx, int rc)
-{
-	struct rpc_bdev_nvme_start_discovery_ctx *ctx = cb_ctx;
-	struct spdk_jsonrpc_request *request = ctx->request;
-
-	if (rc < 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		free_rpc_bdev_nvme_start_discovery(&ctx->req);
-		free(ctx);
-		return;
-	}
-
-	spdk_jsonrpc_send_bool_response(ctx->request, rc == 0);
-
-	free_rpc_bdev_nvme_start_discovery(&ctx->req);
-	free(ctx);
-}
-
-static void
 rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
@@ -1731,14 +1712,12 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->request = request;
-	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctx->req.opts,
-				       rpc_bdev_nvme_start_discovery_done, ctx);
-	if (rc) {
+	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctx->req.opts);
+	if (rc == 0) {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	} else {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		goto cleanup;
 	}
-
-	return;
 
 cleanup:
 	free_rpc_bdev_nvme_start_discovery(&ctx->req);
