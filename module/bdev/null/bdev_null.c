@@ -458,6 +458,10 @@ _bdev_null_finish_cb(void *arg)
 static void
 bdev_null_finish(void)
 {
+	if (g_null_read_buf == NULL) {
+		spdk_bdev_module_fini_done();
+		return;
+	}
 	spdk_io_device_unregister(&g_null_bdev_head, _bdev_null_finish_cb);
 }
 
