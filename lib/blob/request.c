@@ -494,13 +494,13 @@ bs_user_op_execute(spdk_bs_user_op_t *op)
 }
 
 void
-bs_user_op_abort(spdk_bs_user_op_t *op)
+bs_user_op_abort(spdk_bs_user_op_t *op, int bserrno)
 {
 	struct spdk_bs_request_set	*set;
 
 	set = (struct spdk_bs_request_set *)op;
 
-	set->cpl.u.blob_basic.cb_fn(set->cpl.u.blob_basic.cb_arg, -EIO);
+	set->cpl.u.blob_basic.cb_fn(set->cpl.u.blob_basic.cb_arg, bserrno);
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
 }
 

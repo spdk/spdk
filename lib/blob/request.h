@@ -210,6 +210,6 @@ spdk_bs_user_op_t *bs_user_op_alloc(struct spdk_io_channel *channel, struct spdk
 
 void bs_user_op_execute(spdk_bs_user_op_t *op);
 
-void bs_user_op_abort(spdk_bs_user_op_t *op);
+void bs_user_op_abort(spdk_bs_user_op_t *op, int bserrno);
 
 #endif

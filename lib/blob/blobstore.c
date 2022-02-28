@@ -2349,7 +2349,7 @@ blob_allocate_and_copy_cluster_cpl(void *cb_arg, int bserrno)
 		if (bserrno == 0) {
 			bs_user_op_execute(op);
 		} else {
-			bs_user_op_abort(op);
+			bs_user_op_abort(op, bserrno);
 		}
 	}
 
@@ -2447,7 +2447,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
-		bs_user_op_abort(op);
+		bs_user_op_abort(op, -ENOMEM);
 		return;
 	}
 
@@ -2463,7 +2463,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 			SPDK_ERRLOG("DMA allocation for cluster of size = %" PRIu32 " failed.\n",
 				    blob->bs->cluster_sz);
 			free(ctx);
-			bs_user_op_abort(op);
+			bs_user_op_abort(op, -ENOMEM);
 			return;
 		}
 	}
@@ -2475,7 +2475,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	if (rc != 0) {
 		spdk_free(ctx->buf);
 		free(ctx);
-		bs_user_op_abort(op);
+		bs_user_op_abort(op, rc);
 		return;
 	}
 
@@ -2490,7 +2490,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 		pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
 		spdk_free(ctx->buf);
 		free(ctx);
-		bs_user_op_abort(op);
+		bs_user_op_abort(op, -ENOMEM);
 		return;
 	}
 
@@ -3141,13 +3141,13 @@ bs_channel_destroy(void *io_device, void *ctx_buf)
 	while (!TAILQ_EMPTY(&channel->need_cluster_alloc)) {
 		op = TAILQ_FIRST(&channel->need_cluster_alloc);
 		TAILQ_REMOVE(&channel->need_cluster_alloc, op, link);
-		bs_user_op_abort(op);
+		bs_user_op_abort(op, -EIO);
 	}
 
 	while (!TAILQ_EMPTY(&channel->queued_io)) {
 		op = TAILQ_FIRST(&channel->queued_io);
 		TAILQ_REMOVE(&channel->queued_io, op, link);
-		bs_user_op_abort(op);
+		bs_user_op_abort(op, -EIO);
 	}
 
 	free(channel->req_mem);
