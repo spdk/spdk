@@ -2890,7 +2890,7 @@ nvmf_fc_adm_hwqp_clean_sync_cb(struct spdk_nvmf_fc_hwqp *hwqp)
 			if (++ctx->hwqps_responded == ctx->num_hwqps) {
 				free(ctx->sync_poller_args);
 				free(ctx->abts_poller_args);
-				spdk_free(ctx);
+				free(ctx);
 			}
 		}
 	}
