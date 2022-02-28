@@ -37,11 +37,30 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 4
 SO_MINOR := 0
 
-C_SRCS = ftl_band.c ftl_core.c ftl_debug.c ftl_io.c ftl_reloc.c \
-	 ftl_restore.c ftl_init.c ftl_trace.c
+ifneq ($(strip $(SPDK_FTL_ZONE_EMU_BLOCKS)),)
+CFLAGS += -DSPDK_FTL_ZONE_EMU_BLOCKS=$(SPDK_FTL_ZONE_EMU_BLOCKS)
+endif
+
+CFLAGS += -I.
+
+FTL_SUBDIRS := mngt utils
+
+C_SRCS = $(wildcard *.c)
+C_SRCS += $(wildcard mngt/*.c)
+C_SRCS += $(wildcard utils/*.c)
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 
 LIBNAME = ftl
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+
+CLEAN_FTL_SUBDIRS = $(addprefix clean_ftl_, $(FTL_SUBDIRS))
+
+clean: $(CLEAN_FTL_SUBDIRS)
+
+.PHONY: $(CLEAN_FTL_SUBDIRS)
+$(CLEAN_FTL_SUBDIRS): _Q := $(Q)
+$(CLEAN_FTL_SUBDIRS): Q :=
+$(CLEAN_FTL_SUBDIRS): clean_ftl_%:%
+	$(_Q)cd $< && $(CLEAN_C)
