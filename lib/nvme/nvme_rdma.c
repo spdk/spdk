@@ -1950,6 +1950,34 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 static void
 nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 {
+	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
+	struct nvme_rdma_ctrlr *rctrlr;
+	struct nvme_rdma_cm_event_entry *entry, *tmp;
+
+	spdk_rdma_free_mem_map(&rqpair->mr_map);
+	nvme_rdma_unregister_reqs(rqpair);
+	nvme_rdma_unregister_rsps(rqpair);
+
+	if (rqpair->evt) {
+		rdma_ack_cm_event(rqpair->evt);
+		rqpair->evt = NULL;
+	}
+
+	/*
+	 * This works because we have the controller lock both in
+	 * this function and in the function where we add new events.
+	 */
+	if (qpair->ctrlr != NULL) {
+		rctrlr = nvme_rdma_ctrlr(qpair->ctrlr);
+		STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
+			if (nvme_rdma_qpair(entry->evt->id->context) == rqpair) {
+				STAILQ_REMOVE(&rctrlr->pending_cm_events, entry, nvme_rdma_cm_event_entry, link);
+				rdma_ack_cm_event(entry->evt);
+				STAILQ_INSERT_HEAD(&rctrlr->free_cm_events, entry, link);
+			}
+		}
+	}
+
 	if (rqpair->cm_id) {
 		if (rqpair->rdma_qp) {
 			spdk_rdma_qp_destroy(rqpair->rdma_qp);
@@ -2021,42 +2049,16 @@ _nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvm
 				  nvme_rdma_cm_event_cb disconnected_qpair_cb)
 {
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
-	struct nvme_rdma_ctrlr *rctrlr = NULL;
-	struct nvme_rdma_cm_event_entry *entry, *tmp;
 	int rc;
 
 	assert(disconnected_qpair_cb != NULL);
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITING;
 
-	spdk_rdma_free_mem_map(&rqpair->mr_map);
-	nvme_rdma_unregister_reqs(rqpair);
-	nvme_rdma_unregister_rsps(rqpair);
-
-	if (rqpair->evt) {
-		rdma_ack_cm_event(rqpair->evt);
-		rqpair->evt = NULL;
-	}
-
-	/*
-	 * This works because we have the controller lock both in
-	 * this function and in the function where we add new events.
-	 */
-	if (qpair->ctrlr != NULL) {
-		rctrlr = nvme_rdma_ctrlr(qpair->ctrlr);
-		STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
-			if (nvme_rdma_qpair(entry->evt->id->context) == rqpair) {
-				STAILQ_REMOVE(&rctrlr->pending_cm_events, entry, nvme_rdma_cm_event_entry, link);
-				rdma_ack_cm_event(entry->evt);
-				STAILQ_INSERT_HEAD(&rctrlr->free_cm_events, entry, link);
-			}
-		}
-	}
-
 	if (rqpair->cm_id) {
 		if (rqpair->rdma_qp) {
 			rc = spdk_rdma_qp_disconnect(rqpair->rdma_qp);
-			if ((rctrlr != NULL) && (rc == 0)) {
+			if ((qpair->ctrlr != NULL) && (rc == 0)) {
 				rc = nvme_rdma_process_event_start(rqpair, RDMA_CM_EVENT_DISCONNECTED,
 								   disconnected_qpair_cb);
 				if (rc == 0) {
