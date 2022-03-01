@@ -71,6 +71,9 @@ struct spdk_sock_request {
 	 */
 	struct __sock_request_internal {
 		TAILQ_ENTRY(spdk_sock_request)	link;
+#ifdef DEBUG
+		void				*curr_list;
+#endif
 		uint32_t			offset;
 	} internal;
 
