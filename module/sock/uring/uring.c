@@ -1138,6 +1138,7 @@ _sock_flush_client(struct spdk_sock *_sock)
 	int iovcnt;
 	ssize_t rc;
 	int flags = sock->zcopy_send_flags;
+	int retval;
 
 	/* Can't flush from within a callback or we end up with recursive calls */
 	if (_sock->cb_cnt > 0) {
@@ -1161,7 +1162,11 @@ _sock_flush_client(struct spdk_sock *_sock)
 		return rc;
 	}
 
-	sock_complete_reqs(_sock, rc);
+	retval = sock_complete_reqs(_sock, rc);
+	if (retval < 0) {
+		/* if the socket is closed, return to avoid heap-use-after-free error */
+		return retval;
+	}
 
 #ifdef SPDK_ZEROCOPY
 	if (sock->zcopy && !TAILQ_EMPTY(&_sock->pending_reqs)) {
