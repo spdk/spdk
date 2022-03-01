@@ -568,7 +568,7 @@ free_rpc_scheduler(struct rpc_scheduler *req)
 }
 
 static const struct spdk_json_object_decoder rpc_scheduler_decoders[] = {
-	{"scheduler_name", offsetof(struct rpc_scheduler, scheduler_name), spdk_json_decode_string},
+	{"scheduler_name", offsetof(struct rpc_scheduler, scheduler_name), spdk_json_decode_string, true},
 	{"scheduler_period", offsetof(struct rpc_scheduler, scheduler_period), spdk_json_decode_uint64},
 };
 
