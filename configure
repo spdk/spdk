@@ -226,7 +226,7 @@ function check_IPSec_mb() {
 		# Request libdpdk pkg-config settings to figure out if the IPSec_MB is used
 		# as a dependency.
 		# Due to some reason pkg-config shows -lIPSec_MB only with --static option
-		dpdk_libs=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --libs --static libdpdk)
+		dpdk_libs=$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --libs --static libdpdk)
 		if echo "$dpdk_libs" | grep "\-lIPSec_MB" > /dev/null 2>&1; then
 			have_ipsec_mb=y
 		fi
@@ -395,21 +395,21 @@ for i in "$@"; do
 			dpdk_incdir="$dpdk_dir/include"
 
 			# Can we use pkg-config?
-			if command -v "pkg-config" > /dev/null 2>&1 && PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --exists libdpdk; then
+			if command -v "pkg-config" > /dev/null 2>&1 && PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --exists libdpdk; then
 				echo "Using $dpdk_libdir/pkgconfig for additional libs..."
-				dpdk_libdir=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --variable=libdir libdpdk)
+				dpdk_libdir=$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --variable=libdir libdpdk)
 				dpdk_libdir=$(readlink -f $dpdk_libdir)
 				if ! echo $dpdk_libdir | grep $dpdk_dir > /dev/null 2>&1; then
 					echo "ERROR: pkg-config reported DPDK libdir $dpdk_libdir is out of the directory specified with --with-dpdk="
 					echo "ERROR: do you have another DPDK installed in the system?"
 					exit 1
 				fi
-				dpdk_reqs=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --print-requires libdpdk)
+				dpdk_reqs=$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --print-requires libdpdk)
 				if echo $dpdk_reqs | grep "libbsd" > /dev/null 2>&1; then
 					CONFIG[HAVE_LIBBSD]=y
 				fi
-				CFLAGS="${CFLAGS:+$CFLAGS }$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --cflags libdpdk)"
-				dpdk_incdir=$(PKG_CONFIG_PATH="$dpdk_libdir/pkgconfig" pkg-config --variable=includedir libdpdk)
+				CFLAGS="${CFLAGS:+$CFLAGS }$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --cflags libdpdk)"
+				dpdk_incdir=$(PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$dpdk_libdir/pkgconfig" pkg-config --variable=includedir libdpdk)
 				check_IPSec_mb "pkg-config" "$dpdk_libdir" "$dpdk_incdir"
 			else
 				echo "Using $dpdk_incdir/rte_build_config.h for additional libs..."
