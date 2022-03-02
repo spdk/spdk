@@ -272,6 +272,7 @@ struct nvmf_vfio_user_sq {
 	enum nvmf_vfio_user_sq_state		sq_state;
 
 	uint32_t				head;
+	volatile uint32_t			*dbl_tailp;
 
 	/* multiple SQs can be mapped to the same CQ */
 	uint16_t				cqid;
@@ -307,6 +308,8 @@ struct nvmf_vfio_user_cq {
 	enum nvmf_vfio_user_cq_state		cq_state;
 
 	uint32_t				tail;
+	volatile uint32_t			*dbl_headp;
+
 	bool					phase;
 
 	uint16_t				iv;
@@ -432,19 +435,17 @@ sq_headp(struct nvmf_vfio_user_sq *sq)
 }
 
 static inline volatile uint32_t *
-sq_dbl_tailp(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_sq *sq)
+sq_dbl_tailp(struct nvmf_vfio_user_sq *sq)
 {
-	assert(ctrlr != NULL);
 	assert(sq != NULL);
-	return &ctrlr->bar0_doorbells[queue_index(sq->qid, false)];
+	return sq->dbl_tailp;
 }
 
 static inline volatile uint32_t *
-cq_dbl_headp(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
+cq_dbl_headp(struct nvmf_vfio_user_cq *cq)
 {
-	assert(ctrlr != NULL);
 	assert(cq != NULL);
-	return &ctrlr->bar0_doorbells[queue_index(cq->qid, true)];
+	return cq->dbl_headp;
 }
 
 static inline volatile uint32_t *
@@ -482,11 +483,10 @@ cq_tail_advance(struct nvmf_vfio_user_cq *cq)
 }
 
 static inline bool
-cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
+cq_is_full(struct nvmf_vfio_user_cq *cq)
 {
 	uint32_t qindex;
 
-	assert(ctrlr != NULL);
 	assert(cq != NULL);
 
 	qindex = *cq_tailp(cq) + 1;
@@ -494,7 +494,7 @@ cq_is_full(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
 		qindex = 0;
 	}
 
-	return qindex == *cq_dbl_headp(ctrlr, cq);
+	return qindex == *cq_dbl_headp(cq);
 }
 
 static inline size_t
@@ -1032,7 +1032,9 @@ asq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 		return ret;
 	}
 
-	*sq_dbl_tailp(ctrlr, sq) = 0;
+	sq->dbl_tailp = ctrlr->bar0_doorbells + queue_index(0, false);
+
+	*sq_dbl_tailp(sq) = 0;
 
 	return 0;
 }
@@ -1066,7 +1068,9 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 		return ret;
 	}
 
-	*cq_dbl_headp(ctrlr, cq) = 0;
+	cq->dbl_headp = ctrlr->bar0_doorbells + queue_index(0, true);
+
+	*cq_dbl_headp(cq) = 0;
 
 	return 0;
 }
@@ -1158,10 +1162,10 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 		return 0;
 	}
 
-	if (cq_is_full(ctrlr, cq)) {
+	if (cq_is_full(cq)) {
 		SPDK_ERRLOG("%s: CQ%d full (tail=%d, head=%d)\n",
 			    ctrlr_id(ctrlr), cq->qid, *cq_tailp(cq),
-			    *cq_dbl_headp(ctrlr, cq));
+			    *cq_dbl_headp(cq));
 		return -1;
 	}
 
@@ -1414,6 +1418,12 @@ err:
 	return -ENOMEM;
 }
 
+static volatile uint32_t *
+ctrlr_doorbell_ptr(struct nvmf_vfio_user_ctrlr *ctrlr)
+{
+	return ctrlr->bar0_doorbells;
+}
+
 static uint16_t
 handle_create_io_sq(struct nvmf_vfio_user_ctrlr *ctrlr,
 		    struct spdk_nvme_cmd *cmd, uint16_t *sct)
@@ -1486,7 +1496,10 @@ handle_create_io_sq(struct nvmf_vfio_user_ctrlr *ctrlr,
 	ctrlr->cqs[sq->cqid]->cq_ref++;
 	sq->sq_state = VFIO_USER_SQ_CREATED;
 	*sq_headp(sq) = 0;
-	*sq_dbl_tailp(ctrlr, sq) = 0;
+
+	sq->dbl_tailp = ctrlr_doorbell_ptr(ctrlr) + queue_index(qid, false);
+
+	*sq_dbl_tailp(sq) = 0;
 
 	/*
 	 * Create our new I/O qpair. This asynchronously invokes, on a suitable
@@ -1542,6 +1555,8 @@ handle_create_io_cq(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	cq->mapping.prp1 = cmd->dptr.prp.prp1;
 
+	cq->dbl_headp = ctrlr_doorbell_ptr(ctrlr) + queue_index(qid, true);
+
 	err = map_q(ctrlr, &cq->mapping, cq->size, true, true);
 	if (err) {
 		SPDK_ERRLOG("%s: failed to map I/O queue: %m\n", ctrlr_id(ctrlr));
@@ -1559,7 +1574,7 @@ handle_create_io_cq(struct nvmf_vfio_user_ctrlr *ctrlr,
 	cq->cq_state = VFIO_USER_CQ_CREATED;
 
 	*cq_tailp(cq) = 0;
-	*cq_dbl_headp(ctrlr, cq) = 0;
+	*cq_dbl_headp(cq) = 0;
 
 	*sct = SPDK_NVME_SCT_GENERIC;
 	return SPDK_NVME_SC_SUCCESS;
@@ -4338,8 +4353,8 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 		cq_tail = *cq_tailp(cq);
 
 		if (cq_tail != cq->last_trigger_irq_tail) {
-			spdk_ivdt_dcache(cq_dbl_headp(ctrlr, cq));
-			cq_head = *cq_dbl_headp(ctrlr, cq);
+			spdk_ivdt_dcache(cq_dbl_headp(cq));
+			cq_head = *cq_dbl_headp(cq);
 
 			if (cq_head != cq_tail && cq_head == cq->last_head) {
 				err = vfu_irq_trigger(ctrlr->endpoint->vfu_ctx, cq->iv);
@@ -4364,10 +4379,10 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 	 * cannot fix this. Use "dc civac" to invalidate cache may solve
 	 * this.
 	 */
-	spdk_ivdt_dcache(sq_dbl_tailp(ctrlr, sq));
+	spdk_ivdt_dcache(sq_dbl_tailp(sq));
 
 	/* Load-Acquire. */
-	new_tail = *sq_dbl_tailp(ctrlr, sq);
+	new_tail = *sq_dbl_tailp(sq);
 
 	/*
 	 * Ensure that changes to the queue are visible to us.
