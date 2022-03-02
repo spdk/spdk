@@ -348,7 +348,7 @@ struct nvmf_vfio_user_ctrlr {
 
 	TAILQ_ENTRY(nvmf_vfio_user_ctrlr)	link;
 
-	volatile uint32_t			*doorbells;
+	volatile uint32_t			*bar0_doorbells;
 
 	bool					self_kick_requested;
 };
@@ -364,7 +364,7 @@ struct nvmf_vfio_user_endpoint {
 	int					accept_intr_fd;
 	struct spdk_interrupt			*accept_intr;
 
-	volatile uint32_t			*doorbells;
+	volatile uint32_t			*bar0_doorbells;
 
 	int					migr_fd;
 	void					*migr_data;
@@ -432,7 +432,7 @@ sq_dbl_tailp(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_sq *sq)
 {
 	assert(ctrlr != NULL);
 	assert(sq != NULL);
-	return &ctrlr->doorbells[queue_index(sq->qid, false)];
+	return &ctrlr->bar0_doorbells[queue_index(sq->qid, false)];
 }
 
 static inline volatile uint32_t *
@@ -440,7 +440,7 @@ cq_dbl_headp(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
 {
 	assert(ctrlr != NULL);
 	assert(cq != NULL);
-	return &ctrlr->doorbells[queue_index(cq->qid, true)];
+	return &ctrlr->bar0_doorbells[queue_index(cq->qid, true)];
 }
 
 static inline volatile uint32_t *
@@ -797,8 +797,8 @@ nvmf_vfio_user_destroy_endpoint(struct nvmf_vfio_user_endpoint *endpoint)
 	spdk_interrupt_unregister(&endpoint->accept_intr);
 	spdk_poller_unregister(&endpoint->accept_poller);
 
-	if (endpoint->doorbells) {
-		munmap((void *)endpoint->doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
+	if (endpoint->bar0_doorbells) {
+		munmap((void *)endpoint->bar0_doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
 	}
 
 	if (endpoint->devmem_fd > 0) {
@@ -2080,7 +2080,7 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 		return -1;
 	}
 
-	ctrlr->doorbells[pos] = *buf;
+	ctrlr->bar0_doorbells[pos] = *buf;
 	spdk_wmb();
 
 	return 0;
@@ -2522,7 +2522,7 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	regs->acq = ctrlr->vcprop.acq;
 	/* Save doorbells */
 	doorbell_base = (uint32_t *)&regs->doorbell[0].sq_tdbl;
-	memcpy(doorbell_base, (void *)vu_ctrlr->doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
+	memcpy(doorbell_base, (void *)vu_ctrlr->bar0_doorbells, NVMF_VFIO_USER_DOORBELLS_SIZE);
 
 	/* Save PCI configuration space */
 	memcpy(&migr_state.cfg, (void *)endpoint->pci_config_space, NVME_REG_CFG_SIZE);
@@ -2734,7 +2734,7 @@ vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	regs = (struct spdk_nvme_registers *)&migr_state.bar0;
 	doorbell_base = (uint32_t *)&regs->doorbell[0].sq_tdbl;
 	/* restore doorbells from saved registers */
-	memcpy((void *)vu_ctrlr->doorbells, doorbell_base, NVMF_VFIO_USER_DOORBELLS_SIZE);
+	memcpy((void *)vu_ctrlr->bar0_doorbells, doorbell_base, NVMF_VFIO_USER_DOORBELLS_SIZE);
 
 	/* restore controller registers after ADMIN queue connection */
 	ctrlr->vcprop.csts.raw = regs->csts.raw;
@@ -3227,7 +3227,7 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 	ctrlr->intr_fd = -1;
 	ctrlr->transport = transport;
 	ctrlr->endpoint = endpoint;
-	ctrlr->doorbells = endpoint->doorbells;
+	ctrlr->bar0_doorbells = endpoint->bar0_doorbells;
 	TAILQ_INIT(&ctrlr->connected_sqs);
 
 	/* Then, construct an admin queue pair */
@@ -3321,11 +3321,11 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		goto out;
 	}
 
-	endpoint->doorbells = mmap(NULL, NVMF_VFIO_USER_DOORBELLS_SIZE,
-				   PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->devmem_fd, NVME_DOORBELLS_OFFSET);
-	if (endpoint->doorbells == MAP_FAILED) {
+	endpoint->bar0_doorbells = mmap(NULL, NVMF_VFIO_USER_DOORBELLS_SIZE,
+					PROT_READ | PROT_WRITE, MAP_SHARED, endpoint->devmem_fd, NVME_DOORBELLS_OFFSET);
+	if (endpoint->bar0_doorbells == MAP_FAILED) {
 		SPDK_ERRLOG("%s: error to mmap file %s: %s.\n", endpoint_id(endpoint), path, spdk_strerror(errno));
-		endpoint->doorbells = NULL;
+		endpoint->bar0_doorbells = NULL;
 		ret = -1;
 		goto out;
 	}
