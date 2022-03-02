@@ -6318,6 +6318,7 @@ no_wr_batching              | Optional | boolean | Disable work requests batchin
 control_msg_num             | Optional | number  | The number of control messages per poll group (TCP only)
 disable_mappable_bar0       | Optional | boolean | disable client mmap() of BAR0 (VFIO-USER only)
 disable_adaptive_irq        | Optional | boolean | Disable adaptive interrupt feature (VFIO-USER only)
+disable_shadow_doorbells    | Optional | boolean | disable shadow doorbell support (VFIO-USER only)
 zcopy                       | Optional | boolean | Use zero-copy operations if the underlying bdev supports them
 
 #### Example
