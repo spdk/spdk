@@ -497,6 +497,32 @@ cq_is_full(struct nvmf_vfio_user_cq *cq)
 	return qindex == *cq_dbl_headp(cq);
 }
 
+static bool
+io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const bool is_cq)
+{
+	assert(vu_ctrlr != NULL);
+
+	if (qid == 0 || qid >= NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR) {
+		return false;
+	}
+
+	if (is_cq) {
+		if (vu_ctrlr->cqs[qid] == NULL) {
+			return false;
+		}
+
+		return (vu_ctrlr->cqs[qid]->cq_state != VFIO_USER_CQ_DELETED &&
+			vu_ctrlr->cqs[qid]->cq_state != VFIO_USER_CQ_UNUSED);
+	}
+
+	if (vu_ctrlr->sqs[qid] == NULL) {
+		return false;
+	}
+
+	return (vu_ctrlr->sqs[qid]->sq_state != VFIO_USER_SQ_DELETED &&
+		vu_ctrlr->sqs[qid]->sq_state != VFIO_USER_SQ_UNUSED);
+}
+
 static inline size_t
 vfio_user_migr_data_len(void)
 {
@@ -1213,32 +1239,6 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 	}
 
 	return 0;
-}
-
-static bool
-io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const bool is_cq)
-{
-	assert(vu_ctrlr != NULL);
-
-	if (qid == 0 || qid >= NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR) {
-		return false;
-	}
-
-	if (is_cq) {
-		if (vu_ctrlr->cqs[qid] == NULL) {
-			return false;
-		}
-
-		return (vu_ctrlr->cqs[qid]->cq_state != VFIO_USER_CQ_DELETED &&
-			vu_ctrlr->cqs[qid]->cq_state != VFIO_USER_CQ_UNUSED);
-	}
-
-	if (vu_ctrlr->sqs[qid] == NULL) {
-		return false;
-	}
-
-	return (vu_ctrlr->sqs[qid]->sq_state != VFIO_USER_SQ_DELETED &&
-		vu_ctrlr->sqs[qid]->sq_state != VFIO_USER_SQ_UNUSED);
 }
 
 static void
