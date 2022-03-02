@@ -578,6 +578,8 @@ set_xattr_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	spdk_blob_sync_md(cli_context->blob, sync_cb, cli_context);
 }
 
+static void __read_dump_cb(void *arg1);
+
 /*
  * Callback function for reading a blob for dumping to a file.
  */
@@ -602,6 +604,19 @@ read_dump_cb(void *arg1, int bserrno)
 			  bserrno);
 		return;
 	}
+
+	/* This completion may have occurred in the context of a read to
+	 * an unallocated cluster.  So we can't issue the next read here, or
+	 * we risk overflowing the stack.  So use spdk_thread_send_msg() to
+	 * make sure we unwind before doing the next read.
+	 */
+	spdk_thread_send_msg(spdk_get_thread(), __read_dump_cb, cli_context);
+}
+
+static void
+__read_dump_cb(void *arg1)
+{
+	struct cli_context_t *cli_context = arg1;
 
 	printf(".");
 	if (++cli_context->io_unit_count < cli_context->blob_io_units) {
