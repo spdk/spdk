@@ -187,7 +187,7 @@ test_idxd_group_config(void)
 	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
 	CU_ASSERT(wqs[0] == 0x1);
 	CU_ASSERT(engines[0] == 0xf);
-	CU_ASSERT(flags[0].tokens_allowed == MAX_TOKENS / g_user_dev_cfg.num_groups);
+	CU_ASSERT(flags[0].read_buffers_allowed == MAX_TOKENS / g_user_dev_cfg.num_groups);
 
 	/* groups allocated by code under test. */
 	free(idxd->groups);

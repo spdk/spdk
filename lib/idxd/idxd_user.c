@@ -240,7 +240,7 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 		idxd->groups[i].id = i;
 
 		/* Divide BW tokens evenly */
-		idxd->groups[i].grpcfg.flags.tokens_allowed =
+		idxd->groups[i].grpcfg.flags.read_buffers_allowed =
 			user_idxd->registers.groupcap.read_bufs / g_user_dev_cfg.num_groups;
 	}
 

@@ -540,14 +540,14 @@ SPDK_STATIC_ASSERT(sizeof(struct idxd_registers) == 0xE0, "size mismatch");
 
 union idxd_group_flags {
 	struct {
-		uint32_t tc_a: 3;
-		uint32_t tc_b: 3;
-		uint32_t rsvd: 1;
-		uint32_t use_token_limit: 1;
-		uint32_t tokens_reserved: 8;
-		uint32_t rsvd2: 4;
-		uint32_t tokens_allowed: 8;
-		uint32_t rsvd3: 4;
+		uint32_t tc_a : 3;
+		uint32_t tc_b : 3;
+		uint32_t reserved0 : 1;
+		uint32_t global_read_buffer_limit: 1;
+		uint32_t read_buffers_reserved : 8;
+		uint32_t reserved1: 4;
+		uint32_t read_buffers_allowed : 8;
+		uint32_t reserved2 : 4;
 	};
 	uint32_t raw;
 };
