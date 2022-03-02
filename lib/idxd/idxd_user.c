@@ -62,12 +62,6 @@ typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev
 #define __user_idxd(idxd) (struct spdk_user_idxd_device *)idxd
 
 pthread_mutex_t	g_driver_lock = PTHREAD_MUTEX_INITIALIZER;
-struct device_config g_user_dev_cfg = {
-	.config_num = 0,
-	.num_groups = 1,
-	.total_wqs = 1,
-	.total_engines = 4,
-};
 
 static struct spdk_idxd_device *idxd_attach(struct spdk_pci_device *device);
 
@@ -217,49 +211,50 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 	uint64_t base_offset;
 	struct spdk_user_idxd_device *user_idxd = __user_idxd(idxd);
 
-	assert(g_user_dev_cfg.num_groups <= user_idxd->registers.groupcap.num_groups);
-	idxd->groups = calloc(user_idxd->registers.groupcap.num_groups, sizeof(struct idxd_group));
+	assert(user_idxd->registers.groupcap.num_groups >= 1);
+	idxd->groups = calloc(1, sizeof(struct idxd_group));
 	if (idxd->groups == NULL) {
 		SPDK_ERRLOG("Failed to allocate group memory\n");
 		return -ENOMEM;
 	}
 
-	assert(g_user_dev_cfg.total_engines <= user_idxd->registers.enginecap.num_engines);
-	for (i = 0; i < g_user_dev_cfg.total_engines; i++) {
-		idxd->groups[i % g_user_dev_cfg.num_groups].grpcfg.engines |= (1 << i);
+	for (i = 0; i < user_idxd->registers.enginecap.num_engines; i++) {
+		idxd->groups->grpcfg.engines |= (1 << i);
 	}
 
-	assert(g_user_dev_cfg.total_wqs <= user_idxd->registers.wqcap.num_wqs);
-	for (i = 0; i < g_user_dev_cfg.total_wqs; i++) {
-		idxd->groups[i % g_user_dev_cfg.num_groups].grpcfg.wqs[0] |= (1 << i);
-	}
+	assert(user_idxd->registers.wqcap.num_wqs >= 1);
+	idxd->groups->grpcfg.wqs[0] = 0x1;
+	idxd->groups->grpcfg.flags.read_buffers_allowed = user_idxd->registers.groupcap.read_bufs;
 
-	for (i = 0; i < g_user_dev_cfg.num_groups; i++) {
-		idxd->groups[i].idxd = idxd;
-		idxd->groups[i].id = i;
+	idxd->groups->idxd = idxd;
+	idxd->groups->id = 0;
 
-		/* Divide BW tokens evenly */
-		idxd->groups[i].grpcfg.flags.read_buffers_allowed =
-			user_idxd->registers.groupcap.read_bufs / g_user_dev_cfg.num_groups;
-	}
+	base_offset = user_idxd->grpcfg_offset;
+
+	/* GRPWQCFG, work queues config */
+	_idxd_write_8(idxd, base_offset, idxd->groups->grpcfg.wqs[0]);
+
+	/* GRPENGCFG, engine config */
+	_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, idxd->groups->grpcfg.engines);
+
+	/* GRPFLAGS, flags config */
+	_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, idxd->groups->grpcfg.flags.raw);
 
 	/*
-	 * Now write the group config to the device for all groups. We write
-	 * to the max number of groups in order to 0 out the ones we didn't
-	 * configure.
+	 * Now write the other groups to zero them out
 	 */
-	for (i = 0 ; i < user_idxd->registers.groupcap.num_groups; i++) {
+	for (i = 1 ; i < user_idxd->registers.groupcap.num_groups; i++) {
 
 		base_offset = user_idxd->grpcfg_offset + i * 64;
 
 		/* GRPWQCFG, work queues config */
-		_idxd_write_8(idxd, base_offset, idxd->groups[i].grpcfg.wqs[0]);
+		_idxd_write_8(idxd, base_offset, 0UL);
 
 		/* GRPENGCFG, engine config */
-		_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, idxd->groups[i].grpcfg.engines);
+		_idxd_write_8(idxd, base_offset + CFG_ENGINE_OFFSET, 0UL);
 
 		/* GRPFLAGS, flags config */
-		_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, idxd->groups[i].grpcfg.flags.raw);
+		_idxd_write_8(idxd, base_offset + CFG_FLAG_OFFSET, 0UL);
 	}
 
 	return 0;
@@ -272,16 +267,13 @@ idxd_group_config(struct spdk_idxd_device *idxd)
 static int
 idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 {
-	uint32_t i, j;
+	uint32_t j;
 	struct idxd_wq *queue;
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
-	uint32_t wq_size = user_idxd->registers.wqcap.total_wq_size / g_user_dev_cfg.total_wqs;
-	uint32_t wqcap_size = 1 << (WQCFG_SHIFT + user_idxd->registers.wqcap.wqcfg_size);
+	uint32_t wq_size = user_idxd->registers.wqcap.total_wq_size;
 
 	SPDK_DEBUGLOG(idxd, "Total ring slots available space 0x%x, so per work queue is 0x%x\n",
 		      user_idxd->registers.wqcap.total_wq_size, wq_size);
-	assert(g_user_dev_cfg.total_wqs <= IDXD_MAX_QUEUES);
-	assert(g_user_dev_cfg.total_wqs <= user_idxd->registers.wqcap.num_wqs);
 	assert(LOG2_WQ_MAX_BATCH <= user_idxd->registers.gencap.max_batch_shift);
 	assert(LOG2_WQ_MAX_XFER <= user_idxd->registers.gencap.max_xfer_shift);
 
@@ -290,42 +282,37 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	 * and achieve optimal performance for common cases.
 	 */
 	idxd->chan_per_device = (idxd->total_wq_size >= 128) ? 8 : 4;
-	idxd->queues = calloc(1, g_user_dev_cfg.total_wqs * sizeof(struct idxd_wq));
+	idxd->queues = calloc(1, sizeof(struct idxd_wq));
 	if (idxd->queues == NULL) {
 		SPDK_ERRLOG("Failed to allocate queue memory\n");
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < g_user_dev_cfg.total_wqs; i++) {
-		queue = &idxd->queues[i];
-		/* Per spec we need to read in existing values first so we don't zero out something we
-		 * didn't touch when we write the cfg register out below.
-		 */
-		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-			queue->wqcfg.raw[j] = _idxd_read_4(idxd,
-							   user_idxd->wqcfg_offset + i * wqcap_size + j * sizeof(uint32_t));
-		}
-		queue->wqcfg.wq_size = wq_size;
-		queue->wqcfg.mode = WQ_MODE_DEDICATED;
-		queue->wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
-		queue->wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
-		queue->wqcfg.wq_state = WQ_ENABLED;
-		queue->wqcfg.priority = WQ_PRIORITY_1;
-
-		/* Not part of the config struct */
-		queue->idxd = idxd;
-		queue->group = &idxd->groups[i % g_user_dev_cfg.num_groups];
+	queue = idxd->queues;
+	/* Per spec we need to read in existing values first so we don't zero out something we
+	 * didn't touch when we write the cfg register out below.
+	 */
+	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
+		queue->wqcfg.raw[j] = _idxd_read_4(idxd,
+						   user_idxd->wqcfg_offset + j * sizeof(uint32_t));
 	}
+	queue->wqcfg.wq_size = wq_size;
+	queue->wqcfg.mode = WQ_MODE_DEDICATED;
+	queue->wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
+	queue->wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
+	queue->wqcfg.wq_state = WQ_ENABLED;
+	queue->wqcfg.priority = WQ_PRIORITY_1;
+
+	/* Not part of the config struct */
+	queue->idxd = idxd;
+	queue->group = idxd->groups;
 
 	/*
 	 * Now write the work queue config to the device for configured queues
 	 */
-	for (i = 0 ; i < g_user_dev_cfg.total_wqs; i++) {
-		queue = &idxd->queues[i];
-		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-			_idxd_write_4(idxd, user_idxd->wqcfg_offset + i * wqcap_size + j * sizeof(uint32_t),
-				      queue->wqcfg.raw[j]);
-		}
+	for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
+		_idxd_write_4(idxd, user_idxd->wqcfg_offset + j * sizeof(uint32_t),
+			      queue->wqcfg.raw[j]);
 	}
 
 	return 0;
@@ -407,16 +394,13 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	assert(gensts_reg.state == IDXD_DEVICE_STATE_ENABLED);
 
 	/*
-	 * Enable the work queues that we've configured
+	 * Enable the work queue that we've configured
 	 */
-	for (i = 0; i < g_user_dev_cfg.total_wqs; i++) {
-		_idxd_write_4(idxd, IDXD_CMD_OFFSET,
-			      (IDXD_ENABLE_WQ << IDXD_CMD_SHIFT) | i);
-		rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
-		if (rc < 0) {
-			SPDK_ERRLOG("Error enabling work queues 0x%x\n", rc);
-			goto err_wq_enable;
-		}
+	_idxd_write_4(idxd, IDXD_CMD_OFFSET, (IDXD_ENABLE_WQ << IDXD_CMD_SHIFT));
+	rc = idxd_wait_cmd(idxd, IDXD_REGISTER_TIMEOUT_US);
+	if (rc < 0) {
+		SPDK_ERRLOG("Error enabling work queues 0x%x\n", rc);
+		goto err_wq_enable;
 	}
 
 	if ((rc == 0) && (gensts_reg.state == IDXD_DEVICE_STATE_ENABLED)) {

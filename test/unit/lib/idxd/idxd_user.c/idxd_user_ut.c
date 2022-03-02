@@ -115,29 +115,26 @@ test_idxd_wq_config(void)
 	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(user_idxd.reg_base != NULL);
 
-	SPDK_CU_ASSERT_FATAL(g_user_dev_cfg.num_groups <= MAX_ARRAY_SIZE);
-	idxd->groups = calloc(g_user_dev_cfg.num_groups, sizeof(struct idxd_group));
+	idxd->groups = calloc(1, sizeof(struct idxd_group));
 	SPDK_CU_ASSERT_FATAL(idxd->groups != NULL);
 
 	user_idxd.registers.wqcap.total_wq_size = TOTAL_WQE_SIZE;
-	user_idxd.registers.wqcap.num_wqs = g_user_dev_cfg.total_wqs;
+	user_idxd.registers.wqcap.num_wqs = 1;
 	user_idxd.registers.gencap.max_batch_shift = LOG2_WQ_MAX_BATCH;
 	user_idxd.registers.gencap.max_xfer_shift = LOG2_WQ_MAX_XFER;
 	user_idxd.wqcfg_offset = WQ_CFG_OFFSET;
-	wq_size = user_idxd.registers.wqcap.total_wq_size / g_user_dev_cfg.total_wqs;
+	wq_size = user_idxd.registers.wqcap.total_wq_size;
 
 	rc = idxd_wq_config(&user_idxd);
 	CU_ASSERT(rc == 0);
-	for (i = 0; i < g_user_dev_cfg.total_wqs; i++) {
-		CU_ASSERT(idxd->queues[i].wqcfg.wq_size == wq_size);
-		CU_ASSERT(idxd->queues[i].wqcfg.mode == WQ_MODE_DEDICATED);
-		CU_ASSERT(idxd->queues[i].wqcfg.max_batch_shift == LOG2_WQ_MAX_BATCH);
-		CU_ASSERT(idxd->queues[i].wqcfg.max_xfer_shift == LOG2_WQ_MAX_XFER);
-		CU_ASSERT(idxd->queues[i].wqcfg.wq_state == WQ_ENABLED);
-		CU_ASSERT(idxd->queues[i].wqcfg.priority == WQ_PRIORITY_1);
-		CU_ASSERT(idxd->queues[i].idxd == idxd);
-		CU_ASSERT(idxd->queues[i].group == &idxd->groups[i % g_user_dev_cfg.num_groups]);
-	}
+	CU_ASSERT(idxd->queues->wqcfg.wq_size == wq_size);
+	CU_ASSERT(idxd->queues->wqcfg.mode == WQ_MODE_DEDICATED);
+	CU_ASSERT(idxd->queues->wqcfg.max_batch_shift == LOG2_WQ_MAX_BATCH);
+	CU_ASSERT(idxd->queues->wqcfg.max_xfer_shift == LOG2_WQ_MAX_XFER);
+	CU_ASSERT(idxd->queues->wqcfg.wq_state == WQ_ENABLED);
+	CU_ASSERT(idxd->queues->wqcfg.priority == WQ_PRIORITY_1);
+	CU_ASSERT(idxd->queues->idxd == idxd);
+	CU_ASSERT(idxd->queues->group == idxd->groups);
 
 	for (i = 0 ; i < user_idxd.registers.wqcap.num_wqs; i++) {
 		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
@@ -168,10 +165,9 @@ test_idxd_group_config(void)
 	user_idxd.reg_base = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(user_idxd.reg_base != NULL);
 
-	SPDK_CU_ASSERT_FATAL(g_user_dev_cfg.num_groups <= MAX_ARRAY_SIZE);
-	user_idxd.registers.groupcap.num_groups = g_user_dev_cfg.num_groups;
-	user_idxd.registers.enginecap.num_engines = g_user_dev_cfg.total_engines;
-	user_idxd.registers.wqcap.num_wqs = g_user_dev_cfg.total_wqs;
+	user_idxd.registers.groupcap.num_groups = 1;
+	user_idxd.registers.enginecap.num_engines = 4;
+	user_idxd.registers.wqcap.num_wqs = 1;
 	user_idxd.registers.groupcap.read_bufs = MAX_TOKENS;
 	user_idxd.grpcfg_offset = GRP_CFG_OFFSET;
 
@@ -187,7 +183,7 @@ test_idxd_group_config(void)
 	/* wqe and engine arrays are indexed by group id and are bitmaps of assigned elements. */
 	CU_ASSERT(wqs[0] == 0x1);
 	CU_ASSERT(engines[0] == 0xf);
-	CU_ASSERT(flags[0].read_buffers_allowed == MAX_TOKENS / g_user_dev_cfg.num_groups);
+	CU_ASSERT(flags[0].read_buffers_allowed == MAX_TOKENS);
 
 	/* groups allocated by code under test. */
 	free(idxd->groups);
@@ -253,17 +249,6 @@ test_idxd_wait_cmd(void)
 	return 0;
 }
 
-static int
-test_setup(void)
-{
-	g_user_dev_cfg.config_num = 0;
-	g_user_dev_cfg.num_groups = 1;
-	g_user_dev_cfg.total_wqs = 1;
-	g_user_dev_cfg.total_engines = 4;
-
-	return 0;
-}
-
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -272,7 +257,7 @@ int main(int argc, char **argv)
 	CU_set_error_action(CUEA_ABORT);
 	CU_initialize_registry();
 
-	suite = CU_add_suite("idxd_user", test_setup, NULL);
+	suite = CU_add_suite("idxd_user", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_idxd_wait_cmd);
 	CU_ADD_TEST(suite, test_idxd_reset_dev);
