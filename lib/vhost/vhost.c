@@ -116,7 +116,8 @@ vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 
 int
 vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-		   const struct spdk_vhost_dev_backend *backend)
+		   const struct spdk_vhost_dev_backend *backend,
+		   const struct spdk_vhost_user_dev_backend *user_backend)
 {
 	struct spdk_cpuset cpumask = {};
 	int rc;
@@ -143,7 +144,9 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		return -EIO;
 	}
 
-	rc = vhost_user_dev_register(vdev, name, &cpumask, backend);
+	vdev->backend = backend;
+
+	rc = vhost_user_dev_register(vdev, name, &cpumask, user_backend);
 	if (rc != 0) {
 		free(vdev->name);
 		return rc;

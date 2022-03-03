@@ -833,7 +833,7 @@ _stop_session(struct spdk_vhost_session *vsession)
 	int rc;
 	uint16_t i;
 
-	rc = vdev->backend->stop_session(vsession);
+	rc = vdev->user_backend->stop_session(vsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
 		return rc;
@@ -908,12 +908,12 @@ new_connection(int vid)
 	}
 
 	if (posix_memalign((void **)&vsession, SPDK_CACHE_LINE_SIZE, sizeof(*vsession) +
-			   vdev->backend->session_ctx_size)) {
+			   vdev->user_backend->session_ctx_size)) {
 		SPDK_ERRLOG("vsession alloc failed\n");
 		spdk_vhost_unlock();
 		return -1;
 	}
-	memset(vsession, 0, sizeof(*vsession) + vdev->backend->session_ctx_size);
+	memset(vsession, 0, sizeof(*vsession) + vdev->user_backend->session_ctx_size);
 
 	vsession->vdev = vdev;
 	vsession->vid = vid;
@@ -1058,7 +1058,7 @@ start_device(int vid)
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
 	vhost_session_mem_register(vsession->mem);
 	vsession->initialized = true;
-	rc = vdev->backend->start_session(vsession);
+	rc = vdev->user_backend->start_session(vsession);
 	if (rc != 0) {
 		vhost_session_mem_unregister(vsession->mem);
 		free(vsession->mem);
@@ -1712,7 +1712,7 @@ vhost_dev_thread_exit(void *arg1)
 
 int
 vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct spdk_cpuset *cpumask,
-			const struct spdk_vhost_dev_backend *backend)
+			const struct spdk_vhost_user_dev_backend *user_backend)
 {
 	char path[PATH_MAX];
 
@@ -1735,7 +1735,7 @@ vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct sp
 	}
 
 	vdev->registered = true;
-	vdev->backend = backend;
+	vdev->user_backend = user_backend;
 	TAILQ_INIT(&vdev->vsessions);
 
 	vhost_user_dev_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,

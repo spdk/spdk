@@ -102,6 +102,7 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 }
 
 static struct spdk_vhost_dev_backend g_vdev_backend;
+static struct spdk_vhost_user_dev_backend g_vdev_user_backend;
 
 static int
 test_setup(void)
@@ -120,7 +121,7 @@ alloc_vdev(struct spdk_vhost_dev **vdev_p, const char *name, const char *cpumask
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(vdev != NULL);
 	memset(vdev, 0, sizeof(*vdev));
-	rc = vhost_dev_register(vdev, name, cpumask, &g_vdev_backend);
+	rc = vhost_dev_register(vdev, name, cpumask, &g_vdev_backend, &g_vdev_user_backend);
 	if (rc == 0) {
 		*vdev_p = vdev;
 	} else {

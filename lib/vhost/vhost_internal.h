@@ -185,6 +185,7 @@ struct spdk_vhost_dev {
 	bool packed_ring_recovery;
 
 	const struct spdk_vhost_dev_backend *backend;
+	const struct spdk_vhost_user_dev_backend *user_backend;
 
 	/* Saved original values used to setup coalescing to avoid integer
 	 * rounding issues during save/load config.
@@ -226,7 +227,7 @@ typedef int (*spdk_vhost_session_fn)(struct spdk_vhost_dev *vdev,
  */
 typedef void (*spdk_vhost_dev_fn)(struct spdk_vhost_dev *vdev, void *arg);
 
-struct spdk_vhost_dev_backend {
+struct spdk_vhost_user_dev_backend {
 	/**
 	 * Size of additional per-session context data
 	 * allocated whenever a new client connects.
@@ -235,7 +236,9 @@ struct spdk_vhost_dev_backend {
 
 	int (*start_session)(struct spdk_vhost_session *vsession);
 	int (*stop_session)(struct spdk_vhost_session *vsession);
+};
 
+struct spdk_vhost_dev_backend {
 	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
 				uint32_t offset, uint32_t size, uint32_t flags);
@@ -404,7 +407,8 @@ vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
 }
 
 int vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-		       const struct spdk_vhost_dev_backend *backend);
+		       const struct spdk_vhost_dev_backend *backend,
+		       const struct spdk_vhost_user_dev_backend *user_backend);
 int vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 
 void vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
@@ -504,7 +508,7 @@ int vhost_user_session_set_coalescing(struct spdk_vhost_dev *vdev,
 int vhost_user_dev_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 				  uint32_t iops_threshold);
 int vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name,
-			    struct spdk_cpuset *cpumask, const struct spdk_vhost_dev_backend *backend);
+			    struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend);
 int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 typedef void (*vhost_fini_cb)(void *ctx);

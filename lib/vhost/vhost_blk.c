@@ -1534,10 +1534,13 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 	return 0;
 }
 
-static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
+static const struct spdk_vhost_user_dev_backend vhost_blk_user_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_blk_start,
 	.stop_session = vhost_blk_stop,
+};
+
+static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.vhost_get_config = vhost_blk_get_config,
 	.dump_info_json = vhost_blk_dump_info_json,
 	.write_config_json = vhost_blk_write_config_json,
@@ -1617,7 +1620,8 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 
 	bvdev->bdev = bdev;
 	bvdev->readonly = req.readonly;
-	ret = vhost_dev_register(vdev, name, cpumask, &vhost_blk_device_backend);
+	ret = vhost_dev_register(vdev, name, cpumask, &vhost_blk_device_backend,
+				 &vhost_blk_user_device_backend);
 	if (ret != 0) {
 		spdk_put_io_channel(bvdev->dummy_io_channel);
 		spdk_bdev_close(bvdev->bdev_desc);

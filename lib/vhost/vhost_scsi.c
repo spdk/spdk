@@ -150,10 +150,13 @@ static int vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 static int vhost_scsi_dev_param_changed(struct spdk_vhost_dev *vdev,
 					unsigned scsi_tgt_num);
 
-static const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
+static const struct spdk_vhost_user_dev_backend spdk_vhost_scsi_user_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_scsi_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_scsi_start,
 	.stop_session = vhost_scsi_stop,
+};
+
+static const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.dump_info_json = vhost_scsi_dump_info_json,
 	.write_config_json = vhost_scsi_write_config_json,
 	.remove_device = vhost_scsi_dev_remove,
@@ -875,7 +878,8 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 
 	spdk_vhost_lock();
 	rc = vhost_dev_register(&svdev->vdev, name, cpumask,
-				&spdk_vhost_scsi_device_backend);
+				&spdk_vhost_scsi_device_backend,
+				&spdk_vhost_scsi_user_device_backend);
 
 	if (rc) {
 		free(svdev);
