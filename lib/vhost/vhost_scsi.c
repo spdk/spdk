@@ -895,6 +895,10 @@ vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
 	int rc, i;
 
+	if (vdev->pending_async_op_num) {
+		return -EBUSY;
+	}
+
 	assert(svdev != NULL);
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev_state[i].dev) {

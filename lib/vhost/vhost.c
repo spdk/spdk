@@ -196,10 +196,6 @@ vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 int
 spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
-	if (vdev->pending_async_op_num) {
-		return -EBUSY;
-	}
-
 	return vdev->backend->remove_device(vdev);
 }
 

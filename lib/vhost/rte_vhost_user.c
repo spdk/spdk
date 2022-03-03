@@ -1756,6 +1756,10 @@ vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct sp
 int
 vhost_user_dev_unregister(struct spdk_vhost_dev *vdev)
 {
+	if (vdev->pending_async_op_num) {
+		return -EBUSY;
+	}
+
 	if (!TAILQ_EMPTY(&vdev->vsessions)) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		return -EBUSY;
