@@ -186,7 +186,11 @@ rpc_bdev_compress_create(struct spdk_jsonrpc_request *request,
 
 	rc = create_compress_bdev(req.base_bdev_name, req.pm_path, req.lb_size);
 	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		if (rc == -EBUSY) {
+			spdk_jsonrpc_send_error_response(request, rc, "Base bdev already in use for compression.");
+		} else {
+			spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		}
 		goto cleanup;
 	}
 

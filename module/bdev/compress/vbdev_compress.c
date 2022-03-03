@@ -1525,11 +1525,19 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 int
 create_compress_bdev(const char *bdev_name, const char *pm_path, uint32_t lb_size)
 {
+	struct vbdev_compress *comp_bdev = NULL;
+
 	if ((lb_size != 0) && (lb_size != LB_SIZE_4K) && (lb_size != LB_SIZE_512B)) {
 		SPDK_ERRLOG("Logical block size must be 512 or 4096\n");
 		return -EINVAL;
 	}
 
+	TAILQ_FOREACH(comp_bdev, &g_vbdev_comp, link) {
+		if (strcmp(bdev_name, comp_bdev->base_bdev->name) == 0) {
+			SPDK_ERRLOG("Bass bdev %s already being used for a compress bdev\n", bdev_name);
+			return -EBUSY;
+		}
+	}
 	return vbdev_init_reduce(bdev_name, pm_path, lb_size);
 }
 
