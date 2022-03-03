@@ -90,13 +90,11 @@ fuzz_admin_get_log_page_command(struct fuzz_command *cmd)
 
 	/* Only fuzz some of the more interesting parts of the GET_LOG_PAGE command. */
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.get_log_page.numdl = (g_data[0] << 8) + g_data[1];
 	cmd->cmd.cdw10_bits.get_log_page.lid = g_data[2];
 	cmd->cmd.cdw10_bits.get_log_page.lsp = g_data[3] & (0x60 >> 5);
 	cmd->cmd.cdw10_bits.get_log_page.rae = g_data[3] & (0x80 >> 7);
 
-	cmd->cmd.cdw11_bits.raw = 0;
 	cmd->cmd.cdw11_bits.get_log_page.numdu = g_data[3] & (0x18 >> 3);
 
 	/* Log Page Offset Lower */
@@ -118,11 +116,9 @@ fuzz_admin_identify_command(struct fuzz_command *cmd)
 
 	cmd->cmd.opc = SPDK_NVME_OPC_IDENTIFY;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.identify.cns = g_data[0];
 	cmd->cmd.cdw10_bits.identify.cntid = (g_data[1] << 8) + g_data[2];
 
-	cmd->cmd.cdw11_bits.raw = 0;
 	cmd->cmd.cdw11_bits.identify.nvmsetid = (g_data[3] << 8) + g_data[4];
 	cmd->cmd.cdw11_bits.identify.csi = g_data[5];
 
@@ -138,7 +134,6 @@ fuzz_admin_abort_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_ABORT;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.abort.sqid = (g_data[0] << 8) + g_data[1];
 	cmd->cmd.cdw10_bits.abort.cid = (g_data[2] << 8) + g_data[3];
 
@@ -151,11 +146,9 @@ fuzz_admin_create_io_completion_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_CREATE_IO_CQ;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.create_io_q.qid = (g_data[0] << 8) + g_data[1];
 	cmd->cmd.cdw10_bits.create_io_q.qsize = (g_data[2] << 8) + g_data[3];
 
-	cmd->cmd.cdw11_bits.raw = 0;
 	cmd->cmd.cdw11_bits.create_io_cq.iv = (g_data[4] << 8) + g_data[5];
 	cmd->cmd.cdw11_bits.create_io_cq.pc = (g_data[6] >> 7) & 0x01;
 	cmd->cmd.cdw11_bits.create_io_cq.ien = (g_data[6] >> 6) & 0x01;
@@ -169,11 +162,9 @@ fuzz_admin_create_io_submission_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_CREATE_IO_SQ;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.create_io_q.qid = (g_data[0] << 8) + g_data[1];
 	cmd->cmd.cdw10_bits.create_io_q.qsize = (g_data[2] << 8) + g_data[3];
 
-	cmd->cmd.cdw11_bits.raw = 0;
 	cmd->cmd.cdw11_bits.create_io_sq.cqid = (g_data[4] << 8) + g_data[5];
 	cmd->cmd.cdw11_bits.create_io_sq.qprio = (g_data[6] >> 6) & 0x03;
 	cmd->cmd.cdw11_bits.create_io_sq.pc = (g_data[6] >> 5) & 0x01;
@@ -190,7 +181,6 @@ fuzz_admin_delete_io_completion_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_DELETE_IO_CQ;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.delete_io_q.qid = (g_data[0] << 8) + g_data[1];
 
 	g_data += 2;
@@ -202,7 +192,6 @@ fuzz_admin_delete_io_submission_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_DELETE_IO_SQ;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.delete_io_q.qid = (g_data[0] << 8) + g_data[1];
 
 	g_data += 2;
@@ -214,7 +203,6 @@ fuzz_admin_namespace_attachment_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_NS_ATTACHMENT;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.ns_attach.sel = (g_data[0] >> 4) & 0x0f;
 
 	g_data += 1;
@@ -226,7 +214,6 @@ fuzz_admin_namespace_management_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_NS_MANAGEMENT;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.ns_manage.sel = (g_data[0] >> 4) & 0x0f;
 
 	g_data += 1;
@@ -238,7 +225,6 @@ fuzz_admin_security_receive_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_SECURITY_RECEIVE;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.sec_send_recv.secp = g_data[0];
 	cmd->cmd.cdw10_bits.sec_send_recv.spsp1 = g_data[1];
 	cmd->cmd.cdw10_bits.sec_send_recv.spsp0 = g_data[2];
@@ -256,7 +242,6 @@ fuzz_admin_security_send_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_SECURITY_SEND;
 
-	cmd->cmd.cdw10_bits.raw = 0;
 	cmd->cmd.cdw10_bits.sec_send_recv.secp = g_data[0];
 	cmd->cmd.cdw10_bits.sec_send_recv.spsp1 = g_data[1];
 	cmd->cmd.cdw10_bits.sec_send_recv.spsp0 = g_data[2];
