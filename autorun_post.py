@@ -9,6 +9,29 @@ import re
 import pandas as pd
 
 
+def generateTestCompletionTableByTest(output_dir, data_table):
+    columns_to_group = ['Domain', 'Test', 'Agent']
+
+    total_tests_number = len(data_table.groupby('Test'))
+
+    has_agent = data_table['Agent'] != 'None'
+    data_table_with_agent = data_table[has_agent]
+    executed_tests = len(data_table_with_agent.groupby('Test'))
+    tests_executions = len(data_table_with_agent.groupby(columns_to_group))
+
+    pivot_by_test = pd.pivot_table(data_table, index=columns_to_group)
+
+    output_file = os.path.join(output_dir, 'post_process', 'completions_table_by_test.html')
+    with open(output_file, 'w') as f:
+        table_row = '<tr><td>{}</td><td>{}</td>\n'
+        f.write('<table>\n')
+        f.write(table_row.format('Total number of tests', total_tests_number))
+        f.write(table_row.format('Tests executed', executed_tests))
+        f.write(table_row.format('Number of test executions', tests_executions))
+        f.write('</table>\n')
+        f.write(pivot_by_test.to_html(None))
+
+
 def generateTestCompletionTables(output_dir, completion_table):
     data_table = pd.DataFrame(completion_table, columns=["Agent", "Domain", "Test", "With Asan", "With UBsan"])
     data_table.to_html(os.path.join(output_dir, 'completions_table.html'))
@@ -16,8 +39,9 @@ def generateTestCompletionTables(output_dir, completion_table):
 
     pivot_by_agent = pd.pivot_table(data_table, index=["Agent", "Domain", "Test"])
     pivot_by_agent.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_agent.html'))
-    pivot_by_test = pd.pivot_table(data_table, index=["Domain", "Test", "Agent"])
-    pivot_by_test.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_test.html'))
+
+    generateTestCompletionTableByTest(output_dir, data_table)
+
     pivot_by_asan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With Asan"], aggfunc=any)
     pivot_by_asan.to_html(os.path.join(output_dir, "post_process", 'completions_table_by_asan.html'))
     pivot_by_ubsan = pd.pivot_table(data_table, index=["Domain", "Test"], values=["With UBsan"], aggfunc=any)
