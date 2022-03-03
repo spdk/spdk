@@ -7,12 +7,13 @@ import os
 import signal
 import sys
 import threading
+import time
 import yaml
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
 
-import spdk.sma as sma                      # noqa
-from spdk.rpc.client import JSONRPCClient   # noqa
+import spdk.sma as sma               # noqa
+import spdk.rpc.client as rpcclient  # noqa
 
 
 def parse_config(path):
@@ -47,7 +48,7 @@ def parse_argv():
 
 def get_build_client(sock):
     def build_client():
-        return JSONRPCClient(sock)
+        return rpcclient.JSONRPCClient(sock)
 
     return build_client
 
@@ -74,6 +75,24 @@ def load_plugins(plugins, client):
     return devices
 
 
+def wait_for_listen(client, timeout):
+    start = time.monotonic()
+    while True:
+        try:
+            with client() as _client:
+                _client.call('rpc_get_methods')
+            # If we got here, the process is responding to RPCs
+            break
+        except rpcclient.JSONRPCException:
+            logging.debug('The SPDK process is not responding for {}s'.format(
+                          int(time.monotonic() - start)))
+
+        if time.monotonic() > start + timeout:
+            logging.error('Timed out while waiting for SPDK process to respond')
+            sys.exit(1)
+        time.sleep(1)
+
+
 def run(agent):
     event = threading.Event()
 
@@ -93,6 +112,9 @@ if __name__ == '__main__':
 
     config = parse_argv()
     client = get_build_client(config['socket'])
+
+    # Wait until the SPDK process starts responding to RPCs
+    wait_for_listen(client, timeout=60.0)
 
     agent = sma.StorageManagementAgent(config['address'], config['port'])
 

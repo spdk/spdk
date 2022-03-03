@@ -6,6 +6,11 @@ rootdir=$(readlink -f "$testdir/../..")
 source "$rootdir/test/common/autotest_common.sh"
 source "$testdir/common.sh"
 
+function cleanup() {
+	killprocess $tgtpid
+	killprocess $smapid
+}
+
 function create_device() {
 	"$rootdir/scripts/sma-client.py" <<- EOF
 		{
@@ -17,7 +22,10 @@ function create_device() {
 	EOF
 }
 
-trap 'killprocess $smapid; exit 1' SIGINT SIGTERM EXIT
+trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
+
+$rootdir/build/bin/spdk_tgt &
+tgtpid=$!
 
 # First check a single plugin with both its devices enabled in the config
 PYTHONPATH=$testdir/plugins $rootdir/scripts/sma.py -c <(
@@ -144,6 +152,5 @@ sma_waitforlisten
 [[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1' ]]
 [[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2' ]]
 
-killprocess $smapid
-
+cleanup
 trap - SIGINT SIGTERM EXIT

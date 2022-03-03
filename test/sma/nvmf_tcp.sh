@@ -75,10 +75,6 @@ trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 
 $rootdir/build/bin/spdk_tgt &
 tgtpid=$!
-waitforlisten $tgtpid
-
-# Prepare the target
-rpc_cmd bdev_null_create null0 100 4096
 
 $rootdir/scripts/sma.py -c <(
 	cat <<- EOF
@@ -92,6 +88,9 @@ smapid=$!
 
 # Wait until the SMA starts listening
 sma_waitforlisten
+
+# Prepare the target
+rpc_cmd bdev_null_create null0 100 4096
 
 # Make sure a TCP transport has been created
 rpc_cmd nvmf_get_transports --trtype tcp
