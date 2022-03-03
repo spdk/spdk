@@ -40,6 +40,7 @@
 #include "spdk/nvmf_transport.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
+#include "spdk/tree.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/assert.h"
@@ -327,6 +328,9 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_rdma_srq			*srq;
 	struct rdma_cm_id			*listen_id;
 
+	/* Cache the QP number to improve QP search by RB tree. */
+	uint32_t				qp_num;
+
 	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				max_queue_depth;
 
@@ -364,7 +368,7 @@ struct spdk_nvmf_rdma_qpair {
 	/* Number of requests not in the free state */
 	uint32_t				qd;
 
-	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
+	RB_ENTRY(spdk_nvmf_rdma_qpair)		node;
 
 	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	recv_link;
 
@@ -419,7 +423,7 @@ struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_resources		*resources;
 	struct spdk_nvmf_rdma_poller_stat	stat;
 
-	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
+	RB_HEAD(qpairs_tree, spdk_nvmf_rdma_qpair) qpairs;
 
 	STAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs_pending_recv;
 
@@ -516,6 +520,14 @@ static const struct spdk_json_object_decoder rdma_transport_opts_decoder[] = {
 		spdk_json_decode_int32, true
 	},
 };
+
+static int
+nvmf_rdma_qpair_compare(struct spdk_nvmf_rdma_qpair *rqpair1, struct spdk_nvmf_rdma_qpair *rqpair2)
+{
+	return rqpair1->qp_num - rqpair2->qp_num;
+}
+
+RB_GENERATE_STATIC(qpairs_tree, spdk_nvmf_rdma_qpair, node, nvmf_rdma_qpair_compare);
 
 static bool
 nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
@@ -893,7 +905,7 @@ nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 
 	if (rqpair->poller) {
-		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
+		RB_REMOVE(qpairs_tree, &rqpair->poller->qpairs, rqpair);
 
 		if (rqpair->srq != NULL && rqpair->resources != NULL) {
 			/* Drop all received but unprocessed commands for this queue and return them to SRQ */
@@ -1016,6 +1028,8 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	if (!rqpair->rdma_qp) {
 		goto error;
 	}
+
+	rqpair->qp_num = rqpair->rdma_qp->qp->qp_num;
 
 	rqpair->max_send_depth = spdk_min((uint32_t)(rqpair->max_queue_depth * 2),
 					  qp_init_attr.cap.max_send_wr);
@@ -1205,7 +1219,7 @@ nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *rqpai
 	 * Fields below are ignored by rdma cm if qpair has been
 	 * created using rdma cm API. */
 	ctrlr_event_data.srq = rqpair->srq ? 1 : 0;
-	ctrlr_event_data.qp_num = rqpair->rdma_qp->qp->qp_num;
+	ctrlr_event_data.qp_num = rqpair->qp_num;
 
 	rc = spdk_rdma_qp_accept(rqpair->rdma_qp, &ctrlr_event_data);
 	if (rc) {
@@ -2847,7 +2861,7 @@ nvmf_rdma_disconnect_qpairs_on_port(struct spdk_nvmf_rdma_transport *rtransport,
 
 	TAILQ_FOREACH(rgroup, &rtransport->poll_groups, link) {
 		TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
-			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+			RB_FOREACH(rqpair, qpairs_tree, &rpoller->qpairs) {
 				if (rqpair->listen_id == port->id) {
 					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 				}
@@ -3275,7 +3289,7 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 		poller->device = device;
 		poller->group = rgroup;
 
-		TAILQ_INIT(&poller->qpairs);
+		RB_INIT(&poller->qpairs);
 		STAILQ_INIT(&poller->qpairs_pending_send);
 		STAILQ_INIT(&poller->qpairs_pending_recv);
 
@@ -3401,7 +3415,7 @@ nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
 		TAILQ_REMOVE(&rgroup->pollers, poller, link);
 
-		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
+		RB_FOREACH_SAFE(qpair, qpairs_tree, &poller->qpairs, tmp_qpair) {
 			nvmf_rdma_qpair_destroy(qpair);
 		}
 
@@ -3491,7 +3505,7 @@ nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
+	RB_INSERT(qpairs_tree, &poller->qpairs, rqpair);
 
 	rc = nvmf_rdma_event_accept(rqpair->cm_id, rqpair);
 	if (rc) {
@@ -3614,15 +3628,11 @@ nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair,
 static struct spdk_nvmf_rdma_qpair *
 get_rdma_qpair_from_wc(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_wc *wc)
 {
-	struct spdk_nvmf_rdma_qpair *rqpair;
-	/* @todo: improve QP search */
-	TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
-		if (wc->qp_num == rqpair->rdma_qp->qp->qp_num) {
-			return rqpair;
-		}
-	}
-	SPDK_ERRLOG("Didn't find QP with qp_num %u\n", wc->qp_num);
-	return NULL;
+	struct spdk_nvmf_rdma_qpair find;
+
+	find.qp_num = wc->qp_num;
+
+	return RB_FIND(qpairs_tree, &rpoller->qpairs, &find);
 }
 
 #ifdef DEBUG
