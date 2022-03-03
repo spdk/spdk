@@ -3480,15 +3480,18 @@ nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
 	rqpair->poller = poller;
 	rqpair->srq = rqpair->poller->srq;
 
 	rc = nvmf_rdma_qpair_initialize(qpair);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to initialize nvmf_rdma_qpair with qpair=%p\n", qpair);
+		rqpair->poller = NULL;
+		rqpair->srq = NULL;
 		return -1;
 	}
+
+	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
 
 	rc = nvmf_rdma_event_accept(rqpair->cm_id, rqpair);
 	if (rc) {
