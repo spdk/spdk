@@ -172,19 +172,9 @@ struct spdk_vhost_session {
 	TAILQ_ENTRY(spdk_vhost_session) tailq;
 };
 
-struct spdk_vhost_dev {
-	char *name;
-	char *path;
+struct spdk_vhost_user_dev {
+	struct spdk_vhost_dev *vdev;
 
-	struct spdk_thread *thread;
-	bool registered;
-
-	uint64_t virtio_features;
-	uint64_t disabled_features;
-	uint64_t protocol_features;
-	bool packed_ring_recovery;
-
-	const struct spdk_vhost_dev_backend *backend;
 	const struct spdk_vhost_user_dev_backend *user_backend;
 
 	/* Saved original values used to setup coalescing to avoid integer
@@ -204,6 +194,24 @@ struct spdk_vhost_dev {
 
 	/* Number of pending asynchronous operations */
 	uint32_t pending_async_op_num;
+};
+
+struct spdk_vhost_dev {
+	char *name;
+	char *path;
+
+	struct spdk_thread *thread;
+	bool registered;
+
+	uint64_t virtio_features;
+	uint64_t disabled_features;
+	uint64_t protocol_features;
+	bool packed_ring_recovery;
+
+	const struct spdk_vhost_dev_backend *backend;
+
+	/* Context passed from transport */
+	void *ctxt;
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
@@ -503,9 +511,9 @@ int remove_vhost_controller(struct spdk_vhost_dev *vdev);
 
 /* Function calls from vhost.c to rte_vhost_user.c,
  * shall removed once virtio transport abstraction is complete. */
-int vhost_user_session_set_coalescing(struct spdk_vhost_dev *vdev,
+int vhost_user_session_set_coalescing(struct spdk_vhost_dev *dev,
 				      struct spdk_vhost_session *vsession, void *ctx);
-int vhost_user_dev_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+int vhost_user_dev_set_coalescing(struct spdk_vhost_user_dev *user_dev, uint32_t delay_base_us,
 				  uint32_t iops_threshold);
 int vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name,
 			    struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend);

@@ -135,6 +135,7 @@ alloc_vdev(struct spdk_vhost_dev **vdev_p, const char *name, const char *cpumask
 static void
 start_vdev(struct spdk_vhost_dev *vdev)
 {
+	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
 	struct rte_vhost_memory *mem;
 	struct spdk_vhost_session *vsession = NULL;
 	int rc;
@@ -149,7 +150,7 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	mem->regions[1].size = 0x400000; /* 4 MB */
 	mem->regions[1].host_user_addr = 0x2000000;
 
-	assert(TAILQ_EMPTY(&vdev->vsessions));
+	assert(TAILQ_EMPTY(&user_dev->vsessions));
 	/* spdk_vhost_dev must be allocated on a cache line boundary. */
 	rc = posix_memalign((void **)&vsession, 64, sizeof(*vsession));
 	CU_ASSERT(rc == 0);
@@ -157,15 +158,16 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	vsession->started = true;
 	vsession->vid = 0;
 	vsession->mem = mem;
-	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);
+	TAILQ_INSERT_TAIL(&user_dev->vsessions, vsession, tailq);
 }
 
 static void
 stop_vdev(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
+	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
+	struct spdk_vhost_session *vsession = TAILQ_FIRST(&user_dev->vsessions);
 
-	TAILQ_REMOVE(&vdev->vsessions, vsession, tailq);
+	TAILQ_REMOVE(&user_dev->vsessions, vsession, tailq);
 	free(vsession->mem);
 	free(vsession);
 }
@@ -173,7 +175,9 @@ stop_vdev(struct spdk_vhost_dev *vdev)
 static void
 cleanup_vdev(struct spdk_vhost_dev *vdev)
 {
-	if (!TAILQ_EMPTY(&vdev->vsessions)) {
+	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
+
+	if (!TAILQ_EMPTY(&user_dev->vsessions)) {
 		stop_vdev(vdev);
 	}
 	vhost_dev_unregister(vdev);
@@ -196,7 +200,7 @@ desc_to_iov_test(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 	start_vdev(vdev);
 
-	vsession = TAILQ_FIRST(&vdev->vsessions);
+	vsession = TAILQ_FIRST(&to_user_dev(vdev)->vsessions);
 
 	/* Test simple case where iov falls fully within a 2MB page. */
 	desc.addr = 0x110000;
@@ -339,7 +343,7 @@ session_find_by_vid_test(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 	start_vdev(vdev);
 
-	vsession = TAILQ_FIRST(&vdev->vsessions);
+	vsession = TAILQ_FIRST(&to_user_dev(vdev)->vsessions);
 
 	tmp = vhost_session_find_by_vid(vsession->vid);
 	CU_ASSERT(tmp == vsession);
@@ -362,7 +366,7 @@ remove_controller_test(void)
 
 	/* Remove device when controller is in use */
 	start_vdev(vdev);
-	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&vdev->vsessions));
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&to_user_dev(vdev)->vsessions));
 	ret = vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
 

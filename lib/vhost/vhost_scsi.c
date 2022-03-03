@@ -897,9 +897,10 @@ static int
 vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
+	struct spdk_vhost_user_dev *user_dev = vdev->ctxt;
 	int rc, i;
 
-	if (vdev->pending_async_op_num) {
+	if (user_dev->pending_async_op_num) {
 		return -EBUSY;
 	}
 
