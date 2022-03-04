@@ -5905,10 +5905,43 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 }
 
 static void
+bdev_nvme_discovery_config_json(struct spdk_json_write_ctx *w, struct discovery_ctx *ctx)
+{
+	struct spdk_nvme_transport_id trid;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "bdev_nvme_start_discovery");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", ctx->name);
+	spdk_json_write_named_string(w, "hostnqn", ctx->hostnqn);
+
+	trid = ctx->trid;
+	memset(trid.subnqn, 0, sizeof(trid.subnqn));
+	nvme_bdev_dump_trid_json(&trid, w);
+
+	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", ctx->bdev_opts.ctrlr_loss_timeout_sec);
+	spdk_json_write_named_uint32(w, "reconnect_delay_sec", ctx->bdev_opts.reconnect_delay_sec);
+	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec",
+				     ctx->bdev_opts.fast_io_fail_timeout_sec);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
 nvme_ctrlr_config_json(struct spdk_json_write_ctx *w,
 		       struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct spdk_nvme_transport_id	*trid;
+
+	if (nvme_ctrlr->opts.from_discovery_service) {
+		/* Do not emit an RPC for this - it will be implicitly
+		 * covered by a separate bdev_nvme_start_discovery RPC.
+		 */
+		return;
+	}
 
 	trid = &nvme_ctrlr->active_path_id->trid;
 
@@ -5952,6 +5985,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 {
 	struct nvme_bdev_ctrlr	*nbdev_ctrlr;
 	struct nvme_ctrlr	*nvme_ctrlr;
+	struct discovery_ctx	*ctx;
 
 	bdev_nvme_opts_config_json(w);
 
@@ -5961,6 +5995,10 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			nvme_ctrlr_config_json(w, nvme_ctrlr);
 		}
+	}
+
+	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
+		bdev_nvme_discovery_config_json(w, ctx);
 	}
 
 	/* Dump as last parameter to give all NVMe bdevs chance to be constructed
