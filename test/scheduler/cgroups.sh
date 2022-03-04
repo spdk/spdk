@@ -52,8 +52,9 @@ move_cgroup_procs() {
 	local new_cgroup=$2
 	local proc procs old_proc_interface new_proc_interface
 
-	[[ -e $sysfs_cgroup/$old_cgroup ]] || return 1
-	[[ -e $sysfs_cgroup/$new_cgroup ]] || return 1
+	# If target cgroups don't exist then there's nothing to do.
+	[[ -e $sysfs_cgroup/$old_cgroup ]] || return 0
+	[[ -e $sysfs_cgroup/$new_cgroup ]] || return 0
 
 	old_proc_interface=cgroup.procs
 	new_proc_interface=cgroup.procs
