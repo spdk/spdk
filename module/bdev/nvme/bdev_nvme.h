@@ -52,17 +52,21 @@ typedef void (*spdk_bdev_create_nvme_fn)(void *ctx, size_t bdev_count, int rc);
 typedef void (*spdk_bdev_nvme_start_discovery_fn)(void *ctx, int rc);
 typedef void (*spdk_bdev_nvme_stop_discovery_fn)(void *ctx);
 
+struct nvme_ctrlr_opts {
+	uint32_t prchk_flags;
+	int32_t ctrlr_loss_timeout_sec;
+	uint32_t reconnect_delay_sec;
+	uint32_t fast_io_fail_timeout_sec;
+};
+
 struct nvme_async_probe_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
 	const char *base_name;
 	const char **names;
 	uint32_t count;
-	uint32_t prchk_flags;
-	int32_t ctrlr_loss_timeout_sec;
-	uint32_t reconnect_delay_sec;
-	uint32_t fast_io_fail_timeout_sec;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
+	struct nvme_ctrlr_opts bdev_opts;
 	struct spdk_nvme_ctrlr_opts drv_opts;
 	spdk_bdev_create_nvme_fn cb_fn;
 	void *cb_ctx;
@@ -114,12 +118,9 @@ struct nvme_ctrlr {
 	uint32_t				fast_io_fail_timedout : 1;
 	uint32_t				destruct : 1;
 	uint32_t				ana_log_page_updating : 1;
-	/**
-	 * PI check flags. This flags is set to NVMe controllers created only
-	 * through bdev_nvme_attach_controller RPC or .INI config file. Hot added
-	 * NVMe controllers are not included.
-	 */
-	uint32_t				prchk_flags;
+
+	struct nvme_ctrlr_opts			opts;
+
 	RB_HEAD(nvme_ns_tree, nvme_ns)		namespaces;
 
 	struct spdk_opal_dev			*opal_dev;
@@ -147,10 +148,6 @@ struct nvme_ctrlr {
 	struct spdk_nvme_ana_group_descriptor	*copied_ana_desc;
 
 	struct nvme_async_probe_ctx		*probe_ctx;
-
-	uint32_t				reconnect_delay_sec;
-	int32_t					ctrlr_loss_timeout_sec;
-	uint32_t				fast_io_fail_timeout_sec;
 
 	pthread_mutex_t				mutex;
 };
@@ -265,14 +262,11 @@ int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     const char *base_name,
 		     const char **names,
 		     uint32_t count,
-		     uint32_t prchk_flags,
 		     spdk_bdev_create_nvme_fn cb_fn,
 		     void *cb_ctx,
 		     struct spdk_nvme_ctrlr_opts *drv_opts,
-		     bool multipath,
-		     int32_t ctrlr_loss_timeout_sec,
-		     uint32_t reconnect_delay_sec,
-		     uint32_t fast_io_fail_timeout_sec);
+		     struct nvme_ctrlr_opts *bdev_opts,
+		     bool multipath);
 
 int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,
 			      struct spdk_nvme_ctrlr_opts *drv_opts,
