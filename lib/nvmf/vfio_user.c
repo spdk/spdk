@@ -3685,7 +3685,7 @@ vfio_user_poll_vfu_ctx(void *ctx)
 	ret = vfu_run_ctx(ctrlr->endpoint->vfu_ctx);
 	if (spdk_unlikely(ret == -1)) {
 		if (errno == EBUSY) {
-			return SPDK_POLLER_BUSY;
+			return SPDK_POLLER_IDLE;
 		}
 
 		spdk_poller_unregister(&ctrlr->vfu_ctx_poller);
