@@ -349,6 +349,8 @@ struct nvmf_vfio_user_ctrlr {
 	TAILQ_ENTRY(nvmf_vfio_user_ctrlr)	link;
 
 	volatile uint32_t			*doorbells;
+
+	bool					self_kick_requested;
 };
 
 struct nvmf_vfio_user_endpoint {
@@ -495,6 +497,38 @@ static inline size_t
 vfio_user_migr_data_len(void)
 {
 	return SPDK_ALIGN_CEIL(sizeof(struct vfio_user_nvme_migr_state), PAGE_SIZE);
+}
+
+static int
+vfio_user_handle_intr(void *ctx);
+
+/*
+ * Wrap vfio_user_handle_intr() such that it can be used with
+ * spdk_thread_send_msg().
+ * Pollers have type int (*)(void *) while message functions should have type
+ * void (*)(void *), so simply discard the returned value.
+ */
+static void
+vfio_user_handle_intr_wrapper(void *ctx)
+{
+	vfio_user_handle_intr(ctx);
+}
+
+static inline int
+self_kick(struct nvmf_vfio_user_ctrlr *ctrlr)
+{
+	assert(ctrlr != NULL);
+	assert(ctrlr->thread != NULL);
+
+	if (ctrlr->self_kick_requested) {
+		return 0;
+	}
+
+	ctrlr->self_kick_requested = true;
+
+	return spdk_thread_send_msg(ctrlr->thread,
+				    vfio_user_handle_intr_wrapper,
+				    ctrlr);
 }
 
 static int
@@ -3550,6 +3584,13 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 	return &vu_group->group;
 }
 
+static bool
+in_interrupt_mode(struct nvmf_vfio_user_transport *vu_transport)
+{
+	return spdk_interrupt_mode_is_enabled() &&
+	       vu_transport->intr_mode_supported;
+}
+
 static struct spdk_nvmf_transport_poll_group *
 nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
@@ -3586,8 +3627,7 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		 * on the same poll group, to avoid complications in
 		 * vfio_user_handle_intr().
 		 */
-		if (spdk_interrupt_mode_is_enabled() &&
-		    vu_transport->intr_mode_supported) {
+		if (in_interrupt_mode(vu_transport)) {
 			result = sq->ctrlr->sqs[0]->group;
 			goto out;
 		}
@@ -3746,6 +3786,8 @@ vfio_user_handle_intr(void *ctx)
 	assert(ctrlr->sqs[0] != NULL);
 	assert(ctrlr->sqs[0]->group != NULL);
 
+	ctrlr->self_kick_requested = false;
+
 	vfio_user_poll_vfu_ctx(ctrlr);
 
 	/*
@@ -3797,8 +3839,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 		cq->thread = spdk_get_thread();
 
-		if (spdk_interrupt_mode_is_enabled() &&
-		    endpoint->transport->intr_mode_supported) {
+		if (in_interrupt_mode(endpoint->transport)) {
 			vu_ctrlr->intr_fd = vfu_get_poll_fd(vu_ctrlr->endpoint->vfu_ctx);
 			assert(vu_ctrlr->intr_fd != -1);
 
@@ -3840,6 +3881,14 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 						sq->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 			}
 			sq->post_create_io_sq_completion = false;
+		} else if (in_interrupt_mode(endpoint->transport)) {
+			/*
+			 * FIXME self_kick() ends up polling all queues on the
+			 * controller thread, and this will be wrong if we ever
+			 * support interrupt mode with I/O queues in a
+			 * different poll group than the controller's.
+			 */
+			self_kick(vu_ctrlr);
 		}
 		sq->sq_state = VFIO_USER_SQ_ACTIVE;
 	}
