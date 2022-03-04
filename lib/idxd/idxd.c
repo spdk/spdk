@@ -296,6 +296,14 @@ spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 		return -1;
 	}
 
+	/* The idxd library doesn't support UIO at the moment, so fail init
+	 * if the IOMMU is disabled. TODO: remove once driver supports UIO.
+	 */
+	if (spdk_iommu_is_enabled() == false) {
+		SPDK_ERRLOG("The IDXD driver currently requires the IOMMU which is disabled. Please re-enable to use IDXD\n");
+		return -EINVAL;
+	}
+
 	return g_idxd_impl->probe(cb_ctx, attach_cb);
 }
 
