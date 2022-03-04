@@ -517,6 +517,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 	ctx->count = NVME_MAX_BDEVS_PER_RPC;
+	/* Should already be zero due to the calloc(), but set explicitly for clarity. */
+	ctx->req.bdev_opts.from_discovery_service = false;
 	rc = bdev_nvme_create(&trid, ctx->req.name, ctx->names, ctx->count,
 			      rpc_bdev_nvme_attach_controller_done, ctx, &ctx->req.drv_opts,
 			      &ctx->req.bdev_opts, multipath);

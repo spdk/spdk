@@ -56,6 +56,7 @@ struct nvme_ctrlr_opts {
 	int32_t ctrlr_loss_timeout_sec;
 	uint32_t reconnect_delay_sec;
 	uint32_t fast_io_fail_timeout_sec;
+	bool from_discovery_service;
 };
 
 struct nvme_async_probe_ctx {
