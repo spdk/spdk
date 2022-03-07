@@ -749,6 +749,7 @@ test_nvme_free_request(void)
 	/* the code under tests asserts this condition */
 	match_req.num_children = 0;
 	STAILQ_INIT(&qpair.free_req);
+	match_req.qpair->reserved_req = NULL;
 
 	nvme_free_request(&match_req);
 	req = STAILQ_FIRST(&match_req.qpair->free_req);
