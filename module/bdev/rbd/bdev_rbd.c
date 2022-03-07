@@ -449,6 +449,8 @@ bdev_rbd_start_aio(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io,
 		} else {
 			ret = rbd_aio_writev(image, iov, iovcnt, offset, rbd_io->comp);
 		}
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_UNMAP) {
+		ret = rbd_aio_discard(image, offset, len, rbd_io->comp);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
 		ret = rbd_aio_flush(image, rbd_io->comp);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES) {
@@ -605,6 +607,7 @@ _bdev_rbd_submit_request(void *ctx)
 		break;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		bdev_rbd_start_aio(disk,
@@ -648,6 +651,7 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
