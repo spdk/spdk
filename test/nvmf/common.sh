@@ -371,7 +371,7 @@ prepare_net_devs() {
 
 	remove_spdk_ns
 
-	[[ $NET_TYPE == virt ]] || gather_supported_nvmf_pci_devs && is_hw=yes
+	[[ $NET_TYPE != virt ]] && gather_supported_nvmf_pci_devs && is_hw=yes
 
 	if [[ $is_hw == yes ]]; then
 		if [[ $TEST_TRANSPORT == tcp ]]; then
