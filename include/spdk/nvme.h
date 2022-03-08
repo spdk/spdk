@@ -499,10 +499,12 @@ struct spdk_nvme_pcie_stat {
 	uint64_t polls;
 	uint64_t idle_polls;
 	uint64_t completions;
-	uint64_t cq_doorbell_updates;
+	uint64_t cq_mmio_doorbell_updates;
+	uint64_t cq_shadow_doorbell_updates;
 	uint64_t submitted_requests;
 	uint64_t queued_requests;
-	uint64_t sq_doorbell_updates;
+	uint64_t sq_mmio_doorbell_updates;
+	uint64_t sq_shadow_doorbell_updates;
 };
 
 struct spdk_nvme_tcp_stat {

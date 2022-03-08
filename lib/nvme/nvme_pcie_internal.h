@@ -281,6 +281,7 @@ nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (spdk_unlikely(pqpair->flags.has_shadow_doorbell)) {
+		pqpair->stat->sq_shadow_doorbell_updates++;
 		need_mmio = nvme_pcie_qpair_update_mmio_required(
 				    pqpair->sq_tail,
 				    pqpair->shadow_doorbell.sq_tdbl,
@@ -289,7 +290,7 @@ nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
 
 	if (spdk_likely(need_mmio)) {
 		spdk_wmb();
-		pqpair->stat->sq_doorbell_updates++;
+		pqpair->stat->sq_mmio_doorbell_updates++;
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
 		g_thread_mmio_ctrlr = NULL;
@@ -304,6 +305,7 @@ nvme_pcie_qpair_ring_cq_doorbell(struct spdk_nvme_qpair *qpair)
 	bool need_mmio = true;
 
 	if (spdk_unlikely(pqpair->flags.has_shadow_doorbell)) {
+		pqpair->stat->cq_shadow_doorbell_updates++;
 		need_mmio = nvme_pcie_qpair_update_mmio_required(
 				    pqpair->cq_head,
 				    pqpair->shadow_doorbell.cq_hdbl,
@@ -311,7 +313,7 @@ nvme_pcie_qpair_ring_cq_doorbell(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (spdk_likely(need_mmio)) {
-		pqpair->stat->cq_doorbell_updates++;
+		pqpair->stat->cq_mmio_doorbell_updates++;
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
 		g_thread_mmio_ctrlr = NULL;

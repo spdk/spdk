@@ -1059,9 +1059,11 @@ nvme_dump_pcie_statistics(struct spdk_nvme_transport_poll_group_stat *stat)
 	printf("\tpolls:               %"PRIu64"\n", pcie_stat->polls);
 	printf("\tidle_polls:          %"PRIu64"\n", pcie_stat->idle_polls);
 	printf("\tcompletions:         %"PRIu64"\n", pcie_stat->completions);
-	printf("\tcq_doorbell_updates: %"PRIu64"\n", pcie_stat->cq_doorbell_updates);
+	printf("\tcq_mmio_doorbell_updates: %"PRIu64"\n", pcie_stat->cq_mmio_doorbell_updates);
+	printf("\tcq_shadow_doorbell_updates: %"PRIu64"\n", pcie_stat->cq_shadow_doorbell_updates);
 	printf("\tsubmitted_requests:  %"PRIu64"\n", pcie_stat->submitted_requests);
-	printf("\tsq_doorbell_updates:  %"PRIu64"\n", pcie_stat->sq_doorbell_updates);
+	printf("\tsq_mmio_doorbell_updates:  %"PRIu64"\n", pcie_stat->sq_mmio_doorbell_updates);
+	printf("\tsq_shadow_doorbell_updates:  %"PRIu64"\n", pcie_stat->sq_shadow_doorbell_updates);
 	printf("\tqueued_requests:     %"PRIu64"\n", pcie_stat->queued_requests);
 }
 
