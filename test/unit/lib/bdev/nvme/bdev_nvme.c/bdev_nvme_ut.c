@@ -4332,9 +4332,8 @@ test_retry_io_for_io_path_error(void)
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
 	CU_ASSERT(bdev_io == TAILQ_FIRST(&nbdev_ch->retry_io_list));
 
-	bdev_nvme_destroy_qpair(ctrlr_ch1);
-
-	CU_ASSERT(ctrlr_ch1->qpair == NULL);
+	spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch1->qpair);
+	ctrlr_ch1->qpair = NULL;
 
 	poll_threads();
 

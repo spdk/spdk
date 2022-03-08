@@ -1081,22 +1081,6 @@ nvme_poll_group_get_ctrlr_channel(struct nvme_poll_group *group,
 }
 
 static void
-bdev_nvme_destroy_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
-{
-	struct nvme_ctrlr *nvme_ctrlr __attribute__((unused));
-
-	if (ctrlr_ch->qpair != NULL) {
-		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
-		SPDK_DTRACE_PROBE2(bdev_nvme_destroy_qpair, nvme_ctrlr->nbdev_ctrlr->name,
-				   spdk_nvme_qpair_get_id(ctrlr_ch->qpair));
-		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
-		ctrlr_ch->qpair = NULL;
-	}
-
-	_bdev_nvme_clear_io_path_cache(ctrlr_ch);
-}
-
-static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
 	struct nvme_poll_group *group = poll_group_ctx;
@@ -1104,12 +1088,18 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 	struct nvme_ctrlr *nvme_ctrlr;
 
 	SPDK_NOTICELOG("qpair %p is disconnected, free the qpair and reset controller.\n", qpair);
+
 	/*
 	 * Free the I/O qpair and reset the nvme_ctrlr.
 	 */
 	ctrlr_ch = nvme_poll_group_get_ctrlr_channel(group, qpair);
 	if (ctrlr_ch != NULL) {
-		bdev_nvme_destroy_qpair(ctrlr_ch);
+		if (ctrlr_ch->qpair != NULL) {
+			spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
+			ctrlr_ch->qpair = NULL;
+		}
+
+		_bdev_nvme_clear_io_path_cache(ctrlr_ch);
 
 		nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
 		bdev_nvme_reset(nvme_ctrlr);
@@ -1233,7 +1223,7 @@ bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 	}
 
 	SPDK_DTRACE_PROBE3(bdev_nvme_create_qpair, nvme_ctrlr->nbdev_ctrlr->name,
-			   spdk_nvme_qpair_get_id(ctrlr_ch->qpair), spdk_thread_get_id(nvme_ctrlr->thread));
+			   spdk_nvme_qpair_get_id(qpair), spdk_thread_get_id(nvme_ctrlr->thread));
 
 	assert(ctrlr_ch->group != NULL);
 
@@ -1504,7 +1494,12 @@ bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
 
-	bdev_nvme_destroy_qpair(ctrlr_ch);
+	_bdev_nvme_clear_io_path_cache(ctrlr_ch);
+
+	if (ctrlr_ch->qpair != NULL) {
+		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
+		ctrlr_ch->qpair = NULL;
+	}
 
 	spdk_for_each_channel_continue(i, 0);
 }
@@ -2096,7 +2091,12 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 
 	assert(ctrlr_ch->group != NULL);
 
-	bdev_nvme_destroy_qpair(ctrlr_ch);
+	_bdev_nvme_clear_io_path_cache(ctrlr_ch);
+
+	if (ctrlr_ch->qpair != NULL) {
+		spdk_nvme_ctrlr_free_io_qpair(ctrlr_ch->qpair);
+		ctrlr_ch->qpair = NULL;
+	}
 
 	TAILQ_REMOVE(&ctrlr_ch->group->ctrlr_ch_list, ctrlr_ch, tailq);
 
