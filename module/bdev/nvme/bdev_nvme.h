@@ -63,7 +63,7 @@ struct nvme_async_probe_ctx {
 	uint32_t fast_io_fail_timeout_sec;
 	struct spdk_poller *poller;
 	struct spdk_nvme_transport_id trid;
-	struct spdk_nvme_ctrlr_opts opts;
+	struct spdk_nvme_ctrlr_opts drv_opts;
 	spdk_bdev_create_nvme_fn cb_fn;
 	void *cb_ctx;
 	uint32_t populates_in_progress;
@@ -268,14 +268,14 @@ int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     uint32_t prchk_flags,
 		     spdk_bdev_create_nvme_fn cb_fn,
 		     void *cb_ctx,
-		     struct spdk_nvme_ctrlr_opts *opts,
+		     struct spdk_nvme_ctrlr_opts *drv_opts,
 		     bool multipath,
 		     int32_t ctrlr_loss_timeout_sec,
 		     uint32_t reconnect_delay_sec,
 		     uint32_t fast_io_fail_timeout_sec);
 
 int bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid, const char *base_name,
-			      struct spdk_nvme_ctrlr_opts *opts,
+			      struct spdk_nvme_ctrlr_opts *drv_opts,
 			      spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx);
 int bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_fn,
 			     void *cb_ctx);
