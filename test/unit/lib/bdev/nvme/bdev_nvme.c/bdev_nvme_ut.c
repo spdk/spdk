@@ -229,7 +229,7 @@ struct spdk_nvme_ns {
 
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr		*ctrlr;
-	bool				is_failed;
+	uint8_t				failure_reason;
 	bool				is_connected;
 	bool				in_completion_context;
 	bool				delete_after_completion_context;
@@ -711,6 +711,7 @@ spdk_nvme_ctrlr_connect_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	qpair->is_connected = true;
+	qpair->failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
 
 	if (qpair->poll_group) {
 		nvme_poll_group_connect_qpair(qpair);
@@ -726,7 +727,6 @@ spdk_nvme_ctrlr_disconnect_io_qpair(struct spdk_nvme_qpair *qpair)
 		return;
 	}
 
-	qpair->is_failed = false;
 	qpair->is_connected = false;
 
 	if (qpair->poll_group != NULL) {
@@ -1083,6 +1083,12 @@ spdk_nvme_poll_group_destroy(struct spdk_nvme_poll_group *group)
 	return 0;
 }
 
+spdk_nvme_qp_failure_reason
+spdk_nvme_qpair_get_failure_reason(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->failure_reason;
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
@@ -1133,7 +1139,7 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 	}
 
 	TAILQ_FOREACH_SAFE(qpair, &group->connected_qpairs, poll_group_tailq, tmp_qpair) {
-		if (qpair->is_failed) {
+		if (qpair->failure_reason != SPDK_NVME_QPAIR_FAILURE_NONE) {
 			spdk_nvme_ctrlr_disconnect_io_qpair(qpair);
 			continue;
 		}
@@ -2610,7 +2616,7 @@ test_abort(void)
 	 * the corresponding nvme_ctrlr. I/O should be queued if it is submitted
 	 * while resetting the nvme_ctrlr.
 	 */
-	nvme_qpair1->qpair->is_failed = true;
+	nvme_qpair1->qpair->failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 
 	poll_thread_times(0, 3);
 
@@ -2996,7 +3002,7 @@ test_reconnect_qpair(void)
 	/* If a qpair is disconnected, it is freed and then reconnected via
 	 * resetting the corresponding nvme_ctrlr.
 	 */
-	nvme_qpair2->qpair->is_failed = true;
+	nvme_qpair2->qpair->failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 	ctrlr->is_failed = true;
 
 	poll_thread_times(1, 3);
@@ -3034,7 +3040,7 @@ test_reconnect_qpair(void)
 	/* If a qpair is disconnected and resetting the corresponding nvme_ctrlr
 	 * fails, the qpair is just freed.
 	 */
-	nvme_qpair2->qpair->is_failed = true;
+	nvme_qpair2->qpair->failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 	ctrlr->is_failed = true;
 	ctrlr->fail_reset = true;
 
@@ -3986,6 +3992,7 @@ test_find_io_path(void)
 	struct nvme_bdev_channel nbdev_ch = {
 		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
 	};
+	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {};
 	struct nvme_ctrlr_channel ctrlr_ch1 = {}, ctrlr_ch2 = {};
 	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, };
 	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, };
@@ -3997,7 +4004,7 @@ test_find_io_path(void)
 
 	/* Test if io_path whose ANA state is not accessible is excluded. */
 
-	nvme_qpair1.qpair = (struct spdk_nvme_qpair *)0x1;
+	nvme_qpair1.qpair = &qpair1;
 	nvme_ns1.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == NULL);
 
@@ -4028,9 +4035,9 @@ test_find_io_path(void)
 	 * is prioritized.
 	 */
 
-	nvme_qpair1.qpair = (struct spdk_nvme_qpair *)0x1;
+	nvme_qpair1.qpair = &qpair1;
 	nvme_ns1.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
-	nvme_qpair2.qpair = (struct spdk_nvme_qpair *)0x1;
+	nvme_qpair2.qpair = &qpair2;
 	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
 
@@ -5219,7 +5226,7 @@ test_retry_io_if_ctrlr_is_resetting(void)
 	 * the corresponding nvme_ctrlr. I/O should be queued if it is submitted
 	 * while resetting the nvme_ctrlr.
 	 */
-	nvme_qpair->qpair->is_failed = true;
+	nvme_qpair->qpair->failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
 	ctrlr->is_failed = true;
 
 	poll_thread_times(0, 5);

@@ -739,6 +739,11 @@ nvme_io_path_is_connected(struct nvme_io_path *io_path)
 		return false;
 	}
 
+	if (spdk_unlikely(spdk_nvme_qpair_get_failure_reason(io_path->qpair->qpair) !=
+			  SPDK_NVME_QPAIR_FAILURE_NONE)) {
+		return false;
+	}
+
 	if (spdk_unlikely(io_path->qpair->ctrlr_ch->reset_iter != NULL)) {
 		return false;
 	}
@@ -1147,6 +1152,23 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 	}
 }
 
+static void
+bdev_nvme_check_io_qpairs(struct nvme_poll_group *group)
+{
+	struct nvme_qpair *nvme_qpair;
+
+	TAILQ_FOREACH(nvme_qpair, &group->qpair_list, tailq) {
+		if (nvme_qpair->qpair == NULL || nvme_qpair->ctrlr_ch == NULL) {
+			continue;
+		}
+
+		if (spdk_nvme_qpair_get_failure_reason(nvme_qpair->qpair) !=
+		    SPDK_NVME_QPAIR_FAILURE_NONE) {
+			_bdev_nvme_clear_io_path_cache(nvme_qpair);
+		}
+	}
+}
+
 static int
 bdev_nvme_poll(void *arg)
 {
@@ -1169,6 +1191,10 @@ bdev_nvme_poll(void *arg)
 		} else {
 			group->end_ticks = spdk_get_ticks();
 		}
+	}
+
+	if (spdk_unlikely(num_completions < 0)) {
+		bdev_nvme_check_io_qpairs(group);
 	}
 
 	return num_completions > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
