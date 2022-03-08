@@ -396,6 +396,9 @@ struct nvmf_vfio_user_ctrlr {
 	bool					self_kick_requested;
 };
 
+/* Endpoint in vfio-user is associated with a socket file, which
+ * is the representative of a PCI endpoint.
+ */
 struct nvmf_vfio_user_endpoint {
 	struct nvmf_vfio_user_transport		*transport;
 	vfu_ctx_t				*vfu_ctx;
@@ -416,6 +419,12 @@ struct nvmf_vfio_user_endpoint {
 	struct spdk_nvme_transport_id		trid;
 	const struct spdk_nvmf_subsystem	*subsystem;
 
+	/* Controller is associated with an active socket connection,
+	 * the lifecycle of the controller is same as the VM.
+	 * Currently we only support one active connection, as the NVMe
+	 * specification defines, we may support multiple controllers in
+	 * future, so that it can support e.g: RESERVATION.
+	 */
 	struct nvmf_vfio_user_ctrlr		*ctrlr;
 	pthread_mutex_t				lock;
 
