@@ -249,10 +249,6 @@ nvme_pcie_qpair_update_mmio_required(uint16_t value,
 {
 	uint16_t old;
 
-	if (!shadow_db) {
-		return true;
-	}
-
 	spdk_wmb();
 
 	old = *shadow_db;
