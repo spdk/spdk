@@ -3531,7 +3531,7 @@ Example response:
 			  "cq_doorbell_updates": 518827,
 			  "queued_requests": 0,
 			  "submitted_requests": 1485543,
-			  "sq_doobell_updates": 516081
+			  "sq_doorbell_updates": 516081
 			}
 		  ]
 		},
@@ -3573,7 +3573,7 @@ Example response:
 			  "cq_doorbell_updates": 518636,
 			  "queued_requests": 0,
 			  "submitted_requests": 1478730,
-			  "sq_doobell_updates": 511658
+			  "sq_doorbell_updates": 511658
 			}
 		  ]
 		}

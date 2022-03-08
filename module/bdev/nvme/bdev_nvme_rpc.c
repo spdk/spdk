@@ -1175,7 +1175,7 @@ rpc_bdev_nvme_pcie_stats(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_uint64(w, "cq_doorbell_updates", stat->pcie.cq_doorbell_updates);
 	spdk_json_write_named_uint64(w, "queued_requests", stat->pcie.queued_requests);
 	spdk_json_write_named_uint64(w, "submitted_requests", stat->pcie.submitted_requests);
-	spdk_json_write_named_uint64(w, "sq_doobell_updates", stat->pcie.sq_doobell_updates);
+	spdk_json_write_named_uint64(w, "sq_doorbell_updates", stat->pcie.sq_doorbell_updates);
 }
 
 static void

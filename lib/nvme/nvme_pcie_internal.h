@@ -293,7 +293,7 @@ nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
 
 	if (spdk_likely(need_mmio)) {
 		spdk_wmb();
-		pqpair->stat->sq_doobell_updates++;
+		pqpair->stat->sq_doorbell_updates++;
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
 		g_thread_mmio_ctrlr = NULL;

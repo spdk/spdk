@@ -502,7 +502,7 @@ struct spdk_nvme_pcie_stat {
 	uint64_t cq_doorbell_updates;
 	uint64_t submitted_requests;
 	uint64_t queued_requests;
-	uint64_t sq_doobell_updates;
+	uint64_t sq_doorbell_updates;
 };
 
 struct spdk_nvme_tcp_stat {
