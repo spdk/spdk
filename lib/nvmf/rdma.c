@@ -524,7 +524,7 @@ static const struct spdk_json_object_decoder rdma_transport_opts_decoder[] = {
 static int
 nvmf_rdma_qpair_compare(struct spdk_nvmf_rdma_qpair *rqpair1, struct spdk_nvmf_rdma_qpair *rqpair2)
 {
-	return rqpair1->qp_num - rqpair2->qp_num;
+	return rqpair1->qp_num < rqpair2->qp_num ? -1 : rqpair1->qp_num > rqpair2->qp_num;
 }
 
 RB_GENERATE_STATIC(qpairs_tree, spdk_nvmf_rdma_qpair, node, nvmf_rdma_qpair_compare);

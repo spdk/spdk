@@ -1442,6 +1442,18 @@ test_nvmf_rdma_resources_create(void)
 	nvmf_rdma_resources_destroy(rdma_resource);
 }
 
+static void
+test_nvmf_rdma_qpair_compare(void)
+{
+	struct spdk_nvmf_rdma_qpair rqpair1 = {}, rqpair2 = {};
+
+	rqpair1.qp_num = 0;
+	rqpair2.qp_num = UINT32_MAX;
+
+	CU_ASSERT(nvmf_rdma_qpair_compare(&rqpair1, &rqpair2) < 0);
+	CU_ASSERT(nvmf_rdma_qpair_compare(&rqpair2, &rqpair1) > 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1460,6 +1472,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_rdma_request_free_data);
 	CU_ADD_TEST(suite, test_nvmf_rdma_update_ibv_state);
 	CU_ADD_TEST(suite, test_nvmf_rdma_resources_create);
+	CU_ADD_TEST(suite, test_nvmf_rdma_qpair_compare);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
