@@ -1086,8 +1086,9 @@ static int
 post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq,
 		uint32_t cdw0, uint16_t sqid, uint16_t cid, uint16_t sc, uint16_t sct)
 {
-	struct spdk_nvme_cpl *cpl;
+	struct spdk_nvme_status cpl_status = { 0 };
 	const struct spdk_nvmf_registers *regs;
+	struct spdk_nvme_cpl *cpl;
 	int err;
 
 	assert(ctrlr != NULL);
@@ -1123,11 +1124,17 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 	cpl->sqid = sqid;
 	cpl->cid = cid;
 	cpl->cdw0 = cdw0;
-	cpl->status.dnr = 0x0;
-	cpl->status.m = 0x0;
-	cpl->status.sct = sct;
-	cpl->status.sc = sc;
-	cpl->status.p = cq->phase;
+
+	/*
+	 * This is a bitfield: instead of setting the individual bits we need
+	 * directly in cpl->status, which would cause a read-modify-write cycle,
+	 * we'll avoid reading from the CPL altogether by filling in a local
+	 * cpl_status variable, then writing the whole thing.
+	 */
+	cpl_status.sct = sct;
+	cpl_status.sc = sc;
+	cpl_status.p = cq->phase;
+	cpl->status = cpl_status;
 
 	/* Ensure the Completion Queue Entry is visible. */
 	spdk_wmb();
