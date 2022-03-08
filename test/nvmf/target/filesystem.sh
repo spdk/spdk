@@ -58,8 +58,7 @@ function nvmf_filesystem_part() {
 	nvme_name=$(lsblk -l -o NAME,SERIAL | grep -oP "([\w]*)(?=\s+${NVMF_SERIAL})")
 
 	mkdir -p /mnt/device
-
-	parted -s /dev/${nvme_name} mklabel msdos mkpart primary '0%' '100%'
+	parted -s /dev/${nvme_name} mklabel gpt mkpart SPDK_TEST '0%' '100%'
 	partprobe
 	sleep 1
 

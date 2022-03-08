@@ -69,8 +69,7 @@ mkdir -p /mnt/device
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 waitforfile /dev/$dev
-parted -s /dev/$dev mklabel msdos
-parted -s /dev/$dev mkpart primary '0%' '100%'
+parted -s /dev/$dev mklabel gpt mkpart SPDK_TEST '0%' '100%'
 sleep 1
 
 function filesystem_test() {
