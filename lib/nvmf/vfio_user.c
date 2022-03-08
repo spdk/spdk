@@ -509,6 +509,17 @@ cq_tail_advance(struct nvmf_vfio_user_cq *cq)
 	}
 }
 
+/*
+ * As per NVMe Base spec 3.3.1.2.1, we are supposed to implement CQ flow
+ * control: if there is no space in the CQ, we should wait until there is.
+ *
+ * In practice, we just fail the controller instead: as it happens, all host
+ * implementations we care about right-size the CQ: this is required anyway for
+ * NVMEoF support (see 3.3.2.8).
+ *
+ * Since reading the head doorbell is relatively expensive, we use the cached
+ * value, so we only have to read it for real if it appears that we are full.
+ */
 static inline bool
 cq_is_full(struct nvmf_vfio_user_cq *cq)
 {
@@ -521,7 +532,13 @@ cq_is_full(struct nvmf_vfio_user_cq *cq)
 		qindex = 0;
 	}
 
-	return qindex == *cq_dbl_headp(cq);
+	if (qindex != cq->last_head) {
+		return false;
+	}
+
+	cq->last_head = *cq_dbl_headp(cq);
+
+	return qindex == cq->last_head;
 }
 
 static bool
