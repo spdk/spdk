@@ -5801,6 +5801,18 @@ test_fail_path(void)
 	free(bdev_io);
 }
 
+static void
+test_nvme_ns_cmp(void)
+{
+	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {};
+
+	nvme_ns1.id = 0;
+	nvme_ns2.id = UINT32_MAX;
+
+	CU_ASSERT(nvme_ns_cmp(&nvme_ns1, &nvme_ns2) < 0);
+	CU_ASSERT(nvme_ns_cmp(&nvme_ns2, &nvme_ns1) > 0);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -5848,6 +5860,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_reconnect_ctrlr);
 	CU_ADD_TEST(suite, test_retry_failover_ctrlr);
 	CU_ADD_TEST(suite, test_fail_path);
+	CU_ADD_TEST(suite, test_nvme_ns_cmp);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

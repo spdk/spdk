@@ -200,7 +200,7 @@ static int nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr);
 static int
 nvme_ns_cmp(struct nvme_ns *ns1, struct nvme_ns *ns2)
 {
-	return ns1->id - ns2->id;
+	return ns1->id < ns2->id ? -1 : ns1->id > ns2->id;
 }
 
 RB_GENERATE_STATIC(nvme_ns_tree, nvme_ns, node, nvme_ns_cmp);
