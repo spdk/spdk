@@ -2948,6 +2948,35 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-o', '--opc', help="""Opcode of the nvme cmd.""", required=True, type=int)
     p.set_defaults(func=bdev_nvme_remove_error_injection)
 
+    def bdev_daos_create(args):
+        num_blocks = (args.total_size * 1024 * 1024) // args.block_size
+        print_json(rpc.bdev.bdev_daos_create(args.client,
+                                             num_blocks=int(num_blocks),
+                                             block_size=args.block_size,
+                                             name=args.name,
+                                             uuid=args.uuid,
+                                             pool=args.pool,
+                                             cont=args.cont))
+    p = subparsers.add_parser('bdev_daos_create',
+                              help='Create a bdev with DAOS backend')
+    p.add_argument('name', help="Name of the bdev")
+    p.add_argument('pool', help="UUID of the DAOS pool")
+    p.add_argument('cont', help="UUID of the DAOS container")
+    p.add_argument(
+        'total_size', help='Size of DAOS bdev in MB (float > 0)', type=float)
+    p.add_argument('block_size', help='Block size for this bdev', type=int)
+    p.add_argument('-u', '--uuid', help="UUID of the bdev")
+    p.set_defaults(func=bdev_daos_create)
+
+    def bdev_daos_delete(args):
+        rpc.bdev.bdev_daos_delete(args.client,
+                                  name=args.name)
+
+    p = subparsers.add_parser('bdev_daos_delete',
+                              help='Delete a DAOS disk')
+    p.add_argument('name', help='DAOS bdev name')
+    p.set_defaults(func=bdev_daos_delete)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

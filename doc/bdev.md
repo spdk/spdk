@@ -672,3 +672,24 @@ Virtio-SCSI devices can be removed with the following command
 `rpc.py bdev_virtio_detach_controller VirtioScsi0`
 
 Removing a Virtio-SCSI device will destroy all its bdevs.
+
+## DAOS bdev {#bdev_config_daos}
+
+DAOS bdev creates SPDK block device on top of DAOS DFS, the name of the bdev defines the file name in DFS namespace.
+Note that DAOS container has to be POSIX type, e.g.: ` daos cont create --pool=test-pool --label=test-cont --type=POSIX`
+
+To build SPDK with daos support, daos-devel package has to be installed, please see the setup [guide](https://docs.daos.io/v2.0/).
+To enable the module, configure SPDK using `--with-daos` flag.
+
+Running `daos_agent` service on the target machine is required for the SPDK DAOS bdev communication with a DAOS cluster.
+
+The implementation uses the independent pool and container connections per device's channel for the best IO throughput, therefore,
+running a target application with multiple cores (`-m [0-7], for example) is highly advisable.
+
+Example command for creating daos bdev:
+
+`rpc.py bdev_daos_create daosdev0 test-pool test-cont 64 4096`
+
+Example command for removing daos bdev:
+
+`rpc.py bdev_daos_delete daosdev0`

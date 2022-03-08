@@ -481,7 +481,9 @@ Example response:
     "bdev_lvol_create",
     "bdev_lvol_delete_lvstore",
     "bdev_lvol_rename_lvstore",
-    "bdev_lvol_create_lvstore"
+    "bdev_lvol_create_lvstore",
+    "bdev_daos_delete",
+    "bdev_daos_create"
   ]
 }
 ~~~
@@ -10140,4 +10142,87 @@ Example response:
   "result": true
 }
 
+~~~
+
+### bdev_daos_create {#rpc_bdev_daos_create}
+
+Construct @ref bdev_config_daos
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name to use
+pool                    | Required | string      | DAOS pool label or its uuid
+cont                    | Required | string      | DAOS cont label or its uuid
+block_size              | Required | number      | Block size in bytes -must be multiple of 512
+num_blocks              | Required | number      | Number of blocks
+uuid                    | Optional | string      | UUID of new bdev
+
+#### Result
+
+Name of newly created bdev.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "block_size": 4096,
+    "num_blocks": 16384,
+    "name": "daosdev0",
+    "pool": "test-pool",
+    "cont": "test-cont",
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_daos_create",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "daosdev0"
+}
+~~~
+
+### bdev_daos_delete {#rpc_bdev_daos_delete}
+
+Delete @ref bdev_config_daos
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "daosdev0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_daos_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
 ~~~

@@ -163,6 +163,8 @@ export SPDK_TEST_SCANBUILD
 export SPDK_TEST_NVMF_NICS
 : ${SPDK_TEST_SMA=0}
 export SPDK_TEST_SMA
+: ${SPDK_TEST_DAOS=0}
+export SPDK_TEST_DAOS
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"
@@ -486,6 +488,10 @@ function get_config_params() {
 
 	if [[ $SPDK_TEST_SMA -eq 1 ]]; then
 		config_params+=' --with-sma'
+	fi
+
+	if [ -f /usr/include/daos.h ] && [ $SPDK_TEST_DAOS -eq 1 ]; then
+		config_params+=' --with-daos'
 	fi
 
 	echo "$config_params"
@@ -916,6 +922,30 @@ function rbd_cleanup() {
 		$rootdir/scripts/ceph/stop.sh || true
 		rm -f /var/tmp/ceph_raw.img
 	fi
+}
+
+function daos_setup() {
+	# $1 = pool name
+	# $2 = cont name
+	if [ -z "$1" ]; then
+		echo "No pool name provided"
+		exit 1
+	fi
+	if [ -z "$2" ]; then
+		echo "No cont name provided"
+		exit 1
+	fi
+
+	dmg pool create --size=10G $1 || true
+	daos container create --type=POSIX --label=$2 $1 || true
+}
+
+function daos_cleanup() {
+	local pool=${1:-testpool}
+	local cont=${2:-testcont}
+
+	daos container destroy -f $pool $cont || true
+	sudo dmg pool destroy -f $pool || true
 }
 
 function _start_stub() {

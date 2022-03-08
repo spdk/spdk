@@ -1534,3 +1534,33 @@ def bdev_nvme_get_controller_health_info(client, name):
     params = {}
     params['name'] = name
     return client.call('bdev_nvme_get_controller_health_info', params)
+
+
+def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, uuid=None):
+    """Construct DAOS block device.
+
+    Args:
+        num_blocks: size of block device in blocks
+        block_size: block size of device; must be a power of 2 and at least 512
+        name: name of block device (also the name of the backend file on DAOS DFS)
+        pool: UUID of DAOS pool
+        cont: UUID of DAOS container
+        uuid: UUID of block device (optional)
+
+    Returns:
+        Name of created block device.
+    """
+    params = {'num_blocks': num_blocks, 'block_size': block_size, 'pool': pool, 'cont': cont, 'name': name}
+    if uuid:
+        params['uuid'] = uuid
+    return client.call('bdev_daos_create', params)
+
+
+def bdev_daos_delete(client, name):
+    """Delete DAOS block device.
+
+    Args:
+        bdev_name: name of DAOS bdev to delete
+    """
+    params = {'name': name}
+    return client.call('bdev_daos_delete', params)

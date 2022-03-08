@@ -27,6 +27,8 @@ endif
 
 DIRS-$(CONFIG_RBD) += rbd
 
+DIRS-$(CONFIG_DAOS) += daos
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)

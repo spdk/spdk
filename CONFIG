@@ -104,6 +104,10 @@ CONFIG_FC_PATH=
 # Requires librbd development libraries
 CONFIG_RBD=n
 
+# Build DAOS support in bdev modules
+# Requires daos development libraries
+CONFIG_DAOS=n
+
 # Build vhost library.
 CONFIG_VHOST=y
 

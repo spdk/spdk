@@ -19,6 +19,10 @@ function cleanup() {
 		rbd_cleanup
 	fi
 
+	if [[ $test_type == daos ]]; then
+		daos_cleanup
+	fi
+
 	if [[ "$test_type" = "gpt" ]]; then
 		"$rootdir/scripts/setup.sh" reset
 		if [[ -b $gpt_nvme ]]; then
@@ -167,6 +171,17 @@ function setup_rbd_conf() {
 	timing_exit rbd_setup
 
 	"$rpc_py" bdev_rbd_create -b Ceph0 rbd foo 512
+}
+
+function setup_daos_conf() {
+	local pool=testpool
+	local cont=testcont
+
+	timing_enter daos_setup
+	daos_setup $pool $cont
+	timing_exit daos_setup
+
+	"$rpc_py" bdev_daos_create Daos0 $pool $cont 16 4096
 }
 
 function bdev_bounds() {
@@ -501,6 +516,9 @@ case "$test_type" in
 		;;
 	rbd)
 		setup_rbd_conf
+		;;
+	daos)
+		setup_daos_conf
 		;;
 	*)
 		echo "invalid test name"
