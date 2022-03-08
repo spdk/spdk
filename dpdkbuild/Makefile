@@ -101,6 +101,16 @@ with e.g. `meson build --cross-file config/arm/arm64_armv8_linux_gcc`)
 endif
 endif
 
+# DPDK supports ASAN since version 21.11
+ifeq ($(CONFIG_ASAN),y)
+ifneq ($(OS),Windows)
+DPDK_OPTS += -Db_sanitize=address
+ifeq ($(CC_TYPE),clang)
+DPDK_OPTS += -Db_lundef=false
+endif
+endif
+endif
+
 DPDK_CFLAGS += -fPIC
 
 ifneq ($(CONFIG_MAX_LCORES),)
