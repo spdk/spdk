@@ -690,7 +690,9 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 	req->data_from_pool = false;
 }
 
-static inline int
+typedef int (*set_buffer_callback)(struct spdk_nvmf_request *req, void *buf,
+				   uint32_t length,	uint32_t io_unit_size);
+static int
 nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
 			uint32_t io_unit_size)
 {
@@ -708,9 +710,9 @@ static int
 nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			 struct spdk_nvmf_transport_poll_group *group,
 			 struct spdk_nvmf_transport *transport,
-			 uint32_t length)
+			 uint32_t length, uint32_t io_unit_size,
+			 set_buffer_callback cb_func)
 {
-	uint32_t io_unit_size = transport->opts.io_unit_size;
 	uint32_t num_buffers;
 	uint32_t i = 0, j;
 	void *buffer, *buffers[NVMF_REQ_MAX_BUFFERS];
@@ -730,7 +732,7 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
 			assert(buffer != NULL);
 
-			length = nvmf_request_set_buffer(req, buffer, length, io_unit_size);
+			length = cb_func(req, buffer, length, io_unit_size);
 			i++;
 		} else {
 			if (spdk_mempool_get_bulk(transport->data_buf_pool, buffers,
@@ -738,7 +740,7 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				return -ENOMEM;
 			}
 			for (j = 0; j < num_buffers - i; j++) {
-				length = nvmf_request_set_buffer(req, buffers[j], length, io_unit_size);
+				length = cb_func(req, buffers[j], length, io_unit_size);
 			}
 			i += num_buffers - i;
 		}
@@ -746,7 +748,6 @@ nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 
 	assert(length == 0);
 
-	req->data_from_pool = true;
 	return 0;
 }
 
@@ -759,11 +760,90 @@ spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 	int rc;
 
 	req->iovcnt = 0;
-
-	rc = nvmf_request_get_buffers(req, group, transport, length);
-	if (rc == -ENOMEM) {
+	rc = nvmf_request_get_buffers(req, group, transport, length,
+				      transport->opts.io_unit_size,
+				      nvmf_request_set_buffer);
+	if (!rc) {
+		req->data_from_pool = true;
+	} else if (rc == -ENOMEM) {
 		spdk_nvmf_request_free_buffers(req, group, transport);
+		return rc;
 	}
 
+	return rc;
+}
+
+static int
+nvmf_request_set_stripped_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length,
+				 uint32_t io_unit_size)
+{
+	struct spdk_nvmf_stripped_data *data = req->stripped_data;
+
+	data->buffers[data->iovcnt] = buf;
+	data->iov[data->iovcnt].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
+					   ~NVMF_DATA_BUFFER_MASK);
+	data->iov[data->iovcnt].iov_len  = spdk_min(length, io_unit_size);
+	length -= data->iov[data->iovcnt].iov_len;
+	data->iovcnt++;
+
+	return length;
+}
+
+void
+nvmf_request_free_stripped_buffers(struct spdk_nvmf_request *req,
+				   struct spdk_nvmf_transport_poll_group *group,
+				   struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_stripped_data *data = req->stripped_data;
+	uint32_t i;
+
+	for (i = 0; i < data->iovcnt; i++) {
+		if (group->buf_cache_count < group->buf_cache_size) {
+			STAILQ_INSERT_HEAD(&group->buf_cache,
+					   (struct spdk_nvmf_transport_pg_cache_buf *)data->buffers[i],
+					   link);
+			group->buf_cache_count++;
+		} else {
+			spdk_mempool_put(transport->data_buf_pool, data->buffers[i]);
+		}
+	}
+	free(data);
+	req->stripped_data = NULL;
+}
+
+int
+nvmf_request_get_stripped_buffers(struct spdk_nvmf_request *req,
+				  struct spdk_nvmf_transport_poll_group *group,
+				  struct spdk_nvmf_transport *transport,
+				  uint32_t length)
+{
+	uint32_t block_size = req->dif.dif_ctx.block_size;
+	uint32_t data_block_size = block_size - req->dif.dif_ctx.md_size;
+	uint32_t io_unit_size = transport->opts.io_unit_size / block_size * data_block_size;
+	struct spdk_nvmf_stripped_data *data;
+	uint32_t i;
+	int rc;
+
+	/* Data blocks must be block aligned */
+	for (i = 0; i < req->iovcnt; i++) {
+		if (req->iov[i].iov_len % block_size) {
+			return -EINVAL;
+		}
+	}
+
+	data = calloc(1, sizeof(*data));
+	if (data == NULL) {
+		SPDK_ERRLOG("Unable to allocate memory for stripped_data.\n");
+		return -ENOMEM;
+	}
+	req->stripped_data = data;
+	req->stripped_data->iovcnt = 0;
+
+	rc = nvmf_request_get_buffers(req, group, transport, length, io_unit_size,
+				      nvmf_request_set_stripped_buffer);
+	if (rc == -ENOMEM) {
+		nvmf_request_free_stripped_buffers(req, group, transport);
+		return rc;
+	}
 	return rc;
 }

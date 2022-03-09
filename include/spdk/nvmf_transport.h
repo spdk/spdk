@@ -80,6 +80,12 @@ struct spdk_nvmf_dif_info {
 	uint32_t				orig_length;
 };
 
+struct spdk_nvmf_stripped_data {
+	uint32_t			iovcnt;
+	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
+	void				*buffers[NVMF_REQ_MAX_BUFFERS];
+};
+
 enum spdk_nvmf_zcopy_phase {
 	NVMF_ZCOPY_PHASE_NONE,        /* Request is not using ZCOPY */
 	NVMF_ZCOPY_PHASE_INIT,        /* Requesting Buffers */
@@ -104,6 +110,7 @@ struct spdk_nvmf_request {
 	uint32_t			iovcnt;
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
 	void				*buffers[NVMF_REQ_MAX_BUFFERS];
+	struct spdk_nvmf_stripped_data  *stripped_data;
 
 	struct spdk_nvmf_dif_info	dif;
 

@@ -1048,6 +1048,8 @@ nvmf_tcp_qpair_init_mem_resource(struct spdk_nvmf_tcp_qpair *tqpair)
 		tcp_req->req.rsp = (union nvmf_c2h_msg *)&tcp_req->rsp;
 		tcp_req->req.cmd = (union nvmf_h2c_msg *)&tcp_req->cmd;
 
+		tcp_req->req.stripped_data = NULL;
+
 		/* Initialize request state to FREE */
 		tcp_req->state = TCP_REQUEST_STATE_FREE;
 		TAILQ_INSERT_TAIL(&tqpair->tcp_req_free_queue, tcp_req, state_link);

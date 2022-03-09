@@ -48,6 +48,7 @@
 #include "spdk_internal/rdma.h"
 
 #include "nvmf_internal.h"
+#include "transport.h"
 
 #include "spdk_internal/trace_defs.h"
 
@@ -810,6 +811,8 @@ nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 			rdma_req->req.qpair = NULL;
 		}
 		rdma_req->req.cmd = NULL;
+		rdma_req->req.iovcnt = 0;
+		rdma_req->req.stripped_data = NULL;
 
 		/* Set up memory to send responses */
 		rdma_req->req.rsp = &resources->cpls[i];
@@ -1484,19 +1487,29 @@ nvmf_rdma_fill_wr_sgl_with_dif(struct spdk_nvmf_rdma_poll_group *rgroup,
 	struct spdk_dif_ctx *dif_ctx = &rdma_req->req.dif.dif_ctx;
 	struct ibv_sge *sg_ele;
 	struct iovec *iov;
+	struct iovec *rdma_iov;
 	uint32_t lkey, remaining;
 	uint32_t remaining_data_block, data_block_size, md_size;
 	uint32_t sge_len;
 	int rc;
 
 	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
-	md_size = dif_ctx->md_size;
-	remaining_data_block = data_block_size;
+
+	if (spdk_likely(!rdma_req->req.stripped_data)) {
+		rdma_iov = rdma_req->req.iov;
+		remaining_data_block = data_block_size;
+		md_size = dif_ctx->md_size;
+	} else {
+		rdma_iov = rdma_req->req.stripped_data->iov;
+		total_length = total_length / dif_ctx->block_size * data_block_size;
+		remaining_data_block = total_length;
+		md_size = 0;
+	}
 
 	wr->num_sge = 0;
 
 	while (total_length && (num_extra_wrs || wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES)) {
-		iov = &rdma_req->req.iov[rdma_req->iovpos];
+		iov = rdma_iov + rdma_req->iovpos;
 		rc = spdk_rdma_get_translation(device->map, iov->iov_base, iov->iov_len, &mem_translation);
 		if (spdk_unlikely(rc)) {
 			return rc;
@@ -1612,6 +1625,17 @@ nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	assert(req->iovcnt <= rqpair->max_send_sge);
 
+	/* When dif_insert_or_strip is true and the I/O data length is greater than one block,
+	 * the stripped_buffers are got for DIF stripping. */
+	if (spdk_unlikely(req->dif_enabled && (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST)
+			  && (req->dif.elba_length > req->dif.dif_ctx.block_size))) {
+		rc = nvmf_request_get_stripped_buffers(req, &rgroup->group,
+						       &rtransport->transport, req->dif.orig_length);
+		if (rc != 0) {
+			SPDK_INFOLOG(rdma, "Get stripped buffers fail %d, fallback to req.iov.\n", rc);
+		}
+	}
+
 	rdma_req->iovpos = 0;
 
 	if (spdk_unlikely(req->dif_enabled)) {
@@ -1704,6 +1728,17 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 	if (rc != 0) {
 		nvmf_rdma_request_free_data(rdma_req, rtransport);
 		return rc;
+	}
+
+	/* When dif_insert_or_strip is true and the I/O data length is greater than one block,
+	 * the stripped_buffers are got for DIF stripping. */
+	if (spdk_unlikely(req->dif_enabled && (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST)
+			  && (req->dif.elba_length > req->dif.dif_ctx.block_size))) {
+		rc = nvmf_request_get_stripped_buffers(req, &rgroup->group,
+						       &rtransport->transport, req->dif.orig_length);
+		if (rc != 0) {
+			SPDK_INFOLOG(rdma, "Get stripped buffers fail %d, fallback to req.iov.\n", rc);
+		}
 	}
 
 	/* The first WR must always be the embedded data WR. This is how we unwind them later. */
@@ -1889,6 +1924,11 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 		rgroup = rqpair->poller->group;
 
 		spdk_nvmf_request_free_buffers(&rdma_req->req, &rgroup->group, &rtransport->transport);
+	}
+	if (rdma_req->req.stripped_data) {
+		nvmf_request_free_stripped_buffers(&rdma_req->req,
+						   &rqpair->poller->group->group,
+						   &rtransport->transport);
 	}
 	nvmf_rdma_request_free_data(rdma_req, rtransport);
 	rdma_req->req.length = 0;
@@ -2116,9 +2156,15 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 					struct spdk_dif_error error_blk;
 
 					num_blocks = SPDK_CEIL_DIV(rdma_req->req.dif.elba_length, rdma_req->req.dif.dif_ctx.block_size);
-
-					rc = spdk_dif_verify(rdma_req->req.iov, rdma_req->req.iovcnt, num_blocks,
-							     &rdma_req->req.dif.dif_ctx, &error_blk);
+					if (!rdma_req->req.stripped_data) {
+						rc = spdk_dif_verify(rdma_req->req.iov, rdma_req->req.iovcnt, num_blocks,
+								     &rdma_req->req.dif.dif_ctx, &error_blk);
+					} else {
+						rc = spdk_dif_verify_copy(rdma_req->req.stripped_data->iov,
+									  rdma_req->req.stripped_data->iovcnt,
+									  rdma_req->req.iov, rdma_req->req.iovcnt, num_blocks,
+									  &rdma_req->req.dif.dif_ctx, &error_blk);
+					}
 					if (rc) {
 						struct spdk_nvme_cpl *rsp = &rdma_req->req.rsp->nvme_cpl;
 
