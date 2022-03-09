@@ -515,8 +515,10 @@ nvme_ctrlr_unregister_cb(void *io_device)
 }
 
 static void
-nvme_ctrlr_unregister(struct nvme_ctrlr *nvme_ctrlr)
+nvme_ctrlr_unregister(void *ctx)
 {
+	struct nvme_ctrlr *nvme_ctrlr = ctx;
+
 	spdk_io_device_unregister(nvme_ctrlr, nvme_ctrlr_unregister_cb);
 }
 
@@ -558,7 +560,7 @@ nvme_ctrlr_release(struct nvme_ctrlr *nvme_ctrlr)
 
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
-	nvme_ctrlr_unregister(nvme_ctrlr);
+	spdk_thread_exec_msg(nvme_ctrlr->thread, nvme_ctrlr_unregister, nvme_ctrlr);
 }
 
 static struct nvme_io_path *
@@ -1095,6 +1097,8 @@ nvme_poll_group_get_qpair(struct nvme_poll_group *group, struct spdk_nvme_qpair 
 	return nvme_qpair;
 }
 
+static void nvme_qpair_delete(struct nvme_qpair *nvme_qpair);
+
 static void
 bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_ctx)
 {
@@ -1115,7 +1119,12 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 
 		_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
-		bdev_nvme_reset(nvme_qpair->ctrlr);
+		if (nvme_qpair->ctrlr_ch != NULL) {
+			bdev_nvme_reset(nvme_qpair->ctrlr);
+		} else {
+			/* In this case, ctrlr_channel is already deleted. */
+			nvme_qpair_delete(nvme_qpair);
+		}
 	}
 }
 
@@ -2105,6 +2114,10 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 
 	ctrlr_ch->qpair = nvme_qpair;
 
+	pthread_mutex_lock(&nvme_qpair->ctrlr->mutex);
+	nvme_qpair->ctrlr->ref++;
+	pthread_mutex_unlock(&nvme_qpair->ctrlr->mutex);
+
 	return 0;
 }
 
@@ -2128,6 +2141,8 @@ nvme_qpair_delete(struct nvme_qpair *nvme_qpair)
 
 	spdk_put_io_channel(spdk_io_channel_from_ctx(nvme_qpair->group));
 
+	nvme_ctrlr_release(nvme_qpair->ctrlr);
+
 	free(nvme_qpair);
 }
 
@@ -2143,11 +2158,16 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
 	if (nvme_qpair->qpair != NULL) {
-		spdk_nvme_ctrlr_free_io_qpair(nvme_qpair->qpair);
-		nvme_qpair->qpair = NULL;
-	}
+		spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
 
-	nvme_qpair_delete(nvme_qpair);
+		/* We cannot release a reference to the poll group now.
+		 * The qpair may be disconnected asynchronously later.
+		 * We need to poll it until it is actually disconnected.
+		 */
+		nvme_qpair->ctrlr_ch = NULL;
+	} else {
+		nvme_qpair_delete(nvme_qpair);
+	}
 }
 
 static void
