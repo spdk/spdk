@@ -47,6 +47,7 @@ rpc_ioat_scan_accel_engine(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	SPDK_NOTICELOG("Enabling IOAT\n");
 	accel_engine_ioat_enable_probe();
 
 	spdk_jsonrpc_send_bool_response(request, true);

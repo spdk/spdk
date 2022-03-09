@@ -130,7 +130,9 @@ static void
 idxd_done(void *cb_arg, int status)
 {
 	struct spdk_accel_task *accel_task = cb_arg;
-	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(accel_task->accel_ch->engine_ch);
+	struct idxd_io_channel *chan;
+
+	chan = spdk_io_channel_get_ctx(accel_task->accel_ch->engine_ch[accel_task->op_code]);
 
 	assert(chan->num_outstanding > 0);
 	spdk_trace_record(TRACE_IDXD_OP_COMPLETE, 0, 0, 0, chan->num_outstanding - 1);
@@ -302,7 +304,7 @@ idxd_poll(void *arg)
 
 			TAILQ_INIT(&chan->queued_tasks);
 
-			idxd_submit_tasks(task->accel_ch->engine_ch, task);
+			idxd_submit_tasks(task->accel_ch->engine_ch[task->op_code], task);
 		}
 	}
 
@@ -332,6 +334,7 @@ idxd_supports_opcode(enum accel_opcode opc)
 }
 
 static struct spdk_accel_engine idxd_accel_engine = {
+	.name			= "idxd",
 	.supports_opcode	= idxd_supports_opcode,
 	.get_io_channel		= idxd_get_io_channel,
 	.submit_tasks		= idxd_submit_tasks,
@@ -419,8 +422,8 @@ accel_engine_idxd_init(void)
 	}
 
 	g_idxd_initialized = true;
-	SPDK_NOTICELOG("Accel engine updated to use IDXD DSA engine.\n");
-	spdk_accel_hw_engine_register(&idxd_accel_engine);
+	SPDK_NOTICELOG("Accel framework IDXD engine initialized.\n");
+	spdk_accel_engine_register(&idxd_accel_engine);
 	spdk_io_device_register(&idxd_accel_engine, idxd_create_cb, idxd_destroy_cb,
 				sizeof(struct idxd_io_channel), "idxd_accel_engine");
 	return 0;

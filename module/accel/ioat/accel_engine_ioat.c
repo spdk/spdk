@@ -182,6 +182,7 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 }
 
 static struct spdk_accel_engine ioat_accel_engine = {
+	.name			= "ioat",
 	.supports_opcode	= ioat_supports_opcode,
 	.get_io_channel		= ioat_get_io_channel,
 	.submit_tasks		= ioat_submit_tasks,
@@ -289,8 +290,8 @@ accel_engine_ioat_init(void)
 	}
 
 	g_ioat_initialized = true;
-	SPDK_NOTICELOG("Accel engine updated to use IOAT engine.\n");
-	spdk_accel_hw_engine_register(&ioat_accel_engine);
+	SPDK_NOTICELOG("Accel framework IOAT engine initialized.\n");
+	spdk_accel_engine_register(&ioat_accel_engine);
 	spdk_io_device_register(&ioat_accel_engine, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel), "ioat_accel_engine");
 	return 0;
