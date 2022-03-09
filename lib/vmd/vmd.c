@@ -1106,12 +1106,41 @@ vmd_cache_scan_info(struct vmd_pci_device *dev)
 	}
 }
 
+static void
+vmd_reset_root_ports(struct vmd_pci_bus *bus)
+{
+	volatile struct pci_header *header;
+	uint32_t devfn;
+
+	/*
+	 * The root ports might have been configured by some other driver (e.g.  Linux kernel) prior
+	 * to loading the SPDK one, so we need to clear it.  We need to before the scanning process,
+	 * as it's depth-first, so when scanning the initial root ports, the latter ones might still
+	 * be using stale configuration.  This can lead to two bridges having the same
+	 * secondary/subordinate bus configuration, which, of course, isn't correct.
+	 * (Note: this fixed issue #2413.)
+	 */
+	for (devfn = 0; devfn < 32; ++devfn) {
+		if (!vmd_bus_device_present(bus, devfn)) {
+			continue;
+		}
+
+		header = (volatile void *)(bus->vmd->cfg_vaddr + CONFIG_OFFSET_ADDR(bus->bus_number,
+					   devfn, 0, 0));
+		if (vmd_device_is_root_port(header) && !vmd_device_is_enumerated(header)) {
+			vmd_reset_base_limit_registers(header);
+		}
+	}
+}
+
 static uint8_t
 vmd_scan_pcibus(struct vmd_pci_bus *bus)
 {
 	struct vmd_pci_bus *bus_entry;
 	struct vmd_pci_device *dev;
 	uint8_t dev_cnt;
+
+	vmd_reset_root_ports(bus);
 
 	g_end_device_count = 0;
 	TAILQ_INSERT_TAIL(&bus->vmd->bus_list, bus, tailq);
