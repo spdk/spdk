@@ -170,23 +170,27 @@ struct nvme_bdev {
 	TAILQ_ENTRY(nvme_bdev)	tailq;
 };
 
-struct nvme_ctrlr_channel {
+struct nvme_qpair {
+	struct nvme_ctrlr		*ctrlr;
 	struct spdk_nvme_qpair		*qpair;
 	struct nvme_poll_group		*group;
-	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
-	TAILQ_ENTRY(nvme_ctrlr_channel)	tailq;
+	struct nvme_ctrlr_channel	*ctrlr_ch;
 
 	/* The following is used to update io_path cache of nvme_bdev_channels. */
 	TAILQ_HEAD(, nvme_io_path)	io_path_list;
 
+	TAILQ_ENTRY(nvme_qpair)		tailq;
 };
 
-#define nvme_ctrlr_channel_get_ctrlr(ctrlr_ch)	\
-	(struct nvme_ctrlr *)spdk_io_channel_get_io_device(spdk_io_channel_from_ctx(ctrlr_ch))
+struct nvme_ctrlr_channel {
+	struct nvme_ctrlr		*ctrlr;
+	struct nvme_qpair		*qpair;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
+};
 
 struct nvme_io_path {
 	struct nvme_ns			*nvme_ns;
-	struct nvme_ctrlr_channel	*ctrlr_ch;
+	struct nvme_qpair		*qpair;
 	STAILQ_ENTRY(nvme_io_path)	stailq;
 
 	/* The following are used to update io_path cache of the nvme_bdev_channel. */
@@ -209,7 +213,7 @@ struct nvme_poll_group {
 	uint64_t				spin_ticks;
 	uint64_t				start_ticks;
 	uint64_t				end_ticks;
-	TAILQ_HEAD(, nvme_ctrlr_channel)	ctrlr_ch_list;
+	TAILQ_HEAD(, nvme_qpair)		qpair_list;
 };
 
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);

@@ -1885,9 +1885,8 @@ rpc_add_error_injection_per_channel(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct rpc_add_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
-	struct nvme_ctrlr *nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
-	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair;
-	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair->qpair;
+	struct spdk_nvme_ctrlr *ctrlr = ctrlr_ch->qpair->ctrlr->ctrlr;
 	int rc = 0;
 
 	if (qpair != NULL) {
@@ -2003,11 +2002,10 @@ rpc_remove_error_injection_per_channel(struct spdk_io_channel_iter *i)
 	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct rpc_remove_error_injection_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(ch);
-	struct nvme_ctrlr *nvme_ctrlr = nvme_ctrlr_channel_get_ctrlr(ctrlr_ch);
-	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair;
-	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+	struct spdk_nvme_qpair *qpair = ctrlr_ch->qpair->qpair;
+	struct spdk_nvme_ctrlr *ctrlr = ctrlr_ch->qpair->ctrlr->ctrlr;
 
-	if (ctrlr_ch->qpair != NULL) {
+	if (qpair != NULL) {
 		spdk_nvme_qpair_remove_cmd_error_injection(ctrlr, qpair, ctx->rpc.opc);
 	}
 
