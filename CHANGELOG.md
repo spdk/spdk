@@ -31,6 +31,10 @@ A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PM
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and
 remove NVMe error injections.
 
+New parameters, `ctrlr_loss_timeout_sec`, `reconnect_delay_sec`, and `fast_io_fail_timeout_sec`, are
+added to the RPC `bdev_nvme_set_options`. They can be overridden if they are given by the RPC
+`bdev_nvme_attach_controller`.
+
 ### event
 
 Added `msg_mempool_size` parameter to `spdk_reactors_init` and `spdk_thread_lib_init_ext`.

@@ -480,7 +480,10 @@ if __name__ == "__main__":
                                        delay_cmd_submit=args.delay_cmd_submit,
                                        transport_retry_count=args.transport_retry_count,
                                        bdev_retry_count=args.bdev_retry_count,
-                                       transport_ack_timeout=args.transport_ack_timeout)
+                                       transport_ack_timeout=args.transport_ack_timeout,
+                                       ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
+                                       reconnect_delay_sec=args.reconnect_delay_sec,
+                                       fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec)
 
     p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -518,6 +521,29 @@ if __name__ == "__main__":
     p.add_argument('-e', '--transport-ack-timeout',
                    help="""Time to wait ack until packet retransmission. RDMA specific.
                    Range 0-31 where 0 is driver-specific default value.""", type=int)
+    p.add_argument('-l', '--ctrlr-loss-timeout-sec',
+                   help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
+                   -1 means infinite reconnect retries. 0 means no reconnect retry.
+                   If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+                   If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than
+                   reconnect_delay_sec.
+                   This can be overridden by bdev_nvme_attach_controller.""",
+                   type=int)
+    p.add_argument('-o', '--reconnect-delay-sec',
+                   help="""Time to delay a reconnect retry.
+                   If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+                   If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+                   If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero and
+                   less than ctrlr_loss_timeout_sec.
+                   This can be overridden by bdev_nvme_attach_controller.""",
+                   type=int)
+    p.add_argument('-u', '--fast-io-fail-timeout-sec',
+                   help="""Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+                   0 means no such timeout.
+                   If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and
+                   less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
+                   This can be overridden by bdev_nvme_attach_controller.""",
+                   type=int)
 
     p.set_defaults(func=bdev_nvme_set_options)
 

@@ -92,6 +92,9 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_options_decoders[] = 
 	{"transport_retry_count", offsetof(struct spdk_bdev_nvme_opts, transport_retry_count), spdk_json_decode_uint32, true},
 	{"bdev_retry_count", offsetof(struct spdk_bdev_nvme_opts, bdev_retry_count), spdk_json_decode_int32, true},
 	{"transport_ack_timeout", offsetof(struct spdk_bdev_nvme_opts, transport_ack_timeout), spdk_json_decode_uint8, true},
+	{"ctrlr_loss_timeout_sec", offsetof(struct spdk_bdev_nvme_opts, ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
+	{"reconnect_delay_sec", offsetof(struct spdk_bdev_nvme_opts, reconnect_delay_sec), spdk_json_decode_uint32, true},
+	{"fast_io_fail_timeout_sec", offsetof(struct spdk_bdev_nvme_opts, fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -324,6 +327,7 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->req.drv_opts, sizeof(ctx->req.drv_opts));
+	bdev_nvme_get_default_ctrlr_opts(&ctx->req.bdev_opts);
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_attach_controller_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_attach_controller_decoders),

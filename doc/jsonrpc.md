@@ -2888,6 +2888,9 @@ Example response:
 Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized
 or any bdev NVMe has been created.
 
+Parameters, ctrlr_loss_timeout_sec, reconnect_delay_sec, and fast_io_fail_timeout_sec, are for I/O error resiliency.
+They can be overridden if they are given by the RPC bdev_nvme_attach_controller.
+
 #### Parameters
 
 Name                       | Optional | Type        | Description
@@ -2908,6 +2911,9 @@ delay_cmd_submit           | Optional | boolean     | Enable delaying NVMe comma
 transport_retry_count      | Optional | number      | The number of attempts per I/O in the transport layer before an I/O fails.
 bdev_retry_count           | Optional | number      | The number of attempts per I/O in the bdev layer before an I/O fails. -1 means infinite retries.
 transport_ack_timeout      | Optional | number      | Time to wait ack until packet retransmission. RDMA specific. Range 0-31 where 0 is driver-specific default value.
+ctrlr_loss_timeout_sec     | Optional | number      | Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+reconnect_delay_sec        | Optional | number      | Time to delay a reconnect trial. 0 means no reconnect.
+fast_io_fail_timeout_sec   | Optional | number      | Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
 
 #### Example
 

@@ -139,6 +139,9 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.delay_cmd_submit = SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT,
 	.bdev_retry_count = 3,
 	.transport_ack_timeout = 0,
+	.ctrlr_loss_timeout_sec = 0,
+	.reconnect_delay_sec = 0,
+	.fast_io_fail_timeout_sec = 0,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -3474,6 +3477,15 @@ err:
 	return rc;
 }
 
+void
+bdev_nvme_get_default_ctrlr_opts(struct nvme_ctrlr_opts *opts)
+{
+	opts->prchk_flags = 0;
+	opts->ctrlr_loss_timeout_sec = g_opts.ctrlr_loss_timeout_sec;
+	opts->reconnect_delay_sec = g_opts.reconnect_delay_sec;
+	opts->fast_io_fail_timeout_sec = g_opts.fast_io_fail_timeout_sec;
+}
+
 static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *drv_opts)
@@ -3587,6 +3599,10 @@ bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
 	*opts = g_opts;
 }
 
+static bool bdev_nvme_check_multipath_params(int32_t ctrlr_loss_timeout_sec,
+		uint32_t reconnect_delay_sec,
+		uint32_t fast_io_fail_timeout_sec);
+
 static int
 bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 {
@@ -3598,6 +3614,12 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 
 	if (opts->bdev_retry_count < -1) {
 		SPDK_WARNLOG("Invalid option: bdev_retry_count can't be less than -1.\n");
+		return -EINVAL;
+	}
+
+	if (!bdev_nvme_check_multipath_params(opts->ctrlr_loss_timeout_sec,
+					      opts->reconnect_delay_sec,
+					      opts->fast_io_fail_timeout_sec)) {
 		return -EINVAL;
 	}
 
@@ -3979,6 +4001,8 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	if (bdev_opts) {
 		memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
+	} else {
+		bdev_nvme_get_default_ctrlr_opts(&ctx->bdev_opts);
 	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
@@ -5678,6 +5702,9 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "delay_cmd_submit", g_opts.delay_cmd_submit);
 	spdk_json_write_named_int32(w, "bdev_retry_count", g_opts.bdev_retry_count);
 	spdk_json_write_named_uint8(w, "transport_ack_timeout", g_opts.transport_ack_timeout);
+	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", g_opts.ctrlr_loss_timeout_sec);
+	spdk_json_write_named_uint32(w, "reconnect_delay_sec", g_opts.reconnect_delay_sec);
+	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec", g_opts.fast_io_fail_timeout_sec);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

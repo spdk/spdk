@@ -251,12 +251,17 @@ struct spdk_bdev_nvme_opts {
 	/* The number of attempts per I/O in the bdev layer before an I/O fails. */
 	int32_t bdev_retry_count;
 	uint8_t transport_ack_timeout;
+	int32_t ctrlr_loss_timeout_sec;
+	uint32_t reconnect_delay_sec;
+	uint32_t fast_io_fail_timeout_sec;
 };
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
 void bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
+
+void bdev_nvme_get_default_ctrlr_opts(struct nvme_ctrlr_opts *opts);
 
 int bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		     const char *base_name,

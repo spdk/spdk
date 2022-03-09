@@ -443,7 +443,8 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           low_priority_weight=None, medium_priority_weight=None, high_priority_weight=None,
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None,
                           delay_cmd_submit=None, transport_retry_count=None, bdev_retry_count=None,
-                          transport_ack_timeout=None):
+                          transport_ack_timeout=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
+                          fast_io_fail_timeout_sec=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -464,6 +465,22 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         bdev_retry_count: The number of attempts per I/O in the bdev layer when an I/O fails. -1 means infinite retries. (optional)
         transport_ack_timeout: Time to wait ack until packet retransmission. RDMA specific.
         Range 0-31 where 0 is driver-specific default value (optional)
+        ctrlr_loss_timeout_sec: Time to wait until ctrlr is reconnected before deleting ctrlr.
+        -1 means infinite reconnect retries. 0 means no reconnect retry.
+        If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+        If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.
+        This can be overridden by bdev_nvme_attach_controller. (optional)
+        reconnect_delay_sec: Time to delay a reconnect retry.
+        If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+        If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+        If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_sec has to be non-zero and less than ctrlr_loss_timeout_sec.
+        This can be overridden by bdev_nvme_attach_controller. (optional)
+        fail_io_fast_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+        0 means no such timeout.
+        If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
+        ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
+        This can be overridden by bdev_nvme_attach_controller. (optional)
+
     """
     params = {}
 
@@ -515,6 +532,15 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
 
     if transport_ack_timeout is not None:
         params['transport_ack_timeout'] = transport_ack_timeout
+
+    if ctrlr_loss_timeout_sec is not None:
+        params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
+
+    if reconnect_delay_sec is not None:
+        params['reconnect_delay_sec'] = reconnect_delay_sec
+
+    if fast_io_fail_timeout_sec is not None:
+        params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
 
     return client.call('bdev_nvme_set_options', params)
 
