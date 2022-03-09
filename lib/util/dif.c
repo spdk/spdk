@@ -143,6 +143,22 @@ _dif_sgl_is_bytes_multiple(struct _dif_sgl *s, uint32_t bytes)
 	return true;
 }
 
+static bool
+_dif_sgl_is_valid_block_aligned(struct _dif_sgl *s, uint32_t num_blocks, uint32_t block_size)
+{
+	uint32_t count = 0;
+	int i;
+
+	for (i = 0; i < s->iovcnt; i++) {
+		if (s->iov[i].iov_len % block_size) {
+			return false;
+		}
+		count += s->iov[i].iov_len / block_size;
+	}
+
+	return count >= num_blocks;
+}
+
 /* This function must be used before starting iteration. */
 static bool
 _dif_sgl_is_valid(struct _dif_sgl *s, uint32_t bytes)
@@ -880,20 +896,25 @@ dif_generate_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 int
-spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
-		       uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
+		       int bounce_iovcnt, uint32_t num_blocks,
+		       const struct spdk_dif_ctx *ctx)
 {
 	struct _dif_sgl src_sgl, dst_sgl;
 	uint32_t data_block_size;
 
 	_dif_sgl_init(&src_sgl, iovs, iovcnt);
-	_dif_sgl_init(&dst_sgl, bounce_iov, 1);
+	_dif_sgl_init(&dst_sgl, bounce_iovs, bounce_iovcnt);
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	if (!_dif_sgl_is_valid(&src_sgl, data_block_size * num_blocks) ||
-	    !_dif_sgl_is_valid(&dst_sgl, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&src_sgl, data_block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec arrays are not valid.\n");
+		return -EINVAL;
+	}
+
+	if (!_dif_sgl_is_valid_block_aligned(&dst_sgl, num_blocks, ctx->block_size)) {
+		SPDK_ERRLOG("Size of bounce_iovs arrays are not valid or misaligned with block_size.\n");
 		return -EINVAL;
 	}
 
@@ -1013,21 +1034,26 @@ dif_verify_copy_split(struct _dif_sgl *src_sgl, struct _dif_sgl *dst_sgl,
 }
 
 int
-spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
-		     uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iovs,
+		     int bounce_iovcnt, uint32_t num_blocks,
+		     const struct spdk_dif_ctx *ctx,
 		     struct spdk_dif_error *err_blk)
 {
 	struct _dif_sgl src_sgl, dst_sgl;
 	uint32_t data_block_size;
 
-	_dif_sgl_init(&src_sgl, bounce_iov, 1);
+	_dif_sgl_init(&src_sgl, bounce_iovs, bounce_iovcnt);
 	_dif_sgl_init(&dst_sgl, iovs, iovcnt);
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	if (!_dif_sgl_is_valid(&dst_sgl, data_block_size * num_blocks) ||
-	    !_dif_sgl_is_valid(&src_sgl, ctx->block_size * num_blocks)) {
+	if (!_dif_sgl_is_valid(&dst_sgl, data_block_size * num_blocks)) {
 		SPDK_ERRLOG("Size of iovec arrays are not valid\n");
+		return -EINVAL;
+	}
+
+	if (!_dif_sgl_is_valid_block_aligned(&src_sgl, num_blocks, ctx->block_size)) {
+		SPDK_ERRLOG("Size of bounce_iovs arrays are not valid or misaligned with block_size.\n");
 		return -EINVAL;
 	}
 

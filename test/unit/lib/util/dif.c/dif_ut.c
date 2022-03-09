@@ -824,10 +824,10 @@ dif_copy_gen_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov
 			       init_ref_tag, apptag_mask, app_tag, 0, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx);
+	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, 1, num_blocks, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_verify_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx, NULL);
+	rc = spdk_dif_verify_copy(iovs, iovcnt, bounce_iov, 1, num_blocks, &ctx, NULL);
 	CU_ASSERT(rc == 0);
 
 	rc = ut_data_pattern_verify(iovs, iovcnt, block_size - md_size, 0, num_blocks);
@@ -995,13 +995,13 @@ _dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *
 			       88, 0xFFFF, 0x88, 0, GUARD_SEED);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
-	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx);
+	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, 1, num_blocks, &ctx);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_inject_error(bounce_iov, 1, num_blocks, &ctx, inject_flags, &inject_offset);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_verify_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx, &err_blk);
+	rc = spdk_dif_verify_copy(iovs, iovcnt, bounce_iov, 1, num_blocks, &ctx, &err_blk);
 	CU_ASSERT(rc != 0);
 	if (inject_flags == SPDK_DIF_DATA_ERROR) {
 		CU_ASSERT(SPDK_DIF_GUARD_ERROR == err_blk.err_type);
