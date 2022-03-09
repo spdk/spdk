@@ -133,23 +133,20 @@ static int
 spdk_fio_init_thread(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
+	struct spdk_thread *thread;
 
-	fio_thread = calloc(1, sizeof(*fio_thread));
-	if (!fio_thread) {
-		SPDK_ERRLOG("failed to allocate thread local context\n");
-		return -1;
-	}
-
-	fio_thread->td = td;
-	td->io_ops_data = fio_thread;
-
-	fio_thread->thread = spdk_thread_create("fio_thread", NULL);
-	if (!fio_thread->thread) {
-		free(fio_thread);
+	thread = spdk_thread_create("fio_thread", NULL);
+	if (!thread) {
 		SPDK_ERRLOG("failed to allocate thread\n");
 		return -1;
 	}
-	spdk_set_thread(fio_thread->thread);
+
+	fio_thread = spdk_thread_get_ctx(thread);
+	fio_thread->td = td;
+	fio_thread->thread = thread;
+	td->io_ops_data = fio_thread;
+
+	spdk_set_thread(thread);
 
 	fio_thread->iocq_size = td->o.iodepth;
 	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
@@ -302,7 +299,7 @@ spdk_init_thread_poll(void *arg)
 #endif
 	}
 
-	spdk_thread_lib_init(NULL, 0);
+	spdk_thread_lib_init(NULL, sizeof(struct spdk_fio_thread));
 
 	/* Create an SPDK thread temporarily */
 	rc = spdk_fio_init_thread(&td);
@@ -387,9 +384,8 @@ spdk_init_thread_poll(void *arg)
 		TAILQ_FOREACH_SAFE(thread, &g_threads, link, tmp) {
 			if (spdk_thread_is_exited(thread->thread)) {
 				TAILQ_REMOVE(&g_threads, thread, link);
-				spdk_thread_destroy(thread->thread);
 				free(thread->iocq);
-				free(thread);
+				spdk_thread_destroy(thread->thread);
 			} else {
 				spdk_thread_poll(thread->thread, 0, 0);
 			}
