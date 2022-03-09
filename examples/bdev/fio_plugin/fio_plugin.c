@@ -359,7 +359,13 @@ spdk_init_thread_poll(void *arg)
 		pthread_mutex_lock(&g_init_mtx);
 		if (!TAILQ_EMPTY(&g_threads)) {
 			TAILQ_FOREACH_SAFE(thread, &g_threads, link, tmp) {
-				spdk_fio_poll_thread(thread);
+				if (spdk_thread_is_exited(thread->thread)) {
+					TAILQ_REMOVE(&g_threads, thread, link);
+					free(thread->iocq);
+					spdk_thread_destroy(thread->thread);
+				} else {
+					spdk_fio_poll_thread(thread);
+				}
 			}
 
 			/* If there are exiting threads to poll, don't sleep. */
