@@ -4105,7 +4105,7 @@ nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair->current_recv_depth++;
 			rdma_recv->receive_tsc = poll_tsc;
 			rpoller->stat.requests++;
-			STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
+			STAILQ_INSERT_HEAD(&rqpair->resources->incoming_queue, rdma_recv, link);
 			break;
 		case RDMA_WR_TYPE_DATA:
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
