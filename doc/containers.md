@@ -7,6 +7,7 @@ here.
 ## In this document {#containers_toc}
 
 * @ref spdk_in_docker
+* @ref spdk_docker_suite
 * @ref kata_containers_with_spdk_vhost
 
 ## Containerizing an SPDK Application for Docker {#spdk_in_docker}
@@ -76,6 +77,14 @@ Initialization complete.
 INFO: using host memory buffer for IO
 Hello world!
 ~~~
+
+## SPDK Docker suite {#spdk_docker_suite}
+
+When considering how to generate SPDK docker container images formally,
+deploy SPDK containers correctly, interact with SPDK container instances,
+and orchestrate SPDK container instances, you can get practiced and inspired from
+this SPDK docker-compose example:
+[SPDK Docker suite](https://github.com/spdk/spdk/blob/master/docker/README.md).
 
 ## Using SPDK vhost target to provide volume service to Kata Containers and Docker {#kata_containers_with_spdk_vhost}
 
