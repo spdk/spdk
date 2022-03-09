@@ -1096,6 +1096,29 @@ _bdev_nvme_clear_io_path_cache(struct nvme_qpair *nvme_qpair)
 	}
 }
 
+static void
+bdev_nvme_clear_io_path_cache(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(_ch);
+
+	assert(ctrlr_ch->qpair != NULL);
+
+	_bdev_nvme_clear_io_path_cache(ctrlr_ch->qpair);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdev_nvme_clear_io_path_caches(struct nvme_ctrlr *nvme_ctrlr,
+			       spdk_channel_for_each_cpl cpl)
+{
+	spdk_for_each_channel(nvme_ctrlr,
+			      bdev_nvme_clear_io_path_cache,
+			      NULL,
+			      cpl);
+}
+
 static struct nvme_qpair *
 nvme_poll_group_get_qpair(struct nvme_poll_group *group, struct spdk_nvme_qpair *qpair)
 {
@@ -3242,20 +3265,7 @@ nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 }
 
 static void
-bdev_nvme_clear_io_path_cache(struct spdk_io_channel_iter *i)
-{
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
-	struct nvme_ctrlr_channel *ctrlr_ch = spdk_io_channel_get_ctx(_ch);
-
-	assert(ctrlr_ch->qpair != NULL);
-
-	_bdev_nvme_clear_io_path_cache(ctrlr_ch->qpair);
-
-	spdk_for_each_channel_continue(i, 0);
-}
-
-static void
-bdev_nvme_clear_io_path_cache_done(struct spdk_io_channel_iter *i, int status)
+_nvme_ctrlr_read_ana_log_page_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
@@ -3302,10 +3312,7 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 		bdev_nvme_disable_read_ana_log_page(nvme_ctrlr);
 	}
 
-	spdk_for_each_channel(nvme_ctrlr,
-			      bdev_nvme_clear_io_path_cache,
-			      NULL,
-			      bdev_nvme_clear_io_path_cache_done);
+	bdev_nvme_clear_io_path_caches(nvme_ctrlr, _nvme_ctrlr_read_ana_log_page_done);
 }
 
 static int
