@@ -129,13 +129,36 @@ static TAILQ_HEAD(, spdk_fio_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_thread
 /* Default polling timeout (ns) */
 #define SPDK_FIO_POLLING_TIMEOUT 1000000000ULL
 
+static __thread bool g_internal_thread = false;
+
+static int
+spdk_fio_schedule_thread(struct spdk_thread *thread)
+{
+	struct spdk_fio_thread *fio_thread;
+
+	if (g_internal_thread) {
+		/* Do nothing. */
+		return 0;
+	}
+
+	fio_thread = spdk_thread_get_ctx(thread);
+
+	pthread_mutex_lock(&g_init_mtx);
+	TAILQ_INSERT_TAIL(&g_threads, fio_thread, link);
+	pthread_mutex_unlock(&g_init_mtx);
+
+	return 0;
+}
+
 static int
 spdk_fio_init_thread(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
 	struct spdk_thread *thread;
 
+	g_internal_thread = true;
 	thread = spdk_thread_create("fio_thread", NULL);
+	g_internal_thread = false;
 	if (!thread) {
 		SPDK_ERRLOG("failed to allocate thread\n");
 		return -1;
@@ -299,7 +322,7 @@ spdk_init_thread_poll(void *arg)
 #endif
 	}
 
-	spdk_thread_lib_init(NULL, sizeof(struct spdk_fio_thread));
+	spdk_thread_lib_init(spdk_fio_schedule_thread, sizeof(struct spdk_fio_thread));
 
 	/* Create an SPDK thread temporarily */
 	rc = spdk_fio_init_thread(&td);
