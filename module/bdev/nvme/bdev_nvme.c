@@ -735,7 +735,15 @@ nvme_ns_is_accessible(struct nvme_ns *nvme_ns)
 static inline bool
 nvme_io_path_is_connected(struct nvme_io_path *io_path)
 {
-	return io_path->qpair->qpair != NULL;
+	if (spdk_unlikely(io_path->qpair->qpair == NULL)) {
+		return false;
+	}
+
+	if (spdk_unlikely(io_path->qpair->ctrlr_ch->reset_iter != NULL)) {
+		return false;
+	}
+
+	return true;
 }
 
 static inline bool
@@ -1104,6 +1112,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 {
 	struct nvme_poll_group *group = poll_group_ctx;
 	struct nvme_qpair *nvme_qpair;
+	struct nvme_ctrlr_channel *ctrlr_ch;
 
 	SPDK_NOTICELOG("qpair %p is disconnected, free the qpair and reset controller.\n", qpair);
 
@@ -1119,8 +1128,18 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 
 		_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
-		if (nvme_qpair->ctrlr_ch != NULL) {
-			bdev_nvme_reset(nvme_qpair->ctrlr);
+		ctrlr_ch = nvme_qpair->ctrlr_ch;
+
+		if (ctrlr_ch != NULL) {
+			if (ctrlr_ch->reset_iter != NULL) {
+				/* If we are already in a full reset sequence, we do not have
+				 * to restart it. Just move to the next ctrlr_channel.
+				 */
+				spdk_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
+				ctrlr_ch->reset_iter = NULL;
+			} else {
+				bdev_nvme_reset(nvme_qpair->ctrlr);
+			}
 		} else {
 			/* In this case, ctrlr_channel is already deleted. */
 			nvme_qpair_delete(nvme_qpair);
@@ -1523,11 +1542,16 @@ bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 	_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
 	if (nvme_qpair->qpair != NULL) {
-		spdk_nvme_ctrlr_free_io_qpair(nvme_qpair->qpair);
-		nvme_qpair->qpair = NULL;
-	}
+		spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
 
-	spdk_for_each_channel_continue(i, 0);
+		/* The current full reset sequence will move to the next
+		 * ctrlr_channel after the qpair is actually disconnected.
+		 */
+		assert(ctrlr_ch->reset_iter == NULL);
+		ctrlr_ch->reset_iter = i;
+	} else {
+		spdk_for_each_channel_continue(i, 0);
+	}
 }
 
 static void
@@ -2161,14 +2185,25 @@ bdev_nvme_destroy_ctrlr_channel_cb(void *io_device, void *ctx_buf)
 	_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
 	if (nvme_qpair->qpair != NULL) {
-		spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
+		if (ctrlr_ch->reset_iter == NULL) {
+			spdk_nvme_ctrlr_disconnect_io_qpair(nvme_qpair->qpair);
+		} else {
+			/* Skip current ctrlr_channel in a full reset sequence because
+			 * it is being deleted now. The qpair is already being disconnected.
+			 * We do not have to restart disconnecting it.
+			 */
+			spdk_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
+		}
 
 		/* We cannot release a reference to the poll group now.
 		 * The qpair may be disconnected asynchronously later.
 		 * We need to poll it until it is actually disconnected.
+		 * Just detach the qpair from the deleting ctrlr_channel.
 		 */
 		nvme_qpair->ctrlr_ch = NULL;
 	} else {
+		assert(ctrlr_ch->reset_iter == NULL);
+
 		nvme_qpair_delete(nvme_qpair);
 	}
 }

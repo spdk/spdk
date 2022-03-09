@@ -186,6 +186,8 @@ struct nvme_ctrlr_channel {
 	struct nvme_ctrlr		*ctrlr;
 	struct nvme_qpair		*qpair;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
+
+	struct spdk_io_channel_iter	*reset_iter;
 };
 
 struct nvme_io_path {

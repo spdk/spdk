@@ -1341,11 +1341,13 @@ test_reset_ctrlr(void)
 	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr_ch2->qpair->qpair != NULL);
 
+	poll_thread_times(0, 1);
 	poll_thread_times(1, 1);
 	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr.is_failed == true);
 
+	poll_thread_times(1, 1);
 	poll_thread_times(0, 1);
 	CU_ASSERT(ctrlr.is_failed == false);
 
@@ -2972,17 +2974,17 @@ test_reconnect_qpair(void)
 	nvme_qpair2->qpair->is_failed = true;
 	ctrlr->is_failed = true;
 
-	poll_thread_times(1, 2);
+	poll_thread_times(1, 3);
 	CU_ASSERT(nvme_qpair1->qpair != NULL);
 	CU_ASSERT(nvme_qpair2->qpair == NULL);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 
-	poll_thread_times(0, 2);
-	poll_thread_times(1, 1);
+	poll_thread_times(0, 3);
 	CU_ASSERT(nvme_qpair1->qpair == NULL);
 	CU_ASSERT(nvme_qpair2->qpair == NULL);
 	CU_ASSERT(ctrlr->is_failed == true);
 
+	poll_thread_times(1, 2);
 	poll_thread_times(0, 1);
 	CU_ASSERT(ctrlr->is_failed == false);
 
@@ -3006,12 +3008,12 @@ test_reconnect_qpair(void)
 	ctrlr->is_failed = true;
 	ctrlr->fail_reset = true;
 
-	poll_thread_times(1, 2);
+	poll_thread_times(1, 3);
 	CU_ASSERT(nvme_qpair1->qpair != NULL);
 	CU_ASSERT(nvme_qpair2->qpair == NULL);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 
-	poll_thread_times(0, 2);
+	poll_thread_times(0, 3);
 	poll_thread_times(1, 1);
 	CU_ASSERT(nvme_qpair1->qpair == NULL);
 	CU_ASSERT(nvme_qpair2->qpair == NULL);
@@ -3806,11 +3808,11 @@ test_reset_bdev_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr1->resetting == true);
 	CU_ASSERT(nvme_ctrlr1->reset_cb_arg == first_bio);
 
-	poll_thread_times(0, 2);
+	poll_thread_times(0, 3);
 	CU_ASSERT(io_path11->qpair->qpair == NULL);
 	CU_ASSERT(io_path21->qpair->qpair != NULL);
 
-	poll_thread_times(1, 1);
+	poll_thread_times(1, 2);
 	CU_ASSERT(io_path11->qpair->qpair == NULL);
 	CU_ASSERT(io_path21->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr1->is_failed == true);
@@ -3838,11 +3840,11 @@ test_reset_bdev_ctrlr(void)
 	CU_ASSERT(first_bio->io_path == io_path12);
 	CU_ASSERT(nvme_ctrlr2->resetting == true);
 
-	poll_thread_times(0, 2);
+	poll_thread_times(0, 3);
 	CU_ASSERT(io_path12->qpair->qpair == NULL);
 	CU_ASSERT(io_path22->qpair->qpair != NULL);
 
-	poll_thread_times(1, 1);
+	poll_thread_times(1, 2);
 	CU_ASSERT(io_path12->qpair->qpair == NULL);
 	CU_ASSERT(io_path22->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr2->is_failed == true);
@@ -3939,7 +3941,9 @@ test_find_io_path(void)
 	struct nvme_bdev_channel nbdev_ch = {
 		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
 	};
-	struct nvme_qpair nvme_qpair1 = {}, nvme_qpair2 = {};
+	struct nvme_ctrlr_channel ctrlr_ch1 = {}, ctrlr_ch2 = {};
+	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, };
+	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, };
 	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {};
 	struct nvme_io_path io_path1 = { .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
 	struct nvme_io_path io_path2 = { .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
