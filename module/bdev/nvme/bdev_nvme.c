@@ -4117,8 +4117,8 @@ bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id)
 	return rc;
 }
 
-#define DISCOVERY_DEBUGLOG(ctx, format, ...) \
-	SPDK_DEBUGLOG(bdev_nvme, "Discovery[%s:%s] " format, ctx->trid.traddr, ctx->trid.trsvcid, ##__VA_ARGS__);
+#define DISCOVERY_INFOLOG(ctx, format, ...) \
+	SPDK_INFOLOG(bdev_nvme, "Discovery[%s:%s] " format, ctx->trid.traddr, ctx->trid.trsvcid, ##__VA_ARGS__);
 
 #define DISCOVERY_ERRLOG(ctx, format, ...) \
 	SPDK_ERRLOG("Discovery[%s:%s] " format, ctx->trid.traddr, ctx->trid.trsvcid, ##__VA_ARGS__);
@@ -4244,8 +4244,8 @@ discovery_remove_controllers(struct discovery_ctx *ctx)
 		for (i = 0; i < numrec; i++) {
 			new_entry = &log_page->entries[i];
 			if (!memcmp(old_entry, new_entry, sizeof(*old_entry))) {
-				DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s found again\n",
-						   old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
+				DISCOVERY_INFOLOG(ctx, "NVM %s:%s:%s found again\n",
+						  old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
 				found = true;
 				break;
 			}
@@ -4253,8 +4253,8 @@ discovery_remove_controllers(struct discovery_ctx *ctx)
 		if (!found) {
 			struct nvme_path_id path = {};
 
-			DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s not found\n",
-					   old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
+			DISCOVERY_INFOLOG(ctx, "NVM %s:%s:%s not found\n",
+					  old_trid.subnqn, old_trid.traddr, old_trid.trsvcid);
 
 			path.trid = entry_ctx->trid;
 			bdev_nvme_delete(entry_ctx->name, &path);
@@ -4273,7 +4273,7 @@ discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 	struct discovery_entry_ctx *entry_ctx = cb_ctx;
 	struct discovery_ctx *ctx = entry_ctx->ctx;;
 
-	DISCOVERY_DEBUGLOG(ctx, "attach %s done\n", entry_ctx->name);
+	DISCOVERY_INFOLOG(ctx, "attach %s done\n", entry_ctx->name);
 	ctx->attach_in_progress--;
 	if (ctx->attach_in_progress == 0) {
 		discovery_remove_controllers(ctx);
@@ -4350,14 +4350,14 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			build_trid_from_log_page_entry(&new_ctx->trid, new_entry);
 			if (subnqn_ctx) {
 				snprintf(new_ctx->name, sizeof(new_ctx->name), "%s", subnqn_ctx->name);
-				DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s new path for %s\n",
-						   new_ctx->trid.subnqn, new_ctx->trid.traddr, new_ctx->trid.trsvcid,
-						   new_ctx->name);
+				DISCOVERY_INFOLOG(ctx, "NVM %s:%s:%s new path for %s\n",
+						  new_ctx->trid.subnqn, new_ctx->trid.traddr, new_ctx->trid.trsvcid,
+						  new_ctx->name);
 			} else {
 				snprintf(new_ctx->name, sizeof(new_ctx->name), "%s%d", ctx->name, ctx->index++);
-				DISCOVERY_DEBUGLOG(ctx, "NVM %s:%s:%s new subsystem %s\n",
-						   new_ctx->trid.subnqn, new_ctx->trid.traddr, new_ctx->trid.trsvcid,
-						   new_ctx->name);
+				DISCOVERY_INFOLOG(ctx, "NVM %s:%s:%s new subsystem %s\n",
+						  new_ctx->trid.subnqn, new_ctx->trid.traddr, new_ctx->trid.trsvcid,
+						  new_ctx->name);
 			}
 			spdk_nvme_ctrlr_get_default_ctrlr_opts(&new_ctx->drv_opts, sizeof(new_ctx->drv_opts));
 			snprintf(new_ctx->drv_opts.hostnqn, sizeof(new_ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
@@ -4389,7 +4389,7 @@ get_discovery_log_page(struct discovery_ctx *ctx)
 	if (rc != 0) {
 		DISCOVERY_ERRLOG(ctx, "could not get discovery log page\n");
 	}
-	DISCOVERY_DEBUGLOG(ctx, "sent discovery log page command\n");
+	DISCOVERY_INFOLOG(ctx, "sent discovery log page command\n");
 }
 
 static void
@@ -4408,7 +4408,7 @@ discovery_aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
-	DISCOVERY_DEBUGLOG(ctx, "got aer\n");
+	DISCOVERY_INFOLOG(ctx, "got aer\n");
 	if (ctx->in_progress) {
 		ctx->pending = true;
 		return;
@@ -4422,7 +4422,7 @@ start_discovery_done(void *cb_ctx)
 {
 	struct discovery_ctx *ctx = cb_ctx;
 
-	DISCOVERY_DEBUGLOG(ctx, "start discovery done\n");
+	DISCOVERY_INFOLOG(ctx, "start discovery done\n");
 	ctx->start_cb_fn(ctx->cb_ctx, ctx->rc);
 	if (ctx->rc != 0) {
 		DISCOVERY_ERRLOG(ctx, "could not connect to discovery ctrlr\n");
@@ -4440,7 +4440,7 @@ discovery_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	ctx = SPDK_CONTAINEROF(user_opts, struct discovery_ctx, drv_opts);
 
-	DISCOVERY_DEBUGLOG(ctx, "discovery ctrlr attached\n");
+	DISCOVERY_INFOLOG(ctx, "discovery ctrlr attached\n");
 	ctx->probe_ctx = NULL;
 	ctx->ctrlr = ctrlr;
 	spdk_nvme_ctrlr_register_aer_callback(ctx->ctrlr, discovery_aer_cb, ctx);
@@ -4476,7 +4476,7 @@ discovery_poller(void *arg)
 	} else if (ctx->probe_ctx) {
 		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
 		if (rc != -EAGAIN) {
-			DISCOVERY_DEBUGLOG(ctx, "discovery ctrlr connected\n");
+			DISCOVERY_INFOLOG(ctx, "discovery ctrlr connected\n");
 			ctx->rc = rc;
 			spdk_thread_send_msg(ctx->calling_thread, start_discovery_done, ctx);
 			if (rc == 0) {

@@ -46,6 +46,7 @@ waitforlisten $hostpid $HOST_SOCK
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; kill $hostpid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 
+$rpc_py -s $HOST_SOCK log_set_flag bdev_nvme
 $rpc_py -s $HOST_SOCK bdev_nvme_start_discovery -b nvme -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $DISCOVERY_PORT -f ipv4 -q $HOST_NQN
 
