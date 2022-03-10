@@ -1693,11 +1693,17 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 
 	/* Error cleanup paths. */
 error_cipher:
-	free(name->key2);
+	if (name->key2) {
+		memset(name->key2, 0, strlen(name->key2));
+		free(name->key2);
+	}
 error_alloc_key2:
 error_invalid_key2:
 error_invalid_key:
-	free(name->key);
+	if (name->key) {
+		memset(name->key, 0, strlen(name->key));
+		free(name->key);
+	}
 error_alloc_key:
 error_invalid_pmd:
 	free(name->drv_name);
@@ -1759,10 +1765,14 @@ vbdev_crypto_finish(void)
 	while ((name = TAILQ_FIRST(&g_bdev_names))) {
 		TAILQ_REMOVE(&g_bdev_names, name, link);
 		free(name->drv_name);
+		memset(name->key, 0, strlen(name->key));
 		free(name->key);
 		free(name->bdev_name);
 		free(name->vbdev_name);
-		free(name->key2);
+		if (name->key2) {
+			memset(name->key2, 0, strlen(name->key2));
+			free(name->key2);
+		}
 		free(name);
 	}
 
@@ -2119,8 +2129,12 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 			free(name->bdev_name);
 			free(name->vbdev_name);
 			free(name->drv_name);
+			memset(name->key, 0, strlen(name->key));
 			free(name->key);
-			free(name->key2);
+			if (name->key2) {
+				memset(name->key2, 0, strlen(name->key2));
+				free(name->key2);
+			}
 			free(name);
 			break;
 		}
