@@ -128,12 +128,21 @@ nvmf_generate_discovery_log(struct spdk_nvmf_tgt *tgt, const char *hostnqn, size
 
 		for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
 		     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
-			if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY &&
-			    !spdk_nvme_transport_id_compare(listener->trid, cmd_source_trid)) {
+			if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+				struct spdk_nvme_transport_id source_trid = *cmd_source_trid;
+				struct spdk_nvme_transport_id listener_trid = *listener->trid;
+
 				/* Do not generate an entry for the transport ID for the listener
-				 * entry associated with the controller that generated this command.
+				 * entry associated with the discovery controller that generated
+				 * this command.  We compare a copy of the trids, since the trids
+				 * here don't contain the subnqn, and the transport_id_compare()
+				 * function will compare the subnqns.
 				 */
-				continue;
+				source_trid.subnqn[0] = '\0';
+				listener_trid.subnqn[0] = '\0';
+				if (!spdk_nvme_transport_id_compare(&listener_trid, &source_trid)) {
+					continue;
+				}
 			}
 
 			if ((tgt->discovery_filter & SPDK_NVMF_TGT_DISCOVERY_MATCH_TRANSPORT_TYPE) != 0 &&
