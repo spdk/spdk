@@ -136,7 +136,7 @@ uint8_t g_number_of_claimed_volumes = 0;
 #define CRYPTO_QP_DESCRIPTORS	2048
 
 /* Specific to AES_CBC. */
-#define AES_CBC_IV_LENGTH	16
+#define IV_LENGTH		16
 #define AES_CBC_KEY_LENGTH	16
 #define AES_XTS_KEY_LENGTH	16	/* XTS uses 2 keys, each of this size. */
 #define AESNI_MB_NUM_QP		64
@@ -144,7 +144,7 @@ uint8_t g_number_of_claimed_volumes = 0;
 /* Common for suported devices. */
 #define IV_OFFSET            (sizeof(struct rte_crypto_op) + \
 				sizeof(struct rte_crypto_sym_op))
-#define QUEUED_OP_OFFSET (IV_OFFSET + AES_CBC_IV_LENGTH)
+#define QUEUED_OP_OFFSET (IV_OFFSET + IV_LENGTH)
 
 static void _complete_internal_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
@@ -510,7 +510,7 @@ vbdev_crypto_init_crypto_drivers(void)
 			 RTE_CRYPTO_OP_TYPE_SYMMETRIC,
 			 NUM_MBUFS,
 			 POOL_CACHE_SIZE,
-			 AES_CBC_IV_LENGTH + QUEUED_OP_LENGTH,
+			 IV_LENGTH + QUEUED_OP_LENGTH,
 			 rte_socket_id());
 
 	if (g_crypto_op_mp == NULL) {
@@ -966,7 +966,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		/* Set the IV - we use the LBA of the crypto_op */
 		iv_ptr = rte_crypto_op_ctod_offset(crypto_ops[crypto_index], uint8_t *,
 						   IV_OFFSET);
-		memset(iv_ptr, 0, AES_CBC_IV_LENGTH);
+		memset(iv_ptr, 0, IV_LENGTH);
 		op_block_offset = bdev_io->u.bdev.offset_blocks + crypto_index;
 		rte_memcpy(iv_ptr, &op_block_offset, sizeof(uint64_t));
 
@@ -2023,7 +2023,7 @@ vbdev_crypto_claim(const char *bdev_name)
 			vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_XTS;
 			vbdev->cipher_xform.cipher.key.length = AES_XTS_KEY_LENGTH * 2;
 		}
-		vbdev->cipher_xform.cipher.iv.length = AES_CBC_IV_LENGTH;
+		vbdev->cipher_xform.cipher.iv.length = IV_LENGTH;
 
 		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_ENCRYPT;
 		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_encrypt,
