@@ -181,6 +181,7 @@ struct vbdev_crypto {
 	uint8_t				*xts_key;		/* key + key 2 */
 	char				*drv_name;		/* name of the crypto device driver */
 	char				*cipher;		/* cipher used */
+	uint32_t			qp_desc_nr;		/* number of qp descriptors */
 	struct rte_cryptodev_sym_session *session_encrypt;	/* encryption session for this bdev */
 	struct rte_cryptodev_sym_session *session_decrypt;	/* decryption session for this bdev */
 	struct rte_crypto_sym_xform	cipher_xform;		/* crypto control struct for this bdev */
@@ -250,6 +251,7 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 	uint8_t j, cdev_id, cdrv_id;
 	struct device_qp *dev_qp;
 	struct device_qp *tmp_qp;
+	uint32_t qp_desc_nr;
 	int rc;
 	TAILQ_HEAD(device_qps, device_qp) *dev_qp_head;
 
@@ -295,8 +297,24 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 		goto err;
 	}
 
+	/* Select the right device/qp list based on driver name
+	 * or error if it does not exist.
+	 */
+	if (strcmp(device->cdev_info.driver_name, QAT) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_qat;
+		qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
+	} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
+		dev_qp_head = (struct device_qps *)&g_device_qp_aesni_mb;
+		qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
+	} else {
+		SPDK_ERRLOG("Failed to start device %u. Invalid driver name \"%s\"\n",
+			    cdev_id, device->cdev_info.driver_name);
+		rc = -EINVAL;
+		goto err_qp_setup;
+	}
+
 	struct rte_cryptodev_qp_conf qp_conf = {
-		.nb_descriptors = CRYPTO_QP_DESCRIPTORS,
+		.nb_descriptors = qp_desc_nr,
 		.mp_session = g_session_mp,
 		.mp_session_private = g_session_mp_priv,
 	};
@@ -322,20 +340,6 @@ create_vbdev_dev(uint8_t index, uint16_t num_lcores)
 			    cdev_id, rc);
 		rc = -EINVAL;
 		goto err_dev_start;
-	}
-
-	/* Select the right device/qp list based on driver name
-	 * or error if it does not exist.
-	 */
-	if (strcmp(device->cdev_info.driver_name, QAT) == 0) {
-		dev_qp_head = (struct device_qps *)&g_device_qp_qat;
-	} else if (strcmp(device->cdev_info.driver_name, AESNI_MB) == 0) {
-		dev_qp_head = (struct device_qps *)&g_device_qp_aesni_mb;
-	} else {
-		SPDK_ERRLOG("Failed to start device %u. Invalid driver name \"%s\"\n",
-			    cdev_id, device->cdev_info.driver_name);
-		rc = -EINVAL;
-		goto err_invalid_drv_name;
 	}
 
 	/* Build up lists of device/qp combinations per PMD */
@@ -369,7 +373,6 @@ err_qp_alloc:
 		}
 		free(dev_qp);
 	}
-err_invalid_drv_name:
 	rte_cryptodev_stop(cdev_id);
 err_dev_start:
 err_qp_setup:
@@ -1044,7 +1047,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	/* Enqueue everything we've got but limit by the max number of descriptors we
 	 * configured the crypto device for.
 	 */
-	burst = spdk_min(cryop_cnt, CRYPTO_QP_DESCRIPTORS);
+	burst = spdk_min(cryop_cnt, io_ctx->crypto_bdev->qp_desc_nr);
 	num_enqueued_ops = rte_cryptodev_enqueue_burst(cdev_id, crypto_ch->device_qp->qp,
 			   &crypto_ops[0],
 			   burst);
@@ -1933,6 +1936,8 @@ vbdev_crypto_claim(const char *bdev_name)
 
 		bdev = spdk_bdev_desc_get_bdev(vbdev->base_desc);
 		vbdev->base_bdev = bdev;
+
+		vbdev->qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
 
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
 		vbdev->cipher = AES_CBC;

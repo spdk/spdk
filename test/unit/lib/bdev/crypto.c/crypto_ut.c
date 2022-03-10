@@ -408,6 +408,7 @@ test_setup(void)
 	g_dev_qp.device = &g_device;
 	g_io_ctx->crypto_ch = g_crypto_ch;
 	g_io_ctx->crypto_bdev = &g_crypto_bdev;
+	g_io_ctx->crypto_bdev->qp_desc_nr = CRYPTO_QP_DESCRIPTORS;
 	g_crypto_ch->device_qp = &g_dev_qp;
 	TAILQ_INIT(&g_crypto_ch->pending_cry_ios);
 	TAILQ_INIT(&g_crypto_ch->queued_cry_ops);
