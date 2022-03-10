@@ -92,6 +92,7 @@ get_notification_count
 # Discovery hostnqn is added, so now the host should see the subsystem, with a single path for the
 # port of the single listener on the target.
 $rpc_py nvmf_subsystem_add_host ${NQN}0 $HOST_NQN
+sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 [[ "$(get_subsystem_names)" == "nvme0" ]]
 [[ "$(get_bdev_list)" == "nvme0n1" ]]
 [[ "$(get_subsystem_paths nvme0)" == "$NVMF_PORT" ]]
@@ -100,6 +101,7 @@ get_notification_count
 
 # Adding a namespace isn't a discovery function, but do it here anyways just to confirm we see a new bdev.
 $rpc_py nvmf_subsystem_add_ns ${NQN}0 null1
+sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 [[ "$(get_bdev_list)" == "nvme0n1 nvme0n2" ]]
 get_notification_count
 [[ $notification_count == 1 ]]
@@ -107,6 +109,7 @@ get_notification_count
 # Add a second path to the same subsystem.  This shouldn't change the list of subsystems or bdevs, but
 # we should see a second path on the nvme0 subsystem now.
 $rpc_py nvmf_subsystem_add_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
+sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 [[ "$(get_subsystem_names)" == "nvme0" ]]
 [[ "$(get_bdev_list)" == "nvme0n1 nvme0n2" ]]
 [[ "$(get_subsystem_paths nvme0)" == "$NVMF_PORT $NVMF_SECOND_PORT" ]]
@@ -116,6 +119,7 @@ get_notification_count
 # Remove the listener for the first port.  The subsystem and bdevs should stay, but we should see
 # the path to that first port disappear.
 $rpc_py nvmf_subsystem_remove_listener ${NQN}0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 [[ "$(get_subsystem_names)" == "nvme0" ]]
 [[ "$(get_bdev_list)" == "nvme0n1 nvme0n2" ]]
 [[ "$(get_subsystem_paths nvme0)" == "$NVMF_SECOND_PORT" ]]
@@ -123,6 +127,7 @@ get_notification_count
 [[ $notification_count == 0 ]]
 
 $rpc_py -s $HOST_SOCK bdev_nvme_stop_discovery -b nvme
+sleep 1 # Wait a bit to make sure the discovery service has a chance to detect the changes
 [[ "$(get_subsystem_names)" == "" ]]
 [[ "$(get_bdev_list)" == "" ]]
 get_notification_count
