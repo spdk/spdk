@@ -713,6 +713,9 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of a scheduler
 period                  | Optional | number      | Scheduler period
+load_limit              | Optional | number      | Thread load limit in % (dynamic only)
+core_limit              | Optional | number      | Load limit on the core to be considered full (dynamic only)
+core_busy               | Optional | number      | Indicates at what load on core scheduler should move threads to a different core (dynamic only)
 
 #### Response
 

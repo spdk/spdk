@@ -48,10 +48,11 @@ core has to be managed by the administrator.
 ## Scheduler implementations
 
 The scheduler in use may be controlled by JSON-RPC. Please use the
-[framework_set_scheduler](jsonrpc.md/#rpc_framework_set_scheduler) RPC to
-switch between schedulers or change their options.
+[framework_set_scheduler](jsonrpc.html#rpc_framework_set_scheduler) RPC to
+switch between schedulers or change their options. Currently only dynamic
+scheduler supports changing its parameters.
 
-[spdk_top](spdk_top.md#spdk_top) is a useful tool to observe the behavior of
+[spdk_top](spdk_top.html#spdk_top) is a useful tool to observe the behavior of
 schedulers in different scenarios and workloads.
 
 ### static [default]
@@ -65,11 +66,27 @@ the previous behavior of the SPDK event/application framework.
 
 The `dynamic` scheduler is designed for power saving and reduction of CPU
 utilization, especially in cases where workloads show large variations over
-time.
+time. In SPDK thread and core workloads are measured in CPU ticks. Those
+values are then compared with all the ticks since the last check, which allows
+to calculate `busy time`.
+
+`busy time = busy ticks / (busy tick + idle tick) * 100 %`
+
+The thread is considered to be active, if its busy time is over the `load limit`
+parameter.
 
 Active threads are distributed equally among reactors, taking cpu_mask into
 account. All idle threads are moved to the main core. Once an idle thread becomes
-active, it is redistributed again.
+active, it is redistributed again. Dynamic scheduler monitors core workloads and
+redistributes SPDK threads on cores in a way that none of them is over `core limit`.
+In case a core utilization surpasses this threshold, scheduler should move threads
+out of it until this condition no longer applies. Cores might also be in overloaded
+state, which indicates that moving threads out of this core will not decrease its
+utilization under the `core limit` and the threads are unable to process all the I/O
+they are capable of, because they share CPU ticks with other threads. The threshold
+to decide if a core is overloaded is called `core busy`. Note that threads residing
+on an overloaded core will not perform as good as other threads, because the CPU ticks
+intended for them are limited by other threads on the same core.
 
 When a reactor has no scheduled `spdk_thread`s it is switched into interrupt
 mode and stops actively polling. After enough threads become active, the
@@ -80,3 +97,9 @@ not exceed the sum of all idle threads. When no active threads are present on
 the main core, the frequency of that CPU core will decrease as the load
 decreases. All CPU cores corresponding to the other reactors remain at maximum
 frequency.
+
+The dynamic scheduler is currently the only one that allows manual setting of
+its parameters.
+
+Current values of scheduler parameters can be displayed by using
+[framework_get_scheduler](jsonrpc.html#rpc_framework_get_scheduler) RPC.
