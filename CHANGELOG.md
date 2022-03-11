@@ -55,6 +55,16 @@ emitted if no listener was configured for the transport ID of the incoming conne
 
 Added `spdk_thread_exec_msg()` API.
 
+### scheduler
+
+`framework_set_scheduler` can now be called after application initialization.
+Added callbacks to set custom parameters specific for each scheduler implementation
+and `framework_get_scheduler` to retrieve them.
+
+Added `dynamic` scheduler options: load_limit, core_limit, core_busy. Their descriptions
+are available in JSON-RPC document, in section
+[framework_set_scheduler](jsonrpc.html#rpc_framework_set_scheduler).
+
 ## v22.01
 
 ### accel
