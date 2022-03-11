@@ -290,20 +290,15 @@ accel_engine_ioat_init(void)
 }
 
 static void
-accel_engine_ioat_exit(void *ctx)
+_device_unregister_cb(void *io_device)
 {
-	struct ioat_device *dev;
+	struct ioat_device *dev = io_device;
 	struct pci_device *pci_dev;
-
-	if (g_ioat_initialized) {
-		spdk_io_device_unregister(&ioat_accel_engine, NULL);
-	}
 
 	while (!TAILQ_EMPTY(&g_devices)) {
 		dev = TAILQ_FIRST(&g_devices);
 		TAILQ_REMOVE(&g_devices, dev, tailq);
 		spdk_ioat_detach(dev->ioat);
-		ioat_free_device(dev);
 		free(dev);
 	}
 
@@ -315,6 +310,16 @@ accel_engine_ioat_exit(void *ctx)
 	}
 
 	spdk_accel_engine_module_finish();
+}
+
+static void
+accel_engine_ioat_exit(void *ctx)
+{
+	if (g_ioat_initialized) {
+		spdk_io_device_unregister(&ioat_accel_engine, _device_unregister_cb);
+	} else {
+		spdk_accel_engine_module_finish();
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT(accel_ioat)
