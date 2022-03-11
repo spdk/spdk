@@ -317,7 +317,7 @@ function build_doc() {
 
 function autobuild_test_suite() {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
-	run_test "autobuild_external_code" sudo -E --preserve-env=PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH $rootdir/test/external_code/test_make.sh $rootdir
+	run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
 	./configure $config_params --without-shared
 	$MAKE $MAKEFLAGS
