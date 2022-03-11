@@ -164,11 +164,25 @@ may cause problems in some use cases.
 
 Example command
 
-`rpc.py bdev_crypto_create NVMe1n1 CryNvmeA crypto_aesni_mb 0123456789123456`
+`rpc.py bdev_crypto_create NVMe1n1 CryNvmeA crypto_aesni_mb 01234567891234560123456789123456`
 
 This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
 'NVMe1n1' and will use the DPDK software driver 'crypto_aesni_mb' and the key
-'0123456789123456'.
+'01234567891234560123456789123456'.
+
+Please make sure the keys are provided in hexlified format. This means string passed to
+rpc.py must be twice as long than the key length in binary form.
+
+Example command
+
+rpc.py bdev_crypto_create -c AES_XTS -k2 7859243a027411e581e0c40a35c8228f NVMe1n1 CryNvmeA \
+mlx5_pci d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09
+
+This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
+'NVMe1n1' and will use the DPDK software driver 'mlx5_pci', the AES key
+'d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09' and the XTS key
+'7859243a027411e581e0c40a35c8228f'. In other words, the compound AES_XTS key to be used is
+'d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b097859243a027411e581e0c40a35c8228f'
 
 To remove the vbdev use the bdev_crypto_delete command.
 

@@ -30,6 +30,10 @@ A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PM
 
 Support for AES_XTS was added for MLX5 polled mode driver (pmd).
 
+bdev_crypto_create RPC now requires hexlified 'key' and 'key2' params for all pmd drivers.
+Unhexlifying is performed during RPC command processing and the vbdev crypto module runs on
+binary keys as before.
+
 ### bdev_nvme
 
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and

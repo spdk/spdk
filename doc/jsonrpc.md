@@ -2115,9 +2115,12 @@ Name                    | Optional | Type        | Description
 base_bdev_name          | Required | string      | Name of the base bdev
 name                    | Required | string      | Name of the crypto vbdev to create
 crypto_pmd              | Required | string      | Name of the crypto device driver
-key                     | Required | string      | Key
+key                     | Required | string      | Key in hex form
 cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5)
-key2                    | Required | string      | 2nd key only required for cipher AET_XTS
+key2                    | Required | string      | 2nd key in hex form only required for cipher AET_XTS
+
+Both key and key2 must be passed in the hexlified form. For example, 256bit AES key may look like this:
+afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215
 
 #### Result
 
@@ -2133,7 +2136,7 @@ Example request:
     "base_bdev_name": "Nvme0n1",
     "name": "my_crypto_bdev",
     "crypto_pmd": "crypto_aesni_mb",
-    "key": "1234567890123456",
+    "key": "12345678901234561234567890123456",
     "cipher": "AES_CBC"
   },
   "jsonrpc": "2.0",

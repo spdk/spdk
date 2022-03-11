@@ -203,7 +203,7 @@ function create_bdev_subsystem_config() {
 			local crypto_driver=crypto_qat
 		fi
 
-		tgt_rpc bdev_crypto_create MallocForCryptoBdev CryptoMallocBdev $crypto_driver 0123456789123456
+		tgt_rpc bdev_crypto_create MallocForCryptoBdev CryptoMallocBdev $crypto_driver 01234567891234560123456789123456
 		expected_notifications+=(
 			bdev_register:MallocForCryptoBdev
 			bdev_register:CryptoMallocBdev

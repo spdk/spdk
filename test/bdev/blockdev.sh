@@ -99,8 +99,8 @@ function setup_crypto_aesni_conf() {
 	"$rpc_py" <<- RPC
 		bdev_malloc_create -b Malloc0 16 512
 		bdev_malloc_create -b Malloc1 16 512
-		bdev_crypto_create Malloc0 crypto_ram crypto_aesni_mb 0123456789123456
-		bdev_crypto_create Malloc1 crypto_ram2 crypto_aesni_mb 9012345678912345
+		bdev_crypto_create Malloc0 crypto_ram crypto_aesni_mb 01234567891234560123456789123456
+		bdev_crypto_create Malloc1 crypto_ram2 crypto_aesni_mb 90123456789123459012345678912345
 	RPC
 }
 
@@ -110,8 +110,8 @@ function setup_crypto_qat_conf() {
 	"$rpc_py" <<- RPC
 		bdev_malloc_create -b Malloc0 16 512
 		bdev_malloc_create -b Malloc1 16 512
-		bdev_crypto_create Malloc0 crypto_ram crypto_qat 0123456789123456
-		bdev_crypto_create -c AES_XTS -k2 0123456789123456 Malloc1 crypto_ram3 crypto_qat 0123456789123456
+		bdev_crypto_create Malloc0 crypto_ram crypto_qat 01234567891234560123456789123456
+		bdev_crypto_create -c AES_XTS -k2 01234567891234560123456789123456 Malloc1 crypto_ram3 crypto_qat 01234567891234560123456789123456
 		bdev_get_bdevs -b Malloc1
 	RPC
 }
