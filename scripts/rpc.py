@@ -693,7 +693,10 @@ if __name__ == "__main__":
                                            traddr=args.traddr,
                                            adrfam=args.adrfam,
                                            trsvcid=args.trsvcid,
-                                           hostnqn=args.hostnqn)
+                                           hostnqn=args.hostnqn,
+                                           ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
+                                           reconnect_delay_sec=args.reconnect_delay_sec,
+                                           fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec)
 
     p = subparsers.add_parser('bdev_nvme_start_discovery', help='Start automatic discovery')
     p.add_argument('-b', '--name', help="Name of the NVMe controller prefix for each bdev name", required=True)
@@ -706,6 +709,26 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid',
                    help='NVMe-oF target trsvcid: e.g., a port number')
     p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
+    p.add_argument('-l', '--ctrlr-loss-timeout-sec',
+                   help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
+                   -1 means infinite reconnect retries. 0 means no reconnect retry.
+                   If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+                   If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than
+                   reconnect_delay_sec.""",
+                   type=int)
+    p.add_argument('-o', '--reconnect-delay-sec',
+                   help="""Time to delay a reconnect retry.
+                   If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+                   If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+                   If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero and
+                   less than ctrlr_loss_timeout_sec.""",
+                   type=int)
+    p.add_argument('-u', '--fast-io-fail-timeout-sec',
+                   help="""Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+                   0 means no such timeout.
+                   If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and
+                   less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
+                   type=int)
     p.set_defaults(func=bdev_nvme_start_discovery)
 
     def bdev_nvme_stop_discovery(args):

@@ -1607,6 +1607,7 @@ struct rpc_bdev_nvme_start_discovery {
 	char *trsvcid;
 	char *hostnqn;
 	struct spdk_nvme_ctrlr_opts opts;
+	struct nvme_ctrlr_opts bdev_opts;
 };
 
 static void
@@ -1627,6 +1628,9 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_start_discovery_decod
 	{"adrfam", offsetof(struct rpc_bdev_nvme_start_discovery, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_bdev_nvme_start_discovery, trsvcid), spdk_json_decode_string, true},
 	{"hostnqn", offsetof(struct rpc_bdev_nvme_start_discovery, hostnqn), spdk_json_decode_string, true},
+	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
+	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.reconnect_delay_sec), spdk_json_decode_uint32, true},
+	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
 };
 
 struct rpc_bdev_nvme_start_discovery_ctx {
@@ -1712,7 +1716,7 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->request = request;
-	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctx->req.opts);
+	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctx->req.opts, &ctx->req.bdev_opts);
 	if (rc == 0) {
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	} else {

@@ -4332,6 +4332,7 @@ struct discovery_ctx {
 	struct discovery_entry_ctx		*entry_ctx_in_use;
 	struct spdk_poller			*poller;
 	struct spdk_nvme_ctrlr_opts		drv_opts;
+	struct nvme_ctrlr_opts			bdev_opts;
 	struct spdk_nvmf_discovery_log_page	*log_page;
 	TAILQ_ENTRY(discovery_ctx)		tailq;
 	TAILQ_HEAD(, discovery_entry_ctx)	nvm_entry_ctxs;
@@ -4568,7 +4569,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 			snprintf(new_ctx->drv_opts.hostnqn, sizeof(new_ctx->drv_opts.hostnqn), "%s", ctx->hostnqn);
 			rc = bdev_nvme_create(&new_ctx->trid, new_ctx->name, NULL, 0,
 					      discovery_attach_controller_done, new_ctx,
-					      &new_ctx->drv_opts, NULL, true);
+					      &new_ctx->drv_opts, &ctx->bdev_opts, true);
 			if (rc == 0) {
 				TAILQ_INSERT_TAIL(&ctx->nvm_entry_ctxs, new_ctx, tailq);
 				ctx->attach_in_progress++;
@@ -4716,7 +4717,8 @@ start_discovery_poller(void *arg)
 int
 bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
-			  struct spdk_nvme_ctrlr_opts *drv_opts)
+			  struct spdk_nvme_ctrlr_opts *drv_opts,
+			  struct nvme_ctrlr_opts *bdev_opts)
 {
 	struct discovery_ctx *ctx;
 	struct discovery_entry_ctx *discovery_entry_ctx;
@@ -4732,6 +4734,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 		return -ENOMEM;
 	}
 	memcpy(&ctx->drv_opts, drv_opts, sizeof(*drv_opts));
+	memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
 	ctx->calling_thread = spdk_get_thread();
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	TAILQ_INIT(&ctx->discovery_entry_ctxs);

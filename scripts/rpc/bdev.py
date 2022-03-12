@@ -724,7 +724,8 @@ def bdev_nvme_reset_controller(client, name):
 
 
 def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid=None,
-                              hostnqn=None):
+                              hostnqn=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
+                              fast_io_fail_timeout_sec=None):
     """Start discovery with the specified discovery subsystem
 
     Args:
@@ -734,6 +735,20 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
         adrfam: address family ("IPv4", "IPv6", "IB", or "FC")
         trsvcid: transport service ID (port number for IP-based addresses)
         hostnqn: NQN to connect from (optional)
+        ctrlr_loss_timeout_sec: Time to wait until ctrlr is reconnected before deleting ctrlr.
+        -1 means infinite reconnect retries. 0 means no reconnect retry.
+        If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+        If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.
+        (optional)
+        reconnect_delay_sec: Time to delay a reconnect retry.
+        If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+        If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+        If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_sec has to be non-zero and less than ctrlr_loss_timeout_sec.
+        (optional)
+        fail_io_fast_timeout_sec: Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+        0 means no such timeout.
+        If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
+        ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1. (optional)
     """
     params = {'name': name,
               'trtype': trtype,
@@ -747,6 +762,15 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
 
     if trsvcid:
         params['trsvcid'] = trsvcid
+
+    if ctrlr_loss_timeout_sec is not None:
+        params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
+
+    if reconnect_delay_sec is not None:
+        params['reconnect_delay_sec'] = reconnect_delay_sec
+
+    if fast_io_fail_timeout_sec is not None:
+        params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
 
     return client.call('bdev_nvme_start_discovery', params)
 
