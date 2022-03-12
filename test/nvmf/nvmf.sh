@@ -25,6 +25,7 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_abort" test/nvmf/target/abort.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_ns_hotplug_stress" test/nvmf/target/ns_hotplug_stress.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_connect_stress" test/nvmf/target/connect_stress.sh "${TEST_ARGS[@]}"
+	run_test "nvmf_fused_ordering" test/nvmf/target/fused_ordering.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_delete_subsystem" test/nvmf/target/delete_subsystem.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_multicontroller" test/nvmf/host/multicontroller.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_aer" test/nvmf/host/aer.sh "${TEST_ARGS[@]}"
