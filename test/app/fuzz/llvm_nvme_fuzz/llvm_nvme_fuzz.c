@@ -62,6 +62,7 @@ typedef void (*fuzz_build_cmd_fn)(struct fuzz_command *cmd);
 struct fuzz_type {
 	fuzz_build_cmd_fn	fn;
 	uint32_t		bytes_per_cmd;
+	bool	is_admin;
 };
 
 static void
@@ -285,22 +286,67 @@ fuzz_admin_directive_receive_command(struct fuzz_command *cmd)
 	g_data += 8;
 }
 
+static void
+fuzz_nvm_read_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_READ;
+
+	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
+			 (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
+			 (g_data[6] << 8) + g_data[7];
+	cmd->cmd.cdw12 = (g_data[8] << 24) + (g_data[9] << 16) +
+			 (g_data[10] << 8) + g_data[11];
+	cmd->cmd.cdw13 = g_data[12];
+	cmd->cmd.cdw14 = (g_data[13] << 24) + (g_data[14] << 16) +
+			 (g_data[15] << 8) + g_data[16];
+	cmd->cmd.cdw15 = (g_data[17] << 24) + (g_data[18] << 16) +
+			 (g_data[19] << 8) + g_data[20];
+
+	g_data += 21;
+}
+
+static void
+fuzz_nvm_write_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_WRITE;
+
+	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
+			 (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
+			 (g_data[6] << 8) + g_data[7];
+	cmd->cmd.cdw12 = (g_data[8] << 24) + (g_data[9] << 16) +
+			 (g_data[10] << 8) + g_data[11];
+	cmd->cmd.cdw13 = (g_data[12] << 24) + (g_data[13] << 16) +
+			 (g_data[14] << 8) + g_data[15];
+	cmd->cmd.cdw14 = (g_data[16] << 24) + (g_data[17] << 16) +
+			 (g_data[18] << 8) + g_data[19];
+	cmd->cmd.cdw15 = (g_data[20] << 24) + (g_data[21] << 16) +
+			 (g_data[22] << 8) + g_data[23];
+
+	g_data += 24;
+}
+
 static struct fuzz_type g_fuzzers[] = {
-	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd) },
-	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6 },
-	{ .fn = fuzz_admin_identify_command, .bytes_per_cmd = 7 },
-	{ .fn = fuzz_admin_abort_command, .bytes_per_cmd = 4},
-	{ .fn = fuzz_admin_create_io_completion_queue_command, .bytes_per_cmd = 7},
-	{ .fn = fuzz_admin_create_io_submission_queue_command, .bytes_per_cmd = 9},
-	{ .fn = fuzz_admin_delete_io_completion_queue_command, .bytes_per_cmd = 2},
-	{ .fn = fuzz_admin_delete_io_submission_queue_command, .bytes_per_cmd = 2},
-	{ .fn = fuzz_admin_namespace_attachment_command, .bytes_per_cmd = 1},
-	{ .fn = fuzz_admin_namespace_management_command, .bytes_per_cmd = 1},
-	{ .fn = fuzz_admin_security_receive_command, .bytes_per_cmd = 8},
-	{ .fn = fuzz_admin_security_send_command, .bytes_per_cmd = 8},
-	{ .fn = fuzz_admin_directive_send_command, .bytes_per_cmd = 8},
-	{ .fn = fuzz_admin_directive_receive_command, .bytes_per_cmd = 8},
-	{ .fn = NULL, .bytes_per_cmd = 0 }
+	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd), .is_admin = true},
+	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6, .is_admin = true},
+	{ .fn = fuzz_admin_identify_command, .bytes_per_cmd = 7, .is_admin = true},
+	{ .fn = fuzz_admin_abort_command, .bytes_per_cmd = 4, .is_admin = true},
+	{ .fn = fuzz_admin_create_io_completion_queue_command, .bytes_per_cmd = 7, .is_admin = true},
+	{ .fn = fuzz_admin_create_io_submission_queue_command, .bytes_per_cmd = 9, .is_admin = true},
+	{ .fn = fuzz_admin_delete_io_completion_queue_command, .bytes_per_cmd = 2, .is_admin = true},
+	{ .fn = fuzz_admin_delete_io_submission_queue_command, .bytes_per_cmd = 2, .is_admin = true},
+	{ .fn = fuzz_admin_namespace_attachment_command, .bytes_per_cmd = 1, .is_admin = true},
+	{ .fn = fuzz_admin_namespace_management_command, .bytes_per_cmd = 1, .is_admin = true},
+	{ .fn = fuzz_admin_security_receive_command, .bytes_per_cmd = 8, .is_admin = true},
+	{ .fn = fuzz_admin_security_send_command, .bytes_per_cmd = 8, .is_admin = true},
+	{ .fn = fuzz_admin_directive_send_command, .bytes_per_cmd = 8, .is_admin = true},
+	{ .fn = fuzz_admin_directive_receive_command, .bytes_per_cmd = 8, .is_admin = true},
+	{ .fn = fuzz_nvm_read_command, .bytes_per_cmd = 21, .is_admin = false},
+	{ .fn = fuzz_nvm_write_command, .bytes_per_cmd = 24, .is_admin = false},
+	{ .fn = NULL, .bytes_per_cmd = 0, .is_admin = 0}
 };
 
 #define NUM_FUZZERS (SPDK_COUNTOF(g_fuzzers) - 1)
@@ -309,6 +355,7 @@ static struct fuzz_type *g_fuzzer;
 
 struct spdk_nvme_transport_id g_trid;
 static struct spdk_nvme_ctrlr *g_ctrlr;
+static struct spdk_nvme_qpair *g_io_qpair;
 static void
 nvme_fuzz_cpl_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -329,14 +376,20 @@ run_cmds(uint32_t queue_depth)
 
 		g_fuzzer->fn(cmd);
 		outstanding++;
-		rc = spdk_nvme_ctrlr_cmd_admin_raw(g_ctrlr, &cmd->cmd, cmd->buf, cmd->len, nvme_fuzz_cpl_cb,
-						   &outstanding);
+		if (g_fuzzer->is_admin) {
+			rc = spdk_nvme_ctrlr_cmd_admin_raw(g_ctrlr, &cmd->cmd, cmd->buf, cmd->len, nvme_fuzz_cpl_cb,
+							   &outstanding);
+		} else {
+			rc = spdk_nvme_ctrlr_cmd_io_raw(g_ctrlr, g_io_qpair, &cmd->cmd, cmd->buf, cmd->len,
+							nvme_fuzz_cpl_cb, &outstanding);
+		}
 		if (rc) {
 			return rc;
 		}
 	}
 
 	while (outstanding > 0 && !g_shutdown) {
+		spdk_nvme_qpair_process_completions(g_io_qpair, 0);
 		spdk_nvme_ctrlr_process_admin_completions(g_ctrlr);
 	}
 	return 0;
@@ -353,9 +406,16 @@ static int TestOneInput(const uint8_t *data, size_t size)
 		spdk_app_stop(-1);
 	}
 
+	g_io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_ctrlr, NULL, 0);
+	if (g_io_qpair == NULL) {
+		fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
+		spdk_app_stop(-1);
+	}
+
 	g_data = data;
 
 	run_cmds(size / g_fuzzer->bytes_per_cmd);
+	spdk_nvme_ctrlr_free_io_qpair(g_io_qpair);
 	spdk_nvme_detach_async(g_ctrlr, &detach_ctx);
 
 	if (detach_ctx) {
