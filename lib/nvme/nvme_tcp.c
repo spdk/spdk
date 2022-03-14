@@ -320,6 +320,8 @@ fail:
 	return -ENOMEM;
 }
 
+static void nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
+
 static void
 nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -351,10 +353,9 @@ nvme_tcp_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
 	}
 
+	nvme_tcp_qpair_abort_reqs(qpair, 0);
 	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 }
-
-static void nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr);
 
 static int
 nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)

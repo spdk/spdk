@@ -546,7 +546,6 @@ void
 nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 {
 	nvme_qpair_abort_all_queued_reqs(qpair, 0);
-	nvme_transport_qpair_abort_reqs(qpair, 0);
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 }
 
