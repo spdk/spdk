@@ -1205,13 +1205,10 @@ nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *rqpai
 	}
 
 	/* Configure infinite retries for the initiator side qpair.
-	 * When using a shared receive queue on the target side,
-	 * we need to pass this value to the initiator to prevent the
+	 * We need to pass this value to the initiator to prevent the
 	 * initiator side NIC from completing SEND requests back to the
 	 * initiator with status rnr_retry_count_exceeded. */
-	if (rqpair->srq != NULL) {
-		ctrlr_event_data.rnr_retry_count = 0x7;
-	}
+	ctrlr_event_data.rnr_retry_count = 0x7;
 
 	/* When qpair is created without use of rdma cm API, an additional
 	 * information must be provided to initiator in the connection response:
