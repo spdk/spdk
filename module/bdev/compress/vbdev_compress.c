@@ -459,7 +459,7 @@ reduce_rw_blocks_cb(void *arg, int reduce_errno)
 	spdk_thread_exec_msg(orig_thread, _reduce_rw_blocks_cb, io_ctx);
 }
 
-static uint64_t
+static int
 _setup_compress_mbuf(struct rte_mbuf **mbufs, int *mbuf_total, uint64_t *total_length,
 		     struct iovec *iovs, int iovcnt, void *reduce_cb_arg)
 {
@@ -555,6 +555,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	comp_op = rte_comp_op_alloc(g_comp_op_mp);
 	if (!comp_op) {
 		SPDK_ERRLOG("trying to get a comp op!\n");
+		rc = -ENOMEM;
 		goto error_get_op;
 	}
 
@@ -562,12 +563,14 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&src_mbufs[0], src_iovcnt);
 	if (rc) {
 		SPDK_ERRLOG("ERROR trying to get src_mbufs!\n");
+		rc = -ENOMEM;
 		goto error_get_src;
 	}
 
 	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&dst_mbufs[0], dst_iovcnt);
 	if (rc) {
 		SPDK_ERRLOG("ERROR trying to get dst_mbufs!\n");
+		rc = -ENOMEM;
 		goto error_get_dst;
 	}
 
@@ -615,6 +618,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		/* we free mbufs differently depending on whether they were chained or not */
 		rte_pktmbuf_free(comp_op->m_src);
 		rte_pktmbuf_free(comp_op->m_dst);
+		rc = -EAGAIN;
 		goto error_enqueue;
 	} else {
 		device_error = true;
@@ -641,6 +645,9 @@ error_get_op:
 		 */
 		SPDK_ERRLOG("Compression API returned 0x%x\n", comp_op->status);
 		return -EINVAL;
+	}
+	if (rc != -ENOMEM && rc != -EAGAIN) {
+		return rc;
 	}
 
 	op_to_queue = calloc(1, sizeof(struct vbdev_comp_op));
