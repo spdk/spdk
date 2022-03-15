@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -126,6 +127,7 @@ struct spdk_reduce_vol_request {
 	int					num_backing_ops;
 	uint32_t				num_io_units;
 	bool					chunk_is_compressed;
+	bool					copy_after_decompress;
 	uint64_t				offset;
 	uint64_t				logical_map_index;
 	uint64_t				length;
@@ -1148,7 +1150,7 @@ _reduce_vol_compress_chunk(struct spdk_reduce_vol_request *req, reduce_request_f
 	req->comp_buf_iov[0].iov_base = req->comp_buf;
 	req->comp_buf_iov[0].iov_len = vol->params.chunk_size;
 	vol->backing_dev->compress(vol->backing_dev,
-				   &req->decomp_iov[0], req->decomp_iovcnt, req->comp_buf_iov, 1,
+				   req->decomp_iov, req->decomp_iovcnt, req->comp_buf_iov, 1,
 				   &req->backing_cb_args);
 }
 
@@ -1179,6 +1181,19 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 	req->decomp_iovcnt = 0;
 	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
 
+	/* If backing device doesn't support SGL output then we should copy the result of decompression to user's buffer
+	 * if at least one of the conditions below is true:
+	 * 1. User's buffer is fragmented
+	 * 2. Length of the user's buffer is less than the chunk */
+	req->copy_after_decompress = !vol->backing_dev->sgl_out && (req->iovcnt > 1 ||
+				     req->iov[0].iov_len < vol->params.chunk_size);
+	if (req->copy_after_decompress) {
+		req->decomp_iov[0].iov_base = req->decomp_buf;
+		req->decomp_iov[0].iov_len = vol->params.chunk_size;
+		req->decomp_iovcnt = 1;
+		goto decompress;
+	}
+
 	if (chunk_offset) {
 		/* first iov point to our scratch buffer for any offset into the chunk */
 		req->decomp_iov[0].iov_base = req->decomp_buf;
@@ -1205,13 +1220,60 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 	}
 	assert(ttl_len == vol->params.chunk_size);
 
+decompress:
+	assert(!req->copy_after_decompress || (req->copy_after_decompress && req->decomp_iovcnt == 1));
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
 	req->comp_buf_iov[0].iov_base = req->comp_buf;
 	req->comp_buf_iov[0].iov_len = req->chunk->compressed_size;
 	vol->backing_dev->decompress(vol->backing_dev,
-				     req->comp_buf_iov, 1, &req->decomp_iov[0], req->decomp_iovcnt,
+				     req->comp_buf_iov, 1, req->decomp_iov, req->decomp_iovcnt,
 				     &req->backing_cb_args);
+}
+
+static inline void
+_prepare_compress_chunk_copy_user_buffers(struct spdk_reduce_vol_request *req, bool zero_paddings)
+{
+	struct spdk_reduce_vol *vol = req->vol;
+	char *padding_buffer = zero_paddings ? g_zero_buf : req->decomp_buf;
+	uint64_t chunk_offset, ttl_len = 0;
+	uint64_t remainder = 0;
+	char *copy_offset = NULL;
+	uint32_t lbsize = vol->params.logical_block_size;
+	int i;
+
+	req->decomp_iov[0].iov_base = req->decomp_buf;
+	req->decomp_iov[0].iov_len = vol->params.chunk_size;
+	req->decomp_iovcnt = 1;
+	copy_offset = req->decomp_iov[0].iov_base;
+	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
+
+	if (chunk_offset) {
+		ttl_len += chunk_offset * lbsize;
+		/* copy_offset already points to padding buffer if zero_paddings=false */
+		if (zero_paddings) {
+			memcpy(copy_offset, padding_buffer, ttl_len);
+		}
+		copy_offset += ttl_len;
+	}
+
+	/* now the user data iov, direct from the user buffer */
+	for (i = 0; i < req->iovcnt; i++) {
+		memcpy(copy_offset, req->iov[i].iov_base, req->iov[i].iov_len);
+		copy_offset += req->iov[i].iov_len;
+		ttl_len += req->iov[i].iov_len;
+	}
+
+	remainder = vol->params.chunk_size - ttl_len;
+	if (remainder) {
+		/* copy_offset already points to padding buffer if zero_paddings=false */
+		if (zero_paddings) {
+			memcpy(copy_offset, padding_buffer + ttl_len, remainder);
+		}
+		ttl_len += remainder;
+	}
+
+	assert(ttl_len == req->vol->params.chunk_size);
 }
 
 /* This function can be called when we are compressing a new data or in case of read-modify-write
@@ -1226,6 +1288,16 @@ _prepare_compress_chunk(struct spdk_reduce_vol_request *req, bool zero_paddings)
 	uint64_t remainder = 0;
 	uint32_t lbsize = vol->params.logical_block_size;
 	int i;
+
+	/* If backing device doesn't support SGL input then we should copy user's buffer into decomp_buf
+	 * if at least one of the conditions below is true:
+	 * 1. User's buffer is fragmented
+	 * 2. Length of the user's buffer is less than the chunk */
+	if (!vol->backing_dev->sgl_in && (req->iovcnt > 1 ||
+					  req->iov[0].iov_len < vol->params.chunk_size)) {
+		_prepare_compress_chunk_copy_user_buffers(req, zero_paddings);
+		return;
+	}
 
 	req->decomp_iovcnt = 0;
 	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
@@ -1324,6 +1396,18 @@ _read_decompress_done(void *_req, int reduce_errno)
 	if ((uint32_t)reduce_errno != vol->params.chunk_size) {
 		_reduce_vol_complete_req(req, -EIO);
 		return;
+	}
+
+	if (req->copy_after_decompress) {
+		uint64_t chunk_offset = req->offset % vol->logical_blocks_per_chunk;
+		char *decomp_buffer = (char *)req->decomp_buf + chunk_offset * vol->params.logical_block_size;
+		int i;
+
+		for (i = 0; i < req->iovcnt; i++) {
+			memcpy(req->iov[i].iov_base, decomp_buffer, req->iov[i].iov_len);
+			decomp_buffer += req->iov[i].iov_len;
+			assert(decomp_buffer <= (char *)req->decomp_buf + vol->params.chunk_size);
+		}
 	}
 
 	_reduce_vol_complete_req(req, 0);
@@ -1479,6 +1563,7 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	req->offset = offset;
 	req->logical_map_index = logical_map_index;
 	req->length = length;
+	req->copy_after_decompress = false;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
@@ -1553,6 +1638,7 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	req->offset = offset;
 	req->logical_map_index = logical_map_index;
 	req->length = length;
+	req->copy_after_decompress = false;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
