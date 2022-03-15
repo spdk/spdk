@@ -151,7 +151,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	int flags = 0;
 
 	switch (task->op_code) {
-	case ACCEL_OPCODE_MEMMOVE:
+	case ACCEL_OPC_COPY:
 		siov.iov_base = task->src;
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
@@ -162,7 +162,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		}
 		rc = spdk_idxd_submit_copy(chan->chan, &diov, 1, &siov, 1, flags, idxd_done, task);
 		break;
-	case ACCEL_OPCODE_DUALCAST:
+	case ACCEL_OPC_DUALCAST:
 		if (task->flags & ACCEL_FLAG_PERSISTENT) {
 			flags |= SPDK_IDXD_FLAG_PERSISTENT;
 			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
@@ -170,14 +170,14 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = spdk_idxd_submit_dualcast(chan->chan, task->dst, task->dst2, task->src, task->nbytes,
 					       flags, idxd_done, task);
 		break;
-	case ACCEL_OPCODE_COMPARE:
+	case ACCEL_OPC_COMPARE:
 		siov.iov_base = task->src;
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
 		rc = spdk_idxd_submit_compare(chan->chan, &siov, 1, &diov, 1, flags, idxd_done, task);
 		break;
-	case ACCEL_OPCODE_MEMFILL:
+	case ACCEL_OPC_FILL:
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
 		if (task->flags & ACCEL_FLAG_PERSISTENT) {
@@ -187,7 +187,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = spdk_idxd_submit_fill(chan->chan, &diov, 1, task->fill_pattern, flags, idxd_done,
 					   task);
 		break;
-	case ACCEL_OPCODE_CRC32C:
+	case ACCEL_OPC_CRC32C:
 		if (task->v.iovcnt == 0) {
 			siov.iov_base = task->src;
 			siov.iov_len = task->nbytes;
@@ -200,7 +200,7 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = spdk_idxd_submit_crc32c(chan->chan, iov, iovcnt, task->seed, task->crc_dst,
 					     flags, idxd_done, task);
 		break;
-	case ACCEL_OPCODE_COPY_CRC32C:
+	case ACCEL_OPC_COPY_CRC32C:
 		if (task->v.iovcnt == 0) {
 			siov.iov_base = task->src;
 			siov.iov_len = task->nbytes;
@@ -315,15 +315,24 @@ accel_engine_idxd_get_ctx_size(void)
 	return 0;
 }
 
-static uint64_t
-idxd_get_capabilities(void)
+static bool
+idxd_supports_opcode(enum accel_opcode opc)
 {
-	return ACCEL_COPY | ACCEL_FILL | ACCEL_CRC32C | ACCEL_COMPARE |
-	       ACCEL_DUALCAST | ACCEL_COPY_CRC32C;
+	switch (opc) {
+	case ACCEL_OPC_COPY:
+	case ACCEL_OPC_FILL:
+	case ACCEL_OPC_DUALCAST:
+	case ACCEL_OPC_COMPARE:
+	case ACCEL_OPC_CRC32C:
+	case ACCEL_OPC_COPY_CRC32C:
+		return true;
+	default:
+		return false;
+	}
 }
 
 static struct spdk_accel_engine idxd_accel_engine = {
-	.get_capabilities	= idxd_get_capabilities,
+	.supports_opcode	= idxd_supports_opcode,
 	.get_io_channel		= idxd_get_io_channel,
 	.submit_tasks		= idxd_submit_tasks,
 };

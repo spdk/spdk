@@ -56,16 +56,6 @@ struct sw_accel_io_channel {
 	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
 };
 
-enum accel_opcode {
-	ACCEL_OPCODE_MEMMOVE		= 0,
-	ACCEL_OPCODE_MEMFILL		= 1,
-	ACCEL_OPCODE_COMPARE		= 2,
-	ACCEL_OPCODE_BATCH		= 3,
-	ACCEL_OPCODE_CRC32C		= 4,
-	ACCEL_OPCODE_DUALCAST		= 5,
-	ACCEL_OPCODE_COPY_CRC32C	= 6,
-};
-
 struct spdk_accel_task {
 	struct accel_io_channel		*accel_ch;
 	spdk_accel_completion_cb	cb_fn;
@@ -95,8 +85,7 @@ struct spdk_accel_task {
 };
 
 struct spdk_accel_engine {
-	uint64_t capabilities;
-	uint64_t (*get_capabilities)(void);
+	bool (*supports_opcode)(enum accel_opcode);
 	struct spdk_io_channel *(*get_io_channel)(void);
 	int (*submit_tasks)(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
 };

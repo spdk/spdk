@@ -126,10 +126,17 @@ ioat_poll(void *arg)
 
 static struct spdk_io_channel *ioat_get_io_channel(void);
 
-static uint64_t
-ioat_get_capabilities(void)
+static bool
+ioat_supports_opcode(enum accel_opcode opc)
 {
-	return ACCEL_COPY | ACCEL_FILL;
+	switch (opc) {
+	case ACCEL_OPC_COPY:
+	case ACCEL_OPC_FILL:
+		return true;
+	default:
+		return false;
+	}
+
 }
 
 static int
@@ -146,11 +153,11 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 
 	do {
 		switch (accel_task->op_code) {
-		case ACCEL_OPCODE_MEMFILL:
+		case ACCEL_OPC_FILL:
 			rc = spdk_ioat_build_fill(ioat_ch->ioat_ch, accel_task, ioat_done,
 						  accel_task->dst, accel_task->fill_pattern, accel_task->nbytes);
 			break;
-		case ACCEL_OPCODE_MEMMOVE:
+		case ACCEL_OPC_COPY:
 			rc = spdk_ioat_build_copy(ioat_ch->ioat_ch, accel_task, ioat_done,
 						  accel_task->dst, accel_task->src, accel_task->nbytes);
 			break;
@@ -175,7 +182,7 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 }
 
 static struct spdk_accel_engine ioat_accel_engine = {
-	.get_capabilities	= ioat_get_capabilities,
+	.supports_opcode	= ioat_supports_opcode,
 	.get_io_channel		= ioat_get_io_channel,
 	.submit_tasks		= ioat_submit_tasks,
 };

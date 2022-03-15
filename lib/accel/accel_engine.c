@@ -107,9 +107,9 @@ accel_sw_unregister(void)
  * via SW implementation.
  */
 inline static bool
-_is_supported(struct spdk_accel_engine *engine, enum accel_capability operation)
+_is_supported(struct spdk_accel_engine *engine, enum accel_opcode operation)
 {
-	return ((engine->capabilities & operation) == operation);
+	return (engine->supports_opcode(operation));
 }
 
 void
@@ -190,11 +190,11 @@ spdk_accel_submit_copy(struct spdk_io_channel *ch, void *dst, void *src, uint64_
 
 	accel_task->dst = dst;
 	accel_task->src = src;
-	accel_task->op_code = ACCEL_OPCODE_MEMMOVE;
+	accel_task->op_code = ACCEL_OPC_COPY;
 	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 
-	if (_is_supported(accel_ch->engine, ACCEL_COPY)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_COPY)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		rc = _check_flags(flags);
@@ -231,9 +231,9 @@ spdk_accel_submit_dualcast(struct spdk_io_channel *ch, void *dst1, void *dst2, v
 	accel_task->dst2 = dst2;
 	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPCODE_DUALCAST;
+	accel_task->op_code = ACCEL_OPC_DUALCAST;
 
-	if (_is_supported(accel_ch->engine, ACCEL_DUALCAST)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_DUALCAST)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		rc = _check_flags(flags);
@@ -263,9 +263,9 @@ spdk_accel_submit_compare(struct spdk_io_channel *ch, void *src1, void *src2, ui
 	accel_task->src = src1;
 	accel_task->src2 = src2;
 	accel_task->nbytes = nbytes;
-	accel_task->op_code = ACCEL_OPCODE_COMPARE;
+	accel_task->op_code = ACCEL_OPC_COMPARE;
 
-	if (_is_supported(accel_ch->engine, ACCEL_COMPARE)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_COMPARE)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		rc = _sw_accel_compare(src1, src2, (size_t)nbytes);
@@ -292,9 +292,9 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint
 	memset(&accel_task->fill_pattern, fill, sizeof(uint64_t));
 	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPCODE_MEMFILL;
+	accel_task->op_code = ACCEL_OPC_FILL;
 
-	if (_is_supported(accel_ch->engine, ACCEL_FILL)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_FILL)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		rc = _check_flags(flags);
@@ -325,9 +325,9 @@ spdk_accel_submit_crc32c(struct spdk_io_channel *ch, uint32_t *crc_dst, void *sr
 	accel_task->v.iovcnt = 0;
 	accel_task->seed = seed;
 	accel_task->nbytes = nbytes;
-	accel_task->op_code = ACCEL_OPCODE_CRC32C;
+	accel_task->op_code = ACCEL_OPC_CRC32C;
 
-	if (_is_supported(accel_ch->engine, ACCEL_CRC32C)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_CRC32C)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		_sw_accel_crc32c(crc_dst, src, seed, (size_t)nbytes);
@@ -366,9 +366,9 @@ spdk_accel_submit_crc32cv(struct spdk_io_channel *ch, uint32_t *crc_dst, struct 
 	accel_task->v.iovcnt = iov_cnt;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
-	accel_task->op_code = ACCEL_OPCODE_CRC32C;
+	accel_task->op_code = ACCEL_OPC_CRC32C;
 
-	if (_is_supported(accel_ch->engine, ACCEL_CRC32C)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_CRC32C)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		_sw_accel_crc32cv(crc_dst, iov, iov_cnt, seed);
@@ -399,9 +399,9 @@ spdk_accel_submit_copy_crc32c(struct spdk_io_channel *ch, void *dst, void *src,
 	accel_task->seed = seed;
 	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPCODE_COPY_CRC32C;
+	accel_task->op_code = ACCEL_OPC_COPY_CRC32C;
 
-	if (_is_supported(accel_ch->engine, ACCEL_COPY_CRC32C)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_COPY_CRC32C)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		rc = _check_flags(flags);
@@ -449,9 +449,9 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct iov
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
 	accel_task->flags = flags;
-	accel_task->op_code = ACCEL_OPCODE_COPY_CRC32C;
+	accel_task->op_code = ACCEL_OPC_COPY_CRC32C;
 
-	if (_is_supported(accel_ch->engine, ACCEL_COPY_CRC32C)) {
+	if (_is_supported(accel_ch->engine, ACCEL_OPC_COPY_CRC32C)) {
 		return accel_ch->engine->submit_tasks(accel_ch->engine_ch, accel_task);
 	} else {
 		rc = _check_flags(flags);
@@ -509,7 +509,6 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 		accel_ch->engine = g_sw_accel_engine;
 	}
 	assert(accel_ch->engine_ch != NULL);
-	accel_ch->engine->capabilities = accel_ch->engine->get_capabilities();
 
 	return 0;
 }
@@ -623,11 +622,10 @@ spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
 /*
  * The SW Accelerator module is "built in" here (rest of file)
  */
-static uint64_t
-sw_accel_get_capabilities(void)
+static bool
+sw_accel_supports_opcode(enum accel_opcode opc)
 {
-	/* No HW acceleration capabilities. */
-	return 0;
+	return false;
 }
 
 static inline void
@@ -731,7 +729,7 @@ static struct spdk_io_channel *sw_accel_get_io_channel(void);
 
 
 static struct spdk_accel_engine sw_accel_engine = {
-	.get_capabilities	= sw_accel_get_capabilities,
+	.supports_opcode	= sw_accel_supports_opcode,
 	.get_io_channel		= sw_accel_get_io_channel,
 };
 

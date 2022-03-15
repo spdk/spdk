@@ -47,14 +47,14 @@ extern "C" {
 /* Flags for accel operations */
 #define ACCEL_FLAG_PERSISTENT (1 << 0)
 
-enum accel_capability {
-	ACCEL_COPY		= 1 << 0,
-	ACCEL_FILL		= 1 << 1,
-	ACCEL_DUALCAST		= 1 << 2,
-	ACCEL_COMPARE		= 1 << 3,
-	ACCEL_CRC32C		= 1 << 4,
-	ACCEL_DIF		= 1 << 5,
-	ACCEL_COPY_CRC32C	= 1 << 6,
+enum accel_opcode {
+	ACCEL_OPC_COPY			= 0,
+	ACCEL_OPC_FILL			= 1,
+	ACCEL_OPC_DUALCAST		= 2,
+	ACCEL_OPC_COMPARE		= 3,
+	ACCEL_OPC_CRC32C		= 4,
+	ACCEL_OPC_COPY_CRC32C		= 5,
+	ACCEL_OPC_LAST			= 6,
 };
 
 /**
