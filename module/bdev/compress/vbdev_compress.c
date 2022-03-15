@@ -43,6 +43,7 @@
 #include "spdk/thread.h"
 #include "spdk/util.h"
 #include "spdk/bdev_module.h"
+#include "spdk/likely.h"
 
 #include "spdk/log.h"
 
@@ -431,8 +432,10 @@ _reduce_rw_blocks_cb(void *arg)
 {
 	struct comp_bdev_io *io_ctx = arg;
 
-	if (io_ctx->status == 0) {
+	if (spdk_likely(io_ctx->status == 0)) {
 		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else if (io_ctx->status == -ENOMEM) {
+		vbdev_compress_queue_io(spdk_bdev_io_from_ctx(io_ctx));
 	} else {
 		SPDK_ERRLOG("status %d on operation from reduce API\n", io_ctx->status);
 		spdk_bdev_io_complete(io_ctx->orig_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -783,6 +786,12 @@ comp_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, b
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
 
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Failed to get data buffer\n");
+		reduce_rw_blocks_cb(bdev_io, -ENOMEM);
+		return;
+	}
+
 	spdk_reduce_vol_readv(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
 			      reduce_rw_blocks_cb, bdev_io);
@@ -810,7 +819,6 @@ _comp_bdev_io_submit(void *arg)
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
 	struct spdk_thread *orig_thread;
-	int rc = 0;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -822,35 +830,22 @@ _comp_bdev_io_submit(void *arg)
 				       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
 				       reduce_rw_blocks_cb, bdev_io);
 		return;
-	/* TODO in future patch in the series */
+	/* TODO support RESET in future patch in the series */
 	case SPDK_BDEV_IO_TYPE_RESET:
-		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	default:
 		SPDK_ERRLOG("Unknown I/O type %d\n", bdev_io->type);
-		rc = -EINVAL;
-	}
+		io_ctx->status = -ENOTSUP;
 
-	if (rc) {
-		if (rc == -ENOMEM) {
-			SPDK_ERRLOG("No memory, start to queue io for compress.\n");
-			io_ctx->ch = ch;
-			vbdev_compress_queue_io(bdev_io);
-			return;
+		/* Complete this on the orig IO thread. */
+		orig_thread = spdk_io_channel_get_thread(ch);
+		if (orig_thread != spdk_get_thread()) {
+			spdk_thread_send_msg(orig_thread, _complete_other_io, io_ctx);
 		} else {
-			SPDK_ERRLOG("on bdev_io submission!\n");
-			io_ctx->status = rc;
+			_complete_other_io(io_ctx);
 		}
-	}
-
-	/* Complete this on the orig IO thread. */
-	orig_thread = spdk_io_channel_get_thread(ch);
-	if (orig_thread != spdk_get_thread()) {
-		spdk_thread_send_msg(orig_thread, _complete_other_io, io_ctx);
-	} else {
-		_complete_other_io(io_ctx);
 	}
 }
 
