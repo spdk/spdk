@@ -2686,14 +2686,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->rab = 6;
 		cdata->cmic.multi_port = 1;
 		cdata->cmic.multi_ctrlr = 1;
-		if (subsystem->flags.ana_reporting) {
-			/* Asymmetric Namespace Access Reporting is supported. */
-			cdata->cmic.ana_reporting = 1;
-		}
 		cdata->oaes.ns_attribute_notices = 1;
-		if (subsystem->flags.ana_reporting) {
-			cdata->oaes.ana_change_notices = 1;
-		}
 		cdata->ctratt.host_id_exhid_supported = 1;
 		/* We do not have any actual limitation to the number of abort commands.
 		 * We follow the recommendation by the NVMe specification.
@@ -2718,6 +2711,10 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = ctrlr->cdata.oncs.reservations;
 		if (subsystem->flags.ana_reporting) {
+			/* Asymmetric Namespace Access Reporting is supported. */
+			cdata->cmic.ana_reporting = 1;
+			cdata->oaes.ana_change_notices = 1;
+
 			cdata->anatt = ANA_TRANSITION_TIME_IN_SEC;
 			/* ANA Change state is not used, and ANA Persistent Loss state
 			 * is not supported for now.
