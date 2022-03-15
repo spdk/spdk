@@ -162,21 +162,6 @@ test_spdk_accel_task_complete(void)
 }
 
 static void
-test_spdk_accel_get_capabilities(void)
-{
-	uint64_t cap, expected_cap;
-
-	/* Setup a few capabilities and make sure they are reported as expected. */
-	g_accel_ch->engine = &g_accel_engine;
-	expected_cap = ACCEL_COPY | ACCEL_DUALCAST | ACCEL_CRC32C;
-	g_accel_ch->engine->capabilities = expected_cap;
-
-	cap = spdk_accel_get_capabilities(g_ch);
-	CU_ASSERT(cap == expected_cap);
-}
-
-
-static void
 test_get_task(void)
 {
 	struct spdk_accel_task *task;
@@ -799,7 +784,6 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_accel_sw_unregister);
 	CU_ADD_TEST(suite, test_is_supported);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
-	CU_ADD_TEST(suite, test_spdk_accel_get_capabilities);
 	CU_ADD_TEST(suite, test_get_task);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_dualcast);

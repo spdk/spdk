@@ -102,15 +102,6 @@ void spdk_accel_engine_module_finish(void);
 struct spdk_io_channel *spdk_accel_engine_get_io_channel(void);
 
 /**
- * Retrieve accel engine HW acceleration capabilities.
- *
- * \param ch I/O channel associated with this call.
- *
- * \return bitmap of HW acceleration capabilities defined by enum accel_capability.
- */
-uint64_t spdk_accel_get_capabilities(struct spdk_io_channel *ch);
-
-/**
  * Submit a copy request.
  *
  * \param ch I/O channel associated with this call.

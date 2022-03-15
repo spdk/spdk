@@ -26,6 +26,8 @@ The APIs include:
 
 A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PMEM.
 
+The API `spdk_accel_get_capabilities` has been removed.
+
 ### crypto
 
 Support for AES_XTS was added for MLX5 polled mode driver (pmd).

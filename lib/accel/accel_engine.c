@@ -128,15 +128,6 @@ spdk_accel_task_complete(struct spdk_accel_task *accel_task, int status)
 	cb_fn(cb_arg, status);
 }
 
-/* Accel framework public API for discovering current engine capabilities. */
-uint64_t
-spdk_accel_get_capabilities(struct spdk_io_channel *ch)
-{
-	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
-
-	return accel_ch->engine->capabilities;
-}
-
 inline static struct spdk_accel_task *
 _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {

@@ -6,7 +6,6 @@
 	spdk_accel_engine_finish;
 	spdk_accel_engine_module_finish;
 	spdk_accel_engine_get_io_channel;
-	spdk_accel_get_capabilities;
 	spdk_accel_submit_copy;
 	spdk_accel_submit_dualcast;
 	spdk_accel_submit_compare;
