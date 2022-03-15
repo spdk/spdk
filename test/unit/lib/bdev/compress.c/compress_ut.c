@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -181,6 +182,12 @@ mock_rte_comp_op_pool_create(const char *name, unsigned int nb_elts,
 void mock_rte_pktmbuf_free(struct rte_mbuf *m);
 #define rte_pktmbuf_free mock_rte_pktmbuf_free
 void mock_rte_pktmbuf_free(struct rte_mbuf *m)
+{
+}
+
+void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt);
+#define rte_pktmbuf_free_bulk mock_rte_pktmbuf_free_bulk
+void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt)
 {
 }
 

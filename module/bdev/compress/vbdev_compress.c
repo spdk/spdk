@@ -540,7 +540,6 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	uint64_t total_length = 0;
 	int rc = 0;
 	struct vbdev_comp_op *op_to_queue;
-	int i;
 	int src_mbuf_total = src_iovcnt;
 	int dst_mbuf_total = dst_iovcnt;
 	bool device_error = false;
@@ -615,27 +614,17 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	if (rc == 1) {
 		return 0;
 	} else if (comp_op->status == RTE_COMP_OP_STATUS_NOT_PROCESSED) {
-		/* we free mbufs differently depending on whether they were chained or not */
-		rte_pktmbuf_free(comp_op->m_src);
-		rte_pktmbuf_free(comp_op->m_dst);
 		rc = -EAGAIN;
-		goto error_enqueue;
 	} else {
 		device_error = true;
-		goto error_src_dst;
 	}
 
 	/* Error cleanup paths. */
 error_src_dst:
-	for (i = 0; i < dst_mbuf_total; i++) {
-		rte_pktmbuf_free((struct rte_mbuf *)&dst_mbufs[i]);
-	}
+	rte_pktmbuf_free_bulk(dst_mbufs, dst_iovcnt);
 error_get_dst:
-	for (i = 0; i < src_mbuf_total; i++) {
-		rte_pktmbuf_free((struct rte_mbuf *)&src_mbufs[i]);
-	}
+	rte_pktmbuf_free_bulk(src_mbufs, src_iovcnt);
 error_get_src:
-error_enqueue:
 	rte_comp_op_free(comp_op);
 error_get_op:
 
