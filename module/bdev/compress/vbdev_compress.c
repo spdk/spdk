@@ -3,7 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1467,6 +1467,15 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 
 	if (comp_bdev->device_qp != NULL) {
+		uint64_t comp_feature_flags =
+			comp_bdev->device_qp->device->cdev_info.capabilities[RTE_COMP_ALGO_DEFLATE].comp_feature_flags;
+
+		if (comp_feature_flags & (RTE_COMP_FF_OOP_SGL_IN_SGL_OUT | RTE_COMP_FF_OOP_SGL_IN_LB_OUT)) {
+			comp_bdev->backing_dev.sgl_in = true;
+		}
+		if (comp_feature_flags & (RTE_COMP_FF_OOP_SGL_IN_SGL_OUT | RTE_COMP_FF_OOP_LB_IN_SGL_OUT)) {
+			comp_bdev->backing_dev.sgl_out = true;
+		}
 		return 0;
 	} else {
 		SPDK_ERRLOG("out of qpairs, cannot assign one to comp_bdev %p\n", comp_bdev);
