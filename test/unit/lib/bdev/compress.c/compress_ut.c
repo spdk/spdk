@@ -468,15 +468,12 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 	case FAKE_ENQUEUE_BUSY:
 		op->status = RTE_COMP_OP_STATUS_NOT_PROCESSED;
 		return 0;
-		break;
 	case FAKE_ENQUEUE_SUCCESS:
 		op->status = RTE_COMP_OP_STATUS_SUCCESS;
 		return 1;
-		break;
 	case FAKE_ENQUEUE_ERROR:
 		op->status = RTE_COMP_OP_STATUS_ERROR;
 		return 0;
-		break;
 	default:
 		break;
 	}
@@ -500,7 +497,6 @@ rte_compressdev_enqueue_burst(uint8_t dev_id, uint16_t qp_id, struct rte_comp_op
 		op_mbuf[UT_MBUFS_PER_OP_BOUND_TEST - 1] = op->m_src->next->next->next;
 		ut_boundary_alloc = false;
 	}
-
 
 	for (i = 0; i < num_src_mbufs; i++) {
 		CU_ASSERT(op_mbuf[i]->buf_addr == exp_mbuf[i]->buf_addr);
@@ -546,6 +542,7 @@ test_setup(void)
 	thread = spdk_thread_create(NULL, NULL);
 	spdk_set_thread(thread);
 
+	g_comp_bdev.drv_name = "test";
 	g_comp_bdev.reduce_thread = thread;
 	g_comp_bdev.backing_dev.unmap = _comp_reduce_unmap;
 	g_comp_bdev.backing_dev.readv = _comp_reduce_readv;
@@ -554,6 +551,8 @@ test_setup(void)
 	g_comp_bdev.backing_dev.decompress = _comp_reduce_decompress;
 	g_comp_bdev.backing_dev.blocklen = 512;
 	g_comp_bdev.backing_dev.blockcnt = 1024 * 16;
+	g_comp_bdev.backing_dev.sgl_in = true;
+	g_comp_bdev.backing_dev.sgl_out = true;
 
 	g_comp_bdev.device_qp = &g_device_qp;
 	g_comp_bdev.device_qp->device = &g_device;
@@ -758,6 +757,25 @@ test_compress_operation(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
 	CU_ASSERT(rc == 0);
 
+	/* test sgl out failure */
+	g_comp_bdev.backing_dev.sgl_out = false;
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], 1,
+				 &dst_iovs[0], dst_iovcnt, true, &cb_arg);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	g_comp_bdev.backing_dev.sgl_out = true;
+
+	/* test sgl in failure */
+	g_comp_bdev.backing_dev.sgl_in = false;
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	rc = _compress_operation(&g_comp_bdev.backing_dev, &src_iovs[0], src_iovcnt,
+				 &dst_iovs[0], 1, true, &cb_arg);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
+	g_comp_bdev.backing_dev.sgl_in = true;
+
+
 }
 
 static void
@@ -902,6 +920,26 @@ test_compress_operation_cross_boundary(void)
 				 &dst_iovs[0], dst_iovcnt, false, &cb_arg);
 	CU_ASSERT(TAILQ_EMPTY(&g_comp_bdev.queued_comp_ops) == true);
 	CU_ASSERT(rc == 0);
+
+	/* Single input iov is split on page boundary, sgl_in is not supported */
+	g_comp_bdev.backing_dev.sgl_in = false;
+	g_small_size_counter = 0;
+	g_small_size_modify = 1;
+	g_small_size = 0x800;
+	rc = _compress_operation(&g_comp_bdev.backing_dev, src_iovs, 1,
+				 dst_iovs, 1, false, &cb_arg);
+	CU_ASSERT(rc == -EINVAL);
+	g_comp_bdev.backing_dev.sgl_in = true;
+
+	/* Single output iov is split on page boundary, sgl_out is not supported */
+	g_comp_bdev.backing_dev.sgl_out = false;
+	g_small_size_counter = 0;
+	g_small_size_modify = 2;
+	g_small_size = 0x800;
+	rc = _compress_operation(&g_comp_bdev.backing_dev, src_iovs, 1,
+				 dst_iovs, 1, false, &cb_arg);
+	CU_ASSERT(rc == -EINVAL);
+	g_comp_bdev.backing_dev.sgl_out = true;
 }
 
 static void

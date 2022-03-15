@@ -565,6 +565,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		rc = -ENOMEM;
 		goto error_get_src;
 	}
+	assert(src_mbufs[0]);
 
 	rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp, (struct rte_mbuf **)&dst_mbufs[0], dst_iovcnt);
 	if (rc) {
@@ -572,15 +573,26 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 		rc = -ENOMEM;
 		goto error_get_dst;
 	}
+	assert(dst_mbufs[0]);
 
-	/* There is a 1:1 mapping between a bdev_io and a compression operation, but
-	 * all compression PMDs that SPDK uses support chaining so build our mbuf chain
-	 * and associate with our single comp_op.
+	/* There is a 1:1 mapping between a bdev_io and a compression operation
+	 * Some PMDs that SPDK uses don't support chaining, but reduce library should
+	 * provide correct buffers
+	 * Build our mbuf chain and associate it with our single comp_op.
 	 */
-
-	rc = _setup_compress_mbuf(&src_mbufs[0], &src_mbuf_total, &total_length,
+	rc = _setup_compress_mbuf(src_mbufs, &src_mbuf_total, &total_length,
 				  src_iovs, src_iovcnt, reduce_cb_arg);
 	if (rc < 0) {
+		goto error_src_dst;
+	}
+	if (!comp_bdev->backing_dev.sgl_in && src_mbufs[0]->next != NULL) {
+		if (src_iovcnt == 1) {
+			SPDK_ERRLOG("Src buffer crosses 2MB boundary but driver %s doesn't support SGL input\n",
+				    comp_bdev->drv_name);
+		} else {
+			SPDK_ERRLOG("Driver %s doesn't support SGL input\n", comp_bdev->drv_name);
+		}
+		rc = -EINVAL;
 		goto error_src_dst;
 	}
 
@@ -588,10 +600,19 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	comp_op->src.offset = 0;
 	comp_op->src.length = total_length;
 
-	/* setup dst mbufs, for the current test being used with this code there's only one vector */
-	rc = _setup_compress_mbuf(&dst_mbufs[0], &dst_mbuf_total, NULL,
+	rc = _setup_compress_mbuf(dst_mbufs, &dst_mbuf_total, NULL,
 				  dst_iovs, dst_iovcnt, reduce_cb_arg);
 	if (rc < 0) {
+		goto error_src_dst;
+	}
+	if (!comp_bdev->backing_dev.sgl_out && dst_mbufs[0]->next != NULL) {
+		if (dst_iovcnt == 1) {
+			SPDK_ERRLOG("Dst buffer crosses 2MB boundary but driver %s doesn't support SGL output\n",
+				    comp_bdev->drv_name);
+		} else {
+			SPDK_ERRLOG("Driver %s doesn't support SGL output\n", comp_bdev->drv_name);
+		}
+		rc = -EINVAL;
 		goto error_src_dst;
 	}
 
