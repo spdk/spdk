@@ -298,7 +298,7 @@ spdk_accel_submit_fill(struct spdk_io_channel *ch, void *dst, uint8_t fill, uint
 	}
 
 	accel_task->dst = dst;
-	accel_task->fill_pattern = fill;
+	memset(&accel_task->fill_pattern, fill, sizeof(uint64_t));
 	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPCODE_MEMFILL;

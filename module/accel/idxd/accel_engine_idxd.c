@@ -144,7 +144,6 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 {
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	int rc = 0;
-	uint8_t fill_pattern = (uint8_t)task->fill_pattern;
 	struct iovec *iov;
 	uint32_t iovcnt;
 	struct iovec siov = {};
@@ -179,7 +178,6 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		rc = spdk_idxd_submit_compare(chan->chan, &siov, 1, &diov, 1, flags, idxd_done, task);
 		break;
 	case ACCEL_OPCODE_MEMFILL:
-		memset(&task->fill_pattern, fill_pattern, sizeof(uint64_t));
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
 		if (task->flags & ACCEL_FLAG_PERSISTENT) {

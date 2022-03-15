@@ -461,6 +461,7 @@ test_spdk_accel_submit_fill(void)
 	void *dst;
 	void *src;
 	uint8_t fill = 0xf;
+	uint64_t fill64;
 	uint64_t nbytes = TEST_SUBMIT_SIZE;
 	void *cb_arg = NULL;
 	int rc;
@@ -473,6 +474,7 @@ test_spdk_accel_submit_fill(void)
 	src = calloc(1, TEST_SUBMIT_SIZE);
 	SPDK_CU_ASSERT_FATAL(src != NULL);
 	memset(src, fill, TEST_SUBMIT_SIZE);
+	memset(&fill64, fill, sizeof(uint64_t));
 
 	/* Fail with no tasks on _get_task() */
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, dummy_submit_cb_fn, cb_arg);
@@ -492,7 +494,7 @@ test_spdk_accel_submit_fill(void)
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst);
-	CU_ASSERT(task.fill_pattern == fill);
+	CU_ASSERT(task.fill_pattern == fill64);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMFILL);
 	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(task.flags == 0);
@@ -512,7 +514,7 @@ test_spdk_accel_submit_fill(void)
 	rc = spdk_accel_submit_fill(g_ch, dst, fill, nbytes, flags, dummy_submit_cb_fn, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst);
-	CU_ASSERT(task.fill_pattern == fill);
+	CU_ASSERT(task.fill_pattern == fill64);
 	CU_ASSERT(task.op_code == ACCEL_OPCODE_MEMFILL);
 	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(task.flags == 0);
