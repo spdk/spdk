@@ -1816,6 +1816,9 @@ bdev_nvme_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 	nvme_ctrlr->resetting = true;
 
+	assert(nvme_ctrlr->reset_start_tsc == 0);
+	nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
+
 	pthread_mutex_unlock(&nvme_ctrlr->mutex);
 
 	spdk_thread_send_msg(nvme_ctrlr->thread, _bdev_nvme_reset, nvme_ctrlr);
