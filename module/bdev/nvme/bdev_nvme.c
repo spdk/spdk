@@ -825,14 +825,10 @@ nvme_ctrlr_is_available(struct nvme_ctrlr *nvme_ctrlr)
 	return true;
 }
 
-static inline struct nvme_io_path *
-bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
+static struct nvme_io_path *
+_bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
 	struct nvme_io_path *io_path, *non_optimized = NULL;
-
-	if (spdk_likely(nbdev_ch->current_io_path != NULL)) {
-		return nbdev_ch->current_io_path;
-	}
 
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
 		if (spdk_unlikely(!nvme_io_path_is_connected(io_path))) {
@@ -859,6 +855,16 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 	}
 
 	return non_optimized;
+}
+
+static inline struct nvme_io_path *
+bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
+{
+	if (spdk_unlikely(nbdev_ch->current_io_path == NULL)) {
+		return _bdev_nvme_find_io_path(nbdev_ch);
+	}
+
+	return nbdev_ch->current_io_path;
 }
 
 /* Return true if there is any io_path whose qpair is active or ctrlr is not failed,
