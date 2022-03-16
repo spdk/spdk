@@ -1214,13 +1214,51 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 				     &req->backing_cb_args);
 }
 
+/* This function can be called when we are compressing a new data or in case of read-modify-write
+ * In the first case possible paddings should be filled with zeroes, in the second case the paddings
+ * should point to already read and decompressed buffer */
+static inline void
+_prepare_compress_chunk(struct spdk_reduce_vol_request *req, bool zero_paddings)
+{
+	struct spdk_reduce_vol *vol = req->vol;
+	char *padding_buffer = zero_paddings ? g_zero_buf : req->decomp_buf;
+	uint64_t chunk_offset, ttl_len = 0;
+	uint64_t remainder = 0;
+	uint32_t lbsize = vol->params.logical_block_size;
+	int i;
+
+	req->decomp_iovcnt = 0;
+	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
+
+	if (chunk_offset != 0) {
+		ttl_len += chunk_offset * lbsize;
+		req->decomp_iov[0].iov_base = padding_buffer;
+		req->decomp_iov[0].iov_len = ttl_len;
+		req->decomp_iovcnt = 1;
+	}
+
+	/* now the user data iov, direct from the user buffer */
+	for (i = 0; i < req->iovcnt; i++) {
+		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
+		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
+		ttl_len += req->iov[i].iov_len;
+	}
+	req->decomp_iovcnt += req->iovcnt;
+
+	remainder = vol->params.chunk_size - ttl_len;
+	if (remainder) {
+		req->decomp_iov[req->decomp_iovcnt].iov_base = padding_buffer + ttl_len;
+		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
+		req->decomp_iovcnt++;
+		ttl_len += remainder;
+	}
+	assert(ttl_len == req->vol->params.chunk_size);
+}
+
 static void
 _write_decompress_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
-	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t chunk_offset, remainder, ttl_len = 0;
-	int i;
 
 	/* Negative reduce_errno indicates failure for compression operations. */
 	if (reduce_errno < 0) {
@@ -1232,37 +1270,12 @@ _write_decompress_done(void *_req, int reduce_errno)
 	 *  buffer.  This should equal the chunk size - otherwise that's another
 	 *  type of failure.
 	 */
-	if ((uint32_t)reduce_errno != vol->params.chunk_size) {
+	if ((uint32_t)reduce_errno != req->vol->params.chunk_size) {
 		_reduce_vol_complete_req(req, -EIO);
 		return;
 	}
 
-	req->decomp_iovcnt = 0;
-	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
-
-	if (chunk_offset) {
-		req->decomp_iov[0].iov_base = req->decomp_buf;
-		req->decomp_iov[0].iov_len = chunk_offset * vol->params.logical_block_size;
-		ttl_len += req->decomp_iov[0].iov_len;
-		req->decomp_iovcnt = 1;
-	}
-
-	for (i = 0; i < req->iovcnt; i++) {
-		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
-		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
-		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
-	}
-	req->decomp_iovcnt += req->iovcnt;
-
-	remainder = vol->params.chunk_size - ttl_len;
-	if (remainder) {
-		req->decomp_iov[req->decomp_iovcnt].iov_base = req->decomp_buf + ttl_len;
-		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
-		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
-		req->decomp_iovcnt++;
-	}
-	assert(ttl_len == vol->params.chunk_size);
-
+	_prepare_compress_chunk(req, false);
 	_reduce_vol_compress_chunk(req, _write_compress_done);
 }
 
@@ -1480,10 +1493,6 @@ static void
 _start_writev_request(struct spdk_reduce_vol_request *req)
 {
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t chunk_offset, ttl_len = 0;
-	uint64_t remainder = 0;
-	uint32_t lbsize;
-	int i;
 
 	TAILQ_INSERT_TAIL(&req->vol->executing_requests, req, tailq);
 	if (vol->pm_logical_map[req->logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
@@ -1497,36 +1506,9 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 		}
 	}
 
-	lbsize = vol->params.logical_block_size;
-	req->decomp_iovcnt = 0;
 	req->rmw = false;
 
-	/* Note: point to our zero buf for offset into the chunk. */
-	chunk_offset = req->offset % vol->logical_blocks_per_chunk;
-	if (chunk_offset != 0) {
-		ttl_len += chunk_offset * lbsize;
-		req->decomp_iov[0].iov_base = g_zero_buf;
-		req->decomp_iov[0].iov_len = ttl_len;
-		req->decomp_iovcnt = 1;
-	}
-
-	/* now the user data iov, direct from the user buffer */
-	for (i = 0; i < req->iovcnt; i++) {
-		req->decomp_iov[i + req->decomp_iovcnt].iov_base = req->iov[i].iov_base;
-		req->decomp_iov[i + req->decomp_iovcnt].iov_len = req->iov[i].iov_len;
-		ttl_len += req->decomp_iov[i + req->decomp_iovcnt].iov_len;
-	}
-	req->decomp_iovcnt += req->iovcnt;
-
-	remainder = vol->params.chunk_size - ttl_len;
-	if (remainder) {
-		req->decomp_iov[req->decomp_iovcnt].iov_base = g_zero_buf;
-		req->decomp_iov[req->decomp_iovcnt].iov_len = remainder;
-		ttl_len += req->decomp_iov[req->decomp_iovcnt].iov_len;
-		req->decomp_iovcnt++;
-	}
-	assert(ttl_len == req->vol->params.chunk_size);
-
+	_prepare_compress_chunk(req, true);
 	_reduce_vol_compress_chunk(req, _write_compress_done);
 }
 
