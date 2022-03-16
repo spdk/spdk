@@ -1607,11 +1607,14 @@ Get information about block devices (bdevs).
 #### Parameters
 
 The user may specify no parameters in order to list all block devices, or a block device may be
-specified by name.
+specified by name.  If a timeout is specified, the method will block until a bdev with a specified
+name appears or the timeout expires.  By default, the timeout is zero, meaning the method returns
+immediately whether the bdev exists or not.
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
+timeout                 | Optional | number      | Time (ms) to wait for a bdev with specified name to appear
 
 #### Response
 

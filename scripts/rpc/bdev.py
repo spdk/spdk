@@ -1281,11 +1281,12 @@ def bdev_ftl_delete(client, name):
 
 
 @deprecated_alias('get_bdevs')
-def bdev_get_bdevs(client, name=None):
+def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
 
     Args:
         name: bdev name to query (optional; if omitted, query all bdevs)
+        timeout: time in ms to wait for the bdev with specified name to appear
 
     Returns:
         List of bdev information objects.
@@ -1293,6 +1294,8 @@ def bdev_get_bdevs(client, name=None):
     params = {}
     if name:
         params['name'] = name
+    if timeout:
+        params['timeout'] = timeout
     return client.call('bdev_get_bdevs', params)
 
 

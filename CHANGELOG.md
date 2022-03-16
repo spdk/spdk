@@ -34,6 +34,11 @@ bdev_crypto_create RPC now requires hexlified 'key' and 'key2' params for all pm
 Unhexlifying is performed during RPC command processing and the vbdev crypto module runs on
 binary keys as before.
 
+### bdev
+
+Added a timeout option to the `bdev_get_bdevs` RPC.  It allows the user to specify the amount of
+time to wait until a bdev with a given name appears in the system.
+
 ### bdev_nvme
 
 Added `bdev_nvme_add_error_injection` and `bdev_nvme_remove_error_injection` RPCs to add and

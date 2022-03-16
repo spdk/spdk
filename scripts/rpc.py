@@ -1003,11 +1003,15 @@ if __name__ == "__main__":
 
     def bdev_get_bdevs(args):
         print_dict(rpc.bdev.bdev_get_bdevs(args.client,
-                                           name=args.name))
+                                           name=args.name, timeout=args.timeout_ms))
 
     p = subparsers.add_parser('bdev_get_bdevs', aliases=['get_bdevs'],
                               help='Display current blockdev list or required blockdev')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    p.add_argument('-t', '--timeout-ms', help="""Time in ms to wait for the bdev to appear (only used
+    with the -b|--name option). The default timeout is 0, meaning the RPC returns immediately
+    whether the bdev exists or not.""",
+                   type=int, required=False)
     p.set_defaults(func=bdev_get_bdevs)
 
     def bdev_get_iostat(args):

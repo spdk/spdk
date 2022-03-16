@@ -441,7 +441,15 @@ rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 }
 
 struct rpc_bdev_get_bdevs {
-	char *name;
+	char		*name;
+	uint64_t	timeout;
+};
+
+struct rpc_bdev_get_bdevs_ctx {
+	struct rpc_bdev_get_bdevs	rpc;
+	struct spdk_jsonrpc_request	*request;
+	struct spdk_poller		*poller;
+	uint64_t			timeout_ticks;
 };
 
 static void
@@ -452,13 +460,45 @@ free_rpc_bdev_get_bdevs(struct rpc_bdev_get_bdevs *r)
 
 static const struct spdk_json_object_decoder rpc_bdev_get_bdevs_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_get_bdevs, name), spdk_json_decode_string, true},
+	{"timeout", offsetof(struct rpc_bdev_get_bdevs, timeout), spdk_json_decode_uint64, true},
 };
+
+static int
+get_bdevs_poller(void *_ctx)
+{
+	struct rpc_bdev_get_bdevs_ctx *ctx = _ctx;
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(ctx->rpc.name);
+	if (bdev == NULL && spdk_get_ticks() < ctx->timeout_ticks) {
+		return SPDK_POLLER_BUSY;
+	}
+
+	if (bdev == NULL) {
+		SPDK_ERRLOG("Timed out while waiting for bdev '%s' to appear\n", ctx->rpc.name);
+		spdk_jsonrpc_send_error_response(ctx->request, -ENODEV, spdk_strerror(ENODEV));
+	} else {
+		w = spdk_jsonrpc_begin_result(ctx->request);
+		spdk_json_write_array_begin(w);
+		rpc_dump_bdev_info(w, bdev);
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(ctx->request, w);
+	}
+
+	spdk_poller_unregister(&ctx->poller);
+	free_rpc_bdev_get_bdevs(&ctx->rpc);
+	free(ctx);
+
+	return SPDK_POLLER_BUSY;
+}
 
 static void
 rpc_bdev_get_bdevs(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
 	struct rpc_bdev_get_bdevs req = {};
+	struct rpc_bdev_get_bdevs_ctx *ctx;
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev = NULL;
 
@@ -475,9 +515,34 @@ rpc_bdev_get_bdevs(struct spdk_jsonrpc_request *request,
 	if (req.name) {
 		bdev = spdk_bdev_get_by_name(req.name);
 		if (bdev == NULL) {
-			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-			spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-			free_rpc_bdev_get_bdevs(&req);
+			if (req.timeout == 0) {
+				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+				spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
+				free_rpc_bdev_get_bdevs(&req);
+				return;
+			}
+
+			ctx = calloc(1, sizeof(*ctx));
+			if (ctx == NULL) {
+				SPDK_ERRLOG("Failed to allocate bdev_get_bdevs context\n");
+				spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+				free_rpc_bdev_get_bdevs(&req);
+				return;
+			}
+
+			ctx->poller = SPDK_POLLER_REGISTER(get_bdevs_poller, ctx, 10 * 1000);
+			if (ctx->poller == NULL) {
+				SPDK_ERRLOG("Failed to register bdev_get_bdevs poller\n");
+				spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+				free_rpc_bdev_get_bdevs(&req);
+				free(ctx);
+				return;
+			}
+
+			memcpy(&ctx->rpc, &req, sizeof(req));
+			ctx->timeout_ticks = spdk_get_ticks() + req.timeout *
+					     spdk_get_ticks_hz() / 1000ull;
+			ctx->request = request;
 			return;
 		}
 	}
