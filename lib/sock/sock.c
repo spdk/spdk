@@ -476,6 +476,25 @@ spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 	return sock->net_impl->readv(sock, iov, iovcnt);
 }
 
+void
+spdk_sock_readv_async(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	assert(req->cb_fn != NULL);
+
+	if (spdk_unlikely(sock == NULL || sock->flags.closed)) {
+		req->cb_fn(req->cb_arg, -EBADF);
+		return;
+	}
+
+	/* The socket needs to be part of a poll group */
+	if (spdk_unlikely(sock->group_impl == NULL)) {
+		req->cb_fn(req->cb_arg, -EPERM);
+		return;
+	}
+
+	sock->net_impl->readv_async(sock, req);
+}
+
 ssize_t
 spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {

@@ -34,7 +34,11 @@ struct spdk_sock_group;
  */
 struct spdk_sock_request {
 	/* When the request is completed, this callback will be called.
-	 * err will be 0 on success or a negated errno value on failure. */
+	 * On success, err will be:
+	 *   - for writes: 0,
+	 *   - for reads: number of bytes read.
+	 * On failure: negative errno value.
+	 */
 	void	(*cb_fn)(void *cb_arg, int err);
 	void				*cb_arg;
 
@@ -331,6 +335,16 @@ void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *re
  * \return the length of the received message on success, -1 on failure.
  */
 ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
+
+/**
+ * Read message from the given socket asynchronously, calling the provided callback when the whole
+ * buffer is filled or an error is encountered.  Only a single read request can be active at a time
+ * (including synchronous reads).
+ *
+ * \param sock Socket to receive message.
+ * \param req The read request to submit.
+ */
+void spdk_sock_readv_async(struct spdk_sock *sock, struct spdk_sock_request *req);
 
 /**
  * Set the value used to specify the low water mark (in bytes) for this socket.

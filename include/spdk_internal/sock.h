@@ -34,6 +34,7 @@ struct spdk_sock {
 
 	TAILQ_HEAD(, spdk_sock_request)	queued_reqs;
 	TAILQ_HEAD(, spdk_sock_request)	pending_reqs;
+	struct spdk_sock_request	*read_req;
 	int				queued_iovcnt;
 	int				cb_cnt;
 	spdk_sock_cb			cb_fn;
@@ -77,6 +78,7 @@ struct spdk_net_impl {
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
 	void (*writev_async)(struct spdk_sock *sock, struct spdk_sock_request *req);
+	void (*readv_async)(struct spdk_sock *sock, struct spdk_sock_request *req);
 	int (*flush)(struct spdk_sock *sock);
 
 	int (*set_recvlowat)(struct spdk_sock *sock, int nbytes);
@@ -201,6 +203,12 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 		req->cb_fn(req->cb_arg, -ECANCELED);
 
 		req = TAILQ_FIRST(&sock->queued_reqs);
+	}
+
+	req = sock->read_req;
+	if (req != NULL) {
+		sock->read_req = NULL;
+		req->cb_fn(req->cb_arg, -ECANCELED);
 	}
 	assert(sock->cb_cnt > 0);
 	sock->cb_cnt--;
