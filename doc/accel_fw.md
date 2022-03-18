@@ -72,10 +72,12 @@ RPC is provided, the framework is available and will use the software plug-in mo
 
 To use the IOAT engine, use the RPC [`ioat_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) before starting the application.
 
-### IDXD Module {#accel_idxd}
+### DSA Module {#accel_dsa}
+
+The DSA module supports the DSA hardware and relies on the low level IDXD library.
 
 To use the DSA engine, use the RPC
-[`idxd_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html). By default, this
+[`dsa_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html). By default, this
 will attempt to load the SPDK user-space idxd driver. To use the built-in
 kernel driver on Linux, add the `-k` parameter. See the next section for
 details on using the kernel driver.

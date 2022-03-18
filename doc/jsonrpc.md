@@ -442,7 +442,7 @@ Example response:
     "framework_monitor_context_switch",
     "spdk_kill_instance",
     "ioat_scan_accel_engine",
-    "idxd_scan_accel_engine",
+    "dsa_scan_accel_engine",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
@@ -1493,9 +1493,9 @@ Example response:
 
 ## Acceleration Framework Layer {#jsonrpc_components_accel_fw}
 
-### idxd_scan_accel_engine {#rpc_idxd_scan_accel_engine}
+### dsa_scan_accel_engine {#rpc_dsa_scan_accel_engine}
 
-Set config and enable idxd accel engine offload.
+Set config and enable dsa accel engine offload.
 This feature is considered as experimental.
 
 #### Parameters
@@ -1514,7 +1514,7 @@ Example request:
     "config_kernel_mode": false
   },
   "jsonrpc": "2.0",
-  "method": "idxd_scan_accel_engine",
+  "method": "dsa_scan_accel_engine",
   "id": 1
 }
 ~~~

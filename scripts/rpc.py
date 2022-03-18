@@ -2600,15 +2600,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Enable IOAT accel engine offload.')
     p.set_defaults(func=ioat_scan_accel_engine)
 
-    # idxd
-    def idxd_scan_accel_engine(args):
-        rpc.idxd.idxd_scan_accel_engine(args.client, config_kernel_mode=args.config_kernel_mode)
+    # dsa
+    def dsa_scan_accel_engine(args):
+        rpc.dsa.dsa_scan_accel_engine(args.client, config_kernel_mode=args.config_kernel_mode)
 
-    p = subparsers.add_parser('idxd_scan_accel_engine',
-                              help='Set config and enable idxd accel engine offload.')
-    p.add_argument('-k', '--config-kernel-mode', help='Use Kernel mode idxd',
+    p = subparsers.add_parser('dsa_scan_accel_engine',
+                              help='Set config and enable dsa accel engine offload.')
+    p.add_argument('-k', '--config-kernel-mode', help='Use Kernel mode dsa',
                    action='store_true', dest='config_kernel_mode')
-    p.set_defaults(func=idxd_scan_accel_engine, config_kernel_mode=None)
+    p.set_defaults(func=dsa_scan_accel_engine, config_kernel_mode=None)
 
     # opal
     def bdev_nvme_opal_init(args):

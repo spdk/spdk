@@ -37,8 +37,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 3
 SO_MINOR := 0
 
-LIBNAME = accel_idxd
-C_SRCS = accel_engine_idxd.c accel_engine_idxd_rpc.c
+LIBNAME = accel_dsa
+C_SRCS = accel_engine_dsa.c accel_engine_dsa_rpc.c
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 

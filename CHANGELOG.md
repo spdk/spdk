@@ -32,13 +32,18 @@ in multipath mode.
 A new option `disable_auto_failback` was added to the `bdev_nvme_set_options` RPC to disable
 automatic failback.
 
-### idxd
+### idxd / dsa
 
 A new parameter `flags` was added to all low level submission and preparation
 APIs to enable the caller to pass operation flags per the DSA specification.
 
 A new flag 'SPDK_IDXD_FLAG_PERSISTENT' was added to let DSA know that
 the destination is persistent.
+
+The RPC `idxd_scan_accel_engine` has been renamed to `dsa_scan_accel_engine`
+
+Many HW related structs/functions with the name `idxd` have been renamed `dsa`
+to more accurately represent the HW they are associated with.
 
 ### accel_fw
 

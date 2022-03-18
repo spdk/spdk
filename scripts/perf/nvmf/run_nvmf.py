@@ -1086,7 +1086,7 @@ class SPDKTarget(Target):
         self.max_queue_depth = 128
         self.bpf_proc = None
         self.bpf_scripts = []
-        self.enable_idxd = False
+        self.enable_dsa = False
 
         if "num_shared_buffers" in target_config:
             self.num_shared_buffers = target_config["num_shared_buffers"]
@@ -1098,11 +1098,11 @@ class SPDKTarget(Target):
             self.dif_insert_strip = target_config["dif_insert_strip"]
         if "bpf_scripts" in target_config:
             self.bpf_scripts = target_config["bpf_scripts"]
-        if "idxd_settings" in target_config:
-            self.enable_idxd = target_config["idxd_settings"]
+        if "dsa_settings" in target_config:
+            self.enable_dsa = target_config["dsa_settings"]
 
-        self.log_print("====IDXD settings:====")
-        self.log_print("IDXD enabled: %s" % (self.enable_idxd))
+        self.log_print("====DSA settings:====")
+        self.log_print("DSA enabled: %s" % (self.enable_dsa))
 
     @staticmethod
     def get_num_cores(core_mask):
@@ -1249,9 +1249,9 @@ class SPDKTarget(Target):
             rpc.bdev.bdev_nvme_set_options(self.client, timeout_us=0, action_on_timeout=None,
                                            nvme_adminq_poll_period_us=100000, retry_count=4)
 
-        if self.enable_idxd:
-            rpc.idxd.idxd_scan_accel_engine(self.client, config_kernel_mode=None)
-            self.log_print("Target IDXD accel engine enabled")
+        if self.enable_dsa:
+            rpc.dsa.dsa_scan_accel_engine(self.client, config_kernel_mode=None)
+            self.log_print("Target DSA accel engine enabled")
 
         rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
         rpc.framework_start_init(self.client)

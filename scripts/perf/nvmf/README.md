@@ -153,8 +153,8 @@ Optional, SPDK Target only:
   for ADQ testing. You need and ADQ-capable NIC like the Intel E810.
 - bpf_scripts - list of bpftrace scripts that will be attached during the
   test run. Available scripts can be found in the spdk/scripts/bpf directory.
-- idxd_settings - bool. Only for TCP transport. Enable offloading CRC32C
-  calculation to IDXD. You need a CPU with the Intel(R) Data Streaming
+- dsa_settings - bool. Only for TCP transport. Enable offloading CRC32C
+  calculation to DSA. You need a CPU with the Intel(R) Data Streaming
   Accelerator (DSA) engine.
 
 ### Initiator system settings section
