@@ -231,6 +231,9 @@ struct spdk_nvmf_tcp_req  {
 
 	/* In-capsule data buffer */
 	uint8_t					*buf;
+
+	struct spdk_nvmf_tcp_req		*fused_pair;
+
 	/*
 	 * The PDU for a request may be used multiple times in serial over
 	 * the request's lifetime. For example, first to send an R2T, then
@@ -239,6 +242,7 @@ struct spdk_nvmf_tcp_req  {
 	 */
 	bool					pdu_in_use;
 	bool					has_in_capsule_data;
+	bool					fused_failed;
 
 	/* transfer_tag */
 	uint16_t				ttag;
@@ -264,6 +268,8 @@ struct spdk_nvmf_tcp_qpair {
 
 	/* PDU being actively received */
 	struct nvme_tcp_pdu			*pdu_in_progress;
+
+	struct spdk_nvmf_tcp_req		*fused_first;
 
 	/* Queues to track the requests in all states */
 	TAILQ_HEAD(, spdk_nvmf_tcp_req)		tcp_req_working_queue;
@@ -2555,6 +2561,58 @@ nvmf_tcp_set_in_capsule_data(struct spdk_nvmf_tcp_qpair *tqpair,
 	}
 }
 
+static void
+nvmf_tcp_check_fused_ordering(struct spdk_nvmf_tcp_transport *ttransport,
+			      struct spdk_nvmf_tcp_qpair *tqpair,
+			      struct spdk_nvmf_tcp_req *tcp_req)
+{
+	enum spdk_nvme_cmd_fuse last, next;
+
+	last = tqpair->fused_first ? tqpair->fused_first->cmd.fuse : SPDK_NVME_CMD_FUSE_NONE;
+	next = tcp_req->cmd.fuse;
+
+	assert(last != SPDK_NVME_CMD_FUSE_SECOND);
+
+	if (spdk_likely(last == SPDK_NVME_CMD_FUSE_NONE && next == SPDK_NVME_CMD_FUSE_NONE)) {
+		return;
+	}
+
+	if (last == SPDK_NVME_CMD_FUSE_FIRST) {
+		if (next == SPDK_NVME_CMD_FUSE_SECOND) {
+			/* This is a valid pair of fused commands.  Point them at each other
+			 * so they can be submitted consecutively once ready to be executed.
+			 */
+			tqpair->fused_first->fused_pair = tcp_req;
+			tcp_req->fused_pair = tqpair->fused_first;
+			tqpair->fused_first = NULL;
+			return;
+		} else {
+			/* Mark the last req as failed since it wasn't followed by a SECOND. */
+			tqpair->fused_first->fused_failed = true;
+
+			/*
+			 * If the last req is in READY_TO_EXECUTE state, then call
+			 * nvmf_tcp_req_process(), otherwise nothing else will kick it.
+			 */
+			if (tqpair->fused_first->state == TCP_REQUEST_STATE_READY_TO_EXECUTE) {
+				nvmf_tcp_req_process(ttransport, tqpair->fused_first);
+			}
+
+			tqpair->fused_first = NULL;
+		}
+	}
+
+	if (next == SPDK_NVME_CMD_FUSE_FIRST) {
+		/* Set tqpair->fused_first here so that we know to check that the next request
+		 * is a SECOND (and to fail this one if it isn't).
+		 */
+		tqpair->fused_first = tcp_req;
+	} else if (next == SPDK_NVME_CMD_FUSE_SECOND) {
+		/* Mark this req failed since it is a SECOND and the last one was not a FIRST. */
+		tcp_req->fused_failed = true;
+	}
+}
+
 static bool
 nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		     struct spdk_nvmf_tcp_req *tcp_req)
@@ -2601,6 +2659,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				tcp_req->req.dif_enabled = true;
 				tqpair->pdu_in_progress->dif_ctx = &tcp_req->req.dif.dif_ctx;
 			}
+
+			nvmf_tcp_check_fused_ordering(ttransport, tqpair, tcp_req);
 
 			/* The next state transition depends on the data transfer needs of this request. */
 			tcp_req->req.xfer = spdk_nvmf_req_get_xfer(&tcp_req->req);
@@ -2746,9 +2806,55 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				tcp_req->req.length = tcp_req->req.dif.elba_length;
 			}
 
+			if (tcp_req->cmd.fuse != SPDK_NVME_CMD_FUSE_NONE) {
+				if (tcp_req->fused_failed) {
+					/* This request failed FUSED semantics.  Fail it immediately, without
+					 * even sending it to the target layer.
+					 */
+					tcp_req->req.rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+					tcp_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+					nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
+					break;
+				}
+
+				if (tcp_req->fused_pair == NULL ||
+				    tcp_req->fused_pair->state != TCP_REQUEST_STATE_READY_TO_EXECUTE) {
+					/* This request is ready to execute, but either we don't know yet if it's
+					 * valid - i.e. this is a FIRST but we haven't received the next request yet),
+					 * or the other request of this fused pair isn't ready to execute. So
+					 * break here and this request will get processed later either when the
+					 * other request is ready or we find that this request isn't valid.
+					 */
+					break;
+				}
+			}
+
 			if (!spdk_nvmf_request_using_zcopy(&tcp_req->req)) {
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_EXECUTING);
+				/* If we get to this point, and this request is a fused command, we know that
+				 * it is part of a valid sequence (FIRST followed by a SECOND) and that both
+				 * requests are READY_TO_EXECUTE.  So call spdk_nvmf_request_exec() both on this
+				 * request, and the other request of the fused pair, in the correct order.
+				 * Also clear the ->fused_pair pointers on both requests, since after this point
+				 * we no longer need to maintain the relationship between these two requests.
+				 */
+				if (tcp_req->cmd.fuse == SPDK_NVME_CMD_FUSE_SECOND) {
+					assert(tcp_req->fused_pair != NULL);
+					assert(tcp_req->fused_pair->fused_pair == tcp_req);
+					nvmf_tcp_req_set_state(tcp_req->fused_pair, TCP_REQUEST_STATE_EXECUTING);
+					spdk_nvmf_request_exec(&tcp_req->fused_pair->req);
+					tcp_req->fused_pair->fused_pair = NULL;
+					tcp_req->fused_pair = NULL;
+				}
 				spdk_nvmf_request_exec(&tcp_req->req);
+				if (tcp_req->cmd.fuse == SPDK_NVME_CMD_FUSE_FIRST) {
+					assert(tcp_req->fused_pair != NULL);
+					assert(tcp_req->fused_pair->fused_pair == tcp_req);
+					nvmf_tcp_req_set_state(tcp_req->fused_pair, TCP_REQUEST_STATE_EXECUTING);
+					spdk_nvmf_request_exec(&tcp_req->fused_pair->req);
+					tcp_req->fused_pair->fused_pair = NULL;
+					tcp_req->fused_pair = NULL;
+				}
 			} else {
 				/* For zero-copy, only requests with data coming from host to the
 				 * controller can end up here. */
@@ -2756,6 +2862,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_AWAITING_ZCOPY_COMMIT);
 				spdk_nvmf_request_zcopy_end(&tcp_req->req, true);
 			}
+
 			break;
 		case TCP_REQUEST_STATE_EXECUTING:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_EXECUTING, tqpair->qpair.qid, 0, (uintptr_t)tcp_req,
@@ -2822,6 +2929,19 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			tcp_req->req.length = 0;
 			tcp_req->req.iovcnt = 0;
 			tcp_req->req.data = NULL;
+			tcp_req->fused_failed = false;
+			if (tcp_req->fused_pair) {
+				/* This req was part of a valid fused pair, but failed before it got to
+				 * READ_TO_EXECUTE state.  This means we need to fail the other request
+				 * in the pair, because it is no longer part of a valid pair.  If the pair
+				 * already reached READY_TO_EXECUTE state, we need to kick it.
+				 */
+				tcp_req->fused_pair->fused_failed = true;
+				if (tcp_req->fused_pair->state == TCP_REQUEST_STATE_READY_TO_EXECUTE) {
+					nvmf_tcp_req_process(ttransport, tcp_req->fused_pair);
+				}
+				tcp_req->fused_pair = NULL;
+			}
 
 			nvmf_tcp_req_pdu_fini(tcp_req);
 
