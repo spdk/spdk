@@ -264,6 +264,9 @@ struct spdk_nvmf_rdma_request {
 	uint32_t				num_outstanding_data_wr;
 	uint64_t				receive_tsc;
 
+	bool					fused_failed;
+	struct spdk_nvmf_rdma_request		*fused_pair;
+
 	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
 
@@ -379,6 +382,12 @@ struct spdk_nvmf_rdma_qpair {
 	 * qp state and recover from errors.
 	 */
 	enum ibv_qp_state			ibv_state;
+
+	/* Points to the a request that has fuse bits set to
+	 * SPDK_NVME_CMD_FUSE_FIRST, when the qpair is waiting
+	 * for the request that has SPDK_NVME_CMD_FUSE_SECOND.
+	 */
+	struct spdk_nvmf_rdma_request		*fused_first;
 
 	/*
 	 * io_channel which is used to destroy qpair when it is removed from poll group
@@ -1938,11 +1947,75 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->data.wr.next = NULL;
 	rdma_req->offset = 0;
 	rdma_req->req.dif_enabled = false;
+	rdma_req->fused_failed = false;
+	if (rdma_req->fused_pair) {
+		/* This req was part of a valid fused pair, but failed before it got to
+		 * READ_TO_EXECUTE state.  This means we need to fail the other request
+		 * in the pair, because it is no longer part of a valid pair.  If the pair
+		 * already reached READY_TO_EXECUTE state, we need to kick it.
+		 */
+		rdma_req->fused_pair->fused_failed = true;
+		if (rdma_req->fused_pair->state == RDMA_REQUEST_STATE_READY_TO_EXECUTE) {
+			nvmf_rdma_request_process(rtransport, rdma_req->fused_pair);
+		}
+		rdma_req->fused_pair = NULL;
+	}
 	memset(&rdma_req->req.dif, 0, sizeof(rdma_req->req.dif));
 	rqpair->qd--;
 
 	STAILQ_INSERT_HEAD(&rqpair->resources->free_queue, rdma_req, state_link);
 	rdma_req->state = RDMA_REQUEST_STATE_FREE;
+}
+
+static void
+nvmf_rdma_check_fused_ordering(struct spdk_nvmf_rdma_transport *rtransport,
+			       struct spdk_nvmf_rdma_qpair *rqpair,
+			       struct spdk_nvmf_rdma_request *rdma_req)
+{
+	enum spdk_nvme_cmd_fuse last, next;
+
+	last = rqpair->fused_first ? rqpair->fused_first->req.cmd->nvme_cmd.fuse : SPDK_NVME_CMD_FUSE_NONE;
+	next = rdma_req->req.cmd->nvme_cmd.fuse;
+
+	assert(last != SPDK_NVME_CMD_FUSE_SECOND);
+
+	if (spdk_likely(last == SPDK_NVME_CMD_FUSE_NONE && next == SPDK_NVME_CMD_FUSE_NONE)) {
+		return;
+	}
+
+	if (last == SPDK_NVME_CMD_FUSE_FIRST) {
+		if (next == SPDK_NVME_CMD_FUSE_SECOND) {
+			/* This is a valid pair of fused commands.  Point them at each other
+			 * so they can be submitted consecutively once ready to be executed.
+			 */
+			rqpair->fused_first->fused_pair = rdma_req;
+			rdma_req->fused_pair = rqpair->fused_first;
+			rqpair->fused_first = NULL;
+			return;
+		} else {
+			/* Mark the last req as failed since it wasn't followed by a SECOND. */
+			rqpair->fused_first->fused_failed = true;
+
+			/* If the last req is in READY_TO_EXECUTE state, then call
+			 * nvmf_rdma_request_process(), otherwise nothing else will kick it.
+			 */
+			if (rqpair->fused_first->state == RDMA_REQUEST_STATE_READY_TO_EXECUTE) {
+				nvmf_rdma_request_process(rtransport, rqpair->fused_first);
+			}
+
+			rqpair->fused_first = NULL;
+		}
+	}
+
+	if (next == SPDK_NVME_CMD_FUSE_FIRST) {
+		/* Set rqpair->fused_first here so that we know to check that the next request
+		 * is a SECOND (and to fail this one if it isn't).
+		 */
+		rqpair->fused_first = rdma_req;
+	} else if (next == SPDK_NVME_CMD_FUSE_SECOND) {
+		/* Mark this req failed since it ia SECOND and the last one was not a FIRST. */
+		rdma_req->fused_failed = true;
+	}
 }
 
 bool
@@ -2007,6 +2080,8 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			if (spdk_unlikely(spdk_nvmf_request_get_dif_ctx(&rdma_req->req, &rdma_req->req.dif.dif_ctx))) {
 				rdma_req->req.dif_enabled = true;
 			}
+
+			nvmf_rdma_check_fused_ordering(rtransport, rqpair, rdma_req);
 
 #ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
 			rdma_req->rsp.wr.opcode = IBV_WR_SEND;
@@ -2129,8 +2204,54 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				rdma_req->req.length = rdma_req->req.dif.elba_length;
 			}
 
+			if (rdma_req->req.cmd->nvme_cmd.fuse != SPDK_NVME_CMD_FUSE_NONE) {
+				if (rdma_req->fused_failed) {
+					/* This request failed FUSED semantics.  Fail it immediately, without
+					 * even sending it to the target layer.
+					 */
+					rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+					rsp->status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
+					rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+					break;
+				}
+
+				if (rdma_req->fused_pair == NULL ||
+				    rdma_req->fused_pair->state != RDMA_REQUEST_STATE_READY_TO_EXECUTE) {
+					/* This request is ready to execute, but either we don't know yet if it's
+					 * valid - i.e. this is a FIRST but we haven't received the next
+					 * request yet or the other request of this fused pair isn't ready to
+					 * execute.  So break here and this request will get processed later either
+					 * when the other request is ready or we find that this request isn't valid.
+					 */
+					break;
+				}
+			}
+
+			/* If we get to this point, and this request is a fused command, we know that
+			 * it is part of valid sequence (FIRST followed by a SECOND) and that both
+			 * requests are READY_TO_EXECUTE. So call spdk_nvmf_request_exec() both on this
+			 * request, and the other request of the fused pair, in the correct order.
+			 * Also clear the ->fused_pair pointers on both requests, since after this point
+			 * we no longer need to maintain the relationship between these two requests.
+			 */
+			if (rdma_req->req.cmd->nvme_cmd.fuse == SPDK_NVME_CMD_FUSE_SECOND) {
+				assert(rdma_req->fused_pair != NULL);
+				assert(rdma_req->fused_pair->fused_pair != NULL);
+				rdma_req->fused_pair->state = RDMA_REQUEST_STATE_EXECUTING;
+				spdk_nvmf_request_exec(&rdma_req->fused_pair->req);
+				rdma_req->fused_pair->fused_pair = NULL;
+				rdma_req->fused_pair = NULL;
+			}
 			rdma_req->state = RDMA_REQUEST_STATE_EXECUTING;
 			spdk_nvmf_request_exec(&rdma_req->req);
+			if (rdma_req->req.cmd->nvme_cmd.fuse == SPDK_NVME_CMD_FUSE_FIRST) {
+				assert(rdma_req->fused_pair != NULL);
+				assert(rdma_req->fused_pair->fused_pair != NULL);
+				rdma_req->fused_pair->state = RDMA_REQUEST_STATE_EXECUTING;
+				spdk_nvmf_request_exec(&rdma_req->fused_pair->req);
+				rdma_req->fused_pair->fused_pair = NULL;
+				rdma_req->fused_pair = NULL;
+			}
 			break;
 		case RDMA_REQUEST_STATE_EXECUTING:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_EXECUTING, 0, 0,
