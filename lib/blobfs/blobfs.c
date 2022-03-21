@@ -750,6 +750,14 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		}
 
 		f->name = strdup(name);
+		if (!f->name) {
+			SPDK_ERRLOG("Cannot allocate memory for file name\n");
+			args->fn.fs_op_with_handle(args->arg, fs, -ENOMEM);
+			free_fs_request(req);
+			file_free(f);
+			return;
+		}
+
 		f->blobid = spdk_blob_get_id(blob);
 		f->length = *length;
 		f->length_flushed = *length;
@@ -1350,6 +1358,13 @@ _fs_md_rename_file(struct spdk_fs_request *req)
 
 	free(f->name);
 	f->name = strdup(args->op.rename.new_name);
+	if (!f->name) {
+		SPDK_ERRLOG("Cannot allocate memory for file name\n");
+		args->fn.fs_op(args->arg, -ENOMEM);
+		free_fs_request(req);
+		return;
+	}
+
 	args->file = f;
 	spdk_bs_open_blob(args->fs->bs, f->blobid, fs_rename_blob_open_cb, req);
 }
