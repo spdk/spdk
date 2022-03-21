@@ -31,9 +31,9 @@ disclaimer
 
 # First, add extra EPEL, ELRepo, Ceph repos to have a chance of covering most of the packages
 # on the enterprise systems, like RHEL.
-if [[ $ID == centos || $ID == rhel ]]; then
+if [[ $ID == centos || $ID == rhel || $ID == rocky ]]; then
 	repos=() enable=("epel" "elrepo" "elrepo-testing")
-	[[ $ID == centos ]] && enable+=("extras")
+	[[ $ID == centos || $ID == rocky ]] && enable+=("extras")
 	if [[ $VERSION_ID == 7* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm")
@@ -48,9 +48,10 @@ if [[ $ID == centos || $ID == rhel ]]; then
 	if [[ $VERSION_ID == 8* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
-		[[ $ID == centos ]] && repos+=("https://download.ceph.com/rpm-nautilus/el8/noarch/ceph-release-1-1.el8.noarch.rpm")
+		[[ $ID == centos || $ID == rocky ]] \
+			&& repos+=("https://download.ceph.com/rpm-nautilus/el8/noarch/ceph-release-1-1.el8.noarch.rpm")
 		# Add PowerTools needed for install CUnit-devel in Centos8
-		if [[ $ID == centos ]]; then
+		if [[ $ID == centos || $ID == rocky ]]; then
 			is_repo "PowerTools" && enable+=("PowerTools")
 			is_repo "powertools" && enable+=("powertools")
 		fi
@@ -87,7 +88,7 @@ yum install -y gcc gcc-c++ make cmake CUnit-devel libaio-devel openssl-devel \
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 7|rhel 7'; then
 	yum install -y openssl11-devel
 fi
-if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8'; then
+if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8|rocky 8'; then
 	yum install -y python36 python36-devel
 	#Create hard link to use in SPDK as python
 	if [[ ! -e /usr/bin/python && -e /etc/alternatives/python3 ]]; then
@@ -115,9 +116,9 @@ yum install -y numactl-devel nasm
 yum install -y systemtap-sdt-devel
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
-	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8'; then
+	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rocky 8'; then
 		yum install -y python3-pycodestyle
-		echo "Centos 8 does not have lcov and ShellCheck dependencies"
+		echo "Centos 8 and Rocky 8 do not have lcov and ShellCheck dependencies"
 	else
 		yum install -y python-pycodestyle lcov ShellCheck
 	fi

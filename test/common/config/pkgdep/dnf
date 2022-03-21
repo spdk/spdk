@@ -62,7 +62,7 @@ packages=(
 	llvm
 )
 
-if [[ $OSID != centos ]] || ((OSVERSION != 8)); then
+if [[ $OSID != centos && $OSID != rocky ]] || [[ $OSVERSION != 8* ]]; then
 	packages+=(btrfs-progs)
 fi
 
