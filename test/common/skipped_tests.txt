@@ -95,3 +95,4 @@ sma_nvmf_tcp
 sma_plugins
 sma_discovery
 sma_vhost
+sma_vfiouser_qemu
