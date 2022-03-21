@@ -347,10 +347,6 @@ function unittest_build() {
 	$MAKE $MAKEFLAGS
 }
 
-if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
-	run_test "valgrind" echo "using valgrind"
-fi
-
 if [ $SPDK_RUN_ASAN -eq 1 ]; then
 	run_test "asan" echo "using asan"
 fi
