@@ -61,8 +61,9 @@ function usage() {
 	echo " --without-virtio          No path required."
 	echo " --with-vfio-user[=DIR]    Build custom vfio-user transport for NVMf target and NVMe initiator."
 	echo " --without-vfio-user       example: /usr/src/libvfio-user"
-	echo " --with-pmdk[=DIR]         Build persistent memory bdev."
-	echo " --without-pmdk            example: /usr/share/pmdk"
+	echo " --with-pmdk[=DIR]         Build persistent memory bdev.
+					 example: /usr/share/pmdk"
+	echo " --without-pmdk		 No path required."
 	echo " --with-reduce             Build vbdev compression module."
 	echo " --without-reduce          No path required."
 	echo " --with-rbd                Build Ceph RBD bdev module."
