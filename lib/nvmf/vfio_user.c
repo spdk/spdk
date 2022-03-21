@@ -3603,11 +3603,11 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		*vu_group = TAILQ_FIRST(&vu_transport->poll_groups);
 	}
 
+out:
 	if (cq->group == NULL) {
 		cq->group = result;
 	}
 
-out:
 	pthread_mutex_unlock(&vu_transport->pg_lock);
 	return result;
 }
