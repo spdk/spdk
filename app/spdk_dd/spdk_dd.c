@@ -724,6 +724,20 @@ parse_flags(char *file_flags)
 	return flags;
 }
 
+#ifdef SPDK_CONFIG_URING
+static bool
+dd_is_blk(int fd)
+{
+	struct stat st;
+
+	if (fstat(fd, &st) != 0) {
+		return false;
+	}
+
+	return S_ISBLK(st.st_mode);
+}
+#endif
+
 static void
 dd_run(void *arg1)
 {
@@ -840,8 +854,17 @@ dd_run(void *arg1)
 	if (g_opts.input_file || g_opts.output_file) {
 #ifdef SPDK_CONFIG_URING
 		if (g_opts.aio == false) {
+			unsigned int io_uring_flags = IORING_SETUP_SQPOLL;
+			int flags = parse_flags(g_opts.input_file_flags) & parse_flags(g_opts.output_file_flags);
+
+			if ((flags & O_DIRECT) != 0 &&
+			    dd_is_blk(g_job.input.u.uring.fd) &&
+			    dd_is_blk(g_job.output.u.uring.fd)) {
+				io_uring_flags = IORING_SETUP_IOPOLL;
+			}
+
 			g_job.u.uring.poller = spdk_poller_register(dd_uring_poll, NULL, 0);
-			rc = io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, IORING_SETUP_SQPOLL);
+			rc = io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, io_uring_flags);
 			if (rc) {
 				SPDK_ERRLOG("Failed to create io_uring: %d (%s)\n", rc, spdk_strerror(-rc));
 				dd_exit(rc);
