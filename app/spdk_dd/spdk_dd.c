@@ -104,14 +104,10 @@ struct dd_target {
 #ifdef SPDK_CONFIG_URING
 		struct {
 			int fd;
-			struct io_uring ring;
-			struct spdk_poller *poller;
 		} uring;
 #endif
 		struct {
 			int fd;
-			io_context_t io_ctx;
-			struct spdk_poller *poller;
 		} aio;
 	} u;
 
@@ -132,6 +128,20 @@ struct dd_job {
 	struct dd_target	output;
 
 	struct dd_io		*ios;
+
+	union {
+#ifdef SPDK_CONFIG_URING
+		struct {
+			struct io_uring ring;
+			bool active;
+			struct spdk_poller *poller;
+		} uring;
+#endif
+		struct {
+			io_context_t io_ctx;
+			struct spdk_poller *poller;
+		} aio;
+	} u;
 
 	uint32_t		outstanding;
 	uint64_t		copy_size;
@@ -168,13 +178,10 @@ dd_exit(int rc)
 	if (g_job.input.type == DD_TARGET_TYPE_FILE) {
 #ifdef SPDK_CONFIG_URING
 		if (g_opts.aio == false) {
-			spdk_poller_unregister(&g_job.input.u.uring.poller);
 			close(g_job.input.u.uring.fd);
 		} else
 #endif
 		{
-			spdk_poller_unregister(&g_job.input.u.aio.poller);
-			io_destroy(g_job.input.u.aio.io_ctx);
 			close(g_job.input.u.aio.fd);
 		}
 	} else if (g_job.input.type == DD_TARGET_TYPE_BDEV && g_job.input.open) {
@@ -185,18 +192,26 @@ dd_exit(int rc)
 	if (g_job.output.type == DD_TARGET_TYPE_FILE) {
 #ifdef SPDK_CONFIG_URING
 		if (g_opts.aio == false) {
-			spdk_poller_unregister(&g_job.output.u.uring.poller);
 			close(g_job.output.u.uring.fd);
 		} else
 #endif
 		{
-			spdk_poller_unregister(&g_job.output.u.aio.poller);
-			io_destroy(g_job.output.u.aio.io_ctx);
 			close(g_job.output.u.aio.fd);
 		}
 	} else if (g_job.output.type == DD_TARGET_TYPE_BDEV && g_job.output.open) {
 		spdk_put_io_channel(g_job.output.u.bdev.ch);
 		spdk_bdev_close(g_job.output.u.bdev.desc);
+	}
+
+	if (g_job.input.type == DD_TARGET_TYPE_FILE || g_job.output.type == DD_TARGET_TYPE_FILE) {
+#ifdef SPDK_CONFIG_URING
+		if (g_opts.aio == false) {
+			spdk_poller_unregister(&g_job.u.uring.poller);
+		} else
+#endif
+		{
+			spdk_poller_unregister(&g_job.u.aio.poller);
+		}
 	}
 
 	spdk_app_stop(rc);
@@ -274,14 +289,14 @@ dd_uring_submit(struct dd_io *io, struct dd_target *target, uint64_t length, uin
 
 	io->iov.iov_base = io->buf;
 	io->iov.iov_len = length;
-	sqe = io_uring_get_sqe(&target->u.uring.ring);
+	sqe = io_uring_get_sqe(&g_job.u.uring.ring);
 	if (io->type == DD_READ || io->type == DD_POPULATE) {
 		io_uring_prep_readv(sqe, target->u.uring.fd, &io->iov, 1, offset);
 	} else {
 		io_uring_prep_writev(sqe, target->u.uring.fd, &io->iov, 1, offset);
 	}
 	io_uring_sqe_set_data(sqe, io);
-	io_uring_submit(&target->u.uring.ring);
+	io_uring_submit(&g_job.u.uring.ring);
 }
 #endif
 
@@ -336,7 +351,7 @@ dd_target_write(struct dd_io *io)
 
 			io_prep_pwrite(iocb, target->u.aio.fd, io->buf, length, write_offset);
 			iocb->data = io;
-			if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+			if (io_submit(g_job.u.aio.io_ctx, 1, &iocb) < 0) {
 				rc = -errno;
 			}
 		}
@@ -398,7 +413,7 @@ dd_target_read(struct dd_io *io)
 
 			io_prep_pread(iocb, target->u.aio.fd, io->buf, io->length, io->offset);
 			iocb->data = io;
-			if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+			if (io_submit(g_job.u.aio.io_ctx, 1, &iocb) < 0) {
 				rc = -errno;
 			}
 		}
@@ -481,7 +496,7 @@ dd_target_populate_buffer(struct dd_io *io)
 
 			io_prep_pread(iocb, target->u.aio.fd, io->buf, length, write_offset);
 			iocb->data = io;
-			if (io_submit(target->u.aio.io_ctx, 1, &iocb) < 0) {
+			if (io_submit(g_job.u.aio.io_ctx, 1, &iocb) < 0) {
 				rc = -errno;
 			}
 		}
@@ -528,14 +543,13 @@ dd_complete_poll(struct dd_io *io)
 static int
 dd_uring_poll(void *ctx)
 {
-	struct dd_target *target = ctx;
 	struct io_uring_cqe *cqe;
 	struct dd_io *io;
 	int rc = 0;
 	int i;
 
 	for (i = 0; i < (int)g_opts.queue_depth; i++) {
-		rc = io_uring_peek_cqe(&target->u.uring.ring, &cqe);
+		rc = io_uring_peek_cqe(&g_job.u.uring.ring, &cqe);
 		if (rc == 0) {
 			if (cqe->res == -EAGAIN) {
 				continue;
@@ -545,7 +559,7 @@ dd_uring_poll(void *ctx)
 			}
 
 			io = io_uring_cqe_get_data(cqe);
-			io_uring_cqe_seen(&target->u.uring.ring, cqe);
+			io_uring_cqe_seen(&g_job.u.uring.ring, cqe);
 
 			dd_complete_poll(io);
 		} else if (rc != - EAGAIN) {
@@ -559,7 +573,7 @@ dd_uring_poll(void *ctx)
 #endif
 
 static int
-dd_aio_poll(io_context_t io_ctx)
+dd_aio_poll(void *ctx)
 {
 	struct io_event events[32];
 	int rc = 0;
@@ -570,7 +584,7 @@ dd_aio_poll(io_context_t io_ctx)
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
 
-	rc = io_getevents(io_ctx, 0, 32, events, &timeout);
+	rc = io_getevents(g_job.u.aio.io_ctx, 0, 32, events, &timeout);
 
 	if (rc < 0) {
 		SPDK_ERRLOG("%s\n", strerror(-rc));
@@ -584,36 +598,6 @@ dd_aio_poll(io_context_t io_ctx)
 		}
 
 		dd_complete_poll(io);
-	}
-
-	return rc;
-}
-
-static int
-dd_input_poll(void *ctx)
-{
-	int rc = 0;
-
-	assert(g_job.input.type == DD_TARGET_TYPE_FILE);
-
-	rc = dd_aio_poll(g_job.input.u.aio.io_ctx);
-	if (rc == -ENOSPC) {
-		SPDK_ERRLOG("No more file content to read\n");
-	}
-
-	return rc;
-}
-
-static int
-dd_output_poll(void *ctx)
-{
-	int rc = 0;
-
-	assert(g_job.output.type == DD_TARGET_TYPE_FILE);
-
-	rc = dd_aio_poll(g_job.output.u.aio.io_ctx);
-	if (rc == -ENOSPC) {
-		SPDK_ERRLOG("No space left on device\n");
 	}
 
 	return rc;
@@ -671,16 +655,7 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 		g_opts.queue_depth = spdk_min(g_opts.queue_depth, g_opts.io_unit_count);
 	}
 
-#ifdef SPDK_CONFIG_URING
-	if (g_opts.aio == false) {
-		io_uring_queue_init(g_opts.queue_depth, &target->u.uring.ring, 0);
-		target->open = true;
-		return 0;
-	} else
-#endif
-	{
-		return io_setup(g_opts.queue_depth, &target->u.aio.io_ctx);
-	}
+	return 0;
 }
 
 static void
@@ -778,14 +753,6 @@ dd_run(void *arg1)
 			dd_exit(-errno);
 			return;
 		}
-#ifdef SPDK_CONFIG_URING
-		if (g_opts.aio == false) {
-			g_job.input.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.input, 0);
-		} else
-#endif
-		{
-			g_job.input.u.aio.poller = spdk_poller_register(dd_input_poll, NULL, 0);
-		}
 	} else if (g_opts.input_bdev) {
 		rc = dd_open_bdev(&g_job.input, g_opts.input_bdev, g_opts.input_offset);
 		if (rc < 0) {
@@ -835,14 +802,6 @@ dd_run(void *arg1)
 			dd_exit(-errno);
 			return;
 		}
-#ifdef SPDK_CONFIG_URING
-		if (g_opts.aio == false) {
-			g_job.output.u.uring.poller = spdk_poller_register(dd_uring_poll, &g_job.output, 0);
-		} else
-#endif
-		{
-			g_job.output.u.aio.poller = spdk_poller_register(dd_output_poll, NULL, 0);
-		}
 	} else if (g_opts.output_bdev) {
 		rc = dd_open_bdev(&g_job.output, g_opts.output_bdev, g_opts.output_offset);
 		if (rc < 0) {
@@ -887,6 +846,20 @@ dd_run(void *arg1)
 			SPDK_ERRLOG("%s - try smaller block size value\n", strerror(ENOMEM));
 			dd_exit(-ENOMEM);
 			return;
+		}
+	}
+
+	if (g_opts.input_file || g_opts.output_file) {
+#ifdef SPDK_CONFIG_URING
+		if (g_opts.aio == false) {
+			g_job.u.uring.poller = spdk_poller_register(dd_uring_poll, NULL, 0);
+			io_uring_queue_init(g_opts.queue_depth, &g_job.u.uring.ring, 0);
+			g_job.u.uring.active = true;
+		} else
+#endif
+		{
+			g_job.u.aio.poller = spdk_poller_register(dd_aio_poll, NULL, 0);
+			io_setup(g_opts.queue_depth, &g_job.u.aio.io_ctx);
 		}
 	}
 
@@ -1078,17 +1051,19 @@ dd_free(void)
 	free(g_opts.input_file_flags);
 	free(g_opts.output_file_flags);
 
-#ifdef SPDK_CONFIG_URING
-	if (g_opts.aio == false) {
-		if (g_job.input.type == DD_TARGET_TYPE_FILE && g_job.input.open == true) {
-			io_uring_queue_exit(&g_job.input.u.uring.ring);
-		}
 
-		if (g_job.output.type == DD_TARGET_TYPE_FILE && g_job.output.open == true) {
-			io_uring_queue_exit(&g_job.output.u.uring.ring);
+	if (g_job.input.type == DD_TARGET_TYPE_FILE || g_job.output.type == DD_TARGET_TYPE_FILE) {
+#ifdef SPDK_CONFIG_URING
+		if (g_opts.aio == false) {
+			if (g_job.u.uring.active) {
+				io_uring_queue_exit(&g_job.u.uring.ring);
+			}
+		} else
+#endif
+		{
+			io_destroy(g_job.u.aio.io_ctx);
 		}
 	}
-#endif
 
 	if (g_job.ios) {
 		for (i = 0; i < g_opts.queue_depth; i++) {
