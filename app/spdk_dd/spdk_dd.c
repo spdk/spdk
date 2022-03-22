@@ -644,7 +644,11 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 	}
 
 	target->block_size = spdk_max(spdk_fd_get_blocklen(*fd), 1);
+
 	target->total_size = spdk_fd_get_size(*fd);
+	if (target->total_size == 0) {
+		target->total_size = g_opts.io_unit_size * g_opts.io_unit_count;
+	}
 
 	if (input == true) {
 		g_opts.queue_depth = spdk_min(g_opts.queue_depth,
