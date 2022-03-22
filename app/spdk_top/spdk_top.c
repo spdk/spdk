@@ -271,7 +271,6 @@ struct rpc_core_info {
 struct rpc_scheduler {
 	char *scheduler_name;
 	uint64_t scheduler_period;
-	char *governor_name;
 };
 
 struct rpc_thread_info g_threads_info[RPC_MAX_THREADS];
@@ -564,7 +563,6 @@ static void
 free_rpc_scheduler(struct rpc_scheduler *req)
 {
 	free(req->scheduler_name);
-	free(req->governor_name);
 }
 
 static const struct spdk_json_object_decoder rpc_scheduler_decoders[] = {
@@ -1111,8 +1109,8 @@ get_scheduler_data(void)
 	}
 
 	memset(&scheduler_info, 0, sizeof(scheduler_info));
-	if (spdk_json_decode_object(json_resp->result, rpc_scheduler_decoders,
-				    SPDK_COUNTOF(rpc_scheduler_decoders), &scheduler_info)) {
+	if (spdk_json_decode_object_relaxed(json_resp->result, rpc_scheduler_decoders,
+					    SPDK_COUNTOF(rpc_scheduler_decoders), &scheduler_info)) {
 		rc = -EINVAL;
 	} else {
 		pthread_mutex_lock(&g_thread_lock);
