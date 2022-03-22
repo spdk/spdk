@@ -29,7 +29,7 @@
 
 enum spdk_sock_task_type {
 	SPDK_SOCK_TASK_POLLIN = 0,
-	SPDK_SOCK_TASK_RECV,
+	SPDK_SOCK_TASK_ERRQUEUE,
 	SPDK_SOCK_TASK_WRITE,
 	SPDK_SOCK_TASK_CANCEL,
 };
@@ -61,7 +61,7 @@ struct spdk_uring_sock {
 	uint32_t				sendmsg_idx;
 	struct spdk_uring_sock_group_impl	*group;
 	struct spdk_uring_task			write_task;
-	struct spdk_uring_task			recv_task;
+	struct spdk_uring_task			errqueue_task;
 	struct spdk_uring_task			pollin_task;
 	struct spdk_uring_task			cancel_task;
 	struct spdk_pipe			*recv_pipe;
@@ -835,7 +835,7 @@ _sock_check_zcopy(struct spdk_sock *_sock, int status)
 		return 0;
 	}
 
-	cm = CMSG_FIRSTHDR(&sock->recv_task.msg);
+	cm = CMSG_FIRSTHDR(&sock->errqueue_task.msg);
 	if (!((cm->cmsg_level == SOL_IP && cm->cmsg_type == IP_RECVERR) ||
 	      (cm->cmsg_level == SOL_IPV6 && cm->cmsg_type == IPV6_RECVERR))) {
 		SPDK_WARNLOG("Unexpected cmsg level or type!\n");
@@ -880,10 +880,10 @@ _sock_check_zcopy(struct spdk_sock *_sock, int status)
 }
 
 static void
-_sock_prep_recv(struct spdk_sock *_sock)
+_sock_prep_errqueue(struct spdk_sock *_sock)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
-	struct spdk_uring_task *task = &sock->recv_task;
+	struct spdk_uring_task *task = &sock->errqueue_task;
 	struct io_uring_sqe *sqe;
 
 	if (task->status == SPDK_URING_SOCK_TASK_IN_PROCESS) {
@@ -1027,7 +1027,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 		case SPDK_SOCK_TASK_POLLIN:
 #ifdef SPDK_ZEROCOPY
 			if ((status & POLLERR) == POLLERR) {
-				_sock_prep_recv(&sock->base);
+				_sock_prep_errqueue(&sock->base);
 			}
 #endif
 			if ((status & POLLIN) == POLLIN) {
@@ -1051,7 +1051,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 
 			break;
 #ifdef SPDK_ZEROCOPY
-		case SPDK_SOCK_TASK_RECV:
+		case SPDK_SOCK_TASK_ERRQUEUE:
 			if (spdk_unlikely(status == -ECANCELED)) {
 				sock->connection_status = status;
 				break;
@@ -1360,10 +1360,10 @@ uring_sock_group_impl_add_sock(struct spdk_sock_group_impl *_group,
 	sock->pollin_task.sock = sock;
 	sock->pollin_task.type = SPDK_SOCK_TASK_POLLIN;
 
-	sock->recv_task.sock = sock;
-	sock->recv_task.type = SPDK_SOCK_TASK_RECV;
-	sock->recv_task.msg.msg_control = sock->buf;
-	sock->recv_task.msg.msg_controllen = sizeof(sock->buf);
+	sock->errqueue_task.sock = sock;
+	sock->errqueue_task.type = SPDK_SOCK_TASK_ERRQUEUE;
+	sock->errqueue_task.msg.msg_control = sock->buf;
+	sock->errqueue_task.msg.msg_controllen = sizeof(sock->buf);
 
 	sock->cancel_task.sock = sock;
 	sock->cancel_task.type = SPDK_SOCK_TASK_CANCEL;
@@ -1459,11 +1459,11 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 		}
 	}
 
-	if (sock->recv_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
-		_sock_prep_cancel_task(_sock, &sock->recv_task);
+	if (sock->errqueue_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) {
+		_sock_prep_cancel_task(_sock, &sock->errqueue_task);
 		/* Since spdk_sock_group_remove_sock is not asynchronous interface, so
 		 * currently can use a while loop here. */
-		while ((sock->recv_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) ||
+		while ((sock->errqueue_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE) ||
 		       (sock->cancel_task.status != SPDK_URING_SOCK_TASK_NOT_IN_USE)) {
 			uring_sock_group_impl_poll(_group, 32, NULL);
 		}
@@ -1472,7 +1472,7 @@ uring_sock_group_impl_remove_sock(struct spdk_sock_group_impl *_group,
 	/* Make sure the cancelling the tasks above didn't cause sending new requests */
 	assert(sock->write_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
 	assert(sock->pollin_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
-	assert(sock->recv_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
+	assert(sock->errqueue_task.status == SPDK_URING_SOCK_TASK_NOT_IN_USE);
 
 	if (sock->pending_recv) {
 		TAILQ_REMOVE(&group->pending_recv, sock, link);
