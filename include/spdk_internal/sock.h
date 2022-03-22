@@ -137,16 +137,10 @@ spdk_sock_request_pend(struct spdk_sock *sock, struct spdk_sock_request *req)
 }
 
 static inline int
-spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
+spdk_sock_request_complete(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
 {
 	bool closed;
 	int rc = 0;
-
-	assert(req->internal.curr_list == &sock->pending_reqs);
-	TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
-#ifdef DEBUG
-	req->internal.curr_list = NULL;
-#endif
 
 	req->internal.offset = 0;
 	req->internal.is_zcopy = 0;
@@ -164,6 +158,17 @@ spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int
 	}
 
 	return rc;
+}
+
+static inline int
+spdk_sock_request_put(struct spdk_sock *sock, struct spdk_sock_request *req, int err)
+{
+	assert(req->internal.curr_list == &sock->pending_reqs);
+	TAILQ_REMOVE(&sock->pending_reqs, req, internal.link);
+#ifdef DEBUG
+	req->internal.curr_list = NULL;
+#endif
+	return spdk_sock_request_complete(sock, req, err);
 }
 
 static inline int
