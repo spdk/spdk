@@ -857,7 +857,12 @@ dd_run(void *arg1)
 #ifdef SPDK_CONFIG_URING
 		if (g_opts.aio == false) {
 			g_job.u.uring.poller = spdk_poller_register(dd_uring_poll, NULL, 0);
-			io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, 0);
+			rc = io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, IORING_SETUP_SQPOLL);
+			if (rc) {
+				SPDK_ERRLOG("Failed to create io_uring: %d (%s)\n", rc, spdk_strerror(-rc));
+				dd_exit(rc);
+				return;
+			}
 			g_job.u.uring.active = true;
 		} else
 #endif
