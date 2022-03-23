@@ -107,6 +107,18 @@ struct spdk_vhost_blk_session {
 	struct spdk_poller *stop_poller;
 };
 
+struct rpc_vhost_blk {
+	bool readonly;
+	bool packed_ring;
+	bool packed_ring_recovery;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_vhost_blk[] = {
+	{"readonly", offsetof(struct rpc_vhost_blk, readonly), spdk_json_decode_bool, true},
+	{"packed_ring", offsetof(struct rpc_vhost_blk, packed_ring), spdk_json_decode_bool, true},
+	{"packed_ring_recovery", offsetof(struct rpc_vhost_blk, packed_ring_recovery), spdk_json_decode_bool, true},
+};
+
 /* forward declaration */
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
 
@@ -1534,14 +1546,24 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 
 int
 spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
-			 bool readonly, bool packed_ring)
+			 const struct spdk_json_val *params)
 {
+	struct rpc_vhost_blk req = {0};
 	struct spdk_vhost_blk_dev *bvdev = NULL;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_bdev *bdev;
 	int ret = 0;
 
 	spdk_vhost_lock();
+
+	if (spdk_json_decode_object_relaxed(params, rpc_construct_vhost_blk,
+					    SPDK_COUNTOF(rpc_construct_vhost_blk),
+					    &req)) {
+		SPDK_DEBUGLOG(vhost_blk, "spdk_json_decode_object failed\n");
+		ret = -EINVAL;
+		goto out;
+	}
+	g_packed_ring_recovery = req.packed_ring_recovery;
 
 	bvdev = calloc(1, sizeof(*bvdev));
 	if (bvdev == NULL) {
@@ -1562,7 +1584,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	vdev->disabled_features = SPDK_VHOST_BLK_DISABLED_FEATURES;
 	vdev->protocol_features = SPDK_VHOST_BLK_PROTOCOL_FEATURES;
 
-	vdev->virtio_features |= (uint64_t)packed_ring << VIRTIO_F_RING_PACKED;
+	vdev->virtio_features |= (uint64_t)req.packed_ring << VIRTIO_F_RING_PACKED;
 
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_DISCARD);
@@ -1570,7 +1592,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_WRITE_ZEROES);
 	}
-	if (readonly) {
+	if (req.readonly) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_RO);
 	}
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
@@ -1591,7 +1613,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	bvdev->dummy_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
 
 	bvdev->bdev = bdev;
-	bvdev->readonly = readonly;
+	bvdev->readonly = req.readonly;
 	ret = vhost_dev_register(vdev, name, cpumask, &vhost_blk_device_backend);
 	if (ret != 0) {
 		spdk_put_io_channel(bvdev->dummy_io_channel);
