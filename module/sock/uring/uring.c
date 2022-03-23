@@ -740,7 +740,7 @@ uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static int
-sock_complete_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
+sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_sock_request *req;
@@ -1046,7 +1046,7 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				sock->connection_status = status;
 				spdk_sock_abort_requests(&sock->base);
 			} else {
-				sock_complete_reqs(&sock->base, status, task->is_zcopy);
+				sock_complete_write_reqs(&sock->base, status, task->is_zcopy);
 			}
 
 			break;
@@ -1177,7 +1177,7 @@ _sock_flush_client(struct spdk_sock *_sock)
 #ifdef SPDK_ZEROCOPY
 	is_zcopy = flags & MSG_ZEROCOPY;
 #endif
-	retval = sock_complete_reqs(_sock, rc, is_zcopy);
+	retval = sock_complete_write_reqs(_sock, rc, is_zcopy);
 	if (retval < 0) {
 		/* if the socket is closed, return to avoid heap-use-after-free error */
 		return retval;

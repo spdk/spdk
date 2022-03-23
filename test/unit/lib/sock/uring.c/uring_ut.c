@@ -186,7 +186,7 @@ flush_server(void)
 	cb_arg1 = false;
 	rc = spdk_sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL, NULL);
 	CU_ASSERT(rc == 2);
-	sock_complete_reqs(sock, 128, 0);
+	sock_complete_write_reqs(sock, 128, 0);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(TAILQ_EMPTY(&sock->queued_reqs));
 
@@ -197,7 +197,7 @@ flush_server(void)
 	cb_arg2 = false;
 	rc = spdk_sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL, NULL);
 	CU_ASSERT(rc == 4);
-	sock_complete_reqs(sock, 192, 0);
+	sock_complete_write_reqs(sock, 192, 0);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(cb_arg2 == true);
 	CU_ASSERT(TAILQ_EMPTY(&sock->queued_reqs));
@@ -208,18 +208,18 @@ flush_server(void)
 	cb_arg1 = false;
 	rc = spdk_sock_prep_reqs(sock, usock.write_task.iovs, 0, NULL, NULL);
 	CU_ASSERT(rc == 2);
-	sock_complete_reqs(sock, 92, 0);
+	sock_complete_write_reqs(sock, 92, 0);
 	CU_ASSERT(rc == 2);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
 	/* Get the second time partial sent result. */
-	sock_complete_reqs(sock, 10, 0);
+	sock_complete_write_reqs(sock, 10, 0);
 	CU_ASSERT(cb_arg1 == false);
 	CU_ASSERT(TAILQ_FIRST(&sock->queued_reqs) == req1);
 
 	/* Data is finally sent. */
-	sock_complete_reqs(sock, 26, 0);
+	sock_complete_write_reqs(sock, 26, 0);
 	CU_ASSERT(cb_arg1 == true);
 	CU_ASSERT(TAILQ_EMPTY(&sock->queued_reqs));
 
