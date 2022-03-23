@@ -694,8 +694,8 @@ nvmf_rdma_resources_destroy(struct spdk_nvmf_rdma_resources *resources)
 	spdk_free(resources->cmds);
 	spdk_free(resources->cpls);
 	spdk_free(resources->bufs);
-	free(resources->reqs);
-	free(resources->recvs);
+	spdk_free(resources->reqs);
+	spdk_free(resources->recvs);
 	free(resources);
 }
 
@@ -718,8 +718,10 @@ nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 		return NULL;
 	}
 
-	resources->reqs = calloc(opts->max_queue_depth, sizeof(*resources->reqs));
-	resources->recvs = calloc(opts->max_queue_depth, sizeof(*resources->recvs));
+	resources->reqs = spdk_zmalloc(opts->max_queue_depth * sizeof(*resources->reqs),
+				       0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	resources->recvs = spdk_zmalloc(opts->max_queue_depth * sizeof(*resources->recvs),
+					0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	resources->cmds = spdk_zmalloc(opts->max_queue_depth * sizeof(*resources->cmds),
 				       0x1000, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	resources->cpls = spdk_zmalloc(opts->max_queue_depth * sizeof(*resources->cpls),
