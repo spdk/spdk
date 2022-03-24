@@ -141,6 +141,10 @@ function linux_bind_driver() {
 
 	pci_dev_echo "$bdf" "$old_driver_name -> $driver_name"
 
+	if [[ $driver_name == "none" ]]; then
+		return 0
+	fi
+
 	echo "$ven_dev_id" > "/sys/bus/pci/drivers/$driver_name/new_id" 2> /dev/null || true
 	echo "$bdf" > "/sys/bus/pci/drivers/$driver_name/bind" 2> /dev/null || true
 
@@ -248,6 +252,17 @@ function collect_devices() {
 					if [[ $PCI_ALLOWED != *"$bdf"* ]]; then
 						pci_dev_echo "$bdf" "Skipping not allowed VMD controller at $bdf"
 						in_use=1
+					elif [[ " ${drivers_d[*]} " =~ "nvme" ]]; then
+						if [[ "${DRIVER_OVERRIDE}" != "none" ]]; then
+							if [ "$mode" == "config" ]; then
+								cat <<- MESSAGE
+									Binding new driver to VMD device. If there are NVMe SSDs behind the VMD endpoint
+									which are attached to the kernel NVMe driver,the binding process may go faster
+									if you first run this script with DRIVER_OVERRIDE="none" to unbind only the
+									NVMe SSDs, and then run again to unbind the VMD devices."
+								MESSAGE
+							fi
+						fi
 					fi
 				fi
 			fi
@@ -305,7 +320,9 @@ function configure_linux_pci() {
 		fi
 	fi
 
-	if [[ -n "${DRIVER_OVERRIDE}" ]]; then
+	if [[ "${DRIVER_OVERRIDE}" == "none" ]]; then
+		driver_name=none
+	elif [[ -n "${DRIVER_OVERRIDE}" ]]; then
 		driver_path="$DRIVER_OVERRIDE"
 		driver_name="${DRIVER_OVERRIDE##*/}"
 		# modprobe and the sysfs don't use the .ko suffix.
@@ -337,10 +354,12 @@ function configure_linux_pci() {
 	fi
 
 	# modprobe assumes the directory of the module. If the user passes in a path, we should use insmod
-	if [[ -n "$driver_path" ]]; then
-		insmod $driver_path || true
-	else
-		modprobe $driver_name
+	if [[ $driver_name != "none" ]]; then
+		if [[ -n "$driver_path" ]]; then
+			insmod $driver_path || true
+		else
+			modprobe $driver_name
+		fi
 	fi
 
 	for bdf in "${!all_devices_d[@]}"; do
