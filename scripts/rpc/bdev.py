@@ -745,8 +745,8 @@ def bdev_nvme_reset_controller(client, name):
 
 
 def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid=None,
-                              hostnqn=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
-                              fast_io_fail_timeout_sec=None):
+                              hostnqn=None, wait_for_attach=None, ctrlr_loss_timeout_sec=None,
+                              reconnect_delay_sec=None, fast_io_fail_timeout_sec=None):
     """Start discovery with the specified discovery subsystem
 
     Args:
@@ -756,6 +756,7 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
         adrfam: address family ("IPv4", "IPv6", "IB", or "FC")
         trsvcid: transport service ID (port number for IP-based addresses)
         hostnqn: NQN to connect from (optional)
+        wait_for_attach: Wait to complete RPC until all discovered NVM subsystems have attached (optional)
         ctrlr_loss_timeout_sec: Time to wait until ctrlr is reconnected before deleting ctrlr.
         -1 means infinite reconnect retries. 0 means no reconnect retry.
         If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
@@ -783,6 +784,9 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
 
     if trsvcid:
         params['trsvcid'] = trsvcid
+
+    if wait_for_attach:
+        params['wait_for_attach'] = True
 
     if ctrlr_loss_timeout_sec is not None:
         params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec

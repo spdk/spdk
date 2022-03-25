@@ -4327,6 +4327,7 @@ struct discovery_entry_ctx {
 
 struct discovery_ctx {
 	char					*name;
+	spdk_bdev_nvme_start_discovery_fn	start_cb_fn;
 	spdk_bdev_nvme_stop_discovery_fn	stop_cb_fn;
 	void					*cb_ctx;
 	struct spdk_nvme_probe_ctx		*probe_ctx;
@@ -4342,6 +4343,7 @@ struct discovery_ctx {
 	TAILQ_HEAD(, discovery_entry_ctx)	nvm_entry_ctxs;
 	TAILQ_HEAD(, discovery_entry_ctx)	discovery_entry_ctxs;
 	int					rc;
+	bool					wait_for_attach;
 	/* Denotes if a discovery is currently in progress for this context.
 	 * That includes connecting to newly discovered subsystems.  Used to
 	 * ensure we do not start a new discovery until an existing one is
@@ -4471,6 +4473,11 @@ discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 	DISCOVERY_INFOLOG(ctx, "attach %s done\n", entry_ctx->name);
 	ctx->attach_in_progress--;
 	if (ctx->attach_in_progress == 0) {
+		if (ctx->start_cb_fn) {
+			ctx->start_cb_fn(ctx->cb_ctx);
+			ctx->start_cb_fn = NULL;
+			ctx->cb_ctx = NULL;
+		}
 		discovery_remove_controllers(ctx);
 	}
 }
@@ -4722,7 +4729,8 @@ int
 bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
 			  struct spdk_nvme_ctrlr_opts *drv_opts,
-			  struct nvme_ctrlr_opts *bdev_opts)
+			  struct nvme_ctrlr_opts *bdev_opts,
+			  spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx)
 {
 	struct discovery_ctx *ctx;
 	struct discovery_entry_ctx *discovery_entry_ctx;
@@ -4741,6 +4749,14 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
 	ctx->bdev_opts.from_discovery_service = true;
 	ctx->calling_thread = spdk_get_thread();
+	if (ctx->start_cb_fn) {
+		/* We can use this when dumping json to denote if this RPC parameter
+		 * was specified or not.
+		 */
+		ctx->wait_for_attach = true;
+	}
+	ctx->start_cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	TAILQ_INIT(&ctx->discovery_entry_ctxs);
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
@@ -5923,6 +5939,7 @@ bdev_nvme_discovery_config_json(struct spdk_json_write_ctx *w, struct discovery_
 	memset(trid.subnqn, 0, sizeof(trid.subnqn));
 	nvme_bdev_dump_trid_json(&trid, w);
 
+	spdk_json_write_named_bool(w, "wait_for_attach", ctx->wait_for_attach);
 	spdk_json_write_named_int32(w, "ctrlr_loss_timeout_sec", ctx->bdev_opts.ctrlr_loss_timeout_sec);
 	spdk_json_write_named_uint32(w, "reconnect_delay_sec", ctx->bdev_opts.reconnect_delay_sec);
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec",

@@ -1608,6 +1608,7 @@ struct rpc_bdev_nvme_start_discovery {
 	char *traddr;
 	char *trsvcid;
 	char *hostnqn;
+	bool wait_for_attach;
 	struct spdk_nvme_ctrlr_opts opts;
 	struct nvme_ctrlr_opts bdev_opts;
 };
@@ -1630,6 +1631,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_start_discovery_decod
 	{"adrfam", offsetof(struct rpc_bdev_nvme_start_discovery, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_bdev_nvme_start_discovery, trsvcid), spdk_json_decode_string, true},
 	{"hostnqn", offsetof(struct rpc_bdev_nvme_start_discovery, hostnqn), spdk_json_decode_string, true},
+	{"wait_for_attach", offsetof(struct rpc_bdev_nvme_start_discovery, wait_for_attach), spdk_json_decode_bool, true},
 	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
 	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.reconnect_delay_sec), spdk_json_decode_uint32, true},
 	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_start_discovery, bdev_opts.fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
@@ -1641,6 +1643,14 @@ struct rpc_bdev_nvme_start_discovery_ctx {
 };
 
 static void
+rpc_bdev_nvme_start_discovery_done(void *ctx)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+
+static void
 rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
@@ -1648,6 +1658,8 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 	struct spdk_nvme_transport_id trid = {};
 	size_t len, maxlen;
 	int rc;
+	spdk_bdev_nvme_start_discovery_fn cb_fn;
+	void *cb_ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1718,11 +1730,14 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 	}
 
 	ctx->request = request;
-	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctx->req.opts, &ctx->req.bdev_opts);
-	if (rc == 0) {
-		spdk_jsonrpc_send_bool_response(ctx->request, true);
-	} else {
+	cb_fn = ctx->req.wait_for_attach ? rpc_bdev_nvme_start_discovery_done : NULL;
+	cb_ctx = ctx->req.wait_for_attach ? request : NULL;
+	rc = bdev_nvme_start_discovery(&trid, ctx->req.name, &ctx->req.opts, &ctx->req.bdev_opts,
+				       cb_fn, cb_ctx);
+	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+	} else if (!ctx->req.wait_for_attach) {
+		rpc_bdev_nvme_start_discovery_done(request);
 	}
 
 cleanup:
