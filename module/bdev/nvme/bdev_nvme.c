@@ -3598,6 +3598,8 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (ctx != NULL) {
 		memcpy(&nvme_ctrlr->opts, &ctx->bdev_opts, sizeof(ctx->bdev_opts));
+	} else {
+		bdev_nvme_get_default_ctrlr_opts(&nvme_ctrlr->opts);
 	}
 
 	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_ctrlr,
