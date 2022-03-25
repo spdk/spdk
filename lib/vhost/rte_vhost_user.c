@@ -46,8 +46,6 @@
 
 #include "spdk_internal/vhost_user.h"
 
-bool g_packed_ring_recovery = false;
-
 /* Path to folder where character device will be created. Can be set by user. */
 static char g_vhost_user_dev_dirname[PATH_MAX] = "";
 
@@ -1003,7 +1001,7 @@ start_device(int vid)
 			 * supports split ring inflight because it doesn't send negotiated features
 			 * before get inflight fd. Users can use RPC to enable this function.
 			 */
-			if (spdk_unlikely(g_packed_ring_recovery)) {
+			if (spdk_unlikely(vdev->packed_ring_recovery)) {
 				rte_vhost_get_vring_base_from_inflight(vsession->vid, i,
 								       &q->last_avail_idx,
 								       &q->last_used_idx);

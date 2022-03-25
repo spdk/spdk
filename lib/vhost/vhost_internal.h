@@ -45,8 +45,6 @@
 #include "spdk/rpc.h"
 #include "spdk/config.h"
 
-extern bool g_packed_ring_recovery;
-
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
 
@@ -184,6 +182,7 @@ struct spdk_vhost_dev {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
 	uint64_t protocol_features;
+	bool packed_ring_recovery;
 
 	const struct spdk_vhost_dev_backend *backend;
 

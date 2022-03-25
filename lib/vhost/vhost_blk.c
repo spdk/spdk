@@ -1563,7 +1563,6 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		ret = -EINVAL;
 		goto out;
 	}
-	g_packed_ring_recovery = req.packed_ring_recovery;
 
 	bvdev = calloc(1, sizeof(*bvdev));
 	if (bvdev == NULL) {
@@ -1583,8 +1582,12 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	vdev->virtio_features = SPDK_VHOST_BLK_FEATURES_BASE;
 	vdev->disabled_features = SPDK_VHOST_BLK_DISABLED_FEATURES;
 	vdev->protocol_features = SPDK_VHOST_BLK_PROTOCOL_FEATURES;
+	vdev->packed_ring_recovery = false;
 
-	vdev->virtio_features |= (uint64_t)req.packed_ring << VIRTIO_F_RING_PACKED;
+	if (req.packed_ring) {
+		vdev->virtio_features |= (uint64_t)req.packed_ring << VIRTIO_F_RING_PACKED;
+		vdev->packed_ring_recovery = req.packed_ring_recovery;
+	}
 
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		vdev->virtio_features |= (1ULL << VIRTIO_BLK_F_DISCARD);
