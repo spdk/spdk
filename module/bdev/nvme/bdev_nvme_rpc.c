@@ -444,9 +444,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 			}
 		}
 
-		drv_opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
-		ctrlr_trid = spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr);
-
 		/* This controller already exists. Check what the user wants to do. */
 		if (strcasecmp(ctx->req.multipath, "disable") == 0) {
 			/* The user does not want to do any form of multipathing. */
@@ -454,25 +451,28 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 							     "A controller named %s already exists and multipath is disabled\n",
 							     ctx->req.name);
 			goto cleanup;
-		} else if (strcasecmp(ctx->req.multipath, "failover") == 0 ||
-			   strcasecmp(ctx->req.multipath, "multipath") == 0) {
-			/* The user wants to add this as a failover path or add this to create multipath. */
 
-			if (strncmp(trid.traddr, ctrlr_trid->traddr, sizeof(trid.traddr)) == 0 &&
-			    strncmp(trid.trsvcid, ctrlr_trid->trsvcid, sizeof(trid.trsvcid)) == 0 &&
-			    strncmp(ctx->req.drv_opts.src_addr, drv_opts->src_addr, sizeof(drv_opts->src_addr)) == 0 &&
-			    strncmp(ctx->req.drv_opts.src_svcid, drv_opts->src_svcid, sizeof(drv_opts->src_svcid)) == 0) {
-				/* Exactly same network path can't be added a second time */
-				spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
-								     "A controller named %s already exists with the specified network path\n",
-								     ctx->req.name);
-				goto cleanup;
-			}
-		} else {
+		} else if (strcasecmp(ctx->req.multipath, "failover") != 0 &&
+			   strcasecmp(ctx->req.multipath, "multipath") != 0) {
 			/* Invalid multipath option */
 			spdk_jsonrpc_send_error_response_fmt(request, -EINVAL,
 							     "Invalid multipath parameter: %s\n",
 							     ctx->req.multipath);
+			goto cleanup;
+		}
+
+		/* The user wants to add this as a failover path or add this to create multipath. */
+		drv_opts = spdk_nvme_ctrlr_get_opts(ctrlr->ctrlr);
+		ctrlr_trid = spdk_nvme_ctrlr_get_transport_id(ctrlr->ctrlr);
+
+		if (strncmp(trid.traddr, ctrlr_trid->traddr, sizeof(trid.traddr)) == 0 &&
+		    strncmp(trid.trsvcid, ctrlr_trid->trsvcid, sizeof(trid.trsvcid)) == 0 &&
+		    strncmp(ctx->req.drv_opts.src_addr, drv_opts->src_addr, sizeof(drv_opts->src_addr)) == 0 &&
+		    strncmp(ctx->req.drv_opts.src_svcid, drv_opts->src_svcid, sizeof(drv_opts->src_svcid)) == 0) {
+			/* Exactly same network path can't be added a second time */
+			spdk_jsonrpc_send_error_response_fmt(request, -EALREADY,
+							     "A controller named %s already exists with the specified network path\n",
+							     ctx->req.name);
 			goto cleanup;
 		}
 
@@ -485,8 +485,6 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 							     ctx->req.name, ctrlr_trid->subnqn);
 			goto cleanup;
 		}
-
-
 
 		if (strncmp(ctx->req.drv_opts.hostnqn, drv_opts->hostnqn, SPDK_NVMF_NQN_MAX_LEN) != 0) {
 			/* Different HOSTNQN is not allowed when specifying the same controller name. */
