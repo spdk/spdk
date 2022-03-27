@@ -500,6 +500,8 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 							     ctx->req.name);
 			goto cleanup;
 		}
+
+		ctx->req.bdev_opts.prchk_flags = ctrlr->opts.prchk_flags;
 	}
 
 	if (ctx->req.multipath != NULL && strcasecmp(ctx->req.multipath, "multipath") == 0) {
