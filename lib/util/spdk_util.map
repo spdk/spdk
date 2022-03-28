@@ -153,6 +153,10 @@
 	spdk_fd_group_event_modify;
 	spdk_fd_group_get_fd;
 
+	# public functions in xor.h
+	spdk_xor_gen;
+	spdk_xor_get_optimal_alignment;
+
 	# public functions in zipf.h
 	spdk_zipf_create;
 	spdk_zipf_free;

@@ -106,6 +106,9 @@ For now we are using hard-coded PSK and only support TLS 1.3.
 
 Added new functions: `spdk_hexlify` and `spdk_unhexlify`.
 
+A new API `spdk_xor_gen` was added to generate XOR from multiple source buffers. It is going to be
+used by `raid5f` for calculating parity.
+
 ### virtio
 
 virtio-vhost-user no longer tries to support dynamic memory allocation.  The vhost target does
