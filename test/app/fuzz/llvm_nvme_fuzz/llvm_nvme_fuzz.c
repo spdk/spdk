@@ -364,6 +364,94 @@ fuzz_nvm_write_uncorrectable_command(struct fuzz_command *cmd)
 	g_data += 10;
 }
 
+static void
+fuzz_nvm_reservation_acquire_command(struct fuzz_command *cmd)
+{
+	struct spdk_nvme_reservation_acquire_data *payload = cmd->buf;
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_RESERVATION_ACQUIRE;
+
+	cmd->cmd.cdw10_bits.resv_acquire.rtype = g_data[0];
+	cmd->cmd.cdw10_bits.resv_acquire.iekey = (g_data[1] >> 7) & 0x01;
+	cmd->cmd.cdw10_bits.resv_acquire.racqa = (g_data[1] >> 4) & 0x07;
+
+	payload->crkey = ((uint64_t)g_data[2] << 56) + ((uint64_t)g_data[3] << 48) +
+			 ((uint64_t)g_data[4] << 40) + ((uint64_t)g_data[5] << 32) +
+			 ((uint64_t)g_data[6] << 24) + ((uint64_t)g_data[7] << 16) +
+			 ((uint64_t)g_data[8] << 8) + (uint64_t)g_data[9];
+
+	payload->prkey = ((uint64_t)g_data[10] << 56) + ((uint64_t)g_data[11] << 48) +
+			 ((uint64_t)g_data[12] << 40) + ((uint64_t)g_data[13] << 32) +
+			 ((uint64_t)g_data[14] << 24) + ((uint64_t)g_data[15] << 16) +
+			 ((uint64_t)g_data[16] << 8) + (uint64_t)g_data[17];
+
+	cmd->len = sizeof(struct spdk_nvme_reservation_acquire_data);
+
+	g_data += 18;
+}
+
+static void
+fuzz_nvm_reservation_release_command(struct fuzz_command *cmd)
+{
+	struct spdk_nvme_reservation_key_data *payload = cmd->buf;
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_RESERVATION_RELEASE;
+
+	cmd->cmd.cdw10_bits.resv_release.rtype = g_data[0];
+	cmd->cmd.cdw10_bits.resv_release.iekey = (g_data[1] >> 7) & 0x01;
+	cmd->cmd.cdw10_bits.resv_release.rrela = (g_data[1] >> 4) & 0x07;
+
+	payload->crkey = ((uint64_t)g_data[2] << 56) + ((uint64_t)g_data[3] << 48) +
+			 ((uint64_t)g_data[4] << 40) + ((uint64_t)g_data[5] << 32) +
+			 ((uint64_t)g_data[6] << 24) + ((uint64_t)g_data[7] << 16) +
+			 ((uint64_t)g_data[8] << 8) + (uint64_t)g_data[9];
+
+	cmd->len = sizeof(struct spdk_nvme_reservation_key_data);
+
+	g_data += 10;
+}
+
+static void
+fuzz_nvm_reservation_register_command(struct fuzz_command *cmd)
+{
+	struct spdk_nvme_reservation_register_data *payload = cmd->buf;
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_RESERVATION_REGISTER;
+
+	cmd->cmd.cdw10_bits.resv_register.cptpl = (g_data[0] >> 6) & 0x03;
+	cmd->cmd.cdw10_bits.resv_register.iekey = (g_data[0] >> 5) & 0x01;
+	cmd->cmd.cdw10_bits.resv_register.rrega = (g_data[0] >> 2) & 0x07;
+
+	payload->crkey = ((uint64_t)g_data[1] << 56) + ((uint64_t)g_data[2] << 48) +
+			 ((uint64_t)g_data[3] << 40) + ((uint64_t)g_data[4] << 32) +
+			 ((uint64_t)g_data[5] << 24) + ((uint64_t)g_data[6] << 16) +
+			 ((uint64_t)g_data[7] << 8) + (uint64_t)g_data[8];
+
+	payload->nrkey = ((uint64_t)g_data[9] << 56) + ((uint64_t)g_data[10] << 48) +
+			 ((uint64_t)g_data[11] << 40) + ((uint64_t)g_data[12] << 32) +
+			 ((uint64_t)g_data[13] << 24) + ((uint64_t)g_data[14] << 16) +
+			 ((uint64_t)g_data[15] << 8) + (uint64_t)g_data[16];
+
+
+	cmd->len = sizeof(struct spdk_nvme_reservation_register_data);
+
+	g_data += 17;
+}
+
+static void
+fuzz_nvm_reservation_report_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_RESERVATION_REPORT;
+
+	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
+			 (g_data[2] << 8) + g_data[3];
+
+	cmd->cmd.cdw11_bits.resv_report.eds = (g_data[4] >> 7) & 0x01;
+
+	g_data += 5;
+}
+
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd), .is_admin = true},
 	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6, .is_admin = true},
@@ -383,6 +471,10 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_nvm_write_command, .bytes_per_cmd = 24, .is_admin = false},
 	{ .fn = fuzz_nvm_write_zeroes_command, .bytes_per_cmd = 20, .is_admin = false},
 	{ .fn = fuzz_nvm_write_uncorrectable_command, .bytes_per_cmd = 10, .is_admin = false},
+	{ .fn = fuzz_nvm_reservation_acquire_command, .bytes_per_cmd = 18, .is_admin = false},
+	{ .fn = fuzz_nvm_reservation_release_command, .bytes_per_cmd = 10, .is_admin = false},
+	{ .fn = fuzz_nvm_reservation_register_command, .bytes_per_cmd = 17, .is_admin = false},
+	{ .fn = fuzz_nvm_reservation_report_command, .bytes_per_cmd = 5, .is_admin = false},
 	{ .fn = NULL, .bytes_per_cmd = 0, .is_admin = 0}
 };
 
