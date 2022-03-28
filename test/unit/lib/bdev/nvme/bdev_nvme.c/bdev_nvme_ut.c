@@ -4867,30 +4867,30 @@ test_retry_io_for_ana_error(void)
 }
 
 static void
-test_check_multipath_params(void)
+test_check_io_error_resiliency_params(void)
 {
 	/* 1st parameter is ctrlr_loss_timeout_sec, 2nd parameter is reconnect_delay_sec, and
 	 * 3rd parameter is fast_io_fail_timeout_sec.
 	 */
-	CU_ASSERT(bdev_nvme_check_multipath_params(-2, 1, 0) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(-1, 0, 0) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(1, 0, 0) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(1, 2, 0) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(0, 1, 0) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(-1, 1, 0) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(2, 2, 0) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(2, 1, 0) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(INT32_MAX, INT32_MAX, 0) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(-1, UINT32_MAX, 0) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(0, 0, 1) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(-1, 2, 1) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(3, 2, 4) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(3, 2, 1) == false);
-	CU_ASSERT(bdev_nvme_check_multipath_params(-1, 1, 1) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(2, 1, 2) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(2, 1, 1) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(INT32_MAX, INT32_MAX, INT32_MAX) == true);
-	CU_ASSERT(bdev_nvme_check_multipath_params(-1, UINT32_MAX, UINT32_MAX) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(-2, 1, 0) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(-1, 0, 0) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(1, 0, 0) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(1, 2, 0) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(0, 1, 0) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(-1, 1, 0) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(2, 2, 0) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(2, 1, 0) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(INT32_MAX, INT32_MAX, 0) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(-1, UINT32_MAX, 0) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(0, 0, 1) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(-1, 2, 1) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(3, 2, 4) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(3, 2, 1) == false);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(-1, 1, 1) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(2, 1, 2) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(2, 1, 1) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(INT32_MAX, INT32_MAX, INT32_MAX) == true);
+	CU_ASSERT(bdev_nvme_check_io_error_resiliency_params(-1, UINT32_MAX, UINT32_MAX) == true);
 }
 
 static void
@@ -6069,7 +6069,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_retry_io_count);
 	CU_ADD_TEST(suite, test_concurrent_read_ana_log_page);
 	CU_ADD_TEST(suite, test_retry_io_for_ana_error);
-	CU_ADD_TEST(suite, test_check_multipath_params);
+	CU_ADD_TEST(suite, test_check_io_error_resiliency_params);
 	CU_ADD_TEST(suite, test_retry_io_if_ctrlr_is_resetting);
 	CU_ADD_TEST(suite, test_reconnect_ctrlr);
 	CU_ADD_TEST(suite, test_retry_failover_ctrlr);

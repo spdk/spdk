@@ -4287,7 +4287,7 @@ bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts)
 	*opts = g_opts;
 }
 
-static bool bdev_nvme_check_multipath_params(int32_t ctrlr_loss_timeout_sec,
+static bool bdev_nvme_check_io_error_resiliency_params(int32_t ctrlr_loss_timeout_sec,
 		uint32_t reconnect_delay_sec,
 		uint32_t fast_io_fail_timeout_sec);
 
@@ -4305,9 +4305,9 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 		return -EINVAL;
 	}
 
-	if (!bdev_nvme_check_multipath_params(opts->ctrlr_loss_timeout_sec,
-					      opts->reconnect_delay_sec,
-					      opts->fast_io_fail_timeout_sec)) {
+	if (!bdev_nvme_check_io_error_resiliency_params(opts->ctrlr_loss_timeout_sec,
+			opts->reconnect_delay_sec,
+			opts->fast_io_fail_timeout_sec)) {
 		return -EINVAL;
 	}
 
@@ -4606,9 +4606,9 @@ bdev_nvme_async_poll(void *arg)
 }
 
 static bool
-bdev_nvme_check_multipath_params(int32_t ctrlr_loss_timeout_sec,
-				 uint32_t reconnect_delay_sec,
-				 uint32_t fast_io_fail_timeout_sec)
+bdev_nvme_check_io_error_resiliency_params(int32_t ctrlr_loss_timeout_sec,
+		uint32_t reconnect_delay_sec,
+		uint32_t fast_io_fail_timeout_sec)
 {
 	if (ctrlr_loss_timeout_sec < -1) {
 		SPDK_ERRLOG("ctrlr_loss_timeout_sec can't be less than -1.\n");
@@ -4670,9 +4670,9 @@ bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	}
 
 	if (bdev_opts != NULL &&
-	    !bdev_nvme_check_multipath_params(bdev_opts->ctrlr_loss_timeout_sec,
-					      bdev_opts->reconnect_delay_sec,
-					      bdev_opts->fast_io_fail_timeout_sec)) {
+	    !bdev_nvme_check_io_error_resiliency_params(bdev_opts->ctrlr_loss_timeout_sec,
+			    bdev_opts->reconnect_delay_sec,
+			    bdev_opts->fast_io_fail_timeout_sec)) {
 		return -EINVAL;
 	}
 
