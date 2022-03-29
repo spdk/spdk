@@ -66,10 +66,10 @@ int create_iscsi_disk(const char *bdev_name, const char *url, const char *initia
 /**
  * Delete iSCSI bdev.
  *
- * \param bdev Pointer to iSCSI bdev.
+ * \param bdev_name Name of iSCSI bdev.
  * \param cb_fn Completion callback
  * \param cb_arg Completion callback custom arguments
  */
-void delete_iscsi_disk(struct spdk_bdev *bdev, spdk_delete_iscsi_complete cb_fn, void *cb_arg);
+void delete_iscsi_disk(const char *bdev_name, spdk_delete_iscsi_complete cb_fn, void *cb_arg);
 
 #endif /* SPDK_BDEV_ISCSI_H */

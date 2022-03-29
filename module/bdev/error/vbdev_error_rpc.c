@@ -147,7 +147,6 @@ rpc_bdev_error_delete(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct rpc_delete_error req = {NULL};
-	struct spdk_bdev *vbdev;
 
 	if (spdk_json_decode_object(params, rpc_delete_error_decoders,
 				    SPDK_COUNTOF(rpc_delete_error_decoders),
@@ -157,13 +156,7 @@ rpc_bdev_error_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	vbdev = spdk_bdev_get_by_name(req.name);
-	if (vbdev == NULL) {
-		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
-		goto cleanup;
-	}
-
-	vbdev_error_delete(vbdev, rpc_bdev_error_delete_cb, request);
+	vbdev_error_delete(req.name, rpc_bdev_error_delete_cb, request);
 
 cleanup:
 	free_rpc_delete_error(&req);

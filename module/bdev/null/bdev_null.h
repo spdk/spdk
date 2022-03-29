@@ -57,11 +57,11 @@ int bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *
 /**
  * Delete null bdev.
  *
- * \param bdev Pointer to null bdev.
+ * \param bdev_name Name of null bdev.
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void bdev_null_delete(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn,
+void bdev_null_delete(const char *bdev_name, spdk_delete_null_complete cb_fn,
 		      void *cb_arg);
 /**
  * Resize null bdev.

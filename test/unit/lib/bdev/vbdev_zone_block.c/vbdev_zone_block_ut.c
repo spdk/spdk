@@ -161,6 +161,22 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
+int
+spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module *module,
+			     spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev;
+
+	CU_ASSERT(module == &bdev_zoned_if);
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+
+	return 0;
+}
+
 int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
 {
 	struct rpc_construct_zone_block *req = g_rpc_req;

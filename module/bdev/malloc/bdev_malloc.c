@@ -468,14 +468,14 @@ create_malloc_disk(struct spdk_bdev **bdev, const char *name, const struct spdk_
 }
 
 void
-delete_malloc_disk(struct spdk_bdev *bdev, spdk_delete_malloc_complete cb_fn, void *cb_arg)
+delete_malloc_disk(const char *name, spdk_delete_malloc_complete cb_fn, void *cb_arg)
 {
-	if (!bdev || bdev->module != &malloc_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(name, &malloc_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 static int

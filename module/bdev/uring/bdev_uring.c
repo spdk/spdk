@@ -551,14 +551,10 @@ uring_bdev_unregister_cb(void *arg, int bdeverrno)
 }
 
 void
-delete_uring_bdev(struct spdk_bdev *bdev, spdk_delete_uring_complete cb_fn, void *cb_arg)
+delete_uring_bdev(const char *name, spdk_delete_uring_complete cb_fn, void *cb_arg)
 {
 	struct delete_uring_bdev_ctx *ctx;
-
-	if (!bdev || bdev->module != &uring_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -568,7 +564,10 @@ delete_uring_bdev(struct spdk_bdev *bdev, spdk_delete_uring_complete cb_fn, void
 
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
-	spdk_bdev_unregister(bdev, uring_bdev_unregister_cb, ctx);
+	rc = spdk_bdev_unregister_by_name(name, &uring_if, uring_bdev_unregister_cb, ctx);
+	if (rc != 0) {
+		uring_bdev_unregister_cb(ctx, rc);
+	}
 }
 
 static int

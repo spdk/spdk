@@ -64,11 +64,11 @@ int create_delay_disk(const char *bdev_name, const char *vbdev_name, uint64_t av
 /**
  * Delete delay bdev.
  *
- * \param bdev Pointer to delay bdev.
+ * \param vbdev_name Name of the delay bdev.
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_delay_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
+void delete_delay_disk(const char *vbdev_name, spdk_bdev_unregister_cb cb_fn,
 		       void *cb_arg);
 
 /**

@@ -913,22 +913,19 @@ void
 vbdev_zone_block_delete(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_zone_block_config *name_node;
-	struct spdk_bdev *bdev = NULL;
+	int rc;
 
-	bdev = spdk_bdev_get_by_name(name);
-	if (!bdev || bdev->module != &bdev_zoned_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
-
-	TAILQ_FOREACH(name_node, &g_bdev_configs, link) {
-		if (strcmp(name_node->vbdev_name, bdev->name) == 0) {
-			zone_block_remove_config(name_node);
-			break;
+	rc = spdk_bdev_unregister_by_name(name, &bdev_zoned_if, cb_fn, cb_arg);
+	if (rc == 0) {
+		TAILQ_FOREACH(name_node, &g_bdev_configs, link) {
+			if (strcmp(name_node->vbdev_name, name) == 0) {
+				zone_block_remove_config(name_node);
+				break;
+			}
 		}
+	} else {
+		cb_fn(cb_arg, rc);
 	}
-
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
 static void

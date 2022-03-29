@@ -55,11 +55,11 @@ int vbdev_error_create(const char *base_bdev_name);
 /**
  * Delete vbdev used to inject errors.
  *
- * \param bdev Pointer to error vbdev.
+ * \param error_vbdev_name Name of the error vbdev.
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Arguments to pass to cb_fn.
  */
-void vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn,
+void vbdev_error_delete(const char *error_vbdev_name, spdk_delete_error_complete cb_fn,
 			void *cb_arg);
 
 /**

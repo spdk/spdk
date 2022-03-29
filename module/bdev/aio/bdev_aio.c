@@ -867,14 +867,10 @@ aio_bdev_unregister_cb(void *arg, int bdeverrno)
 }
 
 void
-bdev_aio_delete(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg)
+bdev_aio_delete(const char *name, delete_aio_bdev_complete cb_fn, void *cb_arg)
 {
 	struct delete_aio_bdev_ctx *ctx;
-
-	if (!bdev || bdev->module != &aio_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
@@ -884,7 +880,10 @@ bdev_aio_delete(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb
 
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
-	spdk_bdev_unregister(bdev, aio_bdev_unregister_cb, ctx);
+	rc = spdk_bdev_unregister_by_name(name, &aio_if, aio_bdev_unregister_cb, ctx);
+	if (rc != 0) {
+		aio_bdev_unregister_cb(ctx, rc);
+	}
 }
 
 static int

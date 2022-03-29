@@ -344,14 +344,14 @@ bdev_null_create(struct spdk_bdev **bdev, const struct spdk_null_bdev_opts *opts
 }
 
 void
-bdev_null_delete(struct spdk_bdev *bdev, spdk_delete_null_complete cb_fn, void *cb_arg)
+bdev_null_delete(const char *bdev_name, spdk_delete_null_complete cb_fn, void *cb_arg)
 {
-	if (!bdev || bdev->module != &null_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(bdev_name, &null_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 static int

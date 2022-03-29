@@ -54,11 +54,11 @@ int create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev *
 /**
  * Delete pmem bdev.
  *
- * \param bdev Pointer to pmem bdev.
+ * \param name Name of pmem bdev.
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_pmem_disk(struct spdk_bdev *bdev, spdk_delete_pmem_complete cb_fn,
+void delete_pmem_disk(const char *name, spdk_delete_pmem_complete cb_fn,
 		      void *cb_arg);
 
 #endif /* SPDK_BDEV_PMEM_H */

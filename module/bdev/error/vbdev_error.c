@@ -332,14 +332,14 @@ vbdev_error_create(const char *base_bdev_name)
 }
 
 void
-vbdev_error_delete(struct spdk_bdev *vbdev, spdk_delete_error_complete cb_fn, void *cb_arg)
+vbdev_error_delete(const char *error_vbdev_name, spdk_delete_error_complete cb_fn, void *cb_arg)
 {
-	if (!vbdev || vbdev->module != &error_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(vbdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(error_vbdev_name, &error_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 static void

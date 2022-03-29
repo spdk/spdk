@@ -45,6 +45,6 @@ typedef void (*spdk_delete_uring_complete)(void *cb_arg, int bdeverrno);
 
 struct spdk_bdev *create_uring_bdev(const char *name, const char *filename, uint32_t block_size);
 
-void delete_uring_bdev(struct spdk_bdev *bdev, spdk_delete_uring_complete cb_fn, void *cb_arg);
+void delete_uring_bdev(const char *name, spdk_delete_uring_complete cb_fn, void *cb_arg);
 
 #endif /* SPDK_BDEV_URING_H */

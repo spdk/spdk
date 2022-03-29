@@ -253,6 +253,9 @@ DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 64)
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc), 0);
 DEFINE_STUB_V(spdk_bdev_unregister, (struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 				     void *cb_arg));
+DEFINE_STUB(spdk_bdev_unregister_by_name, int, (const char *bdev_name,
+		struct spdk_bdev_module *module,
+		spdk_bdev_unregister_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB(spdk_bdev_open_ext, int, (const char *bdev_name, bool write,
 				      spdk_bdev_event_cb_t event_cb,
 				      void *event_ctx, struct spdk_bdev_desc **_desc), 0);

@@ -1277,14 +1277,14 @@ bdev_rbd_create(struct spdk_bdev **bdev, const char *name, const char *user_id,
 }
 
 void
-bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, void *cb_arg)
+bdev_rbd_delete(const char *name, spdk_delete_rbd_complete cb_fn, void *cb_arg)
 {
-	if (!bdev || bdev->module != &rbd_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
+	int rc;
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	rc = spdk_bdev_unregister_by_name(name, &rbd_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
+	}
 }
 
 int

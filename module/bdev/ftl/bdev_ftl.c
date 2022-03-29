@@ -455,15 +455,12 @@ bdev_ftl_initialize(void)
 void
 bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
-	struct spdk_bdev *bdev;
+	int rc;
 
-	bdev = spdk_bdev_get_by_name(name);
-	if (bdev) {
-		spdk_bdev_unregister(bdev, cb_fn, cb_arg);
-		return;
+	rc = spdk_bdev_unregister_by_name(name, &g_ftl_if, cb_fn, cb_arg);
+	if (rc != 0) {
+		cb_fn(cb_arg, rc);
 	}
-
-	cb_fn(cb_arg, -ENODEV);
 }
 
 static void

@@ -737,31 +737,30 @@ bdev_passthru_create_disk(const char *bdev_name, const char *vbdev_name)
 }
 
 void
-bdev_passthru_delete_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+bdev_passthru_delete_disk(const char *bdev_name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_names *name;
+	int rc;
 
-	if (!bdev || bdev->module != &passthru_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
-
-	/* Remove the association (vbdev, bdev) from g_bdev_names. This is required so that the
-	 * vbdev does not get re-created if the same bdev is constructed at some other time,
-	 * unless the underlying bdev was hot-removed.
-	 */
-	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->vbdev_name, bdev->name) == 0) {
-			TAILQ_REMOVE(&g_bdev_names, name, link);
-			free(name->bdev_name);
-			free(name->vbdev_name);
-			free(name);
-			break;
+	/* Some cleanup happens in the destruct callback. */
+	rc = spdk_bdev_unregister_by_name(bdev_name, &passthru_if, cb_fn, cb_arg);
+	if (rc == 0) {
+		/* Remove the association (vbdev, bdev) from g_bdev_names. This is required so that the
+		 * vbdev does not get re-created if the same bdev is constructed at some other time,
+		 * unless the underlying bdev was hot-removed.
+		 */
+		TAILQ_FOREACH(name, &g_bdev_names, link) {
+			if (strcmp(name->vbdev_name, bdev_name) == 0) {
+				TAILQ_REMOVE(&g_bdev_names, name, link);
+				free(name->bdev_name);
+				free(name->vbdev_name);
+				free(name);
+				break;
+			}
 		}
+	} else {
+		cb_fn(cb_arg, rc);
 	}
-
-	/* Additional cleanup happens in the destruct callback. */
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
 /* Because we specified this function in our pt bdev function table when we

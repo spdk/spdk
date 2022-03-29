@@ -120,7 +120,6 @@ rpc_bdev_pmem_delete(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_delete_pmem req = {NULL};
-	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_delete_pmem_decoders,
 				    SPDK_COUNTOF(rpc_delete_pmem_decoders),
@@ -128,16 +127,10 @@ rpc_bdev_pmem_delete(struct spdk_jsonrpc_request *request,
 		SPDK_DEBUGLOG(bdev_pmem, "spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-	}
-
-	bdev = spdk_bdev_get_by_name(req.name);
-	if (bdev == NULL) {
-		SPDK_DEBUGLOG(bdev_pmem, "bdev '%s' does not exist\n", req.name);
-		spdk_jsonrpc_send_error_response(request, -ENODEV, spdk_strerror(ENODEV));
 		goto cleanup;
 	}
 
-	delete_pmem_disk(bdev, _rpc_bdev_pmem_delete_cb, request);
+	delete_pmem_disk(req.name, _rpc_bdev_pmem_delete_cb, request);
 
 cleanup:
 	free_rpc_delete_pmem(&req);

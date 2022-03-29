@@ -92,11 +92,11 @@ int create_crypto_disk(struct vbdev_crypto_opts *opts);
 /**
  * Delete crypto bdev.
  *
- * \param bdev Pointer to crypto bdev.
+ * \param bdev_name Crypto bdev name.
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
+void delete_crypto_disk(const char *bdev_name, spdk_delete_crypto_complete cb_fn,
 			void *cb_arg);
 
 /**

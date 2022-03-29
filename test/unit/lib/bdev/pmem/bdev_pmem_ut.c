@@ -268,9 +268,11 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	return 0;
 }
 
-void
-spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+int
+spdk_bdev_unregister_by_name(const char *name, struct spdk_bdev_module *module,
+			     spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	return 0;
 }
 
 int

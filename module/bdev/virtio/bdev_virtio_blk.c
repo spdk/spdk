@@ -300,20 +300,7 @@ bdev_virtio_disk_destruct(void *ctx)
 int
 bdev_virtio_blk_dev_remove(const char *name, bdev_virtio_remove_cb cb_fn, void *cb_arg)
 {
-	struct spdk_bdev *bdev;
-
-	bdev = spdk_bdev_get_by_name(name);
-	if (bdev == NULL) {
-		return -ENODEV;
-	}
-
-	if (bdev->module != &virtio_blk_if) {
-		return -ENODEV;
-	}
-
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
-
-	return 0;
+	return spdk_bdev_unregister_by_name(name, &virtio_blk_if, cb_fn, cb_arg);
 }
 
 static int

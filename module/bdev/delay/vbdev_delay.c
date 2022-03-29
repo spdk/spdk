@@ -887,26 +887,25 @@ create_delay_disk(const char *bdev_name, const char *vbdev_name, uint64_t avg_re
 }
 
 void
-delete_delay_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+delete_delay_disk(const char *vbdev_name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_association *assoc;
+	int rc;
 
-	if (!bdev || bdev->module != &delay_if) {
-		cb_fn(cb_arg, -ENODEV);
-		return;
-	}
-
-	TAILQ_FOREACH(assoc, &g_bdev_associations, link) {
-		if (strcmp(assoc->vbdev_name, bdev->name) == 0) {
-			TAILQ_REMOVE(&g_bdev_associations, assoc, link);
-			free(assoc->bdev_name);
-			free(assoc->vbdev_name);
-			free(assoc);
-			break;
+	rc = spdk_bdev_unregister_by_name(vbdev_name, &delay_if, cb_fn, cb_arg);
+	if (rc == 0) {
+		TAILQ_FOREACH(assoc, &g_bdev_associations, link) {
+			if (strcmp(assoc->vbdev_name, vbdev_name) == 0) {
+				TAILQ_REMOVE(&g_bdev_associations, assoc, link);
+				free(assoc->bdev_name);
+				free(assoc->vbdev_name);
+				free(assoc);
+				break;
+			}
 		}
+	} else {
+		cb_fn(cb_arg, rc);
 	}
-
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
 static void
