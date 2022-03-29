@@ -4332,43 +4332,60 @@ handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	return 0;
 }
 
+/*
+ * If we suppressed an IRQ in post_completion(), check if it needs to be fired
+ * here: if the host isn't up to date, and is apparently not actively processing
+ * the queue (i.e. ->last_head isn't changing), we need an IRQ.
+ */
+static void
+handle_suppressed_irq(struct nvmf_vfio_user_ctrlr *ctrlr,
+		      struct nvmf_vfio_user_sq *sq)
+{
+	struct nvmf_vfio_user_cq *cq = ctrlr->cqs[sq->cqid];
+	uint32_t cq_head;
+	uint32_t cq_tail;
+
+	if (!cq->ien || !ctrlr_interrupt_enabled(ctrlr) ||
+	    !adaptive_irq_enabled(ctrlr, cq)) {
+		return;
+	}
+
+	cq_tail = *cq_tailp(cq);
+
+	/* Already sent? */
+	if (cq_tail == cq->last_trigger_irq_tail) {
+		return;
+	}
+
+	spdk_ivdt_dcache(cq_dbl_headp(cq));
+	cq_head = *cq_dbl_headp(cq);
+
+	if (cq_head != cq_tail && cq_head == cq->last_head) {
+		int err = vfu_irq_trigger(ctrlr->endpoint->vfu_ctx, cq->iv);
+		if (err != 0) {
+			SPDK_ERRLOG("%s: failed to trigger interrupt: %m\n",
+				    ctrlr_id(ctrlr));
+		} else {
+			cq->last_trigger_irq_tail = cq_tail;
+		}
+	}
+
+	cq->last_head = cq_head;
+}
+
 /* Returns the number of commands processed, or a negative value on error. */
 static int
 nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr;
-	struct nvmf_vfio_user_cq *cq;
 	uint32_t new_tail;
 	int count = 0;
-	uint32_t cq_head;
-	uint32_t cq_tail;
-	int err;
 
 	assert(sq != NULL);
 
 	ctrlr = sq->ctrlr;
-	cq = ctrlr->cqs[sq->cqid];
 
-	if (cq->ien && ctrlr_interrupt_enabled(ctrlr) &&
-	    adaptive_irq_enabled(ctrlr, cq)) {
-		cq_tail = *cq_tailp(cq);
-
-		if (cq_tail != cq->last_trigger_irq_tail) {
-			spdk_ivdt_dcache(cq_dbl_headp(cq));
-			cq_head = *cq_dbl_headp(cq);
-
-			if (cq_head != cq_tail && cq_head == cq->last_head) {
-				err = vfu_irq_trigger(ctrlr->endpoint->vfu_ctx, cq->iv);
-				if (err != 0) {
-					SPDK_ERRLOG("%s: failed to trigger interrupt: %m\n",
-						    ctrlr_id(ctrlr));
-				} else {
-					cq->last_trigger_irq_tail = cq_tail;
-				}
-			}
-			cq->last_head = cq_head;
-		}
-	}
+	handle_suppressed_irq(ctrlr, sq);
 
 	/* On aarch64 platforms, doorbells update from guest VM may not be seen
 	 * on SPDK target side. This is because there is memory type mismatch
