@@ -1228,7 +1228,7 @@ bdev_nvme_create_qpair(struct nvme_ctrlr_channel *ctrlr_ch)
 	}
 
 	SPDK_DTRACE_PROBE3(bdev_nvme_create_qpair, nvme_ctrlr->nbdev_ctrlr->name,
-			   spdk_nvme_qpair_get_id(ctrlr_ch->qpair), spdk_thread_get_id(nvme_ctrlr->thread));
+			   spdk_nvme_qpair_get_id(qpair), spdk_thread_get_id(nvme_ctrlr->thread));
 
 	assert(ctrlr_ch->group != NULL);
 
