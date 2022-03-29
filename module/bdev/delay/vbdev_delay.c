@@ -646,18 +646,18 @@ vbdev_delay_insert_association(const char *bdev_name, const char *vbdev_name,
 int
 vbdev_delay_update_latency_value(char *delay_name, uint64_t latency_us, enum delay_io_type type)
 {
-	struct spdk_bdev *delay_bdev;
 	struct vbdev_delay *delay_node;
 	uint64_t ticks_mhz = spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 
-	delay_bdev = spdk_bdev_get_by_name(delay_name);
-	if (delay_bdev == NULL) {
-		return -ENODEV;
-	} else if (delay_bdev->module != &delay_if) {
-		return -EINVAL;
+	TAILQ_FOREACH(delay_node, &g_delay_nodes, link) {
+		if (strcmp(delay_node->delay_bdev.name, delay_name) == 0) {
+			break;
+		}
 	}
 
-	delay_node = SPDK_CONTAINEROF(delay_bdev, struct vbdev_delay, delay_bdev);
+	if (delay_node == NULL) {
+		return -ENODEV;
+	}
 
 	switch (type) {
 	case DELAY_AVG_READ:
