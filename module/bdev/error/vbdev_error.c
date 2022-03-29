@@ -94,21 +94,31 @@ static struct spdk_bdev_module error_if = {
 
 SPDK_BDEV_MODULE_REGISTER(error, &error_if)
 
+static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
+}
+
 int
 vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
 {
+	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_part *part;
 	struct error_disk *error_disk = NULL;
 	uint32_t i;
+	int rc = 0;
 
 	pthread_mutex_lock(&g_vbdev_error_mutex);
-	bdev = spdk_bdev_get_by_name(name);
-	if (!bdev) {
-		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
+
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not open ErrorInjection bdev %s\n", name);
 		pthread_mutex_unlock(&g_vbdev_error_mutex);
-		return -ENODEV;
+		return rc;
 	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
 
 	TAILQ_FOREACH(part, &g_error_disks, tailq) {
 		if (bdev == spdk_bdev_part_get_bdev(part)) {
@@ -119,8 +129,8 @@ vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint
 
 	if (error_disk == NULL) {
 		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
-		pthread_mutex_unlock(&g_vbdev_error_mutex);
-		return -ENODEV;
+		rc = -ENODEV;
+		goto exit;
 	}
 
 	if (0xffffffff == io_type) {
@@ -136,8 +146,11 @@ vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint
 		error_disk->error_vector[io_type].error_type = error_type;
 		error_disk->error_vector[io_type].error_num = error_num;
 	}
+
+exit:
+	spdk_bdev_close(desc);
 	pthread_mutex_unlock(&g_vbdev_error_mutex);
-	return 0;
+	return rc;
 }
 
 static void
