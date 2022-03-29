@@ -107,7 +107,7 @@ test_idxd_wq_config(void)
 	struct spdk_user_idxd_device user_idxd = {};
 	uint32_t wq_size, i, j;
 	int rc;
-	struct idxd_wqtbl *wqtbl;
+	union idxd_wqcfg *wqcfg;
 
 	user_idxd.registers = calloc(1, FAKE_REG_SIZE);
 	SPDK_CU_ASSERT_FATAL(user_idxd.registers != NULL);
@@ -119,21 +119,21 @@ test_idxd_wq_config(void)
 	user_idxd.registers->offsets.wqcfg = WQ_CFG_OFFSET;
 	wq_size = user_idxd.registers->wqcap.total_wq_size;
 
-	wqtbl = (struct idxd_wqtbl *)((uint8_t *)user_idxd.registers +
-				      (user_idxd.registers->offsets.wqcfg * IDXD_TABLE_OFFSET_MULT));
+	wqcfg = (union idxd_wqcfg *)((uint8_t *)user_idxd.registers +
+				     (user_idxd.registers->offsets.wqcfg * IDXD_TABLE_OFFSET_MULT));
 
 	rc = idxd_wq_config(&user_idxd);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(wqtbl->wq[0].wq_size == wq_size);
-	CU_ASSERT(wqtbl->wq[0].mode == WQ_MODE_DEDICATED);
-	CU_ASSERT(wqtbl->wq[0].max_batch_shift == LOG2_WQ_MAX_BATCH);
-	CU_ASSERT(wqtbl->wq[0].max_xfer_shift == LOG2_WQ_MAX_XFER);
-	CU_ASSERT(wqtbl->wq[0].wq_state == WQ_ENABLED);
-	CU_ASSERT(wqtbl->wq[0].priority == WQ_PRIORITY_1);
+	CU_ASSERT(wqcfg->wq_size == wq_size);
+	CU_ASSERT(wqcfg->mode == WQ_MODE_DEDICATED);
+	CU_ASSERT(wqcfg->max_batch_shift == LOG2_WQ_MAX_BATCH);
+	CU_ASSERT(wqcfg->max_xfer_shift == LOG2_WQ_MAX_XFER);
+	CU_ASSERT(wqcfg->wq_state == WQ_ENABLED);
+	CU_ASSERT(wqcfg->priority == WQ_PRIORITY_1);
 
 	for (i = 1; i < user_idxd.registers->wqcap.num_wqs; i++) {
 		for (j = 0 ; j < (sizeof(union idxd_wqcfg) / sizeof(uint32_t)); j++) {
-			CU_ASSERT(spdk_mmio_read_4(&wqtbl->wq[i].raw[j]) == 0);
+			CU_ASSERT(spdk_mmio_read_4(&wqcfg->raw[j]) == 0);
 		}
 	}
 

@@ -232,13 +232,9 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	struct spdk_idxd_device *idxd = &user_idxd->idxd;
 	union idxd_wqcap_register wqcap;
 	union idxd_offsets_register table_offsets;
-	struct idxd_wqtbl *wqtbl;
-	union idxd_wqcfg wqcfg;
+	union idxd_wqcfg *wqcfg;
 
 	wqcap.raw = spdk_mmio_read_8(&user_idxd->registers->wqcap.raw);
-
-	/* If this fires, something in the hardware spec has changed. */
-	assert(sizeof(wqtbl->wq[0]) == 1 << (WQCFG_SHIFT + wqcap.wqcfg_size));
 
 	SPDK_DEBUGLOG(idxd, "Total ring slots available 0x%x\n", wqcap.total_wq_size);
 
@@ -251,22 +247,22 @@ idxd_wq_config(struct spdk_user_idxd_device *user_idxd)
 	table_offsets.raw[0] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[0]);
 	table_offsets.raw[1] = spdk_mmio_read_8(&user_idxd->registers->offsets.raw[1]);
 
-	wqtbl = (struct idxd_wqtbl *)((uint8_t *)user_idxd->registers + (table_offsets.wqcfg *
-				      IDXD_TABLE_OFFSET_MULT));
+	wqcfg = (union idxd_wqcfg *)((uint8_t *)user_idxd->registers + (table_offsets.wqcfg *
+				     IDXD_TABLE_OFFSET_MULT));
 
-	for (i = 0 ; i < SPDK_COUNTOF(wqtbl->wq[0].raw); i++) {
-		wqcfg.raw[i] = spdk_mmio_read_4(&wqtbl->wq[0].raw[i]);
+	for (i = 0 ; i < SPDK_COUNTOF(wqcfg->raw); i++) {
+		wqcfg->raw[i] = spdk_mmio_read_4(&wqcfg->raw[i]);
 	}
 
-	wqcfg.wq_size = wqcap.total_wq_size;
-	wqcfg.mode = WQ_MODE_DEDICATED;
-	wqcfg.max_batch_shift = LOG2_WQ_MAX_BATCH;
-	wqcfg.max_xfer_shift = LOG2_WQ_MAX_XFER;
-	wqcfg.wq_state = WQ_ENABLED;
-	wqcfg.priority = WQ_PRIORITY_1;
+	wqcfg->wq_size = wqcap.total_wq_size;
+	wqcfg->mode = WQ_MODE_DEDICATED;
+	wqcfg->max_batch_shift = LOG2_WQ_MAX_BATCH;
+	wqcfg->max_xfer_shift = LOG2_WQ_MAX_XFER;
+	wqcfg->wq_state = WQ_ENABLED;
+	wqcfg->priority = WQ_PRIORITY_1;
 
-	for (i = 0; i < SPDK_COUNTOF(wqtbl->wq[0].raw); i++) {
-		spdk_mmio_write_4(&wqtbl->wq[0].raw[i], wqcfg.raw[i]);
+	for (i = 0; i < SPDK_COUNTOF(wqcfg->raw); i++) {
+		spdk_mmio_write_4(&wqcfg->raw[i], wqcfg->raw[i]);
 	}
 
 	return 0;

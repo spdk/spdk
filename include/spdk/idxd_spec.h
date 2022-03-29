@@ -589,10 +589,6 @@ union idxd_wqcfg {
 };
 SPDK_STATIC_ASSERT(sizeof(union idxd_wqcfg) == 32, "size mismatch");
 
-struct idxd_wqtbl {
-	union idxd_wqcfg wq[1];
-};
-
 #ifdef __cplusplus
 }
 #endif
