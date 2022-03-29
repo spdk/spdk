@@ -6145,6 +6145,42 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 }
 
+static void
+_tmp_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
+	SPDK_NOTICELOG("Unexpected event type: %d\n", type);
+}
+
+int
+spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module *module,
+			     spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	rc = spdk_bdev_open_ext(bdev_name, false, _tmp_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to open bdev with name: %s\n", bdev_name);
+		return rc;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+
+	if (bdev->module != module) {
+		spdk_bdev_close(desc);
+		SPDK_ERRLOG("Bdev %s was not registered by the specified module.\n",
+			    bdev_name);
+		return -ENODEV;
+	}
+
+	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+
+	spdk_bdev_close(desc);
+
+	return 0;
+}
+
 static int
 bdev_start_qos(struct spdk_bdev *bdev)
 {

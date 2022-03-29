@@ -5153,6 +5153,42 @@ bdev_register_uuid_alias(void)
 	poll_threads();
 }
 
+static void
+bdev_unregister_by_name(void)
+{
+	struct spdk_bdev *bdev;
+	int rc;
+
+	bdev = allocate_bdev("bdev");
+
+	g_event_type1 = 0xFF;
+	g_unregister_arg = NULL;
+	g_unregister_rc = -1;
+
+	rc = spdk_bdev_unregister_by_name("bdev1", &bdev_ut_if, bdev_unregister_cb, (void *)0x12345678);
+	CU_ASSERT(rc == -ENODEV);
+
+	rc = spdk_bdev_unregister_by_name("bdev", &vbdev_ut_if, bdev_unregister_cb, (void *)0x12345678);
+	CU_ASSERT(rc == -ENODEV);
+
+	rc = spdk_bdev_unregister_by_name("bdev", &bdev_ut_if, bdev_unregister_cb, (void *)0x12345678);
+	CU_ASSERT(rc == 0);
+
+	/* Check that unregister callback is delayed */
+	CU_ASSERT(g_unregister_arg == NULL);
+	CU_ASSERT(g_unregister_rc == -1);
+
+	poll_threads();
+
+	/* Event callback shall not be issued because device was closed */
+	CU_ASSERT(g_event_type1 == 0xFF);
+	/* Unregister callback is issued */
+	CU_ASSERT(g_unregister_arg == (void *)0x12345678);
+	CU_ASSERT(g_unregister_rc == 0);
+
+	free_bdev(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -5202,6 +5238,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_get_memory_domains);
 	CU_ADD_TEST(suite, bdev_writev_readv_ext);
 	CU_ADD_TEST(suite, bdev_register_uuid_alias);
+	CU_ADD_TEST(suite, bdev_unregister_by_name);
 
 	allocate_cores(1);
 	allocate_threads(1);

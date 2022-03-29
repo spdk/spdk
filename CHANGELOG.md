@@ -12,6 +12,8 @@ fragment copies.
 
 Removed deprecated spdk_bdev_module_finish_done(). Use spdk_bdev_module_fini_done() instead.
 
+A new API `spdk_bdev_unregister_by_name` was added to handle race conditions correctly.
+
 ### idxd
 
 A new parameter `flags` was added to all low level submission and preparation

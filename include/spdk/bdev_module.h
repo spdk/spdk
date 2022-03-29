@@ -803,15 +803,34 @@ int spdk_bdev_register(struct spdk_bdev *bdev);
 
 /**
  * Start unregistering a bdev. This will notify each currently open descriptor
- * on this bdev about the hotremoval in hopes that the upper layers will stop
- * using this bdev and manually close all the descriptors with spdk_bdev_close().
+ * on this bdev of the hotremoval to request the upper layers to stop using this bdev
+ * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
+ *
+ * Note: spdk_bdev_unregister() can be unsafe unless the bdev is not opened before and
+ * closed after unregistration. It is recommended to use spdk_bdev_unregister_by_name().
  *
  * \param bdev Block device to unregister.
  * \param cb_fn Callback function to be called when the unregister is complete.
  * \param cb_arg Argument to be supplied to cb_fn
  */
 void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+
+/**
+ * Start unregistering a bdev. This will notify each currently open descriptor
+ * on this bdev of the hotremoval to request the upper layer to stop using this bdev
+ * and manually close all the descriptors with spdk_bdev_close().
+ * The actual bdev unregistration may be deferred until all descriptors are closed.
+ *
+ * \param bdev_name Block device name to unregister.
+ * \param module Module by which the block device was registered.
+ * \param cb_fn Callback function to be called when the unregister is complete.
+ * \param cb_arg Argument to be supplied to cb_fn
+ *
+ * \return 0 on success, or suitable errno value otherwise
+ */
+int spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module *module,
+				 spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 /**
  * Invokes the unregister callback of a bdev backing a virtual bdev.

@@ -101,6 +101,7 @@
 	# Public functions in bdev_module.h
 	spdk_bdev_register;
 	spdk_bdev_unregister;
+	spdk_bdev_unregister_by_name;
 	spdk_bdev_destruct_done;
 	spdk_bdev_module_examine_done;
 	spdk_bdev_module_init_done;
