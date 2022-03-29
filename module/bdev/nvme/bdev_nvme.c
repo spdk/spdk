@@ -1147,36 +1147,38 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 	struct nvme_qpair *nvme_qpair;
 	struct nvme_ctrlr_channel *ctrlr_ch;
 
-	SPDK_NOTICELOG("qpair %p is disconnected, free the qpair and reset controller.\n", qpair);
-
-	/*
-	 * Free the I/O qpair and reset the nvme_ctrlr.
-	 */
 	nvme_qpair = nvme_poll_group_get_qpair(group, qpair);
-	if (nvme_qpair != NULL) {
-		if (nvme_qpair->qpair != NULL) {
-			spdk_nvme_ctrlr_free_io_qpair(nvme_qpair->qpair);
-			nvme_qpair->qpair = NULL;
-		}
+	if (nvme_qpair == NULL) {
+		return;
+	}
 
-		_bdev_nvme_clear_io_path_cache(nvme_qpair);
+	if (nvme_qpair->qpair != NULL) {
+		spdk_nvme_ctrlr_free_io_qpair(nvme_qpair->qpair);
+		nvme_qpair->qpair = NULL;
+	}
 
-		ctrlr_ch = nvme_qpair->ctrlr_ch;
+	_bdev_nvme_clear_io_path_cache(nvme_qpair);
 
-		if (ctrlr_ch != NULL) {
-			if (ctrlr_ch->reset_iter != NULL) {
-				/* If we are already in a full reset sequence, we do not have
-				 * to restart it. Just move to the next ctrlr_channel.
-				 */
-				spdk_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
-				ctrlr_ch->reset_iter = NULL;
-			} else {
-				bdev_nvme_reset(nvme_qpair->ctrlr);
-			}
+	ctrlr_ch = nvme_qpair->ctrlr_ch;
+
+	if (ctrlr_ch != NULL) {
+		if (ctrlr_ch->reset_iter != NULL) {
+			/* If we are already in a full reset sequence, we do not have
+			 * to restart it. Just move to the next ctrlr_channel.
+			 */
+			SPDK_DEBUGLOG(bdev_nvme, "qpair %p was disconnected and freed in a reset ctrlr sequence.\n",
+				      qpair);
+			spdk_for_each_channel_continue(ctrlr_ch->reset_iter, 0);
+			ctrlr_ch->reset_iter = NULL;
 		} else {
-			/* In this case, ctrlr_channel is already deleted. */
-			nvme_qpair_delete(nvme_qpair);
+			/* qpair was disconnected unexpectedly. Reset controller for recovery. */
+			SPDK_NOTICELOG("qpair %p was disconnected and freed. reset controller.\n", qpair);
+			bdev_nvme_reset(nvme_qpair->ctrlr);
 		}
+	} else {
+		/* In this case, ctrlr_channel is already deleted. */
+		SPDK_DEBUGLOG(bdev_nvme, "qpair %p was disconnected and freed. delete nvme_qpair.\n", qpair);
+		nvme_qpair_delete(nvme_qpair);
 	}
 }
 
