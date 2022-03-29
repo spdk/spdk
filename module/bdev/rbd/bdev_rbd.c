@@ -1287,23 +1287,39 @@ bdev_rbd_delete(const char *name, spdk_delete_rbd_complete cb_fn, void *cb_arg)
 	}
 }
 
-int
-bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
+static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
+}
+
+int
+bdev_rbd_resize(const char *name, const uint64_t new_size_in_mb)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
 	struct spdk_io_channel *ch;
 	struct bdev_rbd_io_channel *rbd_io_ch;
-	int rc;
+	int rc = 0;
 	uint64_t new_size_in_byte;
 	uint64_t current_size_in_mb;
 
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		return rc;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+
 	if (bdev->module != &rbd_if) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	current_size_in_mb = bdev->blocklen * bdev->blockcnt / (1024 * 1024);
 	if (current_size_in_mb > new_size_in_mb) {
-		SPDK_ERRLOG("The new bdev size must be lager than current bdev size.\n");
-		return -EINVAL;
+		SPDK_ERRLOG("The new bdev size must be larger than current bdev size.\n");
+		rc = -EINVAL;
+		goto exit;
 	}
 
 	ch = bdev_rbd_get_io_channel(bdev);
@@ -1314,15 +1330,16 @@ bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb)
 	spdk_put_io_channel(ch);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to resize the ceph bdev.\n");
-		return rc;
+		goto exit;
 	}
 
 	rc = spdk_bdev_notify_blockcnt_change(bdev, new_size_in_byte / bdev->blocklen);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to notify block cnt change.\n");
-		return rc;
 	}
 
+exit:
+	spdk_bdev_close(desc);
 	return rc;
 }
 

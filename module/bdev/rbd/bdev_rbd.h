@@ -69,10 +69,10 @@ void bdev_rbd_delete(const char *name, spdk_delete_rbd_complete cb_fn,
 /**
  * Resize rbd bdev.
  *
- * \param bdev Pointer to rbd bdev.
+ * \param bdev Name of rbd bdev.
  * \param new_size_in_mb The new size in MiB for this bdev.
  */
-int bdev_rbd_resize(struct spdk_bdev *bdev, const uint64_t new_size_in_mb);
+int bdev_rbd_resize(const char *name, const uint64_t new_size_in_mb);
 
 /**
  * Create a Rados cluster.
