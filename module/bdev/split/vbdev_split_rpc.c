@@ -51,11 +51,17 @@ static const struct spdk_json_object_decoder rpc_construct_split_decoders[] = {
 };
 
 static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
+}
+
+static void
 rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
 		      const struct spdk_json_val *params)
 {
 	struct rpc_construct_split req = {};
 	struct spdk_json_write_ctx *w;
+	struct spdk_bdev_desc *base_desc;
 	struct spdk_bdev *base_bdev;
 	int rc;
 
@@ -78,12 +84,14 @@ rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
 	w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(w);
 
-	base_bdev = spdk_bdev_get_by_name(req.base_bdev);
-	if (base_bdev != NULL) {
+	rc = spdk_bdev_open_ext(req.base_bdev, false, dummy_bdev_event_cb, NULL, &base_desc);
+	if (rc == 0) {
 		struct spdk_bdev_part_base *split_base;
 		struct bdev_part_tailq *split_base_tailq;
 		struct spdk_bdev_part *split_part;
 		struct spdk_bdev *split_bdev;
+
+		base_bdev = spdk_bdev_desc_get_bdev(base_desc);
 
 		split_base = vbdev_split_get_part_base(base_bdev);
 
@@ -94,6 +102,8 @@ rpc_bdev_split_create(struct spdk_jsonrpc_request *request,
 			split_bdev = spdk_bdev_part_get_bdev(split_part);
 			spdk_json_write_string(w, spdk_bdev_get_name(split_bdev));
 		}
+
+		spdk_bdev_close(base_desc);
 	}
 
 	spdk_json_write_array_end(w);
