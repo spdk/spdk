@@ -187,7 +187,6 @@ struct nvme_qpair {
 };
 
 struct nvme_ctrlr_channel {
-	struct nvme_ctrlr		*ctrlr;
 	struct nvme_qpair		*qpair;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_resets;
 
