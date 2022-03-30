@@ -1090,8 +1090,8 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 		}
 	} else {
 		if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-			SPDK_ERRLOG("%s: SCSI target number is too big (got %d, max %d)\n",
-				    vdev->name, scsi_tgt_num, SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
+			SPDK_ERRLOG("%s: SCSI target number is too big (got %d, max %d), started from 0.\n",
+				    vdev->name, scsi_tgt_num, SPDK_VHOST_SCSI_CTRLR_MAX_DEVS - 1);
 			return -EINVAL;
 		}
 	}
