@@ -1134,6 +1134,25 @@ vhost_blk_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bo
 	vhost_user_session_set_interrupt_mode(&bvsession->vsession, interrupt_mode);
 }
 
+typedef void (*bdev_event_cb_complete)(struct spdk_vhost_dev *vdev, void *ctx);
+
+static void
+bdev_event_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
+{
+	enum spdk_bdev_event_type type = (enum spdk_bdev_event_type)(uintptr_t)ctx;
+	struct spdk_vhost_blk_dev *bvdev;
+
+	if (type == SPDK_BDEV_EVENT_REMOVE) {
+		/* All sessions have been notified, time to close the bdev */
+		bvdev = to_blk_dev(vdev);
+		assert(bvdev != NULL);
+		spdk_put_io_channel(bvdev->dummy_io_channel);
+		spdk_bdev_close(bvdev->bdev_desc);
+		bvdev->bdev_desc = NULL;
+		bvdev->bdev = NULL;
+	}
+}
+
 static int
 vhost_session_bdev_resize_cb(struct spdk_vhost_dev *vdev,
 			     struct spdk_vhost_session *vsession,
@@ -1150,34 +1169,18 @@ vhost_session_bdev_resize_cb(struct spdk_vhost_dev *vdev,
 }
 
 static void
-blk_resize_cb(void *resize_ctx)
+vhost_user_blk_resize_cb(struct spdk_vhost_dev *vdev, bdev_event_cb_complete cb, void *cb_arg)
 {
-	struct spdk_vhost_blk_dev *bvdev = resize_ctx;
-
 	spdk_vhost_lock();
-	vhost_user_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_resize_cb,
-				       NULL, NULL);
+	vhost_user_dev_foreach_session(vdev, vhost_session_bdev_resize_cb,
+				       cb, cb_arg);
 	spdk_vhost_unlock();
 }
 
-static void
-vhost_dev_bdev_remove_cpl_cb(struct spdk_vhost_dev *vdev, void *ctx)
-{
-
-	/* All sessions have been notified, time to close the bdev */
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
-
-	assert(bvdev != NULL);
-	spdk_put_io_channel(bvdev->dummy_io_channel);
-	spdk_bdev_close(bvdev->bdev_desc);
-	bvdev->bdev_desc = NULL;
-	bvdev->bdev = NULL;
-}
-
 static int
-vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
-			     struct spdk_vhost_session *vsession,
-			     void *ctx)
+vhost_user_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
+				  struct spdk_vhost_session *vsession,
+				  void *ctx)
 {
 	struct spdk_vhost_blk_session *bvsession;
 	int rc;
@@ -1204,35 +1207,48 @@ vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev,
 }
 
 static void
-bdev_remove_cb(void *remove_ctx)
+vhost_user_bdev_remove_cb(struct spdk_vhost_dev *vdev, bdev_event_cb_complete cb, void *cb_arg)
 {
-	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
-
 	SPDK_WARNLOG("%s: hot-removing bdev - all further requests will fail.\n",
-		     bvdev->vdev.name);
+		     vdev->name);
 
 	spdk_vhost_lock();
-	vhost_user_dev_foreach_session(&bvdev->vdev, vhost_session_bdev_remove_cb,
-				       vhost_dev_bdev_remove_cpl_cb, NULL);
+	vhost_user_dev_foreach_session(vdev, vhost_user_session_bdev_remove_cb,
+				       cb, cb_arg);
 	spdk_vhost_unlock();
+}
+
+static void
+vhost_user_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_vhost_dev *vdev,
+			 bdev_event_cb_complete cb, void *cb_arg)
+{
+	switch (type) {
+	case SPDK_BDEV_EVENT_REMOVE:
+		vhost_user_bdev_remove_cb(vdev, cb, cb_arg);
+		break;
+	case SPDK_BDEV_EVENT_RESIZE:
+		vhost_user_blk_resize_cb(vdev, cb, cb_arg);
+		break;
+	default:
+		assert(false);
+		return;
+	}
 }
 
 static void
 bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
 	      void *event_ctx)
 {
+	struct spdk_vhost_dev *vdev = (struct spdk_vhost_dev *)event_ctx;
+
 	SPDK_DEBUGLOG(vhost_blk, "Bdev event: type %d, name %s\n",
 		      type,
 		      bdev->name);
 
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
-		SPDK_NOTICELOG("bdev name (%s) received event(SPDK_BDEV_EVENT_REMOVE)\n", bdev->name);
-		bdev_remove_cb(event_ctx);
-		break;
 	case SPDK_BDEV_EVENT_RESIZE:
-		SPDK_NOTICELOG("bdev name (%s) received event(SPDK_BDEV_EVENT_RESIZE)\n", bdev->name);
-		blk_resize_cb(event_ctx);
+		vhost_user_bdev_event_cb(type, vdev, bdev_event_cpl_cb, (void *)type);
 		break;
 	default:
 		SPDK_NOTICELOG("Unsupported bdev event: type %d\n", type);
