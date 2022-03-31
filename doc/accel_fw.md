@@ -9,12 +9,6 @@ exists to enable use of the framework in environments without hardware
 acceleration capabilities. ISA/L is used for optimized CRC32C calculation within
 the software module.
 
-The framework includes an API for getting the current capabilities of the
-selected module. See [`spdk_accel_get_capabilities`](https://spdk.io/doc/accel__engine_8h.html) for more details.
-For the software module, all capabilities will be reported as supported. For the hardware modules, only functions
-accelerated by hardware will be reported however any function can still be called, it will just be backed by
-software if it is not reported as a supported capability.
-
 ## Acceleration Framework Functions {#accel_functions}
 
 Functions implemented via the framework can be found in the DoxyGen documentation of the
@@ -28,12 +22,14 @@ most cases, except where otherwise documented, are asynchronous and follow the
 standard SPDK model for callbacks with a callback argument.
 
 If the acceleration framework is started without initializing a hardware module,
-optimized software implementations of the functions will back the public API.
-Additionally, if any hardware module does not support a specific function and that
-hardware module is initialized, the specific function will fallback to a software
-optimized implementation.  For example, IOAT does not support the dualcast function
-in hardware but if the IOAT module has been initialized and the public dualcast API
-is called, it will actually be done via software behind the scenes.
+optimized software implementations of the operations will back the public API. All
+operations supported by the framework have a backing software implementation in
+the event that no hardware accelerators have been enabled for that operation.
+
+When multiple hardware engines are enabled the framework will assign each operation to
+an engine based on the order in which it was initialized. So, for example if two modules are
+enabled, IOAT and software, the software engine will be used for every operation except those
+supported by IOAT.
 
 ## Acceleration Low Level Libraries {#accel_libs}
 
@@ -49,18 +45,18 @@ functions exposed by the individual low level libraries. Thus, code written this
 way needs to be certain that the underlying hardware exists everywhere that it runs.
 
 The low level library for IOAT is located in `/lib/ioat`.  The low level library
-for DSA is in `/lib/idxd` (IDXD stands for Intel(R) Data Acceleration Driver).
-In `/lib/idxd` folder, SPDK supports to leverage both user space and kernel space driver
-to drive DSA devices. And the following describes each usage scenario:
+for DSA and IAA is in `/lib/idxd` (IDXD stands for Intel(R) Data Acceleration Driver and
+supports both DSA and IAA hardware accelerators). In `/lib/idxd` folder, SPDK supports the ability
+to use either user space and kernel space drivers. The following describes each usage scenario:
 
-Leveraging user space idxd driver: The DSA devices are managed by the user space
+Leveraging user space idxd driver: The DSA devices are managed by the SPDK user space
 driver in a dedicated SPDK process, then the device cannot be shared by another
 process. The benefit of this usage is no kernel dependency.
 
 Leveraging kernel space driver: The DSA devices are managed by kernel
 space drivers. And the Work queues inside the DSA device can be shared among
 different processes. Naturally, it can be used in cloud native scenario. The drawback of
-this usage is the kernel dependency, i.e., idxd driver must be supported and loaded
+this usage is the kernel dependency, i.e., idxd kernel driver must be supported and loaded
 in the kernel.
 
 ## Acceleration Plug-In Modules {#accel_modules}
@@ -105,6 +101,8 @@ This is often packaged, but the source is available on
 [GitHub](https://github.com/intel/idxd-config). After the library is installed,
 users can use the `accel-config` command to configure the work queues(WQs) of
 the idxd devices managed by the kernel with the following steps:
+
+Note: this library must be installed before you run `configure`
 
 ```bash
 accel-config disable-wq dsa0/wq0.1
