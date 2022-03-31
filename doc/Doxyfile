@@ -841,6 +841,7 @@ INPUT                  += \
                          rpm.md \
                          scheduler.md \
                          shfmt.md \
+                         sma.md \
                          spdkcli.md \
                          spdk_top.md \
                          ssd_internals.md \
