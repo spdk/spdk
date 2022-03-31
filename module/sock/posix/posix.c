@@ -730,11 +730,11 @@ _sock_flush(struct spdk_sock *sock)
 	msg.msg_iovlen = iovcnt;
 #ifdef SPDK_ZEROCOPY
 	if (psock->zcopy) {
-		flags = MSG_ZEROCOPY;
+		flags = MSG_ZEROCOPY | MSG_NOSIGNAL;
 	} else
 #endif
 	{
-		flags = 0;
+		flags = MSG_NOSIGNAL;
 	}
 	rc = sendmsg(psock->fd, &msg, flags);
 	if (rc <= 0) {
