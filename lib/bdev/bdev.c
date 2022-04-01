@@ -6572,6 +6572,82 @@ spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
 	return desc->bdev;
 }
 
+int
+spdk_for_each_bdev(void *ctx, spdk_for_each_bdev_fn fn)
+{
+	struct spdk_bdev *bdev, *tmp;
+	struct spdk_bdev_desc *desc;
+	int rc = 0;
+
+	assert(fn != NULL);
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	bdev = spdk_bdev_first();
+	while (bdev != NULL) {
+		rc = bdev_desc_alloc(bdev, _tmp_bdev_event_cb, NULL, &desc);
+		if (rc != 0) {
+			break;
+		}
+		rc = bdev_open(bdev, false, desc);
+		if (rc != 0) {
+			bdev_desc_free(desc);
+			break;
+		}
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
+		rc = fn(ctx, bdev);
+
+		pthread_mutex_lock(&g_bdev_mgr.mutex);
+		tmp = spdk_bdev_next(bdev);
+		bdev_close(bdev, desc);
+		if (rc != 0) {
+			break;
+		}
+		bdev = tmp;
+	}
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
+	return rc;
+}
+
+int
+spdk_for_each_bdev_leaf(void *ctx, spdk_for_each_bdev_fn fn)
+{
+	struct spdk_bdev *bdev, *tmp;
+	struct spdk_bdev_desc *desc;
+	int rc = 0;
+
+	assert(fn != NULL);
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	bdev = spdk_bdev_first_leaf();
+	while (bdev != NULL) {
+		rc = bdev_desc_alloc(bdev, _tmp_bdev_event_cb, NULL, &desc);
+		if (rc != 0) {
+			break;
+		}
+		rc = bdev_open(bdev, false, desc);
+		if (rc != 0) {
+			bdev_desc_free(desc);
+			break;
+		}
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
+		rc = fn(ctx, bdev);
+
+		pthread_mutex_lock(&g_bdev_mgr.mutex);
+		tmp = spdk_bdev_next_leaf(bdev);
+		bdev_close(bdev, desc);
+		if (rc != 0) {
+			break;
+		}
+		bdev = tmp;
+	}
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
+	return rc;
+}
+
 void
 spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp)
 {

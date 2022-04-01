@@ -14,6 +14,9 @@ Removed deprecated spdk_bdev_module_finish_done(). Use spdk_bdev_module_fini_don
 
 A new API `spdk_bdev_unregister_by_name` was added to handle race conditions correctly.
 
+New APIs, `spdk_for_each_bdev` and `spdk_for_each_bdev_leaf`, were added to provide iteration
+safe for race conditions.
+
 ### idxd
 
 A new parameter `flags` was added to all low level submission and preparation

@@ -5256,6 +5256,64 @@ bdev_unregister_by_name(void)
 	free_bdev(bdev);
 }
 
+static int
+count_bdevs(void *ctx, struct spdk_bdev *bdev)
+{
+	int *count = ctx;
+
+	(*count)++;
+
+	return 0;
+}
+
+static void
+for_each_bdev_test(void)
+{
+	struct spdk_bdev *bdev[8];
+	int rc, count;
+
+	bdev[0] = allocate_bdev("bdev0");
+
+	bdev[1] = allocate_bdev("bdev1");
+	rc = spdk_bdev_module_claim_bdev(bdev[1], NULL, &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+
+	bdev[2] = allocate_bdev("bdev2");
+
+	bdev[3] = allocate_bdev("bdev3");
+	rc = spdk_bdev_module_claim_bdev(bdev[3], NULL, &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+
+	bdev[4] = allocate_bdev("bdev4");
+
+	bdev[5] = allocate_bdev("bdev5");
+	rc = spdk_bdev_module_claim_bdev(bdev[5], NULL, &bdev_ut_if);
+	CU_ASSERT(rc == 0);
+
+	bdev[6] = allocate_bdev("bdev6");
+
+	bdev[7] = allocate_bdev("bdev7");
+
+	count = 0;
+	rc = spdk_for_each_bdev(&count, count_bdevs);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 8);
+
+	count = 0;
+	rc = spdk_for_each_bdev_leaf(&count, count_bdevs);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(count == 5);
+
+	free_bdev(bdev[0]);
+	free_bdev(bdev[1]);
+	free_bdev(bdev[2]);
+	free_bdev(bdev[3]);
+	free_bdev(bdev[4]);
+	free_bdev(bdev[5]);
+	free_bdev(bdev[6]);
+	free_bdev(bdev[7]);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -5306,6 +5364,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_writev_readv_ext);
 	CU_ADD_TEST(suite, bdev_register_uuid_alias);
 	CU_ADD_TEST(suite, bdev_unregister_by_name);
+	CU_ADD_TEST(suite, for_each_bdev_test);
 
 	allocate_cores(1);
 	allocate_threads(1);
