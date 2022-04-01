@@ -6091,20 +6091,11 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 	return rc;
 }
 
-void
-spdk_bdev_close(struct spdk_bdev_desc *desc)
+static void
+bdev_close(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc)
 {
-	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
 	int rc;
 
-	SPDK_DEBUGLOG(bdev, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
-		      spdk_get_thread());
-
-	assert(desc->thread == spdk_get_thread());
-
-	spdk_poller_unregister(&desc->io_timeout_poller);
-
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
 	pthread_mutex_lock(&bdev->internal.mutex);
 	pthread_mutex_lock(&desc->mutex);
 
@@ -6144,6 +6135,23 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	} else {
 		pthread_mutex_unlock(&bdev->internal.mutex);
 	}
+}
+
+void
+spdk_bdev_close(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+
+	SPDK_DEBUGLOG(bdev, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
+		      spdk_get_thread());
+
+	assert(desc->thread == spdk_get_thread());
+
+	spdk_poller_unregister(&desc->io_timeout_poller);
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+
+	bdev_close(bdev, desc);
 
 	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 }
