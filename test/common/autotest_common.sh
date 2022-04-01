@@ -775,21 +775,15 @@ function waitfornbd() {
 
 function waitforbdev() {
 	local bdev_name=$1
+	local bdev_timeout=$2
 	local i
+	[[ -z $bdev_timeout ]] && bdev_timeout=2000 # ms
 
 	$rpc_py bdev_wait_for_examine
 
-	for ((i = 1; i <= 20; i++)); do
-		if $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
-			return 0
-		fi
-
-		if $rpc_py bdev_get_bdevs | jq -r '.[] .aliases' | grep -qw $bdev_name; then
-			return 0
-		fi
-
-		sleep 0.1
-	done
+	if $rpc_py bdev_get_bdevs -b $bdev_name -t $bdev_timeout; then
+		return 0
+	fi
 
 	return 1
 }
