@@ -560,7 +560,7 @@ nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 			SPDK_ERRLOG("aborting queued i/o\n");
 		}
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
-						   SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
+						   SPDK_NVME_SC_ABORTED_SQ_DELETION, dnr, true);
 	}
 }
 
