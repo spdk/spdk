@@ -75,6 +75,7 @@ function create_veth_interfaces() {
 
 	# Accept connections from veth interface
 	iptables -I INPUT 1 -i $INITIATOR_INTERFACE -p tcp --dport $ISCSI_PORT -j ACCEPT
+	iptables -A FORWARD -i $ISCSI_BRIDGE -o $ISCSI_BRIDGE -j ACCEPT
 
 	# Verify connectivity
 	ping -c 1 $TARGET_IP
