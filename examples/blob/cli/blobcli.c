@@ -943,25 +943,33 @@ load_bs(struct cli_context_t *cli_context)
 	spdk_bs_load(bs_dev, optsp, load_bs_cb, cli_context);
 }
 
+static int
+print_bdev(void *ctx, struct spdk_bdev *bdev)
+{
+	uint32_t *count = ctx;
+
+	(*count)++;
+
+	printf("\tbdev Name: %s\n", spdk_bdev_get_name(bdev));
+	printf("\tbdev Product Name: %s\n",
+	       spdk_bdev_get_product_name(bdev));
+	return 0;
+}
+
 /*
  * Lists all the blobs on this blobstore.
  */
 static void
 list_bdevs(struct cli_context_t *cli_context)
 {
-	struct spdk_bdev *bdev = NULL;
+	uint32_t count = 0;
 
 	printf("\nList bdevs:\n");
 
-	bdev = spdk_bdev_first();
-	if (bdev == NULL) {
+	spdk_for_each_bdev(&count, print_bdev);
+
+	if (count == 0) {
 		printf("Could not find a bdev\n");
-	}
-	while (bdev) {
-		printf("\tbdev Name: %s\n", spdk_bdev_get_name(bdev));
-		printf("\tbdev Product Name: %s\n",
-		       spdk_bdev_get_product_name(bdev));
-		bdev = spdk_bdev_next(bdev);
 	}
 
 	printf("\n");
