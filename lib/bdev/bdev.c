@@ -6392,34 +6392,16 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 	return 0;
 }
 
-int
-spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
-		   void *event_ctx, struct spdk_bdev_desc **_desc)
+static int
+bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *event_ctx,
+		struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
-	struct spdk_bdev *bdev;
 	unsigned int event_id;
-	int rc;
-
-	if (event_cb == NULL) {
-		SPDK_ERRLOG("Missing event callback function\n");
-		return -EINVAL;
-	}
-
-	pthread_mutex_lock(&g_bdev_mgr.mutex);
-
-	bdev = bdev_get_by_name(bdev_name);
-
-	if (bdev == NULL) {
-		SPDK_NOTICELOG("Currently unable to find bdev with name: %s\n", bdev_name);
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
-		return -ENODEV;
-	}
 
 	desc = calloc(1, sizeof(*desc));
 	if (desc == NULL) {
 		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		return -ENOMEM;
 	}
 
@@ -6437,7 +6419,6 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 		if (desc->media_events_buffer == NULL) {
 			SPDK_ERRLOG("Failed to initialize media event pool\n");
 			bdev_desc_free(desc);
-			pthread_mutex_unlock(&g_bdev_mgr.mutex);
 			return -ENOMEM;
 		}
 
@@ -6445,6 +6426,40 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 			TAILQ_INSERT_TAIL(&desc->free_media_events,
 					  &desc->media_events_buffer[event_id], tailq);
 		}
+	}
+
+	*_desc = desc;
+
+	return 0;
+}
+
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
+		   void *event_ctx, struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (event_cb == NULL) {
+		SPDK_ERRLOG("Missing event callback function\n");
+		return -EINVAL;
+	}
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+
+	bdev = bdev_get_by_name(bdev_name);
+
+	if (bdev == NULL) {
+		SPDK_NOTICELOG("Currently unable to find bdev with name: %s\n", bdev_name);
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		return -ENODEV;
+	}
+
+	rc = bdev_desc_alloc(bdev, event_cb, event_ctx, &desc);
+	if (rc != 0) {
+		pthread_mutex_unlock(&g_bdev_mgr.mutex);
+		return rc;
 	}
 
 	rc = bdev_open(bdev, write, desc);
