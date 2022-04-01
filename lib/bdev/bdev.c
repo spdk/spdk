@@ -6137,15 +6137,15 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
 		rc = bdev_unregister_unsafe(bdev);
 		pthread_mutex_unlock(&bdev->internal.mutex);
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
 		if (rc == 0) {
 			spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
 		}
 	} else {
 		pthread_mutex_unlock(&bdev->internal.mutex);
-		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 	}
+
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 }
 
 int
