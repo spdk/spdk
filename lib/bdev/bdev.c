@@ -6009,13 +6009,52 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 	return 0;
 }
 
+static int
+bdev_desc_alloc(struct spdk_bdev *bdev, spdk_bdev_event_cb_t event_cb, void *event_ctx,
+		struct spdk_bdev_desc **_desc)
+{
+	struct spdk_bdev_desc *desc;
+	unsigned int event_id;
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INIT(&desc->pending_media_events);
+	TAILQ_INIT(&desc->free_media_events);
+
+	desc->callback.event_fn = event_cb;
+	desc->callback.ctx = event_ctx;
+	pthread_mutex_init(&desc->mutex, NULL);
+
+	if (bdev->media_events) {
+		desc->media_events_buffer = calloc(MEDIA_EVENT_POOL_SIZE,
+						   sizeof(*desc->media_events_buffer));
+		if (desc->media_events_buffer == NULL) {
+			SPDK_ERRLOG("Failed to initialize media event pool\n");
+			bdev_desc_free(desc);
+			return -ENOMEM;
+		}
+
+		for (event_id = 0; event_id < MEDIA_EVENT_POOL_SIZE; ++event_id) {
+			TAILQ_INSERT_TAIL(&desc->free_media_events,
+					  &desc->media_events_buffer[event_id], tailq);
+		}
+	}
+
+	*_desc = desc;
+
+	return 0;
+}
+
 int
 spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
 		   void *event_ctx, struct spdk_bdev_desc **_desc)
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
-	unsigned int event_id;
 	int rc;
 
 	if (event_cb == NULL) {
@@ -6033,34 +6072,10 @@ spdk_bdev_open_ext(const char *bdev_name, bool write, spdk_bdev_event_cb_t event
 		return -ENODEV;
 	}
 
-	desc = calloc(1, sizeof(*desc));
-	if (desc == NULL) {
-		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
+	rc = bdev_desc_alloc(bdev, event_cb, event_ctx, &desc);
+	if (rc != 0) {
 		pthread_mutex_unlock(&g_bdev_mgr.mutex);
-		return -ENOMEM;
-	}
-
-	TAILQ_INIT(&desc->pending_media_events);
-	TAILQ_INIT(&desc->free_media_events);
-
-	desc->callback.event_fn = event_cb;
-	desc->callback.ctx = event_ctx;
-	pthread_mutex_init(&desc->mutex, NULL);
-
-	if (bdev->media_events) {
-		desc->media_events_buffer = calloc(MEDIA_EVENT_POOL_SIZE,
-						   sizeof(*desc->media_events_buffer));
-		if (desc->media_events_buffer == NULL) {
-			SPDK_ERRLOG("Failed to initialize media event pool\n");
-			bdev_desc_free(desc);
-			pthread_mutex_unlock(&g_bdev_mgr.mutex);
-			return -ENOMEM;
-		}
-
-		for (event_id = 0; event_id < MEDIA_EVENT_POOL_SIZE; ++event_id) {
-			TAILQ_INSERT_TAIL(&desc->free_media_events,
-					  &desc->media_events_buffer[event_id], tailq);
-		}
+		return rc;
 	}
 
 	rc = bdev_open(bdev, write, desc);
