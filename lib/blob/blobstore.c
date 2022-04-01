@@ -56,7 +56,8 @@ static int bs_register_md_thread(struct spdk_blob_store *bs);
 static int bs_unregister_md_thread(struct spdk_blob_store *bs);
 static void blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
 static void blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
-		uint64_t cluster, uint32_t extent, spdk_blob_op_complete cb_fn, void *cb_arg);
+		uint64_t cluster, uint32_t extent, struct spdk_blob_md_page *page,
+		spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static int blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 			  uint16_t value_len, bool internal);
@@ -65,7 +66,7 @@ static int blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 static int blob_remove_xattr(struct spdk_blob *blob, const char *name, bool internal);
 
 static void blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
-				   spdk_blob_op_complete cb_fn, void *cb_arg);
+				   struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 static int
 blob_id_cmp(struct spdk_blob *blob1, struct spdk_blob *blob2)
@@ -2330,6 +2331,7 @@ struct spdk_blob_copy_cluster_ctx {
 	uint64_t new_cluster;
 	uint32_t new_extent_page;
 	spdk_bs_sequence_t *seq;
+	struct spdk_blob_md_page *new_cluster_page;
 };
 
 static void
@@ -2395,7 +2397,7 @@ blob_write_copy_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	cluster_number = bs_page_to_cluster(ctx->blob->bs, ctx->page);
 
 	blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
-					 ctx->new_extent_page, blob_insert_cluster_cpl, ctx);
+					 ctx->new_extent_page, ctx->new_cluster_page, blob_insert_cluster_cpl, ctx);
 }
 
 static void
@@ -2455,6 +2457,8 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 
 	ctx->blob = blob;
 	ctx->page = cluster_start_page;
+	ctx->new_cluster_page = ch->new_cluster_page;
+	memset(ctx->new_cluster_page, 0, SPDK_BS_PAGE_SIZE);
 
 	if (blob->parent_id != SPDK_BLOBID_INVALID) {
 		ctx->buf = spdk_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen,
@@ -2505,7 +2509,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 					blob_write_copy, ctx);
 	} else {
 		blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
-						 ctx->new_extent_page, blob_insert_cluster_cpl, ctx);
+						 ctx->new_extent_page, ctx->new_cluster_page, blob_insert_cluster_cpl, ctx);
 	}
 }
 
@@ -3135,6 +3139,15 @@ bs_channel_create(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
+	channel->new_cluster_page = spdk_zmalloc(SPDK_BS_PAGE_SIZE, 0, NULL, SPDK_ENV_SOCKET_ID_ANY,
+				    SPDK_MALLOC_DMA);
+	if (!channel->new_cluster_page) {
+		SPDK_ERRLOG("Failed to allocate new cluster page\n");
+		free(channel->req_mem);
+		channel->dev->destroy_channel(channel->dev, channel->dev_channel);
+		return -1;
+	}
+
 	TAILQ_INIT(&channel->need_cluster_alloc);
 	TAILQ_INIT(&channel->queued_io);
 
@@ -3160,6 +3173,7 @@ bs_channel_destroy(void *io_device, void *ctx_buf)
 	}
 
 	free(channel->req_mem);
+	spdk_free(channel->new_cluster_page);
 	channel->dev->destroy_channel(channel->dev, channel->dev_channel);
 }
 
@@ -6635,6 +6649,7 @@ bs_delete_persist_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 struct delete_snapshot_ctx {
 	struct spdk_blob_list *parent_snapshot_entry;
 	struct spdk_blob *snapshot;
+	struct spdk_blob_md_page *page;
 	bool snapshot_md_ro;
 	struct spdk_blob *clone;
 	bool clone_md_ro;
@@ -6660,6 +6675,7 @@ delete_blob_cleanup_finish(void *cb_arg, int bserrno)
 	}
 
 	ctx->cb_fn(ctx->cb_arg, ctx->snapshot, ctx->bserrno);
+	spdk_free(ctx->page);
 	free(ctx);
 }
 
@@ -6859,8 +6875,9 @@ delete_snapshot_update_extent_pages(void *cb_arg, int bserrno)
 		/* Clone and snapshot both contain partially filled matching extent pages.
 		 * Update the clone extent page in place with cluster map containing the mix of both. */
 		ctx->next_extent_page = i + 1;
+		memset(ctx->page, 0, SPDK_BS_PAGE_SIZE);
 
-		blob_write_extent_page(ctx->clone, *extent_page, i * SPDK_EXTENTS_PER_EP,
+		blob_write_extent_page(ctx->clone, *extent_page, i * SPDK_EXTENTS_PER_EP, ctx->page,
 				       delete_snapshot_update_extent_pages, ctx);
 		return;
 	}
@@ -7105,6 +7122,12 @@ bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	RB_REMOVE(spdk_blob_tree, &blob->bs->open_blobs, blob);
 
 	if (update_clone) {
+		ctx->page = spdk_zmalloc(SPDK_BS_PAGE_SIZE, 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+		if (!ctx->page) {
+			ctx->bserrno = -ENOMEM;
+			spdk_blob_close(blob, delete_blob_cleanup_finish, ctx);
+			return;
+		}
 		/* This blob is a snapshot with active clone - update clone first */
 		update_clone_on_snapshot_deletion(blob, ctx);
 	} else {
@@ -7338,6 +7361,7 @@ struct spdk_blob_insert_cluster_ctx {
 	uint32_t		cluster_num;	/* cluster index in blob */
 	uint32_t		cluster;	/* cluster on disk */
 	uint32_t		extent_page;	/* extent page on disk */
+	struct spdk_blob_md_page *page; /* preallocated extent page */
 	int			rc;
 	spdk_blob_op_complete	cb_fn;
 	void			*cb_arg;
@@ -7376,21 +7400,15 @@ blob_insert_new_ep_cb(void *arg, int bserrno)
 static void
 blob_persist_extent_page_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_md_page        *page = cb_arg;
-
 	bs_sequence_finish(seq, bserrno);
-	spdk_free(page);
 }
 
 static void
 blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
-		       spdk_blob_op_complete cb_fn, void *cb_arg)
+		       struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	spdk_bs_sequence_t		*seq;
 	struct spdk_bs_cpl		cpl;
-	struct spdk_blob_md_page	*page = NULL;
-	uint32_t			page_count = 0;
-	int				rc;
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
@@ -7401,11 +7419,11 @@ blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
-	rc = blob_serialize_add_page(blob, &page, &page_count, &page);
-	if (rc < 0) {
-		bs_sequence_finish(seq, rc);
-		return;
-	}
+
+	assert(page);
+	page->next = SPDK_INVALID_MD_PAGE;
+	page->id = blob->id;
+	page->sequence_num = 0;
 
 	blob_serialize_extent_page(blob, cluster_num, page);
 
@@ -7443,7 +7461,7 @@ blob_insert_cluster_msg(void *arg)
 		 * It was already claimed in the used_md_pages map and placed in ctx. */
 		assert(ctx->extent_page != 0);
 		assert(spdk_bit_array_get(ctx->blob->bs->used_md_pages, ctx->extent_page) == true);
-		blob_write_extent_page(ctx->blob, ctx->extent_page, ctx->cluster_num,
+		blob_write_extent_page(ctx->blob, ctx->extent_page, ctx->cluster_num, ctx->page,
 				       blob_insert_new_ep_cb, ctx);
 	} else {
 		/* It is possible for original thread to allocate extent page for
@@ -7456,14 +7474,15 @@ blob_insert_cluster_msg(void *arg)
 		}
 		/* Extent page already allocated.
 		 * Every cluster allocation, requires just an update of single extent page. */
-		blob_write_extent_page(ctx->blob, *extent_page, ctx->cluster_num,
+		blob_write_extent_page(ctx->blob, *extent_page, ctx->cluster_num, ctx->page,
 				       blob_insert_cluster_msg_cb, ctx);
 	}
 }
 
 static void
 blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
-				 uint64_t cluster, uint32_t extent_page, spdk_blob_op_complete cb_fn, void *cb_arg)
+				 uint64_t cluster, uint32_t extent_page, struct spdk_blob_md_page *page,
+				 spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_insert_cluster_ctx *ctx;
 
@@ -7478,6 +7497,7 @@ blob_insert_cluster_on_md_thread(struct spdk_blob *blob, uint32_t cluster_num,
 	ctx->cluster_num = cluster_num;
 	ctx->cluster = cluster;
 	ctx->extent_page = extent_page;
+	ctx->page = page;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 

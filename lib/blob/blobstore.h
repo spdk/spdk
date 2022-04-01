@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -222,6 +223,9 @@ struct spdk_bs_channel {
 
 	struct spdk_bs_dev		*dev;
 	struct spdk_io_channel		*dev_channel;
+
+	/* This page is only used during insert of a new cluster. */
+	struct spdk_blob_md_page	*new_cluster_page;
 
 	TAILQ_HEAD(, spdk_bs_request_set) need_cluster_alloc;
 	TAILQ_HEAD(, spdk_bs_request_set) queued_io;

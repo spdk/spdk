@@ -3827,6 +3827,7 @@ blob_insert_cluster_msg_test(void)
 	struct spdk_blob_store *bs = g_bs;
 	struct spdk_blob *blob;
 	struct spdk_blob_opts opts;
+	struct spdk_blob_md_page page = {};
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	uint64_t new_cluster = 0;
@@ -3854,7 +3855,7 @@ blob_insert_cluster_msg_test(void)
 	bs_allocate_cluster(blob, cluster_num, &new_cluster, &extent_page, false);
 	CU_ASSERT(blob->active.clusters[cluster_num] == 0);
 
-	blob_insert_cluster_on_md_thread(blob, cluster_num, new_cluster, extent_page,
+	blob_insert_cluster_on_md_thread(blob, cluster_num, new_cluster, extent_page, &page,
 					 blob_op_complete, NULL);
 	poll_threads();
 
