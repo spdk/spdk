@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import argparse
 import os
+import sys
 import glob
 import re
 import pandas as pd
@@ -73,10 +74,11 @@ def generateCoverageReport(output_dir, repo_dir):
         print("lcov failed")
         print(e)
         return
-    cov_total_file = open(cov_total, 'r')
+
+    with open(cov_total, 'r') as cov_total_file:
+        file_contents = cov_total_file.readlines()
+
     replacement = "SF:" + repo_dir
-    file_contents = cov_total_file.readlines()
-    cov_total_file.close()
     os.remove(cov_total)
     with open(cov_total, 'w+') as file:
         for Line in file_contents:
@@ -144,9 +146,9 @@ def getSkippedTests(repo_dir):
     skipped_test_file = os.path.join(repo_dir, "test", "common", "skipped_tests.txt")
     if not os.path.exists(skipped_test_file):
         return []
-    else:
-        with open(skipped_test_file, "r") as skipped_test_data:
-            return [x.strip() for x in skipped_test_data.readlines() if "#" not in x and x.strip() != '']
+
+    with open(skipped_test_file, "r") as skipped_test_data:
+        return [x.strip() for x in skipped_test_data.readlines() if "#" not in x and x.strip() != '']
 
 
 def confirmPerPatchTests(test_list, skiplist):
@@ -155,7 +157,7 @@ def confirmPerPatchTests(test_list, skiplist):
     if len(missing_tests) > 0:
         print("Not all tests were run. Failing the build.")
         print(missing_tests)
-        exit(1)
+        sys.exit(1)
 
 
 def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
@@ -188,6 +190,8 @@ def aggregateCompletedTests(output_dir, repo_dir, skip_confirm=False):
     skipped_tests = getSkippedTests(repo_dir)
     if not skip_confirm:
         confirmPerPatchTests(test_list, skipped_tests)
+
+    return 0
 
 
 def main(output_dir, repo_dir, skip_confirm=False):
