@@ -2,8 +2,7 @@ import os
 import sys
 import argparse
 import multiprocessing
-import subprocess
-from subprocess import check_call, call, check_output, Popen, PIPE
+from subprocess import check_output
 
 
 def range_incl(a, b):
@@ -51,14 +50,12 @@ def get_host_cpus():
 
     # Assuming 2-socket server
     if "2" in str(output):
-        ht_enabled = True
         cpu_chunk = int(cpu_num/4)
         numa0_cpus = cpu_list[0:cpu_chunk]
         numa0_cpus.extend(cpu_list[2*cpu_chunk:3*cpu_chunk])
         numa1_cpus = cpu_list[cpu_chunk:2*cpu_chunk]
         numa1_cpus.extend(cpu_list[3*cpu_chunk:4*cpu_chunk])
     else:
-        ht_enabled = False
         cpu_chunk = int(cpu_num/2)
         numa0_cpus = cpu_list[:cpu_chunk]
         numa1_cpus = cpu_list[cpu_chunk:]
@@ -112,7 +109,7 @@ def gen_qemu_cpu_mask_config(spdk_cpu_list, vm_count, vm_cpu_num):
 
 def create_fio_cfg(template_dir, output_dir, **kwargs):
     fio_template = os.path.join(template_dir, "fio_test.conf")
-    with open("scripts/perf/vhost/fio_test.conf", "r") as fh:
+    with open(fio_template, "r") as fh:
         cfg = fh.read()
     cfg = cfg.format(**kwargs)
 
