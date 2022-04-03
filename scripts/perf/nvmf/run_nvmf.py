@@ -62,7 +62,8 @@ class Server:
     def log_print(self, msg):
         print("[%s] %s" % (self.name, msg), flush=True)
 
-    def get_uncommented_lines(self, lines):
+    @staticmethod
+    def get_uncommented_lines(lines):
         return [line for line in lines if line and not line.startswith('#')]
 
     def get_nic_name_by_ip(self, ip):
@@ -92,6 +93,7 @@ class Server:
 
         self.local_nic_info = extract_network_elements(pci_info)
 
+    # pylint: disable=R0201
     def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
         return ""
 
@@ -414,7 +416,8 @@ class Target(Server):
         fh.close()
         self.log_print("Done zipping")
 
-    def read_json_stats(self, file):
+    @staticmethod
+    def read_json_stats(file):
         with open(file, "r") as json_data:
             data = json.load(json_data)
             job_pos = 0  # job_post = 0 because using aggregated results
@@ -1074,7 +1077,8 @@ class SPDKTarget(Target):
         self.log_print("====IDXD settings:====")
         self.log_print("IDXD enabled: %s" % (self.enable_idxd))
 
-    def get_num_cores(self, core_mask):
+    @staticmethod
+    def get_num_cores(core_mask):
         if "0x" in core_mask:
             return bin(int(core_mask, 16)).count("1")
         else:
