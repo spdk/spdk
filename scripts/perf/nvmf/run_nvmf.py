@@ -334,7 +334,7 @@ class Server:
 
 class Target(Server):
     def __init__(self, name, general_config, target_config):
-        super(Target, self).__init__(name, general_config, target_config)
+        super().__init__(name, general_config, target_config)
 
         # Defaults
         self.enable_sar = False
@@ -408,7 +408,7 @@ class Target(Server):
     def zip_spdk_sources(self, spdk_dir, dest_file):
         self.log_print("Zipping SPDK source directory")
         fh = zipfile.ZipFile(dest_file, "w", zipfile.ZIP_DEFLATED)
-        for root, directories, files in os.walk(spdk_dir, followlinks=True):
+        for root, _directories, files in os.walk(spdk_dir, followlinks=True):
             for file in files:
                 fh.write(os.path.relpath(os.path.join(root, file)))
         fh.close()
@@ -542,8 +542,8 @@ class Target(Server):
                         stats = self.read_json_stats(os.path.join(results_dir, r))
                         separate_stats.append(stats)
                         self.log_print(stats)
-                    except JSONDecodeError as e:
-                        self.log_print("ERROR: Failed to parse %s results! Results might be incomplete!")
+                    except JSONDecodeError:
+                        self.log_print("ERROR: Failed to parse %s results! Results might be incomplete!" % r)
 
                 init_results = [sum(x) for x in zip(*separate_stats)]
                 init_results = [x / len(separate_stats) for x in init_results]
@@ -667,7 +667,7 @@ class Target(Server):
 
 class Initiator(Server):
     def __init__(self, name, general_config, initiator_config):
-        super(Initiator, self).__init__(name, general_config, initiator_config)
+        super().__init__(name, general_config, initiator_config)
 
         # Required fields
         self.ip = initiator_config["ip"]
@@ -949,7 +949,7 @@ registerfiles=1
 
 class KernelTarget(Target):
     def __init__(self, name, general_config, target_config):
-        super(KernelTarget, self).__init__(name, general_config, target_config)
+        super().__init__(name, general_config, target_config)
         # Defaults
         self.nvmet_bin = "nvmetcli"
 
@@ -973,7 +973,7 @@ class KernelTarget(Target):
 
         # Add remaining drives
         for i, disk in enumerate(nvme_list[disks_per_ip * len(address_list):]):
-            disks_chunks[i].append(disk)
+            disk_chunks[i].append(disk)
 
         subsys_no = 1
         port_no = 0
@@ -1017,7 +1017,6 @@ class KernelTarget(Target):
 
         with open("kernel.conf", "w") as fh:
             fh.write(json.dumps(nvmet_cfg, indent=2))
-        pass
 
     def tgt_start(self):
         self.log_print("Configuring kernel NVMeOF Target")
@@ -1044,7 +1043,7 @@ class KernelTarget(Target):
 
 class SPDKTarget(Target):
     def __init__(self, name, general_config, target_config):
-        super(SPDKTarget, self).__init__(name, general_config, target_config)
+        super().__init__(name, general_config, target_config)
 
         # Required fields
         self.core_mask = target_config["core_mask"]
@@ -1261,7 +1260,7 @@ class SPDKTarget(Target):
 
 class KernelInitiator(Initiator):
     def __init__(self, name, general_config, initiator_config):
-        super(KernelInitiator, self).__init__(name, general_config, initiator_config)
+        super().__init__(name, general_config, initiator_config)
 
         # Defaults
         self.extra_params = ""
@@ -1347,7 +1346,7 @@ class KernelInitiator(Initiator):
 
 class SPDKInitiator(Initiator):
     def __init__(self, name, general_config, initiator_config):
-        super(SPDKInitiator, self).__init__(name, general_config, initiator_config)
+        super().__init__(name, general_config, initiator_config)
 
         if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
             self.install_spdk()
@@ -1465,7 +1464,6 @@ if __name__ == "__main__":
                 target_obj = SPDKTarget(k, data["general"], v)
             elif data[k]["mode"] == "kernel":
                 target_obj = KernelTarget(k, data["general"], v)
-                pass
         elif "initiator" in k:
             if data[k]["mode"] == "spdk":
                 init_obj = SPDKInitiator(k, data["general"], v)
