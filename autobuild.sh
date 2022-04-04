@@ -142,8 +142,8 @@ function build_native_dpdk() {
 		DPDK_DRIVERS+=("crypto/qat")
 		DPDK_DRIVERS+=("compress/qat")
 		DPDK_DRIVERS+=("common/qat")
-		# 22.03.0 is version of DPDK with stable support for mlx5 crypto.
-		if ge "$dpdk_ver" 22.03.0; then
+		# 21.11.0 is version of DPDK with stable support for mlx5 crypto.
+		if ge "$dpdk_ver" 21.11.0; then
 			# SPDK enables CRYPTO_MLX in case supported version of DPDK is detected
 			# so make sure proper libs are built.
 			DPDK_DRIVERS+=("bus/auxiliary")

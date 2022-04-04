@@ -957,8 +957,8 @@ if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 			if [[ $dpdk_ver = "none" ]]; then
 				echo "Cannot get DPDK version, so disabling DPDK mlx5_pci crypto PMD"
 				CONFIG[CRYPTO_MLX5]="n"
-			elif [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 22.03.0; then
-				# mlx5_pci for crypto is supported by DPDK >- 22.03.0
+			elif [[ -n $dpdk_ver ]] && lt "$dpdk_ver" 21.11.0; then
+				# mlx5_pci for crypto is supported by DPDK >- 21.11.0
 				echo "DPDK version ${dpdk_ver} doesn't support mlx5_pci crypto PMD"
 				CONFIG[CRYPTO_MLX5]="n"
 			elif [[ -n ${CONFIG[DPDK_LIB_DIR]} ]] && [ ! -f "${CONFIG[DPDK_LIB_DIR]}"/librte_crypto_mlx5.so ]; then
