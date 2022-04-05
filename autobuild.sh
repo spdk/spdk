@@ -187,13 +187,11 @@ function build_native_dpdk() {
 
 	cd $external_dpdk_base_dir
 	if [ "$(uname -s)" = "Linux" ]; then
-		if [[ $dpdk_ver == 20.11* ]]; then
+		if lt $dpdk_ver 21.11.0; then
 			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/20.11/dpdk_pci.patch"
 			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/20.11/dpdk_qat.patch"
-		elif [[ $dpdk_ver == 21.11* ]]; then
-			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/21.11/dpdk_qat.patch"
-		elif [[ $dpdk_ver == 22.03* ]]; then
-			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/22.03/dpdk_qat.patch"
+		else
+			patch -p1 < "$rootdir/test/common/config/pkgdep/patches/dpdk/21.11+/dpdk_qat.patch"
 		fi
 	fi
 
