@@ -48,7 +48,7 @@ if [[ $ID == centos || $ID == rhel ]]; then
 	if [[ $VERSION_ID == 8* ]]; then
 		repos+=("https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm")
 		repos+=("https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm")
-		[[ $ID == centos ]] && repos+=("centos-release-ceph-nautilus.noarch")
+		[[ $ID == centos ]] && repos+=("https://download.ceph.com/rpm-nautilus/el8/noarch/ceph-release-1-1.el8.noarch.rpm")
 		# Add PowerTools needed for install CUnit-devel in Centos8
 		if [[ $ID == centos ]]; then
 			is_repo "PowerTools" && enable+=("PowerTools")
