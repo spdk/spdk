@@ -166,15 +166,17 @@ blk_task_enqueue(struct spdk_vhost_blk_task *task)
 }
 
 static void
-invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
+blk_request_finish(uint8_t status, struct spdk_vhost_blk_task *task)
 {
 	if (task->status) {
 		*task->status = status;
 	}
 
 	blk_task_enqueue(task);
+
+	SPDK_DEBUGLOG(vhost_blk, "Finished task (%p) req_idx=%d\n status: %" PRIu8"\n",
+		      task, task->req_idx, status);
 	blk_task_finish(task);
-	SPDK_DEBUGLOG(vhost_blk_data, "Invalid request (status=%" PRIu8")\n", status);
 }
 
 /*
@@ -407,24 +409,12 @@ blk_iovs_inflight_queue_setup(struct spdk_vhost_blk_session *bvsession,
 }
 
 static void
-blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
-{
-	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
-
-	blk_task_enqueue(task);
-
-	SPDK_DEBUGLOG(vhost_blk, "Finished task (%p) req_idx=%d\n status: %s\n", task,
-		      task->req_idx, success ? "OK" : "FAIL");
-	blk_task_finish(task);
-}
-
-static void
 blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_vhost_blk_task *task = cb_arg;
 
 	spdk_bdev_free_io(bdev_io);
-	blk_request_finish(success, task);
+	blk_request_finish(success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR, task);
 }
 
 static void
@@ -455,7 +445,7 @@ blk_request_queue_io(struct spdk_vhost_blk_task *task)
 	rc = spdk_bdev_queue_io_wait(bdev, bvsession->io_channel, &task->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to queue I/O, rc=%d\n", bvsession->vsession.name, rc);
-		invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+		blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 	}
 }
 
@@ -478,7 +468,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		SPDK_DEBUGLOG(vhost_blk,
 			      "First descriptor size is %zu but expected %zu (req_idx = %"PRIu16").\n",
 			      iov->iov_len, sizeof(req), task->req_idx);
-		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return -1;
 	}
 
@@ -493,7 +483,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		SPDK_DEBUGLOG(vhost_blk,
 			      "Last descriptor size is %zu but expected %d (req_idx = %"PRIu16").\n",
 			      iov->iov_len, 1, task->req_idx);
-		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return -1;
 	}
 
@@ -514,7 +504,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		if (spdk_unlikely(payload_len == 0 || (payload_len & (512 - 1)) != 0)) {
 			SPDK_ERRLOG("%s - passed IO buffer is not multiple of 512b (req_idx = %"PRIu16").\n",
 				    type ? "WRITE" : "READ", task->req_idx);
-			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+			blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 			return -1;
 		}
 
@@ -538,7 +528,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
 				blk_request_queue_io(task);
 			} else {
-				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
 			}
 		}
@@ -547,13 +537,13 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		desc = task->iovs[1].iov_base;
 		if (payload_len != sizeof(*desc)) {
 			SPDK_NOTICELOG("Invalid discard payload size: %u\n", payload_len);
-			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+			blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 			return -1;
 		}
 
 		if (desc->flags & VIRTIO_BLK_WRITE_ZEROES_FLAG_UNMAP) {
 			SPDK_ERRLOG("UNMAP flag is only used for WRITE ZEROES command\n");
-			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+			blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 			return -1;
 		}
 
@@ -565,7 +555,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
 				blk_request_queue_io(task);
 			} else {
-				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
 			}
 		}
@@ -574,7 +564,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		desc = task->iovs[1].iov_base;
 		if (payload_len != sizeof(*desc)) {
 			SPDK_NOTICELOG("Invalid write zeroes payload size: %u\n", payload_len);
-			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+			blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 			return -1;
 		}
 
@@ -595,7 +585,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
 				blk_request_queue_io(task);
 			} else {
-				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
 			}
 		}
@@ -604,7 +594,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		flush_bytes = spdk_bdev_get_num_blocks(bvdev->bdev) * spdk_bdev_get_block_size(bvdev->bdev);
 		if (req.sector != 0) {
 			SPDK_NOTICELOG("sector must be zero for flush command\n");
-			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+			blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 			return -1;
 		}
 		rc = spdk_bdev_flush(bvdev->bdev_desc, bvsession->io_channel,
@@ -615,24 +605,24 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
 				blk_request_queue_io(task);
 			} else {
-				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
 			}
 		}
 		break;
 	case VIRTIO_BLK_T_GET_ID:
 		if (!iovcnt || !payload_len) {
-			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+			blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 			return -1;
 		}
 		task->used_len = spdk_min((size_t)VIRTIO_BLK_ID_BYTES, task->iovs[1].iov_len);
 		spdk_strcpy_pad(task->iovs[1].iov_base, spdk_bdev_get_name(bvdev->bdev),
 				task->used_len, ' ');
-		blk_request_finish(true, task);
+		blk_request_finish(VIRTIO_BLK_S_OK, task);
 		break;
 	default:
 		SPDK_DEBUGLOG(vhost_blk, "Not supported request type '%"PRIu32"'.\n", type);
-		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return -1;
 	}
 
@@ -666,7 +656,7 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 	if (rc) {
 		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
-		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return;
 	}
 
@@ -728,7 +718,7 @@ process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 	if (rc) {
 		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
-		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return;
 	}
 
@@ -786,7 +776,7 @@ process_packed_inflight_blk_task(struct spdk_vhost_virtqueue *vq,
 	if (rc) {
 		SPDK_DEBUGLOG(vhost_blk, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
-		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
+		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return;
 	}
 
