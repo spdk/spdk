@@ -14,6 +14,10 @@ function remove_device() {
 	ssh root@$ip 'Beetle --SetGpio "$gpio" LOW'
 }
 
+function restore_device() {
+	ssh root@$ip 'Beetle --SetGpio "$gpio" HIGH'
+}
+
 ip=$1
 gpio=$2
 driver=$3
@@ -52,7 +56,7 @@ exec >&$log 2>&1
 $SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 $mode &
 hotplug_pid=$!
 
-trap 'killprocess $hotplug_pid; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $hotplug_pid; restore_device; exit 1' SIGINT SIGTERM EXIT
 
 i=0
 while ! grep "Starting I/O" $testdir/log.txt; do
