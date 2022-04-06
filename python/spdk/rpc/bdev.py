@@ -811,6 +811,21 @@ def bdev_nvme_stop_discovery(client, name):
     return client.call('bdev_nvme_stop_discovery', params)
 
 
+def bdev_nvme_get_io_paths(client, name):
+    """Display all or the specified NVMe bdev's active I/O paths
+
+    Args:
+        name: Name of the NVMe bdev (optional)
+
+    Returns:
+        List of active I/O paths
+    """
+    params = {}
+    if name:
+        params['name'] = name
+    return client.call('bdev_nvme_get_io_paths', params)
+
+
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 

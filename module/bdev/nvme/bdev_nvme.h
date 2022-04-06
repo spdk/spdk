@@ -223,6 +223,8 @@ struct nvme_poll_group {
 	TAILQ_HEAD(, nvme_qpair)		qpair_list;
 };
 
+void nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_path);
+
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);

@@ -3344,6 +3344,56 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_get_io_paths {#rpc_bdev_nvme_get_io_paths}
+
+Display all or the specified NVMe bdev's active I/O paths.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Name of the NVMe bdev
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_io_paths",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "poll_groups": [
+      {
+        "thread": "app_thread",
+        "io_paths": [
+          {
+            "bdev_name": "Nvme0n1",
+            "cntlid": 0,
+            "current": true,
+            "connected": true,
+            "accessible": true
+          }
+        ]
+      }
+    ]
+  }
+}
+~~~
+
 ### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.

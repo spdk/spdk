@@ -761,6 +761,13 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
     p.set_defaults(func=bdev_nvme_stop_discovery)
 
+    def bdev_nvme_get_io_paths(args):
+        print_dict(rpc.bdev.bdev_nvme_get_io_paths(args.client, name=args.name))
+
+    p = subparsers.add_parser('bdev_nvme_get_io_paths', help='Display active I/O paths')
+    p.add_argument('-n', '--name', help="Name of the NVMe bdev", required=False)
+    p.set_defaults(func=bdev_nvme_get_io_paths)
+
     def bdev_nvme_cuse_register(args):
         rpc.bdev.bdev_nvme_cuse_register(args.client,
                                          name=args.name)

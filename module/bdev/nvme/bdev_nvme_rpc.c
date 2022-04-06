@@ -2017,3 +2017,112 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_remove_error_injection", rpc_bdev_nvme_remove_error_injection,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_get_io_paths {
+	char *name;
+};
+
+static void
+free_rpc_get_io_paths(struct rpc_get_io_paths *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_get_io_paths_decoders[] = {
+	{"name", offsetof(struct rpc_get_io_paths, name), spdk_json_decode_string, true},
+};
+
+struct rpc_get_io_paths_ctx {
+	struct rpc_get_io_paths req;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+rpc_bdev_nvme_get_io_paths_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct rpc_get_io_paths_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	spdk_json_write_array_end(ctx->w);
+
+	spdk_json_write_object_end(ctx->w);
+
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+
+	free_rpc_get_io_paths(&ctx->req);
+	free(ctx);
+}
+
+static void
+_rpc_bdev_nvme_get_io_paths(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_poll_group *group = spdk_io_channel_get_ctx(_ch);
+	struct rpc_get_io_paths_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct nvme_qpair *qpair;
+	struct nvme_io_path *io_path;
+	struct nvme_bdev *nbdev;
+
+	spdk_json_write_object_begin(ctx->w);
+
+	spdk_json_write_named_string(ctx->w, "thread", spdk_thread_get_name(spdk_get_thread()));
+
+	spdk_json_write_named_array_begin(ctx->w, "io_paths");
+
+	TAILQ_FOREACH(qpair, &group->qpair_list, tailq) {
+		TAILQ_FOREACH(io_path, &qpair->io_path_list, tailq) {
+			nbdev = io_path->nvme_ns->bdev;
+
+			if (ctx->req.name != NULL &&
+			    strcmp(ctx->req.name, nbdev->disk.name) != 0) {
+				continue;
+			}
+
+			nvme_io_path_info_json(ctx->w, io_path);
+		}
+	}
+
+	spdk_json_write_array_end(ctx->w);
+
+	spdk_json_write_object_end(ctx->w);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+rpc_bdev_nvme_get_io_paths(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_get_io_paths_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+
+	if (params != NULL &&
+	    spdk_json_decode_object(params, rpc_get_io_paths_decoders,
+				    SPDK_COUNTOF(rpc_get_io_paths_decoders),
+				    &ctx->req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "bdev_nvme_get_io_paths requires no parameters");
+
+		free_rpc_get_io_paths(&ctx->req);
+		free(ctx);
+		return;
+	}
+
+	ctx->request = request;
+	ctx->w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_object_begin(ctx->w);
+
+	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
+
+	spdk_for_each_channel(&g_nvme_bdev_ctrlrs,
+			      _rpc_bdev_nvme_get_io_paths,
+			      ctx,
+			      rpc_bdev_nvme_get_io_paths_done);
+}
+SPDK_RPC_REGISTER("bdev_nvme_get_io_paths", rpc_bdev_nvme_get_io_paths, SPDK_RPC_RUNTIME)

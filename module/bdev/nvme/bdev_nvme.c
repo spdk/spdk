@@ -6160,4 +6160,28 @@ bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 	return nvme_ns->ctrlr->ctrlr;
 }
 
+void
+nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_path)
+{
+	struct nvme_ns *nvme_ns = io_path->nvme_ns;
+	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "bdev_name", nvme_ns->bdev->disk.name);
+
+	cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+
+	spdk_json_write_named_uint32(w, "cntlid", cdata->cntlid);
+
+	spdk_json_write_named_bool(w, "current", io_path == io_path->nbdev_ch->current_io_path);
+
+	spdk_json_write_named_bool(w, "connected", nvme_io_path_is_connected(io_path));
+
+	spdk_json_write_named_bool(w, "accessible", nvme_ns_is_accessible(nvme_ns));
+
+	spdk_json_write_object_end(w);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(bdev_nvme)

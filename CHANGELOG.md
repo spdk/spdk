@@ -21,6 +21,8 @@ A new API `spdk_bdev_unregister_by_name` was added to handle race conditions cor
 New APIs, `spdk_for_each_bdev` and `spdk_for_each_bdev_leaf`, were added to provide iteration
 safe for race conditions.
 
+A new RPC `bdev_nvme_get_io_paths` was added to get all active I/O paths.
+
 ### idxd
 
 A new parameter `flags` was added to all low level submission and preparation
