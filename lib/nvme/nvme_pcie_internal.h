@@ -281,9 +281,8 @@ nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 	bool need_mmio = true;
 
-	if (qpair->first_fused_submitted) {
+	if (qpair->last_fuse == SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
 		/* This is first cmd of two fused commands - don't ring doorbell */
-		qpair->first_fused_submitted = 0;
 		return;
 	}
 

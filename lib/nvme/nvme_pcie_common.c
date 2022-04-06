@@ -650,9 +650,12 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	spdk_trace_record(TRACE_NVME_PCIE_SUBMIT, qpair->id, 0, (uintptr_t)req,
 			  req->cmd.cid, req->cmd.opc, req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12);
 
-	if (req->cmd.fuse == SPDK_NVME_IO_FLAGS_FUSE_FIRST) {
-		/* This is first cmd of two fused commands - don't ring doorbell */
-		qpair->first_fused_submitted = 1;
+	if (req->cmd.fuse) {
+		/*
+		 * Keep track of the fuse operation sequence so that we ring the doorbell only
+		 * after the second fuse is submitted.
+		 */
+		qpair->last_fuse = req->cmd.fuse;
 	}
 
 	/* Don't use wide instructions to copy NVMe command, this is limited by QEMU
