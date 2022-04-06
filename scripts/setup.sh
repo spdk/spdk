@@ -570,7 +570,7 @@ function configure_linux() {
 		fi
 	fi
 
-	if [ ! -e /dev/cpu/0/msr ]; then
+	if [ $(uname -i) == "x86_64" ] && [ ! -e /dev/cpu/0/msr ]; then
 		# Some distros build msr as a module.  Make sure it's loaded to ensure
 		#  DPDK can easily figure out the TSC rate rather than relying on 100ms
 		#  sleeps.
