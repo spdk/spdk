@@ -1591,6 +1591,7 @@ bdev_nvme_reconnect_delay_timer_expired(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
+	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_reconnect_delay, nvme_ctrlr->nbdev_ctrlr->name);
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 
 	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
@@ -1783,6 +1784,7 @@ bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
 	spdk_nvme_ctrlr_reconnect_async(nvme_ctrlr->ctrlr);
 
+	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_reconnect, nvme_ctrlr->nbdev_ctrlr->name);
 	assert(nvme_ctrlr->reset_detach_poller == NULL);
 	nvme_ctrlr->reset_detach_poller = SPDK_POLLER_REGISTER(bdev_nvme_reconnect_ctrlr_poll,
 					  nvme_ctrlr, 0);
@@ -1793,6 +1795,7 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
 
+	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_reset, nvme_ctrlr->nbdev_ctrlr->name);
 	assert(status == 0);
 
 	if (!spdk_nvme_ctrlr_is_fabrics(nvme_ctrlr->ctrlr)) {

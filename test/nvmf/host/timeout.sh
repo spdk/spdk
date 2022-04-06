@@ -9,6 +9,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="$rootdir/scripts/rpc.py"
+bpf_sh="$rootdir/scripts/bpftrace.sh"
 
 bdevperf_rpc_sock=/var/tmp/bdevperf.sock
 
@@ -36,7 +37,7 @@ function get_controller() {
 	$rpc_py -s $bdevperf_rpc_sock bdev_nvme_get_controllers | jq -r '.[].name'
 }
 
-# case 1 test ctrlr_loss_timeout_sec time to try reconnecting to a ctrlr before deleting it
+# Case 1 test ctrlr_loss_timeout_sec time to try reconnecting to a ctrlr before deleting it
 # ctrlr_loss_timeout_sec is 10 reconnect_delay_sec is 5
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -o 5
@@ -90,6 +91,8 @@ wait $rpc_pid
 cat $testdir/try.txt
 cat /dev/null > $testdir/try.txt
 
+# TODO: Check the IO fail if we wait for 5 sec, needs information from bdevperf
+
 $rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
 sleep 1
@@ -103,8 +106,47 @@ cat $testdir/try.txt
 killprocess $bdevperf_pid
 rm -f $testdir/try.txt
 
+# Case 3 test reconnect_delay_sec
+# Time to delay a reconnect trial
+$rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &> $testdir/try.txt &
+bdevperf_pid=$!
+
+trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $bdevperf_pid $bdevperf_rpc_sock
+
+#start_trace
+$bpf_sh $bdevperf_pid $rootdir/scripts/bpf/nvmf_timeout.bt &> $testdir/trace.txt &
+dtrace_pid=$!
+
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
+
+# ctrlr_loss_timeout_sec is 10 reconnect_delay_sec is 2
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
+	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -o 2
+$rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
+rpc_pid=$!
+sleep 1
+$rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
+
+# wait for 5sec to count the reconnect delay frequency with 2 sec interval
+sleep 5
+cat $testdir/trace.txt
+
+# Check the frequency of delay reconnect
+if (("$(grep -c "reconnect delay bdev controller NVMe0" < $testdir/trace.txt)" != 2)); then
+	false
+fi
+
+kill $dtrace_pid
+rm -f $testdir/trace.txt
+wait $rpc_pid
+cat $testdir/try.txt
+
+killprocess $bdevperf_pid
+
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
+rm -f $testdir/try.txt
 
 nvmftestfini
