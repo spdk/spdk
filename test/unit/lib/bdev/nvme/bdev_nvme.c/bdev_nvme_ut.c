@@ -2480,7 +2480,7 @@ test_abort(void)
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *bdev;
-	struct spdk_bdev_io *write_io, *admin_io, *abort_io;
+	struct spdk_bdev_io *write_io, *fuse_io, *admin_io, *abort_io;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_bdev_channel *nbdev_ch1;
 	struct nvme_io_path *io_path1;
@@ -2521,6 +2521,9 @@ test_abort(void)
 	write_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, NULL);
 	ut_bdev_io_set_buf(write_io);
 
+	fuse_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE, bdev, NULL);
+	ut_bdev_io_set_buf(fuse_io);
+
 	admin_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_NVME_ADMIN, bdev, NULL);
 	admin_io->u.nvme_passthru.cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 
@@ -2542,6 +2545,7 @@ test_abort(void)
 	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
 
 	write_io->internal.ch = (struct spdk_bdev_channel *)ch1;
+	fuse_io->internal.ch = (struct spdk_bdev_channel *)ch1;
 	abort_io->internal.ch = (struct spdk_bdev_channel *)ch1;
 
 	/* Aborting the already completed request should fail. */
@@ -2604,6 +2608,28 @@ test_abort(void)
 	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
 	CU_ASSERT(write_io->internal.in_submit_request == false);
 	CU_ASSERT(write_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
+	CU_ASSERT(nvme_qpair1->qpair->num_outstanding_reqs == 0);
+
+	/* Aborting the fuse request should succeed. */
+	fuse_io->internal.in_submit_request = true;
+	bdev_nvme_submit_request(ch1, fuse_io);
+
+	CU_ASSERT(fuse_io->internal.in_submit_request == true);
+	CU_ASSERT(nvme_qpair1->qpair->num_outstanding_reqs == 2);
+
+	abort_io->u.abort.bio_to_abort = fuse_io;
+	abort_io->internal.in_submit_request = true;
+
+	bdev_nvme_submit_request(ch1, abort_io);
+
+	spdk_delay_us(10000);
+	poll_threads();
+
+	CU_ASSERT(abort_io->internal.in_submit_request == false);
+	CU_ASSERT(abort_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
+	CU_ASSERT(fuse_io->internal.in_submit_request == false);
+	CU_ASSERT(fuse_io->internal.status == SPDK_BDEV_IO_STATUS_ABORTED);
 	CU_ASSERT(nvme_qpair1->qpair->num_outstanding_reqs == 0);
 
 	/* Aborting the admin request should succeed. */
@@ -2675,6 +2701,7 @@ test_abort(void)
 	poll_threads();
 
 	free(write_io);
+	free(fuse_io);
 	free(admin_io);
 	free(abort_io);
 

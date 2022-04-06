@@ -102,6 +102,9 @@ struct nvme_bdev_io {
 	/** Keeps track if first of fused commands was submitted */
 	bool first_fused_submitted;
 
+	/** Keeps track if first of fused commands was completed */
+	bool first_fused_completed;
+
 	/** Temporary pointer to zone report buffer */
 	struct spdk_nvme_zns_zone_report *zone_report_buf;
 
@@ -5153,9 +5156,10 @@ bdev_nvme_comparev_and_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct nvme_bdev_io *bio = ref;
 
 	/* Compare operation completion */
-	if ((cpl->cdw0 & 0xFF) == SPDK_NVME_OPC_COMPARE) {
+	if (!bio->first_fused_completed) {
 		/* Save compare result for write callback */
 		bio->cpl = *cpl;
+		bio->first_fused_completed = true;
 		return;
 	}
 
@@ -5688,6 +5692,7 @@ bdev_nvme_comparev_and_writev(struct nvme_bdev_io *bio, struct iovec *cmp_iov, i
 
 	if (bdev_io->num_retries == 0) {
 		bio->first_fused_submitted = false;
+		bio->first_fused_completed = false;
 	}
 
 	if (!bio->first_fused_submitted) {
