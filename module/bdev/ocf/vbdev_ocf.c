@@ -565,7 +565,7 @@ vbdev_ocf_io_submit_cb(struct ocf_io *io, int error)
 
 	if (error == 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-	} else if (error == -ENOMEM) {
+	} else if (error == -OCF_ERR_NO_MEM) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 	} else {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
