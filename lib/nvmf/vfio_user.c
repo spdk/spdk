@@ -3347,6 +3347,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 			    endpoint_id(endpoint), path, spdk_strerror(errno));
 		goto out;
 	}
+	unlink(path);
 
 	endpoint->devmem_fd = ret;
 	ret = ftruncate(endpoint->devmem_fd,
@@ -3379,6 +3380,7 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 			    endpoint_id(endpoint), path, spdk_strerror(errno));
 		goto out;
 	}
+	unlink(path);
 
 	endpoint->migr_fd = ret;
 	ret = ftruncate(endpoint->migr_fd,
