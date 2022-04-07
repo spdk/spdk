@@ -2871,11 +2871,13 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	const uint8_t *nguid;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_ns_data	*nsdata;
+	const struct spdk_nvme_ctrlr_opts *opts;
 	enum spdk_nvme_csi		csi;
 	uint32_t atomic_bs, phys_bs, bs;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	csi = spdk_nvme_ns_get_csi(ns);
+	opts = spdk_nvme_ctrlr_get_opts(ctrlr);
 
 	switch (csi) {
 	case SPDK_NVME_CSI_NVM:
@@ -2910,6 +2912,16 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	}
 	disk->blocklen = spdk_nvme_ns_get_extended_sector_size(ns);
 	disk->blockcnt = spdk_nvme_ns_get_num_sectors(ns);
+	disk->max_segment_size = spdk_nvme_ctrlr_get_max_xfer_size(ctrlr);
+	/* NVMe driver will split one request into multiple requests
+	 * based on MDTS and stripe boundary, the bdev layer will use
+	 * max_segment_size and max_num_segments to split one big IO
+	 * into multiple requests, then small request can't run out
+	 * of NVMe internal requests data structure.
+	 */
+	if (opts && opts->io_queue_requests) {
+		disk->max_num_segments = opts->io_queue_requests / 2;
+	}
 	disk->optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 
 	nguid = spdk_nvme_ns_get_nguid(ns);
