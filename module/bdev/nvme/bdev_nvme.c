@@ -2624,6 +2624,15 @@ bdev_nvme_parse_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
 	return rc;
 }
 
+static void
+_nvme_ns_set_ana_state(struct nvme_ns *nvme_ns,
+		       const struct spdk_nvme_ana_group_descriptor *desc)
+{
+	nvme_ns->ana_group_id = desc->ana_group_id;
+	nvme_ns->ana_state = desc->ana_state;
+	nvme_ns->ana_state_updating = false;
+}
+
 static int
 nvme_ns_set_ana_state(const struct spdk_nvme_ana_group_descriptor *desc, void *cb_arg)
 {
@@ -2634,8 +2643,8 @@ nvme_ns_set_ana_state(const struct spdk_nvme_ana_group_descriptor *desc, void *c
 		if (desc->nsid[i] != spdk_nvme_ns_get_id(nvme_ns->ns)) {
 			continue;
 		}
-		nvme_ns->ana_group_id = desc->ana_group_id;
-		nvme_ns->ana_state = desc->ana_state;
+
+		_nvme_ns_set_ana_state(nvme_ns, desc);
 		return 1;
 	}
 
@@ -3268,9 +3277,7 @@ nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 			continue;
 		}
 
-		nvme_ns->ana_group_id = desc->ana_group_id;
-		nvme_ns->ana_state = desc->ana_state;
-		nvme_ns->ana_state_updating = false;
+		_nvme_ns_set_ana_state(nvme_ns, desc);
 	}
 
 	return 0;
