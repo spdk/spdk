@@ -329,6 +329,41 @@ fuzz_nvm_write_command(struct fuzz_command *cmd)
 	g_data += 24;
 }
 
+static void
+fuzz_nvm_write_zeroes_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_WRITE_ZEROES;
+
+	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
+			 (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
+			 (g_data[6] << 8) + g_data[7];
+	cmd->cmd.cdw12 = (g_data[8] << 24) + (g_data[9] << 16) +
+			 (g_data[10] << 8) + g_data[11];
+	cmd->cmd.cdw14 = (g_data[12] << 24) + (g_data[13] << 16) +
+			 (g_data[14] << 8) + g_data[15];
+	cmd->cmd.cdw15 = (g_data[16] << 24) + (g_data[17] << 16) +
+			 (g_data[18] << 8) + g_data[19];
+
+	g_data += 20;
+}
+
+static void
+fuzz_nvm_write_uncorrectable_command(struct fuzz_command *cmd)
+{
+	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
+	cmd->cmd.opc = SPDK_NVME_OPC_WRITE_UNCORRECTABLE;
+
+	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
+			 (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
+			 (g_data[6] << 8) + g_data[7];
+	cmd->cmd.cdw12 = (g_data[8] << 8) + g_data[9];
+
+	g_data += 10;
+}
+
 static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_command, .bytes_per_cmd = sizeof(struct spdk_nvme_cmd), .is_admin = true},
 	{ .fn = fuzz_admin_get_log_page_command, .bytes_per_cmd = 6, .is_admin = true},
@@ -346,6 +381,8 @@ static struct fuzz_type g_fuzzers[] = {
 	{ .fn = fuzz_admin_directive_receive_command, .bytes_per_cmd = 8, .is_admin = true},
 	{ .fn = fuzz_nvm_read_command, .bytes_per_cmd = 21, .is_admin = false},
 	{ .fn = fuzz_nvm_write_command, .bytes_per_cmd = 24, .is_admin = false},
+	{ .fn = fuzz_nvm_write_zeroes_command, .bytes_per_cmd = 20, .is_admin = false},
+	{ .fn = fuzz_nvm_write_uncorrectable_command, .bytes_per_cmd = 10, .is_admin = false},
 	{ .fn = NULL, .bytes_per_cmd = 0, .is_admin = 0}
 };
 
