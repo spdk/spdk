@@ -230,6 +230,7 @@ bdev_pmem_submit_request(struct spdk_io_channel *channel, struct spdk_bdev_io *b
 				      bdev_io->u.bdev.num_blocks,
 				      bdev_io->bdev->blocklen);
 		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		break;
@@ -247,6 +248,7 @@ bdev_pmem_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return true;
 	default:
 		return false;
