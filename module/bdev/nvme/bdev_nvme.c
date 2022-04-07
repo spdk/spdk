@@ -875,6 +875,10 @@ any_io_path_may_become_available(struct nvme_bdev_channel *nbdev_ch)
 	struct nvme_io_path *io_path;
 
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+		if (io_path->nvme_ns->ana_transition_timedout) {
+			continue;
+		}
+
 		if (nvme_io_path_is_connected(io_path) ||
 		    !nvme_io_path_is_failed(io_path)) {
 			return true;
@@ -2624,13 +2628,48 @@ bdev_nvme_parse_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
 	return rc;
 }
 
+static int
+nvme_ns_ana_transition_timedout(void *ctx)
+{
+	struct nvme_ns *nvme_ns = ctx;
+
+	spdk_poller_unregister(&nvme_ns->anatt_timer);
+	nvme_ns->ana_transition_timedout = true;
+
+	return SPDK_POLLER_BUSY;
+}
+
 static void
 _nvme_ns_set_ana_state(struct nvme_ns *nvme_ns,
 		       const struct spdk_nvme_ana_group_descriptor *desc)
 {
+	const struct spdk_nvme_ctrlr_data *cdata;
+
 	nvme_ns->ana_group_id = desc->ana_group_id;
 	nvme_ns->ana_state = desc->ana_state;
 	nvme_ns->ana_state_updating = false;
+
+	switch (nvme_ns->ana_state) {
+	case SPDK_NVME_ANA_OPTIMIZED_STATE:
+	case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
+		nvme_ns->ana_transition_timedout = false;
+		spdk_poller_unregister(&nvme_ns->anatt_timer);
+		break;
+
+	case SPDK_NVME_ANA_INACCESSIBLE_STATE:
+	case SPDK_NVME_ANA_CHANGE_STATE:
+		if (nvme_ns->anatt_timer != NULL) {
+			break;
+		}
+
+		cdata = spdk_nvme_ctrlr_get_data(nvme_ns->ctrlr->ctrlr);
+		nvme_ns->anatt_timer = SPDK_POLLER_REGISTER(nvme_ns_ana_transition_timedout,
+				       nvme_ns,
+				       cdata->anatt * SPDK_SEC_TO_USEC);
+		break;
+	default:
+		break;
+	}
 }
 
 static int
@@ -3113,6 +3152,8 @@ static void
 nvme_ctrlr_depopulate_namespace(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 {
 	struct nvme_bdev *bdev;
+
+	spdk_poller_unregister(&nvme_ns->anatt_timer);
 
 	bdev = nvme_ns->bdev;
 	if (bdev != NULL) {

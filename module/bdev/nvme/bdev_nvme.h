@@ -85,6 +85,8 @@ struct nvme_ns {
 	uint32_t			ana_group_id;
 	enum spdk_nvme_ana_state	ana_state;
 	bool				ana_state_updating;
+	bool				ana_transition_timedout;
+	struct spdk_poller		*anatt_timer;
 	struct nvme_async_probe_ctx	*probe_ctx;
 	TAILQ_ENTRY(nvme_ns)		tailq;
 	RB_ENTRY(nvme_ns)		node;

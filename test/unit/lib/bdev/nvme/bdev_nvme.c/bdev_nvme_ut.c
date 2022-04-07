@@ -5930,6 +5930,63 @@ test_nvme_ns_cmp(void)
 	CU_ASSERT(nvme_ns_cmp(&nvme_ns2, &nvme_ns1) > 0);
 }
 
+static void
+test_ana_transition(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = { .cdata.anatt = 10, };
+	struct nvme_ctrlr nvme_ctrlr = { .ctrlr = &ctrlr, };
+	struct nvme_ns nvme_ns = { .ctrlr = &nvme_ctrlr, };
+	struct spdk_nvme_ana_group_descriptor desc = { .ana_group_id = 1, };
+
+	/* case 1: ANA transition timedout is canceled. */
+	nvme_ns.ana_state = SPDK_NVME_ANA_CHANGE_STATE;
+	nvme_ns.ana_transition_timedout = true;
+
+	desc.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+
+	_nvme_ns_set_ana_state(&nvme_ns, &desc);
+
+	CU_ASSERT(nvme_ns.ana_transition_timedout == false);
+	CU_ASSERT(nvme_ns.ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
+
+	/* case 2: ANATT timer is kept. */
+	nvme_ns.ana_state = SPDK_NVME_ANA_CHANGE_STATE;
+	nvme_ns.anatt_timer = SPDK_POLLER_REGISTER(nvme_ns_ana_transition_timedout,
+			      &nvme_ns,
+			      ctrlr.cdata.anatt * SPDK_SEC_TO_USEC);
+
+	desc.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+
+	_nvme_ns_set_ana_state(&nvme_ns, &desc);
+
+	CU_ASSERT(nvme_ns.anatt_timer != NULL);
+	CU_ASSERT(nvme_ns.ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
+
+	/* case 3: ANATT timer is stopped. */
+	desc.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+
+	_nvme_ns_set_ana_state(&nvme_ns, &desc);
+
+	CU_ASSERT(nvme_ns.anatt_timer == NULL);
+	CU_ASSERT(nvme_ns.ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
+
+	/* ANATT timer is started. */
+	desc.ana_state = SPDK_NVME_ANA_CHANGE_STATE;
+
+	_nvme_ns_set_ana_state(&nvme_ns, &desc);
+
+	CU_ASSERT(nvme_ns.anatt_timer != NULL);
+	CU_ASSERT(nvme_ns.ana_state == SPDK_NVME_ANA_CHANGE_STATE);
+
+	/* ANATT timer is expired. */
+	spdk_delay_us(ctrlr.cdata.anatt * SPDK_SEC_TO_USEC);
+
+	poll_threads();
+
+	CU_ASSERT(nvme_ns.anatt_timer == NULL);
+	CU_ASSERT(nvme_ns.ana_transition_timedout == true);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -5978,6 +6035,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_retry_failover_ctrlr);
 	CU_ADD_TEST(suite, test_fail_path);
 	CU_ADD_TEST(suite, test_nvme_ns_cmp);
+	CU_ADD_TEST(suite, test_ana_transition);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
