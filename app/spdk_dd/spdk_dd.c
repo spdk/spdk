@@ -18,8 +18,8 @@
 #include <liburing.h>
 #endif
 
-#define DD_NSEC_SINCE_X(time_now, time_x) ((1000000000 * time_now.tv_sec + time_now.tv_nsec) \
-											- (1000000000 * time_x.tv_sec + time_x.tv_nsec))
+#define TIMESPEC_TO_MS(time) ((time.tv_sec * 1000) + (time.tv_nsec / 1000000))
+#define STATUS_POLLER_PERIOD_SEC 1
 
 struct spdk_dd_opts {
 	char		*input_file;
@@ -117,6 +117,11 @@ struct dd_job {
 
 	uint32_t		outstanding;
 	uint64_t		copy_size;
+
+	struct timespec		start_time;
+	uint64_t		total_bytes;
+	uint64_t		incremental_bytes;
+	struct spdk_poller	*status_poller;
 };
 
 struct dd_flags {
@@ -139,7 +144,6 @@ static struct dd_flags g_flags[] = {
 
 static struct dd_job g_job = {};
 static int g_error = 0;
-static struct timespec g_start_time;
 static bool g_interrupt;
 
 static void dd_target_populate_buffer(struct dd_io *io);
@@ -197,37 +201,46 @@ dd_exit(int rc)
 		}
 	}
 
+	spdk_poller_unregister(&g_job.status_poller);
+
 	spdk_app_stop(rc);
 }
 
 static void
-dd_show_progress(uint64_t offset, uint64_t length, bool finish)
+dd_show_progress(bool finish)
 {
 	char *unit_str[5] = {"", "k", "M", "G", "T"};
 	char *speed_type_str[2] = {"", "average "};
 	char *size_unit_str = "";
 	char *speed_unit_str = "";
 	char *speed_type = "";
-	uint64_t size = g_job.copy_size;
 	uint64_t size_unit = 1;
 	uint64_t speed_unit = 1;
 	uint64_t speed, tmp_speed;
-	static struct timespec g_time_last = {.tv_nsec = 0};
-	static uint64_t g_data_last = 0;
-	struct timespec time_now;
 	int i = 0;
+	uint64_t milliseconds;
+	uint64_t size, tmp_size;
 
-	clock_gettime(CLOCK_REALTIME, &time_now);
+	size = g_job.incremental_bytes;
 
-	if (((time_now.tv_sec == g_time_last.tv_sec && offset + length != g_job.copy_size) ||
-	     (offset < g_data_last)) && !finish) {
-		/* refresh every one second */
-		return;
+	g_job.incremental_bytes = 0;
+	g_job.total_bytes += size;
+
+	if (finish) {
+		struct timespec time_now;
+
+		clock_gettime(CLOCK_REALTIME, &time_now);
+
+		milliseconds = spdk_max(1, TIMESPEC_TO_MS(time_now) - TIMESPEC_TO_MS(g_job.start_time));
+		size = g_job.total_bytes;
+	} else {
+		milliseconds = STATUS_POLLER_PERIOD_SEC * 1000;
 	}
 
 	/* Find the right unit for size displaying (B vs kB vs MB vs GB vs TB) */
-	while (size > 1024 * 10) {
-		size >>= 10;
+	tmp_size = size;
+	while (tmp_size > 1024 * 10) {
+		tmp_size >>= 10;
 		size_unit <<= 10;
 		size_unit_str = unit_str[++i];
 		if (i == 4) {
@@ -235,18 +248,14 @@ dd_show_progress(uint64_t offset, uint64_t length, bool finish)
 		}
 	}
 
-	if (!finish) {
-		speed_type = speed_type_str[0];
-		tmp_speed = speed = (offset - g_data_last) * 1000000000 / DD_NSEC_SINCE_X(time_now, g_time_last);
-	} else {
-		speed_type = speed_type_str[1];
-		tmp_speed = speed = offset * 1000000000 / DD_NSEC_SINCE_X(time_now, g_start_time);
-	}
+	speed_type = finish ? speed_type_str[1] : speed_type_str[0];
+	speed = (size * 1000) / milliseconds;
 
 	i = 0;
 
 	/* Find the right unit for speed displaying (Bps vs kBps vs MBps vs GBps vs TBps) */
-	while (tmp_speed > 1024) {
+	tmp_speed = speed;
+	while (tmp_speed > 1024 * 10) {
 		tmp_speed >>= 10;
 		speed_unit <<= 10;
 		speed_unit_str = unit_str[++i];
@@ -256,12 +265,16 @@ dd_show_progress(uint64_t offset, uint64_t length, bool finish)
 	}
 
 	printf("\33[2K\rCopying: %" PRIu64 "/%" PRIu64 " [%sB] (%s%" PRIu64 " %sBps)",
-	       (offset + length) / size_unit, g_job.copy_size / size_unit, size_unit_str, speed_type,
+	       g_job.total_bytes / size_unit, g_job.copy_size / size_unit, size_unit_str, speed_type,
 	       speed / speed_unit, speed_unit_str);
 	fflush(stdout);
+}
 
-	g_data_last = offset;
-	g_time_last = time_now;
+static int
+dd_status_poller(void *ctx)
+{
+	dd_show_progress(false);
+	return SPDK_POLLER_BUSY;
 }
 
 #ifdef SPDK_CONFIG_URING
@@ -310,7 +323,7 @@ dd_target_write(struct dd_io *io)
 	if (g_error != 0 || g_interrupt == true) {
 		if (g_job.outstanding == 0) {
 			if (g_error == 0) {
-				dd_show_progress(io->offset, io->length, true);
+				dd_show_progress(true);
 				printf("\n\n");
 			}
 			dd_exit(g_error);
@@ -318,8 +331,7 @@ dd_target_write(struct dd_io *io)
 		return;
 	}
 
-	dd_show_progress(read_offset, io->length, false);
-
+	g_job.incremental_bytes += io->length;
 	g_job.outstanding++;
 	io->type = DD_WRITE;
 
@@ -447,7 +459,7 @@ dd_target_populate_buffer(struct dd_io *io)
 	if (io->length == 0 || g_error != 0 || g_interrupt == true) {
 		if (g_job.outstanding == 0) {
 			if (g_error == 0) {
-				dd_show_progress(read_offset, io->length, true);
+				dd_show_progress(true);
 				printf("\n\n");
 			}
 			dd_exit(g_error);
@@ -879,7 +891,10 @@ dd_run(void *arg1)
 		}
 	}
 
-	clock_gettime(CLOCK_REALTIME, &g_start_time);
+	clock_gettime(CLOCK_REALTIME, &g_job.start_time);
+
+	g_job.status_poller = spdk_poller_register(dd_status_poller, NULL,
+			      STATUS_POLLER_PERIOD_SEC * SPDK_SEC_TO_USEC);
 
 	for (i = 0; i < g_opts.queue_depth; i++) {
 		dd_target_populate_buffer(&g_job.ios[i]);
