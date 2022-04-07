@@ -857,7 +857,7 @@ dd_run(void *arg1)
 #ifdef SPDK_CONFIG_URING
 		if (g_opts.aio == false) {
 			g_job.u.uring.poller = spdk_poller_register(dd_uring_poll, NULL, 0);
-			io_uring_queue_init(g_opts.queue_depth, &g_job.u.uring.ring, 0);
+			io_uring_queue_init(g_opts.queue_depth * 2, &g_job.u.uring.ring, 0);
 			g_job.u.uring.active = true;
 		} else
 #endif
