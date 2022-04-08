@@ -1125,8 +1125,8 @@ vmd_reset_root_ports(struct vmd_pci_bus *bus)
 			continue;
 		}
 
-		header = (volatile void *)(bus->vmd->cfg_vaddr + CONFIG_OFFSET_ADDR(bus->bus_number,
-					   devfn, 0, 0));
+		header = (volatile void *)(bus->vmd->cfg_vaddr +
+					   CONFIG_OFFSET_ADDR(bus->config_bus_number, devfn, 0, 0));
 		if (vmd_device_is_root_port(header) && !vmd_device_is_enumerated(header)) {
 			vmd_reset_base_limit_registers(header);
 		}
