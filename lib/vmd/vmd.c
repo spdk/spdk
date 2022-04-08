@@ -183,8 +183,8 @@ vmd_hotplug_allocate_base_addr(struct vmd_hot_plug *hp, uint32_t size)
 	}
 
 	if (region == NULL) {
-		SPDK_DEBUGLOG(vmd, "Unable to find free hotplug memory region of size:"
-			      "%"PRIx32"\n", size);
+		SPDK_INFOLOG(vmd, "Unable to find free hotplug memory region of size:"
+			     "%"PRIx32"\n", size);
 		return 0;
 	}
 
@@ -192,8 +192,8 @@ vmd_hotplug_allocate_base_addr(struct vmd_hot_plug *hp, uint32_t size)
 	if (size < region->size) {
 		free_region = TAILQ_FIRST(&hp->unused_mem_queue);
 		if (free_region == NULL) {
-			SPDK_DEBUGLOG(vmd, "Unable to find unused descriptor to store the "
-				      "free region of size: %"PRIu32"\n", region->size - size);
+			SPDK_INFOLOG(vmd, "Unable to find unused descriptor to store the "
+				     "free region of size: %"PRIu32"\n", region->size - size);
 		} else {
 			TAILQ_REMOVE(&hp->unused_mem_queue, free_region, tailq);
 			free_region->size = region->size - size;
@@ -252,7 +252,7 @@ vmd_allocate_base_addr(struct vmd_adapter *vmd, struct vmd_pci_device *dev, uint
 		vmd->current_addr_size -= size + padding;
 	}
 
-	SPDK_DEBUGLOG(vmd, "allocated(size) %" PRIx64 " (%x)\n", base_address, size);
+	SPDK_INFOLOG(vmd, "allocated(size) %" PRIx64 " (%x)\n", base_address, size);
 
 	return base_address;
 }
@@ -281,8 +281,8 @@ vmd_update_base_limit_register(struct vmd_pci_device *dev, uint16_t base, uint16
 	}
 
 	bridge = bus->self;
-	SPDK_DEBUGLOG(vmd, "base:limit = %x:%x\n", bridge->header->one.mem_base,
-		      bridge->header->one.mem_limit);
+	SPDK_INFOLOG(vmd, "base:limit = %x:%x\n", bridge->header->one.mem_base,
+		     bridge->header->one.mem_limit);
 
 	if (dev->bus->vmd->scan_completed) {
 		return;
@@ -504,15 +504,15 @@ vmd_update_scan_info(struct vmd_pci_device *dev)
 
 	if (vmd_device_is_root_port(dev->header)) {
 		vmd_adapter->root_port_updated = 1;
-		SPDK_DEBUGLOG(vmd, "root_port_updated = %d\n",
-			      vmd_adapter->root_port_updated);
-		SPDK_DEBUGLOG(vmd, "upper:limit = %x : %x\n",
-			      dev->header->one.prefetch_base_upper,
-			      dev->header->one.prefetch_limit_upper);
+		SPDK_INFOLOG(vmd, "root_port_updated = %d\n",
+			     vmd_adapter->root_port_updated);
+		SPDK_INFOLOG(vmd, "upper:limit = %x : %x\n",
+			     dev->header->one.prefetch_base_upper,
+			     dev->header->one.prefetch_limit_upper);
 		if (vmd_device_is_enumerated(dev->header)) {
 			vmd_adapter->scan_completed = 1;
-			SPDK_DEBUGLOG(vmd, "scan_completed = %d\n",
-				      vmd_adapter->scan_completed);
+			SPDK_INFOLOG(vmd, "scan_completed = %d\n",
+				     vmd_adapter->scan_completed);
 		}
 	}
 }
@@ -586,8 +586,8 @@ vmd_init_hotplug(struct vmd_pci_device *dev, struct vmd_pci_bus *bus)
 		TAILQ_INSERT_TAIL(&hp->unused_mem_queue, &hp->mem[mem_id], tailq);
 	}
 
-	SPDK_DEBUGLOG(vmd, "%s: mem_base:mem_limit = %x : %x\n", __func__,
-		      bus->self->header->one.mem_base, bus->self->header->one.mem_limit);
+	SPDK_INFOLOG(vmd, "%s: mem_base:mem_limit = %x : %x\n", __func__,
+		     bus->self->header->one.mem_base, bus->self->header->one.mem_limit);
 }
 
 static bool
@@ -630,8 +630,8 @@ vmd_alloc_dev(struct vmd_pci_bus *bus, uint32_t devfn)
 	header = (struct pci_header * volatile)(bus->vmd->cfg_vaddr +
 						CONFIG_OFFSET_ADDR(bus->config_bus_number, devfn, 0, 0));
 
-	SPDK_DEBUGLOG(vmd, "PCI device found: %04x:%04x ***\n",
-		      header->common.vendor_id, header->common.device_id);
+	SPDK_INFOLOG(vmd, "PCI device found: %04x:%04x ***\n",
+		     header->common.vendor_id, header->common.device_id);
 
 	dev = calloc(1, sizeof(*dev));
 	if (!dev) {
@@ -914,7 +914,7 @@ vmd_dev_init(struct vmd_pci_device *dev)
 
 	if (vmd_is_supported_device(dev)) {
 		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
-		SPDK_DEBUGLOG(vmd, "Initializing NVMe device at %s\n", bdf);
+		SPDK_INFOLOG(vmd, "Initializing NVMe device at %s\n", bdf);
 		dev->pci.parent = dev->bus->vmd->pci;
 		spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
 	}
@@ -985,9 +985,9 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 
 				/* Attach hot plug instance if HP is supported */
 				/* Hot inserted SSDs can be assigned port bus of sub-ordinate + 1 */
-				SPDK_DEBUGLOG(vmd, "hotplug_capable/slot_implemented = "
-					      "%x:%x\n", slot_cap.bit_field.hotplug_capable,
-					      new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented);
+				SPDK_INFOLOG(vmd, "hotplug_capable/slot_implemented = "
+					     "%x:%x\n", slot_cap.bit_field.hotplug_capable,
+					     new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented);
 			}
 
 			new_dev->parent_bridge = parent_bridge;
@@ -1024,7 +1024,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 					vmd->nvme_count++;
 				}
 			} else {
-				SPDK_DEBUGLOG(vmd, "Removing failed device:%p\n", new_dev);
+				SPDK_INFOLOG(vmd, "Removing failed device:%p\n", new_dev);
 				TAILQ_REMOVE(&bus->dev_list, new_dev, tailq);
 				free(new_dev);
 				if (dev_cnt) {
@@ -1091,8 +1091,8 @@ vmd_cache_scan_info(struct vmd_pci_device *dev)
 		return;
 	}
 
-	SPDK_DEBUGLOG(vmd, "vendor/device id:%x:%x\n", dev->header->common.vendor_id,
-		      dev->header->common.device_id);
+	SPDK_INFOLOG(vmd, "vendor/device id:%x:%x\n", dev->header->common.vendor_id,
+		     dev->header->common.device_id);
 
 	if (vmd_device_is_root_port(dev->header)) {
 		dev->header->one.prefetch_base_upper = VMD_UPPER_BASE_SIGNATURE;
@@ -1100,9 +1100,9 @@ vmd_cache_scan_info(struct vmd_pci_device *dev)
 		dev->header->one.prefetch_limit_upper = VMD_UPPER_LIMIT_SIGNATURE;
 		reg = dev->header->one.prefetch_limit_upper;
 
-		SPDK_DEBUGLOG(vmd, "prefetch: %x:%x\n",
-			      dev->header->one.prefetch_base_upper,
-			      dev->header->one.prefetch_limit_upper);
+		SPDK_INFOLOG(vmd, "prefetch: %x:%x\n",
+			     dev->header->one.prefetch_base_upper,
+			     dev->header->one.prefetch_limit_upper);
 	}
 }
 
@@ -1147,8 +1147,8 @@ vmd_scan_pcibus(struct vmd_pci_bus *bus)
 	bus->vmd->next_bus_number = bus->bus_number + 1;
 	dev_cnt = vmd_scan_single_bus(bus, NULL);
 
-	SPDK_DEBUGLOG(vmd, "VMD scan found %u devices\n", dev_cnt);
-	SPDK_DEBUGLOG(vmd, "VMD scan found %u END DEVICES\n", g_end_device_count);
+	SPDK_INFOLOG(vmd, "VMD scan found %u devices\n", dev_cnt);
+	SPDK_INFOLOG(vmd, "VMD scan found %u END DEVICES\n", g_end_device_count);
 
 	SPDK_INFOLOG(vmd, "PCIe devices attached to VMD %04x:%02x:%02x:%x...\n",
 		     bus->vmd->pci->addr.domain, bus->vmd->pci->addr.bus,
@@ -1276,7 +1276,7 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	spdk_pci_device_cfg_write32(pci_dev, cmd_reg, 4);
 
 	spdk_pci_addr_fmt(bdf, sizeof(bdf), &pci_dev->addr);
-	SPDK_DEBUGLOG(vmd, "Found a VMD[ %d ] at %s\n", vmd_c->count, bdf);
+	SPDK_INFOLOG(vmd, "Found a VMD[ %d ] at %s\n", vmd_c->count, bdf);
 
 	/* map vmd bars */
 	i = vmd_c->count;
@@ -1290,15 +1290,15 @@ vmd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	SPDK_DEBUGLOG(vmd, "vmd config bar(%p) vaddr(%p) size(%x)\n",
-		      (void *)vmd_c->vmd[i].cfgbar, (void *)vmd_c->vmd[i].cfg_vaddr,
-		      (uint32_t)vmd_c->vmd[i].cfgbar_size);
-	SPDK_DEBUGLOG(vmd, "vmd mem bar(%p) vaddr(%p) size(%x)\n",
-		      (void *)vmd_c->vmd[i].membar, (void *)vmd_c->vmd[i].mem_vaddr,
-		      (uint32_t)vmd_c->vmd[i].membar_size);
-	SPDK_DEBUGLOG(vmd, "vmd msix bar(%p) vaddr(%p) size(%x)\n\n",
-		      (void *)vmd_c->vmd[i].msixbar, (void *)vmd_c->vmd[i].msix_vaddr,
-		      (uint32_t)vmd_c->vmd[i].msixbar_size);
+	SPDK_INFOLOG(vmd, "vmd config bar(%p) vaddr(%p) size(%x)\n",
+		     (void *)vmd_c->vmd[i].cfgbar, (void *)vmd_c->vmd[i].cfg_vaddr,
+		     (uint32_t)vmd_c->vmd[i].cfgbar_size);
+	SPDK_INFOLOG(vmd, "vmd mem bar(%p) vaddr(%p) size(%x)\n",
+		     (void *)vmd_c->vmd[i].membar, (void *)vmd_c->vmd[i].mem_vaddr,
+		     (uint32_t)vmd_c->vmd[i].membar_size);
+	SPDK_INFOLOG(vmd, "vmd msix bar(%p) vaddr(%p) size(%x)\n\n",
+		     (void *)vmd_c->vmd[i].msixbar, (void *)vmd_c->vmd[i].msix_vaddr,
+		     (uint32_t)vmd_c->vmd[i].msixbar_size);
 
 	vmd_c->count = i + 1;
 
@@ -1407,12 +1407,12 @@ spdk_vmd_hotplug_monitor(void)
 			}
 
 			if (device->pcie_cap->link_status.bit_field.datalink_layer_active == 1) {
-				SPDK_DEBUGLOG(vmd, "Device hotplug detected on bus "
-					      "%"PRIu32"\n", bus->bus_number);
+				SPDK_INFOLOG(vmd, "Device hotplug detected on bus "
+					     "%"PRIu32"\n", bus->bus_number);
 				vmd_bus_handle_hotplug(bus);
 			} else {
-				SPDK_DEBUGLOG(vmd, "Device hotremove detected on bus "
-					      "%"PRIu32"\n", bus->bus_number);
+				SPDK_INFOLOG(vmd, "Device hotremove detected on bus "
+					     "%"PRIu32"\n", bus->bus_number);
 				vmd_bus_handle_hotremove(bus);
 			}
 
