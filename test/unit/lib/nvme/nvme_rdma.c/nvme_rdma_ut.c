@@ -1030,70 +1030,6 @@ test_nvme_rdma_register_and_unregister_reqs(void)
 }
 
 static void
-test_nvme_rdma_poll_group_connect_disconnect_qpair(void)
-{
-	int					rc;
-	struct nvme_rdma_poll_group		group = {};
-	struct rdma_cm_id			cm_id = {};
-	struct nvme_rdma_qpair			*rqpair = NULL;
-	struct nvme_rdma_destroyed_qpair	*qpair_tracker = NULL;
-	struct ibv_context			*contexts = (void *)0xDEADBEEF;
-
-	/* Allocate memory for deleting qpair to free */
-	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
-	rqpair->cm_id =  &cm_id;
-	rqpair->qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	rqpair->qpair.poll_group = &group.group;
-	rqpair->qpair.state = NVME_QPAIR_DESTROYING;
-	cm_id.verbs = (void *)0xDEADBEEF;
-
-	STAILQ_INIT(&group.destroyed_qpairs);
-	STAILQ_INIT(&group.pollers);
-	rc = nvme_rdma_poller_create(&group, contexts);
-	SPDK_CU_ASSERT_FATAL(rc == 0);
-
-	rc = nvme_rdma_poll_group_set_cq(&rqpair->qpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair->cq == (void *)0xFEEDBEEF);
-	CU_ASSERT(rqpair->poller != NULL);
-
-	MOCK_SET(spdk_get_ticks, 10);
-	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair->qpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair->defer_deletion_to_pg == true);
-	CU_ASSERT(rqpair->cq == NULL);
-	CU_ASSERT(!STAILQ_EMPTY(&group.destroyed_qpairs));
-
-	qpair_tracker = STAILQ_FIRST(&group.destroyed_qpairs);
-	CU_ASSERT(qpair_tracker->destroyed_qpair_tracker == rqpair);
-	CU_ASSERT(qpair_tracker->timeout_ticks == 10 + (NVME_RDMA_QPAIR_CM_EVENT_TIMEOUT_US *
-			spdk_get_ticks_hz()) / SPDK_SEC_TO_USEC);
-
-	nvme_rdma_poll_group_delete_qpair(&group, qpair_tracker);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(STAILQ_EMPTY(&group.destroyed_qpairs));
-
-	nvme_rdma_poll_group_free_pollers(&group);
-	CU_ASSERT(STAILQ_EMPTY(&group.pollers));
-	MOCK_CLEAR(spdk_get_ticks);
-
-	/* No available poller */
-	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
-
-	rqpair->cm_id =  &cm_id;
-	rqpair->qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	rqpair->qpair.poll_group = &group.group;
-	rqpair->qpair.state = NVME_QPAIR_DESTROYING;
-	cm_id.verbs = (void *)0xDEADBEEF;
-
-	rc = nvme_rdma_poll_group_set_cq(&rqpair->qpair);
-	CU_ASSERT(rc == -EINVAL);
-	CU_ASSERT(rqpair->cq == NULL);
-
-	free(rqpair);
-}
-
-static void
 test_nvme_rdma_parse_addr(void)
 {
 	struct sockaddr_storage dst_addr;
@@ -1328,16 +1264,13 @@ test_nvme_rdma_poll_group_get_qpair_by_id(void)
 {
 	const uint32_t test_qp_num = 123;
 	struct nvme_rdma_poll_group	group = {};
-	struct nvme_rdma_destroyed_qpair tracker = {};
 	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_rdma_qp rdma_qp = {};
 	struct ibv_qp qp = { .qp_num = test_qp_num };
 
 	STAILQ_INIT(&group.group.disconnected_qpairs);
 	STAILQ_INIT(&group.group.connected_qpairs);
-	STAILQ_INIT(&group.destroyed_qpairs);
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	tracker.destroyed_qpair_tracker = &rqpair;
 
 	/* Test 1 - Simulate case when nvme_rdma_qpair is disconnected but still in one of lists.
 	 * nvme_rdma_poll_group_get_qpair_by_id must return NULL */
@@ -1348,10 +1281,6 @@ test_nvme_rdma_poll_group_get_qpair_by_id(void)
 	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
 	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
 	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
-
-	STAILQ_INSERT_HEAD(&group.destroyed_qpairs, &tracker, link);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
-	STAILQ_REMOVE_HEAD(&group.destroyed_qpairs, link);
 
 	/* Test 2 - nvme_rdma_qpair with valid rdma_qp/ibv_qp and qp_num */
 	rdma_qp.qp = &qp;
@@ -1364,10 +1293,6 @@ test_nvme_rdma_poll_group_get_qpair_by_id(void)
 	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
 	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
 	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
-
-	STAILQ_INSERT_HEAD(&group.destroyed_qpairs, &tracker, link);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
-	STAILQ_REMOVE_HEAD(&group.destroyed_qpairs, link);
 }
 
 static void
@@ -1422,7 +1347,6 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_req_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_validate_cm_event);
 	CU_ADD_TEST(suite, test_nvme_rdma_register_and_unregister_reqs);
-	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_connect_disconnect_qpair);
 	CU_ADD_TEST(suite, test_nvme_rdma_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);
