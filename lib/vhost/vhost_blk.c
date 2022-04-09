@@ -464,7 +464,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		    struct spdk_vhost_blk_session *bvsession)
 {
 	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
-	const struct virtio_blk_outhdr *req;
+	struct virtio_blk_outhdr req;
 	struct virtio_blk_discard_write_zeroes *desc;
 	struct iovec *iov;
 	uint32_t type;
@@ -474,15 +474,19 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 	int rc;
 
 	iov = &task->iovs[0];
-	if (spdk_unlikely(iov->iov_len != sizeof(*req))) {
+	if (spdk_unlikely(iov->iov_len != sizeof(req))) {
 		SPDK_DEBUGLOG(vhost_blk,
 			      "First descriptor size is %zu but expected %zu (req_idx = %"PRIu16").\n",
-			      iov->iov_len, sizeof(*req), task->req_idx);
+			      iov->iov_len, sizeof(req), task->req_idx);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
 	}
 
-	req = iov->iov_base;
+	/* Some SeaBIOS versions don't align the virtio_blk_outhdr on an 8-byte boundary, which
+	 * triggers ubsan errors.  So copy this small 16-byte structure to the stack to workaround
+	 * this problem.
+	 */
+	memcpy(&req, iov->iov_base, sizeof(req));
 
 	iov = &task->iovs[task->iovcnt - 1];
 	if (spdk_unlikely(iov->iov_len != 1)) {
@@ -495,10 +499,10 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 
 	payload_len = task->payload_size;
 	task->status = iov->iov_base;
-	payload_len -= sizeof(*req) + sizeof(*task->status);
+	payload_len -= sizeof(req) + sizeof(*task->status);
 	iovcnt = task->iovcnt - 2;
 
-	type = req->type;
+	type = req.type;
 #ifdef VIRTIO_BLK_T_BARRIER
 	/* Don't care about barrier for now (as QEMU's virtio-blk do). */
 	type &= ~VIRTIO_BLK_T_BARRIER;
@@ -517,12 +521,12 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		if (type == VIRTIO_BLK_T_IN) {
 			task->used_len = payload_len + sizeof(*task->status);
 			rc = spdk_bdev_readv(bvdev->bdev_desc, bvsession->io_channel,
-					     &task->iovs[1], iovcnt, req->sector * 512,
+					     &task->iovs[1], iovcnt, req.sector * 512,
 					     payload_len, blk_request_complete_cb, task);
 		} else if (!bvdev->readonly) {
 			task->used_len = sizeof(*task->status);
 			rc = spdk_bdev_writev(bvdev->bdev_desc, bvsession->io_channel,
-					      &task->iovs[1], iovcnt, req->sector * 512,
+					      &task->iovs[1], iovcnt, req.sector * 512,
 					      payload_len, blk_request_complete_cb, task);
 		} else {
 			SPDK_DEBUGLOG(vhost_blk, "Device is in read-only mode!\n");
@@ -598,7 +602,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		break;
 	case VIRTIO_BLK_T_FLUSH:
 		flush_bytes = spdk_bdev_get_num_blocks(bvdev->bdev) * spdk_bdev_get_block_size(bvdev->bdev);
-		if (req->sector != 0) {
+		if (req.sector != 0) {
 			SPDK_NOTICELOG("sector must be zero for flush command\n");
 			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
 			return -1;
