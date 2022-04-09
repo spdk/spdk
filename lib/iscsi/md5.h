@@ -38,11 +38,12 @@
 #include "spdk/stdinc.h"
 
 #include <openssl/md5.h>
+#include <openssl/evp.h>
 
 #define SPDK_MD5DIGEST_LEN MD5_DIGEST_LENGTH
 
 struct spdk_md5ctx {
-	MD5_CTX md5ctx;
+	EVP_MD_CTX *md5ctx;
 };
 
 int md5init(struct spdk_md5ctx *md5ctx);
