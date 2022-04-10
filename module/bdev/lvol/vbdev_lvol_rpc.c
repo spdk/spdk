@@ -17,6 +17,7 @@ struct rpc_bdev_lvol_create_lvstore {
 	char *bdev_name;
 	uint32_t cluster_sz;
 	char *clear_method;
+	uint32_t num_md_pages_per_cluster_ratio;
 };
 
 static int
@@ -62,6 +63,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_lvstore_decode
 	{"cluster_sz", offsetof(struct rpc_bdev_lvol_create_lvstore, cluster_sz), spdk_json_decode_uint32, true},
 	{"lvs_name", offsetof(struct rpc_bdev_lvol_create_lvstore, lvs_name), spdk_json_decode_string},
 	{"clear_method", offsetof(struct rpc_bdev_lvol_create_lvstore, clear_method), spdk_json_decode_string, true},
+	{"num_md_pages_per_cluster_ratio", offsetof(struct rpc_bdev_lvol_create_lvstore, num_md_pages_per_cluster_ratio), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -120,7 +122,7 @@ rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = vbdev_lvs_create(req.bdev_name, req.lvs_name, req.cluster_sz, clear_method,
-			      rpc_lvol_store_construct_cb, request);
+			      req.num_md_pages_per_cluster_ratio, rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, -rc, spdk_strerror(rc));
 		goto cleanup;

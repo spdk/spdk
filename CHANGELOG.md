@@ -7,6 +7,16 @@
 Added new `ssl` based socket implementation, the code is located in module/sock/posix.
 For now we are using hard-coded PSK and only support TLS 1.3
 
+### blobstore
+
+Reserve space for used_cluster bitmap. The reserved space could be used for blobstore growing
+in the future.
+
+### lvol
+
+Add num_md_pages_per_cluster_ratio parameter to the bdev_lvol_create_lvstore RPC.
+Calculate num_md_pages from num_md_pages_per_cluster_ratio, and pass it to spdk_bs_opts.
+
 ## v22.05
 
 ### sock

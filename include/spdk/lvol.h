@@ -45,6 +45,8 @@ struct spdk_lvs_opts {
 	uint32_t		cluster_sz;
 	enum lvs_clear_method	clear_method;
 	char			name[SPDK_LVS_NAME_MAX];
+	/** num_md_pages_per_cluster_ratio = 100 means 1 page per cluster */
+	uint32_t		num_md_pages_per_cluster_ratio;
 };
 
 /**

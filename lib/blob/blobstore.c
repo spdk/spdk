@@ -4995,6 +4995,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	uint64_t		num_md_lba;
 	uint64_t		num_md_pages;
 	uint64_t		num_md_clusters;
+	uint64_t		max_used_cluster_mask_len;
 	uint32_t		i;
 	struct spdk_bs_opts	opts = {};
 	int			rc;
@@ -5101,7 +5102,16 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->used_cluster_mask_len = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
 					    spdk_divide_round_up(bs->total_clusters, 8),
 					    SPDK_BS_PAGE_SIZE);
-	num_md_pages += ctx->super->used_cluster_mask_len;
+	/* The blobstore might be extended, then the used_cluster bitmap will need more space.
+	 * Here we calculate the max clusters we can support according to the
+	 * num_md_pages (bs->md_len).
+	 */
+	max_used_cluster_mask_len = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
+				    spdk_divide_round_up(bs->md_len, 8),
+				    SPDK_BS_PAGE_SIZE);
+	max_used_cluster_mask_len = spdk_max(max_used_cluster_mask_len,
+					     ctx->super->used_cluster_mask_len);
+	num_md_pages += max_used_cluster_mask_len;
 
 	/* The used_blobids mask requires 1 bit per metadata page, rounded
 	 * up to the nearest page, plus a header.

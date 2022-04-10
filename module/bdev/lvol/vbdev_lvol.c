@@ -199,7 +199,8 @@ end:
 
 int
 vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_sz,
-		 enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+		 enum lvs_clear_method clear_method, uint32_t num_md_pages_per_cluster_ratio,
+		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
@@ -219,6 +220,10 @@ vbdev_lvs_create(const char *base_bdev_name, const char *name, uint32_t cluster_
 
 	if (clear_method != 0) {
 		opts.clear_method = clear_method;
+	}
+
+	if (num_md_pages_per_cluster_ratio != 0) {
+		opts.num_md_pages_per_cluster_ratio = num_md_pages_per_cluster_ratio;
 	}
 
 	if (name == NULL) {

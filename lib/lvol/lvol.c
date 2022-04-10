@@ -526,16 +526,18 @@ spdk_lvs_opts_init(struct spdk_lvs_opts *o)
 {
 	o->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
 	o->clear_method = LVS_CLEAR_WITH_UNMAP;
+	o->num_md_pages_per_cluster_ratio = 100;
 	memset(o->name, 0, sizeof(o->name));
 }
 
 static void
-setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
+setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o, uint32_t total_clusters)
 {
 	assert(o != NULL);
 	lvs_bs_opts_init(bs_opts);
 	bs_opts->cluster_sz = o->cluster_sz;
 	bs_opts->clear_method = (enum bs_clear_method)o->clear_method;
+	bs_opts->num_md_pages = (o->num_md_pages_per_cluster_ratio * total_clusters) / 100;
 }
 
 int
@@ -545,6 +547,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_bs_opts opts = {};
+	uint32_t total_clusters;
 	int rc;
 
 	if (bs_dev == NULL) {
@@ -557,7 +560,14 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -EINVAL;
 	}
 
-	setup_lvs_opts(&opts, o);
+	if (o->cluster_sz < bs_dev->blocklen) {
+		SPDK_ERRLOG("Cluster size %" PRIu32 " is smaller than blocklen %" PRIu32 "\n",
+			    opts.cluster_sz, bs_dev->blocklen);
+		return -EINVAL;
+	}
+	total_clusters = bs_dev->blockcnt / (o->cluster_sz / bs_dev->blocklen);
+
+	setup_lvs_opts(&opts, o, total_clusters);
 
 	if (strnlen(o->name, SPDK_LVS_NAME_MAX) == SPDK_LVS_NAME_MAX) {
 		SPDK_ERRLOG("Name has no null terminator.\n");
