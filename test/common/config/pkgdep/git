@@ -286,7 +286,10 @@ function install_nvmecli() {
 		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
 	fi
 	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v1.16
-	make -C "$GIT_REPOS/nvme-cli-cuse" CPPFLAGS="-Wno-error=maybe-uninitialized"
+
+	cflags=("-Wno-error")
+
+	make -C "$GIT_REPOS/nvme-cli-cuse" CFLAGS="${cflags[*]}"
 	if [ -d "/usr/local/src/nvme-cli" ]; then
 		sudo rm -rf /usr/local/src/nvme-cli
 	fi
