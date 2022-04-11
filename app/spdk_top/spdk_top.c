@@ -76,7 +76,10 @@
 #define POLLER_WIN_FIRST_COL 14
 #define FIRST_DATA_ROW 7
 #define HELP_WIN_WIDTH 88
-#define HELP_WIN_HEIGHT 22
+#define HELP_WIN_HEIGHT 24
+#define SCHEDULER_WIN_HEIGHT 7
+#define SCHEDULER_WIN_FIRST_COL 2
+#define MAX_SCHEDULER_PERIOD_STR_LEN 10
 
 enum tabs {
 	THREADS_TAB,
@@ -247,6 +250,7 @@ struct rpc_core_info {
 
 struct rpc_scheduler {
 	char *scheduler_name;
+	char *governor_name;
 	uint64_t scheduler_period;
 };
 
@@ -540,10 +544,12 @@ static void
 free_rpc_scheduler(struct rpc_scheduler *req)
 {
 	free(req->scheduler_name);
+	free(req->governor_name);
 }
 
 static const struct spdk_json_object_decoder rpc_scheduler_decoders[] = {
 	{"scheduler_name", offsetof(struct rpc_scheduler, scheduler_name), spdk_json_decode_string, true},
+	{"governor_name", offsetof(struct rpc_scheduler, governor_name), spdk_json_decode_string, true},
 	{"scheduler_period", offsetof(struct rpc_scheduler, scheduler_period), spdk_json_decode_uint64},
 };
 
@@ -1771,7 +1777,7 @@ print_in_middle(WINDOW *win, int starty, int startx, int width, char *string, ch
 }
 
 static void
-print_left(WINDOW *win, int starty, int startx, int width, char *string, chtype color)
+print_left(WINDOW *win, int starty, int startx, int width, const char *string, chtype color)
 {
 	wattron(win, color);
 	mvwprintw(win, starty, startx, "%s", string);
@@ -2835,6 +2841,124 @@ show_poller(uint8_t current_page, uint8_t active_tab)
 	delwin(poller_win);
 }
 
+static uint64_t
+get_max_scheduler_win_width(uint8_t sched_name_label_len, uint8_t sched_period_label_len,
+			    uint8_t gov_name_label_len)
+{
+	uint8_t window_borders = 4;
+	uint64_t s_name, s_period, g_name, max_name_len;
+	char scheduler_period[MAX_SCHEDULER_PERIOD_STR_LEN];
+
+	snprintf(scheduler_period, MAX_SCHEDULER_PERIOD_STR_LEN, "%" PRIu64,
+		 g_scheduler_info.scheduler_period);
+
+	s_name = strlen(g_scheduler_info.scheduler_name) + sched_name_label_len;
+	if (g_scheduler_info.governor_name != NULL) {
+		g_name = strlen(g_scheduler_info.governor_name) + gov_name_label_len;
+	} else {
+		g_name = strlen("none") + gov_name_label_len;
+	}
+	s_period = strlen(scheduler_period) + sched_period_label_len;
+
+	max_name_len = spdk_max(s_name, g_name);
+	/* This function relies on the fact that scheduler/governor
+	 * names will not change during runtime. Otherwise the scheduler
+	 * pop-up would need dynamic resizing. */
+
+	return spdk_max(max_name_len, s_period) + window_borders;
+}
+
+static void
+draw_scheduler_popup(WINDOW *scheduler_win, uint64_t scheduler_win_width, uint8_t active_tab,
+		     uint8_t current_page, const char *scheduler_name_label,
+		     const char *scheduler_period_label, const char *governor_name_label)
+{
+	char scheduler_period[MAX_SCHEDULER_PERIOD_STR_LEN];
+
+	box(scheduler_win, 0, 0);
+
+	print_left(scheduler_win, 1, SCHEDULER_WIN_FIRST_COL, scheduler_win_width, scheduler_name_label,
+		   COLOR_PAIR(5));
+	print_left(scheduler_win, 1, SCHEDULER_WIN_FIRST_COL + strlen(scheduler_name_label),
+		   scheduler_win_width,
+		   g_scheduler_info.scheduler_name, COLOR_PAIR(3));
+
+	mvwhline(scheduler_win, 2, 1, ACS_HLINE, scheduler_win_width - 2);
+	mvwaddch(scheduler_win, 2, scheduler_win_width, ACS_RTEE);
+
+	print_left(scheduler_win, 3, SCHEDULER_WIN_FIRST_COL, scheduler_win_width, scheduler_period_label,
+		   COLOR_PAIR(5));
+	snprintf(scheduler_period, MAX_SCHEDULER_PERIOD_STR_LEN, "%" PRIu64,
+		 g_scheduler_info.scheduler_period);
+	mvwprintw(scheduler_win, 3, SCHEDULER_WIN_FIRST_COL + strlen(scheduler_period_label), "%s",
+		  scheduler_period);
+
+	mvwhline(scheduler_win, 4, 1, ACS_HLINE, scheduler_win_width - 2);
+	mvwaddch(scheduler_win, 4, scheduler_win_width, ACS_RTEE);
+
+	print_left(scheduler_win, 5, SCHEDULER_WIN_FIRST_COL, scheduler_win_width, governor_name_label,
+		   COLOR_PAIR(5));
+
+	if (g_scheduler_info.governor_name != NULL) {
+		mvwprintw(scheduler_win, 5, SCHEDULER_WIN_FIRST_COL + strlen(governor_name_label), "%s",
+			  g_scheduler_info.governor_name);
+	} else {
+		mvwprintw(scheduler_win, 5, SCHEDULER_WIN_FIRST_COL + strlen(governor_name_label), "%s", "none");
+	}
+
+	refresh_tab(active_tab, current_page);
+	wnoutrefresh(scheduler_win);
+	refresh();
+}
+
+static void
+show_scheduler(uint8_t active_tab, uint8_t current_page)
+{
+	PANEL *scheduler_panel;
+	WINDOW *scheduler_win;
+	uint64_t scheduler_win_width;
+	bool stop_loop = false;
+	int c;
+	const char *scheduler_name_label = "Scheduler:  ";
+	const char *scheduler_period_label = "Period [us]:  ";
+	const char *governor_name_label = "Governor:  ";
+
+	pthread_mutex_lock(&g_thread_lock);
+	scheduler_win_width = get_max_scheduler_win_width(strlen(scheduler_name_label),
+			      strlen(scheduler_period_label),
+			      strlen(governor_name_label));
+
+	scheduler_win = newwin(SCHEDULER_WIN_HEIGHT, scheduler_win_width,
+			       get_position_for_window(SCHEDULER_WIN_HEIGHT, g_max_row),
+			       get_position_for_window(scheduler_win_width, g_max_col));
+
+	keypad(scheduler_win, TRUE);
+	scheduler_panel = new_panel(scheduler_win);
+
+	top_panel(scheduler_panel);
+	update_panels();
+	doupdate();
+
+	draw_scheduler_popup(scheduler_win, scheduler_win_width, active_tab, current_page,
+			     scheduler_name_label, scheduler_period_label, governor_name_label);
+	pthread_mutex_unlock(&g_thread_lock);
+
+	while (!stop_loop) {
+		c = wgetch(scheduler_win);
+
+		switch (c) {
+		case 27: /* ESC */
+			stop_loop = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	del_panel(scheduler_panel);
+	delwin(scheduler_win);
+}
+
 static void *
 data_thread_routine(void *arg)
 {
@@ -2942,6 +3066,8 @@ help_window_display(void)
 		   "[t] Total/Interval	- switch to display data measured from the start of SPDK", COLOR_PAIR(10));
 	print_left(help_win, ++row, desc_second_row_col,  HELP_WIN_WIDTH,
 		   "application or last refresh", COLOR_PAIR(10));
+	print_left(help_win, ++row, col,  HELP_WIN_WIDTH,
+		   "[g] Scheduler pop-up - display current scheduler information", COLOR_PAIR(10));
 	print_left(help_win, ++row, col,  HELP_WIN_WIDTH, "[h] Help		- show this help window",
 		   COLOR_PAIR(10));
 
@@ -3078,6 +3204,9 @@ show_stats(pthread_t *data_thread)
 			break;
 		case 't':
 			g_interval_data = !g_interval_data;
+			break;
+		case 'g':
+			show_scheduler(active_tab, current_page);
 			break;
 		case KEY_NPAGE: /* PgDown */
 			if (current_page + 1 < max_pages) {
