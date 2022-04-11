@@ -49,7 +49,6 @@ struct nvme_vfio_ctrlr {
 	struct nvme_pcie_ctrlr pctrlr;
 
 	volatile uint32_t *doorbell_base;
-	int bar0_fd;
 	struct vfio_device *dev;
 };
 
@@ -148,42 +147,18 @@ nvme_vfio_ctrlr_set_aqa(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_aqa
 					 aqa->raw);
 }
 
-/* Instead of using path as the bar0 file descriptor, we can also use
- * SPARSE MMAP to get the doorbell mmaped address.
- */
 static int
-nvme_vfio_setup_bar0(struct nvme_vfio_ctrlr *vctrlr, const char *path)
+nvme_vfio_setup_bar0(struct nvme_vfio_ctrlr *vctrlr)
 {
-	volatile uint32_t *doorbell;
-	int fd;
+	void *doorbell;
 
-	fd = open(path, O_RDWR);
-	if (fd < 0) {
-		SPDK_ERRLOG("Failed to open file %s\n", path);
-		return fd;
+	doorbell = spdk_vfio_user_get_bar_addr(vctrlr->dev, 0, 0x1000, 0x1000);
+	if (!doorbell) {
+		return -EINVAL;
 	}
 
-	doorbell = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0x1000);
-	if (doorbell == MAP_FAILED) {
-		SPDK_ERRLOG("Failed to mmap file %s\n", path);
-		close(fd);
-		return -EFAULT;
-	}
-
-	vctrlr->bar0_fd = fd;
-	vctrlr->doorbell_base = doorbell;
-
+	vctrlr->doorbell_base = (volatile uint32_t *)doorbell;
 	return 0;
-}
-
-static void
-nvme_vfio_bar0_destruct(struct nvme_vfio_ctrlr *vctrlr)
-{
-	if (vctrlr->doorbell_base) {
-		munmap((void *)vctrlr->doorbell_base, 0x1000);
-	}
-
-	close(vctrlr->bar0_fd);
 }
 
 static struct spdk_nvme_ctrlr *
@@ -197,20 +172,11 @@ static struct spdk_nvme_ctrlr *
 	union spdk_nvme_cap_register cap;
 	int ret;
 	char ctrlr_path[PATH_MAX];
-	char ctrlr_bar0[PATH_MAX];
 
 	snprintf(ctrlr_path, sizeof(ctrlr_path), "%s/cntrl", trid->traddr);
-	snprintf(ctrlr_bar0, sizeof(ctrlr_bar0), "%s/bar0", trid->traddr);
-
 	ret = access(ctrlr_path, F_OK);
 	if (ret != 0) {
 		SPDK_ERRLOG("Access path %s failed\n", ctrlr_path);
-		return NULL;
-	}
-
-	ret = access(ctrlr_bar0, F_OK);
-	if (ret != 0) {
-		SPDK_ERRLOG("Access path %s failed\n", ctrlr_bar0);
 		return NULL;
 	}
 
@@ -219,18 +185,17 @@ static struct spdk_nvme_ctrlr *
 		return NULL;
 	}
 
-	ret = nvme_vfio_setup_bar0(vctrlr, ctrlr_bar0);
-	if (ret != 0) {
+	vctrlr->dev = spdk_vfio_user_setup(ctrlr_path);
+	if (!vctrlr->dev) {
+		SPDK_ERRLOG("Error to setup vfio device\n");
 		free(vctrlr);
 		return NULL;
 	}
 
-	vctrlr->dev = spdk_vfio_user_setup(ctrlr_path);
-	if (!vctrlr->dev) {
-		SPDK_ERRLOG("Error to setup vfio device\n");
-		nvme_vfio_bar0_destruct(vctrlr);
-		free(vctrlr);
-		return NULL;
+	ret = nvme_vfio_setup_bar0(vctrlr);
+	if (ret != 0) {
+		SPDK_ERRLOG("Error to get device BAR0\n");
+		goto exit;
 	}
 
 	pctrlr = &vctrlr->pctrlr;
@@ -285,7 +250,6 @@ static struct spdk_nvme_ctrlr *
 	return &pctrlr->ctrlr;
 
 exit:
-	nvme_vfio_bar0_destruct(vctrlr);
 	spdk_vfio_user_release(vctrlr->dev);
 	free(vctrlr);
 	return NULL;
@@ -354,7 +318,6 @@ nvme_vfio_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_free_processes(ctrlr);
 
-	nvme_vfio_bar0_destruct(vctrlr);
 	spdk_vfio_user_release(vctrlr->dev);
 	free(vctrlr);
 
