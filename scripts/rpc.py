@@ -545,7 +545,7 @@ if __name__ == "__main__":
     p.add_argument('-r', '--bdev-retry-count',
                    help='the number of attempts per I/O in the bdev layer when an I/O fails. -1 means infinite retries.', type=int)
     p.add_argument('-e', '--transport-ack-timeout',
-                   help="""Time to wait ack until packet retransmission. RDMA specific.
+                   help="""Time to wait ack until packet retransmission for RDMA or until closes connection for TCP.
                    Range 0-31 where 0 is driver-specific default value.""", type=int)
     p.add_argument('-l', '--ctrlr-loss-timeout-sec',
                    help="""Time to wait until ctrlr is reconnected before deleting ctrlr.

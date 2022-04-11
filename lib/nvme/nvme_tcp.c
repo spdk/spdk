@@ -59,6 +59,12 @@
 #define NVME_TCP_MAX_R2T_DEFAULT		1
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
 
+/*
+ * Maximum value of transport_ack_timeout used by TCP controller
+ */
+#define NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT	31
+
+
 /* NVMe TCP transport extensions for spdk_nvme_ctrlr */
 struct nvme_tcp_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
@@ -1926,6 +1932,9 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ctrlr->trid.priority;
 	opts.zcopy = !nvme_qpair_is_admin_queue(qpair);
+	if (ctrlr->opts.transport_ack_timeout) {
+		opts.ack_timeout = 1ULL << ctrlr->opts.transport_ack_timeout;
+	}
 	tqpair->sock = spdk_sock_connect_ext(ctrlr->trid.traddr, port, NULL, &opts);
 	if (!tqpair->sock) {
 		SPDK_ERRLOG("sock connection error of tqpair=%p with addr=%s, port=%ld\n",
@@ -2118,6 +2127,12 @@ static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_t
 
 	tctrlr->ctrlr.opts = *opts;
 	tctrlr->ctrlr.trid = *trid;
+
+	if (opts->transport_ack_timeout > NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT) {
+		SPDK_NOTICELOG("transport_ack_timeout exceeds max value %d, use max value\n",
+			       NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT);
+		tctrlr->ctrlr.opts.transport_ack_timeout = NVME_TCP_CTRLR_MAX_TRANSPORT_ACK_TIMEOUT;
+	}
 
 	rc = nvme_ctrlr_construct(&tctrlr->ctrlr);
 	if (rc != 0) {

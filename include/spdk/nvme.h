@@ -227,9 +227,10 @@ struct spdk_nvme_ctrlr_opts {
 	bool disable_error_logging;
 
 	/**
-	 * It is used for RDMA transport
+	 * It is used for both RDMA & TCP transport
 	 * Specify the transport ACK timeout. The value should be in range 0-31 where 0 means
-	 * use driver-specific default value. The value is applied to each RDMA qpair
+	 * use driver-specific default value.
+	 * RDMA: The value is applied to each qpair
 	 * and affects the time that qpair waits for transport layer acknowledgement
 	 * until it retransmits a packet. The value should be chosen empirically
 	 * to meet the needs of a particular application. A low value means less time
@@ -237,6 +238,11 @@ struct spdk_nvme_ctrlr_opts {
 	 * A large value can increase the time the connection is closed.
 	 * The value of ACK timeout is calculated according to the formula
 	 * 4.096 * 2^(transport_ack_timeout) usec.
+	 * TCP: The value is applied to each qpair
+	 * and affects the time that qpair waits for transport layer acknowledgement
+	 * until connection is closed forcefully.
+	 * The value of ACK timeout is calculated according to the formula
+	 * 2^(transport_ack_timeout) msec.
 	 */
 	uint8_t transport_ack_timeout;
 
