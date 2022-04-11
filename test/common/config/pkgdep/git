@@ -106,6 +106,10 @@ function install_qat() {
 	local kernel_maj kernel_min kernel_rel kernel_loc
 	local kernel_ver
 
+	if ! hash yasm; then
+		install yasm
+	fi
+
 	in_syms() {
 		local syms
 		if [[ -e /proc/kallsyms ]]; then
@@ -132,49 +136,6 @@ function install_qat() {
 	mkdir "$GIT_REPOS/QAT"
 
 	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
-
-	# Patch use of hidden types in kernels >= 5.6.3. See .patch for details
-	if ((kernel_ver >= 0x050603)); then
-		# Patch only the driver version that was tested
-		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-timespec.patch"
-
-	# Patch name of the pci_aer function which was renamed in kernels >= 5.7.1. See .patch for details
-	if ((kernel_ver >= 0x050701)) || ! in_syms pci_cleanup_aer_uncorrect_error_status; then
-		# Patch only the driver version that was tested
-		if [[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]]; then
-			patch --dir="$GIT_REPOS/QAT" -p1
-		fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer.patch"
-		if ((kernel_ver < 0x050701)); then
-			# Older kernel build without pci_cleanup_aer_uncorrect_error_status()? This might be
-			# centos8's build.
-			if [[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.12.0-00011.tar.gz ]]; then
-				patch --dir="$GIT_REPOS/QAT" -p1
-			fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-pci_aer_centos.patch"
-		fi
-	fi
-
-	# Patch use of cryptohash.h which was removed in favor of crypto/sha.h in kernels >= 5.8. See .patch for details
-	if ((kernel_ver >= 0x050800)); then
-		# Patch only the driver version that was tested
-		[[ ${DRIVER_LOCATION_QAT##*/} == qat1.7.l.4.9.0-00008.tar.gz ]] && patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-cryptohash.patch"
-
-	# Object files need to be passed via obj-m otherwise they won't be built with kernels >= 5.10
-	if ((kernel_ver >= 0x050a01)); then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-set-obj-m.patch"
-
-	# sha.h was split into two separate files, sha1.h and sha2.h in kernels >= 5.11
-	if ((kernel_ver >= 0x050b01)); then
-		# qat_algs_ablkcipher.c doesn't exist in older versions of the driver so simply force the patch
-		patch --force --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-sha.patch" || :
-
-	# cipher routines were moved from crypto.h to crypto/internal/cipher.h in kernels >= 5.12
-	if ((kernel_ver >= 0x050c00)); then
-		patch --dir="$GIT_REPOS/QAT" -p1
-	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-cipher-ns.patch"
 
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
@@ -580,7 +541,7 @@ export GIT_REPO_QEMU_VFIO
 export GIT_REPO_LIBISCSI
 : ${GIT_REPO_INTEL_IPSEC_MB=https://github.com/spdk/intel-ipsec-mb.git}
 export GIT_REPO_INTEL_IPSEC_MB
-: ${DRIVER_LOCATION_QAT=https://01.org/sites/default/files/downloads//qat1.7.l.4.12.0-00011.tar.gz}
+: ${DRIVER_LOCATION_QAT=https://downloadmirror.intel.com/729932/QAT.L.4.18.0-00008.tar.gz}
 export DRIVER_LOCATION_QAT
 : ${GIT_REPO_GIT=https://github.com/git/git/archive/v${GIT_VERSION}.tar.gz}
 export GIT_REPO_GIT
