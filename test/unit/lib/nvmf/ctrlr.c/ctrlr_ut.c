@@ -882,6 +882,9 @@ test_get_ns_id_desc_list(void)
 	req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 	req.data = buf;
 	req.length = sizeof(buf);
+	req.iovcnt = 1;
+	req.iov[0].iov_base = req.data;
+	req.iov[0].iov_len = req.length;
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
