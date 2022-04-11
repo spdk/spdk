@@ -169,7 +169,7 @@ SPDK_VAGRANT_DISTRO="$*"
 case "${SPDK_VAGRANT_DISTRO}" in
 	centos[78]) ;&
 	ubuntu1[68]04 | ubuntu2004) ;&
-	fedora3[3-5]) ;&
+	fedora3[3-6]) ;&
 	freebsd1[12]) ;&
 	rocky8) ;&
 	arch | clearlinux) ;;
