@@ -223,13 +223,6 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 {
 	struct rte_mempool *mp;
 	size_t tmp;
-	unsigned dpdk_flags = 0;
-
-#if RTE_VERSION >= RTE_VERSION_NUM(21, 11, 0, 0)
-	dpdk_flags |= RTE_MEMPOOL_F_NO_IOVA_CONTIG;
-#else
-	dpdk_flags |= MEMPOOL_F_NO_IOVA_CONTIG;
-#endif
 
 	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
 		socket_id = SOCKET_ID_ANY;
@@ -247,7 +240,7 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
-				socket_id, dpdk_flags);
+				socket_id, 0);
 
 	return (struct spdk_mempool *)mp;
 }
