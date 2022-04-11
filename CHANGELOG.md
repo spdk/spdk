@@ -2,6 +2,10 @@
 
 ## v22.05: (Upcoming Release)
 
+### sock
+
+A new option `ack_timeout` was added to the `spdk_sock_opts` structure.
+
 ### util
 
 A new parameter `bounce_iovcnt` was added to `spdk_dif_generate_copy` and `spdk_dif_verify_copy`.

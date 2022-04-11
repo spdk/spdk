@@ -366,6 +366,9 @@ posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts)
 	int fd;
 	int val = 1;
 	int rc, sz;
+#if defined(__linux__)
+	int to;
+#endif
 
 	fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (fd < 0) {
@@ -417,6 +420,21 @@ posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts)
 			return -1;
 		}
 	}
+
+	if (opts->ack_timeout) {
+#if defined(__linux__)
+		to = opts->ack_timeout;
+		rc = setsockopt(fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &to, sizeof(to));
+		if (rc != 0) {
+			close(fd);
+			/* error */
+			return -1;
+		}
+#else
+		SPDK_WARNLOG("TCP_USER_TIMEOUT is not supported.\n");
+#endif
+	}
+
 	return fd;
 }
 

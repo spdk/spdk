@@ -457,6 +457,23 @@ retry:
 			continue;
 		}
 
+		if (opts->ack_timeout) {
+#if defined(__linux__)
+			val = opts->ack_timeout;
+			rc = setsockopt(fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &val, sizeof val);
+			if (rc != 0) {
+				close(fd);
+				fd = -1;
+				/* error */
+				continue;
+			}
+#else
+			SPDK_WARNLOG("TCP_USER_TIMEOUT is not supported.\n");
+#endif
+		}
+
+
+
 #if defined(SO_PRIORITY)
 		if (opts != NULL && opts->priority) {
 			rc = setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &opts->priority, sizeof val);

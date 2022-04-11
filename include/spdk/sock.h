@@ -164,6 +164,11 @@ struct spdk_sock_opts {
 	 * Used to enable or disable zero copy on socket layer.
 	 */
 	bool zcopy;
+
+	/**
+	 * Time in msec to wait ack until connection is closed forcefully.
+	 */
+	uint32_t ack_timeout;
 };
 
 /**
