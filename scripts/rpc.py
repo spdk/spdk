@@ -1207,7 +1207,7 @@ if __name__ == "__main__":
             immediate_data_pool_size=args.immediate_data_pool_size,
             data_out_pool_size=args.data_out_pool_size)
 
-    p = subparsers.add_parser('iscsi_set_options', aliases=['set_iscsi_options'],
+    p = subparsers.add_parser('iscsi_set_options',
                               help="""Set options of iSCSI subsystem""")
     p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file')
     p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
@@ -1244,7 +1244,7 @@ if __name__ == "__main__":
             mutual_chap=args.mutual_chap,
             chap_group=args.chap_group)
 
-    p = subparsers.add_parser('iscsi_set_discovery_auth', aliases=['set_iscsi_discovery_auth'],
+    p = subparsers.add_parser('iscsi_set_discovery_auth',
                               help="""Set CHAP authentication for discovery session.""")
     p.add_argument('-d', '--disable-chap', help="""CHAP for discovery session should be disabled.
     *** Mutually exclusive with --require-chap""", action='store_true')
@@ -1262,7 +1262,7 @@ if __name__ == "__main__":
 
         rpc.iscsi.iscsi_create_auth_group(args.client, tag=args.tag, secrets=secrets)
 
-    p = subparsers.add_parser('iscsi_create_auth_group', aliases=['add_iscsi_auth_group'],
+    p = subparsers.add_parser('iscsi_create_auth_group',
                               help='Create authentication group for CHAP authentication.')
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0).', type=int)
     p.add_argument('-c', '--secrets', help="""Comma-separated list of CHAP secrets
@@ -1273,7 +1273,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def iscsi_delete_auth_group(args):
         rpc.iscsi.iscsi_delete_auth_group(args.client, tag=args.tag)
 
-    p = subparsers.add_parser('iscsi_delete_auth_group', aliases=['delete_iscsi_auth_group'],
+    p = subparsers.add_parser('iscsi_delete_auth_group',
                               help='Delete an authentication group.')
     p.add_argument('tag', help='Authentication group tag', type=int)
     p.set_defaults(func=iscsi_delete_auth_group)
@@ -1287,7 +1287,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             muser=args.muser,
             msecret=args.msecret)
 
-    p = subparsers.add_parser('iscsi_auth_group_add_secret', aliases=['add_secret_to_iscsi_auth_group'],
+    p = subparsers.add_parser('iscsi_auth_group_add_secret',
                               help='Add a secret to an authentication group.')
     p.add_argument('tag', help='Authentication group tag', type=int)
     p.add_argument('-u', '--user', help='User name for one-way CHAP authentication', required=True)
@@ -1299,7 +1299,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def iscsi_auth_group_remove_secret(args):
         rpc.iscsi.iscsi_auth_group_remove_secret(args.client, tag=args.tag, user=args.user)
 
-    p = subparsers.add_parser('iscsi_auth_group_remove_secret', aliases=['delete_secret_from_iscsi_auth_group'],
+    p = subparsers.add_parser('iscsi_auth_group_remove_secret',
                               help='Remove a secret from an authentication group.')
     p.add_argument('tag', help='Authentication group tag', type=int)
     p.add_argument('-u', '--user', help='User name for one-way CHAP authentication', required=True)
@@ -1308,31 +1308,27 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def iscsi_get_auth_groups(args):
         print_dict(rpc.iscsi.iscsi_get_auth_groups(args.client))
 
-    p = subparsers.add_parser('iscsi_get_auth_groups', aliases=['get_iscsi_auth_groups'],
+    p = subparsers.add_parser('iscsi_get_auth_groups',
                               help='Display current authentication group configuration')
     p.set_defaults(func=iscsi_get_auth_groups)
 
     def iscsi_get_portal_groups(args):
         print_dict(rpc.iscsi.iscsi_get_portal_groups(args.client))
 
-    p = subparsers.add_parser(
-        'iscsi_get_portal_groups', aliases=['get_portal_groups'],
-        help='Display current portal group configuration')
+    p = subparsers.add_parser('iscsi_get_portal_groups', help='Display current portal group configuration')
     p.set_defaults(func=iscsi_get_portal_groups)
 
     def iscsi_get_initiator_groups(args):
         print_dict(rpc.iscsi.iscsi_get_initiator_groups(args.client))
 
     p = subparsers.add_parser('iscsi_get_initiator_groups',
-                              aliases=['get_initiator_groups'],
                               help='Display current initiator group configuration')
     p.set_defaults(func=iscsi_get_initiator_groups)
 
     def iscsi_get_target_nodes(args):
         print_dict(rpc.iscsi.iscsi_get_target_nodes(args.client))
 
-    p = subparsers.add_parser('iscsi_get_target_nodes', aliases=['get_target_nodes'],
-                              help='Display target nodes')
+    p = subparsers.add_parser('iscsi_get_target_nodes', help='Display target nodes')
     p.set_defaults(func=iscsi_get_target_nodes)
 
     def iscsi_create_target_node(args):
@@ -1360,8 +1356,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             header_digest=args.header_digest,
             data_digest=args.data_digest)
 
-    p = subparsers.add_parser('iscsi_create_target_node', aliases=['construct_target_node'],
-                              help='Add a target node')
+    p = subparsers.add_parser('iscsi_create_target_node', help='Add a target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('alias_name', help='Target node alias name (ASCII)')
     p.add_argument('bdev_name_id_pairs', help="""Whitespace-separated list of <bdev name:LUN ID> pairs enclosed
@@ -1397,7 +1392,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             bdev_name=args.bdev_name,
             lun_id=args.lun_id)
 
-    p = subparsers.add_parser('iscsi_target_node_add_lun', aliases=['target_node_add_lun'],
+    p = subparsers.add_parser('iscsi_target_node_add_lun',
                               help='Add LUN to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('bdev_name', help="""bdev name enclosed in quotes.
@@ -1415,7 +1410,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             require_chap=args.require_chap,
             mutual_chap=args.mutual_chap)
 
-    p = subparsers.add_parser('iscsi_target_node_set_auth', aliases=['set_iscsi_target_node_auth'],
+    p = subparsers.add_parser('iscsi_target_node_set_auth',
                               help='Set CHAP authentication for the target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('-g', '--chap-group', help="""Authentication group ID for this target node.
@@ -1439,7 +1434,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             name=args.name)
 
     p = subparsers.add_parser('iscsi_target_node_add_pg_ig_maps',
-                              aliases=['add_pg_ig_maps'],
                               help='Add PG-IG maps to the target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
@@ -1458,7 +1452,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             args.client, pg_ig_maps=pg_ig_maps, name=args.name)
 
     p = subparsers.add_parser('iscsi_target_node_remove_pg_ig_maps',
-                              aliases=['delete_pg_ig_maps'],
                               help='Delete PG-IG maps from the target node')
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
@@ -1518,7 +1511,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             private=args.private,
             wait=args.wait)
 
-    p = subparsers.add_parser('iscsi_create_portal_group', aliases=['add_portal_group'],
+    p = subparsers.add_parser('iscsi_create_portal_group',
                               help='Add a portal group')
     p.add_argument(
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
@@ -1555,7 +1548,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             initiators=initiators,
             netmasks=netmasks)
 
-    p = subparsers.add_parser('iscsi_create_initiator_group', aliases=['add_initiator_group'],
+    p = subparsers.add_parser('iscsi_create_initiator_group',
                               help='Add an initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
@@ -1583,7 +1576,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             netmasks=netmasks)
 
     p = subparsers.add_parser('iscsi_initiator_group_add_initiators',
-                              aliases=['add_initiators_to_initiator_group'],
                               help='Add initiators to an existing initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
@@ -1612,7 +1604,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             netmasks=netmasks)
 
     p = subparsers.add_parser('iscsi_initiator_group_remove_initiators',
-                              aliases=['delete_initiators_from_initiator_group'],
                               help='Delete initiators from an existing initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
@@ -1627,7 +1618,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.iscsi.iscsi_delete_target_node(
             args.client, target_node_name=args.target_node_name)
 
-    p = subparsers.add_parser('iscsi_delete_target_node', aliases=['delete_target_node'],
+    p = subparsers.add_parser('iscsi_delete_target_node',
                               help='Delete a target node')
     p.add_argument('target_node_name',
                    help='Target node name to be deleted. Example: iqn.2016-06.io.spdk:disk1.')
@@ -1637,7 +1628,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.iscsi.iscsi_delete_portal_group(args.client, tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_portal_group',
-                              aliases=['delete_portal_group'],
                               help='Delete a portal group')
     p.add_argument(
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
@@ -1647,7 +1637,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.iscsi.iscsi_delete_initiator_group(args.client, tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_initiator_group',
-                              aliases=['delete_initiator_group'],
                               help='Delete an initiator group')
     p.add_argument(
         'tag', help='Initiator group tag (unique, integer > 0)', type=int)
@@ -1678,22 +1667,21 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def iscsi_get_connections(args):
         print_dict(rpc.iscsi.iscsi_get_connections(args.client))
 
-    p = subparsers.add_parser('iscsi_get_connections', aliases=['get_iscsi_connections'],
+    p = subparsers.add_parser('iscsi_get_connections',
                               help='Display iSCSI connections')
     p.set_defaults(func=iscsi_get_connections)
 
     def iscsi_get_options(args):
         print_dict(rpc.iscsi.iscsi_get_options(args.client))
 
-    p = subparsers.add_parser('iscsi_get_options', aliases=['get_iscsi_global_params'],
+    p = subparsers.add_parser('iscsi_get_options',
                               help='Display iSCSI global parameters')
     p.set_defaults(func=iscsi_get_options)
 
     def scsi_get_devices(args):
         print_dict(rpc.iscsi.scsi_get_devices(args.client))
 
-    p = subparsers.add_parser('scsi_get_devices', aliases=['get_scsi_devices'],
-                              help='Display SCSI devices')
+    p = subparsers.add_parser('scsi_get_devices', help='Display SCSI devices')
     p.set_defaults(func=scsi_get_devices)
 
     # trace

@@ -64,7 +64,6 @@ rpc_iscsi_get_initiator_groups(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("iscsi_get_initiator_groups", rpc_iscsi_get_initiator_groups,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_initiator_groups, get_initiator_groups)
 
 struct rpc_initiator_list {
 	size_t num_initiators;
@@ -170,7 +169,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("iscsi_create_initiator_group", rpc_iscsi_create_initiator_group,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_initiator_group, add_initiator_group)
 
 static const struct spdk_json_object_decoder rpc_add_or_delete_initiators_decoders[] = {
 	{"tag", offsetof(struct rpc_initiator_group, tag), spdk_json_decode_int32},
@@ -210,8 +208,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("iscsi_initiator_group_add_initiators",
 		  rpc_iscsi_initiator_group_add_initiators, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_initiator_group_add_initiators,
-				   add_initiators_to_initiator_group)
 
 static void
 rpc_iscsi_initiator_group_remove_initiators(struct spdk_jsonrpc_request *request,
@@ -245,8 +241,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("iscsi_initiator_group_remove_initiators",
 		  rpc_iscsi_initiator_group_remove_initiators, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_initiator_group_remove_initiators,
-				   delete_initiators_from_initiator_group)
 
 struct rpc_iscsi_delete_initiator_group {
 	int32_t tag;
@@ -285,7 +279,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("iscsi_delete_initiator_group", rpc_iscsi_delete_initiator_group,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_initiator_group, delete_initiator_group)
 
 static void
 rpc_iscsi_get_target_nodes(struct spdk_jsonrpc_request *request,
@@ -307,7 +300,6 @@ rpc_iscsi_get_target_nodes(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("iscsi_get_target_nodes", rpc_iscsi_get_target_nodes, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_target_nodes, get_target_nodes)
 
 struct rpc_pg_ig_map {
 	int32_t pg_tag;
@@ -491,7 +483,6 @@ invalid:
 	free_rpc_target_node(&req);
 }
 SPDK_RPC_REGISTER("iscsi_create_target_node", rpc_iscsi_create_target_node, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_target_node, construct_target_node)
 
 struct rpc_tgt_node_pg_ig_maps {
 	char *name;
@@ -550,7 +541,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("iscsi_target_node_add_pg_ig_maps",
 		  rpc_iscsi_target_node_add_pg_ig_maps, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_add_pg_ig_maps, add_pg_ig_maps)
 
 static void
 rpc_iscsi_target_node_remove_pg_ig_maps(struct spdk_jsonrpc_request *request,
@@ -599,8 +589,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("iscsi_target_node_remove_pg_ig_maps",
 		  rpc_iscsi_target_node_remove_pg_ig_maps, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_remove_pg_ig_maps,
-				   delete_pg_ig_maps)
 
 struct rpc_iscsi_delete_target_node {
 	char *name;
@@ -668,7 +656,6 @@ invalid:
 	free(ctx);
 }
 SPDK_RPC_REGISTER("iscsi_delete_target_node", rpc_iscsi_delete_target_node, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_target_node, delete_target_node)
 
 static void
 rpc_iscsi_get_portal_groups(struct spdk_jsonrpc_request *request,
@@ -690,7 +677,6 @@ rpc_iscsi_get_portal_groups(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("iscsi_get_portal_groups", rpc_iscsi_get_portal_groups, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_portal_groups, get_portal_groups)
 
 struct rpc_portal {
 	char *host;
@@ -820,7 +806,6 @@ out:
 	free_rpc_portal_group(&req);
 }
 SPDK_RPC_REGISTER("iscsi_create_portal_group", rpc_iscsi_create_portal_group, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_portal_group, add_portal_group)
 
 struct rpc_iscsi_change_portal_group {
 	int32_t tag;
@@ -881,7 +866,6 @@ rpc_iscsi_delete_portal_group(struct spdk_jsonrpc_request *request,
 	_rpc_iscsi_change_portal_group(request, params, _rpc_iscsi_delete_portal_group);
 }
 SPDK_RPC_REGISTER("iscsi_delete_portal_group", rpc_iscsi_delete_portal_group, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_portal_group, delete_portal_group)
 
 static int
 _rpc_iscsi_start_portal_group(int pg_tag)
@@ -1026,7 +1010,6 @@ rpc_iscsi_get_connections(struct spdk_jsonrpc_request *request,
 			      _rpc_iscsi_get_connections_done);
 }
 SPDK_RPC_REGISTER("iscsi_get_connections", rpc_iscsi_get_connections, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_connections, get_iscsi_connections)
 
 struct rpc_target_lun {
 	char *name;
@@ -1086,7 +1069,6 @@ invalid:
 	free_rpc_target_lun(&req);
 }
 SPDK_RPC_REGISTER("iscsi_target_node_add_lun", rpc_iscsi_target_node_add_lun, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_add_lun, target_node_add_lun)
 
 struct rpc_target_auth {
 	char *name;
@@ -1151,7 +1133,6 @@ exit:
 }
 SPDK_RPC_REGISTER("iscsi_target_node_set_auth", rpc_iscsi_target_node_set_auth,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_target_node_set_auth, set_iscsi_target_node_auth)
 
 struct rpc_target_redirect {
 	char *name;
@@ -1293,7 +1274,6 @@ rpc_iscsi_get_options(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("iscsi_get_options", rpc_iscsi_get_options, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_options, get_iscsi_global_params)
 
 struct rpc_discovery_auth {
 	bool disable_chap;
@@ -1335,7 +1315,6 @@ rpc_iscsi_set_discovery_auth(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_set_discovery_auth", rpc_iscsi_set_discovery_auth, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_set_discovery_auth, set_iscsi_discovery_auth)
 
 #define MAX_AUTH_SECRETS	64
 
@@ -1467,7 +1446,6 @@ rpc_iscsi_create_auth_group(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_create_auth_group", rpc_iscsi_create_auth_group, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_create_auth_group, add_iscsi_auth_group)
 
 struct rpc_delete_auth_group {
 	int32_t tag;
@@ -1510,7 +1488,6 @@ rpc_iscsi_delete_auth_group(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_delete_auth_group", rpc_iscsi_delete_auth_group, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_delete_auth_group, delete_iscsi_auth_group)
 
 struct rpc_add_auth_secret {
 	int32_t tag;
@@ -1585,7 +1562,6 @@ rpc_iscsi_auth_group_add_secret(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("iscsi_auth_group_add_secret", rpc_iscsi_auth_group_add_secret,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_auth_group_add_secret, add_secret_to_iscsi_auth_group)
 
 
 struct rpc_remove_auth_secret {
@@ -1652,8 +1628,6 @@ rpc_iscsi_auth_group_remove_secret(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("iscsi_auth_group_remove_secret",
 		  rpc_iscsi_auth_group_remove_secret, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_auth_group_remove_secret,
-				   delete_secret_from_iscsi_auth_group)
 
 static void
 rpc_iscsi_get_auth_groups(struct spdk_jsonrpc_request *request,
@@ -1675,7 +1649,6 @@ rpc_iscsi_get_auth_groups(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("iscsi_get_auth_groups", rpc_iscsi_get_auth_groups, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_get_auth_groups, get_iscsi_auth_groups)
 
 static const struct spdk_json_object_decoder rpc_set_iscsi_opts_decoders[] = {
 	{"auth_file", offsetof(struct spdk_iscsi_opts, authfile), spdk_json_decode_string, true},
@@ -1751,4 +1724,3 @@ rpc_iscsi_set_options(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("iscsi_set_options", rpc_iscsi_set_options, SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(iscsi_set_options, set_iscsi_options)
