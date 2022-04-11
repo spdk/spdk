@@ -14,7 +14,7 @@ def get_box_type(distro, force_distro)
     'ubuntu1804' => 'peru/ubuntu-18.04-server-amd64',
     'ubuntu2004' => 'peru/ubuntu-20.04-server-amd64',
     'fedora33'   => 'generic/fedora33',
-    'fedora34'   => 'fedora/34-cloud-base',
+    'fedora34'   => 'generic/fedora34',
     # Placeholder for F35, no generic image on Vagrant Cloud yet
     'arch'       => 'generic/arch',
     'freebsd12'  => 'generic/freebsd12',
