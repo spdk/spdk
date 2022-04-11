@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('set_bdev_options')
 def bdev_set_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None, bdev_auto_examine=None,
                      small_buf_pool_size=None, large_buf_pool_size=None):
     """Set parameters for the bdev subsystem.
@@ -1354,7 +1353,6 @@ def bdev_ftl_delete(client, name):
     return client.call('bdev_ftl_delete', params)
 
 
-@deprecated_alias('get_bdevs')
 def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
 
@@ -1373,7 +1371,6 @@ def bdev_get_bdevs(client, name=None, timeout=None):
     return client.call('bdev_get_bdevs', params)
 
 
-@deprecated_alias('get_bdevs_iostat')
 def bdev_get_iostat(client, name=None):
     """Get I/O statistics for block devices.
 
@@ -1389,7 +1386,6 @@ def bdev_get_iostat(client, name=None):
     return client.call('bdev_get_iostat', params)
 
 
-@deprecated_alias('enable_bdev_histogram')
 def bdev_enable_histogram(client, name, enable):
     """Control whether histogram is enabled for specified bdev.
 
@@ -1400,7 +1396,6 @@ def bdev_enable_histogram(client, name, enable):
     return client.call('bdev_enable_histogram', params)
 
 
-@deprecated_alias('get_bdev_histogram')
 def bdev_get_histogram(client, name):
     """Get histogram for specified bdev.
 
@@ -1431,7 +1426,6 @@ def bdev_error_inject_error(client, name, io_type, error_type, num=1):
     return client.call('bdev_error_inject_error', params)
 
 
-@deprecated_alias('set_bdev_qd_sampling_period')
 def bdev_set_qd_sampling_period(client, name, period):
     """Enable queue depth tracking on a specified bdev.
 
@@ -1446,7 +1440,6 @@ def bdev_set_qd_sampling_period(client, name, period):
     return client.call('bdev_set_qd_sampling_period', params)
 
 
-@deprecated_alias('set_bdev_qos_limit')
 def bdev_set_qos_limit(
         client,
         name,

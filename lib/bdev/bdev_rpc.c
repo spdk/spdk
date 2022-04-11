@@ -114,7 +114,6 @@ rpc_bdev_set_options(struct spdk_jsonrpc_request *request, const struct spdk_jso
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("bdev_set_options", rpc_bdev_set_options, SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_options, set_bdev_options)
 
 static void
 rpc_bdev_wait_for_examine_cpl(void *arg)
@@ -416,7 +415,6 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	rpc_bdev_get_iostat_done(ctx);
 }
 SPDK_RPC_REGISTER("bdev_get_iostat", rpc_bdev_get_iostat, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_get_iostat, get_bdevs_iostat)
 
 static int
 rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
@@ -665,7 +663,6 @@ rpc_bdev_get_bdevs(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("bdev_get_bdevs", rpc_bdev_get_bdevs, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_get_bdevs, get_bdevs)
 
 struct rpc_bdev_set_qd_sampling_period {
 	char *name;
@@ -719,8 +716,6 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_set_qd_sampling_period",
 		  rpc_bdev_set_qd_sampling_period,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_qd_sampling_period,
-				   set_bdev_qd_sampling_period)
 
 struct rpc_bdev_set_qos_limit {
 	char		*name;
@@ -818,7 +813,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_set_qos_limit", rpc_bdev_set_qos_limit, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_set_qos_limit, set_bdev_qos_limit)
 
 /* SPDK_RPC_ENABLE_BDEV_HISTOGRAM */
 
@@ -879,7 +873,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_enable_histogram", rpc_bdev_enable_histogram, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_enable_histogram, enable_bdev_histogram)
 
 /* SPDK_RPC_GET_BDEV_HISTOGRAM */
 
@@ -985,4 +978,3 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_get_histogram", rpc_bdev_get_histogram, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_get_histogram, get_bdev_histogram)

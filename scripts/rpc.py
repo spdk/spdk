@@ -193,7 +193,7 @@ if __name__ == "__main__":
                                   small_buf_pool_size=args.small_buf_pool_size,
                                   large_buf_pool_size=args.large_buf_pool_size)
 
-    p = subparsers.add_parser('bdev_set_options', aliases=['set_bdev_options'],
+    p = subparsers.add_parser('bdev_set_options',
                               help="""Set options of bdev subsystem""")
     p.add_argument('-p', '--bdev-io-pool-size', help='Number of bdev_io structures in shared buffer pool', type=int)
     p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
@@ -1063,7 +1063,7 @@ if __name__ == "__main__":
         print_dict(rpc.bdev.bdev_get_bdevs(args.client,
                                            name=args.name, timeout=args.timeout_ms))
 
-    p = subparsers.add_parser('bdev_get_bdevs', aliases=['get_bdevs'],
+    p = subparsers.add_parser('bdev_get_bdevs',
                               help='Display current blockdev list or required blockdev')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.add_argument('-t', '--timeout-ms', help="""Time in ms to wait for the bdev to appear (only used
@@ -1076,7 +1076,7 @@ if __name__ == "__main__":
         print_dict(rpc.bdev.bdev_get_iostat(args.client,
                                             name=args.name))
 
-    p = subparsers.add_parser('bdev_get_iostat', aliases=['get_bdevs_iostat'],
+    p = subparsers.add_parser('bdev_get_iostat',
                               help='Display current I/O statistics of all the blockdevs or required blockdev.')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=bdev_get_iostat)
@@ -1084,7 +1084,7 @@ if __name__ == "__main__":
     def bdev_enable_histogram(args):
         rpc.bdev.bdev_enable_histogram(args.client, name=args.name, enable=args.enable)
 
-    p = subparsers.add_parser('bdev_enable_histogram', aliases=['enable_bdev_histogram'],
+    p = subparsers.add_parser('bdev_enable_histogram',
                               help='Enable or disable histogram for specified bdev')
     p.add_argument('-e', '--enable', default=True, dest='enable', action='store_true', help='Enable histograms on specified device')
     p.add_argument('-d', '--disable', dest='enable', action='store_false', help='Disable histograms on specified device')
@@ -1094,7 +1094,7 @@ if __name__ == "__main__":
     def bdev_get_histogram(args):
         print_dict(rpc.bdev.bdev_get_histogram(args.client, name=args.name))
 
-    p = subparsers.add_parser('bdev_get_histogram', aliases=['get_bdev_histogram'],
+    p = subparsers.add_parser('bdev_get_histogram',
                               help='Get histogram for specified bdev')
     p.add_argument('name', help='bdev name')
     p.set_defaults(func=bdev_get_histogram)
@@ -1104,7 +1104,7 @@ if __name__ == "__main__":
                                              name=args.name,
                                              period=args.period)
 
-    p = subparsers.add_parser('bdev_set_qd_sampling_period', aliases=['set_bdev_qd_sampling_period'],
+    p = subparsers.add_parser('bdev_set_qd_sampling_period',
                               help="Enable or disable tracking of a bdev's queue depth.")
     p.add_argument('name', help='Blockdev name. Example: Malloc0')
     p.add_argument('period', help='Period with which to poll the block device queue depth in microseconds.'
@@ -1120,7 +1120,7 @@ if __name__ == "__main__":
                                     r_mbytes_per_sec=args.r_mbytes_per_sec,
                                     w_mbytes_per_sec=args.w_mbytes_per_sec)
 
-    p = subparsers.add_parser('bdev_set_qos_limit', aliases=['set_bdev_qos_limit'],
+    p = subparsers.add_parser('bdev_set_qos_limit',
                               help='Set QoS rate limit on a blockdev')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
     p.add_argument('--rw-ios-per-sec',

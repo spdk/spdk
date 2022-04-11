@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 rpc_py=$rootdir/scripts/rpc.py
 
 function bdev_check_claimed() {
-	if [ "$($rpc_py get_bdevs -b "$@" | jq '.[0].claimed')" = "true" ]; then
+	if [ "$($rpc_py bdev_get_bdevs -b "$@" | jq '.[0].claimed')" = "true" ]; then
 		return 0
 	else
 		return 1
@@ -73,7 +73,7 @@ if bdev_check_claimed Malloc1; then
 	exit 1
 fi
 
-status=$($rpc_py get_bdevs)
+status=$($rpc_py bdev_get_bdevs)
 gone=$(echo $status | jq 'map(select(.name == "HotCache")) == []')
 if [[ $gone == false ]]; then
 	echo >&2 "OCF bdev is expected to unregister"
