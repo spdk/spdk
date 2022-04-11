@@ -86,6 +86,61 @@ _vtophys(const void *buf, uint64_t *buf_addr, uint64_t size)
 	return 0;
 }
 
+struct idxd_vtophys_iter {
+	const void	*src;
+	void		*dst;
+	uint64_t	len;
+
+	uint64_t	offset;
+};
+
+static void
+idxd_vtophys_iter_init(struct idxd_vtophys_iter *iter,
+		       const void *src, void *dst, uint64_t len)
+{
+	iter->src = src;
+	iter->dst = dst;
+	iter->len = len;
+	iter->offset = 0;
+}
+
+static uint64_t
+idxd_vtophys_iter_next(struct idxd_vtophys_iter *iter,
+		       uint64_t *src_phys, uint64_t *dst_phys)
+{
+	uint64_t src_off, dst_off, len;
+	const void *src;
+	void *dst;
+
+	src = iter->src + iter->offset;
+	dst = iter->dst + iter->offset;
+
+	if (iter->offset == iter->len) {
+		return 0;
+	}
+
+	len = iter->len - iter->offset;
+
+	src_off = len;
+	*src_phys = spdk_vtophys(src, &src_off);
+	if (*src_phys == SPDK_VTOPHYS_ERROR) {
+		SPDK_ERRLOG("Error translating address\n");
+		return SPDK_VTOPHYS_ERROR;
+	}
+
+	dst_off = len;
+	*dst_phys = spdk_vtophys(dst, &dst_off);
+	if (*dst_phys == SPDK_VTOPHYS_ERROR) {
+		SPDK_ERRLOG("Error translating address\n");
+		return SPDK_VTOPHYS_ERROR;
+	}
+
+	len = spdk_min(src_off, dst_off);
+	iter->offset += len;
+
+	return len;
+}
+
 struct spdk_idxd_io_channel *
 spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 {
@@ -300,14 +355,6 @@ spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 		return -1;
 	}
 
-	/* The idxd library doesn't support UIO at the moment, so fail init
-	 * if the IOMMU is disabled. TODO: remove once driver supports UIO.
-	 */
-	if (spdk_iommu_is_enabled() == false) {
-		SPDK_ERRLOG("The IDXD driver currently requires the IOMMU which is disabled. Please re-enable to use IDXD\n");
-		return -EINVAL;
-	}
-
 	return g_idxd_impl->probe(cb_ctx, attach_cb);
 }
 
@@ -345,6 +392,8 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn, vo
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb_fn;
 	op->batch = NULL;
+	op->parent = NULL;
+	op->count = 1;
 
 	return 0;
 }
@@ -383,6 +432,8 @@ _idxd_prep_batch_cmd(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn,
 	op->cb_arg = cb_arg;
 	op->cb_fn = cb_fn;
 	op->batch = batch;
+	op->parent = NULL;
+	op->count = 1;
 
 	return 0;
 }
@@ -546,54 +597,6 @@ _idxd_flush_batch(struct spdk_idxd_io_channel *chan)
 	return 0;
 }
 
-static inline int
-_idxd_submit_copy_single(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
-			 uint64_t nbytes, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src_addr, dst_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(dst != NULL);
-	assert(src != NULL);
-
-	rc = _idxd_setup_batch(chan);
-	if (rc) {
-		return rc;
-	}
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
-
-	rc = _vtophys(dst, &dst_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_MEMMOVE;
-	desc->src_addr = src_addr;
-	desc->dst_addr = dst_addr;
-	desc->xfer_size = nbytes;
-	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
-
-	return _idxd_flush_batch(chan);
-
-error:
-	chan->batch->index--;
-	return rc;
-}
-
 int
 spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 		      struct iovec *diov, uint32_t diovcnt,
@@ -601,80 +604,73 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 		      int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
+	struct idxd_ops *first_op, *op;
 	void *src, *dst;
 	uint64_t src_addr, dst_addr;
-	int rc;
-	uint64_t len;
-	struct idxd_batch *batch;
+	int rc, count;
+	uint64_t len, seg_len;
 	struct spdk_ioviter iter;
+	struct idxd_vtophys_iter vtophys_iter;
 
 	assert(chan != NULL);
 	assert(diov != NULL);
 	assert(siov != NULL);
 
-	if (diovcnt == 1 && siovcnt == 1) {
-		/* Simple case - copying one buffer to another */
-		if (diov[0].iov_len < siov[0].iov_len) {
-			return -EINVAL;
-		}
-
-		return _idxd_submit_copy_single(chan, diov[0].iov_base,
-						siov[0].iov_base, siov[0].iov_len,
-						flags, cb_fn, cb_arg);
+	rc = _idxd_setup_batch(chan);
+	if (rc) {
+		return rc;
 	}
 
-	if (chan->batch) {
-		/* Close out existing batch */
-		rc = idxd_batch_submit(chan, NULL, NULL);
-		if (rc) {
-			assert(rc == -EBUSY);
-			/* we can't submit the existing transparent batch so reply to the incoming
-			 * op that we are busy so it will try again.
-			 */
-			return -EBUSY;
-		}
-	}
-
-	batch = idxd_batch_create(chan);
-	if (!batch) {
-		return -EBUSY;
-	}
-
+	count = 0;
+	first_op = NULL;
 	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
 	     len > 0;
 	     len = spdk_ioviter_next(&iter, &src, &dst)) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
-		if (rc) {
-			goto err;
-		}
 
-		rc = _vtophys(src, &src_addr, len);
-		if (rc) {
-			goto err;
-		}
+		idxd_vtophys_iter_init(&vtophys_iter, src, dst, len);
 
-		rc = _vtophys(dst, &dst_addr, len);
-		if (rc) {
-			goto err;
-		}
+		while (len > 0) {
+			if (first_op == NULL) {
+				rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
 
-		desc->opcode = IDXD_OPCODE_MEMMOVE;
-		desc->src_addr = src_addr;
-		desc->dst_addr = dst_addr;
-		desc->xfer_size = len;
-		desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+				first_op = op;
+			} else {
+				rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
+
+				first_op->count++;
+				op->parent = first_op;
+			}
+
+			count++;
+
+			src_addr = 0;
+			dst_addr = 0;
+			seg_len = idxd_vtophys_iter_next(&vtophys_iter, &src_addr, &dst_addr);
+			if (seg_len == SPDK_VTOPHYS_ERROR) {
+				rc = -EFAULT;
+				goto error;
+			}
+
+			desc->opcode = IDXD_OPCODE_MEMMOVE;
+			desc->src_addr = src_addr;
+			desc->dst_addr = dst_addr;
+			desc->xfer_size = seg_len;
+			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+
+			len -= seg_len;
+		}
 	}
 
-	rc = idxd_batch_submit(chan, cb_fn, cb_arg);
-	if (rc) {
-		assert(rc == -EBUSY);
-		goto err;
-	}
+	return _idxd_flush_batch(chan);
 
-	return 0;
-err:
-	idxd_batch_cancel(chan, rc);
+error:
+	chan->batch->index -= count;
 	return rc;
 }
 
@@ -685,9 +681,12 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 			  spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
+	struct idxd_ops *first_op, *op;
 	uint64_t src_addr, dst1_addr, dst2_addr;
-	int rc;
+	int rc, count;
+	uint64_t len;
+	uint64_t outer_seg_len, inner_seg_len;
+	struct idxd_vtophys_iter iter_outer, iter_inner;
 
 	assert(chan != NULL);
 	assert(dst1 != NULL);
@@ -699,88 +698,75 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 		return -EINVAL;
 	}
 
-	/* Common prep. */
-	rc = _idxd_prep_command(chan, cb_fn, cb_arg, flags, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
-
-	rc = _vtophys(dst1, &dst1_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
-
-	rc = _vtophys(dst2, &dst2_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_DUALCAST;
-	desc->src_addr = src_addr;
-	desc->dst_addr = dst1_addr;
-	desc->dest2 = dst2_addr;
-	desc->xfer_size = nbytes;
-	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
-
-	/* Submit operation. */
-	_submit_to_hw(chan, op);
-
-	return 0;
-error:
-	STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
-	return rc;
-}
-
-static inline int
-_idxd_submit_compare_single(struct spdk_idxd_io_channel *chan, void *src1, const void *src2,
-			    uint64_t nbytes, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src1_addr, src2_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(src1 != NULL);
-	assert(src2 != NULL);
-
 	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
 	}
 
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
-	if (rc) {
-		return rc;
-	}
+	idxd_vtophys_iter_init(&iter_outer, src, dst1, nbytes);
 
-	rc = _vtophys(src1, &src1_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
+	first_op = NULL;
+	count = 0;
+	while (nbytes > 0) {
+		src_addr = 0;
+		dst1_addr = 0;
+		outer_seg_len = idxd_vtophys_iter_next(&iter_outer, &src_addr, &dst1_addr);
+		if (outer_seg_len == SPDK_VTOPHYS_ERROR) {
+			goto error;
+		}
 
-	rc = _vtophys(src2, &src2_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
+		idxd_vtophys_iter_init(&iter_inner, src, dst2, nbytes);
 
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_COMPARE;
-	desc->src_addr = src1_addr;
-	desc->src2_addr = src2_addr;
-	desc->xfer_size = nbytes;
+		src += outer_seg_len;
+		nbytes -= outer_seg_len;
+
+		while (outer_seg_len > 0) {
+			if (first_op == NULL) {
+				rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
+
+				first_op = op;
+			} else {
+				rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
+
+				first_op->count++;
+				op->parent = first_op;
+			}
+
+			count++;
+
+			src_addr = 0;
+			dst2_addr = 0;
+			inner_seg_len = idxd_vtophys_iter_next(&iter_inner, &src_addr, &dst2_addr);
+			if (inner_seg_len == SPDK_VTOPHYS_ERROR) {
+				rc = -EFAULT;
+				goto error;
+			}
+
+			len = spdk_min(outer_seg_len, inner_seg_len);
+
+			/* Command specific. */
+			desc->opcode = IDXD_OPCODE_DUALCAST;
+			desc->src_addr = src_addr;
+			desc->dst_addr = dst1_addr;
+			desc->dest2 = dst2_addr;
+			desc->xfer_size = len;
+			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+
+			dst1_addr += len;
+			outer_seg_len -= len;
+		}
+	}
 
 	return _idxd_flush_batch(chan);
 
 error:
-	chan->batch->index--;
+	chan->batch->index -= count;
 	return rc;
 }
 
@@ -790,117 +776,74 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 			 struct iovec *siov2, size_t siov2cnt,
 			 int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
+
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
+	struct idxd_ops *first_op, *op;
 	void *src1, *src2;
 	uint64_t src1_addr, src2_addr;
-	int rc;
-	size_t len;
-	struct idxd_batch *batch;
+	int rc, count;
+	uint64_t len, seg_len;
 	struct spdk_ioviter iter;
-
-	if (siov1cnt == 1 && siov2cnt == 1) {
-		/* Simple case - comparing one buffer to another */
-		if (siov1[0].iov_len != siov2[0].iov_len) {
-			return -EINVAL;
-		}
-
-		return _idxd_submit_compare_single(chan, siov1[0].iov_base, siov2[0].iov_base, siov1[0].iov_len,
-						   flags, cb_fn, cb_arg);
-	}
-
-	if (chan->batch) {
-		/* Close out existing batch */
-		rc = idxd_batch_submit(chan, NULL, NULL);
-		if (rc) {
-			assert(rc == -EBUSY);
-			/* we can't submit the existing transparent batch so reply to the incoming
-			 * op that we are busy so it will try again.
-			 */
-			return -EBUSY;
-		}
-	}
-
-	batch = idxd_batch_create(chan);
-	if (!batch) {
-		return -EBUSY;
-	}
-
-	for (len = spdk_ioviter_first(&iter, siov1, siov1cnt, siov2, siov2cnt, &src1, &src2);
-	     len > 0;
-	     len = spdk_ioviter_next(&iter, &src1, &src2)) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
-		if (rc) {
-			goto err;
-		}
-
-		rc = _vtophys(src1, &src1_addr, len);
-		if (rc) {
-			goto err;
-		}
-
-		rc = _vtophys(src2, &src2_addr, len);
-		if (rc) {
-			goto err;
-		}
-
-		desc->opcode = IDXD_OPCODE_COMPARE;
-		desc->src_addr = src1_addr;
-		desc->src2_addr = src2_addr;
-		desc->xfer_size = len;
-	}
-
-	rc = idxd_batch_submit(chan, cb_fn, cb_arg);
-	if (rc) {
-		assert(rc == -EBUSY);
-		goto err;
-	}
-
-	return 0;
-err:
-	idxd_batch_cancel(chan, rc);
-	return rc;
-}
-
-static inline int
-_idxd_submit_fill_single(struct spdk_idxd_io_channel *chan, void *dst, uint64_t fill_pattern,
-			 uint64_t nbytes, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t dst_addr;
-	int rc;
+	struct idxd_vtophys_iter vtophys_iter;
 
 	assert(chan != NULL);
-	assert(dst != NULL);
+	assert(siov1 != NULL);
+	assert(siov2 != NULL);
 
 	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
 	}
 
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
-	if (rc) {
-		return rc;
-	}
+	count = 0;
+	first_op = NULL;
+	for (len = spdk_ioviter_first(&iter, siov1, siov1cnt, siov2, siov2cnt, &src1, &src2);
+	     len > 0;
+	     len = spdk_ioviter_next(&iter, &src1, &src2)) {
 
-	rc = _vtophys(dst, &dst_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
+		idxd_vtophys_iter_init(&vtophys_iter, src1, src2, len);
 
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_MEMFILL;
-	desc->pattern = fill_pattern;
-	desc->dst_addr = dst_addr;
-	desc->xfer_size = nbytes;
-	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+		while (len > 0) {
+			if (first_op == NULL) {
+				rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
+
+				first_op = op;
+			} else {
+				rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
+
+				first_op->count++;
+				op->parent = first_op;
+			}
+
+			count++;
+
+			src1_addr = 0;
+			src2_addr = 0;
+			seg_len = idxd_vtophys_iter_next(&vtophys_iter, &src1_addr, &src2_addr);
+			if (seg_len == SPDK_VTOPHYS_ERROR) {
+				rc = -EFAULT;
+				goto error;
+			}
+
+			desc->opcode = IDXD_OPCODE_COMPARE;
+			desc->src_addr = src1_addr;
+			desc->src2_addr = src2_addr;
+			desc->xfer_size = seg_len;
+
+			len -= seg_len;
+		}
+	}
 
 	return _idxd_flush_batch(chan);
 
 error:
-	chan->batch->index--;
+	chan->batch->index -= count;
 	return rc;
 }
 
@@ -911,107 +854,72 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 		      spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
+	struct idxd_ops *first_op, *op;
 	uint64_t dst_addr;
-	int rc;
+	int rc, count;
+	uint64_t len, seg_len;
+	void *dst;
 	size_t i;
-	struct idxd_batch *batch;
-
-	if (diovcnt == 1) {
-		/* Simple case - filling one buffer */
-		return _idxd_submit_fill_single(chan, diov[0].iov_base, fill_pattern,
-						diov[0].iov_len, flags, cb_fn, cb_arg);
-	}
-
-	if (chan->batch) {
-		/* Close out existing batch */
-		rc = idxd_batch_submit(chan, NULL, NULL);
-		if (rc) {
-			assert(rc == -EBUSY);
-			/* we can't submit the existing transparent batch so reply to the incoming
-			 * op that we are busy so it will try again.
-			 */
-			return -EBUSY;
-		}
-	}
-
-	batch = idxd_batch_create(chan);
-	if (!batch) {
-		return -EBUSY;
-	}
-
-	for (i = 0; i < diovcnt; i++) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
-		if (rc) {
-			goto err;
-		}
-
-		rc = _vtophys(diov[i].iov_base, &dst_addr, diov[i].iov_len);
-		if (rc) {
-			goto err;
-		}
-
-		desc->opcode = IDXD_OPCODE_MEMFILL;
-		desc->pattern = fill_pattern;
-		desc->dst_addr = dst_addr;
-		desc->xfer_size = diov[i].iov_len;
-		desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
-	}
-
-	rc = idxd_batch_submit(chan, cb_fn, cb_arg);
-	if (rc) {
-		assert(rc == -EBUSY);
-		goto err;
-	}
-
-	return 0;
-err:
-	idxd_batch_cancel(chan, rc);
-	return rc;
-}
-
-static inline int
-_idxd_submit_crc32c_single(struct spdk_idxd_io_channel *chan, uint32_t *crc_dst, void *src,
-			   uint32_t seed, uint64_t nbytes, int flags,
-			   spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src_addr;
-	int rc;
 
 	assert(chan != NULL);
-	assert(crc_dst != NULL);
-	assert(src != NULL);
+	assert(diov != NULL);
 
 	rc = _idxd_setup_batch(chan);
 	if (rc) {
 		return rc;
 	}
 
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
-	if (rc) {
-		return rc;
-	}
+	count = 0;
+	first_op = NULL;
+	for (i = 0; i < diovcnt; i++) {
+		len = diov[i].iov_len;
+		dst = diov[i].iov_base;
 
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
+		while (len > 0) {
+			if (first_op == NULL) {
+				rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
 
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-	desc->src_addr = src_addr;
-	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
-	desc->crc32c.seed = seed;
-	desc->xfer_size = nbytes;
-	op->crc_dst = crc_dst;
+				first_op = op;
+			} else {
+				rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
+
+				first_op->count++;
+				op->parent = first_op;
+			}
+
+			count++;
+
+			seg_len = len;
+			dst_addr = spdk_vtophys(dst, &seg_len);
+			if (dst_addr == SPDK_VTOPHYS_ERROR) {
+				SPDK_ERRLOG("Error translating address\n");
+				rc = -EFAULT;
+				goto error;
+			}
+
+			seg_len = spdk_min(seg_len, len);
+
+			desc->opcode = IDXD_OPCODE_MEMFILL;
+			desc->pattern = fill_pattern;
+			desc->dst_addr = dst_addr;
+			desc->xfer_size = seg_len;
+			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+
+			len -= seg_len;
+			dst += seg_len;
+		}
+	}
 
 	return _idxd_flush_batch(chan);
 
 error:
-	chan->batch->index--;
+	chan->batch->index -= count;
 	return rc;
 }
 
@@ -1022,60 +930,74 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 			spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op = NULL;
+	struct idxd_ops *first_op, *op;
 	uint64_t src_addr;
-	int rc;
+	int rc, count;
+	uint64_t len, seg_len;
+	void *src;
 	size_t i;
-	struct idxd_batch *batch;
 	void *prev_crc;
 
-	if (siovcnt == 1) {
-		/* Simple case - crc on one buffer */
-		return _idxd_submit_crc32c_single(chan, crc_dst, siov[0].iov_base,
-						  seed, siov[0].iov_len, flags, cb_fn, cb_arg);
+	assert(chan != NULL);
+	assert(siov != NULL);
+
+	rc = _idxd_setup_batch(chan);
+	if (rc) {
+		return rc;
 	}
 
-	if (chan->batch) {
-		/* Close out existing batch */
-		rc = idxd_batch_submit(chan, NULL, NULL);
-		if (rc) {
-			assert(rc == -EBUSY);
-			/* we can't submit the existing transparent batch so reply to the incoming
-			 * op that we are busy so it will try again.
-			 */
-			return -EBUSY;
-		}
-		chan->batch = NULL;
-	}
-
-	batch = idxd_batch_create(chan);
-	if (!batch) {
-		return -EBUSY;
-	}
-
-	prev_crc = NULL;
+	count = 0;
+	op = NULL;
+	first_op = NULL;
 	for (i = 0; i < siovcnt; i++) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
-		if (rc) {
-			goto err;
-		}
+		len = siov[i].iov_len;
+		src = siov[i].iov_base;
 
-		rc = _vtophys(siov[i].iov_base, &src_addr, siov[i].iov_len);
-		if (rc) {
-			goto err;
-		}
+		while (len > 0) {
+			if (first_op == NULL) {
+				rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
 
-		desc->opcode = IDXD_OPCODE_CRC32C_GEN;
-		desc->src_addr = src_addr;
-		if (i == 0) {
-			desc->crc32c.seed = seed;
-		} else {
-			desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
-			desc->crc32c.addr = (uint64_t)prev_crc;
-		}
+				first_op = op;
+			} else {
+				rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
 
-		desc->xfer_size = siov[i].iov_len;
-		prev_crc = &op->hw.crc32c_val;
+				first_op->count++;
+				op->parent = first_op;
+			}
+
+			count++;
+
+			seg_len = len;
+			src_addr = spdk_vtophys(src, &seg_len);
+			if (src_addr == SPDK_VTOPHYS_ERROR) {
+				SPDK_ERRLOG("Error translating address\n");
+				rc = -EFAULT;
+				goto error;
+			}
+
+			seg_len = spdk_min(seg_len, len);
+
+			desc->opcode = IDXD_OPCODE_CRC32C_GEN;
+			desc->src_addr = src_addr;
+			if (op == first_op) {
+				desc->crc32c.seed = seed;
+			} else {
+				desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
+				desc->crc32c.addr = (uint64_t)prev_crc;
+			}
+
+			desc->xfer_size = seg_len;
+			prev_crc = &op->hw.crc32c_val;
+
+			len -= seg_len;
+			src += seg_len;
+		}
 	}
 
 	/* Only the last op copies the crc to the destination */
@@ -1083,68 +1005,10 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 		op->crc_dst = crc_dst;
 	}
 
-	rc = idxd_batch_submit(chan, cb_fn, cb_arg);
-	if (rc) {
-		assert(rc == -EBUSY);
-		goto err;
-	}
-
-	return 0;
-err:
-	idxd_batch_cancel(chan, rc);
-	return rc;
-}
-
-static inline int
-_idxd_submit_copy_crc32c_single(struct spdk_idxd_io_channel *chan, void *dst, void *src,
-				uint32_t *crc_dst, uint32_t seed, uint64_t nbytes,
-				int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
-{
-	struct idxd_hw_desc *desc;
-	struct idxd_ops *op;
-	uint64_t src_addr, dst_addr;
-	int rc;
-
-	assert(chan != NULL);
-	assert(dst != NULL);
-	assert(src != NULL);
-	assert(crc_dst != NULL);
-
-	rc = _idxd_setup_batch(chan);
-	if (rc) {
-		return rc;
-	}
-
-	/* Common prep. */
-	rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
-	if (rc) {
-		return rc;
-	}
-
-	rc = _vtophys(src, &src_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
-
-	rc = _vtophys(dst, &dst_addr, nbytes);
-	if (rc) {
-		goto error;
-	}
-
-	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_COPY_CRC;
-	desc->dst_addr = dst_addr;
-	desc->src_addr = src_addr;
-	desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
-	desc->flags &= IDXD_CLEAR_CRC_FLAGS;
-	desc->crc32c.seed = seed;
-	desc->xfer_size = nbytes;
-	op->crc_dst = crc_dst;
-
 	return _idxd_flush_batch(chan);
 
 error:
-	chan->batch->index--;
+	chan->batch->index -= count;
 	return rc;
 }
 
@@ -1156,74 +1020,78 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 			     spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	struct idxd_hw_desc *desc;
-	struct idxd_ops *op = NULL;
+	struct idxd_ops *first_op, *op;
 	void *src, *dst;
 	uint64_t src_addr, dst_addr;
-	int rc;
-	uint64_t len;
-	struct idxd_batch *batch;
+	int rc, count;
+	uint64_t len, seg_len;
 	struct spdk_ioviter iter;
+	struct idxd_vtophys_iter vtophys_iter;
 	void *prev_crc;
 
 	assert(chan != NULL);
 	assert(diov != NULL);
 	assert(siov != NULL);
 
-	if (siovcnt == 1 && diovcnt == 1) {
-		/* Simple case - crc on one buffer */
-		return _idxd_submit_copy_crc32c_single(chan, diov[0].iov_base, siov[0].iov_base,
-						       crc_dst, seed, siov[0].iov_len, flags, cb_fn, cb_arg);
+	rc = _idxd_setup_batch(chan);
+	if (rc) {
+		return rc;
 	}
 
-	if (chan->batch) {
-		/* Close out existing batch */
-		rc = idxd_batch_submit(chan, NULL, NULL);
-		if (rc) {
-			assert(rc == -EBUSY);
-			/* we can't submit the existing transparent batch so reply to the incoming
-			 * op that we are busy so it will try again.
-			 */
-			return -EBUSY;
-		}
-	}
-
-	batch = idxd_batch_create(chan);
-	if (!batch) {
-		return -EBUSY;
-	}
-
-	prev_crc = NULL;
+	count = 0;
+	op = NULL;
+	first_op = NULL;
 	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
 	     len > 0;
 	     len = spdk_ioviter_next(&iter, &src, &dst)) {
-		rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
-		if (rc) {
-			goto err;
-		}
 
-		rc = _vtophys(src, &src_addr, len);
-		if (rc) {
-			goto err;
-		}
 
-		rc = _vtophys(dst, &dst_addr, len);
-		if (rc) {
-			goto err;
-		}
+		idxd_vtophys_iter_init(&vtophys_iter, src, dst, len);
 
-		desc->opcode = IDXD_OPCODE_COPY_CRC;
-		desc->dst_addr = dst_addr;
-		desc->src_addr = src_addr;
-		desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
-		if (prev_crc == NULL) {
-			desc->crc32c.seed = seed;
-		} else {
-			desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
-			desc->crc32c.addr = (uint64_t)prev_crc;
-		}
+		while (len > 0) {
+			if (first_op == NULL) {
+				rc = _idxd_prep_batch_cmd(chan, cb_fn, cb_arg, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
 
-		desc->xfer_size = len;
-		prev_crc = &op->hw.crc32c_val;
+				first_op = op;
+			} else {
+				rc = _idxd_prep_batch_cmd(chan, NULL, NULL, flags, &desc, &op);
+				if (rc) {
+					goto error;
+				}
+
+				first_op->count++;
+				op->parent = first_op;
+			}
+
+			count++;
+
+			src_addr = 0;
+			dst_addr = 0;
+			seg_len = idxd_vtophys_iter_next(&vtophys_iter, &src_addr, &dst_addr);
+			if (seg_len == SPDK_VTOPHYS_ERROR) {
+				rc = -EFAULT;
+				goto error;
+			}
+
+			desc->opcode = IDXD_OPCODE_COPY_CRC;
+			desc->dst_addr = dst_addr;
+			desc->src_addr = src_addr;
+			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+			if (op == first_op) {
+				desc->crc32c.seed = seed;
+			} else {
+				desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
+				desc->crc32c.addr = (uint64_t)prev_crc;
+			}
+
+			desc->xfer_size = seg_len;
+			prev_crc = &op->hw.crc32c_val;
+
+			len -= seg_len;
+		}
 	}
 
 	/* Only the last op copies the crc to the destination */
@@ -1231,15 +1099,10 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 		op->crc_dst = crc_dst;
 	}
 
-	rc = idxd_batch_submit(chan, cb_fn, cb_arg);
-	if (rc) {
-		assert(rc == -EBUSY);
-		goto err;
-	}
+	return _idxd_flush_batch(chan);
 
-	return 0;
-err:
-	idxd_batch_cancel(chan, rc);
+error:
+	chan->batch->index -= count;
 	return rc;
 }
 
@@ -1259,7 +1122,7 @@ _dump_sw_error_reg(struct spdk_idxd_io_channel *chan)
 int
 spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 {
-	struct idxd_ops *op, *tmp;
+	struct idxd_ops *op, *tmp, *parent_op;
 	int status = 0;
 	int rc2, rc = 0;
 	void *cb_arg;
@@ -1303,24 +1166,57 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			break;
 		}
 
+		/* TODO: WHAT IF THIS FAILED!? */
 		op->hw.status = 0;
 
-		cb_fn = op->cb_fn;
-		cb_arg = op->cb_arg;
+		assert(op->count > 0);
+		op->count--;
 
-		if (op->batch != NULL) {
-			assert(op->batch->refcnt > 0);
-			op->batch->refcnt--;
+		parent_op = op->parent;
+		if (parent_op != NULL) {
+			assert(parent_op->count > 0);
+			parent_op->count--;
 
-			if (op->batch->refcnt == 0) {
-				_free_batch(op->batch, chan);
+			if (parent_op->count == 0) {
+				cb_fn = parent_op->cb_fn;
+				cb_arg = parent_op->cb_arg;
+
+				assert(parent_op->batch != NULL);
+
+				/*
+				 * Now that parent_op count is 0, we can release its ref
+				 * to its batch. We have not released the ref to the batch
+				 * that the op is pointing to yet, which will be done below.
+				 */
+				parent_op->batch->refcnt--;
+				if (parent_op->batch->refcnt == 0) {
+					_free_batch(parent_op->batch, chan);
+				}
+
+				if (cb_fn) {
+					cb_fn(cb_arg, status);
+				}
 			}
-		} else {
-			STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
 		}
 
-		if (cb_fn) {
-			cb_fn(cb_arg, status);
+		if (op->count == 0) {
+			cb_fn = op->cb_fn;
+			cb_arg = op->cb_arg;
+
+			if (op->batch != NULL) {
+				assert(op->batch->refcnt > 0);
+				op->batch->refcnt--;
+
+				if (op->batch->refcnt == 0) {
+					_free_batch(op->batch, chan);
+				}
+			} else {
+				STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
+			}
+
+			if (cb_fn) {
+				cb_fn(cb_arg, status);
+			}
 		}
 
 		/* reset the status */
