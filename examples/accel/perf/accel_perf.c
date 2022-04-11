@@ -701,6 +701,10 @@ _init_thread(void *arg1)
 	g_workers = worker;
 	pthread_mutex_unlock(&g_workers_lock);
 	worker->ch = spdk_accel_engine_get_io_channel();
+	if (worker->ch == NULL) {
+		fprintf(stderr, "Unable to get an accel channel\n");
+		goto error;
+	}
 
 	TAILQ_INIT(&worker->tasks_pool);
 
@@ -757,7 +761,6 @@ error:
 	free(worker->rnd_data);
 	_free_task_buffers_in_pool(worker);
 	free(worker->task_base);
-	free(worker);
 	spdk_app_stop(-1);
 }
 
