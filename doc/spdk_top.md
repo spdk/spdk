@@ -87,4 +87,9 @@ window allows to select a thread and display thread details pop-up on top of it.
 
 ## Help Window
 
-Help window pop-up can be invoked by pressing H key inside any tab. It contains explanations for each key used inside the spdk_top application.
+Help window pop-up can be invoked by pressing 'h' key inside any tab. It contains explanations for each key used inside the spdk_top application.
+
+## Scheduler Pop-up
+
+Current scheduler information may be displayed with 'g' key inside all tabs. It contains scheduler name and period along with governor
+name.
