@@ -172,10 +172,20 @@ struct vfio_user_nvme_migr_header {
 	uint64_t	nvmf_data_offset;
 	uint64_t	nvmf_data_len;
 
+	/*
+	 * Whether or not shadow doorbells are used in the source. 0 is a valid DMA
+	 * address.
+	 */
+	bool		sdbl;
+
+	/* Shadow doorbell DMA addresses. */
+	uint64_t	shadow_doorbell_buffer;
+	uint64_t	eventidx_buffer;
+
 	/* Reserved memory space for new added fields, the
 	 * field is always at the end of this data structure.
 	 */
-	uint8_t		unused[3356];
+	uint8_t		unused[3336];
 };
 SPDK_STATIC_ASSERT(sizeof(struct vfio_user_nvme_migr_header) == 0x1000, "Incorrect size");
 
@@ -377,6 +387,11 @@ struct nvmf_vfio_user_ctrlr {
 
 	volatile uint32_t			*bar0_doorbells;
 	struct nvmf_vfio_user_shadow_doorbells	*sdbl;
+	/*
+	 * Shadow doorbells PRPs to provide during the stop-and-copy state.
+	 */
+	uint64_t				shadow_doorbell_buffer;
+	uint64_t				eventidx_buffer;
 
 	bool					self_kick_requested;
 };
@@ -2218,6 +2233,9 @@ handle_doorbell_buffer_config(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nv
 		goto out;
 	}
 
+	ctrlr->shadow_doorbell_buffer = prp1;
+	ctrlr->eventidx_buffer = prp2;
+
 	SPDK_DEBUGLOG(nvmf_vfio,
 		      "%s: mapped shadow doorbell buffers [%p, %p) and [%p, %p)\n",
 		      ctrlr_id(ctrlr),
@@ -3000,7 +3018,9 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 }
 
 static void
-vfio_user_ctrlr_dump_migr_data(const char *name, struct vfio_user_nvme_migr_state *migr_data)
+vfio_user_ctrlr_dump_migr_data(const char *name,
+			       struct vfio_user_nvme_migr_state *migr_data,
+			       struct nvmf_vfio_user_shadow_doorbells *sdbl)
 {
 	struct spdk_nvme_registers *regs;
 	struct nvme_migr_sq_state *sq;
@@ -3023,19 +3043,39 @@ vfio_user_ctrlr_dump_migr_data(const char *name, struct vfio_user_nvme_migr_stat
 	SPDK_NOTICELOG("ACQ  0x%"PRIx64"\n", regs->acq);
 
 	SPDK_NOTICELOG("Number of IO Queues %u\n", migr_data->ctrlr_header.num_io_queues);
+
+	if (sdbl != NULL) {
+		SPDK_NOTICELOG("shadow doorbell buffer=%#lx\n",
+			       migr_data->ctrlr_header.shadow_doorbell_buffer);
+		SPDK_NOTICELOG("eventidx buffer=%#lx\n",
+			       migr_data->ctrlr_header.eventidx_buffer);
+	}
+
 	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
 		sq = &migr_data->qps[i].sq;
 		cq = &migr_data->qps[i].cq;
 
 		if (sq->size) {
-			SPDK_NOTICELOG("SQID %u, SQ DOORBELL %u\n", sq->sqid, doorbell_base[i * 2]);
-			SPDK_NOTICELOG("SQ SQID %u, CQID %u, HEAD %u, SIZE %u, DMA ADDR 0x%"PRIx64"\n",
+			SPDK_NOTICELOG("sqid:%u, bar0_doorbell:%u\n", sq->sqid, doorbell_base[i * 2]);
+			if (i > 0 && sdbl != NULL) {
+				SPDK_NOTICELOG("sqid:%u, shadow_doorbell:%u, eventidx:%u\n",
+					       sq->sqid,
+					       sdbl->shadow_doorbells[queue_index(i, false)],
+					       sdbl->eventidxs[queue_index(i, false)]);
+			}
+			SPDK_NOTICELOG("SQ sqid:%u, cqid:%u, sqhead:%u, size:%u, dma_addr:0x%"PRIx64"\n",
 				       sq->sqid, sq->cqid, sq->head, sq->size, sq->dma_addr);
 		}
 
 		if (cq->size) {
-			SPDK_NOTICELOG("CQID %u, CQ DOORBELL %u\n", cq->cqid, doorbell_base[i * 2 + 1]);
-			SPDK_NOTICELOG("CQ CQID %u, PHASE %u, TAIL %u, SIZE %u, IV %u, IEN %u, DMA ADDR 0x%"PRIx64"\n",
+			SPDK_NOTICELOG("cqid:%u, bar0_doorbell:%u\n", cq->cqid, doorbell_base[i * 2 + 1]);
+			if (i > 0 && sdbl != NULL) {
+				SPDK_NOTICELOG("cqid:%u, shadow_doorbell:%u, eventidx:%u\n",
+					       cq->cqid,
+					       sdbl->shadow_doorbells[queue_index(i, true)],
+					       sdbl->eventidxs[queue_index(i, true)]);
+			}
+			SPDK_NOTICELOG("CQ cqid:%u, phase:%u, cqtail:%u, size:%u, iv:%u, ien:%u, dma_addr:0x%"PRIx64"\n",
 				       cq->cqid, cq->phase, cq->tail, cq->size, cq->iv, cq->ien, cq->dma_addr);
 		}
 	}
@@ -3184,11 +3224,18 @@ vfio_user_migr_ctrlr_save_data(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	migr_state.ctrlr_header.bar_len[VFU_PCI_DEV_CFG_REGION_IDX] = NVME_REG_CFG_SIZE;
 	memcpy(data_ptr, &migr_state.cfg, NVME_REG_CFG_SIZE);
 
+	/* copy shadow doorbells */
+	if (vu_ctrlr->sdbl != NULL) {
+		migr_state.ctrlr_header.sdbl = true;
+		migr_state.ctrlr_header.shadow_doorbell_buffer = vu_ctrlr->shadow_doorbell_buffer;
+		migr_state.ctrlr_header.eventidx_buffer = vu_ctrlr->eventidx_buffer;
+	}
+
 	/* Copy nvme migration header finally */
 	memcpy(endpoint->migr_data, &migr_state.ctrlr_header, sizeof(struct vfio_user_nvme_migr_header));
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
-		vfio_user_ctrlr_dump_migr_data("SAVE", &migr_state);
+		vfio_user_ctrlr_dump_migr_data("SAVE", &migr_state, vu_ctrlr->sdbl);
 	}
 }
 
@@ -3235,7 +3282,7 @@ vfio_user_migr_ctrlr_construct_qps(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 	int ret;
 
 	if (SPDK_DEBUGLOG_FLAG_ENABLED("nvmf_vfio")) {
-		vfio_user_ctrlr_dump_migr_data("RESUME", migr_state);
+		vfio_user_ctrlr_dump_migr_data("RESUME", migr_state, vu_ctrlr->sdbl);
 	}
 
 	/* restore submission queues */
@@ -3354,6 +3401,25 @@ vfio_user_migr_ctrlr_restore(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 		return rc;
 	}
 
+	/* restore shadow doorbells */
+	if (migr_state.ctrlr_header.sdbl) {
+		struct nvmf_vfio_user_shadow_doorbells *sdbl;
+		sdbl = map_sdbl(vu_ctrlr->endpoint->vfu_ctx,
+				migr_state.ctrlr_header.shadow_doorbell_buffer,
+				migr_state.ctrlr_header.eventidx_buffer,
+				memory_page_size(vu_ctrlr));
+		if (sdbl == NULL) {
+			SPDK_ERRLOG("%s: failed to re-map shadow doorbell buffers\n",
+				    ctrlr_id(vu_ctrlr));
+			return -1;
+		}
+
+		vu_ctrlr->shadow_doorbell_buffer = migr_state.ctrlr_header.shadow_doorbell_buffer;
+		vu_ctrlr->eventidx_buffer = migr_state.ctrlr_header.eventidx_buffer;
+
+		SWAP(vu_ctrlr->sdbl, sdbl);
+	}
+
 	rc = vfio_user_migr_ctrlr_construct_qps(vu_ctrlr, &migr_state);
 	if (rc) {
 		return rc;
@@ -3403,6 +3469,20 @@ vfio_user_migr_ctrlr_enable_sqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 {
 	uint32_t i;
 	struct nvmf_vfio_user_sq *sq;
+
+	/* The Admin queue (qid: 0) does not ever use shadow doorbells. */
+
+	if (vu_ctrlr->sqs[0] != NULL) {
+		vu_ctrlr->sqs[0]->dbl_tailp = vu_ctrlr->bar0_doorbells +
+					      queue_index(0, false);
+	}
+
+	if (vu_ctrlr->cqs[0] != NULL) {
+		vu_ctrlr->cqs[0]->dbl_headp = vu_ctrlr->bar0_doorbells +
+					      queue_index(0, true);
+	}
+
+	vfio_user_ctrlr_switch_doorbells(vu_ctrlr, vu_ctrlr->sdbl != NULL);
 
 	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
 		sq = vu_ctrlr->sqs[i];
@@ -3479,6 +3559,8 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 			if (ret) {
 				break;
 			}
+
+			vfio_user_ctrlr_switch_doorbells(vu_ctrlr, false);
 			vfio_user_migr_ctrlr_enable_sqs(vu_ctrlr);
 			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 		} else {
