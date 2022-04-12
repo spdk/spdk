@@ -60,7 +60,7 @@ spdk_idxd_get_socket(struct spdk_idxd_device *idxd)
 static inline void
 _submit_to_hw(struct spdk_idxd_io_channel *chan, struct idxd_ops *op)
 {
-	TAILQ_INSERT_TAIL(&chan->ops_outstanding, op, link);
+	STAILQ_INSERT_TAIL(&chan->ops_outstanding, op, link);
 	movdir64b(chan->portal + chan->portal_offset, op->desc);
 	chan->portal_offset = (chan->portal_offset + chan->idxd->chan_per_device * PORTAL_STRIDE) &
 			      PORTAL_MASK;
@@ -104,9 +104,9 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	}
 
 	chan->idxd = idxd;
-	TAILQ_INIT(&chan->ops_pool);
+	STAILQ_INIT(&chan->ops_pool);
 	TAILQ_INIT(&chan->batch_pool);
-	TAILQ_INIT(&chan->ops_outstanding);
+	STAILQ_INIT(&chan->ops_outstanding);
 
 	/* Assign WQ, portal */
 	pthread_mutex_lock(&idxd->num_channels_lock);
@@ -142,7 +142,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	}
 
 	for (i = 0; i < num_descriptors; i++) {
-		TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+		STAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 		op->desc = desc;
 		rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct idxd_hw_comp_record));
 		if (rc) {
@@ -326,13 +326,13 @@ _idxd_prep_command(struct spdk_idxd_io_channel *chan, spdk_idxd_req_cb cb_fn, vo
 	struct idxd_ops *op;
 	uint64_t comp_addr;
 
-	if (!TAILQ_EMPTY(&chan->ops_pool)) {
-		op = *_op = TAILQ_FIRST(&chan->ops_pool);
+	if (!STAILQ_EMPTY(&chan->ops_pool)) {
+		op = *_op = STAILQ_FIRST(&chan->ops_pool);
 		desc = *_desc = op->desc;
 		comp_addr = desc->completion_addr;
 		memset(desc, 0, sizeof(*desc));
 		desc->completion_addr = comp_addr;
-		TAILQ_REMOVE(&chan->ops_pool, op, link);
+		STAILQ_REMOVE_HEAD(&chan->ops_pool, link);
 	} else {
 		/* The application needs to handle this, violation of flow control */
 		return -EBUSY;
@@ -494,8 +494,8 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan,
 
 		/* Add the batch elements completion contexts to the outstanding list to be polled. */
 		for (i = 0 ; i < batch->index; i++) {
-			TAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
-					  link);
+			STAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
+					   link);
 		}
 		batch->index = UINT8_MAX;
 	}
@@ -732,7 +732,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 
 	return 0;
 error:
-	TAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
 	return rc;
 }
 
@@ -1266,7 +1266,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 
 	assert(chan != NULL);
 
-	TAILQ_FOREACH_SAFE(op, &chan->ops_outstanding, link, tmp) {
+	STAILQ_FOREACH_SAFE(op, &chan->ops_outstanding, link, tmp) {
 		if (!IDXD_COMPLETION(op->hw.status)) {
 			/*
 			 * oldest locations are at the head of the list so if
@@ -1276,7 +1276,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			break;
 		}
 
-		TAILQ_REMOVE(&chan->ops_outstanding, op, link);
+		STAILQ_REMOVE_HEAD(&chan->ops_outstanding, link);
 		rc++;
 
 		if (spdk_unlikely(IDXD_FAILURE(op->hw.status))) {
@@ -1307,9 +1307,9 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 		op->hw.status = 0;
 		if (op->desc->opcode == IDXD_OPCODE_BATCH) {
 			_free_batch(op->batch, chan);
-			TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
+			STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
 		} else if (!op->batch) {
-			TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
+			STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
 		}
 
 		if (cb_fn) {
