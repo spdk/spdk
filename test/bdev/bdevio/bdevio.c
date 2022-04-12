@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -950,15 +951,17 @@ blockdev_test_reset(void)
 {
 	struct bdevio_request req;
 	struct io_target *target;
+	bool reset_supported;
 
 	target = g_current_io_target;
 	req.target = target;
 
+	reset_supported = spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_RESET);
 	g_completion_success = false;
 
 	execute_spdk_function(__blockdev_reset, &req);
 
-	CU_ASSERT_EQUAL(g_completion_success, true);
+	CU_ASSERT_EQUAL(g_completion_success, reset_supported);
 }
 
 struct bdevio_passthrough_request {
