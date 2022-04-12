@@ -1267,51 +1267,7 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 	assert(chan != NULL);
 
 	TAILQ_FOREACH_SAFE(op, &chan->ops_outstanding, link, tmp) {
-		if (IDXD_COMPLETION(op->hw.status)) {
-
-			TAILQ_REMOVE(&chan->ops_outstanding, op, link);
-			rc++;
-
-			if (spdk_unlikely(IDXD_FAILURE(op->hw.status))) {
-				status = -EINVAL;
-				_dump_sw_error_reg(chan);
-			}
-
-			switch (op->desc->opcode) {
-			case IDXD_OPCODE_BATCH:
-				SPDK_DEBUGLOG(idxd, "Complete batch %p\n", op->batch);
-				break;
-			case IDXD_OPCODE_CRC32C_GEN:
-			case IDXD_OPCODE_COPY_CRC:
-				if (spdk_likely(status == 0 && op->crc_dst != NULL)) {
-					*op->crc_dst = op->hw.crc32c_val;
-					*op->crc_dst ^= ~0;
-				}
-				break;
-			case IDXD_OPCODE_COMPARE:
-				if (spdk_likely(status == 0)) {
-					status = op->hw.result;
-				}
-				break;
-			}
-
-			cb_fn = op->cb_fn;
-			cb_arg = op->cb_arg;
-			op->hw.status = 0;
-			if (op->desc->opcode == IDXD_OPCODE_BATCH) {
-				_free_batch(op->batch, chan);
-				TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
-			} else if (!op->batch) {
-				TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
-			}
-
-			if (cb_fn) {
-				cb_fn(cb_arg, status);
-			}
-
-			/* reset the status */
-			status = 0;
-		} else {
+		if (!IDXD_COMPLETION(op->hw.status)) {
 			/*
 			 * oldest locations are at the head of the list so if
 			 * we've polled a location that hasn't completed, bail
@@ -1319,6 +1275,49 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			 */
 			break;
 		}
+
+		TAILQ_REMOVE(&chan->ops_outstanding, op, link);
+		rc++;
+
+		if (spdk_unlikely(IDXD_FAILURE(op->hw.status))) {
+			status = -EINVAL;
+			_dump_sw_error_reg(chan);
+		}
+
+		switch (op->desc->opcode) {
+		case IDXD_OPCODE_BATCH:
+			SPDK_DEBUGLOG(idxd, "Complete batch %p\n", op->batch);
+			break;
+		case IDXD_OPCODE_CRC32C_GEN:
+		case IDXD_OPCODE_COPY_CRC:
+			if (spdk_likely(status == 0 && op->crc_dst != NULL)) {
+				*op->crc_dst = op->hw.crc32c_val;
+				*op->crc_dst ^= ~0;
+			}
+			break;
+		case IDXD_OPCODE_COMPARE:
+			if (spdk_likely(status == 0)) {
+				status = op->hw.result;
+			}
+			break;
+		}
+
+		cb_fn = op->cb_fn;
+		cb_arg = op->cb_arg;
+		op->hw.status = 0;
+		if (op->desc->opcode == IDXD_OPCODE_BATCH) {
+			_free_batch(op->batch, chan);
+			TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
+		} else if (!op->batch) {
+			TAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
+		}
+
+		if (cb_fn) {
+			cb_fn(cb_arg, status);
+		}
+
+		/* reset the status */
+		status = 0;
 	}
 
 	/* Submit any built-up batch */
