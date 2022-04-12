@@ -1,0 +1,23 @@
+{
+	global:
+
+	# public functions from vfu_target.h
+	spdk_vfu_init;
+	spdk_vfu_fini;
+	spdk_vfu_set_socket_path;
+	spdk_vfu_register_endpoint_ops;
+	spdk_vfu_create_endpoint;
+	spdk_vfu_delete_endpoint;
+	spdk_vfu_get_endpoint_id;
+	spdk_vfu_get_endpoint_name;
+	spdk_vfu_get_endpoint_by_name;
+	spdk_vfu_get_vfu_ctx;
+	spdk_vfu_get_endpoint_private;
+	spdk_vfu_endpoint_get_pci_config;
+	spdk_vfu_map_one;
+	spdk_vfu_unmap_sg;
+	spdk_vfu_endpoint_msix_enabled;
+	spdk_vfu_endpoint_intx_enabled;
+
+	local: *;
+};

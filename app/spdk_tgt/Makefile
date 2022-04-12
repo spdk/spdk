@@ -24,6 +24,9 @@ SPDK_LIB_LIST += event_nbd
 ifeq ($(CONFIG_VHOST),y)
 SPDK_LIB_LIST += event_vhost_blk event_vhost_scsi
 endif
+ifeq ($(CONFIG_VFIO_USER),y)
+SPDK_LIB_LIST += event_vfu_tgt
+endif
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

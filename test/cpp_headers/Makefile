@@ -11,6 +11,7 @@ HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
 # On Linux, queue_extras.h is pulled in with queue.h,
 # on FreeBSD, we want to ignore queue_extras.h entirely.
 HEADERS := $(filter-out $(SPDK_ROOT_DIR)/include/spdk/queue_extras.h,$(HEADERS))
+HEADERS := $(filter-out $(SPDK_ROOT_DIR)/include/spdk/vfu_target.h,$(HEADERS))
 CXX_SRCS := $(patsubst %.h,%.cpp,$(notdir $(HEADERS)))
 
 install : all

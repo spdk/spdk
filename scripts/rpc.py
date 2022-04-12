@@ -2616,6 +2616,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help='How often the hotplug is processed for insert and remove events', type=int)
     p.set_defaults(func=bdev_virtio_blk_set_hotplug)
 
+    # vfio-user target
+    def vfu_tgt_set_base_path(args):
+        rpc.vfio_user.vfu_tgt_set_base_path(args.client, path=args.path)
+
+    p = subparsers.add_parser('vfu_tgt_set_base_path', help='Set socket base path.')
+    p.add_argument('path', help='socket base path')
+    p.set_defaults(func=vfu_tgt_set_base_path)
+
     # accel_fw
     def accel_get_opc_assignments(args):
         print_dict(rpc.accel.accel_get_opc_assignments(args.client))
