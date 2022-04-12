@@ -45,7 +45,7 @@ def _fuzz_vhost_create_dev(client, socket, is_blk, use_bogus_buffer, use_valid_b
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='SPDK RPC command line interface. NOTE: spdk/scripts/ is expected in PYTHONPATH')
+        description='SPDK RPC command line interface. NOTE: spdk/python is expected in PYTHONPATH')
     parser.add_argument('-s', dest='server_addr',
                         help='RPC domain socket path or IP address', default='/var/tmp/spdk.sock')
     parser.add_argument('-p', dest='port',

@@ -370,18 +370,18 @@ Run the script on the NVMe-oF target system:
 
 ``` ~sh
 cd spdk
-sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py
+sudo PYTHONPATH=$PYTHONPATH:$PWD/python scripts/perf/nvmf/run_nvmf.py
 ```
 
 By default script uses config.json configuration file in the scripts/perf/nvmf
 directory. You can specify a different configuration file at runtime as below:
 
 ``` ~sh
-sudo PYTHONPATH=$PYTHONPATH:$PWD/scripts scripts/perf/nvmf/run_nvmf.py -c /path/to/config.json
+sudo PYTHONPATH=$PYTHONPATH:$PWD/python scripts/perf/nvmf/run_nvmf.py -c /path/to/config.json
 ```
 
 PYTHONPATH environment variable is needed because script uses SPDK-local Python
-modules. If you'd like to get rid of `PYTHONPATH=$PYTHONPATH:$PWD/scripts`
+modules. If you'd like to get rid of `PYTHONPATH=$PYTHONPATH:$PWD/python`
 you need to modify your environment so that Python interpreter is aware of
 `spdk/scripts` directory.
 

@@ -440,7 +440,7 @@ function run_bdevperf() {
 		sleep 3
 	fi
 
-	PYTHONPATH=$PYTHONPATH:$rootdir/scripts $bdevperf_rpc -s "$rpc_socket" -t $((RUNTIME + 10)) perform_tests
+	PYTHONPATH=$PYTHONPATH:$rootdir/python $bdevperf_rpc -s "$rpc_socket" -t $((RUNTIME + 10)) perform_tests
 
 	# Using "-z" option causes bdevperf to NOT exit automatically after running the test,
 	# so we need to stop it ourselves.

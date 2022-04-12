@@ -9,8 +9,8 @@ try:
     from spdk.rpc.client import print_dict, JSONRPCException
     import spdk.rpc as rpc
 except ImportError:
-    print("SPDK RPC library missing. Please add spdk/scripts/ directory to PYTHONPATH:")
-    print("'export PYTHONPATH=$PYTHONPATH:./spdk/scripts/'")
+    print("SPDK RPC library missing. Please add spdk/python directory to PYTHONPATH:")
+    print("'export PYTHONPATH=$PYTHONPATH:spdk/python'")
     exit(1)
 
 try:
@@ -38,7 +38,7 @@ def perform_tests_func(client):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='SPDK RPC command line interface. NOTE: spdk/scripts/ is expected in PYTHONPATH')
+        description='SPDK RPC command line interface. NOTE: spdk/python is expected in PYTHONPATH')
     parser.add_argument('-s', dest='server_addr',
                         help='RPC domain socket path or IP address', default='/var/tmp/spdk.sock')
     parser.add_argument('-p', dest='port',
