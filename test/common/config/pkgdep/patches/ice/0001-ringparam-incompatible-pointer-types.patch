@@ -1,0 +1,31 @@
+Fix incompatible-pointer-types error raised due to changes in more recent kernels (5.17)
+in ringparam API.
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7462494408cd3de8b0bc1e79670bf213288501d0
+---
+ src/ice_ethtool.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/ice_ethtool.c b/src/ice_ethtool.c
+index f855968..d92f67b 100644
+--- a/src/ice_ethtool.c
++++ b/src/ice_ethtool.c
+@@ -4511,7 +4511,7 @@ ice_get_rxnfc(struct net_device *netdev, struct ethtool_rxnfc *cmd,
+ }
+ 
+ static void
+-ice_get_ringparam(struct net_device *netdev, struct ethtool_ringparam *ring)
++ice_get_ringparam(struct net_device *netdev, struct ethtool_ringparam *ring, struct kernel_ethtool_ringparam __maybe_unused *ker, struct netlink_ext_ack __maybe_unused *ext_ack)
+ {
+ 	struct ice_netdev_priv *np = netdev_priv(netdev);
+ 	struct ice_vsi *vsi = np->vsi;
+@@ -4529,7 +4529,7 @@ ice_get_ringparam(struct net_device *netdev, struct ethtool_ringparam *ring)
+ }
+ 
+ static int
+-ice_set_ringparam(struct net_device *netdev, struct ethtool_ringparam *ring)
++ice_set_ringparam(struct net_device *netdev, struct ethtool_ringparam *ring, struct kernel_ethtool_ringparam __maybe_unused *ker, struct netlink_ext_ack __maybe_unused *ext_ack)
+ {
+ 	struct ice_ring *tx_rings = NULL, *rx_rings = NULL;
+ 	struct ice_netdev_priv *np = netdev_priv(netdev);
+-- 
