@@ -5760,10 +5760,13 @@ bdev_io_complete(void *ctx)
 			     bdev_io->internal.caller_ctx);
 }
 
+static void bdev_destroy_cb(void *io_device);
+
 static void
 bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = bdev_io->bdev;
 
 	if (bdev_io->u.reset.ch_ref != NULL) {
 		spdk_put_io_channel(bdev_io->u.reset.ch_ref);
@@ -5771,6 +5774,11 @@ bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 	}
 
 	bdev_io_complete(bdev_io);
+
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING &&
+	    TAILQ_EMPTY(&bdev->internal.open_descs)) {
+		spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
+	}
 }
 
 static void
@@ -6243,6 +6251,13 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 		bdev_alias_del(bdev, uuid, bdev_name_del_unsafe);
 
 		spdk_notify_send("bdev_unregister", spdk_bdev_get_name(bdev));
+
+		if (bdev->internal.reset_in_progress != NULL) {
+			/* If reset is in progress, let the completion callback for reset
+			 * unregister the bdev.
+			 */
+			rc = -EBUSY;
+		}
 	}
 
 	return rc;

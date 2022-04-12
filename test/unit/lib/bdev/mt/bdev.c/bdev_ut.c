@@ -204,7 +204,6 @@ stub_complete_io(void *io_target, uint32_t num_to_complete)
 		ch->avail_cnt++;
 		num_completed++;
 	}
-
 	spdk_put_io_channel(_ch);
 	return num_completed;
 }
@@ -1983,6 +1982,73 @@ lock_lba_range_then_submit_io(void)
 	teardown_test();
 }
 
+/* spdk_bdev_reset() freezes and unfreezes I/O channels by using spdk_for_each_channel().
+ * spdk_bdev_unregister() calls spdk_io_device_unregister() in the end. However
+ * spdk_io_device_unregister() fails if it is called while executing spdk_for_each_channel().
+ * Hence, in this case, spdk_io_device_unregister() is deferred until spdk_bdev_reset()
+ * completes. Test this behavior.
+ */
+static void
+unregister_during_reset(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	bool done_reset = false, done_unregister = false;
+	int rc;
+
+	setup_test();
+	set_thread(0);
+
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	SPDK_CU_ASSERT_FATAL(io_ch[0] != NULL);
+
+	set_thread(1);
+
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	SPDK_CU_ASSERT_FATAL(io_ch[1] != NULL);
+
+	set_thread(0);
+
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
+
+	rc = spdk_bdev_reset(g_desc, io_ch[0], reset_done, &done_reset);
+	CU_ASSERT(rc == 0);
+
+	set_thread(0);
+
+	poll_thread_times(0, 1);
+
+	spdk_bdev_close(g_desc);
+	spdk_bdev_unregister(&g_bdev.bdev, _bdev_unregistered, &done_unregister);
+
+	CU_ASSERT(done_reset == false);
+	CU_ASSERT(done_unregister == false);
+
+	poll_threads();
+
+	stub_complete_io(g_bdev.io_target, 0);
+
+	poll_threads();
+
+	CU_ASSERT(done_reset == true);
+	CU_ASSERT(done_unregister == false);
+
+	spdk_put_io_channel(io_ch[0]);
+
+	set_thread(1);
+
+	spdk_put_io_channel(io_ch[1]);
+
+	poll_threads();
+
+	CU_ASSERT(done_unregister == true);
+
+	/* Restore the original g_bdev so that we can use teardown_test(). */
+	set_thread(0);
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
+	spdk_bdev_open_ext("ut_bdev", true, _bdev_event_cb, NULL, &g_desc);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2009,6 +2075,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_histograms_mt);
 	CU_ADD_TEST(suite, bdev_set_io_timeout_mt);
 	CU_ADD_TEST(suite, lock_lba_range_then_submit_io);
+	CU_ADD_TEST(suite, unregister_during_reset);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
