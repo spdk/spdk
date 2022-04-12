@@ -27,6 +27,7 @@ DEPDIRS-dma := log
 DEPDIRS-trace_parser := log
 ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-vfio_user := log
+DEPDIRS-vfu_tgt := log util thread $(JSON_LIBS)
 endif
 
 DEPDIRS-conf := log util
@@ -158,3 +159,4 @@ DEPDIRS-event_iscsi := init iscsi event_scheduler event_scsi event_sock
 DEPDIRS-event_vhost_blk := init vhost
 DEPDIRS-event_vhost_scsi := init vhost event_scheduler event_scsi
 DEPDIRS-event_sock := init sock
+DEPDIRS-event_vfu_tgt := init vfu_tgt

@@ -7973,6 +7973,43 @@ crdt1                   | Optional | number      | Command Retry Delay Time 1
 crdt2                   | Optional | number      | Command Retry Delay Time 2
 crdt3                   | Optional | number      | Command Retry Delay Time 3
 
+## Vfio-user Target
+
+### vfu_tgt_set_base_path {#rpc_vfu_tgt_set_base_path}
+
+Set base path of Unix Domain socket file.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+path                    | Required | string      | Base path
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "path": "/var/run/vfu_tgt"
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_tgt_set_base_path",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
