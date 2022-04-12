@@ -918,6 +918,12 @@ _req_pdu_write_done(void *req, int err)
 	assert(tcp_req->pdu_in_use);
 	tcp_req->pdu_in_use = false;
 
+	/* If the request is in a completed state, we're waiting for write completion to free it */
+	if (spdk_unlikely(tcp_req->state == TCP_REQUEST_STATE_COMPLETED)) {
+		nvmf_tcp_request_free(tcp_req);
+		return;
+	}
+
 	if (spdk_unlikely(err != 0)) {
 		nvmf_tcp_qpair_disconnect(tqpair);
 		return;
@@ -2859,6 +2865,18 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			break;
 		case TCP_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_COMPLETED, 0, 0, (uintptr_t)tcp_req, tqpair);
+			/* If there's an outstanding PDU sent to the host, the request is completed
+			 * due to the qpair being disconnected.  We must delay the completion until
+			 * that write is done to avoid freeing the request twice. */
+			if (spdk_unlikely(tcp_req->pdu_in_use)) {
+				SPDK_DEBUGLOG(nvmf_tcp, "Delaying completion due to outstanding "
+					      "write on req=%p\n", tcp_req);
+				/* This can only happen for zcopy requests */
+				assert(spdk_nvmf_request_using_zcopy(&tcp_req->req));
+				assert(tqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE);
+				break;
+			}
+
 			if (tcp_req->req.data_from_pool) {
 				spdk_nvmf_request_free_buffers(&tcp_req->req, group, transport);
 			} else if (spdk_unlikely(tcp_req->has_in_capsule_data &&
