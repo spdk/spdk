@@ -40,6 +40,7 @@
 #include <rte_vhost.h>
 
 #include "spdk_internal/vhost_user.h"
+#include "spdk/bdev.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/rpc.h"
@@ -525,5 +526,24 @@ int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 typedef void (*vhost_fini_cb)(void *ctx);
 void vhost_user_fini(vhost_fini_cb vhost_cb);
+
+struct spdk_vhost_blk_task {
+	struct spdk_bdev_io *bdev_io;
+
+	volatile uint8_t *status;
+
+	/* for io wait */
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+	struct spdk_io_channel *bdev_io_wait_ch;
+	struct spdk_vhost_dev *bdev_io_wait_vdev;
+
+	/** Number of bytes that were written. */
+	uint32_t used_len;
+	uint16_t iovcnt;
+	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
+
+	/** Size of whole payload in bytes */
+	uint32_t payload_size;
+};
 
 #endif /* SPDK_VHOST_INTERNAL_H */
