@@ -209,6 +209,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		fi
 
 		run_test "nvme_rpc" test/nvme/nvme_rpc.sh
+		run_test "nvme_rpc_timeouts" test/nvme/nvme_rpc_timeouts.sh
 		# Only test hotplug without ASAN enabled. Since if it is
 		# enabled, it catches SEGV earlier than our handler which
 		# breaks the hotplug logic.
