@@ -38,7 +38,9 @@
 
 #include "reduce/reduce.c"
 #include "spdk_internal/mock.h"
+#define UNIT_TEST_NO_VTOPHYS
 #include "common/lib/test_env.c"
+#undef UNIT_TEST_NO_VTOPHYS
 
 static struct spdk_reduce_vol *g_vol;
 static int g_reduce_errno;
@@ -52,6 +54,23 @@ static char *g_decomp_buf;
 static int g_decompressed_len;
 
 #define TEST_MD_PATH "/tmp"
+
+uint64_t
+spdk_vtophys(const void *buf, uint64_t *size)
+{
+	/* add + 1 to buf addr for cases where buf is the start of the page, that will give us correct end of the page */
+	const uint8_t *page_2mb_end = (const uint8_t *)SPDK_ALIGN_CEIL((uintptr_t)buf + 1, VALUE_2MB);
+	uint64_t bytes_to_page_end = page_2mb_end - (const uint8_t *)buf;
+	uint64_t _size;
+
+	if (*size) {
+		_size = *size;
+		_size = spdk_min(_size, bytes_to_page_end);
+		*size = _size;
+	}
+
+	return (uintptr_t)buf;
+}
 
 enum ut_reduce_bdev_io_type {
 	UT_REDUCE_IO_READV = 1,
@@ -1735,6 +1754,30 @@ static void test_reduce_decompress_chunk(void)
 	CU_ASSERT(TAILQ_FIRST(&vol.free_requests) == &req);
 }
 
+static void test_allocate_vol_requests(void)
+{
+	struct spdk_reduce_vol *vol;
+	/* include chunk_sizes which are not power of 2 */
+	uint32_t chunk_sizes[] = {8192, 8320, 16384, 16416, 32768};
+	uint32_t io_unit_sizes[] = {512, 520, 4096, 4104, 4096};
+	uint32_t i;
+
+	for (i = 0; i < 4; i++) {
+		vol = calloc(1, sizeof(*vol));
+		SPDK_CU_ASSERT_FATAL(vol);
+
+		vol->params.chunk_size = chunk_sizes[i];
+		vol->params.logical_block_size = io_unit_sizes[i];
+		vol->params.backing_io_unit_size = io_unit_sizes[i];
+		vol->backing_io_units_per_chunk = vol->params.chunk_size / vol->params.backing_io_unit_size;
+		vol->logical_blocks_per_chunk = vol->params.chunk_size / vol->params.logical_block_size;
+
+		CU_ASSERT(_validate_vol_params(&vol->params) == 0);
+		CU_ASSERT(_allocate_vol_requests(vol) == 0);
+		_init_load_cleanup(vol, NULL);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1761,6 +1804,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, compress_algorithm);
 	CU_ADD_TEST(suite, test_prepare_compress_chunk);
 	CU_ADD_TEST(suite, test_reduce_decompress_chunk);
+	CU_ADD_TEST(suite, test_allocate_vol_requests);
 
 	g_unlink_path = g_path;
 	g_unlink_callback = unlink_cb;
