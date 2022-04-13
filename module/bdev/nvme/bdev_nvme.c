@@ -3476,6 +3476,160 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
+}
+
+struct bdev_nvme_set_preferred_path_ctx {
+	struct spdk_bdev_desc *desc;
+	struct nvme_ns *nvme_ns;
+	bdev_nvme_set_preferred_path_cb cb_fn;
+	void *cb_arg;
+};
+
+static void
+bdev_nvme_set_preferred_path_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct bdev_nvme_set_preferred_path_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	assert(ctx != NULL);
+	assert(ctx->desc != NULL);
+	assert(ctx->cb_fn != NULL);
+
+	spdk_bdev_close(ctx->desc);
+
+	ctx->cb_fn(ctx->cb_arg, status);
+
+	free(ctx);
+}
+
+static void
+_bdev_nvme_set_preferred_path(struct spdk_io_channel_iter *i)
+{
+	struct bdev_nvme_set_preferred_path_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
+	struct nvme_io_path *io_path, *prev;
+
+	prev = NULL;
+	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+		if (io_path->nvme_ns == ctx->nvme_ns) {
+			break;
+		}
+		prev = io_path;
+	}
+
+	if (io_path != NULL && prev != NULL) {
+		STAILQ_REMOVE_AFTER(&nbdev_ch->io_path_list, prev, stailq);
+		STAILQ_INSERT_HEAD(&nbdev_ch->io_path_list, io_path, stailq);
+
+		/* We can set io_path to nbdev_ch->current_io_path directly here.
+		 * However, it needs to be conditional. To simplify the code,
+		 * just clear nbdev_ch->current_io_path and let find_io_path()
+		 * fill it.
+		 */
+		nbdev_ch->current_io_path = NULL;
+	}
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static struct nvme_ns *
+bdev_nvme_set_preferred_ns(struct nvme_bdev *nbdev, uint16_t cntlid)
+{
+	struct nvme_ns *nvme_ns, *prev;
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	prev = NULL;
+	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
+		cdata = spdk_nvme_ctrlr_get_data(nvme_ns->ctrlr->ctrlr);
+
+		if (cdata->cntlid == cntlid) {
+			break;
+		}
+		prev = nvme_ns;
+	}
+
+	if (nvme_ns != NULL && prev != NULL) {
+		TAILQ_REMOVE(&nbdev->nvme_ns_list, nvme_ns, tailq);
+		TAILQ_INSERT_HEAD(&nbdev->nvme_ns_list, nvme_ns, tailq);
+	}
+
+	return nvme_ns;
+}
+
+/* This function supports only multipath mode. There is only a single I/O path
+ * for each NVMe-oF controller. Hence, just move the matched I/O path to the
+ * head of the I/O path list for each NVMe bdev channel.
+ *
+ * NVMe bdev channel may be acquired after completing this function. move the
+ * matched namespace to the head of the namespace list for the NVMe bdev too.
+ */
+void
+bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
+			     bdev_nvme_set_preferred_path_cb cb_fn, void *cb_arg)
+{
+	struct bdev_nvme_set_preferred_path_ctx *ctx;
+	struct spdk_bdev *bdev;
+	struct nvme_bdev *nbdev;
+	int rc = 0;
+
+	assert(cb_fn != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc context.\n");
+		rc = -ENOMEM;
+		goto err_alloc;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &ctx->desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to open bdev %s.\n", name);
+		goto err_open;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(ctx->desc);
+
+	if (bdev->module != &nvme_if) {
+		SPDK_ERRLOG("bdev %s is not registered in this module.\n", name);
+		rc = -ENODEV;
+		goto err_bdev;
+	}
+
+	nbdev = SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk);
+
+	pthread_mutex_lock(&nbdev->mutex);
+
+	ctx->nvme_ns = bdev_nvme_set_preferred_ns(nbdev, cntlid);
+	if (ctx->nvme_ns == NULL) {
+		pthread_mutex_unlock(&nbdev->mutex);
+
+		SPDK_ERRLOG("bdev %s does not have namespace to controller %u.\n", name, cntlid);
+		rc = -ENODEV;
+		goto err_bdev;
+	}
+
+	pthread_mutex_unlock(&nbdev->mutex);
+
+	spdk_for_each_channel(nbdev,
+			      _bdev_nvme_set_preferred_path,
+			      ctx,
+			      bdev_nvme_set_preferred_path_done);
+	return;
+
+err_bdev:
+	spdk_bdev_close(ctx->desc);
+err_open:
+	free(ctx);
+err_alloc:
+	cb_fn(cb_arg, rc);
+}
+
+static void
 aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_ctrlr *nvme_ctrlr		= arg;

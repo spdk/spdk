@@ -2126,3 +2126,73 @@ rpc_bdev_nvme_get_io_paths(struct spdk_jsonrpc_request *request,
 			      rpc_bdev_nvme_get_io_paths_done);
 }
 SPDK_RPC_REGISTER("bdev_nvme_get_io_paths", rpc_bdev_nvme_get_io_paths, SPDK_RPC_RUNTIME)
+
+struct rpc_bdev_nvme_set_preferred_path {
+	char *name;
+	uint16_t cntlid;
+};
+
+static void
+free_rpc_bdev_nvme_set_preferred_path(struct rpc_bdev_nvme_set_preferred_path *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_nvme_set_preferred_path_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_nvme_set_preferred_path, name), spdk_json_decode_string},
+	{"cntlid", offsetof(struct rpc_bdev_nvme_set_preferred_path, cntlid), spdk_json_decode_uint16},
+};
+
+struct rpc_bdev_nvme_set_preferred_path_ctx {
+	struct rpc_bdev_nvme_set_preferred_path req;
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+rpc_bdev_nvme_set_preferred_path_done(void *cb_arg, int rc)
+{
+	struct rpc_bdev_nvme_set_preferred_path_ctx *ctx = cb_arg;
+
+	if (rc == 0) {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(ctx->request, rc, spdk_strerror(-rc));
+	}
+
+	free_rpc_bdev_nvme_set_preferred_path(&ctx->req);
+	free(ctx);
+}
+
+static void
+rpc_bdev_nvme_set_preferred_path(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct rpc_bdev_nvme_set_preferred_path_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_bdev_nvme_set_preferred_path_decoders,
+				    SPDK_COUNTOF(rpc_bdev_nvme_set_preferred_path_decoders),
+				    &ctx->req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	ctx->request = request;
+
+	bdev_nvme_set_preferred_path(ctx->req.name, ctx->req.cntlid,
+				     rpc_bdev_nvme_set_preferred_path_done, ctx);
+	return;
+
+cleanup:
+	free_rpc_bdev_nvme_set_preferred_path(&ctx->req);
+	free(ctx);
+}
+SPDK_RPC_REGISTER("bdev_nvme_set_preferred_path", rpc_bdev_nvme_set_preferred_path,
+		  SPDK_RPC_RUNTIME)

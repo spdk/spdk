@@ -768,6 +768,17 @@ if __name__ == "__main__":
     p.add_argument('-n', '--name', help="Name of the NVMe bdev", required=False)
     p.set_defaults(func=bdev_nvme_get_io_paths)
 
+    def bdev_nvme_set_preferred_path(args):
+        rpc.bdev.bdev_nvme_set_preferred_path(args.client,
+                                              name=args.name,
+                                              cntlid=args.cntlid)
+
+    p = subparsers.add_parser('bdev_nvme_set_preferred_path',
+                              help="""Set the preferred I/O path for an NVMe bdev when in multipath mode""")
+    p.add_argument('-b', '--name', help='Name of the NVMe bdev', required=True)
+    p.add_argument('-c', '--cntlid', help='NVMe-oF controller ID', type=int, required=True)
+    p.set_defaults(func=bdev_nvme_set_preferred_path)
+
     def bdev_nvme_cuse_register(args):
         rpc.bdev.bdev_nvme_cuse_register(args.client,
                                          name=args.name)

@@ -826,6 +826,20 @@ def bdev_nvme_get_io_paths(client, name):
     return client.call('bdev_nvme_get_io_paths', params)
 
 
+def bdev_nvme_set_preferred_path(client, name, cntlid):
+    """Set the preferred I/O path for an NVMe bdev when in multipath mode
+
+    Args:
+        name: NVMe bdev name
+        cntlid: NVMe-oF controller ID
+    """
+
+    params = {'name': name,
+              'cntlid': cntlid}
+
+    return client.call('bdev_nvme_set_preferred_path', params)
+
+
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 

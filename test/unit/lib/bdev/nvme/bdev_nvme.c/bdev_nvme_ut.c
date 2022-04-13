@@ -206,6 +206,8 @@ DEFINE_STUB_V(spdk_bdev_module_fini_done, (void));
 
 DEFINE_STUB_V(spdk_bdev_module_list_add, (struct spdk_bdev_module *bdev_module));
 
+DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
+
 DEFINE_STUB(spdk_opal_dev_construct, struct spdk_opal_dev *, (struct spdk_nvme_ctrlr *ctrlr), NULL);
 
 DEFINE_STUB_V(spdk_opal_dev_destruct, (struct spdk_opal_dev *dev));
@@ -308,6 +310,7 @@ static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_attached_ctrlrs = TAILQ_HEAD_INITIALIZ
 static int g_ut_attach_ctrlr_status;
 static size_t g_ut_attach_bdev_count;
 static int g_ut_register_bdev_status;
+static struct spdk_bdev *g_ut_registered_bdev;
 static uint16_t g_ut_cntlid;
 static struct nvme_path_id g_any_path = {};
 
@@ -1207,6 +1210,8 @@ spdk_nvme_poll_group_remove(struct spdk_nvme_poll_group *group,
 int
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
+	g_ut_registered_bdev = bdev;
+
 	return g_ut_register_bdev_status;
 }
 
@@ -1216,9 +1221,35 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	int rc;
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
+
+	if (bdev == g_ut_registered_bdev) {
+		g_ut_registered_bdev = NULL;
+	}
+
 	if (rc <= 0 && cb_fn != NULL) {
 		cb_fn(cb_arg, rc);
 	}
+}
+
+int
+spdk_bdev_open_ext(const char *bdev_name, bool write,
+		   spdk_bdev_event_cb_t event_cb, void *event_ctx,
+		   struct spdk_bdev_desc **desc)
+{
+	if (g_ut_registered_bdev == NULL ||
+	    strcmp(g_ut_registered_bdev->name, bdev_name) != 0) {
+		return -ENODEV;
+	}
+
+	*desc = (struct spdk_bdev_desc *)g_ut_registered_bdev;
+
+	return 0;
+}
+
+struct spdk_bdev *
+spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc)
+{
+	return (struct spdk_bdev *)desc;
 }
 
 int
@@ -6020,6 +6051,155 @@ test_ana_transition(void)
 	CU_ASSERT(nvme_ns.ana_transition_timedout == true);
 }
 
+static void
+_set_preferred_path_cb(void *cb_arg, int rc)
+{
+	bool *done = cb_arg;
+
+	*done = true;
+}
+
+static void
+test_set_preferred_path(void)
+{
+	struct nvme_path_id path1 = {}, path2 = {}, path3 = {};
+	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2, *ctrlr3;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct spdk_io_channel *ch;
+	struct nvme_bdev_channel *nbdev_ch;
+	struct nvme_io_path *io_path;
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
+	const struct spdk_nvme_ctrlr_data *cdata;
+	bool done;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+	ut_init_trid3(&path3.trid);
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	set_thread(0);
+
+	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	ctrlr1->ns[0].uuid = &uuid1;
+
+	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, NULL, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	ctrlr2->ns[0].uuid = &uuid1;
+
+	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, NULL, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	ctrlr3 = ut_attach_ctrlr(&path3.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr3 != NULL);
+
+	ctrlr3->ns[0].uuid = &uuid1;
+
+	rc = bdev_nvme_create(&path3.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, NULL, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	/* ctrlr1 was added first. Hence io_path to ctrlr1 should be preferred. */
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	nbdev_ch = spdk_io_channel_get_ctx(ch);
+
+	io_path = bdev_nvme_find_io_path(nbdev_ch);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr1);
+
+	/* If io_path to ctrlr2 is set to the preferred path dynamically, find_io_path()
+	 * should return io_path to ctrlr2.
+	 */
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr2);
+	done = false;
+
+	bdev_nvme_set_preferred_path(bdev->disk.name, cdata->cntlid, _set_preferred_path_cb, &done);
+
+	poll_threads();
+	CU_ASSERT(done == true);
+
+	io_path = bdev_nvme_find_io_path(nbdev_ch);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr2);
+
+	/* If io_path to ctrlr3 is set to the preferred path and then a new I/O channel is
+	 * aquired, find_io_path() should return io_path to ctrlr3.
+	 */
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr3);
+	done = false;
+
+	bdev_nvme_set_preferred_path(bdev->disk.name, cdata->cntlid, _set_preferred_path_cb, &done);
+
+	poll_threads();
+	CU_ASSERT(done == true);
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	nbdev_ch = spdk_io_channel_get_ctx(ch);
+
+	io_path = bdev_nvme_find_io_path(nbdev_ch);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr3);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -6069,6 +6249,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_fail_path);
 	CU_ADD_TEST(suite, test_nvme_ns_cmp);
 	CU_ADD_TEST(suite, test_ana_transition);
+	CU_ADD_TEST(suite, test_set_preferred_path);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

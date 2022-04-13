@@ -318,4 +318,19 @@ int bdev_nvme_delete(const char *name, const struct nvme_path_id *path_id);
  */
 int bdev_nvme_reset_rpc(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_reset_cb cb_fn, void *cb_arg);
 
+typedef void (*bdev_nvme_set_preferred_path_cb)(void *cb_arg, int rc);
+
+/**
+ * Set the preferred I/O path for an NVMe bdev in multipath mode.
+ *
+ * NOTE: This function does not support NVMe bdevs in failover mode.
+ *
+ * \param name NVMe bdev name
+ * \param cntlid NVMe-oF controller ID
+ * \param cb_fn Function to be called back after completion.
+ * \param cb_arg Argument for callback function.
+ */
+void bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
+				  bdev_nvme_set_preferred_path_cb cb_fn, void *cb_arg);
+
 #endif /* SPDK_BDEV_NVME_H */

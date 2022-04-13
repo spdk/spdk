@@ -3394,6 +3394,45 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_set_preferred_path {#rpc_bdev_nvme_set_preferred_path}
+
+Set the preferred I/O path for an NVMe bdev in multipath mode.
+
+NOTE: This RPC does not support NVMe bdevs in failover mode.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe bdev
+cntlid                  | Required | number      | NVMe-oF controller ID
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_set_preferred_path",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1",
+    "cntlid": 0
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.
