@@ -413,6 +413,7 @@ static void
 _free_batch(struct idxd_batch *batch, struct spdk_idxd_io_channel *chan)
 {
 	SPDK_DEBUGLOG(idxd, "Free batch %p\n", batch);
+	assert(batch->refcnt == 0);
 	batch->index = 0;
 	batch->chan = NULL;
 	TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
@@ -489,11 +490,11 @@ idxd_batch_submit(struct spdk_idxd_io_channel *chan,
 		desc->opcode = IDXD_OPCODE_BATCH;
 		desc->desc_list_addr = batch->user_desc_addr;
 		desc->desc_count = batch->index;
-		op->batch = batch;
 		assert(batch->index <= DESC_PER_BATCH);
 
 		/* Add the batch elements completion contexts to the outstanding list to be polled. */
 		for (i = 0 ; i < batch->index; i++) {
+			batch->refcnt++;
 			STAILQ_INSERT_TAIL(&chan->ops_outstanding, (struct idxd_ops *)&batch->user_ops[i],
 					   link);
 		}
@@ -1302,13 +1303,19 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 			break;
 		}
 
+		op->hw.status = 0;
+
 		cb_fn = op->cb_fn;
 		cb_arg = op->cb_arg;
-		op->hw.status = 0;
-		if (op->desc->opcode == IDXD_OPCODE_BATCH) {
-			_free_batch(op->batch, chan);
-			STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
-		} else if (!op->batch) {
+
+		if (op->batch != NULL) {
+			assert(op->batch->refcnt > 0);
+			op->batch->refcnt--;
+
+			if (op->batch->refcnt == 0) {
+				_free_batch(op->batch, chan);
+			}
+		} else {
 			STAILQ_INSERT_HEAD(&chan->ops_pool, op, link);
 		}
 
