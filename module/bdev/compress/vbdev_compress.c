@@ -66,7 +66,7 @@ static int g_mbuf_offset;
 #define NUM_MAX_INFLIGHT_OPS 128
 #define DEFAULT_WINDOW_SIZE 15
 /* We need extra mbufs per operation to accommodate host buffers that
- *  span a 2MB boundary.
+ *  span a physical page boundary.
  */
 #define MAX_MBUFS_PER_OP (REDUCE_MAX_IOVECS * 2)
 #define CHUNK_SIZE (1024 * 16)
@@ -496,7 +496,7 @@ _setup_compress_mbuf(struct rte_mbuf **mbufs, int *mbuf_total, uint64_t *total_l
 			rte_pktmbuf_chain(mbufs[0], mbufs[mbuf_index]);
 		}
 
-		/* If we crossed 2 2MB boundary we need another mbuf for the remainder */
+		/* If we crossed 2 physical pages boundary we need another mbuf for the remainder */
 		if (remainder > 0) {
 			/* allocate an mbuf at the end of the array */
 			rc = rte_pktmbuf_alloc_bulk(g_mbuf_mp,
@@ -590,7 +590,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	}
 	if (!comp_bdev->backing_dev.sgl_in && src_mbufs[0]->next != NULL) {
 		if (src_iovcnt == 1) {
-			SPDK_ERRLOG("Src buffer crosses 2MB boundary but driver %s doesn't support SGL input\n",
+			SPDK_ERRLOG("Src buffer crosses physical page boundary but driver %s doesn't support SGL input\n",
 				    comp_bdev->drv_name);
 		} else {
 			SPDK_ERRLOG("Driver %s doesn't support SGL input\n", comp_bdev->drv_name);
@@ -610,7 +610,7 @@ _compress_operation(struct spdk_reduce_backing_dev *backing_dev, struct iovec *s
 	}
 	if (!comp_bdev->backing_dev.sgl_out && dst_mbufs[0]->next != NULL) {
 		if (dst_iovcnt == 1) {
-			SPDK_ERRLOG("Dst buffer crosses 2MB boundary but driver %s doesn't support SGL output\n",
+			SPDK_ERRLOG("Dst buffer crosses physical page boundary but driver %s doesn't support SGL output\n",
 				    comp_bdev->drv_name);
 		} else {
 			SPDK_ERRLOG("Driver %s doesn't support SGL output\n", comp_bdev->drv_name);
