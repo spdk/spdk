@@ -204,6 +204,8 @@ static struct spdk_nvme_ctrlr *
 	pctrlr->ctrlr.opts = *opts;
 	pctrlr->ctrlr.trid = *trid;
 	pctrlr->ctrlr.opts.use_cmb_sqs = false;
+	pctrlr->ctrlr.opts.admin_queue_size = spdk_max(pctrlr->ctrlr.opts.admin_queue_size,
+					      NVME_PCIE_MIN_ADMIN_QUEUE_SIZE);
 
 	ret = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (ret != 0) {
