@@ -2924,10 +2924,11 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				nvmf_tcp_control_msg_put(tgroup->control_msg_list, tcp_req->req.data);
 			} else if (tcp_req->req.zcopy_bdev_io != NULL) {
 				/* If the request has an unreleased zcopy bdev_io, it's either a
-				 * read or a failed write */
+				 * read, a failed write, or the qpair is being disconnected */
 				assert(spdk_nvmf_request_using_zcopy(&tcp_req->req));
 				assert(tcp_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
-				       spdk_nvme_cpl_is_error(&tcp_req->req.rsp->nvme_cpl));
+				       spdk_nvme_cpl_is_error(&tcp_req->req.rsp->nvme_cpl) ||
+				       tqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE);
 				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_AWAITING_ZCOPY_RELEASE);
 				spdk_nvmf_request_zcopy_end(&tcp_req->req, false);
 				break;
