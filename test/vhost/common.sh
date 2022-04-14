@@ -599,7 +599,7 @@ function vm_setup() {
 
 	if [[ "$os_mode" == "backing" ]]; then
 		notice "Creating backing file for OS image file: $os"
-		if ! $QEMU_IMG_BIN create -f qcow2 -b $os $vm_dir/os.qcow2; then
+		if ! $QEMU_IMG_BIN create -f qcow2 -b $os $vm_dir/os.qcow2 -F qcow2; then
 			error "Failed to create OS backing file in '$vm_dir/os.qcow2' using '$os'"
 			return 1
 		fi
