@@ -49,6 +49,9 @@
 
 #define NVME_MAX_PRP_LIST_ENTRIES	(503)
 
+/* Minimum admin queue size */
+#define NVME_PCIE_MIN_ADMIN_QUEUE_SIZE	(256)
+
 /* PCIe transport extensions for spdk_nvme_ctrlr */
 struct nvme_pcie_ctrlr {
 	struct spdk_nvme_ctrlr ctrlr;
