@@ -1293,9 +1293,10 @@ test_prepare_compress_chunk(void)
 	struct spdk_reduce_vol vol = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
 	struct spdk_reduce_vol_request req = {};
+	void *buf;
+	char *buffer_end, *aligned_user_buffer, *unaligned_user_buffer;
 	char decomp_buffer[16 * 1024] = {};
 	char comp_buffer[16 * 1024] = {};
-	char user_buffer[16 * 1024] = {};
 	struct iovec user_iov[2] = {};
 	size_t user_buffer_iov_len = 8192;
 	size_t remainder_bytes;
@@ -1310,6 +1311,14 @@ test_prepare_compress_chunk(void)
 	vol.backing_dev = &backing_dev;
 	vol.logical_blocks_per_chunk = vol.params.chunk_size / vol.params.logical_block_size;
 
+	/* Allocate 1 extra byte to test a case when buffer crosses huge page boundary */
+	SPDK_CU_ASSERT_FATAL(posix_memalign(&buf, VALUE_2MB, VALUE_2MB + 1) == 0);
+	buffer_end = (char *)buf + VALUE_2MB + 1;
+	aligned_user_buffer = (char *)buf;
+	memset(aligned_user_buffer, 0xc, vol.params.chunk_size);
+	unaligned_user_buffer = buffer_end - vol.params.chunk_size;
+	memset(unaligned_user_buffer, 0xc, vol.params.chunk_size);
+
 	req.vol = &vol;
 	req.decomp_buf = decomp_buffer;
 	req.comp_buf = comp_buffer;
@@ -1320,7 +1329,7 @@ test_prepare_compress_chunk(void)
 	/* Part 1 - backing dev supports sgl_in */
 	/* Test 1 - user's buffers length equals to chunk_size */
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 	}
 
@@ -1342,7 +1351,7 @@ test_prepare_compress_chunk(void)
 	user_buffer_iov_len = 4096;
 	remainder_bytes = vol.params.chunk_size - user_buffer_iov_len * 2;
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 	}
 
@@ -1399,7 +1408,7 @@ test_prepare_compress_chunk(void)
 	req.offset = 0;
 	user_buffer_iov_len = 8192;
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 		memset(req.iov[i].iov_base, 0xb + i, req.iov[i].iov_len);
 	}
@@ -1424,9 +1433,32 @@ test_prepare_compress_chunk(void)
 	CU_ASSERT(memcmp(req.decomp_iov[0].iov_base + req.iov[0].iov_len, req.iov[1].iov_base,
 			 req.iov[1].iov_len) == 0);
 
-	/* Test 2 - single user's buffer length equals to chunk_size
+	/* Test 2 - single user's buffer length equals to chunk_size, buffer is not aligned
+	* User's buffer is copied */
+	req.iov[0].iov_base = unaligned_user_buffer;
+	req.iov[0].iov_len = vol.params.chunk_size;
+	req.iovcnt = 1;
+	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
+
+	_prepare_compress_chunk(&req, false);
+	CU_ASSERT(req.decomp_iovcnt == 1);
+	CU_ASSERT(req.decomp_iov[0].iov_base == req.decomp_buf);
+	CU_ASSERT(req.decomp_iov[0].iov_len == vol.params.chunk_size);
+	CU_ASSERT(memcmp(req.decomp_iov[0].iov_base, req.iov[0].iov_base,
+			 req.iov[0].iov_len) == 0);
+
+	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
+
+	_prepare_compress_chunk(&req, true);
+	CU_ASSERT(req.decomp_iovcnt == 1);
+	CU_ASSERT(req.decomp_iov[0].iov_base == req.decomp_buf);
+	CU_ASSERT(req.decomp_iov[0].iov_len == vol.params.chunk_size);
+	CU_ASSERT(memcmp(req.decomp_iov[0].iov_base, req.iov[0].iov_base,
+			 req.iov[0].iov_len) == 0);
+
+	/* Test 3 - single user's buffer length equals to chunk_size
 	 * User's buffer is not copied */
-	req.iov[0].iov_base = user_buffer;
+	req.iov[0].iov_base = aligned_user_buffer;
 	req.iov[0].iov_len = vol.params.chunk_size;
 	req.iovcnt = 1;
 	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
@@ -1443,14 +1475,14 @@ test_prepare_compress_chunk(void)
 	CU_ASSERT(req.decomp_iov[0].iov_base == req.iov[0].iov_base);
 	CU_ASSERT(req.decomp_iov[0].iov_len == vol.params.chunk_size);
 
-	/* Test 3 - user's buffer less than chunk_size, without offset
+	/* Test 4 - user's buffer less than chunk_size, without offset
 	 * User's buffers are copied */
 	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
 	user_buffer_iov_len = 4096;
 	req.iovcnt = 2;
 	remainder_bytes = vol.params.chunk_size - user_buffer_iov_len * 2;
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 	}
 
@@ -1486,7 +1518,7 @@ test_prepare_compress_chunk(void)
 	CU_ASSERT(memcmp(req.decomp_iov[0].iov_base + memcmp_offset, g_zero_buf + memcmp_offset,
 			 remainder_bytes) == 0);
 
-	/* Test 4 - user's buffer less than chunk_size, non zero offset
+	/* Test 5 - user's buffer less than chunk_size, non zero offset
 	 * user's buffers are copied */
 	req.offset = 3;
 	offset_bytes = req.offset * vol.params.logical_block_size;
@@ -1527,6 +1559,8 @@ test_prepare_compress_chunk(void)
 	memcmp_offset += req.iov[1].iov_len;
 	CU_ASSERT(memcmp(req.decomp_iov[0].iov_base + memcmp_offset, g_zero_buf + memcmp_offset,
 			 remainder_bytes) == 0);
+
+	free(buf);
 }
 
 static void _reduce_vol_op_complete(void *ctx, int reduce_errno)
@@ -1547,9 +1581,10 @@ static void test_reduce_decompress_chunk(void)
 	struct spdk_reduce_vol vol = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
 	struct spdk_reduce_vol_request req = {};
+	void *buf;
+	char *buffer_end, *aligned_user_buffer, *unaligned_user_buffer;
 	char decomp_buffer[16 * 1024] = {};
 	char comp_buffer[16 * 1024] = {};
-	char user_buffer[16 * 1024] = {};
 	struct iovec user_iov[2] = {};
 	struct iovec comp_buf_iov = {};
 	struct spdk_reduce_chunk_map chunk = {};
@@ -1569,6 +1604,12 @@ static void test_reduce_decompress_chunk(void)
 	TAILQ_INIT(&vol.queued_requests);
 	TAILQ_INIT(&vol.free_requests);
 
+	/* Allocate 1 extra byte to test a case when buffer crosses huge page boundary */
+	SPDK_CU_ASSERT_FATAL(posix_memalign(&buf, VALUE_2MB, VALUE_2MB + 1) == 0);
+	buffer_end = (char *)buf + VALUE_2MB + 1;
+	aligned_user_buffer = (char *)buf;
+	unaligned_user_buffer = buffer_end - vol.params.chunk_size;
+
 	chunk.compressed_size = user_buffer_iov_len / 2;
 	req.chunk = &chunk;
 	req.vol = &vol;
@@ -1583,7 +1624,7 @@ static void test_reduce_decompress_chunk(void)
 	/* Part 1 - backing dev supports sgl_out */
 	/* Test 1 - user's buffers length equals to chunk_size */
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 		memset(req.iov[i].iov_base, 0, req.iov[i].iov_len);
 	}
@@ -1607,7 +1648,7 @@ static void test_reduce_decompress_chunk(void)
 	g_reduce_errno = -1;
 	user_buffer_iov_len = 4096;
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 		memset(req.iov[i].iov_base, 0, req.iov[i].iov_len);
 	}
@@ -1657,7 +1698,7 @@ static void test_reduce_decompress_chunk(void)
 
 	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 		memset(req.iov[i].iov_base, 0xb + i, req.iov[i].iov_len);
 	}
@@ -1676,9 +1717,28 @@ static void test_reduce_decompress_chunk(void)
 	CU_ASSERT(TAILQ_EMPTY(&vol.executing_requests));
 	CU_ASSERT(TAILQ_FIRST(&vol.free_requests) == &req);
 
-	/* Test 2 - single user's buffer length equals to chunk_size
+	/* Test 2 - single user's buffer length equals to chunk_size, buffer is not aligned
+	* User's buffer is copied */
+	memset(unaligned_user_buffer, 0xc, vol.params.chunk_size);
+	req.iov[0].iov_base = unaligned_user_buffer;
+	req.iov[0].iov_len = vol.params.chunk_size;
+	req.iovcnt = 1;
+	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
+	TAILQ_INSERT_HEAD(&vol.executing_requests, &req, tailq);
+	g_reduce_errno = -1;
+
+	_reduce_vol_decompress_chunk(&req, _read_decompress_done);
+	CU_ASSERT(g_reduce_errno == 0);
+	CU_ASSERT(req.copy_after_decompress == true);
+	CU_ASSERT(req.decomp_iovcnt == 1);
+	CU_ASSERT(req.decomp_iov[0].iov_base == req.decomp_buf);
+	CU_ASSERT(req.decomp_iov[0].iov_len == vol.params.chunk_size);
+	CU_ASSERT(memcmp(req.iov[0].iov_base, req.decomp_iov[0].iov_base,
+			 req.iov[0].iov_len) == 0);
+
+	/* Test 3 - single user's buffer length equals to chunk_size
 	* User's buffer is not copied */
-	req.iov[0].iov_base = user_buffer;
+	req.iov[0].iov_base = aligned_user_buffer;
 	req.iov[0].iov_len = vol.params.chunk_size;
 	req.iovcnt = 1;
 	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
@@ -1692,15 +1752,13 @@ static void test_reduce_decompress_chunk(void)
 	CU_ASSERT(req.decomp_iov[0].iov_base == req.iov[0].iov_base);
 	CU_ASSERT(req.decomp_iov[0].iov_len == vol.params.chunk_size);
 
-	/* Test 3 - user's buffer less than chunk_size, without offset
+	/* Test 4 - user's buffer less than chunk_size, without offset
 	 * User's buffers are copied */
-	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
 	user_buffer_iov_len = 4096;
 	req.iovcnt = 2;
 	remainder_bytes = vol.params.chunk_size - user_buffer_iov_len * 2;
-	memset(req.decomp_buf, 0xa, vol.params.chunk_size);
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 		memset(req.iov[i].iov_base, 0xb + i, req.iov[i].iov_len);
 	}
@@ -1722,14 +1780,14 @@ static void test_reduce_decompress_chunk(void)
 	CU_ASSERT(TAILQ_EMPTY(&vol.executing_requests));
 	CU_ASSERT(TAILQ_FIRST(&vol.free_requests) == &req);
 
-	/* Test 4 - user's buffer less than chunk_size, non zero offset
+	/* Test 5 - user's buffer less than chunk_size, non zero offset
 	* user's buffers are copied */
 	req.offset = 3;
 	offset_bytes = req.offset * vol.params.logical_block_size;
 	remainder_bytes = vol.params.chunk_size - offset_bytes - user_buffer_iov_len * 2;
 
 	for (i = 0; i < 2; i++) {
-		req.iov[i].iov_base = user_buffer + i * user_buffer_iov_len;
+		req.iov[i].iov_base = aligned_user_buffer + i * user_buffer_iov_len;
 		req.iov[i].iov_len = user_buffer_iov_len;
 		memset(req.iov[i].iov_base, 0xb + i, req.iov[i].iov_len);
 	}
@@ -1752,6 +1810,8 @@ static void test_reduce_decompress_chunk(void)
 			 req.iov[1].iov_len) == 0);
 	CU_ASSERT(TAILQ_EMPTY(&vol.executing_requests));
 	CU_ASSERT(TAILQ_FIRST(&vol.free_requests) == &req);
+
+	free(buf);
 }
 
 static void test_allocate_vol_requests(void)

@@ -1250,6 +1250,7 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 	struct spdk_reduce_vol *vol = req->vol;
 	uint64_t chunk_offset, remainder = 0;
 	uint64_t ttl_len = 0;
+	size_t iov_len;
 	int i;
 
 	req->decomp_iovcnt = 0;
@@ -1258,9 +1259,12 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 	/* If backing device doesn't support SGL output then we should copy the result of decompression to user's buffer
 	 * if at least one of the conditions below is true:
 	 * 1. User's buffer is fragmented
-	 * 2. Length of the user's buffer is less than the chunk */
+	 * 2. Length of the user's buffer is less than the chunk
+	 * 3. User's buffer is contig, equals chunk_size but crosses huge page boundary */
+	iov_len = req->iov[0].iov_len;
 	req->copy_after_decompress = !vol->backing_dev->sgl_out && (req->iovcnt > 1 ||
-				     req->iov[0].iov_len < vol->params.chunk_size);
+				     req->iov[0].iov_len < vol->params.chunk_size ||
+				     _addr_crosses_huge_page(req->iov[0].iov_base, &iov_len));
 	if (req->copy_after_decompress) {
 		req->decomp_iov[0].iov_base = req->decomp_buf;
 		req->decomp_iov[0].iov_len = vol->params.chunk_size;
@@ -1361,14 +1365,18 @@ _prepare_compress_chunk(struct spdk_reduce_vol_request *req, bool zero_paddings)
 	uint64_t chunk_offset, ttl_len = 0;
 	uint64_t remainder = 0;
 	uint32_t lbsize = vol->params.logical_block_size;
+	size_t iov_len;
 	int i;
 
 	/* If backing device doesn't support SGL input then we should copy user's buffer into decomp_buf
 	 * if at least one of the conditions below is true:
 	 * 1. User's buffer is fragmented
-	 * 2. Length of the user's buffer is less than the chunk */
+	 * 2. Length of the user's buffer is less than the chunk
+	 * 3. User's buffer is contig, equals chunk_size but crosses huge page boundary */
+	iov_len = req->iov[0].iov_len;
 	if (!vol->backing_dev->sgl_in && (req->iovcnt > 1 ||
-					  req->iov[0].iov_len < vol->params.chunk_size)) {
+					  req->iov[0].iov_len < vol->params.chunk_size ||
+					  _addr_crosses_huge_page(req->iov[0].iov_base, &iov_len))) {
 		_prepare_compress_chunk_copy_user_buffers(req, zero_paddings);
 		return;
 	}
