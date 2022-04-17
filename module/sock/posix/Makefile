@@ -11,6 +11,7 @@ SO_MINOR := 0
 
 LIBNAME = sock_posix
 C_SRCS = posix.c
+LOCAL_SYS_LIBS = -lssl
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 

@@ -2,6 +2,11 @@
 
 ## v22.09: (Upcoming Release)
 
+### sock
+
+Added new `ssl` based socket implementation, the code is located in module/sock/posix.
+For now we are using hard-coded PSK and only support TLS 1.3
+
 ## v22.05
 
 ### sock
