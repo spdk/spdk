@@ -2203,10 +2203,12 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 
 	rc = bdev_nvme_create_qpair(nvme_qpair);
 	if (rc != 0) {
-		/* nvme ctrlr can't create IO qpair during reset. In that case ctrlr_ch->qpair
-		 * pointer will be NULL and IO qpair will be created when reset completes.
-		 * If the user submits IO requests during reset, they will be queued and resubmitted later */
-		if (!nvme_ctrlr->resetting) {
+		/* nvme_ctrlr can't create IO qpair if connection is down. If nvme_ctrlr is
+		 * being reset or scheduled to reconnect later, ignore this failure.
+		 * Then IO qpair will be created later when reconnect completes.
+		 * If the user submits IO requests in the meantime, they will be queued and
+		 * resubmitted later */
+		if (!nvme_ctrlr->resetting && !nvme_ctrlr->reconnect_is_delayed) {
 			spdk_put_io_channel(pg_ch);
 			free(nvme_qpair);
 			return rc;
