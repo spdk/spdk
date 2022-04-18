@@ -45,6 +45,9 @@ The RPC `idxd_scan_accel_engine` has been renamed to `dsa_scan_accel_engine`
 Many HW related structs/functions with the name `idxd` have been renamed `dsa`
 to more accurately represent the HW they are associated with.
 
+Two new functions were added to the library `spdk_idxd_submit_compress` and
+`spdk_idxd_submit_decompress`
+
 ### accel_fw
 
 A new parameter `flags` was added to accel API.
@@ -54,6 +57,8 @@ The APIs include:
 `spdk_accel_submit_fill`
 `spdk_accel_submit_copy_crc32c`
 `spdk_accel_submit_copy_crc32cv`
+`spdk_accel_submit_compress`
+`spdk_accel_submit_decompress`
 
 A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PMEM.
 

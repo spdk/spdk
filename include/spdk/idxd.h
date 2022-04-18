@@ -287,6 +287,53 @@ int spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 				 spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit an IAA memory compress request.
+ *
+ * This function will build the compress descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param diov Destination iovec. diov with diovcnt must be large enough to hold compressed data.
+ * \param diovcnt Number of elements in diov for decompress buffer.
+ * \param siov Source iovec
+ * \param siovcnt Number of elements in siov
+ * \param output_size The size of the compressed data
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_compress(struct spdk_idxd_io_channel *chan,
+			      struct iovec *diov, uint32_t diovcnt,
+			      struct iovec *siov, uint32_t siovcnt, uint32_t *output_size,
+			      int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit an IAA memory decompress request.
+ *
+ * This function will build the decompress descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param diov Destination iovec. diov with diovcnt must be large enough to hold decompressed data.
+ * \param diovcnt Number of elements in diov for decompress buffer.
+ * \param siov Source iovec
+ * \param siovcnt Number of elements in siov
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_decompress(struct spdk_idxd_io_channel *chan,
+				struct iovec *diov, uint32_t diovcnt,
+				struct iovec *siov, uint32_t siovcnt,
+				int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Check for completed requests on an IDXD channel.
  *
  * \param chan IDXD channel to check for completions.

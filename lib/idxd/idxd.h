@@ -137,7 +137,10 @@ struct idxd_ops {
 	spdk_idxd_req_cb		cb_fn;
 	struct idxd_batch		*batch;
 	struct idxd_hw_desc		*desc;
-	uint32_t			*crc_dst;
+	union {
+		uint32_t		*crc_dst;
+		uint32_t		*output_size;
+	};
 	struct idxd_ops			*parent;
 	uint32_t			count;
 	STAILQ_ENTRY(idxd_ops)		link;
@@ -164,6 +167,7 @@ struct spdk_idxd_device {
 	uint32_t			chan_per_device;
 	pthread_mutex_t			num_channels_lock;
 	enum idxd_dev			type;
+	struct iaa_aecs			*aecs;
 };
 
 void idxd_impl_register(struct spdk_idxd_impl *impl);

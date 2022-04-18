@@ -65,6 +65,11 @@ extern "C" {
 #define IDXD_FLAG_DEST_STEERING_TAG	(1 << 15)
 #define IDXD_FLAG_CRC_READ_CRC_SEED	(1 << 16)
 
+#define IAA_FLAG_RD_SRC2_AECS		(1 << 16)
+#define IAA_COMP_FLUSH_OUTPUT		(1 << 1)
+#define IAA_COMP_APPEND_EOB		(1 << 2)
+#define IAA_COMP_FLAGS			(IAA_COMP_FLUSH_OUTPUT | IAA_COMP_APPEND_EOB)
+
 /*
  * IDXD is a family of devices, DSA and IAA.
  */
@@ -342,6 +347,20 @@ struct iaa_hw_comp_record {
 	uint64_t		rsvd5[4];
 };
 SPDK_STATIC_ASSERT(sizeof(struct iaa_hw_comp_record) == 64, "size mismatch");
+
+struct iaa_aecs {
+	uint32_t crc;
+	uint32_t xor_checksum;
+	uint32_t rsvd[5];
+	uint32_t num_output_accum_bits;
+	uint8_t output_accum[256];
+	uint32_t ll_sym[286];
+	uint32_t rsvd1;
+	uint32_t rsvd3;
+	uint32_t d_sym[30];
+	uint32_t pad[2];
+};
+SPDK_STATIC_ASSERT(sizeof(struct iaa_aecs) == 1568, "size mismatch");
 
 union idxd_gencap_register {
 	struct {

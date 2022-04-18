@@ -218,7 +218,8 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	struct spdk_idxd_io_channel *chan;
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
-	int i, num_descriptors, rc;
+	int i, num_descriptors, rc = -1;
+	uint32_t comp_rec_size;
 
 	assert(idxd != NULL);
 
@@ -238,7 +239,8 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	if (idxd->num_channels == idxd->chan_per_device) {
 		/* too many channels sharing this device */
 		pthread_mutex_unlock(&idxd->num_channels_lock);
-		goto err_chan;
+		SPDK_ERRLOG("Too many channels sharing this device\n");
+		goto error;
 	}
 
 	/* Have each channel start at a different offset. */
@@ -254,39 +256,46 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 					      0x40, NULL,
 					      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (chan->desc_base == NULL) {
-		SPDK_ERRLOG("Failed to allocate descriptor memory\n");
-		goto err_chan;
+		SPDK_ERRLOG("Failed to allocate DSA descriptor memory\n");
+		goto error;
 	}
 
 	chan->ops_base = op = spdk_zmalloc(num_descriptors * sizeof(struct idxd_ops),
 					   0x40, NULL,
 					   SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (chan->ops_base == NULL) {
-		SPDK_ERRLOG("Failed to allocate completion memory\n");
-		goto err_op;
+		SPDK_ERRLOG("Failed to allocate idxd_ops memory\n");
+		goto error;
+	}
+
+	if (idxd->type == IDXD_DEV_TYPE_DSA) {
+		comp_rec_size = sizeof(struct dsa_hw_comp_record);
+		if (_dsa_alloc_batches(chan, num_descriptors)) {
+			goto error;
+		}
+	} else {
+		comp_rec_size = sizeof(struct iaa_hw_comp_record);
 	}
 
 	for (i = 0; i < num_descriptors; i++) {
 		STAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 		op->desc = desc;
-		rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
+		rc = _vtophys(&op->hw, &desc->completion_addr, comp_rec_size);
 		if (rc) {
 			SPDK_ERRLOG("Failed to translate completion memory\n");
-			goto err_op;
+			goto error;
 		}
 		op++;
 		desc++;
 	}
 
-	if (_dsa_alloc_batches(chan, num_descriptors)) {
-		return NULL;
-	}
-
 	return chan;
-err_op:
+
+error:
+	spdk_free(chan->ops_base);
+	chan->ops_base = NULL;
 	spdk_free(chan->desc_base);
 	chan->desc_base = NULL;
-err_chan:
 	free(chan);
 	return NULL;
 }
@@ -299,6 +308,7 @@ spdk_idxd_put_channel(struct spdk_idxd_io_channel *chan)
 	struct idxd_batch *batch;
 
 	assert(chan != NULL);
+	assert(chan->idxd != NULL);
 
 	if (chan->batch) {
 		idxd_batch_cancel(chan, -ECANCELED);
@@ -338,17 +348,20 @@ idxd_get_impl_by_name(const char *impl_name)
 void
 spdk_idxd_set_config(bool kernel_mode)
 {
-	if (g_idxd_impl != NULL) {
+	struct spdk_idxd_impl *tmp;
+
+	if (kernel_mode) {
+		tmp = idxd_get_impl_by_name(KERNEL_DRIVER_NAME);
+	} else {
+		tmp = idxd_get_impl_by_name(USERSPACE_DRIVER_NAME);
+	}
+
+	if (g_idxd_impl != NULL && g_idxd_impl != tmp) {
 		SPDK_ERRLOG("Cannot change idxd implementation after devices are initialized\n");
 		assert(false);
 		return;
 	}
-
-	if (kernel_mode) {
-		g_idxd_impl = idxd_get_impl_by_name(KERNEL_DRIVER_NAME);
-	} else {
-		g_idxd_impl = idxd_get_impl_by_name(USERSPACE_DRIVER_NAME);
-	}
+	g_idxd_impl = tmp;
 
 	if (g_idxd_impl == NULL) {
 		SPDK_ERRLOG("Cannot set the idxd implementation with %s mode\n",
@@ -1125,6 +1138,142 @@ error:
 	return rc;
 }
 
+static inline int
+_idxd_submit_compress_single(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
+			     uint64_t nbytes_dst, uint64_t nbytes_src, uint32_t *output_size,
+			     int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	uint64_t src_addr, dst_addr;
+	int rc;
+
+	/* Common prep. */
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, flags, &desc, &op);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _vtophys(src, &src_addr, nbytes_src);
+	if (rc) {
+		goto error;
+	}
+
+	rc = _vtophys(dst, &dst_addr, nbytes_dst);
+	if (rc) {
+		goto error;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_COMPRESS;
+	desc->src1_addr = src_addr;
+	desc->dst_addr = dst_addr;
+	desc->src1_size = nbytes_src;
+	desc->iaa.max_dst_size = nbytes_dst;
+	desc->iaa.src2_size = sizeof(struct iaa_aecs);
+	desc->iaa.src2_addr = (uint64_t)chan->idxd->aecs;
+	desc->flags |= IAA_FLAG_RD_SRC2_AECS;
+	desc->compr_flags = IAA_COMP_FLAGS;
+	op->output_size = output_size;
+
+	_submit_to_hw(chan, op);
+	return 0;
+error:
+	STAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
+}
+
+int
+spdk_idxd_submit_compress(struct spdk_idxd_io_channel *chan,
+			  struct iovec *diov, uint32_t diovcnt,
+			  struct iovec *siov, uint32_t siovcnt, uint32_t *output_size,
+			  int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	assert(chan != NULL);
+	assert(diov != NULL);
+	assert(siov != NULL);
+
+	if (diovcnt == 1 && siovcnt == 1) {
+		/* Simple case - copying one buffer to another */
+		if (diov[0].iov_len < siov[0].iov_len) {
+			return -EINVAL;
+		}
+
+		return _idxd_submit_compress_single(chan, diov[0].iov_base, siov[0].iov_base,
+						    diov[0].iov_len, siov[0].iov_len,
+						    output_size, flags, cb_fn, cb_arg);
+	}
+	/* TODO: vectored support */
+	return -EINVAL;
+}
+
+static inline int
+_idxd_submit_decompress_single(struct spdk_idxd_io_channel *chan, void *dst, const void *src,
+			       uint64_t nbytes_dst, uint64_t nbytes, int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	uint64_t src_addr, dst_addr;
+	int rc;
+
+	/* Common prep. */
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, flags, &desc, &op);
+	if (rc) {
+		return rc;
+	}
+
+	rc = _vtophys(src, &src_addr, nbytes);
+	if (rc) {
+		goto error;
+	}
+
+	rc = _vtophys(dst, &dst_addr, nbytes_dst);
+	if (rc) {
+		goto error;
+	}
+
+	/* Command specific. */
+	desc->opcode = IDXD_OPCODE_COMPRESS;
+	desc->src1_addr = src_addr;
+	desc->dst_addr = dst_addr;
+	desc->src1_size = nbytes;
+	desc->iaa.max_dst_size = nbytes_dst;
+	desc->iaa.src2_size = sizeof(struct iaa_aecs);
+	desc->iaa.src2_addr = (uint64_t)chan->idxd->aecs;
+	desc->flags |= IAA_FLAG_RD_SRC2_AECS;
+	desc->compr_flags = IAA_COMP_FLAGS;
+
+	_submit_to_hw(chan, op);
+	return 0;
+error:
+	STAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
+	return rc;
+}
+
+int
+spdk_idxd_submit_decompress(struct spdk_idxd_io_channel *chan,
+			    struct iovec *diov, uint32_t diovcnt,
+			    struct iovec *siov, uint32_t siovcnt,
+			    int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	assert(chan != NULL);
+	assert(diov != NULL);
+	assert(siov != NULL);
+
+	if (diovcnt == 1 && siovcnt == 1) {
+		/* Simple case - copying one buffer to another */
+		if (diov[0].iov_len < siov[0].iov_len) {
+			return -EINVAL;
+		}
+
+		return _idxd_submit_decompress_single(chan, diov[0].iov_base, siov[0].iov_base,
+						      diov[0].iov_len, siov[0].iov_len,
+						      flags, cb_fn, cb_arg);
+	}
+	/* TODO: vectored support */
+	return -EINVAL;
+}
+
 static inline void
 _dump_sw_error_reg(struct spdk_idxd_io_channel *chan)
 {
@@ -1162,7 +1311,9 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 		STAILQ_REMOVE_HEAD(&chan->ops_outstanding, link);
 		rc++;
 
+		/* Status is in the same location for both IAA and DSA completion records. */
 		if (spdk_unlikely(IDXD_FAILURE(op->hw.status))) {
+			SPDK_ERRLOG("Completion status 0x%x\n", op->hw.status);
 			status = -EINVAL;
 			_dump_sw_error_reg(chan);
 		}
@@ -1181,6 +1332,11 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 		case IDXD_OPCODE_COMPARE:
 			if (spdk_likely(status == 0)) {
 				status = op->hw.result;
+			}
+			break;
+		case IDXD_OPCODE_COMPRESS:
+			if (spdk_likely(status == 0 && op->output_size != NULL)) {
+				*op->output_size = op->iaa_hw.output_size;
 			}
 			break;
 		}
