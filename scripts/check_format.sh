@@ -417,9 +417,13 @@ function check_bash_style() {
 	local rc=0
 
 	# find compatible shfmt binary
-	shfmt_bins=$(compgen -c | grep '^shfmt' || true)
+	shfmt_bins=$(compgen -c | grep '^shfmt' | uniq || true)
 	for bin in $shfmt_bins; do
-		if version_lt "$("$bin" --version)" "3.1.0"; then
+		shfmt_version=$("$bin" --version)
+		if [ $shfmt_version != "v3.1.0" ]; then
+			echo "$bin version $shfmt_version not used (only v3.1.0 is supported)"
+			echo "v3.1.0 can be installed using 'scripts/pkgdep.sh -d'"
+		else
 			shfmt=$bin
 			break
 		fi
@@ -471,7 +475,7 @@ function check_bash_style() {
 			fi
 		fi
 	else
-		echo "shfmt not detected, Bash style formatting check is skipped"
+		echo "Supported version of shfmt not detected, Bash style formatting check is skipped"
 	fi
 
 	return $rc
