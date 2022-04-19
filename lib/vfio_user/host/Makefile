@@ -31,14 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += host
+SO_VER := 3
+SO_MINOR := 0
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = vfio_user_pci.c vfio_user.c
+LIBNAME = vfio_user
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_vfio_user.map)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
