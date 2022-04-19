@@ -38,6 +38,11 @@
 
 #include "spdk/accel_engine.h"
 #include "spdk/queue.h"
+#include "spdk/config.h"
+
+#ifdef SPDK_CONFIG_ISAL
+#include "../isa-l/include/igzip_lib.h"
+#endif
 
 struct spdk_accel_task;
 
@@ -45,6 +50,11 @@ void spdk_accel_task_complete(struct spdk_accel_task *task, int status);
 
 struct accel_io_channel {
 	struct spdk_io_channel		*engine_ch[ACCEL_OPC_LAST];
+	/* for ISAL */
+#ifdef SPDK_CONFIG_ISAL
+	struct isal_zstream		stream;
+	struct inflate_state		state;
+#endif
 	void				*task_pool_base;
 	TAILQ_HEAD(, spdk_accel_task)	task_pool;
 };

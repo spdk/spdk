@@ -491,6 +491,18 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 		return -ENOMEM;
 	}
 
+#ifdef SPDK_CONFIG_ISAL
+	isal_deflate_stateless_init(&accel_ch->stream);
+	accel_ch->stream.level = 1;
+	accel_ch->stream.level_buf = calloc(1, ISAL_DEF_LVL1_DEFAULT);
+	if (accel_ch->stream.level_buf == NULL) {
+		SPDK_ERRLOG("Could not allocate isal internal buffer\n");
+		goto err;
+	}
+	accel_ch->stream.level_buf_size = ISAL_DEF_LVL1_DEFAULT;
+	isal_inflate_init(&accel_ch->state);
+#endif
+
 	TAILQ_INIT(&accel_ch->task_pool);
 	task_mem = accel_ch->task_pool_base;
 	for (i = 0 ; i < MAX_TASKS_PER_CHANNEL; i++) {
@@ -501,22 +513,24 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 
 	/* Assign engines and get IO channels for each */
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
-		/* TODO this check goes away once SW implementation of comp/decomp is implemented */
-		if (g_engines_opc[i]) {
-			accel_ch->engine_ch[i] = g_engines_opc[i]->get_io_channel();
-			/* This can happen if idxd runs out of channels. */
-			if (accel_ch->engine_ch[i] == NULL) {
-				goto err;
-			}
+		accel_ch->engine_ch[i] = g_engines_opc[i]->get_io_channel();
+		/* This can happen if idxd runs out of channels. */
+		if (accel_ch->engine_ch[i] == NULL) {
+			goto err2;
 		}
 	}
 
 	return 0;
-err:
+err2:
 	for (j = 0; j < i; j++) {
 		spdk_put_io_channel(accel_ch->engine_ch[j]);
 	}
-	return -EINVAL;
+#ifdef SPDK_CONFIG_ISAL
+	free(accel_ch->stream.level_buf);
+err:
+#endif
+	free(accel_ch->task_pool_base);
+	return -ENOMEM;
 }
 
 /* Framework level channel destroy callback. */
@@ -527,14 +541,14 @@ accel_engine_destroy_cb(void *io_device, void *ctx_buf)
 	int i;
 
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
-		/* TODO this check goes away once SW implementation of comp/decomp is implemented,
-		 * or it can be assert */
-		if (accel_ch->engine_ch[i]) {
-			spdk_put_io_channel(accel_ch->engine_ch[i]);
-			accel_ch->engine_ch[i] = NULL;
-		}
+		assert(accel_ch->engine_ch[i] != NULL);
+		spdk_put_io_channel(accel_ch->engine_ch[i]);
+		accel_ch->engine_ch[i] = NULL;
 	}
 
+#ifdef SPDK_CONFIG_ISAL
+	free(accel_ch->stream.level_buf);
+#endif
 	free(accel_ch->task_pool_base);
 }
 
@@ -577,9 +591,7 @@ spdk_accel_engine_initialize(void)
 		}
 	}
 #ifdef DEBUG
-	/* TODO change ACCEL_OPC_LAST to ACCEL_OPC_LAST once SW implmentation of
-	 * compress/decomp is done */
-	for (op = 0; op < ACCEL_OPC_COMPRESS; op++) {
+	for (op = 0; op < ACCEL_OPC_LAST; op++) {
 		assert(g_engines_opc[op] != NULL);
 	}
 #endif
@@ -667,6 +679,8 @@ sw_accel_supports_opcode(enum accel_opcode opc)
 	case ACCEL_OPC_COMPARE:
 	case ACCEL_OPC_CRC32C:
 	case ACCEL_OPC_COPY_CRC32C:
+	case ACCEL_OPC_COMPRESS:
+	case ACCEL_OPC_DECOMPRESS:
 		return true;
 	default:
 		return false;
@@ -771,6 +785,53 @@ _sw_accel_crc32cv(uint32_t *crc_dst, struct iovec *iov, uint32_t iovcnt, uint32_
 }
 
 static int
+_sw_accel_compress(struct spdk_accel_task *accel_task)
+{
+#ifdef SPDK_CONFIG_ISAL
+	struct accel_io_channel *accel_ch = accel_task->accel_ch;
+
+	accel_ch->stream.next_in = accel_task->src;
+	accel_ch->stream.next_out = accel_task->dst;
+	accel_ch->stream.avail_in = accel_task->nbytes;
+	accel_ch->stream.avail_out = accel_task->nbytes_dst;
+
+	isal_deflate_stateless(&accel_ch->stream);
+	if (accel_task->output_size != NULL) {
+		assert(accel_task->nbytes_dst > accel_ch->stream.avail_out);
+		*accel_task->output_size = accel_task->nbytes_dst - accel_ch->stream.avail_out;
+	}
+
+	return 0;
+#else
+	SPDK_ERRLOG("ISAL option is required to use software compression.\n");
+	return -EINVAL;
+#endif
+}
+
+static int
+_sw_accel_decompress(struct spdk_accel_task *accel_task)
+{
+#ifdef SPDK_CONFIG_ISAL
+	struct accel_io_channel *accel_ch = accel_task->accel_ch;
+	int rc;
+
+	accel_ch->state.next_in = accel_task->src;
+	accel_ch->state.avail_in = accel_task->nbytes;
+	accel_ch->state.next_out = accel_task->dst;
+	accel_ch->state.avail_out = accel_task->nbytes_dst;
+
+	rc = isal_inflate_stateless(&accel_ch->state);
+	if (rc) {
+		SPDK_ERRLOG("isal_inflate_stateless retunred error %d.\n", rc);
+	}
+	return rc;
+#else
+	SPDK_ERRLOG("ISAL option is required to use software decompression.\n");
+	return -EINVAL;
+#endif
+}
+
+static int
 sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task)
 {
 	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
@@ -819,6 +880,12 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 					_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
 				}
 			}
+			break;
+		case ACCEL_OPC_COMPRESS:
+			rc = _sw_accel_compress(accel_task);
+			break;
+		case ACCEL_OPC_DECOMPRESS:
+			rc = _sw_accel_decompress(accel_task);
 			break;
 		default:
 			assert(false);
