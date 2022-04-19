@@ -522,7 +522,7 @@ function configure_linux() {
 		# Some distros build msr as a module.  Make sure it's loaded to ensure
 		#  DPDK can easily figure out the TSC rate rather than relying on 100ms
 		#  sleeps.
-		modprobe msr || true
+		modprobe msr &> /dev/null || true
 	fi
 }
 
