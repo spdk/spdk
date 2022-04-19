@@ -101,7 +101,7 @@ DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost dmadev
 # raid5 deps
 DPDK_LIBS += hash rcu
 
-DPDK_OPTS += -Dmachine=$(TARGET_ARCHITECTURE)
+DPDK_OPTS += -Dcpu_instruction_set=$(TARGET_ARCHITECTURE)
 
 ifneq ($(CONFIG_CROSS_PREFIX),)
 ifeq ($(findstring mingw,$(CONFIG_CROSS_PREFIX)),mingw)
