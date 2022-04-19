@@ -1223,6 +1223,10 @@ nvmf_prop_set_aqa(struct spdk_nvmf_ctrlr *ctrlr, uint32_t value)
 
 	aqa.raw = value;
 
+	/*
+	 * We don't need to explicitly check for maximum size, as the fields are
+	 * limited to 12 bits (4096).
+	 */
 	if (aqa.bits.asqs < SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES - 1 ||
 	    aqa.bits.acqs < SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES - 1 ||
 	    aqa.bits.reserved1 != 0 || aqa.bits.reserved2 != 0) {
