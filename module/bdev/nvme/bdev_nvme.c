@@ -1173,7 +1173,7 @@ bdev_nvme_disconnected_qpair_cb(struct spdk_nvme_qpair *qpair, void *poll_group_
 		} else {
 			/* qpair was disconnected unexpectedly. Reset controller for recovery. */
 			SPDK_NOTICELOG("qpair %p was disconnected and freed. reset controller.\n", qpair);
-			bdev_nvme_reset(nvme_qpair->ctrlr);
+			bdev_nvme_failover(nvme_qpair->ctrlr, false);
 		}
 	} else {
 		/* In this case, ctrlr_channel is already deleted. */
