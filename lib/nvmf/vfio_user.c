@@ -561,6 +561,33 @@ self_kick(struct nvmf_vfio_user_ctrlr *ctrlr)
 				    ctrlr);
 }
 
+/*
+ * Make the given DMA address and length available (locally mapped) via iov.
+ */
+static void *
+map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg,
+	struct iovec *iov, int prot)
+{
+	int ret;
+
+	assert(ctx != NULL);
+	assert(sg != NULL);
+	assert(iov != NULL);
+
+	ret = vfu_addr_to_sg(ctx, (void *)(uintptr_t)addr, len, sg, 1, prot);
+	if (ret < 0) {
+		return NULL;
+	}
+
+	ret = vfu_map_sg(ctx, sg, iov, 1, 0);
+	if (ret != 0) {
+		return NULL;
+	}
+
+	assert(iov->iov_base != NULL);
+	return iov->iov_base;
+}
+
 static int
 nvme_cmd_map_prps(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs,
 		  uint32_t max_iovcnt, uint32_t len, size_t mps,
@@ -966,29 +993,6 @@ max_queue_size(struct nvmf_vfio_user_ctrlr const *vu_ctrlr)
 	assert(vu_ctrlr->ctrlr != NULL);
 
 	return vu_ctrlr->ctrlr->vcprop.cap.bits.mqes + 1;
-}
-
-static void *
-map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg, struct iovec *iov, int prot)
-{
-	int ret;
-
-	assert(ctx != NULL);
-	assert(sg != NULL);
-	assert(iov != NULL);
-
-	ret = vfu_addr_to_sg(ctx, (void *)(uintptr_t)addr, len, sg, 1, prot);
-	if (ret < 0) {
-		return NULL;
-	}
-
-	ret = vfu_map_sg(ctx, sg, iov, 1, 0);
-	if (ret != 0) {
-		return NULL;
-	}
-
-	assert(iov->iov_base != NULL);
-	return iov->iov_base;
 }
 
 static int
