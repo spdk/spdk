@@ -41,7 +41,7 @@
 
 #include "spdk/uuid.h"
 
-#define REDUCE_MAX_IOVECS	17
+#define REDUCE_MAX_IOVECS	33
 
 /**
  * Describes the parameters of an spdk_reduce_vol.

@@ -86,9 +86,9 @@ mkdir -p /tmp/pmem
 run_bdevperf 32 4096 3
 run_bdevperf 32 4096 3 512
 run_bdevperf 32 4096 3 4096
+run_bdevio
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_bdevio
 	run_bdevperf 64 16384 30
 
 	# run perf on nvmf target w/compressed vols
