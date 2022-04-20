@@ -2443,6 +2443,7 @@ nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrl
 {
 	struct spdk_nvme_transport_id *trid;
 	const struct spdk_nvme_ctrlr_opts *opts;
+	const struct spdk_nvme_ctrlr_data *cdata;
 
 	spdk_json_write_object_begin(w);
 
@@ -2461,6 +2462,9 @@ nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrl
 	spdk_json_write_named_object_begin(w, "trid");
 	nvme_bdev_dump_trid_json(trid, w);
 	spdk_json_write_object_end(w);
+
+	cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+	spdk_json_write_named_uint16(w, "cntlid", cdata->cntlid);
 
 	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
 	spdk_json_write_named_object_begin(w, "host");
@@ -2515,6 +2519,8 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 #endif
 
 	spdk_json_write_named_object_begin(w, "ctrlr_data");
+
+	spdk_json_write_named_uint16(w, "cntlid", cdata->cntlid);
 
 	spdk_json_write_named_string_fmt(w, "vendor_id", "0x%04x", cdata->vid);
 

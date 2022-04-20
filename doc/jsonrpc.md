@@ -3153,7 +3153,8 @@ Example response:
       "trid": {
         "trtype": "PCIe",
         "traddr": "0000:05:00.0"
-      }
+      },
+      "cntlid": 0
     }
   ]
 }
