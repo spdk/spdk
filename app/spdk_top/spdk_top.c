@@ -1406,7 +1406,8 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 		core_num = g_threads_info[current_row].core_num;
 		if (core_num >= 0 && core_num < RPC_MAX_CORES) {
 			get_cpu_usage_str(g_threads_info[current_row].busy - g_threads_info[current_row].last_busy,
-					  g_cores_info[core_num].busy + g_cores_info[core_num].idle,
+					  (g_cores_info[core_num].busy - g_cores_info[core_num].last_busy) +
+					  (g_cores_info[core_num].idle - g_cores_info[core_num].last_idle),
 					  cpu_usage);
 		} else {
 			snprintf(cpu_usage, sizeof(cpu_usage), "n/a");
@@ -1674,7 +1675,8 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 
 	if (!col_desc[COL_CORES_CPU_USAGE].disabled) {
 		get_cpu_usage_str(g_cores_info[current_row].busy - g_cores_info[current_row].last_busy,
-				  g_cores_info[current_row].busy + g_cores_info[current_row].idle,
+				  (g_cores_info[current_row].busy - g_cores_info[current_row].last_busy) +
+				  (g_cores_info[current_row].idle - g_cores_info[current_row].last_idle),
 				  cpu_usage);
 		print_max_len(g_tabs[CORES_TAB], TABS_DATA_START_ROW + item_index, col,
 			      col_desc[COL_CORES_CPU_USAGE].max_data_string, ALIGN_RIGHT, cpu_usage);
