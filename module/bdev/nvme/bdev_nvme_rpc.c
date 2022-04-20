@@ -537,60 +537,18 @@ SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller
 		  SPDK_RPC_RUNTIME)
 SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_bdev)
 
-static const char *
-nvme_ctrlr_get_state_str(struct nvme_ctrlr *nvme_ctrlr)
-{
-	if (nvme_ctrlr->destruct) {
-		return "deleting";
-	} else if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
-		return "failed";
-	} else if (nvme_ctrlr->resetting) {
-		return "resetting";
-	} else if (nvme_ctrlr->reconnect_is_delayed > 0) {
-		return "reconnect_is_delayed";
-	} else {
-		return "enabled";
-	}
-}
-
 static void
 rpc_dump_nvme_bdev_controller_info(struct nvme_bdev_ctrlr *nbdev_ctrlr, void *ctx)
 {
 	struct spdk_json_write_ctx	*w = ctx;
-	struct spdk_nvme_transport_id   *trid;
 	struct nvme_ctrlr		*nvme_ctrlr;
-	const struct spdk_nvme_ctrlr_opts *opts;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", nbdev_ctrlr->name);
 
 	spdk_json_write_named_array_begin(w, "ctrlrs");
 	TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_named_string(w, "state", nvme_ctrlr_get_state_str(nvme_ctrlr));
-
-#ifdef SPDK_CONFIG_NVME_CUSE
-		size_t cuse_name_size = 128;
-		char cuse_name[cuse_name_size];
-
-		int rc = spdk_nvme_cuse_get_ctrlr_name(nvme_ctrlr->ctrlr, cuse_name, &cuse_name_size);
-		if (rc == 0) {
-			spdk_json_write_named_string(w, "cuse_device", cuse_name);
-		}
-#endif
-		trid = &nvme_ctrlr->active_path_id->trid;
-		spdk_json_write_named_object_begin(w, "trid");
-		nvme_bdev_dump_trid_json(trid, w);
-		spdk_json_write_object_end(w);
-
-		opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
-		spdk_json_write_named_object_begin(w, "host");
-		spdk_json_write_named_string(w, "nqn", opts->hostnqn);
-		spdk_json_write_named_string(w, "addr", opts->src_addr);
-		spdk_json_write_named_string(w, "svcid", opts->src_svcid);
-		spdk_json_write_object_end(w);
-		spdk_json_write_object_end(w);
+		nvme_ctrlr_info_json(w, nvme_ctrlr);
 	}
 	spdk_json_write_array_end(w);
 	spdk_json_write_object_end(w);

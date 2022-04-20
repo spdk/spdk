@@ -2422,6 +2422,56 @@ bdev_nvme_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int
 	return spdk_nvme_ctrlr_get_memory_domains(nvme_ns->ctrlr->ctrlr, domains, array_size);
 }
 
+static const char *
+nvme_ctrlr_get_state_str(struct nvme_ctrlr *nvme_ctrlr)
+{
+	if (nvme_ctrlr->destruct) {
+		return "deleting";
+	} else if (spdk_nvme_ctrlr_is_failed(nvme_ctrlr->ctrlr)) {
+		return "failed";
+	} else if (nvme_ctrlr->resetting) {
+		return "resetting";
+	} else if (nvme_ctrlr->reconnect_is_delayed > 0) {
+		return "reconnect_is_delayed";
+	} else {
+		return "enabled";
+	}
+}
+
+void
+nvme_ctrlr_info_json(struct spdk_json_write_ctx *w, struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct spdk_nvme_transport_id *trid;
+	const struct spdk_nvme_ctrlr_opts *opts;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "state", nvme_ctrlr_get_state_str(nvme_ctrlr));
+
+#ifdef SPDK_CONFIG_NVME_CUSE
+	size_t cuse_name_size = 128;
+	char cuse_name[cuse_name_size];
+
+	int rc = spdk_nvme_cuse_get_ctrlr_name(nvme_ctrlr->ctrlr, cuse_name, &cuse_name_size);
+	if (rc == 0) {
+		spdk_json_write_named_string(w, "cuse_device", cuse_name);
+	}
+#endif
+	trid = &nvme_ctrlr->active_path_id->trid;
+	spdk_json_write_named_object_begin(w, "trid");
+	nvme_bdev_dump_trid_json(trid, w);
+	spdk_json_write_object_end(w);
+
+	opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
+	spdk_json_write_named_object_begin(w, "host");
+	spdk_json_write_named_string(w, "nqn", opts->hostnqn);
+	spdk_json_write_named_string(w, "addr", opts->src_addr);
+	spdk_json_write_named_string(w, "svcid", opts->src_svcid);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 static void
 nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 			 struct nvme_ns *nvme_ns)
