@@ -2481,6 +2481,7 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_transport_id *trid;
 	union spdk_nvme_vs_register vs;
+	const struct spdk_nvme_ns_data *nsdata;
 	char buf[128];
 
 	ns = nvme_ns->ns;
@@ -2542,6 +2543,9 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_end(w);
 
+	spdk_json_write_named_bool(w, "multi_ctrlr", cdata->cmic.multi_ctrlr);
+	spdk_json_write_named_bool(w, "ana_reporting", cdata->cmic.ana_reporting);
+
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_named_object_begin(w, "vs");
@@ -2555,6 +2559,8 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_end(w);
 
+	nsdata = spdk_nvme_ns_get_data(ns);
+
 	spdk_json_write_named_object_begin(w, "ns_data");
 
 	spdk_json_write_named_uint32(w, "id", spdk_nvme_ns_get_id(ns));
@@ -2563,6 +2569,8 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_string(w, "ana_state",
 					     _nvme_ana_state_str(nvme_ns->ana_state));
 	}
+
+	spdk_json_write_named_bool(w, "can_share", nsdata->nmic.can_share);
 
 	spdk_json_write_object_end(w);
 
