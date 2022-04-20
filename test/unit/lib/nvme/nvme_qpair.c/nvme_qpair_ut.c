@@ -756,7 +756,7 @@ test_nvme_get_sgl_print_info(void)
 	cmd.dptr.sgl1.keyed.key = 0xababccdd;
 
 	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
-	CU_ASSERT(!strncmp(buf, "SGL RESERVED ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
+	CU_ASSERT(!strncmp(buf, "SGL KEYED DATA BLOCK ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
 			   NVME_CMD_DPTR_STR_SIZE));
 }
 
