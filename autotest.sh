@@ -239,6 +239,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 		run_test "rocksdb" ./test/blobfs/rocksdb/rocksdb.sh
 		run_test "blobstore" ./test/blobstore/blobstore.sh
+		run_test "blobstore_grow" ./test/blobstore/blobstore_grow/blobstore_grow.sh
 		run_test "blobfs" ./test/blobfs/blobfs.sh
 		run_test "hello_blob" $SPDK_EXAMPLE_DIR/hello_blob \
 			examples/blob/hello_world/hello_blob.json
