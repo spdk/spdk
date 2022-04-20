@@ -123,8 +123,32 @@ static const struct spdk_json_object_decoder rpc_construct_vhost_blk[] = {
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
 
 static int
-process_blk_request(struct spdk_vhost_blk_task *task,
-		    struct spdk_vhost_blk_session *bvsession);
+process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
+		    struct spdk_vhost_blk_task *task);
+
+static int
+vhost_user_process_blk_request(struct spdk_vhost_blk_task *task)
+{
+	struct spdk_vhost_blk_session *bvsession = task->bvsession;
+	struct spdk_vhost_dev *vdev = &bvsession->bvdev->vdev;
+
+	return process_blk_request(vdev, bvsession->io_channel, task);
+}
+
+static struct spdk_vhost_blk_dev *
+to_blk_dev(struct spdk_vhost_dev *vdev)
+{
+	if (vdev == NULL) {
+		return NULL;
+	}
+
+	if (vdev->backend != &vhost_blk_device_backend) {
+		SPDK_ERRLOG("%s: not a vhost-blk device\n", vdev->name);
+		return NULL;
+	}
+
+	return SPDK_CONTAINEROF(vdev, struct spdk_vhost_blk_dev, vdev);
+}
 
 static struct spdk_vhost_blk_session *
 to_blk_session(struct spdk_vhost_session *vsession)
@@ -423,7 +447,7 @@ blk_request_resubmit(void *arg)
 	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)arg;
 	int rc = 0;
 
-	rc = process_blk_request(task, task->bvsession);
+	rc = vhost_user_process_blk_request(task);
 	if (rc == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p resubmitted ======\n", task);
 	} else {
@@ -450,10 +474,10 @@ blk_request_queue_io(struct spdk_vhost_blk_task *task)
 }
 
 static int
-process_blk_request(struct spdk_vhost_blk_task *task,
-		    struct spdk_vhost_blk_session *bvsession)
+process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
+		    struct spdk_vhost_blk_task *task)
 {
-	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 	struct virtio_blk_outhdr req;
 	struct virtio_blk_discard_write_zeroes *desc;
 	struct iovec *iov;
@@ -510,12 +534,12 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 
 		if (type == VIRTIO_BLK_T_IN) {
 			task->used_len = payload_len + sizeof(*task->status);
-			rc = spdk_bdev_readv(bvdev->bdev_desc, bvsession->io_channel,
+			rc = spdk_bdev_readv(bvdev->bdev_desc, ch,
 					     &task->iovs[1], iovcnt, req.sector * 512,
 					     payload_len, blk_request_complete_cb, task);
 		} else if (!bvdev->readonly) {
 			task->used_len = sizeof(*task->status);
-			rc = spdk_bdev_writev(bvdev->bdev_desc, bvsession->io_channel,
+			rc = spdk_bdev_writev(bvdev->bdev_desc, ch,
 					      &task->iovs[1], iovcnt, req.sector * 512,
 					      payload_len, blk_request_complete_cb, task);
 		} else {
@@ -547,7 +571,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 			return -1;
 		}
 
-		rc = spdk_bdev_unmap(bvdev->bdev_desc, bvsession->io_channel,
+		rc = spdk_bdev_unmap(bvdev->bdev_desc, ch,
 				     desc->sector * 512, desc->num_sectors * 512,
 				     blk_request_complete_cb, task);
 		if (rc) {
@@ -577,7 +601,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 				     (uint64_t)desc->sector * 512, (uint64_t)desc->num_sectors * 512);
 		}
 
-		rc = spdk_bdev_write_zeroes(bvdev->bdev_desc, bvsession->io_channel,
+		rc = spdk_bdev_write_zeroes(bvdev->bdev_desc, ch,
 					    desc->sector * 512, desc->num_sectors * 512,
 					    blk_request_complete_cb, task);
 		if (rc) {
@@ -597,7 +621,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 			blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 			return -1;
 		}
-		rc = spdk_bdev_flush(bvdev->bdev_desc, bvsession->io_channel,
+		rc = spdk_bdev_flush(bvdev->bdev_desc, ch,
 				     0, flush_bytes,
 				     blk_request_complete_cb, task);
 		if (rc) {
@@ -660,7 +684,7 @@ process_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 		return;
 	}
 
-	if (process_blk_request(task, task->bvsession) == 0) {
+	if (vhost_user_process_blk_request(task) == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p req_idx %d submitted ======\n", task,
 			      req_idx);
 	} else {
@@ -722,7 +746,7 @@ process_packed_blk_task(struct spdk_vhost_virtqueue *vq, uint16_t req_idx)
 		return;
 	}
 
-	if (process_blk_request(task, task->bvsession) == 0) {
+	if (vhost_user_process_blk_request(task) == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p req_idx %d submitted ======\n", task,
 			      task_idx);
 	} else {
@@ -780,7 +804,7 @@ process_packed_inflight_blk_task(struct spdk_vhost_virtqueue *vq,
 		return;
 	}
 
-	if (process_blk_request(task, task->bvsession) == 0) {
+	if (vhost_user_process_blk_request(task) == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p req_idx %d submitted ======\n", task,
 			      task_idx);
 	} else {
@@ -1080,21 +1104,6 @@ vhost_blk_poller_set_interrupt_mode(struct spdk_poller *poller, void *cb_arg, bo
 	struct spdk_vhost_blk_session *bvsession = cb_arg;
 
 	vhost_user_session_set_interrupt_mode(&bvsession->vsession, interrupt_mode);
-}
-
-static struct spdk_vhost_blk_dev *
-to_blk_dev(struct spdk_vhost_dev *vdev)
-{
-	if (vdev == NULL) {
-		return NULL;
-	}
-
-	if (vdev->backend != &vhost_blk_device_backend) {
-		SPDK_ERRLOG("%s: not a vhost-blk device\n", vdev->name);
-		return NULL;
-	}
-
-	return SPDK_CONTAINEROF(vdev, struct spdk_vhost_blk_dev, vdev);
 }
 
 static int
