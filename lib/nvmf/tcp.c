@@ -311,6 +311,8 @@ struct spdk_nvmf_tcp_qpair {
 	 */
 	struct spdk_poller			*timeout_poller;
 
+	spdk_nvmf_transport_qpair_fini_cb	fini_cb_fn;
+	void					*fini_cb_arg;
 
 	TAILQ_ENTRY(spdk_nvmf_tcp_qpair)	link;
 };
@@ -524,8 +526,11 @@ nvmf_tcp_dump_qpair_req_contents(struct spdk_nvmf_tcp_qpair *tqpair)
 }
 
 static void
-nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
+_nvmf_tcp_qpair_destroy(void *_tqpair)
 {
+	struct spdk_nvmf_tcp_qpair *tqpair = _tqpair;
+	spdk_nvmf_transport_qpair_fini_cb cb_fn = tqpair->fini_cb_fn;
+	void *cb_arg = tqpair->fini_cb_arg;
 	int err = 0;
 
 	spdk_trace_record(TRACE_TCP_QP_DESTROY, 0, 0, (uintptr_t)tqpair);
@@ -551,7 +556,22 @@ nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
 	free(tqpair->reqs);
 	spdk_free(tqpair->bufs);
 	free(tqpair);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg);
+	}
+
 	SPDK_DEBUGLOG(nvmf_tcp, "Leave\n");
+}
+
+static void
+nvmf_tcp_qpair_destroy(struct spdk_nvmf_tcp_qpair *tqpair)
+{
+	/* Delay the destruction to make sure it isn't performed from the context of a sock
+	 * callback.  Otherwise, spdk_sock_close() might not abort pending requests, causing their
+	 * completions to be executed after the qpair is freed.  (Note: this fixed issue #2471.)
+	 */
+	spdk_thread_send_msg(spdk_get_thread(), _nvmf_tcp_qpair_destroy, tqpair);
 }
 
 static void
@@ -3154,12 +3174,13 @@ nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair,
 	SPDK_DEBUGLOG(nvmf_tcp, "Qpair: %p\n", qpair);
 
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
+
+	assert(tqpair->fini_cb_fn == NULL);
+	tqpair->fini_cb_fn = cb_fn;
+	tqpair->fini_cb_arg = cb_arg;
+
 	nvmf_tcp_qpair_set_state(tqpair, NVME_TCP_QPAIR_STATE_EXITED);
 	nvmf_tcp_qpair_destroy(tqpair);
-
-	if (cb_fn) {
-		cb_fn(cb_arg);
-	}
 }
 
 static int
