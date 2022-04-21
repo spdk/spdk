@@ -78,6 +78,7 @@ DEFINE_STUB_V(spdk_nvmf_tgt_new_qpair, (struct spdk_nvmf_tgt *tgt, struct spdk_n
 DEFINE_STUB(nvmf_ctrlr_abort_request, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
 DEFINE_STUB(ibv_dereg_mr, int, (struct ibv_mr *mr), 0);
+DEFINE_STUB(ibv_resize_cq, int, (struct ibv_cq *cq, int cqe), 0);
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
@@ -1446,6 +1447,82 @@ test_nvmf_rdma_qpair_compare(void)
 	CU_ASSERT(nvmf_rdma_qpair_compare(&rqpair2, &rqpair1) > 0);
 }
 
+static void
+test_nvmf_rdma_resize_cq(void)
+{
+	int rc = -1;
+	int tnum_wr = 0;
+	int tnum_cqe = 0;
+	struct spdk_nvmf_rdma_qpair rqpair = {};
+	struct spdk_nvmf_rdma_poller rpoller = {};
+	struct spdk_nvmf_rdma_device rdevice = {};
+	struct ibv_context ircontext = {};
+	struct ibv_device idevice = {};
+
+	rdevice.context = &ircontext;
+	rqpair.poller = &rpoller;
+	ircontext.device = &idevice;
+
+	/* Test1: Current capacity support required size. */
+	rpoller.required_num_wr = 10;
+	rpoller.num_cqe = 20;
+	rqpair.max_queue_depth = 2;
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rpoller.required_num_wr == 10 + MAX_WR_PER_QP(rqpair.max_queue_depth));
+	CU_ASSERT(rpoller.required_num_wr > tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+	/* Test2: iWARP doesn't support CQ resize. */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	idevice.transport_type = IBV_TRANSPORT_IWARP;
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(rpoller.required_num_wr == tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+
+	/* Test3: RDMA CQE requirement exceeds device max_cqe limitation. */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	idevice.transport_type = IBV_TRANSPORT_UNKNOWN;
+	rdevice.attr.max_cqe = 3;
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(rpoller.required_num_wr == tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+	/* Test4: RDMA CQ resize failed. */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	idevice.transport_type = IBV_TRANSPORT_IB;
+	rdevice.attr.max_cqe = 30;
+	MOCK_SET(ibv_resize_cq, -1);
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(rpoller.required_num_wr == tnum_wr);
+	CU_ASSERT(rpoller.num_cqe == tnum_cqe);
+
+	/* Test5: RDMA CQ resize success. rsize = MIN(MAX(num_cqe * 2, required_num_wr), device->attr.max_cqe). */
+	tnum_wr = rpoller.required_num_wr;
+	tnum_cqe = rpoller.num_cqe;
+	MOCK_SET(ibv_resize_cq, 0);
+
+	rc = nvmf_rdma_resize_cq(&rqpair, &rdevice);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rpoller.num_cqe = 30);
+	CU_ASSERT(rpoller.required_num_wr == 18 + MAX_WR_PER_QP(rqpair.max_queue_depth));
+	CU_ASSERT(rpoller.required_num_wr > tnum_wr);
+	CU_ASSERT(rpoller.num_cqe > tnum_cqe);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1465,6 +1542,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_rdma_update_ibv_state);
 	CU_ADD_TEST(suite, test_nvmf_rdma_resources_create);
 	CU_ADD_TEST(suite, test_nvmf_rdma_qpair_compare);
+	CU_ADD_TEST(suite, test_nvmf_rdma_resize_cq);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
