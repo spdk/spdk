@@ -76,6 +76,8 @@ struct spdk_vhost_blk_task {
 
 	/* for io wait */
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
+	struct spdk_io_channel *bdev_io_wait_ch;
+	struct spdk_vhost_dev *bdev_io_wait_vdev;
 
 	/* If set, the task is currently used for I/O processing. */
 	bool used;
@@ -447,7 +449,7 @@ blk_request_resubmit(void *arg)
 	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)arg;
 	int rc = 0;
 
-	rc = vhost_user_process_blk_request(task);
+	rc = process_blk_request(task->bdev_io_wait_vdev, task->bdev_io_wait_ch, task);
 	if (rc == 0) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Task %p resubmitted ======\n", task);
 	} else {
@@ -456,17 +458,20 @@ blk_request_resubmit(void *arg)
 }
 
 static inline void
-blk_request_queue_io(struct spdk_vhost_blk_task *task)
+blk_request_queue_io(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
+		     struct spdk_vhost_blk_task *task)
 {
 	int rc;
 	struct spdk_vhost_blk_session *bvsession = task->bvsession;
-	struct spdk_bdev *bdev = bvsession->bvdev->bdev;
+	struct spdk_bdev *bdev = task->bdev_io->bdev;
 
 	task->bdev_io_wait.bdev = bdev;
 	task->bdev_io_wait.cb_fn = blk_request_resubmit;
 	task->bdev_io_wait.cb_arg = task;
+	task->bdev_io_wait_ch = ch;
+	task->bdev_io_wait_vdev = vdev;
 
-	rc = spdk_bdev_queue_io_wait(bdev, bvsession->io_channel, &task->bdev_io_wait);
+	rc = spdk_bdev_queue_io_wait(bdev, ch, &task->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to queue I/O, rc=%d\n", bvsession->vsession.name, rc);
 		blk_request_finish(VIRTIO_BLK_S_IOERR, task);
@@ -550,7 +555,7 @@ process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 		if (rc) {
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
-				blk_request_queue_io(task);
+				blk_request_queue_io(vdev, ch, task);
 			} else {
 				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
@@ -577,7 +582,7 @@ process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 		if (rc) {
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
-				blk_request_queue_io(task);
+				blk_request_queue_io(vdev, ch, task);
 			} else {
 				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
@@ -607,7 +612,7 @@ process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 		if (rc) {
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
-				blk_request_queue_io(task);
+				blk_request_queue_io(vdev, ch, task);
 			} else {
 				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
@@ -627,7 +632,7 @@ process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 		if (rc) {
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(vhost_blk, "No memory, start to queue io.\n");
-				blk_request_queue_io(task);
+				blk_request_queue_io(vdev, ch, task);
 			} else {
 				blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 				return -1;
