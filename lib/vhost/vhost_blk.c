@@ -462,7 +462,6 @@ blk_request_queue_io(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 		     struct spdk_vhost_blk_task *task)
 {
 	int rc;
-	struct spdk_vhost_blk_session *bvsession = task->bvsession;
 	struct spdk_bdev *bdev = task->bdev_io->bdev;
 
 	task->bdev_io_wait.bdev = bdev;
@@ -473,7 +472,6 @@ blk_request_queue_io(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 
 	rc = spdk_bdev_queue_io_wait(bdev, ch, &task->bdev_io_wait);
 	if (rc != 0) {
-		SPDK_ERRLOG("%s: failed to queue I/O, rc=%d\n", bvsession->vsession.name, rc);
 		blk_request_finish(VIRTIO_BLK_S_IOERR, task);
 	}
 }
@@ -495,8 +493,8 @@ process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 	iov = &task->iovs[0];
 	if (spdk_unlikely(iov->iov_len != sizeof(req))) {
 		SPDK_DEBUGLOG(vhost_blk,
-			      "First descriptor size is %zu but expected %zu (req_idx = %"PRIu16").\n",
-			      iov->iov_len, sizeof(req), task->req_idx);
+			      "First descriptor size is %zu but expected %zu (task = %p).\n",
+			      iov->iov_len, sizeof(req), task);
 		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return -1;
 	}
@@ -510,8 +508,8 @@ process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 	iov = &task->iovs[task->iovcnt - 1];
 	if (spdk_unlikely(iov->iov_len != 1)) {
 		SPDK_DEBUGLOG(vhost_blk,
-			      "Last descriptor size is %zu but expected %d (req_idx = %"PRIu16").\n",
-			      iov->iov_len, 1, task->req_idx);
+			      "Last descriptor size is %zu but expected %d (task = %p).\n",
+			      iov->iov_len, 1, task);
 		blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 		return -1;
 	}
@@ -531,8 +529,8 @@ process_blk_request(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 	case VIRTIO_BLK_T_IN:
 	case VIRTIO_BLK_T_OUT:
 		if (spdk_unlikely(payload_len == 0 || (payload_len & (512 - 1)) != 0)) {
-			SPDK_ERRLOG("%s - passed IO buffer is not multiple of 512b (req_idx = %"PRIu16").\n",
-				    type ? "WRITE" : "READ", task->req_idx);
+			SPDK_ERRLOG("%s - passed IO buffer is not multiple of 512b (task = %p).\n",
+				    type ? "WRITE" : "READ", task);
 			blk_request_finish(VIRTIO_BLK_S_UNSUPP, task);
 			return -1;
 		}
