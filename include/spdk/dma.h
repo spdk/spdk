@@ -71,7 +71,7 @@ enum spdk_dma_device_type {
 struct spdk_memory_domain;
 
 /**
- * Definition of completion callback to be called by pull or push functions.
+ * Definition of completion callback to be called by pull, push or memzero functions.
  *
  * \param ctx User context passed to pull of push functions
  * \param rc Result of asynchronous data pull or push function
@@ -116,6 +116,20 @@ typedef int (*spdk_memory_domain_push_data_cb)(struct spdk_memory_domain *dst_do
 		void *dst_domain_ctx,
 		struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
 		spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
+
+/**
+ * Definition of function which asynchronously fills memory in \b domain with zeroes
+ *
+ * \param domain Memory domain in which address space data buffer is located
+ * \param domain_ctx User defined context
+ * \param iov iov in \b domain memory space to be filled with zeroes
+ * \param iovcnt \b iov array size
+ * \param cpl_cb Completion callback
+ * \param cpl_cb_arg Completion callback argument
+ * \return 0 on success, negated errno on failure
+ */
+typedef int (*spdk_memory_domain_memzero_cb)(struct spdk_memory_domain *domain, void *domain_ctx,
+		struct iovec *iov, uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 struct spdk_memory_domain_translation_result {
 	/** size of this structure in bytes */
@@ -229,6 +243,15 @@ void spdk_memory_domain_set_push(struct spdk_memory_domain *domain,
 				 spdk_memory_domain_push_data_cb push_cb);
 
 /**
+ * Set memzero function for memory domain. Overwrites existing memzero function.
+ *
+ * \param domain Memory domain
+ * \param memzero_cb memzero function
+ */
+void spdk_memory_domain_set_memzero(struct spdk_memory_domain *domain,
+				    spdk_memory_domain_memzero_cb memzero_cb);
+
+/**
  * Get the context passed by the user in \ref spdk_memory_domain_create
  *
  * \param domain Memory domain
@@ -318,6 +341,21 @@ int spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *ds
 int spdk_memory_domain_translate_data(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 				      struct spdk_memory_domain *dst_domain, struct spdk_memory_domain_translation_ctx *dst_domain_ctx,
 				      void *addr, size_t len, struct spdk_memory_domain_translation_result *result);
+
+/**
+ * Fills memory in \b domain with zeroes
+ *
+ * \param domain Memory domain in which address space data buffer is located
+ * \param domain_ctx User defined context
+ * \param iov iov in \b domain memory space to be filled with zeroes
+ * \param iovcnt \b iov array size
+ * \param cpl_cb Completion callback
+ * \param cpl_cb_arg Completion callback argument
+ * \return 0 on success, negated errno on failure. memzero implementation must only call the callback when 0
+ * is returned
+ */
+int spdk_memory_domain_memzero(struct spdk_memory_domain *domain, void *domain_ctx,
+			       struct iovec *iov, uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg);
 
 /**
  * Get the first memory domain.

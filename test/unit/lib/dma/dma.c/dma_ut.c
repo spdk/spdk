@@ -39,6 +39,7 @@
 static bool g_memory_domain_pull_called;
 static bool g_memory_domain_push_called;
 static bool g_memory_domain_translate_called;
+static bool g_memory_domain_memzero_called;
 static int g_memory_domain_cb_rc = 123;
 
 static void
@@ -46,19 +47,21 @@ test_memory_domain_data_cpl_cb(void *ctx, int rc)
 {
 }
 
-static int test_memory_domain_pull_data_cb(struct spdk_memory_domain *src_device,
-		void *src_device_ctx, struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov,
-		uint32_t dst_iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+static int
+test_memory_domain_pull_data_cb(struct spdk_memory_domain *src_device,
+				void *src_device_ctx, struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov,
+				uint32_t dst_iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
 {
 	g_memory_domain_pull_called = true;
 
 	return g_memory_domain_cb_rc;
 }
 
-static int test_memory_domain_push_data_cb(struct spdk_memory_domain *dst_domain,
-		void *dst_domain_ctx,
-		struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
-		spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+static int
+test_memory_domain_push_data_cb(struct spdk_memory_domain *dst_domain,
+				void *dst_domain_ctx,
+				struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+				spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
 {
 	g_memory_domain_push_called = true;
 
@@ -71,6 +74,15 @@ test_memory_domain_translate_memory_cb(struct spdk_memory_domain *src_device, vo
 				       void *addr, size_t len, struct spdk_memory_domain_translation_result *result)
 {
 	g_memory_domain_translate_called = true;
+
+	return g_memory_domain_cb_rc;
+}
+
+static int
+test_memory_domain_memzero_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			      struct iovec *iov, uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	g_memory_domain_memzero_called = true;
 
 	return g_memory_domain_cb_rc;
 }
@@ -166,6 +178,20 @@ test_dma(void)
 	CU_ASSERT(rc == g_memory_domain_cb_rc);
 	CU_ASSERT(g_memory_domain_translate_called == true);
 
+	/* memzero, callback is NULL. Expect fail */
+	g_memory_domain_memzero_called = false;
+	rc = spdk_memory_domain_memzero(domain, NULL, &src_iov, 1, test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	CU_ASSERT(g_memory_domain_memzero_called == false);
+
+	/* Set memzero callback */
+	spdk_memory_domain_set_memzero(domain, test_memory_domain_memzero_cb);
+
+	/* memzero. Expect pass */
+	rc = spdk_memory_domain_memzero(domain, NULL, &src_iov, 1, test_memory_domain_data_cpl_cb, NULL);
+	CU_ASSERT(rc == g_memory_domain_cb_rc);
+	CU_ASSERT(g_memory_domain_memzero_called == true);
+
 	/* Set translation callback to NULL. Expect pass */
 	spdk_memory_domain_set_translation(domain, NULL);
 	CU_ASSERT(domain->translate_cb == NULL);
@@ -178,9 +204,17 @@ test_dma(void)
 	spdk_memory_domain_set_pull(domain, NULL);
 	CU_ASSERT(domain->pull_cb == NULL);
 
-	/* Set translation_callback. Expect pass */
+	/* Set pull callback. Expect pass */
 	spdk_memory_domain_set_pull(domain, test_memory_domain_pull_data_cb);
 	CU_ASSERT(domain->pull_cb == test_memory_domain_pull_data_cb);
+
+	/* Set memzero to NULL. Expect pass */
+	spdk_memory_domain_set_memzero(domain, NULL);
+	CU_ASSERT(domain->memzero_cb == NULL);
+
+	/* Set memzero callback. Expect pass */
+	spdk_memory_domain_set_memzero(domain, test_memory_domain_memzero_cb);
+	CU_ASSERT(domain->memzero_cb == test_memory_domain_memzero_cb);
 
 	/* Create 2nd and 3rd memory domains with equal id to test enumeration */
 	rc = spdk_memory_domain_create(&domain_2, SPDK_DMA_DEVICE_TYPE_RDMA, &memory_domain_ctx, "test_2");

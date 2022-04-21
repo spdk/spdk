@@ -44,6 +44,7 @@ struct spdk_memory_domain {
 	spdk_memory_domain_pull_data_cb pull_cb;
 	spdk_memory_domain_push_data_cb push_cb;
 	spdk_memory_domain_translate_memory_cb translate_cb;
+	spdk_memory_domain_memzero_cb memzero_cb;
 	TAILQ_ENTRY(spdk_memory_domain) link;
 	struct spdk_memory_domain_ctx *ctx;
 	char *id;
@@ -138,6 +139,17 @@ spdk_memory_domain_set_push(struct spdk_memory_domain *domain,
 	domain->push_cb = push_cb;
 }
 
+void
+spdk_memory_domain_set_memzero(struct spdk_memory_domain *domain,
+			       spdk_memory_domain_memzero_cb memzero_cb)
+{
+	if (!domain) {
+		return;
+	}
+
+	domain->memzero_cb = memzero_cb;
+}
+
 struct spdk_memory_domain_ctx *
 spdk_memory_domain_get_context(struct spdk_memory_domain *domain)
 {
@@ -226,6 +238,21 @@ spdk_memory_domain_translate_data(struct spdk_memory_domain *src_domain, void *s
 
 	return src_domain->translate_cb(src_domain, src_domain_ctx, dst_domain, dst_domain_ctx, addr, len,
 					result);
+}
+
+int
+spdk_memory_domain_memzero(struct spdk_memory_domain *domain, void *domain_ctx, struct iovec *iov,
+			   uint32_t iovcnt, spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	assert(domain);
+	assert(iov);
+	assert(iovcnt);
+
+	if (spdk_unlikely(!domain->memzero_cb)) {
+		return -ENOTSUP;
+	}
+
+	return domain->memzero_cb(domain, domain_ctx, iov, iovcnt, cpl_cb, cpl_cb_arg);
 }
 
 struct spdk_memory_domain *
