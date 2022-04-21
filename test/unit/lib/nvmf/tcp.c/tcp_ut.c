@@ -766,6 +766,11 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 	int rc;
 	struct spdk_nvmf_tcp_qpair *tqpair = NULL;
 	struct spdk_nvmf_transport transport = {};
+	struct spdk_thread *thread;
+
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
 
 	tqpair = calloc(1, sizeof(*tqpair));
 	tqpair->qpair.transport = &transport;
@@ -820,6 +825,12 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 
 	/* Free all of tqpair resource */
 	nvmf_tcp_qpair_destroy(tqpair);
+
+	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
+	spdk_thread_destroy(thread);
 }
 
 static void
