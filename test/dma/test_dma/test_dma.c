@@ -77,6 +77,7 @@ struct dma_test_task {
 	const char *bdev_name;
 	uint64_t num_translations;
 	uint64_t num_pull_push;
+	uint64_t num_mem_zero;
 	uint32_t lcore;
 
 	TAILQ_ENTRY(dma_test_task) link;
@@ -90,6 +91,7 @@ struct dma_test_data_cpl_ctx {
 enum dma_test_domain_ops {
 	DMA_TEST_DOMAIN_OP_TRANSLATE = 1u << 0,
 	DMA_TEST_DOMAIN_OP_PULL_PUSH = 1u << 1,
+	DMA_TEST_DOMAIN_OP_MEMZERO = 1u << 2,
 };
 
 TAILQ_HEAD(, dma_test_task) g_tasks = TAILQ_HEAD_INITIALIZER(g_tasks);
@@ -335,6 +337,33 @@ static int dma_test_pull_memory_cb(struct spdk_memory_domain *src_domain,
 
 	return dma_test_copy_memory(req, dst_iov, dst_iovcnt, src_iov, src_iovcnt, cpl_cb, cpl_cb_arg);
 }
+
+static int dma_test_memzero_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+			       struct iovec *iov, uint32_t iovcnt,
+			       spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+{
+	struct dma_test_req *req = src_domain_ctx;
+	struct dma_test_data_cpl_ctx *cpl_ctx;
+	uint32_t i;
+
+	cpl_ctx = calloc(1, sizeof(*cpl_ctx));
+	if (!cpl_ctx) {
+		return -ENOMEM;
+	}
+
+	cpl_ctx->data_cpl = cpl_cb;
+	cpl_ctx->data_cpl_arg = cpl_cb_arg;
+
+	for (i = 0; i < iovcnt; i++) {
+		memset(iov[i].iov_base, 0, iov[i].iov_len);
+	}
+	req->task->num_mem_zero++;
+
+	spdk_thread_send_msg(req->task->thread, dma_test_data_cpl, cpl_ctx);
+
+	return 0;
+}
+
 
 static int
 dma_test_translate_memory_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
@@ -672,6 +701,7 @@ verify_tasks(void)
 	uint64_t total_requests = 0;
 	uint64_t num_translations = 0;
 	uint64_t num_pull_push = 0;
+	uint64_t num_memzero = 0;
 	int rc = 0;
 
 	if (!g_test_ops) {
@@ -683,6 +713,7 @@ verify_tasks(void)
 		total_requests += task->stats.io_completed;
 		num_translations += task->num_translations;
 		num_pull_push += task->num_pull_push;
+		num_memzero += task->num_mem_zero;
 	}
 
 	if (g_test_ops & DMA_TEST_DOMAIN_OP_TRANSLATE) {
@@ -697,17 +728,24 @@ verify_tasks(void)
 			rc = -EINVAL;
 		}
 	}
+	if (g_test_ops & DMA_TEST_DOMAIN_OP_MEMZERO) {
+		if (num_memzero == 0) {
+			fprintf(stderr, "Requested \"memzero\" operation, but it was not executed\n");
+			rc = -EINVAL;
+		}
+	}
 
 	/* bdev request can be split, so the total number of pull_push +translate operations
 	 * can be bigger than total_number of requests */
-	if (num_translations + num_pull_push < total_requests) {
+	if (num_translations + num_pull_push + num_memzero < total_requests) {
 		fprintf(stderr,
-			"Operations number mismatch: translate %"PRIu64", pull_push %"PRIu64", expected total %"PRIu64"\n",
-			num_translations, num_pull_push, total_requests);
+			"Operations number mismatch: translate %"PRIu64", pull_push %"PRIu64", mem_zero %"PRIu64" expected total %"PRIu64"\n",
+			num_translations, num_pull_push, num_memzero, total_requests);
 		rc = -EINVAL;
 	} else {
-		fprintf(stdout, "Total operations: %"PRIu64", translate %"PRIu64" pull_push %"PRIu64"\n",
-			total_requests, num_translations, num_pull_push);
+		fprintf(stdout,
+			"Total operations: %"PRIu64", translate %"PRIu64" pull_push %"PRIu64" memzero %"PRIu64"\n",
+			total_requests, num_translations, num_pull_push, num_memzero);
 	}
 
 	return rc;
@@ -762,6 +800,7 @@ dma_test_start(void *arg)
 	spdk_memory_domain_set_translation(g_domain, dma_test_translate_memory_cb);
 	spdk_memory_domain_set_pull(g_domain, dma_test_pull_memory_cb);
 	spdk_memory_domain_set_push(g_domain, dma_test_push_memory_cb);
+	spdk_memory_domain_set_memzero(g_domain, dma_test_memzero_cb);
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		rc = allocate_task(i, g_bdev_name);
@@ -813,6 +852,8 @@ parse_expected_ops(const char *_str)
 			g_test_ops |= DMA_TEST_DOMAIN_OP_TRANSLATE;
 		} else if (strcmp(tok, "pull_push") == 0) {
 			g_test_ops |= DMA_TEST_DOMAIN_OP_PULL_PUSH;
+		} else if (strcmp(tok, "memzero") == 0) {
+			g_test_ops |= DMA_TEST_DOMAIN_OP_MEMZERO;
 		} else {
 			fprintf(stderr, "Unknown value %s\n", tok);
 			rc = -EINVAL;
