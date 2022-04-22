@@ -1165,6 +1165,15 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 
 		while (fio_qpair != NULL) {
+			/*
+			 * We can be called while spdk_fio_open()s are still
+			 * ongoing, in which case, ->qpair can still be NULL.
+			 */
+			if (fio_qpair->qpair == NULL) {
+				fio_qpair = TAILQ_NEXT(fio_qpair, link);
+				continue;
+			}
+
 			spdk_nvme_qpair_process_completions(fio_qpair->qpair, max - fio_thread->iocq_count);
 
 			if (fio_thread->iocq_count >= min) {
