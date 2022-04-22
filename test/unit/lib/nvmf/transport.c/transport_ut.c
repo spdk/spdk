@@ -84,6 +84,11 @@ DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid, int, (struct spdk_nvmf_qpair *qpair
 DEFINE_STUB(ibv_reg_mr_iova2, struct ibv_mr *, (struct ibv_pd *pd, void *addr, size_t length,
 		uint64_t iova, unsigned int access), NULL);
 DEFINE_STUB(spdk_nvme_transport_id_adrfam_str, const char *, (enum spdk_nvmf_adrfam adrfam), NULL);
+DEFINE_STUB_V(ut_opts_init, (struct spdk_nvmf_transport_opts *opts));
+DEFINE_STUB(ut_transport_listen, int, (struct spdk_nvmf_transport *transport,
+				       const struct spdk_nvme_transport_id *trid, struct spdk_nvmf_listen_opts *opts), 0);
+DEFINE_STUB_V(ut_transport_stop_listen, (struct spdk_nvmf_transport *transport,
+		const struct spdk_nvme_transport_id *trid));
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
@@ -199,6 +204,147 @@ test_nvmf_transport_poll_group_create(void)
 	spdk_mempool_free(transport.data_buf_pool);
 }
 
+static void
+test_spdk_nvmf_transport_opts_init(void)
+{
+	int rc;
+	bool rcbool;
+	size_t opts_size;
+	struct spdk_nvmf_transport rtransport = {};
+	struct spdk_nvmf_transport *transport = NULL;
+	struct spdk_nvmf_transport_opts opts = {};
+	const struct spdk_nvmf_transport_ops *tops;
+	struct spdk_nvmf_transport_ops ops = {
+		.name = "ut_ops",
+		.type = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA,
+		.create = ut_transport_create,
+		.destroy = ut_transport_destroy,
+		.opts_init = ut_opts_init
+	};
+
+	MOCK_SET(ut_transport_create, &rtransport);
+	spdk_nvmf_transport_register(&ops);
+	transport = spdk_nvmf_transport_create("ut_ops", &g_rdma_ut_transport_opts);
+	CU_ASSERT(transport == &rtransport);
+
+	tops = nvmf_get_transport_ops(ops.name);
+	CU_ASSERT(memcmp(tops, &ops, sizeof(struct spdk_nvmf_transport_ops)) == 0);
+
+	/* Test1: Invalid parameter: unavailable transport type */
+	opts_size = sizeof(struct spdk_nvmf_transport_opts);
+
+	rcbool = spdk_nvmf_transport_opts_init("invalid_ops", &opts, opts_size);
+	CU_ASSERT(rcbool == false);
+
+	/* Test2: Invalid parameter: NULL pointer */
+	rcbool = true;
+
+	rcbool = spdk_nvmf_transport_opts_init(ops.name, NULL, opts_size);
+	CU_ASSERT(rcbool == false);
+
+	/* Test3: Invalid parameter: opts_size inside opts be zero value */
+	rcbool = true;
+	opts_size = 0;
+
+	rcbool = spdk_nvmf_transport_opts_init(ops.name, &opts, opts_size);
+	CU_ASSERT(rcbool == false);
+
+	/* Test4: success */
+	opts.opts_size = 0;
+	opts_size = sizeof(struct spdk_nvmf_transport_opts);
+
+	rcbool = spdk_nvmf_transport_opts_init(ops.name, &opts, opts_size);
+	CU_ASSERT(rcbool == true);
+	CU_ASSERT(opts.opts_size == opts_size);
+
+	rc = spdk_nvmf_transport_destroy(transport, NULL, NULL);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+test_spdk_nvmf_transport_listen_ext(void)
+{
+	int rc;
+	struct spdk_nvmf_transport rtransport = {};
+	struct spdk_nvmf_transport *transport = NULL;
+	struct spdk_nvme_transport_id trid1 = {};
+	struct spdk_nvme_transport_id trid2 = {};
+	struct spdk_nvmf_listen_opts lopts = {};
+	struct spdk_nvmf_listener *tlistener;
+	struct spdk_nvmf_transport_ops ops = {
+		.name = "ut_ops1",
+		.type = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA,
+		.create = ut_transport_create,
+		.destroy = ut_transport_destroy,
+		.opts_init = ut_opts_init,
+		.listen = ut_transport_listen,
+		.stop_listen = ut_transport_stop_listen
+	};
+
+	trid1.trtype = (enum spdk_nvme_transport_type)SPDK_NVMF_TRTYPE_RDMA;
+	trid1.adrfam = (enum spdk_nvmf_adrfam)SPDK_NVMF_ADRFAM_IPV4;
+	trid1.priority = 4;
+	memcpy(trid1.traddr, "192.168.100.72", sizeof("192.168.100.72"));
+	memcpy(trid1.trsvcid, "4420", sizeof("4420"));
+
+	MOCK_SET(ut_transport_create, &rtransport);
+	spdk_nvmf_transport_register(&ops);
+	transport = spdk_nvmf_transport_create("ut_ops1", &g_rdma_ut_transport_opts);
+
+	/* Test1: Execute listen failed */
+	MOCK_SET(ut_transport_listen, -1);
+
+	rc = spdk_nvmf_transport_listen(transport, &trid1, &lopts);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(tlistener == NULL);
+
+	/* Test2: Execute listen success */
+	MOCK_SET(ut_transport_listen, 0);
+
+	rc = spdk_nvmf_transport_listen(transport, &trid1, &lopts);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener != NULL);
+	CU_ASSERT(tlistener->ref == 1);
+	CU_ASSERT(memcmp(&tlistener->trid, &trid1, sizeof(trid1)) == 0);
+
+	/* Test3: Listen for an identifier repeatedly */
+	tlistener = NULL;
+
+	rc = spdk_nvmf_transport_listen(transport, &trid1, &lopts);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener != NULL);
+	CU_ASSERT(tlistener->ref == 2);
+	CU_ASSERT(memcmp(&tlistener->trid, &trid1, sizeof(trid1)) == 0);
+
+	/* Test4: Stop listen when ref >1, Listen will not be released */
+	tlistener = NULL;
+
+	rc = spdk_nvmf_transport_stop_listen(transport, &trid1);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener != NULL);
+	CU_ASSERT(tlistener->ref == 1);
+	CU_ASSERT(memcmp(&tlistener->trid, &trid1, sizeof(trid1)) == 0);
+
+	/* Test5: Stop listen when ref == 1, Listen will be released */
+
+	rc = spdk_nvmf_transport_stop_listen(transport, &trid1);
+	tlistener = nvmf_transport_find_listener(transport, &trid1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tlistener == NULL);
+
+	/* Test6: Release unrecognized listener */
+	rc = spdk_nvmf_transport_stop_listen(transport, &trid2);
+
+	CU_ASSERT(rc == -ENOENT);
+
+	rc = spdk_nvmf_transport_destroy(transport, NULL, NULL);
+	CU_ASSERT(rc == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -211,6 +357,8 @@ int main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_spdk_nvmf_transport_create);
 	CU_ADD_TEST(suite, test_nvmf_transport_poll_group_create);
+	CU_ADD_TEST(suite, test_spdk_nvmf_transport_opts_init);
+	CU_ADD_TEST(suite, test_spdk_nvmf_transport_listen_ext);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
