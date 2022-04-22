@@ -5,8 +5,9 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
 function beetle_ssh() {
+	ssh_opts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 	if [[ -n $BEETLE_SSH_KEY ]]; then
-		ssh_opts=" -i $(readlink -f $BEETLE_SSH_KEY)"
+		ssh_opts+=" -i $(readlink -f $BEETLE_SSH_KEY)"
 	fi
 
 	#shellcheck disable=SC2029
