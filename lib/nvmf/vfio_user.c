@@ -1684,7 +1684,7 @@ delete_sq_done(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvmf_vfio_user_sq *
 		cqid = sq->cqid;
 		cq = vu_ctrlr->cqs[cqid];
 
-		SPDK_DEBUGLOG(nvmf_vfio, "%s: try to delete CQ%d=%p\n", ctrlr_id(vu_ctrlr),
+		SPDK_DEBUGLOG(nvmf_vfio, "%s: try to delete cqid:%u=%p\n", ctrlr_id(vu_ctrlr),
 			      cq->qid, cq);
 
 		if (cq->cq_ref) {
@@ -1723,7 +1723,7 @@ free_qp(struct nvmf_vfio_user_ctrlr *ctrlr, uint16_t qid)
 
 	cq = ctrlr->cqs[qid];
 	if (cq) {
-		SPDK_DEBUGLOG(nvmf_vfio, "%s: Free CQ %u\n", ctrlr_id(ctrlr), qid);
+		SPDK_DEBUGLOG(nvmf_vfio, "%s: Free cqid:%u\n", ctrlr_id(ctrlr), qid);
 		unmap_q(ctrlr, &cq->mapping);
 		free(cq->mapping.sg);
 		free(cq);
@@ -1861,7 +1861,7 @@ handle_create_io_sq(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	/* CQ must be created before SQ. */
 	if (!io_q_exists(ctrlr, cqid, true)) {
-		SPDK_ERRLOG("%s: CQ%u does not exist\n", ctrlr_id(ctrlr), cqid);
+		SPDK_ERRLOG("%s: cqid:%u does not exist\n", ctrlr_id(ctrlr), cqid);
 		*sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		return SPDK_NVME_SC_COMPLETION_QUEUE_INVALID;
 	}
@@ -1992,7 +1992,7 @@ handle_create_io_cq(struct nvmf_vfio_user_ctrlr *ctrlr,
 		return SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s: mapped CQ%d IOVA=%#lx vaddr=%p\n",
+	SPDK_DEBUGLOG(nvmf_vfio, "%s: mapped cqid:%u IOVA=%#lx vaddr=%p\n",
 		      ctrlr_id(ctrlr), qid, cmd->dptr.prp.prp1,
 		      q_addr(&cq->mapping));
 
@@ -2046,7 +2046,7 @@ handle_create_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 	if (io_q_exists(ctrlr, qid, is_cq)) {
 		SPDK_ERRLOG("%s: %cqid:%d already exists\n", ctrlr_id(ctrlr),
-			    is_cq ? 'C' : 'S', qid);
+			    is_cq ? 'c' : 's', qid);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		goto out;
@@ -2109,12 +2109,12 @@ handle_del_io_q(struct nvmf_vfio_user_ctrlr *ctrlr,
 	struct vfio_user_delete_sq_ctx *ctx;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s: delete I/O %cqid:%d\n",
-		      ctrlr_id(ctrlr), is_cq ? 'C' : 'S',
+		      ctrlr_id(ctrlr), is_cq ? 'c' : 's',
 		      cmd->cdw10_bits.delete_io_q.qid);
 
 	if (!io_q_exists(ctrlr, cmd->cdw10_bits.delete_io_q.qid, is_cq)) {
-		SPDK_ERRLOG("%s: I/O %cQ%d does not exist\n", ctrlr_id(ctrlr),
-			    is_cq ? 'C' : 'S', cmd->cdw10_bits.delete_io_q.qid);
+		SPDK_ERRLOG("%s: I/O %cqid:%d does not exist\n", ctrlr_id(ctrlr),
+			    is_cq ? 'c' : 's', cmd->cdw10_bits.delete_io_q.qid);
 		sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		sc = SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER;
 		goto out;
@@ -2464,7 +2464,7 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 			}
 		}
 		sq->sq_state = VFIO_USER_SQ_ACTIVE;
-		SPDK_DEBUGLOG(nvmf_vfio, "Remap SQ %u successfully\n", sq->qid);
+		SPDK_DEBUGLOG(nvmf_vfio, "Remap sqid:%u successfully\n", sq->qid);
 	}
 	pthread_mutex_unlock(&endpoint->lock);
 }
