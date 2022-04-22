@@ -44,7 +44,7 @@ function aer_vfio_user() {
 rm -rf /var/run/vfio-user
 
 # Start the target
-"${NVMF_APP[@]}" -m 0x1 &
+"${NVMF_APP[@]}" -m '[0,1,2,3]' &
 nvmfpid=$!
 echo "Process pid: $nvmfpid"
 

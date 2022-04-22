@@ -580,6 +580,12 @@ poll_group_to_thread(struct nvmf_vfio_user_poll_group *vu_pg)
 	return vu_pg->group.group->thread;
 }
 
+static dma_sg_t *
+index_to_sg_t(void *arr, size_t i)
+{
+	return (dma_sg_t *)((uintptr_t)arr + i * dma_sg_size());
+}
+
 static inline size_t
 vfio_user_migr_data_len(void)
 {
@@ -633,12 +639,12 @@ map_one(vfu_ctx_t *ctx, uint64_t addr, uint64_t len, dma_sg_t *sg,
 	assert(sg != NULL);
 	assert(iov != NULL);
 
-	ret = vfu_addr_to_sg(ctx, (void *)(uintptr_t)addr, len, sg, 1, prot);
+	ret = vfu_addr_to_sgl(ctx, (void *)(uintptr_t)addr, len, sg, 1, prot);
 	if (ret < 0) {
 		return NULL;
 	}
 
-	ret = vfu_map_sg(ctx, sg, iov, 1, 0);
+	ret = vfu_sgl_get(ctx, sg, iov, 1, 0);
 	if (ret != 0) {
 		return NULL;
 	}
@@ -928,10 +934,10 @@ unmap_sdbl(vfu_ctx_t *vfu_ctx, struct nvmf_vfio_user_shadow_doorbells *sdbl)
 			continue;
 		}
 
-		sg = (dma_sg_t *)((uintptr_t)sdbl->sgs + i * dma_sg_size());
+		sg = index_to_sg_t(sdbl->sgs, i);
 		iov = sdbl->iovs + i;
 
-		vfu_unmap_sg(vfu_ctx, sg, iov, 1);
+		vfu_sgl_put(vfu_ctx, sg, iov, 1);
 	}
 }
 
@@ -986,7 +992,7 @@ map_sdbl(vfu_ctx_t *vfu_ctx, uint64_t prp1, uint64_t prp2, size_t len)
 	 * Should only be written to by the controller.
 	 */
 
-	sg2 = (dma_sg_t *)((uintptr_t)sdbl->sgs + dma_sg_size());
+	sg2 = index_to_sg_t(sdbl->sgs, 1);
 
 	p = map_one(vfu_ctx, prp2, len, sg2, sdbl->iovs + 1,
 		    PROT_READ | PROT_WRITE);
@@ -1294,8 +1300,8 @@ static inline void
 unmap_q(struct nvmf_vfio_user_ctrlr *vu_ctrlr, struct nvme_q_mapping *mapping)
 {
 	if (q_addr(mapping) != NULL) {
-		vfu_unmap_sg(vu_ctrlr->endpoint->vfu_ctx, mapping->sg,
-			     &mapping->iov, 1);
+		vfu_sgl_put(vu_ctrlr->endpoint->vfu_ctx, mapping->sg,
+			    &mapping->iov, 1);
 		mapping->iov.iov_base = NULL;
 	}
 }
@@ -1543,12 +1549,6 @@ acq_setup(struct nvmf_vfio_user_ctrlr *ctrlr)
 	return 0;
 }
 
-static inline dma_sg_t *
-vu_req_to_sg_t(struct nvmf_vfio_user_req *vu_req, uint32_t iovcnt)
-{
-	return (dma_sg_t *)(vu_req->sg + iovcnt * dma_sg_size());
-}
-
 static void *
 _map_one(void *prv, uint64_t addr, uint64_t len, int prot)
 {
@@ -1565,7 +1565,7 @@ _map_one(void *prv, uint64_t addr, uint64_t len, int prot)
 
 	assert(vu_req->iovcnt < NVMF_VFIO_USER_MAX_IOVECS);
 	ret = map_one(sq->ctrlr->endpoint->vfu_ctx, addr, len,
-		      vu_req_to_sg_t(vu_req, vu_req->iovcnt),
+		      index_to_sg_t(vu_req->sg, vu_req->iovcnt),
 		      &vu_req->iov[vu_req->iovcnt], prot);
 	if (spdk_likely(ret != NULL)) {
 		vu_req->iovcnt++;
@@ -2340,9 +2340,9 @@ handle_cmd_rsp(struct nvmf_vfio_user_req *vu_req, void *cb_arg)
 	assert(vu_ctrlr != NULL);
 
 	if (spdk_likely(vu_req->iovcnt)) {
-		vfu_unmap_sg(vu_ctrlr->endpoint->vfu_ctx,
-			     vu_req_to_sg_t(vu_req, 0),
-			     vu_req->iov, vu_req->iovcnt);
+		vfu_sgl_put(vu_ctrlr->endpoint->vfu_ctx,
+			    index_to_sg_t(vu_req->sg, 0),
+			    vu_req->iov, vu_req->iovcnt);
 	}
 	sqid = sq->qid;
 	cqid = sq->cqid;
@@ -3602,6 +3602,50 @@ vfio_user_migr_ctrlr_enable_sqs(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	}
 }
 
+/*
+ * We are in stop-and-copy state, but still potentially have some current dirty
+ * sgls: while we're quiesced and thus should have no active requests, we still
+ * have potentially dirty maps of the shadow doorbells and the CQs (SQs are
+ * mapped read only).
+ *
+ * Since we won't be calling vfu_sgl_put() for them, we need to explicitly
+ * mark them dirty now.
+ */
+static void
+vfio_user_migr_ctrlr_mark_dirty(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
+
+	assert(vu_ctrlr->state == VFIO_USER_CTRLR_MIGRATING);
+
+	for (size_t i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
+		struct nvmf_vfio_user_cq *cq = vu_ctrlr->cqs[i];
+
+		if (cq == NULL || q_addr(&cq->mapping) == NULL) {
+			continue;
+		}
+
+		vfu_sgl_mark_dirty(endpoint->vfu_ctx, cq->mapping.sg, 1);
+	}
+
+	if (vu_ctrlr->sdbl != NULL) {
+		dma_sg_t *sg;
+		size_t i;
+
+		for (i = 0; i < NVMF_VFIO_USER_SHADOW_DOORBELLS_BUFFER_COUNT;
+		     ++i) {
+
+			if (!vu_ctrlr->sdbl->iovs[i].iov_len) {
+				continue;
+			}
+
+			sg = index_to_sg_t(vu_ctrlr->sdbl->sgs, i);
+
+			vfu_sgl_mark_dirty(endpoint->vfu_ctx, sg, 1);
+		}
+	}
+}
+
 static int
 vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t state)
 {
@@ -3616,6 +3660,7 @@ vfio_user_migration_device_state_transition(vfu_ctx_t *vfu_ctx, vfu_migr_state_t
 	switch (state) {
 	case VFU_MIGR_STATE_STOP_AND_COPY:
 		vu_ctrlr->state = VFIO_USER_CTRLR_MIGRATING;
+		vfio_user_migr_ctrlr_mark_dirty(vu_ctrlr);
 		vfio_user_migr_ctrlr_save_data(vu_ctrlr);
 		break;
 	case VFU_MIGR_STATE_STOP:
