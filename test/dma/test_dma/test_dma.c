@@ -76,6 +76,7 @@ struct dma_test_task {
 	struct spdk_thread *thread;
 	const char *bdev_name;
 	uint64_t num_translations;
+	uint64_t num_pull_push;
 	uint32_t lcore;
 
 	TAILQ_ENTRY(dma_test_task) link;
@@ -84,6 +85,11 @@ struct dma_test_task {
 struct dma_test_data_cpl_ctx {
 	spdk_memory_domain_data_cpl_cb data_cpl;
 	void *data_cpl_arg;
+};
+
+enum dma_test_domain_ops {
+	DMA_TEST_DOMAIN_OP_TRANSLATE = 1u << 0,
+	DMA_TEST_DOMAIN_OP_PULL_PUSH = 1u << 1,
 };
 
 TAILQ_HEAD(, dma_test_task) g_tasks = TAILQ_HEAD_INITIALIZER(g_tasks);
@@ -96,6 +102,7 @@ static uint32_t g_queue_depth;
 static uint32_t g_io_size;
 static uint32_t g_run_time_sec;
 static uint32_t g_run_count;
+static uint32_t g_test_ops;
 static bool g_is_random;
 static bool g_force_memory_domains_support;
 
@@ -303,6 +310,7 @@ dma_test_copy_memory(struct dma_test_req *req, struct iovec *dst_iov, uint32_t d
 	cpl_ctx->data_cpl_arg = cpl_cb_arg;
 
 	spdk_iovcpy(src_iov, src_iovcnt, dst_iov, dst_iovcnt);
+	req->task->num_pull_push++;
 	spdk_thread_send_msg(req->task->thread, dma_test_data_cpl, cpl_ctx);
 
 	return 0;
@@ -661,16 +669,48 @@ static int
 verify_tasks(void)
 {
 	struct dma_test_task *task;
+	uint64_t total_requests = 0;
+	uint64_t num_translations = 0;
+	uint64_t num_pull_push = 0;
+	int rc = 0;
+
+	if (!g_test_ops) {
+		/* No specific ops were requested, nothing to check */
+		return rc;
+	}
 
 	TAILQ_FOREACH(task, &g_tasks, link) {
-		if (task->num_translations < task->stats.io_completed) {
-			fprintf(stderr, "Unexpected number of translations %"PRIu64", must be at least %"PRIu64"\n",
-				task->num_translations, task->stats.io_completed);
-			return -1;
+		total_requests += task->stats.io_completed;
+		num_translations += task->num_translations;
+		num_pull_push += task->num_pull_push;
+	}
+
+	if (g_test_ops & DMA_TEST_DOMAIN_OP_TRANSLATE) {
+		if (num_translations == 0) {
+			fprintf(stderr, "Requested \"translate\" operation, but it was not executed\n");
+			rc = -EINVAL;
+		}
+	}
+	if (g_test_ops & DMA_TEST_DOMAIN_OP_PULL_PUSH) {
+		if (num_pull_push == 0) {
+			fprintf(stderr, "Requested \"pull_push\" operation, but it was not executed\n");
+			rc = -EINVAL;
 		}
 	}
 
-	return 0;
+	/* bdev request can be split, so the total number of pull_push +translate operations
+	 * can be bigger than total_number of requests */
+	if (num_translations + num_pull_push < total_requests) {
+		fprintf(stderr,
+			"Operations number mismatch: translate %"PRIu64", pull_push %"PRIu64", expected total %"PRIu64"\n",
+			num_translations, num_pull_push, total_requests);
+		rc = -EINVAL;
+	} else {
+		fprintf(stdout, "Total operations: %"PRIu64", translate %"PRIu64" pull_push %"PRIu64"\n",
+			total_requests, num_translations, num_pull_push);
+	}
+
+	return rc;
 }
 
 static void
@@ -746,12 +786,49 @@ static void
 print_usage(void)
 {
 	printf(" -b <bdev>         bdev name for test\n");
+	printf(" -f                force memory domains support - abort test if bdev doesn't report memory domains\n");
 	printf(" -q <val>          io depth\n");
 	printf(" -o <val>          io size in bytes\n");
 	printf(" -t <val>          run time in seconds\n");
+	printf(" -x <op,op>        Comma separated memory domain operations expected in the test. Values are \"translate\" and \"pull_push\"\n");
 	printf(" -w <str>          io pattern (read, write, randread, randwrite, randrw)\n");
 	printf(" -M <0-100>        rw percentage (100 for reads, 0 for writes)\n");
-	printf(" -f                force memory domains support - abort test if bdev doesn't report memory domains\n");
+}
+
+static int
+parse_expected_ops(const char *_str)
+{
+	char *str = strdup(_str);
+	char *tok;
+	int rc = 0;
+
+	if (!str) {
+		fprintf(stderr, "Failed to dup args\n");
+		return -ENOMEM;
+	}
+
+	tok = strtok(str, ",");
+	while (tok) {
+		if (strcmp(tok, "translate") == 0) {
+			g_test_ops |= DMA_TEST_DOMAIN_OP_TRANSLATE;
+		} else if (strcmp(tok, "pull_push") == 0) {
+			g_test_ops |= DMA_TEST_DOMAIN_OP_PULL_PUSH;
+		} else {
+			fprintf(stderr, "Unknown value %s\n", tok);
+			rc = -EINVAL;
+			break;
+		}
+		tok = strtok(NULL, ",");
+	}
+
+	free(str);
+
+	if (g_test_ops == 0 || rc) {
+		fprintf(stderr, "-e \"%s\" specified but nothing was parsed\n", _str);
+		return -EINVAL;
+	}
+
+	return rc;
 }
 
 static int
@@ -794,7 +871,11 @@ parse_arg(int ch, char *arg)
 	case 'f':
 		g_force_memory_domains_support = true;
 		break;
-
+	case 'x':
+		if (parse_expected_ops(arg)) {
+			return 1;
+		}
+		break;
 	default:
 		fprintf(stderr, "Unknown option %c\n", ch);
 		return 1;
@@ -860,7 +941,7 @@ main(int argc, char **argv)
 	opts.name = "test_dma";
 	opts.shutdown_cb = dma_test_shutdown_cb;
 
-	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:w:M:", NULL, parse_arg, print_usage);
+	rc = spdk_app_parse_args(argc, argv, &opts, "b:fq:o:t:x:w:M:", NULL, parse_arg, print_usage);
 	if (rc != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
@@ -871,7 +952,7 @@ main(int argc, char **argv)
 	}
 
 	rc = spdk_app_start(&opts, dma_test_start, NULL);
-	if (rc == 0 && g_force_memory_domains_support) {
+	if (rc == 0) {
 		rc = verify_tasks();
 	}
 	destroy_tasks();
