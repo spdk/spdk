@@ -175,7 +175,7 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 	assert(io_ctx != NULL);
 
 	if (!success) {
-		io_ctx->error |= 1;
+		io_ctx->error = io_ctx->error ? : -OCF_ERR_IO;
 	}
 
 	if (io_ctx->iovs_allocated && bdev_io != NULL) {
@@ -360,10 +360,13 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 
 end:
 	if (status) {
-		/* TODO [ENOMEM]: implement ENOMEM handling when submitting IO to base device */
+		if (status == -ENOMEM) {
+			io_ctx->error = -OCF_ERR_NO_MEM;
+		} else {
+			SPDK_ERRLOG("submission failed with status=%d\n", status);
+		}
 
 		/* Since callback is not called, we need to do it manually to free io structures */
-		SPDK_ERRLOG("submission failed with status=%d\n", status);
 		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 	}
 }
