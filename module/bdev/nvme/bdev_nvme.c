@@ -2548,9 +2548,9 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 	      SPDK_NVME_CTRLR_COMPARE_AND_WRITE_SUPPORTED)) {
 		disk->acwu = 0;
 	} else if (nsdata->nsfeat.ns_atomic_write_unit) {
-		disk->acwu = nsdata->nacwu;
+		disk->acwu = nsdata->nacwu + 1; /* 0-based */
 	} else {
-		disk->acwu = cdata->acwu;
+		disk->acwu = cdata->acwu + 1; /* 0-based */
 	}
 
 	disk->ctxt = ctx;
