@@ -739,14 +739,43 @@ uring_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 	return writev(sock->fd, iov, iovcnt);
 }
 
+static ssize_t
+sock_request_advance_offset(struct spdk_sock_request *req, ssize_t rc)
+{
+	unsigned int offset;
+	size_t len;
+	int i;
+
+	offset = req->internal.offset;
+	for (i = 0; i < req->iovcnt; i++) {
+		/* Advance by the offset first */
+		if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
+			offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+			continue;
+		}
+
+		/* Calculate the remaining length of this element */
+		len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
+
+		if (len > (size_t)rc) {
+			req->internal.offset += rc;
+			return -1;
+		}
+
+		offset = 0;
+		req->internal.offset += len;
+		rc -= len;
+	}
+
+	return rc;
+}
+
 static int
 sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	struct spdk_sock_request *req;
-	int i, retval;
-	unsigned int offset;
-	size_t len;
+	int retval;
 
 	if (is_zcopy) {
 		/* Handling overflow case, because we use psock->sendmsg_idx - 1 for the
@@ -761,30 +790,13 @@ sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 	/* Consume the requests that were actually written */
 	req = TAILQ_FIRST(&_sock->queued_reqs);
 	while (req) {
-		offset = req->internal.offset;
-
 		/* req->internal.is_zcopy is true when the whole req or part of it is sent with zerocopy */
 		req->internal.is_zcopy = is_zcopy;
 
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Advance by the offset first */
-			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
-				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
-				continue;
-			}
-
-			/* Calculate the remaining length of this element */
-			len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-
-			if (len > (size_t)rc) {
-				/* This element was partially sent. */
-				req->internal.offset += rc;
-				return 0;
-			}
-
-			offset = 0;
-			req->internal.offset += len;
-			rc -= len;
+		rc = sock_request_advance_offset(req, rc);
+		if (rc < 0) {
+			/* This element was partially sent. */
+			return 0;
 		}
 
 		/* Handled a full request. */
