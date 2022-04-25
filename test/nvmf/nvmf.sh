@@ -72,6 +72,7 @@ fi
 run_test "nvmf_queue_depth" test/nvmf/target/queue_depth.sh "${TEST_ARGS[@]}"
 run_test "nvmf_multipath" test/nvmf/target/multipath.sh "${TEST_ARGS[@]}"
 run_test "nvmf_zcopy" test/nvmf/target/zcopy.sh "${TEST_ARGS[@]}"
+run_test "nvmf_tls" test/nvmf/target/tls.sh "${TEST_ARGS[@]}"
 
 timing_enter host
 
