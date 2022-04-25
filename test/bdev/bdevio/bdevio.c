@@ -44,6 +44,7 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 
+#include "bdev_internal.h"
 #include "CUnit/Basic.h"
 
 #define BUFFER_IOVS		1024
@@ -564,15 +565,14 @@ blockdev_write_zeroes_read_4k(void)
  * This i/o will not have to split at the bdev layer.
  */
 static void
-blockdev_write_zeroes_read_1m(void)
+blockdev_write_zeroes_read_no_split(void)
 {
 	uint32_t data_length;
 	uint64_t offset;
 	int pattern;
 	int expected_rc;
 
-	/* Data size = 1M */
-	data_length = 1048576;
+	data_length = ZERO_BUFFER_SIZE; /* from bdev_internal.h */
 	offset = 0;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
@@ -587,15 +587,14 @@ blockdev_write_zeroes_read_1m(void)
  * write-zeroes is not supported by the bdev.
  */
 static void
-blockdev_write_zeroes_read_3m(void)
+blockdev_write_zeroes_read_split(void)
 {
 	uint32_t data_length;
 	uint64_t offset;
 	int pattern;
 	int expected_rc;
 
-	/* Data size = 3M */
-	data_length = 3145728;
+	data_length = 3 * ZERO_BUFFER_SIZE; /* from bdev_internal.h */
 	offset = 0;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
@@ -612,15 +611,14 @@ blockdev_write_zeroes_read_3m(void)
  * the bdev layer zero buffer size.
  */
 static void
-blockdev_write_zeroes_read_3m_500k(void)
+blockdev_write_zeroes_read_split_partial(void)
 {
 	uint32_t data_length;
 	uint64_t offset;
 	int pattern;
 	int expected_rc;
 
-	/* Data size = 3.5M */
-	data_length = 3670016;
+	data_length = ZERO_BUFFER_SIZE * 7 / 2;
 	offset = 0;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
@@ -1175,9 +1173,11 @@ __setup_ut_on_single_target(struct io_target *target)
 	if (
 		CU_add_test(suite, "blockdev write read 4k", blockdev_write_read_4k) == NULL
 		|| CU_add_test(suite, "blockdev write zeroes read 4k", blockdev_write_zeroes_read_4k) == NULL
-		|| CU_add_test(suite, "blockdev write zeroes read 1m", blockdev_write_zeroes_read_1m) == NULL
-		|| CU_add_test(suite, "blockdev write zeroes read 3m", blockdev_write_zeroes_read_3m) == NULL
-		|| CU_add_test(suite, "blockdev write zeroes read 3.5m", blockdev_write_zeroes_read_3m_500k) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read no split",
+			       blockdev_write_zeroes_read_no_split) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read split", blockdev_write_zeroes_read_split) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read split partial",
+			       blockdev_write_zeroes_read_split_partial) == NULL
 		|| CU_add_test(suite, "blockdev reset",
 			       blockdev_test_reset) == NULL
 		|| CU_add_test(suite, "blockdev write read 512 bytes",

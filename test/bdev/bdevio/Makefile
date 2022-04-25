@@ -38,6 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP = bdevio
 
 C_SRCS := bdevio.c
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev
 

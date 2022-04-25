@@ -36,6 +36,8 @@
 
 #include "spdk/bdev.h"
 
+#define ZERO_BUFFER_SIZE	0x100000
+
 struct spdk_bdev;
 struct spdk_bdev_io;
 struct spdk_bdev_channel;
