@@ -137,6 +137,16 @@ to_blk_dev(struct spdk_vhost_dev *vdev)
 	return SPDK_CONTAINEROF(vdev, struct spdk_vhost_blk_dev, vdev);
 }
 
+struct spdk_bdev *
+vhost_blk_get_bdev(struct spdk_vhost_dev *vdev)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	assert(bvdev != NULL);
+
+	return bvdev->bdev;
+}
+
 static struct spdk_vhost_blk_session *
 to_blk_session(struct spdk_vhost_session *vsession)
 {
@@ -460,7 +470,7 @@ blk_request_queue_io(struct spdk_vhost_dev *vdev, struct spdk_io_channel *ch,
 		     struct spdk_vhost_blk_task *task)
 {
 	int rc;
-	struct spdk_bdev *bdev = task->bdev_io->bdev;
+	struct spdk_bdev *bdev = vhost_blk_get_bdev(vdev);
 
 	task->bdev_io_wait.bdev = bdev;
 	task->bdev_io_wait.cb_fn = blk_request_resubmit;
@@ -1495,15 +1505,12 @@ vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
 		     uint32_t len)
 {
 	struct virtio_blk_config blkcfg;
-	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_bdev *bdev;
 	uint32_t blk_size;
 	uint64_t blkcnt;
 
 	memset(&blkcfg, 0, sizeof(blkcfg));
-	bvdev = to_blk_dev(vdev);
-	assert(bvdev != NULL);
-	bdev = bvdev->bdev;
+	bdev = vhost_blk_get_bdev(vdev);
 	if (bdev == NULL) {
 		/* We can't just return -1 here as this GET_CONFIG message might
 		 * be caused by a QEMU VM reboot. Returning -1 will indicate an

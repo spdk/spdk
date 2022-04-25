@@ -521,6 +521,10 @@ int remove_vhost_controller(struct spdk_vhost_dev *vdev);
 struct spdk_io_channel *vhost_blk_get_io_channel(struct spdk_vhost_dev *vdev);
 void vhost_blk_put_io_channel(struct spdk_io_channel *ch);
 
+/* The spdk_bdev pointer should only be used to retrieve
+ * the device properties, ex. number of blocks or I/O type supported. */
+struct spdk_bdev *vhost_blk_get_bdev(struct spdk_vhost_dev *vdev);
+
 /* Function calls from vhost.c to rte_vhost_user.c,
  * shall removed once virtio transport abstraction is complete. */
 int vhost_user_session_set_coalescing(struct spdk_vhost_dev *dev,
