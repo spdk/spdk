@@ -231,12 +231,46 @@ spdk_sock_abort_requests(struct spdk_sock *sock)
 }
 
 static inline int
+spdk_sock_prep_req(struct spdk_sock_request *req, struct iovec *iovs, int index,
+		   uint64_t *num_bytes)
+{
+	unsigned int offset;
+	int iovcnt, i;
+
+	assert(index < IOV_BATCH_SIZE);
+	offset = req->internal.offset;
+	iovcnt = index;
+
+	for (i = 0; i < req->iovcnt; i++) {
+		/* Consume any offset first */
+		if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
+			offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
+			continue;
+		}
+
+		iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
+		iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
+		if (num_bytes != NULL) {
+			*num_bytes += iovs[iovcnt].iov_len;
+		}
+
+		iovcnt++;
+		offset = 0;
+
+		if (iovcnt >= IOV_BATCH_SIZE) {
+			break;
+		}
+	}
+
+	return iovcnt;
+}
+
+static inline int
 spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
 		    struct spdk_sock_request **last_req, int *flags)
 {
-	int iovcnt, i;
+	int iovcnt;
 	struct spdk_sock_request *req;
-	unsigned int offset;
 	uint64_t total = 0;
 
 	/* Gather an iov */
@@ -252,26 +286,7 @@ spdk_sock_prep_reqs(struct spdk_sock *_sock, struct iovec *iovs, int index,
 	}
 
 	while (req) {
-		offset = req->internal.offset;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			/* Consume any offset first */
-			if (offset >= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len) {
-				offset -= SPDK_SOCK_REQUEST_IOV(req, i)->iov_len;
-				continue;
-			}
-
-			iovs[iovcnt].iov_base = SPDK_SOCK_REQUEST_IOV(req, i)->iov_base + offset;
-			iovs[iovcnt].iov_len = SPDK_SOCK_REQUEST_IOV(req, i)->iov_len - offset;
-
-			total += iovs[iovcnt].iov_len;
-			iovcnt++;
-			offset = 0;
-
-			if (iovcnt >= IOV_BATCH_SIZE) {
-				break;
-			}
-		}
+		iovcnt = spdk_sock_prep_req(req, iovs, iovcnt, &total);
 		if (iovcnt >= IOV_BATCH_SIZE) {
 			break;
 		}
