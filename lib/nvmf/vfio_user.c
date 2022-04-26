@@ -5171,8 +5171,6 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 
 	assert(group != NULL);
 
-	spdk_rmb();
-
 	vu_group = SPDK_CONTAINEROF(group, struct nvmf_vfio_user_poll_group, group);
 
 	SPDK_DEBUGLOG(vfio_user_db, "polling all SQs\n");
