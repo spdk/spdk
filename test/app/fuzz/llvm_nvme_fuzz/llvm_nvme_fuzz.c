@@ -606,6 +606,7 @@ start_fuzzer(void *ctx)
 	int argc = SPDK_COUNTOF(_argv);
 	uint32_t len;
 
+	spdk_unaffinitize_thread();
 	len = MAX_COMMANDS * g_fuzzer->bytes_per_cmd;
 	snprintf(len_str, sizeof(len_str), "-max_len=%d", len);
 	argv[argc - 3] = len_str;
