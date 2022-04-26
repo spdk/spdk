@@ -6500,4 +6500,34 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 	spdk_json_write_object_end(w);
 }
 
+void
+bdev_nvme_get_discovery_info(struct spdk_json_write_ctx *w)
+{
+	struct discovery_ctx *ctx;
+	struct discovery_entry_ctx *entry_ctx;
+
+	spdk_json_write_array_begin(w);
+	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "name", ctx->name);
+
+		spdk_json_write_named_object_begin(w, "trid");
+		nvme_bdev_dump_trid_json(&ctx->trid, w);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_named_array_begin(w, "referrals");
+		TAILQ_FOREACH(entry_ctx, &ctx->discovery_entry_ctxs, tailq) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_object_begin(w, "trid");
+			nvme_bdev_dump_trid_json(&entry_ctx->trid, w);
+			spdk_json_write_object_end(w);
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(bdev_nvme)

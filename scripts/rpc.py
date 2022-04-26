@@ -761,6 +761,12 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
     p.set_defaults(func=bdev_nvme_stop_discovery)
 
+    def bdev_nvme_get_discovery_info(args):
+        print_dict(rpc.bdev.bdev_nvme_get_discovery_info(args.client))
+
+    p = subparsers.add_parser('bdev_nvme_get_discovery_info', help='Get information about the automatic discovery')
+    p.set_defaults(func=bdev_nvme_get_discovery_info)
+
     def bdev_nvme_get_io_paths(args):
         print_dict(rpc.bdev.bdev_nvme_get_io_paths(args.client, name=args.name))
 

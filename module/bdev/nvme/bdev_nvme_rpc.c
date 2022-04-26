@@ -1766,6 +1766,19 @@ cleanup:
 SPDK_RPC_REGISTER("bdev_nvme_stop_discovery", rpc_bdev_nvme_stop_discovery,
 		  SPDK_RPC_RUNTIME)
 
+static void
+rpc_bdev_nvme_get_discovery_info(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	bdev_nvme_get_discovery_info(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("bdev_nvme_get_discovery_info", rpc_bdev_nvme_get_discovery_info,
+		  SPDK_RPC_RUNTIME)
+
 enum error_injection_cmd_type {
 	NVME_ADMIN_CMD = 1,
 	NVME_IO_CMD,

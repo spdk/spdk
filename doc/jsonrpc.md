@@ -3344,6 +3344,43 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_get_discovery_info {#rpc_bdev_nvme_get_discovery_info}
+
+Get information about the discovery service.
+
+#### Example
+
+Example request:
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_discovery_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "nvme-disc",
+      "trid": {
+        "trtype": "TCP",
+        "adrfam": "IPv4",
+        "traddr": "127.0.0.1",
+        "trsvcid": "8009",
+        "subnqn": "nqn.2014-08.org.nvmexpress.discovery"
+      },
+      "referrals": []
+    }
+  ]
+}
+~~~
+
 ### bdev_nvme_get_io_paths {#rpc_bdev_nvme_get_io_paths}
 
 Display all or the specified NVMe bdev's active I/O paths.

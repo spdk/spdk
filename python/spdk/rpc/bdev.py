@@ -811,6 +811,12 @@ def bdev_nvme_stop_discovery(client, name):
     return client.call('bdev_nvme_stop_discovery', params)
 
 
+def bdev_nvme_get_discovery_info(client):
+    """Get information about the automatic discovery
+    """
+    return client.call('bdev_nvme_get_discovery_info')
+
+
 def bdev_nvme_get_io_paths(client, name):
     """Display all or the specified NVMe bdev's active I/O paths
 
