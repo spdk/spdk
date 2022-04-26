@@ -5112,13 +5112,6 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 	/* Load-Acquire. */
 	new_tail = *sq_dbl_tailp(sq);
 
-	/*
-	 * Ensure that changes to the queue are visible to us.
-	 * The host driver should write the queue first, do a wmb(), and then
-	 * update the SQ tail doorbell (their Store-Release).
-	 */
-	spdk_rmb();
-
 	new_tail = new_tail & 0xffffu;
 	if (spdk_unlikely(new_tail >= sq->size)) {
 		union spdk_nvme_async_event_completion event = {};
@@ -5146,6 +5139,13 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 			      ctrlr->sdbl->shadow_doorbells[queue_index(sq->qid, false)],
 			      ctrlr->sdbl->eventidxs[queue_index(sq->qid, false)]);
 	}
+
+	/*
+	 * Ensure that changes to the queue are visible to us.
+	 * The host driver should write the queue first, do a wmb(), and then
+	 * update the SQ tail doorbell (their Store-Release).
+	 */
+	spdk_rmb();
 
 	count = handle_sq_tdbl_write(ctrlr, new_tail, sq);
 	if (count < 0) {
