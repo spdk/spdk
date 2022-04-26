@@ -45,7 +45,9 @@ static bool g_trid_specified = false;
 static int32_t g_time_in_sec = 10;
 static char *g_corpus_dir;
 static pthread_t g_fuzz_td;
+static pthread_t g_reactor_td;
 static bool g_shutdown;
+static bool g_in_fuzzer;
 
 #define MAX_COMMANDS 5
 
@@ -584,6 +586,14 @@ static int TestOneInput(const uint8_t *data, size_t size)
 
 int LLVMFuzzerRunDriver(int *argc, char ***argv, int (*UserCb)(const uint8_t *Data, size_t Size));
 
+static void exit_handler(void)
+{
+	if (g_in_fuzzer) {
+		spdk_app_stop(0);
+		pthread_join(g_reactor_td, NULL);
+	}
+}
+
 static void *
 start_fuzzer(void *ctx)
 {
@@ -608,8 +618,18 @@ start_fuzzer(void *ctx)
 	argv[argc - 2] = time_str;
 	argv[argc - 1] = g_corpus_dir;
 
+	g_in_fuzzer = true;
+	atexit(exit_handler);
 	LLVMFuzzerRunDriver(&argc, &argv, TestOneInput);
+	/* TODO: in the normal case, LLVMFuzzerRunDriver never returns - it calls exit()
+	 * directly and we never get here.  But this behavior isn't really documented
+	 * anywhere by LLVM, so call spdk_app_stop(0) if it does return, which will
+	 * result in the app exiting like a normal SPDK application (spdk_app_start()
+	 * returns to main().
+	 */
+	g_in_fuzzer = false;
 	spdk_app_stop(0);
+
 	return NULL;
 }
 
@@ -617,6 +637,8 @@ static void
 begin_fuzz(void *ctx)
 {
 	int i;
+
+	g_reactor_td = pthread_self();
 
 	for (i = 0; i < MAX_COMMANDS; i++) {
 		g_cmds[i].buf = spdk_malloc(4096, 0, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
