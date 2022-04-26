@@ -128,6 +128,9 @@ declare -A CONFIG
 source $rootdir/CONFIG.sh
 rm $rootdir/CONFIG.sh
 
+# Try to expand literal ~ that might have been passed as an option via --long-opt=~/dir.
+set -- "${@//\~/~}"
+
 for i in "$@"; do
 	case "$i" in
 		--cross-prefix=*)
@@ -535,9 +538,10 @@ for i in "$@"; do
 		--with-fio) ;&
 		--with-fio=*)
 			if [[ ${i#*=} != "$i" ]]; then
-				CONFIG[FIO_SOURCE_DIR]=$(readlink -f "${i#*=}")
+				CONFIG[FIO_SOURCE_DIR]=${i#*=}
 			fi
 			check_dir "--with-fio=${CONFIG[FIO_SOURCE_DIR]}"
+			CONFIG[FIO_SOURCE_DIR]=$(readlink -f "${CONFIG[FIO_SOURCE_DIR]}")
 			CONFIG[FIO_PLUGIN]=y
 			;;
 		--without-fio)
