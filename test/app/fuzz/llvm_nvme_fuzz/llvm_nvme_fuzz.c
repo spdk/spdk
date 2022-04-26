@@ -46,7 +46,6 @@ static int32_t g_time_in_sec = 10;
 static char *g_corpus_dir;
 static pthread_t g_fuzz_td;
 static pthread_t g_reactor_td;
-static bool g_shutdown;
 static bool g_in_fuzzer;
 
 #define MAX_COMMANDS 5
@@ -543,7 +542,7 @@ run_cmds(uint32_t queue_depth)
 		}
 	}
 
-	while (outstanding > 0 && !g_shutdown) {
+	while (outstanding > 0) {
 		spdk_nvme_qpair_process_completions(g_io_qpair, 0);
 		spdk_nvme_ctrlr_process_admin_completions(g_ctrlr);
 	}
@@ -575,10 +574,6 @@ static int TestOneInput(const uint8_t *data, size_t size)
 
 	if (detach_ctx) {
 		spdk_nvme_detach_poll(detach_ctx);
-	}
-
-	if (g_shutdown) {
-		pthread_exit(NULL);
 	}
 
 	return 0;
@@ -710,10 +705,17 @@ nvme_fuzz_parse(int ch, char *arg)
 static void
 fuzz_shutdown(void)
 {
-	g_shutdown = true;
-	/* Wait for the fuzz thread to exit before calling spdk_app_stop(). */
-	pthread_join(g_fuzz_td, NULL);
-	spdk_app_stop(-1);
+	/* If the user terminates the fuzzer prematurely, it is likely due
+	 * to an input hang.  So raise a SIGSEGV signal which will cause the
+	 * fuzzer to generate a crash file for the last input.
+	 *
+	 * Note that the fuzzer will always generate a crash file, even if
+	 * we get our TestOneInput() function (which is called by the fuzzer)
+	 * to pthread_exit().  So just doing the SIGSEGV here in all cases is
+	 * simpler than trying to differentiate between hung inputs and
+	 * an impatient user.
+	 */
+	pthread_kill(g_fuzz_td, SIGSEGV);
 }
 
 int
