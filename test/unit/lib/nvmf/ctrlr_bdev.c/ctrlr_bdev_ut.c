@@ -487,7 +487,7 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	memcpy(ns.opts.eui64, eui64, 8);
 
 	bdev.blockcnt = 10;
-	bdev.acwu = 0;
+	bdev.acwu = 1;
 	bdev.md_len = 512;
 	bdev.dif_type = SPDK_DIF_TYPE1;
 	bdev.blocklen = 4096;
