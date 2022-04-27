@@ -380,6 +380,33 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
 					   bdev_part_complete_zcopy_io, bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_COMPARE:
+		if (!bdev_io->u.bdev.md_buf) {
+			rc = spdk_bdev_comparev_blocks(base_desc, base_ch,
+						       bdev_io->u.bdev.iovs,
+						       bdev_io->u.bdev.iovcnt,
+						       remapped_offset,
+						       bdev_io->u.bdev.num_blocks,
+						       bdev_part_complete_io, bdev_io);
+		} else {
+			rc = spdk_bdev_comparev_blocks_with_md(base_desc, base_ch,
+							       bdev_io->u.bdev.iovs,
+							       bdev_io->u.bdev.iovcnt,
+							       bdev_io->u.bdev.md_buf,
+							       remapped_offset,
+							       bdev_io->u.bdev.num_blocks,
+							       bdev_part_complete_io, bdev_io);
+		}
+		break;
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
+		rc = spdk_bdev_comparev_and_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
+				bdev_io->u.bdev.iovcnt,
+				bdev_io->u.bdev.fused_iovs,
+				bdev_io->u.bdev.fused_iovcnt,
+				remapped_offset,
+				bdev_io->u.bdev.num_blocks,
+				bdev_part_complete_io, bdev_io);
+		break;
 	default:
 		SPDK_ERRLOG("unknown I/O type %d\n", bdev_io->type);
 		return SPDK_BDEV_IO_STATUS_FAILED;
