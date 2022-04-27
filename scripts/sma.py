@@ -32,7 +32,8 @@ def parse_argv():
     parser.add_argument('--config', '-c', help='Path to config file')
     defaults = {'address': 'localhost',
                 'socket': '/var/tmp/spdk.sock',
-                'port': 8080}
+                'port': 8080,
+                'discovery_timeout': 10.0}
     # Merge the default values, config file, and the command-line
     args = vars(parser.parse_args())
     config = parse_config(args.get('config'))
@@ -116,7 +117,7 @@ if __name__ == '__main__':
     # Wait until the SPDK process starts responding to RPCs
     wait_for_listen(client, timeout=60.0)
 
-    agent = sma.StorageManagementAgent(config)
+    agent = sma.StorageManagementAgent(config, client)
 
     devices = [sma.NvmfTcpDeviceManager(client)]
     devices += load_plugins(config.get('plugins') or [], client)
