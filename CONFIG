@@ -166,8 +166,8 @@ CONFIG_OPENSSL_PATH=
 # Build with FUSE support
 CONFIG_FUSE=n
 
-# Build with RAID5 support
-CONFIG_RAID5=n
+# Build with RAID5f support
+CONFIG_RAID5F=n
 
 # Build with IDXD support
 # In this mode, SPDK fully controls the DSA device.

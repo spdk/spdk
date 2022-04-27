@@ -101,8 +101,8 @@ function usage() {
 	echo " --without-fuse            No path required."
 	echo " --with-nvme-cuse          Build NVMe driver with support for CUSE-based character devices."
 	echo " --without-nvme-cuse       No path required."
-	echo " --with-raid5              Build with bdev_raid module RAID5 support."
-	echo " --without-raid5           No path required."
+	echo " --with-raid5f             Build with bdev_raid module RAID5f support."
+	echo " --without-raid5f          No path required."
 	echo " --with-wpdk=DIR           Build using WPDK to provide support for Windows (experimental)."
 	echo " --without-wpdk            The argument must be a directory containing lib and include."
 	echo " --with-usdt               Build with userspace DTrace probes enabled."
@@ -616,11 +616,11 @@ for i in "$@"; do
 		--without-nvme-cuse)
 			CONFIG[NVME_CUSE]=n
 			;;
-		--with-raid5)
-			CONFIG[RAID5]=y
+		--with-raid5f)
+			CONFIG[RAID5F]=y
 			;;
-		--without-raid5)
-			CONFIG[RAID5]=n
+		--without-raid5f)
+			CONFIG[RAID5F]=n
 			;;
 		--with-idxd)
 			CONFIG[IDXD]=y

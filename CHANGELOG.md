@@ -28,6 +28,12 @@ New options `enable_ktls` and `tls_version` were added to the `sock_impl_set_opt
 Added warning message for `bdev_rbd_create`, if it is used without -c.
 `bdev_rbd_create()` API without specifying -c is deprecated and will be removed in future release.
 
+### raid
+
+Renamed the `raid5` module to `raid5f` to reflect that it is not a traditional
+RAID5 implementation - only full stripe writes are supported, partial stripe
+writes (read-modify-write) are not.
+
 ## v22.05
 
 ### sock

@@ -12,8 +12,8 @@ SO_MINOR := 0
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 C_SRCS = bdev_raid.c bdev_raid_rpc.c raid0.c concat.c
 
-ifeq ($(CONFIG_RAID5),y)
-C_SRCS += raid5.c
+ifeq ($(CONFIG_RAID5F),y)
+C_SRCS += raid5f.c
 endif
 
 LIBNAME = bdev_raid

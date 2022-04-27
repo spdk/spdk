@@ -462,7 +462,7 @@ function get_config_params() {
 	fi
 
 	if [ $SPDK_TEST_RAID5 -eq 1 ]; then
-		config_params+=' --with-raid5'
+		config_params+=' --with-raid5f'
 	fi
 
 	if [ $SPDK_TEST_VFIOUSER -eq 1 ] || [ $SPDK_TEST_VFIOUSER_QEMU -eq 1 ]; then
