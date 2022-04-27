@@ -396,7 +396,7 @@ function nvmftestinit() {
 		return 1
 	fi
 
-	trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini' SIGINT SIGTERM EXIT
+	trap 'nvmftestfini' SIGINT SIGTERM EXIT
 
 	prepare_net_devs
 
@@ -411,7 +411,7 @@ function nvmftestinit() {
 		NVMF_SECOND_TARGET_IP=$(echo "$RDMA_IP_LIST" | tail -n +2 | head -n 1)
 		if [ -z $NVMF_FIRST_TARGET_IP ]; then
 			echo "no RDMA NIC for nvmf test"
-			exit 0
+			exit 1
 		fi
 	elif [[ "$TEST_TRANSPORT" == "tcp" ]]; then
 		NVMF_TRANSPORT_OPTS="$NVMF_TRANSPORT_OPTS -o"
@@ -433,6 +433,7 @@ function nvmfappstart() {
 	nvmfpid=$!
 	waitforlisten $nvmfpid
 	timing_exit start_nvmf_tgt
+	trap 'process_shm --id $NVMF_APP_SHM_ID || :; nvmftestfini' SIGINT SIGTERM EXIT
 }
 
 function nvmftestfini() {
