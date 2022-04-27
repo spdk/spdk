@@ -145,3 +145,15 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	yum install -y mscgen || echo "Warning: couldn't install mscgen via yum. Please install mscgen manually."
 	yum install -y doxygen graphviz
 fi
+if [[ $INSTALL_DAOS == "true" ]]; then
+	if [[ $ID == centos || $ID == rocky ]]; then
+		if ! hash yum-config-manager &> /dev/null; then
+			yum install -y yum-utils
+		fi
+		yum-config-manager --add-repo "https://packages.daos.io/v2.0/CentOS${VERSION_ID:0:1}/packages/x86_64/daos_packages.repo"
+		yum-config-manager --enable "daos-packages"
+		yum install -y daos-devel
+	else
+		echo "Skipping installation of DAOS bdev dependencies. It is supported only for CentOS 7, CentOS 8 and Rocky 8"
+	fi
+fi

@@ -17,6 +17,7 @@ function usage() {
 	echo "  -r --rdma                   Additional dependencies for RDMA transport in NVMe over Fabrics"
 	echo "  -b --docs                   Additional dependencies for building docs"
 	echo "  -u --uring                  Additional dependencies for io_uring"
+	echo "  -D --daos                   Additional dependencies for DAOS"
 	echo ""
 	exit 0
 }
@@ -28,6 +29,7 @@ function install_all_dependencies() {
 	INSTALL_RDMA=true
 	INSTALL_DOCS=true
 	INSTALL_LIBURING=true
+	INSTALL_DAOS=true
 }
 
 INSTALL_CRYPTO=false
@@ -37,8 +39,9 @@ INSTALL_FUSE=false
 INSTALL_RDMA=false
 INSTALL_DOCS=false
 INSTALL_LIBURING=false
+INSTALL_DAOS=false
 
-while getopts 'abdfhipru-:' optchar; do
+while getopts 'abdfhipruD-:' optchar; do
 	case "$optchar" in
 		-)
 			case "$OPTARG" in
@@ -50,6 +53,7 @@ while getopts 'abdfhipru-:' optchar; do
 				rdma) INSTALL_RDMA=true ;;
 				docs) INSTALL_DOCS=true ;;
 				uring) INSTALL_LIBURING=true ;;
+				daos) INSTALL_DAOS=true ;;
 				*)
 					echo "Invalid argument '$OPTARG'"
 					usage
@@ -64,6 +68,7 @@ while getopts 'abdfhipru-:' optchar; do
 		r) INSTALL_RDMA=true ;;
 		b) INSTALL_DOCS=true ;;
 		u) INSTALL_LIBURING=true ;;
+		D) INSTALL_DAOS=true ;;
 		*)
 			echo "Invalid argument '$OPTARG'"
 			usage
