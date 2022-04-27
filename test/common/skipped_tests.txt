@@ -94,3 +94,4 @@ zoned_fio
 sma_nvmf_tcp
 sma_plugins
 sma_discovery
+sma_vhost
