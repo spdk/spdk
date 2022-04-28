@@ -577,6 +577,15 @@ io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const boo
 		vu_ctrlr->sqs[qid]->sq_state != VFIO_USER_SQ_UNUSED);
 }
 
+/* Return the poll group for the admin queue of the controller. */
+static inline struct nvmf_vfio_user_poll_group *
+ctrlr_to_poll_group(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
+{
+	return SPDK_CONTAINEROF(vu_ctrlr->sqs[0]->group,
+				struct nvmf_vfio_user_poll_group,
+				group);
+}
+
 static inline size_t
 vfio_user_migr_data_len(void)
 {
@@ -1419,15 +1428,13 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq);
  * processed some SQ entries.
  */
 static int
-set_sq_intr_mode(struct nvmf_vfio_user_ctrlr *ctrlr,
-		 struct nvmf_vfio_user_sq *sq)
+vfio_user_sq_rearm(struct nvmf_vfio_user_ctrlr *ctrlr,
+		   struct nvmf_vfio_user_sq *sq)
 {
 	int count = 0;
 	size_t i;
 
-	if (!sq->need_rearm) {
-		return 0;
-	}
+	assert(sq->need_rearm);
 
 	for (i = 0; i < NVMF_VFIO_USER_SET_EVENTIDX_MAX_ATTEMPTS; i++) {
 		int ret;
@@ -1480,30 +1487,19 @@ set_sq_intr_mode(struct nvmf_vfio_user_ctrlr *ctrlr,
  * Returns non-zero if we processed something.
  */
 static int
-set_ctrlr_intr_mode(struct nvmf_vfio_user_ctrlr *ctrlr)
+vfio_user_poll_group_rearm(struct nvmf_vfio_user_poll_group *vu_group)
 {
+	struct nvmf_vfio_user_sq *sq;
 	int count = 0;
 
-	assert(ctrlr != NULL);
-
-	if (ctrlr->sdbl == NULL) {
-		return 0;
-	}
-
-	/*
-	 * The admin queue (qid: 0) doesn't use the shadow doorbell buffer, so
-	 * skip it.
-	 */
-	for (size_t i = 1; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; ++i) {
-		struct nvmf_vfio_user_sq *sq = ctrlr->sqs[i];
-
-		if (sq == NULL ||
-		    sq->sq_state != VFIO_USER_SQ_ACTIVE ||
-		    !sq->size) {
+	TAILQ_FOREACH(sq, &vu_group->sqs, link) {
+		if (spdk_unlikely(sq->sq_state != VFIO_USER_SQ_ACTIVE || !sq->size)) {
 			continue;
 		}
 
-		count += set_sq_intr_mode(ctrlr, ctrlr->sqs[i]);
+		if (sq->need_rearm) {
+			count += vfio_user_sq_rearm(sq->ctrlr, sq);
+		}
 	}
 
 	return count;
@@ -2280,7 +2276,7 @@ handle_doorbell_buffer_config(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nv
 	vfio_user_ctrlr_switch_doorbells(ctrlr, true);
 
 	/* Update event index buffer and poll queues if necessary. */
-	set_ctrlr_intr_mode(ctrlr);
+	vfio_user_poll_group_rearm(ctrlr_to_poll_group(ctrlr));
 
 	sc = SPDK_NVME_SC_SUCCESS;
 
@@ -2382,11 +2378,13 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 	assert(ctrlr != NULL);
 	assert(sq != NULL);
 
-	/*
-	 * Submission queue index has moved past the event index, so it needs to
-	 * be re-armed before we go to sleep.
-	 */
-	sq->need_rearm = true;
+	if (ctrlr->sdbl != NULL) {
+		/*
+		 * Submission queue index has moved past the event index, so it
+		 * needs to be re-armed before we go to sleep.
+		 */
+		sq->need_rearm = true;
+	}
 
 	queue = q_addr(&sq->mapping);
 	while (*sq_headp(sq) != new_tail) {
@@ -4579,11 +4577,16 @@ _post_completion_msg(void *ctx)
 
 static int nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
-static int set_ctrlr_intr_mode(struct nvmf_vfio_user_ctrlr *ctrlr);
+static int vfio_user_poll_group_rearm(struct nvmf_vfio_user_poll_group *vu_group);
 
+/*
+ * Handle an interrupt for the given controller: we must poll the vfu_ctx, and
+ * the SQs assigned to our poll group.
+ */
 static int
 vfio_user_ctrlr_intr(void *ctx)
 {
+	struct nvmf_vfio_user_poll_group *vu_group;
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	int ret = 0;
 
@@ -4596,7 +4599,9 @@ vfio_user_ctrlr_intr(void *ctx)
 	/*
 	 * Poll vfio-user for this controller.
 	 */
-	vfio_user_poll_vfu_ctx(ctrlr);
+	ret = vfio_user_poll_vfu_ctx(ctrlr);
+
+	vu_group = ctrlr_to_poll_group(ctrlr);
 
 	/*
 	 * See nvmf_vfio_user_get_optimal_poll_group() for why it's OK to only
@@ -4606,10 +4611,13 @@ vfio_user_ctrlr_intr(void *ctx)
 	 * (since a single poll group can have SQs from multiple separate
 	 * controllers).
 	 */
-	ret |= nvmf_vfio_user_poll_group_poll(ctrlr->sqs[0]->group);
+	ret |= nvmf_vfio_user_poll_group_poll(&vu_group->group);
 
-	/* Re-arm the event indexes. */
-	ret |= set_ctrlr_intr_mode(ctrlr);
+	/*
+	 * Re-arm the event indexes. NB: this also could rearm other
+	 * controller's SQs.
+	 */
+	ret |= vfio_user_poll_group_rearm(vu_group);
 
 	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
@@ -4630,7 +4638,8 @@ vfio_user_set_intr_mode(struct spdk_poller *poller, void *arg,
 	 * it in the endpoint instead.
 	 */
 	ctrlr->endpoint->interrupt_mode = interrupt_mode;
-	set_ctrlr_intr_mode(ctrlr);
+
+	vfio_user_poll_group_rearm(ctrlr_to_poll_group(ctrlr));
 }
 
 static int
