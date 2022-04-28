@@ -1939,7 +1939,7 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		}
 	}
 
-	if (ctrlr->cdata.sgls.supported) {
+	if (ctrlr->cdata.sgls.supported && !(ctrlr->quirks & NVME_QUIRK_NOT_USE_SGL)) {
 		assert(ctrlr->cdata.sgls.supported != 0x3);
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
 		if (ctrlr->cdata.sgls.supported == 0x2) {

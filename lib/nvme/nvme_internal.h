@@ -163,6 +163,12 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_MDTS_EXCLUDE_MD 0x8000
 
+/**
+ * Force not to use SGL even the controller report that it can
+ * support it.
+ */
+#define NVME_QUIRK_NOT_USE_SGL 0x10000
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(30)
