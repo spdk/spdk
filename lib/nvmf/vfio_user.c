@@ -583,19 +583,18 @@ vfio_user_migr_data_len(void)
 	return SPDK_ALIGN_CEIL(sizeof(struct vfio_user_nvme_migr_state), PAGE_SIZE);
 }
 
-static int
-vfio_user_handle_intr(void *ctx);
+static int vfio_user_ctrlr_intr(void *ctx);
 
 /*
- * Wrap vfio_user_handle_intr() such that it can be used with
+ * Wrap vfio_user_ctrlr_intr() such that it can be used with
  * spdk_thread_send_msg().
  * Pollers have type int (*)(void *) while message functions should have type
  * void (*)(void *), so simply discard the returned value.
  */
 static void
-vfio_user_handle_intr_wrapper(void *ctx)
+vfio_user_ctrlr_intr_wrapper(void *ctx)
 {
-	vfio_user_handle_intr(ctx);
+	vfio_user_ctrlr_intr(ctx);
 }
 
 static inline int
@@ -611,7 +610,7 @@ self_kick(struct nvmf_vfio_user_ctrlr *ctrlr)
 	ctrlr->self_kick_requested = true;
 
 	return spdk_thread_send_msg(ctrlr->thread,
-				    vfio_user_handle_intr_wrapper,
+				    vfio_user_ctrlr_intr_wrapper,
 				    ctrlr);
 }
 
@@ -4425,7 +4424,7 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		/*
 		 * If we're in interrupt mode, align all qpairs for a controller
 		 * on the same poll group, to avoid complications in
-		 * vfio_user_handle_intr().
+		 * vfio_user_ctrlr_intr().
 		 */
 		if (in_interrupt_mode(vu_transport)) {
 			result = sq->ctrlr->sqs[0]->group;
@@ -4579,7 +4578,7 @@ static int nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group 
 static int set_ctrlr_intr_mode(struct nvmf_vfio_user_ctrlr *ctrlr);
 
 static int
-vfio_user_handle_intr(void *ctx)
+vfio_user_ctrlr_intr(void *ctx)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	int ret = 0;
@@ -4590,11 +4589,18 @@ vfio_user_handle_intr(void *ctx)
 
 	ctrlr->self_kick_requested = false;
 
+	/*
+	 * Poll vfio-user for this controller.
+	 */
 	vfio_user_poll_vfu_ctx(ctrlr);
 
 	/*
 	 * See nvmf_vfio_user_get_optimal_poll_group() for why it's OK to only
 	 * poll this poll group.
+	 *
+	 * Note that this could end up polling other controller's SQs as well
+	 * (since a single poll group can have SQs from multiple separate
+	 * controllers).
 	 */
 	ret |= nvmf_vfio_user_poll_group_poll(ctrlr->sqs[0]->group);
 
@@ -4670,8 +4676,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 			assert(vu_ctrlr->intr_fd != -1);
 
 			vu_ctrlr->intr = SPDK_INTERRUPT_REGISTER(vu_ctrlr->intr_fd,
-					 vfio_user_handle_intr,
-					 vu_ctrlr);
+					 vfio_user_ctrlr_intr, vu_ctrlr);
 
 			assert(vu_ctrlr->intr != NULL);
 
