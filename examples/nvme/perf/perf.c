@@ -1673,6 +1673,7 @@ work_fn(void *arg)
 				TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 					memset(&ns_ctx->stats, 0, sizeof(ns_ctx->stats));
 					ns_ctx->stats.min_tsc = UINT64_MAX;
+					spdk_histogram_data_reset(ns_ctx->histogram);
 				}
 
 				if (worker->lcore == g_main_core && isatty(STDOUT_FILENO)) {
