@@ -45,3 +45,8 @@ test/external_code/nvme/identify
 # This file requires some additional work in CI and test scripts before it can
 # be part of autotest.
 test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz
+
+# Disable DAOS. Development libraries are not available for Fedora which is
+# used for the main build and scanbuild tests.
+module/bdev/daos/bdev_daos
+module/bdev/daos/bdev_daos_rpc
