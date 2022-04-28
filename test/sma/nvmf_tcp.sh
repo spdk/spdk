@@ -11,13 +11,6 @@ function cleanup() {
 	killprocess $smapid
 }
 
-function uuid2base64() {
-	python <<- EOF
-		import base64, uuid
-		print(base64.b64encode(uuid.UUID("$1").bytes).decode())
-	EOF
-}
-
 function create_device() {
 	"$rootdir/scripts/sma-client.py" <<- EOF
 		{
