@@ -318,6 +318,8 @@ struct nvmf_vfio_user_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
 	TAILQ_ENTRY(nvmf_vfio_user_poll_group)	link;
 	TAILQ_HEAD(, nvmf_vfio_user_sq)		sqs;
+	struct spdk_interrupt			*intr;
+	int					intr_fd;
 };
 
 struct nvmf_vfio_user_shadow_doorbells {
@@ -371,7 +373,6 @@ struct nvmf_vfio_user_ctrlr {
 	uint64_t				eventidx_buffer;
 
 	bool					adaptive_irqs_enabled;
-	bool					kick_requested;
 };
 
 /* Endpoint in vfio-user is associated with a socket file, which
@@ -423,6 +424,7 @@ struct nvmf_vfio_user_transport_opts {
 	bool					disable_adaptive_irq;
 	bool					disable_shadow_doorbells;
 	bool					disable_compare;
+	bool					enable_intr_mode_sq_spreading;
 };
 
 struct nvmf_vfio_user_transport {
@@ -572,6 +574,22 @@ io_q_exists(struct nvmf_vfio_user_ctrlr *vu_ctrlr, const uint16_t qid, const boo
 		vu_ctrlr->sqs[qid]->sq_state != VFIO_USER_SQ_UNUSED);
 }
 
+static char *
+endpoint_id(struct nvmf_vfio_user_endpoint *endpoint)
+{
+	return endpoint->trid.traddr;
+}
+
+static char *
+ctrlr_id(struct nvmf_vfio_user_ctrlr *ctrlr)
+{
+	if (!ctrlr || !ctrlr->endpoint) {
+		return "Null Ctrlr";
+	}
+
+	return endpoint_id(ctrlr->endpoint);
+}
+
 /* Return the poll group for the admin queue of the controller. */
 static inline struct nvmf_vfio_user_poll_group *
 ctrlr_to_poll_group(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
@@ -599,38 +617,37 @@ vfio_user_migr_data_len(void)
 	return SPDK_ALIGN_CEIL(sizeof(struct vfio_user_nvme_migr_state), PAGE_SIZE);
 }
 
+static inline bool
+in_interrupt_mode(struct nvmf_vfio_user_transport *vu_transport)
+{
+	return spdk_interrupt_mode_is_enabled() &&
+	       vu_transport->intr_mode_supported;
+}
+
 static int vfio_user_ctrlr_intr(void *ctx);
 
-/*
- * Wrap vfio_user_ctrlr_intr() such that it can be used with
- * spdk_thread_send_msg().
- * Pollers have type int (*)(void *) while message functions should have type
- * void (*)(void *), so simply discard the returned value.
- */
 static void
-vfio_user_ctrlr_intr_wrapper(void *ctx)
+vfio_user_msg_ctrlr_intr(void *ctx)
 {
 	vfio_user_ctrlr_intr(ctx);
 }
 
 /*
- * Arrange for this controller to immediately wake up and process everything.
+ * Kick (force a wakeup) of all poll groups for this controller.
+ * vfio_user_ctrlr_intr() itself arranges for kicking other poll groups if
+ * needed.
  */
-static inline int
-ctrlr_kick(struct nvmf_vfio_user_ctrlr *ctrlr)
+static void
+ctrlr_kick(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 {
-	assert(ctrlr != NULL);
-	assert(ctrlr->thread != NULL);
+	struct nvmf_vfio_user_poll_group *vu_ctrlr_group;
 
-	if (ctrlr->kick_requested) {
-		return 0;
-	}
+	SPDK_DEBUGLOG(vfio_user_db, "%s: kicked\n", ctrlr_id(vu_ctrlr));
 
-	ctrlr->kick_requested = true;
+	vu_ctrlr_group = ctrlr_to_poll_group(vu_ctrlr);
 
-	return spdk_thread_send_msg(ctrlr->thread,
-				    vfio_user_ctrlr_intr_wrapper,
-				    ctrlr);
+	spdk_thread_send_msg(poll_group_to_thread(vu_ctrlr_group),
+			     vfio_user_msg_ctrlr_intr, vu_ctrlr);
 }
 
 /*
@@ -873,22 +890,6 @@ nvme_map_cmd(void *prv, struct spdk_nvme_cmd *cmd, struct iovec *iovs, uint32_t 
 	}
 
 	return nvme_cmd_map_sgls(prv, cmd, iovs, max_iovcnt, len, mps, gpa_to_vva);
-}
-
-static char *
-endpoint_id(struct nvmf_vfio_user_endpoint *endpoint)
-{
-	return endpoint->trid.traddr;
-}
-
-static char *
-ctrlr_id(struct nvmf_vfio_user_ctrlr *ctrlr)
-{
-	if (!ctrlr || !ctrlr->endpoint) {
-		return "Null Ctrlr";
-	}
-
-	return endpoint_id(ctrlr->endpoint);
 }
 
 /*
@@ -1156,6 +1157,11 @@ static const struct spdk_json_object_decoder vfio_user_transport_opts_decoder[] 
 		offsetof(struct nvmf_vfio_user_transport, transport_opts.disable_compare),
 		spdk_json_decode_bool, true
 	},
+	{
+		"enable_intr_mode_sq_spreading",
+		offsetof(struct nvmf_vfio_user_transport, transport_opts.enable_intr_mode_sq_spreading),
+		spdk_json_decode_bool, true
+	},
 };
 
 static struct spdk_nvmf_transport *
@@ -1216,12 +1222,17 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 		vu_transport->transport_opts.disable_shadow_doorbells = true;
 	}
 
-	/*
-	 * If we are in interrupt mode, we cannot support adaptive IRQs, as
-	 * there is no guarantee the SQ poller will run subsequently to send
-	 * pending IRQs.
-	 */
 	if (spdk_interrupt_mode_is_enabled()) {
+		if (!vu_transport->intr_mode_supported) {
+			SPDK_ERRLOG("interrupt mode not supported\n");
+			goto cleanup;
+		}
+
+		/*
+		 * If we are in interrupt mode, we cannot support adaptive IRQs,
+		 * as there is no guarantee the SQ poller will run subsequently
+		 * to send pending IRQs.
+		 */
 		vu_transport->transport_opts.disable_adaptive_irq = true;
 	}
 
@@ -1367,6 +1378,7 @@ set_sq_eventidx(struct nvmf_vfio_user_sq *sq)
 	assert(sq->ctrlr != NULL);
 	assert(sq->ctrlr->sdbl != NULL);
 	assert(sq->need_rearm);
+	assert(sq->qid != 0);
 
 	ctrlr = sq->ctrlr;
 
@@ -2293,10 +2305,10 @@ handle_doorbell_buffer_config(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nv
 	copy_doorbells(ctrlr, sdbl != NULL ?
 		       sdbl->shadow_doorbells : ctrlr->bar0_doorbells,
 		       ctrlr->sdbl->shadow_doorbells);
+
 	vfio_user_ctrlr_switch_doorbells(ctrlr, true);
 
-	/* Update event index buffer and poll queues if necessary. */
-	vfio_user_poll_group_rearm(ctrlr_to_poll_group(ctrlr));
+	ctrlr_kick(ctrlr);
 
 	sc = SPDK_NVME_SC_SUCCESS;
 
@@ -2398,7 +2410,7 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 	assert(ctrlr != NULL);
 	assert(sq != NULL);
 
-	if (ctrlr->sdbl != NULL) {
+	if (ctrlr->sdbl != NULL && sq->qid != 0) {
 		/*
 		 * Submission queue index has moved past the event index, so it
 		 * needs to be re-armed before we go to sleep.
@@ -2946,13 +2958,6 @@ struct ctrlr_quiesce_ctx {
 };
 
 static void ctrlr_quiesce(struct nvmf_vfio_user_ctrlr *vu_ctrlr);
-
-static inline bool
-in_interrupt_mode(struct nvmf_vfio_user_transport *vu_transport)
-{
-	return spdk_interrupt_mode_is_enabled() &&
-	       vu_transport->intr_mode_supported;
-}
 
 static void
 _vfio_user_endpoint_resume_done_msg(void *ctx)
@@ -4514,12 +4519,32 @@ nvmf_vfio_user_discover(struct spdk_nvmf_transport *transport,
 			struct spdk_nvmf_discovery_log_page_entry *entry)
 { }
 
+static int vfio_user_poll_group_intr(void *ctx);
+
+static void
+vfio_user_poll_group_add_intr(struct nvmf_vfio_user_poll_group *vu_group,
+			      struct spdk_nvmf_poll_group *group)
+{
+	vu_group->intr_fd = eventfd(0, EFD_NONBLOCK);
+	assert(vu_group->intr_fd != -1);
+
+	vu_group->intr = SPDK_INTERRUPT_REGISTER(vu_group->intr_fd,
+			 vfio_user_poll_group_intr, vu_group);
+	assert(vu_group->intr != NULL);
+
+	spdk_poller_register_interrupt(group->poller, set_intr_mode_noop,
+				       vu_group);
+}
+
 static struct spdk_nvmf_transport_poll_group *
 nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 				 struct spdk_nvmf_poll_group *group)
 {
 	struct nvmf_vfio_user_transport *vu_transport;
 	struct nvmf_vfio_user_poll_group *vu_group;
+
+	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
+					transport);
 
 	SPDK_DEBUGLOG(nvmf_vfio, "create poll group\n");
 
@@ -4529,45 +4554,18 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 		return NULL;
 	}
 
+	if (in_interrupt_mode(vu_transport)) {
+		vfio_user_poll_group_add_intr(vu_group, group);
+	}
+
 	TAILQ_INIT(&vu_group->sqs);
 
-	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
-					transport);
 	pthread_mutex_lock(&vu_transport->pg_lock);
 	TAILQ_INSERT_TAIL(&vu_transport->poll_groups, vu_group, link);
 	if (vu_transport->next_pg == NULL) {
 		vu_transport->next_pg = vu_group;
 	}
 	pthread_mutex_unlock(&vu_transport->pg_lock);
-
-	if (!spdk_interrupt_mode_is_enabled()) {
-		return &vu_group->group;
-	}
-
-	/*
-	 * Only allow the poll group to work in interrupt mode if the transport
-	 * supports it. It's our responsibility to register the actual interrupt
-	 * later (in handle_queue_connect_rsp()) that processes everything in
-	 * the poll group: for us, that's the libvfio-user context, and the
-	 * actual qpairs.
-	 *
-	 * Note that this only works in the case that nothing else shares the
-	 * spdk_nvmf_poll_group.
-	 *
-	 * If not supported, this will effectively always wake up to poll the
-	 * poll group.
-	 */
-
-	vu_transport = SPDK_CONTAINEROF(transport, struct nvmf_vfio_user_transport,
-					transport);
-
-	if (!vu_transport->intr_mode_supported) {
-		SPDK_WARNLOG("vfio-user interrupt mode not supported\n");
-		return &vu_group->group;
-	}
-
-	spdk_poller_register_interrupt(group->poller, set_intr_mode_noop,
-				       NULL);
 
 	return &vu_group->group;
 }
@@ -4605,10 +4603,12 @@ nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 
 		/*
 		 * If we're in interrupt mode, align all qpairs for a controller
-		 * on the same poll group, to avoid complications in
-		 * vfio_user_ctrlr_intr().
+		 * on the same poll group by default, unless requested. This can
+		 * be lower in performance than running on a single poll group,
+		 * so we disable spreading by default.
 		 */
-		if (in_interrupt_mode(vu_transport)) {
+		if (in_interrupt_mode(vu_transport) &&
+		    !vu_transport->transport_opts.enable_intr_mode_sq_spreading) {
 			result = sq->ctrlr->sqs[0]->group;
 			goto out;
 		}
@@ -4633,11 +4633,22 @@ out:
 	return result;
 }
 
+static void
+vfio_user_poll_group_del_intr(struct nvmf_vfio_user_poll_group *vu_group)
+{
+	assert(vu_group->intr_fd != -1);
+
+	spdk_interrupt_unregister(&vu_group->intr);
+
+	close(vu_group->intr_fd);
+	vu_group->intr_fd = -1;
+}
+
 /* called when process exits */
 static void
 nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
-	struct nvmf_vfio_user_poll_group *vu_group, *next_tgroup;;
+	struct nvmf_vfio_user_poll_group *vu_group, *next_tgroup;
 	struct nvmf_vfio_user_transport *vu_transport;
 
 	SPDK_DEBUGLOG(nvmf_vfio, "destroy poll group\n");
@@ -4645,6 +4656,10 @@ nvmf_vfio_user_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	vu_group = SPDK_CONTAINEROF(group, struct nvmf_vfio_user_poll_group, group);
 	vu_transport = SPDK_CONTAINEROF(vu_group->group.transport, struct nvmf_vfio_user_transport,
 					transport);
+
+	if (in_interrupt_mode(vu_transport)) {
+		vfio_user_poll_group_del_intr(vu_group);
+	}
 
 	pthread_mutex_lock(&vu_transport->pg_lock);
 	next_tgroup = TAILQ_NEXT(vu_group, link);
@@ -4758,46 +4773,21 @@ _post_completion_msg(void *ctx)
 
 static int nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
-static int vfio_user_poll_group_rearm(struct nvmf_vfio_user_poll_group *vu_group);
-
-/*
- * Handle an interrupt for the given controller: we must poll the vfu_ctx, and
- * the SQs assigned to our poll group.
- */
 static int
-vfio_user_ctrlr_intr(void *ctx)
+vfio_user_poll_group_intr(void *ctx)
 {
-	struct nvmf_vfio_user_poll_group *vu_group;
-	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
+	struct nvmf_vfio_user_poll_group *vu_group = ctx;
+	eventfd_t val;
 	int ret = 0;
 
-	assert(ctrlr != NULL);
-	assert(ctrlr->sqs[0] != NULL);
-	assert(ctrlr->sqs[0]->group != NULL);
-
-	ctrlr->kick_requested = false;
+	SPDK_DEBUGLOG(vfio_user_db, "pg:%p got intr\n", vu_group);
 
 	/*
-	 * Poll vfio-user for this controller.
+	 * NB: this might fail if called from vfio_user_ctrlr_intr(), but it's
+	 * non-blocking, so not an issue.
 	 */
-	ret = vfio_user_poll_vfu_ctx(ctrlr);
-	/* `sqs[0]` could be set to NULL in vfio_user_poll_vfu_ctx() context, just return
-	 * for this case.
-	 */
-	if (ctrlr->sqs[0] == NULL) {
-		return ret;
-	}
+	eventfd_read(vu_group->intr_fd, &val);
 
-	vu_group = ctrlr_to_poll_group(ctrlr);
-
-	/*
-	 * See nvmf_vfio_user_get_optimal_poll_group() for why it's OK to only
-	 * poll this poll group.
-	 *
-	 * Note that this could end up polling other controller's SQs as well
-	 * (since a single poll group can have SQs from multiple separate
-	 * controllers).
-	 */
 	ret |= nvmf_vfio_user_poll_group_poll(&vu_group->group);
 
 	/*
@@ -4809,11 +4799,61 @@ vfio_user_ctrlr_intr(void *ctx)
 	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
-static void
-vfio_user_set_intr_mode(struct spdk_poller *poller, void *arg,
-			bool interrupt_mode)
+/*
+ * Handle an interrupt for the given controller: we must poll the vfu_ctx, and
+ * the SQs assigned to our own poll group. Other poll groups are handled via
+ * vfio_user_poll_group_intr().
+ */
+static int
+vfio_user_ctrlr_intr(void *ctx)
 {
-	struct nvmf_vfio_user_ctrlr *ctrlr = arg;
+	struct nvmf_vfio_user_poll_group *vu_ctrlr_group;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx;
+	struct nvmf_vfio_user_poll_group *vu_group;
+	int ret = SPDK_POLLER_IDLE;
+
+	vu_ctrlr_group = ctrlr_to_poll_group(vu_ctrlr);
+
+	SPDK_DEBUGLOG(vfio_user_db, "ctrlr pg:%p got intr\n", vu_ctrlr_group);
+
+	/*
+	 * Poll vfio-user for this controller. We need to do this before polling
+	 * any SQs, as this is where doorbell writes may be handled.
+	 */
+	ret = vfio_user_poll_vfu_ctx(vu_ctrlr);
+
+	/*
+	 * `sqs[0]` could be set to NULL in vfio_user_poll_vfu_ctx() context,
+	 * just return for this case.
+	 */
+	if (vu_ctrlr->sqs[0] == NULL) {
+		return ret;
+	}
+
+	if (vu_ctrlr->transport->transport_opts.enable_intr_mode_sq_spreading) {
+		/*
+		 * We may have just written to a doorbell owned by another
+		 * reactor: we need to prod them to make sure its SQs are polled
+		 * *after* the doorbell value is updated.
+		 */
+		TAILQ_FOREACH(vu_group, &vu_ctrlr->transport->poll_groups, link) {
+			if (vu_group != vu_ctrlr_group) {
+				SPDK_DEBUGLOG(vfio_user_db, "prodding pg:%p\n", vu_group);
+				eventfd_write(vu_group->intr_fd, 1);
+			}
+		}
+	}
+
+	ret |= vfio_user_poll_group_intr(vu_ctrlr_group);
+
+	return ret;
+}
+
+static void
+vfio_user_ctrlr_set_intr_mode(struct spdk_poller *poller, void *ctx,
+			      bool interrupt_mode)
+{
+	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	assert(ctrlr != NULL);
 	assert(ctrlr->endpoint != NULL);
 
@@ -4862,7 +4902,7 @@ start_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 	assert(vu_ctrlr->intr != NULL);
 
 	spdk_poller_register_interrupt(vu_ctrlr->vfu_ctx_poller,
-				       vfio_user_set_intr_mode,
+				       vfio_user_ctrlr_set_intr_mode,
 				       vu_ctrlr);
 }
 
