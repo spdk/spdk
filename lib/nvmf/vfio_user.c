@@ -1495,7 +1495,11 @@ set_ctrlr_intr_mode(struct nvmf_vfio_user_ctrlr *ctrlr)
 	 * skip it.
 	 */
 	for (size_t i = 1; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; ++i) {
-		if (!io_q_exists(ctrlr, i, false)) {
+		struct nvmf_vfio_user_sq *sq = ctrlr->sqs[i];
+
+		if (sq == NULL ||
+		    sq->sq_state != VFIO_USER_SQ_ACTIVE ||
+		    !sq->size) {
 			continue;
 		}
 
