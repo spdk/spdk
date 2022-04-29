@@ -1295,6 +1295,104 @@ test_nvme_rdma_ctrlr_get_max_sges(void)
 	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 2);
 }
 
+static void
+test_nvme_rdma_poll_group_get_stats(void)
+{
+	int rc = -1;
+	struct spdk_nvme_transport_poll_group_stat *tpointer = NULL;
+	struct nvme_rdma_poll_group tgroup = {};
+	struct ibv_device dev1, dev2 = {};
+	struct ibv_context contexts1, contexts2 = {};
+	struct nvme_rdma_poller *tpoller1 = NULL;
+	struct nvme_rdma_poller *tpoller2 = NULL;
+
+	memcpy(dev1.name, "/dev/test1", sizeof("/dev/test1"));
+	memcpy(dev2.name, "/dev/test2", sizeof("/dev/test2"));
+	contexts1.device = &dev1;
+	contexts2.device = &dev2;
+
+	/* Initialization */
+	STAILQ_INIT(&tgroup.pollers);
+	rc = nvme_rdma_poller_create(&tgroup, &contexts1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tgroup.num_pollers == 1);
+
+	rc = nvme_rdma_poller_create(&tgroup, &contexts2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tgroup.num_pollers == 2);
+	CU_ASSERT(&tgroup.pollers != NULL);
+
+	tpoller1 = STAILQ_FIRST(&tgroup.pollers);
+	SPDK_CU_ASSERT_FATAL(tpoller1 != NULL);
+	tpoller2 = STAILQ_NEXT(tpoller1, link);
+	SPDK_CU_ASSERT_FATAL(tpoller2 != NULL);
+
+	CU_ASSERT(tpoller1->device == &contexts2);
+	CU_ASSERT(tpoller2->device == &contexts1);
+	CU_ASSERT(strcmp(tpoller1->device->device->name, "/dev/test2") == 0);
+	CU_ASSERT(strcmp(tpoller2->device->device->name, "/dev/test1") == 0);
+	CU_ASSERT(tpoller1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(tpoller2->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(tpoller1->required_num_wc == 0);
+	CU_ASSERT(tpoller2->required_num_wc == 0);
+
+	/* Test1: Invalid stats */
+	rc = nvme_rdma_poll_group_get_stats(NULL, &tpointer);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Test2: Invalid group pointer */
+	rc = nvme_rdma_poll_group_get_stats(&tgroup.group, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Test3: Success member variables should be correct */
+	tpoller1->stats.polls = 111;
+	tpoller1->stats.idle_polls = 112;
+	tpoller1->stats.completions = 113;
+	tpoller1->stats.queued_requests = 114;
+	tpoller1->stats.rdma_stats.send.num_submitted_wrs = 121;
+	tpoller1->stats.rdma_stats.send.doorbell_updates = 122;
+	tpoller1->stats.rdma_stats.recv.num_submitted_wrs = 131;
+	tpoller1->stats.rdma_stats.recv.doorbell_updates = 132;
+	tpoller2->stats.polls = 211;
+	tpoller2->stats.idle_polls = 212;
+	tpoller2->stats.completions = 213;
+	tpoller2->stats.queued_requests = 214;
+	tpoller2->stats.rdma_stats.send.num_submitted_wrs = 221;
+	tpoller2->stats.rdma_stats.send.doorbell_updates = 222;
+	tpoller2->stats.rdma_stats.recv.num_submitted_wrs = 231;
+	tpoller2->stats.rdma_stats.recv.doorbell_updates = 232;
+
+	rc = nvme_rdma_poll_group_get_stats(&tgroup.group, &tpointer);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tpointer != NULL);
+	CU_ASSERT(tpointer->trtype == SPDK_NVME_TRANSPORT_RDMA);
+	CU_ASSERT(tpointer->rdma.num_devices == tgroup.num_pollers);
+	CU_ASSERT(tpointer->rdma.device_stats != NULL);
+
+	CU_ASSERT(strcmp(tpointer->rdma.device_stats[0].name, "/dev/test2") == 0);
+	CU_ASSERT(tpointer->rdma.device_stats[0].polls == 111);
+	CU_ASSERT(tpointer->rdma.device_stats[0].idle_polls == 112);
+	CU_ASSERT(tpointer->rdma.device_stats[0].completions == 113);
+	CU_ASSERT(tpointer->rdma.device_stats[0].queued_requests == 114);
+	CU_ASSERT(tpointer->rdma.device_stats[0].total_send_wrs == 121);
+	CU_ASSERT(tpointer->rdma.device_stats[0].send_doorbell_updates == 122);
+	CU_ASSERT(tpointer->rdma.device_stats[0].total_recv_wrs == 131);
+	CU_ASSERT(tpointer->rdma.device_stats[0].recv_doorbell_updates == 132);
+
+	CU_ASSERT(strcmp(tpointer->rdma.device_stats[1].name, "/dev/test1") == 0);
+	CU_ASSERT(tpointer->rdma.device_stats[1].polls == 211);
+	CU_ASSERT(tpointer->rdma.device_stats[1].idle_polls == 212);
+	CU_ASSERT(tpointer->rdma.device_stats[1].completions == 213);
+	CU_ASSERT(tpointer->rdma.device_stats[1].queued_requests == 214);
+	CU_ASSERT(tpointer->rdma.device_stats[1].total_send_wrs == 221);
+	CU_ASSERT(tpointer->rdma.device_stats[1].send_doorbell_updates == 222);
+	CU_ASSERT(tpointer->rdma.device_stats[1].total_recv_wrs == 231);
+	CU_ASSERT(tpointer->rdma.device_stats[1].recv_doorbell_updates == 232);
+
+	nvme_rdma_poll_group_free_stats(&tgroup.group, tpointer);
+	nvme_rdma_poll_group_free_pollers(&tgroup);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1327,6 +1425,7 @@ int main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_rdma_get_memory_translation);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_qpair_by_id);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_get_max_sges);
+	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_stats);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
