@@ -825,6 +825,55 @@ nvme_ctrlr_is_available(struct nvme_ctrlr *nvme_ctrlr)
 	return true;
 }
 
+/* Simulate circular linked list. */
+static inline struct nvme_io_path *
+nvme_io_path_get_next(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_path *prev_path)
+{
+	struct nvme_io_path *next_path;
+
+	next_path = STAILQ_NEXT(prev_path, stailq);
+	if (next_path != NULL) {
+		return next_path;
+	} else {
+		return STAILQ_FIRST(&nbdev_ch->io_path_list);
+	}
+}
+
+static struct nvme_io_path *
+bdev_nvme_find_next_io_path(struct nvme_bdev_channel *nbdev_ch,
+			    struct nvme_io_path *prev)
+{
+	struct nvme_io_path *io_path, *start, *non_optimized = NULL;
+
+	start = nvme_io_path_get_next(nbdev_ch, prev);
+
+	io_path = start;
+	do {
+		if (spdk_likely(nvme_io_path_is_connected(io_path) &&
+				!io_path->nvme_ns->ana_state_updating)) {
+			switch (io_path->nvme_ns->ana_state) {
+			case SPDK_NVME_ANA_OPTIMIZED_STATE:
+				nbdev_ch->current_io_path = io_path;
+				return io_path;
+			case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
+				if (non_optimized == NULL) {
+					non_optimized = io_path;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		io_path = nvme_io_path_get_next(nbdev_ch, io_path);
+	} while (io_path != start);
+
+	/* We come here only if there is no optimized path. Cache even non_optimized
+	 * path for load balance across multiple non_optimized paths.
+	 */
+	nbdev_ch->current_io_path = non_optimized;
+	return non_optimized;
+}
+
 static struct nvme_io_path *
 _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
@@ -864,7 +913,11 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 		return _bdev_nvme_find_io_path(nbdev_ch);
 	}
 
-	return nbdev_ch->current_io_path;
+	if (spdk_likely(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE)) {
+		return nbdev_ch->current_io_path;
+	} else {
+		return bdev_nvme_find_next_io_path(nbdev_ch, nbdev_ch->current_io_path);
+	}
 }
 
 /* Return true if there is any io_path whose qpair is active or ctrlr is not failed,
@@ -2600,6 +2653,20 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
+static const char *
+nvme_bdev_get_mp_policy_str(struct nvme_bdev *nbdev)
+{
+	switch (nbdev->mp_policy) {
+	case BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE:
+		return "active_passive";
+	case BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE:
+		return "active_active";
+	default:
+		assert(false);
+		return "invalid";
+	}
+}
+
 static int
 bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -2612,6 +2679,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 		nvme_namespace_info_json(w, nvme_ns);
 	}
 	spdk_json_write_array_end(w);
+	spdk_json_write_named_string(w, "mp_policy", nvme_bdev_get_mp_policy_str(nvme_bdev));
 	pthread_mutex_unlock(&nvme_bdev->mutex);
 
 	return 0;
@@ -2884,6 +2952,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 	}
 
 	bdev->ref = 1;
+	bdev->mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
 	TAILQ_INIT(&bdev->nvme_ns_list);
 	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
 	bdev->opal = nvme_ctrlr->opal_dev != NULL;
@@ -3629,6 +3698,88 @@ bdev_nvme_set_preferred_path(const char *name, uint16_t cntlid,
 
 err_bdev:
 	spdk_bdev_close(ctx->desc);
+err_open:
+	free(ctx);
+err_alloc:
+	cb_fn(cb_arg, rc);
+}
+
+struct bdev_nvme_set_multipath_policy_ctx {
+	struct spdk_bdev_desc *desc;
+	bdev_nvme_set_multipath_policy_cb cb_fn;
+	void *cb_arg;
+};
+
+static void
+bdev_nvme_set_multipath_policy_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct bdev_nvme_set_multipath_policy_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	assert(ctx != NULL);
+	assert(ctx->desc != NULL);
+	assert(ctx->cb_fn != NULL);
+
+	spdk_bdev_close(ctx->desc);
+
+	ctx->cb_fn(ctx->cb_arg, status);
+
+	free(ctx);
+}
+
+static void
+_bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(_ch);
+	struct nvme_bdev *nbdev = spdk_io_channel_get_io_device(_ch);
+
+	nbdev_ch->mp_policy = nbdev->mp_policy;
+	nbdev_ch->current_io_path = NULL;
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy policy,
+			       bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
+{
+	struct bdev_nvme_set_multipath_policy_ctx *ctx;
+	struct spdk_bdev *bdev;
+	struct nvme_bdev *nbdev;
+	int rc;
+
+	assert(cb_fn != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc context.\n");
+		rc = -ENOMEM;
+		goto err_alloc;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &ctx->desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("bdev %s is not registered in this module.\n", name);
+		rc = -ENODEV;
+		goto err_open;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(ctx->desc);
+	nbdev = SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk);
+
+	pthread_mutex_lock(&nbdev->mutex);
+	nbdev->mp_policy = policy;
+	pthread_mutex_unlock(&nbdev->mutex);
+
+	spdk_for_each_channel(nbdev,
+			      _bdev_nvme_set_multipath_policy,
+			      ctx,
+			      bdev_nvme_set_multipath_policy_done);
+	return;
+
 err_open:
 	free(ctx);
 err_alloc:

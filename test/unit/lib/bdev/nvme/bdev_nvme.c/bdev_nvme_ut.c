@@ -6200,6 +6200,58 @@ test_set_preferred_path(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
+static void
+test_find_next_io_path(void)
+{
+	struct nvme_bdev_channel nbdev_ch = {
+		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
+		.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
+	};
+	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {}, qpair3 = {};
+	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {}, ctrlr3 = {};
+	struct nvme_ctrlr nvme_ctrlr1 = { .ctrlr = &ctrlr1, };
+	struct nvme_ctrlr nvme_ctrlr2 = { .ctrlr = &ctrlr2, };
+	struct nvme_ctrlr nvme_ctrlr3 = { .ctrlr = &ctrlr3, };
+	struct nvme_ctrlr_channel ctrlr_ch1 = {};
+	struct nvme_ctrlr_channel ctrlr_ch2 = {};
+	struct nvme_ctrlr_channel ctrlr_ch3 = {};
+	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, .ctrlr = &nvme_ctrlr1, .qpair = &qpair1, };
+	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, .ctrlr = &nvme_ctrlr2, .qpair = &qpair2, };
+	struct nvme_qpair nvme_qpair3 = { .ctrlr_ch = &ctrlr_ch3, .ctrlr = &nvme_ctrlr3, .qpair = &qpair3, };
+	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {}, nvme_ns3 = {};
+	struct nvme_io_path io_path1 = { .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
+	struct nvme_io_path io_path2 = { .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
+	struct nvme_io_path io_path3 = { .qpair = &nvme_qpair3, .nvme_ns = &nvme_ns3, };
+
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path1, stailq);
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path2, stailq);
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path3, stailq);
+
+	/* nbdev_ch->current_io_path is filled always when bdev_nvme_find_next_io_path() is called. */
+
+	nbdev_ch.current_io_path = &io_path2;
+	nvme_ns1.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
+
+	nbdev_ch.current_io_path = &io_path3;
+	nvme_ns1.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -6250,6 +6302,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_cmp);
 	CU_ADD_TEST(suite, test_ana_transition);
 	CU_ADD_TEST(suite, test_set_preferred_path);
+	CU_ADD_TEST(suite, test_find_next_io_path);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

@@ -3433,6 +3433,43 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_set_multipath_policy {#rpc_bdev_nvme_set_multipath_policy}
+
+Set multipath policy of the NVMe bdev in multipath mode.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe bdev
+policy                  | Required | string      | Multipath policy: active_active or active_passive
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_set_multipath_policy",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1",
+    "policy": "active_passive"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.

@@ -840,6 +840,20 @@ def bdev_nvme_set_preferred_path(client, name, cntlid):
     return client.call('bdev_nvme_set_preferred_path', params)
 
 
+def bdev_nvme_set_multipath_policy(client, name, policy):
+    """Set multipath policy of the NVMe bdev
+
+    Args:
+        name: NVMe bdev name
+        policy: Multipath policy (active_passive or active_active)
+    """
+
+    params = {'name': name,
+              'policy': policy}
+
+    return client.call('bdev_nvme_set_multipath_policy', params)
+
+
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 

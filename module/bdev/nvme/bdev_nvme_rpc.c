@@ -2196,3 +2196,90 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_preferred_path", rpc_bdev_nvme_set_preferred_path,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_set_multipath_policy {
+	char *name;
+	enum bdev_nvme_multipath_policy policy;
+};
+
+static void
+free_rpc_set_multipath_policy(struct rpc_set_multipath_policy *req)
+{
+	free(req->name);
+}
+
+static int
+rpc_decode_mp_policy(const struct spdk_json_val *val, void *out)
+{
+	enum bdev_nvme_multipath_policy *policy = out;
+
+	if (spdk_json_strequal(val, "active_passive") == true) {
+		*policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
+	} else if (spdk_json_strequal(val, "active_active") == true) {
+		*policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE;
+	} else {
+		SPDK_NOTICELOG("Invalid parameter value: policy\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static const struct spdk_json_object_decoder rpc_set_multipath_policy_decoders[] = {
+	{"name", offsetof(struct rpc_set_multipath_policy, name), spdk_json_decode_string},
+	{"policy", offsetof(struct rpc_set_multipath_policy, policy), rpc_decode_mp_policy},
+};
+
+struct rpc_set_multipath_policy_ctx {
+	struct rpc_set_multipath_policy req;
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+rpc_bdev_nvme_set_multipath_policy_done(void *cb_arg, int rc)
+{
+	struct rpc_set_multipath_policy_ctx *ctx = cb_arg;
+
+	if (rc == 0) {
+		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	} else {
+		spdk_jsonrpc_send_error_response(ctx->request, rc, spdk_strerror(-rc));
+	}
+
+	free_rpc_set_multipath_policy(&ctx->req);
+	free(ctx);
+}
+
+static void
+rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	struct rpc_set_multipath_policy_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_set_multipath_policy_decoders,
+				    SPDK_COUNTOF(rpc_set_multipath_policy_decoders),
+				    &ctx->req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	ctx->request = request;
+
+	bdev_nvme_set_multipath_policy(ctx->req.name, ctx->req.policy,
+				       rpc_bdev_nvme_set_multipath_policy_done, ctx);
+	return;
+
+cleanup:
+	free_rpc_set_multipath_policy(&ctx->req);
+	free(ctx);
+}
+SPDK_RPC_REGISTER("bdev_nvme_set_multipath_policy", rpc_bdev_nvme_set_multipath_policy,
+		  SPDK_RPC_RUNTIME)

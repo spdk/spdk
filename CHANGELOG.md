@@ -26,6 +26,9 @@ A new RPC `bdev_nvme_get_io_paths` was added to get all active I/O paths.
 A new RPC `bdev_nvme_set_preferred_path` was added to set preferred I/O path for an NVMe bdev
 when in multipath mode. This RPC does not support NVMe bdevs in failover mode.
 
+A new RPC `bdev_nvme_set_multipath_policy` was added to set multipath policy of a NVMe bdev
+in multipath mode.
+
 ### idxd
 
 A new parameter `flags` was added to all low level submission and preparation
