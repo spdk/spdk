@@ -15,7 +15,7 @@ FIO_BIN=${FIO_BIN:-"$DEFAULT_FIO_BIN"}
 WORKDIR=$(readlink -f "$(dirname "$0")")
 
 if ! hash $QEMU_IMG_BIN $QEMU_BIN; then
-	error 'QEMU is not installed on this system. Unable to run vhost tests.'
+	echo 'ERROR: QEMU is not installed on this system. Unable to run vhost tests.' >&2
 	exit 1
 fi
 
