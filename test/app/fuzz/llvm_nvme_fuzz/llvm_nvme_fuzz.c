@@ -80,6 +80,9 @@ fuzz_admin_command(struct fuzz_command *cmd)
 	if (cmd->cmd.opc == SPDK_NVME_OPC_FABRIC) {
 		cmd->cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	}
+
+	/* Fuzz a normal operation, so set a zero value in Fused field. */
+	cmd->cmd.fuse = 0;
 }
 
 static void
