@@ -5,6 +5,9 @@ rootdir=$(readlink -f "$curdir/../../../")
 
 source "$rootdir/test/vhost/common.sh"
 
+# Allow for the fio_conf() to slurp extra config from the stdin.
+exec {fio_extra_conf}<&0
+
 fio_conf() {
 	cat <<- FIO
 		[global]
@@ -23,6 +26,14 @@ fio_conf() {
 			registerfiles=${registerfiles:-1}
 			sqthread_poll=${sqthread_poll:-1}
 		FIO_URING
+	fi
+
+	if [[ -e $fio_extra_conf ]]; then
+		# Overriden through cmdline|env
+		cat "$fio_extra_conf"
+	elif [[ ! -t $fio_extra_conf ]]; then
+		# Attached to stdin
+		cat <&"$fio_extra_conf"
 	fi
 
 	cat <<- FIO
