@@ -396,6 +396,9 @@ To remove an NVMe controller use the bdev_nvme_detach_controller command.
 
 This command will remove NVMe bdev named Nvme0.
 
+The SPDK NVMe bdev driver provides the multipath feature. Please refer to
+@ref nvme_multipath for details.
+
 ### NVMe bdev character device {#bdev_config_nvme_cuse}
 
 This feature is considered as experimental. You must configure with --with-nvme-cuse
