@@ -77,7 +77,7 @@ while ! grep "Starting I/O" $testdir/log.txt; do
 done
 
 if ! grep "Starting I/O" $testdir/log.txt; then
-	return 1
+	exit 1
 fi
 
 # Add and remove NVMe with delays between to give some time for IO to proceed
@@ -94,7 +94,7 @@ timing_enter wait_for_example
 
 if ! wait $hotplug_pid; then
 	echo "Hotplug example returned error!"
-	return 1
+	exit 1
 fi
 
 timing_exit wait_for_example
