@@ -8,13 +8,24 @@ source "$rootdir/test/vhost/common.sh"
 fio_conf() {
 	cat <<- FIO
 		[global]
-		ioengine=libaio
+		ioengine=${ioengine:-libaio}
 		thread=1
 		group_reporting=1
 		direct=1
 		verify=0
 		norandommap=1
+	FIO
 
+	if [[ $ioengine == io_uring ]]; then
+		cat <<- FIO_URING
+			fixedbufs=${fixedbufs:-1}
+			hipri=${hipri:-1}
+			registerfiles=${registerfiles:-1}
+			sqthread_poll=${sqthread_poll:-1}
+		FIO_URING
+	fi
+
+	cat <<- FIO
 		[perf_test]
 		stonewall
 		description="Vhost performance test for a given workload"
