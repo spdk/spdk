@@ -76,6 +76,7 @@ struct dd_target {
 #ifdef SPDK_CONFIG_URING
 		struct {
 			int fd;
+			int idx;
 		} uring;
 #endif
 		struct {
@@ -287,10 +288,11 @@ dd_uring_submit(struct dd_io *io, struct dd_target *target, uint64_t length, uin
 	io->iov.iov_len = length;
 	sqe = io_uring_get_sqe(&g_job.u.uring.ring);
 	if (io->type == DD_READ || io->type == DD_POPULATE) {
-		io_uring_prep_readv(sqe, target->u.uring.fd, &io->iov, 1, offset);
+		io_uring_prep_readv(sqe, target->u.uring.idx, &io->iov, 1, offset);
 	} else {
-		io_uring_prep_writev(sqe, target->u.uring.fd, &io->iov, 1, offset);
+		io_uring_prep_writev(sqe, target->u.uring.idx, &io->iov, 1, offset);
 	}
+	sqe->flags |= IOSQE_FIXED_FILE;
 	io_uring_sqe_set_data(sqe, io);
 	io_uring_submit(&g_job.u.uring.ring);
 }
@@ -740,6 +742,28 @@ dd_is_blk(int fd)
 
 	return S_ISBLK(st.st_mode);
 }
+
+static int
+dd_register_files(void)
+{
+	int fds[2];
+	unsigned count = 0;
+
+	if (g_opts.input_file) {
+		fds[count] = g_job.input.u.uring.fd;
+		g_job.input.u.uring.idx = count;
+		count++;
+	}
+
+	if (g_opts.output_file) {
+		fds[count] = g_job.output.u.uring.fd;
+		g_job.output.u.uring.idx = count;
+		count++;
+	}
+
+	return io_uring_register_files(&g_job.u.uring.ring, fds, count);
+
+}
 #endif
 
 static void
@@ -875,6 +899,15 @@ dd_run(void *arg1)
 				return;
 			}
 			g_job.u.uring.active = true;
+
+			/* Register the files */
+			rc = dd_register_files();
+			if (rc) {
+				SPDK_ERRLOG("Failed to register files with io_uring: %d (%s)\n", rc, spdk_strerror(-rc));
+				dd_exit(rc);
+				return;
+			}
+
 		} else
 #endif
 		{
@@ -1079,6 +1112,7 @@ dd_free(void)
 #ifdef SPDK_CONFIG_URING
 		if (g_opts.aio == false) {
 			if (g_job.u.uring.active) {
+				io_uring_unregister_files(&g_job.u.uring.ring);
 				io_uring_queue_exit(&g_job.u.uring.ring);
 			}
 		} else
