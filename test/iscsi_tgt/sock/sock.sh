@@ -88,6 +88,22 @@ if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi
 
+# send message using hello_sock client with zero copy disabled
+message="**MESSAGE:This is a test message from the client with zero copy disabled**"
+response=$(echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N "posix" -z)
+
+if ! echo "$response" | grep -q "$message"; then
+	exit 1
+fi
+
+# send message using hello_sock client with zero copy enabled
+message="**MESSAGE:This is a test message from the client with zero copy enabled**"
+response=$(echo $message | $HELLO_SOCK_APP -H $INITIATOR_IP -P $ISCSI_PORT -N "posix" -Z)
+
+if ! echo "$response" | grep -q "$message"; then
+	exit 1
+fi
+
 trap '-' SIGINT SIGTERM EXIT
 # NOTE: socat returns code 143 on SIGINT
 killprocess $server_pid || true
