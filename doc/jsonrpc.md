@@ -9518,7 +9518,9 @@ Example response:
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
     "enable_zerocopy_send_client": false,
-    "zerocopy_threshold": 0
+    "zerocopy_threshold": 0,
+    "tls_version": 13,
+    "enable_ktls": false
   }
 }
 ~~~
@@ -9541,6 +9543,8 @@ enable_zerocopy_send_server | Optional | boolean     | Enable or disable zero co
 enable_zerocopy_send_client | Optional | boolean     | Enable or disable zero copy on send for client sockets
 zerocopy_threshold          | Optional | number      | Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs
 that fall below this threshold may be sent without zerocopy flag set
+tls_version                 | Optional | number      | TLS protocol version, e.g. 13 for v1.3 (only applies when impl_name == ssl)
+enable_ktls                 | Optional | boolean     | Enable or disable Kernel TLS (only applies when impl_name == ssl)
 
 #### Response
 
@@ -9564,7 +9568,9 @@ Example request:
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
     "enable_zerocopy_send_client": false,
-    "zerocopy_threshold": 10240
+    "zerocopy_threshold": 10240,
+    "tls_version": 13,
+    "enable_ktls": false
   }
 }
 ~~~

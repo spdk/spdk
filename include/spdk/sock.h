@@ -128,6 +128,16 @@ struct spdk_sock_impl_opts {
 	 * threshold may be sent without zerocopy flag set.
 	 */
 	uint32_t zerocopy_threshold;
+
+	/**
+	 * TLS protocol version. Used by ssl socket module.
+	 */
+	uint32_t tls_version;
+
+	/**
+	 * Enable or disable kernel TLS. Used by ssl socket modules.
+	 */
+	bool enable_ktls;
 };
 
 /**
@@ -158,16 +168,6 @@ struct spdk_sock_opts {
 	 * Time in msec to wait ack until connection is closed forcefully.
 	 */
 	uint32_t ack_timeout;
-
-	/**
-	 * TLS protocol version. Used by posix socket module.
-	 */
-	uint32_t tls_version;
-
-	/**
-	 * Used to enable or disable KTLS for ssl posix socket module.
-	 */
-	bool ktls;
 
 	/**
 	 * Socket implementation options.  If non-NULL, these will override those set by

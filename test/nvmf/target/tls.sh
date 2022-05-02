@@ -17,6 +17,62 @@ if [ "$TEST_TRANSPORT" != tcp ]; then
 fi
 
 $rpc_py sock_set_default_impl -i ssl
+
+# Check default TLS version
+version=$($rpc_py sock_impl_get_options -i ssl | jq -r .tls_version)
+if [[ "$version" != "0" ]]; then
+	echo "TLS version was not set correctly $version != 0"
+	exit 1
+fi
+
+# Check TLS version set to 13
+$rpc_py sock_impl_set_options -i ssl --tls-version 13
+version=$($rpc_py sock_impl_get_options -i ssl | jq -r .tls_version)
+if [[ "$version" != "13" ]]; then
+	echo "TLS version was not set correctly $version != 13"
+	exit 1
+fi
+
+# Check TLS version set to 12
+$rpc_py sock_impl_set_options -i ssl --tls-version 12
+version=$($rpc_py sock_impl_get_options -i ssl | jq -r .tls_version)
+if [[ "$version" != "12" ]]; then
+	echo "TLS version was not set correctly $version != 12"
+	exit 1
+fi
+
+# Check incorrect TLS version set to 7
+$rpc_py sock_impl_set_options -i ssl --tls-version 7
+version=$($rpc_py sock_impl_get_options -i ssl | jq -r .tls_version)
+if [[ "$version" != "7" ]]; then
+	echo "TLS version was not set correctly $version != 7"
+	exit 1
+fi
+
+# Check default KTLS is disabled
+ktls=$($rpc_py sock_impl_get_options -i ssl | jq -r .enable_ktls)
+if [[ "$ktls" != "false" ]]; then
+	echo "KTLS was not set correctly $ktls != false"
+	exit 1
+fi
+
+# Check KTLS enable
+$rpc_py sock_impl_set_options -i ssl --enable-ktls
+ktls=$($rpc_py sock_impl_get_options -i ssl | jq -r .enable_ktls)
+if [[ "$ktls" != "true" ]]; then
+	echo "KTLS was not set correctly $ktls != true"
+	exit 1
+fi
+
+# Check KTLS disable
+$rpc_py sock_impl_set_options -i ssl --disable-ktls
+ktls=$($rpc_py sock_impl_get_options -i ssl | jq -r .enable_ktls)
+if [[ "$ktls" != "false" ]]; then
+	echo "KTLS was not set correctly $ktls != false"
+	exit 1
+fi
+
+$rpc_py sock_impl_set_options -i ssl --tls-version 13
 $rpc_py framework_start_init
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 10

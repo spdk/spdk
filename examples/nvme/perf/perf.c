@@ -291,7 +291,7 @@ static int g_file_optind; /* Index of first filename in argv */
 static inline void task_complete(struct perf_task *task);
 
 static void
-perf_set_sock_zcopy(const char *impl_name, bool enable)
+perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val)
 {
 	struct spdk_sock_impl_opts sock_opts = {};
 	size_t opts_size = sizeof(sock_opts);
@@ -314,11 +314,23 @@ perf_set_sock_zcopy(const char *impl_name, bool enable)
 		opts_size = sizeof(sock_opts);
 	}
 
-	sock_opts.enable_zerocopy_send_client = enable;
+	if (!field) {
+		fprintf(stderr, "Warning: no socket opts field specified\n");
+		return;
+	} else if (strcmp(field, "enable_zerocopy_send_client") == 0) {
+		sock_opts.enable_zerocopy_send_client = val;
+	} else if (strcmp(field, "tls_version") == 0) {
+		sock_opts.tls_version = val;
+	} else if (strcmp(field, "ktls") == 0) {
+		sock_opts.enable_ktls = val;
+	} else {
+		fprintf(stderr, "Warning: invalid or unprocessed socket opts field: %s\n", field);
+		return;
+	}
 
 	if (spdk_sock_impl_set_opts(impl_name, &sock_opts, opts_size)) {
-		fprintf(stderr, "Failed to %s zcopy send for sock impl %s: error %d (%s)\n",
-			enable ? "enable" : "disable", impl_name, errno, strerror(errno));
+		fprintf(stderr, "Failed to set %s: %d for sock impl %s : error %d (%s)\n", field, val, impl_name,
+			errno, strerror(errno));
 	}
 }
 
@@ -1775,6 +1787,9 @@ usage(char *program_name)
 	printf("\t[--transport-stats dump transport statistics]\n");
 	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
 	printf("\t[--io-queue-size <val> size of NVMe IO queue. Default: maximum allowed by controller]\n");
+	printf("\t[--disable-ktls disable Kernel TLS. Only valid for ssl impl. Default for ssl impl]\n");
+	printf("\t[--enable-ktls enable Kernel TLS. Only valid for ssl impl]\n");
+	printf("\t[--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)]\n");
 }
 
 static void
@@ -2267,6 +2282,12 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"iova-mode", required_argument, NULL, PERF_IOVA_MODE},
 #define PERF_IO_QUEUE_SIZE	259
 	{"io-queue-size", required_argument, NULL, PERF_IO_QUEUE_SIZE},
+#define PERF_DISABLE_KTLS	260
+	{"disable-ktls", no_argument, NULL, PERF_DISABLE_KTLS},
+#define PERF_ENABLE_KTLS	261
+	{"enable-ktls", no_argument, NULL, PERF_ENABLE_KTLS},
+#define PERF_TLS_VERSION	262
+	{"tls-version", required_argument, NULL, PERF_TLS_VERSION},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2447,11 +2468,25 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_ENABLE_VMD:
 			g_vmd = true;
 			break;
+		case PERF_DISABLE_KTLS:
+			perf_set_sock_opts(optarg, "ktls", 0);
+			break;
+		case PERF_ENABLE_KTLS:
+			perf_set_sock_opts(optarg, "ktls", 1);
+			break;
+		case PERF_TLS_VERSION:
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Illegal tls version value %s\n", optarg);
+				return val;
+			}
+			perf_set_sock_opts(optarg, "tls_version", val);
+			break;
 		case PERF_DISABLE_ZCOPY:
-			perf_set_sock_zcopy(optarg, false);
+			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 0);
 			break;
 		case PERF_ENABLE_ZCOPY:
-			perf_set_sock_zcopy(optarg, true);
+			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 1);
 			break;
 		case PERF_DEFAULT_SOCK_IMPL:
 			rc = spdk_sock_set_default_impl(optarg);

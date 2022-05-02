@@ -95,7 +95,9 @@ static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
 	.enable_placement_id = PLACEMENT_NONE,
 	.enable_zerocopy_send_server = false,
 	.enable_zerocopy_send_client = false,
-	.zerocopy_threshold = 0
+	.zerocopy_threshold = 0,
+	.tls_version = 0,
+	.enable_ktls = false
 };
 
 static struct spdk_sock_map g_map = {
@@ -134,6 +136,8 @@ uring_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_so
 	SET_FIELD(enable_zerocopy_send_server);
 	SET_FIELD(enable_zerocopy_send_client);
 	SET_FIELD(zerocopy_threshold);
+	SET_FIELD(tls_version);
+	SET_FIELD(enable_ktls);
 
 #undef SET_FIELD
 #undef FIELD_OK

@@ -76,7 +76,9 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_placement_id = PLACEMENT_NONE,
 	.enable_zerocopy_send_server = true,
 	.enable_zerocopy_send_client = false,
-	.zerocopy_threshold = 0
+	.zerocopy_threshold = 0,
+	.tls_version = 0,
+	.enable_ktls = false
 };
 
 static struct spdk_sock_map g_map = {
@@ -114,6 +116,8 @@ posix_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_so
 	SET_FIELD(enable_zerocopy_send_server);
 	SET_FIELD(enable_zerocopy_send_client);
 	SET_FIELD(zerocopy_threshold);
+	SET_FIELD(tls_version);
+	SET_FIELD(enable_ktls);
 
 #undef SET_FIELD
 #undef FIELD_OK
@@ -577,7 +581,8 @@ err:
 }
 
 static SSL_CTX *
-posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_opts *opts)
+posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_opts *opts,
+			      struct spdk_sock_impl_opts *impl_opts)
 {
 	SSL_CTX *ctx;
 	int tls_version = 0;
@@ -597,7 +602,7 @@ posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_opts *o
 	}
 	SPDK_DEBUGLOG(sock_posix, "SSL context created\n");
 
-	switch (opts->tls_version) {
+	switch (impl_opts->tls_version) {
 	case 0:
 		/* auto-negotioation */
 		break;
@@ -611,22 +616,23 @@ posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_opts *o
 		tls_version = TLS1_3_VERSION;
 		break;
 	default:
-		SPDK_ERRLOG("Incorrect TLS version provided: %d\n", opts->tls_version);
+		SPDK_ERRLOG("Incorrect TLS version provided: %d\n", impl_opts->tls_version);
 		goto err;
 	}
 
 	if (tls_version) {
-		SPDK_DEBUGLOG(sock_posix, "Hardening TLS version to '%d'='0x%X'\n", opts->tls_version, tls_version);
+		SPDK_DEBUGLOG(sock_posix, "Hardening TLS version to '%d'='0x%X'\n", impl_opts->tls_version,
+			      tls_version);
 		if (!SSL_CTX_set_min_proto_version(ctx, tls_version)) {
-			SPDK_ERRLOG("Unable to set Min TLS version to '%d'='0x%X\n", opts->tls_version, tls_version);
+			SPDK_ERRLOG("Unable to set Min TLS version to '%d'='0x%X\n", impl_opts->tls_version, tls_version);
 			goto err;
 		}
 		if (!SSL_CTX_set_max_proto_version(ctx, tls_version)) {
-			SPDK_ERRLOG("Unable to set Max TLS version to '%d'='0x%X\n", opts->tls_version, tls_version);
+			SPDK_ERRLOG("Unable to set Max TLS version to '%d'='0x%X\n", impl_opts->tls_version, tls_version);
 			goto err;
 		}
 	}
-	if (opts->ktls) {
+	if (impl_opts->enable_ktls) {
 		SPDK_DEBUGLOG(sock_posix, "Enabling kTLS offload\n");
 #ifdef SSL_OP_ENABLE_KTLS
 		options = SSL_CTX_set_options(ctx, SSL_OP_ENABLE_KTLS);
@@ -868,7 +874,7 @@ retry:
 		}
 		if (type == SPDK_SOCK_CREATE_LISTEN) {
 			if (enable_ssl) {
-				ctx = posix_sock_create_ssl_context(TLS_server_method(), opts);
+				ctx = posix_sock_create_ssl_context(TLS_server_method(), opts, &impl_opts);
 				if (!ctx) {
 					SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
 					close(fd);
@@ -917,7 +923,7 @@ retry:
 			}
 			enable_zcopy_impl_opts = impl_opts.enable_zerocopy_send_client;
 			if (enable_ssl) {
-				ctx = posix_sock_create_ssl_context(TLS_client_method(), opts);
+				ctx = posix_sock_create_ssl_context(TLS_client_method(), opts, &impl_opts);
 				if (!ctx) {
 					SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
 					close(fd);

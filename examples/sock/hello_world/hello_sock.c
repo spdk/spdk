@@ -218,13 +218,19 @@ hello_sock_connect(struct hello_context_t *ctx)
 	int rc;
 	char saddr[ADDR_STR_LEN], caddr[ADDR_STR_LEN];
 	uint16_t cport, sport;
+	struct spdk_sock_impl_opts impl_opts;
+	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+
+	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
+	impl_opts.enable_ktls = ctx->ktls;
+	impl_opts.tls_version = ctx->tls_version;
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.zcopy = ctx->zcopy;
-	opts.ktls = ctx->ktls;
-	opts.tls_version = ctx->tls_version;
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
 
 	SPDK_NOTICELOG("Connecting to the server on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
 		       ctx->sock_impl_name);
@@ -356,13 +362,19 @@ hello_sock_group_poll(void *arg)
 static int
 hello_sock_listen(struct hello_context_t *ctx)
 {
+	struct spdk_sock_impl_opts impl_opts;
+	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
+
+	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
+	impl_opts.enable_ktls = ctx->ktls;
+	impl_opts.tls_version = ctx->tls_version;
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.zcopy = ctx->zcopy;
-	opts.ktls = ctx->ktls;
-	opts.tls_version = ctx->tls_version;
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
 
 	ctx->sock = spdk_sock_listen_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {

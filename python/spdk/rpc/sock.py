@@ -20,7 +20,9 @@ def sock_impl_set_options(client,
                           enable_placement_id=None,
                           enable_zerocopy_send_server=None,
                           enable_zerocopy_send_client=None,
-                          zerocopy_threshold=None):
+                          zerocopy_threshold=None,
+                          tls_version=None,
+                          enable_ktls=None):
     """Set parameters for the socket layer implementation.
 
     Args:
@@ -33,6 +35,8 @@ def sock_impl_set_options(client,
         enable_zerocopy_send_server: enable or disable zerocopy on send for server sockets(optional)
         enable_zerocopy_send_client: enable or disable zerocopy on send for client sockets(optional)
         zerocopy_threshold: set zerocopy_threshold in bytes(optional)
+        tls_version: set TLS protocol version (optional)
+        enable_ktls: enable or disable Kernel TLS (optional)
     """
     params = {}
 
@@ -53,6 +57,10 @@ def sock_impl_set_options(client,
         params['enable_zerocopy_send_client'] = enable_zerocopy_send_client
     if zerocopy_threshold is not None:
         params['zerocopy_threshold'] = zerocopy_threshold
+    if tls_version is not None:
+        params['tls_version'] = tls_version
+    if enable_ktls is not None:
+        params['enable_ktls'] = enable_ktls
 
     return client.call('sock_impl_set_options', params)
 
