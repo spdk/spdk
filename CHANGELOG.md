@@ -29,6 +29,9 @@ when in multipath mode. This RPC does not support NVMe bdevs in failover mode.
 A new RPC `bdev_nvme_set_multipath_policy` was added to set multipath policy of a NVMe bdev
 in multipath mode.
 
+A new option `disable_auto_failback` was added to the `bdev_nvme_set_options` RPC to disable
+automatic failback.
+
 ### idxd
 
 A new parameter `flags` was added to all low level submission and preparation

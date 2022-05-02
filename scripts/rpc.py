@@ -509,7 +509,8 @@ if __name__ == "__main__":
                                        transport_ack_timeout=args.transport_ack_timeout,
                                        ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
                                        reconnect_delay_sec=args.reconnect_delay_sec,
-                                       fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec)
+                                       fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
+                                       disable_auto_failback=args.disable_auto_failback)
 
     p = subparsers.add_parser('bdev_nvme_set_options', aliases=['set_bdev_nvme_options'],
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -570,6 +571,10 @@ if __name__ == "__main__":
                    less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
                    This can be overridden by bdev_nvme_attach_controller.""",
                    type=int)
+    p.add_argument('-f', '--disable-auto-failback',
+                   help="""Disable automatic failback. bdev_nvme_set_preferred_path can be used to do manual failback.
+                   By default, immediately failback to the preferred I/O path if it restored.""",
+                   action='store_true')
 
     p.set_defaults(func=bdev_nvme_set_options)
 

@@ -145,6 +145,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.ctrlr_loss_timeout_sec = 0,
 	.reconnect_delay_sec = 0,
 	.fast_io_fail_timeout_sec = 0,
+	.disable_auto_failback = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -1415,7 +1416,9 @@ bdev_nvme_create_qpair(struct nvme_qpair *nvme_qpair)
 
 	nvme_qpair->qpair = qpair;
 
-	_bdev_nvme_clear_io_path_cache(nvme_qpair);
+	if (!g_opts.disable_auto_failback) {
+		_bdev_nvme_clear_io_path_cache(nvme_qpair);
+	}
 
 	return 0;
 
@@ -3601,14 +3604,19 @@ _bdev_nvme_set_preferred_path(struct spdk_io_channel_iter *i)
 		prev = io_path;
 	}
 
-	if (io_path != NULL && prev != NULL) {
-		STAILQ_REMOVE_AFTER(&nbdev_ch->io_path_list, prev, stailq);
-		STAILQ_INSERT_HEAD(&nbdev_ch->io_path_list, io_path, stailq);
+	if (io_path != NULL) {
+		if (prev != NULL) {
+			STAILQ_REMOVE_AFTER(&nbdev_ch->io_path_list, prev, stailq);
+			STAILQ_INSERT_HEAD(&nbdev_ch->io_path_list, io_path, stailq);
+		}
 
 		/* We can set io_path to nbdev_ch->current_io_path directly here.
 		 * However, it needs to be conditional. To simplify the code,
 		 * just clear nbdev_ch->current_io_path and let find_io_path()
 		 * fill it.
+		 *
+		 * Automatic failback may be disabled. Hence even if the io_path is
+		 * already at the head, clear nbdev_ch->current_io_path.
 		 */
 		nbdev_ch->current_io_path = NULL;
 	}

@@ -6252,6 +6252,153 @@ test_find_next_io_path(void)
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
 }
 
+static void
+test_disable_auto_failback(void)
+{
+	struct nvme_path_id path1 = {}, path2 = {};
+	struct nvme_ctrlr_opts opts = {};
+	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr1;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct spdk_io_channel *ch;
+	struct nvme_bdev_channel *nbdev_ch;
+	struct nvme_io_path *io_path;
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
+	const struct spdk_nvme_ctrlr_data *cdata;
+	bool done;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	g_opts.disable_auto_failback = true;
+
+	opts.ctrlr_loss_timeout_sec = -1;
+	opts.reconnect_delay_sec = 1;
+
+	set_thread(0);
+
+	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	ctrlr1->ns[0].uuid = &uuid1;
+
+	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, &opts, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	ctrlr2->ns[0].uuid = &uuid1;
+
+	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, &opts, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	nvme_ctrlr1 = nvme_bdev_ctrlr_get_ctrlr(nbdev_ctrlr, &path1.trid);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr1 != NULL);
+
+	/* ctrlr1 was added first. Hence io_path to ctrlr1 should be preferred. */
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	nbdev_ch = spdk_io_channel_get_ctx(ch);
+
+	io_path = bdev_nvme_find_io_path(nbdev_ch);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr1);
+
+	/* If resetting ctrlr1 failed, io_path to ctrlr2 should be used. */
+	ctrlr1->fail_reset = true;
+	ctrlr1->is_failed = true;
+
+	bdev_nvme_reset(nvme_ctrlr1);
+
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->adminq.is_connected == false);
+
+	io_path = bdev_nvme_find_io_path(nbdev_ch);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr2);
+
+	/* After a second, ctrlr1 is recovered. However, automatic failback is disabled.
+	 * Hence, io_path to ctrlr2 should still be used.
+	 */
+	ctrlr1->fail_reset = false;
+
+	spdk_delay_us(SPDK_SEC_TO_USEC);
+	poll_threads();
+
+	CU_ASSERT(ctrlr1->adminq.is_connected == true);
+
+	io_path = bdev_nvme_find_io_path(nbdev_ch);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr2);
+
+	/* Set io_path to ctrlr1 to preferred explicitly. Then io_path to ctrlr1 should
+	 * be used again.
+	 */
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr1);
+	done = false;
+
+	bdev_nvme_set_preferred_path(bdev->disk.name, cdata->cntlid, _set_preferred_path_cb, &done);
+
+	poll_threads();
+	CU_ASSERT(done == true);
+
+	io_path = bdev_nvme_find_io_path(nbdev_ch);
+	SPDK_CU_ASSERT_FATAL(io_path != NULL);
+
+	CU_ASSERT(io_path->nvme_ns->ctrlr->ctrlr == ctrlr1);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+
+	g_opts.disable_auto_failback = false;
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -6303,6 +6450,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_ana_transition);
 	CU_ADD_TEST(suite, test_set_preferred_path);
 	CU_ADD_TEST(suite, test_find_next_io_path);
+	CU_ADD_TEST(suite, test_disable_auto_failback);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

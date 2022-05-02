@@ -464,7 +464,7 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
                           nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None, io_queue_requests=None,
                           delay_cmd_submit=None, transport_retry_count=None, bdev_retry_count=None,
                           transport_ack_timeout=None, ctrlr_loss_timeout_sec=None, reconnect_delay_sec=None,
-                          fast_io_fail_timeout_sec=None):
+                          fast_io_fail_timeout_sec=None, disable_auto_failback=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
@@ -500,6 +500,8 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
         If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
         ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
         This can be overridden by bdev_nvme_attach_controller. (optional)
+        disable_auto_failback: Disable automatic failback. bdev_nvme_set_preferred_path can be used to do manual failback.
+        By default, immediately failback to the preferred I/O path if it is restored. (optional)
 
     """
     params = {}
@@ -561,6 +563,9 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
 
     if fast_io_fail_timeout_sec is not None:
         params['fast_io_fail_timeout_sec'] = fast_io_fail_timeout_sec
+
+    if disable_auto_failback is not None:
+        params['disable_auto_failback'] = disable_auto_failback
 
     return client.call('bdev_nvme_set_options', params)
 

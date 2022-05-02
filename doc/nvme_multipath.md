@@ -58,7 +58,10 @@ For active-passive policy, each I/O channel for an NVMe bdev has a cache to stor
 I/O path which is connected and optimal from ANA and use it for I/O submission. Some users may want
 to specify the preferred I/O path manually. They can dynamically set the preferred I/O path using
 the `bdev_nvme_set_preferred_path` RPC. Such assignment is realized naturally by moving the
-I/O path to the head of the I/O path list.
+I/O path to the head of the I/O path list. By default, if the preferred I/O path is restored,
+failback to it is done automatically. The automatic failback can be disabled by a global option
+`disable_auto_failback`. In this case, the `bdev_nvme_set_preferred_path` RPC can be used
+to do manual failback.
 
 The active-active policy uses the round-robin algorithm and submits an I/O to each I/O path in
 circular order.
