@@ -51,7 +51,7 @@ def sock_impl_set_options(client,
         params['enable_zerocopy_send_server'] = enable_zerocopy_send_server
     if enable_zerocopy_send_client is not None:
         params['enable_zerocopy_send_client'] = enable_zerocopy_send_client
-    if enable_dynamic_zerocopy is not None:
+    if zerocopy_threshold is not None:
         params['zerocopy_threshold'] = zerocopy_threshold
 
     return client.call('sock_impl_set_options', params)
