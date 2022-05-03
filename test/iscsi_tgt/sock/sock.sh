@@ -66,6 +66,8 @@ iscsitestinit
 
 HELLO_SOCK_APP="${TARGET_NS_CMD[*]} $SPDK_EXAMPLE_DIR/hello_sock"
 SOCAT_APP="socat"
+OPENSSL_APP="openssl"
+PSK_ID="nqn.2014-08.org.nvmexpress:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
 
 # ----------------
 # Test client path
@@ -109,6 +111,51 @@ trap '-' SIGINT SIGTERM EXIT
 killprocess $server_pid || true
 
 timing_exit sock_client
+
+# ----------------
+# Test SSL server path
+# ----------------
+timing_enter sock_ssl_server
+echo "Testing SSL server path"
+
+# start echo server using hello_sock echo server
+$HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -S -N "ssl" &
+server_pid=$!
+trap 'killprocess $server_pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $server_pid
+
+# send message using hello_sock client
+message="**MESSAGE:This is a test message from the hello_sock client with ssl**"
+response=$(echo $message | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT -N "ssl")
+if ! echo "$response" | grep -q "$message"; then
+	exit 1
+fi
+
+# send message using openssl client using TLS 1.3
+message="**MESSAGE:This is a test message from the openssl client using TLS 1.3**"
+response=$( (
+	echo -ne $message
+	sleep 2
+) | $OPENSSL_APP s_client -debug -state -tlsextdebug -tls1_3 -psk_identity $PSK_ID -psk "1234567890ABCDEF" -connect $TARGET_IP:$ISCSI_PORT)
+if ! echo "$response" | grep -q "$message"; then
+	exit 1
+fi
+
+# send message using openssl client using TLS 1.2
+message="**MESSAGE:This is a test message from the openssl client using TLS 1.2**"
+response=$( (
+	echo -ne $message
+	sleep 2
+) | $OPENSSL_APP s_client -debug -state -tlsextdebug -tls1_2 -psk_identity $PSK_ID -psk "1234567890ABCDEF" -connect $TARGET_IP:$ISCSI_PORT)
+if ! echo "$response" | grep -q "$message"; then
+	exit 1
+fi
+
+trap '-' SIGINT SIGTERM EXIT
+# NOTE: socat returns code 143 on SIGINT
+killprocess $server_pid || true
+
+timing_exit sock_ssl_server
 
 # ----------------
 # Test server path

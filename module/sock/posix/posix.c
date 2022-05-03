@@ -428,21 +428,38 @@ posix_sock_tls_psk_server_cb(SSL *ssl,
 			     unsigned char *psk,
 			     unsigned int max_psk_len)
 {
+	long key_len;
+	unsigned char *default_psk;
+
+	if (PSK_KEY == NULL) {
+		SPDK_ERRLOG("PSK is not set\n");
+		goto err;
+	}
 	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(PSK_ID));
+	if (id == NULL) {
+		SPDK_ERRLOG("Received empty PSK ID\n");
+		goto err;
+	}
+	SPDK_DEBUGLOG(sock_posix,  "Received PSK ID '%s'\n", id);
 	if (strcmp(PSK_ID, id) != 0) {
 		SPDK_ERRLOG("Unknown Client's PSK ID\n");
 		goto err;
 	}
 
 	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK KEY %u\n", max_psk_len);
-	if (strlen(PSK_KEY) > max_psk_len) {
-		SPDK_ERRLOG("Insufficient buffer size to copy PSK_KEY\n");
+	default_psk = OPENSSL_hexstr2buf(PSK_KEY, &key_len);
+	if (default_psk == NULL) {
+		SPDK_ERRLOG("Could not unhexlify PSK\n");
+		goto err;
+	}
+	if (key_len > max_psk_len) {
+		SPDK_ERRLOG("Insufficient buffer size to copy PSK\n");
 		goto err;
 	}
 
-	memcpy(psk, PSK_KEY, strlen(PSK_KEY));
+	memcpy(psk, default_psk, key_len);
 
-	return strlen(PSK_KEY);
+	return key_len;
 
 err:
 	return 0;
@@ -455,16 +472,34 @@ posix_sock_tls_psk_client_cb(SSL *ssl, const char *hint,
 			     unsigned char *psk,
 			     unsigned int max_psk_len)
 {
+	long key_len;
+	unsigned char *default_psk;
+
+	if (hint) {
+		SPDK_DEBUGLOG(sock_posix,  "Received PSK identity hint '%s'\n", hint);
+	}
+
+	if (PSK_KEY == NULL) {
+		SPDK_ERRLOG("PSK is not set\n");
+		goto err;
+	}
+	default_psk = OPENSSL_hexstr2buf(PSK_KEY, &key_len);
+	if (default_psk == NULL) {
+		SPDK_ERRLOG("Could not unhexlify PSK\n");
+		goto err;
+	}
 	if ((strlen(PSK_ID) + 1 > max_identity_len)
-	    || (strlen(PSK_KEY) > max_psk_len)) {
+	    || (key_len > max_psk_len)) {
 		SPDK_ERRLOG("PSK ID or Key buffer is not sufficient\n");
 		goto err;
 	}
 	spdk_strcpy_pad(identity, PSK_ID, strlen(PSK_ID), 0);
-	memcpy(psk, PSK_KEY, strlen(PSK_KEY));
+	SPDK_DEBUGLOG(sock_posix, "Sending PSK identity '%s'\n", identity);
+
+	memcpy(psk, default_psk, key_len);
 	SPDK_DEBUGLOG(sock_posix, "Provided out-of-band (OOB) PSK for TLS1.3 client\n");
 
-	return strlen(PSK_KEY);
+	return key_len;
 
 err:
 	return 0;
