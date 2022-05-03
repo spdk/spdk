@@ -39,11 +39,14 @@
 #include "spdk/nvme_spec.h"
 #include "spdk/nvme.h"
 #include "spdk/likely.h"
+#include "spdk/file.h"
 
 static const uint8_t *g_data;
 static bool g_trid_specified = false;
 static int32_t g_time_in_sec = 10;
 static char *g_corpus_dir;
+static uint8_t *g_repro_data;
+static size_t g_repro_size;
 static pthread_t g_fuzz_td;
 static pthread_t g_reactor_td;
 static bool g_in_fuzzer;
@@ -616,13 +619,19 @@ start_fuzzer(void *ctx)
 
 	g_in_fuzzer = true;
 	atexit(exit_handler);
-	LLVMFuzzerRunDriver(&argc, &argv, TestOneInput);
-	/* TODO: in the normal case, LLVMFuzzerRunDriver never returns - it calls exit()
-	 * directly and we never get here.  But this behavior isn't really documented
-	 * anywhere by LLVM, so call spdk_app_stop(0) if it does return, which will
-	 * result in the app exiting like a normal SPDK application (spdk_app_start()
-	 * returns to main().
-	 */
+	if (g_repro_data) {
+		printf("Running single test based on reproduction data file.\n");
+		TestOneInput(g_repro_data, g_repro_size);
+		printf("Done.\n");
+	} else {
+		LLVMFuzzerRunDriver(&argc, &argv, TestOneInput);
+		/* TODO: in the normal case, LLVMFuzzerRunDriver never returns - it calls exit()
+		 * directly and we never get here.  But this behavior isn't really documented
+		 * anywhere by LLVM, so call spdk_app_stop(0) if it does return, which will
+		 * result in the app exiting like a normal SPDK application (spdk_app_start()
+		 * returns to main().
+		 */
+	}
 	g_in_fuzzer = false;
 	spdk_app_stop(0);
 
@@ -650,6 +659,7 @@ nvme_fuzz_usage(void)
 {
 	fprintf(stderr, " -D                        Path of corpus directory.\n");
 	fprintf(stderr, " -F                        Transport ID for subsystem that should be fuzzed.\n");
+	fprintf(stderr, " -N                        Name of reproduction data file.\n");
 	fprintf(stderr, " -t                        Time to run fuzz tests (in seconds). Default: 10\n");
 	fprintf(stderr, " -Z                        Fuzzer to run (0 to %lu)\n", NUM_FUZZERS - 1);
 }
@@ -659,6 +669,7 @@ nvme_fuzz_parse(int ch, char *arg)
 {
 	long long tmp;
 	int rc;
+	FILE *repro_file;
 
 	switch (ch) {
 	case 'D':
@@ -673,6 +684,18 @@ nvme_fuzz_parse(int ch, char *arg)
 		rc = spdk_nvme_transport_id_parse(&g_trid, optarg);
 		if (rc < 0) {
 			fprintf(stderr, "failed to parse transport ID: %s\n", optarg);
+			return -1;
+		}
+		break;
+	case 'N':
+		repro_file = fopen(optarg, "r");
+		if (repro_file == NULL) {
+			fprintf(stderr, "could not open %s: %s\n", optarg, spdk_strerror(errno));
+			return -1;
+		}
+		g_repro_data = spdk_posix_file_load(repro_file, &g_repro_size);
+		if (g_repro_data == NULL) {
+			fprintf(stderr, "could not load data for file %s\n", optarg);
 			return -1;
 		}
 		break;
@@ -729,7 +752,7 @@ main(int argc, char **argv)
 	opts.name = "nvme_fuzz";
 	opts.shutdown_cb = fuzz_shutdown;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:t:Z:", NULL, nvme_fuzz_parse,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:t:Z:", NULL, nvme_fuzz_parse,
 				      nvme_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {
 		return rc;
 	}
