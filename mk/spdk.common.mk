@@ -304,8 +304,17 @@ CXXFLAGS += $(COMMON_CFLAGS) -std=c++11
 
 SYS_LIBS += -lrt
 SYS_LIBS += -luuid
+SYS_LIBS += -lssl
 SYS_LIBS += -lcrypto
 SYS_LIBS += -lm
+
+PKGCONF ?= pkg-config
+# `libssl11` name is unique to Centos7 via EPEL
+# So it's safe to add it here without additional check for Centos7
+ifeq ($(shell $(PKGCONF) --exists libssl11 && echo 1),1)
+CFLAGS  += $(shell $(PKGCONF) --cflags libssl11)
+LDFLAGS += $(shell $(PKGCONF) --libs libssl11)
+endif
 
 ifneq ($(CONFIG_NVME_CUSE)$(CONFIG_FUSE),nn)
 SYS_LIBS += -lfuse3
