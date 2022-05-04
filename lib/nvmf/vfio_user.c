@@ -393,6 +393,7 @@ struct nvmf_vfio_user_ctrlr {
 	uint64_t				shadow_doorbell_buffer;
 	uint64_t				eventidx_buffer;
 
+	bool					adaptive_irqs_enabled;
 	bool					self_kick_requested;
 };
 
@@ -1192,6 +1193,15 @@ nvmf_vfio_user_create(struct spdk_nvmf_transport_opts *opts)
 		vu_transport->transport_opts.disable_shadow_doorbells = true;
 	}
 
+	/*
+	 * If we are in interrupt mode, we cannot support adaptive IRQs, as
+	 * there is no guarantee the SQ poller will run subsequently to send
+	 * pending IRQs.
+	 */
+	if (spdk_interrupt_mode_is_enabled()) {
+		vu_transport->transport_opts.disable_adaptive_irq = true;
+	}
+
 	SPDK_DEBUGLOG(nvmf_vfio, "vfio_user transport: disable_mappable_bar0=%d\n",
 		      vu_transport->transport_opts.disable_mappable_bar0);
 	SPDK_DEBUGLOG(nvmf_vfio, "vfio_user transport: disable_adaptive_irq=%d\n",
@@ -1578,14 +1588,6 @@ static int
 handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
 	       struct nvmf_vfio_user_sq *sq);
 
-static inline int
-adaptive_irq_enabled(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq)
-{
-	return (!spdk_interrupt_mode_is_enabled() && cq->qid != 0 &&
-		!ctrlr->transport->transport_opts.disable_adaptive_irq);
-
-}
-
 /*
  * Posts a CQE in the completion queue.
  *
@@ -1646,12 +1648,7 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 	spdk_wmb();
 	cq_tail_advance(cq);
 
-	/*
-	 * this function now executes at SPDK thread context, we
-	 * might be triggering interrupts from vfio-user thread context so
-	 * check for race conditions.
-	 */
-	if (!adaptive_irq_enabled(ctrlr, cq) &&
+	if ((cq->qid == 0 || !ctrlr->adaptive_irqs_enabled) &&
 	    cq->ien && ctrlr_interrupt_enabled(ctrlr)) {
 		err = vfu_irq_trigger(ctrlr->endpoint->vfu_ctx, cq->iv);
 		if (err != 0) {
@@ -4003,6 +4000,9 @@ nvmf_vfio_user_create_ctrlr(struct nvmf_vfio_user_transport *transport,
 	ctrlr->bar0_doorbells = endpoint->bar0_doorbells;
 	TAILQ_INIT(&ctrlr->connected_sqs);
 
+	ctrlr->adaptive_irqs_enabled =
+		!transport->transport_opts.disable_adaptive_irq;
+
 	/* Then, construct an admin queue pair */
 	err = init_sq(ctrlr, &transport->transport, 0);
 	if (err != 0) {
@@ -5131,8 +5131,7 @@ handle_suppressed_irq(struct nvmf_vfio_user_ctrlr *ctrlr,
 	uint32_t cq_head;
 	uint32_t cq_tail;
 
-	if (!cq->ien || !ctrlr_interrupt_enabled(ctrlr) ||
-	    !adaptive_irq_enabled(ctrlr, cq)) {
+	if (!cq->ien || cq->qid == 0 || !ctrlr_interrupt_enabled(ctrlr)) {
 		return;
 	}
 
@@ -5171,7 +5170,9 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 
 	ctrlr = sq->ctrlr;
 
-	handle_suppressed_irq(ctrlr, sq);
+	if (ctrlr->adaptive_irqs_enabled) {
+		handle_suppressed_irq(ctrlr, sq);
+	}
 
 	/* On aarch64 platforms, doorbells update from guest VM may not be seen
 	 * on SPDK target side. This is because there is memory type mismatch
