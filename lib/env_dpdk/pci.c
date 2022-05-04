@@ -536,7 +536,12 @@ pci_device_fini(struct rte_pci_device *_dev)
 		set_allowed_at(_dev->device.devargs, 0);
 	}
 
-	assert(!dev->internal.removed);
+	/* It is possible that removed flag was already set when there is a race
+	 * between the remove notification for this process, and another process
+	 * that is also detaching from this same device (for example, when using
+	 * nvme driver in multi-process mode.  So do not assert here.  See
+	 * #2456 for additional details.
+	 */
 	dev->internal.removed = true;
 	pthread_mutex_unlock(&g_pci_mutex);
 	return 0;
