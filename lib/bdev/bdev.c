@@ -1978,10 +1978,6 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		bdev_io_put_buf(bdev_io);
 	}
 
-	if (spdk_unlikely(bdev_io->internal.ext_opts == &bdev_io->internal.ext_opts_copy)) {
-		memset(&bdev_io->internal.ext_opts_copy, 0, sizeof(bdev_io->internal.ext_opts_copy));
-	}
-
 	if (ch->per_thread_cache_count < ch->bdev_io_cache_size) {
 		ch->per_thread_cache_count++;
 		STAILQ_INSERT_HEAD(&ch->per_thread_cache, bdev_io, internal.buf_link);
@@ -2926,8 +2922,11 @@ _bdev_io_copy_ext_opts(struct spdk_bdev_io *bdev_io, struct spdk_bdev_ext_io_opt
 {
 	struct spdk_bdev_ext_io_opts *opts_copy = &bdev_io->internal.ext_opts_copy;
 
+	/* Zero part we don't copy */
+	memset(((char *)opts_copy) + opts->size, 0, sizeof(*opts) - opts->size);
 	memcpy(opts_copy, opts, opts->size);
-	bdev_io->internal.ext_opts_copy.metadata = bdev_io->u.bdev.md_buf;
+	opts_copy->size = sizeof(*opts_copy);
+	opts_copy->metadata = bdev_io->u.bdev.md_buf;
 	/* Save pointer to the copied ext_opts which will be used by bdev modules */
 	bdev_io->u.bdev.ext_opts = opts_copy;
 }
@@ -2959,7 +2958,7 @@ _bdev_io_submit_ext(struct spdk_bdev_desc *desc, struct spdk_bdev_io *bdev_io,
 		 * copy if size is smaller than opts struct to avoid having to check size
 		 * on every access to bdev_io->u.bdev.ext_opts
 		 */
-		if (copy_opts || use_pull_push) {
+		if (copy_opts || use_pull_push || opts->size < sizeof(*opts)) {
 			_bdev_io_copy_ext_opts(bdev_io, opts);
 			if (use_pull_push) {
 				_bdev_io_ext_use_bounce_buffer(bdev_io);
@@ -4307,7 +4306,13 @@ spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 static inline bool
 _bdev_io_check_opts(struct spdk_bdev_ext_io_opts *opts, struct iovec *iov)
 {
-	return opts->size > 0 &&
+	/*
+	 * We check if opts size is at least of size when we first introduced
+	 * spdk_bdev_ext_io_opts (ac6f2bdd8d) since access to those members
+	 * are not checked internal.
+	 */
+	return opts->size >= offsetof(struct spdk_bdev_ext_io_opts, metadata) +
+	       sizeof(opts->metadata) &&
 	       opts->size <= sizeof(*opts) &&
 	       /* When memory domain is used, the user must provide data buffers */
 	       (!opts->memory_domain || (iov && iov[0].iov_base));

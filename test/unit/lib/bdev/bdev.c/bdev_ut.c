@@ -5094,6 +5094,13 @@ bdev_writev_readv_ext(void)
 	rc = spdk_bdev_writev_blocks_ext(desc, io_ch, &iov, 1, 32, 14, io_done, NULL, &ext_io_opts);
 	CU_ASSERT(rc != 0);
 
+	ext_io_opts.size = offsetof(struct spdk_bdev_ext_io_opts, metadata) +
+			   sizeof(ext_io_opts.metadata) - 1;
+	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 32, 14, io_done, NULL, &ext_io_opts);
+	CU_ASSERT(rc != 0);
+	rc = spdk_bdev_writev_blocks_ext(desc, io_ch, &iov, 1, 32, 14, io_done, NULL, &ext_io_opts);
+	CU_ASSERT(rc != 0);
+
 	/* Test 3, Check that IO request with ext_opts and metadata is split correctly
 	 * Offset 14, length 8, payload 0xF000
 	 *  Child - Offset 14, length 2, payload 0xF000
@@ -5140,63 +5147,6 @@ bdev_writev_readv_ext(void)
 
 	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 16, 6, 1);
 	expected_io->md_buf = ext_io_opts.metadata + 2 * 8;
-	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
-	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
-
-	rc = spdk_bdev_writev_blocks_ext(desc, io_ch, &iov, 1, 14, 8, io_done, NULL, &ext_io_opts);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_io_done == false);
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
-	stub_complete_io(2);
-	CU_ASSERT(g_io_done == true);
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
-
-	/* ext_opts contains metadata but ext_opts::size doesn't cover metadata pointer.
-	 * Check that IO request with ext_opts and metadata is split correctly - metadata pointer is not copied, so split
-	 * requests do not have metadata
-	 * Offset 14, length 8, payload 0xF000
-	 *  Child - Offset 14, length 2, payload 0xF000
-	 *  Child - Offset 16, length 6, payload 0xF000 + 2 * 512
-	 */
-	iov.iov_base = (void *)0xF000;
-	iov.iov_len = 4096;
-	memset(&ext_io_opts, 0, sizeof(ext_io_opts));
-	ext_io_opts.metadata = (void *)0xFF000000;
-	ext_io_opts.size = offsetof(struct spdk_bdev_ext_io_opts, metadata);;
-	g_io_done = false;
-
-	/* read */
-	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 14, 2, 1);
-	/* Split request must not contain metadata pointer */
-	expected_io->md_buf = NULL;
-	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 2 * 512);
-	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
-
-	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_READ, 16, 6, 1);
-	expected_io->md_buf = NULL;
-	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
-	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
-
-	rc = spdk_bdev_readv_blocks_ext(desc, io_ch, &iov, 1, 14, 8, io_done, NULL, &ext_io_opts);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_io_done == false);
-
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
-	stub_complete_io(2);
-	CU_ASSERT(g_io_done == true);
-	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
-
-	/* write */
-	g_io_done = false;
-	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 14, 2, 1);
-	expected_io->md_buf = NULL;
-	ut_expected_io_set_iov(expected_io, 0, (void *)0xF000, 2 * 512);
-	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
-
-	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_WRITE, 16, 6, 1);
-	/* Split request must not contain metadata pointer */
-	expected_io->md_buf = NULL;
 	ut_expected_io_set_iov(expected_io, 0, (void *)(0xF000 + 2 * 512), 6 * 512);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
