@@ -623,14 +623,6 @@ dd_open_file(struct dd_target *target, const char *fname, int flags, uint64_t sk
 		flags |= O_TRUNC;
 	}
 
-#ifdef SPDK_CONFIG_URING
-	/* io_uring does not work correctly with O_NONBLOCK flag */
-	if (flags & O_NONBLOCK && g_opts.aio == false) {
-		flags &= ~O_NONBLOCK;
-		SPDK_WARNLOG("Skipping 'nonblock' flag due to existing issue with uring implementation and this flag\n");
-	}
-#endif
-
 	target->type = DD_TARGET_TYPE_FILE;
 	*fd = open(fname, flags, 0600);
 	if (*fd < 0) {
