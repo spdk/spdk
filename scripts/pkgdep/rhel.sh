@@ -83,6 +83,10 @@ fi
 
 yum install -y gcc gcc-c++ make cmake CUnit-devel libaio-devel openssl-devel \
 	libuuid-devel libiscsi-devel ncurses-devel json-c-devel libcmocka-devel
+# for rhel and centos7 OpenSSL 1.1 should be installed via EPEL
+if echo "$ID $VERSION_ID" | grep -E -q 'centos 7|rhel 7'; then
+	yum install -y openssl11-devel
+fi
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rhel 8'; then
 	yum install -y python36 python36-devel
 	#Create hard link to use in SPDK as python
