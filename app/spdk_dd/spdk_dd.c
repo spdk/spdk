@@ -53,7 +53,7 @@ struct dd_io {
 	struct iocb		iocb;
 	enum dd_submit_type	type;
 #ifdef SPDK_CONFIG_URING
-	struct iovec		iov;
+	int			idx;
 #endif
 	void			*buf;
 };
@@ -284,13 +284,11 @@ dd_uring_submit(struct dd_io *io, struct dd_target *target, uint64_t length, uin
 {
 	struct io_uring_sqe *sqe;
 
-	io->iov.iov_base = io->buf;
-	io->iov.iov_len = length;
 	sqe = io_uring_get_sqe(&g_job.u.uring.ring);
 	if (io->type == DD_READ || io->type == DD_POPULATE) {
-		io_uring_prep_readv(sqe, target->u.uring.idx, &io->iov, 1, offset);
+		io_uring_prep_read_fixed(sqe, target->u.uring.idx, io->buf, length, offset, io->idx);
 	} else {
-		io_uring_prep_writev(sqe, target->u.uring.idx, &io->iov, 1, offset);
+		io_uring_prep_write_fixed(sqe, target->u.uring.idx, io->buf, length, offset, io->idx);
 	}
 	sqe->flags |= IOSQE_FIXED_FILE;
 	io_uring_sqe_set_data(sqe, io);
@@ -764,6 +762,29 @@ dd_register_files(void)
 	return io_uring_register_files(&g_job.u.uring.ring, fds, count);
 
 }
+
+static int
+dd_register_buffers(void)
+{
+	struct iovec *iovs;
+	int i, rc;
+
+	iovs = calloc(g_opts.queue_depth, sizeof(struct iovec));
+	if (iovs == NULL) {
+		return -ENOMEM;
+	}
+
+	for (i = 0; i < (int)g_opts.queue_depth; i++) {
+		iovs[i].iov_base = g_job.ios[i].buf;
+		iovs[i].iov_len = g_opts.io_unit_size;
+		g_job.ios[i].idx = i;
+	}
+
+	rc = io_uring_register_buffers(&g_job.u.uring.ring, iovs, g_opts.queue_depth);
+
+	free(iovs);
+	return rc;
+}
 #endif
 
 static void
@@ -904,6 +925,14 @@ dd_run(void *arg1)
 			rc = dd_register_files();
 			if (rc) {
 				SPDK_ERRLOG("Failed to register files with io_uring: %d (%s)\n", rc, spdk_strerror(-rc));
+				dd_exit(rc);
+				return;
+			}
+
+			/* Register the buffers */
+			rc = dd_register_buffers();
+			if (rc) {
+				SPDK_ERRLOG("Failed to register buffers with io_uring: %d (%s)\n", rc, spdk_strerror(-rc));
 				dd_exit(rc);
 				return;
 			}
