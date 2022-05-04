@@ -4597,11 +4597,13 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		vu_ctrlr->thread = spdk_get_thread();
 		vu_ctrlr->ctrlr = sq->qpair.ctrlr;
 		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
-		vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx, vu_ctrlr, 0);
 
 		cq->thread = spdk_get_thread();
 
 		if (in_interrupt_mode(endpoint->transport)) {
+			vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx,
+						   vu_ctrlr, 0);
+
 			vu_ctrlr->intr_fd = vfu_get_poll_fd(vu_ctrlr->endpoint->vfu_ctx);
 			assert(vu_ctrlr->intr_fd != -1);
 
@@ -4614,6 +4616,9 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 			spdk_poller_register_interrupt(vu_ctrlr->vfu_ctx_poller,
 						       vfio_user_set_intr_mode,
 						       vu_ctrlr);
+		} else {
+			vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx,
+						   vu_ctrlr, 1000);
 		}
 	} else {
 		/* For I/O queues this command was generated in response to an
