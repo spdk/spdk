@@ -40,6 +40,8 @@
 
 static char g_path[256];
 static struct spdk_poller *g_poller;
+/* default sleep time in ms */
+static uint32_t g_sleep_time = 1000;
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -75,6 +77,7 @@ usage(char *executable_name)
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    main (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
+	printf(" -t msec    sleep time (ms) between checking for admin completions\n");
 	printf(" -H         show this usage\n");
 }
 
@@ -109,7 +112,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static int
 stub_sleep(void *arg)
 {
-	usleep(1000 * 1000);
+	struct ctrlr_entry *ctrlr_entry, *tmp;
+
+	usleep(g_sleep_time * 1000);
+	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr_entry->ctrlr);
+	}
 	return 0;
 }
 
@@ -155,7 +163,7 @@ main(int argc, char **argv)
 	opts.name = "stub";
 	opts.rpc_addr = NULL;
 
-	while ((ch = getopt(argc, argv, "i:m:n:p:s:H")) != -1) {
+	while ((ch = getopt(argc, argv, "i:m:n:p:s:t:H")) != -1) {
 		if (ch == 'm') {
 			opts.reactor_mask = optarg;
 		} else if (ch == '?' || ch == 'H') {
@@ -179,6 +187,9 @@ main(int argc, char **argv)
 				break;
 			case 's':
 				opts.mem_size = val;
+				break;
+			case 't':
+				g_sleep_time = val;
 				break;
 			default:
 				usage(argv[0]);
