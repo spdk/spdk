@@ -4566,7 +4566,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
 	struct nvmf_vfio_user_poll_group *vu_group;
 	struct nvmf_vfio_user_sq *sq = cb_arg;
-	struct nvmf_vfio_user_cq *cq;
+	struct nvmf_vfio_user_cq *admin_cq;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
 	struct nvmf_vfio_user_endpoint *endpoint;
 
@@ -4588,8 +4588,8 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 	vu_group = SPDK_CONTAINEROF(sq->group, struct nvmf_vfio_user_poll_group, group);
 	TAILQ_INSERT_TAIL(&vu_group->sqs, sq, link);
 
-	cq = vu_ctrlr->cqs[0];
-	assert(cq != NULL);
+	admin_cq = vu_ctrlr->cqs[0];
+	assert(admin_cq != NULL);
 
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&sq->qpair)) {
@@ -4598,7 +4598,7 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		vu_ctrlr->ctrlr = sq->qpair.ctrlr;
 		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 
-		cq->thread = spdk_get_thread();
+		admin_cq->thread = spdk_get_thread();
 
 		if (in_interrupt_mode(endpoint->transport)) {
 			vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx,
@@ -4626,8 +4626,8 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 		 * been completed. Complete it now.
 		 */
 		if (sq->post_create_io_sq_completion) {
-			assert(cq->thread != NULL);
-			if (cq->thread != spdk_get_thread()) {
+			assert(admin_cq->thread != NULL);
+			if (admin_cq->thread != spdk_get_thread()) {
 				struct vfio_user_post_cpl_ctx *cpl_ctx;
 
 				cpl_ctx = calloc(1, sizeof(*cpl_ctx));
@@ -4635,16 +4635,17 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 					return -ENOMEM;
 				}
 				cpl_ctx->ctrlr = vu_ctrlr;
-				cpl_ctx->cq = cq;
+				cpl_ctx->cq = admin_cq;
 				cpl_ctx->cpl.sqid = 0;
 				cpl_ctx->cpl.cdw0 = 0;
 				cpl_ctx->cpl.cid = sq->create_io_sq_cmd.cid;
 				cpl_ctx->cpl.status.sc = SPDK_NVME_SC_SUCCESS;
 				cpl_ctx->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 
-				spdk_thread_send_msg(cq->thread, _post_completion_msg, cpl_ctx);
+				spdk_thread_send_msg(admin_cq->thread, _post_completion_msg,
+						     cpl_ctx);
 			} else {
-				post_completion(vu_ctrlr, cq, 0, 0,
+				post_completion(vu_ctrlr, admin_cq, 0, 0,
 						sq->create_io_sq_cmd.cid, SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 			}
 			sq->post_create_io_sq_completion = false;
