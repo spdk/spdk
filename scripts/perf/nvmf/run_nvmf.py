@@ -585,9 +585,10 @@ class Target(Server):
                 fh.write(row + "\n")
         self.log_print("You can find the test results in the file %s" % os.path.join(results_dir, csv_file))
 
-    def measure_sar(self, results_dir, sar_file_name):
+    def measure_sar(self, results_dir, sar_file_prefix):
         cpu_number = os.cpu_count()
         sar_idle_sum = 0
+        sar_file_name = sar_file_prefix + ".txt"
 
         self.log_print("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % self.sar_delay)
         time.sleep(self.sar_delay)
@@ -1526,9 +1527,8 @@ if __name__ == "__main__":
                 t = threading.Thread(target=i.run_fio, args=(cfg, fio_run_num))
                 threads.append(t)
             if target_obj.enable_sar:
-                sar_file_name = "_".join([str(block_size), str(rw), str(io_depth), "sar"])
-                sar_file_name = ".".join([sar_file_name, "txt"])
-                t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_name))
+                sar_file_prefix = "%s_%s_%s_sar" % (block_size, rw, io_depth)
+                t = threading.Thread(target=target_obj.measure_sar, args=(args.results, sar_file_prefix))
                 threads.append(t)
 
             if target_obj.enable_pcm:
