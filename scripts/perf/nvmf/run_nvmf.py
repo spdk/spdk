@@ -588,14 +588,15 @@ class Target(Server):
     def measure_sar(self, results_dir, sar_file_prefix):
         cpu_number = os.cpu_count()
         sar_idle_sum = 0
-        sar_file_name = sar_file_prefix + ".txt"
+        sar_output_file = os.path.join(results_dir, sar_file_prefix + ".txt")
+        sar_cpu_util_file = os.path.join(results_dir, ".".join([sar_file_prefix + "cpu_util", "txt"]))
 
         self.log_print("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % self.sar_delay)
         time.sleep(self.sar_delay)
         self.log_print("Starting SAR measurements")
 
         out = self.exec_cmd(["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count])
-        with open(os.path.join(results_dir, sar_file_name), "w") as fh:
+        with open(os.path.join(results_dir, sar_output_file), "w") as fh:
             for line in out.split("\n"):
                 if "Average" in line:
                     if "CPU" in line:
@@ -607,8 +608,9 @@ class Target(Server):
                         sar_idle_sum += float(line.split()[7])
             fh.write(out)
         sar_cpu_usage = cpu_number * 100 - sar_idle_sum
-        with open(os.path.join(results_dir, sar_file_name), "a") as f:
-            f.write("Total CPU used: " + str(sar_cpu_usage))
+
+        with open(os.path.join(results_dir, sar_cpu_util_file), "w") as f:
+            f.write("%0.2f" % sar_cpu_usage)
 
     def ethtool_after_fio_ramp(self, fio_ramp_time):
         time.sleep(fio_ramp_time//2)
