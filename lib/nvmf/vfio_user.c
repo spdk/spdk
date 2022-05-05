@@ -4744,6 +4744,43 @@ vfio_user_set_intr_mode(struct spdk_poller *poller, void *arg,
 	vfio_user_poll_group_rearm(ctrlr_to_poll_group(ctrlr));
 }
 
+/*
+ * In response to the nvmf_vfio_user_create_ctrlr() path, the admin queue is now
+ * set up and we can start operating on this controller.
+ */
+static void
+start_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
+	    struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
+
+	vu_ctrlr->ctrlr = ctrlr;
+	vu_ctrlr->cntlid = ctrlr->cntlid;
+	vu_ctrlr->thread = spdk_get_thread();
+	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+
+	if (!in_interrupt_mode(endpoint->transport)) {
+		vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx,
+					   vu_ctrlr, 1000);
+		return;
+	}
+
+	vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx,
+				   vu_ctrlr, 0);
+
+	vu_ctrlr->intr_fd = vfu_get_poll_fd(vu_ctrlr->endpoint->vfu_ctx);
+	assert(vu_ctrlr->intr_fd != -1);
+
+	vu_ctrlr->intr = SPDK_INTERRUPT_REGISTER(vu_ctrlr->intr_fd,
+			 vfio_user_ctrlr_intr, vu_ctrlr);
+
+	assert(vu_ctrlr->intr != NULL);
+
+	spdk_poller_register_interrupt(vu_ctrlr->vfu_ctx_poller,
+				       vfio_user_set_intr_mode,
+				       vu_ctrlr);
+}
+
 static int
 handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 {
@@ -4776,32 +4813,8 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 
 	pthread_mutex_lock(&endpoint->lock);
 	if (nvmf_qpair_is_admin_queue(&sq->qpair)) {
-		vu_ctrlr->cntlid = sq->qpair.ctrlr->cntlid;
-		vu_ctrlr->thread = spdk_get_thread();
-		vu_ctrlr->ctrlr = sq->qpair.ctrlr;
-		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
-
 		admin_cq->thread = spdk_get_thread();
-
-		if (in_interrupt_mode(endpoint->transport)) {
-			vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx,
-						   vu_ctrlr, 0);
-
-			vu_ctrlr->intr_fd = vfu_get_poll_fd(vu_ctrlr->endpoint->vfu_ctx);
-			assert(vu_ctrlr->intr_fd != -1);
-
-			vu_ctrlr->intr = SPDK_INTERRUPT_REGISTER(vu_ctrlr->intr_fd,
-					 vfio_user_ctrlr_intr, vu_ctrlr);
-
-			assert(vu_ctrlr->intr != NULL);
-
-			spdk_poller_register_interrupt(vu_ctrlr->vfu_ctx_poller,
-						       vfio_user_set_intr_mode,
-						       vu_ctrlr);
-		} else {
-			vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(vfio_user_poll_vfu_ctx,
-						   vu_ctrlr, 1000);
-		}
+		start_ctrlr(vu_ctrlr, sq->qpair.ctrlr);
 	} else {
 		/* For I/O queues this command was generated in response to an
 		 * ADMIN I/O CREATE SUBMISSION QUEUE command which has not yet
