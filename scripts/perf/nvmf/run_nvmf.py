@@ -586,10 +586,13 @@ class Target(Server):
         self.log_print("You can find the test results in the file %s" % os.path.join(results_dir, csv_file))
 
     def measure_sar(self, results_dir, sar_file_name):
-        self.log_print("Waiting %d delay before measuring SAR stats" % self.sar_delay)
         cpu_number = os.cpu_count()
         sar_idle_sum = 0
+
+        self.log_print("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % self.sar_delay)
         time.sleep(self.sar_delay)
+        self.log_print("Starting SAR measurements")
+
         out = self.exec_cmd(["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count])
         with open(os.path.join(results_dir, sar_file_name), "w") as fh:
             for line in out.split("\n"):
