@@ -280,6 +280,8 @@ unregister_bdev(struct ut_bdev *ut_bdev)
 	/* Handle any deferred messages. */
 	poll_threads();
 	spdk_bdev_unregister(&ut_bdev->bdev, NULL, NULL);
+	/* Handle the async bdev unregister. */
+	poll_threads();
 }
 
 static void
@@ -1218,6 +1220,59 @@ enomem_multi_bdev(void)
 	teardown_test();
 }
 
+static void
+enomem_multi_bdev_unregister(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_shared_resource *shared_resource;
+	struct ut_bdev_channel *ut_ch;
+	const uint32_t IO_ARRAY_SIZE = 64;
+	const uint32_t AVAIL = 20;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE];
+	uint32_t i;
+	int rc;
+
+	setup_test();
+
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	shared_resource = bdev_ch->shared_resource;
+	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
+	ut_ch->avail_cnt = AVAIL;
+
+	/* Saturate io_target through the bdev. */
+	for (i = 0; i < AVAIL; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+	CU_ASSERT(TAILQ_EMPTY(&shared_resource->nomem_io));
+
+	/*
+	 * Now submit I/O through the bdev. This should fail with ENOMEM
+	 * and then go onto the nomem_io list.
+	 */
+	status[AVAIL] = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[AVAIL]);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&shared_resource->nomem_io));
+
+	/* Unregister the bdev to abort the IOs from nomem_io queue. */
+	unregister_bdev(&g_bdev);
+	CU_ASSERT(status[AVAIL] == SPDK_BDEV_IO_STATUS_FAILED);
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&shared_resource->nomem_io));
+	SPDK_CU_ASSERT_FATAL(shared_resource->io_outstanding == AVAIL);
+
+	/* Complete the bdev's I/O. */
+	stub_complete_io(g_bdev.io_target, AVAIL);
+	SPDK_CU_ASSERT_FATAL(shared_resource->io_outstanding == 0);
+
+	spdk_put_io_channel(io_ch);
+	poll_threads();
+	teardown_test();
+}
 
 static void
 enomem_multi_io_target(void)
@@ -2070,6 +2125,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, io_during_qos_reset);
 	CU_ADD_TEST(suite, enomem);
 	CU_ADD_TEST(suite, enomem_multi_bdev);
+	CU_ADD_TEST(suite, enomem_multi_bdev_unregister);
 	CU_ADD_TEST(suite, enomem_multi_io_target);
 	CU_ADD_TEST(suite, qos_dynamic_enable);
 	CU_ADD_TEST(suite, bdev_histograms_mt);

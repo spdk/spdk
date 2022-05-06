@@ -81,6 +81,8 @@ int g_status;
 int g_count;
 enum spdk_bdev_event_type g_event_type1;
 enum spdk_bdev_event_type g_event_type2;
+enum spdk_bdev_event_type g_event_type3;
+enum spdk_bdev_event_type g_event_type4;
 struct spdk_histogram_data *g_histogram;
 void *g_unregister_arg;
 int g_unregister_rc;
@@ -566,6 +568,18 @@ bdev_open_cb2(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *even
 	if (SPDK_BDEV_EVENT_REMOVE == type) {
 		spdk_bdev_close(desc);
 	}
+}
+
+static void
+bdev_open_cb3(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	g_event_type3 = type;
+}
+
+static void
+bdev_open_cb4(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
+{
+	g_event_type4 = type;
 }
 
 static void
@@ -3770,6 +3784,8 @@ bdev_open_while_hotremove(void)
 	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc[0]));
 
 	spdk_bdev_unregister(bdev, NULL, NULL);
+	/* Bdev unregister is handled asynchronously. Poll thread to complete. */
+	poll_threads();
 
 	rc = spdk_bdev_open_ext("bdev", false, bdev_ut_event_cb, NULL, &desc[1]);
 	CU_ASSERT(rc == -ENODEV);
@@ -3845,6 +3861,87 @@ bdev_open_ext(void)
 	/* Check if correct events have been triggered in event callback fn */
 	CU_ASSERT_EQUAL(g_event_type1, SPDK_BDEV_EVENT_REMOVE);
 	CU_ASSERT_EQUAL(g_event_type2, SPDK_BDEV_EVENT_REMOVE);
+
+	free_bdev(bdev);
+	poll_threads();
+}
+
+static void
+bdev_open_ext_unregister(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc1 = NULL;
+	struct spdk_bdev_desc *desc2 = NULL;
+	struct spdk_bdev_desc *desc3 = NULL;
+	struct spdk_bdev_desc *desc4 = NULL;
+	int rc = 0;
+
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, NULL, NULL, &desc1);
+	CU_ASSERT_EQUAL(rc, -EINVAL);
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb1, &desc1, &desc1);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb2, &desc2, &desc2);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb3, &desc3, &desc3);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_open_cb4, &desc4, &desc4);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	g_event_type1 = 0xFF;
+	g_event_type2 = 0xFF;
+	g_event_type3 = 0xFF;
+	g_event_type4 = 0xFF;
+
+	g_unregister_arg = NULL;
+	g_unregister_rc = -1;
+
+	/* Simulate hot-unplug by unregistering bdev */
+	spdk_bdev_unregister(bdev, bdev_unregister_cb, (void *)0x12345678);
+
+	/*
+	 * Unregister is handled asynchronously and event callback
+	 * (i.e., above bdev_open_cbN) will be called.
+	 * For bdev_open_cb3 and bdev_open_cb4, it is intended to not
+	 * close the desc3 and desc4 so that the bdev is not closed.
+	 */
+	poll_threads();
+
+	/* Check if correct events have been triggered in event callback fn */
+	CU_ASSERT_EQUAL(g_event_type1, SPDK_BDEV_EVENT_REMOVE);
+	CU_ASSERT_EQUAL(g_event_type2, SPDK_BDEV_EVENT_REMOVE);
+	CU_ASSERT_EQUAL(g_event_type3, SPDK_BDEV_EVENT_REMOVE);
+	CU_ASSERT_EQUAL(g_event_type4, SPDK_BDEV_EVENT_REMOVE);
+
+	/* Check that unregister callback is delayed */
+	CU_ASSERT(g_unregister_arg == NULL);
+	CU_ASSERT(g_unregister_rc == -1);
+
+	/*
+	 * Explicitly close desc3. As desc4 is still opened there, the
+	 * unergister callback is still delayed to execute.
+	 */
+	spdk_bdev_close(desc3);
+	CU_ASSERT(g_unregister_arg == NULL);
+	CU_ASSERT(g_unregister_rc == -1);
+
+	/*
+	 * Explicitly close desc4 to trigger the ongoing bdev unregister
+	 * operation after last desc is closed.
+	 */
+	spdk_bdev_close(desc4);
+
+	/* Poll the thread for the async unregister operation */
+	poll_threads();
+
+	/* Check that unregister callback is executed */
+	CU_ASSERT(g_unregister_arg == (void *)0x12345678);
+	CU_ASSERT(g_unregister_rc == 0);
 
 	free_bdev(bdev);
 	poll_threads();
@@ -5350,6 +5447,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_open_while_hotremove);
 	CU_ADD_TEST(suite, bdev_close_while_hotremove);
 	CU_ADD_TEST(suite, bdev_open_ext);
+	CU_ADD_TEST(suite, bdev_open_ext_unregister);
 	CU_ADD_TEST(suite, bdev_set_io_timeout);
 	CU_ADD_TEST(suite, lba_range_overlap);
 	CU_ADD_TEST(suite, lock_lba_range_check_ranges);

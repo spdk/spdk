@@ -3602,11 +3602,20 @@ bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 }
 
 static void
+bdev_channel_abort_queued_ios(struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
+	struct spdk_bdev_mgmt_channel *mgmt_ch = shared_resource->mgmt_ch;
+
+	bdev_abort_all_queued_io(&shared_resource->nomem_io, ch);
+	bdev_abort_all_buf_io(&mgmt_ch->need_buf_small, ch);
+	bdev_abort_all_buf_io(&mgmt_ch->need_buf_large, ch);
+}
+
+static void
 bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
-	struct spdk_bdev_channel	*ch = ctx_buf;
-	struct spdk_bdev_mgmt_channel	*mgmt_ch;
-	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
+	struct spdk_bdev_channel *ch = ctx_buf;
 
 	SPDK_DEBUGLOG(bdev, "Destroying channel %p for bdev %s on thread %p\n", ch, ch->bdev->name,
 		      spdk_get_thread());
@@ -3619,12 +3628,9 @@ bdev_channel_destroy(void *io_device, void *ctx_buf)
 	bdev_io_stat_add(&ch->bdev->internal.stat, &ch->stat);
 	pthread_mutex_unlock(&ch->bdev->internal.mutex);
 
-	mgmt_ch = shared_resource->mgmt_ch;
-
 	bdev_abort_all_queued_io(&ch->queued_resets, ch);
-	bdev_abort_all_queued_io(&shared_resource->nomem_io, ch);
-	bdev_abort_all_buf_io(&mgmt_ch->need_buf_small, ch);
-	bdev_abort_all_buf_io(&mgmt_ch->need_buf_large, ch);
+
+	bdev_channel_abort_queued_ios(ch);
 
 	if (ch->histogram) {
 		spdk_histogram_data_free(ch->histogram);
@@ -6259,11 +6265,43 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	return rc;
 }
 
+static void
+bdev_unregister_abort_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+
+	bdev_channel_abort_queued_ios(bdev_ch);
+	spdk_for_each_channel_continue(i, 0);
+}
+
+static void
+bdev_unregister(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
+	int rc;
+
+	pthread_mutex_lock(&g_bdev_mgr.mutex);
+	pthread_mutex_lock(&bdev->internal.mutex);
+	/*
+	 * Set the status to REMOVING after completing to abort channels. Otherwise,
+	 * the last spdk_bdev_close() may call spdk_io_device_unregister() while
+	 * spdk_for_each_channel() is executed and spdk_io_device_unregister() may fail.
+	 */
+	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
+	rc = bdev_unregister_unsafe(bdev);
+	pthread_mutex_unlock(&bdev->internal.mutex);
+	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+
+	if (rc == 0) {
+		spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
+	}
+}
+
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_thread	*thread;
-	int			rc;
 
 	SPDK_DEBUGLOG(bdev, "Removing bdev %s from list\n", bdev->name);
 
@@ -6277,7 +6315,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 
 	pthread_mutex_lock(&g_bdev_mgr.mutex);
-	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
+	if (bdev->internal.status == SPDK_BDEV_STATUS_UNREGISTERING ||
+	    bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
 		pthread_mutex_unlock(&g_bdev_mgr.mutex);
 		if (cb_fn) {
 			cb_fn(cb_arg, -EBUSY);
@@ -6286,18 +6325,16 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	}
 
 	pthread_mutex_lock(&bdev->internal.mutex);
-	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
+	bdev->internal.status = SPDK_BDEV_STATUS_UNREGISTERING;
 	bdev->internal.unregister_cb = cb_fn;
 	bdev->internal.unregister_ctx = cb_arg;
-
-	/* Call under lock. */
-	rc = bdev_unregister_unsafe(bdev);
 	pthread_mutex_unlock(&bdev->internal.mutex);
 	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
-	if (rc == 0) {
-		spdk_io_device_unregister(__bdev_to_io_dev(bdev), bdev_destroy_cb);
-	}
+	spdk_for_each_channel(__bdev_to_io_dev(bdev),
+			      bdev_unregister_abort_channel,
+			      bdev,
+			      bdev_unregister);
 }
 
 static void
@@ -6377,7 +6414,8 @@ bdev_open(struct spdk_bdev *bdev, bool write, struct spdk_bdev_desc *desc)
 	desc->write = write;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
-	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
+	if (bdev->internal.status == SPDK_BDEV_STATUS_UNREGISTERING ||
+	    bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
 		pthread_mutex_unlock(&bdev->internal.mutex);
 		return -ENODEV;
 	}
