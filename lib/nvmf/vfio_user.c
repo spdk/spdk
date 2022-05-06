@@ -2886,23 +2886,22 @@ init_pci_config_space(vfu_pci_config_space_t *p)
 	p->hdr.intr.ipin = 0x1;
 }
 
+struct subsystem_pause_ctx {
+	struct nvmf_vfio_user_ctrlr *ctrlr;
+	int status;
+};
+
 static void
 vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status);
 
 static void
-vfio_user_endpoint_resume_done(struct spdk_nvmf_subsystem *subsystem,
-			       void *cb_arg, int status)
+_vfio_user_endpoint_resume_done_msg(void *ctx)
 {
-	struct nvmf_vfio_user_endpoint *endpoint = cb_arg;
+	struct nvmf_vfio_user_endpoint *endpoint = ctx;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	int ret;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s resumed done with status %d\n", endpoint_id(endpoint), status);
-
-	if (!vu_ctrlr) {
-		return;
-	}
 	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 
 	/* Basically, once we call `vfu_device_quiesced` the device is unquiesced from
@@ -2925,19 +2924,34 @@ vfio_user_endpoint_resume_done(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
-			   void *cb_arg, int status)
+vfio_user_endpoint_resume_done(struct spdk_nvmf_subsystem *subsystem,
+			       void *cb_arg, int status)
 {
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
+	struct nvmf_vfio_user_endpoint *endpoint = cb_arg;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s resumed done with status %d\n", endpoint_id(endpoint), status);
+
+	if (!vu_ctrlr) {
+		return;
+	}
+
+	spdk_thread_send_msg(vu_ctrlr->thread, _vfio_user_endpoint_resume_done_msg, endpoint);
+}
+
+static void
+_vfio_user_dev_quiesce_done_msg(void *ctx)
+{
+	struct subsystem_pause_ctx *subsystem_ctx = ctx;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = subsystem_ctx->ctrlr;
 	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
 	int ret;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s paused done with status %d\n", ctrlr_id(vu_ctrlr), status);
-
 	assert(vu_ctrlr->state == VFIO_USER_CTRLR_PAUSING);
 	vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
-	vfu_device_quiesced(endpoint->vfu_ctx, status);
+	vfu_device_quiesced(endpoint->vfu_ctx, subsystem_ctx->status);
 	vu_ctrlr->queued_quiesce = false;
+	free(subsystem_ctx);
 
 	/* `vfu_device_quiesced` can change the migration state,
 	 * so we need to re-check `vu_ctrlr->state`.
@@ -2955,6 +2969,28 @@ vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
 		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
 		SPDK_ERRLOG("%s: failed to resume, ret=%d\n", endpoint_id(endpoint), ret);
 	}
+}
+
+static void
+vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
+			   void *cb_arg, int status)
+{
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
+	struct subsystem_pause_ctx *ctx;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "%s paused done with status %d\n", ctrlr_id(vu_ctrlr), status);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		SPDK_ERRLOG("Failed to allocate subsystem pause context\n");
+		assert(false);
+		return;
+	}
+
+	ctx->ctrlr = vu_ctrlr;
+	ctx->status = status;
+
+	spdk_thread_send_msg(vu_ctrlr->thread, _vfio_user_dev_quiesce_done_msg, ctx);
 }
 
 static int
