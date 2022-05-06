@@ -597,14 +597,17 @@ nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd
 	uint32_t		aborting = 0;
 
 	STAILQ_FOREACH_SAFE(req, &qpair->queued_req, stailq, tmp) {
-		if (req->cb_arg == cmd_cb_arg) {
-			STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
-			STAILQ_INSERT_TAIL(&qpair->aborting_queued_req, req, stailq);
-			if (!qpair->ctrlr->opts.disable_error_logging) {
-				SPDK_ERRLOG("aborting queued i/o\n");
-			}
-			aborting++;
+		if ((req->cb_arg != cmd_cb_arg) &&
+		    (req->parent == NULL || req->parent->cb_arg != cmd_cb_arg)) {
+			continue;
 		}
+
+		STAILQ_REMOVE(&qpair->queued_req, req, nvme_request, stailq);
+		STAILQ_INSERT_TAIL(&qpair->aborting_queued_req, req, stailq);
+		if (!qpair->ctrlr->opts.disable_error_logging) {
+			SPDK_ERRLOG("aborting queued i/o\n");
+		}
+		aborting++;
 	}
 
 	return aborting;
