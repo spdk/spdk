@@ -1516,6 +1516,25 @@ bdev_nvme_check_fast_io_fail_timeout(struct nvme_ctrlr *nvme_ctrlr)
 	}
 }
 
+static void
+nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb cb_fn)
+{
+	int rc __attribute__((unused));
+
+	/* spdk_nvme_ctrlr_disconnect() may complete asynchronously later by polling adminq.
+	 * Set callback here to execute the specified operation after ctrlr is really disconnected.
+	 */
+	assert(nvme_ctrlr->disconnected_cb == NULL);
+	nvme_ctrlr->disconnected_cb = cb_fn;
+
+	/* Disconnect fails if ctrlr is already resetting or removed. Both cases are
+	 * not possible. Reset is controlled and the callback to hot remove is called
+	 * when ctrlr is hot removed.
+	 */
+	rc = spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
+	assert(rc == 0);
+}
+
 enum bdev_nvme_op_after_reset {
 	OP_NONE,
 	OP_COMPLETE_PENDING_DESTRUCT,
@@ -1636,13 +1655,7 @@ _bdev_nvme_reset_complete(struct spdk_io_channel_iter *i, int status)
 		_bdev_nvme_delete(nvme_ctrlr, false);
 		break;
 	case OP_DELAYED_RECONNECT:
-		/* spdk_nvme_ctrlr_disconnect() may complete asynchronously later by polling adminq.
-		 * Set callback here to start reconnect delay timer after ctrlr is really disconnected.
-		 */
-		assert(nvme_ctrlr->disconnected_cb == NULL);
-		nvme_ctrlr->disconnected_cb = bdev_nvme_start_reconnect_delay_timer;
-
-		spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
+		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_start_reconnect_delay_timer);
 		break;
 	default:
 		break;
@@ -1760,22 +1773,10 @@ static void
 bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
-	int rc __attribute__((unused));
 
 	assert(status == 0);
 
-	/* spdk_nvme_ctrlr_disconnect() may complete asynchronously later by polling adminq.
-	 * Set callback here to reconnect after ctrlr is really disconnected.
-	 */
-	assert(nvme_ctrlr->disconnected_cb == NULL);
-	nvme_ctrlr->disconnected_cb = bdev_nvme_reconnect_ctrlr;
-
-	/* Disconnect fails if ctrlr is already resetting or removed. Both cases are
-	 * not possible. Reset is controlled and the callback to hot remove is called
-	 * when ctrlr is hot removed.
-	 */
-	rc = spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
-	assert(rc == 0);
+	nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reconnect_ctrlr);
 }
 
 static void
