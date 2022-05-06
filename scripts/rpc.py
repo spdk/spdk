@@ -926,9 +926,6 @@ if __name__ == "__main__":
         print_json(rpc.bdev.bdev_rbd_resize(args.client,
                                             name=args.name,
                                             new_size=int(args.new_size)))
-        rpc.bdev.bdev_rbd_resize(args.client,
-                                 name=args.name,
-                                 new_size=int(args.new_size))
 
     p = subparsers.add_parser('bdev_rbd_resize',
                               help='Resize a rbd bdev')
