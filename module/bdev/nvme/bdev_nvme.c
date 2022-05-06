@@ -1779,6 +1779,15 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
+bdev_nvme_reset_destroy_qpairs(struct nvme_ctrlr *nvme_ctrlr)
+{
+	spdk_for_each_channel(nvme_ctrlr,
+			      bdev_nvme_reset_destroy_qpair,
+			      NULL,
+			      bdev_nvme_reset_ctrlr);
+}
+
+static void
 _bdev_nvme_reset(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
@@ -1789,10 +1798,7 @@ _bdev_nvme_reset(void *ctx)
 	spdk_nvme_ctrlr_prepare_for_reset(nvme_ctrlr->ctrlr);
 
 	/* First, delete all NVMe I/O queue pairs. */
-	spdk_for_each_channel(nvme_ctrlr,
-			      bdev_nvme_reset_destroy_qpair,
-			      NULL,
-			      bdev_nvme_reset_ctrlr);
+	bdev_nvme_reset_destroy_qpairs(nvme_ctrlr);
 }
 
 static int
