@@ -24,6 +24,9 @@ if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
 else
 	scanbuild_exclude="--exclude $rootdir/dpdk/"
 fi
+if [[ "$SPDK_TEST_VFIOUSER" -eq 1 ]]; then
+	scanbuild_exclude+=" --exclude $rootdir/libvfio-user/"
+fi
 scanbuild="scan-build -o $output_dir/scan-build-tmp $scanbuild_exclude --status-bugs"
 config_params=$(get_config_params)
 
