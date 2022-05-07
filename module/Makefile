@@ -12,6 +12,10 @@ ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 DIRS-y += env_dpdk
 endif
 
+ifeq ($(CONFIG_VFIO_USER), y)
+DIRS-y += vfu_device
+endif
+
 DEPDIRS-blob :=
 DEPDIRS-accel :=
 DEPDIRS-env_dpdk :=
@@ -20,6 +24,7 @@ DEPDIRS-scheduler :=
 DEPDIRS-bdev := blob
 DEPDIRS-blobfs := blob
 DEPDIRS-event := bdev blob
+DEPDIRS-vfu_device :=
 
 .PHONY: all clean $(DIRS-y)
 

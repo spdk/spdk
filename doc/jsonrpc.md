@@ -8010,6 +8010,85 @@ Example response:
 }
 ~~~
 
+### vfu_virtio_delete_endpoint {#rpc_vfu_virtio_delete_endpoint}
+
+Delete PCI device via endpoint name.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0"
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_delete_endpoint",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### vfu_virtio_create_blk_endpoint {#rpc_vfu_virtio_create_blk_endpoint}
+
+Create vfio-user virtio-blk PCI endpoint.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Endpoint name
+bdev_name               | Required | string      | Block device name
+cpumask                 | Optional | string      | CPU masks
+num_queues              | Optional | number      | Number of queues
+qsize                   | Optional | number      | Queue size
+packed_ring             | Optional | boolean     | Enable packed ring
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "vfu.0",
+    "bdev_name": "Malloc0",
+    "cpumask": "0x2",
+    "num_queues": 4,
+    "qsize": 256
+  },
+  "jsonrpc": "2.0",
+  "method": "vfu_virtio_create_blk_endpoint",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Vhost Target {#jsonrpc_components_vhost_tgt}
 
 The following common preconditions need to be met in all target types.
