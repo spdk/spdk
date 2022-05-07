@@ -233,7 +233,6 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("nbd_start_disk", rpc_nbd_start_disk, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_start_disk, start_nbd_disk)
 
 struct rpc_nbd_stop_disk {
 	char *nbd_device;
@@ -337,7 +336,6 @@ out:
 }
 
 SPDK_RPC_REGISTER("nbd_stop_disk", rpc_nbd_stop_disk, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_stop_disk, stop_nbd_disk)
 
 static void
 rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
@@ -417,4 +415,3 @@ invalid:
 	free_rpc_nbd_get_disks(&req);
 }
 SPDK_RPC_REGISTER("nbd_get_disks", rpc_nbd_get_disks, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nbd_get_disks, get_nbd_disks)

@@ -2082,7 +2082,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                      bdev_name=args.bdev_name,
                                      nbd_device=args.nbd_device))
 
-    p = subparsers.add_parser('nbd_start_disk', aliases=['start_nbd_disk'],
+    p = subparsers.add_parser('nbd_start_disk',
                               help='Export a bdev as an nbd disk')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
     p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.', nargs='?')
@@ -2092,7 +2092,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.nbd.nbd_stop_disk(args.client,
                               nbd_device=args.nbd_device)
 
-    p = subparsers.add_parser('nbd_stop_disk', aliases=['stop_nbd_disk'],
+    p = subparsers.add_parser('nbd_stop_disk',
                               help='Stop an nbd disk')
     p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
     p.set_defaults(func=nbd_stop_disk)
@@ -2101,7 +2101,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_dict(rpc.nbd.nbd_get_disks(args.client,
                                          nbd_device=args.nbd_device))
 
-    p = subparsers.add_parser('nbd_get_disks', aliases=['get_nbd_disks'],
+    p = subparsers.add_parser('nbd_get_disks',
                               help='Display full or specified nbd device list')
     p.add_argument('-n', '--nbd-device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
     p.set_defaults(func=nbd_get_disks)
