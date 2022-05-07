@@ -2624,6 +2624,31 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('path', help='socket base path')
     p.set_defaults(func=vfu_tgt_set_base_path)
 
+    def vfu_virtio_delete_endpoint(args):
+        rpc.vfio_user.vfu_virtio_delete_endpoint(args.client, name=args.name)
+
+    p = subparsers.add_parser('vfu_virtio_delete_endpoint', help='Delete the PCI device via endpoint name.')
+    p.add_argument('name', help='Endpoint name')
+    p.set_defaults(func=vfu_virtio_delete_endpoint)
+
+    def vfu_virtio_create_blk_endpoint(args):
+        rpc.vfio_user.vfu_virtio_create_blk_endpoint(args.client,
+                                                     name=args.name,
+                                                     bdev_name=args.bdev_name,
+                                                     cpumask=args.cpumask,
+                                                     num_queues=args.num_queues,
+                                                     qsize=args.qsize,
+                                                     packed_ring=args.packed_ring)
+
+    p = subparsers.add_parser('vfu_virtio_create_blk_endpoint', help='Create virtio-blk endpoint.')
+    p.add_argument('name', help='Name of the endpoint')
+    p.add_argument('--bdev-name', help='block device name', type=str, required=True)
+    p.add_argument('--cpumask', help='CPU masks')
+    p.add_argument('--num-queues', help='number of vrings', type=int, default=0)
+    p.add_argument('--qsize', help='number of element for each vring', type=int, default=0)
+    p.add_argument("--packed-ring", action='store_true', help='Enable packed ring')
+    p.set_defaults(func=vfu_virtio_create_blk_endpoint)
+
     # accel_fw
     def accel_get_opc_assignments(args):
         print_dict(rpc.accel.accel_get_opc_assignments(args.client))

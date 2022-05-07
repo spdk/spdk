@@ -160,3 +160,9 @@ DEPDIRS-event_vhost_blk := init vhost
 DEPDIRS-event_vhost_scsi := init vhost event_scheduler event_scsi
 DEPDIRS-event_sock := init sock
 DEPDIRS-event_vfu_tgt := init vfu_tgt
+
+# module/vfu_device
+
+ifeq ($(CONFIG_VFIO_USER),y)
+DEPDIRS-vfu_device := $(BDEV_DEPS_THREAD) vfu_tgt
+endif
