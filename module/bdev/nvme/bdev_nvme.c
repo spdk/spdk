@@ -1779,7 +1779,11 @@ bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 
 	assert(status == 0);
 
-	nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reconnect_ctrlr);
+	if (!spdk_nvme_ctrlr_is_fabrics(nvme_ctrlr->ctrlr)) {
+		bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
+	} else {
+		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reconnect_ctrlr);
+	}
 }
 
 static void
@@ -1799,10 +1803,11 @@ _bdev_nvme_reset(void *ctx)
 	assert(nvme_ctrlr->resetting == true);
 	assert(nvme_ctrlr->thread == spdk_get_thread());
 
-	spdk_nvme_ctrlr_prepare_for_reset(nvme_ctrlr->ctrlr);
-
-	/* First, delete all NVMe I/O queue pairs. */
-	bdev_nvme_reset_destroy_qpairs(nvme_ctrlr);
+	if (!spdk_nvme_ctrlr_is_fabrics(nvme_ctrlr->ctrlr)) {
+		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reset_destroy_qpairs);
+	} else {
+		bdev_nvme_reset_destroy_qpairs(nvme_ctrlr);
+	}
 }
 
 static int
