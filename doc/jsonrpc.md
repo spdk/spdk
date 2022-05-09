@@ -9379,7 +9379,8 @@ Example response:
     "enable_quickack": true,
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
-    "enable_zerocopy_send_client": false
+    "enable_zerocopy_send_client": false,
+    "zerocopy_threshold": 0
   }
 }
 ~~~
@@ -9400,6 +9401,8 @@ enable_quick_ack            | Optional | boolean     | Enable or disable quick A
 enable_placement_id         | Optional | number      | Enable or disable placement_id. 0:disable,1:incoming_napi,2:incoming_cpu
 enable_zerocopy_send_server | Optional | boolean     | Enable or disable zero copy on send for server sockets
 enable_zerocopy_send_client | Optional | boolean     | Enable or disable zero copy on send for client sockets
+zerocopy_threshold          | Optional | number      | Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs
+that fall below this threshold may be sent without zerocopy flag set
 
 #### Response
 
@@ -9422,7 +9425,8 @@ Example request:
     "enable_quick_ack": false,
     "enable_placement_id": 0,
     "enable_zerocopy_send_server": true,
-    "enable_zerocopy_send_client": false
+    "enable_zerocopy_send_client": false,
+    "zerocopy_threshold": 10240
   }
 }
 ~~~
