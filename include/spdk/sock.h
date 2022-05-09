@@ -134,12 +134,12 @@ struct spdk_sock_impl_opts {
 	uint32_t enable_placement_id;
 
 	/**
-	 * Enable or disable use of zero copy flow on send for server sockets. Used by posix socket module.
+	 * Enable or disable use of zero copy flow on send for server sockets. Used by posix and uring socket modules.
 	 */
 	bool enable_zerocopy_send_server;
 
 	/**
-	 * Enable or disable use of zero copy flow on send for client sockets. Used by posix socket module.
+	 * Enable or disable use of zero copy flow on send for client sockets. Used by posix and uring socket modules.
 	 */
 	bool enable_zerocopy_send_client;
 
