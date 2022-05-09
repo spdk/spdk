@@ -1634,8 +1634,6 @@ nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair	*qpair;
 
-	ctrlr->prepare_for_reset = false;
-
 	if (ctrlr->is_resetting || ctrlr->is_removed) {
 		/*
 		 * Controller is already resetting or has been removed. Return
@@ -1648,6 +1646,7 @@ nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_resetting = true;
 	ctrlr->is_failed = false;
 	ctrlr->is_disconnecting = true;
+	ctrlr->prepare_for_reset = true;
 
 	NVME_CTRLR_NOTICELOG(ctrlr, "resetting controller\n");
 
@@ -1701,6 +1700,8 @@ void
 spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr)
 {
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	ctrlr->prepare_for_reset = false;
 
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
@@ -4157,6 +4158,7 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 
 	NVME_CTRLR_DEBUGLOG(ctrlr, "Prepare to destruct SSD\n");
 
+	ctrlr->prepare_for_reset = false;
 	ctrlr->is_destructed = true;
 
 	spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
