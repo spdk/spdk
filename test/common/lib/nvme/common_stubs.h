@@ -92,6 +92,8 @@ DEFINE_STUB(nvme_get_transport, const struct spdk_nvme_transport *, (const char 
 	    NULL);
 DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t, (struct spdk_nvme_qpair *qpair,
 		uint32_t max_completions), 0);
+DEFINE_STUB_V(nvme_ctrlr_disable, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB(nvme_ctrlr_disable_poll, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 /* Fabric transports only */
 DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));

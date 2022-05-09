@@ -602,7 +602,16 @@ nvme_pcie_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qp
 void
 nvme_pcie_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+	if (!nvme_qpair_is_admin_queue(qpair) || !ctrlr->is_disconnecting) {
+		nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+	} else {
+		/* If this function is called for the admin qpair via spdk_nvme_ctrlr_reset()
+		 * or spdk_nvme_ctrlr_disconnect(), initiate a Controller Level Reset.
+		 * Then we can abort trackers safely because the Controller Level Reset deletes
+		 * all I/O SQ/CQs.
+		 */
+		nvme_ctrlr_disable(ctrlr);
+	}
 }
 
 /* Used when dst points to MMIO (i.e. CMB) in a virtual machine - in these cases we must
@@ -980,9 +989,18 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		nvme_pcie_qpair_check_timeout(qpair);
 	}
 
-	/* Before returning, complete any pending admin request. */
+	/* Before returning, complete any pending admin request or
+	 * process the admin qpair disconnection.
+	 */
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_pcie_qpair_complete_pending_admin_request(qpair);
+
+		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
+			rc = nvme_ctrlr_disable_poll(qpair->ctrlr);
+			if (rc == 0) {
+				nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+			}
+		}
 
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
