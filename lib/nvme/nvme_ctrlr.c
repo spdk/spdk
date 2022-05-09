@@ -1788,6 +1788,37 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
+/*
+ * For PCIe transport, spdk_nvme_ctrlr_disconnect() will do a Controller Level Reset
+ * (Change CC.EN from 1 to 0) as a operation to disconnect the admin qpair.
+ * The following two functions are added to do a Controller Level Reset. They have
+ * to be called under the nvme controller's lock.
+ */
+void
+nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
+{
+	assert(ctrlr->is_disconnecting == true);
+
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_CHECK_EN, NVME_TIMEOUT_INFINITE);
+}
+
+int
+nvme_ctrlr_disable_poll(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc = 0;
+
+	if (nvme_ctrlr_process_init(ctrlr) != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "failed to disable controller\n");
+		rc = -1;
+	}
+
+	if (ctrlr->state != NVME_CTRLR_STATE_DISABLED && rc != -1) {
+		return -EAGAIN;
+	}
+
+	return rc;
+}
+
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -3852,13 +3883,17 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_DISABLED:
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
+		if (ctrlr->is_disconnecting) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Ctrlr was disabled.\n");
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
 
-		/*
-		 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
-		 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
-		 */
-		spdk_delay_us(100);
+			/*
+			 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
+			 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
+			 */
+			spdk_delay_us(100);
+		}
 		break;
 
 	case NVME_CTRLR_STATE_ENABLE:
@@ -3974,7 +4009,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_WAIT_FOR_SUPPORTED_INTEL_LOG_PAGES:
 	case NVME_CTRLR_STATE_WAIT_FOR_DB_BUF_CFG:
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+		/*
+		 * nvme_ctrlr_process_init() may be called from the completion context
+		 * for the admin qpair. Avoid recursive calls for this case.
+		 */
+		if (!ctrlr->adminq->in_completion_context) {
+			spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+		}
 		break;
 
 	default:
