@@ -459,7 +459,7 @@ _get_task_data_bufs(struct idxd_task *task)
 		}
 	}
 
-	if (g_workload_selection != IDXD_COPY_CRC32C) {
+	if (g_workload_selection != IDXD_CRC32C) {
 		task->dst = spdk_dma_zmalloc(dst_buff_len, align, NULL);
 		if (task->dst == NULL) {
 			fprintf(stderr, "Unable to alloc dst buffer\n");
@@ -574,10 +574,16 @@ _submit_single(struct idxd_chan_entry *t, struct idxd_task *task)
 		rc = spdk_idxd_submit_dualcast(t->ch, task->dst, task->dst2,
 					       task->src, g_xfer_size_bytes, flags, idxd_done, task);
 		break;
+	case IDXD_COPY_CRC32C:
+		diov.iov_base = task->dst;
+		diov.iov_len = g_xfer_size_bytes;
+		rc = spdk_idxd_submit_copy_crc32c(t->ch, &diov, 1, task->iovs, task->iov_cnt, g_crc32c_seed,
+						  &task->crc_dst,
+						  flags, idxd_done, task);
+		break;
 	default:
 		assert(false);
 		break;
-
 	}
 
 queue:
