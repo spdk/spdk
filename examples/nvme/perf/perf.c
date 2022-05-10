@@ -1270,6 +1270,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("WARNING: IO size %u (-o) is not a multiple of nsid %u sector size %u."
 		       " Removing this ns from test\n", g_io_size_bytes, spdk_nvme_ns_get_id(ns), entry->block_size);
 		g_warn = true;
+		spdk_zipf_free(&entry->zipf);
 		free(entry);
 		return;
 	}
