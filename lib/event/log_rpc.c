@@ -128,7 +128,6 @@ end:
 }
 SPDK_RPC_REGISTER("log_set_print_level", rpc_log_set_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_set_print_level, set_log_print_level)
 
 static void
 rpc_log_get_print_level(struct spdk_jsonrpc_request *request,
@@ -159,7 +158,6 @@ rpc_log_get_print_level(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("log_get_print_level", rpc_log_get_print_level,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_print_level, get_log_print_level)
 
 static void
 rpc_log_set_level(struct spdk_jsonrpc_request *request,
@@ -191,7 +189,6 @@ end:
 	free_rpc_log_level(&req);
 }
 SPDK_RPC_REGISTER("log_set_level", rpc_log_set_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_set_level, set_log_level)
 
 static void
 rpc_log_get_level(struct spdk_jsonrpc_request *request,
@@ -221,7 +218,6 @@ rpc_log_get_level(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("log_get_level", rpc_log_get_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_level, get_log_level)
 
 static void
 rpc_log_set_flag(struct spdk_jsonrpc_request *request,
@@ -250,7 +246,6 @@ end:
 	free_rpc_log_flag(&req);
 }
 SPDK_RPC_REGISTER("log_set_flag", rpc_log_set_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_set_flag, set_log_flag)
 
 static void
 rpc_log_clear_flag(struct spdk_jsonrpc_request *request,
@@ -280,7 +275,6 @@ end:
 }
 SPDK_RPC_REGISTER("log_clear_flag", rpc_log_clear_flag,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_clear_flag, clear_log_flag)
 
 static void
 rpc_log_get_flags(struct spdk_jsonrpc_request *request,
@@ -307,7 +301,6 @@ rpc_log_get_flags(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("log_get_flags", rpc_log_get_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(log_get_flags, get_log_flags)
 
 struct rpc_log_enable_timestamps {
 	bool enabled;

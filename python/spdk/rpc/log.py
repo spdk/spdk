@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('set_log_flag')
 def log_set_flag(client, flag):
     """Set log flag.
 
@@ -12,7 +11,6 @@ def log_set_flag(client, flag):
     return client.call('log_set_flag', params)
 
 
-@deprecated_alias('clear_log_flag')
 def log_clear_flag(client, flag):
     """Clear log flag.
 
@@ -23,7 +21,6 @@ def log_clear_flag(client, flag):
     return client.call('log_clear_flag', params)
 
 
-@deprecated_alias('get_log_flags')
 def log_get_flags(client):
     """Get log flags
 
@@ -33,7 +30,6 @@ def log_get_flags(client):
     return client.call('log_get_flags')
 
 
-@deprecated_alias('set_log_level')
 def log_set_level(client, level):
     """Set log level.
 
@@ -44,7 +40,6 @@ def log_set_level(client, level):
     return client.call('log_set_level', params)
 
 
-@deprecated_alias('get_log_level')
 def log_get_level(client):
     """Get log level
 
@@ -54,7 +49,6 @@ def log_get_level(client):
     return client.call('log_get_level')
 
 
-@deprecated_alias('set_log_print_level')
 def log_set_print_level(client, level):
     """Set log print level.
 
@@ -65,7 +59,6 @@ def log_set_print_level(client, level):
     return client.call('log_set_print_level', params)
 
 
-@deprecated_alias('get_log_print_level')
 def log_get_print_level(client):
     """Get log print level
 
