@@ -207,7 +207,7 @@ usage(void)
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-q queue depth per core]\n");
-	printf("\t[-R max idxd devices per core can drive (default 1)]\n");
+	printf("\t[-r max idxd devices per core can drive (default 1)]\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, dualcast\n");
