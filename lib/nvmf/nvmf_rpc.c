@@ -362,7 +362,6 @@ rpc_nvmf_get_subsystems(struct spdk_jsonrpc_request *request,
 	free(req.nqn);
 }
 SPDK_RPC_REGISTER("nvmf_get_subsystems", rpc_nvmf_get_subsystems, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_get_subsystems, get_nvmf_subsystems)
 
 struct rpc_subsystem_create {
 	char *nqn;
@@ -498,7 +497,6 @@ cleanup:
 	}
 }
 SPDK_RPC_REGISTER("nvmf_create_subsystem", rpc_nvmf_create_subsystem, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_create_subsystem, nvmf_subsystem_create)
 
 struct rpc_delete_subsystem {
 	char *nqn;
@@ -603,7 +601,6 @@ invalid_custom_response:
 	free_rpc_delete_subsystem(&req);
 }
 SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_delete_subsystem, delete_nvmf_subsystem)
 
 struct rpc_listen_address {
 	char *transport;
@@ -2103,7 +2100,6 @@ rpc_nvmf_get_transports(struct spdk_jsonrpc_request *request,
 	free(req.tgt_name);
 }
 SPDK_RPC_REGISTER("nvmf_get_transports", rpc_nvmf_get_transports, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_get_transports, get_nvmf_transports)
 
 struct rpc_nvmf_get_stats_ctx {
 	char *tgt_name;

@@ -2104,7 +2104,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.nvmf.nvmf_set_max_subsystems(args.client,
                                          max_subsystems=args.max_subsystems)
 
-    p = subparsers.add_parser('nvmf_set_max_subsystems', aliases=['set_nvmf_target_max_subsystems'],
+    p = subparsers.add_parser('nvmf_set_max_subsystems',
                               help='Set the maximum number of NVMf target subsystems')
     p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int, required=True)
     p.set_defaults(func=nvmf_set_max_subsystems)
@@ -2115,8 +2115,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                  poll_groups_mask=args.poll_groups_mask,
                                  discovery_filter=args.discovery_filter)
 
-    p = subparsers.add_parser('nvmf_set_config', aliases=['set_nvmf_target_config'],
-                              help='Set NVMf target config')
+    p = subparsers.add_parser('nvmf_set_config', help='Set NVMf target config')
     p.add_argument('-i', '--passthru-identify-ctrlr', help="""Passthrough fields like serial number and model number
     when the controller has a single namespace that is an NVMe bdev""", action='store_true')
     p.add_argument('-m', '--poll-groups-mask', help='Set cpumask for NVMf poll groups (optional)', type=str)
@@ -2164,8 +2163,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def nvmf_get_transports(args):
         print_dict(rpc.nvmf.nvmf_get_transports(args.client, trtype=args.trtype, tgt_name=args.tgt_name))
 
-    p = subparsers.add_parser('nvmf_get_transports', aliases=['get_nvmf_transports'],
-                              help='Display nvmf transports or required transport')
+    p = subparsers.add_parser('nvmf_get_transports', help='Display nvmf transports or required transport')
     p.add_argument('--trtype', help='Transport type (optional)')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_transports)
@@ -2173,8 +2171,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def nvmf_get_subsystems(args):
         print_dict(rpc.nvmf.nvmf_get_subsystems(args.client, nqn=args.nqn, tgt_name=args.tgt_name))
 
-    p = subparsers.add_parser('nvmf_get_subsystems', aliases=['get_nvmf_subsystems'],
-                              help='Display nvmf subsystems or required subsystem')
+    p = subparsers.add_parser('nvmf_get_subsystems', help='Display nvmf subsystems or required subsystem')
     p.add_argument('nqn', help='Subsystem NQN (optional)', nargs="?", default=None)
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_subsystems)
@@ -2191,8 +2188,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        min_cntlid=args.min_cntlid,
                                        max_cntlid=args.max_cntlid)
 
-    p = subparsers.add_parser('nvmf_create_subsystem', aliases=['nvmf_subsystem_create'],
-                              help='Create an NVMe-oF subsystem')
+    p = subparsers.add_parser('nvmf_create_subsystem', help='Create an NVMe-oF subsystem')
     p.add_argument('nqn', help='Subsystem NQN (ASCII)')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.add_argument("-s", "--serial-number", help="""
@@ -2214,8 +2210,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        nqn=args.subsystem_nqn,
                                        tgt_name=args.tgt_name)
 
-    p = subparsers.add_parser('nvmf_delete_subsystem', aliases=['delete_nvmf_subsystem'],
-                              help='Delete a nvmf subsystem')
+    p = subparsers.add_parser('nvmf_delete_subsystem', help='Delete a nvmf subsystem')
     p.add_argument('subsystem_nqn',
                    help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
