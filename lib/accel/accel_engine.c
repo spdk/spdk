@@ -377,6 +377,8 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	struct spdk_accel_task *accel_task;
 	struct spdk_accel_engine *engine = g_engines_opc[ACCEL_OPC_COPY_CRC32C];
 	struct spdk_io_channel *engine_ch = accel_ch->engine_ch[ACCEL_OPC_COPY_CRC32C];
+	uint64_t nbytes;
+	uint32_t i;
 
 	if (src_iovs == NULL) {
 		SPDK_ERRLOG("iov should not be NULL");
@@ -395,11 +397,17 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 		return -ENOMEM;
 	}
 
+	nbytes = 0;
+	for (i = 0; i < iov_cnt; i++) {
+		nbytes += src_iovs[i].iov_len;
+	}
+
 	accel_task->v.iovs = src_iovs;
 	accel_task->v.iovcnt = iov_cnt;
 	accel_task->dst = (void *)dst;
 	accel_task->crc_dst = crc_dst;
 	accel_task->seed = seed;
+	accel_task->nbytes = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_COPY_CRC32C;
 
