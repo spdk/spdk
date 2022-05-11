@@ -5170,9 +5170,22 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	struct discovery_ctx *ctx;
 	struct discovery_entry_ctx *discovery_entry_ctx;
 
+	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
 		if (strcmp(ctx->name, base_name) == 0) {
 			return -EEXIST;
+		}
+
+		if (ctx->entry_ctx_in_use != NULL) {
+			if (!spdk_nvme_transport_id_compare(trid, &ctx->entry_ctx_in_use->trid)) {
+				return -EEXIST;
+			}
+		}
+
+		TAILQ_FOREACH(discovery_entry_ctx, &ctx->discovery_entry_ctxs, tailq) {
+			if (!spdk_nvme_transport_id_compare(trid, &discovery_entry_ctx->trid)) {
+				return -EEXIST;
+			}
 		}
 	}
 
@@ -5200,7 +5213,6 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	ctx->cb_ctx = cb_ctx;
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	TAILQ_INIT(&ctx->discovery_entry_ctxs);
-	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 	memcpy(&ctx->trid, trid, sizeof(*trid));
 	/* Even if user did not specify hostnqn, we can still strdup("\0"); */
 	ctx->hostnqn = strdup(ctx->drv_opts.hostnqn);

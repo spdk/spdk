@@ -145,6 +145,12 @@ NOT $rpc_py -s $HOST_SOCK bdev_nvme_start_discovery -b nvme -t $TEST_TRANSPORT \
 [[ $(get_discovery_ctrlrs) == "nvme" ]]
 [[ $(get_bdev_list) == "nvme0n1 nvme0n2" ]]
 
+# Make sure that it's also impossible to start the discovery using the same trid
+NOT $rpc_py -s $HOST_SOCK bdev_nvme_start_discovery -b nvme_second -t $TEST_TRANSPORT \
+	-a $NVMF_FIRST_TARGET_IP -s $DISCOVERY_PORT -f ipv4 -q $HOST_NQN -w
+[[ $(get_discovery_ctrlrs) == "nvme" ]]
+[[ $(get_bdev_list) == "nvme0n1 nvme0n2" ]]
+
 trap - SIGINT SIGTERM EXIT
 
 kill $hostpid
