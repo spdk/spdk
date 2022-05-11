@@ -633,6 +633,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS,
 
 	/**
+	 * The controller is disabled. (CC.EN and CSTS.RDY are 0.)
+	 */
+	NVME_CTRLR_STATE_DISABLED,
+
+	/**
 	 * Enable the controller by writing CC.EN to 1
 	 */
 	NVME_CTRLR_STATE_ENABLE,

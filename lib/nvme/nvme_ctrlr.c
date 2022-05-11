@@ -1367,6 +1367,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "disable and wait for CSTS.RDY = 0";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS:
 		return "disable and wait for CSTS.RDY = 0 reg";
+	case NVME_CTRLR_STATE_DISABLED:
+		return "controller is disabled";
 	case NVME_CTRLR_STATE_ENABLE:
 		return "enable controller by writing CC.EN = 1";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_CC:
@@ -3676,13 +3678,8 @@ nvme_ctrlr_process_init_wait_for_ready_0(void *ctx, uint64_t value, const struct
 	csts.raw = (uint32_t)value;
 	if (csts.bits.rdy == 0) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "CC.EN = 0 && CSTS.RDY = 0\n");
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE,
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLED,
 				     nvme_ctrlr_get_ready_timeout(ctrlr));
-		/*
-		 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
-		 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
-		 */
-		spdk_delay_us(100);
 	} else {
 		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
 					   NVME_TIMEOUT_KEEP_EXISTING);
@@ -3852,6 +3849,16 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_ctrlr_set_state_quiet(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0_WAIT_FOR_CSTS,
 					   NVME_TIMEOUT_KEEP_EXISTING);
 		rc = nvme_ctrlr_get_csts_async(ctrlr, nvme_ctrlr_process_init_wait_for_ready_0, ctrlr);
+		break;
+
+	case NVME_CTRLR_STATE_DISABLED:
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
+
+		/*
+		 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
+		 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
+		 */
+		spdk_delay_us(100);
 		break;
 
 	case NVME_CTRLR_STATE_ENABLE:
