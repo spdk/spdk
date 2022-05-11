@@ -1297,6 +1297,17 @@ bdev_nvme_poll(void *arg)
 	return num_completions > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
+static int bdev_nvme_poll_adminq(void *arg);
+
+static void
+bdev_nvme_change_adminq_poll_period(struct nvme_ctrlr *nvme_ctrlr, uint64_t new_period_us)
+{
+	spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
+
+	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq,
+					  nvme_ctrlr, new_period_us);
+}
+
 static int
 bdev_nvme_poll_adminq(void *arg)
 {
@@ -1312,6 +1323,8 @@ bdev_nvme_poll_adminq(void *arg)
 		nvme_ctrlr->disconnected_cb = NULL;
 
 		if (rc == -ENXIO && disconnected_cb != NULL) {
+			bdev_nvme_change_adminq_poll_period(nvme_ctrlr,
+							    g_opts.nvme_adminq_poll_period_us);
 			disconnected_cb(nvme_ctrlr);
 		} else {
 			bdev_nvme_failover(nvme_ctrlr, false);
@@ -1536,6 +1549,9 @@ nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb 
 	 */
 	rc = spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
 	assert(rc == 0);
+
+	/* During disconnection, reduce the period to poll adminq more often. */
+	bdev_nvme_change_adminq_poll_period(nvme_ctrlr, 0);
 }
 
 enum bdev_nvme_op_after_reset {
