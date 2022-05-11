@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Install main dependencies
-pacman -Sy --needed --noconfirm gcc make cmake cunit libaio openssl \
+pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
 	libutil-linux libiscsi python ncurses json-c cmocka ninja meson
 # Additional dependencies for SPDK CLI
 pacman -Sy --needed --noconfirm python-pexpect python-pip libffi

@@ -519,11 +519,6 @@ BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
 
 if [[ "${CONFIG[VFIO_USER]}" = "y" ]]; then
 
-	if ! bash -c "command -v cmake3 cmake" > /dev/null; then
-		echo "ERROR: --with-vfio-user requires cmake"
-		echo "Please install then re-run this script"
-		exit 1
-	fi
 	if [[ ! -d /usr/include/json-c ]] && [[ ! -d /usr/local/include/json-c ]]; then
 		echo "ERROR: --with-vfio-user requires json-c-devel"
 		echo "Please install then re-run this script"
