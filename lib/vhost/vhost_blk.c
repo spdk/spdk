@@ -861,7 +861,7 @@ submit_inflight_desc(struct spdk_vhost_blk_session *bvsession,
 	resubmit->resubmit_num = 0;
 }
 
-static void
+static int
 process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
@@ -872,7 +872,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 
 	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	if (!reqs_cnt) {
-		return;
+		return 0;
 	}
 
 	for (i = 0; i < reqs_cnt; i++) {
@@ -890,12 +890,15 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 
 		process_blk_task(vq, reqs[i]);
 	}
+
+	return reqs_cnt;
 }
 
-static void
+static int
 process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
 	uint16_t i = 0;
+	uint16_t count = 0;
 
 	submit_inflight_desc(bvsession, vq);
 
@@ -903,9 +906,11 @@ process_packed_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_vi
 	       vhost_vq_packed_ring_is_avail(vq)) {
 		SPDK_DEBUGLOG(vhost_blk, "====== Starting processing request idx %"PRIu16"======\n",
 			      vq->last_avail_idx);
-
+		count++;
 		process_packed_blk_task(vq, vq->last_avail_idx);
 	}
+
+	return count;
 }
 
 static int
@@ -914,17 +919,18 @@ _vdev_vq_worker(struct spdk_vhost_virtqueue *vq)
 	struct spdk_vhost_session *vsession = vq->vsession;
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 	bool packed_ring;
+	int rc = 0;
 
 	packed_ring = vq->packed.packed_ring;
 	if (packed_ring) {
-		process_packed_vq(bvsession, vq);
+		rc = process_packed_vq(bvsession, vq);
 	} else {
-		process_vq(bvsession, vq);
+		rc = process_vq(bvsession, vq);
 	}
 
 	vhost_session_vq_used_signal(vq);
 
-	return SPDK_POLLER_BUSY;
+	return rc;
 
 }
 
@@ -942,12 +948,13 @@ vdev_worker(void *arg)
 	struct spdk_vhost_blk_session *bvsession = arg;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	uint16_t q_idx;
+	int rc = 0;
 
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		_vdev_vq_worker(&vsession->virtqueue[q_idx]);
+		rc += _vdev_vq_worker(&vsession->virtqueue[q_idx]);
 	}
 
-	return SPDK_POLLER_BUSY;
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static void

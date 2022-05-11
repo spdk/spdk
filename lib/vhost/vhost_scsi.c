@@ -775,7 +775,7 @@ submit_inflight_desc(struct spdk_vhost_scsi_session *svsession,
 	resubmit->resubmit_num = 0;
 }
 
-static void
+static int
 process_vq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_session *vsession = &svsession->vsession;
@@ -802,6 +802,8 @@ process_vq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueu
 
 		process_scsi_task(vsession, vq, reqs[i]);
 	}
+
+	return reqs_cnt;
 }
 
 static int
@@ -809,6 +811,7 @@ vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_session *svsession = arg;
 	struct spdk_vhost_session *vsession = &svsession->vsession;
+	int rc = 0;
 
 	process_removed_devs(svsession);
 
@@ -817,11 +820,11 @@ vdev_mgmt_worker(void *arg)
 	}
 
 	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc) {
-		process_vq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+		rc = process_vq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 		vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 	}
 
-	return SPDK_POLLER_BUSY;
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static int
@@ -830,14 +833,15 @@ vdev_worker(void *arg)
 	struct spdk_vhost_scsi_session *svsession = arg;
 	struct spdk_vhost_session *vsession = &svsession->vsession;
 	uint32_t q_idx;
+	int rc = 0;
 
 	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < vsession->max_queues; q_idx++) {
-		process_vq(svsession, &vsession->virtqueue[q_idx]);
+		rc = process_vq(svsession, &vsession->virtqueue[q_idx]);
 	}
 
 	vhost_session_used_signal(vsession);
 
-	return SPDK_POLLER_BUSY;
+	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
 static struct spdk_vhost_scsi_dev *
