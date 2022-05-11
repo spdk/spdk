@@ -156,6 +156,8 @@ Optional, SPDK Target only:
 - dsa_settings - bool. Only for TCP transport. Enable offloading CRC32C
   calculation to DSA. You need a CPU with the Intel(R) Data Streaming
   Accelerator (DSA) engine.
+- scheduler_core_limit - int, 0-100. Dynamic scheduler option to load limit on
+  the core to be considered full.
 
 ### Initiator system settings section
 
