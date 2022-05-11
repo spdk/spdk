@@ -173,16 +173,19 @@ class Server:
             self.log_print(xps_cmd)
             self.exec_cmd(xps_cmd)
 
+    def reload_driver(self, driver):
+        try:
+            self.exec_cmd(["sudo", "rmmod", driver])
+            self.exec_cmd(["sudo", "modprobe", driver])
+        except CalledProcessError as e:
+            self.log_print("ERROR: failed to reload %s module!" % driver)
+            self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+
     def adq_configure_nic(self):
         self.log_print("Configuring NIC port settings for ADQ testing...")
 
         # Reload the driver first, to make sure any previous settings are re-set.
-        try:
-            self.exec_cmd(["sudo", "rmmod", "ice"])
-            self.exec_cmd(["sudo", "modprobe", "ice"])
-        except CalledProcessError as e:
-            self.log_print("ERROR: failed to reload ice module!")
-            self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+        self.reload_driver("ice")
 
         nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
         for nic in nic_names:
@@ -1572,11 +1575,15 @@ if __name__ == "__main__":
         target_obj.restore_tuned()
         target_obj.restore_services()
         target_obj.restore_sysctl()
+        if target_obj.enable_adq:
+            target_obj.reload_driver("ice")
         for i in initiators:
             i.restore_governor()
             i.restore_tuned()
             i.restore_services()
             i.restore_sysctl()
+            if i.enable_adq:
+                i.reload_driver("ice")
         target_obj.parse_results(args.results, args.csv_filename)
     finally:
         for i in initiators:
