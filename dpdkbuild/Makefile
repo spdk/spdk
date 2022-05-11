@@ -96,7 +96,7 @@ DPDK_LIBS += compressdev
 DPDK_LIBS += security
 
 # vhost and deps
-DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost
+DPDK_LIBS += cryptodev mbuf cmdline meter hash vhost dmadev
 
 # raid5 deps
 DPDK_LIBS += hash rcu
