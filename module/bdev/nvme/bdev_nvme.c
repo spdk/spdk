@@ -5203,14 +5203,14 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	memcpy(&ctx->bdev_opts, bdev_opts, sizeof(*bdev_opts));
 	ctx->bdev_opts.from_discovery_service = true;
 	ctx->calling_thread = spdk_get_thread();
+	ctx->start_cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
 	if (ctx->start_cb_fn) {
 		/* We can use this when dumping json to denote if this RPC parameter
 		 * was specified or not.
 		 */
 		ctx->wait_for_attach = true;
 	}
-	ctx->start_cb_fn = cb_fn;
-	ctx->cb_ctx = cb_ctx;
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	TAILQ_INIT(&ctx->discovery_entry_ctxs);
 	memcpy(&ctx->trid, trid, sizeof(*trid));
