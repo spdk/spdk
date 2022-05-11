@@ -82,7 +82,7 @@ if [ "$(uname -m)" = "aarch64" ]; then
 	fi
 fi
 
-yum install -y gcc gcc-c++ make cmake CUnit-devel libaio-devel openssl-devel \
+yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 	libuuid-devel libiscsi-devel ncurses-devel json-c-devel libcmocka-devel
 # for rhel and centos7 OpenSSL 1.1 should be installed via EPEL
 if echo "$ID $VERSION_ID" | grep -E -q 'centos 7|rhel 7'; then
