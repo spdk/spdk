@@ -5170,6 +5170,12 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	struct discovery_ctx *ctx;
 	struct discovery_entry_ctx *discovery_entry_ctx;
 
+	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
+		if (strcmp(ctx->name, base_name) == 0) {
+			return -EEXIST;
+		}
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		return -ENOMEM;
