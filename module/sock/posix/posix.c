@@ -506,9 +506,14 @@ err:
 }
 
 static SSL_CTX *
-posix_sock_create_ssl_context(const SSL_METHOD *method)
+posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_opts *opts)
 {
 	SSL_CTX *ctx;
+	int tls_version = 0;
+	bool ktls_enabled = false;
+#ifdef SSL_OP_ENABLE_KTLS
+	long options;
+#endif
 
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
@@ -516,11 +521,59 @@ posix_sock_create_ssl_context(const SSL_METHOD *method)
 	/* Produce a SSL CTX in SSL V2 and V3 standards compliant way */
 	ctx = SSL_CTX_new(method);
 	if (!ctx) {
-		SPDK_ERRLOG("SSL_CTX_new() failed, errno = %d\n", errno);
+		SPDK_ERRLOG("SSL_CTX_new() failed, msg = %s\n", ERR_error_string(ERR_peek_last_error(), NULL));
 		return NULL;
 	}
 	SPDK_DEBUGLOG(sock_posix, "SSL context created\n");
+
+	switch (opts->tls_version) {
+	case 0:
+		/* auto-negotioation */
+		break;
+	case SPDK_TLS_VERSION_1_1:
+		tls_version = TLS1_1_VERSION;
+		break;
+	case SPDK_TLS_VERSION_1_2:
+		tls_version = TLS1_2_VERSION;
+		break;
+	case SPDK_TLS_VERSION_1_3:
+		tls_version = TLS1_3_VERSION;
+		break;
+	default:
+		SPDK_ERRLOG("Incorrect TLS version provided: %d\n", opts->tls_version);
+		goto err;
+	}
+
+	if (tls_version) {
+		SPDK_DEBUGLOG(sock_posix, "Hardening TLS version to '%d'='0x%X'\n", opts->tls_version, tls_version);
+		if (!SSL_CTX_set_min_proto_version(ctx, tls_version)) {
+			SPDK_ERRLOG("Unable to set Min TLS version to '%d'='0x%X\n", opts->tls_version, tls_version);
+			goto err;
+		}
+		if (!SSL_CTX_set_max_proto_version(ctx, tls_version)) {
+			SPDK_ERRLOG("Unable to set Max TLS version to '%d'='0x%X\n", opts->tls_version, tls_version);
+			goto err;
+		}
+	}
+	if (opts->ktls) {
+		SPDK_DEBUGLOG(sock_posix, "Enabling kTLS offload\n");
+#ifdef SSL_OP_ENABLE_KTLS
+		options = SSL_CTX_set_options(ctx, SSL_OP_ENABLE_KTLS);
+		ktls_enabled = options & SSL_OP_ENABLE_KTLS;
+#else
+		ktls_enabled = false;
+#endif
+		if (!ktls_enabled) {
+			SPDK_ERRLOG("Unable to set kTLS offload via SSL_CTX_set_options(). Configure openssl with 'enable-ktls'\n");
+			goto err;
+		}
+	}
+
 	return ctx;
+
+err:
+	SSL_CTX_free(ctx);
+	return NULL;
 }
 
 static SSL *
@@ -532,7 +585,7 @@ ssl_sock_connect_loop(SSL_CTX *ctx, int fd)
 
 	ssl = SSL_new(ctx);
 	if (!ssl) {
-		SPDK_ERRLOG("SSL_new() failed, errno = %d\n", errno);
+		SPDK_ERRLOG("SSL_new() failed, msg = %s\n", ERR_error_string(ERR_peek_last_error(), NULL));
 		return NULL;
 	}
 	SSL_set_fd(ssl, fd);
@@ -570,7 +623,7 @@ ssl_sock_accept_loop(SSL_CTX *ctx, int fd)
 
 	ssl = SSL_new(ctx);
 	if (!ssl) {
-		SPDK_ERRLOG("SSL_new() failed, errno = %d\n", errno);
+		SPDK_ERRLOG("SSL_new() failed, msg = %s\n", ERR_error_string(ERR_peek_last_error(), NULL));
 		return NULL;
 	}
 	SSL_set_fd(ssl, fd);
@@ -742,7 +795,7 @@ retry:
 		}
 		if (type == SPDK_SOCK_CREATE_LISTEN) {
 			if (enable_ssl) {
-				ctx = posix_sock_create_ssl_context(TLS_server_method());
+				ctx = posix_sock_create_ssl_context(TLS_server_method(), opts);
 				if (!ctx) {
 					SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
 					close(fd);
@@ -791,7 +844,7 @@ retry:
 			}
 			enable_zcopy_impl_opts = g_spdk_posix_sock_impl_opts.enable_zerocopy_send_client;
 			if (enable_ssl) {
-				ctx = posix_sock_create_ssl_context(TLS_client_method());
+				ctx = posix_sock_create_ssl_context(TLS_client_method(), opts);
 				if (!ctx) {
 					SPDK_ERRLOG("posix_sock_create_ssl_context() failed, errno = %d\n", errno);
 					close(fd);

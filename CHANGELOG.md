@@ -17,6 +17,10 @@ in the future.
 Add num_md_pages_per_cluster_ratio parameter to the bdev_lvol_create_lvstore RPC.
 Calculate num_md_pages from num_md_pages_per_cluster_ratio, and pass it to spdk_bs_opts.
 
+### rpc
+
+New options `ktls` and `tls_version` were added to the `spdk_sock_opts` structure.
+
 ## v22.05
 
 ### sock

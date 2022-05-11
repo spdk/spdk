@@ -15,6 +15,8 @@
 #define SPDK_SOCK_DEFAULT_PRIORITY 0
 #define SPDK_SOCK_DEFAULT_ZCOPY true
 #define SPDK_SOCK_DEFAULT_ACK_TIMEOUT 0
+#define SPDK_SOCK_DEFAULT_TLS_VERSION 0
+#define SPDK_SOCK_DEFAULT_KTLS false
 
 #define SPDK_SOCK_OPTS_FIELD_OK(opts, field) (offsetof(struct spdk_sock_opts, field) + sizeof(opts->field) <= (opts->opts_size))
 
@@ -245,6 +247,14 @@ spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ack_timeout)) {
 		opts->ack_timeout = SPDK_SOCK_DEFAULT_ACK_TIMEOUT;
 	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, tls_version)) {
+		opts->tls_version = SPDK_SOCK_DEFAULT_TLS_VERSION;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ktls)) {
+		opts->ktls = SPDK_SOCK_DEFAULT_KTLS;
+	}
 }
 
 /*
@@ -272,6 +282,14 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ack_timeout)) {
 		opts->ack_timeout = opts_user->ack_timeout;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, tls_version)) {
+		opts->tls_version = opts_user->tls_version;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ktls)) {
+		opts->ktls = opts_user->ktls;
 	}
 }
 

@@ -65,6 +65,10 @@ enum spdk_placement_mode {
 	PLACEMENT_MARK,
 };
 
+#define SPDK_TLS_VERSION_1_1 11
+#define SPDK_TLS_VERSION_1_2 12
+#define SPDK_TLS_VERSION_1_3 13
+
 /**
  * SPDK socket implementation options.
  *
@@ -150,6 +154,17 @@ struct spdk_sock_opts {
 	 * Time in msec to wait ack until connection is closed forcefully.
 	 */
 	uint32_t ack_timeout;
+
+	/**
+	 * TLS protocol version. Used by posix socket module.
+	 */
+	uint32_t tls_version;
+
+	/**
+	 * Used to enable or disable KTLS for ssl posix socket module.
+	 */
+	bool ktls;
+
 };
 
 /**

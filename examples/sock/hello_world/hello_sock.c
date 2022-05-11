@@ -24,6 +24,8 @@ static char *g_sock_impl_name;
 static int g_port;
 static bool g_is_server;
 static int g_zcopy;
+static int g_ktls;
+static int g_tls_version;
 static bool g_verbose;
 
 /*
@@ -36,6 +38,8 @@ struct hello_context_t {
 	char *sock_impl_name;
 	int port;
 	int zcopy;
+	int ktls;
+	int tls_version;
 
 	bool verbose;
 	int bytes_in;
@@ -61,6 +65,9 @@ hello_sock_usage(void)
 	printf(" -P port       port number\n");
 	printf(" -N sock_impl  socket implementation, e.g., -N posix or -N uring\n");
 	printf(" -S            start in server mode\n");
+	printf(" -T tls_ver    TLS version, e.g., -T 12 or -T 13. If omitted, auto-negotiation will take place\n");
+	printf(" -k            disable KTLS for the given sock implementation (default)\n");
+	printf(" -K            enable KTLS for the given sock implementation\n");
 	printf(" -V            print out additional informations\n");
 	printf(" -z            disable zero copy send for the given sock implementation\n");
 	printf(" -Z            enable zero copy send for the given sock implementation\n");
@@ -88,6 +95,19 @@ hello_sock_parse_arg(int ch, char *arg)
 		break;
 	case 'S':
 		g_is_server = 1;
+		break;
+	case 'K':
+		g_ktls = 1;
+		break;
+	case 'k':
+		g_ktls = 0;
+		break;
+	case 'T':
+		g_tls_version = spdk_strtol(arg, 10);
+		if (g_tls_version < 0) {
+			fprintf(stderr, "Invalid TLS version\n");
+			return g_tls_version;
+		}
 		break;
 	case 'V':
 		g_verbose = true;
@@ -203,6 +223,8 @@ hello_sock_connect(struct hello_context_t *ctx)
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.zcopy = ctx->zcopy;
+	opts.ktls = ctx->ktls;
+	opts.tls_version = ctx->tls_version;
 
 	SPDK_NOTICELOG("Connecting to the server on %s:%d with sock_impl(%s)\n", ctx->host, ctx->port,
 		       ctx->sock_impl_name);
@@ -339,6 +361,8 @@ hello_sock_listen(struct hello_context_t *ctx)
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.zcopy = ctx->zcopy;
+	opts.ktls = ctx->ktls;
+	opts.tls_version = ctx->tls_version;
 
 	ctx->sock = spdk_sock_listen_ext(ctx->host, ctx->port, ctx->sock_impl_name, &opts);
 	if (ctx->sock == NULL) {
@@ -407,7 +431,7 @@ main(int argc, char **argv)
 	opts.name = "hello_sock";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:N:P:SVzZ", NULL, hello_sock_parse_arg,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:kKN:P:ST:VzZ", NULL, hello_sock_parse_arg,
 				      hello_sock_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
@@ -416,6 +440,8 @@ main(int argc, char **argv)
 	hello_context.sock_impl_name = g_sock_impl_name;
 	hello_context.port = g_port;
 	hello_context.zcopy = g_zcopy;
+	hello_context.ktls = g_ktls;
+	hello_context.tls_version = g_tls_version;
 	hello_context.verbose = g_verbose;
 
 	rc = spdk_app_start(&opts, hello_start, &hello_context);
