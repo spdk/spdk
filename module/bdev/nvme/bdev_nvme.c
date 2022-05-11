@@ -4859,6 +4859,33 @@ build_trid_from_log_page_entry(struct spdk_nvme_transport_id *trid,
 }
 
 static void
+stop_discovery(struct discovery_ctx *ctx, spdk_bdev_nvme_stop_discovery_fn cb_fn, void *cb_ctx)
+{
+	ctx->stop = true;
+	ctx->stop_cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+
+	while (!TAILQ_EMPTY(&ctx->nvm_entry_ctxs)) {
+		struct discovery_entry_ctx *entry_ctx;
+		struct nvme_path_id path = {};
+
+		entry_ctx = TAILQ_FIRST(&ctx->nvm_entry_ctxs);
+		path.trid = entry_ctx->trid;
+		bdev_nvme_delete(entry_ctx->name, &path);
+		TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
+		free(entry_ctx);
+	}
+
+	while (!TAILQ_EMPTY(&ctx->discovery_entry_ctxs)) {
+		struct discovery_entry_ctx *entry_ctx;
+
+		entry_ctx = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
+		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, entry_ctx, tailq);
+		free(entry_ctx);
+	}
+}
+
+static void
 discovery_remove_controllers(struct discovery_ctx *ctx)
 {
 	struct spdk_nvmf_discovery_log_page *log_page = ctx->log_page;
@@ -5242,26 +5269,7 @@ bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_f
 			if (ctx->stop) {
 				return -EALREADY;
 			}
-			ctx->stop = true;
-			ctx->stop_cb_fn = cb_fn;
-			ctx->cb_ctx = cb_ctx;
-			while (!TAILQ_EMPTY(&ctx->nvm_entry_ctxs)) {
-				struct discovery_entry_ctx *entry_ctx;
-				struct nvme_path_id path = {};
-
-				entry_ctx = TAILQ_FIRST(&ctx->nvm_entry_ctxs);
-				path.trid = entry_ctx->trid;
-				bdev_nvme_delete(entry_ctx->name, &path);
-				TAILQ_REMOVE(&ctx->nvm_entry_ctxs, entry_ctx, tailq);
-				free(entry_ctx);
-			}
-			while (!TAILQ_EMPTY(&ctx->discovery_entry_ctxs)) {
-				struct discovery_entry_ctx *entry_ctx;
-
-				entry_ctx = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
-				TAILQ_REMOVE(&ctx->discovery_entry_ctxs, entry_ctx, tailq);
-				free(entry_ctx);
-			}
+			stop_discovery(ctx, cb_fn, cb_ctx);
 			return 0;
 		}
 	}
