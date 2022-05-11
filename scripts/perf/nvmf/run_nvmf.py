@@ -1087,6 +1087,7 @@ class SPDKTarget(Target):
         self.bpf_proc = None
         self.bpf_scripts = []
         self.enable_dsa = False
+        self.scheduler_core_limit = None
 
         if "num_shared_buffers" in target_config:
             self.num_shared_buffers = target_config["num_shared_buffers"]
@@ -1100,6 +1101,8 @@ class SPDKTarget(Target):
             self.bpf_scripts = target_config["bpf_scripts"]
         if "dsa_settings" in target_config:
             self.enable_dsa = target_config["dsa_settings"]
+        if "scheduler_core_limit" in target_config:
+            self.scheduler_core_limit = target_config["scheduler_core_limit"]
 
         self.log_print("====DSA settings:====")
         self.log_print("DSA enabled: %s" % (self.enable_dsa))
@@ -1253,7 +1256,7 @@ class SPDKTarget(Target):
             rpc.dsa.dsa_scan_accel_engine(self.client, config_kernel_mode=None)
             self.log_print("Target DSA accel engine enabled")
 
-        rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name)
+        rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name, core_limit=self.scheduler_core_limit)
         rpc.framework_start_init(self.client)
 
         if self.bpf_scripts:
