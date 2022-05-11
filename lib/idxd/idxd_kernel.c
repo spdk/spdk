@@ -79,6 +79,8 @@ kernel_idxd_device_destruct(struct spdk_idxd_device *idxd)
 	free(kernel_idxd);
 }
 
+static struct spdk_idxd_impl g_kernel_idxd_impl;
+
 static int
 kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 {
@@ -114,6 +116,7 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 		kernel_idxd->max_batch_size = accfg_device_get_max_batch_size(device);
 		kernel_idxd->max_xfer_size = accfg_device_get_max_transfer_size(device);
 		kernel_idxd->idxd.socket_id = accfg_device_get_numa_node(device);
+		kernel_idxd->idxd.impl = &g_kernel_idxd_impl;
 		kernel_idxd->fd = -1;
 
 		accfg_wq_foreach(device, wq) {
