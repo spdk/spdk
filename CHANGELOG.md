@@ -1,5 +1,7 @@
 # Changelog
 
+## v22.01.2: (Upcoming Release)
+
 ## v22.01.1
 
 ### dpdk
