@@ -720,6 +720,7 @@ if __name__ == "__main__":
                                            trsvcid=args.trsvcid,
                                            hostnqn=args.hostnqn,
                                            wait_for_attach=args.wait_for_attach,
+                                           attach_timeout_ms=args.attach_timeout_ms,
                                            ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
                                            reconnect_delay_sec=args.reconnect_delay_sec,
                                            fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec)
@@ -737,6 +738,10 @@ if __name__ == "__main__":
     p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
     p.add_argument('-w', '--wait-for-attach', action='store_true',
                    help='Do not complete RPC until all discovered NVM subsystems are attached')
+    p.add_argument('-T', '--attach-timeout-ms', type=int, required=False,
+                   help="""Time to wait until the discovery and all discovered NVM subsystems
+                        are attached (default: 0, meaning wait indefinitely).  Automatically
+                        selects the --wait-for-attach option.""")
     p.add_argument('-l', '--ctrlr-loss-timeout-sec',
                    help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
                    -1 means infinite reconnect retries. 0 means no reconnect retry.

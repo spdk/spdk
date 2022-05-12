@@ -4787,6 +4787,12 @@ struct discovery_ctx {
 	TAILQ_HEAD(, discovery_entry_ctx)	discovery_entry_ctxs;
 	int					rc;
 	bool					wait_for_attach;
+	uint64_t				timeout_ticks;
+	/* Denotes that the discovery service is being started. We're waiting
+	 * for the initial connection to the discovery controller to be
+	 * established and attach discovered NVM ctrlrs.
+	 */
+	bool					initializing;
 	/* Denotes if a discovery is currently in progress for this context.
 	 * That includes connecting to newly discovered subsystems.  Used to
 	 * ensure we do not start a new discovery until an existing one is
@@ -4829,6 +4835,7 @@ free_discovery_ctx(struct discovery_ctx *ctx)
 static void
 discovery_complete(struct discovery_ctx *ctx)
 {
+	ctx->initializing = false;
 	ctx->in_progress = false;
 	if (ctx->pending) {
 		ctx->pending = false;
@@ -4939,20 +4946,33 @@ discovery_remove_controllers(struct discovery_ctx *ctx)
 }
 
 static void
+complete_discovery_start(struct discovery_ctx *ctx, int status)
+{
+	ctx->timeout_ticks = 0;
+	ctx->rc = status;
+	if (ctx->start_cb_fn) {
+		ctx->start_cb_fn(ctx->cb_ctx, status);
+		ctx->start_cb_fn = NULL;
+		ctx->cb_ctx = NULL;
+	}
+}
+
+static void
 discovery_attach_controller_done(void *cb_ctx, size_t bdev_count, int rc)
 {
 	struct discovery_entry_ctx *entry_ctx = cb_ctx;
-	struct discovery_ctx *ctx = entry_ctx->ctx;;
+	struct discovery_ctx *ctx = entry_ctx->ctx;
 
 	DISCOVERY_INFOLOG(ctx, "attach %s done\n", entry_ctx->name);
 	ctx->attach_in_progress--;
 	if (ctx->attach_in_progress == 0) {
-		if (ctx->start_cb_fn) {
-			ctx->start_cb_fn(ctx->cb_ctx);
-			ctx->start_cb_fn = NULL;
-			ctx->cb_ctx = NULL;
+		complete_discovery_start(ctx, ctx->rc);
+		if (ctx->initializing && ctx->rc != 0) {
+			DISCOVERY_ERRLOG(ctx, "stopping discovery due to errors: %d\n", ctx->rc);
+			stop_discovery(ctx, NULL, ctx->cb_ctx);
+		} else {
+			discovery_remove_controllers(ctx);
 		}
-		discovery_remove_controllers(ctx);
 	}
 }
 
@@ -5120,6 +5140,13 @@ discovery_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	DISCOVERY_INFOLOG(ctx, "discovery ctrlr attached\n");
 	ctx->probe_ctx = NULL;
 	ctx->ctrlr = ctrlr;
+
+	if (ctx->rc != 0) {
+		DISCOVERY_ERRLOG(ctx, "encountered error while attaching discovery ctrlr: %d\n",
+				 ctx->rc);
+		return;
+	}
+
 	spdk_nvme_ctrlr_register_aer_callback(ctx->ctrlr, discovery_aer_cb, ctx);
 }
 
@@ -5146,9 +5173,23 @@ discovery_poller(void *arg)
 		}
 		spdk_poller_unregister(&ctx->poller);
 		TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
-		ctx->stop_cb_fn(ctx->cb_ctx);
+		assert(ctx->start_cb_fn == NULL);
+		if (ctx->stop_cb_fn != NULL) {
+			ctx->stop_cb_fn(ctx->cb_ctx);
+		}
 		free_discovery_ctx(ctx);
 	} else if (ctx->probe_ctx == NULL && ctx->ctrlr == NULL) {
+		if (ctx->timeout_ticks != 0 && ctx->timeout_ticks < spdk_get_ticks()) {
+			DISCOVERY_ERRLOG(ctx, "timed out while attaching discovery ctrlr\n");
+			assert(ctx->initializing);
+			spdk_poller_unregister(&ctx->poller);
+			TAILQ_REMOVE(&g_discovery_ctxs, ctx, tailq);
+			complete_discovery_start(ctx, -ETIMEDOUT);
+			stop_discovery(ctx, NULL, NULL);
+			free_discovery_ctx(ctx);
+			return SPDK_POLLER_BUSY;
+		}
+
 		assert(ctx->entry_ctx_in_use == NULL);
 		ctx->entry_ctx_in_use = TAILQ_FIRST(&ctx->discovery_entry_ctxs);
 		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, ctx->entry_ctx_in_use, tailq);
@@ -5163,15 +5204,39 @@ discovery_poller(void *arg)
 			ctx->entry_ctx_in_use = NULL;
 		}
 	} else if (ctx->probe_ctx) {
+		if (ctx->timeout_ticks != 0 && ctx->timeout_ticks < spdk_get_ticks()) {
+			DISCOVERY_ERRLOG(ctx, "timed out while attaching discovery ctrlr\n");
+			complete_discovery_start(ctx, -ETIMEDOUT);
+			return SPDK_POLLER_BUSY;
+		}
+
 		rc = spdk_nvme_probe_poll_async(ctx->probe_ctx);
 		if (rc != -EAGAIN) {
-			DISCOVERY_INFOLOG(ctx, "discovery ctrlr connected\n");
-			ctx->rc = rc;
-			if (rc == 0) {
-				get_discovery_log_page(ctx);
+			if (ctx->rc != 0) {
+				assert(ctx->initializing);
+				stop_discovery(ctx, NULL, ctx->cb_ctx);
+			} else {
+				DISCOVERY_INFOLOG(ctx, "discovery ctrlr connected\n");
+				ctx->rc = rc;
+				if (rc == 0) {
+					get_discovery_log_page(ctx);
+				}
 			}
 		}
 	} else {
+		if (ctx->timeout_ticks != 0 && ctx->timeout_ticks < spdk_get_ticks()) {
+			DISCOVERY_ERRLOG(ctx, "timed out while attaching NVM ctrlrs\n");
+			complete_discovery_start(ctx, -ETIMEDOUT);
+			/* We need to wait until all NVM ctrlrs are attached before we stop the
+			 * discovery service to make sure we don't detach a ctrlr that is still
+			 * being attached.
+			 */
+			if (ctx->attach_in_progress == 0) {
+				stop_discovery(ctx, NULL, ctx->cb_ctx);
+				return SPDK_POLLER_BUSY;
+			}
+		}
+
 		rc = spdk_nvme_ctrlr_process_admin_completions(ctx->ctrlr);
 		if (rc < 0) {
 			spdk_poller_unregister(&ctx->poller);
@@ -5204,6 +5269,7 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
 			  struct spdk_nvme_ctrlr_opts *drv_opts,
 			  struct nvme_ctrlr_opts *bdev_opts,
+			  uint64_t attach_timeout,
 			  spdk_bdev_nvme_start_discovery_fn cb_fn, void *cb_ctx)
 {
 	struct discovery_ctx *ctx;
@@ -5244,11 +5310,16 @@ bdev_nvme_start_discovery(struct spdk_nvme_transport_id *trid,
 	ctx->calling_thread = spdk_get_thread();
 	ctx->start_cb_fn = cb_fn;
 	ctx->cb_ctx = cb_ctx;
+	ctx->initializing = true;
 	if (ctx->start_cb_fn) {
 		/* We can use this when dumping json to denote if this RPC parameter
 		 * was specified or not.
 		 */
 		ctx->wait_for_attach = true;
+	}
+	if (attach_timeout != 0) {
+		ctx->timeout_ticks = spdk_get_ticks() + attach_timeout *
+				     spdk_get_ticks_hz() / 1000ull;
 	}
 	TAILQ_INIT(&ctx->nvm_entry_ctxs);
 	TAILQ_INIT(&ctx->discovery_entry_ctxs);
@@ -5279,6 +5350,12 @@ bdev_nvme_stop_discovery(const char *name, spdk_bdev_nvme_stop_discovery_fn cb_f
 	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
 		if (strcmp(name, ctx->name) == 0) {
 			if (ctx->stop) {
+				return -EALREADY;
+			}
+			/* If we're still starting the discovery service and ->rc is non-zero, we're
+			 * going to stop it as soon as we can
+			 */
+			if (ctx->initializing && ctx->rc != 0) {
 				return -EALREADY;
 			}
 			stop_discovery(ctx, cb_fn, cb_ctx);

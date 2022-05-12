@@ -750,7 +750,8 @@ def bdev_nvme_reset_controller(client, name):
 
 def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                               hostnqn=None, wait_for_attach=None, ctrlr_loss_timeout_sec=None,
-                              reconnect_delay_sec=None, fast_io_fail_timeout_sec=None):
+                              reconnect_delay_sec=None, fast_io_fail_timeout_sec=None,
+                              attach_timeout_ms=None):
     """Start discovery with the specified discovery subsystem
 
     Args:
@@ -775,6 +776,7 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
         0 means no such timeout.
         If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and less than
         ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1. (optional)
+        attach_timeout_ms: Time to wait until the discovery and all discovered NVM subsystems are attached (optional)
     """
     params = {'name': name,
               'trtype': trtype,
@@ -791,6 +793,9 @@ def bdev_nvme_start_discovery(client, name, trtype, traddr, adrfam=None, trsvcid
 
     if wait_for_attach:
         params['wait_for_attach'] = True
+
+    if attach_timeout_ms is not None:
+        params['attach_timeout_ms'] = attach_timeout_ms
 
     if ctrlr_loss_timeout_sec is not None:
         params['ctrlr_loss_timeout_sec'] = ctrlr_loss_timeout_sec
