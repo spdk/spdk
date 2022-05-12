@@ -164,5 +164,5 @@ DEPDIRS-event_vfu_tgt := init vfu_tgt
 # module/vfu_device
 
 ifeq ($(CONFIG_VFIO_USER),y)
-DEPDIRS-vfu_device := $(BDEV_DEPS_THREAD) vfu_tgt
+DEPDIRS-vfu_device := $(BDEV_DEPS_THREAD) scsi vfu_tgt
 endif
