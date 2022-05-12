@@ -5356,8 +5356,7 @@ bdev_nvme_library_fini(void)
 		bdev_nvme_fini_destruct_ctrlrs();
 	} else {
 		TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
-			ctx->stop = true;
-			ctx->stop_cb_fn = check_discovery_fini;
+			stop_discovery(ctx, check_discovery_fini, NULL);
 		}
 	}
 }
