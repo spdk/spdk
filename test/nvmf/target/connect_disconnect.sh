@@ -23,7 +23,7 @@ $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	num_iterations=200
+	num_iterations=100
 	IO_QUEUES="-i 8"
 else
 	num_iterations=10
