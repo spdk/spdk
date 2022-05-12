@@ -62,6 +62,7 @@ packages=(
 	libswitch-perl
 	gdisk
 	socat
+	openssl
 	sshfs
 	sshpass
 	python3-pandas

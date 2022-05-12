@@ -43,6 +43,7 @@ packages=(
 	libibverbs-utils
 	gdisk
 	socat
+	openssl
 	sshfs
 	sshpass
 	python3-pandas
