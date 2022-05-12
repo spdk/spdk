@@ -2747,6 +2747,11 @@ vfio_user_property_access(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 	struct nvmf_vfio_user_req *req;
 	const struct spdk_nvmf_registers *regs;
 
+	if ((count != 4) && (count != 8)) {
+		errno = EINVAL;
+		return -1;
+	}
+
 	/* Construct a Fabric Property Get/Set command and send it */
 	req = get_nvmf_vfio_user_req(vu_ctrlr->sqs[0]);
 	if (req == NULL) {
@@ -2760,7 +2765,11 @@ vfio_user_property_access(struct nvmf_vfio_user_ctrlr *vu_ctrlr,
 	req->cb_arg = vu_ctrlr->sqs[0];
 	req->req.cmd->prop_set_cmd.opcode = SPDK_NVME_OPC_FABRIC;
 	req->req.cmd->prop_set_cmd.cid = 0;
-	req->req.cmd->prop_set_cmd.attrib.size = (count / 4) - 1;
+	if (count == 4) {
+		req->req.cmd->prop_set_cmd.attrib.size = 0;
+	} else {
+		req->req.cmd->prop_set_cmd.attrib.size = 1;
+	}
 	req->req.cmd->prop_set_cmd.ofst = pos;
 	if (is_write) {
 		req->req.cmd->prop_set_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET;
