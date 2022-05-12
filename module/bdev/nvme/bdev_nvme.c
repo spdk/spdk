@@ -4883,6 +4883,9 @@ stop_discovery(struct discovery_ctx *ctx, spdk_bdev_nvme_stop_discovery_fn cb_fn
 		TAILQ_REMOVE(&ctx->discovery_entry_ctxs, entry_ctx, tailq);
 		free(entry_ctx);
 	}
+
+	free(ctx->entry_ctx_in_use);
+	ctx->entry_ctx_in_use = NULL;
 }
 
 static void
