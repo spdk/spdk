@@ -1,6 +1,57 @@
 # Changelog
 
-## v22.01.1: (Upcoming Release)
+## v22.01.1
+
+### dpdk
+
+DPDK submodule is now updated to DPDK 21.11.1. This includes fixes for DPDK vhost:
+CVE-2021-3839
+CVE-2022-0669
+Users are strongly encouraged to upgrade.
+
+(#2374) Added `rte_dmadev` as vhost library dependency.
+
+### bdev_crypto
+
+(#2500) Fixed bdev_io double completion.
+
+### bdev_nvme
+
+(#2440) Fixed NULL pointer access by DTRACE when creating qpair.
+
+(#2335) Set `ana_state_updating` only after starting read ANA log page.
+
+### blobstore
+
+(#2347) Avoid recursion when split IO immediately complete.
+
+### iscsi
+
+(#2393) Fix a memory leak in `create_iscsi_sess()` error handling.
+
+### nvme
+
+(#2371) Allocate extra request for fabrics connect.
+
+(#2465) Increase min admin queue size to 256
+
+### nvmf
+
+(#2335) `ctrlr_get_ana_state()` now always returns optimized if ana_reporting is disabled.
+
+(#2395) Avoid a null dereference before null check in FC transport when freeing a request.
+
+(#2471) Delay NVMe-oF TCP qpair destruction till after the socket write callback.
+
+### thread
+
+(#2378) Fix double unlock in `spdk_io_device_register()`.
+
+### vmd
+
+(#2413) Reset root port config before enumeration.
+
+(#2451) Use `config_bus_number` when resetting root ports
 
 ## v22.01: NVMe multipath, NVMe TCP zero-copy, NVMe-oF discovery service
 
