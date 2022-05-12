@@ -404,21 +404,13 @@ nvme_rdma_calloc(size_t nmemb, size_t size)
 		return NULL;
 	}
 
-	if (!g_nvme_hooks.get_rkey) {
-		return calloc(nmemb, size);
-	} else {
-		return spdk_zmalloc(nmemb * size, 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
-	}
+	return spdk_zmalloc(nmemb * size, 0, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 }
 
 static inline void
 nvme_rdma_free(void *buf)
 {
-	if (!g_nvme_hooks.get_rkey) {
-		free(buf);
-	} else {
-		spdk_free(buf);
-	}
+	spdk_free(buf);
 }
 
 static int nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
