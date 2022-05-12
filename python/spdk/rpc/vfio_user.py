@@ -49,3 +49,60 @@ def vfu_virtio_create_blk_endpoint(client, name, bdev_name, cpumask, num_queues,
         params['packed_ring'] = packed_ring
 
     return client.call('vfu_virtio_create_blk_endpoint', params)
+
+
+def vfu_virtio_scsi_add_target(client, name, scsi_target_num, bdev_name):
+    """Attach a block device to the specified SCSI target.
+
+    Args:
+        name: endpoint name
+        scsi_target_num: SCSI target number
+        bdev_name: name of block device
+    """
+    params = {
+            'name': name,
+            'scsi_target_num': scsi_target_num,
+            'bdev_name': bdev_name
+    }
+
+    return client.call('vfu_virtio_scsi_add_target', params)
+
+
+def vfu_virtio_scsi_remove_target(client, name, scsi_target_num):
+    """Remove specified SCSI target of socket endpoint.
+
+    Args:
+        name: endpoint name
+        scsi_target_num: SCSI target number
+    """
+    params = {
+            'name': name,
+            'scsi_target_num': scsi_target_num
+    }
+
+    return client.call('vfu_virtio_scsi_remove_target', params)
+
+
+def vfu_virtio_create_scsi_endpoint(client, name, cpumask, num_io_queues, qsize, packed_ring):
+    """Create virtio-scsi endpoint.
+
+    Args:
+        name: endpoint name
+        cpumask: CPU core mask
+        num_io_queues: number of IO vrings
+        qsize: number of element of each vring
+        packed_ring: enable packed ring
+    """
+    params = {
+            'name': name,
+    }
+    if cpumask:
+        params['cpumask'] = cpumask
+    if num_io_queues:
+        params['num_io_queues'] = num_io_queues
+    if qsize:
+        params['qsize'] = qsize
+    if packed_ring:
+        params['packed_ring'] = packed_ring
+
+    return client.call('vfu_virtio_create_scsi_endpoint', params)

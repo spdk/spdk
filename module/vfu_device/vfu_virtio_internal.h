@@ -399,5 +399,10 @@ int vfu_virtio_pre_memory_remove(struct spdk_vfu_endpoint *endpoint, void *map_s
 int vfu_virtio_pci_reset_cb(struct spdk_vfu_endpoint *endpoint);
 int vfu_virtio_blk_add_bdev(const char *name, const char *bdev_name,
 			    uint16_t num_queues, uint16_t qsize, bool packed_ring);
-
+/* virtio_scsi */
+int vfu_virtio_scsi_add_target(const char *name, uint8_t scsi_target_num,
+			       const char *bdev_name);
+int vfu_virtio_scsi_remove_target(const char *name, uint8_t scsi_target_num);
+int vfu_virtio_scsi_set_options(const char *name, uint16_t num_io_queues, uint16_t qsize,
+				bool packed_ring);
 #endif
