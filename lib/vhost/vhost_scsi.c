@@ -157,6 +157,7 @@ static const struct spdk_vhost_user_dev_backend spdk_vhost_scsi_user_device_back
 };
 
 static const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
+	.type = VHOST_BACKEND_SCSI,
 	.dump_info_json = vhost_scsi_dump_info_json,
 	.write_config_json = vhost_scsi_write_config_json,
 	.remove_device = vhost_scsi_dev_remove,
@@ -851,7 +852,7 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 		return NULL;
 	}
 
-	if (ctrlr->backend != &spdk_vhost_scsi_device_backend) {
+	if (ctrlr->backend->type != VHOST_BACKEND_SCSI) {
 		SPDK_ERRLOG("%s: not a vhost-scsi device.\n", ctrlr->name);
 		return NULL;
 	}
@@ -862,7 +863,7 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 static struct spdk_vhost_scsi_session *
 to_scsi_session(struct spdk_vhost_session *vsession)
 {
-	assert(vsession->vdev->backend == &spdk_vhost_scsi_device_backend);
+	assert(vsession->vdev->backend->type == VHOST_BACKEND_SCSI);
 	return (struct spdk_vhost_scsi_session *)vsession;
 }
 

@@ -129,7 +129,7 @@ to_blk_dev(struct spdk_vhost_dev *vdev)
 		return NULL;
 	}
 
-	if (vdev->backend != &vhost_blk_device_backend) {
+	if (vdev->backend->type != VHOST_BACKEND_BLK) {
 		SPDK_ERRLOG("%s: not a vhost-blk device\n", vdev->name);
 		return NULL;
 	}
@@ -140,7 +140,7 @@ to_blk_dev(struct spdk_vhost_dev *vdev)
 static struct spdk_vhost_blk_session *
 to_blk_session(struct spdk_vhost_session *vsession)
 {
-	assert(vsession->vdev->backend == &vhost_blk_device_backend);
+	assert(vsession->vdev->backend->type == VHOST_BACKEND_BLK);
 	return (struct spdk_vhost_blk_session *)vsession;
 }
 
@@ -1562,6 +1562,7 @@ static const struct spdk_vhost_user_dev_backend vhost_blk_user_device_backend = 
 };
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
+	.type = VHOST_BACKEND_BLK,
 	.vhost_get_config = vhost_blk_get_config,
 	.dump_info_json = vhost_blk_dump_info_json,
 	.write_config_json = vhost_blk_write_config_json,
