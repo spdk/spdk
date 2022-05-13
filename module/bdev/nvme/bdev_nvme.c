@@ -4962,7 +4962,7 @@ discovery_log_page_cb(void *cb_arg, int rc, const struct spdk_nvme_cpl *cpl,
 		new_entry = &log_page->entries[i];
 		if (new_entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			struct discovery_entry_ctx *new_ctx;
-			struct spdk_nvme_transport_id trid;
+			struct spdk_nvme_transport_id trid = {};
 
 			build_trid_from_log_page_entry(&trid, new_entry);
 			new_ctx = create_discovery_entry_ctx(ctx, &trid);
