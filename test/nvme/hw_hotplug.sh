@@ -67,7 +67,7 @@ exec >&$log 2>&1
 $SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 $mode &
 hotplug_pid=$!
 
-trap 'killprocess $hotplug_pid; restore_device; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $hotplug_pid; restore_device; rm $testdir/log.txt; exit 1' SIGINT SIGTERM EXIT
 
 i=0
 while ! grep "Starting I/O" $testdir/log.txt; do
@@ -77,6 +77,7 @@ while ! grep "Starting I/O" $testdir/log.txt; do
 done
 
 if ! grep "Starting I/O" $testdir/log.txt; then
+	rm $testdir/log.txt
 	exit 1
 fi
 
@@ -94,10 +95,13 @@ timing_enter wait_for_example
 
 if ! wait $hotplug_pid; then
 	echo "Hotplug example returned error!"
+	rm $testdir/log.txt
 	exit 1
 fi
 
 timing_exit wait_for_example
+
+rm $testdir/log.txt
 
 trap - SIGINT SIGTERM EXIT
 
