@@ -47,7 +47,6 @@ packages=(
 	socat
 	openssl
 	sshfs
-	sshpass
 	python3-pandas
 	rpm-build
 	iptables
@@ -65,6 +64,12 @@ packages=(
 
 if [[ $OSID != centos && $OSID != rocky ]] || [[ $OSVERSION != 8* ]]; then
 	packages+=(btrfs-progs)
+fi
+
+if [[ $OSID == centos && $OSVERSION == 8* ]]; then
+	packages+=("https://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/sshpass-1.09-4.el8.x86_64.rpm")
+else
+	packages+=(sshpass)
 fi
 
 if [[ $OSID == fedora ]] && ((OSVERSION >= 34)); then
