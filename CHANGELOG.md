@@ -14,6 +14,9 @@ A new parameter `bounce_iovcnt` was added to `spdk_dif_generate_copy` and `spdk_
 The `bounce_iovcnt` is used to specify the number of bounce_iov to support multiple block-aligned
 fragment copies.
 
+A new API `spdk_copy_iovs_to_buf` and `spdk_copy_buf_to_iovs` were added to copy iovs to buf or
+copy buf to iovs. There're many cases need to use these two APIs.
+
 ### bdev
 
 Removed deprecated spdk_bdev_module_finish_done(). Use spdk_bdev_module_fini_done() instead.

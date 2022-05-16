@@ -788,34 +788,6 @@ _are_iovs_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment)
 }
 
 static void
-_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
-{
-	int i;
-	size_t len;
-
-	for (i = 0; i < iovcnt; i++) {
-		len = spdk_min(iovs[i].iov_len, buf_len);
-		memcpy(buf, iovs[i].iov_base, len);
-		buf += len;
-		buf_len -= len;
-	}
-}
-
-static void
-_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, size_t buf_len)
-{
-	int i;
-	size_t len;
-
-	for (i = 0; i < iovcnt; i++) {
-		len = spdk_min(iovs[i].iov_len, buf_len);
-		memcpy(iovs[i].iov_base, buf, len);
-		buf += len;
-		buf_len -= len;
-	}
-}
-
-static void
 bdev_io_get_buf_complete(struct spdk_bdev_io *bdev_io, bool status)
 {
 	struct spdk_io_channel *ch = spdk_bdev_io_get_io_channel(bdev_io);
@@ -953,7 +925,7 @@ _bdev_io_pull_bounce_data_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t le
 			SPDK_ERRLOG("Failed to pull data from memory domain %s\n",
 				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.ext_opts->memory_domain));
 		} else {
-			_copy_iovs_to_buf(buf, len, bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt);
+			spdk_copy_iovs_to_buf(buf, len, bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt);
 		}
 	}
 
@@ -1218,10 +1190,10 @@ _bdev_io_push_bounce_data_buffer(struct spdk_bdev_io *bdev_io, bdev_copy_bounce_
 			SPDK_ERRLOG("Failed to push data to memory domain %s\n",
 				    spdk_memory_domain_get_dma_device_id(bdev_io->internal.ext_opts->memory_domain));
 		} else {
-			_copy_buf_to_iovs(bdev_io->internal.orig_iovs,
-					  bdev_io->internal.orig_iovcnt,
-					  bdev_io->internal.bounce_iov.iov_base,
-					  bdev_io->internal.bounce_iov.iov_len);
+			spdk_copy_buf_to_iovs(bdev_io->internal.orig_iovs,
+					      bdev_io->internal.orig_iovcnt,
+					      bdev_io->internal.bounce_iov.iov_base,
+					      bdev_io->internal.bounce_iov.iov_len);
 		}
 	}
 

@@ -126,6 +126,8 @@
 	spdk_iovcpy;
 	spdk_ioviter_first;
 	spdk_ioviter_next;
+	spdk_copy_iovs_to_buf;
+	spdk_copy_buf_to_iovs;
 
 	# resolvers for functions in util.h
 	spdk_u32log2.resolver;

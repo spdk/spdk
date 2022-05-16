@@ -103,3 +103,33 @@ spdk_iovcpy(struct iovec *siov, size_t siovcnt, struct iovec *diov, size_t diovc
 
 	return total_sz;
 }
+
+void
+spdk_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
+{
+	int i;
+	size_t len;
+
+	for (i = 0; i < iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_len);
+		memcpy(buf, iovs[i].iov_base, len);
+		buf += len;
+		assert(buf_len >= len);
+		buf_len -= len;
+	}
+}
+
+void
+spdk_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, size_t buf_len)
+{
+	int i;
+	size_t len;
+
+	for (i = 0; i < iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_len);
+		memcpy(iovs[i].iov_base, buf, len);
+		buf += len;
+		assert(buf_len >= len);
+		buf_len -= len;
+	}
+}

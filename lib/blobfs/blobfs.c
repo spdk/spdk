@@ -1708,36 +1708,6 @@ __rw_done(void *ctx, int bserrno)
 }
 
 static void
-_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
-{
-	int i;
-	size_t len;
-
-	for (i = 0; i < iovcnt; i++) {
-		len = spdk_min(iovs[i].iov_len, buf_len);
-		memcpy(buf, iovs[i].iov_base, len);
-		buf += len;
-		assert(buf_len >= len);
-		buf_len -= len;
-	}
-}
-
-static void
-_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, size_t buf_len)
-{
-	int i;
-	size_t len;
-
-	for (i = 0; i < iovcnt; i++) {
-		len = spdk_min(iovs[i].iov_len, buf_len);
-		memcpy(iovs[i].iov_base, buf, len);
-		buf += len;
-		assert(buf_len >= len);
-		buf_len -= len;
-	}
-}
-
-static void
 __read_done(void *ctx, int bserrno)
 {
 	struct spdk_fs_request *req = ctx;
@@ -1747,10 +1717,10 @@ __read_done(void *ctx, int bserrno)
 	assert(req != NULL);
 	buf = (void *)((uintptr_t)args->op.rw.pin_buf + (args->op.rw.offset & (args->op.rw.blocklen - 1)));
 	if (args->op.rw.is_read) {
-		_copy_buf_to_iovs(args->iovs, args->iovcnt, buf, args->op.rw.length);
+		spdk_copy_buf_to_iovs(args->iovs, args->iovcnt, buf, args->op.rw.length);
 		__rw_done(req, 0);
 	} else {
-		_copy_iovs_to_buf(buf, args->op.rw.length, args->iovs, args->iovcnt);
+		spdk_copy_iovs_to_buf(buf, args->op.rw.length, args->iovs, args->iovcnt);
 		spdk_blob_io_write(args->file->blob, args->op.rw.channel,
 				   args->op.rw.pin_buf,
 				   args->op.rw.start_lba, args->op.rw.num_lba,
@@ -1861,7 +1831,7 @@ __readvwritev(struct spdk_file *file, struct spdk_io_channel *_channel,
 	if (!is_read && file->length < offset + length) {
 		spdk_file_truncate_async(file, offset + length, __do_blob_read, req);
 	} else if (!is_read && __is_lba_aligned(file, offset, length)) {
-		_copy_iovs_to_buf(args->op.rw.pin_buf, args->op.rw.length, args->iovs, args->iovcnt);
+		spdk_copy_iovs_to_buf(args->op.rw.pin_buf, args->op.rw.length, args->iovs, args->iovcnt);
 		spdk_blob_io_write(args->file->blob, args->op.rw.channel,
 				   args->op.rw.pin_buf,
 				   args->op.rw.start_lba, args->op.rw.num_lba,

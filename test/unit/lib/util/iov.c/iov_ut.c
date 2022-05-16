@@ -195,6 +195,54 @@ test_complex_iov(void)
 	CU_ASSERT(_check_val(ddata, 64, 1) == 0);
 }
 
+static void
+test_iovs_to_buf(void)
+{
+	struct iovec iov[4];
+	uint8_t sdata[64];
+	uint8_t ddata[64];
+
+	memset(&sdata, 1, sizeof(sdata));
+	memset(&ddata, 6, sizeof(ddata));
+
+	iov[0].iov_base = sdata;
+	iov[0].iov_len = 3;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 11;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 29;
+
+	spdk_copy_iovs_to_buf(ddata, 64, iov, 4);
+	CU_ASSERT(_check_val(ddata, 64, 1) == 0);
+}
+
+static void
+test_buf_to_iovs(void)
+{
+	struct iovec iov[4];
+	uint8_t sdata[64];
+	uint8_t ddata[64];
+
+	memset(&sdata, 7, sizeof(sdata));
+	memset(&ddata, 4, sizeof(ddata));
+
+	iov[0].iov_base = sdata;
+	iov[0].iov_len = 5;
+	iov[1].iov_base = iov[0].iov_base + iov[0].iov_len;
+	iov[1].iov_len = 15;
+	iov[2].iov_base = iov[1].iov_base + iov[1].iov_len;
+	iov[2].iov_len = 21;
+	iov[3].iov_base = iov[2].iov_base + iov[2].iov_len;
+	iov[3].iov_len = 23;
+
+	spdk_copy_buf_to_iovs(iov, 4, sdata, 64);
+	spdk_copy_iovs_to_buf(ddata, 64, iov, 4);
+
+	CU_ASSERT(_check_val(ddata, 64, 7) == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -209,6 +257,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_single_iov);
 	CU_ADD_TEST(suite, test_simple_iov);
 	CU_ADD_TEST(suite, test_complex_iov);
+	CU_ADD_TEST(suite, test_iovs_to_buf);
+	CU_ADD_TEST(suite, test_buf_to_iovs);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

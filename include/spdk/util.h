@@ -148,6 +148,18 @@ size_t spdk_ioviter_first(struct spdk_ioviter *iter,
 size_t spdk_ioviter_next(struct spdk_ioviter *iter, void **src, void **dst);
 
 /**
+ * Copy iovs contents to buf through memcpy.
+ */
+void spdk_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs,
+			   int iovcnt);
+
+/**
+ * Copy buf contents to iovs through memcpy.
+ */
+void spdk_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf,
+			   size_t buf_len);
+
+/**
  * Scan build is really pessimistic and assumes that mempool functions can
  * dequeue NULL buffers even if they return success. This is obviously a false
  * positive, but the mempool dequeue can be done in a DPDK inline function that
