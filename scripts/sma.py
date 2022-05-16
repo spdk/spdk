@@ -33,7 +33,8 @@ def parse_argv():
     defaults = {'address': 'localhost',
                 'socket': '/var/tmp/spdk.sock',
                 'port': 8080,
-                'discovery_timeout': 10.0}
+                'discovery_timeout': 10.0,
+                'volume_cleanup_period': 60.0}
     # Merge the default values, config file, and the command-line
     args = vars(parser.parse_args())
     config = parse_config(args.get('config'))

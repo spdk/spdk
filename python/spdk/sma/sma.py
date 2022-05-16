@@ -15,7 +15,8 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
         self._devices = {}
         self._server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
         self._server.add_insecure_port(f'{addr}:{port}')
-        self._volume_mgr = VolumeManager(client, config['discovery_timeout'])
+        self._volume_mgr = VolumeManager(client, config['discovery_timeout'],
+                                         config['volume_cleanup_period'])
         pb2_grpc.add_StorageManagementAgentServicer_to_server(self, self._server)
 
     def _grpc_method(f):
@@ -28,10 +29,12 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
         self._devices[device_manager.protocol] = device_manager
 
     def start(self):
+        self._volume_mgr.start()
         self._server.start()
 
     def stop(self):
         self._server.stop(None)
+        self._volume_mgr.stop()
 
     def _find_device_by_name(self, name):
         return self._devices.get(name)

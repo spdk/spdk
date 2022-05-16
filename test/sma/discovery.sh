@@ -18,6 +18,7 @@ t2dscport2=8011
 t1nqn='nqn.2016-06.io.spdk:node1'
 t2nqn='nqn.2016-06.io.spdk:node2'
 hostnqn='nqn.2016-06.io.spdk:host0'
+cleanup_period=1
 
 function cleanup() {
 	killprocess $smapid
@@ -141,6 +142,7 @@ tgtpid=$!
 $rootdir/scripts/sma.py -c <(
 	cat <<- EOF
 		discovery_timeout: 5
+		volume_cleanup_period: $cleanup_period
 		devices:
 		  - name: 'nvmf_tcp'
 	EOF
@@ -397,6 +399,35 @@ $rpc_py bdev_nvme_get_discovery_info | jq -r '.[].trid.trsvcid' | grep $t1dscpor
 NOT attach_volume $device_id $(uuidgen) $invalid_port
 [[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 1 ]]
 $rpc_py bdev_nvme_get_discovery_info | jq -r '.[].trid.trsvcid' | grep $t1dscport
+
+# Make sure that the discovery service is stopped if a volume is disconnected outside of SMA (e.g.
+# by removing it from the target)
+$rpc_py -s $t1sock nvmf_subsystem_remove_ns $t1nqn 1
+# Give SMA some time to be notified about the change
+sleep $((cleanup_period + 1))
+[[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 0 ]]
+$rpc_py -s $t1sock nvmf_subsystem_add_ns $t1nqn $t1uuid
+
+# Do the same, but this time attach two volumes and check that the discovery service is only
+# stopped once both volumes are disconnected
+attach_volume $device_id $t2uuid $t2dscport1
+attach_volume $device_id $t2uuid2 $t2dscport1
+[[ $($rpc_py nvmf_get_subsystems $localnqn | jq -r '.[].namespaces | length') -eq 2 ]]
+[[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 1 ]]
+$rpc_py -s $t2sock nvmf_subsystem_remove_ns $t2nqn 2
+# Give SMA some time to be notified about the change
+sleep $((cleanup_period + 1))
+# One of the volumes should be gone, but the discovery service should still be running
+[[ $($rpc_py nvmf_get_subsystems $localnqn | jq -r '.[].namespaces | length') -eq 1 ]]
+[[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 1 ]]
+$rpc_py -s $t2sock nvmf_subsystem_remove_ns $t2nqn 1
+# Give SMA some time to be notified about the change
+sleep $((cleanup_period + 1))
+# Now that both are gone, the discovery service should be stopped too
+[[ $($rpc_py nvmf_get_subsystems $localnqn | jq -r '.[].namespaces | length') -eq 0 ]]
+[[ $($rpc_py bdev_nvme_get_discovery_info | jq -r '. | length') -eq 0 ]]
+$rpc_py -s $t2sock nvmf_subsystem_add_ns $t2nqn $t2uuid
+$rpc_py -s $t2sock nvmf_subsystem_add_ns $t2nqn $t2uuid2
 
 delete_device $device_id
 

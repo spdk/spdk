@@ -1,6 +1,7 @@
 import grpc
 import ipaddress
 import logging
+import threading
 import uuid
 from dataclasses import dataclass
 from spdk.rpc.client import JSONRPCException
@@ -25,13 +26,67 @@ class Volume:
 
 
 class VolumeManager:
-    def __init__(self, client, discovery_timeout):
+    def __init__(self, client, discovery_timeout, cleanup_period):
         self._client = client
         # Discovery service map (name -> refcnt)
         self._discovery = {}
         # Volume map (volume_id -> Volume)
         self._volumes = {}
         self._discovery_timeout = int(discovery_timeout * 1000)
+        self._cleanup_period = cleanup_period
+        self._lock = threading.Lock()
+        self._cv = threading.Condition(self._lock)
+        self._running = False
+        self._thread = None
+
+    def _locked(f):
+        def wrapper(self, *args, **kwargs):
+            self._lock.acquire()
+            try:
+                return f(self, *args, **kwargs)
+            finally:
+                self._lock.release()
+        return wrapper
+
+    def start(self):
+        if self._thread is not None:
+            raise ValueError('Volume manager was already started')
+        self._running = True
+        self._thread = threading.Thread(target=self._cleanup_thread, args=(self,))
+        self._thread.start()
+
+    def stop(self):
+        if self._thread is None:
+            return
+        with self._lock:
+            self._running = False
+            self._cv.notify_all()
+        self._thread.join()
+        self._thread = None
+
+    @staticmethod
+    def _cleanup_thread(*args):
+        self, = args
+        with self._lock:
+            while self._running:
+                self._cleanup_volumes()
+                self._cv.wait(self._cleanup_period)
+
+    def _cleanup_volumes(self):
+        try:
+            disconnected = []
+            with self._client() as client:
+                bdevs = client.call('bdev_get_bdevs')
+                for volume_id in self._volumes:
+                    if volume_id not in [b['uuid'] for b in bdevs]:
+                        log.warning(f'Found disconnected volume: {volume_id}')
+                        disconnected.append(volume_id)
+            for volume_id in disconnected:
+                self._disconnect_volume(volume_id)
+        except VolumeException as ex:
+            log.error(f'Failure when trying to disconnect volumes: {ex.message}')
+        except JSONRPCException as ex:
+            log.error(f'Failed to retrieve bdevs: {ex.message}')
 
     def _get_discovery_info(self):
         try:
@@ -102,6 +157,7 @@ class VolumeManager:
             raise VolumeException(grpc.StatusCode.INTERNAL,
                                   'Failed to stop discovery')
 
+    @_locked
     def connect_volume(self, params, device_handle=None):
         """ Connects a volume through a discovery service.  Returns a tuple (volume_id, existing):
         the first item is a volume_id as str, while the second denotes whether the selected volume
@@ -173,8 +229,7 @@ class VolumeManager:
             raise ex
         return volume_id, False
 
-    def disconnect_volume(self, volume_id):
-        """Disconnects a volume connected through discovery service"""
+    def _disconnect_volume(self, volume_id):
         id = format_volume_id(volume_id)
         if id is None:
             raise VolumeException(grpc.StatusCode.INVALID_ARGUMENT,
@@ -193,6 +248,12 @@ class VolumeManager:
                 log.error(f'Failed to stop discovery service: {name}')
         del self._volumes[id]
 
+    @_locked
+    def disconnect_volume(self, volume_id):
+        """Disconnects a volume connected through discovery service"""
+        return self._disconnect_volume(volume_id)
+
+    @_locked
     def set_device(self, volume_id, device_handle):
         """Marks a previously connected volume as being attached to specified device.  This is only
         necessary if the device handle is not known at a time a volume is connected.
@@ -210,8 +271,9 @@ class VolumeManager:
                                   'Volume is already attached to a different device')
         volume.device_handle = device_handle
 
+    @_locked
     def disconnect_device_volumes(self, device_handle):
         """Disconnects all volumes attached to a specific device"""
         volumes = [i for i, v in self._volumes.items() if v.device_handle == device_handle]
         for volume_id in volumes:
-            self.disconnect_volume(volume_id)
+            self._disconnect_volume(volume_id)
