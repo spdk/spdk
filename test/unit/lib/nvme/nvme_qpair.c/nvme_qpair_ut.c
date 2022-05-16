@@ -3,6 +3,7 @@
  *
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -741,21 +742,21 @@ test_nvme_get_sgl_print_info(void)
 	cmd.dptr.sgl1.generic.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 	cmd.dptr.sgl1.generic.subtype = 0;
 	cmd.dptr.sgl1.address = 0xdeadbeef;
-	cmd.dptr.sgl1.keyed.length = 0x1000;
-	cmd.dptr.sgl1.keyed.key = 0xababccdd;
+	cmd.dptr.sgl1.unkeyed.length = 0x1000;
 
 	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
-	CU_ASSERT(!strncmp(buf, "SGL DATA BLOCK ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
+	CU_ASSERT(!strncmp(buf, "SGL DATA BLOCK ADDRESS 0xdeadbeef len:0x1000",
 			   NVME_CMD_DPTR_STR_SIZE));
 
 	memset(&cmd.dptr.sgl1, 0, sizeof(cmd.dptr.sgl1));
 	cmd.dptr.sgl1.generic.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	cmd.dptr.sgl1.generic.subtype = 0;
 	cmd.dptr.sgl1.address = 0xdeadbeef;
-	cmd.dptr.sgl1.unkeyed.length = 0x1000;
+	cmd.dptr.sgl1.keyed.length = 0x1000;
+	cmd.dptr.sgl1.keyed.key = 0xababccdd;
 
 	nvme_get_sgl(buf, NVME_CMD_DPTR_STR_SIZE, &cmd);
-	CU_ASSERT(!strncmp(buf, "SGL RESERVED ADDRESS 0xdeadbeef len:0x1000",
+	CU_ASSERT(!strncmp(buf, "SGL RESERVED ADDRESS 0xdeadbeef len:0x1000 key:0xababccdd",
 			   NVME_CMD_DPTR_STR_SIZE));
 }
 

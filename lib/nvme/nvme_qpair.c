@@ -191,11 +191,11 @@ nvme_get_sgl(char *buf, size_t size, struct spdk_nvme_cmd *cmd)
 		     nvme_get_string(sgl_subtype, sgl->generic.subtype), sgl->address);
 	assert(c >= 0 && (size_t)c < size);
 
-	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
 		nvme_get_sgl_unkeyed(buf + c, size - c, cmd);
 	}
 
-	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 		nvme_get_sgl_keyed(buf + c, size - c, cmd);
 	}
 }
