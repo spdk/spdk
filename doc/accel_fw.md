@@ -118,6 +118,15 @@ accel-config enable-wq dsa0/wq0.1
 ```
 
 DSA can be configured in many ways, but the above configuration is needed for use with SPDK.
+Before you can run using the kernel driver you need to make sure that the hardware is bound
+to the kernel driver and not VFIO.  By default when you run `setup.sh` DSA devices will be
+bound to VFIO.  To exclude DSA devices, pass a whitespace separated list of DSA devices BDF
+using the PCI_BLOCKED parameter as shown below.
+
+`sudo PCI_BLOCKED="0000:04:00.0 0000:05:00.0" ./setup.sh`
+
+Note: you might need to run `sudo ./setup.sh reset` to unbind all drivers before performing
+the step above.
 
 ### Software Module {#accel_sw}
 
