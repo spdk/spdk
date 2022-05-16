@@ -569,7 +569,7 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 	struct rdma_event_channel	*channel = rctrlr->cm_channel;
 
 	STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
-		event_qpair = nvme_rdma_qpair(entry->evt->id->context);
+		event_qpair = entry->evt->id->context;
 		if (event_qpair->evt == NULL) {
 			event_qpair->evt = entry->evt;
 			STAILQ_REMOVE(&rctrlr->pending_cm_events, entry, nvme_rdma_cm_event_entry, link);
@@ -578,7 +578,7 @@ nvme_rdma_poll_events(struct nvme_rdma_ctrlr *rctrlr)
 	}
 
 	while (rdma_get_cm_event(channel, &event) == 0) {
-		event_qpair = nvme_rdma_qpair(event->id->context);
+		event_qpair = event->id->context;
 		if (event_qpair->evt == NULL) {
 			event_qpair->evt = event;
 		} else {
@@ -815,7 +815,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	rctrlr->pd = rqpair->rdma_qp->qp->pd;
 
-	rqpair->cm_id->context = &rqpair->qpair;
+	rqpair->cm_id->context = rqpair;
 
 	return 0;
 }
@@ -1970,7 +1970,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	if (qpair->ctrlr != NULL) {
 		rctrlr = nvme_rdma_ctrlr(qpair->ctrlr);
 		STAILQ_FOREACH_SAFE(entry, &rctrlr->pending_cm_events, link, tmp) {
-			if (nvme_rdma_qpair(entry->evt->id->context) == rqpair) {
+			if (entry->evt->id->context == rqpair) {
 				STAILQ_REMOVE(&rctrlr->pending_cm_events, entry, nvme_rdma_cm_event_entry, link);
 				rdma_ack_cm_event(entry->evt);
 				STAILQ_INSERT_HEAD(&rctrlr->free_cm_events, entry, link);
