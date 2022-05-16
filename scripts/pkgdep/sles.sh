@@ -30,3 +30,9 @@ if [[ $INSTALL_DOCS == "true" ]]; then
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
 fi
+if [[ $INSTALL_DAOS == "true" ]]; then
+	zypper ar https://packages.daos.io/v2.0/Leap15/packages/x86_64/ daos_packages
+	rpm --import https://packages.daos.io/RPM-GPG-KEY
+	zypper --non-interactive refresh
+	zypper install -y daos-client daos-devel
+fi
