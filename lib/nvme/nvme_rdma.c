@@ -2188,6 +2188,15 @@ nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	assert(qpair != NULL);
 	rqpair = nvme_rdma_qpair(qpair);
 
+	if (rqpair->state != NVME_RDMA_QPAIR_STATE_EXITED) {
+		int rc __attribute__((unused));
+
+		/* qpair was removed from the poll group while the disconnect is not finished.
+		 * Destroy rdma resources forcefully. */
+		rc = nvme_rdma_qpair_disconnected(rqpair, 0);
+		assert(rc == 0);
+	}
+
 	nvme_rdma_qpair_abort_reqs(qpair, 0);
 	nvme_qpair_deinit(qpair);
 
