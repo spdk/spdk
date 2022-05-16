@@ -334,6 +334,25 @@ int spdk_idxd_submit_decompress(struct spdk_idxd_io_channel *chan,
 				int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
 
 /**
+ * Build and submit an IDXD raw request.
+ *
+ * This function will process the supplied descriptor and then immediately submit
+ * by writing to the proper device portal.
+ *
+ * \param chan IDXD channel to submit request.
+ * \param desc proprely formatted IDXD descriptor.  Memory addresses should be physical.
+ * The completion address will be filled in by the lower level library.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_idxd_submit_raw_desc(struct spdk_idxd_io_channel *chan,
+			      struct idxd_hw_desc *desc,
+			      spdk_idxd_req_cb cb_fn, void *cb_arg);
+
+/**
  * Check for completed requests on an IDXD channel.
  *
  * \param chan IDXD channel to check for completions.

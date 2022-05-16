@@ -1274,6 +1274,38 @@ spdk_idxd_submit_decompress(struct spdk_idxd_io_channel *chan,
 	return -EINVAL;
 }
 
+int
+spdk_idxd_submit_raw_desc(struct spdk_idxd_io_channel *chan,
+			  struct idxd_hw_desc *_desc,
+			  spdk_idxd_req_cb cb_fn, void *cb_arg)
+{
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	int rc, flags = 0;
+	uint64_t comp_addr;
+
+	assert(chan != NULL);
+	assert(_desc != NULL);
+
+	/* Common prep. */
+	rc = _idxd_prep_command(chan, cb_fn, cb_arg, flags, &desc, &op);
+	if (rc) {
+		return rc;
+	}
+
+	/* Command specific. */
+	flags = desc->flags;
+	comp_addr = desc->completion_addr;
+	memcpy(desc, _desc, sizeof(*desc));
+	desc->flags |= flags;
+	desc->completion_addr = comp_addr;
+
+	/* Submit operation. */
+	_submit_to_hw(chan, op);
+
+	return 0;
+}
+
 static inline void
 _dump_sw_error_reg(struct spdk_idxd_io_channel *chan)
 {
