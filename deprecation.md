@@ -13,14 +13,3 @@ Specific future SPDK release for the removal must be provided.
 ABI cannot be removed without providing deprecation notice for at least single SPDK release.
 
 ## Deprecation Notices {#deprecation-notices}
-
-### nvme
-
-Deprecated `spdk_nvme_ctrlr_reset_async` and `spdk_nvme_ctrlr_reset_poll_async` APIs,
-which will be removed in SPDK 22.01. `spdk_nvme_ctrlr_disconnect`, `spdk_nvme_ctrlr_reconnect_async`,
-and `spdk_nvme_ctrlr_reconnect_poll_async` should be used instead.
-
-### bdev
-
-Deprecated `spdk_bdev_module_finish_done()` API, which will be removed in SPDK 22.01.
-Bdev modules should use `spdk_bdev_module_fini_done()` instead.
