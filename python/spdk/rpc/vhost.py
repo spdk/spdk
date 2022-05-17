@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('set_vhost_controller_coalescing')
 def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold):
     """Set coalescing for vhost controller.
     Args:
@@ -17,7 +16,6 @@ def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold
     return client.call('vhost_controller_set_coalescing', params)
 
 
-@deprecated_alias('construct_vhost_scsi_controller')
 def vhost_create_scsi_controller(client, ctrlr, cpumask=None):
     """Create a vhost scsi controller.
     Args:
@@ -32,7 +30,6 @@ def vhost_create_scsi_controller(client, ctrlr, cpumask=None):
     return client.call('vhost_create_scsi_controller', params)
 
 
-@deprecated_alias('add_vhost_scsi_lun')
 def vhost_scsi_controller_add_target(client, ctrlr, scsi_target_num, bdev_name):
     """Add LUN to vhost scsi controller target.
     Args:
@@ -48,7 +45,6 @@ def vhost_scsi_controller_add_target(client, ctrlr, scsi_target_num, bdev_name):
     return client.call('vhost_scsi_controller_add_target', params)
 
 
-@deprecated_alias('remove_vhost_scsi_target')
 def vhost_scsi_controller_remove_target(client, ctrlr, scsi_target_num):
     """Remove target from vhost scsi controller.
     Args:
@@ -62,7 +58,6 @@ def vhost_scsi_controller_remove_target(client, ctrlr, scsi_target_num):
     return client.call('vhost_scsi_controller_remove_target', params)
 
 
-@deprecated_alias('construct_vhost_blk_controller')
 def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=None, packed_ring=None, packed_ring_recovery=None):
     """Create vhost BLK controller.
     Args:
@@ -88,7 +83,6 @@ def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=
     return client.call('vhost_create_blk_controller', params)
 
 
-@deprecated_alias('get_vhost_controllers')
 def vhost_get_controllers(client, name=None):
     """Get information about configured vhost controllers.
 
@@ -104,7 +98,6 @@ def vhost_get_controllers(client, name=None):
     return client.call('vhost_get_controllers', params)
 
 
-@deprecated_alias('remove_vhost_controller')
 def vhost_delete_controller(client, ctrlr):
     """Delete vhost controller from configuration.
     Args:

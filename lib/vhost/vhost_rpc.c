@@ -93,7 +93,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_create_scsi_controller", rpc_vhost_create_scsi_controller,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_scsi_controller, construct_vhost_scsi_controller)
 
 struct rpc_vhost_scsi_ctrlr_add_target {
 	char *ctrlr;
@@ -159,7 +158,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_scsi_controller_add_target", rpc_vhost_scsi_controller_add_target,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_scsi_controller_add_target, add_vhost_scsi_lun)
 
 struct rpc_remove_vhost_scsi_ctrlr_target {
 	char *ctrlr;
@@ -229,7 +227,6 @@ invalid:
 
 SPDK_RPC_REGISTER("vhost_scsi_controller_remove_target",
 		  rpc_vhost_scsi_controller_remove_target, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_scsi_controller_remove_target, remove_vhost_scsi_target)
 
 struct rpc_vhost_blk_ctrlr {
 	char *ctrlr;
@@ -284,7 +281,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_create_blk_controller", rpc_vhost_create_blk_controller,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_create_blk_controller, construct_vhost_blk_controller)
 
 struct rpc_delete_vhost_ctrlr {
 	char *ctrlr;
@@ -341,7 +337,6 @@ invalid:
 
 }
 SPDK_RPC_REGISTER("vhost_delete_controller", rpc_vhost_delete_controller, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_delete_controller, remove_vhost_controller)
 
 struct rpc_get_vhost_ctrlrs {
 	char *name;
@@ -440,7 +435,6 @@ invalid:
 					 spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("vhost_get_controllers", rpc_vhost_get_controllers, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_get_controllers, get_vhost_controllers)
 
 
 struct rpc_vhost_ctrlr_coalescing {
@@ -502,6 +496,5 @@ invalid:
 }
 SPDK_RPC_REGISTER("vhost_controller_set_coalescing", rpc_vhost_controller_set_coalescing,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vhost_controller_set_coalescing, set_vhost_controller_coalescing)
 
 SPDK_LOG_REGISTER_COMPONENT(vhost_rpc)

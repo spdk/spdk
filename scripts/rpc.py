@@ -2412,8 +2412,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                   delay_base_us=args.delay_base_us,
                                                   iops_threshold=args.iops_threshold)
 
-    p = subparsers.add_parser('vhost_controller_set_coalescing', aliases=['set_vhost_controller_coalescing'],
-                              help='Set vhost controller coalescing')
+    p = subparsers.add_parser('vhost_controller_set_coalescing', help='Set vhost controller coalescing')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('delay_base_us', help='Base delay time', type=int)
     p.add_argument('iops_threshold', help='IOPS threshold when coalescing is enabled', type=int)
@@ -2424,9 +2423,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                ctrlr=args.ctrlr,
                                                cpumask=args.cpumask)
 
-    p = subparsers.add_parser(
-        'vhost_create_scsi_controller', aliases=['construct_vhost_scsi_controller'],
-        help='Add new vhost controller')
+    p = subparsers.add_parser('vhost_create_scsi_controller', help='Add new vhost controller')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('--cpumask', help='cpu mask for this controller')
     p.set_defaults(func=vhost_create_scsi_controller)
@@ -2437,9 +2434,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                               scsi_target_num=args.scsi_target_num,
                                                               bdev_name=args.bdev_name))
 
-    p = subparsers.add_parser('vhost_scsi_controller_add_target',
-                              aliases=['add_vhost_scsi_lun'],
-                              help='Add lun to vhost controller')
+    p = subparsers.add_parser('vhost_scsi_controller_add_target', help='Add lun to vhost controller')
     p.add_argument('ctrlr', help='controller name where add lun')
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
     p.add_argument('bdev_name', help='bdev name')
@@ -2451,7 +2446,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                       scsi_target_num=args.scsi_target_num)
 
     p = subparsers.add_parser('vhost_scsi_controller_remove_target',
-                              aliases=['remove_vhost_scsi_target'],
                               help='Remove target from vhost controller')
     p.add_argument('ctrlr', help='controller name to remove target from')
     p.add_argument('scsi_target_num', help='scsi_target_num', type=int)
@@ -2466,9 +2460,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                               packed_ring=args.packed_ring,
                                               packed_ring_recovery=args.packed_ring_recovery)
 
-    p = subparsers.add_parser('vhost_create_blk_controller',
-                              aliases=['construct_vhost_blk_controller'],
-                              help='Add a new vhost block controller')
+    p = subparsers.add_parser('vhost_create_blk_controller', help='Add a new vhost block controller')
     p.add_argument('ctrlr', help='controller name')
     p.add_argument('dev_name', help='device name')
     p.add_argument('--cpumask', help='cpu mask for this controller')
@@ -2480,8 +2472,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def vhost_get_controllers(args):
         print_dict(rpc.vhost.vhost_get_controllers(args.client, args.name))
 
-    p = subparsers.add_parser('vhost_get_controllers', aliases=['get_vhost_controllers'],
-                              help='List all or specific vhost controller(s)')
+    p = subparsers.add_parser('vhost_get_controllers', help='List all or specific vhost controller(s)')
     p.add_argument('-n', '--name', help="Name of vhost controller", required=False)
     p.set_defaults(func=vhost_get_controllers)
 
@@ -2489,8 +2480,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.vhost.vhost_delete_controller(args.client,
                                           ctrlr=args.ctrlr)
 
-    p = subparsers.add_parser('vhost_delete_controller', aliases=['remove_vhost_controller'],
-                              help='Delete a vhost controller')
+    p = subparsers.add_parser('vhost_delete_controller', help='Delete a vhost controller')
     p.add_argument('ctrlr', help='controller name')
     p.set_defaults(func=vhost_delete_controller)
 
