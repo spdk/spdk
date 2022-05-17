@@ -9,7 +9,8 @@ from .proto import sma_pb2_grpc as pb2_grpc
 
 
 class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
-    def __init__(self, addr, port):
+    def __init__(self, config):
+        addr, port = config['address'], config['port']
         self._devices = {}
         self._server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
         self._server.add_insecure_port(f'{addr}:{port}')

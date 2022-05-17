@@ -116,7 +116,7 @@ if __name__ == '__main__':
     # Wait until the SPDK process starts responding to RPCs
     wait_for_listen(client, timeout=60.0)
 
-    agent = sma.StorageManagementAgent(config['address'], config['port'])
+    agent = sma.StorageManagementAgent(config)
 
     devices = [sma.NvmfTcpDeviceManager(client)]
     devices += load_plugins(config.get('plugins') or [], client)
