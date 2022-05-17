@@ -4820,6 +4820,7 @@ static void get_discovery_log_page(struct discovery_ctx *ctx);
 static void
 free_discovery_ctx(struct discovery_ctx *ctx)
 {
+	free(ctx->log_page);
 	free(ctx->hostnqn);
 	free(ctx->name);
 	free(ctx);
