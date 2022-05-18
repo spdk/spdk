@@ -13,3 +13,8 @@ Specific future SPDK release for the removal must be provided.
 ABI cannot be removed without providing deprecation notice for at least single SPDK release.
 
 ## Deprecation Notices {#deprecation-notices}
+
+### nvme
+
+Deprecated `spdk_nvme_ctrlr_prepare_for_reset` API, which will be removed in SPDK 22.01.
+For PCIe transport, `spdk_nvme_ctrlr_disconnect` should be used before freeing I/O qpairs.

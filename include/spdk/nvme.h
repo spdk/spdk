@@ -1074,6 +1074,7 @@ int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Inform the driver that the application is preparing to reset the specified NVMe controller.
+ * (Deprecated, please use spdk_nvme_ctrlr_disconnect() before freeing I/O qpairs instead.)
  *
  * This function allows the driver to make decisions knowing that a reset is about to happen.
  * For example, the pcie transport in this case could skip sending DELETE_CQ and DELETE_SQ

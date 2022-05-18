@@ -87,6 +87,11 @@ Added `msg_mempool_size` parameter to `spdk_reactors_init` and `spdk_thread_lib_
 The size of `g_spdk_msg_mempool` can now be controlled through the same-named
 user option of `spdk_app_opts` structure.
 
+### nvme
+
+The API `spdk_nvme_ctrlr_prepare_for_reset()` was deprecated. The functionality provided by the
+`spdk_nvme_ctrlr_prepare_for_reset()` was merged into the API `spdk_nvme_ctrlr_disconnect()`.
+
 ### nvmf
 
 Removed deprecated max_qpairs_per_ctrlr parameter from nvmf_create_transport RPC. Use
