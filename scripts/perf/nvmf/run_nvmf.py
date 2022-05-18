@@ -360,6 +360,7 @@ class Target(Server):
         self.null_block = 0
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
         self.subsystem_info_list = []
+        self.initiator_info = []
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
@@ -1504,6 +1505,11 @@ if __name__ == "__main__":
         os.mkdir(args.results)
     except FileExistsError:
         pass
+
+    for i in initiators:
+        target_obj.initiator_info.append(
+            {"name": i.name, "target_nic_ips": i.target_nic_ips, "initiator_nic_ips": i.nic_ips}
+        )
 
     # TODO: This try block is definietly too large. Need to break this up into separate
     # logical blocks to reduce size.
