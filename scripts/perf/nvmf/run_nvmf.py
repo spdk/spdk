@@ -421,6 +421,30 @@ class Target(Server):
         self.log_print("Done zipping")
 
     @staticmethod
+    def _chunks(input_list, chunks_no):
+        div, rem = divmod(len(input_list), chunks_no)
+        for i in range(chunks_no):
+            si = (div + 1) * (i if i < rem else rem) + div * (0 if i < rem else i - rem)
+            yield input_list[si:si + (div + 1 if i < rem else div)]
+
+    def spread_bdevs(self, req_disks):
+        # Spread available block devices indexes:
+        # - evenly across available initiator systems
+        # - evenly across available NIC interfaces for
+        #   each initiator
+        # Not NUMA aware.
+        ip_bdev_map = []
+        initiator_chunks = self._chunks(range(0, req_disks), len(self.initiator_info))
+
+        for i, (init, init_chunk) in enumerate(zip(self.initiator_info, initiator_chunks)):
+            self.initiator_info[i]["bdev_range"] = init_chunk
+            init_chunks_list = list(self._chunks(init_chunk, len(init["target_nic_ips"])))
+            for ip, nic_chunk in zip(self.initiator_info[i]["target_nic_ips"], init_chunks_list):
+                for c in nic_chunk:
+                    ip_bdev_map.append((ip, c))
+        return ip_bdev_map
+
+    @staticmethod
     def read_json_stats(file):
         with open(file, "r") as json_data:
             data = json.load(json_data)
@@ -972,7 +996,7 @@ class KernelTarget(Target):
     def stop(self):
         nvmet_command(self.nvmet_bin, "clear")
 
-    def kernel_tgt_gen_subsystem_conf(self, nvme_list, address_list):
+    def kernel_tgt_gen_subsystem_conf(self, nvme_list):
 
         nvmet_cfg = {
             "ports": [],
@@ -980,53 +1004,46 @@ class KernelTarget(Target):
             "subsystems": [],
         }
 
-        # Split disks between NIC IP's
-        disks_per_ip = int(len(nvme_list) / len(address_list))
-        disk_chunks = [nvme_list[i * disks_per_ip:disks_per_ip + disks_per_ip * i] for i in range(0, len(address_list))]
+        for ip, bdev_num in self.spread_bdevs(len(nvme_list)):
+            port = str(4420 + bdev_num)
+            nqn = "nqn.2018-09.io.spdk:cnode%s" % bdev_num
+            serial = "SPDK00%s" % bdev_num
+            bdev_name = nvme_list[bdev_num]
 
-        # Add remaining drives
-        for i, disk in enumerate(nvme_list[disks_per_ip * len(address_list):]):
-            disk_chunks[i].append(disk)
+            nvmet_cfg["subsystems"].append({
+                "allowed_hosts": [],
+                "attr": {
+                    "allow_any_host": "1",
+                    "serial": serial,
+                    "version": "1.3"
+                },
+                "namespaces": [
+                    {
+                        "device": {
+                            "path": bdev_name,
+                            "uuid": "%s" % uuid.uuid4()
+                        },
+                        "enable": 1,
+                        "nsid": port
+                    }
+                ],
+                "nqn": nqn
+            })
 
-        subsys_no = 1
-        port_no = 0
-        for ip, chunk in zip(address_list, disk_chunks):
-            for disk in chunk:
-                nqn = "nqn.2018-09.io.spdk:cnode%s" % subsys_no
-                nvmet_cfg["subsystems"].append({
-                    "allowed_hosts": [],
-                    "attr": {
-                        "allow_any_host": "1",
-                        "serial": "SPDK00%s" % subsys_no,
-                        "version": "1.3"
-                    },
-                    "namespaces": [
-                        {
-                            "device": {
-                                "path": disk,
-                                "uuid": "%s" % uuid.uuid4()
-                            },
-                            "enable": 1,
-                            "nsid": subsys_no
-                        }
-                    ],
-                    "nqn": nqn
-                })
+            nvmet_cfg["ports"].append({
+                "addr": {
+                    "adrfam": "ipv4",
+                    "traddr": ip,
+                    "trsvcid": port,
+                    "trtype": self.transport
+                },
+                "portid": bdev_num,
+                "referrals": [],
+                "subsystems": [nqn]
+            })
 
-                nvmet_cfg["ports"].append({
-                    "addr": {
-                        "adrfam": "ipv4",
-                        "traddr": ip,
-                        "trsvcid": "%s" % (4420 + port_no),
-                        "trtype": "%s" % self.transport
-                    },
-                    "portid": subsys_no,
-                    "referrals": [],
-                    "subsystems": [nqn]
-                })
-                subsys_no += 1
-                port_no += 1
-                self.subsystem_info_list.append([port_no, nqn, ip])
+            self.subsystem_info_list.append([port, nqn, ip])
+        self.subsys_no = len(self.subsystem_info_list)
 
         with open("kernel.conf", "w") as fh:
             fh.write(json.dumps(nvmet_cfg, indent=2))
@@ -1036,14 +1053,13 @@ class KernelTarget(Target):
 
         if self.null_block:
             print("Configuring with null block device.")
-            null_blk_list = ["/dev/nullb{}".format(x) for x in range(self.null_block)]
-            self.kernel_tgt_gen_subsystem_conf(null_blk_list, self.nic_ips)
-            self.subsys_no = len(null_blk_list)
+            nvme_list = ["/dev/nullb{}".format(x) for x in range(self.null_block)]
         else:
             print("Configuring with NVMe drives.")
             nvme_list = get_nvme_devices()
-            self.kernel_tgt_gen_subsystem_conf(nvme_list, self.nic_ips)
-            self.subsys_no = len(nvme_list)
+
+        self.kernel_tgt_gen_subsystem_conf(nvme_list)
+        self.subsys_no = len(nvme_list)
 
         nvmet_command(self.nvmet_bin, "clear")
         nvmet_command(self.nvmet_bin, "restore kernel.conf")
@@ -1162,40 +1178,27 @@ class SPDKTarget(Target):
 
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
         self.log_print("Adding subsystems to config")
-        port = "4420"
         if not req_num_disks:
             req_num_disks = get_nvme_devices_count()
 
-        # Distribute bdevs between provided NICs
-        num_disks = range(0, req_num_disks)
-        if len(num_disks) == 1:
-            disks_per_ip = 1
-        else:
-            disks_per_ip = int(len(num_disks) / len(ips))
-        disk_chunks = [[*num_disks[i * disks_per_ip:disks_per_ip + disks_per_ip * i]] for i in range(0, len(ips))]
+        for ip, bdev_num in self.spread_bdevs(req_num_disks):
+            port = str(4420 + bdev_num)
+            nqn = "nqn.2018-09.io.spdk:cnode%s" % bdev_num
+            serial = "SPDK00%s" % bdev_num
+            bdev_name = "Nvme%sn1" % bdev_num
 
-        # Add remaining drives
-        for i, disk in enumerate(num_disks[disks_per_ip * len(ips):]):
-            disk_chunks[i].append(disk)
+            rpc.nvmf.nvmf_create_subsystem(self.client, nqn, serial,
+                                           allow_any_host=True, max_namespaces=8)
+            rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
+            rpc.nvmf.nvmf_subsystem_add_listener(self.client,
+                                                 nqn=nqn,
+                                                 trtype=self.transport,
+                                                 traddr=ip,
+                                                 trsvcid=port,
+                                                 adrfam="ipv4")
+            self.subsystem_info_list.append([port, nqn, ip])
+        self.subsys_no = len(self.subsystem_info_list)
 
-        # Create subsystems, add bdevs to namespaces, add listeners
-        for ip, chunk in zip(ips, disk_chunks):
-            for c in chunk:
-                nqn = "nqn.2018-09.io.spdk:cnode%s" % c
-                serial = "SPDK00%s" % c
-                bdev_name = "Nvme%sn1" % c
-                rpc.nvmf.nvmf_create_subsystem(self.client, nqn, serial,
-                                               allow_any_host=True, max_namespaces=8)
-                rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
-
-                rpc.nvmf.nvmf_subsystem_add_listener(self.client,
-                                                     nqn=nqn,
-                                                     trtype=self.transport,
-                                                     traddr=ip,
-                                                     trsvcid=port,
-                                                     adrfam="ipv4")
-
-                self.subsystem_info_list.append([port, nqn, ip])
         self.log_print("SPDK NVMeOF subsystem configuration:")
         rpc_client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
 
