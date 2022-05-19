@@ -167,7 +167,7 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 	return cb(arg);
 }
 
-static struct spdk_vhost_dev_backend g_vdev_backend;
+static struct spdk_vhost_dev_backend g_vdev_backend = {.type = VHOST_BACKEND_SCSI};
 static struct spdk_vhost_user_dev_backend g_vdev_user_backend;
 
 static bool g_init_fail;
