@@ -102,7 +102,6 @@ cleanup:
 	free_rpc_bdev_iscsi_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_iscsi_create", rpc_bdev_iscsi_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_iscsi_create, construct_iscsi_bdev)
 
 struct rpc_delete_iscsi {
 	char *name;
@@ -150,4 +149,3 @@ cleanup:
 	free_rpc_delete_iscsi(&req);
 }
 SPDK_RPC_REGISTER("bdev_iscsi_delete", rpc_bdev_iscsi_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_iscsi_delete, delete_iscsi_bdev)

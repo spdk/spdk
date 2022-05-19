@@ -1107,7 +1107,6 @@ def bdev_error_delete(client, name):
     return client.call('bdev_error_delete', params)
 
 
-@deprecated_alias('construct_iscsi_bdev')
 def bdev_iscsi_create(client, name, url, initiator_iqn):
     """Construct an iSCSI block device.
 
@@ -1127,7 +1126,6 @@ def bdev_iscsi_create(client, name, url, initiator_iqn):
     return client.call('bdev_iscsi_create', params)
 
 
-@deprecated_alias('delete_iscsi_bdev')
 def bdev_iscsi_delete(client, name):
     """Remove iSCSI bdev from the system.
 
