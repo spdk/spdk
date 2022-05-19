@@ -150,7 +150,6 @@ cleanup:
 	free_rpc_construct_null(&req);
 }
 SPDK_RPC_REGISTER("bdev_null_create", rpc_bdev_null_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_null_create, construct_null_bdev)
 
 struct rpc_delete_null {
 	char *name;
@@ -202,7 +201,6 @@ cleanup:
 	free_rpc_delete_null(&req);
 }
 SPDK_RPC_REGISTER("bdev_null_delete", rpc_bdev_null_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_null_delete, delete_null_bdev)
 
 struct rpc_bdev_null_resize {
 	char *name;

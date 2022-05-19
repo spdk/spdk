@@ -115,7 +115,6 @@ cleanup:
 	free_rpc_construct_malloc(&req);
 }
 SPDK_RPC_REGISTER("bdev_malloc_create", rpc_bdev_malloc_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_malloc_create, construct_malloc_bdev)
 
 struct rpc_delete_malloc {
 	char *name;
@@ -164,4 +163,3 @@ cleanup:
 	free_rpc_delete_malloc(&req);
 }
 SPDK_RPC_REGISTER("bdev_malloc_delete", rpc_bdev_malloc_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_malloc_delete, delete_malloc_bdev)

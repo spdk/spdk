@@ -369,8 +369,7 @@ if __name__ == "__main__":
                                                name=args.name,
                                                uuid=args.uuid,
                                                optimal_io_boundary=args.optimal_io_boundary))
-    p = subparsers.add_parser('bdev_malloc_create', aliases=['construct_malloc_bdev'],
-                              help='Create a bdev with malloc backend')
+    p = subparsers.add_parser('bdev_malloc_create', help='Create a bdev with malloc backend')
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.add_argument(
@@ -384,8 +383,7 @@ if __name__ == "__main__":
         rpc.bdev.bdev_malloc_delete(args.client,
                                     name=args.name)
 
-    p = subparsers.add_parser('bdev_malloc_delete', aliases=['delete_malloc_bdev'],
-                              help='Delete a malloc disk')
+    p = subparsers.add_parser('bdev_malloc_delete', help='Delete a malloc disk')
     p.add_argument('name', help='malloc bdev name')
     p.set_defaults(func=bdev_malloc_delete)
 
@@ -403,8 +401,7 @@ if __name__ == "__main__":
                                              dif_type=args.dif_type,
                                              dif_is_head_of_md=args.dif_is_head_of_md))
 
-    p = subparsers.add_parser('bdev_null_create', aliases=['construct_null_bdev'],
-                              help='Add a bdev with null backend')
+    p = subparsers.add_parser('bdev_null_create', help='Add a bdev with null backend')
     p.add_argument('name', help='Block device name')
     p.add_argument('-u', '--uuid', help='UUID of the bdev')
     p.add_argument('total_size', help='Size of null bdev in MB (int > 0). Includes only data blocks.', type=int)
@@ -423,8 +420,7 @@ if __name__ == "__main__":
         rpc.bdev.bdev_null_delete(args.client,
                                   name=args.name)
 
-    p = subparsers.add_parser('bdev_null_delete', aliases=['delete_null_bdev'],
-                              help='Delete a null bdev')
+    p = subparsers.add_parser('bdev_null_delete', help='Delete a null bdev')
     p.add_argument('name', help='null bdev name')
     p.set_defaults(func=bdev_null_delete)
 

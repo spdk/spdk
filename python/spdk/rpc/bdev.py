@@ -242,7 +242,6 @@ def bdev_ocf_set_seqcutoff(client, name, policy, threshold, promotion_count):
     return client.call('bdev_ocf_set_seqcutoff', params)
 
 
-@deprecated_alias('construct_malloc_bdev')
 def bdev_malloc_create(client, num_blocks, block_size, name=None, uuid=None, optimal_io_boundary=None):
     """Construct a malloc block device.
 
@@ -266,7 +265,6 @@ def bdev_malloc_create(client, num_blocks, block_size, name=None, uuid=None, opt
     return client.call('bdev_malloc_create', params)
 
 
-@deprecated_alias('delete_malloc_bdev')
 def bdev_malloc_delete(client, name):
     """Delete malloc block device.
 
@@ -277,7 +275,6 @@ def bdev_malloc_delete(client, name):
     return client.call('bdev_malloc_delete', params)
 
 
-@deprecated_alias('construct_null_bdev')
 def bdev_null_create(client, num_blocks, block_size, name, uuid=None, md_size=None,
                      dif_type=None, dif_is_head_of_md=None):
     """Construct a null block device.
@@ -307,7 +304,6 @@ def bdev_null_create(client, num_blocks, block_size, name, uuid=None, md_size=No
     return client.call('bdev_null_create', params)
 
 
-@deprecated_alias('delete_null_bdev')
 def bdev_null_delete(client, name):
     """Remove null bdev from the system.
 

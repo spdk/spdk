@@ -71,18 +71,18 @@ function test_construct_two_lvs_on_the_same_bdev() {
 # try to create two lvs with conflicting aliases
 function test_construct_lvs_conflict_alias() {
 	# create first bdev and lvs
-	malloc1_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	malloc1_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
 	lvs1_uuid=$(rpc_cmd construct_lvol_store "$malloc1_name" lvs_test)
 
 	# create second bdev and lvs with the same name as previously
-	malloc2_name=$(rpc_cmd construct_malloc_bdev $MALLOC_SIZE_MB $MALLOC_BS)
+	malloc2_name=$(rpc_cmd bdev_malloc_create $MALLOC_SIZE_MB $MALLOC_BS)
 	rpc_cmd construct_lvol_store "$malloc2_name" lvs_test && false
 
 	# clean up
 	rpc_cmd destroy_lvol_store -u "$lvs1_uuid"
 	rpc_cmd get_lvol_stores -u "$lvs1_uuid" && false
-	rpc_cmd delete_malloc_bdev "$malloc1_name"
-	rpc_cmd delete_malloc_bdev "$malloc2_name"
+	rpc_cmd bdev_malloc_delete "$malloc1_name"
+	rpc_cmd bdev_malloc_delete "$malloc2_name"
 	check_leftover_devices
 }
 
