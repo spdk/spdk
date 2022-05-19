@@ -1632,8 +1632,6 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_qpair	*qpair;
-
 	if (ctrlr->is_resetting || ctrlr->is_removed) {
 		/*
 		 * Controller is already resetting or has been removed. Return
@@ -1657,11 +1655,6 @@ nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_abort_queued_aborts(ctrlr);
 
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
-
-	/* Disable all queues before disabling the controller hardware. */
-	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
-	}
 
 	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
@@ -1820,6 +1813,16 @@ nvme_ctrlr_disable_poll(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
+static void
+nvme_ctrlr_fail_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_qpair	*qpair;
+
+	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
+	}
+}
+
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1828,6 +1831,9 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	rc = nvme_ctrlr_disconnect(ctrlr);
+	if (rc == 0) {
+		nvme_ctrlr_fail_io_qpairs(ctrlr);
+	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
