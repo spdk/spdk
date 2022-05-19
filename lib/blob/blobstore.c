@@ -68,6 +68,7 @@ blob_is_esnap_clone(const struct spdk_blob *blob)
 static int
 blob_id_cmp(struct spdk_blob *blob1, struct spdk_blob *blob2)
 {
+	assert(blob1 != NULL && blob2 != NULL);
 	return (blob1->id < blob2->id ? -1 : blob1->id > blob2->id);
 }
 
