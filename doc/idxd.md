@@ -15,11 +15,9 @@ spdk_idxd_submit_crc32c()               | @copybrief spdk_idxd_submit_crc32c()
 spdk_idxd_submit_dualcast               | @copybrief spdk_idxd_submit_dualcast()
 spdk_idxd_submit_fill()                 | @copybrief spdk_idxd_submit_fill()
 
-## Pre-defined configuration {#idxd_configs}
+## Kernel vs User {#idxd_configs}
 
-The low level library can be initialized either directly via `spdk_idxd_set_config` or
-through an RPC via one of the accelerator framework modules that rely on the low level
-IDXD library.  Either way, the underlying hardware will be set to the pre-defined
-hardware configuration below:
-
-Config: 1 group, 1 work queue, 4 engines in the group.
+The low level library can be initialized either directly via `spdk_idxd_set_config`,
+passing in a value of `true` indicates that the IDXD kernel driver is loaded and
+that SPDK will use work queue(s) surfaced by the driver.  Passing in `false` means
+that the SPDK user space driver will be used to initialize the hardware.
