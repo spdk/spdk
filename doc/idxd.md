@@ -15,10 +15,11 @@ spdk_idxd_submit_crc32c()               | @copybrief spdk_idxd_submit_crc32c()
 spdk_idxd_submit_dualcast               | @copybrief spdk_idxd_submit_dualcast()
 spdk_idxd_submit_fill()                 | @copybrief spdk_idxd_submit_fill()
 
-## Pre-defined configurations {#idxd_configs}
+## Pre-defined configuration {#idxd_configs}
 
-The RPC `idxd_scan_accel_engine` is used to both enable IDXD and set it's
-configuration to one of two pre-defined configs:
+The low level library can be initialized either directly via `spdk_idxd_set_config` or
+through an RPC via one of the accelerator framework modules that rely on the low level
+IDXD library.  Either way, the underlying hardware will be set to the pre-defined
+hardware configuration below:
 
-Config #0: 4 groups, 1 work queue per group, 1 engine per group.
-Config #1: 2 groups, 2 work queues per group, 2 engines per group.
+Config: 1 group, 1 work queue, 4 engines in the group.

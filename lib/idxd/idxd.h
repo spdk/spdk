@@ -124,7 +124,7 @@ struct pci_dev_id {
  * size and must be 32 byte aligned.
  */
 struct idxd_ops {
-	struct idxd_hw_comp_record	hw;
+	struct dsa_hw_comp_record	hw;
 	void				*cb_arg;
 	spdk_idxd_req_cb		cb_fn;
 	struct idxd_batch		*batch;

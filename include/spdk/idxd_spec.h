@@ -66,39 +66,38 @@ extern "C" {
 #define IDXD_FLAG_CRC_READ_CRC_SEED	(1 << 16)
 
 /*
- * IDXD is a family of devices, DSA is the only currently
- * supported one.
+ * IDXD is a family of devices, DSA and IAA.
  */
 enum dsa_completion_status {
-	IDXD_COMP_NONE			= 0,
-	IDXD_COMP_SUCCESS		= 1,
-	IDXD_COMP_SUCCESS_PRED		= 2,
-	IDXD_COMP_PAGE_FAULT_NOBOF	= 3,
-	IDXD_COMP_PAGE_FAULT_IR		= 4,
-	IDXD_COMP_BATCH_FAIL		= 5,
-	IDXD_COMP_BATCH_PAGE_FAULT	= 6,
-	IDXD_COMP_DR_OFFSET_NOINC	= 7,
-	IDXD_COMP_DR_OFFSET_ERANGE	= 8,
-	IDXD_COMP_DIF_ERR		= 9,
-	IDXD_COMP_BAD_OPCODE		= 16,
-	IDXD_COMP_INVALID_FLAGS		= 17,
-	IDXD_COMP_NOZERO_RESERVE	= 18,
-	IDXD_COMP_XFER_ERANGE		= 19,
-	IDXD_COMP_DESC_CNT_ERANGE	= 20,
-	IDXD_COMP_DR_ERANGE		= 21,
-	IDXD_COMP_OVERLAP_BUFFERS	= 22,
-	IDXD_COMP_DCAST_ERR		= 23,
-	IDXD_COMP_DESCLIST_ALIGN	= 24,
-	IDXD_COMP_INT_HANDLE_INVAL	= 25,
-	IDXD_COMP_CRA_XLAT		= 26,
-	IDXD_COMP_CRA_ALIGN		= 27,
-	IDXD_COMP_ADDR_ALIGN		= 28,
-	IDXD_COMP_PRIV_BAD		= 29,
-	IDXD_COMP_TRAFFIC_CLASS_CONF	= 30,
-	IDXD_COMP_PFAULT_RDBA		= 31,
-	IDXD_COMP_HW_ERR1		= 32,
-	IDXD_COMP_HW_ERR_DRB		= 33,
-	IDXD_COMP_TRANSLATION_FAIL	= 34,
+	DSA_COMP_NONE			= 0,
+	DSA_COMP_SUCCESS		= 1,
+	DSA_COMP_SUCCESS_PRED		= 2,
+	DSA_COMP_PAGE_FAULT_NOBOF	= 3,
+	DSA_COMP_PAGE_FAULT_IR		= 4,
+	DSA_COMP_BATCH_FAIL		= 5,
+	DSA_COMP_BATCH_PAGE_FAULT	= 6,
+	DSA_COMP_DR_OFFSET_NOINC	= 7,
+	DSA_COMP_DR_OFFSET_ERANGE	= 8,
+	DSA_COMP_DIF_ERR		= 9,
+	DSA_COMP_BAD_OPCODE		= 16,
+	DSA_COMP_INVALID_FLAGS		= 17,
+	DSA_COMP_NOZERO_RESERVE		= 18,
+	DSA_COMP_XFER_ERANGE		= 19,
+	DSA_COMP_DESC_CNT_ERANGE	= 20,
+	DSA_COMP_DR_ERANGE		= 21,
+	DSA_COMP_OVERLAP_BUFFERS	= 22,
+	DSA_COMP_DCAST_ERR		= 23,
+	DSA_COMP_DESCLIST_ALIGN		= 24,
+	DSA_COMP_INT_HANDLE_INVAL	= 25,
+	DSA_COMP_CRA_XLAT		= 26,
+	DSA_COMP_CRA_ALIGN		= 27,
+	DSA_COMP_ADDR_ALIGN		= 28,
+	DSA_COMP_PRIV_BAD		= 29,
+	DSA_COMP_TRAFFIC_CLASS_CONF	= 30,
+	DSA_COMP_PFAULT_RDBA		= 31,
+	DSA_COMP_HW_ERR1		= 32,
+	DSA_COMP_HW_ERR_DRB		= 33,
+	DSA_COMP_TRANSLATION_FAIL	= 34,
 };
 
 enum idxd_wq_state {
@@ -253,7 +252,7 @@ struct idxd_hw_desc {
 } __attribute((aligned(64)));
 SPDK_STATIC_ASSERT(sizeof(struct idxd_hw_desc) == 64, "size mismatch");
 
-struct idxd_hw_comp_record {
+struct dsa_hw_comp_record {
 	volatile uint8_t	status;
 	union {
 		uint8_t		result;
@@ -287,7 +286,7 @@ struct idxd_hw_comp_record {
 		uint8_t		op_specific[16];
 	};
 };
-SPDK_STATIC_ASSERT(sizeof(struct idxd_hw_comp_record) == 32, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(struct dsa_hw_comp_record) == 32, "size mismatch");
 
 union idxd_gencap_register {
 	struct {

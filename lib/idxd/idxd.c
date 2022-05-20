@@ -199,7 +199,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	for (i = 0; i < num_descriptors; i++) {
 		STAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 		op->desc = desc;
-		rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct idxd_hw_comp_record));
+		rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
 		if (rc) {
 			SPDK_ERRLOG("Failed to translate completion memory\n");
 			goto err_op;
@@ -241,7 +241,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 		}
 
 		for (j = 0; j < DESC_PER_BATCH; j++) {
-			rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct idxd_hw_comp_record));
+			rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
 			if (rc) {
 				SPDK_ERRLOG("Failed to translate batch entry completion memory\n");
 				goto err_user_desc_or_op;
