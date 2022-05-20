@@ -31,7 +31,6 @@ args+=(core_pid)
 args+=(core_sig)
 args+=(core_ts)
 args+=(rlimit)
-args+=(output_dir)
 
 read -r "${args[@]}" <<< "$*"
 
@@ -41,7 +40,7 @@ statm=$(< "/proc/$core_pid/statm")
 core_time=$(date -d@"$core_ts")
 core_sig_name=$(kill -l "$core_sig")
 
-core=$output_dir/${exe_path##*/}_$core_pid.core
+core=$(< "${0%/*}/../.coredump_path")/${exe_path##*/}_$core_pid.core
 stderr
 
 # RLIMIT_CORE is not enforced when core is piped to us. To make
