@@ -141,14 +141,84 @@ idxd_vtophys_iter_next(struct idxd_vtophys_iter *iter,
 	return len;
 }
 
+/* helper function for DSA specific spdk_idxd_get_channel() stuff */
+static int
+_dsa_alloc_batches(struct spdk_idxd_io_channel *chan, int num_descriptors)
+{
+	struct idxd_batch *batch;
+	struct idxd_hw_desc *desc;
+	struct idxd_ops *op;
+	int i, j, num_batches, rc = -1;
+
+	/* Allocate batches */
+	num_batches = num_descriptors;
+	chan->batch_base = calloc(num_batches, sizeof(struct idxd_batch));
+	if (chan->batch_base == NULL) {
+		SPDK_ERRLOG("Failed to allocate batch pool\n");
+		goto error_desc;
+	}
+	batch = chan->batch_base;
+	for (i = 0 ; i < num_batches ; i++) {
+		batch->user_desc = desc = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_hw_desc),
+						       0x40, NULL,
+						       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (batch->user_desc == NULL) {
+			SPDK_ERRLOG("Failed to allocate batch descriptor memory\n");
+			goto error_user;
+		}
+
+		rc = _vtophys(batch->user_desc, &batch->user_desc_addr,
+			      DESC_PER_BATCH * sizeof(struct idxd_hw_desc));
+		if (rc) {
+			SPDK_ERRLOG("Failed to translate batch descriptor memory\n");
+			goto error_user;
+		}
+
+		batch->user_ops = op = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_ops),
+						    0x40, NULL,
+						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+		if (batch->user_ops == NULL) {
+			SPDK_ERRLOG("Failed to allocate user completion memory\n");
+			goto error_user;
+		}
+
+		for (j = 0; j < DESC_PER_BATCH; j++) {
+			rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
+			if (rc) {
+				SPDK_ERRLOG("Failed to translate batch entry completion memory\n");
+				goto error_user;
+			}
+			op++;
+			desc++;
+		}
+		TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
+		batch++;
+	}
+	return 0;
+
+error_user:
+	TAILQ_FOREACH(batch, &chan->batch_pool, link) {
+		spdk_free(batch->user_ops);
+		batch->user_ops = NULL;
+		spdk_free(batch->user_desc);
+		batch->user_desc = NULL;
+	}
+	spdk_free(chan->ops_base);
+	chan->ops_base = NULL;
+error_desc:
+	STAILQ_INIT(&chan->ops_pool);
+	spdk_free(chan->desc_base);
+	chan->desc_base = NULL;
+	return rc;
+}
+
 struct spdk_idxd_io_channel *
 spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 {
 	struct spdk_idxd_io_channel *chan;
-	struct idxd_batch *batch;
 	struct idxd_hw_desc *desc;
 	struct idxd_ops *op;
-	int i, j, num_batches, num_descriptors, rc;
+	int i, num_descriptors, rc;
 
 	assert(idxd != NULL);
 
@@ -208,63 +278,11 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 		desc++;
 	}
 
-	/* Allocate batches */
-	num_batches = num_descriptors;
-	chan->batch_base = calloc(num_batches, sizeof(struct idxd_batch));
-	if (chan->batch_base == NULL) {
-		SPDK_ERRLOG("Failed to allocate batch pool\n");
-		goto err_op;
-	}
-	batch = chan->batch_base;
-	for (i = 0 ; i < num_batches ; i++) {
-		batch->user_desc = desc = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_hw_desc),
-						       0x40, NULL,
-						       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (batch->user_desc == NULL) {
-			SPDK_ERRLOG("Failed to allocate batch descriptor memory\n");
-			goto err_user_desc_or_op;
-		}
-
-		rc = _vtophys(batch->user_desc, &batch->user_desc_addr,
-			      DESC_PER_BATCH * sizeof(struct idxd_hw_desc));
-		if (rc) {
-			SPDK_ERRLOG("Failed to translate batch descriptor memory\n");
-			goto err_user_desc_or_op;
-		}
-
-		batch->user_ops = op = spdk_zmalloc(DESC_PER_BATCH * sizeof(struct idxd_ops),
-						    0x40, NULL,
-						    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (batch->user_ops == NULL) {
-			SPDK_ERRLOG("Failed to allocate user completion memory\n");
-			goto err_user_desc_or_op;
-		}
-
-		for (j = 0; j < DESC_PER_BATCH; j++) {
-			rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
-			if (rc) {
-				SPDK_ERRLOG("Failed to translate batch entry completion memory\n");
-				goto err_user_desc_or_op;
-			}
-			op++;
-			desc++;
-		}
-
-		TAILQ_INSERT_TAIL(&chan->batch_pool, batch, link);
-		batch++;
+	if (_dsa_alloc_batches(chan, num_descriptors)) {
+		return NULL;
 	}
 
 	return chan;
-
-err_user_desc_or_op:
-	TAILQ_FOREACH(batch, &chan->batch_pool, link) {
-		spdk_free(batch->user_desc);
-		batch->user_desc = NULL;
-		spdk_free(batch->user_ops);
-		batch->user_ops = NULL;
-	}
-	spdk_free(chan->ops_base);
-	chan->ops_base = NULL;
 err_op:
 	spdk_free(chan->desc_base);
 	chan->desc_base = NULL;
