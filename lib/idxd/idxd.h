@@ -69,6 +69,11 @@ static inline void movdir64b(void *dst, const void *src)
 #define WQ_PRIORITY_1		1
 #define IDXD_MAX_QUEUES		64
 
+enum idxd_dev {
+	IDXD_DEV_TYPE_DSA	= 0,
+	IDXD_DEV_TYPE_IAA	= 1,
+};
+
 /* Each pre-allocated batch structure goes on a per channel list and
  * contains the memory for both user descriptors.
  */
@@ -124,7 +129,10 @@ struct pci_dev_id {
  * size and must be 32 byte aligned.
  */
 struct idxd_ops {
-	struct dsa_hw_comp_record	hw;
+	union {
+		struct dsa_hw_comp_record	hw;
+		struct iaa_hw_comp_record	iaa_hw;
+	};
 	void				*cb_arg;
 	spdk_idxd_req_cb		cb_fn;
 	struct idxd_batch		*batch;
@@ -134,11 +142,12 @@ struct idxd_ops {
 	uint32_t			count;
 	STAILQ_ENTRY(idxd_ops)		link;
 };
-SPDK_STATIC_ASSERT(sizeof(struct idxd_ops) == 96, "size mismatch");
+SPDK_STATIC_ASSERT(sizeof(struct idxd_ops) == 128, "size mismatch");
 
 struct spdk_idxd_impl {
 	const char *name;
-	int (*probe)(void *cb_ctx, spdk_idxd_attach_cb attach_cb);
+	int (*probe)(void *cb_ctx, spdk_idxd_attach_cb attach_cb,
+		     spdk_idxd_probe_cb probe_cb);
 	void (*destruct)(struct spdk_idxd_device *idxd);
 	void (*dump_sw_error)(struct spdk_idxd_device *idxd, void *portal);
 	char *(*portal_get_addr)(struct spdk_idxd_device *idxd);
@@ -154,6 +163,7 @@ struct spdk_idxd_device {
 	uint32_t			total_wq_size;
 	uint32_t			chan_per_device;
 	pthread_mutex_t			num_channels_lock;
+	enum idxd_dev			type;
 };
 
 void idxd_impl_register(struct spdk_idxd_impl *impl);

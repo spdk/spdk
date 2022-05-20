@@ -51,8 +51,6 @@ struct spdk_user_idxd_device {
 	struct idxd_registers	*registers;
 };
 
-typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
-
 #define __user_idxd(idxd) (struct spdk_user_idxd_device *)idxd
 
 pthread_mutex_t	g_driver_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -329,7 +327,8 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	}
 
 	if ((rc == 0) && (gensts_reg.state == IDXD_DEVICE_STATE_ENABLED)) {
-		SPDK_DEBUGLOG(idxd, "Device enabled\n");
+		SPDK_DEBUGLOG(idxd, "Device enabled VID 0x%x DID 0x%x\n",
+			      user_idxd->device->id.vendor_id, user_idxd->device->id.device_id);
 	}
 
 	return rc;
@@ -364,27 +363,6 @@ struct idxd_enum_ctx {
 	void *cb_ctx;
 };
 
-/* This function must only be called while holding g_driver_lock */
-static int
-idxd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
-{
-	struct idxd_enum_ctx *enum_ctx = ctx;
-	struct spdk_idxd_device *idxd;
-
-	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev)) {
-		idxd = idxd_attach(pci_dev);
-		if (idxd == NULL) {
-			SPDK_ERRLOG("idxd_attach() failed\n");
-			return -EINVAL;
-		}
-
-		enum_ctx->attach_cb(enum_ctx->cb_ctx, idxd);
-	}
-
-	return 0;
-}
-
-
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
@@ -409,8 +387,37 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	return true;
 }
 
+/* This function must only be called while holding g_driver_lock */
 static int
-user_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
+idxd_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
+{
+	struct idxd_enum_ctx *enum_ctx = ctx;
+	struct spdk_idxd_device *idxd;
+
+	/* Call the user probe_cb to see if they want this device or not, if not
+	 * skip it with a positive return code.
+	 */
+	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev) == false) {
+		return 1;
+	}
+
+	if (probe_cb(enum_ctx->cb_ctx, pci_dev)) {
+		idxd = idxd_attach(pci_dev);
+		if (idxd == NULL) {
+			SPDK_ERRLOG("idxd_attach() failed\n");
+			return -EINVAL;
+		}
+
+		enum_ctx->attach_cb(enum_ctx->cb_ctx, idxd);
+	}
+
+	return 0;
+}
+
+/* The IDXD driver supports 2 distinct HW units, DSA and IAA. */
+static int
+user_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb,
+		spdk_idxd_probe_cb probe_cb)
 {
 	int rc;
 	struct idxd_enum_ctx enum_ctx;
@@ -422,6 +429,7 @@ user_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
 	pthread_mutex_lock(&g_driver_lock);
 	rc = spdk_pci_enumerate(spdk_pci_idxd_get_driver(), idxd_enum_cb, &enum_ctx);
 	pthread_mutex_unlock(&g_driver_lock);
+	assert(rc == 0);
 
 	return rc;
 }
@@ -464,6 +472,7 @@ idxd_attach(struct spdk_pci_device *device)
 {
 	struct spdk_user_idxd_device *user_idxd;
 	struct spdk_idxd_device *idxd;
+	uint16_t did = device->id.device_id;
 	uint32_t cmd_reg;
 	int rc;
 
@@ -474,6 +483,12 @@ idxd_attach(struct spdk_pci_device *device)
 	}
 
 	idxd = &user_idxd->idxd;
+	if (did == PCI_DEVICE_ID_INTEL_DSA) {
+		idxd->type = IDXD_DEV_TYPE_DSA;
+	} else if (did == PCI_DEVICE_ID_INTEL_IAA) {
+		idxd->type = IDXD_DEV_TYPE_IAA;
+	}
+
 	user_idxd->device = device;
 	idxd->impl = &g_user_idxd_impl;
 	idxd->socket_id = device->socket_id;

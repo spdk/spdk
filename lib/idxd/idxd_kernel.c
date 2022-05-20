@@ -82,7 +82,7 @@ kernel_idxd_device_destruct(struct spdk_idxd_device *idxd)
 static struct spdk_idxd_impl g_kernel_idxd_impl;
 
 static int
-kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
+kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_cb probe_cb)
 {
 	int rc;
 	struct accfg_ctx *ctx;

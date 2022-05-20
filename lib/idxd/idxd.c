@@ -348,14 +348,15 @@ idxd_device_destruct(struct spdk_idxd_device *idxd)
 }
 
 int
-spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb)
+spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb,
+		spdk_idxd_probe_cb probe_cb)
 {
 	if (g_idxd_impl == NULL) {
 		SPDK_ERRLOG("No idxd impl is selected\n");
 		return -1;
 	}
 
-	return g_idxd_impl->probe(cb_ctx, attach_cb);
+	return g_idxd_impl->probe(cb_ctx, attach_cb, probe_cb);
 }
 
 void

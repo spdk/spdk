@@ -100,6 +100,32 @@ enum dsa_completion_status {
 	DSA_COMP_TRANSLATION_FAIL	= 34,
 };
 
+enum iaa_completion_status {
+	IAA_COMP_NONE			= 0,
+	IAA_COMP_SUCCESS		= 1,
+	IAA_COMP_PAGE_FAULT_IR		= 4,
+	IAA_COMP_OUTBUF_OVERFLOW	= 5,
+	IAA_COMP_BAD_OPCODE		= 16,
+	IAA_COMP_INVALID_FLAGS		= 17,
+	IAA_COMP_NOZERO_RESERVE		= 18,
+	IAA_COMP_INVALID_SIZE		= 19,
+	IAA_COMP_OVERLAP_BUFFERS	= 22,
+	IAA_COMP_INT_HANDLE_INVAL	= 25,
+	IAA_COMP_CRA_XLAT		= 32,
+	IAA_COMP_CRA_ALIGN		= 33,
+	IAA_COMP_ADDR_ALIGN		= 34,
+	IAA_COMP_PRIV_BAD		= 35,
+	IAA_COMP_TRAFFIC_CLASS_CONF	= 36,
+	IAA_COMP_PFAULT_RDBA		= 37,
+	IAA_COMP_HW_ERR1		= 38,
+	IAA_COMP_TRANSLATION_FAIL	= 39,
+	IAA_COMP_PRS_TIMEOUT		= 40,
+	IAA_COMP_WATCHDOG		= 41,
+	IAA_COMP_INVALID_COMP_FLAG	= 48,
+	IAA_COMP_INVALID_FILTER_FLAG	= 49,
+	IAA_COMP_INVALID_NUM_ELEMS	= 50,
+};
+
 enum idxd_wq_state {
 	WQ_DISABLED	= 0,
 	WQ_ENABLED	= 1,
@@ -188,6 +214,7 @@ struct idxd_hw_desc {
 	uint64_t	completion_addr;
 	union {
 		uint64_t	src_addr;
+		uint64_t	src1_addr;
 		uint64_t	readback_addr;
 		uint64_t	pattern;
 		uint64_t	desc_list_addr;
@@ -199,12 +226,24 @@ struct idxd_hw_desc {
 		uint64_t	comp_pattern;
 	};
 	union {
+		uint32_t	src1_size;
 		uint32_t	xfer_size;
 		uint32_t	desc_count;
 	};
 	uint16_t	int_handle;
-	uint16_t	rsvd1;
 	union {
+		uint16_t	rsvd1;
+		uint16_t	compr_flags;
+		uint16_t	decompr_flags;
+	};
+	union {
+		struct {
+			uint64_t	src2_addr;
+			uint32_t	max_dst_size;
+			uint32_t	src2_size;
+			uint32_t	filter_flags;
+			uint32_t	num_inputs;
+		} iaa;
 		uint8_t		expected_res;
 		struct {
 			uint64_t	addr;
@@ -287,6 +326,22 @@ struct dsa_hw_comp_record {
 	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct dsa_hw_comp_record) == 32, "size mismatch");
+
+struct iaa_hw_comp_record {
+	volatile uint8_t	status;
+	uint8_t			error_code;
+	uint16_t		rsvd;
+	uint32_t		bytes_completed;
+	uint64_t		fault_addr;
+	uint32_t		invalid_flags;
+	uint32_t		rsvd2;
+	uint32_t		output_size;
+	uint8_t			output_bits;
+	uint8_t			rsvd3;
+	uint16_t		rsvd4;
+	uint64_t		rsvd5[4];
+};
+SPDK_STATIC_ASSERT(sizeof(struct iaa_hw_comp_record) == 64, "size mismatch");
 
 union idxd_gencap_register {
 	struct {

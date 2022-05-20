@@ -105,6 +105,15 @@ typedef void (*spdk_idxd_req_cb)(void *arg, int status);
 typedef void (*spdk_idxd_attach_cb)(void *cb_ctx, struct spdk_idxd_device *idxd);
 
 /**
+ * Callback for spdk_idxd_probe() to report a device that has been found.
+ *
+ * \param cb_ctx User-specified opaque value corresponding to cb_ctx from spdk_idxd_probe().
+ * \param dev PCI device that is in question.
+ * \return true if the caller wants the device, false if not..
+ */
+typedef bool (*spdk_idxd_probe_cb)(void *cb_ctx, struct spdk_pci_device *dev);
+
+/**
  * Enumerate the IDXD devices attached to the system and attach the userspace
  * IDXD driver to them if desired.
  *
@@ -116,12 +125,14 @@ typedef void (*spdk_idxd_attach_cb)(void *cb_ctx, struct spdk_idxd_device *idxd)
  *
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
  * the callbacks.
+ * \param probe_cb callback to determine if the device being probe should be attached.
  * \param attach_cb will be called for devices for which probe_cb returned true
  * once the IDXD controller has been attached to the userspace driver.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb);
+int spdk_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb,
+		    spdk_idxd_probe_cb probe_cb);
 
 /**
  * Detach specified device returned by spdk_idxd_probe() from the IDXD driver.

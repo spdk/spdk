@@ -404,6 +404,16 @@ accel_engine_dsa_enable_probe(bool kernel_mode)
 	spdk_idxd_set_config(g_kernel_mode);
 }
 
+static bool
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
+{
+	if (dev->id.device_id == PCI_DEVICE_ID_INTEL_DSA) {
+		return true;
+	}
+
+	return false;
+}
+
 static int
 accel_engine_dsa_init(void)
 {
@@ -411,7 +421,7 @@ accel_engine_dsa_init(void)
 		return -EINVAL;
 	}
 
-	if (spdk_idxd_probe(NULL, attach_cb) != 0) {
+	if (spdk_idxd_probe(NULL, attach_cb, probe_cb) != 0) {
 		SPDK_ERRLOG("spdk_idxd_probe() failed\n");
 		return -EINVAL;
 	}

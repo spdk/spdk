@@ -166,13 +166,20 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 	g_num_devices++;
 }
 
+static bool
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
+{
+	/* this tool will gladly claim all types of IDXD devices. */
+	return true;
+}
+
 static int
 idxd_init(void)
 {
 	spdk_idxd_set_config(g_idxd_kernel_mode);
 
-	if (spdk_idxd_probe(NULL, attach_cb) != 0) {
-		fprintf(stderr, "idxd_probe() failed\n");
+	if (spdk_idxd_probe(NULL, attach_cb, probe_cb) != 0) {
+		fprintf(stderr, "spdk_idxd_probe() failed\n");
 		return 1;
 	}
 
