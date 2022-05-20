@@ -17,6 +17,9 @@ an object with an array named "subsystems".
 
 New RPCs `bdev_xnvme_create` and `bdev_xnvme_delete` were added to support the xNVMe bdev.
 
+A new API `spdk_bdev_for_each_bdev_io` was added to execute the function on the appropriate
+thread for each bdev_io submitted to the bdev.
+
 ### sock
 
 Added new `ssl` based socket implementation, the code is located in module/sock/posix.

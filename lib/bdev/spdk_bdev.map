@@ -147,6 +147,7 @@
 	spdk_bdev_part_get_offset_blocks;
 	spdk_bdev_push_media_events;
 	spdk_bdev_notify_media_management;
+	spdk_bdev_for_each_bdev_io;
 
 	# Public functions in bdev_zone.h
 	spdk_bdev_get_zone_size;

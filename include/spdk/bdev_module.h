@@ -1293,6 +1293,26 @@ int spdk_bdev_push_media_events(struct spdk_bdev *bdev, const struct spdk_bdev_m
  */
 void spdk_bdev_notify_media_management(struct spdk_bdev *bdev);
 
+typedef int (*spdk_bdev_io_fn)(void *ctx, struct spdk_bdev_io *bdev_io);
+typedef void (*spdk_bdev_for_each_io_cb)(void *ctx, int rc);
+
+/**
+ * Call the provided function on the appropriate thread for each bdev_io submitted
+ * to the provided bdev.
+ *
+ * Note: This function should be used only in the bdev module and it should be
+ * ensured that the bdev is not unregistered while executing the function.
+ * Both fn and cb are required to specify.
+ *
+ * \param bdev Block device to query.
+ * \param ctx Context passed to the function for each bdev_io and the completion
+ * callback function.
+ * \param fn Called on the appropriate thread for each bdev_io submitted to the bdev.
+ * \param cb Called when this operation completes.
+ */
+void spdk_bdev_for_each_bdev_io(struct spdk_bdev *bdev, void *ctx, spdk_bdev_io_fn fn,
+				spdk_bdev_for_each_io_cb cb);
+
 /*
  *  Macro used to register module for later initialization.
  */

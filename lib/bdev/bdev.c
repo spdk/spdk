@@ -7739,6 +7739,66 @@ spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain *
 	return 0;
 }
 
+struct spdk_bdev_for_each_io_ctx {
+	void *ctx;
+	spdk_bdev_io_fn fn;
+	spdk_bdev_for_each_io_cb cb;
+};
+
+static void
+bdev_channel_for_each_io(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_for_each_io_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	struct spdk_bdev_io *bdev_io;
+	int rc = 0;
+
+	TAILQ_FOREACH(bdev_io, &bdev_ch->io_submitted, internal.ch_link) {
+		rc = ctx->fn(ctx->ctx, bdev_io);
+		if (rc != 0) {
+			break;
+		}
+	}
+
+	spdk_for_each_channel_continue(i, rc);
+}
+
+static void
+bdev_for_each_io_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev_for_each_io_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	ctx->cb(ctx->ctx, status);
+
+	free(ctx);
+}
+
+void
+spdk_bdev_for_each_bdev_io(struct spdk_bdev *bdev, void *_ctx, spdk_bdev_io_fn fn,
+			   spdk_bdev_for_each_io_cb cb)
+{
+	struct spdk_bdev_for_each_io_ctx *ctx;
+
+	assert(fn != NULL && cb != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate context.\n");
+		cb(_ctx, -ENOMEM);
+		return;
+	}
+
+	ctx->ctx = _ctx;
+	ctx->fn = fn;
+	ctx->cb = cb;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev),
+			      bdev_channel_for_each_io,
+			      ctx,
+			      bdev_for_each_io_done);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(bdev)
 
 SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
