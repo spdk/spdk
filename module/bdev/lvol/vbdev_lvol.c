@@ -1441,6 +1441,13 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 	struct spdk_lvs_with_handle_req *req;
 	int rc;
 
+	if (spdk_bdev_get_md_size(bdev) != 0) {
+		SPDK_INFOLOG(vbdev_lvol, "Cannot create bs dev on %s\n which is formatted with metadata",
+			     bdev->name);
+		spdk_bdev_module_examine_done(&g_lvol_if);
+		return;
+	}
+
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
 		spdk_bdev_module_examine_done(&g_lvol_if);

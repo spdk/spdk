@@ -73,6 +73,12 @@ spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
 	return &bdev->aliases;
 }
 
+uint32_t
+spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
+{
+	return bdev->md_len;
+}
+
 int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 {
