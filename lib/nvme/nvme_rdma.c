@@ -831,7 +831,7 @@ nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 		SPDK_ERRLOG("Failed to post WRs on receive queue, errno %d (%s), bad_wr %p\n",
 			    rc, spdk_strerror(rc), bad_recv_wr);
 		while (bad_recv_wr != NULL) {
-			assert(rqpair->current_num_sends > 0);
+			assert(rqpair->current_num_recvs > 0);
 			rqpair->current_num_recvs--;
 			bad_recv_wr = bad_recv_wr->next;
 		}
@@ -864,7 +864,6 @@ nvme_rdma_qpair_queue_send_wr(struct nvme_rdma_qpair *rqpair, struct ibv_send_wr
 static inline int
 nvme_rdma_qpair_queue_recv_wr(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr *wr)
 {
-
 	assert(wr->next == NULL);
 	assert(rqpair->current_num_recvs < rqpair->num_entries);
 
@@ -2619,6 +2618,7 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 
 			rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
 			rdma_req->completion_flags |= NVME_RDMA_SEND_COMPLETED;
+			assert(rqpair->current_num_sends > 0);
 			rqpair->current_num_sends--;
 
 			if ((rdma_req->completion_flags & NVME_RDMA_RECV_COMPLETED) != 0) {
