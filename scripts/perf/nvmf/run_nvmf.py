@@ -836,6 +836,7 @@ class Initiator(Server):
                                 r'traddr:\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',  # get IP address
                                 nvme_discover_output)  # from nvme discovery output
         subsystems = filter(lambda x: x[-1] in address_list, subsystems)
+        subsystems = filter(lambda x: "discovery" not in x[1], subsystems)
         subsystems = list(set(subsystems))
         subsystems.sort(key=lambda x: x[1])
         self.log_print("Found matching subsystems on target side:")
@@ -1190,12 +1191,13 @@ class SPDKTarget(Target):
             rpc.nvmf.nvmf_create_subsystem(self.client, nqn, serial,
                                            allow_any_host=True, max_namespaces=8)
             rpc.nvmf.nvmf_subsystem_add_ns(self.client, nqn, bdev_name)
-            rpc.nvmf.nvmf_subsystem_add_listener(self.client,
-                                                 nqn=nqn,
-                                                 trtype=self.transport,
-                                                 traddr=ip,
-                                                 trsvcid=port,
-                                                 adrfam="ipv4")
+            for nqn_name in [nqn, "discovery"]:
+                rpc.nvmf.nvmf_subsystem_add_listener(self.client,
+                                                     nqn=nqn_name,
+                                                     trtype=self.transport,
+                                                     traddr=ip,
+                                                     trsvcid=port,
+                                                     adrfam="ipv4")
             self.subsystem_info_list.append([port, nqn, ip])
         self.subsys_no = len(self.subsystem_info_list)
 
