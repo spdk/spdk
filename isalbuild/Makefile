@@ -52,7 +52,7 @@ all: $(ISAL_DIR)/isa-l
 install: all
 
 uninstall:
-        @:
+	@:
 
 clean:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l clean $(REDIRECT)
