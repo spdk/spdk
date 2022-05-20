@@ -241,23 +241,23 @@ function get_used_bdf_block_devs() {
 }
 
 function collect_devices() {
-	# NVMe, IOAT, IDXD, VIRTIO, VMD
+	# NVMe, IOAT, DSA, VIRTIO, VMD
 
 	local ids dev_type dev_id bdf bdfs in_use driver
 
 	ids+="PCI_DEVICE_ID_INTEL_IOAT"
-	ids+="|PCI_DEVICE_ID_INTEL_IDXD"
+	ids+="|PCI_DEVICE_ID_INTEL_DSA"
 	ids+="|PCI_DEVICE_ID_VIRTIO"
 	ids+="|PCI_DEVICE_ID_INTEL_VMD"
 	ids+="|SPDK_PCI_CLASS_NVME"
 
-	local -gA nvme_d ioat_d idxd_d virtio_d vmd_d all_devices_d drivers_d
+	local -gA nvme_d ioat_d dsa_d virtio_d vmd_d all_devices_d drivers_d
 
 	while read -r _ dev_type dev_id; do
 		bdfs=(${pci_bus_cache["0x8086:$dev_id"]})
 		[[ $dev_type == *NVME* ]] && bdfs=(${pci_bus_cache["$dev_id"]})
 		[[ $dev_type == *VIRT* ]] && bdfs=(${pci_bus_cache["0x1af4:$dev_id"]})
-		[[ $dev_type =~ (NVME|IOAT|IDXD|VIRTIO|VMD) ]] && dev_type=${BASH_REMATCH[1],,}
+		[[ $dev_type =~ (NVME|IOAT|DSA|VIRTIO|VMD) ]] && dev_type=${BASH_REMATCH[1],,}
 		for bdf in "${bdfs[@]}"; do
 			in_use=0
 			if [[ $1 != status ]]; then
@@ -310,7 +310,7 @@ function collect_driver() {
 	else
 		[[ -n ${nvme_d["$bdf"]} ]] && driver=nvme
 		[[ -n ${ioat_d["$bdf"]} ]] && driver=ioatdma
-		[[ -n ${idxd_d["$bdf"]} ]] && driver=idxd
+		[[ -n ${dsa_d["$bdf"]} ]] && driver=dsa
 		[[ -n ${virtio_d["$bdf"]} ]] && driver=virtio-pci
 		[[ -n ${vmd_d["$bdf"]} ]] && driver=vmd
 	fi 2> /dev/null
@@ -667,7 +667,7 @@ function status_linux() {
 		desc=""
 		desc=${desc:-${nvme_d["$bdf"]:+NVMe}}
 		desc=${desc:-${ioat_d["$bdf"]:+I/OAT}}
-		desc=${desc:-${idxd_d["$bdf"]:+IDXD}}
+		desc=${desc:-${dsa_d["$bdf"]:+DSA}}
 		desc=${desc:-${virtio_d["$bdf"]:+virtio}}
 		desc=${desc:-${vmd_d["$bdf"]:+VMD}}
 
@@ -721,8 +721,8 @@ function status_freebsd() {
 		I/IOAT DMA
 		$(status_print "${!ioat_d[@]}")
 
-		IDXD DMA
-		$(status_print "${!idxd_d[@]}")
+		DSA DMA
+		$(status_print "${!dsa_d[@]}")
 
 		VMD
 		$(status_print "${!vmd_d[@]}")
@@ -734,7 +734,7 @@ function configure_freebsd_pci() {
 
 	BDFS+=("${!nvme_d[@]}")
 	BDFS+=("${!ioat_d[@]}")
-	BDFS+=("${!idxd_d[@]}")
+	BDFS+=("${!dsa_d[@]}")
 	BDFS+=("${!vmd_d[@]}")
 
 	# Drop the domain part from all the addresses
