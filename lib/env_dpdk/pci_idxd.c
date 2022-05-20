@@ -37,7 +37,7 @@
 
 #define SPDK_IDXD_PCI_DEVICE(DEVICE_ID) SPDK_PCI_DEVICE(SPDK_PCI_VID_INTEL, DEVICE_ID)
 static struct spdk_pci_id idxd_driver_id[] = {
-	{SPDK_IDXD_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IDXD)},
+	{SPDK_IDXD_PCI_DEVICE(PCI_DEVICE_ID_INTEL_DSA)},
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
