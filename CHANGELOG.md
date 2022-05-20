@@ -42,6 +42,8 @@ the destination is persistent.
 
 The RPC `idxd_scan_accel_engine` has been renamed to `dsa_scan_accel_engine`
 
+The RPC `iaa_scan_accel_engine` has been added.
+
 Many HW related structs/functions with the name `idxd` have been renamed `dsa`
 to more accurately represent the HW they are associated with.
 

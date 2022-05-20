@@ -74,9 +74,13 @@ struct spdk_accel_task {
 		uint32_t			seed;
 		uint64_t			fill_pattern;
 	};
-	uint32_t			*crc_dst;
+	union {
+		uint32_t		*crc_dst;
+		uint32_t		*output_size;
+	};
 	enum accel_opcode		op_code;
 	uint64_t			nbytes;
+	uint64_t			nbytes_dst;
 	int				flags;
 	int				status;
 	TAILQ_ENTRY(spdk_accel_task)	link;

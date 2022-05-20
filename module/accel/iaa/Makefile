@@ -31,17 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = ioat
+SO_VER := 1
+SO_MINOR := 0
 
-DIRS-$(CONFIG_IDXD) += dsa
-DIRS-$(CONFIG_IDXD) += iaa
+LIBNAME = accel_iaa
+C_SRCS = accel_engine_iaa.c accel_engine_iaa_rpc.c
 
-.PHONY: all clean $(DIRS-y)
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

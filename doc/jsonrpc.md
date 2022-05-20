@@ -1529,6 +1529,37 @@ Example response:
 }
 ~~~
 
+### iaa_scan_accel_engine {#rpc_iaa_scan_accel_engine}
+
+Enable IAA accel engine offload.
+This feature is considered as experimental.
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "iaa_scan_accel_engine",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### ioat_scan_accel_engine {#rpc_ioat_scan_accel_engine}
 
 Enable ioat accel engine offload.

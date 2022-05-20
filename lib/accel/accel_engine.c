@@ -414,6 +414,60 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 	return engine->submit_tasks(engine_ch, accel_task);
 }
 
+int
+spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes_dst,
+			   uint64_t nbytes_src, uint32_t *output_size, int flags,
+			   spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *accel_task;
+	struct spdk_accel_engine *engine = g_engines_opc[ACCEL_OPC_COMPRESS];
+	struct spdk_io_channel *engine_ch = accel_ch->engine_ch[ACCEL_OPC_COMPRESS];
+
+	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
+	if (accel_task == NULL) {
+		return -ENOMEM;
+	}
+
+	accel_task->output_size = output_size;
+	accel_task->src = src;
+	accel_task->dst = dst;
+	accel_task->nbytes = nbytes_src;
+	accel_task->nbytes_dst = nbytes_dst;
+	accel_task->flags = flags;
+	accel_task->op_code = ACCEL_OPC_COMPRESS;
+
+	return engine->submit_tasks(engine_ch, accel_task);
+
+	return 0;
+}
+
+int
+spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes_dst,
+			     uint64_t nbytes_src, int flags, spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *accel_task;
+	struct spdk_accel_engine *engine = g_engines_opc[ACCEL_OPC_DECOMPRESS];
+	struct spdk_io_channel *engine_ch = accel_ch->engine_ch[ACCEL_OPC_DECOMPRESS];
+
+	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
+	if (accel_task == NULL) {
+		return -ENOMEM;
+	}
+
+	accel_task->src = src;
+	accel_task->dst = dst;
+	accel_task->nbytes = nbytes_src;
+	accel_task->nbytes_dst = nbytes_dst;
+	accel_task->flags = flags;
+	accel_task->op_code = ACCEL_OPC_DECOMPRESS;
+
+	return engine->submit_tasks(engine_ch, accel_task);
+
+	return 0;
+}
+
 /* Helper function when when accel modules register with the framework. */
 void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 {
@@ -447,10 +501,13 @@ accel_engine_create_cb(void *io_device, void *ctx_buf)
 
 	/* Assign engines and get IO channels for each */
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
-		accel_ch->engine_ch[i] = g_engines_opc[i]->get_io_channel();
-		/* This can happen if idxd runs out of channels. */
-		if (accel_ch->engine_ch[i] == NULL) {
-			goto err;
+		/* TODO this check goes away once SW implementation of comp/decomp is implemented */
+		if (g_engines_opc[i]) {
+			accel_ch->engine_ch[i] = g_engines_opc[i]->get_io_channel();
+			/* This can happen if idxd runs out of channels. */
+			if (accel_ch->engine_ch[i] == NULL) {
+				goto err;
+			}
 		}
 	}
 
@@ -470,6 +527,8 @@ accel_engine_destroy_cb(void *io_device, void *ctx_buf)
 	int i;
 
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
+		/* TODO this check goes away once SW implementation of comp/decomp is implemented,
+		 * or it can be assert */
 		if (accel_ch->engine_ch[i]) {
 			spdk_put_io_channel(accel_ch->engine_ch[i]);
 			accel_ch->engine_ch[i] = NULL;
@@ -518,7 +577,9 @@ spdk_accel_engine_initialize(void)
 		}
 	}
 #ifdef DEBUG
-	for (op = 0; op < ACCEL_OPC_LAST; op++) {
+	/* TODO change ACCEL_OPC_LAST to ACCEL_OPC_LAST once SW implmentation of
+	 * compress/decomp is done */
+	for (op = 0; op < ACCEL_OPC_COMPRESS; op++) {
 		assert(g_engines_opc[op] != NULL);
 	}
 #endif

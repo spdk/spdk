@@ -54,7 +54,9 @@ enum accel_opcode {
 	ACCEL_OPC_COMPARE		= 3,
 	ACCEL_OPC_CRC32C		= 4,
 	ACCEL_OPC_COPY_CRC32C		= 5,
-	ACCEL_OPC_LAST			= 6,
+	ACCEL_OPC_COMPRESS		= 6,
+	ACCEL_OPC_DECOMPRESS		= 7,
+	ACCEL_OPC_LAST			= 8,
 };
 
 /**
@@ -246,6 +248,48 @@ int spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct
 				   uint32_t iovcnt, uint32_t *crc_dst, uint32_t seed,
 				   int flags, spdk_accel_completion_cb cb_fn, void *cb_arg);
 
+/**
+ * Build and submit a memory compress request.
+ *
+ * This function will build the compress descriptor and submit it.
+ *
+ * \param ch I/O channel associated with this call
+ * \param dst Destination to compress to.
+ * \param src Source to read from.
+ * \param nbytes_dst Length in bytes of output buffer.
+ * \param nbytes_src Length in bytes of input buffer.
+ * \param output_size The size of the compressed data
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, void *src,
+			       uint64_t nbytes_dst, uint64_t nbytes_src, uint32_t *output_size,
+			       int flags, spdk_accel_completion_cb cb_fn, void *cb_arg);
+
+/**
+ * Build and submit a memory decompress request.
+ *
+ * This function will build the decompress descriptor and submit it.
+ *
+ * \param ch I/O channel associated with this call
+ * \param dst Destination. Must be large enough to hold decompressed data.
+ * \param src Source to read from.
+ * \param nbytes_dst Length in bytes of output buffer.
+ * \param nbytes_src Length in bytes of input buffer.
+ * \param flags Flags, optional flags that can vary per operation.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *src,
+				 uint64_t nbytes_dst, uint64_t nbytes_src, int flags,
+				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 struct spdk_json_write_ctx;
 

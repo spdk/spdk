@@ -120,6 +120,7 @@ endif
 # module/accel
 DEPDIRS-accel_ioat := log ioat thread jsonrpc rpc accel
 DEPDIRS-accel_dsa := log idxd thread $(JSON_LIBS) accel trace
+DEPDIRS-accel_iaa := log idxd thread $(JSON_LIBS) accel trace
 
 # module/env_dpdk
 DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)

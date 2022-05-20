@@ -9,6 +9,7 @@ from . import bdev
 from . import blobfs
 from . import env_dpdk
 from . import dsa
+from . import iaa
 from . import ioat
 from . import iscsi
 from . import log

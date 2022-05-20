@@ -2609,6 +2609,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='config_kernel_mode')
     p.set_defaults(func=dsa_scan_accel_engine, config_kernel_mode=None)
 
+    # iaa
+    def iaa_scan_accel_engine(args):
+        rpc.iaa.iaa_scan_accel_engine(args.client)
+
+    p = subparsers.add_parser('iaa_scan_accel_engine',
+                              help='Set config and enable iaa accel engine offload.')
+    p.set_defaults(func=iaa_scan_accel_engine)
+
     # opal
     def bdev_nvme_opal_init(args):
         rpc.nvme.bdev_nvme_opal_init(args.client,
