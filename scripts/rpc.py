@@ -58,15 +58,13 @@ if __name__ == "__main__":
     def framework_start_init(args):
         rpc.framework_start_init(args.client)
 
-    p = subparsers.add_parser('framework_start_init', aliases=['start_subsystem_init'],
-                              help='Start initialization of subsystems')
+    p = subparsers.add_parser('framework_start_init', help='Start initialization of subsystems')
     p.set_defaults(func=framework_start_init)
 
     def framework_wait_init(args):
         rpc.framework_wait_init(args.client)
 
-    p = subparsers.add_parser('framework_wait_init', aliases=['wait_subsystem_init'],
-                              help='Block until subsystems have been initialized')
+    p = subparsers.add_parser('framework_wait_init', help='Block until subsystems have been initialized')
     p.set_defaults(func=framework_wait_init)
 
     def rpc_get_methods(args):
@@ -74,8 +72,7 @@ if __name__ == "__main__":
                                        current=args.current,
                                        include_aliases=args.include_aliases))
 
-    p = subparsers.add_parser('rpc_get_methods', aliases=['get_rpc_methods'],
-                              help='Get list of supported RPC methods')
+    p = subparsers.add_parser('rpc_get_methods', help='Get list of supported RPC methods')
     p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
     p.set_defaults(func=rpc_get_methods)
@@ -83,8 +80,7 @@ if __name__ == "__main__":
     def spdk_get_version(args):
         print_json(rpc.spdk_get_version(args.client))
 
-    p = subparsers.add_parser('spdk_get_version', aliases=['get_spdk_version'],
-                              help='Get SPDK version')
+    p = subparsers.add_parser('spdk_get_version', help='Get SPDK version')
     p.set_defaults(func=spdk_get_version)
 
     def save_config(args):
