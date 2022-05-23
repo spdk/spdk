@@ -2538,9 +2538,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def ioat_scan_accel_engine(args):
         rpc.ioat.ioat_scan_accel_engine(args.client)
 
-    p = subparsers.add_parser('ioat_scan_accel_engine',
-                              aliases=['ioat_scan_copy_engine', 'scan_ioat_copy_engine'],
-                              help='Enable IOAT accel engine offload.')
+    p = subparsers.add_parser('ioat_scan_accel_engine', help='Enable IOAT accel engine offload.')
     p.set_defaults(func=ioat_scan_accel_engine)
 
     # dsa
