@@ -79,7 +79,6 @@ rpc_framework_get_subsystems(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("framework_get_subsystems", rpc_framework_get_subsystems, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_subsystems, get_subsystems)
 
 struct rpc_framework_get_config_ctx {
 	char *name;
@@ -119,7 +118,6 @@ rpc_framework_get_config(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("framework_get_config", rpc_framework_get_config, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_get_config, get_subsystem_config)
 
 static void
 dump_pci_device(void *ctx, struct spdk_pci_device *dev)
