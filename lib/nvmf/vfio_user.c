@@ -394,7 +394,7 @@ struct nvmf_vfio_user_ctrlr {
 	uint64_t				eventidx_buffer;
 
 	bool					adaptive_irqs_enabled;
-	bool					self_kick_requested;
+	bool					kick_requested;
 };
 
 /* Endpoint in vfio-user is associated with a socket file, which
@@ -606,17 +606,20 @@ vfio_user_ctrlr_intr_wrapper(void *ctx)
 	vfio_user_ctrlr_intr(ctx);
 }
 
+/*
+ * Arrange for this controller to immediately wake up and process everything.
+ */
 static inline int
-self_kick(struct nvmf_vfio_user_ctrlr *ctrlr)
+ctrlr_kick(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	assert(ctrlr != NULL);
 	assert(ctrlr->thread != NULL);
 
-	if (ctrlr->self_kick_requested) {
+	if (ctrlr->kick_requested) {
 		return 0;
 	}
 
-	ctrlr->self_kick_requested = true;
+	ctrlr->kick_requested = true;
 
 	return spdk_thread_send_msg(ctrlr->thread,
 				    vfio_user_ctrlr_intr_wrapper,
@@ -1473,7 +1476,7 @@ vfio_user_sq_rearm(struct nvmf_vfio_user_ctrlr *ctrlr,
 	 * we raced with the producer too many times; force ourselves to wake up
 	 * instead. We'll process all queues at that point.
 	 */
-	self_kick(ctrlr);
+	ctrlr_kick(ctrlr);
 
 	return count;
 }
@@ -4594,7 +4597,7 @@ vfio_user_ctrlr_intr(void *ctx)
 	assert(ctrlr->sqs[0] != NULL);
 	assert(ctrlr->sqs[0]->group != NULL);
 
-	ctrlr->self_kick_requested = false;
+	ctrlr->kick_requested = false;
 
 	/*
 	 * Poll vfio-user for this controller.
@@ -4731,12 +4734,14 @@ handle_queue_connect_rsp(struct nvmf_vfio_user_req *req, void *cb_arg)
 			sq->post_create_io_sq_completion = false;
 		} else if (in_interrupt_mode(endpoint->transport)) {
 			/*
-			 * FIXME self_kick() ends up polling all queues on the
-			 * controller thread, and this will be wrong if we ever
-			 * support interrupt mode with I/O queues in a
-			 * different poll group than the controller's.
+			 * If we're live migrating a guest, there is a window
+			 * where the I/O queues haven't been set up but the
+			 * device is in running state, during which the guest
+			 * might write to a doorbell. This doorbell write will
+			 * go unnoticed, so let's poll the whole controller to
+			 * pick that up.
 			 */
-			self_kick(vu_ctrlr);
+			ctrlr_kick(vu_ctrlr);
 		}
 		sq->sq_state = VFIO_USER_SQ_ACTIVE;
 	}
