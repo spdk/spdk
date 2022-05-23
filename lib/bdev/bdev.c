@@ -4052,6 +4052,58 @@ spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 				   bdev, period);
 }
 
+struct bdev_get_current_qd_ctx {
+	uint64_t current_qd;
+	spdk_bdev_get_current_qd_cb cb_fn;
+	void *cb_arg;
+};
+
+static void
+bdev_get_current_qd_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct bdev_get_current_qd_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	void *io_dev = spdk_io_channel_iter_get_io_device(i);
+
+	ctx->cb_fn(__bdev_from_io_dev(io_dev), ctx->current_qd, ctx->cb_arg, 0);
+
+	free(ctx);
+}
+
+static void
+bdev_get_current_qd(struct spdk_io_channel_iter *i)
+{
+	struct bdev_get_current_qd_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
+
+	ctx->current_qd += bdev_ch->io_outstanding;
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+spdk_bdev_get_current_qd(struct spdk_bdev *bdev, spdk_bdev_get_current_qd_cb cb_fn,
+			 void *cb_arg)
+{
+	struct bdev_get_current_qd_ctx *ctx;
+
+	assert(cb_fn != NULL);
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		cb_fn(bdev, 0, cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev),
+			      bdev_get_current_qd,
+			      ctx,
+			      bdev_get_current_qd_done);
+}
+
 static void
 _resize_notify(void *arg)
 {

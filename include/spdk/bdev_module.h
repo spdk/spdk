@@ -1313,6 +1313,27 @@ typedef void (*spdk_bdev_for_each_io_cb)(void *ctx, int rc);
 void spdk_bdev_for_each_bdev_io(struct spdk_bdev *bdev, void *ctx, spdk_bdev_io_fn fn,
 				spdk_bdev_for_each_io_cb cb);
 
+typedef void (*spdk_bdev_get_current_qd_cb)(struct spdk_bdev *bdev, uint64_t current_qd,
+		void *cb_arg, int rc);
+
+/**
+ * Measure and return the queue depth from a bdev.
+ *
+ * Note: spdk_bdev_get_qd() works only when the user enables queue depth sampling,
+ * while this new function works even when queue depth sampling is disabled.
+ * The returned queue depth may not be exact, for example, some additional I/Os may
+ * have been submitted or completed during the for_each_channel operation.
+ * This function should be used only in the bdev module and it should be ensured
+ * that the dev is not unregistered while executing the function.
+ * cb_fn is required to specify.
+ *
+ * \param bdev Block device to query.
+ * \param cb_fn Callback function to be called with queue depth measured for a bdev.
+ * \param cb_arg Argument to pass to callback function.
+ */
+void spdk_bdev_get_current_qd(struct spdk_bdev *bdev,
+			      spdk_bdev_get_current_qd_cb cb_fn, void *cb_arg);
+
 /*
  *  Macro used to register module for later initialization.
  */

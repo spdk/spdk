@@ -20,6 +20,9 @@ New RPCs `bdev_xnvme_create` and `bdev_xnvme_delete` were added to support the x
 A new API `spdk_bdev_for_each_bdev_io` was added to execute the function on the appropriate
 thread for each bdev_io submitted to the bdev.
 
+A new API `spdk_bdev_get_current_qd` was added to measure and return the queue depth from a
+bdev. This API is available even when queue depth sampling is disabled.
+
 ### sock
 
 Added new `ssl` based socket implementation, the code is located in module/sock/posix.
