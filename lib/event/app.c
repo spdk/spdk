@@ -1067,7 +1067,6 @@ rpc_framework_start_init(struct spdk_jsonrpc_request *request,
 	spdk_subsystem_init(rpc_framework_start_init_cpl, request);
 }
 SPDK_RPC_REGISTER("framework_start_init", rpc_framework_start_init, SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_start_init, start_subsystem_init)
 
 struct subsystem_init_poller_ctx {
 	struct spdk_poller *init_poller;
@@ -1109,4 +1108,3 @@ rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("framework_wait_init", rpc_framework_wait_init,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_wait_init, wait_subsystem_init)
