@@ -2688,8 +2688,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def notify_get_types(args):
         print_dict(rpc.notify.notify_get_types(args.client))
 
-    p = subparsers.add_parser('notify_get_types', aliases=['get_notification_types'],
-                              help='List available notifications that user can subscribe to.')
+    p = subparsers.add_parser('notify_get_types', help='List available notifications that user can subscribe to.')
     p.set_defaults(func=notify_get_types)
 
     def notify_get_notifications(args):
@@ -2698,8 +2697,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                   max=args.max)
         print_dict(ret)
 
-    p = subparsers.add_parser('notify_get_notifications', aliases=['get_notifications'],
-                              help='Get notifications')
+    p = subparsers.add_parser('notify_get_notifications', help='Get notifications')
     p.add_argument('-i', '--id', help="""First ID to start fetching from""", type=int)
     p.add_argument('-n', '--max', help="""Maximum number of notifications to return in response""", type=int)
     p.set_defaults(func=notify_get_notifications)

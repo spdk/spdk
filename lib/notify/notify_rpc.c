@@ -67,7 +67,6 @@ rpc_notify_get_types(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("notify_get_types", rpc_notify_get_types, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(notify_get_types, get_notification_types)
 
 struct rpc_notify_get_notifications {
 	uint64_t id;
@@ -121,6 +120,5 @@ rpc_notify_get_notifications(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, req.w);
 }
 SPDK_RPC_REGISTER("notify_get_notifications", rpc_notify_get_notifications, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(notify_get_notifications, get_notifications)
 
 SPDK_LOG_REGISTER_COMPONENT(notify_rpc)
