@@ -111,7 +111,6 @@ invalid:
 	free_rpc_spdk_kill_instance(&req);
 }
 SPDK_RPC_REGISTER("spdk_kill_instance", rpc_spdk_kill_instance, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(spdk_kill_instance, kill_instance)
 
 
 struct rpc_framework_monitor_context_switch {
@@ -152,7 +151,6 @@ rpc_framework_monitor_context_switch(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("framework_monitor_context_switch", rpc_framework_monitor_context_switch,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(framework_monitor_context_switch, context_switch_monitor)
 
 struct rpc_get_stats_ctx {
 	struct spdk_jsonrpc_request *request;

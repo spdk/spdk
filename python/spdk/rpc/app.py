@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('kill_instance')
 def spdk_kill_instance(client, sig_name):
     """Send a signal to the SPDK process.
 
@@ -12,7 +11,6 @@ def spdk_kill_instance(client, sig_name):
     return client.call('spdk_kill_instance', params)
 
 
-@deprecated_alias('context_switch_monitor')
 def framework_monitor_context_switch(client, enabled=None):
     """Query or set state of context switch monitoring.
 

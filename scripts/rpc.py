@@ -133,8 +133,7 @@ if __name__ == "__main__":
         rpc.app.spdk_kill_instance(args.client,
                                    sig_name=args.sig_name)
 
-    p = subparsers.add_parser('spdk_kill_instance', aliases=['kill_instance'],
-                              help='Send signal to instance')
+    p = subparsers.add_parser('spdk_kill_instance', help='Send signal to instance')
     p.add_argument('sig_name', help='signal will be sent to server.')
     p.set_defaults(func=spdk_kill_instance)
 
@@ -147,7 +146,7 @@ if __name__ == "__main__":
         print_dict(rpc.app.framework_monitor_context_switch(args.client,
                                                             enabled=enabled))
 
-    p = subparsers.add_parser('framework_monitor_context_switch', aliases=['context_switch_monitor'],
+    p = subparsers.add_parser('framework_monitor_context_switch',
                               help='Control whether the context switch monitor is enabled')
     p.add_argument('-e', '--enable', action='store_true', help='Enable context switch monitoring')
     p.add_argument('-d', '--disable', action='store_true', help='Disable context switch monitoring')
