@@ -784,14 +784,12 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			if (rc == 0) {
 				_sw_accel_copy(accel_task->dst, accel_task->src, accel_task->nbytes, accel_task->flags);
 			}
-			_add_to_comp_list(sw_ch, accel_task, rc);
 			break;
 		case ACCEL_OPC_FILL:
 			rc = _check_flags(accel_task->flags);
 			if (rc == 0) {
 				_sw_accel_fill(accel_task->dst, accel_task->fill_pattern, accel_task->nbytes, accel_task->flags);
 			}
-			_add_to_comp_list(sw_ch, accel_task, rc);
 			break;
 		case ACCEL_OPC_DUALCAST:
 			rc = _check_flags(accel_task->flags);
@@ -799,11 +797,9 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 				_sw_accel_dualcast(accel_task->dst, accel_task->dst2, accel_task->src, accel_task->nbytes,
 						   accel_task->flags);
 			}
-			_add_to_comp_list(sw_ch, accel_task, rc);
 			break;
 		case ACCEL_OPC_COMPARE:
 			rc = _sw_accel_compare(accel_task->src, accel_task->src2, accel_task->nbytes);
-			_add_to_comp_list(sw_ch, accel_task, rc);
 			break;
 		case ACCEL_OPC_CRC32C:
 			if (accel_task->v.iovcnt == 0) {
@@ -811,7 +807,6 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			} else {
 				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
 			}
-			_add_to_comp_list(sw_ch, accel_task, 0);
 			break;
 		case ACCEL_OPC_COPY_CRC32C:
 			rc = _check_flags(accel_task->flags);
@@ -824,7 +819,6 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 					_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
 				}
 			}
-			_add_to_comp_list(sw_ch, accel_task, rc);
 			break;
 		default:
 			assert(false);
@@ -833,10 +827,7 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 
 		tmp = TAILQ_NEXT(accel_task, link);
 
-		/* Report any build errors via the callback now. */
-		if (rc) {
-			spdk_accel_task_complete(accel_task, rc);
-		}
+		_add_to_comp_list(sw_ch, accel_task, rc);
 
 		accel_task = tmp;
 	} while (accel_task);
