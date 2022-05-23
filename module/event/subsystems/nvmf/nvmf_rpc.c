@@ -71,7 +71,6 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_set_max_subsystems, set_nvmf_target_max_subsystems)
 
 static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
 	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool}
@@ -216,7 +215,6 @@ rpc_nvmf_set_config(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(request, true);
 }
 SPDK_RPC_REGISTER("nvmf_set_config", rpc_nvmf_set_config, SPDK_RPC_STARTUP)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(nvmf_set_config, set_nvmf_target_config)
 
 struct nvmf_rpc_set_crdt {
 	uint16_t crdt1;
