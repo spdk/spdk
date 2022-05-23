@@ -1665,7 +1665,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def trace_enable_tpoint_group(args):
         rpc.trace.trace_enable_tpoint_group(args.client, name=args.name)
 
-    p = subparsers.add_parser('trace_enable_tpoint_group', aliases=['enable_tpoint_group'],
+    p = subparsers.add_parser('trace_enable_tpoint_group',
                               help='enable trace on a specific tpoint group')
     p.add_argument(
         'name', help="""trace group name we want to enable in tpoint_group_mask.
@@ -1675,7 +1675,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def trace_disable_tpoint_group(args):
         rpc.trace.trace_disable_tpoint_group(args.client, name=args.name)
 
-    p = subparsers.add_parser('trace_disable_tpoint_group', aliases=['disable_tpoint_group'],
+    p = subparsers.add_parser('trace_disable_tpoint_group',
                               help='disable trace on a specific tpoint group')
     p.add_argument(
         'name', help="""trace group name we want to disable in tpoint_group_mask.
@@ -1713,8 +1713,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def trace_get_tpoint_group_mask(args):
         print_dict(rpc.trace.trace_get_tpoint_group_mask(args.client))
 
-    p = subparsers.add_parser('trace_get_tpoint_group_mask', aliases=['get_tpoint_group_mask'],
-                              help='get trace point group mask')
+    p = subparsers.add_parser('trace_get_tpoint_group_mask', help='get trace point group mask')
     p.set_defaults(func=trace_get_tpoint_group_mask)
 
     # log

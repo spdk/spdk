@@ -162,7 +162,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("trace_enable_tpoint_group", rpc_trace_enable_tpoint_group,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(trace_enable_tpoint_group, enable_tpoint_group)
 
 static void
 rpc_trace_disable_tpoint_group(struct spdk_jsonrpc_request *request,
@@ -196,7 +195,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("trace_disable_tpoint_group", rpc_trace_disable_tpoint_group,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(trace_disable_tpoint_group, disable_tpoint_group)
 
 static void
 rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
@@ -241,4 +239,3 @@ rpc_trace_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("trace_get_tpoint_group_mask", rpc_trace_get_tpoint_group_mask,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(trace_get_tpoint_group_mask, get_tpoint_group_mask)

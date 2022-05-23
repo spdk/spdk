@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('enable_tpoint_group')
 def trace_enable_tpoint_group(client, name):
     """Enable trace on a specific tpoint group.
 
@@ -12,7 +11,6 @@ def trace_enable_tpoint_group(client, name):
     return client.call('trace_enable_tpoint_group', params)
 
 
-@deprecated_alias('disable_tpoint_group')
 def trace_disable_tpoint_group(client, name):
     """Disable trace on a specific tpoint group.
 
@@ -47,7 +45,6 @@ def trace_clear_tpoint_mask(client, name, tpoint_mask):
     return client.call('trace_clear_tpoint_mask', params)
 
 
-@deprecated_alias('get_tpoint_group_mask')
 def trace_get_tpoint_group_mask(client):
     """Get trace point group mask
 
