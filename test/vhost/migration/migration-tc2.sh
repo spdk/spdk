@@ -16,7 +16,7 @@ function migration_tc2_cleanup_vhost_config() {
 	$rpc_0 bdev_nvme_detach_controller Nvme0
 	$rpc_0 vhost_delete_controller $incoming_vm_ctrlr
 
-	$rpc_1 delete_nvme_controller Nvme0
+	$rpc_1 bdev_nvme_detach_controller Nvme0
 	$rpc_1 vhost_delete_controller $target_vm_ctrlr
 
 	notice "killing vhost app"

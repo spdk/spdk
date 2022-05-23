@@ -87,7 +87,6 @@ cleanup:
 	free_rpc_bdev_pmem_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_pmem_create", rpc_bdev_pmem_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_create, construct_pmem_bdev)
 
 struct rpc_delete_pmem {
 	char *name;
@@ -136,7 +135,6 @@ cleanup:
 	free_rpc_delete_pmem(&req);
 }
 SPDK_RPC_REGISTER("bdev_pmem_delete", rpc_bdev_pmem_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_delete, delete_pmem_bdev)
 
 struct rpc_bdev_pmem_create_pool {
 	char *pmem_file;
@@ -205,7 +203,6 @@ cleanup:
 	free_rpc_bdev_pmem_create_pool(&req);
 }
 SPDK_RPC_REGISTER("bdev_pmem_create_pool", rpc_bdev_pmem_create_pool, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_create_pool, create_pmem_pool)
 
 struct rpc_bdev_pmem_get_pool_info {
 	char *pmem_file;
@@ -274,7 +271,6 @@ cleanup:
 	free_rpc_bdev_pmem_get_pool_info(&req);
 }
 SPDK_RPC_REGISTER("bdev_pmem_get_pool_info", rpc_bdev_pmem_get_pool_info, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_get_pool_info, pmem_pool_info)
 
 struct rpc_bdev_pmem_delete_pool {
 	char *pmem_file;
@@ -323,4 +319,3 @@ cleanup:
 	free_rpc_bdev_pmem_delete_pool(&req);
 }
 SPDK_RPC_REGISTER("bdev_pmem_delete_pool", rpc_bdev_pmem_delete_pool, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_pmem_delete_pool, delete_pmem_pool)

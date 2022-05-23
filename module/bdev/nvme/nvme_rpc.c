@@ -488,4 +488,3 @@ invalid:
 	return;
 }
 SPDK_RPC_REGISTER("bdev_nvme_send_cmd", rpc_bdev_nvme_send_cmd, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_send_cmd, send_nvme_cmd)

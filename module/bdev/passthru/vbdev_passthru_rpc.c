@@ -91,7 +91,6 @@ cleanup:
 	free_rpc_bdev_passthru_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_passthru_create", rpc_bdev_passthru_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_passthru_create, construct_passthru_bdev)
 
 struct rpc_bdev_passthru_delete {
 	char *name;
@@ -139,4 +138,3 @@ cleanup:
 	free_rpc_bdev_passthru_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_passthru_delete", rpc_bdev_passthru_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_passthru_delete, delete_passthru_bdev)

@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('construct_lvol_store')
 def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None, clear_method=None):
     """Construct a logical volume store.
 
@@ -22,7 +21,6 @@ def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None, clear
     return client.call('bdev_lvol_create_lvstore', params)
 
 
-@deprecated_alias('rename_lvol_store')
 def bdev_lvol_rename_lvstore(client, old_name, new_name):
     """Rename a logical volume store.
 
@@ -37,7 +35,6 @@ def bdev_lvol_rename_lvstore(client, old_name, new_name):
     return client.call('bdev_lvol_rename_lvstore', params)
 
 
-@deprecated_alias('construct_lvol_bdev')
 def bdev_lvol_create(client, lvol_name, size, thin_provision=False, uuid=None, lvs_name=None, clear_method=None):
     """Create a logical volume on a logical volume store.
 
@@ -68,7 +65,6 @@ def bdev_lvol_create(client, lvol_name, size, thin_provision=False, uuid=None, l
     return client.call('bdev_lvol_create', params)
 
 
-@deprecated_alias('snapshot_lvol_bdev')
 def bdev_lvol_snapshot(client, lvol_name, snapshot_name):
     """Capture a snapshot of the current state of a logical volume.
 
@@ -86,7 +82,6 @@ def bdev_lvol_snapshot(client, lvol_name, snapshot_name):
     return client.call('bdev_lvol_snapshot', params)
 
 
-@deprecated_alias('clone_lvol_bdev')
 def bdev_lvol_clone(client, snapshot_name, clone_name):
     """Create a logical volume based on a snapshot.
 
@@ -104,7 +99,6 @@ def bdev_lvol_clone(client, snapshot_name, clone_name):
     return client.call('bdev_lvol_clone', params)
 
 
-@deprecated_alias('rename_lvol_bdev')
 def bdev_lvol_rename(client, old_name, new_name):
     """Rename a logical volume.
 
@@ -119,7 +113,6 @@ def bdev_lvol_rename(client, old_name, new_name):
     return client.call('bdev_lvol_rename', params)
 
 
-@deprecated_alias('resize_lvol_bdev')
 def bdev_lvol_resize(client, name, size):
     """Resize a logical volume.
 
@@ -134,7 +127,6 @@ def bdev_lvol_resize(client, name, size):
     return client.call('bdev_lvol_resize', params)
 
 
-@deprecated_alias('set_read_only_lvol_bdev')
 def bdev_lvol_set_read_only(client, name):
     """Mark logical volume as read only.
 
@@ -147,7 +139,6 @@ def bdev_lvol_set_read_only(client, name):
     return client.call('bdev_lvol_set_read_only', params)
 
 
-@deprecated_alias('destroy_lvol_bdev')
 def bdev_lvol_delete(client, name):
     """Destroy a logical volume.
 
@@ -160,7 +151,6 @@ def bdev_lvol_delete(client, name):
     return client.call('bdev_lvol_delete', params)
 
 
-@deprecated_alias('inflate_lvol_bdev')
 def bdev_lvol_inflate(client, name):
     """Inflate a logical volume.
 
@@ -173,7 +163,6 @@ def bdev_lvol_inflate(client, name):
     return client.call('bdev_lvol_inflate', params)
 
 
-@deprecated_alias('decouple_parent_lvol_bdev')
 def bdev_lvol_decouple_parent(client, name):
     """Decouple parent of a logical volume.
 
@@ -186,7 +175,6 @@ def bdev_lvol_decouple_parent(client, name):
     return client.call('bdev_lvol_decouple_parent', params)
 
 
-@deprecated_alias('destroy_lvol_store')
 def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):
     """Destroy a logical volume store.
 
@@ -207,7 +195,6 @@ def bdev_lvol_delete_lvstore(client, uuid=None, lvs_name=None):
     return client.call('bdev_lvol_delete_lvstore', params)
 
 
-@deprecated_alias('get_lvol_stores')
 def bdev_lvol_get_lvstores(client, uuid=None, lvs_name=None):
     """List logical volume stores.
 

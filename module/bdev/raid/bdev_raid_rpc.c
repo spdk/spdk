@@ -138,7 +138,6 @@ cleanup:
 	free_rpc_bdev_raid_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("bdev_raid_get_bdevs", rpc_bdev_raid_get_bdevs, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_get_bdevs, get_raid_bdevs)
 
 /*
  * Base bdevs in RPC bdev_raid_create
@@ -309,7 +308,6 @@ cleanup:
 	free_rpc_bdev_raid_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_raid_create", rpc_bdev_raid_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_create, construct_raid_bdev)
 
 /*
  * Input structure for RPC deleting a raid bdev
@@ -431,4 +429,3 @@ cleanup:
 	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_raid_delete, destroy_raid_bdev)

@@ -288,7 +288,6 @@ cleanup:
 	free_rpc_construct_crypto(&req);
 }
 SPDK_RPC_REGISTER("bdev_crypto_create", rpc_bdev_crypto_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_crypto_create, construct_crypto_bdev)
 
 struct rpc_delete_crypto {
 	char *name;
@@ -340,4 +339,3 @@ cleanup:
 	free_rpc_delete_crypto(&req);
 }
 SPDK_RPC_REGISTER("bdev_crypto_delete", rpc_bdev_crypto_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_crypto_delete, delete_crypto_bdev)

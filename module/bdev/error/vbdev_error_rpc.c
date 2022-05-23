@@ -114,7 +114,6 @@ cleanup:
 	free_rpc_bdev_error_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_create", rpc_bdev_error_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_error_create, construct_error_bdev)
 
 struct rpc_delete_error {
 	char *name;
@@ -162,7 +161,6 @@ cleanup:
 	free_rpc_delete_error(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_delete", rpc_bdev_error_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_error_delete, delete_error_bdev)
 
 struct rpc_error_information {
 	char *name;
@@ -230,4 +228,3 @@ cleanup:
 	free_rpc_error_information(&req);
 }
 SPDK_RPC_REGISTER("bdev_error_inject_error", rpc_bdev_error_inject_error, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_error_inject_error, bdev_inject_error)

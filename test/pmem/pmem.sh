@@ -120,7 +120,7 @@ function bdev_pmem_get_pool_info_tc3() {
 
 	if $rpc_py bdev_pmem_get_pool_info $obj_pool_file; then
 		pmem_clean_pool_file $obj_pool_file
-		error "Pmem_pool_info passed with invalid pool_file type!"
+		error "Bdev_pmem_get_pool_info passed with invalid pool_file type!"
 	fi
 
 	pmem_clean_pool_file $obj_pool_file

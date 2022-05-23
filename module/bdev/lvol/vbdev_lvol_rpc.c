@@ -161,7 +161,6 @@ cleanup:
 	free_rpc_bdev_lvol_create_lvstore(&req);
 }
 SPDK_RPC_REGISTER("bdev_lvol_create_lvstore", rpc_bdev_lvol_create_lvstore, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_create_lvstore, construct_lvol_store)
 
 struct rpc_bdev_lvol_rename_lvstore {
 	char *old_name;
@@ -226,7 +225,6 @@ cleanup:
 	free_rpc_bdev_lvol_rename_lvstore(&req);
 }
 SPDK_RPC_REGISTER("bdev_lvol_rename_lvstore", rpc_bdev_lvol_rename_lvstore, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename_lvstore, rename_lvol_store)
 
 struct rpc_bdev_lvol_delete_lvstore {
 	char *uuid;
@@ -291,7 +289,6 @@ cleanup:
 	free_rpc_bdev_lvol_delete_lvstore(&req);
 }
 SPDK_RPC_REGISTER("bdev_lvol_delete_lvstore", rpc_bdev_lvol_delete_lvstore, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_delete_lvstore, destroy_lvol_store)
 
 struct rpc_bdev_lvol_create {
 	char *uuid;
@@ -393,7 +390,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_create", rpc_bdev_lvol_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_create, construct_lvol_bdev)
 
 struct rpc_bdev_lvol_snapshot {
 	char *lvol_name;
@@ -472,7 +468,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_snapshot", rpc_bdev_lvol_snapshot, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_snapshot, snapshot_lvol_bdev)
 
 struct rpc_bdev_lvol_clone {
 	char *snapshot_name;
@@ -551,7 +546,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_clone", rpc_bdev_lvol_clone, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_clone, clone_lvol_bdev)
 
 struct rpc_bdev_lvol_rename {
 	char *old_name;
@@ -627,7 +621,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_rename", rpc_bdev_lvol_rename, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_rename, rename_lvol_bdev)
 
 struct rpc_bdev_lvol_inflate {
 	char *name;
@@ -700,7 +693,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_inflate", rpc_bdev_lvol_inflate, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_inflate, inflate_lvol_bdev)
 
 static void
 rpc_bdev_lvol_decouple_parent(struct spdk_jsonrpc_request *request,
@@ -742,7 +734,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_decouple_parent", rpc_bdev_lvol_decouple_parent, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_decouple_parent, decouple_parent_lvol_bdev)
 
 struct rpc_bdev_lvol_resize {
 	char *name;
@@ -816,7 +807,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_resize", rpc_bdev_lvol_resize, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_resize, resize_lvol_bdev)
 
 struct rpc_set_ro_lvol_bdev {
 	char *name;
@@ -894,7 +884,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_set_read_only", rpc_bdev_lvol_set_read_only, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_set_read_only, set_read_only_lvol_bdev)
 
 struct rpc_bdev_lvol_delete {
 	char *name;
@@ -964,7 +953,6 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_delete", rpc_bdev_lvol_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_delete, destroy_lvol_bdev)
 
 struct rpc_bdev_lvol_get_lvstores {
 	char *uuid;
@@ -1066,4 +1054,3 @@ cleanup:
 }
 
 SPDK_RPC_REGISTER("bdev_lvol_get_lvstores", rpc_bdev_lvol_get_lvstores, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_lvol_get_lvstores, get_lvol_stores)

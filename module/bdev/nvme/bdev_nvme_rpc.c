@@ -127,7 +127,6 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_options", rpc_bdev_nvme_set_options,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_options, set_bdev_nvme_options)
 
 struct rpc_bdev_nvme_hotplug {
 	bool enabled;
@@ -172,7 +171,6 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_hotplug", rpc_bdev_nvme_set_hotplug, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_set_hotplug, set_bdev_nvme_hotplug)
 
 struct rpc_bdev_nvme_attach_controller {
 	char *name;
@@ -536,7 +534,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_attach_controller", rpc_bdev_nvme_attach_controller,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_attach_controller, construct_nvme_bdev)
 
 static void
 rpc_dump_nvme_bdev_controller_info(struct nvme_bdev_ctrlr *nbdev_ctrlr, void *ctx)
@@ -612,7 +609,6 @@ cleanup:
 	free_rpc_bdev_nvme_get_controllers(&req);
 }
 SPDK_RPC_REGISTER("bdev_nvme_get_controllers", rpc_bdev_nvme_get_controllers, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_get_controllers, get_nvme_controllers)
 
 struct rpc_bdev_nvme_detach_controller {
 	char *name;
@@ -764,7 +760,6 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_nvme_detach_controller", rpc_bdev_nvme_detach_controller,
 		  SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_detach_controller, delete_nvme_controller)
 
 struct rpc_apply_firmware {
 	char *filename;
@@ -1097,7 +1092,6 @@ err:
 	apply_firmware_cleanup(firm_ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_apply_firmware", rpc_bdev_nvme_apply_firmware, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_nvme_apply_firmware, apply_nvme_firmware)
 
 struct rpc_bdev_nvme_transport_stat_ctx {
 	struct spdk_jsonrpc_request *request;

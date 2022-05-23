@@ -32,7 +32,7 @@ function create_vols() {
 	$rpc_py bdev_lvol_create -t -l lvs0 lv0 100
 	waitforbdev lvs0/lv0
 
-	$rpc_py compress_set_pmd -p "$pmd"
+	$rpc_py bdev_compress_set_pmd -p "$pmd"
 	if [ -z "$1" ]; then
 		$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
 	else

@@ -46,7 +46,6 @@ def bdev_wait_for_examine(client):
     return client.call('bdev_wait_for_examine')
 
 
-@deprecated_alias('construct_compress_bdev')
 def bdev_compress_create(client, base_bdev_name, pm_path, lb_size):
     """Construct a compress virtual block device.
 
@@ -63,7 +62,6 @@ def bdev_compress_create(client, base_bdev_name, pm_path, lb_size):
     return client.call('bdev_compress_create', params)
 
 
-@deprecated_alias('delete_compress_bdev')
 def bdev_compress_delete(client, name):
     """Delete compress virtual block device.
 
@@ -74,8 +72,6 @@ def bdev_compress_delete(client, name):
     return client.call('bdev_compress_delete', params)
 
 
-@deprecated_alias('set_compress_pmd')
-@deprecated_alias('compress_set_pmd')
 def bdev_compress_set_pmd(client, pmd):
     """Set pmd options for the bdev compress.
 
@@ -102,7 +98,6 @@ def bdev_compress_get_orphans(client, name=None):
     return client.call('bdev_compress_get_orphans', params)
 
 
-@deprecated_alias('construct_crypto_bdev')
 def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd, key, cipher=None, key2=None):
     """Construct a crypto virtual block device.
 
@@ -123,7 +118,6 @@ def bdev_crypto_create(client, base_bdev_name, name, crypto_pmd, key, cipher=Non
     return client.call('bdev_crypto_create', params)
 
 
-@deprecated_alias('delete_crypto_bdev')
 def bdev_crypto_delete(client, name):
     """Delete crypto virtual block device.
 
@@ -134,7 +128,6 @@ def bdev_crypto_delete(client, name):
     return client.call('bdev_crypto_delete', params)
 
 
-@deprecated_alias('construct_ocf_bdev')
 def bdev_ocf_create(client, name, mode, cache_line_size, cache_bdev_name, core_bdev_name):
     """Add an OCF block device
 
@@ -159,7 +152,6 @@ def bdev_ocf_create(client, name, mode, cache_line_size, cache_bdev_name, core_b
     return client.call('bdev_ocf_create', params)
 
 
-@deprecated_alias('delete_ocf_bdev')
 def bdev_ocf_delete(client, name):
     """Delete an OCF device
 
@@ -172,7 +164,6 @@ def bdev_ocf_delete(client, name):
     return client.call('bdev_ocf_delete', params)
 
 
-@deprecated_alias('get_ocf_stats')
 def bdev_ocf_get_stats(client, name):
     """Get statistics of chosen OCF block device
 
@@ -187,7 +178,6 @@ def bdev_ocf_get_stats(client, name):
     return client.call('bdev_ocf_get_stats', params)
 
 
-@deprecated_alias('get_ocf_stats')
 def bdev_ocf_get_bdevs(client, name=None):
     """Get list of OCF devices including unregistered ones
 
@@ -328,7 +318,6 @@ def bdev_null_resize(client, name, new_size):
     return client.call('bdev_null_resize', params)
 
 
-@deprecated_alias('get_raid_bdevs')
 def bdev_raid_get_bdevs(client, category):
     """Get list of raid bdevs based on category
 
@@ -342,7 +331,6 @@ def bdev_raid_get_bdevs(client, category):
     return client.call('bdev_raid_get_bdevs', params)
 
 
-@deprecated_alias('construct_raid_bdev')
 def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None):
     """Create raid bdev. Either strip size arg will work but one is required.
 
@@ -367,7 +355,6 @@ def bdev_raid_create(client, name, raid_level, base_bdevs, strip_size=None, stri
     return client.call('bdev_raid_create', params)
 
 
-@deprecated_alias('destroy_raid_bdev')
 def bdev_raid_delete(client, name):
     """Delete raid bdev
 
@@ -381,7 +368,6 @@ def bdev_raid_delete(client, name):
     return client.call('bdev_raid_delete', params)
 
 
-@deprecated_alias('construct_aio_bdev')
 def bdev_aio_create(client, filename, name, block_size=None):
     """Construct a Linux AIO block device.
 
@@ -412,7 +398,6 @@ def bdev_aio_rescan(client, name):
     return client.call('bdev_aio_rescan', params)
 
 
-@deprecated_alias('delete_aio_bdev')
 def bdev_aio_delete(client, name):
     """Remove aio bdev from the system.
 
@@ -453,7 +438,6 @@ def bdev_uring_delete(client, name):
     return client.call('bdev_uring_delete', params)
 
 
-@deprecated_alias('set_bdev_nvme_options')
 def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeout_admin_us=None,
                           keep_alive_timeout_ms=None, retry_count=None, arbitration_burst=None,
                           low_priority_weight=None, medium_priority_weight=None, high_priority_weight=None,
@@ -566,7 +550,6 @@ def bdev_nvme_set_options(client, action_on_timeout=None, timeout_us=None, timeo
     return client.call('bdev_nvme_set_options', params)
 
 
-@deprecated_alias('set_bdev_nvme_hotplug')
 def bdev_nvme_set_hotplug(client, enable, period_us=None):
     """Set options for the bdev nvme. This is startup command.
 
@@ -582,7 +565,6 @@ def bdev_nvme_set_hotplug(client, enable, period_us=None):
     return client.call('bdev_nvme_set_hotplug', params)
 
 
-@deprecated_alias('construct_nvme_bdev')
 def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                                 priority=None, subnqn=None, hostnqn=None, hostaddr=None,
                                 hostsvcid=None, prchk_reftag=None, prchk_guard=None,
@@ -685,7 +667,6 @@ def bdev_nvme_attach_controller(client, name, trtype, traddr, adrfam=None, trsvc
     return client.call('bdev_nvme_attach_controller', params)
 
 
-@deprecated_alias('delete_nvme_controller')
 def bdev_nvme_detach_controller(client, name, trtype=None, traddr=None,
                                 adrfam=None, trsvcid=None, subnqn=None,
                                 hostaddr=None, hostsvcid=None):
@@ -969,7 +950,6 @@ def bdev_rbd_get_clusters_info(client, name):
     return client.call('bdev_rbd_get_clusters_info', params)
 
 
-@deprecated_alias('construct_rbd_bdev')
 def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=None, config=None, cluster_name=None, uuid=None):
     """Create a Ceph RBD block device.
 
@@ -1006,7 +986,6 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=Non
     return client.call('bdev_rbd_create', params)
 
 
-@deprecated_alias('delete_rbd_bdev')
 def bdev_rbd_delete(client, name):
     """Remove rbd bdev from the system.
 
@@ -1031,7 +1010,6 @@ def bdev_rbd_resize(client, name, new_size):
     return client.call('bdev_rbd_resize', params)
 
 
-@deprecated_alias('construct_error_bdev')
 def bdev_error_create(client, base_name):
     """Construct an error injection block device.
 
@@ -1096,7 +1074,6 @@ def bdev_delay_update_latency(client, delay_bdev_name, latency_type, latency_us)
     return client.call('bdev_delay_update_latency', params)
 
 
-@deprecated_alias('delete_error_bdev')
 def bdev_error_delete(client, name):
     """Remove error bdev from the system.
 
@@ -1136,7 +1113,6 @@ def bdev_iscsi_delete(client, name):
     return client.call('bdev_iscsi_delete', params)
 
 
-@deprecated_alias('construct_pmem_bdev')
 def bdev_pmem_create(client, pmem_file, name):
     """Construct a libpmemblk block device.
 
@@ -1154,7 +1130,6 @@ def bdev_pmem_create(client, pmem_file, name):
     return client.call('bdev_pmem_create', params)
 
 
-@deprecated_alias('delete_pmem_bdev')
 def bdev_pmem_delete(client, name):
     """Remove pmem bdev from the system.
 
@@ -1165,7 +1140,6 @@ def bdev_pmem_delete(client, name):
     return client.call('bdev_pmem_delete', params)
 
 
-@deprecated_alias('construct_passthru_bdev')
 def bdev_passthru_create(client, base_bdev_name, name):
     """Construct a pass-through block device.
 
@@ -1183,7 +1157,6 @@ def bdev_passthru_create(client, base_bdev_name, name):
     return client.call('bdev_passthru_create', params)
 
 
-@deprecated_alias('delete_passthru_bdev')
 def bdev_passthru_delete(client, name):
     """Remove pass through bdev from the system.
 
@@ -1291,7 +1264,6 @@ def bdev_opal_set_lock_state(client, bdev_name, user_id, password, lock_state):
     return client.call('bdev_opal_set_lock_state', params)
 
 
-@deprecated_alias('construct_split_vbdev')
 def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     """Create split block devices from a base bdev.
 
@@ -1313,7 +1285,6 @@ def bdev_split_create(client, base_bdev, split_count, split_size_mb=None):
     return client.call('bdev_split_create', params)
 
 
-@deprecated_alias('destruct_split_vbdev')
 def bdev_split_delete(client, base_bdev):
     """Delete split block devices.
 
@@ -1327,7 +1298,6 @@ def bdev_split_delete(client, base_bdev):
     return client.call('bdev_split_delete', params)
 
 
-@deprecated_alias('construct_ftl_bdev')
 def bdev_ftl_create(client, name, base_bdev, **kwargs):
     """Construct FTL bdev
 
@@ -1345,7 +1315,6 @@ def bdev_ftl_create(client, name, base_bdev, **kwargs):
     return client.call('bdev_ftl_create', params)
 
 
-@deprecated_alias('delete_ftl_bdev')
 def bdev_ftl_delete(client, name):
     """Delete FTL bdev
 
@@ -1410,7 +1379,6 @@ def bdev_get_histogram(client, name):
     return client.call('bdev_get_histogram', params)
 
 
-@deprecated_alias('bdev_inject_error')
 def bdev_error_inject_error(client, name, io_type, error_type, num=1):
     """Inject an error via an error bdev.
 
@@ -1473,7 +1441,6 @@ def bdev_set_qos_limit(
     return client.call('bdev_set_qos_limit', params)
 
 
-@deprecated_alias('apply_firmware')
 def bdev_nvme_apply_firmware(client, bdev_name, filename):
     """Download and commit firmware to NVMe device.
 

@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('send_nvme_cmd')
 def bdev_nvme_send_cmd(client, name, cmd_type, data_direction, cmdbuf,
                        data=None, metadata=None,
                        data_len=None, metadata_len=None,
@@ -41,7 +40,6 @@ def bdev_nvme_send_cmd(client, name, cmd_type, data_direction, cmdbuf,
     return client.call('bdev_nvme_send_cmd', params)
 
 
-@deprecated_alias('get_nvme_controllers')
 def bdev_nvme_get_controllers(client, name=None):
     """Get information about NVMe controllers.
 

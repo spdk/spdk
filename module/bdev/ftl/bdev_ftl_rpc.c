@@ -215,7 +215,6 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("bdev_ftl_create", rpc_bdev_ftl_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_create, construct_ftl_bdev)
 
 struct rpc_delete_ftl {
 	char *name;
@@ -257,4 +256,3 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("bdev_ftl_delete", rpc_bdev_ftl_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ftl_delete, delete_ftl_bdev)

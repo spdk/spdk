@@ -138,8 +138,6 @@ rpc_bdev_compress_set_pmd(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("bdev_compress_set_pmd", rpc_bdev_compress_set_pmd,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_set_pmd, set_compress_pmd)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_set_pmd, compress_set_pmd)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_compress {
@@ -204,7 +202,6 @@ cleanup:
 	free_rpc_construct_compress(&req);
 }
 SPDK_RPC_REGISTER("bdev_compress_create", rpc_bdev_compress_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_create, construct_compress_bdev)
 
 struct rpc_delete_compress {
 	char *name;
@@ -246,4 +243,3 @@ rpc_bdev_compress_delete(struct spdk_jsonrpc_request *request,
 	free_rpc_delete_compress(&req);
 }
 SPDK_RPC_REGISTER("bdev_compress_delete", rpc_bdev_compress_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_compress_delete, delete_compress_bdev)

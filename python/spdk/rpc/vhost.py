@@ -114,7 +114,6 @@ def vhost_delete_controller(client, ctrlr):
     return client.call('vhost_delete_controller', params)
 
 
-@deprecated_alias('construct_virtio_dev')
 def bdev_virtio_attach_controller(client, name, trtype, traddr, dev_type, vq_count=None, vq_size=None):
     """Attaches virtio controller using
     provided transport type and device type.
@@ -142,7 +141,6 @@ def bdev_virtio_attach_controller(client, name, trtype, traddr, dev_type, vq_cou
     return client.call('bdev_virtio_attach_controller', params)
 
 
-@deprecated_alias('remove_virtio_bdev ')
 def bdev_virtio_detach_controller(client, name):
     """Remove a Virtio device
     This will delete all bdevs exposed by this device.
@@ -153,7 +151,6 @@ def bdev_virtio_detach_controller(client, name):
     return client.call('bdev_virtio_detach_controller', params)
 
 
-@deprecated_alias('get_virtio_scsi_devs')
 def bdev_virtio_scsi_get_devices(client):
     """Get list of virtio scsi devices."""
     return client.call('bdev_virtio_scsi_get_devices')

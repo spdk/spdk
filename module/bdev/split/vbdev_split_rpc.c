@@ -113,7 +113,6 @@ out:
 	free(req.base_bdev);
 }
 SPDK_RPC_REGISTER("bdev_split_create", rpc_bdev_split_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_split_create, construct_split_vbdev)
 
 struct rpc_delete_split {
 	char *base_bdev;
@@ -149,4 +148,3 @@ out:
 	free(req.base_bdev);
 }
 SPDK_RPC_REGISTER("bdev_split_delete", rpc_bdev_split_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_split_delete, destruct_split_vbdev)

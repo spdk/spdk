@@ -104,7 +104,6 @@ rpc_bdev_ocf_create(struct spdk_jsonrpc_request *request,
 	free_rpc_bdev_ocf_create(&req);
 }
 SPDK_RPC_REGISTER("bdev_ocf_create", rpc_bdev_ocf_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_create, construct_ocf_bdev)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_delete {
@@ -172,7 +171,6 @@ end:
 	free_rpc_bdev_ocf_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_ocf_delete", rpc_bdev_ocf_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_delete, delete_ocf_bdev)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_get_stats {
@@ -267,7 +265,6 @@ end:
 	free_rpc_bdev_ocf_get_stats(&req);
 }
 SPDK_RPC_REGISTER("bdev_ocf_get_stats", rpc_bdev_ocf_get_stats, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_get_stats, get_ocf_stats)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_get_bdevs {
@@ -359,7 +356,6 @@ end:
 	free_rpc_bdev_ocf_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("bdev_ocf_get_bdevs", rpc_bdev_ocf_get_bdevs, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_ocf_get_bdevs, get_ocf_bdevs)
 
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_bdev_ocf_set_cache_mode {

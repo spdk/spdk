@@ -159,7 +159,6 @@ cleanup:
 	free_rpc_create_rbd(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_create", rpc_bdev_rbd_create, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_rbd_create, construct_rbd_bdev)
 
 struct rpc_bdev_rbd_delete {
 	char *name;
@@ -207,7 +206,6 @@ cleanup:
 	free_rpc_bdev_rbd_delete(&req);
 }
 SPDK_RPC_REGISTER("bdev_rbd_delete", rpc_bdev_rbd_delete, SPDK_RPC_RUNTIME)
-SPDK_RPC_REGISTER_ALIAS_DEPRECATED(bdev_rbd_delete, delete_rbd_bdev)
 
 struct rpc_bdev_rbd_resize {
 	char *name;

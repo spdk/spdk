@@ -1,7 +1,6 @@
 from .helpers import deprecated_alias
 
 
-@deprecated_alias('create_pmem_pool')
 def bdev_pmem_create_pool(client, pmem_file, num_blocks, block_size):
     """Create pmem pool at specified path.
     Args:
@@ -15,7 +14,6 @@ def bdev_pmem_create_pool(client, pmem_file, num_blocks, block_size):
     return client.call('bdev_pmem_create_pool', params)
 
 
-@deprecated_alias('pmem_pool_info')
 def bdev_pmem_get_pool_info(client, pmem_file):
     """Get details about pmem pool.
     Args:
@@ -25,7 +23,6 @@ def bdev_pmem_get_pool_info(client, pmem_file):
     return client.call('bdev_pmem_get_pool_info', params)
 
 
-@deprecated_alias('delete_pmem_pool')
 def bdev_pmem_delete_pool(client, pmem_file):
     """Delete pmem pool.
     Args:
