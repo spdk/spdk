@@ -648,9 +648,9 @@ for i in "$@"; do
 done
 
 if [[ $arch == x86_64* ]]; then
-	BUILD_CMD=("$CC" -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS "-march=native")
+	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS "-march=native")
 else
-	BUILD_CMD=("$CC" -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
+	BUILD_CMD=($CC -o /dev/null -x c $CPPFLAGS $CFLAGS $LDFLAGS)
 fi
 BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
 
