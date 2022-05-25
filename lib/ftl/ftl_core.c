@@ -38,6 +38,8 @@ ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		io->status = -EIO;
 	}
 
+	ftl_trace_completion(dev, io, FTL_TRACE_COMPLETION_DISK);
+
 	ftl_io_dec_req(io);
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
@@ -129,6 +131,8 @@ ftl_apply_limits(struct spdk_ftl_dev *dev)
 			break;
 		}
 	}
+
+	ftl_trace_limits(dev, dev->limit, dev->num_free);
 }
 
 void
@@ -239,6 +243,8 @@ ftl_submit_read(struct ftl_io *io)
 		}
 
 		assert(num_blocks > 0);
+
+		ftl_trace_submission(dev, io, addr, num_blocks);
 
 		if (ftl_addr_in_nvc(dev, addr)) {
 			rc = ftl_nv_cache_read(io, addr, num_blocks, ftl_io_cmpl_cb, io);

@@ -1061,6 +1061,8 @@ ftl_nv_cache_pin_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx
 
 	assert(io->iov_pos == 0);
 
+	ftl_trace_submission(io->dev, io, io->addr, io->num_blocks);
+
 	nv_cache_write(io);
 }
 

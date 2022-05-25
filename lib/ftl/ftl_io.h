@@ -13,6 +13,7 @@
 #include "spdk/util.h"
 
 #include "ftl_internal.h"
+#include "ftl_trace.h"
 #include "ftl_l2p.h"
 #include "utils/ftl_md.h"
 
@@ -111,6 +112,9 @@ struct ftl_io {
 
 	/* Done flag */
 	bool				done;
+
+	/* Trace group id */
+	uint64_t			trace;
 
 	/* Used by retry and write completion queues */
 	TAILQ_ENTRY(ftl_io)		queue_entry;

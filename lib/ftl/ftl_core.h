@@ -17,6 +17,7 @@
 
 #include "ftl_internal.h"
 #include "ftl_io.h"
+#include "ftl_trace.h"
 #include "ftl_nv_cache.h"
 #include "ftl_writer.h"
 #include "ftl_layout.h"
@@ -85,6 +86,9 @@ struct spdk_ftl_dev {
 
 	/* Band md memory pool */
 	struct ftl_mempool		*band_md_pool;
+
+	/* Traces */
+	struct ftl_trace		trace;
 
 	/* Statistics */
 	struct ftl_stats		stats;
