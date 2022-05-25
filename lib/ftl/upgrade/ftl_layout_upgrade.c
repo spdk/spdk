@@ -71,8 +71,14 @@ static struct ftl_layout_upgrade_desc layout_upgrade_desc[] = {
 		.reg_upgrade_desc = sb_upgrade_desc,
 	},
 	[ftl_layout_region_type_l2p] = {},
-	[ftl_layout_region_type_band_md] = {},
-	[ftl_layout_region_type_band_md_mirror] = {},
+	[ftl_layout_region_type_band_md] = {
+			.reg_upgrade_desc_sz = FTL_BAND_VERSION_CURRENT,
+			.reg_upgrade_desc = band_upgrade_desc,
+	},
+	[ftl_layout_region_type_band_md_mirror] = {
+			.reg_upgrade_desc_sz = FTL_BAND_VERSION_CURRENT,
+			.reg_upgrade_desc = band_upgrade_desc,
+	},
 	[ftl_layout_region_type_valid_map] = {},
 	[ftl_layout_region_type_nvc_md] = {},
 	[ftl_layout_region_type_nvc_md_mirror] = {},
