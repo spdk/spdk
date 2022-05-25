@@ -2413,8 +2413,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def virtio_blk_create_transport(args):
         rpc.vhost.virtio_blk_create_transport(args.client,
-                                              name=args.name,
-                                              opts=args.opts)
+                                              name=args.name)
 
     p = subparsers.add_parser('virtio_blk_create_transport',
                               help='Create virtio blk transport')

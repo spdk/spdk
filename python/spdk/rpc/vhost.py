@@ -16,7 +16,7 @@ def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold
     return client.call('vhost_controller_set_coalescing', params)
 
 
-def virtio_blk_create_transport(client, name, opts):
+def virtio_blk_create_transport(client, name):
     """Create virtio blk transport.
     Args:
         name: transport name
