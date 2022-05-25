@@ -64,7 +64,7 @@ superblock_md_region_overflow(struct spdk_ftl_dev *dev, struct ftl_superblock_md
 	}
 
 	/* Make sure the entry doesn't overflow the pointer value (probably overkill to check) */
-	if (UINT64_MAX - (uintptr_t)sb_reg < sizeof(*sb_reg)) {
+	if (UINT64_MAX - (uintptr_t)sb_reg <= sizeof(*sb_reg)) {
 		return true;
 	}
 

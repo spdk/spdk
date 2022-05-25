@@ -45,17 +45,41 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 		.desc = sb_upgrade_desc,
 	},
 	[FTL_LAYOUT_REGION_TYPE_L2P] = {},
-	[FTL_LAYOUT_REGION_TYPE_BAND_MD] = {},
-	[FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR] = {},
+	[FTL_LAYOUT_REGION_TYPE_BAND_MD] = {
+		.count = FTL_BAND_VERSION_CURRENT,
+		.desc = band_upgrade_desc,
+	},
+	[FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR] = {
+		.count = FTL_BAND_VERSION_CURRENT,
+		.desc = band_upgrade_desc,
+	},
 	[FTL_LAYOUT_REGION_TYPE_VALID_MAP] = {},
-	[FTL_LAYOUT_REGION_TYPE_NVC_MD] = {},
-	[FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR] = {},
+	[FTL_LAYOUT_REGION_TYPE_NVC_MD] = {
+		.count = FTL_NVC_VERSION_CURRENT,
+		.desc = nvc_upgrade_desc,
+	},
+	[FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR] = {
+		.count = FTL_NVC_VERSION_CURRENT,
+		.desc = nvc_upgrade_desc,
+	},
 	[FTL_LAYOUT_REGION_TYPE_DATA_NVC] = {},
 	[FTL_LAYOUT_REGION_TYPE_DATA_BASE] = {},
-	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC] = {},
-	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT] = {},
-	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP] = {},
-	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT] = {},
+	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC] = {
+		.count = FTL_P2L_VERSION_CURRENT,
+		.desc = p2l_upgrade_desc,
+	},
+	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT] = {
+		.count = FTL_P2L_VERSION_CURRENT,
+		.desc = p2l_upgrade_desc,
+	},
+	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP] = {
+		.count = FTL_P2L_VERSION_CURRENT,
+		.desc = p2l_upgrade_desc,
+	},
+	[FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT] = {
+		.count = FTL_P2L_VERSION_CURRENT,
+		.desc = p2l_upgrade_desc,
+	},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = {},
 };
