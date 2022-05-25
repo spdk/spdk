@@ -9,8 +9,8 @@
 #include "spdk/uuid.h"
 #include "ftl_sb_common.h"
 
-#define FTL_METADATA_VERSION_4			4
-#define FTL_METADATA_VERSION_CURRENT	FTL_METADATA_VERSION_4
+#define FTL_SB_VERSION_4			4
+#define FTL_SB_VERSION_CURRENT			FTL_SB_VERSION_4
 
 struct ftl_superblock {
 	struct ftl_superblock_header	header;

@@ -6,11 +6,16 @@
 #include "ftl_sb.h"
 #include "ftl_core.h"
 #include "ftl_layout.h"
+#include "upgrade/ftl_sb_prev.h"
 
 bool
 ftl_superblock_check_magic(struct ftl_superblock *sb)
 {
-	return sb->header.magic == FTL_SUPERBLOCK_MAGIC;
+	if (sb->header.version >= FTL_SB_VERSION_3) {
+		return sb->header.magic == FTL_SUPERBLOCK_MAGIC;
+	} else {
+		return sb->header.magic == FTL_SUPERBLOCK_MAGIC_V2;
+	}
 }
 bool
 ftl_superblock_md_layout_is_empty(struct ftl_superblock *sb)
@@ -58,13 +63,13 @@ superblock_md_region_overflow(struct spdk_ftl_dev *dev, struct ftl_superblock_md
 		return true;
 	}
 
-	/* There's only a finite (FTL_SUPERBLOCK_SIZE) amount of space in the superblock. Make sure the region wholly fits in that space. */
-	if ((uintptr_t)(sb_reg + 1) > ((uintptr_t)(dev->sb) + FTL_SUPERBLOCK_SIZE)) {
+	/* Make sure the entry doesn't overflow the pointer value (probably overkill to check) */
+	if (UINT64_MAX - (uintptr_t)sb_reg < sizeof(*sb_reg)) {
 		return true;
 	}
 
-	/* Make sure the entry doesn't overflow the pointer value (probably overkill to check) */
-	if ((uintptr_t)(sb_reg + 1) < (uintptr_t)sb_reg) {
+	/* There's only a finite (FTL_SUPERBLOCK_SIZE) amount of space in the superblock. Make sure the region wholly fits in that space. */
+	if ((uintptr_t)(sb_reg + 1) > ((uintptr_t)(dev->sb) + FTL_SUPERBLOCK_SIZE)) {
 		return true;
 	}
 
@@ -256,6 +261,11 @@ ftl_superblock_md_layout_load_all(struct spdk_ftl_dev *dev)
 next_sb_reg:
 		if (sb_reg->df_next == FTL_DF_OBJ_ID_INVALID) {
 			break;
+		}
+
+		if (UINT64_MAX - (uintptr_t)sb <= sb_reg->df_next) {
+			FTL_ERRLOG(dev, "Buffer overflow\n");
+			return -EOVERFLOW;
 		}
 
 		sb_reg = ftl_df_get_obj_ptr(sb, sb_reg->df_next);

@@ -14,6 +14,7 @@
 #include "ftl_internal.h"
 #include "ftl_sb.h"
 #include "upgrade/ftl_layout_upgrade.h"
+#include "upgrade/ftl_sb_upgrade.h"
 
 void
 ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
@@ -255,8 +256,15 @@ get_sb_crc(struct ftl_superblock *sb)
 	crc = spdk_crc32c_update(buffer, size, crc);
 
 	buffer += offset + sizeof(sb->header.crc);
-	size = FTL_SUPERBLOCK_SIZE - offset - sizeof(sb->header.crc);
-	crc = spdk_crc32c_update(buffer, size, crc);
+	if (sb->header.version > FTL_SB_VERSION_2) {
+		/* whole buf for v3 and on: */
+		size = FTL_SUPERBLOCK_SIZE - offset - sizeof(sb->header.crc);
+		crc = spdk_crc32c_update(buffer, size, crc);
+	} else {
+		/* special for sb v2 only: */
+		size = sizeof(struct ftl_superblock_v2) - offset - sizeof(sb->header.crc);
+		sb->header.crc = spdk_crc32c_update(buffer, size, crc);
+	}
 
 	return crc;
 }
@@ -358,7 +366,7 @@ ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 	struct ftl_superblock *sb = dev->sb;
 
 	sb->header.magic = FTL_SUPERBLOCK_MAGIC;
-	sb->header.version = FTL_METADATA_VERSION_CURRENT;
+	sb->header.version = FTL_SB_VERSION_CURRENT;
 	sb->uuid = dev->conf.uuid;
 	sb->clean = 0;
 	dev->sb_shm->shm_clean = false;

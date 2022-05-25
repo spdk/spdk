@@ -6,6 +6,7 @@
 #include "ftl_layout_upgrade.h"
 #include "ftl_layout.h"
 #include "ftl_sb_current.h"
+#include "ftl_sb_prev.h"
 #include "ftl_core.h"
 #include "ftl_band.h"
 
@@ -35,8 +36,14 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 #ifdef SPDK_FTL_VSS_EMU
 	[FTL_LAYOUT_REGION_TYPE_VSS] = {},
 #endif
-	[FTL_LAYOUT_REGION_TYPE_SB] = {},
-	[FTL_LAYOUT_REGION_TYPE_SB_BASE] = {},
+	[FTL_LAYOUT_REGION_TYPE_SB] = {
+		.count = FTL_SB_VERSION_CURRENT,
+		.desc = sb_upgrade_desc,
+	},
+	[FTL_LAYOUT_REGION_TYPE_SB_BASE] = {
+		.count = FTL_SB_VERSION_CURRENT,
+		.desc = sb_upgrade_desc,
+	},
 	[FTL_LAYOUT_REGION_TYPE_L2P] = {},
 	[FTL_LAYOUT_REGION_TYPE_BAND_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR] = {},

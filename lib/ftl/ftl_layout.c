@@ -503,8 +503,8 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	region->type = FTL_LAYOUT_REGION_TYPE_SB;
 	region->mirror_type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
 	region->name = "sb";
-	region->current.version = FTL_METADATA_VERSION_CURRENT;
-	region->prev.version = FTL_METADATA_VERSION_CURRENT;
+	region->current.version = FTL_SB_VERSION_CURRENT;
+	region->prev.version = FTL_SB_VERSION_CURRENT;
 	region->current.offset = 0;
 
 	/*
@@ -527,8 +527,8 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	region->type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
 	region->mirror_type = FTL_LAYOUT_REGION_TYPE_MAX;
 	region->name = "sb_mirror";
-	region->current.version = FTL_METADATA_VERSION_CURRENT;
-	region->prev.version = FTL_METADATA_VERSION_CURRENT;
+	region->current.version = FTL_SB_VERSION_CURRENT;
+	region->prev.version = FTL_SB_VERSION_CURRENT;
 	/* TODO: This should really be at offset 0 - think how best to upgrade between the two layouts
 	 * This is an issue if some other metadata appears at block 0 of base device (most likely GPT or blobstore)
 	 */
