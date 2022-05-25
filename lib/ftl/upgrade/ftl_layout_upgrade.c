@@ -78,10 +78,22 @@ static struct ftl_layout_upgrade_desc layout_upgrade_desc[] = {
 	[ftl_layout_region_type_nvc_md_mirror] = {},
 	[ftl_layout_region_type_data_nvc] = {},
 	[ftl_layout_region_type_data_btm] = {},
-	[ftl_layout_region_type_p2l_ckpt_gc] = {},
-	[ftl_layout_region_type_p2l_ckpt_gc_next] = {},
-	[ftl_layout_region_type_p2l_ckpt_comp] = {},
-	[ftl_layout_region_type_p2l_ckpt_comp_next] = {},
+	[ftl_layout_region_type_p2l_ckpt_gc] = {
+			.reg_upgrade_desc_sz = FTL_P2L_VERSION_CURRENT,
+			.reg_upgrade_desc = p2l_upgrade_desc,
+	},
+	[ftl_layout_region_type_p2l_ckpt_gc_next] = {
+			.reg_upgrade_desc_sz = FTL_P2L_VERSION_CURRENT,
+			.reg_upgrade_desc = p2l_upgrade_desc,
+	},
+	[ftl_layout_region_type_p2l_ckpt_comp] = {
+			.reg_upgrade_desc_sz = FTL_P2L_VERSION_CURRENT,
+			.reg_upgrade_desc = p2l_upgrade_desc,
+	},
+	[ftl_layout_region_type_p2l_ckpt_comp_next] = {
+			.reg_upgrade_desc_sz = FTL_P2L_VERSION_CURRENT,
+			.reg_upgrade_desc = p2l_upgrade_desc,
+	},
 	[ftl_layout_region_type_trim_md] = {},
 	[ftl_layout_region_type_trim_md_mirror] = {},
 };
