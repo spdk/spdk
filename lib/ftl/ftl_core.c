@@ -101,6 +101,8 @@ ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		io->status = -EIO;
 	}
 
+	ftl_trace_completion(dev, io, FTL_TRACE_COMPLETION_DISK);
+
 	if (io->type == FTL_IO_WRITE && ftl_is_append_supported(dev)) {
 		assert(io->parent);
 		io->parent->addr = spdk_bdev_io_get_append_location(bdev_io);
@@ -148,6 +150,7 @@ ftl_submit_erase(struct ftl_io *io)
 			continue;
 		}
 
+		ftl_trace_submission(dev, io, addr, 1);
 		rc = spdk_bdev_zone_management(dev->base_bdev_desc, dev->base_ioch, addr,
 					       SPDK_BDEV_ZONE_RESET, ftl_io_cmpl_cb, io);
 		if (spdk_unlikely(rc)) {
@@ -337,6 +340,8 @@ ftl_apply_limits(struct spdk_ftl_dev *dev)
 			break;
 		}
 	}
+
+	ftl_trace_limits(dev, dev->limit, dev->num_free);
 }
 
 void
@@ -445,6 +450,8 @@ ftl_submit_read(struct ftl_io *io)
 		}
 
 		assert(num_blocks > 0);
+
+		ftl_trace_submission(dev, io, addr, num_blocks);
 
 		if (ftl_addr_cached(dev, addr)) {
 			rc = ftl_nv_cache_read(io, addr, num_blocks, ftl_io_cmpl_cb, io);

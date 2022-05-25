@@ -46,6 +46,7 @@
 
 #include "ftl_internal.h"
 #include "ftl_io.h"
+#include "ftl_trace.h"
 #include "ftl_nv_cache.h"
 #include "ftl_writer.h"
 #include "ftl_layout.h"
@@ -107,6 +108,9 @@ enum ftl_stats_type {
 };
 
 struct ftl_stats {
+	/* Traces */
+	struct ftl_trace			trace;
+
 	/* Number of limits applied */
 	uint64_t					limits[SPDK_FTL_LIMIT_MAX];
 

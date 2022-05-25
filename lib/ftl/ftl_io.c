@@ -180,6 +180,7 @@ ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
 	io->addr = FTL_ADDR_INVALID;
 	io->cb_fn = fn;
 	io->cb_ctx = ctx;
+	io->trace = ftl_trace_alloc_id(dev);
 }
 
 struct ftl_io *
@@ -332,6 +333,7 @@ ftl_io_user_init(struct spdk_io_channel *_ioch, struct ftl_io *io, uint64_t lba,
 	io->iov_cnt = iov_cnt;
 	io->num_blocks = num_blocks;
 
+	ftl_trace_lba_io_init(io->dev, io);
 	return 0;
 }
 
