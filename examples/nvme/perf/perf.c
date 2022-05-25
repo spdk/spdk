@@ -249,6 +249,9 @@ static double g_zipf_theta;
  */
 static uint32_t g_io_queue_size = UINT16_MAX;
 
+static uint32_t g_sock_zcopy_threshold;
+static char *g_sock_threshold_impl;
+
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
  * error occurs.
@@ -343,6 +346,8 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const
 			fprintf(stderr, "Failed to allocate psk_identity in sock_impl\n");
 			return;
 		}
+	} else if (strcmp(field, "zerocopy_threshold") == 0) {
+		sock_opts.zerocopy_threshold = val;
 	} else {
 		fprintf(stderr, "Warning: invalid or unprocessed socket opts field: %s\n", field);
 		return;
@@ -1812,6 +1817,8 @@ usage(char *program_name)
 	printf("\t[--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)]\n");
 	printf("\t[--psk-key <val> Default PSK KEY in hexadecimal digits, e.g. 1234567890ABCDEF (only applies when sock_impl == ssl)]\n");
 	printf("\t[--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)]\n");
+	printf("\t[--zerocopy-threshold <val> data is sent with MSG_ZEROCOPY if size is greater than this val. Default: 0 to disable it]\n");
+	printf("\t[--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold]\n");
 }
 
 static void
@@ -2314,6 +2321,10 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"psk-key", required_argument, NULL, PERF_PSK_KEY},
 #define PERF_PSK_IDENTITY	264
 	{"psk-identity ", required_argument, NULL, PERF_PSK_IDENTITY},
+#define PERF_ZEROCOPY_THRESHOLD		265
+	{"zerocopy-threshold", required_argument, NULL, PERF_ZEROCOPY_THRESHOLD},
+#define PERF_SOCK_IMPL		266
+	{"zerocopy-threshold-sock-impl", required_argument, NULL, PERF_SOCK_IMPL},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2345,6 +2356,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_NUM_UNUSED_IO_QPAIRS:
 		case PERF_SKIP_ERRORS:
 		case PERF_IO_QUEUE_SIZE:
+		case PERF_ZEROCOPY_THRESHOLD:
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Converting a string to integer failed\n");
@@ -2404,6 +2416,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			case PERF_IO_QUEUE_SIZE:
 				g_io_queue_size = val;
 				break;
+			case PERF_ZEROCOPY_THRESHOLD:
+				g_sock_zcopy_threshold = val;
 			}
 			break;
 		case PERF_ZIPF:
@@ -2541,6 +2555,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_IOVA_MODE:
 			env_opts->iova_mode = optarg;
 			break;
+		case PERF_SOCK_IMPL:
+			g_sock_threshold_impl = optarg;
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
@@ -2612,6 +2629,16 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			"-w (--io-pattern) io pattern type must be one of\n"
 			"(read, write, randread, randwrite, rw, randrw)\n");
 		return 1;
+	}
+
+	if (g_sock_zcopy_threshold > 0) {
+		if (!g_sock_threshold_impl) {
+			fprintf(stderr,
+				"--zerocopy-threshold must be set with sock implementation specified(--zerocopy-threshold-sock-impl <impl>)\n");
+			return 1;
+		}
+
+		perf_set_sock_opts(g_sock_threshold_impl, "zerocopy_threshold", g_sock_zcopy_threshold, NULL);
 	}
 
 	if (TAILQ_EMPTY(&g_trid_list)) {
