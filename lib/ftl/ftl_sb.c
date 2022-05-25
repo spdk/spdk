@@ -34,11 +34,16 @@
 #include "ftl_sb.h"
 #include "ftl_core.h"
 #include "ftl_layout.h"
+#include "upgrade/ftl_sb_prev.h"
 
 bool
 ftl_superblock_check_magic(struct ftl_superblock *sb)
 {
-	return sb->header.magic == FTL_SUPERBLOCK_MAGIC;
+	if (sb->header.version >= FTL_METADATA_VERSION_3) {
+		return sb->header.magic == FTL_SUPERBLOCK_MAGIC;
+	} else {
+		return sb->header.magic == FTL_SUPERBLOCK_MAGIC_V2;
+	}
 }
 
 bool
