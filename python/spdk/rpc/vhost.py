@@ -70,8 +70,7 @@ def vhost_scsi_controller_remove_target(client, ctrlr, scsi_target_num):
     return client.call('vhost_scsi_controller_remove_target', params)
 
 
-def vhost_create_blk_controller(
-        client, ctrlr, dev_name, cpumask=None, transport=None, readonly=None, packed_ring=None, packed_ring_recovery=None):
+def vhost_create_blk_controller(client, **params):
     """Create vhost BLK controller.
     Args:
         ctrlr: controller name
@@ -82,20 +81,9 @@ def vhost_create_blk_controller(
         packed_ring: support controller packed_ring
         packed_ring_recovery: enable packed ring live recovery
     """
-    params = {
-        'ctrlr': ctrlr,
-        'dev_name': dev_name,
-    }
-    if cpumask:
-        params['cpumask'] = cpumask
-    if transport:
-        params['transport'] = transport
-    if readonly:
-        params['readonly'] = readonly
-    if packed_ring:
-        params['packed_ring'] = packed_ring
-    if packed_ring_recovery:
-        params['packed_ring_recovery'] = packed_ring_recovery
+    strip_globals(params)
+    remove_null(params)
+
     return client.call('vhost_create_blk_controller', params)
 
 

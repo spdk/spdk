@@ -2453,14 +2453,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=vhost_scsi_controller_remove_target)
 
     def vhost_create_blk_controller(args):
-        rpc.vhost.vhost_create_blk_controller(args.client,
-                                              ctrlr=args.ctrlr,
-                                              dev_name=args.dev_name,
-                                              cpumask=args.cpumask,
-                                              transport=args.transport,
-                                              readonly=args.readonly,
-                                              packed_ring=args.packed_ring,
-                                              packed_ring_recovery=args.packed_ring_recovery)
+        rpc.vhost.vhost_create_blk_controller(**vars(args))
 
     p = subparsers.add_parser('vhost_create_blk_controller', help='Add a new vhost block controller')
     p.add_argument('ctrlr', help='controller name')
