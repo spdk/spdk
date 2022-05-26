@@ -1,4 +1,5 @@
 from .helpers import deprecated_alias
+from .cmd_parser import *
 
 
 def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold):
@@ -16,12 +17,14 @@ def vhost_controller_set_coalescing(client, ctrlr, delay_base_us, iops_threshold
     return client.call('vhost_controller_set_coalescing', params)
 
 
-def virtio_blk_create_transport(client, name):
+def virtio_blk_create_transport(client, **params):
     """Create virtio blk transport.
     Args:
         name: transport name
     """
-    params = {'name': name}
+    strip_globals(params)
+    remove_null(params)
+
     return client.call('virtio_blk_create_transport', params)
 
 
