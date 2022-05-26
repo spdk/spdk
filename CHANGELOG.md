@@ -34,6 +34,11 @@ Renamed the `raid5` module to `raid5f` to reflect that it is not a traditional
 RAID5 implementation - only full stripe writes are supported, partial stripe
 writes (read-modify-write) are not.
 
+### accel_fw
+
+Added a new runtime RPC `accel_get_opc_assignments` to get a list of current opcode to engine
+assignements.
+
 ## v22.05
 
 ### sock

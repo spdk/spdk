@@ -263,6 +263,18 @@ int spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *sr
 				 uint64_t nbytes_dst, uint64_t nbytes_src, int flags,
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
+/**
+ * Return the name of the engine assigned to a specfic opcode.
+ *
+ * \param opcode Accel Framework Opcode enum value. Valid codes can be retrieved using
+ * `accel_get_opc_assignments` or `spdk_accel_get_opc_name`.
+ * \param engine_name Pointer to update with engine name.
+ *
+ * \return 0 if a valid engine name was provided. -EINVAL for invalid opcode
+ *  or -ENOENT no engine was found at this time for the provided opcode.
+ */
+int spdk_accel_get_opc_engine_name(enum accel_opcode opcode, const char **engine_name);
+
 struct spdk_json_write_ctx;
 
 /**

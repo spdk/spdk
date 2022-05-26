@@ -49,6 +49,23 @@ static struct spdk_accel_engine *g_engines_opc[ACCEL_OPC_LAST] = {};
 
 static int sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task);
 
+int
+spdk_accel_get_opc_engine_name(enum accel_opcode opcode, const char **engine_name)
+{
+	if (opcode >= ACCEL_OPC_LAST) {
+		/* invalid opcode */
+		return -EINVAL;
+	}
+
+	if (g_engines_opc[opcode]) {
+		*engine_name = g_engines_opc[opcode]->name;
+	} else {
+		return -ENOENT;
+	}
+
+	return 0;
+}
+
 static struct spdk_accel_engine *
 _engine_find_by_name(const char *name)
 {

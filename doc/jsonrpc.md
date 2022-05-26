@@ -441,6 +441,7 @@ Example response:
     "framework_get_subsystems",
     "framework_monitor_context_switch",
     "spdk_kill_instance",
+    "accel_get_opc_assignments",
     "ioat_scan_accel_engine",
     "dsa_scan_accel_engine",
     "bdev_virtio_attach_controller",
@@ -1494,6 +1495,46 @@ Example response:
 ~~~
 
 ## Acceleration Framework Layer {#jsonrpc_components_accel_fw}
+
+### accel_get_opc_assignments {#rpc_accel_get_opc_assignments}
+
+Get a list of opcode names and their assigned accel_fw modules.
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_get_opc_assignments",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "copy": "software",
+      "fill": "software",
+      "dualcast": "software",
+      "compare": "software",
+      "crc32c": "software",
+      "copy_crc32c": "software",
+      "compress": "software",
+      "decompress": "software"
+    }
+}
+~~~
 
 ### dsa_scan_accel_engine {#rpc_dsa_scan_accel_engine}
 

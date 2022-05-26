@@ -6,6 +6,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
+#include "spdk_internal/accel_engine.h"
 #include "thread/thread_internal.h"
 #include "common/lib/test_env.c"
 #include "accel/accel_engine.c"
