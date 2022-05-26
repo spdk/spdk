@@ -2,54 +2,6 @@
 
 ## v22.05: (Upcoming Release)
 
-### sock
-
-A new option `ack_timeout` was added to the `spdk_sock_opts` structure.
-
-### util
-
-A new parameter `bounce_iovcnt` was added to `spdk_dif_generate_copy` and `spdk_dif_verify_copy`.
-The `bounce_iovcnt` is used to specify the number of bounce_iov to support multiple block-aligned
-fragment copies.
-
-### bdev
-
-Removed deprecated spdk_bdev_module_finish_done(). Use spdk_bdev_module_fini_done() instead.
-
-A new API `spdk_bdev_unregister_by_name` was added to handle race conditions correctly.
-
-New APIs, `spdk_for_each_bdev` and `spdk_for_each_bdev_leaf`, were added to provide iteration
-safe for race conditions.
-
-A new RPC `bdev_nvme_get_io_paths` was added to get all active I/O paths.
-
-A new RPC `bdev_nvme_set_preferred_path` was added to set preferred I/O path for an NVMe bdev
-when in multipath mode. This RPC does not support NVMe bdevs in failover mode.
-
-A new RPC `bdev_nvme_set_multipath_policy` was added to set multipath policy of a NVMe bdev
-in multipath mode.
-
-A new option `disable_auto_failback` was added to the `bdev_nvme_set_options` RPC to disable
-automatic failback.
-
-### idxd / dsa
-
-A new parameter `flags` was added to all low level submission and preparation
-APIs to enable the caller to pass operation flags per the DSA specification.
-
-A new flag 'SPDK_IDXD_FLAG_PERSISTENT' was added to let DSA know that
-the destination is persistent.
-
-The RPC `idxd_scan_accel_engine` has been renamed to `dsa_scan_accel_engine`
-
-The RPC `iaa_scan_accel_engine` has been added.
-
-Many HW related structs/functions with the name `idxd` have been renamed `dsa`
-to more accurately represent the HW they are associated with.
-
-Two new functions were added to the library `spdk_idxd_submit_compress` and
-`spdk_idxd_submit_decompress`
-
 ### accel_fw
 
 A new parameter `flags` was added to accel API.
@@ -66,15 +18,25 @@ A new flag `ACCEL_FLAG_PERSISTENT` was added to indicate the target memory is PM
 
 The API `spdk_accel_get_capabilities` has been removed.
 
-### crypto
-
-Support for AES_XTS was added for MLX5 polled mode driver (pmd).
-
-bdev_crypto_create RPC now requires hexlified 'key' and 'key2' params for all pmd drivers.
-Unhexlifying is performed during RPC command processing and the vbdev crypto module runs on
-binary keys as before.
-
 ### bdev
+
+Removed deprecated `spdk_bdev_module_finish_done`. Use `spdk_bdev_module_fini_done` instead.
+
+A new API `spdk_bdev_unregister_by_name` was added to handle race conditions correctly.
+
+New APIs, `spdk_for_each_bdev` and `spdk_for_each_bdev_leaf`, were added to provide iteration
+safe for race conditions.
+
+A new RPC `bdev_nvme_get_io_paths` was added to get all active I/O paths.
+
+A new RPC `bdev_nvme_set_preferred_path` was added to set preferred I/O path for an NVMe bdev
+when in multipath mode. This RPC does not support NVMe bdevs in failover mode.
+
+A new RPC `bdev_nvme_set_multipath_policy` was added to set multipath policy of a NVMe bdev
+in multipath mode.
+
+A new option `disable_auto_failback` was added to the `bdev_nvme_set_options` RPC to disable
+automatic failback.
 
 Added a timeout option to the `bdev_get_bdevs` RPC.  It allows the user to specify the amount of
 time to wait until a bdev with a given name appears in the system.
@@ -93,21 +55,47 @@ added to the RPC `bdev_nvme_set_options`. They can be overridden if they are giv
 New functions `spdk_blob_io_writev_ext` and `spdk_blob_io_readv_ext` are added. The new functions accept
 `spdk_blob_ext_io_opts` structure with extended IO request options.
 
+### crypto
+
+Support for AES_XTS was added for MLX5 polled mode driver (pmd).
+
+`bdev_crypto_create` RPC now requires hexlified `key` and `key2` params for all pmd drivers.
+Unhexlifying is performed during RPC command processing and the vbdev crypto module runs on
+binary keys as before.
+
 ### event
 
 Added `msg_mempool_size` parameter to `spdk_reactors_init` and `spdk_thread_lib_init_ext`.
 The size of `g_spdk_msg_mempool` can now be controlled through the same-named
 user option of `spdk_app_opts` structure.
 
+### idxd
+
+A new parameter `flags` was added to all low level submission and preparation
+APIs to enable the caller to pass operation flags per the DSA specification.
+
+A new flag `SPDK_IDXD_FLAG_PERSISTENT` was added to let DSA know that
+the destination is persistent.
+
+The RPC `idxd_scan_accel_engine` has been renamed to `dsa_scan_accel_engine`
+
+The RPC `iaa_scan_accel_engine` has been added.
+
+Many HW related structs/functions with the name `idxd` have been renamed `dsa`
+to more accurately represent the HW they are associated with.
+
+Two new functions were added to the library `spdk_idxd_submit_compress` and
+`spdk_idxd_submit_decompress`
+
 ### nvme
 
-The API `spdk_nvme_ctrlr_prepare_for_reset()` was deprecated. The functionality provided by the
-`spdk_nvme_ctrlr_prepare_for_reset()` was merged into the API `spdk_nvme_ctrlr_disconnect()`.
+The API `spdk_nvme_ctrlr_prepare_for_reset` was deprecated. The functionality provided by the
+`spdk_nvme_ctrlr_prepare_for_reset` was merged into the API `spdk_nvme_ctrlr_disconnect`.
 
 ### nvmf
 
-Removed deprecated max_qpairs_per_ctrlr parameter from nvmf_create_transport RPC. Use
-max_io_qpairs_per_ctrlr instead.
+Removed deprecated `max_qpairs_per_ctrlr` parameter from `nvmf_create_transport` RPC. Use
+`max_io_qpairs_per_ctrlr` instead.
 
 Deprecated the ability for hosts to connect to the discovery subsystem automatically on any
 existing listener. Users should now explicitly add listeners for the discovery subsystem.
@@ -117,20 +105,6 @@ emitted if no listener was configured for the transport ID of the incoming conne
 Added adaptive interrupt feature for vfio-user transport. New parameter `disable_adaptive_irq`
 is added to the RPC `nvmf_create_transport`.
 
-### thread
-
-Added `spdk_thread_exec_msg()` API.
-
-### scheduler
-
-`framework_set_scheduler` can now be called after application initialization.
-Added callbacks to set custom parameters specific for each scheduler implementation
-and `framework_get_scheduler` to retrieve them.
-
-Added `dynamic` scheduler options: load_limit, core_limit, core_busy. Their descriptions
-are available in JSON-RPC document, in section
-[framework_set_scheduler](jsonrpc.html#rpc_framework_set_scheduler).
-
 ### raid
 
 Add concat as a special raid module. The concat module could create a virtual bdev.  The
@@ -139,16 +113,38 @@ bdevs is one after another. The concat bdev is extendable. When the free space o
 concat bdev is not enough, the user can deconstruct the concat bdev, then reconstruct it
 with an additional underlying bdev.
 
-### sock
-
-Allow MSG_ZEROCOPY flag to be set or not according to data size, which can be enabled and
-set by setting "zerocopy_threshold". zerocopy_threshold = 0 means disable this function;
-zerocopy_threshold > 0 means enable it and use this value as the threshold.
-
 ### rpc
 
 Introduced `zerocopy_threshold` to enable zerocopy on send for server sockets according to
 data size to be flushed.
+
+### scheduler
+
+`framework_set_scheduler` can now be called after application initialization.
+Added callbacks to set custom parameters specific for each scheduler implementation
+and `framework_get_scheduler` to retrieve them.
+
+Added `dynamic` scheduler options: `load_limit`, `core_limit`, `core_busy`. Their descriptions
+are available in JSON-RPC document, in section
+[framework_set_scheduler](jsonrpc.html#rpc_framework_set_scheduler).
+
+### sock
+
+A new option `ack_timeout` was added to the `spdk_sock_opts` structure.
+
+Allow `MSG_ZEROCOPY` flag to be set or not according to data size, which can be enabled and
+set by setting `zerocopy_threshold`. `zerocopy_threshold` = 0 means disable this function;
+`zerocopy_threshold` > 0 means enable it and use this value as the threshold.
+
+### thread
+
+Added `spdk_thread_exec_msg` API.
+
+### util
+
+A new parameter `bounce_iovcnt` was added to `spdk_dif_generate_copy` and `spdk_dif_verify_copy`.
+The `bounce_iovcnt` is used to specify the number of bounce_iov to support multiple block-aligned
+fragment copies.
 
 ## v22.01
 
