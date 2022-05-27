@@ -321,9 +321,31 @@ static void
 ftl_mngt_recovery_iteration_init_seq_ids(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_mngt_recovery_ctx *ctx = ftl_mngt_get_caller_ctx(mngt);
-	size_t size = sizeof(ctx->l2p_snippet.seq_id[0]) * ctx->l2p_snippet.count;
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+	uint64_t *trim_map = ftl_md_get_buffer(md);
+	uint64_t page_id, trim_seq_id;
+	uint32_t lbas_in_page = FTL_BLOCK_SIZE / dev->layout.l2p.addr_size;
+	uint64_t lba, lba_off;
 
-	memset(ctx->l2p_snippet.seq_id, 0, size);
+	if (dev->sb->ckpt_seq_id) {
+		FTL_ERRLOG(dev, "Checkpoint recovery not supported!\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	for (lba = ctx->iter.lba_first; lba < ctx->iter.lba_last; lba++) {
+		lba_off = lba - ctx->iter.lba_first;
+		page_id = lba / lbas_in_page;
+
+		assert(page_id < ftl_md_get_buffer_size(md) / sizeof(*trim_map));
+		assert(page_id < dev->layout.region[FTL_LAYOUT_REGION_TYPE_L2P].current.blocks);
+		assert(lba_off < ctx->l2p_snippet.count);
+
+		trim_seq_id = trim_map[page_id];
+
+		ctx->l2p_snippet.seq_id[lba_off] = trim_seq_id;
+		ftl_addr_store(dev, ctx->l2p_snippet.l2p, lba_off, FTL_ADDR_INVALID);
+	}
 
 	ftl_mngt_next_step(mngt);
 }
@@ -692,6 +714,100 @@ ftl_mngt_restore_valid_counters(struct spdk_ftl_dev *dev, struct ftl_mngt_proces
 }
 
 static void
+ftl_mngt_complete_unmap_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
+
+	dev->sb_shm->trim.in_progress = false;
+
+	if (!status) {
+		ftl_mngt_next_step(mngt);
+	} else {
+		ftl_mngt_fail_step(mngt);
+	}
+}
+
+static void
+ftl_mngt_complete_unmap(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	uint64_t start_lba, num_blocks, seq_id;
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+
+	if (dev->sb_shm->trim.in_progress) {
+		start_lba = dev->sb_shm->trim.start_lba;
+		num_blocks = dev->sb_shm->trim.num_blocks;
+		seq_id = dev->sb_shm->trim.seq_id;
+
+		assert(seq_id <= dev->sb->seq_id);
+
+		FTL_NOTICELOG(dev, "Uncomplete unmap detected lba: %"PRIu64" num_blocks: %"PRIu64"\n",
+			      start_lba, num_blocks);
+
+		ftl_set_unmap_map(dev, start_lba, num_blocks, seq_id);
+	}
+
+	md->owner.cb_ctx = mngt;
+	md->cb = ftl_mngt_complete_unmap_cb;
+
+	ftl_md_persist(md);
+}
+
+static void
+ftl_mngt_recover_unmap_map_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
+	uint64_t num_md_blocks, first_page, num_pages;
+	uint32_t lbas_in_page = FTL_BLOCK_SIZE / dev->layout.l2p.addr_size;
+	uint64_t *page = ftl_md_get_buffer(md);
+	union ftl_md_vss *page_vss = ftl_md_get_vss_buffer(md);
+	uint64_t lba, num_blocks, vss_seq_id;
+	size_t i, j;
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	num_md_blocks = ftl_md_get_buffer_size(md) / lbas_in_page;
+
+	for (i = 0; i < num_md_blocks; ++i, page_vss++) {
+		lba = page_vss->unmap.start_lba;
+		num_blocks = page_vss->unmap.num_blocks;
+		vss_seq_id = page_vss->unmap.seq_id;
+
+		first_page = lba / lbas_in_page;
+		num_pages = num_blocks / lbas_in_page;
+
+		if (lba % lbas_in_page || num_blocks % lbas_in_page) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+
+		for (j = first_page; j < first_page + num_pages; ++j) {
+			page[j] = spdk_max(vss_seq_id, page[j]);
+		}
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+static void
+ftl_mngt_recover_unmap_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+
+	if (ftl_fast_recovery(dev)) {
+		FTL_DEBUGLOG(dev, "SHM: skipping unmap map recovery\n");
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+
+	md->owner.cb_ctx = mngt;
+	md->cb = ftl_mngt_recover_unmap_map_cb;
+	ftl_md_restore(md);
+}
+
+static void
 ftl_mngt_recovery_shm_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	if (ftl_fast_recovery(dev)) {
@@ -781,6 +897,10 @@ static const struct ftl_mngt_process_desc g_desc_recovery = {
 			.action = ftl_mngt_recover_seq_id
 		},
 		{
+			.name = "Recover unmap map",
+			.action = ftl_mngt_recover_unmap_map
+		},
+		{
 			.name = "Recover open chunks P2L",
 			.action = ftl_mngt_nv_cache_recover_open_chunk
 		},
@@ -841,6 +961,10 @@ static const struct ftl_mngt_process_desc g_desc_recovery_shm = {
 		{
 			.name = "Restore valid maps counters",
 			.action = ftl_mngt_restore_valid_counters,
+		},
+		{
+			.name = "Complete unmap transaction",
+			.action = ftl_mngt_complete_unmap,
 		},
 		{}
 	}

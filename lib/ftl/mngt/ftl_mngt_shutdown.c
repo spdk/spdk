@@ -32,6 +32,10 @@ static const struct ftl_mngt_process_desc desc_shutdown = {
 			.action = ftl_mngt_persist_l2p
 		},
 		{
+			.name = "Finish L2P unmaps",
+			.action = ftl_mngt_unmap_l2p,
+		},
+		{
 			.name = "Persist metadata",
 			.action = ftl_mngt_persist_md
 		},

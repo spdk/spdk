@@ -53,6 +53,12 @@ ftl_mngt_persist_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 }
 
 void
+ftl_mngt_unmap_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_l2p_unmap(dev, l2p_cb, mngt);
+}
+
+void
 ftl_mngt_restore_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	ftl_l2p_restore(dev, l2p_cb, mngt);

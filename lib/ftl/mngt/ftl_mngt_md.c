@@ -236,6 +236,12 @@ ftl_mngt_persist_band_info_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_pr
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_BAND_MD);
 }
 
+static void
+ftl_mngt_persist_trim_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_TRIM_MD);
+}
+
 static uint32_t
 get_sb_crc(struct ftl_superblock *sb)
 {
@@ -293,6 +299,10 @@ static const struct ftl_mngt_process_desc desc_persist = {
 		{
 			.name = "persist band info metadata",
 			.action = ftl_mngt_persist_band_info_metadata,
+		},
+		{
+			.name = "persist trim metadata",
+			.action = ftl_mngt_persist_trim_metadata,
 		},
 		{
 			.name = "Persist superblock",
@@ -674,6 +684,21 @@ ftl_mngt_restore_band_info_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_pr
 	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_BAND_MD);
 }
 
+static void
+ftl_mngt_restore_trim_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	if (ftl_fast_startup(dev)) {
+		FTL_DEBUGLOG(dev, "SHM: found trim md\n");
+		if (ftl_md_restore_region(dev, FTL_LAYOUT_REGION_TYPE_TRIM_MD)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_TRIM_MD);
+}
+
 
 
 #ifdef SPDK_FTL_VSS_EMU
@@ -707,6 +732,10 @@ static const struct ftl_mngt_process_desc desc_restore = {
 		{
 			.name = "Restore band info metadata",
 			.action = ftl_mngt_restore_band_info_metadata,
+		},
+		{
+			.name = "Restore trim metadata",
+			.action = ftl_mngt_restore_trim_metadata,
 		},
 		{}
 	}
