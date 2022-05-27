@@ -349,6 +349,8 @@ start_io(struct ftl_io *io)
 		TAILQ_INSERT_TAIL(&dev->wr_sq, io, queue_entry);
 		break;
 	case FTL_IO_UNMAP:
+		TAILQ_INSERT_TAIL(&dev->unmap_sq, io, queue_entry);
+		break;
 	default:
 		io->status = -EOPNOTSUPP;
 		ftl_io_complete(io);
@@ -434,6 +436,59 @@ spdk_ftl_readv(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_chann
 	return queue_io(dev, io);
 }
 
+int
+ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+	  uint64_t lba, uint64_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	int rc;
+
+	rc = ftl_io_init(ch, io, lba, lba_cnt, NULL, 0, cb_fn, cb_arg, FTL_IO_UNMAP);
+	if (rc) {
+		return rc;
+	}
+
+	return queue_io(dev, io);
+}
+
+int
+spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+	       uint64_t lba, uint64_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	int rc;
+	uint64_t aligment = dev->layout.l2p.lbas_in_page;
+
+	if (lba_cnt == 0) {
+		return -EINVAL;
+	}
+
+	if (lba + lba_cnt < lba_cnt) {
+		return -EINVAL;
+	}
+
+	if (lba + lba_cnt > dev->num_lbas) {
+		return -EINVAL;
+	}
+
+	if (!dev->initialized) {
+		return -EBUSY;
+	}
+
+	if (lba % aligment || lba_cnt % aligment) {
+		rc = ftl_io_init(ch, io, lba, lba_cnt, NULL, 0, cb_fn, cb_arg, FTL_IO_UNMAP);
+		if (rc) {
+			return rc;
+		}
+
+		io->status = 0;
+		ftl_io_complete(io);
+		return 0;
+	}
+
+	rc = ftl_unmap(dev, io, ch, lba, lba_cnt, cb_fn, cb_arg);
+
+	return rc;
+}
+
 #define FTL_IO_QUEUE_BATCH 16
 int
 ftl_io_channel_poll(void *arg)
@@ -473,6 +528,82 @@ ftl_process_io_channel(struct spdk_ftl_dev *dev, struct ftl_io_channel *ioch)
 }
 
 static void
+ftl_process_unmap_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_io *io = md->owner.cb_ctx;
+
+	io->dev->unmap_qd--;
+
+	if (spdk_unlikely(status)) {
+		TAILQ_INSERT_HEAD(&io->dev->unmap_sq, io, queue_entry);
+		return;
+	}
+
+	ftl_io_complete(io);
+}
+
+void
+ftl_set_unmap_map(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, uint64_t seq_id)
+{
+	uint64_t first_page, num_pages;
+	uint64_t first_md_block, num_md_blocks, num_pages_in_block;
+	uint32_t lbas_in_page = dev->layout.l2p.lbas_in_page;
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+	uint64_t *page = ftl_md_get_buffer(md);
+	union ftl_md_vss *page_vss;
+	size_t i;
+
+	first_page = lba / lbas_in_page;
+	num_pages = num_blocks / lbas_in_page;
+
+	for (i = first_page; i < first_page + num_pages; ++i) {
+		ftl_bitmap_set(dev->unmap_map, i);
+		page[i] = seq_id;
+	}
+
+	num_pages_in_block = FTL_BLOCK_SIZE / sizeof(*page);
+	first_md_block = first_page / num_pages_in_block;
+	num_md_blocks = spdk_divide_round_up(num_pages, num_pages_in_block);
+	page_vss = ftl_md_get_vss_buffer(md) + first_md_block;
+	for (i = first_md_block; i < num_md_blocks; ++i, page_vss++) {
+		page_vss->unmap.start_lba = lba;
+		page_vss->unmap.num_blocks = num_blocks;
+		page_vss->unmap.seq_id = seq_id;
+	}
+}
+
+static bool
+ftl_process_unmap(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+	uint64_t seq_id;
+
+	seq_id = ftl_nv_cache_acquire_trim_seq_id(&dev->nv_cache);
+	if (seq_id == 0) {
+		return false;
+	}
+
+	dev->unmap_in_progress = true;
+	dev->unmap_qd++;
+
+	dev->sb_shm->trim.start_lba = io->lba;
+	dev->sb_shm->trim.num_blocks = io->num_blocks;
+	dev->sb_shm->trim.seq_id = seq_id;
+	dev->sb_shm->trim.in_progress = true;
+	ftl_set_unmap_map(dev, io->lba, io->num_blocks, seq_id);
+	ftl_debug_inject_unmap_error();
+	dev->sb_shm->trim.in_progress = false;
+
+	md->owner.cb_ctx = io;
+	md->cb = ftl_process_unmap_cb;
+
+	ftl_md_persist(md);
+
+	return true;
+}
+
+static void
 ftl_process_io_queue(struct spdk_ftl_dev *dev)
 {
 	struct ftl_io_channel *ioch;
@@ -494,6 +625,22 @@ ftl_process_io_queue(struct spdk_ftl_dev *dev)
 		assert(io->type == FTL_IO_WRITE);
 		if (!ftl_nv_cache_write(io)) {
 			TAILQ_INSERT_HEAD(&dev->wr_sq, io, queue_entry);
+		}
+	}
+
+	if (!TAILQ_EMPTY(&dev->unmap_sq) && dev->unmap_qd == 0) {
+		io = TAILQ_FIRST(&dev->unmap_sq);
+		TAILQ_REMOVE(&dev->unmap_sq, io, queue_entry);
+		assert(io->type == FTL_IO_UNMAP);
+
+		/*
+		 * Unmap operation requires generating a sequence id for itself, which it gets based on the open chunk
+		 * in nv cache. If there are no open chunks (because we're in the middle of state transistion or compaction
+		 * lagged behind), then we need to wait for the nv cache to resolve the situation - it's fine to just put the
+		 * unmap and try again later.
+		 */
+		if (!ftl_process_unmap(io)) {
+			TAILQ_INSERT_HEAD(&dev->unmap_sq, io, queue_entry);
 		}
 	}
 

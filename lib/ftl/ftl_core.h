@@ -157,6 +157,15 @@ struct spdk_ftl_dev {
 	/* Write submission queue */
 	TAILQ_HEAD(, ftl_io)		wr_sq;
 
+	/* Trim submission queue */
+	TAILQ_HEAD(, ftl_io)		unmap_sq;
+
+	/* Trim valid map */
+	struct ftl_bitmap		*unmap_map;
+	struct ftl_md			*unmap_map_md;
+	size_t				unmap_qd;
+	bool				unmap_in_progress;
+
 	/* Writer for user IOs */
 	struct ftl_writer		writer_user;
 
@@ -191,7 +200,13 @@ bool ftl_needs_reloc(struct spdk_ftl_dev *dev);
 
 struct ftl_band *ftl_band_get_next_free(struct spdk_ftl_dev *dev);
 
+void ftl_set_unmap_map(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
+		       uint64_t seq_id);
+
 void ftl_recover_max_seq(struct spdk_ftl_dev *dev);
+
+int ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+	      uint64_t lba, size_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
 static inline uint64_t
 ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)

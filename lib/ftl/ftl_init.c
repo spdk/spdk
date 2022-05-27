@@ -117,6 +117,7 @@ allocate_dev(const struct spdk_ftl_conf *conf, int *error)
 
 	TAILQ_INIT(&dev->rd_sq);
 	TAILQ_INIT(&dev->wr_sq);
+	TAILQ_INIT(&dev->unmap_sq);
 	TAILQ_INIT(&dev->ioch_queue);
 
 	ftl_writer_init(dev, &dev->writer_user, SPDK_FTL_LIMIT_HIGH, FTL_BAND_TYPE_COMPACTION);

@@ -2225,3 +2225,37 @@ ftl_nv_cache_halt(struct ftl_nv_cache *nv_cache)
 		ftl_chunk_close(chunk);
 	}
 }
+
+uint64_t
+ftl_nv_cache_acquire_trim_seq_id(struct ftl_nv_cache *nv_cache)
+{
+	struct ftl_nv_cache_chunk *chunk = nv_cache->chunk_current;
+	uint64_t seq_id, free_space;
+
+	if (!chunk) {
+		chunk = TAILQ_FIRST(&nv_cache->chunk_open_list);
+		if (chunk && chunk->md->state == FTL_CHUNK_STATE_OPEN) {
+			return chunk->md->seq_id;
+		} else {
+			return 0;
+		}
+	}
+
+	if (chunk_is_closed(chunk)) {
+		return 0;
+	}
+
+	seq_id = nv_cache->chunk_current->md->seq_id;
+	free_space = chunk_get_free_space(nv_cache, chunk);
+
+	chunk->md->blocks_skipped = free_space;
+	chunk->md->blocks_written += free_space;
+	chunk->md->write_pointer += free_space;
+	if (chunk->md->blocks_written == chunk_tail_md_offset(nv_cache)) {
+		ftl_chunk_close(chunk);
+	}
+	nv_cache->chunk_current = NULL;
+
+	seq_id++;
+	return seq_id;
+}

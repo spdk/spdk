@@ -123,6 +123,16 @@ ftl_l2p_halt(struct spdk_ftl_dev *dev)
 	return FTL_L2P_OP(halt)(dev);
 }
 
+static uint64_t
+get_trim_seq_id(struct spdk_ftl_dev *dev, uint64_t lba)
+{
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+	uint64_t *page = ftl_md_get_buffer(md);
+	uint64_t page_no = lba / dev->layout.l2p.lbas_in_page;
+
+	return page[page_no];
+}
+
 void
 ftl_l2p_update_cache(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, ftl_addr old_addr)
 {
@@ -171,6 +181,14 @@ ftl_l2p_update_cache(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, 
 		ftl_invalidate_addr(dev, current_addr);
 		/* DO NOT CHANGE ORDER - END */
 		return;
+	} else {
+		uint64_t trim_seq_id = get_trim_seq_id(dev, lba);
+		uint64_t new_seq_id = ftl_nv_cache_get_chunk_from_addr(dev, new_addr)->md->seq_id;
+
+		/* Check if region hasn't been unmapped during IO */
+		if (new_seq_id < trim_seq_id) {
+			return;
+		}
 	}
 
 	/* If current address doesn't have any value (ie. it was never set, or it was trimmed), then we can just set L2P */

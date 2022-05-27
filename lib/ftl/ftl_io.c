@@ -134,6 +134,10 @@ ftl_io_cb(struct ftl_io *io, void *arg, int status)
 				ftl_io_clear(io);
 				TAILQ_INSERT_HEAD(&io->dev->wr_sq, io, queue_entry);
 				break;
+			case FTL_IO_UNMAP:
+				ftl_io_clear(io);
+				TAILQ_INSERT_HEAD(&io->dev->unmap_sq, io, queue_entry);
+				break;
 			default:
 				/* Unknown IO type, complete to the user */
 				assert(0);

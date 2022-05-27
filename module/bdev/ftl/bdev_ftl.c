@@ -148,6 +148,9 @@ _bdev_ftl_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				       bdev_io->u.bdev.iovcnt, bdev_ftl_cb, bdev_io);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return spdk_ftl_unmap(ftl_bdev->dev, (struct ftl_io *)bdev_io->driver_ctx,
+				      ch, bdev_io->u.bdev.offset_blocks,
+				      bdev_io->u.bdev.num_blocks, bdev_ftl_cb, bdev_io);
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;

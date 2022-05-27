@@ -176,6 +176,10 @@ ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 void
 ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
+	if (ftl_bitmap_find_first_set(dev->unmap_map, 0, UINT64_MAX) != UINT64_MAX) {
+		dev->unmap_in_progress = true;
+	}
+
 	dev->initialized = 1;
 	dev->sb_shm->shm_ready = true;
 
@@ -243,6 +247,71 @@ ftl_mngt_deinit_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 		ftl_bitmap_destroy(dev->valid_map);
 		dev->valid_map = NULL;
 	}
+
+	ftl_mngt_next_step(mngt);
+}
+void
+ftl_mngt_init_unmap_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	uint64_t num_l2p_pages = spdk_divide_round_up(dev->num_lbas, dev->layout.l2p.lbas_in_page);
+	uint64_t map_blocks = ftl_bitmap_bits_to_blocks(num_l2p_pages);
+
+	dev->unmap_map_md = ftl_md_create(dev,
+					  map_blocks,
+					  0,
+					  "trim_bitmap",
+					  ftl_md_create_shm_flags(dev), NULL);
+
+	if (!dev->unmap_map_md) {
+		FTL_ERRLOG(dev, "Failed to create trim bitmap md\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	dev->unmap_map = ftl_bitmap_create(ftl_md_get_buffer(dev->unmap_map_md),
+					   ftl_md_get_buffer_size(dev->unmap_map_md));
+
+	if (!dev->unmap_map) {
+		FTL_ERRLOG(dev, "Failed to create unmap map\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+static void
+unmap_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
+
+	if (status) {
+		FTL_ERRLOG(dev, "ERROR of clearing trim unmap\n");
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+void
+ftl_mngt_unmap_clear(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+
+	md->cb = unmap_clear_cb;
+	md->owner.cb_ctx = mngt;
+
+	ftl_md_clear(md, 0, NULL);
+}
+
+void
+ftl_mngt_deinit_unmap_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_bitmap_destroy(dev->unmap_map);
+	dev->unmap_map = NULL;
+
+	ftl_md_destroy(dev->unmap_map_md, ftl_md_destroy_shm_flags(dev));
+	dev->unmap_map_md = NULL;
 
 	ftl_mngt_next_step(mngt);
 }

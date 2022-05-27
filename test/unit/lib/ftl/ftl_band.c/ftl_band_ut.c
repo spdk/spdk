@@ -129,6 +129,10 @@ DEFINE_STUB(ftl_mempool_claim_df, void *, (struct ftl_mempool *mpool, ftl_df_obj
 DEFINE_STUB(ftl_bitmap_count_set, uint64_t, (struct ftl_bitmap *bitmap), 0);
 DEFINE_STUB(ftl_p2l_ckpt_region_type, enum ftl_layout_region_type,
 	    (const struct ftl_p2l_ckpt *ckpt), 0);
+DEFINE_STUB(ftl_md_get_buffer, void *, (struct ftl_md *md), NULL);
+DEFINE_STUB(ftl_md_get_vss_buffer, union ftl_md_vss *, (struct ftl_md *md), NULL);
+DEFINE_STUB(ftl_nv_cache_acquire_trim_seq_id, uint64_t, (struct ftl_nv_cache *nv_cache), 0);
+DEFINE_STUB_V(ftl_md_persist, (struct ftl_md *md));
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

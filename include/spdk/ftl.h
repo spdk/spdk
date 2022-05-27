@@ -204,6 +204,22 @@ int spdk_ftl_writev(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_
 		    struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
 /**
+ * Submits a unmap to the specified device.
+ *
+ * \param dev Device
+ * \param io Allocated ftl_io
+ * \param ch I/O channel
+ * \param lba Starting LBA to write the data
+ * \param lba_cnt Number of blocks to unmap
+ * \param cb_fn Callback function to invoke when the I/O is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negative errno otherwise.
+ */
+int spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		   uint64_t lba, uint64_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
+
+/**
  * Returns the size of ftl_io struct that needs to be passed to spdk_ftl_read/write
  *
  * \return The size of struct
