@@ -552,6 +552,23 @@ static void process_finish(struct ftl_l2p_cache *cache)
 	ctx.cb(cache->dev, ctx.status, ctx.cb_ctx);
 }
 
+static void process_page_in(struct ftl_l2p_page *page, spdk_bdev_io_completion_cb cb)
+{
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)page->ctx.cache;
+	int rc;
+
+	assert(page->l1);
+
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(cache->dev, ftl_l2p_cache_get_bdev_desc(cache),
+				       ftl_l2p_cache_get_bdev_iochannel(cache),
+				       page->l1, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
+				       1, cb, page);
+
+	if (rc) {
+		cb(NULL, false, page);
+	}
+}
+
 static void process_page_out(struct ftl_l2p_page *page, spdk_bdev_io_completion_cb cb)
 {
 	struct ftl_l2p_cache *cache = page->ctx.cache;
@@ -568,6 +585,99 @@ static void process_page_out(struct ftl_l2p_page *page, spdk_bdev_io_completion_
 	if (rc) {
 		cb(NULL, false, page);
 	}
+}
+
+static void process_unmap(struct ftl_l2p_cache *cache);
+
+static void process_unmap_page_out_cb(struct spdk_bdev_io *bdev_io, bool success,
+				      void *ctx_page)
+{
+	struct ftl_l2p_page *page = (struct ftl_l2p_page *)ctx_page;
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	if (bdev_io) {
+		spdk_bdev_free_io(bdev_io);
+	}
+	if (!success) {
+		ctx->status = -EIO;
+	}
+
+	assert(!page->on_rank_list);
+	assert(ftl_bitmap_get(dev->unmap_map, page->page_no));
+	ftl_bitmap_clear(dev->unmap_map, page->page_no);
+	ftl_l2p_cache_page_remove(cache, page);
+
+	ctx->qd--;
+	process_unmap(cache);
+}
+
+static void process_unmap_page_in_cb(struct spdk_bdev_io *bdev_io, bool success,
+				     void *ctx_page)
+{
+	struct ftl_l2p_page *page = (struct ftl_l2p_page *)ctx_page;
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	if (bdev_io) {
+		spdk_bdev_free_io(bdev_io);
+	}
+	if (success) {
+		assert(ftl_bitmap_get(dev->unmap_map, page->page_no));
+		ftl_l2p_page_set_invalid(dev, page);
+		process_page_out(page, process_unmap_page_out_cb);
+	} else {
+		ctx->status = -EIO;
+		ctx->qd--;
+		process_unmap(cache);
+	}
+}
+
+static void process_unmap(struct ftl_l2p_cache *cache)
+{
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	while (ctx->idx < cache->num_pages && ctx->qd < 64) {
+		if (!ftl_bitmap_get(cache->dev->unmap_map, ctx->idx)) {
+			/* Page had not been unmapped, continue */
+			ctx->idx++;
+			continue;
+		}
+
+		/* All pages were removed in persist phase */
+		assert(get_l2p_page_by_df_id(cache, ctx->idx) == NULL);
+
+		/* Allocate page to invalidate it */
+		struct ftl_l2p_page *page = ftl_l2p_cache_page_alloc(cache, ctx->idx);
+		if (!page) {
+			/* All pages utilized so far, continue when they will be back available */
+			assert(ctx->qd);
+			break;
+		}
+
+		page->state = L2P_CACHE_PAGE_IN_CLEAR;
+		page->ctx.cache = cache;
+
+		ftl_l2p_cache_page_insert(cache, page);
+		process_page_in(page, process_unmap_page_in_cb);
+
+		ctx->qd++;
+		ctx->idx++;
+	}
+
+	if (0 == ctx->qd) {
+		process_finish(cache);
+	}
+}
+
+void ftl_l2p_cache_unmap(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+
+	process_init_ctx(dev, cache, cb, cb_ctx);
+	process_unmap(cache);
 }
 
 static void clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)

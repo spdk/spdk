@@ -118,6 +118,12 @@ ftl_l2p_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 }
 
 void
+ftl_l2p_unmap(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	FTL_L2P_OP(unmap)(dev, cb, cb_ctx);
+}
+
+void
 ftl_l2p_process(struct spdk_ftl_dev *dev)
 {
 	struct ftl_l2p_pin_ctx *pin_ctx;
