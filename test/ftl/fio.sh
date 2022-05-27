@@ -7,7 +7,7 @@ source $testdir/common.sh
 
 declare -A suite
 suite['basic']='randw-verify randw-verify-j2 randw-verify-depth128'
-suite['extended']='drive-prep randw-verify-qd128-ext randw-verify-qd2048-ext randw randr randrw'
+suite['extended']='drive-prep randw-verify-qd128-ext randw-verify-qd2048-ext randw randr randrw unmap'
 suite['nightly']='drive-prep randw-verify-qd256-nght randw-verify-qd256-nght randw-verify-qd256-nght'
 
 rpc_py=$rootdir/scripts/rpc.py
