@@ -24,6 +24,7 @@ static const struct spdk_ftl_conf g_default_conf = {
 	.user_io_pool_size = 2048,
 	.nv_cache = {
 		.chunk_compaction_threshold = 80,
+		.chunk_free_target = 5,
 	},
 	.fast_shutdown = true,
 };
@@ -135,6 +136,10 @@ ftl_conf_is_valid(const struct spdk_ftl_conf *conf)
 
 	if (conf->nv_cache.chunk_compaction_threshold == 0 ||
 	    conf->nv_cache.chunk_compaction_threshold > 100) {
+		return false;
+	}
+
+	if (conf->nv_cache.chunk_free_target == 0 || conf->nv_cache.chunk_free_target > 100) {
 		return false;
 	}
 

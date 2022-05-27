@@ -144,6 +144,7 @@ DEFINE_STUB(ftl_nv_cache_acquire_trim_seq_id, uint64_t, (struct ftl_nv_cache *nv
 DEFINE_STUB_V(ftl_md_persist, (struct ftl_md *md));
 DEFINE_STUB_V(spdk_bdev_io_get_nvme_status, (const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
 		int *sct, int *sc));
+DEFINE_STUB(ftl_nv_cache_throttle, bool, (struct spdk_ftl_dev *dev), true);
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

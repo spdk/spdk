@@ -101,6 +101,9 @@ struct spdk_ftl_conf {
 	struct {
 		/* Start compaction when full chunks exceed given % of entire chunks */
 		uint32_t			chunk_compaction_threshold;
+
+		/* Percentage of chunks to maintain free */
+		uint32_t			chunk_free_target;
 	} nv_cache;
 
 	/* Name of base block device (zoned or non-zoned) */
