@@ -1006,6 +1006,7 @@ pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
 		}
 
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
+		crc32c = crc32c ^ SPDK_CRC32C_XOR;
 		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 	}
 
@@ -1928,6 +1929,7 @@ nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair,
 	/* check data digest if need */
 	if (pdu->ddgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
+		crc32c = crc32c ^ SPDK_CRC32C_XOR;
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("Data digest error on tqpair=(%p) with pdu=%p\n", tqpair, pdu);

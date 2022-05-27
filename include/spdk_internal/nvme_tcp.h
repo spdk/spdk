@@ -226,7 +226,6 @@ nvme_tcp_pdu_calc_data_digest(struct nvme_tcp_pdu *pdu)
 		assert(pad_length <= sizeof(pad));
 		crc32c = spdk_crc32c_update(pad, pad_length, crc32c);
 	}
-	crc32c = crc32c ^ SPDK_CRC32C_XOR;
 	return crc32c;
 }
 
