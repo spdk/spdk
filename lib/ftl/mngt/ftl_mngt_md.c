@@ -13,6 +13,7 @@
 #include "ftl_band.h"
 #include "ftl_internal.h"
 #include "ftl_sb.h"
+#include "upgrade/ftl_layout_upgrade.h"
 
 void
 ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
@@ -746,4 +747,11 @@ void
 ftl_mngt_restore_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	ftl_mngt_call_process(mngt, &desc_restore);
+}
+
+void
+ftl_mngt_persist_superblock(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	dev->sb->header.crc = get_sb_crc(dev->sb);
+	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
 }

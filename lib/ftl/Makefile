@@ -23,7 +23,7 @@ endif
 
 CFLAGS += -I.
 
-FTL_SUBDIRS := mngt utils
+FTL_SUBDIRS := mngt utils upgrade
 
 C_SRCS = ftl_core.c ftl_init.c ftl_layout.c ftl_debug.c ftl_io.c ftl_sb.c ftl_l2p.c ftl_l2p_flat.c
 C_SRCS += ftl_nv_cache.c ftl_band.c ftl_band_ops.c ftl_writer.c ftl_rq.c ftl_reloc.c ftl_l2p_cache.c
@@ -31,8 +31,9 @@ C_SRCS += ftl_p2l.c
 C_SRCS += mngt/ftl_mngt.c mngt/ftl_mngt_bdev.c mngt/ftl_mngt_shutdown.c mngt/ftl_mngt_startup.c
 C_SRCS += mngt/ftl_mngt_md.c mngt/ftl_mngt_misc.c mngt/ftl_mngt_ioch.c mngt/ftl_mngt_l2p.c
 C_SRCS += mngt/ftl_mngt_band.c mngt/ftl_mngt_self_test.c mngt/ftl_mngt_p2l.c
-C_SRCS += mngt/ftl_mngt_recovery.c
+C_SRCS += mngt/ftl_mngt_recovery.c mngt/ftl_mngt_upgrade.c
 C_SRCS += utils/ftl_conf.c utils/ftl_md.c utils/ftl_mempool.c utils/ftl_bitmap.c
+C_SRCS += upgrade/ftl_layout_upgrade.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 
