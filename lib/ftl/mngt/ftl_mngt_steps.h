@@ -108,6 +108,10 @@ void ftl_mngt_persist_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_layout_verify(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_layout_upgrade(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);

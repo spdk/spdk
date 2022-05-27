@@ -51,11 +51,12 @@ endif
 
 CFLAGS += -I.
 
-FTL_SUBDIRS := mngt utils
+FTL_SUBDIRS := mngt utils upgrade
 
 C_SRCS = $(wildcard *.c)
 C_SRCS += $(wildcard mngt/*.c)
 C_SRCS += $(wildcard utils/*.c)
+C_SRCS += $(wildcard upgrade/*.c)
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 

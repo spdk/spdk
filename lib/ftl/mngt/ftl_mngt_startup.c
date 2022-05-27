@@ -118,6 +118,10 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.action = ftl_mngt_init_layout
 		},
 		{
+			.name = "Verify layout",
+			.action = ftl_mngt_layout_verify,
+		},
+		{
 			.name = "Initialize metadata",
 			.action = ftl_mngt_init_md,
 			.cleanup = ftl_mngt_deinit_md
@@ -126,6 +130,10 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.name = "Initialize NV cache",
 			.action = ftl_mngt_init_nv_cache,
 			.cleanup = ftl_mngt_deinit_nv_cache
+		},
+		{
+			.name = "Upgrade layout",
+			.action = ftl_mngt_layout_upgrade,
 		},
 		{
 			.name = "Initialize valid map",

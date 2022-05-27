@@ -41,6 +41,7 @@
 #include "ftl_band.h"
 #include "ftl_internal.h"
 #include "ftl_sb.h"
+#include "upgrade/ftl_layout_upgrade.h"
 
 void ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -451,6 +452,12 @@ void ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 
 	if (sb->header.crc != get_sb_crc(sb)) {
 		FTL_ERRLOG(dev, "Invalid FTL superblock CRC\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	if (ftl_superblock_upgrade(dev)) {
+		FTL_ERRLOG(dev, "FTL superblock dirty or invalid version\n");
 		ftl_mngt_fail_step(mngt);
 		return;
 	}

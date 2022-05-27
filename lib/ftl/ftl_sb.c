@@ -265,6 +265,78 @@ next_sb_reg:
 	return 0;
 }
 
+static void
+ftl_superblock_md_layout_free_region(struct spdk_ftl_dev *dev, struct ftl_superblock_md_region *sb_reg)
+{
+	// TODO: major upgrades: implement
+	sb_reg->type = ftl_layout_region_type_free_nvc;
+}
+
+int
+ftl_superblock_md_layout_upgrade_region(struct spdk_ftl_dev *dev, struct ftl_superblock_md_region *sb_reg, uint32_t new_version)
+{
+	struct ftl_superblock *sb = dev->sb;
+	struct ftl_superblock_md_region *sb_reg_iter = &sb->md_layout_head;
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *reg = &layout->region[sb_reg->type];
+	uint32_t old_version = sb_reg->version;
+
+	assert(sb_reg);
+	assert(reg->prev.sb_md_reg == sb_reg);
+	assert(new_version > old_version);
+
+	while (sb_reg_iter->type != ftl_layout_region_type_invalid) {
+		if (sb_reg_iter->type != sb_reg->type) {
+			goto next_sb_reg_iter;
+		}
+
+		// Verify all region versions up to new_version are updated:
+		if (sb_reg_iter->version != old_version && sb_reg_iter->version < new_version) {
+			FTL_ERRLOG(dev, "Region upgrade skipped\n");
+			return -1;
+		}
+
+		if (sb_reg_iter->version == new_version) {
+			// Major upgrades: update region prev version to the new version region found
+			assert(sb_reg != sb_reg_iter);
+			reg->prev.offset = sb_reg_iter->blk_offs;
+			reg->prev.blocks = sb_reg_iter->blk_sz;
+			reg->prev.version = sb_reg_iter->version;
+			reg->prev.sb_md_reg = sb_reg_iter;
+
+			ftl_superblock_md_layout_free_region(dev, sb_reg);
+			goto exit;
+		}
+
+next_sb_reg_iter:
+		if (sb_reg_iter->df_next == FTL_DF_OBJ_ID_INVALID) {
+			break;
+		}
+
+		sb_reg_iter = ftl_df_get_obj_ptr(sb, sb_reg_iter->df_next);
+		if (superblock_md_region_overflow(dev, sb_reg_iter)) {
+			FTL_ERRLOG(dev, "Buffer overflow\n");
+			return -EOVERFLOW;
+		}
+	}
+
+	// Minor upgrades: update the region in place (only the new version)
+	assert(sb_reg == reg->prev.sb_md_reg);
+	sb_reg->version = new_version;
+	reg->prev.version = new_version;
+
+exit:
+	// Update the region current version
+	if (new_version == reg->current.version) {
+		reg->current.offset = sb_reg->blk_offs;
+		reg->current.blocks = sb_reg->blk_sz;
+		reg->current.version = sb_reg->version;
+		reg->current.sb_md_reg = sb_reg;
+	}
+
+	return 0;
+}
+
 void ftl_superblock_md_layout_dump(struct spdk_ftl_dev *dev)
 {
 	struct ftl_superblock *sb = dev->sb;

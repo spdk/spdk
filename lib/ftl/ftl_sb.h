@@ -48,6 +48,8 @@ int ftl_superblock_md_layout_build(struct spdk_ftl_dev *dev);
 
 int ftl_superblock_md_layout_load_all(struct spdk_ftl_dev *dev);
 
+int ftl_superblock_md_layout_upgrade_region(struct spdk_ftl_dev *dev, struct ftl_superblock_md_region *sb_reg, uint32_t new_version);
+
 void ftl_superblock_md_layout_dump(struct spdk_ftl_dev *dev);
 
 #endif /* FTL_SB_H */
