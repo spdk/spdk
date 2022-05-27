@@ -106,6 +106,8 @@ void ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 
 void ftl_mngt_restore_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
 
+void ftl_mngt_recover(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
+
 void ftl_mngt_init_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
 
 void ftl_mngt_deinit_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);

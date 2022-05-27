@@ -660,6 +660,14 @@ ftl_valid_map_load_state(struct spdk_ftl_dev *dev)
 }
 
 void
+ftl_band_initialize_free_state(struct ftl_band *band)
+{
+	/* All bands start on the shut list during startup, removing it manually here */
+	TAILQ_REMOVE(&band->dev->shut_bands, band, queue_entry);
+	_ftl_band_set_free(band);
+}
+
+void
 ftl_bands_load_state(struct spdk_ftl_dev *dev)
 {
 	uint64_t i;
@@ -669,9 +677,7 @@ ftl_bands_load_state(struct spdk_ftl_dev *dev)
 		band = &dev->bands[i];
 
 		if (band->md->state == FTL_BAND_STATE_FREE) {
-			/* All bands start on the shut list during startup, removing it manually here */
-			TAILQ_REMOVE(&dev->shut_bands, band, queue_entry);
-			_ftl_band_set_free(band);
+			ftl_band_initialize_free_state(band);
 		}
 	}
 }

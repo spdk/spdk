@@ -31,6 +31,7 @@ C_SRCS += ftl_p2l.c
 C_SRCS += mngt/ftl_mngt.c mngt/ftl_mngt_bdev.c mngt/ftl_mngt_shutdown.c mngt/ftl_mngt_startup.c
 C_SRCS += mngt/ftl_mngt_md.c mngt/ftl_mngt_misc.c mngt/ftl_mngt_ioch.c mngt/ftl_mngt_l2p.c
 C_SRCS += mngt/ftl_mngt_band.c mngt/ftl_mngt_self_test.c mngt/ftl_mngt_p2l.c
+C_SRCS += mngt/ftl_mngt_recovery.c
 C_SRCS += utils/ftl_conf.c utils/ftl_md.c utils/ftl_mempool.c utils/ftl_bitmap.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
