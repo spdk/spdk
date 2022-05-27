@@ -3,6 +3,7 @@
 # cases
 ftl_dirty_shutdown
 ftl_restore_fast
+ftl_write_after_write
 ftl_fio_basic
 ftl_fio_extended
 ftl_fio_nightly
