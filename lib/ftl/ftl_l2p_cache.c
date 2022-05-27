@@ -121,6 +121,17 @@ struct ftl_l2p_cache {
 	struct ftl_mempool *page_sets_pool;
 	TAILQ_HEAD(, ftl_l2p_page_set) deferred_page_set_list; /* for deferred page sets */
 
+	/* Process unmap in backgorund */
+	struct {
+#define FTL_L2P_MAX_LAZY_UNMAP_QD 1
+		/* Unmap queue depth */
+		uint32_t qd;
+		/* Currently processed page */
+		uint64_t page_no;
+		/* Context for page pinning */
+		struct ftl_l2p_pin_ctx pin_ctx;
+	} lazy_unmap;
+
 	/* This is a context for a management process */
 	struct ftl_l2p_cache_process_ctx mctx;
 
@@ -1476,6 +1487,68 @@ ftl_l2p_cache_process_eviction(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *c
 	}
 }
 
+static void
+ftl_l2p_lazy_unmap_process_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx *pin_ctx)
+{
+	struct ftl_l2p_cache *cache = dev->l2p;
+
+	cache->lazy_unmap.qd--;
+
+	/* We will retry on next ftl_l2p_lazy_unmap_process */
+	if (spdk_unlikely(status != 0)) {
+		return;
+	}
+
+	if (ftl_l2p_cache_running(cache)) {
+		ftl_l2p_cache_get(dev, pin_ctx->lba);
+	}
+
+	ftl_l2p_cache_unpin(dev, pin_ctx->lba, pin_ctx->count);
+}
+
+static void
+ftl_l2p_lazy_unmap_process(struct spdk_ftl_dev *dev)
+{
+	struct ftl_l2p_cache *cache = dev->l2p;
+	struct ftl_l2p_pin_ctx *pin_ctx;
+	uint64_t page_no;
+
+	if (spdk_likely(!dev->unmap_in_progress)) {
+		return;
+	}
+
+	if (cache->lazy_unmap.qd == FTL_L2P_MAX_LAZY_UNMAP_QD) {
+		return;
+	}
+
+	page_no = ftl_bitmap_find_first_set(dev->unmap_map, cache->lazy_unmap.page_no, UINT64_MAX);
+	if (page_no == UINT64_MAX) {
+		cache->lazy_unmap.page_no = 0;
+
+		/* Check unmap map from beginning to detect unprocessed unmaps */
+		page_no = ftl_bitmap_find_first_set(dev->unmap_map, cache->lazy_unmap.page_no, UINT64_MAX);
+		if (page_no == UINT64_MAX) {
+			dev->unmap_in_progress = false;
+			return;
+		}
+	}
+
+	cache->lazy_unmap.page_no = page_no;
+
+	pin_ctx = &cache->lazy_unmap.pin_ctx;
+
+	cache->lazy_unmap.qd++;
+	assert(cache->lazy_unmap.qd <= FTL_L2P_MAX_LAZY_UNMAP_QD);
+	assert(page_no < cache->num_pages);
+
+	pin_ctx->lba = page_no * cache->lbas_in_page;
+	pin_ctx->count = 1;
+	pin_ctx->cb = ftl_l2p_lazy_unmap_process_cb;
+	pin_ctx->cb_ctx = pin_ctx;
+
+	ftl_l2p_cache_pin(dev, pin_ctx);
+}
+
 void
 ftl_l2p_cache_process(struct spdk_ftl_dev *dev)
 {
@@ -1493,4 +1566,5 @@ ftl_l2p_cache_process(struct spdk_ftl_dev *dev)
 	}
 
 	ftl_l2p_cache_process_eviction(dev, cache);
+	ftl_l2p_lazy_unmap_process(dev);
 }
