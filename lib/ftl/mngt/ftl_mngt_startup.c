@@ -56,7 +56,7 @@ static void ftl_mngt_select_restore_mode(struct spdk_ftl_dev *dev,
 	if (dev->sb->clean) {
 		ftl_mngt_call(mngt, &desc_clean_start);
 	} else {
-		ftl_mngt_fail_step(mngt);
+		ftl_mngt_recover(dev, mngt);
 	}
 }
 
