@@ -70,6 +70,7 @@ fi
 if [[ -z $SPDK_TEST_FTL_NIGHTLY ]]; then
 	run_test "ftl_fio_basic" $testdir/fio.sh $device $nv_cache basic
 	run_test "ftl_bdevperf" $testdir/bdevperf.sh $device $nv_cache
+	run_test "ftl_trim" $testdir/trim.sh $device $nv_cache
 	run_test "ftl_restore" $testdir/restore.sh -c $nv_cache $device
 	run_test "ftl_dirty_shutdown" $testdir/dirty_shutdown.sh -c $nv_cache $device
 fi
