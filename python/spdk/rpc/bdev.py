@@ -1401,6 +1401,21 @@ def bdev_ftl_delete(client, name, fast_shutdown):
     return client.call('bdev_ftl_delete', params)
 
 
+def bdev_ftl_unmap(client, name, lba, num_blocks):
+    """FTL unmap
+
+    Args:
+        name: name of the bdev
+        lba: starting lba to be unmapped
+        num_blocks: number of blocks to unmap
+    """
+    params = {'name': name,
+              'lba': lba,
+              'num_blocks': num_blocks}
+
+    return client.call('bdev_ftl_unmap', params)
+
+
 def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
 

@@ -482,6 +482,72 @@ not_found:
 	cb_fn(cb_arg, -ENODEV);
 }
 
+struct ftl_unmap_ctx {
+	struct spdk_bdev_desc *bdev;
+	spdk_ftl_fn cb_fn;
+	void *cb_arg;
+};
+
+static void
+bdev_ftl_unmap_cb(void *cb_arg, int status)
+{
+	struct ftl_unmap_ctx *ctx = cb_arg;
+
+	spdk_bdev_close(ctx->bdev);
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+void
+bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	struct spdk_bdev_desc *ftl_bdev_desc;
+	struct spdk_bdev *bdev;
+	struct ftl_bdev *ftl;
+	struct ftl_unmap_ctx *ctx;
+	int rc;
+
+	rc = spdk_bdev_open_ext(name, false, bdev_ftl_event_cb, NULL, &ftl_bdev_desc);
+
+	if (rc) {
+		goto not_found;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(ftl_bdev_desc);
+
+	if (bdev->module != &g_ftl_if) {
+		rc = -ENODEV;
+		goto bdev_opened;
+	}
+
+	ctx = calloc(1, sizeof(struct ftl_unmap_ctx));
+	if (!ctx) {
+		rc = -ENOMEM;
+		goto bdev_opened;
+	}
+
+	ctx->bdev = ftl_bdev_desc;
+	ctx->cb_arg = cb_arg;
+	ctx->cb_fn = cb_fn;
+
+	ftl = bdev->ctxt;
+	assert(ftl);
+	/* It's ok to pass NULL as IO channel - FTL will detect this and use it's internal IO channel for management operations */
+	rc = spdk_ftl_unmap(ftl->dev, NULL, NULL, lba, num_blocks, bdev_ftl_unmap_cb, ctx);
+
+	if (rc) {
+		goto ctx_allocated;
+	}
+
+	return;
+ctx_allocated:
+	free(ctx);
+bdev_opened:
+	spdk_bdev_close(ftl_bdev_desc);
+not_found:
+	cb_fn(cb_arg, rc);
+}
+
 static void
 bdev_ftl_finish(void)
 {

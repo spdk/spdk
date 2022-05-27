@@ -303,6 +303,23 @@ void ftl_mngt_call_process_rollback(struct ftl_mngt_process *mngt,
  */
 int ftl_mngt_call_dev_startup(struct spdk_ftl_dev *dev, ftl_mngt_completion cb, void *cb_cntx);
 
+/*
+ * The specific management functions
+ */
+/**
+ * @brief Issue unmap on FTL instance
+ *
+ * @param dev FTL device
+ * @param cb Caller callback
+ * @param cb_cntx Caller context
+ *
+ * @return Operation result
+ * @retval 0 The operation successful has started
+ * @retval Non-zero Startup failure
+ */
+int ftl_mngt_unmap(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, spdk_ftl_fn cb,
+		   void *cb_cntx);
+
 /**
  * @brief Shuts down a FTL instance
  *

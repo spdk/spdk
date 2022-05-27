@@ -172,3 +172,41 @@ rpc_bdev_ftl_unload(struct spdk_jsonrpc_request *request,
 	rpc_bdev_ftl_delete(request, params);
 }
 SPDK_RPC_REGISTER("bdev_ftl_unload", rpc_bdev_ftl_unload, SPDK_RPC_RUNTIME)
+
+struct rpc_ftl_unmap {
+	char *name;
+	uint64_t lba;
+	uint64_t num_blocks;
+};
+
+static const struct spdk_json_object_decoder rpc_ftl_unmap_decoders[] = {
+	{"name", offsetof(struct rpc_delete_ftl, name), spdk_json_decode_string},
+	{"lba", offsetof(struct rpc_ftl_unmap, lba), spdk_json_decode_uint64, true},
+	{"num_blocks", offsetof(struct rpc_ftl_unmap, num_blocks), spdk_json_decode_uint64, true},
+};
+
+static void
+rpc_bdev_ftl_unmap_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	spdk_jsonrpc_send_bool_response(request, bdeverrno == 0);
+}
+
+static void
+rpc_bdev_ftl_unmap(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_ftl_unmap attrs = {};
+
+	if (spdk_json_decode_object(params, rpc_ftl_unmap_decoders, SPDK_COUNTOF(rpc_ftl_unmap_decoders),
+				    &attrs)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto invalid;
+	}
+
+	bdev_ftl_unmap(attrs.name, attrs.lba, attrs.num_blocks, rpc_bdev_ftl_unmap_cb, request);
+invalid:
+	free(attrs.name);
+}
+
+SPDK_RPC_REGISTER("bdev_ftl_unmap", rpc_bdev_ftl_unmap, SPDK_RPC_RUNTIME)

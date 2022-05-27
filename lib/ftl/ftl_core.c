@@ -474,6 +474,12 @@ spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_chann
 	}
 
 	if (lba % aligment || lba_cnt % aligment) {
+		if (!io) {
+			/* This is management/RPC path, its parameters must be aligned to 1MiB. */
+			return -EINVAL;
+		}
+
+		/* Otherwise unaligned IO requests are NOPs */
 		rc = ftl_io_init(ch, io, lba, lba_cnt, NULL, 0, cb_fn, cb_arg, FTL_IO_UNMAP);
 		if (rc) {
 			return rc;
@@ -484,7 +490,11 @@ spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_chann
 		return 0;
 	}
 
-	rc = ftl_unmap(dev, io, ch, lba, lba_cnt, cb_fn, cb_arg);
+	if (io) {
+		rc = ftl_unmap(dev, io, ch, lba, lba_cnt, cb_fn, cb_arg);
+	} else {
+		rc = ftl_mngt_unmap(dev, lba, lba_cnt, cb_fn, cb_arg);
+	}
 
 	return rc;
 }
