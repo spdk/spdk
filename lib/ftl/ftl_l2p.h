@@ -69,6 +69,7 @@ void ftl_l2p_set(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr);
 ftl_addr ftl_l2p_get(struct spdk_ftl_dev *dev, uint64_t lba);
 
 void ftl_l2p_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
+void ftl_l2p_unmap(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
 void ftl_l2p_restore(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
 void ftl_l2p_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
 void ftl_l2p_process(struct spdk_ftl_dev *dev);

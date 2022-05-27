@@ -133,6 +133,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_deinit_vld_map
 		},
 		{
+			.name = "Initialize trim map",
+			.action = ftl_mngt_init_unmap_map,
+			.cleanup = ftl_mngt_deinit_unmap_map
+		},
+		{
 			.name = "Initialize bands metadata",
 			.action = ftl_mngt_init_bands_md,
 			.cleanup = ftl_mngt_deinit_bands_md
@@ -187,6 +192,10 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 		{
 			.name = "Wipe P2L region",
 			.action = ftl_mngt_p2l_wipe,
+		},
+		{
+			.name = "Clear trim map",
+			.action = ftl_mngt_unmap_clear,
 		},
 		{
 			.name = "Free P2L region bufs",

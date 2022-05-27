@@ -292,4 +292,6 @@ void ftl_mngt_nv_cache_restore_l2p(struct spdk_ftl_dev *dev,
 struct ftl_nv_cache_chunk *ftl_nv_cache_get_chunk_from_addr(struct spdk_ftl_dev *dev,
 		ftl_addr addr);
 
+uint64_t ftl_nv_cache_acquire_trim_seq_id(struct ftl_nv_cache *nv_cache);
+
 #endif  /* FTL_NV_CACHE_H */

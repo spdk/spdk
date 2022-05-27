@@ -302,6 +302,25 @@ static inline void ftl_l2p_cache_set_addr(struct spdk_ftl_dev *dev,
 	ftl_addr_store(dev, page->l1, lba % cache->lbas_in_page, addr);
 }
 
+static void ftl_l2p_page_set_invalid(struct spdk_ftl_dev *dev, struct ftl_l2p_page *page)
+{
+	ftl_addr addr;
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+
+	page->updates++;
+
+	uint64_t naddr = ftl_l2p_cache_get_lbas_in_page(cache);
+	for (uint64_t i = 0; i < naddr; i++) {
+		addr = ftl_addr_load(dev, page->l1, i);
+		if (addr == FTL_ADDR_INVALID) {
+			continue;
+		}
+
+		ftl_invalidate_addr(dev, addr);
+		ftl_l2p_cache_set_addr(dev, cache, page, i, FTL_ADDR_INVALID);
+	}
+}
+
 static inline void ftl_l2p_cache_page_pin(struct ftl_l2p_cache *cache,
 		struct ftl_l2p_page *page)
 {
@@ -677,6 +696,7 @@ static void process_persist_page_out_cb(struct spdk_bdev_io *bdev_io, bool succe
 {
 	struct ftl_l2p_page *page = (struct ftl_l2p_page *)arg;
 	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
 	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
 
 	if (bdev_io) {
@@ -686,6 +706,13 @@ static void process_persist_page_out_cb(struct spdk_bdev_io *bdev_io, bool succe
 		ctx->status = -EIO;
 	}
 
+	if (ftl_bitmap_get(dev->unmap_map, ctx->idx)) {
+		/*
+		 * Page had been unmapped, in persist path before IO, it was invalidated entirely
+		 * now clear unmap flag
+		 */
+		ftl_bitmap_clear(dev->unmap_map, page->page_no);
+	}
 	ftl_l2p_cache_page_remove(cache, page);
 
 	ctx->qd--;
@@ -695,12 +722,18 @@ static void process_persist_page_out_cb(struct spdk_bdev_io *bdev_io, bool succe
 static void process_persist(struct ftl_l2p_cache *cache)
 {
 	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+	struct spdk_ftl_dev *dev = cache->dev;
 
 	while (ctx->idx < cache->num_pages && ctx->qd < 64) {
 		struct ftl_l2p_page *page = get_l2p_page_by_df_id(cache, ctx->idx);
 		if (!page) {
 			ctx->idx++;
 			continue;
+		}
+
+		/* Finished unmap if the page was marked */
+		if (ftl_bitmap_get(dev->unmap_map, ctx->idx)) {
+			ftl_l2p_page_set_invalid(dev, page);
 		}
 
 		if (page->on_rank_list) {
@@ -876,6 +909,11 @@ ftl_addr ftl_l2p_cache_get(struct spdk_ftl_dev *dev, uint64_t lba)
 	assert(ftl_l2p_cache_running(cache));
 	assert(page->pin_ref_cnt);
 
+	if (ftl_bitmap_get(dev->unmap_map, page->page_no)) {
+		ftl_l2p_page_set_invalid(dev, page);
+		ftl_bitmap_clear(dev->unmap_map, page->page_no);
+	}
+
 	ftl_l2p_cache_page_rank_up(cache, page);
 	ftl_addr addr = ftl_l2p_cache_get_addr(dev, cache, page, lba);
 
@@ -891,6 +929,11 @@ void ftl_l2p_cache_set(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr)
 	ftl_bug(!page);
 	assert(ftl_l2p_cache_running(cache));
 	assert(page->pin_ref_cnt);
+
+	if (ftl_bitmap_get(dev->unmap_map, page->page_no)) {
+		ftl_l2p_page_set_invalid(dev, page);
+		ftl_bitmap_clear(dev->unmap_map, page->page_no);
+	}
 
 	page->updates++;
 	ftl_l2p_cache_page_rank_up(cache, page);
