@@ -466,6 +466,7 @@ Example response:
     "bdev_malloc_create",
     "bdev_ftl_delete",
     "bdev_ftl_create",
+    "bdev_ftl_unmap",
     "bdev_lvol_get_lvstores",
     "bdev_lvol_delete",
     "bdev_lvol_resize",
@@ -4380,7 +4381,46 @@ Example response:
   "result": true
 }
 ~~~
+### bdev_ftl_unmap {#rpc_bdev_ftl_unmap}
 
+Unmap range of LBAs.
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+lba                     | Required | int         | start lba
+num_blocks              | Required | int         | number of blocks
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "nvme0"
+    "lba": "0"
+    "num_blocks": "1024"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
 ### bdev_pmem_create_pool {#rpc_bdev_pmem_create_pool}
 
 Create a @ref bdev_config_pmem blk pool file. It is equivalent of following `pmempool create` command:

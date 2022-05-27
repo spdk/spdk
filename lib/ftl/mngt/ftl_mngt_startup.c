@@ -289,6 +289,77 @@ int ftl_mngt_startup(struct spdk_ftl_dev *dev,
 	return ftl_mngt_execute(dev, &desc_startup, cb, cb_cntx);
 }
 
+struct ftl_unmap_ctx {
+	uint64_t lba;
+	uint64_t num_blocks;
+	spdk_ftl_fn cb_fn;
+	void *cb_arg;
+};
+
+static void ftl_mngt_process_unmap_cb(void *ctx, int status)
+{
+	struct ftl_mngt *mngt = ctx;
+
+	if (status) {
+		ftl_mngt_fail_step(ctx);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+static void ftl_mngt_process_unmap(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_io *io = ftl_mngt_get_process_cntx(mngt);
+	struct spdk_io_channel *ch = ftl_get_io_channel(dev);
+	struct ftl_unmap_ctx *ctx = ftl_mngt_get_caller_context(mngt);
+	int rc;
+
+	rc = spdk_ftl_unmap(dev, io, ch, ctx->lba, ctx->num_blocks, ftl_mngt_process_unmap_cb, mngt);
+	if (rc == -EAGAIN) {
+		ftl_mngt_continue_step(mngt);
+	}
+}
+
+static const struct ftl_mngt_process_desc desc_unmap = {
+	.name = "FTL unmap",
+	.arg_size = sizeof(struct ftl_io),
+	.steps = {
+		{
+			.name = "Process unmap",
+			.action = ftl_mngt_process_unmap,
+		},
+		{}
+	}
+};
+
+static void ftl_mngt_unmap_cb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_unmap_ctx *ctx = ftl_mngt_get_caller_context(mngt);
+
+	ctx->cb_fn(ctx->cb_arg, ftl_mngt_get_status(mngt));
+
+	free(ctx);
+}
+
+int ftl_mngt_unmap(struct spdk_ftl_dev *dev,
+		   uint64_t lba, uint64_t num_blocks,
+		   spdk_ftl_fn cb, void *cb_cntx)
+{
+	struct ftl_unmap_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -EAGAIN;
+	}
+
+	ctx->lba = lba;
+	ctx->num_blocks = num_blocks;
+	ctx->cb_fn = cb;
+	ctx->cb_arg = cb_cntx;
+
+	return ftl_mngt_execute(dev, &desc_unmap, ftl_mngt_unmap_cb, ctx);
+}
+
 void ftl_mngt_rollback_device(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	ftl_mngt_call_rollback(mngt, &desc_startup);

@@ -702,7 +702,11 @@ spdk_ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_chann
 		return -EBUSY;
 	}
 
-	rc = ftl_unmap(dev, io, ch, lba, lba_cnt, cb_fn, cb_arg);
+	if (io) {
+		rc = ftl_unmap(dev, io, ch, lba, lba_cnt, cb_fn, cb_arg);
+	} else {
+		rc = ftl_mngt_unmap(dev, lba, lba_cnt, cb_fn, cb_arg);
+	}
 
 	return rc;
 }

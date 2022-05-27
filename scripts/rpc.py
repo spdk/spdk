@@ -1947,6 +1947,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-f', '--fast-shutdown', help="Fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_delete)
 
+    def bdev_ftl_unmap(args):
+        print_dict(rpc.bdev.bdev_ftl_unmap(args.client, name=args.name,
+                                           lba=args.lba,
+                                           num_blocks=args.num_blocks))
+
+    p = subparsers.add_parser('bdev_ftl_unmap', help='FTL unmap')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('--lba', help='start LBA', required=True, type=int)
+    p.add_argument('--num-blocks', help='num blocks', required=True, type=int)
+    p.set_defaults(func=bdev_ftl_unmap)
+
     # vmd
     def enable_vmd(args):
         print_dict(rpc.vmd.enable_vmd(args.client))

@@ -506,6 +506,28 @@ bdev_ftl_delete_bdev(const char *name, bool fast_shdn,
 	cb_fn(cb_arg, -ENODEV);
 }
 
+void
+bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks,
+	       spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev;
+	struct ftl_bdev *ftl;
+	int rc;
+
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev == NULL || bdev->module != &g_ftl_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	ftl = bdev->ctxt;
+	assert(ftl);
+	rc = spdk_ftl_unmap(ftl->dev, NULL, NULL, lba, num_blocks, cb_fn, cb_arg);
+	if (rc) {
+		cb_fn(cb_arg, rc);
+	}
+}
+
 static void
 bdev_ftl_finish(void)
 {
