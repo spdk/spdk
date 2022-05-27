@@ -51,6 +51,8 @@ if [[ -z $SPDK_TEST_FTL_NIGHTLY  ]]; then
 fi
 
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
+	run_test "ftl_dirty_shutdown" $testdir/dirty_shutdown.sh -c $nv_cache $device
+	run_test "ftl_write_after_write" $testdir/write_after_write.sh $device $nv_cache
 	run_test "ftl_fio_extended" $testdir/fio.sh $device $nv_cache extended
 fi
 
