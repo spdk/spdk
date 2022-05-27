@@ -239,6 +239,11 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 		return -ENOMEM;
 	}
 
+	nv_cache->throttle.interval_tsc = FTL_NV_CACHE_THROTTLE_INTERVAL_MILIS *
+					  (spdk_get_ticks_hz() / 1000);
+	nv_cache->chunk_free_target = spdk_divide_round_up(nv_cache->chunk_count *
+				      dev->conf.nv_cache.chunk_free_target,
+				      100);
 	return 0;
 }
 
@@ -518,6 +523,35 @@ ftl_chunk_send_free_state(struct ftl_nv_cache *nv_cache)
 	}
 }
 
+static void compaction_stats_update(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	double *ptr;
+
+	if (spdk_unlikely(chunk->compaction_length_tsc == 0)) {
+		return;
+	}
+
+	if (spdk_likely(nv_cache->compaction_recent_bw.count == FTL_NV_CACHE_COMPACTION_SMA_N)) {
+		ptr = nv_cache->compaction_recent_bw.buf + nv_cache->compaction_recent_bw.first;
+		nv_cache->compaction_recent_bw.first++;
+		if (nv_cache->compaction_recent_bw.first == FTL_NV_CACHE_COMPACTION_SMA_N) {
+			nv_cache->compaction_recent_bw.first = 0;
+		}
+		nv_cache->compaction_recent_bw.sum -= *ptr;
+	} else {
+		ptr = nv_cache->compaction_recent_bw.buf + nv_cache->compaction_recent_bw.count;
+		nv_cache->compaction_recent_bw.count++;
+	}
+
+	*ptr = (double)chunk->md->blocks_compacted * FTL_BLOCK_SIZE / chunk->compaction_length_tsc;
+	chunk->compaction_length_tsc = 0;
+
+	nv_cache->compaction_recent_bw.sum += *ptr;
+	nv_cache->compaction_sma = nv_cache->compaction_recent_bw.sum /
+				   nv_cache->compaction_recent_bw.count;
+}
+
 static void
 chunk_compaction_advance(struct ftl_nv_cache_chunk *chunk, uint64_t num_blocks)
 {
@@ -535,6 +569,8 @@ chunk_compaction_advance(struct ftl_nv_cache_chunk *chunk, uint64_t num_blocks)
 	/* Remove chunk from compacted list */
 	TAILQ_REMOVE(&nv_cache->chunk_comp_list, chunk, entry);
 	nv_cache->chunk_comp_count--;
+
+	compaction_stats_update(chunk);
 
 	ftl_chunk_free(chunk);
 }
@@ -1134,6 +1170,8 @@ ftl_nv_cache_write(struct ftl_io *io)
 		    ftl_nv_cache_pin_cb, io,
 		    &io->l2p_pin_ctx);
 
+	dev->nv_cache.throttle.blocks_submitted += io->num_blocks;
+
 	return true;
 }
 
@@ -1256,6 +1294,43 @@ ftl_nv_cache_set_addr(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr)
 	ftl_bitmap_set(dev->valid_map, addr);
 }
 
+static void ftl_nv_cache_throttle_update(struct ftl_nv_cache *nv_cache)
+{
+	double err;
+	double modifier;
+
+	err = ((double)nv_cache->chunk_free_count - nv_cache->chunk_free_target) / nv_cache->chunk_count;
+	modifier = FTL_NV_CACHE_THROTTLE_MODIFIER_KP * err;
+
+	if (modifier < FTL_NV_CACHE_THROTTLE_MODIFIER_MIN) {
+		modifier = FTL_NV_CACHE_THROTTLE_MODIFIER_MIN;
+	} else if (modifier > FTL_NV_CACHE_THROTTLE_MODIFIER_MAX) {
+		modifier = FTL_NV_CACHE_THROTTLE_MODIFIER_MAX;
+	}
+
+	if (spdk_unlikely(nv_cache->compaction_sma == 0)) {
+		nv_cache->throttle.blocks_submitted_limit = UINT64_MAX;
+	} else {
+		double blocks_per_interval = nv_cache->compaction_sma *
+					     nv_cache->throttle.interval_tsc / FTL_BLOCK_SIZE;
+		nv_cache->throttle.blocks_submitted_limit = blocks_per_interval * (1.0 + modifier);
+	}
+}
+
+static void
+ftl_nv_cache_process_throttle(struct ftl_nv_cache *nv_cache)
+{
+	uint64_t tsc = spdk_thread_get_last_tsc(spdk_get_thread());
+
+	if (spdk_unlikely(!nv_cache->throttle.start_tsc)) {
+		nv_cache->throttle.start_tsc = tsc;
+	} else if (tsc - nv_cache->throttle.start_tsc >= nv_cache->throttle.interval_tsc) {
+		ftl_nv_cache_throttle_update(nv_cache);
+		nv_cache->throttle.start_tsc = tsc;
+		nv_cache->throttle.blocks_submitted = 0;
+	}
+}
+
 static void ftl_chunk_open(struct ftl_nv_cache_chunk *chunk);
 
 void ftl_nv_cache_process(struct spdk_ftl_dev *dev)
@@ -1298,9 +1373,11 @@ void ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 			ftl_nv_cache_compaction_reset(compaction);
 		}
 	}
+
+	ftl_nv_cache_process_throttle(nv_cache);
 }
 
-bool
+static bool
 ftl_nv_cache_full(struct ftl_nv_cache *nv_cache)
 {
 	if (0 == nv_cache->chunk_open_count && NULL == nv_cache->chunk_current) {
@@ -1308,6 +1385,19 @@ ftl_nv_cache_full(struct ftl_nv_cache *nv_cache)
 	} else {
 		return false;
 	}
+}
+
+bool
+ftl_nv_cache_throttle(struct spdk_ftl_dev *dev)
+{
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+
+	if (dev->nv_cache.throttle.blocks_submitted >= nv_cache->throttle.blocks_submitted_limit ||
+	    ftl_nv_cache_full(nv_cache)) {
+		return true;
+	}
+
+	return false;
 }
 
 static void

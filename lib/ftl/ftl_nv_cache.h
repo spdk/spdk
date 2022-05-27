@@ -83,6 +83,24 @@
  */
 #define FTL_NV_CACHE_NUM_COMPACTORS 8
 
+/*
+ * Parameters controlling nv cache write throttling.
+ *
+ * The write throttle limit value is calculated as follows:
+ * limit = compaction_average_bw * (1.0 + modifier)
+ *
+ * The modifier depends on the number of free chunks vs the configured threshold. Its value is
+ * zero if the number of free chunks is at the threshold, negative if below and positive if above.
+ */
+
+/* Interval in miliseconds between write throttle updates. */
+#define FTL_NV_CACHE_THROTTLE_INTERVAL_MILIS	20
+/* Throttle modifier proportional gain */
+#define FTL_NV_CACHE_THROTTLE_MODIFIER_KP	20
+/* Min and max modifier values */
+#define FTL_NV_CACHE_THROTTLE_MODIFIER_MIN	-0.8
+#define FTL_NV_CACHE_THROTTLE_MODIFIER_MAX	0.5
+
 struct spdk_ftl_dev;
 struct ftl_mngt;
 
@@ -231,6 +249,27 @@ struct ftl_nv_cache {
 	struct ftl_nv_cache_chunk *chunks;
 
 	uint64_t last_seq_id;
+
+	uint64_t chunk_free_target;
+
+	/* Simple moving average of recent compaction velocity values */
+	double compaction_sma;
+
+#define FTL_NV_CACHE_COMPACTION_SMA_N (FTL_NV_CACHE_NUM_COMPACTORS * 2)
+	/* Circular buffer holding values for calculating compaction SMA */
+	struct {
+		double buf[FTL_NV_CACHE_COMPACTION_SMA_N];
+		ptrdiff_t first;
+		size_t count;
+		double sum;
+	} compaction_recent_bw;
+
+	struct {
+		uint64_t interval_tsc;
+		uint64_t start_tsc;
+		uint64_t blocks_submitted;
+		uint64_t blocks_submitted_limit;
+	} throttle;
 };
 
 int ftl_nv_cache_init(struct spdk_ftl_dev *dev);
@@ -239,7 +278,7 @@ bool ftl_nv_cache_write(struct ftl_io *io);
 void ftl_nv_cache_fill_md(struct ftl_io *io);
 int ftl_nv_cache_read(struct ftl_io *io, ftl_addr addr, uint32_t num_blocks,
 		      spdk_bdev_io_completion_cb cb, void *cb_arg);
-bool ftl_nv_cache_full(struct ftl_nv_cache *nv_cache);
+bool ftl_nv_cache_throttle(struct spdk_ftl_dev *dev);
 void ftl_nv_cache_process(struct spdk_ftl_dev *dev);
 
 void ftl_chunk_map_set_lba(struct ftl_nv_cache_chunk *chunk,

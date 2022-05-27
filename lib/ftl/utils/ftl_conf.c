@@ -164,5 +164,10 @@ bool ftl_conf_is_valid(const struct spdk_ftl_conf *conf)
 		return false;
 	}
 
+	if (conf->nv_cache.chunk_free_target == 0 ||
+	    conf->nv_cache.chunk_free_target > 100) {
+		return false;
+	}
+
 	return true;
 }
