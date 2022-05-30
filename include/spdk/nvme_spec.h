@@ -1891,6 +1891,11 @@ struct spdk_nvme_cdata_oacs {
 	uint16_t	oacs_rsvd : 6;
 };
 
+struct spdk_nvme_cdata_fuses {
+	uint16_t	compare_and_write : 1;
+	uint16_t	reserved : 15;
+};
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -2181,10 +2186,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	struct spdk_nvme_cdata_oncs oncs;
 
 	/** fused operation support */
-	struct {
-		uint16_t	compare_and_write : 1;
-		uint16_t	reserved : 15;
-	} fuses;
+	struct spdk_nvme_cdata_fuses fuses;
 
 	/** format nvm attributes */
 	struct {

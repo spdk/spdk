@@ -184,6 +184,7 @@ struct spdk_nvmf_ctrlr_data {
 	uint8_t ieee[3];
 	struct spdk_nvme_cdata_oacs oacs;
 	struct spdk_nvme_cdata_oncs oncs;
+	struct spdk_nvme_cdata_fuses fuses;
 	struct spdk_nvme_cdata_sgls sgls;
 	struct spdk_nvme_cdata_nvmf_specific nvmf_specific;
 };
