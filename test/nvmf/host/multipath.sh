@@ -55,7 +55,7 @@ function confirm_io_on_port() {
 	sleep 6
 	active_port=$($rpc_py nvmf_subsystem_get_listeners $NQN | jq -r '.[] | select (.ana_states[0].ana_state=="'$1'") | .address.trsvcid')
 	cat $testdir/trace.txt
-	port=$(cut < $testdir/trace.txt -d ']' -f1 | awk '$1=="@path[10.0.0.2," {print $2}' | sed -n '1p')
+	port=$(cut < $testdir/trace.txt -d ']' -f1 | awk '$1=="@path['$NVMF_FIRST_TARGET_IP'," {print $2}' | sed -n '1p')
 	[[ "$active_port" == "$port" ]]
 	[[ "$port" == "$2" ]]
 	kill $dtrace_pid
