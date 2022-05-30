@@ -280,6 +280,9 @@ void ftl_nv_cache_get_max_seq_id(struct ftl_nv_cache *nv_cache, uint64_t *open_s
 void ftl_mngt_nv_cache_restore_chunk_state(struct spdk_ftl_dev *dev,
 		struct ftl_mngt *mngt);
 
+void ftl_mngt_nv_cache_recover_open_chunk(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt);
+
 typedef int (*ftl_chunk_md_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx);
 
 void ftl_mngt_nv_cache_restore_l2p(struct spdk_ftl_dev *dev,

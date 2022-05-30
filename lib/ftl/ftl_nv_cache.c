@@ -1741,6 +1741,193 @@ ftl_chunk_close(struct ftl_nv_cache_chunk *chunk)
 
 static int
 ftl_chunk_read_tail_md(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *brq,
+		       void (*cb)(struct ftl_basic_rq *brq), void *cb_ctx);
+static void read_tail_md_cb(struct ftl_basic_rq *brq);
+static void recover_open_chunk_cb(struct ftl_basic_rq *brq);
+
+static void
+restore_chunk_close_cb(int status, void *ctx)
+{
+	struct ftl_basic_rq *parent = (struct ftl_basic_rq *)ctx;
+	struct ftl_nv_cache_chunk *chunk = parent->io.chunk;
+	struct ftl_lba_map *lba_map = &chunk->lba_map;
+
+	if (spdk_unlikely(status)) {
+		parent->success = false;
+	} else {
+		chunk->md->lba_map_checksum = lba_map->chunk_dma_md->lba_map_checksum;
+		chunk->md->state = FTL_CHUNK_STATE_CLOSED;
+	}
+
+	read_tail_md_cb(parent);
+}
+
+static void
+restore_fill_lba_map_cb(struct ftl_basic_rq *parent)
+{
+	struct ftl_nv_cache_chunk *chunk = parent->io.chunk;
+	struct ftl_lba_map *lba_map = &chunk->lba_map;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_md *md = dev->layout.md[ftl_layout_region_type_nvc_md];
+	struct ftl_layout_region *region = &dev->layout.region[ftl_layout_region_type_nvc_md];
+	uint32_t chunk_map_crc;
+
+	/* Set original callback */
+	ftl_basic_rq_set_owner(parent, recover_open_chunk_cb, parent->owner.priv);
+	if (spdk_likely(parent->success)) {
+		chunk_map_crc = spdk_crc32c_update(lba_map->dma_buf,
+				ftl_nv_cache_chunk_tail_md_num_blocks(chunk->nv_cache) * FTL_BLOCK_SIZE, 0);
+		memcpy(lba_map->chunk_dma_md, chunk->md, region->entry_size * FTL_BLOCK_SIZE);
+		lba_map->chunk_dma_md->state = FTL_CHUNK_STATE_CLOSED;
+		lba_map->chunk_dma_md->write_pointer = chunk->nv_cache->chunk_blocks;
+		lba_map->chunk_dma_md->blocks_written = chunk->nv_cache->chunk_blocks;
+		lba_map->chunk_dma_md->lba_map_checksum = chunk_map_crc;
+
+		ftl_md_persist_entry(md, get_chunk_idx(chunk), lba_map->chunk_dma_md, ftl_md_get_vss_buffer(md),
+				     restore_chunk_close_cb, parent, &chunk->md_persist_entry_ctx);
+	} else {
+		read_tail_md_cb(parent);
+		return;
+	}
+}
+
+static void
+restore_fill_tail_md(struct ftl_basic_rq *parent, struct ftl_nv_cache_chunk *chunk)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	uint64_t num_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(chunk->nv_cache);
+	void *metadata;
+
+	chunk->md->close_seq_id = ftl_get_next_seq_id(dev);
+
+	metadata = chunk->lba_map.dma_buf;
+	ftl_basic_rq_init(dev, parent, metadata, num_blocks);
+	ftl_basic_rq_set_owner(parent, restore_fill_lba_map_cb, parent->owner.priv);
+
+	parent->io.addr = chunk->offset + chunk_tail_md_offset(chunk->nv_cache);
+	parent->io.chunk = chunk;
+
+	ftl_chunk_basic_rq_write(chunk, parent);
+}
+
+static void
+read_open_chunk_cb(struct spdk_bdev_io *bdev_io,
+		   bool success, void *cb_arg)
+{
+	struct ftl_rq *rq = (struct ftl_rq *)cb_arg;
+	struct ftl_basic_rq *parent = (struct ftl_basic_rq *)rq->owner.priv;
+	struct ftl_nv_cache_chunk *chunk = parent->io.chunk;
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	union ftl_md_vss *md;
+	uint64_t cache_offset = bdev_io->u.bdev.offset_blocks;
+	uint64_t len = bdev_io->u.bdev.num_blocks;
+	ftl_addr addr = ftl_addr_to_cached(dev, cache_offset);
+	int rc;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		parent->success = false;
+		read_tail_md_cb(parent);
+		return;
+	}
+
+	while (rq->iter.idx < rq->iter.count) {
+		/* Get metadata */
+		md = rq->entries[rq->iter.idx].io_md;
+		if (md->nv_cache.seq_id != chunk->md->seq_id) {
+			md->nv_cache.lba = FTL_LBA_INVALID;
+		}
+		/*
+		 * The lba map contains effectively random data at this point (since it contains arbitrary
+		 * blocks from potentially not even filled tail md), so even LBA_INVALID needs to be set explicitly
+		 */
+
+		ftl_chunk_set_addr(chunk,  md->nv_cache.lba, addr + rq->iter.idx);
+		rq->iter.idx++;
+	}
+
+	if (cache_offset + len < chunk->offset + chunk_tail_md_offset(nv_cache)) {
+		cache_offset += len;
+		len = spdk_min(dev->xfer_size, chunk->offset + chunk_tail_md_offset(nv_cache) - cache_offset);
+		rq->iter.idx = 0;
+		rq->iter.count = len;
+
+		rc = ftl_nv_cache_bdev_readv_blocks_with_md(dev, nv_cache->bdev_desc,
+				nv_cache->cache_ioch,
+				rq->io_vec, len,
+				rq->io_md,
+				cache_offset, len,
+				read_open_chunk_cb,
+				rq);
+
+		if (rc) {
+			ftl_rq_del(rq);
+			parent->success = false;
+			read_tail_md_cb(parent);
+			return;
+		}
+	} else {
+		ftl_rq_del(rq);
+		restore_fill_tail_md(parent, chunk);
+	}
+}
+
+static void restore_open_chunk(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *parent)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_rq *rq;
+	uint64_t addr;
+	uint64_t len = dev->xfer_size;
+	int rc;
+
+	/*
+	 * We've just read the LBA MAP, prefill it with INVALID LBA
+	 * TODO we need to do this because head/tail md are also represented in the lba map, instead of just user data region
+	 */
+	memset(chunk->lba_map.chunk_map, -1, FTL_BLOCK_SIZE * chunk_lba_map_num_blocks(nv_cache));
+
+	/* Need to read user data, recalculate chunk's P2L and write tail md with it */
+	rq = ftl_rq_new(dev, dev->nv_cache.md_size);
+	if (!rq) {
+		parent->success = false;
+		read_tail_md_cb(parent);
+		return;
+	}
+
+	rq->owner.priv = parent;
+	rq->iter.idx = 0;
+	rq->iter.count = len;
+
+	addr = chunk->offset;
+
+	len = spdk_min(dev->xfer_size, chunk->offset + chunk_tail_md_offset(nv_cache) - addr);
+
+	rc = ftl_nv_cache_bdev_readv_blocks_with_md(dev, nv_cache->bdev_desc,
+			nv_cache->cache_ioch,
+			rq->io_vec, len,
+			rq->io_md,
+			addr, len,
+			read_open_chunk_cb,
+			rq);
+
+	if (rc) {
+		ftl_rq_del(rq);
+		parent->success = false;
+		read_tail_md_cb(parent);
+	}
+}
+
+static void
+read_tail_md_cb(struct ftl_basic_rq *brq)
+{
+	brq->owner.cb(brq);
+}
+
+static int
+ftl_chunk_read_tail_md(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *brq,
 		       void (*cb)(struct ftl_basic_rq *brq), void *cb_ctx)
 {
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
@@ -1943,6 +2130,94 @@ void ftl_mngt_nv_cache_restore_chunk_state(struct spdk_ftl_dev *dev,
 	md->owner.cb_ctx = mngt;
 	md->cb = restore_chunk_state_cb;
 	ftl_md_restore(md);
+}
+
+static void
+recover_open_chunk_cb(struct ftl_basic_rq *brq)
+{
+	struct ftl_mngt *mngt = brq->owner.priv;
+	struct ftl_nv_cache_chunk *chunk = brq->io.chunk;
+	struct ftl_nv_cache *nvc = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = ftl_mngt_get_dev(mngt);
+
+	chunk_free_lba_map(chunk);
+
+	if (!brq->success) {
+		FTL_ERRLOG(dev, "Recovery chunk ERROR, offset = %"PRIu64","
+			   " seq id %"PRIu64"\n", chunk->offset, chunk->md->seq_id);
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	FTL_NOTICELOG(dev, "Recovered chunk, offset = %"PRIu64","
+		      " seq id %"PRIu64"\n", chunk->offset, chunk->md->seq_id);
+
+	TAILQ_REMOVE(&nvc->chunk_open_list, chunk, entry);
+	nvc->chunk_open_count--;
+
+	TAILQ_INSERT_TAIL(&nvc->chunk_full_list, chunk, entry);
+	nvc->chunk_full_count++;
+
+	/* This is closed chunk */
+	chunk->md->write_pointer = nvc->chunk_blocks;
+	chunk->md->blocks_written = nvc->chunk_blocks;
+
+	ftl_mngt_continue_step(mngt);
+}
+
+void
+ftl_mngt_nv_cache_recover_open_chunk(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_nv_cache *nvc = &dev->nv_cache;
+	struct ftl_nv_cache_chunk *chunk;
+
+	struct ftl_basic_rq *brq = ftl_mngt_get_step_cntx(mngt);
+	if (!brq) {
+		if (TAILQ_EMPTY(&nvc->chunk_open_list)) {
+			FTL_NOTICELOG(dev, "No open chunks to recover P2L\n");
+			ftl_mngt_next_step(mngt);
+			return;
+		}
+
+		if (ftl_mngt_alloc_step_cntx(mngt, sizeof(*brq))) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		brq = ftl_mngt_get_step_cntx(mngt);
+		ftl_basic_rq_set_owner(brq, recover_open_chunk_cb, mngt);
+	}
+
+	if (TAILQ_EMPTY(&nvc->chunk_open_list)) {
+		int status = 0;
+
+		if (!is_chunk_count_valid(nvc)) {
+			FTL_ERRLOG(dev, "Recovery ERROR, invalid number of chunk\n");
+			assert(false);
+			status = -EINVAL;
+		}
+
+		/*
+		 * Now all chunks loaded and closed, do final step of restoring
+		 * chunks state
+		 */
+		if (status || ftl_nv_cache_load_state(nvc)) {
+			ftl_mngt_fail_step(mngt);
+		} else {
+			ftl_mngt_next_step(mngt);
+		}
+	} else {
+		chunk = TAILQ_FIRST(&nvc->chunk_open_list);
+		if (chunk_alloc_lba_map(chunk)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+
+		brq->io.chunk = chunk;
+
+		FTL_NOTICELOG(dev, "Start recovery open chunk, offset = %"PRIu64","
+			      " seq id %"PRIu64"\n", chunk->offset, chunk->md->seq_id);
+		restore_open_chunk(chunk, brq);
+	}
 }
 
 int

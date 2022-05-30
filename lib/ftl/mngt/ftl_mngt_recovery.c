@@ -807,6 +807,10 @@ static const struct ftl_mngt_process_desc desc_recovery = {
 			.action = ftl_mngt_recover_seq_id
 		},
 		{
+			.name = "Recover open chunks P2L",
+			.action = ftl_mngt_nv_cache_recover_open_chunk
+		},
+		{
 			.name = "Recovery iterations",
 			.action = ftl_mngt_recovery_run_iteration,
 		},
