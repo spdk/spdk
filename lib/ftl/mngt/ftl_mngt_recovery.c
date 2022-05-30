@@ -248,6 +248,75 @@ ftl_mngt_recovery_restore_band_state(struct spdk_ftl_dev *dev, struct ftl_mngt_p
 	ftl_md_restore(md);
 }
 
+struct band_md_ctx {
+	int status;
+	uint64_t qd;
+	uint64_t id;
+};
+
+static void
+ftl_mngt_recovery_walk_band_tail_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
+				    ftl_band_md_cb cb)
+{
+	struct band_md_ctx *sctx = ftl_mngt_get_step_ctx(mngt);
+	uint64_t num_bands = ftl_get_num_bands(dev);
+
+	/*
+	 * This function generates a high queue depth and will utilize ftl_mngt_continue_step during completions to make sure all bands
+	 * are processed before returning an error (if any were found) or continuing on.
+	 */
+	if (0 == sctx->qd && sctx->id == num_bands) {
+		if (sctx->status) {
+			ftl_mngt_fail_step(mngt);
+		} else {
+			ftl_mngt_next_step(mngt);
+		}
+		return;
+	}
+
+	while (sctx->id < num_bands) {
+		struct ftl_band *band = &dev->bands[sctx->id];
+
+		if (FTL_BAND_STATE_FREE == band->md->state) {
+			sctx->id++;
+			continue;
+		}
+
+		if (FTL_BAND_STATE_OPEN == band->md->state || FTL_BAND_STATE_FULL == band->md->state) {
+			/* This band is already open and has valid P2L map */
+			sctx->id++;
+			sctx->qd++;
+			ftl_band_acquire_p2l_map(band);
+			cb(band, mngt, FTL_MD_SUCCESS);
+			continue;
+		} else {
+			if (dev->sb->ckpt_seq_id && (band->md->close_seq_id <= dev->sb->ckpt_seq_id)) {
+				sctx->id++;
+				continue;
+			}
+
+			band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
+			if (ftl_band_alloc_p2l_map(band)) {
+				/* No more free P2L map, try later */
+				break;
+			}
+		}
+
+		sctx->id++;
+		ftl_band_read_tail_brq_md(band, cb, mngt);
+		sctx->qd++;
+	}
+
+	if (0 == sctx->qd) {
+		/*
+		 * No QD could happen due to all leftover bands being in free state.
+		 * For streamlining of all potential error handling (since many bands are reading P2L at the same time),
+		 * we're using ftl_mngt_continue_step to arrive at the same spot of checking for mngt step end (see beginning of function).
+		 */
+		ftl_mngt_continue_step(mngt);
+	}
+}
+
 static void
 ftl_mngt_recovery_iteration_init_seq_ids(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
@@ -302,6 +371,105 @@ ftl_mngt_recovery_iteration_save_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_p
 	md->owner.cb_ctx = mngt;
 	md->cb = l2p_cb;
 	ftl_md_persist(md);
+}
+
+static void
+restore_band_l2p_cb(struct ftl_band *band, void *cntx, enum ftl_md_status status)
+{
+	struct ftl_mngt_process *mngt = cntx;
+	struct ftl_mngt_recovery_ctx *pctx = ftl_mngt_get_caller_ctx(mngt);
+	struct band_md_ctx *sctx = ftl_mngt_get_step_ctx(mngt);
+	struct spdk_ftl_dev *dev = band->dev;
+	ftl_addr addr, curr_addr;
+	uint64_t i, lba, seq_id, num_blks_in_band;
+	uint32_t band_map_crc;
+	int rc = 0;
+
+	if (status != FTL_MD_SUCCESS) {
+		FTL_ERRLOG(dev, "L2P band restore error, failed to read P2L map\n");
+		rc = -EIO;
+		goto cleanup;
+	}
+
+	band_map_crc = spdk_crc32c_update(band->p2l_map.band_map,
+					  ftl_tail_md_num_blocks(band->dev) * FTL_BLOCK_SIZE, 0);
+
+	/* P2L map is only valid if the band state is closed */
+	if (FTL_BAND_STATE_CLOSED == band->md->state && band->md->p2l_map_checksum != band_map_crc) {
+		FTL_ERRLOG(dev, "L2P band restore error, inconsistent P2L map CRC\n");
+		rc = -EINVAL;
+		goto cleanup;
+	}
+
+	num_blks_in_band = ftl_get_num_blocks_in_band(dev);
+	for (i = 0; i < num_blks_in_band; ++i) {
+		uint64_t lba_off;
+		lba = band->p2l_map.band_map[i].lba;
+		seq_id = band->p2l_map.band_map[i].seq_id;
+
+		if (lba == FTL_LBA_INVALID) {
+			continue;
+		}
+		if (lba >= dev->num_lbas) {
+			FTL_ERRLOG(dev, "L2P band restore ERROR, LBA out of range\n");
+			rc = -EINVAL;
+			break;
+		}
+		if (lba < pctx->iter.lba_first || lba >= pctx->iter.lba_last) {
+			continue;
+		}
+
+		lba_off = lba - pctx->iter.lba_first;
+		if (seq_id < pctx->l2p_snippet.seq_id[lba_off]) {
+
+			/* Overlapped band/chunk has newer data - invalidate P2L map on open/full band  */
+			if (FTL_BAND_STATE_OPEN == band->md->state || FTL_BAND_STATE_FULL == band->md->state) {
+				addr = ftl_band_addr_from_block_offset(band, i);
+				ftl_band_set_p2l(band, FTL_LBA_INVALID, addr, 0);
+			}
+
+			/* Newer data already recovered */
+			continue;
+		}
+
+		addr = ftl_band_addr_from_block_offset(band, i);
+
+		curr_addr = ftl_addr_load(dev, pctx->l2p_snippet.l2p, lba_off);
+
+		/* Overlapped band/chunk has newer data - invalidate P2L map on open/full band  */
+		if (curr_addr != FTL_ADDR_INVALID && !ftl_addr_in_nvc(dev, curr_addr) && curr_addr != addr) {
+			struct ftl_band *curr_band = ftl_band_from_addr(dev, curr_addr);
+
+			if (FTL_BAND_STATE_OPEN == curr_band->md->state || FTL_BAND_STATE_FULL == curr_band->md->state) {
+				size_t prev_offset = ftl_band_block_offset_from_addr(curr_band, curr_addr);
+				if (curr_band->p2l_map.band_map[prev_offset].lba == lba &&
+				    seq_id >= curr_band->p2l_map.band_map[prev_offset].seq_id) {
+					ftl_band_set_p2l(curr_band, FTL_LBA_INVALID, curr_addr, 0);
+				}
+			}
+		}
+
+		ftl_addr_store(dev, pctx->l2p_snippet.l2p, lba_off, addr);
+		pctx->l2p_snippet.seq_id[lba_off] = seq_id;
+	}
+
+
+cleanup:
+	ftl_band_release_p2l_map(band);
+
+	sctx->qd--;
+	if (rc) {
+		sctx->status = rc;
+	}
+
+	ftl_mngt_continue_step(mngt);
+}
+
+static void
+ftl_mngt_recovery_iteration_restore_band_l2p(struct spdk_ftl_dev *dev,
+		struct ftl_mngt_process *mngt)
+{
+	ftl_mngt_recovery_walk_band_tail_md(dev, mngt, restore_band_l2p_cb);
 }
 
 static void
@@ -418,7 +586,7 @@ ftl_mngt_recovery_open_bands_p2l(struct spdk_ftl_dev *dev, struct ftl_mngt_proce
 		TAILQ_FOREACH(band, &pctx->open_bands, queue_entry) {
 			band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
 			if (ftl_band_alloc_p2l_map(band)) {
-				FTL_ERRLOG(dev, "Open band recovery ERROR, Cannot allocate LBA map\n");
+				FTL_ERRLOG(dev, "Open band recovery ERROR, Cannot allocate P2L map\n");
 				ftl_mngt_fail_step(mngt);
 				return;
 			}
@@ -492,6 +660,11 @@ static const struct ftl_mngt_process_desc g_desc_recovery_iteration = {
 		{
 			.name = "Initialize sequence IDs",
 			.action = ftl_mngt_recovery_iteration_init_seq_ids,
+		},
+		{
+			.name = "Restore band L2P",
+			.ctx_size = sizeof(struct band_md_ctx),
+			.action = ftl_mngt_recovery_iteration_restore_band_l2p,
 		},
 		{
 			.name = "Restore valid map",
