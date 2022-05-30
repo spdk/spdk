@@ -37,8 +37,15 @@ struct ftl_mngt_recovery_ctx {
 	uint64_t p2l_ckpt_seq_id[FTL_LAYOUT_REGION_TYPE_P2L_COUNT];
 };
 
+static const struct ftl_mngt_process_desc g_desc_recovery_iteration;
 static const struct ftl_mngt_process_desc g_desc_recovery;
 static const struct ftl_mngt_process_desc g_desc_recovery_shm;
+
+static bool
+recovery_iter_done(struct spdk_ftl_dev *dev, struct ftl_mngt_recovery_ctx *ctx)
+{
+	return 0 == ctx->l2p_snippet.region.current.blocks;
+}
 
 static void
 recovery_iter_advance(struct spdk_ftl_dev *dev, struct ftl_mngt_recovery_ctx *ctx)
@@ -161,6 +168,37 @@ ftl_mngt_recovery_deinit(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 }
 
 static void
+recovery_iteration_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
+{
+	struct ftl_mngt_recovery_ctx *ctx = _ctx;
+
+	recovery_iter_advance(dev, ctx);
+
+	if (status) {
+		ftl_mngt_fail_step(ctx->main);
+	} else {
+		ftl_mngt_continue_step(ctx->main);
+	}
+}
+
+static void
+ftl_mngt_recovery_run_iteration(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_mngt_recovery_ctx *ctx = ftl_mngt_get_process_ctx(mngt);
+
+	if (ftl_fast_recovery(dev)) {
+		ftl_mngt_skip_step(mngt);
+		return;
+	}
+
+	if (recovery_iter_done(dev, ctx)) {
+		ftl_mngt_next_step(mngt);
+	} else {
+		ftl_mngt_process_execute(dev, &g_desc_recovery_iteration, recovery_iteration_cb, ctx);
+	}
+}
+
+static void
 restore_band_state_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 {
 	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
@@ -208,6 +246,95 @@ ftl_mngt_recovery_restore_band_state(struct spdk_ftl_dev *dev, struct ftl_mngt_p
 	md->owner.cb_ctx = mngt;
 	md->cb = restore_band_state_cb;
 	ftl_md_restore(md);
+}
+
+static void
+ftl_mngt_recovery_iteration_init_seq_ids(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_mngt_recovery_ctx *ctx = ftl_mngt_get_caller_ctx(mngt);
+	size_t size = sizeof(ctx->l2p_snippet.seq_id[0]) * ctx->l2p_snippet.count;
+
+	memset(ctx->l2p_snippet.seq_id, 0, size);
+
+	ftl_mngt_next_step(mngt);
+}
+
+static void
+l2p_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+static void
+ftl_mngt_recovery_iteration_load_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_mngt_recovery_ctx *ctx = ftl_mngt_get_caller_ctx(mngt);
+	struct ftl_md *md = ctx->l2p_snippet.md;
+	struct ftl_layout_region *region = &ctx->l2p_snippet.region;
+
+	FTL_NOTICELOG(dev, "L2P recovery, iteration %u\n", ctx->iter.i);
+	FTL_NOTICELOG(dev, "Load L2P, blocks [%"PRIu64", %"PRIu64"), LBAs [%"PRIu64", %"PRIu64")\n",
+		      region->current.offset, region->current.offset + region->current.blocks,
+		      ctx->iter.lba_first, ctx->iter.lba_last);
+
+	if (ftl_md_set_region(md, &ctx->l2p_snippet.region)) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	md->owner.cb_ctx = mngt;
+	md->cb = l2p_cb;
+	ftl_md_restore(md);
+}
+
+static void
+ftl_mngt_recovery_iteration_save_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_mngt_recovery_ctx *ctx = ftl_mngt_get_caller_ctx(mngt);
+	struct ftl_md *md = ctx->l2p_snippet.md;
+
+	md->owner.cb_ctx = mngt;
+	md->cb = l2p_cb;
+	ftl_md_persist(md);
+}
+
+static void
+ftl_mngt_recovery_iteration_restore_valid_map(struct spdk_ftl_dev *dev,
+		struct ftl_mngt_process *mngt)
+{
+	struct ftl_mngt_recovery_ctx *pctx = ftl_mngt_get_caller_ctx(mngt);
+	uint64_t lba, lba_off;
+	ftl_addr addr;
+
+	for (lba = pctx->iter.lba_first; lba < pctx->iter.lba_last; lba++) {
+		lba_off = lba - pctx->iter.lba_first;
+		addr = ftl_addr_load(dev, pctx->l2p_snippet.l2p, lba_off);
+
+		if (addr == FTL_ADDR_INVALID) {
+			continue;
+		}
+
+		if (!ftl_addr_in_nvc(dev, addr)) {
+			struct ftl_band *band = ftl_band_from_addr(dev, addr);
+			band->p2l_map.num_valid++;
+		}
+
+		if (ftl_bitmap_get(dev->valid_map, addr)) {
+			assert(false);
+			ftl_mngt_fail_step(mngt);
+			return;
+		} else {
+			ftl_bitmap_set(dev->valid_map, addr);
+		}
+	}
+
+	ftl_mngt_next_step(mngt);
 }
 
 static void
@@ -351,6 +478,34 @@ ftl_mngt_recovery_shm_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 }
 
 /*
+ * During dirty shutdown recovery, the whole L2P needs to be reconstructed. However,
+ * recreating it all at the same time may take up to much DRAM, so it's done in multiple
+ * iterations. This process describes the recovery of a part of L2P in one iteration.
+ */
+static const struct ftl_mngt_process_desc g_desc_recovery_iteration = {
+	.name = "FTL recovery iteration",
+	.steps = {
+		{
+			.name = "Load L2P",
+			.action = ftl_mngt_recovery_iteration_load_l2p,
+		},
+		{
+			.name = "Initialize sequence IDs",
+			.action = ftl_mngt_recovery_iteration_init_seq_ids,
+		},
+		{
+			.name = "Restore valid map",
+			.action = ftl_mngt_recovery_iteration_restore_valid_map,
+		},
+		{
+			.name = "Save L2P",
+			.action = ftl_mngt_recovery_iteration_save_l2p,
+		},
+		{}
+	}
+};
+
+/*
  * Loading of FTL after dirty shutdown. Recovers metadata, L2P, decides on amount of recovery
  * iterations to be executed (dependent on ratio of L2P cache size and total L2P size)
  */
@@ -387,6 +542,10 @@ static const struct ftl_mngt_process_desc g_desc_recovery = {
 		{
 			.name = "Recover max seq ID",
 			.action = ftl_mngt_recover_seq_id
+		},
+		{
+			.name = "Recovery iterations",
+			.action = ftl_mngt_recovery_run_iteration,
 		},
 		{
 			.name = "Deinitialize recovery",
