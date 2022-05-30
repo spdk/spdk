@@ -37,6 +37,7 @@ struct ftl_mngt_recovery_ctx {
 };
 
 static const struct ftl_mngt_process_desc g_desc_recovery;
+static const struct ftl_mngt_process_desc g_desc_recovery_shm;
 
 static void
 recovery_iter_advance(struct spdk_ftl_dev *dev, struct ftl_mngt_recovery_ctx *ctx)
@@ -215,6 +216,23 @@ ftl_mngt_recover_seq_id(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	ftl_mngt_next_step(mngt);
 }
 
+static void
+ftl_mngt_restore_valid_counters(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_valid_map_load_state(dev);
+	ftl_mngt_next_step(mngt);
+}
+
+static void
+ftl_mngt_recovery_shm_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	if (ftl_fast_recovery(dev)) {
+		ftl_mngt_call_process(mngt, &g_desc_recovery_shm);
+	} else {
+		ftl_mngt_skip_step(mngt);
+	}
+}
+
 /*
  * Loading of FTL after dirty shutdown. Recovers metadata, L2P, decides on amount of recovery
  * iterations to be executed (dependent on ratio of L2P cache size and total L2P size)
@@ -246,6 +264,10 @@ static const struct ftl_mngt_process_desc g_desc_recovery = {
 			.cleanup = ftl_mngt_deinit_l2p
 		},
 		{
+			.name = "Recover L2P from shared memory",
+			.action = ftl_mngt_recovery_shm_l2p,
+		},
+		{
 			.name = "Finalize band initialization",
 			.action = ftl_mngt_finalize_init_bands,
 		},
@@ -261,6 +283,26 @@ static const struct ftl_mngt_process_desc g_desc_recovery = {
 		{
 			.name = "Finalize initialization",
 			.action = ftl_mngt_finalize_startup,
+		},
+		{}
+	}
+};
+
+/*
+ * Shared memory specific steps for dirty shutdown recovery - main task is rebuilding the state of
+ * L2P cache (paged in/out status, dirtiness etc. of individual pages).
+ */
+static const struct ftl_mngt_process_desc g_desc_recovery_shm = {
+	.name = "FTL recovery from SHM",
+	.ctx_size = sizeof(struct ftl_mngt_recovery_ctx),
+	.steps = {
+		{
+			.name = "Restore L2P from SHM",
+			.action = ftl_mngt_restore_l2p,
+		},
+		{
+			.name = "Restore valid maps counters",
+			.action = ftl_mngt_restore_valid_counters,
 		},
 		{}
 	}
