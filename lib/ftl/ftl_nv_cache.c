@@ -1595,6 +1595,38 @@ ftl_chunk_basic_rq_write(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *
 }
 
 static void
+read_brq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct ftl_basic_rq *brq = arg;
+
+	brq->success = success;
+
+	brq->owner.cb(brq);
+	spdk_bdev_free_io(bdev_io);
+}
+
+static int
+ftl_chunk_basic_rq_read(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *brq)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	int rc;
+
+	brq->io.chunk = chunk;
+	brq->success = false;
+
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(dev, nv_cache->bdev_desc, nv_cache->cache_ioch,
+				   brq->io_payload, NULL, brq->io.addr,
+				   brq->num_blocks, read_brq_end, brq);
+
+	if (spdk_likely(!rc)) {
+		dev->io_activity_total += brq->num_blocks;
+	}
+
+	return rc;
+}
+
+static void
 chunk_open_cb(int status, void *ctx)
 {
 	struct ftl_nv_cache_chunk *chunk = (struct ftl_nv_cache_chunk *)ctx;
@@ -1705,6 +1737,140 @@ ftl_chunk_close(struct ftl_nv_cache_chunk *chunk)
 	brq->io.addr = chunk->offset + chunk->md->write_pointer;
 
 	ftl_chunk_basic_rq_write(chunk, brq);
+}
+
+static int
+ftl_chunk_read_tail_md(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *brq,
+		       void (*cb)(struct ftl_basic_rq *brq), void *cb_ctx)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	void *metadata;
+	uint64_t num_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(chunk->nv_cache);
+	int rc;
+
+	metadata = chunk->lba_map.dma_buf;
+	ftl_basic_rq_init(dev, brq, metadata, num_blocks);
+	ftl_basic_rq_set_owner(brq, cb, cb_ctx);
+
+	brq->io.addr = chunk->offset + chunk_tail_md_offset(chunk->nv_cache);
+	rc = ftl_chunk_basic_rq_read(chunk, brq);
+	if (spdk_unlikely(rc)) {
+		return rc;
+	}
+
+	return 0;
+}
+
+struct restore_chunk_md_ctx {
+	ftl_chunk_md_cb cb;
+	void *cb_ctx;
+	int status;
+	uint64_t qd;
+	uint64_t id;
+};
+
+static void
+walk_tail_md_cb(struct ftl_basic_rq *brq)
+{
+	struct ftl_mngt *mngt = brq->owner.priv;
+	struct ftl_nv_cache_chunk *chunk = brq->io.chunk;
+	struct restore_chunk_md_ctx *ctx = ftl_mngt_get_step_cntx(mngt);
+	int rc = 0;
+
+	if (brq->success) {
+		rc = ctx->cb(chunk, ctx->cb_ctx);
+	} else {
+		rc = -EIO;
+	}
+
+	if (rc) {
+		ctx->status = rc;
+	}
+	ctx->qd--;
+	chunk_free_lba_map(chunk);
+	ftl_mngt_continue_step(mngt);
+}
+
+static void
+ftl_mngt_nv_cache_walk_tail_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt,
+			       uint64_t seq_id, ftl_chunk_md_cb cb, void *cb_ctx)
+{
+	struct ftl_nv_cache *nvc = &dev->nv_cache;
+	struct restore_chunk_md_ctx *ctx;
+
+	ctx = ftl_mngt_get_step_cntx(mngt);
+	if (!ctx) {
+		if (ftl_mngt_alloc_step_cntx(mngt, sizeof(*ctx))) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ctx = ftl_mngt_get_step_cntx(mngt);
+		assert(ctx);
+
+		ctx->cb = cb;
+		ctx->cb_ctx = cb_ctx;
+	}
+
+	if (0 == ctx->qd && ctx->id == nvc->chunk_count) {
+		if (!is_chunk_count_valid(nvc)) {
+			FTL_ERRLOG(dev, "Recovery ERROR, invalid number of chunk\n");
+			assert(false);
+			ctx->status = -EINVAL;
+		}
+
+		if (ctx->status) {
+			ftl_mngt_fail_step(mngt);
+		} else {
+			ftl_mngt_next_step(mngt);
+		}
+		return;
+	}
+
+	while (ctx->id < nvc->chunk_count) {
+		struct ftl_nv_cache_chunk *chunk = &nvc->chunks[ctx->id];
+
+		if (!chunk->recovery) {
+			/* This chunk is empty and not used in recovery */
+			ctx->id++;
+			continue;
+		}
+
+		if (seq_id && (chunk->md->close_seq_id <= seq_id)) {
+			ctx->id++;
+			continue;
+		}
+
+		if (chunk_alloc_lba_map(chunk)) {
+			/* No more free LBA map, break and continue later */
+			break;
+		}
+		ctx->id++;
+
+		int rc = ftl_chunk_read_tail_md(chunk, &chunk->metadata_rq, walk_tail_md_cb, mngt);
+
+		if (0 == rc) {
+			ctx->qd++;
+		} else {
+			chunk_free_lba_map(chunk);
+			ctx->status = rc;
+		}
+	}
+
+	if (0 == ctx->qd) {
+		/*
+		 * No QD because of error, continue the step,
+		 * it will be finished when all chunks processed
+		 */
+		ftl_mngt_continue_step(mngt);
+	}
+
+}
+
+void ftl_mngt_nv_cache_restore_l2p(struct spdk_ftl_dev *dev,
+				   struct ftl_mngt *mngt,
+				   ftl_chunk_md_cb cb, void *cb_ctx)
+{
+	ftl_mngt_nv_cache_walk_tail_md(dev, mngt, dev->sb->ckpt_seq_id, cb, cb_ctx);
 }
 
 static void

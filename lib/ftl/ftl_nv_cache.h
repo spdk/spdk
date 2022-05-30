@@ -282,6 +282,10 @@ void ftl_mngt_nv_cache_restore_chunk_state(struct spdk_ftl_dev *dev,
 
 typedef int (*ftl_chunk_md_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx);
 
+void ftl_mngt_nv_cache_restore_l2p(struct spdk_ftl_dev *dev,
+				   struct ftl_mngt *mngt,
+				   ftl_chunk_md_cb cb, void *cb_ctx);
+
 struct ftl_nv_cache_chunk *ftl_nv_cache_get_chunk_from_addr(struct spdk_ftl_dev *dev,
 		ftl_addr addr);
 
