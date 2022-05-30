@@ -4252,7 +4252,13 @@ nvmf_vfio_user_listen(struct spdk_nvmf_transport *transport,
 		ret = -1;
 		goto out;
 	}
-	vfu_setup_log(endpoint->vfu_ctx, vfio_user_log, vfio_user_get_log_level());
+
+	ret = vfu_setup_log(endpoint->vfu_ctx, vfio_user_log,
+			    vfio_user_get_log_level());
+	if (ret < 0) {
+		goto out;
+	}
+
 
 	ret = vfio_user_dev_info_fill(vu_transport, endpoint);
 	if (ret < 0) {
