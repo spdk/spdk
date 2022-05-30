@@ -739,6 +739,10 @@ static const struct ftl_mngt_process_desc desc_recovery = {
 			.action = ftl_mngt_recovery_open_bands_p2l
 		},
 		{
+			.name = "Recover chunk state",
+			.action = ftl_mngt_nv_cache_restore_chunk_state
+		},
+		{
 			.name = "Recover max seq ID",
 			.action = ftl_mngt_recover_seq_id
 		},

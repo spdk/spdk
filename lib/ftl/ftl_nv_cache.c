@@ -1707,6 +1707,78 @@ ftl_chunk_close(struct ftl_nv_cache_chunk *chunk)
 	ftl_chunk_basic_rq_write(chunk, brq);
 }
 
+static void
+restore_chunk_state_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt *mngt = md->owner.cb_ctx;
+	struct ftl_nv_cache *nvc = &dev->nv_cache;
+	struct ftl_nv_cache_chunk *chunk;
+	uint64_t i;
+
+	if (status) {
+		/* Restore error, end step */
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	for (i = 0; i < nvc->chunk_count; i++) {
+		chunk = &nvc->chunks[i];
+
+		switch (chunk->md->state) {
+		case FTL_CHUNK_STATE_FREE:
+			break;
+		case FTL_CHUNK_STATE_OPEN:
+			/*
+			 * Chunk has valid head, most such chunks will be full instead
+			 * of open so move it to that list. The final check will happen
+			 * during tail metadata scan later.
+			 */
+			TAILQ_REMOVE(&nvc->chunk_free_list, chunk, entry);
+			nvc->chunk_free_count--;
+
+			TAILQ_INSERT_TAIL(&nvc->chunk_open_list, chunk, entry);
+			nvc->chunk_open_count++;
+
+			/* Chunk is not empty, mark it to be recovered */
+			chunk->recovery = true;
+			break;
+		case FTL_CHUNK_STATE_CLOSED:
+			/*
+			 * Chunk has valid head, most such chunks will be full instead
+			 * of open so move it to that list. The final check will happen
+			 * during tail metadata scan later.
+			 */
+			TAILQ_REMOVE(&nvc->chunk_free_list, chunk, entry);
+			nvc->chunk_free_count--;
+
+			TAILQ_INSERT_TAIL(&nvc->chunk_full_list, chunk, entry);
+			nvc->chunk_full_count++;
+
+			/* Chunk is not empty, mark it to be recovered */
+			chunk->recovery = true;
+			break;
+		default:
+			status = -EINVAL;
+		}
+	}
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+void ftl_mngt_nv_cache_restore_chunk_state(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt)
+{
+	struct ftl_md *md = dev->layout.md[ftl_layout_region_type_nvc_md];
+
+	md->owner.cb_ctx = mngt;
+	md->cb = restore_chunk_state_cb;
+	ftl_md_restore(md);
+}
+
 int
 ftl_nv_cache_chunks_busy(struct ftl_nv_cache *nv_cache)
 {
