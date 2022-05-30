@@ -65,6 +65,7 @@ struct ftl_mngt_recovery_context {
 };
 
 static const struct ftl_mngt_process_desc desc_recovery;
+static const struct ftl_mngt_process_desc desc_recovery_shm;
 
 static void recovery_iter_advance(struct spdk_ftl_dev *dev,
 				  struct ftl_mngt_recovery_context *ctx)
@@ -254,6 +255,23 @@ ftl_mngt_recover_seq_id(struct spdk_ftl_dev *dev,
 	ftl_mngt_next_step(mngt);
 }
 
+static void
+ftl_mngt_restore_valid_counters(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_valid_map_load_state(dev);
+	ftl_mngt_next_step(mngt);
+}
+
+static void
+ftl_mngt_recovery_shm_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (ftl_fast_recovery(dev)) {
+		ftl_mngt_call(mngt, &desc_recovery_shm);
+	} else {
+		ftl_mngt_skip_step(mngt);
+	}
+}
+
 static const struct ftl_mngt_process_desc desc_recovery = {
 	.name = "FTL recovery",
 	.arg_size = sizeof(struct ftl_mngt_recovery_context),
@@ -282,6 +300,10 @@ static const struct ftl_mngt_process_desc desc_recovery = {
 			.cleanup = ftl_mngt_deinit_l2p
 		},
 		{
+			.name = "Recover L2P from shared memory",
+			.action = ftl_mngt_recovery_shm_l2p,
+		},
+		{
 			.name = "Finalize band initialization",
 			.action = ftl_mngt_finalize_init_bands,
 		},
@@ -297,6 +319,22 @@ static const struct ftl_mngt_process_desc desc_recovery = {
 		{
 			.name = "Finalize initialization",
 			.action = ftl_mngt_finalize_init,
+		},
+		{}
+	}
+};
+
+static const struct ftl_mngt_process_desc desc_recovery_shm = {
+	.name = "FTL recovery from SHM",
+	.arg_size = sizeof(struct ftl_mngt_recovery_context),
+	.steps = {
+		{
+			.name = "Restore L2P from SHM",
+			.action = ftl_mngt_restore_l2p,
+		},
+		{
+			.name = "Restore valid maps counters",
+			.action = ftl_mngt_restore_valid_counters,
 		},
 		{}
 	}
