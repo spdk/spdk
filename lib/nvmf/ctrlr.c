@@ -290,6 +290,7 @@ nvmf_ctrlr_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_su
 	cdata->ieee[0] = 0xe4;
 	cdata->ieee[1] = 0xd2;
 	cdata->ieee[2] = 0x5c;
+	cdata->oncs.compare = 1;
 	cdata->oncs.reservations = 1;
 	cdata->fuses.compare_and_write = 1;
 	cdata->sgls.supported = 1;
@@ -2690,6 +2691,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		cdata->nvmf_specific = ctrlr->cdata.nvmf_specific;
 
+		cdata->oncs.compare = ctrlr->cdata.oncs.compare;
 		cdata->oncs.dsm = nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = nvmf_ctrlr_write_zeroes_supported(ctrlr);
 		cdata->oncs.reservations = ctrlr->cdata.oncs.reservations;
