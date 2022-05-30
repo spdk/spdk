@@ -472,6 +472,62 @@ ftl_mngt_recovery_iteration_restore_band_l2p(struct spdk_ftl_dev *dev,
 	ftl_mngt_recovery_walk_band_tail_md(dev, mngt, restore_band_l2p_cb);
 }
 
+static int
+restore_chunk_l2p_cb(struct ftl_nv_cache_chunk *chunk, void *ctx)
+{
+	struct ftl_mngt_recovery_ctx *pctx = ctx;
+	struct spdk_ftl_dev *dev;
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	ftl_addr addr;
+	const uint64_t seq_id = chunk->md->seq_id;
+	uint64_t i, lba;
+	uint32_t chunk_map_crc;
+
+	dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+
+	chunk_map_crc = spdk_crc32c_update(chunk->p2l_map.chunk_map,
+					   ftl_nv_cache_chunk_tail_md_num_blocks(chunk->nv_cache) * FTL_BLOCK_SIZE, 0);
+	if (chunk->md->p2l_map_checksum != chunk_map_crc) {
+		return -1;
+	}
+
+	for (i = 0; i < nv_cache->chunk_blocks; ++i) {
+		uint64_t lba_off;
+
+		lba = ftl_chunk_map_get_lba(chunk, i);
+
+		if (lba == FTL_LBA_INVALID) {
+			continue;
+		}
+		if (lba >= dev->num_lbas) {
+			FTL_ERRLOG(dev, "L2P Chunk restore ERROR, LBA out of range\n");
+			return -1;
+		}
+		if (lba < pctx->iter.lba_first || lba >= pctx->iter.lba_last) {
+			continue;
+		}
+
+		lba_off = lba - pctx->iter.lba_first;
+		if (seq_id < pctx->l2p_snippet.seq_id[lba_off]) {
+			/* Newer data already recovered */
+			continue;
+		}
+
+		addr = ftl_addr_from_nvc_offset(dev, chunk->offset + i);
+		ftl_addr_store(dev, pctx->l2p_snippet.l2p, lba_off, addr);
+		pctx->l2p_snippet.seq_id[lba_off] = seq_id;
+	}
+
+	return 0;
+}
+
+static void
+ftl_mngt_recovery_iteration_restore_chunk_l2p(struct spdk_ftl_dev *dev,
+		struct ftl_mngt_process *mngt)
+{
+	ftl_mngt_nv_cache_restore_l2p(dev, mngt, restore_chunk_l2p_cb, ftl_mngt_get_caller_ctx(mngt));
+}
+
 static void
 ftl_mngt_recovery_iteration_restore_valid_map(struct spdk_ftl_dev *dev,
 		struct ftl_mngt_process *mngt)
@@ -660,6 +716,10 @@ static const struct ftl_mngt_process_desc g_desc_recovery_iteration = {
 		{
 			.name = "Initialize sequence IDs",
 			.action = ftl_mngt_recovery_iteration_init_seq_ids,
+		},
+		{
+			.name = "Restore chunk L2P",
+			.action = ftl_mngt_recovery_iteration_restore_chunk_l2p,
 		},
 		{
 			.name = "Restore band L2P",
