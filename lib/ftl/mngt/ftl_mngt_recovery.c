@@ -288,6 +288,63 @@ static void ftl_mngt_recovery_restore_band_state(struct spdk_ftl_dev *dev,
 	ftl_md_restore(md);
 }
 
+static void ftl_mngt_recovery_walk_band_tail_md(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt, ftl_band_md_cb cb)
+{
+	struct band_md_ctx *sctx = ftl_mngt_get_step_cntx(mngt);
+	uint64_t num_bands = ftl_get_num_bands(dev);
+
+	if (0 == sctx->qd && sctx->id == num_bands) {
+		if (sctx->status) {
+			ftl_mngt_fail_step(mngt);
+		} else {
+			ftl_mngt_next_step(mngt);
+		}
+		return;
+	}
+
+	while (sctx->id < num_bands) {
+		struct ftl_band *band = &dev->bands[sctx->id];
+
+		if (FTL_BAND_STATE_FREE == band->md->state) {
+			sctx->id++;
+			continue;
+		}
+
+		if (FTL_BAND_STATE_OPEN == band->md->state || FTL_BAND_STATE_FULL == band->md->state) {
+			/* This band is already open and have valid LBA map */
+			sctx->id++;
+			sctx->qd++;
+			ftl_band_acquire_lba_map(band);
+			cb(band, mngt, FTL_MD_SUCCESS);
+			continue;
+		} else {
+			if (dev->sb->ckpt_seq_id && (band->md->close_seq_id <= dev->sb->ckpt_seq_id)) {
+				sctx->id++;
+				continue;
+			}
+
+			band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
+			if (ftl_band_alloc_lba_map(band)) {
+				/* No more free LBA map, try later */
+				break;
+			}
+		}
+
+		sctx->id++;
+		ftl_band_read_tail_brq_md(band, cb, mngt);
+		sctx->qd++;
+	}
+
+	if (0 == sctx->qd) {
+		/*
+		 * No QD because of error, continue the step,
+		 * it will be finished when all bands processed
+		 */
+		ftl_mngt_continue_step(mngt);
+	}
+}
+
 static void
 ftl_mngt_recovery_iteration_init_seq_ids(struct spdk_ftl_dev *dev,
 		struct ftl_mngt *mngt)
@@ -344,6 +401,107 @@ ftl_mngt_recovery_iteration_save_l2p(struct spdk_ftl_dev *dev,
 	md->owner.cb_ctx = mngt;
 	md->cb = l2p_cb;
 	ftl_md_persist(md);
+}
+
+static void
+restore_band_l2p_cb(struct ftl_band *band, void *cntx, enum ftl_md_status status)
+{
+	struct ftl_mngt *mngt = cntx;
+	struct ftl_mngt_recovery_context *pctx = ftl_mngt_get_caller_context(mngt);
+	struct band_md_ctx *sctx = ftl_mngt_get_step_cntx(mngt);
+	struct spdk_ftl_dev *dev = band->dev;
+	ftl_addr addr, curr_addr;
+	uint64_t i, lba, seq_id;
+	uint32_t band_map_crc;
+	int rc = 0;
+
+	if (status != FTL_MD_SUCCESS) {
+		FTL_ERRLOG(dev, "L2P band restore error, failed to read LBA map\n");
+		rc = -EIO;
+		goto cleanup;
+	}
+
+	band_map_crc = spdk_crc32c_update(band->lba_map.dma_buf,
+					  ftl_tail_md_num_blocks(band->dev) * FTL_BLOCK_SIZE, 0);
+
+	/* LBA map is only valid if the band state is closed - additionally checking
+	 * for non-zero value helps with upgrade path and shared memory recovery */
+	if (FTL_BAND_STATE_CLOSED == band->md->state && band->md->lba_map_checksum &&
+	    band->md->lba_map_checksum != band_map_crc) {
+		FTL_ERRLOG(dev, "L2P band restore error, inconsistent LBA map CRC\n");
+		rc = -EINVAL;
+		goto cleanup;
+	}
+
+	uint64_t num_blks_in_band = ftl_get_num_blocks_in_band(dev);
+	for (i = 0; i < num_blks_in_band; ++i) {
+		lba = band->lba_map.band_map[i].lba;
+		seq_id = band->lba_map.band_map[i].seq_id;
+
+		if (lba == FTL_LBA_INVALID) {
+			continue;
+		}
+		if (lba >= dev->num_lbas) {
+			FTL_ERRLOG(dev, "L2P band restore ERROR, LBA out of range\n");
+			rc = -EINVAL;
+			break;
+		}
+		if (lba < pctx->iter.lba_first || lba >= pctx->iter.lba_last) {
+			continue;
+		}
+
+		uint64_t lba_off = lba - pctx->iter.lba_first;
+		if (seq_id < pctx->l2p_snippet.seq_id[lba_off]) {
+
+			/* Overlapped band/chunk has newer data - invalidate lba map on open/full band  */
+			if (FTL_BAND_STATE_OPEN == band->md->state || FTL_BAND_STATE_FULL == band->md->state) {
+				addr = ftl_band_addr_from_block_offset(band, i);
+				ftl_band_set_p2l(band, FTL_LBA_INVALID, addr, 0);
+			}
+
+			/* Newer data already recovered */
+			continue;
+		}
+
+		addr = ftl_band_addr_from_block_offset(band, i);
+
+		curr_addr = ftl_addr_load(dev, pctx->l2p_snippet.l2p, lba_off);
+
+		/* Overlapped band/chunk has newer data - invalidate lba map on open/full band  */
+		if (curr_addr != FTL_ADDR_INVALID && !ftl_addr_cached(dev, curr_addr) && curr_addr != addr) {
+
+			struct ftl_band *curr_band = ftl_band_from_addr(dev, curr_addr);
+
+			if (FTL_BAND_STATE_OPEN == curr_band->md->state || FTL_BAND_STATE_FULL == curr_band->md->state) {
+				size_t prev_offset = ftl_band_block_offset_from_addr(curr_band, curr_addr);
+				if (curr_band->lba_map.band_map[prev_offset].lba == lba &&
+				    seq_id >= curr_band->lba_map.band_map[prev_offset].seq_id) {
+					ftl_band_set_p2l(curr_band, FTL_LBA_INVALID, curr_addr, 0);
+				}
+			}
+		}
+
+		ftl_addr_store(dev, pctx->l2p_snippet.l2p, lba_off, addr);
+		pctx->l2p_snippet.seq_id[lba_off] = seq_id;
+	}
+
+
+cleanup:
+	ftl_band_release_lba_map(band);
+
+	sctx->qd--;
+	if (rc) {
+		sctx->status = rc;
+	}
+
+	ftl_mngt_continue_step(mngt);
+}
+
+static void
+ftl_mngt_recovery_iteration_restore_band_l2p(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt)
+{
+	ftl_mngt_recovery_walk_band_tail_md(dev, mngt, restore_band_l2p_cb);
 }
 
 static void
@@ -531,6 +689,11 @@ static const struct ftl_mngt_process_desc desc_recovery_iteration = {
 		{
 			.name = "Initialize sequence IDs",
 			.action = ftl_mngt_recovery_iteration_init_seq_ids,
+		},
+		{
+			.name = "Restore band L2P",
+			.arg_size = sizeof(struct band_md_ctx),
+			.action = ftl_mngt_recovery_iteration_restore_band_l2p,
 		},
 		{
 			.name = "Restore valid map",
