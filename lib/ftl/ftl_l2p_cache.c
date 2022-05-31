@@ -626,6 +626,107 @@ ftl_l2p_cache_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 }
 
 static void
+l2p_shm_restore_clean(struct spdk_ftl_dev *dev)
+{
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+	struct ftl_l2p_l1_map_entry *me = cache->l2_mapping;
+	struct ftl_l2p_page *page;
+	ftl_df_obj_id obj_id;
+	uint64_t page_no;
+
+	for (page_no = 0; page_no < cache->num_pages; ++page_no) {
+		obj_id = me[page_no].page_obj_id;
+		if (obj_id == FTL_DF_OBJ_ID_INVALID) {
+			continue;
+		}
+
+		page = ftl_mempool_claim_df(cache->l2_ctx_pool, obj_id);
+		assert(page);
+		assert(page->obj_id == ftl_mempool_get_df_obj_id(cache->l2_ctx_pool, page));
+		assert(page->page_no == page_no);
+		assert(page->state != L2P_CACHE_PAGE_INIT);
+		assert(page->state != L2P_CACHE_PAGE_CLEARING);
+		assert(cache->l2_pgs_avail > 0);
+		cache->l2_pgs_avail--;
+
+		page->page_buffer = (char *)ftl_md_get_buffer(cache->l1_md) + ftl_mempool_get_df_obj_index(
+					    cache->l2_ctx_pool, page) * FTL_BLOCK_SIZE;
+
+		TAILQ_INIT(&page->ppe_list);
+
+		page->pin_ref_cnt = 0;
+		page->on_lru_list = 0;
+		memset(&page->ctx, 0, sizeof(page->ctx));
+
+		ftl_l2p_cache_lru_add_page(cache, page);
+	}
+
+	ftl_mempool_initialize_ext(cache->l2_ctx_pool);
+}
+
+static void
+l2p_shm_restore_dirty(struct spdk_ftl_dev *dev)
+{
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+	struct ftl_l2p_l1_map_entry *me = cache->l2_mapping;
+	struct ftl_l2p_page *page;
+	ftl_df_obj_id obj_id;
+	uint64_t page_no;
+
+	for (page_no = 0; page_no < cache->num_pages; ++page_no) {
+		obj_id = me[page_no].page_obj_id;
+		if (obj_id == FTL_DF_OBJ_ID_INVALID) {
+			continue;
+		}
+
+		page = ftl_mempool_claim_df(cache->l2_ctx_pool, obj_id);
+		assert(page);
+		assert(page->obj_id == ftl_mempool_get_df_obj_id(cache->l2_ctx_pool, page));
+		assert(page->page_no == page_no);
+		assert(page->state != L2P_CACHE_PAGE_CLEARING);
+		assert(cache->l2_pgs_avail > 0);
+		cache->l2_pgs_avail--;
+
+		if (page->state == L2P_CACHE_PAGE_INIT) {
+			me[page_no].page_obj_id = FTL_DF_OBJ_ID_INVALID;
+			cache->l2_pgs_avail++;
+			ftl_mempool_release_df(cache->l2_ctx_pool, obj_id);
+			continue;
+		}
+
+		page->state = L2P_CACHE_PAGE_READY;
+		/* Assume page is dirty after crash */
+		page->updates = 1;
+		page->page_buffer = (char *)ftl_md_get_buffer(cache->l1_md) + ftl_mempool_get_df_obj_index(
+					    cache->l2_ctx_pool, page) * FTL_BLOCK_SIZE;
+
+		TAILQ_INIT(&page->ppe_list);
+
+		page->pin_ref_cnt = 0;
+		page->on_lru_list = 0;
+		memset(&page->ctx, 0, sizeof(page->ctx));
+
+		ftl_l2p_cache_lru_add_page(cache, page);
+	}
+
+	ftl_mempool_initialize_ext(cache->l2_ctx_pool);
+}
+
+void
+ftl_l2p_cache_restore(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	if (ftl_fast_startup(dev)) {
+		l2p_shm_restore_clean(dev);
+	}
+
+	if (ftl_fast_recovery(dev)) {
+		l2p_shm_restore_dirty(dev);
+	}
+
+	cb(dev, 0, cb_ctx);
+}
+
+static void
 process_persist(struct ftl_l2p_cache *cache)
 {
 	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;

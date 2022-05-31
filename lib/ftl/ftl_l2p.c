@@ -82,6 +82,12 @@ ftl_l2p_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 }
 
 void
+ftl_l2p_restore(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	FTL_L2P_OP(restore)(dev, cb, cb_ctx);
+}
+
+void
 ftl_l2p_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 {
 	FTL_L2P_OP(persist)(dev, cb, cb_ctx);

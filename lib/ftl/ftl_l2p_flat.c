@@ -81,6 +81,18 @@ ftl_l2p_flat_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 }
 
 void
+ftl_l2p_flat_restore(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	struct ftl_md *md;
+
+	md = get_l2p_md(dev);
+	md->cb = md_cb;
+	md->owner.cb_ctx = cb_ctx;
+	md->owner.private = cb;
+	ftl_md_restore(md);
+}
+
+void
 ftl_l2p_flat_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 {
 	struct ftl_md *md;
