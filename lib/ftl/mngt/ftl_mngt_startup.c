@@ -9,6 +9,8 @@
 
 static const struct ftl_mngt_process_desc desc_startup;
 static const struct ftl_mngt_process_desc desc_first_start;
+static const struct ftl_mngt_process_desc desc_restore;
+static const struct ftl_mngt_process_desc desc_clean_start;
 
 static void
 ftl_mngt_select_startup_mode(struct spdk_ftl_dev *dev,
@@ -16,6 +18,17 @@ ftl_mngt_select_startup_mode(struct spdk_ftl_dev *dev,
 {
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
 		ftl_mngt_call_process(mngt, &desc_first_start);
+	} else {
+		ftl_mngt_call_process(mngt, &desc_restore);
+	}
+}
+
+static void
+ftl_mngt_select_restore_mode(struct spdk_ftl_dev *dev,
+			     struct ftl_mngt_process *mngt)
+{
+	if (dev->sb->clean) {
+		ftl_mngt_call_process(mngt, &desc_clean_start);
 	} else {
 		ftl_mngt_fail_step(mngt);
 	}
@@ -157,6 +170,64 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 			.name = "Start core poller",
 			.action = ftl_mngt_start_core_poller,
 			.cleanup = ftl_mngt_stop_core_poller
+		},
+		{
+			.name = "Finalize initialization",
+			.action = ftl_mngt_finalize_startup,
+		},
+		{}
+	}
+};
+
+/*
+ * Step utilized on loading of an FTL instance - decides on dirty/clean shutdown path.
+ */
+static const struct ftl_mngt_process_desc desc_restore = {
+	.name = "FTL restore",
+	.steps = {
+		{
+			.name = "Select recovery mode",
+			.action = ftl_mngt_select_restore_mode,
+		},
+		{}
+	}
+};
+
+/*
+ * Loading of FTL after clean shutdown.
+ */
+static const struct ftl_mngt_process_desc desc_clean_start = {
+	.name = "Clean startup",
+	.steps = {
+		{
+			.name = "Restore metadata",
+			.action = ftl_mngt_restore_md
+		},
+		{
+			.name = "Initialize L2P",
+			.action = ftl_mngt_init_l2p,
+			.cleanup = ftl_mngt_deinit_l2p
+		},
+		{
+			.name = "Restore L2P",
+			.action = ftl_mngt_restore_l2p,
+		},
+		{
+			.name = "Finalize band initialization",
+			.action = ftl_mngt_finalize_init_bands,
+		},
+		{
+			.name = "Start core poller",
+			.action = ftl_mngt_start_core_poller,
+			.cleanup = ftl_mngt_stop_core_poller
+		},
+		{
+			.name = "Self test on startup",
+			.action = ftl_mngt_self_test,
+		},
+		{
+			.name = "Set FTL dirty state",
+			.action = ftl_mngt_set_dirty,
 		},
 		{
 			.name = "Finalize initialization",
