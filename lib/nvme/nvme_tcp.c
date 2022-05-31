@@ -1117,22 +1117,23 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 			    uint32_t *reaped)
 {
 	int rc = 0;
-	struct nvme_tcp_pdu *pdu;
+	struct nvme_tcp_pdu *pdu = tqpair->recv_pdu;
 	uint32_t crc32c;
 	struct nvme_tcp_poll_group *tgroup;
-	struct nvme_tcp_req *tcp_req;
+	struct nvme_tcp_req *tcp_req = pdu->req;
 
 	assert(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
-	pdu = tqpair->recv_pdu;
-
 	SPDK_DEBUGLOG(nvme, "enter\n");
 
-	tcp_req = pdu->req;
-	/* Increase the expected data offset */
-	tcp_req->expected_datao += pdu->data_len;
+	/* The request can be NULL, e.g. in case of C2HTermReq */
+	if (spdk_likely(tcp_req != NULL)) {
+		tcp_req->expected_datao += pdu->data_len;
+	}
 
 	/* check data digest if need */
 	if (pdu->ddgst_enable) {
+		/* But if the data digest is enabled, tcp_req cannot be NULL */
+		assert(tcp_req != NULL);
 		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 		/* Only suport this limitated case for the first step */
 		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
