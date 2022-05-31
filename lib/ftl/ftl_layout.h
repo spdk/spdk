@@ -57,6 +57,11 @@ enum ftl_layout_region_type {
 	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT,
 	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT,
 
+	/* Information about trimmed space in FTL */
+	FTL_LAYOUT_REGION_TYPE_TRIM_MD,
+	/* Mirrored information about trim */
+	FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR,
+
 	FTL_LAYOUT_REGION_TYPE_MAX,
 };
 

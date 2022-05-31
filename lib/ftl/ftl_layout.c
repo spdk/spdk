@@ -128,7 +128,7 @@ static int
 setup_layout_nvc(struct spdk_ftl_dev *dev)
 {
 	int region_type;
-	uint64_t left, offset = 0;
+	uint64_t left, offset = 0, l2p_blocks;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region, *mirror;
 	static const char *p2l_region_name[] = {
@@ -221,6 +221,38 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 		set_region_bdev_nvc(region, dev);
 		offset += region->current.blocks;
 	}
+
+	/*
+	 * Initialize trim metadata region
+	 */
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
+	l2p_blocks = layout->region[FTL_LAYOUT_REGION_TYPE_L2P].current.blocks;
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_TRIM_MD];
+	region->type = FTL_LAYOUT_REGION_TYPE_TRIM_MD;
+	region->mirror_type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR;
+	region->name = "trim_md";
+	region->current.version = 0;
+	region->prev.version = 0;
+	region->current.offset = offset;
+	region->current.blocks = blocks_region(l2p_blocks * sizeof(uint64_t));
+	region->entry_size = 1;
+	region->num_entries = region->current.blocks;
+	set_region_bdev_nvc(region, dev);
+	offset += region->current.blocks;
+
+	/* Initialize trim metadata mirror region */
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
+	mirror = &layout->region[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR];
+	*mirror = *region;
+	mirror->type = FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR;
+	mirror->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
+	mirror->name = "trim_md_mirror";
+	mirror->current.offset += region->current.blocks;
+	offset += mirror->current.blocks;
 
 	/*
 	 * Initialize NV Cache metadata

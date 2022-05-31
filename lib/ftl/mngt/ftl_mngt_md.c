@@ -40,6 +40,7 @@ is_buffer_needed(enum ftl_layout_region_type type)
 #ifndef SPDK_FTL_L2P_FLAT
 	case FTL_LAYOUT_REGION_TYPE_L2P:
 #endif
+	case FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR:
 		return false;
 
 	default:
