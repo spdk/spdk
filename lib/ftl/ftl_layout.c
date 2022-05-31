@@ -248,6 +248,37 @@ static int setup_layout_nvc(struct spdk_ftl_dev *dev)
 	}
 
 	/*
+	 * Initialize trim metadata region
+	 */
+	if (offset >= layout->nvc.total_blocks) {
+		goto ERROR;
+	}
+	uint64_t l2p_blocks = layout->region[ftl_layout_region_type_l2p].current.blocks;
+	region = &layout->region[ftl_layout_region_type_trim_md];
+	region->type = ftl_layout_region_type_trim_md;
+	region->mirror_type = ftl_layout_region_type_trim_md_mirror;
+	region->name = "trim_md";
+	set_region_version(region, 0);
+	region->current.offset = offset;
+	region->current.blocks = blocks_region(l2p_blocks * sizeof(uint64_t));
+	region->entry_size = 1;
+	region->num_entries = region->current.blocks;
+	set_region_bdev_nvc(region, dev);
+	offset += region->current.blocks;
+
+	/* Initialize trim metadata mirror region */
+	if (offset >= layout->nvc.total_blocks) {
+		goto ERROR;
+	}
+	mirror = &layout->region[ftl_layout_region_type_trim_md_mirror];
+	*mirror = *region;
+	mirror->type = ftl_layout_region_type_trim_md_mirror;
+	mirror->mirror_type = ftl_layout_region_type_invalid;
+	mirror->name = "trim_md_mirror";
+	mirror->current.offset += region->current.blocks;
+	offset += mirror->current.blocks;
+
+	/*
 	 * Initialize NV Cache metadata
 	 */
 	if (offset >= layout->nvc.total_blocks) {

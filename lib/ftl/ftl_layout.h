@@ -82,6 +82,11 @@ enum ftl_layout_region_type {
 	ftl_layout_region_type_p2l_ckpt_comp_next,
 	ftl_layout_region_type_p2l_ckpt_max = ftl_layout_region_type_p2l_ckpt_comp_next,
 
+	/* Information about trimmed space in FTL */
+	ftl_layout_region_type_trim_md,
+	/* Mirrored information about trim*/
+	ftl_layout_region_type_trim_md_mirror,
+
 	ftl_layout_region_type_max,
 
 	/* last nvc/btm region in terms of lba address space */
