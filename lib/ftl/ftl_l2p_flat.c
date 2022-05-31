@@ -135,6 +135,23 @@ ftl_l2p_flat_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 }
 
 void
+ftl_l2p_flat_restore(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	struct ftl_l2p_flat *l2p_flat = dev->l2p;
+
+	if (l2p_flat->l2p_pmem_len != 0) {
+		cb(dev, 0, cb_ctx);
+		return;
+	}
+
+	struct ftl_md *md = get_l2p_md(dev);
+	md->cb = md_cb;
+	md->owner.cb_ctx = cb_ctx;
+	md->owner.cb = cb;
+	ftl_md_restore(md);
+}
+
+void
 ftl_l2p_flat_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 {
 	struct ftl_l2p_flat *l2p_flat = dev->l2p;
