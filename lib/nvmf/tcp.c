@@ -999,9 +999,10 @@ pdu_data_crc32_compute(struct nvme_tcp_pdu *pdu)
 		/* Only suport this limitated case for the first step */
 		if (spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)
 				&& tqpair->group)) {
-			spdk_accel_submit_crc32cv(tqpair->group->accel_channel, &pdu->data_digest_crc32,
-						  pdu->data_iov, pdu->data_iovcnt, 0, data_crc32_accel_done, pdu);
-			return;
+			if (!spdk_accel_submit_crc32cv(tqpair->group->accel_channel, &pdu->data_digest_crc32, pdu->data_iov,
+						       pdu->data_iovcnt, 0, data_crc32_accel_done, pdu)) {
+				return;
+			}
 		}
 
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
