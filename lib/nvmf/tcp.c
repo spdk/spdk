@@ -550,6 +550,10 @@ _nvmf_tcp_qpair_destroy(void *_tqpair)
 		nvmf_tcp_dump_qpair_req_contents(tqpair);
 	}
 
+	/* The timeout poller might still be registered here if we close the qpair before host
+	 * terminates the connection.
+	 */
+	spdk_poller_unregister(&tqpair->timeout_poller);
 	spdk_dma_free(tqpair->pdus);
 	free(tqpair->reqs);
 	spdk_free(tqpair->bufs);
