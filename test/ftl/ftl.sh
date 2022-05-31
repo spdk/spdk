@@ -46,6 +46,8 @@ fi
 if [[ -z $SPDK_TEST_FTL_NIGHTLY  ]]; then
 	run_test "ftl_fio_basic" $testdir/fio.sh $device $nv_cache basic
 	run_test "ftl_bdevperf" $testdir/bdevperf.sh $device $nv_cache
+	run_test "ftl_restore_nv_cache" $testdir/restore.sh -c $nv_cache $device
+	run_test "ftl_restore_nv_cache" $testdir/restore.sh -f -c $nv_cache $device
 fi
 
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then

@@ -53,7 +53,11 @@ fi
 
 l2p_dram_size_mb=$(( $(get_bdev_size $split_bdev)/1024*$l2p_percentage/100 ))
 
-$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache --l2p_dram_limit $l2p_dram_size_mb
+if [ -z "$uuid" ]; then
+	$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache --l2p_dram_limit $l2p_dram_size_mb
+else
+	$rpc_py bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache -u $uuid --l2p_dram_limit $l2p_dram_size_mb
+fi
 
 waitforbdev ftl0
 
@@ -61,8 +65,7 @@ waitforbdev ftl0
 	echo '{"subsystems": ['
 	$rpc_py save_subsystem_config -n bdev
 	echo ']}'
-# Temporary hack so tests are always creating new instance, until clean restore is reintroduced later
-) | sed 's/"uuid": "[a-f0-9\-]\{36\}"/"uuid": "00000000-0000-0000-0000-000000000000"/g' > $FTL_JSON_CONF
+) > $FTL_JSON_CONF
 
 killprocess $svcpid
 trap - SIGINT SIGTERM EXIT
