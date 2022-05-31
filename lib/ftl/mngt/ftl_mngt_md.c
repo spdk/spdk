@@ -147,6 +147,65 @@ static void persist(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt,
 	ftl_md_persist(md);
 }
 
+static int
+ftl_md_restore_region(struct spdk_ftl_dev *dev, int region_type)
+{
+	int status = 0;
+	switch (region_type) {
+	case ftl_layout_region_type_nvc_md:
+		status = ftl_nv_cache_load_state(&dev->nv_cache);
+		break;
+	case ftl_layout_region_type_valid_map:
+		ftl_valid_map_load_state(dev);
+		break;
+	case ftl_layout_region_type_band_md:
+		ftl_bands_load_state(dev);
+		break;
+	default:
+		break;
+	}
+	return status;
+}
+
+static void restore_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt *mngt = md->owner.cb_ctx;
+	const struct ftl_layout_region *region = ftl_md_get_region(md);
+
+	if (status) {
+		/* Restore error, end step */
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	assert(region);
+	status = ftl_md_restore_region(dev, region->type);
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+static void restore(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt,
+		    enum ftl_layout_region_type type)
+{
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_md *md = layout->md[type];
+
+	assert(type < ftl_layout_region_type_max);
+
+	if (!md) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	md->owner.cb_ctx = mngt;
+	md->cb = restore_cb;
+	ftl_md_restore(md);
+}
+
 void ftl_mngt_persist_nv_cache_metadata(
 	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -332,6 +391,78 @@ void ftl_mngt_set_shm_clean(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	ftl_mngt_next_step(mngt);
 }
 
+void ftl_mngt_load_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	FTL_NOTICELOG(dev, "SHM: clean %"PRIu64", shm_clean %d\n", dev->sb->clean, dev->sb_shm->shm_clean);
+	if (ftl_fast_startup(dev)) {
+		FTL_NOTICELOG(dev, "SHM: found SB\n");
+		if (ftl_md_restore_region(dev, ftl_layout_region_type_sb)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, ftl_layout_region_type_sb);
+}
+
+void ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_superblock *sb = dev->sb;
+
+	if (!ftl_superblock_check_magic(sb)) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock magic\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	if (sb->header.crc != get_sb_crc(sb)) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock CRC\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	if (spdk_uuid_compare(&sb->uuid, &dev->uuid) != 0) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock UUID\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	if (sb->lba_cnt == 0) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock lba_cnt\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	dev->num_lbas = sb->lba_cnt;
+
+	/* The sb has just been read. Validate and update the conf */
+	if (sb->lba_rsvd == 0 || sb->lba_rsvd >= 100) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock lba_rsvd\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	dev->conf.lba_rsvd = sb->lba_rsvd;
+
+	dev->conf.use_append = sb->use_append;
+
+	ftl_mngt_next_step(mngt);
+}
+
+static const struct ftl_mngt_process_desc desc_restore_sb = {
+	.name = "SB restore",
+	.steps = {
+		{
+			.name = "Load super block",
+			.action = ftl_mngt_load_sb
+		},
+		{
+			.name = "Validate super block",
+			.action = ftl_mngt_validate_sb
+		},
+		{}
+	}
+};
+
 static const struct ftl_mngt_process_desc desc_init_sb = {
 	.name = "SB initialize",
 	.steps = {
@@ -455,7 +586,7 @@ shm_retry:
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
 		ftl_mngt_call(mngt, &desc_init_sb);
 	} else {
-		ftl_mngt_fail_step(mngt);
+		ftl_mngt_call(mngt, &desc_restore_sb);
 	}
 }
 
@@ -479,6 +610,91 @@ void ftl_mngt_superblock_deinit(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	dev->sb_shm = NULL;
 
 	ftl_mngt_next_step(mngt);
+}
+
+static void ftl_mngt_restore_nv_cache_metadata(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt)
+{
+	if (ftl_fast_startup(dev)) {
+		FTL_NOTICELOG(dev, "SHM: found nv cache md\n");
+		if (ftl_md_restore_region(dev, ftl_layout_region_type_nvc_md)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, ftl_layout_region_type_nvc_md);
+}
+
+static void ftl_mngt_restore_vld_map_metadata(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt)
+{
+	if (ftl_fast_startup(dev)) {
+		FTL_NOTICELOG(dev, "SHM: found vldmap\n");
+		if (ftl_md_restore_region(dev, ftl_layout_region_type_valid_map)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, ftl_layout_region_type_valid_map);
+}
+
+static void ftl_mngt_restore_band_info_metadata(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt)
+{
+	if (ftl_fast_startup(dev)) {
+		FTL_NOTICELOG(dev, "SHM: found band md\n");
+		if (ftl_md_restore_region(dev, ftl_layout_region_type_band_md)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, ftl_layout_region_type_band_md);
+}
+
+
+
+#ifdef SPDK_FTL_VSS_EMU
+static void ftl_mngt_restore_vss_metadata(struct spdk_ftl_dev *dev,
+		struct ftl_mngt *mngt)
+{
+	restore(dev, mngt, ftl_layout_region_type_vss);
+}
+#endif
+
+static const struct ftl_mngt_process_desc desc_restore = {
+	.name = "Restore metadata",
+	.steps = {
+#ifdef SPDK_FTL_VSS_EMU
+		{
+			.name = "Restore VSS metadata",
+			.action = ftl_mngt_restore_vss_metadata,
+		},
+#endif
+		{
+			.name = "Restore NV cache metadata",
+			.action = ftl_mngt_restore_nv_cache_metadata,
+		},
+		{
+			.name = "Restore valid map metadata",
+			.action = ftl_mngt_restore_vld_map_metadata,
+		},
+		{
+			.name = "Restore band info metadata",
+			.action = ftl_mngt_restore_band_info_metadata,
+		},
+		{}
+	}
+};
+
+void ftl_mngt_restore_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_mngt_call(mngt, &desc_restore);
 }
 
 static const struct ftl_mngt_process_desc desc_update_sb = {

@@ -207,6 +207,8 @@ void ftl_band_remove_zone(struct ftl_band *band, struct ftl_zone *zone);
 struct ftl_band *ftl_band_search_next_to_defrag(struct spdk_ftl_dev *dev);
 void ftl_band_init_gc_iter(struct spdk_ftl_dev *dev);
 ftl_addr ftl_band_lba_map_addr(struct ftl_band *band);
+void ftl_valid_map_load_state(struct spdk_ftl_dev *dev);
+void ftl_bands_load_state(struct spdk_ftl_dev *dev);
 void ftl_band_open(struct ftl_band *band, enum ftl_band_type type);
 void ftl_band_close(struct ftl_band *band);
 void ftl_band_free(struct ftl_band *band);

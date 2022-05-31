@@ -756,3 +756,31 @@ void ftl_band_init_gc_iter(struct spdk_ftl_dev *dev)
 	/* We lost GC state due to dirty shutdown, reset GC state to start over */
 	ftl_band_reset_gc_iter(dev);
 }
+
+void ftl_valid_map_load_state(struct spdk_ftl_dev *dev)
+{
+	uint64_t i;
+	struct ftl_band *band;
+
+	for (i = 0; i < dev->num_bands; i++) {
+		band = &dev->bands[i];
+		band->lba_map.num_vld = ftl_bitmap_count_set(band->lba_map.vld);
+	}
+}
+
+void ftl_bands_load_state(struct spdk_ftl_dev *dev)
+{
+	uint64_t i;
+	struct ftl_band *band;
+
+	for (i = 0; i < dev->num_bands; i++) {
+		band = &dev->bands[i];
+		band->zone = ftl_band_zone_from_addr(band, band->md->iter.addr);
+
+		if (band->md->state == FTL_BAND_STATE_FREE) {
+			TAILQ_REMOVE(&dev->shut_bands, band, queue_entry);
+			band->md->state = FTL_BAND_STATE_CLOSED;
+			ftl_band_set_state(band, FTL_BAND_STATE_FREE);
+		}
+	}
+}

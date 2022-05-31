@@ -242,6 +242,8 @@ void ftl_nv_cache_set_addr(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr
 
 int ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache);
 
+int ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache);
+
 void ftl_nv_cache_halt(struct ftl_nv_cache *nv_cache);
 
 int ftl_nv_cache_chunks_busy(struct ftl_nv_cache *nv_cache);
