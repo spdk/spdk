@@ -72,6 +72,8 @@ _ftl_band_set_free(struct ftl_band *band)
 
 	dev->num_free++;
 	ftl_apply_limits(dev);
+
+	band->md->p2l_map_checksum = 0;
 }
 
 static void
@@ -137,8 +139,6 @@ ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
 	case FTL_BAND_STATE_FREE:
 		assert(band->md->state == FTL_BAND_STATE_CLOSED);
 		_ftl_band_set_free(band);
-
-		band->md->p2l_map_checksum = 0;
 		break;
 
 	case FTL_BAND_STATE_PREP:
@@ -625,4 +625,33 @@ ftl_band_init_gc_iter(struct spdk_ftl_dev *dev)
 
 	/* We lost GC state due to dirty shutdown, reset GC state to start over */
 	ftl_band_reset_gc_iter(dev);
+}
+
+void
+ftl_valid_map_load_state(struct spdk_ftl_dev *dev)
+{
+	uint64_t i;
+	struct ftl_band *band;
+
+	for (i = 0; i < dev->num_bands; i++) {
+		band = &dev->bands[i];
+		band->p2l_map.num_valid = ftl_bitmap_count_set(band->p2l_map.valid);
+	}
+}
+
+void
+ftl_bands_load_state(struct spdk_ftl_dev *dev)
+{
+	uint64_t i;
+	struct ftl_band *band;
+
+	for (i = 0; i < dev->num_bands; i++) {
+		band = &dev->bands[i];
+
+		if (band->md->state == FTL_BAND_STATE_FREE) {
+			/* All bands start on the shut list during startup, removing it manually here */
+			TAILQ_REMOVE(&dev->shut_bands, band, queue_entry);
+			_ftl_band_set_free(band);
+		}
+	}
 }

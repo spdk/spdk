@@ -160,6 +160,8 @@ size_t ftl_p2l_map_pool_elem_size(struct spdk_ftl_dev *dev);
 struct ftl_band *ftl_band_search_next_to_reloc(struct spdk_ftl_dev *dev);
 void ftl_band_init_gc_iter(struct spdk_ftl_dev *dev);
 ftl_addr ftl_band_p2l_map_addr(struct ftl_band *band);
+void ftl_valid_map_load_state(struct spdk_ftl_dev *dev);
+void ftl_bands_load_state(struct spdk_ftl_dev *dev);
 void ftl_band_open(struct ftl_band *band, enum ftl_band_type type);
 void ftl_band_close(struct ftl_band *band);
 void ftl_band_free(struct ftl_band *band);

@@ -100,6 +100,12 @@ void ftl_mngt_set_clean(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 
 void ftl_mngt_set_shm_clean(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
 
+void ftl_mngt_load_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
+
+void ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
+
+void ftl_mngt_restore_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
+
 void ftl_mngt_init_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
 
 void ftl_mngt_deinit_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);

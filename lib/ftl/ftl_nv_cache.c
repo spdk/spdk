@@ -1343,6 +1343,74 @@ chunk_alloc_p2l_map(struct ftl_nv_cache_chunk *chunk)
 	return 0;
 }
 
+int
+ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
+{
+	struct ftl_nv_cache_chunk *chunk;
+	uint64_t chunks_number, offset, i;
+	int status = 0;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+
+	nv_cache->chunk_current = NULL;
+	TAILQ_INIT(&nv_cache->chunk_free_list);
+	TAILQ_INIT(&nv_cache->chunk_full_list);
+	nv_cache->chunk_full_count = nv_cache->chunk_free_count = 0;
+
+	assert(nv_cache->chunk_open_count == 0);
+	offset = nvc_data_offset(nv_cache);
+	chunk = nv_cache->chunks;
+	if (!chunk) {
+		FTL_ERRLOG(dev, "No NV cache metadata\n");
+		return -1;
+	}
+
+	for (i = 0; i < nv_cache->chunk_count; i++, chunk++) {
+		chunk->nv_cache = nv_cache;
+		nvc_validate_md(nv_cache, chunk->md);
+
+		if (offset != chunk->offset) {
+			status = -EINVAL;
+			goto error;
+		}
+
+		if (chunk->md->blocks_written == nv_cache->chunk_blocks) {
+			/* Chunk full, move it on full list */
+			TAILQ_INSERT_TAIL(&nv_cache->chunk_full_list, chunk, entry);
+			nv_cache->chunk_full_count++;
+		} else if (0 == chunk->md->blocks_written) {
+			/* Chunk empty, move it on empty list */
+			TAILQ_INSERT_TAIL(&nv_cache->chunk_free_list, chunk, entry);
+			nv_cache->chunk_free_count++;
+		} else {
+			status = -EINVAL;
+			goto error;
+		}
+
+		offset += nv_cache->chunk_blocks;
+	}
+
+	chunks_number = nv_cache->chunk_free_count + nv_cache->chunk_full_count;
+	assert(nv_cache->chunk_current == NULL);
+
+	if (chunks_number != nv_cache->chunk_count) {
+		FTL_ERRLOG(dev, "Inconsistent NV cache metadata\n");
+		status = -EINVAL;
+		goto error;
+	}
+
+	FTL_NOTICELOG(dev, "FTL NV Cache: full chunks = %lu, empty chunks = %lu\n",
+		      nv_cache->chunk_full_count, nv_cache->chunk_free_count);
+
+	if (0 == status) {
+		FTL_NOTICELOG(dev, "FTL NV Cache: state loaded successfully\n");
+	} else {
+		FTL_ERRLOG(dev, "FTL NV Cache: loading state ERROR\n");
+	}
+
+error:
+	return status;
+}
+
 typedef void (*ftl_chunk_ops_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx, bool status);
 
 static void

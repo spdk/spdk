@@ -122,6 +122,7 @@ DEFINE_STUB_V(ftl_writer_run, (struct ftl_writer *writer));
 DEFINE_STUB(ftl_writer_is_halted, bool, (struct ftl_writer *writer), true);
 DEFINE_STUB(ftl_mempool_claim_df, void *, (struct ftl_mempool *mpool, ftl_df_obj_id df_obj_id),
 	    NULL);
+DEFINE_STUB(ftl_bitmap_count_set, uint64_t, (struct ftl_bitmap *bitmap), 0);
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

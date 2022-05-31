@@ -127,6 +127,65 @@ persist(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
 	ftl_md_persist(md);
 }
 
+static int
+ftl_md_restore_region(struct spdk_ftl_dev *dev, int region_type)
+{
+	int status = 0;
+	switch (region_type) {
+	case FTL_LAYOUT_REGION_TYPE_NVC_MD:
+		status = ftl_nv_cache_load_state(&dev->nv_cache);
+		break;
+	case FTL_LAYOUT_REGION_TYPE_VALID_MAP:
+		ftl_valid_map_load_state(dev);
+		break;
+	case FTL_LAYOUT_REGION_TYPE_BAND_MD:
+		ftl_bands_load_state(dev);
+		break;
+	default:
+		break;
+	}
+	return status;
+}
+
+static void
+restore_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt_process *mngt = md->owner.cb_ctx;
+	const struct ftl_layout_region *region = ftl_md_get_region(md);
+
+	if (status) {
+		/* Restore error, end step */
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	assert(region);
+	status = ftl_md_restore_region(dev, region->type);
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+static void
+restore(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt, enum ftl_layout_region_type type)
+{
+	struct ftl_layout *layout = &dev->layout;
+	assert(type < FTL_LAYOUT_REGION_TYPE_MAX);
+	struct ftl_md *md = layout->md[type];
+
+	if (!md) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	md->owner.cb_ctx = mngt;
+	md->cb = restore_cb;
+	ftl_md_restore(md);
+}
+
 void
 ftl_mngt_persist_nv_cache_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
@@ -322,6 +381,84 @@ ftl_mngt_set_shm_clean(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	ftl_mngt_next_step(mngt);
 }
 
+void
+ftl_mngt_load_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	FTL_NOTICELOG(dev, "SHM: clean %"PRIu64", shm_clean %d\n", dev->sb->clean, dev->sb_shm->shm_clean);
+
+	if (!ftl_fast_startup(dev)) {
+		restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
+		return;
+	}
+
+	FTL_DEBUGLOG(dev, "SHM: found SB\n");
+	if (ftl_md_restore_region(dev, FTL_LAYOUT_REGION_TYPE_SB)) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	ftl_mngt_next_step(mngt);
+}
+
+void
+ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_superblock *sb = dev->sb;
+
+	if (!ftl_superblock_check_magic(sb)) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock magic\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	if (sb->header.crc != get_sb_crc(sb)) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock CRC\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	if (spdk_uuid_compare(&sb->uuid, &dev->conf.uuid) != 0) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock UUID\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	if (sb->lba_cnt == 0) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock lba_cnt\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	dev->num_lbas = sb->lba_cnt;
+
+	/* The sb has just been read. Validate and update the conf */
+	if (sb->overprovisioning == 0 || sb->overprovisioning >= 100) {
+		FTL_ERRLOG(dev, "Invalid FTL superblock lba_rsvd\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	dev->conf.overprovisioning = sb->overprovisioning;
+
+	ftl_mngt_next_step(mngt);
+}
+
+/*
+ * Loads and verifies superblock contents - utilized during the load of an FTL
+ * instance (both from a clean and dirty shutdown).
+ */
+static const struct ftl_mngt_process_desc desc_restore_sb = {
+	.name = "SB restore",
+	.steps = {
+		{
+			.name = "Load super block",
+			.action = ftl_mngt_load_sb
+		},
+		{
+			.name = "Validate super block",
+			.action = ftl_mngt_validate_sb
+		},
+		{}
+	}
+};
+
 /*
  * Initializes the superblock fields during first startup of FTL
  */
@@ -442,7 +579,7 @@ shm_retry:
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
 		ftl_mngt_call_process(mngt, &desc_init_sb);
 	} else {
-		ftl_mngt_fail_step(mngt);
+		ftl_mngt_call_process(mngt, &desc_restore_sb);
 	}
 }
 
@@ -467,4 +604,93 @@ ftl_mngt_superblock_deinit(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mn
 	dev->sb_shm = NULL;
 
 	ftl_mngt_next_step(mngt);
+}
+
+static void
+ftl_mngt_restore_nv_cache_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	if (ftl_fast_startup(dev)) {
+		FTL_DEBUGLOG(dev, "SHM: found nv cache md\n");
+		if (ftl_md_restore_region(dev, FTL_LAYOUT_REGION_TYPE_NVC_MD)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_NVC_MD);
+}
+
+static void
+ftl_mngt_restore_vld_map_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	if (ftl_fast_startup(dev)) {
+		FTL_DEBUGLOG(dev, "SHM: found vldmap\n");
+		if (ftl_md_restore_region(dev, FTL_LAYOUT_REGION_TYPE_VALID_MAP)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_VALID_MAP);
+}
+
+static void
+ftl_mngt_restore_band_info_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	if (ftl_fast_startup(dev)) {
+		FTL_DEBUGLOG(dev, "SHM: found band md\n");
+		if (ftl_md_restore_region(dev, FTL_LAYOUT_REGION_TYPE_BAND_MD)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		ftl_mngt_next_step(mngt);
+		return;
+	}
+	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_BAND_MD);
+}
+
+
+
+#ifdef SPDK_FTL_VSS_EMU
+static void
+ftl_mngt_restore_vss_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	restore(dev, mngt, FTL_LAYOUT_REGION_TYPE_VSS);
+}
+#endif
+
+/*
+ * Loads metadata after a clean shutdown.
+ */
+static const struct ftl_mngt_process_desc desc_restore = {
+	.name = "Restore metadata",
+	.steps = {
+#ifdef SPDK_FTL_VSS_EMU
+		{
+			.name = "Restore VSS metadata",
+			.action = ftl_mngt_restore_vss_metadata,
+		},
+#endif
+		{
+			.name = "Restore NV cache metadata",
+			.action = ftl_mngt_restore_nv_cache_metadata,
+		},
+		{
+			.name = "Restore valid map metadata",
+			.action = ftl_mngt_restore_vld_map_metadata,
+		},
+		{
+			.name = "Restore band info metadata",
+			.action = ftl_mngt_restore_band_info_metadata,
+		},
+		{}
+	}
+};
+
+void
+ftl_mngt_restore_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_mngt_call_process(mngt, &desc_restore);
 }
