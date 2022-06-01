@@ -1585,7 +1585,7 @@ error:
 	return rc;
 }
 
-static void
+void
 nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_request	*req, *tmp;

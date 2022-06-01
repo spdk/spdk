@@ -1055,6 +1055,9 @@ nvme_qpair_abort_all_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	nvme_qpair_complete_error_reqs(qpair);
 	nvme_qpair_abort_queued_reqs(qpair, dnr);
 	_nvme_qpair_complete_abort_queued_reqs(qpair);
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_ctrlr_abort_queued_aborts(qpair->ctrlr);
+	}
 }
 
 int
