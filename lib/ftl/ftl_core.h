@@ -183,6 +183,8 @@ bool ftl_needs_reloc(struct spdk_ftl_dev *dev);
 
 struct ftl_band *ftl_band_get_next_free(struct spdk_ftl_dev *dev);
 
+void ftl_recover_max_seq(struct spdk_ftl_dev *dev);
+
 static inline uint64_t
 ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 {
@@ -250,11 +252,17 @@ ftl_addr_from_nvc_offset(const struct spdk_ftl_dev *dev, uint64_t cache_offset)
 	return cache_offset + dev->layout.base.total_blocks;
 }
 
+static inline uint64_t
+ftl_get_next_seq_id(struct spdk_ftl_dev *dev)
+{
+	return ++dev->sb->seq_id;
+}
+
 static inline size_t
 ftl_p2l_map_num_blocks(const struct spdk_ftl_dev *dev)
 {
-	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) * sizeof(uint64_t),
-				    FTL_BLOCK_SIZE);
+	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) *
+				    sizeof(struct ftl_p2l_map_entry), FTL_BLOCK_SIZE);
 }
 
 static inline size_t

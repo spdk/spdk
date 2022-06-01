@@ -151,7 +151,8 @@ ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 	/* Invalidate open/full band p2l_map entry to keep p2l and l2p
 	 * consistency when band is going to close state */
 	if (FTL_BAND_STATE_OPEN == band->md->state || FTL_BAND_STATE_FULL == band->md->state) {
-		p2l_map->band_map[ftl_band_block_offset_from_addr(band, addr)] = FTL_LBA_INVALID;
+		p2l_map->band_map[ftl_band_block_offset_from_addr(band, addr)].lba = FTL_LBA_INVALID;
+		p2l_map->band_map[ftl_band_block_offset_from_addr(band, addr)].seq_id = 0;
 	}
 }
 

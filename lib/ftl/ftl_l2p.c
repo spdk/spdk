@@ -155,6 +155,10 @@ ftl_l2p_update_cache(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, 
 				if (new_addr < current_addr) {
 					return;
 				}
+			} else {
+				if (new_chunk->md->seq_id < current_chunk->md->seq_id) {
+					return;
+				}
 			}
 		}
 

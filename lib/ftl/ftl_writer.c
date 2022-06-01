@@ -47,6 +47,7 @@ ftl_writer_band_state_change(struct ftl_band *band)
 		assert(writer->num_bands > 0);
 		writer->num_bands--;
 		ftl_band_clear_owner(band, ftl_writer_band_state_change, writer);
+		writer->last_seq_id = band->md->close_seq_id;
 		break;
 
 	default:

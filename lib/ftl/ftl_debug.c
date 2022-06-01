@@ -59,10 +59,10 @@ ftl_band_validate_md_pin(struct ftl_band_validate_ctx *ctx)
 			continue;
 		}
 
-		assert(p2l_map->band_map[i] != FTL_LBA_INVALID);
+		assert(p2l_map->band_map[i].lba != FTL_LBA_INVALID);
 		ctx->remaining++;
 		ctx->pin_cnt++;
-		ftl_l2p_pin(dev, p2l_map->band_map[i], 1, ftl_band_validate_md_l2p_pin_cb, ctx,
+		ftl_l2p_pin(dev, p2l_map->band_map[i].lba, 1, ftl_band_validate_md_l2p_pin_cb, ctx,
 			    &ctx->l2p_pin_ctx[i]);
 	}
 

@@ -307,12 +307,14 @@ ftl_nv_cache_get_wr_buffer(struct ftl_nv_cache *nv_cache, struct ftl_io *io)
 void
 ftl_nv_cache_fill_md(struct ftl_io *io)
 {
+	struct ftl_nv_cache_chunk *chunk = io->nv_cache_chunk;
 	uint64_t i;
 	union ftl_md_vss *metadata = io->md;
 	uint64_t lba = ftl_io_get_lba(io, 0);
 
 	for (i = 0; i < io->num_blocks; ++i, lba++, metadata++) {
 		metadata->nv_cache.lba = lba;
+		metadata->nv_cache.seq_id = chunk->md->seq_id;
 	}
 }
 
@@ -433,6 +435,7 @@ chunk_free_cb(int status, void *ctx)
 		nv_cache->chunk_free_count++;
 		nv_cache->chunk_full_count--;
 		chunk->md->state = FTL_CHUNK_STATE_FREE;
+		chunk->md->close_seq_id = 0;
 		ftl_chunk_free_chunk_free_entry(chunk);
 	} else {
 		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
@@ -460,6 +463,7 @@ ftl_chunk_persist_free_state(struct ftl_nv_cache *nv_cache)
 
 		memcpy(p2l_map->chunk_dma_md, chunk->md, region->entry_size * FTL_BLOCK_SIZE);
 		p2l_map->chunk_dma_md->state = FTL_CHUNK_STATE_FREE;
+		p2l_map->chunk_dma_md->close_seq_id = 0;
 		p2l_map->chunk_dma_md->p2l_map_checksum = 0;
 
 		ftl_md_persist_entry(md, get_chunk_idx(chunk), p2l_map->chunk_dma_md, NULL,
@@ -539,6 +543,7 @@ static void
 compaction_process_pin_lba(struct ftl_nv_cache_compactor *comp)
 {
 	union ftl_md_vss *md;
+	struct ftl_nv_cache_chunk *chunk = comp->rd->owner.priv;
 	struct spdk_ftl_dev *dev = comp->rd->dev;
 	uint64_t i;
 	uint32_t count = comp->rd->iter.count;
@@ -553,7 +558,7 @@ compaction_process_pin_lba(struct ftl_nv_cache_compactor *comp)
 		entry = &comp->rd->entries[i];
 		pin_ctx = &entry->l2p_pin_ctx;
 		md = entry->io_md;
-		if (md->nv_cache.lba == FTL_LBA_INVALID) {
+		if (md->nv_cache.lba == FTL_LBA_INVALID || md->nv_cache.seq_id != chunk->md->seq_id) {
 			ftl_l2p_pin_skip(dev, compaction_process_pin_lba_cb, comp, pin_ctx);
 		} else {
 			ftl_l2p_pin(dev, md->nv_cache.lba, 1, compaction_process_pin_lba_cb, comp, pin_ctx);
@@ -697,6 +702,7 @@ compaction_process_pad(struct ftl_nv_cache_compactor *compactor)
 		iter->addr = FTL_ADDR_INVALID;
 		iter->owner.priv = NULL;
 		iter->lba = FTL_LBA_INVALID;
+		iter->seq_id = 0;
 		iter++;
 		wr->iter.idx++;
 	}
@@ -858,7 +864,7 @@ compaction_process_finish_read(struct ftl_nv_cache_compactor *compactor)
 	while (wr->iter.idx < num_entries && rd->iter.idx < rd->iter.count) {
 		/* Get metadata */
 		md = rd->entries[rd->iter.idx].io_md;
-		if (md->nv_cache.lba == FTL_LBA_INVALID) {
+		if (md->nv_cache.lba == FTL_LBA_INVALID || md->nv_cache.seq_id != chunk->md->seq_id) {
 			cache_addr++;
 			rd->iter.idx++;
 			chunk_compaction_advance(chunk, 1);
@@ -878,6 +884,7 @@ compaction_process_finish_read(struct ftl_nv_cache_compactor *compactor)
 			iter->addr = current_addr;
 			iter->owner.priv = chunk;
 			iter->lba = md->nv_cache.lba;
+			iter->seq_id = chunk->md->seq_id;
 
 			/* Advance within batch */
 			iter++;
@@ -1214,6 +1221,7 @@ ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 		TAILQ_REMOVE(&nv_cache->chunk_free_list, chunk, entry);
 		TAILQ_INSERT_TAIL(&nv_cache->chunk_open_list, chunk, entry);
 		nv_cache->chunk_free_count--;
+		chunk->md->seq_id = ftl_get_next_seq_id(dev);
 		ftl_chunk_open(chunk);
 	}
 
@@ -1317,6 +1325,52 @@ ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache)
 }
 
 static int
+sort_chunks_cmp(const void *a, const void *b)
+{
+	struct ftl_nv_cache_chunk *a_chunk = *(struct ftl_nv_cache_chunk **)a;
+	struct ftl_nv_cache_chunk *b_chunk = *(struct ftl_nv_cache_chunk **)b;
+
+	return a_chunk->md->seq_id - b_chunk->md->seq_id;
+}
+
+static int
+sort_chunks(struct ftl_nv_cache *nv_cache)
+{
+	struct ftl_nv_cache_chunk **chunks_list;
+	struct ftl_nv_cache_chunk *chunk;
+	uint32_t i;
+
+	if (TAILQ_EMPTY(&nv_cache->chunk_full_list)) {
+		return 0;
+	}
+
+	chunks_list = calloc(nv_cache->chunk_full_count,
+			     sizeof(chunks_list[0]));
+	if (!chunks_list) {
+		return -ENOMEM;
+	}
+
+	i = 0;
+	TAILQ_FOREACH(chunk, &nv_cache->chunk_full_list, entry) {
+		chunks_list[i] = chunk;
+		i++;
+	}
+	assert(i == nv_cache->chunk_full_count);
+
+	qsort(chunks_list, nv_cache->chunk_full_count, sizeof(chunks_list[0]),
+	      sort_chunks_cmp);
+
+	TAILQ_INIT(&nv_cache->chunk_full_list);
+	for (i = 0; i < nv_cache->chunk_full_count; i++) {
+		chunk = chunks_list[i];
+		TAILQ_INSERT_TAIL(&nv_cache->chunk_full_list, chunk, entry);
+	}
+
+	free(chunks_list);
+	return 0;
+}
+
+static int
 chunk_alloc_p2l_map(struct ftl_nv_cache_chunk *chunk)
 {
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
@@ -1398,6 +1452,11 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 		goto error;
 	}
 
+	status = sort_chunks(nv_cache);
+	if (status) {
+		FTL_ERRLOG(dev, "FTL NV Cache: sorting chunks ERROR\n");
+	}
+
 	FTL_NOTICELOG(dev, "FTL NV Cache: full chunks = %lu, empty chunks = %lu\n",
 		      nv_cache->chunk_full_count, nv_cache->chunk_free_count);
 
@@ -1409,6 +1468,26 @@ ftl_nv_cache_load_state(struct ftl_nv_cache *nv_cache)
 
 error:
 	return status;
+}
+
+void
+ftl_nv_cache_get_max_seq_id(struct ftl_nv_cache *nv_cache, uint64_t *open_seq_id,
+			    uint64_t *close_seq_id)
+{
+	uint64_t i, o_seq_id = 0, c_seq_id = 0;
+	struct ftl_nv_cache_chunk *chunk;
+
+	chunk = nv_cache->chunks;
+	assert(chunk);
+
+	/* Iterate over chunks and get their max open and close seq id */
+	for (i = 0; i < nv_cache->chunk_count; i++, chunk++) {
+		o_seq_id = spdk_max(o_seq_id, chunk->md->seq_id);
+		c_seq_id = spdk_max(c_seq_id, chunk->md->close_seq_id);
+	}
+
+	*open_seq_id = o_seq_id;
+	*close_seq_id = c_seq_id;
 }
 
 typedef void (*ftl_chunk_ops_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx, bool status);
@@ -1530,6 +1609,8 @@ chunk_close_cb(int status, void *ctx)
 		TAILQ_INSERT_TAIL(&chunk->nv_cache->chunk_full_list, chunk, entry);
 		chunk->nv_cache->chunk_full_count++;
 
+		chunk->nv_cache->last_seq_id = chunk->md->close_seq_id;
+
 		chunk->md->state = FTL_CHUNK_STATE_CLOSED;
 	} else {
 		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
@@ -1569,6 +1650,7 @@ ftl_chunk_close(struct ftl_nv_cache_chunk *chunk)
 	struct ftl_basic_rq *brq = &chunk->metadata_rq;
 	void *metadata = chunk->p2l_map.chunk_map;
 
+	chunk->md->close_seq_id = ftl_get_next_seq_id(dev);
 	ftl_basic_rq_init(dev, brq, metadata, chunk->nv_cache->tail_md_chunk_blocks);
 	ftl_basic_rq_set_owner(brq, chunk_map_write_cb, chunk);
 

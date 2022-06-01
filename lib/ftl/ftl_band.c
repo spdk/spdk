@@ -68,6 +68,7 @@ _ftl_band_set_free(struct ftl_band *band)
 
 	/* Add the band to the free band list */
 	TAILQ_INSERT_TAIL(&dev->free_bands, band, queue_entry);
+	band->md->close_seq_id = 0;
 	band->reloc = false;
 
 	dev->num_free++;
@@ -192,7 +193,7 @@ ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr)
 
 	offset = ftl_band_block_offset_from_addr(band, addr);
 
-	p2l_map->band_map[offset] = lba;
+	p2l_map->band_map[offset].lba = lba;
 	p2l_map->num_valid++;
 	ftl_bitmap_set(band->dev->valid_map, addr);
 }
@@ -387,12 +388,17 @@ ftl_band_p2l_map_addr(struct ftl_band *band)
 int
 ftl_band_write_prep(struct ftl_band *band)
 {
+	struct spdk_ftl_dev *dev = band->dev;
+
 	if (ftl_band_alloc_p2l_map(band)) {
 		return -1;
 	}
 
 	ftl_band_iter_init(band);
 
+	band->md->seq = ftl_get_next_seq_id(dev);
+
+	FTL_DEBUGLOG(dev, "Band to write, id %u seq %"PRIu64"\n", band->id, band->md->seq);
 	return 0;
 }
 

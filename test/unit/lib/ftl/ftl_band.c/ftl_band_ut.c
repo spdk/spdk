@@ -256,14 +256,14 @@ test_band_set_addr(void)
 
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
 	CU_ASSERT_EQUAL(p2l_map->num_valid, 1);
-	CU_ASSERT_EQUAL(p2l_map->band_map[offset], TEST_LBA);
+	CU_ASSERT_EQUAL(p2l_map->band_map[offset].lba, TEST_LBA);
 	CU_ASSERT_TRUE(ftl_bitmap_get(p2l_map->valid, offset));
 
 	addr += g_geo.zone_size / 2;
 	offset = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
 	CU_ASSERT_EQUAL(p2l_map->num_valid, 2);
-	CU_ASSERT_EQUAL(p2l_map->band_map[offset], TEST_LBA + 1);
+	CU_ASSERT_EQUAL(p2l_map->band_map[offset].lba, TEST_LBA + 1);
 	CU_ASSERT_TRUE(ftl_bitmap_get(p2l_map->valid, offset));
 	addr -= g_geo.zone_size / 2;
 	offset = test_offset_from_addr(addr, g_band);

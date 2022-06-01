@@ -62,6 +62,7 @@ ftl_rq_new(struct spdk_ftl_dev *dev, uint32_t io_md_size)
 		entry->addr = FTL_ADDR_INVALID;
 		entry->lba = FTL_LBA_INVALID;
 		entry->io_payload = io_payload;
+		entry->seq_id = 0;
 
 		if (io_md_size) {
 			entry->io_md = io_md;

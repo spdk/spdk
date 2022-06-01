@@ -17,6 +17,9 @@ struct ftl_superblock {
 
 	struct spdk_uuid		uuid;
 
+	/* Current sequence number */
+	uint64_t			seq_id;
+
 	/* Flag describing clean shutdown */
 	uint64_t			clean;
 
@@ -29,8 +32,10 @@ struct ftl_superblock {
 	/* Maximum IO depth per band relocate */
 	uint64_t			max_reloc_qdepth;
 
-	/* Reserved field */
+	/* Reserved fields */
 	uint64_t			reserved;
+
+	bool				reserved3;
 
 	uint32_t			reserved2;
 
