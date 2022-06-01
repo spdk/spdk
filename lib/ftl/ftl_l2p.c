@@ -34,9 +34,14 @@
 #include "ftl_l2p.h"
 #include "ftl_band.h"
 #include "ftl_nv_cache.h"
+#include "ftl_l2p_cache.h"
 #include "ftl_l2p_flat.h"
 
+#ifdef SPDK_FTL_L2P_FLAT
 #define FTL_L2P_OP(name)	ftl_l2p_flat_ ## name
+#else
+#define FTL_L2P_OP(name)	ftl_l2p_cache_ ## name
+#endif
 
 
 int ftl_l2p_init(struct spdk_ftl_dev *dev)

@@ -63,6 +63,9 @@ static bool is_md(enum ftl_layout_region_type type)
 	case ftl_layout_region_type_data_btm:
 	case ftl_layout_region_type_nvc_md_mirror:
 	case ftl_layout_region_type_band_md_mirror:
+#ifndef SPDK_FTL_L2P_FLAT
+	case ftl_layout_region_type_l2p:
+#endif
 		return false;
 
 	default:
