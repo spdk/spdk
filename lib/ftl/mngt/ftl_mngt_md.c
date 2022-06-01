@@ -158,6 +158,16 @@ void ftl_mngt_persist_nv_cache_metadata(
 	persist(dev, mngt, ftl_layout_region_type_nvc_md);
 }
 
+static void ftl_mngt_fast_persist_nv_cache_metadata(
+	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (ftl_nv_cache_save_state(&dev->nv_cache)) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	ftl_mngt_next_step(mngt);
+}
+
 static void ftl_mngt_persist_vld_map_metadata(
 	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -239,6 +249,28 @@ void ftl_mngt_persist_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	ftl_mngt_call(mngt, &desc_persist);
 }
 
+static const struct ftl_mngt_process_desc desc_fast_persist = {
+	.name = "Fast persist metadata",
+	.steps = {
+		{
+			.name = "Fast persist NV cache metadata",
+			.action = ftl_mngt_fast_persist_nv_cache_metadata,
+		},
+#ifdef SPDK_FTL_VSS_EMU
+		{
+			.name = "Persist VSS metadata",
+			.action = ftl_mngt_persist_vss,
+		},
+#endif
+		{}
+	}
+};
+
+void ftl_mngt_fast_persist_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_mngt_call(mngt, &desc_fast_persist);
+}
+
 void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	struct ftl_superblock *sb = dev->sb;
@@ -288,6 +320,16 @@ void ftl_mngt_set_clean(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	persist(dev, mngt, ftl_layout_region_type_sb);
 
 	dev->sb_shm->shm_ready = false;
+}
+
+void ftl_mngt_set_shm_clean(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_superblock *sb = dev->sb;
+
+	sb->clean = 1;
+	dev->sb_shm->shm_clean = true;
+	sb->header.crc = get_sb_crc(sb);
+	ftl_mngt_next_step(mngt);
 }
 
 static const struct ftl_mngt_process_desc desc_init_sb = {

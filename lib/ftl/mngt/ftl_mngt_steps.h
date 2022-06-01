@@ -110,6 +110,8 @@ void ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_persist_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_fast_persist_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_rollback_device(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_dump_stats(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
@@ -119,6 +121,8 @@ void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 void ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_set_clean(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_set_shm_clean(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_load_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 

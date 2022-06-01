@@ -73,8 +73,41 @@ static const struct ftl_mngt_process_desc desc_shutdown = {
 	}
 };
 
+static const struct ftl_mngt_process_desc desc_fast_shutdown = {
+	.name = "FTL fast shutdown",
+	.steps = {
+		{
+			.name = "Stop task core",
+			.action = ftl_mngt_stop_task_core
+		},
+		{
+			.name = "Fast persist metadata",
+			.action = ftl_mngt_fast_persist_md
+		},
+		{
+			.name = "Set FTL SHM clean state",
+			.action = ftl_mngt_set_shm_clean
+		},
+		{
+			.name = "Dump statistics",
+			.action = ftl_mngt_dump_stats
+		},
+		{
+			.name = "Deinitialize L2P",
+			.action = ftl_mngt_deinit_l2p
+		},
+		{
+			.name = "Rollback FTL device",
+			.action = ftl_mngt_rollback_device
+		},
+		{}
+	}
+};
+
 int ftl_mngt_shutdown(struct spdk_ftl_dev *dev,
 		      ftl_mngt_fn cb, void *cb_cntx)
 {
-	return ftl_mngt_execute(dev, &desc_shutdown, cb, cb_cntx);
+	const struct ftl_mngt_process_desc *pdesc = (dev->conf.fast_shdn) ?
+			&desc_fast_shutdown : &desc_shutdown;
+	return ftl_mngt_execute(dev, pdesc, cb, cb_cntx);
 }
