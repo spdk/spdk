@@ -37,6 +37,9 @@ is_buffer_needed(enum ftl_layout_region_type type)
 	case FTL_LAYOUT_REGION_TYPE_DATA_BASE:
 	case FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR:
 	case FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR:
+#ifndef SPDK_FTL_L2P_FLAT
+	case FTL_LAYOUT_REGION_TYPE_L2P:
+#endif
 		return false;
 
 	default:
