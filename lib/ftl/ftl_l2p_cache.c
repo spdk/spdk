@@ -116,8 +116,8 @@ struct ftl_l2p_cache {
 	uint32_t l2_pgs_evicting;
 	uint32_t l2_pgs_resident_max;
 	uint32_t evict_keep;
-	struct ftl_mempool *page_pinners_pool;
-	TAILQ_HEAD(, ftl_l2p_page_set) deferred_pinner_list; /* for deferred pinners */
+	struct ftl_mempool *page_sets_pool;
+	TAILQ_HEAD(, ftl_l2p_page_set) deferred_page_set_list; /* for deferred page sets */
 
 	/* This is a context for a management process */
 	struct ftl_l2p_cache_process_ctx mctx;
@@ -136,6 +136,17 @@ typedef void (*ftl_l2p_cache_clear_cb)(struct ftl_l2p_cache *cache, int status, 
 typedef void (*ftl_l2p_cache_persist_cb)(struct ftl_l2p_cache *cache, int status, void *ctx_page);
 typedef void (*ftl_l2p_cache_sync_cb)(struct spdk_ftl_dev *dev, int status, void *page,
 				      void *user_ctx);
+
+static bool page_set_is_done(struct ftl_l2p_page_set *page_set);
+static void page_set_end(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+			 struct ftl_l2p_page_set *page_set);
+
+static inline void
+ftl_l2p_page_queue_wait_ctx(struct ftl_l2p_page *page,
+			    struct ftl_l2p_page_wait_ctx *ppe)
+{
+	TAILQ_INSERT_TAIL(&page->ppe_list, ppe, list_entry);
+}
 
 static inline uint64_t
 ftl_l2p_cache_get_l1_page_size(void)
@@ -195,6 +206,36 @@ ftl_l2p_cache_set_addr(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
 	ftl_addr_store(dev, page->page_buffer, lba % cache->lbas_in_page, addr);
 }
 
+static inline void
+ftl_l2p_cache_page_pin(struct ftl_l2p_cache *cache,
+		       struct ftl_l2p_page *page)
+{
+	page->pin_ref_cnt++;
+	/* Pinned pages can't be evicted (since L2P sets/gets will be executed on it), so remove them from LRU */
+	if (page->on_lru_list) {
+		ftl_l2p_cache_lru_remove_page(cache, page);
+	}
+}
+
+static inline void
+ftl_l2p_cache_page_unpin(struct ftl_l2p_cache *cache, struct ftl_l2p_page *page)
+{
+	page->pin_ref_cnt--;
+	if (!page->pin_ref_cnt && !page->on_lru_list && page->state != L2P_CACHE_PAGE_FLUSHING) {
+		/* L2P_CACHE_PAGE_FLUSHING: the page is currently being evicted.
+		 * In such a case, the page can't be returned to the rank list, because
+		 * the ongoing eviction will remove it if no pg updates had happened.
+		 * Moreover, the page could make it to the top of the rank list and be
+		 * selected for another eviction, while the ongoing one did not finish yet.
+		 *
+		 * Depending on the page updates tracker, the page will be evicted
+		 * or returned to the rank list in context of the eviction completion
+		 * cb - see page_out_io_complete().
+		 */
+		ftl_l2p_cache_lru_add_page(cache, page);
+	}
+}
+
 static void *
 _ftl_l2p_cache_init(struct spdk_ftl_dev *dev, size_t addr_size, uint64_t l2p_size)
 {
@@ -247,7 +288,7 @@ ftl_l2p_cache_init(struct spdk_ftl_dev *dev)
 	struct ftl_l2p_cache *cache;
 	const struct ftl_layout_region *reg;
 	void *l2p = _ftl_l2p_cache_init(dev, dev->layout.l2p.addr_size, l2p_size);
-	size_t page_pinners_pool_size = 1 << 15;
+	size_t page_sets_pool_size = 1 << 15;
 	size_t max_resident_size, max_resident_pgs;
 
 	if (!l2p) {
@@ -256,10 +297,10 @@ ftl_l2p_cache_init(struct spdk_ftl_dev *dev)
 	dev->l2p = l2p;
 
 	cache = (struct ftl_l2p_cache *)dev->l2p;
-	cache->page_pinners_pool = ftl_mempool_create(page_pinners_pool_size,
-				   sizeof(struct ftl_l2p_page_set),
-				   64, SPDK_ENV_SOCKET_ID_ANY);
-	if (!cache->page_pinners_pool) {
+	cache->page_sets_pool = ftl_mempool_create(page_sets_pool_size,
+				sizeof(struct ftl_l2p_page_set),
+				64, SPDK_ENV_SOCKET_ID_ANY);
+	if (!cache->page_sets_pool) {
 		return -1;
 	}
 
@@ -276,7 +317,7 @@ ftl_l2p_cache_init(struct spdk_ftl_dev *dev)
 	SPDK_NOTICELOG("l2p maximum resident size is: %"PRIu64" (of %"PRIu64") MiB\n",
 		       max_resident_size >> 20, dev->conf.l2p_dram_limit);
 
-	TAILQ_INIT(&cache->deferred_pinner_list);
+	TAILQ_INIT(&cache->deferred_page_set_list);
 	TAILQ_INIT(&cache->lru_list);
 
 	cache->l2_ctx_md = ftl_md_create(dev,
@@ -338,8 +379,8 @@ ftl_l2p_cache_deinit_l2(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache)
 	ftl_md_destroy(cache->l1_md, ftl_md_destroy_shm_flags(dev));
 	cache->l1_md = NULL;
 
-	ftl_mempool_destroy(cache->page_pinners_pool);
-	cache->page_pinners_pool = NULL;
+	ftl_mempool_destroy(cache->page_sets_pool);
+	cache->page_sets_pool = NULL;
 }
 
 static void
@@ -415,10 +456,116 @@ get_page(struct ftl_l2p_cache *cache, uint64_t lba)
 	return get_l2p_page_by_df_id(cache, lba / cache->lbas_in_page);
 }
 
+static inline void
+ftl_l2p_cache_init_page_set(struct ftl_l2p_page_set *page_set, struct ftl_l2p_pin_ctx *pin_ctx)
+{
+	page_set->to_pin_cnt = 0;
+	page_set->pinned_cnt = 0;
+	page_set->pin_fault_cnt = 0;
+	page_set->locked = 0;
+	page_set->deferred = 0;
+	page_set->pin_ctx = pin_ctx;
+}
+
 static inline bool
 ftl_l2p_cache_running(struct ftl_l2p_cache *cache)
 {
 	return cache->state == L2P_CACHE_RUNNING;
+}
+
+static inline bool
+ftl_l2p_cache_page_is_pinnable(struct ftl_l2p_page *page)
+{
+	return page->state != L2P_CACHE_PAGE_INIT;
+}
+
+void
+ftl_l2p_cache_pin(struct spdk_ftl_dev *dev, struct ftl_l2p_pin_ctx *pin_ctx)
+{
+	assert(dev->num_lbas >= pin_ctx->lba + pin_ctx->count);
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+	struct ftl_l2p_page_set *page_set;
+	bool defer_pin = false;
+
+	/* Calculate first and last page to pin, count of them */
+	uint64_t start = pin_ctx->lba / cache->lbas_in_page;
+	uint64_t end = (pin_ctx->lba + pin_ctx->count - 1) / cache->lbas_in_page;
+	uint64_t count = end - start + 1;
+	uint64_t i;
+
+	if (spdk_unlikely(count > L2P_MAX_PAGES_TO_PIN)) {
+		ftl_l2p_pin_complete(dev, -E2BIG, pin_ctx);
+		return;
+	}
+
+	/* Get and initialize page sets */
+	assert(ftl_l2p_cache_running(cache));
+	page_set = ftl_mempool_get(cache->page_sets_pool);
+	if (!page_set) {
+		ftl_l2p_pin_complete(dev, -EAGAIN, pin_ctx);
+		return;
+	}
+	ftl_l2p_cache_init_page_set(page_set, pin_ctx);
+
+	struct ftl_l2p_page_wait_ctx *entry = page_set->entry;
+	for (i = start; i <= end; i++, entry++) {
+		struct ftl_l2p_page *page;
+		entry->parent = page_set;
+		entry->pg_no = i;
+		entry->pg_pin_completed = false;
+		entry->pg_pin_issued = false;
+
+		page_set->to_pin_cnt++;
+
+		/* Try get page and pin */
+		page = get_l2p_page_by_df_id(cache, i);
+		if (page) {
+			if (ftl_l2p_cache_page_is_pinnable(page)) {
+				/* Page available and we can pin it */
+				page_set->pinned_cnt++;
+				entry->pg_pin_issued = true;
+				entry->pg_pin_completed = true;
+				ftl_l2p_cache_page_pin(cache, page);
+			} else {
+				/* The page is being loaded */
+				/* Queue the page pin entry to be executed on page in */
+				ftl_l2p_page_queue_wait_ctx(page, entry);
+				entry->pg_pin_issued = true;
+			}
+		} else {
+			/* The page is not in the cache, queue the page_set to page in */
+			defer_pin = true;
+		}
+	}
+
+	/* Check if page set is done */
+	if (page_set_is_done(page_set)) {
+		page_set_end(dev, cache, page_set);
+	} else if (defer_pin) {
+		TAILQ_INSERT_TAIL(&cache->deferred_page_set_list, page_set, list_entry);
+		page_set->deferred = 1;
+	}
+}
+
+void
+ftl_l2p_cache_unpin(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t count)
+{
+	assert(dev->num_lbas >= lba + count);
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+	struct ftl_l2p_page *page;
+	uint64_t start = lba / cache->lbas_in_page;
+	uint64_t end = (lba + count - 1) / cache->lbas_in_page;
+	uint64_t i;
+
+	assert(count);
+	assert(start < cache->num_pages);
+	assert(end < cache->num_pages);
+
+	for (i = start; i <= end; i++) {
+		page = get_l2p_page_by_df_id(cache, i);
+		ftl_bug(!page);
+		ftl_l2p_cache_page_unpin(cache, page);
+	}
 }
 
 ftl_addr
@@ -453,6 +600,56 @@ ftl_l2p_cache_set(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr)
 	page->updates++;
 	ftl_l2p_cache_lru_promote_page(cache, page);
 	ftl_l2p_cache_set_addr(dev, cache, page, lba, addr);
+}
+
+static bool
+page_set_is_done(struct ftl_l2p_page_set *page_set)
+{
+	if (page_set->locked) {
+		return false;
+	}
+
+	assert(page_set->pinned_cnt + page_set->pin_fault_cnt <= page_set->to_pin_cnt);
+	return (page_set->pinned_cnt + page_set->pin_fault_cnt == page_set->to_pin_cnt);
+}
+
+static void
+page_set_unpin(struct ftl_l2p_cache *cache, struct ftl_l2p_page_set *page_set)
+{
+	uint64_t i;
+	struct ftl_l2p_page_wait_ctx *pentry = page_set->entry;
+
+	for (i = 0; i < page_set->to_pin_cnt; i++, pentry++) {
+		struct ftl_l2p_page *pinned_page;
+
+		if (false == pentry->pg_pin_completed) {
+			continue;
+		}
+
+		pinned_page = get_l2p_page_by_df_id(cache, pentry->pg_no);
+		ftl_bug(!pinned_page);
+
+		ftl_l2p_cache_page_unpin(cache, pinned_page);
+	}
+}
+
+static void
+page_set_end(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+	     struct ftl_l2p_page_set *page_set)
+{
+	if (spdk_likely(0 == page_set->pin_fault_cnt)) {
+		ftl_l2p_pin_complete(dev, 0, page_set->pin_ctx);
+	} else {
+		page_set_unpin(cache, page_set);
+		ftl_l2p_pin_complete(dev, -EIO, page_set->pin_ctx);
+	}
+
+	if (page_set->deferred) {
+		TAILQ_REMOVE(&cache->deferred_page_set_list, page_set, list_entry);
+	}
+
+	assert(0 == page_set->locked);
+	ftl_mempool_put(cache->page_sets_pool, page_set);
 }
 
 void
