@@ -140,6 +140,7 @@ typedef void (*ftl_l2p_cache_sync_cb)(struct spdk_ftl_dev *dev, int status, void
 static bool page_set_is_done(struct ftl_l2p_page_set *page_set);
 static void page_set_end(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
 			 struct ftl_l2p_page_set *page_set);
+static void page_in_io_retry(void *arg);
 
 static inline void
 ftl_l2p_page_queue_wait_ctx(struct ftl_l2p_page *page,
@@ -190,6 +191,71 @@ ftl_l2p_cache_lru_promote_page(struct ftl_l2p_cache *cache, struct ftl_l2p_page 
 
 	ftl_l2p_cache_lru_remove_page(cache, page);
 	ftl_l2p_cache_lru_add_page(cache, page);
+}
+
+static inline void
+ftl_l2p_cache_page_insert(struct ftl_l2p_cache *cache, struct ftl_l2p_page *page)
+{
+	struct ftl_l2p_l1_map_entry *me = cache->l2_mapping;
+	assert(me);
+
+	assert(me[page->page_no].page_obj_id == FTL_DF_OBJ_ID_INVALID);
+	me[page->page_no].page_obj_id = page->obj_id;
+}
+
+static void
+ftl_l2p_cache_page_remove(struct ftl_l2p_cache *cache, struct ftl_l2p_page *page)
+{
+	struct ftl_l2p_l1_map_entry *me = cache->l2_mapping;
+	assert(me);
+	assert(me[page->page_no].page_obj_id != FTL_DF_OBJ_ID_INVALID);
+	assert(TAILQ_EMPTY(&page->ppe_list));
+
+	me[page->page_no].page_obj_id = FTL_DF_OBJ_ID_INVALID;
+	cache->l2_pgs_avail++;
+	ftl_mempool_put(cache->l2_ctx_pool, page);
+}
+
+static inline uint64_t
+ftl_l2p_cache_page_get_bdev_offset(struct ftl_l2p_cache *cache,
+				   struct ftl_l2p_page *page)
+{
+	return cache->cache_layout_offset + page->page_no;
+}
+
+static inline struct spdk_bdev_desc *
+ftl_l2p_cache_get_bdev_desc(struct ftl_l2p_cache *cache)
+{
+	return cache->cache_layout_bdev_desc;
+}
+
+static inline struct spdk_io_channel *
+ftl_l2p_cache_get_bdev_iochannel(struct ftl_l2p_cache *cache)
+{
+	return cache->cache_layout_ioch;
+}
+
+static struct ftl_l2p_page *
+ftl_l2p_cache_page_alloc(struct ftl_l2p_cache *cache, size_t page_no)
+{
+	struct ftl_l2p_page *page = ftl_mempool_get(cache->l2_ctx_pool);
+	ftl_bug(!page);
+
+	cache->l2_pgs_avail--;
+
+	memset(page, 0, sizeof(*page));
+
+	page->obj_id = ftl_mempool_get_df_obj_id(cache->l2_ctx_pool, page);
+
+	page->page_buffer = (char *)ftl_md_get_buffer(cache->l1_md) + ftl_mempool_get_df_obj_index(
+				    cache->l2_ctx_pool, page) * FTL_BLOCK_SIZE;
+
+	TAILQ_INIT(&page->ppe_list);
+
+	page->page_no = page_no;
+	page->state = L2P_CACHE_PAGE_INIT;
+
+	return page;
 }
 
 static inline ftl_addr
@@ -602,6 +668,15 @@ ftl_l2p_cache_set(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr)
 	ftl_l2p_cache_set_addr(dev, cache, page, lba, addr);
 }
 
+static struct ftl_l2p_page *
+page_allocate(struct ftl_l2p_cache *cache, uint64_t page_no)
+{
+	struct ftl_l2p_page *page = ftl_l2p_cache_page_alloc(cache, page_no);
+	ftl_l2p_cache_page_insert(cache, page);
+
+	return page;
+}
+
 static bool
 page_set_is_done(struct ftl_l2p_page_set *page_set)
 {
@@ -652,12 +727,192 @@ page_set_end(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
 	ftl_mempool_put(cache->page_sets_pool, page_set);
 }
 
+static void
+page_in_io_complete(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+		    struct ftl_l2p_page *page, bool success)
+{
+	struct ftl_l2p_page_set *page_set;
+	struct ftl_l2p_page_wait_ctx *pentry;
+
+	cache->ios_in_flight--;
+
+	assert(0 == page->pin_ref_cnt);
+	assert(L2P_CACHE_PAGE_INIT == page->state);
+	assert(false == page->on_lru_list);
+
+	if (spdk_likely(success)) {
+		page->state = L2P_CACHE_PAGE_READY;
+	}
+
+	while ((pentry = TAILQ_FIRST(&page->ppe_list))) {
+		TAILQ_REMOVE(&page->ppe_list, pentry, list_entry);
+
+		page_set = pentry->parent;
+
+		assert(false == pentry->pg_pin_completed);
+
+		if (success) {
+			ftl_l2p_cache_page_pin(cache, page);
+			page_set->pinned_cnt++;
+			pentry->pg_pin_completed = true;
+		} else {
+			page_set->pin_fault_cnt++;
+		}
+
+		/* Check if page_set is done */
+		if (page_set_is_done(page_set)) {
+			page_set_end(dev, cache, page_set);
+		}
+	}
+
+	if (spdk_unlikely(!success)) {
+		ftl_bug(page->on_lru_list);
+		ftl_l2p_cache_page_remove(cache, page);
+	}
+}
+
+static void
+page_in_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_l2p_page *page = cb_arg;
+	struct ftl_l2p_cache *cache = page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+
+	spdk_bdev_free_io(bdev_io);
+	page_in_io_complete(dev, cache, page, success);
+}
+
+static void
+page_in_io(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache, struct ftl_l2p_page *page)
+{
+	struct spdk_io_channel *ioch;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_io_wait_entry *bdev_io_wait;
+	int rc;
+	page->ctx.cache = cache;
+
+	rc = ftl_nv_cache_bdev_read_blocks_with_md(cache->dev, ftl_l2p_cache_get_bdev_desc(cache),
+			ftl_l2p_cache_get_bdev_iochannel(cache),
+			page->page_buffer, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
+			1, page_in_io_cb, page);
+	cache->ios_in_flight++;
+	if (spdk_likely(0 == rc)) {
+		return;
+	}
+
+	if (rc == -ENOMEM) {
+		ioch = ftl_l2p_cache_get_bdev_iochannel(cache);
+		bdev = spdk_bdev_desc_get_bdev(ftl_l2p_cache_get_bdev_desc(cache));
+		bdev_io_wait = &page->ctx.bdev_io_wait;
+		bdev_io_wait->bdev = bdev;
+		bdev_io_wait->cb_fn = page_in_io_retry;
+		bdev_io_wait->cb_arg = page;
+
+		rc = spdk_bdev_queue_io_wait(bdev, ioch, bdev_io_wait);
+		ftl_bug(rc);
+	} else {
+		ftl_abort();
+	}
+}
+
+static void
+page_in_io_retry(void *arg)
+{
+	struct ftl_l2p_page *page = arg;
+	struct ftl_l2p_cache *cache = page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+
+	cache->ios_in_flight--;
+	page_in_io(dev, cache, page);
+}
+
+static void
+page_in(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+	struct ftl_l2p_page_set *page_set, struct ftl_l2p_page_wait_ctx *pentry)
+{
+	struct ftl_l2p_page *page;
+	bool page_in = false;
+
+	/* Get page */
+	page = get_l2p_page_by_df_id(cache, pentry->pg_no);
+	if (!page) {
+		/* Page not allocated yet, do it */
+		page = page_allocate(cache, pentry->pg_no);
+		page_in = true;
+	}
+
+	if (ftl_l2p_cache_page_is_pinnable(page)) {
+		ftl_l2p_cache_page_pin(cache, page);
+		page_set->pinned_cnt++;
+		pentry->pg_pin_issued = true;
+		pentry->pg_pin_completed = true;
+	} else {
+		pentry->pg_pin_issued = true;
+		ftl_l2p_page_queue_wait_ctx(page, pentry);
+	}
+
+	if (page_in) {
+		page_in_io(dev, cache, page);
+	}
+}
+
+static int
+ftl_l2p_cache_process_page_sets(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache)
+{
+	struct ftl_l2p_page_set *page_set;
+	struct ftl_l2p_page_wait_ctx *pentry;
+	uint64_t i;
+
+	page_set = TAILQ_FIRST(&cache->deferred_page_set_list);
+	if (!page_set) {
+		/* No page_set */
+		return -ECHILD;
+	}
+
+	if (page_set->to_pin_cnt > cache->l2_pgs_avail) {
+		/* No enough page to pin, wait */
+		return -EBUSY;
+	}
+	if (cache->ios_in_flight > 512) {
+		/* Too big QD */
+		return -EBUSY;
+	}
+
+	TAILQ_REMOVE(&cache->deferred_page_set_list, page_set, list_entry);
+	page_set->deferred = 0;
+	page_set->locked = 1;
+
+	/* Now we can start pinning */
+	pentry = page_set->entry;
+	for (i = 0; i < page_set->to_pin_cnt; i++, pentry++) {
+		if (!pentry->pg_pin_issued) {
+			page_in(dev, cache, page_set, pentry);
+		}
+	}
+
+	page_set->locked = 0;
+
+	/* Check if page_set is done */
+	if (page_set_is_done(page_set)) {
+		page_set_end(dev, cache, page_set);
+	}
+
+	return 0;
+}
+
 void
 ftl_l2p_cache_process(struct spdk_ftl_dev *dev)
 {
 	struct ftl_l2p_cache *cache = dev->l2p;
+	int i;
 
 	if (spdk_unlikely(cache->state != L2P_CACHE_RUNNING)) {
 		return;
+	}
+
+	for (i = 0; i < 256; i++) {
+		if (ftl_l2p_cache_process_page_sets(dev, cache)) {
+			break;
+		}
 	}
 }
