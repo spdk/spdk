@@ -166,6 +166,48 @@ static inline size_t ftl_l2p_cache_get_page_all_size(void)
 	return sizeof(struct ftl_l2p_page) + ftl_l2p_cache_get_l1_page_size();
 }
 
+static void ftl_l2p_cache_page_remove_rank(struct ftl_l2p_cache *cache, struct ftl_l2p_page *page)
+{
+	assert(page);
+	assert(page->on_rank_list);
+
+	TAILQ_REMOVE(&cache->lru_list, page, list_entry);
+	page->on_rank_list = false;
+}
+
+static void ftl_l2p_cache_page_append_rank(struct ftl_l2p_cache *cache, struct ftl_l2p_page *page)
+{
+	assert(page);
+	assert(!page->on_rank_list);
+
+	TAILQ_INSERT_TAIL(&cache->lru_list, page, list_entry);
+
+	page->on_rank_list = true;
+}
+
+static void ftl_l2p_cache_page_rank_up(struct ftl_l2p_cache *cache, struct ftl_l2p_page *page)
+{
+	if (!page->on_rank_list) {
+		return;
+	}
+
+	ftl_l2p_cache_page_remove_rank(cache, page);
+	ftl_l2p_cache_page_append_rank(cache, page);
+}
+
+static inline ftl_addr ftl_l2p_cache_get_addr(struct spdk_ftl_dev *dev,
+		struct ftl_l2p_cache *cache, struct ftl_l2p_page *page, uint64_t lba)
+{
+	return ftl_addr_load(dev, page->l1, lba % cache->lbas_in_page);
+}
+
+static inline void ftl_l2p_cache_set_addr(struct spdk_ftl_dev *dev,
+		struct ftl_l2p_cache *cache, struct ftl_l2p_page *page,
+		uint64_t lba, ftl_addr addr)
+{
+	ftl_addr_store(dev, page->l1, lba % cache->lbas_in_page, addr);
+}
+
 static void *_ftl_l2p_cache_init(struct spdk_ftl_dev *dev, size_t addr_size, uint64_t l2p_size)
 {
 	struct ftl_l2p_cache *cache;
@@ -194,6 +236,19 @@ static void *_ftl_l2p_cache_init(struct spdk_ftl_dev *dev, size_t addr_size, uin
 	return cache;
 fail_l2_md:
 	free(cache);
+	return NULL;
+}
+
+static struct ftl_l2p_page *
+get_l2p_page_by_df_id(struct ftl_l2p_cache *cache, size_t page_no)
+{
+	struct ftl_l2p_l1_map_entry *me = (struct ftl_l2p_l1_map_entry *)cache->l2;
+	ftl_df_obj_id obj_id = me[page_no].page_obj_id;
+
+	if (obj_id != FTL_DF_OBJ_ID_INVALID) {
+		return ftl_mempool_get_df_ptr(cache->l2_ctx_pool, obj_id);
+	}
+
 	return NULL;
 }
 
@@ -355,6 +410,47 @@ void ftl_l2p_cache_halt(struct spdk_ftl_dev *dev)
 			cache->state = L2P_CACHE_SHTDW_DONE;
 		}
 	}
+}
+
+static inline struct ftl_l2p_page *get_page(struct ftl_l2p_cache *cache, uint64_t lba)
+{
+	return get_l2p_page_by_df_id(cache, lba / cache->lbas_in_page);
+}
+
+static inline bool ftl_l2p_cache_running(struct ftl_l2p_cache *cache)
+{
+	return cache->state == L2P_CACHE_RUNNING;
+}
+
+ftl_addr ftl_l2p_cache_get(struct spdk_ftl_dev *dev, uint64_t lba)
+{
+	assert(dev->num_lbas > lba);
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+	struct ftl_l2p_page *page = get_page(cache, lba);
+
+	ftl_bug(!page);
+	assert(ftl_l2p_cache_running(cache));
+	assert(page->pin_ref_cnt);
+
+	ftl_l2p_cache_page_rank_up(cache, page);
+	ftl_addr addr = ftl_l2p_cache_get_addr(dev, cache, page, lba);
+
+	return addr;
+}
+
+void ftl_l2p_cache_set(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr)
+{
+	assert(dev->num_lbas > lba);
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+	struct ftl_l2p_page *page = get_page(cache, lba);
+
+	ftl_bug(!page);
+	assert(ftl_l2p_cache_running(cache));
+	assert(page->pin_ref_cnt);
+
+	page->updates++;
+	ftl_l2p_cache_page_rank_up(cache, page);
+	ftl_l2p_cache_set_addr(dev, cache, page, lba, addr);
 }
 
 void ftl_l2p_cache_process(struct spdk_ftl_dev *dev)
