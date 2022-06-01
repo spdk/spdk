@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 #include "utils/ftl_defs.h"
+#include "utils/ftl_df.h"
 
 /* Size of superblock on NV cache, make it bigger for future fields */
 #define FTL_SUPERBLOCK_SIZE (128ULL * KiB)
@@ -67,6 +68,7 @@ struct ftl_superblock_md_region {
 	uint32_t		version;
 	uint64_t		blk_offs;
 	uint64_t		blk_sz;
+	ftl_df_obj_id	df_next;
 };
 
 struct ftl_superblock_shm {

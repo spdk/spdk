@@ -385,6 +385,7 @@ void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	// md layout isn't initialized yet.
 	// empty region list => all regions in the default location
 	sb->md_layout_head.type = ftl_layout_region_type_invalid;
+	sb->md_layout_head.df_next = FTL_DF_OBJ_ID_INVALID;
 
 	sb->header.crc = get_sb_crc(sb);
 
