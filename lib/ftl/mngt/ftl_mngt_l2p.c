@@ -45,3 +45,9 @@ ftl_mngt_clear_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	ftl_l2p_clear(dev, l2p_cb, mngt);
 }
+
+void
+ftl_mngt_persist_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_l2p_persist(dev, l2p_cb, mngt);
+}

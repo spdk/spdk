@@ -24,6 +24,7 @@
 struct ftl_l2p_cache_page_io_ctx {
 	struct ftl_l2p_cache *cache;
 	uint64_t updates;
+	spdk_bdev_io_completion_cb cb;
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
@@ -510,6 +511,99 @@ ftl_l2p_cache_deinit(struct spdk_ftl_dev *dev)
 }
 
 static void
+process_init_ctx(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+		 ftl_l2p_cb cb, void *cb_ctx)
+{
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	assert(NULL == ctx->cb_ctx);
+	assert(0 == cache->l2_pgs_evicting);
+
+	memset(ctx, 0, sizeof(*ctx));
+
+	ctx->cb = cb;
+	ctx->cb_ctx = cb_ctx;
+}
+
+static void
+process_finish(struct ftl_l2p_cache *cache)
+{
+	struct ftl_l2p_cache_process_ctx ctx = cache->mctx;
+
+	assert(cache->l2_pgs_avail == cache->l2_pgs_resident_max);
+	assert(0 == ctx.qd);
+
+	memset(&cache->mctx, 0, sizeof(cache->mctx));
+	ctx.cb(cache->dev, ctx.status, ctx.cb_ctx);
+}
+
+static void process_page_out_retry(void *_page);
+static void process_persist(struct ftl_l2p_cache *cache);
+
+static void
+process_persist_page_out_cb(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct ftl_l2p_page *page = arg;
+	struct ftl_l2p_cache *cache = page->ctx.cache;
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	assert(bdev_io);
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		ctx->status = -EIO;
+	}
+
+	ftl_l2p_cache_page_remove(cache, page);
+
+	ctx->qd--;
+	process_persist(cache);
+}
+
+static void
+process_page_out(struct ftl_l2p_page *page, spdk_bdev_io_completion_cb cb)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_io_wait_entry *bdev_io_wait;
+	struct ftl_l2p_cache *cache = page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+	int rc;
+
+	assert(page->page_buffer);
+
+	rc = ftl_nv_cache_bdev_write_blocks_with_md(dev, ftl_l2p_cache_get_bdev_desc(cache),
+			ftl_l2p_cache_get_bdev_iochannel(cache),
+			page->page_buffer, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
+			1, cb, page);
+
+	if (spdk_likely(0 == rc)) {
+		return;
+	}
+
+	if (rc == -ENOMEM) {
+		bdev = spdk_bdev_desc_get_bdev(ftl_l2p_cache_get_bdev_desc(cache));
+		bdev_io_wait = &page->ctx.bdev_io_wait;
+		bdev_io_wait->bdev = bdev;
+		bdev_io_wait->cb_fn = process_page_out_retry;
+		bdev_io_wait->cb_arg = page;
+		page->ctx.cb = cb;
+
+		rc = spdk_bdev_queue_io_wait(bdev, ftl_l2p_cache_get_bdev_iochannel(cache), bdev_io_wait);
+		ftl_bug(rc);
+	} else {
+		ftl_abort();
+	}
+}
+
+static void
+process_page_out_retry(void *_page)
+{
+	struct ftl_l2p_page *page = _page;
+
+	process_page_out(page, page->ctx.cb);
+}
+
+static void
 clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 {
 	ftl_l2p_cb cb = md->owner.private;
@@ -529,6 +623,48 @@ ftl_l2p_cache_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 	md->owner.private = cb;
 
 	ftl_md_clear(md, invalid_addr, NULL);
+}
+
+static void
+process_persist(struct ftl_l2p_cache *cache)
+{
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	while (ctx->idx < cache->num_pages && ctx->qd < 64) {
+		struct ftl_l2p_page *page = get_l2p_page_by_df_id(cache, ctx->idx);
+		ctx->idx++;
+
+		if (!page) {
+			continue;
+		}
+
+		if (page->on_lru_list) {
+			ftl_l2p_cache_lru_remove_page(cache, page);
+		}
+
+		if (page->updates) {
+			/* Need to persist the page */
+			page->state = L2P_CACHE_PAGE_PERSISTING;
+			page->ctx.cache = cache;
+			ctx->qd++;
+			process_page_out(page, process_persist_page_out_cb);
+		} else {
+			ftl_l2p_cache_page_remove(cache, page);
+		}
+	}
+
+	if (0 == ctx->qd) {
+		process_finish(cache);
+	}
+}
+
+void
+ftl_l2p_cache_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+
+	process_init_ctx(dev, cache, cb, cb_ctx);
+	process_persist(cache);
 }
 
 bool

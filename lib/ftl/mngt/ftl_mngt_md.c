@@ -138,9 +138,14 @@ ftl_mngt_persist_nv_cache_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_pro
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 }
 
+static void
+ftl_mngt_persist_vld_map_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_VALID_MAP);
+}
+
 void
-ftl_mngt_persist_band_info_metadata(
-	struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+ftl_mngt_persist_band_info_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_BAND_MD);
 }
@@ -161,6 +166,61 @@ get_sb_crc(struct ftl_superblock *sb)
 	crc = spdk_crc32c_update(buffer, size, crc);
 
 	return crc;
+}
+
+static void
+ftl_mngt_persist_super_block(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	dev->sb->overprovisioning = dev->conf.overprovisioning;
+	dev->sb->gc_info = dev->sb_shm->gc_info;
+	dev->sb->header.crc = get_sb_crc(dev->sb);
+	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
+}
+
+#ifdef SPDK_FTL_VSS_EMU
+static void
+ftl_mngt_persist_vss(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_VSS);
+}
+#endif
+
+/*
+ * Persists all necessary metadata (band state, P2L, etc) during FTL's clean shutdown.
+ */
+static const struct ftl_mngt_process_desc desc_persist = {
+	.name = "Persist metadata",
+	.steps = {
+		{
+			.name = "Persist NV cache metadata",
+			.action = ftl_mngt_persist_nv_cache_metadata,
+		},
+		{
+			.name = "Persist valid map metadata",
+			.action = ftl_mngt_persist_vld_map_metadata,
+		},
+		{
+			.name = "persist band info metadata",
+			.action = ftl_mngt_persist_band_info_metadata,
+		},
+		{
+			.name = "Persist superblock",
+			.action = ftl_mngt_persist_super_block,
+		},
+#ifdef SPDK_FTL_VSS_EMU
+		{
+			.name = "Persist VSS metadata",
+			.action = ftl_mngt_persist_vss,
+		},
+#endif
+		{}
+	}
+};
+
+void
+ftl_mngt_persist_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_mngt_call_process(mngt, &desc_persist);
 }
 
 void
@@ -199,6 +259,19 @@ ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	dev->sb_shm->shm_clean = false;
 	sb->header.crc = get_sb_crc(sb);
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
+}
+
+void
+ftl_mngt_set_clean(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_superblock *sb = dev->sb;
+
+	sb->clean = 1;
+	dev->sb_shm->shm_clean = false;
+	sb->header.crc = get_sb_crc(sb);
+	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
+
+	dev->sb_shm->shm_ready = false;
 }
 
 /*
