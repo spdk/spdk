@@ -43,6 +43,7 @@ enum ftl_band_state {
 typedef void (*ftl_band_state_change_fn)(struct ftl_band *band);
 typedef void (*ftl_band_ops_cb)(struct ftl_band *band, void *ctx, bool status);
 typedef void (*ftl_band_md_cb)(struct ftl_band *band, void *ctx, enum ftl_md_status status);
+typedef void (*ftl_band_validate_md_cb)(struct ftl_band *band, bool valid);
 
 struct ftl_band_md {
 	/* Band iterator for writing */
@@ -132,6 +133,9 @@ struct ftl_band {
 
 	/* For writing metadata */
 	struct ftl_md_io_entry_ctx	md_persist_entry_ctx;
+
+	/* Callback function for validate md */
+	ftl_band_validate_md_cb		validate_cb;
 };
 
 
