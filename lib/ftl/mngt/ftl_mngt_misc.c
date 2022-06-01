@@ -221,7 +221,8 @@ void ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	FTL_NOTICELOG(dev, "Scrubbing %lluGiB\n", region->current.blocks * FTL_BLOCK_SIZE / GiB);
 
 	/* Need to scrub user data, so in case of dirty shutdown the recovery won't
-	 * pull in data during open chunks recovery from any previous instance
+	 * pull in data during open chunks recovery from any previous instance (since during short
+	 * tests it's very likely that chunks seq_id will be in line between new head md and old VSS)
 	 */
 	md->cb = user_clear_cb;
 	md->owner.cb_ctx = mngt;

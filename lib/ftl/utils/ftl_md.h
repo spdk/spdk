@@ -86,10 +86,12 @@ union ftl_md_vss {
 	struct {
 		uint64_t	start_lba;
 		uint64_t	num_blocks;
+		uint64_t	seq_id;
 	} unmap;
 
 	struct {
 		uint64_t	lba;
+		uint64_t	seq_id;
 	} nv_cache;
 };
 

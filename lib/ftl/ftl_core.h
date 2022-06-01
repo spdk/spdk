@@ -246,6 +246,8 @@ bool ftl_needs_defrag(struct spdk_ftl_dev *dev);
 
 struct ftl_band *ftl_band_get_next_free(struct spdk_ftl_dev *dev);
 
+void ftl_recover_max_seq(struct spdk_ftl_dev *dev);
+
 static inline uint64_t
 ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 {
@@ -374,11 +376,16 @@ ftl_is_append_supported(const struct spdk_ftl_dev *dev)
 	return dev->conf.use_append;
 }
 
+static inline uint64_t ftl_get_next_seq_id(struct spdk_ftl_dev *dev)
+{
+	return ++dev->sb->seq_id;
+}
+
 static inline size_t
 ftl_lba_map_num_blocks(const struct spdk_ftl_dev *dev)
 {
-	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) * sizeof(uint64_t),
-				    FTL_BLOCK_SIZE);
+	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) *
+				    sizeof(struct ftl_lba_map_entry), FTL_BLOCK_SIZE);
 }
 
 static inline size_t

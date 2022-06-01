@@ -241,6 +241,43 @@ void ftl_mngt_decorate_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	ftl_mngt_next_step(mngt);
 }
 
+void
+ftl_recover_max_seq(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *band;
+	size_t band_close_seq_id = 0, band_open_seq_id = 0;
+	size_t chunk_close_seq_id = 0, chunk_open_seq_id = 0;
+
+	TAILQ_FOREACH(band, &dev->shut_bands, queue_entry) {
+		band_open_seq_id = spdk_max(band_open_seq_id, band->md->seq);
+		band_close_seq_id = spdk_max(band_close_seq_id, band->md->close_seq_id);
+	}
+	ftl_nv_cache_get_max_seq_id(&dev->nv_cache, &chunk_open_seq_id, &chunk_close_seq_id);
+
+
+	dev->nv_cache.last_seq_id = chunk_close_seq_id;
+	dev->writer_gc.last_seq_id = band_close_seq_id;
+	dev->writer_user.last_seq_id = band_close_seq_id;
+
+	size_t max = 0;
+	max = spdk_max(max, band_open_seq_id);
+	max = spdk_max(max, band_close_seq_id);
+	max = spdk_max(max, chunk_open_seq_id);
+	max = spdk_max(max, chunk_close_seq_id);
+
+	dev->sb->seq_id = max;
+}
+
+static int _band_cmp(const void *_a, const void *_b)
+{
+	struct ftl_band *a, *b;
+
+	a = *((struct ftl_band **)_a);
+	b = *((struct ftl_band **)_b);
+
+	return a->md->seq - b->md->seq;
+}
+
 static struct ftl_band *next_high_prio_band(struct spdk_ftl_dev *dev)
 {
 	struct ftl_band *result = NULL, *band;
@@ -304,6 +341,8 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	size_t i, num_open = 0, num_shut = 0;
 	bool fast_startup = ftl_fast_startup(dev);
 
+	ftl_recover_max_seq(dev);
+
 	TAILQ_FOREACH_SAFE(band, &dev->free_bands, queue_entry, temp_band) {
 		band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
 	}
@@ -330,6 +369,8 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	}
 
 	/* Assign open bands to writers and alloc necessary resources */
+	qsort(open_bands, num_open, sizeof(open_bands[0]), _band_cmp);
+
 	for (i = 0; i < num_open; ++i) {
 		band = open_bands[i];
 

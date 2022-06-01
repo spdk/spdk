@@ -64,6 +64,8 @@ struct ftl_writer {
 
 	/* Which type of band the writer uses */
 	enum ftl_band_type writer_type;
+
+	uint64_t last_seq_id;
 };
 
 bool ftl_writer_is_halted(struct ftl_writer *writer);

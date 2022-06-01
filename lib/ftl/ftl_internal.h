@@ -83,8 +83,13 @@ enum ftl_md_status {
 	FTL_MD_INVALID_SIZE
 };
 
+struct ftl_lba_map_entry {
+	uint64_t lba;
+	uint64_t seq_id;
+};
+
 /* Number of LBAs that could be stored in a single block */
-#define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
+#define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(struct ftl_lba_map_entry))
 
 struct ftl_lba_map {
 	/* Number of valid LBAs */
@@ -98,7 +103,7 @@ struct ftl_lba_map {
 
 	/* LBA map (only valid for open/relocating bands) */
 	union {
-		uint64_t	*band_map;
+		struct ftl_lba_map_entry	*band_map;
 		void						*chunk_map;
 	};
 

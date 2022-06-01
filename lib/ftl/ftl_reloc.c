@@ -312,9 +312,10 @@ static void move_advance_rq(struct ftl_rq *rq)
 		assert(offset < ftl_band_num_usable_blocks(band));
 		assert(ftl_band_block_offset_valid(band, offset));
 
-		entry->lba = band->lba_map.band_map[offset];
+		entry->lba = band->lba_map.band_map[offset].lba;
 		entry->addr = rq->io.addr;
 		entry->owner.priv = band;
+		entry->seq_id = band->lba_map.band_map[offset].seq_id;
 
 		entry++;
 		rq->io.addr = ftl_band_next_addr(band, rq->io.addr, 1);
@@ -340,6 +341,7 @@ static void move_init_entries(struct ftl_rq *rq, uint64_t idx, uint64_t count)
 		iter->addr = FTL_ADDR_INVALID;
 		iter->owner.priv = NULL;
 		iter->lba = FTL_LBA_INVALID;
+		iter->seq_id = 0;
 		iter++;
 		i++;
 	}
@@ -376,6 +378,7 @@ move_rq_pad(struct ftl_rq *rq, struct ftl_band *band)
 		entry->addr = rq->io.addr;
 		entry->owner.priv = band;
 		entry->lba = FTL_LBA_INVALID;
+		entry->seq_id = 0;
 		entry++;
 		rq->io.addr = ftl_band_next_addr(band, rq->io.addr, 1);
 		band->owner.cnt++;

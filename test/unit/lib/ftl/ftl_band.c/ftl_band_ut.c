@@ -268,14 +268,14 @@ test_band_set_addr(void)
 
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
-	CU_ASSERT_EQUAL(lba_map->band_map[offset], TEST_LBA);
+	CU_ASSERT_EQUAL(lba_map->band_map[offset].lba, TEST_LBA);
 	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset));
 
 	addr += g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
-	CU_ASSERT_EQUAL(lba_map->band_map[offset], TEST_LBA + 1);
+	CU_ASSERT_EQUAL(lba_map->band_map[offset].lba, TEST_LBA + 1);
 	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset));
 	addr -= g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);

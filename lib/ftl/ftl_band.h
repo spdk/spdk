@@ -99,6 +99,12 @@ struct ftl_band_md {
 	/* Band type set during opening */
 	enum ftl_band_type		type;
 
+	/* Sequence number */
+	uint64_t				seq;
+
+	/* Sequence ID when band was closed */
+	uint64_t				close_seq_id;
+
 	/* Number of defrag cycles */
 	uint64_t				wr_cnt;
 

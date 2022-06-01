@@ -410,6 +410,7 @@ ftl_band_close(struct ftl_band *band)
 	uint64_t num_blocks = ftl_tail_md_num_blocks(dev);
 
 	/* Write LBA map first, after completion, set the state to close on nvcache, then internally */
+	band->md->close_seq_id = ftl_get_next_seq_id(dev);
 	ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
 	ftl_basic_rq_init(dev, &band->metadata_rq, metadata, num_blocks);
 	ftl_basic_rq_set_owner(&band->metadata_rq, band_map_write_cb, band);
@@ -449,6 +450,7 @@ ftl_band_free(struct ftl_band *band)
 	if (!ftl_is_zoned(band->dev)) {
 		memcpy(lba_map->band_dma_md, band->md, region->entry_size * FTL_BLOCK_SIZE);
 		lba_map->band_dma_md->state = FTL_BAND_STATE_FREE;
+		lba_map->band_dma_md->close_seq_id = 0;
 		lba_map->band_dma_md->lba_map_checksum = 0;
 
 		ftl_md_persist_entry(md, band->id, lba_map->band_dma_md, ftl_md_get_vss_buffer(md), band_free_cb, band,

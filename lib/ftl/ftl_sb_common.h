@@ -81,6 +81,7 @@ struct ftl_superblock_shm {
 		bool			in_progress;
 		uint64_t		start_lba;
 		uint64_t		num_blocks;
+		uint64_t		seq_id;
 	} trim;
 
 	struct ftl_superblock_gc_info gc_info;

@@ -45,6 +45,9 @@ struct ftl_superblock {
 
 	struct spdk_uuid				uuid;
 
+	/* Current sequence number */
+	uint64_t						seq_id;
+
 	/* Flag describing clean shutdown */
 	uint64_t						clean;
 

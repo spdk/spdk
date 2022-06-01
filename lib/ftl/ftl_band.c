@@ -103,6 +103,7 @@ _ftl_band_set_free(struct ftl_band *band)
 
 	/* Remove the band from the closed band list */
 	TAILQ_INSERT_TAIL(&dev->free_bands, band, queue_entry);
+	band->md->close_seq_id = 0;
 	band->reloc = false;
 
 	dev->num_free++;
@@ -241,7 +242,7 @@ ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr)
 
 	offset = ftl_band_block_offset_from_addr(band, addr);
 
-	lba_map->band_map[offset] = lba;
+	lba_map->band_map[offset].lba = lba;
 	lba_map->num_vld++;
 	ftl_bitmap_set(band->dev->valid_map, addr);
 }
@@ -429,7 +430,7 @@ ftl_band_alloc_lba_map(struct ftl_band *band)
 	/* Set the P2L to FTL_LBA_INVALID */
 	memset(lba_map->dma_buf, -1, FTL_BLOCK_SIZE * ftl_lba_map_num_blocks(band->dev));
 
-	lba_map->band_map = lba_map->dma_buf;
+	lba_map->band_map = (struct ftl_lba_map_entry *)(lba_map->dma_buf);
 
 	ftl_band_acquire_lba_map(band);
 	return 0;
@@ -453,7 +454,7 @@ int ftl_band_open_lba_map(struct ftl_band *band)
 	lba_map->dma_buf = ftl_mempool_claim_df(dev->lba_pool,
 						band->md->df_lba_map);
 
-	lba_map->band_map = lba_map->dma_buf;
+	lba_map->band_map = (struct ftl_lba_map_entry *)(lba_map->dma_buf);
 
 	ftl_band_acquire_lba_map(band);
 	return 0;
@@ -490,12 +491,18 @@ ftl_band_remove_zone(struct ftl_band *band, struct ftl_zone *zone)
 int
 ftl_band_write_prep(struct ftl_band *band)
 {
+	struct spdk_ftl_dev *dev = band->dev;
+
 	if (ftl_band_alloc_lba_map(band)) {
 		return -1;
 	}
 
 	ftl_band_iter_init(band);
 
+	band->md->seq = ftl_get_next_seq_id(dev);
+
+	FTL_DEBUGLOG(dev, "Band to write, id %u seq %"PRIu64"\n", band->id,
+		     band->md->seq);
 	return 0;
 }
 

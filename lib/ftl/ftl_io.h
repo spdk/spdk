@@ -229,6 +229,9 @@ struct ftl_rq_entry {
 	/* Logical block address */
 	uint64_t lba;
 
+	/* Sequence id of original chunk where this user data was written to */
+	uint64_t seq_id;
+
 	/* Index of this entry within FTL request */
 	const uint64_t index;
 

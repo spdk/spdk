@@ -97,6 +97,12 @@ enum ftl_chunk_state {
 };
 
 struct ftl_nv_cache_chunk_md {
+	/* Sequence id of writing */
+	uint64_t seq_id;
+
+	/* Sequence ID when chunk was closed */
+	uint64_t close_seq_id;
+
 	/* Current lba to write */
 	uint32_t write_pointer;
 
@@ -223,6 +229,8 @@ struct ftl_nv_cache {
 	uint64_t chunk_compaction_threshold;
 
 	struct ftl_nv_cache_chunk *chunks;
+
+	uint64_t last_seq_id;
 };
 
 int ftl_nv_cache_init(struct spdk_ftl_dev *dev);
@@ -259,6 +267,15 @@ bool ftl_nv_cache_is_halted(struct ftl_nv_cache *nv_cache);
 size_t ftl_nv_cache_chunk_tail_md_num_blocks(const struct ftl_nv_cache *nv_cache);
 
 uint64_t chunk_tail_md_offset(struct ftl_nv_cache *nv_cache);
+/**
+ * @brief Iterates over NV caches chunks and returns the max open and closed sequence id
+ *
+ * @param nv_cache FLT NV cache
+ * @param[out] open_seq_id Max detected open sequence id
+ * @param[out] close_seq_id Max detected clos sequence id
+ */
+void ftl_nv_cache_get_max_seq_id(struct ftl_nv_cache *nv_cache, uint64_t *open_seq_id,
+				 uint64_t *close_seq_id);
 
 typedef int (*ftl_chunk_md_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx);
 
