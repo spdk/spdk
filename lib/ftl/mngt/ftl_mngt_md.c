@@ -158,6 +158,12 @@ void ftl_mngt_persist_nv_cache_metadata(
 	persist(dev, mngt, ftl_layout_region_type_nvc_md);
 }
 
+static void ftl_mngt_persist_vld_map_metadata(
+	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	persist(dev, mngt, ftl_layout_region_type_valid_map);
+}
+
 void ftl_mngt_persist_band_info_metadata(
 	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -179,6 +185,58 @@ static uint32_t get_sb_crc(struct ftl_superblock *sb)
 	crc = spdk_crc32c_update(buffer, size, crc);
 
 	return crc;
+}
+
+static void ftl_mngt_persist_super_block(
+	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	dev->sb->lba_rsvd = dev->conf.lba_rsvd;
+	dev->sb->use_append = dev->conf.use_append;
+	dev->sb->gc_info = dev->sb_shm->gc_info;
+	dev->sb->header.crc = get_sb_crc(dev->sb);
+	persist(dev, mngt, ftl_layout_region_type_sb);
+}
+
+#ifdef SPDK_FTL_VSS_EMU
+static void ftl_mngt_persist_vss(
+	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	persist(dev, mngt, ftl_layout_region_type_vss);
+}
+#endif
+
+static const struct ftl_mngt_process_desc desc_persist = {
+	.name = "Persist metadata",
+	.steps = {
+		{
+			.name = "Persist NV cache metadata",
+			.action = ftl_mngt_persist_nv_cache_metadata,
+		},
+		{
+			.name = "Persist valid map metadata",
+			.action = ftl_mngt_persist_vld_map_metadata,
+		},
+		{
+			.name = "persist band info metadata",
+			.action = ftl_mngt_persist_band_info_metadata,
+		},
+		{
+			.name = "Persist superblock",
+			.action = ftl_mngt_persist_super_block,
+		},
+#ifdef SPDK_FTL_VSS_EMU
+		{
+			.name = "Persist VSS metadata",
+			.action = ftl_mngt_persist_vss,
+		},
+#endif
+		{}
+	}
+};
+
+void ftl_mngt_persist_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_mngt_call(mngt, &desc_persist);
 }
 
 void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
@@ -218,6 +276,18 @@ void ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	dev->sb_shm->shm_clean = false;
 	sb->header.crc = get_sb_crc(sb);
 	persist(dev, mngt, ftl_layout_region_type_sb);
+}
+
+void ftl_mngt_set_clean(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_superblock *sb = dev->sb;
+
+	sb->clean = 1;
+	dev->sb_shm->shm_clean = false;
+	sb->header.crc = get_sb_crc(sb);
+	persist(dev, mngt, ftl_layout_region_type_sb);
+
+	dev->sb_shm->shm_ready = false;
 }
 
 static const struct ftl_mngt_process_desc desc_init_sb = {

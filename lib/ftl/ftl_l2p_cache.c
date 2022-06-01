@@ -506,6 +506,50 @@ void ftl_l2p_cache_deinit(struct spdk_ftl_dev *dev)
 	dev->l2p = 0;
 }
 
+static void process_init_ctx(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+			     ftl_l2p_cb cb, void *cb_ctx)
+{
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	assert(NULL == ctx->cb_ctx);
+	assert(0 == cache->current_qd);
+	assert(0 == cache->l2_pgs_evicting);
+
+	memset(ctx, 0, sizeof(*ctx));
+
+	ctx->cb = cb;
+	ctx->cb_ctx = cb_ctx;
+}
+
+static void process_finish(struct ftl_l2p_cache *cache)
+{
+	struct ftl_l2p_cache_process_ctx ctx = cache->mctx;
+
+	assert(cache->l2_pgs_avail == cache->l2_pgs_resident_max);
+	assert(0 == ctx.qd);
+
+	memset(&cache->mctx, 0, sizeof(cache->mctx));
+	ctx.cb(cache->dev, ctx.status, ctx.cb_ctx);
+}
+
+static void process_page_out(struct ftl_l2p_page *page, spdk_bdev_io_completion_cb cb)
+{
+	struct ftl_l2p_cache *cache = page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+	int rc;
+
+	assert(page->l1);
+
+	rc = ftl_nv_cache_bdev_write_blocks_with_md(dev, ftl_l2p_cache_get_bdev_desc(cache),
+			ftl_l2p_cache_get_bdev_iochannel(cache),
+			page->l1, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
+			1, cb, page);
+
+	if (rc) {
+		cb(NULL, false, page);
+	}
+}
+
 static void clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 {
 	md->owner.cb(dev, status, md->owner.cb_ctx);
@@ -524,6 +568,68 @@ void ftl_l2p_cache_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 	ftl_addr invalid_addr = FTL_ADDR_INVALID;
 
 	ftl_md_clear(md, &invalid_addr, sizeof(invalid_addr), NULL);
+}
+
+static void process_persist(struct ftl_l2p_cache *cache);
+
+static void process_persist_page_out_cb(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct ftl_l2p_page *page = (struct ftl_l2p_page *)arg;
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)page->ctx.cache;
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	if (bdev_io) {
+		spdk_bdev_free_io(bdev_io);
+	}
+	if (!success) {
+		ctx->status = -EIO;
+	}
+
+	ftl_l2p_cache_page_remove(cache, page);
+
+	ctx->qd--;
+	process_persist(cache);
+}
+
+static void process_persist(struct ftl_l2p_cache *cache)
+{
+	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
+
+	while (ctx->idx < cache->num_pages && ctx->qd < 64) {
+		struct ftl_l2p_page *page = get_l2p_page_by_df_id(cache, ctx->idx);
+		if (!page) {
+			ctx->idx++;
+			continue;
+		}
+
+		if (page->on_rank_list) {
+			ftl_l2p_cache_page_remove_rank(cache, page);
+		}
+
+		if (page->updates) {
+			/* Need to persist the page */
+			page->state = L2P_CACHE_PAGE_IN_PERSIST;
+			page->ctx.cache = cache;
+			ctx->qd++;
+			process_page_out(page, process_persist_page_out_cb);
+		} else {
+			ftl_l2p_cache_page_remove(cache, page);
+		}
+
+		ctx->idx++;
+	}
+
+	if (0 == ctx->qd) {
+		process_finish(cache);
+	}
+}
+
+void ftl_l2p_cache_persist(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
+{
+	struct ftl_l2p_cache *cache = (struct ftl_l2p_cache *)dev->l2p;
+
+	process_init_ctx(dev, cache, cb, cb_ctx);
+	process_persist(cache);
 }
 
 bool ftl_l2p_cache_is_halted(struct spdk_ftl_dev *dev)

@@ -46,6 +46,18 @@ static const struct ftl_mngt_process_desc desc_shutdown = {
 			.action = ftl_mngt_stop_task_core
 		},
 		{
+			.name = "Persist L2P",
+			.action = ftl_mngt_persist_l2p
+		},
+		{
+			.name = "Persist metadata",
+			.action = ftl_mngt_persist_md
+		},
+		{
+			.name = "Set FTL clean state",
+			.action = ftl_mngt_set_clean
+		},
+		{
 			.name = "Dump statistics",
 			.action = ftl_mngt_dump_stats
 		},
