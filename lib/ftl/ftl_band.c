@@ -139,6 +139,8 @@ _ftl_band_set_closed_cb(struct ftl_band *band, bool valid)
 		band->owner.state_change_fn(band);
 	}
 
+	ftl_p2l_validate_ckpt(band);
+
 	/* Free the lba map if there are no outstanding IOs */
 	ftl_band_release_lba_map(band);
 	assert(band->lba_map.ref_cnt == 0);
@@ -235,7 +237,7 @@ ftl_band_set_type(struct ftl_band *band, enum ftl_band_type type)
 }
 
 void
-ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr)
+ftl_band_set_p2l(struct ftl_band *band, uint64_t lba, ftl_addr addr, uint64_t seq_id)
 {
 	struct ftl_lba_map *lba_map = &band->lba_map;
 	uint64_t offset;
@@ -243,7 +245,13 @@ ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr)
 	offset = ftl_band_block_offset_from_addr(band, addr);
 
 	lba_map->band_map[offset].lba = lba;
-	lba_map->num_vld++;
+	lba_map->band_map[offset].seq_id = seq_id;
+}
+
+void
+ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr)
+{
+	band->lba_map.num_vld++;
 	ftl_bitmap_set(band->dev->valid_map, addr);
 }
 
@@ -470,6 +478,10 @@ ftl_band_release_lba_map(struct ftl_band *band)
 	lba_map->ref_cnt--;
 
 	if (lba_map->ref_cnt == 0) {
+		if (lba_map->p2l_ckpt) {
+			ftl_p2l_ckpt_release(band->dev, lba_map->p2l_ckpt);
+			lba_map->p2l_ckpt = NULL;
+		}
 		ftl_band_free_lba_map(band);
 		ftl_band_free_md_entry(band);
 	}
@@ -497,6 +509,8 @@ ftl_band_write_prep(struct ftl_band *band)
 		return -1;
 	}
 
+	band->lba_map.p2l_ckpt = ftl_p2l_ckpt_acquire(dev);
+	band->md->p2l_md_region = ftl_p2l_ckpt_region_type(band->lba_map.p2l_ckpt);
 	ftl_band_iter_init(band);
 
 	band->md->seq = ftl_get_next_seq_id(dev);

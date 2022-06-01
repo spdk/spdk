@@ -99,6 +99,11 @@ void ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 
 
 	dev->xfer_size = ftl_get_write_unit_size(bdev);
+	if (dev->xfer_size != FTL_NUM_LBA_IN_BLOCK) {
+		FTL_ERRLOG(dev, "Unsupported xfer_size (%"PRIu64")\n", dev->xfer_size);
+		goto error;
+	}
+
 	dev->md_size = spdk_bdev_get_md_size(bdev);
 
 	block_size = spdk_bdev_get_block_size(bdev);

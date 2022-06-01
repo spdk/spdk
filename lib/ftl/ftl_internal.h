@@ -48,16 +48,29 @@
 /* Smallest data unit size */
 #define FTL_BLOCK_SIZE		4096ULL
 
+#define FTL_P2L_VERSION_0	0
+#define FTL_P2L_VERSION_1	1
+
+#define FTL_P2L_VERSION_CURRENT FTL_P2L_VERSION_1
+
 /*
  * This type represents address in the ftl address space. Values from 0 to based bdev size are
  * mapped directly to base device lbas. Values above that represent nv cache lbas.
  */
 typedef uint64_t ftl_addr;
 
+struct ftl_p2l_ckpt;
 struct ftl_band;
 struct spdk_ftl_dev;
 struct ftl_mngt;
 struct ftl_rq;
+
+struct ftl_p2l_sync_ctx {
+	struct ftl_band	*band;
+	uint64_t		page_start;
+	uint64_t		page_end;
+	int				md_region;
+};
 
 enum ftl_md_type {
 	FTL_MD_TYPE_BAND,
@@ -91,6 +104,10 @@ struct ftl_lba_map_entry {
 /* Number of LBAs that could be stored in a single block */
 #define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(struct ftl_lba_map_entry))
 
+struct ftl_p2l_ckpt_page {
+	struct ftl_lba_map_entry    map[FTL_NUM_LBA_IN_BLOCK];
+};
+
 struct ftl_lba_map {
 	/* Number of valid LBAs */
 	size_t					num_vld;
@@ -116,7 +133,56 @@ struct ftl_lba_map {
 
 	/* LBA map DMA buffer (only valid for open/relocating bands) */
 	void					*dma_buf;
+
+	/* P2L checkpointing region */
+	struct ftl_p2l_ckpt		*p2l_ckpt;
 };
+
+int
+ftl_p2l_ckpt_init(struct spdk_ftl_dev *dev);
+
+void
+ftl_p2l_ckpt_deinit(struct spdk_ftl_dev *dev);
+
+void
+ftl_p2l_ckpt_issue(struct ftl_rq *rq);
+
+struct ftl_p2l_ckpt *
+ftl_p2l_ckpt_acquire(struct spdk_ftl_dev *dev);
+
+struct ftl_p2l_ckpt *
+ftl_p2l_ckpt_acquire_region_type(struct spdk_ftl_dev *dev, int region_type);
+
+void
+ftl_p2l_ckpt_release(struct spdk_ftl_dev *dev, struct ftl_p2l_ckpt *ckpt);
+
+enum ftl_layout_region_type
+ftl_p2l_ckpt_region_type(const struct ftl_p2l_ckpt *ckpt);
+
+#if defined(DEBUG)
+void
+ftl_p2l_validate_ckpt(struct ftl_band *band);
+#else
+static inline void
+ftl_p2l_validate_ckpt(struct ftl_band *band)
+{
+}
+#endif
+
+int
+ftl_mngt_p2l_ckpt_get_seq_id(struct spdk_ftl_dev *dev, int md_region);
+
+int
+ftl_mngt_p2l_ckpt_restore(struct ftl_band *band, uint32_t md_region, uint64_t seq_id);
+
+int
+ftl_mngt_p2l_ckpt_restore_clean(struct ftl_band *band);
+
+void
+ftl_mngt_p2l_ckpt_restore_shm_clean(struct ftl_band *band);
+
+void
+ftl_mngt_persist_bands_p2l(struct ftl_mngt *mngt);
 
 struct ftl_reloc *
 ftl_reloc_init(struct spdk_ftl_dev *dev);

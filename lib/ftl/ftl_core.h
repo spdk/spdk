@@ -217,6 +217,14 @@ struct spdk_ftl_dev {
 
 	/* Retry init sequence */
 	bool						init_retry;
+
+	/* P2L checkpointing */
+	struct {
+		/* Free regions */
+		TAILQ_HEAD(, ftl_p2l_ckpt)	free;
+		/* In use regions */
+		TAILQ_HEAD(, ftl_p2l_ckpt)	inuse;
+	} p2l_ckpt;
 };
 
 struct ftl_media_event {
@@ -312,12 +320,8 @@ ftl_addr_get_zone_offset(const struct spdk_ftl_dev *dev, ftl_addr addr)
 static inline uint32_t
 ftl_get_write_unit_size(struct spdk_bdev *bdev)
 {
-	if (spdk_bdev_is_zoned(bdev)) {
-		return spdk_bdev_get_write_unit_size(bdev);
-	}
-
-	/* TODO: this should be passed via input parameter */
-	return 32;
+	/* Full block of P2L map worth of xfer_sz is needed for P2L checkpointing */
+	return FTL_NUM_LBA_IN_BLOCK;
 }
 
 static inline struct spdk_thread *

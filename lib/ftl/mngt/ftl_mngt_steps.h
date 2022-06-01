@@ -136,6 +136,16 @@ void ftl_mngt_init_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_deinit_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_p2l_init_ckpt(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_p2l_deinit_ckpt(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_p2l_wipe(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_p2l_free_bufs(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_p2l_restore_ckpt(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_self_test(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_persist_band_info_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);

@@ -39,6 +39,9 @@
 struct spdk_ftl_dev;
 struct ftl_md;
 
+#define FTL_LAYOUT_REGION_TYPE_P2L_COUNT \
+	(ftl_layout_region_type_p2l_ckpt_max - ftl_layout_region_type_p2l_ckpt_min + 1)
+
 enum ftl_layout_region_type {
 #ifdef SPDK_FTL_VSS_EMU
 	/** VSS region for NV cache VSS emulation */
@@ -69,6 +72,15 @@ enum ftl_layout_region_type {
 
 	/* User data region on the base device */
 	ftl_layout_region_type_data_btm,
+
+	/* P2L checkpointing allows for emulation of VSS on base device.
+	 * 4 entries are needed - 2 for each writer */
+	ftl_layout_region_type_p2l_ckpt_gc,
+	ftl_layout_region_type_p2l_ckpt_min = ftl_layout_region_type_p2l_ckpt_gc,
+	ftl_layout_region_type_p2l_ckpt_gc_next,
+	ftl_layout_region_type_p2l_ckpt_comp,
+	ftl_layout_region_type_p2l_ckpt_comp_next,
+	ftl_layout_region_type_p2l_ckpt_max = ftl_layout_region_type_p2l_ckpt_comp_next,
 
 	ftl_layout_region_type_max,
 
@@ -156,6 +168,12 @@ struct ftl_layout {
 		/* Number of LBAS in memory page */
 		uint64_t lbas_in_page;
 	} l2p;
+
+	/* Organization of P2L checkpoints */
+	struct {
+		/* Number of P2L checkpoint pages */
+		uint64_t ckpt_pages;
+	} p2l;
 
 	struct ftl_layout_region region[ftl_layout_region_type_max];
 

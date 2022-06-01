@@ -42,6 +42,7 @@
 
 #define TEST_BAND_IDX		68
 #define TEST_LBA		0x68676564
+#define TEST_SEQ		0xDEADBEEF
 #define G_GEO_ZONE_SIZE 10000
 #define G_GEO_OPTIMAL_OPEN_ZONES 9
 
@@ -127,8 +128,10 @@ DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, si
 DEFINE_STUB(ftl_reloc_is_defrag_active, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB(ftl_reloc_is_halted, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), true);
+DEFINE_STUB(ftl_p2l_ckpt_acquire, struct ftl_p2l_ckpt *, (struct spdk_ftl_dev *dev), NULL);
 DEFINE_STUB(ftl_mngt_unmap, int, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
 				  spdk_ftl_fn cb, void *cb_cntx), 0);
+DEFINE_STUB_V(ftl_p2l_ckpt_release, (struct spdk_ftl_dev *dev, struct ftl_p2l_ckpt *ckpt));
 
 #ifdef SPDK_CONFIG_PMDK
 DEFINE_STUB_V(pmem_persist, (const void *addr, size_t len));
@@ -267,15 +270,19 @@ test_band_set_addr(void)
 	offset = test_offset_from_addr(addr, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
+	ftl_band_set_p2l(g_band, TEST_LBA, addr, TEST_SEQ);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
 	CU_ASSERT_EQUAL(lba_map->band_map[offset].lba, TEST_LBA);
+	CU_ASSERT_EQUAL(lba_map->band_map[offset].seq_id, TEST_SEQ);
 	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset));
 
 	addr += g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
+	ftl_band_set_p2l(g_band, TEST_LBA + 1, addr, TEST_SEQ + 1);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
 	CU_ASSERT_EQUAL(lba_map->band_map[offset].lba, TEST_LBA + 1);
+	CU_ASSERT_EQUAL(lba_map->band_map[offset].seq_id, TEST_SEQ + 1);
 	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset));
 	addr -= g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);
@@ -297,6 +304,7 @@ test_invalidate_addr(void)
 	offset[0] = test_offset_from_addr(addr, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
+	ftl_band_set_p2l(g_band, TEST_LBA, addr, TEST_SEQ);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
 	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset[0]));
 	ftl_invalidate_addr(g_band->dev, addr);
@@ -305,9 +313,11 @@ test_invalidate_addr(void)
 
 	offset[0] = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
+	ftl_band_set_p2l(g_band, TEST_LBA, addr, TEST_SEQ);
 	addr += g_geo.zone_size;
 	offset[1] = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
+	ftl_band_set_p2l(g_band, TEST_LBA + 1, addr, TEST_SEQ);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
 	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset[0]));
 	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset[1]));

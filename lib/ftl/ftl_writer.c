@@ -127,6 +127,12 @@ get_band(struct ftl_writer *writer)
 			}
 		}
 
+		if (writer->band_num >= FTL_LAYOUT_REGION_TYPE_P2L_COUNT / 2) {
+			/* Maximum number of opened band exceed (we split this
+			 * value between and compaction and GC writer */
+			return NULL;
+		}
+
 		writer->band = ftl_band_get_next_free(writer->dev);
 		if (writer->band) {
 			writer->band_num++;

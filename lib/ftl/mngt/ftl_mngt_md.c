@@ -233,6 +233,21 @@ static void ftl_mngt_persist_vld_map_metadata(
 	persist(dev, mngt, ftl_layout_region_type_valid_map);
 }
 
+static void ftl_mngt_persist_p2l_metadata(
+	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	/* Sync runtime P2L to persist any invalidation that may have happened */
+
+	struct ftl_p2l_sync_ctx *ctx = ftl_mngt_get_step_cntx(mngt);
+
+	/* If enum is changed so ftl_layout_region_type_p2l_ckpt_min == 0, we need the equality check.
+	 * ftl_mngt_persist_bands_p2l will increment the md_region before the step_continue for next regions */
+	if (ctx->md_region <= ftl_layout_region_type_p2l_ckpt_min) {
+		ctx->md_region = ftl_layout_region_type_p2l_ckpt_min;
+	}
+	ftl_mngt_persist_bands_p2l(mngt);
+}
+
 void ftl_mngt_persist_band_info_metadata(
 	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -284,6 +299,11 @@ static const struct ftl_mngt_process_desc desc_persist = {
 		{
 			.name = "Persist valid map metadata",
 			.action = ftl_mngt_persist_vld_map_metadata,
+		},
+		{
+			.name = "Persist P2L metadata",
+			.action = ftl_mngt_persist_p2l_metadata,
+			.arg_size = sizeof(struct ftl_p2l_sync_ctx),
 		},
 		{
 			.name = "persist band info metadata",
@@ -339,6 +359,7 @@ void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	sb->uuid = dev->uuid;
 	sb->clean = 0;
 	dev->sb_shm->shm_clean = false;
+	sb->ckpt_seq_id = 0;
 
 	/* Max 12 IO depth per band relocate */
 	sb->max_reloc_qdepth = 16;

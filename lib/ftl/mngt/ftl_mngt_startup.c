@@ -180,6 +180,19 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 			.action = ftl_mngt_persist_nv_cache_metadata,
 		},
 		{
+			.name = "Initialize P2L checkpointing",
+			.action = ftl_mngt_p2l_init_ckpt,
+			.cleanup = ftl_mngt_p2l_deinit_ckpt
+		},
+		{
+			.name = "Wipe P2L region",
+			.action = ftl_mngt_p2l_wipe,
+		},
+		{
+			.name = "Free P2L region bufs",
+			.action = ftl_mngt_p2l_free_bufs,
+		},
+		{
 			.name = "Set FTL dirty state",
 			.action = ftl_mngt_set_dirty,
 		},
@@ -215,6 +228,15 @@ static const struct ftl_mngt_process_desc desc_clean_start = {
 			.action = ftl_mngt_restore_md
 		},
 		{
+			.name = "Initialize P2L checkpointing",
+			.action = ftl_mngt_p2l_init_ckpt,
+			.cleanup = ftl_mngt_p2l_deinit_ckpt
+		},
+		{
+			.name = "Restore P2L checkpoints",
+			.action = ftl_mngt_p2l_restore_ckpt
+		},
+		{
 			.name = "Initialize L2P",
 			.action = ftl_mngt_init_l2p,
 			.cleanup = ftl_mngt_deinit_l2p
@@ -226,6 +248,10 @@ static const struct ftl_mngt_process_desc desc_clean_start = {
 		{
 			.name = "Finalize band initialization",
 			.action = ftl_mngt_finalize_init_bands,
+		},
+		{
+			.name = "Free P2L region bufs",
+			.action = ftl_mngt_p2l_free_bufs,
 		},
 		{
 			.name = "Start task core",

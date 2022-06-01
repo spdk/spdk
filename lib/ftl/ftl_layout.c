@@ -154,6 +154,7 @@ static void set_region_bdev_btm(struct ftl_layout_region *reg, struct spdk_ftl_d
 
 static int setup_layout_nvc(struct spdk_ftl_dev *dev)
 {
+	int region_type;
 	uint64_t left, offset = 0;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region, *mirror;
@@ -215,6 +216,35 @@ static int setup_layout_nvc(struct spdk_ftl_dev *dev)
 
 	if (offset >= layout->nvc.total_blocks) {
 		goto ERROR;
+	}
+
+	/*
+	 * Initialize P2L checkpointing regions
+	 */
+	static const char *p2l_region_name[] = {
+		"p2l0",
+		"p2l1",
+		"p2l2",
+		"p2l3"
+	};
+	SPDK_STATIC_ASSERT(sizeof(p2l_region_name) / sizeof(*p2l_region_name) ==
+			   FTL_LAYOUT_REGION_TYPE_P2L_COUNT, "Incorrect # of P2L region names");
+	for (region_type = ftl_layout_region_type_p2l_ckpt_min;
+	     region_type <= ftl_layout_region_type_p2l_ckpt_max;
+	     region_type++) {
+		if (offset >= layout->nvc.total_blocks) {
+			goto ERROR;
+		}
+		region = &layout->region[region_type];
+		region->type = region_type;
+		region->name = p2l_region_name[region_type - ftl_layout_region_type_p2l_ckpt_min];
+		set_region_version(region, FTL_P2L_VERSION_CURRENT);
+		region->current.offset = offset;
+		region->current.blocks = blocks_region(layout->p2l.ckpt_pages * FTL_BLOCK_SIZE);
+		region->entry_size = 1;
+		region->num_entries = region->current.blocks;
+		set_region_bdev_nvc(region, dev);
+		offset += region->current.blocks;
 	}
 
 	/*
@@ -394,6 +424,11 @@ int ftl_layout_setup(struct spdk_ftl_dev *dev)
 	layout->l2p.addr_size = layout->l2p.addr_length > 32 ? 8 : 4;
 	layout->l2p.lbas_in_page = FTL_BLOCK_SIZE / layout->l2p.addr_size;
 
+	/* Setup P2L ckpt */
+	layout->p2l.ckpt_pages = spdk_divide_round_up(
+					 ftl_get_num_blocks_in_band(dev),
+					 dev->xfer_size);
+
 	if (setup_layout_nvc(dev)) {
 		return -1;
 	}
@@ -414,6 +449,8 @@ int ftl_layout_setup(struct spdk_ftl_dev *dev)
 		      dev->num_lbas);
 	FTL_NOTICELOG(dev, "L2P address size:               %"PRIu64"\n",
 		      layout->l2p.addr_size);
+	FTL_NOTICELOG(dev, "P2L checkpoint pages:           %"PRIu64"\n",
+		      layout->p2l.ckpt_pages);
 
 	return 0;
 }

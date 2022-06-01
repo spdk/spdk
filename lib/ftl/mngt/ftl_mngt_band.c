@@ -414,6 +414,7 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 			uint64_t offset = band->md->iter.offset;
 			ftl_band_iter_init(band);
 			ftl_band_iter_set(band, offset);
+			ftl_mngt_p2l_ckpt_restore_shm_clean(band);
 		} else if (dev->sb->clean) {
 			band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
 			if (ftl_band_alloc_lba_map(band)) {
@@ -424,6 +425,11 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 			uint64_t offset = band->md->iter.offset;
 			ftl_band_iter_init(band);
 			ftl_band_iter_set(band, offset);
+
+			if (ftl_mngt_p2l_ckpt_restore_clean(band)) {
+				ftl_mngt_fail_step(mngt);
+				return;
+			}
 		}
 	}
 
