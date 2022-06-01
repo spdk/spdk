@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def spdk_kill_instance(client, sig_name):
     """Send a signal to the SPDK process.
 

@@ -1,4 +1,3 @@
-from .helpers import deprecated_alias
 from .cmd_parser import *
 
 

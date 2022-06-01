@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def iscsi_set_options(
         client,
         auth_file=None,

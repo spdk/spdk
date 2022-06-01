@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def notify_get_types(client):
     return client.call("notify_get_types")
 

@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def log_set_flag(client, flag):
     """Set log flag.
 

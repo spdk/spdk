@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def bdev_pmem_create_pool(client, pmem_file, num_blocks, block_size):
     """Create pmem pool at specified path.
     Args:

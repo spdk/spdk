@@ -25,7 +25,6 @@ from . import vhost
 from . import vmd
 from . import sock
 from . import client as rpc_client
-from .helpers import deprecated_alias
 
 
 def framework_start_init(client):

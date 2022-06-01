@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def trace_enable_tpoint_group(client, name):
     """Enable trace on a specific tpoint group.
 

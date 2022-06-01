@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def bdev_lvol_create_lvstore(client, bdev_name, lvs_name, cluster_sz=None, clear_method=None):
     """Construct a logical volume store.
 

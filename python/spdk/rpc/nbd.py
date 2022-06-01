@@ -1,6 +1,3 @@
-from .helpers import deprecated_alias
-
-
 def nbd_start_disk(client, bdev_name, nbd_device):
     params = {
         'bdev_name': bdev_name
