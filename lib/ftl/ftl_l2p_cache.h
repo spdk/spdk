@@ -41,6 +41,7 @@
 int ftl_l2p_cache_init(struct spdk_ftl_dev *dev);
 void ftl_l2p_cache_deinit(struct spdk_ftl_dev *dev);
 void ftl_l2p_cache_pin(struct spdk_ftl_dev *dev, struct ftl_l2p_pin_ctx *pin_ctx);
+void ftl_l2p_cache_unpin(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t count);
 ftl_addr ftl_l2p_cache_get(struct spdk_ftl_dev *dev, uint64_t lba);
 void ftl_l2p_cache_set(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr);
 void ftl_l2p_cache_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
