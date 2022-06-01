@@ -17,6 +17,7 @@
         spdk_accel_submit_compress;
         spdk_accel_submit_decompress;
 	spdk_accel_get_opc_engine_name;
+	spdk_accel_assign_opc;
 	spdk_accel_write_config_json;
 
 	# functions needed by modules

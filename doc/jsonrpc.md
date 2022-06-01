@@ -1587,6 +1587,43 @@ Example response:
 }
 ~~~
 
+### accel_assign_opc {#rpc_accel_assign_opc}
+
+Manually assign an operation to an engine.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------------
+opname                  | Required | string      | name of operation
+engine                  | Required | string      | name of engine
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_assign_opc",
+  "id": 1,
+  "params": {
+    "opanme": "copy",
+    "engine": "software"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### dsa_scan_accel_engine {#rpc_dsa_scan_accel_engine}
 
 Set config and enable dsa accel engine offload.

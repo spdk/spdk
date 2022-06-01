@@ -275,6 +275,19 @@ int spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *sr
  */
 int spdk_accel_get_opc_engine_name(enum accel_opcode opcode, const char **engine_name);
 
+/**
+ * Override the assignment of an opcode to an engine.
+ *
+ * \param opcode Accel Framework Opcode enum value. Valid codes can be retrieved using
+ * `accel_get_opc_assignments` or `spdk_accel_get_opc_name`.
+ * \param name Name of the engine to assign. Valid engine names may be retrieved
+ * with `spdk_accel_get_opc_engine_name`
+ *
+ * \return 0 if a valid opcode name was provided. -EINVAL for invalid opcode
+ *  or if the framework has started (cannot change engines after startup)
+ */
+int spdk_accel_assign_opc(enum accel_opcode opcode, const char *name);
+
 struct spdk_json_write_ctx;
 
 /**

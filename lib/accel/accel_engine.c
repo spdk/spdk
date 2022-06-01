@@ -35,6 +35,7 @@ static size_t g_max_accel_module_size = 0;
 static struct spdk_accel_module_if *g_accel_engine_module = NULL;
 static spdk_accel_fini_cb g_fini_cb_fn = NULL;
 static void *g_fini_cb_arg = NULL;
+static bool g_engine_started = false;
 
 /* Global list of registered accelerator modules */
 static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
@@ -46,6 +47,7 @@ static TAILQ_HEAD(, spdk_accel_engine) g_engine_list =
 
 /* Global array mapping capabilities to engines */
 static struct spdk_accel_engine *g_engines_opc[ACCEL_OPC_LAST] = {};
+static char *g_engines_opc_override[ACCEL_OPC_LAST] = {};
 
 static int sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task);
 
@@ -85,6 +87,25 @@ _accel_for_each_engine(struct engine_info *info, _accel_for_each_engine_fn fn)
 		fn(info);
 		j = 0;
 	}
+}
+
+int
+spdk_accel_assign_opc(enum accel_opcode opcode, const char *name)
+{
+	if (g_engine_started == true) {
+		/* we don't allow re-assignment once things have started */
+		return -EINVAL;
+	}
+
+	if (opcode >= ACCEL_OPC_LAST) {
+		/* invalid opcode */
+		return -EINVAL;
+	}
+
+	/* engine selection will be validated after the framework starts. */
+	g_engines_opc_override[opcode] = strdup(name);
+
+	return 0;
 }
 
 static struct spdk_accel_engine *
@@ -585,6 +606,7 @@ spdk_accel_engine_initialize(void)
 	enum accel_opcode op;
 	struct spdk_accel_engine *accel_engine = NULL;
 
+	g_engine_started = true;
 	accel_engine_module_initialize();
 
 	/* Create our priority global map of opcodes to engines, we populate starting
@@ -601,6 +623,23 @@ spdk_accel_engine_initialize(void)
 			}
 		}
 	}
+
+	/* Now lets check for overrides and apply all that exist */
+	for (op = 0; op < ACCEL_OPC_LAST; op++) {
+		if (g_engines_opc_override[op] != NULL) {
+			accel_engine = _engine_find_by_name(g_engines_opc_override[op]);
+			if (accel_engine == NULL) {
+				SPDK_ERRLOG("Invalid engine name of %s\n", g_engines_opc_override[op]);
+				return -EINVAL;
+			}
+			if (accel_engine->supports_opcode(op) == false) {
+				SPDK_ERRLOG("Engine %s does not support op code %d\n", accel_engine->name, op);
+				return -EINVAL;
+			}
+			g_engines_opc[op] = accel_engine;
+		}
+	}
+
 #ifdef DEBUG
 	for (op = 0; op < ACCEL_OPC_LAST; op++) {
 		assert(g_engines_opc[op] != NULL);
@@ -668,10 +707,18 @@ spdk_accel_engine_module_finish(void)
 void
 spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
 {
+	enum accel_opcode op;
+
 	assert(cb_fn != NULL);
 
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
+
+	for (op = 0; op < ACCEL_OPC_LAST; op++) {
+		if (g_engines_opc_override[op] != NULL) {
+			free(g_engines_opc_override[op]);
+		}
+	}
 
 	spdk_io_device_unregister(&spdk_accel_module_list, NULL);
 	spdk_accel_engine_module_finish();

@@ -122,3 +122,68 @@ rpc_accel_get_engine_info(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("accel_get_engine_info", rpc_accel_get_engine_info,
 		  SPDK_RPC_RUNTIME)
+
+struct rpc_accel_assign_opc {
+	char *opname;
+	char *engine;
+};
+
+static const struct spdk_json_object_decoder rpc_accel_assign_opc_decoders[] = {
+	{"opname", offsetof(struct rpc_accel_assign_opc, opname), spdk_json_decode_string},
+	{"engine", offsetof(struct rpc_accel_assign_opc, engine), spdk_json_decode_string},
+};
+
+static void
+free_accel_assign_opc(struct rpc_accel_assign_opc *r)
+{
+	free(r->opname);
+	free(r->engine);
+}
+
+static void
+rpc_accel_assign_opc(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *params)
+{
+	struct rpc_accel_assign_opc req = {};
+	enum accel_opcode opcode;
+	bool found = false;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_accel_assign_opc_decoders,
+				    SPDK_COUNTOF(rpc_accel_assign_opc_decoders),
+				    &req)) {
+		SPDK_DEBUGLOG(accel, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
+		if (strcmp(g_opcode_strings[opcode], req.opname) == 0) {
+			found = true;
+			break;
+		}
+	}
+
+	if (found == false) {
+		SPDK_DEBUGLOG(accel, "Invalid operation name\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = spdk_accel_assign_opc(opcode, req.engine);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "error assigning opcode");
+		goto cleanup;
+	}
+
+	SPDK_NOTICELOG("Operation %s will be assigned to engine %s\n", req.opname, req.engine);
+	spdk_jsonrpc_send_bool_response(request, true);
+
+cleanup:
+	free_accel_assign_opc(&req);
+
+}
+SPDK_RPC_REGISTER("accel_assign_opc", rpc_accel_assign_opc, SPDK_RPC_STARTUP)

@@ -2575,6 +2575,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('accel_get_engine_info', help='Get list of valid engine names and their operations.')
     p.set_defaults(func=accel_get_engine_info)
 
+    def accel_assign_opc(args):
+        rpc.accel.accel_assign_opc(args.client, opname=args.opname, engine=args.engine)
+
+    p = subparsers.add_parser('accel_assign_opc', help='Manually assign an operation to an engine.')
+    p.add_argument('-o', '--opname', help='opname')
+    p.add_argument('-e', '--engine', help='name of engine')
+    p.set_defaults(func=accel_assign_opc)
+
     # ioat
     def ioat_scan_accel_engine(args):
         rpc.ioat.ioat_scan_accel_engine(args.client)

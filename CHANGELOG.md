@@ -39,6 +39,9 @@ writes (read-modify-write) are not.
 Added a new runtime RPC `accel_get_opc_assignments` to get a list of current opcode to engine
 assignements.
 
+Added a new startup RPC `accel_assign_opc` to assign/override a specific opcode to
+an engine.
+
 ## v22.05
 
 ### sock
