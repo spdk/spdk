@@ -55,8 +55,59 @@ static const struct ftl_mngt_process_desc desc_shutdown = {
 	}
 };
 
+/*
+ * Steps executed during fast clean shutdown (shutting down to shared memory). Utilizes
+ * minimum amount of metadata persistence and rolls back any setup steps executed during
+ * startup (closing bdevs, io channels, etc)
+ */
+static const struct ftl_mngt_process_desc desc_fast_shutdown = {
+	.name = "FTL fast shutdown",
+	.steps = {
+		{
+			.name = "Deinit core IO channel",
+			.action = ftl_mngt_deinit_io_channel
+		},
+		{
+			.name = "Unregister IO device",
+			.action = ftl_mngt_unregister_io_device
+		},
+		{
+			.name = "Stop core poller",
+			.action = ftl_mngt_stop_core_poller
+		},
+		{
+			.name = "Fast persist metadata",
+			.action = ftl_mngt_fast_persist_md
+		},
+		{
+			.name = "Set FTL SHM clean state",
+			.action = ftl_mngt_set_shm_clean
+		},
+		{
+			.name = "Dump statistics",
+			.action = ftl_mngt_dump_stats
+		},
+		{
+			.name = "Deinitialize L2P",
+			.action = ftl_mngt_deinit_l2p
+		},
+		{
+			.name = "Rollback FTL device",
+			.action = ftl_mngt_rollback_device
+		},
+		{}
+	}
+};
+
 int
 ftl_mngt_call_dev_shutdown(struct spdk_ftl_dev *dev, ftl_mngt_completion cb, void *cb_cntx)
 {
-	return ftl_mngt_process_execute(dev, &desc_shutdown, cb, cb_cntx);
+	const struct ftl_mngt_process_desc *pdesc;
+
+	if (dev->conf.fast_shutdown) {
+		pdesc = &desc_fast_shutdown;
+	} else {
+		pdesc = &desc_shutdown;
+	}
+	return ftl_mngt_process_execute(dev, pdesc, cb, cb_cntx);
 }
