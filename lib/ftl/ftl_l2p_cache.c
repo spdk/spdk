@@ -159,6 +159,7 @@ typedef void (*ftl_l2p_cache_sync_cb)(struct spdk_ftl_dev *dev, int status, void
 static bool pinner_is_done(struct ftl_l2p_page_pinner *pinner);
 static void pinner_end(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
 		       struct ftl_l2p_page_pinner *pinner);
+static void page_out_io_retry(void *arg);
 static void page_in_io_retry(void *arg);
 
 static inline void ftl_l2p_page_queue_ppe(struct ftl_l2p_page *page,
@@ -170,6 +171,11 @@ static inline void ftl_l2p_page_queue_ppe(struct ftl_l2p_page *page,
 static inline uint64_t ftl_l2p_cache_get_l1_page_size(void)
 {
 	return 1UL << 12;
+}
+
+static inline uint64_t ftl_l2p_cache_get_lbas_in_page(struct ftl_l2p_cache *cache)
+{
+	return cache->lbas_in_page;
 }
 
 static inline size_t ftl_l2p_cache_get_page_all_size(void)
@@ -227,6 +233,16 @@ static void ftl_l2p_cache_page_remove(struct ftl_l2p_cache *cache, struct ftl_l2
 	ftl_mempool_put(cache->l2_ctx_pool, page);
 }
 
+static inline struct ftl_l2p_page *ftl_l2p_cache_page_cold(struct ftl_l2p_cache *cache)
+{
+	return TAILQ_FIRST(&cache->lru_list);
+}
+
+static inline struct ftl_l2p_page *ftl_l2p_cache_page_next(struct ftl_l2p_page *page)
+{
+	return TAILQ_NEXT(page, list_entry);
+}
+
 static inline uint64_t ftl_l2p_cache_page_get_bdev_offset(struct ftl_l2p_cache *cache,
 		struct ftl_l2p_page *page)
 {
@@ -263,6 +279,13 @@ static struct ftl_l2p_page *ftl_l2p_cache_page_alloc(struct ftl_l2p_cache *cache
 	page->state = L2P_CACHE_PAGE_INIT;
 
 	return page;
+}
+
+static inline bool ftl_l2p_cache_page_can_remove(struct ftl_l2p_page *page)
+{
+	return (!page->updates &&
+		page->state != L2P_CACHE_PAGE_INIT &&
+		!page->pin_ref_cnt);
 }
 
 static inline ftl_addr ftl_l2p_cache_get_addr(struct spdk_ftl_dev *dev,
@@ -304,6 +327,19 @@ static inline void ftl_l2p_cache_page_unpin(struct ftl_l2p_cache *cache,
 		 */
 		ftl_l2p_cache_page_append_rank(cache, page);
 	}
+}
+
+static inline bool ftl_l2p_cache_page_can_evict(struct ftl_l2p_page *page)
+{
+	return (page->state == L2P_CACHE_PAGE_IN_FLUSH ||
+		page->state == L2P_CACHE_PAGE_IN_PERSIST ||
+		page->state == L2P_CACHE_PAGE_INIT ||
+		page->pin_ref_cnt) ? false : true;
+}
+
+static bool ftl_l2p_cache_evict_continue(struct ftl_l2p_cache *cache)
+{
+	return cache->l2_pgs_avail + cache->l2_pgs_evicting < cache->evict_keep;
 }
 
 static void *_ftl_l2p_cache_init(struct spdk_ftl_dev *dev, size_t addr_size, uint64_t l2p_size)
@@ -882,6 +918,131 @@ static void ftl_l2p_cache_process_pinners(struct spdk_ftl_dev *dev, struct ftl_l
 	return;
 }
 
+static struct ftl_l2p_page *
+eviction_get_page(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache)
+{
+	uint64_t i = 0;
+	struct ftl_l2p_page *page = ftl_l2p_cache_page_cold(cache);
+
+	while (page) {
+		ftl_bug(L2P_CACHE_PAGE_READY != page->state);
+		ftl_bug(page->pin_ref_cnt);
+
+		if (ftl_l2p_cache_page_can_evict(page)) {
+			ftl_l2p_cache_page_remove_rank(cache, page);
+			return page;
+		}
+
+		/*
+		 * Practically only one iterations is needed to find a page. It is because
+		 * the rank of pages contains only ready and unpined pages
+		 */
+		ftl_bug(++i > 1024);
+
+		page = ftl_l2p_cache_page_next(page);
+	}
+
+	return NULL;
+}
+
+static void page_out_io_complete(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+				 struct ftl_l2p_page *page, bool success)
+{
+	cache->l2_pgs_evicting--;
+
+	ftl_bug(page->ctx.updates > page->updates);
+	ftl_bug(!TAILQ_EMPTY(&page->ppe_list));
+	ftl_bug(page->on_rank_list);
+
+	if (spdk_likely(success)) {
+		page->updates -= page->ctx.updates;
+	}
+
+	if (success && ftl_l2p_cache_page_can_remove(page)) {
+		ftl_l2p_cache_page_remove(cache, page);
+	} else {
+		if (!page->pin_ref_cnt) {
+			ftl_l2p_cache_page_append_rank(cache, page);
+		}
+		page->state = L2P_CACHE_PAGE_READY;
+	}
+}
+
+static void page_out_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_l2p_page *page = cb_arg;
+	struct ftl_l2p_cache *cache = page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+
+	spdk_bdev_free_io(bdev_io);
+	page_out_io_complete(dev, cache, page, success);
+}
+
+static void page_out_io(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache,
+			struct ftl_l2p_page *page)
+{
+	page->ctx.cache = cache;
+
+	int rc = ftl_nv_cache_bdev_write_blocks_with_md(dev, ftl_l2p_cache_get_bdev_desc(cache),
+			ftl_l2p_cache_get_bdev_iochannel(cache),
+			page->l1, NULL, ftl_l2p_cache_page_get_bdev_offset(cache, page),
+			1, page_out_io_cb, page);
+
+	cache->l2_pgs_evicting++;
+	if (spdk_likely(0 == rc)) {
+		return;
+	}
+
+	if (rc == -ENOMEM) {
+		struct spdk_io_channel *ioch = ftl_l2p_cache_get_bdev_iochannel(cache);
+		struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(ftl_l2p_cache_get_bdev_desc(cache));
+		struct spdk_bdev_io_wait_entry *bdev_io_wait = &page->ctx.bdev_io_wait;
+		bdev_io_wait->bdev = bdev;
+		bdev_io_wait->cb_fn = page_out_io_retry;
+		bdev_io_wait->cb_arg = page;
+
+		rc = spdk_bdev_queue_io_wait(bdev, ioch, bdev_io_wait);
+		ftl_bug(rc);
+	} else {
+		ftl_abort();
+	}
+}
+
+static void page_out_io_retry(void *arg)
+{
+	struct ftl_l2p_page *page = arg;
+	struct ftl_l2p_cache *cache = page->ctx.cache;
+	struct spdk_ftl_dev *dev = cache->dev;
+
+	cache->l2_pgs_evicting--;
+	page_out_io(dev, cache, page);
+}
+
+static void ftl_l2p_cache_process_eviction(struct spdk_ftl_dev *dev, struct ftl_l2p_cache *cache)
+{
+	if (!ftl_l2p_cache_evict_continue(cache)) {
+		return;
+	}
+
+	if (cache->l2_pgs_evicting > 512) {
+		return;
+	}
+
+	struct ftl_l2p_page *page = eviction_get_page(dev, cache);
+	if (spdk_unlikely(!page)) {
+		return;
+	}
+
+	if (page->updates) {
+		page->state = L2P_CACHE_PAGE_IN_FLUSH;
+		page->ctx.updates = page->updates;
+		page_out_io(dev, cache, page);
+	} else {
+		/* Page clean and we can remove it */
+		ftl_l2p_cache_page_remove(cache, page);
+	}
+}
+
 void ftl_l2p_cache_process(struct spdk_ftl_dev *dev)
 {
 	struct ftl_l2p_cache *cache = dev->l2p;
@@ -902,4 +1063,6 @@ void ftl_l2p_cache_process(struct spdk_ftl_dev *dev)
 
 		ftl_l2p_cache_process_pinners(dev, cache);
 	}
+
+	ftl_l2p_cache_process_eviction(dev, cache);
 }
