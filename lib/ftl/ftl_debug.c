@@ -48,6 +48,135 @@ static const char *ftl_band_state_str[] = {
 	"max"
 };
 
+struct ftl_band_validate_ctx {
+	struct ftl_band *band;
+	ftl_band_validate_md_cb cb;
+	int remaining;
+	uint64_t pin_cnt;
+	uint64_t current_offset;
+	struct ftl_l2p_pin_ctx l2p_pin_ctx[];
+};
+
+static void ftl_band_validate_md_l2p_pin_cb(struct spdk_ftl_dev *dev, int status,
+		struct ftl_l2p_pin_ctx *pin_ctx);
+
+#define FTL_MD_VALIDATE_PIN_QD 128
+
+static void
+ftl_band_validate_md_pin(struct ftl_band_validate_ctx *ctx)
+{
+	struct ftl_band *band = ctx->band;
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_lba_map *lba_map = &band->lba_map;
+	size_t i, size;
+	struct ftl_l2p_pin_ctx tmp_pin_ctx = {
+		.cb_ctx = ctx
+	};
+
+	size = spdk_min(FTL_MD_VALIDATE_PIN_QD,
+			ftl_get_num_blocks_in_band(dev) - ctx->current_offset);
+
+	for (i = ctx->current_offset; i < ctx->current_offset + size; ++i) {
+		if (!ftl_bitmap_get(lba_map->vld, i)) {
+			ctx->l2p_pin_ctx[i].lba = FTL_LBA_INVALID;
+			continue;
+		}
+
+		assert(lba_map->band_map[i] != FTL_LBA_INVALID);
+		ctx->remaining++;
+		ctx->pin_cnt++;
+		ftl_l2p_pin(dev, lba_map->band_map[i], 1, ftl_band_validate_md_l2p_pin_cb, ctx,
+			    &ctx->l2p_pin_ctx[i]);
+	}
+
+	ftl_band_validate_md_l2p_pin_cb(dev, 0, &tmp_pin_ctx);
+}
+
+static void
+_ftl_band_validate_md(void *_ctx)
+{
+	struct ftl_band_validate_ctx *ctx = _ctx;
+	struct ftl_band *band = ctx->band;
+	struct spdk_ftl_dev *dev = band->dev;
+	ftl_addr addr_l2p;
+	size_t i, size;
+	bool valid = true;
+	uint64_t lba;
+
+	size = spdk_min(FTL_MD_VALIDATE_PIN_QD,
+			ftl_get_num_blocks_in_band(dev) - ctx->current_offset);
+
+	for (i = ctx->current_offset; i < ctx->current_offset + size; ++i) {
+		lba = ctx->l2p_pin_ctx[i].lba;
+		if (lba == FTL_LBA_INVALID) {
+			continue;
+		}
+
+		if (ftl_bitmap_get(band->lba_map.vld, i)) {
+			addr_l2p = ftl_l2p_get(dev, lba);
+
+			if (addr_l2p != FTL_ADDR_INVALID && !ftl_addr_cached(dev, addr_l2p) &&
+			    addr_l2p != ftl_band_addr_from_block_offset(band, i)) {
+				valid = false;
+			}
+		}
+
+		ctx->pin_cnt--;
+		ftl_l2p_unpin(dev, lba, 1);
+	}
+	assert(ctx->pin_cnt == 0);
+
+	ctx->current_offset += size;
+
+	if (ctx->current_offset == ftl_get_num_blocks_in_band(dev)) {
+		ctx->cb(band, valid);
+		free(ctx);
+		return;
+	}
+
+	ctx->remaining = 1;
+	ftl_band_validate_md_pin(ctx);
+}
+
+static void
+ftl_band_validate_md_l2p_pin_cb(struct spdk_ftl_dev *dev, int status,
+				struct ftl_l2p_pin_ctx *pin_ctx)
+{
+	struct ftl_band_validate_ctx *ctx = pin_ctx->cb_ctx;
+
+	assert(status == 0);
+
+	if (--ctx->remaining == 0) {
+		spdk_thread_send_msg(dev->core_thread, _ftl_band_validate_md, ctx);
+	}
+}
+
+void
+ftl_band_validate_md(struct ftl_band *band, ftl_band_validate_md_cb cb)
+{
+	struct ftl_band_validate_ctx *ctx;
+	size_t size;
+
+	assert(cb);
+
+	if (!band->num_zones) {
+		cb(band, true);
+		return;
+	}
+
+	size = ftl_get_num_blocks_in_band(band->dev);
+
+	ctx = malloc(sizeof(*ctx) + size * sizeof(*ctx->l2p_pin_ctx));
+	assert(ctx);
+	ctx->band = band;
+	ctx->cb = cb;
+	ctx->remaining = 1;
+	ctx->pin_cnt = 0;
+	ctx->current_offset = 0;
+
+	ftl_band_validate_md_pin(ctx);
+}
+
 void
 ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 {

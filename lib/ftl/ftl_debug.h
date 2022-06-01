@@ -56,8 +56,14 @@ ftl_addr2str(ftl_addr addr, char *buf, size_t size)
 typedef void (*ftl_band_validate_md_cb)(struct ftl_band *band, bool valid);
 
 #if defined(DEBUG)
+void ftl_band_validate_md(struct ftl_band *band, ftl_band_validate_md_cb cb);
 void ftl_dev_dump_bands(struct spdk_ftl_dev *dev);
 #else
+static inline void
+ftl_band_validate_md(struct ftl_band *band, ftl_band_validate_md_cb cb)
+{
+	cb(band, true);
+}
 static inline void ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
 {
 }

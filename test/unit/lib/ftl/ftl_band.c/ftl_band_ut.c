@@ -55,6 +55,9 @@ struct base_bdev_geometry g_geo = {
 static struct spdk_ftl_dev *g_dev;
 static struct ftl_band	*g_band;
 
+#if defined(DEBUG)
+DEFINE_STUB_V(ftl_band_validate_md, (struct ftl_band *band, ftl_band_validate_md_cb cb));
+#endif
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 512);
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");

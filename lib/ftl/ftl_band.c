@@ -40,6 +40,7 @@
 #include "ftl_band.h"
 #include "ftl_io.h"
 #include "ftl_core.h"
+#include "ftl_debug.h"
 #include "ftl_internal.h"
 #include "utils/ftl_md.h"
 #include "utils/ftl_defs.h"
@@ -125,9 +126,11 @@ _ftl_band_set_preparing(struct ftl_band *band)
 }
 
 static void
-_ftl_band_set_closed(struct ftl_band *band)
+_ftl_band_set_closed_cb(struct ftl_band *band, bool valid)
 {
 	struct spdk_ftl_dev *dev = band->dev;
+
+	assert(valid == true);
 
 	/* Set the state as free_md() checks for that */
 	band->md->state = FTL_BAND_STATE_CLOSED;
@@ -144,6 +147,13 @@ _ftl_band_set_closed(struct ftl_band *band)
 	} else {
 		TAILQ_REMOVE(&dev->shut_bands, band, queue_entry);
 	}
+}
+
+static void
+_ftl_band_set_closed(struct ftl_band *band)
+{
+	/* Verify that band's metadata is consistent with l2p */
+	ftl_band_validate_md(band, _ftl_band_set_closed_cb);
 }
 
 ftl_addr
