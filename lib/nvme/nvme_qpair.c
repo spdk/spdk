@@ -695,6 +695,11 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	int32_t ret;
 	struct nvme_request *req, *tmp;
 
+	/* Complete any pending register operations */
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_complete_register_operations(qpair);
+	}
+
 	if (spdk_unlikely(qpair->ctrlr->is_failed &&
 			  nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTING)) {
 		if (qpair->ctrlr->is_removed) {
@@ -756,11 +761,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	 */
 	if (ret > 0) {
 		nvme_qpair_resubmit_requests(qpair, ret);
-	}
-
-	/* Complete any pending register operations */
-	if (nvme_qpair_is_admin_queue(qpair)) {
-		nvme_complete_register_operations(qpair);
 	}
 
 	return ret;
