@@ -388,10 +388,49 @@ static void move_read(struct ftl_reloc *reloc, struct ftl_reloc_move *mv,
 		      struct ftl_band *band)
 {
 	struct ftl_rq *rq = mv->rq;
-	uint64_t band_left, rq_left;
+	uint64_t blocks = ftl_get_num_blocks_in_band(band->dev);
+	uint64_t pos = band->md->iter.offset;
+	uint64_t begin = ftl_bitmap_find_first_set(band->lba_map.vld, pos, UINT64_MAX);
+	uint64_t end, band_left, rq_left;
+
+	if (spdk_likely(begin < blocks)) {
+		if (begin > pos) {
+			ftl_band_iter_advance(band, begin - pos);
+		} else if (begin == pos) {
+			/* Valid block at the position of iterator */
+		} else {
+			/* Inconsistent state */
+			ftl_abort();
+		}
+	} else if (UINT64_MAX == begin) {
+		/* No more valid LBAs in the band */
+		band_left = ftl_band_user_blocks_left(band, pos);
+		ftl_band_iter_advance(band, band_left);
+		band->zone->busy = false;
+
+		assert(ftl_band_filled(band, band->md->iter.offset));
+
+		if (rq->iter.idx) {
+			move_rq_pad(rq, band);
+			move_set_state(mv, FTL_RELOC_STATE_WAIT);
+			rq->iter.qd++;
+			rq->owner.cb(rq);
+		}
+
+		return;
+	} else {
+		/* Inconsistent state */
+		ftl_abort();
+	}
 
 	rq_left = rq->num_blocks - rq->iter.idx;
 	assert(rq_left > 0);
+
+	/* Find next clear bit, but no further than max request count */
+	end = ftl_bitmap_find_first_clear(band->lba_map.vld, begin + 1, begin + rq_left);
+	if (end != UINT64_MAX) {
+		rq_left = end - begin;
+	}
 
 	band_left = ftl_band_user_blocks_left(band, band->md->iter.offset);
 	rq->iter.count = spdk_min(rq_left, band_left);
