@@ -932,7 +932,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			__builtin_prefetch(&pqpair->tr[next_cpl->cid]);
 		}
 
-#ifdef __PPC64__
+#if defined(__PPC64__) || defined(__riscv)
 		/*
 		 * This memory barrier prevents reordering of:
 		 * - load after store from/to tr
