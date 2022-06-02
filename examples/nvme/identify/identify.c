@@ -1395,6 +1395,10 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oacs.virtualization_management ? "Supported" : "Not Supported");
 	printf("Doorbell Buffer Config:                %s\n",
 	       cdata->oacs.doorbell_buffer_config ? "Supported" : "Not Supported");
+	printf("Get LBA Status Capability:             %s\n",
+	       cdata->oacs.get_lba_status ? "Supported" : "Not Supported");
+	printf("Command & Feature Lockdown Capability: %s\n",
+	       cdata->oacs.doorbell_buffer_config ? "Supported" : "Not Supported");
 	printf("Abort Command Limit:                   %d\n", cdata->acl + 1);
 	printf("Async Event Request Limit:             %d\n", cdata->aerl + 1);
 	printf("Number of Firmware Slots:              ");
@@ -1406,6 +1410,18 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Firmware Slot 1 Read-Only:             ");
 	if (cdata->oacs.firmware != 0) {
 		printf("%s\n", cdata->frmw.slot1_ro ? "Yes" : "No");
+	} else {
+		printf("N/A\n");
+	}
+	printf("Firmware Activation Without Reset:     ");
+	if (cdata->oacs.firmware != 0) {
+		printf("%s\n", cdata->frmw.activation_without_reset ? "Yes" : "No");
+	} else {
+		printf("N/A\n");
+	}
+	printf("Multiple Update Detection Support:     ");
+	if (cdata->oacs.firmware != 0) {
+		printf("%s\n", cdata->frmw.multiple_update_detection ? "Yes" : "No");
 	} else {
 		printf("N/A\n");
 	}
@@ -1451,6 +1467,18 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->lpa.edlp ? "Supported" : "Not Supported");
 	printf("Telemetry Log Pages:                   %s\n",
 	       cdata->lpa.telemetry ? "Supported" : "Not Supported");
+	printf("Persistent Event Log Pages:            %s\n",
+	       cdata->lpa.pelp ? "Supported" : "Not Supported");
+	printf("Supported Log Pages Log Page:          %s\n",
+	       cdata->lpa.lplp ? "Supported" : "May Support");
+	printf("Commands Supported & Effects Log Page: %s\n",
+	       cdata->lpa.lplp ? "Supported" : "Not Supported");
+	printf("Feature Identifiers & Effects Log Page:%s\n",
+	       cdata->lpa.lplp ? "Supported" : "May Support");
+	printf("NVMe-MI Commands & Effects Log Page:   %s\n",
+	       cdata->lpa.lplp ? "Supported" : "May Support");
+	printf("Data Area 4 for Telemetry Log:         %s\n",
+	       cdata->lpa.da4_telemetry ? "Supported" : "Not Supported");
 	printf("Error Log Page Entries Supported:      %d\n", cdata->elpe + 1);
 	if (cdata->kas == 0) {
 		printf("Keep Alive:                            Not Supported\n");

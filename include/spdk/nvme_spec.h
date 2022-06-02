@@ -1776,6 +1776,7 @@ enum spdk_nvmf_ctrlr_model {
 #define SPDK_NVME_CTRLR_SN_LEN	20
 #define SPDK_NVME_CTRLR_MN_LEN	40
 #define SPDK_NVME_CTRLR_FR_LEN	8
+#define SPDK_NVME_CTRLR_MEGCAP_LEN 16
 
 /** Identify Controller data sgls.supported values */
 enum spdk_nvme_sgls_supported {
@@ -1888,7 +1889,10 @@ struct spdk_nvme_cdata_oacs {
 	/** Supports SPDK_NVME_OPC_GET_LBA_STATUS */
 	uint16_t	get_lba_status : 1;
 
-	uint16_t	oacs_rsvd : 6;
+	/** Supports command and feature lockdown capability */
+	uint16_t	command_feature_lockdown : 1;
+
+	uint16_t	oacs_rsvd : 5;
 };
 
 struct spdk_nvme_cdata_fuses {
@@ -2108,7 +2112,10 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		/* support activation without reset */
 		uint8_t		activation_without_reset : 1;
 
-		uint8_t		frmw_rsvd : 3;
+		/* Support multiple update detection */
+		uint8_t		multiple_update_detection : 1;
+
+		uint8_t		frmw_rsvd : 2;
 	} frmw;
 
 	/** log page attributes */
@@ -2119,9 +2126,15 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		uint8_t		celp : 1;
 		/* extended data for get log page */
 		uint8_t		edlp: 1;
-		/** telemetry log pages and notices */
+		/* telemetry log pages and notices */
 		uint8_t		telemetry : 1;
-		uint8_t		lpa_rsvd : 4;
+		/* Persistent event log */
+		uint8_t		pelp : 1;
+		/* Log pages log page */
+		uint8_t		lplp : 1;
+		/* Data Area 4 for telemetry */
+		uint8_t		da4_telemetry : 1;
+		uint8_t		lpa_rsvd : 1;
 	} lpa;
 
 	/** error log page entries */
@@ -2236,8 +2249,17 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		} bits;
 	} sanicap;
 
-	/* bytes 332-342 */
-	uint8_t			reserved3[10];
+	/** Host memory buffer minimum descriptor entry size */
+	uint32_t		hmminds;
+
+	/** Host memory maximum descriptor entries */
+	uint16_t		hmmaxd;
+
+	/** NVM set identifier maximum */
+	uint16_t		nsetidmax;
+
+	/** Endurance group identifier maximum */
+	uint16_t		endgidmax;
 
 	/** ANA transition time */
 	uint8_t			anatt;
@@ -2259,8 +2281,19 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 348-351: number of ANA group identifiers */
 	uint32_t		nanagrpid;
 
-	/* bytes 352-511 */
-	uint8_t			reserved352[160];
+	/* bytes 352-355: persistent event log size */
+	uint32_t		pels;
+
+	/* Domain identifier that contains this controller */
+	uint16_t		domain_identifier;
+
+	uint8_t			reserved3[10];
+
+	/* Maximum capacity of a single endurance group */
+	uint8_t			megcap[SPDK_NVME_CTRLR_MEGCAP_LEN];
+
+	/* bytes 384-511 */
+	uint8_t			reserved384[128];
 
 	/* bytes 512-703: nvm command set attributes */
 

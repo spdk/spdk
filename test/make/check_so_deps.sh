@@ -53,6 +53,8 @@ function confirm_abi_deps() {
 	name = spdk_nvme_power_state
 [suppress_type]
 	name = spdk_nvme_ctrlr_data
+[suppress_type]
+	name = spdk_nvme_cdata_oacs
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
