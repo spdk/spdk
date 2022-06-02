@@ -88,6 +88,8 @@ COMMON_CFLAGS += -mcpu=$(TARGET_ARCHITECTURE)
 else ifeq ($(TARGET_MACHINE),aarch64)
 COMMON_CFLAGS += -march=$(TARGET_ARCHITECTURE)
 COMMON_CFLAGS += -DPAGE_SIZE=$(shell getconf PAGESIZE)
+else ifeq ('$(TARGET_MACHINE)|$(TARGET_ARCHITECTURE)','riscv64|native')
+# -march=native is not yet supported by GCC on RISC-V. Falling back to default.
 else
 COMMON_CFLAGS += -march=$(TARGET_ARCHITECTURE)
 endif
