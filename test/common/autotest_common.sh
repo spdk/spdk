@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+rpc_py=rpc_cmd
+
 function xtrace_fd() {
 	if [[ -n $BASH_XTRACEFD && -e /proc/self/fd/$BASH_XTRACEFD ]]; then
 		# Close it first to make sure it's sane

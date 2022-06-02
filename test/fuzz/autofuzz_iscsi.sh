@@ -22,8 +22,6 @@ timing_enter iscsi_fuzz_test
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 TEST_TIMEOUT=1200
 
 # This argument is used in addition to the test arguments in autotest_common.sh

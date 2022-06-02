@@ -52,7 +52,6 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 IOPS_RESULT=
 BANDWIDTH_RESULT=
-rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio-wrapper"
 
 timing_enter start_iscsi_tgt

@@ -6,8 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 source $rootdir/scripts/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 
 timing_enter nvme_identify

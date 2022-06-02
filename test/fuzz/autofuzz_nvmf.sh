@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 TEST_TIMEOUT=1200
 
 # This argument is used in addition to the test arguments in autotest_common.sh

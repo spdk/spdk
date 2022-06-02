@@ -7,7 +7,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 iscsitestinit
 
-rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio-wrapper"
 pids=()
 

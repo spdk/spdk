@@ -7,7 +7,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 iscsitestinit
 
-rpc_py="$rootdir/scripts/rpc.py"
 node_base="iqn.2013-06.com.intel.ch.spdk"
 
 timing_enter start_iscsi_tgt

@@ -8,8 +8,6 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 # connect disconnect is geared towards ensuring that we are properly freeing resources after disconnecting qpairs.
 nvmftestinit
 nvmfappstart -m 0xF

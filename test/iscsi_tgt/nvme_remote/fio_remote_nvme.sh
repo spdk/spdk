@@ -9,7 +9,6 @@ source $rootdir/test/iscsi_tgt/common.sh
 nvmftestinit
 iscsitestinit
 
-rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio-wrapper"
 
 # Namespaces are NOT used here on purpose. Rxe_cfg utility used for NVMf tests do not support namespaces.

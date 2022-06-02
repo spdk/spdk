@@ -6,8 +6,6 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/scripts/common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 
 if [[ $CONFIG_FIO_PLUGIN != y ]]; then

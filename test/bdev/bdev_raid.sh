@@ -3,11 +3,12 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 rpc_server=/var/tmp/spdk-raid.sock
-rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
 tmp_file=$SPDK_TEST_STORAGE/raidrandtest
 
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
+
+rpc_py="$rootdir/scripts/rpc.py -s $rpc_server"
 
 function raid_unmap_data_verify() {
 	if hash blkdiscard; then

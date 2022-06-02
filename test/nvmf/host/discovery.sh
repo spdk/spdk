@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 if [ "$TEST_TRANSPORT" == "rdma" ]; then
 	echo "Skipping tests on RDMA because the rdma stack fails to configure the same IP for host and target."
 	exit 0

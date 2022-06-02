@@ -4,7 +4,6 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
 MEM_SCRIPT="$rootdir/scripts/dpdk_mem_info.py"
 
 "${SPDK_APP[@]}" &

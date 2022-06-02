@@ -5,10 +5,10 @@ set -e
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
-rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
+rpc_py="$rootdir/scripts/rpc.py"
 
 function error_cleanup() {
 	# force delete pmem file and wipe on-disk metadata

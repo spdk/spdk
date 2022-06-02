@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 nvmfappstart -m 0x2
 

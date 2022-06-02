@@ -4,7 +4,6 @@ set -e
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_py="$rootdir/scripts/rpc.py"
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
 

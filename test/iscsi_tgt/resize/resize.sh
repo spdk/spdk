@@ -12,8 +12,6 @@ BDEV_NEW_SIZE=128
 BLOCK_SIZE=512
 RESIZE_SOCK="/var/tmp/spdk-resize.sock"
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 timing_enter start_iscsi_tgt
 
 # Remove the sock file first

@@ -6,8 +6,8 @@ rootdir=$(readlink -f "$testdir/../..")
 source "$rootdir/test/common/autotest_common.sh"
 source "$testdir/common.sh"
 
-rpc_py="$rootdir/scripts/rpc.py"
 sma_py="$rootdir/scripts/sma-client.py"
+rpc_py="$rootdir/scripts/rpc.py"
 
 t1sock='/var/tmp/spdk.sock1'
 t2sock='/var/tmp/spdk.sock2'

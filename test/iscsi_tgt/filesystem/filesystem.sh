@@ -9,7 +9,6 @@ source $rootdir/scripts/common.sh
 
 iscsitestinit
 
-rpc_py="$rootdir/scripts/rpc.py"
 # Remove lvol bdevs and stores.
 function remove_backends() {
 	echo "INFO: Removing lvol bdev"

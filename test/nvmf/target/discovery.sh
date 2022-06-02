@@ -8,8 +8,6 @@ source $rootdir/test/nvmf/common.sh
 NULL_BDEV_SIZE=102400
 NULL_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 if ! hash nvme; then
 	echo "nvme command not found; skipping discovery test"
 	exit 0

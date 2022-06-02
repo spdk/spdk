@@ -46,7 +46,6 @@ function iscsi_header_data_digest_test() {
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio-wrapper"
 
 timing_enter start_iscsi_tgt

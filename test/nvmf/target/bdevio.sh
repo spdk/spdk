@@ -8,8 +8,6 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 # Don't use cores 0 - 2 to avoid overlap with bdevio.
 nvmfappstart -m 0x78

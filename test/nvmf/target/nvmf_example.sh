@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 NVMF_EXAMPLE=("$SPDK_EXAMPLE_DIR/nvmf")
 
 MALLOC_BDEV_SIZE=64

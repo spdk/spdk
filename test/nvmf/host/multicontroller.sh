@@ -5,8 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 NVMF_HOST_FIRST_PORT="60000"

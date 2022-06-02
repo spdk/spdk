@@ -10,8 +10,6 @@ PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 function disconnect_init() {
 	nvmfappstart -m 0xF0
 

@@ -8,8 +8,6 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 function starttarget() {
 	# Start the target
 	nvmfappstart -m 0x1E

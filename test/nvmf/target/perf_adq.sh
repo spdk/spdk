@@ -12,7 +12,6 @@ if ((${#TCP_INTERFACE_LIST[@]} == 0)); then
 	exit 1
 fi
 
-rpc_py="$rootdir/scripts/rpc.py"
 perf="$SPDK_EXAMPLE_DIR/perf"
 
 function adq_configure_driver() {

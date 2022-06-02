@@ -12,7 +12,6 @@ fi
 MALLOC_BDEV_SIZE=256
 MALLOC_BLOCK_SIZE=512
 subsystem="0"
-rpc_py="$rootdir/scripts/rpc.py"
 
 function gen_malloc_json() {
 	jq . <<- JSON

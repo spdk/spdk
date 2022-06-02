@@ -9,7 +9,6 @@ fi
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
-rpc_py="$rootdir/scripts/rpc.py"
 
 truncate -s 64M $testdir/aio.bdev
 

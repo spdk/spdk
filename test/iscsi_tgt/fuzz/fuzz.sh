@@ -22,8 +22,6 @@ timing_enter iscsi_fuzz
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 timing_enter start_iscsi_tgt
 
 "${ISCSI_APP[@]}" -m $ISCSI_TEST_CORE_MASK --wait-for-rpc &

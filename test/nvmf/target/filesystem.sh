@@ -9,8 +9,6 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 
 function nvmf_filesystem_create() {

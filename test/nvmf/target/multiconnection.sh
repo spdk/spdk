@@ -10,8 +10,6 @@ MALLOC_BLOCK_SIZE=512
 
 NVMF_SUBSYS=11
 
-rpc_py="$rootdir/scripts/rpc.py"
-
 nvmftestinit
 nvmfappstart -m 0xF
 

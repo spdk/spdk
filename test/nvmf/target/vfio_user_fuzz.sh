@@ -8,7 +8,6 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
-rpc_py="$rootdir/scripts/rpc.py"
 nqn=nqn.2021-09.io.spdk:cnode0
 traddr=/var/run/vfio-user
 
