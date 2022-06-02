@@ -103,6 +103,16 @@ extern "C" {
 #endif
 #define _spdk_ivdt_dcache(pdata)
 
+#elif defined(__riscv)
+
+#define _spdk_rmb()	__asm__ __volatile__("fence ir, ir" ::: "memory")
+#define _spdk_wmb()	__asm__ __volatile__("fence ow, ow" ::: "memory")
+#define _spdk_mb()	__asm__ __volatile__("fence iorw, iorw" ::: "memory")
+#define _spdk_smp_rmb()	__asm__ __volatile__("fence r, r" ::: "memory")
+#define _spdk_smp_wmb()	__asm__ __volatile__("fence w, w" ::: "memory")
+#define _spdk_smp_mb()	__asm__ __volatile__("fence rw, rw" ::: "memory")
+#define _spdk_ivdt_dcache(pdata)
+
 #else
 
 #define _spdk_rmb()
