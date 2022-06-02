@@ -103,11 +103,9 @@ DEPDIRS-sock_uring := log sock util
 
 # module/scheduler
 DEPDIRS-scheduler_dynamic := event log thread util json
-ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
-ifeq ($(OS),Linux)
+ifeq (y,$(DPDK_POWER))
 DEPDIRS-scheduler_dpdk_governor := event log
 DEPDIRS-scheduler_gscheduler := event log
-endif
 endif
 
 # module/bdev

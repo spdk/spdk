@@ -94,10 +94,8 @@ ACCEL_MODULES_LIST += accel_dsa accel_iaa idxd
 endif
 
 SCHEDULER_MODULES_LIST = scheduler_dynamic
-ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
-ifeq ($(OS),Linux)
+ifeq (y,$(DPDK_POWER))
 SCHEDULER_MODULES_LIST += env_dpdk scheduler_dpdk_governor scheduler_gscheduler
-endif
 endif
 
 EVENT_BDEV_SUBSYSTEM = event_bdev event_accel event_vmd event_sock

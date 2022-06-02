@@ -10,11 +10,8 @@ DIRS-y = dynamic
 
 # Do not compile schedulers and governors based on DPDK env
 # if non-DPDK env is used.
-ENV_NAME := $(notdir $(CONFIG_ENV))
-ifeq ($(ENV_NAME),env_dpdk)
-ifeq ($(OS),Linux)
+ifeq (y,$(DPDK_POWER))
 DIRS-y += dpdk_governor gscheduler
-endif
 endif
 
 .PHONY: all clean $(DIRS-y)
