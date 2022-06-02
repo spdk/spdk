@@ -1896,6 +1896,95 @@ struct spdk_nvme_cdata_fuses {
 	uint16_t	reserved : 15;
 };
 
+struct spdk_nvme_cdata_oaes {
+	uint32_t	reserved1 : 8;
+
+	/* Supports sending Namespace Attribute Notices. */
+	uint32_t	ns_attribute_notices : 1;
+
+	/* Supports sending Firmware Activation Notices. */
+	uint32_t	fw_activation_notices : 1;
+
+	uint32_t	reserved2 : 1;
+
+	/* Supports Asymmetric Namespace Access Change Notices. */
+	uint32_t	ana_change_notices : 1;
+
+	/* Supports Predictable Latency Event Aggregate Log Change Notices. */
+	uint32_t	pleal_change_notices : 1;
+
+	/* Supports LBA Status Information Alert Notices. */
+	uint32_t	lba_sia_notices : 1;
+
+	/* Supports Endurance Group Event Aggregate Log Page Change Notices. */
+	uint32_t	egealp_change_notices : 1;
+
+	/* Supports Normal NVM Subsystem Shutdown event. */
+	uint32_t	nnvm_sse : 1;
+
+	uint32_t	reserved3 : 11;
+
+	/* Supports Zone Descriptor Change Notices (refer to the ZNS Command Set specification) */
+	uint32_t	zdes_change_notices : 1;
+
+	uint32_t	reserved4 : 3;
+
+	/* Supports Discovery log change notices (refer to the NVMe over Fabrics specification) */
+	uint32_t	discovery_log_change_notices : 1;
+};
+
+struct spdk_nvme_cdata_ctratt {
+	/* Supports 128-bit host identifier */
+	uint32_t	host_id_exhid_supported: 1;
+
+	/* Supports non-operational power state permissive mode */
+	uint32_t	non_operational_power_state_permissive_mode: 1;
+
+	/* Supports NVM sets */
+	uint32_t	nvm_sets: 1;
+
+	/* Supports read recovery levels */
+	uint32_t	read_recovery_levels: 1;
+
+	/* Supports endurance groups */
+	uint32_t	endurance_groups: 1;
+
+	/* Supports predictable latency mode */
+	uint32_t	predictable_latency_mode: 1;
+
+	/* Supports traffic based keep alive */
+	uint32_t	tbkas: 1;
+
+	/* Supports reporting of namespace granularity */
+	uint32_t	namespace_granularity: 1;
+
+	/* Supports SQ associations */
+	uint32_t	sq_associations: 1;
+
+	/* Supports reporting of UUID list */
+	uint32_t	uuid_list: 1;
+
+	/* NVM subsystem supports multiple domains */
+	uint32_t	mds: 1;
+
+	/* Supports fixed capacity management */
+	uint32_t	fixed_capacity_management: 1;
+
+	/* Supports variable capacity management */
+	uint32_t	variable_capacity_management: 1;
+
+	/* Supports delete endurance group operation */
+	uint32_t	delete_endurance_group: 1;
+
+	/* Supports delete NVM set */
+	uint32_t	delete_nvm_set: 1;
+
+	/* Supports I/O command set specific extended PI formats */
+	uint32_t	elbas: 1;
+
+	uint32_t	reserved: 16;
+};
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -1945,39 +2034,18 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	uint32_t		rtd3e;
 
 	/** optional asynchronous events supported */
-	struct {
-		uint32_t	reserved1 : 8;
-
-		/** Supports sending Namespace Attribute Notices. */
-		uint32_t	ns_attribute_notices : 1;
-
-		/** Supports sending Firmware Activation Notices. */
-		uint32_t	fw_activation_notices : 1;
-
-		uint32_t	reserved2 : 1;
-
-		/** Supports Asymmetric Namespace Access Change Notices. */
-		uint32_t	ana_change_notices : 1;
-
-		uint32_t	reserved3 : 19;
-
-		/** Supports Discovery log change notices (refer to the NVMe over Fabrics specification) */
-		uint32_t	discovery_log_change_notices : 1;
-
-	} oaes;
+	struct spdk_nvme_cdata_oaes oaes;
 
 	/** controller attributes */
-	struct {
-		/** Supports 128-bit host identifier */
-		uint32_t	host_id_exhid_supported: 1;
+	struct spdk_nvme_cdata_ctratt ctratt;
 
-		/** Supports non-operational power state permissive mode */
-		uint32_t	non_operational_power_state_permissive_mode: 1;
+	/** Read Recovery Levels Supported */
+	uint16_t		rrls;
 
-		uint32_t	reserved: 30;
-	} ctratt;
+	uint8_t			reserved_102[9];
 
-	uint8_t			reserved_100[12];
+	/** Controller Type */
+	uint8_t			cntrltype;
 
 	/** FRU globally unique identifier */
 	uint8_t			fguid[16];
@@ -1985,7 +2053,38 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/** Command Retry Delay Time 1, 2 and 3 */
 	uint16_t		crdt[3];
 
-	uint8_t			reserved_122[122];
+	uint8_t			reserved_134[119];
+
+	/** NVM Subsystem Report */
+	struct {
+		/* NVM Subsystem part of NVMe storage device */
+		uint8_t		nvmesd : 1;
+
+		/* NVM Subsystem part of NVMe enclosure */
+		uint8_t		nvmee : 1;
+
+		uint8_t		nvmsr_rsvd : 6;
+	} nvmsr;
+
+	/** VPD Write Cycle Information */
+	struct {
+		/* VPD write cycles remaining */
+		uint8_t		vwcr : 7;
+
+		/* VPD write cycles remaining valid */
+		uint8_t		vwcrv : 1;
+	} vwci;
+
+	/** Management Endpoint Capabilities */
+	struct {
+		/* SMBus/I2C Port management endpoint */
+		uint8_t		smbusme : 1;
+
+		/* PCIe port management endpoint */
+		uint8_t		pcieme : 1;
+
+		uint8_t		mec_rsvd : 6;
+	} mec;
 
 	/* bytes 256-511: admin command set attributes */
 

@@ -1286,9 +1286,54 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oaes.ns_attribute_notices ? "Supported" : "Not Supported");
 	printf("  Firmware Activation Notices:         %s\n",
 	       cdata->oaes.fw_activation_notices ? "Supported" : "Not Supported");
+	printf("  ANA Change Notices:                  %s\n",
+	       cdata->oaes.ana_change_notices ? "Supported" : "Not Supported");
+	printf("  PLE Aggregate Log Change Notices:    %s\n",
+	       cdata->oaes.pleal_change_notices ? "Supported" : "Not Supported");
+	printf("  LBA Status Info Alert Notices:       %s\n",
+	       cdata->oaes.lba_sia_notices ? "Supported" : "Not Supported");
+	printf("  EGE Aggregate Log Change Notices:    %s\n",
+	       cdata->oaes.egealp_change_notices ? "Supported" : "Not Supported");
+	printf("  Normal NVM Subsystem Shutdown event: %s\n",
+	       cdata->oaes.nnvm_sse ? "Supported" : "Not Supported");
+	printf("  Zone Descriptor Change Notices:      %s\n",
+	       cdata->oaes.zdes_change_notices ? "Supported" : "Not Supported");
+	printf("  Discovery Log Change Notices:        %s\n",
+	       cdata->oaes.discovery_log_change_notices ? "Supported" : "Not Supported");
 
-	printf("128-bit Host Identifier:               %s\n",
+	printf("Controller Attributes\n");
+	printf("  128-bit Host Identifier:             %s\n",
 	       cdata->ctratt.host_id_exhid_supported ? "Supported" : "Not Supported");
+	printf("  Non-Operational Permissive Mode:     %s\n",
+	       cdata->ctratt.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
+	printf("  NVM Sets:                            %s\n",
+	       cdata->ctratt.nvm_sets ? "Supported" : "Not Supported");
+	printf("  Read Recovery Levels:                %s\n",
+	       cdata->ctratt.read_recovery_levels ? "Supported" : "Not Supported");
+	printf("  Endurance Groups:                    %s\n",
+	       cdata->ctratt.endurance_groups ? "Supported" : "Not Supported");
+	printf("  Predictable Latency Mode:            %s\n",
+	       cdata->ctratt.predictable_latency_mode ? "Supported" : "Not Supported");
+	printf("  Traffic Based Keep ALive:            %s\n",
+	       cdata->ctratt.tbkas ? "Supported" : "Not Supported");
+	printf("  Namespace Granularity:               %s\n",
+	       cdata->ctratt.namespace_granularity ? "Supported" : "Not Supported");
+	printf("  SQ Associations:                     %s\n",
+	       cdata->ctratt.sq_associations ? "Supported" : "Not Supported");
+	printf("  UUID List:                           %s\n",
+	       cdata->ctratt.uuid_list ? "Supported" : "Not Supported");
+	printf("  Multi-Domain Subsystem:              %s\n",
+	       cdata->ctratt.mds ? "Supported" : "Not Supported");
+	printf("  Fixed Capacity Management:           %s\n",
+	       cdata->ctratt.fixed_capacity_management ? "Supported" : "Not Supported");
+	printf("  Variable Capacity Management:        %s\n",
+	       cdata->ctratt.variable_capacity_management ? "Supported" : "Not Supported");
+	printf("  Delete Endurance Group:              %s\n",
+	       cdata->ctratt.delete_endurance_group ? "Supported" : "Not Supported");
+	printf("  Delete NVM Set:                      %s\n",
+	       cdata->ctratt.delete_nvm_set ? "Supported" : "Not Supported");
+	printf("  Extended LBA Formats Supported:      %s\n",
+	       cdata->ctratt.elbas ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Controller Memory Buffer Support\n");
