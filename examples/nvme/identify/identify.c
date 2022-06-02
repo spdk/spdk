@@ -731,8 +731,39 @@ print_zns_zone(uint8_t *report, uint32_t index, uint32_t zdes)
 
 	desc = (struct spdk_nvme_zns_zone_desc *)(report + zd_index);
 
-	printf("ZSLBA: 0x%016"PRIx64" ZCAP: 0x%016"PRIx64" WP: 0x%016"PRIx64" ZS: %x ZT: %x ZA: %x\n",
-	       desc->zslba, desc->zcap, desc->wp, desc->zs, desc->zt, desc->za.raw);
+	printf("ZSLBA: 0x%016"PRIx64" ZCAP: 0x%016"PRIx64" WP: 0x%016"PRIx64" ZS: ", desc->zslba,
+	       desc->zcap, desc->wp);
+	switch (desc->zs) {
+	case SPDK_NVME_ZONE_STATE_EMPTY:
+		printf("Empty");
+		break;
+	case SPDK_NVME_ZONE_STATE_IOPEN:
+		printf("Implicit open");
+		break;
+	case SPDK_NVME_ZONE_STATE_EOPEN:
+		printf("Explicit open");
+		break;
+	case SPDK_NVME_ZONE_STATE_CLOSED:
+		printf("Closed");
+		break;
+	case SPDK_NVME_ZONE_STATE_RONLY:
+		printf("Read only");
+		break;
+	case SPDK_NVME_ZONE_STATE_FULL:
+		printf("Full");
+		break;
+	case SPDK_NVME_ZONE_STATE_OFFLINE:
+		printf("Offline");
+		break;
+	default:
+		printf("Reserved");
+	}
+	printf(" ZT: %s ZA: %x\n", (desc->zt == SPDK_NVME_ZONE_TYPE_SEQWR) ? "SWR" : "Reserved",
+	       desc->za.raw);
+
+	if (!desc->za.bits.zdev) {
+		return;
+	}
 
 	for (i = 0; i < zdes; i += 8) {
 		printf("zone_desc_ext[%d] : 0x%"PRIx64"\n", i,
@@ -819,6 +850,7 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 			slba += zone_size_lba;
 			handled_zones++;
 		}
+		printf("\n");
 	}
 
 	free(report_buf);
