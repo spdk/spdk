@@ -136,3 +136,35 @@ The software module is enabled by default. If no hardware engine is explicitly
 enabled via startup RPC as discussed earlier, the software module will use ISA-L
 if available for functions such as CRC32C. Otherwise, standard glibc calls are
 used to back the framework API.
+
+### Engine to Operation Code Assignment {#accel_assignments}
+
+When multiple engines are initialized, the accel framework will assign op codes to
+engines by first assigning all op codes to the Software Engine and then overriding
+op code assignments to Hardware Engines in the order in which they were initialized.
+The RPC `accel_get_opc_assignments` can be used at any time to see the current
+assignment map including the names of valid operations.  The RPC `accel_assign_opc`
+can be used after initializing the desired Hardware Engines but before starting the
+framework in the event that a specific override is desired.  Note that to start an
+application and send startup RPC's use the `--wait-for-rpc` parameter and then use the
+`framework_start_init` RPC to continue. For example, assume the DSA Engine is initialized
+but for some reason the desire is to have the Software Module handle copies instead.
+The following RPCs would accomplish the copy override:
+
+`./scripts/rpc.py dsa_scan_accel_engine
+./scripts/rpc.py accel_assign_opc -o copy -e software
+./scripts/rpc.py framework_start_init
+./scripts/rpc.py accel_get_opc_assignments
+{
+  "copy": "software",
+  "fill": "dsa",
+  "dualcast": "dsa",
+  "compare": "dsa",
+  "crc32c": "dsa",
+  "copy_crc32c": "dsa",
+  "compress": "software",
+  "decompress": "software"
+}`
+
+To detemine the name of available engines and their supported operations use the
+RPC `accel_get_engine_info`.
