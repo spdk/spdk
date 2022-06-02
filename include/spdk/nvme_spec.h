@@ -1804,6 +1804,7 @@ enum spdk_nvme_flush_broadcast {
 	SPDK_NVME_FLUSH_BROADCAST_SUPPORTED		= 3
 };
 
+#define SPDK_NVME_MAXDNA_FIELD_SIZE 16
 #define SPDK_NVME_NQN_FIELD_SIZE 256
 
 /** Identify Controller data NVMe over Fabrics-specific fields */
@@ -2344,7 +2345,8 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/** NVM vendor specific command configuration */
 	uint8_t			nvscc;
 
-	uint8_t			reserved531;
+	/** Namespace Write Protection Capabilities */
+	uint8_t			nwpc;
 
 	/** atomic compare & write unit */
 	uint16_t		acwu;
@@ -2361,7 +2363,13 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* maximum number of allowed namespaces */
 	uint32_t		mnan;
 
-	uint8_t			reserved4[224];
+	/* maximum domain namespace attachments */
+	uint8_t			maxdna[SPDK_NVME_MAXDNA_FIELD_SIZE];
+
+	/* maximum I/O controller namespace attachments */
+	uint32_t		maxcna;
+
+	uint8_t			reserved4[204];
 
 	uint8_t			subnqn[SPDK_NVME_NQN_FIELD_SIZE];
 
