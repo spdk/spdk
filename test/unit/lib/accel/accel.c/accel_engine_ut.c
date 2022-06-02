@@ -62,6 +62,7 @@ test_setup(void)
 	}
 
 	g_accel_engine.submit_tasks = sw_accel_submit_tasks;
+	g_accel_engine.name = "software";
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
 		g_accel_ch->engine_ch[i] = g_engine_ch;
 		g_engines_opc[i] = &g_accel_engine;
@@ -514,6 +515,46 @@ test_spdk_accel_engine_register(void)
 	CU_ASSERT(i == 4);
 }
 
+static void
+test_spdk_accel_assign_opc(void)
+{
+	int rc;
+
+	g_engines_opc_override[ACCEL_OPC_COPY] = "software";
+
+	/* invalid opcode won't change the override value */
+	rc = spdk_accel_assign_opc(ACCEL_OPC_LAST + 1, "dsa");
+	CU_ASSERT(strcmp(g_engines_opc_override[ACCEL_OPC_COPY], "software") == 0);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* valid opcode should update to "dsa" */
+	rc = spdk_accel_assign_opc(ACCEL_OPC_COPY, "dsa");
+	CU_ASSERT(strcmp(g_engines_opc_override[ACCEL_OPC_COPY], "dsa") == 0);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+test_spdk_accel_get_opc_engine_name(void)
+{
+	const char *name;
+	int rc;
+
+	/* valid index, hardcoded name for UT */
+	rc = spdk_accel_get_opc_engine_name(ACCEL_OPC_COPY, &name);
+	CU_ASSERT(strcmp(name, "software") == 0);
+	CU_ASSERT(rc == 0);
+
+	/* pretend nothing is assigned yet */
+	g_engines_opc[0] = NULL;
+	rc = spdk_accel_get_opc_engine_name(ACCEL_OPC_COPY, &name);
+	CU_ASSERT(rc == -ENOENT);
+	g_engines_opc[0] = &g_accel_engine;
+
+	/* invalid name */
+	rc = spdk_accel_get_opc_engine_name(ACCEL_OPC_LAST + 1, &name);
+	CU_ASSERT(rc == -EINVAL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -536,6 +577,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32cv);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy_crc32c);
 	CU_ADD_TEST(suite, test_engine_find_by_name);
+	CU_ADD_TEST(suite, test_spdk_accel_assign_opc);
+	CU_ADD_TEST(suite, test_spdk_accel_get_opc_engine_name);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
