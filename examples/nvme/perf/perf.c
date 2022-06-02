@@ -1745,7 +1745,7 @@ static void usage(char *program_name)
 	printf("\t[-w, --io-pattern <pattern> io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M, --rwmixread <0-100> rwmixread (100 for reads, 0 for writes)]\n");
-	printf("\t[-F, --zipf <theta> use zipf distribution for random I/O\n");
+	printf("\t[-F, --zipf <theta> use zipf distribution for random I/O]\n");
 	printf("\t[-L, --enable-sw-latency-tracking enable latency tracking via sw, default: disabled]\n");
 	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
 	printf("\t[-l, --enable-ssd-latency-tracking enable latency tracking via ssd (if supported), default: disabled]\n");
@@ -1782,7 +1782,7 @@ static void usage(char *program_name)
 	printf("\t[-C, --max-completion-per-poll <val> max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i, --shmem-grp-id <id> shared memory group ID]\n");
-	printf("\t[-Q, --skip-errors log I/O errors every N times (default: 1)\n");
+	printf("\t[-Q, --skip-errors log I/O errors every N times (default: 1)]\n");
 	printf("\t");
 	spdk_log_usage(stdout, "-T");
 	printf("\t[-V, --enable-vmd enable VMD enumeration]\n");
@@ -1798,7 +1798,7 @@ static void usage(char *program_name)
 #ifdef DEBUG
 	printf("\t[-G, --enable-debug enable debug logging]\n");
 #else
-	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 #endif
 	printf("\t[--transport-stats dump transport statistics]\n");
 	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
