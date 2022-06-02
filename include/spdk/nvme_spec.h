@@ -1828,7 +1828,14 @@ struct spdk_nvme_cdata_nvmf_specific {
 	/** Maximum SGL block descriptors (0 = no limit) */
 	uint8_t		msdbd;
 
-	uint8_t		reserved[244];
+	/** Optional fabric commands supported */
+	struct {
+		/** Support disconnect command and individual I/O queue deletion */
+		uint16_t disconnect : 1;
+		uint16_t reserved : 15;
+	} ofcs;
+
+	uint8_t		reserved[242];
 };
 
 /** Identify Controller data SGL support */
