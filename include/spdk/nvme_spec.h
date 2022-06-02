@@ -1724,7 +1724,20 @@ struct spdk_nvme_power_state {
 	uint8_t rwl		: 5;		/* bits 124:120: relative write latency */
 	uint8_t reserved6	: 3;
 
-	uint8_t reserved7[16];
+	uint16_t idlp;				/* bits 143:128: idle power */
+
+	uint8_t reserved7	: 6;
+	uint8_t ips		: 2;		/* bits 151:150: idle power scale */
+
+	uint8_t reserved8;
+
+	uint16_t actp;				/* bits 175:160: active power */
+
+	uint8_t apw		: 3;		/* bits 178:176: active power workload */
+	uint8_t reserved9	: 3;
+	uint8_t aps		: 2;		/* bits 183:182: active power scale */
+
+	uint8_t reserved10[9];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_power_state) == 32, "Incorrect size");
 

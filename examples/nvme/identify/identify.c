@@ -1671,23 +1671,66 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		unsigned ps = features[SPDK_NVME_FEAT_POWER_MANAGEMENT].result & 0x1F;
 		printf("Power Management\n");
 		printf("================\n");
-		printf("Number of Power States:      %u\n", cdata->npss + 1);
-		printf("Current Power State:         Power State #%u\n", ps);
+		printf("Number of Power States:          %u\n", cdata->npss + 1);
+		printf("Current Power State:             Power State #%u\n", ps);
 		for (i = 0; i <= cdata->npss; i++) {
 			const struct spdk_nvme_power_state psd = cdata->psd[i];
-			printf("Power State #%u:  ", i);
+			printf("Power State #%u:\n", i);
 			if (psd.mps) {
 				/* MP scale is 0.0001 W */
-				printf("Max Power: %u.%04u W\n",
+				printf("  Max Power:                    %u.%04u W\n",
 				       psd.mp / 10000,
 				       psd.mp % 10000);
 			} else {
 				/* MP scale is 0.01 W */
-				printf("Max Power: %3u.%02u W\n",
+				printf("  Max Power:                    %3u.%02u W\n",
 				       psd.mp / 100,
 				       psd.mp % 100);
 			}
-			/* TODO: print other power state descriptor fields */
+			printf("  Non-Operational State:         %s\n",
+			       psd.nops ? "Non-Operation" : "Operational");
+			printf("  Entry Latency:                 ");
+			if (psd.enlat) {
+				printf("%u microseconds\n", psd.enlat);
+			} else {
+				printf("Not Reported\n");
+			}
+			printf("  Exit Latency:                  ");
+			if (psd.exlat) {
+				printf("%u microseconds\n", psd.exlat);
+			} else {
+				printf("Not Reported\n");
+			}
+			printf("  Relative Read Throughput:      %u\n", psd.rrt);
+			printf("  Relative Read Latency:         %u\n", psd.rrl);
+			printf("  Relative Write Throughput:     %u\n", psd.rwt);
+			printf("  Relative Write Latency:        %u\n", psd.rwl);
+			printf("  Idle Power:                    ");
+			switch (psd.ips) {
+			case 1:
+				/* Idle Power scale is 0.0001 W */
+				printf("%u.%04u W\n", psd.idlp / 10000, psd.idlp % 10000);
+				break;
+			case 2:
+				/* Idle Power scale is 0.01 W */
+				printf("%u.%02u W\n", psd.idlp / 100, psd.idlp % 100);
+				break;
+			default:
+				printf(" Not Reported\n");
+			}
+			printf("  Active Power:                  ");
+			switch (psd.aps) {
+			case 1:
+				/* Active Power scale is 0.0001 W */
+				printf("%u.%04u W\n", psd.actp / 10000, psd.actp % 10000);
+				break;
+			case 2:
+				/* Active Power scale is 0.01 W */
+				printf("%u.%02u W\n", psd.actp / 100, psd.actp % 100);
+				break;
+			default:
+				printf(" Not Reported\n");
+			}
 		}
 		printf("Non-Operational Permissive Mode: %s\n",
 		       cdata->ctratt.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
