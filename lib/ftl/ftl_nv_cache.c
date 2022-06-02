@@ -709,7 +709,7 @@ compaction_process(struct ftl_nv_cache_compactor *compactor)
 	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache,
 				   struct spdk_ftl_dev, nv_cache);
 	struct ftl_nv_cache_chunk *chunk;
-	uint64_t to_read, addr;
+	uint64_t to_read, addr, begin, end, offset;
 	int rc;
 
 	/* Check if all read blocks done */
@@ -733,8 +733,34 @@ compaction_process(struct ftl_nv_cache_compactor *compactor)
 	/*
 	 * Get range of blocks to read
 	 */
+	to_read = chunk_blocks_to_read(chunk);
+	assert(to_read > 0);
+
 	addr = ftl_addr_from_nvc_offset(dev, chunk->offset + chunk->md->read_pointer);
-	to_read = spdk_min(chunk_blocks_to_read(chunk), compactor->rd->num_blocks);
+	begin = ftl_bitmap_find_first_set(dev->valid_map, addr, addr + to_read);
+	if (begin != UINT64_MAX) {
+		offset = spdk_min(begin - addr, to_read);
+	} else {
+		offset = to_read;
+	}
+
+	if (offset) {
+		chunk->md->read_pointer += offset;
+		chunk_compaction_advance(chunk, offset);
+		to_read -= offset;
+		if (!to_read) {
+			compactor_deactivate(compactor);
+			return;
+		}
+	}
+
+	end = ftl_bitmap_find_first_clear(dev->valid_map, begin + 1, begin + to_read);
+	if (end != UINT64_MAX) {
+		to_read = end - begin;
+	}
+
+	addr = begin;
+	to_read = spdk_min(to_read, compactor->rd->num_blocks);
 
 	/* Read data and metadata from NV cache */
 	rc = compaction_submit_read(compactor, addr, to_read);
