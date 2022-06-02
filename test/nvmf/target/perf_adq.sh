@@ -151,9 +151,9 @@ pre_conf_for_adq
 traffic_classes
 start_nvmf_target 0xF
 sleep 2
-# The number of I/O connections from initiator is the core count * qpairs per ns, so here its 6.
-# ADQ on target side will work if 6 connections are matched to two out of four cores on the target.
-$perf -q 64 -o 4096 -w randread -t 15 -P 2 -c 0x70 \
+# The number of I/O connections from initiator is the core count * qpairs per ns, so here its 12.
+# ADQ on target side will work if 12 connections are matched to two out of four cores on the target.
+$perf -q 64 -o 4096 -w randread -t 15 -P 4 -c 0x70 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 subnqn:nqn.2016-06.io.spdk:cnode1" &
 perfpid=$!
