@@ -178,6 +178,9 @@ struct ftl_nv_cache {
 	/* Chunk md memory pool */
 	struct ftl_mempool *chunk_md_pool;
 
+	/* Chunk md memory pool for freeing chunks */
+	struct ftl_mempool *free_chunk_md_pool;
+
 	/* Block Metadata size */
 	uint64_t md_size;
 
@@ -210,6 +213,10 @@ struct ftl_nv_cache {
 	/* Chunks being compacted */
 	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_comp_list;
 	uint64_t chunk_comp_count;
+
+	/* Chunks being freed */
+	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_free_md_list;
+	uint64_t chunk_free_md_count;
 
 	TAILQ_HEAD(, ftl_nv_cache_compaction) compaction_list;
 	uint64_t compaction_active_count;

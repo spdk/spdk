@@ -108,6 +108,18 @@ nv_cache_lba_map_pool_elem_size(const struct ftl_nv_cache *nv_cache)
 	return ftl_nv_cache_chunk_tail_md_num_blocks(nv_cache) * FTL_BLOCK_SIZE;
 }
 
+static inline bool is_chunk_count_valid(struct ftl_nv_cache *nv_cache)
+{
+	uint64_t chunk_count = 0;
+
+	chunk_count += nv_cache->chunk_open_count;
+	chunk_count += nv_cache->chunk_free_count;
+	chunk_count +=  nv_cache->chunk_full_count;
+	chunk_count +=  nv_cache->chunk_comp_count;
+
+	return chunk_count == nv_cache->chunk_count;
+}
+
 static uint64_t
 get_chunk_idx(struct ftl_nv_cache_chunk *chunk)
 {
@@ -161,6 +173,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	TAILQ_INIT(&nv_cache->chunk_open_list);
 	TAILQ_INIT(&nv_cache->chunk_full_list);
 	TAILQ_INIT(&nv_cache->chunk_comp_list);
+	TAILQ_INIT(&nv_cache->chunk_free_md_list);
 
 	/* First chunk metadata */
 	struct ftl_nv_cache_chunk_md *md = nvc_metadata(nv_cache);
@@ -216,6 +229,16 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 		return -ENOMEM;
 	}
 
+	/* Each compactor can be reading a different chunk which it needs to send free to at the end,
+	 * plus one backup each for high invalidity chunks processing */
+	nv_cache->free_chunk_md_pool = ftl_mempool_create(2 * FTL_NV_CACHE_NUM_COMPACTORS,
+				       sizeof(struct ftl_nv_cache_chunk_md),
+				       FTL_BLOCK_SIZE,
+				       SPDK_ENV_SOCKET_ID_ANY);
+	if (!nv_cache->free_chunk_md_pool) {
+		return -ENOMEM;
+	}
+
 	return 0;
 }
 
@@ -235,9 +258,11 @@ ftl_nv_cache_deinit(struct spdk_ftl_dev *dev)
 	ftl_mempool_destroy(nv_cache->md_pool);
 	ftl_mempool_destroy(nv_cache->lba_pool);
 	ftl_mempool_destroy(nv_cache->chunk_md_pool);
+	ftl_mempool_destroy(nv_cache->free_chunk_md_pool);
 	nv_cache->md_pool = NULL;
 	nv_cache->lba_pool = NULL;
 	nv_cache->chunk_md_pool = NULL;
+	nv_cache->free_chunk_md_pool = NULL;
 
 	free(nv_cache->chunks);
 	nv_cache->chunks = NULL;
@@ -405,6 +430,91 @@ ftl_chunk_free_md_entry(struct ftl_nv_cache_chunk *chunk)
 }
 
 static void
+ftl_chunk_free(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+
+	/* Reset chunk */
+	memset(chunk->md, 0, sizeof(*chunk->md));
+
+	TAILQ_INSERT_TAIL(&nv_cache->chunk_free_md_list, chunk, entry);
+	nv_cache->chunk_free_md_count++;
+}
+
+static int
+ftl_chunk_alloc_chunk_free_entry(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_lba_map *lba_map = &chunk->lba_map;
+	struct ftl_layout_region *region = &dev->layout.region[ftl_layout_region_type_nvc_md];
+
+	lba_map->chunk_dma_md = ftl_mempool_get(nv_cache->free_chunk_md_pool);
+
+	if (!lba_map->chunk_dma_md) {
+		return -1;
+	}
+
+	memset(lba_map->chunk_dma_md, 0, region->entry_size * FTL_BLOCK_SIZE);
+	return 0;
+}
+
+static void
+ftl_chunk_free_chunk_free_entry(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_lba_map *lba_map = &chunk->lba_map;
+
+	ftl_mempool_put(chunk->nv_cache->free_chunk_md_pool, lba_map->chunk_dma_md);
+	lba_map->chunk_dma_md = NULL;
+}
+
+static void chunk_free_cb(int status, void *ctx)
+{
+	struct ftl_nv_cache_chunk *chunk = (struct ftl_nv_cache_chunk *)ctx;
+
+	if (spdk_likely(!status)) {
+		struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+
+		nv_cache->chunk_free_md_count--;
+		TAILQ_INSERT_TAIL(&nv_cache->chunk_free_list, chunk, entry);
+		nv_cache->chunk_free_count++;
+		nv_cache->chunk_full_count--;
+		chunk->md->state = FTL_CHUNK_STATE_FREE;
+		ftl_chunk_free_chunk_free_entry(chunk);
+	} else {
+		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
+	}
+}
+
+static void
+ftl_chunk_send_free_state(struct ftl_nv_cache *nv_cache)
+{
+	int rc;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_lba_map *lba_map;
+	struct ftl_md *md = dev->layout.md[ftl_layout_region_type_nvc_md];
+	struct ftl_layout_region *region = &dev->layout.region[ftl_layout_region_type_nvc_md];
+	struct ftl_nv_cache_chunk *tchunk, *chunk = NULL;
+
+	TAILQ_FOREACH_SAFE(chunk, &nv_cache->chunk_free_md_list, entry, tchunk) {
+		lba_map = &chunk->lba_map;
+		rc = ftl_chunk_alloc_chunk_free_entry(chunk);
+		if (rc) {
+			break;
+		}
+
+		TAILQ_REMOVE(&nv_cache->chunk_free_md_list, chunk, entry);
+
+		memcpy(lba_map->chunk_dma_md, chunk->md, region->entry_size * FTL_BLOCK_SIZE);
+		lba_map->chunk_dma_md->state = FTL_CHUNK_STATE_FREE;
+		lba_map->chunk_dma_md->lba_map_checksum = 0;
+
+		ftl_md_persist_entry(md, get_chunk_idx(chunk), lba_map->chunk_dma_md, ftl_md_get_vss_buffer(md),
+				     chunk_free_cb, chunk, &chunk->md_persist_entry_ctx);
+	}
+}
+
+static void
 chunk_compaction_advance(struct ftl_nv_cache_chunk *chunk, uint64_t num_blocks)
 {
 	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
@@ -421,6 +531,8 @@ chunk_compaction_advance(struct ftl_nv_cache_chunk *chunk, uint64_t num_blocks)
 	/* Remove chunk from compacted list */
 	TAILQ_REMOVE(&nv_cache->chunk_comp_list, chunk, entry);
 	nv_cache->chunk_comp_count--;
+
+	ftl_chunk_free(chunk);
 }
 
 static bool
@@ -1134,6 +1246,8 @@ void ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 		compaction_process_start(comp);
 	}
 
+	ftl_chunk_send_free_state(nv_cache);
+
 	if (spdk_unlikely(nv_cache->halt)) {
 		struct ftl_nv_cache_compaction *compaction;
 
@@ -1421,8 +1535,8 @@ int
 ftl_nv_cache_chunks_busy(struct ftl_nv_cache *nv_cache)
 {
 	/* chunk_current is migrating to closed status when closing, any others should already be
-	 * moved to free chunk list. */
-	return nv_cache->chunk_open_count == 0;
+	 * moved to free chunk list. Also need to wait for free md requests */
+	return nv_cache->chunk_open_count == 0 && nv_cache->chunk_free_md_count == 0;
 }
 
 void
