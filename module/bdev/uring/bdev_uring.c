@@ -764,7 +764,7 @@ create_uring_bdev(const char *name, const char *filename, uint32_t block_size)
 	uring->bdev.product_name = "URING bdev";
 	uring->bdev.module = &uring_if;
 
-	uring->bdev.write_cache = 1;
+	uring->bdev.write_cache = 0;
 
 	detected_block_size = spdk_fd_get_blocklen(uring->fd);
 	if (block_size == 0) {
