@@ -406,6 +406,7 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 
 	}
 
+	worker->current_queue_depth++;
 	if (rc) {
 		accel_done(task, rc);
 	}
@@ -566,7 +567,6 @@ accel_done(void *arg1, int status)
 		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 		task = _get_task(worker);
 		_submit_single(worker, task);
-		worker->current_queue_depth++;
 	} else {
 		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
 	}
@@ -733,7 +733,6 @@ _init_thread(void *arg1)
 	/* Load up queue depth worth of operations. */
 	for (i = 0; i < g_queue_depth; i++) {
 		task = _get_task(worker);
-		worker->current_queue_depth++;
 		if (task == NULL) {
 			goto error;
 		}
