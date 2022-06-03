@@ -340,7 +340,7 @@ ftl_band_close(struct ftl_band *band)
 	void *metadata = band->p2l_map.band_map;
 	uint64_t num_blocks = ftl_tail_md_num_blocks(dev);
 
-	/* Write LBA map first, after completion, set the state to close on nvcache, then internally */
+	/* Write P2L map first, after completion, set the state to close on nvcache, then internally */
 	ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
 	ftl_basic_rq_init(dev, &band->metadata_rq, metadata, num_blocks);
 	ftl_basic_rq_set_owner(&band->metadata_rq, band_map_write_cb, band);
@@ -380,6 +380,68 @@ ftl_band_free(struct ftl_band *band)
 			     band_free_cb, band, &band->md_persist_entry_ctx);
 
 	/* TODO: The whole band erase code should probably be done here instead */
+}
+
+static void
+read_md_cb(struct ftl_basic_rq *brq)
+{
+	struct ftl_band *band = brq->owner.priv;
+	struct spdk_ftl_dev *dev = band->dev;
+	ftl_band_ops_cb cb;
+	uint32_t band_map_crc;
+	bool success = true;
+	void *priv;
+
+	cb = band->owner.ops_fn;
+	priv = band->owner.priv;
+
+	if (!brq->success) {
+		ftl_band_basic_rq_read(band, &band->metadata_rq);
+		return;
+	}
+
+	band_map_crc = spdk_crc32c_update(band->p2l_map.band_map,
+					  ftl_tail_md_num_blocks(band->dev) * FTL_BLOCK_SIZE, 0);
+	if (band->md->p2l_map_checksum && band->md->p2l_map_checksum != band_map_crc) {
+		FTL_ERRLOG(dev, "GC error, inconsistent P2L map CRC\n");
+		success = false;
+	}
+	band->owner.ops_fn = NULL;
+	band->owner.priv = NULL;
+	cb(band, priv, success);
+}
+
+static int
+_read_md(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_basic_rq *rq = &band->metadata_rq;
+
+	if (ftl_band_alloc_p2l_map(band)) {
+		return -ENOMEM;
+	}
+
+	/* Read P2L map */
+	ftl_basic_rq_init(dev, rq, band->p2l_map.band_map, ftl_p2l_map_num_blocks(dev));
+	ftl_basic_rq_set_owner(rq, read_md_cb, band);
+
+	rq->io.band = band;
+	rq->io.addr = ftl_band_p2l_map_addr(band);
+
+	ftl_band_basic_rq_read(band, &band->metadata_rq);
+
+	return 0;
+}
+
+static void
+read_md(void *band)
+{
+	int rc;
+
+	rc = _read_md(band);
+	if (spdk_unlikely(rc)) {
+		spdk_thread_send_msg(spdk_get_thread(), read_md, band);
+	}
 }
 
 static void
@@ -425,4 +487,25 @@ ftl_band_read_tail_brq_md(struct ftl_band *band, ftl_band_md_cb cb, void *cntx)
 	rq->io.addr = band->tail_md_addr;
 
 	ftl_band_basic_rq_read(band, &band->metadata_rq);
+}
+
+void
+ftl_band_get_next_gc(struct spdk_ftl_dev *dev, ftl_band_ops_cb cb, void *cntx)
+{
+	struct ftl_band *band = ftl_band_search_next_to_reloc(dev);
+
+	/* if disk is very small, GC start very early that no band is ready for it */
+	if (spdk_unlikely(!band)) {
+		cb(NULL, cntx, false);
+		return;
+	}
+
+	/* Only one owner is allowed */
+	assert(!band->queue_depth);
+	assert(!band->owner.ops_fn);
+	assert(!band->owner.priv);
+	band->owner.ops_fn = cb;
+	band->owner.priv = cntx;
+
+	read_md(band);
 }

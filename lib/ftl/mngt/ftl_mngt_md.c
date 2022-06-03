@@ -177,6 +177,8 @@ ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 
 	sb->overprovisioning = dev->conf.overprovisioning;
 
+	ftl_band_init_gc_iter(dev);
+
 	/* md layout isn't initialized yet.
 	 * empty region list => all regions in the default location */
 	sb->md_layout_head.type = FTL_LAYOUT_REGION_TYPE_INVALID;
