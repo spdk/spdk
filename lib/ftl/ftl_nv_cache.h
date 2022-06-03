@@ -12,10 +12,21 @@
 #include "ftl_io.h"
 #include "ftl_utils.h"
 
+/*
+ * FTL non volatile cache is divided into groups of blocks called chunks.
+ * Size of each chunk is multiple of xfer size plus additional metadata.
+ * For each block associated lba is stored in metadata. Cache space is
+ * written chunk by chunk sequentially. When number of free chunks reaches
+ * some threshold oldest chunks are moved from cache to backend storage to
+ * create space for new user data.
+ */
+
 #define FTL_NVC_VERSION_0	0
 #define FTL_NVC_VERSION_1	1
 
 #define FTL_NVC_VERSION_CURRENT FTL_NVC_VERSION_1
+
+#define FTL_NV_CACHE_NUM_COMPACTORS 8
 
 struct ftl_nvcache_restore;
 typedef void (*ftl_nv_cache_restore_fn)(struct ftl_nvcache_restore *, int, void *cb_arg);
@@ -77,6 +88,14 @@ struct ftl_nv_cache_chunk {
 	struct ftl_md_io_entry_ctx md_persist_entry_ctx;
 };
 
+struct ftl_nv_cache_compactor {
+	struct ftl_nv_cache *nv_cache;
+	struct ftl_rq *wr;
+	struct ftl_rq *rd;
+	TAILQ_ENTRY(ftl_nv_cache_compactor) entry;
+	struct spdk_bdev_io_wait_entry bdev_io_wait;
+};
+
 struct ftl_nv_cache {
 	/* Flag indicating halt request */
 	bool halt;
@@ -125,6 +144,14 @@ struct ftl_nv_cache {
 	/* Full chunks list */
 	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_full_list;
 	uint64_t chunk_full_count;
+
+	/* Chunks being compacted */
+	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_comp_list;
+	uint64_t chunk_comp_count;
+
+	TAILQ_HEAD(, ftl_nv_cache_compactor) compactor_list;
+	uint64_t compaction_active_count;
+	uint64_t chunk_compaction_threshold;
 
 	struct ftl_nv_cache_chunk *chunks;
 };

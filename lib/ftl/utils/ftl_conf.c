@@ -20,6 +20,9 @@ static const struct spdk_ftl_conf g_default_conf = {
 	.overprovisioning = 20,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
 	.user_io_pool_size = 2048,
+	.nv_cache = {
+		.chunk_compaction_threshold = 80,
+	},
 };
 
 void
@@ -124,6 +127,11 @@ ftl_conf_is_valid(const struct spdk_ftl_conf *conf)
 		return false;
 	}
 	if (conf->overprovisioning == 0) {
+		return false;
+	}
+
+	if (conf->nv_cache.chunk_compaction_threshold == 0 ||
+	    conf->nv_cache.chunk_compaction_threshold > 100) {
 		return false;
 	}
 

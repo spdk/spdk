@@ -49,6 +49,11 @@ struct spdk_ftl_conf {
 	/* FTL startup mode mask, see spdk_ftl_mode enum for possible values */
 	uint32_t				mode;
 
+	struct {
+		/* Start compaction when full chunks exceed given % of entire chunks */
+		uint32_t			chunk_compaction_threshold;
+	} nv_cache;
+
 	/* Name of base block device (zoned or non-zoned) */
 	char					*base_bdev;
 
