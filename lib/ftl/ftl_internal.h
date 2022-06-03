@@ -24,6 +24,8 @@
  */
 typedef uint64_t ftl_addr;
 
+struct spdk_ftl_dev;
+
 enum ftl_md_type {
 	FTL_MD_TYPE_BAND,
 	FTL_MD_TYPE_CHUNK
@@ -79,5 +81,19 @@ struct ftl_p2l_map {
 		struct ftl_nv_cache_chunk_md	*chunk_dma_md;
 	};
 };
+
+struct spdk_ftl_dev;
+
+struct ftl_reloc *ftl_reloc_init(struct spdk_ftl_dev *dev);
+
+void ftl_reloc_free(struct ftl_reloc *reloc);
+
+void ftl_reloc(struct ftl_reloc *reloc);
+
+void ftl_reloc_halt(struct ftl_reloc *reloc);
+
+void ftl_reloc_resume(struct ftl_reloc *reloc);
+
+bool ftl_reloc_is_halted(const struct ftl_reloc *reloc);
 
 #endif /* FTL_INTERNAL_H */

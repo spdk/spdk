@@ -83,6 +83,26 @@ ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 }
 
 void
+ftl_mngt_init_reloc(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	dev->reloc = ftl_reloc_init(dev);
+	if (!dev->reloc) {
+		FTL_ERRLOG(dev, "Unable to initialize reloc structures\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+void
+ftl_mngt_deinit_reloc(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	ftl_reloc_free(dev->reloc);
+	ftl_mngt_next_step(mngt);
+}
+
+void
 ftl_mngt_init_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	if (ftl_nv_cache_init(dev)) {
@@ -141,6 +161,7 @@ ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 	dev->initialized = 1;
 	dev->sb_shm->shm_ready = true;
 
+	ftl_reloc_resume(dev->reloc);
 	ftl_writer_resume(&dev->writer_user);
 	ftl_writer_resume(&dev->writer_gc);
 	ftl_nv_cache_resume(&dev->nv_cache);

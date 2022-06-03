@@ -97,6 +97,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.action = ftl_mngt_init_bands_md
 		},
 		{
+			.name = "Initialize reloc",
+			.action = ftl_mngt_init_reloc,
+			.cleanup = ftl_mngt_deinit_reloc
+		},
+		{
 			.name = "Select startup mode",
 			.action = ftl_mngt_select_startup_mode
 		},

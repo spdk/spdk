@@ -78,6 +78,11 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 		return false;
 	}
 
+	if (!ftl_reloc_is_halted(dev->reloc)) {
+		ftl_reloc_halt(dev->reloc);
+		return false;
+	}
+
 	if (!ftl_writer_is_halted(&dev->writer_gc)) {
 		ftl_writer_halt(&dev->writer_gc);
 		return false;
@@ -263,6 +268,18 @@ ftl_submit_read(struct ftl_io *io)
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
+}
+
+bool
+ftl_needs_reloc(struct spdk_ftl_dev *dev)
+{
+	size_t limit = ftl_get_limit(dev, SPDK_FTL_LIMIT_START);
+
+	if (dev->num_free <= limit) {
+		return true;
+	}
+
+	return false;
 }
 
 void
@@ -493,6 +510,7 @@ ftl_core_poller(void *ctx)
 	ftl_process_io_queue(dev);
 	ftl_writer_run(&dev->writer_user);
 	ftl_writer_run(&dev->writer_gc);
+	ftl_reloc(dev->reloc);
 	ftl_nv_cache_process(dev);
 	ftl_l2p_process(dev);
 
