@@ -182,6 +182,8 @@ decorate_bands(struct spdk_ftl_dev *dev)
 		}
 	}
 
+	dev->num_logical_bands_in_physical = num_logical_in_phys;
+
 	/* Remove band from shut_bands list to prevent further processing */
 	/* if all blocks on this band are bad */
 	TAILQ_FOREACH_SAFE(band, &dev->shut_bands, queue_entry, temp_band) {
@@ -197,6 +199,62 @@ void ftl_mngt_decorate_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	decorate_bands(dev);
 	ftl_mngt_next_step(mngt);
+}
+
+static struct ftl_band *next_high_prio_band(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *result = NULL, *band;
+	uint64_t validity = UINT64_MAX;
+
+	TAILQ_FOREACH(band, &dev->shut_bands, queue_entry) {
+		if (band->lba_map.num_vld < validity) {
+			result = band;
+			validity = result->lba_map.num_vld;
+		}
+	}
+
+	return result;
+}
+
+static int finalize_init_gc(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *band;
+
+	ftl_band_init_gc_iter(dev);
+	dev->sb_shm->gc_info.band_id_high_prio = FTL_BAND_ID_INVALID;
+
+	if (0 == dev->num_free) {
+		/* Get number of available blocks in writer */
+		uint64_t free_blocks = ftl_writer_free_block(&dev->writer_gc);
+
+		/*
+		 * First, check a band candidate to GC
+		 */
+		band = ftl_band_search_next_to_defrag(dev);
+		ftl_bug(NULL == band);
+		uint64_t blocks_to_move = band->lba_map.num_vld;
+		if (blocks_to_move <= free_blocks) {
+			/* This GC band can be moved */
+			return 0;
+		}
+
+		/*
+		 * The GC candidate cannot be moved because no enough space. We need to find
+		 * another band.
+		 */
+		band = next_high_prio_band(dev);
+		ftl_bug(NULL == band);
+
+		if (band->lba_map.num_vld > free_blocks) {
+			FTL_ERRLOG(dev, "CRITICAL ERROR, no more free bands and cannot start\n");
+			return -1;
+		} else {
+			/* GC needs to start using this band */
+			dev->sb_shm->gc_info.band_id_high_prio = band->id;
+		}
+	}
+
+	return 0;
 }
 
 void
@@ -284,5 +342,9 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		return;
 	}
 
-	ftl_mngt_next_step(mngt);
+	if (finalize_init_gc(dev)) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
 }

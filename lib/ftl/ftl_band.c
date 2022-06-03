@@ -101,6 +101,7 @@ _ftl_band_set_free(struct ftl_band *band)
 
 	/* Remove the band from the closed band list */
 	TAILQ_INSERT_TAIL(&dev->free_bands, band, queue_entry);
+	band->reloc = false;
 
 	dev->num_free++;
 	ftl_apply_limits(dev);
@@ -504,4 +505,210 @@ ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev)
 {
 	/* Map pool element holds the whole tail md */
 	return ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE;
+}
+
+static double _band_invalidity(struct ftl_band *band)
+{
+	double valid = band->lba_map.num_vld;
+	double count = ftl_band_user_blocks(band);
+
+	return 1.0 - (valid / count);
+}
+
+static void dump_bands_to_gc(struct spdk_ftl_dev *dev)
+{
+	uint64_t i = dev->sb_shm->gc_info.band_id;
+	uint64_t end = dev->sb_shm->gc_info.band_id + dev->num_logical_bands_in_physical;
+
+	for (; i < end; i++) {
+		struct ftl_band *band = &dev->bands[i];
+
+		FTL_DEBUGLOG(dev, "Band, id %u, phys_is %u, wr cnt = %u, invalidity = %u\n",
+			     band->id, band->phys_id, (uint32_t)band->md->wr_cnt,
+			     (uint32_t)(_band_invalidity(band) * 100));
+	}
+}
+
+static bool is_band_to_gc(struct ftl_band *band)
+{
+	if (FTL_BAND_STATE_CLOSED != band->md->state) {
+		return false;
+	}
+
+	if (band->reloc) {
+		return false;
+	}
+
+	return true;
+}
+
+static void get_band_phys_info(struct spdk_ftl_dev *dev, uint64_t phys_id,
+			       double *invalidity, double *wr_cnt)
+{
+	struct ftl_band *band;
+	uint64_t band_id = phys_id * dev->num_logical_bands_in_physical;
+
+	*wr_cnt = *invalidity = 0.0L;
+	for (; band_id < ftl_get_num_bands(dev); band_id++) {
+		band = &dev->bands[band_id];
+
+		if (phys_id != band->phys_id) {
+			break;
+		}
+
+		*wr_cnt += band->md->wr_cnt;
+
+		if (!is_band_to_gc(band)) {
+			continue;
+		}
+
+		*invalidity += _band_invalidity(band);
+	}
+
+	*invalidity /= dev->num_logical_bands_in_physical;
+	*wr_cnt /= dev->num_logical_bands_in_physical;
+}
+
+static bool band_cmp(double a_invalidity, double a_wr_cnt,
+		     double b_invalidity, double b_wr_cnt,
+		     uint64_t a_id, uint64_t b_id)
+{
+	assert(a_id != FTL_BAND_PHYS_ID_INVALID);
+	assert(b_id != FTL_BAND_PHYS_ID_INVALID);
+	double diff = a_invalidity - b_invalidity;
+	if (diff < 0.0L) {
+		diff *= -1.0L;
+	}
+
+	if (diff > 0.1L) {
+		return a_invalidity > b_invalidity;
+	}
+
+	if (a_wr_cnt != b_wr_cnt) {
+		return a_wr_cnt < b_wr_cnt;
+	}
+
+	return a_id < b_id;
+}
+
+static void band_start_gc(struct spdk_ftl_dev *dev, struct ftl_band *band)
+{
+	ftl_bug(false == is_band_to_gc(band));
+
+	TAILQ_REMOVE(&dev->shut_bands, band, queue_entry);
+	band->reloc = true;
+
+	FTL_DEBUGLOG(dev, "Band to GC, id %u\n", band->id);
+}
+
+static struct ftl_band *
+gc_high_priority_band(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *band;
+	uint64_t high_prio_id = dev->sb_shm->gc_info.band_id_high_prio;
+
+	if (FTL_BAND_ID_INVALID != high_prio_id) {
+		ftl_bug(high_prio_id >= dev->num_bands);
+
+		band = &dev->bands[high_prio_id];
+		dev->sb_shm->gc_info.band_id_high_prio = FTL_BAND_ID_INVALID;
+
+		band_start_gc(dev, band);
+		FTL_NOTICELOG(dev, "GC takes high priority band, id %u\n", band->id);
+		return band;
+	}
+
+	return 0;
+}
+
+static void ftl_band_reset_gc_iter(struct spdk_ftl_dev *dev)
+{
+	dev->sb->gc_info.is_valid = 0;
+	dev->sb->gc_info.band_id = FTL_BAND_ID_INVALID;
+	dev->sb->gc_info.band_id_high_prio = FTL_BAND_ID_INVALID;
+	dev->sb->gc_info.band_phys_id = FTL_BAND_PHYS_ID_INVALID;
+
+	dev->sb_shm->gc_info = dev->sb->gc_info;
+}
+
+struct ftl_band *
+ftl_band_search_next_to_defrag(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *band;
+	uint64_t i, band_count;
+	uint64_t phys_count;
+
+	band = gc_high_priority_band(dev);
+	if (spdk_unlikely(NULL != band)) {
+		return band;
+	}
+
+	phys_count = dev->num_logical_bands_in_physical;
+	band_count = ftl_get_num_bands(dev);
+
+	for (; dev->sb_shm->gc_info.band_id < band_count;) {
+		band = &dev->bands[dev->sb_shm->gc_info.band_id];
+		if (band->phys_id != dev->sb_shm->gc_info.band_phys_id) {
+			break;
+		}
+
+		if (false == is_band_to_gc(band)) {
+			dev->sb_shm->gc_info.band_id++;
+			continue;
+		}
+
+		band_start_gc(dev, band);
+		return band;
+	}
+
+	double invalidity, max_invalidity = 0.0L;
+	double wr_cnt, max_wr_cnt = 0.0L;
+	uint64_t phys_id = FTL_BAND_PHYS_ID_INVALID;
+
+	for (i = 0; i < band_count; i += phys_count) {
+		band = &dev->bands[i];
+
+		/* Calculate entire band physical group invalidity */
+		get_band_phys_info(dev, band->phys_id, &invalidity, &wr_cnt);
+
+		if (invalidity != 0.0L) {
+			if (phys_id == FTL_BAND_PHYS_ID_INVALID ||
+			    band_cmp(invalidity, wr_cnt, max_invalidity, max_wr_cnt,
+				     band->phys_id, phys_id)) {
+				max_invalidity = invalidity;
+				max_wr_cnt = wr_cnt;
+				phys_id = band->phys_id;
+			}
+		}
+	}
+
+	if (FTL_BAND_PHYS_ID_INVALID != phys_id) {
+		FTL_DEBUGLOG(dev, "Band physical id %"PRIu64" to GC\n", phys_id);
+		dev->sb_shm->gc_info.is_valid = 0;
+		dev->sb_shm->gc_info.band_id = phys_id * phys_count;
+		dev->sb_shm->gc_info.band_phys_id = phys_id;
+		dev->sb_shm->gc_info.is_valid = 1;
+		dump_bands_to_gc(dev);
+		return ftl_band_search_next_to_defrag(dev);
+	} else {
+		ftl_band_reset_gc_iter(dev);
+	}
+
+	return NULL;
+}
+
+void ftl_band_init_gc_iter(struct spdk_ftl_dev *dev)
+{
+	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
+		ftl_band_reset_gc_iter(dev);
+		return;
+	}
+
+	if (dev->sb->clean) {
+		dev->sb_shm->gc_info = dev->sb->gc_info;
+		return;
+	}
+
+	/* We lost GC state due to dirty shutdown, reset GC state to start over */
+	ftl_band_reset_gc_iter(dev);
 }

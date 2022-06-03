@@ -198,6 +198,8 @@ void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	sb->lba_rsvd = dev->conf.lba_rsvd;
 	sb->use_append = dev->conf.use_append;
 
+	ftl_band_init_gc_iter(dev);
+
 	// md layout isn't initialized yet.
 	// empty region list => all regions in the default location
 	sb->md_layout_head.type = ftl_layout_region_type_invalid;
