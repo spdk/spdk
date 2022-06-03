@@ -45,6 +45,7 @@ fi
 
 if [[ -z $SPDK_TEST_FTL_NIGHTLY  ]]; then
 	run_test "ftl_fio_basic" $testdir/fio.sh $device $nv_cache basic
+	run_test "ftl_bdevperf" $testdir/bdevperf.sh $device $nv_cache
 fi
 
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
@@ -53,4 +54,5 @@ fi
 
 if [ $SPDK_TEST_FTL_NIGHTLY -eq 1 ]; then
 	run_test "ftl_recovery" $testdir/jenkins/jenkins-ftl-test-nightly.sh $device $nv_cache
+	run_test "ftl_fio_extended" $testdir/fio.sh $device $nv_cache nightly
 fi
