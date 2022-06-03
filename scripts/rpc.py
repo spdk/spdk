@@ -2678,7 +2678,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-D', '--data-length', help="""Data length required to transfer from controller to host""", type=int)
     p.add_argument('-M', '--metadata-length', help="""Metadata length required to transfer from controller to host""", type=int)
     p.add_argument('-T', '--timeout-ms',
-                   help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
+                   help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int)
     p.set_defaults(func=bdev_nvme_send_cmd)
 
     # Notifications
