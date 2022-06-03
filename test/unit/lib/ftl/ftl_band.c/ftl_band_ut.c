@@ -117,6 +117,12 @@ DEFINE_STUB(ftl_io_user_init, int,
 
 DEFINE_STUB(ftl_iovec_num_blocks, size_t,
 	    (struct iovec *iov, size_t iov_cnt), 0);
+DEFINE_STUB_V(ftl_reloc, (struct ftl_reloc *reloc));
+
+DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
+			      size_t num_blocks, int prio, bool defrag));
+DEFINE_STUB(ftl_reloc_is_defrag_active, bool, (const struct ftl_reloc *reloc), false);
+DEFINE_STUB(ftl_reloc_is_halted, bool, (const struct ftl_reloc *reloc), false);
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), true);
 DEFINE_STUB(ftl_mngt_unmap, int, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks,
 				  spdk_ftl_fn cb, void *cb_cntx), 0);

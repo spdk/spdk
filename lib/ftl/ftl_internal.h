@@ -108,4 +108,22 @@ struct ftl_lba_map {
 	void					*dma_buf;
 };
 
+struct ftl_reloc *
+ftl_reloc_init(struct spdk_ftl_dev *dev);
+
+void
+ftl_reloc_free(struct ftl_reloc *reloc);
+
+void
+ftl_reloc(struct ftl_reloc *reloc);
+
+void
+ftl_reloc_halt(struct ftl_reloc *reloc);
+
+void
+ftl_reloc_resume(struct ftl_reloc *reloc);
+
+bool
+ftl_reloc_is_halted(const struct ftl_reloc *reloc);
+
 #endif /* FTL_INTERNAL_H */

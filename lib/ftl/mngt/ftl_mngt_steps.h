@@ -70,9 +70,13 @@ void ftl_mngt_init_io_channel(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_deinit_io_channel(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_init_zone(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_decorate_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
-void ftl_mngt_init_zone(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+void ftl_mngt_init_reloc(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_deinit_reloc(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_init_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 

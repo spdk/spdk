@@ -62,6 +62,7 @@ struct spdk_ftl_dev;
 struct ftl_band;
 struct ftl_zone;
 struct ftl_io;
+struct ftl_reloc;
 
 /*
  * We need to reserve at least 2 buffers for band close / open sequence
@@ -178,6 +179,9 @@ struct spdk_ftl_dev {
 	/* Inflight IO operations */
 	uint32_t					num_inflight;
 
+	/* Manages data relocation */
+	struct ftl_reloc			*reloc;
+
 	/* Thread on which the poller is running */
 	struct spdk_thread			*core_thread;
 
@@ -230,6 +234,8 @@ int ftl_io_channel_poll(void *arg);
 struct spdk_io_channel *ftl_get_io_channel(const struct spdk_ftl_dev *dev);
 
 struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
+
+bool ftl_needs_defrag(struct spdk_ftl_dev *dev);
 
 struct ftl_band *ftl_band_get_next_free(struct spdk_ftl_dev *dev);
 
