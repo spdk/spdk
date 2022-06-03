@@ -4,6 +4,7 @@
 ftl_dirty_shutdown
 ftl_fio_basic
 ftl_fio_extended
+ftl_fio_nightly
 ftl_restore_nv_cache
 ftl_bdevperf
 ftl_bdevperf_append
