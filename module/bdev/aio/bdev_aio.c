@@ -338,29 +338,25 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 	int nr, i = 0;
 	struct bdev_aio_task *aio_task;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
-	uint64_t io_result;
 
 	nr = bdev_user_io_getevents(io_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
-
 	if (nr < 0) {
 		return 0;
 	}
 
-#define MAX_AIO_ERRNO 256
 	for (i = 0; i < nr; i++) {
 		aio_task = events[i].data;
 		aio_task->ch->io_inflight--;
-		io_result = events[i].res;
-		if (io_result == aio_task->len) {
+		if (events[i].res == aio_task->len) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
-		} else if (io_result < MAX_AIO_ERRNO) {
-			/* Linux AIO will return its errno to io_event.res */
-			int aio_errno = io_result;
-
-			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -aio_errno);
 		} else {
+			/* From aio_abi.h, io_event.res is defined __s64, negative errno
+			 * will be assigned to io_event.res for error situation.
+			 * But from libaio.h, io_event.res is defined unsigned long, so
+			 * convert it to signed value for error detection.
+			 */
 			SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), (int)events[i].res);
 		}
 	}
 
