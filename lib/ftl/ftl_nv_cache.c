@@ -44,6 +44,10 @@
 #include "utils/ftl_addr_utils.h"
 #include "mngt/ftl_mngt.h"
 
+static struct ftl_nv_cache_compaction *compaction_alloc(struct spdk_ftl_dev *dev);
+static void compaction_free(struct spdk_ftl_dev *dev, struct ftl_nv_cache_compaction *compaction);
+static void compaction_process_ftl_done(struct ftl_rq *rq);
+
 static inline const struct ftl_layout_region *nvc_data_region(
 	struct ftl_nv_cache *nv_cache)
 {
@@ -156,6 +160,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	TAILQ_INIT(&nv_cache->chunk_free_list);
 	TAILQ_INIT(&nv_cache->chunk_open_list);
 	TAILQ_INIT(&nv_cache->chunk_full_list);
+	TAILQ_INIT(&nv_cache->chunk_comp_list);
 
 	/* First chunk metadata */
 	struct ftl_nv_cache_chunk_md *md = nvc_metadata(nv_cache);
@@ -177,6 +182,21 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 		TAILQ_INSERT_TAIL(&nv_cache->chunk_free_list, chunk, entry);
 	}
 	assert(offset <= nvc_data_offset(nv_cache) + nvc_data_blocks(nv_cache));
+
+	/* Start compaction when full chunks exceed given % of entire chunks */
+	nv_cache->chunk_compaction_threshold = nv_cache->chunk_count *
+					       dev->conf.nv_cache.chunk_compaction_threshold / 100;
+	TAILQ_INIT(&nv_cache->compaction_list);
+	for (i = 0; i < FTL_NV_CACHE_NUM_COMPACTORS; i++) {
+		struct ftl_nv_cache_compaction *compact = compaction_alloc(dev);
+
+		if (!compact) {
+			FTL_ERRLOG(dev, "Cannot allocate compaction process\n");
+			return -1;
+		}
+
+		TAILQ_INSERT_TAIL(&nv_cache->compaction_list, compact, entry);
+	}
 
 #define FTL_MAX_OPEN_CHUNKS 2
 	nv_cache->lba_pool = ftl_mempool_create(FTL_MAX_OPEN_CHUNKS,
@@ -203,6 +223,14 @@ void
 ftl_nv_cache_deinit(struct spdk_ftl_dev *dev)
 {
 	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct ftl_nv_cache_compaction *compaction;
+
+	while (!TAILQ_EMPTY(&nv_cache->compaction_list)) {
+		compaction = TAILQ_FIRST(&nv_cache->compaction_list);
+		TAILQ_REMOVE(&nv_cache->compaction_list, compaction, entry);
+
+		compaction_free(dev, compaction);
+	}
 
 	ftl_mempool_destroy(nv_cache->md_pool);
 	ftl_mempool_destroy(nv_cache->lba_pool);
@@ -324,6 +352,31 @@ chunk_advance_blocks(struct ftl_nv_cache *nv_cache, struct ftl_nv_cache_chunk *c
 	}
 }
 
+static uint64_t
+chunk_md_num_blocks(struct ftl_nv_cache *nv_cache)
+{
+	return ftl_nv_cache_chunk_tail_md_num_blocks(nv_cache);
+}
+
+static uint64_t
+chunk_blocks_written(struct ftl_nv_cache_chunk *chunk)
+{
+	return chunk->md->blocks_written - chunk->md->blocks_skipped -
+	       chunk_md_num_blocks(chunk->nv_cache);
+}
+
+static bool
+is_chunk_compacted(struct ftl_nv_cache_chunk *chunk)
+{
+	assert(chunk->md->blocks_written != 0);
+
+	if (chunk_blocks_written(chunk) == chunk->md->blocks_compacted) {
+		return true;
+	}
+
+	return false;
+}
+
 static int
 ftl_chunk_alloc_md_entry(struct ftl_nv_cache_chunk *chunk)
 {
@@ -349,6 +402,463 @@ ftl_chunk_free_md_entry(struct ftl_nv_cache_chunk *chunk)
 
 	ftl_mempool_put(chunk->nv_cache->chunk_md_pool, lba_map->chunk_dma_md);
 	lba_map->chunk_dma_md = NULL;
+}
+
+static void
+chunk_compaction_advance(struct ftl_nv_cache_chunk *chunk, uint64_t num_blocks)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	uint64_t tsc = spdk_thread_get_last_tsc(spdk_get_thread());
+
+	chunk->compaction_length_tsc += tsc - chunk->compaction_start_tsc;
+	chunk->compaction_start_tsc = tsc;
+
+	chunk->md->blocks_compacted += num_blocks;
+	if (!is_chunk_compacted(chunk)) {
+		return;
+	}
+
+	/* Remove chunk from compacted list */
+	TAILQ_REMOVE(&nv_cache->chunk_comp_list, chunk, entry);
+	nv_cache->chunk_comp_count--;
+}
+
+static bool
+is_compaction_required(struct ftl_nv_cache *nv_cache)
+{
+	uint64_t full;
+
+	if (spdk_unlikely(nv_cache->halt)) {
+		return false;
+	}
+
+	full = nv_cache->chunk_full_count - nv_cache->compaction_active_count;
+	if (full >= nv_cache->chunk_compaction_threshold) {
+		return true;
+	}
+
+	return false;
+}
+
+static void compaction_process_finish_read(struct ftl_nv_cache_compaction *compaction);
+static void compaction_process_pin_lba(struct ftl_nv_cache_compaction *comp);
+
+static void
+_compaction_process_pin_lba(void *_comp)
+{
+	struct ftl_nv_cache_compaction *comp = _comp;
+
+	compaction_process_pin_lba(comp);
+}
+
+static void
+compaction_process_pin_lba_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx *pin_ctx)
+{
+	struct ftl_nv_cache_compaction *comp = pin_ctx->cb_ctx;
+	struct ftl_rq *rq = comp->rd;
+
+	if (status) {
+		rq->iter.status = status;
+		pin_ctx->lba = FTL_LBA_INVALID;
+	}
+
+	if (--rq->iter.remaining == 0) {
+		if (rq->iter.status) {
+			/* unpin and try again */
+			ftl_rq_unpin(rq);
+			spdk_thread_send_msg(spdk_get_thread(), _compaction_process_pin_lba, comp);
+			return;
+		}
+
+		compaction_process_finish_read(comp);
+	}
+}
+
+static void
+compaction_process_pin_lba(struct ftl_nv_cache_compaction *comp)
+{
+	union ftl_md_vss *md;
+	struct spdk_ftl_dev *dev = comp->rd->dev;
+	uint64_t i;
+	uint32_t count = comp->rd->iter.count;
+	struct ftl_rq_entry *entry;
+	struct ftl_l2p_pin_ctx *pin_ctx;
+
+	assert(comp->rd->iter.idx == 0);
+	comp->rd->iter.remaining = count;
+	comp->rd->iter.status = 0;
+
+	for (i = 0; i < count; i++) {
+		entry = &comp->rd->entries[i];
+		pin_ctx = &entry->l2p_pin_ctx;
+		md = entry->io_md;
+		if (md->nv_cache.lba == FTL_LBA_INVALID) {
+			ftl_l2p_pin_skip(dev, compaction_process_pin_lba_cb, comp, pin_ctx);
+		} else {
+			ftl_l2p_pin(dev, md->nv_cache.lba, 1, compaction_process_pin_lba_cb, comp, pin_ctx);
+		}
+	}
+}
+
+static int compaction_submit_read(struct ftl_nv_cache_compaction *compaction, ftl_addr addr,
+				  uint64_t num_blocks);
+
+static void
+compaction_retry_read(void *_compaction)
+{
+	struct ftl_nv_cache_compaction *compaction = _compaction;
+	struct ftl_rq *rq = compaction->rd;
+	int ret;
+
+	ret = compaction_submit_read(compaction, rq->io.addr, rq->iter.count);
+	if (ret) {
+		spdk_thread_send_msg(spdk_get_thread(), compaction_retry_read, compaction);
+	}
+}
+
+static void
+compaction_process_read_cb(struct spdk_bdev_io *bdev_io,
+			   bool success, void *cb_arg)
+{
+	struct ftl_nv_cache_compaction *compaction = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (!success) {
+		/* retry */
+		spdk_thread_send_msg(spdk_get_thread(), compaction_retry_read, compaction);
+		return;
+	}
+
+	compaction_process_pin_lba(compaction);
+}
+
+static bool
+is_chunk_to_read(struct ftl_nv_cache_chunk *chunk)
+{
+	assert(chunk->md->blocks_written != 0);
+
+	if (chunk_blocks_written(chunk) == chunk->md->read_pointer) {
+		return false;
+	}
+
+	return true;
+}
+
+static struct ftl_nv_cache_chunk *
+get_chunk_for_compaction(struct ftl_nv_cache *nv_cache)
+{
+	struct ftl_nv_cache_chunk *chunk = NULL;
+
+	if (!TAILQ_EMPTY(&nv_cache->chunk_comp_list)) {
+		chunk = TAILQ_FIRST(&nv_cache->chunk_comp_list);
+		if (is_chunk_to_read(chunk)) {
+			return chunk;
+		}
+	}
+
+	if (!TAILQ_EMPTY(&nv_cache->chunk_full_list)) {
+		chunk = TAILQ_FIRST(&nv_cache->chunk_full_list);
+		TAILQ_REMOVE(&nv_cache->chunk_full_list, chunk, entry);
+
+		assert(chunk->md->write_pointer);
+	} else {
+		return NULL;
+	}
+
+	if (spdk_likely(chunk)) {
+		assert(chunk->md->write_pointer != 0);
+		TAILQ_INSERT_HEAD(&nv_cache->chunk_comp_list, chunk, entry);
+		nv_cache->chunk_comp_count++;
+	}
+
+	return chunk;
+}
+
+static uint64_t
+chunk_blocks_to_read(struct ftl_nv_cache_chunk *chunk)
+{
+	uint64_t blocks_written;
+	uint64_t blocks_to_read;
+
+	assert(chunk->md->blocks_written >= chunk->md->blocks_skipped);
+	blocks_written = chunk_blocks_written(chunk);
+
+	assert(blocks_written >= chunk->md->read_pointer);
+	blocks_to_read = blocks_written - chunk->md->read_pointer;
+
+	return blocks_to_read;
+}
+
+static void
+compaction_inactivate(struct ftl_nv_cache_compaction *compaction)
+{
+	struct ftl_nv_cache *nv_cache = compaction->nv_cache;
+
+	nv_cache->compaction_active_count--;
+	TAILQ_INSERT_TAIL(&nv_cache->compaction_list, compaction, entry);
+}
+
+static int
+compaction_submit_read(struct ftl_nv_cache_compaction *compaction, ftl_addr addr,
+		       uint64_t num_blocks)
+{
+	struct ftl_nv_cache *nv_cache = compaction->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+
+	return ftl_nv_cache_bdev_readv_blocks_with_md(dev, nv_cache->bdev_desc,
+			nv_cache->cache_ioch,
+			compaction->rd->io_vec, num_blocks,
+			compaction->rd->io_md,
+			ftl_addr_get_cache_offset(dev, addr), num_blocks,
+			compaction_process_read_cb,
+			compaction);
+}
+
+static void
+compaction_process_pad(struct ftl_nv_cache_compaction *compaction)
+{
+	struct ftl_rq *wr = compaction->wr;
+	const uint64_t num_entries = wr->num_blocks;
+	struct ftl_rq_entry *iter;
+
+	iter = &wr->entries[wr->iter.idx];
+
+	while (wr->iter.idx < num_entries) {
+		iter->addr = FTL_ADDR_INVALID;
+		iter->owner.priv = NULL;
+		iter->lba = FTL_LBA_INVALID;
+		iter++;
+		wr->iter.idx++;
+	}
+}
+
+static void
+compaction_process_start(struct ftl_nv_cache_compaction *compaction)
+{
+	struct ftl_nv_cache *nv_cache = compaction->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache,
+				   struct spdk_ftl_dev, nv_cache);
+	struct ftl_nv_cache_chunk *chunk;
+	uint64_t to_read, addr;
+	int rc;
+
+	/* Check if all read blocks done */
+	assert(compaction->rd->iter.idx <= compaction->rd->iter.count);
+	if (compaction->rd->iter.idx < compaction->rd->iter.count) {
+		compaction_process_finish_read(compaction);
+		return;
+	}
+
+	/*
+	 * Get currently handled chunk
+	 */
+	chunk = get_chunk_for_compaction(nv_cache);
+	if (!chunk) {
+		/* No chunks to compact, pad this request */
+		compaction_process_pad(compaction);
+		ftl_writer_queue_rq(&dev->writer_user, compaction->wr);
+		return;
+	}
+
+	chunk->compaction_start_tsc = spdk_thread_get_last_tsc(spdk_get_thread());
+
+	/*
+	 * Get range of blocks to read
+	 */
+	addr = ftl_addr_to_cached(dev, chunk->offset + chunk->md->read_pointer);
+	to_read = spdk_min(chunk_blocks_to_read(chunk), compaction->rd->num_blocks);
+
+	/* Read data and metadata from NV cache */
+	rc = compaction_submit_read(compaction, addr, to_read);
+	if (spdk_unlikely(rc)) {
+		/* An error occurred, inactivate this compaction, it will retry
+		 * in next iteration
+		 */
+		compaction_inactivate(compaction);
+		return;
+	}
+
+	/* IO has started, initialize compaction */
+	compaction->rd->owner.priv = chunk;
+	compaction->rd->iter.idx = 0;
+	compaction->rd->iter.count = to_read;
+	compaction->rd->io.addr = addr;
+
+	/* Move read pointer in the chunk */
+	chunk->md->read_pointer += to_read;
+}
+
+static void
+compaction_process_ftl_done(struct ftl_rq *rq)
+{
+	struct spdk_ftl_dev *dev = rq->dev;
+	struct ftl_nv_cache_compaction *compaction = rq->owner.priv;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	struct ftl_band *band = rq->io.band;
+	struct ftl_rq_entry *entry;
+	ftl_addr addr;
+	uint64_t i;
+
+	if (spdk_unlikely(false == rq->success)) {
+		/* IO error retry writing */
+		ftl_writer_queue_rq(&dev->writer_user, rq);
+		return;
+	}
+
+	/* Update L2P table */
+	addr = rq->io.addr;
+	for (i = 0, entry = rq->entries; i < rq->num_blocks; i++, entry++) {
+		struct ftl_nv_cache_chunk *chunk = entry->owner.priv;
+
+		if (entry->lba == FTL_LBA_INVALID) {
+			assert(entry->addr == FTL_ADDR_INVALID);
+			addr = ftl_band_next_addr(band, addr, 1);
+			continue;
+		}
+
+		ftl_l2p_update(dev, entry->lba, addr, entry->addr);
+		ftl_l2p_unpin(dev, entry->lba, 1);
+
+		chunk_compaction_advance(chunk, 1);
+		addr = ftl_band_next_addr(band, addr, 1);
+	}
+
+	compaction->wr->iter.idx = 0;
+
+	if (is_compaction_required(nv_cache)) {
+		compaction_process_start(compaction);
+	} else {
+		compaction_inactivate(compaction);
+	}
+}
+
+static void
+compaction_process_finish_read(struct ftl_nv_cache_compaction *compaction)
+{
+	struct ftl_rq *wr = compaction->wr;
+	struct ftl_rq *rd = compaction->rd;
+	ftl_addr cache_addr = rd->io.addr;
+	struct ftl_nv_cache_chunk *chunk = rd->owner.priv;
+	struct spdk_ftl_dev *dev;
+	struct ftl_rq_entry *iter;
+	union ftl_md_vss *md;
+	ftl_addr current_addr;
+	const uint64_t num_entries = wr->num_blocks;
+	uint64_t tsc = spdk_thread_get_last_tsc(spdk_get_thread());
+
+	chunk->compaction_length_tsc += tsc - chunk->compaction_start_tsc;
+	chunk->compaction_start_tsc = tsc;
+
+	dev = SPDK_CONTAINEROF(compaction->nv_cache,
+			       struct spdk_ftl_dev, nv_cache);
+
+	assert(wr->iter.idx < num_entries);
+	assert(rd->iter.idx < rd->iter.count);
+
+	cache_addr += rd->iter.idx;
+	iter = &wr->entries[wr->iter.idx];
+
+	while (wr->iter.idx < num_entries && rd->iter.idx < rd->iter.count) {
+		/* Get metadata */
+		md = rd->entries[rd->iter.idx].io_md;
+		if (md->nv_cache.lba == FTL_LBA_INVALID) {
+			cache_addr++;
+			rd->iter.idx++;
+			chunk_compaction_advance(chunk, 1);
+			continue;
+		}
+
+		current_addr = ftl_l2p_get(dev, md->nv_cache.lba);
+		if (current_addr == cache_addr) {
+			/* Swap payload */
+			ftl_rq_swap_payload(wr, wr->iter.idx, rd, rd->iter.idx);
+
+			/*
+			 * Address still the same, we may continue to compact it
+			 * back to  FTL, set valid number of entries within
+			 * this batch
+			 */
+			iter->addr = current_addr;
+			iter->owner.priv = chunk;
+			iter->lba = md->nv_cache.lba;
+
+			/* Advance within batch */
+			iter++;
+			wr->iter.idx++;
+		} else {
+			/* This address already invalidated, just omit this block */
+			chunk_compaction_advance(chunk, 1);
+			ftl_l2p_unpin(dev, md->nv_cache.lba, 1);
+		}
+
+		/* Advance within reader */
+		rd->iter.idx++;
+		cache_addr++;
+	}
+
+	if (num_entries == wr->iter.idx) {
+		/*
+		 *Request contains data to be placed on FTL, compact it
+		 */
+		ftl_writer_queue_rq(&dev->writer_user, wr);
+	} else {
+		struct ftl_nv_cache *nv_cache = compaction->nv_cache;
+
+		if (is_compaction_required(compaction->nv_cache)) {
+			compaction_process_start(compaction);
+		} else {
+			nv_cache->compaction_active_count--;
+			TAILQ_INSERT_HEAD(&nv_cache->compaction_list,
+					  compaction, entry);
+		}
+	}
+}
+
+static void
+compaction_free(struct spdk_ftl_dev *dev, struct ftl_nv_cache_compaction *compaction)
+{
+	if (!compaction) {
+		return;
+	}
+
+	ftl_rq_del(compaction->wr);
+	ftl_rq_del(compaction->rd);
+	free(compaction);
+}
+
+static struct ftl_nv_cache_compaction *
+compaction_alloc(struct spdk_ftl_dev *dev)
+{
+	struct ftl_nv_cache_compaction *compaction;
+
+	compaction = calloc(1, sizeof(*compaction));
+	if (!compaction) {
+		goto ERROR;
+	}
+
+	/* Allocate help request for writing */
+	compaction->wr = ftl_rq_new(dev, dev->md_size);
+	if (!compaction->wr) {
+		goto ERROR;
+	}
+
+	/* Allocate help request for reading */
+	compaction->rd = ftl_rq_new(dev, dev->nv_cache.md_size);
+	if (!compaction->rd) {
+		goto ERROR;
+	}
+
+	compaction->nv_cache = &dev->nv_cache;
+	compaction->wr->owner.priv = compaction;
+	compaction->wr->owner.cb = compaction_process_ftl_done;
+	compaction->wr->owner.uio = true;
+
+	return compaction;
+
+ERROR:
+	compaction_free(dev, compaction);
+	return NULL;
 }
 
 static void
@@ -493,11 +1003,49 @@ ftl_nv_cache_read(struct ftl_io *io, ftl_addr addr, uint32_t num_blocks,
 bool
 ftl_nv_cache_is_halted(struct ftl_nv_cache *nv_cache)
 {
+	struct ftl_nv_cache_compaction *compaction;
+
+	if (nv_cache->compaction_active_count) {
+		return false;
+	}
+
+	TAILQ_FOREACH(compaction, &nv_cache->compaction_list, entry) {
+		if (compaction->rd->iter.idx != 0 || compaction->wr->iter.idx != 0) {
+			return false;
+		}
+	}
+
 	if (nv_cache->chunk_open_count > 0) {
 		return false;
 	}
 
 	return true;
+}
+
+static void
+ftl_nv_cache_compaction_reset(struct ftl_nv_cache_compaction *compaction)
+{
+	struct ftl_rq *rd = compaction->rd;
+	struct ftl_rq *wr = compaction->wr;
+	uint64_t lba;
+	uint64_t i;
+
+	for (i = rd->iter.idx; i < rd->iter.count; i++) {
+		lba = ((union ftl_md_vss *)rd->entries[i].io_md)->nv_cache.lba;
+		if (lba != FTL_LBA_INVALID) {
+			ftl_l2p_unpin(rd->dev, lba, 1);
+		}
+	}
+
+	rd->iter.idx = rd->iter.count = 0;
+
+	for (i = 0; i < wr->iter.idx; i++) {
+		lba = wr->entries[i].lba;
+		assert(lba != FTL_LBA_INVALID);
+		ftl_l2p_unpin(wr->dev, lba, 1);
+	}
+
+	wr->iter.idx = 0;
 }
 
 void ftl_chunk_map_set_lba(struct ftl_nv_cache_chunk *chunk,
@@ -574,6 +1122,25 @@ void ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 			ftl_chunk_open(chunk);
 		}
 	}
+
+	if (is_compaction_required(nv_cache) &&
+	    !TAILQ_EMPTY(&nv_cache->compaction_list)) {
+		struct ftl_nv_cache_compaction *comp =
+			TAILQ_FIRST(&nv_cache->compaction_list);
+
+		TAILQ_REMOVE(&nv_cache->compaction_list, comp, entry);
+
+		nv_cache->compaction_active_count++;
+		compaction_process_start(comp);
+	}
+
+	if (spdk_unlikely(nv_cache->halt)) {
+		struct ftl_nv_cache_compaction *compaction;
+
+		TAILQ_FOREACH(compaction, &nv_cache->compaction_list, entry) {
+			ftl_nv_cache_compaction_reset(compaction);
+		}
+	}
 }
 
 bool
@@ -608,6 +1175,11 @@ int ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache)
 
 	assert(nv_cache->chunk_open_count == 0);
 
+	if (nv_cache->compaction_active_count) {
+		FTL_ERRLOG(dev, "Cannot save NV cache state, compaction in progress\n");
+		return -EINVAL;
+	}
+
 	struct ftl_nv_cache_chunk *chunk = nv_cache->chunks;
 	if (!chunk) {
 		FTL_ERRLOG(dev, "Cannot save NV cache state, no NV cache metadata\n");
@@ -617,7 +1189,20 @@ int ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache)
 	for (i = 0; i < nv_cache->chunk_count; i++, chunk++) {
 		nvc_metadata_validate(nv_cache, chunk->md);
 
-		if (chunk->md->blocks_written == nv_cache->chunk_blocks) {
+		if (chunk->md->read_pointer)  {
+			/* Only full chunks can be compacted */
+			if (chunk->md->blocks_written != nv_cache->chunk_blocks) {
+				assert(0);
+				status = -EINVAL;
+				break;
+			}
+
+			/*
+			 * Chunk in the middle of compaction, start over after
+			 * load
+			 */
+			chunk->md->read_pointer = chunk->md->blocks_compacted = 0;
+		} else if (chunk->md->blocks_written == nv_cache->chunk_blocks) {
 			/* Full chunk */
 		} else if (0 == chunk->md->blocks_written) {
 			/* Empty chunk */

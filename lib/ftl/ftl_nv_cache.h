@@ -41,6 +41,16 @@
 #include "ftl_utils.h"
 
 /*
+ * FTL non volatile cache is divided into groups of blocks called chunks.
+ * Size of each chunk is multiple of xfer size plus additional metadata.
+ * For each block associated lba is stored in metadata. Cache space is
+ * written chunk by chunk sequentially. When number of free chunks reaches
+ * some threshold oldest chunks are moved from cache to backend storage to
+ * create space for new user data.
+ */
+#define FTL_NV_CACHE_NUM_COMPACTORS 8
+
+/*
  * Parameters controlling nv cache write throttling.
  *
  * The write throttle limit value is calculated as follows:
@@ -62,6 +72,16 @@
 #define FTL_NVC_VERSION_1	1
 
 #define FTL_NVC_VERSION_CURRENT FTL_NVC_VERSION_1
+
+/*
+ * FTL non volatile cache is divided into groups of blocks called chunks.
+ * Size of each chunk is multiple of xfer size plus additional metadata.
+ * For each block associated lba is stored in metadata. Cache space is
+ * written chunk by chunk sequentially. When number of free chunks reaches
+ * some threshold oldest chunks are moved from cache to backend storage to
+ * create space for new user data.
+ */
+#define FTL_NV_CACHE_NUM_COMPACTORS 8
 
 struct spdk_ftl_dev;
 struct ftl_mngt;
@@ -122,8 +142,21 @@ struct ftl_nv_cache_chunk {
 	/* This flag is used to indicate chunk is used in recovery */
 	bool recovery;
 
+	/* Compaction start time */
+	uint64_t compaction_start_tsc;
+
+	/* Compaction duration */
+	uint64_t compaction_length_tsc;
+
 	/* For writing metadata */
 	struct ftl_md_io_entry_ctx md_persist_entry_ctx;
+};
+
+struct ftl_nv_cache_compaction {
+	struct ftl_nv_cache *nv_cache;
+	struct ftl_rq *wr;
+	struct ftl_rq *rd;
+	TAILQ_ENTRY(ftl_nv_cache_compaction) entry;
 };
 
 struct ftl_nv_cache {
@@ -173,6 +206,14 @@ struct ftl_nv_cache {
 	/* Full chunks list */
 	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_full_list;
 	uint64_t chunk_full_count;
+
+	/* Chunks being compacted */
+	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_comp_list;
+	uint64_t chunk_comp_count;
+
+	TAILQ_HEAD(, ftl_nv_cache_compaction) compaction_list;
+	uint64_t compaction_active_count;
+	uint64_t chunk_compaction_threshold;
 
 	struct ftl_nv_cache_chunk *chunks;
 };
