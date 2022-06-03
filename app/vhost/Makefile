@@ -18,3 +18,9 @@ SPDK_LIB_LIST += env_dpdk_rpc
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+
+install: $(APP)
+	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)

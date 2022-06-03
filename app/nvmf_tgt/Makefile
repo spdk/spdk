@@ -22,3 +22,9 @@ SPDK_LIB_LIST += event_nbd
 endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+
+install: $(APP)
+	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)

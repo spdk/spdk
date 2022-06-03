@@ -16,3 +16,9 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 C_SRCS := iscsi_top.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+
+install: $(APP)
+	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)

@@ -14,3 +14,9 @@ C_SRCS := spdk_dd.c
 SPDK_LIB_LIST = $(ALL_MODULES_LIST) event event_bdev
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+
+install: $(APP)
+	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)

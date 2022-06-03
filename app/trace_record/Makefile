@@ -13,3 +13,9 @@ APP = spdk_trace_record
 C_SRCS := trace_record.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+
+install: $(APP)
+	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)

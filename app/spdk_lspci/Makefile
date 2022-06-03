@@ -14,3 +14,9 @@ C_SRCS := spdk_lspci.c
 SPDK_LIB_LIST = $(SOCK_MODULES_LIST) nvme vmd
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+
+install: $(APP)
+	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)

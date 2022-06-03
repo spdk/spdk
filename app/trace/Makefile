@@ -15,3 +15,9 @@ SPDK_LIB_LIST += json trace_parser
 CXX_SRCS := trace.cpp
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app_cxx.mk
+
+install: $(APP)
+	$(INSTALL_APP)
+
+uninstall:
+	$(UNINSTALL_APP)
