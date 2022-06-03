@@ -55,7 +55,6 @@ DEFINE_STUB(__io_uring_get_cqe, int, (struct io_uring *ring, struct io_uring_cqe
 				      unsigned submit,
 				      unsigned wait_nr, sigset_t *sigmask), 0);
 DEFINE_STUB(io_uring_submit, int, (struct io_uring *ring), 0);
-DEFINE_STUB(io_uring_get_sqe, struct io_uring_sqe *, (struct io_uring *ring), 0);
 DEFINE_STUB(io_uring_queue_init, int, (unsigned entries, struct io_uring *ring, unsigned flags), 0);
 DEFINE_STUB_V(io_uring_queue_exit, (struct io_uring *ring));
 
