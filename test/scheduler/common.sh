@@ -438,7 +438,7 @@ active_thread() {
 get_cpu_time() {
 	xtrace_disable
 
-	local interval=$1 cpu_time=$2 interval_count
+	local interval=$1 cpu_time=${2:-idle} interval_count
 	shift 2
 	local cpus=("$@") cpu
 	local stats stat old_stats avg_load
@@ -478,7 +478,7 @@ get_cpu_time() {
 	unset -v ${!avg_stat@}
 	unset -v ${!avg_load@}
 
-	cpu_time=${cpu_time_map["$cpu_time"]:-3}
+	cpu_time=${cpu_time_map["$cpu_time"]}
 	interval=$((interval <= 0 ? 1 : interval))
 	# We skip first sample to have min 2 for stat comparison
 	interval=$((interval + 1)) interval_count=0
@@ -550,7 +550,7 @@ collect_cpu_idle() {
 			printf '* cpu%u is idle\n' "$cpu"
 			is_idle[cpu]=1
 		else
-			printf '*cpu%u is not idle\n' "$cpu"
+			printf '* cpu%u is not idle\n' "$cpu"
 			is_idle[cpu]=0
 		fi
 	done
