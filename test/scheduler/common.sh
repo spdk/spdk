@@ -460,7 +460,7 @@ get_cpu_time() {
 	# 8 - guest (Time spent running a virtual CPU)
 	# 9 - guest_nice (Time spent running a niced guest)
 
-	local -A cpu_time_map
+	local -gA cpu_time_map
 	cpu_time_map["user"]=0
 	cpu_time_map["nice"]=1
 	cpu_time_map["system"]=2
@@ -477,6 +477,7 @@ get_cpu_time() {
 	unset -v ${!old_stat_@}
 	unset -v ${!avg_stat@}
 	unset -v ${!avg_load@}
+	unset -v ${!raw_samples@}
 
 	cpu_time=${cpu_time_map["$cpu_time"]}
 	interval=$((interval <= 0 ? 1 : interval))
@@ -486,6 +487,8 @@ get_cpu_time() {
 		for cpu in "${cpus[@]}"; do
 			local -n old_stats=old_stats_$cpu
 			local -n avg_load=avg_load_$cpu
+			local -n raw_samples=raw_samples_$cpu
+
 			sample_stats=() total_sample=0
 
 			stats=($(get_cpu_stat "$cpu" all))
@@ -501,6 +504,9 @@ get_cpu_time() {
 			done
 			for stat in "${!stats[@]}"; do
 				local -n avg_stat=stat_${stat}_${cpu}
+				local -n raw_samples_ref=raw_samples_${stat}_${cpu}
+				raw_samples[stat]="raw_samples_${stat}_${cpu}[@]"
+				raw_samples_ref+=("${stats[stat]}")
 				avg_stat+=($((sample_stats[stat] * 100 / (total_sample == 0 ? 1 : total_sample))))
 			done
 			old_stats=("${stats[@]}")
@@ -537,23 +543,61 @@ collect_cpu_idle() {
 
 	get_cpu_time "$time" idle "${cpus_to_collect[@]}"
 
+	local user_load
 	for cpu in "${cpus_to_collect[@]}"; do
 		samples=(${cpu_times[cpu]})
 		printf '* cpu%u idle samples: %s (avg: %u%%)\n' \
 			"$cpu" "${samples[*]}" "${avg_cpu_time[cpu]}"
 		# Cores with polling reactors have 0% idle time,
 		# while the ones in interrupt mode won't have 100% idle.
-		# Work can be potentially be scheduled to the core by kernel,
-		# to prevent that affecting tests set reasonably high idle limit.
-		# Consider last sample
+		# During the tests, polling reactors spend the major portion
+		# of their cpu time in user mode. With that in mind, if the
+		# general check for cpus's idleness fails, check what portion
+		# of the cpu load falls into user mode. For the idle check
+		# use the last sample. For the cpu load, compare user's raw
+		# samples in SC_CLK_TCK context for a more detailed view.
+		user_load=$(cpu_usage_clk_tck "$cpu" user)
 		if ((samples[-1] >= 70)); then
 			printf '* cpu%u is idle\n' "$cpu"
+			is_idle[cpu]=1
+		elif ((user_load <= 15)); then
+			printf '* cpu%u not fully idle, but user load is low so passing\n' "$cpu"
 			is_idle[cpu]=1
 		else
 			printf '* cpu%u is not idle\n' "$cpu"
 			is_idle[cpu]=0
 		fi
 	done
+}
+
+cpu_usage_clk_tck() {
+	local cpu=$1 time=${2:-all}
+	local user nice system usage clk_delta
+
+	# We should be called in get_cpu_time()'s environment.
+	[[ -v raw_samples_$cpu ]] || return 1
+
+	local -n raw_samples=raw_samples_$cpu
+	user=("${!raw_samples[cpu_time_map["user"]]}")
+	nice=("${!raw_samples[cpu_time_map["nice"]]}")
+	system=("${!raw_samples[cpu_time_map["system"]]}")
+
+	# Construct delta based on last two samples of a given time.
+	case "$time" in
+		user | all) ((clk_delta += (user[-1] - user[-2]))) ;;&
+		nice | all) ((clk_delta += (nice[-1] - nice[-2]))) ;;&
+		system | all) ((clk_delta += (system[-1] - system[-2]))) ;;
+		*) ;;
+	esac
+	# We assume 1s between each sample. See get_cpu_time().
+	usage=$((100 * clk_delta / $(getconf CLK_TCK)))
+	usage=$((usage > 100 ? 100 : usage))
+
+	printf '%u' "$usage"
+	printf '* cpu%u %s usage: %u\n' "$cpu" "$time" "$usage" >&2
+	printf '* cpu%u user samples: %s\n' "$cpu" "${user[*]}" >&2
+	printf '* cpu%u nice samples: %s\n' "$cpu" "${nice[*]}" >&2
+	printf '* cpu%u system samples: %s\n' "$cpu" "${system[*]}" >&2
 }
 
 update_thread_cpus_map() {
