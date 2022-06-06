@@ -576,6 +576,12 @@ ctrlr_to_poll_group(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 				group);
 }
 
+static inline struct spdk_thread *
+poll_group_to_thread(struct nvmf_vfio_user_poll_group *vu_pg)
+{
+	return vu_pg->group.group->thread;
+}
+
 static inline size_t
 vfio_user_migr_data_len(void)
 {
@@ -2896,45 +2902,48 @@ init_pci_config_space(vfu_pci_config_space_t *p)
 	p->hdr.intr.ipin = 0x1;
 }
 
-struct subsystem_pause_ctx {
+struct ctrlr_quiesce_ctx {
 	struct nvmf_vfio_user_ctrlr *ctrlr;
+	struct nvmf_vfio_user_poll_group *group;
 	int status;
 };
 
 static void
-vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
-			   void *cb_arg, int status);
+ctrlr_quiesce(struct nvmf_vfio_user_ctrlr *vu_ctrlr);
 
 static void
 _vfio_user_endpoint_resume_done_msg(void *ctx)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = ctx;
-	struct spdk_nvmf_subsystem *subsystem = endpoint->subsystem;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
-	int ret;
 
 	endpoint->need_resume = false;
-	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 
 	if (!vu_ctrlr->queued_quiesce) {
+		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+
+		/*
+		 * We might have ignored new SQ entries while we were quiesced:
+		 * kick ourselves so we'll definitely check again while in
+		 * VFIO_USER_CTRLR_RUNNING state.
+		 */
+		ctrlr_kick(vu_ctrlr);
 		return;
 	}
 
-	/* Basically, once we call `vfu_device_quiesced` the device is unquiesced from
-	 * libvfio-user's perspective so from the moment `vfio_user_dev_quiesce_done` returns
-	 * libvfio-user might quiesce the device again. However, because the NVMf subsytem is
-	 * an asynchronous operation, this quiesce might come _before_ the NVMf subsystem has
-	 * been resumed, so in the callback of `spdk_nvmf_subsystem_resume` we need to check
-	 * whether a quiesce was requested.
+
+	/*
+	 * Basically, once we call `vfu_device_quiesced` the device is
+	 * unquiesced from libvfio-user's perspective so from the moment
+	 * `vfio_user_quiesce_done` returns libvfio-user might quiesce the device
+	 * again. However, because the NVMf subsytem is an asynchronous
+	 * operation, this quiesce might come _before_ the NVMf subsystem has
+	 * been resumed, so in the callback of `spdk_nvmf_subsystem_resume` we
+	 * need to check whether a quiesce was requested.
 	 */
-	SPDK_DEBUGLOG(nvmf_vfio, "%s has queued quiesce event, pause again\n", ctrlr_id(vu_ctrlr));
-	vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
-	ret = spdk_nvmf_subsystem_pause(subsystem, SPDK_NVME_GLOBAL_NS_TAG,
-					vfio_user_dev_quiesce_done, vu_ctrlr);
-	if (ret < 0) {
-		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
-		SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
-	}
+	SPDK_DEBUGLOG(nvmf_vfio, "%s has queued quiesce event, quiesce again\n",
+		      ctrlr_id(vu_ctrlr));
+	ctrlr_quiesce(vu_ctrlr);
 }
 
 static void
@@ -2954,18 +2963,20 @@ vfio_user_endpoint_resume_done(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-_vfio_user_dev_quiesce_done_msg(void *ctx)
+vfio_user_quiesce_done(void *ctx)
 {
-	struct subsystem_pause_ctx *subsystem_ctx = ctx;
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = subsystem_ctx->ctrlr;
+	struct ctrlr_quiesce_ctx *quiesce_ctx = ctx;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = quiesce_ctx->ctrlr;
 	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
 	int ret;
 
+	SPDK_DEBUGLOG(nvmf_vfio, "%s device quiesced\n", ctrlr_id(vu_ctrlr));
+
 	assert(vu_ctrlr->state == VFIO_USER_CTRLR_PAUSING);
 	vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
-	vfu_device_quiesced(endpoint->vfu_ctx, subsystem_ctx->status);
+	vfu_device_quiesced(endpoint->vfu_ctx, quiesce_ctx->status);
 	vu_ctrlr->queued_quiesce = false;
-	free(subsystem_ctx);
+	free(quiesce_ctx);
 
 	/* `vfu_device_quiesced` can change the migration state,
 	 * so we need to re-check `vu_ctrlr->state`.
@@ -2986,25 +2997,79 @@ _vfio_user_dev_quiesce_done_msg(void *ctx)
 }
 
 static void
-vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
-			   void *cb_arg, int status)
+vfio_user_pause_done(struct spdk_nvmf_subsystem *subsystem,
+		     void *ctx, int status)
 {
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
-	struct subsystem_pause_ctx *ctx;
+	struct ctrlr_quiesce_ctx *quiesce_ctx = ctx;
 
-	SPDK_DEBUGLOG(nvmf_vfio, "%s paused done with status %d\n", ctrlr_id(vu_ctrlr), status);
+	quiesce_ctx->status = status;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	SPDK_DEBUGLOG(nvmf_vfio, "%s pause done with status %d\n",
+		      ctrlr_id(quiesce_ctx->ctrlr), status);
+
+	spdk_thread_send_msg(quiesce_ctx->ctrlr->thread,
+			     vfio_user_quiesce_done, ctx);
+}
+
+/*
+ * Ensure that, for this PG, we've stopped running in nvmf_vfio_user_sq_poll();
+ * we've already set ctrlr->state, so we won't process new entries, but we need
+ * to ensure that this PG is quiesced. This only works because there's no
+ * callback context set up between polling the SQ and spdk_nvmf_request_exec().
+ *
+ * Once we've walked all PGs, we need to pause any submitted I/O via
+ * spdk_nvmf_subsystem_pause(SPDK_NVME_GLOBAL_NS_TAG).
+ */
+static void
+vfio_user_quiesce_pg(void *ctx)
+{
+	struct ctrlr_quiesce_ctx *quiesce_ctx = ctx;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = quiesce_ctx->ctrlr;
+	struct spdk_nvmf_subsystem *subsystem = vu_ctrlr->endpoint->subsystem;
+	struct nvmf_vfio_user_poll_group *vu_group = quiesce_ctx->group;
+	int ret;
+
+	SPDK_DEBUGLOG(nvmf_vfio, "quiesced pg:%p\n", vu_group);
+
+	quiesce_ctx->group = TAILQ_NEXT(vu_group, link);
+
+	if (quiesce_ctx->group != NULL)  {
+		spdk_thread_send_msg(poll_group_to_thread(quiesce_ctx->group),
+				     vfio_user_quiesce_pg, quiesce_ctx);
+		return;
+	}
+
+	ret = spdk_nvmf_subsystem_pause(subsystem, SPDK_NVME_GLOBAL_NS_TAG,
+					vfio_user_pause_done, quiesce_ctx);
+	if (ret < 0) {
+		SPDK_ERRLOG("%s: failed to pause, ret=%d\n",
+			    endpoint_id(vu_ctrlr->endpoint), ret);
+		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+		fail_ctrlr(vu_ctrlr);
+		free(quiesce_ctx);
+	}
+}
+
+static void
+ctrlr_quiesce(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
+{
+	struct ctrlr_quiesce_ctx *quiesce_ctx;
+
+	vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
+
+	quiesce_ctx = calloc(1, sizeof(*quiesce_ctx));
+	if (!quiesce_ctx) {
 		SPDK_ERRLOG("Failed to allocate subsystem pause context\n");
 		assert(false);
 		return;
 	}
 
-	ctx->ctrlr = vu_ctrlr;
-	ctx->status = status;
+	quiesce_ctx->ctrlr = vu_ctrlr;
+	quiesce_ctx->status = 0;
+	quiesce_ctx->group = TAILQ_FIRST(&vu_ctrlr->transport->poll_groups);
 
-	spdk_thread_send_msg(vu_ctrlr->thread, _vfio_user_dev_quiesce_done_msg, ctx);
+	spdk_thread_send_msg(poll_group_to_thread(quiesce_ctx->group),
+			     vfio_user_quiesce_pg, quiesce_ctx);
 }
 
 static int
@@ -3014,7 +3079,6 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 	struct spdk_nvmf_subsystem *subsystem = endpoint->subsystem;
 
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
-	int ret;
 
 	if (!vu_ctrlr) {
 		return 0;
@@ -3045,14 +3109,7 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 	case VFIO_USER_CTRLR_MIGRATING:
 		return 0;
 	case VFIO_USER_CTRLR_RUNNING:
-		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
-		ret = spdk_nvmf_subsystem_pause(subsystem, SPDK_NVME_GLOBAL_NS_TAG,
-						vfio_user_dev_quiesce_done, vu_ctrlr);
-		if (ret < 0) {
-			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
-			SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
-			return 0;
-		}
+		ctrlr_quiesce(vu_ctrlr);
 		break;
 	case VFIO_USER_CTRLR_RESUMING:
 		vu_ctrlr->queued_quiesce = true;
@@ -5194,6 +5251,14 @@ nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq)
 	assert(sq != NULL);
 
 	ctrlr = sq->ctrlr;
+
+	/*
+	 * A quiesced, or migrating, controller should never process new
+	 * commands.
+	 */
+	if (ctrlr->state != VFIO_USER_CTRLR_RUNNING) {
+		return SPDK_POLLER_IDLE;
+	}
 
 	if (ctrlr->adaptive_irqs_enabled) {
 		handle_suppressed_irq(ctrlr, sq);
