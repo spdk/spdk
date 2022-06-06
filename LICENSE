@@ -28,8 +28,3 @@ Exceptions:
   FreeBSD source tree.
 
 * lib/util/base64_neon.c is BSD-2-Clause.
-
-* lib/util/base64_neon.c, lib/util/base64_sve.c,
-  script/vagrant/run-autorun.sh and test/app/match/match do not use SPDX
-  identifers.  This will be cleaned up in a future patch, to keep SPDX
-  additions in this patch limited to the automated script replacement.
