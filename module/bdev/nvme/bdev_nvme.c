@@ -3813,12 +3813,17 @@ bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy
 
 	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &ctx->desc);
 	if (rc != 0) {
-		SPDK_ERRLOG("bdev %s is not registered in this module.\n", name);
+		SPDK_ERRLOG("Failed to open bdev %s.\n", name);
 		rc = -ENODEV;
 		goto err_open;
 	}
 
 	bdev = spdk_bdev_desc_get_bdev(ctx->desc);
+	if (bdev->module != &nvme_if) {
+		SPDK_ERRLOG("bdev %s is not registered in this module.\n", name);
+		rc = -ENODEV;
+		goto err_module;
+	}
 	nbdev = SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk);
 
 	pthread_mutex_lock(&nbdev->mutex);
@@ -3831,6 +3836,8 @@ bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy
 			      bdev_nvme_set_multipath_policy_done);
 	return;
 
+err_module:
+	spdk_bdev_close(ctx->desc);
 err_open:
 	free(ctx);
 err_alloc:
