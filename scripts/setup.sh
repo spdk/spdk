@@ -689,13 +689,11 @@ function status_freebsd() {
 		echo -e "BDF\t\tVendor\tDevice\tDriver"
 
 		for pci; do
-			driver=$(pciconf -l "pci$pci")
-			driver=${driver%@*}
 			printf '%s\t%s\t%s\t%s\n' \
 				"$pci" \
 				"${pci_ids_vendor["$pci"]}" \
 				"${pci_ids_device["$pci"]}" \
-				"$driver"
+				"${pci_bus_driver["$pci"]}"
 		done | sort -k1,1
 	)
 
