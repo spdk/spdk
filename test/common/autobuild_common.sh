@@ -191,6 +191,15 @@ _build_native_dpdk() {
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS
 	ninja -C "$external_dpdk_base_dir/build-tmp" $MAKEFLAGS install
 
+	if [[ $(uname -s) == "FreeBSD" ]]; then
+		# Make sure kernel modules are available for freebsd_update_contigmem_mod() to fetch
+		mapfile -t drivers < <(find "$external_dpdk_base_dir/build-tmp" -name '*.ko')
+		if ((${#drivers[@]} > 0)); then
+			mkdir -p "$external_dpdk_dir/kmod"
+			cp -f "${drivers[@]}" "$external_dpdk_dir/kmod/"
+		fi
+	fi
+
 	# Save this path. In tests are run using autorun.sh then autotest.sh
 	# script will be unaware of LD_LIBRARY_PATH and will fail tests.
 	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH" > /tmp/spdk-ld-path
