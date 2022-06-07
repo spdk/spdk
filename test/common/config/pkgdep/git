@@ -466,6 +466,24 @@ function install_lcov() {
 	(cd /usr/src/lcov; sudo make install)
 }
 
+function install_bpftrace() {
+	install llvm-devel clang-devel cereal-devel gtest-devel gmock-devel cmake
+	rm -rf $GIT_REPOS/bcc
+	rm -rf $GIT_REPOS/bpftrace
+	git clone --recursive $GIT_REPO_BCC $GIT_REPOS/bcc
+	git -C $GIT_REPOS/bcc checkout $BCC_BRANCH
+	git clone --recursive $GIT_REPO_BPFTRACE --branch $BPFTRACE_VERSION $GIT_REPOS/bpftrace
+	mkdir -p $GIT_REPOS/bcc/build $GIT_REPOS/bpftrace/build
+
+	cmake -DCMAKE_BUILD_TYPE=Release -B $GIT_REPOS/bcc/build -S $GIT_REPOS/bcc
+	make -C $GIT_REPOS/bcc/build -j$(nproc)
+	make -C $GIT_REPOS/bcc/build install
+
+	cmake -DCMAKE_BUILD_TYPE=Release -B $GIT_REPOS/bpftrace/build -S $GIT_REPOS/bpftrace
+	make -C $GIT_REPOS/bpftrace/build -j$(nproc)
+	make -C $GIT_REPOS/bpftrace/build install
+}
+
 function install_sources() {
 	if [[ $ID == centos ]] && (( VERSION_ID == 7 )); then
 		# install proper version of the git first
@@ -509,6 +527,10 @@ function install_sources() {
 		fi
 	done
 
+	if [[ $INSTALL_BPFTRACE == true ]] || [[ $ID == fedora ]] && (( VERSION_ID >= 35 )); then
+		install_bpftrace
+	fi
+
 	if [[ $INSTALL_REFSPDK == true ]]; then
 		# Serialize builds as refspdk depends on spdk
 		[[ $INSTALL_SPDK != true ]] && install_spdk
@@ -520,8 +542,11 @@ function install_sources() {
 GIT_VERSION=2.25.1
 IRDMA_VERSION=1.7.72
 ICE_VERSION=1.8.8
+BPFTRACE_VERSION=v0.15.0
+
 VFIO_QEMU_BRANCH=${VFIO_QEMU_BRANCH:-vfio-user-dbfix}
 VANILLA_QEMU_BRANCH=${VANILLA_QEMU_BRANCH:-v6.2.0}
+BCC_BRANCH=${BCC_BRANCH:-6dac27d9}
 
 : ${GIT_REPO_SPDK=https://github.com/spdk/spdk.git}
 export GIT_REPO_SPDK
@@ -553,6 +578,11 @@ export IRDMA_DRIVER
 export ICE_DRIVER
 : ${GIT_REPO_LCOV=https://github.com/linux-test-project/lcov}
 export GIT_REPO_LCOV
+: ${GIT_REPO_BCC=https://github.com/iovisor/bcc.git}
+export GIT_REPO_BCC
+: ${GIT_REPO_BPFTRACE=https://github.com/iovisor/bpftrace.git}
+export GIT_REPO_BPFTRACE
+
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}

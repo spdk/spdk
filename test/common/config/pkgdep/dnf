@@ -72,7 +72,7 @@ else
 	packages+=(sshpass)
 fi
 
-if [[ $OSID == fedora ]] && ((OSVERSION >= 34)); then
+if [[ $OSID == fedora ]] && ((OSVERSION == 34)); then
 	packages+=(bpftrace)
 fi
 
