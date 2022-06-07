@@ -381,9 +381,14 @@ _pdu_write_done(void *cb_arg, int err)
 	 * response to a PDU completing here. However, to attempt to make forward progress
 	 * the qpair needs to be polled and we can't rely on another network event to make
 	 * that happen. Add it to a list of qpairs to poll regardless of network activity
-	 * here. */
-	if (tqpair->qpair.poll_group && !STAILQ_EMPTY(&tqpair->qpair.queued_req) &&
-	    !tqpair->needs_poll) {
+	 * here.
+	 * Besides, when tqpair state is NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL or
+	 * NVME_TCP_QPAIR_STATE_INITIALIZING, need to add it to needs_poll list too to make
+	 * forward progress in case that the resources are released after icreq's or CONNECT's
+	 * resp is processed. */
+	if (tqpair->qpair.poll_group && !tqpair->needs_poll && (!STAILQ_EMPTY(&tqpair->qpair.queued_req) ||
+			tqpair->state == NVME_TCP_QPAIR_STATE_FABRIC_CONNECT_POLL ||
+			tqpair->state == NVME_TCP_QPAIR_STATE_INITIALIZING)) {
 		pgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
 
 		TAILQ_INSERT_TAIL(&pgroup->needs_poll, tqpair, link);
