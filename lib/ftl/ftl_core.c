@@ -73,6 +73,16 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 		return false;
 	}
 
+	if (!ftl_writer_is_halted(&dev->writer_user)) {
+		ftl_writer_halt(&dev->writer_user);
+		return false;
+	}
+
+	if (!ftl_writer_is_halted(&dev->writer_gc)) {
+		ftl_writer_halt(&dev->writer_gc);
+		return false;
+	}
+
 	if (!ftl_nv_cache_chunks_busy(&dev->nv_cache)) {
 		return false;
 	}
@@ -481,6 +491,8 @@ ftl_core_poller(void *ctx)
 	}
 
 	ftl_process_io_queue(dev);
+	ftl_writer_run(&dev->writer_user);
+	ftl_writer_run(&dev->writer_gc);
 	ftl_nv_cache_process(dev);
 	ftl_l2p_process(dev);
 

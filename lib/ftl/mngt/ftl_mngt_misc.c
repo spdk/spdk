@@ -140,6 +140,8 @@ ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 {
 	dev->initialized = 1;
 
+	ftl_writer_resume(&dev->writer_user);
+	ftl_writer_resume(&dev->writer_gc);
 	ftl_nv_cache_resume(&dev->nv_cache);
 
 	ftl_mngt_next_step(mngt);
