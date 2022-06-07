@@ -15,4 +15,4 @@ size=100%
 serialize_overlap=1
 
 [verify]
-do_verify=0
+do_verify=1

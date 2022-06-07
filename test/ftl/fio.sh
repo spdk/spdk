@@ -7,7 +7,7 @@ source $testdir/common.sh
 
 declare -A suite
 suite['basic']='randw-verify randw-verify-j2 randw-verify-depth128'
-suite['extended']='randw-verify-qd2048-ext'
+suite['extended']='randw-verify-qd2048-ext randr'
 
 rpc_py=$rootdir/scripts/rpc.py
 

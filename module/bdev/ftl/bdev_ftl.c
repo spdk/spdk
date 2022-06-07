@@ -114,6 +114,31 @@ bdev_ftl_cb(void *arg, int rc)
 	spdk_bdev_io_complete(bdev_io, status);
 }
 
+static void
+bdev_ftl_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		    bool success)
+{
+	struct ftl_bdev *ftl_bdev;
+	int rc;
+
+	ftl_bdev = bdev_io->bdev->ctxt;
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	rc = spdk_ftl_readv(ftl_bdev->dev, (struct ftl_io *)bdev_io->driver_ctx,
+			    ch,
+			    bdev_io->u.bdev.offset_blocks,
+			    bdev_io->u.bdev.num_blocks,
+			    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, bdev_ftl_cb, bdev_io);
+
+	if (spdk_unlikely(rc != 0)) {
+		spdk_bdev_io_complete(bdev_io, rc);
+	}
+}
+
 static int
 _bdev_ftl_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
@@ -121,7 +146,8 @@ _bdev_ftl_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		spdk_bdev_io_get_buf(bdev_io, bdev_ftl_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:

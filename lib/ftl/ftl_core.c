@@ -344,6 +344,124 @@ ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 	}
 }
 
+static int
+ftl_read_canceled(int rc)
+{
+	return rc == -EFAULT;
+}
+
+static int
+ftl_read_next_logical_addr(struct ftl_io *io, ftl_addr *addr)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	ftl_addr next_addr;
+	size_t i;
+	bool addr_cached = false;
+
+	*addr = ftl_l2p_get(dev, ftl_io_current_lba(io));
+	io->map[io->pos] = *addr;
+
+	/* If the address is invalid, skip it */
+	if (*addr == FTL_ADDR_INVALID) {
+		return -EFAULT;
+	}
+
+	addr_cached = ftl_addr_cached(dev, *addr);
+
+	for (i = 1; i < ftl_io_iovec_len_left(io); ++i) {
+		next_addr = ftl_l2p_get(dev, ftl_io_get_lba(io, io->pos + i));
+
+		if (next_addr == FTL_ADDR_INVALID) {
+			break;
+		}
+
+		if (addr_cached != ftl_addr_cached(dev, next_addr)) {
+			break;
+		}
+
+		if (*addr + i != next_addr) {
+			break;
+		}
+
+		io->map[io->pos + i] = next_addr;
+	}
+
+	return i;
+}
+
+static void
+ftl_submit_read(struct ftl_io *io);
+
+static void
+_ftl_submit_read(void *_io)
+{
+	struct ftl_io *io = _io;
+
+	ftl_submit_read(io);
+}
+
+static void
+ftl_submit_read(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	ftl_addr addr;
+	int rc = 0, num_blocks;
+
+	assert(LIST_EMPTY(&io->children));
+
+	while (io->pos < io->num_blocks) {
+		num_blocks = rc = ftl_read_next_logical_addr(io, &addr);
+
+		/* Address is invalid, skip this block */
+		if (ftl_read_canceled(rc)) {
+			memset(ftl_io_iovec_addr(io), 0, FTL_BLOCK_SIZE);
+			ftl_io_advance(io, 1);
+			continue;
+		}
+
+		assert(num_blocks > 0);
+
+		if (ftl_addr_cached(dev, addr)) {
+			rc = ftl_nv_cache_read(io, addr, num_blocks, ftl_io_cmpl_cb, io);
+		} else {
+			rc = spdk_bdev_read_blocks(dev->base_bdev_desc, dev->base_ioch,
+						   ftl_io_iovec_addr(io),
+						   addr, num_blocks, ftl_io_cmpl_cb, io);
+		}
+
+		if (spdk_unlikely(rc)) {
+			if (rc == -ENOMEM) {
+				struct spdk_bdev *bdev;
+				struct spdk_io_channel *ch;
+
+				if (ftl_addr_cached(dev, addr)) {
+					bdev = spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc);
+					ch = dev->nv_cache.cache_ioch;
+				} else {
+					bdev = spdk_bdev_desc_get_bdev(dev->base_bdev_desc);
+					ch = dev->base_ioch;
+				}
+				io->bdev_io_wait.bdev = bdev;
+				io->bdev_io_wait.cb_fn = _ftl_submit_read;
+				io->bdev_io_wait.cb_arg = io;
+				spdk_bdev_queue_io_wait(bdev, ch, &io->bdev_io_wait);
+				return;
+			} else {
+				ftl_abort();
+			}
+		}
+
+		ftl_io_inc_req(io);
+		ftl_io_advance(io, num_blocks);
+	}
+
+	/* If we didn't have to read anything from the device, */
+	/* complete the request right away */
+	if (ftl_io_done(io)) {
+		ftl_io_complete(io);
+	}
+}
+
 int
 ftl_current_limit(const struct spdk_ftl_dev *dev)
 {
@@ -370,6 +488,38 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 }
 
 static void
+ftl_io_pin_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx *pin_ctx)
+{
+	struct ftl_io *io = pin_ctx->cb_ctx;
+
+	if (spdk_unlikely(status != 0)) {
+		/* Retry on the internal L2P fault */
+		io->status = -EAGAIN;
+		ftl_io_complete(io);
+		return;
+	}
+
+	io->flags |= FTL_IO_PINNED;
+	ftl_submit_read(io);
+}
+
+static void
+ftl_io_pin(struct ftl_io *io)
+{
+	if (spdk_unlikely(io->flags & FTL_IO_PINNED)) {
+		/*
+		 * The IO is in a retry path and it had been pinned already.
+		 * Continue with further processing.
+		 */
+		ftl_l2p_pin_skip(io->dev, ftl_io_pin_cb, io, &io->l2p_pin_ctx);
+	} else {
+		/* First time when pinning the IO */
+		ftl_l2p_pin(io->dev, io->lba, io->num_blocks,
+			    ftl_io_pin_cb, io, &io->l2p_pin_ctx);
+	}
+}
+
+static void
 start_io(struct ftl_io *io)
 {
 	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
@@ -384,8 +534,7 @@ start_io(struct ftl_io *io)
 
 	switch (io->type) {
 	case FTL_IO_READ:
-		io->status = -EOPNOTSUPP;
-		ftl_io_complete(io);
+		TAILQ_INSERT_TAIL(&dev->rd_sq, io, queue_entry);
 		break;
 	case FTL_IO_WRITE:
 		TAILQ_INSERT_TAIL(&dev->wr_sq, io, queue_entry);
@@ -437,6 +586,39 @@ spdk_ftl_writev(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_chan
 	}
 
 	rc = ftl_io_user_init(ch, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
+	if (rc) {
+		return rc;
+	}
+
+	return queue_io(dev, io);
+}
+
+int
+spdk_ftl_readv(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+	       uint64_t lba,
+	       size_t lba_cnt, struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
+{
+	int rc;
+
+	if (iov_cnt == 0) {
+		return -EINVAL;
+	}
+
+	if (lba_cnt == 0) {
+		return -EINVAL;
+	}
+
+	if (lba_cnt != ftl_iovec_num_blocks(iov, iov_cnt)) {
+		FTL_ERRLOG(dev, "Invalid IO vector to handle, device %s, LBA %"PRIu64"\n",
+			   dev->name, lba);
+		return -EINVAL;
+	}
+
+	if (!dev->initialized) {
+		return -EBUSY;
+	}
+
+	rc = ftl_io_user_init(ch, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
 	if (rc) {
 		return rc;
 	}
@@ -541,6 +723,13 @@ ftl_process_io_queue(struct spdk_ftl_dev *dev)
 {
 	struct ftl_io_channel *ioch;
 	struct ftl_io *io;
+
+	if (!TAILQ_EMPTY(&dev->rd_sq)) {
+		io = TAILQ_FIRST(&dev->rd_sq);
+		TAILQ_REMOVE(&dev->rd_sq, io, queue_entry);
+		assert(io->type == FTL_IO_READ);
+		ftl_io_pin(io);
+	}
 
 	if (!ftl_nv_cache_full(&dev->nv_cache) && !TAILQ_EMPTY(&dev->wr_sq)) {
 		io = TAILQ_FIRST(&dev->wr_sq);
