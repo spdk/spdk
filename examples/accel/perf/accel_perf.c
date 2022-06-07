@@ -211,6 +211,9 @@ parse_args(int argc, char *argv)
 			g_workload_selection = ACCEL_OPC_DUALCAST;
 		} else if (!strcmp(g_workload_type, "compress")) {
 			g_workload_selection = ACCEL_OPC_COMPRESS;
+		} else {
+			usage();
+			return 1;
 		}
 		break;
 	default:
