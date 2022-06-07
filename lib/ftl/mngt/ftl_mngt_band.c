@@ -202,14 +202,14 @@ void ftl_mngt_decorate_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 void
 ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
-	struct ftl_band *band, *temp_band;
-	size_t num_open = 0, num_shut = 0;
+	struct ftl_band *band, *temp_band, *open_bands[FTL_MAX_OPEN_BANDS];
+	size_t i, num_open = 0, num_shut = 0;
 
 	TAILQ_FOREACH_SAFE(band, &dev->shut_bands, queue_entry, temp_band) {
 		if (band->md->state == FTL_BAND_STATE_OPEN ||
 		    band->md->state == FTL_BAND_STATE_FULL) {
 			TAILQ_REMOVE(&dev->shut_bands, band, queue_entry);
-			num_open++;
+			open_bands[num_open++] = band;
 			assert(num_open <= FTL_MAX_OPEN_BANDS);
 			continue;
 		}
@@ -221,6 +221,52 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 			ftl_band_set_state(band, FTL_BAND_STATE_FREE);
 		} else {
 			num_shut++;
+		}
+	}
+
+	/* Assign open bands to writers and alloc necessary resources */
+	for (i = 0; i < num_open; ++i) {
+		band = open_bands[i];
+
+		if (band->md->type == FTL_BAND_TYPE_COMPACTION) {
+			if (band->md->state == FTL_BAND_STATE_FULL) {
+				TAILQ_INSERT_TAIL(&dev->writer_user.full_bands, band, queue_entry);
+			} else {
+				if (dev->writer_user.band == NULL) {
+					dev->writer_user.band = band;
+				} else {
+					dev->writer_user.next_band = band;
+				}
+			}
+
+			dev->writer_user.band_num++;
+			ftl_band_set_owner(band, ftl_writer_band_state_change, &dev->writer_user);
+		}
+
+		if (band->md->type == FTL_BAND_TYPE_GC) {
+			if (band->md->state == FTL_BAND_STATE_FULL) {
+				TAILQ_INSERT_TAIL(&dev->writer_gc.full_bands, band, queue_entry);
+			} else {
+				if (dev->writer_gc.band == NULL) {
+					dev->writer_gc.band = band;
+				} else {
+					dev->writer_gc.next_band = band;
+				}
+			}
+
+			dev->writer_gc.band_num++;
+			ftl_band_set_owner(band, ftl_writer_band_state_change, &dev->writer_gc);
+		}
+
+		if (dev->sb->clean) {
+			if (ftl_band_alloc_lba_map(band)) {
+				ftl_mngt_fail_step(mngt);
+				return;
+			}
+
+			uint64_t offset = band->md->iter.offset;
+			ftl_band_iter_init(band);
+			ftl_band_iter_set(band, offset);
 		}
 	}
 

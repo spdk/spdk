@@ -48,6 +48,7 @@
 #include "ftl_band.h"
 #include "ftl_debug.h"
 #include "ftl_nv_cache.h"
+#include "ftl_writer.h"
 #include "ftl_utils.h"
 #include "mngt/ftl_mngt.h"
 
@@ -166,6 +167,9 @@ static struct spdk_ftl_dev *allocate_dev(
 	TAILQ_INIT(&dev->rd_sq);
 	TAILQ_INIT(&dev->wr_sq);
 	TAILQ_INIT(&dev->ioch_queue);
+
+	ftl_writer_init(dev, &dev->writer_user, SPDK_FTL_LIMIT_HIGH, FTL_BAND_TYPE_COMPACTION);
+	ftl_writer_init(dev, &dev->writer_gc, SPDK_FTL_LIMIT_CRIT, FTL_BAND_TYPE_GC);
 
 	return dev;
 error:

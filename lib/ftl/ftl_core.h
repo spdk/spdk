@@ -47,6 +47,7 @@
 #include "ftl_internal.h"
 #include "ftl_io.h"
 #include "ftl_nv_cache.h"
+#include "ftl_writer.h"
 #include "ftl_layout.h"
 #include "ftl_sb.h"
 #include "ftl_l2p.h"
@@ -190,6 +191,12 @@ struct spdk_ftl_dev {
 
 	/* Write submission queue */
 	TAILQ_HEAD(, ftl_io)		wr_sq;
+
+	/* Writer for user IOs */
+	struct ftl_writer			writer_user;
+
+	/* Writer for GC IOs */
+	struct ftl_writer			writer_gc;
 };
 
 struct ftl_media_event {
