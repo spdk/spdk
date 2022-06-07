@@ -684,17 +684,19 @@ function status_freebsd() {
 	local pci
 
 	status_print() (
+		local type=$1
 		local dev driver
 
-		echo -e "BDF\t\tVendor\tDevice\tDriver"
+		shift
 
 		for pci; do
-			printf '%s\t%s\t%s\t%s\n' \
+			printf '%-8s %-15s %-6s %-6s %-16s\n' \
+				"$type" \
 				"$pci" \
 				"${pci_ids_vendor["$pci"]}" \
 				"${pci_ids_device["$pci"]}" \
 				"${pci_bus_driver["$pci"]}"
-		done | sort -k1,1
+		done | sort -k2,2
 	)
 
 	local contigmem=present
@@ -716,21 +718,16 @@ function status_freebsd() {
 		Buffer Size: $contigmem_buffer_size
 		Num Buffers: $contigmem_num_buffers
 
-		NVMe devices
-		$(status_print "${!nvme_d[@]}")
-
-		I/IOAT DMA
-		$(status_print "${!ioat_d[@]}")
-
-		DSA DMA
-		$(status_print "${!dsa_d[@]}")
-
-		IAA DMA
-		$(status_print "${!iaa_d[@]}")
-
-		VMD
-		$(status_print "${!vmd_d[@]}")
 	BSD_INFO
+
+	printf '\n%-8s %-15s %-6s %-6s %-16s\n' \
+		"Type" "BDF" "Vendor" "Device" "Driver" >&2
+
+	status_print "NVMe" "${!nvme_d[@]}"
+	status_print "I/OAT" "${!ioat_d[@]}"
+	status_print "DSA" "${!dsa_d[@]}"
+	status_print "IAA" "${!iaa_d[@]}"
+	status_print "VMD" "${!vmd_d[@]}"
 }
 
 function configure_freebsd_pci() {
