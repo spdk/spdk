@@ -18,7 +18,6 @@ if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_discovery" test/nvmf/target/discovery.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_connect_disconnect" test/nvmf/target/connect_disconnect.sh "${TEST_ARGS[@]}"
-	run_test "nvmf_create_transport" test/nvmf/target/create_transport.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_multitarget" test/nvmf/target/multitarget.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_rpc" test/nvmf/target/rpc.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_invalid" test/nvmf/target/invalid.sh "${TEST_ARGS[@]}"
