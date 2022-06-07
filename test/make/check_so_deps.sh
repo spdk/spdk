@@ -49,6 +49,8 @@ function confirm_abi_deps() {
 	fi
 
 	cat << EOF > ${suppression_file}
+[suppress_type]
+	name = spdk_nvme_power_state
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
