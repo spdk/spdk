@@ -185,6 +185,7 @@ void ftl_band_set_type(struct ftl_band *band, enum ftl_band_type type);
 void ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state);
 void ftl_band_acquire_lba_map(struct ftl_band *band);
 int ftl_band_alloc_lba_map(struct ftl_band *band);
+int ftl_band_open_lba_map(struct ftl_band *band);
 void ftl_band_clear_lba_map(struct ftl_band *band);
 void ftl_band_release_lba_map(struct ftl_band *band);
 ftl_addr ftl_band_next_xfer_addr(struct ftl_band *band, ftl_addr addr, size_t num_blocks);

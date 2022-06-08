@@ -385,4 +385,16 @@ ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev)
 		       dev->xfer_size) * dev->xfer_size;
 }
 
+static inline bool
+ftl_fast_startup(const struct spdk_ftl_dev *dev)
+{
+	return dev->sb->clean && dev->sb_shm->shm_clean && dev->sb_shm->shm_ready;
+}
+
+static inline bool
+ftl_fast_recovery(const struct spdk_ftl_dev *dev)
+{
+	return !dev->sb->clean && !dev->sb_shm->shm_clean && dev->sb_shm->shm_ready;
+}
+
 #endif /* FTL_CORE_H */

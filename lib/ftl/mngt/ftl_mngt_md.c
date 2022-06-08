@@ -84,9 +84,7 @@ void ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 			*/
 			continue;
 		}
-		int md_flags = is_md(i) ?
-			       FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW | FTL_MD_CREATE_SHM_HUGE :
-			       FTL_MD_CREATE_NO_MEM;
+		int md_flags = is_md(i) ? ftl_md_create_region_flags(dev, region->type) : FTL_MD_CREATE_NO_MEM;
 		layout->md[i] = ftl_md_create(dev, region->current.blocks, region->vss_blksz, region->name, md_flags);
 		if (NULL == layout->md[i]) {
 			ftl_mngt_fail_step(mngt);
@@ -268,7 +266,7 @@ void ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region = &layout->region[ftl_layout_region_type_sb];
 	char uuid[SPDK_UUID_STRING_LEN];
-	int md_create_flags = FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW | FTL_MD_CREATE_SHM_HUGE;
+	int md_create_flags = ftl_md_create_region_flags(dev, ftl_layout_region_type_sb);
 
 	/* Must generate UUID before MD create on SHM for the SB */
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
@@ -277,12 +275,18 @@ void ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		FTL_NOTICELOG(dev, "Create new FTL, UUID %s\n", uuid);
 	}
 
+shm_retry:
 	/* Allocate md buf */
 	dev->sb_shm = NULL;
 	dev->sb_shm_md = ftl_md_create(dev, spdk_divide_round_up(sizeof(*dev->sb_shm), FTL_BLOCK_SIZE),
 				       0, "sb_shm",
 				       md_create_flags);
 	if (dev->sb_shm_md == NULL) {
+		/* The first attempt may fail when trying to open SHM - try to create new */
+		if ((md_create_flags & FTL_MD_CREATE_SHM_NEW) == 0) {
+			md_create_flags |= FTL_MD_CREATE_SHM_NEW;
+			goto shm_retry;
+		}
 		if (dev->sb_shm_md == NULL) {
 			ftl_mngt_fail_step(mngt);
 			return;
@@ -302,6 +306,12 @@ void ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 						region->vss_blksz, region->name,
 						md_create_flags);
 	if (NULL == layout->md[ftl_layout_region_type_sb]) {
+		/* The first attempt may fail when trying to open SHM - try to create new */
+		if ((md_create_flags & FTL_MD_CREATE_SHM_NEW) == 0) {
+			md_create_flags |= FTL_MD_CREATE_SHM_NEW;
+			ftl_md_destroy(dev->sb_shm_md, 0);
+			goto shm_retry;
+		}
 		ftl_mngt_fail_step(mngt);
 		return;
 	}

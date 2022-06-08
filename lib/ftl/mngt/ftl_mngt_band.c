@@ -43,7 +43,9 @@ static int ftl_band_init_md(struct ftl_band *band)
 	struct ftl_band_md *band_md = ftl_md_get_buffer(band_info_md);
 
 	band->md = &band_md[band->id];
-	band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
+	if (!ftl_fast_startup(dev)) {
+		band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
+	}
 
 	return 0;
 }
@@ -263,6 +265,7 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	struct ftl_band *band, *temp_band, *open_bands[FTL_MAX_OPEN_BANDS];
 	size_t i, num_open = 0, num_shut = 0;
+	bool fast_startup = ftl_fast_startup(dev);
 
 	TAILQ_FOREACH_SAFE(band, &dev->free_bands, queue_entry, temp_band) {
 		band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
@@ -323,7 +326,17 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 			ftl_band_set_owner(band, ftl_writer_band_state_change, &dev->writer_gc);
 		}
 
-		if (dev->sb->clean) {
+		if (fast_startup) {
+			FTL_NOTICELOG(dev, "SHM: band open lba map df_id 0x%"PRIx64"\n", band->md->df_lba_map);
+			if (ftl_band_open_lba_map(band)) {
+				ftl_mngt_fail_step(mngt);
+				return;
+			}
+
+			uint64_t offset = band->md->iter.offset;
+			ftl_band_iter_init(band);
+			ftl_band_iter_set(band, offset);
+		} else if (dev->sb->clean) {
 			band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
 			if (ftl_band_alloc_lba_map(band)) {
 				ftl_mngt_fail_step(mngt);
@@ -335,6 +348,11 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 			ftl_band_iter_set(band, offset);
 		}
 	}
+
+	if (fast_startup) {
+		ftl_mempool_initialize_ext(dev->lba_pool);
+	}
+
 
 	/* Recalculate number of free bands */
 	dev->num_free = 0;

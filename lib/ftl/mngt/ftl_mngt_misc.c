@@ -63,8 +63,7 @@ static int init_lba_map_pool(struct spdk_ftl_dev *dev)
 	size_t lba_pool_buf_blks = LBA_MEMPOOL_SIZE * lba_pool_el_blks;
 
 	dev->lba_pool_md = ftl_md_create(dev, lba_pool_buf_blks, 0, "lba_pool",
-					 FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW |
-					 FTL_MD_CREATE_SHM_HUGE);
+					 ftl_md_create_shm_flags(dev));
 	if (!dev->lba_pool_md) {
 		return -ENOMEM;
 	}
@@ -77,7 +76,9 @@ static int init_lba_map_pool(struct spdk_ftl_dev *dev)
 		return -ENOMEM;
 	}
 
-	ftl_mempool_initialize_ext(dev->lba_pool);
+	if (!ftl_fast_startup(dev)) {
+		ftl_mempool_initialize_ext(dev->lba_pool);
+	}
 
 	return 0;
 }

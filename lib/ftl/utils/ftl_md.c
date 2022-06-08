@@ -1174,6 +1174,32 @@ int ftl_md_set_region(struct ftl_md *md,
 }
 
 int
+ftl_md_create_region_flags(struct spdk_ftl_dev *dev, int region_type)
+{
+	int flags = FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_HUGE;
+
+	switch (region_type) {
+	case ftl_layout_region_type_sb:
+		if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
+			flags |= FTL_MD_CREATE_SHM_NEW;
+		}
+		break;
+
+	case ftl_layout_region_type_band_md:
+	case ftl_layout_region_type_nvc_md:
+		if (!ftl_fast_startup(dev)) {
+			flags |= FTL_MD_CREATE_SHM_NEW;
+		}
+		break;
+	default:
+		return 0;
+		break;
+	}
+
+	return flags;
+}
+
+int
 ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type)
 {
 	switch (region_type) {
@@ -1189,6 +1215,17 @@ ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type)
 		break;
 	}
 	return 0;
+}
+
+int
+ftl_md_create_shm_flags(struct spdk_ftl_dev *dev)
+{
+	int flags = FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_HUGE;
+
+	if (!ftl_fast_startup(dev) && !ftl_fast_recovery(dev)) {
+		flags |= FTL_MD_CREATE_SHM_NEW;
+	}
+	return flags;
 }
 
 int

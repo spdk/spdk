@@ -301,6 +301,22 @@ void ftl_md_clear(struct ftl_md *md, const void *pattern, uint64_t size,
 uint64_t ftl_md_xfer_blocks(struct spdk_ftl_dev *dev);
 
 /**
+ * @brief Return the md creation flags for a given md region type
+ *
+ * Controls MD regions backed up on SHM via FTL_MD_CREATE_SHM.
+ * FTL_MD_CREATE_SHM_NEW is added for:
+ * 1. superblock upon SPDK_FTL_MODE_CREATE flag set,
+ * 2. other regions if not in a fast startup mode.
+ *
+ * @param dev			The FTL device
+ * @param region_type	MD region type
+ *
+ * @return MD creation flags
+ */
+int
+ftl_md_create_region_flags(struct spdk_ftl_dev *dev, int region_type);
+
+/**
  * @brief Return the md destroy flags for a given md region type
  *
  * In a fast shutdown mode, returns FTL_MD_DESTROY_SHM_KEEP.
@@ -315,6 +331,19 @@ int
 ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type);
 
 /**
+ * @brief Return the SHM-backed md creation flags
+ *
+ * FTL_MD_CREATE_SHM is always set.
+ * FTL_MD_CREATE_SHM_NEW is added if not in a fast startup mode.
+ *
+ * @param dev	The FTL device
+ *
+ * @return MD creation flags
+ */
+int
+ftl_md_create_shm_flags(struct spdk_ftl_dev *dev);
+
+/**
  * @brief Return the md destroy flags
  *
  * In a fast shutdown mode, returns FTL_MD_DESTROY_SHM_KEEP.
@@ -326,4 +355,5 @@ ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type);
  */
 int
 ftl_md_destroy_shm_flags(struct spdk_ftl_dev *dev);
+
 #endif /* FTL_OBJ_H */
