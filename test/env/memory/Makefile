@@ -5,8 +5,9 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
-CFLAGS += $(ENV_CFLAGS)
-CFLAGS += -I$(SPDK_ROOT_DIR)/test/lib
 TEST_FILE = memory_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
+
+CFLAGS += $(ENV_CFLAGS)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test/lib

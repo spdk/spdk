@@ -5,7 +5,8 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
-CFLAGS += $(ENV_CFLAGS)
 APP = env_dpdk_post_init
 
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
+
+CFLAGS += $(ENV_CFLAGS)
