@@ -105,6 +105,10 @@ build_macros() {
 		fi
 	fi
 
+	if get_config libdir has-arg; then
+		macros+=(-D "libdir $(get_config libdir print)")
+	fi
+
 	if [[ $deps == no ]]; then
 		macros+=(-D "deps 0")
 	fi

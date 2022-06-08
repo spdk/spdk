@@ -26,7 +26,11 @@ CONFIG_PREFIX=$(prefix)
 endif
 
 bindir?=$(CONFIG_PREFIX)/bin
+ifeq ($(CONFIG_LIBDIR),)
 libdir?=$(CONFIG_PREFIX)/lib
+else
+libdir?=$(CONFIG_LIBDIR)
+endif
 includedir?=$(CONFIG_PREFIX)/include
 
 ifeq ($(MAKECMDGOALS),)

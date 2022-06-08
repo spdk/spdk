@@ -8,6 +8,7 @@
 %{!?requirements:%define requirements 0}
 %{!?build_requirements:%define build_requirements 0}
 %{!?shared:%define shared 0}
+%{!?libdir:%define libdir /usr/local/lib}
 
 # Spec metadata
 Name:           spdk
@@ -87,7 +88,7 @@ mkdir -p %{buildroot}/etc/ld.so.conf.d
 mkdir -p %{buildroot}%{python3_sitelib}
 
 cat <<-EOF > %{buildroot}/etc/ld.so.conf.d/spdk.conf
-/usr/local/lib
+%{libdir}
 /usr/local/lib/dpdk
 EOF
 
@@ -127,7 +128,7 @@ SPDK development libraries and headers
 %files devel
 /usr/local/include/*
 %if %{shared}
-/usr/local/lib/lib*.so
+%{libdir}/lib*.so
 %endif
 
 %package libs
@@ -138,10 +139,10 @@ SPDK libraries
 
 %files libs
 /etc/ld.so.conf.d/*
-/usr/local/lib/lib*.a
-/usr/local/lib/pkgconfig/*.pc
+%{libdir}/lib*.a
+%{libdir}/pkgconfig/*.pc
 %if %{shared}
-/usr/local/lib/lib*.so.*
+%{libdir}/lib*.so.*
 %endif
 
 %post libs

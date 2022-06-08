@@ -22,6 +22,7 @@ function usage() {
 	echo ""
 	echo " --cross-prefix=prefix     Prefix for cross compilation (default: none)"
 	echo "                           example: aarch64-linux-gnu"
+	echo " --libdir=path             Configure installation path for the libraries (default: \$prefix/lib)"
 	echo ""
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-werror           Treat compiler warnings as errors"
@@ -297,6 +298,9 @@ for i in "$@"; do
 			;;
 		--target-arch=*)
 			CONFIG[ARCH]="${i#*=}"
+			;;
+		--libdir=*)
+			CONFIG[LIBDIR]="${i#*=}"
 			;;
 		--enable-debug)
 			CONFIG[DEBUG]=y

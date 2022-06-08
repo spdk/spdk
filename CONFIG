@@ -10,6 +10,9 @@ CONFIG_PREFIX="/usr/local"
 # Target architecture
 CONFIG_ARCH=native
 
+# Destination directory for the libraries
+CONFIG_LIBDIR=
+
 # Prefix for cross compilation
 CONFIG_CROSS_PREFIX=
 

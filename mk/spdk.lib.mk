@@ -87,16 +87,16 @@ $(SHARED_REALNAME_LIB): $(LIB)
 	$(call spdk_build_realname_shared_lib,$(COMPILER),$^,$(SPDK_MAP_FILE),$(LOCAL_SYS_LIBS),$(SPDK_DEP_LIBS))
 
 define pkgconfig_create
-	$(Q)$(SPDK_ROOT_DIR)/scripts/pc.sh $(1) $(LIBNAME) $(SO_SUFFIX) \
+	$(Q)$(SPDK_ROOT_DIR)/scripts/pc.sh $(1) $(2) $(LIBNAME) $(SO_SUFFIX) \
 		"$(DEPDIRS-$(LIBNAME):%=spdk_%) $(MODULES-$(LIBNAME))" \
 		"" > $@
 endef
 
 $(PKGCONFIG): $(LIB)
-	$(call pkgconfig_create,$(SPDK_ROOT_DIR)/build)
+	$(call pkgconfig_create,$(SPDK_ROOT_DIR)/build "")
 
 $(PKGCONFIG_INST): $(LIB)
-	$(call pkgconfig_create,$(CONFIG_PREFIX))
+	$(call pkgconfig_create,$(CONFIG_PREFIX),$(libdir))
 
 $(LIB): $(OBJS)
 	$(LIB_C)
