@@ -37,6 +37,7 @@ static enum accel_opcode g_workload_selection;
 static struct worker_thread *g_workers = NULL;
 static int g_num_workers = 0;
 static pthread_mutex_t g_workers_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct spdk_app_opts g_opts = {};
 
 struct worker_thread;
 static void accel_done(void *ref, int status);
@@ -81,10 +82,18 @@ struct worker_thread {
 };
 
 static void
-dump_user_config(struct spdk_app_opts *opts)
+dump_user_config(void)
 {
-	printf("SPDK Configuration:\n");
-	printf("Core mask:      %s\n\n", opts->reactor_mask);
+	const char *engine_name = NULL;
+	int rc;
+
+	rc = spdk_accel_get_opc_engine_name(g_workload_selection, &engine_name);
+	if (rc) {
+		printf("error getting engine name (%d)\n", rc);
+	}
+
+	printf("\nSPDK Configuration:\n");
+	printf("Core mask:      %s\n\n", g_opts.reactor_mask);
 	printf("Accel Perf Configuration:\n");
 	printf("Workload Type:  %s\n", g_workload_type);
 	if (g_workload_selection == ACCEL_OPC_CRC32C || g_workload_selection == ACCEL_OPC_COPY_CRC32C) {
@@ -101,6 +110,7 @@ dump_user_config(struct spdk_app_opts *opts)
 	} else {
 		printf("Transfer size:  %u bytes\n", g_xfer_size_bytes);
 	}
+	printf("Engine:         %s\n", engine_name);
 	printf("Queue depth:    %u\n", g_queue_depth);
 	printf("Allocate depth: %u\n", g_allocate_depth);
 	printf("# threads/core: %u\n", g_threads_per_core);
@@ -749,6 +759,8 @@ accel_perf_start(void *arg1)
 	g_tsc_rate = spdk_get_ticks_hz();
 	g_tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
+	dump_user_config();
+
 	printf("Running for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
 
@@ -775,14 +787,13 @@ accel_perf_start(void *arg1)
 int
 main(int argc, char **argv)
 {
-	struct spdk_app_opts opts = {};
 	struct worker_thread *worker, *tmp;
 
 	pthread_mutex_init(&g_workers_lock, NULL);
-	spdk_app_opts_init(&opts, sizeof(opts));
-	opts.name = "accel_perf";
-	opts.reactor_mask = "0x1";
-	if (spdk_app_parse_args(argc, argv, &opts, "a:C:o:q:t:yw:P:f:T:", NULL, parse_args,
+	spdk_app_opts_init(&g_opts, sizeof(g_opts));
+	g_opts.name = "accel_perf";
+	g_opts.reactor_mask = "0x1";
+	if (spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		g_rc = -1;
 		goto cleanup;
@@ -818,8 +829,7 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	dump_user_config(&opts);
-	g_rc = spdk_app_start(&opts, accel_perf_start, NULL);
+	g_rc = spdk_app_start(&g_opts, accel_perf_start, NULL);
 	if (g_rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}
