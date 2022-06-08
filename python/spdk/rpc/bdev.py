@@ -141,10 +141,12 @@ def bdev_ocf_create(client, name, mode, cache_line_size, cache_bdev_name, core_b
     params = {
         'name': name,
         'mode': mode,
-        'cache_line_size': cache_line_size,
         'cache_bdev_name': cache_bdev_name,
         'core_bdev_name': core_bdev_name,
     }
+
+    if cache_line_size:
+        params['cache_line_size'] = cache_line_size
 
     return client.call('bdev_ocf_create', params)
 

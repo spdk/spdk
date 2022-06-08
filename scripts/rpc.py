@@ -291,8 +291,7 @@ if __name__ == "__main__":
         help='OCF cache line size. The unit is KiB',
         type=int,
         choices=[4, 8, 16, 32, 64],
-        required=False,
-        default=0,
+        required=False
     )
     p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
     p.add_argument('core_bdev_name', help='Name of underlying core bdev')
