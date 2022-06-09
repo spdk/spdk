@@ -170,6 +170,7 @@ ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 	sb->header.version = FTL_METADATA_VERSION_CURRENT;
 	sb->uuid = dev->conf.uuid;
 	sb->clean = 0;
+	dev->sb_shm->shm_clean = false;
 
 	/* Max 16 IO depth per band relocate */
 	sb->max_reloc_qdepth = 16;
@@ -191,6 +192,7 @@ ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	struct ftl_superblock *sb = dev->sb;
 
 	sb->clean = 0;
+	dev->sb_shm->shm_clean = false;
 	sb->header.crc = get_sb_crc(sb);
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_SB);
 }
@@ -258,6 +260,18 @@ ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 		FTL_NOTICELOG(dev, "Create new FTL, UUID %s\n", uuid);
 	}
 
+	/* Allocate md buf */
+	dev->sb_shm = NULL;
+	dev->sb_shm_md = ftl_md_create(dev, spdk_divide_round_up(sizeof(*dev->sb_shm), FTL_BLOCK_SIZE),
+				       0, "sb_shm",
+				       md_create_flags, NULL);
+	if (dev->sb_shm_md == NULL) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	dev->sb_shm = ftl_md_get_buffer(dev->sb_shm_md);
+
 	/* Setup the layout of a superblock */
 	if (ftl_layout_setup_superblock(dev)) {
 		ftl_mngt_fail_step(mngt);
@@ -307,6 +321,10 @@ ftl_mngt_superblock_deinit(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mn
 		ftl_md_destroy(layout->md[FTL_LAYOUT_REGION_TYPE_SB_BASE]);
 		layout->md[FTL_LAYOUT_REGION_TYPE_SB_BASE] = NULL;
 	}
+
+	ftl_md_destroy(dev->sb_shm_md);
+	dev->sb_shm_md = NULL;
+	dev->sb_shm = NULL;
 
 	ftl_mngt_next_step(mngt);
 }

@@ -47,6 +47,10 @@ struct spdk_ftl_dev {
 	/* FTL superblock */
 	struct ftl_superblock		*sb;
 
+	/* FTL shm superblock */
+	struct ftl_superblock_shm	*sb_shm;
+	struct ftl_md			*sb_shm_md;
+
 	/* Queue of registered IO channels */
 	TAILQ_HEAD(, ftl_io_channel)	ioch_queue;
 
@@ -145,6 +149,9 @@ struct spdk_ftl_dev {
 
 	/* Writer for GC IOs */
 	struct ftl_writer		writer_gc;
+
+	/* Retry init sequence */
+	bool				init_retry;
 };
 
 void ftl_apply_limits(struct spdk_ftl_dev *dev);

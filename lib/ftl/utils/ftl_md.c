@@ -116,6 +116,15 @@ ftl_md_setup_obj(struct ftl_md *md, int flags,
 }
 
 static void
+ftl_md_invalidate_shm(struct ftl_md *md)
+{
+	if (md->dev->sb_shm && md->dev->sb_shm->shm_ready) {
+		md->dev->init_retry = true;
+		md->dev->sb_shm->shm_ready = false;
+	}
+}
+
+static void
 ftl_md_create_shm(struct ftl_md *md, uint64_t vss_blksz, int flags)
 {
 	struct stat shm_stat;
@@ -138,6 +147,7 @@ ftl_md_create_shm(struct ftl_md *md, uint64_t vss_blksz, int flags)
 	/* If specified, unlink before create a new SHM object */
 	if (flags & FTL_MD_CREATE_SHM_NEW) {
 		if (md->shm_unlink(md->name) < 0 && errno != ENOENT) {
+			ftl_md_invalidate_shm(md);
 			return;
 		}
 		open_flags += O_CREAT | O_TRUNC;
@@ -215,6 +225,7 @@ err_shm:
 		md->shm_unlink(md->name);
 		md->shm_fd = -1;
 	}
+	ftl_md_invalidate_shm(md);
 }
 
 static void

@@ -132,8 +132,20 @@ static void
 dev_init_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
 {
 	struct ftl_dev_init_ctx *ctx = _ctx;
+	int rc;
 
 	if (status) {
+		if (dev->init_retry) {
+			FTL_NOTICELOG(dev, "Startup retry\n");
+			rc = spdk_ftl_dev_init(&dev->conf, ctx->cb_fn, ctx->cb_arg);
+			if (!rc) {
+				free_dev(dev);
+				free(ctx);
+				return;
+			}
+			FTL_NOTICELOG(dev, "Startup retry failed: %d\n", rc);
+		}
+
 		free_dev(dev);
 		dev = NULL;
 	}

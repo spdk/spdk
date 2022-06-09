@@ -47,4 +47,21 @@ struct ftl_superblock_md_region {
 	uint64_t		blk_sz;
 };
 
+struct ftl_superblock_shm {
+	/* SHM initialization completed */
+	bool				shm_ready;
+
+	/* SHM status - fast restart */
+	bool				shm_clean;
+
+	/* Used to continue trim after SHM recovery */
+	struct {
+		bool			in_progress;
+		uint64_t		start_lba;
+		uint64_t		num_blocks;
+	} trim;
+
+	struct ftl_superblock_gc_info	gc_info;
+};
+
 #endif /* FTL_SB_COMMON_H */
