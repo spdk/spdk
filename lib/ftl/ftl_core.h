@@ -93,6 +93,10 @@ struct spdk_ftl_dev {
 	/* FTL superblock */
 	struct ftl_superblock		*sb;
 
+	/* FTL shm superblock */
+	struct ftl_superblock_shm	*sb_shm;
+	struct ftl_md				*sb_shm_md;
+
 	/* Indicates the device is fully initialized */
 	int							initialized;
 
@@ -197,6 +201,9 @@ struct spdk_ftl_dev {
 
 	/* Writer for GC IOs */
 	struct ftl_writer			writer_gc;
+
+	/* Retry init sequence */
+	bool						init_retry;
 };
 
 struct ftl_media_event {

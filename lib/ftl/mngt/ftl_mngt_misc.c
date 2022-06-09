@@ -200,6 +200,7 @@ void ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 void ftl_mngt_finalize_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	dev->initialized = 1;
+	dev->sb_shm->shm_ready = true;
 
 	ftl_writer_resume(&dev->writer_user);
 	ftl_writer_resume(&dev->writer_gc);

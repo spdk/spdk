@@ -181,8 +181,29 @@ static void spdk_ftl_dev_init_cb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt
 {
 	struct ftl_dev_init_ctx *ictx = ftl_mngt_get_caller_context(mngt);
 	int status = ftl_mngt_get_status(mngt);
+	struct spdk_ftl_dev_init_opts init_opts;
+	int rc;
 
 	if (status) {
+		if (dev->init_retry) {
+			init_opts.name = dev->name;
+			init_opts.uuid = dev->uuid;
+			init_opts.mode = dev->conf.mode;
+			init_opts.base_bdev = dev->conf.base_bdev;
+			init_opts.cache_bdev = dev->conf.cache_bdev;
+			init_opts.conf = &dev->conf;
+
+			FTL_NOTICELOG(dev, "Startup retry\n");
+			rc = spdk_ftl_dev_init(&init_opts, ictx->cb_fn, ictx->cb_arg);
+			if (!rc) {
+				free_dev(dev);
+				ftl_mngt_clear_dev(mngt);
+				free(ictx);
+				return;
+			}
+			FTL_NOTICELOG(dev, "Startup retry failed: %d\n", rc);
+		}
+
 		free_dev(dev);
 		dev = NULL;
 		ftl_mngt_clear_dev(mngt);
