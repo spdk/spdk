@@ -15,6 +15,12 @@
 #define SIZE (ALIGNMENT * 2)
 #define SOCKET_ID_ANY -1
 
+DEFINE_STUB(ftl_bitmap_create, struct ftl_bitmap *, (void *buf, size_t size), NULL);
+DEFINE_STUB_V(ftl_bitmap_destroy, (struct ftl_bitmap *bitmap));
+DEFINE_STUB(ftl_bitmap_get, bool, (const struct ftl_bitmap *bitmap, uint64_t bit), true);
+DEFINE_STUB_V(ftl_bitmap_set, (struct ftl_bitmap *bitmap, uint64_t bit));
+DEFINE_STUB_V(ftl_bitmap_clear, (struct ftl_bitmap *bitmap, uint64_t bit));
+
 static struct ftl_mempool *g_mpool;
 
 static void
