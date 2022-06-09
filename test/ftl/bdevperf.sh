@@ -35,3 +35,5 @@ for ((i = 0; i < ${#tests[@]}; i++)); do
 	trap - SIGINT SIGTERM EXIT
 	timing_exit "${tests[$i]}"
 done
+
+remove_shm

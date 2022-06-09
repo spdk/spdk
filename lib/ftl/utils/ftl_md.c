@@ -42,6 +42,9 @@ struct ftl_md_impl;
 static void io_submit(struct ftl_md_impl *md);
 static void io_done(struct ftl_md_impl *md);
 
+typedef int (*shm_open_t)(const char *, int, mode_t);
+typedef int (*shm_unlink_t)(const char *);
+
 enum ftl_md_ops {
 	FTL_MD_OP_RESTORE,
 	FTL_MD_OP_PERSIST,
@@ -78,6 +81,27 @@ struct ftl_md_impl {
 		enum ftl_md_ops op;
 		struct spdk_bdev_io_wait_entry bdev_io_wait;
 	} io;
+
+	/* SHM object file descriptor or -1 if heap alloc */
+	int shm_fd;
+
+	/* Object name */
+	char name[NAME_MAX + 1];
+
+	/* mmap flags for the SHM object */
+	int shm_mmap_flags;
+
+	/* Total size of SHM object (data + md) */
+	size_t shm_sz;
+
+	/* open() for the SHM object */
+	shm_open_t shm_open;
+
+	/* unlink() for the SHM object */
+	shm_unlink_t shm_unlink;
+
+	/* Memory was registered to SPDK */
+	bool mem_reg;
 
 	/* Metadata primary object */
 	struct ftl_md_impl *mirror;
@@ -129,8 +153,197 @@ static uint64_t xfer_size(struct ftl_md_impl *md)
 	return ftl_md_xfer_blocks(md->dev) * FTL_BLOCK_SIZE;
 }
 
+static void ftl_md_create_heap(struct ftl_md_impl *md, uint64_t vss_blksz)
+{
+	md->shm_fd = -1;
+	md->data = calloc(md->data_blocks, FTL_BLOCK_SIZE + vss_blksz);
+	if (!md->data) {
+		md->vss_data = NULL;
+		return;
+	}
+
+	if (vss_blksz) {
+		md->vss_data = ((char *)md->data) + md->data_blocks * FTL_BLOCK_SIZE;
+	} else {
+		md->vss_data = NULL;
+	}
+}
+
+static void ftl_md_destroy_heap(struct ftl_md_impl *md)
+{
+	if (md->data) {
+		free(md->data);
+		md->data = NULL;
+		md->vss_data = NULL;
+	}
+}
+
+static int ftl_wrapper_open(const char *name, int of, mode_t m)
+{
+	return open(name, of, m);
+}
+
+static void ftl_md_setup_obj(struct ftl_md_impl *md, int flags,
+			     const char *name)
+{
+	char uuid_str[SPDK_UUID_STRING_LEN];
+	const char *fmt;
+
+	if ((flags & (FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_HUGE)) ==
+	    (FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_HUGE)) {
+		/* TODO: temporary, define a proper hugetlbfs mountpoint */
+		fmt = "/dev/hugepages/ftl_%s_%s";
+		md->shm_mmap_flags = MAP_SHARED;
+		md->shm_open = ftl_wrapper_open;
+		md->shm_unlink = unlink;
+	} else {
+		fmt = "/ftl_%s_%s";
+		md->shm_mmap_flags = MAP_SHARED;
+		md->shm_open = shm_open;
+		md->shm_unlink = shm_unlink;
+	}
+
+	if (name == NULL ||
+	    spdk_uuid_fmt_lower(uuid_str, SPDK_UUID_STRING_LEN, &md->dev->uuid) ||
+	    snprintf(md->name, sizeof(md->name) / sizeof(md->name[0]),
+		     fmt, uuid_str, name) <= 0) {
+		md->name[0] = 0;
+	}
+}
+
+static void ftl_md_create_shm(struct ftl_md_impl *md, uint64_t vss_blksz, int flags)
+{
+	struct stat shm_stat;
+	size_t vss_blk_offs;
+	void *shm_ptr;
+	int open_flags = O_RDWR;
+	mode_t open_mode = S_IRUSR | S_IWUSR;
+
+	assert(md->shm_open && md->shm_unlink);
+	md->data = NULL;
+	md->vss_data = NULL;
+	md->shm_sz = 0;
+
+	/* Must have an object name */
+	if (md->name[0] == 0) {
+		return;
+	}
+
+	/* If specified, unlink before create a new SHM object */
+	if (flags & FTL_MD_CREATE_SHM_NEW) {
+		if (md->shm_unlink(md->name) < 0 && errno != ENOENT) {
+			return;
+		}
+		open_flags += O_CREAT | O_TRUNC;
+	}
+
+	/* Open existing or create a new SHM object, then query its props */
+	md->shm_fd = md->shm_open(md->name, open_flags, open_mode);
+	if (md->shm_fd < 0 || fstat(md->shm_fd, &shm_stat) < 0) {
+		goto err_shm;
+	}
+
+	/* Verify open mode hasn't changed */
+	if ((shm_stat.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) != open_mode) {
+		goto err_shm;
+	}
+
+	/* Round up the SHM obj size to the nearest blk size (i.e. page size) */
+	md->shm_sz = spdk_divide_round_up(md->data_blocks * FTL_BLOCK_SIZE, shm_stat.st_blksize);
+
+	/* Add some blks for VSS metadata */
+	vss_blk_offs = md->shm_sz;
+
+	if (vss_blksz) {
+		md->shm_sz += spdk_divide_round_up(md->data_blocks * vss_blksz,
+						   shm_stat.st_blksize);
+	}
+
+	/* Total SHM obj size */
+	md->shm_sz *= shm_stat.st_blksize;
+
+	/* Set or check the object size - zero init`d in case of set (FTL_MD_CREATE_SHM_NEW) */
+	if ((shm_stat.st_size == 0 && (ftruncate(md->shm_fd, md->shm_sz) < 0 ||
+				       (flags & FTL_MD_CREATE_SHM_NEW) == 0))
+	    || (shm_stat.st_size > 0 && (size_t)shm_stat.st_size != md->shm_sz)) {
+		goto err_shm;
+	}
+
+	/* Create a virtual memory mapping for the object */
+	shm_ptr = mmap(NULL, md->shm_sz, PROT_READ | PROT_WRITE, md->shm_mmap_flags,
+		       md->shm_fd, 0);
+	if (shm_ptr == MAP_FAILED) {
+		goto err_shm;
+	}
+
+	md->data = shm_ptr;
+	if (vss_blksz) {
+		md->vss_data = ((char *)shm_ptr) + vss_blk_offs * shm_stat.st_blksize;
+	}
+
+	/* Lock the pages in memory (i.e. prevent the pages to be paged out) */
+	if (mlock(md->data, md->shm_sz) < 0) {
+		goto err_map;
+	}
+
+	if (flags & FTL_MD_CREATE_SHM_HUGE) {
+		if (spdk_mem_register(md->data, md->shm_sz)) {
+			goto err_mlock;
+		}
+		md->mem_reg = true;
+	}
+
+	return;
+
+	/* Cleanup upon fault */
+err_mlock:
+	munlock(md->data, md->shm_sz);
+
+err_map:
+	munmap(md->data, md->shm_sz);
+	md->data = NULL;
+	md->vss_data = NULL;
+	md->shm_sz = 0;
+
+err_shm:
+	if (md->shm_fd >= 0) {
+		close(md->shm_fd);
+		md->shm_unlink(md->name);
+		md->shm_fd = -1;
+	}
+}
+
+static void ftl_md_destroy_shm(struct ftl_md_impl *md)
+{
+	if (!md->data) {
+		return;
+	}
+
+	assert(md->shm_sz > 0);
+	if (md->mem_reg) {
+		spdk_mem_unregister(md->data, md->shm_sz);
+		md->mem_reg = false;
+	}
+
+	/* Unlock the pages in memory */
+	munlock(md->data, md->shm_sz);
+
+	/* Remove the virtual memory mapping for the object */
+	munmap(md->data, md->shm_sz);
+
+	/* Close SHM object fd */
+	close(md->shm_fd);
+
+	md->data = NULL;
+	md->vss_data = NULL;
+
+	/* Otherwise destroy/unlink the object */
+	assert(md->name[0] != 0 && md->shm_unlink != NULL);
+	md->shm_unlink(md->name);
+}
+
 struct ftl_md *ftl_md_create(struct spdk_ftl_dev *dev, uint64_t blocks,
-			     uint64_t vss_blksz, const char *name, bool no_mem)
+			     uint64_t vss_blksz, const char *name, int flags)
 {
 	struct ftl_md_impl *md = calloc(1, sizeof(*md));
 
@@ -141,25 +354,38 @@ struct ftl_md *ftl_md_create(struct spdk_ftl_dev *dev, uint64_t blocks,
 	md->data_blocks = blocks;
 	md->mirror_on = true;
 
-	if (!no_mem) {
-		size_t buf_size = md->data_blocks * (FTL_BLOCK_SIZE + vss_blksz);
-		int ret;
+	ftl_md_setup_obj(md, flags, name);
 
-		ret = posix_memalign((void **)&md->data, FTL_BLOCK_SIZE, buf_size);
-		if (ret) {
+	if (0 == (flags & FTL_MD_CREATE_NO_MEM)) {
+		if (flags & FTL_MD_CREATE_SHM) {
+			ftl_md_create_shm(md, vss_blksz, flags);
+		} else {
+			assert(flags == 0);
+			ftl_md_create_heap(md, vss_blksz);
+		}
+
+		if (!md->data) {
 			free(md);
 			return NULL;
-		}
-		memset(md->data, 0, buf_size);
-
-		if (vss_blksz) {
-			md->vss_data = ((char *)md->data) + md->data_blocks * FTL_BLOCK_SIZE;
-		} else {
-			md->vss_data = NULL;
 		}
 	}
 
 	return &md->base;
+}
+
+int ftl_md_unlink(struct spdk_ftl_dev *dev, const char *name, int flags)
+{
+	struct ftl_md_impl md = { 0 };
+
+	if (0 == (flags & FTL_MD_CREATE_SHM)) {
+		/* Unlink can be called for shared memory only */
+		return -EINVAL;
+	}
+
+	md.dev = dev;
+	ftl_md_setup_obj(&md, flags, name);
+
+	return md.shm_unlink(md.name);
 }
 
 void ftl_md_destroy(struct ftl_md *md)
@@ -186,10 +412,10 @@ void ftl_md_free_buf(struct ftl_md *md)
 	}
 	impl = SPDK_CONTAINEROF(md, struct ftl_md_impl, base);
 
-	if (impl->data) {
-		free(impl->data);
-		impl->data = NULL;
-		impl->vss_data = NULL;
+	if (impl->shm_fd < 0) {
+		ftl_md_destroy_heap(impl);
+	} else {
+		ftl_md_destroy_shm(impl);
 	}
 }
 

@@ -59,3 +59,13 @@ function gen_ftl_nvme_conf() {
 		}
 	JSON
 }
+
+# Remove not needed files from shared memory
+function remove_shm() {
+	echo  Remove shared memory files
+	rm -f rm -f /dev/shm/ftl*
+	rm -f rm -f /dev/hugepages/ftl*
+	rm -f rm -f /dev/shm/spdk*
+	rm -f rm -f /dev/shm/iscsi
+	rm -f rm -f /dev/hugepages/spdk*
+}

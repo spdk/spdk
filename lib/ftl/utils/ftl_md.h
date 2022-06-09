@@ -96,20 +96,51 @@ union ftl_md_vss {
 SPDK_STATIC_ASSERT(sizeof(union ftl_md_vss) == FTL_MD_VSS_SZ, "Invalid md vss size");
 
 /**
+ *  FTL metadata creation flags
+ */
+typedef enum ftl_md_create_flags {
+	/** FTL metadata data buf will be allocated in SHM */
+	FTL_MD_CREATE_SHM     = 1,
+
+	/** Always create a new SHM obj, i.e. issue shm_unlock() before shm_open() */
+	FTL_MD_CREATE_SHM_NEW = 2,
+
+	/** Use hugetlbfs */
+	FTL_MD_CREATE_SHM_HUGE = 4,
+
+	/** FTL metadata will be created without memory allocation */
+	FTL_MD_CREATE_NO_MEM = 8
+} ftl_md_create_flags_t;
+
+/**
  * @brief Creates FTL metadata
  *
  * @param dev The FTL device
  * @param blocks Size of buffer in FTL block size unit
  * @param vss_blksz Size of VSS MD
  * @param name Name of the object being created
- * @param no_mem If true metadata will be created without memory allocation
+ * @param flags Bit flags of ftl_md_create_flags_t type
  *
  * @note if buffer is NULL, the buffer will be allocated internally by the object
  *
  * @return FTL metadata
  */
 struct ftl_md *ftl_md_create(struct spdk_ftl_dev *dev, uint64_t blocks,
-			     uint64_t vss_blksz, const char *name, bool no_mem);
+			     uint64_t vss_blksz, const char *name, int flags);
+
+/**
+ * @brief Unlinks metadata object from FS
+ * @param dev The FTL device
+ * @param name Name of the object being unlinked
+ * @param flags Bit flag describing the MD object
+ *
+ * @note Unlink is possible only for following set flags:
+ * - FTL_MD_CREATE_SHM
+ * - FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_HUGE
+ *
+ * @return Operation result
+ */
+int ftl_md_unlink(struct spdk_ftl_dev *dev, const char *name, int flags);
 
 /**
  * @brief Destroys metadata
