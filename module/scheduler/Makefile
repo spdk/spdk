@@ -8,10 +8,12 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = dynamic
 
-# Do not compile schedulers and governors based on DPDK env
-# if non-DPDK env is used.
+# When DPDK rte_power is missing, do not compile schedulers
+# and governors based on it.
 ifeq (y,$(DPDK_POWER))
 DIRS-y += dpdk_governor gscheduler
+else
+$(warning Skipping building dpdk_governor and gscheduler, due to missing rte_power)
 endif
 
 .PHONY: all clean $(DIRS-y)

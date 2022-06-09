@@ -38,8 +38,14 @@ DPDK_LIB_LIST += rte_telemetry rte_kvargs
 DPDK_POWER=n
 
 ifeq ($(OS),Linux)
+# Despite rte_power was added DPDK 1.6,
+# some DPDK packages do not include it. See #2534.
+ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_power.*))
 DPDK_POWER=y
+# Since DPDK 21.02 rte_power depends on rte_ethdev that
+# in turn depends on rte_net.
 DPDK_LIB_LIST += rte_power rte_ethdev rte_net
+endif
 endif
 
 # There are some complex dependencies when using crypto, reduce or both so
