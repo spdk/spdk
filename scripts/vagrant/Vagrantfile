@@ -17,6 +17,7 @@ def get_box_type(distro, force_distro)
     'fedora33'   => 'generic/fedora33',
     'fedora34'   => 'generic/fedora34',
     'fedora35'   => 'generic/fedora35',
+    'fedora36'   => 'generic/fedora36',
     'arch'       => 'generic/arch',
     'freebsd12'  => 'generic/freebsd12',
     'rocky8'     => 'rockylinux/8'
