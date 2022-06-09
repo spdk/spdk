@@ -13,6 +13,7 @@ def get_box_type(distro, force_distro)
     'ubuntu1604' => 'peru/ubuntu-16.04-server-amd64',
     'ubuntu1804' => 'peru/ubuntu-18.04-server-amd64',
     'ubuntu2004' => 'peru/ubuntu-20.04-server-amd64',
+    'ubuntu2204' => 'generic/ubuntu2204',
     'fedora33'   => 'generic/fedora33',
     'fedora34'   => 'generic/fedora34',
     'fedora35'   => 'generic/fedora35',
