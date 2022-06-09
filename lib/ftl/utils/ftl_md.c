@@ -722,9 +722,6 @@ static void persist_entry_cb(struct spdk_bdev_io *bdev_io, bool success, void *c
 	}
 
 	if (!ctx->remaining) {
-		if (ctx->vss_buffer) {
-			spdk_free(ctx->vss_buffer);
-		}
 		ctx->cb(ctx->status, ctx->cb_arg);
 	}
 }
@@ -807,18 +804,6 @@ void ftl_md_persist_entry(struct ftl_md *md, uint64_t start_entry, void *buffer,
 	ctx->md = impl;
 	ctx->start_entry = start_entry;
 	ctx->buffer = buffer;
-
-	if (vss_buffer) {
-		size_t vss_buf_size = impl->region->entry_size * impl->region->vss_blksz;
-		void *vss_buf = spdk_zmalloc(vss_buf_size, FTL_BLOCK_SIZE, NULL,
-					     SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (!vss_buf) {
-			cb(-ENOMEM, cb_arg);
-			return;
-		}
-		memcpy(vss_buf, vss_buffer, vss_buf_size);
-		vss_buffer = vss_buf;
-	}
 	ctx->vss_buffer = vss_buffer;
 
 	_ftl_md_persist_entry(ctx);
