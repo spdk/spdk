@@ -38,6 +38,7 @@
 #include "spdk/likely.h"
 
 #include "ftl_mempool.h"
+#include "ftl_bitmap.h"
 
 struct ftl_mempool_element {
 	SLIST_ENTRY(ftl_mempool_element) entry;
@@ -51,6 +52,8 @@ struct ftl_mempool {
 	size_t count;
 	size_t alignment;
 	int socket_id;
+	struct ftl_bitmap *inuse_bmp;
+	void *inuse_buf;
 };
 
 
@@ -143,8 +146,15 @@ void ftl_mempool_destroy(struct ftl_mempool *mpool)
 	free(mpool);
 }
 
+static inline bool
+ftl_mempool_is_initialized(struct ftl_mempool *mpool)
+{
+	return mpool->inuse_buf == NULL;
+}
+
 void *ftl_mempool_get(struct ftl_mempool *mpool)
 {
+	assert(ftl_mempool_is_initialized(mpool));
 	if (spdk_unlikely(SLIST_EMPTY(&mpool->list))) {
 		return NULL;
 	}
@@ -159,6 +169,146 @@ void ftl_mempool_put(struct ftl_mempool *mpool, void *element)
 {
 	struct ftl_mempool_element *el = element;
 
+	assert(ftl_mempool_is_initialized(mpool));
 	assert(is_element_valid(mpool, element));
 	SLIST_INSERT_HEAD(&mpool->list, el, entry);
+}
+
+struct ftl_mempool *ftl_mempool_create_ext(void *buffer, size_t count, size_t size,
+		size_t alignment)
+{
+	struct ftl_mempool *mp;
+	size_t inuse_buf_sz;
+
+	assert(buffer);
+	assert(count > 0);
+	assert(size > 0);
+
+	mp = calloc(1, sizeof(*mp));
+	if (!mp) {
+		goto error;
+	}
+
+	size = spdk_max(size, sizeof(struct ftl_mempool_element));
+
+	mp->count = count;
+	mp->element_size = element_size_aligned(size, alignment);
+	mp->alignment = alignment;
+	SLIST_INIT(&mp->list);
+
+	/* Calculate underlying inuse_bmp's buf size */
+	inuse_buf_sz = spdk_divide_round_up(mp->count, 8);
+	/* The bitmap size must be a multiple of word size (8b) - round up */
+	if (inuse_buf_sz & 7UL) {
+		inuse_buf_sz &= ~7UL;
+		inuse_buf_sz += 8;
+	}
+
+	mp->inuse_buf = calloc(1, inuse_buf_sz);
+	if (!mp->inuse_buf) {
+		goto error;
+	}
+
+	mp->inuse_bmp = ftl_bitmap_create(mp->inuse_buf, inuse_buf_sz);
+	if (!mp->inuse_bmp) {
+		goto error;
+	}
+
+	/* Map the buffer */
+	mp->buffer_size = mp->element_size * mp->count;
+	mp->buffer = buffer;
+
+	return mp;
+
+error:
+	if (mp) {
+		if (mp->inuse_bmp) {
+			ftl_bitmap_destroy(mp->inuse_bmp);
+		}
+		if (mp->inuse_buf) {
+			free(mp->inuse_buf);
+		}
+		free(mp);
+	}
+	return NULL;
+}
+
+void ftl_mempool_destroy_ext(struct ftl_mempool *mpool)
+{
+	if (!mpool) {
+		return;
+	}
+
+	if (mpool->inuse_bmp) {
+		ftl_bitmap_destroy(mpool->inuse_bmp);
+	}
+	if (mpool->inuse_buf) {
+		free(mpool->inuse_buf);
+	}
+	free(mpool);
+}
+
+void
+ftl_mempool_initialize_ext(struct ftl_mempool *mpool)
+{
+	void *buffer = mpool->buffer;
+	size_t i;
+
+	assert(!ftl_mempool_is_initialized(mpool));
+
+	for (i = 0; i < mpool->count; i++, buffer += mpool->element_size) {
+		if (ftl_bitmap_get(mpool->inuse_bmp, i)) {
+			continue;
+		}
+		struct ftl_mempool_element *el = buffer;
+		assert(is_element_valid(mpool, el));
+		SLIST_INSERT_HEAD(&mpool->list, el, entry);
+	}
+
+	ftl_bitmap_destroy(mpool->inuse_bmp);
+	mpool->inuse_bmp = NULL;
+
+	free(mpool->inuse_buf);
+	mpool->inuse_buf = NULL;
+}
+
+ftl_df_obj_id
+ftl_mempool_get_df_obj_id(struct ftl_mempool *mpool, void *df_obj_ptr)
+{
+	return ftl_df_get_obj_id(mpool->buffer, df_obj_ptr);
+}
+
+size_t
+ftl_mempool_get_elem_id(struct ftl_mempool *mpool, void *element)
+{
+	return ftl_mempool_get_df_obj_id(mpool, element) / mpool->element_size;
+}
+
+void *
+ftl_mempool_get_df_ptr(struct ftl_mempool *mpool, ftl_df_obj_id df_obj_id)
+{
+	return ftl_df_get_obj_ptr(mpool->buffer, df_obj_id);
+}
+
+void *
+ftl_mempool_claim_df(struct ftl_mempool *mpool, ftl_df_obj_id df_obj_id)
+{
+	struct ftl_mempool_element *el = ftl_df_get_obj_ptr(mpool->buffer, df_obj_id);
+
+	assert(!ftl_mempool_is_initialized(mpool));
+	assert(df_obj_id % mpool->element_size == 0);
+	assert(df_obj_id / mpool->element_size < mpool->count);
+
+	ftl_bitmap_set(mpool->inuse_bmp, df_obj_id / mpool->element_size);
+	return el;
+}
+
+void
+ftl_mempool_release_df(struct ftl_mempool *mpool, ftl_df_obj_id df_obj_id)
+{
+	assert(!ftl_mempool_is_initialized(mpool));
+	assert(df_obj_id % mpool->element_size == 0);
+	assert(df_obj_id / mpool->element_size < mpool->count);
+
+	ftl_bitmap_clear(mpool->inuse_bmp, df_obj_id / mpool->element_size);
 }
