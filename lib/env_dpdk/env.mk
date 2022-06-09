@@ -89,7 +89,7 @@ endif
 LINK_HASH=n
 
 ifeq ($(CONFIG_VHOST),y)
-DPDK_LIB_LIST += rte_vhost
+DPDK_LIB_LIST += rte_vhost rte_net
 ifneq (, $(wildcard $(DPDK_LIB_DIR)/librte_dmadev.*))
 # Introduced in DPDK 21.11, and rte_vhost became dependent on
 # it shortly thereafter
