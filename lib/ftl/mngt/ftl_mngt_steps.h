@@ -66,6 +66,8 @@ void ftl_mngt_init_bands_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_deinit_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_deinit_bands_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_init_io_channel(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_deinit_io_channel(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
@@ -115,6 +117,10 @@ void ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 void ftl_mngt_load_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_init_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_deinit_vld_map(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_persist_band_info_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 

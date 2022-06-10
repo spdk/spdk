@@ -342,15 +342,20 @@ ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 	struct ftl_lba_map *lba_map;
 
 	if (ftl_addr_cached(dev, addr)) {
+		ftl_bitmap_clear(dev->valid_map, addr);
 		return;
 	}
 
 	band = ftl_band_from_addr(dev, addr);
 	lba_map = &band->lba_map;
 
-	/* TODO: fix case when the same address is invalidated from multiple sources */
-	assert(lba_map->num_vld > 0);
-	lba_map->num_vld--;
+	/* The bit might be already cleared if two writes are scheduled to the */
+	/* same LBA at the same time */
+	if (ftl_bitmap_get(dev->valid_map, addr)) {
+		assert(lba_map->num_vld > 0);
+		ftl_bitmap_clear(dev->valid_map, addr);
+		lba_map->num_vld--;
+	}
 
 	/* Invalidate open/full band lba_map entry to keep p2l and l2p
 	 * consistency when band is going to close state */

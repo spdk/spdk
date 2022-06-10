@@ -310,6 +310,7 @@ static void move_advance_rq(struct ftl_rq *rq)
 		offset = ftl_band_block_offset_from_addr(band, rq->io.addr);
 
 		assert(offset < ftl_band_num_usable_blocks(band));
+		assert(ftl_band_block_offset_valid(band, offset));
 
 		entry->lba = band->lba_map.band_map[offset];
 		entry->addr = rq->io.addr;

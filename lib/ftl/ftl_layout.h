@@ -56,6 +56,9 @@ enum ftl_layout_region_type {
 	/* Mirrored instance of bands state */
 	ftl_layout_region_type_band_md_mirror,
 
+	/* Map of valid physical addresses, used for more efficient garbage collection */
+	ftl_layout_region_type_valid_map,
+
 	/* State of chunks */
 	ftl_layout_region_type_nvc_md,
 	/* Mirrored instance of the state of chunks */
@@ -71,7 +74,7 @@ enum ftl_layout_region_type {
 
 	/* last nvc/btm region in terms of lba address space */
 	ftl_layout_region_last_nvc = ftl_layout_region_type_data_nvc,
-	ftl_layout_region_last_btm = ftl_layout_region_type_data_btm,
+	ftl_layout_region_last_btm = ftl_layout_region_type_valid_map,
 
 	ftl_layout_region_type_free_btm = UINT32_MAX - 2,
 	ftl_layout_region_type_free_nvc = UINT32_MAX - 1,

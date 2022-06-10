@@ -39,6 +39,8 @@
 #include "spdk/util.h"
 #include "spdk/uuid.h"
 
+#include "utils/ftl_bitmap.h"
+
 /* Marks address as invalid */
 #define FTL_ADDR_INVALID	((ftl_addr)-1)
 /* Marks LBA as invalid */
@@ -90,6 +92,9 @@ struct ftl_lba_map {
 
 	/* LBA map's reference count */
 	size_t					ref_cnt;
+
+	/* Bitmap of valid LBAs */
+	struct ftl_bitmap		*vld;
 
 	/* LBA map (only valid for open/relocating bands) */
 	union {

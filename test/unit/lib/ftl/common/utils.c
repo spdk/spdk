@@ -144,6 +144,10 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
 	TAILQ_INSERT_HEAD(&dev->shut_bands, band, queue_entry);
 	CIRCLEQ_INIT(&band->zones);
 
+	band->lba_map.vld = (struct ftl_bitmap *)spdk_bit_array_create(ftl_get_num_blocks_in_band(
+				    dev));
+	SPDK_CU_ASSERT_FATAL(band->lba_map.vld != NULL);
+
 	band->zone_buf = calloc(ftl_get_num_punits(dev), sizeof(*band->zone_buf));
 	SPDK_CU_ASSERT_FATAL(band->zone_buf != NULL);
 
@@ -186,6 +190,7 @@ void
 test_free_ftl_band(struct ftl_band *band)
 {
 	SPDK_CU_ASSERT_FATAL(band != NULL);
+	spdk_bit_array_free((struct spdk_bit_array **)&band->lba_map.vld);
 	free(band->zone_buf);
 	spdk_dma_free(band->lba_map.dma_buf);
 	spdk_dma_free(band->lba_map.band_dma_md);

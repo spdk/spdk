@@ -52,6 +52,7 @@
 #include "ftl_sb.h"
 #include "ftl_l2p.h"
 #include "mngt/ftl_mngt_zone.h"
+#include "utils/ftl_bitmap.h"
 #include "utils/ftl_log.h"
 
 #ifdef SPDK_CONFIG_PMDK
@@ -169,6 +170,9 @@ struct spdk_ftl_dev {
 
 	/* L2P checkpointing */
 	void						*l2p_ckpt;
+
+	/* LBA valid map */
+	struct ftl_bitmap			*valid_map;
 
 	/* Metadata size */
 	size_t						md_size;

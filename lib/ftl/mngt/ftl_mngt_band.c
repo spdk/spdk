@@ -39,8 +39,24 @@
 static int ftl_band_init_md(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_lba_map *lba_map = &band->lba_map;
 	struct ftl_md *band_info_md = dev->layout.md[ftl_layout_region_type_band_md];
+	struct ftl_md *valid_map_md = dev->layout.md[ftl_layout_region_type_valid_map];
+	uint64_t band_num_blocks = ftl_get_num_blocks_in_band(band->dev);
+	size_t band_valid_map_bytes;
 	struct ftl_band_md *band_md = ftl_md_get_buffer(band_info_md);
+
+	if (band_num_blocks % (ftl_bitmap_buffer_alignment * 8)) {
+		FTL_ERRLOG(dev, "The number of blocks in band is not divisible by bitmap word bits\n");
+		return -EINVAL;
+	}
+	band_valid_map_bytes = band_num_blocks / 8;
+
+	lba_map->vld = ftl_bitmap_create(ftl_md_get_buffer(valid_map_md) +
+					 band_valid_map_bytes * band->id, band_valid_map_bytes);
+	if (!lba_map->vld) {
+		return -ENOMEM;
+	}
 
 	band->md = &band_md[band->id];
 	if (!ftl_fast_startup(dev)) {
@@ -122,6 +138,21 @@ static void ftl_dev_deinit_bands(struct spdk_ftl_dev *dev)
 	free(dev->bands);
 }
 
+static void ftl_dev_deinit_bands_md(struct spdk_ftl_dev *dev)
+{
+	if (dev->bands) {
+		uint64_t i;
+		for (i = 0; i < dev->num_bands; ++i) {
+			struct ftl_band *band = &dev->bands[i];
+
+			ftl_bitmap_destroy(band->lba_map.vld);
+			band->lba_map.vld = NULL;
+
+			band->md = NULL;
+		}
+	}
+}
+
 void ftl_mngt_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	if (ftl_dev_init_bands(dev)) {
@@ -143,6 +174,12 @@ void ftl_mngt_init_bands_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 void ftl_mngt_deinit_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	ftl_dev_deinit_bands(dev);
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_deinit_bands_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_dev_deinit_bands_md(dev);
 	ftl_mngt_next_step(mngt);
 }
 

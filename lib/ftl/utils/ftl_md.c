@@ -1191,6 +1191,11 @@ ftl_md_create_region_flags(struct spdk_ftl_dev *dev, int region_type)
 			flags |= FTL_MD_CREATE_SHM_NEW;
 		}
 		break;
+	case ftl_layout_region_type_valid_map:
+		if (!ftl_fast_startup(dev) && !ftl_fast_recovery(dev)) {
+			flags |= FTL_MD_CREATE_SHM_NEW;
+		}
+		break;
 	default:
 		return 0;
 		break;
@@ -1205,6 +1210,7 @@ ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type)
 	switch (region_type) {
 	case ftl_layout_region_type_sb:
 	case ftl_layout_region_type_band_md:
+	case ftl_layout_region_type_valid_map:
 	case ftl_layout_region_type_nvc_md:
 		if (dev->conf.fast_shdn) {
 			return FTL_MD_DESTROY_SHM_KEEP;

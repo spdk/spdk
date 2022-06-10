@@ -330,6 +330,17 @@ static int setup_layout_base(struct spdk_ftl_dev *dev)
 	/* Move offset after base superblock */
 	offset += layout->region[ftl_layout_region_type_sb_btm].current.blocks;
 
+	/* Setup validity map */
+	region = &layout->region[ftl_layout_region_type_valid_map];
+	region->type = ftl_layout_region_type_valid_map;
+	region->name = "vmap";
+	set_region_version(region, 0);
+	region->current.offset = offset;
+	region->current.blocks = blocks_region(spdk_divide_round_up(
+					       layout->btm.total_blocks + layout->nvc.total_blocks, 8));
+	set_region_bdev_btm(region, dev);
+	offset += region->current.blocks;
+
 	left = layout->btm.total_blocks - offset;
 	if (left > layout->btm.total_blocks) {
 		FTL_ERRLOG(dev, "Error when setup base device layout\n");

@@ -116,8 +116,14 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_deinit_nv_cache
 		},
 		{
+			.name = "Initialize valid map",
+			.action = ftl_mngt_init_vld_map,
+			.cleanup = ftl_mngt_deinit_vld_map
+		},
+		{
 			.name = "Initialize bands metadata",
-			.action = ftl_mngt_init_bands_md
+			.action = ftl_mngt_init_bands_md,
+			.cleanup = ftl_mngt_deinit_bands_md
 		},
 		{
 			.name = "Initialize reloc",

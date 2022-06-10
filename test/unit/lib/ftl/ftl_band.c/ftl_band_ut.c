@@ -131,6 +131,35 @@ DEFINE_STUB(ftl_mngt_unmap, int, (struct spdk_ftl_dev *dev, uint64_t lba, uint64
 DEFINE_STUB_V(pmem_persist, (const void *addr, size_t len));
 #endif
 
+static void adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)
+{
+	if (*bitmap == g_dev->valid_map) {
+		*bitmap = g_band->lba_map.vld;
+		*bit = test_offset_from_addr(*bit, g_band);
+	}
+}
+
+bool ftl_bitmap_get(const struct ftl_bitmap *bitmap, uint64_t bit)
+{
+	adjust_bitmap((struct ftl_bitmap **)&bitmap, &bit);
+	return spdk_bit_array_get((struct spdk_bit_array *)bitmap, bit);
+}
+
+void ftl_bitmap_set(struct ftl_bitmap *bitmap, uint64_t bit)
+{
+	int ret;
+
+	adjust_bitmap(&bitmap, &bit);
+	ret = spdk_bit_array_set((struct spdk_bit_array *)bitmap, bit);
+	CU_ASSERT_EQUAL(ret, 0);
+}
+
+void ftl_bitmap_clear(struct ftl_bitmap *bitmap, uint64_t bit)
+{
+	adjust_bitmap(&bitmap, &bit);
+	spdk_bit_array_clear((struct spdk_bit_array *)bitmap, bit);
+}
+
 static void
 setup_band(void)
 {
@@ -237,14 +266,17 @@ test_band_set_addr(void)
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
 	CU_ASSERT_EQUAL(lba_map->band_map[offset], TEST_LBA);
+	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset));
 
 	addr += g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
 	CU_ASSERT_EQUAL(lba_map->band_map[offset], TEST_LBA + 1);
+	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset));
 	addr -= g_geo.zone_size;
 	offset = test_offset_from_addr(addr, g_band);
+	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset));
 	cleanup_band();
 }
 
@@ -253,23 +285,33 @@ test_invalidate_addr(void)
 {
 	struct ftl_lba_map *lba_map;
 	ftl_addr addr;
+	uint64_t offset[2];
 
 	setup_band();
 	lba_map = &g_band->lba_map;
 	addr = addr_from_punit(0);
 	addr += TEST_BAND_IDX * ftl_get_num_blocks_in_band(g_dev);
+	offset[0] = test_offset_from_addr(addr, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
+	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset[0]));
 	ftl_invalidate_addr(g_band->dev, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 0);
+	CU_ASSERT_FALSE(ftl_bitmap_get(lba_map->vld, offset[0]));
 
+	offset[0] = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA, addr);
 	addr += g_geo.zone_size;
+	offset[1] = test_offset_from_addr(addr, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 2);
+	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset[0]));
+	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset[1]));
 	ftl_invalidate_addr(g_band->dev, addr);
 	CU_ASSERT_EQUAL(lba_map->num_vld, 1);
+	CU_ASSERT_TRUE(ftl_bitmap_get(lba_map->vld, offset[0]));
+	CU_ASSERT_FALSE(ftl_bitmap_get(lba_map->vld, offset[1]));
 	cleanup_band();
 }
 

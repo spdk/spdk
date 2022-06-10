@@ -259,6 +259,17 @@ ftl_band_next_zone(struct ftl_band *band, struct ftl_zone *zone)
 }
 
 static inline int
+ftl_band_block_offset_valid(struct ftl_band *band, size_t block_off)
+{
+	struct ftl_lba_map *lba_map = &band->lba_map;
+
+	if (ftl_bitmap_get(lba_map->vld, block_off)) {
+		return 1;
+	}
+	return 0;
+}
+
+static inline int
 ftl_band_zone_is_last(struct ftl_band *band, struct ftl_zone *zone)
 {
 	return zone == CIRCLEQ_LAST(&band->zones);

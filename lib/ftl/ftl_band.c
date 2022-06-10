@@ -233,6 +233,7 @@ ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr)
 
 	lba_map->band_map[offset] = lba;
 	lba_map->num_vld++;
+	ftl_bitmap_set(band->dev->valid_map, addr);
 }
 
 size_t
