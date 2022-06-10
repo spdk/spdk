@@ -101,6 +101,55 @@ bdev_uring_open(struct bdev_uring *bdev)
 	return 0;
 }
 
+static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
+}
+
+int
+bdev_uring_rescan(const char *name)
+{
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	struct bdev_uring *uring;
+	uint64_t uring_size, blockcnt;
+	int rc;
+
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		return rc;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+	if (bdev->module != &uring_if) {
+		rc = -ENODEV;
+		goto exit;
+	}
+
+	uring = SPDK_CONTAINEROF(bdev, struct bdev_uring, bdev);
+	uring_size = spdk_fd_get_size(uring->fd);
+	blockcnt = uring_size / bdev->blocklen;
+
+	if (bdev->blockcnt != blockcnt) {
+		SPDK_NOTICELOG("URING device is resized: bdev name %s, old block count %" PRIu64
+			       ", new block count %"
+			       PRIu64 "\n",
+			       uring->filename,
+			       bdev->blockcnt,
+			       blockcnt);
+		rc = spdk_bdev_notify_blockcnt_change(bdev, blockcnt);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not change num blocks for uring bdev: name %s, errno: %d.\n",
+				    uring->filename, rc);
+			goto exit;
+		}
+	}
+
+exit:
+	spdk_bdev_close(desc);
+	return rc;
+}
+
 static int
 bdev_uring_close(struct bdev_uring *bdev)
 {

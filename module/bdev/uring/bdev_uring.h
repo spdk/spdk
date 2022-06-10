@@ -26,4 +26,6 @@ struct spdk_bdev *create_uring_bdev(const struct bdev_uring_opts *opts);
 
 void delete_uring_bdev(const char *name, spdk_delete_uring_complete cb_fn, void *cb_arg);
 
+int bdev_uring_rescan(const char *name);
+
 #endif /* SPDK_BDEV_URING_H */

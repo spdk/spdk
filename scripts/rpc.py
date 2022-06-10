@@ -520,6 +520,14 @@ if __name__ == "__main__":
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
     p.set_defaults(func=bdev_uring_create)
 
+    def bdev_uring_rescan(args):
+        print_json(rpc.bdev.bdev_uring_rescan(args.client,
+                                              name=args.name))
+
+    p = subparsers.add_parser('bdev_uring_rescan', help='Rescan a bdev size with uring backend')
+    p.add_argument('name', help='Block device name')
+    p.set_defaults(func=bdev_uring_rescan)
+
     def bdev_uring_delete(args):
         rpc.bdev.bdev_uring_delete(args.client,
                                    name=args.name)

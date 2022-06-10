@@ -519,7 +519,7 @@ def bdev_aio_rescan(client, name):
     """Rescan a Linux AIO block device.
 
     Args:
-        bdev_name: name of aio bdev to delete
+        name: name of aio bdev to rescan
     """
     params = {'name': name}
     return client.call('bdev_aio_rescan', params)
@@ -529,7 +529,7 @@ def bdev_aio_delete(client, name):
     """Remove aio bdev from the system.
 
     Args:
-        bdev_name: name of aio bdev to delete
+        name: name of aio bdev to delete
     """
     params = {'name': name}
     return client.call('bdev_aio_delete', params)
@@ -557,6 +557,16 @@ def bdev_uring_create(client, filename, name, block_size=None, uuid=None):
         params['uuid'] = uuid
 
     return client.call('bdev_uring_create', params)
+
+
+def bdev_uring_rescan(client, name):
+    """Rescan a Linux URING block device.
+
+    Args:
+        name: name of uring bdev to rescan
+    """
+    params = {'name': name}
+    return client.call('bdev_uring_rescan', params)
 
 
 def bdev_uring_delete(client, name):

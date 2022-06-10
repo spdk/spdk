@@ -76,6 +76,42 @@ cleanup:
 }
 SPDK_RPC_REGISTER("bdev_uring_create", rpc_bdev_uring_create, SPDK_RPC_RUNTIME)
 
+struct rpc_rescan_uring {
+	char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_rescan_uring_decoders[] = {
+	{"name", offsetof(struct rpc_rescan_uring, name), spdk_json_decode_string},
+};
+
+static void
+rpc_bdev_uring_rescan(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
+{
+	struct rpc_rescan_uring req = {NULL};
+	int bdeverrno;
+
+	if (spdk_json_decode_object(params, rpc_rescan_uring_decoders,
+				    SPDK_COUNTOF(rpc_rescan_uring_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	bdeverrno = bdev_uring_rescan(req.name);
+	if (bdeverrno) {
+		spdk_jsonrpc_send_error_response(request, bdeverrno,
+						 spdk_strerror(-bdeverrno));
+		goto cleanup;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+cleanup:
+	free(req.name);
+}
+SPDK_RPC_REGISTER("bdev_uring_rescan", rpc_bdev_uring_rescan, SPDK_RPC_RUNTIME)
+
 struct rpc_delete_uring {
 	char *name;
 };

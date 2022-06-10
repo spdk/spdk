@@ -10818,6 +10818,41 @@ Example response:
 }
 ~~~
 
+### bdev_uring_rescan {#rpc_bdev_uring_rescan}
+
+Rescan the size of a uring bdev.
+
+#### Parameters
+
+Name | Optional | Type   | Description
+---- | -------- | ------ | -----------
+name | Required | string | name of uring bdev to rescan
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_uring_rescan",
+  "id": 1,
+  "params": {
+    "name": "bdev_u0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_uring_delete {#rpc_bdev_uring_delete}
 
 Remove a uring bdev.

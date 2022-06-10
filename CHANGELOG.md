@@ -7,6 +7,10 @@
 Function `spdk_subsystem_init_from_json_config` is deprecated and will be removed in 24.09 release.
 Please use `spdk_subsystem_load_config` instead.
 
+### bdev_uring
+
+Added `bdev_uring_rescan` RPC to allow rescaning the size of uring bdev.
+
 ## v24.01
 
 ### accel
