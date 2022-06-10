@@ -321,6 +321,150 @@ ftl_band_basic_rq_read(struct ftl_band *band, struct ftl_basic_rq *brq)
 }
 
 static void
+band_open_cb(int status, void *cb_arg)
+{
+	struct ftl_band *band = cb_arg;
+
+	if (spdk_unlikely(status)) {
+		ftl_md_persist_entry_retry(&band->md_persist_entry_ctx);
+		return;
+	}
+
+	ftl_band_set_state(band, FTL_BAND_STATE_OPEN);
+}
+
+void
+ftl_band_open(struct ftl_band *band, enum ftl_band_type type)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_md *md = dev->layout.md[ftl_layout_region_type_band_md];
+	struct ftl_layout_region *region = &dev->layout.region[ftl_layout_region_type_band_md];
+	struct ftl_lba_map *lba_map = &band->lba_map;
+
+	ftl_band_set_type(band, type);
+	ftl_band_set_state(band, FTL_BAND_STATE_OPENING);
+
+	memcpy(lba_map->band_dma_md, band->md, region->entry_size * FTL_BLOCK_SIZE);
+	lba_map->band_dma_md->state = FTL_BAND_STATE_OPEN;
+	lba_map->band_dma_md->lba_map_checksum = 0;
+
+	if (spdk_unlikely(0 != band->lba_map.num_vld)) {
+		/*
+		 * This is inconsistent state, a band with valid block,
+		 * it could be moved on the free list
+		 */
+		assert(0 == band->lba_map.num_vld);
+		ftl_abort();
+	}
+
+	ftl_md_persist_entry(md, band->id, lba_map->band_dma_md, ftl_md_get_vss_buffer(md), band_open_cb, band,
+			     &band->md_persist_entry_ctx);
+}
+
+static void
+band_close_cb(int status, void *cb_arg)
+{
+	struct ftl_band *band = cb_arg;
+
+	if (spdk_unlikely(status)) {
+		ftl_md_persist_entry_retry(&band->md_persist_entry_ctx);
+		return;
+	}
+
+	band->md->lba_map_checksum = band->lba_map.band_dma_md->lba_map_checksum;
+	ftl_band_set_state(band, FTL_BAND_STATE_CLOSED);
+}
+
+static void
+band_map_write_cb(struct ftl_basic_rq *brq)
+{
+	struct ftl_band *band = brq->io.band;
+	struct ftl_lba_map *lba_map = &band->lba_map;
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_layout_region *region = &dev->layout.region[ftl_layout_region_type_band_md];
+	struct ftl_md *md = dev->layout.md[ftl_layout_region_type_band_md];
+	uint32_t band_map_crc;
+
+	if (spdk_likely(brq->success)) {
+
+		band_map_crc = spdk_crc32c_update(lba_map->dma_buf,
+						  ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE, 0);
+		memcpy(lba_map->band_dma_md, band->md, region->entry_size * FTL_BLOCK_SIZE);
+		lba_map->band_dma_md->state = FTL_BAND_STATE_CLOSED;
+		lba_map->band_dma_md->lba_map_checksum = band_map_crc;
+
+		ftl_md_persist_entry(md, band->id, lba_map->band_dma_md, ftl_md_get_vss_buffer(md), band_close_cb, band,
+				     &band->md_persist_entry_ctx);
+	} else {
+		/* Try to retry in case of failure */
+		ftl_band_brq_bdev_write(brq);
+		band->queue_depth++;
+	}
+}
+
+void
+ftl_band_close(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	void *metadata = band->lba_map.dma_buf;
+	uint64_t num_blocks = ftl_tail_md_num_blocks(dev);
+
+	/* Write LBA map first, after completion, set the state to close on nvcache, then internally */
+	ftl_band_set_state(band, FTL_BAND_STATE_CLOSING);
+	ftl_basic_rq_init(dev, &band->metadata_rq, metadata, num_blocks);
+	ftl_basic_rq_set_owner(&band->metadata_rq, band_map_write_cb, band);
+
+	ftl_band_basic_rq_write(band, &band->metadata_rq);
+}
+
+static void band_free_cb(int status, void *ctx)
+{
+	struct ftl_band *band = (struct ftl_band *)ctx;
+
+	if (spdk_unlikely(status)) {
+		ftl_md_persist_entry_retry(&band->md_persist_entry_ctx);
+		return;
+	}
+
+	ftl_band_release_lba_map(band);
+	FTL_DEBUGLOG(band->dev, "Band is going to free state. Band id: %u\n", band->id);
+	ftl_band_set_state(band, FTL_BAND_STATE_FREE);
+	assert(0 == band->lba_map.ref_cnt);
+}
+
+void
+ftl_band_free(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_lba_map *lba_map = &band->lba_map;
+	struct ftl_md *md = dev->layout.md[ftl_layout_region_type_band_md];
+	struct ftl_layout_region *region = &dev->layout.region[ftl_layout_region_type_band_md];
+
+
+	/*
+	 * For zone_block vbdev there's no way to recover free band after shutdown since zone state
+	 * and write pointer aren't persisted. For real ZNS drives the recovery flow will need to be adapted
+	 * anyway to take into account these fields persisting and this will probably turn into a zone reset
+	 */
+	if (!ftl_is_zoned(band->dev)) {
+		memcpy(lba_map->band_dma_md, band->md, region->entry_size * FTL_BLOCK_SIZE);
+		lba_map->band_dma_md->state = FTL_BAND_STATE_FREE;
+		lba_map->band_dma_md->lba_map_checksum = 0;
+
+		ftl_md_persist_entry(md, band->id, lba_map->band_dma_md, ftl_md_get_vss_buffer(md), band_free_cb, band,
+				     &band->md_persist_entry_ctx);
+
+	} else {
+		/* TODO: This is for jenkins tests only, any recovery from dirty shutdown will not work on zone ns */
+
+		FTL_DEBUGLOG(dev, "Band is going to free state. Band id: %u\n", band->id);
+		ftl_band_set_state(band, FTL_BAND_STATE_FREE);
+		assert(0 == band->lba_map.ref_cnt);
+	}
+	/* TODO: The whole band erase code should probably be done here instead */
+}
+
+static void
 read_tail_md_cb(struct ftl_basic_rq *brq)
 {
 	struct ftl_band *band = brq->owner.priv;
