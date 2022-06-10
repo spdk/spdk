@@ -108,6 +108,9 @@ DEFINE_STUB(ftl_l2p_get, ftl_addr, (struct spdk_ftl_dev *dev, uint64_t lba), 0);
 #if defined(FTL_META_DEBUG)
 DEFINE_STUB_V(ftl_band_validate_md, (struct ftl_band *band, ftl_band_validate_md_cb cb));
 #endif
+#if defined(FTL_META_DEBUG)
+DEFINE_STUB_V(ftl_dev_dump_bands, (struct spdk_ftl_dev *dev));
+#endif
 #if defined(FTL_DUMP_STATS)
 DEFINE_STUB_V(ftl_dev_dump_stats, (const struct spdk_ftl_dev *dev));
 #endif

@@ -35,6 +35,7 @@
 #define FTL_DEBUG_H
 
 #include "ftl_internal.h"
+#include "ftl_band.h"
 #include "ftl_core.h"
 
 #if defined(DEBUG)
@@ -51,6 +52,16 @@ ftl_addr2str(ftl_addr addr, char *buf, size_t size)
 	snprintf(buf, size, "(%"PRIu64")", addr);
 	return buf;
 }
+
+typedef void (*ftl_band_validate_md_cb)(struct ftl_band *band, bool valid);
+
+#if defined(DEBUG)
+void ftl_dev_dump_bands(struct spdk_ftl_dev *dev);
+#else
+static inline void ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
+{
+}
+#endif
 
 void ftl_dev_dump_stats(const struct spdk_ftl_dev *dev);
 

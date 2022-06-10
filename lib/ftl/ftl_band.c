@@ -251,6 +251,13 @@ ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset)
 	return tail_md_offset - offset;
 }
 
+size_t
+ftl_band_user_blocks(const struct ftl_band *band)
+{
+	return ftl_band_num_usable_blocks(band) -
+	       ftl_tail_md_num_blocks(band->dev);
+}
+
 struct ftl_band *
 ftl_band_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 {

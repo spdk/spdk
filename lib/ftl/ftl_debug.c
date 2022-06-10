@@ -33,12 +33,64 @@
 
 #include "spdk/ftl.h"
 #include "ftl_debug.h"
+#include "ftl_band.h"
+
+#if defined(DEBUG)
+
+static const char *ftl_band_state_str[] = {
+	"free",
+	"prep",
+	"opening",
+	"open",
+	"full",
+	"closing",
+	"closed",
+	"max"
+};
+
+void
+ftl_dev_dump_bands(struct spdk_ftl_dev *dev)
+{
+	size_t i, total = 0;
+
+	if (!dev->bands) {
+		return;
+	}
+
+	ftl_debug(dev, "Bands validity:\n");
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
+		if (!dev->bands[i].num_zones) {
+			ftl_debug(dev, " Band %3zu: all zones are offline\n", i + 1);
+			continue;
+		}
+
+		total += dev->bands[i].lba_map.num_vld;
+		ftl_debug(dev, " Band %3zu: %8zu / %zu \tnum_zones: %zu \twr_cnt: %"PRIu64
+			  "\tstate: %s\n",
+			  i + 1, dev->bands[i].lba_map.num_vld,
+			  ftl_band_user_blocks(&dev->bands[i]),
+			  dev->bands[i].num_zones,
+			  dev->bands[i].md->wr_cnt,
+			  ftl_band_state_str[dev->bands[i].md->state]);
+	}
+}
+
+#endif /* defined(DEBUG) */
 
 void
 ftl_dev_dump_stats(const struct spdk_ftl_dev *dev)
 {
-	size_t total = 0;
+	size_t i, total = 0;
 	char uuid[SPDK_UUID_STRING_LEN];
+
+	if (!dev->bands) {
+		return;
+	}
+
+	/* Count the number of valid LBAs */
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
+		total += dev->bands[i].lba_map.num_vld;
+	}
 
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &dev->uuid);
 	FTL_NOTICELOG(dev, "\n");
