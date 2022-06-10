@@ -4742,6 +4742,7 @@ cache                   | Required | string      | Name of the cache device
 uuid                    | Optional | string      | UUID of restored bdev (not applicable when creating new instance)
 core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
 overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
 
 #### Result
 
@@ -4796,6 +4797,7 @@ cache                   | Required | string      | Name of the cache device
 uuid                    | Required | string      | UUID of restored bdev
 core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
 overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
 
 #### Result
 
@@ -4845,6 +4847,7 @@ This RPC is subject to change.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data during deletion and rely on shared memory during next load
 
 #### Example
 
@@ -4882,6 +4885,7 @@ This RPC is subject to change.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
+fast_shutdown           | Optional | bool        | When set FTL will minimize persisted data during deletion and rely on shared memory during next load
 
 #### Example
 

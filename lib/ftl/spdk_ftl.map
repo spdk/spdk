@@ -15,6 +15,7 @@
 	spdk_ftl_io_size;
 	spdk_ftl_readv;
 	spdk_ftl_writev;
+	spdk_ftl_dev_set_fast_shutdown;
 
 	local: *;
 };

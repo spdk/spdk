@@ -41,6 +41,10 @@ static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
 		"core_mask", offsetof(struct spdk_ftl_conf, core_mask),
 		spdk_json_decode_string, true
 	},
+	{
+		"fast_shutdown", offsetof(struct spdk_ftl_conf, fast_shutdown),
+		spdk_json_decode_bool, true
+	},
 };
 
 static void
@@ -118,10 +122,15 @@ SPDK_RPC_REGISTER("bdev_ftl_load", rpc_bdev_ftl_load, SPDK_RPC_RUNTIME)
 
 struct rpc_delete_ftl {
 	char *name;
+	bool fast_shutdown;
 };
 
 static const struct spdk_json_object_decoder rpc_delete_ftl_decoders[] = {
 	{"name", offsetof(struct rpc_delete_ftl, name), spdk_json_decode_string},
+	{
+		"fast_shutdown", offsetof(struct rpc_delete_ftl, fast_shutdown),
+		spdk_json_decode_bool, true
+	},
 };
 
 static void
@@ -146,7 +155,7 @@ rpc_bdev_ftl_delete(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev_ftl_delete_bdev(attrs.name, rpc_bdev_ftl_delete_cb, request);
+	bdev_ftl_delete_bdev(attrs.name, attrs.fast_shutdown, rpc_bdev_ftl_delete_cb, request);
 invalid:
 	free(attrs.name);
 }

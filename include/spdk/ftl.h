@@ -59,6 +59,8 @@ struct spdk_ftl_conf {
 
 	/* Name of cache block device (must support extended metadata) */
 	char					*cache_bdev;
+	/* Enable fast shutdown path */
+	bool					fast_shutdown;
 };
 
 enum spdk_ftl_mode {
@@ -204,6 +206,14 @@ int spdk_ftl_writev(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_
  * \return The size of struct
  */
 size_t spdk_ftl_io_size(void);
+
+/**
+ * Enable fast shutdown.
+ *
+ * During fast shutdown FTL will keep the necessary metadata in shared memory instead
+ * of serializing it to storage. This allows for shorter downtime during upgrade process.
+ */
+void spdk_ftl_dev_set_fast_shutdown(struct spdk_ftl_dev *dev, bool fast_shutdown);
 
 #ifdef __cplusplus
 }

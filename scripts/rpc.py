@@ -2008,7 +2008,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                             uuid=args.uuid,
                                             cache=args.cache,
                                             overprovisioning=args.overprovisioning,
-                                            core_mask=args.core_mask))
+                                            core_mask=args.core_mask,
+                                            fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_create', help='Add FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
@@ -2022,6 +2023,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    ' to user (optional); default 20', type=int)
     p.add_argument('--core-mask', help='CPU core mask - which cores will be used for ftl core thread, '
                    'by default core thread will be set to the main application core (optional)')
+    p.add_argument('-f', '--fast-shutdown', help="Enable fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_create)
 
     def bdev_ftl_load(args):
@@ -2031,7 +2033,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                           uuid=args.uuid,
                                           cache=args.cache,
                                           overprovisioning=args.overprovisioning,
-                                          core_mask=args.core_mask))
+                                          core_mask=args.core_mask,
+                                          fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_load', help='Load FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
@@ -2044,6 +2047,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    ' to user (optional); default 20', type=int)
     p.add_argument('--core-mask', help='CPU core mask - which cores will be used for ftl core thread, '
                    'by default core thread will be set to the main application core (optional)')
+    p.add_argument('-f', '--fast-shutdown', help="Enable fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_load)
 
     def bdev_ftl_unload(args):
@@ -2051,13 +2055,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('bdev_ftl_unload', help='Unload FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-f', '--fast-shutdown', help="Fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_unload)
 
     def bdev_ftl_delete(args):
-        print_dict(rpc.bdev.bdev_ftl_delete(args.client, name=args.name))
+        print_dict(rpc.bdev.bdev_ftl_delete(args.client, name=args.name, fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_delete', help='Delete FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-f', '--fast-shutdown', help="Fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_delete)
 
     # vmd

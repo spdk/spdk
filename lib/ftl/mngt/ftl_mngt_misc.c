@@ -85,7 +85,7 @@ ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 	}
 
 	if (dev->p2l_pool_md) {
-		ftl_md_destroy(dev->p2l_pool_md);
+		ftl_md_destroy(dev->p2l_pool_md, ftl_md_destroy_shm_flags(dev));
 		dev->p2l_pool_md = NULL;
 	}
 

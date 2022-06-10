@@ -23,6 +23,7 @@ static const struct spdk_ftl_conf g_default_conf = {
 	.nv_cache = {
 		.chunk_compaction_threshold = 80,
 	},
+	.fast_shutdown = true,
 };
 
 void

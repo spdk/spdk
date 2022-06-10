@@ -564,6 +564,13 @@ spdk_ftl_fini(void)
 	spdk_free(g_ftl_read_buf);
 }
 
+void
+spdk_ftl_dev_set_fast_shutdown(struct spdk_ftl_dev *dev, bool fast_shutdown)
+{
+	assert(dev);
+	dev->conf.fast_shutdown = fast_shutdown;
+}
+
 struct spdk_io_channel *
 spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev)
 {

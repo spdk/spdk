@@ -213,6 +213,8 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &conf.uuid);
 	spdk_json_write_named_string(w, "uuid", uuid);
 
+	spdk_json_write_named_bool(w, "fast_shutdown", conf.fast_shutdown);
+
 	spdk_json_write_named_string(w, "base_bdev", conf.base_bdev);
 
 	if (conf.cache_bdev) {
@@ -331,6 +333,9 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 
 error:
 	if (ftl_bdev->dev) {
+		/* Cleanup all FTL */
+		spdk_ftl_dev_set_fast_shutdown(ftl_bdev->dev, false);
+
 		/* FTL was created, but we have got an error, so we need to delete it */
 		spdk_ftl_dev_free(dev, bdev_ftl_create_err_cleanup_cb, ftl_bdev);
 	} else {
@@ -430,15 +435,47 @@ bdev_ftl_initialize(void)
 	return spdk_ftl_init();
 }
 
-void
-bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+static void
+bdev_ftl_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
 {
+}
+
+void
+bdev_ftl_delete_bdev(const char *name, bool fast_shutdown, spdk_bdev_unregister_cb cb_fn,
+		     void *cb_arg)
+{
+	struct spdk_bdev_desc	*ftl_bdev_desc;
+	struct spdk_bdev *bdev;
+	struct ftl_bdev *ftl;
 	int rc;
+
+	rc = spdk_bdev_open_ext(name, false, bdev_ftl_event_cb, NULL, &ftl_bdev_desc);
+
+	if (rc) {
+		goto not_found;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(ftl_bdev_desc);
+
+	if (bdev->module != &g_ftl_if) {
+		goto bdev_opened;
+	}
+
+	ftl = bdev->ctxt;
+	assert(ftl);
+	spdk_ftl_dev_set_fast_shutdown(ftl->dev, fast_shutdown);
+	spdk_bdev_close(ftl_bdev_desc);
 
 	rc = spdk_bdev_unregister_by_name(name, &g_ftl_if, cb_fn, cb_arg);
 	if (rc) {
 		cb_fn(cb_arg, rc);
 	}
+
+	return;
+bdev_opened:
+	spdk_bdev_close(ftl_bdev_desc);
+not_found:
+	cb_fn(cb_arg, -ENODEV);
 }
 
 static void

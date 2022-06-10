@@ -1378,7 +1378,7 @@ def bdev_ftl_load(client, name, base_bdev, **kwargs):
     return client.call('bdev_ftl_load', params)
 
 
-def bdev_ftl_unload(client, name):
+def bdev_ftl_unload(client, name, fast_shutdown):
     """Unload FTL bdev
 
     Args:
@@ -1389,13 +1389,14 @@ def bdev_ftl_unload(client, name):
     return client.call('bdev_ftl_unload', params)
 
 
-def bdev_ftl_delete(client, name):
+def bdev_ftl_delete(client, name, fast_shutdown):
     """Delete FTL bdev
 
     Args:
         name: name of the bdev
     """
-    params = {'name': name}
+    params = {'name': name,
+              'fast_shutdown': fast_shutdown}
 
     return client.call('bdev_ftl_delete', params)
 

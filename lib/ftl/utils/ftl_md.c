@@ -229,7 +229,7 @@ err_shm:
 }
 
 static void
-ftl_md_destroy_shm(struct ftl_md *md)
+ftl_md_destroy_shm(struct ftl_md *md, int flags)
 {
 	if (!md->data) {
 		return;
@@ -252,6 +252,11 @@ ftl_md_destroy_shm(struct ftl_md *md)
 
 	md->data = NULL;
 	md->vss_data = NULL;
+
+	/* If specified, keep the object in SHM */
+	if (flags & FTL_MD_DESTROY_SHM_KEEP) {
+		return;
+	}
 
 	/* Otherwise destroy/unlink the object */
 	assert(md->name[0] != 0 && md->shm_unlink != NULL);
@@ -306,7 +311,7 @@ struct ftl_md *ftl_md_create(struct spdk_ftl_dev *dev, uint64_t blocks,
 
 	return md;
 err:
-	ftl_md_destroy(md);
+	ftl_md_destroy(md, ftl_md_destroy_region_flags(dev, region->type));
 	return NULL;
 }
 
@@ -327,13 +332,13 @@ ftl_md_unlink(struct spdk_ftl_dev *dev, const char *name, int flags)
 }
 
 void
-ftl_md_destroy(struct ftl_md *md)
+ftl_md_destroy(struct ftl_md *md, int flags)
 {
 	if (!md) {
 		return;
 	}
 
-	ftl_md_free_buf(md);
+	ftl_md_free_buf(md, flags);
 
 	spdk_free(md->entry_vss_dma_buf);
 
@@ -342,16 +347,17 @@ ftl_md_destroy(struct ftl_md *md)
 }
 
 void
-ftl_md_free_buf(struct ftl_md *md)
+ftl_md_free_buf(struct ftl_md *md, int flags)
 {
 	if (!md) {
 		return;
 	}
 
 	if (md->shm_fd < 0) {
+		assert(flags == 0);
 		ftl_md_destroy_heap(md);
 	} else {
-		ftl_md_destroy_shm(md);
+		ftl_md_destroy_shm(md, flags);
 	}
 }
 
@@ -1125,9 +1131,33 @@ ftl_md_create_region_flags(struct spdk_ftl_dev *dev, int region_type)
 }
 
 int
+ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type)
+{
+	switch (region_type) {
+	case FTL_LAYOUT_REGION_TYPE_SB:
+	case FTL_LAYOUT_REGION_TYPE_BAND_MD:
+	case FTL_LAYOUT_REGION_TYPE_NVC_MD:
+		if (dev->conf.fast_shutdown) {
+			return FTL_MD_DESTROY_SHM_KEEP;
+		}
+		break;
+
+	default:
+		break;
+	}
+	return 0;
+}
+
+int
 ftl_md_create_shm_flags(struct spdk_ftl_dev *dev)
 {
 	int flags = FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW;
 
 	return flags;
+}
+
+int
+ftl_md_destroy_shm_flags(struct spdk_ftl_dev *dev)
+{
+	return (dev->conf.fast_shutdown) ? FTL_MD_DESTROY_SHM_KEEP : 0;
 }
