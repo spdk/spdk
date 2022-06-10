@@ -39,6 +39,7 @@
 #include "ftl/ftl_io.c"
 #include "ftl/ftl_init.c"
 #include "ftl/ftl_core.c"
+#include "ftl/ftl_band.c"
 
 DEFINE_STUB(spdk_bdev_io_get_append_location, uint64_t, (struct spdk_bdev_io *bdev_io), 0);
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
@@ -104,6 +105,9 @@ DEFINE_STUB(spdk_mempool_obj_iter, uint32_t,
 DEFINE_STUB_V(ftl_l2p_unpin, (struct spdk_ftl_dev *dev, uint64_t lba, uint64_t count));
 DEFINE_STUB(ftl_l2p_get, ftl_addr, (struct spdk_ftl_dev *dev, uint64_t lba), 0);
 
+#if defined(FTL_META_DEBUG)
+DEFINE_STUB_V(ftl_band_validate_md, (struct ftl_band *band, ftl_band_validate_md_cb cb));
+#endif
 #if defined(FTL_DUMP_STATS)
 DEFINE_STUB_V(ftl_dev_dump_stats, (const struct spdk_ftl_dev *dev));
 #endif

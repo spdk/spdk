@@ -89,6 +89,88 @@ spdk_ftl_io_size(void)
 	return sizeof(struct ftl_io);
 }
 
+static void
+ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_io *io = cb_arg;
+	struct spdk_ftl_dev *dev = io->dev;
+
+	if (spdk_unlikely(!success)) {
+		io->status = -EIO;
+	}
+
+	if (io->type == FTL_IO_WRITE && ftl_is_append_supported(dev)) {
+		assert(io->parent);
+		io->parent->addr = spdk_bdev_io_get_append_location(bdev_io);
+	}
+
+	ftl_io_dec_req(io);
+	if (ftl_io_done(io)) {
+		ftl_io_complete(io);
+	}
+
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+ftl_submit_erase(struct ftl_io *io);
+
+static void
+_ftl_submit_erase(void *_io)
+{
+	struct ftl_io *io = _io;
+
+	ftl_submit_erase(io);
+}
+
+static void
+ftl_submit_erase(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_band *band = io->band;
+	ftl_addr addr = io->addr;
+	struct ftl_zone *zone;
+	int rc = 0;
+	size_t i;
+
+	for (i = 0; i < io->num_blocks; ++i) {
+		if (i != 0) {
+			zone = ftl_band_next_zone(band, ftl_band_zone_from_addr(band, addr));
+			assert(zone->info.state == SPDK_BDEV_ZONE_STATE_FULL);
+			addr = zone->info.zone_id;
+		}
+
+		assert(ftl_addr_get_zone_offset(dev, addr) == 0);
+
+		if (i < io->pos) {
+			continue;
+		}
+
+		rc = spdk_bdev_zone_management(dev->base_bdev_desc, dev->base_ioch, addr,
+					       SPDK_BDEV_ZONE_RESET, ftl_io_cmpl_cb, io);
+		if (spdk_unlikely(rc)) {
+			if (rc == -ENOMEM) {
+				struct spdk_bdev *bdev;
+				bdev = spdk_bdev_desc_get_bdev(dev->base_bdev_desc);
+				io->bdev_io_wait.bdev = bdev;
+				io->bdev_io_wait.cb_fn = _ftl_submit_erase;
+				io->bdev_io_wait.cb_arg = io;
+				spdk_bdev_queue_io_wait(bdev, dev->base_ioch, &io->bdev_io_wait);
+				return;
+			} else {
+				ftl_abort();
+			}
+		}
+
+		ftl_io_inc_req(io);
+		ftl_io_advance(io, 1);
+	}
+
+	if (ftl_io_done(io)) {
+		ftl_io_complete(io);
+	}
+}
+
 struct spdk_io_channel *
 ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 {
@@ -97,6 +179,82 @@ ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 	}
 
 	return NULL;
+}
+
+static void
+ftl_erase_fail(struct ftl_io *io, int status)
+{
+	struct ftl_zone *zone;
+	struct ftl_band *band = io->band;
+	char buf[128];
+
+	FTL_ERRLOG(band->dev, "Erase failed at address: %s, status: %d\n",
+		   ftl_addr2str(io->addr, buf, sizeof(buf)), status);
+
+	zone = ftl_band_zone_from_addr(band, io->addr);
+	zone->info.state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+	ftl_band_remove_zone(band, zone);
+	band->tail_md_addr = ftl_band_tail_md_addr(band);
+}
+
+static void
+ftl_zone_erase_cb(struct ftl_io *io, void *ctx, int status)
+{
+	struct ftl_zone *zone;
+
+	zone = ftl_band_zone_from_addr(io->band, io->addr);
+	zone->busy = false;
+
+	if (spdk_unlikely(status)) {
+		ftl_erase_fail(io, status);
+		return;
+	}
+
+	zone->info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+	zone->info.write_pointer = zone->info.zone_id;
+}
+
+static void
+_ftl_band_erase(void *_band)
+{
+	struct ftl_band *band = _band;
+	struct ftl_zone *zone;
+	struct ftl_io *io;
+
+	CIRCLEQ_FOREACH(zone, &band->zones, circleq) {
+		if (zone->info.state == SPDK_BDEV_ZONE_STATE_EMPTY) {
+			continue;
+		}
+
+		io = ftl_io_erase_init(band, 1, ftl_zone_erase_cb);
+		if (!io) {
+			spdk_thread_send_msg(spdk_get_thread(), _ftl_band_erase, band);
+			break;
+		}
+
+		zone->busy = true;
+		io->addr = zone->info.zone_id;
+		ftl_submit_erase(io);
+	}
+}
+
+static void
+ftl_band_erase(struct ftl_band *band)
+{
+	assert(band->md->state == FTL_BAND_STATE_CLOSED ||
+	       band->md->state == FTL_BAND_STATE_FREE);
+
+	ftl_band_set_state(band, FTL_BAND_STATE_PREP);
+
+	/* TODO: move ftl_band_erase to band abstraction */
+	if (spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(band->dev->base_bdev_desc))) {
+		_ftl_band_erase(band);
+	} else {
+		struct ftl_zone *zone = &band->zone_buf[0];
+
+		zone->info.state = SPDK_BDEV_ZONE_STATE_EMPTY;
+		zone->info.write_pointer = zone->info.zone_id;
+	}
 }
 
 static size_t
@@ -411,6 +569,20 @@ ftl_task_core(void *ctx)
 	}
 
 	return SPDK_POLLER_IDLE;
+}
+
+struct ftl_band *
+ftl_band_get_next_free(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *band = NULL;
+
+	if (!TAILQ_EMPTY(&dev->free_bands)) {
+		band = TAILQ_FIRST(&dev->free_bands);
+		TAILQ_REMOVE(&dev->free_bands, band, queue_entry);
+		ftl_band_erase(band);
+	}
+
+	return band;
 }
 
 void *g_ftl_zero_buf;

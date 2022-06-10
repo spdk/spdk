@@ -38,6 +38,7 @@
 
 #include "ftl_io.h"
 #include "ftl_core.h"
+#include "ftl_band.h"
 #include "ftl_debug.h"
 
 void
@@ -205,6 +206,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	ftl_io_clear(io);
 	ftl_io_init(io, dev, opts->cb_fn, opts->cb_ctx, opts->flags | FTL_IO_INTERNAL, opts->type);
 
+	io->band = opts->band;
 	io->md = opts->md;
 
 	if (parent) {
@@ -228,6 +230,34 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	if (iov_cnt > 0) {
 		ftl_io_init_iovec(io, iov, iov_cnt, iov_off, opts->num_blocks);
 	}
+
+	return io;
+}
+
+struct ftl_io *
+ftl_io_erase_init(struct ftl_band *band, size_t num_blocks, ftl_io_fn cb)
+{
+	struct ftl_io *io;
+	struct ftl_io_init_opts opts = {
+		.dev		= band->dev,
+		.io		= NULL,
+		.band		= band,
+		.size		= sizeof(struct ftl_io),
+		.flags		= 0,
+		.type		= FTL_IO_ERASE,
+		.num_blocks	= 1,
+		.cb_fn		= cb,
+		.iovcnt		= 0,
+		.md		= NULL,
+		.ioch		= ftl_get_io_channel(band->dev),
+	};
+
+	io = ftl_io_init_internal(&opts);
+	if (!io) {
+		return NULL;
+	}
+
+	io->num_blocks = num_blocks;
 
 	return io;
 }
@@ -442,6 +472,7 @@ ftl_io_clear(struct ftl_io *io)
 {
 	ftl_io_reset(io);
 	io->flags = 0;
+	io->band = NULL;
 }
 
 void
