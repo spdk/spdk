@@ -1170,6 +1170,7 @@ ftl_nv_cache_set_addr(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr)
 	assert(lba != FTL_LBA_INVALID);
 
 	ftl_chunk_set_addr(chunk, lba, addr);
+	ftl_bitmap_set(dev->valid_map, addr);
 }
 
 static void ftl_chunk_open(struct ftl_nv_cache_chunk *chunk);

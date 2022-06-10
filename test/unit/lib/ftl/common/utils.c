@@ -116,6 +116,9 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
 	band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
 	TAILQ_INSERT_HEAD(&dev->shut_bands, band, queue_entry);
 
+	band->p2l_map.valid = (struct ftl_bitmap *)spdk_bit_array_create(ftl_get_num_blocks_in_band(dev));
+	SPDK_CU_ASSERT_FATAL(band->p2l_map.valid != NULL);
+
 	band->start_addr = zone_size * id;
 
 	return band;
@@ -149,6 +152,7 @@ void
 test_free_ftl_band(struct ftl_band *band)
 {
 	SPDK_CU_ASSERT_FATAL(band != NULL);
+	spdk_bit_array_free((struct spdk_bit_array **)&band->p2l_map.valid);
 	spdk_dma_free(band->p2l_map.band_dma_md);
 
 	band->p2l_map.band_dma_md = NULL;

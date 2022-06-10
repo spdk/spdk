@@ -133,15 +133,20 @@ ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 	struct ftl_p2l_map *p2l_map;
 
 	if (ftl_addr_in_nvc(dev, addr)) {
+		ftl_bitmap_clear(dev->valid_map, addr);
 		return;
 	}
 
 	band = ftl_band_from_addr(dev, addr);
 	p2l_map = &band->p2l_map;
 
-	/* TODO: fix case when the same address is invalidated from multiple sources */
-	assert(p2l_map->num_valid > 0);
-	p2l_map->num_valid--;
+	/* The bit might be already cleared if two writes are scheduled to the */
+	/* same LBA at the same time */
+	if (ftl_bitmap_get(dev->valid_map, addr)) {
+		assert(p2l_map->num_valid > 0);
+		ftl_bitmap_clear(dev->valid_map, addr);
+		p2l_map->num_valid--;
+	}
 
 	/* Invalidate open/full band p2l_map entry to keep p2l and l2p
 	 * consistency when band is going to close state */

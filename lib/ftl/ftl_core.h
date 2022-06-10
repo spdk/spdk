@@ -22,6 +22,7 @@
 #include "ftl_layout.h"
 #include "ftl_sb.h"
 #include "ftl_l2p.h"
+#include "utils/ftl_bitmap.h"
 #include "utils/ftl_log.h"
 
 /*
@@ -114,6 +115,9 @@ struct spdk_ftl_dev {
 
 	/* Size of the l2p table */
 	uint64_t			num_lbas;
+
+	/* P2L valid map */
+	struct ftl_bitmap		*valid_map;
 
 	/* Metadata size */
 	uint64_t			md_size;

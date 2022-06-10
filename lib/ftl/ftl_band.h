@@ -202,6 +202,14 @@ ftl_band_qd(const struct ftl_band *band)
 	return band->queue_depth;
 }
 
+static inline bool
+ftl_band_block_offset_valid(struct ftl_band *band, size_t block_off)
+{
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+
+	return ftl_bitmap_get(p2l_map->valid, block_off);
+}
+
 static inline void
 ftl_band_iter_init(struct ftl_band *band)
 {

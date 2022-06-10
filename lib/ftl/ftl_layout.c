@@ -306,6 +306,17 @@ setup_layout_base(struct spdk_ftl_dev *dev)
 	/* Move offset after base superblock */
 	offset += layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.blocks;
 
+	/* Setup validity map */
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_VALID_MAP];
+	region->type = FTL_LAYOUT_REGION_TYPE_VALID_MAP;
+	region->name = "vmap";
+	region->current.version = region->prev.version = 0;
+	region->current.offset = offset;
+	region->current.blocks = blocks_region(spdk_divide_round_up(
+			layout->base.total_blocks + layout->nvc.total_blocks, 8));
+	set_region_bdev_btm(region, dev);
+	offset += region->current.blocks;
+
 	/* Checking for underflow */
 	left = layout->base.total_blocks - offset;
 	if (left > layout->base.total_blocks) {
