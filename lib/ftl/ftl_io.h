@@ -88,6 +88,9 @@ struct ftl_io {
 	/* Offset within the iovec (in blocks) */
 	size_t				iov_off;
 
+	/* Band this IO is being written to */
+	struct ftl_band			*band;
+
 	/* Request status */
 	int				status;
 

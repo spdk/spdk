@@ -10,6 +10,7 @@
 
 #include "ftl_io.h"
 #include "ftl_core.h"
+#include "ftl_band.h"
 #include "ftl_debug.h"
 
 void
@@ -238,4 +239,5 @@ ftl_io_clear(struct ftl_io *io)
 	io->done = false;
 	io->status = 0;
 	io->flags = 0;
+	io->band = NULL;
 }

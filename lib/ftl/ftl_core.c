@@ -26,6 +26,15 @@ spdk_ftl_io_size(void)
 	return sizeof(struct ftl_io);
 }
 
+static void
+ftl_band_erase(struct ftl_band *band)
+{
+	assert(band->md->state == FTL_BAND_STATE_CLOSED ||
+	       band->md->state == FTL_BAND_STATE_FREE);
+
+	ftl_band_set_state(band, FTL_BAND_STATE_PREP);
+}
+
 static size_t
 ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
 {
@@ -261,6 +270,20 @@ ftl_core_poller(void *ctx)
 	}
 
 	return SPDK_POLLER_IDLE;
+}
+
+struct ftl_band *
+ftl_band_get_next_free(struct spdk_ftl_dev *dev)
+{
+	struct ftl_band *band = NULL;
+
+	if (!TAILQ_EMPTY(&dev->free_bands)) {
+		band = TAILQ_FIRST(&dev->free_bands);
+		TAILQ_REMOVE(&dev->free_bands, band, queue_entry);
+		ftl_band_erase(band);
+	}
+
+	return band;
 }
 
 void *g_ftl_write_buf;

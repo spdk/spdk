@@ -150,6 +150,8 @@ int ftl_io_channel_poll(void *arg);
 
 struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
 
+struct ftl_band *ftl_band_get_next_free(struct spdk_ftl_dev *dev);
+
 static inline uint64_t
 ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 {

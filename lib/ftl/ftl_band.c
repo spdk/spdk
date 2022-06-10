@@ -59,6 +59,52 @@ ftl_band_free_md_entry(struct ftl_band *band)
 	p2l_map->band_dma_md = NULL;
 }
 
+static void
+_ftl_band_set_free(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+
+	/* Add the band to the free band list */
+	TAILQ_INSERT_TAIL(&dev->free_bands, band, queue_entry);
+
+	dev->num_free++;
+	ftl_apply_limits(dev);
+}
+
+static void
+_ftl_band_set_preparing(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+
+	/* Remove band from free list */
+	TAILQ_REMOVE(&dev->free_bands, band, queue_entry);
+
+	band->md->wr_cnt++;
+
+	assert(dev->num_free > 0);
+	dev->num_free--;
+
+	ftl_apply_limits(dev);
+}
+
+static void
+_ftl_band_set_closed(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+
+	/* Set the state as free_md() checks for that */
+	band->md->state = FTL_BAND_STATE_CLOSED;
+	if (band->owner.state_change_fn) {
+		band->owner.state_change_fn(band);
+	}
+
+	/* Free the p2l map if there are no outstanding IOs */
+	ftl_band_release_p2l_map(band);
+	assert(band->p2l_map.ref_cnt == 0);
+
+	TAILQ_INSERT_TAIL(&dev->shut_bands, band, queue_entry);
+}
+
 ftl_addr
 ftl_band_tail_md_addr(struct ftl_band *band)
 {
@@ -70,6 +116,46 @@ ftl_band_tail_md_addr(struct ftl_band *band)
 	addr = ftl_band_tail_md_offset(band) + band->start_addr;
 
 	return addr;
+}
+
+void
+ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
+{
+	switch (state) {
+	case FTL_BAND_STATE_FREE:
+		assert(band->md->state == FTL_BAND_STATE_CLOSED);
+		_ftl_band_set_free(band);
+
+		band->md->p2l_map_checksum = 0;
+		break;
+
+	case FTL_BAND_STATE_PREP:
+		assert(band->md->state == FTL_BAND_STATE_FREE);
+		_ftl_band_set_preparing(band);
+		break;
+
+	case FTL_BAND_STATE_CLOSED:
+		if (band->md->state != FTL_BAND_STATE_CLOSED) {
+			assert(band->md->state == FTL_BAND_STATE_CLOSING);
+			_ftl_band_set_closed(band);
+			return; /* state can be changed asynchronously */
+		}
+		break;
+
+	case FTL_BAND_STATE_OPEN:
+		band->md->p2l_map_checksum = 0;
+		break;
+	case FTL_BAND_STATE_OPENING:
+	case FTL_BAND_STATE_FULL:
+	case FTL_BAND_STATE_CLOSING:
+		break;
+	default:
+		FTL_ERRLOG(band->dev, "Unknown band state, %u", state);
+		assert(false);
+		break;
+	}
+
+	band->md->state = state;
 }
 
 void
