@@ -93,6 +93,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_deinit_io_channel
 		},
 		{
+			.name = "Initialize zones",
+			.action = ftl_mngt_init_zone
+
+		},
+		{
 			.name = "Decorate bands",
 			.action = ftl_mngt_decorate_bands
 		},

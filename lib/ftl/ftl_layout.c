@@ -122,9 +122,11 @@ int validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout)
 
 static uint64_t get_num_lbas(struct spdk_ftl_dev *dev)
 {
-	uint64_t blocks = 0;
+	uint64_t i, blocks = 0;
 
-	blocks = dev->layout.btm.total_blocks;
+	for (i = 0; i < dev->num_bands; ++i) {
+		blocks += ftl_band_num_usable_blocks(&dev->bands[i]);
+	}
 	blocks = (blocks * (100 - dev->conf.lba_rsvd)) / 100;
 
 
@@ -303,6 +305,9 @@ static int setup_layout_base(struct spdk_ftl_dev *dev)
 	uint64_t left, offset;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
+
+	layout->btm.num_usable_blocks = ftl_band_num_usable_blocks(dev->bands);
+	layout->btm.user_blocks = ftl_band_user_blocks(dev->bands);
 
 	/* Base device layout is following:
 	 * - data

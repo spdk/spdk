@@ -146,7 +146,7 @@ void ftl_mngt_deinit_bands(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 static void
 decorate_bands(struct spdk_ftl_dev *dev)
 {
-	struct ftl_band *band;
+	struct ftl_band *band, *temp_band;
 	size_t i, num_to_drop, phys_id = 0;
 	uint64_t num_blocks;
 	uint64_t num_blocks_in_band = ftl_get_num_blocks_in_band(dev);
@@ -179,6 +179,16 @@ decorate_bands(struct spdk_ftl_dev *dev)
 		/* Mark not aligned logical bands as broken */
 		if (i + 1 > ftl_get_num_bands(dev) - num_to_drop) {
 			band->num_zones = 0;
+		}
+	}
+
+	/* Remove band from shut_bands list to prevent further processing */
+	/* if all blocks on this band are bad */
+	TAILQ_FOREACH_SAFE(band, &dev->shut_bands, queue_entry, temp_band) {
+		if (!band->num_zones) {
+			dev->num_bands--;
+			TAILQ_REMOVE(&dev->shut_bands, band, queue_entry);
+			free_band_items(band);
 		}
 	}
 }
