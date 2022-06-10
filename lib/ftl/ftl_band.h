@@ -137,6 +137,7 @@ void ftl_band_release_p2l_map(struct ftl_band *band);
 ftl_addr ftl_band_next_xfer_addr(struct ftl_band *band, ftl_addr addr, size_t num_blocks);
 ftl_addr ftl_band_next_addr(struct ftl_band *band, ftl_addr addr, size_t offset);
 size_t ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset);
+size_t ftl_band_user_blocks(const struct ftl_band *band);
 void ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr);
 struct ftl_band *ftl_band_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
 ftl_addr ftl_band_tail_md_addr(struct ftl_band *band);

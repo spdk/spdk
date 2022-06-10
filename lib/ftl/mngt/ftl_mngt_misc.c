@@ -173,6 +173,7 @@ ftl_mngt_stop_core_poller(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 void
 ftl_mngt_dump_stats(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
+	ftl_dev_dump_bands(dev);
 	ftl_dev_dump_stats(dev);
 	ftl_mngt_next_step(mngt);
 }
