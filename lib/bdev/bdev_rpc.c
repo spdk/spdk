@@ -162,6 +162,7 @@ struct rpc_bdev_get_iostat_ctx {
 	int rc;
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
+	bool per_channel;
 };
 
 struct rpc_bdev_iostat {
@@ -171,15 +172,25 @@ struct rpc_bdev_iostat {
 };
 
 static void
-rpc_bdev_get_iostat_started(struct rpc_bdev_get_iostat_ctx *ctx)
+rpc_bdev_get_iostat_started(struct rpc_bdev_get_iostat_ctx *ctx,
+			    struct spdk_bdev_desc *desc)
 {
+	struct spdk_bdev *bdev;
+
 	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
 
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_uint64(ctx->w, "ticks", spdk_get_ticks());
 
-	spdk_json_write_named_array_begin(ctx->w, "bdevs");
+	if (ctx->per_channel == false) {
+		spdk_json_write_named_array_begin(ctx->w, "bdevs");
+	} else {
+		bdev = spdk_bdev_desc_get_bdev(desc);
+
+		spdk_json_write_named_string(ctx->w, "name", spdk_bdev_get_name(bdev));
+		spdk_json_write_named_array_begin(ctx->w, "channels");
+	}
 }
 
 static void
@@ -206,10 +217,8 @@ rpc_bdev_get_iostat_done(struct rpc_bdev_get_iostat_ctx *ctx)
 
 static void
 rpc_bdev_get_iostat_dump(struct spdk_json_write_ctx *w,
-			 struct spdk_bdev *bdev,
 			 struct spdk_bdev_io_stat *stat)
 {
-	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(bdev));
 	spdk_json_write_named_uint64(w, "bytes_read", stat->bytes_read);
 	spdk_json_write_named_uint64(w, "num_read_ops", stat->num_read_ops);
 	spdk_json_write_named_uint64(w, "bytes_written", stat->bytes_written);
@@ -240,7 +249,9 @@ rpc_bdev_get_iostat_cb(struct spdk_bdev *bdev,
 
 	spdk_json_write_object_begin(w);
 
-	rpc_bdev_get_iostat_dump(w, bdev, stat);
+	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(bdev));
+
+	rpc_bdev_get_iostat_dump(w, stat);
 
 	if (spdk_bdev_get_qd_sampling_period(bdev)) {
 		spdk_json_write_named_uint64(w, "queue_depth_polling_period",
@@ -265,6 +276,7 @@ done:
 
 struct rpc_bdev_get_iostat {
 	char *name;
+	bool per_channel;
 };
 
 static void
@@ -275,6 +287,7 @@ free_rpc_bdev_get_iostat(struct rpc_bdev_get_iostat *r)
 
 static const struct spdk_json_object_decoder rpc_bdev_get_iostat_decoders[] = {
 	{"name", offsetof(struct rpc_bdev_get_iostat, name), spdk_json_decode_string, true},
+	{"per_channel", offsetof(struct rpc_bdev_get_iostat, per_channel), spdk_json_decode_bool, true},
 };
 
 static int
@@ -305,6 +318,36 @@ _bdev_get_device_stat(void *_ctx, struct spdk_bdev *bdev)
 }
 
 static void
+rpc_bdev_get_per_channel_stat_done(struct spdk_bdev *bdev, void *ctx, int status)
+{
+	struct rpc_bdev_iostat *_stat = ctx;
+
+	rpc_bdev_get_iostat_done(_stat->ctx);
+
+	spdk_bdev_close(_stat->desc);
+
+	free(_stat);
+}
+
+static void
+rpc_bdev_get_per_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			      struct spdk_io_channel *ch, void *ctx)
+{
+	struct rpc_bdev_iostat *_stat = ctx;
+	struct spdk_json_write_ctx *w = _stat->ctx->w;
+	struct spdk_bdev_io_stat stat;
+
+	spdk_bdev_get_io_stat(bdev, ch, &stat);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_uint64(w, "thread_id", spdk_thread_get_id(spdk_get_thread()));
+	rpc_bdev_get_iostat_dump(w, &stat);
+	spdk_json_write_object_end(w);
+
+	spdk_bdev_for_each_channel_continue(i, 0);
+}
+
+static void
 rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 		    const struct spdk_json_val *params)
 {
@@ -321,6 +364,13 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "spdk_json_decode_object failed");
+			free_rpc_bdev_get_iostat(&req);
+			return;
+		}
+
+		if (req.per_channel == true && !req.name) {
+			SPDK_ERRLOG("Bdev name is required for per channel IO statistics\n");
+			spdk_jsonrpc_send_error_response(request, -EINVAL, spdk_strerror(EINVAL));
 			free_rpc_bdev_get_iostat(&req);
 			return;
 		}
@@ -351,6 +401,7 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 	 */
 	ctx->bdev_count++;
 	ctx->request = request;
+	ctx->per_channel = req.per_channel;
 
 	if (desc != NULL) {
 		_stat = calloc(1, sizeof(struct rpc_bdev_iostat));
@@ -364,8 +415,15 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 
 			ctx->bdev_count++;
 			_stat->ctx = ctx;
-			spdk_bdev_get_device_stat(spdk_bdev_desc_get_bdev(desc), &_stat->stat,
-						  rpc_bdev_get_iostat_cb, _stat);
+			if (req.per_channel == false) {
+				spdk_bdev_get_device_stat(spdk_bdev_desc_get_bdev(desc), &_stat->stat,
+							  rpc_bdev_get_iostat_cb, _stat);
+			} else {
+				spdk_bdev_for_each_channel(spdk_bdev_desc_get_bdev(desc),
+							   rpc_bdev_get_per_channel_stat,
+							   _stat,
+							   rpc_bdev_get_per_channel_stat_done);
+			}
 		}
 	} else {
 		rc = spdk_for_each_bdev(ctx, _bdev_get_device_stat);
@@ -376,11 +434,11 @@ rpc_bdev_get_iostat(struct spdk_jsonrpc_request *request,
 
 	if (ctx->rc == 0) {
 		/* We want to fail the RPC for all failures. The callback function to
-		 * spdk_bdev_get_device_stat() is executed after stack unwinding if successful.
-		 * Hence defer starting RPC response until it is ensured that all
-		 * spdk_bdev_get_device_stat() calls will succeed or there is no bdev.
+		 * spdk_bdev_for_each_channel() is executed after stack unwinding if
+		 * successful. Hence defer starting RPC response until it is ensured that
+		 * all spdk_bdev_for_each_channel() calls will succeed or there is no bdev.
 		 */
-		rpc_bdev_get_iostat_started(ctx);
+		rpc_bdev_get_iostat_started(ctx, desc);
 	}
 
 	rpc_bdev_get_iostat_done(ctx);

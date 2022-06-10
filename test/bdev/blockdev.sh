@@ -488,6 +488,61 @@ function qd_sampling_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
+function stat_function_test() {
+	local bdev_name=$1
+	local iostats
+	local io_count1
+	local io_count2
+	local iostats_per_channel
+	local io_count_per_channel1
+	local io_count_per_channel2
+	local io_count_per_channel_all=0
+
+	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	io_count1=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
+
+	iostats_per_channel=$($rpc_py bdev_get_iostat -b $bdev_name -c)
+	io_count_per_channel1=$(jq -r '.channels[0].num_read_ops' <<< "$iostats_per_channel")
+	io_count_per_channel_all=$((io_count_per_channel_all + io_count_per_channel1))
+	io_count_per_channel2=$(jq -r '.channels[1].num_read_ops' <<< "$iostats_per_channel")
+	io_count_per_channel_all=$((io_count_per_channel_all + io_count_per_channel2))
+
+	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+	io_count2=$(jq -r '.bdevs[0].num_read_ops' <<< "$iostats")
+
+	# There is little time passed between the three iostats collected. So that
+	# the accumulated statistics from per channel data shall be bigger than the
+	# the first run and smaller than the third run in this short time of period.
+	if [ $io_count_per_channel_all -lt $io_count1 ] || [ $io_count_per_channel_all -gt $io_count2 ]; then
+		echo "Failed to collect the per Core IO statistics"
+		$rpc_py bdev_malloc_delete $STAT_DEV
+		killprocess $STAT_PID
+		exit 1
+	fi
+}
+
+function stat_test_suite() {
+	STAT_DEV="Malloc_STAT"
+
+	# Run bdevperf with 2 cores so as to collect per Core IO statistics
+	"$testdir/bdevperf/bdevperf" -z -m 0x3 -q 256 -o 4096 -w randread -t 10 -C "$env_ctx" &
+	STAT_PID=$!
+	echo "Process Bdev IO statistics testing pid: $STAT_PID"
+	trap 'cleanup; killprocess $STAT_PID; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $STAT_PID
+
+	$rpc_py bdev_malloc_create -b $STAT_DEV 128 512
+	waitforbdev $STAT_DEV
+
+	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
+	sleep 2
+	stat_function_test $STAT_DEV
+
+	$rpc_py bdev_malloc_delete $STAT_DEV
+	killprocess $STAT_PID
+	trap - SIGINT SIGTERM EXIT
+}
+
 # Inital bdev creation and configuration
 #-----------------------------------------------------
 QOS_DEV_1="Malloc_0"
@@ -609,6 +664,7 @@ if [[ $test_type == bdev ]]; then
 	run_test "bdev_qos" qos_test_suite "$env_ctx"
 	run_test "bdev_qd_sampling" qd_sampling_test_suite "$env_ctx"
 	run_test "bdev_error" error_test_suite "$env_ctx"
+	run_test "bdev_stat" stat_test_suite "$env_ctx"
 fi
 
 # Temporarily disabled - infinite loop

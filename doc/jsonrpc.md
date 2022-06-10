@@ -1920,6 +1920,7 @@ specified by name.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Optional | string      | Block device name
+per_channel             | Optional | bool        | Display per channel data for specified block device.
 
 #### Response
 
@@ -1935,7 +1936,8 @@ Example request:
   "id": 1,
   "method": "bdev_get_iostat",
   "params": {
-    "name": "Nvme0n1"
+    "name": "Nvme0n1",
+    "per_channel": false
   }
 }
 ~~~

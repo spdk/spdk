@@ -1467,11 +1467,12 @@ def bdev_get_bdevs(client, name=None, timeout=None):
     return client.call('bdev_get_bdevs', params)
 
 
-def bdev_get_iostat(client, name=None):
+def bdev_get_iostat(client, name=None, per_channel=None):
     """Get I/O statistics for block devices.
 
     Args:
         name: bdev name to query (optional; if omitted, query all bdevs)
+        per_channel: display per channel IO stats for specified bdev
 
     Returns:
         I/O statistics for the requested block devices.
@@ -1479,6 +1480,8 @@ def bdev_get_iostat(client, name=None):
     params = {}
     if name:
         params['name'] = name
+    if per_channel:
+        params['per_channel'] = per_channel
     return client.call('bdev_get_iostat', params)
 
 

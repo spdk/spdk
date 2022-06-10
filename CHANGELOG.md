@@ -18,6 +18,9 @@ as there is no way of saving original SPDK thread distribution on reactors.
 New APIs `spdk_bdev_for_each_channel` and `spdk_bdev_for_each_channel_continue` and
 associated function pointers were added to iterate each channel of the required bdev.
 
+The RPC `bdev_get_iostat` now allows a user to query the per channel IO statistics for
+required bdev.
+
 ## v22.09
 
 ### accel

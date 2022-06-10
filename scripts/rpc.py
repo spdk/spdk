@@ -1094,11 +1094,14 @@ if __name__ == "__main__":
 
     def bdev_get_iostat(args):
         print_dict(rpc.bdev.bdev_get_iostat(args.client,
-                                            name=args.name))
+                                            name=args.name,
+                                            per_channel=args.per_channel))
 
     p = subparsers.add_parser('bdev_get_iostat',
                               help='Display current I/O statistics of all the blockdevs or required blockdev.')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+    p.add_argument('-c', '--per-channel', default=False, dest='per_channel', help='Display per channel IO stats for specified device',
+                   action='store_true', required=False)
     p.set_defaults(func=bdev_get_iostat)
 
     def bdev_enable_histogram(args):
