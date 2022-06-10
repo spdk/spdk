@@ -75,6 +75,7 @@ ftl_band_free_lba_map(struct ftl_band *band)
 	assert(lba_map->ref_cnt == 0);
 	assert(lba_map->band_map != NULL);
 
+	band->md->df_lba_map = FTL_DF_OBJ_ID_INVALID;
 	ftl_mempool_put(dev->lba_pool, lba_map->dma_buf);
 	lba_map->band_map = NULL;
 	lba_map->dma_buf = NULL;
@@ -399,6 +400,7 @@ ftl_band_alloc_lba_map(struct ftl_band *band)
 	assert(lba_map->ref_cnt == 0);
 	assert(lba_map->band_map == NULL);
 
+	assert(band->md->df_lba_map == FTL_DF_OBJ_ID_INVALID);
 	lba_map->dma_buf = ftl_mempool_get(dev->lba_pool);
 	if (!lba_map->dma_buf) {
 		return -1;
@@ -409,6 +411,9 @@ ftl_band_alloc_lba_map(struct ftl_band *band)
 		lba_map->dma_buf = NULL;
 		return -1;
 	}
+
+	band->md->df_lba_map = ftl_mempool_get_df_obj_id(dev->lba_pool,
+			       lba_map->dma_buf);
 
 	/* Set the P2L to FTL_LBA_INVALID */
 	memset(lba_map->dma_buf, -1, FTL_BLOCK_SIZE * ftl_lba_map_num_blocks(band->dev));

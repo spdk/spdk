@@ -44,6 +44,8 @@
 #include "ftl_internal.h"
 #include "ftl_core.h"
 
+#include "utils/ftl_df.h"
+
 #define FTL_MAX_OPEN_BANDS 4
 
 #define FTL_BAND_VERSION_0	0
@@ -99,6 +101,9 @@ struct ftl_band_md {
 
 	/* Number of defrag cycles */
 	uint64_t				wr_cnt;
+
+	/* Durable format object id for LBA map, allocated on shared memory */
+	ftl_df_obj_id			df_lba_map;
 
 	/* CRC32 checksum of the associated LBA map when band is in closed state */
 	uint32_t				lba_map_checksum;
