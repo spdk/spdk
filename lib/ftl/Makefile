@@ -26,7 +26,7 @@ C_SRCS += ftl_nv_cache.c ftl_band.c ftl_band_ops.c ftl_writer.c ftl_rq.c ftl_rel
 C_SRCS += mngt/ftl_mngt.c mngt/ftl_mngt_bdev.c mngt/ftl_mngt_shutdown.c mngt/ftl_mngt_startup.c
 C_SRCS += mngt/ftl_mngt_md.c mngt/ftl_mngt_misc.c mngt/ftl_mngt_ioch.c mngt/ftl_mngt_l2p.c
 C_SRCS += mngt/ftl_mngt_band.c
-C_SRCS += utils/ftl_conf.c utils/ftl_md.c utils/ftl_mempool.c
+C_SRCS += utils/ftl_conf.c utils/ftl_md.c utils/ftl_mempool.c utils/ftl_bitmap.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 
