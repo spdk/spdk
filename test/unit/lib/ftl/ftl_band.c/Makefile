@@ -31,15 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-DIRS-y = ftl_ppa ftl_band.c ftl_io.c
-DIRS-y += ftl_mempool.c ftl_mngt
+TEST_FILE = ftl_band_ut.c
 
-.PHONY: all clean $(DIRS-y)
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/ftl

@@ -44,7 +44,10 @@ struct base_bdev_geometry {
 extern struct base_bdev_geometry g_geo;
 
 struct spdk_ftl_dev *test_init_ftl_dev(const struct base_bdev_geometry *geo);
+struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size);
 void test_free_ftl_dev(struct spdk_ftl_dev *dev);
+void test_free_ftl_band(struct ftl_band *band);
+uint64_t test_offset_from_addr(ftl_addr addr, struct ftl_band *band);
 
 DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *desc), NULL);
 
@@ -100,6 +103,11 @@ test_init_ftl_dev(const struct base_bdev_geometry *geo)
 		dev->bands[i].md = md;
 	}
 
+	dev->lba_pool = (struct ftl_mempool *)spdk_mempool_create("ftl_ut", 2, 0x210200,
+			SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			SPDK_ENV_SOCKET_ID_ANY);
+	SPDK_CU_ASSERT_FATAL(dev->lba_pool != NULL);
+
 	TAILQ_INIT(&dev->free_bands);
 	TAILQ_INIT(&dev->shut_bands);
 
@@ -110,6 +118,37 @@ test_init_ftl_dev(const struct base_bdev_geometry *geo)
 	dev->is_zoned = spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
 
 	return dev;
+}
+
+struct ftl_band *
+test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
+{
+	struct ftl_band *band;
+	struct ftl_zone *zone;
+
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	SPDK_CU_ASSERT_FATAL(id < dev->num_bands);
+
+	band = &dev->bands[id];
+	band->dev = dev;
+	band->id = id;
+
+	band->md->state = FTL_BAND_STATE_CLOSED;
+	TAILQ_INSERT_HEAD(&dev->shut_bands, band, queue_entry);
+	CIRCLEQ_INIT(&band->zones);
+
+	band->zone_buf = calloc(ftl_get_num_punits(dev), sizeof(*band->zone_buf));
+	SPDK_CU_ASSERT_FATAL(band->zone_buf != NULL);
+
+	for (size_t i = 0; i < ftl_get_num_punits(dev); ++i) {
+		zone = &band->zone_buf[i];
+		zone->info.state = SPDK_BDEV_ZONE_STATE_FULL;
+		zone->info.zone_id = zone_size * (id * ftl_get_num_punits(dev) + i);
+		CIRCLEQ_INSERT_TAIL(&band->zones, zone, circleq);
+		band->num_zones++;
+	}
+
+	return band;
 }
 
 void
@@ -128,9 +167,32 @@ test_free_ftl_dev(struct spdk_ftl_dev *dev)
 		spdk_thread_poll(thread, 0, 0);
 	}
 	spdk_thread_destroy(thread);
+	spdk_mempool_free((struct spdk_mempool *)dev->lba_pool);
 	for (size_t i = 0; i < dev->num_bands; i++) {
 		free(dev->bands[i].md);
 	}
 	free(dev->bands);
 	free(dev);
+}
+
+void
+test_free_ftl_band(struct ftl_band *band)
+{
+	SPDK_CU_ASSERT_FATAL(band != NULL);
+	free(band->zone_buf);
+	spdk_dma_free(band->lba_map.dma_buf);
+	spdk_dma_free(band->lba_map.band_dma_md);
+
+	band->lba_map.dma_buf = NULL;
+	band->lba_map.band_dma_md = NULL;
+}
+
+uint64_t
+test_offset_from_addr(ftl_addr addr, struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+
+	CU_ASSERT_EQUAL(ftl_addr_get_band(dev, addr), band->id);
+
+	return addr - band->id * ftl_get_num_blocks_in_band(dev);
 }
