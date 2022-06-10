@@ -206,7 +206,7 @@ ftl_band_user_blocks(const struct ftl_band *band)
 struct ftl_band *
 ftl_band_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 {
-	size_t band_id = ftl_addr_get_band(dev, addr);
+	uint64_t band_id = ftl_addr_get_band(dev, addr);
 
 	assert(band_id < ftl_get_num_bands(dev));
 	return &dev->bands[band_id];

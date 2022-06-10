@@ -181,7 +181,7 @@ ftl_get_core_thread(const struct spdk_ftl_dev *dev)
 	return dev->core_thread;
 }
 
-static inline size_t
+static inline uint64_t
 ftl_get_num_bands(const struct spdk_ftl_dev *dev)
 {
 	return dev->num_bands;

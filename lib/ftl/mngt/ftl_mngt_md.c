@@ -132,6 +132,13 @@ ftl_mngt_persist_nv_cache_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_pro
 	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_NVC_MD);
 }
 
+void
+ftl_mngt_persist_band_info_metadata(
+	struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	persist(dev, mngt, FTL_LAYOUT_REGION_TYPE_BAND_MD);
+}
+
 static uint32_t
 get_sb_crc(struct ftl_superblock *sb)
 {

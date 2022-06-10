@@ -45,6 +45,8 @@ ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
 static bool
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
+	uint64_t i;
+
 	if (dev->num_inflight) {
 		return false;
 	}
@@ -56,6 +58,13 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 
 	if (!ftl_nv_cache_chunks_busy(&dev->nv_cache)) {
 		return false;
+	}
+
+	for (i = 0; i < ftl_get_num_bands(dev); ++i) {
+		if (dev->bands[i].queue_depth ||
+		    dev->bands[i].md->state == FTL_BAND_STATE_CLOSING) {
+			return false;
+		}
 	}
 
 	if (!ftl_l2p_is_halted(dev)) {
