@@ -12,6 +12,7 @@
 	spdk_ftl_init;
 	spdk_ftl_deinit;
 	spdk_ftl_get_io_channel;
+	spdk_ftl_dev_set_fast_shdn;
 
 	local: *;
 };

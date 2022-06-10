@@ -147,7 +147,7 @@ void ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 
 	if (dev->lba_pool_md) {
 		assert(dev->lba_pool_md);
-		ftl_md_destroy(dev->lba_pool_md);
+		ftl_md_destroy(dev->lba_pool_md, ftl_md_destroy_shm_flags(dev));
 		dev->lba_pool_md = NULL;
 	}
 

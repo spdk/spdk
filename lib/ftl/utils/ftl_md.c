@@ -323,7 +323,7 @@ err_shm:
 	ftl_md_invalidate_shm(md);
 }
 
-static void ftl_md_destroy_shm(struct ftl_md_impl *md)
+static void ftl_md_destroy_shm(struct ftl_md_impl *md, int flags)
 {
 	if (!md->data) {
 		return;
@@ -346,6 +346,11 @@ static void ftl_md_destroy_shm(struct ftl_md_impl *md)
 
 	md->data = NULL;
 	md->vss_data = NULL;
+
+	/* If specified, keep the object in SHM */
+	if (flags & FTL_MD_DESTROY_SHM_KEEP) {
+		return;
+	}
 
 	/* Otherwise destroy/unlink the object */
 	assert(md->name[0] != 0 && md->shm_unlink != NULL);
@@ -398,7 +403,7 @@ int ftl_md_unlink(struct spdk_ftl_dev *dev, const char *name, int flags)
 	return md.shm_unlink(md.name);
 }
 
-void ftl_md_destroy(struct ftl_md *md)
+void ftl_md_destroy(struct ftl_md *md, int flags)
 {
 	struct ftl_md_impl *impl;
 
@@ -407,13 +412,13 @@ void ftl_md_destroy(struct ftl_md *md)
 	}
 	impl = SPDK_CONTAINEROF(md, struct ftl_md_impl, base);
 
-	ftl_md_free_buf(md);
+	ftl_md_free_buf(md, flags);
 
 	free(impl->mirror);
 	free(impl);
 }
 
-void ftl_md_free_buf(struct ftl_md *md)
+void ftl_md_free_buf(struct ftl_md *md, int flags)
 {
 	struct ftl_md_impl *impl;
 
@@ -423,9 +428,10 @@ void ftl_md_free_buf(struct ftl_md *md)
 	impl = SPDK_CONTAINEROF(md, struct ftl_md_impl, base);
 
 	if (impl->shm_fd < 0) {
+		assert(flags == 0);
 		ftl_md_destroy_heap(impl);
 	} else {
-		ftl_md_destroy_shm(impl);
+		ftl_md_destroy_shm(impl, flags);
 	}
 }
 
@@ -1165,4 +1171,28 @@ int ftl_md_set_region(struct ftl_md *md,
 	}
 
 	return 0;
+}
+
+int
+ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type)
+{
+	switch (region_type) {
+	case ftl_layout_region_type_sb:
+	case ftl_layout_region_type_band_md:
+	case ftl_layout_region_type_nvc_md:
+		if (dev->conf.fast_shdn) {
+			return FTL_MD_DESTROY_SHM_KEEP;
+		}
+		break;
+
+	default:
+		break;
+	}
+	return 0;
+}
+
+int
+ftl_md_destroy_shm_flags(struct spdk_ftl_dev *dev)
+{
+	return (dev->conf.fast_shdn) ? FTL_MD_DESTROY_SHM_KEEP : 0;
 }

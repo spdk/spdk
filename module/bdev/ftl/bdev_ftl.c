@@ -246,6 +246,8 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &attrs.uuid);
 	spdk_json_write_named_string(w, "uuid", uuid);
 
+	spdk_json_write_named_bool(w, "fast_shutdown", conf->fast_shdn);
+
 	_bdev_ftl_write_config_info(ftl_bdev, w);
 
 	spdk_json_write_object_end(w);
@@ -354,6 +356,9 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 
 error:
 	if (ftl_bdev->dev) {
+		/* Cleanup all FTL */
+		spdk_ftl_dev_set_fast_shdn(ftl_bdev->dev, false);
+
 		/* FTL was created, but we have got and error, so we need to delete it */
 		spdk_ftl_dev_free(dev, bdev_ftl_create_err_cleanup_cb, ftl_bdev);
 		return;
@@ -479,12 +484,17 @@ bdev_ftl_initialize(void)
 }
 
 void
-bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+bdev_ftl_delete_bdev(const char *name, bool fast_shdn,
+		     spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev *bdev;
+	struct ftl_bdev *ftl;
 
 	bdev = spdk_bdev_get_by_name(name);
 	if (bdev && bdev->module == &g_ftl_if) {
+		ftl = bdev->ctxt;
+		assert(ftl);
+		spdk_ftl_dev_set_fast_shdn(ftl->dev, fast_shdn);
 		spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 		return;
 	}

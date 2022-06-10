@@ -1913,7 +1913,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                             overprovisioning=args.overprovisioning,
                                             core_mask=args.core_mask,
                                             l2p_path=args.l2p_path,
-                                            use_append=args.use_append))
+                                            use_append=args.use_append,
+                                            fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_create', aliases=['construct_ftl_bdev'], help='Add FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
@@ -1931,14 +1932,16 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--l2p-path', help='Path to persistent memory file or device to store l2p onto, '
                    'by default l2p is kept in DRAM and is volatile (optional)')
     p.add_argument('--use-append', help='Use appends instead of writes', action='store_true')
+    p.add_argument('-f', '--fast-shutdown', help="Fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_create)
 
     def bdev_ftl_delete(args):
-        print_dict(rpc.bdev.bdev_ftl_delete(args.client, name=args.name))
+        print_dict(rpc.bdev.bdev_ftl_delete(args.client, name=args.name, fast_shutdown=args.fast_shutdown))
 
     p = subparsers.add_parser('bdev_ftl_delete', aliases=['delete_ftl_bdev'],
                               help='Delete FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-f', '--fast-shutdown', help="Fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_delete)
 
     # vmd

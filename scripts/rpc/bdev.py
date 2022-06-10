@@ -1219,13 +1219,14 @@ def bdev_ftl_create(client, name, base_bdev, **kwargs):
 
 
 @deprecated_alias('delete_ftl_bdev')
-def bdev_ftl_delete(client, name):
+def bdev_ftl_delete(client, name, fast_shutdown):
     """Delete FTL bdev
 
     Args:
         name: name of the bdev
     """
-    params = {'name': name}
+    params = {'name': name,
+              'fast_shutdown': fast_shutdown}
 
     return client.call('bdev_ftl_delete', params)
 

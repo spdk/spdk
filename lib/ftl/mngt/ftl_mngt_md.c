@@ -109,7 +109,7 @@ void ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 
 	for (i = 0; i < ftl_layout_region_type_max; i++, region++) {
 		if (layout->md[i]) {
-			ftl_md_destroy(layout->md[i]);
+			ftl_md_destroy(layout->md[i], ftl_md_destroy_region_flags(dev, layout->region[i].type));
 			layout->md[i] = NULL;
 		}
 	}
@@ -255,7 +255,7 @@ void ftl_mngt_md_deinit_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	struct ftl_layout *layout = &dev->layout;
 
 	if (layout->md[ftl_layout_region_type_vss]) {
-		ftl_md_destroy(layout->md[ftl_layout_region_type_vss]);
+		ftl_md_destroy(layout->md[ftl_layout_region_type_vss], 0);
 		layout->md[ftl_layout_region_type_vss] = NULL;
 	}
 
@@ -339,16 +339,17 @@ void ftl_mngt_superblock_deinit(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	struct ftl_layout *layout = &dev->layout;
 
 	if (layout->md[ftl_layout_region_type_sb]) {
-		ftl_md_destroy(layout->md[ftl_layout_region_type_sb]);
+		ftl_md_destroy(layout->md[ftl_layout_region_type_sb],
+			       ftl_md_destroy_region_flags(dev, ftl_layout_region_type_sb));
 		layout->md[ftl_layout_region_type_sb] = NULL;
 	}
 
 	if (layout->md[ftl_layout_region_type_sb_btm]) {
-		ftl_md_destroy(layout->md[ftl_layout_region_type_sb_btm]);
+		ftl_md_destroy(layout->md[ftl_layout_region_type_sb_btm], 0);
 		layout->md[ftl_layout_region_type_sb_btm] = NULL;
 	}
 
-	ftl_md_destroy(dev->sb_shm_md);
+	ftl_md_destroy(dev->sb_shm_md, ftl_md_destroy_shm_flags(dev));
 	dev->sb_shm_md = NULL;
 	dev->sb_shm = NULL;
 

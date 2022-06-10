@@ -143,18 +143,28 @@ struct ftl_md *ftl_md_create(struct spdk_ftl_dev *dev, uint64_t blocks,
 int ftl_md_unlink(struct spdk_ftl_dev *dev, const char *name, int flags);
 
 /**
+ *  FTL metadata destroy flags
+ */
+typedef enum ftl_md_destroy_flags {
+	/** FTL metadata data buf will be kept in SHM */
+	FTL_MD_DESTROY_SHM_KEEP = 1,
+} ftl_md_destroy_flags_t;
+
+/**
  * @brief Destroys metadata
  *
  * @param md Metadata to be destroyed
+ * @param flags Bit flags of type ftl_md_destroy_flags_t
  */
-void ftl_md_destroy(struct ftl_md *md);
+void ftl_md_destroy(struct ftl_md *md, int flags);
 
 /**
  * @brief Free the data buf associated with the metadata
  *
  * @param md Metadata object
+ * @param flags Bit flags of type ftl_md_destroy_flags_t
  */
-void ftl_md_free_buf(struct ftl_md *md);
+void ftl_md_free_buf(struct ftl_md *md, int flags);
 
 /**
  * @brief Sets the region of a device on which to perform IO when persisting,
@@ -290,4 +300,30 @@ void ftl_md_clear(struct ftl_md *md, const void *pattern, uint64_t size,
  */
 uint64_t ftl_md_xfer_blocks(struct spdk_ftl_dev *dev);
 
+/**
+ * @brief Return the md destroy flags for a given md region type
+ *
+ * In a fast shutdown mode, returns FTL_MD_DESTROY_SHM_KEEP.
+ * Otherwise the SHM is unlinked.
+ *
+ * @param dev			The FTL device
+ * @param region_type	MD region type
+ *
+ * #return MD destroy flags
+ */
+int
+ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type);
+
+/**
+ * @brief Return the md destroy flags
+ *
+ * In a fast shutdown mode, returns FTL_MD_DESTROY_SHM_KEEP.
+ * Otherwise the SHM is unlinked.
+ *
+ * @param dev			The FTL device
+ *
+ * @return MD destroy flags
+ */
+int
+ftl_md_destroy_shm_flags(struct spdk_ftl_dev *dev);
 #endif /* FTL_OBJ_H */

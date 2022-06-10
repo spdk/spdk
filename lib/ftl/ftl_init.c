@@ -78,6 +78,7 @@ static const struct spdk_ftl_conf	g_default_conf = {
 		.chunk_compaction_threshold = 80,
 		.chunk_free_target = 5,
 	},
+	.fast_shdn = true,
 	.base_bdev_reclaim_unit_size = (1ULL << 30) * 72
 };
 

@@ -86,6 +86,7 @@ struct rpc_ftl_stats_ctx {
 
 int	bdev_ftl_create_bdev(const struct ftl_bdev_init_opts *bdev_opts,
 			     ftl_bdev_init_fn cb, void *cb_arg);
-void	bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+void	bdev_ftl_delete_bdev(const char *name, bool fast_shdn,
+			     spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 #endif /* SPDK_BDEV_FTL_H */
