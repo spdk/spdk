@@ -190,6 +190,7 @@ ftl_l2p_update(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, ftl_ad
 
 	if (current_addr == weak_addr) {
 		/* DO NOT CHANGE ORDER - START */
+		ftl_band_set_addr(ftl_band_from_addr(dev, new_addr), lba, new_addr);
 		ftl_l2p_set(dev, lba, new_addr);
 		/* In case update is from gc invalidate bit in lba map */
 		ftl_invalidate_addr(dev, current_addr);

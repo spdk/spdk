@@ -116,6 +116,12 @@ struct spdk_ftl_dev {
 	/* Non-volatile write buffer cache */
 	struct ftl_nv_cache			nv_cache;
 
+	/* LBA map memory pool */
+	struct ftl_mempool			*lba_pool;
+
+	/* Band md memory pool */
+	struct ftl_mempool			*band_md_pool;
+
 	/* Media management events pool */
 	struct spdk_mempool			*media_events_pool;
 

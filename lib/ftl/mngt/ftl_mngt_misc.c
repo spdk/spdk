@@ -35,6 +35,7 @@
 #include "ftl_utils.h"
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
+#include "ftl_band.h"
 #include "ftl_internal.h"
 #include "ftl_nv_cache.h"
 #include "ftl_debug.h"
@@ -46,6 +47,44 @@ void ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	} else {
 		ftl_mngt_fail_step(mngt);
 	}
+}
+
+static int init_lba_map_pool(struct spdk_ftl_dev *dev)
+{
+	/* We need to reserve at least 2 buffers for band close / open sequence
+	 * alone, plus additional (8) buffers for handling write errors.
+	 */
+	size_t lba_pool_el_blks = ftl_lba_map_pool_elem_size(dev);
+	if (lba_pool_el_blks % FTL_BLOCK_SIZE) {
+		lba_pool_el_blks += FTL_BLOCK_SIZE;
+	}
+	lba_pool_el_blks /= FTL_BLOCK_SIZE;
+
+	dev->lba_pool = ftl_mempool_create(LBA_MEMPOOL_SIZE,
+					   lba_pool_el_blks * FTL_BLOCK_SIZE,
+					   FTL_BLOCK_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
+	if (!dev->lba_pool) {
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static int init_band_md_pool(struct spdk_ftl_dev *dev)
+{
+	/* We need to reserve at least 2 buffers for band close / open sequence
+	 * alone, plus additional (8) buffers for handling write errors.
+	 */
+	dev->band_md_pool = ftl_mempool_create(LBA_MEMPOOL_SIZE,
+					       sizeof(struct ftl_band_md),
+					       FTL_BLOCK_SIZE,
+					       SPDK_ENV_SOCKET_ID_ANY);
+	if (!dev->band_md_pool) {
+		return -ENOMEM;
+	}
+
+	return 0;
 }
 
 static int init_media_events_pool(struct spdk_ftl_dev *dev)
@@ -73,6 +112,14 @@ static int init_media_events_pool(struct spdk_ftl_dev *dev)
 
 void ftl_mngt_init_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
+	if (init_lba_map_pool(dev)) {
+		ftl_mngt_fail_step(mngt);
+	}
+
+	if (init_band_md_pool(dev)) {
+		ftl_mngt_fail_step(mngt);
+	}
+
 	if (init_media_events_pool(dev)) {
 		ftl_mngt_fail_step(mngt);
 	}
@@ -82,6 +129,16 @@ void ftl_mngt_init_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 
 void ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
+	if (dev->lba_pool) {
+		ftl_mempool_destroy(dev->lba_pool);
+		dev->lba_pool = NULL;
+	}
+
+	if (dev->band_md_pool) {
+		ftl_mempool_destroy(dev->band_md_pool);
+		dev->band_md_pool = NULL;
+	}
+
 	if (dev->media_events_pool) {
 		spdk_mempool_free(dev->media_events_pool);
 		dev->media_events_pool = NULL;
