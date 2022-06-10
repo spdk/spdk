@@ -83,9 +83,18 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_deinit_mem_pools
 		},
 		{
+			.name = "Initialize bands",
+			.action = ftl_mngt_init_bands,
+			.cleanup = ftl_mngt_deinit_bands
+		},
+		{
 			.name = "Initialize IO channel",
 			.action = ftl_mngt_init_io_channel,
 			.cleanup = ftl_mngt_deinit_io_channel
+		},
+		{
+			.name = "Decorate bands",
+			.action = ftl_mngt_decorate_bands
 		},
 		{
 			.name = "Initialize layout",
@@ -100,6 +109,10 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.name = "Initialize NV cache",
 			.action = ftl_mngt_init_nv_cache,
 			.cleanup = ftl_mngt_deinit_nv_cache
+		},
+		{
+			.name = "Initialize bands metadata",
+			.action = ftl_mngt_init_bands_md
 		},
 		{
 			.name = "Select startup mode",
@@ -125,6 +138,14 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 		{
 			.name = "Scrub NV cache",
 			.action = ftl_mngt_scrub_nv_cache,
+		},
+		{
+			.name = "Finalize band initialization",
+			.action = ftl_mngt_finalize_init_bands,
+		},
+		{
+			.name = "Save initial band info metadata",
+			.action = ftl_mngt_persist_band_info_metadata,
 		},
 		{
 			.name = "Save initial chunk info metadata",

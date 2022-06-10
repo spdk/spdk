@@ -154,6 +154,12 @@ void ftl_mngt_persist_nv_cache_metadata(
 	persist(dev, mngt, ftl_layout_region_type_nvc_md);
 }
 
+void ftl_mngt_persist_band_info_metadata(
+	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	persist(dev, mngt, ftl_layout_region_type_band_md);
+}
+
 static uint32_t get_sb_crc(struct ftl_superblock *sb)
 {
 	uint32_t crc = 0;
