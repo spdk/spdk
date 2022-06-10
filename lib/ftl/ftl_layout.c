@@ -100,9 +100,9 @@ ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout)
 static uint64_t
 get_num_user_lbas(struct spdk_ftl_dev *dev)
 {
-	uint64_t blocks = 0;
+	uint64_t blocks;
 
-	blocks = dev->layout.base.total_blocks;
+	blocks = dev->num_bands * ftl_get_num_blocks_in_band(dev);
 	blocks = (blocks * (100 - dev->conf.overprovisioning)) / 100;
 
 	return blocks;
@@ -281,6 +281,9 @@ setup_layout_base(struct spdk_ftl_dev *dev)
 	uint64_t left, offset;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
+
+	layout->base.num_usable_blocks = ftl_get_num_blocks_in_band(dev);
+	layout->base.user_blocks = ftl_band_user_blocks(dev->bands);
 
 	/* Base device layout is following:
 	 * - data
