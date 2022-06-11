@@ -4096,6 +4096,111 @@ bdev_set_io_timeout(void)
 }
 
 static void
+bdev_set_qd_sampling(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch = NULL;
+	struct spdk_bdev_channel *bdev_ch = NULL;
+	struct timeout_io_cb_arg cb_arg;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev");
+
+	CU_ASSERT(spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc) == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->io_submitted));
+
+	/* This is the part1.
+	 * We will check the bdev_ch->io_submitted list
+	 * TO make sure that it can link IOs and only the user submitted IOs
+	 */
+	CU_ASSERT(spdk_bdev_read(desc, io_ch, (void *)0x1000, 0, 4096, io_done, NULL) == 0);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+	CU_ASSERT(spdk_bdev_write(desc, io_ch, (void *)0x2000, 0, 4096, io_done, NULL) == 0);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 2);
+	stub_complete_io(1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+	stub_complete_io(1);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 0);
+
+	/* This is the part2.
+	 * Test the bdev's qd poller register
+	 */
+	/* 1st Successfully set the qd sampling period */
+	spdk_bdev_set_qd_sampling_period(bdev, 10);
+	CU_ASSERT(bdev->internal.new_period == 10);
+	CU_ASSERT(bdev->internal.period == 10);
+	CU_ASSERT(bdev->internal.qd_desc != NULL);
+	poll_threads();
+	CU_ASSERT(bdev->internal.qd_poller != NULL);
+
+	/* 2nd Change the qd sampling period */
+	spdk_bdev_set_qd_sampling_period(bdev, 20);
+	CU_ASSERT(bdev->internal.new_period == 20);
+	CU_ASSERT(bdev->internal.period == 10);
+	CU_ASSERT(bdev->internal.qd_desc != NULL);
+	poll_threads();
+	CU_ASSERT(bdev->internal.qd_poller != NULL);
+	CU_ASSERT(bdev->internal.period == bdev->internal.new_period);
+
+	/* 3rd Change the qd sampling period and verify qd_poll_in_progress */
+	spdk_delay_us(20);
+	poll_thread_times(0, 1);
+	CU_ASSERT(bdev->internal.qd_poll_in_progress == true);
+	spdk_bdev_set_qd_sampling_period(bdev, 30);
+	CU_ASSERT(bdev->internal.new_period == 30);
+	CU_ASSERT(bdev->internal.period == 20);
+	poll_threads();
+	CU_ASSERT(bdev->internal.qd_poll_in_progress == false);
+	CU_ASSERT(bdev->internal.period == bdev->internal.new_period);
+
+	/* 4th Disable the qd sampling period */
+	spdk_bdev_set_qd_sampling_period(bdev, 0);
+	CU_ASSERT(bdev->internal.new_period == 0);
+	CU_ASSERT(bdev->internal.period == 30);
+	poll_threads();
+	CU_ASSERT(bdev->internal.qd_poller == NULL);
+	CU_ASSERT(bdev->internal.period == bdev->internal.new_period);
+	CU_ASSERT(bdev->internal.qd_desc == NULL);
+
+	/* This is the part3.
+	 * We will test the submitted IO and reset works
+	 * properly with the qd sampling.
+	 */
+	memset(&cb_arg, 0, sizeof(cb_arg));
+	spdk_bdev_set_qd_sampling_period(bdev, 1);
+	poll_threads();
+
+	CU_ASSERT(spdk_bdev_write(desc, io_ch, (void *)0x2000, 0, 4096, io_done, NULL) == 0);
+	CU_ASSERT(bdev_channel_count_submitted_io(bdev_ch) == 1);
+
+	/* Also include the reset IO */
+	memset(&cb_arg, 0, sizeof(cb_arg));
+	CU_ASSERT(spdk_bdev_reset(desc, io_ch, io_done, NULL) == 0);
+	poll_threads();
+
+	/* Close the desc */
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+
+	/* Complete the submitted IO and reset */
+	stub_complete_io(2);
+	poll_threads();
+
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
 lba_range_overlap(void)
 {
 	struct lba_range r1, r2;
@@ -5371,6 +5476,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_open_ext);
 	CU_ADD_TEST(suite, bdev_open_ext_unregister);
 	CU_ADD_TEST(suite, bdev_set_io_timeout);
+	CU_ADD_TEST(suite, bdev_set_qd_sampling);
 	CU_ADD_TEST(suite, lba_range_overlap);
 	CU_ADD_TEST(suite, lock_lba_range_check_ranges);
 	CU_ADD_TEST(suite, lock_lba_range_with_io_outstanding);

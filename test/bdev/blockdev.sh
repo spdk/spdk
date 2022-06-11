@@ -353,6 +353,46 @@ function qos_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
+function qd_sampling_function_test() {
+	local bdev_name=$1
+	local sampling_period=10
+	local iostats
+
+	$rpc_py bdev_set_qd_sampling_period $bdev_name $sampling_period
+
+	iostats=$($rpc_py bdev_get_iostat -b $bdev_name)
+
+	qd_sampling_period=$(jq -r '.bdevs[0].queue_depth_polling_period' <<< "$iostats")
+
+	if [ $qd_sampling_period == null ] || [ $qd_sampling_period -ne $sampling_period ]; then
+		echo "Qeueue depth polling period is not right"
+		$rpc_py bdev_malloc_delete $QD_DEV
+		killprocess $QD_PID
+		exit 1
+	fi
+}
+
+function qd_sampling_test_suite() {
+	QD_DEV="Malloc_QD"
+
+	"$testdir/bdevperf/bdevperf" -z -m 0x3 -q 256 -o 4096 -w randread -t 5 -C "$env_ctx" &
+	QD_PID=$!
+	echo "Process bdev QD sampling period testing pid: $QD_PID"
+	trap 'cleanup; killprocess $QD_PID; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $QD_PID
+
+	$rpc_py bdev_malloc_create -b $QD_DEV 128 512
+	waitforbdev $QD_DEV
+
+	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
+	sleep 2
+	qd_sampling_function_test $QD_DEV
+
+	$rpc_py bdev_malloc_delete $QD_DEV
+	killprocess $QD_PID
+	trap - SIGINT SIGTERM EXIT
+}
+
 # Inital bdev creation and configuration
 #-----------------------------------------------------
 QOS_DEV_1="Malloc_0"
@@ -457,6 +497,7 @@ run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 1
 
 if [[ $test_type == bdev ]]; then
 	run_test "bdev_qos" qos_test_suite "$env_ctx"
+	run_test "bdev_qd_sampling" qd_sampling_test_suite "$env_ctx"
 fi
 
 # Temporarily disabled - infinite loop

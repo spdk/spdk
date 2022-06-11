@@ -478,8 +478,14 @@ struct spdk_bdev {
 		/** poller for tracking the queue_depth of a device, NULL if not tracking */
 		struct spdk_poller *qd_poller;
 
+		/** open descriptor to use qd_poller safely */
+		struct spdk_bdev_desc *qd_desc;
+
 		/** period at which we poll for queue depth information */
 		uint64_t period;
+
+		/** new period to be used to poll for queue depth information */
+		uint64_t new_period;
 
 		/** used to aggregate queue depth while iterating across the bdev's open channels */
 		uint64_t temporary_queue_depth;
@@ -495,6 +501,9 @@ struct spdk_bdev {
 
 		/** accumulated I/O statistics for previously deleted channels of this bdev */
 		struct spdk_bdev_io_stat stat;
+
+		/** true if tracking the queue_depth of a device is in progress */
+		bool	qd_poll_in_progress;
 
 		/** histogram enabled on this bdev */
 		bool	histogram_enabled;

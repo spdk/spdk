@@ -3925,6 +3925,8 @@ spdk_bdev_get_io_time(const struct spdk_bdev *bdev)
 	return bdev->internal.io_time;
 }
 
+static void bdev_update_qd_sampling_period(void *ctx);
+
 static void
 _calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
 {
@@ -3936,6 +3938,10 @@ _calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
 		bdev->internal.io_time += bdev->internal.period;
 		bdev->internal.weighted_io_time += bdev->internal.period * bdev->internal.measured_queue_depth;
 	}
+
+	bdev->internal.qd_poll_in_progress = false;
+
+	bdev_update_qd_sampling_period(bdev);
 }
 
 static void
@@ -3953,26 +3959,75 @@ static int
 bdev_calculate_measured_queue_depth(void *ctx)
 {
 	struct spdk_bdev *bdev = ctx;
+
+	bdev->internal.qd_poll_in_progress = true;
 	bdev->internal.temporary_queue_depth = 0;
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), _calculate_measured_qd, bdev,
 			      _calculate_measured_qd_cpl);
 	return SPDK_POLLER_BUSY;
 }
 
+static void
+bdev_update_qd_sampling_period(void *ctx)
+{
+	struct spdk_bdev *bdev = ctx;
+
+	if (bdev->internal.period == bdev->internal.new_period) {
+		return;
+	}
+
+	if (bdev->internal.qd_poll_in_progress) {
+		return;
+	}
+
+	bdev->internal.period = bdev->internal.new_period;
+
+	spdk_poller_unregister(&bdev->internal.qd_poller);
+	if (bdev->internal.period != 0) {
+		bdev->internal.qd_poller = SPDK_POLLER_REGISTER(bdev_calculate_measured_queue_depth,
+					   bdev, bdev->internal.period);
+	} else {
+		spdk_bdev_close(bdev->internal.qd_desc);
+		bdev->internal.qd_desc = NULL;
+	}
+}
+
+static void
+_tmp_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
+	SPDK_NOTICELOG("Unexpected event type: %d\n", type);
+}
+
 void
 spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 {
+	int rc;
+
+	if (bdev->internal.new_period == period) {
+		return;
+	}
+
+	bdev->internal.new_period = period;
+
+	if (bdev->internal.qd_desc != NULL) {
+		assert(bdev->internal.period != 0);
+
+		spdk_thread_send_msg(bdev->internal.qd_desc->thread,
+				     bdev_update_qd_sampling_period, bdev);
+		return;
+	}
+
+	assert(bdev->internal.period == 0);
+
+	rc = spdk_bdev_open_ext(spdk_bdev_get_name(bdev), false, _tmp_bdev_event_cb,
+				NULL, &bdev->internal.qd_desc);
+	if (rc != 0) {
+		return;
+	}
+
 	bdev->internal.period = period;
-
-	if (bdev->internal.qd_poller != NULL) {
-		spdk_poller_unregister(&bdev->internal.qd_poller);
-		bdev->internal.measured_queue_depth = UINT64_MAX;
-	}
-
-	if (period != 0) {
-		bdev->internal.qd_poller = SPDK_POLLER_REGISTER(bdev_calculate_measured_queue_depth, bdev,
-					   period);
-	}
+	bdev->internal.qd_poller = SPDK_POLLER_REGISTER(bdev_calculate_measured_queue_depth,
+				   bdev, period);
 }
 
 static void
@@ -6071,6 +6126,9 @@ bdev_register(struct spdk_bdev *bdev)
 	}
 
 	bdev->internal.reset_in_progress = NULL;
+	bdev->internal.qd_poll_in_progress = false;
+	bdev->internal.period = 0;
+	bdev->internal.new_period = 0;
 
 	spdk_io_device_register(__bdev_to_io_dev(bdev),
 				bdev_channel_create, bdev_channel_destroy,
@@ -6280,16 +6338,12 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	pthread_mutex_unlock(&bdev->internal.mutex);
 	pthread_mutex_unlock(&g_bdev_mgr.mutex);
 
+	spdk_bdev_set_qd_sampling_period(bdev, 0);
+
 	spdk_for_each_channel(__bdev_to_io_dev(bdev),
 			      bdev_unregister_abort_channel,
 			      bdev,
 			      bdev_unregister);
-}
-
-static void
-_tmp_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
-{
-	SPDK_NOTICELOG("Unexpected event type: %d\n", type);
 }
 
 int
@@ -6504,8 +6558,6 @@ bdev_close(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc)
 			SPDK_ERRLOG("Unable to shut down QoS poller. It will continue running on the current thread.\n");
 		}
 	}
-
-	spdk_bdev_set_qd_sampling_period(bdev, 0);
 
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
 		rc = bdev_unregister_unsafe(bdev);
