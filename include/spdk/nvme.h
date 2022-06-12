@@ -1340,7 +1340,7 @@ bool spdk_nvme_ctrlr_is_feature_supported(struct spdk_nvme_ctrlr *ctrlr, uint8_t
 typedef void (*spdk_nvme_cmd_cb)(void *ctx, const struct spdk_nvme_cpl *cpl);
 
 /**
- * Signature for callback function invoked when an asynchronous error request
+ * Signature for callback function invoked when an asynchronous event request
  * command is completed.
  *
  * \param aer_cb_arg Context specified by spdk_nvme_register_aer_callback().
@@ -1355,7 +1355,7 @@ typedef void (*spdk_nvme_aer_cb)(void *aer_cb_arg,
  * given NVMe controller.
  *
  * \param ctrlr Opaque handle to NVMe controller.
- * \param aer_cb_fn Callback function invoked when an asynchronous error request
+ * \param aer_cb_fn Callback function invoked when an asynchronous event request
  * command is completed.
  * \param aer_cb_arg Argument passed to callback function.
  */
