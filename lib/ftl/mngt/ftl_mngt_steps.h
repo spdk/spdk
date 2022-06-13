@@ -68,4 +68,6 @@ void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process 
 
 void ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
 
+void ftl_mngt_persist_nv_cache_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
+
 #endif /* FTL_MNGT_STEPS_H */

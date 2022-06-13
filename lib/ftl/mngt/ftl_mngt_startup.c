@@ -109,6 +109,10 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 			.action = ftl_mngt_scrub_nv_cache,
 		},
 		{
+			.name = "Save initial chunk info metadata",
+			.action = ftl_mngt_persist_nv_cache_metadata,
+		},
+		{
 			.name = "Set FTL dirty state",
 			.action = ftl_mngt_set_dirty,
 		},

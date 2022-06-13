@@ -137,6 +137,8 @@ int ftl_nv_cache_read(struct ftl_io *io, ftl_addr addr, uint32_t num_blocks,
 bool ftl_nv_cache_full(struct ftl_nv_cache *nv_cache);
 void ftl_nv_cache_process(struct spdk_ftl_dev *dev);
 
+int ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache);
+
 void ftl_nv_cache_halt(struct ftl_nv_cache *nv_cache);
 
 int ftl_nv_cache_chunks_busy(struct ftl_nv_cache *nv_cache);
