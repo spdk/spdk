@@ -66,7 +66,8 @@ for fs in $fs; do
 		fio --name="integrity" --bsrange=4k-512k --iodepth=128 --numjobs=1 --direct=1 \
 			--thread=1 --group_reporting=1 --rw=randrw --rwmixread=70 \
 			--filename=/mnt/${dev}dir/test_file --verify=md5 --do_verify=1 \
-			--verify_backlog=1024 --fsync_on_close=1 --runtime=20 --time_based=1 --size=512m
+			--verify_backlog=1024 --fsync_on_close=1 --runtime=20 --time_based=1 \
+			--size=512m --verify_state_save=0
 
 		# Print out space consumed on target device
 		df -h /dev/$dev

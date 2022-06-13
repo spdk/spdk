@@ -8,4 +8,5 @@ verify=md5
 verify_backlog=1024
 fsync_on_close=1
 iodepth=32
+verify_state_save=0
 [job0]

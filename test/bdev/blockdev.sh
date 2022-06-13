@@ -234,10 +234,10 @@ function fio_test_suite() {
 		echo "filename=$b" >> $testdir/bdev.fio
 	done
 
-	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio --spdk_json_conf=$conf_file"
+	local fio_params="--ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio \
+			--verify_state_save=0 --spdk_json_conf=$conf_file"
 
-	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM \
-		--output=$output_dir/blockdev_fio_verify.txt --aux-path=$output_dir
+	run_test "bdev_fio_rw_verify" fio_bdev $fio_params --spdk_mem=$PRE_RESERVED_MEM --aux-path=$output_dir
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 
@@ -255,7 +255,7 @@ function fio_test_suite() {
 		return 0
 	fi
 
-	run_test "bdev_fio_trim" fio_bdev $fio_params --output=$output_dir/blockdev_trim.txt --aux-path=$output_dir
+	run_test "bdev_fio_trim" fio_bdev $fio_params --verify_state_save=0 --aux-path=$output_dir
 	rm -f ./*.state
 	rm -f $testdir/bdev.fio
 	popd

@@ -13,6 +13,7 @@ verify=md5
 verify_fatal=1
 verify_dump=1
 size=100%
+verify_state_save=0
 
 [write]
 rw=write

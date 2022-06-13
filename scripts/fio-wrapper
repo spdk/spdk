@@ -21,6 +21,7 @@ fio_config() {
 		numjobs=$numjobs
 		verify_dump=1
 		verify_backlog=512
+		verify_state_save=0
 	FIO
 
 	if ((verify == 1)); then
