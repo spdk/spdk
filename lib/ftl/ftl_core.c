@@ -17,7 +17,6 @@
 #include "ftl_debug.h"
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
-#include "utils/ftl_mempool.h"
 
 
 size_t
@@ -30,6 +29,15 @@ static bool
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
 	if (dev->num_inflight) {
+		return false;
+	}
+
+	if (!ftl_nv_cache_is_halted(&dev->nv_cache)) {
+		ftl_nv_cache_halt(&dev->nv_cache);
+		return false;
+	}
+
+	if (!ftl_nv_cache_chunks_busy(&dev->nv_cache)) {
 		return false;
 	}
 
@@ -141,6 +149,7 @@ ftl_core_poller(void *ctx)
 	}
 
 	ftl_process_io_queue(dev);
+	ftl_nv_cache_process(dev);
 	ftl_l2p_process(dev);
 
 	if (io_activity_total_old != dev->io_activity_total) {

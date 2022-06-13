@@ -8,7 +8,12 @@
 #include "ftl_core.h"
 #include "ftl_utils.h"
 #include "ftl_layout.h"
+#include "ftl_nv_cache.h"
 #include "ftl_sb.h"
+
+#define FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) ((uint64_t)blocks * FTL_BLOCK_SIZE)
+#define FTL_NV_CACHE_CHUNK_SIZE(blocks) \
+	(FTL_NV_CACHE_CHUNK_DATA_SIZE(blocks) + (2 * FTL_NV_CACHE_CHUNK_MD_SIZE))
 
 static inline float
 blocks2mib(uint64_t blocks)
@@ -105,9 +110,9 @@ get_num_user_lbas(struct spdk_ftl_dev *dev)
 static void
 set_region_bdev_nvc(struct ftl_layout_region *reg, struct spdk_ftl_dev *dev)
 {
-	reg->bdev_desc = dev->cache_bdev_desc;
-	reg->ioch = dev->cache_ioch;
-	reg->vss_blksz = dev->cache_md_size;
+	reg->bdev_desc = dev->nv_cache.bdev_desc;
+	reg->ioch = dev->nv_cache.cache_ioch;
+	reg->vss_blksz = dev->nv_cache.md_size;
 }
 
 static void
@@ -121,9 +126,9 @@ set_region_bdev_btm(struct ftl_layout_region *reg, struct spdk_ftl_dev *dev)
 static int
 setup_layout_nvc(struct spdk_ftl_dev *dev)
 {
-	uint64_t offset = 0;
+	uint64_t left, offset = 0;
 	struct ftl_layout *layout = &dev->layout;
-	struct ftl_layout_region *region;
+	struct ftl_layout_region *region, *mirror;
 
 #ifdef SPDK_FTL_VSS_EMU
 	/* Skip the already init`d VSS region */
@@ -157,14 +162,68 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 		goto error;
 	}
 
+	/*
+	 * Initialize NV Cache metadata
+	 */
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
+
+	left = layout->nvc.total_blocks - offset;
+	layout->nvc.chunk_data_blocks =
+		FTL_NV_CACHE_CHUNK_DATA_SIZE(ftl_get_num_blocks_in_zone(dev)) / FTL_BLOCK_SIZE;
+	layout->nvc.chunk_meta_size = FTL_NV_CACHE_CHUNK_MD_SIZE;
+	layout->nvc.chunk_count = (left * FTL_BLOCK_SIZE) /
+				  FTL_NV_CACHE_CHUNK_SIZE(ftl_get_num_blocks_in_zone(dev));
+	layout->nvc.chunk_tail_md_num_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(&dev->nv_cache);
+
+	if (0 == layout->nvc.chunk_count) {
+		goto error;
+	}
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	region->type = FTL_LAYOUT_REGION_TYPE_NVC_MD;
+	region->mirror_type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR;
+	region->name = "nvc_md";
+	region->current.version = region->prev.version = FTL_NVC_VERSION_CURRENT;
+	region->current.offset = offset;
+	region->current.blocks = blocks_region(layout->nvc.chunk_count *
+					       sizeof(struct ftl_nv_cache_chunk_md));
+	region->entry_size = sizeof(struct ftl_nv_cache_chunk_md) / FTL_BLOCK_SIZE;
+	region->num_entries = layout->nvc.chunk_count;
+	set_region_bdev_nvc(region, dev);
+	offset += region->current.blocks;
+
+	/*
+	 * Initialize NV Cache metadata mirror
+	 */
+	mirror = &layout->region[FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR];
+	*mirror = *region;
+	mirror->type = FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR;
+	mirror->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
+	mirror->name = "nvc_md_mirror";
+	mirror->current.offset += region->current.blocks;
+	offset += mirror->current.blocks;
+
+	/*
+	 * Initialize data region on NV cache
+	 */
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_DATA_NVC];
 	region->type = FTL_LAYOUT_REGION_TYPE_DATA_NVC;
 	region->name = "data_nvc";
 	region->current.version = region->prev.version = 0;
 	region->current.offset = offset;
-	region->current.blocks = layout->nvc.total_blocks - offset;
+	region->current.blocks = layout->nvc.chunk_count * layout->nvc.chunk_data_blocks;
 	set_region_bdev_nvc(region, dev);
 	offset += region->current.blocks;
+
+	left = layout->nvc.total_blocks - offset;
+	if (left > layout->nvc.chunk_data_blocks) {
+		FTL_ERRLOG(dev, "Error when setup NV cache layout\n");
+		return -1;
+	}
 
 	if (offset > layout->nvc.total_blocks) {
 		FTL_ERRLOG(dev, "Error when setup NV cache layout\n");
@@ -241,7 +300,7 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	bdev = spdk_bdev_desc_get_bdev(dev->base_bdev_desc);
 	layout->base.total_blocks = spdk_bdev_get_num_blocks(bdev);
 
-	bdev = spdk_bdev_desc_get_bdev(dev->cache_bdev_desc);
+	bdev = spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc);
 	layout->nvc.total_blocks = spdk_bdev_get_num_blocks(bdev);
 
 	/* Initialize mirrors types */
@@ -310,13 +369,13 @@ ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev)
 	region->current.version = region->prev.version = 0;
 	region->current.offset = 0;
 
-	bdev = spdk_bdev_desc_get_bdev(dev->cache_bdev_desc);
+	bdev = spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc);
 	layout->nvc.total_blocks = spdk_bdev_get_num_blocks(bdev);
-	region->current.blocks = blocks_region(dev->cache_md_size * layout->nvc.total_blocks);
+	region->current.blocks = blocks_region(dev->nv_cache.md_size * layout->nvc.total_blocks);
 
 	region->vss_blksz = 0;
-	region->bdev_desc = dev->cache_bdev_desc;
-	region->ioch = dev->cache_ioch;
+	region->bdev_desc = dev->nv_cache.bdev_desc;
+	region->ioch = dev->nv_cache.cache_ioch;
 
 	assert(region->bdev_desc != NULL);
 	assert(region->ioch != NULL);
@@ -350,8 +409,8 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 
 	region->current.blocks = blocks_region(FTL_SUPERBLOCK_SIZE);
 	region->vss_blksz = 0;
-	region->bdev_desc = dev->cache_bdev_desc;
-	region->ioch = dev->cache_ioch;
+	region->bdev_desc = dev->nv_cache.bdev_desc;
+	region->ioch = dev->nv_cache.cache_ioch;
 
 	assert(region->bdev_desc != NULL);
 	assert(region->ioch != NULL);
@@ -389,7 +448,7 @@ ftl_layout_dump(struct spdk_ftl_dev *dev)
 	int i;
 	FTL_NOTICELOG(dev, "NV cache layout:\n");
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; ++i) {
-		if (layout->region[i].bdev_desc == dev->cache_bdev_desc) {
+		if (layout->region[i].bdev_desc == dev->nv_cache.bdev_desc) {
 			dump_region(dev, &layout->region[i]);
 		}
 	}

@@ -131,10 +131,10 @@ setup_device(uint32_t num_threads, uint32_t xfer_size)
 	dev->conf = g_default_conf;
 	dev->xfer_size = xfer_size;
 	dev->base_bdev_desc = (struct spdk_bdev_desc *)0xdeadbeef;
-	dev->cache_bdev_desc = (struct spdk_bdev_desc *)0xdead1234;
+	dev->nv_cache.bdev_desc = (struct spdk_bdev_desc *)0xdead1234;
 	spdk_io_device_register(dev, channel_create_cb, channel_destroy_cb, 0, NULL);
 	spdk_io_device_register(dev->base_bdev_desc, channel_create_cb, channel_destroy_cb, 0, NULL);
-	spdk_io_device_register(dev->cache_bdev_desc, channel_create_cb, channel_destroy_cb, 0, NULL);
+	spdk_io_device_register(dev->nv_cache.bdev_desc, channel_create_cb, channel_destroy_cb, 0, NULL);
 
 	TAILQ_INIT(&dev->ioch_queue);
 
@@ -152,7 +152,7 @@ free_device(struct spdk_ftl_dev *dev)
 
 	spdk_io_device_unregister(dev, NULL);
 	spdk_io_device_unregister(dev->base_bdev_desc, NULL);
-	spdk_io_device_unregister(dev->cache_bdev_desc, NULL);
+	spdk_io_device_unregister(dev->nv_cache.bdev_desc, NULL);
 
 	while (!TAILQ_EMPTY(&dev->ioch_queue)) {
 		TAILQ_REMOVE(&dev->ioch_queue, TAILQ_FIRST(&dev->ioch_queue), entry);

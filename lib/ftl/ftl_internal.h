@@ -27,4 +27,33 @@ typedef uint64_t ftl_addr;
 /* Number of LBAs that could be stored in a single block */
 #define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
 
+/*
+ * Mapping of physical (actual location on disk) to logical (user's POV) addresses. Used in two main scenarios:
+ * - during relocation FTL needs to pin L2P pages (this allows to check which pages to pin) and move still valid blocks
+ * (valid map allows for preliminary elimination of invalid physical blocks, but user data could invalidate a location
+ * during read/write operation, so actual comparision against L2P needs to be done)
+ * - After dirty shutdown the state of the L2P is unknown and needs to be rebuilt - it is done by applying all P2L, taking
+ * into account ordering of user writes
+ */
+struct ftl_p2l_map {
+	/* Number of valid LBAs */
+	size_t					num_valid;
+
+	/* P2L map's reference count, prevents premature release of resources during dirty shutdown recovery for open bands */
+	size_t					ref_cnt;
+
+	/* P2L map (only valid for open/relocating bands) */
+	union {
+		uint64_t	*band_map;
+		void		*chunk_map;
+	};
+
+	/* DMA buffer for region's metadata entry */
+	union {
+		struct ftl_band_md		*band_dma_md;
+
+		struct ftl_nv_cache_chunk_md	*chunk_dma_md;
+	};
+};
+
 #endif /* FTL_INTERNAL_H */

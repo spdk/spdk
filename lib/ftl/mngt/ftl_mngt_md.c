@@ -30,10 +30,12 @@ is_buffer_needed(enum ftl_layout_region_type type)
 #ifdef SPDK_FTL_VSS_EMU
 	case FTL_LAYOUT_REGION_TYPE_VSS:
 #endif
+
 	case FTL_LAYOUT_REGION_TYPE_SB:
 	case FTL_LAYOUT_REGION_TYPE_SB_BASE:
 	case FTL_LAYOUT_REGION_TYPE_DATA_NVC:
 	case FTL_LAYOUT_REGION_TYPE_DATA_BASE:
+	case FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR:
 		return false;
 
 	default:
