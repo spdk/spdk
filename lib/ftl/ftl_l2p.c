@@ -16,7 +16,6 @@
 int
 ftl_l2p_init(struct spdk_ftl_dev *dev)
 {
-	TAILQ_INIT(&dev->l2p_deferred_pins);
 	return FTL_L2P_OP(init)(dev);
 }
 
@@ -79,24 +78,12 @@ ftl_l2p_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 void
 ftl_l2p_process(struct spdk_ftl_dev *dev)
 {
-	struct ftl_l2p_pin_ctx *pin_ctx;
-
-	pin_ctx = TAILQ_FIRST(&dev->l2p_deferred_pins);
-	if (pin_ctx) {
-		TAILQ_REMOVE(&dev->l2p_deferred_pins, pin_ctx, link);
-		FTL_L2P_OP(pin)(dev, pin_ctx);
-	}
-
 	FTL_L2P_OP(process)(dev);
 }
 
 bool
 ftl_l2p_is_halted(struct spdk_ftl_dev *dev)
 {
-	if (!TAILQ_EMPTY(&dev->l2p_deferred_pins)) {
-		return false;
-	}
-
 	return FTL_L2P_OP(is_halted)(dev);
 }
 
@@ -104,6 +91,59 @@ void
 ftl_l2p_halt(struct spdk_ftl_dev *dev)
 {
 	return FTL_L2P_OP(halt)(dev);
+}
+
+void
+ftl_l2p_update_cache(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, ftl_addr old_addr)
+{
+	struct ftl_nv_cache_chunk *current_chunk, *new_chunk;
+	ftl_addr current_addr;
+	/* Updating L2P for data in cache device - used by user writes.
+	 * Split off from updating L2P in base due to extra edge cases for handling dirty shutdown in the cache case,
+	 * namely keeping two simultaneous writes to same LBA consistent before/after shutdown - on base device we
+	 * can simply ignore the L2P update, here we need to keep the address with more advanced write pointer
+	 */
+	assert(ftl_check_core_thread(dev));
+	assert(new_addr != FTL_ADDR_INVALID);
+	assert(ftl_addr_in_nvc(dev, new_addr));
+
+	current_addr = ftl_l2p_get(dev, lba);
+
+	if (current_addr != FTL_ADDR_INVALID) {
+
+		/* Check if write-after-write happened (two simultaneous user writes to the same LBA) */
+		if (spdk_unlikely(current_addr != old_addr
+				  && ftl_addr_in_nvc(dev, current_addr))) {
+
+			current_chunk = ftl_nv_cache_get_chunk_from_addr(dev, current_addr);
+			new_chunk = ftl_nv_cache_get_chunk_from_addr(dev, new_addr);
+
+			/* To keep data consistency after recovery skip oldest block */
+			/* If both user writes are to the same chunk, the highest address should 'win', to keep data after
+			 * dirty shutdown recovery consistent. If they're on different chunks, then higher seq_id chunk 'wins' */
+			if (current_chunk == new_chunk) {
+				if (new_addr < current_addr) {
+					return;
+				}
+			}
+		}
+
+		/* For recovery from SHM case valid maps need to be set before l2p set and
+		 * invalidated after it */
+
+		/* DO NOT CHANGE ORDER - START */
+		ftl_nv_cache_set_addr(dev, lba, new_addr);
+		ftl_l2p_set(dev, lba, new_addr);
+		ftl_invalidate_addr(dev, current_addr);
+		/* DO NOT CHANGE ORDER - END */
+		return;
+	}
+
+	/* If current address doesn't have any value (ie. it was never set, or it was trimmed), then we can just set L2P */
+	/* DO NOT CHANGE ORDER - START (need to set P2L maps/valid map first) */
+	ftl_nv_cache_set_addr(dev, lba, new_addr);
+	ftl_l2p_set(dev, lba, new_addr);
+	/* DO NOT CHANGE ORDER - END */
 }
 
 void
@@ -142,7 +182,8 @@ void
 ftl_l2p_pin_complete(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx *pin_ctx)
 {
 	if (spdk_unlikely(status == -EAGAIN)) {
-		TAILQ_INSERT_TAIL(&dev->l2p_deferred_pins, pin_ctx, link);
+		/* Path updated in later patch */
+		assert(false);
 	} else {
 		pin_ctx->cb(dev, status, pin_ctx);
 	}

@@ -283,6 +283,62 @@ ftl_nv_cache_is_halted(struct ftl_nv_cache *nv_cache)
 	return true;
 }
 
+void
+ftl_chunk_map_set_lba(struct ftl_nv_cache_chunk *chunk,
+		      uint64_t offset, uint64_t lba)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+
+	ftl_lba_store(dev, p2l_map->chunk_map, offset, lba);
+}
+
+uint64_t
+ftl_chunk_map_get_lba(struct ftl_nv_cache_chunk *chunk, uint64_t offset)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+
+	return ftl_lba_load(dev, p2l_map->chunk_map, offset);
+}
+
+static void
+ftl_chunk_set_addr(struct ftl_nv_cache_chunk *chunk, uint64_t lba, ftl_addr addr)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	uint64_t cache_offset = ftl_addr_to_nvc_offset(dev, addr);
+	uint64_t offset;
+
+	offset = (cache_offset - chunk->offset) % chunk->nv_cache->chunk_blocks;
+	ftl_chunk_map_set_lba(chunk, offset, lba);
+}
+
+struct ftl_nv_cache_chunk *
+ftl_nv_cache_get_chunk_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	struct ftl_nv_cache_chunk *chunk = dev->nv_cache.chunks;
+	uint64_t chunk_idx;
+	uint64_t cache_offset = ftl_addr_to_nvc_offset(dev, addr);
+
+	assert(chunk != NULL);
+	chunk_idx = (cache_offset - chunk->offset) / chunk->nv_cache->chunk_blocks;
+	chunk += chunk_idx;
+
+	return chunk;
+}
+
+void
+ftl_nv_cache_set_addr(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr)
+{
+	struct ftl_nv_cache_chunk *chunk;
+
+	chunk = ftl_nv_cache_get_chunk_from_addr(dev, addr);
+
+	assert(lba != FTL_LBA_INVALID);
+
+	ftl_chunk_set_addr(chunk, lba, addr);
+}
+
 static void ftl_chunk_open(struct ftl_nv_cache_chunk *chunk);
 
 void

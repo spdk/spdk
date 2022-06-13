@@ -137,6 +137,12 @@ int ftl_nv_cache_read(struct ftl_io *io, ftl_addr addr, uint32_t num_blocks,
 bool ftl_nv_cache_full(struct ftl_nv_cache *nv_cache);
 void ftl_nv_cache_process(struct spdk_ftl_dev *dev);
 
+void ftl_chunk_map_set_lba(struct ftl_nv_cache_chunk *chunk,
+			   uint64_t offset, uint64_t lba);
+uint64_t ftl_chunk_map_get_lba(struct ftl_nv_cache_chunk *chunk, uint64_t offset);
+
+void ftl_nv_cache_set_addr(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr);
+
 int ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache);
 
 void ftl_nv_cache_halt(struct ftl_nv_cache *nv_cache);
@@ -156,5 +162,8 @@ size_t ftl_nv_cache_chunk_tail_md_num_blocks(const struct ftl_nv_cache *nv_cache
 uint64_t chunk_tail_md_offset(struct ftl_nv_cache *nv_cache);
 
 typedef int (*ftl_chunk_md_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx);
+
+struct ftl_nv_cache_chunk *ftl_nv_cache_get_chunk_from_addr(struct spdk_ftl_dev *dev,
+		ftl_addr addr);
 
 #endif  /* FTL_NV_CACHE_H */
