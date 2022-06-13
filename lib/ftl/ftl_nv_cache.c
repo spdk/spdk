@@ -361,6 +361,42 @@ chunk_free_lba_map(struct ftl_nv_cache_chunk *chunk)
 	ftl_chunk_free_md_entry(chunk);
 }
 
+int ftl_nv_cache_save_state(struct ftl_nv_cache *nv_cache)
+{
+	int status = 0;
+	uint64_t i;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+
+	assert(nv_cache->chunk_open_count == 0);
+
+	struct ftl_nv_cache_chunk *chunk = nv_cache->chunks;
+	if (!chunk) {
+		FTL_ERRLOG(dev, "Cannot save NV cache state, no NV cache metadata\n");
+		return -1;
+	}
+
+	for (i = 0; i < nv_cache->chunk_count; i++, chunk++) {
+		nvc_metadata_validate(nv_cache, chunk->md);
+
+		if (chunk->md->blocks_written == nv_cache->chunk_blocks) {
+			/* Full chunk */
+		} else if (0 == chunk->md->blocks_written) {
+			/* Empty chunk */
+		} else {
+			assert(0);
+			status = -EINVAL;
+			break;
+		}
+	}
+
+	if (status) {
+		FTL_ERRLOG(dev, "Cannot save NV cache state, inconsistent NV cache"
+			   "metadata\n");
+	}
+
+	return status;
+}
+
 static int
 chunk_alloc_lba_map(struct ftl_nv_cache_chunk *chunk)
 {

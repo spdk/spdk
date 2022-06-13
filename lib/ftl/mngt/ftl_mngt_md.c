@@ -141,6 +141,17 @@ static void persist(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt,
 	ftl_md_persist(md);
 }
 
+void ftl_mngt_persist_nv_cache_metadata(
+	struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (ftl_nv_cache_save_state(&dev->nv_cache)) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	persist(dev, mngt, ftl_layout_region_type_nvc_md);
+}
+
 static uint32_t get_sb_crc(struct ftl_superblock *sb)
 {
 	uint32_t crc = 0;

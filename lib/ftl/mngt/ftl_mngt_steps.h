@@ -100,6 +100,8 @@ void ftl_mngt_load_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_persist_nv_cache_metadata(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_update_supeblock(struct spdk_ftl_dev *dev, ftl_mngt_fn cb, void *cb_cntx);
 
 void ftl_mngt_persist_superblock(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
