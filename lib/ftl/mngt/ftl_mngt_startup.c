@@ -97,6 +97,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_deinit_md
 		},
 		{
+			.name = "Initialize NV cache",
+			.action = ftl_mngt_init_nv_cache,
+			.cleanup = ftl_mngt_deinit_nv_cache
+		},
+		{
 			.name = "Select startup mode",
 			.action = ftl_mngt_select_startup_mode
 		},

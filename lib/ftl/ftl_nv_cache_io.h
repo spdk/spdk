@@ -125,7 +125,7 @@ ftl_nv_cache_bdev_readv_blocks_with_md(struct spdk_ftl_dev *dev,
 				       uint64_t offset_blocks, uint64_t num_blocks,
 				       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	assert(desc == dev->cache_bdev_desc);
+	assert(desc == dev->nv_cache.bdev_desc);
 	ftl_nv_cache_bdev_get_md(dev, offset_blocks, num_blocks, md);
 	return spdk_bdev_readv_blocks(desc, ch, iov, iovcnt, offset_blocks,
 				      num_blocks, cb, cb_arg);
@@ -163,7 +163,7 @@ ftl_nv_cache_bdev_writev_blocks_with_md(struct spdk_ftl_dev *dev,
 					uint64_t offset_blocks, uint64_t num_blocks,
 					spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	assert(desc == dev->cache_bdev_desc);
+	assert(desc == dev->nv_cache.bdev_desc);
 	ftl_nv_cache_bdev_set_md(dev, offset_blocks, num_blocks, md_buf);
 	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt,
 				       offset_blocks, num_blocks,
@@ -178,7 +178,7 @@ ftl_nv_cache_bdev_read_blocks_with_md(struct spdk_ftl_dev *dev,
 				      uint64_t offset_blocks, uint64_t num_blocks,
 				      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	assert(desc == dev->cache_bdev_desc);
+	assert(desc == dev->nv_cache.bdev_desc);
 	ftl_nv_cache_bdev_get_md(dev, offset_blocks, num_blocks, md);
 	return spdk_bdev_read_blocks(desc, ch, buf, offset_blocks,
 				     num_blocks, cb, cb_arg);
@@ -192,7 +192,7 @@ ftl_nv_cache_bdev_write_blocks_with_md(struct spdk_ftl_dev *dev,
 				       uint64_t offset_blocks, uint64_t num_blocks,
 				       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	assert(desc == dev->cache_bdev_desc);
+	assert(desc == dev->nv_cache.bdev_desc);
 	ftl_nv_cache_bdev_set_md(dev, offset_blocks, num_blocks, md);
 	return spdk_bdev_write_blocks(desc, ch, buf,
 				      offset_blocks, num_blocks,

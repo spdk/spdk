@@ -32,6 +32,7 @@
  */
 
 #include "ftl_l2p.h"
+#include "ftl_nv_cache.h"
 #include "ftl_l2p_flat.h"
 #include "ftl_core.h"
 

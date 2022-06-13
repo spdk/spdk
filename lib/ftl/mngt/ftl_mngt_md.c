@@ -60,6 +60,7 @@ static bool is_md(enum ftl_layout_region_type type)
 	case ftl_layout_region_type_sb_btm:
 	case ftl_layout_region_type_data_nvc:
 	case ftl_layout_region_type_data_btm:
+	case ftl_layout_region_type_nvc_md_mirror:
 		return false;
 
 	default:

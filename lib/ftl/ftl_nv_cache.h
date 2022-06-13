@@ -1,0 +1,206 @@
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright (c) Intel Corporation.
+ *   All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of Intel Corporation nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef FTL_NV_CACHE_H
+#define FTL_NV_CACHE_H
+
+#include "spdk/stdinc.h"
+#include "spdk/crc32.h"
+
+#include "ftl_io.h"
+#include "ftl_utils.h"
+
+/*
+ * Parameters controlling nv cache write throttling.
+ *
+ * The write throttle limit value is calculated as follows:
+ * limit = compaction_average_bw * (1.0 + modifier)
+ *
+ * The modifier depends on the number of free chunks vs the configured threshold. Its value is
+ * zero if the number of free chunks is at the threshold, negative if below and positive if above.
+ */
+
+/* Interval in miliseconds between write throttle updates. */
+#define FTL_NV_CACHE_THROTTLE_INTERVAL_MILIS	20
+/* Throttle modifier proportional gain */
+#define FTL_NV_CACHE_THROTTLE_MODIFIER_KP	20
+/* Min and max modifier values */
+#define FTL_NV_CACHE_THROTTLE_MODIFIER_MIN	-0.8
+#define FTL_NV_CACHE_THROTTLE_MODIFIER_MAX	0.5
+
+#define FTL_NVC_VERSION_0	0
+#define FTL_NVC_VERSION_1	1
+
+#define FTL_NVC_VERSION_CURRENT FTL_NVC_VERSION_1
+
+struct spdk_ftl_dev;
+struct ftl_mngt;
+
+struct ftl_nvcache_restore;
+typedef void (*ftl_nv_cache_restore_fn)(struct ftl_nvcache_restore *, int, void *cb_arg);
+
+enum ftl_chunk_state {
+	FTL_CHUNK_STATE_FREE,
+	FTL_CHUNK_STATE_OPEN,
+	FTL_CHUNK_STATE_CLOSED,
+	FTL_CHUNK_STATE_MAX
+};
+
+struct ftl_nv_cache_chunk_md {
+	/* Current lba to write */
+	uint32_t write_pointer;
+
+	/* Number of blocks written */
+	uint32_t blocks_written;
+
+	/* Number of skipped block (case when IO size is greater than blocks left in chunk) */
+	uint32_t blocks_skipped;
+
+	/* Current compacted block */
+	uint32_t read_pointer;
+
+	/* Number of compacted blocks */
+	uint32_t blocks_compacted;
+
+	/* Chunk state */
+	enum ftl_chunk_state state;
+
+	/* CRC32 checksum of the associated LBA map when chunk is in closed state */
+	uint32_t lba_map_checksum;
+} __attribute__((aligned(FTL_BLOCK_SIZE)));
+
+#define FTL_NV_CACHE_CHUNK_META_SIZE sizeof(struct ftl_nv_cache_chunk_md)
+SPDK_STATIC_ASSERT(FTL_NV_CACHE_CHUNK_META_SIZE == FTL_BLOCK_SIZE,
+		   "FTL NV Chunk metadata size is invalid");
+
+struct ftl_nv_cache_chunk {
+	struct ftl_nv_cache *nv_cache;
+
+	struct ftl_nv_cache_chunk_md *md;
+
+	/* Offset from start lba of the cache */
+	uint64_t offset;
+
+	/* LBA map */
+	struct ftl_lba_map lba_map;
+
+	/* Metadata request */
+	struct ftl_basic_rq metadata_rq;
+
+	TAILQ_ENTRY(ftl_nv_cache_chunk) entry;
+
+	/* This flag is used to indicate chunk is used in recovery */
+	bool recovery;
+
+	/* For writing metadata */
+	struct ftl_md_io_entry_ctx md_persist_entry_ctx;
+};
+
+struct ftl_nv_cache {
+	/* Flag indicating halt request */
+	bool halt;
+
+	/* Write buffer cache bdev */
+	struct spdk_bdev_desc *bdev_desc;
+
+	/* Persistent cache IO channel */
+	struct spdk_io_channel *cache_ioch;
+
+	/* Metadata pool */
+	struct ftl_mempool *md_pool;
+
+	/* LBA map memory pool */
+	struct ftl_mempool *lba_pool;
+
+	/* Chunk md memory pool */
+	struct ftl_mempool *chunk_md_pool;
+
+	/* Block Metadata size */
+	uint64_t md_size;
+
+	/* NV cache metadata object handle */
+	struct ftl_md *md;
+
+	/* Number of blocks in chunk */
+	uint64_t chunk_blocks;
+
+	/* Number of chunks */
+	uint64_t chunk_count;
+
+	/* Current processed chunk */
+	struct ftl_nv_cache_chunk *chunk_current;
+
+	/* Number of currently open chunks */
+	uint64_t chunk_open_count;
+
+	/* Free chunks list */
+	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_free_list;
+	uint64_t chunk_free_count;
+
+	/* Open chunks list */
+	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_open_list;
+
+	/* Full chunks list */
+	TAILQ_HEAD(, ftl_nv_cache_chunk) chunk_full_list;
+	uint64_t chunk_full_count;
+
+	struct ftl_nv_cache_chunk *chunks;
+};
+
+int ftl_nv_cache_init(struct spdk_ftl_dev *dev);
+void ftl_nv_cache_deinit(struct spdk_ftl_dev *dev);
+void ftl_nv_cache_fill_md(struct ftl_io *io);
+int ftl_nv_cache_read(struct ftl_io *io, ftl_addr addr, uint32_t num_blocks,
+		      spdk_bdev_io_completion_cb cb, void *cb_arg);
+bool ftl_nv_cache_full(struct ftl_nv_cache *nv_cache);
+void ftl_nv_cache_process(struct spdk_ftl_dev *dev);
+
+void ftl_nv_cache_halt(struct ftl_nv_cache *nv_cache);
+
+int ftl_nv_cache_chunks_busy(struct ftl_nv_cache *nv_cache);
+
+static inline void
+ftl_nv_cache_resume(struct ftl_nv_cache *nv_cache)
+{
+	nv_cache->halt = false;
+}
+
+bool ftl_nv_cache_is_halted(struct ftl_nv_cache *nv_cache);
+
+size_t ftl_nv_cache_chunk_tail_md_num_blocks(const struct ftl_nv_cache *nv_cache);
+
+uint64_t chunk_tail_md_offset(struct ftl_nv_cache *nv_cache);
+
+typedef int (*ftl_chunk_md_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx);
+
+#endif  /* FTL_NV_CACHE_H */

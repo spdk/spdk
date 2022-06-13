@@ -34,6 +34,7 @@
 #include "spdk/bdev_module.h"
 #include "spdk/ftl.h"
 
+#include "ftl_nv_cache.h"
 #include "ftl_internal.h"
 #include "ftl_mngt_steps.h"
 #include "ftl_internal.h"
@@ -173,6 +174,7 @@ nv_cache_bdev_event_cb(enum spdk_bdev_event_type type,
 void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	struct spdk_bdev *bdev;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
 	const char *bdev_name = dev->conf.cache_bdev;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
@@ -182,15 +184,15 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	}
 
 	if (spdk_bdev_open_ext(bdev_name, true, nv_cache_bdev_event_cb, dev,
-			       &dev->cache_bdev_desc)) {
+			       &nv_cache->bdev_desc)) {
 		FTL_ERRLOG(dev, "Unable to open bdev: %s\n", bdev_name);
 		goto error;
 	}
 
-	if (spdk_bdev_module_claim_bdev(bdev, dev->cache_bdev_desc,
+	if (spdk_bdev_module_claim_bdev(bdev, nv_cache->bdev_desc,
 					&g_ftl_bdev_module)) {
-		spdk_bdev_close(dev->cache_bdev_desc);
-		dev->cache_bdev_desc = NULL;
+		spdk_bdev_close(nv_cache->bdev_desc);
+		nv_cache->bdev_desc = NULL;
 		FTL_ERRLOG(dev, "Unable to claim bdev %s\n", bdev_name);
 		goto error;
 	}
@@ -203,8 +205,8 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		goto error;
 	}
 
-	dev->cache_ioch = spdk_bdev_get_io_channel(dev->cache_bdev_desc);
-	if (!dev->cache_ioch) {
+	nv_cache->cache_ioch = spdk_bdev_get_io_channel(nv_cache->bdev_desc);
+	if (!nv_cache->cache_ioch) {
 		FTL_ERRLOG(dev, "Failed to create cache IO channel for NV Cache\n");
 		goto error;
 	}
@@ -216,8 +218,8 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		goto error;
 	}
 
-	dev->cache_md_size = spdk_bdev_get_md_size(bdev);
-	if (dev->cache_md_size != sizeof(union ftl_md_vss)) {
+	nv_cache->md_size = spdk_bdev_get_md_size(bdev);
+	if (nv_cache->md_size != sizeof(union ftl_md_vss)) {
 		FTL_ERRLOG(dev, "Bdev's %s metadata is invalid size (%"PRIu32")\n",
 			    spdk_bdev_get_name(bdev), spdk_bdev_get_md_size(bdev));
 		goto error;
@@ -229,7 +231,7 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		goto error;
 	}
 
-	if (ftl_md_xfer_blocks(dev) * dev->cache_md_size > FTL_ZERO_BUFFER_SIZE) {
+	if (ftl_md_xfer_blocks(dev) * nv_cache->md_size > FTL_ZERO_BUFFER_SIZE) {
 		FTL_ERRLOG(dev, "Zero buffer too small for bdev %s metadata transfer\n",
 			   spdk_bdev_get_name(bdev));
 		goto error;
@@ -240,7 +242,7 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		goto error;
 	}
 
-	dev->cache_md_size = 64;
+	nv_cache->md_size = 64;
 	FTL_NOTICELOG(dev, "FTL uses VSS emulation\n");
 #endif
 
@@ -252,15 +254,15 @@ error:
 
 void ftl_mngt_close_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
-	if (dev->cache_ioch) {
-		spdk_put_io_channel(dev->cache_ioch);
-		dev->cache_ioch = NULL;
+	if (dev->nv_cache.cache_ioch) {
+		spdk_put_io_channel(dev->nv_cache.cache_ioch);
+		dev->nv_cache.cache_ioch = NULL;
 	}
 
-	if (dev->cache_bdev_desc) {
+	if (dev->nv_cache.bdev_desc) {
 		spdk_bdev_module_release_bdev(
-			spdk_bdev_desc_get_bdev(dev->cache_bdev_desc));
-		spdk_bdev_close(dev->cache_bdev_desc);
+			spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc));
+		spdk_bdev_close(dev->nv_cache.bdev_desc);
 	}
 
 	ftl_mngt_next_step(mngt);

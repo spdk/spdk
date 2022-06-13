@@ -60,4 +60,28 @@ struct ftl_rq;
 /* Number of LBAs that could be stored in a single block */
 #define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
 
+struct ftl_lba_map {
+	/* Number of valid LBAs */
+	size_t					num_vld;
+
+	/* LBA map's reference count */
+	size_t					ref_cnt;
+
+	/* LBA map (only valid for open/relocating bands) */
+	union {
+		uint64_t	*band_map;
+		void						*chunk_map;
+	};
+
+	/* DMA buffer for region's metadata entry */
+	union {
+		struct ftl_band_md				*band_dma_md;
+
+		struct ftl_nv_cache_chunk_md	*chunk_dma_md;
+	};
+
+	/* LBA map DMA buffer (only valid for open/relocating bands) */
+	void					*dma_buf;
+};
+
 #endif /* FTL_INTERNAL_H */

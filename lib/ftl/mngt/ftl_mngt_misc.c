@@ -36,6 +36,7 @@
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
 #include "ftl_internal.h"
+#include "ftl_nv_cache.h"
 #include "ftl_debug.h"
 
 void ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
@@ -89,6 +90,23 @@ void ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	ftl_mngt_next_step(mngt);
 }
 
+void ftl_mngt_init_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (ftl_nv_cache_init(dev)) {
+		FTL_ERRLOG(dev, "Unable to initialize persistent cache\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_deinit_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_nv_cache_deinit(dev);
+	ftl_mngt_next_step(mngt);
+}
+
 static void user_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 {
 	struct ftl_mngt *mngt = md->owner.cb_ctx;
@@ -125,6 +143,8 @@ void ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 void ftl_mngt_finalize_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	dev->initialized = 1;
+
+	ftl_nv_cache_resume(&dev->nv_cache);
 
 	ftl_mngt_next_step(mngt);
 }

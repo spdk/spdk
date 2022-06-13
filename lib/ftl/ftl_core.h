@@ -46,6 +46,7 @@
 
 #include "ftl_internal.h"
 #include "ftl_io.h"
+#include "ftl_nv_cache.h"
 #include "ftl_layout.h"
 #include "ftl_sb.h"
 #include "ftl_l2p.h"
@@ -95,12 +96,6 @@ struct spdk_ftl_dev {
 	/* Underlying device */
 	struct spdk_bdev_desc		*base_bdev_desc;
 
-	/* Cache device */
-	struct spdk_bdev_desc		*cache_bdev_desc;
-
-	/* Cache VSS metadata size */
-	uint64_t					cache_md_size;
-
 	/* Cached properties of the underlying device */
 	uint64_t					num_blocks_in_band;
 	size_t						num_punits;
@@ -109,6 +104,9 @@ struct spdk_ftl_dev {
 
 	/* Underlying device IO channel */
 	struct spdk_io_channel		*base_ioch;
+
+	/* Non-volatile write buffer cache */
+	struct ftl_nv_cache			nv_cache;
 
 	/* Media management events pool */
 	struct spdk_mempool			*media_events_pool;
@@ -151,9 +149,6 @@ struct spdk_ftl_dev {
 
 	/* IO channel */
 	struct spdk_io_channel		*ioch;
-
-	/* Cache IO channel */
-	struct spdk_io_channel		*cache_ioch;
 
 	/* Poller */
 	struct spdk_poller			*core_poller;

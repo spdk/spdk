@@ -45,7 +45,6 @@
 #include "ftl_debug.h"
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
-#include "utils/ftl_mempool.h"
 
 struct ftl_wptr {
 	/* Owner device */
@@ -107,6 +106,15 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 		return 0;
 	}
 
+	if (!ftl_nv_cache_is_halted(&dev->nv_cache)) {
+		ftl_nv_cache_halt(&dev->nv_cache);
+		return 0;
+	}
+
+	if (!ftl_nv_cache_chunks_busy(&dev->nv_cache)) {
+		return 0;
+	}
+
 	if (!ftl_l2p_is_halted(dev)) {
 		ftl_l2p_halt(dev);
 		return 0;
@@ -136,6 +144,10 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->optimum_io_size = dev->xfer_size;
 
 	attrs->cache_bdev = NULL;
+	if (dev->nv_cache.bdev_desc) {
+		attrs->cache_bdev = spdk_bdev_get_name(
+					    spdk_bdev_desc_get_bdev(dev->nv_cache.bdev_desc));
+	}
 }
 
 static void
@@ -276,6 +288,7 @@ ftl_task_core(void *ctx)
 	}
 
 	ftl_process_io_queue(dev);
+	ftl_nv_cache_process(dev);
 	ftl_l2p_process(dev);
 
 	if ((io_activity_total_old != dev->io_activity_total)) {

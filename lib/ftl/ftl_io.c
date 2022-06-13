@@ -39,7 +39,6 @@
 #include "ftl_io.h"
 #include "ftl_core.h"
 #include "ftl_debug.h"
-#include "utils/ftl_mempool.h"
 
 void
 ftl_io_inc_req(struct ftl_io *io)

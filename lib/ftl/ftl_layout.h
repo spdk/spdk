@@ -51,6 +51,11 @@ enum ftl_layout_region_type {
 	/* If using cached L2P, this region stores the serialized instance of it */
 	ftl_layout_region_type_l2p,
 
+	/* State of chunks */
+	ftl_layout_region_type_nvc_md,
+	/* Mirrored instance of the state of chunks */
+	ftl_layout_region_type_nvc_md_mirror,
+
 	/* User data region on the nv cache device */
 	ftl_layout_region_type_data_nvc,
 
@@ -126,6 +131,10 @@ struct ftl_layout {
 	/* Organization for NV cache */
 	struct {
 		uint64_t total_blocks;
+		uint64_t chunk_data_blocks;
+		uint64_t chunk_meta_size;
+		uint64_t chunk_count;
+		uint64_t chunk_tail_md_num_blocks;
 	} nvc;
 
 	/* Information corresponding to L2P */
