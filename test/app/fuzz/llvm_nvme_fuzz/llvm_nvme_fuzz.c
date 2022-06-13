@@ -70,7 +70,7 @@ fuzz_admin_get_log_page_command(struct fuzz_command *cmd)
 
 	/* Only fuzz some of the more interesting parts of the GET_LOG_PAGE command. */
 
-	cmd->cmd.cdw10_bits.get_log_page.numdl = (g_data[0] << 8) + g_data[1];
+	cmd->cmd.cdw10_bits.get_log_page.numdl = ((uint16_t)g_data[0] << 8) + (uint16_t)g_data[1];
 	cmd->cmd.cdw10_bits.get_log_page.lid = g_data[2];
 	cmd->cmd.cdw10_bits.get_log_page.lsp = g_data[3] & (0x60 >> 5);
 	cmd->cmd.cdw10_bits.get_log_page.rae = g_data[3] & (0x80 >> 7);
@@ -78,7 +78,7 @@ fuzz_admin_get_log_page_command(struct fuzz_command *cmd)
 	cmd->cmd.cdw11_bits.get_log_page.numdu = g_data[3] & (0x18 >> 3);
 
 	/* Log Page Offset Lower */
-	cmd->cmd.cdw12 = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw12 = ((uint16_t)g_data[4] << 8) + (uint16_t)g_data[5];
 
 	/* Offset Type */
 	cmd->cmd.cdw14 = g_data[3] & (0x01 >> 0);
@@ -97,9 +97,9 @@ fuzz_admin_identify_command(struct fuzz_command *cmd)
 	cmd->cmd.opc = SPDK_NVME_OPC_IDENTIFY;
 
 	cmd->cmd.cdw10_bits.identify.cns = g_data[0];
-	cmd->cmd.cdw10_bits.identify.cntid = (g_data[1] << 8) + g_data[2];
+	cmd->cmd.cdw10_bits.identify.cntid = ((uint16_t)g_data[1] << 8) + (uint16_t)g_data[2];
 
-	cmd->cmd.cdw11_bits.identify.nvmsetid = (g_data[3] << 8) + g_data[4];
+	cmd->cmd.cdw11_bits.identify.nvmsetid = ((uint16_t)g_data[3] << 8) + (uint16_t)g_data[4];
 	cmd->cmd.cdw11_bits.identify.csi = g_data[5];
 
 	/* UUID index, bits 0-6 are used */
@@ -114,8 +114,8 @@ fuzz_admin_abort_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_ABORT;
 
-	cmd->cmd.cdw10_bits.abort.sqid = (g_data[0] << 8) + g_data[1];
-	cmd->cmd.cdw10_bits.abort.cid = (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw10_bits.abort.sqid = ((uint16_t)g_data[0] << 8) + (uint16_t)g_data[1];
+	cmd->cmd.cdw10_bits.abort.cid = ((uint16_t)g_data[2] << 8) + (uint16_t)g_data[3];
 
 	g_data += 4;
 }
@@ -126,10 +126,10 @@ fuzz_admin_create_io_completion_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_CREATE_IO_CQ;
 
-	cmd->cmd.cdw10_bits.create_io_q.qid = (g_data[0] << 8) + g_data[1];
-	cmd->cmd.cdw10_bits.create_io_q.qsize = (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw10_bits.create_io_q.qid = ((uint16_t)g_data[0] << 8) + (uint16_t)g_data[1];
+	cmd->cmd.cdw10_bits.create_io_q.qsize = ((uint16_t)g_data[2] << 8) + (uint16_t)g_data[3];
 
-	cmd->cmd.cdw11_bits.create_io_cq.iv = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.create_io_cq.iv = ((uint16_t)g_data[4] << 8) + (uint16_t)g_data[5];
 	cmd->cmd.cdw11_bits.create_io_cq.pc = (g_data[6] >> 7) & 0x01;
 	cmd->cmd.cdw11_bits.create_io_cq.ien = (g_data[6] >> 6) & 0x01;
 
@@ -142,15 +142,15 @@ fuzz_admin_create_io_submission_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_CREATE_IO_SQ;
 
-	cmd->cmd.cdw10_bits.create_io_q.qid = (g_data[0] << 8) + g_data[1];
-	cmd->cmd.cdw10_bits.create_io_q.qsize = (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw10_bits.create_io_q.qid = ((uint16_t)g_data[0] << 8) + (uint16_t)g_data[1];
+	cmd->cmd.cdw10_bits.create_io_q.qsize = ((uint16_t)g_data[2] << 8) + (uint16_t)g_data[3];
 
-	cmd->cmd.cdw11_bits.create_io_sq.cqid = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.create_io_sq.cqid = ((uint16_t)g_data[4] << 8) + (uint16_t)g_data[5];
 	cmd->cmd.cdw11_bits.create_io_sq.qprio = (g_data[6] >> 6) & 0x03;
 	cmd->cmd.cdw11_bits.create_io_sq.pc = (g_data[6] >> 5) & 0x01;
 
 	/* NVM Set Identifier */
-	cmd->cmd.cdw12 = (g_data[7] << 8) + g_data[8];
+	cmd->cmd.cdw12 = ((uint16_t)g_data[7] << 8) + (uint16_t)g_data[8];
 
 	g_data += 9;
 }
@@ -161,7 +161,7 @@ fuzz_admin_delete_io_completion_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_DELETE_IO_CQ;
 
-	cmd->cmd.cdw10_bits.delete_io_q.qid = (g_data[0] << 8) + g_data[1];
+	cmd->cmd.cdw10_bits.delete_io_q.qid = ((uint16_t)g_data[0] << 8) + (uint16_t)g_data[1];
 
 	g_data += 2;
 }
@@ -172,7 +172,7 @@ fuzz_admin_delete_io_submission_queue_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_DELETE_IO_SQ;
 
-	cmd->cmd.cdw10_bits.delete_io_q.qid = (g_data[0] << 8) + g_data[1];
+	cmd->cmd.cdw10_bits.delete_io_q.qid = ((uint16_t)g_data[0] << 8) + (uint16_t)g_data[1];
 
 	g_data += 2;
 }
@@ -211,7 +211,8 @@ fuzz_admin_security_receive_command(struct fuzz_command *cmd)
 	cmd->cmd.cdw10_bits.sec_send_recv.nssf = g_data[3];
 
 	/* Allocation Length(AL) */
-	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) + (g_data[6] << 8) + g_data[7];
+	cmd->cmd.cdw11 = ((uint32_t)g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
 
 	g_data += 8;
 }
@@ -228,7 +229,8 @@ fuzz_admin_security_send_command(struct fuzz_command *cmd)
 	cmd->cmd.cdw10_bits.sec_send_recv.nssf = g_data[3];
 
 	/* Transfer Length(TL) */
-	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) + (g_data[6] << 8) + g_data[7];
+	cmd->cmd.cdw11 = (uint32_t)(g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
 
 	g_data += 8;
 }
@@ -239,10 +241,10 @@ fuzz_admin_directive_send_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_DIRECTIVE_SEND;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
 
-	cmd->cmd.cdw11_bits.directive.dspec = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.directive.dspec = ((uint16_t)g_data[4] << 8) + (uint16_t)g_data[5];
 	cmd->cmd.cdw11_bits.directive.dtype = g_data[6];
 	cmd->cmd.cdw11_bits.directive.doper = g_data[7];
 
@@ -255,10 +257,10 @@ fuzz_admin_directive_receive_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_DIRECTIVE_RECEIVE;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
 
-	cmd->cmd.cdw11_bits.directive.dspec = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.directive.dspec = ((uint16_t)g_data[4] << 8) + (uint16_t)g_data[5];
 	cmd->cmd.cdw11_bits.directive.dtype = g_data[6];
 	cmd->cmd.cdw11_bits.directive.doper = g_data[7];
 
@@ -288,13 +290,15 @@ static void feat_temperature_threshold(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.thsel = g_data[2] & 0x03;
 	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.tmpsel = (g_data[2] >> 2) & 0x0f;
-	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.tmpth = (g_data[3] << 8) + g_data[4];
+	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.tmpth = ((uint16_t)g_data[3] << 8) +
+			(uint16_t)g_data[4];
 }
 
 static void feat_error_recover(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_error_recovery.bits.dulbe = g_data[2] & 0x01;
-	cmd->cmd.cdw11_bits.feat_error_recovery.bits.tler = (g_data[3] << 8) + g_data[4];
+	cmd->cmd.cdw11_bits.feat_error_recovery.bits.tler = ((uint16_t)g_data[3] << 8) +
+			(uint16_t)g_data[4];
 }
 
 static void feat_volatile_write_cache(struct fuzz_command *cmd)
@@ -304,8 +308,8 @@ static void feat_volatile_write_cache(struct fuzz_command *cmd)
 
 static void feat_number_of_queues(struct fuzz_command *cmd)
 {
-	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = (g_data[2] << 8) + g_data[3];
-	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = (g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = ((uint16_t)g_data[2] << 8) + (uint16_t)g_data[3];
+	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = ((uint16_t)g_data[4] << 8) + (uint16_t)g_data[5];
 }
 
 static void feat_interrupt_coalescing(struct fuzz_command *cmd)
@@ -317,7 +321,8 @@ static void feat_interrupt_coalescing(struct fuzz_command *cmd)
 static void feat_interrupt_vector_configuration(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_interrupt_vector_configuration.bits.cd = g_data[2] & 0x01;
-	cmd->cmd.cdw11_bits.feat_interrupt_vector_configuration.bits.iv = (g_data[3] << 8) + g_data[4];
+	cmd->cmd.cdw11_bits.feat_interrupt_vector_configuration.bits.iv = ((uint16_t)g_data[3] << 8) +
+			(uint16_t)g_data[4];
 }
 
 static void feat_write_atomicity(struct fuzz_command *cmd)
@@ -344,8 +349,9 @@ static void feat_async_event_cfg(struct fuzz_command *cmd)
 
 static void feat_keep_alive_timer(struct fuzz_command *cmd)
 {
-	cmd->cmd.cdw11_bits.feat_keep_alive_timer.bits.kato = (g_data[2] << 24) + (g_data[3] << 16) +
-			(g_data[4] << 8) + g_data[5];
+	cmd->cmd.cdw11_bits.feat_keep_alive_timer.bits.kato = ((uint32_t)g_data[2] << 24) + ((
+				uint32_t)g_data[3] << 16) +
+			((uint32_t)g_data[4] << 8) + (uint32_t)g_data[5];
 }
 
 static void feat_host_identifier(struct fuzz_command *cmd)
@@ -498,17 +504,17 @@ fuzz_nvm_read_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_READ;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
-	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
-			 (g_data[6] << 8) + g_data[7];
-	cmd->cmd.cdw12 = (g_data[8] << 24) + (g_data[9] << 16) +
-			 (g_data[10] << 8) + g_data[11];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
+	cmd->cmd.cdw11 = ((uint32_t)g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
+	cmd->cmd.cdw12 = ((uint32_t)g_data[8] << 24) + ((uint32_t)g_data[9] << 16) +
+			 ((uint32_t)g_data[10] << 8) + (uint32_t)g_data[11];
 	cmd->cmd.cdw13 = g_data[12];
-	cmd->cmd.cdw14 = (g_data[13] << 24) + (g_data[14] << 16) +
-			 (g_data[15] << 8) + g_data[16];
-	cmd->cmd.cdw15 = (g_data[17] << 24) + (g_data[18] << 16) +
-			 (g_data[19] << 8) + g_data[20];
+	cmd->cmd.cdw14 = ((uint32_t)g_data[13] << 24) + ((uint32_t)g_data[14] << 16) +
+			 ((uint32_t)g_data[15] << 8) + (uint32_t)g_data[16];
+	cmd->cmd.cdw15 = ((uint32_t)g_data[17] << 24) + ((uint32_t)g_data[18] << 16) +
+			 ((uint32_t)g_data[19] << 8) + (uint32_t)g_data[20];
 
 	g_data += 21;
 }
@@ -519,18 +525,18 @@ fuzz_nvm_write_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_WRITE;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
-	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
-			 (g_data[6] << 8) + g_data[7];
-	cmd->cmd.cdw12 = (g_data[8] << 24) + (g_data[9] << 16) +
-			 (g_data[10] << 8) + g_data[11];
-	cmd->cmd.cdw13 = (g_data[12] << 24) + (g_data[13] << 16) +
-			 (g_data[14] << 8) + g_data[15];
-	cmd->cmd.cdw14 = (g_data[16] << 24) + (g_data[17] << 16) +
-			 (g_data[18] << 8) + g_data[19];
-	cmd->cmd.cdw15 = (g_data[20] << 24) + (g_data[21] << 16) +
-			 (g_data[22] << 8) + g_data[23];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
+	cmd->cmd.cdw11 = ((uint32_t)g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
+	cmd->cmd.cdw12 = ((uint32_t)g_data[8] << 24) + ((uint32_t)g_data[9] << 16) +
+			 ((uint32_t)g_data[10] << 8) + (uint32_t)g_data[11];
+	cmd->cmd.cdw13 = ((uint32_t)g_data[12] << 24) + ((uint32_t)g_data[13] << 16) +
+			 ((uint32_t)g_data[14] << 8) + (uint32_t)g_data[15];
+	cmd->cmd.cdw14 = ((uint32_t)g_data[16] << 24) + ((uint32_t)g_data[17] << 16) +
+			 ((uint32_t)g_data[18] << 8) + (uint32_t)g_data[19];
+	cmd->cmd.cdw15 = ((uint32_t)g_data[20] << 24) + ((uint32_t)g_data[21] << 16) +
+			 ((uint32_t)g_data[22] << 8) + (uint32_t)g_data[23];
 
 	g_data += 24;
 }
@@ -541,16 +547,16 @@ fuzz_nvm_write_zeroes_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_WRITE_ZEROES;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
-	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
-			 (g_data[6] << 8) + g_data[7];
-	cmd->cmd.cdw12 = (g_data[8] << 24) + (g_data[9] << 16) +
-			 (g_data[10] << 8) + g_data[11];
-	cmd->cmd.cdw14 = (g_data[12] << 24) + (g_data[13] << 16) +
-			 (g_data[14] << 8) + g_data[15];
-	cmd->cmd.cdw15 = (g_data[16] << 24) + (g_data[17] << 16) +
-			 (g_data[18] << 8) + g_data[19];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
+	cmd->cmd.cdw11 = ((uint32_t)g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
+	cmd->cmd.cdw12 = ((uint32_t)g_data[8] << 24) + ((uint32_t)g_data[9] << 16) +
+			 ((uint32_t)g_data[10] << 8) + (uint32_t)g_data[11];
+	cmd->cmd.cdw14 = ((uint32_t)g_data[12] << 24) + ((uint32_t)g_data[13] << 16) +
+			 ((uint32_t)g_data[14] << 8) + (uint32_t)g_data[15];
+	cmd->cmd.cdw15 = ((uint32_t)g_data[16] << 24) + ((uint32_t)g_data[17] << 16) +
+			 ((uint32_t)g_data[18] << 8) + (uint32_t)g_data[19];
 
 	g_data += 20;
 }
@@ -561,10 +567,10 @@ fuzz_nvm_write_uncorrectable_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_WRITE_UNCORRECTABLE;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
-	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
-			 (g_data[6] << 8) + g_data[7];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
+	cmd->cmd.cdw11 = ((uint32_t)g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
 	cmd->cmd.cdw12 = (g_data[8] << 8) + g_data[9];
 
 	g_data += 10;
@@ -650,8 +656,8 @@ fuzz_nvm_reservation_report_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_RESERVATION_REPORT;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
 
 	cmd->cmd.cdw11_bits.resv_report.eds = (g_data[4] >> 7) & 0x01;
 
@@ -664,16 +670,16 @@ fuzz_nvm_compare_command(struct fuzz_command *cmd)
 	memset(&cmd->cmd, 0, sizeof(cmd->cmd));
 	cmd->cmd.opc = SPDK_NVME_OPC_COMPARE;
 
-	cmd->cmd.cdw10 = (g_data[0] << 24) + (g_data[1] << 16) +
-			 (g_data[2] << 8) + g_data[3];
-	cmd->cmd.cdw11 = (g_data[4] << 24) + (g_data[5] << 16) +
-			 (g_data[6] << 8) + g_data[7];
-	cmd->cmd.cdw12 = (g_data[8] << 24) + (g_data[9] << 16) +
-			 (g_data[10] << 8) + g_data[11];
-	cmd->cmd.cdw14 = (g_data[12] << 24) + (g_data[13] << 16) +
-			 (g_data[14] << 8) + g_data[15];
-	cmd->cmd.cdw15 = (g_data[16] << 24) + (g_data[17] << 16) +
-			 (g_data[18] << 8) + g_data[19];
+	cmd->cmd.cdw10 = ((uint32_t)g_data[0] << 24) + ((uint32_t)g_data[1] << 16) +
+			 ((uint32_t)g_data[2] << 8) + (uint32_t)g_data[3];
+	cmd->cmd.cdw11 = ((uint32_t)g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
+	cmd->cmd.cdw12 = ((uint32_t)g_data[8] << 24) + ((uint32_t)g_data[9] << 16) +
+			 ((uint32_t)g_data[10] << 8) + (uint32_t)g_data[11];
+	cmd->cmd.cdw14 = ((uint32_t)g_data[12] << 24) + ((uint32_t)g_data[13] << 16) +
+			 ((uint32_t)g_data[14] << 8) + (uint32_t)g_data[15];
+	cmd->cmd.cdw15 = ((uint32_t)g_data[16] << 24) + ((uint32_t)g_data[17] << 16) +
+			 ((uint32_t)g_data[18] << 8) + (uint32_t)g_data[19];
 
 	g_data += 20;
 }
