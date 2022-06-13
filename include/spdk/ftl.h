@@ -16,6 +16,7 @@ extern "C" {
 #endif
 
 struct spdk_ftl_dev;
+struct ftl_io;
 
 struct spdk_ftl_conf {
 	/* Device's name */
@@ -145,6 +146,25 @@ void spdk_ftl_conf_deinit(struct spdk_ftl_conf *conf);
  * \param conf FTL configuration to initialize
  */
 void spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf);
+
+/**
+ * Submits a write to the specified device.
+ *
+ * \param dev Device
+ * \param io Allocated ftl_io
+ * \param ch I/O channel
+ * \param lba Starting LBA to write the data
+ * \param lba_cnt Number of sectors to write
+ * \param iov Single IO vector or pointer to IO vector table
+ * \param iov_cnt Number of IO vectors
+ * \param cb_fn Callback function to invoke when the I/O is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negative errno otherwise.
+ */
+int spdk_ftl_writev(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		    uint64_t lba, uint64_t lba_cnt,
+		    struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg);
 
 /**
  * Returns the size of ftl_io struct that needs to be passed to spdk_ftl_read/write

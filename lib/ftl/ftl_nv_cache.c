@@ -199,6 +199,66 @@ chunk_is_closed(struct ftl_nv_cache_chunk *chunk)
 
 static void ftl_chunk_close(struct ftl_nv_cache_chunk *chunk);
 
+static uint64_t
+ftl_nv_cache_get_wr_buffer(struct ftl_nv_cache *nv_cache, struct ftl_io *io)
+{
+	uint64_t address = FTL_LBA_INVALID;
+	uint64_t num_blocks = io->num_blocks;
+	uint64_t free_space;
+	struct ftl_nv_cache_chunk *chunk;
+
+	do {
+		chunk = nv_cache->chunk_current;
+		/* Chunk has been closed so pick new one */
+		if (chunk && chunk_is_closed(chunk))  {
+			chunk = NULL;
+		}
+
+		if (!chunk) {
+			chunk = TAILQ_FIRST(&nv_cache->chunk_open_list);
+			if (chunk && chunk->md->state == FTL_CHUNK_STATE_OPEN) {
+				TAILQ_REMOVE(&nv_cache->chunk_open_list, chunk, entry);
+				nv_cache->chunk_current = chunk;
+			} else {
+				break;
+			}
+		}
+
+		free_space = chunk_get_free_space(nv_cache, chunk);
+
+		if (free_space >= num_blocks) {
+			/* Enough space in chunk */
+
+			/* Calculate address in NV cache */
+			address = chunk->offset + chunk->md->write_pointer;
+
+			/* Set chunk in IO */
+			io->nv_cache_chunk = chunk;
+
+			/* Move write pointer */
+			chunk->md->write_pointer += num_blocks;
+			break;
+		}
+
+		/* Not enough space in nv_cache_chunk */
+		nv_cache->chunk_current = NULL;
+
+		if (0 == free_space) {
+			continue;
+		}
+
+		chunk->md->blocks_skipped = free_space;
+		chunk->md->blocks_written += free_space;
+		chunk->md->write_pointer += free_space;
+
+		if (chunk->md->blocks_written == chunk_tail_md_offset(nv_cache)) {
+			ftl_chunk_close(chunk);
+		}
+	} while (1);
+
+	return address;
+}
+
 void
 ftl_nv_cache_fill_md(struct ftl_io *io)
 {
@@ -255,6 +315,130 @@ ftl_chunk_free_md_entry(struct ftl_nv_cache_chunk *chunk)
 
 	ftl_mempool_put(chunk->nv_cache->chunk_md_pool, p2l_map->chunk_dma_md);
 	p2l_map->chunk_dma_md = NULL;
+}
+
+static void
+ftl_nv_cache_submit_cb_done(struct ftl_io *io)
+{
+	struct ftl_nv_cache *nv_cache = &io->dev->nv_cache;
+
+	chunk_advance_blocks(nv_cache, io->nv_cache_chunk, io->num_blocks);
+	io->nv_cache_chunk = NULL;
+
+	ftl_mempool_put(nv_cache->md_pool, io->md);
+	ftl_io_complete(io);
+}
+
+static void
+ftl_nv_cache_l2p_update(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	ftl_addr next_addr = io->addr;
+	size_t i;
+
+	for (i = 0; i < io->num_blocks; ++i, ++next_addr) {
+		ftl_l2p_update_cache(dev, ftl_io_get_lba(io, i), next_addr, io->map[i]);
+	}
+
+	ftl_l2p_unpin(dev, io->lba, io->num_blocks);
+	ftl_nv_cache_submit_cb_done(io);
+}
+
+static void
+ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_io *io = cb_arg;
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (spdk_unlikely(!success)) {
+		FTL_ERRLOG(io->dev, "Non-volatile cache write failed at %"PRIx64"\n",
+			   io->addr);
+		io->status = -EIO;
+		ftl_nv_cache_submit_cb_done(io);
+	} else {
+		ftl_nv_cache_l2p_update(io);
+	}
+}
+
+static void
+nv_cache_write(void *_io)
+{
+	struct ftl_io *io = _io;
+	struct spdk_ftl_dev *dev = io->dev;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+	int rc;
+
+	rc = ftl_nv_cache_bdev_writev_blocks_with_md(dev,
+			nv_cache->bdev_desc, nv_cache->cache_ioch,
+			io->iov, io->iov_cnt, io->md,
+			ftl_addr_to_nvc_offset(dev, io->addr), io->num_blocks,
+			ftl_nv_cache_submit_cb, io);
+	if (spdk_unlikely(rc)) {
+		if (rc == -ENOMEM) {
+			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+			io->bdev_io_wait.bdev = bdev;
+			io->bdev_io_wait.cb_fn = nv_cache_write;
+			io->bdev_io_wait.cb_arg = io;
+			spdk_bdev_queue_io_wait(bdev, nv_cache->cache_ioch, &io->bdev_io_wait);
+		} else {
+			ftl_abort();
+		}
+	}
+}
+
+static void
+ftl_nv_cache_pin_cb(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx *pin_ctx)
+{
+	struct ftl_io *io = pin_ctx->cb_ctx;
+	size_t i;
+
+	if (spdk_unlikely(status != 0)) {
+		/* Retry on the internal L2P fault */
+		FTL_ERRLOG(dev, "Cannot PIN LBA for NV cache write failed at %"PRIx64"\n",
+			   io->addr);
+		io->status = -EAGAIN;
+		ftl_nv_cache_submit_cb_done(io);
+		return;
+	}
+
+	/* Remember previous l2p mapping to resolve conflicts in case of outstanding write-after-write */
+	for (i = 0; i < io->num_blocks; ++i) {
+		io->map[i] = ftl_l2p_get(dev, ftl_io_get_lba(io, i));
+	}
+
+	assert(io->iov_pos == 0);
+
+	nv_cache_write(io);
+}
+
+bool
+ftl_nv_cache_write(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	uint64_t cache_offset;
+
+	io->md = ftl_mempool_get(dev->nv_cache.md_pool);
+	if (spdk_unlikely(!io->md)) {
+		return false;
+	}
+
+	/* Reserve area on the write buffer cache */
+	cache_offset = ftl_nv_cache_get_wr_buffer(&dev->nv_cache, io);
+	if (cache_offset == FTL_LBA_INVALID) {
+		/* No free space in NV cache, resubmit request */
+		ftl_mempool_put(dev->nv_cache.md_pool, io->md);
+		return false;
+	}
+	io->addr = ftl_addr_from_nvc_offset(dev, cache_offset);
+	io->nv_cache_chunk = dev->nv_cache.chunk_current;
+
+	ftl_nv_cache_fill_md(io);
+	ftl_l2p_pin(io->dev, io->lba, io->num_blocks,
+		    ftl_nv_cache_pin_cb, io,
+		    &io->l2p_pin_ctx);
+
+	return true;
 }
 
 int

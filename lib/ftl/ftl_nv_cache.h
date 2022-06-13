@@ -131,6 +131,7 @@ struct ftl_nv_cache {
 
 int ftl_nv_cache_init(struct spdk_ftl_dev *dev);
 void ftl_nv_cache_deinit(struct spdk_ftl_dev *dev);
+bool ftl_nv_cache_write(struct ftl_io *io);
 void ftl_nv_cache_fill_md(struct ftl_io *io);
 int ftl_nv_cache_read(struct ftl_io *io, ftl_addr addr, uint32_t num_blocks,
 		      spdk_bdev_io_completion_cb cb, void *cb_arg);

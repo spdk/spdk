@@ -84,12 +84,43 @@ bdev_ftl_destruct(void *ctx)
 	return 1;
 }
 
+static void
+bdev_ftl_cb(void *arg, int rc)
+{
+	struct spdk_bdev_io *bdev_io = arg;
+	enum spdk_bdev_io_status status;
+
+	switch (rc) {
+	case 0:
+		status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		break;
+	case -ENOMEM:
+		status = SPDK_BDEV_IO_STATUS_NOMEM;
+		break;
+	default:
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+		break;
+	}
+
+	spdk_bdev_io_complete(bdev_io, status);
+}
+
 static int
 _bdev_ftl_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct ftl_bdev *ftl_bdev = (struct ftl_bdev *)bdev_io->bdev->ctxt;
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
+
 	case SPDK_BDEV_IO_TYPE_WRITE:
+		return spdk_ftl_writev(ftl_bdev->dev, (struct ftl_io *)bdev_io->driver_ctx,
+				       ch, bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.iovs,
+				       bdev_io->u.bdev.iovcnt, bdev_ftl_cb, bdev_io);
+
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
