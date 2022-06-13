@@ -154,6 +154,7 @@ static void
 start_io(struct ftl_io *io)
 {
 	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
+	struct spdk_ftl_dev *dev = io->dev;
 
 	io->map = ftl_mempool_get(ioch->map_pool);
 	if (spdk_unlikely(!io->map)) {
@@ -164,12 +165,64 @@ start_io(struct ftl_io *io)
 
 	switch (io->type) {
 	case FTL_IO_READ:
+		io->status = -EOPNOTSUPP;
+		ftl_io_complete(io);
+		break;
 	case FTL_IO_WRITE:
+		TAILQ_INSERT_TAIL(&dev->wr_sq, io, queue_entry);
+		break;
 	case FTL_IO_UNMAP:
 	default:
 		io->status = -EOPNOTSUPP;
 		ftl_io_complete(io);
 	}
+}
+
+static int
+queue_io(struct spdk_ftl_dev *dev, struct ftl_io *io)
+{
+	size_t result;
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
+
+	result = spdk_ring_enqueue(ioch->sq, (void **)&io, 1, NULL);
+	if (spdk_unlikely(0 == result)) {
+		return -EAGAIN;
+	}
+
+	return 0;
+}
+
+int
+spdk_ftl_writev(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
+		uint64_t lba, size_t lba_cnt, struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn,
+		void *cb_arg)
+{
+	int rc;
+
+	if (iov_cnt == 0) {
+		return -EINVAL;
+	}
+
+	if (lba_cnt == 0) {
+		return -EINVAL;
+	}
+
+	if (lba_cnt != ftl_iovec_num_blocks(iov, iov_cnt)) {
+		FTL_ERRLOG(dev, "Invalid IO vector to handle, device %s, LBA %"PRIu64"\n",
+			   dev->name, lba);
+		return -EINVAL;
+	}
+
+	if (!dev->initialized) {
+		return -EBUSY;
+	}
+
+	rc = ftl_io_user_init(ch, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_WRITE);
+	if (rc) {
+		return rc;
+	}
+
+	return queue_io(dev, io);
 }
 
 static void ftl_process_media_event(struct spdk_ftl_dev *dev, struct spdk_bdev_media_event event);
@@ -268,6 +321,16 @@ static void
 ftl_process_io_queue(struct spdk_ftl_dev *dev)
 {
 	struct ftl_io_channel *ioch;
+	struct ftl_io *io;
+
+	if (!ftl_nv_cache_full(&dev->nv_cache) && !TAILQ_EMPTY(&dev->wr_sq)) {
+		io = TAILQ_FIRST(&dev->wr_sq);
+		TAILQ_REMOVE(&dev->wr_sq, io, queue_entry);
+		assert(io->type == FTL_IO_WRITE);
+		if (!ftl_nv_cache_write(io)) {
+			TAILQ_INSERT_HEAD(&dev->wr_sq, io, queue_entry);
+		}
+	}
 
 	TAILQ_FOREACH(ioch, &dev->ioch_queue, entry) {
 		ftl_process_io_channel(dev, ioch);
