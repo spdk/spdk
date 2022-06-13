@@ -38,7 +38,7 @@ spdk_vfio_user_pci_bar_access(struct vfio_device *dev, uint32_t index, uint64_t 
 		if ((offset >= region->mmaps[i].offset) &&
 		    (offset + len <= region->mmaps[i].offset + region->mmaps[i].size)) {
 			assert(region->mmaps[i].mem != NULL);
-			void *bar_addr = region->mmaps[i].mem + offset;
+			void *bar_addr = region->mmaps[i].mem + offset - region->mmaps[i].offset;
 			if (is_write) {
 				memcpy(bar_addr, buf, len);
 			} else {
