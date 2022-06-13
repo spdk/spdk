@@ -131,6 +131,52 @@ ftl_l2p_halt(struct spdk_ftl_dev *dev)
 }
 
 void
+ftl_l2p_update_cached(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, ftl_addr prev_addr)
+{
+	struct ftl_nv_cache_chunk *current_chunk, *new_chunk;
+	ftl_addr current_addr;
+
+	assert(ftl_check_core_thread(dev));
+	assert(new_addr != FTL_ADDR_INVALID);
+	assert(ftl_addr_cached(dev, new_addr));
+
+	current_addr = ftl_l2p_get(dev, lba);
+
+	if (current_addr != FTL_ADDR_INVALID) {
+
+		/* Write-after-write happend */
+		if (spdk_unlikely(current_addr != prev_addr
+				  && ftl_addr_cached(dev, current_addr))) {
+
+			current_chunk = ftl_nv_cache_get_chunk_from_addr(dev, current_addr);
+			new_chunk = ftl_nv_cache_get_chunk_from_addr(dev, new_addr);
+
+			/* To keep data consistency after recovery skip oldest block */
+			if (current_chunk == new_chunk) {
+				if (new_addr < current_addr) {
+					return;
+				}
+			}
+		}
+
+		/* For recovery from SHM case valid maps need to be set before l2p set and
+		 * invalidated after it */
+
+		/* DO NOT CHANGE ORDER - START */
+		ftl_nv_cache_set_addr(dev, lba, new_addr);
+		ftl_l2p_set(dev, lba, new_addr);
+		ftl_invalidate_addr(dev, current_addr);
+		/* DO NOT CHANGE ORDER - END */
+		return;
+	}
+
+	/* DO NOT CHANGE ORDER - START */
+	ftl_nv_cache_set_addr(dev, lba, new_addr);
+	ftl_l2p_set(dev, lba, new_addr);
+	/* DO NOT CHANGE ORDER - END */
+}
+
+void
 ftl_l2p_update(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, ftl_addr weak_addr)
 {
 	ftl_addr current_addr;
