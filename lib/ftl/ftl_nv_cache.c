@@ -69,7 +69,15 @@ static size_t
 nv_cache_p2l_map_pool_elem_size(const struct ftl_nv_cache *nv_cache)
 {
 	/* Map pool element holds the whole tail md */
-	return ftl_nv_cache_chunk_tail_md_num_blocks(nv_cache) * FTL_BLOCK_SIZE;
+	return nv_cache->tail_md_chunk_blocks * FTL_BLOCK_SIZE;
+}
+
+static uint64_t
+get_chunk_idx(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_nv_cache_chunk *first_chunk = chunk->nv_cache->chunks;
+
+	return (chunk->offset - first_chunk->offset) / chunk->nv_cache->chunk_blocks;
 }
 
 int
@@ -101,6 +109,7 @@ ftl_nv_cache_init(struct spdk_ftl_dev *dev)
 	 */
 	nv_cache->chunk_blocks = dev->layout.nvc.chunk_data_blocks;
 	nv_cache->chunk_count = dev->layout.nvc.chunk_count;
+	nv_cache->tail_md_chunk_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(nv_cache);
 
 	/* Allocate chunks */
 	nv_cache->chunks = calloc(nv_cache->chunk_count,
@@ -172,6 +181,24 @@ ftl_nv_cache_deinit(struct spdk_ftl_dev *dev)
 	nv_cache->chunks = NULL;
 }
 
+static uint64_t
+chunk_get_free_space(struct ftl_nv_cache *nv_cache,
+		     struct ftl_nv_cache_chunk *chunk)
+{
+	assert(chunk->md->write_pointer + nv_cache->tail_md_chunk_blocks <=
+	       nv_cache->chunk_blocks);
+	return nv_cache->chunk_blocks - chunk->md->write_pointer -
+	       nv_cache->tail_md_chunk_blocks;
+}
+
+static bool
+chunk_is_closed(struct ftl_nv_cache_chunk *chunk)
+{
+	return chunk->md->write_pointer == chunk->nv_cache->chunk_blocks;
+}
+
+static void ftl_chunk_close(struct ftl_nv_cache_chunk *chunk);
+
 void
 ftl_nv_cache_fill_md(struct ftl_io *io)
 {
@@ -187,7 +214,47 @@ ftl_nv_cache_fill_md(struct ftl_io *io)
 uint64_t
 chunk_tail_md_offset(struct ftl_nv_cache *nv_cache)
 {
-	return nv_cache->chunk_blocks - ftl_nv_cache_chunk_tail_md_num_blocks(nv_cache);
+	return nv_cache->chunk_blocks - nv_cache->tail_md_chunk_blocks;
+}
+
+static void
+chunk_advance_blocks(struct ftl_nv_cache *nv_cache, struct ftl_nv_cache_chunk *chunk,
+		     uint64_t advanced_blocks)
+{
+	chunk->md->blocks_written += advanced_blocks;
+
+	assert(chunk->md->blocks_written <= nv_cache->chunk_blocks);
+
+	if (chunk->md->blocks_written == chunk_tail_md_offset(nv_cache)) {
+		ftl_chunk_close(chunk);
+	}
+}
+
+static int
+ftl_chunk_alloc_md_entry(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+
+	p2l_map->chunk_dma_md = ftl_mempool_get(nv_cache->chunk_md_pool);
+
+	if (!p2l_map->chunk_dma_md) {
+		return -ENOMEM;
+	}
+
+	memset(p2l_map->chunk_dma_md, 0, region->entry_size * FTL_BLOCK_SIZE);
+	return 0;
+}
+
+static void
+ftl_chunk_free_md_entry(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+
+	ftl_mempool_put(chunk->nv_cache->chunk_md_pool, p2l_map->chunk_dma_md);
+	p2l_map->chunk_dma_md = NULL;
 }
 
 int
@@ -216,11 +283,22 @@ ftl_nv_cache_is_halted(struct ftl_nv_cache *nv_cache)
 	return true;
 }
 
+static void ftl_chunk_open(struct ftl_nv_cache_chunk *chunk);
+
 void
 ftl_nv_cache_process(struct spdk_ftl_dev *dev)
 {
-	if (!dev->nv_cache.bdev_desc) {
-		return;
+	struct ftl_nv_cache *nv_cache = &dev->nv_cache;
+
+	assert(dev->nv_cache.bdev_desc);
+
+	if (nv_cache->chunk_open_count < FTL_MAX_OPEN_CHUNKS && spdk_likely(!nv_cache->halt) &&
+	    !TAILQ_EMPTY(&nv_cache->chunk_free_list)) {
+		struct ftl_nv_cache_chunk *chunk = TAILQ_FIRST(&nv_cache->chunk_free_list);
+		TAILQ_REMOVE(&nv_cache->chunk_free_list, chunk, entry);
+		TAILQ_INSERT_TAIL(&nv_cache->chunk_open_list, chunk, entry);
+		nv_cache->chunk_free_count--;
+		ftl_chunk_open(chunk);
 	}
 }
 
@@ -234,6 +312,213 @@ ftl_nv_cache_full(struct ftl_nv_cache *nv_cache)
 	}
 }
 
+static void
+chunk_free_p2l_map(struct ftl_nv_cache_chunk *chunk)
+{
+
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+
+	ftl_mempool_put(nv_cache->p2l_pool, p2l_map->chunk_map);
+	p2l_map->chunk_map = NULL;
+
+	ftl_chunk_free_md_entry(chunk);
+}
+
+static int
+chunk_alloc_p2l_map(struct ftl_nv_cache_chunk *chunk)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+
+	assert(p2l_map->ref_cnt == 0);
+	assert(p2l_map->chunk_map == NULL);
+
+	p2l_map->chunk_map = ftl_mempool_get(nv_cache->p2l_pool);
+
+	if (!p2l_map->chunk_map) {
+		return -ENOMEM;
+	}
+
+	if (ftl_chunk_alloc_md_entry(chunk)) {
+		ftl_mempool_put(nv_cache->p2l_pool, p2l_map->chunk_map);
+		p2l_map->chunk_map = NULL;
+		return -ENOMEM;
+	}
+
+	/* Set the P2L to FTL_LBA_INVALID */
+	memset(p2l_map->chunk_map, -1, FTL_BLOCK_SIZE * nv_cache->tail_md_chunk_blocks);
+
+	return 0;
+}
+
+typedef void (*ftl_chunk_ops_cb)(struct ftl_nv_cache_chunk *chunk, void *cntx, bool status);
+
+static void
+write_brq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct ftl_basic_rq *brq = arg;
+	struct ftl_nv_cache_chunk *chunk = brq->io.chunk;
+
+	brq->success = success;
+	if (spdk_likely(success)) {
+		chunk_advance_blocks(chunk->nv_cache, chunk, brq->num_blocks);
+	}
+
+	spdk_bdev_free_io(bdev_io);
+	brq->owner.cb(brq);
+}
+
+static void
+_ftl_chunk_basic_rq_write(void *_brq)
+{
+	struct ftl_basic_rq *brq = _brq;
+	struct ftl_nv_cache *nv_cache = brq->io.chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+	int rc;
+
+	rc = ftl_nv_cache_bdev_write_blocks_with_md(dev, nv_cache->bdev_desc, nv_cache->cache_ioch,
+			brq->io_payload, NULL, brq->io.addr,
+			brq->num_blocks, write_brq_end, brq);
+	if (spdk_unlikely(rc)) {
+		if (rc == -ENOMEM) {
+			struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(nv_cache->bdev_desc);
+			brq->io.bdev_io_wait.bdev = bdev;
+			brq->io.bdev_io_wait.cb_fn = _ftl_chunk_basic_rq_write;
+			brq->io.bdev_io_wait.cb_arg = brq;
+			spdk_bdev_queue_io_wait(bdev, nv_cache->cache_ioch, &brq->io.bdev_io_wait);
+		} else {
+			ftl_abort();
+		}
+	}
+}
+
+static void
+ftl_chunk_basic_rq_write(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *brq)
+{
+	struct ftl_nv_cache *nv_cache = chunk->nv_cache;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(nv_cache, struct spdk_ftl_dev, nv_cache);
+
+	brq->io.chunk = chunk;
+	brq->success = false;
+
+	_ftl_chunk_basic_rq_write(brq);
+
+	chunk->md->write_pointer += brq->num_blocks;
+	dev->io_activity_total += brq->num_blocks;
+}
+
+static void
+chunk_open_cb(int status, void *ctx)
+{
+	struct ftl_nv_cache_chunk *chunk = (struct ftl_nv_cache_chunk *)ctx;
+
+	if (spdk_unlikely(status)) {
+		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
+		return;
+	}
+
+	chunk->md->state = FTL_CHUNK_STATE_OPEN;
+}
+
+static void
+ftl_chunk_open(struct ftl_nv_cache_chunk *chunk)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+
+	if (chunk_alloc_p2l_map(chunk)) {
+		assert(0);
+		/*
+		 * We control number of opening chunk and it shall be consistent with size of chunk
+		 * P2L map pool
+		 */
+		ftl_abort();
+		return;
+	}
+
+	chunk->nv_cache->chunk_open_count++;
+
+	assert(chunk->md->write_pointer == 0);
+	assert(chunk->md->blocks_written == 0);
+
+	memcpy(p2l_map->chunk_dma_md, chunk->md, region->entry_size * FTL_BLOCK_SIZE);
+	p2l_map->chunk_dma_md->state = FTL_CHUNK_STATE_OPEN;
+	p2l_map->chunk_dma_md->p2l_map_checksum = 0;
+
+	ftl_md_persist_entry(md, get_chunk_idx(chunk), p2l_map->chunk_dma_md,
+			     NULL, chunk_open_cb, chunk,
+			     &chunk->md_persist_entry_ctx);
+}
+
+static void
+chunk_close_cb(int status, void *ctx)
+{
+	struct ftl_nv_cache_chunk *chunk = (struct ftl_nv_cache_chunk *)ctx;
+
+	assert(chunk->md->write_pointer == chunk->nv_cache->chunk_blocks);
+
+	if (spdk_likely(!status)) {
+		chunk->md->p2l_map_checksum = chunk->p2l_map.chunk_dma_md->p2l_map_checksum;
+		chunk_free_p2l_map(chunk);
+
+		assert(chunk->nv_cache->chunk_open_count > 0);
+		chunk->nv_cache->chunk_open_count--;
+
+		/* Chunk full move it on full list */
+		TAILQ_INSERT_TAIL(&chunk->nv_cache->chunk_full_list, chunk, entry);
+		chunk->nv_cache->chunk_full_count++;
+
+		chunk->md->state = FTL_CHUNK_STATE_CLOSED;
+	} else {
+		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
+	}
+}
+
+static void
+chunk_map_write_cb(struct ftl_basic_rq *brq)
+{
+	struct ftl_nv_cache_chunk *chunk = brq->io.chunk;
+	struct ftl_p2l_map *p2l_map = &chunk->p2l_map;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	struct ftl_md *md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_NVC_MD];
+	uint32_t chunk_map_crc;
+
+	if (spdk_likely(brq->success)) {
+		chunk_map_crc = spdk_crc32c_update(p2l_map->chunk_map,
+						   chunk->nv_cache->tail_md_chunk_blocks * FTL_BLOCK_SIZE, 0);
+		memcpy(p2l_map->chunk_dma_md, chunk->md, region->entry_size * FTL_BLOCK_SIZE);
+		p2l_map->chunk_dma_md->state = FTL_CHUNK_STATE_CLOSED;
+		p2l_map->chunk_dma_md->p2l_map_checksum = chunk_map_crc;
+		ftl_md_persist_entry(md, get_chunk_idx(chunk), chunk->p2l_map.chunk_dma_md,
+				     NULL, chunk_close_cb, chunk,
+				     &chunk->md_persist_entry_ctx);
+	} else {
+		/* retry */
+		chunk->md->write_pointer -= brq->num_blocks;
+		ftl_chunk_basic_rq_write(chunk, brq);
+	}
+}
+
+static void
+ftl_chunk_close(struct ftl_nv_cache_chunk *chunk)
+{
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(chunk->nv_cache, struct spdk_ftl_dev, nv_cache);
+	struct ftl_basic_rq *brq = &chunk->metadata_rq;
+	void *metadata = chunk->p2l_map.chunk_map;
+
+	ftl_basic_rq_init(dev, brq, metadata, chunk->nv_cache->tail_md_chunk_blocks);
+	ftl_basic_rq_set_owner(brq, chunk_map_write_cb, chunk);
+
+	assert(chunk->md->write_pointer == chunk_tail_md_offset(chunk->nv_cache));
+	brq->io.addr = chunk->offset + chunk->md->write_pointer;
+
+	ftl_chunk_basic_rq_write(chunk, brq);
+}
+
 int
 ftl_nv_cache_chunks_busy(struct ftl_nv_cache *nv_cache)
 {
@@ -245,5 +530,42 @@ ftl_nv_cache_chunks_busy(struct ftl_nv_cache *nv_cache)
 void
 ftl_nv_cache_halt(struct ftl_nv_cache *nv_cache)
 {
+	struct ftl_nv_cache_chunk *chunk;
+	uint64_t free_space;
+
 	nv_cache->halt = true;
+
+	/* Set chunks on open list back to free state since no user data has been written to it */
+	while (!TAILQ_EMPTY(&nv_cache->chunk_open_list)) {
+		chunk = TAILQ_FIRST(&nv_cache->chunk_open_list);
+
+		/* Chunks are moved between lists on metadata update submission, but state is changed
+		 * on completion. Breaking early in such a case to make sure all the necessary resources
+		 * will be freed (during next pass(es) of ftl_nv_cache_halt).
+		 */
+		if (chunk->md->state != FTL_CHUNK_STATE_OPEN) {
+			break;
+		}
+
+		TAILQ_REMOVE(&nv_cache->chunk_open_list, chunk, entry);
+		chunk_free_p2l_map(chunk);
+		memset(chunk->md, 0, sizeof(*chunk->md));
+		assert(nv_cache->chunk_open_count > 0);
+		nv_cache->chunk_open_count--;
+	}
+
+	/* Close current chunk by skipping all not written blocks */
+	chunk = nv_cache->chunk_current;
+	if (chunk != NULL) {
+		nv_cache->chunk_current = NULL;
+		if (chunk_is_closed(chunk)) {
+			return;
+		}
+
+		free_space = chunk_get_free_space(nv_cache, chunk);
+		chunk->md->blocks_skipped = free_space;
+		chunk->md->blocks_written += free_space;
+		chunk->md->write_pointer += free_space;
+		ftl_chunk_close(chunk);
+	}
 }

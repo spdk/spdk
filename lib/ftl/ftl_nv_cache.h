@@ -105,6 +105,9 @@ struct ftl_nv_cache {
 	/* Number of blocks in chunk */
 	uint64_t chunk_blocks;
 
+	/* Number of blocks in tail md per chunk */
+	uint64_t tail_md_chunk_blocks;
+
 	/* Number of chunks */
 	uint64_t chunk_count;
 
