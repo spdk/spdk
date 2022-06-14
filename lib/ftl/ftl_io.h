@@ -299,6 +299,9 @@ int ftl_io_init(struct spdk_io_channel *ioch, struct ftl_io *io, uint64_t lba,
 		size_t num_blocks, struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn,
 		void *cb_arg, int type);
 void ftl_io_complete(struct ftl_io *io);
+void ftl_rq_del(struct ftl_rq *rq);
+struct ftl_rq *ftl_rq_new(struct spdk_ftl_dev *dev, uint32_t io_md_size);
+void ftl_rq_unpin(struct ftl_rq *rq);
 
 static inline void
 ftl_basic_rq_init(struct spdk_ftl_dev *dev, struct ftl_basic_rq *brq,
