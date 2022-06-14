@@ -95,6 +95,8 @@ ftl_io_cmpl_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct ftl_io *io = cb_arg;
 	struct spdk_ftl_dev *dev = io->dev;
 
+	ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_USER, bdev_io);
+
 	if (spdk_unlikely(!success)) {
 		io->status = -EIO;
 	}
@@ -320,6 +322,7 @@ void
 ftl_apply_limits(struct spdk_ftl_dev *dev)
 {
 	size_t limit;
+	struct ftl_stats *stats = &dev->stats;
 	int i;
 
 	/*  Clear existing limit */
@@ -329,6 +332,7 @@ ftl_apply_limits(struct spdk_ftl_dev *dev)
 		limit = ftl_get_limit(dev, i);
 
 		if (dev->num_free <= limit) {
+			stats->limits[i]++;
 			dev->limit = i;
 			break;
 		}
@@ -919,7 +923,7 @@ int
 ftl_task_core(void *ctx)
 {
 	struct spdk_ftl_dev *dev = ctx;
-	uint64_t io_activity_total_old = dev->io_activity_total;
+	uint64_t io_activity_total_old = dev->stats.io_activity_total;
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
@@ -935,7 +939,7 @@ ftl_task_core(void *ctx)
 	ftl_nv_cache_process(dev);
 	ftl_l2p_process(dev);
 
-	if ((io_activity_total_old != dev->io_activity_total)) {
+	if ((io_activity_total_old != dev->stats.io_activity_total)) {
 		return SPDK_POLLER_BUSY;
 	}
 
@@ -990,10 +994,55 @@ spdk_ftl_dev_set_fast_shdn(struct spdk_ftl_dev *dev, bool fast_shdn)
 	dev->conf.fast_shdn = fast_shdn;
 }
 
+void
+ftl_stats_bdev_io_completed(struct spdk_ftl_dev *dev, enum ftl_stats_type type,
+			    struct spdk_bdev_io *bdev_io)
+{
+	struct ftl_stats_entry *stats_entry = &dev->stats.entries[type];
+	struct ftl_stats_group *stats_group;
+	uint32_t cdw0;
+	int sct;
+	int sc;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		stats_group = &stats_entry->read;
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+		stats_group = &stats_entry->write;
+		break;
+	default:
+		return;
+	}
+
+	spdk_bdev_io_get_nvme_status(bdev_io, &cdw0, &sct, &sc);
+
+	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
+		stats_group->ios++;
+		stats_group->blocks += bdev_io->u.bdev.num_blocks;
+	} else if (sct == SPDK_NVME_SCT_MEDIA_ERROR) {
+		stats_group->errors.media++;
+	} else {
+		stats_group->errors.other++;
+	}
+}
+
 struct spdk_io_channel *
 spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev)
 {
 	return spdk_get_io_channel(dev);
+}
+
+void
+ftl_stats_crc_error(struct spdk_ftl_dev *dev, enum ftl_stats_type type)
+{
+
+	struct ftl_stats_entry *stats_entry = &dev->stats.entries[type];
+	struct ftl_stats_group *stats_group = &stats_entry->read;
+
+	stats_group->errors.crc++;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(ftl_core)

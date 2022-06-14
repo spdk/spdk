@@ -44,6 +44,10 @@ write_rq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct ftl_rq *rq = arg;
 	struct ftl_zone *zone = rq->io.zone;
+	struct spdk_ftl_dev *dev = rq->dev;
+
+	ftl_stats_bdev_io_completed(dev, rq->owner.uio ? FTL_STATS_TYPE_CMP : FTL_STATS_TYPE_GC,
+				    bdev_io);
 
 	rq->success = success;
 	if (spdk_likely(success)) {
@@ -109,7 +113,7 @@ ftl_band_rq_write(struct ftl_band *band, struct ftl_rq *rq)
 	ftl_band_rq_bdev_write(rq);
 
 	band->queue_depth++;
-	dev->io_activity_total += rq->num_blocks;
+	dev->stats.io_activity_total += rq->num_blocks;
 
 	ftl_band_iter_advance(band, rq->num_blocks);
 	if (ftl_band_filled(band, band->md->iter.offset)) {
@@ -127,6 +131,8 @@ read_rq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 	struct ftl_rq_entry *entry = arg;
 	struct ftl_band *band = entry->io.band;
 	struct ftl_rq *rq = ftl_rq_from_entry(entry);
+
+	ftl_stats_bdev_io_completed(band->dev, FTL_STATS_TYPE_GC, bdev_io);
 
 	if (spdk_unlikely(!success)) {
 		rq->success = false;
@@ -183,7 +189,7 @@ ftl_band_rq_read(struct ftl_band *band, struct ftl_rq *rq)
 
 	ftl_band_rq_bdev_read(entry);
 
-	dev->io_activity_total += rq->num_blocks;
+	dev->stats.io_activity_total += rq->num_blocks;
 	band->queue_depth++;
 }
 
@@ -193,6 +199,8 @@ write_brq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 	struct ftl_basic_rq *brq = arg;
 	struct ftl_zone *zone = brq->io.zone;
 	struct ftl_band *band = brq->io.band;
+
+	ftl_stats_bdev_io_completed(band->dev, FTL_STATS_TYPE_MD_BASE, bdev_io);
 
 	brq->success = success;
 	if (spdk_likely(success)) {
@@ -258,7 +266,7 @@ ftl_band_basic_rq_write(struct ftl_band *band, struct ftl_basic_rq *brq)
 
 	ftl_band_brq_bdev_write(brq);
 
-	dev->io_activity_total += brq->num_blocks;
+	dev->stats.io_activity_total += brq->num_blocks;
 	band->queue_depth++;
 	ftl_band_iter_advance(band, brq->num_blocks);
 	if (ftl_band_filled(band, band->md->iter.offset)) {
@@ -272,6 +280,8 @@ read_brq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct ftl_basic_rq *brq = arg;
 	struct ftl_band *band = brq->io.band;
+
+	ftl_stats_bdev_io_completed(band->dev, FTL_STATS_TYPE_MD_BASE, bdev_io);
 
 	brq->success = success;
 
@@ -314,7 +324,7 @@ ftl_band_basic_rq_read(struct ftl_band *band, struct ftl_basic_rq *brq)
 	ftl_band_brq_bdev_read(brq);
 
 	brq->io.band->queue_depth++;
-	dev->io_activity_total += brq->num_blocks;
+	dev->stats.io_activity_total += brq->num_blocks;
 }
 
 static void
@@ -486,6 +496,8 @@ read_md_cb(struct ftl_basic_rq *brq)
 	if (band->md->lba_map_checksum && band->md->lba_map_checksum != band_map_crc) {
 		FTL_ERRLOG(dev, "GC error, inconsistent LBA map CRC\n");
 		success = false;
+
+		ftl_stats_crc_error(band->dev, FTL_STATS_TYPE_GC);
 	}
 	band->owner.ops_fn = NULL;
 	band->owner.priv = NULL;

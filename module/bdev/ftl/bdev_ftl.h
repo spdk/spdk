@@ -90,5 +90,7 @@ void	bdev_ftl_delete_bdev(const char *name, bool fast_shdn,
 			     spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 void bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks,
 	       spdk_ftl_fn cb_fn, void *cb_arg);
+int bdev_ftl_get_stats(const char *name, ftl_bdev_thread_fn fn,
+		       struct spdk_jsonrpc_request *request);
 
 #endif /* SPDK_BDEV_FTL_H */

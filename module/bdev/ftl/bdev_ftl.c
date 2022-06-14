@@ -528,6 +528,34 @@ bdev_ftl_unmap(const char *name, uint64_t lba, uint64_t num_blocks,
 	}
 }
 
+int
+bdev_ftl_get_stats(const char *name, ftl_bdev_thread_fn fn, struct spdk_jsonrpc_request *request)
+{
+	struct spdk_bdev *bdev;
+	struct ftl_bdev *ftl;
+	struct rpc_ftl_stats_ctx *ftl_stats;
+
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev == NULL || bdev->module != &g_ftl_if) {
+		SPDK_ERRLOG("Wrong device type\n");
+		return -ENODEV;
+	}
+
+	ftl_stats = calloc(1, sizeof(*ftl_stats));
+	if (!ftl_stats) {
+		SPDK_ERRLOG("Could not allocate ftl_stats\n");
+		return -ENOMEM;
+	}
+
+	ftl = bdev->ctxt;
+	ftl_stats->request = request;
+	ftl_stats->dev = ftl->dev;
+
+	spdk_thread_send_msg(ftl_stats->dev->core_thread, fn, ftl_stats);
+
+	return 0;
+}
+
 static void
 bdev_ftl_finish(void)
 {

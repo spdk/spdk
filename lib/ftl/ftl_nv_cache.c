@@ -638,6 +638,10 @@ compaction_process_read_cb(struct spdk_bdev_io *bdev_io,
 			   bool success, void *cb_arg)
 {
 	struct ftl_nv_cache_compaction *compaction = cb_arg;
+	struct spdk_ftl_dev *dev = SPDK_CONTAINEROF(compaction->nv_cache, struct spdk_ftl_dev,
+				   nv_cache);
+
+	ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_CMP, bdev_io);
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -1037,6 +1041,8 @@ static void
 ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct ftl_io *io = cb_arg;
+
+	ftl_stats_bdev_io_completed(io->dev, FTL_STATS_TYPE_USER, bdev_io);
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -1546,6 +1552,8 @@ write_brq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 	struct ftl_basic_rq *brq = arg;
 	struct ftl_nv_cache_chunk *chunk = brq->io.chunk;
 
+	ftl_stats_bdev_io_completed(brq->dev, FTL_STATS_TYPE_MD_NV_CACHE, bdev_io);
+
 	brq->success = success;
 	if (spdk_likely(success)) {
 		chunk_advance_blocks(chunk->nv_cache, chunk, brq->num_blocks);
@@ -1591,13 +1599,15 @@ ftl_chunk_basic_rq_write(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *
 	_ftl_chunk_basic_rq_write(brq);
 
 	chunk->md->write_pointer += brq->num_blocks;
-	dev->io_activity_total += brq->num_blocks;
+	dev->stats.io_activity_total += brq->num_blocks;
 }
 
 static void
 read_brq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct ftl_basic_rq *brq = arg;
+
+	ftl_stats_bdev_io_completed(brq->dev, FTL_STATS_TYPE_MD_NV_CACHE, bdev_io);
 
 	brq->success = success;
 
@@ -1620,7 +1630,7 @@ ftl_chunk_basic_rq_read(struct ftl_nv_cache_chunk *chunk, struct ftl_basic_rq *b
 				   brq->num_blocks, read_brq_end, brq);
 
 	if (spdk_likely(!rc)) {
-		dev->io_activity_total += brq->num_blocks;
+		dev->stats.io_activity_total += brq->num_blocks;
 	}
 
 	return rc;
@@ -1824,6 +1834,8 @@ read_open_chunk_cb(struct spdk_bdev_io *bdev_io,
 	uint64_t len = bdev_io->u.bdev.num_blocks;
 	ftl_addr addr = ftl_addr_to_cached(dev, cache_offset);
 	int rc;
+
+	ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_USER, bdev_io);
 
 	spdk_bdev_free_io(bdev_io);
 

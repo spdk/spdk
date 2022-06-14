@@ -260,3 +260,101 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("bdev_ftl_unmap", rpc_bdev_ftl_unmap, SPDK_RPC_RUNTIME)
+
+struct rpc_ftl_stats {
+	char *name;
+};
+
+static const struct spdk_json_object_decoder rpc_ftl_stats_decoders[] = {
+	{"name", offsetof(struct rpc_ftl_stats, name), spdk_json_decode_string},
+};
+
+static void _rpc_bdev_ftl_get_stats(void *cntx)
+{
+	struct rpc_ftl_stats_ctx *ftl_stats = cntx;
+	struct spdk_jsonrpc_request *request = ftl_stats->request;
+	struct spdk_ftl_dev *dev = ftl_stats->dev;
+	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", dev->name);
+
+	for (uint64_t i = 0; i < FTL_STATS_TYPE_MAX; i++) {
+		switch (i) {
+		case FTL_STATS_TYPE_USER:
+			spdk_json_write_named_object_begin(w, "user");
+			break;
+		case FTL_STATS_TYPE_CMP:
+			spdk_json_write_named_object_begin(w, "cmp");
+			break;
+		case FTL_STATS_TYPE_GC:
+			spdk_json_write_named_object_begin(w, "gc");
+			break;
+		case FTL_STATS_TYPE_MD_BASE:
+			spdk_json_write_named_object_begin(w, "md_base");
+			break;
+		case FTL_STATS_TYPE_MD_NV_CACHE:
+			spdk_json_write_named_object_begin(w, "md_nv_cache");
+			break;
+		case FTL_STATS_TYPE_L2P:
+			spdk_json_write_named_object_begin(w, "l2p");
+			break;
+		default:
+			assert(false);
+			continue;
+		}
+
+		spdk_json_write_named_object_begin(w, "read");
+		spdk_json_write_named_uint64(w, "ios", dev->stats.entries[i].read.ios);
+		spdk_json_write_named_uint64(w, "blocks", dev->stats.entries[i].read.blocks);
+		spdk_json_write_named_object_begin(w, "errors");
+		spdk_json_write_named_uint64(w, "media", dev->stats.entries[i].read.errors.media);
+		spdk_json_write_named_uint64(w, "crc", dev->stats.entries[i].read.errors.crc);
+		spdk_json_write_named_uint64(w, "other", dev->stats.entries[i].read.errors.other);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_named_object_begin(w, "write");
+		spdk_json_write_named_uint64(w, "ios", dev->stats.entries[i].write.ios);
+		spdk_json_write_named_uint64(w, "blocks", dev->stats.entries[i].write.blocks);
+		spdk_json_write_named_object_begin(w, "errors");
+		spdk_json_write_named_uint64(w, "media", dev->stats.entries[i].write.errors.media);
+		spdk_json_write_named_uint64(w, "other", dev->stats.entries[i].write.errors.other);
+		spdk_json_write_object_end(w);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+	free(cntx);
+}
+
+static void
+rpc_bdev_ftl_get_stats(struct spdk_jsonrpc_request *request,
+		    const struct spdk_json_val *params)
+{
+	struct rpc_ftl_stats attrs = {};
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_ftl_stats_decoders,
+					SPDK_COUNTOF(rpc_ftl_stats_decoders),
+					&attrs)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto invalid;
+	}
+
+	rc = bdev_ftl_get_stats(attrs.name, _rpc_bdev_ftl_get_stats, request);
+	if (rc) {
+		spdk_jsonrpc_send_bool_response(request, false);
+		goto invalid;
+	}
+
+invalid:
+	free(attrs.name);
+}
+
+SPDK_RPC_REGISTER("bdev_ftl_get_stats", rpc_bdev_ftl_get_stats, SPDK_RPC_RUNTIME)

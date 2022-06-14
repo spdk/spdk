@@ -79,6 +79,46 @@ struct ftl_reloc;
 extern void *g_ftl_zero_buf;
 extern void *g_ftl_tmp_buf;
 
+struct ftl_stats_error {
+	uint64_t media;
+	uint64_t crc;
+	uint64_t other;
+};
+
+struct ftl_stats_group {
+	uint64_t ios;
+	uint64_t blocks;
+	struct ftl_stats_error errors;
+};
+
+struct ftl_stats_entry {
+	struct ftl_stats_group read;
+	struct ftl_stats_group write;
+};
+
+enum ftl_stats_type {
+	FTL_STATS_TYPE_USER = 0,
+	FTL_STATS_TYPE_CMP,
+	FTL_STATS_TYPE_GC,
+	FTL_STATS_TYPE_MD_BASE,
+	FTL_STATS_TYPE_MD_NV_CACHE,
+	FTL_STATS_TYPE_L2P,
+	FTL_STATS_TYPE_MAX,
+};
+
+struct ftl_stats {
+	/* Number of limits applied */
+	uint64_t					limits[SPDK_FTL_LIMIT_MAX];
+
+	/* counters for poller busy, include
+	   1. nv cache read/write
+	   2. metadata read/write
+	   3. base bdev read/write */
+	uint64_t					io_activity_total;
+
+	struct ftl_stats_entry			entries[FTL_STATS_TYPE_MAX];
+};
+
 struct spdk_ftl_dev {
 	/* Device instance */
 	struct spdk_uuid			uuid;
@@ -135,11 +175,8 @@ struct spdk_ftl_dev {
 	/* Media management events pool */
 	struct spdk_mempool			*media_events_pool;
 
-	/* counters for poller busy, include
-	   1. nv cache read/write
-	   2. metadata read/write
-	   3. base bdev read/write */
-	uint64_t					io_activity_total;
+	/* Statistics */
+	struct ftl_stats			stats;
 
 	/* Array of bands */
 	struct ftl_band				*bands;
@@ -267,6 +304,11 @@ void ftl_set_unmap_map(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_bloc
 		       uint64_t seq_id);
 
 void ftl_recover_max_seq(struct spdk_ftl_dev *dev);
+
+void ftl_stats_bdev_io_completed(struct spdk_ftl_dev *dev, enum ftl_stats_type type,
+				 struct spdk_bdev_io *bdev_io);
+
+void ftl_stats_crc_error(struct spdk_ftl_dev *dev, enum ftl_stats_type type);
 
 int ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
 	      uint64_t lba, size_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg);

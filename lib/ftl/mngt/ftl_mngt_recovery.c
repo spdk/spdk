@@ -452,6 +452,7 @@ restore_band_l2p_cb(struct ftl_band *band, void *cntx, enum ftl_md_status status
 	if (FTL_BAND_STATE_CLOSED == band->md->state && band->md->lba_map_checksum &&
 	    band->md->lba_map_checksum != band_map_crc) {
 		FTL_ERRLOG(dev, "L2P band restore error, inconsistent LBA map CRC\n");
+		ftl_stats_crc_error(dev, FTL_STATS_TYPE_MD_BASE);
 		rc = -EINVAL;
 		goto cleanup;
 	}
@@ -543,6 +544,7 @@ restore_chunk_l2p_cb(struct ftl_nv_cache_chunk *chunk, void *cntx)
 	chunk_map_crc = spdk_crc32c_update(chunk->lba_map.dma_buf,
 			ftl_nv_cache_chunk_tail_md_num_blocks(chunk->nv_cache) * FTL_BLOCK_SIZE, 0);
 	if (chunk->md->lba_map_checksum && chunk->md->lba_map_checksum != chunk_map_crc) {
+		ftl_stats_crc_error(dev, FTL_STATS_TYPE_MD_NV_CACHE);
 		return -1;
 	}
 

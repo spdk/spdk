@@ -420,6 +420,7 @@ ftl_mngt_p2l_ckpt_restore(struct ftl_band *band, uint32_t md_region, uint64_t se
 		if (page_md_buf->p2l_ckpt.p2l_checksum &&
 				page_md_buf->p2l_ckpt.p2l_checksum != spdk_crc32c_update(page,
 				       	FTL_NUM_LBA_IN_BLOCK * sizeof(struct ftl_lba_map_entry), 0)) {
+			ftl_stats_crc_error(band->dev, FTL_STATS_TYPE_MD_NV_CACHE);
 			return -EINVAL;
 		}
 
