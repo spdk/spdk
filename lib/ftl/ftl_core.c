@@ -53,8 +53,24 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 void
 ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 {
+	struct ftl_band *band;
+	struct ftl_p2l_map *p2l_map;
+
 	if (ftl_addr_in_nvc(dev, addr)) {
 		return;
+	}
+
+	band = ftl_band_from_addr(dev, addr);
+	p2l_map = &band->p2l_map;
+
+	/* TODO: fix case when the same address is invalidated from multiple sources */
+	assert(p2l_map->num_valid > 0);
+	p2l_map->num_valid--;
+
+	/* Invalidate open/full band p2l_map entry to keep p2l and l2p
+	 * consistency when band is going to close state */
+	if (FTL_BAND_STATE_OPEN == band->md->state || FTL_BAND_STATE_FULL == band->md->state) {
+		p2l_map->band_map[ftl_band_block_offset_from_addr(band, addr)] = FTL_LBA_INVALID;
 	}
 }
 

@@ -7,6 +7,7 @@
 #include "ftl_utils.h"
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
+#include "ftl_band.h"
 #include "ftl_internal.h"
 #include "ftl_nv_cache.h"
 #include "ftl_debug.h"
@@ -19,6 +20,66 @@ ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	} else {
 		ftl_mngt_fail_step(mngt);
 	}
+}
+
+static int
+init_p2l_map_pool(struct spdk_ftl_dev *dev)
+{
+	size_t p2l_pool_el_blks = spdk_divide_round_up(ftl_p2l_map_pool_elem_size(dev), FTL_BLOCK_SIZE);
+
+	dev->p2l_pool = ftl_mempool_create(P2L_MEMPOOL_SIZE,
+					   p2l_pool_el_blks * FTL_BLOCK_SIZE,
+					   FTL_BLOCK_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
+	if (!dev->p2l_pool) {
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+static int
+init_band_md_pool(struct spdk_ftl_dev *dev)
+{
+	dev->band_md_pool = ftl_mempool_create(P2L_MEMPOOL_SIZE,
+					       sizeof(struct ftl_band_md),
+					       FTL_BLOCK_SIZE,
+					       SPDK_ENV_SOCKET_ID_ANY);
+	if (!dev->band_md_pool) {
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+void
+ftl_mngt_init_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	if (init_p2l_map_pool(dev)) {
+		ftl_mngt_fail_step(mngt);
+	}
+
+	if (init_band_md_pool(dev)) {
+		ftl_mngt_fail_step(mngt);
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+void
+ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	if (dev->p2l_pool) {
+		ftl_mempool_destroy(dev->p2l_pool);
+		dev->p2l_pool = NULL;
+	}
+
+	if (dev->band_md_pool) {
+		ftl_mempool_destroy(dev->band_md_pool);
+		dev->band_md_pool = NULL;
+	}
+
+	ftl_mngt_next_step(mngt);
 }
 
 void

@@ -166,6 +166,7 @@ ftl_l2p_update_base(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr new_addr, f
 		/* DO NOT CHANGE ORDER - START (need to set L2P (and valid bits), before invalidating old ones,
 		 * due to dirty shutdown from shm recovery - it's ok to have too many bits set, but not ok to
 		 * have too many cleared) */
+		ftl_band_set_addr(ftl_band_from_addr(dev, new_addr), lba, new_addr);
 		ftl_l2p_set(dev, lba, new_addr);
 		/* DO NOT CHANGE ORDER - END */
 	} else {

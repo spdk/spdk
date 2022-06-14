@@ -29,6 +29,36 @@ ftl_band_filled(struct ftl_band *band, size_t offset)
 	return offset == ftl_band_tail_md_offset(band);
 }
 
+static void
+ftl_band_free_p2l_map(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+
+	assert(band->md->state == FTL_BAND_STATE_CLOSED ||
+	       band->md->state == FTL_BAND_STATE_FREE);
+	assert(p2l_map->ref_cnt == 0);
+	assert(p2l_map->band_map != NULL);
+
+	ftl_mempool_put(dev->p2l_pool, p2l_map->band_map);
+	p2l_map->band_map = NULL;
+}
+
+
+static void
+ftl_band_free_md_entry(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+
+	assert(band->md->state == FTL_BAND_STATE_CLOSED ||
+	       band->md->state == FTL_BAND_STATE_FREE);
+	assert(p2l_map->band_dma_md != NULL);
+
+	ftl_mempool_put(dev->band_md_pool, p2l_map->band_dma_md);
+	p2l_map->band_dma_md = NULL;
+}
+
 ftl_addr
 ftl_band_tail_md_addr(struct ftl_band *band)
 {
@@ -54,6 +84,18 @@ ftl_band_set_type(struct ftl_band *band, enum ftl_band_type type)
 		assert(false);
 		break;
 	}
+}
+
+void
+ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr)
+{
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+	uint64_t offset;
+
+	offset = ftl_band_block_offset_from_addr(band, addr);
+
+	p2l_map->band_map[offset] = lba;
+	p2l_map->num_valid++;
 }
 
 size_t
@@ -140,8 +182,92 @@ ftl_band_next_addr(struct ftl_band *band, ftl_addr addr, size_t offset)
 	return ftl_band_addr_from_block_offset(band, block_off + offset);
 }
 
+void
+ftl_band_acquire_p2l_map(struct ftl_band *band)
+{
+	assert(band->p2l_map.band_map != NULL);
+	band->p2l_map.ref_cnt++;
+}
+
+static int
+ftl_band_alloc_md_entry(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+	struct ftl_layout_region *region = &dev->layout.region[FTL_LAYOUT_REGION_TYPE_BAND_MD];
+
+	p2l_map->band_dma_md = ftl_mempool_get(dev->band_md_pool);
+
+	if (!p2l_map->band_dma_md) {
+		return -1;
+	}
+
+	memset(p2l_map->band_dma_md, 0, region->entry_size * FTL_BLOCK_SIZE);
+	return 0;
+}
+
+int
+ftl_band_alloc_p2l_map(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+
+	assert(p2l_map->ref_cnt == 0);
+	assert(p2l_map->band_map == NULL);
+
+	p2l_map->band_map = ftl_mempool_get(dev->p2l_pool);
+	if (!p2l_map->band_map) {
+		return -1;
+	}
+
+	if (ftl_band_alloc_md_entry(band)) {
+		ftl_band_free_p2l_map(band);
+		return -1;
+	}
+
+	/* Set the P2L to FTL_LBA_INVALID */
+	memset(p2l_map->band_map, -1, FTL_BLOCK_SIZE * ftl_p2l_map_num_blocks(band->dev));
+
+	ftl_band_acquire_p2l_map(band);
+	return 0;
+}
+
+void
+ftl_band_release_p2l_map(struct ftl_band *band)
+{
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+
+	assert(p2l_map->band_map != NULL);
+	assert(p2l_map->ref_cnt > 0);
+	p2l_map->ref_cnt--;
+
+	if (p2l_map->ref_cnt == 0) {
+		ftl_band_free_p2l_map(band);
+		ftl_band_free_md_entry(band);
+	}
+}
+
 ftl_addr
 ftl_band_p2l_map_addr(struct ftl_band *band)
 {
 	return band->tail_md_addr;
+}
+
+int
+ftl_band_write_prep(struct ftl_band *band)
+{
+	if (ftl_band_alloc_p2l_map(band)) {
+		return -1;
+	}
+
+	ftl_band_iter_init(band);
+
+	return 0;
+}
+
+size_t
+ftl_p2l_map_pool_elem_size(struct spdk_ftl_dev *dev)
+{
+	/* Map pool element holds the whole tail md */
+	return ftl_tail_md_num_blocks(dev) * FTL_BLOCK_SIZE;
 }

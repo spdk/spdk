@@ -26,7 +26,6 @@
 /*
  * We need to reserve at least 2 buffers for band close / open sequence
  * alone, plus additional (8) buffers for handling relocations.
- *
  */
 #define P2L_MEMPOOL_SIZE (2 + 8)
 
@@ -71,6 +70,12 @@ struct spdk_ftl_dev {
 
 	/* Non-volatile write buffer cache */
 	struct ftl_nv_cache		nv_cache;
+
+	/* P2L map memory pool */
+	struct ftl_mempool		*p2l_pool;
+
+	/* Band md memory pool */
+	struct ftl_mempool		*band_md_pool;
 
 	/* counters for poller busy, include
 	   1. nv cache read/write

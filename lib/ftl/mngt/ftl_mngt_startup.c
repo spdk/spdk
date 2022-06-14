@@ -55,6 +55,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_superblock_deinit
 		},
 		{
+			.name = "Initialize memory pools",
+			.action = ftl_mngt_init_mem_pools,
+			.cleanup = ftl_mngt_deinit_mem_pools
+		},
+		{
 			.name = "Register IO device",
 			.action = ftl_mngt_register_io_device,
 			.cleanup = ftl_mngt_unregister_io_device
