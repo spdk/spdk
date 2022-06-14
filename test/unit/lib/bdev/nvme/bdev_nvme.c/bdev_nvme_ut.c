@@ -426,6 +426,7 @@ ut_attach_ctrlr(const struct spdk_nvme_transport_id *trid, uint32_t num_ns,
 		}
 
 		ctrlr->cdata.nn = num_ns;
+		ctrlr->cdata.mnan = num_ns;
 		ctrlr->cdata.nanagrpid = num_ns;
 	}
 
