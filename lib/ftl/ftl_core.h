@@ -167,6 +167,9 @@ struct spdk_ftl_dev {
 	/* Transfer unit size */
 	size_t						xfer_size;
 
+	/* Current user write limit */
+	int							limit;
+
 	/* Inflight IO operations */
 	uint32_t					num_inflight;
 
@@ -195,6 +198,10 @@ struct ftl_media_event {
 	/* Media event */
 	struct spdk_bdev_media_event	event;
 };
+
+void ftl_apply_limits(struct spdk_ftl_dev *dev);
+
+int ftl_current_limit(const struct spdk_ftl_dev *dev);
 
 void ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
 

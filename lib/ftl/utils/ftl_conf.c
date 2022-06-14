@@ -126,6 +126,7 @@ int ftl_conf_init_dev(struct spdk_ftl_dev *dev,
 	dev->name = strdup(opts->name);
 	dev->uuid = opts->uuid;
 	dev->conf.mode = opts->mode;
+	dev->limit = SPDK_FTL_LIMIT_MAX;
 
 	free(dev->conf.base_bdev);
 	dev->conf.base_bdev = strdup(opts->base_bdev);

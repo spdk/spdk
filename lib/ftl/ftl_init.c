@@ -59,6 +59,14 @@ struct ftl_dev_init_ctx {
 };
 
 static const struct spdk_ftl_conf	g_default_conf = {
+        /* 1 free bands  / 0 % host writes */
+        .limits[SPDK_FTL_LIMIT_CRIT]  = 2,
+        /* 3 free bands / 12 % host writes */
+        .limits[SPDK_FTL_LIMIT_HIGH]  = 3,
+        /* 7 free bands / 45 % host writes */
+        .limits[SPDK_FTL_LIMIT_LOW]   = 4,
+        /* 10 free bands / 75 % host writes - defrag starts running */
+        .limits[SPDK_FTL_LIMIT_START] = 5,
 	/* 20% spare blocks */
 	.lba_rsvd = 20,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */

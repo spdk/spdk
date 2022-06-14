@@ -99,6 +99,13 @@ ftl_get_io_channel(const struct spdk_ftl_dev *dev)
 	return NULL;
 }
 
+static size_t
+ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
+{
+	assert(type < SPDK_FTL_LIMIT_MAX);
+	return dev->conf.limits[type];
+}
+
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
@@ -128,6 +135,25 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 }
 
 void
+ftl_apply_limits(struct spdk_ftl_dev *dev)
+{
+	size_t limit;
+	int i;
+
+	/*  Clear existing limit */
+	dev->limit = SPDK_FTL_LIMIT_MAX;
+
+	for (i = SPDK_FTL_LIMIT_CRIT; i < SPDK_FTL_LIMIT_MAX; ++i) {
+		limit = ftl_get_limit(dev, i);
+
+		if (dev->num_free <= limit) {
+			dev->limit = i;
+			break;
+		}
+	}
+}
+
+void
 ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 {
 	struct ftl_band *band;
@@ -149,6 +175,12 @@ ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 	if (FTL_BAND_STATE_OPEN == band->md->state || FTL_BAND_STATE_FULL == band->md->state) {
 		lba_map->band_map[ftl_band_block_offset_from_addr(band, addr)] = FTL_LBA_INVALID;
 	}
+}
+
+int
+ftl_current_limit(const struct spdk_ftl_dev *dev)
+{
+	return dev->limit;
 }
 
 void

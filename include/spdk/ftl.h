@@ -58,6 +58,15 @@ void spdk_ftl_fini(void);
 struct spdk_ftl_dev;
 struct ftl_io;
 
+/* Limit thresholds */
+enum {
+	SPDK_FTL_LIMIT_CRIT,
+	SPDK_FTL_LIMIT_HIGH,
+	SPDK_FTL_LIMIT_LOW,
+	SPDK_FTL_LIMIT_START,
+	SPDK_FTL_LIMIT_MAX
+};
+
 struct spdk_ftl_conf {
 	/* Number of reserved addresses not exposed to the user */
 	size_t					lba_rsvd;
@@ -67,6 +76,9 @@ struct spdk_ftl_conf {
 
 	/* IO pool size per user thread */
 	size_t					user_io_pool_size;
+
+	/* User writes limits */
+	size_t			                limits[SPDK_FTL_LIMIT_MAX];
 
 	/* Use zone devices, use append instead of write if applicable */
 	bool					use_append;
