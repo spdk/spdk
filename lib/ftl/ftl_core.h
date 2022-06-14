@@ -101,6 +101,9 @@ struct spdk_ftl_dev {
 	/* Underlying device IO channel */
 	struct spdk_io_channel		*base_ioch;
 
+	/* Media management events pool */
+	struct spdk_mempool			*media_events_pool;
+
 	/* counters for poller busy, include
 	   1. nv cache read/write
 	   2. metadata read/write
@@ -150,7 +153,16 @@ struct spdk_ftl_dev {
 	TAILQ_HEAD(, ftl_io)		wr_sq;
 };
 
+struct ftl_media_event {
+	/* Owner */
+	struct spdk_ftl_dev				*dev;
+	/* Media event */
+	struct spdk_bdev_media_event	event;
+};
+
 int ftl_task_core(void *ctx);
+
+void ftl_get_media_events(struct spdk_ftl_dev *dev);
 
 int ftl_io_channel_poll(void *arg);
 

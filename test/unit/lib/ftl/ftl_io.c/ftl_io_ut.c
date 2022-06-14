@@ -84,6 +84,9 @@ DEFINE_STUB(spdk_bdev_writev_blocks, int, (struct spdk_bdev_desc *desc, struct s
 DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 1024);
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t, (const struct spdk_bdev *bdev), 4096);
+DEFINE_STUB(spdk_bdev_get_media_events, size_t,
+	    (struct spdk_bdev_desc *bdev_desc, struct spdk_bdev_media_event *events,
+	     size_t max_events), 0);
 DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
 DEFINE_STUB(spdk_bdev_write_zeroes_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,

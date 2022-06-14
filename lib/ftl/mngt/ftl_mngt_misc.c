@@ -47,6 +47,48 @@ void ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	}
 }
 
+static int init_media_events_pool(struct spdk_ftl_dev *dev)
+{
+	char pool_name[128];
+	int rc;
+
+	rc = snprintf(pool_name, sizeof(pool_name), "ftl-media-%p", dev);
+	if (rc < 0 || rc >= (int)sizeof(pool_name)) {
+		FTL_ERRLOG(dev, "Failed to create media pool name\n");
+		return -1;
+	}
+
+	dev->media_events_pool = spdk_mempool_create(pool_name, 1024,
+				 sizeof(struct ftl_media_event),
+				 SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+				 SPDK_ENV_SOCKET_ID_ANY);
+	if (!dev->media_events_pool) {
+		FTL_ERRLOG(dev, "Failed to create media events pool\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+void ftl_mngt_init_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (init_media_events_pool(dev)) {
+		ftl_mngt_fail_step(mngt);
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (dev->media_events_pool) {
+		spdk_mempool_free(dev->media_events_pool);
+		dev->media_events_pool = NULL;
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
 static void user_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 {
 	struct ftl_mngt *mngt = md->owner.cb_ctx;

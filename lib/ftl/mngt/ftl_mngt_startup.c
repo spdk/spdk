@@ -73,6 +73,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 		},
 #endif
 		{
+			.name = "Initialize memory pools",
+			.action = ftl_mngt_init_mem_pools,
+			.cleanup = ftl_mngt_deinit_mem_pools
+		},
+		{
 			.name = "Initialize IO channel",
 			.action = ftl_mngt_init_io_channel,
 			.cleanup = ftl_mngt_deinit_io_channel

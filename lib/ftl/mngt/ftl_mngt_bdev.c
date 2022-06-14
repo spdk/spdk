@@ -48,9 +48,15 @@ static void base_bdev_event_cb(enum spdk_bdev_event_type type,
 			       struct spdk_bdev *bdev,
 			       void *event_ctx)
 {
+	struct spdk_ftl_dev *dev = event_ctx;
+
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
 		assert(0);
+		break;
+	case SPDK_BDEV_EVENT_MEDIA_MANAGEMENT:
+		assert(bdev == spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
+		ftl_get_media_events(dev);
 		break;
 	default:
 		break;

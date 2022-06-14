@@ -52,6 +52,10 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_close_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_init_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_init_io_channel(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_deinit_io_channel(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
