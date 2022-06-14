@@ -3898,7 +3898,7 @@ nvme_ctrlr_init_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + cdata->nanagrpid *
-			    sizeof(struct spdk_nvme_ana_group_descriptor) + cdata->nn *
+			    sizeof(struct spdk_nvme_ana_group_descriptor) + cdata->mnan *
 			    sizeof(uint32_t);
 
 	nvme_ctrlr->ana_log_page = spdk_zmalloc(ana_log_page_size, 64, NULL,
