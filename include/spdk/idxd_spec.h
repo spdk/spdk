@@ -41,6 +41,8 @@ extern "C" {
 #define IAA_COMP_FLUSH_OUTPUT		(1 << 1)
 #define IAA_COMP_APPEND_EOB		(1 << 2)
 #define IAA_COMP_FLAGS			(IAA_COMP_FLUSH_OUTPUT | IAA_COMP_APPEND_EOB)
+#define IAA_DECOMP_ENABLE		(1 << 0)
+#define IAA_DECOMP_FLAGS		(IAA_DECOMP_ENABLE)
 
 /*
  * IDXD is a family of devices, DSA and IAA.

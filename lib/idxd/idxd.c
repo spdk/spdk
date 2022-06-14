@@ -1205,15 +1205,12 @@ _idxd_submit_decompress_single(struct spdk_idxd_io_channel *chan, void *dst, con
 	}
 
 	/* Command specific. */
-	desc->opcode = IDXD_OPCODE_COMPRESS;
+	desc->opcode = IDXD_OPCODE_DECOMPRESS;
 	desc->src1_addr = src_addr;
 	desc->dst_addr = dst_addr;
 	desc->src1_size = nbytes;
 	desc->iaa.max_dst_size = nbytes_dst;
-	desc->iaa.src2_size = sizeof(struct iaa_aecs);
-	desc->iaa.src2_addr = (uint64_t)chan->idxd->aecs;
-	desc->flags |= IAA_FLAG_RD_SRC2_AECS;
-	desc->compr_flags = IAA_COMP_FLAGS;
+	desc->decompr_flags = IAA_DECOMP_FLAGS;
 
 	_submit_to_hw(chan, op);
 	return 0;
