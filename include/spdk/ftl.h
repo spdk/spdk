@@ -18,6 +18,15 @@ extern "C" {
 struct spdk_ftl_dev;
 struct ftl_io;
 
+/* Limit thresholds */
+enum {
+	SPDK_FTL_LIMIT_CRIT,
+	SPDK_FTL_LIMIT_HIGH,
+	SPDK_FTL_LIMIT_LOW,
+	SPDK_FTL_LIMIT_START,
+	SPDK_FTL_LIMIT_MAX
+};
+
 struct spdk_ftl_conf {
 	/* Device's name */
 	char					*name;
@@ -33,6 +42,9 @@ struct spdk_ftl_conf {
 
 	/* IO pool size per user thread */
 	size_t					user_io_pool_size;
+
+	/* User writes limits */
+	size_t			                limits[SPDK_FTL_LIMIT_MAX];
 
 	/* FTL startup mode mask, see spdk_ftl_mode enum for possible values */
 	uint32_t				mode;

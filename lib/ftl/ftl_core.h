@@ -113,6 +113,9 @@ struct spdk_ftl_dev {
 	/* Transfer unit size */
 	uint64_t			xfer_size;
 
+	/* Current user write limit */
+	int				limit;
+
 	/* Inflight IO operations */
 	uint32_t			num_inflight;
 
@@ -136,6 +139,8 @@ struct spdk_ftl_dev {
 	/* Write submission queue */
 	TAILQ_HEAD(, ftl_io)		wr_sq;
 };
+
+void ftl_apply_limits(struct spdk_ftl_dev *dev);
 
 void ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
 

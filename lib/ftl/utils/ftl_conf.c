@@ -8,6 +8,14 @@
 #include "ftl_core.h"
 
 static const struct spdk_ftl_conf g_default_conf = {
+	/* 2 free bands - compaction is blocked, gc only */
+	.limits[SPDK_FTL_LIMIT_CRIT]	= 2,
+	/* 3 free bands */
+	.limits[SPDK_FTL_LIMIT_HIGH]	= 3,
+	/* 4 free bands */
+	.limits[SPDK_FTL_LIMIT_LOW]	= 4,
+	/* 5 free bands - gc starts running */
+	.limits[SPDK_FTL_LIMIT_START]	= 5,
 	/* 20% spare blocks */
 	.overprovisioning = 20,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
@@ -105,6 +113,7 @@ ftl_conf_init_dev(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf)
 		return rc;
 	}
 
+	dev->limit = SPDK_FTL_LIMIT_MAX;
 	return 0;
 }
 

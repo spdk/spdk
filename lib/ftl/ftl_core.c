@@ -26,6 +26,13 @@ spdk_ftl_io_size(void)
 	return sizeof(struct ftl_io);
 }
 
+static size_t
+ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
+{
+	assert(type < SPDK_FTL_LIMIT_MAX);
+	return dev->conf.limits[type];
+}
+
 static bool
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
@@ -48,6 +55,25 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 	}
 
 	return true;
+}
+
+void
+ftl_apply_limits(struct spdk_ftl_dev *dev)
+{
+	size_t limit;
+	int i;
+
+	/*  Clear existing limit */
+	dev->limit = SPDK_FTL_LIMIT_MAX;
+
+	for (i = SPDK_FTL_LIMIT_CRIT; i < SPDK_FTL_LIMIT_MAX; ++i) {
+		limit = ftl_get_limit(dev, i);
+
+		if (dev->num_free <= limit) {
+			dev->limit = i;
+			break;
+		}
+	}
 }
 
 void
