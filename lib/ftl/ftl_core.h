@@ -21,6 +21,13 @@
 #include "ftl_layout.h"
 #include "utils/ftl_log.h"
 
+/* When using VSS on nvcache, FTL sometimes doesn't require the contents of metadata.
+ * Some devices have bugs when sending a NULL pointer as part of metadata when namespace
+ * is formatted with VSS. This buffer is passed to such calls to avoid the bug. */
+#define FTL_ZERO_BUFFER_SIZE 0x100000
+extern void *g_ftl_write_buf;
+extern void *g_ftl_read_buf;
+
 struct spdk_ftl_dev {
 	/* Configuration */
 	struct spdk_ftl_conf		conf;

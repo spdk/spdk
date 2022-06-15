@@ -43,7 +43,7 @@ ftl_nv_cache_bdev_read_blocks_with_md(struct spdk_ftl_dev *dev,
 				      uint64_t offset_blocks, uint64_t num_blocks,
 				      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return spdk_bdev_read_blocks_with_md(desc, ch, buf, md,
+	return spdk_bdev_read_blocks_with_md(desc, ch, buf, md ? : g_ftl_read_buf,
 					     offset_blocks, num_blocks,
 					     cb, cb_arg);
 }
@@ -56,7 +56,7 @@ ftl_nv_cache_bdev_write_blocks_with_md(struct spdk_ftl_dev *dev,
 				       uint64_t offset_blocks, uint64_t num_blocks,
 				       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return spdk_bdev_write_blocks_with_md(desc, ch, buf, md,
+	return spdk_bdev_write_blocks_with_md(desc, ch, buf, md ? : g_ftl_write_buf,
 					      offset_blocks, num_blocks,
 					      cb, cb_arg);
 }

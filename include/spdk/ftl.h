@@ -65,6 +65,18 @@ typedef void (*spdk_ftl_fn)(void *cb_arg, int status);
 typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *dev, void *cb_arg, int status);
 
 /**
+ * Initializes the FTL library.
+ *
+ * @return 0 on success, negative errno otherwise.
+ */
+int spdk_ftl_init(void);
+
+/**
+ * Deinitializes the FTL library.
+ */
+void spdk_ftl_fini(void);
+
+/**
  * Initialize the FTL on the given pair of bdevs - base and cache bdev.
  * Upon receiving a successful completion callback user is free to use I/O calls.
  *

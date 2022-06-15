@@ -36,6 +36,7 @@ struct ftl_deferred_init {
 static LIST_HEAD(, ftl_deferred_init)	g_deferred_init = LIST_HEAD_INITIALIZER(g_deferred_init);
 
 static int bdev_ftl_initialize(void);
+static void bdev_ftl_finish(void);
 static void bdev_ftl_examine(struct spdk_bdev *bdev);
 
 static int
@@ -47,6 +48,7 @@ bdev_ftl_get_ctx_size(void)
 static struct spdk_bdev_module g_ftl_if = {
 	.name		= "ftl",
 	.module_init	= bdev_ftl_initialize,
+	.module_fini	= bdev_ftl_finish,
 	.examine_disk	= bdev_ftl_examine,
 	.get_ctx_size	= bdev_ftl_get_ctx_size,
 };
@@ -370,7 +372,7 @@ error:
 static int
 bdev_ftl_initialize(void)
 {
-	return 0;
+	return spdk_ftl_init();
 }
 
 void
@@ -382,6 +384,12 @@ bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_a
 	if (rc) {
 		cb_fn(cb_arg, rc);
 	}
+}
+
+static void
+bdev_ftl_finish(void)
+{
+	spdk_ftl_fini();
 }
 
 static void
