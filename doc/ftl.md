@@ -68,41 +68,32 @@ is being written. Then the band moves to the `OPEN` state and actual user data c
 band. Once the whole available space is filled, tail metadata is written and the band transitions to
 `CLOSING` state. When that finishes the band becomes `CLOSED`.
 
-### Ring write buffer {#ftl_rwb}
+### Non volatile cache {#ftl_nvcache}
 
-- Shorthand: RWB
+- Shorthand: nvcache
 
-Because the smallest write size the SSD may support can be a multiple of block size, in order to
-support writes to a single block, the data needs to be buffered. The write buffer is the solution to
-this problem. It consists of a number of pre-allocated buffers called batches, each of size allowing
-for a single transfer to the SSD. A single batch is divided into block-sized buffer entries.
-
+Nvcache is a bdev that is used for buffering user writes and storing varius metadata.
+Nvcache data space is divided into chunks. Chunks are written in sequential manner.
+When number of free chunks is below assigned treshold data from fully written chunks
+is moved to base_bdev. This process is called chunk compaction.
 ```text
-                 write buffer
-    +-----------------------------------+
-    |batch 1                            |
-    |   +-----------------------------+ |
-    |   |rwb    |rwb    | ... |rwb    | |
-    |   |entry 1|entry 2|     |entry n| |
-    |   +-----------------------------+ |
-    +-----------------------------------+
-    | ...                               |
-    +-----------------------------------+
-    |batch m                            |
-    |   +-----------------------------+ |
-    |   |rwb    |rwb    | ... |rwb    | |
-    |   |entry 1|entry 2|     |entry n| |
-    |   +-----------------------------+ |
-    +-----------------------------------+
+                      nvcache
+    +-----------------------------------------+
+    |chunk 1                           	      |
+    |   +--------------------------------- +  |
+    |   |blk 1 + md| blk 2 + md| blk n + md|  |
+    |   +----------------------------------|  |
+    +-----------------------------------------+
+    | ...                                     |
+    +-----------------------------------------+
+    +-----------------------------------------+
+    |chunk N                           	      |
+    |   +--------------------------------- +  |
+    |   |blk 1 + md| blk 2 + md| blk n + md|  |
+    |   +----------------------------------|  |
+    +-----------------------------------------+
+
 ```
-
-When a write is scheduled, it needs to acquire an entry for each of its blocks and copy the data
-onto this buffer. Once all blocks are copied, the write can be signalled as completed to the user.
-In the meantime, the `rwb` is polled for filled batches and, if one is found, it's sent to the SSD.
-After that operation is completed the whole batch can be freed. For the whole time the data is in
-the `rwb`, the L2P points at the buffer entry instead of a location on the SSD. This allows for
-servicing read requests from the buffer.
-
 ### Defragmentation and relocation {#ftl_reloc}
 
 - Shorthand: defrag, reloc
@@ -156,29 +147,8 @@ Both interfaces require the same arguments which are described by the `--help` o
 
 - bdev's name
 - base bdev's name (base bdev must implement bdev_zone API)
+- cache bdev's name (cache bdev must support VSS DIX mode - could be emulated by providing SPDK_FTL_VSS_EMU=1 flag to make)
 - UUID of the FTL device (if the FTL is to be restored from the SSD)
-
-## Configuring SPDK {#ftl_spdk_config}
-
-To verify that the drive is emulated correctly, one can check the output of the NVMe identify app
-(assuming that `scripts/setup.sh` was called before and the driver has been changed for that
-device):
-
-```bash
-$ build/examples/identify
-=====================================================
-NVMe Controller at 0000:00:0a.0 [1d1d:1f1f]
-=====================================================
-Controller Capabilities/Features
-================================
-Vendor ID:                             1d1d
-Subsystem Vendor ID:                   1af4
-Serial Number:                         deadbeef
-Model Number:                          QEMU NVMe Ctrl
-
-... other info ...
-
-```
 
 ## FTL usage with zone block bdev {#ftl_zone_block}
 
@@ -189,17 +159,21 @@ In order to create FTL on top of a regular bdev:
 1) Create regular bdev e.g. `bdev_nvme`, `bdev_null`, `bdev_malloc`
 2) Create zone block bdev on top of a regular bdev created in step 1 (user could specify zone capacity
 and optimal number of open zones)
-3) Create FTL bdev on top of bdev created in step 2
+3) Create second regular bdev for nvcache
+3) Create FTL bdev on top of bdev created in step 2 and step 3
 
 Example:
 ```
 $ scripts/rpc.py bdev_nvme_attach_controller -b nvme0 -a 00:05.0 -t pcie
 	nvme0n1
 
+$ scripts/rpc.py bdev_nvme_attach_controller -b nvme1 -a 00:06.0 -t pcie
+	nvme1n1
+
 $ scripts/rpc.py bdev_zone_block_create -b zone1 -n nvme0n1 -z 4096 -o 32
 	zone1
 
-$ scripts/rpc.py bdev_ftl_create -b ftl0 -d zone1
+$ scripts/rpc.py bdev_ftl_create -b ftl0 -d zone1 -c nvme1n1
 {
 	"name": "ftl0",
 	"uuid": "3b469565-1fa5-4bfb-8341-747ec9f3a9b9"
