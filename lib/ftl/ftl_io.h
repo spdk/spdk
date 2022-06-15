@@ -184,6 +184,146 @@ struct ftl_io {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 };
 
+struct ftl_rq_entry {
+	/* Data payload of single entry (block) */
+	void *io_payload;
+
+	void *io_md;
+
+	/*
+	 * Physical address of that particular block.  Valid once the data has
+	 * been written out.
+	 */
+	ftl_addr addr;
+
+	/* Logical block address */
+	uint64_t lba;
+
+	/* Index of this entry within FTL request */
+	const uint64_t index;
+
+	struct {
+		void *priv;
+	} owner;
+
+	struct {
+		uint64_t offset_blocks;
+		uint64_t num_blocks;
+		struct spdk_bdev_io_wait_entry wait_entry;
+	} bdev_io;
+};
+
+struct ftl_rq {
+	struct spdk_ftl_dev *dev;
+
+	/* Request queue entry */
+	TAILQ_ENTRY(ftl_rq) qentry;
+
+	/* Number of block within the request */
+	uint64_t num_blocks;
+
+	/* Extended metadata for IO. Its size is io_md_size * num_blocks */
+	void *io_md;
+
+	/* Size of extended metadata size for one entry */
+	uint64_t io_md_size;
+
+	/* Size of IO vector array */
+	uint64_t io_vec_size;
+
+	/* Array of IO vectors, its size equals to num_blocks */
+	struct iovec *io_vec;
+
+	/* Payload for IO */
+	void *io_payload;
+
+	/* Request result status */
+	bool success;
+
+	/* Fields for owner of this request */
+	struct {
+		/* End request callback */
+		void (*cb)(struct ftl_rq *rq);
+
+		/* Owner context */
+		void *priv;
+
+		/* This is user IO */
+		bool uio;
+	} owner;
+
+	/* Iterator fields for processing state of the request */
+	struct {
+		uint32_t idx;
+
+		uint32_t count;
+
+		/* Queue depth on this request */
+		uint32_t qd;
+
+		uint32_t remaining;
+		int status;
+	} iter;
+
+	/* Private fields for issuing IO */
+	struct {
+		/* Request physical address, on IO completion set for append device */
+		ftl_addr addr;
+
+		/* Zone to which IO is issued */
+		struct ftl_zone *zone;
+
+		struct spdk_bdev_io_wait_entry bdev_io_wait;
+	} io;
+
+	/* For writing metadata */
+	struct ftl_md_io_entry_ctx md_persist_entry_ctx;
+
+	struct ftl_rq_entry entries[];
+};
+
+struct ftl_basic_rq {
+	struct spdk_ftl_dev *dev;
+
+	/* Request queue entry */
+	TAILQ_ENTRY(ftl_basic_rq) qentry;
+
+	/* Number of block within the request */
+	uint64_t num_blocks;
+
+	/* Payload for IO */
+	void *io_payload;
+
+	/* Request result status */
+	bool success;
+
+	/* Fields for owner of this request */
+	struct {
+		/* End request callback */
+		void (*cb)(struct ftl_basic_rq *brq);
+
+		/* Owner context */
+		void *priv;
+
+		/* This is user IO */
+		bool uio;
+	} owner;
+
+	/* Private fields for issuing IO */
+	struct {
+		/* Request physical address, on IO completion set for append device */
+		ftl_addr addr;
+
+		/* Zone to which IO is issued */
+		struct ftl_zone *zone;
+
+		/* Chunk to which IO is issued */
+		struct ftl_nv_cache_chunk *chunk;
+
+		struct spdk_bdev_io_wait_entry bdev_io_wait;
+	} io;
+};
+
 struct ftl_io *ftl_io_alloc(struct spdk_io_channel *ch);
 struct ftl_io *ftl_io_alloc_child(struct ftl_io *parent);
 void ftl_io_fail(struct ftl_io *io, int status);
@@ -206,6 +346,48 @@ int ftl_io_user_init(struct spdk_io_channel *ioch, struct ftl_io *io, uint64_t l
 		     void *cb_arg, int type);
 void ftl_io_complete(struct ftl_io *io);
 void ftl_io_reset(struct ftl_io *io);
+
+static inline void
+ftl_basic_rq_init(struct spdk_ftl_dev *dev, struct ftl_basic_rq *brq,
+		  void *io_payload, uint64_t num_blocks)
+{
+	brq->dev = dev;
+	brq->io_payload = io_payload;
+	brq->num_blocks = num_blocks;
+	brq->success = false;
+}
+
+static inline void
+ftl_basic_rq_set_owner(struct ftl_basic_rq *brq, void (*cb)(struct ftl_basic_rq *brq), void *priv)
+{
+	brq->owner.cb = cb;
+	brq->owner.priv = priv;
+}
+
+static inline void
+ftl_rq_swap_payload(struct ftl_rq *a, uint32_t aidx,
+		    struct ftl_rq *b, uint32_t bidx)
+{
+	assert(aidx < a->num_blocks);
+	assert(bidx < b->num_blocks);
+
+	void *a_payload = a->io_vec[aidx].iov_base;
+	void *b_payload = b->io_vec[bidx].iov_base;
+
+	a->io_vec[aidx].iov_base = b_payload;
+	a->entries[aidx].io_payload = b_payload;
+
+	b->io_vec[bidx].iov_base = a_payload;
+	b->entries[bidx].io_payload = a_payload;
+}
+
+static inline struct ftl_rq *ftl_rq_from_entry(struct ftl_rq_entry *entry)
+{
+	uint64_t idx = entry->index;
+	struct ftl_rq *rq = SPDK_CONTAINEROF(entry, struct ftl_rq, entries[idx]);
+	return rq;
+}
+
 
 static inline bool
 ftl_io_done(const struct ftl_io *io)
