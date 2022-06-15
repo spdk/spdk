@@ -57,4 +57,7 @@ struct spdk_ftl_dev;
 struct ftl_mngt;
 struct ftl_rq;
 
+/* Number of LBAs that could be stored in a single block */
+#define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
+
 #endif /* FTL_INTERNAL_H */
