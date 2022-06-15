@@ -169,15 +169,20 @@ VFIO_USER_BUILD_TYPE=debug
 else
 VFIO_USER_BUILD_TYPE=release
 endif
+ifeq ($(CONFIG_SHARED), y)
+VFIO_USER_BUILD_SHARED=shared
+else
+VFIO_USER_BUILD_SHARED=static
+endif
 VFIO_USER_LIB_PREFIX=/usr/local/lib
 VFIO_USER_BUILD_DIR=$(SPDK_ROOT_DIR)/build/libvfio-user/build-$(VFIO_USER_BUILD_TYPE)
-VFIO_USER_INSTALL_DIR=$(SPDK_ROOT_DIR)/build/libvfio-user/
+VFIO_USER_INSTALL_DIR=$(SPDK_ROOT_DIR)/build/libvfio-user
 VFIO_USER_INCLUDE_DIR=$(VFIO_USER_INSTALL_DIR)/usr/local/include
-VFIO_USER_LIBRARY_DIR=$(VFIO_USER_INSTALL_DIR)/$(VFIO_USER_LIB_PREFIX)
+VFIO_USER_LIBRARY_DIR=$(VFIO_USER_INSTALL_DIR)$(VFIO_USER_LIB_PREFIX)
 
 CFLAGS += -I$(VFIO_USER_INCLUDE_DIR)
 LDFLAGS += -L$(VFIO_USER_LIBRARY_DIR)
-SYS_LIBS += -Wl,-Bstatic -lvfio-user -Wl,-Bdynamic -ljson-c
+SYS_LIBS += -lvfio-user -ljson-c
 endif
 
 #Attach only if FreeBSD and RDMA is specified with configure

@@ -38,7 +38,7 @@ ifeq ($(CONFIG_VFIO_USER), y)
 C_SRCS += vfio_user.c
 CFLAGS += -I$(VFIO_USER_INCLUDE_DIR)
 LDFLAGS += -L$(VFIO_USER_LIBRARY_DIR)
-LOCAL_SYS_LIBS += -Wl,-Bstatic -lvfio-user -Wl,-Bdynamic -ljson-c
+LOCAL_SYS_LIBS += -lvfio-user -ljson-c
 endif
 
 ifeq ($(CONFIG_FC),y)

@@ -12,7 +12,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 # target instead of allowing CC=scan-build like everyone else.
 SUB_CC = $(patsubst %ccc-analyzer,$(DEFAULT_CC),$(CC))
 
-VFIO_USER_CFG_OPTS = --buildtype $(VFIO_USER_BUILD_TYPE) -Ddefault_library=static -Dlibdir=$(VFIO_USER_LIB_PREFIX)
+VFIO_USER_CFG_OPTS = --buildtype $(VFIO_USER_BUILD_TYPE) -Ddefault_library=$(VFIO_USER_BUILD_SHARED) -Dlibdir=$(VFIO_USER_LIB_PREFIX)
 
 all: scan-build
 
