@@ -774,6 +774,11 @@ if [[ "${CONFIG[ASAN]}" = "y" && "${CONFIG[TSAN]}" = "y" ]]; then
 	exit 1
 fi
 
+if [[ "${CONFIG[FIO_PLUGIN]}" = "y" && "${CONFIG[EXAMPLES]}" = "n" ]]; then
+	echo "ERROR: --with-fio and --disable-examples are mutually exclusive."
+	exit 1
+fi
+
 if [[ $sys_name == "FreeBSD" ]]; then
 	# FreeBSD doesn't support all configurations
 	if [[ "${CONFIG[COVERAGE]}" == "y" ]]; then
