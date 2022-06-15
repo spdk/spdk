@@ -44,6 +44,7 @@
 #include "ftl_debug.h"
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
+#include "utils/ftl_mempool.h"
 
 struct ftl_wptr {
 	/* Owner device */
