@@ -113,6 +113,9 @@ struct spdk_ftl_dev {
 	/* Logical -> physical table */
 	void				*l2p;
 
+	/* l2p deferred pins list */
+	TAILQ_HEAD(, ftl_l2p_pin_ctx)	l2p_deferred_pins;
+
 	/* Size of the l2p table */
 	uint64_t			num_lbas;
 

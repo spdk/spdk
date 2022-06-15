@@ -18,6 +18,8 @@ static const struct spdk_ftl_conf g_default_conf = {
 	.limits[SPDK_FTL_LIMIT_START]	= 5,
 	/* 20% spare blocks */
 	.overprovisioning = 20,
+	/* 2GiB of DRAM for l2p cache */
+	.l2p_dram_limit = 2048,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
 	.user_io_pool_size = 2048,
 	.nv_cache = {

@@ -37,6 +37,9 @@ struct spdk_ftl_conf {
 	/* Percentage of base device blocks not exposed to the user */
 	uint64_t				overprovisioning;
 
+	/* l2p cache size that could reside in DRAM (in MiB) */
+	size_t					l2p_dram_limit;
+
 	/* Core mask - core thread plus additional relocation threads */
 	char					*core_mask;
 

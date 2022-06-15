@@ -2008,6 +2008,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                             uuid=args.uuid,
                                             cache=args.cache,
                                             overprovisioning=args.overprovisioning,
+                                            l2p_dram_limit=args.l2p_dram_limit,
                                             core_mask=args.core_mask,
                                             fast_shutdown=args.fast_shutdown))
 
@@ -2021,6 +2022,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    required=True)
     p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
                    ' to user (optional); default 20', type=int)
+    p.add_argument('--l2p-dram-limit', help='l2p size that could reside in DRAM (optional); default 2048',
+                   type=int)
     p.add_argument('--core-mask', help='CPU core mask - which cores will be used for ftl core thread, '
                    'by default core thread will be set to the main application core (optional)')
     p.add_argument('-f', '--fast-shutdown', help="Enable fast shutdown", action='store_true')
@@ -2033,6 +2036,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                           uuid=args.uuid,
                                           cache=args.cache,
                                           overprovisioning=args.overprovisioning,
+                                          l2p_dram_limit=args.l2p_dram_limit,
                                           core_mask=args.core_mask,
                                           fast_shutdown=args.fast_shutdown))
 
@@ -2045,6 +2049,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    required=True)
     p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
                    ' to user (optional); default 20', type=int)
+    p.add_argument('--l2p-dram-limit', help='l2p size that could reside in DRAM (optional); default 2048',
+                   type=int)
     p.add_argument('--core-mask', help='CPU core mask - which cores will be used for ftl core thread, '
                    'by default core thread will be set to the main application core (optional)')
     p.add_argument('-f', '--fast-shutdown', help="Enable fast shutdown", action='store_true')

@@ -38,6 +38,10 @@ static const struct spdk_json_object_decoder rpc_bdev_ftl_create_decoders[] = {
 		spdk_json_decode_uint64, true
 	},
 	{
+		"l2p_dram_limit", offsetof(struct spdk_ftl_conf, l2p_dram_limit),
+		spdk_json_decode_uint64, true
+	},
+	{
 		"core_mask", offsetof(struct spdk_ftl_conf, core_mask),
 		spdk_json_decode_string, true
 	},

@@ -16,6 +16,7 @@
 int
 ftl_l2p_init(struct spdk_ftl_dev *dev)
 {
+	TAILQ_INIT(&dev->l2p_deferred_pins);
 	return FTL_L2P_OP(init)(dev);
 }
 
@@ -78,12 +79,24 @@ ftl_l2p_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx)
 void
 ftl_l2p_process(struct spdk_ftl_dev *dev)
 {
+	struct ftl_l2p_pin_ctx *pin_ctx;
+
+	pin_ctx = TAILQ_FIRST(&dev->l2p_deferred_pins);
+	if (pin_ctx) {
+		TAILQ_REMOVE(&dev->l2p_deferred_pins, pin_ctx, link);
+		FTL_L2P_OP(pin)(dev, pin_ctx);
+	}
+
 	FTL_L2P_OP(process)(dev);
 }
 
 bool
 ftl_l2p_is_halted(struct spdk_ftl_dev *dev)
 {
+	if (!TAILQ_EMPTY(&dev->l2p_deferred_pins)) {
+		return false;
+	}
+
 	return FTL_L2P_OP(is_halted)(dev);
 }
 
@@ -183,8 +196,7 @@ void
 ftl_l2p_pin_complete(struct spdk_ftl_dev *dev, int status, struct ftl_l2p_pin_ctx *pin_ctx)
 {
 	if (spdk_unlikely(status == -EAGAIN)) {
-		/* Path updated in later patch */
-		assert(false);
+		TAILQ_INSERT_TAIL(&dev->l2p_deferred_pins, pin_ctx, link);
 	} else {
 		pin_ctx->cb(dev, status, pin_ctx);
 	}
