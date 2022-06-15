@@ -45,6 +45,39 @@
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
 
+struct ftl_wptr {
+	/* Owner device */
+	struct spdk_ftl_dev		*dev;
+
+	/* Current address */
+	ftl_addr			addr;
+
+	/* Current logical block's offset */
+	uint64_t			offset;
+
+	/* Current zone */
+	struct ftl_zone			*zone;
+
+	/* Pending IO queue */
+	TAILQ_HEAD(, ftl_io)		pending_queue;
+
+	/* List link */
+	LIST_ENTRY(ftl_wptr)		list_entry;
+
+	/*
+	 * If setup in direct mode, there will be no offset or band state u;pdate after IO.
+	 * The zoned bdev address is not assigned by wptr, and is instead taken directly
+	 * from the request.
+	 */
+	bool				direct_mode;
+
+	/* Number of outstanding write requests */
+	uint32_t			num_outstanding;
+
+	/* Marks that the band related to this wptr needs to be closed as soon as possible */
+	bool				flush;
+};
+
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
