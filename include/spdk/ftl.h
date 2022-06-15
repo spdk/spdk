@@ -43,6 +43,18 @@
 extern "C" {
 #endif
 
+/**
+ * Initializes the FTL library.
+ *
+ * @return 0 on success, negative errno otherwise.
+ */
+int spdk_ftl_init(void);
+
+/**
+ * Deinitializes the FTL library.
+ */
+void spdk_ftl_fini(void);
+
 struct spdk_ftl_dev;
 
 struct spdk_ftl_conf {

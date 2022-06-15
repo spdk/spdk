@@ -54,6 +54,13 @@ struct spdk_ftl_dev;
 struct ftl_zone;
 struct ftl_io;
 
+/* When using VSS on nvcache, FTL sometimes doesn't require the contents of metadata.
+ * Some devices have bugs when sending a NULL pointer as part of metadata when namespace
+ * is formatted with VSS. This buffer is passed to such calls to avoid the bug. */
+#define FTL_ZERO_BUFFER_SIZE 0x100000
+extern void *g_ftl_zero_buf;
+extern void *g_ftl_tmp_buf;
+
 struct spdk_ftl_dev {
 	/* Device instance */
 	struct spdk_uuid			uuid;

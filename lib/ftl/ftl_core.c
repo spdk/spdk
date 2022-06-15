@@ -217,6 +217,33 @@ ftl_task_core(void *ctx)
 	return SPDK_POLLER_IDLE;
 }
 
+void *g_ftl_zero_buf;
+void *g_ftl_tmp_buf;
+
+int spdk_ftl_init(void)
+{
+	g_ftl_zero_buf = spdk_zmalloc(FTL_ZERO_BUFFER_SIZE, FTL_ZERO_BUFFER_SIZE, NULL,
+				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (!g_ftl_zero_buf) {
+		return -ENOMEM;
+	}
+
+	g_ftl_tmp_buf = spdk_zmalloc(FTL_ZERO_BUFFER_SIZE, FTL_ZERO_BUFFER_SIZE, NULL,
+				      SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (!g_ftl_tmp_buf) {
+		spdk_free(g_ftl_zero_buf);
+		g_ftl_zero_buf = NULL;
+		return -ENOMEM;
+	}
+	return 0;
+}
+
+void spdk_ftl_fini(void)
+{
+	spdk_free(g_ftl_zero_buf);
+	spdk_free(g_ftl_tmp_buf);
+}
+
 struct spdk_io_channel *
 spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev)
 {

@@ -222,6 +222,12 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		goto error;
 	}
 
+	if (ftl_md_xfer_blocks(dev) * dev->cache_md_size > FTL_ZERO_BUFFER_SIZE) {
+		FTL_ERRLOG(dev, "Zero buffer too small for bdev %s metadata transfer\n",
+			   spdk_bdev_get_name(bdev));
+		goto error;
+	}
+
 	ftl_mngt_next_step(mngt);
 	return;
 error:
