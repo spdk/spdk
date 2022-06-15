@@ -16,6 +16,7 @@
 #include "ftl_debug.h"
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
+#include "utils/ftl_mempool.h"
 
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
