@@ -26,6 +26,9 @@ static bool
 is_buffer_needed(enum ftl_layout_region_type type)
 {
 	switch (type) {
+#ifdef SPDK_FTL_VSS_EMU
+	case FTL_LAYOUT_REGION_TYPE_VSS:
+#endif
 	case FTL_LAYOUT_REGION_TYPE_DATA_NVC:
 	case FTL_LAYOUT_REGION_TYPE_DATA_BASE:
 		return false;
@@ -79,3 +82,37 @@ ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 
 	ftl_mngt_next_step(mngt);
 }
+
+#ifdef SPDK_FTL_VSS_EMU
+void
+ftl_mngt_md_init_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
+
+	/* Initialize VSS layout */
+	ftl_layout_setup_vss_emu(dev);
+
+	/* Allocate md buf */
+	layout->md[FTL_LAYOUT_REGION_TYPE_VSS] = ftl_md_create(dev, region->current.blocks,
+			region->vss_blksz, NULL, 0, region);
+	if (NULL == layout->md[FTL_LAYOUT_REGION_TYPE_VSS]) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	ftl_mngt_next_step(mngt);
+}
+
+void
+ftl_mngt_md_deinit_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_layout *layout = &dev->layout;
+
+	if (layout->md[FTL_LAYOUT_REGION_TYPE_VSS]) {
+		ftl_md_destroy(layout->md[FTL_LAYOUT_REGION_TYPE_VSS]);
+		layout->md[FTL_LAYOUT_REGION_TYPE_VSS] = NULL;
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+#endif

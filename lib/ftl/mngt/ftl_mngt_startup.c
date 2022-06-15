@@ -42,6 +42,13 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.action = ftl_mngt_open_cache_bdev,
 			.cleanup = ftl_mngt_close_cache_bdev
 		},
+#ifdef SPDK_FTL_VSS_EMU
+		{
+			.name = "Initialize VSS emu",
+			.action = ftl_mngt_md_init_vss_emu,
+			.cleanup = ftl_mngt_md_deinit_vss_emu
+		},
+#endif
 		{
 			.name = "Register IO device",
 			.action = ftl_mngt_register_io_device,

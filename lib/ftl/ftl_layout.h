@@ -12,6 +12,10 @@ struct spdk_ftl_dev;
 struct ftl_md;
 
 enum ftl_layout_region_type {
+#ifdef SPDK_FTL_VSS_EMU
+	/** VSS region for NV cache VSS emulation */
+	FTL_LAYOUT_REGION_TYPE_VSS,
+#endif
 	/* User data region on the nv cache device */
 	FTL_LAYOUT_REGION_TYPE_DATA_NVC,
 
@@ -110,6 +114,13 @@ struct ftl_layout {
  * @brief Setup FTL layout
  */
 int ftl_layout_setup(struct spdk_ftl_dev *dev);
+
+#ifdef SPDK_FTL_VSS_EMU
+/**
+ * @brief Setup FTL layout of VSS emu
+ */
+void ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev);
+#endif
 
 void ftl_layout_dump(struct spdk_ftl_dev *dev);
 int ftl_validate_regions(struct spdk_ftl_dev *dev, struct ftl_layout *layout);

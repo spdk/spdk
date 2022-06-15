@@ -27,6 +27,21 @@ blocks2mib(uint64_t blocks)
 #define FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS 32ULL
 #define FTL_LAYOUT_REGION_ALIGNMENT_BYTES (FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS * FTL_BLOCK_SIZE)
 
+#ifdef SPDK_FTL_VSS_EMU
+static inline uint64_t
+blocks_region(uint64_t bytes)
+{
+	const uint64_t alignment = FTL_LAYOUT_REGION_ALIGNMENT_BYTES;
+	uint64_t result;
+
+	result = spdk_divide_round_up(bytes, alignment);
+	result *= alignment;
+	result /= FTL_BLOCK_SIZE;
+
+	return result;
+}
+#endif
+
 static void
 dump_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
 {
@@ -110,6 +125,16 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	uint64_t offset = 0;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
+
+#ifdef SPDK_FTL_VSS_EMU
+	/* Skip the already init`d VSS region */
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
+	offset += region->current.blocks;
+
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
+#endif
 
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_DATA_NVC];
 	region->type = FTL_LAYOUT_REGION_TYPE_DATA_NVC;
@@ -207,6 +232,36 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 
 	return 0;
 }
+
+#ifdef SPDK_FTL_VSS_EMU
+void
+ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev)
+{
+	const struct spdk_bdev *bdev;
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
+
+	assert(layout->md[FTL_LAYOUT_REGION_TYPE_VSS] == NULL);
+
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_VSS];
+	region->type = FTL_LAYOUT_REGION_TYPE_VSS;
+	region->name = "vss";
+	region->current.version = region->prev.version = 0;
+	region->current.offset = 0;
+
+	bdev = spdk_bdev_desc_get_bdev(dev->cache_bdev_desc);
+	layout->nvc.total_blocks = spdk_bdev_get_num_blocks(bdev);
+	region->current.blocks = blocks_region(dev->cache_md_size * layout->nvc.total_blocks);
+
+	region->vss_blksz = 0;
+	region->bdev_desc = dev->cache_bdev_desc;
+	region->ioch = dev->cache_ioch;
+
+	assert(region->bdev_desc != NULL);
+	assert(region->ioch != NULL);
+}
+#endif
+
 
 void
 ftl_layout_dump(struct spdk_ftl_dev *dev)

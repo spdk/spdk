@@ -203,6 +203,7 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 		goto error;
 	}
 
+#ifndef SPDK_FTL_VSS_EMU
 	if (!spdk_bdev_is_md_separate(bdev)) {
 		FTL_ERRLOG(dev, "Bdev %s doesn't support separate metadata buffer IO\n",
 			   spdk_bdev_get_name(bdev));
@@ -233,6 +234,15 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 			   spdk_bdev_get_name(bdev));
 		goto error;
 	}
+#else
+	if (spdk_bdev_is_md_separate(bdev)) {
+		FTL_ERRLOG(dev, "FTL VSS emulation but NV cache supports VSS\n");
+		goto error;
+	}
+
+	dev->cache_md_size = 64;
+	FTL_NOTICELOG(dev, "FTL uses VSS emulation\n");
+#endif
 
 	ftl_mngt_next_step(mngt);
 	return;
