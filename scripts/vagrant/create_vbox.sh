@@ -17,9 +17,9 @@ SPDK_DIR="$(cd "${DIR}/../../" && pwd)"
 # The command line help
 display_help() {
 	echo
-	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcuf] <distro>"
+	echo " Usage: ${0##*/} [-b nvme-backing-file] [-n <num-cpus>] [-s <ram-size>] [-x <http-proxy>] [-hvrldcufaoH] <distro>"
 	echo
-	echo "  distro = <centos7 | centos8| ubuntu1604 | ubuntu1804 | ubuntu2004 | fedora33 |"
+	echo "  distro = <centos7 | centos8 | ubuntu1604 | ubuntu1804 | ubuntu2004 | fedora33 |"
 	echo "            fedora34 | fedora35 | freebsd11 | freebsd12 | arch | clearlinux | rocky8>"
 	echo
 	echo "  -s <ram-size> in MB             Default: ${SPDK_VAGRANT_VMRAM}"
@@ -45,12 +45,13 @@ display_help() {
 	echo "  --qemu-emulator=<path>          Path to custom QEMU binary. Only works with libvirt provider"
 	echo "  --vagrantfiles-dir=<path>       Destination directory to put Vagrantfile into."
 	echo "  --package-box                   Install all dependencies for SPDK and create a local vagrant box version."
-	echo " --vagrantfile=<path>             Path to a custom Vagrantfile"
+	echo "  --vagrantfile=<path>            Path to a custom Vagrantfile"
 	echo "  -r dry-run"
 	echo "  -h help"
 	echo "  -v verbose"
-	echo "  -f                             Force use of given distro, regardless if it's supported by the script or not."
-	echo "  --box-version                  Version of the vagrant box to select for given distro."
+	echo "  -f                              Force use of given distro, regardless if it's supported by the script or not."
+	echo "  --box-version                   Version of the vagrant box to select for given distro."
+	echo
 	echo " Examples:"
 	echo
 	echo "  $0 -x http://user:password@host:port fedora33"
