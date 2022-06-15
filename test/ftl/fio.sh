@@ -46,7 +46,14 @@ $rpc_py bdev_nvme_attach_controller -b nvme0 -a $device -t pcie
 split_bdev=$($rootdir/scripts/rpc.py bdev_split_create nvme0n1 -s $((1024*101))  1)
 nv_cache=$(create_nv_cache_bdev nvc0 $cache_device $split_bdev)
 
-$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache
+l2p_percentage=60
+if [ $SPDK_TEST_FTL_NIGHTLY -eq 1 ]; then
+	l2p_percentage=12
+fi
+
+l2p_dram_size_mb=$(( $(get_bdev_size $split_bdev)/1024*$l2p_percentage/100 ))
+
+$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev -c $nv_cache --l2p_dram_limit $l2p_dram_size_mb
 
 waitforbdev ftl0
 

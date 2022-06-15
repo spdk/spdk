@@ -1911,6 +1911,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                             uuid=args.uuid,
                                             cache=args.cache,
                                             overprovisioning=args.overprovisioning,
+                                            l2p_dram_limit=args.l2p_dram_limit,
                                             core_mask=args.core_mask,
                                             l2p_path=args.l2p_path,
                                             use_append=args.use_append,
@@ -1926,6 +1927,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    required=True)
     p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
                    ' to user (optional)', type=int)
+    p.add_argument('--l2p-dram-limit', help='l2p size that could reside in DRAM (optional)',
+                   type=int)
     p.add_argument('--core-mask', help='Core mask - lowest core will be used for ftl core thread, additional'
                    ' cores will be used for relocation threads, by default core and relocation thread will'
                    ' be set to the application thread (optional)')

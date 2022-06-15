@@ -235,6 +235,7 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 
 	spdk_json_write_named_bool(w, "use_append", conf->use_append);
 	spdk_json_write_named_uint64(w, "overprovisioning", conf->lba_rsvd);
+	spdk_json_write_named_uint64(w, "l2p_dram_limit", conf->l2p_dram_limit);
 	if (conf->l2p_path) {
 		spdk_json_write_named_string(w, "l2p_path", conf->l2p_path);
 	}

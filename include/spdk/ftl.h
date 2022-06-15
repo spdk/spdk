@@ -71,6 +71,9 @@ struct spdk_ftl_conf {
 	/* Number of reserved addresses not exposed to the user */
 	size_t					lba_rsvd;
 
+	/* l2p cache size that could reside in DRAM (in MiB) */
+	size_t					l2p_dram_limit;
+
 	/* Core mask - core thread plus additional relocation threads */
 	char					*core_mask;
 
