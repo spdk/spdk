@@ -1,23 +1,23 @@
-# Using bdevperf application {#bdevperf}
+# bdevperf {#bdevperf}
 
 ## Introduction
 
-bdevperf is an SPDK application that is used for performance testing
+bdevperf is an SPDK application used for performance testing
 of block devices (bdevs) exposed by the SPDK bdev layer.  It is an
 alternative to the SPDK bdev fio plugin for benchmarking SPDK bdevs.
-In some cases, bdevperf can provide much lower overhead than the fio
-plugin, resulting in much better performance for tests using a limited
-number of CPU cores.
+In some cases, bdevperf can provide lower overhead than the fio
+plugin, resulting in better performance and efficiency for tests
+using a limited number of CPU cores.
 
 bdevperf exposes command line interface that allows to specify
 SPDK framework options as well as testing options.
-Since SPDK 20.07, bdevperf supports configuration file that is similar
+bdevperf also supports a configuration file format similar
 to FIO. It allows user to create jobs parameterized by
 filename, cpumask, blocksize, queuesize, etc.
 
 ## Config file
 
-Bdevperf's config file is similar to FIO's config file format.
+bdevperf's config file format is similar to FIO.
 
 Below is an example config file that uses all available parameters:
 
