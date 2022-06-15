@@ -149,6 +149,16 @@ static int setup_layout_nvc(struct spdk_ftl_dev *dev)
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
 
+#ifdef SPDK_FTL_VSS_EMU
+	/* Skip the already init`d VSS region */
+	region = &layout->region[ftl_layout_region_type_vss];
+	offset += region->current.blocks;
+
+	if (offset >= layout->nvc.total_blocks) {
+		goto ERROR;
+	}
+#endif
+
 	if (offset >= layout->nvc.total_blocks) {
 		goto ERROR;
 	}
@@ -247,6 +257,34 @@ int ftl_layout_setup(struct spdk_ftl_dev *dev)
 
 	return 0;
 }
+
+#ifdef SPDK_FTL_VSS_EMU
+void ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev)
+{
+	const struct spdk_bdev *bdev;
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *region = &layout->region[ftl_layout_region_type_vss];
+
+	assert(layout->md[ftl_layout_region_type_vss] == NULL);
+
+	region = &layout->region[ftl_layout_region_type_vss];
+	region->type = ftl_layout_region_type_vss;
+	region->name = "vss";
+	set_region_version(region, 0);
+	region->current.offset = 0;
+
+	bdev = spdk_bdev_desc_get_bdev(dev->cache_bdev_desc);
+	layout->nvc.total_blocks = spdk_bdev_get_num_blocks(bdev);
+	region->current.blocks = blocks_region(dev->cache_md_size * layout->nvc.total_blocks);
+
+	region->vss_blksz = 0;
+	region->bdev_desc = dev->cache_bdev_desc;
+	region->ioch = dev->cache_ioch;
+
+	assert(region->bdev_desc != NULL);
+	assert(region->ioch != NULL);
+}
+#endif
 
 void layout_dump(struct spdk_ftl_dev *dev)
 {

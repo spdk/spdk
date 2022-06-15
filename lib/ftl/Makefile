@@ -37,6 +37,10 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 4
 SO_MINOR := 0
 
+ifdef SPDK_FTL_VSS_EMU
+CFLAGS += -DSPDK_FTL_VSS_EMU
+endif
+
 ifneq ($(strip $(SPDK_FTL_ZONE_EMU_BLOCKS)),)
 CFLAGS += -DSPDK_FTL_ZONE_EMU_BLOCKS=$(SPDK_FTL_ZONE_EMU_BLOCKS)
 endif
