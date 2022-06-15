@@ -36,6 +36,7 @@
 
 #include "ftl_core.h"
 #include "ftl_md.h"
+#include "ftl_nv_cache_io.h"
 #include "ftl_utils.h"
 
 struct ftl_md_impl;
@@ -306,7 +307,11 @@ read_blocks(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *desc,
 	    uint64_t offset_blocks, uint64_t num_blocks,
 	    spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	if (md_buf) {
+	if (desc == dev->cache_bdev_desc) {
+		return ftl_nv_cache_bdev_read_blocks_with_md(dev, desc, ch, buf, md_buf,
+				offset_blocks, num_blocks,
+				cb, cb_arg);
+	} else if (md_buf) {
 		return spdk_bdev_read_blocks_with_md(desc, ch, buf, md_buf,
 					     offset_blocks, num_blocks,
 					     cb, cb_arg);
@@ -324,7 +329,11 @@ write_blocks(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *desc,
 	     uint64_t offset_blocks, uint64_t num_blocks,
 	     spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	if (md_buf) {
+	if (desc == dev->cache_bdev_desc) {
+		return ftl_nv_cache_bdev_write_blocks_with_md(dev, desc, ch, buf, md_buf,
+				offset_blocks, num_blocks,
+				cb, cb_arg);
+	} else if (md_buf) {
 		return spdk_bdev_write_blocks_with_md(desc, ch, buf, md_buf, offset_blocks,
 						      num_blocks, cb, cb_arg);
 	} else {
