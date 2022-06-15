@@ -1,36 +1,38 @@
-# SPDK CLI {#spdkcli}
+# spdkcli {#spdkcli}
 
-Spdkcli is a command-line management application for SPDK.
-Spdkcli has support for a limited number of applications and bdev modules,
-and should be considered experimental for the v18.04 release.
-This experimental version was added for v18.04 to get early feedback
-that can be incorporated as spdkcli becomes more fully-featured
-for the next SPDK release.
+spdkcli is a command-line management application for SPDK.
+spdkcli has support for most transport protocols and
+bdev modules.
 
-## Install needed dependencies
+## Dependencies
 
-All dependencies should be handled by scripts/pkgdep.sh script.
+Dependencies are installed by scripts/pkgdep.sh.
 Package dependencies at the moment include:
 
 - configshell
 
-## Run SPDK application instance
+Some distributions name the package configshell_fb.
+
+## Example usage
+
+### Start SPDK application
 
 ~~~{.sh}
 ./scripts/setup.sh
 ./build/bin/vhost -c vhost.json
 ~~~
 
-## Run SPDK CLI
+### Run spdkcli
 
-Spdkcli should be run with the same privileges as SPDK application.
-In order to use SPDK CLI in interactive mode please use:
+spdkcli should be run with the same privileges as SPDK application.
+
+To use spdkcli in interactive mode:
 ~~~{.sh}
 scripts/spdkcli.py
 ~~~
 Use "help" command to get a list of available commands for each tree node.
 
-It is also possible to use SPDK CLI to run just a single command,
+It is also possible to use spdkcli to run just a single command,
 just use the command as an argument to the application.
 For example, to view current configuration and immediately exit:
 ~~~{.sh}
