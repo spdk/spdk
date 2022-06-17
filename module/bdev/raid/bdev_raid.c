@@ -1420,18 +1420,18 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
 			 * so cleanup should be done here itself.
 			 */
 			raid_bdev_free_base_bdev_resource(raid_bdev, base_info);
-			if (raid_bdev->num_base_bdevs_discovered == 0) {
-				/* There is no base bdev for this raid, so free the raid device. */
-				raid_bdev_cleanup(raid_bdev);
-				if (cb_fn) {
-					cb_fn(cb_arg, 0);
-				}
-				return;
-			}
 		}
 	}
 
-	raid_bdev_deconfigure(raid_bdev, cb_fn, cb_arg);
+	if (raid_bdev->num_base_bdevs_discovered == 0) {
+		/* There is no base bdev for this raid, so free the raid device. */
+		raid_bdev_cleanup(raid_bdev);
+		if (cb_fn) {
+			cb_fn(cb_arg, 0);
+		}
+	} else {
+		raid_bdev_deconfigure(raid_bdev, cb_fn, cb_arg);
+	}
 }
 
 /*
