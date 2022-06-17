@@ -29,7 +29,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 
 	server->handle_request = handle_request;
 
-	server->sockfd = socket(domain, SOCK_STREAM | SOCK_NONBLOCK, protocol);
+	server->sockfd = socket(domain, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, protocol);
 	if (server->sockfd < 0) {
 		SPDK_ERRLOG("socket() failed\n");
 		free(server);
