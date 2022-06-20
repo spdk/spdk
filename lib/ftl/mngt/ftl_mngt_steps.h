@@ -58,4 +58,6 @@ void ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_rollback_device(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_dump_stats(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 #endif /* FTL_MNGT_STEPS_H */

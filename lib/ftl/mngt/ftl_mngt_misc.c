@@ -36,6 +36,7 @@
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
 #include "ftl_internal.h"
+#include "ftl_debug.h"
 
 void ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -83,5 +84,11 @@ void ftl_mngt_finalize_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	dev->initialized = 1;
 
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_dump_stats(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_dev_dump_stats(dev);
 	ftl_mngt_next_step(mngt);
 }

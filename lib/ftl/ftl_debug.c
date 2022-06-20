@@ -31,30 +31,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ftl_core.h"
-#include "ftl_mngt.h"
-#include "ftl_mngt_steps.h"
+#include "spdk/ftl.h"
+#include "ftl_debug.h"
 
-static const struct ftl_mngt_process_desc desc_shutdown;
-
-static const struct ftl_mngt_process_desc desc_shutdown = {
-	.name = "FTL shutdown",
-	.error_handler = ftl_mngt_rollback_device,
-	.steps = {
-		{
-			.name = "Dump statistics",
-			.action = ftl_mngt_dump_stats
-		},
-		{
-			.name = "Rollback FTL device",
-			.action = ftl_mngt_rollback_device
-		},
-		{}
-	}
-};
-
-int ftl_mngt_shutdown(struct spdk_ftl_dev *dev,
-		      ftl_mngt_fn cb, void *cb_cntx)
+void
+ftl_dev_dump_stats(const struct spdk_ftl_dev *dev)
 {
-	return ftl_mngt_execute(dev, &desc_shutdown, cb, cb_cntx);
+	size_t total = 0;
+	char uuid[SPDK_UUID_STRING_LEN];
+
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &dev->uuid);
+	FTL_NOTICELOG(dev, "\n");
+	FTL_NOTICELOG(dev, "device UUID:         %s\n", uuid);
+	FTL_NOTICELOG(dev, "total valid LBAs:    %zu\n", total);
 }
