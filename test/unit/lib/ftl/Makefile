@@ -31,17 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = accel bdev blob blobfs dma event ioat iscsi json jsonrpc log lvol
-DIRS-y += notify nvme nvmf scsi sock thread util env_dpdk init rpc
-DIRS-$(CONFIG_IDXD) += idxd
-DIRS-$(CONFIG_REDUCE) += reduce
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
-DIRS-y += ftl
-endif
+DIRS-y = ftl_mngt
 
 .PHONY: all clean $(DIRS-y)
 

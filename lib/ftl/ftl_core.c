@@ -42,5 +42,6 @@
 
 #include "ftl_core.h"
 #include "ftl_internal.h"
+#include "mngt/ftl_mngt.h"
 
 SPDK_LOG_REGISTER_COMPONENT(ftl_core)

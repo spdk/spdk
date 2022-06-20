@@ -43,6 +43,10 @@ function unittest_event() {
 	$valgrind $testdir/lib/event/reactor.c/reactor_ut
 }
 
+function unittest_ftl() {
+	$valgrind $testdir/lib/ftl/ftl_mngt/ftl_mngt_ut
+}
+
 function unittest_iscsi() {
 	$valgrind $testdir/lib/iscsi/conn.c/conn_ut
 	$valgrind $testdir/lib/iscsi/param.c/param_ut
@@ -192,6 +196,9 @@ fi
 
 run_test "unittest_blob_blobfs" unittest_blob
 run_test "unittest_event" unittest_event
+if [ $(uname -s) = Linux ]; then
+	run_test "unittest_ftl" unittest_ftl
+fi
 
 run_test "unittest_accel" $valgrind $testdir/lib/accel/accel.c/accel_engine_ut
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
