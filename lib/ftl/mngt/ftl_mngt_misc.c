@@ -45,3 +45,43 @@ void ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		ftl_mngt_fail_step(mngt);
 	}
 }
+
+static void user_clear_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt *mngt = md->owner.cb_ctx;
+
+	if (status) {
+		FTL_ERRLOG(ftl_mngt_get_dev(mngt), "FTL NV Cache: ERROR of clearing user cache data\n");
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+void ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_layout_region *region = &dev->layout.region[ftl_layout_region_type_data_nvc];
+	struct ftl_md *md = dev->layout.md[ftl_layout_region_type_data_nvc];
+
+	FTL_NOTICELOG(dev, "First startup needs to scrub nv cache data region, this may take some time.\n");
+	FTL_NOTICELOG(dev, "Scrubbing %lluGiB\n", region->current.blocks * FTL_BLOCK_SIZE / GiB);
+
+	/* Need to scrub user data, so in case of dirty shutdown the recovery won't
+	 * pull in data during open chunks recovery from any previous instance
+	 */
+	md->cb = user_clear_cb;
+	md->owner.cb_ctx = mngt;
+
+	union ftl_md_vss vss;
+	vss.version.md_version = region->current.version;
+	vss.nv_cache.lba = FTL_ADDR_INVALID;
+	uint64_t block_data = 0;
+	ftl_md_clear(md, &block_data, sizeof(block_data), &vss);
+}
+
+void ftl_mngt_finalize_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	dev->initialized = 1;
+
+	ftl_mngt_next_step(mngt);
+}
