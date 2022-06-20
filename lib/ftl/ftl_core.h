@@ -17,11 +17,15 @@
 #include "spdk/bdev_zone.h"
 
 #include "ftl_internal.h"
+#include "ftl_layout.h"
 #include "utils/ftl_log.h"
 
 struct spdk_ftl_dev {
 	/* Configuration */
 	struct spdk_ftl_conf		conf;
+
+	/* FTL device layout */
+	struct ftl_layout		layout;
 
 	/* Underlying device */
 	struct spdk_bdev_desc		*base_bdev_desc;

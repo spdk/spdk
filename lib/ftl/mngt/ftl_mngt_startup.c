@@ -22,6 +22,10 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.action = ftl_mngt_open_cache_bdev,
 			.cleanup = ftl_mngt_close_cache_bdev
 		},
+		{
+			.name = "Initialize layout",
+			.action = ftl_mngt_init_layout
+		},
 		{}
 	}
 };
