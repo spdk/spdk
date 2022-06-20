@@ -38,6 +38,7 @@
 #include "ftl_mngt_steps.h"
 #include "ftl_internal.h"
 #include "ftl_core.h"
+#include "utils/ftl_md.h"
 
 /*  Dummy bdev module used to to claim bdevs. */
 static struct spdk_bdev_module g_ftl_bdev_module = {
@@ -210,6 +211,11 @@ void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	}
 
 	dev->cache_md_size = spdk_bdev_get_md_size(bdev);
+	if (dev->cache_md_size != sizeof(union ftl_md_vss)) {
+		FTL_ERRLOG(dev, "Bdev's %s metadata is invalid size (%"PRIu32")\n",
+			    spdk_bdev_get_name(bdev), spdk_bdev_get_md_size(bdev));
+		goto error;
+	}
 
 	if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
 		FTL_ERRLOG(dev, "Unsupported DIF type used by bdev %s\n",

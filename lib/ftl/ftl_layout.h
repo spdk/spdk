@@ -128,6 +128,9 @@ struct ftl_layout {
 	} l2p;
 
 	struct ftl_layout_region region[ftl_layout_region_type_max];
+
+	/* Metadata object corresponding to the regions */
+	struct ftl_md *md[ftl_layout_region_type_max];
 };
 
 /**

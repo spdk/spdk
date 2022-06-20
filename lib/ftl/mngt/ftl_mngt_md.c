@@ -48,3 +48,59 @@ void ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 		ftl_mngt_next_step(mngt);
 	}
 }
+
+static bool is_md(enum ftl_layout_region_type type)
+{
+	switch (type) {
+	case ftl_layout_region_type_data_nvc:
+	case ftl_layout_region_type_data_btm:
+		return false;
+
+	default:
+		return true;
+	}
+}
+
+void ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *region = layout->region;
+	uint64_t i;
+
+	for (i = 0; i < ftl_layout_region_type_max; i++, region++) {
+		if (layout->md[i]) {
+			/*
+			* Some metadata objects are initialized by other FTL
+			* components, e.g. L2P is set by L2P impl itself.
+			*/
+			continue;
+		}
+		layout->md[i] = ftl_md_create(dev, region->current.blocks, region->vss_blksz, region->name, !is_md(i));
+		if (NULL == layout->md[i]) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+		if (ftl_md_set_region(layout->md[i], region)) {
+			ftl_mngt_fail_step(mngt);
+			return;
+		}
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *region = layout->region;
+	uint64_t i;
+
+	for (i = 0; i < ftl_layout_region_type_max; i++, region++) {
+		if (layout->md[i]) {
+			ftl_md_destroy(layout->md[i]);
+			layout->md[i] = NULL;
+		}
+	}
+
+	ftl_mngt_next_step(mngt);
+}
