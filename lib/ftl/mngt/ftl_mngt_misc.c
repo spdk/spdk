@@ -31,20 +31,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_CONF_H
-#define FTL_CONF_H
+#include "ftl_core.h"
+#include "ftl_utils.h"
+#include "ftl_mngt.h"
+#include "ftl_mngt_steps.h"
+#include "ftl_internal.h"
 
-#include "spdk/ftl.h"
-
-bool ftl_conf_is_valid(const struct spdk_ftl_conf *conf);
-
-int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
-
-void ftl_conf_free(struct spdk_ftl_conf *conf);
-
-int ftl_conf_init_dev(struct spdk_ftl_dev *dev,
-		      const struct spdk_ftl_dev_init_opts *opts);
-
-void ftl_conf_deinit_dev(struct spdk_ftl_dev *dev);
-
-#endif /* FTL_DEFS_H */
+void ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (ftl_conf_is_valid(&dev->conf)) {
+		ftl_mngt_next_step(mngt);
+	} else {
+		ftl_mngt_fail_step(mngt);
+	}
+}

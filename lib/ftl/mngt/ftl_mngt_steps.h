@@ -36,6 +36,8 @@
 
 #include "ftl_mngt.h"
 
+void ftl_mngt_check_conf(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_close_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);

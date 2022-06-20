@@ -168,3 +168,20 @@ void ftl_conf_deinit_dev(struct spdk_ftl_dev *dev)
 	ftl_conf_free(&dev->conf);
 	free(dev->name);
 }
+
+bool ftl_conf_is_valid(const struct spdk_ftl_conf *conf)
+{
+	if (conf->lba_rsvd >= 100) {
+		return false;
+	}
+	if (conf->lba_rsvd == 0) {
+		return false;
+	}
+
+	if (conf->nv_cache.chunk_compaction_threshold == 0 ||
+	    conf->nv_cache.chunk_compaction_threshold > 100) {
+		return false;
+	}
+
+	return true;
+}
