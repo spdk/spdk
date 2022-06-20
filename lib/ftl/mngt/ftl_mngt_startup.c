@@ -26,6 +26,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.name = "Initialize layout",
 			.action = ftl_mngt_init_layout
 		},
+		{
+			.name = "Initialize metadata",
+			.action = ftl_mngt_init_md,
+			.cleanup = ftl_mngt_deinit_md
+		},
 		{}
 	}
 };

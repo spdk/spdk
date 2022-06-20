@@ -11,6 +11,7 @@
 #include "ftl_internal.h"
 #include "ftl_core.h"
 #include "utils/ftl_defs.h"
+#include "utils/ftl_md.h"
 
 #define MINIMUM_CACHE_SIZE_GIB 5
 #define MINIMUM_BASE_SIZE_GIB 20
@@ -210,6 +211,11 @@ ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 	}
 
 	dev->cache_md_size = spdk_bdev_get_md_size(bdev);
+	if (dev->cache_md_size != sizeof(union ftl_md_vss)) {
+		FTL_ERRLOG(dev, "Bdev's %s metadata is invalid size (%"PRIu32")\n",
+			   spdk_bdev_get_name(bdev), spdk_bdev_get_md_size(bdev));
+		goto error;
+	}
 
 	if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
 		FTL_ERRLOG(dev, "Unsupported DIF type used by bdev %s\n",
