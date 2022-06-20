@@ -103,8 +103,11 @@ pip3 install meson
 pip3 install pyelftools
 pip3 install ijson
 pip3 install python-magic
-pip3 install grpcio
-pip3 install grpcio-tools
+if ! [[ $ID == centos && $VERSION_ID == 7 ]]; then
+	# Problem with modules compilation on Centos7
+	pip3 install grpcio
+	pip3 install grpcio-tools
+fi
 pip3 install pyyaml
 
 # Additional dependencies for SPDK CLI - not available in rhel and centos
