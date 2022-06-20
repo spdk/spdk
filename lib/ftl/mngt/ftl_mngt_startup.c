@@ -8,7 +8,23 @@
 #include "ftl_mngt_steps.h"
 
 static const struct ftl_mngt_process_desc desc_startup;
+static const struct ftl_mngt_process_desc desc_first_start;
 
+static void
+ftl_mngt_select_startup_mode(struct spdk_ftl_dev *dev,
+			     struct ftl_mngt_process *mngt)
+{
+	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
+		ftl_mngt_call_process(mngt, &desc_first_start);
+	} else {
+		ftl_mngt_fail_step(mngt);
+	}
+}
+
+/*
+ * Common startup steps required by FTL in all cases (creation, load, dirty shutdown recovery).
+ * Includes actions like opening the devices, calculating the expected size and version of metadata, etc.
+ */
 static const struct ftl_mngt_process_desc desc_startup = {
 	.name = "FTL startup",
 	.steps = {
@@ -34,6 +50,30 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.name = "Initialize metadata",
 			.action = ftl_mngt_init_md,
 			.cleanup = ftl_mngt_deinit_md
+		},
+		{
+			.name = "Select startup mode",
+			.action = ftl_mngt_select_startup_mode
+		},
+		{}
+	}
+};
+
+/*
+ * Steps executed when creating FTL for the first time - most important being scrubbing
+ * old data/metadata (so it's not leaked during dirty shutdown recovery) and laying out
+ * regions for the new metadata (initializing band states, etc).
+ */
+static const struct ftl_mngt_process_desc desc_first_start = {
+	.name = "FTL first start",
+	.steps = {
+		{
+			.name = "Scrub NV cache",
+			.action = ftl_mngt_scrub_nv_cache,
+		},
+		{
+			.name = "Finalize initialization",
+			.action = ftl_mngt_finalize_startup,
 		},
 		{}
 	}

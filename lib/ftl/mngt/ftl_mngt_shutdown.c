@@ -7,6 +7,10 @@
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
 
+/*
+ * Steps executed during clean shutdown - includes persisting metadata and rolling
+ * back any setup steps executed during startup (closing bdevs, io channels, etc)
+ */
 static const struct ftl_mngt_process_desc desc_shutdown = {
 	.name = "FTL shutdown",
 	.error_handler = ftl_mngt_rollback_device,
