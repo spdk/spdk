@@ -45,6 +45,7 @@
 #include "spdk/bdev_zone.h"
 
 #include "ftl_internal.h"
+#include "ftl_layout.h"
 #include "mngt/ftl_mngt_zone.h"
 #include "utils/ftl_log.h"
 
@@ -61,6 +62,9 @@ struct spdk_ftl_dev {
 
 	/* Configuration */
 	struct spdk_ftl_conf		conf;
+
+	/* FTL device layout */
+	struct ftl_layout			layout;
 
 	/* Indicates the device is fully initialized */
 	int							initialized;
@@ -150,6 +154,32 @@ ftl_get_write_unit_size(struct spdk_bdev *bdev)
 
 	/* TODO: this should be passed via input parameter */
 	return 32;
+}
+
+static inline int
+ftl_addr_packed(const struct spdk_ftl_dev *dev)
+{
+	return dev->layout.l2p.addr_size < sizeof(ftl_addr);
+}
+
+static inline int
+ftl_addr_cached(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	assert(addr != FTL_ADDR_INVALID);
+	return addr >= dev->layout.btm.total_blocks;
+}
+
+static inline uint64_t
+ftl_addr_get_cache_offset(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	assert(ftl_addr_cached(dev, addr));
+	return addr - dev->layout.btm.total_blocks;
+}
+
+static inline ftl_addr
+ftl_addr_to_cached(const struct spdk_ftl_dev *dev, uint64_t cache_offset)
+{
+	return cache_offset + dev->layout.btm.total_blocks;
 }
 
 static inline bool

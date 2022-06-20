@@ -31,21 +31,20 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_MNGT_STEPS_H
-#define FTL_MNGT_STEPS_H
+#include "spdk/thread.h"
+#include "spdk/crc32.h"
 
+#include "ftl_core.h"
 #include "ftl_mngt.h"
+#include "ftl_mngt_steps.h"
+#include "ftl_utils.h"
+#include "ftl_internal.h"
 
-void ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
-
-void ftl_mngt_close_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
-
-void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
-
-void ftl_mngt_close_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
-
-void ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
-
-void ftl_mngt_rollback_device(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
-
-#endif /* FTL_MNGT_STEPS_H */
+void ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (ftl_layout_setup(dev)) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
