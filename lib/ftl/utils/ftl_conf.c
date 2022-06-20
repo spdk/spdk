@@ -101,3 +101,16 @@ ftl_conf_init_dev(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf)
 
 	return 0;
 }
+
+bool
+ftl_conf_is_valid(const struct spdk_ftl_conf *conf)
+{
+	if (conf->overprovisioning >= 100) {
+		return false;
+	}
+	if (conf->overprovisioning == 0) {
+		return false;
+	}
+
+	return true;
+}

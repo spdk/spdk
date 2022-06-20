@@ -13,6 +13,10 @@ static const struct ftl_mngt_process_desc desc_startup = {
 	.name = "FTL startup",
 	.steps = {
 		{
+			.name = "Check configuration",
+			.action = ftl_mngt_check_conf,
+		},
+		{
 			.name = "Open base bdev",
 			.action = ftl_mngt_open_base_bdev,
 			.cleanup = ftl_mngt_close_base_bdev

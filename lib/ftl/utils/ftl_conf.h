@@ -8,6 +8,8 @@
 
 #include "spdk/ftl.h"
 
+bool ftl_conf_is_valid(const struct spdk_ftl_conf *conf);
+
 int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
 
 void ftl_conf_deinit(struct spdk_ftl_conf *conf);
