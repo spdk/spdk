@@ -39,6 +39,7 @@
 #include "ftl_mngt_steps.h"
 #include "ftl_utils.h"
 #include "ftl_internal.h"
+#include "ftl_sb.h"
 
 void ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -55,6 +56,8 @@ static bool is_md(enum ftl_layout_region_type type)
 #ifdef SPDK_FTL_VSS_EMU
 	case ftl_layout_region_type_vss:
 #endif
+	case ftl_layout_region_type_sb:
+	case ftl_layout_region_type_sb_btm:
 	case ftl_layout_region_type_data_nvc:
 	case ftl_layout_region_type_data_btm:
 		return false;
@@ -108,6 +111,98 @@ void ftl_mngt_deinit_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	ftl_mngt_next_step(mngt);
 }
 
+static void persist_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_mngt *mngt = md->owner.cb_ctx;
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+static void persist(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt,
+		    enum ftl_layout_region_type type)
+{
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_md *md = layout->md[type];
+
+	assert(type < ftl_layout_region_type_max);
+
+	if (!md) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	md->owner.cb_ctx = mngt;
+	md->cb = persist_cb;
+	ftl_md_persist(md);
+}
+
+static uint32_t get_sb_crc(struct ftl_superblock *sb)
+{
+	uint32_t crc = 0;
+
+	/* Calculate CRC excluding CRC field in superblock */
+	void *buffer = sb;
+	size_t offset = offsetof(struct ftl_superblock, header.crc);
+	size_t size = offset;
+	crc = spdk_crc32c_update(buffer, size, crc);
+
+	buffer += offset + sizeof(sb->header.crc);
+	size = FTL_SUPERBLOCK_SIZE - offset - sizeof(sb->header.crc);
+	crc = spdk_crc32c_update(buffer, size, crc);
+
+	return crc;
+}
+
+void ftl_mngt_init_default_sb(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_superblock *sb = dev->sb;
+
+	sb->header.magic = FTL_SUPERBLOCK_MAGIC;
+	sb->header.version = FTL_METADATA_VERSION_CURRENT;
+	sb->uuid = dev->uuid;
+	sb->clean = 0;
+
+	/* Max 12 IO depth per band relocate */
+	sb->max_reloc_qdepth = 16;
+
+	sb->max_io_channels = 128;
+
+	sb->lba_rsvd = dev->conf.lba_rsvd;
+	sb->use_append = dev->conf.use_append;
+
+	// md layout isn't initialized yet.
+	// empty region list => all regions in the default location
+	sb->md_layout_head.type = ftl_layout_region_type_invalid;
+
+	sb->header.crc = get_sb_crc(sb);
+
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_set_dirty(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_superblock *sb = dev->sb;
+
+	sb->clean = 0;
+	sb->header.crc = get_sb_crc(sb);
+	persist(dev, mngt, ftl_layout_region_type_sb);
+}
+
+static const struct ftl_mngt_process_desc desc_init_sb = {
+	.name = "SB initialize",
+	.steps = {
+		{
+			.name = "Default-initialize superblock",
+			.action = ftl_mngt_init_default_sb,
+		},
+		{}
+	}
+};
+
 #ifdef SPDK_FTL_VSS_EMU
 void ftl_mngt_md_init_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
@@ -140,3 +235,98 @@ void ftl_mngt_md_deinit_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	ftl_mngt_next_step(mngt);
 }
 #endif
+
+void ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *region = &layout->region[ftl_layout_region_type_sb];
+	char uuid[SPDK_UUID_STRING_LEN];
+
+	/* Must generate UUID before MD create on SHM for the SB */
+	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
+		spdk_uuid_generate(&dev->uuid);
+		spdk_uuid_fmt_lower(uuid, sizeof(uuid), &dev->uuid);
+		FTL_NOTICELOG(dev, "Create new FTL, UUID %s\n", uuid);
+	}
+
+	/* Setup the layout of a superblock */
+	if (ftl_layout_setup_superblock(dev)) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	/* Allocate md buf */
+	layout->md[ftl_layout_region_type_sb] = ftl_md_create(dev, region->current.blocks,
+						region->vss_blksz, region->name, false);
+	if (NULL == layout->md[ftl_layout_region_type_sb]) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	if (ftl_md_set_region(layout->md[ftl_layout_region_type_sb], region)) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	/* Link the md buf to the device */
+	dev->sb = ftl_md_get_buffer(layout->md[ftl_layout_region_type_sb]);
+
+	/* Setup superblock mirror to QLC */
+	region = &layout->region[ftl_layout_region_type_sb_btm];
+	layout->md[ftl_layout_region_type_sb_btm] = ftl_md_create(dev, region->current.blocks,
+			region->vss_blksz, NULL, false);
+	if (NULL == layout->md[ftl_layout_region_type_sb_btm]) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+	if (ftl_md_set_region(layout->md[ftl_layout_region_type_sb_btm], region)) {
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	/* Initialize the superblock */
+	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
+		ftl_mngt_call(mngt, &desc_init_sb);
+	} else {
+		ftl_mngt_fail_step(mngt);
+	}
+}
+
+void ftl_mngt_superblock_deinit(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	struct ftl_layout *layout = &dev->layout;
+
+	if (layout->md[ftl_layout_region_type_sb]) {
+		ftl_md_destroy(layout->md[ftl_layout_region_type_sb]);
+		layout->md[ftl_layout_region_type_sb] = NULL;
+	}
+
+	if (layout->md[ftl_layout_region_type_sb_btm]) {
+		ftl_md_destroy(layout->md[ftl_layout_region_type_sb_btm]);
+		layout->md[ftl_layout_region_type_sb_btm] = NULL;
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+static const struct ftl_mngt_process_desc desc_update_sb = {
+	.name = "FTL update superblock",
+	.steps = {
+		{
+			.name = "Update superblock",
+			.action = ftl_mngt_set_dirty
+		},
+		{}
+	}
+};
+
+void ftl_mngt_update_supeblock(struct spdk_ftl_dev *dev,
+			       ftl_mngt_fn cb, void *cb_cntx)
+{
+	ftl_mngt_execute(dev, &desc_update_sb, cb, cb_cntx);
+}
+
+void ftl_mngt_persist_superblock(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	dev->sb->header.crc = get_sb_crc(dev->sb);
+	persist(dev, mngt, ftl_layout_region_type_sb);
+}

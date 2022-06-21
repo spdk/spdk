@@ -44,6 +44,10 @@ enum ftl_layout_region_type {
 	/** VSS region for NV cache VSS emulation */
 	ftl_layout_region_type_vss,
 #endif
+	/* Superblock describing the basic FTL information */
+	ftl_layout_region_type_sb,
+	/* Mirrored instance of the superblock */
+	ftl_layout_region_type_sb_btm,
 	/* User data region on the nv cache device */
 	ftl_layout_region_type_data_nvc,
 
@@ -141,6 +145,11 @@ struct ftl_layout {
  * @brief Setup FTL layout
  */
 int ftl_layout_setup(struct spdk_ftl_dev *dev);
+
+/**
+ * @brief Setup FTL layout of a superblock
+ */
+int ftl_layout_setup_superblock(struct spdk_ftl_dev *dev);
 
 #ifdef SPDK_FTL_VSS_EMU
 /**

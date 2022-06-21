@@ -47,6 +47,7 @@
 #include "ftl_internal.h"
 #include "ftl_io.h"
 #include "ftl_layout.h"
+#include "ftl_sb.h"
 #include "mngt/ftl_mngt_zone.h"
 #include "utils/ftl_log.h"
 
@@ -73,6 +74,9 @@ struct spdk_ftl_dev {
 
 	/* FTL device layout */
 	struct ftl_layout			layout;
+
+	/* FTL superblock */
+	struct ftl_superblock		*sb;
 
 	/* Indicates the device is fully initialized */
 	int							initialized;
@@ -169,6 +173,12 @@ int ftl_io_channel_poll(void *arg);
 struct spdk_io_channel *ftl_get_io_channel(const struct spdk_ftl_dev *dev);
 
 struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
+
+static inline uint64_t
+ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_blocks_in_band;
+}
 
 static inline size_t
 ftl_get_num_punits(const struct spdk_ftl_dev *dev)

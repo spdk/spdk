@@ -37,7 +37,6 @@
 #include "ftl_core.h"
 #include "ftl_md.h"
 #include "ftl_nv_cache_io.h"
-#include "ftl_utils.h"
 
 struct ftl_md_impl;
 static void io_submit(struct ftl_md_impl *md);
@@ -740,6 +739,20 @@ static void restore_mirror_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int s
 	}
 }
 
+static void restore_sync_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
+{
+	struct ftl_md_impl *primary = md->owner.private;
+
+	if (status) {
+		/* Cannot sync the object from the primary to the mirror, mark error and fail */
+		primary->io.status = -EIO;
+		io_done(primary);
+	} else {
+		primary->base.cb(dev, &primary->base, primary->io.status);
+		io_cleanup(primary);
+	}
+}
+
 static int restore_done(struct ftl_md_impl *md)
 {
 	if (-EAGAIN == md->io.status) {
@@ -764,6 +777,18 @@ static int restore_done(struct ftl_md_impl *md)
 			return -EAGAIN;
 		} else {
 			return -EIO;
+		}
+	} else if (0 == md->io.status && false == md->dev->sb->clean) {
+		if (has_mirror(md)) {
+			/* There was a dirty shutdown, synchronize primary to mirror */
+
+			/* Set callback and context in the mirror */
+			md->mirror->base.cb = restore_sync_cb;
+			md->mirror->base.owner.private = md;
+
+			/* First persist the mirror */
+			ftl_md_persist(&md->mirror->base);
+			return -EAGAIN;
 		}
 	}
 

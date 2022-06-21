@@ -208,6 +208,7 @@ free_device(struct spdk_ftl_dev *dev)
 	free_threads();
 
 	free(dev->ioch);
+	free(dev->sb);
 	free(dev);
 }
 

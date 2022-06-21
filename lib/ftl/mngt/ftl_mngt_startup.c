@@ -73,6 +73,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 		},
 #endif
 		{
+			.name = "Initialize superblock",
+			.action = ftl_mngt_superblock_init,
+			.cleanup = ftl_mngt_superblock_deinit
+		},
+		{
 			.name = "Initialize memory pools",
 			.action = ftl_mngt_init_mem_pools,
 			.cleanup = ftl_mngt_deinit_mem_pools
@@ -105,6 +110,10 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 		{
 			.name = "Scrub NV cache",
 			.action = ftl_mngt_scrub_nv_cache,
+		},
+		{
+			.name = "Set FTL dirty state",
+			.action = ftl_mngt_set_dirty,
 		},
 		{
 			.name = "Start task core",

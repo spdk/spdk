@@ -81,13 +81,19 @@ static int io_channel_create_cb(void *io_device, void *ctx)
 	struct spdk_ftl_dev *dev = io_device;
 	struct ftl_io_channel_cntx *_ioch = ctx;
 	struct ftl_io_channel *ioch;
+	uint32_t num_io_channels;
 	char mempool_name[32];
 	int rc;
 
 	FTL_NOTICELOG(dev, "FTL IO channel created on %s\n",
 		      spdk_thread_get_name(spdk_get_thread()));
 
-	__atomic_fetch_add(&dev->num_io_channels, 1, __ATOMIC_SEQ_CST);
+	num_io_channels = __atomic_fetch_add(&dev->num_io_channels, 1, __ATOMIC_SEQ_CST);
+	if (num_io_channels >= dev->sb->max_io_channels) {
+		FTL_ERRLOG(dev, "Reached maximum number of IO channels\n");
+		__atomic_fetch_sub(&dev->num_io_channels, 1, __ATOMIC_SEQ_CST);
+		return -1;
+	}
 
 	ioch = calloc(1, sizeof(*ioch));
 	if (ioch == NULL) {
@@ -187,6 +193,8 @@ static void io_channel_destroy_cb(void *io_device, void *ctx)
 
 static void init_io_channel(struct spdk_ftl_dev *dev)
 {
+	/* Align the IO channels to nearest power of 2 to allow for easy addr bit shift */
+	dev->sb->max_io_channels = spdk_align32pow2(dev->sb->max_io_channels);
 	dev->num_io_channels = 0;
 
 	spdk_io_device_register(dev, io_channel_create_cb,
