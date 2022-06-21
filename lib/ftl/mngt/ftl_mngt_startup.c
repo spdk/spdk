@@ -31,18 +31,36 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_CONF_H
-#define FTL_CONF_H
+#include "ftl_core.h"
+#include "ftl_mngt.h"
+#include "ftl_mngt_steps.h"
 
-#include "spdk/ftl.h"
+static const struct ftl_mngt_process_desc desc_startup;
 
-int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
+static const struct ftl_mngt_process_desc desc_startup = {
+	.name = "FTL startup",
+	.steps = {
+		{
+			.name = "Open base bdev",
+			.action = ftl_mngt_open_base_bdev,
+			.cleanup = ftl_mngt_close_base_bdev
+		},
+		{
+			.name = "Open cache bdev",
+			.action = ftl_mngt_open_cache_bdev,
+			.cleanup = ftl_mngt_close_cache_bdev
+		},
+		{}
+	}
+};
 
-void ftl_conf_free(struct spdk_ftl_conf *conf);
+int ftl_mngt_startup(struct spdk_ftl_dev *dev,
+		     ftl_mngt_fn cb, void *cb_cntx)
+{
+	return ftl_mngt_execute(dev, &desc_startup, cb, cb_cntx);
+}
 
-int ftl_conf_init_dev(struct spdk_ftl_dev *dev,
-		      const struct spdk_ftl_dev_init_opts *opts);
-
-void ftl_conf_deinit_dev(struct spdk_ftl_dev *dev);
-
-#endif /* FTL_DEFS_H */
+void ftl_mngt_rollback_device(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_mngt_call_rollback(mngt, &desc_startup);
+}

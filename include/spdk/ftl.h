@@ -85,6 +85,52 @@ struct spdk_ftl_conf {
 	uint64_t				base_bdev_reclaim_unit_size;
 };
 
+enum spdk_ftl_mode {
+	/* Create new device */
+	SPDK_FTL_MODE_CREATE = (1 << 0),
+};
+
+struct spdk_ftl_dev_init_opts {
+	/* Underlying device */
+	const char				*base_bdev;
+	/* Write buffer cache */
+	const char				*cache_bdev;
+	/* Device's config */
+	const struct spdk_ftl_conf		*conf;
+	/* Device's name */
+	const char				*name;
+	/* Mode flags */
+	unsigned int				mode;
+	/* Device UUID (valid when restoring device from disk) */
+	struct spdk_uuid			uuid;
+};
+
+typedef void (*spdk_ftl_fn)(void *, int);
+typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
+
+/**
+ * Initialize the FTL on the given pair of bdevs - base and cache bdev.
+ * Upon receiving the completion callback user is free to use I/O calls.
+ *
+ * \param opts configuration for new device
+ * \param cb callback function to call when the device is created
+ * \param cb_arg callback's argument
+ *
+ * \return 0 if initialization was started successfully, negative errno otherwise.
+ */
+int spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb, void *cb_arg);
+
+/**
+ * Deinitialize and free given device.
+ *
+ * \param dev device
+ * \param cb callback function to call when the device is freed
+ * \param cb_arg callback's argument
+ *
+ * \return 0 if successfully scheduled free, negative errno otherwise.
+ */
+int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif

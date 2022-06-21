@@ -31,18 +31,46 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_CONF_H
-#define FTL_CONF_H
+#ifndef FTL_MNGT_ZONE_H
+#define FTL_MNGT_ZONE_H
 
-#include "spdk/ftl.h"
+#include "spdk/bdev.h"
+#include "spdk/bdev_zone.h"
+#include "spdk/util.h"
 
-int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
+#include "ftl_internal.h"
 
-void ftl_conf_free(struct spdk_ftl_conf *conf);
+struct spdk_bdev_desc;
 
-int ftl_conf_init_dev(struct spdk_ftl_dev *dev,
-		      const struct spdk_ftl_dev_init_opts *opts);
+static inline size_t
+ftl_calculate_num_punits(struct spdk_bdev_desc *desc)
+{
+	if (spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(desc))) {
+		return spdk_bdev_get_optimal_open_zones(spdk_bdev_desc_get_bdev(desc));
+	}
 
-void ftl_conf_deinit_dev(struct spdk_ftl_dev *dev);
+	return 1;
+}
 
-#endif /* FTL_DEFS_H */
+static inline size_t
+ftl_calculate_num_blocks_in_zone(struct spdk_bdev_desc *desc)
+{
+	if (spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(desc))) {
+		return spdk_bdev_get_zone_size(spdk_bdev_desc_get_bdev(desc));
+	}
+
+	/* TODO: this should be passed via input parameter */
+#ifdef SPDK_FTL_ZONE_EMU_BLOCKS
+	return SPDK_FTL_ZONE_EMU_BLOCKS;
+#else
+	return (1ULL << 30) / FTL_BLOCK_SIZE;
+#endif
+}
+
+static inline uint64_t
+ftl_calculate_num_blocks_in_band(struct spdk_bdev_desc *desc)
+{
+	return ftl_calculate_num_punits(desc) * ftl_calculate_num_blocks_in_zone(desc);
+}
+
+#endif /* FTL_MNGT_ZONE_H */

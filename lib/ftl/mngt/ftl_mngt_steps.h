@@ -31,18 +31,19 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_CONF_H
-#define FTL_CONF_H
+#ifndef FTL_MNGT_STEPS_H
+#define FTL_MNGT_STEPS_H
 
-#include "spdk/ftl.h"
+#include "ftl_mngt.h"
 
-int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
+void ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
-void ftl_conf_free(struct spdk_ftl_conf *conf);
+void ftl_mngt_close_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
-int ftl_conf_init_dev(struct spdk_ftl_dev *dev,
-		      const struct spdk_ftl_dev_init_opts *opts);
+void ftl_mngt_open_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
-void ftl_conf_deinit_dev(struct spdk_ftl_dev *dev);
+void ftl_mngt_close_cache_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
-#endif /* FTL_DEFS_H */
+void ftl_mngt_rollback_device(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+#endif /* FTL_MNGT_STEPS_H */

@@ -45,6 +45,7 @@
 #include "spdk/bdev_zone.h"
 
 #include "ftl_internal.h"
+#include "mngt/ftl_mngt_zone.h"
 #include "utils/ftl_log.h"
 
 struct spdk_ftl_dev;
@@ -127,5 +128,34 @@ struct spdk_ftl_dev {
 	/* Write submission queue */
 	TAILQ_HEAD(, ftl_io)		wr_sq;
 };
+
+static inline size_t
+ftl_get_num_punits(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_punits;
+}
+
+static inline size_t
+ftl_get_num_blocks_in_zone(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_blocks_in_zone;
+}
+
+static inline uint32_t
+ftl_get_write_unit_size(struct spdk_bdev *bdev)
+{
+	if (spdk_bdev_is_zoned(bdev)) {
+		return spdk_bdev_get_write_unit_size(bdev);
+	}
+
+	/* TODO: this should be passed via input parameter */
+	return 32;
+}
+
+static inline bool
+ftl_is_append_supported(const struct spdk_ftl_dev *dev)
+{
+	return dev->conf.use_append;
+}
 
 #endif /* FTL_CORE_H */

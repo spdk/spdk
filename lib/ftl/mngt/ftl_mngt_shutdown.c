@@ -31,18 +31,26 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_CONF_H
-#define FTL_CONF_H
+#include "ftl_core.h"
+#include "ftl_mngt.h"
+#include "ftl_mngt_steps.h"
 
-#include "spdk/ftl.h"
+static const struct ftl_mngt_process_desc desc_shutdown;
 
-int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
+static const struct ftl_mngt_process_desc desc_shutdown = {
+	.name = "FTL shutdown",
+	.error_handler = ftl_mngt_rollback_device,
+	.steps = {
+		{
+			.name = "Rollback FTL device",
+			.action = ftl_mngt_rollback_device
+		},
+		{}
+	}
+};
 
-void ftl_conf_free(struct spdk_ftl_conf *conf);
-
-int ftl_conf_init_dev(struct spdk_ftl_dev *dev,
-		      const struct spdk_ftl_dev_init_opts *opts);
-
-void ftl_conf_deinit_dev(struct spdk_ftl_dev *dev);
-
-#endif /* FTL_DEFS_H */
+int ftl_mngt_shutdown(struct spdk_ftl_dev *dev,
+		      ftl_mngt_fn cb, void *cb_cntx)
+{
+	return ftl_mngt_execute(dev, &desc_shutdown, cb, cb_cntx);
+}

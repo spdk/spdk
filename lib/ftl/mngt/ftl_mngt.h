@@ -316,4 +316,35 @@ void ftl_mngt_call(struct ftl_mngt *mngt,
 void ftl_mngt_call_rollback(struct ftl_mngt *mngt,
 			    const struct ftl_mngt_process_desc *process);
 
+/*
+ * The specific management functions
+ */
+/**
+ * @brief Starts up a FTL instance
+ *
+ * @param dev FTL device
+ * @param cb Caller callback
+ * @param cb_cntx Caller context
+ *
+ * @return Operation result
+ * @retval 0 The operation successful has started
+ * @retval Non-zero Startup failure
+ */
+int ftl_mngt_startup(struct spdk_ftl_dev *dev,
+		     ftl_mngt_fn cb, void *cb_cntx);
+
+/**
+ * @brief Shuts down a FTL instance
+ *
+ * @param dev FTL device
+ * @param cb Caller callback
+ * @param cb_cntx Caller context
+ *
+ * @return Operation result
+ * @retval 0 The operation successful has started
+ * @retval Non-zero Shutdown failure
+ */
+int ftl_mngt_shutdown(struct spdk_ftl_dev *dev,
+		      ftl_mngt_fn cb, void *cb_cntx);
+
 #endif /* LIB_FTL_FTL_MNGT_H */
