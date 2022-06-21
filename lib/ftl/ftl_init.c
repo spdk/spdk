@@ -55,6 +55,20 @@ struct ftl_dev_init_ctx {
 	/* Thread to call the callback on */
 };
 
+static const struct spdk_ftl_conf	g_default_conf = {
+	/* 20% spare blocks */
+	.lba_rsvd = 20,
+	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
+	.user_io_pool_size = 2048,
+	.nv_cache = {
+		/* Maximum number of blocks per request */
+		.max_request_size = 16,
+		.chunk_compaction_threshold = 80,
+		.chunk_free_target = 5,
+	},
+	.base_bdev_reclaim_unit_size = (1ULL << 30) * 72
+};
+
 static int init_core_thread(struct spdk_ftl_dev *dev)
 {
 	uint32_t i;
@@ -233,6 +247,12 @@ int spdk_ftl_dev_free(struct spdk_ftl_dev *dev,
 error:
 	free(ictx);
 	return rc;
+}
+
+void
+spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf)
+{
+	*conf = g_default_conf;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(ftl_init)

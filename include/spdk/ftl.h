@@ -153,6 +153,13 @@ int spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_f
 int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb, void *cb_arg);
 
 /**
+ * Initialize FTL configuration structure with default values.
+ *
+ * \param conf FTL configuration to initialize
+ */
+void spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
+
+/**
  * Retrieve device’s attributes.
  *
  * \param dev device

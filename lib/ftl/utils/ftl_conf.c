@@ -36,26 +36,6 @@
 #include "ftl_conf.h"
 #include "ftl_core.h"
 
-static const struct spdk_ftl_conf	g_default_conf = {
-	/* 20% spare blocks */
-	.lba_rsvd = 20,
-	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
-	.user_io_pool_size = 2048,
-	.nv_cache = {
-		/* Maximum number of blocks per request */
-		.max_request_size = 16,
-		.chunk_compaction_threshold = 80,
-		.chunk_free_target = 5,
-	},
-	.base_bdev_reclaim_unit_size = (1ULL << 30) * 72
-};
-
-static void
-conf_init_defaults(struct spdk_ftl_conf *conf)
-{
-	*conf = g_default_conf;
-}
-
 int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src)
 {
 	char *core_mask = NULL;
@@ -136,7 +116,7 @@ int ftl_conf_init_dev(struct spdk_ftl_dev *dev,
 	if (opts->conf) {
 		rc = ftl_conf_cpy(&dev->conf, opts->conf);
 	} else {
-		conf_init_defaults(&dev->conf);
+		spdk_ftl_conf_init_defaults(&dev->conf);
 		rc = 0;
 	}
 	if (rc) {
