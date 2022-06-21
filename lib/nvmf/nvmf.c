@@ -1524,6 +1524,7 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	struct spdk_nvmf_subsystem_pg_ns_info *ns_info = NULL;
 	int rc = 0;
+	uint32_t i;
 
 	if (subsystem->id >= group->num_sgroups) {
 		rc = -1;
@@ -1536,10 +1537,17 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 	}
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
 
-	/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
-	if (nsid - 1 < sgroup->num_ns) {
-		ns_info  = &sgroup->ns_info[nsid - 1];
-		ns_info->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
+		for (i = 0; i < sgroup->num_ns; i++) {
+			ns_info = &sgroup->ns_info[i];
+			ns_info->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+		}
+	} else {
+		/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
+		if (nsid - 1 < sgroup->num_ns) {
+			ns_info  = &sgroup->ns_info[nsid - 1];
+			ns_info->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+		}
 	}
 
 	if (sgroup->mgmt_io_outstanding > 0) {
@@ -1550,12 +1558,26 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 		return;
 	}
 
-	if (ns_info != NULL && ns_info->io_outstanding > 0) {
-		assert(sgroup->cb_fn == NULL);
-		sgroup->cb_fn = cb_fn;
-		assert(sgroup->cb_arg == NULL);
-		sgroup->cb_arg = cb_arg;
-		return;
+	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
+		for (i = 0; i < sgroup->num_ns; i++) {
+			ns_info = &sgroup->ns_info[i];
+
+			if (ns_info->io_outstanding > 0) {
+				assert(sgroup->cb_fn == NULL);
+				sgroup->cb_fn = cb_fn;
+				assert(sgroup->cb_arg == NULL);
+				sgroup->cb_arg = cb_arg;
+				return;
+			}
+		}
+	} else {
+		if (ns_info != NULL && ns_info->io_outstanding > 0) {
+			assert(sgroup->cb_fn == NULL);
+			sgroup->cb_fn = cb_fn;
+			assert(sgroup->cb_arg == NULL);
+			sgroup->cb_arg = cb_arg;
+			return;
+		}
 	}
 
 	assert(sgroup->mgmt_io_outstanding == 0);
