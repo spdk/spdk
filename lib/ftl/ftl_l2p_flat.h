@@ -31,38 +31,19 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ftl_core.h"
-#include "ftl_mngt.h"
-#include "ftl_mngt_steps.h"
+#ifndef FTL_L2P_FLAT_H
+#define FTL_L2P_FLAT_H
 
-static const struct ftl_mngt_process_desc desc_shutdown;
+int ftl_l2p_flat_init(struct spdk_ftl_dev *dev);
+void ftl_l2p_flat_deinit(struct spdk_ftl_dev *dev);
+void ftl_l2p_flat_pin(struct spdk_ftl_dev *dev, struct ftl_l2p_pin_ctx *pin_ctx);
+void ftl_l2p_flat_unpin(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t count);
+ftl_addr ftl_l2p_flat_get(struct spdk_ftl_dev *dev, uint64_t lba);
+void ftl_l2p_flat_set(struct spdk_ftl_dev *dev, uint64_t lba, ftl_addr addr);
+void ftl_l2p_flat_unmap(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
+void ftl_l2p_flat_clear(struct spdk_ftl_dev *dev, ftl_l2p_cb cb, void *cb_ctx);
+void ftl_l2p_flat_process(struct spdk_ftl_dev *dev);
+bool ftl_l2p_flat_is_halted(struct spdk_ftl_dev *dev);
+void ftl_l2p_flat_halt(struct spdk_ftl_dev *dev);
 
-static const struct ftl_mngt_process_desc desc_shutdown = {
-	.name = "FTL shutdown",
-	.error_handler = ftl_mngt_rollback_device,
-	.steps = {
-		{
-			.name = "Stop task core",
-			.action = ftl_mngt_stop_task_core
-		},
-		{
-			.name = "Dump statistics",
-			.action = ftl_mngt_dump_stats
-		},
-		{
-			.name = "Deinitialize L2P",
-			.action = ftl_mngt_deinit_l2p
-		},
-		{
-			.name = "Rollback FTL device",
-			.action = ftl_mngt_rollback_device
-		},
-		{}
-	}
-};
-
-int ftl_mngt_shutdown(struct spdk_ftl_dev *dev,
-		      ftl_mngt_fn cb, void *cb_cntx)
-{
-	return ftl_mngt_execute(dev, &desc_shutdown, cb, cb_cntx);
-}
+#endif /* FTL_L2P_FLAT_H */

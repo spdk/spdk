@@ -164,6 +164,19 @@ static int setup_layout_nvc(struct spdk_ftl_dev *dev)
 	region = &layout->region[ftl_layout_region_type_sb];
 	offset += region->current.blocks;
 
+	/* Initialize L2P region */
+	if (offset >= layout->nvc.total_blocks) {
+		goto ERROR;
+	}
+	region = &layout->region[ftl_layout_region_type_l2p];
+	region->type = ftl_layout_region_type_l2p;
+	region->name = "l2p";
+	set_region_version(region, 0);
+	region->current.offset = offset;
+	region->current.blocks = blocks_region(layout->l2p.addr_size * dev->num_lbas);
+	set_region_bdev_nvc(region, dev);
+	offset += region->current.blocks;
+
 	if (offset >= layout->nvc.total_blocks) {
 		goto ERROR;
 	}

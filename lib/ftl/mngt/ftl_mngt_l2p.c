@@ -31,38 +31,40 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/thread.h"
+
 #include "ftl_core.h"
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
+#include "ftl_l2p.h"
 
-static const struct ftl_mngt_process_desc desc_shutdown;
-
-static const struct ftl_mngt_process_desc desc_shutdown = {
-	.name = "FTL shutdown",
-	.error_handler = ftl_mngt_rollback_device,
-	.steps = {
-		{
-			.name = "Stop task core",
-			.action = ftl_mngt_stop_task_core
-		},
-		{
-			.name = "Dump statistics",
-			.action = ftl_mngt_dump_stats
-		},
-		{
-			.name = "Deinitialize L2P",
-			.action = ftl_mngt_deinit_l2p
-		},
-		{
-			.name = "Rollback FTL device",
-			.action = ftl_mngt_rollback_device
-		},
-		{}
-	}
-};
-
-int ftl_mngt_shutdown(struct spdk_ftl_dev *dev,
-		      ftl_mngt_fn cb, void *cb_cntx)
+static void l2p_cb(struct spdk_ftl_dev *dev, int status, void *ctx)
 {
-	return ftl_mngt_execute(dev, &desc_shutdown, cb, cb_cntx);
+	struct ftl_mngt *mngt = ctx;
+
+	if (status) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+void ftl_mngt_init_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	if (ftl_l2p_init(dev)) {
+		ftl_mngt_fail_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
+void ftl_mngt_deinit_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_l2p_deinit(dev);
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_clear_l2p(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	ftl_l2p_clear(dev, l2p_cb, mngt);
 }

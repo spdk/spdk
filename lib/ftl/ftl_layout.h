@@ -48,6 +48,9 @@ enum ftl_layout_region_type {
 	ftl_layout_region_type_sb,
 	/* Mirrored instance of the superblock */
 	ftl_layout_region_type_sb_btm,
+	/* If using cached L2P, this region stores the serialized instance of it */
+	ftl_layout_region_type_l2p,
+
 	/* User data region on the nv cache device */
 	ftl_layout_region_type_data_nvc,
 

@@ -339,8 +339,9 @@ static void
 ftl_io_complete_verify(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
+	uint64_t i;
+	uint64_t lba = io->lba;
 
-	(void)(dev);
 	assert(io->num_blocks <= dev->xfer_size);
 
 	if (FTL_IO_WRITE == io->type) {
@@ -349,6 +350,15 @@ ftl_io_complete_verify(struct ftl_io *io)
 
 	if (spdk_unlikely(io->status)) {
 		return;
+	}
+
+	for (i = 0; i < io->num_blocks; i++, lba++) {
+		ftl_addr current_addr = ftl_l2p_get(dev, lba);
+
+		if (spdk_unlikely(current_addr != io->map[i])) {
+			io->status = -EAGAIN;
+			break;
+		}
 	}
 }
 
@@ -366,6 +376,7 @@ ftl_io_complete(struct ftl_io *io)
 	if (complete) {
 		if (io->flags & FTL_IO_PINNED) {
 			ftl_io_complete_verify(io);
+			ftl_l2p_unpin(io->dev, io->lba, io->num_blocks);
 		}
 
 		if (io->cb_fn) {

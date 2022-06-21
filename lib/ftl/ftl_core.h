@@ -48,8 +48,13 @@
 #include "ftl_io.h"
 #include "ftl_layout.h"
 #include "ftl_sb.h"
+#include "ftl_l2p.h"
 #include "mngt/ftl_mngt_zone.h"
 #include "utils/ftl_log.h"
+
+#ifdef SPDK_CONFIG_PMDK
+#include "libpmem.h"
+#endif /* SPDK_CONFIG_PMDK */
 
 struct spdk_ftl_dev;
 struct ftl_zone;
@@ -120,6 +125,12 @@ struct spdk_ftl_dev {
 	/* Number of free bands */
 	size_t						num_free;
 
+	/* Logical -> physical table */
+	void						*l2p;
+
+	/* l2p deferred pins list */
+	TAILQ_HEAD(, ftl_l2p_pin_ctx) l2p_deferred_pins;
+
 	/* Size of the l2p table */
 	uint64_t					num_lbas;
 
@@ -163,6 +174,8 @@ struct ftl_media_event {
 	/* Media event */
 	struct spdk_bdev_media_event	event;
 };
+
+void ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
 
 int ftl_task_core(void *ctx);
 
