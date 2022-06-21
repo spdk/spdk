@@ -45,6 +45,46 @@ extern "C" {
 
 struct spdk_ftl_dev;
 
+struct spdk_ftl_conf {
+	/* Number of reserved addresses not exposed to the user */
+	size_t					lba_rsvd;
+
+	/* Core mask - core thread plus additional relocation threads */
+	char					*core_mask;
+
+	/* IO pool size per user thread */
+	size_t					user_io_pool_size;
+
+	/* Use zone devices, use append instead of write if applicable */
+	bool					use_append;
+
+	/* FTL startup mode mask, see spdk_ftl_mode enum for possible values*/
+	uint32_t				mode;
+
+	struct {
+		/* Maximum number of blocks per one request */
+		size_t				max_request_size;
+
+		/* Start compaction when full chunks exceed given % of entire chunks */
+		uint32_t			chunk_compaction_threshold;
+
+		/* Percent of chunks to maintain free */
+		uint32_t			chunk_free_target;
+	} nv_cache;
+
+	/* Create l2p table on l2p_path persistent memory file or device instead of in DRAM */
+	char					*l2p_path;
+
+	/* Name of base block device (zoned or non-zoned) */
+	char					*base_bdev;
+
+	/* Name of cache block device (must support extended metadata) */
+	char					*cache_bdev;
+
+	/* Base bdev reclaim uint size */
+	uint64_t				base_bdev_reclaim_unit_size;
+};
+
 #ifdef __cplusplus
 }
 #endif

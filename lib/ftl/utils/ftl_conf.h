@@ -31,10 +31,13 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FTL_FTL_UTILS_H
-#define FTL_FTL_UTILS_H
+#ifndef FTL_CONF_H
+#define FTL_CONF_H
 
-#include "utils/ftl_defs.h"
-#include "utils/ftl_conf.h"
+#include "spdk/ftl.h"
 
-#endif /* FTL_FTL_UTILS_H */
+int ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
+
+void ftl_conf_free(struct spdk_ftl_conf *conf);
+
+#endif /* FTL_DEFS_H */
