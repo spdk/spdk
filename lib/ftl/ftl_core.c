@@ -45,4 +45,19 @@
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
 
+void
+spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
+{
+	attrs->uuid = dev->uuid;
+	attrs->num_blocks = dev->num_lbas;
+	attrs->block_size = FTL_BLOCK_SIZE;
+	attrs->num_zones = ftl_get_num_zones(dev);
+	attrs->zone_size = ftl_get_num_blocks_in_zone(dev);
+	attrs->conf = dev->conf;
+	attrs->base_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
+	attrs->optimum_io_size = dev->xfer_size;
+
+	attrs->cache_bdev = NULL;
+}
+
 SPDK_LOG_REGISTER_COMPONENT(ftl_core)

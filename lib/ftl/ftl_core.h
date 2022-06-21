@@ -156,6 +156,18 @@ ftl_get_write_unit_size(struct spdk_bdev *bdev)
 	return 32;
 }
 
+static inline size_t
+ftl_get_num_bands(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_bands;
+}
+
+static inline size_t
+ftl_get_num_zones(const struct spdk_ftl_dev *dev)
+{
+	return ftl_get_num_bands(dev) * ftl_get_num_punits(dev);
+}
+
 static inline int
 ftl_addr_packed(const struct spdk_ftl_dev *dev)
 {

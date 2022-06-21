@@ -105,6 +105,27 @@ struct spdk_ftl_dev_init_opts {
 	struct spdk_uuid			uuid;
 };
 
+struct spdk_ftl_attrs {
+	/* Device's UUID */
+	struct spdk_uuid		uuid;
+	/* Number of logical blocks */
+	uint64_t				num_blocks;
+	/* Logical block size */
+	uint64_t				block_size;
+	/* Underlying device */
+	const char				*base_bdev;
+	/* Write buffer cache */
+	const char				*cache_bdev;
+	/* Number of zones per parallel unit in the underlying device (including any offline ones) */
+	uint64_t				num_zones;
+	/* Number of logical blocks per zone */
+	uint64_t				zone_size;
+	/* Optimal IO size - bdev layer will split requests over this size */
+	uint64_t				optimum_io_size;
+	/* Device specific configuration */
+	struct spdk_ftl_conf	conf;
+};
+
 typedef void (*spdk_ftl_fn)(void *, int);
 typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *, void *, int);
 
@@ -130,6 +151,14 @@ int spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_f
  * \return 0 if successfully scheduled free, negative errno otherwise.
  */
 int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb, void *cb_arg);
+
+/**
+ * Retrieve device’s attributes.
+ *
+ * \param dev device
+ * \param attr Attribute structure to fill
+ */
+void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
 
 #ifdef __cplusplus
 }
