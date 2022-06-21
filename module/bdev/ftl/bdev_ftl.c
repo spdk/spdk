@@ -41,7 +41,7 @@ static void bdev_ftl_examine(struct spdk_bdev *bdev);
 static int
 bdev_ftl_get_ctx_size(void)
 {
-	return 0;
+	return spdk_ftl_io_size();
 }
 
 static struct spdk_bdev_module g_ftl_if = {

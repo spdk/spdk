@@ -11,7 +11,6 @@
 #include "ftl_internal.h"
 #include "ftl_core.h"
 #include "utils/ftl_defs.h"
-#include "utils/ftl_md.h"
 
 #define MINIMUM_CACHE_SIZE_GIB 5
 #define MINIMUM_BASE_SIZE_GIB 20

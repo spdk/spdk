@@ -17,6 +17,7 @@
 #include "spdk/bdev_zone.h"
 
 #include "ftl_internal.h"
+#include "ftl_io.h"
 #include "ftl_layout.h"
 #include "utils/ftl_log.h"
 
@@ -137,6 +138,12 @@ static inline size_t
 ftl_get_num_zones(const struct spdk_ftl_dev *dev)
 {
 	return ftl_get_num_bands(dev) * ftl_get_num_zones_in_band(dev);
+}
+
+static inline bool
+ftl_check_core_thread(const struct spdk_ftl_dev *dev)
+{
+	return dev->core_thread == spdk_get_thread();
 }
 
 #endif /* FTL_CORE_H */

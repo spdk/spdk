@@ -13,10 +13,18 @@
 #include "spdk/crc32.h"
 
 #include "ftl_core.h"
+#include "ftl_io.h"
 #include "ftl_debug.h"
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
 #include "utils/ftl_mempool.h"
+
+
+size_t
+spdk_ftl_io_size(void)
+{
+	return sizeof(struct ftl_io);
+}
 
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)

@@ -134,6 +134,13 @@ void spdk_ftl_conf_deinit(struct spdk_ftl_conf *conf);
  */
 void spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf);
 
+/**
+ * Returns the size of ftl_io struct that needs to be passed to spdk_ftl_read/write
+ *
+ * \return The size of struct
+ */
+size_t spdk_ftl_io_size(void);
+
 #ifdef __cplusplus
 }
 #endif
