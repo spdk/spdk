@@ -73,6 +73,9 @@ struct spdk_ftl_dev {
 	/* Indicates the device is about to be stopped */
 	int							halt;
 
+	/* Queue of registered IO channels */
+	TAILQ_HEAD(, ftl_io_channel) ioch_queue;
+
 	/* Underlying device */
 	struct spdk_bdev_desc		*base_bdev_desc;
 
@@ -130,6 +133,9 @@ struct spdk_ftl_dev {
 	/* Poller */
 	struct spdk_poller			*core_poller;
 
+	/* Number of IO channels */
+	uint64_t					num_io_channels;
+
 	/* Read submission queue */
 	TAILQ_HEAD(, ftl_io)		rd_sq;
 
@@ -139,7 +145,11 @@ struct spdk_ftl_dev {
 
 int ftl_task_core(void *ctx);
 
+int ftl_io_channel_poll(void *arg);
+
 struct spdk_io_channel *ftl_get_io_channel(const struct spdk_ftl_dev *dev);
+
+struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
 
 static inline size_t
 ftl_get_num_punits(const struct spdk_ftl_dev *dev)
@@ -162,6 +172,12 @@ ftl_get_write_unit_size(struct spdk_bdev *bdev)
 
 	/* TODO: this should be passed via input parameter */
 	return 32;
+}
+
+static inline struct spdk_thread *
+ftl_get_core_thread(const struct spdk_ftl_dev *dev)
+{
+	return dev->core_thread;
 }
 
 static inline size_t

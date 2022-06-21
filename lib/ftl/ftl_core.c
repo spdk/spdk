@@ -103,6 +103,10 @@ ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 		return 0;
 	}
 
+	if (__atomic_load_n(&dev->num_io_channels, __ATOMIC_SEQ_CST) != 1) {
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -121,6 +125,76 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->cache_bdev = NULL;
 }
 
+static void
+start_io(struct ftl_io *io)
+{
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
+
+	io->map = ftl_mempool_get(ioch->map_pool);
+	if (spdk_unlikely(!io->map)) {
+		io->status = -ENOMEM;
+		ftl_io_complete(io);
+		return;
+	}
+
+	switch (io->type) {
+	case FTL_IO_READ:
+	case FTL_IO_WRITE:
+	case FTL_IO_UNMAP:
+	default:
+		io->status = -EOPNOTSUPP;
+		ftl_io_complete(io);
+	}
+}
+
+#define FTL_IO_QUEUE_BATCH 16
+int
+ftl_io_channel_poll(void *arg)
+{
+	struct ftl_io_channel *ch = arg;
+	void *ios[FTL_IO_QUEUE_BATCH];
+	uint64_t i, count;
+
+	count = spdk_ring_dequeue(ch->cq, ios, FTL_IO_QUEUE_BATCH);
+	if (count == 0) {
+		return SPDK_POLLER_IDLE;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct ftl_io *io = ios[i];
+		io->user_fn(io->cb_ctx, io->status);
+	}
+
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+ftl_process_io_channel(struct spdk_ftl_dev *dev, struct ftl_io_channel *ioch)
+{
+	void *ios[FTL_IO_QUEUE_BATCH];
+	size_t count, i;
+
+	count = spdk_ring_dequeue(ioch->sq, ios, FTL_IO_QUEUE_BATCH);
+	if (count == 0) {
+		return;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct ftl_io *io = ios[i];
+		start_io(io);
+	}
+}
+
+static void
+ftl_process_io_queue(struct spdk_ftl_dev *dev)
+{
+	struct ftl_io_channel *ioch;
+
+	TAILQ_FOREACH(ioch, &dev->ioch_queue, entry) {
+		ftl_process_io_channel(dev, ioch);
+	}
+}
+
 int
 ftl_task_core(void *ctx)
 {
@@ -133,6 +207,8 @@ ftl_task_core(void *ctx)
 			return SPDK_POLLER_IDLE;
 		}
 	}
+
+	ftl_process_io_queue(dev);
 
 	if ((io_activity_total_old != dev->io_activity_total)) {
 		return SPDK_POLLER_BUSY;

@@ -155,6 +155,7 @@ static struct spdk_ftl_dev *allocate_dev(
 
 	TAILQ_INIT(&dev->rd_sq);
 	TAILQ_INIT(&dev->wr_sq);
+	TAILQ_INIT(&dev->ioch_queue);
 
 	return dev;
 error:

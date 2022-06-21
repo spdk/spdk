@@ -105,6 +105,25 @@ struct ftl_io_init_opts {
 	void					*cb_ctx;
 };
 
+struct ftl_io_channel {
+	/*  Device */
+	struct spdk_ftl_dev			*dev;
+	/*  Entry of IO channels queue/list */
+	TAILQ_ENTRY(ftl_io_channel)	entry;
+	/*  IO pool element size */
+	size_t						io_pool_elem_size;
+	/*  IO pool */
+	struct spdk_mempool			*io_pool;
+	/*  IO map pool */
+	struct ftl_mempool			*map_pool;
+	/*  Poller used for completing write requests and retrying IO */
+	struct spdk_poller			*poller;
+	/*  Submission queue */
+	struct spdk_ring			*sq;
+	/*  Completion queue */
+	struct spdk_ring			*cq;
+};
+
 /* General IO descriptor */
 struct ftl_io {
 	/* Device */

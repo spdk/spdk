@@ -234,8 +234,23 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 }
 
 static void
+ftl_io_user_enqueue_completion(void *_io)
+{
+	struct ftl_io *io = _io;
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
+	size_t result;
+
+	result = spdk_ring_enqueue(ioch->cq, (void **)&io, 1, NULL);
+	if (spdk_unlikely(result == 0)) {
+		spdk_thread_send_msg(spdk_get_thread(), ftl_io_user_enqueue_completion, io);
+	}
+}
+
+static void
 ftl_io_user_cb(struct ftl_io *io, void *arg, int status)
 {
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
+
 	if (spdk_unlikely(status)) {
 		io->status = status;
 
@@ -264,15 +279,19 @@ ftl_io_user_cb(struct ftl_io *io, void *arg, int status)
 		}
 	}
 
-	/* User completion added in next patch */
+	if (io->map) {
+		ftl_mempool_put(ioch->map_pool, io->map);
+	}
+
+	ftl_io_user_enqueue_completion(io);
 }
 
 int
 ftl_io_user_init(struct spdk_io_channel *_ioch, struct ftl_io *io, uint64_t lba, size_t num_blocks,
 		 struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_ctx, int type)
 {
-	/* dev initialized from io channel context in next patch */
-	struct spdk_ftl_dev *dev = NULL;
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(_ioch);
+	struct spdk_ftl_dev *dev = ioch->dev;
 
 	memset(io, 0, sizeof(struct ftl_io));
 	io->ioch = _ioch;
@@ -290,10 +309,13 @@ ftl_io_user_init(struct spdk_io_channel *_ioch, struct ftl_io *io, uint64_t lba,
 static void
 _ftl_io_free(struct ftl_io *io)
 {
+	struct ftl_io_channel *ioch;
+
 	assert(LIST_EMPTY(&io->children));
 
 	if (io->flags & FTL_IO_INTERNAL) {
-		spdk_free(io);
+		ioch = ftl_io_channel_get_ctx(io->ioch);
+		spdk_mempool_put(ioch->io_pool, io);
 	}
 }
 
@@ -385,12 +407,14 @@ struct ftl_io *
 ftl_io_alloc(struct spdk_io_channel *ch)
 {
 	struct ftl_io *io;
-	/* Temporary allocation, switches to mempool in next patch*/
-	io = spdk_zmalloc(sizeof(struct ftl_io), 64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(ch);
+
+	io = spdk_mempool_get(ioch->io_pool);
 	if (!io) {
 		return NULL;
 	}
 
+	memset(io, 0, ioch->io_pool_elem_size);
 	io->ioch = ch;
 
 	return io;

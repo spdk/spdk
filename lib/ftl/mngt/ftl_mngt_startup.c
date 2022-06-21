@@ -66,6 +66,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_close_cache_bdev
 		},
 		{
+			.name = "Initialize IO channel",
+			.action = ftl_mngt_init_io_channel,
+			.cleanup = ftl_mngt_deinit_io_channel
+		},
+		{
 			.name = "Initialize layout",
 			.action = ftl_mngt_init_layout
 		},
