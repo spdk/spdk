@@ -126,12 +126,17 @@ struct spdk_ftl_dev {
 	/* Cache IO channel */
 	struct spdk_io_channel		*cache_ioch;
 
+	/* Poller */
+	struct spdk_poller			*core_poller;
+
 	/* Read submission queue */
 	TAILQ_HEAD(, ftl_io)		rd_sq;
 
 	/* Write submission queue */
 	TAILQ_HEAD(, ftl_io)		wr_sq;
 };
+
+int ftl_task_core(void *ctx);
 
 static inline size_t
 ftl_get_num_punits(const struct spdk_ftl_dev *dev)

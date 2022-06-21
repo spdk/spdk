@@ -87,6 +87,29 @@ void ftl_mngt_finalize_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 	ftl_mngt_next_step(mngt);
 }
 
+void ftl_mngt_start_task_core(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	dev->core_poller = SPDK_POLLER_REGISTER(ftl_task_core, dev, 0);
+	if (!dev->core_poller) {
+		FTL_ERRLOG(dev, "Unable to register core poller\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
+	ftl_mngt_next_step(mngt);
+}
+
+void ftl_mngt_stop_task_core(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
+{
+	dev->halt = true;
+
+	if (dev->core_poller) {
+		ftl_mngt_continue_step(mngt);
+	} else {
+		ftl_mngt_next_step(mngt);
+	}
+}
+
 void ftl_mngt_dump_stats(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt)
 {
 	ftl_dev_dump_stats(dev);

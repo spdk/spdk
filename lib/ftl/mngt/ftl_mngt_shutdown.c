@@ -42,6 +42,10 @@ static const struct ftl_mngt_process_desc desc_shutdown = {
 	.error_handler = ftl_mngt_rollback_device,
 	.steps = {
 		{
+			.name = "Stop task core",
+			.action = ftl_mngt_stop_task_core
+		},
+		{
 			.name = "Dump statistics",
 			.action = ftl_mngt_dump_stats
 		},

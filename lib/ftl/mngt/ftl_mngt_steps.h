@@ -50,6 +50,10 @@ void ftl_mngt_scrub_nv_cache(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_finalize_init(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
+void ftl_mngt_start_task_core(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
+void ftl_mngt_stop_task_core(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
+
 void ftl_mngt_init_layout(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);
 
 void ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt *mngt);

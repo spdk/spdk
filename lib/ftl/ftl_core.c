@@ -45,6 +45,16 @@
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
 
+static int
+ftl_shutdown_complete(struct spdk_ftl_dev *dev)
+{
+	if (dev->num_inflight) {
+		return 0;
+	}
+
+	return 1;
+}
+
 void
 spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
 {
@@ -58,6 +68,26 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 	attrs->optimum_io_size = dev->xfer_size;
 
 	attrs->cache_bdev = NULL;
+}
+
+int
+ftl_task_core(void *ctx)
+{
+	struct spdk_ftl_dev *dev = ctx;
+	uint64_t io_activity_total_old = dev->io_activity_total;
+
+	if (dev->halt) {
+		if (ftl_shutdown_complete(dev)) {
+			spdk_poller_unregister(&dev->core_poller);
+			return SPDK_POLLER_IDLE;
+		}
+	}
+
+	if ((io_activity_total_old != dev->io_activity_total)) {
+		return SPDK_POLLER_BUSY;
+	}
+
+	return SPDK_POLLER_IDLE;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(ftl_core)
