@@ -72,6 +72,11 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 			.action = ftl_mngt_scrub_nv_cache,
 		},
 		{
+			.name = "Start core poller",
+			.action = ftl_mngt_start_core_poller,
+			.cleanup = ftl_mngt_stop_core_poller
+		},
+		{
 			.name = "Finalize initialization",
 			.action = ftl_mngt_finalize_startup,
 		},
