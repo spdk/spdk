@@ -20,6 +20,12 @@ spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf)
 	*conf = g_default_conf;
 }
 
+void
+spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf)
+{
+	*conf = dev->conf;
+}
+
 int
 ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src)
 {

@@ -48,6 +48,19 @@ enum spdk_ftl_mode {
 	SPDK_FTL_MODE_CREATE = (1 << 0),
 };
 
+struct spdk_ftl_attrs {
+	/* Number of logical blocks */
+	uint64_t			num_blocks;
+	/* Logical block size */
+	uint64_t			block_size;
+	/* Number of zones in the underlying device (including any offline ones) */
+	uint64_t			num_zones;
+	/* Number of logical blocks per zone */
+	uint64_t			zone_size;
+	/* Optimal IO size - bdev layer will split requests over this size */
+	uint64_t			optimum_io_size;
+};
+
 typedef void (*spdk_ftl_fn)(void *cb_arg, int status);
 typedef void (*spdk_ftl_init_fn)(struct spdk_ftl_dev *dev, void *cb_arg, int status);
 
@@ -73,6 +86,22 @@ int spdk_ftl_dev_init(const struct spdk_ftl_conf *conf, spdk_ftl_init_fn cb, voi
  * \return 0 if deinitialization was started successfully, negative errno otherwise.
  */
 int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg);
+
+/**
+ * Retrieve device’s attributes.
+ *
+ * \param dev device
+ * \param attr Attribute structure to fill
+ */
+void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+
+/**
+ * Retrieve device’s configuration.
+ *
+ * \param dev device
+ * \param conf FTL configuration structure to fill
+ */
+void spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf);
 
 /**
  * Initialize FTL configuration structure with default values.

@@ -5,6 +5,8 @@
 	spdk_ftl_dev_init;
 	spdk_ftl_dev_free;
 	spdk_ftl_get_default_conf;
+	spdk_ftl_dev_get_attrs;
+	spdk_ftl_dev_get_conf;
 
 	local: *;
 };
