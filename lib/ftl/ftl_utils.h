@@ -7,5 +7,6 @@
 #define FTL_FTL_UTILS_H
 
 #include "utils/ftl_defs.h"
+#include "utils/ftl_conf.h"
 
 #endif /* FTL_FTL_UTILS_H */

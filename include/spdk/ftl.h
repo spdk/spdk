@@ -17,6 +17,34 @@ extern "C" {
 
 struct spdk_ftl_dev;
 
+struct spdk_ftl_conf {
+	/* Percentage of base device blocks not exposed to the user */
+	uint64_t				overprovisioning;
+
+	/* Core mask - core thread plus additional relocation threads */
+	char					*core_mask;
+
+	/* IO pool size per user thread */
+	size_t					user_io_pool_size;
+
+	/* FTL startup mode mask, see spdk_ftl_mode enum for possible values */
+	uint32_t				mode;
+
+	/* Name of base block device (zoned or non-zoned) */
+	char					*base_bdev;
+
+	/* Name of cache block device (must support extended metadata) */
+	char					*cache_bdev;
+
+	/* Base bdev reclaim unit size */
+	uint64_t				base_bdev_reclaim_unit_size;
+};
+
+enum spdk_ftl_mode {
+	/* Create new device */
+	SPDK_FTL_MODE_CREATE = (1 << 0),
+};
+
 #ifdef __cplusplus
 }
 #endif

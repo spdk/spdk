@@ -15,6 +15,7 @@ FTL_SUBDIRS := mngt utils
 
 C_SRCS = ftl_core.c
 C_SRCS += mngt/ftl_mngt.c
+C_SRCS += utils/ftl_conf.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 
