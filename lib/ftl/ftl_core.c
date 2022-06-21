@@ -55,4 +55,10 @@ ftl_core_poller(void *ctx)
 	return SPDK_POLLER_IDLE;
 }
 
+struct spdk_io_channel *
+spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev)
+{
+	return spdk_get_io_channel(dev);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(ftl_core)

@@ -109,6 +109,9 @@ DEPDIRS-scheduler_gscheduler := event log
 endif
 
 # module/bdev
+ifeq ($(OS),Linux)
+DEPDIRS-bdev_ftl := bdev json log util ftl
+endif
 DEPDIRS-bdev_gpt := bdev json log thread util
 
 DEPDIRS-bdev_error := $(BDEV_DEPS)

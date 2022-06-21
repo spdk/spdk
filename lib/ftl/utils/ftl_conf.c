@@ -27,7 +27,7 @@ spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf
 }
 
 int
-ftl_conf_cpy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src)
+spdk_ftl_conf_copy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src)
 {
 	char *name = NULL;
 	char *core_mask = NULL;
@@ -74,7 +74,7 @@ error:
 }
 
 void
-ftl_conf_deinit(struct spdk_ftl_conf *conf)
+spdk_ftl_conf_deinit(struct spdk_ftl_conf *conf)
 {
 	free(conf->name);
 	free(conf->core_mask);
@@ -100,7 +100,7 @@ ftl_conf_init_dev(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf)
 		return -EINVAL;
 	}
 
-	rc = ftl_conf_cpy(&dev->conf, conf);
+	rc = spdk_ftl_conf_copy(&dev->conf, conf);
 	if (rc) {
 		return rc;
 	}

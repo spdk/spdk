@@ -7,6 +7,9 @@
 	spdk_ftl_get_default_conf;
 	spdk_ftl_dev_get_attrs;
 	spdk_ftl_dev_get_conf;
+	spdk_ftl_conf_copy;
+	spdk_ftl_conf_deinit;
+	spdk_ftl_get_io_channel;
 
 	local: *;
 };

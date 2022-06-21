@@ -104,6 +104,30 @@ void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attr
 void spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf);
 
 /**
+ * Obtain an I/O channel for the device.
+ *
+ * \param dev device
+ *
+ * \return A handle to the I/O channel or NULL on failure.
+ */
+struct spdk_io_channel *spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev);
+
+/**
+ * Make a deep copy of an FTL configuration structure
+ *
+ * \param dst The destination FTL configuration
+ * \param src The source FTL configuration
+ */
+int spdk_ftl_conf_copy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src);
+
+/**
+ * Release the FTL configuration resources. This does not free the structure itself.
+ *
+ * \param conf FTL configuration to deinitialize
+ */
+void spdk_ftl_conf_deinit(struct spdk_ftl_conf *conf);
+
+/**
  * Initialize FTL configuration structure with default values.
  *
  * \param conf FTL configuration to initialize

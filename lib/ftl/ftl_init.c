@@ -84,7 +84,7 @@ free_dev(struct spdk_ftl_dev *dev)
 	}
 
 	deinit_core_thread(dev);
-	ftl_conf_deinit(&dev->conf);
+	spdk_ftl_conf_deinit(&dev->conf);
 	free(dev);
 }
 
