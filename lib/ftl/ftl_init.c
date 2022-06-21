@@ -44,6 +44,7 @@
 #include "spdk/config.h"
 
 #include "ftl_core.h"
+#include "ftl_io.h"
 #include "ftl_debug.h"
 #include "ftl_utils.h"
 #include "mngt/ftl_mngt.h"

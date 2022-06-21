@@ -45,6 +45,7 @@
 #include "spdk/bdev_zone.h"
 
 #include "ftl_internal.h"
+#include "ftl_io.h"
 #include "ftl_layout.h"
 #include "mngt/ftl_mngt_zone.h"
 #include "utils/ftl_log.h"
@@ -138,6 +139,8 @@ struct spdk_ftl_dev {
 
 int ftl_task_core(void *ctx);
 
+struct spdk_io_channel *ftl_get_io_channel(const struct spdk_ftl_dev *dev);
+
 static inline size_t
 ftl_get_num_punits(const struct spdk_ftl_dev *dev)
 {
@@ -197,6 +200,12 @@ static inline ftl_addr
 ftl_addr_to_cached(const struct spdk_ftl_dev *dev, uint64_t cache_offset)
 {
 	return cache_offset + dev->layout.btm.total_blocks;
+}
+
+static inline bool
+ftl_check_core_thread(const struct spdk_ftl_dev *dev)
+{
+	return dev->core_thread == spdk_get_thread();
 }
 
 static inline bool

@@ -41,6 +41,7 @@
 #include "spdk/crc32.h"
 
 #include "ftl_core.h"
+#include "ftl_io.h"
 #include "ftl_debug.h"
 #include "ftl_internal.h"
 #include "mngt/ftl_mngt.h"
@@ -78,6 +79,22 @@ struct ftl_wptr {
 	/* Marks that the band related to this wptr needs to be closed as soon as possible */
 	bool				flush;
 };
+
+size_t
+spdk_ftl_io_size(void)
+{
+	return sizeof(struct ftl_io);
+}
+
+struct spdk_io_channel *
+ftl_get_io_channel(const struct spdk_ftl_dev *dev)
+{
+	if (ftl_check_core_thread(dev)) {
+		return dev->ioch;
+	}
+
+	return NULL;
+}
 
 static int
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)

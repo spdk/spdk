@@ -176,6 +176,13 @@ void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attr
  */
 struct spdk_io_channel *spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev);
 
+/**
+ * Returns the size of ftl_io struct that needs to be passed to spdk_ftl_read/write
+ *
+ * \return The size of struct
+ */
+size_t spdk_ftl_io_size(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -38,7 +38,6 @@
 #include "ftl_mngt_steps.h"
 #include "ftl_internal.h"
 #include "ftl_core.h"
-#include "utils/ftl_md.h"
 
 /*  Dummy bdev module used to to claim bdevs. */
 static struct spdk_bdev_module g_ftl_bdev_module = {
