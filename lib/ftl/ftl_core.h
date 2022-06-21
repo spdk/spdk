@@ -28,6 +28,9 @@ struct spdk_ftl_dev {
 	/* FTL device layout */
 	struct ftl_layout		layout;
 
+	/* Queue of registered IO channels */
+	TAILQ_HEAD(, ftl_io_channel)	ioch_queue;
+
 	/* Underlying device */
 	struct spdk_bdev_desc		*base_bdev_desc;
 
@@ -48,6 +51,12 @@ struct spdk_ftl_dev {
 
 	/* Indicates the device is about to be stopped */
 	bool				halt;
+
+	/* Indicates if the device is registered as an IO device */
+	bool				io_device_registered;
+
+	/* Management process to be continued after IO device unregistration completes */
+	struct ftl_mngt_process		*unregister_process;
 
 	/* counters for poller busy, include
 	   1. nv cache read/write
@@ -99,6 +108,10 @@ struct spdk_ftl_dev {
 
 int ftl_core_poller(void *ctx);
 
+int ftl_io_channel_poll(void *arg);
+
+struct ftl_io_channel *ftl_io_channel_get_ctx(struct spdk_io_channel *ioch);
+
 static inline uint64_t
 ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 {
@@ -126,6 +139,12 @@ ftl_get_write_unit_size(struct spdk_bdev *bdev)
 
 	/* TODO: this should be passed via input parameter */
 	return 32;
+}
+
+static inline struct spdk_thread *
+ftl_get_core_thread(const struct spdk_ftl_dev *dev)
+{
+	return dev->core_thread;
 }
 
 static inline size_t

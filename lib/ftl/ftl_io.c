@@ -117,6 +117,9 @@ ftl_io_iovec_len_left(struct ftl_io *io)
 static void
 ftl_io_cb(struct ftl_io *io, void *arg, int status)
 {
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
+	size_t result;
+
 	if (spdk_unlikely(status)) {
 		io->status = status;
 
@@ -145,15 +148,20 @@ ftl_io_cb(struct ftl_io *io, void *arg, int status)
 		}
 	}
 
-	/* User completion added in next patch */
+	if (io->map) {
+		ftl_mempool_put(ioch->map_pool, io->map);
+	}
+
+	result = spdk_ring_enqueue(ioch->cq, (void **)&io, 1, NULL);
+	assert(result != 0);
 }
 
 int
 ftl_io_init(struct spdk_io_channel *_ioch, struct ftl_io *io, uint64_t lba, size_t num_blocks,
 	    struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_ctx, int type)
 {
-	/* dev initialized from io channel context in next patch */
-	struct spdk_ftl_dev *dev = NULL;
+	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(_ioch);
+	struct spdk_ftl_dev *dev = ioch->dev;
 
 	memset(io, 0, sizeof(struct ftl_io));
 	io->ioch = _ioch;

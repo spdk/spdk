@@ -34,6 +34,21 @@ enum ftl_io_type {
 
 #define FTL_IO_MAX_IOVEC 4
 
+struct ftl_io_channel {
+	/*  Device */
+	struct spdk_ftl_dev		*dev;
+	/*  Entry of IO channels queue/list */
+	TAILQ_ENTRY(ftl_io_channel)	entry;
+	/*  IO map pool */
+	struct ftl_mempool		*map_pool;
+	/*  Poller used for completing user requests and retrying IO */
+	struct spdk_poller		*poller;
+	/*  Submission queue */
+	struct spdk_ring		*sq;
+	/*  Completion queue */
+	struct spdk_ring		*cq;
+};
+
 /* General IO descriptor for user requests */
 struct ftl_io {
 	/* Device */
