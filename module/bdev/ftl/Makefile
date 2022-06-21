@@ -31,31 +31,21 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += delay error gpt lvol malloc null nvme passthru raid split zone_block
+SO_VER := 4
+SO_MINOR := 0
 
-DIRS-$(CONFIG_CRYPTO) += crypto
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/ftl/
 
-DIRS-$(CONFIG_OCF) += ocf
-
-DIRS-$(CONFIG_REDUCE) += compress
-
-DIRS-$(CONFIG_URING) += uring
-
-ifeq ($(OS),Linux)
-DIRS-y += aio ftl
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_PMDK) += pmem
+ifdef SPDK_FTL_VSS_EMU
+CFLAGS += -DSPDK_FTL_VSS_EMU
 endif
 
-DIRS-$(CONFIG_RBD) += rbd
+C_SRCS += bdev_ftl.c
+LIBNAME = bdev_ftl
 
-.PHONY: all clean $(DIRS-y)
+SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

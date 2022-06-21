@@ -160,6 +160,15 @@ int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_init_fn cb, void *cb_ar
  */
 void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
 
+/**
+ * Obtain an I/O channel for the device.
+ *
+ * \param dev device
+ *
+ * \return A handle to the I/O channel or NULL on failure.
+ */
+struct spdk_io_channel *spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev);
+
 #ifdef __cplusplus
 }
 #endif

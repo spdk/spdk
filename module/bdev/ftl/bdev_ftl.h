@@ -31,69 +31,61 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/likely.h"
+#ifndef SPDK_BDEV_FTL_H
+#define SPDK_BDEV_FTL_H
+
 #include "spdk/stdinc.h"
-#include "spdk/nvme.h"
-#include "spdk/thread.h"
 #include "spdk/bdev_module.h"
-#include "spdk/string.h"
 #include "spdk/ftl.h"
-#include "spdk/crc32.h"
 
 #include "ftl_core.h"
-#include "ftl_debug.h"
-#include "ftl_internal.h"
-#include "mngt/ftl_mngt.h"
 
-static int
-ftl_shutdown_complete(struct spdk_ftl_dev *dev)
-{
-	if (dev->num_inflight) {
-		return 0;
-	}
+struct spdk_bdev;
+struct spdk_uuid;
 
-	return 1;
-}
+struct ftl_bdev_info {
+	const char			*name;
+	struct spdk_uuid	uuid;
+};
 
-void
-spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
-{
-	attrs->uuid = dev->uuid;
-	attrs->num_blocks = dev->num_lbas;
-	attrs->block_size = FTL_BLOCK_SIZE;
-	attrs->num_zones = ftl_get_num_zones(dev);
-	attrs->zone_size = ftl_get_num_blocks_in_zone(dev);
-	attrs->conf = dev->conf;
-	attrs->base_bdev = spdk_bdev_get_name(spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
-	attrs->optimum_io_size = dev->xfer_size;
+struct ftl_bdev_init_opts {
+	/* Bdev's name */
+	const char				*name;
+	/* Base bdev's name */
+	const char				*base_bdev;
+	/* Write buffer bdev's name */
+	const char				*cache_bdev;
+	/* Bdev's mode */
+	uint32_t				mode;
+	/* UUID if device is restored from SSD */
+	struct spdk_uuid		uuid;
+	/* FTL library configuration */
+	struct spdk_ftl_conf	ftl_conf;
+};
 
-	attrs->cache_bdev = NULL;
-}
+typedef void (*ftl_bdev_init_fn)(const struct ftl_bdev_info *, void *, int);
+typedef void (*ftl_bdev_thread_fn)(void *);
 
-int
-ftl_task_core(void *ctx)
-{
-	struct spdk_ftl_dev *dev = ctx;
-	uint64_t io_activity_total_old = dev->io_activity_total;
+struct ftl_bdev {
+	struct spdk_bdev		bdev;
 
-	if (dev->halt) {
-		if (ftl_shutdown_complete(dev)) {
-			spdk_poller_unregister(&dev->core_poller);
-			return SPDK_POLLER_IDLE;
-		}
-	}
+	struct spdk_ftl_dev		*dev;
 
-	if ((io_activity_total_old != dev->io_activity_total)) {
-		return SPDK_POLLER_BUSY;
-	}
+	ftl_bdev_init_fn		init_cb;
 
-	return SPDK_POLLER_IDLE;
-}
+	void					*init_arg;
 
-struct spdk_io_channel *
-spdk_ftl_get_io_channel(struct spdk_ftl_dev *dev)
-{
-	return spdk_get_io_channel(dev);
-}
+	int						rc;
+};
 
-SPDK_LOG_REGISTER_COMPONENT(ftl_core)
+struct rpc_ftl_stats_ctx {
+	struct spdk_jsonrpc_request *request;
+
+	struct spdk_ftl_dev *dev;
+};
+
+int	bdev_ftl_create_bdev(const struct ftl_bdev_init_opts *bdev_opts,
+			     ftl_bdev_init_fn cb, void *cb_arg);
+void	bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+
+#endif /* SPDK_BDEV_FTL_H */
