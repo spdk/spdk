@@ -8,6 +8,7 @@
 #include "ftl_core.h"
 #include "ftl_utils.h"
 #include "ftl_layout.h"
+#include "ftl_sb.h"
 
 static inline float
 blocks2mib(uint64_t blocks)
@@ -27,7 +28,6 @@ blocks2mib(uint64_t blocks)
 #define FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS 32ULL
 #define FTL_LAYOUT_REGION_ALIGNMENT_BYTES (FTL_LAYOUT_REGION_ALIGNMENT_BLOCKS * FTL_BLOCK_SIZE)
 
-#ifdef SPDK_FTL_VSS_EMU
 static inline uint64_t
 blocks_region(uint64_t bytes)
 {
@@ -40,7 +40,6 @@ blocks_region(uint64_t bytes)
 
 	return result;
 }
-#endif
 
 static void
 dump_region(struct spdk_ftl_dev *dev, struct ftl_layout_region *region)
@@ -136,6 +135,14 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	}
 #endif
 
+	/* Skip the superblock region. Already init`d in ftl_layout_setup_superblock */
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB];
+	offset += region->current.blocks;
+
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
+
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_DATA_NVC];
 	region->type = FTL_LAYOUT_REGION_TYPE_DATA_NVC;
 	region->name = "data_nvc";
@@ -157,11 +164,30 @@ error:
 	return -1;
 }
 
+static ftl_addr
+layout_base_offset(struct spdk_ftl_dev *dev)
+{
+	ftl_addr addr;
+
+	addr = dev->num_bands * ftl_get_num_blocks_in_band(dev);
+	return addr;
+}
+
 static int
 setup_layout_base(struct spdk_ftl_dev *dev)
 {
+	uint64_t left, offset;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
+
+	/* Base device layout is following:
+	 * - data
+	 * - superblock
+	 * - valid map
+	 *
+	 * Superblock has been already configured, its offset marks the end of the data region
+	 */
+	offset = layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.offset;
 
 	/* Setup data region on base device */
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_DATA_BASE];
@@ -169,8 +195,23 @@ setup_layout_base(struct spdk_ftl_dev *dev)
 	region->name = "data_btm";
 	region->current.version = region->prev.version = 0;
 	region->current.offset = 0;
-	region->current.blocks = layout->base.total_blocks;
+	region->current.blocks = offset;
 	set_region_bdev_btm(region, dev);
+
+	/* Move offset after base superblock */
+	offset += layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.blocks;
+
+	/* Checking for underflow */
+	left = layout->base.total_blocks - offset;
+	if (left > layout->base.total_blocks) {
+		FTL_ERRLOG(dev, "Error when setup base device layout\n");
+		return -1;
+	}
+
+	if (offset > layout->base.total_blocks) {
+		FTL_ERRLOG(dev, "Error when setup base device layout\n");
+		return -1;
+	}
 
 	return 0;
 }
@@ -191,6 +232,11 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 
 	/* Initialize mirrors types */
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; ++i) {
+		if (i == FTL_LAYOUT_REGION_TYPE_SB) {
+			/* Super block has been already initialized */
+			continue;
+		}
+
 		layout->region[i].mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
 	}
 
@@ -201,6 +247,7 @@ ftl_layout_setup(struct spdk_ftl_dev *dev)
 	if (dev->num_lbas == 0) {
 		assert(dev->conf.mode & SPDK_FTL_MODE_CREATE);
 		dev->num_lbas = num_lbas;
+		dev->sb->lba_cnt = num_lbas;
 	} else if (dev->num_lbas != num_lbas) {
 		FTL_ERRLOG(dev, "Mismatched FTL num_lbas\n");
 		return -EINVAL;
@@ -262,6 +309,64 @@ ftl_layout_setup_vss_emu(struct spdk_ftl_dev *dev)
 }
 #endif
 
+int
+ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
+{
+	struct ftl_layout *layout = &dev->layout;
+	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB];
+	uint64_t total_blocks, offset, left;
+
+	assert(layout->md[FTL_LAYOUT_REGION_TYPE_SB] == NULL);
+
+	/* Initialize superblock region */
+	region->type = FTL_LAYOUT_REGION_TYPE_SB;
+	region->mirror_type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
+	region->name = "sb";
+	region->current.version = FTL_METADATA_VERSION_CURRENT;
+	region->prev.version = FTL_METADATA_VERSION_CURRENT;
+	region->current.offset = 0;
+
+	/*
+	 * VSS region must go first in case SB to make calculating its relative size easier
+	 */
+#ifdef SPDK_FTL_VSS_EMU
+	region->current.offset = layout->region[FTL_LAYOUT_REGION_TYPE_VSS].current.offset +
+				 layout->region[FTL_LAYOUT_REGION_TYPE_VSS].current.blocks;
+#endif
+
+	region->current.blocks = blocks_region(FTL_SUPERBLOCK_SIZE);
+	region->vss_blksz = 0;
+	region->bdev_desc = dev->cache_bdev_desc;
+	region->ioch = dev->cache_ioch;
+
+	assert(region->bdev_desc != NULL);
+	assert(region->ioch != NULL);
+
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE];
+	region->type = FTL_LAYOUT_REGION_TYPE_SB_BASE;
+	region->mirror_type = FTL_LAYOUT_REGION_TYPE_MAX;
+	region->name = "sb_mirror";
+	region->current.version = FTL_METADATA_VERSION_CURRENT;
+	region->prev.version = FTL_METADATA_VERSION_CURRENT;
+	/* TODO: This should really be at offset 0 - think how best to upgrade between the two layouts
+	 * This is an issue if some other metadata appears at block 0 of base device (most likely GPT or blobstore)
+	 */
+	region->current.offset = layout_base_offset(dev);
+	region->current.blocks = blocks_region(FTL_SUPERBLOCK_SIZE);
+	set_region_bdev_btm(region, dev);
+
+	/* Check if SB can be stored at the end of base device */
+	total_blocks = spdk_bdev_get_num_blocks(
+			       spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
+	offset = region->current.offset + region->current.blocks;
+	left = total_blocks - offset;
+	if ((left > total_blocks) || (offset > total_blocks)) {
+		FTL_ERRLOG(dev, "Error when setup base device super block\n");
+		return -1;
+	}
+
+	return 0;
+}
 
 void
 ftl_layout_dump(struct spdk_ftl_dev *dev)

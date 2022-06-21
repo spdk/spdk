@@ -19,6 +19,7 @@
 #include "ftl_internal.h"
 #include "ftl_io.h"
 #include "ftl_layout.h"
+#include "ftl_sb.h"
 #include "utils/ftl_log.h"
 
 /* When using VSS on nvcache, FTL sometimes doesn't require the contents of metadata.
@@ -34,6 +35,9 @@ struct spdk_ftl_dev {
 
 	/* FTL device layout */
 	struct ftl_layout		layout;
+
+	/* FTL superblock */
+	struct ftl_superblock		*sb;
 
 	/* Queue of registered IO channels */
 	TAILQ_HEAD(, ftl_io_channel)	ioch_queue;

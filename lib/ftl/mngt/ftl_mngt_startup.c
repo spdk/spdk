@@ -50,6 +50,11 @@ static const struct ftl_mngt_process_desc desc_startup = {
 		},
 #endif
 		{
+			.name = "Initialize superblock",
+			.action = ftl_mngt_superblock_init,
+			.cleanup = ftl_mngt_superblock_deinit
+		},
+		{
 			.name = "Register IO device",
 			.action = ftl_mngt_register_io_device,
 			.cleanup = ftl_mngt_unregister_io_device
@@ -87,6 +92,10 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 		{
 			.name = "Scrub NV cache",
 			.action = ftl_mngt_scrub_nv_cache,
+		},
+		{
+			.name = "Set FTL dirty state",
+			.action = ftl_mngt_set_dirty,
 		},
 		{
 			.name = "Start core poller",
