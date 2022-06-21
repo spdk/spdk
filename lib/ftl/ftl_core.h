@@ -241,6 +241,17 @@ ftl_is_zoned(const struct spdk_ftl_dev *dev)
 	return dev->is_zoned;
 }
 
+
+static inline uint64_t
+ftl_addr_get_zone_slba(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	if (ftl_is_zoned(dev)) {
+		return addr - (addr % ftl_get_num_blocks_in_zone(dev));
+	}
+
+	return addr & ~(ftl_get_num_blocks_in_zone(dev) - 1);
+}
+
 static inline uint64_t
 ftl_addr_get_band(const struct spdk_ftl_dev *dev, ftl_addr addr)
 {

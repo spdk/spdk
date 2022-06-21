@@ -196,6 +196,11 @@ struct ftl_zone *ftl_band_next_operational_zone(struct ftl_band *band,
 size_t ftl_lba_map_pool_elem_size(struct spdk_ftl_dev *dev);
 void ftl_band_remove_zone(struct ftl_band *band, struct ftl_zone *zone);
 ftl_addr ftl_band_lba_map_addr(struct ftl_band *band);
+void ftl_band_rq_write(struct ftl_band *band, struct ftl_rq *rq);
+void ftl_band_rq_read(struct ftl_band *band, struct ftl_rq *rq);
+void ftl_band_basic_rq_write(struct ftl_band *band, struct ftl_basic_rq *brq);
+void ftl_band_basic_rq_read(struct ftl_band *band, struct ftl_basic_rq *brq);
+void ftl_band_read_tail_brq_md(struct ftl_band *band, ftl_band_md_cb cb, void *cntx);
 
 static inline void ftl_band_set_owner(struct ftl_band *band,
 				      ftl_band_state_change_fn fn,
