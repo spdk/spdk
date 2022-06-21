@@ -60,7 +60,7 @@ DEPDIRS-blobfs := log thread blob trace util
 DEPDIRS-event := log util thread $(JSON_LIBS) trace init
 DEPDIRS-init := jsonrpc json log rpc thread util
 
-DEPDIRS-ftl := log thread
+DEPDIRS-ftl := log util thread bdev
 DEPDIRS-nbd := log util thread $(JSON_LIBS) bdev
 DEPDIRS-nvmf := accel log sock util nvme thread $(JSON_LIBS) trace bdev
 ifeq ($(CONFIG_RDMA),y)

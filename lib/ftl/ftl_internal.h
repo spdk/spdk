@@ -13,6 +13,8 @@
 
 /* Marks address as invalid */
 #define FTL_ADDR_INVALID	((ftl_addr)-1)
+/* Smallest data unit size */
+#define FTL_BLOCK_SIZE		4096ULL
 
 /*
  * This type represents address in the ftl address space. Values from 0 to based bdev size are

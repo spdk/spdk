@@ -411,30 +411,33 @@ trace_step(struct spdk_ftl_dev *dev, struct ftl_mngt_step *step, bool rollback)
 }
 
 static void
-process_summary(struct ftl_mngt_process *mngt)
-{
-	uint64_t duration;
-
-	if (mngt->silent) {
-		return;
-	}
-
-	duration = mngt->tsc_stop - mngt->tsc_start;
-	FTL_NOTICELOG(mngt->dev, "Management process finished, "
-		      "name '%s', duration = %.3f ms, result %d\n",
-		      mngt->desc->name,
-		      tsc_to_ms(duration),
-		      mngt->status);
-}
-
-static void
 finish_msg(void *ctx)
 {
 	struct ftl_mngt_process *mngt = ctx;
+	char *devname = NULL;
+
+	if (!mngt->silent && mngt->dev->conf.name) {
+		/* the callback below can free the device so make a temp copy of the name */
+		devname = strdup(mngt->dev->conf.name);
+	}
 
 	mngt->caller.cb(mngt->dev, mngt->caller.cb_ctx, mngt->status);
-	process_summary(mngt);
+
+	if (!mngt->silent) {
+		/* TODO: refactor the logging macros to pass just the name instead of device */
+		struct spdk_ftl_dev tmpdev = {
+			.conf = {
+				.name = devname
+			}
+		};
+
+		FTL_NOTICELOG(&tmpdev, "Management process finished, name '%s', duration = %.3f ms, result %d\n",
+			      mngt->desc->name,
+			      tsc_to_ms(mngt->tsc_stop - mngt->tsc_start),
+			      mngt->status);
+	}
 	free_mngt(mngt);
+	free(devname);
 }
 
 void

@@ -20,11 +20,8 @@
 #include "utils/ftl_log.h"
 
 struct spdk_ftl_dev {
-	/* Device instance */
-	struct spdk_uuid		uuid;
-
-	/* Device name */
-	char				*name;
+	/* Configuration */
+	struct spdk_ftl_conf		conf;
 
 	/* Underlying device */
 	struct spdk_bdev_desc		*base_bdev_desc;
@@ -91,5 +88,34 @@ struct spdk_ftl_dev {
 	/* Write submission queue */
 	TAILQ_HEAD(, ftl_io)		wr_sq;
 };
+
+static inline uint64_t
+ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_blocks_in_band;
+}
+
+static inline size_t
+ftl_get_num_zones_in_band(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_zones_in_band;
+}
+
+static inline size_t
+ftl_get_num_blocks_in_zone(const struct spdk_ftl_dev *dev)
+{
+	return dev->num_blocks_in_zone;
+}
+
+static inline uint32_t
+ftl_get_write_unit_size(struct spdk_bdev *bdev)
+{
+	if (spdk_bdev_is_zoned(bdev)) {
+		return spdk_bdev_get_write_unit_size(bdev);
+	}
+
+	/* TODO: this should be passed via input parameter */
+	return 32;
+}
 
 #endif /* FTL_CORE_H */

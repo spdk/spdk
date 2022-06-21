@@ -9,12 +9,16 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 SO_VER := 5
 SO_MINOR := 0
 
+ifneq ($(strip $(SPDK_FTL_ZONE_EMU_BLOCKS)),)
+CFLAGS += -DSPDK_FTL_ZONE_EMU_BLOCKS=$(SPDK_FTL_ZONE_EMU_BLOCKS)
+endif
+
 CFLAGS += -I.
 
 FTL_SUBDIRS := mngt utils
 
-C_SRCS = ftl_core.c
-C_SRCS += mngt/ftl_mngt.c
+C_SRCS = ftl_core.c ftl_init.c
+C_SRCS += mngt/ftl_mngt.c mngt/ftl_mngt_bdev.c mngt/ftl_mngt_shutdown.c mngt/ftl_mngt_startup.c
 C_SRCS += utils/ftl_conf.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)

@@ -14,7 +14,7 @@
 	{ \
 		spdk_log(SPDK_LOG_##type, __FILE__, __LINE__, __func__, "[FTL] "format, ## __VA_ARGS__); \
 	} else { \
-		spdk_log(SPDK_LOG_##type, __FILE__, __LINE__, __func__, "[FTL][%s] "format, (dev)->name, ## __VA_ARGS__); \
+		spdk_log(SPDK_LOG_##type, __FILE__, __LINE__, __func__, "[FTL][%s] "format, (dev)->conf.name, ## __VA_ARGS__); \
 	} \
 
 #define FTL_ERRLOG(dev, format, ...) \
