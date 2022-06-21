@@ -16,6 +16,7 @@
 
 #include "ftl_core.h"
 #include "ftl_io.h"
+#include "ftl_band.h"
 #include "ftl_debug.h"
 #include "ftl_nv_cache.h"
 #include "ftl_utils.h"

@@ -23,6 +23,11 @@ enum ftl_layout_region_type {
 	/* If using cached L2P, this region stores the serialized instance of it */
 	FTL_LAYOUT_REGION_TYPE_L2P,
 
+	/* State of bands */
+	FTL_LAYOUT_REGION_TYPE_BAND_MD,
+	/* Mirrored instance of bands state */
+	FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR,
+
 	/* State of chunks */
 	FTL_LAYOUT_REGION_TYPE_NVC_MD,
 	/* Mirrored instance of the state of chunks */
@@ -99,6 +104,8 @@ struct ftl_layout {
 	/* Organization for base device */
 	struct {
 		uint64_t total_blocks;
+		uint64_t num_usable_blocks;
+		uint64_t user_blocks;
 	} base;
 
 	/* Organization for NV cache */

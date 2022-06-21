@@ -7,6 +7,7 @@
 
 #include "ftl_core.h"
 #include "ftl_utils.h"
+#include "ftl_band.h"
 #include "ftl_layout.h"
 #include "ftl_nv_cache.h"
 #include "ftl_sb.h"
@@ -157,6 +158,34 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 	region->current.blocks = blocks_region(layout->l2p.addr_size * dev->num_lbas);
 	set_region_bdev_nvc(region, dev);
 	offset += region->current.blocks;
+
+	/* Initialize band info metadata */
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
+	region = &layout->region[FTL_LAYOUT_REGION_TYPE_BAND_MD];
+	region->type = FTL_LAYOUT_REGION_TYPE_BAND_MD;
+	region->mirror_type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR;
+	region->name = "band_md";
+	region->current.version = region->prev.version = FTL_BAND_VERSION_CURRENT;
+	region->current.offset = offset;
+	region->current.blocks = blocks_region(ftl_get_num_bands(dev) * sizeof(struct ftl_band_md));
+	region->entry_size = sizeof(struct ftl_band_md) / FTL_BLOCK_SIZE;
+	region->num_entries = ftl_get_num_bands(dev);
+	set_region_bdev_nvc(region, dev);
+	offset += region->current.blocks;
+
+	/* Initialize band info metadata mirror */
+	if (offset >= layout->nvc.total_blocks) {
+		goto error;
+	}
+	mirror = &layout->region[FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR];
+	*mirror = *region;
+	mirror->type = FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR;
+	mirror->mirror_type = FTL_LAYOUT_REGION_TYPE_INVALID;
+	mirror->name = "band_md_mirror";
+	mirror->current.offset += region->current.blocks;
+	offset += mirror->current.blocks;
 
 	if (offset >= layout->nvc.total_blocks) {
 		goto error;

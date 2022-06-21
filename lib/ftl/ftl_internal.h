@@ -24,6 +24,30 @@
  */
 typedef uint64_t ftl_addr;
 
+enum ftl_md_type {
+	FTL_MD_TYPE_BAND,
+	FTL_MD_TYPE_CHUNK
+};
+
+enum ftl_band_type {
+	FTL_BAND_TYPE_GC = 1,
+	FTL_BAND_TYPE_COMPACTION
+};
+
+enum ftl_md_status {
+	FTL_MD_SUCCESS,
+	/* Metadata read failure */
+	FTL_MD_IO_FAILURE,
+	/* Invalid version */
+	FTL_MD_INVALID_VER,
+	/* UUID doesn't match */
+	FTL_MD_NO_MD,
+	/* UUID and version matches but CRC doesn't */
+	FTL_MD_INVALID_CRC,
+	/* Vld or p2l map size doesn't match */
+	FTL_MD_INVALID_SIZE
+};
+
 /* Number of LBAs that could be stored in a single block */
 #define FTL_NUM_LBA_IN_BLOCK	(FTL_BLOCK_SIZE / sizeof(uint64_t))
 

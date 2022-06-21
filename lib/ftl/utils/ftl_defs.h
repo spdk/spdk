@@ -37,4 +37,8 @@
 		}				\
 	} while (0)
 
+#define FTL_INVALID_VALUE		((uint64_t)-1)
+#define FTL_BAND_ID_INVALID		FTL_INVALID_VALUE
+#define FTL_BAND_PHYS_ID_INVALID	FTL_INVALID_VALUE
+
 #endif /* FTL_DEFS_H */

@@ -4,9 +4,9 @@
  */
 
 #include "ftl_l2p.h"
+#include "ftl_band.h"
 #include "ftl_nv_cache.h"
 #include "ftl_l2p_flat.h"
-#include "ftl_core.h"
 
 
 /* TODO: Verify why function pointers had worse performance than compile time constants */

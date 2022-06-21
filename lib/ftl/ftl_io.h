@@ -17,6 +17,7 @@
 #include "utils/ftl_md.h"
 
 struct spdk_ftl_dev;
+struct ftl_band;
 struct ftl_io;
 
 typedef void (*ftl_io_fn)(struct ftl_io *, void *, int);
@@ -147,6 +148,11 @@ struct ftl_rq_entry {
 		void *priv;
 	} owner;
 
+	/* If request issued in iterative way, it contains IO information */
+	struct {
+		struct ftl_band *band;
+	} io;
+
 	/* For l2p pinning */
 	struct ftl_l2p_pin_ctx l2p_pin_ctx;
 
@@ -194,6 +200,10 @@ struct ftl_rq {
 		/* End request callback */
 		void (*cb)(struct ftl_rq *rq);
 
+		/* IO error request callback */
+		void (*error)(struct ftl_rq *rq, struct ftl_band *band,
+			      uint64_t idx, uint64_t count);
+
 		/* Owner context */
 		void *priv;
 
@@ -219,6 +229,9 @@ struct ftl_rq {
 		/* Request physical address, on IO completion set for append device */
 		ftl_addr addr;
 
+		/* Band to which IO is issued */
+		struct ftl_band *band;
+
 		struct spdk_bdev_io_wait_entry bdev_io_wait;
 	} io;
 
@@ -228,7 +241,7 @@ struct ftl_rq {
 	struct ftl_rq_entry entries[];
 };
 
-/* Used for reading/writing LBA map during runtime and recovery */
+/* Used for reading/writing P2L map during runtime and recovery */
 struct ftl_basic_rq {
 	struct spdk_ftl_dev *dev;
 
@@ -257,6 +270,9 @@ struct ftl_basic_rq {
 	struct {
 		/* Request physical address, on IO completion set for append device */
 		ftl_addr addr;
+
+		/* Band to which IO is issued */
+		struct ftl_band *band;
 
 		/* Chunk to which IO is issued */
 		struct ftl_nv_cache_chunk *chunk;

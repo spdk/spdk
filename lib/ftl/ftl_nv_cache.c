@@ -12,6 +12,7 @@
 #include "ftl_nv_cache.h"
 #include "ftl_nv_cache_io.h"
 #include "ftl_core.h"
+#include "ftl_band.h"
 #include "utils/ftl_addr_utils.h"
 #include "mngt/ftl_mngt.h"
 

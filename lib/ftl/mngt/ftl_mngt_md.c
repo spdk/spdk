@@ -10,6 +10,7 @@
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
 #include "ftl_utils.h"
+#include "ftl_band.h"
 #include "ftl_internal.h"
 #include "ftl_sb.h"
 
@@ -30,12 +31,12 @@ is_buffer_needed(enum ftl_layout_region_type type)
 #ifdef SPDK_FTL_VSS_EMU
 	case FTL_LAYOUT_REGION_TYPE_VSS:
 #endif
-
 	case FTL_LAYOUT_REGION_TYPE_SB:
 	case FTL_LAYOUT_REGION_TYPE_SB_BASE:
 	case FTL_LAYOUT_REGION_TYPE_DATA_NVC:
 	case FTL_LAYOUT_REGION_TYPE_DATA_BASE:
 	case FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR:
+	case FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR:
 		return false;
 
 	default:

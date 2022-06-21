@@ -23,6 +23,13 @@
 #include "ftl_l2p.h"
 #include "utils/ftl_log.h"
 
+/*
+ * We need to reserve at least 2 buffers for band close / open sequence
+ * alone, plus additional (8) buffers for handling relocations.
+ *
+ */
+#define P2L_MEMPOOL_SIZE (2 + 8)
+
 /* When using VSS on nvcache, FTL sometimes doesn't require the contents of metadata.
  * Some devices have bugs when sending a NULL pointer as part of metadata when namespace
  * is formatted with VSS. This buffer is passed to such calls to avoid the bug. */
@@ -71,8 +78,20 @@ struct spdk_ftl_dev {
 	   3. base bdev read/write */
 	uint64_t			io_activity_total;
 
+	/* Array of bands */
+	struct ftl_band			*bands;
+
 	/* Number of operational bands */
 	uint64_t			num_bands;
+
+	/* Next write band */
+	struct ftl_band			*next_band;
+
+	/* Free band list */
+	TAILQ_HEAD(, ftl_band)		free_bands;
+
+	/* Closed bands list */
+	TAILQ_HEAD(, ftl_band)		shut_bands;
 
 	/* Number of free bands */
 	uint64_t			num_free;
@@ -125,6 +144,12 @@ static inline uint64_t
 ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 {
 	return dev->num_blocks_in_band;
+}
+
+static inline uint64_t
+ftl_addr_get_band(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	return addr / ftl_get_num_blocks_in_band(dev);
 }
 
 static inline uint32_t
@@ -180,6 +205,21 @@ static inline ftl_addr
 ftl_addr_from_nvc_offset(const struct spdk_ftl_dev *dev, uint64_t cache_offset)
 {
 	return cache_offset + dev->layout.base.total_blocks;
+}
+
+static inline size_t
+ftl_p2l_map_num_blocks(const struct spdk_ftl_dev *dev)
+{
+	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) * sizeof(uint64_t),
+				    FTL_BLOCK_SIZE);
+}
+
+static inline size_t
+ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev)
+{
+	return spdk_divide_round_up(
+		       ftl_p2l_map_num_blocks(dev),
+		       dev->xfer_size) * dev->xfer_size;
 }
 
 #endif /* FTL_CORE_H */
