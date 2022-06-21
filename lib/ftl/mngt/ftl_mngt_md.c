@@ -38,6 +38,7 @@
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
 #include "ftl_utils.h"
+#include "ftl_band.h"
 #include "ftl_internal.h"
 #include "ftl_sb.h"
 
@@ -61,6 +62,7 @@ static bool is_md(enum ftl_layout_region_type type)
 	case ftl_layout_region_type_data_nvc:
 	case ftl_layout_region_type_data_btm:
 	case ftl_layout_region_type_nvc_md_mirror:
+	case ftl_layout_region_type_band_md_mirror:
 		return false;
 
 	default:

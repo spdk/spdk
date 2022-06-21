@@ -33,6 +33,7 @@
 
 #include "ftl_l2p.h"
 #include "ftl_core.h"
+#include "ftl_band.h"
 #include "ftl_utils.h"
 #include "ftl_l2p_flat.h"
 #include "utils/ftl_addr_utils.h"

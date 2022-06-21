@@ -1,0 +1,276 @@
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright (c) Intel Corporation.
+ *   All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of Intel Corporation nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "spdk/stdinc.h"
+#include "spdk/crc32.h"
+#include "spdk/likely.h"
+#include "spdk/util.h"
+#include "spdk/ftl.h"
+
+#include "ftl_band.h"
+#include "ftl_io.h"
+#include "ftl_core.h"
+#include "ftl_internal.h"
+#include "utils/ftl_md.h"
+#include "utils/ftl_defs.h"
+
+static uint64_t
+ftl_band_tail_md_offset(const struct ftl_band *band)
+{
+	return ftl_band_num_usable_blocks(band) -
+	       ftl_tail_md_num_blocks(band->dev);
+}
+
+int
+ftl_band_filled(struct ftl_band *band, size_t offset)
+{
+	return offset == ftl_band_tail_md_offset(band);
+}
+
+void
+ftl_band_force_full(struct ftl_band *band)
+{
+	ftl_band_iter_init(band);
+	ftl_band_iter_advance(band, ftl_band_tail_md_offset(band));
+}
+
+ftl_addr
+ftl_band_tail_md_addr(struct ftl_band *band)
+{
+	ftl_addr addr;
+	struct ftl_zone *zone;
+	struct spdk_ftl_dev *dev = band->dev;
+	size_t xfer_size = dev->xfer_size;
+	size_t num_req = ftl_band_tail_md_offset(band) / xfer_size;
+	size_t i;
+
+	if (spdk_unlikely(!band->num_zones)) {
+		return FTL_ADDR_INVALID;
+	}
+
+	/* Metadata should be aligned to xfer size */
+	assert(ftl_band_tail_md_offset(band) % xfer_size == 0);
+
+	zone = CIRCLEQ_FIRST(&band->zones);
+	for (i = 0; i < num_req % band->num_zones; ++i) {
+		zone = ftl_band_next_zone(band, zone);
+	}
+
+	addr = (num_req / band->num_zones) * xfer_size;
+	addr += zone->info.zone_id;
+
+	return addr;
+}
+
+void
+ftl_band_set_type(struct ftl_band *band, enum ftl_band_type type)
+{
+	assert(type == FTL_BAND_TYPE_COMPACTION || type == FTL_BAND_TYPE_GC);
+
+	switch (type) {
+	case FTL_BAND_TYPE_COMPACTION:
+	case FTL_BAND_TYPE_GC:
+		band->md->type = type;
+		break;
+	default:
+		break;
+	}
+}
+
+size_t
+ftl_band_num_usable_blocks(const struct ftl_band *band)
+{
+	return band->num_zones * ftl_get_num_blocks_in_zone(band->dev);
+}
+
+size_t
+ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset)
+{
+	size_t tail_md_offset = ftl_band_tail_md_offset(band);
+
+	if (spdk_unlikely(offset > tail_md_offset)) {
+		return 0;
+	}
+
+	return tail_md_offset - offset;
+}
+
+struct ftl_band *
+ftl_band_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	size_t band_id = ftl_addr_get_band(dev, addr);
+
+	assert(band_id < ftl_get_num_bands(dev));
+	return &dev->bands[band_id];
+}
+
+struct ftl_zone *
+ftl_band_zone_from_addr(struct ftl_band *band, ftl_addr addr)
+{
+	size_t pu_id = ftl_addr_get_punit(band->dev, addr);
+
+	assert(pu_id < ftl_get_num_punits(band->dev));
+	return &band->zone_buf[pu_id];
+}
+
+uint64_t
+ftl_band_block_offset_from_addr(struct ftl_band *band, ftl_addr addr)
+{
+	assert(ftl_addr_get_band(band->dev, addr) == band->id);
+	assert(ftl_addr_get_punit(band->dev, addr) <
+	       ftl_get_num_punits(band->dev));
+	return addr % ftl_get_num_blocks_in_band(band->dev);
+}
+
+ftl_addr
+ftl_band_next_xfer_addr(struct ftl_band *band, ftl_addr addr, size_t num_blocks)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_zone *zone;
+	size_t num_xfers, num_stripes;
+	uint64_t offset;
+
+	assert(ftl_addr_get_band(dev, addr) == band->id);
+
+	offset = ftl_addr_get_zone_offset(dev, addr);
+	zone = ftl_band_zone_from_addr(band, addr);
+
+	num_blocks += (offset % dev->xfer_size);
+	offset  -= (offset % dev->xfer_size);
+
+#if defined(DEBUG)
+	/* Check that the number of zones has not been changed */
+	struct ftl_zone *_zone;
+	size_t _num_zones = 0;
+	CIRCLEQ_FOREACH(_zone, &band->zones, circleq) {
+		if (spdk_likely(_zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+			_num_zones++;
+		}
+	}
+	assert(band->num_zones == _num_zones);
+#endif
+	assert(band->num_zones != 0);
+	num_stripes = (num_blocks / dev->xfer_size) / band->num_zones;
+	offset += num_stripes * dev->xfer_size;
+	num_blocks -= num_stripes * dev->xfer_size * band->num_zones;
+
+	if (offset > ftl_get_num_blocks_in_zone(dev)) {
+		return FTL_ADDR_INVALID;
+	}
+
+	num_xfers = num_blocks / dev->xfer_size;
+	for (size_t i = 0; i < num_xfers; ++i) {
+		/* When the last zone is reached the block part of the address */
+		/* needs to be increased by xfer_size */
+		if (ftl_band_zone_is_last(band, zone)) {
+			offset += dev->xfer_size;
+			if (offset > ftl_get_num_blocks_in_zone(dev)) {
+				return FTL_ADDR_INVALID;
+			}
+		}
+
+		zone = ftl_band_next_operational_zone(band, zone);
+		assert(zone);
+
+		num_blocks -= dev->xfer_size;
+	}
+
+	if (num_blocks) {
+		offset += num_blocks;
+		if (offset > ftl_get_num_blocks_in_zone(dev)) {
+			return FTL_ADDR_INVALID;
+		}
+	}
+
+	addr = zone->info.zone_id + offset;
+	return addr;
+}
+
+ftl_addr
+ftl_band_addr_from_block_offset(struct ftl_band *band, uint64_t block_off)
+{
+	ftl_addr addr;
+
+	addr = block_off + band->id * ftl_get_num_blocks_in_band(band->dev);
+	return addr;
+}
+
+ftl_addr
+ftl_band_next_addr(struct ftl_band *band, ftl_addr addr, size_t offset)
+{
+	uint64_t block_off = ftl_band_block_offset_from_addr(band, addr);
+	return ftl_band_addr_from_block_offset(band, block_off + offset);
+}
+
+ftl_addr
+ftl_band_lba_map_addr(struct ftl_band *band)
+{
+	return band->tail_md_addr;
+}
+
+void
+ftl_band_remove_zone(struct ftl_band *band, struct ftl_zone *zone)
+{
+	CIRCLEQ_REMOVE(&band->zones, zone, circleq);
+	band->num_zones--;
+}
+
+struct ftl_zone *
+ftl_band_next_operational_zone(struct ftl_band *band, struct ftl_zone *zone)
+{
+	struct ftl_zone *result = NULL;
+	struct ftl_zone *entry;
+
+	if (spdk_unlikely(!band->num_zones)) {
+		return NULL;
+	}
+
+	/* Erasing band may fail after it was assigned to wptr. */
+	/* In such a case zone is no longer in band->zones queue. */
+	if (spdk_likely(zone->info.state != SPDK_BDEV_ZONE_STATE_OFFLINE)) {
+		result = ftl_band_next_zone(band, zone);
+	} else {
+		CIRCLEQ_FOREACH_REVERSE(entry, &band->zones, circleq) {
+			if (entry->info.zone_id > zone->info.zone_id) {
+				result = entry;
+			} else {
+				if (!result) {
+					result = CIRCLEQ_FIRST(&band->zones);
+				}
+				break;
+			}
+		}
+	}
+
+	return result;
+}

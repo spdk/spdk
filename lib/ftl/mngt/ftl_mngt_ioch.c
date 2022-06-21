@@ -36,6 +36,7 @@
 #include "ftl_core.h"
 #include "ftl_mngt.h"
 #include "ftl_mngt_steps.h"
+#include "ftl_band.h"
 
 struct ftl_io_channel_cntx {
 	struct ftl_io_channel *ioch;

@@ -58,8 +58,16 @@
 #endif /* SPDK_CONFIG_PMDK */
 
 struct spdk_ftl_dev;
+struct ftl_band;
 struct ftl_zone;
 struct ftl_io;
+
+/*
+ * We need to reserve at least 2 buffers for band close / open sequence
+ * alone, plus additional (8) buffers for handling relocations.
+ *
+ */
+#define LBA_MEMPOOL_SIZE (2 + 8)
 
 /* When using VSS on nvcache, FTL sometimes doesn't require the contents of metadata.
  * Some devices have bugs when sending a NULL pointer as part of metadata when namespace
@@ -117,8 +125,20 @@ struct spdk_ftl_dev {
 	   3. base bdev read/write */
 	uint64_t					io_activity_total;
 
+	/* Array of bands */
+	struct ftl_band				*bands;
+
 	/* Number of operational bands */
 	size_t						num_bands;
+
+	/* Next write band */
+	struct ftl_band				*next_band;
+
+	/* Free band list */
+	TAILQ_HEAD(, ftl_band)		free_bands;
+
+	/* Closed bands list */
+	TAILQ_HEAD(, ftl_band)		shut_bands;
 
 	/* Number of free bands */
 	size_t						num_free;
@@ -200,6 +220,38 @@ ftl_get_num_blocks_in_zone(const struct spdk_ftl_dev *dev)
 	return dev->num_blocks_in_zone;
 }
 
+static inline size_t
+ftl_is_zoned(const struct spdk_ftl_dev *dev)
+{
+	return dev->is_zoned;
+}
+
+static inline uint64_t
+ftl_addr_get_band(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	return addr / ftl_get_num_blocks_in_band(dev);
+}
+
+static inline uint64_t
+ftl_addr_get_punit(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	if (ftl_is_zoned(dev)) {
+		return (addr / ftl_get_num_blocks_in_zone(dev)) % ftl_get_num_punits(dev);
+	}
+
+	return 0;
+}
+
+static inline uint64_t
+ftl_addr_get_zone_offset(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	if (ftl_is_zoned(dev)) {
+		return addr % ftl_get_num_blocks_in_zone(dev);
+	}
+
+	return addr & (ftl_get_num_blocks_in_zone(dev) - 1);
+}
+
 static inline uint32_t
 ftl_get_write_unit_size(struct spdk_bdev *bdev)
 {
@@ -265,6 +317,21 @@ static inline bool
 ftl_is_append_supported(const struct spdk_ftl_dev *dev)
 {
 	return dev->conf.use_append;
+}
+
+static inline size_t
+ftl_lba_map_num_blocks(const struct spdk_ftl_dev *dev)
+{
+	return spdk_divide_round_up(ftl_get_num_blocks_in_band(dev) * sizeof(uint64_t),
+				    FTL_BLOCK_SIZE);
+}
+
+static inline size_t
+ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev)
+{
+	return spdk_divide_round_up(
+		       ftl_lba_map_num_blocks(dev),
+		       dev->xfer_size) * dev->xfer_size;
 }
 
 #endif /* FTL_CORE_H */

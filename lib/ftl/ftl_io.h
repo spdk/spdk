@@ -45,6 +45,7 @@
 #include "utils/ftl_md.h"
 
 struct spdk_ftl_dev;
+struct ftl_band;
 struct ftl_io;
 
 typedef void (*ftl_io_fn)(struct ftl_io *, void *, int);
@@ -229,6 +230,11 @@ struct ftl_rq_entry {
 		void *priv;
 	} owner;
 
+	/* If request issued in iterative way, it contains IO information */
+	struct {
+		struct ftl_band *band;
+	} io;
+
 	/* For l2p pinning */
 	struct ftl_l2p_pin_ctx l2p_pin_ctx;
 
@@ -271,6 +277,10 @@ struct ftl_rq {
 		/* End request callback */
 		void (*cb)(struct ftl_rq *rq);
 
+		/* IO error request callback */
+		void (*error)(struct ftl_rq *rq, struct ftl_band *band,
+			      uint64_t idx, uint64_t count);
+
 		/* Owner context */
 		void *priv;
 
@@ -295,6 +305,9 @@ struct ftl_rq {
 	struct {
 		/* Request physical address, on IO completion set for append device */
 		ftl_addr addr;
+
+		/* Band to which IO is issued */
+		struct ftl_band *band;
 
 		/* Zone to which IO is issued */
 		struct ftl_zone *zone;
@@ -340,6 +353,9 @@ struct ftl_basic_rq {
 		/* Request physical address, on IO completion set for append device */
 		ftl_addr addr;
 
+		/* Band to which IO is issued */
+		struct ftl_band *band;
+
 		/* Zone to which IO is issued */
 		struct ftl_zone *zone;
 
@@ -367,6 +383,7 @@ void ftl_io_advance(struct ftl_io *io, size_t num_blocks);
 size_t ftl_iovec_num_blocks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);
+struct ftl_io *ftl_io_erase_init(struct ftl_band *band, size_t num_blocks, ftl_io_fn cb);
 int ftl_io_user_init(struct spdk_io_channel *ioch, struct ftl_io *io, uint64_t lba,
 		     size_t num_blocks, struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn,
 		     void *cb_arg, int type);

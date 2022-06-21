@@ -32,9 +32,9 @@
  */
 
 #include "ftl_l2p.h"
+#include "ftl_band.h"
 #include "ftl_nv_cache.h"
 #include "ftl_l2p_flat.h"
-#include "ftl_core.h"
 
 #define FTL_L2P_OP(name)	ftl_l2p_flat_ ## name
 

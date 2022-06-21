@@ -41,6 +41,7 @@
 #include "spdk/crc32.h"
 
 #include "ftl_core.h"
+#include "ftl_band.h"
 #include "ftl_io.h"
 #include "ftl_debug.h"
 #include "ftl_internal.h"
@@ -52,6 +53,9 @@ struct ftl_wptr {
 
 	/* Current address */
 	ftl_addr			addr;
+
+	/* Band currently being written to */
+	struct ftl_band			*band;
 
 	/* Current logical block's offset */
 	uint64_t			offset;
