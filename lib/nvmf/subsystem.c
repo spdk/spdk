@@ -1638,11 +1638,21 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	ns->bdev = spdk_bdev_desc_get_bdev(ns->desc);
 
-	if (spdk_bdev_get_md_size(ns->bdev) != 0 && !spdk_bdev_is_md_interleaved(ns->bdev)) {
-		SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
-		spdk_bdev_close(ns->desc);
-		free(ns);
-		return 0;
+	if (spdk_bdev_get_md_size(ns->bdev) != 0) {
+		if (!spdk_bdev_is_md_interleaved(ns->bdev)) {
+			SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");
+			spdk_bdev_close(ns->desc);
+			free(ns);
+			return 0;
+		}
+
+		if (spdk_bdev_get_md_size(ns->bdev) > SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE) {
+			SPDK_ERRLOG("Maximum supported interleaved md size %u, current md size %u\n",
+				    SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE, spdk_bdev_get_md_size(ns->bdev));
+			spdk_bdev_close(ns->desc);
+			free(ns);
+			return 0;
+		}
 	}
 
 	rc = spdk_bdev_module_claim_bdev(ns->bdev, ns->desc, &ns_bdev_module);
