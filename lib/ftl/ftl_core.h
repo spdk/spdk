@@ -15,7 +15,9 @@
 #include "spdk/ftl.h"
 #include "spdk/bdev.h"
 #include "spdk/bdev_zone.h"
-#include "spdk/log.h"
+
+#include "ftl_internal.h"
+#include "utils/ftl_log.h"
 
 struct spdk_ftl_dev {
 	/* Device instance */

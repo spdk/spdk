@@ -13,5 +13,6 @@
 #include "spdk/crc32.h"
 
 #include "ftl_core.h"
+#include "ftl_internal.h"
 
 SPDK_LOG_REGISTER_COMPONENT(ftl_core)
