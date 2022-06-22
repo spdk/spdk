@@ -6,11 +6,6 @@ source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 
 # Pci bus hotplug
-cleanup() {
-	[[ -e /proc/$hotplug_pid/status ]] || return 0
-	kill "$hotplug_pid"
-}
-
 # Helper function to remove/attach cotrollers
 remove_attach_helper() {
 	local hotplug_events=$1
@@ -72,17 +67,32 @@ remove_attach_helper() {
 }
 
 run_hotplug() {
-	trap "cleanup" EXIT
-
-	remove_attach_helper "$hotplug_events" "$hotplug_wait" false &
-	hotplug_pid=$!
+	trap 'killprocess $hotplug_pid; exit 1' SIGINT SIGTERM EXIT
 
 	"$SPDK_EXAMPLE_DIR/hotplug" \
 		-i 0 \
 		-t $((hotplug_events * hotplug_wait + hotplug_wait * 3)) \
 		-n $((hotplug_events * nvme_count)) \
 		-r $((hotplug_events * nvme_count)) \
-		-l warning
+		-l warning &
+	hotplug_pid=$!
+
+	remove_attach_helper "$hotplug_events" "$hotplug_wait" false
+
+	# Wait in case hotplug app is lagging behind
+	# and kill it, if it hung.
+	sleep $hotplug_wait
+
+	if ! kill -0 "$hotplug_pid"; then
+		# hotplug already finished, check for the error code.
+		wait "$hotplug_pid"
+	else
+		echo "Killing hotplug application"
+		killprocess $hotplug_pid
+		return 1
+	fi
+
+	trap - SIGINT SIGTERM EXIT
 }
 
 # SPDK target hotplug
