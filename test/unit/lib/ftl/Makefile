@@ -6,7 +6,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = ftl_l2p ftl_io.c
+DIRS-y = ftl_l2p ftl_band.c ftl_io.c
 DIRS-y += ftl_mempool.c ftl_mngt
 
 .PHONY: all clean $(DIRS-y)
