@@ -106,7 +106,8 @@ verify_devices(struct spdk_nvme_ctrlr *ctrlr)
 {
 	char ctrlr_name[256];
 	size_t ctrlr_name_size;
-	char ctrlr_dev[256], ns_dev[256 + 10];
+	char ctrlr_dev[256];
+	char ns_dev[256 + 1 + 10]; /* sizeof ctrl_dev + 'n' + string size of UINT32_MAX */
 	uint32_t nsid, num_ns;
 	int rv;
 
