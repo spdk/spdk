@@ -11,9 +11,10 @@ SO_MINOR := 0
 
 CFLAGS += -I.
 
-FTL_SUBDIRS := utils
+FTL_SUBDIRS := mngt utils
 
 C_SRCS = ftl_core.c
+C_SRCS += mngt/ftl_mngt.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_ftl.map)
 
