@@ -290,29 +290,32 @@ dma_test_copy_memory(struct dma_test_req *req, struct iovec *dst_iov, uint32_t d
 	return 0;
 }
 
-static int dma_test_push_memory_cb(struct spdk_memory_domain *dst_domain,
-				   void *dst_domain_ctx,
-				   struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
-				   spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+static int
+dma_test_push_memory_cb(struct spdk_memory_domain *dst_domain,
+			void *dst_domain_ctx,
+			struct iovec *dst_iov, uint32_t dst_iovcnt, struct iovec *src_iov, uint32_t src_iovcnt,
+			spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
 {
 	struct dma_test_req *req = dst_domain_ctx;
 
 	return dma_test_copy_memory(req, dst_iov, dst_iovcnt, src_iov, src_iovcnt, cpl_cb, cpl_cb_arg);
 }
 
-static int dma_test_pull_memory_cb(struct spdk_memory_domain *src_domain,
-				   void *src_domain_ctx,
-				   struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov, uint32_t dst_iovcnt,
-				   spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+static int
+dma_test_pull_memory_cb(struct spdk_memory_domain *src_domain,
+			void *src_domain_ctx,
+			struct iovec *src_iov, uint32_t src_iovcnt, struct iovec *dst_iov, uint32_t dst_iovcnt,
+			spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
 {
 	struct dma_test_req *req = src_domain_ctx;
 
 	return dma_test_copy_memory(req, dst_iov, dst_iovcnt, src_iov, src_iovcnt, cpl_cb, cpl_cb_arg);
 }
 
-static int dma_test_memzero_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
-			       struct iovec *iov, uint32_t iovcnt,
-			       spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
+static int
+dma_test_memzero_cb(struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+		    struct iovec *iov, uint32_t iovcnt,
+		    spdk_memory_domain_data_cpl_cb cpl_cb, void *cpl_cb_arg)
 {
 	struct dma_test_req *req = src_domain_ctx;
 	struct dma_test_data_cpl_ctx *cpl_ctx;
@@ -420,7 +423,8 @@ dma_test_bdev_dummy_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *b
 {
 }
 
-static void dma_test_task_run(void *ctx)
+static void
+dma_test_task_run(void *ctx)
 {
 	struct dma_test_task *task = ctx;
 	uint32_t i;

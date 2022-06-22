@@ -30,19 +30,22 @@ bool ut_rte_cryptodev_info_get_mocked = false;
 
 void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt);
 #define rte_pktmbuf_free_bulk mock_rte_pktmbuf_free_bulk
-void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt)
+void
+mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt)
 {
 	spdk_mempool_put_bulk((struct spdk_mempool *)m[0]->pool, (void **)m, cnt);
 }
 
 void mock_rte_pktmbuf_free(struct rte_mbuf *m);
 #define rte_pktmbuf_free mock_rte_pktmbuf_free
-void mock_rte_pktmbuf_free(struct rte_mbuf *m)
+void
+mock_rte_pktmbuf_free(struct rte_mbuf *m)
 {
 	spdk_mempool_put((struct spdk_mempool *)m->pool, (void *)m);
 }
 
-void rte_mempool_free(struct rte_mempool *mp)
+void
+rte_mempool_free(struct rte_mempool *mp)
 {
 	spdk_mempool_free((struct spdk_mempool *)mp);
 }
@@ -50,8 +53,9 @@ void rte_mempool_free(struct rte_mempool *mp)
 int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
 				unsigned count);
 #define rte_pktmbuf_alloc_bulk mock_rte_pktmbuf_alloc_bulk
-int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
-				unsigned count)
+int
+mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
+			    unsigned count)
 {
 	int rc;
 

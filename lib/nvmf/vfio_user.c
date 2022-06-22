@@ -433,11 +433,9 @@ struct nvmf_vfio_user_transport {
 /*
  * function prototypes
  */
-static int
-nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
+static int nvmf_vfio_user_req_free(struct spdk_nvmf_request *req);
 
-static struct nvmf_vfio_user_req *
-get_nvmf_vfio_user_req(struct nvmf_vfio_user_sq *sq);
+static struct nvmf_vfio_user_req *get_nvmf_vfio_user_req(struct nvmf_vfio_user_sq *sq);
 
 /*
  * Local process virtual address of a queue.
@@ -1424,8 +1422,7 @@ set_sq_eventidx(struct nvmf_vfio_user_sq *sq)
 	return false;
 }
 
-static int
-nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq);
+static int nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq);
 
 /*
  * Arrange for an SQ to interrupt us if written. Returns non-zero if we
@@ -1587,9 +1584,8 @@ vfio_user_map_cmd(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvmf_request *
 			    length, 4096, _map_one);
 }
 
-static int
-handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
-	       struct nvmf_vfio_user_sq *sq);
+static int handle_cmd_req(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
+			  struct nvmf_vfio_user_sq *sq);
 
 /*
  * Posts a CQE in the completion queue.
@@ -2908,8 +2904,7 @@ struct ctrlr_quiesce_ctx {
 	int status;
 };
 
-static void
-ctrlr_quiesce(struct nvmf_vfio_user_ctrlr *vu_ctrlr);
+static void ctrlr_quiesce(struct nvmf_vfio_user_ctrlr *vu_ctrlr);
 
 static void
 _vfio_user_endpoint_resume_done_msg(void *ctx)

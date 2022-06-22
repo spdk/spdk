@@ -48,7 +48,8 @@ static const struct spdk_json_object_decoder admin_passthru_decoder[] = {
 	{"identify_ctrlr", offsetof(struct spdk_nvmf_admin_passthru_conf, identify_ctrlr), spdk_json_decode_bool}
 };
 
-static int decode_admin_passthru(const struct spdk_json_val *val, void *out)
+static int
+decode_admin_passthru(const struct spdk_json_val *val, void *out)
 {
 	struct spdk_nvmf_admin_passthru_conf *req = (struct spdk_nvmf_admin_passthru_conf *)out;
 

@@ -128,9 +128,10 @@ spdk_nvmf_get_transport_name(struct spdk_nvmf_transport *transport)
 	return transport->ops->name;
 }
 
-static void nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
-				     struct spdk_nvmf_transport_opts *opts_src,
-				     size_t opts_size)
+static void
+nvmf_transport_opts_copy(struct spdk_nvmf_transport_opts *opts,
+			 struct spdk_nvmf_transport_opts *opts_src,
+			 size_t opts_size)
 {
 	assert(opts);
 	assert(opts_src);

@@ -827,7 +827,8 @@ usage(const char *program_name)
 	printf("            6 : Disconnect bad assoc_id test\n");
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	unsigned int num_failures = 0;
 	CU_pSuite suite = NULL;

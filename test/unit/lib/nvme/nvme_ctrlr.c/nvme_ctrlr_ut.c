@@ -279,10 +279,11 @@ nvme_driver_init(void)
 	return 0;
 }
 
-int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
-		    struct spdk_nvme_ctrlr *ctrlr,
-		    enum spdk_nvme_qprio qprio,
-		    uint32_t num_requests, bool async)
+int
+nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		struct spdk_nvme_ctrlr *ctrlr,
+		enum spdk_nvme_qprio qprio,
+		uint32_t num_requests, bool async)
 {
 	qpair->id = id;
 	qpair->qprio = qprio;
@@ -1739,7 +1740,8 @@ test_alloc_io_qpair_wrr_2(void)
 
 bool g_connect_qpair_called = false;
 int g_connect_qpair_return_code = 0;
-int nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+int
+nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	g_connect_qpair_called = true;
 	qpair->state = NVME_QPAIR_CONNECTED;
@@ -2779,7 +2781,8 @@ test_nvme_ctrlr_ns_mgmt(void)
 	nvme_ctrlr_destruct(&ctrlr);
 }
 
-static void check_en_set_rdy(void)
+static void
+check_en_set_rdy(void)
 {
 	if (g_ut_nvme_regs.cc.bits.en == 1) {
 		g_ut_nvme_regs.csts.bits.rdy = 1;
@@ -3276,7 +3279,8 @@ test_nvme_ctrlr_get_memory_domains(void)
 	MOCK_CLEAR(nvme_transport_ctrlr_get_memory_domains);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

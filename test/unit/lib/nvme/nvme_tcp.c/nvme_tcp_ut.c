@@ -1545,7 +1545,8 @@ test_nvme_tcp_ctrlr_delete_io_qpair(void)
 	CU_ASSERT(rc == 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

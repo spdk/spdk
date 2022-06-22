@@ -38,8 +38,7 @@ raid0_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	}
 }
 
-static void
-raid0_submit_rw_request(struct raid_bdev_io *raid_io);
+static void raid0_submit_rw_request(struct raid_bdev_io *raid_io);
 
 static void
 _raid0_submit_rw_request(void *_raid_io)
@@ -225,8 +224,7 @@ _raid0_split_io_range(struct raid_bdev_io_range *io_range, uint8_t disk_idx,
 	*_nblocks_in_disk = nblocks_in_disk;
 }
 
-static void
-raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
+static void raid0_submit_null_payload_request(struct raid_bdev_io *raid_io);
 
 static void
 _raid0_submit_null_payload_request(void *_raid_io)
@@ -328,7 +326,8 @@ raid0_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	}
 }
 
-static int raid0_start(struct raid_bdev *raid_bdev)
+static int
+raid0_start(struct raid_bdev *raid_bdev)
 {
 	uint64_t min_blockcnt = UINT64_MAX;
 	struct raid_base_bdev_info *base_info;

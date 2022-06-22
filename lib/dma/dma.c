@@ -130,7 +130,11 @@ spdk_memory_domain_get_context(struct spdk_memory_domain *domain)
 	return domain->ctx;
 }
 
-enum spdk_dma_device_type spdk_memory_domain_get_dma_device_type(struct spdk_memory_domain *domain)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_dma_device_type spdk_dma_device_type_t;
+
+spdk_dma_device_type_t
+spdk_memory_domain_get_dma_device_type(struct spdk_memory_domain *domain)
 {
 	assert(domain);
 

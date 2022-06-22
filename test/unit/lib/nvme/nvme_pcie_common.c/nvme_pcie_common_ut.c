@@ -53,10 +53,11 @@ DEFINE_STUB(nvme_ctrlr_disable_poll, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
 DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair_done, (struct spdk_nvme_qpair *qpair));
 
-int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
-		    struct spdk_nvme_ctrlr *ctrlr,
-		    enum spdk_nvme_qprio qprio,
-		    uint32_t num_requests, bool async)
+int
+nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		struct spdk_nvme_ctrlr *ctrlr,
+		enum spdk_nvme_qprio qprio,
+		uint32_t num_requests, bool async)
 {
 	qpair->id = id;
 	qpair->qprio = qprio;
@@ -544,7 +545,8 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 	CU_ASSERT(rc == 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

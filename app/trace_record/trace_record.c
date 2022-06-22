@@ -538,7 +538,8 @@ setup_exit_signal_handler(void)
 	return rc;
 }
 
-static void usage(void)
+static void
+usage(void)
 {
 	printf("\n%s is used to record all SPDK generated trace entries\n", g_exe_name);
 	printf("from SPDK trace shared-memory to specified file.\n\n");
@@ -554,7 +555,8 @@ static void usage(void)
 	printf("                 '-h' to print usage information\n");
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	const char			*app_name = NULL;
 	const char			*file_name = NULL;

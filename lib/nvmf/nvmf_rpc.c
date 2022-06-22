@@ -482,7 +482,8 @@ free_rpc_delete_subsystem(struct rpc_delete_subsystem *r)
 	free(r->tgt_name);
 }
 
-static void rpc_nvmf_subsystem_destroy_complete_cb(void *cb_arg)
+static void
+rpc_nvmf_subsystem_destroy_complete_cb(void *cb_arg)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 

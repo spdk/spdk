@@ -71,8 +71,9 @@ DEFINE_STUB(rte_vhost_extern_callback_register, int,
 /* rte_vhost_user.c shutdowns vhost_user sessions in a separte pthread */
 DECLARE_WRAPPER(pthread_create, int, (pthread_t *thread, const pthread_attr_t *attr,
 				      void *(*start_routine)(void *), void *arg));
-int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *),
-		   void *arg)
+int
+pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *),
+	       void *arg)
 {
 	start_routine(arg);
 	return 0;

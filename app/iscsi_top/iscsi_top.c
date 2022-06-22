@@ -19,7 +19,8 @@ static int g_shm_id = 0;
 
 struct spdk_jsonrpc_client *g_rpc_client;
 
-static void usage(void)
+static void
+usage(void)
 {
 	fprintf(stderr, "usage:\n");
 	fprintf(stderr, "   %s <option>\n", exe_name);
@@ -107,7 +108,8 @@ end:
 	spdk_jsonrpc_client_free_request(request);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	void			*history_ptr;
 	struct spdk_trace_histories *histories;

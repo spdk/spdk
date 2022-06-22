@@ -126,7 +126,8 @@ test_ctrlr_failed(void)
 	cleanup_submit_request_test(&qpair);
 }
 
-static void struct_packing(void)
+static void
+struct_packing(void)
 {
 	/* ctrlr is the first field in nvme_qpair after the fields
 	 * that are used in the I/O path. Make sure the I/O path fields
@@ -148,7 +149,8 @@ dummy_cb_fn(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
-static void test_nvme_qpair_process_completions(void)
+static void
+test_nvme_qpair_process_completions(void)
 {
 	struct spdk_nvme_qpair		admin_qp = {0};
 	struct spdk_nvme_qpair		qpair = {0};
@@ -272,7 +274,8 @@ static void test_nvme_qpair_process_completions(void)
 	free(admin_qp.req_buf);
 }
 
-static void test_nvme_completion_is_retry(void)
+static void
+test_nvme_completion_is_retry(void)
 {
 	struct spdk_nvme_cpl	cpl = {};
 
@@ -732,7 +735,8 @@ test_nvme_get_sgl_print_info(void)
 			   NVME_CMD_DPTR_STR_SIZE));
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

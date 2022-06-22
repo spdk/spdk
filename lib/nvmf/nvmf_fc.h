@@ -778,10 +778,9 @@ struct spdk_nvmf_fc_remove_hwqp_cb_args {
  *
  * \return 0 on success, non-zero on failure.
  */
-int
-nvmf_fc_main_enqueue_event(enum spdk_fc_event event_type,
-			   void *args,
-			   spdk_nvmf_fc_callback cb_func);
+int nvmf_fc_main_enqueue_event(enum spdk_fc_event event_type,
+			       void *args,
+			       spdk_nvmf_fc_callback cb_func);
 
 /*
  * dump info

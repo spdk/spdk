@@ -1427,7 +1427,8 @@ admin_create_io_sq_shared_cq(void)
 	spdk_nvme_detach(ctrlr);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct spdk_env_opts	opts;
 	CU_pSuite		suite = NULL;

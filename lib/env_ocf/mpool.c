@@ -68,7 +68,8 @@ err:
 	return NULL;
 }
 
-void env_mpool_destroy(struct env_mpool *mpool)
+void
+env_mpool_destroy(struct env_mpool *mpool)
 {
 	if (mpool) {
 		int i;
@@ -83,8 +84,9 @@ void env_mpool_destroy(struct env_mpool *mpool)
 	}
 }
 
-static env_allocator *env_mpool_get_allocator(struct env_mpool *mpool,
-		uint32_t count)
+static env_allocator *
+env_mpool_get_allocator(struct env_mpool *mpool,
+			uint32_t count)
 {
 	unsigned int idx;
 
@@ -105,7 +107,8 @@ static env_allocator *env_mpool_get_allocator(struct env_mpool *mpool,
 	return mpool->allocator[idx];
 }
 
-void *env_mpool_new(struct env_mpool *mpool, uint32_t count)
+void *
+env_mpool_new(struct env_mpool *mpool, uint32_t count)
 {
 	void *items = NULL;
 	env_allocator *allocator;
@@ -122,8 +125,9 @@ void *env_mpool_new(struct env_mpool *mpool, uint32_t count)
 	return items;
 }
 
-bool env_mpool_del(struct env_mpool *mpool,
-		   void *items, uint32_t count)
+bool
+env_mpool_del(struct env_mpool *mpool,
+	      void *items, uint32_t count)
 {
 	env_allocator *allocator;
 

@@ -1584,7 +1584,8 @@ test_spdk_nvme_detach_async(void)
 	MOCK_CLEAR(nvme_ctrlr_get_ref_count);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

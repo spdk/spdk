@@ -674,7 +674,8 @@ nvme_ctrlr_set_intel_support_log_pages_done(void *arg, const struct spdk_nvme_cp
 	free(ctx);
 }
 
-static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
+static int
+nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	struct intel_log_pages_ctx *ctx;
@@ -4929,7 +4930,8 @@ spdk_nvme_ctrlr_unmap_pmr(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
-int spdk_nvme_ctrlr_read_boot_partition_start(struct spdk_nvme_ctrlr *ctrlr, void *payload,
+int
+spdk_nvme_ctrlr_read_boot_partition_start(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 		uint32_t bprsz, uint32_t bprof, uint32_t bpid)
 {
 	union spdk_nvme_bprsel_register bprsel;
@@ -4986,7 +4988,8 @@ int spdk_nvme_ctrlr_read_boot_partition_start(struct spdk_nvme_ctrlr *ctrlr, voi
 	return 0;
 }
 
-int spdk_nvme_ctrlr_read_boot_partition_poll(struct spdk_nvme_ctrlr *ctrlr)
+int
+spdk_nvme_ctrlr_read_boot_partition_poll(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	union spdk_nvme_bpinfo_register bpinfo;
@@ -5092,9 +5095,10 @@ nvme_write_boot_partition_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
-int spdk_nvme_ctrlr_write_boot_partition(struct spdk_nvme_ctrlr *ctrlr,
-		void *payload, uint32_t size, uint32_t bpid,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+int
+spdk_nvme_ctrlr_write_boot_partition(struct spdk_nvme_ctrlr *ctrlr,
+				     void *payload, uint32_t size, uint32_t bpid,
+				     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	int res;
 

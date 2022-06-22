@@ -142,7 +142,6 @@ struct spdk_bdev *bdev_virtio_pci_blk_dev_create(const char *name,
  * \param period_us The period time of the hotplug monitor in us
  * \return 0 for success otherwise failure
  */
-int
-bdev_virtio_pci_blk_set_hotplug(bool enabled, uint64_t period_us);
+int bdev_virtio_pci_blk_set_hotplug(bool enabled, uint64_t period_us);
 
 #endif /* SPDK_BDEV_VIRTIO_H */

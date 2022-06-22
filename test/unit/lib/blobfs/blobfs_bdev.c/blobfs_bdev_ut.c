@@ -276,7 +276,8 @@ spdk_blobfs_bdev_mount_test(void)
 #endif
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

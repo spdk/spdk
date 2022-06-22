@@ -921,7 +921,8 @@ test_iterating(void)
 	free(values);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

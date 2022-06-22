@@ -7194,7 +7194,8 @@ suite_blob_cleanup(void)
 	CU_ASSERT(g_bs == NULL);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite, suite_bs, suite_blob;
 	unsigned int	num_failures;

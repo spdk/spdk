@@ -464,7 +464,6 @@ int virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
  * \return the name of the virtio device on success, NULL means it
  * is not a suitable uevent.
  */
-const char *
-virtio_pci_dev_event_process(int fd, uint16_t device_id);
+const char *virtio_pci_dev_event_process(int fd, uint16_t device_id);
 
 #endif /* SPDK_VIRTIO_H */

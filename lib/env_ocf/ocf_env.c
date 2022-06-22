@@ -114,7 +114,8 @@ env_crc32(uint32_t crc, uint8_t const *message, size_t len)
 /* EXECUTION CONTEXTS */
 pthread_mutex_t *exec_context_mutex;
 
-static void __attribute__((constructor)) init_execution_context(void)
+static void
+__attribute__((constructor)) init_execution_context(void)
 {
 	unsigned count = env_get_execution_context_count();
 	unsigned i;
@@ -127,7 +128,8 @@ static void __attribute__((constructor)) init_execution_context(void)
 	}
 }
 
-static void __attribute__((destructor)) deinit_execution_context(void)
+static void
+__attribute__((destructor)) deinit_execution_context(void)
 {
 	unsigned count = env_get_execution_context_count();
 	unsigned i;
@@ -146,7 +148,8 @@ static void __attribute__((destructor)) deinit_execution_context(void)
  * we simulate this behavior by acquiring per execution context mutex. As a
  * result the caller might actually get preempted, but no other thread will
  * execute in this context by the time the caller puts current execution ctx. */
-unsigned env_get_execution_context(void)
+unsigned
+env_get_execution_context(void)
 {
 	unsigned cpu;
 
@@ -158,12 +161,14 @@ unsigned env_get_execution_context(void)
 	return cpu;
 }
 
-void env_put_execution_context(unsigned ctx)
+void
+env_put_execution_context(unsigned ctx)
 {
 	pthread_mutex_unlock(&exec_context_mutex[ctx]);
 }
 
-unsigned env_get_execution_context_count(void)
+unsigned
+env_get_execution_context_count(void)
 {
 	int num = sysconf(_SC_NPROCESSORS_ONLN);
 

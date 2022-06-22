@@ -365,7 +365,8 @@ out:
 	return (void *)(intptr_t)rc;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	pthread_t srv_tid, client_tid;
 	int srv_tid_valid;

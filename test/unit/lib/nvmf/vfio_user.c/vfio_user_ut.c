@@ -249,7 +249,8 @@ test_nvmf_vfio_user_create_destroy(void)
 	CU_ASSERT(done == 1);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

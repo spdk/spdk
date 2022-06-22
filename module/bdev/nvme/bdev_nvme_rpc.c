@@ -1332,7 +1332,8 @@ static const struct spdk_json_object_decoder rpc_get_controller_health_info_deco
 	{"name", offsetof(struct rpc_get_controller_health_info, name), spdk_json_decode_string, true},
 };
 
-static void nvme_health_info_cleanup(struct spdk_nvme_health_info_context *context, bool response)
+static void
+nvme_health_info_cleanup(struct spdk_nvme_health_info_context *context, bool response)
 {
 	if (response == true) {
 		spdk_jsonrpc_send_error_response(context->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

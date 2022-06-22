@@ -419,7 +419,8 @@ ftl_io_alloc_child(struct ftl_io *parent)
 	return io;
 }
 
-void ftl_io_fail(struct ftl_io *io, int status)
+void
+ftl_io_fail(struct ftl_io *io, int status)
 {
 	io->status = status;
 	ftl_io_advance(io, io->num_blocks - io->pos);

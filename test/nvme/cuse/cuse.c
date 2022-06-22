@@ -181,7 +181,8 @@ test_cuse_update(void)
 	nvme_cuse_stop(&ctrlr);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

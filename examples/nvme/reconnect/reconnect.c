@@ -99,8 +99,7 @@ struct trid_entry {
 
 static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
 
-static inline void
-task_complete(struct perf_task *task);
+static inline void task_complete(struct perf_task *task);
 static void submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth);
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
@@ -552,7 +551,8 @@ work_fn(void *arg)
 	return 0;
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
@@ -1042,7 +1042,8 @@ nvme_poll_ctrlrs(void *arg)
 	return NULL;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *main_worker;

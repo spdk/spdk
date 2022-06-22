@@ -318,7 +318,8 @@ print_json(void *cb_ctx, const void *data, size_t size)
 	return 0;
 }
 
-static void usage(void)
+static void
+usage(void)
 {
 	fprintf(stderr, "usage:\n");
 	fprintf(stderr, "   %s <option> <lcore#>\n", g_exe_name);
@@ -335,7 +336,8 @@ static void usage(void)
 	fprintf(stderr, "                 '-j' to use JSON to format the output\n");
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct spdk_trace_parser_opts	opts;
 	struct spdk_trace_parser_entry	entry;

@@ -103,7 +103,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-static void usage(void)
+static void
+usage(void)
 {
 	printf("NVMe Management Options");
 	printf("\n");
@@ -1583,7 +1584,8 @@ parse_args(int argc, char **argv)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int			rc;
 	struct spdk_env_opts	opts;

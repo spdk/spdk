@@ -182,7 +182,8 @@ cleanup:
 	}
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct dev		*dev;
 	struct spdk_env_opts	opts;

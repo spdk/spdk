@@ -201,9 +201,8 @@ iscsi_init_grp_allow_iscsi_name(struct spdk_iscsi_init_grp *igp,
 	return -1;
 }
 
-static struct spdk_iscsi_pg_map *
-iscsi_tgt_node_find_pg_map(struct spdk_iscsi_tgt_node *target,
-			   struct spdk_iscsi_portal_grp *pg);
+static struct spdk_iscsi_pg_map *iscsi_tgt_node_find_pg_map(struct spdk_iscsi_tgt_node *target,
+		struct spdk_iscsi_portal_grp *pg);
 
 bool
 iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
@@ -1220,8 +1219,9 @@ iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-void iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
-			       struct spdk_iscsi_init_grp *initiator_group)
+void
+iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
+			  struct spdk_iscsi_init_grp *initiator_group)
 {
 	struct spdk_iscsi_tgt_node *target;
 

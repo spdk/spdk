@@ -1535,7 +1535,8 @@ test_prepare_compress_chunk(void)
 	free(buf);
 }
 
-static void _reduce_vol_op_complete(void *ctx, int reduce_errno)
+static void
+_reduce_vol_op_complete(void *ctx, int reduce_errno)
 {
 	g_reduce_errno = reduce_errno;
 }
@@ -1548,7 +1549,8 @@ dummy_backing_dev_decompress(struct spdk_reduce_backing_dev *backing_dev,
 {
 	args->cb_fn(args->cb_arg, g_decompressed_len);
 }
-static void test_reduce_decompress_chunk(void)
+static void
+test_reduce_decompress_chunk(void)
 {
 	struct spdk_reduce_vol vol = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
@@ -1786,7 +1788,8 @@ static void test_reduce_decompress_chunk(void)
 	free(buf);
 }
 
-static void test_allocate_vol_requests(void)
+static void
+test_allocate_vol_requests(void)
 {
 	struct spdk_reduce_vol *vol;
 	/* include chunk_sizes which are not power of 2 */

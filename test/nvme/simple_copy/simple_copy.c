@@ -384,7 +384,8 @@ cleanup(struct simple_copy_context *context)
 	free(context->read_bufs);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int			rc;
 	struct spdk_env_opts	opts;

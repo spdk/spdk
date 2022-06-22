@@ -82,8 +82,7 @@ struct passthru_bdev_io {
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
-static void
-vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+static void vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 
 /* Callback for unregistering the IO device. */

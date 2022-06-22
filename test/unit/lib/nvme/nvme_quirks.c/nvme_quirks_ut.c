@@ -44,7 +44,8 @@ test_nvme_quirks_striping(void)
 	CU_ASSERT((quirks & NVME_INTEL_QUIRK_STRIPING) != 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

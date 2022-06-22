@@ -55,7 +55,8 @@ print_device(void *ctx, struct spdk_pci_device *pci_device)
 	}
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct spdk_env_opts opts;
 	int rc;

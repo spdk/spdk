@@ -71,7 +71,8 @@ spdk_nvme_transport_available_by_name(const char *transport_name)
 	return nvme_get_transport(transport_name) == NULL ? false : true;
 }
 
-void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
+void
+spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
 {
 	struct spdk_nvme_transport *new_transport;
 
@@ -769,7 +770,8 @@ nvme_transport_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgro
 	}
 }
 
-enum spdk_nvme_transport_type nvme_transport_get_trtype(const struct spdk_nvme_transport *transport)
+spdk_nvme_transport_type_t
+nvme_transport_get_trtype(const struct spdk_nvme_transport *transport)
 {
 	return transport->ops.type;
 }

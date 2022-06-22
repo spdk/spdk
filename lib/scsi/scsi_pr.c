@@ -1013,7 +1013,8 @@ scsi2_release(struct spdk_scsi_task *task)
 	return 0;
 }
 
-int scsi2_reserve_check(struct spdk_scsi_task *task)
+int
+scsi2_reserve_check(struct spdk_scsi_task *task)
 {
 	struct spdk_scsi_lun *lun = task->lun;
 	uint8_t *cdb = task->cdb;

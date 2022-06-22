@@ -122,7 +122,8 @@ parse_args(int argc, char **argv)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;

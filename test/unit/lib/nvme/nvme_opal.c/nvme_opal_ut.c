@@ -135,7 +135,8 @@ test_opal_add_short_atom_header(void)
 	CU_ASSERT(sess.cmd_pos == 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

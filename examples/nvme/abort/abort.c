@@ -1020,7 +1020,8 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *main_worker;

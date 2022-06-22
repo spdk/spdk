@@ -288,8 +288,7 @@ static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list
 
 static int g_file_optind; /* Index of first filename in argv */
 
-static inline void
-task_complete(struct perf_task *task);
+static inline void task_complete(struct perf_task *task);
 
 static void
 perf_set_sock_zcopy(const char *impl_name, bool enable)
@@ -1700,7 +1699,8 @@ work_fn(void *arg)
 	return 0;
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 #if defined(SPDK_CONFIG_URING) || defined(HAVE_LIBAIO)
@@ -2820,7 +2820,8 @@ setup_sig_handlers(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *main_worker;

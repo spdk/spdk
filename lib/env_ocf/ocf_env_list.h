@@ -27,7 +27,8 @@ struct list_head {
  * @param it list entry to be added
  * @param l1 list main node (head)
  */
-static inline void list_add(struct list_head *it, struct list_head *l1)
+static inline void
+list_add(struct list_head *it, struct list_head *l1)
 {
 	it->prev = l1;
 	it->next = l1->next;
@@ -41,7 +42,8 @@ static inline void list_add(struct list_head *it, struct list_head *l1)
  * @param it list entry to be added
  * @param l1 list main node (head)
  */
-static inline void list_add_tail(struct list_head *it, struct list_head *l1)
+static inline void
+list_add_tail(struct list_head *it, struct list_head *l1)
 {
 	it->prev = l1->prev;
 	it->next = l1;
@@ -53,7 +55,8 @@ static inline void list_add_tail(struct list_head *it, struct list_head *l1)
 /**
  * check if a list is empty (return true)
  */
-static inline int list_empty(struct list_head *it)
+static inline int
+list_empty(struct list_head *it)
 {
 	return it->next == it;
 }
@@ -61,21 +64,24 @@ static inline int list_empty(struct list_head *it)
 /**
  * delete an entry from a list
  */
-static inline void list_del(struct list_head *it)
+static inline void
+list_del(struct list_head *it)
 {
 	it->next->prev = it->prev;
 	it->prev->next = it->next;
 }
 
-static inline void list_move_tail(struct list_head *list,
-				  struct list_head *head)
+static inline void
+list_move_tail(struct list_head *list,
+	       struct list_head *head)
 {
 	list_del(list);
 	list_add_tail(list, head);
 }
 
-static inline void list_move(struct list_head *list,
-			     struct list_head *head)
+static inline void
+list_move(struct list_head *list,
+	  struct list_head *head)
 {
 	list_del(list);
 	list_add(list, head);

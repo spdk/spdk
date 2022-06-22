@@ -49,12 +49,10 @@ static const char *g_iova_mode = NULL;
 static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC;
 static struct spdk_nvme_detach_ctx *g_detach_ctx;
 
-static void
-task_complete(struct perf_task *task);
+static void task_complete(struct perf_task *task);
 
-static void
-timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
-	   struct spdk_nvme_qpair *qpair, uint16_t cid);
+static void timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+		       struct spdk_nvme_qpair *qpair, uint16_t cid);
 
 static void
 register_dev(struct spdk_nvme_ctrlr *ctrlr)
@@ -390,7 +388,8 @@ io_loop(void)
 	}
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
@@ -499,7 +498,8 @@ register_controllers(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;

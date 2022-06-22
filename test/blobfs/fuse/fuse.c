@@ -54,7 +54,8 @@ spdk_fuse_shutdown(void)
 	spdk_app_stop(0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
 	int rc = 0;

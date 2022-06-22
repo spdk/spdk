@@ -185,7 +185,8 @@ iscsi_free_pools(void)
 	spdk_mempool_free(iscsi->task_pool);
 }
 
-void iscsi_put_pdu(struct spdk_iscsi_pdu *pdu)
+void
+iscsi_put_pdu(struct spdk_iscsi_pdu *pdu)
 {
 	if (!pdu) {
 		return;

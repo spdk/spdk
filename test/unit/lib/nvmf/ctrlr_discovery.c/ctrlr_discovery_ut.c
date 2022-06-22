@@ -634,7 +634,8 @@ test_discovery_log_with_filters(void)
 	free(tgt.subsystems);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

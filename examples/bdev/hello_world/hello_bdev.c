@@ -39,7 +39,8 @@ hello_bdev_usage(void)
 /*
  * This function is called to parse the parameters that are specific to this application
  */
-static int hello_bdev_parse_arg(int ch, char *arg)
+static int
+hello_bdev_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
 	case 'b':

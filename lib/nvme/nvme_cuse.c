@@ -828,7 +828,8 @@ cuse_ns_ioctl(fuse_req_t req, int cmd, void *arg,
  * CUSE threads initialization.
  */
 
-static void cuse_open(fuse_req_t req, struct fuse_file_info *fi)
+static void
+cuse_open(fuse_req_t req, struct fuse_file_info *fi)
 {
 	fuse_reply_open(req, fi);
 }
@@ -843,7 +844,8 @@ static const struct cuse_lowlevel_ops cuse_ns_clop = {
 	.ioctl		= cuse_ns_ioctl,
 };
 
-static int cuse_session_create(struct cuse_device *cuse_device)
+static int
+cuse_session_create(struct cuse_device *cuse_device)
 {
 	char *cuse_argv[] = { "cuse", "-f" };
 	int multithreaded;

@@ -389,7 +389,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	dev->ctrlr = ctrlr;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct dev		*iter;
 	struct spdk_env_opts	opts;

@@ -144,8 +144,7 @@ vbdev_gpt_destruct(void *ctx)
 	return spdk_bdev_part_free(&gpt_disk->part);
 }
 
-static void
-_vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
+static void _vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
 
 static void
 vbdev_gpt_resubmit_request(void *arg)

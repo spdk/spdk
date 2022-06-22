@@ -1320,7 +1320,8 @@ opal_lock_unlock_range(struct spdk_opal_dev *dev, struct opal_session *sess,
 	return opal_parse_and_check_status(sess);
 }
 
-static int opal_generic_locking_range_enable_disable(struct spdk_opal_dev *dev,
+static int
+opal_generic_locking_range_enable_disable(struct spdk_opal_dev *dev,
 		struct opal_session *sess,
 		uint8_t *uid, bool read_lock_enabled, bool write_lock_enabled)
 {

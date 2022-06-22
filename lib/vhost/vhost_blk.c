@@ -73,8 +73,8 @@ struct spdk_vhost_blk_session {
 /* forward declaration */
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
 
-static void
-vhost_user_blk_request_finish(uint8_t status, struct spdk_vhost_blk_task *task, void *cb_arg);
+static void vhost_user_blk_request_finish(uint8_t status, struct spdk_vhost_blk_task *task,
+		void *cb_arg);
 
 static int
 vhost_user_process_blk_request(struct spdk_vhost_user_blk_task *user_task)

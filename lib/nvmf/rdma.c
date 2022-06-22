@@ -511,17 +511,14 @@ nvmf_rdma_qpair_compare(struct spdk_nvmf_rdma_qpair *rqpair1, struct spdk_nvmf_r
 
 RB_GENERATE_STATIC(qpairs_tree, spdk_nvmf_rdma_qpair, node, nvmf_rdma_qpair_compare);
 
-static bool
-nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
-			  struct spdk_nvmf_rdma_request *rdma_req);
+static bool nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
+				      struct spdk_nvmf_rdma_request *rdma_req);
 
-static void
-_poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
-		     struct spdk_nvmf_rdma_poller *rpoller);
+static void _poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
+				 struct spdk_nvmf_rdma_poller *rpoller);
 
-static void
-_poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
-		     struct spdk_nvmf_rdma_poller *rpoller);
+static void _poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
+				 struct spdk_nvmf_rdma_poller *rpoller);
 
 static inline int
 nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
@@ -2385,8 +2382,7 @@ nvmf_rdma_is_rxe_device(struct spdk_nvmf_rdma_device *device)
 	       device->attr.vendor_id == SPDK_RDMA_RXE_VENDOR_ID_NEW;
 }
 
-static int
-nvmf_rdma_accept(void *ctx);
+static int nvmf_rdma_accept(void *ctx);
 
 static struct spdk_nvmf_transport *
 nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
@@ -2742,10 +2738,9 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-static int
-nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
-			  struct spdk_nvme_transport_id *trid,
-			  bool peer);
+static int nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
+				     struct spdk_nvme_transport_id *trid,
+				     bool peer);
 
 static int
 nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_transport_id *trid,
@@ -3430,8 +3425,7 @@ nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 	entry->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
 }
 
-static void
-nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
+static void nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
 static struct spdk_nvmf_transport_poll_group *
 nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,

@@ -76,7 +76,8 @@ ut_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t off
 	return 0;
 }
 
-static int ut_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+static int
+ut_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
 	struct ut_pci_dev *ut_dev = (struct ut_pci_dev *)dev;
 
@@ -180,7 +181,8 @@ pci_hook_test(void)
 	CU_ASSERT(rc != 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

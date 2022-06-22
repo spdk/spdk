@@ -580,8 +580,7 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-static int
-nvmf_tcp_accept(void *ctx);
+static int nvmf_tcp_accept(void *ctx);
 
 static struct spdk_nvmf_transport *
 nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)

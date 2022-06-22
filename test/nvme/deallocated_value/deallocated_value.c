@@ -462,7 +462,8 @@ cleanup(struct deallocate_context *context)
 	free(context->FFh_buf);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int			rc;
 	struct spdk_env_opts	opts;

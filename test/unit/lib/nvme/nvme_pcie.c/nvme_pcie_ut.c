@@ -399,7 +399,8 @@ test_nvme_pcie_hotplug_monitor(void)
 	g_spdk_nvme_driver = NULL;
 }
 
-static void test_shadow_doorbell_update(void)
+static void
+test_shadow_doorbell_update(void)
 {
 	bool ret;
 
@@ -1003,7 +1004,8 @@ test_nvme_pcie_ctrlr_config_pmr(void)
 	CU_ASSERT(rc == -EINVAL);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

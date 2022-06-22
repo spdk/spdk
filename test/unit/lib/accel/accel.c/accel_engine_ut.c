@@ -513,7 +513,8 @@ test_spdk_accel_engine_register(void)
 	CU_ASSERT(i == 4);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

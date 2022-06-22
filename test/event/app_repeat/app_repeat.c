@@ -43,7 +43,8 @@ app_repeat_started(void *arg1)
 	printf("spdk_app_start is called in Round %d.\n", index);
 }
 
-static void _app_repeat_shutdown_cb(void)
+static void
+_app_repeat_shutdown_cb(void)
 {
 	printf("Shutdown signal received, stop current app iteration\n");
 	spdk_app_stop(0);

@@ -452,7 +452,8 @@ work_fn(void)
 	return 0;
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 #if HAVE_LIBAIO
@@ -690,7 +691,8 @@ cleanup(void)
 	}
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int			rc;
 	struct spdk_env_opts	opts;

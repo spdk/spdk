@@ -389,7 +389,8 @@ int vhost_vring_inflight_desc_to_iov(struct spdk_vhost_session *vsession, struct
 uint16_t vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
 		uint16_t *num_descs);
 
-static inline bool __attribute__((always_inline))
+static inline bool
+__attribute__((always_inline))
 vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
 {
 	return vsession->negotiated_features & (1ULL << feature_id);
@@ -604,8 +605,8 @@ int virtio_blk_transport_create(const char *transport_name, const struct spdk_js
 int virtio_blk_transport_destroy(struct spdk_virtio_blk_transport *transport,
 				 spdk_vhost_fini_cb cb_fn);
 
-const struct spdk_virtio_blk_transport_ops *
-virtio_blk_get_transport_ops(const char *transport_name);
+const struct spdk_virtio_blk_transport_ops *virtio_blk_get_transport_ops(
+	const char *transport_name);
 
 
 /*

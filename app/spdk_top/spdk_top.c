@@ -3239,7 +3239,8 @@ wait_init(pthread_t *data_thread)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int op, rc;
 	char *socket = SPDK_DEFAULT_RPC_ADDR;

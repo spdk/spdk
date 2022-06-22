@@ -456,7 +456,8 @@ nvmf_fc_tests_fini(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	unsigned int num_failures = 0;
 	CU_pSuite suite = NULL;

@@ -1932,8 +1932,7 @@ nvmf_fc_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->num_shared_buffers =   SPDK_NVMF_FC_DEFAULT_NUM_SHARED_BUFFERS;
 }
 
-static int
-nvmf_fc_accept(void *ctx);
+static int nvmf_fc_accept(void *ctx);
 
 static struct spdk_nvmf_transport *
 nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)

@@ -17,7 +17,8 @@ static int g_time_in_sec;
 
 static struct spdk_nvme_transport_id g_trid;
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
@@ -236,7 +237,8 @@ test_controller(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct spdk_env_opts opts;
 	uint64_t tsc_end;

@@ -870,7 +870,8 @@ test_parse_comment(void)
 	PARSE_FAIL_FLAGS("[0/", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

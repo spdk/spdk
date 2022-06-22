@@ -1115,8 +1115,9 @@ spdk_fio_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset, u
 #endif
 
 #if FIO_IOOPS_VERSION >= 30
-static int spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
-				       unsigned int *max_open_zones)
+static int
+spdk_fio_get_max_open_zones(struct thread_data *td, struct fio_file *f,
+			    unsigned int *max_open_zones)
 {
 	struct spdk_bdev *bdev;
 
@@ -1294,7 +1295,8 @@ struct ioengine_ops ioengine = {
 	.options		= options,
 };
 
-static void fio_init spdk_fio_register(void)
+static void fio_init
+spdk_fio_register(void)
 {
 	register_ioengine(&ioengine);
 }
@@ -1312,7 +1314,8 @@ spdk_fio_finish_env(void)
 	spdk_env_fini();
 }
 
-static void fio_exit spdk_fio_unregister(void)
+static void fio_exit
+spdk_fio_unregister(void)
 {
 	if (g_spdk_env_initialized) {
 		spdk_fio_finish_env();

@@ -392,7 +392,8 @@ release_vbdev_dev(struct vbdev_dev *device)
 
 /* Dummy function used by DPDK to free ext attached buffers to mbufs, we free them ourselves but
  * this callback has to be here. */
-static void shinfo_free_cb(void *arg1, void *arg2)
+static void
+shinfo_free_cb(void *arg1, void *arg2)
 {
 }
 

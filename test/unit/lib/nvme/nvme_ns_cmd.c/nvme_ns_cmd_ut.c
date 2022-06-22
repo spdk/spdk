@@ -68,11 +68,13 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, voi
 	return -1;
 }
 
-static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
+static void
+nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 {
 }
 
-static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
+static int
+nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	uint32_t *lba_count = cb_arg;
 
@@ -754,7 +756,8 @@ test_nvme_ns_cmd_readv(void)
 	cleanup_after_test(&qpair);
 }
 
-static int nvme_request_next_sge_invalid_prp1(void *cb_arg, void **address, uint32_t *length)
+static int
+nvme_request_next_sge_invalid_prp1(void *cb_arg, void **address, uint32_t *length)
 {
 	struct nvme_ns_cmd_ut_cb_arg *iovs = cb_arg;
 
@@ -2201,7 +2204,8 @@ test_spdk_nvme_ns_cmd_readv_ext(void)
 	cleanup_after_test(&qpair);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

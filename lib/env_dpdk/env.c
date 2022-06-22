@@ -295,22 +295,26 @@ spdk_process_is_primary(void)
 	return (rte_eal_process_type() == RTE_PROC_PRIMARY);
 }
 
-uint64_t spdk_get_ticks(void)
+uint64_t
+spdk_get_ticks(void)
 {
 	return rte_get_timer_cycles();
 }
 
-uint64_t spdk_get_ticks_hz(void)
+uint64_t
+spdk_get_ticks_hz(void)
 {
 	return rte_get_timer_hz();
 }
 
-void spdk_delay_us(unsigned int us)
+void
+spdk_delay_us(unsigned int us)
 {
 	rte_delay_us(us);
 }
 
-void spdk_pause(void)
+void
+spdk_pause(void)
 {
 	rte_pause();
 }

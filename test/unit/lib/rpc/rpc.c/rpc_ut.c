@@ -37,8 +37,9 @@ DEFINE_WRAPPER(open, int, (const char *pathname, int flags, mode_t mode), (pathn
 DEFINE_WRAPPER(close, int, (int fd), (fd));
 DEFINE_WRAPPER(flock, int, (int fd, int operation), (fd, operation));
 
-int spdk_json_decode_object(const struct spdk_json_val *values,
-			    const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
+int
+spdk_json_decode_object(const struct spdk_json_val *values,
+			const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
 {
 	if (values ->type == SPDK_JSON_VAL_INVALID) {
 		return 1;
@@ -77,8 +78,9 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 	g_rpc_err = error_code;
 }
 
-void fn_rpc_method_handler(struct spdk_jsonrpc_request *request,
-			   const struct spdk_json_val *params)
+void
+fn_rpc_method_handler(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
 {
 	g_rpc_err = 0;
 }
@@ -235,7 +237,8 @@ test_spdk_rpc_listen_close(void)
 	MOCK_CLEAR(flock);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

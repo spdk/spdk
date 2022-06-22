@@ -26,7 +26,8 @@ struct ocf_io_ctx {
 int vbdev_ocf_volume_init(void);
 void vbdev_ocf_volume_cleanup(void);
 
-static inline struct ocf_io_ctx *ocf_get_io_ctx(struct ocf_io *io)
+static inline struct ocf_io_ctx *
+ocf_get_io_ctx(struct ocf_io *io)
 {
 	return ocf_io_get_priv(io);
 }

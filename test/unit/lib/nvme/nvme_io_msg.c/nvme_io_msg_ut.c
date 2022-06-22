@@ -168,7 +168,8 @@ test_nvme_io_msg_ctrlr_register_unregister(void)
 	MOCK_CLEAR(spdk_nvme_ctrlr_alloc_io_qpair);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

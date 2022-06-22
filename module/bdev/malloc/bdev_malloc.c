@@ -209,7 +209,8 @@ bdev_malloc_unmap(struct malloc_disk *mdisk,
 				      byte_count, 0, malloc_done, task);
 }
 
-static int _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
+static int
+_bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
 {
 	uint32_t block_size = bdev_io->bdev->blocklen;
 
@@ -294,7 +295,8 @@ static int _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_b
 	return 0;
 }
 
-static void bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct malloc_channel *mch = spdk_io_channel_get_ctx(ch);
 
@@ -505,7 +507,8 @@ malloc_destroy_channel_cb(void *io_device, void *ctx)
 	spdk_poller_unregister(&ch->completion_poller);
 }
 
-static int bdev_malloc_initialize(void)
+static int
+bdev_malloc_initialize(void)
 {
 	/* This needs to be reset for each reinitialization of submodules.
 	 * Otherwise after enough devices or reinitializations the value gets too high.

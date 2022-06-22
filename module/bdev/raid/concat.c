@@ -42,8 +42,7 @@ concat_bdev_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_a
 	}
 }
 
-static void
-concat_submit_rw_request(struct raid_bdev_io *raid_io);
+static void concat_submit_rw_request(struct raid_bdev_io *raid_io);
 
 static void
 _concat_submit_rw_request(void *_raid_io)
@@ -127,8 +126,7 @@ concat_submit_rw_request(struct raid_bdev_io *raid_io)
 	}
 }
 
-static void
-concat_submit_null_payload_request(struct raid_bdev_io *raid_io);
+static void concat_submit_null_payload_request(struct raid_bdev_io *raid_io);
 
 static void
 _concat_submit_null_payload_request(void *_raid_io)
@@ -265,7 +263,8 @@ concat_submit_null_payload_request(struct raid_bdev_io *raid_io)
 	}
 }
 
-static int concat_start(struct raid_bdev *raid_bdev)
+static int
+concat_start(struct raid_bdev *raid_bdev)
 {
 	uint64_t total_blockcnt = 0;
 	struct raid_base_bdev_info *base_info;

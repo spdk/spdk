@@ -549,10 +549,9 @@ nvmf_bdev_ctrlr_unmap_cpl(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_free_io(bdev_io);
 }
 
-static int
-nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-		      struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
-		      struct nvmf_bdev_ctrlr_unmap *unmap_ctx);
+static int nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+				 struct nvmf_bdev_ctrlr_unmap *unmap_ctx);
 static void
 nvmf_bdev_ctrlr_unmap_resubmit(void *arg)
 {

@@ -132,7 +132,7 @@ function check_c_style() {
 			#  coding standards.
 			git ls-files '*.[ch]' \
 				| grep -v rte_vhost | grep -v cpp_headers \
-				| xargs -P$(nproc) -n10 astyle \
+				| xargs -P$(nproc) -n10 astyle --break-return-type --attach-return-type-decl \
 					--options=.astylerc >> astyle.log
 			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
 				| grep -v rte_vhost | grep -v cpp_headers \

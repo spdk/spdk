@@ -836,7 +836,8 @@ nvmf_setup_signal_handlers(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;

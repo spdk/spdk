@@ -58,7 +58,8 @@ log_test(void)
 	spdk_log_close();
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

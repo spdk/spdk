@@ -528,7 +528,8 @@ test_nvme_cuse_stop(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_ctrlr_ctx_head));
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

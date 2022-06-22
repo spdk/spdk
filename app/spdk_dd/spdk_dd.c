@@ -677,7 +677,8 @@ dd_open_bdev(struct dd_target *target, const char *bdev_name, uint64_t skip_bloc
 	return 0;
 }
 
-static void dd_finish(void)
+static void
+dd_finish(void)
 {
 	/* Interrupt operation */
 	g_interrupt = true;

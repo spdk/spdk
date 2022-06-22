@@ -99,16 +99,15 @@ static char *validation_errors[] = {
 	"Bad Subsystem Port",
 };
 
-static inline void
-nvmf_fc_add_assoc_to_tgt_port(struct spdk_nvmf_fc_nport *tgtport,
-			      struct spdk_nvmf_fc_association *assoc,
-			      struct spdk_nvmf_fc_remote_port_info *rport);
+static inline void nvmf_fc_add_assoc_to_tgt_port(struct spdk_nvmf_fc_nport *tgtport,
+		struct spdk_nvmf_fc_association *assoc,
+		struct spdk_nvmf_fc_remote_port_info *rport);
 
-static void
-nvmf_fc_del_connection(struct spdk_nvmf_fc_association *assoc,
-		       struct spdk_nvmf_fc_conn *fc_conn);
+static void nvmf_fc_del_connection(struct spdk_nvmf_fc_association *assoc,
+				   struct spdk_nvmf_fc_conn *fc_conn);
 
-static inline FCNVME_BE32 cpu_to_be32(uint32_t in)
+static inline FCNVME_BE32
+cpu_to_be32(uint32_t in)
 {
 	uint32_t t;
 
@@ -116,7 +115,8 @@ static inline FCNVME_BE32 cpu_to_be32(uint32_t in)
 	return (FCNVME_BE32)t;
 }
 
-static inline FCNVME_BE32 nvmf_fc_lsdesc_len(size_t sz)
+static inline FCNVME_BE32
+nvmf_fc_lsdesc_len(size_t sz)
 {
 	uint32_t t;
 

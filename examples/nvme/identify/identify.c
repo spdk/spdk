@@ -2325,7 +2325,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int				rc;
 	struct spdk_env_opts		opts;

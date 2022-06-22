@@ -537,7 +537,8 @@ dequeue_task(void *_head, struct spdk_iscsi_task *task)
 	return false;
 }
 
-static void iscsi_conn_pdu_dummy_complete(void *arg)
+static void
+iscsi_conn_pdu_dummy_complete(void *arg)
 {
 }
 

@@ -441,7 +441,8 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *src, u
 }
 
 /* Helper function when when accel modules register with the framework. */
-void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
+void
+spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module)
 {
 	TAILQ_INSERT_TAIL(&spdk_accel_module_list, accel_module, tailq);
 	if (accel_module->get_ctx_size && accel_module->get_ctx_size() > g_max_accel_module_size) {
@@ -924,7 +925,8 @@ sw_accel_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_poller_unregister(&sw_ch->completion_poller);
 }
 
-static struct spdk_io_channel *sw_accel_get_io_channel(void)
+static struct spdk_io_channel *
+sw_accel_get_io_channel(void)
 {
 	return spdk_get_io_channel(&sw_accel_engine);
 }

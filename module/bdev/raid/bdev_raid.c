@@ -40,7 +40,8 @@ struct raid_offline_tailq	g_raid_bdev_offline_list = TAILQ_HEAD_INITIALIZER(
 
 static TAILQ_HEAD(, raid_bdev_module) g_raid_modules = TAILQ_HEAD_INITIALIZER(g_raid_modules);
 
-static struct raid_bdev_module *raid_bdev_module_find(enum raid_level level)
+static struct raid_bdev_module *
+raid_bdev_module_find(enum raid_level level)
 {
 	struct raid_bdev_module *raid_module;
 
@@ -53,7 +54,8 @@ static struct raid_bdev_module *raid_bdev_module_find(enum raid_level level)
 	return NULL;
 }
 
-void raid_bdev_module_list_add(struct raid_bdev_module *raid_module)
+void
+raid_bdev_module_list_add(struct raid_bdev_module *raid_module)
 {
 	if (raid_bdev_module_find(raid_module->level) != NULL) {
 		SPDK_ERRLOG("module for raid level '%s' already registered.\n",
@@ -359,8 +361,7 @@ raid_base_bdev_reset_complete(struct spdk_bdev_io *bdev_io, bool success, void *
 				   SPDK_BDEV_IO_STATUS_FAILED);
 }
 
-static void
-raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io);
+static void raid_bdev_submit_reset_request(struct raid_bdev_io *raid_io);
 
 static void
 _raid_bdev_submit_reset_request(void *_raid_io)
@@ -884,7 +885,11 @@ static struct {
 	{ }
 };
 
-enum raid_level raid_bdev_parse_raid_level(const char *str)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum raid_level raid_level_t;
+
+raid_level_t
+raid_bdev_parse_raid_level(const char *str)
 {
 	unsigned int i;
 

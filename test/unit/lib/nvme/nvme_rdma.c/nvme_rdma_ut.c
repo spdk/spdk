@@ -132,7 +132,8 @@ ibv_query_device(struct ibv_context *context,
 }
 
 /* essentially a simplification of bdev_nvme_next_sge and bdev_nvme_reset_sgl */
-static void nvme_rdma_ut_reset_sgl(void *cb_arg, uint32_t offset)
+static void
+nvme_rdma_ut_reset_sgl(void *cb_arg, uint32_t offset)
 {
 	struct nvme_rdma_ut_bdev_io *bio = cb_arg;
 	struct iovec *iov;
@@ -150,7 +151,8 @@ static void nvme_rdma_ut_reset_sgl(void *cb_arg, uint32_t offset)
 	SPDK_CU_ASSERT_FATAL(bio->iovpos < NVME_RDMA_MAX_SGL_DESCRIPTORS);
 }
 
-static int nvme_rdma_ut_next_sge(void *cb_arg, void **address, uint32_t *length)
+static int
+nvme_rdma_ut_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	struct nvme_rdma_ut_bdev_io *bio = cb_arg;
 	struct iovec *iov;
@@ -1484,7 +1486,8 @@ test_nvme_rdma_poll_group_set_cq(void)
 	CU_ASSERT(rc == 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

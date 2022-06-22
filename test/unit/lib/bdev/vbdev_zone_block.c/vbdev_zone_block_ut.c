@@ -149,7 +149,8 @@ spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module *mod
 	return 0;
 }
 
-int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
+int
+spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
 {
 	struct rpc_construct_zone_block *req = g_rpc_req;
 	if (strcmp(name, "zone_capacity") == 0) {
@@ -1458,7 +1459,8 @@ test_append_zone(void)
 	test_cleanup();
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
 	unsigned int    num_failures;

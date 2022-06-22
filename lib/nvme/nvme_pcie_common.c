@@ -21,8 +21,8 @@ __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 
 static struct spdk_nvme_pcie_stat g_dummy_stat = {};
 
-static void
-nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr);
+static void nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair,
+		struct nvme_tracker *tr);
 
 static inline uint64_t
 nvme_pcie_vtophys(struct spdk_nvme_ctrlr *ctrlr, const void *buf, uint64_t *size)

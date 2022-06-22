@@ -1709,7 +1709,8 @@ spdk_reduce_vol_get_params(struct spdk_reduce_vol *vol)
 	return &vol->params;
 }
 
-void spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol)
+void
+spdk_reduce_vol_print_info(struct spdk_reduce_vol *vol)
 {
 	uint64_t logical_map_size, num_chunks, ttl_chunk_sz;
 	uint32_t struct_size;

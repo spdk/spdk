@@ -736,10 +736,11 @@ _nvmf_tgt_add_transport(struct spdk_io_channel_iter *i)
 	spdk_for_each_channel_continue(i, rc);
 }
 
-void spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
-				 struct spdk_nvmf_transport *transport,
-				 spdk_nvmf_tgt_add_transport_done_fn cb_fn,
-				 void *cb_arg)
+void
+spdk_nvmf_tgt_add_transport(struct spdk_nvmf_tgt *tgt,
+			    struct spdk_nvmf_transport *transport,
+			    spdk_nvmf_tgt_add_transport_done_fn cb_fn,
+			    void *cb_arg)
 {
 	struct spdk_nvmf_tgt_add_transport_ctx *ctx;
 

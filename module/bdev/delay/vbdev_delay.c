@@ -88,8 +88,7 @@ struct delay_io_channel {
 	unsigned int rand_seed;
 };
 
-static void
-vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+static void vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 
 /* Callback for unregistering the IO device. */

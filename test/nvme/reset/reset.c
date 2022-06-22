@@ -287,7 +287,8 @@ work_fn(void *arg)
 	return 0;
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
@@ -621,7 +622,8 @@ free_tasks(void)
 	spdk_mempool_free(task_pool);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int			rc;
 	int			i;

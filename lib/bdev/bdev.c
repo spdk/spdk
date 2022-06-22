@@ -331,27 +331,23 @@ static void bdev_write_zero_buffer_next(void *_bdev_io);
 static void bdev_enable_qos_msg(struct spdk_io_channel_iter *i);
 static void bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status);
 
-static int
-bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			  struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
-			  uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
-			  struct spdk_bdev_ext_io_opts *opts, bool copy_opts);
-static int
-bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			   struct iovec *iov, int iovcnt, void *md_buf,
-			   uint64_t offset_blocks, uint64_t num_blocks,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg,
-			   struct spdk_bdev_ext_io_opts *opts, bool copy_opts);
+static int bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				     struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
+				     uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg,
+				     struct spdk_bdev_ext_io_opts *opts, bool copy_opts);
+static int bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				      struct iovec *iov, int iovcnt, void *md_buf,
+				      uint64_t offset_blocks, uint64_t num_blocks,
+				      spdk_bdev_io_completion_cb cb, void *cb_arg,
+				      struct spdk_bdev_ext_io_opts *opts, bool copy_opts);
 
-static int
-bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
-		    uint64_t offset, uint64_t length,
-		    lock_range_cb cb_fn, void *cb_arg);
+static int bdev_lock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+			       uint64_t offset, uint64_t length,
+			       lock_range_cb cb_fn, void *cb_arg);
 
-static int
-bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
-		      uint64_t offset, uint64_t length,
-		      lock_range_cb cb_fn, void *cb_arg);
+static int bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
+				 uint64_t offset, uint64_t length,
+				 lock_range_cb cb_fn, void *cb_arg);
 
 static inline void bdev_io_complete(void *ctx);
 
@@ -481,8 +477,7 @@ struct spdk_bdev_wait_for_examine_ctx {
 	void				*cb_arg;
 };
 
-static bool
-bdev_module_all_actions_completed(void);
+static bool bdev_module_all_actions_completed(void);
 
 static int
 bdev_wait_for_examine_cb(void *arg)
@@ -2322,14 +2317,11 @@ _to_next_boundary(uint64_t offset, uint32_t boundary)
 	return (boundary - (offset % boundary));
 }
 
-static void
-bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+static void bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
-static void
-_bdev_rw_split(void *_bdev_io);
+static void _bdev_rw_split(void *_bdev_io);
 
-static void
-bdev_unmap_split(struct spdk_bdev_io *bdev_io);
+static void bdev_unmap_split(struct spdk_bdev_io *bdev_io);
 
 static void
 _bdev_unmap_split(void *_bdev_io)
@@ -2337,8 +2329,7 @@ _bdev_unmap_split(void *_bdev_io)
 	return bdev_unmap_split((struct spdk_bdev_io *)_bdev_io);
 }
 
-static void
-bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io);
+static void bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io);
 
 static void
 _bdev_write_zeroes_split(void *_bdev_io)
@@ -2676,8 +2667,8 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 }
 
-static void
-bdev_rw_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success);
+static void bdev_rw_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+				     bool success);
 
 static void
 bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -2759,8 +2750,7 @@ _bdev_io_submit(void *ctx)
 	}
 }
 
-bool
-bdev_lba_range_overlapped(struct lba_range *range1, struct lba_range *range2);
+bool bdev_lba_range_overlapped(struct lba_range *range1, struct lba_range *range2);
 
 bool
 bdev_lba_range_overlapped(struct lba_range *range1, struct lba_range *range2)
@@ -3868,7 +3858,11 @@ _bdev_get_block_size_with_md(const struct spdk_bdev *bdev)
 	}
 }
 
-enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_dif_type spdk_dif_type_t;
+
+spdk_dif_type_t
+spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
 {
 	if (bdev->md_len != 0) {
 		return bdev->dif_type;
@@ -4220,10 +4214,11 @@ bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 	return 0;
 }
 
-int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			   struct iovec *iov, int iovcnt,
-			   uint64_t offset_blocks, uint64_t num_blocks,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg)
+int
+spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		       struct iovec *iov, int iovcnt,
+		       uint64_t offset_blocks, uint64_t num_blocks,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return bdev_readv_blocks_with_md(desc, ch, iov, iovcnt, NULL, offset_blocks,
 					 num_blocks, cb, cb_arg, NULL, false);
@@ -7311,8 +7306,7 @@ bdev_lock_error_cleanup_cb(struct spdk_io_channel_iter *i, int status)
 	free(ctx);
 }
 
-static void
-bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i);
+static void bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i);
 
 static void
 bdev_lock_lba_range_cb(struct spdk_io_channel_iter *i, int status)

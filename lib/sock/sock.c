@@ -866,7 +866,8 @@ spdk_net_impl_register(struct spdk_net_impl *impl, int priority)
 	}
 }
 
-int spdk_sock_set_default_impl(const char *impl_name)
+int
+spdk_sock_set_default_impl(const char *impl_name)
 {
 	struct spdk_net_impl *impl;
 

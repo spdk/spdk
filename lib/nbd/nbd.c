@@ -100,10 +100,8 @@ static void *g_fini_cb_arg;
 
 static void _nbd_fini(void *arg1);
 
-static int
-nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
-static int
-nbd_io_recv_internal(struct spdk_nbd_disk *nbd);
+static int nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io);
+static int nbd_io_recv_internal(struct spdk_nbd_disk *nbd);
 
 int
 spdk_nbd_init(void)

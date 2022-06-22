@@ -466,7 +466,8 @@ bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	}
 }
 
-static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static int
+_bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	/* Read and write operations must be performed on buffers aligned to
@@ -491,7 +492,8 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 	}
 }
 
-static void bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	if (_bdev_aio_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -594,7 +596,8 @@ static const struct spdk_bdev_fn_table aio_fn_table = {
 	.write_config_json	= bdev_aio_write_json_config,
 };
 
-static void aio_free_disk(struct file_disk *fdisk)
+static void
+aio_free_disk(struct file_disk *fdisk)
 {
 	if (fdisk == NULL) {
 		return;

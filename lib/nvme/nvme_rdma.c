@@ -2194,9 +2194,13 @@ nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 static int nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 
-static struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		void *devhandle)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef struct spdk_nvme_ctrlr spdk_nvme_ctrlr_t;
+
+static spdk_nvme_ctrlr_t *
+nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+			  const struct spdk_nvme_ctrlr_opts *opts,
+			  void *devhandle)
 {
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct ibv_context **contexts;

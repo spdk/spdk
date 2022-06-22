@@ -223,7 +223,8 @@ test_ctrlr_get_memory_domains(void)
 	TAILQ_REMOVE(&g_spdk_nvme_transports, &new_transport, link);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

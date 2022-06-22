@@ -1690,7 +1690,8 @@ test_nvmf_ns_reservation_restore(void)
 	CU_ASSERT(rc == -EINVAL);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

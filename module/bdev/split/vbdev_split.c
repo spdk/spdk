@@ -53,8 +53,7 @@ static void vbdev_split_examine(struct spdk_bdev *bdev);
 static int vbdev_split_config_json(struct spdk_json_write_ctx *w);
 static int vbdev_split_get_ctx_size(void);
 
-static void
-_vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
+static void _vbdev_split_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
 
 static struct spdk_bdev_module split_if = {
 	.name = "split",

@@ -345,7 +345,8 @@ test_spdk_nvmf_transport_listen_ext(void)
 	CU_ASSERT(rc == 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

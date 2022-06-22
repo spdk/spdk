@@ -95,7 +95,8 @@ ioat_exit(void)
 		free(dev);
 	}
 }
-static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_task *ioat_task)
+static void
+prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_task *ioat_task)
 {
 	int len;
 	uintptr_t src_offset;

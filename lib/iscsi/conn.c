@@ -92,7 +92,8 @@ _iscsi_conns_cleanup(void)
 	free(g_conns_array);
 }
 
-int initialize_iscsi_conns(void)
+int
+initialize_iscsi_conns(void)
 {
 	uint32_t i;
 

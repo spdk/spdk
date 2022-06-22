@@ -873,9 +873,10 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 	}
 }
 
-static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		void *devhandle)
+static struct spdk_nvme_ctrlr *
+	nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+			  const struct spdk_nvme_ctrlr_opts *opts,
+			  void *devhandle)
 {
 	struct spdk_pci_device *pci_dev = devhandle;
 	struct nvme_pcie_ctrlr *pctrlr;

@@ -69,14 +69,16 @@ struct lvol_ut_bs_dev {
 	struct spdk_blob_store	*bs;
 };
 
-void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-			  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+		     spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, g_inflate_rc);
 }
 
-void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
-				  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
+			     spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, g_inflate_rc);
 }
@@ -115,7 +117,8 @@ spdk_bs_iter_first(struct spdk_blob_store *bs,
 	cb_fn(cb_arg, first, _errno);
 }
 
-uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob)
+uint64_t
+spdk_blob_get_num_clusters(struct spdk_blob *blob)
 {
 	return 0;
 }
@@ -163,7 +166,8 @@ struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 	return g_io_channel;
 }
 
-void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
+void
+spdk_bs_free_io_channel(struct spdk_io_channel *channel)
 {
 	g_io_channel->ref--;
 	if (g_io_channel->ref == 0) {
@@ -206,7 +210,8 @@ spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
 	return -ENOENT;
 }
 
-bool spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
+bool
+spdk_blob_is_thin_provisioned(struct spdk_blob *blob)
 {
 	return blob->thin_provisioned;
 }
@@ -319,7 +324,8 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size)
 
 DEFINE_STUB(spdk_bs_get_cluster_size, uint64_t, (struct spdk_blob_store *bs), BS_CLUSTER_SIZE);
 
-void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	b->ref--;
 
@@ -1811,7 +1817,8 @@ lvs_rename(void)
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
 }
-static void lvol_refcnt(void)
+static void
+lvol_refcnt(void)
 {
 	struct lvol_ut_bs_dev dev;
 	struct spdk_lvs_opts opts;
@@ -2075,7 +2082,8 @@ lvol_get_xattr(void)
 	free_dev(&dev);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

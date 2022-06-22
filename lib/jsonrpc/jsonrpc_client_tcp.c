@@ -355,8 +355,9 @@ spdk_jsonrpc_client_poll(struct spdk_jsonrpc_client *client, int timeout)
 	}
 }
 
-int spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
-				     struct spdk_jsonrpc_client_request *req)
+int
+spdk_jsonrpc_client_send_request(struct spdk_jsonrpc_client *client,
+				 struct spdk_jsonrpc_client_request *req)
 {
 	if (client->request != NULL) {
 		return -ENOSPC;

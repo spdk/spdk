@@ -165,8 +165,9 @@ struct vring {
 #define vring_used_event(vr) ((vr)->avail->ring[(vr)->num])
 #define vring_avail_event(vr) (*(__virtio16 *)&(vr)->used->ring[(vr)->num])
 
-static inline void vring_init(struct vring *vr, unsigned int num, void *p,
-			      unsigned long align)
+static inline void
+vring_init(struct vring *vr, unsigned int num, void *p,
+	   unsigned long align)
 {
 	vr->num = num;
 	vr->desc = p;
@@ -176,7 +177,8 @@ static inline void vring_init(struct vring *vr, unsigned int num, void *p,
 			     + align - 1) & ~(align - 1));
 }
 
-static inline unsigned vring_size(unsigned int num, unsigned long align)
+static inline unsigned
+vring_size(unsigned int num, unsigned long align)
 {
 	return ((sizeof(struct vring_desc) * num + sizeof(__virtio16) * (3 + num)
 		 + align - 1) & ~(align - 1))
@@ -187,7 +189,8 @@ static inline unsigned vring_size(unsigned int num, unsigned long align)
 /* Assuming a given event_idx value from the other side, if
  * we have just incremented index from old to new_idx,
  * should we trigger an event? */
-static inline int vring_need_event(__u16 event_idx, __u16 new_idx, __u16 old)
+static inline int
+vring_need_event(__u16 event_idx, __u16 new_idx, __u16 old)
 {
 	/* Note: Xen has similar logic for notification hold-off
 	 * in include/xen/interface/io/ring.h with req_event and req_prod

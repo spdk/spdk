@@ -108,12 +108,9 @@ struct ftl_restore {
 	struct ftl_nv_cache_restore	nv_cache;
 };
 
-static int
-ftl_restore_tail_md(struct ftl_restore_band *rband);
-static void
-ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status);
-static void
-ftl_restore_pad_band(struct ftl_restore_band *rband);
+static int ftl_restore_tail_md(struct ftl_restore_band *rband);
+static void ftl_pad_zone_cb(struct ftl_io *io, void *arg, int status);
+static void ftl_restore_pad_band(struct ftl_restore_band *rband);
 
 static void
 ftl_restore_free(struct ftl_restore *restore)

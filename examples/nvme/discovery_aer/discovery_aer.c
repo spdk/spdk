@@ -102,7 +102,8 @@ get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static void usage(char *program_name)
+static void
+usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
@@ -247,7 +248,8 @@ setup_sig_handlers(void)
 	}
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;

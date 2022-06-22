@@ -382,7 +382,8 @@ spdk_sprintf_alloc(const char *format, ...)
 	return strdup(format);
 }
 
-int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
+int
+spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
 {
 	struct rpc_bdev_raid_create *req = g_rpc_req;
 	if (strcmp(name, "strip_size_kb") == 0) {
@@ -401,7 +402,8 @@ int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name
 	return 0;
 }
 
-int spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val)
+int
+spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val)
 {
 	struct rpc_bdev_raid_create *req = g_rpc_req;
 	if (strcmp(name, "raid_level") == 0) {
@@ -2044,7 +2046,8 @@ test_raid_level_conversions(void)
 	CU_ASSERT(raid_str != NULL && strcmp(raid_str, "raid0") == 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite       suite = NULL;
 	unsigned int    num_failures;

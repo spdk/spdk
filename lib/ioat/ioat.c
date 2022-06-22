@@ -229,7 +229,8 @@ ioat_prep_fill(struct spdk_ioat_chan *ioat, uint64_t dst,
 	return desc;
 }
 
-static int ioat_reset_hw(struct spdk_ioat_chan *ioat)
+static int
+ioat_reset_hw(struct spdk_ioat_chan *ioat)
 {
 	int timeout;
 	uint64_t status;

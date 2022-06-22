@@ -207,7 +207,8 @@ test_nvmf_tgt_create_poll_group(void)
 	MOCK_CLEAR(spdk_bdev_get_io_channel);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

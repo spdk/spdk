@@ -69,8 +69,9 @@ ibv_reg_mr(struct ibv_pd *pd, void *addr, size_t length, int access)
 	}
 }
 
-int ibv_query_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
-		 int attr_mask, struct ibv_qp_init_attr *init_attr)
+int
+ibv_query_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
+	     int attr_mask, struct ibv_qp_init_attr *init_attr)
 {
 	if (qp == NULL) {
 		return -1;
@@ -123,7 +124,8 @@ spdk_nvme_transport_id_populate_trstring(struct spdk_nvme_transport_id *trid, co
 	return 0;
 }
 
-static void reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
+static void
+reset_nvmf_rdma_request(struct spdk_nvmf_rdma_request *rdma_req)
 {
 	int i;
 
@@ -1495,7 +1497,8 @@ test_nvmf_rdma_resize_cq(void)
 	CU_ASSERT(rpoller.num_cqe > tnum_cqe);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

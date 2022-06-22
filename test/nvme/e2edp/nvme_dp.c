@@ -77,7 +77,8 @@ ns_data_buffer_reset(struct spdk_nvme_ns *ns, struct io_request *req, uint8_t da
 	}
 }
 
-static void nvme_req_reset_sgl(void *cb_arg, uint32_t sgl_offset)
+static void
+nvme_req_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
 
@@ -85,7 +86,8 @@ static void nvme_req_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 	return;
 }
 
-static int nvme_req_next_sge(void *cb_arg, void **address, uint32_t *length)
+static int
+nvme_req_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
 	void *payload;
@@ -99,8 +101,9 @@ static int nvme_req_next_sge(void *cb_arg, void **address, uint32_t *length)
 }
 
 /* CRC-16 Guard checked for extended lba format */
-static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct io_request *req,
-		uint32_t *io_flags)
+static uint32_t
+dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct io_request *req,
+				 uint32_t *io_flags)
 {
 	struct spdk_nvme_protection_info *pi;
 	uint32_t md_size, sector_size, chksum_size;
@@ -142,8 +145,9 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
  *  both extended LBA format and separate metadata can
  *  run the test case.
  */
-static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *req,
-				   uint32_t *io_flags)
+static uint32_t
+dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *req,
+		   uint32_t *io_flags)
 {
 	uint32_t md_size, sector_size, data_len;
 
@@ -187,8 +191,9 @@ static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *r
 }
 
 /* Block Reference Tag checked for TYPE1 and TYPE2 with PRACT setting to 0 */
-static uint32_t dp_without_pract_extended_lba_test(struct spdk_nvme_ns *ns, struct io_request *req,
-		uint32_t *io_flags)
+static uint32_t
+dp_without_pract_extended_lba_test(struct spdk_nvme_ns *ns, struct io_request *req,
+				   uint32_t *io_flags)
 {
 	struct spdk_nvme_protection_info *pi;
 	uint32_t md_size, sector_size;
@@ -230,8 +235,9 @@ static uint32_t dp_without_pract_extended_lba_test(struct spdk_nvme_ns *ns, stru
 }
 
 /* LBA + Metadata without data protection bits setting */
-static uint32_t dp_without_flags_extended_lba_test(struct spdk_nvme_ns *ns, struct io_request *req,
-		uint32_t *io_flags)
+static uint32_t
+dp_without_flags_extended_lba_test(struct spdk_nvme_ns *ns, struct io_request *req,
+				   uint32_t *io_flags)
 {
 	uint32_t md_size, sector_size;
 
@@ -257,8 +263,9 @@ static uint32_t dp_without_flags_extended_lba_test(struct spdk_nvme_ns *ns, stru
 }
 
 /* Block Reference Tag checked for TYPE1 and TYPE2 with PRACT setting to 0 */
-static uint32_t dp_without_pract_separate_meta_test(struct spdk_nvme_ns *ns, struct io_request *req,
-		uint32_t *io_flags)
+static uint32_t
+dp_without_pract_separate_meta_test(struct spdk_nvme_ns *ns, struct io_request *req,
+				    uint32_t *io_flags)
 {
 	struct spdk_nvme_protection_info *pi;
 	uint32_t md_size, sector_size;
@@ -305,7 +312,8 @@ static uint32_t dp_without_pract_separate_meta_test(struct spdk_nvme_ns *ns, str
 }
 
 /* Application Tag checked with PRACT setting to 0 */
-static uint32_t dp_without_pract_separate_meta_apptag_test(struct spdk_nvme_ns *ns,
+static uint32_t
+dp_without_pract_separate_meta_apptag_test(struct spdk_nvme_ns *ns,
 		struct io_request *req,
 		uint32_t *io_flags)
 {
@@ -347,8 +355,9 @@ static uint32_t dp_without_pract_separate_meta_apptag_test(struct spdk_nvme_ns *
  * LBA + Metadata without data protection bits setting,
  *  separate metadata payload for the test case.
  */
-static uint32_t dp_without_flags_separate_meta_test(struct spdk_nvme_ns *ns, struct io_request *req,
-		uint32_t *io_flags)
+static uint32_t
+dp_without_flags_separate_meta_test(struct spdk_nvme_ns *ns, struct io_request *req,
+				    uint32_t *io_flags)
 {
 	uint32_t md_size, sector_size;
 
@@ -576,7 +585,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	printf("Attached to %s\n", dev->name);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct dev		*iter;
 	int			rc;

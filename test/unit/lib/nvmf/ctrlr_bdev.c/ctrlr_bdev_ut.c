@@ -61,7 +61,11 @@ spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev)
 	return (bdev->md_len != 0) && bdev->md_interleave;
 }
 
-enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_dif_type spdk_dif_type_t;
+
+spdk_dif_type_t
+spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
 {
 	if (bdev->md_len != 0) {
 		return bdev->dif_type;
@@ -239,15 +243,17 @@ static uint32_t g_bdev_nvme_status_cdw0;
 static uint32_t g_bdev_nvme_status_sct = SPDK_NVME_SCT_GENERIC;
 static uint32_t g_bdev_nvme_status_sc = SPDK_NVME_SC_SUCCESS;
 
-static void reset_bdev_nvme_status(void)
+static void
+reset_bdev_nvme_status(void)
 {
 	g_bdev_nvme_status_cdw0 = 0;
 	g_bdev_nvme_status_sct = SPDK_NVME_SCT_GENERIC;
 	g_bdev_nvme_status_sc = SPDK_NVME_SC_SUCCESS;
 }
 
-void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct,
-				  int *sc)
+void
+spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, uint32_t *cdw0, int *sct,
+			     int *sc)
 {
 	*cdw0 = g_bdev_nvme_status_cdw0;
 	*sct = g_bdev_nvme_status_sct;
@@ -844,7 +850,8 @@ test_nvmf_bdev_ctrlr_nvme_passthru(void)
 	MOCK_SET(spdk_bdev_nvme_admin_passthru, 0);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

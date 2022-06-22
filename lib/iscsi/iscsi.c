@@ -502,7 +502,8 @@ end:
 	return iovcnt - sgl.iovcnt;
 }
 
-void iscsi_free_sess(struct spdk_iscsi_sess *sess)
+void
+iscsi_free_sess(struct spdk_iscsi_sess *sess)
 {
 	if (sess == NULL) {
 		return;
@@ -2449,7 +2450,8 @@ iscsi_pdu_payload_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	return 0;
 }
 
-static void iscsi_conn_logout_pdu_complete(void *arg)
+static void
+iscsi_conn_logout_pdu_complete(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
@@ -2809,9 +2811,10 @@ iscsi_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 	return false;
 }
 
-void iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
-				   struct spdk_scsi_lun *lun,
-				   struct spdk_iscsi_pdu *pdu)
+void
+iscsi_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
+			      struct spdk_scsi_lun *lun,
+			      struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task *task, *task_tmp;
 	struct spdk_iscsi_pdu *pdu_tmp;
@@ -3072,8 +3075,9 @@ iscsi_transfer_in(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task)
 	return sent_status;
 }
 
-void iscsi_task_response(struct spdk_iscsi_conn *conn,
-			 struct spdk_iscsi_task *task)
+void
+iscsi_task_response(struct spdk_iscsi_conn *conn,
+		    struct spdk_iscsi_task *task)
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_scsi_resp *rsph;

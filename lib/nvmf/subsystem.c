@@ -1284,8 +1284,7 @@ nvmf_subsystem_ns_changed(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 	}
 }
 
-static uint32_t
-nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns);
+static uint32_t nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns);
 
 int
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
@@ -1560,10 +1559,9 @@ static struct spdk_bdev_module ns_bdev_module = {
 	.name	= "NVMe-oF Target",
 };
 
-static int
-nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
-static int
-nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info);
+static int nvmf_ns_load_reservation(const char *file, struct spdk_nvmf_reservation_info *info);
+static int nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns,
+				       struct spdk_nvmf_reservation_info *info);
 
 uint32_t
 spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char *bdev_name,
@@ -1858,7 +1856,11 @@ spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subnqn;
 }
 
-enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvmf_subtype spdk_nvmf_subtype_t;
+
+spdk_nvmf_subtype_t
+spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subtype;
 }
@@ -2124,8 +2126,7 @@ exit:
 	return rc;
 }
 
-static bool
-nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
+static bool nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns);
 
 static int
 nvmf_ns_reservation_restore(struct spdk_nvmf_ns *ns, struct spdk_nvmf_reservation_info *info)

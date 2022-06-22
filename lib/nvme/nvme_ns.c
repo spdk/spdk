@@ -324,7 +324,12 @@ spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return _nvme_ns_get_data(ns);
 }
 
-enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical_block_read_value(
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef enum spdk_nvme_dealloc_logical_block_read_value
+spdk_nvme_dealloc_logical_block_read_value_t;
+
+spdk_nvme_dealloc_logical_block_read_value_t
+spdk_nvme_ns_get_dealloc_logical_block_read_value(
 	struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
@@ -492,8 +497,9 @@ spdk_nvme_ns_get_ana_state(const struct spdk_nvme_ns *ns) {
 	return ns->ana_state;
 }
 
-int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
-		      struct spdk_nvme_ctrlr *ctrlr)
+int
+nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
+		  struct spdk_nvme_ctrlr *ctrlr)
 {
 	int	rc;
 
@@ -530,7 +536,8 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 	return 0;
 }
 
-void nvme_ns_destruct(struct spdk_nvme_ns *ns)
+void
+nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ns_data *nsdata;
 

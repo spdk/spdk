@@ -4200,7 +4200,8 @@ spdk_nvmf_request_exec_fabrics(struct spdk_nvmf_request *req)
 	}
 }
 
-static bool nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
+static bool
+nvmf_check_subsystem_active(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = NULL;
@@ -4446,7 +4447,8 @@ struct spdk_nvmf_subsystem *spdk_nvmf_request_get_subsystem(struct spdk_nvmf_req
 	return req->qpair->ctrlr->subsys;
 }
 
-void spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length)
+void
+spdk_nvmf_request_get_data(struct spdk_nvmf_request *req, void **data, uint32_t *length)
 {
 	*data = req->data;
 	*length = req->length;
@@ -4457,7 +4459,8 @@ struct spdk_nvmf_subsystem *spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr
 	return ctrlr->subsys;
 }
 
-uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr)
+uint16_t
+spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return ctrlr->cntlid;
 }

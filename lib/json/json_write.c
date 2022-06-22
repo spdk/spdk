@@ -661,70 +661,80 @@ spdk_json_write_val(struct spdk_json_write_ctx *w, const struct spdk_json_val *v
 	return fail(w);
 }
 
-int spdk_json_write_named_null(struct spdk_json_write_ctx *w, const char *name)
+int
+spdk_json_write_named_null(struct spdk_json_write_ctx *w, const char *name)
 {
 	int rc = spdk_json_write_name(w, name);
 	return rc ? rc : spdk_json_write_null(w);
 }
 
-int spdk_json_write_named_bool(struct spdk_json_write_ctx *w, const char *name, bool val)
+int
+spdk_json_write_named_bool(struct spdk_json_write_ctx *w, const char *name, bool val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_bool(w, val);
 }
 
-int spdk_json_write_named_uint8(struct spdk_json_write_ctx *w, const char *name, uint8_t val)
+int
+spdk_json_write_named_uint8(struct spdk_json_write_ctx *w, const char *name, uint8_t val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_uint8(w, val);
 }
 
-int spdk_json_write_named_uint16(struct spdk_json_write_ctx *w, const char *name, uint16_t val)
+int
+spdk_json_write_named_uint16(struct spdk_json_write_ctx *w, const char *name, uint16_t val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_uint16(w, val);
 }
 
-int spdk_json_write_named_int32(struct spdk_json_write_ctx *w, const char *name, int32_t val)
+int
+spdk_json_write_named_int32(struct spdk_json_write_ctx *w, const char *name, int32_t val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_int32(w, val);
 }
 
-int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
+int
+spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_uint32(w, val);
 }
 
-int spdk_json_write_named_int64(struct spdk_json_write_ctx *w, const char *name, int64_t val)
+int
+spdk_json_write_named_int64(struct spdk_json_write_ctx *w, const char *name, int64_t val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_int64(w, val);
 }
 
-int spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
+int
+spdk_json_write_named_uint64(struct spdk_json_write_ctx *w, const char *name, uint64_t val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_uint64(w, val);
 }
 
-int spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val)
+int
+spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_string(w, val);
 }
 
-int spdk_json_write_named_string_fmt(struct spdk_json_write_ctx *w, const char *name,
-				     const char *fmt, ...)
+int
+spdk_json_write_named_string_fmt(struct spdk_json_write_ctx *w, const char *name,
+				 const char *fmt, ...)
 {
 	va_list args;
 	int rc;
@@ -736,8 +746,9 @@ int spdk_json_write_named_string_fmt(struct spdk_json_write_ctx *w, const char *
 	return rc;
 }
 
-int spdk_json_write_named_string_fmt_v(struct spdk_json_write_ctx *w, const char *name,
-				       const char *fmt, va_list args)
+int
+spdk_json_write_named_string_fmt_v(struct spdk_json_write_ctx *w, const char *name,
+				   const char *fmt, va_list args)
 {
 	char *s;
 	int rc;
@@ -767,14 +778,16 @@ spdk_json_write_named_bytearray(struct spdk_json_write_ctx *w, const char *name,
 	return rc ? rc : spdk_json_write_bytearray(w, val, len);
 }
 
-int spdk_json_write_named_array_begin(struct spdk_json_write_ctx *w, const char *name)
+int
+spdk_json_write_named_array_begin(struct spdk_json_write_ctx *w, const char *name)
 {
 	int rc = spdk_json_write_name(w, name);
 
 	return rc ? rc : spdk_json_write_array_begin(w);
 }
 
-int spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char *name)
+int
+spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char *name)
 {
 	int rc = spdk_json_write_name(w, name);
 

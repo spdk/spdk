@@ -534,7 +534,8 @@ bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			 bdev_io->u.bdev.offset_blocks);
 }
 
-static void _bdev_iscsi_submit_request(void *_bdev_io)
+static void
+_bdev_iscsi_submit_request(void *_bdev_io)
 {
 	struct spdk_bdev_io *bdev_io = _bdev_io;
 	struct bdev_iscsi_io *iscsi_io = (struct bdev_iscsi_io *)bdev_io->driver_ctx;
@@ -573,7 +574,8 @@ static void _bdev_iscsi_submit_request(void *_bdev_io)
 	}
 }
 
-static void bdev_iscsi_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_iscsi_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_thread *submit_td = spdk_io_channel_get_thread(_ch);
 	struct bdev_iscsi_io *iscsi_io = (struct bdev_iscsi_io *)bdev_io->driver_ctx;

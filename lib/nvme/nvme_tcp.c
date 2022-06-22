@@ -2093,9 +2093,13 @@ nvme_tcp_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 					   opts->io_queue_requests, opts->async_mode);
 }
 
-static struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		void *devhandle)
+/* We have to use the typedef in the function declaration to appease astyle. */
+typedef struct spdk_nvme_ctrlr spdk_nvme_ctrlr_t;
+
+static spdk_nvme_ctrlr_t *
+nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+			 const struct spdk_nvme_ctrlr_opts *opts,
+			 void *devhandle)
 {
 	struct nvme_tcp_ctrlr *tctrlr;
 	int rc;

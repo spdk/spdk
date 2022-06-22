@@ -48,7 +48,8 @@ spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
 	return 0;
 }
 
-static void ioat_state_check(void)
+static void
+ioat_state_check(void)
 {
 	/*
 	 * CHANSTS's STATUS field is 3 bits (8 possible values), but only has 5 valid states:
@@ -96,7 +97,8 @@ static void ioat_state_check(void)
 	CU_ASSERT(is_ioat_halted(7) == 0); /* reserved */
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

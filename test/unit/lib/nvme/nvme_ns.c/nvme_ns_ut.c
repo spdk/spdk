@@ -493,7 +493,8 @@ test_nvme_ns_find_id_desc(void)
 	CU_ASSERT(csi == NULL);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

@@ -47,8 +47,9 @@ struct comp_io_channel *g_comp_ch;
 static void mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, rte_iova_t buf_iova,
 		uint16_t buf_len, struct rte_mbuf_ext_shared_info *shinfo);
 #define rte_pktmbuf_attach_extbuf mock_rte_pktmbuf_attach_extbuf
-static void mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, rte_iova_t buf_iova,
-		uint16_t buf_len, struct rte_mbuf_ext_shared_info *shinfo)
+static void
+mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, rte_iova_t buf_iova,
+			       uint16_t buf_len, struct rte_mbuf_ext_shared_info *shinfo)
 {
 	assert(m != NULL);
 	m->buf_addr = buf_addr;
@@ -59,7 +60,8 @@ static void mock_rte_pktmbuf_attach_extbuf(struct rte_mbuf *m, void *buf_addr, r
 
 static char *mock_rte_pktmbuf_append(struct rte_mbuf *m, uint16_t len);
 #define rte_pktmbuf_append mock_rte_pktmbuf_append
-static char *mock_rte_pktmbuf_append(struct rte_mbuf *m, uint16_t len)
+static char *
+mock_rte_pktmbuf_append(struct rte_mbuf *m, uint16_t len)
 {
 	m->pkt_len = m->pkt_len + len;
 	return NULL;
@@ -67,7 +69,8 @@ static char *mock_rte_pktmbuf_append(struct rte_mbuf *m, uint16_t len)
 
 static inline int mock_rte_pktmbuf_chain(struct rte_mbuf *head, struct rte_mbuf *tail);
 #define rte_pktmbuf_chain mock_rte_pktmbuf_chain
-static inline int mock_rte_pktmbuf_chain(struct rte_mbuf *head, struct rte_mbuf *tail)
+static inline int
+mock_rte_pktmbuf_chain(struct rte_mbuf *head, struct rte_mbuf *tail)
 {
 	struct rte_mbuf *cur_tail;
 
@@ -153,13 +156,15 @@ mock_rte_comp_op_pool_create(const char *name, unsigned int nb_elts,
 
 void mock_rte_pktmbuf_free(struct rte_mbuf *m);
 #define rte_pktmbuf_free mock_rte_pktmbuf_free
-void mock_rte_pktmbuf_free(struct rte_mbuf *m)
+void
+mock_rte_pktmbuf_free(struct rte_mbuf *m)
 {
 }
 
 void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt);
 #define rte_pktmbuf_free_bulk mock_rte_pktmbuf_free_bulk
-void mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt)
+void
+mock_rte_pktmbuf_free_bulk(struct rte_mbuf **m, unsigned int cnt)
 {
 }
 
@@ -168,8 +173,9 @@ static int ut_rte_pktmbuf_alloc_bulk = 0;
 int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
 				unsigned count);
 #define rte_pktmbuf_alloc_bulk mock_rte_pktmbuf_alloc_bulk
-int mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
-				unsigned count)
+int
+mock_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs,
+			    unsigned count)
 {
 	int i;
 

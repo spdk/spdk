@@ -463,8 +463,7 @@ spdk_nvmf_ctrlr_get_subsystem(struct spdk_nvmf_ctrlr *ctrlr);
  *
  * \return The NVMe-oF controller ID
  */
-uint16_t
-spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
+uint16_t spdk_nvmf_ctrlr_get_id(struct spdk_nvmf_ctrlr *ctrlr);
 
 static inline enum spdk_nvme_data_transfer
 spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {

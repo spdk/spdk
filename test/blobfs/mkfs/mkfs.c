@@ -56,7 +56,8 @@ mkfs_parse_arg(int ch, char *arg)
 	return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
 	int rc = 0;

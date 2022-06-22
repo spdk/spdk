@@ -77,7 +77,8 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair, void *buffer, uin
 	return nvme_allocate_request_contig(qpair, buffer, payload_size, cb_fn, cb_arg);
 }
 
-static void verify_geometry_cmd(struct nvme_request *req)
+static void
+verify_geometry_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_OCSSD_OPC_GEOMETRY);
 	CU_ASSERT(req->cmd.nsid == expected_geometry_ns);
@@ -130,7 +131,8 @@ test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 	CU_ASSERT(rc == false);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;

@@ -250,8 +250,9 @@ int spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
  * \param translation Memory translation
  * \return Local Memory Key
  */
-static inline uint32_t spdk_rdma_memory_translation_get_lkey(struct spdk_rdma_memory_translation
-		*translation)
+static inline uint32_t
+spdk_rdma_memory_translation_get_lkey(struct spdk_rdma_memory_translation
+				      *translation)
 {
 	return translation->translation_type == SPDK_RDMA_TRANSLATION_MR ?
 	       translation->mr_or_key.mr->lkey : (uint32_t)translation->mr_or_key.key;
@@ -264,8 +265,9 @@ static inline uint32_t spdk_rdma_memory_translation_get_lkey(struct spdk_rdma_me
  * \param translation Memory translation
  * \return Remote Memory Key
  */
-static inline uint32_t spdk_rdma_memory_translation_get_rkey(struct spdk_rdma_memory_translation
-		*translation)
+static inline uint32_t
+spdk_rdma_memory_translation_get_rkey(struct spdk_rdma_memory_translation
+				      *translation)
 {
 	return translation->translation_type == SPDK_RDMA_TRANSLATION_MR ?
 	       translation->mr_or_key.mr->rkey : (uint32_t)translation->mr_or_key.key;

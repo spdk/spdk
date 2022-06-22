@@ -591,7 +591,8 @@ spdk_thread(void *arg)
 	return NULL;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct spdk_thread *thread;
 	CU_pSuite	suite = NULL;

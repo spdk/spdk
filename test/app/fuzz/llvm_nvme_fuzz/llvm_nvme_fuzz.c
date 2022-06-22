@@ -267,7 +267,8 @@ fuzz_admin_directive_receive_command(struct fuzz_command *cmd)
 	g_data += 8;
 }
 
-static void feat_arbitration(struct fuzz_command *cmd)
+static void
+feat_arbitration(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_arbitration.bits.hpw = g_data[2];
 	cmd->cmd.cdw11_bits.feat_arbitration.bits.mpw = g_data[3];
@@ -275,18 +276,21 @@ static void feat_arbitration(struct fuzz_command *cmd)
 	cmd->cmd.cdw11_bits.feat_arbitration.bits.ab = g_data[5] & 0x07;
 }
 
-static void feat_power_management(struct fuzz_command *cmd)
+static void
+feat_power_management(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_power_management.bits.wh = g_data[2] & 0x07;
 	cmd->cmd.cdw11_bits.feat_power_management.bits.ps = (g_data[2] >> 3) & 0x1f;
 }
 
-static void feat_lba_range_type(struct fuzz_command *cmd)
+static void
+feat_lba_range_type(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_lba_range_type.bits.num = (g_data[2] >> 2) & 0x3f;
 }
 
-static void feat_temperature_threshold(struct fuzz_command *cmd)
+static void
+feat_temperature_threshold(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.thsel = g_data[2] & 0x03;
 	cmd->cmd.cdw11_bits.feat_temp_threshold.bits.tmpsel = (g_data[2] >> 2) & 0x0f;
@@ -294,43 +298,50 @@ static void feat_temperature_threshold(struct fuzz_command *cmd)
 			(uint16_t)g_data[4];
 }
 
-static void feat_error_recover(struct fuzz_command *cmd)
+static void
+feat_error_recover(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_error_recovery.bits.dulbe = g_data[2] & 0x01;
 	cmd->cmd.cdw11_bits.feat_error_recovery.bits.tler = ((uint16_t)g_data[3] << 8) +
 			(uint16_t)g_data[4];
 }
 
-static void feat_volatile_write_cache(struct fuzz_command *cmd)
+static void
+feat_volatile_write_cache(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_volatile_write_cache.bits.wce = g_data[2] & 0x01;
 }
 
-static void feat_number_of_queues(struct fuzz_command *cmd)
+static void
+feat_number_of_queues(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.ncqr = ((uint16_t)g_data[2] << 8) + (uint16_t)g_data[3];
 	cmd->cmd.cdw11_bits.feat_num_of_queues.bits.nsqr = ((uint16_t)g_data[4] << 8) + (uint16_t)g_data[5];
 }
 
-static void feat_interrupt_coalescing(struct fuzz_command *cmd)
+static void
+feat_interrupt_coalescing(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_interrupt_coalescing.bits.time = g_data[2];
 	cmd->cmd.cdw11_bits.feat_interrupt_coalescing.bits.thr = g_data[3];
 }
 
-static void feat_interrupt_vector_configuration(struct fuzz_command *cmd)
+static void
+feat_interrupt_vector_configuration(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_interrupt_vector_configuration.bits.cd = g_data[2] & 0x01;
 	cmd->cmd.cdw11_bits.feat_interrupt_vector_configuration.bits.iv = ((uint16_t)g_data[3] << 8) +
 			(uint16_t)g_data[4];
 }
 
-static void feat_write_atomicity(struct fuzz_command *cmd)
+static void
+feat_write_atomicity(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_write_atomicity.bits.dn = g_data[2] & 0x01;
 }
 
-static void feat_async_event_cfg(struct fuzz_command *cmd)
+static void
+feat_async_event_cfg(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.ana_change_notice = g_data[2] & 0x01;
 	cmd->cmd.cdw11_bits.feat_async_event_cfg.bits.discovery_log_change_notice = (g_data[2] >> 1) & 0x01;
@@ -347,26 +358,30 @@ static void feat_async_event_cfg(struct fuzz_command *cmd)
 		(g_data[3] >> 4) & 0x01;
 }
 
-static void feat_keep_alive_timer(struct fuzz_command *cmd)
+static void
+feat_keep_alive_timer(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_keep_alive_timer.bits.kato = ((uint32_t)g_data[2] << 24) + ((
 				uint32_t)g_data[3] << 16) +
 			((uint32_t)g_data[4] << 8) + (uint32_t)g_data[5];
 }
 
-static void feat_host_identifier(struct fuzz_command *cmd)
+static void
+feat_host_identifier(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_host_identifier.bits.exhid = g_data[2] & 0x01;
 }
 
-static void feat_rsv_notification_mask(struct fuzz_command *cmd)
+static void
+feat_rsv_notification_mask(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_rsv_notification_mask.bits.regpre = g_data[2] & 0x01;
 	cmd->cmd.cdw11_bits.feat_rsv_notification_mask.bits.respre = (g_data[2] >> 1) & 0x01;
 	cmd->cmd.cdw11_bits.feat_rsv_notification_mask.bits.resrel = (g_data[2] >> 2) & 0x01;
 }
 
-static void feat_rsv_persistence(struct fuzz_command *cmd)
+static void
+feat_rsv_persistence(struct fuzz_command *cmd)
 {
 	cmd->cmd.cdw11_bits.feat_rsv_persistence.bits.ptpl = g_data[2] & 0x01;
 }
@@ -759,7 +774,8 @@ run_cmds(uint32_t queue_depth)
 	return 0;
 }
 
-static int TestOneInput(const uint8_t *data, size_t size)
+static int
+TestOneInput(const uint8_t *data, size_t size)
 {
 	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
@@ -791,7 +807,8 @@ static int TestOneInput(const uint8_t *data, size_t size)
 
 int LLVMFuzzerRunDriver(int *argc, char ***argv, int (*UserCb)(const uint8_t *Data, size_t Size));
 
-static void exit_handler(void)
+static void
+exit_handler(void)
 {
 	if (g_in_fuzzer) {
 		spdk_app_stop(0);
