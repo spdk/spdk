@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -353,6 +354,12 @@ bdev_blob_get_base_bdev(struct spdk_bs_dev *bs_dev)
 	return __get_bdev(bs_dev);
 }
 
+static bool
+bdev_blob_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	return false;
+}
+
 static void
 blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 {
@@ -377,6 +384,7 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 	b->bs_dev.write_zeroes = bdev_blob_write_zeroes;
 	b->bs_dev.unmap = bdev_blob_unmap;
 	b->bs_dev.get_base_bdev = bdev_blob_get_base_bdev;
+	b->bs_dev.is_zeroes = bdev_blob_is_zeroes;
 }
 
 int

@@ -117,6 +117,24 @@ blob_bs_dev_destroy(struct spdk_bs_dev *bs_dev)
 	spdk_blob_close(b->blob, blob_bs_dev_destroy_cpl, b);
 }
 
+static bool
+blob_bs_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
+	struct spdk_blob *blob = b->blob;
+
+	assert(lba == bs_cluster_to_lba(blob->bs, bs_lba_to_cluster(blob->bs, lba)));
+	assert(lba_count == bs_dev_byte_to_lba(dev, blob->bs->cluster_sz));
+
+	if (bs_io_unit_is_allocated(blob, lba)) {
+		return false;
+	}
+
+	assert(blob->back_bs_dev != NULL);
+	return blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
+					    bs_io_unit_to_back_dev_lba(blob, lba),
+					    bs_io_unit_to_back_dev_lba(blob, lba_count));
+}
 
 struct spdk_bs_dev *
 bs_create_blob_bs_dev(struct spdk_blob *blob)
@@ -142,6 +160,7 @@ bs_create_blob_bs_dev(struct spdk_blob *blob)
 	b->bs_dev.readv_ext = blob_bs_dev_readv_ext;
 	b->bs_dev.write_zeroes = blob_bs_dev_write_zeroes;
 	b->bs_dev.unmap = blob_bs_dev_unmap;
+	b->bs_dev.is_zeroes = blob_bs_is_zeroes;
 	b->blob = blob;
 
 	return &b->bs_dev;

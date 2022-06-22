@@ -118,6 +118,12 @@ zeroes_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	assert(false);
 }
 
+static bool
+zeroes_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	return true;
+}
+
 static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.blockcnt = UINT64_MAX,
 	.blocklen = 512,
@@ -132,6 +138,7 @@ static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.writev_ext = zeroes_writev_ext,
 	.write_zeroes = zeroes_write_zeroes,
 	.unmap = zeroes_unmap,
+	.is_zeroes = zeroes_is_zeroes,
 };
 
 struct spdk_bs_dev *

@@ -2399,6 +2399,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	struct spdk_blob_copy_cluster_ctx *ctx;
 	uint32_t cluster_start_page;
 	uint32_t cluster_number;
+	bool is_zeroes;
 	int rc;
 
 	ch = spdk_io_channel_get_ctx(_ch);
@@ -2431,7 +2432,10 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	ctx->new_cluster_page = ch->new_cluster_page;
 	memset(ctx->new_cluster_page, 0, SPDK_BS_PAGE_SIZE);
 
-	if (blob->parent_id != SPDK_BLOBID_INVALID) {
+	is_zeroes = blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
+			bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
+			bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz));
+	if (blob->parent_id != SPDK_BLOBID_INVALID && !is_zeroes) {
 		ctx->buf = spdk_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen,
 				       NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		if (!ctx->buf) {
@@ -2472,7 +2476,7 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	/* Queue the user op to block other incoming operations */
 	TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
 
-	if (blob->parent_id != SPDK_BLOBID_INVALID) {
+	if (blob->parent_id != SPDK_BLOBID_INVALID && !is_zeroes) {
 		/* Read cluster from backing device */
 		bs_sequence_read_bs_dev(ctx->seq, blob->back_bs_dev, ctx->buf,
 					bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),

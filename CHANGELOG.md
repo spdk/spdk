@@ -27,6 +27,9 @@ For now we are using hard-coded PSK and only support TLS 1.3
 Reserve space for used_cluster bitmap. The reserved space could be used for blobstore growing
 in the future.
 
+Added `is_zeroes` operation to `spdk_bs_dev`. It allows to detect if logical blocks are backed
+by zeroes device and do a shortcut in copy-on-write flow by excluding copy part from zeroes device.
+
 ### lvol
 
 Add num_md_pages_per_cluster_ratio parameter to the bdev_lvol_create_lvstore RPC.
