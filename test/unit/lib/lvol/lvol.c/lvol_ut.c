@@ -1083,7 +1083,7 @@ lvs_load(void)
 
 	/* Fail on closing super blob */
 	g_lvserrno = 0;
-	spdk_blob_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
+	spdk_blob_set_xattr(super_blob, "name", "lvs", strlen("lvs") + 1);
 	super_blob->close_status = -1;
 	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
@@ -1128,7 +1128,7 @@ lvols_load(void)
 	SPDK_CU_ASSERT_FATAL(super_blob != NULL);
 	super_blob->id = 0x100;
 	spdk_blob_set_xattr(super_blob, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
+	spdk_blob_set_xattr(super_blob, "name", "lvs", strlen("lvs") + 1);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
 	dev.bs->super_blobid = 0x100;
 
@@ -1140,21 +1140,21 @@ lvols_load(void)
 	SPDK_CU_ASSERT_FATAL(blob1 != NULL);
 	blob1->id = 0x1;
 	spdk_blob_set_xattr(blob1, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob1, "name", "lvol1", strnlen("lvol1", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob1, "name", "lvol1", strlen("lvol1") + 1);
 	blob1->uuid[SPDK_UUID_STRING_LEN - 2] = '1';
 
 	blob2 = calloc(1, sizeof(*blob2));
 	SPDK_CU_ASSERT_FATAL(blob2 != NULL);
 	blob2->id = 0x2;
 	spdk_blob_set_xattr(blob2, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob2, "name", "lvol2", strnlen("lvol2", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob2, "name", "lvol2", strlen("lvol2") + 1);
 	blob2->uuid[SPDK_UUID_STRING_LEN - 2] = '2';
 
 	blob3 = calloc(1, sizeof(*blob3));
 	SPDK_CU_ASSERT_FATAL(blob3 != NULL);
 	blob3->id = 0x2;
 	spdk_blob_set_xattr(blob3, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob3, "name", "lvol3", strnlen("lvol3", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob3, "name", "lvol3", strlen("lvol3") + 1);
 	blob3->uuid[SPDK_UUID_STRING_LEN - 2] = '3';
 
 	/* Load lvs with 0 blobs */
@@ -1235,7 +1235,7 @@ lvol_open(void)
 	SPDK_CU_ASSERT_FATAL(super_blob != NULL);
 	super_blob->id = 0x100;
 	spdk_blob_set_xattr(super_blob, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
+	spdk_blob_set_xattr(super_blob, "name", "lvs", strlen("lvs") + 1);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
 	dev.bs->super_blobid = 0x100;
 
@@ -1247,21 +1247,21 @@ lvol_open(void)
 	SPDK_CU_ASSERT_FATAL(blob1 != NULL);
 	blob1->id = 0x1;
 	spdk_blob_set_xattr(blob1, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob1, "name", "lvol1", strnlen("lvol1", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob1, "name", "lvol1", strlen("lvol1") + 1);
 	blob1->uuid[SPDK_UUID_STRING_LEN - 2] = '1';
 
 	blob2 = calloc(1, sizeof(*blob2));
 	SPDK_CU_ASSERT_FATAL(blob2 != NULL);
 	blob2->id = 0x2;
 	spdk_blob_set_xattr(blob2, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob2, "name", "lvol2", strnlen("lvol2", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob2, "name", "lvol2", strlen("lvol2") + 1);
 	blob2->uuid[SPDK_UUID_STRING_LEN - 2] = '2';
 
 	blob3 = calloc(1, sizeof(*blob3));
 	SPDK_CU_ASSERT_FATAL(blob3 != NULL);
 	blob3->id = 0x2;
 	spdk_blob_set_xattr(blob3, "uuid", uuid, SPDK_UUID_STRING_LEN);
-	spdk_blob_set_xattr(blob3, "name", "lvol3", strnlen("lvol3", SPDK_LVOL_NAME_MAX) + 1);
+	spdk_blob_set_xattr(blob3, "name", "lvol3", strlen("lvol3") + 1);
 	blob3->uuid[SPDK_UUID_STRING_LEN - 2] = '3';
 
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob1, link);
