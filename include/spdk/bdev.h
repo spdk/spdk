@@ -27,11 +27,14 @@ extern "C" {
 #define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
 #define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
 
+#define SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE (64)
+
 /* Increase the buffer size to store interleaved metadata.  Increment is the
- *  amount necessary to store metadata per data block.  16 byte metadata per
- *  512 byte data block is the current maximum ratio of metadata per block.
+ *  amount necessary to store metadata per data block.  SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE
+ *  bytes metadata per 512 byte data block is the current maximum ratio of
+ *  metadata per block.
  */
-#define SPDK_BDEV_BUF_SIZE_WITH_MD(x)	(((x) / 512) * (512 + 16))
+#define SPDK_BDEV_BUF_SIZE_WITH_MD(x)	(((x) / 512) * (512 + SPDK_BDEV_MAX_INTERLEAVED_MD_SIZE))
 
 /** Asynchronous event type */
 enum spdk_bdev_event_type {
