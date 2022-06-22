@@ -53,10 +53,7 @@ struct ap_task {
 	uint32_t		iov_cnt;
 	void			*dst;
 	void			*dst2;
-	union {
-		uint32_t	crc_dst;
-		uint32_t	output_size;
-	};
+	uint32_t		crc_dst;
 	struct worker_thread	*worker;
 	int			expected_status; /* used for the compare operation */
 	TAILQ_ENTRY(ap_task)	link;
@@ -78,7 +75,6 @@ struct worker_thread {
 	void				*task_base;
 	struct display_info		display;
 	enum accel_opcode		workload;
-	void				*rnd_data;
 };
 
 static void
@@ -129,7 +125,7 @@ usage(void)
 	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, dualcast\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, dualcast\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-f for fill workload, use this BYTE value (default 255)\n");
@@ -209,8 +205,6 @@ parse_args(int argc, char *argv)
 			g_workload_selection = ACCEL_OPC_COMPARE;
 		} else if (!strcmp(g_workload_type, "dualcast")) {
 			g_workload_selection = ACCEL_OPC_DUALCAST;
-		} else if (!strcmp(g_workload_type, "compress")) {
-			g_workload_selection = ACCEL_OPC_COMPRESS;
 		} else {
 			usage();
 			return 1;
@@ -231,7 +225,6 @@ unregister_worker(void *arg1)
 	struct worker_thread *worker = arg1;
 
 	free(worker->task_base);
-	free(worker->rnd_data);
 	spdk_put_io_channel(worker->ch);
 	pthread_mutex_lock(&g_workers_lock);
 	assert(g_num_workers >= 1);
@@ -289,8 +282,6 @@ _get_task_data_bufs(struct ap_task *task)
 		/* For fill, set the entire src buffer so we can check if verify is enabled. */
 		if (g_workload_selection == ACCEL_OPC_FILL) {
 			memset(task->src, g_fill_pattern, g_xfer_size_bytes);
-		} else if (g_workload_selection == ACCEL_OPC_COMPRESS) {
-			memcpy(task->src, task->worker->rnd_data, g_xfer_size_bytes);
 		} else {
 			memset(task->src, DATA_PATTERN, g_xfer_size_bytes);
 		}
@@ -311,24 +302,14 @@ _get_task_data_bufs(struct ap_task *task)
 		}
 	}
 
-	/* For dualcast 2 buffers are needed for the operation.  For compress we use the second buffer to
-	 * store the original pre-compressed data so we have a copy of it when we go to decompress.
-	 */
-	if (g_workload_selection == ACCEL_OPC_DUALCAST || g_workload_selection == ACCEL_OPC_COMPRESS) {
+	/* For dualcast 2 buffers are needed for the operation.  */
+	if (g_workload_selection == ACCEL_OPC_DUALCAST) {
 		task->dst2 = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
 		if (task->dst2 == NULL) {
 			fprintf(stderr, "Unable to alloc dst buffer\n");
 			return -ENOMEM;
 		}
-		if (g_workload_selection == ACCEL_OPC_DUALCAST) {
-			memset(task->dst2, ~DATA_PATTERN, g_xfer_size_bytes);
-		} else if (g_workload_selection == ACCEL_OPC_COMPRESS) {
-			/* copy the oriignal data to dst2 so we can compare it to
-			 * the results of decompression if -y is used.
-			 */
-			assert(task->src); /* for scan-build */
-			memcpy(task->dst2, task->src, g_xfer_size_bytes);
-		}
+		memset(task->dst2, ~DATA_PATTERN, g_xfer_size_bytes);
 	}
 
 	return 0;
@@ -395,11 +376,6 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		rc = spdk_accel_submit_dualcast(worker->ch, task->dst, task->dst2,
 						task->src, g_xfer_size_bytes, flags, accel_done, task);
 		break;
-	case ACCEL_OPC_COMPRESS:
-		rc = spdk_accel_submit_compress(worker->ch, task->dst, task->src,
-						g_xfer_size_bytes, g_xfer_size_bytes, &task->output_size,
-						flags, accel_done, task);
-		break;
 	default:
 		assert(false);
 		break;
@@ -431,7 +407,7 @@ _free_task_buffers(struct ap_task *task)
 	}
 
 	spdk_dma_free(task->dst);
-	if (g_workload_selection == ACCEL_OPC_DUALCAST || g_workload_selection == ACCEL_OPC_COMPRESS) {
+	if (g_workload_selection == ACCEL_OPC_DUALCAST) {
 		spdk_dma_free(task->dst2);
 	}
 }
@@ -466,15 +442,9 @@ accel_done(void *arg1, int status)
 	struct ap_task *task = arg1;
 	struct worker_thread *worker = task->worker;
 	uint32_t sw_crc32c;
-	int rc;
 
 	assert(worker);
 	assert(worker->current_queue_depth > 0);
-
-	if (!worker->is_draining && status == -EINVAL && worker->workload == ACCEL_OPC_COMPRESS) {
-		printf("Invalid configuration, compress workload needs ISA-L or IAA. Exiting\n");
-		_worker_stop(worker);
-	}
 
 	if (g_verify && status == 0) {
 		switch (worker->workload) {
@@ -519,31 +489,6 @@ accel_done(void *arg1, int status)
 			}
 			break;
 		case ACCEL_OPC_COMPARE:
-			break;
-		case ACCEL_OPC_COMPRESS:
-			/* We've completed the compression phase, now need to uncompress the compressed data
-			 * and compare that to the original buffer to see if it matches.  So we flip flor
-			 * src and destination then compare task->src to task->dst which is where we saved
-			 * the orgiinal data.
-			 */
-			if (!worker->is_draining) {
-				worker->workload = ACCEL_OPC_DECOMPRESS;
-				worker->xfer_completed++;
-				memset(task->src, 0, g_xfer_size_bytes);
-				rc = spdk_accel_submit_decompress(worker->ch, task->src, task->dst,
-								  g_xfer_size_bytes, g_xfer_size_bytes, 0, accel_done, task);
-				if (rc) {
-					SPDK_NOTICELOG("Unable to submit decomrpess for verficiation, tc = %d\n", rc);
-				}
-				return;
-			}
-			break;
-		case ACCEL_OPC_DECOMPRESS:
-			worker->workload = ACCEL_OPC_COMPRESS;
-			if (memcmp(task->dst2, task->src, g_xfer_size_bytes)) {
-				SPDK_NOTICELOG("Data miscompare after decompression\n");
-				worker->xfer_failed++;
-			}
 			break;
 		default:
 			assert(false);
@@ -664,8 +609,6 @@ _init_thread(void *arg1)
 	struct ap_task *task;
 	int i, num_tasks = g_allocate_depth;
 	struct display_info *display = arg1;
-	uint8_t *offset;
-	uint64_t j;
 
 	worker = calloc(1, sizeof(*worker));
 	if (worker == NULL) {
@@ -699,22 +642,6 @@ _init_thread(void *arg1)
 		goto error;
 	}
 
-	if (g_workload_selection == ACCEL_OPC_COMPRESS) {
-		worker->rnd_data = calloc(1, g_xfer_size_bytes);
-		if (worker->rnd_data == NULL) {
-			printf("unable to allcoate rnd_data buffer\n");
-			goto error;
-		}
-		/* only fill half the data buffer with rnd data to make it more
-		 * compressible.
-		 */
-		offset = worker->rnd_data;
-		for (j = 0; j < g_xfer_size_bytes / sizeof(uint8_t) / 2; j++) {
-			*offset = rand() % 256;
-			offset++;
-		}
-	}
-
 	task = worker->task_base;
 	for (i = 0; i < num_tasks; i++) {
 		TAILQ_INSERT_TAIL(&worker->tasks_pool, task, link);
@@ -742,7 +669,6 @@ _init_thread(void *arg1)
 	return;
 error:
 
-	free(worker->rnd_data);
 	_free_task_buffers_in_pool(worker);
 	free(worker->task_base);
 	spdk_app_stop(-1);
@@ -806,8 +732,7 @@ main(int argc, char **argv)
 	    (g_workload_selection != ACCEL_OPC_CRC32C) &&
 	    (g_workload_selection != ACCEL_OPC_COPY_CRC32C) &&
 	    (g_workload_selection != ACCEL_OPC_COMPARE) &&
-	    (g_workload_selection != ACCEL_OPC_DUALCAST) &&
-	    (g_workload_selection != ACCEL_OPC_COMPRESS)) {
+	    (g_workload_selection != ACCEL_OPC_DUALCAST)) {
 		usage();
 		g_rc = -1;
 		goto cleanup;

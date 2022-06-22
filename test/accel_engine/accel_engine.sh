@@ -14,4 +14,3 @@ run_test "accel_engine" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w copy_crc32c -y
 run_test "accel_engine" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w copy_crc32c -y -C 2
 run_test "accel_engine" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w dualcast -y
 run_test "accel_engine" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compare -y
-run_test "accel_engine" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compress -y
