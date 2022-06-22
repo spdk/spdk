@@ -482,8 +482,7 @@ test_nvmf_bdev_ctrlr_identify_ns(void)
 	CU_ASSERT(nsdata.nacwu == 0);
 	CU_ASSERT(nsdata.lbaf[0].lbads == spdk_u32log2(4096));
 	CU_ASSERT(nsdata.lbaf[0].ms == 512);
-	CU_ASSERT(nsdata.dpc.pit1 == 1);
-	CU_ASSERT(nsdata.dps.pit == SPDK_NVME_FMT_NVM_PROTECTION_TYPE1);
+	CU_ASSERT(nsdata.dps.pit == SPDK_NVME_FMT_NVM_PROTECTION_DISABLE);
 	CU_ASSERT(nsdata.noiob == BDEV_IO_NUM_CHILD_IOV);
 	CU_ASSERT(nsdata.nmic.can_share == 1);
 	CU_ASSERT(nsdata.nsrescap.rescap.persist == 1);

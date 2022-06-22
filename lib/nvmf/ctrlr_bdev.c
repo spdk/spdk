@@ -131,25 +131,10 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 			nsdata->mc.extended = 1;
 			nsdata->mc.pointer = 0;
 			nsdata->dps.md_start = spdk_bdev_is_dif_head_of_md(bdev);
-
-			switch (spdk_bdev_get_dif_type(bdev)) {
-			case SPDK_DIF_TYPE1:
-				nsdata->dpc.pit1 = 1;
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
-				break;
-			case SPDK_DIF_TYPE2:
-				nsdata->dpc.pit2 = 1;
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE2;
-				break;
-			case SPDK_DIF_TYPE3:
-				nsdata->dpc.pit3 = 1;
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE3;
-				break;
-			default:
-				SPDK_DEBUGLOG(nvmf, "Protection Disabled\n");
-				nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
-				break;
-			}
+			/* NVMf library doesn't process PRACT and PRCHK flags, we
+			 * leave the use of extended LBA buffer to users.
+			 */
+			nsdata->dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
 		}
 	} else {
 		nsdata->lbaf[0].ms = 0;
