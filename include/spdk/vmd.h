@@ -16,7 +16,6 @@
 extern "C" {
 #endif
 
-#include "spdk/config.h"
 #include "spdk/env.h"
 
 /* Maximum VMD devices - up to 6 per cpu */
