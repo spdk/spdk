@@ -13,6 +13,10 @@ trap "exit 1" SIGINT SIGTERM EXIT
 
 TEST_ARGS=("$@")
 
+if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
+	run_test "nvmf_llvm_fuzz" test/nvmf/target/llvm_nvme_fuzz.sh "${TEST_ARGS[@]}"
+fi
+
 if [[ $SPDK_TEST_URING -eq 0 ]]; then
 	run_test "nvmf_example" test/nvmf/target/nvmf_example.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_filesystem" test/nvmf/target/filesystem.sh "${TEST_ARGS[@]}"
@@ -48,9 +52,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test "nvmf_fuzz" test/nvmf/target/fabrics_fuzz.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_multiconnection" test/nvmf/target/multiconnection.sh "${TEST_ARGS[@]}"
 	run_test "nvmf_initiator_timeout" test/nvmf/target/initiator_timeout.sh "${TEST_ARGS[@]}"
-	if [ $SPDK_TEST_FUZZER -eq 1 ]; then
-		run_test "nvmf_llvm_fuzz" test/nvmf/target/llvm_nvme_fuzz.sh "${TEST_ARGS[@]}" "--time=60000" "--all"
-	fi
 fi
 
 run_test "nvmf_nmic" test/nvmf/target/nmic.sh "${TEST_ARGS[@]}"

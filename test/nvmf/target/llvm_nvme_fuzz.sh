@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-TIME=10
-RUN_ALL=0
+if [[ $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
+	TIME=60000
+else
+	TIME=1
+fi
+
 for i in "$@"; do
 	case "$i" in
 		--time=*)
 			TIME="${i#*=}"
-			;;
-		--all)
-			RUN_ALL=1
 			;;
 	esac
 done
@@ -54,7 +55,11 @@ trap 'process_shm --id 0; rm -rf /tmp/llvm_fuzz*; exit 1' SIGINT SIGTERM EXIT
 
 trid="trtype:tcp adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:127.0.0.1 trsvcid:4420"
 
-if [[ $RUN_ALL -eq 1 ]]; then
+if [[ $SPDK_TEST_FUZZER_SHORT -eq 1 ]]; then
+	for ((i = 0; i < fuzz_num; i++)); do
+		start_llvm_fuzz $i
+	done
+elif [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
 	run_fuzz
 else
 	start_llvm_fuzz $1
