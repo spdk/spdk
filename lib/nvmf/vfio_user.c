@@ -390,7 +390,7 @@ struct nvmf_vfio_user_endpoint {
 	void					*migr_data;
 
 	struct spdk_nvme_transport_id		trid;
-	const struct spdk_nvmf_subsystem	*subsystem;
+	struct spdk_nvmf_subsystem		*subsystem;
 
 	/* Controller is associated with an active socket connection,
 	 * the lifecycle of the controller is same as the VM.
@@ -2909,11 +2909,16 @@ static void
 _vfio_user_endpoint_resume_done_msg(void *ctx)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = ctx;
+	struct spdk_nvmf_subsystem *subsystem = endpoint->subsystem;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	int ret;
 
 	endpoint->need_resume = false;
 	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+
+	if (!vu_ctrlr->queued_quiesce) {
+		return;
+	}
 
 	/* Basically, once we call `vfu_device_quiesced` the device is unquiesced from
 	 * libvfio-user's perspective so from the moment `vfio_user_dev_quiesce_done` returns
@@ -2922,15 +2927,13 @@ _vfio_user_endpoint_resume_done_msg(void *ctx)
 	 * been resumed, so in the callback of `spdk_nvmf_subsystem_resume` we need to check
 	 * whether a quiesce was requested.
 	 */
-	if (vu_ctrlr->queued_quiesce) {
-		SPDK_DEBUGLOG(nvmf_vfio, "%s has queued quiesce event, pause again\n", ctrlr_id(vu_ctrlr));
-		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
-		ret = spdk_nvmf_subsystem_pause((struct spdk_nvmf_subsystem *)endpoint->subsystem, 0,
-						vfio_user_dev_quiesce_done, vu_ctrlr);
-		if (ret < 0) {
-			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
-			SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
-		}
+	SPDK_DEBUGLOG(nvmf_vfio, "%s has queued quiesce event, pause again\n", ctrlr_id(vu_ctrlr));
+	vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
+	ret = spdk_nvmf_subsystem_pause(subsystem, SPDK_NVME_GLOBAL_NS_TAG,
+					vfio_user_dev_quiesce_done, vu_ctrlr);
+	if (ret < 0) {
+		vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
+		SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
 	}
 }
 
@@ -3008,6 +3011,8 @@ static int
 vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 {
 	struct nvmf_vfio_user_endpoint *endpoint = vfu_get_private(vfu_ctx);
+	struct spdk_nvmf_subsystem *subsystem = endpoint->subsystem;
+
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	int ret;
 
@@ -3018,8 +3023,7 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 	/* NVMf library will destruct controller when no
 	 * connected queue pairs.
 	 */
-	if (!nvmf_subsystem_get_ctrlr((struct spdk_nvmf_subsystem *)endpoint->subsystem,
-				      vu_ctrlr->cntlid)) {
+	if (!nvmf_subsystem_get_ctrlr(subsystem, vu_ctrlr->cntlid)) {
 		return 0;
 	}
 
@@ -3042,7 +3046,7 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 		return 0;
 	case VFIO_USER_CTRLR_RUNNING:
 		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
-		ret = spdk_nvmf_subsystem_pause((struct spdk_nvmf_subsystem *)endpoint->subsystem, 0,
+		ret = spdk_nvmf_subsystem_pause(subsystem, SPDK_NVME_GLOBAL_NS_TAG,
 						vfio_user_dev_quiesce_done, vu_ctrlr);
 		if (ret < 0) {
 			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
@@ -4263,7 +4267,8 @@ nvmf_vfio_user_listen_associate(struct spdk_nvmf_transport *transport,
 		return -ENOENT;
 	}
 
-	endpoint->subsystem = subsystem;
+	/* Drop const - we will later need to pause/unpause. */
+	endpoint->subsystem = (struct spdk_nvmf_subsystem *)subsystem;
 
 	return 0;
 }
