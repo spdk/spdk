@@ -236,7 +236,7 @@ void spdk_thread_lib_fini(void);
  *
  * \return a pointer to the allocated thread on success or NULL on failure..
  */
-struct spdk_thread *spdk_thread_create(const char *name, struct spdk_cpuset *cpumask);
+struct spdk_thread *spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask);
 
 /**
  * Force the current system thread to act as if executing the given SPDK thread.

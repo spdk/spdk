@@ -388,7 +388,7 @@ _free_thread(struct spdk_thread *thread)
 }
 
 struct spdk_thread *
-spdk_thread_create(const char *name, struct spdk_cpuset *cpumask)
+spdk_thread_create(const char *name, const struct spdk_cpuset *cpumask)
 {
 	struct spdk_thread *thread;
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
