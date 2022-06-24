@@ -54,7 +54,10 @@ def bdev_compress_create(client, base_bdev_name, pm_path, lb_size):
     Returns:
         Name of created virtual block device.
     """
-    params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path, 'lb_size': lb_size}
+    params = {'base_bdev_name': base_bdev_name, 'pm_path': pm_path}
+
+    if lb_size:
+        params['lb_size'] = lb_size
 
     return client.call('bdev_compress_create', params)
 
@@ -1391,8 +1394,10 @@ def bdev_error_inject_error(client, name, io_type, error_type, num=1):
         'name': name,
         'io_type': io_type,
         'error_type': error_type,
-        'num': num,
     }
+
+    if num:
+        params['num'] = num
 
     return client.call('bdev_error_inject_error', params)
 

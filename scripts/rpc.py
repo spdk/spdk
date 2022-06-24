@@ -225,7 +225,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_compress_create', help='Add a compress vbdev')
     p.add_argument('-b', '--base-bdev-name', help="Name of the base bdev")
     p.add_argument('-p', '--pm-path', help="Path to persistent memory")
-    p.add_argument('-l', '--lb-size', help="Compressed vol logical block size (optional, if used must be 512 or 4096)", type=int, default=0)
+    p.add_argument('-l', '--lb-size', help="Compressed vol logical block size (optional, if used must be 512 or 4096)", type=int)
     p.set_defaults(func=bdev_compress_create)
 
     def bdev_compress_delete(args):
@@ -264,7 +264,7 @@ if __name__ == "__main__":
     p.add_argument('name', help="Name of the crypto vbdev")
     p.add_argument('crypto_pmd', help="Name of the crypto device driver")
     p.add_argument('key', help="Key")
-    p.add_argument('-c', '--cipher', help="cipher to use, AES_CBC or AES_XTS (QAT only)", default="AES_CBC")
+    p.add_argument('-c', '--cipher', help="cipher to use, AES_CBC or AES_XTS (QAT only)")
     p.add_argument('-k2', '--key2', help="2nd key for cipher AET_XTS", default=None)
     p.set_defaults(func=bdev_crypto_create)
 
@@ -316,7 +316,7 @@ if __name__ == "__main__":
         print_dict(rpc.bdev.bdev_ocf_get_bdevs(args.client,
                                                name=args.name))
     p = subparsers.add_parser('bdev_ocf_get_bdevs', help='Get list of OCF devices including unregistered ones')
-    p.add_argument('name', nargs='?', default=None, help='name of OCF vbdev or name of cache device or name of core device (optional)')
+    p.add_argument('name', nargs='?', help='name of OCF vbdev or name of cache device or name of core device (optional)')
     p.set_defaults(func=bdev_ocf_get_bdevs)
 
     def bdev_ocf_set_cache_mode(args):
@@ -394,7 +394,7 @@ if __name__ == "__main__":
                                       'Should be a sum of block size and metadata size if --md-size is used.', type=int)
     p.add_argument('-m', '--md-size', type=int,
                    help='Metadata size for this bdev. Default=0.')
-    p.add_argument('-t', '--dif-type', type=int, default=0, choices=[0, 1, 2, 3],
+    p.add_argument('-t', '--dif-type', type=int, choices=[0, 1, 2, 3],
                    help='Protection information type. Parameter --md-size needs'
                         'to be set along --dif-type. Default=0 - no protection.')
     p.add_argument('-d', '--dif-is-head-of-md', action='store_true',
@@ -429,7 +429,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_aio_create', help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
     p.add_argument('name', help='Block device name')
-    p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?', default=0)
+    p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
     p.set_defaults(func=bdev_aio_create)
 
     def bdev_aio_rescan(args):
@@ -457,7 +457,7 @@ if __name__ == "__main__":
     p = subparsers.add_parser('bdev_uring_create', help='Create a bdev with io_uring backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
     p.add_argument('name', help='bdev name')
-    p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?', default=0)
+    p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
     p.set_defaults(func=bdev_uring_create)
 
     def bdev_uring_delete(args):
@@ -519,7 +519,7 @@ if __name__ == "__main__":
                    help='The number of requests allocated for each NVMe I/O queue. Default: 512', type=int)
     p.add_argument('-d', '--disable-delay-cmd-submit',
                    help='Disable delaying NVMe command submission, i.e. no batching of multiple commands',
-                   action='store_false', dest='delay_cmd_submit', default=True)
+                   action='store_false', dest='delay_cmd_submit')
     p.add_argument('-c', '--transport-retry-count',
                    help='the number of attempts per I/O in the transport layer when an I/O fails.', type=int)
     p.add_argument('-r', '--bdev-retry-count',
@@ -1123,7 +1123,7 @@ if __name__ == "__main__":
     p.add_argument('io_type', help="""io_type: 'clear' 'read' 'write' 'unmap' 'flush' 'all'""")
     p.add_argument('error_type', help="""error_type: 'failure' 'pending'""")
     p.add_argument(
-        '-n', '--num', help='the number of commands you want to fail', type=int, default=1)
+        '-n', '--num', help='the number of commands you want to fail', type=int)
     p.set_defaults(func=bdev_error_inject_error)
 
     def bdev_nvme_apply_firmware(args):
