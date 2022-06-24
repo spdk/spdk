@@ -154,6 +154,9 @@ CONFIG_URING=n
 # Path to custom built IO_URING library
 CONFIG_URING_PATH=
 
+# Path to custom built OPENSSL library
+CONFIG_OPENSSL_PATH=
+
 # Build with FUSE support
 CONFIG_FUSE=n
 

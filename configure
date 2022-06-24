@@ -92,6 +92,8 @@ function usage() {
 	echo " --without-uring           If an argument is provided, it is considered a directory containing"
 	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
 	echo "                           be searched."
+	echo " --with-openssl[=DIR]      Build OPENSSL with custom path. Otherwise the regular system paths will"
+	echo "                           be searched."
 	echo " --with-fuse               Build FUSE components for mounting a blobfs filesystem."
 	echo " --without-fuse            No path required."
 	echo " --with-nvme-cuse          Build NVMe driver with support for CUSE-based character devices."
@@ -585,6 +587,10 @@ for i in "$@"; do
 		--without-uring)
 			CONFIG[URING]=n
 			CONFIG[URING_PATH]=
+			;;
+		--with-openssl=*)
+			check_dir "$i"
+			CONFIG[OPENSSL_PATH]=$(readlink -f ${i#*=})
 			;;
 		--with-fuse)
 			CONFIG[FUSE]=y

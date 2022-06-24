@@ -285,11 +285,16 @@ SYS_LIBS += -lcrypto
 SYS_LIBS += -lm
 
 PKGCONF ?= pkg-config
+ifneq ($(strip $(CONFIG_OPENSSL_PATH)),)
+CFLAGS += -I$(CONFIG_OPENSSL_PATH)/include
+LDFLAGS += -L$(CONFIG_OPENSSL_PATH)
+else
 # `libssl11` name is unique to Centos7 via EPEL
 # So it's safe to add it here without additional check for Centos7
 ifeq ($(shell $(PKGCONF) --exists libssl11 && echo 1),1)
 CFLAGS  += $(shell $(PKGCONF) --cflags libssl11)
 LDFLAGS += $(shell $(PKGCONF) --libs libssl11)
+endif
 endif
 
 ifneq ($(CONFIG_NVME_CUSE)$(CONFIG_FUSE),nn)
