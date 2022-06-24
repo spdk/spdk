@@ -223,8 +223,10 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	    ((aen_event_info == SPDK_NVME_ASYNC_EVENT_TEMPERATURE_THRESHOLD) || \
 	     (aen_event_info == SPDK_NVME_ASYNC_EVENT_SPARE_BELOW_THRESHOLD))) {
 		/* Set the temperature threshold back to the original value to stop triggering  */
-		AER_PRINTF("aer_cb - Resetting Temp Threshold for device: %s\n", dev->name);
-		set_temp_threshold(dev, dev->orig_temp_threshold);
+		if (g_parent_process) {
+			AER_PRINTF("aer_cb - Resetting Temp Threshold for device: %s\n", dev->name);
+			set_temp_threshold(dev, dev->orig_temp_threshold);
+		}
 		get_health_log_page(dev);
 	} else if (log_page_id == SPDK_NVME_LOG_CHANGED_NS_LIST) {
 		AER_PRINTF("aer_cb - Changed Namespace\n");
@@ -452,7 +454,6 @@ spdk_aer_temperature_test(void)
 				spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
 			}
 		}
-		g_temperature_done = 0;
 
 		if (g_failed) {
 			return g_failed;
@@ -464,8 +465,8 @@ spdk_aer_temperature_test(void)
 	if (!g_parent_process) {
 		sem_post(g_sem_child_id);
 	}
-	/* Waiting for AEN to be occur here */
-	while (!g_failed && (g_aer_done < g_num_devs || g_temperature_done < g_num_devs)) {
+	/* Waiting for AEN to be occur here. Each device will increment g_aer_done on an AEN */
+	while (!g_failed && (g_aer_done < g_num_devs)) {
 		foreach_dev(dev) {
 			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
 		}
@@ -628,7 +629,7 @@ main(int argc, char **argv)
 	if (g_parent_process && g_enable_temp_test) {
 		AER_PRINTF("Reset controller to setup AER completions for this process\n");
 		foreach_dev(dev) {
-			if (spdk_nvme_ctrlr_reset(dev->ctrlr) < 0) {
+			if (spdk_nvme_ctrlr_reset(dev->ctrlr) != 0) {
 				AER_FPRINTF(stderr, "nvme reset failed.\n");
 				return -1;
 			}
