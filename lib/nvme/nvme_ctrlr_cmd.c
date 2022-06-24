@@ -589,6 +589,7 @@ nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	ctrlr = req->qpair->ctrlr;
 
+	assert(ctrlr->outstanding_aborts > 0);
 	ctrlr->outstanding_aborts--;
 	nvme_ctrlr_retry_queued_abort(ctrlr);
 
@@ -637,6 +638,7 @@ nvme_complete_abort_request(void *ctx, const struct spdk_nvme_cpl *cpl)
 
 	ctrlr = req->qpair->ctrlr;
 
+	assert(ctrlr->outstanding_aborts > 0);
 	ctrlr->outstanding_aborts--;
 	nvme_ctrlr_retry_queued_abort(ctrlr);
 

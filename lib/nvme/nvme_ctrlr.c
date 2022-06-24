@@ -1595,6 +1595,7 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 
 	STAILQ_FOREACH_SAFE(req, &ctrlr->queued_aborts, stailq, tmp) {
 		STAILQ_REMOVE_HEAD(&ctrlr->queued_aborts, stailq);
+		ctrlr->outstanding_aborts++;
 
 		nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, &cpl);
 		nvme_free_request(req);
