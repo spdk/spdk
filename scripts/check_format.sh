@@ -130,7 +130,11 @@ function check_c_style() {
 			#  as-is to enable ongoing work to synch with a generic upstream DPDK vhost library,
 			#  rather than making diffs more complicated by a lot of changes to follow SPDK
 			#  coding standards.
-			git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
+			git ls-files '*.[ch]' \
+				| grep -v rte_vhost | grep -v cpp_headers \
+				| xargs -P$(nproc) -n10 astyle \
+					--options=.astylerc >> astyle.log
+			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
 				| grep -v rte_vhost | grep -v cpp_headers \
 				| xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
 			if grep -q "^Formatted" astyle.log; then
