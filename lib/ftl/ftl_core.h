@@ -176,4 +176,30 @@ ftl_check_core_thread(const struct spdk_ftl_dev *dev)
 	return dev->core_thread == spdk_get_thread();
 }
 
+static inline int
+ftl_addr_packed(const struct spdk_ftl_dev *dev)
+{
+	return dev->layout.l2p.addr_size < sizeof(ftl_addr);
+}
+
+static inline int
+ftl_addr_in_nvc(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	assert(addr != FTL_ADDR_INVALID);
+	return addr >= dev->layout.base.total_blocks;
+}
+
+static inline uint64_t
+ftl_addr_to_nvc_offset(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	assert(ftl_addr_in_nvc(dev, addr));
+	return addr - dev->layout.base.total_blocks;
+}
+
+static inline ftl_addr
+ftl_addr_from_nvc_offset(const struct spdk_ftl_dev *dev, uint64_t cache_offset)
+{
+	return cache_offset + dev->layout.base.total_blocks;
+}
+
 #endif /* FTL_CORE_H */
