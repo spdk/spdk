@@ -2901,7 +2901,7 @@ init_pci_config_space(vfu_pci_config_space_t *p)
 }
 
 struct subsystem_pause_ctx {
-	struct nvmf_vfio_user_ctrlr *ctrlr;
+	struct nvmf_vfio_user_endpoint *endpoint;
 	int status;
 };
 
@@ -2915,6 +2915,10 @@ _vfio_user_endpoint_resume_done_msg(void *ctx)
 	struct nvmf_vfio_user_endpoint *endpoint = ctx;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	int ret;
+
+	if (!vu_ctrlr) {
+		return;
+	}
 
 	endpoint->need_resume = false;
 	vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
@@ -2930,7 +2934,7 @@ _vfio_user_endpoint_resume_done_msg(void *ctx)
 		SPDK_DEBUGLOG(nvmf_vfio, "%s has queued quiesce event, pause again\n", ctrlr_id(vu_ctrlr));
 		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
 		ret = spdk_nvmf_subsystem_pause((struct spdk_nvmf_subsystem *)endpoint->subsystem, 0,
-						vfio_user_dev_quiesce_done, vu_ctrlr);
+						vfio_user_dev_quiesce_done, endpoint);
 		if (ret < 0) {
 			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 			SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
@@ -2958,9 +2962,14 @@ static void
 _vfio_user_dev_quiesce_done_msg(void *ctx)
 {
 	struct subsystem_pause_ctx *subsystem_ctx = ctx;
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = subsystem_ctx->ctrlr;
-	struct nvmf_vfio_user_endpoint *endpoint = vu_ctrlr->endpoint;
+	struct nvmf_vfio_user_endpoint *endpoint = subsystem_ctx->endpoint;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
 	int ret;
+
+	if (!vu_ctrlr) {
+		free(subsystem_ctx);
+		return;
+	}
 
 	assert(vu_ctrlr->state == VFIO_USER_CTRLR_PAUSING);
 	vu_ctrlr->state = VFIO_USER_CTRLR_PAUSED;
@@ -2990,8 +2999,13 @@ static void
 vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status)
 {
-	struct nvmf_vfio_user_ctrlr *vu_ctrlr = cb_arg;
 	struct subsystem_pause_ctx *ctx;
+	struct nvmf_vfio_user_endpoint *endpoint = cb_arg;
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = endpoint->ctrlr;
+
+	if (!vu_ctrlr) {
+		return;
+	}
 
 	SPDK_DEBUGLOG(nvmf_vfio, "%s paused done with status %d\n", ctrlr_id(vu_ctrlr), status);
 
@@ -3002,7 +3016,7 @@ vfio_user_dev_quiesce_done(struct spdk_nvmf_subsystem *subsystem,
 		return;
 	}
 
-	ctx->ctrlr = vu_ctrlr;
+	ctx->endpoint = endpoint;
 	ctx->status = status;
 
 	spdk_thread_send_msg(vu_ctrlr->thread, _vfio_user_dev_quiesce_done_msg, ctx);
@@ -3047,7 +3061,7 @@ vfio_user_dev_quiesce_cb(vfu_ctx_t *vfu_ctx)
 	case VFIO_USER_CTRLR_RUNNING:
 		vu_ctrlr->state = VFIO_USER_CTRLR_PAUSING;
 		ret = spdk_nvmf_subsystem_pause((struct spdk_nvmf_subsystem *)endpoint->subsystem, 0,
-						vfio_user_dev_quiesce_done, vu_ctrlr);
+						vfio_user_dev_quiesce_done, endpoint);
 		if (ret < 0) {
 			vu_ctrlr->state = VFIO_USER_CTRLR_RUNNING;
 			SPDK_ERRLOG("%s: failed to pause, ret=%d\n", endpoint_id(endpoint), ret);
