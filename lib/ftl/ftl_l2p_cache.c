@@ -605,6 +605,7 @@ process_persist_page_out_cb(struct spdk_bdev_io *bdev_io, bool success, void *ar
 	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
 
 	assert(bdev_io);
+	ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_L2P, bdev_io);
 	spdk_bdev_free_io(bdev_io);
 
 	if (!success) {
@@ -678,6 +679,7 @@ process_unmap_page_out_cb(struct spdk_bdev_io *bdev_io, bool success, void *ctx_
 	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
 
 	assert(bdev_io);
+	ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_L2P, bdev_io);
 	spdk_bdev_free_io(bdev_io);
 
 	if (!success) {
@@ -702,6 +704,7 @@ process_unmap_page_in_cb(struct spdk_bdev_io *bdev_io, bool success, void *ctx_p
 	struct ftl_l2p_cache_process_ctx *ctx = &cache->mctx;
 
 	if (bdev_io) {
+		ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_L2P, bdev_io);
 		spdk_bdev_free_io(bdev_io);
 	}
 	if (success) {
@@ -1228,6 +1231,7 @@ page_in_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct ftl_l2p_cache *cache = page->ctx.cache;
 	struct spdk_ftl_dev *dev = cache->dev;
 
+	ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_L2P, bdev_io);
 	spdk_bdev_free_io(bdev_io);
 	page_in_io_complete(dev, cache, page, success);
 }
@@ -1408,6 +1412,7 @@ page_out_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct ftl_l2p_cache *cache = page->ctx.cache;
 	struct spdk_ftl_dev *dev = cache->dev;
 
+	ftl_stats_bdev_io_completed(dev, FTL_STATS_TYPE_L2P, bdev_io);
 	spdk_bdev_free_io(bdev_io);
 	page_out_io_complete(dev, cache, page, success);
 }

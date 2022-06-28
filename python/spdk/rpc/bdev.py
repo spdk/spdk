@@ -1420,6 +1420,17 @@ def bdev_ftl_unmap(client, name, lba, num_blocks):
     return client.call('bdev_ftl_unmap', params)
 
 
+def bdev_ftl_get_stats(client, name):
+    """get FTL stats
+
+    Args:
+        name: name of the bdev
+    """
+    params = {'name': name}
+
+    return client.call('bdev_ftl_get_stats', params)
+
+
 def bdev_get_bdevs(client, name=None, timeout=None):
     """Get information about block devices.
 

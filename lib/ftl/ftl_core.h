@@ -86,11 +86,8 @@ struct spdk_ftl_dev {
 	/* Band md memory pool */
 	struct ftl_mempool		*band_md_pool;
 
-	/* counters for poller busy, include
-	   1. nv cache read/write
-	   2. metadata read/write
-	   3. base bdev read/write */
-	uint64_t			io_activity_total;
+	/* Statistics */
+	struct ftl_stats		stats;
 
 	/* Array of bands */
 	struct ftl_band			*bands;
@@ -204,6 +201,11 @@ void ftl_set_unmap_map(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_bloc
 		       uint64_t seq_id);
 
 void ftl_recover_max_seq(struct spdk_ftl_dev *dev);
+
+void ftl_stats_bdev_io_completed(struct spdk_ftl_dev *dev, enum ftl_stats_type type,
+				 struct spdk_bdev_io *bdev_io);
+
+void ftl_stats_crc_error(struct spdk_ftl_dev *dev, enum ftl_stats_type type);
 
 int ftl_unmap(struct spdk_ftl_dev *dev, struct ftl_io *io, struct spdk_io_channel *ch,
 	      uint64_t lba, size_t lba_cnt, spdk_ftl_fn cb_fn, void *cb_arg);

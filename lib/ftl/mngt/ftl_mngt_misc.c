@@ -180,6 +180,10 @@ ftl_mngt_finalize_startup(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mng
 		dev->unmap_in_progress = true;
 	}
 
+	/* Clear the limit applications as they're incremented incorrectly by
+	 * the initialization code.
+	 */
+	memset(dev->stats.limits, 0, sizeof(dev->stats.limits));
 	dev->initialized = 1;
 	dev->sb_shm->shm_ready = true;
 

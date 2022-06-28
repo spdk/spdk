@@ -27,6 +27,52 @@ enum {
 	SPDK_FTL_LIMIT_MAX
 };
 
+struct ftl_stats_error {
+	uint64_t media;
+	uint64_t crc;
+	uint64_t other;
+};
+
+struct ftl_stats_group {
+	uint64_t ios;
+	uint64_t blocks;
+	struct ftl_stats_error errors;
+};
+
+struct ftl_stats_entry {
+	struct ftl_stats_group read;
+	struct ftl_stats_group write;
+};
+
+enum ftl_stats_type {
+	FTL_STATS_TYPE_USER = 0,
+	FTL_STATS_TYPE_CMP,
+	FTL_STATS_TYPE_GC,
+	FTL_STATS_TYPE_MD_BASE,
+	FTL_STATS_TYPE_MD_NV_CACHE,
+	FTL_STATS_TYPE_L2P,
+	FTL_STATS_TYPE_MAX,
+};
+
+struct ftl_stats {
+	/* Number of times write limits were triggered by FTL writers
+	 * (gc and compaction) dependent on number of free bands. GC starts at
+	 * SPDK_FTL_LIMIT_START level, while at SPDK_FTL_LIMIT_CRIT compaction stops
+	 * and only GC is allowed to work.
+	 */
+	uint64_t		limits[SPDK_FTL_LIMIT_MAX];
+
+	/* Total number of blocks with IO to the underlying devices
+	 * 1. nv cache read/write
+	 * 2. base bdev read/write
+	 */
+	uint64_t		io_activity_total;
+
+	struct ftl_stats_entry	entries[FTL_STATS_TYPE_MAX];
+};
+
+typedef void (*spdk_ftl_stats_fn)(struct ftl_stats *stats, void *cb_arg);
+
 struct spdk_ftl_conf {
 	/* Device's name */
 	char					*name;
@@ -47,7 +93,7 @@ struct spdk_ftl_conf {
 	size_t					user_io_pool_size;
 
 	/* User writes limits */
-	size_t			                limits[SPDK_FTL_LIMIT_MAX];
+	size_t					limits[SPDK_FTL_LIMIT_MAX];
 
 	/* FTL startup mode mask, see spdk_ftl_mode enum for possible values */
 	uint32_t				mode;
@@ -233,6 +279,19 @@ size_t spdk_ftl_io_size(void);
  * of serializing it to storage. This allows for shorter downtime during upgrade process.
  */
 void spdk_ftl_dev_set_fast_shutdown(struct spdk_ftl_dev *dev, bool fast_shutdown);
+
+/*
+ * Returns current FTL I/O statistics.
+ *
+ * \param dev Device
+ * \param stats Allocated ftl_stats
+ * \param cb_fn Callback function to invoke when the call is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negative errno otherwise.
+ */
+int spdk_ftl_get_stats(struct spdk_ftl_dev *dev, struct ftl_stats *stats, spdk_ftl_stats_fn cb_fn,
+		       void *cb_arg);
 
 #ifdef __cplusplus
 }

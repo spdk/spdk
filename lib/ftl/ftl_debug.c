@@ -180,6 +180,16 @@ ftl_dev_dump_stats(const struct spdk_ftl_dev *dev)
 {
 	uint64_t i, total = 0;
 	char uuid[SPDK_UUID_STRING_LEN];
+	double waf;
+	uint64_t write_user, write_total;
+	const char *limits[] = {
+		[SPDK_FTL_LIMIT_CRIT]  = "crit",
+		[SPDK_FTL_LIMIT_HIGH]  = "high",
+		[SPDK_FTL_LIMIT_LOW]   = "low",
+		[SPDK_FTL_LIMIT_START] = "start"
+	};
+
+	(void)limits;
 
 	if (!dev->bands) {
 		return;
@@ -190,8 +200,24 @@ ftl_dev_dump_stats(const struct spdk_ftl_dev *dev)
 		total += dev->bands[i].p2l_map.num_valid;
 	}
 
+	write_user = dev->stats.entries[FTL_STATS_TYPE_CMP].write.blocks;
+	write_total = write_user +
+		      dev->stats.entries[FTL_STATS_TYPE_GC].write.blocks +
+		      dev->stats.entries[FTL_STATS_TYPE_MD_BASE].write.blocks;
+
+	waf = (double)write_total / (double)write_user;
+
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &dev->conf.uuid);
 	FTL_NOTICELOG(dev, "\n");
 	FTL_NOTICELOG(dev, "device UUID:         %s\n", uuid);
 	FTL_NOTICELOG(dev, "total valid LBAs:    %zu\n", total);
+	FTL_NOTICELOG(dev, "total writes:        %"PRIu64"\n", write_total);
+	FTL_NOTICELOG(dev, "user writes:         %"PRIu64"\n", write_user);
+	FTL_NOTICELOG(dev, "WAF:                 %.4lf\n", waf);
+#ifdef DEBUG
+	FTL_NOTICELOG(dev, "limits:\n");
+	for (i = 0; i < SPDK_FTL_LIMIT_MAX; ++i) {
+		FTL_NOTICELOG(dev, " %5s: %"PRIu64"\n", limits[i], dev->stats.limits[i]);
+	}
+#endif
 }

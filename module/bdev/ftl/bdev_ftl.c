@@ -549,6 +549,66 @@ not_found:
 }
 
 static void
+bdev_ftl_get_stats_cb(struct ftl_stats *stats, void *ctx)
+{
+	struct rpc_ftl_stats_ctx *ftl_stats_ctx = ctx;
+
+	ftl_stats_ctx->cb(ftl_stats_ctx);
+
+	spdk_bdev_close(ftl_stats_ctx->ftl_bdev_desc);
+	free(ftl_stats_ctx);
+}
+
+
+int
+bdev_ftl_get_stats(const char *name, ftl_bdev_thread_fn cb, struct spdk_jsonrpc_request *request,
+		   struct ftl_stats *stats)
+{
+	struct spdk_bdev_desc *ftl_bdev_desc;
+	struct spdk_bdev *bdev;
+	struct ftl_bdev *ftl;
+	struct rpc_ftl_stats_ctx *ftl_stats_ctx;
+	int rc;
+
+	rc = spdk_bdev_open_ext(name, false, bdev_ftl_event_cb, NULL, &ftl_bdev_desc);
+	if (rc) {
+		goto not_found;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(ftl_bdev_desc);
+	if (bdev->module != &g_ftl_if) {
+		rc = -ENODEV;
+		goto bdev_opened;
+	}
+
+	ftl_stats_ctx = calloc(1, sizeof(*ftl_stats_ctx));
+	if (!ftl_stats_ctx) {
+		SPDK_ERRLOG("Could not allocate ftl_stats_ctx\n");
+		rc = -ENOMEM;
+		goto bdev_opened;
+	}
+
+	ftl = bdev->ctxt;
+	ftl_stats_ctx->request = request;
+	ftl_stats_ctx->ftl_bdev_desc = ftl_bdev_desc;
+	ftl_stats_ctx->cb = cb;
+	ftl_stats_ctx->ftl_stats = stats;
+
+	rc = spdk_ftl_get_stats(ftl->dev, stats, bdev_ftl_get_stats_cb, ftl_stats_ctx);
+	if (rc) {
+		goto stats_allocated;
+	}
+
+	return 0;
+stats_allocated:
+	free(ftl_stats_ctx);
+bdev_opened:
+	spdk_bdev_close(ftl_bdev_desc);
+not_found:
+	return rc;
+}
+
+static void
 bdev_ftl_finish(void)
 {
 	spdk_ftl_fini();

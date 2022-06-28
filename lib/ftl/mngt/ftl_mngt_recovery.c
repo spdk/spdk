@@ -419,6 +419,7 @@ restore_band_l2p_cb(struct ftl_band *band, void *cntx, enum ftl_md_status status
 	/* P2L map is only valid if the band state is closed */
 	if (FTL_BAND_STATE_CLOSED == band->md->state && band->md->p2l_map_checksum != band_map_crc) {
 		FTL_ERRLOG(dev, "L2P band restore error, inconsistent P2L map CRC\n");
+		ftl_stats_crc_error(dev, FTL_STATS_TYPE_MD_BASE);
 		rc = -EINVAL;
 		goto cleanup;
 	}
@@ -510,6 +511,7 @@ restore_chunk_l2p_cb(struct ftl_nv_cache_chunk *chunk, void *ctx)
 	chunk_map_crc = spdk_crc32c_update(chunk->p2l_map.chunk_map,
 					   ftl_nv_cache_chunk_tail_md_num_blocks(chunk->nv_cache) * FTL_BLOCK_SIZE, 0);
 	if (chunk->md->p2l_map_checksum != chunk_map_crc) {
+		ftl_stats_crc_error(dev, FTL_STATS_TYPE_MD_NV_CACHE);
 		return -1;
 	}
 

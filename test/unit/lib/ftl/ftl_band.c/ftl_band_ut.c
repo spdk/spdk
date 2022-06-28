@@ -133,6 +133,8 @@ DEFINE_STUB(ftl_md_get_buffer, void *, (struct ftl_md *md), NULL);
 DEFINE_STUB(ftl_md_get_vss_buffer, union ftl_md_vss *, (struct ftl_md *md), NULL);
 DEFINE_STUB(ftl_nv_cache_acquire_trim_seq_id, uint64_t, (struct ftl_nv_cache *nv_cache), 0);
 DEFINE_STUB_V(ftl_md_persist, (struct ftl_md *md));
+DEFINE_STUB_V(spdk_bdev_io_get_nvme_status, (const struct spdk_bdev_io *bdev_io, uint32_t *cdw0,
+		int *sct, int *sc));
 
 static void
 adjust_bitmap(struct ftl_bitmap **bitmap, uint64_t *bit)

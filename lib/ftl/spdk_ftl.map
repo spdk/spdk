@@ -17,6 +17,7 @@
 	spdk_ftl_writev;
 	spdk_ftl_unmap;
 	spdk_ftl_dev_set_fast_shutdown;
+	spdk_ftl_get_stats;
 
 	local: *;
 };

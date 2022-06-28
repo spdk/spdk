@@ -470,6 +470,7 @@ Example response:
     "bdev_ftl_create",
     "bdev_ftl_load",
     "bdev_ftl_unmap",
+    "bdev_ftl_get_stats",
     "bdev_lvol_get_lvstores",
     "bdev_lvol_delete",
     "bdev_lvol_resize",
@@ -4952,6 +4953,179 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+### bdev_ftl_get_stats {#rpc_bdev_ftl_get_stats}
+
+Get IO statistics for FTL bdev
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Response
+
+The response is an object containing IO statistics for an FTL instance, split into multiple subobjects:
+
+- `user` - contains information about number of IOs, and errors for any incoming requests,
+- `cmp` - information about IO for the compaction process,
+- `gc` - information about IO for the garbage collection process,
+- `md_base` - internal metadata requests to the base FTL device,
+- `md_nv_cache` - internal metadata requests to the cache device,
+- `l2p` - requests done on the L2P cache region.
+
+Each subobject contains the following information:
+
+- `ios` - describes the total number of IOs requested,
+- `blocks` - the total number of requested blocks,
+- `errors` - describes the number of detected errors for a given operation, with the following distinctions:
+  - `media` - media errors,
+  - `crc` - mismatch in calculated CRC versus saved checksum in the metadata,
+  - `other` - any other errors.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_get_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+      "name": "ftl0",
+      "user": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 318707,
+          "blocks": 318707,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "cmp": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "gc": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "md_base": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 1,
+          "blocks": 32,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "md_nv_cache": {
+        "read": {
+          "ios": 0,
+          "blocks": 0,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 1064,
+          "blocks": 1073896,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      },
+      "l2p": {
+        "read": {
+          "ios": 240659,
+          "blocks": 240659,
+          "errors": {
+            "media": 0,
+            "crc": 0,
+            "other": 0
+          }
+        },
+        "write": {
+          "ios": 235745,
+          "blocks": 235745,
+          "errors": {
+            "media": 0,
+            "other": 0
+          }
+        }
+      }
+    }
 }
 ~~~
 ### bdev_pmem_create_pool {#rpc_bdev_pmem_create_pool}
