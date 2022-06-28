@@ -13,6 +13,7 @@
 	spdk_ftl_conf_deinit;
 	spdk_ftl_get_io_channel;
 	spdk_ftl_io_size;
+	spdk_ftl_readv;
 	spdk_ftl_writev;
 
 	local: *;
