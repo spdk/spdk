@@ -117,6 +117,8 @@ DEFINE_STUB(spdk_bdev_queue_io_wait, int, (struct spdk_bdev *bdev, struct spdk_i
 DEFINE_STUB(ftl_l2p_get, ftl_addr, (struct spdk_ftl_dev *dev, uint64_t lba), 0);
 DEFINE_STUB_V(ftl_writer_run, (struct ftl_writer *writer));
 DEFINE_STUB(ftl_writer_is_halted, bool, (struct ftl_writer *writer), true);
+DEFINE_STUB(ftl_mempool_claim_df, void *, (struct ftl_mempool *mpool, ftl_df_obj_id df_obj_id),
+	    NULL);
 
 static void
 setup_band(void)

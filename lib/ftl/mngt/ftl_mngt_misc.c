@@ -43,7 +43,9 @@ init_p2l_map_pool(struct spdk_ftl_dev *dev)
 		return -ENOMEM;
 	}
 
-	ftl_mempool_initialize_ext(dev->p2l_pool);
+	if (!ftl_fast_startup(dev)) {
+		ftl_mempool_initialize_ext(dev->p2l_pool);
+	}
 
 	return 0;
 }

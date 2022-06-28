@@ -16,7 +16,9 @@ ftl_band_init_md(struct ftl_band *band)
 	struct ftl_band_md *band_md = ftl_md_get_buffer(band_info_md);
 
 	band->md = &band_md[band->id];
-	band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
+	if (!ftl_fast_startup(dev)) {
+		band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
+	}
 
 	return 0;
 }
@@ -224,6 +226,7 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt_process *
 	struct ftl_writer *writer;
 	uint64_t i, num_open = 0, num_shut = 0;
 	uint64_t offset;
+	bool fast_startup = ftl_fast_startup(dev);
 
 	TAILQ_FOREACH_SAFE(band, &dev->free_bands, queue_entry, temp_band) {
 		band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
@@ -275,7 +278,17 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt_process *
 		writer->num_bands++;
 		ftl_band_set_owner(band, ftl_writer_band_state_change, writer);
 
-		if (dev->sb->clean) {
+		if (fast_startup) {
+			FTL_NOTICELOG(dev, "SHM: band open P2L map df_id 0x%"PRIx64"\n", band->md->df_p2l_map);
+			if (ftl_band_open_p2l_map(band)) {
+				ftl_mngt_fail_step(mngt);
+				return;
+			}
+
+			offset = band->md->iter.offset;
+			ftl_band_iter_init(band);
+			ftl_band_iter_set(band, offset);
+		} else if (dev->sb->clean) {
 			band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
 			if (ftl_band_alloc_p2l_map(band)) {
 				ftl_mngt_fail_step(mngt);
@@ -287,6 +300,11 @@ ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt_process *
 			ftl_band_iter_set(band, offset);
 		}
 	}
+
+	if (fast_startup) {
+		ftl_mempool_initialize_ext(dev->p2l_pool);
+	}
+
 
 	/* Recalculate number of free bands */
 	dev->num_free = 0;

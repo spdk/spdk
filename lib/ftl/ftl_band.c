@@ -330,6 +330,28 @@ ftl_band_alloc_p2l_map(struct ftl_band *band)
 	return 0;
 }
 
+int
+ftl_band_open_p2l_map(struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	struct ftl_p2l_map *p2l_map = &band->p2l_map;
+
+	assert(p2l_map->ref_cnt == 0);
+	assert(p2l_map->band_map == NULL);
+
+	assert(band->md->df_p2l_map != FTL_DF_OBJ_ID_INVALID);
+
+	if (ftl_band_alloc_md_entry(band)) {
+		p2l_map->band_map = NULL;
+		return -1;
+	}
+
+	p2l_map->band_map = ftl_mempool_claim_df(dev->p2l_pool, band->md->df_p2l_map);
+
+	ftl_band_acquire_p2l_map(band);
+	return 0;
+}
+
 void
 ftl_band_release_p2l_map(struct ftl_band *band)
 {
@@ -583,6 +605,10 @@ ftl_band_init_gc_iter(struct spdk_ftl_dev *dev)
 
 	if (dev->sb->clean) {
 		dev->sb_shm->gc_info = dev->sb->gc_info;
+		return;
+	}
+
+	if (ftl_fast_startup(dev) || ftl_fast_recovery(dev)) {
 		return;
 	}
 

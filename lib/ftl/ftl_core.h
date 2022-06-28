@@ -79,7 +79,7 @@ struct spdk_ftl_dev {
 	/* P2L map memory pool */
 	struct ftl_mempool		*p2l_pool;
 
-	/* Underlying SHM buf for LBA map mempool */
+	/* Underlying SHM buf for P2L map mempool */
 	struct ftl_md			*p2l_pool_md;
 
 	/* Band md memory pool */
@@ -256,6 +256,28 @@ ftl_tail_md_num_blocks(const struct spdk_ftl_dev *dev)
 	return spdk_divide_round_up(
 		       ftl_p2l_map_num_blocks(dev),
 		       dev->xfer_size) * dev->xfer_size;
+}
+
+/*
+ * shm_ready being set is a necessary part of the validity of the shm superblock
+ * If it's not set, then the recovery or startup must proceed from disk
+ *
+ * - If both sb and shm_sb are clean, then shm memory can be relied on for startup
+ * - If shm_sb wasn't set to clean, then disk startup/recovery needs to be done (which depends on the sb->clean flag)
+ * - sb->clean clear and sb_shm->clean is technically not possible (due to the order of these operations), but it should
+ * probably do a full recovery from disk to be on the safe side (which the ftl_fast_recovery will guarantee)
+ */
+
+static inline bool
+ftl_fast_startup(const struct spdk_ftl_dev *dev)
+{
+	return dev->sb->clean && dev->sb_shm->shm_clean && dev->sb_shm->shm_ready;
+}
+
+static inline bool
+ftl_fast_recovery(const struct spdk_ftl_dev *dev)
+{
+	return !dev->sb->clean && !dev->sb_shm->shm_clean && dev->sb_shm->shm_ready;
 }
 
 #endif /* FTL_CORE_H */

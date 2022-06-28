@@ -141,6 +141,7 @@ void ftl_band_set_type(struct ftl_band *band, enum ftl_band_type type);
 void ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state);
 void ftl_band_acquire_p2l_map(struct ftl_band *band);
 int ftl_band_alloc_p2l_map(struct ftl_band *band);
+int ftl_band_open_p2l_map(struct ftl_band *band);
 void ftl_band_release_p2l_map(struct ftl_band *band);
 ftl_addr ftl_band_next_xfer_addr(struct ftl_band *band, ftl_addr addr, size_t num_blocks);
 ftl_addr ftl_band_next_addr(struct ftl_band *band, ftl_addr addr, size_t offset);

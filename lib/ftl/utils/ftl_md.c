@@ -1121,7 +1121,9 @@ ftl_md_create_region_flags(struct spdk_ftl_dev *dev, int region_type)
 
 	case FTL_LAYOUT_REGION_TYPE_BAND_MD:
 	case FTL_LAYOUT_REGION_TYPE_NVC_MD:
-		flags |= FTL_MD_CREATE_SHM_NEW;
+		if (!ftl_fast_startup(dev)) {
+			flags |= FTL_MD_CREATE_SHM_NEW;
+		}
 		break;
 	default:
 		return FTL_MD_CREATE_HEAP;
@@ -1151,8 +1153,11 @@ ftl_md_destroy_region_flags(struct spdk_ftl_dev *dev, int region_type)
 int
 ftl_md_create_shm_flags(struct spdk_ftl_dev *dev)
 {
-	int flags = FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW;
+	int flags = FTL_MD_CREATE_SHM;
 
+	if (!ftl_fast_startup(dev) && !ftl_fast_recovery(dev)) {
+		flags |= FTL_MD_CREATE_SHM_NEW;
+	}
 	return flags;
 }
 
