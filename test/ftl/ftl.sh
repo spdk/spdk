@@ -22,6 +22,7 @@ function at_ftl_exit() {
 
 	# restore original driver
 	$rootdir/scripts/setup.sh reset
+	remove_shm
 }
 
 trap 'at_ftl_exit' SIGINT SIGTERM EXIT

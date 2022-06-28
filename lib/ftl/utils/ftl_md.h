@@ -20,6 +20,9 @@ enum ftl_md_ops {
 	FTL_MD_OP_CLEAR,
 };
 
+typedef int (*shm_open_t)(const char *, int, mode_t);
+typedef int (*shm_unlink_t)(const char *);
+
 /* FTL metadata container which allows to store/restore/recover */
 struct ftl_md {
 	/* Context of owner (Caller of restore/persist/clear operation) */
@@ -64,6 +67,27 @@ struct ftl_md {
 		struct spdk_bdev_io_wait_entry bdev_io_wait;
 	} io;
 
+	/* SHM object file descriptor or -1 if heap alloc */
+	int shm_fd;
+
+	/* Object name */
+	char name[NAME_MAX + 1];
+
+	/* mmap flags for the SHM object */
+	int shm_mmap_flags;
+
+	/* Total size of SHM object (data + md) */
+	size_t shm_sz;
+
+	/* open() for the SHM object */
+	shm_open_t shm_open;
+
+	/* unlink() for the SHM object */
+	shm_unlink_t shm_unlink;
+
+	/* Memory was registered to SPDK */
+	bool mem_reg;
+
 	/* Metadata primary object */
 	struct ftl_md *mirror;
 
@@ -105,13 +129,30 @@ union ftl_md_vss {
 SPDK_STATIC_ASSERT(sizeof(union ftl_md_vss) == FTL_MD_VSS_SZ, "Invalid md vss size");
 
 /**
+ *  FTL metadata creation flags
+ */
+enum ftl_md_create_flags {
+	/** FTL metadata will be created without memory allocation */
+	FTL_MD_CREATE_NO_MEM =		0x0,
+
+	/** FTL metadata data buf will be allocated in SHM */
+	FTL_MD_CREATE_SHM =		0x1,
+
+	/** Always create a new SHM obj, i.e. issue shm_unlink() before shm_open(), only valid with FTL_MD_CREATE_SHM */
+	FTL_MD_CREATE_SHM_NEW =		0x2,
+
+	/** FTL metadata will be created on heap */
+	FTL_MD_CREATE_HEAP =		0x4,
+};
+
+/**
  * @brief Creates FTL metadata
  *
  * @param dev The FTL device
  * @param blocks Size of buffer in FTL block size unit
  * @param vss_blksz Size of VSS MD
  * @param name Name of the object being created
- * @param no_mem If true metadata will be created without memory allocation
+ * @param flags Bit flags of ftl_md_create_flags type
  * @param region Region associated with FTL metadata
  *
  * @note if buffer is NULL, the buffer will be allocated internally by the object
@@ -119,8 +160,20 @@ SPDK_STATIC_ASSERT(sizeof(union ftl_md_vss) == FTL_MD_VSS_SZ, "Invalid md vss si
  * @return FTL metadata
  */
 struct ftl_md *ftl_md_create(struct spdk_ftl_dev *dev, uint64_t blocks,
-			     uint64_t vss_blksz, const char *name, bool no_mem,
+			     uint64_t vss_blksz, const char *name, int flags,
 			     const struct ftl_layout_region *region);
+
+/**
+ * @brief Unlinks metadata object from FS
+ * @param dev The FTL device
+ * @param name Name of the object being unlinked
+ * @param flags Bit flag describing the MD object
+ *
+ * @note Unlink is possible only for objects created with FTL_MD_CREATE_SHM flag
+ *
+ * @return Operation result
+ */
+int ftl_md_unlink(struct spdk_ftl_dev *dev, const char *name, int flags);
 
 /**
  * @brief Destroys metadata

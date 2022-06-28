@@ -50,6 +50,7 @@ ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region = layout->region;
 	uint64_t i;
+	int md_flags;
 
 	for (i = 0; i < FTL_LAYOUT_REGION_TYPE_MAX; i++, region++) {
 		if (layout->md[i]) {
@@ -61,8 +62,11 @@ ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 			 */
 			continue;
 		}
+		md_flags = is_buffer_needed(i) ?
+			   FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW :
+			   FTL_MD_CREATE_NO_MEM;
 		layout->md[i] = ftl_md_create(dev, region->current.blocks, region->vss_blksz, region->name,
-					      !is_buffer_needed(i), region);
+					      md_flags, region);
 		if (NULL == layout->md[i]) {
 			ftl_mngt_fail_step(mngt);
 			return;
@@ -245,6 +249,7 @@ ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB];
 	char uuid[SPDK_UUID_STRING_LEN];
+	int md_create_flags = FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW;
 
 	/* Must generate UUID before MD create on SHM for the SB */
 	if (dev->conf.mode & SPDK_FTL_MODE_CREATE) {
@@ -261,7 +266,8 @@ ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 
 	/* Allocate md buf */
 	layout->md[FTL_LAYOUT_REGION_TYPE_SB] = ftl_md_create(dev, region->current.blocks,
-						region->vss_blksz, region->name, false, region);
+						region->vss_blksz, region->name,
+						md_create_flags, region);
 	if (NULL == layout->md[FTL_LAYOUT_REGION_TYPE_SB]) {
 		ftl_mngt_fail_step(mngt);
 		return;
@@ -273,7 +279,7 @@ ftl_mngt_superblock_init(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 	/* Setup superblock mirror to QLC */
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE];
 	layout->md[FTL_LAYOUT_REGION_TYPE_SB_BASE] = ftl_md_create(dev, region->current.blocks,
-			region->vss_blksz, NULL, false, region);
+			region->vss_blksz, NULL, FTL_MD_CREATE_HEAP, region);
 	if (NULL == layout->md[FTL_LAYOUT_REGION_TYPE_SB_BASE]) {
 		ftl_mngt_fail_step(mngt);
 		return;

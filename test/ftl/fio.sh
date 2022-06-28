@@ -66,3 +66,4 @@ for test in ${tests}; do
 done
 
 rm -f $FTL_JSON_CONF
+remove_shm
