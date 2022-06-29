@@ -98,8 +98,8 @@ commands:
 intel_iommu=on,sm_on
 ```
 
-2 User library dependency: Users need to install the `accel-config` library.
-This is often packaged, but the source is available on
+2 User library dependency: Users need to install the developer version of the
+`accel-config` library. This is often packaged, but the source is available on
 [GitHub](https://github.com/intel/idxd-config). After the library is installed,
 users can use the `accel-config` command to configure the work queues(WQs) of
 the idxd devices managed by the kernel with the following steps:
