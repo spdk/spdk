@@ -665,13 +665,14 @@ fi
 BUILD_CMD+=(-I/usr/local/include -L/usr/local/lib)
 
 if [[ "${CONFIG[VFIO_USER]}" = "y" ]]; then
-
-	if [[ ! -d /usr/include/json-c ]] && [[ ! -d /usr/local/include/json-c ]]; then
+	if ! echo -e '#include <json-c/json.h>' \
+		| "${BUILD_CMD[@]}" -E - 2> /dev/null; then
 		echo "ERROR: --with-vfio-user requires json-c-devel"
 		echo "Please install then re-run this script"
 		exit 1
 	fi
-	if [[ ! -e /usr/include/cmocka.h ]] && [[ ! -e /usr/local/include/cmocka.h ]]; then
+	if ! echo -e '#include <cmocka.h>' \
+		| "${BUILD_CMD[@]}" -E - 2> /dev/null; then
 		echo "ERROR: --with-vfio-user requires libcmocka-devel"
 		echo "Please install then re-run this script"
 		exit 1
