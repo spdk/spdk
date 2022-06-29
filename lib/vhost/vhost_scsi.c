@@ -711,7 +711,7 @@ process_scsi_task(struct spdk_vhost_session *vsession,
 	}
 }
 
-static void
+static int
 submit_inflight_desc(struct spdk_vhost_scsi_session *svsession,
 		     struct spdk_vhost_virtqueue *vq)
 {
@@ -719,12 +719,12 @@ submit_inflight_desc(struct spdk_vhost_scsi_session *svsession,
 	spdk_vhost_resubmit_info *resubmit;
 	spdk_vhost_resubmit_desc *resubmit_list;
 	uint16_t req_idx;
-	int i;
+	int i, resubmit_cnt;
 
 	resubmit = vq->vring_inflight.resubmit_inflight;
 	if (spdk_likely(resubmit == NULL || resubmit->resubmit_list == NULL ||
 			resubmit->resubmit_num == 0)) {
-		return;
+		return 0;
 	}
 
 	resubmit_list = resubmit->resubmit_list;
@@ -744,8 +744,9 @@ submit_inflight_desc(struct spdk_vhost_scsi_session *svsession,
 
 		process_scsi_task(vsession, vq, req_idx);
 	}
-
+	resubmit_cnt = resubmit->resubmit_num;
 	resubmit->resubmit_num = 0;
+	return resubmit_cnt;
 }
 
 static int
@@ -754,8 +755,9 @@ process_vq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueu
 	struct spdk_vhost_session *vsession = &svsession->vsession;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
+	int resubmit_cnt;
 
-	submit_inflight_desc(svsession, vq);
+	resubmit_cnt = submit_inflight_desc(svsession, vq);
 
 	reqs_cnt = vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	assert(reqs_cnt <= 32);
@@ -776,7 +778,7 @@ process_vq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueu
 		process_scsi_task(vsession, vq, reqs[i]);
 	}
 
-	return reqs_cnt;
+	return reqs_cnt > 0 ? reqs_cnt : resubmit_cnt;
 }
 
 static int
