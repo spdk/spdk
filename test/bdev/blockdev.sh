@@ -353,6 +353,65 @@ function qos_test_suite() {
 	trap - SIGINT SIGTERM EXIT
 }
 
+function error_test_suite() {
+	DEV_1="Dev_1"
+	DEV_2="Dev_2"
+	ERR_DEV="EE_Dev_1"
+
+	# Run bdevperf with 1 normal bdev and 1 error bdev, also continue on error
+	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 16 -o 4096 -w randread -t 5 -f "$env_ctx" &
+	ERR_PID=$!
+	echo "Process error testing pid: $ERR_PID"
+	waitforlisten $ERR_PID
+
+	$rpc_py bdev_malloc_create -b $DEV_1 128 512
+	waitforbdev $DEV_1
+	$rpc_py bdev_error_create $DEV_1
+	$rpc_py bdev_malloc_create -b $DEV_2 128 512
+	waitforbdev $DEV_2
+	$rpc_py bdev_error_inject_error $ERR_DEV 'all' 'failure' -n 5
+
+	$rootdir/test/bdev/bdevperf/bdevperf.py -t 1 perform_tests &
+	sleep 1
+
+	# Bdevperf is expected to be there as the continue on error is set
+	if kill -0 $ERR_PID; then
+		echo "Process is existed as continue on error is set. Pid: $ERR_PID"
+	else
+		echo "Process exited unexpectedly. Pid: $ERR_PID"
+		exit 1
+	fi
+
+	# Delete the error devices
+	$rpc_py bdev_error_delete $ERR_DEV
+	$rpc_py bdev_malloc_delete $DEV_1
+	sleep 5
+	# Expected to exit normally
+	killprocess $ERR_PID
+
+	# Run bdevperf with 1 normal bdev and 1 error bdev, and exit on error
+	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 16 -o 4096 -w randread -t 5 "$env_ctx" &
+	ERR_PID=$!
+	echo "Process error testing pid: $ERR_PID"
+	waitforlisten $ERR_PID
+
+	$rpc_py bdev_malloc_create -b $DEV_1 128 512
+	waitforbdev $DEV_1
+	$rpc_py bdev_error_create $DEV_1
+	$rpc_py bdev_malloc_create -b $DEV_2 128 512
+	waitforbdev $DEV_2
+	$rpc_py bdev_error_inject_error $ERR_DEV 'all' 'failure' -n 5
+
+	$rootdir/test/bdev/bdevperf/bdevperf.py -t 1 perform_tests &
+	sleep 1
+
+	# Bdevperf is expected to exit when hitting error
+	if kill -0 $ERR_PID; then
+		echo "Process still exists, but was expected to fail due to IO error. Pid: $ERR_PID"
+		exit 1
+	fi
+}
+
 function qd_sampling_function_test() {
 	local bdev_name=$1
 	local sampling_period=10
@@ -498,6 +557,7 @@ run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 1
 if [[ $test_type == bdev ]]; then
 	run_test "bdev_qos" qos_test_suite "$env_ctx"
 	run_test "bdev_qd_sampling" qd_sampling_test_suite "$env_ctx"
+	run_test "bdev_error" error_test_suite "$env_ctx"
 fi
 
 # Temporarily disabled - infinite loop

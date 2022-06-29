@@ -44,6 +44,7 @@ static bool g_verify = false;
 static bool g_reset = false;
 static bool g_continue_on_failure = false;
 static bool g_abort = false;
+static bool g_error_to_exit = false;
 static int g_queue_depth = 0;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
@@ -113,6 +114,7 @@ struct bdevperf_job {
 	struct spdk_bit_array		*outstanding;
 	struct spdk_zipf		*zipf;
 	TAILQ_HEAD(, bdevperf_task)	task_list;
+	uint64_t			run_time_in_usec;
 };
 
 struct spdk_bdevperf {
@@ -202,27 +204,48 @@ static void
 performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job)
 {
 	double io_per_second, mb_per_second, failed_per_second, timeout_per_second;
+	uint64_t time_in_usec;
 
 	printf("\r Job: %s (Core Mask 0x%s)\n", spdk_thread_get_name(job->thread),
 	       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
+
+	if (job->io_failed > 0 && !job->reset && !job->continue_on_failure) {
+		printf("\r Job: %s ended in about %.2f seconds with error\n",
+		       spdk_thread_get_name(job->thread), (double)job->run_time_in_usec / 1000000);
+	}
 	if (job->verify) {
 		printf("\t Verification LBA range: start 0x%" PRIx64 " length 0x%" PRIx64 "\n",
 		       job->ios_base, job->size_in_ios);
 	}
+
+	if (g_performance_dump_active == true) {
+		/* Use job's actual run time as Job has ended */
+		if (job->io_failed > 0 && !job->continue_on_failure) {
+			time_in_usec = job->run_time_in_usec;
+		} else {
+			time_in_usec = stats->io_time_in_usec;
+		}
+	} else {
+		time_in_usec = job->run_time_in_usec;
+	}
+
 	if (stats->ema_period == 0) {
-		io_per_second = get_cma_io_per_second(job, stats->io_time_in_usec);
+		io_per_second = get_cma_io_per_second(job, time_in_usec);
 	} else {
 		io_per_second = get_ema_io_per_second(job, stats->ema_period);
 	}
 	mb_per_second = io_per_second * job->io_size / (1024 * 1024);
-	failed_per_second = (double)job->io_failed * 1000000 / stats->io_time_in_usec;
-	timeout_per_second = (double)job->io_timeout * 1000000 / stats->io_time_in_usec;
+
+	failed_per_second = (double)job->io_failed * 1000000 / time_in_usec;
+	timeout_per_second = (double)job->io_timeout * 1000000 / time_in_usec;
 
 	printf("\t %-20s: %10.2f IOPS %10.2f MiB/s\n",
 	       job->name, io_per_second, mb_per_second);
 	if (failed_per_second != 0) {
 		printf("\t %-20s: %10.2f Fail/s %8.2f TO/s\n",
 		       "", failed_per_second, timeout_per_second);
+		printf("\t %-20s: %10ld Fail IOs %6ld TO IOs\n",
+		       "", job->io_failed, job->io_timeout);
 	}
 	stats->total_io_per_second += io_per_second;
 	stats->total_mb_per_second += mb_per_second;
@@ -345,16 +368,16 @@ bdevperf_test_done(void *ctx)
 {
 	struct bdevperf_job *job, *jtmp;
 	struct bdevperf_task *task, *ttmp;
+	int rc;
+	uint64_t time_in_usec;
 
-	if (g_time_in_usec && !g_run_rc) {
+	if (g_time_in_usec) {
 		g_stats.io_time_in_usec = g_time_in_usec;
 
-		if (g_performance_dump_active) {
+		if (!g_run_rc && g_performance_dump_active) {
 			spdk_thread_send_msg(spdk_get_thread(), bdevperf_test_done, NULL);
 			return;
 		}
-	} else {
-		printf("Job run time less than one microsecond, no performance data will be shown\n");
 	}
 
 	if (g_show_performance_real_time) {
@@ -363,7 +386,8 @@ bdevperf_test_done(void *ctx)
 
 	if (g_shutdown) {
 		g_shutdown_tsc = spdk_get_ticks() - g_start_tsc;
-		g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
+		time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
+		g_time_in_usec = (g_time_in_usec > time_in_usec) ? time_in_usec : g_time_in_usec;
 		printf("Received shutdown signal, test time was about %.6f seconds\n",
 		       (double)g_time_in_usec / 1000000);
 	}
@@ -397,10 +421,14 @@ bdevperf_test_done(void *ctx)
 	}
 	fflush(stdout);
 
+	rc = g_run_rc;
 	if (g_request && !g_shutdown) {
 		rpc_perform_tests_cb();
+		if (rc != 0) {
+			spdk_app_stop(rc);
+		}
 	} else {
-		spdk_app_stop(g_run_rc);
+		spdk_app_stop(rc);
 	}
 }
 
@@ -418,10 +446,13 @@ static void
 bdevperf_end_task(struct bdevperf_task *task)
 {
 	struct bdevperf_job     *job = task->job;
+	uint64_t		end_tsc = 0;
 
 	TAILQ_INSERT_TAIL(&job->task_list, task, link);
 	if (job->is_draining) {
 		if (job->current_queue_depth == 0) {
+			end_tsc = spdk_get_ticks() - g_start_tsc;
+			job->run_time_in_usec = end_tsc * 1000000 / spdk_get_ticks_hz();
 			spdk_put_io_channel(job->ch);
 			spdk_bdev_close(job->bdev_desc);
 			spdk_thread_send_msg(g_main_thread, bdevperf_job_end, NULL);
@@ -490,10 +521,13 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	job = task->job;
 	md_check = spdk_bdev_get_dif_type(job->bdev) == SPDK_DIF_DISABLE;
 
-	if (!success) {
+	if (g_error_to_exit == true) {
+		bdevperf_job_drain(job);
+	} else if (!success) {
 		if (!job->reset && !job->continue_on_failure) {
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
+			g_error_to_exit = true;
 			printf("task offset: %" PRIu64 " on job bdev=%s fails\n",
 			       task->offset_blocks, job->name);
 		}
