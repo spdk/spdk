@@ -901,17 +901,17 @@ nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 }
 
 static int
-nvme_rdma_reg_mr(struct rdma_cm_id *cm_id, union nvme_rdma_mr *mr, void *mem, size_t length)
+nvme_rdma_reg_mr(struct ibv_pd *pd, union nvme_rdma_mr *mr, void *mem, size_t length)
 {
 	if (!g_nvme_hooks.get_rkey) {
-		mr->mr = rdma_reg_msgs(cm_id, mem, length);
+		mr->mr = ibv_reg_mr(pd, mem, length, IBV_ACCESS_LOCAL_WRITE);
 		if (mr->mr == NULL) {
 			SPDK_ERRLOG("Unable to register mr: %s (%d)\n",
 				    spdk_strerror(errno), errno);
 			return -1;
 		}
 	} else {
-		mr->key = g_nvme_hooks.get_rkey(cm_id->pd, mem, length);
+		mr->key = g_nvme_hooks.get_rkey(pd, mem, length);
 	}
 
 	return 0;
@@ -1000,7 +1000,7 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 	int rc;
 	uint32_t lkey;
 
-	rc = nvme_rdma_reg_mr(rqpair->cm_id, &rqpair->rsp_mr,
+	rc = nvme_rdma_reg_mr(rqpair->cm_id->pd, &rqpair->rsp_mr,
 			      rqpair->rsps, rqpair->num_entries * sizeof(*rqpair->rsps));
 
 	if (rc < 0) {
@@ -1121,7 +1121,7 @@ nvme_rdma_register_reqs(struct nvme_rdma_qpair *rqpair)
 	int rc;
 	uint32_t lkey;
 
-	rc = nvme_rdma_reg_mr(rqpair->cm_id, &rqpair->cmd_mr,
+	rc = nvme_rdma_reg_mr(rqpair->cm_id->pd, &rqpair->cmd_mr,
 			      rqpair->cmds, rqpair->num_entries * sizeof(*rqpair->cmds));
 
 	if (rc < 0) {
