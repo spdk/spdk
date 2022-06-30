@@ -93,6 +93,9 @@ class Server:
 
         self.local_nic_info = extract_network_elements(pci_info)
 
+    def get_nic_numa_node(self, nic_name):
+        return int(self.exec_cmd(["cat", "/sys/class/net/%s/device/numa_node" % nic_name]))
+
     # pylint: disable=R0201
     def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
         return ""
