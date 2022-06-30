@@ -96,6 +96,18 @@ class Server:
     def get_nic_numa_node(self, nic_name):
         return int(self.exec_cmd(["cat", "/sys/class/net/%s/device/numa_node" % nic_name]))
 
+    def get_numa_cpu_map(self):
+        numa_cpu_json_obj = json.loads(self.exec_cmd(["lscpu", "-b", "-e=NODE,CPU", "-J"]))
+        numa_cpu_json_map = {}
+
+        for cpu in numa_cpu_json_obj["cpus"]:
+            cpu_num = int(cpu["cpu"])
+            numa_node = int(cpu["node"])
+            numa_cpu_json_map.setdefault(numa_node, [])
+            numa_cpu_json_map[numa_node].append(cpu_num)
+
+        return numa_cpu_json_map
+
     # pylint: disable=R0201
     def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
         return ""
@@ -868,13 +880,29 @@ class Initiator(Server):
         # Logic implemented in SPDKInitiator and KernelInitiator classes
         pass
 
+    def get_route_nic_numa(self, remote_nvme_ip):
+        local_nvme_nic = json.loads(self.exec_cmd(["ip", "-j", "route", "get", remote_nvme_ip]))
+        local_nvme_nic = local_nvme_nic[0]["dev"]
+        return self.get_nic_numa_node(local_nvme_nic)
+
     @staticmethod
     def gen_fio_offset_section(offset_inc, num_jobs):
         offset_inc = 100 // num_jobs if offset_inc == 0 else offset_inc
-        fio_size = "size=%s%%" % offset_inc
-        fio_offset = "offset=0%"
-        fio_offset_inc = "offset_increment=%s%%" % offset_inc
-        return "\n".join([fio_size, fio_offset, fio_offset_inc])
+        return "\n".join(["size=%s%%" % offset_inc,
+                          "offset=0%",
+                          "offset_increment=%s%%" % offset_inc])
+
+    def gen_fio_numa_section(self, fio_filenames_list):
+        numa_stats = {}
+        for nvme in fio_filenames_list:
+            nvme_numa = self.get_nvme_subsystem_numa(os.path.basename(nvme))
+            numa_stats[nvme_numa] = numa_stats.setdefault(nvme_numa, 0) + 1
+
+        # Use the most common NUMA node for this chunk to allocate memory and CPUs
+        section_local_numa = sorted(numa_stats.items(), key=lambda item: item[1], reverse=True)[0][0]
+
+        return "\n".join(["numa_cpu_nodes=%s" % section_local_numa,
+                          "numa_mem_policy=prefer:%s" % section_local_numa])
 
     def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no,
                        num_jobs=None, ramp_time=0, run_time=10, rate_iops=0,
@@ -1381,8 +1409,19 @@ class KernelInitiator(Initiator):
             self.exec_cmd(["sudo", self.nvmecli_bin, "disconnect", "-n", subsystem[1]])
             time.sleep(1)
 
+    def get_nvme_subsystem_numa(self, dev_name):
+        # Remove two last characters to get controller name instead of subsystem name
+        nvme_ctrl = os.path.basename(dev_name)[:-2]
+        remote_nvme_ip = re.search(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',
+                                   self.exec_cmd(["cat", "/sys/class/nvme/%s/address" % nvme_ctrl]))
+        return self.get_route_nic_numa(remote_nvme_ip)
+
     def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
+        # Generate connected nvme devices names and sort them by used NIC numa node
+        # to allow better grouping when splitting into fio sections.
         nvme_list = [os.path.join("/dev", nvme) for nvme in self.get_connected_nvme_list()]
+        nvme_numas = [self.get_nvme_subsystem_numa(x) for x in nvme_list]
+        nvme_list = [x for _, x in sorted(zip(nvme_numas, nvme_list))]
 
         filename_section = ""
         nvme_per_split = int(len(nvme_list) / len(threads))
@@ -1408,7 +1447,9 @@ class KernelInitiator(Initiator):
             if offset:
                 offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
 
-            filename_section = "\n".join([filename_section, header, disks, iodepth, offset_section, ""])
+            numa_opts = self.gen_fio_numa_section(r)
+
+            filename_section = "\n".join([filename_section, header, disks, iodepth, numa_opts, offset_section, ""])
 
         return filename_section
 
@@ -1477,7 +1518,13 @@ class SPDKInitiator(Initiator):
         filename_section = ""
         if len(threads) >= len(subsystems):
             threads = range(0, len(subsystems))
+
+        # Generate expected NVMe Bdev names and sort them by used NIC numa node
+        # to allow better grouping when splitting into fio sections.
         filenames = ["Nvme%sn1" % x for x in range(0, len(subsystems))]
+        filename_numas = [self.get_nvme_subsystem_numa(x) for x in filenames]
+        filenames = [x for _, x in sorted(zip(filename_numas, filenames))]
+
         nvme_per_split = int(len(subsystems) / len(threads))
         remainder = len(subsystems) % len(threads)
         iterator = iter(filenames)
@@ -1501,9 +1548,20 @@ class SPDKInitiator(Initiator):
             if offset:
                 offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
 
-            filename_section = "\n".join([filename_section, header, disks, iodepth, offset_section, ""])
+            numa_opts = self.gen_fio_numa_section(r)
+
+            filename_section = "\n".join([filename_section, header, disks, iodepth, numa_opts, offset_section, ""])
 
         return filename_section
+
+    def get_nvme_subsystem_numa(self, bdev_name):
+        bdev_conf_json_obj = json.loads(self.exec_cmd(["cat", "%s/bdev.conf" % self.spdk_dir]))
+        bdev_conf_json_obj = bdev_conf_json_obj["subsystems"][0]["config"]
+
+        # Remove two last characters to get controller name instead of subsystem name
+        nvme_ctrl = bdev_name[:-2]
+        remote_nvme_ip = list(filter(lambda x: x["params"]["name"] == "%s" % nvme_ctrl, bdev_conf_json_obj))[0]["params"]["traddr"]
+        return self.get_route_nic_numa(remote_nvme_ip)
 
 
 if __name__ == "__main__":
