@@ -432,17 +432,33 @@ nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdm
 
 static void
 nvme_rdma_req_complete(struct spdk_nvme_rdma_req *rdma_req,
-		       struct spdk_nvme_cpl *rsp)
+		       struct spdk_nvme_cpl *rsp,
+		       bool print_on_error)
 {
 	struct nvme_request *req = rdma_req->req;
 	struct nvme_rdma_qpair *rqpair;
+	struct spdk_nvme_qpair *qpair;
+	bool error, print_error;
 
 	assert(req != NULL);
 
-	rqpair = nvme_rdma_qpair(req->qpair);
+	qpair = req->qpair;
+	rqpair = nvme_rdma_qpair(qpair);
+
+	error = spdk_nvme_cpl_is_error(rsp);
+	print_error = error && print_on_error && !qpair->ctrlr->opts.disable_error_logging;
+
+	if (print_error) {
+		spdk_nvme_qpair_print_command(qpair, &req->cmd);
+	}
+
+	if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
+		spdk_nvme_qpair_print_completion(qpair, rsp);
+	}
+
 	TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 
-	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, rsp);
+	nvme_complete_request(req->cb_fn, req->cb_arg, qpair, req, rsp);
 	nvme_free_request(req);
 }
 
@@ -2396,7 +2412,7 @@ nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
-		nvme_rdma_req_complete(rdma_req, &cpl);
+		nvme_rdma_req_complete(rdma_req, &cpl, true);
 		nvme_rdma_req_put(rqpair, rdma_req);
 	}
 }
@@ -2443,7 +2459,7 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 static inline int
 nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
-	nvme_rdma_req_complete(rdma_req, &rqpair->rsps[rdma_req->rsp_idx].cpl);
+	nvme_rdma_req_complete(rdma_req, &rqpair->rsps[rdma_req->rsp_idx].cpl, true);
 	nvme_rdma_req_put(rqpair, rdma_req);
 	return nvme_rdma_post_recv(rqpair, rdma_req->rsp_idx);
 }
@@ -2797,7 +2813,7 @@ nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 
-		nvme_rdma_req_complete(rdma_req, &cpl);
+		nvme_rdma_req_complete(rdma_req, &cpl, false);
 		nvme_rdma_req_put(rqpair, rdma_req);
 	}
 }
