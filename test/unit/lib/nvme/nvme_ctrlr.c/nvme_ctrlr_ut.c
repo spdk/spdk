@@ -3068,6 +3068,7 @@ test_nvme_ctrlr_set_intel_supported_log_pages(void)
 
 	ctrlr.opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
 	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	ctrlr.state = NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES;
 
 	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);

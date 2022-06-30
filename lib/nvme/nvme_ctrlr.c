@@ -886,7 +886,9 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL && !(ctrlr->quirks & NVME_INTEL_QUIRK_NO_LOG_PAGES)) {
+	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL &&
+	    ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE &&
+	    !(ctrlr->quirks & NVME_INTEL_QUIRK_NO_LOG_PAGES)) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_INTEL_LOG_PAGES,
 				     ctrlr->opts.admin_timeout_ms);
 
