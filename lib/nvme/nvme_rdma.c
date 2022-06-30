@@ -460,6 +460,7 @@ nvme_rdma_req_complete(struct spdk_nvme_rdma_req *rdma_req,
 
 	nvme_complete_request(req->cb_fn, req->cb_arg, qpair, req, rsp);
 	nvme_free_request(req);
+	nvme_rdma_req_put(rqpair, rdma_req);
 }
 
 static const char *
@@ -2413,7 +2414,6 @@ nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
 		nvme_rdma_req_complete(rdma_req, &cpl, true);
-		nvme_rdma_req_put(rqpair, rdma_req);
 	}
 }
 
@@ -2460,7 +2460,6 @@ static inline int
 nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
 	nvme_rdma_req_complete(rdma_req, &rqpair->rsps[rdma_req->rsp_idx].cpl, true);
-	nvme_rdma_req_put(rqpair, rdma_req);
 	return nvme_rdma_post_recv(rqpair, rdma_req->rsp_idx);
 }
 
@@ -2814,7 +2813,6 @@ nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 		}
 
 		nvme_rdma_req_complete(rdma_req, &cpl, false);
-		nvme_rdma_req_put(rqpair, rdma_req);
 	}
 }
 
