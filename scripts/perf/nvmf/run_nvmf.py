@@ -865,7 +865,17 @@ class Initiator(Server):
         # Logic implemented in SPDKInitiator and KernelInitiator classes
         pass
 
-    def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no, num_jobs=None, ramp_time=0, run_time=10, rate_iops=0):
+    @staticmethod
+    def gen_fio_offset_section(offset_inc, num_jobs):
+        offset_inc = 100 // num_jobs if offset_inc == 0 else offset_inc
+        fio_size = "size=%s%%" % offset_inc
+        fio_offset = "offset=0%"
+        fio_offset_inc = "offset_increment=%s%%" % offset_inc
+        return "\n".join([fio_size, fio_offset, fio_offset_inc])
+
+    def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no,
+                       num_jobs=None, ramp_time=0, run_time=10, rate_iops=0,
+                       offset=False, offset_inc=0):
         fio_conf_template = """
 [global]
 ioengine={ioengine}
@@ -918,9 +928,11 @@ rate_iops={rate_iops}
             threads = range(0, len(subsystems))
 
         if "spdk" in self.mode:
-            filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, num_jobs)
+            filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, num_jobs,
+                                                          offset, offset_inc)
         else:
-            filename_section = self.gen_fio_filename_conf(threads, io_depth, num_jobs)
+            filename_section = self.gen_fio_filename_conf(threads, io_depth, num_jobs,
+                                                          offset, offset_inc)
 
         fio_config = fio_conf_template.format(ioengine=ioengine, spdk_conf=spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
@@ -1366,7 +1378,7 @@ class KernelInitiator(Initiator):
             self.exec_cmd(["sudo", self.nvmecli_bin, "disconnect", "-n", subsystem[1]])
             time.sleep(1)
 
-    def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1):
+    def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
         nvme_list = [os.path.join("/dev", nvme) for nvme in self.get_connected_nvme_list()]
 
         filename_section = ""
@@ -1388,7 +1400,12 @@ class KernelInitiator(Initiator):
             if job_section_qd == 0:
                 job_section_qd = 1
             iodepth = "iodepth=%s" % job_section_qd
-            filename_section = "\n".join([filename_section, header, disks, iodepth])
+
+            offset_section = ""
+            if offset:
+                offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
+
+            filename_section = "\n".join([filename_section, header, disks, iodepth, offset_section, ""])
 
         return filename_section
 
@@ -1453,7 +1470,7 @@ class SPDKInitiator(Initiator):
 
         return json.dumps(bdev_cfg_section, indent=2)
 
-    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1):
+    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
         filename_section = ""
         if len(threads) >= len(subsystems):
             threads = range(0, len(subsystems))
@@ -1476,7 +1493,12 @@ class SPDKInitiator(Initiator):
             if job_section_qd == 0:
                 job_section_qd = 1
             iodepth = "iodepth=%s" % job_section_qd
-            filename_section = "\n".join([filename_section, header, disks, iodepth])
+
+            offset_section = ""
+            if offset:
+                offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
+
+            filename_section = "\n".join([filename_section, header, disks, iodepth, offset_section, ""])
 
         return filename_section
 
@@ -1533,6 +1555,13 @@ if __name__ == "__main__":
             fio_rate_iops = 0
             if "rate_iops" in data[k]:
                 fio_rate_iops = data[k]["rate_iops"]
+
+            fio_offset = False
+            if "offset" in data[k]:
+                fio_offset = data[k]["offset"]
+            fio_offset_inc = 0
+            if "offset_inc" in data[k]:
+                fio_offset_inc = data[k]["offset_inc"]
         else:
             continue
 
@@ -1567,7 +1596,8 @@ if __name__ == "__main__":
                     i.kernel_init_connect()
 
                 cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
-                                       fio_num_jobs, fio_ramp_time, fio_run_time, fio_rate_iops)
+                                       fio_num_jobs, fio_ramp_time, fio_run_time, fio_rate_iops,
+                                       fio_offset, fio_offset_inc)
                 configs.append(cfg)
 
             for i, cfg in zip(initiators, configs):

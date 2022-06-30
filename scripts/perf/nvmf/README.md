@@ -255,6 +255,8 @@ Optional, SPDK Initiator only:
   "rwmixread": 100,
   "rate_iops": 10000,
   "num_jobs": 2,
+  "offset": true,
+  "offset_inc": 10,
   "run_time": 30,
   "ramp_time": 30,
   "run_num": 3
@@ -277,6 +279,16 @@ Required:
 Optional:
 
 - rate_iops - limit IOPS to this number
+- offset - bool; enable offseting of the IO to the file. When this option is
+  enabled the file is "split" into a number of chunks equal to "num_jobs"
+  parameter value, and each "num_jobs" fio thread gets it's own chunk to
+  work with.
+  For more detail see "offset", "offset_increment" and "size" in fio man
+  pages. Default: false.
+- offset_inc - int; Percentage value determining the offset, size and
+  offset_increment when "offset" option is enabled. By default if "offset"
+  is enabled fio file will get split evenly between fio threads doing the
+  IO. Offset_inc can be used to specify a custom value.
 
 #### Test Combinations
 
