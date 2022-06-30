@@ -39,6 +39,12 @@ DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme
 DEFINE_STUB(nvme_poll_group_connect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair, uint32_t num_requests));
 
+DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cmd *cmd));
+
+DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
+		struct spdk_nvme_cpl *cpl));
+
 static void
 test_nvme_tcp_pdu_set_data_buf(void)
 {
@@ -1333,6 +1339,7 @@ static void
 test_nvme_tcp_capsule_resp_hdr_handle(void)
 {
 	struct nvme_tcp_qpair	tqpair = {};
+	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct spdk_nvme_tcp_stat	stats = {};
 	struct nvme_request	req = {};
 	struct spdk_nvme_cpl	rccqe_tgt = {};
@@ -1344,6 +1351,7 @@ test_nvme_tcp_capsule_resp_hdr_handle(void)
 	tqpair.num_entries = 1;
 	tqpair.stats = &stats;
 	req.qpair = &tqpair.qpair;
+	req.qpair->ctrlr = &ctrlr;
 
 	rc = nvme_tcp_alloc_reqs(&tqpair);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
@@ -1520,7 +1528,7 @@ test_nvme_tcp_ctrlr_create_io_qpair(void)
 static void
 test_nvme_tcp_ctrlr_delete_io_qpair(void)
 {
-	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)0xdeadbeef;
+	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct spdk_nvme_qpair *qpair;
 	struct nvme_tcp_qpair *tqpair;
 	struct nvme_tcp_req tcp_req = {};
@@ -1532,6 +1540,7 @@ test_nvme_tcp_ctrlr_delete_io_qpair(void)
 	tqpair->send_pdus = calloc(1, sizeof(struct nvme_tcp_pdu));
 	tqpair->qpair.trtype = SPDK_NVME_TRANSPORT_TCP;
 	qpair = &tqpair->qpair;
+	qpair->ctrlr = &ctrlr;
 	tcp_req.req = &req;
 	tcp_req.req->qpair = &tqpair->qpair;
 	tcp_req.req->cb_fn = ut_nvme_complete_request;
@@ -1540,7 +1549,7 @@ test_nvme_tcp_ctrlr_delete_io_qpair(void)
 	TAILQ_INIT(&tqpair->outstanding_reqs);
 	TAILQ_INSERT_TAIL(&tcp_req.tqpair->outstanding_reqs, &tcp_req, link);
 
-	rc = nvme_tcp_ctrlr_delete_io_qpair(ctrlr, qpair);
+	rc = nvme_tcp_ctrlr_delete_io_qpair(&ctrlr, qpair);
 
 	CU_ASSERT(rc == 0);
 }

@@ -153,7 +153,7 @@ static int64_t nvme_tcp_poll_group_process_completions(struct spdk_nvme_transpor
 		*tgroup, uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 static void nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu);
 static void nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req, struct nvme_tcp_qpair *tqpair,
-				  struct spdk_nvme_cpl *rsp);
+				  struct spdk_nvme_cpl *rsp, bool print_on_error);
 
 static inline struct nvme_tcp_qpair *
 nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
@@ -629,7 +629,7 @@ nvme_tcp_req_complete_safe(struct nvme_tcp_req *tcp_req)
 		tcp_req->tqpair->async_complete++;
 	}
 
-	nvme_tcp_req_complete(tcp_req, tcp_req->tqpair, &tcp_req->rsp);
+	nvme_tcp_req_complete(tcp_req, tcp_req->tqpair, &tcp_req->rsp, true);
 	return true;
 }
 
@@ -744,13 +744,15 @@ nvme_tcp_qpair_reset(struct spdk_nvme_qpair *qpair)
 static void
 nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		      struct nvme_tcp_qpair *tqpair,
-		      struct spdk_nvme_cpl *rsp)
+		      struct spdk_nvme_cpl *rsp,
+		      bool print_on_error)
 {
 	struct spdk_nvme_cpl	cpl;
 	spdk_nvme_cmd_cb	user_cb;
 	void			*user_cb_arg;
 	struct spdk_nvme_qpair	*qpair;
 	struct nvme_request	*req;
+	bool			error, print_error;
 
 	assert(tcp_req->req != NULL);
 	req = tcp_req->req;
@@ -760,6 +762,17 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	user_cb		= req->cb_fn;
 	user_cb_arg	= req->cb_arg;
 	qpair		= req->qpair;
+
+	error = spdk_nvme_cpl_is_error(rsp);
+	print_error = error && print_on_error && !qpair->ctrlr->opts.disable_error_logging;
+
+	if (print_error) {
+		spdk_nvme_qpair_print_command(qpair, &req->cmd);
+	}
+
+	if (print_error || SPDK_DEBUGLOG_FLAG_ENABLED("nvme")) {
+		spdk_nvme_qpair_print_completion(qpair, rsp);
+	}
 
 	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 	nvme_tcp_req_put(tqpair, tcp_req);
@@ -779,7 +792,7 @@ nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	cpl.status.dnr = dnr;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
-		nvme_tcp_req_complete(tcp_req, tqpair, &cpl);
+		nvme_tcp_req_complete(tcp_req, tqpair, &cpl, true);
 	}
 }
 
@@ -2197,7 +2210,7 @@ nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 
-		nvme_tcp_req_complete(tcp_req, tqpair, &cpl);
+		nvme_tcp_req_complete(tcp_req, tqpair, &cpl, false);
 	}
 }
 
