@@ -50,11 +50,6 @@ function install_refspdk() {
 
 	release=${release#v}
 
-	if ((gcc_version >= 11)) && le "$release" 21.04; then
-		cherry_picks+=("36b5a69bb0699694b53a2f08a13cc0de620450a9")
-		cherry_picks+=("2ac152158116a17b863270a4731977d9ddedf50d")
-	fi
-
 	if [[ $OSID == "freebsd" ]]; then
 		# Fetch all the branches
 		git -C "$output_dir" fetch origin '+refs/heads/v*:refs/remotes/origin/v*'
