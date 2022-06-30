@@ -201,6 +201,12 @@ spdk_ut_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 }
 
 static int
+spdk_ut_sock_flush(struct spdk_sock *sock)
+{
+	return -1;
+}
+
+static int
 spdk_ut_sock_set_recvlowat(struct spdk_sock *_sock, int nbytes)
 {
 	return 0;
@@ -313,6 +319,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.recv		= spdk_ut_sock_recv,
 	.readv		= spdk_ut_sock_readv,
 	.writev		= spdk_ut_sock_writev,
+	.flush          = spdk_ut_sock_flush,
 	.set_recvlowat	= spdk_ut_sock_set_recvlowat,
 	.set_recvbuf	= spdk_ut_sock_set_recvbuf,
 	.set_sendbuf	= spdk_ut_sock_set_sendbuf,
@@ -339,6 +346,7 @@ _sock(const char *ip, int port, char *impl_name)
 	char buffer[64];
 	ssize_t bytes_read, bytes_written;
 	struct iovec iov;
+	int nbytes;
 	int rc;
 
 	listen_sock = spdk_sock_listen(ip, port, impl_name);
@@ -361,6 +369,36 @@ _sock(const char *ip, int port, char *impl_name)
 	SPDK_CU_ASSERT_FATAL(server_sock != NULL);
 	CU_ASSERT(spdk_sock_is_connected(client_sock) == true);
 	CU_ASSERT(spdk_sock_is_connected(server_sock) == true);
+
+	/* Test spdk_sock_set_default_impl */
+	rc = spdk_sock_set_default_impl(impl_name);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_default_impl != NULL);
+
+	/* Test spdk_sock_set_default_impl when name is NULL */
+	rc = spdk_sock_set_default_impl(NULL);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(errno == EINVAL);
+
+	/* Test spdk_sock_is _ipv6 */
+	CU_ASSERT(!spdk_sock_is_ipv6(client_sock));
+
+	/* Test spdk_sock_is _ipv4 */
+	CU_ASSERT(spdk_sock_is_ipv4(client_sock));
+
+	nbytes = 2048;
+
+	/* Test spdk_sock_set_recvlowat */
+	rc = spdk_sock_set_recvlowat(client_sock, nbytes);
+	CU_ASSERT(rc == 0);
+
+	/* Test spdk_sock_set_recvbuf */
+	rc = spdk_sock_set_recvbuf(client_sock, nbytes);
+	CU_ASSERT(rc == 0);
+
+	/* Test spdk_sock_set_sendbuf */
+	rc = spdk_sock_set_sendbuf(client_sock, nbytes);
+	CU_ASSERT(rc == 0);
 
 	/* Test spdk_sock_recv */
 	iov.iov_base = test_string;
@@ -451,6 +489,7 @@ static void
 _sock_group(const char *ip, int port, char *impl_name)
 {
 	struct spdk_sock_group *group;
+	struct spdk_sock_group *hint;
 	struct spdk_sock *listen_sock;
 	struct spdk_sock *server_sock;
 	struct spdk_sock *client_sock;
@@ -476,6 +515,9 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	group = spdk_sock_group_create(NULL);
 	SPDK_CU_ASSERT_FATAL(group != NULL);
+
+	hint = spdk_sock_group_create(NULL);
+	SPDK_CU_ASSERT_FATAL(hint != NULL);
 
 	/* pass null cb_fn */
 	rc = spdk_sock_group_add_sock(group, server_sock, NULL, NULL);
@@ -518,6 +560,10 @@ _sock_group(const char *ip, int port, char *impl_name)
 	CU_ASSERT(client_sock == NULL);
 	CU_ASSERT(rc == 0);
 
+	/* Test get_optimal_sock_group */
+	rc = spdk_sock_get_optimal_sock_group(server_sock, &group, hint);
+	CU_ASSERT(rc == 0);
+
 	/* Try to close sock_group while it still has sockets. */
 	rc = spdk_sock_group_close(&group);
 	CU_ASSERT(rc == -1);
@@ -533,6 +579,10 @@ _sock_group(const char *ip, int port, char *impl_name)
 
 	rc = spdk_sock_group_close(&group);
 	CU_ASSERT(group == NULL);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_sock_group_close(&hint);
+	CU_ASSERT(hint == NULL);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_sock_close(&server_sock);
@@ -752,6 +802,14 @@ _sock_close(const char *ip, int port, char *impl_name)
 	req2->cb_arg = &cb_arg2;
 	spdk_sock_writev_async(server_sock, req2);
 	CU_ASSERT(cb_arg2 == false);
+
+	/* Test spdk_sock_flush when sock is NULL */
+	rc = spdk_sock_flush(NULL);
+	CU_ASSERT(rc == -EBADF);
+
+	/* Test spdk_sock_flush when sock is not NULL */
+	rc = spdk_sock_flush(client_sock);
+	CU_ASSERT(rc == 0);
 
 	/* Poll the socket so the writev_async's send. The first one's
 	 * callback will close the socket. */
