@@ -650,14 +650,15 @@ class Target(Server):
 
     def measure_pcm_memory(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
-        cmd = ["%s/pcm-memory.x" % self.pcm_dir, "%s" % self.pcm_interval, "-csv=%s/%s" % (results_dir, pcm_file_name)]
+        cmd = ["%s/build/bin/pcm-memory" % self.pcm_dir, "%s" % self.pcm_interval, "-csv=%s/%s" % (results_dir, pcm_file_name)]
         pcm_memory = subprocess.Popen(cmd)
         time.sleep(self.pcm_count)
         pcm_memory.terminate()
 
     def measure_pcm(self, results_dir, pcm_file_name):
         time.sleep(self.pcm_delay)
-        cmd = ["%s/pcm.x" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count, "-csv=%s/%s" % (results_dir, pcm_file_name)]
+        cmd = ["%s/build/bin/pcm" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count,
+               "-csv=%s/%s" % (results_dir, pcm_file_name)]
         subprocess.run(cmd)
         df = pd.read_csv(os.path.join(results_dir, pcm_file_name), header=[0, 1])
         df = df.rename(columns=lambda x: re.sub(r'Unnamed:[\w\s]*$', '', x))
@@ -667,7 +668,7 @@ class Target(Server):
 
     def measure_pcm_power(self, results_dir, pcm_power_file_name):
         time.sleep(self.pcm_delay)
-        out = self.exec_cmd(["%s/pcm-power.x" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count])
+        out = self.exec_cmd(["%s/build/bin/pcm-power" % self.pcm_dir, "%s" % self.pcm_interval, "-i=%s" % self.pcm_count])
         with open(os.path.join(results_dir, pcm_power_file_name), "w") as fh:
             fh.write(out)
 

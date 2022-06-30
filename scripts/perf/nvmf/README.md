@@ -115,9 +115,14 @@ Optional, common:
   Wait for "x" seconds before starting measurements, then do "z" samples
   with "y" seconds intervals between them. Default: disabled.
 - pcm_settings - [path, int(x), int(y), int(z)];
-  Enable [PCM](https://github.com/opcm/pcm.git) measurements on Tartet side.
+  Enable [PCM](https://github.com/opcm/pcm.git) measurements on Target side.
   Measurements include CPU, memory and power consumption. "path" points to a
-  directory where pcm executables are present. Default: disabled.
+  directory where pcm executables are present.
+  "x" - time to wait before starting measurements (suggested it equals to fio
+  ramp_time).
+  "y" - time interval between measurements.
+  "z" - number of measurement samples.
+  Default: disabled.
 - enable_bandwidth - [bool, int]. Wait a given number of seconds and run
   bwm-ng until the end of test to measure bandwidth utilization on network
   interfaces. Default: disabled.
