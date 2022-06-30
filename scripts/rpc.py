@@ -1960,7 +1960,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
     available (during examination process).""")
     p.add_argument('base_bdev', help='base bdev name')
-    p.add_argument('-s', '--split-size-mb', help='size in MiB for each bdev', type=int, default=0)
+    p.add_argument('-s', '--split-size-mb', help='size in MiB for each bdev', type=int)
     p.add_argument('split_count', help="""Optional - number of split bdevs to create. Total size * split_count must not
     exceed the base bdev size.""", type=int)
     p.set_defaults(func=bdev_split_create)
@@ -2143,7 +2143,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_dict(rpc.nvmf.nvmf_get_subsystems(args.client, nqn=args.nqn, tgt_name=args.tgt_name))
 
     p = subparsers.add_parser('nvmf_get_subsystems', help='Display nvmf subsystems or required subsystem')
-    p.add_argument('nqn', help='Subsystem NQN (optional)', nargs="?", default=None)
+    p.add_argument('nqn', help='Subsystem NQN (optional)', nargs="?")
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
     p.set_defaults(func=nvmf_get_subsystems)
 
