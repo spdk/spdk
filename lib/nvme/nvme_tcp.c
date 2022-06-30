@@ -152,6 +152,8 @@ static void nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
 static int64_t nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group
 		*tgroup, uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 static void nvme_tcp_icresp_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu);
+static void nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req, struct nvme_tcp_qpair *tqpair,
+				  struct spdk_nvme_cpl *rsp);
 
 static inline struct nvme_tcp_qpair *
 nvme_tcp_qpair(struct spdk_nvme_qpair *qpair)
@@ -613,12 +615,6 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 static inline bool
 nvme_tcp_req_complete_safe(struct nvme_tcp_req *tcp_req)
 {
-	struct spdk_nvme_cpl	cpl;
-	spdk_nvme_cmd_cb	user_cb;
-	void			*user_cb_arg;
-	struct spdk_nvme_qpair	*qpair;
-	struct nvme_request	*req;
-
 	if (!(tcp_req->ordering.bits.send_ack && tcp_req->ordering.bits.data_recv)) {
 		return false;
 	}
@@ -633,18 +629,7 @@ nvme_tcp_req_complete_safe(struct nvme_tcp_req *tcp_req)
 		tcp_req->tqpair->async_complete++;
 	}
 
-	/* Cache arguments to be passed to nvme_complete_request since tcp_req can be zeroed when released */
-	memcpy(&cpl, &tcp_req->rsp, sizeof(cpl));
-	user_cb		= tcp_req->req->cb_fn;
-	user_cb_arg	= tcp_req->req->cb_arg;
-	qpair		= tcp_req->req->qpair;
-	req		= tcp_req->req;
-
-	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
-	nvme_tcp_req_put(tcp_req->tqpair, tcp_req);
-	nvme_free_request(tcp_req->req);
-	nvme_complete_request(user_cb, user_cb_arg, qpair, req, &cpl);
-
+	nvme_tcp_req_complete(tcp_req, tcp_req->tqpair, &tcp_req->rsp);
 	return true;
 }
 
@@ -761,15 +746,25 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		      struct nvme_tcp_qpair *tqpair,
 		      struct spdk_nvme_cpl *rsp)
 {
-	struct nvme_request *req;
+	struct spdk_nvme_cpl	cpl;
+	spdk_nvme_cmd_cb	user_cb;
+	void			*user_cb_arg;
+	struct spdk_nvme_qpair	*qpair;
+	struct nvme_request	*req;
 
 	assert(tcp_req->req != NULL);
 	req = tcp_req->req;
 
+	/* Cache arguments to be passed to nvme_complete_request since tcp_req can be zeroed when released */
+	memcpy(&cpl, rsp, sizeof(cpl));
+	user_cb		= req->cb_fn;
+	user_cb_arg	= req->cb_arg;
+	qpair		= req->qpair;
+
 	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 	nvme_tcp_req_put(tqpair, tcp_req);
-	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, rsp);
 	nvme_free_request(req);
+	nvme_complete_request(user_cb, user_cb_arg, qpair, req, &cpl);
 }
 
 static void
