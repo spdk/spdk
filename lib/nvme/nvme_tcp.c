@@ -758,6 +758,7 @@ nvme_tcp_qpair_reset(struct spdk_nvme_qpair *qpair)
 
 static void
 nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
+		      struct nvme_tcp_qpair *tqpair,
 		      struct spdk_nvme_cpl *rsp)
 {
 	struct nvme_request *req;
@@ -766,6 +767,7 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 	req = tcp_req->req;
 
 	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
+	nvme_tcp_req_put(tqpair, tcp_req);
 	nvme_complete_request(req->cb_fn, req->cb_arg, req->qpair, req, rsp);
 	nvme_free_request(req);
 }
@@ -782,8 +784,7 @@ nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	cpl.status.dnr = dnr;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
-		nvme_tcp_req_complete(tcp_req, &cpl);
-		nvme_tcp_req_put(tqpair, tcp_req);
+		nvme_tcp_req_complete(tcp_req, tqpair, &cpl);
 	}
 }
 
@@ -2201,8 +2202,7 @@ nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 			continue;
 		}
 
-		nvme_tcp_req_complete(tcp_req, &cpl);
-		nvme_tcp_req_put(tqpair, tcp_req);
+		nvme_tcp_req_complete(tcp_req, tqpair, &cpl);
 	}
 }
 
