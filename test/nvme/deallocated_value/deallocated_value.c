@@ -20,6 +20,11 @@
  * be all bytes set to 00h, all bytes set to FFh, or the last data written to the associated logical block".
  */
 
+struct ctrlr_entry {
+	struct spdk_nvme_ctrlr		*ctrlr;
+	TAILQ_ENTRY(ctrlr_entry)	link;
+};
+
 struct ns_entry {
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct spdk_nvme_ns	*ns;
@@ -42,6 +47,7 @@ struct deallocate_context {
 	int		matches_FFh;
 };
 
+static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
 static struct ns_entry *g_namespaces = NULL;
 static struct spdk_nvme_transport_id g_trid = {};
 
@@ -416,20 +422,30 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	int			num_ns;
+	struct ctrlr_entry	*entry;
+	int			nsid;
 	struct spdk_nvme_ns	*ns;
 
+	entry = malloc(sizeof(struct ctrlr_entry));
+	if (entry == NULL) {
+		perror("ctrlr_entry malloc");
+		exit(1);
+	}
 	printf("Attached to %s\n", trid->traddr);
+
 	/*
 	 * Use only the first namespace from each controller since we are testing controller level functionality.
 	 */
-	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-	if (num_ns < 1) {
+	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	if (nsid < 1) {
 		printf("No valid namespaces in controller\n");
 	} else {
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, 1);
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 		register_ns(ctrlr, ns);
 	}
+
+	entry->ctrlr = ctrlr;
+	TAILQ_INSERT_TAIL(&g_controllers, entry, link);
 }
 
 static void
@@ -467,6 +483,8 @@ main(int argc, char **argv)
 {
 	int			rc;
 	struct spdk_env_opts	opts;
+	struct ctrlr_entry *ctrlr_entry, *tmp_ctrlr_entry;
+	struct spdk_nvme_detach_ctx *detach_ctx = NULL;
 
 	spdk_env_opts_init(&opts);
 	rc = parse_args(argc, argv, &opts);
@@ -488,12 +506,30 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	if (g_namespaces == NULL) {
+	if (TAILQ_EMPTY(&g_controllers)) {
 		fprintf(stderr, "no NVMe controllers found\n");
 		return 1;
 	}
 
+	if (g_namespaces == NULL) {
+		fprintf(stderr, "no Namespaces found\n");
+		rc = 1;
+		goto cleanup;
+	}
+
 	printf("Initialization complete.\n");
 	deallocate_test();
-	return 0;
+
+cleanup:
+	TAILQ_FOREACH_SAFE(ctrlr_entry, &g_controllers, link, tmp_ctrlr_entry) {
+		TAILQ_REMOVE(&g_controllers, ctrlr_entry, link);
+		spdk_nvme_detach_async(ctrlr_entry->ctrlr, &detach_ctx);
+		free(ctrlr_entry);
+	}
+
+	if (detach_ctx) {
+		spdk_nvme_detach_poll(detach_ctx);
+	}
+
+	return rc;
 }
