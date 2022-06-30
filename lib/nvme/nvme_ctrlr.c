@@ -629,9 +629,7 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 		return;
 	}
 
-	if (ctrlr->cdata.vid != SPDK_PCI_VID_INTEL) {
-		return;
-	}
+	assert(ctrlr->cdata.vid == SPDK_PCI_VID_INTEL);
 
 	ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY] = true;
 

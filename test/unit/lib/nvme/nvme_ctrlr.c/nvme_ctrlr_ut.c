@@ -1830,10 +1830,6 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
 	CU_ASSERT(ctrlr.quirks == 0);
 
-	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
-	CU_ASSERT(res == false);
-
 	/* Set the vendor to Intel, but provide no device id */
 	pci_id.class_id = SPDK_PCI_CLASS_NVME;
 	ctrlr.cdata.vid = pci_id.vendor_id = SPDK_PCI_VID_INTEL;
