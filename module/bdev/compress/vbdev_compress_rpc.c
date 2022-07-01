@@ -130,7 +130,7 @@ free_rpc_construct_compress(struct rpc_construct_compress *r)
 static const struct spdk_json_object_decoder rpc_construct_compress_decoders[] = {
 	{"base_bdev_name", offsetof(struct rpc_construct_compress, base_bdev_name), spdk_json_decode_string},
 	{"pm_path", offsetof(struct rpc_construct_compress, pm_path), spdk_json_decode_string},
-	{"lb_size", offsetof(struct rpc_construct_compress, lb_size), spdk_json_decode_uint32},
+	{"lb_size", offsetof(struct rpc_construct_compress, lb_size), spdk_json_decode_uint32, true},
 };
 
 /* Decode the parameters for this RPC method and properly construct the compress
