@@ -598,11 +598,11 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	struct spdk_nvmf_tcp_req tcp_req = {};
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
 
-	TAILQ_INIT(&tqpair.tcp_req_working_queue);
-
 	/* Set qpair state to make unrelated operations NOP */
 	tqpair.state = NVME_TCP_QPAIR_STATE_RUNNING;
 	tqpair.recv_state = NVME_TCP_PDU_RECV_STATE_ERROR;
+	tqpair.resource_count = 1;
+	tqpair.reqs = &tcp_req;
 
 	tcp_req.req.iov[0].iov_base = (void *)0xDEADBEEF;
 	tcp_req.req.iov[0].iov_len = 101;
@@ -614,14 +614,11 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 
 	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
 	tcp_req.req.cmd->nvme_cmd.cid = 1;
-	tcp_req.ttag = 2;
-
-	TAILQ_INSERT_TAIL(&tqpair.tcp_req_working_queue,
-			  &tcp_req, state_link);
+	tcp_req.ttag = 1;
 
 	h2c_data = &pdu.hdr.h2c_data;
 	h2c_data->cccid = 1;
-	h2c_data->ttag = 2;
+	h2c_data->ttag = 1;
 	h2c_data->datao = 0;
 	h2c_data->datal = 200;
 
@@ -632,11 +629,6 @@ test_nvmf_tcp_h2c_data_hdr_handle(void)
 	CU_ASSERT(pdu.data_iov[0].iov_len == 101);
 	CU_ASSERT((uint64_t)pdu.data_iov[1].iov_base == 0xFEEDBEEF);
 	CU_ASSERT(pdu.data_iov[1].iov_len == 99);
-
-	CU_ASSERT(TAILQ_FIRST(&tqpair.tcp_req_working_queue) ==
-		  &tcp_req);
-	TAILQ_REMOVE(&tqpair.tcp_req_working_queue,
-		     &tcp_req, state_link);
 }
 
 

@@ -1587,37 +1587,6 @@ err:
 	nvmf_tcp_send_c2h_term_req(tqpair, pdu, fes, error_offset);
 }
 
-static int
-nvmf_tcp_find_req_in_state(struct spdk_nvmf_tcp_qpair *tqpair,
-			   enum spdk_nvmf_tcp_req_state state,
-			   uint16_t cid, uint16_t tag,
-			   struct spdk_nvmf_tcp_req **req)
-{
-	struct spdk_nvmf_tcp_req *tcp_req = NULL;
-
-	TAILQ_FOREACH(tcp_req, &tqpair->tcp_req_working_queue, state_link) {
-		if (tcp_req->state != state) {
-			continue;
-		}
-
-		if (tcp_req->req.cmd->nvme_cmd.cid != cid) {
-			continue;
-		}
-
-		if (tcp_req->ttag == tag) {
-			*req = tcp_req;
-			return 0;
-		}
-
-		*req = NULL;
-		return -1;
-	}
-
-	/* Didn't find it, but not an error */
-	*req = NULL;
-	return 0;
-}
-
 static void
 nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 			     struct spdk_nvmf_tcp_qpair *tqpair,
@@ -1627,28 +1596,36 @@ nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes = 0;
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
-	int rc;
 
 	h2c_data = &pdu->hdr.h2c_data;
 
 	SPDK_DEBUGLOG(nvmf_tcp, "tqpair=%p, r2t_info: datao=%u, datal=%u, cccid=%u, ttag=%u\n",
 		      tqpair, h2c_data->datao, h2c_data->datal, h2c_data->cccid, h2c_data->ttag);
 
-	rc = nvmf_tcp_find_req_in_state(tqpair, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
-					h2c_data->cccid, h2c_data->ttag, &tcp_req);
-	if (rc == 0 && tcp_req == NULL) {
-		rc = nvmf_tcp_find_req_in_state(tqpair, TCP_REQUEST_STATE_AWAITING_R2T_ACK, h2c_data->cccid,
-						h2c_data->ttag, &tcp_req);
+	if (h2c_data->ttag > tqpair->resource_count) {
+		SPDK_DEBUGLOG(nvmf_tcp, "ttag %u is larger than allowed %u.\n", h2c_data->ttag,
+			      tqpair->resource_count);
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
+		error_offset = offsetof(struct spdk_nvme_tcp_h2c_data_hdr, ttag);
+		goto err;
 	}
 
-	if (!tcp_req) {
-		SPDK_DEBUGLOG(nvmf_tcp, "tcp_req is not found for tqpair=%p\n", tqpair);
-		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER;
-		if (rc == 0) {
-			error_offset = offsetof(struct spdk_nvme_tcp_h2c_data_hdr, cccid);
-		} else {
-			error_offset = offsetof(struct spdk_nvme_tcp_h2c_data_hdr, ttag);
-		}
+	tcp_req = &tqpair->reqs[h2c_data->ttag - 1];
+
+	if (spdk_unlikely(tcp_req->state != TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER &&
+			  tcp_req->state != TCP_REQUEST_STATE_AWAITING_R2T_ACK)) {
+		SPDK_DEBUGLOG(nvmf_tcp, "tcp_req(%p), tqpair=%p, has error state in %d\n", tcp_req, tqpair,
+			      tcp_req->state);
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
+		error_offset = offsetof(struct spdk_nvme_tcp_h2c_data_hdr, ttag);
+		goto err;
+	}
+
+	if (spdk_unlikely(tcp_req->req.cmd->nvme_cmd.cid != h2c_data->cccid)) {
+		SPDK_DEBUGLOG(nvmf_tcp, "tcp_req(%p), tqpair=%p, expected %u but %u for cccid.\n", tcp_req, tqpair,
+			      tcp_req->req.cmd->nvme_cmd.cid, h2c_data->cccid);
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR;
+		error_offset = offsetof(struct spdk_nvme_tcp_h2c_data_hdr, cccid);
 		goto err;
 	}
 
