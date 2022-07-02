@@ -605,6 +605,10 @@ The user needs to configure SPDK to include io_uring support:
 
 `configure --with-uring`
 
+To enable uring bdev for ZNS devices use the following:
+
+`configure --with-uring --with-uring-zns`
+
 To create a uring bdev with given filename, bdev name and block size use the `bdev_uring_create` RPC.
 
 `rpc.py  bdev_uring_create /path/to/device bdev_u0 512`

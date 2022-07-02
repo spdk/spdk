@@ -161,6 +161,9 @@ CONFIG_ISAL=y
 # Build with IO_URING support
 CONFIG_URING=n
 
+# Build IO_URING bdev with ZNS support
+CONFIG_URING_ZNS=n
+
 # Path to custom built IO_URING library
 CONFIG_URING_PATH=
 
