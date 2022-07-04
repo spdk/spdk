@@ -98,11 +98,21 @@ class Server:
         return ""
 
     def configure_system(self):
+        self.load_drivers()
         self.configure_services()
         self.configure_sysctl()
         self.configure_tuned()
         self.configure_cpu_governor()
         self.configure_irq_affinity()
+
+    def load_drivers(self):
+        self.log_print("Loading drivers")
+        self.exec_cmd(["sudo", "modprobe", "-a",
+                       "nvme-%s" % self.transport,
+                       "nvmet-%s" % self.transport])
+        if self.mode == "kernel" and hasattr(self, "null_block") and self.null_block:
+            self.exec_cmd(["sudo", "modprobe", "null_blk",
+                           "nr_devices=%s" % self.null_block])
 
     def configure_adq(self):
         if self.mode == "kernel":
