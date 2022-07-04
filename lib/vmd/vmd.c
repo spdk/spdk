@@ -1391,18 +1391,24 @@ vmd_bus_handle_hotplug(struct vmd_pci_bus *bus)
 }
 
 static void
+vmd_remove_device(struct vmd_pci_device *device)
+{
+	device->pci.internal.pending_removal = true;
+
+	/* If the device isn't attached, remove it immediately */
+	if (!device->pci.internal.attached) {
+		vmd_dev_detach(&device->pci);
+	}
+}
+
+static void
 vmd_bus_handle_hotremove(struct vmd_pci_bus *bus)
 {
 	struct vmd_pci_device *device, *tmpdev;
 
 	TAILQ_FOREACH_SAFE(device, &bus->dev_list, tailq, tmpdev) {
 		if (!vmd_bus_device_present(bus, device->devfn)) {
-			device->pci.internal.pending_removal = true;
-
-			/* If the device isn't attached, remove it immediately */
-			if (!device->pci.internal.attached) {
-				vmd_dev_detach(&device->pci);
-			}
+			vmd_remove_device(device);
 		}
 	}
 }
