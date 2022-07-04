@@ -20,6 +20,8 @@ function install_refspdk() {
 	local config_params
 	local rootdir
 	local version
+	# Note to keep cherry-pick'ed commits in proper order
+	local cherry_picks=()
 
 	version=$1
 
@@ -43,12 +45,35 @@ function install_refspdk() {
 	git -C "$output_dir" checkout "$release"
 	git -C "$output_dir" submodule update --init
 
-	if ((gcc_version >= 11)) && le "${release#v}" 21.04; then
-		git -C "$output_dir" config --global user.name "spdk"
-		git -C "$output_dir" config --global user.email "hotpatch@spdk.io"
-		git -C "$output_dir" cherry-pick 36b5a69bb0699694b53a2f08a13cc0de620450a9
-		git -C "$output_dir" cherry-pick 2ac152158116a17b863270a4731977d9ddedf50d
+	git -C "$output_dir" config --global user.name "spdk"
+	git -C "$output_dir" config --global user.email "hotpatch@spdk.io"
+
+	release=${release#v}
+
+	if ((gcc_version >= 11)) && le "$release" 21.04; then
+		cherry_picks+=("36b5a69bb0699694b53a2f08a13cc0de620450a9")
+		cherry_picks+=("2ac152158116a17b863270a4731977d9ddedf50d")
 	fi
+
+	if [[ $OSID == "freebsd" ]]; then
+		# Fetch all the branches
+		git -C "$output_dir" fetch origin '+refs/heads/v*:refs/remotes/origin/v*'
+		# Slurp commit from the master and the LTS branch to address changes in the
+		# use of cpu macros under latest freebsd releases (13.x).
+		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13484 - master
+		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13541 - LTS.x
+		case "$version" in
+			latest) eq "$release" 22.05.0 && cherry_picks+=("a83dc0546f838905dbe96605e99811b2f62c0eb5") ;;
+			LTS   ) eq "$release" 22.01.1 && cherry_picks+=("1d1248bd1b0e11896ed5e3fa5ce4a8b94c3d5fd0") ;;
+		esac
+	fi
+
+	for cherry in "${cherry_picks[@]}"; do
+		git -C "$output_dir" cherry-pick "$cherry"
+	done
+
+	# Make sure submodules point at proper commits after cherry-picks are applied
+	git -C "$output_dir" submodule update
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
