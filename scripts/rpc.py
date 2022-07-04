@@ -2826,8 +2826,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    action='store_true', dest='enable_zerocopy_send_client')
     p.add_argument('--disable-zerocopy-send-client', help='Disable zerocopy on send for client sockets',
                    action='store_false', dest='enable_zerocopy_send_client')
-    p.add_argument('--zerocopy-threshold', help='Set zerocopy_threshold in bytes',
-                   action='store_true', dest='zerocopy_threshold')
+    p.add_argument('--zerocopy-threshold', help='Set zerocopy_threshold in bytes', type=int)
     p.set_defaults(func=sock_impl_set_options, enable_recv_pipe=None, enable_quickack=None,
                    enable_placement_id=None, enable_zerocopy_send_server=None, enable_zerocopy_send_client=None,
                    zerocopy_threshold=None)
