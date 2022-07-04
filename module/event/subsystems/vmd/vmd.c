@@ -46,26 +46,31 @@
 static struct spdk_poller *g_hotplug_poller;
 static bool g_enabled;
 
+void
+vmd_subsystem_enable(void)
+{
+	g_enabled = true;
+}
+
 static int
 vmd_hotplug_monitor(void *ctx)
 {
 	return spdk_vmd_hotplug_monitor();
 }
 
-int
+static void
 vmd_subsystem_init(void)
 {
-	int rc;
+	int rc = 0;
 
-	if (g_enabled) {
-		SPDK_ERRLOG("The initialization has already been performed\n");
-		return -EBUSY;
+	if (!g_enabled) {
+		goto out;
 	}
 
 	rc = spdk_vmd_init();
 	if (spdk_likely(rc != 0)) {
 		SPDK_ERRLOG("Failed to initialize the VMD library\n");
-		return rc;
+		goto out;
 	}
 
 	assert(g_hotplug_poller == NULL);
@@ -73,12 +78,11 @@ vmd_subsystem_init(void)
 	g_hotplug_poller = SPDK_POLLER_REGISTER(vmd_hotplug_monitor, NULL, 1000000ULL);
 	if (g_hotplug_poller == NULL) {
 		SPDK_ERRLOG("Failed to register hotplug monitor poller\n");
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto out;
 	}
-
-	g_enabled = true;
-
-	return 0;
+out:
+	spdk_subsystem_init_next(rc);
 }
 
 static void
@@ -109,6 +113,7 @@ vmd_write_config_json(struct spdk_json_write_ctx *w)
 
 static struct spdk_subsystem g_spdk_subsystem_vmd = {
 	.name = "vmd",
+	.init = vmd_subsystem_init,
 	.fini = vmd_subsystem_fini,
 	.write_config_json = vmd_write_config_json,
 };

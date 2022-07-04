@@ -42,11 +42,9 @@
 static void
 rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
-	int rc;
+	vmd_subsystem_enable();
 
-	rc = vmd_subsystem_init();
-
-	spdk_jsonrpc_send_bool_response(request, rc == 0);
+	spdk_jsonrpc_send_bool_response(request, true);
 }
 
 SPDK_RPC_REGISTER("enable_vmd", rpc_vmd_enable, SPDK_RPC_STARTUP)
