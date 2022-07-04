@@ -6,6 +6,6 @@
 #ifndef EVENT_VMD_H
 #define EVENT_VMD_H
 
-int vmd_subsystem_init(void);
+void vmd_subsystem_enable(void);
 
 #endif
