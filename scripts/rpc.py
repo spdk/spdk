@@ -2080,6 +2080,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('addr', help='Address of the device to remove', type=str)
     p.set_defaults(func=vmd_remove_device)
 
+    def vmd_rescan(args):
+        print_dict(rpc.vmd.vmd_rescan(args.client))
+
+    p = subparsers.add_parser('vmd_rescan', help='Force a rescan of the devices behind VMD')
+    p.set_defaults(func=vmd_rescan)
+
     # nbd
     def nbd_start_disk(args):
         print(rpc.nbd.nbd_start_disk(args.client,

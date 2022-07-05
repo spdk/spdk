@@ -1435,6 +1435,22 @@ spdk_vmd_remove_device(const struct spdk_pci_addr *addr)
 	return 0;
 }
 
+int
+spdk_vmd_rescan(void)
+{
+	struct vmd_pci_bus *bus;
+	uint32_t i;
+	int rc = 0;
+
+	for (i = 0; i < g_vmd_container.count; ++i) {
+		TAILQ_FOREACH(bus, &g_vmd_container.vmd[i].bus_list, tailq) {
+			rc += vmd_scan_single_bus(bus, bus->self, true);
+		}
+	}
+
+	return rc;
+}
+
 static int
 vmd_attach_device(const struct spdk_pci_addr *addr)
 {

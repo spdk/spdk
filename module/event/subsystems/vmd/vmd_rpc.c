@@ -69,3 +69,28 @@ out:
 	free(req.addr);
 }
 SPDK_RPC_REGISTER("vmd_remove_device", rpc_vmd_remove_device, SPDK_RPC_RUNTIME)
+
+static void
+rpc_vmd_rescan(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (!vmd_subsystem_is_enabled()) {
+		spdk_jsonrpc_send_error_response(request, -EPERM, "VMD subsystem is disabled");
+		return;
+	}
+
+	rc = spdk_vmd_rescan();
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_uint32(w, "count", (uint32_t)rc);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("vmd_rescan", rpc_vmd_rescan, SPDK_RPC_RUNTIME)
