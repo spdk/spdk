@@ -80,6 +80,16 @@ int spdk_vmd_get_led_state(struct spdk_pci_device *pci_device, enum spdk_vmd_led
  */
 int spdk_vmd_hotplug_monitor(void);
 
+/**
+ * Removes a given device from the PCI subsystem simulating a hot-remove.  If the device is being
+ * actively used by another module, the actual detach might be deferred.
+ *
+ * \param addr Address of a PCI device to remove.
+ *
+ * \return 0 if the device was successfully removed, negative errno otherwise.
+ */
+int spdk_vmd_remove_device(const struct spdk_pci_addr *addr);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1419,6 +1419,22 @@ spdk_vmd_hotplug_monitor(void)
 	return num_hotplugs;
 }
 
+int
+spdk_vmd_remove_device(const struct spdk_pci_addr *addr)
+{
+	struct vmd_pci_device *device;
+
+	device = vmd_find_device(addr);
+	if (device == NULL) {
+		return -ENODEV;
+	}
+
+	assert(strcmp(spdk_pci_device_get_type(&device->pci), "vmd") == 0);
+	vmd_remove_device(device);
+
+	return 0;
+}
+
 static int
 vmd_attach_device(const struct spdk_pci_addr *addr)
 {

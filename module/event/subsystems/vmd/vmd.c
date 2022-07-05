@@ -24,6 +24,12 @@ vmd_subsystem_enable(void)
 	g_enabled = true;
 }
 
+bool
+vmd_subsystem_is_enabled(void)
+{
+	return g_enabled;
+}
+
 static int
 vmd_hotplug_monitor(void *ctx)
 {
