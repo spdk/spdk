@@ -29,6 +29,9 @@ New options `psk_key` and `psk_identity` were added to the `sock_impl_set_option
 Added warning message for `bdev_rbd_create`, if it is used without -c.
 `bdev_rbd_create()` API without specifying -c is deprecated and will be removed in future release.
 
+Renamed `enable_vmd` RPC to `vmd_enable` to make it consistent with our naming scheme of
+`<subsystem>_<action>`.  For now, the old name is still available, but is marked as deprecated.
+
 ### raid
 
 Renamed the `raid5` module to `raid5f` to reflect that it is not a traditional

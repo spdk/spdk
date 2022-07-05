@@ -74,7 +74,7 @@ vmd_write_config_json(struct spdk_json_write_ctx *w)
 
 	if (g_enabled) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "enable_vmd");
+		spdk_json_write_named_string(w, "method", "vmd_enable");
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);

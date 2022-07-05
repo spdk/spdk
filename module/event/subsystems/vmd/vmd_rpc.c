@@ -18,5 +18,5 @@ rpc_vmd_enable(struct spdk_jsonrpc_request *request, const struct spdk_json_val 
 
 	spdk_jsonrpc_send_bool_response(request, true);
 }
-
-SPDK_RPC_REGISTER("enable_vmd", rpc_vmd_enable, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER("vmd_enable", rpc_vmd_enable, SPDK_RPC_STARTUP)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(vmd_enable, enable_vmd)

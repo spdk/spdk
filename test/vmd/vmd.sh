@@ -34,7 +34,7 @@ function vmd_bdev_svc() {
 	# Wait until bdev_svc starts
 	waitforlisten $svcpid
 
-	$rpc_py enable_vmd
+	$rpc_py vmd_enable
 	$rpc_py framework_start_init
 
 	for bdf in $pci_devs; do
