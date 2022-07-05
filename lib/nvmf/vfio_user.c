@@ -417,6 +417,8 @@ struct nvmf_vfio_user_endpoint {
 	 * in source VM.
 	 */
 	bool					need_resume;
+	/* Start the accept poller again after destroying the controller */
+	bool					need_relisten;
 
 	TAILQ_ENTRY(nvmf_vfio_user_endpoint)	link;
 };
@@ -4063,6 +4065,7 @@ vfio_user_register_accept_poller(struct nvmf_vfio_user_endpoint *endpoint)
 	}
 
 	endpoint->accept_thread = spdk_get_thread();
+	endpoint->need_relisten = false;
 
 	if (!spdk_interrupt_mode_is_enabled()) {
 		return 0;
@@ -4109,7 +4112,7 @@ _free_ctrlr(void *ctx)
 
 	if (endpoint->need_async_destroy) {
 		nvmf_vfio_user_destroy_endpoint(endpoint);
-	} else {
+	} else if (endpoint->need_relisten) {
 		spdk_thread_send_msg(endpoint->accept_thread,
 				     _vfio_user_relisten, endpoint);
 	}
@@ -4662,6 +4665,7 @@ vfio_user_destroy_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 	assert(endpoint != NULL);
 
 	pthread_mutex_lock(&endpoint->lock);
+	endpoint->need_relisten = true;
 	if (TAILQ_EMPTY(&ctrlr->connected_sqs)) {
 		endpoint->ctrlr = NULL;
 		free_ctrlr(ctrlr);
