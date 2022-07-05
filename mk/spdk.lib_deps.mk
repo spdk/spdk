@@ -172,7 +172,7 @@ endif
 # are not related to symbols, but are defined directly in
 # the SPDK event subsystem code.
 DEPDIRS-event_accel := init accel
-DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread
+DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread util
 
 DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock
 

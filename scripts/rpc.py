@@ -1967,6 +1967,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('enable_vmd', help='Enable VMD enumeration')
     p.set_defaults(func=enable_vmd)
 
+    def vmd_remove_device(args):
+        print_dict(rpc.vmd.vmd_remove_device(args.client, addr=args.addr))
+
+    p = subparsers.add_parser('vmd_remove_device', help='Remove a device behind VMD')
+    p.add_argument('addr', help='Address of the device to remove', type=str)
+    p.set_defaults(func=vmd_remove_device)
+
     # nbd
     def nbd_start_disk(args):
         print(rpc.nbd.nbd_start_disk(args.client,

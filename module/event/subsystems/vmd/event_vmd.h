@@ -35,5 +35,6 @@
 #define EVENT_VMD_H
 
 void vmd_subsystem_enable(void);
+bool vmd_subsystem_is_enabled(void);
 
 #endif

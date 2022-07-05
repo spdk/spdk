@@ -9280,6 +9280,39 @@ Example response:
 }
 ~~~
 
+### vmd_remove_device {#rpc_vmd_remove_device}
+
+Remove a device behind a VMD.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+addr                    | Required | string      | Address of the device to remove.
+
+### Example
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "vmd_remove_device",
+  "params": {
+    "addr": "5d0505:01:00.0"
+  }
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### spdk_get_version {#rpc_spdk_get_version}
 
 Get the version info of the running SPDK application.
