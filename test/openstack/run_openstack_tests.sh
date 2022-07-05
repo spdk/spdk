@@ -19,6 +19,10 @@ function finish_test() {
 	} || :
 }
 
+function tox() {
+	source /opt/stack/devstack/openrc "$(type -P tox)" "$@"
+}
+
 $rootdir/scripts/gen_nvme.sh --json-with-subsystems > $testdir/conf.json
 
 nvmfappstart -m 0x3 -p 0 -s 1024 --json $testdir/conf.json
