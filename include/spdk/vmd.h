@@ -119,6 +119,14 @@ int spdk_vmd_hotplug_monitor(void);
  */
 int spdk_vmd_remove_device(const struct spdk_pci_addr *addr);
 
+/**
+ * Forces a rescan of the devices behind the VMD.  If a device was previously removed through
+ * spdk_vmd_remove_device() this will cause it to be reattached.
+ *
+ * \return number of new devices found during scanning or negative errno on failure.
+ */
+int spdk_vmd_rescan(void);
+
 #ifdef __cplusplus
 }
 #endif

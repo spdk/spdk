@@ -9313,6 +9313,40 @@ Example response:
 }
 ~~~
 
+### vmd_rescan {#rpc_vmd_rescan}
+
+Force a rescan of the devices behind VMD.
+
+### Parameters
+
+This method has no parameters.
+
+#### Response
+
+The response is the number of new devices found.
+
+### Example
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "vmd_rescan",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "count": 1
+  }
+}
+~~~
+
 ### spdk_get_version {#rpc_spdk_get_version}
 
 Get the version info of the running SPDK application.
