@@ -601,6 +601,19 @@ _idxd_flush_batch(struct spdk_idxd_io_channel *chan)
 	return 0;
 }
 
+static inline void
+_update_write_flags(struct spdk_idxd_io_channel *chan, struct idxd_hw_desc *desc)
+{
+	if (desc->flags & SPDK_IDXD_FLAG_PERSISTENT) {
+		/* recent spec changes require a different set of flags for PMEM writes */
+		desc->flags &= ~IDXD_FLAG_DEST_STEERING_TAG;
+		desc->flags &= ~IDXD_FLAG_CACHE_CONTROL;
+		desc->flags |= IDXD_FLAG_DEST_READBACK;
+	} else {
+		desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+	}
+}
+
 int
 spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 		      struct iovec *diov, uint32_t diovcnt,
@@ -665,7 +678,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 			desc->src_addr = src_addr;
 			desc->dst_addr = dst_addr;
 			desc->xfer_size = seg_len;
-			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+			_update_write_flags(chan, desc);
 
 			len -= seg_len;
 		}
@@ -760,7 +773,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 			desc->dst_addr = dst1_addr;
 			desc->dest2 = dst2_addr;
 			desc->xfer_size = len;
-			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+			_update_write_flags(chan, desc);
 
 			dst1_addr += len;
 			outer_seg_len -= len;
@@ -913,7 +926,7 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 			desc->pattern = fill_pattern;
 			desc->dst_addr = dst_addr;
 			desc->xfer_size = seg_len;
-			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+			_update_write_flags(chan, desc);
 
 			len -= seg_len;
 			dst += seg_len;
@@ -1083,7 +1096,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 			desc->opcode = IDXD_OPCODE_COPY_CRC;
 			desc->dst_addr = dst_addr;
 			desc->src_addr = src_addr;
-			desc->flags ^= IDXD_FLAG_CACHE_CONTROL;
+			_update_write_flags(chan, desc);
 			if (op == first_op) {
 				desc->crc32c.seed = seed;
 			} else {
