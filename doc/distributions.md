@@ -48,14 +48,14 @@ Fedora may vary. In the future these will be aligned with the
 - ubuntu20-vg-autotest
 ```
 
-* CentOS: Maintained releases. Currently `7.9` and `8.2`.
+* CentOS: Maintained releases. Currently `7.9`. Centos 8.3 is only used for testing on 22.01.x branch.
 
 ```list
 - centos7-vg-autotest
 - centos8-vg-autotest
 ```
 
-* Rocky Linux: Last release. Currently `8.6`.
+* Rocky Linux: Last release. Currently `8.6`. CentOS 8 replacement.
 
 ```list
 - rocky8-vg-autotest
