@@ -982,6 +982,8 @@ def bdev_rbd_create(client, pool_name, rbd_name, block_size, name=None, user=Non
         params['config'] = config
     if cluster_name is not None:
         params['cluster_name'] = cluster_name
+    else:
+        print("WARNING:bdev_rbd_create should be used with specifying -c to have a cluster name after bdev_rbd_register_cluster.")
     if uuid is not None:
         params['uuid'] = uuid
 
