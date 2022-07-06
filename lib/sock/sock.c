@@ -255,6 +255,14 @@ spdk_sock_get_default_opts(struct spdk_sock_opts *opts)
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ktls)) {
 		opts->ktls = SPDK_SOCK_DEFAULT_KTLS;
 	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts)) {
+		opts->impl_opts = NULL;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts_size)) {
+		opts->impl_opts_size = 0;
+	}
 }
 
 /*
@@ -290,6 +298,14 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 
 	if (SPDK_SOCK_OPTS_FIELD_OK(opts, ktls)) {
 		opts->ktls = opts_user->ktls;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts)) {
+		opts->impl_opts = opts_user->impl_opts;
+	}
+
+	if (SPDK_SOCK_OPTS_FIELD_OK(opts, impl_opts)) {
+		opts->impl_opts_size = opts_user->impl_opts_size;
 	}
 }
 
@@ -333,6 +349,9 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 		if (sock != NULL) {
 			/* Copy the contents, both the two structures are the same ABI version */
 			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
+			/* Clear out impl_opts to make sure we don't keep reference to a dangling
+			 * pointer */
+			sock->opts.impl_opts = NULL;
 			sock->net_impl = impl;
 			TAILQ_INIT(&sock->queued_reqs);
 			TAILQ_INIT(&sock->pending_reqs);
@@ -384,6 +403,9 @@ spdk_sock_listen_ext(const char *ip, int port, char *_impl_name, struct spdk_soc
 		if (sock != NULL) {
 			/* Copy the contents, both the two structures are the same ABI version */
 			memcpy(&sock->opts, &opts_local, sizeof(sock->opts));
+			/* Clear out impl_opts to make sure we don't keep reference to a dangling
+			 * pointer */
+			sock->opts.impl_opts = NULL;
 			sock->net_impl = impl;
 			/* Don't need to initialize the request queues for listen
 			 * sockets. */

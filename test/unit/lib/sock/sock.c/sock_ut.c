@@ -1146,6 +1146,91 @@ ut_sock_map(void)
 	spdk_ut_sock_group_impl_close(group_1);
 }
 
+static void
+override_impl_opts(void)
+{
+	struct spdk_sock *lsock, *csock, *asock;
+	struct spdk_sock_opts opts;
+	struct spdk_sock_impl_opts impl_opts;
+	uint32_t send_buf_size;
+	size_t opts_size;
+	int rc;
+
+	opts_size = sizeof(impl_opts);
+	rc = spdk_sock_impl_get_opts("posix", &impl_opts, &opts_size);
+	CU_ASSERT_EQUAL(rc, 0);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
+
+	/* Use send_buf_size to verify that impl_opts get overriden */
+	send_buf_size = impl_opts.send_buf_size;
+	impl_opts.send_buf_size = send_buf_size + 1;
+
+	lsock = spdk_sock_listen_ext("127.0.0.1", UT_PORT, "posix", &opts);
+	SPDK_CU_ASSERT_FATAL(lsock != NULL);
+	CU_ASSERT_EQUAL(lsock->impl_opts.send_buf_size, send_buf_size + 1);
+
+	/* Check the same for connect() */
+	opts_size = sizeof(impl_opts);
+	rc = spdk_sock_impl_get_opts("posix", &impl_opts, &opts_size);
+	CU_ASSERT_EQUAL(rc, 0);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = sizeof(impl_opts);
+
+	impl_opts.send_buf_size = send_buf_size + 2;
+
+	csock = spdk_sock_connect_ext("127.0.0.1", UT_PORT, "posix", &opts);
+	SPDK_CU_ASSERT_FATAL(csock != NULL);
+	CU_ASSERT_EQUAL(csock->impl_opts.send_buf_size, send_buf_size + 2);
+
+	/* Check that accept() inherits impl_opts from listen socket */
+	asock = spdk_sock_accept(lsock);
+	SPDK_CU_ASSERT_FATAL(asock != NULL);
+	CU_ASSERT_EQUAL(asock->impl_opts.send_buf_size, send_buf_size + 1);
+
+	spdk_sock_close(&asock);
+	spdk_sock_close(&csock);
+	spdk_sock_close(&lsock);
+
+	/* Check that impl_opts_size is verified by setting it to the offset of send_buf_size  */
+	opts_size = sizeof(impl_opts);
+	rc = spdk_sock_impl_get_opts("posix", &impl_opts, &opts_size);
+	CU_ASSERT_EQUAL(rc, 0);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = offsetof(struct spdk_sock_impl_opts, send_buf_size);
+
+	send_buf_size = impl_opts.send_buf_size;
+	impl_opts.send_buf_size = send_buf_size + 1;
+
+	lsock = spdk_sock_listen_ext("127.0.0.1", UT_PORT, "posix", &opts);
+	SPDK_CU_ASSERT_FATAL(lsock != NULL);
+	CU_ASSERT_EQUAL(lsock->impl_opts.send_buf_size, send_buf_size);
+
+	/* Check the same for connect() */
+	opts_size = sizeof(impl_opts);
+	rc = spdk_sock_impl_get_opts("posix", &impl_opts, &opts_size);
+	CU_ASSERT_EQUAL(rc, 0);
+	opts.opts_size = sizeof(opts);
+	spdk_sock_get_default_opts(&opts);
+	opts.impl_opts = &impl_opts;
+	opts.impl_opts_size = offsetof(struct spdk_sock_impl_opts, send_buf_size);
+
+	impl_opts.send_buf_size = send_buf_size + 2;
+
+	csock = spdk_sock_connect_ext("127.0.0.1", UT_PORT, "posix", &opts);
+	SPDK_CU_ASSERT_FATAL(csock != NULL);
+	CU_ASSERT_EQUAL(csock->impl_opts.send_buf_size, send_buf_size);
+
+	spdk_sock_close(&lsock);
+	spdk_sock_close(&csock);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1167,6 +1252,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_sock_impl_get_set_opts);
 	CU_ADD_TEST(suite, posix_sock_impl_get_set_opts);
 	CU_ADD_TEST(suite, ut_sock_map);
+	CU_ADD_TEST(suite, override_impl_opts);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

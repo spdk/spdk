@@ -169,6 +169,17 @@ struct spdk_sock_opts {
 	 */
 	bool ktls;
 
+	/**
+	 * Socket implementation options.  If non-NULL, these will override those set by
+	 * spdk_sock_impl_set_opts().  The library copies this structure internally, so the user can
+	 * free it immediately after a spdk_sock_connect()/spdk_sock_listen() call.
+	 */
+	struct spdk_sock_impl_opts *impl_opts;
+
+	/**
+	 * Size of the impl_opts structure.
+	 */
+	size_t impl_opts_size;
 };
 
 /**
