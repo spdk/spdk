@@ -114,53 +114,16 @@ uring_sock_map_cleanup(void)
 #define __uring_sock(sock) (struct spdk_uring_sock *)sock
 #define __uring_group_impl(group) (struct spdk_uring_sock_group_impl *)group
 
-static int
-uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+static void
+uring_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_sock_impl_opts *src,
+			  size_t len)
 {
-	if (!opts || !len) {
-		errno = EINVAL;
-		return -1;
-	}
-	memset(opts, 0, *len);
-
 #define FIELD_OK(field) \
-	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
-
-#define GET_FIELD(field) \
-	if (FIELD_OK(field)) { \
-		opts->field = g_spdk_uring_sock_impl_opts.field; \
-	}
-
-	GET_FIELD(recv_buf_size);
-	GET_FIELD(send_buf_size);
-	GET_FIELD(enable_recv_pipe);
-	GET_FIELD(enable_quickack);
-	GET_FIELD(enable_placement_id);
-	GET_FIELD(enable_zerocopy_send_server);
-	GET_FIELD(enable_zerocopy_send_client);
-	GET_FIELD(zerocopy_threshold);
-
-#undef GET_FIELD
-#undef FIELD_OK
-
-	*len = spdk_min(*len, sizeof(g_spdk_uring_sock_impl_opts));
-	return 0;
-}
-
-static int
-uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
-{
-	if (!opts) {
-		errno = EINVAL;
-		return -1;
-	}
-
-#define FIELD_OK(field) \
-	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= len
+	offsetof(struct spdk_sock_impl_opts, field) + sizeof(src->field) <= len
 
 #define SET_FIELD(field) \
 	if (FIELD_OK(field)) { \
-		g_spdk_uring_sock_impl_opts.field = opts->field; \
+		dest->field = src->field; \
 	}
 
 	SET_FIELD(recv_buf_size);
@@ -174,6 +137,32 @@ uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 
 #undef SET_FIELD
 #undef FIELD_OK
+}
+
+static int
+uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+{
+	if (!opts || !len) {
+		errno = EINVAL;
+		return -1;
+	}
+	memset(opts, 0, *len);
+
+	uring_sock_copy_impl_opts(opts, &g_spdk_uring_sock_impl_opts, *len);
+	*len = spdk_min(*len, sizeof(g_spdk_uring_sock_impl_opts));
+
+	return 0;
+}
+
+static int
+uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
+{
+	if (!opts) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	uring_sock_copy_impl_opts(&g_spdk_uring_sock_impl_opts, opts, len);
 
 	return 0;
 }
