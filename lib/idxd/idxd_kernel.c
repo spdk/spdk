@@ -90,6 +90,7 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 		kernel_idxd->idxd.socket_id = accfg_device_get_numa_node(device);
 		kernel_idxd->idxd.impl = &g_kernel_idxd_impl;
 		kernel_idxd->fd = -1;
+		kernel_idxd->idxd.version = accfg_device_get_version(device);
 
 		accfg_wq_foreach(device, wq) {
 			enum accfg_wq_state wstate;

@@ -257,6 +257,11 @@ idxd_device_configure(struct spdk_user_idxd_device *user_idxd)
 	}
 
 	/*
+	 * Save the device version for use in the common library code.
+	 */
+	user_idxd->idxd.version = user_idxd->registers->version;
+
+	/*
 	 * Configure groups and work queues.
 	 */
 	rc = idxd_group_config(user_idxd);

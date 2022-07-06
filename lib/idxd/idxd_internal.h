@@ -140,6 +140,7 @@ struct spdk_idxd_device {
 	pthread_mutex_t			num_channels_lock;
 	enum idxd_dev			type;
 	struct iaa_aecs			*aecs;
+	uint32_t			version;
 };
 
 void idxd_impl_register(struct spdk_idxd_impl *impl);
