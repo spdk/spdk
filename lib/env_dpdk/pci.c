@@ -121,6 +121,13 @@ detach_rte_cb(void *_dev)
 	remove_rte_dev(_dev);
 }
 
+/* if it's a physical device we need to deal with DPDK on
+ * a different process and we can't just unset one flag
+ * here. We also want to stop using any device resources
+ * so that the device isn't "in use" by the userspace driver
+ * once we detach it. This would allow attaching the device
+ * to a different process, or to a kernel driver like nvme.
+ */
 static void
 detach_rte(struct spdk_pci_device *dev)
 {
@@ -525,23 +532,23 @@ pci_device_fini(struct rte_pci_device *_dev)
 void
 spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
+	struct spdk_pci_device_provider *provider;
+
 	assert(dev->internal.attached);
 
 	if (dev->internal.claim_fd >= 0) {
 		spdk_pci_device_unclaim(dev);
 	}
 
-	dev->internal.attached = false;
-	if (strcmp(dev->type, "pci") == 0) {
-		/* if it's a physical device we need to deal with DPDK on
-		 * a different process and we can't just unset one flag
-		 * here. We also want to stop using any device resources
-		 * so that the device isn't "in use" by the userspace driver
-		 * once we detach it. This would allow attaching the device
-		 * to a different process, or to a kernel driver like nvme.
-		 */
-		detach_rte(dev);
+	TAILQ_FOREACH(provider, &g_pci_device_providers, tailq) {
+		if (strcmp(dev->type, provider->name) == 0) {
+			break;
+		}
 	}
+
+	assert(provider != NULL);
+	dev->internal.attached = false;
+	provider->detach_cb(dev);
 
 	cleanup_pci_devices();
 }
@@ -633,6 +640,7 @@ pci_attach_rte(const struct spdk_pci_addr *addr)
 static struct spdk_pci_device_provider g_pci_rte_provider = {
 	.name = "pci",
 	.attach_cb = pci_attach_rte,
+	.detach_cb = detach_rte,
 };
 
 SPDK_PCI_REGISTER_DEVICE_PROVIDER(pci, &g_pci_rte_provider);

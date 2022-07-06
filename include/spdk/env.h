@@ -1182,6 +1182,15 @@ struct spdk_pci_device_provider {
 	 */
 	int (*attach_cb)(const struct spdk_pci_addr *addr);
 
+	/**
+	 * Callback executed to detach a given PCI device.  The provider to detach the device is
+	 * selected based on the type of the device and the name of the provider (i.e. dev->type ==
+	 * provider->name).
+	 *
+	 * \param dev PCI device to detach.
+	 */
+	void (*detach_cb)(struct spdk_pci_device *dev);
+
 	TAILQ_ENTRY(spdk_pci_device_provider) tailq;
 };
 
