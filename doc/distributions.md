@@ -16,7 +16,7 @@ jobs (see [status](https://ci.spdk.io) as a reference).
 ## Linux distributions {#linux_list}
 
 * Fedora: Trying to follow new release as per the release cycle whenever
-          possible. Currently at `Fedora33`.
+          possible. Currently at `Fedora35`.
 
 ```list
 - autobuild-vg-autotest
@@ -41,7 +41,7 @@ Fedora may vary. In the future these will be aligned with the
 - vhost-autotest
 ```
 
-* Ubuntu: Last two LTS releases. Currently `20.04` and `18.04`.
+* Ubuntu: Last two LTS releases. Currently `18.04` and `20.04`.
 
 ```list
 - ubuntu18-vg-autotest
@@ -53,6 +53,12 @@ Fedora may vary. In the future these will be aligned with the
 ```list
 - centos7-vg-autotest
 - centos8-vg-autotest
+```
+
+* Rocky Linux: Last release. Currently `8.6`.
+
+```list
+- rocky8-vg-autotest
 ```
 
 ## FreeBSD distributions {#freebsd_list}
