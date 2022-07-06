@@ -44,6 +44,7 @@ struct spdk_sock {
 		uint8_t		closed		: 1;
 		uint8_t		reserved	: 7;
 	} flags;
+	struct spdk_sock_impl_opts	impl_opts;
 };
 
 struct spdk_sock_group {
