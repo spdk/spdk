@@ -115,6 +115,70 @@ uring_sock_map_cleanup(void)
 #define __uring_group_impl(group) (struct spdk_uring_sock_group_impl *)group
 
 static int
+uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
+{
+	if (!opts || !len) {
+		errno = EINVAL;
+		return -1;
+	}
+	memset(opts, 0, *len);
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
+
+#define GET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		opts->field = g_spdk_uring_sock_impl_opts.field; \
+	}
+
+	GET_FIELD(recv_buf_size);
+	GET_FIELD(send_buf_size);
+	GET_FIELD(enable_recv_pipe);
+	GET_FIELD(enable_quickack);
+	GET_FIELD(enable_placement_id);
+	GET_FIELD(enable_zerocopy_send_server);
+	GET_FIELD(enable_zerocopy_send_client);
+	GET_FIELD(zerocopy_threshold);
+
+#undef GET_FIELD
+#undef FIELD_OK
+
+	*len = spdk_min(*len, sizeof(g_spdk_uring_sock_impl_opts));
+	return 0;
+}
+
+static int
+uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
+{
+	if (!opts) {
+		errno = EINVAL;
+		return -1;
+	}
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= len
+
+#define SET_FIELD(field) \
+	if (FIELD_OK(field)) { \
+		g_spdk_uring_sock_impl_opts.field = opts->field; \
+	}
+
+	SET_FIELD(recv_buf_size);
+	SET_FIELD(send_buf_size);
+	SET_FIELD(enable_recv_pipe);
+	SET_FIELD(enable_quickack);
+	SET_FIELD(enable_placement_id);
+	SET_FIELD(enable_zerocopy_send_server);
+	SET_FIELD(enable_zerocopy_send_client);
+	SET_FIELD(zerocopy_threshold);
+
+#undef SET_FIELD
+#undef FIELD_OK
+
+	return 0;
+}
+
+static int
 uring_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *sport,
 		   char *caddr, int clen, uint16_t *cport)
 {
@@ -1543,70 +1607,6 @@ uring_sock_group_impl_close(struct spdk_sock_group_impl *_group)
 	}
 
 	free(group);
-	return 0;
-}
-
-static int
-uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
-{
-	if (!opts || !len) {
-		errno = EINVAL;
-		return -1;
-	}
-	memset(opts, 0, *len);
-
-#define FIELD_OK(field) \
-	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= *len
-
-#define GET_FIELD(field) \
-	if (FIELD_OK(field)) { \
-		opts->field = g_spdk_uring_sock_impl_opts.field; \
-	}
-
-	GET_FIELD(recv_buf_size);
-	GET_FIELD(send_buf_size);
-	GET_FIELD(enable_recv_pipe);
-	GET_FIELD(enable_quickack);
-	GET_FIELD(enable_placement_id);
-	GET_FIELD(enable_zerocopy_send_server);
-	GET_FIELD(enable_zerocopy_send_client);
-	GET_FIELD(zerocopy_threshold);
-
-#undef GET_FIELD
-#undef FIELD_OK
-
-	*len = spdk_min(*len, sizeof(g_spdk_uring_sock_impl_opts));
-	return 0;
-}
-
-static int
-uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
-{
-	if (!opts) {
-		errno = EINVAL;
-		return -1;
-	}
-
-#define FIELD_OK(field) \
-	offsetof(struct spdk_sock_impl_opts, field) + sizeof(opts->field) <= len
-
-#define SET_FIELD(field) \
-	if (FIELD_OK(field)) { \
-		g_spdk_uring_sock_impl_opts.field = opts->field; \
-	}
-
-	SET_FIELD(recv_buf_size);
-	SET_FIELD(send_buf_size);
-	SET_FIELD(enable_recv_pipe);
-	SET_FIELD(enable_quickack);
-	SET_FIELD(enable_placement_id);
-	SET_FIELD(enable_zerocopy_send_server);
-	SET_FIELD(enable_zerocopy_send_client);
-	SET_FIELD(zerocopy_threshold);
-
-#undef SET_FIELD
-#undef FIELD_OK
-
 	return 0;
 }
 
