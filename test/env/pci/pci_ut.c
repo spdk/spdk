@@ -126,6 +126,25 @@ ut_enum_cb(void *ctx, struct spdk_pci_device *dev)
 	return 0;
 }
 
+static int
+ut_attach_cb(const struct spdk_pci_addr *addr)
+{
+	return -ENODEV;
+}
+
+static void
+ut_detach_cb(struct spdk_pci_device *dev)
+{
+}
+
+static struct spdk_pci_device_provider g_ut_provider = {
+	.name = "custom",
+	.attach_cb = ut_attach_cb,
+	.detach_cb = ut_detach_cb,
+};
+
+SPDK_PCI_REGISTER_DEVICE_PROVIDER(ut, &g_ut_provider);
+
 static void
 pci_hook_test(void)
 {

@@ -1499,9 +1499,21 @@ vmd_attach_device(const struct spdk_pci_addr *addr)
 	return -ENODEV;
 }
 
+static void
+vmd_detach_device(struct spdk_pci_device *pci_dev)
+{
+	struct vmd_pci_device *dev = SPDK_CONTAINEROF(pci_dev, struct vmd_pci_device, pci);
+
+	assert(strcmp(spdk_pci_device_get_type(pci_dev), "vmd") == 0);
+	assert(vmd_find_device(&pci_dev->addr) != NULL);
+
+	vmd_remove_device(dev);
+}
+
 static struct spdk_pci_device_provider g_vmd_device_provider = {
 	.name = "vmd",
 	.attach_cb = vmd_attach_device,
+	.detach_cb = vmd_detach_device,
 };
 
 SPDK_PCI_REGISTER_DEVICE_PROVIDER(vmd, &g_vmd_device_provider);
