@@ -147,12 +147,14 @@ _raid0_get_io_range(struct raid_bdev_io_range *io_range,
 {
 	uint64_t	start_strip;
 	uint64_t	end_strip;
+	uint64_t	total_blocks;
 
 	io_range->strip_size = strip_size;
+	total_blocks = offset_blocks + num_blocks - (num_blocks > 0);
 
 	/* The start and end strip index in raid0 bdev scope */
 	start_strip = offset_blocks >> strip_size_shift;
-	end_strip = (offset_blocks + num_blocks - 1) >> strip_size_shift;
+	end_strip = total_blocks >> strip_size_shift;
 	io_range->start_strip_in_disk = start_strip / num_base_bdevs;
 	io_range->end_strip_in_disk = end_strip / num_base_bdevs;
 
@@ -161,7 +163,7 @@ _raid0_get_io_range(struct raid_bdev_io_range *io_range,
 	 * Strips between them certainly have aligned offset and length to boundaries.
 	 */
 	io_range->start_offset_in_strip = offset_blocks % strip_size;
-	io_range->end_offset_in_strip = (offset_blocks + num_blocks - 1) % strip_size;
+	io_range->end_offset_in_strip = total_blocks % strip_size;
 
 	/* The base bdev indexes in which start and end strips are located */
 	io_range->start_disk = start_strip % num_base_bdevs;
