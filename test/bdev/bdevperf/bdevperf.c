@@ -52,6 +52,7 @@ static uint64_t g_show_performance_period_num = 0;
 static uint64_t g_show_performance_ema_period = 0;
 static int g_run_rc = 0;
 static bool g_shutdown = false;
+static uint64_t g_start_tsc;
 static uint64_t g_shutdown_tsc;
 static bool g_zcopy = false;
 static struct spdk_thread *g_main_thread;
@@ -361,7 +362,7 @@ bdevperf_test_done(void *ctx)
 	}
 
 	if (g_shutdown) {
-		g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
+		g_shutdown_tsc = spdk_get_ticks() - g_start_tsc;
 		g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
 		printf("Received shutdown signal, test time was about %.6f seconds\n",
 		       (double)g_time_in_usec / 1000000);
@@ -1049,7 +1050,7 @@ bdevperf_test(void)
 	fflush(stdout);
 
 	/* Start a timer to dump performance numbers */
-	g_shutdown_tsc = spdk_get_ticks();
+	g_start_tsc = spdk_get_ticks();
 	if (g_show_performance_real_time && !g_perf_timer) {
 		g_perf_timer = SPDK_POLLER_REGISTER(performance_statistics_thread, NULL,
 						    g_show_performance_period_in_usec);
