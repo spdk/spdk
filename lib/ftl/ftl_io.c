@@ -181,11 +181,46 @@ ftl_io_init(struct spdk_io_channel *_ioch, struct ftl_io *io, uint64_t lba, size
 	return 0;
 }
 
+static void
+ftl_io_complete_verify(struct ftl_io *io)
+{
+	struct spdk_ftl_dev *dev = io->dev;
+	uint64_t i;
+	uint64_t lba = io->lba;
+
+	assert(io->num_blocks <= dev->xfer_size);
+
+	if (FTL_IO_WRITE == io->type) {
+		return;
+	}
+
+	if (spdk_unlikely(io->status)) {
+		return;
+	}
+
+	for (i = 0; i < io->num_blocks; i++, lba++) {
+		ftl_addr current_addr = ftl_l2p_get(dev, lba);
+
+		/* If user read request gets stuck for whatever reason, then it's possible the LBA
+		 * has been relocated by GC or compaction and it may no longer be safe to return data
+		 * from that address */
+		if (spdk_unlikely(current_addr != io->map[i])) {
+			io->status = -EAGAIN;
+			break;
+		}
+	}
+}
+
 void
 ftl_io_complete(struct ftl_io *io)
 {
 	io->flags &= ~FTL_IO_INITIALIZED;
 	io->done = true;
+
+	if (io->flags & FTL_IO_PINNED) {
+		ftl_io_complete_verify(io);
+		ftl_l2p_unpin(io->dev, io->lba, io->num_blocks);
+	}
 
 	ftl_io_cb(io, io->cb_ctx, io->status);
 }

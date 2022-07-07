@@ -20,6 +20,9 @@ enum ftl_layout_region_type {
 	FTL_LAYOUT_REGION_TYPE_SB,
 	/* Mirrored instance of the superblock on the base device */
 	FTL_LAYOUT_REGION_TYPE_SB_BASE,
+	/* If using cached L2P, this region stores the serialized instance of it */
+	FTL_LAYOUT_REGION_TYPE_L2P,
+
 	/* User data region on the nv cache device */
 	FTL_LAYOUT_REGION_TYPE_DATA_NVC,
 

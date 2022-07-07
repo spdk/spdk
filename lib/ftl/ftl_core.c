@@ -26,14 +26,27 @@ spdk_ftl_io_size(void)
 	return sizeof(struct ftl_io);
 }
 
-static int
+static bool
 ftl_shutdown_complete(struct spdk_ftl_dev *dev)
 {
 	if (dev->num_inflight) {
-		return 0;
+		return false;
 	}
 
-	return 1;
+	if (!ftl_l2p_is_halted(dev)) {
+		ftl_l2p_halt(dev);
+		return false;
+	}
+
+	return true;
+}
+
+void
+ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	if (ftl_addr_in_nvc(dev, addr)) {
+		return;
+	}
 }
 
 void
@@ -128,6 +141,7 @@ ftl_core_poller(void *ctx)
 	}
 
 	ftl_process_io_queue(dev);
+	ftl_l2p_process(dev);
 
 	if (io_activity_total_old != dev->io_activity_total) {
 		return SPDK_POLLER_BUSY;

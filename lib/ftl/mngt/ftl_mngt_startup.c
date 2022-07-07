@@ -90,6 +90,16 @@ static const struct ftl_mngt_process_desc desc_first_start = {
 	.name = "FTL first start",
 	.steps = {
 		{
+			.name = "Initialize L2P",
+			.action = ftl_mngt_init_l2p,
+			.cleanup = ftl_mngt_deinit_l2p
+		},
+		{
+			.name = "Clear L2P",
+			.action = ftl_mngt_clear_l2p,
+			.cleanup = ftl_mngt_clear_l2p
+		},
+		{
 			.name = "Scrub NV cache",
 			.action = ftl_mngt_scrub_nv_cache,
 		},

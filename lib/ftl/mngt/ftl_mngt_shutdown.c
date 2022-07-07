@@ -32,6 +32,10 @@ static const struct ftl_mngt_process_desc desc_shutdown = {
 			.action = ftl_mngt_dump_stats
 		},
 		{
+			.name = "Deinitialize L2P",
+			.action = ftl_mngt_deinit_l2p
+		},
+		{
 			.name = "Rollback FTL device",
 			.action = ftl_mngt_rollback_device
 		},

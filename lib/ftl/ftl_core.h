@@ -20,6 +20,7 @@
 #include "ftl_io.h"
 #include "ftl_layout.h"
 #include "ftl_sb.h"
+#include "ftl_l2p.h"
 #include "utils/ftl_log.h"
 
 /* When using VSS on nvcache, FTL sometimes doesn't require the contents of metadata.
@@ -81,6 +82,12 @@ struct spdk_ftl_dev {
 	/* Number of free bands */
 	uint64_t			num_free;
 
+	/* Logical -> physical table */
+	void				*l2p;
+
+	/* l2p deferred pins list */
+	TAILQ_HEAD(, ftl_l2p_pin_ctx) l2p_deferred_pins;
+
 	/* Size of the l2p table */
 	uint64_t			num_lbas;
 
@@ -116,6 +123,8 @@ struct spdk_ftl_dev {
 	/* Write submission queue */
 	TAILQ_HEAD(, ftl_io)		wr_sq;
 };
+
+void ftl_invalidate_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
 
 int ftl_core_poller(void *ctx);
 

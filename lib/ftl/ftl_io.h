@@ -13,6 +13,7 @@
 #include "spdk/util.h"
 
 #include "ftl_internal.h"
+#include "ftl_l2p.h"
 #include "utils/ftl_md.h"
 
 struct spdk_ftl_dev;
@@ -24,6 +25,8 @@ typedef void (*ftl_io_fn)(struct ftl_io *, void *, int);
 enum ftl_io_flags {
 	/* Indicates whether IO is already initialized */
 	FTL_IO_INITIALIZED	= (1 << 0),
+	/* Indicated whether the user IO pinned the L2P pages containing LBAs */
+	FTL_IO_PINNED		= (1 << 1),
 };
 
 enum ftl_io_type {
@@ -111,6 +114,9 @@ struct ftl_io {
 	/* Reference to the chunk within NV cache */
 	struct ftl_nv_cache_chunk	*nv_cache_chunk;
 
+	/* For l2p pinning */
+	struct ftl_l2p_pin_ctx		l2p_pin_ctx;
+
 	/* Logical to physical mapping for this IO, number of entries equals to
 	 * number of transfer blocks */
 	ftl_addr			*map;
@@ -140,6 +146,9 @@ struct ftl_rq_entry {
 	struct {
 		void *priv;
 	} owner;
+
+	/* For l2p pinning */
+	struct ftl_l2p_pin_ctx l2p_pin_ctx;
 
 	struct {
 		uint64_t offset_blocks;
