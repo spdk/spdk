@@ -113,28 +113,28 @@ enum spdk_log_level spdk_log_get_print_level(void);
 	spdk_log(SPDK_LOG_ERROR, __FILE__, __LINE__, __func__, __VA_ARGS__)
 #define SPDK_PRINTF(...) \
 	spdk_log(SPDK_LOG_NOTICE, NULL, -1, NULL, __VA_ARGS__)
-#define SPDK_INFOLOG(FLAG, ...)									\
+#define SPDK_INFOLOG(flag, ...)									\
 	do {											\
-		extern struct spdk_log_flag SPDK_LOG_##FLAG;					\
-		if (SPDK_LOG_##FLAG.enabled) {							\
+		extern struct spdk_log_flag SPDK_LOG_##flag;					\
+		if (SPDK_LOG_##flag.enabled) {							\
 			spdk_log(SPDK_LOG_INFO, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
 		}										\
 	} while (0)
 
 #ifdef DEBUG
-#define SPDK_DEBUGLOG(FLAG, ...)								\
+#define SPDK_DEBUGLOG(flag, ...)								\
 	do {											\
-		extern struct spdk_log_flag SPDK_LOG_##FLAG;					\
-		if (SPDK_LOG_##FLAG.enabled) {							\
+		extern struct spdk_log_flag SPDK_LOG_##flag;					\
+		if (SPDK_LOG_##flag.enabled) {							\
 			spdk_log(SPDK_LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
 		}										\
 	} while (0)
 
-#define SPDK_LOGDUMP(FLAG, LABEL, BUF, LEN)				\
+#define SPDK_LOGDUMP(flag, label, buf, len)				\
 	do {								\
-		extern struct spdk_log_flag SPDK_LOG_##FLAG;		\
-		if (SPDK_LOG_##FLAG.enabled) {				\
-			spdk_log_dump(stderr, (LABEL), (BUF), (LEN));	\
+		extern struct spdk_log_flag SPDK_LOG_##flag;		\
+		if (SPDK_LOG_##flag.enabled) {				\
+			spdk_log_dump(stderr, (label), (buf), (len));	\
 		}							\
 	} while (0)
 
@@ -194,14 +194,14 @@ struct spdk_log_flag {
  */
 void spdk_log_register_flag(const char *name, struct spdk_log_flag *flag);
 
-#define SPDK_LOG_REGISTER_COMPONENT(FLAG) \
-struct spdk_log_flag SPDK_LOG_##FLAG = { \
-	.name = #FLAG, \
+#define SPDK_LOG_REGISTER_COMPONENT(flag) \
+struct spdk_log_flag SPDK_LOG_##flag = { \
+	.name = #flag, \
 	.enabled = false, \
 }; \
-__attribute__((constructor)) static void register_flag_##FLAG(void) \
+__attribute__((constructor)) static void register_flag_##flag(void) \
 { \
-	spdk_log_register_flag(#FLAG, &SPDK_LOG_##FLAG); \
+	spdk_log_register_flag(#flag, &SPDK_LOG_##flag); \
 }
 
 /**
