@@ -479,7 +479,9 @@ backing_dev_compress(struct spdk_reduce_backing_dev *backing_dev,
 	rc = ut_compress(dst_iov[0].iov_base, &compressed_len,
 			 g_decomp_buf, total_length);
 
-	args->cb_fn(args->cb_arg, rc ? rc : (int)compressed_len);
+	args->output_size = compressed_len;
+
+	args->cb_fn(args->cb_arg, rc);
 }
 
 static void
@@ -506,7 +508,9 @@ backing_dev_decompress(struct spdk_reduce_backing_dev *backing_dev,
 		buf += dst_iov[i].iov_len;
 	}
 
-	args->cb_fn(args->cb_arg, rc ? rc : (int)decompressed_len);
+	args->output_size = decompressed_len;
+
+	args->cb_fn(args->cb_arg, rc);
 }
 
 static void
@@ -1547,7 +1551,8 @@ dummy_backing_dev_decompress(struct spdk_reduce_backing_dev *backing_dev,
 			     struct iovec *dst_iov, int dst_iovcnt,
 			     struct spdk_reduce_vol_cb_args *args)
 {
-	args->cb_fn(args->cb_arg, g_decompressed_len);
+	args->output_size = g_decompressed_len;
+	args->cb_fn(args->cb_arg, 0);
 }
 static void
 test_reduce_decompress_chunk(void)

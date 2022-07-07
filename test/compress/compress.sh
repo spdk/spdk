@@ -38,7 +38,6 @@ function create_vols() {
 	$rpc_py bdev_lvol_create -t -l lvs0 lv0 100
 	waitforbdev lvs0/lv0
 
-	$rpc_py bdev_compress_set_pmd -p "$pmd"
 	if [ -z "$1" ]; then
 		$rpc_py bdev_compress_create -b lvs0/lv0 -p /tmp/pmem
 	else
@@ -48,7 +47,11 @@ function create_vols() {
 }
 
 function run_bdevio() {
-	$rootdir/test/bdev/bdevio/bdevio -w &
+	if [[ $test_type == "compdev" ]]; then
+		$rootdir/test/bdev/bdevio/bdevio -c $rootdir/test/compress/dpdk.json -w &
+	else
+		$rootdir/test/bdev/bdevio/bdevio -w &
+	fi
 	bdevio_pid=$!
 	trap 'killprocess $bdevio_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevio_pid
@@ -60,7 +63,11 @@ function run_bdevio() {
 }
 
 function run_bdevperf() {
-	$rootdir/build/examples/bdevperf -z -q $1 -o $2 -w verify -t $3 -C -m 0x6 &
+	if [[ $test_type == "compdev" ]]; then
+		$rootdir/build/examples/bdevperf -z -q $1 -o $2 -w verify -t $3 -C -m 0x6 -c $rootdir/test/compress/dpdk.json &
+	else
+		$rootdir/build/examples/bdevperf -z -q $1 -o $2 -w verify -t $3 -C -m 0x6 &
+	fi
 	bdevperf_pid=$!
 	trap 'killprocess $bdevperf_pid; error_cleanup; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
@@ -71,21 +78,8 @@ function run_bdevperf() {
 	killprocess $bdevperf_pid
 }
 
-test_type=$1
-case "$test_type" in
-	qat)
-		pmd=1
-		;;
-	isal)
-		pmd=2
-		;;
-	*)
-		echo "invalid pmd name"
-		exit 1
-		;;
-esac
-
 mkdir -p /tmp/pmem
+test_type=$1
 
 # per patch bdevperf uses slightly different params than nightly
 # logical block size same as underlying device, then 512 then 4096

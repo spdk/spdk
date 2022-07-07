@@ -104,15 +104,10 @@ unless the data stored on disk is placed appropriately. The compression vbdev mo
 relies on an internal SPDK library called `reduce` to accomplish this, see @ref reduce
 for detailed information.
 
-The vbdev module relies on the DPDK CompressDev Framework to provide all compression
-functionality. The framework provides support for many different software only
-compression modules as well as hardware assisted support for Intel QAT. At this
-time the vbdev module supports the DPDK drivers for ISAL, QAT and mlx5_pci.
-
-mlx5_pci driver works with BlueField 2 SmartNIC and requires additional configuration of DPDK
-environment to enable compression function. It can be done via SPDK event library by configuring
-`env_context` member of `spdk_app_opts` structure or by passing corresponding CLI arguments in the
-following form: `--allow=BDF,class=compress`, e.g. `--allow=0000:01:00.0,class=compress`.
+The compression bdev module leverages the [Acceleration Framework](https://spdk.io/doc/accel_fw.html) to
+carry out the actual compression and decompression. The acceleration framework can be configured to use
+ISA-L software optimized compression or the DPDK Compressdev module for hardware acceleration. To configure
+the Compressdev module please see the `compressdev_scan_accel_module` documentation [here](https://spdk.io/doc/jsonrpc.html)
 
 Persistent memory is used to store metadata associated with the layout of the data on the
 backing device. SPDK relies on [PMDK](http://pmem.io/pmdk/) to interface persistent memory so any hardware
@@ -134,18 +129,6 @@ The logical volume is referred to as the backing device and once the compression
 created it cannot be separated from the persistent memory file that will be created in
 the specified directory.  If the persistent memory file is not available, the compression
 vbdev will also not be available.
-
-By default the vbdev module will choose the QAT driver if the hardware and drivers are
-available and loaded.  If not, it will revert to the software-only ISAL driver. By using
-the following command, the driver may be specified however this is not persistent so it
-must be done either upon creation or before the underlying logical volume is loaded to
-be honored. In the example below, `0` is telling the vbdev module to use QAT if available
-otherwise use ISAL, this is the default and if sufficient the command is not required. Passing
-a value of 1 tells the driver to use QAT and if not available then the creation or loading
-the vbdev should fail to create or load.  A value of '2' as shown below tells the module
-to use ISAL and if for some reason it is not available, the vbdev should fail to create or load.
-
-`rpc.py bdev_compress_set_pmd -p 2`
 
 To remove a compression vbdev, use the following command which will also delete the PMEM
 file.  If the logical volume is deleted the PMEM file will not be removed and the

@@ -78,17 +78,6 @@ def bdev_compress_delete(client, name):
     return client.call('bdev_compress_delete', params)
 
 
-def bdev_compress_set_pmd(client, pmd):
-    """Set pmd options for the bdev compress.
-
-    Args:
-        pmd: 0 = auto-select, 1 = QAT, 2 = ISAL, 3 = mlx5_pci
-    """
-    params = {'pmd': pmd}
-
-    return client.call('bdev_compress_set_pmd', params)
-
-
 def bdev_compress_get_orphans(client, name=None):
     """Get a list of comp bdevs that do not have a pmem file (aka orphaned).
 

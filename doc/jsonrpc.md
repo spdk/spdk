@@ -2724,42 +2724,6 @@ Example response:
 }
 ~~~
 
-### bdev_compress_set_pmd {#rpc_bdev_compress_set_pmd}
-
-Select the DPDK polled mode driver (pmd) for a compressed bdev,
-0 = auto-select, 1= QAT only, 2 = ISAL only, 3 = mlx5_pci only.
-
-#### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-pmd                     | Required | int         | pmd selection
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "params": {
-    "pmd": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_compress_set_pmd",
-  "id": 1
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
 ### bdev_crypto_create {#rpc_bdev_crypto_create}
 
 Create a new crypto bdev on a given base bdev.

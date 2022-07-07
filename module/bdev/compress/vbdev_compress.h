@@ -45,16 +45,6 @@ bool compress_has_orphan(const char *name);
  */
 const char *compress_get_name(const struct vbdev_compress *comp_bdev);
 
-enum compress_pmd {
-	COMPRESS_PMD_AUTO = 0,
-	COMPRESS_PMD_QAT_ONLY,
-	COMPRESS_PMD_ISAL_ONLY,
-	COMPRESS_PMD_MLX5_PCI_ONLY,
-	COMPRESS_PMD_MAX
-};
-
-int compress_set_pmd(enum compress_pmd *opts);
-
 typedef void (*spdk_delete_compress_complete)(void *cb_arg, int bdeverrno);
 
 /**

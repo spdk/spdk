@@ -136,7 +136,7 @@ DEPDIRS-bdev_rpc := $(BDEV_DEPS)
 DEPDIRS-bdev_split := $(BDEV_DEPS)
 
 DEPDIRS-bdev_aio := $(BDEV_DEPS_THREAD)
-DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce
+DEPDIRS-bdev_compress := $(BDEV_DEPS_THREAD) reduce accel
 DEPDIRS-bdev_crypto := $(BDEV_DEPS_THREAD) accel
 DEPDIRS-bdev_delay := $(BDEV_DEPS_THREAD)
 DEPDIRS-bdev_iscsi := $(BDEV_DEPS_THREAD)

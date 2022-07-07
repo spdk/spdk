@@ -1179,11 +1179,10 @@ _write_compress_done(void *_req, int reduce_errno)
 	 * the uncompressed buffer to disk.
 	 */
 	if (reduce_errno < 0) {
-		reduce_errno = req->vol->params.chunk_size;
+		req->backing_cb_args.output_size = req->vol->params.chunk_size;
 	}
 
-	/* Positive reduce_errno indicates number of bytes in compressed buffer. */
-	_reduce_vol_write_chunk(req, _write_write_done, (uint32_t)reduce_errno);
+	_reduce_vol_write_chunk(req, _write_write_done, req->backing_cb_args.output_size);
 }
 
 static void
@@ -1392,11 +1391,10 @@ _write_decompress_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	/* Positive reduce_errno indicates number of bytes in decompressed
-	 *  buffer.  This should equal the chunk size - otherwise that's another
-	 *  type of failure.
+	/* Positive reduce_errno indicates that the output size field in the backing_cb_args
+	 * represents the output_size.
 	 */
-	if ((uint32_t)reduce_errno != req->vol->params.chunk_size) {
+	if (req->backing_cb_args.output_size != req->vol->params.chunk_size) {
 		_reduce_vol_complete_req(req, -EIO);
 		return;
 	}
@@ -1443,11 +1441,10 @@ _read_decompress_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	/* Positive reduce_errno indicates number of bytes in decompressed
-	 *  buffer.  This should equal the chunk size - otherwise that's another
-	 *  type of failure.
+	/* Positive reduce_errno indicates that the output size field in the backing_cb_args
+	 * represents the output_size.
 	 */
-	if ((uint32_t)reduce_errno != vol->params.chunk_size) {
+	if (req->backing_cb_args.output_size != vol->params.chunk_size) {
 		_reduce_vol_complete_req(req, -EIO);
 		return;
 	}

@@ -325,7 +325,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [ $SPDK_TEST_VBDEV_COMPRESS -eq 1 ]; then
-		run_test "compress_qat" ./test/compress/compress.sh "qat"
+		run_test "compress_compdev" ./test/compress/compress.sh "compdev"
 		run_test "compress_isal" ./test/compress/compress.sh "isal"
 	fi
 

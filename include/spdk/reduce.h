@@ -78,6 +78,7 @@ typedef void (*spdk_reduce_vol_op_with_handle_complete)(void *ctx,
 typedef void (*spdk_reduce_dev_cpl)(void *cb_arg, int reduce_errno);
 
 struct spdk_reduce_vol_cb_args {
+	uint32_t		output_size;
 	spdk_reduce_dev_cpl	cb_fn;
 	void			*cb_arg;
 };
