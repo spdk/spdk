@@ -4132,12 +4132,6 @@ bdev_io_valid_blocks(struct spdk_bdev *bdev, uint64_t offset_blocks, uint64_t nu
 	return true;
 }
 
-static bool
-_bdev_io_check_md_buf(const struct iovec *iovs, const void *md_buf)
-{
-	return _is_buf_allocated(iovs) == (md_buf != NULL);
-}
-
 static int
 bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
 			 void *md_buf, uint64_t offset_blocks, uint64_t num_blocks,
@@ -4205,11 +4199,11 @@ spdk_bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 		.iov_base = buf,
 	};
 
-	if (!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
+	if (md_buf && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
 		return -EINVAL;
 	}
 
-	if (!_bdev_io_check_md_buf(&iov, md_buf)) {
+	if (md_buf && !_is_buf_allocated(&iov)) {
 		return -EINVAL;
 	}
 
@@ -4285,11 +4279,11 @@ spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 			       uint64_t offset_blocks, uint64_t num_blocks,
 			       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	if (!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
+	if (md_buf && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
 		return -EINVAL;
 	}
 
-	if (!_bdev_io_check_md_buf(iov, md_buf)) {
+	if (md_buf && !_is_buf_allocated(iov)) {
 		return -EINVAL;
 	}
 
@@ -4332,7 +4326,7 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 		return -EINVAL;
 	}
 
-	if (md && !_bdev_io_check_md_buf(iov, md)) {
+	if (md && !_is_buf_allocated(iov)) {
 		return -EINVAL;
 	}
 
@@ -4412,11 +4406,11 @@ spdk_bdev_write_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chann
 		.iov_base = buf,
 	};
 
-	if (!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
+	if (md_buf && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
 		return -EINVAL;
 	}
 
-	if (!_bdev_io_check_md_buf(&iov, md_buf)) {
+	if (md_buf && !_is_buf_allocated(&iov)) {
 		return -EINVAL;
 	}
 
@@ -4497,11 +4491,11 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 				uint64_t offset_blocks, uint64_t num_blocks,
 				spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	if (!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
+	if (md_buf && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
 		return -EINVAL;
 	}
 
-	if (!_bdev_io_check_md_buf(iov, md_buf)) {
+	if (md_buf && !_is_buf_allocated(iov)) {
 		return -EINVAL;
 	}
 
@@ -4529,7 +4523,7 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 		return -EINVAL;
 	}
 
-	if (md && !_bdev_io_check_md_buf(iov, md)) {
+	if (md && !_is_buf_allocated(iov)) {
 		return -EINVAL;
 	}
 
@@ -4646,11 +4640,11 @@ spdk_bdev_comparev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_ch
 				  uint64_t offset_blocks, uint64_t num_blocks,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	if (!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
+	if (md_buf && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
 		return -EINVAL;
 	}
 
-	if (!_bdev_io_check_md_buf(iov, md_buf)) {
+	if (md_buf && !_is_buf_allocated(iov)) {
 		return -EINVAL;
 	}
 
@@ -4716,11 +4710,11 @@ spdk_bdev_compare_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_cha
 		.iov_base = buf,
 	};
 
-	if (!spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
+	if (md_buf && !spdk_bdev_is_md_separate(spdk_bdev_desc_get_bdev(desc))) {
 		return -EINVAL;
 	}
 
-	if (!_bdev_io_check_md_buf(&iov, md_buf)) {
+	if (md_buf && !_is_buf_allocated(&iov)) {
 		return -EINVAL;
 	}
 
