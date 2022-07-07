@@ -137,6 +137,7 @@ struct nvme_rdma_poller_stats {
 struct nvme_rdma_poller {
 	struct ibv_context		*device;
 	struct ibv_cq			*cq;
+	uint32_t			refcnt;
 	int				required_num_wc;
 	int				current_num_wc;
 	struct nvme_rdma_poller_stats	stats;
@@ -295,6 +296,10 @@ static const char *rdma_cm_event_str[] = {
 
 struct nvme_rdma_qpair *nvme_rdma_poll_group_get_qpair_by_id(struct nvme_rdma_poll_group *group,
 		uint32_t qp_num);
+static struct nvme_rdma_poller *nvme_rdma_poll_group_get_poller(struct nvme_rdma_poll_group *group,
+		struct ibv_context *device);
+static void nvme_rdma_poll_group_put_poller(struct nvme_rdma_poll_group *group,
+		struct nvme_rdma_poller *poller);
 
 static TAILQ_HEAD(, nvme_rdma_memory_domain) g_memory_domains = TAILQ_HEAD_INITIALIZER(
 			g_memory_domains);
@@ -711,22 +716,19 @@ nvme_rdma_poll_group_set_cq(struct spdk_nvme_qpair *qpair)
 
 	assert(rqpair->cq == NULL);
 
-	STAILQ_FOREACH(poller, &group->pollers, link) {
-		if (poller->device == rqpair->cm_id->verbs) {
-			if (nvme_rdma_resize_cq(rqpair, poller)) {
-				return -EPROTO;
-			}
-			rqpair->cq = poller->cq;
-			rqpair->poller = poller;
-			break;
-		}
-	}
-
-	if (rqpair->cq == NULL) {
+	poller = nvme_rdma_poll_group_get_poller(group, rqpair->cm_id->verbs);
+	if (!poller) {
 		SPDK_ERRLOG("Unable to find a cq for qpair %p on poll group %p\n", qpair, qpair->poll_group);
 		return -EINVAL;
 	}
 
+	if (nvme_rdma_resize_cq(rqpair, poller)) {
+		nvme_rdma_poll_group_put_poller(group, poller);
+		return -EPROTO;
+	}
+
+	rqpair->cq = poller->cq;
+	rqpair->poller = poller;
 	return 0;
 }
 
@@ -2155,6 +2157,13 @@ nvme_rdma_stale_conn_retry(struct nvme_rdma_qpair *rqpair)
 		       rqpair->stale_conn_retry_count, qpair->ctrlr->cntlid, qpair->id);
 
 	if (qpair->poll_group) {
+		struct nvme_rdma_poll_group	*group;
+
+		group = nvme_rdma_poll_group(qpair->poll_group);
+		if (rqpair->poller) {
+			nvme_rdma_poll_group_put_poller(group, rqpair->poller);
+			rqpair->poller = NULL;
+		}
 		rqpair->cq = NULL;
 	}
 
@@ -2816,7 +2825,7 @@ nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 	}
 }
 
-static int
+static struct nvme_rdma_poller *
 nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *ctx)
 {
 	struct nvme_rdma_poller *poller;
@@ -2824,22 +2833,23 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 	poller = calloc(1, sizeof(*poller));
 	if (poller == NULL) {
 		SPDK_ERRLOG("Unable to allocate poller.\n");
-		return -ENOMEM;
+		return NULL;
 	}
 
 	poller->device = ctx;
 	poller->cq = ibv_create_cq(poller->device, DEFAULT_NVME_RDMA_CQ_SIZE, group, NULL, 0);
 
 	if (poller->cq == NULL) {
+		SPDK_ERRLOG("Unable to create CQ, errno %d.\n", errno);
 		free(poller);
-		return -EINVAL;
+		return NULL;
 	}
 
 	STAILQ_INSERT_HEAD(&group->pollers, poller, link);
 	group->num_pollers++;
 	poller->current_num_wc = DEFAULT_NVME_RDMA_CQ_SIZE;
 	poller->required_num_wc = 0;
-	return 0;
+	return poller;
 }
 
 static void
@@ -2848,6 +2858,12 @@ nvme_rdma_poll_group_free_pollers(struct nvme_rdma_poll_group *group)
 	struct nvme_rdma_poller	*poller, *tmp_poller;
 
 	STAILQ_FOREACH_SAFE(poller, &group->pollers, link, tmp_poller) {
+		assert(poller->refcnt == 0);
+		if (poller->refcnt) {
+			SPDK_WARNLOG("Destroying poller with non-zero ref count: poller %p, refcnt %d\n",
+				     poller, poller->refcnt);
+		}
+
 		if (poller->cq) {
 			ibv_destroy_cq(poller->cq);
 		}
@@ -2856,12 +2872,47 @@ nvme_rdma_poll_group_free_pollers(struct nvme_rdma_poll_group *group)
 	}
 }
 
+static struct nvme_rdma_poller *
+nvme_rdma_poll_group_get_poller(struct nvme_rdma_poll_group *group, struct ibv_context *device)
+{
+	struct nvme_rdma_poller *poller = NULL;
+
+	STAILQ_FOREACH(poller, &group->pollers, link) {
+		if (poller->device == device) {
+			break;
+		}
+	}
+
+	if (!poller) {
+		poller = nvme_rdma_poller_create(group, device);
+		if (!poller) {
+			SPDK_ERRLOG("Failed to create a poller for device %p\n", device);
+			return NULL;
+		}
+	}
+
+	poller->refcnt++;
+	return poller;
+}
+
+static void
+nvme_rdma_poll_group_put_poller(struct nvme_rdma_poll_group *group, struct nvme_rdma_poller *poller)
+{
+	assert(poller->refcnt > 0);
+	if (--poller->refcnt == 0) {
+		if (poller->cq) {
+			ibv_destroy_cq(poller->cq);
+		}
+		STAILQ_REMOVE(&group->pollers, poller, nvme_rdma_poller, link);
+		free(poller);
+		group->num_pollers--;
+	}
+}
+
 static struct spdk_nvme_transport_poll_group *
 nvme_rdma_poll_group_create(void)
 {
 	struct nvme_rdma_poll_group	*group;
-	struct ibv_context		**contexts;
-	int i = 0;
 
 	group = calloc(1, sizeof(*group));
 	if (group == NULL) {
@@ -2870,26 +2921,6 @@ nvme_rdma_poll_group_create(void)
 	}
 
 	STAILQ_INIT(&group->pollers);
-
-	contexts = rdma_get_devices(NULL);
-	if (contexts == NULL) {
-		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
-		free(group);
-		return NULL;
-	}
-
-	while (contexts[i] != NULL) {
-		if (nvme_rdma_poller_create(group, contexts[i])) {
-			nvme_rdma_poll_group_free_pollers(group);
-			free(group);
-			rdma_free_devices(contexts);
-			return NULL;
-		}
-		i++;
-	}
-
-	rdma_free_devices(contexts);
-
 	return &group->group;
 }
 
@@ -2927,7 +2958,13 @@ static int
 nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
+	struct nvme_rdma_poll_group	*group;
 
+	group = nvme_rdma_poll_group(qpair->poll_group);
+	if (rqpair->poller) {
+		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
+		rqpair->poller = NULL;
+	}
 	rqpair->cq = NULL;
 
 	return 0;
@@ -3003,7 +3040,9 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 	}
 
 	completions_allowed = completions_per_qpair * num_qpairs;
-	completions_per_poller = spdk_max(completions_allowed / group->num_pollers, 1);
+	if (group->num_pollers) {
+		completions_per_poller = spdk_max(completions_allowed / group->num_pollers, 1);
+	}
 
 	STAILQ_FOREACH(poller, &group->pollers, link) {
 		poller_completions = 0;
@@ -3086,6 +3125,12 @@ nvme_rdma_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
 	}
 	stats->trtype = SPDK_NVME_TRANSPORT_RDMA;
 	stats->rdma.num_devices = group->num_pollers;
+
+	if (stats->rdma.num_devices == 0) {
+		*_stats = stats;
+		return 0;
+	}
+
 	stats->rdma.device_stats = calloc(stats->rdma.num_devices, sizeof(*stats->rdma.device_stats));
 	if (!stats->rdma.device_stats) {
 		SPDK_ERRLOG("Can't allocate memory for RDMA device stats\n");

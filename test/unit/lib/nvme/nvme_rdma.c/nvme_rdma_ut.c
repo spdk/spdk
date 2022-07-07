@@ -601,20 +601,50 @@ static void
 test_nvme_rdma_poller_create(void)
 {
 	struct nvme_rdma_poll_group	group = {};
-	struct ibv_context *contexts = (struct ibv_context *)0xDEADBEEF;
+	struct ibv_context context = {
+		.device = (struct ibv_device *)0xDEADBEEF
+	};
+	struct ibv_context context_2 = {
+		.device = (struct ibv_device *)0xBAADBEEF
+	};
+	struct nvme_rdma_poller *poller_1, *poller_2, *poller_3;
 
 	/* Case: calloc and ibv not need to fail test */
 	STAILQ_INIT(&group.pollers);
-	group.num_pollers = 1;
-	int rc = nvme_rdma_poller_create(&group, contexts);
 
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(group.num_pollers = 2);
-	CU_ASSERT(&group.pollers != NULL);
-	CU_ASSERT(group.pollers.stqh_first->device == contexts);
-	CU_ASSERT(group.pollers.stqh_first->cq == (struct ibv_cq *)0xFEEDBEEF);
-	CU_ASSERT(group.pollers.stqh_first->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
-	CU_ASSERT(group.pollers.stqh_first->required_num_wc == 0);
+	poller_1 = nvme_rdma_poll_group_get_poller(&group, &context);
+	SPDK_CU_ASSERT_FATAL(poller_1 != NULL);
+	CU_ASSERT(group.num_pollers == 1);
+	CU_ASSERT(STAILQ_FIRST(&group.pollers) == poller_1);
+	CU_ASSERT(poller_1->refcnt == 1);
+	CU_ASSERT(poller_1->device == &context);
+	CU_ASSERT(poller_1->cq == (struct ibv_cq *)0xFEEDBEEF);
+	CU_ASSERT(poller_1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(poller_1->required_num_wc == 0);
+
+	poller_2 = nvme_rdma_poll_group_get_poller(&group, &context_2);
+	SPDK_CU_ASSERT_FATAL(poller_2 != NULL);
+	CU_ASSERT(group.num_pollers == 2);
+	CU_ASSERT(STAILQ_FIRST(&group.pollers) == poller_2);
+	CU_ASSERT(poller_2->refcnt == 1);
+	CU_ASSERT(poller_2->device == &context_2);
+
+	poller_3 = nvme_rdma_poll_group_get_poller(&group, &context);
+	SPDK_CU_ASSERT_FATAL(poller_3 != NULL);
+	CU_ASSERT(poller_3 == poller_1);
+	CU_ASSERT(group.num_pollers == 2);
+	CU_ASSERT(poller_3->refcnt == 2);
+
+	nvme_rdma_poll_group_put_poller(&group, poller_2);
+	CU_ASSERT(group.num_pollers == 1);
+
+	nvme_rdma_poll_group_put_poller(&group, poller_1);
+	CU_ASSERT(group.num_pollers == 1);
+	CU_ASSERT(poller_3->refcnt == 1);
+
+	nvme_rdma_poll_group_put_poller(&group, poller_3);
+	CU_ASSERT(STAILQ_EMPTY(&group.pollers));
+	CU_ASSERT(group.num_pollers == 0);
 
 	nvme_rdma_poll_group_free_pollers(&group);
 }
@@ -1321,19 +1351,14 @@ test_nvme_rdma_poll_group_get_stats(void)
 
 	/* Initialization */
 	STAILQ_INIT(&tgroup.pollers);
-	rc = nvme_rdma_poller_create(&tgroup, &contexts1);
-	CU_ASSERT(rc == 0);
+	tpoller2 = nvme_rdma_poller_create(&tgroup, &contexts1);
+	SPDK_CU_ASSERT_FATAL(tpoller2 != NULL);
 	CU_ASSERT(tgroup.num_pollers == 1);
 
-	rc = nvme_rdma_poller_create(&tgroup, &contexts2);
-	CU_ASSERT(rc == 0);
+	tpoller1 = nvme_rdma_poller_create(&tgroup, &contexts2);
+	SPDK_CU_ASSERT_FATAL(tpoller1 != NULL);
 	CU_ASSERT(tgroup.num_pollers == 2);
 	CU_ASSERT(&tgroup.pollers != NULL);
-
-	tpoller1 = STAILQ_FIRST(&tgroup.pollers);
-	SPDK_CU_ASSERT_FATAL(tpoller1 != NULL);
-	tpoller2 = STAILQ_NEXT(tpoller1, link);
-	SPDK_CU_ASSERT_FATAL(tpoller2 != NULL);
 
 	CU_ASSERT(tpoller1->device == &contexts2);
 	CU_ASSERT(tpoller2->device == &contexts1);
@@ -1407,86 +1432,91 @@ test_nvme_rdma_poll_group_set_cq(void)
 	int rc = -1;
 	struct nvme_rdma_poll_group *group;
 	struct spdk_nvme_transport_poll_group *tgroup;
-	struct nvme_rdma_poller *poller1;
-	struct nvme_rdma_poller *poller2;
+	struct nvme_rdma_poller *poller;
 	struct nvme_rdma_qpair rqpair = {};
 	struct rdma_cm_id cm_id = {};
 
-	/* Case1: Test function nvme_rdma_poll_group_create
-	   Test1: Function rdma_get_devices failed */
-	MOCK_SET(rdma_get_devices, NULL);
-
+	/* Case1: Test function nvme_rdma_poll_group_create */
+	/* Test1: Function nvme_rdma_poll_group_create success */
 	tgroup = nvme_rdma_poll_group_create();
-	CU_ASSERT(tgroup == NULL);
-
-	/* Test2: Function nvme_rdma_poller_create failed */
-	MOCK_CLEAR(rdma_get_devices);
-	MOCK_SET(ibv_create_cq, NULL);
-
-	tgroup = nvme_rdma_poll_group_create();
-	CU_ASSERT(tgroup == NULL);
-
-	/* Test3: Function nvme_rdma_poll_group_create success */
-	MOCK_SET(ibv_create_cq, (struct ibv_cq *)0xFEEDBEEF);
-
-	tgroup = nvme_rdma_poll_group_create();
-	CU_ASSERT(tgroup != NULL);
+	SPDK_CU_ASSERT_FATAL(tgroup != NULL);
 
 	group = nvme_rdma_poll_group(tgroup);
 	CU_ASSERT(group != NULL);
-
-	poller1 = STAILQ_FIRST(&group->pollers);
-	SPDK_CU_ASSERT_FATAL(poller1 != NULL);
-	poller2 = STAILQ_NEXT(poller1, link);
-	SPDK_CU_ASSERT_FATAL(poller2 != NULL);
-
-	CU_ASSERT(poller1->device == (struct ibv_context *)0xFEEDBEEF);
-	CU_ASSERT(poller1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
-	CU_ASSERT(poller1->required_num_wc == 0);
-	CU_ASSERT(poller2->device == (struct ibv_context *)0xDEADBEEF);
-	CU_ASSERT(poller2->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
-	CU_ASSERT(poller2->required_num_wc == 0);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
 
 	/* Case2: Test function nvme_rdma_poll_group_set_cq */
 	rqpair.qpair.poll_group = tgroup;
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rqpair.cm_id = &cm_id;
 
-	/* Test1: Unable to find a cq for qpair on poll group */
+	/* Test1: Function ibv_create_cq failed */
+	cm_id.verbs = (void *)0xFEEDBEEF;
+	MOCK_SET(ibv_create_cq, NULL);
+
+	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
+	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(rqpair.cq == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	MOCK_CLEAR(ibv_create_cq);
+
+	/* Test2: Unable to find a cq for qpair on poll group */
 	cm_id.verbs = NULL;
 
 	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(rqpair.cq == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
 
-	/* Test2: Match cq success, current_num_wc is enough */
+	/* Test3: Match cq success, current_num_wc is enough */
+	MOCK_SET(ibv_create_cq, (struct ibv_cq *)0xFEEDBEEF);
+
 	cm_id.verbs = (void *)0xFEEDBEEF;
 	rqpair.num_entries = 0;
 
 	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(poller1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
-	CU_ASSERT(poller1->required_num_wc == 0);
+	CU_ASSERT(rqpair.cq == (void *)0xFEEDBEEF);
 
-	/* Test3: Match cq success, function ibv_resize_cq failed */
+	poller = STAILQ_FIRST(&group->pollers);
+	SPDK_CU_ASSERT_FATAL(poller != NULL);
+	CU_ASSERT(STAILQ_NEXT(poller, link) == NULL);
+	CU_ASSERT(poller->device == (struct ibv_context *)0xFEEDBEEF);
+	CU_ASSERT(poller->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
+	CU_ASSERT(poller->required_num_wc == 0);
+	CU_ASSERT(rqpair.poller == poller);
+
+	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair.qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.cq == NULL);
+	CU_ASSERT(rqpair.poller == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	/* Test4: Match cq success, function ibv_resize_cq failed */
 	rqpair.cq = NULL;
 	rqpair.num_entries = DEFAULT_NVME_RDMA_CQ_SIZE - 1;
 	MOCK_SET(ibv_resize_cq, -1);
 
 	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
 	CU_ASSERT(rc == -EPROTO);
-	CU_ASSERT(poller1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE);
-	CU_ASSERT(poller1->required_num_wc == 0);
+	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
 
-	/* Test4: Current_num_wc is not enough, resize success */
+	/* Test5: Current_num_wc is not enough, resize success */
 	MOCK_SET(ibv_resize_cq, 0);
 
 	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(poller1->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE * 2);
-	CU_ASSERT(poller1->required_num_wc == (DEFAULT_NVME_RDMA_CQ_SIZE - 1) * 2);
-	CU_ASSERT(rqpair.cq == poller1->cq);
-	CU_ASSERT(rqpair.poller == poller1);
+
+	poller = STAILQ_FIRST(&group->pollers);
+	SPDK_CU_ASSERT_FATAL(poller != NULL);
+	CU_ASSERT(poller->current_num_wc == DEFAULT_NVME_RDMA_CQ_SIZE * 2);
+	CU_ASSERT(poller->required_num_wc == (DEFAULT_NVME_RDMA_CQ_SIZE - 1) * 2);
+	CU_ASSERT(rqpair.cq == poller->cq);
+	CU_ASSERT(rqpair.poller == poller);
+
+	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair.qpair);
+	CU_ASSERT(rc == 0);
 
 	rc = nvme_rdma_poll_group_destroy(tgroup);
 	CU_ASSERT(rc == 0);
