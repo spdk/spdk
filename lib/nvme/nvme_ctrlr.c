@@ -593,7 +593,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, qpair);
 
-	if (qpair->poll_group) {
+	if (qpair->poll_group && (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr))) {
 		spdk_nvme_poll_group_remove(qpair->poll_group->group, qpair);
 	}
 

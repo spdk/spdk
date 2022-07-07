@@ -508,7 +508,8 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTING);
 	assert(transport != NULL);
-	if (qpair->poll_group) {
+
+	if (qpair->poll_group && (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr))) {
 		nvme_poll_group_disconnect_qpair(qpair);
 	}
 
@@ -518,7 +519,9 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 void
 nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 {
-	nvme_qpair_abort_all_queued_reqs(qpair, 0);
+	if (qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr)) {
+		nvme_qpair_abort_all_queued_reqs(qpair, 0);
+	}
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
 }
 
