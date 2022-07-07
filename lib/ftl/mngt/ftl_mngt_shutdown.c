@@ -48,6 +48,10 @@ static const struct ftl_mngt_process_desc desc_shutdown = {
 			.action = ftl_mngt_deinit_l2p
 		},
 		{
+			.name = "Deinitialize P2L checkpointing",
+			.action = ftl_mngt_p2l_deinit_ckpt
+		},
+		{
 			.name = "Rollback FTL device",
 			.action = ftl_mngt_rollback_device
 		},
@@ -90,6 +94,10 @@ static const struct ftl_mngt_process_desc desc_fast_shutdown = {
 		{
 			.name = "Deinitialize L2P",
 			.action = ftl_mngt_deinit_l2p
+		},
+		{
+			.name = "Deinitialize P2L checkpointing",
+			.action = ftl_mngt_p2l_deinit_ckpt
 		},
 		{
 			.name = "Rollback FTL device",

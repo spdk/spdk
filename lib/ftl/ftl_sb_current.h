@@ -39,6 +39,9 @@ struct ftl_superblock {
 
 	uint32_t			reserved2;
 
+	/* Last L2P checkpoint +1 (i.e. min_seq_id, 0:no ckpt) */
+	uint64_t			ckpt_seq_id;
+
 	struct ftl_superblock_gc_info	gc_info;
 
 	struct ftl_superblock_md_region	md_layout_head;

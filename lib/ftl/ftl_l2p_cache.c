@@ -47,6 +47,7 @@ struct ftl_l2p_page {
 	struct ftl_l2p_cache_page_io_ctx ctx;
 	bool on_lru_list;
 	void *page_buffer;
+	uint64_t ckpt_seq_id;
 	ftl_df_obj_id obj_id;
 };
 

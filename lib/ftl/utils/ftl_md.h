@@ -123,6 +123,11 @@ union ftl_md_vss {
 	} unmap;
 
 	struct {
+		uint64_t	seq_id;
+		uint32_t	p2l_checksum;
+	} p2l_ckpt;
+
+	struct {
 		uint64_t	lba;
 		uint64_t	seq_id;
 	} nv_cache;

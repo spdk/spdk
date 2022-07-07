@@ -15,14 +15,11 @@ static void
 write_rq_end(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct ftl_rq *rq = arg;
-	struct ftl_band *band = rq->io.band;
 
 	rq->success = success;
 
-	assert(band->queue_depth > 0);
-	band->queue_depth--;
+	ftl_p2l_ckpt_issue(rq);
 
-	rq->owner.cb(rq);
 	spdk_bdev_free_io(bdev_io);
 }
 

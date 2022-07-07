@@ -17,7 +17,7 @@
 
 #include "utils/ftl_df.h"
 
-#define FTL_MAX_OPEN_BANDS 4
+#define FTL_MAX_OPEN_BANDS FTL_LAYOUT_REGION_TYPE_P2L_COUNT
 
 #define FTL_BAND_VERSION_0	0
 #define FTL_BAND_VERSION_1	1
@@ -60,6 +60,9 @@ struct ftl_band_md {
 
 	/* Band type set during opening */
 	enum ftl_band_type		type;
+
+	/* nv_cache p2l md region associated with band */
+	enum ftl_layout_region_type	p2l_md_region;
 
 	/* Sequence ID when band was opened */
 	uint64_t			seq;
@@ -157,6 +160,7 @@ ftl_addr ftl_band_next_xfer_addr(struct ftl_band *band, ftl_addr addr, size_t nu
 ftl_addr ftl_band_next_addr(struct ftl_band *band, ftl_addr addr, size_t offset);
 size_t ftl_band_user_blocks_left(const struct ftl_band *band, size_t offset);
 size_t ftl_band_user_blocks(const struct ftl_band *band);
+void ftl_band_set_p2l(struct ftl_band *band, uint64_t lba, ftl_addr addr, uint64_t seq_id);
 void ftl_band_set_addr(struct ftl_band *band, uint64_t lba, ftl_addr addr);
 struct ftl_band *ftl_band_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr);
 ftl_addr ftl_band_tail_md_addr(struct ftl_band *band);
