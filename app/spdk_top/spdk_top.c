@@ -1027,14 +1027,6 @@ get_cores_data(void)
 				cores_info[i].last_busy = g_cores_info[j].busy;
 				cores_info[i].last_idle = g_cores_info[j].idle;
 			}
-			/* Do not consider threads which changed cores when issuing
-			 * RPCs to get_core_data and get_thread_data and threads
-			 * not currently assigned to this core. */
-			if ((int)cores_info[i].lcore == g_threads_info[j].core_num) {
-				cores_info[i].pollers_count += g_threads_info[j].active_pollers_count +
-							       g_threads_info[j].timed_pollers_count +
-							       g_threads_info[j].paused_pollers_count;
-			}
 		}
 	}
 
@@ -1053,6 +1045,12 @@ get_cores_data(void)
 			for (k = 0; k < g_last_threads_count; k++) {
 				if (core_info->threads.thread[j].id == g_threads_info[k].id) {
 					g_threads_info[k].core_num = core_info->lcore;
+					/* Do not consider threads which changed cores when issuing
+					 * RPCs to get_core_data and get_thread_data and threads
+					 * not currently assigned to this core. */
+					core_info->pollers_count += g_threads_info[k].active_pollers_count +
+								    g_threads_info[k].timed_pollers_count +
+								    g_threads_info[k].paused_pollers_count;
 				}
 			}
 		}
