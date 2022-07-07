@@ -513,8 +513,7 @@ rpc_virtio_blk_create_transport(struct spdk_jsonrpc_request *request,
 
 invalid:
 	free_rpc_virtio_blk_create_transport(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 spdk_strerror(-rc));
+	spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("virtio_blk_create_transport", rpc_virtio_blk_create_transport,
 		  SPDK_RPC_RUNTIME)
