@@ -33,9 +33,6 @@ extern struct ftl_region_upgrade_desc nvc_upgrade_desc[];
 extern struct ftl_region_upgrade_desc band_upgrade_desc[];
 
 static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
-#ifdef SPDK_FTL_VSS_EMU
-	[FTL_LAYOUT_REGION_TYPE_VSS] = {},
-#endif
 	[FTL_LAYOUT_REGION_TYPE_SB] = {
 		.count = FTL_SB_VERSION_CURRENT,
 		.desc = sb_upgrade_desc,
@@ -82,6 +79,9 @@ static struct ftl_layout_upgrade_desc_list layout_upgrade_desc[] = {
 	},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD] = {},
 	[FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR] = {},
+#ifdef SPDK_FTL_VSS_EMU
+	[FTL_LAYOUT_REGION_TYPE_VSS] = {},
+#endif
 };
 
 SPDK_STATIC_ASSERT(sizeof(layout_upgrade_desc) / sizeof(*layout_upgrade_desc) ==

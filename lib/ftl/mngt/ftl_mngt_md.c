@@ -534,7 +534,7 @@ ftl_mngt_md_init_vss_emu(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt
 
 	/* Allocate md buf */
 	layout->md[FTL_LAYOUT_REGION_TYPE_VSS] = ftl_md_create(dev, region->current.blocks,
-			region->vss_blksz, NULL, 0, region);
+			region->vss_blksz, NULL, FTL_MD_CREATE_HEAP, region);
 	if (NULL == layout->md[FTL_LAYOUT_REGION_TYPE_VSS]) {
 		ftl_mngt_fail_step(mngt);
 		return;

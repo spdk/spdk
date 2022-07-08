@@ -15,54 +15,53 @@ struct ftl_md;
 	(FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX - FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN + 1)
 
 enum ftl_layout_region_type {
-#ifdef SPDK_FTL_VSS_EMU
-	/** VSS region for NV cache VSS emulation */
-	FTL_LAYOUT_REGION_TYPE_VSS,
-#endif
 	/* Superblock describing the basic FTL information */
-	FTL_LAYOUT_REGION_TYPE_SB,
+	FTL_LAYOUT_REGION_TYPE_SB = 0,
 	/* Mirrored instance of the superblock on the base device */
-	FTL_LAYOUT_REGION_TYPE_SB_BASE,
+	FTL_LAYOUT_REGION_TYPE_SB_BASE = 1,
 	/* If using cached L2P, this region stores the serialized instance of it */
-	FTL_LAYOUT_REGION_TYPE_L2P,
+	FTL_LAYOUT_REGION_TYPE_L2P = 2,
 
 	/* State of bands */
-	FTL_LAYOUT_REGION_TYPE_BAND_MD,
+	FTL_LAYOUT_REGION_TYPE_BAND_MD = 3,
 	/* Mirrored instance of bands state */
-	FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR,
+	FTL_LAYOUT_REGION_TYPE_BAND_MD_MIRROR = 4,
 
 	/* Map of valid physical addresses, used for more efficient garbage collection */
-	FTL_LAYOUT_REGION_TYPE_VALID_MAP,
+	FTL_LAYOUT_REGION_TYPE_VALID_MAP = 5,
 
 	/* State of chunks */
-	FTL_LAYOUT_REGION_TYPE_NVC_MD,
+	FTL_LAYOUT_REGION_TYPE_NVC_MD = 6,
 	/* Mirrored instance of the state of chunks */
-	FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR,
+	FTL_LAYOUT_REGION_TYPE_NVC_MD_MIRROR = 7,
 
 	/* User data region on the nv cache device */
-	FTL_LAYOUT_REGION_TYPE_DATA_NVC,
+	FTL_LAYOUT_REGION_TYPE_DATA_NVC = 8,
 
 	/* User data region on the base device */
-	FTL_LAYOUT_REGION_TYPE_DATA_BASE,
+	FTL_LAYOUT_REGION_TYPE_DATA_BASE = 9,
 
 	/* P2L checkpointing allows for emulation of VSS on base device.
-	 * 4 entries are needed - 2 for each writer
-	 * Although the naming may suggest a particular region is assigned to its corresponding writer, it's not
-	 * the case - they can be used interchangeably
-	 */
-	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC,
+	 * 4 entries are needed - 2 for each writer */
+	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC = 10,
 	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MIN = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC,
-	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT,
-	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP,
-	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT,
+	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_GC_NEXT = 11,
+	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP = 12,
+	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT = 13,
 	FTL_LAYOUT_REGION_TYPE_P2L_CKPT_MAX = FTL_LAYOUT_REGION_TYPE_P2L_CKPT_COMP_NEXT,
 
 	/* Information about trimmed space in FTL */
-	FTL_LAYOUT_REGION_TYPE_TRIM_MD,
+	FTL_LAYOUT_REGION_TYPE_TRIM_MD = 14,
 	/* Mirrored information about trim */
-	FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR,
+	FTL_LAYOUT_REGION_TYPE_TRIM_MD_MIRROR = 15,
 
-	FTL_LAYOUT_REGION_TYPE_MAX,
+#ifndef SPDK_FTL_VSS_EMU
+	FTL_LAYOUT_REGION_TYPE_MAX = 16
+#else
+	/* VSS region for NV cache VSS emulation */
+	FTL_LAYOUT_REGION_TYPE_VSS = 16,
+	FTL_LAYOUT_REGION_TYPE_MAX = 17,
+#endif
 };
 
 /* last nvc/base region in terms of lba address space */
