@@ -569,6 +569,7 @@ function install_sources() {
 			install_igb_uio
 			install_ice
 			install_lcov
+			install_bpftrace
 		)
 		install_extra_pkgs
 	fi
@@ -585,10 +586,6 @@ function install_sources() {
 			"$source"
 		fi
 	done
-
-	if [[ $INSTALL_BPFTRACE == true ]] || [[ $ID == fedora ]] && (( VERSION_ID >= 35 )); then
-		install_bpftrace
-	fi
 
 	if [[ $INSTALL_REFSPDK == true ]]; then
 		# Serialize builds as refspdk depends on spdk
