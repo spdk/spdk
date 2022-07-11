@@ -318,17 +318,12 @@ vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
 force_distro = ENV['FORCE_DISTRO'] == "true" ? true : false
 
 distro_to_use = get_box_type(distro, force_distro)
-if (distro_to_use.include?("generic/freebsd"))
-  files_sync_backend = {type: :nfs, nfs_udp: false,  mount_options: ['ro']}
-  plugins_sync_backend = {type: :nfs, nfs_udp: false}
-else
-  # Remove --copy-links from default rsync cmdline since we do want to sync
-  # actual symlinks as well. Also, since copy is made between host and its
-  # local VM we don't need to worry about saturating the local link so skip
-  # the compression to speed up the whole transfer.
-  files_sync_backend = {type: "rsync", rsync__auto: false, rsync__args: ["--archive", "--verbose", "--delete"]}
-  plugins_sync_backend = {type: :sshfs}
-end
+# Remove --copy-links from default rsync cmdline since we do want to sync
+# actual symlinks as well. Also, since copy is made between host and its
+# local VM we don't need to worry about saturating the local link so skip
+# the compression to speed up the whole transfer.
+files_sync_backend = {type: "rsync", rsync__auto: false, rsync__args: ["--archive", "--verbose", "--delete"]}
+plugins_sync_backend = {type: :nfs, nfs_udp: false, nfs_version: 4}
 
 Vagrant.configure(2) do |config|
   config.vm.box = distro_to_use
