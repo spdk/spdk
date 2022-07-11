@@ -6163,29 +6163,6 @@ bdev_destroy_cb(void *io_device)
 	}
 }
 
-static void
-bdev_register_finished(void *arg)
-{
-	struct spdk_bdev *bdev = arg;
-
-	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
-}
-
-int
-spdk_bdev_register(struct spdk_bdev *bdev)
-{
-	int rc = bdev_register(bdev);
-
-	if (rc == 0) {
-		/* Examine configuration before initializing I/O */
-		bdev_examine(bdev);
-
-		spdk_bdev_wait_for_examine(bdev_register_finished, bdev);
-	}
-
-	return rc;
-}
-
 void
 spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 {
@@ -6582,6 +6559,54 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	bdev_close(bdev, desc);
 
 	pthread_mutex_unlock(&g_bdev_mgr.mutex);
+}
+
+static void
+bdev_register_finished(void *arg)
+{
+	struct spdk_bdev_desc *desc = arg;
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+
+	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
+
+	bdev_close(bdev, desc);
+}
+
+int
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_desc *desc;
+	int rc;
+
+	rc = bdev_register(bdev);
+	if (rc != 0) {
+		return rc;
+	}
+
+	/* A descriptor is opened to prevent bdev deletion during examination */
+	rc = bdev_desc_alloc(bdev, _tmp_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		spdk_bdev_unregister(bdev, NULL, NULL);
+		return rc;
+	}
+
+	rc = bdev_open(bdev, false, desc);
+	if (rc != 0) {
+		bdev_desc_free(desc);
+		spdk_bdev_unregister(bdev, NULL, NULL);
+		return rc;
+	}
+
+	/* Examine configuration before initializing I/O */
+	bdev_examine(bdev);
+
+	rc = spdk_bdev_wait_for_examine(bdev_register_finished, desc);
+	if (rc != 0) {
+		bdev_close(bdev, desc);
+		spdk_bdev_unregister(bdev, NULL, NULL);
+	}
+
+	return rc;
 }
 
 int
