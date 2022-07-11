@@ -439,6 +439,7 @@ allocate_bdev(char *name)
 	bdev->blocklen = 512;
 
 	rc = spdk_bdev_register(bdev);
+	poll_threads();
 	CU_ASSERT(rc == 0);
 
 	return bdev;
@@ -458,6 +459,7 @@ allocate_vbdev(char *name)
 	bdev->module = &vbdev_ut_if;
 
 	rc = spdk_bdev_register(bdev);
+	poll_threads();
 	CU_ASSERT(rc == 0);
 
 	return bdev;
@@ -733,6 +735,7 @@ num_blocks_test(void)
 	bdev.fn_table = &fn_table;
 	bdev.module = &bdev_ut_if;
 	spdk_bdev_register(&bdev);
+	poll_threads();
 	spdk_bdev_notify_blockcnt_change(&bdev, 50);
 
 	/* Growing block number */
