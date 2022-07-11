@@ -20,6 +20,7 @@ def get_box_type(distro, force_distro)
     'fedora36'   => 'generic/fedora36',
     'arch'       => 'generic/arch',
     'freebsd12'  => 'generic/freebsd12',
+    'freebsd13'  => 'generic/freebsd13',
     'rocky8'     => 'rockylinux/8'
   }
   abort("Invalid argument! #{distro}") unless distro_to_type.key?(distro) || force_distro
