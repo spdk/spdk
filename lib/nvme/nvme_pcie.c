@@ -1048,39 +1048,6 @@ spdk_nvme_pcie_set_hotplug_filter(spdk_nvme_pcie_hotplug_filter_cb filter_cb)
 	g_hotplug_filter_cb = filter_cb;
 }
 
-static int
-nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
-			       struct spdk_nvme_transport_poll_group_stat **_stats)
-{
-	struct nvme_pcie_poll_group *group;
-	struct spdk_nvme_transport_poll_group_stat *stats;
-
-	if (tgroup == NULL || _stats == NULL) {
-		SPDK_ERRLOG("Invalid stats or group pointer\n");
-		return -EINVAL;
-	}
-
-	group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
-	stats = calloc(1, sizeof(*stats));
-	if (!stats) {
-		SPDK_ERRLOG("Can't allocate memory for RDMA stats\n");
-		return -ENOMEM;
-	}
-	stats->trtype = SPDK_NVME_TRANSPORT_PCIE;
-	memcpy(&stats->pcie, &group->stats, sizeof(group->stats));
-
-	*_stats = stats;
-
-	return 0;
-}
-
-static void
-nvme_pcie_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
-				struct spdk_nvme_transport_poll_group_stat *stats)
-{
-	free(stats);
-}
-
 static struct spdk_pci_id nvme_pci_driver_id[] = {
 	{
 		.class_id = SPDK_PCI_CLASS_NVME,

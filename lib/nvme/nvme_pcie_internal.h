@@ -329,6 +329,10 @@ struct spdk_nvme_qpair *nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *
 		const struct spdk_nvme_io_qpair_opts *opts);
 int nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
 int nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
+int nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				   struct spdk_nvme_transport_poll_group_stat **_stats);
+void nvme_pcie_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				     struct spdk_nvme_transport_poll_group_stat *stats);
 
 struct spdk_nvme_transport_poll_group *nvme_pcie_poll_group_create(void);
 int nvme_pcie_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair);

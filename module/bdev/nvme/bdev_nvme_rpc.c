@@ -1160,6 +1160,7 @@ rpc_bdev_nvme_stats_per_channel(struct spdk_io_channel_iter *i)
 			rpc_bdev_nvme_rdma_stats(ctx->w, tr_stat);
 			break;
 		case SPDK_NVME_TRANSPORT_PCIE:
+		case SPDK_NVME_TRANSPORT_VFIOUSER:
 			rpc_bdev_nvme_pcie_stats(ctx->w, tr_stat);
 			break;
 		case SPDK_NVME_TRANSPORT_TCP:

@@ -1777,6 +1777,39 @@ nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 	return 0;
 }
 
+int
+nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
+			       struct spdk_nvme_transport_poll_group_stat **_stats)
+{
+	struct nvme_pcie_poll_group *group;
+	struct spdk_nvme_transport_poll_group_stat *stats;
+
+	if (tgroup == NULL || _stats == NULL) {
+		SPDK_ERRLOG("Invalid stats or group pointer\n");
+		return -EINVAL;
+	}
+
+	group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
+	stats = calloc(1, sizeof(*stats));
+	if (!stats) {
+		SPDK_ERRLOG("Can't allocate memory for RDMA stats\n");
+		return -ENOMEM;
+	}
+	stats->trtype = SPDK_NVME_TRANSPORT_PCIE;
+	memcpy(&stats->pcie, &group->stats, sizeof(group->stats));
+
+	*_stats = stats;
+
+	return 0;
+}
+
+void
+nvme_pcie_poll_group_free_stats(struct spdk_nvme_transport_poll_group *tgroup,
+				struct spdk_nvme_transport_poll_group_stat *stats)
+{
+	free(stats);
+}
+
 SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
 {
 	struct spdk_trace_tpoint_opts opts[] = {
