@@ -102,15 +102,15 @@ concat_submit_rw_request(struct raid_bdev_io *raid_io)
 	assert(raid_ch->base_channel);
 	base_ch = raid_ch->base_channel[pd_idx];
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		ret = spdk_bdev_readv_blocks(base_info->desc, base_ch,
-					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					     pd_lba, pd_blocks, concat_bdev_io_completion,
-					     raid_io);
+		ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch,
+						 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						 pd_lba, pd_blocks, concat_bdev_io_completion,
+						 raid_io, bdev_io->u.bdev.ext_opts);
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		ret = spdk_bdev_writev_blocks(base_info->desc, base_ch,
-					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					      pd_lba, pd_blocks, concat_bdev_io_completion,
-					      raid_io);
+		ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch,
+						  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						  pd_lba, pd_blocks, concat_bdev_io_completion,
+						  raid_io, bdev_io->u.bdev.ext_opts);
 	} else {
 		SPDK_ERRLOG("Recvd not supported io type %u\n", bdev_io->type);
 		assert(0);

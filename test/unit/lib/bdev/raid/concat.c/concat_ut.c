@@ -33,6 +33,7 @@ struct req_records {
 	uint64_t num_blocks[MAX_RECORDS];
 	enum CONCAT_IO_TYPE io_type[MAX_RECORDS];
 	int count;
+	void *md;
 } g_req_records;
 
 /*
@@ -56,9 +57,9 @@ DEFINE_STUB(raid_bdev_io_complete_part, bool,
 	    true);
 
 int
-spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		       struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts)
 {
 	if (g_succeed) {
 		int i = g_req_records.count;
@@ -68,6 +69,7 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		g_req_records.io_type[i] = CONCAT_READV;
 		g_req_records.count++;
 		cb(NULL, true, cb_arg);
+		g_req_records.md = opts->metadata;
 		return 0;
 	} else {
 		return -ENOMEM;
@@ -75,9 +77,9 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 int
-spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-			struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
-			spdk_bdev_io_completion_cb cb, void *cb_arg)
+spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts)
 {
 	if (g_succeed) {
 		int i = g_req_records.count;
@@ -87,6 +89,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		g_req_records.io_type[i] = CONCAT_WRITEV;
 		g_req_records.count++;
 		cb(NULL, true, cb_arg);
+		g_req_records.md = opts->metadata;
 		return 0;
 	} else {
 		return -ENOMEM;
@@ -314,6 +317,13 @@ bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
 		}
 		free(bdev_io->u.bdev.iovs);
 	}
+
+	if (bdev_io->u.bdev.ext_opts) {
+		if (bdev_io->u.bdev.ext_opts->metadata) {
+			bdev_io->u.bdev.ext_opts->metadata = NULL;
+		}
+		free(bdev_io->u.bdev.ext_opts);
+	}
 	free(bdev_io);
 }
 
@@ -339,6 +349,9 @@ bdev_io_initialize(struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch, str
 	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.iovs->iov_base != NULL);
 	bdev_io->u.bdev.iovs->iov_len = bdev_io->u.bdev.num_blocks * BLOCK_LEN;
 	bdev_io->internal.ch = channel;
+	bdev_io->u.bdev.ext_opts = calloc(1, sizeof(struct spdk_bdev_ext_io_opts));
+	SPDK_CU_ASSERT_FATAL(bdev_io->u.bdev.ext_opts != NULL);
+	bdev_io->u.bdev.ext_opts->metadata = (void *)0xAEDFEBAC;
 }
 
 static void
@@ -399,6 +412,7 @@ submit_and_verify_rw(enum CONCAT_IO_TYPE io_type, struct concat_params *params)
 		CU_ASSERT(g_req_records.num_blocks[0] == blocks);
 		CU_ASSERT(g_req_records.io_type[0] == io_type);
 		CU_ASSERT(g_req_records.count == 1);
+		CU_ASSERT(g_req_records.md == (void *)0xAEDFEBAC);
 		bdev_io_cleanup(bdev_io);
 		free(ch);
 		free(raid_ch->base_channel);
