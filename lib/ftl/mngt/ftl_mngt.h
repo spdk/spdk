@@ -21,6 +21,15 @@ struct ftl_mngt_process;
 typedef void (*ftl_mngt_fn)(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt);
 
 /**
+ * The FTL management process completion callback function
+ *
+ * @param dev FTL device
+ * @param ctx Caller context
+ * @param status The operation result of the management process
+ */
+typedef void (*ftl_mngt_completion)(struct spdk_ftl_dev *dev, void *ctx, int status);
+
+/**
  * The FTL management step descriptior
  */
 struct ftl_mngt_step_desc {
@@ -116,7 +125,7 @@ struct ftl_mngt_process_desc {
  */
 int ftl_mngt_process_execute(struct spdk_ftl_dev *dev,
 			     const struct ftl_mngt_process_desc *process,
-			     ftl_mngt_fn cb, void *cb_ctx);
+			     ftl_mngt_completion cb, void *cb_ctx);
 
 /**
  * @brief Executes rollback on the FTL management process defined by the process
@@ -135,7 +144,7 @@ int ftl_mngt_process_execute(struct spdk_ftl_dev *dev,
  */
 int ftl_mngt_process_rollback(struct spdk_ftl_dev *dev,
 			      const struct ftl_mngt_process_desc *process,
-			      ftl_mngt_fn cb, void *cb_ctx);
+			      ftl_mngt_completion cb, void *cb_ctx);
 
 /*
  * FTL management API for steps
@@ -198,19 +207,6 @@ void *ftl_mngt_get_process_ctx(struct ftl_mngt_process *mngt);
  * @return Pointer to the caller context
  */
 void *ftl_mngt_get_caller_ctx(struct ftl_mngt_process *mngt);
-
-/**
- * @brief Gets the status of executed management process
- *
- * @param mngt FTL management handle
- *
- * @note This function can be invoked within ftl_mngt_fn callback only
- *
- * @return The operation result of the management process
- * @retval 0 Operation successful
- * @retval Non-zero Operation failure
- */
-int ftl_mngt_get_status(struct ftl_mngt_process *mngt);
 
 /**
  * @brief Finishes the management process immediately

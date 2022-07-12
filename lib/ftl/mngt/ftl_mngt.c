@@ -28,11 +28,11 @@ struct ftl_mngt_step {
 struct ftl_mngt_process {
 	struct spdk_ftl_dev *dev;
 	int status;
-	int silent;
+	bool silent;
 	bool rollback;
 	bool continuing;
 	struct  {
-		ftl_mngt_fn cb;
+		ftl_mngt_completion cb;
 		void *cb_ctx;
 		struct spdk_thread *thread;
 	} caller;
@@ -121,9 +121,8 @@ free_mngt(struct ftl_mngt_process *mngt)
 }
 
 static struct ftl_mngt_process *
-allocate_mngt(struct spdk_ftl_dev *dev,
-	      const struct ftl_mngt_process_desc *pdesc,
-	      ftl_mngt_fn cb, void *cb_ctx)
+allocate_mngt(struct spdk_ftl_dev *dev, const struct ftl_mngt_process_desc *pdesc,
+	      ftl_mngt_completion cb, void *cb_ctx, bool silent)
 {
 	struct ftl_mngt_process *mngt;
 
@@ -133,6 +132,7 @@ allocate_mngt(struct spdk_ftl_dev *dev,
 		goto error;
 	}
 	mngt->dev = dev;
+	mngt->silent = silent;
 	mngt->caller.cb = cb;
 	mngt->caller.cb_ctx = cb_ctx;
 	mngt->caller.thread = spdk_get_thread();
@@ -157,16 +157,15 @@ error:
 	return NULL;
 }
 
-int
-ftl_mngt_process_execute(struct spdk_ftl_dev *dev,
-			 const struct ftl_mngt_process_desc *pdesc,
-			 ftl_mngt_fn cb, void *cb_ctx)
+static int
+_ftl_mngt_process_execute(struct spdk_ftl_dev *dev, const struct ftl_mngt_process_desc *pdesc,
+			  ftl_mngt_completion cb, void *cb_ctx, bool silent)
 {
 	const struct ftl_mngt_step_desc *sdesc;
 	struct ftl_mngt_process *mngt;
 	int rc = 0;
 
-	mngt = allocate_mngt(dev, pdesc, cb, cb_ctx);
+	mngt = allocate_mngt(dev, pdesc, cb, cb_ctx, silent);
 	if (!mngt) {
 		rc = -ENOMEM;
 		goto error;
@@ -201,15 +200,21 @@ error:
 }
 
 int
-ftl_mngt_process_rollback(struct spdk_ftl_dev *dev,
-			  const struct ftl_mngt_process_desc *pdesc,
-			  ftl_mngt_fn cb, void *cb_ctx)
+ftl_mngt_process_execute(struct spdk_ftl_dev *dev, const struct ftl_mngt_process_desc *pdesc,
+			 ftl_mngt_completion cb, void *cb_ctx)
+{
+	return _ftl_mngt_process_execute(dev, pdesc, cb, cb_ctx, false);
+}
+
+int
+ftl_mngt_process_rollback(struct spdk_ftl_dev *dev, const struct ftl_mngt_process_desc *pdesc,
+			  ftl_mngt_completion cb, void *cb_ctx)
 {
 	const struct ftl_mngt_step_desc *sdesc;
 	struct ftl_mngt_process *mngt;
 	int rc = 0;
 
-	mngt = allocate_mngt(dev, pdesc, cb, cb_ctx);
+	mngt = allocate_mngt(dev, pdesc, cb, cb_ctx, true);
 	if (!mngt) {
 		rc = -ENOMEM;
 		goto error;
@@ -285,12 +290,6 @@ ftl_mngt_get_caller_ctx(struct ftl_mngt_process *mngt)
 	return mngt->caller.cb_ctx;
 }
 
-int
-ftl_mngt_get_status(struct ftl_mngt_process *mngt)
-{
-	return mngt->status;
-}
-
 void
 ftl_mngt_next_step(struct ftl_mngt_process *mngt)
 {
@@ -328,12 +327,9 @@ ftl_mngt_continue_step(struct ftl_mngt_process *mngt)
 }
 
 static void
-child_cb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *child)
+child_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
-	int status = ftl_mngt_get_status(child);
-	struct ftl_mngt_process *parent = ftl_mngt_get_caller_ctx(child);
-
-	child->silent = true;
+	struct ftl_mngt_process *parent = ctx;
 
 	if (status) {
 		ftl_mngt_fail_step(parent);
@@ -346,7 +342,7 @@ void
 ftl_mngt_call_process(struct ftl_mngt_process *mngt,
 		      const struct ftl_mngt_process_desc *pdesc)
 {
-	if (ftl_mngt_process_execute(mngt->dev, pdesc, child_cb, mngt)) {
+	if (_ftl_mngt_process_execute(mngt->dev, pdesc, child_cb, mngt, true)) {
 		ftl_mngt_fail_step(mngt);
 	} else {
 		if (mngt->rollback) {
@@ -436,7 +432,7 @@ finish_msg(void *ctx)
 {
 	struct ftl_mngt_process *mngt = ctx;
 
-	mngt->caller.cb(mngt->dev, mngt);
+	mngt->caller.cb(mngt->dev, mngt->caller.cb_ctx, mngt->status);
 	process_summary(mngt);
 	free_mngt(mngt);
 }

@@ -80,7 +80,7 @@ check_elem_on_list_and_remove(int compared_elem)
 }
 
 static void
-fn_finish(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+fn_finish(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
 	add_elem_to_test_list(CALLER_CB_RET_VALUE);
 	g_thread_send_msg_container.fn = NULL;
@@ -89,7 +89,7 @@ fn_finish(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 
 typedef int (*ftl_execute_fn)(struct spdk_ftl_dev *dev,
 			      const struct ftl_mngt_process_desc *process,
-			      ftl_mngt_fn cb, void *cb_cntx);
+			      ftl_mngt_completion cb, void *cb_cntx);
 
 static void
 run_ftl_mngt_with_cb_cntx(ftl_execute_fn exec_fn,
