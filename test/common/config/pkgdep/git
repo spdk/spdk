@@ -155,6 +155,10 @@ function install_qat() {
 
 	tar -C "$GIT_REPOS/QAT" -xzof - < <(wget -O- "$DRIVER_LOCATION_QAT")
 
+	if ge "$kernel_ver" 5.16.0; then
+		patch --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-dma-mask.patch"
+
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then
