@@ -1146,7 +1146,7 @@ nvmf_tcp_qpair_sock_init(struct spdk_nvmf_tcp_qpair *tqpair)
 	spdk_trace_record(TRACE_TCP_QP_SOCK_INIT, 0, 0, (uintptr_t)tqpair);
 
 	/* set low water mark */
-	rc = spdk_sock_set_recvlowat(tqpair->sock, sizeof(struct spdk_nvme_tcp_common_pdu_hdr));
+	rc = spdk_sock_set_recvlowat(tqpair->sock, 1);
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed\n");
 		return rc;
