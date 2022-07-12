@@ -163,7 +163,7 @@ function install_qat() {
 		patch --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-default-groups.patch"
 
-	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
+	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make -j$jobs install)
 
 	if ! sudo service qat_service start; then
 		echo "failed to start the qat service. Something may be wrong with your device or package."
