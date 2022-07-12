@@ -102,10 +102,6 @@ function install_refspdk() {
 }
 
 function install_qat() {
-	# Dissect the kernel version into maj, min, release and local version
-	local kernel_maj kernel_min kernel_rel kernel_loc
-	local kernel_ver
-
 	if ! hash yasm; then
 		install yasm
 	fi
@@ -114,17 +110,14 @@ function install_qat() {
 		local syms
 		if [[ -e /proc/kallsyms ]]; then
 			syms=/proc/kallsyms
-		elif [[ -e /boot/System.map-$(< /proc/sys/kernel/osrelease) ]]; then
-			syms=/boot/System.map-$(< /proc/sys/kernel/osrelease)
+		elif [[ -e /boot/System.map-$kernel_ver ]]; then
+			syms=/boot/System.map-$kernel_ver
 		else
 			return 0
 		fi
 
 		grep -q "$1" "$syms"
 	}
-
-	IFS=".-" read -r kernel_{maj,min,rel,loc} < /proc/sys/kernel/osrelease
-	kernel_ver=$((kernel_maj << 16 | kernel_min << 8 | kernel_rel))
 
 	if [[ -e /sys/module/qat_c62x ]]; then
 		sudo modprobe -r qat_c62x || :
@@ -447,7 +440,7 @@ function install_ice() {
 	curl -L -o- "$ICE_DRIVER" | tar -C "$GIT_REPOS" -xzf -
 
 	if [[ $OSID == ubuntu && $OSVERSION == 18.04 ]]; then
-		if ge "$(< /proc/sys/kernel/osrelease)" 4.15.0-159; then
+		if ge "$kernel_ver" 4.15.0-159; then
 			patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
 		fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-undef-skb-frag-off.patch"
 	fi
@@ -586,3 +579,6 @@ export GIT_REPO_BPFTRACE
 GIT_REPOS=${GIT_REPOS:-$HOME}
 
 gcc_version=$(gcc -dumpversion) gcc_version=${gcc_version%%.*}
+if [[ -e /proc/sys/kernel/osrelease ]]; then
+	kernel_ver=$(< /proc/sys/kernel/osrelease)
+fi
