@@ -159,6 +159,10 @@ function install_qat() {
 		patch --dir="$GIT_REPOS/QAT" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-dma-mask.patch"
 
+	if ge "$kernel_ver" 5.18.0; then
+		patch --dir="$GIT_REPOS/QAT" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/qat/0001-default-groups.patch"
+
 	(cd "$GIT_REPOS/QAT" && sudo ./configure --enable-icp-sriov=host && sudo make install)
 
 	if ! sudo service qat_service start; then

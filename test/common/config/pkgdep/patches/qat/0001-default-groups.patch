@@ -1,0 +1,52 @@
+Replace use of default_attrs from the kobj_type with default_groups pointer.
+The former was removed from the struct in the recent kernel versions (5.18).
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=cdb4f26a63c391317e335e6e683a614358e70aeb
+
+---
+ .../qat/drivers/crypto/qat/qat_common/adf_uio_control.c    | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/quickassist/qat/drivers/crypto/qat/qat_common/adf_uio_control.c b/quickassist/qat/drivers/crypto/qat/qat_common/adf_uio_control.c
+index 088623e..b141c20 100644
+--- a/quickassist/qat/drivers/crypto/qat/qat_common/adf_uio_control.c
++++ b/quickassist/qat/drivers/crypto/qat/qat_common/adf_uio_control.c
+@@ -83,6 +83,7 @@ static struct attribute *accel_default_attrs[] = {
+ 	&accel_sku.attr,
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(accel_default);
+ 
+ static ssize_t accel_show(struct kobject *kobj, struct attribute *attr,
+ 			  char *buf);
+@@ -177,6 +178,7 @@ static struct attribute *bundle_default_attrs[] = {
+ 	&bundle_rings_reserved.attr,
+ 	NULL,
+ };
++ATTRIBUTE_GROUPS(bundle_default);
+ 
+ static ssize_t bundle_show(struct kobject *kobj, struct attribute *attr,
+ 			   char *buf);
+@@ -227,9 +229,10 @@ static void adf_uio_sysfs_cleanup(struct adf_accel_dev *accel_dev)
+ static struct kobj_type accel_ktype = {
+ 	.release = accel_kobject_free,
+ 	.sysfs_ops = &accel_sysfs_ops,
+-	.default_attrs = accel_default_attrs,
++	.default_groups = accel_default_groups,
+ };
+ 
++
+ int adf_uio_sysfs_create(struct adf_accel_dev *accel_dev)
+ {
+ 	struct kobject *dev_kobj;
+@@ -280,7 +283,7 @@ int adf_uio_sysfs_create(struct adf_accel_dev *accel_dev)
+ static struct kobj_type bundle_ktype = {
+ 	.release = bundle_kobject_free,
+ 	.sysfs_ops = &bundle_sysfs_ops,
+-	.default_attrs = bundle_default_attrs,
++	.default_groups = bundle_default_groups,
+ };
+ 
+ int adf_uio_sysfs_bundle_create(struct pci_dev *pdev,
+-- 
+
