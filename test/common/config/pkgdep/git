@@ -50,6 +50,11 @@ function install_refspdk() {
 
 	release=${release#v}
 
+	if ((gcc_version >= 11)) && eq "$release" 22.05.0; then
+		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13404
+		cherry_picks+=("713506d5da4676b9f900ae59963f6eb50ecdba36")
+	fi
+
 	if [[ $OSID == "freebsd" ]]; then
 		# Fetch all the branches
 		git -C "$output_dir" fetch origin '+refs/heads/v*:refs/remotes/origin/v*'
@@ -69,6 +74,12 @@ function install_refspdk() {
 
 	# Make sure submodules point at proper commits after cherry-picks are applied
 	git -C "$output_dir" submodule update
+
+	if ((gcc_version >= 11)) && eq "$release" 22.01.1; then
+		# HACK: We can't apply https://review.spdk.io/gerrit/c/spdk/spdk/+/13506 cleanly under
+		# the LTS, however, we can cherry-pick target commit directly into the submodule.
+		git -C "$output_dir/libvfio-user" cherry-pick b52bff72d4eb646a453d19e19ddbd13ed6111a09
+	fi
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
