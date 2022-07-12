@@ -245,16 +245,10 @@ function _install_qemu() {
 
 	opt_params+=("--disable-docs")
 	if ((gcc_version >= 9)); then
-		# GCC 9 fails to compile Qemu due to some old warnings which were not detected by older versions.
-		extra_cflags+=("-Wno-error=stringop-truncation" "-Wno-error=deprecated-declarations")
-		extra_cflags+=("-Wno-error=incompatible-pointer-types" "-Wno-error=format-truncation")
-		extra_cflags+=("-Wno-error=address-of-packed-member")
 		opt_params+=("--disable-glusterfs")
 	fi
 
-	if ((gcc_version >= 11)); then
-		extra_cflags+=("-Wno-error=array-bounds")
-	fi
+	extra_cflags+=("-Wno-error")
 
 	# Most tsocks proxies rely on a configuration file in /etc/tsocks.conf.
 	# If using tsocks, please make sure to complete this config before trying to build qemu.
