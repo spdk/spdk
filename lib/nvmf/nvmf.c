@@ -137,6 +137,32 @@ nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 }
 
 static int
+nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
+			      struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (tgroup->transport == transport) {
+			/* Transport already in the poll group */
+			return 0;
+		}
+	}
+
+	tgroup = nvmf_transport_poll_group_create(transport, group);
+	if (!tgroup) {
+		SPDK_ERRLOG("Unable to create poll group for transport\n");
+		return -1;
+	}
+	SPDK_DTRACE_PROBE2(nvmf_transport_poll_group_create, transport, spdk_thread_get_id(group->thread));
+
+	tgroup->group = group;
+	TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
+
+	return 0;
+}
+
+static int
 nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
@@ -1142,32 +1168,6 @@ spdk_nvmf_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 				struct spdk_nvme_transport_id *trid)
 {
 	return nvmf_transport_qpair_get_listen_trid(qpair, trid);
-}
-
-int
-nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
-			      struct spdk_nvmf_transport *transport)
-{
-	struct spdk_nvmf_transport_poll_group *tgroup;
-
-	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		if (tgroup->transport == transport) {
-			/* Transport already in the poll group */
-			return 0;
-		}
-	}
-
-	tgroup = nvmf_transport_poll_group_create(transport, group);
-	if (!tgroup) {
-		SPDK_ERRLOG("Unable to create poll group for transport\n");
-		return -1;
-	}
-	SPDK_DTRACE_PROBE2(nvmf_transport_poll_group_create, transport, spdk_thread_get_id(group->thread));
-
-	tgroup->group = group;
-	TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
-
-	return 0;
 }
 
 static int

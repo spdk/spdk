@@ -337,8 +337,6 @@ struct spdk_nvmf_subsystem {
 	uint32_t					*ana_group;
 };
 
-int nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
-				  struct spdk_nvmf_transport *transport);
 int nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				     struct spdk_nvmf_subsystem *subsystem);
 int nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
