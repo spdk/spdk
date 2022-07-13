@@ -378,6 +378,7 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	const struct spdk_nvme_ctrlr_data *cdata;
 	outstanding_commands = 0;
 	bool is_discovery = spdk_nvme_ctrlr_is_discovery(ctrlr);
+	uint32_t nsid, active_ns_count = 0;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -408,6 +409,11 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS)) {
+		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+		     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+			active_ns_count++;
+		}
+
 		/* We always set RGO (Return Groups Only) to 0 in this tool, an ANA group
 		 * descriptor is returned only if that ANA group contains namespaces
 		 * that are attached to the controller processing the command, and
@@ -415,7 +421,7 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		 * Hence the following size should be enough.
 		 */
 		g_ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + cdata->nanagrpid *
-				      sizeof(struct spdk_nvme_ana_group_descriptor) + cdata->nn *
+				      sizeof(struct spdk_nvme_ana_group_descriptor) + active_ns_count *
 				      sizeof(uint32_t);
 		g_ana_log_page = calloc(1, g_ana_log_page_size);
 		if (g_ana_log_page == NULL) {
