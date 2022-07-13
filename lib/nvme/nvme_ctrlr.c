@@ -790,19 +790,6 @@ nvme_ctrlr_update_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
-nvme_ctrlr_init_ana_log_page(struct spdk_nvme_ctrlr *ctrlr)
-{
-	int rc;
-
-	rc = nvme_ctrlr_alloc_ana_log_page(ctrlr);
-	if (rc) {
-		return rc;
-	}
-
-	return nvme_ctrlr_update_ana_log_page(ctrlr);
-}
-
-static int
 nvme_ctrlr_update_ns_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 				void *cb_arg)
 {
@@ -878,7 +865,7 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	if (ctrlr->cdata.cmic.ana_reporting) {
 		ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
 		if (!ctrlr->opts.disable_read_ana_log_page) {
-			rc = nvme_ctrlr_init_ana_log_page(ctrlr);
+			rc = nvme_ctrlr_update_ana_log_page(ctrlr);
 			if (rc == 0) {
 				nvme_ctrlr_parse_ana_log_page(ctrlr, nvme_ctrlr_update_ns_ana_states,
 							      ctrlr);

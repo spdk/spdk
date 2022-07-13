@@ -3116,7 +3116,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	ctrlr.cdata.nanagrpid = 3;
 	ctrlr.active_ns_count = 3;
 
-	rc = nvme_ctrlr_init_ana_log_page(&ctrlr);
+	rc = nvme_ctrlr_update_ana_log_page(&ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ctrlr.ana_log_page != NULL);
 	CU_ASSERT(ctrlr.copied_ana_desc != NULL);
