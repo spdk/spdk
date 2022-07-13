@@ -39,7 +39,6 @@ struct spdk_sock {
 	int				cb_cnt;
 	spdk_sock_cb			cb_fn;
 	void				*cb_arg;
-	uint32_t			zerocopy_threshold;
 	struct {
 		uint8_t		closed		: 1;
 		uint8_t		reserved	: 7;
@@ -302,7 +301,7 @@ end:
 
 #if defined(MSG_ZEROCOPY)
 	/* if data size < zerocopy_threshold, remove MSG_ZEROCOPY flag */
-	if (total < _sock->zerocopy_threshold && flags != NULL) {
+	if (total < _sock->impl_opts.zerocopy_threshold && flags != NULL) {
 		*flags = *flags & (~MSG_ZEROCOPY);
 	}
 #endif
