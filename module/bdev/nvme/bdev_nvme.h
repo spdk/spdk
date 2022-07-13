@@ -126,7 +126,7 @@ struct nvme_ctrlr {
 
 	TAILQ_HEAD(nvme_paths, nvme_path_id)	trids;
 
-	uint32_t				ana_log_page_size;
+	uint32_t				max_ana_log_page_size;
 	struct spdk_nvme_ana_page		*ana_log_page;
 	struct spdk_nvme_ana_group_descriptor	*copied_ana_desc;
 

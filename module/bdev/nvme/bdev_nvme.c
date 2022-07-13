@@ -2756,7 +2756,7 @@ bdev_nvme_parse_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
 	copied_desc = nvme_ctrlr->copied_ana_desc;
 
 	orig_desc = (uint8_t *)nvme_ctrlr->ana_log_page + sizeof(struct spdk_nvme_ana_page);
-	copy_len = nvme_ctrlr->ana_log_page_size - sizeof(struct spdk_nvme_ana_page);
+	copy_len = nvme_ctrlr->max_ana_log_page_size - sizeof(struct spdk_nvme_ana_page);
 
 	for (i = 0; i < nvme_ctrlr->ana_log_page->num_ana_group_desc; i++) {
 		memcpy(copied_desc, orig_desc, copy_len);
@@ -3456,6 +3456,25 @@ nvme_ctrlr_depopulate_namespaces(struct nvme_ctrlr *nvme_ctrlr)
 	}
 }
 
+static uint32_t
+nvme_ctrlr_get_ana_log_page_size(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	uint32_t nsid, ns_count = 0;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+		ns_count++;
+	}
+
+	return sizeof(struct spdk_nvme_ana_page) + cdata->nanagrpid *
+	       sizeof(struct spdk_nvme_ana_group_descriptor) + ns_count *
+	       sizeof(uint32_t);
+}
+
 static int
 nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 			  void *cb_arg)
@@ -3538,9 +3557,18 @@ nvme_ctrlr_read_ana_log_page_done(void *ctx, const struct spdk_nvme_cpl *cpl)
 static int
 nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 {
+	uint32_t ana_log_page_size;
 	int rc;
 
 	if (nvme_ctrlr->ana_log_page == NULL) {
+		return -EINVAL;
+	}
+
+	ana_log_page_size = nvme_ctrlr_get_ana_log_page_size(nvme_ctrlr);
+
+	if (ana_log_page_size > nvme_ctrlr->max_ana_log_page_size) {
+		SPDK_ERRLOG("ANA log page size %" PRIu32 " is larger than allowed %" PRIu32 "\n",
+			    ana_log_page_size, nvme_ctrlr->max_ana_log_page_size);
 		return -EINVAL;
 	}
 
@@ -3558,7 +3586,7 @@ nvme_ctrlr_read_ana_log_page(struct nvme_ctrlr *nvme_ctrlr)
 					      SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
 					      SPDK_NVME_GLOBAL_NS_TAG,
 					      nvme_ctrlr->ana_log_page,
-					      nvme_ctrlr->ana_log_page_size, 0,
+					      ana_log_page_size, 0,
 					      nvme_ctrlr_read_ana_log_page_done,
 					      nvme_ctrlr);
 	if (rc != 0) {
@@ -3897,6 +3925,7 @@ nvme_ctrlr_init_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
+	/* Set buffer size enough to include maximum number of allowed namespaces. */
 	ana_log_page_size = sizeof(struct spdk_nvme_ana_page) + cdata->nanagrpid *
 			    sizeof(struct spdk_nvme_ana_group_descriptor) + cdata->mnan *
 			    sizeof(uint32_t);
@@ -3920,15 +3949,24 @@ nvme_ctrlr_init_ana_log_page(struct nvme_ctrlr *nvme_ctrlr,
 		return -ENOMEM;
 	}
 
-	nvme_ctrlr->ana_log_page_size = ana_log_page_size;
+	nvme_ctrlr->max_ana_log_page_size = ana_log_page_size;
 
 	nvme_ctrlr->probe_ctx = ctx;
+
+	/* Then, set the read size only to include the current active namespaces. */
+	ana_log_page_size = nvme_ctrlr_get_ana_log_page_size(nvme_ctrlr);
+
+	if (ana_log_page_size > nvme_ctrlr->max_ana_log_page_size) {
+		SPDK_ERRLOG("ANA log page size %" PRIu32 " is larger than allowed %" PRIu32 "\n",
+			    ana_log_page_size, nvme_ctrlr->max_ana_log_page_size);
+		return -EINVAL;
+	}
 
 	return spdk_nvme_ctrlr_cmd_get_log_page(ctrlr,
 						SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS,
 						SPDK_NVME_GLOBAL_NS_TAG,
 						nvme_ctrlr->ana_log_page,
-						nvme_ctrlr->ana_log_page_size, 0,
+						ana_log_page_size, 0,
 						nvme_ctrlr_init_ana_log_page_done,
 						nvme_ctrlr);
 }
