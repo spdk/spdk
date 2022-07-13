@@ -331,7 +331,6 @@ struct spdk_nvmf_tcp_transport {
 	struct spdk_nvmf_tcp_poll_group		*next_pg;
 
 	struct spdk_poller			*accept_poller;
-	pthread_mutex_t				lock;
 
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 	TAILQ_HEAD(, spdk_nvmf_tcp_poll_group)	poll_groups;
@@ -572,7 +571,6 @@ nvmf_tcp_destroy(struct spdk_nvmf_transport *transport,
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
 	spdk_poller_unregister(&ttransport->accept_poller);
-	pthread_mutex_destroy(&ttransport->lock);
 	free(ttransport);
 
 	if (cb_fn) {
@@ -671,12 +669,9 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	pthread_mutex_init(&ttransport->lock, NULL);
-
 	ttransport->accept_poller = SPDK_POLLER_REGISTER(nvmf_tcp_accept, &ttransport->transport,
 				    opts->acceptor_poll_rate);
 	if (!ttransport->accept_poller) {
-		pthread_mutex_destroy(&ttransport->lock);
 		free(ttransport);
 		return NULL;
 	}
@@ -728,8 +723,6 @@ nvmf_tcp_canon_listen_trid(struct spdk_nvme_transport_id *canon_trid,
 
 /**
  * Find an existing listening port.
- *
- * Caller must hold ttransport->lock.
  */
 static struct spdk_nvmf_tcp_port *
 nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
@@ -774,11 +767,9 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&ttransport->lock);
 	port = calloc(1, sizeof(*port));
 	if (!port) {
 		SPDK_ERRLOG("Port allocation failed\n");
-		pthread_mutex_unlock(&ttransport->lock);
 		return -ENOMEM;
 	}
 
@@ -793,7 +784,6 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 			    trid->traddr, trsvcid_int,
 			    spdk_strerror(errno), errno);
 		free(port);
-		pthread_mutex_unlock(&ttransport->lock);
 		return -errno;
 	}
 
@@ -810,7 +800,6 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		SPDK_ERRLOG("Socket address family mismatch\n");
 		spdk_sock_close(&port->listen_sock);
 		free(port);
-		pthread_mutex_unlock(&ttransport->lock);
 		return -EINVAL;
 	}
 
@@ -818,7 +807,6 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 		       trid->traddr, trid->trsvcid);
 
 	TAILQ_INSERT_TAIL(&ttransport->ports, port, link);
-	pthread_mutex_unlock(&ttransport->lock);
 	return 0;
 }
 
@@ -834,15 +822,12 @@ nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 	SPDK_DEBUGLOG(nvmf_tcp, "Removing listen address %s port %s\n",
 		      trid->traddr, trid->trsvcid);
 
-	pthread_mutex_lock(&ttransport->lock);
 	port = nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
 		TAILQ_REMOVE(&ttransport->ports, port, link);
 		spdk_sock_close(&port->listen_sock);
 		free(port);
 	}
-
-	pthread_mutex_unlock(&ttransport->lock);
 }
 
 static void nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
@@ -1334,12 +1319,10 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 		goto cleanup;
 	}
 
-	pthread_mutex_lock(&ttransport->lock);
 	TAILQ_INSERT_TAIL(&ttransport->poll_groups, tgroup, link);
 	if (ttransport->next_pg == NULL) {
 		ttransport->next_pg = tgroup;
 	}
-	pthread_mutex_unlock(&ttransport->lock);
 
 	return &tgroup->group;
 
@@ -1359,10 +1342,7 @@ nvmf_tcp_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 
 	ttransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_tcp_transport, transport);
 
-	pthread_mutex_lock(&ttransport->lock);
-
 	if (TAILQ_EMPTY(&ttransport->poll_groups)) {
-		pthread_mutex_unlock(&ttransport->lock);
 		return NULL;
 	}
 
@@ -1373,11 +1353,9 @@ nvmf_tcp_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 	rc = spdk_sock_get_optimal_sock_group(tqpair->sock, &group, hint);
 	if (rc != 0) {
-		pthread_mutex_unlock(&ttransport->lock);
 		return NULL;
 	} else if (group != NULL) {
 		/* Optimal poll group was found */
-		pthread_mutex_unlock(&ttransport->lock);
 		return spdk_sock_group_get_ctx(group);
 	}
 
@@ -1387,7 +1365,6 @@ nvmf_tcp_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 		*pg = TAILQ_FIRST(&ttransport->poll_groups);
 	}
 
-	pthread_mutex_unlock(&ttransport->lock);
 	return spdk_sock_group_get_ctx(hint);
 }
 
@@ -1409,7 +1386,6 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	ttransport = SPDK_CONTAINEROF(tgroup->group.transport, struct spdk_nvmf_tcp_transport, transport);
 
-	pthread_mutex_lock(&ttransport->lock);
 	next_tgroup = TAILQ_NEXT(tgroup, link);
 	TAILQ_REMOVE(&ttransport->poll_groups, tgroup, link);
 	if (next_tgroup == NULL) {
@@ -1418,7 +1394,6 @@ nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	if (ttransport->next_pg == tgroup) {
 		ttransport->next_pg = next_tgroup;
 	}
-	pthread_mutex_unlock(&ttransport->lock);
 
 	free(tgroup);
 }
