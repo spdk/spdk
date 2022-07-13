@@ -730,6 +730,58 @@ bdev_virtio_user_blk_dev_create(const char *name, const char *path,
 	return &bvdev->bdev;
 }
 
+struct spdk_bdev *
+bdev_virtio_vfio_user_blk_dev_create(const char *name, const char *path)
+{
+	struct virtio_blk_dev *bvdev;
+	uint16_t num_queues = 0;
+	int rc;
+
+	bvdev = calloc(1, sizeof(*bvdev));
+	if (bvdev == NULL) {
+		SPDK_ERRLOG("calloc failed for virtio device %s: %s\n", name, path);
+		return NULL;
+	}
+
+	rc = virtio_vfio_user_dev_init(&bvdev->vdev, name, path);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create %s as virtio device\n", path);
+		free(bvdev);
+		return NULL;
+	}
+
+	rc = virtio_dev_reset(&bvdev->vdev, VIRTIO_BLK_DEV_SUPPORTED_FEATURES);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to reset %s as virtio device\n", path);
+		virtio_dev_destruct(&bvdev->vdev);
+		free(bvdev);
+		return NULL;
+	}
+
+	if (virtio_dev_has_feature(&bvdev->vdev, VIRTIO_BLK_F_MQ)) {
+		rc = virtio_dev_read_dev_config(&bvdev->vdev, offsetof(struct virtio_blk_config, num_queues),
+						&num_queues, sizeof(num_queues));
+		if (rc) {
+			SPDK_ERRLOG("%s: config read failed: %s\n", name, spdk_strerror(-rc));
+			virtio_dev_destruct(&bvdev->vdev);
+			free(bvdev);
+			return NULL;
+		}
+	} else {
+		num_queues = 1;
+	}
+
+	rc = virtio_blk_dev_init(bvdev, num_queues);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to initialize %s as virtio device\n", path);
+		virtio_dev_destruct(&bvdev->vdev);
+		free(bvdev);
+		return NULL;
+	}
+
+	return &bvdev->bdev;
+}
+
 static int
 bdev_virtio_blk_get_ctx_size(void)
 {

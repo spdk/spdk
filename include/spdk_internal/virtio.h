@@ -444,6 +444,17 @@ int virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *
 			 uint32_t queue_size);
 
 /**
+ * Connect to a vfio-user device and init corresponding virtio_dev struct.
+ * The virtio_dev will have to be freed with \c virtio_dev_free.
+ *
+ * \param vdev preallocated vhost device struct to operate on
+ * \param name name of this virtio device
+ * \param path path to the Unix domain socket of the vhost-user device
+ * \return virtio device
+ */
+int virtio_vfio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path);
+
+/**
  * Initialize virtio_dev for a given PCI device.
  * The virtio_dev has to be freed with \c virtio_dev_destruct.
  *
