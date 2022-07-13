@@ -792,7 +792,6 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 	uint32_t i;
 
 	rqpair.qpair.transport = transport;
-	pthread_mutex_init(&rtransport.lock, NULL);
 	TAILQ_INIT(&rtransport.poll_groups);
 
 	for (i = 0; i < TEST_GROUPS_COUNT; i++) {
@@ -855,8 +854,6 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 	rqpair.qpair.qid = 1;
 	result = nvmf_rdma_get_optimal_poll_group(&rqpair.qpair);
 	CU_ASSERT(result == NULL);
-
-	pthread_mutex_destroy(&rtransport.lock);
 }
 #undef TEST_GROUPS_COUNT
 

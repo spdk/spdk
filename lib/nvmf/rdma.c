@@ -469,7 +469,6 @@ struct spdk_nvmf_rdma_transport {
 	struct spdk_mempool		*data_wr_pool;
 
 	struct spdk_poller		*accept_poller;
-	pthread_mutex_t			lock;
 
 	/* fields used to poll RDMA/IB events */
 	nfds_t			npoll_fds;
@@ -2398,34 +2397,11 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			min_shared_buffers;
 	uint32_t			min_in_capsule_data_size;
 	int				max_device_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
-	pthread_mutexattr_t		attr;
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
 		return NULL;
 	}
-
-	if (pthread_mutexattr_init(&attr)) {
-		SPDK_ERRLOG("pthread_mutexattr_init() failed\n");
-		free(rtransport);
-		return NULL;
-	}
-
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE)) {
-		SPDK_ERRLOG("pthread_mutexattr_settype() failed\n");
-		pthread_mutexattr_destroy(&attr);
-		free(rtransport);
-		return NULL;
-	}
-
-	if (pthread_mutex_init(&rtransport->lock, &attr)) {
-		SPDK_ERRLOG("pthread_mutex_init() failed\n");
-		pthread_mutexattr_destroy(&attr);
-		free(rtransport);
-		return NULL;
-	}
-
-	pthread_mutexattr_destroy(&attr);
 
 	TAILQ_INIT(&rtransport->devices);
 	TAILQ_INIT(&rtransport->ports);
@@ -2730,7 +2706,6 @@ nvmf_rdma_destroy(struct spdk_nvmf_transport *transport,
 	spdk_mempool_free(rtransport->data_wr_pool);
 
 	spdk_poller_unregister(&rtransport->accept_poller);
-	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
 
 	if (cb_fn) {
@@ -2763,11 +2738,9 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 	assert(rtransport->event_channel != NULL);
 
-	pthread_mutex_lock(&rtransport->lock);
 	port = calloc(1, sizeof(*port));
 	if (!port) {
 		SPDK_ERRLOG("Port allocation failed\n");
-		pthread_mutex_unlock(&rtransport->lock);
 		return -ENOMEM;
 	}
 
@@ -2783,7 +2756,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	default:
 		SPDK_ERRLOG("Unhandled ADRFAM %d\n", trid->adrfam);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
 
@@ -2797,7 +2769,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 	if (rc) {
 		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(rc), rc);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
 
@@ -2806,7 +2777,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 		SPDK_ERRLOG("rdma_create_id() failed\n");
 		freeaddrinfo(res);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 
@@ -2817,7 +2787,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 		SPDK_ERRLOG("rdma_bind_addr() failed\n");
 		rdma_destroy_id(port->id);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 
@@ -2825,7 +2794,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 		SPDK_ERRLOG("ibv_context is null\n");
 		rdma_destroy_id(port->id);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return -1;
 	}
 
@@ -2834,7 +2802,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 		SPDK_ERRLOG("rdma_listen() failed\n");
 		rdma_destroy_id(port->id);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 
@@ -2849,7 +2816,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 			    port->id->verbs);
 		rdma_destroy_id(port->id);
 		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
 
@@ -2857,7 +2823,6 @@ nvmf_rdma_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_t
 		       trid->traddr, trid->trsvcid);
 
 	TAILQ_INSERT_TAIL(&rtransport->ports, port, link);
-	pthread_mutex_unlock(&rtransport->lock);
 	return 0;
 }
 
@@ -2870,7 +2835,6 @@ nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	pthread_mutex_lock(&rtransport->lock);
 	TAILQ_FOREACH_SAFE(port, &rtransport->ports, link, tmp) {
 		if (spdk_nvme_transport_id_compare(port->trid, trid) == 0) {
 			TAILQ_REMOVE(&rtransport->ports, port, link);
@@ -2879,8 +2843,6 @@ nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 			break;
 		}
 	}
-
-	pthread_mutex_unlock(&rtransport->lock);
 }
 
 static void
@@ -3449,13 +3411,11 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 
 	TAILQ_INIT(&rgroup->pollers);
 
-	pthread_mutex_lock(&rtransport->lock);
 	TAILQ_FOREACH(device, &rtransport->devices, link) {
 		poller = calloc(1, sizeof(*poller));
 		if (!poller) {
 			SPDK_ERRLOG("Unable to allocate memory for new RDMA poller\n");
 			nvmf_rdma_poll_group_destroy(&rgroup->group);
-			pthread_mutex_unlock(&rtransport->lock);
 			return NULL;
 		}
 
@@ -3484,7 +3444,6 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 			if (!poller->srq) {
 				SPDK_ERRLOG("Unable to create shared receive queue, errno %d\n", errno);
 				nvmf_rdma_poll_group_destroy(&rgroup->group);
-				pthread_mutex_unlock(&rtransport->lock);
 				return NULL;
 			}
 
@@ -3499,7 +3458,6 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 			if (!poller->resources) {
 				SPDK_ERRLOG("Unable to allocate resources for shared receive queue.\n");
 				nvmf_rdma_poll_group_destroy(&rgroup->group);
-				pthread_mutex_unlock(&rtransport->lock);
 				return NULL;
 			}
 		}
@@ -3520,7 +3478,6 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 		if (!poller->cq) {
 			SPDK_ERRLOG("Unable to create completion queue\n");
 			nvmf_rdma_poll_group_destroy(&rgroup->group);
-			pthread_mutex_unlock(&rtransport->lock);
 			return NULL;
 		}
 		poller->num_cqe = num_cqe;
@@ -3532,7 +3489,6 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 		rtransport->conn_sched.next_io_pg = rgroup;
 	}
 
-	pthread_mutex_unlock(&rtransport->lock);
 	return &rgroup->group;
 }
 
@@ -3545,10 +3501,7 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
-	pthread_mutex_lock(&rtransport->lock);
-
 	if (TAILQ_EMPTY(&rtransport->poll_groups)) {
-		pthread_mutex_unlock(&rtransport->lock);
 		return NULL;
 	}
 
@@ -3566,8 +3519,6 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 	if (*pg == NULL) {
 		*pg = TAILQ_FIRST(&rtransport->poll_groups);
 	}
-
-	pthread_mutex_unlock(&rtransport->lock);
 
 	return result;
 }
@@ -3616,7 +3567,6 @@ nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	rtransport = SPDK_CONTAINEROF(rgroup->group.transport, struct spdk_nvmf_rdma_transport, transport);
 
-	pthread_mutex_lock(&rtransport->lock);
 	next_rgroup = TAILQ_NEXT(rgroup, link);
 	TAILQ_REMOVE(&rtransport->poll_groups, rgroup, link);
 	if (next_rgroup == NULL) {
@@ -3628,7 +3578,6 @@ nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	if (rtransport->conn_sched.next_io_pg == rgroup) {
 		rtransport->conn_sched.next_io_pg = next_rgroup;
 	}
-	pthread_mutex_unlock(&rtransport->lock);
 
 	free(rgroup);
 }
