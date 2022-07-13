@@ -211,6 +211,7 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 		return NULL;
 	}
 
+	pthread_mutex_init(&transport->mutex, NULL);
 	TAILQ_INIT(&transport->listeners);
 
 	transport->ops = ops;
@@ -275,6 +276,7 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport,
 		free(listener);
 	}
 
+	pthread_mutex_destroy(&transport->mutex);
 	return transport->ops->destroy(transport, cb_fn, cb_arg);
 }
 
@@ -310,7 +312,9 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 		listener->ref = 1;
 		listener->trid = *trid;
 		TAILQ_INSERT_TAIL(&transport->listeners, listener, link);
+		pthread_mutex_lock(&transport->mutex);
 		rc = transport->ops->listen(transport, &listener->trid, opts);
+		pthread_mutex_unlock(&transport->mutex);
 		if (rc != 0) {
 			TAILQ_REMOVE(&transport->listeners, listener, link);
 			free(listener);
@@ -336,7 +340,9 @@ spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 
 	if (--listener->ref == 0) {
 		TAILQ_REMOVE(&transport->listeners, listener, link);
+		pthread_mutex_lock(&transport->mutex);
 		transport->ops->stop_listen(transport, trid);
+		pthread_mutex_unlock(&transport->mutex);
 		free(listener);
 	}
 
@@ -444,7 +450,9 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_transport_pg_cache_buf **bufs;
 	uint32_t i;
 
+	pthread_mutex_lock(&transport->mutex);
 	tgroup = transport->ops->poll_group_create(transport, group);
+	pthread_mutex_unlock(&transport->mutex);
 	if (!tgroup) {
 		return NULL;
 	}
@@ -491,8 +499,14 @@ struct spdk_nvmf_transport_poll_group *
 nvmf_transport_get_optimal_poll_group(struct spdk_nvmf_transport *transport,
 				      struct spdk_nvmf_qpair *qpair)
 {
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
 	if (transport->ops->get_optimal_poll_group) {
-		return transport->ops->get_optimal_poll_group(qpair);
+		pthread_mutex_lock(&transport->mutex);
+		tgroup = transport->ops->get_optimal_poll_group(qpair);
+		pthread_mutex_unlock(&transport->mutex);
+
+		return tgroup;
 	} else {
 		return NULL;
 	}
@@ -502,6 +516,9 @@ void
 nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_transport_pg_cache_buf *buf, *tmp;
+	struct spdk_nvmf_transport *transport;
+
+	transport = group->transport;
 
 	if (!STAILQ_EMPTY(&group->pending_buf_queue)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
@@ -509,9 +526,12 @@ nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	STAILQ_FOREACH_SAFE(buf, &group->buf_cache, link, tmp) {
 		STAILQ_REMOVE(&group->buf_cache, buf, spdk_nvmf_transport_pg_cache_buf, link);
-		spdk_mempool_put(group->transport->data_buf_pool, buf);
+		spdk_mempool_put(transport->data_buf_pool, buf);
 	}
-	group->transport->ops->poll_group_destroy(group);
+
+	pthread_mutex_lock(&transport->mutex);
+	transport->ops->poll_group_destroy(group);
+	pthread_mutex_unlock(&transport->mutex);
 }
 
 int

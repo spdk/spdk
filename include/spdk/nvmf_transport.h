@@ -199,6 +199,8 @@ struct spdk_nvmf_transport {
 
 	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
+
+	pthread_mutex_t				mutex;
 };
 
 typedef void (*spdk_nvmf_transport_qpair_fini_cb)(void *cb_arg);
