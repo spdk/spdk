@@ -6656,20 +6656,32 @@ nvme_io_path_info_json(struct spdk_json_write_ctx *w, struct nvme_io_path *io_pa
 	struct nvme_ns *nvme_ns = io_path->nvme_ns;
 	struct nvme_ctrlr *nvme_ctrlr = io_path->qpair->ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
+	const struct spdk_nvme_transport_id *trid;
+	const char *adrfam_str;
 
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_string(w, "bdev_name", nvme_ns->bdev->disk.name);
 
 	cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
+	trid = spdk_nvme_ctrlr_get_transport_id(nvme_ctrlr->ctrlr);
 
 	spdk_json_write_named_uint32(w, "cntlid", cdata->cntlid);
-
 	spdk_json_write_named_bool(w, "current", io_path == io_path->nbdev_ch->current_io_path);
-
 	spdk_json_write_named_bool(w, "connected", nvme_io_path_is_connected(io_path));
-
 	spdk_json_write_named_bool(w, "accessible", nvme_ns_is_accessible(nvme_ns));
+
+	spdk_json_write_named_object_begin(w, "transport");
+	spdk_json_write_named_string(w, "trtype", trid->trstring);
+	spdk_json_write_named_string(w, "traddr", trid->traddr);
+	if (trid->trsvcid[0] != '\0') {
+		spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+	}
+	adrfam_str = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
+	if (adrfam_str) {
+		spdk_json_write_named_string(w, "adrfam", adrfam_str);
+	}
+	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
 }

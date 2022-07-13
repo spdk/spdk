@@ -3455,7 +3455,13 @@ Example response:
             "cntlid": 0,
             "current": true,
             "connected": true,
-            "accessible": true
+            "accessible": true,
+            "transport": {
+              "trtype": "RDMA",
+              "traddr": "1.2.3.4",
+              "trsvcid": "4420",
+              "adrfam": "IPv4"
+            }
           }
         ]
       }
