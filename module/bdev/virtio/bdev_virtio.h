@@ -122,6 +122,16 @@ struct spdk_bdev *bdev_virtio_user_blk_dev_create(const char *name, const char *
 		unsigned num_queues, unsigned queue_size);
 
 /**
+ * Connect to a vfio-user Unix domain socket and create a Virtio BLK bdev.
+ *
+ * \param name name for the virtio bdev
+ * \param path path to the socket
+ * \return virtio-blk bdev or NULL
+ */
+struct spdk_bdev *
+bdev_virtio_vfio_user_blk_dev_create(const char *name, const char *path);
+
+/**
  * Attach virtio-pci device. This creates a Virtio BLK device with the same
  * capabilities as the vhost-user equivalent.
  *

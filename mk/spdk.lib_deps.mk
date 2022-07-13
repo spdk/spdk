@@ -49,7 +49,7 @@ endif
 DEPDIRS-blob := log util thread dma
 DEPDIRS-accel := log util thread json rpc jsonrpc
 DEPDIRS-jsonrpc := log util json
-DEPDIRS-virtio := log util json thread
+DEPDIRS-virtio := log util json thread vfio_user
 
 DEPDIRS-lvol := log util blob
 DEPDIRS-rpc := log util json jsonrpc

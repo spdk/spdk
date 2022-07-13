@@ -184,9 +184,8 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 				  const struct spdk_json_val *params)
 {
 	struct rpc_bdev_virtio_attach_controller_ctx *req;
-	struct spdk_bdev *bdev;
+	struct spdk_bdev *bdev = NULL;
 	struct spdk_pci_addr pci_addr;
-	bool pci;
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -217,12 +216,16 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 			spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Invalid PCI address '%s'", req->traddr);
 			goto cleanup;
 		}
-
-		pci = true;
 	} else if (strcmp(req->trtype, "user") == 0) {
 		req->vq_count = req->vq_count == 0 ? SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT : req->vq_count;
 		req->vq_size = req->vq_size == 0 ? SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE : req->vq_size;
-		pci = false;
+	} else if (strcmp(req->trtype, "vfio-user") == 0) {
+		if (req->vq_count != 0 || req->vq_size != 0) {
+			SPDK_ERRLOG("VQ count or size is not allowed for vfio-user transport type\n");
+			spdk_jsonrpc_send_error_response(request, EINVAL,
+							 "vq_count or vq_size is not allowed for vfio-user transport type.");
+			goto cleanup;
+		}
 	} else {
 		SPDK_ERRLOG("Invalid trtype '%s'\n", req->trtype);
 		spdk_jsonrpc_send_error_response_fmt(request, EINVAL, "Invalid trtype '%s'", req->trtype);
@@ -231,17 +234,19 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 
 	req->request = request;
 	if (strcmp(req->dev_type, "blk") == 0) {
-		if (pci) {
+		if (strcmp(req->trtype, "pci") == 0) {
 			bdev = bdev_virtio_pci_blk_dev_create(req->name, &pci_addr);
-		} else {
+		} else if (strcmp(req->trtype, "user") == 0) {
 			bdev = bdev_virtio_user_blk_dev_create(req->name, req->traddr, req->vq_count, req->vq_size);
+		} else if (strcmp(req->trtype, "vfio-user") == 0) {
+			bdev = bdev_virtio_vfio_user_blk_dev_create(req->name, req->traddr);
 		}
 
 		/* Virtio blk doesn't use callback so call it manually to send result. */
 		rc = bdev ? 0 : -EINVAL;
 		rpc_create_virtio_dev_cb(req, rc, &bdev, bdev ? 1 : 0);
 	} else if (strcmp(req->dev_type, "scsi") == 0) {
-		if (pci) {
+		if (strcmp(req->trtype, "pci") == 0) {
 			rc = bdev_virtio_pci_scsi_dev_create(req->name, &pci_addr, rpc_create_virtio_dev_cb, req);
 		} else {
 			rc = bdev_virtio_user_scsi_dev_create(req->name, req->traddr, req->vq_count, req->vq_size,
