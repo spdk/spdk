@@ -30,15 +30,23 @@ static const struct spdk_ftl_conf g_default_conf = {
 };
 
 void
-spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf)
+spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf, size_t conf_size)
 {
-	*conf = g_default_conf;
+	assert(conf_size > 0);
+	assert(conf_size <= sizeof(struct spdk_ftl_conf));
+
+	memcpy(conf, &g_default_conf, conf_size);
+	conf->conf_size = conf_size;
 }
 
 void
-spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf)
+spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf, size_t conf_size)
 {
-	*conf = dev->conf;
+	assert(conf_size > 0);
+	assert(conf_size <= sizeof(struct spdk_ftl_conf));
+
+	memcpy(conf, &dev->conf, conf_size);
+	conf->conf_size = conf_size;
 }
 
 int
@@ -48,6 +56,10 @@ spdk_ftl_conf_copy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src)
 	char *core_mask = NULL;
 	char *base_bdev = NULL;
 	char *cache_bdev = NULL;
+
+	if (!src->conf_size || src->conf_size > sizeof(struct spdk_ftl_conf)) {
+		return -EINVAL;
+	}
 
 	if (src->name) {
 		name = strdup(src->name);
@@ -74,7 +86,8 @@ spdk_ftl_conf_copy(struct spdk_ftl_conf *dst, const struct spdk_ftl_conf *src)
 		}
 	}
 
-	*dst = *src;
+	memcpy(dst, src, src->conf_size);
+
 	dst->name = name;
 	dst->core_mask = core_mask;
 	dst->base_bdev = base_bdev;
@@ -101,6 +114,11 @@ int
 ftl_conf_init_dev(struct spdk_ftl_dev *dev, const struct spdk_ftl_conf *conf)
 {
 	int rc;
+
+	if (!conf->conf_size) {
+		FTL_ERRLOG(dev, "FTL configuration is uninitialized\n");
+		return -EINVAL;
+	}
 
 	if (!conf->name) {
 		FTL_ERRLOG(dev, "No FTL name in configuration\n");

@@ -300,11 +300,13 @@ ftl_needs_reloc(struct spdk_ftl_dev *dev)
 }
 
 void
-spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
+spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs,
+		       size_t attrs_size)
 {
 	attrs->num_blocks = dev->num_lbas;
 	attrs->block_size = FTL_BLOCK_SIZE;
 	attrs->optimum_io_size = dev->xfer_size;
+	/* NOTE: check any new fields in attrs against attrs_size */
 }
 
 static void

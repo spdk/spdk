@@ -198,7 +198,7 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	struct spdk_ftl_conf conf;
 	char uuid[SPDK_UUID_STRING_LEN];
 
-	spdk_ftl_dev_get_conf(ftl_bdev->dev, &conf);
+	spdk_ftl_dev_get_conf(ftl_bdev->dev, &conf, sizeof(conf));
 
 	spdk_json_write_object_begin(w);
 
@@ -236,8 +236,8 @@ bdev_ftl_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_ftl_attrs attrs;
 	struct spdk_ftl_conf conf;
 
-	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
-	spdk_ftl_dev_get_conf(ftl_bdev->dev, &conf);
+	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs, sizeof(attrs));
+	spdk_ftl_dev_get_conf(ftl_bdev->dev, &conf, sizeof(conf));
 
 	spdk_json_write_named_object_begin(w, "ftl");
 
@@ -303,8 +303,8 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 		goto error;
 	}
 
-	spdk_ftl_dev_get_attrs(dev, &attrs);
-	spdk_ftl_dev_get_conf(dev, &conf);
+	spdk_ftl_dev_get_attrs(dev, &attrs, sizeof(attrs));
+	spdk_ftl_dev_get_conf(dev, &conf, sizeof(conf));
 
 	ftl_bdev->dev = dev;
 	ftl_bdev->bdev.product_name = "FTL disk";

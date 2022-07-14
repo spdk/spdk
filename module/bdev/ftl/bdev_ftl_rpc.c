@@ -82,7 +82,7 @@ rpc_bdev_ftl_create(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	int rc;
 
-	spdk_ftl_get_default_conf(&conf);
+	spdk_ftl_get_default_conf(&conf, sizeof(conf));
 
 	if (spdk_json_decode_object(params, rpc_bdev_ftl_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_ftl_create_decoders),

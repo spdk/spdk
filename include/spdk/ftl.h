@@ -73,6 +73,11 @@ struct ftl_stats {
 
 typedef void (*spdk_ftl_stats_fn)(struct ftl_stats *stats, void *cb_arg);
 
+/*
+ * FTL configuration.
+ *
+ * NOTE: Do not change the layout of this structure. Only add new fields at the end.
+ */
 struct spdk_ftl_conf {
 	/* Device's name */
 	char					*name;
@@ -106,20 +111,40 @@ struct spdk_ftl_conf {
 		uint32_t			chunk_free_target;
 	} nv_cache;
 
+	/* Hole at bytes 0x60 - 0x67. */
+	uint8_t					reserved[4];
+
 	/* Name of base block device (zoned or non-zoned) */
 	char					*base_bdev;
 
 	/* Name of cache block device (must support extended metadata) */
 	char					*cache_bdev;
+
 	/* Enable fast shutdown path */
 	bool					fast_shutdown;
-};
+
+	/* Hole at bytes 0x79 - 0x7f. */
+	uint8_t					reserved2[7];
+
+	/*
+	 * The size of spdk_ftl_conf according to the caller of this library is used for ABI
+	 * compatibility. The library uses this field to know how many fields in this
+	 * structure are valid. And the library will populate any remaining fields with default values.
+	 */
+	size_t					conf_size;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_ftl_conf) == 136, "Incorrect size");
 
 enum spdk_ftl_mode {
 	/* Create new device */
 	SPDK_FTL_MODE_CREATE = (1 << 0),
 };
 
+/*
+ * FTL device attributes.
+ *
+ * NOTE: Do not change the layout of this structure. Only add new fields at the end.
+ */
 struct spdk_ftl_attrs {
 	/* Number of logical blocks */
 	uint64_t			num_blocks;
@@ -172,16 +197,20 @@ int spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg);
  *
  * \param dev device
  * \param attr Attribute structure to fill
+ * \param attrs_size Must be set to sizeof(struct spdk_ftl_attrs)
  */
-void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+void spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr,
+			    size_t attrs_size);
 
 /**
  * Retrieve device’s configuration.
  *
  * \param dev device
  * \param conf FTL configuration structure to fill
+ * \param conf_size Must be set to sizeof(struct spdk_ftl_conf)
  */
-void spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf);
+void spdk_ftl_dev_get_conf(const struct spdk_ftl_dev *dev, struct spdk_ftl_conf *conf,
+			   size_t conf_size);
 
 /**
  * Obtain an I/O channel for the device.
@@ -211,8 +240,9 @@ void spdk_ftl_conf_deinit(struct spdk_ftl_conf *conf);
  * Initialize FTL configuration structure with default values.
  *
  * \param conf FTL configuration to initialize
+ * \param conf_size Must be set to sizeof(struct spdk_ftl_conf)
  */
-void spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf);
+void spdk_ftl_get_default_conf(struct spdk_ftl_conf *conf, size_t conf_size);
 
 /**
  * Submits a read to the specified device.
