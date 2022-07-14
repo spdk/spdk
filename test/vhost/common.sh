@@ -1033,7 +1033,7 @@ function vm_check_blk_location() {
 }
 
 function vm_check_nvme_location() {
-	SCSI_DISK="$(vm_exec $1 grep -l SPDK /sys/class/nvme/*/model | awk -F/ '{print $5"n1"}')"
+	SCSI_DISK="$(vm_exec $1 "grep -l SPDK /sys/class/nvme/*/model" | awk -F/ '{print $5"n1"}')"
 	if [[ -z "$SCSI_DISK" ]]; then
 		error "no vfio-user nvme test disk found!"
 		return 1
