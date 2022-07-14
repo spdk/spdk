@@ -51,17 +51,15 @@ get_iscsi() {
 
 get_nvme() {
 	local blocks nvme nvme_sub
-	for nvme in /sys/class/nvme/nvme+([0-9]); do
-		# Make sure we touch only the block devices which belong to bdev subsystem and
-		# use supported protocols.
-		[[ $(< "$nvme/transport") == tcp || $(< "$nvme/transport") == rdma ]] || continue
-		for nvme_sub in /sys/class/nvme-subsystem/nvme-subsys+([0-9]); do
-			[[ -e $nvme_sub/${nvme##*/} ]] || continue
-			[[ $(< "$nvme_sub/model") == "SPDK bdev Controller"* ]] || continue
-			blocks+=("$nvme_sub/${nvme##*/}"n*)
-		done
+	for nvme in /sys/block/nvme*; do
+		# Some kernels expose hidden fabrics devices ("nvmeXcXnX") under sysfs - skip them.
+		if (($(< "$nvme/hidden") == 1)); then
+			continue
+		fi
+		# Make sure we touch only the block devices which belong to bdev subsystem.
+		[[ $(< "$nvme/device/model") == "SPDK bdev Controller"* ]] || continue
+		blocks+=("${nvme##*/}")
 	done
-	blocks=("${blocks[@]##*/}")
 	printf '%s\n' "${blocks[@]}"
 }
 
