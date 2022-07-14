@@ -1972,15 +1972,9 @@ nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	struct spdk_nvmf_async_event_completion *pending_event;
 
 	SPDK_DEBUGLOG(nvmf, "Async Event Request\n");
-
-	/* AER cmd is an exception */
-	sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
-	assert(sgroup != NULL);
-	sgroup->mgmt_io_outstanding--;
 
 	/* Four asynchronous events are supported for now */
 	if (ctrlr->nr_aer_reqs >= NVMF_MAX_ASYNC_EVENTS) {
@@ -3281,7 +3275,18 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int rc;
+
+	if (cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+		/* We do not want to treat AERs as outstanding commands,
+		 * so decrement mgmt_io_outstanding here to offset
+		 * the increment that happened prior to this call.
+		 */
+		sgroup = &req->qpair->group->sgroups[ctrlr->subsys->id];
+		assert(sgroup != NULL);
+		sgroup->mgmt_io_outstanding--;
+	}
 
 	if (ctrlr == NULL) {
 		SPDK_ERRLOG("Admin command sent before CONNECT\n");
