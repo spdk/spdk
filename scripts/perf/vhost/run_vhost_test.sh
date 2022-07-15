@@ -70,4 +70,4 @@ trap 'rm -f "$curdir/fio.conf"' EXIT
 fio_conf > "$curdir/fio.conf"
 
 "$rootdir/test/vhost/perf_bench/vhost_perf.sh" \
-	"${perf_args[@]}" --fio-jobs="$curdir/fio.conf"
+	"${perf_args[@]}" --fio-jobs="$curdir/fio.conf"${fio_jobs:+",$fio_jobs"}
