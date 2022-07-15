@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -163,6 +164,17 @@ nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 {
 	status->timed_out = false;
 	HANDLE_RETURN_MOCK(nvme_wait_for_completion);
+	return 0;
+}
+
+DEFINE_RETURN_MOCK(nvme_wait_for_completion_robust_lock, int);
+int
+nvme_wait_for_completion_robust_lock(struct spdk_nvme_qpair *qpair,
+				     struct nvme_completion_poll_status *status,
+				     pthread_mutex_t *robust_mutex)
+{
+	status->timed_out = false;
+	HANDLE_RETURN_MOCK(nvme_wait_for_completion_robust_lock);
 	return 0;
 }
 
