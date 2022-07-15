@@ -153,7 +153,8 @@ if [[ $INSTALL_DAOS == "true" ]]; then
 		if ! hash yum-config-manager &> /dev/null; then
 			yum install -y yum-utils
 		fi
-		yum-config-manager --add-repo "https://packages.daos.io/v2.0/CentOS${VERSION_ID:0:1}/packages/x86_64/daos_packages.repo"
+		[[ $VERSION_ID == 7* ]] && yum-config-manager --add-repo "https://packages.daos.io/v2.0/CentOS7/packages/x86_64/daos_packages.repo"
+		[[ $VERSION_ID == 8* ]] && yum-config-manager --add-repo "https://packages.daos.io/v2.0/EL8/packages/x86_64/daos_packages.repo"
 		yum-config-manager --enable "daos-packages"
 		yum install -y daos-devel
 	else
