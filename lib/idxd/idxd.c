@@ -1397,6 +1397,10 @@ spdk_idxd_process_events(struct spdk_idxd_io_channel *chan)
 
 		/* reset the status */
 		status = 0;
+		/* break the processing loop to prevent from starving the rest of the system */
+		if (rc > DESC_PER_BATCH) {
+			break;
+		}
 	}
 
 	/* Submit any built-up batch */
