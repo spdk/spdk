@@ -1395,6 +1395,8 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "set host ID";
 	case NVME_CTRLR_STATE_WAIT_FOR_HOST_ID:
 		return "wait for set host ID";
+	case NVME_CTRLR_STATE_TRANSPORT_READY:
+		return "transport ready";
 	case NVME_CTRLR_STATE_READY:
 		return "ready";
 	case NVME_CTRLR_STATE_ERROR:
@@ -2906,7 +2908,7 @@ nvme_ctrlr_set_host_id_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Set Features - Host ID was successful\n");
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_TRANSPORT_READY, ctrlr->opts.admin_timeout_ms);
 }
 
 static int
@@ -2922,7 +2924,7 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 		 * Set Features - Host Identifier after Connect, so we don't need to do anything here.
 		 */
 		NVME_CTRLR_DEBUGLOG(ctrlr, "NVMe-oF transport - not sending Set Features - Host ID\n");
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_TRANSPORT_READY, ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
 
@@ -2939,7 +2941,7 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 	/* If the user specified an all-zeroes host identifier, don't send the command. */
 	if (spdk_mem_all_zero(host_id, host_id_size)) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "User did not specify host ID - not sending Set Features - Host ID\n");
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_TRANSPORT_READY, ctrlr->opts.admin_timeout_ms);
 		return 0;
 	}
 
@@ -3946,6 +3948,16 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_SET_HOST_ID:
 		rc = nvme_ctrlr_set_host_id(ctrlr);
+		break;
+
+	case NVME_CTRLR_STATE_TRANSPORT_READY:
+		rc = nvme_transport_ctrlr_ready(ctrlr);
+		if (rc) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Transport controller ready step failed: rc %d\n", rc);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+		} else {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+		}
 		break;
 
 	case NVME_CTRLR_STATE_READY:

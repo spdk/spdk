@@ -142,6 +142,19 @@ nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
+nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_ready) {
+		return transport->ops.ctrlr_ready(ctrlr);
+	}
+
+	return 0;
+}
+
+int
 nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);

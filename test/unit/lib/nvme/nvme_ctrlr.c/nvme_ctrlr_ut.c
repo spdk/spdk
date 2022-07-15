@@ -65,6 +65,14 @@ nvme_transport_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+DEFINE_RETURN_MOCK(nvme_transport_ctrlr_ready, int);
+int
+nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr)
+{
+	HANDLE_RETURN_MOCK(nvme_transport_ctrlr_ready);
+	return 0;
+}
+
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
@@ -3276,6 +3284,24 @@ test_nvme_ctrlr_get_memory_domains(void)
 	MOCK_CLEAR(nvme_transport_ctrlr_get_memory_domains);
 }
 
+static void
+test_nvme_transport_ctrlr_ready(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+
+	/* Transport init succeeded */
+	ctrlr.state = NVME_CTRLR_STATE_TRANSPORT_READY;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_READY);
+
+	/* Transport init failed */
+	ctrlr.state = NVME_CTRLR_STATE_TRANSPORT_READY;
+	MOCK_SET(nvme_transport_ctrlr_ready, -1);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == -1);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
+	MOCK_CLEAR(nvme_transport_ctrlr_ready);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -3331,6 +3357,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_parse_ana_log_page);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ana_resize);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_get_memory_domains);
+	CU_ADD_TEST(suite, test_nvme_transport_ctrlr_ready);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

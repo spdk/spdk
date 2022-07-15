@@ -3954,6 +3954,8 @@ struct spdk_nvme_transport_ops {
 	int (*ctrlr_get_memory_domains)(const struct spdk_nvme_ctrlr *ctrlr,
 					struct spdk_memory_domain **domains,
 					int array_size);
+
+	int (*ctrlr_ready)(struct spdk_nvme_ctrlr *ctrlr);
 };
 
 /**

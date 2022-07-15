@@ -776,6 +776,11 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_WAIT_FOR_HOST_ID,
 
 	/**
+	 * Let transport layer do its part of initialization.
+	 */
+	NVME_CTRLR_STATE_TRANSPORT_READY,
+
+	/**
 	 * Controller initialization has completed and the controller is ready.
 	 */
 	NVME_CTRLR_STATE_READY,
@@ -1470,6 +1475,7 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 int nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx, bool direct_connect);
 int nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr);
+int nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 int nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
 int nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
