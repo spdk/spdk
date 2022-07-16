@@ -1993,57 +1993,57 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=bdev_split_delete)
 
     # ftl
-    ftl_valid_limits = ('crit', 'high', 'low', 'start')
-
     def bdev_ftl_create(args):
-        def parse_limits(limits, arg_dict, key_suffix=''):
-            for limit in limits.split(','):
-                key, value = limit.split(':', 1)
-                if key in ftl_valid_limits:
-                    arg_dict['limit_' + key + key_suffix] = int(value)
-                else:
-                    raise ValueError('Limit {} is not supported'.format(key))
-
-        arg_limits = {}
-        if args.limit_threshold:
-            parse_limits(args.limit_threshold, arg_limits, '_threshold')
-
-        if args.limit:
-            parse_limits(args.limit, arg_limits)
-
         print_dict(rpc.bdev.bdev_ftl_create(args.client,
                                             name=args.name,
                                             base_bdev=args.base_bdev,
                                             uuid=args.uuid,
                                             cache=args.cache,
-                                            allow_open_bands=args.allow_open_bands,
                                             overprovisioning=args.overprovisioning,
-                                            l2p_path=args.l2p_path,
-                                            use_append=args.use_append,
-                                            **arg_limits))
+                                            core_mask=args.core_mask))
 
     p = subparsers.add_parser('bdev_ftl_create', help='Add FTL bdev')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-d', '--base-bdev', help='Name of zoned bdev used as underlying device',
+    p.add_argument('-d', '--base-bdev', help='Name of bdev used as underlying device',
                    required=True)
     p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
                    'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
-    p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache (optional)')
-    p.add_argument('-o', '--allow-open-bands', help='Restoring after dirty shutdown without cache will'
-                   ' result in partial data recovery, instead of error', action='store_true')
+    p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache',
+                   required=True)
     p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
-                   ' to user (optional)', type=int)
-    p.add_argument('--l2p-path', help='Path to persistent memory file or device to store l2p onto, '
-                                      'by default l2p is kept in DRAM and is volatile (optional)')
-    p.add_argument('--use-append', help='Use appends instead of writes', action='store_true')
-
-    limits = p.add_argument_group('Defrag limits', 'Configures defrag limits and thresholds for'
-                                  ' levels ' + str(ftl_valid_limits)[1:-1])
-    limits.add_argument('--limit', help='Percentage of allowed user versus internal writes at given'
-                        ' levels, e.g. crit:0,high:20,low:80')
-    limits.add_argument('--limit-threshold', help='Number of free bands triggering a given level of'
-                        ' write limiting e.g. crit:1,high:2,low:3,start:4')
+                   ' to user (optional); default 20', type=int)
+    p.add_argument('--core-mask', help='CPU core mask - which cores will be used for ftl core thread, '
+                   'by default core thread will be set to the main application core (optional)')
     p.set_defaults(func=bdev_ftl_create)
+
+    def bdev_ftl_load(args):
+        print_dict(rpc.bdev.bdev_ftl_load(args.client,
+                                          name=args.name,
+                                          base_bdev=args.base_bdev,
+                                          uuid=args.uuid,
+                                          cache=args.cache,
+                                          overprovisioning=args.overprovisioning,
+                                          core_mask=args.core_mask))
+
+    p = subparsers.add_parser('bdev_ftl_load', help='Load FTL bdev')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.add_argument('-d', '--base-bdev', help='Name of bdev used as underlying device',
+                   required=True)
+    p.add_argument('-u', '--uuid', help='UUID of restored bdev', required=True)
+    p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write buffer cache',
+                   required=True)
+    p.add_argument('--overprovisioning', help='Percentage of device used for relocation, not exposed'
+                   ' to user (optional); default 20', type=int)
+    p.add_argument('--core-mask', help='CPU core mask - which cores will be used for ftl core thread, '
+                   'by default core thread will be set to the main application core (optional)')
+    p.set_defaults(func=bdev_ftl_load)
+
+    def bdev_ftl_unload(args):
+        print_dict(rpc.bdev.bdev_ftl_unload(args.client, name=args.name))
+
+    p = subparsers.add_parser('bdev_ftl_unload', help='Unload FTL bdev')
+    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
+    p.set_defaults(func=bdev_ftl_unload)
 
     def bdev_ftl_delete(args):
         print_dict(rpc.bdev.bdev_ftl_delete(args.client, name=args.name))

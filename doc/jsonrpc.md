@@ -465,7 +465,9 @@ Example response:
     "bdev_malloc_delete",
     "bdev_malloc_create",
     "bdev_ftl_delete",
+    "bdev_ftl_unload",
     "bdev_ftl_create",
+    "bdev_ftl_load",
     "bdev_lvol_get_lvstores",
     "bdev_lvol_delete",
     "bdev_lvol_resize",
@@ -4564,11 +4566,11 @@ This RPC is subject to change.
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Bdev name
-trtype                  | Required | string      | Transport type
-traddr                  | Required | string      | NVMe target address
-punits                  | Required | string      | Parallel unit range in the form of start-end e.g 4-8
+base_bdev               | Required | string      | Name of the base device
+cache                   | Required | string      | Name of the cache device
 uuid                    | Optional | string      | UUID of restored bdev (not applicable when creating new instance)
-cache                   | Optional | string      | Name of the bdev to be used as a write buffer cache
+core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
+overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
 
 #### Result
 
@@ -4581,11 +4583,12 @@ Example request:
 ~~~json
 {
   "params": {
-    "name": "nvme0"
-    "trtype" "pcie"
-    "traddr": "0000:00:04.0"
-    "punits": "0-3"
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
+    "name": "ftl0",
+    "base_bdev": "nvme0n1",
+    "cache": "nvme1n1",
+    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3",
+    "core_mask": "[0]",
+    "overprovisioning": 10
   },
   "jsonrpc": "2.0",
   "method": "bdev_ftl_create",
@@ -4600,7 +4603,61 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-      "name" : "nvme0"
+      "name" : "ftl0"
+      "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
+  }
+}
+~~~
+
+### bdev_ftl_load {#rpc_bdev_ftl_load}
+
+Loads FTL bdev.
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+base_bdev               | Required | string      | Name of the base device
+cache                   | Required | string      | Name of the cache device
+uuid                    | Required | string      | UUID of restored bdev
+core_mask               | Optional | string      | CPU core(s) possible for placement of the ftl core thread, application main thread by default
+overprovisioning        | Optional | int         | Percentage of base device used for relocation, 20% by default
+
+#### Result
+
+Name of loaded bdev.
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0",
+    "base_bdev": "nvme0n1",
+    "cache": "nvme1n1",
+    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3",
+    "core_mask": "[0]",
+    "overprovisioning": 10
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_load",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+      "name" : "ftl0"
       "uuid" : "4a7481ce-786f-41a0-9b86-8f7465c8f4d3"
   }
 }
@@ -4625,10 +4682,47 @@ Example request:
 ~~~json
 {
   "params": {
-    "name": "nvme0"
+    "name": "ftl0"
   },
   "jsonrpc": "2.0",
   "method": "bdev_ftl_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_ftl_unload {#rpc_bdev_ftl_unload}
+
+Unloads FTL bdev.
+
+This RPC is subject to change.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "ftl0"
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_ftl_unload",
   "id": 1
 }
 ~~~

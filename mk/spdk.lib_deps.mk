@@ -110,7 +110,7 @@ endif
 
 # module/bdev
 ifeq ($(OS),Linux)
-DEPDIRS-bdev_ftl := bdev json log util ftl
+DEPDIRS-bdev_ftl := $(BDEV_DEPS) ftl
 endif
 DEPDIRS-bdev_gpt := bdev json log thread util
 

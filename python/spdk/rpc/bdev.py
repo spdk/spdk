@@ -1347,6 +1347,34 @@ def bdev_ftl_create(client, name, base_bdev, **kwargs):
     return client.call('bdev_ftl_create', params)
 
 
+def bdev_ftl_load(client, name, base_bdev, **kwargs):
+    """Load FTL bdev
+
+    Args:
+        name: name of the bdev
+        base_bdev: name of the base bdev
+        kwargs: optional parameters
+    """
+    params = {'name': name,
+              'base_bdev': base_bdev}
+    for key, value in kwargs.items():
+        if value is not None:
+            params[key] = value
+
+    return client.call('bdev_ftl_load', params)
+
+
+def bdev_ftl_unload(client, name):
+    """Unload FTL bdev
+
+    Args:
+        name: name of the bdev
+    """
+    params = {'name': name}
+
+    return client.call('bdev_ftl_unload', params)
+
+
 def bdev_ftl_delete(client, name):
     """Delete FTL bdev
 
