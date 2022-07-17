@@ -13,6 +13,10 @@
 #include "spdk/stdinc.h"
 #include "spdk/bdev.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief SPDK block device.
  *
@@ -276,5 +280,9 @@ int spdk_bdev_zone_appendv_with_md(struct spdk_bdev_desc *desc, struct spdk_io_c
  * \param bdev_io I/O to get append location from.
  */
 uint64_t spdk_bdev_io_get_append_location(struct spdk_bdev_io *bdev_io);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_BDEV_ZONE_H */
