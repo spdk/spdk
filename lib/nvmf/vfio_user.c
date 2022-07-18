@@ -2918,6 +2918,13 @@ struct ctrlr_quiesce_ctx {
 
 static void ctrlr_quiesce(struct nvmf_vfio_user_ctrlr *vu_ctrlr);
 
+static inline bool
+in_interrupt_mode(struct nvmf_vfio_user_transport *vu_transport)
+{
+	return spdk_interrupt_mode_is_enabled() &&
+	       vu_transport->intr_mode_supported;
+}
+
 static void
 _vfio_user_endpoint_resume_done_msg(void *ctx)
 {
@@ -2938,7 +2945,9 @@ _vfio_user_endpoint_resume_done_msg(void *ctx)
 		 * kick ourselves so we'll definitely check again while in
 		 * VFIO_USER_CTRLR_RUNNING state.
 		 */
-		ctrlr_kick(vu_ctrlr);
+		if (in_interrupt_mode(endpoint->transport)) {
+			ctrlr_kick(vu_ctrlr);
+		}
 		return;
 	}
 
@@ -4549,13 +4558,6 @@ nvmf_vfio_user_poll_group_create(struct spdk_nvmf_transport *transport,
 	return &vu_group->group;
 }
 
-static bool
-in_interrupt_mode(struct nvmf_vfio_user_transport *vu_transport)
-{
-	return spdk_interrupt_mode_is_enabled() &&
-	       vu_transport->intr_mode_supported;
-}
-
 static struct spdk_nvmf_transport_poll_group *
 nvmf_vfio_user_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 {
@@ -4765,6 +4767,12 @@ vfio_user_ctrlr_intr(void *ctx)
 	 * Poll vfio-user for this controller.
 	 */
 	ret = vfio_user_poll_vfu_ctx(ctrlr);
+	/* `sqs[0]` could be set to NULL in vfio_user_poll_vfu_ctx() context, just return
+	 * for this case.
+	 */
+	if (ctrlr->sqs[0] == NULL) {
+		return ret;
+	}
 
 	vu_group = ctrlr_to_poll_group(ctrlr);
 
