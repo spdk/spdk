@@ -784,7 +784,7 @@ static void
 nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 {
 	struct nvme_tcp_req *tcp_req, *tmp;
-	struct spdk_nvme_cpl cpl;
+	struct spdk_nvme_cpl cpl = {};
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
 	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
@@ -2198,7 +2198,7 @@ static void
 nvme_tcp_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_req *tcp_req, *tmp;
-	struct spdk_nvme_cpl cpl;
+	struct spdk_nvme_cpl cpl = {};
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
 
 	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
