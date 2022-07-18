@@ -60,6 +60,18 @@ spdk_fd_group_get_fd(struct spdk_fd_group *fgrp)
 
 #ifdef __linux__
 
+static __thread struct epoll_event *g_event = NULL;
+
+int
+spdk_fd_group_get_epoll_event(struct epoll_event *event)
+{
+	if (g_event == NULL) {
+		return -EINVAL;
+	}
+	*event = *g_event;
+	return 0;
+}
+
 int
 spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,
 		  void *arg, const char *name)
@@ -277,8 +289,10 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 		SPDK_DTRACE_PROBE4(interrupt_fd_process, ehdlr->name, ehdlr->fd,
 				   ehdlr->fn, ehdlr->fn_arg);
 
+		g_event = &events[n];
 		/* call the interrupt response function */
 		ehdlr->fn(ehdlr->fn_arg);
+		g_event = NULL;
 
 		/* It is possible that the ehdlr was removed
 		 * during this wait loop when it get executed.
@@ -294,6 +308,12 @@ spdk_fd_group_wait(struct spdk_fd_group *fgrp, int timeout)
 }
 
 #else
+
+int
+spdk_fd_group_get_epoll_event(struct epoll_event *event)
+{
+	return -ENOTSUP;
+}
 
 int
 spdk_fd_group_add(struct spdk_fd_group *fgrp, int efd, spdk_fd_fn fn,

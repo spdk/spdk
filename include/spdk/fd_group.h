@@ -118,6 +118,22 @@ void spdk_fd_group_remove(struct spdk_fd_group *fgrp, int efd);
 int spdk_fd_group_event_modify(struct spdk_fd_group *fgrp,
 			       int efd, int event_types);
 
+/*
+ * Forward declaration of epoll_event to avoid having to conditionally compile
+ * spdk_fd_group_get_epoll_event on non-Linux systems.
+ */
+struct epoll_event;
+
+/**
+ * Copies the epoll(7) event that caused a callback function to execute.
+ * This function can only be called by the callback function, doing otherwise
+ * results in undefined behavior.
+ *
+ * \param event pointer to an epoll(7) event to copy to
+ * \return 0 on success, -errno on error
+ */
+int spdk_fd_group_get_epoll_event(struct epoll_event *event);
+
 #ifdef __cplusplus
 }
 #endif

@@ -55,6 +55,11 @@ Added spdk_rpc_set_allowlist to restrict allowed RPCs to the specified list.
 Promoted the application to example to match similar programs: fio_plugin and perf.
 It can now be found inside `examples/bdev/bdevperf`.
 
+### util
+
+New API `spdk_fd_group_get_epoll_event` that returns the epoll(7) event that
+caused a function callback in file descriptor group to execute.
+
 ## v22.09
 
 ### accel
