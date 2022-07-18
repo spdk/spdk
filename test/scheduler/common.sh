@@ -7,7 +7,7 @@ declare -r sysfs_node=$sysfs_system/node
 declare -r scheduler=$rootdir/test/event/scheduler/scheduler
 declare -r plugin=scheduler_plugin
 
-source "$testdir/cgroups.sh"
+source "$rootdir/test/scheduler/cgroups.sh"
 
 fold_list_onto_array() {
 	local array=$1

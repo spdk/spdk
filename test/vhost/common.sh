@@ -773,6 +773,8 @@ function vm_setup() {
 	notice "Saving to $vm_dir/run.sh"
 	cat <<- RUN > "$vm_dir/run.sh"
 		#!/bin/bash
+		rootdir=$rootdir
+		source "\$rootdir/test/scheduler/common.sh"
 		qemu_log () {
 			echo "=== qemu.log ==="
 			[[ -s $vm_dir/qemu.log ]] && cat $vm_dir/qemu.log
@@ -790,12 +792,18 @@ function vm_setup() {
 		chmod +r $vm_dir/*
 		echo "Running VM in $vm_dir"
 		rm -f $qemu_pid_file
+		cgroup=\$(get_cgroup \$$)
+		set_cgroup_attr_top_bottom \$$ cgroup.subtree_control "+cpuset"
+		create_cgroup \$cgroup/qemu.$vm_num
+		set_cgroup_attr "\$cgroup/qemu.$vm_num" cpuset.mems "$node_num"
+		set_cgroup_attr "\$cgroup/qemu.$vm_num" cpuset.cpus "$task_mask"
 		"\${qemu_cmd[@]}"
 
 		echo "Waiting for QEMU pid file"
 		sleep 1
 		[[ ! -f $qemu_pid_file ]] && sleep 1
 		[[ ! -f $qemu_pid_file ]] && echo "ERROR: no qemu pid file found" && exit 1
+		set_cgroup_attr "\$cgroup/qemu.$vm_num" cgroup.threads \$(< "$qemu_pid_file")
 		exit 0
 		# EOF
 	RUN
