@@ -1001,12 +1001,16 @@ test_nvme_rdma_register_and_unregister_reqs(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_nvmf_cmd cmds = {};
+	struct ibv_qp qp = {};
+	struct spdk_rdma_qp rdma_qp = {};
 	struct rdma_cm_id cm_id = {};
 	struct spdk_nvme_rdma_req rdma_reqs[50] = {};
 	int rc;
 
 	rqpair.cm_id = &cm_id;
 	rqpair.cmds = &cmds;
+	rqpair.rdma_qp = &rdma_qp;
+	rdma_qp.qp = &qp;
 	g_nvme_hooks.get_rkey = NULL;
 	rqpair.rdma_reqs = rdma_reqs;
 	/* case 1: nvme_rdma_register_req: nvme_rdma_reg_mr fail, expect: fail */

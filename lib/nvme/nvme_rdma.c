@@ -1000,7 +1000,7 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 	int rc;
 	uint32_t lkey;
 
-	rc = nvme_rdma_reg_mr(rqpair->cm_id->pd, &rqpair->rsp_mr,
+	rc = nvme_rdma_reg_mr(rqpair->rdma_qp->qp->pd, &rqpair->rsp_mr,
 			      rqpair->rsps, rqpair->num_entries * sizeof(*rqpair->rsps));
 
 	if (rc < 0) {
@@ -1121,7 +1121,7 @@ nvme_rdma_register_reqs(struct nvme_rdma_qpair *rqpair)
 	int rc;
 	uint32_t lkey;
 
-	rc = nvme_rdma_reg_mr(rqpair->cm_id->pd, &rqpair->cmd_mr,
+	rc = nvme_rdma_reg_mr(rqpair->rdma_qp->qp->pd, &rqpair->cmd_mr,
 			      rqpair->cmds, rqpair->num_entries * sizeof(*rqpair->cmds));
 
 	if (rc < 0) {
