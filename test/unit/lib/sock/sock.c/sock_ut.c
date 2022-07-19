@@ -911,7 +911,6 @@ posix_sock_impl_get_set_opts(void)
 	int rc;
 	size_t len = 0;
 	struct spdk_sock_impl_opts opts = {};
-	struct spdk_sock_impl_opts long_opts[2];
 
 	rc = spdk_sock_impl_get_opts("posix", NULL, &len);
 	CU_ASSERT(rc == -1);
@@ -927,12 +926,6 @@ posix_sock_impl_get_set_opts(void)
 	CU_ASSERT(len == sizeof(opts));
 	CU_ASSERT(opts.recv_buf_size == MIN_SO_RCVBUF_SIZE);
 	CU_ASSERT(opts.send_buf_size == MIN_SO_SNDBUF_SIZE);
-
-	/* Try to request more opts */
-	len = sizeof(long_opts);
-	rc = spdk_sock_impl_get_opts("posix", long_opts, &len);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(len == sizeof(opts));
 
 	/* Try to request zero opts */
 	len = 0;
@@ -955,14 +948,6 @@ posix_sock_impl_get_set_opts(void)
 	CU_ASSERT(opts.recv_buf_size == 16);
 	CU_ASSERT(opts.send_buf_size == 4);
 
-	/* Try to set more opts */
-	long_opts[0].recv_buf_size = 4;
-	long_opts[0].send_buf_size = 6;
-	long_opts[1].recv_buf_size = 0;
-	long_opts[1].send_buf_size = 0;
-	rc = spdk_sock_impl_set_opts("posix", long_opts, sizeof(long_opts));
-	CU_ASSERT(rc == 0);
-
 	/* Try to set less opts. Opts in the end should be untouched */
 	opts.recv_buf_size = 5;
 	opts.send_buf_size = 10;
@@ -973,7 +958,7 @@ posix_sock_impl_get_set_opts(void)
 	rc = spdk_sock_impl_get_opts("posix", &opts, &len);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(opts.recv_buf_size == 5);
-	CU_ASSERT(opts.send_buf_size == 6);
+	CU_ASSERT(opts.send_buf_size == 4);
 
 	/* Try to set partial option. It should not be changed */
 	opts.recv_buf_size = 1000;

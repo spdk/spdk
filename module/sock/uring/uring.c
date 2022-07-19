@@ -150,6 +150,8 @@ uring_sock_impl_get_opts(struct spdk_sock_impl_opts *opts, size_t *len)
 		errno = EINVAL;
 		return -1;
 	}
+
+	assert(sizeof(*opts) >= *len);
 	memset(opts, 0, *len);
 
 	uring_sock_copy_impl_opts(opts, &g_spdk_uring_sock_impl_opts, *len);
@@ -166,6 +168,7 @@ uring_sock_impl_set_opts(const struct spdk_sock_impl_opts *opts, size_t len)
 		return -1;
 	}
 
+	assert(sizeof(*opts) >= len);
 	uring_sock_copy_impl_opts(&g_spdk_uring_sock_impl_opts, opts, len);
 
 	return 0;
@@ -178,6 +181,7 @@ uring_opts_get_impl_opts(const struct spdk_sock_opts *opts, struct spdk_sock_imp
 	memcpy(dest, &g_spdk_uring_sock_impl_opts, sizeof(*dest));
 
 	if (opts->impl_opts != NULL) {
+		assert(sizeof(*dest) >= opts->impl_opts_size);
 		uring_sock_copy_impl_opts(dest, opts->impl_opts, opts->impl_opts_size);
 	}
 }
