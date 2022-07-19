@@ -1164,6 +1164,7 @@ function parse_fio_results() {
 	local client_stats iops bw
 	local read_avg_lat read_min_lat read_max_lat
 	local write_avg_lat write_min_lat write_min_lat
+	local clients
 
 	declare -A results
 	results["iops"]=0
@@ -1176,16 +1177,23 @@ function parse_fio_results() {
 	# matching files. This is in case we ran fio test multiple times.
 	log_files=("$fio_log_dir/$fio_log_filename"*)
 	for log_file in "${log_files[@]}"; do
-		rwmode=$(jq -r '.["client_stats"][0]["job options"]["rw"]' "$log_file")
+		# Save entire array to avoid opening $log_file multiple times
+		clients=$(jq -r '.client_stats' "$log_file")
+		[[ -n $clients ]]
+		rwmode=$(jq -r '.[0]["job options"]["rw"]' <<< "$clients")
 		mixread=1
 		mixwrite=1
 		if [[ $rwmode = *"rw"* ]]; then
-			mixread=$(jq -r '.["client_stats"][0]["job options"]["rwmixread"]' "$log_file")
+			mixread=$(jq -r '.[0]["job options"]["rwmixread"]' <<< "$clients")
 			mixread=$(bc -l <<< "scale=3; $mixread/100")
 			mixwrite=$(bc -l <<< "scale=3; 1-$mixread")
 		fi
 
-		client_stats=$(jq -r '.["client_stats"][] | select(.jobname == "All clients")' "$log_file")
+		client_stats=$(jq -r '.[] | select(.jobname == "All clients")' <<< "$clients")
+		if [[ -z $client_stats ]]; then
+			# Potentially single client (single VM)
+			client_stats=$(jq -r '.[]' <<< "$clients")
+		fi
 
 		# Check latency unit and later normalize to microseconds
 		lat_key="lat_us"
