@@ -32,6 +32,31 @@ if [[ "$spdk_tag" == "$spdk_lts_tag" ]]; then
 fi
 source_abi_dir="$HOME/$repo/build/lib"
 
+function check_header_filenames() {
+	local dups_found=0
+
+	xtrace_disable
+
+	include_headers=$(git ls-files -- include/spdk include/spdk_internal | xargs -n 1 basename)
+	dups=
+	for file in $include_headers; do
+		if [[ $(git ls-files "lib/**/$file" "module/**/$file" --error-unmatch 2> /dev/null) ]]; then
+			dups+=" $file"
+			dups_found=1
+		fi
+	done
+
+	xtrace_restore
+
+	if ((dups_found == 1)); then
+		echo "Private header file(s) found with same name as public header file."
+		echo "This is not allowed since it can confuse abidiff when determining if"
+		echo "data structure changes impact ABI."
+		echo $dups
+		return 1
+	fi
+}
+
 function confirm_abi_deps() {
 	local processed_so=0
 	local abidiff_output
@@ -250,6 +275,8 @@ function confirm_makefile_deps() {
 		wait
 	)
 }
+
+run_test "check_header_filenames" check_header_filenames
 
 config_params=$(get_config_params)
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
