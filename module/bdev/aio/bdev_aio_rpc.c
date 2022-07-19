@@ -106,8 +106,13 @@ rpc_bdev_aio_rescan(struct spdk_jsonrpc_request *request,
 	}
 
 	bdeverrno = bdev_aio_rescan(req.name);
-	spdk_jsonrpc_send_bool_response(request, bdeverrno);
+	if (bdeverrno) {
+		spdk_jsonrpc_send_error_response(request, bdeverrno,
+						 spdk_strerror(-bdeverrno));
+		goto cleanup;
+	}
 
+	spdk_jsonrpc_send_bool_response(request, true);
 cleanup:
 	free(req.name);
 }
