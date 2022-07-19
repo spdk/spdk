@@ -2199,13 +2199,11 @@ bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 	int				submitted_ios = 0;
 
 	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
-		if (bdev_qos_queue_io(qos, bdev_io)) {
-			return submitted_ios;
+		if (!bdev_qos_queue_io(qos, bdev_io)) {
+			TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
+			bdev_io_do_submit(ch, bdev_io);
+			submitted_ios++;
 		}
-
-		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
-		bdev_io_do_submit(ch, bdev_io);
-		submitted_ios++;
 	}
 
 	return submitted_ios;
