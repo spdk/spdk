@@ -3,7 +3,7 @@
  *   All rights reserved.
  */
 
-#include "vmd.h"
+#include "vmd_internal.h"
 
 #include "spdk/stdinc.h"
 #include "spdk/likely.h"

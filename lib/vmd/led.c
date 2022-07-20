@@ -6,7 +6,7 @@
 #include "spdk/stdinc.h"
 #include "spdk/likely.h"
 #include "spdk/log.h"
-#include "vmd.h"
+#include "vmd_internal.h"
 
 struct vmd_led_indicator_config {
 	uint8_t attention_indicator	: 2;
