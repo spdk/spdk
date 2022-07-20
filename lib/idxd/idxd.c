@@ -14,7 +14,7 @@
 #include "spdk/log.h"
 #include "spdk_internal/idxd.h"
 
-#include "idxd.h"
+#include "idxd_internal.h"
 
 #define ALIGN_4K 0x1000
 #define USERSPACE_DRIVER_NAME "user"

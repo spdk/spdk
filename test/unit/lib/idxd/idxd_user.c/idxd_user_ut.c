@@ -8,7 +8,6 @@
 #include "spdk_internal/idxd.h"
 #include "common/lib/test_env.c"
 
-#include "idxd/idxd.h"
 #include "idxd/idxd_user.c"
 
 #define FAKE_REG_SIZE 0x1000

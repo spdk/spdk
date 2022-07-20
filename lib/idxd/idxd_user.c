@@ -14,7 +14,7 @@
 #include "spdk/log.h"
 #include "spdk_internal/idxd.h"
 
-#include "idxd.h"
+#include "idxd_internal.h"
 
 struct spdk_user_idxd_device {
 	struct spdk_idxd_device	idxd;
