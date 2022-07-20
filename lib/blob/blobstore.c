@@ -6333,7 +6333,6 @@ bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 	if (ctx->allocate_all) {
 		/* remove thin provisioning */
 		bs_blob_list_remove(_blob);
-		blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
 		_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
 		_blob->back_bs_dev->destroy(_blob->back_bs_dev);
 		_blob->back_bs_dev = NULL;
@@ -6348,7 +6347,6 @@ bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 		}
 
 		bs_blob_list_remove(_blob);
-		blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
 		_blob->parent_id = SPDK_BLOBID_INVALID;
 		_blob->back_bs_dev->destroy(_blob->back_bs_dev);
 		_blob->back_bs_dev = bs_create_zeroes_dev();
@@ -6356,6 +6354,7 @@ bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 
 	/* Temporarily override md_ro flag for MD modification */
 	_blob->md_ro = false;
+	blob_remove_xattr(_blob, BLOB_SNAPSHOT, true);
 	_blob->state = SPDK_BLOB_STATE_DIRTY;
 
 	spdk_blob_sync_md(_blob, bs_clone_snapshot_origblob_cleanup, ctx);
