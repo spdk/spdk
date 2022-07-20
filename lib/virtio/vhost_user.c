@@ -5,7 +5,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "vhost_user.h"
+#include "vhost_user_internal.h"
 
 #include "spdk/string.h"
 #include "spdk_internal/vhost_user.h"

@@ -7,7 +7,7 @@
 
 #include <sys/eventfd.h>
 
-#include "vhost_user.h"
+#include "vhost_user_internal.h"
 #include "spdk/string.h"
 #include "spdk/config.h"
 #include "spdk/util.h"
