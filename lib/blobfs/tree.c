@@ -6,7 +6,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/blobfs.h"
-#include "tree.h"
+#include "cache_tree.h"
 
 #include "spdk/queue.h"
 #include "spdk/assert.h"
