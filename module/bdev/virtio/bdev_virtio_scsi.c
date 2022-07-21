@@ -1806,6 +1806,58 @@ bdev_virtio_user_scsi_dev_create(const char *base_name, const char *path,
 	return rc;
 }
 
+int
+bdev_vfio_user_scsi_dev_create(const char *base_name, const char *path,
+			       bdev_virtio_create_cb cb_fn, void *cb_arg)
+{
+	struct virtio_scsi_dev *svdev;
+	uint32_t num_queues = 0;
+	int rc;
+
+	svdev = calloc(1, sizeof(*svdev));
+	if (svdev == NULL) {
+		SPDK_ERRLOG("calloc failed for virtio device %s: %s\n", base_name, path);
+		return -ENOMEM;
+	}
+
+	rc = virtio_vfio_user_dev_init(&svdev->vdev, base_name, path);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to create %s as virtio device\n", path);
+		free(svdev);
+		return -EFAULT;
+	}
+
+	rc = virtio_dev_read_dev_config(&svdev->vdev, offsetof(struct virtio_scsi_config, num_queues),
+					&num_queues, sizeof(num_queues));
+	if (rc) {
+		SPDK_ERRLOG("%s: config read failed: %s\n", base_name, spdk_strerror(-rc));
+		virtio_dev_destruct(&svdev->vdev);
+		free(svdev);
+		return rc;
+	}
+
+	if (num_queues < SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED) {
+		SPDK_ERRLOG("%s: invalid num_queues %u\n", base_name, num_queues);
+		virtio_dev_destruct(&svdev->vdev);
+		free(svdev);
+		return -EINVAL;
+	}
+
+	rc = virtio_scsi_dev_init(svdev, num_queues, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	if (rc != 0) {
+		virtio_dev_destruct(&svdev->vdev);
+		free(svdev);
+		return -EFAULT;
+	}
+
+	rc = virtio_scsi_dev_scan(svdev, cb_fn, cb_arg);
+	if (rc) {
+		virtio_scsi_dev_remove(svdev, NULL, NULL);
+	}
+
+	return rc;
+}
+
 struct bdev_virtio_pci_dev_create_ctx {
 	const char *name;
 	bdev_virtio_create_cb cb_fn;

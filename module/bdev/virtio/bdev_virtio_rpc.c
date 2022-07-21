@@ -186,7 +186,7 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_bdev_virtio_attach_controller_ctx *req;
 	struct spdk_bdev *bdev = NULL;
 	struct spdk_pci_addr pci_addr;
-	int rc;
+	int rc = 0;
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
@@ -248,9 +248,11 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 	} else if (strcmp(req->dev_type, "scsi") == 0) {
 		if (strcmp(req->trtype, "pci") == 0) {
 			rc = bdev_virtio_pci_scsi_dev_create(req->name, &pci_addr, rpc_create_virtio_dev_cb, req);
-		} else {
+		} else if (strcmp(req->trtype, "user") == 0) {
 			rc = bdev_virtio_user_scsi_dev_create(req->name, req->traddr, req->vq_count, req->vq_size,
 							      rpc_create_virtio_dev_cb, req);
+		} else if (strcmp(req->trtype, "vfio-user") == 0) {
+			rc = bdev_vfio_user_scsi_dev_create(req->name, req->traddr, rpc_create_virtio_dev_cb, req);
 		}
 
 		if (rc < 0) {
