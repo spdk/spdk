@@ -260,6 +260,7 @@ set +x
 readarray disk_cfg < $disk_map
 for line in "${disk_cfg[@]}"; do
 	echo $line
+	[[ $line == "#"* ]] && continue
 	IFS=","
 	s=($line)
 	disk_cfg_bdfs+=(${s[0]})
