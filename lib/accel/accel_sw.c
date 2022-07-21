@@ -247,21 +247,21 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			rc = _sw_accel_compare(accel_task->src, accel_task->src2, accel_task->nbytes);
 			break;
 		case ACCEL_OPC_CRC32C:
-			if (accel_task->v.iovcnt == 0) {
+			if (accel_task->s.iovcnt == 0) {
 				_sw_accel_crc32c(accel_task->crc_dst, accel_task->src, accel_task->seed, accel_task->nbytes);
 			} else {
-				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
+				_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs, accel_task->s.iovcnt, accel_task->seed);
 			}
 			break;
 		case ACCEL_OPC_COPY_CRC32C:
 			rc = _check_flags(accel_task->flags);
 			if (rc == 0) {
-				if (accel_task->v.iovcnt == 0) {
+				if (accel_task->s.iovcnt == 0) {
 					_sw_accel_copy(accel_task->dst, accel_task->src, accel_task->nbytes, accel_task->flags);
 					_sw_accel_crc32c(accel_task->crc_dst, accel_task->src, accel_task->seed, accel_task->nbytes);
 				} else {
-					_sw_accel_copyv(accel_task->dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->flags);
-					_sw_accel_crc32cv(accel_task->crc_dst, accel_task->v.iovs, accel_task->v.iovcnt, accel_task->seed);
+					_sw_accel_copyv(accel_task->dst, accel_task->s.iovs, accel_task->s.iovcnt, accel_task->flags);
+					_sw_accel_crc32cv(accel_task->crc_dst, accel_task->s.iovs, accel_task->s.iovcnt, accel_task->seed);
 				}
 			}
 			break;

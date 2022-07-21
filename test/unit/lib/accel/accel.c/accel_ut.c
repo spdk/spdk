@@ -360,7 +360,7 @@ test_spdk_accel_submit_crc32c(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.crc_dst == &crc_dst);
 	CU_ASSERT(task.src == src);
-	CU_ASSERT(task.v.iovcnt == 0);
+	CU_ASSERT(task.s.iovcnt == 0);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.op_code == ACCEL_OPC_CRC32C);
 	CU_ASSERT(task.nbytes == nbytes);
@@ -396,8 +396,8 @@ test_spdk_accel_submit_crc32cv(void)
 	/* accel submission OK. */
 	rc = spdk_accel_submit_crc32cv(g_ch, &crc_dst, iov, iov_cnt, seed, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(task.v.iovs == iov);
-	CU_ASSERT(task.v.iovcnt == iov_cnt);
+	CU_ASSERT(task.s.iovs == iov);
+	CU_ASSERT(task.s.iovcnt == iov_cnt);
 	CU_ASSERT(task.crc_dst == &crc_dst);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.op_code == ACCEL_OPC_CRC32C);
@@ -442,7 +442,7 @@ test_spdk_accel_submit_copy_crc32c(void)
 	CU_ASSERT(task.dst == dst);
 	CU_ASSERT(task.src == src);
 	CU_ASSERT(task.crc_dst == &crc_dst);
-	CU_ASSERT(task.v.iovcnt == 0);
+	CU_ASSERT(task.s.iovcnt == 0);
 	CU_ASSERT(task.seed == seed);
 	CU_ASSERT(task.nbytes == nbytes);
 	CU_ASSERT(task.flags == 0);

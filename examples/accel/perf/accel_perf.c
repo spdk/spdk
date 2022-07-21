@@ -49,8 +49,8 @@ struct display_info {
 
 struct ap_task {
 	void			*src;
-	struct iovec		*iovs;
-	uint32_t		iov_cnt;
+	struct iovec		*src_iovs;
+	uint32_t		src_iovcnt;
 	void			*dst;
 	void			*dst2;
 	uint32_t		crc_dst;
@@ -252,10 +252,10 @@ _get_task_data_bufs(struct ap_task *task)
 
 	if (g_workload_selection == ACCEL_OPC_CRC32C || g_workload_selection == ACCEL_OPC_COPY_CRC32C) {
 		assert(g_crc32c_chained_count > 0);
-		task->iov_cnt = g_crc32c_chained_count;
-		task->iovs = calloc(task->iov_cnt, sizeof(struct iovec));
-		if (!task->iovs) {
-			fprintf(stderr, "cannot allocated task->iovs fot task=%p\n", task);
+		task->src_iovcnt = g_crc32c_chained_count;
+		task->src_iovs = calloc(task->src_iovcnt, sizeof(struct iovec));
+		if (!task->src_iovs) {
+			fprintf(stderr, "cannot allocated task->src_iovs fot task=%p\n", task);
 			return -ENOMEM;
 		}
 
@@ -263,13 +263,13 @@ _get_task_data_bufs(struct ap_task *task)
 			dst_buff_len = g_xfer_size_bytes * g_crc32c_chained_count;
 		}
 
-		for (i = 0; i < task->iov_cnt; i++) {
-			task->iovs[i].iov_base = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
-			if (task->iovs[i].iov_base == NULL) {
+		for (i = 0; i < task->src_iovcnt; i++) {
+			task->src_iovs[i].iov_base = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
+			if (task->src_iovs[i].iov_base == NULL) {
 				return -ENOMEM;
 			}
-			memset(task->iovs[i].iov_base, DATA_PATTERN, g_xfer_size_bytes);
-			task->iovs[i].iov_len = g_xfer_size_bytes;
+			memset(task->src_iovs[i].iov_base, DATA_PATTERN, g_xfer_size_bytes);
+			task->src_iovs[i].iov_len = g_xfer_size_bytes;
 		}
 
 	} else {
@@ -353,11 +353,11 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		break;
 	case ACCEL_OPC_CRC32C:
 		rc = spdk_accel_submit_crc32cv(worker->ch, &task->crc_dst,
-					       task->iovs, task->iov_cnt, g_crc32c_seed,
+					       task->src_iovs, task->src_iovcnt, g_crc32c_seed,
 					       accel_done, task);
 		break;
 	case ACCEL_OPC_COPY_CRC32C:
-		rc = spdk_accel_submit_copy_crc32cv(worker->ch, task->dst, task->iovs, task->iov_cnt,
+		rc = spdk_accel_submit_copy_crc32cv(worker->ch, task->dst, task->src_iovs, task->src_iovcnt,
 						    &task->crc_dst, g_crc32c_seed, flags, accel_done, task);
 		break;
 	case ACCEL_OPC_COMPARE:
@@ -394,13 +394,13 @@ _free_task_buffers(struct ap_task *task)
 	uint32_t i;
 
 	if (g_workload_selection == ACCEL_OPC_CRC32C || g_workload_selection == ACCEL_OPC_COPY_CRC32C) {
-		if (task->iovs) {
-			for (i = 0; i < task->iov_cnt; i++) {
-				if (task->iovs[i].iov_base) {
-					spdk_dma_free(task->iovs[i].iov_base);
+		if (task->src_iovs) {
+			for (i = 0; i < task->src_iovcnt; i++) {
+				if (task->src_iovs[i].iov_base) {
+					spdk_dma_free(task->src_iovs[i].iov_base);
 				}
 			}
-			free(task->iovs);
+			free(task->src_iovs);
 		}
 	} else {
 		spdk_dma_free(task->src);
@@ -413,18 +413,18 @@ _free_task_buffers(struct ap_task *task)
 }
 
 static int
-_vector_memcmp(void *_dst, struct iovec *src_iovs, uint32_t iovcnt)
+_vector_memcmp(void *_dst, struct iovec *src_src_iovs, uint32_t iovcnt)
 {
 	uint32_t i;
 	uint32_t ttl_len = 0;
 	uint8_t *dst = (uint8_t *)_dst;
 
 	for (i = 0; i < iovcnt; i++) {
-		if (memcmp(dst, src_iovs[i].iov_base, src_iovs[i].iov_len)) {
+		if (memcmp(dst, src_src_iovs[i].iov_base, src_src_iovs[i].iov_len)) {
 			return -1;
 		}
-		dst += src_iovs[i].iov_len;
-		ttl_len += src_iovs[i].iov_len;
+		dst += src_src_iovs[i].iov_len;
+		ttl_len += src_src_iovs[i].iov_len;
 	}
 
 	if (ttl_len != iovcnt * g_xfer_size_bytes) {
@@ -449,18 +449,18 @@ accel_done(void *arg1, int status)
 	if (g_verify && status == 0) {
 		switch (worker->workload) {
 		case ACCEL_OPC_COPY_CRC32C:
-			sw_crc32c = spdk_crc32c_iov_update(task->iovs, task->iov_cnt, ~g_crc32c_seed);
+			sw_crc32c = spdk_crc32c_iov_update(task->src_iovs, task->src_iovcnt, ~g_crc32c_seed);
 			if (task->crc_dst != sw_crc32c) {
 				SPDK_NOTICELOG("CRC-32C miscompare\n");
 				worker->xfer_failed++;
 			}
-			if (_vector_memcmp(task->dst, task->iovs, task->iov_cnt)) {
+			if (_vector_memcmp(task->dst, task->src_iovs, task->src_iovcnt)) {
 				SPDK_NOTICELOG("Data miscompare\n");
 				worker->xfer_failed++;
 			}
 			break;
 		case ACCEL_OPC_CRC32C:
-			sw_crc32c = spdk_crc32c_iov_update(task->iovs, task->iov_cnt, ~g_crc32c_seed);
+			sw_crc32c = spdk_crc32c_iov_update(task->src_iovs, task->src_iovcnt, ~g_crc32c_seed);
 			if (task->crc_dst != sw_crc32c) {
 				SPDK_NOTICELOG("CRC-32C miscompare\n");
 				worker->xfer_failed++;

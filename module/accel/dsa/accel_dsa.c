@@ -171,27 +171,27 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 					   idxd_task);
 		break;
 	case ACCEL_OPC_CRC32C:
-		if (task->v.iovcnt == 0) {
+		if (task->s.iovcnt == 0) {
 			siov.iov_base = task->src;
 			siov.iov_len = task->nbytes;
 			iov = &siov;
 			iovcnt = 1;
 		} else {
-			iov = task->v.iovs;
-			iovcnt = task->v.iovcnt;
+			iov = task->s.iovs;
+			iovcnt = task->s.iovcnt;
 		}
 		rc = spdk_idxd_submit_crc32c(chan->chan, iov, iovcnt, task->seed, task->crc_dst,
 					     flags, dsa_done, idxd_task);
 		break;
 	case ACCEL_OPC_COPY_CRC32C:
-		if (task->v.iovcnt == 0) {
+		if (task->s.iovcnt == 0) {
 			siov.iov_base = task->src;
 			siov.iov_len = task->nbytes;
 			iov = &siov;
 			iovcnt = 1;
 		} else {
-			iov = task->v.iovs;
-			iovcnt = task->v.iovcnt;
+			iov = task->s.iovs;
+			iovcnt = task->s.iovcnt;
 		}
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes;
