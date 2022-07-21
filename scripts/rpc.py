@@ -2569,6 +2569,12 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('accel_get_opc_assignments', help='Get list of opcode name to engine assignments.')
     p.set_defaults(func=accel_get_opc_assignments)
 
+    def accel_get_engine_info(args):
+        print_dict(rpc.accel.accel_get_engine_info(args.client))
+
+    p = subparsers.add_parser('accel_get_engine_info', help='Get list of valid engine names and their operations.')
+    p.set_defaults(func=accel_get_engine_info)
+
     # ioat
     def ioat_scan_accel_engine(args):
         rpc.ioat.ioat_scan_accel_engine(args.client)

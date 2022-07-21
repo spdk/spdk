@@ -71,3 +71,54 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 }
 SPDK_RPC_REGISTER("accel_get_opc_assignments", rpc_accel_get_opc_assignments,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+rpc_dump_engine_info(struct engine_info *info)
+{
+	struct spdk_json_write_ctx *w = info->w;
+	const char *name;
+	uint32_t i;
+	int rc;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "engine", info->name);
+	spdk_json_write_named_array_begin(w, "suppoerted ops");
+
+	for (i = 0; i < info->num_ops; i++) {
+		rc = _get_opc_name(i, &name);
+		if (rc == 0) {
+			spdk_json_write_string(w, name);
+		} else {
+			/* this should never happen */
+			SPDK_ERRLOG("Invalid opcode (%d)).\n", i);
+			assert(0);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_json_write_object_end(w);
+}
+
+static void
+rpc_accel_get_engine_info(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct engine_info info;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "accel_get_engine_info requires no parameters");
+		return;
+	}
+
+	info.w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_array_begin(info.w);
+
+	_accel_for_each_engine(&info, rpc_dump_engine_info);
+
+	spdk_json_write_array_end(info.w);
+	spdk_jsonrpc_end_result(request, info.w);
+}
+SPDK_RPC_REGISTER("accel_get_engine_info", rpc_accel_get_engine_info,
+		  SPDK_RPC_RUNTIME)

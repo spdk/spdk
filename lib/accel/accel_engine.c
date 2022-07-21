@@ -66,6 +66,27 @@ spdk_accel_get_opc_engine_name(enum accel_opcode opcode, const char **engine_nam
 	return 0;
 }
 
+void
+_accel_for_each_engine(struct engine_info *info, _accel_for_each_engine_fn fn)
+{
+	struct spdk_accel_engine *accel_engine;
+	enum accel_opcode opcode;
+	int j = 0;
+
+	TAILQ_FOREACH(accel_engine, &g_engine_list, tailq) {
+		for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
+			if (accel_engine->supports_opcode(opcode)) {
+				info->ops[j] = opcode;
+				j++;
+			}
+		}
+		info->name = accel_engine->name;
+		info->num_ops = j;
+		fn(info);
+		j = 0;
+	}
+}
+
 static struct spdk_accel_engine *
 _engine_find_by_name(const char *name)
 {

@@ -1496,6 +1496,57 @@ Example response:
 
 ## Acceleration Framework Layer {#jsonrpc_components_accel_fw}
 
+### accel_get_engine_info {#accel_get_engine_info}
+
+Get a list of valid engine names and their supported operations.
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_get_engine_info",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+[
+  {
+    "engine": "software",
+    "supported ops": [
+      "copy",
+      "fill",
+      "dualcast",
+      "compare",
+      "crc32c",
+      "copy_crc32c",
+      "compress",
+      "decompress"
+    ]
+  },
+  {
+    "engine": "dsa",
+    "supported ops": [
+      "copy",
+      "fill",
+      "dualcast",
+      "compare",
+      "crc32c",
+      "copy_crc32c"
+    ]
+  }
+]
+~~~
+
 ### accel_get_opc_assignments {#rpc_accel_get_opc_assignments}
 
 Get a list of opcode names and their assigned accel_fw modules.
