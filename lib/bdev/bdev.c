@@ -2164,31 +2164,43 @@ bdev_io_do_submit(struct spdk_bdev_channel *bdev_ch, struct spdk_bdev_io *bdev_i
 	}
 }
 
+static bool
+bdev_qos_queue_io(struct spdk_bdev_qos *qos, struct spdk_bdev_io *bdev_io)
+{
+	int i;
+
+	if (bdev_qos_io_to_limit(bdev_io) == true) {
+		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+			if (!qos->rate_limits[i].queue_io) {
+				continue;
+			}
+
+			if (qos->rate_limits[i].queue_io(&qos->rate_limits[i],
+							 bdev_io) == true) {
+				return true;
+			}
+		}
+		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+			if (!qos->rate_limits[i].update_quota) {
+				continue;
+			}
+
+			qos->rate_limits[i].update_quota(&qos->rate_limits[i], bdev_io);
+		}
+	}
+
+	return false;
+}
+
 static int
 bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 {
 	struct spdk_bdev_io		*bdev_io = NULL, *tmp = NULL;
-	int				i, submitted_ios = 0;
+	int				submitted_ios = 0;
 
 	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
-		if (bdev_qos_io_to_limit(bdev_io) == true) {
-			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-				if (!qos->rate_limits[i].queue_io) {
-					continue;
-				}
-
-				if (qos->rate_limits[i].queue_io(&qos->rate_limits[i],
-								 bdev_io) == true) {
-					return submitted_ios;
-				}
-			}
-			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-				if (!qos->rate_limits[i].update_quota) {
-					continue;
-				}
-
-				qos->rate_limits[i].update_quota(&qos->rate_limits[i], bdev_io);
-			}
+		if (bdev_qos_queue_io(qos, bdev_io)) {
+			return submitted_ios;
 		}
 
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
