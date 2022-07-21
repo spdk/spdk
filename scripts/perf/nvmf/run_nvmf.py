@@ -1275,11 +1275,19 @@ class SPDKTarget(Target):
         if hasattr(self, "nvmf_proc"):
             try:
                 self.nvmf_proc.terminate()
-                self.nvmf_proc.wait()
+                self.nvmf_proc.wait(timeout=30)
             except Exception as e:
+                self.log_print("Failed to terminate SPDK Target process. Sending SIGKILL.")
                 self.log_print(e)
                 self.nvmf_proc.kill()
                 self.nvmf_proc.communicate()
+                # Try to clean up RPC socket files if they were not removed
+                # because of using 'kill'
+                try:
+                    os.remove("/var/tmp/spdk.sock")
+                    os.remove("/var/tmp/spdk.sock.lock")
+                except FileNotFoundError:
+                    pass
 
 
 class KernelInitiator(Initiator):
