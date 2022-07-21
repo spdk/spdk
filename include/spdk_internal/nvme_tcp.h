@@ -98,6 +98,7 @@ struct nvme_tcp_pdu {
 
 	void						*req; /* data tied to a tcp request */
 	void						*qpair;
+	SLIST_ENTRY(nvme_tcp_pdu)			slist;
 };
 SPDK_STATIC_ASSERT(offsetof(struct nvme_tcp_pdu,
 			    sock_req) + sizeof(struct spdk_sock_request) == offsetof(struct nvme_tcp_pdu, iov),

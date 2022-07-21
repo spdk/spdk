@@ -781,9 +781,9 @@ test_nvmf_tcp_qpair_init_mem_resource(void)
 	CU_ASSERT(tqpair->reqs[127].req.cmd == (void *)&tqpair->reqs[127].cmd);
 	CU_ASSERT(tqpair->reqs[127].state == TCP_REQUEST_STATE_FREE);
 	CU_ASSERT(tqpair->state_cntr[TCP_REQUEST_STATE_FREE] == SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH);
-	CU_ASSERT(tqpair->mgmt_pdu == &tqpair->pdus[SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH]);
+	CU_ASSERT(tqpair->mgmt_pdu == &tqpair->pdus[2 * SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH]);
 	CU_ASSERT(tqpair->mgmt_pdu->qpair == tqpair);
-	CU_ASSERT(tqpair->pdu_in_progress == &tqpair->pdus[SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH + 1]);
+	CU_ASSERT(tqpair->pdu_in_progress == &tqpair->pdus[2 * SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH - 1]);
 	CU_ASSERT(tqpair->recv_buf_size == (4096 + sizeof(struct spdk_nvme_tcp_cmd) + 2 *
 					    SPDK_NVME_TCP_DIGEST_LEN) * SPDK_NVMF_TCP_RECV_BUF_SIZE_FACTOR);
 
