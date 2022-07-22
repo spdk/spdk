@@ -613,11 +613,14 @@ nvmf_rdma_request_free_data(struct spdk_nvmf_rdma_request *rdma_req,
 		data_wr->wr.num_sge = 0;
 		next_send_wr = data_wr->wr.next;
 		if (data_wr != &rdma_req->data) {
+			data_wr->wr.next = NULL;
 			spdk_mempool_put(rtransport->data_wr_pool, data_wr);
 		}
 		data_wr = (!next_send_wr || next_send_wr == &rdma_req->rsp.wr) ? NULL :
 			  SPDK_CONTAINEROF(next_send_wr, struct spdk_nvmf_rdma_request_data, wr);
 	}
+	rdma_req->data.wr.next = NULL;
+	rdma_req->rsp.wr.next = NULL;
 }
 
 static void
@@ -1914,8 +1917,6 @@ _nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
 	rdma_req->req.data = NULL;
-	rdma_req->rsp.wr.next = NULL;
-	rdma_req->data.wr.next = NULL;
 	rdma_req->offset = 0;
 	rdma_req->req.dif_enabled = false;
 	rdma_req->fused_failed = false;
