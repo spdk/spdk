@@ -27,6 +27,8 @@ static int g_zcopy;
 static int g_ktls;
 static int g_tls_version;
 static bool g_verbose;
+static char *g_psk_key;
+static char *g_psk_identity;
 
 /*
  * We'll use this struct to gather housekeeping hello_context to pass between
@@ -40,6 +42,8 @@ struct hello_context_t {
 	int zcopy;
 	int ktls;
 	int tls_version;
+	char *psk_key;
+	char *psk_identity;
 
 	bool verbose;
 	int bytes_in;
@@ -61,7 +65,9 @@ struct hello_context_t {
 static void
 hello_sock_usage(void)
 {
+	printf(" -E psk_key    Default PSK KEY in hexadecimal digits, e.g. 1234567890ABCDEF (only applies when sock_impl == ssl)\n");
 	printf(" -H host_addr  host address\n");
+	printf(" -I psk_id     Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)\n");
 	printf(" -P port       port number\n");
 	printf(" -N sock_impl  socket implementation, e.g., -N posix or -N uring\n");
 	printf(" -S            start in server mode\n");
@@ -80,8 +86,14 @@ static int
 hello_sock_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
+	case 'E':
+		g_psk_key = arg;
+		break;
 	case 'H':
 		g_host = arg;
+		break;
+	case 'I':
+		g_psk_identity = arg;
 		break;
 	case 'N':
 		g_sock_impl_name = arg;
@@ -225,6 +237,8 @@ hello_sock_connect(struct hello_context_t *ctx)
 	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
 	impl_opts.enable_ktls = ctx->ktls;
 	impl_opts.tls_version = ctx->tls_version;
+	impl_opts.psk_key = ctx->psk_key;
+	impl_opts.psk_identity = ctx->psk_identity;
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
@@ -369,6 +383,8 @@ hello_sock_listen(struct hello_context_t *ctx)
 	spdk_sock_impl_get_opts(ctx->sock_impl_name, &impl_opts, &impl_opts_size);
 	impl_opts.enable_ktls = ctx->ktls;
 	impl_opts.tls_version = ctx->tls_version;
+	impl_opts.psk_key = ctx->psk_key;
+	impl_opts.psk_identity = ctx->psk_identity;
 
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
@@ -443,7 +459,7 @@ main(int argc, char **argv)
 	opts.name = "hello_sock";
 	opts.shutdown_cb = hello_sock_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "H:kKN:P:ST:VzZ", NULL, hello_sock_parse_arg,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "E:H:I:kKN:P:ST:VzZ", NULL, hello_sock_parse_arg,
 				      hello_sock_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
 	}
@@ -454,6 +470,8 @@ main(int argc, char **argv)
 	hello_context.zcopy = g_zcopy;
 	hello_context.ktls = g_ktls;
 	hello_context.tls_version = g_tls_version;
+	hello_context.psk_key = g_psk_key;
+	hello_context.psk_identity = g_psk_identity;
 	hello_context.verbose = g_verbose;
 
 	rc = spdk_app_start(&opts, hello_start, &hello_context);

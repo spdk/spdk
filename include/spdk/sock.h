@@ -138,6 +138,16 @@ struct spdk_sock_impl_opts {
 	 * Enable or disable kernel TLS. Used by ssl socket modules.
 	 */
 	bool enable_ktls;
+
+	/**
+	 * Set default PSK key. Used by ssl socket module.
+	 */
+	char *psk_key;
+
+	/**
+	 * Set default PSK identity. Used by ssl socket module.
+	 */
+	char *psk_identity;
 };
 
 /**

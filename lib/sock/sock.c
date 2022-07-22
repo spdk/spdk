@@ -867,6 +867,12 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_uint32(w, "zerocopy_threshold", opts.zerocopy_threshold);
 			spdk_json_write_named_uint32(w, "tls_version", opts.tls_version);
 			spdk_json_write_named_bool(w, "enable_ktls", opts.enable_ktls);
+			if (opts.psk_key) {
+				spdk_json_write_named_string(w, "psk_key", opts.psk_key);
+			}
+			if (opts.psk_identity) {
+				spdk_json_write_named_string(w, "psk_identity", opts.psk_identity);
+			}
 			spdk_json_write_object_end(w);
 			spdk_json_write_object_end(w);
 		} else {

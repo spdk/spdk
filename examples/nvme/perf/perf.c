@@ -291,7 +291,7 @@ static int g_file_optind; /* Index of first filename in argv */
 static inline void task_complete(struct perf_task *task);
 
 static void
-perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val)
+perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const char *valstr)
 {
 	struct spdk_sock_impl_opts sock_opts = {};
 	size_t opts_size = sizeof(sock_opts);
@@ -323,6 +323,26 @@ perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val)
 		sock_opts.tls_version = val;
 	} else if (strcmp(field, "ktls") == 0) {
 		sock_opts.enable_ktls = val;
+	} else if (strcmp(field, "psk_key") == 0) {
+		if (!valstr) {
+			fprintf(stderr, "No socket opts value specified\n");
+			return;
+		}
+		sock_opts.psk_key = strdup(valstr);
+		if (sock_opts.psk_key == NULL) {
+			fprintf(stderr, "Failed to allocate psk_key in sock_impl\n");
+			return;
+		}
+	} else if (strcmp(field, "psk_identity") == 0) {
+		if (!valstr) {
+			fprintf(stderr, "No socket opts value specified\n");
+			return;
+		}
+		sock_opts.psk_identity = strdup(valstr);
+		if (sock_opts.psk_identity == NULL) {
+			fprintf(stderr, "Failed to allocate psk_identity in sock_impl\n");
+			return;
+		}
 	} else {
 		fprintf(stderr, "Warning: invalid or unprocessed socket opts field: %s\n", field);
 		return;
@@ -1790,6 +1810,8 @@ usage(char *program_name)
 	printf("\t[--disable-ktls disable Kernel TLS. Only valid for ssl impl. Default for ssl impl]\n");
 	printf("\t[--enable-ktls enable Kernel TLS. Only valid for ssl impl]\n");
 	printf("\t[--tls-version <val> TLS version to use. Only valid for ssl impl. Default: 0 (auto-negotiation)]\n");
+	printf("\t[--psk-key <val> Default PSK KEY in hexadecimal digits, e.g. 1234567890ABCDEF (only applies when sock_impl == ssl)]\n");
+	printf("\t[--psk-identity <val> Default PSK ID, e.g. psk.spdk.io (only applies when sock_impl == ssl)]\n");
 }
 
 static void
@@ -2288,6 +2310,10 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"enable-ktls", no_argument, NULL, PERF_ENABLE_KTLS},
 #define PERF_TLS_VERSION	262
 	{"tls-version", required_argument, NULL, PERF_TLS_VERSION},
+#define PERF_PSK_KEY		263
+	{"psk-key", required_argument, NULL, PERF_PSK_KEY},
+#define PERF_PSK_IDENTITY	264
+	{"psk-identity ", required_argument, NULL, PERF_PSK_IDENTITY},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2299,6 +2325,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	long int val;
 	int rc;
 	char *endptr;
+	bool ssl_used = false;
+	char *sock_impl = "posix";
 
 	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
@@ -2469,26 +2497,38 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			g_vmd = true;
 			break;
 		case PERF_DISABLE_KTLS:
-			perf_set_sock_opts(optarg, "ktls", 0);
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "ktls", 0, NULL);
 			break;
 		case PERF_ENABLE_KTLS:
-			perf_set_sock_opts(optarg, "ktls", 1);
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "ktls", 1, NULL);
 			break;
 		case PERF_TLS_VERSION:
+			ssl_used = true;
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Illegal tls version value %s\n", optarg);
 				return val;
 			}
-			perf_set_sock_opts(optarg, "tls_version", val);
+			perf_set_sock_opts("ssl", "tls_version", val, NULL);
+			break;
+		case PERF_PSK_KEY:
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "psk_key", 0, optarg);
+			break;
+		case PERF_PSK_IDENTITY:
+			ssl_used = true;
+			perf_set_sock_opts("ssl", "psk_identity", 0, optarg);
 			break;
 		case PERF_DISABLE_ZCOPY:
-			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 0);
+			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 0, NULL);
 			break;
 		case PERF_ENABLE_ZCOPY:
-			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 1);
+			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 1, NULL);
 			break;
 		case PERF_DEFAULT_SOCK_IMPL:
+			sock_impl = optarg;
 			rc = spdk_sock_set_default_impl(optarg);
 			if (rc) {
 				fprintf(stderr, "Failed to set sock impl %s, err %d (%s)\n", optarg, errno, strerror(errno));
@@ -2546,6 +2586,13 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		g_is_random = 1;
 		g_workload_type = &g_workload_type[4];
 	}
+
+	if (ssl_used && strncmp(sock_impl, "ssl", 3) != 0) {
+		fprintf(stderr, "sock impl is not SSL but tried to use one of the SSL only options\n");
+		usage(argv[0]);
+		return 1;
+	}
+
 
 	if (strcmp(g_workload_type, "read") == 0 || strcmp(g_workload_type, "write") == 0) {
 		g_rw_percentage = strcmp(g_workload_type, "read") == 0 ? 100 : 0;

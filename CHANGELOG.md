@@ -24,6 +24,7 @@ Calculate num_md_pages from num_md_pages_per_cluster_ratio, and pass it to spdk_
 ### rpc
 
 New options `enable_ktls` and `tls_version` were added to the `sock_impl_set_options` structure.
+New options `psk_key` and `psk_identity` were added to the `sock_impl_set_options` structure.
 
 Added warning message for `bdev_rbd_create`, if it is used without -c.
 `bdev_rbd_create()` API without specifying -c is deprecated and will be removed in future release.

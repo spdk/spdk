@@ -78,7 +78,9 @@ static struct spdk_sock_impl_opts g_spdk_posix_sock_impl_opts = {
 	.enable_zerocopy_send_client = false,
 	.zerocopy_threshold = 0,
 	.tls_version = 0,
-	.enable_ktls = false
+	.enable_ktls = false,
+	.psk_key = NULL,
+	.psk_identity = NULL
 };
 
 static struct spdk_sock_map g_map = {
@@ -118,6 +120,8 @@ posix_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_so
 	SET_FIELD(zerocopy_threshold);
 	SET_FIELD(tls_version);
 	SET_FIELD(enable_ktls);
+	SET_FIELD(psk_key);
+	SET_FIELD(psk_identity);
 
 #undef SET_FIELD
 #undef FIELD_OK
@@ -498,9 +502,6 @@ posix_fd_create(struct addrinfo *res, struct spdk_sock_opts *opts,
 	return fd;
 }
 
-#define PSK_ID  "nqn.2014-08.org.nvmexpress:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
-#define PSK_KEY "1234567890ABCDEF"
-
 static unsigned int
 posix_sock_tls_psk_server_cb(SSL *ssl,
 			     const char *id,
@@ -509,24 +510,27 @@ posix_sock_tls_psk_server_cb(SSL *ssl,
 {
 	long key_len;
 	unsigned char *default_psk;
+	struct spdk_sock_impl_opts *impl_opts;
 
-	if (PSK_KEY == NULL) {
+	impl_opts = SSL_get_app_data(ssl);
+
+	if (impl_opts->psk_key == NULL) {
 		SPDK_ERRLOG("PSK is not set\n");
 		goto err;
 	}
-	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(PSK_ID));
+	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK ID %lu\n", strlen(impl_opts->psk_identity));
 	if (id == NULL) {
 		SPDK_ERRLOG("Received empty PSK ID\n");
 		goto err;
 	}
 	SPDK_DEBUGLOG(sock_posix,  "Received PSK ID '%s'\n", id);
-	if (strcmp(PSK_ID, id) != 0) {
+	if (strcmp(impl_opts->psk_identity, id) != 0) {
 		SPDK_ERRLOG("Unknown Client's PSK ID\n");
 		goto err;
 	}
 
 	SPDK_DEBUGLOG(sock_posix, "Length of Client's PSK KEY %u\n", max_psk_len);
-	default_psk = OPENSSL_hexstr2buf(PSK_KEY, &key_len);
+	default_psk = OPENSSL_hexstr2buf(impl_opts->psk_key, &key_len);
 	if (default_psk == NULL) {
 		SPDK_ERRLOG("Could not unhexlify PSK\n");
 		goto err;
@@ -553,26 +557,29 @@ posix_sock_tls_psk_client_cb(SSL *ssl, const char *hint,
 {
 	long key_len;
 	unsigned char *default_psk;
+	struct spdk_sock_impl_opts *impl_opts;
+
+	impl_opts = SSL_get_app_data(ssl);
 
 	if (hint) {
 		SPDK_DEBUGLOG(sock_posix,  "Received PSK identity hint '%s'\n", hint);
 	}
 
-	if (PSK_KEY == NULL) {
+	if (impl_opts->psk_key == NULL) {
 		SPDK_ERRLOG("PSK is not set\n");
 		goto err;
 	}
-	default_psk = OPENSSL_hexstr2buf(PSK_KEY, &key_len);
+	default_psk = OPENSSL_hexstr2buf(impl_opts->psk_key, &key_len);
 	if (default_psk == NULL) {
 		SPDK_ERRLOG("Could not unhexlify PSK\n");
 		goto err;
 	}
-	if ((strlen(PSK_ID) + 1 > max_identity_len)
+	if ((strlen(impl_opts->psk_identity) + 1 > max_identity_len)
 	    || (key_len > max_psk_len)) {
 		SPDK_ERRLOG("PSK ID or Key buffer is not sufficient\n");
 		goto err;
 	}
-	spdk_strcpy_pad(identity, PSK_ID, strlen(PSK_ID), 0);
+	spdk_strcpy_pad(identity, impl_opts->psk_identity, strlen(impl_opts->psk_identity), 0);
 	SPDK_DEBUGLOG(sock_posix, "Sending PSK identity '%s'\n", identity);
 
 	memcpy(psk, default_psk, key_len);
@@ -658,7 +665,7 @@ err:
 }
 
 static SSL *
-ssl_sock_connect_loop(SSL_CTX *ctx, int fd)
+ssl_sock_connect_loop(SSL_CTX *ctx, int fd, struct spdk_sock_impl_opts *impl_opts)
 {
 	int rc;
 	SSL *ssl;
@@ -670,6 +677,7 @@ ssl_sock_connect_loop(SSL_CTX *ctx, int fd)
 		return NULL;
 	}
 	SSL_set_fd(ssl, fd);
+	SSL_set_app_data(ssl, impl_opts);
 	SSL_set_psk_client_callback(ssl, posix_sock_tls_psk_client_cb);
 	SPDK_DEBUGLOG(sock_posix, "SSL object creation finished: %p\n", ssl);
 	SPDK_DEBUGLOG(sock_posix, "%s = SSL_state_string_long(%p)\n", SSL_state_string_long(ssl), ssl);
@@ -696,7 +704,7 @@ ssl_sock_connect_loop(SSL_CTX *ctx, int fd)
 }
 
 static SSL *
-ssl_sock_accept_loop(SSL_CTX *ctx, int fd)
+ssl_sock_accept_loop(SSL_CTX *ctx, int fd, struct spdk_sock_impl_opts *impl_opts)
 {
 	int rc;
 	SSL *ssl;
@@ -708,6 +716,7 @@ ssl_sock_accept_loop(SSL_CTX *ctx, int fd)
 		return NULL;
 	}
 	SSL_set_fd(ssl, fd);
+	SSL_set_app_data(ssl, impl_opts);
 	SSL_set_psk_server_callback(ssl, posix_sock_tls_psk_server_cb);
 	SPDK_DEBUGLOG(sock_posix, "SSL object creation finished: %p\n", ssl);
 	SPDK_DEBUGLOG(sock_posix, "%s = SSL_state_string_long(%p)\n", SSL_state_string_long(ssl), ssl);
@@ -934,7 +943,7 @@ retry:
 					fd = -1;
 					break;
 				}
-				ssl = ssl_sock_connect_loop(ctx, fd);
+				ssl = ssl_sock_connect_loop(ctx, fd, &impl_opts);
 				if (!ssl) {
 					SPDK_ERRLOG("ssl_sock_connect_loop() failed, errno = %d\n", errno);
 					close(fd);
@@ -1037,7 +1046,7 @@ posix_sock_accept(struct spdk_sock *_sock)
 
 	/* Establish SSL connection */
 	if (sock->ctx) {
-		ssl = ssl_sock_accept_loop(sock->ctx, fd);
+		ssl = ssl_sock_accept_loop(sock->ctx, fd, &sock->base.impl_opts);
 		if (!ssl) {
 			SPDK_ERRLOG("ssl_sock_accept_loop() failed, errno = %d\n", errno);
 			close(fd);
