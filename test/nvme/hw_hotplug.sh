@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+shopt -s nullglob
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
@@ -15,22 +16,25 @@ function beetle_ssh() {
 }
 
 function insert_device() {
-	beetle_ssh 'Beetle --SetGpio "$gpio" HIGH'
-	waitforblk $name
+	beetle_ssh 'for gpio in {0..10}; do Beetle --SetGpio "$gpio" HIGH; done'
+	for name in "${names[@]}"; do
+		waitforblk $name
+	done
 	DRIVER_OVERRIDE=$driver $rootdir/scripts/setup.sh
 }
 
 function remove_device() {
-	beetle_ssh 'Beetle --SetGpio "$gpio" LOW'
+	beetle_ssh 'for gpio in {0..10}; do Beetle --SetGpio "$gpio" LOW; done'
 }
 
 function restore_device() {
-	beetle_ssh 'Beetle --SetGpio "$gpio" HIGH'
+	beetle_ssh 'for gpio in {0..10}; do Beetle --SetGpio "$gpio" HIGH; done'
+	# Bind all devices to kernel
+	"$rootdir/scripts/setup.sh" reset
 }
 
 ip=$1
-gpio=$2
-driver=$3
+driver=$2
 
 declare -i io_time=5
 declare -i kernel_hotplug_time=7
@@ -38,18 +42,22 @@ declare -i kernel_hotplug_time=7
 timing_enter hotplug_hw_cfg
 
 # Configure microcontroller
-beetle_ssh 'Beetle --SetGpioDirection "$gpio" OUT'
+beetle_ssh 'for gpio in {0..10}; do Beetle --SetGpioDirection "$gpio" OUT; done'
 
-# Get blk dev name connected to interposer
-beetle_ssh 'Beetle --SetGpio "$gpio" HIGH'
+# Get blk dev names connected to interposer
+restore_device
 sleep $kernel_hotplug_time
-$rootdir/scripts/setup.sh reset
 blk_list1=$(lsblk -d --output NAME | grep "^nvme")
 remove_device
 sleep $kernel_hotplug_time
 blk_list2=$(lsblk -d --output NAME | grep "^nvme") || true
-name=${blk_list1#"$blk_list2"}
 
+names=(${blk_list1#"$blk_list2"})
+
+nvme_count="${#names[@]}"
+echo nvme_count
+
+# Move devices back to userspace
 insert_device
 
 timing_exit hotplug_hw_cfg
@@ -64,7 +72,7 @@ fi
 exec {log}> >(tee -a "$testdir/log.txt")
 exec >&$log 2>&1
 
-$SPDK_EXAMPLE_DIR/hotplug -i 0 -t 100 -n 2 -r 2 $mode &
+"$SPDK_EXAMPLE_DIR/hotplug" -i 0 -t 100 -n $((2 * nvme_count)) -r $((2 * nvme_count)) $mode &
 hotplug_pid=$!
 
 trap 'killprocess $hotplug_pid; restore_device; rm $testdir/log.txt; exit 1' SIGINT SIGTERM EXIT
@@ -104,5 +112,7 @@ timing_exit wait_for_example
 rm $testdir/log.txt
 
 trap - SIGINT SIGTERM EXIT
+
+restore_device
 
 timing_exit hotplug_hw_test
