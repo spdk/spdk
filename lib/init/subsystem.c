@@ -111,14 +111,9 @@ subsystem_sort(void)
 				}
 			}
 
-			if (depends_on == false) {
+			if (!depends_on || depends_on_sorted) {
 				TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
 				TAILQ_INSERT_TAIL(&subsystems_list, subsystem, tailq);
-			} else {
-				if (depends_on_sorted == true) {
-					TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
-					TAILQ_INSERT_TAIL(&subsystems_list, subsystem, tailq);
-				}
 			}
 		}
 	}
