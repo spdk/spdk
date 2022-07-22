@@ -846,17 +846,17 @@ reactor_post_process_lw_thread(struct spdk_reactor *reactor, struct spdk_lw_thre
 {
 	struct spdk_thread *thread = spdk_thread_get_from_ctx(lw_thread);
 
-	if (spdk_unlikely(lw_thread->resched)) {
-		lw_thread->resched = false;
-		_reactor_remove_lw_thread(reactor, lw_thread);
-		_reactor_schedule_thread(thread);
-		return true;
-	}
-
 	if (spdk_unlikely(spdk_thread_is_exited(thread) &&
 			  spdk_thread_is_idle(thread))) {
 		_reactor_remove_lw_thread(reactor, lw_thread);
 		spdk_thread_destroy(thread);
+		return true;
+	}
+
+	if (spdk_unlikely(lw_thread->resched)) {
+		lw_thread->resched = false;
+		_reactor_remove_lw_thread(reactor, lw_thread);
+		_reactor_schedule_thread(thread);
 		return true;
 	}
 
