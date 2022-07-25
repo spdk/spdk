@@ -22,6 +22,12 @@ raid_malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_
 raid_malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 $rpc_py bdev_raid_create -n raid0 -z 64 -r 0 -b "$raid_malloc_bdevs"
 
+#Create a Concat bdev from three malloc bdevs
+concat_malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+concat_malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
+concat_malloc_bdevs+="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
+$rpc_py bdev_raid_create -n concat0 -r concat -z 64 -b "$concat_malloc_bdevs"
+
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s $NVMF_SERIAL
 for malloc_bdev in $malloc_bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 "$malloc_bdev"
@@ -31,9 +37,12 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 # Append the raid0 bdev into subsystem
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 raid0
 
+# Append the concat0 bdev into subsystem
+$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 concat0
+
 nvme connect -t $TEST_TRANSPORT -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
-waitforserial $NVMF_SERIAL 3
+waitforserial $NVMF_SERIAL 4
 
 $rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t write -r 1 -v
 $rootdir/scripts/fio-wrapper -p nvmf -i 4096 -d 1 -t randwrite -r 1 -v
@@ -48,8 +57,9 @@ fio_pid=$!
 
 sleep 3
 
+$rpc_py bdev_raid_delete "concat0"
 $rpc_py bdev_raid_delete "raid0"
-for malloc_bdev in $malloc_bdevs; do
+for malloc_bdev in $malloc_bdevs $raid_malloc_bdevs $concat_malloc_bdevs; do
 	$rpc_py bdev_malloc_delete "$malloc_bdev"
 done
 
