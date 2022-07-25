@@ -1690,6 +1690,66 @@ test_nvmf_ns_reservation_restore(void)
 	CU_ASSERT(rc == -EINVAL);
 }
 
+static void
+test_nvmf_subsystem_state_change(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem *subsystem, *discovery_subsystem;
+	int rc;
+
+	tgt.max_subsystems = 1024;
+	tgt.subsystems = calloc(tgt.max_subsystems, sizeof(struct spdk_nvmf_subsystem *));
+	SPDK_CU_ASSERT_FATAL(tgt.subsystems != NULL);
+
+	discovery_subsystem = spdk_nvmf_subsystem_create(&tgt, SPDK_NVMF_DISCOVERY_NQN,
+			      SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+	SPDK_CU_ASSERT_FATAL(discovery_subsystem != NULL);
+	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+					       SPDK_NVMF_SUBTYPE_NVME, 0);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+
+	spdk_io_device_register(&tgt,
+				nvmf_tgt_create_poll_group,
+				nvmf_tgt_destroy_poll_group,
+				sizeof(struct spdk_nvmf_poll_group),
+				NULL);
+
+	rc = spdk_nvmf_subsystem_start(discovery_subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(discovery_subsystem->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
+	rc = spdk_nvmf_subsystem_start(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(subsystem->state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
+
+	rc = spdk_nvmf_subsystem_pause(subsystem, SPDK_NVME_GLOBAL_NS_TAG, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_nvmf_subsystem_stop(subsystem, NULL, NULL);
+	CU_ASSERT(rc == -EBUSY);
+	poll_threads();
+	CU_ASSERT(subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
+
+	rc = spdk_nvmf_subsystem_stop(discovery_subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(discovery_subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
+	rc = spdk_nvmf_subsystem_stop(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
+
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_nvmf_subsystem_destroy(discovery_subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_io_device_unregister(&tgt, NULL);
+	poll_threads();
+
+	free(tgt.subsystems);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1721,6 +1781,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_report);
 	CU_ADD_TEST(suite, test_nvmf_valid_nqn);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_restore);
+	CU_ADD_TEST(suite, test_nvmf_subsystem_state_change);
 
 	allocate_threads(1);
 	set_thread(0);
