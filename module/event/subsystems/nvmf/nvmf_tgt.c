@@ -232,7 +232,8 @@ nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 	if (subsystem) {
 		rc = spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
 		if (rc) {
-			SPDK_ERRLOG("Unable to stop NVMe-oF subsystem. Trying others.\n");
+			SPDK_ERRLOG("Unable to stop NVMe-oF subsystem %s with rc %d, Trying others.\n",
+				    spdk_nvmf_subsystem_get_nqn(subsystem), rc);
 			nvmf_tgt_subsystem_stopped(subsystem, NULL, 0);
 		}
 		return;

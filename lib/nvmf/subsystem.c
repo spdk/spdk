@@ -420,8 +420,8 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 	assert(spdk_get_thread() == subsystem->thread);
 
 	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
-		SPDK_ERRLOG("Subsystem can only be destroyed in inactive state\n");
-		assert(0);
+		SPDK_ERRLOG("Subsystem can only be destroyed in inactive state, current state %d\n",
+			    subsystem->state);
 		return -EAGAIN;
 	}
 	if (subsystem->destroying) {
