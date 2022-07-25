@@ -55,6 +55,11 @@ function install_refspdk() {
 		cherry_picks+=("713506d5da4676b9f900ae59963f6eb50ecdba36")
 	fi
 
+	if ((gcc_version >= 12)); then
+		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13405
+		cherry_picks+=("8c532ae0322edc71003db3e4d3ece138f0f47ef7")
+	fi
+
 	if [[ $OSID == "freebsd" ]]; then
 		# Fetch all the branches
 		git -C "$output_dir" fetch origin '+refs/heads/v*:refs/remotes/origin/v*'
