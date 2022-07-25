@@ -52,13 +52,38 @@ with detailed information can be found on the @ref jsonrpc_components_bdev page.
 The SPDK RBD bdev driver provides SPDK block layer access to Ceph RADOS block
 devices (RBD). Ceph RBD devices are accessed via librbd and librados libraries
 to access the RADOS block device exported by Ceph. To create Ceph bdev RPC
-command `bdev_rbd_create` should be used.
+command `bdev_rbd_register_cluster` and `bdev_rbd_create` should be used.
+
+SPDK provides two ways of creating a RBD bdev. One is to create a new Rados cluster object
+for each RBD bdev. Another is to share the same Rados cluster object for multiple RBD bdevs.
+Each Rados cluster object creates a small number of io_context_pool and messenger threads.
+Ceph commands `ceph config help librados_thread_count` and `ceph config help ms_async_op_threads`
+could help to check these threads information. Besides, you can specify the number of threads by
+updating ceph.conf file or using Ceph config commands. For more information, please refer to
+[Ceph configuration](https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/)
+One set of threads may not be enough to maximize performance with a large number of RBD bdevs,
+but one set of threads per RBD bdev may add too much context switching. Therefore, performance
+tuning on the number of RBD bdevs per cluster object and thread may be required.
 
 Example command
 
-`rpc.py bdev_rbd_create rbd foo 512`
+`rpc.py bdev_rbd_register_cluster rbd_cluster`
+
+This command will register a cluster named rbd_cluster. Optional `--config-file` and
+`--key-file` params are specified for the cluster.
+
+To remove a registered cluster use the bdev_rbd_unregister_cluster command.
+
+`rpc.py bdev_rbd_unregister_cluster rbd_cluster`
+
+To create RBD bdev with a registered cluster.
+
+`rpc.py bdev_rbd_create rbd foo 512 -c rbd_cluster`
 
 This command will create a bdev that represents the 'foo' image from a pool called 'rbd'.
+When specifying -c for `bdev_rbd_create`, RBD bdevs will share the same rados cluster with
+one connection of Ceph in librbd module. Instead it will create a new rados cluster with one
+cluster connection for every bdev without specifying -c.
 
 To remove a block device representation use the bdev_rbd_delete command.
 

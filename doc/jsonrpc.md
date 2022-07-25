@@ -4208,7 +4208,11 @@ default), the "user_id" has to be set.
 
 If provided with cluster_name option, it will use the Rados cluster object
 referenced by the name (created by bdev_rbd_register_cluster RPC) and ignores
-"user_id + config" combination to create its own Rados cluster.
+"user_id + config" combination to create its own Rados cluster. In this scenario,
+all the bdevs will share the same cluster with one connection of Ceph in librbd module.
+Performance tuning on the I/O workload could be done by estimating how many io_contxt
+threads and messager threads in Ceph side and how many cores would be reasonable to provide
+for SPDK to get up to your projections.
 
 #### Result
 
