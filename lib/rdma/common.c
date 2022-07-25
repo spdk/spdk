@@ -13,6 +13,14 @@
 #include "spdk_internal/rdma.h"
 #include "spdk_internal/assert.h"
 
+struct spdk_rdma_device {
+	struct ibv_pd				*pd;
+	struct ibv_context			*context;
+	int					ref;
+	bool					removed;
+	TAILQ_ENTRY(spdk_rdma_device)		tailq;
+};
+
 struct spdk_rdma_mem_map {
 	struct spdk_mem_map		*map;
 	struct ibv_pd			*pd;
@@ -21,6 +29,10 @@ struct spdk_rdma_mem_map {
 	enum spdk_rdma_memory_map_role role;
 	LIST_ENTRY(spdk_rdma_mem_map) link;
 };
+
+static pthread_mutex_t g_dev_mutex = PTHREAD_MUTEX_INITIALIZER;
+static struct ibv_context **g_ctx_list = NULL;
+static TAILQ_HEAD(, spdk_rdma_device) g_dev_list = TAILQ_HEAD_INITIALIZER(g_dev_list);
 
 static LIST_HEAD(, spdk_rdma_mem_map) g_rdma_mr_maps = LIST_HEAD_INITIALIZER(&g_rdma_mr_maps);
 static pthread_mutex_t g_rdma_mr_maps_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -349,4 +361,210 @@ spdk_rdma_qp_flush_recv_wrs(struct spdk_rdma_qp *spdk_rdma_qp, struct ibv_recv_w
 	spdk_rdma_qp->stats->recv.doorbell_updates++;
 
 	return rc;
+}
+
+static struct spdk_rdma_device *
+rdma_add_dev(struct ibv_context *context)
+{
+	struct spdk_rdma_device *dev;
+
+	dev = calloc(1, sizeof(*dev));
+	if (dev == NULL) {
+		SPDK_ERRLOG("Failed to allocate RDMA device object.\n");
+		return NULL;
+	}
+
+	dev->pd = ibv_alloc_pd(context);
+	if (dev->pd == NULL) {
+		SPDK_ERRLOG("ibv_alloc_pd() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		free(dev);
+		return NULL;
+	}
+
+	dev->context = context;
+	TAILQ_INSERT_TAIL(&g_dev_list, dev, tailq);
+
+	return dev;
+}
+
+static void
+rdma_remove_dev(struct spdk_rdma_device *dev)
+{
+	if (!dev->removed || dev->ref > 0) {
+		return;
+	}
+
+	/* Deallocate protection domain only if the device is already removed and
+	 * there is no reference.
+	 */
+	TAILQ_REMOVE(&g_dev_list, dev, tailq);
+	ibv_dealloc_pd(dev->pd);
+	free(dev);
+}
+
+static int
+ctx_cmp(const void *_c1, const void *_c2)
+{
+	struct ibv_context *c1 = *(struct ibv_context **)_c1;
+	struct ibv_context *c2 = *(struct ibv_context **)_c2;
+
+	return c1 < c2 ? -1 : c1 > c2;
+}
+
+static int
+rdma_sync_dev_list(void)
+{
+	struct ibv_context **new_ctx_list;
+	int i, j;
+	int num_devs = 0;
+
+	/*
+	 * rdma_get_devices() returns a NULL terminated array of opened RDMA devices,
+	 * and sets num_devs to the number of the returned devices.
+	 */
+	new_ctx_list = rdma_get_devices(&num_devs);
+	if (new_ctx_list == NULL) {
+		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
+		return -ENODEV;
+	}
+
+	if (num_devs == 0) {
+		rdma_free_devices(new_ctx_list);
+		SPDK_ERRLOG("Returned RDMA device array was empty\n");
+		return -ENODEV;
+	}
+
+	/*
+	 * Sort new_ctx_list by addresses to update devices easily.
+	 */
+	qsort(new_ctx_list, num_devs, sizeof(struct ibv_context *), ctx_cmp);
+
+	if (g_ctx_list == NULL) {
+		/* If no old array, this is the first call. Add all devices. */
+		for (i = 0; new_ctx_list[i] != NULL; i++) {
+			rdma_add_dev(new_ctx_list[i]);
+		}
+
+		goto exit;
+	}
+
+	for (i = j = 0; new_ctx_list[i] != NULL || g_ctx_list[j] != NULL;) {
+		struct ibv_context *new_ctx = new_ctx_list[i];
+		struct ibv_context *old_ctx = g_ctx_list[j];
+		bool add = false, remove = false;
+
+		/*
+		 * If a context exists only in the new array, create a device for it,
+		 * or if a context exists only in the old array, try removing the
+		 * corresponding device.
+		 */
+
+		if (old_ctx == NULL) {
+			add = true;
+		} else if (new_ctx == NULL) {
+			remove = true;
+		} else if (new_ctx < old_ctx) {
+			add = true;
+		} else if (old_ctx < new_ctx) {
+			remove = true;
+		}
+
+		if (add) {
+			rdma_add_dev(new_ctx_list[i]);
+			i++;
+		} else if (remove) {
+			struct spdk_rdma_device *dev, *tmp;
+
+			TAILQ_FOREACH_SAFE(dev, &g_dev_list, tailq, tmp) {
+				if (dev->context == g_ctx_list[j]) {
+					dev->removed = true;
+					rdma_remove_dev(dev);
+				}
+			}
+			j++;
+		} else {
+			i++;
+			j++;
+		}
+	}
+
+	/* Free the old array. */
+	rdma_free_devices(g_ctx_list);
+
+exit:
+	/*
+	 * Keep the newly returned array so that allocated protection domains
+	 * are not freed unexpectedly.
+	 */
+	g_ctx_list = new_ctx_list;
+	return 0;
+}
+
+struct ibv_pd *
+spdk_rdma_get_pd(struct ibv_context *context)
+{
+	struct spdk_rdma_device *dev;
+	int rc;
+
+	pthread_mutex_lock(&g_dev_mutex);
+
+	rc = rdma_sync_dev_list();
+	if (rc != 0) {
+		pthread_mutex_unlock(&g_dev_mutex);
+
+		SPDK_ERRLOG("Failed to sync RDMA device list\n");
+		return NULL;
+	}
+
+	TAILQ_FOREACH(dev, &g_dev_list, tailq) {
+		if (dev->context == context && !dev->removed) {
+			dev->ref++;
+			pthread_mutex_unlock(&g_dev_mutex);
+
+			return dev->pd;
+		}
+	}
+
+	pthread_mutex_unlock(&g_dev_mutex);
+
+	SPDK_ERRLOG("Failed to get PD\n");
+	return NULL;
+}
+
+void
+spdk_rdma_put_pd(struct ibv_pd *pd)
+{
+	struct spdk_rdma_device *dev, *tmp;
+
+	pthread_mutex_lock(&g_dev_mutex);
+
+	TAILQ_FOREACH_SAFE(dev, &g_dev_list, tailq, tmp) {
+		if (dev->pd == pd) {
+			assert(dev->ref > 0);
+			dev->ref--;
+
+			rdma_remove_dev(dev);
+		}
+	}
+
+	rdma_sync_dev_list();
+
+	pthread_mutex_unlock(&g_dev_mutex);
+}
+
+__attribute__((destructor)) static void
+_rdma_fini(void)
+{
+	struct spdk_rdma_device *dev, *tmp;
+
+	TAILQ_FOREACH_SAFE(dev, &g_dev_list, tailq, tmp) {
+		dev->removed = true;
+		dev->ref = 0;
+		rdma_remove_dev(dev);
+	}
+
+	if (g_ctx_list != NULL) {
+		rdma_free_devices(g_ctx_list);
+		g_ctx_list = NULL;
+	}
 }

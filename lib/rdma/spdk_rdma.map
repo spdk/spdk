@@ -18,6 +18,8 @@
 	spdk_rdma_get_translation;
 	spdk_rdma_qp_queue_recv_wrs;
 	spdk_rdma_qp_flush_recv_wrs;
+	spdk_rdma_get_pd;
+	spdk_rdma_put_pd;
 
 	local: *;
 };

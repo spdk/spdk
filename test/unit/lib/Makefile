@@ -13,6 +13,7 @@ DIRS-$(CONFIG_REDUCE) += reduce
 ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VHOST) += vhost
 DIRS-y += ftl
+DIRS-$(CONFIG_RDMA) += rdma
 endif
 
 .PHONY: all clean $(DIRS-y)
