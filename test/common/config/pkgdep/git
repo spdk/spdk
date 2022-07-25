@@ -85,6 +85,12 @@ function install_refspdk() {
 		# the LTS, however, we can cherry-pick target commit directly into the submodule.
 		git -C "$output_dir/libvfio-user" cherry-pick b52bff72d4eb646a453d19e19ddbd13ed6111a09
 	fi
+	if ((gcc_version >= 12)); then
+		if eq "$release" 22.01.1 || eq "$release" 22.05.0; then
+			# https://review.spdk.io/gerrit/c/spdk/dpdk/+/13411
+			git -C "$output_dir/dpdk" cherry-pick 66866df9602b024541b7071f5c4142ce47c9f640
+		fi
+	fi
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
