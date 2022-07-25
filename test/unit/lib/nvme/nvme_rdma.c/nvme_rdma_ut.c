@@ -1076,6 +1076,7 @@ test_nvme_rdma_qpair_init(void)
 	rqpair.qpair.poll_group = NULL;
 	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
 	g_spdk_rdma_qp.qp = &qp;
+	MOCK_SET(spdk_rdma_get_pd, pd);
 
 	rc = nvme_rdma_qpair_init(&rqpair);
 	CU_ASSERT(rc == 0);
@@ -1087,6 +1088,8 @@ test_nvme_rdma_qpair_init(void)
 	CU_ASSERT(rqpair.current_num_recvs == 0);
 	CU_ASSERT(rqpair.cq == (struct ibv_cq *)0xFEEDBEEF);
 	CU_ASSERT(rqpair.memory_domain != NULL);
+
+	MOCK_CLEAR(spdk_rdma_get_pd);
 }
 
 static void

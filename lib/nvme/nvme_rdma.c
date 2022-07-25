@@ -113,8 +113,6 @@ struct nvme_rdma_cm_event_entry {
 struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
 
-	struct ibv_pd				*pd;
-
 	uint16_t				max_sge;
 
 	struct rdma_event_channel		*cm_channel;
@@ -764,12 +762,11 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
 	if (g_nvme_hooks.get_ibv_pd) {
-		rctrlr->pd = g_nvme_hooks.get_ibv_pd(&rctrlr->ctrlr.trid, rqpair->cm_id->verbs);
+		attr.pd = g_nvme_hooks.get_ibv_pd(&rctrlr->ctrlr.trid, rqpair->cm_id->verbs);
 	} else {
-		rctrlr->pd = NULL;
+		attr.pd = spdk_rdma_get_pd(rqpair->cm_id->verbs);
 	}
 
-	attr.pd =		rctrlr->pd;
 	attr.stats =		rqpair->poller ? &rqpair->poller->stats.rdma_stats : NULL;
 	attr.send_cq		= rqpair->cq;
 	attr.recv_cq		= rqpair->cq;
@@ -795,8 +792,6 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	rqpair->max_recv_sge = spdk_min(NVME_RDMA_DEFAULT_RX_SGE, attr.cap.max_recv_sge);
 	rqpair->current_num_recvs = 0;
 	rqpair->current_num_sends = 0;
-
-	rctrlr->pd = rqpair->rdma_qp->qp->pd;
 
 	rqpair->cm_id->context = rqpair;
 
@@ -1963,6 +1958,7 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 
 	if (rqpair->cm_id) {
 		if (rqpair->rdma_qp) {
+			spdk_rdma_put_pd(rqpair->rdma_qp->qp->pd);
 			spdk_rdma_qp_destroy(rqpair->rdma_qp);
 			rqpair->rdma_qp = NULL;
 		}

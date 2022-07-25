@@ -65,3 +65,13 @@ spdk_rdma_get_translation(struct spdk_rdma_mem_map *map, void *address,
 
 	return 0;
 }
+
+DEFINE_RETURN_MOCK(spdk_rdma_get_pd, struct ibv_pd *);
+struct ibv_pd *
+spdk_rdma_get_pd(struct ibv_context *context)
+{
+	HANDLE_RETURN_MOCK(spdk_rdma_get_pd);
+	return NULL;
+}
+
+DEFINE_STUB_V(spdk_rdma_put_pd, (struct ibv_pd *pd));
