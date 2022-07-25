@@ -317,7 +317,7 @@ function install_nvmecli() {
 	if [[ ! -d $GIT_REPOS/nvme-cli-cuse ]]; then
 		git clone "https://github.com/linux-nvme/nvme-cli.git" "$GIT_REPOS/nvme-cli-cuse"
 	fi
-	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v1.16
+	git -C "$GIT_REPOS/nvme-cli-cuse" checkout v2.0
 
 	cflags=("-Wno-error")
 
@@ -326,6 +326,10 @@ function install_nvmecli() {
 		sudo rm -rf /usr/local/src/nvme-cli
 	fi
 	sudo mv "$GIT_REPOS/nvme-cli-cuse" /usr/local/src/nvme-cli
+	# Make sure binary is available for the cuse tests
+	if [[ -e /usr/local/src/nvme-cli/.build/nvme ]]; then
+		sudo ln -s .build/nvme /usr/local/src/nvme-cli/
+	fi
 }
 
 function install_libiscsi() {
