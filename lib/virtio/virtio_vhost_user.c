@@ -21,8 +21,6 @@
 	((1ULL << VHOST_USER_PROTOCOL_F_MQ) | \
 	(1ULL << VHOST_USER_PROTOCOL_F_CONFIG))
 
-struct virtio_user_backend_ops;
-
 struct virtio_user_dev {
 	int		vhostfd;
 
@@ -34,15 +32,7 @@ struct virtio_user_dev {
 	char		path[PATH_MAX];
 	uint64_t	protocol_features;
 	struct vring	vrings[SPDK_VIRTIO_MAX_VIRTQUEUES];
-	struct virtio_user_backend_ops *ops;
 	struct spdk_mem_map *mem_map;
-};
-
-struct virtio_user_backend_ops {
-	int (*setup)(struct virtio_user_dev *dev);
-	int (*send_request)(struct virtio_user_dev *dev,
-			    enum vhost_user_request req,
-			    void *arg);
 };
 
 static int
@@ -485,11 +475,6 @@ vhost_user_setup(struct virtio_user_dev *dev)
 	return 0;
 }
 
-struct virtio_user_backend_ops ops_user = {
-	.setup = vhost_user_setup,
-	.send_request = vhost_user_sock,
-};
-
 static int
 virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 {
@@ -503,7 +488,7 @@ virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 
 	file.index = queue_sel;
 	file.fd = dev->callfds[queue_sel];
-	return dev->ops->send_request(dev, VHOST_USER_SET_VRING_CALL, &file);
+	return vhost_user_sock(dev, VHOST_USER_SET_VRING_CALL, &file);
 }
 
 static int
@@ -520,7 +505,7 @@ virtio_user_set_vring_addr(struct virtio_dev *vdev, uint32_t queue_sel)
 		.flags = 0, /* disable log */
 	};
 
-	return dev->ops->send_request(dev, VHOST_USER_SET_VRING_ADDR, &addr);
+	return vhost_user_sock(dev, VHOST_USER_SET_VRING_ADDR, &addr);
 }
 
 static int
@@ -534,14 +519,14 @@ virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 
 	state.index = queue_sel;
 	state.num = vring->num;
-	rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_NUM, &state);
+	rc = vhost_user_sock(dev, VHOST_USER_SET_VRING_NUM, &state);
 	if (rc < 0) {
 		return rc;
 	}
 
 	state.index = queue_sel;
 	state.num = 0; /* no reservation */
-	rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_BASE, &state);
+	rc = vhost_user_sock(dev, VHOST_USER_SET_VRING_BASE, &state);
 	if (rc < 0) {
 		return rc;
 	}
@@ -554,7 +539,7 @@ virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 	 */
 	file.index = queue_sel;
 	file.fd = dev->kickfds[queue_sel];
-	return dev->ops->send_request(dev, VHOST_USER_SET_VRING_KICK, &file);
+	return vhost_user_sock(dev, VHOST_USER_SET_VRING_KICK, &file);
 }
 
 static int
@@ -566,7 +551,7 @@ virtio_user_stop_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 	state.index = queue_sel;
 	state.num = 0;
 
-	return dev->ops->send_request(dev, VHOST_USER_GET_VRING_BASE, &state);
+	return vhost_user_sock(dev, VHOST_USER_GET_VRING_BASE, &state);
 }
 
 static int
@@ -600,7 +585,7 @@ virtio_user_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	/* We have to resend all mappings anyway, so don't bother with any
 	 * page tracking.
 	 */
-	ret = dev->ops->send_request(dev, VHOST_USER_SET_MEM_TABLE, NULL);
+	ret = vhost_user_sock(dev, VHOST_USER_SET_MEM_TABLE, NULL);
 	if (ret < 0) {
 		return ret;
 	}
@@ -611,7 +596,7 @@ virtio_user_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	 * support it, so we send a simple message that always has a response
 	 * and we wait for that response. Messages are always processed in order.
 	 */
-	return dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features);
+	return vhost_user_sock(dev, VHOST_USER_GET_FEATURES, &features);
 }
 
 static int
@@ -657,7 +642,7 @@ virtio_user_start_device(struct virtio_dev *vdev)
 	}
 
 	/* negotiate the number of I/O queues. */
-	ret = dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &host_max_queues);
+	ret = vhost_user_sock(dev, VHOST_USER_GET_QUEUE_NUM, &host_max_queues);
 	if (ret < 0) {
 		return ret;
 	}
@@ -711,9 +696,7 @@ virtio_user_dev_setup(struct virtio_dev *vdev)
 		dev->kickfds[i] = -1;
 	}
 
-	dev->ops = &ops_user;
-
-	return dev->ops->setup(dev);
+	return vhost_user_setup(dev);
 }
 
 static int
@@ -731,7 +714,7 @@ virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 	cfg.offset = 0;
 	cfg.size = VHOST_USER_MAX_CONFIG_SIZE;
 
-	rc = dev->ops->send_request(dev, VHOST_USER_GET_CONFIG, &cfg);
+	rc = vhost_user_sock(dev, VHOST_USER_GET_CONFIG, &cfg);
 	if (rc < 0) {
 		SPDK_ERRLOG("get_config failed: %s\n", spdk_strerror(-rc));
 		return rc;
@@ -757,7 +740,7 @@ virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 	cfg.size = length;
 	memcpy(cfg.region, src, length);
 
-	rc = dev->ops->send_request(dev, VHOST_USER_SET_CONFIG, &cfg);
+	rc = vhost_user_sock(dev, VHOST_USER_SET_CONFIG, &cfg);
 	if (rc < 0) {
 		SPDK_ERRLOG("set_config failed: %s\n", spdk_strerror(-rc));
 		return rc;
@@ -804,7 +787,7 @@ virtio_user_get_features(struct virtio_dev *vdev)
 	uint64_t features;
 	int rc;
 
-	rc = dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features);
+	rc = vhost_user_sock(dev, VHOST_USER_GET_FEATURES, &features);
 	if (rc < 0) {
 		SPDK_ERRLOG("get_features failed: %s\n", spdk_strerror(-rc));
 		return 0;
@@ -820,7 +803,7 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 	uint64_t protocol_features;
 	int ret;
 
-	ret = dev->ops->send_request(dev, VHOST_USER_SET_FEATURES, &features);
+	ret = vhost_user_sock(dev, VHOST_USER_SET_FEATURES, &features);
 	if (ret < 0) {
 		return ret;
 	}
@@ -833,13 +816,13 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 		return 0;
 	}
 
-	ret = dev->ops->send_request(dev, VHOST_USER_GET_PROTOCOL_FEATURES, &protocol_features);
+	ret = vhost_user_sock(dev, VHOST_USER_GET_PROTOCOL_FEATURES, &protocol_features);
 	if (ret < 0) {
 		return ret;
 	}
 
 	protocol_features &= VIRTIO_USER_SUPPORTED_PROTOCOL_FEATURES;
-	ret = dev->ops->send_request(dev, VHOST_USER_SET_PROTOCOL_FEATURES, &protocol_features);
+	ret = vhost_user_sock(dev, VHOST_USER_SET_PROTOCOL_FEATURES, &protocol_features);
 	if (ret < 0) {
 		return ret;
 	}
@@ -904,7 +887,7 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	state.num = vq->vq_nentries;
 
 	if (virtio_dev_has_feature(vdev, VHOST_USER_F_PROTOCOL_FEATURES)) {
-		rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_ENABLE, &state);
+		rc = vhost_user_sock(dev, VHOST_USER_SET_VRING_ENABLE, &state);
 		if (rc < 0) {
 			SPDK_ERRLOG("failed to send VHOST_USER_SET_VRING_ENABLE: %s\n",
 				    spdk_strerror(-rc));
@@ -1045,7 +1028,7 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 		goto err;
 	}
 
-	rc = dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL);
+	rc = vhost_user_sock(dev, VHOST_USER_SET_OWNER, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("set_owner fails: %s\n", spdk_strerror(-rc));
 		goto err;
