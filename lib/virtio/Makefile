@@ -10,7 +10,7 @@ SO_VER := 4
 SO_MINOR := 0
 
 CFLAGS += $(ENV_CFLAGS)
-C_SRCS = virtio.c virtio_user.c virtio_pci.c vhost_user.c
+C_SRCS = virtio.c virtio_vhost_user.c virtio_pci.c
 LIBNAME = virtio
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_virtio.map)
