@@ -58,6 +58,10 @@ function install_refspdk() {
 	if ((gcc_version >= 12)); then
 		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13405
 		cherry_picks+=("8c532ae0322edc71003db3e4d3ece138f0f47ef7")
+		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13412
+		cherry_picks+=("98292d1eee805256ff72757de87ef4813f7fb714")
+		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13413
+		cherry_picks+=("862bdb53b984a9ab3fc524bfb253553a2e892753")
 	fi
 
 	if [[ $OSID == "freebsd" ]]; then
@@ -81,6 +85,12 @@ function install_refspdk() {
 	git -C "$output_dir" submodule update
 
 	if ((gcc_version >= 11)) && eq "$release" 22.01.1; then
+		if ((gcc_version >= 12)); then
+			# This series is needed to cleany apply https://review.spdk.io/gerrit/c/spdk/spdk/+/12639
+			git -C "$output_dir/libvfio-user" cherry-pick 9ad7474568a6c9f1fbb12fb8048f2083078a8144
+			git -C "$output_dir/libvfio-user" cherry-pick 3779fca8c766b18b6d68feda9ed7958aa60bd4cf
+			git -C "$output_dir/libvfio-user" cherry-pick bc44bd1a246dc95b91faae30defafc3c259f5c4d
+		fi
 		# HACK: We can't apply https://review.spdk.io/gerrit/c/spdk/spdk/+/13506 cleanly under
 		# the LTS, however, we can cherry-pick target commit directly into the submodule.
 		git -C "$output_dir/libvfio-user" cherry-pick b52bff72d4eb646a453d19e19ddbd13ed6111a09
