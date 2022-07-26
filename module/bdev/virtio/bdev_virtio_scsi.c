@@ -357,7 +357,7 @@ virtio_user_scsi_dev_create(const char *name, const char *path,
 
 	feature_bits = VIRTIO_SCSI_DEV_SUPPORTED_FEATURES;
 	feature_bits |= (1ULL << VHOST_USER_F_PROTOCOL_FEATURES);
-	rc = virtio_scsi_dev_init(svdev, num_queues, feature_bits);
+	rc = virtio_scsi_dev_init(svdev, num_queues + SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED, feature_bits);
 	if (rc != 0) {
 		virtio_dev_destruct(vdev);
 		free(svdev);

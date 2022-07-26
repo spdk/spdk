@@ -209,33 +209,6 @@ virtio_dev_init(struct virtio_dev *vdev, const char *socket_path, uint64_t flags
 static int
 blk_dev_init(struct virtio_dev *vdev, const char *socket_path, uint16_t max_queues)
 {
-	uint16_t host_max_queues;
-	int rc;
-
-	if (virtio_dev_has_feature(vdev, VIRTIO_BLK_F_MQ)) {
-		rc = virtio_dev_read_dev_config(vdev, offsetof(struct virtio_blk_config, num_queues),
-						&host_max_queues, sizeof(host_max_queues));
-		if (rc) {
-			fprintf(stderr, "%s: config read failed: %s\n", vdev->name, spdk_strerror(-rc));
-			return rc;
-		}
-	} else {
-		host_max_queues = 1;
-	}
-
-	if (max_queues == 0) {
-		fprintf(stderr, "%s: requested 0 request queues (%"PRIu16" available).\n",
-			vdev->name, host_max_queues);
-		return -EINVAL;
-	}
-
-	if (max_queues > host_max_queues) {
-		fprintf(stderr, "%s: requested %"PRIu16" request queues "
-			"but only %"PRIu16" available.\n",
-			vdev->name, max_queues, host_max_queues);
-		max_queues = host_max_queues;
-	}
-
 	return virtio_dev_init(vdev, socket_path, VIRTIO_BLK_DEV_SUPPORTED_FEATURES, max_queues);
 }
 

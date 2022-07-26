@@ -161,26 +161,24 @@ virtio_free_queues(struct virtio_dev *dev)
 }
 
 static int
-virtio_alloc_queues(struct virtio_dev *dev, uint16_t request_vq_num, uint16_t fixed_vq_num)
+virtio_alloc_queues(struct virtio_dev *dev, uint16_t max_queues, uint16_t fixed_vq_num)
 {
-	uint16_t nr_vq;
 	uint16_t i;
 	int ret;
 
-	nr_vq = request_vq_num + fixed_vq_num;
-	if (nr_vq == 0) {
+	if (max_queues == 0) {
 		/* perfectly fine to have a device with no virtqueues. */
 		return 0;
 	}
 
 	assert(dev->vqs == NULL);
-	dev->vqs = calloc(1, sizeof(struct virtqueue *) * nr_vq);
+	dev->vqs = calloc(1, sizeof(struct virtqueue *) * max_queues);
 	if (!dev->vqs) {
-		SPDK_ERRLOG("failed to allocate %"PRIu16" vqs\n", nr_vq);
+		SPDK_ERRLOG("failed to allocate %"PRIu16" vqs\n", max_queues);
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < nr_vq; i++) {
+	for (i = 0; i < max_queues; i++) {
 		ret = virtio_init_queue(dev, i);
 		if (ret < 0) {
 			virtio_free_queues(dev);
@@ -188,7 +186,7 @@ virtio_alloc_queues(struct virtio_dev *dev, uint16_t request_vq_num, uint16_t fi
 		}
 	}
 
-	dev->max_queues = nr_vq;
+	dev->max_queues = max_queues;
 	dev->fixed_queues_num = fixed_vq_num;
 	return 0;
 }
