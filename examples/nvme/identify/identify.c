@@ -1188,7 +1188,8 @@ io_opc_name(uint8_t opc)
 }
 
 static void
-print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
+print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid,
+		 const struct spdk_nvme_ctrlr_opts *opts)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
@@ -1282,6 +1283,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("%" PRIu64 "\n", (uint64_t)1 << (12 + cap.bits.mpsmin + cdata->mdts));
 	}
 	printf("Max Number of Namespaces:              %d\n", cdata->nn);
+	printf("Max Number of I/O Queues:              %d\n", opts->num_io_queues);
 	printf("NVMe Specification Version (VS):       %u.%u", vs.bits.mjr, vs.bits.mnr);
 	if (vs.bits.ter) {
 		printf(".%u", vs.bits.ter);
@@ -2327,7 +2329,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	g_controllers_found++;
-	print_controller(ctrlr, trid);
+	print_controller(ctrlr, trid, opts);
 	spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
 }
 
@@ -2378,7 +2380,7 @@ main(int argc, char **argv)
 		}
 
 		g_controllers_found++;
-		print_controller(ctrlr, &g_trid);
+		print_controller(ctrlr, &g_trid, spdk_nvme_ctrlr_get_opts(ctrlr));
 		spdk_nvme_detach_async(ctrlr, &g_detach_ctx);
 	} else if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
