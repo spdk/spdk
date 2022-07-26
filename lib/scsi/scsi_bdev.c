@@ -28,42 +28,27 @@
 
 static void bdev_scsi_process_block_resubmit(void *arg);
 
-static int
-hex2bin(char ch)
-{
-	if ((ch >= '0') && (ch <= '9')) {
-		return ch - '0';
-	}
-	ch = tolower(ch);
-	if ((ch >= 'a') && (ch <= 'f')) {
-		return ch - 'a' + 10;
-	}
-	return (int)ch;
-}
-
 static void
 bdev_scsi_set_naa_ieee_extended(const char *name, uint8_t *buf)
 {
-	int i, value, count = 0;
-	uint64_t local_value;
+	int i;
+	uint64_t local_value = 0, id_a, seed = 131;
 
-	for (i = 0; (i < 16) && (name[i] != '\0'); i++) {
-		value = hex2bin(name[i]);
-		if (i % 2) {
-			buf[count++] |= value << 4;
-		} else {
-			buf[count] = value;
-		}
+	for (i = 0; name[i] != '\0'; i++) {
+		local_value = (local_value * seed) + name[i];
 	}
 
-	local_value = *(uint64_t *)buf;
 	/*
 	 * see spc3r23 7.6.3.6.2,
 	 *  NAA IEEE Extended identifer format
 	 */
-	local_value &= 0x0fff000000ffffffull;
+	id_a = local_value & 0x0000000fff000000ull;
+	id_a = id_a << 24;
+
+	local_value &= 0x0000000000ffffffull;
 	/* NAA 02, and 00 03 47 for IEEE Intel */
 	local_value |= 0x2000000347000000ull;
+	local_value |= id_a;
 
 	to_be64((void *)buf, local_value);
 }
