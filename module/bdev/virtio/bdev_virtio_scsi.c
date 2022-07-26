@@ -166,8 +166,7 @@ static bool g_bdev_virtio_finish = false;
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
 	 1ULL << VIRTIO_SCSI_F_HOTPLUG		|	\
-	 1ULL << VIRTIO_RING_F_EVENT_IDX	|	\
-	 1ULL << VHOST_USER_F_PROTOCOL_FEATURES)
+	 1ULL << VIRTIO_RING_F_EVENT_IDX)
 
 static void virtio_scsi_dev_unregister_cb(void *io_device);
 static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev,
@@ -194,7 +193,7 @@ virtio_scsi_dev_send_eventq_io(struct virtqueue *vq, struct virtio_scsi_eventq_i
 }
 
 static int
-virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
+virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues, uint64_t feature_bits)
 {
 	struct virtio_dev *vdev = &svdev->vdev;
 	struct spdk_ring *ctrlq_ring;
@@ -203,7 +202,7 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 	uint16_t i, num_events;
 	int rc;
 
-	rc = virtio_dev_reset(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	rc = virtio_dev_reset(vdev, feature_bits);
 	if (rc != 0) {
 		return rc;
 	}
@@ -319,7 +318,7 @@ virtio_pci_scsi_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 		goto fail;
 	}
 
-	rc = virtio_scsi_dev_init(svdev, num_queues);
+	rc = virtio_scsi_dev_init(svdev, num_queues, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
 	if (rc != 0) {
 		goto fail;
 	}
@@ -339,6 +338,7 @@ virtio_user_scsi_dev_create(const char *name, const char *path,
 {
 	struct virtio_scsi_dev *svdev;
 	struct virtio_dev *vdev;
+	uint64_t feature_bits;
 	int rc;
 
 	svdev = calloc(1, sizeof(*svdev));
@@ -355,7 +355,9 @@ virtio_user_scsi_dev_create(const char *name, const char *path,
 		return NULL;
 	}
 
-	rc = virtio_scsi_dev_init(svdev, num_queues);
+	feature_bits = VIRTIO_SCSI_DEV_SUPPORTED_FEATURES;
+	feature_bits |= (1ULL << VHOST_USER_F_PROTOCOL_FEATURES);
+	rc = virtio_scsi_dev_init(svdev, num_queues, feature_bits);
 	if (rc != 0) {
 		virtio_dev_destruct(vdev);
 		free(svdev);

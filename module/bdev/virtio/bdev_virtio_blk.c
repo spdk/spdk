@@ -59,8 +59,7 @@ struct bdev_virtio_blk_io_channel {
 	 1ULL << VIRTIO_BLK_F_MQ		|	\
 	 1ULL << VIRTIO_BLK_F_RO		|	\
 	 1ULL << VIRTIO_BLK_F_DISCARD		|	\
-	 1ULL << VIRTIO_RING_F_EVENT_IDX	|	\
-	 1ULL << VHOST_USER_F_PROTOCOL_FEATURES)
+	 1ULL << VIRTIO_RING_F_EVENT_IDX)
 
 /* 10 sec for max poll period */
 #define VIRTIO_BLK_HOTPLUG_POLL_PERIOD_MAX		10000000ULL
@@ -590,6 +589,7 @@ virtio_user_blk_dev_create(const char *name, const char *path,
 			   uint16_t num_queues, uint32_t queue_size)
 {
 	struct virtio_blk_dev *bvdev;
+	uint64_t feature_bits;
 	int rc;
 
 	bvdev = calloc(1, sizeof(*bvdev));
@@ -605,7 +605,9 @@ virtio_user_blk_dev_create(const char *name, const char *path,
 		return NULL;
 	}
 
-	rc = virtio_dev_reset(&bvdev->vdev, VIRTIO_BLK_DEV_SUPPORTED_FEATURES);
+	feature_bits = VIRTIO_BLK_DEV_SUPPORTED_FEATURES;
+	feature_bits |= (1ULL << VHOST_USER_F_PROTOCOL_FEATURES);
+	rc = virtio_dev_reset(&bvdev->vdev, feature_bits);
 	if (rc != 0) {
 		virtio_dev_destruct(&bvdev->vdev);
 		free(bvdev);
