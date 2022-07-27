@@ -10,6 +10,10 @@
 #ifndef SPDK_THREAD_H_
 #define SPDK_THREAD_H_
 
+#ifdef __linux__
+#include <sys/epoll.h>
+#endif
+
 #include "spdk/stdinc.h"
 #include "spdk/cpuset.h"
 
@@ -802,9 +806,15 @@ struct spdk_interrupt *spdk_interrupt_register(int efd, spdk_interrupt_fn fn,
 void spdk_interrupt_unregister(struct spdk_interrupt **pintr);
 
 enum spdk_interrupt_event_types {
-	SPDK_INTERRUPT_EVENT_IN = 0x001,
+#ifdef __linux__
+	SPDK_INTERRUPT_EVENT_IN = EPOLLIN,
+	SPDK_INTERRUPT_EVENT_OUT = EPOLLOUT,
+	SPDK_INTERRUPT_EVENT_ET = EPOLLET
+#else
+	SPDK_INTERRUPT_EVENT_IN =  0x001,
 	SPDK_INTERRUPT_EVENT_OUT = 0x004,
 	SPDK_INTERRUPT_EVENT_ET = 1u << 31
+#endif
 };
 
 /**
