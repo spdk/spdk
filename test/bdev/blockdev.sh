@@ -403,13 +403,7 @@ function error_test_suite() {
 	$rpc_py bdev_error_inject_error $ERR_DEV 'all' 'failure' -n 5
 
 	$rootdir/test/bdev/bdevperf/bdevperf.py -t 1 perform_tests &
-	sleep 1
-
-	# Bdevperf is expected to exit when hitting error
-	if kill -0 $ERR_PID; then
-		echo "Process still exists, but was expected to fail due to IO error. Pid: $ERR_PID"
-		exit 1
-	fi
+	NOT wait $ERR_PID
 }
 
 function qd_sampling_function_test() {
