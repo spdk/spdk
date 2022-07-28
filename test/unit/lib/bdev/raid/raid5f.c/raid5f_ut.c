@@ -14,6 +14,7 @@
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB_V(raid_bdev_queue_io_wait, (struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 					struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn));
+DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
 
 void
 raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
@@ -209,6 +210,9 @@ struct raid_io_info {
 	void *src_buf;
 	void *dest_buf;
 	size_t buf_size;
+	void *parity_buf;
+	void *reference_parity;
+	size_t parity_buf_size;
 	enum spdk_bdev_io_status status;
 	bool failed;
 	int remaining;
@@ -341,21 +345,27 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	stripe_req = raid5f_chunk_stripe_req(chunk);
 	test_raid_bdev_io = (struct test_raid_bdev_io *)spdk_bdev_io_from_ctx(stripe_req->raid_io);
 	io_info = test_raid_bdev_io->io_info;
-	raid_bdev = io_info->r5f_info->raid_bdev;
 
-	SPDK_CU_ASSERT_FATAL(chunk != stripe_req->parity_chunk);
+	raid_bdev = io_info->r5f_info->raid_bdev;
 
 	stripe_idx_off = offset_blocks / raid_bdev->strip_size -
 			 io_info->offset_blocks / io_info->r5f_info->stripe_blocks;
 
-	data_chunk_idx = chunk < stripe_req->parity_chunk ? chunk->index : chunk->index - 1;
-	dest_buf = test_raid_bdev_io->buf +
-		   (stripe_idx_off * io_info->r5f_info->stripe_blocks +
-		    data_chunk_idx * raid_bdev->strip_size) *
-		   raid_bdev->bdev.blocklen;
+	if (chunk == stripe_req->parity_chunk) {
+		if (io_info->parity_buf == NULL) {
+			goto submit;
+		}
+		dest_buf = io_info->parity_buf + stripe_idx_off * raid_bdev->strip_size_kb * 1024;
+	} else {
+		data_chunk_idx = chunk < stripe_req->parity_chunk ? chunk->index : chunk->index - 1;
+		dest_buf = test_raid_bdev_io->buf +
+			   (stripe_idx_off * io_info->r5f_info->stripe_blocks +
+			    data_chunk_idx * raid_bdev->strip_size) *
+			   raid_bdev->bdev.blocklen;
+	}
 
 	memcpy(dest_buf, iov->iov_base, iov->iov_len);
-
+submit:
 	submit_io(test_raid_bdev_io->io_info, desc, cb, cb_arg);
 
 	return 0;
@@ -383,6 +393,14 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 static void
+xor_block(uint8_t *a, uint8_t *b, size_t size)
+{
+	while (size-- > 0) {
+		a[size] ^= b[size];
+	}
+}
+
+static void
 test_raid5f_write_request(struct raid_io_info *io_info)
 {
 	struct raid_bdev_io *raid_io;
@@ -394,6 +412,11 @@ test_raid5f_write_request(struct raid_io_info *io_info)
 	raid5f_submit_rw_request(raid_io);
 
 	process_io_completions(io_info);
+
+	if (io_info->status == SPDK_BDEV_IO_STATUS_SUCCESS && io_info->parity_buf) {
+		CU_ASSERT(memcmp(io_info->parity_buf, io_info->reference_parity,
+				 io_info->parity_buf_size) == 0);
+	}
 }
 
 static void
@@ -424,6 +447,8 @@ deinit_io_info(struct raid_io_info *io_info)
 {
 	free(io_info->src_buf);
 	free(io_info->dest_buf);
+	free(io_info->parity_buf);
+	free(io_info->reference_parity);
 }
 
 static void
@@ -464,6 +489,35 @@ init_io_info(struct raid_io_info *io_info, struct raid5f_info *r5f_info,
 }
 
 static void
+io_info_setup_parity(struct raid_io_info *io_info)
+{
+	struct raid5f_info *r5f_info = io_info->r5f_info;
+	struct raid_bdev *raid_bdev = r5f_info->raid_bdev;
+	uint32_t blocklen = raid_bdev->bdev.blocklen;
+	uint64_t num_stripes = io_info->num_blocks / r5f_info->stripe_blocks;
+	size_t strip_len = raid_bdev->strip_size * blocklen;
+	void *src = io_info->src_buf;
+	void *dest;
+	unsigned i, j;
+
+	io_info->parity_buf_size = num_stripes * strip_len;
+	io_info->parity_buf = calloc(1, io_info->parity_buf_size);
+	SPDK_CU_ASSERT_FATAL(io_info->parity_buf != NULL);
+
+	io_info->reference_parity = calloc(1, io_info->parity_buf_size);
+	SPDK_CU_ASSERT_FATAL(io_info->reference_parity != NULL);
+
+	dest = io_info->reference_parity;
+	for (i = 0; i < num_stripes; i++) {
+		for (j = 0; j < raid5f_stripe_data_chunks_num(raid_bdev); j++) {
+			xor_block(dest, src, strip_len);
+			src += strip_len;
+		}
+		dest += strip_len;
+	}
+}
+
+static void
 test_raid5f_submit_rw_request(struct raid5f_info *r5f_info, struct raid_bdev_io_channel *raid_ch,
 			      enum spdk_bdev_io_type io_type, uint64_t stripe_index, uint64_t stripe_offset_blocks,
 			      uint64_t num_blocks)
@@ -478,6 +532,7 @@ test_raid5f_submit_rw_request(struct raid5f_info *r5f_info, struct raid_bdev_io_
 		test_raid5f_read_request(&io_info);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
+		io_info_setup_parity(&io_info);
 		test_raid5f_write_request(&io_info);
 		break;
 	default:
