@@ -62,7 +62,8 @@ function usage() {
 	echo " --without-vhost           No path required."
 	echo " --with-virtio             Build vhost initiator and virtio-pci bdev modules."
 	echo " --without-virtio          No path required."
-	echo " --with-vfio-user[=DIR]    Build custom vfio-user transport for NVMf target and NVMe initiator."
+	echo " --with-vfio-user[=DIR]    Build custom vfio-user transport for NVMf target and vfio-user target."
+	echo "                           vfio-user initiator is always built-in in Linux."
 	echo " --without-vfio-user       example: /usr/src/libvfio-user"
 	echo " --with-pmdk[=DIR]         Build persistent memory bdev.
 					 example: /usr/share/pmdk"
