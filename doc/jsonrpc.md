@@ -2909,7 +2909,7 @@ name                    | Required | string      | Bdev name
 
 Example request:
 
-~~json
+~~~json
 {
   "params": {
     "name": "Aio0"
@@ -2918,17 +2918,17 @@ Example request:
   "method": "bdev_aio_rescan",
   "id": 1
 }
-~~
+~~~
 
 Example response:
 
-~~json
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
 }
-~~
+~~~
 
 ### bdev_aio_delete {#rpc_bdev_aio_delete}
 
@@ -9636,7 +9636,7 @@ enable_placement_id         | Optional | number      | Enable or disable placeme
 enable_zerocopy_send_server | Optional | boolean     | Enable or disable zero copy on send for server sockets
 enable_zerocopy_send_client | Optional | boolean     | Enable or disable zero copy on send for client sockets
 zerocopy_threshold          | Optional | number      | Set zerocopy_threshold in bytes. A consecutive sequence of requests' iovecs
-that fall below this threshold may be sent without zerocopy flag set
+--                          | --       | --          | that fall below this threshold may be sent without zerocopy flag set
 tls_version                 | Optional | number      | TLS protocol version, e.g. 13 for v1.3 (only applies when impl_name == ssl)
 enable_ktls                 | Optional | boolean     | Enable or disable Kernel TLS (only applies when impl_name == ssl)
 
@@ -9831,16 +9831,18 @@ The response is the version number including major version number, minor version
 #### Example
 
 Example request:
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
   "method": "spdk_get_version"
 }
-~~
+~~~
 
 Example response:
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -9854,7 +9856,7 @@ Example response:
     }
   }
 }
-~~
+~~~
 
 ### framework_get_pci_devices
 
@@ -9871,17 +9873,19 @@ The response is an array of attached PCIe devices.
 #### Example
 
 Example request:
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
   "method": "framework_get_pci_devices"
 }
-~~
+~~~
 
 Example response:
 Note that the config space buffer was trimmed.
-~~
+
+~~~json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -9898,7 +9902,7 @@ Note that the config space buffer was trimmed.
     ]
   }
 }
-~~
+~~~
 
 ### bdev_nvme_add_error_injection {#rpc_bdev_nvme_add_error_injection}
 
