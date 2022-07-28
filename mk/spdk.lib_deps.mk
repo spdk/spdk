@@ -25,8 +25,10 @@ DEPDIRS-util := log
 DEPDIRS-vmd := log util
 DEPDIRS-dma := log
 DEPDIRS-trace_parser := log
-ifeq ($(CONFIG_VFIO_USER),y)
+ifeq ($(OS),Linux)
 DEPDIRS-vfio_user := log
+endif
+ifeq ($(CONFIG_VFIO_USER),y)
 DEPDIRS-vfu_tgt := log util thread $(JSON_LIBS)
 endif
 
@@ -37,11 +39,11 @@ DEPDIRS-reduce := log util
 DEPDIRS-thread := log util trace
 
 DEPDIRS-nvme := log sock util trace
+ifeq ($(OS),Linux)
+DEPDIRS-nvme += vfio_user
+endif
 ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvme += rdma dma
-endif
-ifeq ($(CONFIG_VFIO_USER),y)
-DEPDIRS-nvme += vfio_user
 endif
 
 DEPDIRS-blob := log util thread dma

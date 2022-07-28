@@ -11,7 +11,7 @@ DIRS-y += bdev blob blobfs conf dma accel event json jsonrpc \
           log lvol rpc sock thread trace util nvme vmd nvmf scsi \
           ioat ut_mock iscsi notify init trace_parser
 ifeq ($(OS),Linux)
-DIRS-y += nbd ftl
+DIRS-y += nbd ftl vfio_user
 endif
 
 DIRS-$(CONFIG_OCF) += env_ocf
@@ -20,7 +20,7 @@ DIRS-$(CONFIG_VHOST) += vhost
 DIRS-$(CONFIG_VIRTIO) += virtio
 DIRS-$(CONFIG_REDUCE) += reduce
 DIRS-$(CONFIG_RDMA) += rdma
-DIRS-$(CONFIG_VFIO_USER) += vfio_user vfu_tgt
+DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 
 # If CONFIG_ENV is pointing at a directory in lib, build it.
 # Out-of-tree env implementations must be built separately by the user.
