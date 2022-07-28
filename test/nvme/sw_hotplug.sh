@@ -56,12 +56,12 @@ remove_attach_helper() {
 			done
 		fi
 
-		# setup.sh masks failures while writing to sysfs interfaces so let's do
-		# this on our own to make sure there's anything for the hotplug to reattach
-		# to.
+		# Avoid setup.sh as it does some extra work which is not relevant for this test.
 		for dev in "${nvmes[@]}"; do
+			echo "${pci_bus_driver["$dev"]}" > "/sys/bus/pci/devices/$dev/driver_override"
 			echo "$dev" > "/sys/bus/pci/devices/$dev/driver/unbind"
-			echo "$dev" > "/sys/bus/pci/drivers/${pci_bus_driver["$dev"]}/bind"
+			echo "$dev" > "/sys/bus/pci/drivers_probe"
+			echo "" > "/sys/bus/pci/devices/$dev/driver_override"
 		done
 
 		# Wait now for hotplug to reattach to the devices

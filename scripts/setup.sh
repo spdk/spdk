@@ -134,7 +134,6 @@ function linux_bind_driver() {
 	bdf="$1"
 	driver_name="$2"
 	old_driver_name=${drivers_d["$bdf"]:-no driver}
-	ven_dev_id="${pci_ids_vendor["$bdf"]#0x} ${pci_ids_device["$bdf"]#0x}"
 
 	if [[ $driver_name == "$old_driver_name" ]]; then
 		pci_dev_echo "$bdf" "Already using the $old_driver_name driver"
@@ -142,7 +141,6 @@ function linux_bind_driver() {
 	fi
 
 	if [[ $old_driver_name != "no driver" ]]; then
-		echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
 		echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
 	fi
 
@@ -152,8 +150,9 @@ function linux_bind_driver() {
 		return 0
 	fi
 
-	echo "$ven_dev_id" > "/sys/bus/pci/drivers/$driver_name/new_id" 2> /dev/null || true
-	echo "$bdf" > "/sys/bus/pci/drivers/$driver_name/bind" 2> /dev/null || true
+	echo "$driver_name" > "/sys/bus/pci/devices/$bdf/driver_override"
+	echo "$bdf" > "/sys/bus/pci/drivers_probe"
+	echo "" > "/sys/bus/pci/devices/$bdf/driver_override"
 
 	if [[ $driver_name == uio_pci_generic ]] && ! check_for_driver igb_uio; then
 		# Check if the uio_pci_generic driver is broken as it might be in
@@ -177,8 +176,6 @@ function linux_bind_driver() {
 
 function linux_unbind_driver() {
 	local bdf="$1"
-	local ven_dev_id
-	ven_dev_id="${pci_ids_vendor["$bdf"]#0x} ${pci_ids_device["$bdf"]#0x}"
 	local old_driver_name=${drivers_d["$bdf"]:-no driver}
 
 	if [[ $old_driver_name == "no driver" ]]; then
@@ -187,8 +184,8 @@ function linux_unbind_driver() {
 	fi
 
 	if [[ -e /sys/bus/pci/drivers/$old_driver_name ]]; then
-		echo "$ven_dev_id" > "/sys/bus/pci/drivers/$old_driver_name/remove_id" 2> /dev/null || true
 		echo "$bdf" > "/sys/bus/pci/drivers/$old_driver_name/unbind"
+		echo "" > "/sys/bus/pci/devices/$bdf/driver_override"
 	fi
 
 	pci_dev_echo "$bdf" "$old_driver_name -> no driver"
