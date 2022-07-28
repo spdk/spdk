@@ -128,18 +128,17 @@ rpc_pid=$!
 sleep 1
 $rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-# wait for 5sec to count the reconnect delay frequency with 2 sec interval
-sleep 5
+wait $rpc_pid
 cat $testdir/trace.txt
 
 # Check the frequency of delay reconnect
-if (("$(grep -c "reconnect delay bdev controller NVMe0" < $testdir/trace.txt)" != 2)); then
+if (("$(grep -c "reconnect delay bdev controller NVMe0" < $testdir/trace.txt)" <= 2)); then
+	cat $testdir/try.txt
 	false
 fi
 
 kill $dtrace_pid
 rm -f $testdir/trace.txt
-wait $rpc_pid
 cat $testdir/try.txt
 
 killprocess $bdevperf_pid
