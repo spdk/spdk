@@ -79,6 +79,9 @@ struct spdk_ftl_dev {
 	/* P2L map memory pool */
 	struct ftl_mempool		*p2l_pool;
 
+	/* Underlying SHM buf for LBA map mempool */
+	struct ftl_md			*p2l_pool_md;
+
 	/* Band md memory pool */
 	struct ftl_mempool		*band_md_pool;
 

@@ -26,14 +26,24 @@ static int
 init_p2l_map_pool(struct spdk_ftl_dev *dev)
 {
 	size_t p2l_pool_el_blks = spdk_divide_round_up(ftl_p2l_map_pool_elem_size(dev), FTL_BLOCK_SIZE);
+	size_t p2l_pool_buf_blks = P2L_MEMPOOL_SIZE * p2l_pool_el_blks;
+	void *p2l_pool_buf;
 
-	dev->p2l_pool = ftl_mempool_create(P2L_MEMPOOL_SIZE,
-					   p2l_pool_el_blks * FTL_BLOCK_SIZE,
-					   FTL_BLOCK_SIZE,
-					   SPDK_ENV_SOCKET_ID_ANY);
+	dev->p2l_pool_md = ftl_md_create(dev, p2l_pool_buf_blks, 0, "p2l_pool",
+					 FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW, NULL);
+	if (!dev->p2l_pool_md) {
+		return -ENOMEM;
+	}
+
+	p2l_pool_buf = ftl_md_get_buffer(dev->p2l_pool_md);
+	dev->p2l_pool = ftl_mempool_create_ext(p2l_pool_buf, P2L_MEMPOOL_SIZE,
+					       p2l_pool_el_blks * FTL_BLOCK_SIZE,
+					       FTL_BLOCK_SIZE);
 	if (!dev->p2l_pool) {
 		return -ENOMEM;
 	}
+
+	ftl_mempool_initialize_ext(dev->p2l_pool);
 
 	return 0;
 }
@@ -70,8 +80,13 @@ void
 ftl_mngt_deinit_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	if (dev->p2l_pool) {
-		ftl_mempool_destroy(dev->p2l_pool);
+		ftl_mempool_destroy_ext(dev->p2l_pool);
 		dev->p2l_pool = NULL;
+	}
+
+	if (dev->p2l_pool_md) {
+		ftl_md_destroy(dev->p2l_pool_md);
+		dev->p2l_pool_md = NULL;
 	}
 
 	if (dev->band_md_pool) {

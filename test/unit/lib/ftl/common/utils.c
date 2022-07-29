@@ -50,6 +50,12 @@ ftl_mempool_put(struct ftl_mempool *mpool, void *element)
 	spdk_mempool_put((struct spdk_mempool *)mpool, element);
 }
 
+ftl_df_obj_id
+ftl_mempool_get_df_obj_id(struct ftl_mempool *mpool, void *df_obj_ptr)
+{
+	return (ftl_df_obj_id)df_obj_ptr;
+}
+
 struct spdk_ftl_dev *
 test_init_ftl_dev(const struct base_bdev_geometry *geo)
 {
@@ -107,6 +113,7 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id, size_t zone_size)
 	band->id = id;
 
 	band->md->state = FTL_BAND_STATE_CLOSED;
+	band->md->df_p2l_map = FTL_DF_OBJ_ID_INVALID;
 	TAILQ_INSERT_HEAD(&dev->shut_bands, band, queue_entry);
 
 	band->start_addr = zone_size * id;
