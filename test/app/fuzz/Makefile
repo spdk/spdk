@@ -11,6 +11,9 @@ DIRS-y += iscsi_fuzz
 
 ifeq ($(CONFIG_FUZZER),y)
 DIRS-y += llvm_nvme_fuzz
+ifeq ($(CONFIG_VFIO_USER),y)
+DIRS-y += llvm_vfio_fuzz
+endif
 endif
 
 ifeq ($(OS),Linux)
