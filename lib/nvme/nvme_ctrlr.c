@@ -3693,7 +3693,7 @@ nvme_ctrlr_process_init_wait_for_ready_1(void *ctx, uint64_t value, const struct
 
 	assert(value <= UINT32_MAX);
 	csts.raw = (uint32_t)value;
-	if (csts.bits.rdy == 1) {
+	if (csts.bits.rdy == 1 || csts.bits.cfs == 1) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_EN_0,
 				     nvme_ctrlr_get_ready_timeout(ctrlr));
 	} else {
