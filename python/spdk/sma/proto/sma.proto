@@ -13,6 +13,20 @@ package sma;
 
 option go_package = "spdk.io/sma";
 
+// Volume's crypto parameters
+message VolumeCryptoParameters {
+  // Key to be used for encryption
+  bytes key = 1;
+  // Second key (only required by some ciphers)
+  bytes key2 = 2;
+  enum Cipher {
+    AES_CBC = 0;
+    AES_XTS = 1;
+  }
+  // Cipher to use
+  Cipher cipher = 3;
+}
+
 // Parameters describing a volume
 message VolumeParameters {
   // Volume GUID/UUID
@@ -21,6 +35,8 @@ message VolumeParameters {
     // NVMeoF volume
     nvmf.VolumeConnectionParameters nvmf = 2;
   }
+  // Crypto parameters (optional)
+  VolumeCryptoParameters crypto = 3;
 }
 
 // Create device request
