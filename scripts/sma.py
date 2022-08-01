@@ -67,6 +67,22 @@ def register_devices(agent, devices, config):
         agent.register_device(device_manager)
 
 
+def init_crypto(config, client):
+    crypto_config = config.get('crypto')
+    if crypto_config is None:
+        return
+    name = crypto_config.get('name')
+    if name is None:
+        logging.error('Crypto engine name is missing')
+        sys.exit(1)
+    try:
+        sma.set_crypto_engine(name)
+        sma.get_crypto_engine().init(client, crypto_config.get('params', {}))
+    except ValueError:
+        logging.error(f'Invalid crypto engine: {name}')
+        sys.exit(1)
+
+
 def load_plugins(plugins, client):
     devices = []
     for plugin in plugins:
@@ -74,6 +90,10 @@ def load_plugins(plugins, client):
         for device in getattr(module, 'devices', []):
             logging.debug(f'Loading external device: {plugin}.{device.__name__}')
             devices.append(device(client))
+        for engine_class in getattr(module, 'crypto_engines', []):
+            engine = engine_class()
+            logging.debug(f'Loading external crypto engine: {plugin}.{engine.name}')
+            sma.register_crypto_engine(engine)
     return devices
 
 
@@ -125,5 +145,6 @@ if __name__ == '__main__':
     devices += load_plugins(config.get('plugins') or [], client)
     devices += load_plugins(filter(None, os.environ.get('SMA_PLUGINS', '').split(':')),
                             client)
+    init_crypto(config, client)
     register_devices(agent, devices, config)
     run(agent)

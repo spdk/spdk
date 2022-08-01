@@ -41,8 +41,8 @@ smapid=$!
 # Wait for a while to make sure SMA starts listening
 sma_waitforlisten
 
-[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1' ]]
-[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin1-device2' ]]
+[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1:nop' ]]
+[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin1-device2:nop' ]]
 
 killprocess $smapid
 
@@ -58,7 +58,7 @@ PYTHONPATH=$testdir/plugins $rootdir/scripts/sma.py -c <(
 smapid=$!
 sma_waitforlisten
 
-[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin1-device2' ]]
+[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin1-device2:nop' ]]
 NOT create_device nvme
 
 killprocess $smapid
@@ -77,8 +77,8 @@ PYTHONPATH=$testdir/plugins $rootdir/scripts/sma.py -c <(
 smapid=$!
 sma_waitforlisten
 
-[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1' ]]
-[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin1-device2' ]]
+[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1:nop' ]]
+[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin1-device2:nop' ]]
 
 killprocess $smapid
 
@@ -96,8 +96,8 @@ PYTHONPATH=$testdir/plugins $rootdir/scripts/sma.py -c <(
 smapid=$!
 sma_waitforlisten
 
-[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin2-device1' ]]
-[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2' ]]
+[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin2-device1:nop' ]]
+[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2:nop' ]]
 
 killprocess $smapid
 
@@ -115,8 +115,8 @@ PYTHONPATH=$testdir/plugins $rootdir/scripts/sma.py -c <(
 smapid=$!
 sma_waitforlisten
 
-[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1' ]]
-[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2' ]]
+[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1:nop' ]]
+[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2:nop' ]]
 
 killprocess $smapid
 
@@ -131,12 +131,12 @@ PYTHONPATH=$testdir/plugins SMA_PLUGINS=plugin1:plugin2 $rootdir/scripts/sma.py 
 smapid=$!
 sma_waitforlisten
 
-[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1' ]]
-[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2' ]]
+[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1:nop' ]]
+[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2:nop' ]]
 
 killprocess $smapid
 
-# Finally, register one plugin in a config and the other through env var
+# Register one plugin in a config and the other through env var
 PYTHONPATH=$testdir/plugins SMA_PLUGINS=plugin1 $rootdir/scripts/sma.py -c <(
 	cat <<- EOF
 		plugins:
@@ -149,8 +149,34 @@ PYTHONPATH=$testdir/plugins SMA_PLUGINS=plugin1 $rootdir/scripts/sma.py -c <(
 smapid=$!
 sma_waitforlisten
 
-[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1' ]]
-[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2' ]]
+[[ $(create_device nvme | jq -r '.handle') == 'nvme:plugin1-device1:nop' ]]
+[[ $(create_device nvmf_tcp | jq -r '.handle') == 'nvmf_tcp:plugin2-device2:nop' ]]
+
+killprocess $smapid
+
+# Check registering external crypto engines
+crypto_engines=(crypto-plugin1 crypto-plugin2)
+for crypto in "${crypto_engines[@]}"; do
+	PYTHONPATH=$testdir/plugins $rootdir/scripts/sma.py -c <(
+		cat <<- EOF
+			plugins:
+			  - 'plugin1'
+			  - 'plugin2'
+			devices:
+			  - name: 'plugin1-device1'
+			  - name: 'plugin2-device2'
+			crypto:
+			  name: '$crypto'
+		EOF
+	) &
+	smapid=$!
+	sma_waitforlisten
+
+	[[ $(create_device nvme | jq -r '.handle') == nvme:plugin1-device1:$crypto ]]
+	[[ $(create_device nvmf_tcp | jq -r '.handle') == nvmf_tcp:plugin2-device2:$crypto ]]
+
+	killprocess $smapid
+done
 
 cleanup
 trap - SIGINT SIGTERM EXIT
