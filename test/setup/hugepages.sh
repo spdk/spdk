@@ -186,29 +186,6 @@ custom_alloc() {
 	nr_hugepages=$_nr_hugepages verify_nr_hugepages
 }
 
-hp_status() {
-	# Parse status from last verification
-
-	local node
-	local size free total
-
-	((${#nodes_sys[@]} > 0))
-
-	while read -r node size free _ total; do
-		size=${size/kB/} node=${node#node}
-		((size == default_hugepages)) || continue
-		((total == nodes_test[node]))
-		# If something grabbed hugepages we can't really do anything about it. Just skip the free check and leave
-		# a big warning.
-		if ((free != total)); then
-			printf '* %u free != %u total hugepages. Something is using hugepages, this may affect the test\n' \
-				"$free" "$total" >&2
-			continue
-		fi
-		((free == nodes_test[node]))
-	done < <(setup output status |& grep "node[0-9]")
-}
-
 get_nodes
 clear_hp
 
@@ -217,6 +194,5 @@ run_test "per_node_2G_alloc" per_node_2G_alloc
 run_test "even_2G_alloc" even_2G_alloc
 run_test "odd_alloc" odd_alloc
 run_test "custom_alloc" custom_alloc
-run_test "hp_status" hp_status
 
 clear_hp
