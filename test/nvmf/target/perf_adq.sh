@@ -36,8 +36,7 @@ function adq_configure_driver() {
 	"${NVMF_TARGET_NS_CMD[@]}" $rootdir/scripts/perf/nvmf/set_xps_rxqs $NVMF_TARGET_INTERFACE
 }
 
-function adq_start_nvmf_target() {
-	nvmfappstart -m $2 --wait-for-rpc
+function adq_configure_nvmf_target() {
 	$rpc_py sock_impl_set_options --enable-placement-id $1 --enable-zerocopy-send-server -i posix
 	$rpc_py framework_start_init
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS --io-unit-size 8192 --sock-priority $1
@@ -64,7 +63,8 @@ adq_reload_driver
 
 # When ADQ is disabled, we expect 1 connection on each of the 4 poll groups.
 nvmftestinit
-adq_start_nvmf_target 0 0xF
+nvmfappstart -m 0xF --wait-for-rpc
+adq_configure_nvmf_target 0
 sleep 2
 $perf -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
@@ -86,7 +86,8 @@ adq_reload_driver
 nvmftestinit
 sleep 2
 adq_configure_driver
-adq_start_nvmf_target 1 0xF
+nvmfappstart -m 0xF --wait-for-rpc
+adq_configure_nvmf_target 1
 sleep 2
 $perf -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
