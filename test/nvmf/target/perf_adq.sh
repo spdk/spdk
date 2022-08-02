@@ -14,9 +14,8 @@ fi
 
 rpc_py="$rootdir/scripts/rpc.py"
 perf="$SPDK_EXAMPLE_DIR/perf"
-enable_adq=0
 
-function pre_conf_for_adq() {
+function adq_configure_driver() {
 	# Enable adding flows to hardware
 	"${NVMF_TARGET_NS_CMD[@]}" ethtool --offload $NVMF_TARGET_INTERFACE hw-tc-offload on
 	# ADQ driver turns on this switch by default, we need to turn it off for SPDK testing
@@ -27,7 +26,7 @@ function pre_conf_for_adq() {
 }
 
 # Configuring traffic classes
-function traffic_classes() {
+function adq_configure_traffic_classes() {
 	tc=/usr/sbin/tc
 	# Create 2 traffic classes and 2 tc1 queues
 	"${NVMF_TARGET_NS_CMD[@]}" $tc qdisc add dev $NVMF_TARGET_INTERFACE root \
@@ -40,19 +39,19 @@ function traffic_classes() {
 	"${NVMF_TARGET_NS_CMD[@]}" $rootdir/scripts/perf/nvmf/set_xps_rxqs $NVMF_TARGET_INTERFACE
 }
 
-function start_nvmf_target() {
-	nvmfappstart -m $1 --wait-for-rpc
+function adq_start_nvmf_target() {
+	nvmfappstart -m $2 --wait-for-rpc
 	trap 'process_shm --id $NVMF_APP_SHM_ID; clean_ints_files; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
-	$rpc_py sock_impl_set_options --enable-placement-id $enable_adq --enable-zerocopy-send-server -i posix
+	$rpc_py sock_impl_set_options --enable-placement-id $1 --enable-zerocopy-send-server -i posix
 	$rpc_py framework_start_init
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS --io-unit-size 8192 --sock-priority $enable_adq
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS --io-unit-size 8192 --sock-priority $1
 	$rpc_py bdev_malloc_create 64 512 -b Malloc1
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1
 	$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 }
 
-function reload_driver() {
+function adq_reload_driver() {
 	rmmod ice
 	modprobe ice
 	sleep 5
@@ -118,7 +117,7 @@ function check_ints_result() {
 
 # Clear the previous configuration that may have an impact.
 # At present, ADQ configuration is only applicable to the ice driver.
-reload_driver
+adq_reload_driver
 
 # Testcase 1 and Testcase 2 show the SPDK interacting with ADQ.
 # The number of continuously increasing nvmf_poll_group_poll's busy_count, we define it as "num_busy_count".
@@ -126,7 +125,7 @@ reload_driver
 # When ADQ disabled, num_busy_count will be equal to the smaller value of initiator connections and target cores.
 # Testcase 1: Testing 2 traffic classes and 2 tc1 queues without ADQ
 nvmftestinit
-start_nvmf_target 0xF
+adq_start_nvmf_target 0 0xF
 sleep 2
 $perf -q 64 -o 4096 -w randread -t 10 -c 0x70 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
@@ -141,15 +140,14 @@ wait $perfpid
 clean_ints_files
 nvmftestfini
 
-reload_driver
+adq_reload_driver
 
 # Testcase 2: Testing 2 traffic classes and 2 tc1 queues with ADQ
-enable_adq=1
 nvmftestinit
 sleep 2
-pre_conf_for_adq
-traffic_classes
-start_nvmf_target 0xF
+adq_configure_driver
+adq_configure_traffic_classes
+adq_start_nvmf_target 1 0xF
 sleep 2
 # The number of I/O connections from initiator is the core count * qpairs per ns, so here its 12.
 # ADQ on target side will work if 12 connections are matched to two out of four cores on the target.
