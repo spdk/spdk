@@ -5,6 +5,7 @@ import threading
 import uuid
 from dataclasses import dataclass
 from spdk.rpc.client import JSONRPCException
+from . import crypto
 from ..common import format_volume_id
 from ..proto import sma_pb2
 
@@ -157,6 +158,40 @@ class VolumeManager:
             raise VolumeException(grpc.StatusCode.INTERNAL,
                                   'Failed to stop discovery')
 
+    def _get_crypto_params(self, params):
+        key, cipher, key2 = None, None, None
+        try:
+            if params.HasField('crypto'):
+                key, cipher = params.crypto.key.decode('ascii'), params.crypto.cipher
+                if len(params.crypto.key2) > 0:
+                    key2 = params.crypto.key2.decode('ascii')
+        except UnicodeDecodeError:
+            raise VolumeException(grpc.StatusCode.INVALID_ARGUMENT,
+                                  'Corrupted crypto key')
+        return key, cipher, key2
+
+    def _setup_crypto(self, volume_id, params):
+        try:
+            if not params.HasField('crypto'):
+                return
+            key, cipher, key2 = self._get_crypto_params(params)
+            crypto.get_crypto_engine().setup(volume_id, key, cipher, key2)
+        except crypto.CryptoException as ex:
+            raise VolumeException(ex.code, ex.message)
+
+    def _cleanup_crypto(self, volume_id):
+        try:
+            crypto.get_crypto_engine().cleanup(volume_id)
+        except crypto.CryptoException as ex:
+            logging.warning(f'Failed to cleanup crypto: {ex.message}')
+
+    def _verify_crypto(self, volume_id, params):
+        try:
+            key, cipher, key2 = self._get_crypto_params(params)
+            crypto.get_crypto_engine().verify(volume_id, key, cipher, key2)
+        except crypto.CryptoException as ex:
+            raise VolumeException(ex.code, ex.message)
+
     @_locked
     def connect_volume(self, params, device_handle=None):
         """ Connects a volume through a discovery service.  Returns a tuple (volume_id, existing):
@@ -172,6 +207,8 @@ class VolumeManager:
             if device_handle is not None and volume.device_handle != device_handle:
                 raise VolumeException(grpc.StatusCode.ALREADY_EXISTS,
                                       'Volume is already attached to a different device')
+            # Make sure the crypto params are the same
+            self._verify_crypto(volume_id, params)
             return volume_id, True
         discovery_services = set()
         try:
@@ -218,6 +255,7 @@ class VolumeManager:
                 if subnqn != params.nvmf.subnqn:
                     raise VolumeException(grpc.StatusCode.INVALID_ARGUMENT,
                                           'Unexpected subsystem NQN')
+            self._setup_crypto(volume_id, params)
             # Finally remember that volume
             self._volumes[volume_id] = Volume(volume_id, device_handle, discovery_services)
         except Exception as ex:
@@ -238,6 +276,7 @@ class VolumeManager:
         volume = self._volumes.get(id)
         if volume is None:
             return
+        self._cleanup_crypto(id)
         # Delete the volume from the map and stop the services it uses
         for name in volume.discovery_services:
             try:
