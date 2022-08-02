@@ -65,7 +65,6 @@ adq_reload_driver
 nvmftestinit
 nvmfappstart -m 0xF --wait-for-rpc
 adq_configure_nvmf_target 0
-sleep 2
 $perf -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 	subnqn:nqn.2016-06.io.spdk:cnode1" &
@@ -84,11 +83,9 @@ adq_reload_driver
 
 # When ADQ is enabled, we expect the connections to reside on AT MOST two poll groups.
 nvmftestinit
-sleep 2
 adq_configure_driver
 nvmfappstart -m 0xF --wait-for-rpc
 adq_configure_nvmf_target 1
-sleep 2
 $perf -q 64 -o 4096 -w randread -t 10 -c 0xF0 \
 	-r "trtype:${TEST_TRANSPORT} adrfam:IPv4 traddr:${NVMF_FIRST_TARGET_IP} trsvcid:${NVMF_PORT} \
 	subnqn:nqn.2016-06.io.spdk:cnode1" &
