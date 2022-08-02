@@ -38,7 +38,6 @@ function adq_configure_driver() {
 
 function adq_start_nvmf_target() {
 	nvmfappstart -m $2 --wait-for-rpc
-	trap 'process_shm --id $NVMF_APP_SHM_ID; clean_ints_files; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 	$rpc_py sock_impl_set_options --enable-placement-id $1 --enable-zerocopy-send-server -i posix
 	$rpc_py framework_start_init
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS --io-unit-size 8192 --sock-priority $1
@@ -52,11 +51,6 @@ function adq_reload_driver() {
 	rmmod ice
 	modprobe ice
 	sleep 5
-}
-
-function clean_ints_files() {
-	rm -f temp_ints1.log
-	rm -f temp_ints2.log
 }
 
 function get_nvmf_poll_groups() {
@@ -76,40 +70,6 @@ function num_busy_count() {
 		fi
 	done
 	echo $num
-}
-
-function compare_ints() {
-	grep $2 < /proc/interrupts | awk '{
-		for (i = 1; i <= NF; i++) {
-				val[i]=$i;
-				if (i>1)
-					printf "%d\n", $i;
-		}
-	}' > temp_ints1.log
-	sleep $1
-	grep $2 < /proc/interrupts | awk '{
-		for (i = 1; i <= NF; i++) {
-				val[i]=$i;
-				if (i>1)
-					printf "%d\n", $i;
-		}
-	}' > temp_ints2.log
-
-	if diff temp_ints1.log temp_ints2.log > /dev/null; then
-		return 0
-	fi
-	return 1
-}
-
-function check_ints_result() {
-	# We only test check_ints three times here, as long as there is no interruption once,
-	# we consider it is pass. Of course, ideally, one time is enough.
-	for ((i = 1; i <= 3; i++)); do
-		if compare_ints 2 $NVMF_TARGET_INTERFACE; then
-			return 0
-		fi
-	done
-	return 1
 }
 
 # Clear the previous configuration that may have an impact.
@@ -134,7 +94,6 @@ if [[ $(num_busy_count) -ne 3 ]]; then
 	exit 1
 fi
 wait $perfpid
-clean_ints_files
 nvmftestfini
 
 adq_reload_driver
@@ -152,16 +111,12 @@ $perf -q 64 -o 4096 -w randread -t 15 -P 4 -c 0x70 \
 subnqn:nqn.2016-06.io.spdk:cnode1" &
 perfpid=$!
 sleep 3
-if ! check_ints_result; then
-	echo "ERROR: check_ints failed! There is interruption in perf, this is not what we expected."
-	exit 1
-fi
+
 if [[ $(num_busy_count) -ne 2 ]]; then
 	echo "ERROR: num_busy_count != tc1 queues of traffic classes! Testcase 2 failed."
 	exit 1
 fi
 wait $perfpid
-clean_ints_files
 nvmftestfini
 
 trap - SIGINT SIGTERM EXIT
