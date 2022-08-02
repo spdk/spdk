@@ -87,13 +87,33 @@ verify_nr_hugepages() {
 	local node
 	local sorted_t
 	local sorted_s
+	local surp
+	local resv
+	local anon
+
+	if [[ $(< /sys/kernel/mm/transparent_hugepage/enabled) != *"[never]"* ]]; then
+		anon=$(get_meminfo AnonHugePages)
+	fi
+	surp=$(get_meminfo HugePages_Surp)
+	resv=$(get_meminfo HugePages_Rsvd)
 
 	echo "nr_hugepages=$nr_hugepages"
-	(($(< "$default_huge_nr") == nr_hugepages))
+	echo "resv_hugepages=$resv"
+	echo "surplus_hugepages=$surp"
+	echo "anon_hugepages=${anon:-disabled}"
+
+	(($(< "$default_huge_nr") == nr_hugepages + surp + resv))
+	# This knob doesn't account for the surp, resv hugepages
 	(($(< "$global_huge_nr") == nr_hugepages))
-	(($(get_meminfo HugePages_Total) == nr_hugepages))
+	(($(get_meminfo HugePages_Total) == nr_hugepages + surp + resv))
 
 	get_nodes
+
+	# Take global resv and per-node surplus hugepages into account
+	for node in "${!nodes_test[@]}"; do
+		((nodes_test[node] += resv))
+		((nodes_test[node] += $(get_meminfo HugePages_Surp "$node")))
+	done
 
 	# There's no obvious way of determining which NUMA node is going to end
 	# up with an odd number of hugepages in case such number was actually
@@ -103,7 +123,7 @@ verify_nr_hugepages() {
 
 	for node in "${!nodes_test[@]}"; do
 		sorted_t[nodes_test[node]]=1 sorted_s[nodes_sys[node]]=1
-		echo "node$node=${nodes_sys[node]}"
+		echo "node$node=${nodes_sys[node]} expecting ${nodes_test[node]}"
 	done
 	[[ ${!sorted_s[*]} == "${!sorted_t[*]}" ]]
 }
@@ -177,8 +197,15 @@ hp_status() {
 	while read -r node size free _ total; do
 		size=${size/kB/} node=${node#node}
 		((size == default_hugepages)) || continue
-		((free == nodes_test[node]))
 		((total == nodes_test[node]))
+		# If something grabbed hugepages we can't really do anything about it. Just skip the free check and leave
+		# a big warning.
+		if ((free != total)); then
+			printf '* %u free != %u total hugepages. Something is using hugepages, this may affect the test\n' \
+				"$free" "$total" >&2
+			continue
+		fi
+		((free == nodes_test[node]))
 	done < <(setup output status |& grep "node[0-9]")
 }
 

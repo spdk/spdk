@@ -19,6 +19,8 @@ get_meminfo() {
 	mem_f=/proc/meminfo
 	if [[ -e /sys/devices/system/node/node$node/meminfo ]]; then
 		mem_f=/sys/devices/system/node/node$node/meminfo
+	elif [[ -n $node ]]; then
+		return 1
 	fi
 	mapfile -t mem < "$mem_f"
 	mem=("${mem[@]#Node +([0-9]) }")
