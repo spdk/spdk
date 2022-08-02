@@ -23,10 +23,7 @@ function adq_configure_driver() {
 	# Since sockets are non-blocking, a non-zero value of net.core.busy_read is sufficient
 	sysctl -w net.core.busy_poll=1
 	sysctl -w net.core.busy_read=1
-}
 
-# Configuring traffic classes
-function adq_configure_traffic_classes() {
 	tc=/usr/sbin/tc
 	# Create 2 traffic classes and 2 tc1 queues
 	"${NVMF_TARGET_NS_CMD[@]}" $tc qdisc add dev $NVMF_TARGET_INTERFACE root \
@@ -146,7 +143,6 @@ adq_reload_driver
 nvmftestinit
 sleep 2
 adq_configure_driver
-adq_configure_traffic_classes
 adq_start_nvmf_target 1 0xF
 sleep 2
 # The number of I/O connections from initiator is the core count * qpairs per ns, so here its 12.
