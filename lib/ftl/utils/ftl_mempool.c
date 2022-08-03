@@ -25,6 +25,8 @@ struct ftl_mempool {
 	int socket_id;
 };
 
+static inline bool is_element_valid(struct ftl_mempool *mpool,
+				    void *element)  __attribute__((unused));
 
 static size_t
 element_size_aligned(size_t size, size_t alignment)
