@@ -260,7 +260,8 @@ _nvmf_tgt_subsystem_destroy(void *cb_arg)
 				 * is destroyed, _nvmf_tgt_subsystem_destroy will continue to destroy other subsystems if any */
 				return;
 			} else {
-				SPDK_ERRLOG("Unable to destroy NVMe-oF subsystem, rc %d. Trying others.\n", rc);
+				SPDK_ERRLOG("Unable to destroy subsystem %s, rc %d. Trying others.\n",
+					    spdk_nvmf_subsystem_get_nqn(subsystem), rc);
 			}
 		}
 		subsystem = next_subsystem;

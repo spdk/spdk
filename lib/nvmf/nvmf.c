@@ -367,8 +367,7 @@ nvmf_tgt_destroy_cb(void *io_device)
 						 * is destroyed, nvmf_tgt_destroy_cb will continue to destroy other subsystems if any */
 						return;
 					} else {
-						SPDK_ERRLOG("Failed to destroy subsystem, id %u, rc %d\n", tgt->subsystems[i]->id, rc);
-						assert(0);
+						SPDK_ERRLOG("Failed to destroy subsystem %s, rc %d\n", tgt->subsystems[i]->subnqn, rc);
 					}
 				}
 			}
