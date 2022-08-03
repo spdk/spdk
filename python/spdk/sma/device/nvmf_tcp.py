@@ -3,7 +3,8 @@ import logging
 import uuid
 from spdk.rpc.client import JSONRPCException
 from .device import DeviceManager, DeviceException
-from ..common import format_volume_id
+from ..common import format_volume_id, volume_id_to_nguid
+from ..volume import get_crypto_engine, CryptoException
 from ..proto import sma_pb2
 from ..proto import nvmf_tcp_pb2
 
@@ -95,11 +96,14 @@ class NvmfTcpDeviceManager(DeviceManager):
                                  'listen_address': {'trtype': 'tcp', **addr}})
                 volume_id = format_volume_id(request.volume.volume_id)
                 if volume_id is not None:
+                    bdev_name = get_crypto_engine().get_crypto_bdev(volume_id) or volume_id
                     result = client.call('nvmf_subsystem_add_ns',
                                          {'nqn': params.subnqn,
                                           'namespace': {
-                                              'bdev_name': volume_id}})
-            except JSONRPCException:
+                                              'bdev_name': bdev_name,
+                                              'uuid': volume_id,
+                                              'nguid': volume_id_to_nguid(volume_id)}})
+            except (JSONRPCException, CryptoException):
                 try:
                     client.call('nvmf_delete_subsystem', {'nqn': params.subnqn})
                 except JSONRPCException:
@@ -127,8 +131,9 @@ class NvmfTcpDeviceManager(DeviceManager):
 
     def _find_bdev(self, client, guid):
         try:
-            return client.call('bdev_get_bdevs', {'name': guid})[0]
-        except JSONRPCException:
+            bdev_name = get_crypto_engine().get_crypto_bdev(guid) or guid
+            return client.call('bdev_get_bdevs', {'name': bdev_name})[0]
+        except (JSONRPCException, CryptoException):
             return None
 
     @_check_transport
@@ -155,7 +160,9 @@ class NvmfTcpDeviceManager(DeviceManager):
                     result = client.call('nvmf_subsystem_add_ns',
                                          {'nqn': nqn,
                                           'namespace': {
-                                              'bdev_name': bdev['name']}})
+                                              'bdev_name': bdev['name'],
+                                              'uuid': volume_id,
+                                              'nguid': volume_id_to_nguid(volume_id)}})
                     if not result:
                         raise DeviceException(grpc.StatusCode.INTERNAL,
                                               'Failed to attach volume')

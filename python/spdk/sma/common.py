@@ -15,3 +15,7 @@ def format_volume_id(volume_id):
     except ValueError:
         pass
     return None
+
+
+def volume_id_to_nguid(uuid):
+    return uuid.replace('-', '')
