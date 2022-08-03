@@ -9,9 +9,11 @@
 
 #include "json/json_parse.c"
 
+#define JSONVALUE_NUM 100
+
 static uint8_t g_buf[1000];
 static void *g_end;
-static struct spdk_json_val g_vals[100];
+static struct spdk_json_val g_vals[JSONVALUE_NUM];
 static int g_cur_val;
 
 /* Fill buf with raw data */
@@ -30,7 +32,7 @@ static int g_cur_val;
 	BUF_SETUP(in); \
 	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, flags) == num_vals); \
 	memset(g_vals, 0, sizeof(g_vals)); \
-	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, g_vals, sizeof(g_vals), &g_end, flags | SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == num_vals); \
+	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, g_vals, JSONVALUE_NUM, &g_end, flags | SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == num_vals); \
 	CU_ASSERT(g_end == g_buf + sizeof(in) - sizeof(trailing)); \
 	CU_ASSERT(memcmp(g_end, trailing, sizeof(trailing) - 1) == 0); \
 	g_cur_val = 0
