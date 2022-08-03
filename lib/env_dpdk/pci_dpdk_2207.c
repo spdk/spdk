@@ -14,7 +14,7 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte
 		   "driver_buf not big enough");
 
 static uint64_t
-pci_device_vtophys_2207(struct rte_pci_device *dev, uint64_t vaddr)
+pci_device_vtophys_2207(struct rte_pci_device *dev, uint64_t vaddr, size_t len)
 {
 	struct rte_mem_resource *res;
 	uint64_t paddr;
@@ -22,11 +22,24 @@ pci_device_vtophys_2207(struct rte_pci_device *dev, uint64_t vaddr)
 
 	for (r = 0; r < PCI_MAX_RESOURCE; r++) {
 		res = &dev->mem_resource[r];
-		if (res->phys_addr && vaddr >= (uint64_t)res->addr &&
-		    vaddr < (uint64_t)res->addr + res->len) {
-			paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
-			return paddr;
+
+		if (res->phys_addr == 0 || vaddr < (uint64_t)res->addr ||
+		    (vaddr + len) >= (uint64_t)res->addr + res->len) {
+			continue;
 		}
+
+#if VFIO_ENABLED
+		if (spdk_iommu_is_enabled() && rte_eal_iova_mode() == RTE_IOVA_VA) {
+			/*
+			 * The IOMMU is on and we're using IOVA == VA. The BAR was
+			 * automatically registered when it was mapped, so just return
+			 * the virtual address here.
+			 */
+			return vaddr;
+		}
+#endif
+		paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
+		return paddr;
 	}
 
 	return SPDK_VTOPHYS_ERROR;

@@ -11,6 +11,7 @@
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
+#include "spdk/memory.h"
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
@@ -712,12 +713,54 @@ int
 spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
 			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
 {
-	return dev->map_bar(dev, bar, mapped_addr, phys_addr, size);
+	int rc;
+
+	rc = dev->map_bar(dev, bar, mapped_addr, phys_addr, size);
+	if (rc) {
+		return rc;
+	}
+
+#if VFIO_ENABLED
+	/* Automatically map the BAR to the IOMMU */
+	if (!spdk_iommu_is_enabled()) {
+		return 0;
+	}
+
+	if (rte_eal_iova_mode() == RTE_IOVA_VA) {
+		/* We'll use the virtual address as the iova to match DPDK. */
+		rc = vtophys_iommu_map_dma_bar((uint64_t)(*mapped_addr), (uint64_t) * mapped_addr, *size);
+		if (rc) {
+			dev->unmap_bar(dev, bar, *mapped_addr);
+			return -EFAULT;
+		}
+
+		*phys_addr = (uint64_t)(*mapped_addr);
+	} else {
+		/* We'll use the physical address as the iova to match DPDK. */
+		rc = vtophys_iommu_map_dma_bar((uint64_t)(*mapped_addr), *phys_addr, *size);
+		if (rc) {
+			dev->unmap_bar(dev, bar, *mapped_addr);
+			return -EFAULT;
+		}
+	}
+#endif
+	return rc;
 }
 
 int
 spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr)
 {
+#if VFIO_ENABLED
+	int rc;
+
+	if (spdk_iommu_is_enabled()) {
+		rc = vtophys_iommu_unmap_dma_bar((uint64_t)addr);
+		if (rc) {
+			return -EFAULT;
+		}
+	}
+#endif
+
 	return dev->unmap_bar(dev, bar, addr);
 }
 
