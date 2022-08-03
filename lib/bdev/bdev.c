@@ -1867,9 +1867,17 @@ spdk_bdev_module_fini_start_done(void)
 	}
 }
 
+static void
+bdev_finish_wait_for_examine_done(void *cb_arg)
+{
+	bdev_module_fini_start_iter(NULL);
+}
+
 void
 spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 {
+	int rc;
+
 	assert(cb_fn != NULL);
 
 	g_fini_thread = spdk_get_thread();
@@ -1877,7 +1885,11 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
 
-	bdev_module_fini_start_iter(NULL);
+	rc = spdk_bdev_wait_for_examine(bdev_finish_wait_for_examine_done, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("wait_for_examine failed: %s\n", spdk_strerror(-rc));
+		bdev_finish_wait_for_examine_done(NULL);
+	}
 }
 
 struct spdk_bdev_io *
