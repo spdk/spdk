@@ -286,12 +286,12 @@ def parse_mem_stats(stat_path):
             if state == parse_state.PARSE_MEMZONES:
                 if line.find("Zone") == 0:
                     zone = parse_zone(line)
+                    memory_struct.add_memzone(zone)
                     state = parse_state.PARSE_MEMZONE_SEGMENTS
                 line = stats.readline()
 
             if state == parse_state.PARSE_MEMZONE_SEGMENTS:
                 if line.find("Zone") == 0:
-                    memory_struct.add_memzone(zone)
                     state = parse_state.PARSE_MEMZONES
                     continue
                 elif line.lstrip().find("addr:") == 0:
