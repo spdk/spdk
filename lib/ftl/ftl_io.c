@@ -118,7 +118,7 @@ static void
 ftl_io_cb(struct ftl_io *io, void *arg, int status)
 {
 	struct ftl_io_channel *ioch = ftl_io_channel_get_ctx(io->ioch);
-	size_t result;
+	size_t result  __attribute__((unused));
 
 	if (spdk_unlikely(status)) {
 		io->status = status;
