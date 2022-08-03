@@ -44,9 +44,9 @@ dpdk_pci_init(void)
 }
 
 uint64_t
-dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr)
+dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr, size_t len)
 {
-	return g_dpdk_fn_table->pci_device_vtophys(dev, vaddr);
+	return g_dpdk_fn_table->pci_device_vtophys(dev, vaddr, len);
 }
 
 const char *

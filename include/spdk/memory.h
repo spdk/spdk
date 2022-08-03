@@ -8,6 +8,17 @@
 
 #include "spdk/stdinc.h"
 
+#ifndef __linux__
+#define VFIO_ENABLED 0
+#else
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+#define VFIO_ENABLED 1
+#else
+#define VFIO_ENABLED 0
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

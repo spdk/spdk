@@ -33,6 +33,9 @@ void pci_env_fini(void);
 int mem_map_init(bool legacy_mem);
 int vtophys_init(void);
 
+int vtophys_iommu_map_dma_bar(uint64_t vaddr, uint64_t iova, uint64_t size);
+int vtophys_iommu_unmap_dma_bar(uint64_t vaddr);
+
 struct rte_pci_device;
 
 /**

@@ -26,7 +26,7 @@ struct rte_pci_driver;
 struct rte_device;
 
 struct dpdk_fn_table {
-	uint64_t (*pci_device_vtophys)(struct rte_pci_device *dev, uint64_t vaddr);
+	uint64_t (*pci_device_vtophys)(struct rte_pci_device *dev, uint64_t vaddr, size_t len);
 	const char *(*pci_device_get_name)(struct rte_pci_device *);
 	struct rte_devargs *(*pci_device_get_devargs)(struct rte_pci_device *);
 	void (*pci_device_copy_identifiers)(struct rte_pci_device *_dev, struct spdk_pci_device *dev);
@@ -52,7 +52,7 @@ struct dpdk_fn_table {
 
 int dpdk_pci_init(void);
 
-uint64_t dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr);
+uint64_t dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr, size_t len);
 const char *dpdk_pci_device_get_name(struct rte_pci_device *);
 struct rte_devargs *dpdk_pci_device_get_devargs(struct rte_pci_device *);
 void dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_device *dev);
