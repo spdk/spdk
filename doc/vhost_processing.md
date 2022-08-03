@@ -42,7 +42,7 @@ The initial vhost implementation is a part of the Linux kernel and uses ioctl
 interface to communicate with userspace applications. What makes it possible for
 SPDK to expose a vhost device is Vhost-user protocol.
 
-The [Vhost-user specification](https://git.qemu.org/?p=qemu.git;a=blob_plain;f=docs/interop/vhost-user.txt;hb=HEAD)
+The [Vhost-user specification](https://qemu-project.gitlab.io/qemu/interop/vhost-user.html)
 describes the protocol as follows:
 
 > [Vhost-user protocol] is aiming to complement the ioctl interface used to
@@ -51,17 +51,19 @@ describes the protocol as follows:
 > same host. It uses communication over a Unix domain socket to share file
 > descriptors in the ancillary data of the message.
 >
-> The protocol defines 2 sides of the communication, master and slave. Master is
-> the application that shares its virtqueues, in our case QEMU. Slave is the
-> consumer of the virtqueues.
+> The protocol defines 2 sides of the communication, front-end and back-end.
+> The front-end is the application that shares its virtqueues, in our case QEMU.
+> The back-end is the consumer of the virtqueues.
 >
-> In the current implementation QEMU is the Master, and the Slave is intended to
-> be a software Ethernet switch running in user space, such as Snabbswitch.
+> In the current implementation QEMU is the front-end, and the back-end is
+> the external process consuming the virtio queues, for example a software
+> Ethernet switch running in user space, such as Snabbswitch, or a block
+> device back-end processing read and write to a virtual disk.
 >
-> Master and slave can be either a client (i.e. connecting) or server (listening)
-> in the socket communication.
+> The front-end and back-end can be either a client (i.e. connecting) or
+> server (listening) in the socket communication.
 
-SPDK vhost is a Vhost-user slave server. It exposes Unix domain sockets and
+SPDK vhost is a Vhost-user back-end server. It exposes Unix domain sockets and
 allows external applications to connect.
 
 ## QEMU {#vhost_processing_qemu}
@@ -76,7 +78,7 @@ communicates with SPDK Vhost-SCSI device.
 
 All initialization and management information is exchanged using Vhost-user
 messages. The connection always starts with the feature negotiation. Both
-the Master and the Slave exposes a list of their implemented features and
+the front-end and the back-end expose a list of their implemented features and
 upon negotiation they choose a common set of those. Most of these features are
 implementation-related, but also regard e.g. multiqueue support or live migration.
 
@@ -94,7 +96,7 @@ the following data:
 - user offset - positive offset for the mmap
 - size
 
-The Master will send new memory regions after each memory change - usually
+The front-end will send new memory regions after each memory change - usually
 hotplug/hotremove. The previous mappings will be removed.
 
 Drivers may also request a device config, consisting of e.g. disk geometry.
@@ -116,7 +118,7 @@ polled as soon as they're initialized.
 
 ## I/O path {#vhost_processing_io_path}
 
-The Master sends I/O by allocating proper buffers in shared memory, filling
+The front-end sends I/O by allocating proper buffers in shared memory, filling
 the request data, and putting guest addresses of those buffers into virtqueues.
 
 A Virtio-Block request looks as follows.
