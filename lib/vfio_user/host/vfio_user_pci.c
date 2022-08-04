@@ -421,4 +421,13 @@ spdk_vfio_user_get_bar_addr(struct vfio_device *dev, uint32_t index, uint64_t of
 	return NULL;
 }
 
+/* For fuzzing only */
+int
+spdk_vfio_user_dev_send_request(struct vfio_device *dev, enum vfio_user_command command,
+				void *arg, size_t arg_len, size_t buf_len, int *fds,
+				int max_fds)
+{
+	return vfio_user_dev_send_request(dev, command, arg, arg_len, buf_len, fds, max_fds);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(vfio_pci)

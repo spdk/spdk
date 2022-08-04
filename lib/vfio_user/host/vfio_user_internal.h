@@ -65,5 +65,9 @@ int vfio_user_get_dev_region_info(struct vfio_device *dev, struct vfio_region_in
 int vfio_user_dev_dma_map_unmap(struct vfio_device *dev, struct vfio_memory_region *mr, bool map);
 int vfio_user_dev_mmio_access(struct vfio_device *dev, uint32_t index, uint64_t offset, size_t len,
 			      void *buf, bool is_write);
+/* For fuzzing only */
+int vfio_user_dev_send_request(struct vfio_device *dev, enum vfio_user_command command,
+			       void *arg, size_t arg_len, size_t buf_len, int *fds,
+			       int max_fds);
 
 #endif

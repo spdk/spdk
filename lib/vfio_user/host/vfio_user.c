@@ -157,7 +157,7 @@ vfio_user_read(int fd, struct vfio_user_request *req)
 	return 0;
 }
 
-static int
+int
 vfio_user_dev_send_request(struct vfio_device *dev, enum vfio_user_command command,
 			   void *arg, size_t arg_len, size_t buf_len, int *fds, int max_fds)
 {

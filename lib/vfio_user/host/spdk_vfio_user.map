@@ -6,6 +6,7 @@
 	spdk_vfio_user_get_bar_addr;
 	spdk_vfio_user_setup;
 	spdk_vfio_user_release;
+	spdk_vfio_user_dev_send_request;
 
 	local: *;
 };
