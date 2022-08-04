@@ -1444,6 +1444,62 @@ spdk_vmd_hotplug_monitor(void)
 	return num_hotplugs;
 }
 
+static int
+vmd_attach_device(const struct spdk_pci_addr *addr)
+{
+	struct vmd_pci_bus *bus;
+	struct vmd_adapter *vmd;
+	struct vmd_pci_device *dev;
+	uint32_t i;
+	int rc;
+
+	/* VMD always sets function to zero */
+	if (addr->func != 0) {
+		return -ENODEV;
+	}
+
+	for (i = 0; i < g_vmd_container.count; ++i) {
+		vmd = &g_vmd_container.vmd[i];
+		if (vmd->domain != addr->domain) {
+			continue;
+		}
+
+		TAILQ_FOREACH(bus, &vmd->bus_list, tailq) {
+			if (bus->bus_number != addr->bus) {
+				continue;
+			}
+
+			dev = vmd_alloc_dev(bus, addr->dev);
+			if (dev == NULL) {
+				return -ENODEV;
+			}
+
+			/* Only allow attaching endpoint devices */
+			if (dev->header->common.header_type & PCI_HEADER_TYPE_BRIDGE) {
+				free(dev);
+				return -ENODEV;
+			}
+
+			rc = vmd_init_end_device(dev);
+			if (rc != 0) {
+				free(dev);
+				return -ENODEV;
+			}
+
+			return 0;
+		}
+	}
+
+	return -ENODEV;
+}
+
+static struct spdk_pci_device_provider g_vmd_device_provider = {
+	.name = "vmd",
+	.attach_cb = vmd_attach_device,
+};
+
+SPDK_PCI_REGISTER_DEVICE_PROVIDER(vmd, &g_vmd_device_provider);
+
 int
 spdk_vmd_init(void)
 {
