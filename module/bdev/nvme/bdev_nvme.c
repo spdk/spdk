@@ -3851,7 +3851,7 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	union spdk_nvme_async_event_completion	event;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		SPDK_WARNLOG("AER request execute failed");
+		SPDK_WARNLOG("AER request execute failed\n");
 		return;
 	}
 
