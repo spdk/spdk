@@ -920,6 +920,33 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	}
 }
 
+static int
+vmd_init_end_device(struct vmd_pci_device *dev)
+{
+	struct vmd_pci_bus *bus = dev->bus;
+	struct vmd_adapter *vmd;
+
+	/* Attach the device to the current bus and assign base addresses */
+	TAILQ_INSERT_TAIL(&bus->dev_list, dev, tailq);
+	g_end_device_count++;
+	if (vmd_assign_base_addrs(dev)) {
+		vmd_setup_msix(dev, &bus->vmd->msix_table[0]);
+		vmd_dev_init(dev);
+		if (vmd_is_supported_device(dev)) {
+			vmd = bus->vmd;
+			vmd->target[vmd->nvme_count] = dev;
+			vmd->nvme_count++;
+		}
+
+		return 0;
+	} else {
+		SPDK_INFOLOG(vmd, "Removing failed device:%p\n", dev);
+		TAILQ_REMOVE(&bus->dev_list, dev, tailq);
+
+		return -1;
+	}
+}
+
 /*
  * Scans a single bus for all devices attached and return a count of
  * how many devices found. In the VMD topology, it is assume there are no multi-
@@ -945,11 +972,11 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 {
 	/* assuming only single function devices are on the bus */
 	struct vmd_pci_device *new_dev;
-	struct vmd_adapter *vmd;
 	union express_slot_capabilities_register slot_cap;
 	struct vmd_pci_bus *new_bus;
 	uint8_t  device_number, dev_cnt = 0;
 	uint8_t new_bus_num;
+	int rc;
 
 	for (device_number = 0; device_number < 32; device_number++) {
 		new_dev = vmd_alloc_dev(bus, device_number);
@@ -1012,20 +1039,8 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 				}
 			}
 		} else {
-			/* Attach the device to the current bus and assign base addresses */
-			TAILQ_INSERT_TAIL(&bus->dev_list, new_dev, tailq);
-			g_end_device_count++;
-			if (vmd_assign_base_addrs(new_dev)) {
-				vmd_setup_msix(new_dev, &bus->vmd->msix_table[0]);
-				vmd_dev_init(new_dev);
-				if (vmd_is_supported_device(new_dev)) {
-					vmd = bus->vmd;
-					vmd->target[vmd->nvme_count] = new_dev;
-					vmd->nvme_count++;
-				}
-			} else {
-				SPDK_DEBUGLOG(vmd, "Removing failed device:%p\n", new_dev);
-				TAILQ_REMOVE(&bus->dev_list, new_dev, tailq);
+			rc = vmd_init_end_device(new_dev);
+			if (rc != 0) {
 				free(new_dev);
 				if (dev_cnt) {
 					dev_cnt--;
