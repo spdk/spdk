@@ -624,15 +624,9 @@ for_each_channel_unreg(void)
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 	CU_ASSERT(RB_NEXT(io_device_tree, &g_io_devices, dev) == NULL);
 	ch0 = spdk_get_io_channel(&io_target);
-	spdk_for_each_channel(&io_target, unreg_ch_done, &ctx, unreg_foreach_done);
 
-	spdk_io_device_unregister(&io_target, NULL);
-	/*
-	 * There is an outstanding foreach call on the io_device, so the unregister should not
-	 *  have removed the device.
-	 */
-	CU_ASSERT(dev == RB_MIN(io_device_tree, &g_io_devices));
 	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
+
 	/*
 	 * There is already a device registered at &io_target, so a new io_device should not
 	 *  have been added to g_io_devices.
@@ -640,14 +634,22 @@ for_each_channel_unreg(void)
 	CU_ASSERT(dev == RB_MIN(io_device_tree, &g_io_devices));
 	CU_ASSERT(RB_NEXT(io_device_tree, &g_io_devices, dev) == NULL);
 
+	spdk_for_each_channel(&io_target, unreg_ch_done, &ctx, unreg_foreach_done);
+	spdk_io_device_unregister(&io_target, NULL);
+	/*
+	 * There is an outstanding foreach call on the io_device, so the unregister should not
+	 *  have immediately removed the device.
+	 */
+	CU_ASSERT(dev == RB_MIN(io_device_tree, &g_io_devices));
+
 	poll_thread(0);
 	CU_ASSERT(ctx.ch_done == true);
 	CU_ASSERT(ctx.foreach_done == true);
+
 	/*
-	 * There are no more foreach operations outstanding, so we can unregister the device,
-	 *  even though a channel still exists for the device.
+	 * There are no more foreach operations outstanding, so the device should be
+	 * unregistered.
 	 */
-	spdk_io_device_unregister(&io_target, NULL);
 	CU_ASSERT(RB_EMPTY(&g_io_devices));
 
 	set_thread(0);

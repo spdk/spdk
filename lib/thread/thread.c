@@ -161,6 +161,7 @@ struct io_device {
 
 	uint32_t			refcnt;
 
+	bool				pending_unregister;
 	bool				unregistered;
 };
 
@@ -2044,18 +2045,31 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 		return;
 	}
 
-	if (dev->for_each_count > 0) {
-		SPDK_ERRLOG("io_device %s (%p) has %u for_each calls outstanding\n",
-			    dev->name, io_device, dev->for_each_count);
+	/* The for_each_count check differentiates the user attempting to unregister the
+	 * device a second time, from the internal call to this function that occurs
+	 * after the for_each_count reaches 0.
+	 */
+	if (dev->pending_unregister && dev->for_each_count > 0) {
+		SPDK_ERRLOG("io_device %p already has a pending unregister\n", io_device);
+		assert(false);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
 
 	dev->unregister_cb = unregister_cb;
+	dev->unregister_thread = thread;
+
+	if (dev->for_each_count > 0) {
+		SPDK_WARNLOG("io_device %s (%p) has %u for_each calls outstanding\n",
+			     dev->name, io_device, dev->for_each_count);
+		dev->pending_unregister = true;
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
+	}
+
 	dev->unregistered = true;
 	RB_REMOVE(io_device_tree, &g_io_devices, dev);
 	refcnt = dev->refcnt;
-	dev->unregister_thread = thread;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	SPDK_DEBUGLOG(thread, "Unregistering io_device %s (%p) from thread %s\n",
@@ -2385,6 +2399,15 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 		goto end;
 	}
 
+	/* Do not allow new for_each operations if we are already waiting to unregister
+	 * the device for other for_each operations to complete.
+	 */
+	if (i->dev->pending_unregister) {
+		SPDK_ERRLOG("io_device %p has a pending unregister\n", io_device);
+		i->status = -ENODEV;
+		goto end;
+	}
+
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		ch = thread_get_io_channel(thread, i->dev);
 		if (ch != NULL) {
@@ -2405,11 +2428,22 @@ end:
 	assert(rc == 0);
 }
 
+static void
+__pending_unregister(void *arg)
+{
+	struct io_device *dev = arg;
+
+	assert(dev->pending_unregister);
+	assert(dev->for_each_count == 0);
+	spdk_io_device_unregister(dev->io_device, dev->unregister_cb);
+}
+
 void
 spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
+	struct io_device *dev;
 	int rc __attribute__((unused));
 
 	assert(i->cur_thread == spdk_get_thread());
@@ -2417,12 +2451,14 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 	i->status = status;
 
 	pthread_mutex_lock(&g_devlist_mutex);
+	dev = i->dev;
 	if (status) {
 		goto end;
 	}
+
 	thread = TAILQ_NEXT(i->cur_thread, tailq);
 	while (thread) {
-		ch = thread_get_io_channel(thread, i->dev);
+		ch = thread_get_io_channel(thread, dev);
 		if (ch != NULL) {
 			i->cur_thread = thread;
 			i->ch = ch;
@@ -2435,12 +2471,19 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 	}
 
 end:
-	i->dev->for_each_count--;
+	dev->for_each_count--;
 	i->ch = NULL;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	rc = spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 	assert(rc == 0);
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	if (dev->pending_unregister && dev->for_each_count == 0) {
+		rc = spdk_thread_send_msg(dev->unregister_thread, __pending_unregister, dev);
+		assert(rc == 0);
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
 }
 
 struct spdk_interrupt {
