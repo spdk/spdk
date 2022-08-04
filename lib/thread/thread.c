@@ -256,7 +256,7 @@ _thread_lib_init(size_t ctx_sz, size_t msg_mempool_sz)
 
 	if (!g_spdk_msg_mempool) {
 		SPDK_ERRLOG("spdk_msg_mempool creation failed\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	return 0;
