@@ -10,3 +10,4 @@ run_test "sma_vfiouser_qemu" $testdir/vfiouser_qemu.sh
 run_test "sma_plugins" $testdir/plugins.sh
 run_test "sma_discovery" $testdir/discovery.sh
 run_test "sma_vhost" $testdir/vhost_blk.sh
+run_test "sma_crypto" $testdir/crypto.sh
