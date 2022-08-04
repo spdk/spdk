@@ -6,6 +6,7 @@
 #include "vmd_internal.h"
 
 #include "spdk/stdinc.h"
+#include "spdk/string.h"
 #include "spdk/likely.h"
 
 static unsigned char *device_type[] = {
@@ -896,6 +897,7 @@ vmd_init_end_device(struct vmd_pci_device *dev)
 	struct vmd_pci_bus *bus = dev->bus;
 	struct vmd_adapter *vmd;
 	uint8_t bdf[32];
+	int rc;
 
 	if (!vmd_assign_base_addrs(dev)) {
 		SPDK_ERRLOG("Failed to allocate BARs for device: %p\n", dev);
@@ -909,7 +911,12 @@ vmd_init_end_device(struct vmd_pci_device *dev)
 		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
 		SPDK_INFOLOG(vmd, "Initializing NVMe device at %s\n", bdf);
 		dev->pci.parent = dev->bus->vmd->pci;
-		spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
+
+		rc = spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to hook device %s: %s\n", bdf, spdk_strerror(-rc));
+			return -1;
+		}
 
 		vmd = bus->vmd;
 		vmd->target[vmd->nvme_count] = dev;

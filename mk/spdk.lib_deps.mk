@@ -22,7 +22,7 @@ DEPDIRS-ioat := log
 DEPDIRS-idxd := log util
 DEPDIRS-sock := log $(JSON_LIBS)
 DEPDIRS-util := log
-DEPDIRS-vmd := log
+DEPDIRS-vmd := log util
 DEPDIRS-dma := log
 DEPDIRS-trace_parser := log
 ifeq ($(CONFIG_VFIO_USER),y)

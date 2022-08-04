@@ -1149,8 +1149,10 @@ int spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr);
  *
  * \param drv driver that will be able to attach the device
  * \param dev fully initialized PCI device struct
+ *
+ * \return 0 on success, negative errno otherwise.
  */
-void spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *dev);
+int spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *dev);
 
 /**
  * Un-hook a custom PCI device from the PCI layer. The device must not be attached.

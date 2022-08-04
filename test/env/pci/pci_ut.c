@@ -125,7 +125,8 @@ pci_hook_test(void)
 	ut_dev.pci.cfg_write = ut_cfg_write;
 
 	/* hook the device into the PCI layer */
-	spdk_pci_hook_device(&ut_pci_driver, &ut_dev.pci);
+	rc = spdk_pci_hook_device(&ut_pci_driver, &ut_dev.pci);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	/* try to attach a device with the matching driver and bdf */
 	rc = spdk_pci_device_attach(&ut_pci_driver, ut_enum_cb, NULL, &ut_dev.pci.addr);

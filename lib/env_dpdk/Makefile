@@ -6,8 +6,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 9
-SO_MINOR := 1
+SO_VER := 10
+SO_MINOR := 0
 
 CFLAGS += $(ENV_CFLAGS)
 C_SRCS = env.c memory.c pci.c init.c threads.c
