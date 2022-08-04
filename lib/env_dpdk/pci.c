@@ -1178,11 +1178,21 @@ spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
 void
 spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *dev)
 {
+	int rc;
+
 	assert(dev->map_bar != NULL);
 	assert(dev->unmap_bar != NULL);
 	assert(dev->cfg_read != NULL);
 	assert(dev->cfg_write != NULL);
 	dev->internal.driver = drv;
+
+	if (drv->cb_fn != NULL) {
+		rc = drv->cb_fn(drv->cb_arg, dev);
+		if (rc == 0) {
+			dev->internal.attached = true;
+		}
+	}
+
 	TAILQ_INSERT_TAIL(&g_pci_devices, dev, internal.tailq);
 }
 
