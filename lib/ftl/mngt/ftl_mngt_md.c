@@ -103,10 +103,11 @@ persist(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt,
 	enum ftl_layout_region_type type)
 {
 	struct ftl_layout *layout = &dev->layout;
-	struct ftl_md *md = layout->md[type];
+	struct ftl_md *md;
 
 	assert(type < FTL_LAYOUT_REGION_TYPE_MAX);
 
+	md = layout->md[type];
 	if (!md) {
 		ftl_mngt_fail_step(mngt);
 		return;
