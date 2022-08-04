@@ -3,6 +3,7 @@
 ## Release 22.05
 
 - [SPDK 22.05 NVMe Bdev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2205.pdf)
+- [SPDK 22.05 NVMe-oF TCP Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_tcp_perf_report_2205.pdf)
 
 ## Release 22.01
 
