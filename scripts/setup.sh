@@ -421,7 +421,7 @@ function cleanup_linux() {
 	shopt -u extglob nullglob
 
 	files_to_clean+="$(ls -1 /dev/shm/* \
-		| grep -E '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf|vhost_fuzz|nvme_fuzz)_trace|spdk_iscsi_conns' || true) "
+		| grep -E '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf|vhost_fuzz|nvme_fuzz|accel_perf|bdev_svc)_trace|spdk_iscsi_conns' || true) "
 	files_to_clean+=" ${file_locks[*]}"
 	files_to_clean="$(readlink -e assert_not_empty $files_to_clean || true)"
 	if [[ -z "$files_to_clean" ]]; then
