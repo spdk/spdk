@@ -523,6 +523,11 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 		return 1;
 	}
 
+	if (opts_user->name == NULL) {
+		SPDK_ERRLOG("spdk_app_opts::name not specified\n");
+		return 1;
+	}
+
 	app_copy_opts(opts, opts_user, opts_user->opts_size);
 
 	if (!start_fn) {

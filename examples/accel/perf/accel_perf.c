@@ -780,6 +780,7 @@ main(int argc, char **argv)
 
 	pthread_mutex_init(&g_workers_lock, NULL);
 	spdk_app_opts_init(&opts, sizeof(opts));
+	opts.name = "accel_perf";
 	opts.reactor_mask = "0x1";
 	if (spdk_app_parse_args(argc, argv, &opts, "a:C:o:q:t:yw:P:f:T:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
