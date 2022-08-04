@@ -2381,6 +2381,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	if (i->dev == NULL) {
 		SPDK_ERRLOG("could not find io_device %p\n", io_device);
 		assert(false);
+		i->status = -ENODEV;
 		goto end;
 	}
 
