@@ -246,8 +246,15 @@ spdk_reactors_init(size_t msg_mempool_size)
 
 	memset(g_reactors, 0, (g_reactor_count) * sizeof(struct spdk_reactor));
 
-	spdk_thread_lib_init_ext(reactor_thread_op, reactor_thread_op_supported,
-				 sizeof(struct spdk_lw_thread), msg_mempool_size);
+	rc = spdk_thread_lib_init_ext(reactor_thread_op, reactor_thread_op_supported,
+				      sizeof(struct spdk_lw_thread), msg_mempool_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("Initialize spdk thread lib failed\n");
+		spdk_mempool_free(g_spdk_event_mempool);
+		free(g_reactors);
+		free(g_core_infos);
+		return rc;
+	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor_construct(&g_reactors[i], i);
