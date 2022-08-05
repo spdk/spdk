@@ -453,8 +453,13 @@ SPDK_TRACE_REGISTER_FN(dsa_trace, "dsa", TRACE_GROUP_ACCEL_DSA)
 					0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
 
-SPDK_ACCEL_MODULE_REGISTER(accel_engine_dsa_init, accel_engine_dsa_exit,
-			   accel_engine_dsa_write_config_json,
-			   accel_engine_dsa_get_ctx_size)
+static struct spdk_accel_module_if g_dsa_module = {
+	.module_init = accel_engine_dsa_init,
+	.module_fini = accel_engine_dsa_exit,
+	.write_config_json = accel_engine_dsa_write_config_json,
+	.get_ctx_size = accel_engine_dsa_get_ctx_size
+};
+
+SPDK_ACCEL_MODULE_REGISTER(dsa, &g_dsa_module)
 
 SPDK_LOG_REGISTER_COMPONENT(accel_dsa)

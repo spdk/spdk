@@ -117,16 +117,10 @@ struct spdk_accel_module_if {
 void spdk_accel_engine_register(struct spdk_accel_engine *accel_engine);
 void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module);
 
-#define SPDK_ACCEL_MODULE_REGISTER(init_fn, fini_fn, config_json, ctx_size_fn)				\
-	static struct spdk_accel_module_if init_fn ## _if = {						\
-	.module_init		= init_fn,								\
-	.module_fini		= fini_fn,								\
-	.write_config_json	= config_json,								\
-	.get_ctx_size		= ctx_size_fn,								\
-	};												\
-	__attribute__((constructor)) static void init_fn ## _init(void)					\
-	{												\
-		spdk_accel_module_list_add(&init_fn ## _if);						\
-	}
+#define SPDK_ACCEL_MODULE_REGISTER(name, module) \
+static void __attribute__((constructor)) _spdk_accel_module_register_##name(void) \
+{ \
+	spdk_accel_module_list_add(module); \
+}
 
 #endif

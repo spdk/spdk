@@ -76,8 +76,14 @@ accel_engine_ioat_get_ctx_size(void)
 	return 0;
 }
 
-SPDK_ACCEL_MODULE_REGISTER(accel_engine_ioat_init, accel_engine_ioat_exit,
-			   NULL, accel_engine_ioat_get_ctx_size)
+static struct spdk_accel_module_if g_ioat_module = {
+	.module_init = accel_engine_ioat_init,
+	.module_fini = accel_engine_ioat_exit,
+	.write_config_json = NULL,
+	.get_ctx_size = accel_engine_ioat_get_ctx_size
+};
+
+SPDK_ACCEL_MODULE_REGISTER(ioat, &g_ioat_module)
 
 static void
 ioat_done(void *cb_arg)

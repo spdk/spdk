@@ -389,8 +389,13 @@ SPDK_TRACE_REGISTER_FN(iaa_trace, "iaa", TRACE_GROUP_ACCEL_IAA)
 					OBJECT_NONE, 0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
 
-SPDK_ACCEL_MODULE_REGISTER(iaccel_engine_iaa_init, accel_engine_iaa_exit,
-			   accel_engine_iaa_write_config_json,
-			   accel_engine_iaa_get_ctx_size)
+static struct spdk_accel_module_if g_iaa_module = {
+	.module_init = iaccel_engine_iaa_init,
+	.module_fini = accel_engine_iaa_exit,
+	.write_config_json = accel_engine_iaa_write_config_json,
+	.get_ctx_size = accel_engine_iaa_get_ctx_size
+};
+
+SPDK_ACCEL_MODULE_REGISTER(iaa, &g_iaa_module)
 
 SPDK_LOG_REGISTER_COMPONENT(accel_iaa)

@@ -1053,5 +1053,11 @@ sw_accel_engine_fini(void *ctxt)
 
 SPDK_LOG_REGISTER_COMPONENT(accel)
 
-SPDK_ACCEL_MODULE_REGISTER(sw_accel_engine_init, sw_accel_engine_fini,
-			   NULL, sw_accel_engine_get_ctx_size)
+static struct spdk_accel_module_if g_sw_module = {
+	.module_init = sw_accel_engine_init,
+	.module_fini = sw_accel_engine_fini,
+	.write_config_json = NULL,
+	.get_ctx_size = sw_accel_engine_get_ctx_size
+};
+
+SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)
