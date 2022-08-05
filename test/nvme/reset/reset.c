@@ -298,7 +298,6 @@ usage(char *program_name)
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
 	printf("\t[-t time in seconds(should be larger than 15 seconds)]\n");
-	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default:0 - unlimited)\n");
 }
 
@@ -354,7 +353,7 @@ parse_args(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_rw_percentage = -1;
 
-	while ((op = getopt(argc, argv, "m:q:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "q:s:t:w:M:")) != -1) {
 		if (op == 'w') {
 			workload_type = optarg;
 		} else if (op == '?') {
