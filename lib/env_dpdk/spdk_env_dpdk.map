@@ -97,6 +97,7 @@
 	spdk_pci_hook_device;
 	spdk_pci_unhook_device;
 	spdk_pci_device_get_type;
+	spdk_pci_register_device_provider;
 	spdk_unaffinitize_thread;
 	spdk_call_unaffinitized;
 	spdk_mem_map_alloc;

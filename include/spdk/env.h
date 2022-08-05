@@ -1168,6 +1168,34 @@ void spdk_pci_unhook_device(struct spdk_pci_device *dev);
  */
 const char *spdk_pci_device_get_type(const struct spdk_pci_device *dev);
 
+struct spdk_pci_device_provider {
+	const char *name;
+
+	/**
+	 * Callback executed to attach a PCI device on a given address.
+	 *
+	 * \param addr address of the device.
+	 *
+	 * \return 0 if the device was attached successfully, negative errno otherwise.
+	 */
+	int (*attach_cb)(const struct spdk_pci_addr *addr);
+
+	TAILQ_ENTRY(spdk_pci_device_provider) tailq;
+};
+
+/**
+ * Register a PCI device provdier.
+ *
+ * \param provider PCI device provider.
+ */
+void spdk_pci_register_device_provider(struct spdk_pci_device_provider *provider);
+
+#define SPDK_PCI_REGISTER_DEVICE_PROVIDER(name, provider) \
+	static void __attribute__((constructor)) _spdk_pci_register_device_provider_##name(void) \
+	{ \
+		spdk_pci_register_device_provider(provider); \
+	}
+
 /**
  * Remove any CPU affinity from the current thread.
  */
