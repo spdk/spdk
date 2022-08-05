@@ -7,6 +7,8 @@
 
 #include "spdk_internal/accel_engine.h"
 
+#include "accel_internal.h"
+
 #include "spdk/env.h"
 #include "spdk/likely.h"
 #include "spdk/log.h"
@@ -17,6 +19,10 @@
 
 #ifdef SPDK_CONFIG_PMDK
 #include "libpmem.h"
+#endif
+
+#ifdef SPDK_CONFIG_ISAL
+#include "../isa-l/include/igzip_lib.h"
 #endif
 
 /* Accelerator Engine Framework: The following provides a top level
@@ -140,6 +146,16 @@ _get_task(struct accel_io_channel *accel_ch, spdk_accel_completion_cb cb_fn, voi
 
 	return accel_task;
 }
+
+struct sw_accel_io_channel {
+	/* for ISAL */
+#ifdef SPDK_CONFIG_ISAL
+	struct isal_zstream		stream;
+	struct inflate_state		state;
+#endif
+	struct spdk_poller		*completion_poller;
+	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
+};
 
 /* Post SW completions to a list and complete in a poller as we don't want to
  * complete them on the caller's stack as they'll likely submit another. */

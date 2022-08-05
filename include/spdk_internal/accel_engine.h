@@ -16,16 +16,6 @@
 #include "../isa-l/include/igzip_lib.h"
 #endif
 
-struct engine_info {
-	struct spdk_json_write_ctx *w;
-	const char *name;
-	enum accel_opcode ops[ACCEL_OPC_LAST];
-	uint32_t num_ops;
-};
-
-typedef void (*_accel_for_each_engine_fn)(struct engine_info *info);
-void _accel_for_each_engine(struct engine_info *info, _accel_for_each_engine_fn fn);
-
 struct spdk_accel_task;
 
 void spdk_accel_task_complete(struct spdk_accel_task *task, int status);
@@ -39,11 +29,6 @@ struct accel_io_channel {
 #endif
 	void				*task_pool_base;
 	TAILQ_HEAD(, spdk_accel_task)	task_pool;
-};
-
-struct sw_accel_io_channel {
-	struct spdk_poller		*completion_poller;
-	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
 };
 
 struct spdk_accel_task {

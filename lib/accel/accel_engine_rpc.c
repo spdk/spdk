@@ -3,7 +3,7 @@
  *   All rights reserved.
  */
 
-#include "spdk_internal/accel_engine.h"
+#include "accel_internal.h"
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"
