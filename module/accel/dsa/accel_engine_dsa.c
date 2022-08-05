@@ -292,6 +292,10 @@ accel_engine_dsa_get_ctx_size(void)
 static bool
 dsa_supports_opcode(enum accel_opcode opc)
 {
+	if (!g_dsa_initialized) {
+		return false;
+	}
+
 	switch (opc) {
 	case ACCEL_OPC_COPY:
 	case ACCEL_OPC_FILL:
@@ -305,12 +309,22 @@ dsa_supports_opcode(enum accel_opcode opc)
 	}
 }
 
-static struct spdk_accel_engine dsa_accel_engine = {
+static int accel_engine_dsa_init(void);
+static void accel_engine_dsa_exit(void *ctx);
+static void accel_engine_dsa_write_config_json(struct spdk_json_write_ctx *w);
+
+static struct spdk_accel_module_if g_dsa_module = {
+	.module_init = accel_engine_dsa_init,
+	.module_fini = accel_engine_dsa_exit,
+	.write_config_json = accel_engine_dsa_write_config_json,
+	.get_ctx_size = accel_engine_dsa_get_ctx_size,
 	.name			= "dsa",
 	.supports_opcode	= dsa_supports_opcode,
 	.get_io_channel		= dsa_get_io_channel,
-	.submit_tasks		= dsa_submit_tasks,
+	.submit_tasks		= dsa_submit_tasks
 };
+
+SPDK_ACCEL_MODULE_REGISTER(dsa, &g_dsa_module)
 
 static int
 dsa_create_cb(void *io_device, void *ctx_buf)
@@ -345,7 +359,7 @@ dsa_destroy_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 dsa_get_io_channel(void)
 {
-	return spdk_get_io_channel(&dsa_accel_engine);
+	return spdk_get_io_channel(&g_dsa_module);
 }
 
 static void
@@ -405,8 +419,7 @@ accel_engine_dsa_init(void)
 
 	g_dsa_initialized = true;
 	SPDK_NOTICELOG("Accel framework DSA engine initialized.\n");
-	spdk_accel_engine_register(&dsa_accel_engine);
-	spdk_io_device_register(&dsa_accel_engine, dsa_create_cb, dsa_destroy_cb,
+	spdk_io_device_register(&g_dsa_module, dsa_create_cb, dsa_destroy_cb,
 				sizeof(struct idxd_io_channel), "dsa_accel_engine");
 	return 0;
 }
@@ -417,7 +430,8 @@ accel_engine_dsa_exit(void *ctx)
 	struct idxd_device *dev;
 
 	if (g_dsa_initialized) {
-		spdk_io_device_unregister(&dsa_accel_engine, NULL);
+		spdk_io_device_unregister(&g_dsa_module, NULL);
+		g_dsa_initialized = false;
 	}
 
 	while (!TAILQ_EMPTY(&g_dsa_devices)) {
@@ -452,14 +466,5 @@ SPDK_TRACE_REGISTER_FN(dsa_trace, "dsa", TRACE_GROUP_ACCEL_DSA)
 					OBJECT_NONE,
 					0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
-
-static struct spdk_accel_module_if g_dsa_module = {
-	.module_init = accel_engine_dsa_init,
-	.module_fini = accel_engine_dsa_exit,
-	.write_config_json = accel_engine_dsa_write_config_json,
-	.get_ctx_size = accel_engine_dsa_get_ctx_size
-};
-
-SPDK_ACCEL_MODULE_REGISTER(dsa, &g_dsa_module)
 
 SPDK_LOG_REGISTER_COMPONENT(accel_dsa)

@@ -21,7 +21,6 @@
 	spdk_accel_write_config_json;
 
 	# functions needed by modules
-	spdk_accel_engine_register;
 	spdk_accel_module_list_add;
 	spdk_accel_task_complete;
 

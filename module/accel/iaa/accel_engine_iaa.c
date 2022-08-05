@@ -236,6 +236,10 @@ accel_engine_iaa_get_ctx_size(void)
 static bool
 iaa_supports_opcode(enum accel_opcode opc)
 {
+	if (!g_iaa_initialized) {
+		return false;
+	}
+
 	switch (opc) {
 	case ACCEL_OPC_COMPRESS:
 	case ACCEL_OPC_DECOMPRESS:
@@ -245,12 +249,22 @@ iaa_supports_opcode(enum accel_opcode opc)
 	}
 }
 
-static struct spdk_accel_engine iaa_accel_engine = {
+static int accel_engine_iaa_init(void);
+static void accel_engine_iaa_exit(void *ctx);
+static void accel_engine_iaa_write_config_json(struct spdk_json_write_ctx *w);
+
+static struct spdk_accel_module_if g_iaa_module = {
+	.module_init = accel_engine_iaa_init,
+	.module_fini = accel_engine_iaa_exit,
+	.write_config_json = accel_engine_iaa_write_config_json,
+	.get_ctx_size = accel_engine_iaa_get_ctx_size,
 	.name			= "iaa",
 	.supports_opcode	= iaa_supports_opcode,
 	.get_io_channel		= iaa_get_io_channel,
-	.submit_tasks		= iaa_submit_tasks,
+	.submit_tasks		= iaa_submit_tasks
 };
+
+SPDK_ACCEL_MODULE_REGISTER(iaa, &g_iaa_module)
 
 static int
 idxd_create_cb(void *io_device, void *ctx_buf)
@@ -285,7 +299,7 @@ idxd_destroy_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 iaa_get_io_channel(void)
 {
-	return spdk_get_io_channel(&iaa_accel_engine);
+	return spdk_get_io_channel(&g_iaa_module);
 }
 
 static void
@@ -327,7 +341,7 @@ caller_probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static int
-iaccel_engine_iaa_init(void)
+accel_engine_iaa_init(void)
 {
 	if (!g_iaa_enable) {
 		return -EINVAL;
@@ -345,8 +359,7 @@ iaccel_engine_iaa_init(void)
 
 	g_iaa_initialized = true;
 	SPDK_NOTICELOG("Accel framework IAA engine initialized.\n");
-	spdk_accel_engine_register(&iaa_accel_engine);
-	spdk_io_device_register(&iaa_accel_engine, idxd_create_cb, idxd_destroy_cb,
+	spdk_io_device_register(&g_iaa_module, idxd_create_cb, idxd_destroy_cb,
 				sizeof(struct idxd_io_channel), "iaa_accel_engine");
 	return 0;
 }
@@ -357,7 +370,8 @@ accel_engine_iaa_exit(void *ctx)
 	struct idxd_device *dev;
 
 	if (g_iaa_initialized) {
-		spdk_io_device_unregister(&iaa_accel_engine, NULL);
+		spdk_io_device_unregister(&g_iaa_module, NULL);
+		g_iaa_initialized = false;
 	}
 
 	while (!TAILQ_EMPTY(&g_iaa_devices)) {
@@ -388,14 +402,5 @@ SPDK_TRACE_REGISTER_FN(iaa_trace, "iaa", TRACE_GROUP_ACCEL_IAA)
 	spdk_trace_register_description("IAA_OP_COMPLETE", TRACE_ACCEL_IAA_OP_COMPLETE, OWNER_NONE,
 					OBJECT_NONE, 0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
-
-static struct spdk_accel_module_if g_iaa_module = {
-	.module_init = iaccel_engine_iaa_init,
-	.module_fini = accel_engine_iaa_exit,
-	.write_config_json = accel_engine_iaa_write_config_json,
-	.get_ctx_size = accel_engine_iaa_get_ctx_size
-};
-
-SPDK_ACCEL_MODULE_REGISTER(iaa, &g_iaa_module)
 
 SPDK_LOG_REGISTER_COMPONENT(accel_iaa)

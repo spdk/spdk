@@ -20,7 +20,7 @@ DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NU
 #endif
 
 /* global vars and setup/cleanup functions used for all test functions */
-struct spdk_accel_engine g_accel_engine = {};
+struct spdk_accel_module_if g_accel_module = {};
 struct spdk_io_channel *g_ch = NULL;
 struct accel_io_channel *g_accel_ch = NULL;
 struct sw_accel_io_channel *g_sw_ch = NULL;
@@ -61,16 +61,16 @@ test_setup(void)
 		return -1;
 	}
 
-	g_accel_engine.submit_tasks = sw_accel_submit_tasks;
-	g_accel_engine.name = "software";
+	g_accel_module.submit_tasks = sw_accel_submit_tasks;
+	g_accel_module.name = "software";
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
 		g_accel_ch->engine_ch[i] = g_engine_ch;
-		g_engines_opc[i] = &g_accel_engine;
+		g_engines_opc[i] = &g_accel_module;
 	}
 	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_engine_ch + sizeof(
 				struct spdk_io_channel));
 	TAILQ_INIT(&g_sw_ch->tasks_to_complete);
-	g_accel_engine.supports_opcode = _supports_opcode;
+	g_accel_module.supports_opcode = _supports_opcode;
 	return 0;
 }
 
@@ -452,60 +452,67 @@ test_spdk_accel_submit_copy_crc32c(void)
 }
 
 static void
-test_engine_find_by_name(void)
+test_spdk_accel_module_find_by_name(void)
 {
-	struct spdk_accel_engine eng1, eng2, eng3;
-	struct spdk_accel_engine *accel_engine = NULL;
+	struct spdk_accel_module_if mod1 = {};
+	struct spdk_accel_module_if mod2 = {};
+	struct spdk_accel_module_if mod3 = {};
+	struct spdk_accel_module_if *accel_module = NULL;
 
-	eng1.name = "ioat";
-	eng2.name = "idxd";
-	eng3.name = "software";
+	mod1.name = "ioat";
+	mod2.name = "idxd";
+	mod3.name = "software";
 
-	TAILQ_INIT(&g_engine_list);
-	TAILQ_INSERT_TAIL(&g_engine_list, &eng1, tailq);
-	TAILQ_INSERT_TAIL(&g_engine_list, &eng2, tailq);
-	TAILQ_INSERT_TAIL(&g_engine_list, &eng3, tailq);
+	TAILQ_INIT(&spdk_accel_module_list);
+	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod1, tailq);
+	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod2, tailq);
+	TAILQ_INSERT_TAIL(&spdk_accel_module_list, &mod3, tailq);
 
 	/* Now let's find a valid engine */
-	accel_engine = _engine_find_by_name("ioat");
-	CU_ASSERT(accel_engine != NULL);
+	accel_module = _module_find_by_name("ioat");
+	CU_ASSERT(accel_module != NULL);
 
 	/* Try to find one that doesn't exist */
-	accel_engine = _engine_find_by_name("XXX");
-	CU_ASSERT(accel_engine == NULL);
+	accel_module = _module_find_by_name("XXX");
+	CU_ASSERT(accel_module == NULL);
 }
 
 static void
-test_spdk_accel_engine_register(void)
+test_spdk_accel_module_register(void)
 {
-	struct spdk_accel_engine eng1, eng2, eng3, eng4;
-	struct spdk_accel_engine *accel_engine = NULL;
+	struct spdk_accel_module_if mod1 = {};
+	struct spdk_accel_module_if mod2 = {};
+	struct spdk_accel_module_if mod3 = {};
+	struct spdk_accel_module_if mod4 = {};
+	struct spdk_accel_module_if *accel_module = NULL;
 	int i = 0;
 
-	eng1.name = "ioat";
-	eng2.name = "idxd";
-	eng3.name = "software";
-	eng4.name = "nothing";
+	mod1.name = "ioat";
+	mod2.name = "idxd";
+	mod3.name = "software";
+	mod4.name = "nothing";
 
-	spdk_accel_engine_register(&eng1);
-	spdk_accel_engine_register(&eng2);
-	spdk_accel_engine_register(&eng3);
-	spdk_accel_engine_register(&eng4);
+	TAILQ_INIT(&spdk_accel_module_list);
+
+	spdk_accel_module_list_add(&mod1);
+	spdk_accel_module_list_add(&mod2);
+	spdk_accel_module_list_add(&mod3);
+	spdk_accel_module_list_add(&mod4);
 
 	/* Now confirm they're in the right order. */
-	TAILQ_FOREACH(accel_engine, &g_engine_list, tailq) {
+	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
 		switch (i++) {
 		case 0:
-			CU_ASSERT(strcmp(accel_engine->name, "software") == 0);
+			CU_ASSERT(strcmp(accel_module->name, "software") == 0);
 			break;
 		case 1:
-			CU_ASSERT(strcmp(accel_engine->name, "ioat") == 0);
+			CU_ASSERT(strcmp(accel_module->name, "ioat") == 0);
 			break;
 		case 2:
-			CU_ASSERT(strcmp(accel_engine->name, "idxd") == 0);
+			CU_ASSERT(strcmp(accel_module->name, "idxd") == 0);
 			break;
 		case 3:
-			CU_ASSERT(strcmp(accel_engine->name, "nothing") == 0);
+			CU_ASSERT(strcmp(accel_module->name, "nothing") == 0);
 			break;
 		default:
 			CU_ASSERT(false);
@@ -513,46 +520,6 @@ test_spdk_accel_engine_register(void)
 		}
 	}
 	CU_ASSERT(i == 4);
-}
-
-static void
-test_spdk_accel_assign_opc(void)
-{
-	int rc;
-
-	g_engines_opc_override[ACCEL_OPC_COPY] = "software";
-
-	/* invalid opcode won't change the override value */
-	rc = spdk_accel_assign_opc(ACCEL_OPC_LAST + 1, "dsa");
-	CU_ASSERT(strcmp(g_engines_opc_override[ACCEL_OPC_COPY], "software") == 0);
-	CU_ASSERT(rc == -EINVAL);
-
-	/* valid opcode should update to "dsa" */
-	rc = spdk_accel_assign_opc(ACCEL_OPC_COPY, "dsa");
-	CU_ASSERT(strcmp(g_engines_opc_override[ACCEL_OPC_COPY], "dsa") == 0);
-	CU_ASSERT(rc == 0);
-}
-
-static void
-test_spdk_accel_get_opc_engine_name(void)
-{
-	const char *name;
-	int rc;
-
-	/* valid index, hardcoded name for UT */
-	rc = spdk_accel_get_opc_engine_name(ACCEL_OPC_COPY, &name);
-	CU_ASSERT(strcmp(name, "software") == 0);
-	CU_ASSERT(rc == 0);
-
-	/* pretend nothing is assigned yet */
-	g_engines_opc[0] = NULL;
-	rc = spdk_accel_get_opc_engine_name(ACCEL_OPC_COPY, &name);
-	CU_ASSERT(rc == -ENOENT);
-	g_engines_opc[0] = &g_accel_engine;
-
-	/* invalid name */
-	rc = spdk_accel_get_opc_engine_name(ACCEL_OPC_LAST + 1, &name);
-	CU_ASSERT(rc == -EINVAL);
 }
 
 int
@@ -566,7 +533,6 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("accel", test_setup, test_cleanup);
 
-	CU_ADD_TEST(suite, test_spdk_accel_engine_register);
 	CU_ADD_TEST(suite, test_spdk_accel_task_complete);
 	CU_ADD_TEST(suite, test_get_task);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy);
@@ -576,9 +542,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32c);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32cv);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy_crc32c);
-	CU_ADD_TEST(suite, test_engine_find_by_name);
-	CU_ADD_TEST(suite, test_spdk_accel_assign_opc);
-	CU_ADD_TEST(suite, test_spdk_accel_get_opc_engine_name);
+	CU_ADD_TEST(suite, test_spdk_accel_module_find_by_name);
+	CU_ADD_TEST(suite, test_spdk_accel_module_register);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

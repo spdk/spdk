@@ -69,6 +69,9 @@ ioat_free_device(struct ioat_device *dev)
 
 static int accel_engine_ioat_init(void);
 static void accel_engine_ioat_exit(void *ctx);
+static bool ioat_supports_opcode(enum accel_opcode opc);
+static struct spdk_io_channel *ioat_get_io_channel(void);
+static int ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
 
 static size_t
 accel_engine_ioat_get_ctx_size(void)
@@ -80,7 +83,11 @@ static struct spdk_accel_module_if g_ioat_module = {
 	.module_init = accel_engine_ioat_init,
 	.module_fini = accel_engine_ioat_exit,
 	.write_config_json = NULL,
-	.get_ctx_size = accel_engine_ioat_get_ctx_size
+	.get_ctx_size = accel_engine_ioat_get_ctx_size,
+	.name			= "ioat",
+	.supports_opcode	= ioat_supports_opcode,
+	.get_io_channel		= ioat_get_io_channel,
+	.submit_tasks		= ioat_submit_tasks
 };
 
 SPDK_ACCEL_MODULE_REGISTER(ioat, &g_ioat_module)
@@ -107,6 +114,10 @@ static struct spdk_io_channel *ioat_get_io_channel(void);
 static bool
 ioat_supports_opcode(enum accel_opcode opc)
 {
+	if (!g_ioat_initialized) {
+		return false;
+	}
+
 	switch (opc) {
 	case ACCEL_OPC_COPY:
 	case ACCEL_OPC_FILL:
@@ -159,13 +170,6 @@ ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task
 	return 0;
 }
 
-static struct spdk_accel_engine ioat_accel_engine = {
-	.name			= "ioat",
-	.supports_opcode	= ioat_supports_opcode,
-	.get_io_channel		= ioat_get_io_channel,
-	.submit_tasks		= ioat_submit_tasks,
-};
-
 static int
 ioat_create_cb(void *io_device, void *ctx_buf)
 {
@@ -196,7 +200,7 @@ ioat_destroy_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 ioat_get_io_channel(void)
 {
-	return spdk_get_io_channel(&ioat_accel_engine);
+	return spdk_get_io_channel(&g_ioat_module);
 }
 
 static bool
@@ -269,8 +273,7 @@ accel_engine_ioat_init(void)
 
 	g_ioat_initialized = true;
 	SPDK_NOTICELOG("Accel framework IOAT engine initialized.\n");
-	spdk_accel_engine_register(&ioat_accel_engine);
-	spdk_io_device_register(&ioat_accel_engine, ioat_create_cb, ioat_destroy_cb,
+	spdk_io_device_register(&g_ioat_module, ioat_create_cb, ioat_destroy_cb,
 				sizeof(struct ioat_io_channel), "ioat_accel_engine");
 	return 0;
 }
@@ -295,6 +298,8 @@ _device_unregister_cb(void *io_device)
 		free(pci_dev);
 	}
 
+	g_ioat_initialized = false;
+
 	spdk_accel_engine_module_finish();
 }
 
@@ -302,7 +307,7 @@ static void
 accel_engine_ioat_exit(void *ctx)
 {
 	if (g_ioat_initialized) {
-		spdk_io_device_unregister(&ioat_accel_engine, _device_unregister_cb);
+		spdk_io_device_unregister(&g_ioat_module, _device_unregister_cb);
 	} else {
 		spdk_accel_engine_module_finish();
 	}

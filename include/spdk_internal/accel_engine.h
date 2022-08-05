@@ -78,14 +78,6 @@ struct spdk_accel_task {
 	TAILQ_ENTRY(spdk_accel_task)	link;
 };
 
-struct spdk_accel_engine {
-	const char *name;
-	bool (*supports_opcode)(enum accel_opcode);
-	struct spdk_io_channel *(*get_io_channel)(void);
-	int (*submit_tasks)(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
-	TAILQ_ENTRY(spdk_accel_engine) tailq;
-};
-
 struct spdk_accel_module_if {
 	/** Initialization function for the module.  Called by the spdk
 	 *   application during startup.
@@ -111,10 +103,14 @@ struct spdk_accel_module_if {
 	 */
 	size_t	(*get_ctx_size)(void);
 
+	const char *name;
+	bool (*supports_opcode)(enum accel_opcode);
+	struct spdk_io_channel *(*get_io_channel)(void);
+	int (*submit_tasks)(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
+
 	TAILQ_ENTRY(spdk_accel_module_if)	tailq;
 };
 
-void spdk_accel_engine_register(struct spdk_accel_engine *accel_engine);
 void spdk_accel_module_list_add(struct spdk_accel_module_if *accel_module);
 
 #define SPDK_ACCEL_MODULE_REGISTER(name, module) \
