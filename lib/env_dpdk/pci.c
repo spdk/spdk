@@ -63,6 +63,8 @@ static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pc
 static TAILQ_HEAD(, spdk_pci_device) g_pci_hotplugged_devices =
 	TAILQ_HEAD_INITIALIZER(g_pci_hotplugged_devices);
 static TAILQ_HEAD(, spdk_pci_driver) g_pci_drivers = TAILQ_HEAD_INITIALIZER(g_pci_drivers);
+static TAILQ_HEAD(, spdk_pci_device_provider) g_pci_device_providers =
+	TAILQ_HEAD_INITIALIZER(g_pci_device_providers);
 
 struct env_devargs {
 	struct rte_bus	*bus;
@@ -634,18 +636,45 @@ scan_pci_bus(bool delay_init)
 	return 0;
 }
 
+static int
+pci_attach_rte(const struct spdk_pci_addr *addr)
+{
+	char bdf[32];
+	int rc, i = 0;
+
+	spdk_pci_addr_fmt(bdf, sizeof(bdf), addr);
+
+	do {
+		rc = rte_eal_hotplug_add("pci", bdf, "");
+	} while (rc == -ENOMSG && ++i <= DPDK_HOTPLUG_RETRY_COUNT);
+
+	if (i > 1 && rc == -EEXIST) {
+		/* Even though the previous request timed out, the device
+		 * was attached successfully.
+		 */
+		rc = 0;
+	}
+
+	return rc;
+}
+
+static struct spdk_pci_device_provider g_pci_rte_provider = {
+	.name = "pci",
+	.attach_cb = pci_attach_rte,
+};
+
+SPDK_PCI_REGISTER_DEVICE_PROVIDER(pci, &g_pci_rte_provider);
+
 int
 spdk_pci_device_attach(struct spdk_pci_driver *driver,
 		       spdk_pci_enum_cb enum_cb,
 		       void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
 	struct spdk_pci_device *dev;
+	struct spdk_pci_device_provider *provider;
 	struct rte_pci_device *rte_dev;
 	struct rte_devargs *da;
 	int rc;
-	char bdf[32];
-
-	spdk_pci_addr_fmt(bdf, sizeof(bdf), pci_address);
 
 	cleanup_pci_devices();
 
@@ -673,17 +702,12 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	driver->cb_fn = enum_cb;
 	driver->cb_arg = enum_ctx;
 
-	int i = 0;
-
-	do {
-		rc = rte_eal_hotplug_add("pci", bdf, "");
-	} while (rc == -ENOMSG && ++i <= DPDK_HOTPLUG_RETRY_COUNT);
-
-	if (i > 1 && rc == -EEXIST) {
-		/* Even though the previous request timed out, the device
-		 * was attached successfully.
-		 */
-		rc = 0;
+	rc = -ENODEV;
+	TAILQ_FOREACH(provider, &g_pci_device_providers, tailq) {
+		rc = provider->attach_cb(pci_address);
+		if (rc == 0) {
+			break;
+		}
 	}
 
 	driver->cb_arg = NULL;
@@ -706,10 +730,12 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	assert(dev != NULL);
 
 	rte_dev = dev->dev_handle;
-	da = rte_dev->device.devargs;
-	if (da && get_allowed_at(da)) {
-		set_allowed_at(da, spdk_get_ticks());
-		da->policy = RTE_DEV_ALLOWED;
+	if (rte_dev != NULL) {
+		da = rte_dev->device.devargs;
+		if (da && get_allowed_at(da)) {
+			set_allowed_at(da, spdk_get_ticks());
+			da->policy = RTE_DEV_ALLOWED;
+		}
 	}
 
 	return 0;
@@ -1165,6 +1191,12 @@ spdk_pci_unhook_device(struct spdk_pci_device *dev)
 {
 	assert(!dev->internal.attached);
 	TAILQ_REMOVE(&g_pci_devices, dev, internal.tailq);
+}
+
+void
+spdk_pci_register_device_provider(struct spdk_pci_device_provider *provider)
+{
+	TAILQ_INSERT_TAIL(&g_pci_device_providers, provider, tailq);
 }
 
 const char *
