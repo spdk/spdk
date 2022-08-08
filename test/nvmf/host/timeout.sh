@@ -111,7 +111,7 @@ waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 $bpf_sh $bdevperf_pid $rootdir/scripts/bpf/nvmf_timeout.bt &> $testdir/trace.txt &
 dtrace_pid=$!
 
-$rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1 -e 9
 
 # ctrlr_loss_timeout_sec is 10 reconnect_delay_sec is 2
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
