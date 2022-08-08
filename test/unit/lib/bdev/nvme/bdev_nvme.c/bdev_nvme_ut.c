@@ -250,6 +250,7 @@ struct spdk_nvme_ctrlr {
 	bool				attached;
 	bool				is_failed;
 	bool				fail_reset;
+	bool				is_removed;
 	struct spdk_nvme_transport_id	trid;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 	TAILQ_ENTRY(spdk_nvme_ctrlr)	tailq;
@@ -788,6 +789,10 @@ spdk_nvme_ctrlr_reconnect_async(struct spdk_nvme_ctrlr *ctrlr)
 int
 spdk_nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
+	if (ctrlr->is_removed) {
+		return -ENXIO;
+	}
+
 	ctrlr->adminq.is_connected = false;
 	ctrlr->is_failed = false;
 
@@ -1305,6 +1310,17 @@ test_create_ctrlr(void)
 }
 
 static void
+ut_check_hotplug_on_reset(void *cb_arg, bool success)
+{
+	bool *detect_remove = cb_arg;
+
+	CU_ASSERT(success == false);
+	SPDK_CU_ASSERT_FATAL(detect_remove != NULL);
+
+	*detect_remove = true;
+}
+
+static void
 test_reset_ctrlr(void)
 {
 	struct spdk_nvme_transport_id trid = {};
@@ -1313,6 +1329,7 @@ test_reset_ctrlr(void)
 	struct nvme_path_id *curr_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
+	bool detect_remove;
 	int rc;
 
 	ut_init_trid(&trid);
@@ -1399,6 +1416,24 @@ test_reset_ctrlr(void)
 	poll_thread_times(0, 1);
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 	CU_ASSERT(curr_trid->is_failed == false);
+
+	/* Case 4: ctrlr is already removed. */
+	ctrlr.is_removed = true;
+
+	rc = bdev_nvme_reset(nvme_ctrlr);
+	CU_ASSERT(rc == 0);
+
+	detect_remove = false;
+	nvme_ctrlr->reset_cb_fn = ut_check_hotplug_on_reset;
+	nvme_ctrlr->reset_cb_arg = &detect_remove;
+
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr->reset_cb_fn == NULL);
+	CU_ASSERT(nvme_ctrlr->reset_cb_arg == NULL);
+	CU_ASSERT(detect_remove == true);
+
+	ctrlr.is_removed = false;
 
 	spdk_put_io_channel(ch2);
 

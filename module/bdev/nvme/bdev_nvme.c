@@ -1572,20 +1572,24 @@ bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 					  nvme_ctrlr, 0);
 }
 
+static void bdev_nvme_reset_complete(struct nvme_ctrlr *nvme_ctrlr, bool success);
+
 static void
 bdev_nvme_reset_ctrlr(struct spdk_io_channel_iter *i, int status)
 {
 	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
-	int rc __attribute__((unused));
+	int rc;
 
 	assert(status == 0);
 
-	/* Disconnect fails if ctrlr is already resetting or removed. Both cases are
-	 * not possible. Reset is controlled and the callback to hot remove is called
-	 * when ctrlr is hot removed.
-	 */
 	rc = spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
-	assert(rc == 0);
+	if (rc != 0) {
+		/* Disconnect fails if ctrlr is already resetting or removed. In this case,
+		 * fail the reset sequence immediately.
+		 */
+		bdev_nvme_reset_complete(nvme_ctrlr, false);
+		return;
+	}
 
 	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 }
