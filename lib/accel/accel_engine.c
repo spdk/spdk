@@ -28,7 +28,7 @@
 #define MAX_TASKS_PER_CHANNEL		0x800
 
 /* Largest context size for all accel modules */
-static size_t g_max_accel_module_size = 0;
+static size_t g_max_accel_module_size = sizeof(struct spdk_accel_task);
 
 static struct spdk_accel_module_if *g_accel_engine_module = NULL;
 static spdk_accel_fini_cb g_fini_cb_fn = NULL;

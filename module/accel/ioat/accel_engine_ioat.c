@@ -76,7 +76,7 @@ static int ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task 
 static size_t
 accel_engine_ioat_get_ctx_size(void)
 {
-	return 0;
+	return sizeof(struct spdk_accel_task);
 }
 
 static struct spdk_accel_module_if g_ioat_module = {

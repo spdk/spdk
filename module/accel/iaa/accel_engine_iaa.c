@@ -230,7 +230,7 @@ idxd_poll(void *arg)
 static size_t
 accel_engine_iaa_get_ctx_size(void)
 {
-	return 0;
+	return sizeof(struct spdk_accel_task);
 }
 
 static bool
