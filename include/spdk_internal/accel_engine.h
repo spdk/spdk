@@ -16,12 +16,6 @@ struct spdk_accel_task;
 
 void spdk_accel_task_complete(struct spdk_accel_task *task, int status);
 
-struct accel_io_channel {
-	struct spdk_io_channel		*engine_ch[ACCEL_OPC_LAST];
-	void				*task_pool_base;
-	TAILQ_HEAD(, spdk_accel_task)	task_pool;
-};
-
 struct spdk_accel_task {
 	struct accel_io_channel		*accel_ch;
 	spdk_accel_completion_cb	cb_fn;

@@ -43,6 +43,12 @@ static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
 static struct spdk_accel_module_if *g_engines_opc[ACCEL_OPC_LAST] = {};
 static char *g_engines_opc_override[ACCEL_OPC_LAST] = {};
 
+struct accel_io_channel {
+	struct spdk_io_channel		*engine_ch[ACCEL_OPC_LAST];
+	void				*task_pool_base;
+	TAILQ_HEAD(, spdk_accel_task)	task_pool;
+};
+
 int
 spdk_accel_get_opc_engine_name(enum accel_opcode opcode, const char **engine_name)
 {
