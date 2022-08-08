@@ -385,7 +385,7 @@ static void
 sw_accel_engine_fini(void *ctxt)
 {
 	spdk_io_device_unregister(&g_sw_module, NULL);
-	spdk_accel_engine_module_finish();
+	spdk_accel_module_finish();
 }
 
 SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)

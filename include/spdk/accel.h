@@ -62,11 +62,6 @@ int spdk_accel_engine_initialize(void);
 void spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg);
 
 /**
- * Close the acceleration engine module and perform any necessary cleanup.
- */
-void spdk_accel_engine_module_finish(void);
-
-/**
  * Get the I/O channel registered on the acceleration engine.
  *
  * This I/O channel is used to submit copy request.

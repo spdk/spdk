@@ -4,7 +4,6 @@
 	# public functions
 	spdk_accel_engine_initialize;
 	spdk_accel_engine_finish;
-	spdk_accel_engine_module_finish;
 	spdk_accel_engine_get_io_channel;
 	spdk_accel_submit_copy;
 	spdk_accel_submit_dualcast;
@@ -22,6 +21,7 @@
 
 	# functions needed by modules
 	spdk_accel_module_list_add;
+	spdk_accel_module_finish;
 	spdk_accel_task_complete;
 
 	local: *;

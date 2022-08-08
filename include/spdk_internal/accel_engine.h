@@ -89,4 +89,9 @@ static void __attribute__((constructor)) _spdk_accel_module_register_##name(void
 	spdk_accel_module_list_add(module); \
 }
 
+/**
+ * Called by an accel module when cleanup initiated during .module_fini has completed
+ */
+void spdk_accel_module_finish(void);
+
 #endif

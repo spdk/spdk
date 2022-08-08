@@ -392,7 +392,7 @@ accel_engine_iaa_exit(void *ctx)
 		free(dev);
 	}
 
-	spdk_accel_engine_module_finish();
+	spdk_accel_module_finish();
 }
 
 static void

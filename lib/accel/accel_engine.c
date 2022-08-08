@@ -637,7 +637,7 @@ spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 }
 
 void
-spdk_accel_engine_module_finish(void)
+spdk_accel_module_finish(void)
 {
 	if (!g_accel_engine_module) {
 		g_accel_engine_module = TAILQ_FIRST(&spdk_accel_module_list);
@@ -653,7 +653,7 @@ spdk_accel_engine_module_finish(void)
 	if (g_accel_engine_module->module_fini) {
 		spdk_thread_send_msg(spdk_get_thread(), g_accel_engine_module->module_fini, NULL);
 	} else {
-		spdk_accel_engine_module_finish();
+		spdk_accel_module_finish();
 	}
 }
 
@@ -676,7 +676,7 @@ spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg)
 	}
 
 	spdk_io_device_unregister(&spdk_accel_module_list, NULL);
-	spdk_accel_engine_module_finish();
+	spdk_accel_module_finish();
 }
 
 SPDK_LOG_REGISTER_COMPONENT(accel)

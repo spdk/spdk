@@ -300,7 +300,7 @@ _device_unregister_cb(void *io_device)
 
 	g_ioat_initialized = false;
 
-	spdk_accel_engine_module_finish();
+	spdk_accel_module_finish();
 }
 
 static void
@@ -309,7 +309,7 @@ accel_engine_ioat_exit(void *ctx)
 	if (g_ioat_initialized) {
 		spdk_io_device_unregister(&g_ioat_module, _device_unregister_cb);
 	} else {
-		spdk_accel_engine_module_finish();
+		spdk_accel_module_finish();
 	}
 }
 
