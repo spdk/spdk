@@ -45,7 +45,12 @@ trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 
 vm_no=0
 timing_enter setup_vm
-vm_setup --force=$vm_no --disk-type=virtio --qemu-args="-qmp tcp:localhost:9090,server,nowait -device pci-bridge,chassis_nr=1,id=pci.spdk.0 -device pci-bridge,chassis_nr=2,id=pci.spdk.1"
+vm_setup \
+	--force=$vm_no \
+	--disk-type=virtio \
+	--qemu-args="-qmp tcp:localhost:9090,server,nowait -device pci-bridge,chassis_nr=1,id=pci.spdk.0 -device pci-bridge,chassis_nr=2,id=pci.spdk.1" \
+	--os="$VM_IMAGE"
+
 vm_run $vm_no
 vm_wait_for_boot 300 $vm_no
 timing_exit setup_vm
