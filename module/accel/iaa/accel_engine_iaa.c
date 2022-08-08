@@ -39,6 +39,11 @@ static struct idxd_device *g_next_dev = NULL;
 static uint32_t g_num_devices = 0;
 static pthread_mutex_t g_dev_lock = PTHREAD_MUTEX_INITIALIZER;
 
+struct idxd_task {
+	struct spdk_accel_task	task;
+	struct idxd_io_channel	*chan;
+};
+
 struct idxd_io_channel {
 	struct spdk_idxd_io_channel	*chan;
 	struct idxd_device		*dev;
@@ -101,26 +106,30 @@ idxd_select_device(struct idxd_io_channel *chan)
 static void
 iaa_done(void *cb_arg, int status)
 {
-	struct spdk_accel_task *accel_task = cb_arg;
+	struct idxd_task *idxd_task = cb_arg;
 	struct idxd_io_channel *chan;
 
-	chan = spdk_io_channel_get_ctx(accel_task->accel_ch->engine_ch[accel_task->op_code]);
+	chan = idxd_task->chan;
 
 	assert(chan->num_outstanding > 0);
 	spdk_trace_record(TRACE_ACCEL_IAA_OP_COMPLETE, 0, 0, 0, chan->num_outstanding - 1);
 	chan->num_outstanding--;
 
-	spdk_accel_task_complete(accel_task, status);
+	spdk_accel_task_complete(&idxd_task->task, status);
 }
 
 static int
 _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 {
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
+	struct idxd_task *idxd_task;
 	int rc = 0;
 	struct iovec siov = {};
 	struct iovec diov = {};
 	int flags = 0;
+
+	idxd_task = SPDK_CONTAINEROF(task, struct idxd_task, task);
+	idxd_task->chan = chan;
 
 	switch (task->op_code) {
 	case ACCEL_OPC_COMPRESS:
@@ -129,14 +138,14 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes_dst;
 		rc = spdk_idxd_submit_compress(chan->chan, &diov, 1, &siov, 1, task->output_size,
-					       flags, iaa_done, task);
+					       flags, iaa_done, idxd_task);
 		break;
 	case ACCEL_OPC_DECOMPRESS:
 		siov.iov_base = task->src;
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
 		diov.iov_len = task->nbytes_dst;
-		rc = spdk_idxd_submit_decompress(chan->chan, &diov, 1, &siov, 1, flags, iaa_done, task);
+		rc = spdk_idxd_submit_decompress(chan->chan, &diov, 1, &siov, 1, flags, iaa_done, idxd_task);
 		break;
 	default:
 		assert(false);
@@ -208,6 +217,7 @@ idxd_poll(void *arg)
 {
 	struct idxd_io_channel *chan = arg;
 	struct spdk_accel_task *task = NULL;
+	struct idxd_task *idxd_task;
 	int count;
 
 	count = spdk_idxd_process_events(chan->chan);
@@ -217,10 +227,11 @@ idxd_poll(void *arg)
 		/* Submit queued tasks */
 		if (!TAILQ_EMPTY(&chan->queued_tasks)) {
 			task = TAILQ_FIRST(&chan->queued_tasks);
+			idxd_task = SPDK_CONTAINEROF(task, struct idxd_task, task);
 
 			TAILQ_INIT(&chan->queued_tasks);
 
-			iaa_submit_tasks(task->accel_ch->engine_ch[task->op_code], task);
+			iaa_submit_tasks(spdk_io_channel_from_ctx(idxd_task->chan), task);
 		}
 	}
 
@@ -230,7 +241,7 @@ idxd_poll(void *arg)
 static size_t
 accel_engine_iaa_get_ctx_size(void)
 {
-	return sizeof(struct spdk_accel_task);
+	return sizeof(struct idxd_task);
 }
 
 static bool
