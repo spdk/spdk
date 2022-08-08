@@ -442,8 +442,8 @@ Example response:
     "framework_monitor_context_switch",
     "spdk_kill_instance",
     "accel_get_opc_assignments",
-    "ioat_scan_accel_engine",
-    "dsa_scan_accel_engine",
+    "ioat_scan_accel_module",
+    "dsa_scan_accel_module",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
@@ -1500,9 +1500,9 @@ Example response:
 
 ## Acceleration Framework Layer {#jsonrpc_components_accel_fw}
 
-### accel_get_engine_info {#accel_get_engine_info}
+### accel_get_module_info {#accel_get_module_info}
 
-Get a list of valid engine names and their supported operations.
+Get a list of valid module names and their supported operations.
 
 #### Parameters
 
@@ -1515,7 +1515,7 @@ Example request:
 ~~~json
 {
   "jsonrpc": "2.0",
-  "method": "accel_get_engine_info",
+  "method": "accel_get_module_info",
   "id": 1
 }
 ~~~
@@ -1525,7 +1525,7 @@ Example response:
 ~~~json
 [
   {
-    "engine": "software",
+    "module": "software",
     "supported ops": [
       "copy",
       "fill",
@@ -1538,7 +1538,7 @@ Example response:
     ]
   },
   {
-    "engine": "dsa",
+    "module": "dsa",
     "supported ops": [
       "copy",
       "fill",
@@ -1593,14 +1593,14 @@ Example response:
 
 ### accel_assign_opc {#rpc_accel_assign_opc}
 
-Manually assign an operation to an engine.
+Manually assign an operation to a module.
 
 #### Parameters
 
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------------
 opname                  | Required | string      | name of operation
-engine                  | Required | string      | name of engine
+module                  | Required | string      | name of module
 
 #### Example
 
@@ -1612,8 +1612,8 @@ Example request:
   "method": "accel_assign_opc",
   "id": 1,
   "params": {
-    "opanme": "copy",
-    "engine": "software"
+    "opname": "copy",
+    "module": "software"
   }
 }
 ~~~
@@ -1628,9 +1628,9 @@ Example response:
 }
 ~~~
 
-### dsa_scan_accel_engine {#rpc_dsa_scan_accel_engine}
+### dsa_scan_accel_module {#rpc_dsa_scan_accel_module}
 
-Set config and enable dsa accel engine offload.
+Set config and enable dsa accel module offload.
 This feature is considered as experimental.
 
 #### Parameters
@@ -1649,7 +1649,7 @@ Example request:
     "config_kernel_mode": false
   },
   "jsonrpc": "2.0",
-  "method": "dsa_scan_accel_engine",
+  "method": "dsa_scan_accel_module",
   "id": 1
 }
 ~~~
@@ -1664,9 +1664,9 @@ Example response:
 }
 ~~~
 
-### iaa_scan_accel_engine {#rpc_iaa_scan_accel_engine}
+### iaa_scan_accel_module {#rpc_iaa_scan_accel_module}
 
-Enable IAA accel engine offload.
+Enable IAA accel module offload.
 This feature is considered as experimental.
 
 #### Parameters
@@ -1680,7 +1680,7 @@ Example request:
 ~~~json
 {
   "jsonrpc": "2.0",
-  "method": "iaa_scan_accel_engine",
+  "method": "iaa_scan_accel_module",
   "id": 1
 }
 ~~~
@@ -1695,9 +1695,9 @@ Example response:
 }
 ~~~
 
-### ioat_scan_accel_engine {#rpc_ioat_scan_accel_engine}
+### ioat_scan_accel_module {#rpc_ioat_scan_accel_module}
 
-Enable ioat accel engine offload.
+Enable ioat accel module offload.
 
 #### Parameters
 
@@ -1710,7 +1710,7 @@ Example request:
 ~~~json
 {
   "jsonrpc": "2.0",
-  "method": "ioat_scan_accel_engine",
+  "method": "ioat_scan_accel_module",
   "id": 1
 }
 ~~~

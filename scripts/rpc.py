@@ -2620,47 +2620,47 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     def accel_get_opc_assignments(args):
         print_dict(rpc.accel.accel_get_opc_assignments(args.client))
 
-    p = subparsers.add_parser('accel_get_opc_assignments', help='Get list of opcode name to engine assignments.')
+    p = subparsers.add_parser('accel_get_opc_assignments', help='Get list of opcode name to module assignments.')
     p.set_defaults(func=accel_get_opc_assignments)
 
-    def accel_get_engine_info(args):
-        print_dict(rpc.accel.accel_get_engine_info(args.client))
+    def accel_get_module_info(args):
+        print_dict(rpc.accel.accel_get_module_info(args.client))
 
-    p = subparsers.add_parser('accel_get_engine_info', help='Get list of valid engine names and their operations.')
-    p.set_defaults(func=accel_get_engine_info)
+    p = subparsers.add_parser('accel_get_module_info', help='Get list of valid module names and their operations.')
+    p.set_defaults(func=accel_get_module_info)
 
     def accel_assign_opc(args):
-        rpc.accel.accel_assign_opc(args.client, opname=args.opname, engine=args.engine)
+        rpc.accel.accel_assign_opc(args.client, opname=args.opname, module=args.module)
 
-    p = subparsers.add_parser('accel_assign_opc', help='Manually assign an operation to an engine.')
+    p = subparsers.add_parser('accel_assign_opc', help='Manually assign an operation to a module.')
     p.add_argument('-o', '--opname', help='opname')
-    p.add_argument('-e', '--engine', help='name of engine')
+    p.add_argument('-m', '--module', help='name of module')
     p.set_defaults(func=accel_assign_opc)
 
     # ioat
-    def ioat_scan_accel_engine(args):
-        rpc.ioat.ioat_scan_accel_engine(args.client)
+    def ioat_scan_accel_module(args):
+        rpc.ioat.ioat_scan_accel_module(args.client)
 
-    p = subparsers.add_parser('ioat_scan_accel_engine', help='Enable IOAT accel engine offload.')
-    p.set_defaults(func=ioat_scan_accel_engine)
+    p = subparsers.add_parser('ioat_scan_accel_module', help='Enable IOAT accel module offload.')
+    p.set_defaults(func=ioat_scan_accel_module)
 
     # dsa
-    def dsa_scan_accel_engine(args):
-        rpc.dsa.dsa_scan_accel_engine(args.client, config_kernel_mode=args.config_kernel_mode)
+    def dsa_scan_accel_module(args):
+        rpc.dsa.dsa_scan_accel_module(args.client, config_kernel_mode=args.config_kernel_mode)
 
-    p = subparsers.add_parser('dsa_scan_accel_engine',
-                              help='Set config and enable dsa accel engine offload.')
+    p = subparsers.add_parser('dsa_scan_accel_module',
+                              help='Set config and enable dsa accel module offload.')
     p.add_argument('-k', '--config-kernel-mode', help='Use Kernel mode dsa',
                    action='store_true', dest='config_kernel_mode')
-    p.set_defaults(func=dsa_scan_accel_engine, config_kernel_mode=None)
+    p.set_defaults(func=dsa_scan_accel_module, config_kernel_mode=None)
 
     # iaa
-    def iaa_scan_accel_engine(args):
-        rpc.iaa.iaa_scan_accel_engine(args.client)
+    def iaa_scan_accel_module(args):
+        rpc.iaa.iaa_scan_accel_module(args.client)
 
-    p = subparsers.add_parser('iaa_scan_accel_engine',
-                              help='Set config and enable iaa accel engine offload.')
-    p.set_defaults(func=iaa_scan_accel_engine)
+    p = subparsers.add_parser('iaa_scan_accel_module',
+                              help='Set config and enable iaa accel module offload.')
+    p.set_defaults(func=iaa_scan_accel_module)
 
     # opal
     def bdev_nvme_opal_init(args):

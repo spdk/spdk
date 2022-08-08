@@ -3,11 +3,11 @@
  *   All rights reserved.
  */
 
-#include "accel_engine_dsa.h"
+#include "accel_iaa.h"
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/accel_engine.h"
+#include "spdk_internal/accel_module.h"
 #include "spdk/log.h"
 #include "spdk_internal/idxd.h"
 
@@ -20,21 +20,21 @@
 #include "spdk/trace.h"
 #include "spdk_internal/trace_defs.h"
 
-static bool g_dsa_enable = false;
-static bool g_kernel_mode = false;
+static bool g_iaa_enable = false;
 
 enum channel_state {
 	IDXD_CHANNEL_ACTIVE,
 	IDXD_CHANNEL_ERROR,
 };
 
-static bool g_dsa_initialized = false;
+static bool g_iaa_initialized = false;
 
 struct idxd_device {
-	struct				spdk_idxd_device *dsa;
+	struct spdk_idxd_device		*iaa;
 	TAILQ_ENTRY(idxd_device)	tailq;
 };
-static TAILQ_HEAD(, idxd_device) g_dsa_devices = TAILQ_HEAD_INITIALIZER(g_dsa_devices);
+
+static TAILQ_HEAD(, idxd_device) g_iaa_devices = TAILQ_HEAD_INITIALIZER(g_iaa_devices);
 static struct idxd_device *g_next_dev = NULL;
 static uint32_t g_num_devices = 0;
 static pthread_mutex_t g_dev_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -53,7 +53,7 @@ struct idxd_io_channel {
 	TAILQ_HEAD(, spdk_accel_task)	queued_tasks;
 };
 
-static struct spdk_io_channel *dsa_get_io_channel(void);
+static struct spdk_io_channel *iaa_get_io_channel(void);
 
 static struct idxd_device *
 idxd_select_device(struct idxd_io_channel *chan)
@@ -72,12 +72,12 @@ idxd_select_device(struct idxd_io_channel *chan)
 		pthread_mutex_lock(&g_dev_lock);
 		g_next_dev = TAILQ_NEXT(g_next_dev, tailq);
 		if (g_next_dev == NULL) {
-			g_next_dev = TAILQ_FIRST(&g_dsa_devices);
+			g_next_dev = TAILQ_FIRST(&g_iaa_devices);
 		}
 		dev = g_next_dev;
 		pthread_mutex_unlock(&g_dev_lock);
 
-		if (socket_id != spdk_idxd_get_socket(dev->dsa)) {
+		if (socket_id != spdk_idxd_get_socket(dev->iaa)) {
 			continue;
 		}
 
@@ -86,10 +86,10 @@ idxd_select_device(struct idxd_io_channel *chan)
 		 * allow a specific number of channels to share a device
 		 * to limit outstanding IO for flow control purposes.
 		 */
-		chan->chan = spdk_idxd_get_channel(dev->dsa);
+		chan->chan = spdk_idxd_get_channel(dev->iaa);
 		if (chan->chan != NULL) {
-			SPDK_DEBUGLOG(accel_dsa, "On socket %d using device on socket %d\n",
-				      socket_id, spdk_idxd_get_socket(dev->dsa));
+			SPDK_DEBUGLOG(accel_iaa, "On socket %d using device on socket %d\n",
+				      socket_id, spdk_idxd_get_socket(dev->iaa));
 			return dev;
 		}
 	} while (count++ < g_num_devices);
@@ -99,12 +99,12 @@ idxd_select_device(struct idxd_io_channel *chan)
 	 * that the current thread is on. If on a 2 socket system it may be possible to avoid
 	 * this situation by spreading threads across the sockets.
 	 */
-	SPDK_ERRLOG("No more DSA devices available on the local socket.\n");
+	SPDK_ERRLOG("No more IAA devices available on the local socket.\n");
 	return NULL;
 }
 
 static void
-dsa_done(void *cb_arg, int status)
+iaa_done(void *cb_arg, int status)
 {
 	struct idxd_task *idxd_task = cb_arg;
 	struct idxd_io_channel *chan;
@@ -112,7 +112,7 @@ dsa_done(void *cb_arg, int status)
 	chan = idxd_task->chan;
 
 	assert(chan->num_outstanding > 0);
-	spdk_trace_record(TRACE_ACCEL_DSA_OP_COMPLETE, 0, 0, 0, chan->num_outstanding - 1);
+	spdk_trace_record(TRACE_ACCEL_IAA_OP_COMPLETE, 0, 0, 0, chan->num_outstanding - 1);
 	chan->num_outstanding--;
 
 	spdk_accel_task_complete(&idxd_task->task, status);
@@ -124,8 +124,6 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	struct idxd_task *idxd_task;
 	int rc = 0;
-	struct iovec *iov;
-	uint32_t iovcnt;
 	struct iovec siov = {};
 	struct iovec diov = {};
 	int flags = 0;
@@ -134,74 +132,20 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	idxd_task->chan = chan;
 
 	switch (task->op_code) {
-	case ACCEL_OPC_COPY:
+	case ACCEL_OPC_COMPRESS:
 		siov.iov_base = task->src;
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes;
-		if (task->flags & ACCEL_FLAG_PERSISTENT) {
-			flags |= SPDK_IDXD_FLAG_PERSISTENT;
-			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
-		}
-		rc = spdk_idxd_submit_copy(chan->chan, &diov, 1, &siov, 1, flags, dsa_done, idxd_task);
+		diov.iov_len = task->nbytes_dst;
+		rc = spdk_idxd_submit_compress(chan->chan, &diov, 1, &siov, 1, task->output_size,
+					       flags, iaa_done, idxd_task);
 		break;
-	case ACCEL_OPC_DUALCAST:
-		if (task->flags & ACCEL_FLAG_PERSISTENT) {
-			flags |= SPDK_IDXD_FLAG_PERSISTENT;
-			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
-		}
-		rc = spdk_idxd_submit_dualcast(chan->chan, task->dst, task->dst2, task->src, task->nbytes,
-					       flags, dsa_done, idxd_task);
-		break;
-	case ACCEL_OPC_COMPARE:
+	case ACCEL_OPC_DECOMPRESS:
 		siov.iov_base = task->src;
 		siov.iov_len = task->nbytes;
 		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes;
-		rc = spdk_idxd_submit_compare(chan->chan, &siov, 1, &diov, 1, flags, dsa_done, idxd_task);
-		break;
-	case ACCEL_OPC_FILL:
-		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes;
-		if (task->flags & ACCEL_FLAG_PERSISTENT) {
-			flags |= SPDK_IDXD_FLAG_PERSISTENT;
-			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
-		}
-		rc = spdk_idxd_submit_fill(chan->chan, &diov, 1, task->fill_pattern, flags, dsa_done,
-					   idxd_task);
-		break;
-	case ACCEL_OPC_CRC32C:
-		if (task->v.iovcnt == 0) {
-			siov.iov_base = task->src;
-			siov.iov_len = task->nbytes;
-			iov = &siov;
-			iovcnt = 1;
-		} else {
-			iov = task->v.iovs;
-			iovcnt = task->v.iovcnt;
-		}
-		rc = spdk_idxd_submit_crc32c(chan->chan, iov, iovcnt, task->seed, task->crc_dst,
-					     flags, dsa_done, idxd_task);
-		break;
-	case ACCEL_OPC_COPY_CRC32C:
-		if (task->v.iovcnt == 0) {
-			siov.iov_base = task->src;
-			siov.iov_len = task->nbytes;
-			iov = &siov;
-			iovcnt = 1;
-		} else {
-			iov = task->v.iovs;
-			iovcnt = task->v.iovcnt;
-		}
-		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes;
-		if (task->flags & ACCEL_FLAG_PERSISTENT) {
-			flags |= SPDK_IDXD_FLAG_PERSISTENT;
-			flags |= SPDK_IDXD_FLAG_NONTEMPORAL;
-		}
-		rc = spdk_idxd_submit_copy_crc32c(chan->chan, &diov, 1, iov, iovcnt,
-						  task->seed, task->crc_dst, flags,
-						  dsa_done, idxd_task);
+		diov.iov_len = task->nbytes_dst;
+		rc = spdk_idxd_submit_decompress(chan->chan, &diov, 1, &siov, 1, flags, iaa_done, idxd_task);
 		break;
 	default:
 		assert(false);
@@ -211,14 +155,14 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 
 	if (rc == 0) {
 		chan->num_outstanding++;
-		spdk_trace_record(TRACE_ACCEL_DSA_OP_SUBMIT, 0, 0, 0, chan->num_outstanding);
+		spdk_trace_record(TRACE_ACCEL_IAA_OP_SUBMIT, 0, 0, 0, chan->num_outstanding);
 	}
 
 	return rc;
 }
 
 static int
-dsa_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task)
+iaa_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *first_task)
 {
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *task, *tmp;
@@ -287,7 +231,7 @@ idxd_poll(void *arg)
 
 			TAILQ_INIT(&chan->queued_tasks);
 
-			dsa_submit_tasks(spdk_io_channel_from_ctx(idxd_task->chan), task);
+			iaa_submit_tasks(spdk_io_channel_from_ctx(idxd_task->chan), task);
 		}
 	}
 
@@ -295,61 +239,57 @@ idxd_poll(void *arg)
 }
 
 static size_t
-accel_engine_dsa_get_ctx_size(void)
+accel_iaa_get_ctx_size(void)
 {
 	return sizeof(struct idxd_task);
 }
 
 static bool
-dsa_supports_opcode(enum accel_opcode opc)
+iaa_supports_opcode(enum accel_opcode opc)
 {
-	if (!g_dsa_initialized) {
+	if (!g_iaa_initialized) {
 		return false;
 	}
 
 	switch (opc) {
-	case ACCEL_OPC_COPY:
-	case ACCEL_OPC_FILL:
-	case ACCEL_OPC_DUALCAST:
-	case ACCEL_OPC_COMPARE:
-	case ACCEL_OPC_CRC32C:
-	case ACCEL_OPC_COPY_CRC32C:
+	case ACCEL_OPC_COMPRESS:
+	case ACCEL_OPC_DECOMPRESS:
 		return true;
 	default:
 		return false;
 	}
 }
 
-static int accel_engine_dsa_init(void);
-static void accel_engine_dsa_exit(void *ctx);
-static void accel_engine_dsa_write_config_json(struct spdk_json_write_ctx *w);
+static int accel_iaa_init(void);
+static void accel_iaa_exit(void *ctx);
+static void accel_iaa_write_config_json(struct spdk_json_write_ctx *w);
 
-static struct spdk_accel_module_if g_dsa_module = {
-	.module_init = accel_engine_dsa_init,
-	.module_fini = accel_engine_dsa_exit,
-	.write_config_json = accel_engine_dsa_write_config_json,
-	.get_ctx_size = accel_engine_dsa_get_ctx_size,
-	.name			= "dsa",
-	.supports_opcode	= dsa_supports_opcode,
-	.get_io_channel		= dsa_get_io_channel,
-	.submit_tasks		= dsa_submit_tasks
+static struct spdk_accel_module_if g_iaa_module = {
+	.module_init = accel_iaa_init,
+	.module_fini = accel_iaa_exit,
+	.write_config_json = accel_iaa_write_config_json,
+	.get_ctx_size = accel_iaa_get_ctx_size,
+	.name			= "iaa",
+	.supports_opcode	= iaa_supports_opcode,
+	.get_io_channel		= iaa_get_io_channel,
+	.submit_tasks		= iaa_submit_tasks
 };
 
-SPDK_ACCEL_MODULE_REGISTER(dsa, &g_dsa_module)
+SPDK_ACCEL_MODULE_REGISTER(iaa, &g_iaa_module)
 
 static int
-dsa_create_cb(void *io_device, void *ctx_buf)
+idxd_create_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
-	struct idxd_device *dsa;
+	struct idxd_device *iaa;
 
-	dsa = idxd_select_device(chan);
-	if (dsa == NULL) {
+	iaa = idxd_select_device(chan);
+	if (iaa == NULL) {
 		SPDK_ERRLOG("Failed to get an idxd channel\n");
 		return -EINVAL;
 	}
 
-	chan->dev = dsa;
+	chan->dev = iaa;
 	chan->poller = SPDK_POLLER_REGISTER(idxd_poll, chan, 0);
 	TAILQ_INIT(&chan->queued_tasks);
 	chan->num_outstanding = 0;
@@ -359,7 +299,7 @@ dsa_create_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-dsa_destroy_cb(void *io_device, void *ctx_buf)
+idxd_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct idxd_io_channel *chan = ctx_buf;
 
@@ -368,13 +308,13 @@ dsa_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static struct spdk_io_channel *
-dsa_get_io_channel(void)
+iaa_get_io_channel(void)
 {
-	return spdk_get_io_channel(&g_dsa_module);
+	return spdk_get_io_channel(&g_iaa_module);
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
+attach_cb(void *cb_ctx, struct spdk_idxd_device *iaa)
 {
 	struct idxd_device *dev;
 
@@ -384,27 +324,27 @@ attach_cb(void *cb_ctx, struct spdk_idxd_device *idxd)
 		return;
 	}
 
-	dev->dsa = idxd;
+	dev->iaa = iaa;
 	if (g_next_dev == NULL) {
 		g_next_dev = dev;
 	}
 
-	TAILQ_INSERT_TAIL(&g_dsa_devices, dev, tailq);
+	TAILQ_INSERT_TAIL(&g_iaa_devices, dev, tailq);
 	g_num_devices++;
 }
 
 void
-accel_engine_dsa_enable_probe(bool kernel_mode)
+accel_iaa_enable_probe(void)
 {
-	g_kernel_mode = kernel_mode;
-	g_dsa_enable = true;
-	spdk_idxd_set_config(g_kernel_mode);
+	g_iaa_enable = true;
+	/* TODO initially only support user mode w/IAA */
+	spdk_idxd_set_config(false);
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
+caller_probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 {
-	if (dev->id.device_id == PCI_DEVICE_ID_INTEL_DSA) {
+	if (dev->id.device_id == PCI_DEVICE_ID_INTEL_IAA) {
 		return true;
 	}
 
@@ -412,43 +352,43 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static int
-accel_engine_dsa_init(void)
+accel_iaa_init(void)
 {
-	if (!g_dsa_enable) {
+	if (!g_iaa_enable) {
 		return -EINVAL;
 	}
 
-	if (spdk_idxd_probe(NULL, attach_cb, probe_cb) != 0) {
+	if (spdk_idxd_probe(NULL, attach_cb, caller_probe_cb) != 0) {
 		SPDK_ERRLOG("spdk_idxd_probe() failed\n");
 		return -EINVAL;
 	}
 
-	if (TAILQ_EMPTY(&g_dsa_devices)) {
-		SPDK_NOTICELOG("no available dsa devices\n");
+	if (TAILQ_EMPTY(&g_iaa_devices)) {
+		SPDK_NOTICELOG("no available idxd devices\n");
 		return -EINVAL;
 	}
 
-	g_dsa_initialized = true;
-	SPDK_NOTICELOG("Accel framework DSA engine initialized.\n");
-	spdk_io_device_register(&g_dsa_module, dsa_create_cb, dsa_destroy_cb,
-				sizeof(struct idxd_io_channel), "dsa_accel_engine");
+	g_iaa_initialized = true;
+	SPDK_NOTICELOG("Accel framework IAA module initialized.\n");
+	spdk_io_device_register(&g_iaa_module, idxd_create_cb, idxd_destroy_cb,
+				sizeof(struct idxd_io_channel), "iaa_accel_module");
 	return 0;
 }
 
 static void
-accel_engine_dsa_exit(void *ctx)
+accel_iaa_exit(void *ctx)
 {
 	struct idxd_device *dev;
 
-	if (g_dsa_initialized) {
-		spdk_io_device_unregister(&g_dsa_module, NULL);
-		g_dsa_initialized = false;
+	if (g_iaa_initialized) {
+		spdk_io_device_unregister(&g_iaa_module, NULL);
+		g_iaa_initialized = false;
 	}
 
-	while (!TAILQ_EMPTY(&g_dsa_devices)) {
-		dev = TAILQ_FIRST(&g_dsa_devices);
-		TAILQ_REMOVE(&g_dsa_devices, dev, tailq);
-		spdk_idxd_detach(dev->dsa);
+	while (!TAILQ_EMPTY(&g_iaa_devices)) {
+		dev = TAILQ_FIRST(&g_iaa_devices);
+		TAILQ_REMOVE(&g_iaa_devices, dev, tailq);
+		spdk_idxd_detach(dev->iaa);
 		free(dev);
 	}
 
@@ -456,26 +396,22 @@ accel_engine_dsa_exit(void *ctx)
 }
 
 static void
-accel_engine_dsa_write_config_json(struct spdk_json_write_ctx *w)
+accel_iaa_write_config_json(struct spdk_json_write_ctx *w)
 {
-	if (g_dsa_enable) {
+	if (g_iaa_enable) {
 		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "dsa_scan_accel_engine");
-		spdk_json_write_named_object_begin(w, "params");
-		spdk_json_write_named_bool(w, "config_kernel_mode", g_kernel_mode);
+		spdk_json_write_named_string(w, "method", "iaa_scan_accel_module");
 		spdk_json_write_object_end(w);
 		spdk_json_write_object_end(w);
 	}
 }
 
-SPDK_TRACE_REGISTER_FN(dsa_trace, "dsa", TRACE_GROUP_ACCEL_DSA)
+SPDK_TRACE_REGISTER_FN(iaa_trace, "iaa", TRACE_GROUP_ACCEL_IAA)
 {
-	spdk_trace_register_description("DSA_OP_SUBMIT", TRACE_ACCEL_DSA_OP_SUBMIT, OWNER_NONE, OBJECT_NONE,
-					0,
-					SPDK_TRACE_ARG_TYPE_INT, "count");
-	spdk_trace_register_description("DSA_OP_COMPLETE", TRACE_ACCEL_DSA_OP_COMPLETE, OWNER_NONE,
-					OBJECT_NONE,
+	spdk_trace_register_description("IAA_OP_SUBMIT", TRACE_ACCEL_IAA_OP_SUBMIT, OWNER_NONE, OBJECT_NONE,
 					0, SPDK_TRACE_ARG_TYPE_INT, "count");
+	spdk_trace_register_description("IAA_OP_COMPLETE", TRACE_ACCEL_IAA_OP_COMPLETE, OWNER_NONE,
+					OBJECT_NONE, 0, SPDK_TRACE_ARG_TYPE_INT, "count");
 }
 
-SPDK_LOG_REGISTER_COMPONENT(accel_dsa)
+SPDK_LOG_REGISTER_COMPONENT(accel_iaa)

@@ -3,11 +3,11 @@
  *   All rights reserved.
  */
 
-#include "accel_engine_ioat.h"
+#include "accel_ioat.h"
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/accel_engine.h"
+#include "spdk_internal/accel_module.h"
 #include "spdk/log.h"
 
 #include "spdk/env.h"
@@ -67,23 +67,23 @@ ioat_free_device(struct ioat_device *dev)
 	pthread_mutex_unlock(&g_ioat_mutex);
 }
 
-static int accel_engine_ioat_init(void);
-static void accel_engine_ioat_exit(void *ctx);
+static int accel_ioat_init(void);
+static void accel_ioat_exit(void *ctx);
 static bool ioat_supports_opcode(enum accel_opcode opc);
 static struct spdk_io_channel *ioat_get_io_channel(void);
 static int ioat_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
 
 static size_t
-accel_engine_ioat_get_ctx_size(void)
+accel_ioat_get_ctx_size(void)
 {
 	return sizeof(struct spdk_accel_task);
 }
 
 static struct spdk_accel_module_if g_ioat_module = {
-	.module_init = accel_engine_ioat_init,
-	.module_fini = accel_engine_ioat_exit,
+	.module_init = accel_ioat_init,
+	.module_fini = accel_ioat_exit,
 	.write_config_json = NULL,
-	.get_ctx_size = accel_engine_ioat_get_ctx_size,
+	.get_ctx_size = accel_ioat_get_ctx_size,
 	.name			= "ioat",
 	.supports_opcode	= ioat_supports_opcode,
 	.get_io_channel		= ioat_get_io_channel,
@@ -249,13 +249,13 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 }
 
 void
-accel_engine_ioat_enable_probe(void)
+accel_ioat_enable_probe(void)
 {
 	g_ioat_enable = true;
 }
 
 static int
-accel_engine_ioat_init(void)
+accel_ioat_init(void)
 {
 	if (!g_ioat_enable) {
 		return 0;
@@ -272,9 +272,9 @@ accel_engine_ioat_init(void)
 	}
 
 	g_ioat_initialized = true;
-	SPDK_NOTICELOG("Accel framework IOAT engine initialized.\n");
+	SPDK_NOTICELOG("Accel framework IOAT module initialized.\n");
 	spdk_io_device_register(&g_ioat_module, ioat_create_cb, ioat_destroy_cb,
-				sizeof(struct ioat_io_channel), "ioat_accel_engine");
+				sizeof(struct ioat_io_channel), "ioat_accel_module");
 	return 0;
 }
 
@@ -304,7 +304,7 @@ _device_unregister_cb(void *io_device)
 }
 
 static void
-accel_engine_ioat_exit(void *ctx)
+accel_ioat_exit(void *ctx)
 {
 	if (g_ioat_initialized) {
 		spdk_io_device_unregister(&g_ioat_module, _device_unregister_cb);

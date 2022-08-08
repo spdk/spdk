@@ -3,8 +3,8 @@
  *   All rights reserved.
  */
 
-#ifndef SPDK_INTERNAL_ACCEL_ENGINE_H
-#define SPDK_INTERNAL_ACCEL_ENGINE_H
+#ifndef SPDK_ACCEL_MODULE_H
+#define SPDK_ACCEL_MODULE_H
 
 #include "spdk/stdinc.h"
 

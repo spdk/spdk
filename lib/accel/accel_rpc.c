@@ -37,7 +37,7 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	enum accel_opcode opcode;
-	const char *name, *engine_name;
+	const char *name, *module_name;
 	int rc;
 
 	if (params != NULL) {
@@ -52,13 +52,13 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 	for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
 		rc = _get_opc_name(opcode, &name);
 		if (rc == 0) {
-			rc = spdk_accel_get_opc_engine_name(opcode, &engine_name);
+			rc = spdk_accel_get_opc_module_name(opcode, &module_name);
 			if (rc != 0) {
 				/* This isn't fatal but throw an informational message if we
-				 * cant get an engine name right now */
-				SPDK_NOTICELOG("FYI error (%d) getting engine name.\n", rc);
+				 * cant get an module name right now */
+				SPDK_NOTICELOG("FYI error (%d) getting module name.\n", rc);
 			}
-			spdk_json_write_named_string(w, name, engine_name);
+			spdk_json_write_named_string(w, name, module_name);
 		} else {
 			/* this should never happen */
 			SPDK_ERRLOG("Invalid opcode (%d)).\n", opcode);
@@ -73,7 +73,7 @@ SPDK_RPC_REGISTER("accel_get_opc_assignments", rpc_accel_get_opc_assignments,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
-rpc_dump_engine_info(struct engine_info *info)
+rpc_dump_module_info(struct module_info *info)
 {
 	struct spdk_json_write_ctx *w = info->w;
 	const char *name;
@@ -82,8 +82,8 @@ rpc_dump_engine_info(struct engine_info *info)
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "engine", info->name);
-	spdk_json_write_named_array_begin(w, "suppoerted ops");
+	spdk_json_write_named_string(w, "module", info->name);
+	spdk_json_write_named_array_begin(w, "supported ops");
 
 	for (i = 0; i < info->num_ops; i++) {
 		rc = _get_opc_name(i, &name);
@@ -101,43 +101,44 @@ rpc_dump_engine_info(struct engine_info *info)
 }
 
 static void
-rpc_accel_get_engine_info(struct spdk_jsonrpc_request *request,
+rpc_accel_get_module_info(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct engine_info info;
+	struct module_info info;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "accel_get_engine_info requires no parameters");
+						 "accel_get_module_info requires no parameters");
 		return;
 	}
 
 	info.w = spdk_jsonrpc_begin_result(request);
 	spdk_json_write_array_begin(info.w);
 
-	_accel_for_each_engine(&info, rpc_dump_engine_info);
+	_accel_for_each_module(&info, rpc_dump_module_info);
 
 	spdk_json_write_array_end(info.w);
 	spdk_jsonrpc_end_result(request, info.w);
 }
-SPDK_RPC_REGISTER("accel_get_engine_info", rpc_accel_get_engine_info,
+SPDK_RPC_REGISTER("accel_get_module_info", rpc_accel_get_module_info,
 		  SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_ALIAS_DEPRECATED(accel_get_module_info, accel_get_engine_info)
 
 struct rpc_accel_assign_opc {
 	char *opname;
-	char *engine;
+	char *module;
 };
 
 static const struct spdk_json_object_decoder rpc_accel_assign_opc_decoders[] = {
 	{"opname", offsetof(struct rpc_accel_assign_opc, opname), spdk_json_decode_string},
-	{"engine", offsetof(struct rpc_accel_assign_opc, engine), spdk_json_decode_string},
+	{"module", offsetof(struct rpc_accel_assign_opc, module), spdk_json_decode_string},
 };
 
 static void
 free_accel_assign_opc(struct rpc_accel_assign_opc *r)
 {
 	free(r->opname);
-	free(r->engine);
+	free(r->module);
 }
 
 static void
@@ -172,14 +173,14 @@ rpc_accel_assign_opc(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = spdk_accel_assign_opc(opcode, req.engine);
+	rc = spdk_accel_assign_opc(opcode, req.module);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "error assigning opcode");
 		goto cleanup;
 	}
 
-	SPDK_NOTICELOG("Operation %s will be assigned to engine %s\n", req.opname, req.engine);
+	SPDK_NOTICELOG("Operation %s will be assigned to module %s\n", req.opname, req.module);
 	spdk_jsonrpc_send_bool_response(request, true);
 
 cleanup:

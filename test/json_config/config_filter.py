@@ -23,7 +23,7 @@ def sort_json_object(o):
 
 def filter_methods(do_remove_global_rpcs):
     global_rpcs = [
-        'dsa_scan_accel_engine',
+        'dsa_scan_accel_module',
         'iscsi_set_options',
         'nvmf_set_config',
         'nvmf_set_max_subsystems',

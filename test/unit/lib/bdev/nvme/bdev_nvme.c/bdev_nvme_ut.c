@@ -39,8 +39,8 @@ DEFINE_STUB_V(spdk_nvme_ctrlr_set_remove_cb, (struct spdk_nvme_ctrlr *ctrlr,
 
 DEFINE_STUB(spdk_nvme_ctrlr_get_flags, uint64_t, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
-DEFINE_STUB(accel_engine_create_cb, int, (void *io_device, void *ctx_buf), 0);
-DEFINE_STUB_V(accel_engine_destroy_cb, (void *io_device, void *ctx_buf));
+DEFINE_STUB(accel_channel_create, int, (void *io_device, void *ctx_buf), 0);
+DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
 
 DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domain, int);
 
@@ -2993,7 +2993,7 @@ test_init_ana_log_page(void)
 static void
 init_accel(void)
 {
-	spdk_io_device_register(g_accel_p, accel_engine_create_cb, accel_engine_destroy_cb,
+	spdk_io_device_register(g_accel_p, accel_channel_create, accel_channel_destroy,
 				sizeof(int), "accel_p");
 }
 

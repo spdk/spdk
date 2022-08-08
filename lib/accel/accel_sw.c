@@ -5,7 +5,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk_internal/accel_engine.h"
+#include "spdk_internal/accel_module.h"
 
 #include "spdk/env.h"
 #include "spdk/likely.h"
@@ -287,15 +287,15 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 }
 
 static struct spdk_io_channel *sw_accel_get_io_channel(void);
-static int sw_accel_engine_init(void);
-static void sw_accel_engine_fini(void *ctxt);
-static size_t sw_accel_engine_get_ctx_size(void);
+static int sw_accel_module_init(void);
+static void sw_accel_module_fini(void *ctxt);
+static size_t sw_accel_module_get_ctx_size(void);
 
 static struct spdk_accel_module_if g_sw_module = {
-	.module_init = sw_accel_engine_init,
-	.module_fini = sw_accel_engine_fini,
+	.module_init = sw_accel_module_init,
+	.module_fini = sw_accel_module_fini,
 	.write_config_json = NULL,
-	.get_ctx_size = sw_accel_engine_get_ctx_size,
+	.get_ctx_size = sw_accel_module_get_ctx_size,
 	.name			= "software",
 	.supports_opcode	= sw_accel_supports_opcode,
 	.get_io_channel		= sw_accel_get_io_channel,
@@ -366,23 +366,23 @@ sw_accel_get_io_channel(void)
 }
 
 static size_t
-sw_accel_engine_get_ctx_size(void)
+sw_accel_module_get_ctx_size(void)
 {
 	return sizeof(struct spdk_accel_task);
 }
 
 static int
-sw_accel_engine_init(void)
+sw_accel_module_init(void)
 {
-	SPDK_NOTICELOG("Accel framework software engine initialized.\n");
+	SPDK_NOTICELOG("Accel framework software module initialized.\n");
 	spdk_io_device_register(&g_sw_module, sw_accel_create_cb, sw_accel_destroy_cb,
-				sizeof(struct sw_accel_io_channel), "sw_accel_engine");
+				sizeof(struct sw_accel_io_channel), "sw_accel_module");
 
 	return 0;
 }
 
 static void
-sw_accel_engine_fini(void *ctxt)
+sw_accel_module_fini(void *ctxt)
 {
 	spdk_io_device_unregister(&g_sw_module, NULL);
 	spdk_accel_module_finish();

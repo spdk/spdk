@@ -259,27 +259,27 @@ int spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *sr
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
- * Return the name of the engine assigned to a specfic opcode.
+ * Return the name of the module assigned to a specfic opcode.
  *
  * \param opcode Accel Framework Opcode enum value. Valid codes can be retrieved using
  * `accel_get_opc_assignments` or `spdk_accel_get_opc_name`.
- * \param engine_name Pointer to update with engine name.
+ * \param module_name Pointer to update with module name.
  *
- * \return 0 if a valid engine name was provided. -EINVAL for invalid opcode
- *  or -ENOENT no engine was found at this time for the provided opcode.
+ * \return 0 if a valid module name was provided. -EINVAL for invalid opcode
+ *  or -ENOENT no module was found at this time for the provided opcode.
  */
-int spdk_accel_get_opc_engine_name(enum accel_opcode opcode, const char **engine_name);
+int spdk_accel_get_opc_module_name(enum accel_opcode opcode, const char **module_name);
 
 /**
- * Override the assignment of an opcode to an engine.
+ * Override the assignment of an opcode to an module.
  *
  * \param opcode Accel Framework Opcode enum value. Valid codes can be retrieved using
  * `accel_get_opc_assignments` or `spdk_accel_get_opc_name`.
- * \param name Name of the engine to assign. Valid engine names may be retrieved
- * with `spdk_accel_get_opc_engine_name`
+ * \param name Name of the module to assign. Valid module names may be retrieved
+ * with `spdk_accel_get_opc_module_name`
  *
  * \return 0 if a valid opcode name was provided. -EINVAL for invalid opcode
- *  or if the framework has started (cannot change engines after startup)
+ *  or if the framework has started (cannot change modules after startup)
  */
 int spdk_accel_assign_opc(enum accel_opcode opcode, const char *name);
 

@@ -10,7 +10,7 @@ SO_VER := 1
 SO_MINOR := 0
 
 LIBNAME = accel_iaa
-C_SRCS = accel_engine_iaa.c accel_engine_iaa_rpc.c
+C_SRCS = accel_iaa.c accel_iaa_rpc.c
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 

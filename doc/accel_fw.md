@@ -26,9 +26,9 @@ optimized software implementations of the operations will back the public API. A
 operations supported by the framework have a backing software implementation in
 the event that no hardware accelerators have been enabled for that operation.
 
-When multiple hardware engines are enabled the framework will assign each operation to
-an engine based on the order in which it was initialized. So, for example if two modules are
-enabled, IOAT and software, the software engine will be used for every operation except those
+When multiple hardware modules are enabled the framework will assign each operation to
+a module based on the order in which it was initialized. So, for example if two modules are
+enabled, IOAT and software, the software module will be used for every operation except those
 supported by IOAT.
 
 ## Acceleration Low Level Libraries {#accel_libs}
@@ -70,14 +70,14 @@ RPC is provided, the framework is available and will use the software plug-in mo
 
 ### IOAT Module {#accel_ioat}
 
-To use the IOAT engine, use the RPC [`ioat_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html) before starting the application.
+To use the IOAT module, use the RPC [`ioat_scan_accel_module`](https://spdk.io/doc/jsonrpc.html) before starting the application.
 
 ### DSA Module {#accel_dsa}
 
 The DSA module supports the DSA hardware and relies on the low level IDXD library.
 
-To use the DSA engine, use the RPC
-[`dsa_scan_accel_engine`](https://spdk.io/doc/jsonrpc.html). By default, this
+To use the DSA module, use the RPC
+[`dsa_scan_accel_module`](https://spdk.io/doc/jsonrpc.html). By default, this
 will attempt to load the SPDK user-space idxd driver. To use the built-in
 kernel driver on Linux, add the `-k` parameter. See the next section for
 details on using the kernel driver.
@@ -132,26 +132,26 @@ the step above.
 
 ### Software Module {#accel_sw}
 
-The software module is enabled by default. If no hardware engine is explicitly
+The software module is enabled by default. If no hardware module is explicitly
 enabled via startup RPC as discussed earlier, the software module will use ISA-L
 if available for functions such as CRC32C. Otherwise, standard glibc calls are
 used to back the framework API.
 
-### Engine to Operation Code Assignment {#accel_assignments}
+### Module to Operation Code Assignment {#accel_assignments}
 
-When multiple engines are initialized, the accel framework will assign op codes to
-engines by first assigning all op codes to the Software Engine and then overriding
-op code assignments to Hardware Engines in the order in which they were initialized.
+When multiple modules are initialized, the accel framework will assign op codes to
+modules by first assigning all op codes to the Software Module and then overriding
+op code assignments to Hardware Modules in the order in which they were initialized.
 The RPC `accel_get_opc_assignments` can be used at any time to see the current
 assignment map including the names of valid operations.  The RPC `accel_assign_opc`
-can be used after initializing the desired Hardware Engines but before starting the
+can be used after initializing the desired Hardware Modules but before starting the
 framework in the event that a specific override is desired.  Note that to start an
 application and send startup RPC's use the `--wait-for-rpc` parameter and then use the
-`framework_start_init` RPC to continue. For example, assume the DSA Engine is initialized
+`framework_start_init` RPC to continue. For example, assume the DSA Module is initialized
 but for some reason the desire is to have the Software Module handle copies instead.
 The following RPCs would accomplish the copy override:
 
-`./scripts/rpc.py dsa_scan_accel_engine
+`./scripts/rpc.py dsa_scan_accel_module
 ./scripts/rpc.py accel_assign_opc -o copy -e software
 ./scripts/rpc.py framework_start_init
 ./scripts/rpc.py accel_get_opc_assignments
@@ -166,5 +166,5 @@ The following RPCs would accomplish the copy override:
   "decompress": "software"
 }`
 
-To detemine the name of available engines and their supported operations use the
-RPC `accel_get_engine_info`.
+To detemine the name of available modules and their supported operations use the
+RPC `accel_get_module_info`.

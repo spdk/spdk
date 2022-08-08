@@ -10,7 +10,7 @@ SO_VER := 3
 SO_MINOR := 0
 
 LIBNAME = accel_dsa
-C_SRCS = accel_engine_dsa.c accel_engine_dsa_rpc.c
+C_SRCS = accel_dsa.c accel_dsa_rpc.c
 
 SPDK_MAP_FILE = $(SPDK_ROOT_DIR)/mk/spdk_blank.map
 

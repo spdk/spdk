@@ -6,7 +6,7 @@
 
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
-#include "spdk_internal/accel_engine.h"
+#include "spdk_internal/accel_module.h"
 #include "thread/thread_internal.h"
 #include "common/lib/test_env.c"
 #include "accel/accel.c"
@@ -21,11 +21,11 @@ DEFINE_STUB(pmem_memset_persist, void *, (void *pmemdest, int c, size_t len), NU
 #endif
 
 /* global vars and setup/cleanup functions used for all test functions */
-struct spdk_accel_module_if g_accel_module = {};
+struct spdk_accel_module_if g_module = {};
 struct spdk_io_channel *g_ch = NULL;
 struct accel_io_channel *g_accel_ch = NULL;
 struct sw_accel_io_channel *g_sw_ch = NULL;
-struct spdk_io_channel *g_engine_ch = NULL;
+struct spdk_io_channel *g_module_ch = NULL;
 
 static uint64_t g_opc_mask = 0;
 
@@ -56,22 +56,22 @@ test_setup(void)
 		return -1;
 	}
 	g_accel_ch = (struct accel_io_channel *)((char *)g_ch + sizeof(struct spdk_io_channel));
-	g_engine_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct sw_accel_io_channel));
-	if (g_engine_ch == NULL) {
+	g_module_ch = calloc(1, sizeof(struct spdk_io_channel) + sizeof(struct sw_accel_io_channel));
+	if (g_module_ch == NULL) {
 		CU_ASSERT(false);
 		return -1;
 	}
 
-	g_accel_module.submit_tasks = sw_accel_submit_tasks;
-	g_accel_module.name = "software";
+	g_module.submit_tasks = sw_accel_submit_tasks;
+	g_module.name = "software";
 	for (i = 0; i < ACCEL_OPC_LAST; i++) {
-		g_accel_ch->engine_ch[i] = g_engine_ch;
-		g_engines_opc[i] = &g_accel_module;
+		g_accel_ch->module_ch[i] = g_module_ch;
+		g_modules_opc[i] = &g_module;
 	}
-	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_engine_ch + sizeof(
+	g_sw_ch = (struct sw_accel_io_channel *)((char *)g_module_ch + sizeof(
 				struct spdk_io_channel));
 	TAILQ_INIT(&g_sw_ch->tasks_to_complete);
-	g_accel_module.supports_opcode = _supports_opcode;
+	g_module.supports_opcode = _supports_opcode;
 	return 0;
 }
 
@@ -79,7 +79,7 @@ static int
 test_cleanup(void)
 {
 	free(g_ch);
-	free(g_engine_ch);
+	free(g_module_ch);
 
 	return 0;
 }
@@ -228,7 +228,7 @@ test_spdk_accel_submit_dualcast(void)
 	SPDK_CU_ASSERT_FATAL(dst1 != NULL);
 	dst2 = spdk_dma_zmalloc(nbytes, align, NULL);
 	SPDK_CU_ASSERT_FATAL(dst2 != NULL);
-	/* SW engine does the dualcast. */
+	/* SW module does the dualcast. */
 	rc = spdk_accel_submit_dualcast(g_ch, dst1, dst2, src, nbytes, flags, NULL, cb_arg);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(task.dst == dst1);

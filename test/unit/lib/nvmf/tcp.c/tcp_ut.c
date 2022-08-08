@@ -210,8 +210,8 @@ DEFINE_STUB(nvmf_transport_req_free,
 	    (struct spdk_nvmf_request *req),
 	    0);
 
-DEFINE_STUB(accel_engine_create_cb, int, (void *io_device, void *ctx_buf), 0);
-DEFINE_STUB_V(accel_engine_destroy_cb, (void *io_device, void *ctx_buf));
+DEFINE_STUB(accel_channel_create, int, (void *io_device, void *ctx_buf), 0);
+DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
 DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
@@ -448,7 +448,7 @@ test_nvmf_tcp_destroy(void)
 static void
 init_accel(void)
 {
-	spdk_io_device_register(g_accel_p, accel_engine_create_cb, accel_engine_destroy_cb,
+	spdk_io_device_register(g_accel_p, accel_channel_create, accel_channel_destroy,
 				sizeof(int), "accel_p");
 }
 

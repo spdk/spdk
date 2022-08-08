@@ -1272,8 +1272,8 @@ class SPDKTarget(Target):
                                            nvme_adminq_poll_period_us=100000, retry_count=4)
 
         if self.enable_dsa:
-            rpc.dsa.dsa_scan_accel_engine(self.client, config_kernel_mode=None)
-            self.log_print("Target DSA accel engine enabled")
+            rpc.dsa.dsa_scan_accel_module(self.client, config_kernel_mode=None)
+            self.log_print("Target DSA accel module enabled")
 
         rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name, core_limit=self.scheduler_core_limit)
         rpc.framework_start_init(self.client)
