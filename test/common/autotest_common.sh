@@ -161,6 +161,8 @@ export SPDK_TEST_SCHEDULER
 export SPDK_TEST_SCANBUILD
 : ${SPDK_TEST_NVMF_NICS:=}
 export SPDK_TEST_NVMF_NICS
+: ${SPDK_TEST_SMA=0}
+export SPDK_TEST_SMA
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"
@@ -480,6 +482,10 @@ function get_config_params() {
 
 	if [ -n "$SPDK_RUN_EXTERNAL_DPDK" ]; then
 		config_params+=" --with-dpdk=$SPDK_RUN_EXTERNAL_DPDK"
+	fi
+
+	if [[ $SPDK_TEST_SMA -eq 1 ]]; then
+		config_params+=' --with-sma'
 	fi
 
 	echo "$config_params"

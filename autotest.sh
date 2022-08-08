@@ -329,6 +329,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	if [[ $SPDK_TEST_SCHEDULER -eq 1 ]]; then
 		run_test "scheduler" ./test/scheduler/scheduler.sh
 	fi
+
+	if [[ $SPDK_TEST_SMA -eq 1 ]]; then
+		run_test "sma" ./test/sma/sma.sh
+	fi
 fi
 
 timing_enter cleanup
