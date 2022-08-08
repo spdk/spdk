@@ -226,6 +226,10 @@ fi
 export SPDK_BIN_DIR="$rootdir/build/bin"
 export SPDK_EXAMPLE_DIR="$rootdir/build/examples"
 
+# for vhost, vfio-user tests
+export QEMU_BIN=${QEMU_BIN:-}
+export VFIO_QEMU_BIN=${VFIO_QEMU_BIN:-}
+
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
 	export valgrind=''
