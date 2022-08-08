@@ -5,7 +5,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/accel_engine.h"
+#include "spdk/accel.h"
 
 #include "spdk_internal/init.h"
 #include "spdk/env.h"

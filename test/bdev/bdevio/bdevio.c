@@ -7,7 +7,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk/accel_engine.h"
+#include "spdk/accel.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"

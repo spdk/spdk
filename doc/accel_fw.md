@@ -12,11 +12,11 @@ the software module.
 ## Acceleration Framework Functions {#accel_functions}
 
 Functions implemented via the framework can be found in the DoxyGen documentation of the
-framework public header file here [accel_engine.h](https://spdk.io/doc/accel__engine_8h.html)
+framework public header file here [accel.h](https://spdk.io/doc/accel_8h.html)
 
 ## Acceleration Framework Design Considerations {#accel_dc}
 
-The general interface is defined by `/include/accel_engine.h` and implemented
+The general interface is defined by `/include/spdk/accel.h` and implemented
 in `/lib/accel`.  These functions may be called by an SPDK application and in
 most cases, except where otherwise documented, are asynchronous and follow the
 standard SPDK model for callbacks with a callback argument.

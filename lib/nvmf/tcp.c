@@ -4,7 +4,7 @@
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
-#include "spdk/accel_engine.h"
+#include "spdk/accel.h"
 #include "spdk/stdinc.h"
 #include "spdk/crc32.h"
 #include "spdk/endian.h"

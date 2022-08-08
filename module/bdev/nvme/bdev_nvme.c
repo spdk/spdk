@@ -8,7 +8,7 @@
 
 #include "bdev_nvme.h"
 
-#include "spdk/accel_engine.h"
+#include "spdk/accel.h"
 #include "spdk/config.h"
 #include "spdk/endian.h"
 #include "spdk/bdev.h"

@@ -8,7 +8,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/accel_engine.h"
+#include "spdk/accel.h"
 #include "spdk/queue.h"
 #include "spdk/config.h"
 

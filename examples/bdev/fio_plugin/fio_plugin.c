@@ -7,7 +7,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/bdev_zone.h"
-#include "spdk/accel_engine.h"
+#include "spdk/accel.h"
 #include "spdk/env.h"
 #include "spdk/init.h"
 #include "spdk/thread.h"

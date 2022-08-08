@@ -35,7 +35,10 @@ Renamed the `raid5` module to `raid5f` to reflect that it is not a traditional
 RAID5 implementation - only full stripe writes are supported, partial stripe
 writes (read-modify-write) are not.
 
-### accel_fw
+### accel
+
+Many names were changed in the accel framework to make them consistent both with themselves and
+the rest of SPDK. The primary public header file is now named `include/spdk/accel.h`.
 
 Added a new runtime RPC `accel_get_opc_assignments` to get a list of current opcode to engine
 assignements.
