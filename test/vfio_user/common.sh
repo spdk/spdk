@@ -2,7 +2,7 @@
 : ${MALLOC_BLOCK_SIZE=512}
 
 # Verify vfio-user support of qemu.
-QEMU_BIN="/usr/local/qemu/vfio-user-v0.93/bin/qemu-system-x86_64"
+QEMU_BIN="/usr/local/qemu/vfio-user-dbfix/bin/qemu-system-x86_64"
 
 function clean_vfio_user() {
 	trap - ERR
