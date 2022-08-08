@@ -45,9 +45,15 @@ _submit_to_hw(struct spdk_idxd_io_channel *chan, struct idxd_ops *op)
 }
 
 inline static int
-_vtophys(const void *buf, uint64_t *buf_addr, uint64_t size)
+_vtophys(struct spdk_idxd_io_channel *chan, const void *buf, uint64_t *buf_addr, uint64_t size)
 {
 	uint64_t updated_size = size;
+
+	if (chan->pasid_enabled) {
+		/* We can just use virtual addresses */
+		*buf_addr = (uint64_t)buf;
+		return 0;
+	}
 
 	*buf_addr = spdk_vtophys(buf, &updated_size);
 
@@ -70,16 +76,20 @@ struct idxd_vtophys_iter {
 	uint64_t	len;
 
 	uint64_t	offset;
+
+	bool		pasid_enabled;
 };
 
 static void
-idxd_vtophys_iter_init(struct idxd_vtophys_iter *iter,
+idxd_vtophys_iter_init(struct spdk_idxd_io_channel *chan,
+		       struct idxd_vtophys_iter *iter,
 		       const void *src, void *dst, uint64_t len)
 {
 	iter->src = src;
 	iter->dst = dst;
 	iter->len = len;
 	iter->offset = 0;
+	iter->pasid_enabled = chan->pasid_enabled;
 }
 
 static uint64_t
@@ -95,6 +105,12 @@ idxd_vtophys_iter_next(struct idxd_vtophys_iter *iter,
 
 	if (iter->offset == iter->len) {
 		return 0;
+	}
+
+	if (iter->pasid_enabled) {
+		*src_phys = (uint64_t)src;
+		*dst_phys = (uint64_t)dst;
+		return iter->len;
 	}
 
 	len = iter->len - iter->offset;
@@ -145,7 +161,7 @@ _dsa_alloc_batches(struct spdk_idxd_io_channel *chan, int num_descriptors)
 			goto error_user;
 		}
 
-		rc = _vtophys(batch->user_desc, &batch->user_desc_addr,
+		rc = _vtophys(chan, batch->user_desc, &batch->user_desc_addr,
 			      DESC_PER_BATCH * sizeof(struct idxd_hw_desc));
 		if (rc) {
 			SPDK_ERRLOG("Failed to translate batch descriptor memory\n");
@@ -161,7 +177,7 @@ _dsa_alloc_batches(struct spdk_idxd_io_channel *chan, int num_descriptors)
 		}
 
 		for (j = 0; j < DESC_PER_BATCH; j++) {
-			rc = _vtophys(&op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
+			rc = _vtophys(chan, &op->hw, &desc->completion_addr, sizeof(struct dsa_hw_comp_record));
 			if (rc) {
 				SPDK_ERRLOG("Failed to translate batch entry completion memory\n");
 				goto error_user;
@@ -208,6 +224,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	}
 
 	chan->idxd = idxd;
+	chan->pasid_enabled = idxd->pasid_enabled;
 	STAILQ_INIT(&chan->ops_pool);
 	TAILQ_INIT(&chan->batch_pool);
 	STAILQ_INIT(&chan->ops_outstanding);
@@ -258,7 +275,7 @@ spdk_idxd_get_channel(struct spdk_idxd_device *idxd)
 	for (i = 0; i < num_descriptors; i++) {
 		STAILQ_INSERT_TAIL(&chan->ops_pool, op, link);
 		op->desc = desc;
-		rc = _vtophys(&op->hw, &desc->completion_addr, comp_rec_size);
+		rc = _vtophys(chan, &op->hw, &desc->completion_addr, comp_rec_size);
 		if (rc) {
 			SPDK_ERRLOG("Failed to translate completion memory\n");
 			goto error;
@@ -650,7 +667,7 @@ spdk_idxd_submit_copy(struct spdk_idxd_io_channel *chan,
 	     len > 0;
 	     len = spdk_ioviter_next(&iter, &src, &dst)) {
 
-		idxd_vtophys_iter_init(&vtophys_iter, src, dst, len);
+		idxd_vtophys_iter_init(chan, &vtophys_iter, src, dst, len);
 
 		while (len > 0) {
 			if (first_op == NULL) {
@@ -726,7 +743,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 		return rc;
 	}
 
-	idxd_vtophys_iter_init(&iter_outer, src, dst1, nbytes);
+	idxd_vtophys_iter_init(chan, &iter_outer, src, dst1, nbytes);
 
 	first_op = NULL;
 	count = 0;
@@ -738,7 +755,7 @@ spdk_idxd_submit_dualcast(struct spdk_idxd_io_channel *chan, void *dst1, void *d
 			goto error;
 		}
 
-		idxd_vtophys_iter_init(&iter_inner, src, dst2, nbytes);
+		idxd_vtophys_iter_init(chan, &iter_inner, src, dst2, nbytes);
 
 		src += outer_seg_len;
 		nbytes -= outer_seg_len;
@@ -824,7 +841,7 @@ spdk_idxd_submit_compare(struct spdk_idxd_io_channel *chan,
 	     len > 0;
 	     len = spdk_ioviter_next(&iter, &src1, &src2)) {
 
-		idxd_vtophys_iter_init(&vtophys_iter, src1, src2, len);
+		idxd_vtophys_iter_init(chan, &vtophys_iter, src1, src2, len);
 
 		while (len > 0) {
 			if (first_op == NULL) {
@@ -919,11 +936,15 @@ spdk_idxd_submit_fill(struct spdk_idxd_io_channel *chan,
 			count++;
 
 			seg_len = len;
-			dst_addr = spdk_vtophys(dst, &seg_len);
-			if (dst_addr == SPDK_VTOPHYS_ERROR) {
-				SPDK_ERRLOG("Error translating address\n");
-				rc = -EFAULT;
-				goto error;
+			if (chan->pasid_enabled) {
+				dst_addr = (uint64_t)dst;
+			} else {
+				dst_addr = spdk_vtophys(dst, &seg_len);
+				if (dst_addr == SPDK_VTOPHYS_ERROR) {
+					SPDK_ERRLOG("Error translating address\n");
+					rc = -EFAULT;
+					goto error;
+				}
 			}
 
 			seg_len = spdk_min(seg_len, len);
@@ -997,11 +1018,15 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 			count++;
 
 			seg_len = len;
-			src_addr = spdk_vtophys(src, &seg_len);
-			if (src_addr == SPDK_VTOPHYS_ERROR) {
-				SPDK_ERRLOG("Error translating address\n");
-				rc = -EFAULT;
-				goto error;
+			if (chan->pasid_enabled) {
+				src_addr = (uint64_t)src;
+			} else {
+				src_addr = spdk_vtophys(src, &seg_len);
+				if (src_addr == SPDK_VTOPHYS_ERROR) {
+					SPDK_ERRLOG("Error translating address\n");
+					rc = -EFAULT;
+					goto error;
+				}
 			}
 
 			seg_len = spdk_min(seg_len, len);
@@ -1069,7 +1094,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 	     len = spdk_ioviter_next(&iter, &src, &dst)) {
 
 
-		idxd_vtophys_iter_init(&vtophys_iter, src, dst, len);
+		idxd_vtophys_iter_init(chan, &vtophys_iter, src, dst, len);
 
 		while (len > 0) {
 			if (first_op == NULL) {
@@ -1145,12 +1170,12 @@ _idxd_submit_compress_single(struct spdk_idxd_io_channel *chan, void *dst, const
 		return rc;
 	}
 
-	rc = _vtophys(src, &src_addr, nbytes_src);
+	rc = _vtophys(chan, src, &src_addr, nbytes_src);
 	if (rc) {
 		goto error;
 	}
 
-	rc = _vtophys(dst, &dst_addr, nbytes_dst);
+	rc = _vtophys(chan, dst, &dst_addr, nbytes_dst);
 	if (rc) {
 		goto error;
 	}
@@ -1213,12 +1238,12 @@ _idxd_submit_decompress_single(struct spdk_idxd_io_channel *chan, void *dst, con
 		return rc;
 	}
 
-	rc = _vtophys(src, &src_addr, nbytes);
+	rc = _vtophys(chan, src, &src_addr, nbytes);
 	if (rc) {
 		goto error;
 	}
 
-	rc = _vtophys(dst, &dst_addr, nbytes_dst);
+	rc = _vtophys(chan, dst, &dst_addr, nbytes_dst);
 	if (rc) {
 		goto error;
 	}
