@@ -17,6 +17,8 @@ nvmftestinit
 
 nvmfappstart -m 0x3
 
+trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid || :; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
@@ -26,7 +28,6 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 $rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
 bdevperf_pid=$!
 
-trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 function get_bdev() {
@@ -68,7 +69,6 @@ $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPOR
 $rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
 bdevperf_pid=$!
 
-trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 # ctrlr_loss_timeout_sec is 10 fast_io_fail_timeout_sec is 2 -o reconnect_delay_sec is 1
@@ -105,7 +105,6 @@ killprocess $bdevperf_pid
 $rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w randread -t 20 -f &
 bdevperf_pid=$!
 
-trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 
 #start_trace
