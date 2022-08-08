@@ -33,6 +33,12 @@ static inline void
 _submit_to_hw(struct spdk_idxd_io_channel *chan, struct idxd_ops *op)
 {
 	STAILQ_INSERT_TAIL(&chan->ops_outstanding, op, link);
+	/*
+	 * We must barrier before writing the descriptor to ensure that data
+	 * has been correctly flushed from the associated data buffers before DMA
+	 * operations begin.
+	 */
+	_spdk_wmb();
 	movdir64b(chan->portal + chan->portal_offset, op->desc);
 	chan->portal_offset = (chan->portal_offset + chan->idxd->chan_per_device * PORTAL_STRIDE) &
 			      PORTAL_MASK;
