@@ -217,7 +217,7 @@ DEFINE_STUB(spdk_bdev_reset, int, (struct spdk_bdev_desc *desc, struct spdk_io_c
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 
 struct spdk_io_channel *
-spdk_accel_engine_get_io_channel(void)
+spdk_accel_get_io_channel(void)
 {
 	return spdk_get_io_channel(g_accel_p);
 }

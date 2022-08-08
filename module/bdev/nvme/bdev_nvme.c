@@ -2426,7 +2426,7 @@ bdev_nvme_create_poll_group_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	group->accel_channel = spdk_accel_engine_get_io_channel();
+	group->accel_channel = spdk_accel_get_io_channel();
 	if (!group->accel_channel) {
 		spdk_nvme_poll_group_destroy(group->group);
 		SPDK_ERRLOG("Cannot get the accel_channel for bdev nvme polling group=%p\n",

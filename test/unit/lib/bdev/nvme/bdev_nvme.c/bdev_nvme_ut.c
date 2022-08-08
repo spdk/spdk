@@ -57,7 +57,7 @@ spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 }
 
 struct spdk_io_channel *
-spdk_accel_engine_get_io_channel(void)
+spdk_accel_get_io_channel(void)
 {
 	return spdk_get_io_channel(g_accel_p);
 }

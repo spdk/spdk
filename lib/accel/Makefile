@@ -11,7 +11,7 @@ SO_MINOR := 0
 SO_SUFFIX := $(SO_VER).$(SO_MINOR)
 
 LIBNAME = accel
-C_SRCS = accel_engine.c accel_engine_rpc.c accel_sw.c
+C_SRCS = accel.c accel_rpc.c accel_sw.c
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_accel.map)
 

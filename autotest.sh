@@ -161,7 +161,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test "dpdk_mem_utility" test/dpdk_memory_utility/test_dpdk_mem_info.sh
 	run_test "event" test/event/event.sh
 	run_test "thread" test/thread/thread.sh
-	run_test "accel_engine" test/accel_engine/accel_engine.sh
+	run_test "accel" test/accel/accel.sh
 
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test "blockdev_general" test/bdev/blockdev.sh

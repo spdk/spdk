@@ -9,7 +9,7 @@
 #include "spdk_internal/accel_engine.h"
 #include "thread/thread_internal.h"
 #include "common/lib/test_env.c"
-#include "accel/accel_engine.c"
+#include "accel/accel.c"
 #include "accel/accel_sw.c"
 #include "unit/lib/json_mock.c"
 

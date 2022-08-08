@@ -4,11 +4,11 @@
  */
 
 /** \file
- * Acceleration engine abstraction layer
+ * Acceleration Framework
  */
 
-#ifndef SPDK_ACCEL_ENGINE_H
-#define SPDK_ACCEL_ENGINE_H
+#ifndef SPDK_ACCEL_H
+#define SPDK_ACCEL_H
 
 #include "spdk/stdinc.h"
 
@@ -40,35 +40,35 @@ enum accel_opcode {
 typedef void (*spdk_accel_completion_cb)(void *ref, int status);
 
 /**
- * Acceleration engine finish callback.
+ * Acceleration framework finish callback.
  *
  * \param cb_arg Callback argument.
  */
 typedef void (*spdk_accel_fini_cb)(void *cb_arg);
 
 /**
- * Initialize the acceleration engine.
+ * Initialize the acceleration framework.
  *
  * \return 0 on success.
  */
-int spdk_accel_engine_initialize(void);
+int spdk_accel_initialize(void);
 
 /**
- * Close the acceleration engine.
+ * Close the acceleration framework.
  *
  * \param cb_fn Called when the close operation completes.
  * \param cb_arg Argument passed to the callback function.
  */
-void spdk_accel_engine_finish(spdk_accel_fini_cb cb_fn, void *cb_arg);
+void spdk_accel_finish(spdk_accel_fini_cb cb_fn, void *cb_arg);
 
 /**
- * Get the I/O channel registered on the acceleration engine.
+ * Get an I/O channel for the acceleration framework.
  *
- * This I/O channel is used to submit copy request.
+ * This I/O channel is used to submit requests.
  *
  * \return a pointer to the I/O channel on success, or NULL on failure.
  */
-struct spdk_io_channel *spdk_accel_engine_get_io_channel(void);
+struct spdk_io_channel *spdk_accel_get_io_channel(void);
 
 /**
  * Submit a copy request.

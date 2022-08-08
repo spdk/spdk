@@ -628,7 +628,7 @@ _init_thread(void *arg1)
 	worker->next = g_workers;
 	g_workers = worker;
 	pthread_mutex_unlock(&g_workers_lock);
-	worker->ch = spdk_accel_engine_get_io_channel();
+	worker->ch = spdk_accel_get_io_channel();
 	if (worker->ch == NULL) {
 		fprintf(stderr, "Unable to get an accel channel\n");
 		goto error;

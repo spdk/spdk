@@ -478,9 +478,9 @@ malloc_create_channel_cb(void *io_device, void *ctx)
 {
 	struct malloc_channel *ch = ctx;
 
-	ch->accel_channel = spdk_accel_engine_get_io_channel();
+	ch->accel_channel = spdk_accel_get_io_channel();
 	if (!ch->accel_channel) {
-		SPDK_ERRLOG("Failed to get accel engine's IO channel\n");
+		SPDK_ERRLOG("Failed to get accel framework's IO channel\n");
 		return -ENOMEM;
 	}
 

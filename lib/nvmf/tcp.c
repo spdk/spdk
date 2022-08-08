@@ -1313,7 +1313,7 @@ nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport,
 		}
 	}
 
-	tgroup->accel_channel = spdk_accel_engine_get_io_channel();
+	tgroup->accel_channel = spdk_accel_get_io_channel();
 	if (spdk_unlikely(!tgroup->accel_channel)) {
 		SPDK_ERRLOG("Cannot create accel_channel for tgroup=%p\n", tgroup);
 		goto cleanup;
