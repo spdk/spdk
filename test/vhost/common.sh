@@ -701,26 +701,13 @@ function vm_setup() {
 				local raw_name="RAWSCSI"
 				local raw_disk=$vm_dir/test.img
 
-				if [[ -n $disk ]]; then
-					[[ ! -b $disk ]] && touch $disk
-					local raw_disk
-					raw_disk=$(readlink -f $disk)
-				fi
-
 				# Create disk file if it not exist or it is smaller than 1G
-				if { [[ -f $raw_disk ]] && [[ $(stat --printf="%s" $raw_disk) -lt $((1024 * 1024 * 1024)) ]]; } \
-					|| [[ ! -e $raw_disk ]]; then
-					if [[ $raw_disk =~ /dev/.* ]]; then
-						error \
-							"ERROR: Virtio disk point to missing device ($raw_disk) -\n" \
-							"       this is probably not what you want."
-						return 1
-					fi
-
+				if [[ -f $disk && $(stat --printf="%s" $disk) -ge $((1024 * 1024 * 1024)) ]]; then
+					raw_disk=$disk
+					notice "Using existing image $raw_disk"
+				else
 					notice "Creating Virtio disc $raw_disk"
 					dd if=/dev/zero of=$raw_disk bs=1024k count=1024
-				else
-					notice "Using existing image $raw_disk"
 				fi
 
 				cmd+=(-device "virtio-scsi-pci,num_queues=$queue_number")
