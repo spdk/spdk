@@ -71,11 +71,23 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 		enum accfg_device_state dstate;
 		struct spdk_kernel_idxd_device *kernel_idxd;
 		struct accfg_wq *wq;
+		bool pasid_enabled;
 
 		/* Make sure that the device is enabled */
 		dstate = accfg_device_get_state(device);
 		if (dstate != ACCFG_DEVICE_ENABLED) {
 			continue;
+		}
+
+		pasid_enabled = accfg_device_get_pasid_enabled(device);
+		if (!pasid_enabled && spdk_iommu_is_enabled()) {
+			/*
+			 * If the IOMMU is enabled but shared memory mode is not on,
+			 * then we have no way to get the IOVA from userspace to use this
+			 * device or any kernel device. Return an error.
+			 */
+			SPDK_ERRLOG("Found kernel IDXD device, but cannot use it when IOMMU is enabled but SM is disabled\n");
+			return -ENOTSUP;
 		}
 
 		kernel_idxd = calloc(1, sizeof(struct spdk_kernel_idxd_device));
@@ -91,6 +103,7 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 		kernel_idxd->idxd.impl = &g_kernel_idxd_impl;
 		kernel_idxd->fd = -1;
 		kernel_idxd->idxd.version = accfg_device_get_version(device);
+		kernel_idxd->idxd.pasid_enabled = pasid_enabled;
 
 		accfg_wq_foreach(device, wq) {
 			enum accfg_wq_state wstate;
@@ -146,8 +159,6 @@ kernel_idxd_probe(void *cb_ctx, spdk_idxd_attach_cb attach_cb, spdk_idxd_probe_c
 			/* Since we only use a single WQ, the total size is the size of this WQ */
 			kernel_idxd->idxd.total_wq_size = accfg_wq_get_size(wq);
 			kernel_idxd->idxd.chan_per_device = (kernel_idxd->idxd.total_wq_size >= 128) ? 8 : 4;
-			/* TODO: Handle BOF when we add support for shared WQ */
-			/* wq_ctx->bof = accfg_wq_get_block_on_fault(wq); */
 
 			/* We only use a single WQ, so once we've found one we can stop looking. */
 			break;

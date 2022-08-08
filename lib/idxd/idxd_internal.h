@@ -74,6 +74,8 @@ struct spdk_idxd_io_channel {
 	void					*portal;
 	uint32_t				portal_offset;
 
+	bool					pasid_enabled;
+
 	/* The currently open batch */
 	struct idxd_batch			*batch;
 
@@ -138,6 +140,7 @@ struct spdk_idxd_device {
 	uint32_t			total_wq_size;
 	uint32_t			chan_per_device;
 	pthread_mutex_t			num_channels_lock;
+	bool				pasid_enabled;
 	enum idxd_dev			type;
 	struct iaa_aecs			*aecs;
 	uint32_t			version;
