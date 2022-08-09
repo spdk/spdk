@@ -51,6 +51,8 @@ an engine.
 Added SPDK_NVME_TRANSPORT_CUSTOM_FABRICS to enum spdk_nvme_transport_type to support custom
 fabric transport. SPDK_NVME_TRANSPORT_CUSTOM was intended to be non-fabric custom transport.
 
+Added a new function `spdk_nvme_ns_cmd_verify` to submit a Verify Command to a Namespace.
+
 ## v22.05
 
 ### sock

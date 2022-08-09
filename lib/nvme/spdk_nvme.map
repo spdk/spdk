@@ -167,6 +167,7 @@
 	spdk_nvme_ns_cmd_compare_with_md;
 	spdk_nvme_ns_cmd_writev_ext;
 	spdk_nvme_ns_cmd_readv_ext;
+	spdk_nvme_ns_cmd_verify;
 
 	spdk_nvme_qpair_get_optimal_poll_group;
 	spdk_nvme_qpair_process_completions;

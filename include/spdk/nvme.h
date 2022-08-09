@@ -3124,6 +3124,32 @@ int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 				  uint32_t io_flags);
 
 /**
+ * Submit a verify I/O to the specified NVMe namespace.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any
+ * given time.
+ *
+ * \param ns NVMe namespace to submit the verify I/O.
+ * \param qpair I/O queue pair to submit the request.
+ * \param lba Starting LBA to verify the data.
+ * \param lba_count Length (in sectors) for the verify operation.
+ * \param cb_fn Callback function to invoke when the I/O is completed.
+ * \param cb_arg Argument to pass to the callback function.
+ * \param io_flags Set flags, defined by the SPDK_NVME_IO_FLAGS_* entries in
+ * spdk/nvme_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, negated errnos on the following error conditions:
+ * -EINVAL: The request is malformed.
+ * -ENOMEM: The request cannot be allocated.
+ * -ENXIO: The qpair is failed at the transport level.
+ */
+int spdk_nvme_ns_cmd_verify(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			    uint64_t lba, uint32_t lba_count,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			    uint32_t io_flags);
+
+/**
  * Submit a write uncorrectable I/O to the specified NVMe namespace.
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().

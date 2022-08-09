@@ -2204,6 +2204,31 @@ test_spdk_nvme_ns_cmd_readv_ext(void)
 	cleanup_after_test(&qpair);
 }
 
+static void
+test_nvme_ns_cmd_verify(void)
+{
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	struct spdk_nvme_qpair	qpair;
+	uint64_t		cmd_lba;
+	uint32_t		cmd_lba_count;
+	int			rc;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
+
+	rc = spdk_nvme_ns_cmd_verify(&ns, &qpair, 0, 2, NULL, NULL, 0);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_VERIFY);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT_EQUAL(cmd_lba, 0);
+	CU_ASSERT_EQUAL(cmd_lba_count, 2);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2244,6 +2269,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_readv_with_md);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_writev_ext);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_cmd_readv_ext);
+	CU_ADD_TEST(suite, test_nvme_ns_cmd_verify);
 
 	g_spdk_nvme_driver = &_g_nvme_driver;
 

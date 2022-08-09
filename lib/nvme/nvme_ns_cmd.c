@@ -1088,6 +1088,40 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 }
 
 int
+spdk_nvme_ns_cmd_verify(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			uint64_t lba, uint32_t lba_count,
+			spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			uint32_t io_flags)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	if (!_is_io_flags_valid(io_flags)) {
+		return -EINVAL;
+	}
+
+	if (lba_count == 0 || lba_count > UINT16_MAX + 1) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_VERIFY;
+	cmd->nsid = ns->id;
+
+	*(uint64_t *)&cmd->cdw10 = lba;
+	cmd->cdw12 = lba_count - 1;
+	cmd->fuse = (io_flags & SPDK_NVME_IO_FLAGS_FUSE_MASK);
+	cmd->cdw12 |= (io_flags & SPDK_NVME_IO_FLAGS_CDW12_MASK);
+
+	return nvme_qpair_submit_request(qpair, req);
+}
+
+int
 spdk_nvme_ns_cmd_write_uncorrectable(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 				     uint64_t lba, uint32_t lba_count,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
