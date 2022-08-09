@@ -157,13 +157,9 @@ struct vmd_adapter {
 
 	uint32_t next_bus_number : 10;
 	uint32_t max_pci_bus : 10;
-	uint32_t is_hotplug_scan : 1;
-	uint32_t is_ready : 1;
-	uint32_t processing_hp : 1;
-	uint32_t max_payload_size: 3;
 	uint32_t root_port_updated : 1;
 	uint32_t scan_completed : 1;
-	uint32_t rsv : 4;
+	uint32_t rsv : 10;
 
 	/* end devices attached to vmd adapters */
 	struct vmd_pci_device *target[MAX_VMD_TARGET];
@@ -177,26 +173,6 @@ struct vmd_adapter {
 
 	struct event_fifo *hp_queue;
 };
-
-/* TODO: Temporary stubs for Hot Plug interface */
-static inline struct vmd_pci_bus *
-vmd_is_dev_in_hotplug_path(struct vmd_pci_device *dev)
-{
-	return NULL;
-}
-
-static inline void
-vmd_hp_enable_hotplug(struct vmd_hot_plug *hp)
-{
-
-}
-
-static inline uint8_t
-vmd_hp_get_next_bus_number(struct vmd_hot_plug *hp)
-{
-	assert(false);
-	return 0;
-}
 
 struct vmd_pci_device *vmd_find_device(const struct spdk_pci_addr *addr);
 

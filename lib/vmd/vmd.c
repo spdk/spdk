@@ -690,30 +690,16 @@ vmd_create_new_bus(struct vmd_pci_bus *parent, struct vmd_pci_device *bridge, ui
 	return new_bus;
 }
 
-/*
- * Assigns a bus number from the list of available
- * bus numbers. If the device is downstream of a hot plug port,
- * assign the bus number from those assigned to the HP port. Otherwise,
- * assign the next bus number from the vmd bus number list.
- */
 static uint8_t
-vmd_get_next_bus_number(struct vmd_pci_device *dev, struct vmd_adapter *vmd)
+vmd_get_next_bus_number(struct vmd_adapter *vmd)
 {
 	uint8_t bus = 0xff;
-	struct vmd_pci_bus *hp_bus;
 
-	if (dev) {
-		hp_bus = vmd_is_dev_in_hotplug_path(dev);
-		if (hp_bus && hp_bus->self && hp_bus->self->hotplug_capable) {
-			return vmd_hp_get_next_bus_number(&hp_bus->self->hp);
-		}
-	}
-
-	/* Device is not under a hot plug path. Return next global bus number */
 	if ((vmd->next_bus_number + 1) < vmd->max_pci_bus) {
 		bus = vmd->next_bus_number;
 		vmd->next_bus_number++;
 	}
+
 	return bus;
 }
 
@@ -972,7 +958,7 @@ vmd_init_end_device(struct vmd_pci_device *dev)
  * Return count of how many devices found(type1 + type 0 header devices)
  */
 static uint8_t
-vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridge)
+vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridge, bool hotplug)
 {
 	/* assuming only single function devices are on the bus */
 	struct vmd_pci_device *new_dev;
@@ -989,12 +975,17 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 		}
 
 		if (new_dev->header->common.header_type & PCI_HEADER_TYPE_BRIDGE) {
+			if (hotplug) {
+				free(new_dev);
+				continue;
+			}
+
 			slot_cap.as_uint32_t = 0;
 			if (new_dev->pcie_cap != NULL) {
 				slot_cap.as_uint32_t = new_dev->pcie_cap->slot_cap.as_uint32_t;
 			}
 
-			new_bus_num = vmd_get_next_bus_number(bus->vmd->is_hotplug_scan ? new_dev : NULL, bus->vmd);
+			new_bus_num = vmd_get_next_bus_number(bus->vmd);
 			if (new_bus_num == 0xff) {
 				vmd_dev_free(new_dev);
 				return dev_cnt;
@@ -1036,7 +1027,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 				vmd_init_hotplug(new_dev, new_bus);
 			}
 
-			dev_cnt += vmd_scan_single_bus(new_bus, new_dev);
+			dev_cnt += vmd_scan_single_bus(new_bus, new_dev, hotplug);
 			if (new_dev->pcie_cap != NULL) {
 				if (new_dev->pcie_cap->express_cap_register.bit_field.device_type == SwitchUpstreamPort) {
 					return dev_cnt;
@@ -1163,7 +1154,7 @@ vmd_scan_pcibus(struct vmd_pci_bus *bus)
 	g_end_device_count = 0;
 	TAILQ_INSERT_TAIL(&bus->vmd->bus_list, bus, tailq);
 	bus->vmd->next_bus_number = bus->bus_number + 1;
-	dev_cnt = vmd_scan_single_bus(bus, NULL);
+	dev_cnt = vmd_scan_single_bus(bus, NULL, false);
 
 	SPDK_DEBUGLOG(vmd, "VMD scan found %u devices\n", dev_cnt);
 	SPDK_DEBUGLOG(vmd, "VMD scan found %u END DEVICES\n", g_end_device_count);
@@ -1376,7 +1367,7 @@ vmd_bus_handle_hotplug(struct vmd_pci_bus *bus)
 
 	for (sleep_count = 0; sleep_count < 20; ++sleep_count) {
 		/* Scan until a new device is found */
-		num_devices = vmd_scan_single_bus(bus, bus->self);
+		num_devices = vmd_scan_single_bus(bus, bus->self, true);
 		if (num_devices > 0) {
 			break;
 		}
