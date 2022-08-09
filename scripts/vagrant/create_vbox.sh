@@ -46,6 +46,7 @@ display_help() {
 	echo "  --vagrantfiles-dir=<path>       Destination directory to put Vagrantfile into."
 	echo "  --package-box                   Install all dependencies for SPDK and create a local vagrant box version."
 	echo "  --vagrantfile=<path>            Path to a custom Vagrantfile"
+	echo "  --extra-vagrantfiles=<path>     Comma separated list of files to load from within main Vagrantfile"
 	echo "  -r dry-run"
 	echo "  -h help"
 	echo "  -v verbose"
@@ -91,6 +92,7 @@ VAGRANT_HUGE_MEM=0
 VAGRANTFILE=$DIR/Vagrantfile
 FORCE_DISTRO=false
 VAGRANT_BOX_VERSION=""
+EXTRA_VAGRANTFILES=""
 
 while getopts ":b:n:s:x:p:uvcraldoHhf-:" opt; do
 	case "${opt}" in
@@ -101,6 +103,7 @@ while getopts ":b:n:s:x:p:uvcraldoHhf-:" opt; do
 				vagrantfiles-dir=*) VAGRANTFILE_DIR="${OPTARG#*=}" ;;
 				vagrantfile=*) [[ -n ${OPTARG#*=} ]] && VAGRANTFILE="${OPTARG#*=}" ;;
 				box-version=*) [[ -n ${OPTARG#*=} ]] && VAGRANT_BOX_VERSION="${OPTARG#*=}" ;;
+				extra-vagrantfiles=*) [[ -n ${OPTARG#*=} ]] && EXTRA_VAGRANTFILES="${OPTARG#*=}" ;;
 				*) echo "Invalid argument '$OPTARG'" ;;
 			esac
 			;;
@@ -233,6 +236,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo VAGRANTFILE=$VAGRANTFILE
 	echo FORCE_DISTRO=$FORCE_DISTRO
 	echo VAGRANT_BOX_VERSION=$VAGRANT_BOX_VERSION
+	echo EXTRA_VAGRANTFILES=$EXTRA_VAGRANTFILES
 	echo
 fi
 
@@ -254,6 +258,7 @@ export VAGRANT_PASSWORD_AUTH
 export VAGRANT_HUGE_MEM
 export FORCE_DISTRO
 export VAGRANT_BOX_VERSION
+export EXTRA_VAGRANTFILES
 
 if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
 	provider="--provider=${SPDK_VAGRANT_PROVIDER}"
@@ -284,6 +289,7 @@ if [ ${DRY_RUN} = 1 ]; then
 	printenv VAGRANTFILE
 	printenv FORCE_DISTRO
 	printenv VAGRANT_BOX_VERSION
+	printenv EXTRA_VAGRANTFILES
 fi
 if [ -z "$VAGRANTFILE_DIR" ]; then
 	VAGRANTFILE_DIR="${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
