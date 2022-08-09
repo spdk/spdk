@@ -670,13 +670,22 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 static void
 nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_register_completion *ctx;
+	struct nvme_register_completion *ctx, *tmp;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	STAILQ_HEAD(, nvme_register_completion) operations;
 
 	STAILQ_INIT(&operations);
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	STAILQ_SWAP(&ctrlr->register_operations, &operations, nvme_register_completion);
+	STAILQ_FOREACH_SAFE(ctx, &ctrlr->register_operations, stailq, tmp) {
+		/* We need to make sure we complete the register operation in
+		 * the correct process.
+		 */
+		if (ctx->pid != getpid()) {
+			continue;
+		}
+		STAILQ_REMOVE(&ctrlr->register_operations, ctx, nvme_register_completion, stailq);
+		STAILQ_INSERT_TAIL(&operations, ctx, stailq);
+	}
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	while (!STAILQ_EMPTY(&operations)) {
@@ -685,7 +694,7 @@ nvme_complete_register_operations(struct spdk_nvme_qpair *qpair)
 		if (ctx->cb_fn != NULL) {
 			ctx->cb_fn(ctx->cb_ctx, ctx->value, &ctx->cpl);
 		}
-		free(ctx);
+		spdk_free(ctx);
 	}
 }
 

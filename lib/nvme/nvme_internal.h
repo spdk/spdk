@@ -845,6 +845,7 @@ struct nvme_register_completion {
 	spdk_nvme_reg_cb			cb_fn;
 	void					*cb_ctx;
 	STAILQ_ENTRY(nvme_register_completion)	stailq;
+	pid_t					pid;
 };
 
 /*
