@@ -1131,6 +1131,26 @@ bdev_nvme_admin_passthru_complete(struct nvme_bdev_io *bio, int rc)
 }
 
 static void
+_nvme_ctrlr_read_ana_log_page_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
+
+	pthread_mutex_lock(&nvme_ctrlr->mutex);
+
+	assert(nvme_ctrlr->ana_log_page_updating == true);
+	nvme_ctrlr->ana_log_page_updating = false;
+
+	if (!nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
+		pthread_mutex_unlock(&nvme_ctrlr->mutex);
+		return;
+	}
+
+	pthread_mutex_unlock(&nvme_ctrlr->mutex);
+
+	nvme_ctrlr_unregister(nvme_ctrlr);
+}
+
+static void
 _bdev_nvme_clear_io_path_cache(struct nvme_qpair *nvme_qpair)
 {
 	struct nvme_io_path *io_path;
@@ -3501,26 +3521,6 @@ nvme_ctrlr_set_ana_states(const struct spdk_nvme_ana_group_descriptor *desc,
 	}
 
 	return 0;
-}
-
-static void
-_nvme_ctrlr_read_ana_log_page_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct nvme_ctrlr *nvme_ctrlr = spdk_io_channel_iter_get_io_device(i);
-
-	pthread_mutex_lock(&nvme_ctrlr->mutex);
-
-	assert(nvme_ctrlr->ana_log_page_updating == true);
-	nvme_ctrlr->ana_log_page_updating = false;
-
-	if (!nvme_ctrlr_can_be_unregistered(nvme_ctrlr)) {
-		pthread_mutex_unlock(&nvme_ctrlr->mutex);
-		return;
-	}
-
-	pthread_mutex_unlock(&nvme_ctrlr->mutex);
-
-	nvme_ctrlr_unregister(nvme_ctrlr);
 }
 
 static void
