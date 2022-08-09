@@ -967,7 +967,6 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			continue;
 		}
 
-		dev_cnt++;
 		if (new_dev->header->common.header_type & PCI_HEADER_TYPE_BRIDGE) {
 			slot_cap.as_uint32_t = 0;
 			if (new_dev->pcie_cap != NULL) {
@@ -1009,6 +1008,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			TAILQ_INSERT_TAIL(&bus->vmd->bus_list, new_bus, tailq);
 
 			vmd_dev_init(new_dev);
+			dev_cnt++;
 
 			if (slot_cap.bit_field.hotplug_capable && new_dev->pcie_cap != NULL &&
 			    new_dev->pcie_cap->express_cap_register.bit_field.slot_implemented) {
@@ -1025,9 +1025,8 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 			rc = vmd_init_end_device(new_dev);
 			if (rc != 0) {
 				vmd_dev_free(new_dev);
-				if (dev_cnt) {
-					dev_cnt--;
-				}
+			} else {
+				dev_cnt++;
 			}
 		}
 	}
