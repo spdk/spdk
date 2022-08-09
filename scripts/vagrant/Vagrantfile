@@ -311,11 +311,6 @@ provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
 vmcpu = (ENV['SPDK_VAGRANT_VMCPU'] || 2)
 vmram = (ENV['SPDK_VAGRANT_VMRAM'] || 4096)
 
-# generic/freebsd boxes do not work properly with vagrant-proxyconf and
-# have issues installing rsync and sshfs for syncing files. NFS is
-# pre-installed, so use it.
-# generic/fedora boxes on the other hand have problems running NFS
-# service so use sshfs+rsync combo instead.
 force_distro = ENV['FORCE_DISTRO'] == "true" ? true : false
 
 distro_to_use = get_box_type(distro, force_distro)
@@ -345,8 +340,6 @@ Vagrant.configure(2) do |config|
   # Copy in the user's tools if they exists
   copy_vagrant_tools(config,files_sync_backend)
 
-  # rsync the spdk directory if provision hasn't happened yet
-  # Warning: rsync does not work with freebsd boxes, so this step is disabled
   copy_spdk_dir(config, files_sync_backend)
 
   # rsync artifacts from build
@@ -358,9 +351,6 @@ Vagrant.configure(2) do |config|
   # Virtualbox configuration
   setup_virtualbox(config,vmcpu,vmram)
 
-  # This setup was Tested on Fedora 27
-  # libvirt configuration need modern Qemu(tested on 2.10) & vagrant-libvirt in version 0.0.39+
-  # There are few limitation for SElinux - The file added outside libvirt must have proper SE ACL policy or setenforce 0
   setup_libvirt(config,vmcpu,vmram,distro)
 
   # provision the vm with all of the necessary spdk dependencies for running the autorun.sh tests
