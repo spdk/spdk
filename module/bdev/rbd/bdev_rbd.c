@@ -458,18 +458,38 @@ static struct spdk_bdev_module rbd_if = {
 };
 SPDK_BDEV_MODULE_REGISTER(rbd, &rbd_if)
 
+static int bdev_rbd_reset_timer(void *arg);
+
+static void
+bdev_rbd_check_outstanding_ios(struct spdk_bdev *bdev, uint64_t current_qd,
+			       void *cb_arg, int rc)
+{
+	struct bdev_rbd *disk = cb_arg;
+	enum spdk_bdev_io_status bio_status;
+
+	if (rc == 0 && current_qd > 0) {
+		disk->reset_timer = SPDK_POLLER_REGISTER(bdev_rbd_reset_timer, disk, 1000);
+		return;
+	}
+
+	if (rc != 0) {
+		bio_status = SPDK_BDEV_IO_STATUS_FAILED;
+	} else {
+		bio_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	}
+
+	bdev_rbd_io_complete(disk->reset_bdev_io, bio_status);
+	disk->reset_bdev_io = NULL;
+}
+
 static int
 bdev_rbd_reset_timer(void *arg)
 {
 	struct bdev_rbd *disk = arg;
 
-	/*
-	 * TODO: This should check if any I/O is still in flight before completing the reset.
-	 * For now, just complete after the timer expires.
-	 */
-	bdev_rbd_io_complete(disk->reset_bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	spdk_poller_unregister(&disk->reset_timer);
-	disk->reset_bdev_io = NULL;
+
+	spdk_bdev_get_current_qd(&disk->disk, bdev_rbd_check_outstanding_ios, disk);
 
 	return SPDK_POLLER_BUSY;
 }
@@ -479,11 +499,12 @@ bdev_rbd_reset(struct bdev_rbd *disk, struct spdk_bdev_io *bdev_io)
 {
 	/*
 	 * HACK: Since librbd doesn't provide any way to cancel outstanding aio, just kick off a
-	 * timer to wait for in-flight I/O to complete.
+	 * poller to wait for in-flight I/O to complete.
 	 */
 	assert(disk->reset_bdev_io == NULL);
 	disk->reset_bdev_io = bdev_io;
-	disk->reset_timer = SPDK_POLLER_REGISTER(bdev_rbd_reset_timer, disk, 1 * 1000 * 1000);
+
+	bdev_rbd_reset_timer(disk);
 }
 
 static void
