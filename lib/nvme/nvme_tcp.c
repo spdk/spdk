@@ -23,6 +23,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/nvme_tcp.h"
+#include "spdk_internal/trace_defs.h"
 
 #define NVME_TCP_RW_BUFFER_SIZE 131072
 #define NVME_TCP_TIME_OUT_IN_SECONDS 2
@@ -730,6 +731,9 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
+	spdk_trace_record(TRACE_NVME_TCP_SUBMIT, qpair->id, 0, (uintptr_t)req,
+			  (uint32_t)req->cmd.cid, (uint32_t)req->cmd.opc,
+			  req->cmd.cdw10, req->cmd.cdw11, req->cmd.cdw12);
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 	return nvme_tcp_qpair_capsule_cmd_send(tqpair, tcp_req);
 }
@@ -773,6 +777,8 @@ nvme_tcp_req_complete(struct nvme_tcp_req *tcp_req,
 		spdk_nvme_qpair_print_completion(qpair, rsp);
 	}
 
+	spdk_trace_record(TRACE_NVME_TCP_COMPLETE, qpair->id, 0, (uintptr_t)req,
+			  (uint32_t)req->cmd.cid, (uint32_t)cpl.status_raw);
 	TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 	nvme_tcp_req_put(tqpair, tcp_req);
 	nvme_free_request(req);
@@ -2456,3 +2462,30 @@ const struct spdk_nvme_transport_ops tcp_ops = {
 };
 
 SPDK_NVME_TRANSPORT_REGISTER(tcp, &tcp_ops);
+
+SPDK_TRACE_REGISTER_FN(nvme_tcp, "nvme_tcp", TRACE_GROUP_NVME_TCP)
+{
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"NVME_TCP_SUBMIT", TRACE_NVME_TCP_SUBMIT,
+			OWNER_NVME_TCP_QP, OBJECT_NVME_TCP_REQ, 1,
+			{	{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
+				{ "opc", SPDK_TRACE_ARG_TYPE_INT, 4 },
+				{ "dw10", SPDK_TRACE_ARG_TYPE_PTR, 4 },
+				{ "dw11", SPDK_TRACE_ARG_TYPE_PTR, 4 },
+				{ "dw12", SPDK_TRACE_ARG_TYPE_PTR, 4 }
+			}
+		},
+		{
+			"NVME_TCP_COMPLETE", TRACE_NVME_TCP_COMPLETE,
+			OWNER_NVME_TCP_QP, OBJECT_NVME_TCP_REQ, 0,
+			{	{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
+				{ "cpl", SPDK_TRACE_ARG_TYPE_PTR, 4 }
+			}
+		},
+	};
+
+	spdk_trace_register_object(OBJECT_NVME_TCP_REQ, 'p');
+	spdk_trace_register_owner(OWNER_NVME_TCP_QP, 'q');
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+}
