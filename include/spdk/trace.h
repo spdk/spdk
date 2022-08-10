@@ -340,7 +340,7 @@ struct spdk_trace_tpoint_opts {
 
 /**
  * Register the description for a number of tpoints. This function allows the user to register
- * tracepoints with multiple arguments (up to 5).
+ * tracepoints with multiple arguments.
  *
  * \param opts Array of structures describing tpoints and their arguments.
  * \param num_opts Number of tpoints to register (size of the opts array).
