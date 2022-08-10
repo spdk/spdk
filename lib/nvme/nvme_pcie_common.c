@@ -1817,7 +1817,7 @@ SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
 	struct spdk_trace_tpoint_opts opts[] = {
 		{
 			"NVME_PCIE_SUBMIT", TRACE_NVME_PCIE_SUBMIT,
-			OWNER_NVME_PCIE_QP, OBJECT_NVME_PCIE_TR, 1,
+			OWNER_NVME_PCIE_QP, OBJECT_NVME_PCIE_REQ, 1,
 			{	{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
 				{ "opc", SPDK_TRACE_ARG_TYPE_INT, 4 },
 				{ "dw10", SPDK_TRACE_ARG_TYPE_PTR, 4 },
@@ -1827,14 +1827,14 @@ SPDK_TRACE_REGISTER_FN(nvme_pcie, "nvme_pcie", TRACE_GROUP_NVME_PCIE)
 		},
 		{
 			"NVME_PCIE_COMPLETE", TRACE_NVME_PCIE_COMPLETE,
-			OWNER_NVME_PCIE_QP, OBJECT_NVME_PCIE_TR, 0,
+			OWNER_NVME_PCIE_QP, OBJECT_NVME_PCIE_REQ, 0,
 			{	{ "cid", SPDK_TRACE_ARG_TYPE_INT, 4 },
 				{ "cpl", SPDK_TRACE_ARG_TYPE_PTR, 4 }
 			}
 		},
 	};
 
-	spdk_trace_register_object(OBJECT_NVME_PCIE_TR, 'p');
+	spdk_trace_register_object(OBJECT_NVME_PCIE_REQ, 'p');
 	spdk_trace_register_owner(OWNER_NVME_PCIE_QP, 'q');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
 }

@@ -18,7 +18,7 @@
 /* Object definitions */
 #define OBJECT_ISCSI_PDU	0x1
 #define OBJECT_BDEV_IO		0x2
-#define OBJECT_NVME_PCIE_TR	0x3
+#define OBJECT_NVME_PCIE_REQ	0x3
 #define OBJECT_SCSI_TASK	0x10
 #define OBJECT_NVMF_RDMA_IO	0x40
 #define OBJECT_NVMF_TCP_IO	0x80
