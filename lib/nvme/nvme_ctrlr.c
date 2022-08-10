@@ -2720,9 +2720,7 @@ nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_update_nvmf_ioccsz(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA ||
-	    ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_TCP ||
-	    ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_FC) {
+	if (spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
 		if (ctrlr->cdata.nvmf_specific.ioccsz < 4) {
 			NVME_CTRLR_ERRLOG(ctrlr, "Incorrect IOCCSZ %u, the minimum value should be 4\n",
 					  ctrlr->cdata.nvmf_specific.ioccsz);

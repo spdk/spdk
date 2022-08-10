@@ -679,7 +679,8 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 						\
 	STAILQ_INIT(&adminq.free_req);		\
 	STAILQ_INSERT_HEAD(&adminq.free_req, &req, stailq);	\
-	ctrlr.adminq = &adminq;
+	ctrlr.adminq = &adminq;					\
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_CUSTOM;
 
 static void
 test_nvme_ctrlr_init_en_1_rdy_0(void)
@@ -2459,6 +2460,31 @@ test_nvme_ctrlr_init_set_nvmf_ioccsz(void)
 
 	CU_ASSERT(ctrlr.ioccsz_bytes == 0);
 	CU_ASSERT(ctrlr.icdoff == 0);
+
+	nvme_ctrlr_destruct(&ctrlr);
+
+	/* Check CUSTOM_FABRICS trtype, */
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_CUSTOM_FABRICS;
+
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_CONFIGURE_AER);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_IOCS_SPECIFIC);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_NUM_QUEUES);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_IDENTIFY_NS);
+
+	CU_ASSERT(ctrlr.ioccsz_bytes == 4096);
+	CU_ASSERT(ctrlr.icdoff == 1);
+	ctrlr.ioccsz_bytes = 0;
+	ctrlr.icdoff = 0;
 
 	nvme_ctrlr_destruct(&ctrlr);
 
