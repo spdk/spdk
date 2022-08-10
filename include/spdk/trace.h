@@ -62,7 +62,7 @@ struct spdk_trace_object {
 #define SPDK_TRACE_ARG_TYPE_PTR 1
 #define SPDK_TRACE_ARG_TYPE_STR 2
 
-#define SPDK_TRACE_MAX_ARGS_COUNT 5
+#define SPDK_TRACE_MAX_ARGS_COUNT 8
 #define SPDK_TRACE_MAX_RELATIONS 16
 
 struct spdk_trace_argument {

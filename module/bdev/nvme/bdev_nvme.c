@@ -6781,4 +6781,8 @@ SPDK_TRACE_REGISTER_FN(bdev_nvme_trace, "bdev_nvme", TRACE_GROUP_BDEV_NVME)
 
 	spdk_trace_register_object(OBJECT_BDEV_NVME_IO, 'N');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+	spdk_trace_tpoint_register_relation(TRACE_NVME_PCIE_SUBMIT, OBJECT_BDEV_NVME_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_NVME_TCP_SUBMIT, OBJECT_BDEV_NVME_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_NVME_PCIE_COMPLETE, OBJECT_BDEV_NVME_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_NVME_TCP_COMPLETE, OBJECT_BDEV_NVME_IO, 0);
 }
