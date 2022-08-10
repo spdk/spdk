@@ -42,6 +42,11 @@ assignements.
 Added a new startup RPC `accel_assign_opc` to assign/override a specific opcode to
 an engine.
 
+### nvme
+
+Added SPDK_NVME_TRANSPORT_CUSTOM_FABRICS to enum spdk_nvme_transport_type to support custom
+fabric transport. SPDK_NVME_TRANSPORT_CUSTOM was intended to be non-fabric custom transport.
+
 ## v22.05
 
 ### sock

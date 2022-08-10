@@ -363,6 +363,11 @@ enum spdk_nvme_transport_type {
 	 * Custom Transport (Not spec defined)
 	 */
 	SPDK_NVME_TRANSPORT_CUSTOM = 4096,
+
+	/**
+	 * Custom Fabric Transport (Not spec defined)
+	 */
+	SPDK_NVME_TRANSPORT_CUSTOM_FABRICS = 4097,
 };
 
 static inline bool spdk_nvme_trtype_is_fabrics(enum spdk_nvme_transport_type trtype)
@@ -370,7 +375,7 @@ static inline bool spdk_nvme_trtype_is_fabrics(enum spdk_nvme_transport_type trt
 	/* We always define non-fabrics trtypes outside of the 8-bit range
 	 * of NVMe-oF trtype.
 	 */
-	return trtype <= UINT8_MAX;
+	return trtype <= UINT8_MAX || trtype == SPDK_NVME_TRANSPORT_CUSTOM_FABRICS;
 }
 
 /* typedef added for coding style reasons */
