@@ -4,7 +4,7 @@ testdir=$(readlink -f "$(dirname "$0")")
 rootdir=$(readlink -f "$testdir/../..")
 
 source "$rootdir/test/common/autotest_common.sh"
-source "$rootdir/test/vhost/common.sh"
+source "$rootdir/test/vfio_user/common.sh"
 source "$testdir/common.sh"
 
 function create_device() {
