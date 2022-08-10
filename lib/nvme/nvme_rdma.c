@@ -916,7 +916,7 @@ static void
 nvme_rdma_dereg_mr(union nvme_rdma_mr *mr)
 {
 	if (!g_nvme_hooks.get_rkey) {
-		if (mr->mr && rdma_dereg_mr(mr->mr)) {
+		if (mr->mr && ibv_dereg_mr(mr->mr)) {
 			SPDK_ERRLOG("Unable to de-register mr\n");
 		}
 	} else {
