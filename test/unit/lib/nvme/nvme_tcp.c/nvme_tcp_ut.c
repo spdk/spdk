@@ -581,7 +581,11 @@ test_nvme_tcp_req_get(void)
 	CU_ASSERT(tcp_req.r2tl_remain == 0);
 	CU_ASSERT(tcp_req.iovcnt == 0);
 	CU_ASSERT(tcp_req.ordering.raw == 0);
-	CU_ASSERT(!TAILQ_EMPTY(&tqpair.outstanding_reqs));
+	/* outstanding_reqs should still be empty - caller is responsible
+	 * for putting it on the TAILQ after any other initialization is
+	 * completed.
+	 */
+	CU_ASSERT(TAILQ_EMPTY(&tqpair.outstanding_reqs));
 	CU_ASSERT(TAILQ_EMPTY(&tqpair.free_reqs));
 
 	/* No tcp request available, expect fail */

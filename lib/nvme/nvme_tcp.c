@@ -200,7 +200,6 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->ordering.raw = 0;
 	memset(tcp_req->pdu, 0, sizeof(struct nvme_tcp_pdu));
 	memset(&tcp_req->rsp, 0, sizeof(struct spdk_nvme_cpl));
-	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
 	return tcp_req;
 }
@@ -727,11 +726,11 @@ nvme_tcp_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	if (nvme_tcp_req_init(tqpair, req, tcp_req)) {
 		SPDK_ERRLOG("nvme_tcp_req_init() failed\n");
-		TAILQ_REMOVE(&tcp_req->tqpair->outstanding_reqs, tcp_req, link);
 		nvme_tcp_req_put(tqpair, tcp_req);
 		return -1;
 	}
 
+	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 	return nvme_tcp_qpair_capsule_cmd_send(tqpair, tcp_req);
 }
 
