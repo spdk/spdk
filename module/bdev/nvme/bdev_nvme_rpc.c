@@ -88,12 +88,14 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 	}
 
 	rc = bdev_nvme_set_opts(&opts);
-	if (rc) {
+	if (rc == -EPERM) {
+		spdk_jsonrpc_send_error_response(request, -EPERM,
+						 "RPC not permitted with nvme controllers already attached");
+	} else if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		return;
+	} else {
+		spdk_jsonrpc_send_bool_response(request, true);
 	}
-
-	spdk_jsonrpc_send_bool_response(request, true);
 
 	return;
 }
