@@ -1,15 +1,18 @@
-import os
-import grpc
 import logging
-from ..common import format_volume_id
-from socket import AddressFamily
-from spdk.rpc.client import JSONRPCException
+import os
 import shutil
-from .device import DeviceManager, DeviceException
-from google.protobuf import wrappers_pb2 as wrap
-from ..qmp import QMPClient, QMPError
-from ..proto import sma_pb2
 from contextlib import contextmanager
+from socket import AddressFamily
+
+import grpc
+from google.protobuf import wrappers_pb2 as wrap
+from spdk.rpc.client import JSONRPCException
+
+from ..common import format_volume_id, volume_id_to_nguid
+from ..proto import sma_pb2
+from ..qmp import QMPClient, QMPError
+from ..volume import CryptoException, get_crypto_engine
+from .device import DeviceException, DeviceManager
 
 log = logging.getLogger(__name__)
 
@@ -204,8 +207,9 @@ class NvmfVfioDeviceManager(DeviceManager):
 
     def _get_bdev(self, client, guid):
         try:
-            return client.call('bdev_get_bdevs', {'name': guid})[0]
-        except JSONRPCException:
+            bdev_name = get_crypto_engine().get_crypto_bdev(guid) or guid
+            return client.call('bdev_get_bdevs', {'name': bdev_name})[0]
+        except (JSONRPCException, CryptoException):
             logging.error('Failed to find bdev')
             return None
 
@@ -214,14 +218,16 @@ class NvmfVfioDeviceManager(DeviceManager):
             if ns['name'] == bdev['name']:
                 return ns
 
-    def _subsystem_add_ns(self, client, bdev, subsystem, subnqn):
+    def _subsystem_add_ns(self, client, bdev, subsystem, subnqn, volume_id):
         try:
             if self._get_ns(bdev, subsystem) is not None:
                 return True
             return client.call('nvmf_subsystem_add_ns',
                                {'nqn': subnqn,
                                 'namespace': {
-                                    'bdev_name': bdev['name']}})
+                                    'bdev_name': bdev['name'],
+                                    'uuid': volume_id,
+                                    'nguid': volume_id_to_nguid(volume_id)}})
         except JSONRPCException:
             logging.error('Failed to add ns')
         return False
@@ -238,7 +244,7 @@ class NvmfVfioDeviceManager(DeviceManager):
             if subsys is None:
                 raise DeviceException(grpc.StatusCode.NOT_FOUND,
                                       'Invalid device handle')
-            result = self._subsystem_add_ns(client, bdev, subsys, nqn)
+            result = self._subsystem_add_ns(client, bdev, subsys, nqn, volume_id)
             if not result:
                 raise DeviceException(grpc.StatusCode.INTERNAL,
                                       'Failed to attach volume')
