@@ -1,13 +1,15 @@
-import os
-import grpc
 import logging
-from ..common import format_volume_id
+import os
 from socket import AddressFamily
+
+import grpc
 from spdk.rpc.client import JSONRPCException
-from .device import DeviceManager, DeviceException
+
+from ..common import format_volume_id, volume_id_to_nguid
+from ..proto import sma_pb2, virtio_blk_pb2
 from ..qmp import QMPClient, QMPError
-from ..proto import sma_pb2
-from ..proto import virtio_blk_pb2
+from ..volume import CryptoException, get_crypto_engine
+from .device import DeviceException, DeviceManager
 
 
 class VhostBlkDeviceManager(DeviceManager):
@@ -72,10 +74,11 @@ class VhostBlkDeviceManager(DeviceManager):
             logging.error('Failed to delete controller')
         return False
 
-    def _find_bdev(self, client, name):
+    def _find_bdev(self, client, guid):
         try:
-            return client.call('bdev_get_bdevs', {'name': name})[0]
-        except JSONRPCException:
+            bdev_name = get_crypto_engine().get_crypto_bdev(guid) or guid
+            return client.call('bdev_get_bdevs', {'name': bdev_name})[0]
+        except (JSONRPCException, CryptoException):
             return None
 
     def _bdev_cmp(self, client, bdev1, bdev2):
@@ -89,8 +92,9 @@ class VhostBlkDeviceManager(DeviceManager):
         if nctrlr is not None:
             return self._bdev_cmp(client, nctrlr['backend_specific']['block']['bdev'], volume_guid)
         try:
+            bdev_name = get_crypto_engine().get_crypto_bdev(volume_guid) or volume_guid
             return client.call('vhost_create_blk_controller',
-                               {'ctrlr': ctrlr, 'dev_name': volume_guid})
+                               {'ctrlr': ctrlr, 'dev_name': bdev_name})
         except JSONRPCException:
             logging.error('Failed to create subsystem')
         return False
