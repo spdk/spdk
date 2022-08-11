@@ -7768,4 +7768,6 @@ SPDK_TRACE_REGISTER_FN(bdev_trace, "bdev", TRACE_GROUP_BDEV)
 	spdk_trace_register_owner(OWNER_BDEV, 'b');
 	spdk_trace_register_object(OBJECT_BDEV_IO, 'i');
 	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_NVME_IO_START, OBJECT_BDEV_IO, 0);
+	spdk_trace_tpoint_register_relation(TRACE_BDEV_NVME_IO_DONE, OBJECT_BDEV_IO, 0);
 }

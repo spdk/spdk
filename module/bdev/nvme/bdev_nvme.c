@@ -19,6 +19,7 @@
 #include "spdk/nvme_zns.h"
 #include "spdk/opal.h"
 #include "spdk/thread.h"
+#include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 
@@ -26,6 +27,7 @@
 #include "spdk/log.h"
 
 #include "spdk_internal/usdt.h"
+#include "spdk_internal/trace_defs.h"
 
 #define SPDK_BDEV_NVME_DEFAULT_DELAY_CMD_SUBMIT true
 #define SPDK_BDEV_NVME_DEFAULT_KEEP_ALIVE_TIMEOUT_IN_MS	(10000)
@@ -664,6 +666,8 @@ static inline void
 __bdev_nvme_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 			const struct spdk_nvme_cpl *cpl)
 {
+	spdk_trace_record(TRACE_BDEV_NVME_IO_DONE, 0, 0, (uintptr_t)bdev_io->driver_ctx,
+			  (uintptr_t)bdev_io);
 	if (cpl) {
 		spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
 	} else {
@@ -2092,6 +2096,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	struct nvme_bdev_io *nbdev_io_to_abort;
 	int rc = 0;
 
+	spdk_trace_record(TRACE_BDEV_NVME_IO_START, 0, 0, (uintptr_t)nbdev_io, (uintptr_t)bdev_io);
 	nbdev_io->io_path = bdev_nvme_find_io_path(nbdev_ch);
 	if (spdk_unlikely(!nbdev_io->io_path)) {
 		if (!bdev_nvme_io_type_is_admin(bdev_io->type)) {
@@ -6757,3 +6762,23 @@ bdev_nvme_get_discovery_info(struct spdk_json_write_ctx *w)
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev_nvme)
+
+SPDK_TRACE_REGISTER_FN(bdev_nvme_trace, "bdev_nvme", TRACE_GROUP_BDEV_NVME)
+{
+	struct spdk_trace_tpoint_opts opts[] = {
+		{
+			"BDEV_NVME_IO_START", TRACE_BDEV_NVME_IO_START,
+			OWNER_NONE, OBJECT_BDEV_NVME_IO, 1,
+			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
+		},
+		{
+			"BDEV_NVME_IO_DONE", TRACE_BDEV_NVME_IO_DONE,
+			OWNER_NONE, OBJECT_BDEV_NVME_IO, 0,
+			{{ "ctx", SPDK_TRACE_ARG_TYPE_PTR, 8 }}
+		}
+	};
+
+
+	spdk_trace_register_object(OBJECT_BDEV_NVME_IO, 'N');
+	spdk_trace_register_description_ext(opts, SPDK_COUNTOF(opts));
+}
