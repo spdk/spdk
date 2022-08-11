@@ -82,9 +82,13 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 			break;
 		case SPDK_TRACE_ARG_TYPE_INT:
 		case SPDK_TRACE_ARG_TYPE_PTR:
-			intval = va_arg(vl, uint64_t);
+			if (argument->size == 8) {
+				intval = va_arg(vl, uint64_t);
+			} else {
+				intval = va_arg(vl, uint32_t);
+			}
 			argval = &intval;
-			arglen = sizeof(uint64_t);
+			arglen = argument->size;
 			break;
 		default:
 			assert(0 && "Invalid trace argument type");

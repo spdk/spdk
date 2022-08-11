@@ -289,8 +289,8 @@ trace_register_description(const struct spdk_trace_tpoint_opts *opts)
 		switch (opts->args[i].type) {
 		case SPDK_TRACE_ARG_TYPE_INT:
 		case SPDK_TRACE_ARG_TYPE_PTR:
-			/* The integers and pointers have to be exactly 64b long */
-			assert(opts->args[i].size == sizeof(uint64_t));
+			/* The integers and pointers have to be exactly 4 or 8 bytes */
+			assert(opts->args[i].size == 4 || opts->args[i].size == 8);
 			break;
 		case SPDK_TRACE_ARG_TYPE_STR:
 			/* Strings need to have at least one byte for the NULL terminator */

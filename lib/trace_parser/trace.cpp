@@ -127,6 +127,10 @@ spdk_trace_parser::build_arg(argument_context *argctx, const spdk_trace_argument
 	size_t curlen, argoff;
 
 	argoff = 0;
+	/* Make sure that if we only copy a 4-byte integer, that the upper bytes have already been
+	 * zeroed.
+	 */
+	pe->args[argid].integer = 0;
 	while (argoff < arg->size) {
 		if (argctx->offset == sizeof(buffer->data)) {
 			buffer = get_next_buffer(buffer, argctx->lcore);
