@@ -17,3 +17,21 @@ function uuid2base64() {
 		print(base64.b64encode(uuid.UUID("$1").bytes).decode())
 	EOF
 }
+
+get_cipher() {
+	case "$1" in
+		AES_CBC) echo 0 ;;
+		AES_XTS) echo 1 ;;
+		*) echo "$1" ;;
+	esac
+}
+
+format_key() {
+	base64 <(echo -n "$1")
+}
+
+uuid2nguid() {
+	# The NGUID returned by the RPC is UPPERCASE
+	local uuid=${1^^}
+	echo ${uuid//-/}
+}

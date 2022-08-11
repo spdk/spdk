@@ -20,24 +20,6 @@ cleanup() {
 	killprocess $tgtpid
 }
 
-get_cipher() {
-	case "$1" in
-		AES_CBC) echo 0 ;;
-		AES_XTS) echo 1 ;;
-		*) echo "$1" ;;
-	esac
-}
-
-format_key() {
-	base64 <(echo -n "$1")
-}
-
-uuid2nguid() {
-	# The NGUID returned by the RPC is UPPERCASE
-	local uuid=${1^^}
-	echo ${uuid//-/}
-}
-
 gen_volume_params() {
 	local volume_id=$1 cipher=$2 key=$3 key2=$4 config
 	local -a params crypto
