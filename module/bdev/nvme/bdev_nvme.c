@@ -657,6 +657,20 @@ bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
+/* If cpl != NULL, complete the bdev_io with nvme status based on 'cpl'.
+ * If cpl == NULL, complete the bdev_io with bdev status based on 'status'.
+ */
+static inline void
+__bdev_nvme_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+			const struct spdk_nvme_cpl *cpl)
+{
+	if (cpl) {
+		spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	} else {
+		spdk_bdev_io_complete(bdev_io, status);
+	}
+}
+
 static void
 bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch)
 {
@@ -664,7 +678,7 @@ bdev_nvme_abort_retry_ios(struct nvme_bdev_channel *nbdev_ch)
 
 	TAILQ_FOREACH_SAFE(bdev_io, &nbdev_ch->retry_io_list, module_link, tmp_io) {
 		TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io, module_link);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED);
+		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
 	}
 
 	spdk_poller_unregister(&nbdev_ch->retry_io_poller);
@@ -1065,7 +1079,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 
 complete:
 	bio->retry_count = 0;
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	__bdev_nvme_io_complete(bdev_io, 0, cpl);
 }
 
 static inline void
@@ -1099,7 +1113,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 	}
 
 	bio->retry_count = 0;
-	spdk_bdev_io_complete(bdev_io, io_status);
+	__bdev_nvme_io_complete(bdev_io, io_status, NULL);
 }
 
 static inline void
@@ -1131,7 +1145,7 @@ bdev_nvme_admin_passthru_complete(struct nvme_bdev_io *bio, int rc)
 	}
 
 	bio->retry_count = 0;
-	spdk_bdev_io_complete(bdev_io, io_status);
+	__bdev_nvme_io_complete(bdev_io, io_status, NULL);
 }
 
 static void
@@ -1461,7 +1475,7 @@ bdev_nvme_complete_pending_resets(struct spdk_io_channel_iter *i)
 	while (!TAILQ_EMPTY(&ctrlr_ch->pending_resets)) {
 		bdev_io = TAILQ_FIRST(&ctrlr_ch->pending_resets);
 		TAILQ_REMOVE(&ctrlr_ch->pending_resets, bdev_io, module_link);
-		spdk_bdev_io_complete(bdev_io, status);
+		__bdev_nvme_io_complete(bdev_io, status, NULL);
 	}
 
 	spdk_for_each_channel_continue(i, 0);
@@ -1892,7 +1906,7 @@ bdev_nvme_reset_io_complete(struct nvme_bdev_io *bio)
 		io_status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), io_status);
+	__bdev_nvme_io_complete(spdk_bdev_io_from_ctx(bio), io_status, NULL);
 }
 
 static void
@@ -5869,7 +5883,7 @@ bdev_nvme_admin_passthru_complete_nvme_status(void *ctx)
 
 complete:
 	bio->retry_count = 0;
-	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->cdw0, cpl->status.sct, cpl->status.sc);
+	__bdev_nvme_io_complete(bdev_io, 0, cpl);
 }
 
 static void
@@ -5879,9 +5893,9 @@ bdev_nvme_abort_complete(void *ctx)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	if (spdk_nvme_cpl_is_abort_success(&bio->cpl)) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS, NULL);
 	} else {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, NULL);
 	}
 }
 
@@ -6470,9 +6484,9 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 	TAILQ_FOREACH(bdev_io_to_abort, &nbdev_ch->retry_io_list, module_link) {
 		if ((struct nvme_bdev_io *)bdev_io_to_abort->driver_ctx == bio_to_abort) {
 			TAILQ_REMOVE(&nbdev_ch->retry_io_list, bdev_io_to_abort, module_link);
-			spdk_bdev_io_complete(bdev_io_to_abort, SPDK_BDEV_IO_STATUS_ABORTED);
+			__bdev_nvme_io_complete(bdev_io_to_abort, SPDK_BDEV_IO_STATUS_ABORTED, NULL);
 
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+			__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS, NULL);
 			return;
 		}
 	}
@@ -6507,7 +6521,7 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		/* If no command was found or there was any error, complete the abort
 		 * request with failure.
 		 */
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, NULL);
 	}
 }
 
