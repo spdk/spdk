@@ -343,6 +343,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 	uint64_t	tpoint_group_mask, tpoint_mask = -1ULL;
 	char		*end = NULL, *tpoint_group_mask_str, *tpoint_group_str = NULL;
 	char		*tp_g_str, *tpoint_group, *tpoints;
+	bool		error_found = false;
 	uint64_t	group_id;
 
 	if (opts->shm_id >= 0) {
@@ -379,6 +380,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 			if (*end != '\0' || errno) {
 				tpoint_group_mask = spdk_trace_create_tpoint_group_mask(tpoint_group);
 				if (tpoint_group_mask == 0) {
+					error_found = true;
 					break;
 				}
 			}
@@ -388,12 +390,14 @@ app_setup_trace(struct spdk_app_opts *opts)
 			if (!spdk_u64_is_pow2(tpoint_group_mask)) {
 				SPDK_ERRLOG("Tpoint group mask: %s contains multiple tpoint groups.\n", tpoint_group);
 				SPDK_ERRLOG("This is not supported, to prevent from activating tpoints by mistake.\n");
+				error_found = true;
 				break;
 			}
 
 			errno = 0;
 			tpoint_mask = strtoull(tpoints, &end, 16);
 			if (*end != '\0' || errno) {
+				error_found = true;
 				break;
 			}
 		} else {
@@ -402,6 +406,7 @@ app_setup_trace(struct spdk_app_opts *opts)
 			if (*end != '\0' || errno) {
 				tpoint_group_mask = spdk_trace_create_tpoint_group_mask(tpoint_group_str);
 				if (tpoint_group_mask == 0) {
+					error_found = true;
 					break;
 				}
 			}
@@ -415,8 +420,9 @@ app_setup_trace(struct spdk_app_opts *opts)
 		}
 	}
 
-	if (tpoint_group_str != NULL) {
+	if (error_found) {
 		SPDK_ERRLOG("invalid tpoint mask %s\n", opts->tpoint_group_mask);
+		return -1;
 	} else {
 		SPDK_NOTICELOG("Tracepoint Group Mask %s specified.\n", opts->tpoint_group_mask);
 		SPDK_NOTICELOG("Use 'spdk_trace -s %s %s %d' to capture a snapshot of events at runtime.\n",
