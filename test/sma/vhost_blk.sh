@@ -72,6 +72,10 @@ $rootdir/scripts/sma.py -c <(
 		        count: 32
 		      qmp_addr: 127.0.0.1
 		      qmp_port: 9090
+		crypto:
+		  name: 'bdev_crypto'
+		  params:
+		    driver: 'crypto_aesni_mb'
 	EOF
 ) &
 smapid=$!
@@ -153,6 +157,43 @@ done
 
 # And back to none
 [[ $(vm_exec $vm_no "lsblk | grep -E \"^vd.\" | wc -l") -eq 0 ]]
+
+key0=1234567890abcdef1234567890abcdef
+rpc_cmd bdev_malloc_create -b malloc0 32 4096
+uuidc=$(rpc_cmd bdev_get_bdevs -b malloc0 | jq -r '.[].uuid')
+
+#Try to create controller with bdev crypto
+devid0=$(
+	"$rootdir/scripts/sma-client.py" <<- CREATE | jq -r '.handle'
+		{
+		  "method": "CreateDevice",
+		  "params": {
+		    "virtio_blk": {
+		      "physical_id": "0",
+		      "virtual_id": "0"
+		    },
+		    "volume": {
+		      "volume_id": "$(uuid2base64 $uuidc)",
+		      "crypto": {
+		        "cipher": "$(get_cipher AES_CBC)",
+		        "key": "$(format_key $key0)"
+		      }
+		    }
+		  }
+		}
+	CREATE
+)
+
+[[ $(rpc_cmd vhost_get_controllers | jq -r '. | length') -eq 1 ]]
+bdev=$(rpc_cmd vhost_get_controllers | jq -r '.[].backend_specific.block.bdev')
+
+crypto_bdev=$(rpc_cmd bdev_get_bdevs | jq -r '.[] | select(.product_name == "crypto")')
+[[ $(jq -r '.driver_specific.crypto.key' <<< "$crypto_bdev") == "$key0" ]]
+[[ $(jq -r '.driver_specific.crypto.name' <<< "$crypto_bdev") == "$bdev" ]]
+
+# Delete crypto device and check if it's gone
+delete_device $devid0
+[[ $(rpc_cmd bdev_get_bdevs | jq -r '.[] | select(.product_name == "crypto")' | jq -r length) -eq 0 ]]
 
 cleanup
 trap - SIGINT SIGTERM EXIT
