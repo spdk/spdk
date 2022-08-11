@@ -139,6 +139,10 @@ $rootdir/scripts/sma.py -c <(
 		          count: 32
 		      qmp_addr: 127.0.0.1
 		      qmp_port: 10005
+		crypto:
+		  name: 'bdev_crypto'
+		  params:
+		    driver: 'crypto_aesni_mb'
 	EOF
 ) &
 smapid=$!
@@ -257,6 +261,39 @@ detach_volume "$device1" "$uuid0"
 
 delete_device "$device0"
 delete_device "$device1"
+
+key0=1234567890abcdef1234567890abcdef
+device0=$(create_device 0 0 | jq -r '.handle')
+uuid0=$(rpc_cmd bdev_get_bdevs -b null0 | jq -r '.[].uuid')
+
+# Now check vfio-user attach with bdev crypto
+"$rootdir/scripts/sma-client.py" <<- ATTACH
+	{
+	  "method": "AttachVolume",
+	  "params": {
+	    "device_handle": "$device0",
+	    "volume": {
+	      "volume_id": "$(uuid2base64 $uuid0)",
+	      "crypto": {
+	        "cipher": "$(get_cipher AES_CBC)",
+	        "key": "$(format_key $key0)"
+	      }
+	    }
+	  }
+	}
+ATTACH
+
+# Make sure that the namespace exposed in the subsystem is a crypto bdev
+ns_bdev=$(rpc_cmd nvmf_get_subsystems nqn.2016-06.io.spdk:vfiouser-0 | jq -r '.[0].namespaces[0].name')
+[[ $(rpc_cmd bdev_get_bdevs -b "$ns_bdev" | jq -r '.[0].product_name') == "crypto" ]]
+crypto_bdev=$(rpc_cmd bdev_get_bdevs -b "$ns_bdev" | jq -r '.[] | select(.product_name == "crypto")')
+[[ $(rpc_cmd bdev_get_bdevs | jq -r '[.[] | select(.product_name == "crypto")] | length') -eq 1 ]]
+
+[[ $(jq -r '.driver_specific.crypto.key' <<< "$crypto_bdev") == "$key0" ]]
+
+detach_volume "$device0" "$uuid0"
+delete_device "$device0"
+[[ $(rpc_cmd bdev_get_bdevs | jq -r '.[] | select(.product_name == "crypto")' | jq -r length) -eq 0 ]]
 
 cleanup
 trap - SIGINT SIGTERM EXIT
