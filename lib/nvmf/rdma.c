@@ -3508,7 +3508,31 @@ nvmf_rdma_get_optimal_poll_group(struct spdk_nvmf_qpair *qpair)
 	if (qpair->qid == 0) {
 		pg = &rtransport->conn_sched.next_admin_pg;
 	} else {
+		struct spdk_nvmf_rdma_poll_group *pg_min, *pg_start, *pg_current;
+		uint32_t min_value;
+
 		pg = &rtransport->conn_sched.next_io_pg;
+		pg_min = *pg;
+		pg_start = *pg;
+		pg_current = *pg;
+		min_value = (*pg)->group.group->stat.current_io_qpairs;
+
+		while (pg_current->group.group->stat.current_io_qpairs) {
+			pg_current = TAILQ_NEXT(pg_current, link);
+			if (pg_current == NULL) {
+				pg_current = TAILQ_FIRST(&rtransport->poll_groups);
+			}
+
+			if (pg_current->group.group->stat.current_io_qpairs < min_value) {
+				min_value = pg_current->group.group->stat.current_io_qpairs;
+				pg_min = pg_current;
+			}
+
+			if (pg_current == pg_start) {
+				break;
+			}
+		}
+		*pg = pg_min;
 	}
 
 	assert(*pg != NULL);

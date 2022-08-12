@@ -789,6 +789,7 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 	struct spdk_nvmf_transport_poll_group *groups[TEST_GROUPS_COUNT];
 	struct spdk_nvmf_rdma_poll_group *rgroups[TEST_GROUPS_COUNT];
 	struct spdk_nvmf_transport_poll_group *result;
+	struct spdk_nvmf_poll_group group = {};
 	uint32_t i;
 
 	rqpair.qpair.transport = transport;
@@ -797,6 +798,7 @@ test_nvmf_rdma_get_optimal_poll_group(void)
 	for (i = 0; i < TEST_GROUPS_COUNT; i++) {
 		groups[i] = nvmf_rdma_poll_group_create(transport, NULL);
 		CU_ASSERT(groups[i] != NULL);
+		groups[i]->group = &group;
 		rgroups[i] = SPDK_CONTAINEROF(groups[i], struct spdk_nvmf_rdma_poll_group, group);
 		groups[i]->transport = transport;
 	}
