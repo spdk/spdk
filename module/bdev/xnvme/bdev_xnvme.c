@@ -285,6 +285,7 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 		return NULL;
 	}
 
+	opts.direct = 1;
 	opts.async = io_mechanism;
 	if (!opts.async) {
 		goto error_return;
