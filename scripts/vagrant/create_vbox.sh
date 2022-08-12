@@ -30,11 +30,12 @@ display_help() {
 	echo "                                  If no -b option is specified then this option defaults to emulating single"
 	echo "                                  NVMe with 1 namespace and assumes path: /var/lib/libvirt/images/nvme_disk.img"
 	echo "                                  -b option can be used multiple times for attaching multiple files to the VM"
-	echo "                                  Parameters for -b option: <path>,<type>,<ns_path1[:ns_path1:...]>,<cmb>,<pmr_file[:pmr_size]>"
+	echo "                                  Parameters for -b option: <path>,<type>,<ns_path1[:ns_path1:...]>,<cmb>,<pmr_file[:pmr_size]>,<ms>"
 	echo "                                  Available types: nvme"
 	echo "                                  Default pmr size: 16M"
 	echo "                                  Default cmb: false"
-	echo "                                  type, ns_path, cmb and pmr can be empty"
+	echo "                                  Default ms: none"
+	echo "                                  type, ns_path, cmb, pmr and ms can be empty"
 	echo "  -c                              Create all above disk, default 0"
 	echo "  -H                              Use hugepages for allocating VM memory. Only for libvirt provider. Default: false."
 	echo "  -u                              Use password authentication to the VM instead of SSH keys."
@@ -193,7 +194,7 @@ if [ -z "$NVME_FILE" ]; then
 else
 	TMP=""
 	for args in $NVME_FILE; do
-		while IFS=, read -r path type namespace cmb pmr zns; do
+		while IFS=, read -r path type namespace cmb pmr zns ms; do
 			TMP+="$path,"
 			if [ -z "$type" ]; then
 				type="nvme"
@@ -203,6 +204,7 @@ else
 			NVME_ZNS+="$zns,"
 			NVME_DISKS_TYPE+="$type,"
 			NVME_DISKS_NAMESPACES+="$namespace,"
+			NVME_MS+="$ms,"
 			if [ ${NVME_AUTO_CREATE} = 1 ]; then
 				$SPDK_DIR/scripts/vagrant/create_nvme_img.sh -n $path
 			fi
@@ -225,6 +227,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo NVME_CMB=$NVME_CMB
 	echo NVME_PMR=$NVME_PMR
 	echo NVME_ZNS=$NVME_ZNS
+	echo NVME_MS=$NVME_MS
 	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
@@ -251,6 +254,7 @@ export DEPLOY_TEST_VM
 export NVME_CMB
 export NVME_PMR
 export NVME_ZNS
+export NVME_MS
 export NVME_DISKS_TYPE
 export NVME_DISKS_NAMESPACES
 export NVME_FILE

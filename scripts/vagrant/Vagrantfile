@@ -135,6 +135,8 @@ def setup_nvme_disk(libvirt, disk, index)
   nvme_cmbs=(ENV['NVME_CMB'] || "").split(',')
   nvme_pmrs=(ENV['NVME_PMR'] || "").split(',')
   nvme_zns=(ENV['NVME_ZNS'] || "").split(',')
+  nvme_ms=(ENV['NVME_MS'] || "").split(',')
+
 
   namespace_disks = []
   pmr_cmdline = ""
@@ -187,10 +189,11 @@ def setup_nvme_disk(libvirt, disk, index)
       next
     end
     zoned = nvme_zns[index].nil? ? "false" : "true"
+    ms = nvme_ms[index].nil? ? "" : ",ms=64"
     libvirt.qemuargs :value => "-drive"
     libvirt.qemuargs :value => "format=raw,file=#{disk},if=none,id=#{nvme_disk_id}-drive#{nsid}"
     libvirt.qemuargs :value => "-device"
-    libvirt.qemuargs :value => "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096"
+    libvirt.qemuargs :value => "nvme-ns,drive=#{nvme_disk_id}-drive#{nsid},bus=#{nvme_disk_id},nsid=#{nsid + 1},zoned=#{zoned},logical_block_size=4096,physical_block_size=4096#{ms}"
   }
 
 end
