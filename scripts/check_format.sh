@@ -270,7 +270,7 @@ function check_posix_includes() {
 	local rc=0
 
 	echo -n "Checking for POSIX includes..."
-	git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/rte_vhost*/**' ':!scripts/posix.txt' ':!*.patch' > scripts/posix.log || true
+	git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!lib/rte_vhost*/**' ':!scripts/posix.txt' ':!*.patch' ':!configure' > scripts/posix.log || true
 	if [ -s scripts/posix.log ]; then
 		echo "POSIX includes detected. Please include spdk/stdinc.h instead."
 		cat scripts/posix.log
