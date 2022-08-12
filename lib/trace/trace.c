@@ -11,6 +11,7 @@
 #include "spdk/util.h"
 #include "spdk/barrier.h"
 #include "spdk/log.h"
+#include "spdk/cpuset.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
@@ -142,20 +143,24 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 int
 spdk_trace_init(const char *shm_name, uint64_t num_entries)
 {
-	int i = 0;
+	uint32_t i = 0;
 	int histories_size;
-	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1];
+	uint64_t lcore_offsets[SPDK_TRACE_MAX_LCORE + 1] = { 0 };
+	struct spdk_cpuset cpuset = {};
 
 	/* 0 entries requested - skip trace initialization */
 	if (num_entries == 0) {
 		return 0;
 	}
 
-	lcore_offsets[0] = sizeof(struct spdk_trace_flags);
-	for (i = 1; i < (int)SPDK_COUNTOF(lcore_offsets); i++) {
-		lcore_offsets[i] = spdk_get_trace_history_size(num_entries) + lcore_offsets[i - 1];
+	spdk_cpuset_zero(&cpuset);
+	histories_size = sizeof(struct spdk_trace_flags);
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(&cpuset, i, true);
+		lcore_offsets[i] = histories_size;
+		histories_size += spdk_get_trace_history_size(num_entries);
 	}
-	histories_size = lcore_offsets[SPDK_TRACE_MAX_LCORE];
+	lcore_offsets[SPDK_TRACE_MAX_LCORE] = histories_size;
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
@@ -202,6 +207,10 @@ spdk_trace_init(const char *shm_name, uint64_t num_entries)
 		struct spdk_trace_history *lcore_history;
 
 		g_trace_flags->lcore_history_offsets[i] = lcore_offsets[i];
+		if (lcore_offsets[i] == 0) {
+			continue;
+		}
+		assert(spdk_cpuset_get_cpu(&cpuset, i));
 		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
 		lcore_history->lcore = i;
 		lcore_history->num_entries = num_entries;
@@ -228,7 +237,7 @@ trace_init_err:
 void
 spdk_trace_cleanup(void)
 {
-	bool unlink;
+	bool unlink = true;
 	int i;
 	struct spdk_trace_history *lcore_history;
 
@@ -243,6 +252,9 @@ spdk_trace_cleanup(void)
 	 */
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
+		if (lcore_history == NULL) {
+			continue;
+		}
 		unlink = lcore_history->entries[0].tsc == 0;
 		if (!unlink) {
 			break;

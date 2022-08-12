@@ -97,9 +97,8 @@ spdk_trace_parser::entry_count(uint16_t lcore) const
 	}
 
 	history = spdk_get_per_lcore_history(_histories, lcore);
-	assert(history);
 
-	return history->num_entries;
+	return history == NULL ? 0 : history->num_entries;
 }
 
 spdk_trace_entry_buffer *
@@ -340,8 +339,7 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 	if (opts->lcore == SPDK_TRACE_MAX_LCORE) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = spdk_get_per_lcore_history(_histories, i);
-			assert(history);
-			if (history->num_entries == 0 || history->entries[0].tsc == 0) {
+			if (history == NULL || history->num_entries == 0 || history->entries[0].tsc == 0) {
 				continue;
 			}
 
@@ -349,7 +347,11 @@ spdk_trace_parser::init(const spdk_trace_parser_opts *opts)
 		}
 	} else {
 		history = spdk_get_per_lcore_history(_histories, opts->lcore);
-		assert(history);
+		if (history == NULL) {
+			SPDK_ERRLOG("Trace file %s has no trace history for lcore %d\n",
+				    opts->filename, opts->lcore);
+			return false;
+		}
 		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
 			populate_events(history, history->num_entries);
 		}

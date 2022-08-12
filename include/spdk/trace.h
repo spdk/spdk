@@ -157,16 +157,18 @@ spdk_get_trace_histories_size(struct spdk_trace_histories *trace_histories)
 static inline struct spdk_trace_history *
 spdk_get_per_lcore_history(struct spdk_trace_histories *trace_histories, unsigned lcore)
 {
-	char *lcore_history_offset;
+	uint64_t lcore_history_offset;
 
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {
 		return NULL;
 	}
 
-	lcore_history_offset = (char *)trace_histories;
-	lcore_history_offset += trace_histories->flags.lcore_history_offsets[lcore];
+	lcore_history_offset = trace_histories->flags.lcore_history_offsets[lcore];
+	if (lcore_history_offset == 0) {
+		return NULL;
+	}
 
-	return (struct spdk_trace_history *)lcore_history_offset;
+	return (struct spdk_trace_history *)(((char *)trace_histories) + lcore_history_offset);
 }
 
 void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
