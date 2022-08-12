@@ -1065,6 +1065,11 @@ if [[ "${CONFIG[TSAN]}" = "y" ]]; then
 	fi
 fi
 
+if echo -e '#include <stdlib.h>\nint main(void) { arc4random(); return 0; }\n' \
+	| "${BUILD_CMD[@]}" - 2> /dev/null; then
+	CONFIG[HAVE_ARC4RANDOM]="y"
+fi
+
 if [[ "${CONFIG[OCF]}" = "y" ]]; then
 	# If OCF_PATH is a file, assume it is a library and use it to compile with
 	if [ -f ${CONFIG[OCF_PATH]} ]; then

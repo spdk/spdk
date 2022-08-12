@@ -180,6 +180,9 @@ CONFIG_USDT=n
 # In this mode, SPDK shares the DSA device with the kernel.
 CONFIG_IDXD_KERNEL=n
 
+# arc4random is available in stdlib.h
+CONFIG_HAVE_ARC4RANDOM=n
+
 # Is DPDK using libbsd?
 CONFIG_HAVE_LIBBSD=n
 
