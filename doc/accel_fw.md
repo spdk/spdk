@@ -125,7 +125,9 @@ to the kernel driver and not VFIO.  By default when you run `setup.sh` DSA devic
 bound to VFIO.  To exclude DSA devices, pass a whitespace separated list of DSA devices BDF
 using the PCI_BLOCKED parameter as shown below.
 
-`sudo PCI_BLOCKED="0000:04:00.0 0000:05:00.0" ./setup.sh`
+```bash
+sudo PCI_BLOCKED="0000:04:00.0 0000:05:00.0" ./setup.sh
+```
 
 Note: you might need to run `sudo ./setup.sh reset` to unbind all drivers before performing
 the step above.
@@ -151,7 +153,8 @@ application and send startup RPC's use the `--wait-for-rpc` parameter and then u
 but for some reason the desire is to have the Software Module handle copies instead.
 The following RPCs would accomplish the copy override:
 
-`./scripts/rpc.py dsa_scan_accel_module
+```bash
+./scripts/rpc.py dsa_scan_accel_module
 ./scripts/rpc.py accel_assign_opc -o copy -e software
 ./scripts/rpc.py framework_start_init
 ./scripts/rpc.py accel_get_opc_assignments
@@ -164,7 +167,8 @@ The following RPCs would accomplish the copy override:
   "copy_crc32c": "dsa",
   "compress": "software",
   "decompress": "software"
-}`
+}
+```
 
 To detemine the name of available modules and their supported operations use the
 RPC `accel_get_module_info`.
