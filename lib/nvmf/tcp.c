@@ -777,6 +777,7 @@ nvmf_tcp_listen(struct spdk_nvmf_transport *transport, const struct spdk_nvme_tr
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ttransport->tcp_opts.sock_priority;
+	/* TODO: also add impl_opts like on the initiator side */
 	port->listen_sock = spdk_sock_listen_ext(trid->traddr, trsvcid_int,
 			    NULL, &opts);
 	if (port->listen_sock == NULL) {

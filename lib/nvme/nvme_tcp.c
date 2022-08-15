@@ -1882,6 +1882,9 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	struct nvme_tcp_qpair *tqpair;
 	int family;
 	long int port;
+	char *sock_impl_name;
+	struct spdk_sock_impl_opts impl_opts;
+	size_t impl_opts_size = sizeof(impl_opts);
 	struct spdk_sock_opts opts;
 
 	tqpair = nvme_tcp_qpair(qpair);
@@ -1926,6 +1929,17 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 		return rc;
 	}
 
+	sock_impl_name = ctrlr->opts.psk[0] ? "ssl" : NULL;
+	SPDK_DEBUGLOG(nvme, "sock_impl_name is %s\n", sock_impl_name);
+
+	spdk_sock_impl_get_opts(sock_impl_name, &impl_opts, &impl_opts_size);
+	impl_opts.enable_ktls = false;
+	impl_opts.tls_version = SPDK_TLS_VERSION_1_3;
+	/* TODO: Change current PSK HEX string format to TLS PSK Interchange Format */
+	impl_opts.psk_key = ctrlr->opts.psk;
+	/* TODO: generate identity from hostnqn instead */
+	impl_opts.psk_identity = "psk.spdk.io";
+
 	opts.opts_size = sizeof(opts);
 	spdk_sock_get_default_opts(&opts);
 	opts.priority = ctrlr->trid.priority;
@@ -1933,7 +1947,11 @@ nvme_tcp_qpair_connect_sock(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	if (ctrlr->opts.transport_ack_timeout) {
 		opts.ack_timeout = 1ULL << ctrlr->opts.transport_ack_timeout;
 	}
-	tqpair->sock = spdk_sock_connect_ext(ctrlr->trid.traddr, port, NULL, &opts);
+	if (sock_impl_name) {
+		opts.impl_opts = &impl_opts;
+		opts.impl_opts_size = sizeof(impl_opts);
+	}
+	tqpair->sock = spdk_sock_connect_ext(ctrlr->trid.traddr, port, sock_impl_name, &opts);
 	if (!tqpair->sock) {
 		SPDK_ERRLOG("sock connection error of tqpair=%p with addr=%s, port=%ld\n",
 			    tqpair, ctrlr->trid.traddr, port);

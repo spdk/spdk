@@ -163,6 +163,7 @@ struct rpc_bdev_nvme_attach_controller {
 	char *hostnqn;
 	char *hostaddr;
 	char *hostsvcid;
+	char *psk;
 	enum bdev_nvme_multipath_mode multipath;
 	struct nvme_ctrlr_opts bdev_opts;
 	struct spdk_nvme_ctrlr_opts drv_opts;
@@ -181,6 +182,7 @@ free_rpc_bdev_nvme_attach_controller(struct rpc_bdev_nvme_attach_controller *req
 	free(req->hostnqn);
 	free(req->hostaddr);
 	free(req->hostsvcid);
+	free(req->psk);
 }
 
 static int
@@ -256,6 +258,7 @@ static const struct spdk_json_object_decoder rpc_bdev_nvme_attach_controller_dec
 	{"ctrlr_loss_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, bdev_opts.ctrlr_loss_timeout_sec), spdk_json_decode_int32, true},
 	{"reconnect_delay_sec", offsetof(struct rpc_bdev_nvme_attach_controller, bdev_opts.reconnect_delay_sec), spdk_json_decode_uint32, true},
 	{"fast_io_fail_timeout_sec", offsetof(struct rpc_bdev_nvme_attach_controller, bdev_opts.fast_io_fail_timeout_sec), spdk_json_decode_uint32, true},
+	{"psk", offsetof(struct rpc_bdev_nvme_attach_controller, psk), spdk_json_decode_string, true},
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -405,6 +408,11 @@ rpc_bdev_nvme_attach_controller(struct spdk_jsonrpc_request *request,
 	if (ctx->req.hostnqn) {
 		snprintf(ctx->req.drv_opts.hostnqn, sizeof(ctx->req.drv_opts.hostnqn), "%s",
 			 ctx->req.hostnqn);
+	}
+
+	if (ctx->req.psk) {
+		snprintf(ctx->req.drv_opts.psk, sizeof(ctx->req.drv_opts.psk), "%s",
+			 ctx->req.psk);
 	}
 
 	if (ctx->req.hostaddr) {

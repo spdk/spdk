@@ -234,6 +234,10 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	SET_FIELD(disable_read_ana_log_page, false);
 	SET_FIELD(disable_read_changed_ns_list_log_page, false);
 
+	if (FIELD_OK(psk)) {
+		memset(opts->psk, 0, sizeof(opts->psk));
+	}
+
 #undef FIELD_OK
 #undef SET_FIELD
 }

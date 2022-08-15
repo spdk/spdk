@@ -608,7 +608,8 @@ if __name__ == "__main__":
                                                          num_io_queues=args.num_io_queues,
                                                          ctrlr_loss_timeout_sec=args.ctrlr_loss_timeout_sec,
                                                          reconnect_delay_sec=args.reconnect_delay_sec,
-                                                         fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec))
+                                                         fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec,
+                                                         psk=args.psk))
 
     p = subparsers.add_parser('bdev_nvme_attach_controller', help='Add bdevs with nvme backend')
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
@@ -659,6 +660,8 @@ if __name__ == "__main__":
                    If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and
                    less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
                    type=int)
+    p.add_argument('-k', '--psk',
+                   help='Set PSK and enable TCP SSL socket implementation: e.g., 1234567890ABCDEF')
     p.set_defaults(func=bdev_nvme_attach_controller)
 
     def bdev_nvme_get_controllers(args):

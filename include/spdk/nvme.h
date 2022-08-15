@@ -266,8 +266,17 @@ struct spdk_nvme_ctrlr_opts {
 	 * Default is `false` (CHANGED_NS_LIST log page is read).
 	 */
 	uint8_t disable_read_changed_ns_list_log_page;
+
+	/**
+	 * Set PSK and enable SSL socket implementation for NVMe/TCP only.
+	 *
+	 * If empty, a default socket implementation will be used.
+	 * The TLS PSK interchange format is: NVMeTLSkey-1:xx:[Base64 encoded string]:
+	 * 12B (header) + 2B (hash) + 176B (base64 for 1024b + crc32) + 3B (colons) + 1B (NULL) + 6B (extra space for future)
+	 */
+	char psk[200];
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 617, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 817, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.

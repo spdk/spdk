@@ -43,6 +43,9 @@ Calculate num_md_pages from num_md_pages_per_cluster_ratio, and pass it to spdk_
 
 ### rpc
 
+Added `psk` parameter to `bdev_nvme_attach_controller` RPC in order to enable SSL socket implementation
+of TCP connection and set the PSK. Applicable for TCP transport only.
+
 New options `enable_ktls` and `tls_version` were added to the `sock_impl_set_options` structure.
 New options `psk_key` and `psk_identity` were added to the `sock_impl_set_options` structure.
 
@@ -80,6 +83,9 @@ Added `spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page` to allow an applic
 tell the driver to not read the CHANGED_NS_LIST log page in response to a NS_ATTR_CHANGED
 AEN.  When called the application is required to read this log page instead to clear the
 AEN.
+
+Added `psk` field to `spdk_nvme_ctrlr_opts` struct in order to enable SSL socket implementation
+of TCP connection and set the PSK. Applicable for TCP transport only.
 
 ### util
 
