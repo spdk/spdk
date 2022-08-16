@@ -49,6 +49,7 @@ spdk_memory_domain_push_data(struct spdk_memory_domain *dst_domain, void *dst_do
 static void
 _part_cleanup(struct spdk_bdev_part *part)
 {
+	spdk_io_device_unregister(part, NULL);
 	free(part->internal.bdev.name);
 	free(part->internal.bdev.product_name);
 }
