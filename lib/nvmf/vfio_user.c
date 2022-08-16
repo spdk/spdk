@@ -1624,6 +1624,10 @@ post_completion(struct nvmf_vfio_user_ctrlr *ctrlr, struct nvmf_vfio_user_cq *cq
 		return 0;
 	}
 
+	if (cq->qid == 0) {
+		assert(spdk_get_thread() == cq->thread);
+	}
+
 	if (cq_is_full(cq)) {
 		SPDK_ERRLOG("%s: cqid:%d full (tail=%d, head=%d)\n",
 			    ctrlr_id(ctrlr), cq->qid, *cq_tailp(cq),
@@ -2117,10 +2121,19 @@ vfio_user_qpair_delete_cb(void *cb_arg)
 {
 	struct vfio_user_delete_sq_ctx *ctx = cb_arg;
 	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx->vu_ctrlr;
+	struct nvmf_vfio_user_cq *admin_cq = vu_ctrlr->cqs[0];
 
-	post_completion(vu_ctrlr, vu_ctrlr->cqs[0], 0, 0, ctx->delete_io_sq_cmd.cid,
-			SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
-	free(ctx);
+	if (admin_cq->thread != spdk_get_thread()) {
+		assert(admin_cq->thread != NULL);
+		spdk_thread_send_msg(admin_cq->thread,
+				     vfio_user_qpair_delete_cb,
+				     cb_arg);
+	} else {
+		post_completion(vu_ctrlr, vu_ctrlr->cqs[0], 0, 0,
+				ctx->delete_io_sq_cmd.cid,
+				SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
+		free(ctx);
+	}
 }
 
 /*
