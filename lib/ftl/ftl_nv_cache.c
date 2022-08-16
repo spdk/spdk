@@ -15,6 +15,8 @@
 #include "utils/ftl_addr_utils.h"
 #include "mngt/ftl_mngt.h"
 
+static inline uint64_t nvc_data_blocks(struct ftl_nv_cache *nv_cache) __attribute__((unused));
+
 static inline const struct ftl_layout_region *
 nvc_data_region(
 	struct ftl_nv_cache *nv_cache)
