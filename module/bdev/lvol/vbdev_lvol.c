@@ -814,17 +814,21 @@ static void
 lvol_op_comp(void *cb_arg, int bserrno)
 {
 	struct spdk_bdev_io *bdev_io = cb_arg;
-	enum spdk_bdev_io_status status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	if (bserrno != 0) {
-		if (bserrno == -ENOMEM) {
-			status = SPDK_BDEV_IO_STATUS_NOMEM;
-		} else {
-			status = SPDK_BDEV_IO_STATUS_FAILED;
-		}
+	switch (bserrno) {
+	case 0:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		break;
+	case -ENOMEM:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		break;
+	case -ENOSPC:
+		spdk_bdev_io_complete_nvme_status(bdev_io, 0, SPDK_NVME_SCT_VENDOR_SPECIFIC, -bserrno);
+		break;
+	default:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		break;
 	}
-
-	spdk_bdev_io_complete(bdev_io, status);
 }
 
 static void
