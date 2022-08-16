@@ -13,8 +13,8 @@
 	spdk_accel_submit_crc32cv;
 	spdk_accel_submit_copy_crc32c;
 	spdk_accel_submit_copy_crc32cv;
-        spdk_accel_submit_compress;
-        spdk_accel_submit_decompress;
+	spdk_accel_submit_compress;
+	spdk_accel_submit_decompress;
 	spdk_accel_get_opc_module_name;
 	spdk_accel_assign_opc;
 	spdk_accel_write_config_json;

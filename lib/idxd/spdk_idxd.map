@@ -22,8 +22,8 @@
 	spdk_idxd_submit_copy;
 	spdk_idxd_submit_dualcast;
 	spdk_idxd_submit_fill;
-        spdk_idxd_submit_compress;
-        spdk_idxd_submit_decompress;
+	spdk_idxd_submit_compress;
+	spdk_idxd_submit_decompress;
 	spdk_idxd_submit_raw_desc;
 	spdk_idxd_process_events;
 	spdk_idxd_get_channel;

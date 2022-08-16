@@ -119,6 +119,5 @@
 	spdk_nvmf_req_get_xfer;
 	spdk_nvmf_poll_group_remove;
 
-
 	local: *;
 };
