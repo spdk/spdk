@@ -244,6 +244,7 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	bool disable_read_ana_log_page;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 616, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.
@@ -551,6 +552,7 @@ struct spdk_nvme_ns_cmd_ext_io_opts {
 	/** Application tag to use end-to-end protection information. */
 	uint16_t apptag;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_cmd_ext_io_opts) == 48, "Incorrect size");
 
 /**
  * Parse the string representation of a transport ID.
@@ -1543,6 +1545,7 @@ struct spdk_nvme_io_qpair_opts {
 	 */
 	bool async_mode;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 72, "Incorrect size");
 
 /**
  * Get the default options for I/O qpair creation for a specific NVMe controller.

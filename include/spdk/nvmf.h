@@ -89,6 +89,7 @@ struct spdk_nvmf_transport_opts {
 	/* Use zero-copy operations if the underlying bdev supports them */
 	bool zcopy;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 64, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
 	/**
@@ -101,6 +102,7 @@ struct spdk_nvmf_listen_opts {
 
 	const struct spdk_json_val *transport_specific;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 16, "Incorrect size");
 
 /**
  * Initialize listen options
@@ -741,6 +743,7 @@ struct spdk_nvmf_ns_opts {
 	 */
 	uint32_t anagrpid;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 64, "Incorrect size");
 
 /**
  * Get default namespace creation options.

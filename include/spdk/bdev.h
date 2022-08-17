@@ -175,6 +175,7 @@ struct spdk_bdev_opts {
 	uint32_t small_buf_pool_size;
 	uint32_t large_buf_pool_size;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 
 /**
  * Structure with optional IO request parameters
@@ -193,6 +194,7 @@ struct spdk_bdev_ext_io_opts {
 	/** Metadata buffer, optional */
 	void *metadata;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 32, "Incorrect size");
 
 /**
  * Get the options for the bdev module.

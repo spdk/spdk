@@ -14,6 +14,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/json.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -191,6 +192,7 @@ struct spdk_sock_opts {
 	 */
 	size_t impl_opts_size;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 40, "Incorrect size");
 
 /**
  * Initialize the default value of opts.

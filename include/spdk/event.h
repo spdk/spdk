@@ -20,6 +20,7 @@
 #include "spdk/queue.h"
 #include "spdk/log.h"
 #include "spdk/thread.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,6 +128,7 @@ struct spdk_app_opts {
 	 */
 	size_t msg_mempool_size;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
 
 /**
  * Initialize the default value of opts

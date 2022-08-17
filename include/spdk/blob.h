@@ -34,6 +34,7 @@
 #define SPDK_BLOB_H
 
 #include "spdk/stdinc.h"
+#include "spdk/assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -135,6 +136,7 @@ struct spdk_blob_ext_io_opts {
 	/** Optional user context */
 	void *user_ctx;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_ext_io_opts) == 32, "Incorrect size");
 
 struct spdk_bs_dev {
 	/* Create a new channel which is a software construct that is used
@@ -237,6 +239,7 @@ struct spdk_bs_opts {
 	/** Force recovery during import. This is a uint64_t for padding reasons, treated as a bool. */
 	uint64_t force_recover;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 72, "Incorrect size");
 
 /**
  * Initialize a spdk_bs_opts structure to the default blobstore option values.
@@ -449,6 +452,7 @@ struct spdk_blob_opts {
 	 */
 	size_t opts_size;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_opts) == 64, "Incorrect size");
 
 /**
  * Initialize a spdk_blob_opts structure to the default blob option values.
@@ -637,6 +641,7 @@ struct spdk_blob_open_opts {
 	 */
 	size_t opts_size;
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_open_opts) == 16, "Incorrect size");
 
 /**
  * Initialize a spdk_blob_open_opts structure to the default blob option values.
