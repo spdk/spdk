@@ -639,6 +639,16 @@ blockdev_comparev_and_writev(void)
 	struct io_target *target = g_current_io_target;
 	struct spdk_bdev *bdev = target->bdev;
 
+	if (spdk_bdev_get_md_size(bdev) > 0) {
+		/* TODO: remove this check once bdev layer properly supports
+		 * compare and write for md-enabled bdevs.
+		 */
+		SPDK_ERRLOG("skipping comparev_and_writev on bdev %s since it has\n"
+			    "metadata which is not supported yet.\n",
+			    spdk_bdev_get_name(bdev));
+		return;
+	}
+
 	/* Data size = acwu size */
 	data_length = spdk_bdev_get_block_size(bdev) * spdk_bdev_get_acwu(bdev);
 	iov_len = data_length;
