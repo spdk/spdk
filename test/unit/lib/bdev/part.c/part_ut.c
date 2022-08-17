@@ -130,6 +130,48 @@ part_test(void)
 	poll_threads();
 }
 
+static void
+part_free_test(void)
+{
+	struct spdk_bdev_part_base	*base = NULL;
+	struct spdk_bdev_part		*part;
+	struct spdk_bdev		bdev_base = {};
+	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
+	int rc;
+
+	bdev_base.name = "base";
+	bdev_base.fn_table = &base_fn_table;
+	bdev_base.module = &bdev_ut_if;
+	rc = spdk_bdev_register(&bdev_base);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	rc = spdk_bdev_part_base_construct_ext("base", NULL, &vbdev_ut_if,
+					       &part_fn_table, &tailq, NULL,
+					       NULL, 0, NULL, NULL, &base);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_EMPTY(&tailq));
+	SPDK_CU_ASSERT_FATAL(base != NULL);
+
+	part = calloc(1, sizeof(*part));
+	SPDK_CU_ASSERT_FATAL(part != NULL);
+	rc = spdk_bdev_part_construct(part, base, "test", 0, 100, "test");
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	poll_threads();
+	CU_ASSERT(!TAILQ_EMPTY(&tailq));
+
+	spdk_bdev_unregister(&part->internal.bdev, NULL, NULL);
+	poll_threads();
+
+	rc = spdk_bdev_part_free(part);
+	CU_ASSERT(rc == 1);
+	poll_threads();
+	CU_ASSERT(TAILQ_EMPTY(&tailq));
+
+	spdk_bdev_unregister(&bdev_base, NULL, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -142,6 +184,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("bdev_part", NULL, NULL);
 
 	CU_ADD_TEST(suite, part_test);
+	CU_ADD_TEST(suite, part_free_test);
 
 	allocate_threads(1);
 	set_thread(0);
