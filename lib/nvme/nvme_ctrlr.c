@@ -232,6 +232,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	SET_FIELD(admin_queue_size, DEFAULT_ADMIN_QUEUE_SIZE);
 	SET_FIELD(fabrics_connect_timeout_us, NVME_FABRIC_CONNECT_COMMAND_TIMEOUT);
 	SET_FIELD(disable_read_ana_log_page, false);
+	SET_FIELD(disable_read_changed_ns_list_log_page, false);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -2979,6 +2980,10 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 	char		*buffer = NULL;
 	uint32_t	nsid;
 	size_t		buf_size = (SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t));
+
+	if (ctrlr->opts.disable_read_changed_ns_list_log_page) {
+		return 0;
+	}
 
 	buffer = spdk_dma_zmalloc(buf_size, 4096, NULL);
 	if (!buffer) {

@@ -258,8 +258,16 @@ struct spdk_nvme_ctrlr_opts {
 
 	/* Hole at bytes 610-616. */
 	uint8_t reserved610[7];
+
+	/**
+	 * Disable reading CHANGED_NS_LIST log page in response to an NS_ATTR_CHANGED AEN
+	 * The upper layer should reading CHANGED_NS_LIST log page instead if set to true.
+	 *
+	 * Default is `false` (CHANGED_NS_LIST log page is read).
+	 */
+	uint8_t disable_read_changed_ns_list_log_page;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 616, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 617, "Incorrect size");
 
 /**
  * NVMe acceleration operation callback.
