@@ -743,7 +743,7 @@ usage(void (*app_usage)(void))
 
 spdk_app_parse_args_rvals_t
 spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
-		    const char *app_getopt_str, struct option *app_long_opts,
+		    const char *app_getopt_str, const struct option *app_long_opts,
 		    int (*app_parse)(int ch, char *arg),
 		    void (*app_usage)(void))
 {

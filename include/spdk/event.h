@@ -271,7 +271,7 @@ typedef enum spdk_app_parse_args_rvals spdk_app_parse_args_rvals_t;
  */
 spdk_app_parse_args_rvals_t spdk_app_parse_args(int argc, char **argv,
 		struct spdk_app_opts *opts, const char *getopt_str,
-		struct option *app_long_opts, int (*parse)(int ch, char *arg),
+		const struct option *app_long_opts, int (*parse)(int ch, char *arg),
 		void (*usage)(void));
 
 /**
