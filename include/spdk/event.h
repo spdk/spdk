@@ -63,23 +63,42 @@ struct spdk_app_opts {
 	const char *name;
 	const char *json_config_file;
 	bool json_config_ignore_errors;
+
+	/* Hole at bytes 17-23. */
+	uint8_t	reserved17[7];
+
 	const char *rpc_addr; /* Can be UNIX domain socket path or IP address + TCP port */
 	const char *reactor_mask;
 	const char *tpoint_group_mask;
 
 	int shm_id;
 
+	/* Hole at bytes 52-55. */
+	uint8_t			reserved52[4];
+
 	spdk_app_shutdown_cb	shutdown_cb;
 
 	bool			enable_coredump;
+
+	/* Hole at bytes 65-67. */
+	uint8_t			reserved65[3];
+
 	int			mem_channel;
 	int			main_core;
 	int			mem_size;
 	bool			no_pci;
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
+
+	/* Hole at bytes 83-85. */
+	uint8_t			reserved83[5];
+
 	const char		*hugedir;
 	enum spdk_log_level	print_level;
+
+	/* Hole at bytes 100-103. */
+	uint8_t			reserved100[4];
+
 	size_t			num_pci_addr;
 	struct spdk_pci_addr	*pci_blocked;
 	struct spdk_pci_addr	*pci_allowed;
@@ -89,6 +108,9 @@ struct spdk_app_opts {
 	 * when this flag is enabled.
 	 */
 	bool			delay_subsystem_init;
+
+	/* Hole at bytes 137-143. */
+	uint8_t			reserved137[7];
 
 	/* Number of trace entries allocated for each core */
 	uint64_t		num_entries;
@@ -121,13 +143,16 @@ struct spdk_app_opts {
 	 */
 	bool disable_signal_handlers;
 
+	/* Hole at bytes 185-191. */
+	uint8_t reserved185[7];
+
 	/**
 	 * The allocated size for the message pool used by the threading library.
 	 *
 	 * Default is `SPDK_DEFAULT_MSG_MEMPOOL_SIZE`.
 	 */
 	size_t msg_mempool_size;
-};
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 200, "Incorrect size");
 
 /**

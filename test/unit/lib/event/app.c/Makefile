@@ -5,6 +5,8 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
+CFLAGS += -Wno-address-of-packed-member
+
 SPDK_LIB_LIST = conf trace jsonrpc json
 TEST_FILE = app_ut.c
 

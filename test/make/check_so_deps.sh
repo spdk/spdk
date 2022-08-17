@@ -84,6 +84,8 @@ function confirm_abi_deps() {
 	name = spdk_nvme_cdata_nvmf_specific
 [suppress_type]
 	name = spdk_bs_opts
+[suppress_type]
+	name = spdk_app_opts
 EOF
 
 	for object in "$libdir"/libspdk_*.so; do
