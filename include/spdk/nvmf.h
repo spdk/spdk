@@ -72,6 +72,9 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	buf_cache_size;
 	bool		dif_insert_or_strip;
 
+	/* Hole at bytes 29-31. */
+	uint8_t		reserved29[3];
+
 	uint32_t	abort_timeout_sec;
 	/* ms */
 	uint32_t	association_timeout;
@@ -88,7 +91,10 @@ struct spdk_nvmf_transport_opts {
 	uint32_t acceptor_poll_rate;
 	/* Use zero-copy operations if the underlying bdev supports them */
 	bool zcopy;
-};
+
+	/* Hole at bytes 61-63. */
+	uint8_t reserved61[3];
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_transport_opts) == 64, "Incorrect size");
 
 struct spdk_nvmf_listen_opts {
@@ -101,7 +107,7 @@ struct spdk_nvmf_listen_opts {
 	size_t opts_size;
 
 	const struct spdk_json_val *transport_specific;
-};
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_listen_opts) == 16, "Incorrect size");
 
 /**
@@ -728,6 +734,9 @@ struct spdk_nvmf_ns_opts {
 	 */
 	struct spdk_uuid uuid;
 
+	/* Hole at bytes 44-47. */
+	uint8_t reserved44[4];
+
 	/**
 	 * The size of spdk_nvmf_ns_opts according to the caller of this library is used for ABI
 	 * compatibility.  The library uses this field to know how many fields in this structure
@@ -742,7 +751,10 @@ struct spdk_nvmf_ns_opts {
 	 * Set to be equal with the NSID if not specified.
 	 */
 	uint32_t anagrpid;
-};
+
+	/* Hole at bytes 60-63. */
+	uint8_t reserved60[4];
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ns_opts) == 64, "Incorrect size");
 
 /**
