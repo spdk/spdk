@@ -175,10 +175,16 @@ struct spdk_sock_opts {
 	 */
 	bool zcopy;
 
+	/* Hole at bytes 13-15. */
+	uint8_t reserved13[3];
+
 	/**
 	 * Time in msec to wait ack until connection is closed forcefully.
 	 */
 	uint32_t ack_timeout;
+
+	/* Hole at bytes 20-23. */
+	uint8_t reserved[4];
 
 	/**
 	 * Socket implementation options.  If non-NULL, these will override those set by
@@ -191,7 +197,7 @@ struct spdk_sock_opts {
 	 * Size of the impl_opts structure.
 	 */
 	size_t impl_opts_size;
-};
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_opts) == 40, "Incorrect size");
 
 /**
