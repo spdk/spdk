@@ -18,6 +18,7 @@
 #include "spdk/vfio_user_spec.h"
 
 #define VFIO_MAXIMUM_SPARSE_MMAP_REGIONS	8
+#define VFIO_USER_GET_REGION_INFO_LEN		4096
 
 typedef int (*fuzzer_fn)(const uint8_t *data, size_t size, struct vfio_device *dev);
 struct fuzz_type {
@@ -92,10 +93,82 @@ fuzz_vfio_user_region_rw(const uint8_t *data, size_t size, struct vfio_device *d
 					     &buf, false);
 }
 
+static int
+fuzz_vfio_user_get_region_info(const uint8_t *data, size_t size, struct vfio_device *dev)
+{
+	int ret = 0;
+	int fds[VFIO_MAXIMUM_SPARSE_MMAP_REGIONS];
+	uint8_t buf[VFIO_USER_GET_REGION_INFO_LEN];
+	struct vfio_region_info *info = (struct vfio_region_info *)buf;
+
+	memcpy(&info->index, &data[0], 4);
+	memcpy(&info->argsz, &data[4], 4);
+
+	ret = spdk_vfio_user_dev_send_request(dev, VFIO_USER_DEVICE_GET_REGION_INFO,
+					      info, info->argsz, VFIO_USER_GET_REGION_INFO_LEN, fds,
+					      VFIO_MAXIMUM_SPARSE_MMAP_REGIONS);
+	return ret;
+}
+
+/* Since both ends of the connection are in the same process,
+ * picking completely random addresses is actually fine, since
+ * we won't be actually mapping anything.
+ */
+static int
+fuzz_vfio_user_dma_map(const uint8_t *data, size_t size, struct vfio_device *dev)
+{
+	struct vfio_user_dma_map dma_map = { 0 };
+	int fd;
+
+	memcpy(&fd, &data[0], 4);
+	dma_map.argsz = sizeof(struct vfio_user_dma_map);
+
+	memcpy(&dma_map.addr, &data[8], 8);
+	memcpy(&dma_map.size, &data[16], 8);
+	memcpy(&dma_map.offset, &data[24], 8);
+
+	dma_map.flags = VFIO_USER_F_DMA_REGION_READ | VFIO_USER_F_DMA_REGION_WRITE;
+
+	spdk_vfio_user_dev_send_request(dev, VFIO_USER_DMA_MAP,
+					&dma_map, sizeof(dma_map), sizeof(dma_map), &fd, 1);
+	return 0;
+}
+
+static int
+fuzz_vfio_user_dma_unmap(const uint8_t *data, size_t size, struct vfio_device *dev)
+{
+	struct vfio_user_dma_unmap dma_unmap = { 0 };
+	struct vfio_user_dma_map dma_map = { 0 };
+	int fd;
+
+	memcpy(&fd, &data[0], 4);
+	dma_map.argsz = sizeof(struct vfio_user_dma_map);
+
+	memcpy(&dma_map.addr, &data[8], 8);
+	memcpy(&dma_map.size, &data[16], 8);
+	memcpy(&dma_map.offset, &data[24], 8);
+
+	dma_map.flags = VFIO_USER_F_DMA_REGION_READ | VFIO_USER_F_DMA_REGION_WRITE;
+
+	dma_unmap.argsz = sizeof(struct vfio_user_dma_unmap);
+	dma_unmap.addr = dma_map.addr;
+	dma_unmap.size = dma_map.size;
+
+	spdk_vfio_user_dev_send_request(dev, VFIO_USER_DMA_MAP,
+					&dma_map, sizeof(dma_map), sizeof(dma_map), &fd, 1);
+	/* Don't verify return value to check unmapping not previously mapped region */
+	spdk_vfio_user_dev_send_request(dev, VFIO_USER_DMA_UNMAP,
+					&dma_unmap, sizeof(dma_unmap), sizeof(dma_unmap), &fd, 1);
+	return 0;
+}
+
 static struct fuzz_type g_fuzzers[] = {
-	{ .fn = fuzz_vfio_user_region_rw,			.bytes_per_cmd = 6},
-	{ .fn = fuzz_vfio_user_version,				.bytes_per_cmd = 4},
-	{ .fn = NULL,						.bytes_per_cmd = 0}
+	{ .fn = fuzz_vfio_user_region_rw,		.bytes_per_cmd = 6},
+	{ .fn = fuzz_vfio_user_version,			.bytes_per_cmd = 4},
+	{ .fn = fuzz_vfio_user_get_region_info,		.bytes_per_cmd = 8},
+	{ .fn = fuzz_vfio_user_dma_map,			.bytes_per_cmd = 32},
+	{ .fn = fuzz_vfio_user_dma_unmap,		.bytes_per_cmd = 32},
+	{ .fn = NULL,					.bytes_per_cmd = 0}
 };
 
 #define NUM_FUZZERS (SPDK_COUNTOF(g_fuzzers) - 1)
