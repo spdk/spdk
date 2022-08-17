@@ -1,7 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation. All rights reserved.
  */
-
 #include "spdk/stdinc.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
@@ -36,8 +35,23 @@ static uint8_t					*g_repro_data;
 static size_t					g_repro_size;
 static pthread_t				g_fuzz_td;
 static pthread_t				g_reactor_td;
-static bool					g_in_fuzzer;
 static struct fuzz_type				*g_fuzzer;
+
+struct io_thread {
+	int					lba_num;
+	char					*write_buf;
+	char					*read_buf;
+	size_t					buf_size;
+	struct spdk_poller			*run_poller;
+	struct spdk_thread			*thread;
+	struct spdk_nvme_ctrlr			*io_ctrlr;
+	pthread_t				io_td;
+	struct spdk_nvme_ns			*io_ns;
+	struct spdk_nvme_qpair			*io_qpair;
+	char					*io_ctrlr_path;
+	bool					io_processing;
+	bool					terminate;
+} g_io_thread;
 
 static int
 fuzz_vfio_user_version(const uint8_t *data, size_t size, struct vfio_device *dev)
@@ -112,12 +126,22 @@ TestOneInput(const uint8_t *data, size_t size)
 int LLVMFuzzerRunDriver(int *argc, char ***argv, int (*UserCb)(const uint8_t *Data, size_t Size));
 
 static void
+io_terminate(void *ctx)
+{
+	((struct io_thread *)ctx)->terminate = true;
+}
+
+static void
 exit_handler(void)
 {
-	if (g_in_fuzzer) {
+	if (g_io_thread.io_ctrlr_path) {
+		spdk_thread_send_msg(g_io_thread.thread, io_terminate, &g_io_thread);
+
+	} else {
 		spdk_app_stop(0);
-		pthread_join(g_reactor_td, NULL);
 	}
+
+	pthread_join(g_reactor_td, NULL);
 }
 
 static void *
@@ -145,7 +169,6 @@ start_fuzzer(void *ctx)
 	argv[argc - 2] = time_str;
 	argv[argc - 1] = g_corpus_dir;
 
-	g_in_fuzzer = true;
 	atexit(exit_handler);
 
 	if (g_repro_data) {
@@ -156,14 +179,181 @@ start_fuzzer(void *ctx)
 		LLVMFuzzerRunDriver(&argc, &argv, TestOneInput);
 		/* TODO: in the normal case, LLVMFuzzerRunDriver never returns - it calls exit()
 		 * directly and we never get here.  But this behavior isn't really documented
-		 * anywhere by LLVM, so call spdk_app_stop(0) if it does return, which will
-		 * result in the app exiting like a normal SPDK application (spdk_app_start()
-		 * returns to main().
+		 * anywhere by LLVM.
 		 */
 	}
 
-	g_in_fuzzer = false;
-	spdk_app_stop(0);
+	return NULL;
+}
+
+static void
+read_complete(void *arg, const struct spdk_nvme_cpl *completion)
+{
+	int sectors_num = 0;
+	struct io_thread *io = (struct io_thread *)arg;
+
+	if (spdk_nvme_cpl_is_error(completion)) {
+		spdk_nvme_qpair_print_completion(io->io_qpair, (struct spdk_nvme_cpl *)completion);
+		fprintf(stderr, "I/O read error status: %s\n",
+			spdk_nvme_cpl_get_status_string(&completion->status));
+		io->io_processing = false;
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return;
+	}
+
+	if (memcmp(io->read_buf, io->write_buf, io->buf_size)) {
+		fprintf(stderr, "I/O corrupt, value not the same\n");
+		pthread_kill(g_fuzz_td, SIGSEGV);
+	}
+
+	sectors_num =  spdk_nvme_ns_get_num_sectors(io->io_ns);
+	io->lba_num = (io->lba_num + 1) % sectors_num;
+
+	io->io_processing = false;
+}
+
+static void
+write_complete(void *arg, const struct spdk_nvme_cpl *completion)
+{
+	int rc = 0;
+	struct io_thread *io = (struct io_thread *)arg;
+
+	if (spdk_nvme_cpl_is_error(completion)) {
+		spdk_nvme_qpair_print_completion(io->io_qpair,
+						 (struct spdk_nvme_cpl *)completion);
+		fprintf(stderr, "I/O write error status: %s\n",
+			spdk_nvme_cpl_get_status_string(&completion->status));
+		io->io_processing = false;
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return;
+	}
+	rc = spdk_nvme_ns_cmd_read(io->io_ns, io->io_qpair,
+				   io->read_buf, io->lba_num, 1,
+				   read_complete, io, 0);
+	if (rc != 0) {
+		fprintf(stderr, "starting read I/O failed\n");
+		io->io_processing = false;
+		pthread_kill(g_fuzz_td, SIGSEGV);
+	}
+}
+
+static int
+io_poller(void *ctx)
+{
+	int ret = 0;
+	struct io_thread *io = (struct io_thread *)ctx;
+	size_t i;
+	unsigned int seed = 0;
+	int *write_buf = (int *)io->write_buf;
+
+	if (io->io_processing) {
+		spdk_nvme_qpair_process_completions(io->io_qpair, 0);
+		return SPDK_POLLER_BUSY;
+	}
+
+	if (io->terminate) {
+		/* detaching controller here cause deadlock */
+		spdk_poller_unregister(&(io->run_poller));
+		spdk_free(io->write_buf);
+		spdk_free(io->read_buf);
+
+		spdk_app_stop(0);
+
+		return SPDK_POLLER_IDLE;
+	}
+
+	/* Compiler should optimize the "/ sizeof(int)" into a right shift. */
+	for (i = 0; i < io->buf_size / sizeof(int); i++) {
+		write_buf[i] = rand_r(&seed);
+	}
+
+	io->io_processing = true;
+
+	ret = spdk_nvme_ns_cmd_write(io->io_ns, io->io_qpair,
+				     io->write_buf, io->lba_num, 1,
+				     write_complete, io, 0);
+	if (ret < 0) {
+		fprintf(stderr, "starting write I/O failed\n");
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return SPDK_POLLER_IDLE;
+	}
+
+	return SPDK_POLLER_IDLE;
+}
+
+static void
+start_io_poller(void *ctx)
+{
+	struct io_thread *io = (struct io_thread *)ctx;
+
+	io->run_poller = SPDK_POLLER_REGISTER(io_poller, ctx, 0);
+	if (io->run_poller == NULL) {
+		fprintf(stderr, "Failed to register a poller for IO.\n");
+		spdk_app_stop(-1);
+		pthread_kill(g_fuzz_td, SIGSEGV);
+	}
+}
+
+static void *
+init_io(void *ctx)
+{
+	struct spdk_nvme_transport_id trid = {};
+	int nsid = 0;
+
+	snprintf(trid.traddr, sizeof(trid.traddr), "%s", g_io_thread.io_ctrlr_path);
+
+	trid.trtype = SPDK_NVME_TRANSPORT_VFIOUSER;
+	g_io_thread.io_ctrlr = spdk_nvme_connect(&trid, NULL, 0);
+	if (g_io_thread.io_ctrlr == NULL) {
+		fprintf(stderr, "spdk_nvme_connect() failed for transport address '%s'\n",
+			trid.traddr);
+		spdk_app_stop(-1);
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return NULL;
+	}
+
+	g_io_thread.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_io_thread.io_ctrlr, NULL, 0);
+	if (g_io_thread.io_qpair == NULL) {
+		spdk_nvme_detach(g_io_thread.io_ctrlr);
+		fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair failed\n");
+		spdk_app_stop(-1);
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return NULL;
+	}
+
+	if (spdk_nvme_ctrlr_get_num_ns(g_io_thread.io_ctrlr) == 0) {
+		fprintf(stderr, "no namespaces for IO\n");
+		spdk_app_stop(-1);
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return NULL;
+	}
+
+	nsid = spdk_nvme_ctrlr_get_first_active_ns(g_io_thread.io_ctrlr);
+	g_io_thread.io_ns = spdk_nvme_ctrlr_get_ns(g_io_thread.io_ctrlr, nsid);
+	if (!g_io_thread.io_ns) {
+		fprintf(stderr, "no io_ns for IO\n");
+		spdk_app_stop(-1);
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return NULL;
+	}
+
+	g_io_thread.buf_size = spdk_nvme_ns_get_sector_size(g_io_thread.io_ns);
+
+	g_io_thread.read_buf = spdk_zmalloc(g_io_thread.buf_size, 0x1000, NULL,
+					    SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+
+	g_io_thread.write_buf = spdk_zmalloc(g_io_thread.buf_size, 0x1000, NULL,
+					     SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+
+	if (!g_io_thread.write_buf || !g_io_thread.read_buf) {
+		fprintf(stderr, "cannot allocated memory for io buffers\n");
+		spdk_app_stop(-1);
+		pthread_kill(g_fuzz_td, SIGSEGV);
+		return NULL;
+	}
+
+	g_io_thread.thread = spdk_thread_create("io_thread", NULL);
+	spdk_thread_send_msg(g_io_thread.thread, start_io_poller, &g_io_thread);
 
 	return NULL;
 }
@@ -174,6 +364,13 @@ begin_fuzz(void *ctx)
 	g_reactor_td = pthread_self();
 
 	pthread_create(&g_fuzz_td, NULL, start_fuzzer, NULL);
+
+	/* posix thread is use to avoid deadlock during spdk_nvme_connect
+	 * vfio-user version negotiation may block when waiting for response
+	 */
+	if (g_io_thread.io_ctrlr_path) {
+		pthread_create(&g_io_thread.io_td, NULL, init_io, NULL);
+	}
 }
 
 static void
@@ -183,6 +380,7 @@ vfio_fuzz_usage(void)
 	fprintf(stderr, " -F                        Path for ctrlr that should be fuzzed.\n");
 	fprintf(stderr, " -N                        Name of reproduction data file.\n");
 	fprintf(stderr, " -t                        Time to run fuzz tests (in seconds). Default: 10\n");
+	fprintf(stderr, " -Y                        Path of addition controller to perform io.\n");
 	fprintf(stderr, " -Z                        Fuzzer to run (0 to %lu)\n", NUM_FUZZERS - 1);
 }
 
@@ -217,6 +415,13 @@ vfio_fuzz_parse(int ch, char *arg)
 		if (g_repro_data == NULL) {
 			fprintf(stderr, "could not load data for file %s\n", optarg);
 			return -1;
+		}
+		break;
+	case 'Y':
+		g_io_thread.io_ctrlr_path = strdup(optarg);
+		if (!g_io_thread.io_ctrlr_path) {
+			fprintf(stderr, "cannot strdup: %s\n", optarg);
+			return -ENOMEM;
 		}
 		break;
 	case 't':
@@ -272,7 +477,7 @@ main(int argc, char **argv)
 	opts.name = "vfio_fuzz";
 	opts.shutdown_cb = fuzz_shutdown;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:t:Z:", NULL, vfio_fuzz_parse,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "D:F:N:t:Y:Z:", NULL, vfio_fuzz_parse,
 				      vfio_fuzz_usage) != SPDK_APP_PARSE_ARGS_SUCCESS)) {
 		return rc;
 	}
