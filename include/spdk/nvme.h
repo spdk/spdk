@@ -58,6 +58,9 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	bool no_shn_notification;
 
+	/* Hole at bytes 6-7. */
+	uint8_t	reserved6[2];
+
 	/**
 	 * Type of arbitration mechanism
 	 */
@@ -105,6 +108,9 @@ struct spdk_nvme_ctrlr_opts {
 	 * Specify the retry number when there is issue with the transport
 	 */
 	uint8_t transport_retry_count;
+
+	/* Hole at bytes 21-23. */
+	uint8_t reserved21[3];
 
 	/**
 	 * The queue depth of each NVMe I/O queue.
@@ -156,6 +162,9 @@ struct spdk_nvme_ctrlr_opts {
 	 * Set to all zeroes to specify that no host ID should be provided to the controller.
 	 */
 	uint8_t extended_host_id[16];
+
+	/* Hole at bytes 570-571. */
+	uint8_t reserved570[2];
 
 	/**
 	 * The I/O command set to select.
@@ -223,6 +232,9 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	uint16_t admin_queue_size;
 
+	/* Hole at bytes 586-591. */
+	uint8_t reserved586[6];
+
 	/**
 	 * The size of spdk_nvme_ctrlr_opts according to the caller of this library is used for ABI
 	 * compatibility.  The library uses this field to know how many fields in this
@@ -243,7 +255,10 @@ struct spdk_nvme_ctrlr_opts {
 	 * Default is `false` (ANA log page is read).
 	 */
 	bool disable_read_ana_log_page;
-};
+
+	/* Hole at bytes 610-616. */
+	uint8_t reserved610[7];
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_opts) == 616, "Incorrect size");
 
 /**
@@ -545,13 +560,17 @@ struct spdk_nvme_ns_cmd_ext_io_opts {
 	void *memory_domain_ctx;
 	/** Flags for this IO, defined in nvme_spec.h */
 	uint32_t io_flags;
+	/* Hole at bytes 28-31. */
+	uint8_t reserved28[4];
 	/** Virtual address pointer to the metadata payload, the length of metadata is specified by \ref spdk_nvme_ns_get_md_size */
 	void *metadata;
 	/** Application tag mask to use end-to-end protection information. */
 	uint16_t apptag_mask;
 	/** Application tag to use end-to-end protection information. */
 	uint16_t apptag;
-};
+	/* Hole at bytes 44-47. */
+	uint8_t reserved44[4];
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_cmd_ext_io_opts) == 48, "Incorrect size");
 
 /**
@@ -1502,6 +1521,9 @@ struct spdk_nvme_io_qpair_opts {
 		bool delay_pcie_doorbell;
 	};
 
+	/* Hole at bytes 13-15. */
+	uint8_t reserved13[3];
+
 	/**
 	 * These fields allow specifying the memory buffers for the submission and/or
 	 * completion queues.
@@ -1544,7 +1566,10 @@ struct spdk_nvme_io_qpair_opts {
 	 * false to create io qpair synchronously.
 	 */
 	bool async_mode;
-};
+
+	/* Hole at bytes 66-71. */
+	uint8_t reserved66[6];
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_qpair_opts) == 72, "Incorrect size");
 
 /**
