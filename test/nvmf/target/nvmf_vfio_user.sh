@@ -81,8 +81,6 @@ for i in $(seq 1 $NUM_DEVICES); do
 	sleep 1
 	$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
 	sleep 1
-	$nvmeappdir/deallocated_value/deallocated_value -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
-	sleep 1
 	$nvmeappdir/overhead/overhead -s 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
 	sleep 1
 	aer_vfio_user $test_traddr $test_subnqn $i

@@ -127,7 +127,6 @@ run_test "nvme_reset" $testdir/reset/reset -q 64 -w write -s 4096 -t 5
 run_test "nvme_identify" nvme_identify
 run_test "nvme_perf" nvme_perf
 run_test "nvme_hello_world" $SPDK_EXAMPLE_DIR/hello_world -i 0
-run_test "nvme_deallocated_value" $testdir/deallocated_value/deallocated_value -i 0
 run_test "nvme_sgl" $testdir/sgl/sgl
 run_test "nvme_e2edp" $testdir/e2edp/nvme_dp
 run_test "nvme_reserve" $testdir/reserve/reserve
