@@ -135,7 +135,7 @@ struct spdk_blob_ext_io_opts {
 	void *memory_domain_ctx;
 	/** Optional user context */
 	void *user_ctx;
-};
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_ext_io_opts) == 32, "Incorrect size");
 
 struct spdk_bs_dev {
@@ -222,6 +222,9 @@ struct spdk_bs_opts {
 	/** Blobstore type */
 	struct spdk_bs_type bstype;
 
+	/* Hole at bytes 36-39. */
+	uint8_t reserved36[4];
+
 	/** Callback function to invoke for each blob. */
 	spdk_blob_op_with_handle_complete iter_cb_fn;
 
@@ -238,7 +241,7 @@ struct spdk_bs_opts {
 
 	/** Force recovery during import. This is a uint64_t for padding reasons, treated as a bool. */
 	uint64_t force_recover;
-};
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 72, "Incorrect size");
 
 /**
