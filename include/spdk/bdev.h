@@ -164,6 +164,10 @@ struct spdk_bdev_opts {
 	uint32_t bdev_io_pool_size;
 	uint32_t bdev_io_cache_size;
 	bool bdev_auto_examine;
+
+	/* Hole at bytes 9-15. */
+	uint8_t reserved9[7];
+
 	/**
 	 * The size of spdk_bdev_opts according to the caller of this library is used for ABI
 	 * compatibility.  The library uses this field to know how many fields in this
@@ -174,7 +178,7 @@ struct spdk_bdev_opts {
 
 	uint32_t small_buf_pool_size;
 	uint32_t large_buf_pool_size;
-};
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_opts) == 32, "Incorrect size");
 
 /**
@@ -193,7 +197,7 @@ struct spdk_bdev_ext_io_opts {
 	void *memory_domain_ctx;
 	/** Metadata buffer, optional */
 	void *metadata;
-};
+} __attribute__((packed));
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_ext_io_opts) == 32, "Incorrect size");
 
 /**
