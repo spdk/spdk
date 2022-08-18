@@ -4608,6 +4608,42 @@ Example response:
 }
 ~~~
 
+### bdev_iscsi_set_options {#rpc_bdev_iscsi_set_options}
+
+This RPC can be called at any time, but the new value will only take effect for new iSCSI bdevs.
+
+#### Parameters
+
+Name                       | Optional | Type        | Description
+-------------------------- | -------- | ----------- | -----------
+timeout                    | Optional | number      | Timeout for command, in seconds, if 0, don't track timeout
+
+#### Example
+
+Example request:
+
+~~~json
+request:
+{
+  "params": {
+    "timeout": 30
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_iscsi_set_options",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### bdev_iscsi_create {#rpc_bdev_iscsi_create}
 
 Connect to iSCSI target and create bdev backed by this connection.

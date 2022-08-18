@@ -8,6 +8,11 @@
 
 #include "spdk/bdev.h"
 
+struct spdk_bdev_iscsi_opts {
+	uint64_t timeout;
+	uint64_t timeout_poller_period_us;
+};
+
 typedef void (*spdk_delete_iscsi_complete)(void *cb_arg, int bdeverrno);
 
 /**
@@ -43,5 +48,6 @@ int create_iscsi_disk(const char *bdev_name, const char *url, const char *initia
  * \param cb_arg Completion callback custom arguments
  */
 void delete_iscsi_disk(const char *bdev_name, spdk_delete_iscsi_complete cb_fn, void *cb_arg);
-
+void bdev_iscsi_get_opts(struct spdk_bdev_iscsi_opts *opts);
+int bdev_iscsi_set_opts(struct spdk_bdev_iscsi_opts *opts);
 #endif /* SPDK_BDEV_ISCSI_H */

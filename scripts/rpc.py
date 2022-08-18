@@ -996,6 +996,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='error bdev name')
     p.set_defaults(func=bdev_error_delete)
 
+    def bdev_iscsi_set_options(args):
+        rpc.bdev.bdev_iscsi_set_options(args.client,
+                                        timeout=args.timeout)
+
+    p = subparsers.add_parser('bdev_iscsi_set_options', help='Set options for the bdev iscsi type.')
+    p.add_argument('-t', '--timeout', help="Timeout for command, in seconds, if 0, don't track timeout.", type=int)
+    p.set_defaults(func=bdev_iscsi_set_options)
+
     def bdev_iscsi_create(args):
         print_json(rpc.bdev.bdev_iscsi_create(args.client,
                                               name=args.name,

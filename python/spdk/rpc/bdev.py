@@ -1116,6 +1116,20 @@ def bdev_error_delete(client, name):
     return client.call('bdev_error_delete', params)
 
 
+def bdev_iscsi_set_options(client, timeout):
+    """Set options for the bdev iscsi.
+
+    Args:
+        timeout: Timeout for command, in seconds, if 0, don't track timeout
+    """
+    params = {}
+
+    if timeout is not None:
+        params['timeout'] = timeout
+
+    return client.call('bdev_iscsi_set_options', params)
+
+
 def bdev_iscsi_create(client, name, url, initiator_iqn):
     """Construct an iSCSI block device.
 

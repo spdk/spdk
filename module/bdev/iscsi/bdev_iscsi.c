@@ -28,6 +28,10 @@ struct bdev_iscsi_lun;
 #define BDEV_ISCSI_CONNECTION_POLL_US 500 /* 0.5 ms */
 #define BDEV_ISCSI_NO_MAIN_CH_POLL_US 10000 /* 10ms */
 
+#define BDEV_ISCSI_TIMEOUT_POLL_PERIOD_DEFAULT	1000000ULL /* 1 s */
+#define BDEV_ISCSI_TIMEOUT_DEFAULT 30 /* 30 s */
+#define BDEV_ISCSI_TIMEOUT_POLL_PERIOD_DIVISOR 30
+
 #define DEFAULT_INITIATOR_NAME "iqn.2016-06.io.spdk:init"
 
 /* MAXIMUM UNMAP LBA COUNT:
@@ -75,6 +79,7 @@ struct bdev_iscsi_lun {
 	bool				unmap_supported;
 	uint32_t			max_unmap;
 	struct spdk_poller		*poller;
+	struct spdk_poller		*timeout_poller;
 };
 
 struct bdev_iscsi_io_channel {
@@ -94,6 +99,29 @@ struct bdev_iscsi_conn_req {
 	int					status;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
 };
+
+static struct spdk_bdev_iscsi_opts g_opts = {
+	.timeout = BDEV_ISCSI_TIMEOUT_DEFAULT,
+	.timeout_poller_period_us = BDEV_ISCSI_TIMEOUT_POLL_PERIOD_DEFAULT,
+};
+
+void
+bdev_iscsi_get_opts(struct spdk_bdev_iscsi_opts *opts)
+{
+	*opts = g_opts;
+}
+
+int
+bdev_iscsi_set_opts(struct spdk_bdev_iscsi_opts *opts)
+{
+	/* make the poller period equal to timeout / 30 */
+	opts->timeout_poller_period_us = (opts->timeout * 1000000ULL) /
+					 BDEV_ISCSI_TIMEOUT_POLL_PERIOD_DIVISOR;
+
+	g_opts = *opts;
+
+	return 0;
+}
 
 static void
 complete_conn_req(struct bdev_iscsi_conn_req *req, struct spdk_bdev *bdev,
@@ -499,6 +527,15 @@ bdev_iscsi_poll_lun(void *_lun)
 }
 
 static int
+bdev_iscsi_poll_lun_timeout(void *_lun)
+{
+	struct bdev_iscsi_lun *lun = _lun;
+	/* passing 0 here to iscsi_service means do nothing except for timeout checks */
+	iscsi_service(lun->context, 0);
+	return SPDK_POLLER_BUSY;
+}
+
+static int
 bdev_iscsi_no_main_ch_poll(void *arg)
 {
 	struct bdev_iscsi_lun *lun = arg;
@@ -624,6 +661,10 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 		assert(lun->main_td == NULL);
 		lun->main_td = spdk_get_thread();
 		lun->poller = SPDK_POLLER_REGISTER(bdev_iscsi_poll_lun, lun, 0);
+		if (g_opts.timeout > 0) {
+			lun->timeout_poller = SPDK_POLLER_REGISTER(bdev_iscsi_poll_lun_timeout, lun,
+					      g_opts.timeout_poller_period_us);
+		}
 		ch->lun = lun;
 	}
 	lun->ch_count++;
@@ -650,6 +691,7 @@ _iscsi_destroy_cb(void *ctx)
 
 	lun->main_td = NULL;
 	spdk_poller_unregister(&lun->poller);
+	spdk_poller_unregister(&lun->timeout_poller);
 
 	pthread_mutex_unlock(&lun->mutex);
 }
@@ -678,6 +720,7 @@ bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 
 		lun->main_td = NULL;
 		spdk_poller_unregister(&lun->poller);
+		spdk_poller_unregister(&lun->timeout_poller);
 	}
 	pthread_mutex_unlock(&lun->mutex);
 }
@@ -1001,6 +1044,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 	rc = iscsi_set_session_type(req->context, ISCSI_SESSION_NORMAL);
 	rc = rc ? rc : iscsi_set_header_digest(req->context, ISCSI_HEADER_DIGEST_NONE);
 	rc = rc ? rc : iscsi_set_targetname(req->context, iscsi_url->target);
+	rc = rc ? rc : iscsi_set_timeout(req->context, g_opts.timeout);
 	rc = rc ? rc : iscsi_full_connect_async(req->context, iscsi_url->portal, iscsi_url->lun,
 						iscsi_connect_cb, req);
 	if (rc == 0 && iscsi_url->user[0] != '\0') {
