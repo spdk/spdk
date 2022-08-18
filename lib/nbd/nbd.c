@@ -935,11 +935,16 @@ nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 #endif
 
 #ifdef NBD_FLAG_SEND_FLUSH
-	nbd_flags |= NBD_FLAG_SEND_FLUSH;
+	if (spdk_bdev_io_type_supported(ctx->nbd->bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
+		nbd_flags |= NBD_FLAG_SEND_FLUSH;
+	}
 #endif
 #ifdef NBD_FLAG_SEND_TRIM
-	nbd_flags |= NBD_FLAG_SEND_TRIM;
+	if (spdk_bdev_io_type_supported(ctx->nbd->bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		nbd_flags |= NBD_FLAG_SEND_TRIM;
+	}
 #endif
+
 	if (nbd_flags) {
 		rc = ioctl(ctx->nbd->dev_fd, NBD_SET_FLAGS, nbd_flags);
 		if (rc == -1) {

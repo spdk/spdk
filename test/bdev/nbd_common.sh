@@ -121,3 +121,21 @@ function nbd_rpc_start_stop_verify() {
 
 	return 0
 }
+
+function nbd_with_lvol_verify() {
+	local rpc_server=$1
+	local nbd_list=($2)
+
+	$rootdir/scripts/rpc.py -s $rpc_server bdev_malloc_create -b malloc_lvol_verify 16 512
+	$rootdir/scripts/rpc.py -s $rpc_server bdev_lvol_create_lvstore malloc_lvol_verify lvs
+	$rootdir/scripts/rpc.py -s $rpc_server bdev_lvol_create lvol 4 -l lvs
+	$rootdir/scripts/rpc.py -s $rpc_server nbd_start_disk lvs/lvol "${nbd_list[0]}"
+
+	mkfs_ret=$(mkfs.ext4 ${nbd_list[0]})
+	nbd_stop_disks $rpc_server "${nbd_list[0]}"
+	if [ $mkfs_ret -ne 0 ]; then
+		return 1
+	fi
+
+	return 0
+}
