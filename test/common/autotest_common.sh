@@ -165,6 +165,8 @@ export SPDK_TEST_NVMF_NICS
 export SPDK_TEST_SMA
 : ${SPDK_TEST_DAOS=0}
 export SPDK_TEST_DAOS
+: ${SPDK_TEST_XNVME:=0}
+export SPDK_TEST_XNVME
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"
@@ -211,6 +213,9 @@ leak:libtcmalloc_minimal.so
 
 # Suppress leaks in libiscsi
 leak:libiscsi.so
+
+# Supress leaks in xnvme
+leak:xnvme_dev_alloc
 EOL
 
 # Suppress leaks in libfuse3
@@ -233,6 +238,8 @@ export SPDK_EXAMPLE_DIR="$rootdir/build/examples"
 # for vhost, vfio-user tests
 export QEMU_BIN=${QEMU_BIN:-}
 export VFIO_QEMU_BIN=${VFIO_QEMU_BIN:-}
+
+export AR_TOOL=$rootdir/scripts/ar-xnvme-fixer
 
 # pass our valgrind desire on to unittest.sh
 if [ $SPDK_RUN_VALGRIND -eq 0 ]; then
@@ -492,6 +499,11 @@ function get_config_params() {
 
 	if [ -f /usr/include/daos.h ] && [ $SPDK_TEST_DAOS -eq 1 ]; then
 		config_params+=' --with-daos'
+	fi
+
+	# Make the xnvme module available for the tests
+	if [[ $SPDK_TEST_XNVME -eq 1 ]]; then
+		config_params+=' --with-xnvme'
 	fi
 
 	echo "$config_params"

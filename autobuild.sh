@@ -24,6 +24,10 @@ if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
 else
 	scanbuild_exclude="--exclude $rootdir/dpdk/"
 fi
+# We exclude /tmp as it's used by xnvme's liburing subproject for storing
+# temporary .c files which are picked up as buggy by the scanbuild.
+scanbuild_exclude+=" --exclude $rootdir/xnvme --exclude /tmp"
+
 scanbuild="scan-build -o $output_dir/scan-build-tmp $scanbuild_exclude --status-bugs"
 config_params=$(get_config_params)
 
