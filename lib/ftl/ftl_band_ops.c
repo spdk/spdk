@@ -264,8 +264,12 @@ band_open_cb(int status, void *cb_arg)
 	struct ftl_band *band = cb_arg;
 
 	if (spdk_unlikely(status)) {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_md_persist_entry_retry(&band->md_persist_entry_ctx);
 		return;
+#else
+		ftl_abort();
+#endif
 	}
 
 	ftl_band_set_state(band, FTL_BAND_STATE_OPEN);
@@ -305,8 +309,12 @@ band_close_cb(int status, void *cb_arg)
 	struct ftl_band *band = cb_arg;
 
 	if (spdk_unlikely(status)) {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_md_persist_entry_retry(&band->md_persist_entry_ctx);
 		return;
+#else
+		ftl_abort();
+#endif
 	}
 
 	band->md->p2l_map_checksum = band->p2l_map.band_dma_md->p2l_map_checksum;
@@ -334,9 +342,13 @@ band_map_write_cb(struct ftl_basic_rq *brq)
 		ftl_md_persist_entry(md, band->id, p2l_map->band_dma_md, NULL,
 				     band_close_cb, band, &band->md_persist_entry_ctx);
 	} else {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		/* Try to retry in case of failure */
 		ftl_band_brq_bdev_write(brq);
 		band->queue_depth++;
+#else
+		ftl_abort();
+#endif
 	}
 }
 
@@ -362,8 +374,12 @@ band_free_cb(int status, void *ctx)
 	struct ftl_band *band = (struct ftl_band *)ctx;
 
 	if (spdk_unlikely(status)) {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_md_persist_entry_retry(&band->md_persist_entry_ctx);
 		return;
+#else
+		ftl_abort();
+#endif
 	}
 
 	ftl_band_release_p2l_map(band);

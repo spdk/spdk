@@ -558,8 +558,12 @@ ftl_process_unmap_cb(struct spdk_ftl_dev *dev, struct ftl_md *md, int status)
 	io->dev->unmap_qd--;
 
 	if (spdk_unlikely(status)) {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		TAILQ_INSERT_HEAD(&io->dev->unmap_sq, io, queue_entry);
 		return;
+#else
+		io->status = status;
+#endif
 	}
 
 	ftl_io_complete(io);

@@ -139,9 +139,13 @@ ftl_p2l_ckpt_issue_end(int status, void *arg)
 	assert(rq);
 
 	if (status) {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		/* retry */
 		ftl_md_persist_entry_retry(&rq->md_persist_entry_ctx);
 		return;
+#else
+		ftl_abort();
+#endif
 	}
 
 	assert(rq->io.band->queue_depth > 0);

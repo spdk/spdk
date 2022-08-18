@@ -443,7 +443,11 @@ chunk_free_cb(int status, void *ctx)
 		chunk->md->close_seq_id = 0;
 		ftl_chunk_free_chunk_free_entry(chunk);
 	} else {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
+#else
+		ftl_abort();
+#endif
 	}
 }
 
@@ -858,8 +862,12 @@ compaction_process_ftl_done(struct ftl_rq *rq)
 
 	if (spdk_unlikely(false == rq->success)) {
 		/* IO error retry writing */
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_writer_queue_rq(&dev->writer_user, rq);
 		return;
+#else
+		ftl_abort();
+#endif
 	}
 
 	/* Update L2P table */
@@ -1700,8 +1708,12 @@ chunk_open_cb(int status, void *ctx)
 	struct ftl_nv_cache_chunk *chunk = (struct ftl_nv_cache_chunk *)ctx;
 
 	if (spdk_unlikely(status)) {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
 		return;
+#else
+		ftl_abort();
+#endif
 	}
 
 	chunk->md->state = FTL_CHUNK_STATE_OPEN;
@@ -1761,7 +1773,11 @@ chunk_close_cb(int status, void *ctx)
 
 		chunk->md->state = FTL_CHUNK_STATE_CLOSED;
 	} else {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		ftl_md_persist_entry_retry(&chunk->md_persist_entry_ctx);
+#else
+		ftl_abort();
+#endif
 	}
 }
 
@@ -1785,9 +1801,13 @@ chunk_map_write_cb(struct ftl_basic_rq *brq)
 				     NULL, chunk_close_cb, chunk,
 				     &chunk->md_persist_entry_ctx);
 	} else {
+#ifdef SPDK_FTL_RETRY_ON_ERROR
 		/* retry */
 		chunk->md->write_pointer -= brq->num_blocks;
 		ftl_chunk_basic_rq_write(chunk, brq);
+#else
+		ftl_abort();
+#endif
 	}
 }
 
