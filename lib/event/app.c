@@ -750,6 +750,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	int ch, rc, opt_idx, global_long_opts_len, app_long_opts_len;
 	struct option *cmdline_options;
 	char *cmdline_short_opts = NULL;
+	char *shm_id_str = NULL;
 	enum spdk_app_parse_args_rvals retval = SPDK_APP_PARSE_ARGS_FAIL;
 	long int tmp;
 
@@ -822,10 +823,21 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			retval = SPDK_APP_PARSE_ARGS_HELP;
 			goto out;
 		case SHM_ID_OPT_IDX:
-			opts->shm_id = spdk_strtol(optarg, 0);
+			shm_id_str = optarg;
+			/* a negative shm-id disables shared configuration file */
+			if (optarg[0] == '-') {
+				shm_id_str++;
+			}
+			/* check if the positive value of provided shm_id can be parsed as
+			 * an integer
+			 */
+			opts->shm_id = spdk_strtol(shm_id_str, 0);
 			if (opts->shm_id < 0) {
 				SPDK_ERRLOG("Invalid shared memory ID %s\n", optarg);
 				goto out;
+			}
+			if (optarg[0] == '-') {
+				opts->shm_id = -opts->shm_id;
 			}
 			break;
 		case CPUMASK_OPT_IDX:
