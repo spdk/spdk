@@ -22,9 +22,6 @@ DEFINE_STUB(spdk_bdev_zone_appendv, int, (struct spdk_bdev_desc *desc, struct sp
 		struct iovec *iov, int iovcnt, uint64_t zone_id, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *b), 1024);
-DEFINE_STUB(spdk_bdev_zone_management, int, (struct spdk_bdev_desc *desc,
-		struct spdk_io_channel *ch, uint64_t zone_id, enum spdk_bdev_zone_action action,
-		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 64);
 DEFINE_STUB(spdk_bdev_get_dif_type, enum spdk_dif_type,
@@ -56,10 +53,6 @@ DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
 DEFINE_STUB(spdk_bdev_write_zeroes_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     uint64_t offset_blocks, uint64_t num_blocks,
-	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
-DEFINE_STUB(spdk_bdev_get_zone_info, int,
-	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-	     uint64_t zone_id, size_t num_zones, struct spdk_bdev_zone_info *info,
 	     spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB(spdk_mempool_create_ctor, struct spdk_mempool *,
 	    (const char *name, size_t count, size_t ele_size, size_t cache_size,

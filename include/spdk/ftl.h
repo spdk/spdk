@@ -54,10 +54,6 @@ struct spdk_ftl_attrs {
 	uint64_t			num_blocks;
 	/* Logical block size */
 	uint64_t			block_size;
-	/* Number of zones in the underlying device (including any offline ones) */
-	uint64_t			num_zones;
-	/* Number of logical blocks per zone */
-	uint64_t			zone_size;
 	/* Optimal IO size - bdev layer will split requests over this size */
 	uint64_t			optimum_io_size;
 };

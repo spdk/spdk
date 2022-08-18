@@ -171,10 +171,10 @@ setup_layout_nvc(struct spdk_ftl_dev *dev)
 
 	left = layout->nvc.total_blocks - offset;
 	layout->nvc.chunk_data_blocks =
-		FTL_NV_CACHE_CHUNK_DATA_SIZE(ftl_get_num_blocks_in_zone(dev)) / FTL_BLOCK_SIZE;
+		FTL_NV_CACHE_CHUNK_DATA_SIZE(ftl_get_num_blocks_in_band(dev)) / FTL_BLOCK_SIZE;
 	layout->nvc.chunk_meta_size = FTL_NV_CACHE_CHUNK_MD_SIZE;
 	layout->nvc.chunk_count = (left * FTL_BLOCK_SIZE) /
-				  FTL_NV_CACHE_CHUNK_SIZE(ftl_get_num_blocks_in_zone(dev));
+				  FTL_NV_CACHE_CHUNK_SIZE(ftl_get_num_blocks_in_band(dev));
 	layout->nvc.chunk_tail_md_num_blocks = ftl_nv_cache_chunk_tail_md_num_blocks(&dev->nv_cache);
 
 	if (0 == layout->nvc.chunk_count) {

@@ -21,35 +21,15 @@ static struct spdk_bdev_module g_ftl_bdev_module = {
 	.name   = "ftl_lib",
 };
 
-static inline size_t
-ftl_calculate_num_zones_in_band(struct spdk_bdev_desc *desc)
+static inline uint64_t
+ftl_calculate_num_blocks_in_band(struct spdk_bdev_desc *desc)
 {
-	if (spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(desc))) {
-		return spdk_bdev_get_optimal_open_zones(spdk_bdev_desc_get_bdev(desc));
-	}
-
-	return 1;
-}
-
-static inline size_t
-ftl_calculate_num_blocks_in_zone(struct spdk_bdev_desc *desc)
-{
-	if (spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(desc))) {
-		return spdk_bdev_get_zone_size(spdk_bdev_desc_get_bdev(desc));
-	}
-
 	/* TODO: this should be passed via input parameter */
 #ifdef SPDK_FTL_ZONE_EMU_BLOCKS
 	return SPDK_FTL_ZONE_EMU_BLOCKS;
 #else
 	return (1ULL << 30) / FTL_BLOCK_SIZE;
 #endif
-}
-
-static inline uint64_t
-ftl_calculate_num_blocks_in_band(struct spdk_bdev_desc *desc)
-{
-	return ftl_calculate_num_zones_in_band(desc) * ftl_calculate_num_blocks_in_zone(desc);
 }
 
 static void
@@ -115,8 +95,6 @@ ftl_mngt_open_base_bdev(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 
 	/* Cache frequently used values */
 	dev->num_blocks_in_band = ftl_calculate_num_blocks_in_band(dev->base_bdev_desc);
-	dev->num_zones_in_band = ftl_calculate_num_zones_in_band(dev->base_bdev_desc);
-	dev->num_blocks_in_zone = ftl_calculate_num_blocks_in_zone(dev->base_bdev_desc);
 	dev->is_zoned = spdk_bdev_is_zoned(spdk_bdev_desc_get_bdev(dev->base_bdev_desc));
 
 	if (dev->is_zoned) {

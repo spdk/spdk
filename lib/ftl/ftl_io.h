@@ -219,9 +219,6 @@ struct ftl_rq {
 		/* Request physical address, on IO completion set for append device */
 		ftl_addr addr;
 
-		/* Zone to which IO is issued */
-		struct ftl_zone *zone;
-
 		struct spdk_bdev_io_wait_entry bdev_io_wait;
 	} io;
 
@@ -260,9 +257,6 @@ struct ftl_basic_rq {
 	struct {
 		/* Request physical address, on IO completion set for append device */
 		ftl_addr addr;
-
-		/* Zone to which IO is issued */
-		struct ftl_zone *zone;
 
 		/* Chunk to which IO is issued */
 		struct ftl_nv_cache_chunk *chunk;

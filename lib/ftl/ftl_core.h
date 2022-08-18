@@ -14,7 +14,6 @@
 #include "spdk/queue.h"
 #include "spdk/ftl.h"
 #include "spdk/bdev.h"
-#include "spdk/bdev_zone.h"
 
 #include "ftl_internal.h"
 #include "ftl_io.h"
@@ -49,8 +48,6 @@ struct spdk_ftl_dev {
 
 	/* Cached properties of the underlying device */
 	uint64_t			num_blocks_in_band;
-	uint64_t			num_zones_in_band;
-	uint64_t			num_blocks_in_zone;
 	bool				is_zoned;
 
 	/* Indicates the device is fully initialized */
@@ -130,18 +127,6 @@ ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 	return dev->num_blocks_in_band;
 }
 
-static inline size_t
-ftl_get_num_zones_in_band(const struct spdk_ftl_dev *dev)
-{
-	return dev->num_zones_in_band;
-}
-
-static inline size_t
-ftl_get_num_blocks_in_zone(const struct spdk_ftl_dev *dev)
-{
-	return dev->num_blocks_in_zone;
-}
-
 static inline uint32_t
 ftl_get_write_unit_size(struct spdk_bdev *bdev)
 {
@@ -163,12 +148,6 @@ static inline size_t
 ftl_get_num_bands(const struct spdk_ftl_dev *dev)
 {
 	return dev->num_bands;
-}
-
-static inline size_t
-ftl_get_num_zones(const struct spdk_ftl_dev *dev)
-{
-	return ftl_get_num_bands(dev) * ftl_get_num_zones_in_band(dev);
 }
 
 static inline bool

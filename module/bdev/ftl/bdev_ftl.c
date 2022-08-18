@@ -214,8 +214,6 @@ bdev_ftl_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	if (conf.cache_bdev) {
 		spdk_json_write_named_string(w, "cache", conf.cache_bdev);
 	}
-	spdk_json_write_named_string_fmt(w, "num_zones", "%zu", attrs.num_zones);
-	spdk_json_write_named_string_fmt(w, "zone_size", "%zu", attrs.zone_size);
 
 	/* ftl */
 	spdk_json_write_object_end(w);

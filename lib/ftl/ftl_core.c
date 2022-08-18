@@ -62,8 +62,6 @@ spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *at
 {
 	attrs->num_blocks = dev->num_lbas;
 	attrs->block_size = FTL_BLOCK_SIZE;
-	attrs->num_zones = ftl_get_num_zones(dev);
-	attrs->zone_size = ftl_get_num_blocks_in_zone(dev);
 	attrs->optimum_io_size = dev->xfer_size;
 }
 
