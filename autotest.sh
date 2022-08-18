@@ -220,6 +220,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		if [ $SPDK_RUN_ASAN -eq 0 ] && [ $(uname -s) = Linux ]; then
 			run_test "sw_hotplug" test/nvme/sw_hotplug.sh
 		fi
+
+		if [[ $SPDK_TEST_XNVME -eq 1 ]]; then
+			run_test "nvme_xnvme" test/nvme/xnvme/xnvme.sh
+		fi
 	fi
 
 	if [ $SPDK_TEST_IOAT -eq 1 ]; then
