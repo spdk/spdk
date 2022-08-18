@@ -45,13 +45,11 @@ _get_default_rpc_methods() {
 	done < <(_get_help "$1" 2> /dev/null)
 }
 
-_get_supported_methods() {
+_get_rpc_methods() {
 	local method methods
 
-	if ! methods=($("$1" -s "$rpc_sock" rpc_get_methods 2> /dev/null)); then
-		_get_default_rpc_methods "$1"
-		return 0
-	fi
+	_get_default_rpc_methods "$1"
+	methods=($("$1" -s "$rpc_sock" rpc_get_methods 2> /dev/null)) || return 0
 	((${#methods[@]} > 0)) || return 0
 
 	# Kill the json flavor
@@ -207,11 +205,7 @@ _rpc() {
 	local -A rpc_methods=()
 
 	_set_rpc_sock
-	if [[ -S $rpc_sock ]]; then
-		_get_supported_methods "$rpc"
-	else
-		_get_default_rpc_methods "$rpc"
-	fi
+	_get_rpc_methods "$rpc"
 
 	if method=$(_method_in_words); then
 		COMPREPLY=($(compgen -W '$(_get_help_rpc_method "$rpc" "$method")' -- "$cur"))
