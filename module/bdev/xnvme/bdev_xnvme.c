@@ -35,6 +35,7 @@ struct bdev_xnvme_task {
 struct bdev_xnvme {
 	struct spdk_bdev	bdev;
 	char			*filename;
+	char			*io_mechanism;
 	struct xnvme_dev	*dev;
 	uint32_t		nsid;
 
@@ -52,11 +53,34 @@ bdev_xnvme_get_ctx_size(void)
 	return sizeof(struct bdev_xnvme_task);
 }
 
+static int
+bdev_xnvme_config_json(struct spdk_json_write_ctx *w)
+{
+	struct bdev_xnvme *xnvme;
+
+	TAILQ_FOREACH(xnvme, &g_xnvme_bdev_head, link) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_named_string(w, "method", "bdev_xnvme_create");
+
+		spdk_json_write_named_object_begin(w, "params");
+		spdk_json_write_named_string(w, "name", xnvme->bdev.name);
+		spdk_json_write_named_string(w, "filename", xnvme->filename);
+		spdk_json_write_named_string(w, "io_mechanism", xnvme->io_mechanism);
+		spdk_json_write_object_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
+	return 0;
+}
+
 static struct spdk_bdev_module xnvme_if = {
 	.name		= "xnvme",
 	.module_init	= bdev_xnvme_init,
 	.module_fini	= bdev_xnvme_fini,
 	.get_ctx_size	= bdev_xnvme_get_ctx_size,
+	.config_json	= bdev_xnvme_config_json,
 };
 
 SPDK_BDEV_MODULE_REGISTER(xnvme, &xnvme_if)
@@ -199,6 +223,7 @@ bdev_xnvme_free(struct bdev_xnvme *xnvme)
 	assert(xnvme != NULL);
 
 	xnvme_dev_close(xnvme->dev);
+	free(xnvme->io_mechanism);
 	free(xnvme->filename);
 	free(xnvme->bdev.name);
 	free(xnvme);
@@ -288,6 +313,10 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 	opts.direct = 1;
 	opts.async = io_mechanism;
 	if (!opts.async) {
+		goto error_return;
+	}
+	xnvme->io_mechanism = strdup(io_mechanism);
+	if (!xnvme->io_mechanism) {
 		goto error_return;
 	}
 
