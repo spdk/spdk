@@ -3028,6 +3028,10 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t	nsid;
 	size_t		buf_size = (SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t));
 
+	if (ctrlr->disable_read_changed_ns_list_log_page) {
+		return 0;
+	}
+
 	buffer = spdk_dma_zmalloc(buf_size, 4096, NULL);
 	if (!buffer) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate buffer for getting "
@@ -4520,6 +4524,12 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
+void
+spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	ctrlr->disable_read_changed_ns_list_log_page = true;
 }
 
 void

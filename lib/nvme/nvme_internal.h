@@ -889,6 +889,8 @@ struct spdk_nvme_ctrlr {
 	 */
 	bool				prepare_for_reset;
 
+	bool				disable_read_changed_ns_list_log_page;
+
 	uint16_t			max_sges;
 
 	uint16_t			cntlid;

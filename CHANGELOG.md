@@ -2,6 +2,16 @@
 
 ## v22.01.2: (Upcoming Release)
 
+### nvme
+
+Added  `spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page` to allow an
+application to tell the driver to not read the CHANGED_NS_LIST log page in
+response to a NS_ATTR_CHANGED AEN.  Applications that are consuming data from
+the CHANGED_NS_LIST log page *must* call this new API when upgrading to SPDK
+v22.01.  Otherwise the driver will perform the read to clear the AEN before
+notifying the application, and when the application reads it the log page will
+be empty.
+
 ## v22.01.1
 
 ### dpdk
