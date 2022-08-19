@@ -4557,6 +4557,7 @@ static void
 bdev_compare_do_read_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
+	struct spdk_bdev *bdev = parent_io->bdev;
 	uint8_t *read_buf = bdev_io->u.bdev.iovs[0].iov_base;
 	int i, rc = 0;
 
@@ -4575,6 +4576,12 @@ bdev_compare_do_read_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_a
 			break;
 		}
 		read_buf += parent_io->u.bdev.iovs[i].iov_len;
+	}
+
+	if (rc == 0 && parent_io->u.bdev.md_buf && spdk_bdev_is_md_separate(bdev)) {
+		rc = memcmp(bdev_io->u.bdev.md_buf,
+			    parent_io->u.bdev.md_buf,
+			    spdk_bdev_get_md_size(bdev));
 	}
 
 	spdk_bdev_free_io(bdev_io);
