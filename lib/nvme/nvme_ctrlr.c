@@ -4523,6 +4523,12 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 void
+spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	ctrlr->opts.disable_read_changed_ns_list_log_page = true;
+}
+
+void
 spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		uint64_t timeout_io_us, uint64_t timeout_admin_us,
 		spdk_nvme_timeout_cb cb_fn, void *cb_arg)

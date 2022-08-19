@@ -1398,6 +1398,22 @@ void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 		void *aer_cb_arg);
 
 /**
+ * Disable reading the CHANGED_NS_LIST log page for the specified controller.
+ *
+ * Applications that register an AER callback may wish to read the CHANGED_NS_LIST
+ * log page itself, rather than relying on the driver to do it.  Calling this
+ * function will ensure that the driver does not read this log page if the
+ * controller returns a NS_ATTR_CHANGED AEN.
+ *
+ * Reading of this log page can alternatively be disabled by setting the
+ * disable_read_changed_ns_list_log_page flag in the spdk_nvme_ctrlr_opts
+ * when attaching the controller.
+ *
+ * \param ctrlr NVMe controller on which to disable the log page read.
+ */
+void spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Opaque handle to a queue pair.
  *
  * I/O queue pairs may be allocated using spdk_nvme_ctrlr_alloc_io_qpair().
