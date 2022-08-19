@@ -848,9 +848,6 @@ struct nvme_register_completion {
 	pid_t					pid;
 };
 
-/*
- * One of these per allocated PCI device.
- */
 struct spdk_nvme_ctrlr {
 	/* Hot data (accessed in I/O path) starts here. */
 
