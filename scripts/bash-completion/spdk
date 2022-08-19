@@ -75,7 +75,7 @@ _get_help_rpc_method() {
 _is_rpc_method() {
 	local word=$1
 
-	[[ -v rpc_methods["$word"] ]]
+	[[ -n $word && -n ${rpc_methods["$word"]} ]]
 }
 
 _method_in_words() {
@@ -148,7 +148,7 @@ _spdk_opt_to_complete() {
 			fi
 			;;
 		*) return 1 ;;
-	esac
+	esac 2> /dev/null
 	return 0
 }
 
@@ -218,7 +218,7 @@ _rpc() {
 		_filedir
 	else
 		COMPREPLY=($(compgen -W '${!rpc_methods[*]}' -- "$cur"))
-	fi
+	fi 2> /dev/null
 }
 
 _spdk_app() {
