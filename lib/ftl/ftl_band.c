@@ -225,6 +225,12 @@ ftl_band_user_blocks(const struct ftl_band *band)
 	       ftl_tail_md_num_blocks(band->dev);
 }
 
+static inline uint64_t
+ftl_addr_get_band(const struct spdk_ftl_dev *dev, ftl_addr addr)
+{
+	return (addr - dev->bands->start_addr) / ftl_get_num_blocks_in_band(dev);
+}
+
 struct ftl_band *
 ftl_band_from_addr(struct spdk_ftl_dev *dev, ftl_addr addr)
 {
@@ -238,7 +244,7 @@ uint64_t
 ftl_band_block_offset_from_addr(struct ftl_band *band, ftl_addr addr)
 {
 	assert(ftl_addr_get_band(band->dev, addr) == band->id);
-	return addr % ftl_get_num_blocks_in_band(band->dev);
+	return addr - band->start_addr;
 }
 
 ftl_addr
@@ -285,7 +291,7 @@ ftl_band_addr_from_block_offset(struct ftl_band *band, uint64_t block_off)
 {
 	ftl_addr addr;
 
-	addr = block_off + band->id * ftl_get_num_blocks_in_band(band->dev);
+	addr = block_off + band->start_addr;
 	return addr;
 }
 

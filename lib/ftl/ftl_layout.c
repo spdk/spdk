@@ -344,30 +344,33 @@ setup_layout_base(struct spdk_ftl_dev *dev)
 	uint64_t left, offset;
 	struct ftl_layout *layout = &dev->layout;
 	struct ftl_layout_region *region;
+	uint64_t data_base_alignment = 8 * ftl_bitmap_buffer_alignment;
+	/* Allocating a ftl_bitmap requires a 8B input buffer alignment, since we're reusing the global valid map md buffer
+	 * this means that each band starting address needs to be aligned too - each device sector takes 1b in the valid map,
+	 * so 64 sectors (8*8) is the needed alignment
+	 */
 
 	layout->base.num_usable_blocks = ftl_get_num_blocks_in_band(dev);
 	layout->base.user_blocks = ftl_band_user_blocks(dev->bands);
 
 	/* Base device layout is following:
-	 * - data
 	 * - superblock
+	 * - data
 	 * - valid map
-	 *
-	 * Superblock has been already configured, its offset marks the end of the data region
 	 */
-	offset = layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.offset;
+	offset = layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.blocks;
+	offset = SPDK_ALIGN_CEIL(offset, data_base_alignment);
 
 	/* Setup data region on base device */
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_DATA_BASE];
 	region->type = FTL_LAYOUT_REGION_TYPE_DATA_BASE;
 	region->name = "data_btm";
 	region->current.version = region->prev.version = 0;
-	region->current.offset = 0;
-	region->current.blocks = offset;
+	region->current.offset = offset;
+	region->current.blocks = layout_base_offset(dev);
 	set_region_bdev_btm(region, dev);
 
-	/* Move offset after base superblock */
-	offset += layout->region[FTL_LAYOUT_REGION_TYPE_SB_BASE].current.blocks;
+	offset += region->current.blocks;
 
 	/* Setup validity map */
 	region = &layout->region[FTL_LAYOUT_REGION_TYPE_VALID_MAP];
@@ -529,10 +532,7 @@ ftl_layout_setup_superblock(struct spdk_ftl_dev *dev)
 	region->name = "sb_mirror";
 	region->current.version = FTL_SB_VERSION_CURRENT;
 	region->prev.version = FTL_SB_VERSION_CURRENT;
-	/* TODO: This should really be at offset 0 - think how best to upgrade between the two layouts
-	 * This is an issue if some other metadata appears at block 0 of base device (most likely GPT or blobstore)
-	 */
-	region->current.offset = layout_base_offset(dev);
+	region->current.offset = 0;
 	region->current.blocks = blocks_region(FTL_SUPERBLOCK_SIZE);
 	set_region_bdev_btm(region, dev);
 

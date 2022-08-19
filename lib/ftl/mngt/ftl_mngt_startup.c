@@ -105,6 +105,10 @@ static const struct ftl_mngt_process_desc desc_startup = {
 			.cleanup = ftl_mngt_deinit_md
 		},
 		{
+			.name = "Initialize band addresses",
+			.action = ftl_mngt_initialize_band_address
+		},
+		{
 			.name = "Initialize NV cache",
 			.action = ftl_mngt_init_nv_cache,
 			.cleanup = ftl_mngt_deinit_nv_cache

@@ -26,7 +26,7 @@ ftl_band_init_md(struct ftl_band *band)
 	band_valid_map_bytes = band_num_blocks / 8;
 
 	p2l_map->valid = ftl_bitmap_create(ftl_md_get_buffer(valid_map_md) +
-					   band_valid_map_bytes * band->id, band_valid_map_bytes);
+					   band->start_addr / 8, band_valid_map_bytes);
 	if (!p2l_map->valid) {
 		return -ENOMEM;
 	}
@@ -170,8 +170,6 @@ decorate_bands(struct spdk_ftl_dev *dev)
 	i = 0;
 	while (i < ftl_get_num_bands(dev) - num_to_drop) {
 		band = &dev->bands[i];
-		band->start_addr = i * dev->num_blocks_in_band;
-		band->tail_md_addr = ftl_band_tail_md_addr(band);
 
 		band->phys_id = phys_id;
 		i++;
@@ -196,6 +194,22 @@ void
 ftl_mngt_decorate_bands(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	decorate_bands(dev);
+	ftl_mngt_next_step(mngt);
+}
+
+void
+ftl_mngt_initialize_band_address(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
+{
+	struct ftl_band *band;
+	struct ftl_md *data_md = dev->layout.md[FTL_LAYOUT_REGION_TYPE_DATA_BASE];
+	uint64_t i;
+
+	for (i = 0; i < ftl_get_num_bands(dev); i++) {
+		band = &dev->bands[i];
+		band->start_addr = data_md->region->current.offset + i * dev->num_blocks_in_band;
+		band->tail_md_addr = ftl_band_tail_md_addr(band);
+	}
+
 	ftl_mngt_next_step(mngt);
 }
 

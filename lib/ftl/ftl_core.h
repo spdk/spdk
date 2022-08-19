@@ -220,12 +220,6 @@ ftl_get_num_blocks_in_band(const struct spdk_ftl_dev *dev)
 	return dev->num_blocks_in_band;
 }
 
-static inline uint64_t
-ftl_addr_get_band(const struct spdk_ftl_dev *dev, ftl_addr addr)
-{
-	return addr / ftl_get_num_blocks_in_band(dev);
-}
-
 static inline uint32_t
 ftl_get_write_unit_size(struct spdk_bdev *bdev)
 {
