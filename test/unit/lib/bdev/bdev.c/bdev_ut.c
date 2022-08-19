@@ -111,6 +111,7 @@ static void *g_compare_read_buf;
 static uint32_t g_compare_read_buf_len;
 static void *g_compare_write_buf;
 static uint32_t g_compare_write_buf_len;
+static void *g_compare_md_buf;
 static bool g_abort_done;
 static enum spdk_bdev_io_status g_abort_status;
 static void *g_zcopy_read_buf;
@@ -159,6 +160,10 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 		CU_ASSERT(bdev_io->u.bdev.iovcnt == 1);
 		CU_ASSERT(g_compare_read_buf_len == len);
 		memcpy(bdev_io->u.bdev.iovs[0].iov_base, g_compare_read_buf, len);
+		if (bdev_io->bdev->md_len && bdev_io->u.bdev.md_buf && g_compare_md_buf) {
+			memcpy(bdev_io->u.bdev.md_buf, g_compare_md_buf,
+			       bdev_io->bdev->md_len * bdev_io->u.bdev.num_blocks);
+		}
 	}
 
 	if (g_compare_write_buf && bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
@@ -175,6 +180,11 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 		CU_ASSERT(bdev_io->u.bdev.iovcnt == 1);
 		CU_ASSERT(g_compare_read_buf_len == len);
 		if (memcmp(bdev_io->u.bdev.iovs[0].iov_base, g_compare_read_buf, len)) {
+			g_io_exp_status = SPDK_BDEV_IO_STATUS_MISCOMPARE;
+		}
+		if (bdev_io->u.bdev.md_buf &&
+		    memcmp(bdev_io->u.bdev.md_buf, g_compare_md_buf,
+			   bdev_io->bdev->md_len * bdev_io->u.bdev.num_blocks)) {
 			g_io_exp_status = SPDK_BDEV_IO_STATUS_MISCOMPARE;
 		}
 	}
@@ -3299,13 +3309,13 @@ _bdev_compare(bool emulated)
 	char aa_buf[512];
 	char bb_buf[512];
 	struct iovec compare_iov;
-	uint8_t io_type;
+	uint8_t expected_io_type;
 	int rc;
 
 	if (emulated) {
-		io_type = SPDK_BDEV_IO_TYPE_READ;
+		expected_io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
-		io_type = SPDK_BDEV_IO_TYPE_COMPARE;
+		expected_io_type = SPDK_BDEV_IO_TYPE_COMPARE;
 	}
 
 	memset(aa_buf, 0xaa, sizeof(aa_buf));
@@ -3332,7 +3342,8 @@ _bdev_compare(bool emulated)
 	compare_iov.iov_base = aa_buf;
 	compare_iov.iov_len = sizeof(aa_buf);
 
-	expected_io = ut_alloc_expected_io(io_type, offset, num_blocks, 0);
+	/* 1. successful compare */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	g_io_done = false;
@@ -3345,7 +3356,8 @@ _bdev_compare(bool emulated)
 	CU_ASSERT(g_io_done == true);
 	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
-	expected_io = ut_alloc_expected_io(io_type, offset, num_blocks, 0);
+	/* 2. miscompare */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	g_io_done = false;
@@ -3371,10 +3383,173 @@ _bdev_compare(bool emulated)
 }
 
 static void
+_bdev_compare_with_md(bool emulated)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_expected_io *expected_io;
+	uint64_t offset, num_blocks;
+	uint32_t num_completed;
+	char buf[1024 + 16 /* 2 * blocklen + 2 * mdlen */];
+	char buf_interleaved_miscompare[1024 + 16 /* 2 * blocklen + 2 * mdlen */];
+	char buf_miscompare[1024 /* 2 * blocklen */];
+	char md_buf[16];
+	char md_buf_miscompare[16];
+	struct iovec compare_iov;
+	uint8_t expected_io_type;
+	int rc;
+
+	if (emulated) {
+		expected_io_type = SPDK_BDEV_IO_TYPE_READ;
+	} else {
+		expected_io_type = SPDK_BDEV_IO_TYPE_COMPARE;
+	}
+
+	memset(buf, 0xaa, sizeof(buf));
+	memset(buf_interleaved_miscompare, 0xaa, sizeof(buf_interleaved_miscompare));
+	/* make last md different */
+	memset(buf_interleaved_miscompare + 1024 + 8, 0xbb, 8);
+	memset(buf_miscompare, 0xbb, sizeof(buf_miscompare));
+	memset(md_buf, 0xaa, 16);
+	memset(md_buf_miscompare, 0xbb, 16);
+
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = !emulated;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	fn_table.submit_request = stub_submit_request_get_buf;
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	fn_table.submit_request = stub_submit_request_get_buf;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	offset = 50;
+	num_blocks = 2;
+
+	/* interleaved md & data */
+	bdev->md_interleave = true;
+	bdev->md_len = 8;
+	bdev->blocklen = 512 + 8;
+	compare_iov.iov_base = buf;
+	compare_iov.iov_len = sizeof(buf);
+
+	/* 1. successful compare with md interleaved */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	g_io_done = false;
+	g_compare_read_buf = buf;
+	g_compare_read_buf_len = sizeof(buf);
+	rc = spdk_bdev_comparev_blocks(desc, ioch, &compare_iov, 1, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* 2. miscompare with md interleaved */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	g_io_done = false;
+	g_compare_read_buf = buf_interleaved_miscompare;
+	g_compare_read_buf_len = sizeof(buf_interleaved_miscompare);
+	rc = spdk_bdev_comparev_blocks(desc, ioch, &compare_iov, 1, offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_MISCOMPARE);
+
+	/* Separate data & md buffers */
+	bdev->md_interleave = false;
+	bdev->blocklen = 512;
+	compare_iov.iov_base = buf;
+	compare_iov.iov_len = 1024;
+
+	/* 3. successful compare with md separated */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	g_io_done = false;
+	g_compare_read_buf = buf;
+	g_compare_read_buf_len = 1024;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_compare_md_buf = md_buf;
+	rc = spdk_bdev_comparev_blocks_with_md(desc, ioch, &compare_iov, 1, md_buf,
+					       offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* 4. miscompare with md separated where md buf is different */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	g_io_done = false;
+	g_compare_read_buf = buf;
+	g_compare_read_buf_len = 1024;
+	g_compare_md_buf = md_buf_miscompare;
+	rc = spdk_bdev_comparev_blocks_with_md(desc, ioch, &compare_iov, 1, md_buf,
+					       offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_MISCOMPARE);
+
+	/* 5. miscompare with md separated where buf is different */
+	expected_io = ut_alloc_expected_io(expected_io_type, offset, num_blocks, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	g_io_done = false;
+	g_compare_read_buf = buf_miscompare;
+	g_compare_read_buf_len = sizeof(buf_miscompare);
+	g_compare_md_buf = md_buf;
+	rc = spdk_bdev_comparev_blocks_with_md(desc, ioch, &compare_iov, 1, md_buf,
+					       offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_io_status == SPDK_BDEV_IO_STATUS_MISCOMPARE);
+
+	bdev->md_len = 0;
+	g_compare_md_buf = NULL;
+
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	fn_table.submit_request = stub_submit_request;
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+
+	g_io_types_supported[SPDK_BDEV_IO_TYPE_COMPARE] = true;
+
+	g_compare_read_buf = NULL;
+}
+
+static void
 bdev_compare(void)
 {
-	_bdev_compare(true);
 	_bdev_compare(false);
+	_bdev_compare_with_md(false);
+}
+
+static void
+bdev_compare_emulated(void)
+{
+	_bdev_compare(true);
+	_bdev_compare_with_md(true);
 }
 
 static void
@@ -5621,6 +5796,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_write_zeroes);
 	CU_ADD_TEST(suite, bdev_compare_and_write);
 	CU_ADD_TEST(suite, bdev_compare);
+	CU_ADD_TEST(suite, bdev_compare_emulated);
 	CU_ADD_TEST(suite, bdev_zcopy_write);
 	CU_ADD_TEST(suite, bdev_zcopy_read);
 	CU_ADD_TEST(suite, bdev_open_while_hotremove);
