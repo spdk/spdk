@@ -468,6 +468,12 @@ rpc_dump_bdev_info(void *ctx, struct spdk_bdev *bdev)
 				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
 	spdk_json_write_named_bool(w, "reset",
 				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
+	spdk_json_write_named_bool(w, "compare",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE));
+	spdk_json_write_named_bool(w, "compare_and_write",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE));
+	spdk_json_write_named_bool(w, "abort",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ABORT));
 	spdk_json_write_named_bool(w, "nvme_admin",
 				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
 	spdk_json_write_named_bool(w, "nvme_io",

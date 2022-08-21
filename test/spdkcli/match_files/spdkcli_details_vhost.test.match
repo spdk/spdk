@@ -20,6 +20,9 @@
   "num_blocks": $(N),
   "product_name": "Split Disk",
   "supported_io_types": {
+    "abort": $(S),
+    "compare": $(S),
+    "compare_and_write": $(S),
     "flush": $(S),
     "nvme_admin": $(S),
     "nvme_io": $(S),
