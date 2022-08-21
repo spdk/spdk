@@ -639,12 +639,12 @@ blockdev_comparev_and_writev(void)
 	struct io_target *target = g_current_io_target;
 	struct spdk_bdev *bdev = target->bdev;
 
-	if (spdk_bdev_get_md_size(bdev) > 0) {
+	if (spdk_bdev_is_md_separate(bdev)) {
 		/* TODO: remove this check once bdev layer properly supports
-		 * compare and write for md-enabled bdevs.
+		 * compare and write for bdevs with separate md.
 		 */
 		SPDK_ERRLOG("skipping comparev_and_writev on bdev %s since it has\n"
-			    "metadata which is not supported yet.\n",
+			    "separate metadata which is not supported yet.\n",
 			    spdk_bdev_get_name(bdev));
 		return;
 	}
