@@ -399,13 +399,7 @@ blockdev_read(struct io_target *target, char *rx_buf,
 static int
 blockdev_write_read_data_match(char *rx_buf, char *tx_buf, int data_length)
 {
-	int rc;
-	rc = memcmp(rx_buf, tx_buf, data_length);
-
-	spdk_free(rx_buf);
-	spdk_free(tx_buf);
-
-	return rc;
+	return memcmp(rx_buf, tx_buf, data_length);
 }
 
 static void
@@ -451,6 +445,9 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 		 * from each blockdev */
 		CU_ASSERT_EQUAL(rc, 0);
 	}
+
+	spdk_free(rx_buf);
+	spdk_free(tx_buf);
 }
 
 static void
@@ -483,6 +480,10 @@ blockdev_compare_and_write(uint32_t data_length, uint32_t iov_len, uint64_t offs
 	/* Assert the write by comparing it with values read
 	 * from each blockdev */
 	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_free(rx_buf);
+	spdk_free(tx_buf);
+	spdk_free(write_buf);
 }
 
 static void
@@ -861,6 +862,9 @@ blockdev_write_read_offset_plus_nbytes_equals_bdev_size(void)
 	/* Assert the write by comparing it with values read
 	 * from each blockdev */
 	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_free(tx_buf);
+	spdk_free(rx_buf);
 }
 
 static void
@@ -896,6 +900,9 @@ blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 
 	blockdev_read(target, rx_buf, offset, data_length, 0);
 	CU_ASSERT_EQUAL(g_completion_success, false);
+
+	spdk_free(tx_buf);
+	spdk_free(rx_buf);
 }
 
 static void
