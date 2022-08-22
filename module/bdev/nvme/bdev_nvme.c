@@ -2036,6 +2036,10 @@ static int bdev_nvme_unmap(struct nvme_bdev_io *bio, uint64_t offset_blocks,
 static int bdev_nvme_write_zeroes(struct nvme_bdev_io *bio, uint64_t offset_blocks,
 				  uint64_t num_blocks);
 
+static int bdev_nvme_copy(struct nvme_bdev_io *bio, uint64_t dst_offset_blocks,
+			  uint64_t src_offset_blocks,
+			  uint64_t num_blocks);
+
 static void
 bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
@@ -2206,6 +2210,12 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 				nbdev_io,
 				nbdev_io_to_abort);
 		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		rc = bdev_nvme_copy(nbdev_io,
+				    bdev_io->u.bdev.offset_blocks,
+				    bdev_io->u.bdev.copy.src_offset_blocks,
+				    bdev_io->u.bdev.num_blocks);
+		break;
 	default:
 		rc = -EINVAL;
 		break;
@@ -2269,6 +2279,10 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		return spdk_nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS &&
 		       spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED;
+
+	case SPDK_BDEV_IO_TYPE_COPY:
+		cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+		return cdata->oncs.copy;
 
 	default:
 		return false;
@@ -2979,6 +2993,11 @@ nvme_disk_create(struct spdk_bdev *disk, const char *base_name,
 		disk->acwu = nsdata->nacwu + 1; /* 0-based */
 	} else {
 		disk->acwu = cdata->acwu + 1; /* 0-based */
+	}
+
+	if (cdata->oncs.copy) {
+		/* For now bdev interface allows only single segment copy */
+		disk->max_copy = nsdata->mssrl;
 	}
 
 	disk->ctxt = ctx;
@@ -6488,6 +6507,21 @@ bdev_nvme_abort(struct nvme_bdev_channel *nbdev_ch, struct nvme_bdev_io *bio,
 		 */
 		__bdev_nvme_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED, NULL);
 	}
+}
+
+static int
+bdev_nvme_copy(struct nvme_bdev_io *bio, uint64_t dst_offset_blocks, uint64_t src_offset_blocks,
+	       uint64_t num_blocks)
+{
+	struct spdk_nvme_scc_source_range range = {
+		.slba = src_offset_blocks,
+		.nlb = num_blocks - 1
+	};
+
+	return spdk_nvme_ns_cmd_copy(bio->io_path->nvme_ns->ns,
+				     bio->io_path->qpair->qpair,
+				     &range, 1, dst_offset_blocks,
+				     bdev_nvme_queued_done, bio);
 }
 
 static void

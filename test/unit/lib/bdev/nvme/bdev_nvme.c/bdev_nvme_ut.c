@@ -1046,6 +1046,15 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE_ZEROES, cb_fn, cb_arg);
 }
 
+int
+spdk_nvme_ns_cmd_copy(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+		      const struct spdk_nvme_scc_source_range *ranges,
+		      uint16_t num_ranges, uint64_t dest_lba,
+		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_COPY, cb_fn, cb_arg);
+}
+
 struct spdk_nvme_poll_group *
 spdk_nvme_poll_group_create(void *ctx, struct spdk_nvme_accel_fn_table *table)
 {
