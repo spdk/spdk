@@ -316,6 +316,27 @@ bdev_malloc_unmap(struct malloc_disk *mdisk,
 				      byte_count, 0, malloc_done, task);
 }
 
+static void
+bdev_malloc_copy(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		 struct malloc_task *task,
+		 uint64_t dst_offset, uint64_t src_offset, size_t len)
+{
+	int64_t res = 0;
+	void *dst = mdisk->malloc_buf + dst_offset;
+	void *src = mdisk->malloc_buf + src_offset;
+
+	SPDK_DEBUGLOG(bdev_malloc, "Copy %zu bytes from offset %#" PRIx64 " to offset %#" PRIx64 "\n",
+		      len, src_offset, dst_offset);
+
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	task->num_outstanding = 1;
+
+	res = spdk_accel_submit_copy(ch, dst, src, len, 0, malloc_done, task);
+	if (res != 0) {
+		malloc_done(task, res);
+	}
+}
+
 static int
 _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bdev_io)
 {
@@ -413,6 +434,15 @@ _bdev_malloc_submit_request(struct malloc_channel *mch, struct spdk_bdev_io *bde
 		malloc_complete_task((struct malloc_task *)bdev_io->driver_ctx, mch,
 				     SPDK_BDEV_IO_STATUS_FAILED);
 		return 0;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		bdev_malloc_copy((struct malloc_disk *)bdev_io->bdev->ctxt,
+				 mch->accel_channel,
+				 (struct malloc_task *)bdev_io->driver_ctx,
+				 bdev_io->u.bdev.offset_blocks * block_size,
+				 bdev_io->u.bdev.copy.src_offset_blocks * block_size,
+				 bdev_io->u.bdev.num_blocks * block_size);
+		return 0;
+
 	default:
 		return -1;
 	}
@@ -442,6 +472,7 @@ bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 	case SPDK_BDEV_IO_TYPE_ABORT:
+	case SPDK_BDEV_IO_TYPE_COPY:
 		return true;
 
 	default:
@@ -660,6 +691,7 @@ create_malloc_disk(struct spdk_bdev **bdev, const struct malloc_bdev_opts *opts)
 		spdk_uuid_generate(&mdisk->disk.uuid);
 	}
 
+	mdisk->disk.max_copy = 0;
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
 	mdisk->disk.module = &malloc_if;
