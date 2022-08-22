@@ -2328,6 +2328,14 @@ get_single_thread_info(uint64_t thread_id, struct rpc_thread_info *thread_info)
 	for (i = 0; i < g_last_threads_count; i++) {
 		if (g_threads_info[i].id == thread_id) {
 			memcpy(thread_info, &g_threads_info[i], sizeof(struct rpc_thread_info));
+			thread_info->name = strdup(g_threads_info[i].name);
+			thread_info->cpumask = strdup(g_threads_info[i].cpumask);
+
+			if (thread_info->name == NULL || thread_info->cpumask == NULL) {
+				print_bottom_message("Unable to allocate memory for thread name and cpumask. Exiting pop-up.");
+				return -1;
+			}
+
 			return 0;
 		}
 	}
@@ -2420,6 +2428,10 @@ display_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab,
 		pthread_mutex_lock(&g_thread_lock);
 		if (get_single_thread_info(thread_id, &thread_info)) {
 			pthread_mutex_unlock(&g_thread_lock);
+			free(thread_info.name);
+			free(thread_info.cpumask);
+			thread_info.name = NULL;
+			thread_info.cpumask = NULL;
 			return;
 		}
 		pollers_count = thread_info.active_pollers_count +
@@ -2489,6 +2501,10 @@ display_thread(uint64_t thread_id, uint8_t current_page, uint8_t active_tab,
 		}
 
 		last_pollers_count = pollers_count;
+		free(thread_info.name);
+		free(thread_info.cpumask);
+		thread_info.name = NULL;
+		thread_info.cpumask = NULL;
 	}
 
 	del_panel(thread_panel);
