@@ -119,6 +119,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_ABORT,
 	SPDK_BDEV_IO_TYPE_SEEK_HOLE,
 	SPDK_BDEV_IO_TYPE_SEEK_DATA,
+	SPDK_BDEV_IO_TYPE_COPY,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -667,6 +668,14 @@ bool spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev);
  */
 bool spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
 				    enum spdk_dif_check_type check_type);
+
+/**
+ * Get block device max copy size.
+ *
+ * \param bdev Block device to query.
+ * \return Max copy size for this bdev in blocks. 0 means unlimited.
+ */
+uint32_t spdk_bdev_get_max_copy(const struct spdk_bdev *bdev);
 
 /**
  * Get the most recently measured queue depth from a bdev.
@@ -1708,6 +1717,31 @@ int spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *bdev_desc,
 				  const struct spdk_nvme_cmd *cmd,
 				  void *buf, size_t nbytes, void *md_buf, size_t md_len,
 				  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a copy request to the block device.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param dst_offset_blocks The destination offset, in blocks, from the start of the block device.
+ * \param src_offset_blocks The source offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to copy.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - dst_offset_blocks, src_offset_blocks and/or num_blocks are out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ *   * -EBADF - desc not open for writing
+ *   * -ENOTSUP - copy operation is not supported
+ */
+int spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  uint64_t dst_offset_blocks, uint64_t src_offset_blocks,
+			  uint64_t num_blocks, spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Free an I/O request. This should only be called after the completion callback

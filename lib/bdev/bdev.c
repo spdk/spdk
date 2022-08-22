@@ -56,6 +56,11 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_MAX_CHILDREN_UNMAP_WRITE_ZEROES_REQS (8)
 #define BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD 1000000
 
+/* The maximum number of children requests for a COPY command
+ * when splitting into children requests at a time.
+ */
+#define SPDK_BDEV_MAX_CHILDREN_COPY_REQS (8)
+
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
 				    };
@@ -2346,6 +2351,17 @@ bdev_write_zeroes_should_split(struct spdk_bdev_io *bdev_io)
 }
 
 static bool
+bdev_copy_should_split(struct spdk_bdev_io *bdev_io)
+{
+	if (bdev_io->bdev->max_copy != 0 &&
+	    bdev_io->u.bdev.num_blocks > bdev_io->bdev->max_copy) {
+		return true;
+	}
+
+	return false;
+}
+
+static bool
 bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
@@ -2356,6 +2372,8 @@ bdev_io_should_split(struct spdk_bdev_io *bdev_io)
 		return bdev_unmap_should_split(bdev_io);
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_write_zeroes_should_split(bdev_io);
+	case SPDK_BDEV_IO_TYPE_COPY:
+		return bdev_copy_should_split(bdev_io);
 	default:
 		return false;
 	}
@@ -2387,12 +2405,20 @@ _bdev_write_zeroes_split(void *_bdev_io)
 	return bdev_write_zeroes_split((struct spdk_bdev_io *)_bdev_io);
 }
 
+static void bdev_copy_split(struct spdk_bdev_io *bdev_io);
+
+static void
+_bdev_copy_split(void *_bdev_io)
+{
+	return bdev_copy_split((struct spdk_bdev_io *)_bdev_io);
+}
+
 static int
 bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt, void *md_buf,
 		     uint64_t num_blocks, uint64_t *offset, uint64_t *remaining)
 {
 	int rc;
-	uint64_t current_offset, current_remaining;
+	uint64_t current_offset, current_remaining, current_src_offset;
 	spdk_bdev_io_wait_cb io_wait_fn;
 
 	current_offset = *offset;
@@ -2431,6 +2457,15 @@ bdev_io_split_submit(struct spdk_bdev_io *bdev_io, struct iovec *iov, int iovcnt
 						   spdk_io_channel_from_ctx(bdev_io->internal.ch),
 						   current_offset, num_blocks,
 						   bdev_io_split_done, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		io_wait_fn = _bdev_copy_split;
+		current_src_offset = bdev_io->u.bdev.copy.src_offset_blocks +
+				     (current_offset - bdev_io->u.bdev.offset_blocks);
+		rc = spdk_bdev_copy_blocks(bdev_io->internal.desc,
+					   spdk_io_channel_from_ctx(bdev_io->internal.ch),
+					   current_offset, current_src_offset, num_blocks,
+					   bdev_io_split_done, bdev_io);
 		break;
 	default:
 		assert(false);
@@ -2656,6 +2691,30 @@ bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+bdev_copy_split(struct spdk_bdev_io *bdev_io)
+{
+	uint64_t offset, copy_blocks, remaining;
+	uint32_t num_children_reqs = 0;
+	int rc;
+
+	offset = bdev_io->u.bdev.split_current_offset_blocks;
+	remaining = bdev_io->u.bdev.split_remaining_num_blocks;
+
+	assert(bdev_io->bdev->max_copy != 0);
+	while (remaining && (num_children_reqs < SPDK_BDEV_MAX_CHILDREN_COPY_REQS)) {
+		copy_blocks = spdk_min(remaining, bdev_io->bdev->max_copy);
+
+		rc = bdev_io_split_submit(bdev_io, NULL, 0, NULL, copy_blocks,
+					  &offset, &remaining);
+		if (spdk_likely(rc == 0)) {
+			num_children_reqs++;
+		} else {
+			return;
+		}
+	}
+}
+
+static void
 parent_bdev_io_complete(void *ctx, int rc)
 {
 	struct spdk_bdev_io *parent_io = ctx;
@@ -2718,6 +2777,9 @@ bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		bdev_write_zeroes_split(parent_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		bdev_copy_split(parent_io);
+		break;
 	default:
 		assert(false);
 		break;
@@ -2751,6 +2813,9 @@ bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		bdev_write_zeroes_split(bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		bdev_copy_split(bdev_io);
 		break;
 	default:
 		assert(false);
@@ -2845,6 +2910,7 @@ bdev_io_range_is_locked(struct spdk_bdev_io *bdev_io, struct lba_range *range)
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
+	case SPDK_BDEV_IO_TYPE_COPY:
 		r.offset = bdev_io->u.bdev.offset_blocks;
 		r.length = bdev_io->u.bdev.num_blocks;
 		if (!bdev_lba_range_overlapped(range, &r)) {
@@ -3958,6 +4024,12 @@ spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
 	default:
 		return false;
 	}
+}
+
+uint32_t
+spdk_bdev_get_max_copy(const struct spdk_bdev *bdev)
+{
+	return bdev->max_copy;
 }
 
 uint64_t
@@ -8098,6 +8170,56 @@ spdk_bdev_for_each_channel(struct spdk_bdev *bdev, spdk_bdev_for_each_channel_ms
 
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_each_channel_msg,
 			      iter, bdev_each_channel_cpl);
+}
+
+int
+spdk_bdev_copy_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		      uint64_t dst_offset_blocks, uint64_t src_offset_blocks, uint64_t num_blocks,
+		      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		return -EBADF;
+	}
+
+	if (spdk_unlikely(!bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY))) {
+		SPDK_DEBUGLOG(bdev, "Copy IO type is not supported\n");
+		return -ENOTSUP;
+	}
+
+	if (num_blocks == 0) {
+		SPDK_ERRLOG("Can't copy 0 blocks\n");
+		return -EINVAL;
+	}
+
+	if (!bdev_io_valid_blocks(bdev, dst_offset_blocks, num_blocks) ||
+	    !bdev_io_valid_blocks(bdev, src_offset_blocks, num_blocks)) {
+		SPDK_DEBUGLOG(bdev,
+			      "Invalid offset or number of blocks: dst %lu, src %lu, count %lu\n",
+			      dst_offset_blocks, src_offset_blocks, num_blocks);
+		return -EINVAL;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_COPY;
+
+	bdev_io->u.bdev.offset_blocks = dst_offset_blocks;
+	bdev_io->u.bdev.copy.src_offset_blocks = src_offset_blocks;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.ext_opts = NULL;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	bdev_io_submit(bdev_io);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev)

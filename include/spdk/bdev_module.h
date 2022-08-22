@@ -374,6 +374,9 @@ struct spdk_bdev {
 	/* Maximum write zeroes in unit of logical block */
 	uint32_t max_write_zeroes;
 
+	/* Maximum copy size in unit of logical block */
+	uint32_t max_copy;
+
 	/**
 	 * UUID for this bdev.
 	 *
@@ -663,6 +666,11 @@ struct spdk_bdev_io {
 				/** The offset of next data/hole.  */
 				uint64_t offset;
 			} seek;
+
+			struct {
+				/** Starting source offset (in blocks) of the bdev for copy I/O. */
+				uint64_t src_offset_blocks;
+			} copy;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */

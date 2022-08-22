@@ -21,6 +21,8 @@ associated function pointers were added to iterate each channel of the required 
 The RPC `bdev_get_iostat` now allows a user to query the per channel IO statistics for
 required bdev.
 
+New `spdk_bdev_copy_blocks` and `spdk_bdev_get_max_copy` APIs to support copy commands.
+
 ## v22.09
 
 ### accel

@@ -105,6 +105,8 @@
 	spdk_bdev_writev_blocks_ext;
 	spdk_bdev_for_each_channel;
 	spdk_bdev_for_each_channel_continue;
+	spdk_bdev_get_max_copy;
+	spdk_bdev_copy_blocks;
 
 	# Public functions in bdev_module.h
 	spdk_bdev_register;
