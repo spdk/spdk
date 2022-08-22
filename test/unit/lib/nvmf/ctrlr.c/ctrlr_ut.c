@@ -74,6 +74,11 @@ DEFINE_STUB(nvmf_ctrlr_write_zeroes_supported,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false);
 
+DEFINE_STUB(nvmf_ctrlr_copy_supported,
+	    bool,
+	    (struct spdk_nvmf_ctrlr *ctrlr),
+	    false);
+
 DEFINE_STUB_V(nvmf_get_discovery_log_page,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn, struct iovec *iov,
 	       uint32_t iovcnt, uint64_t offset, uint32_t length, struct spdk_nvme_transport_id *cmd_src_trid));
@@ -131,6 +136,12 @@ DEFINE_STUB(nvmf_bdev_ctrlr_flush_cmd,
 	    0);
 
 DEFINE_STUB(nvmf_bdev_ctrlr_dsm_cmd,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(nvmf_bdev_ctrlr_copy_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),

@@ -1227,6 +1227,32 @@ union spdk_nvme_cmd_cdw11 {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw11) == 4, "Incorrect size");
 
+union spdk_nvme_cmd_cdw12 {
+	uint32_t raw;
+
+	struct {
+		/* Number of Ranges */
+		uint32_t nr        : 8;
+		/* Desciptor Format */
+		uint32_t df        : 4;
+		/* Protection Information Field Read */
+		uint32_t prinfor   : 4;
+		uint32_t reserved  : 4;
+		/* Directive Type */
+		uint32_t dtype     : 4;
+		/* Storage Tag Check Write */
+		uint32_t stcw      : 1;
+		uint32_t reserved2 : 1;
+		/* Protection Information Field Write */
+		uint32_t prinfow   : 4;
+		/* Force Unit Access */
+		uint32_t fua       : 1;
+		/* Limited Retry */
+		uint32_t lr        : 1;
+	} copy;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmd_cdw12) == 4, "Incorrect size");
+
 struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */
@@ -1265,8 +1291,12 @@ struct spdk_nvme_cmd {
 		uint32_t cdw11;
 		union spdk_nvme_cmd_cdw11 cdw11_bits;
 	};
-	/* dword 12-15 */
-	uint32_t cdw12;		/* command-specific */
+	/* command-specific */
+	union {
+		uint32_t cdw12;
+		union spdk_nvme_cmd_cdw12 cdw12_bits;
+	};
+	/* dword 13-15 */
 	uint32_t cdw13;		/* command-specific */
 	uint32_t cdw14;		/* command-specific */
 	uint32_t cdw15;		/* command-specific */

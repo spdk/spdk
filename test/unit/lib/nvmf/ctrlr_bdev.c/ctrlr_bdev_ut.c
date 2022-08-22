@@ -205,6 +205,14 @@ DEFINE_STUB(spdk_bdev_zcopy_end, int,
 	     spdk_bdev_io_completion_cb cb, void *cb_arg),
 	    0);
 
+DEFINE_STUB(spdk_bdev_copy_blocks, int,
+	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     uint64_t dst_offset_blocks, uint64_t src_offset_blocks, uint64_t num_blocks,
+	     spdk_bdev_io_completion_cb cb, void *cb_arg),
+	    0);
+
+DEFINE_STUB(spdk_bdev_get_max_copy, uint32_t, (const struct spdk_bdev *bdev), 0);
+
 struct spdk_nvmf_ns *
 spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
@@ -620,6 +628,7 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	struct spdk_nvmf_qpair qpair = {};
 	union nvmf_h2c_msg cmd = {};
 	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvme_scc_source_range range = {};
 
 	req.cmd = &cmd;
 	req.rsp = &rsp;
@@ -711,6 +720,66 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+
+	/* Copy blocks status asynchronous */
+	MOCK_SET(spdk_bdev_io_type_supported, true);
+	cmd.nvme_cmd.cdw10 = 1024;
+	cmd.nvme_cmd.cdw11 = 0;
+	cmd.nvme_cmd.cdw12 = 0;
+	cmd.nvme_cmd.cdw12_bits.copy.nr = 0;
+	req.length = 32;
+	range.slba = 512;
+	range.nlb = 511;
+	req.data = &range;
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
+	/* Copy command not supported */
+	MOCK_SET(spdk_bdev_io_type_supported, false);
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_OPCODE);
+
+	MOCK_SET(spdk_bdev_io_type_supported, true);
+
+	/* Unsupported number of source ranges */
+	cmd.nvme_cmd.cdw12_bits.copy.nr = 1;
+	req.length = 64;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_CMD_SIZE_LIMIT_SIZE_EXCEEDED);
+
+	cmd.nvme_cmd.cdw12_bits.copy.nr = 0;
+	req.length = 32;
+
+	/* Unsupported source range descriptor format */
+	cmd.nvme_cmd.cdw12_bits.copy.df = 1;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	cmd.nvme_cmd.cdw12_bits.copy.df = 0;
+
+	/* Bdev copy command failed */
+	MOCK_SET(spdk_bdev_copy_blocks, -1);
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_copy_cmd(&bdev, NULL, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+
+	MOCK_CLEAR(spdk_bdev_copy_blocks);
+	MOCK_CLEAR(spdk_bdev_io_type_supported);
 }
 
 static void

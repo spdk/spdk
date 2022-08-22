@@ -95,6 +95,11 @@ DEFINE_STUB(nvmf_ctrlr_write_zeroes_supported,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false);
 
+DEFINE_STUB(nvmf_ctrlr_copy_supported,
+	    bool,
+	    (struct spdk_nvmf_ctrlr *ctrlr),
+	    false);
+
 DEFINE_STUB(nvmf_bdev_ctrlr_read_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
@@ -132,6 +137,12 @@ DEFINE_STUB(nvmf_bdev_ctrlr_flush_cmd,
 	    0);
 
 DEFINE_STUB(nvmf_bdev_ctrlr_dsm_cmd,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(nvmf_bdev_ctrlr_copy_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),

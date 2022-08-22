@@ -96,6 +96,8 @@ function confirm_abi_deps() {
 [suppress_type]
 	name = spdk_nvme_cdata_nvmf_specific
 [suppress_type]
+	name = spdk_nvme_cmd
+[suppress_type]
 	name = spdk_bs_opts
 [suppress_type]
 	name = spdk_app_opts
