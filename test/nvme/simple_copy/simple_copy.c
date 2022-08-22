@@ -29,6 +29,8 @@ struct simple_copy_context {
 };
 
 static struct ns_entry *g_namespaces = NULL;
+static struct spdk_nvme_transport_id g_trid;
+static bool g_use_trid = false;
 
 static void cleanup(struct simple_copy_context *context);
 
@@ -153,7 +155,7 @@ simple_copy_test(void)
 	struct spdk_nvme_ctrlr			*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*data;
 	struct simple_copy_context		context;
-	struct spdk_nvme_scc_source_range	range;
+	struct spdk_nvme_scc_source_range	range = {};
 	uint32_t				max_block_size;
 	int					rc, i;
 
@@ -384,6 +386,54 @@ cleanup(struct simple_copy_context *context)
 	free(context->read_bufs);
 }
 
+static void
+usage(const char *program_name)
+{
+	printf("%s [options]", program_name);
+	printf("\n");
+	printf("options:\n");
+	printf(" -r trid    remote NVMe over Fabrics target address\n");
+	printf("    Format: 'key:value [key:value] ...'\n");
+	printf("    Keys:\n");
+	printf("     trtype      Transport type (e.g. RDMA)\n");
+	printf("     adrfam      Address family (e.g. IPv4, IPv6)\n");
+	printf("     traddr      Transport address (e.g. 192.168.100.8)\n");
+	printf("     trsvcid     Transport service identifier (e.g. 4420)\n");
+	printf("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
+	printf(" -h         show this usage\n");
+}
+
+static int
+parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
+{
+	int op;
+
+	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
+	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	while ((op = getopt(argc, argv, "r:h")) != -1) {
+		switch (op) {
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
+
+			g_use_trid = true;
+			break;
+		case 'h':
+			usage(argv[0]);
+			exit(EXIT_SUCCESS);
+		default:
+			usage(argv[0]);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -391,6 +441,11 @@ main(int argc, char **argv)
 	struct spdk_env_opts	opts;
 
 	spdk_env_opts_init(&opts);
+	rc = parse_args(argc, argv, &opts);
+	if (rc != 0) {
+		return rc;
+	}
+
 	opts.name = "simple_copy";
 	opts.shm_id = 0;
 	if (spdk_env_init(&opts) < 0) {
@@ -400,7 +455,7 @@ main(int argc, char **argv)
 
 	printf("Initializing NVMe Controllers\n");
 
-	rc = spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL);
+	rc = spdk_nvme_probe(g_use_trid ? &g_trid : NULL, NULL, probe_cb, attach_cb, NULL);
 	if (rc != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
