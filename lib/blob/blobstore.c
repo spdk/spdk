@@ -2389,6 +2389,28 @@ blob_write_copy(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			      blob_write_copy_cpl, ctx);
 }
 
+static bool
+blob_can_copy(struct spdk_blob *blob, uint32_t cluster_start_page, uint64_t *base_lba)
+{
+	uint64_t lba = bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page);
+
+	return (blob->bs->dev->copy != NULL) &&
+	       blob->back_bs_dev->translate_lba(blob->back_bs_dev, lba, base_lba);
+}
+
+static void
+blob_copy(struct spdk_blob_copy_cluster_ctx *ctx, spdk_bs_user_op_t *op, uint64_t src_lba)
+{
+	struct spdk_blob *blob = ctx->blob;
+	uint64_t lba_count = bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz);
+
+	bs_sequence_copy_dev(ctx->seq,
+			     bs_cluster_to_lba(blob->bs, ctx->new_cluster),
+			     src_lba,
+			     lba_count,
+			     blob_write_copy_cpl, ctx);
+}
+
 static void
 bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 			     struct spdk_io_channel *_ch,
@@ -2400,6 +2422,8 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	uint32_t cluster_start_page;
 	uint32_t cluster_number;
 	bool is_zeroes;
+	bool can_copy;
+	uint64_t copy_src_lba;
 	int rc;
 
 	ch = spdk_io_channel_get_ctx(_ch);
@@ -2431,11 +2455,12 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	ctx->page = cluster_start_page;
 	ctx->new_cluster_page = ch->new_cluster_page;
 	memset(ctx->new_cluster_page, 0, SPDK_BS_PAGE_SIZE);
+	can_copy = blob_can_copy(blob, cluster_start_page, &copy_src_lba);
 
 	is_zeroes = blob->back_bs_dev->is_zeroes(blob->back_bs_dev,
 			bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
 			bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz));
-	if (blob->parent_id != SPDK_BLOBID_INVALID && !is_zeroes) {
+	if (blob->parent_id != SPDK_BLOBID_INVALID && !is_zeroes && !can_copy) {
 		ctx->buf = spdk_malloc(blob->bs->cluster_sz, blob->back_bs_dev->blocklen,
 				       NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 		if (!ctx->buf) {
@@ -2477,11 +2502,16 @@ bs_allocate_and_copy_cluster(struct spdk_blob *blob,
 	TAILQ_INSERT_TAIL(&ch->need_cluster_alloc, op, link);
 
 	if (blob->parent_id != SPDK_BLOBID_INVALID && !is_zeroes) {
-		/* Read cluster from backing device */
-		bs_sequence_read_bs_dev(ctx->seq, blob->back_bs_dev, ctx->buf,
-					bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
-					bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz),
-					blob_write_copy, ctx);
+		if (can_copy) {
+			blob_copy(ctx, op, copy_src_lba);
+		} else {
+			/* Read cluster from backing device */
+			bs_sequence_read_bs_dev(ctx->seq, blob->back_bs_dev, ctx->buf,
+						bs_dev_page_to_lba(blob->back_bs_dev, cluster_start_page),
+						bs_dev_byte_to_lba(blob->back_bs_dev, blob->bs->cluster_sz),
+						blob_write_copy, ctx);
+		}
+
 	} else {
 		blob_insert_cluster_on_md_thread(ctx->blob, cluster_number, ctx->new_cluster,
 						 ctx->new_extent_page, ctx->new_cluster_page, blob_insert_cluster_cpl, ctx);

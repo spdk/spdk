@@ -150,6 +150,10 @@ void bs_sequence_write_zeroes_dev(spdk_bs_sequence_t *seq,
 				  uint64_t lba, uint64_t lba_count,
 				  spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
+void bs_sequence_copy_dev(spdk_bs_sequence_t *seq,
+			  uint64_t dst_lba, uint64_t src_lba, uint64_t lba_count,
+			  spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+
 void bs_sequence_finish(spdk_bs_sequence_t *seq, int bserrno);
 
 void bs_user_op_sequence_finish(void *cb_arg, int bserrno);

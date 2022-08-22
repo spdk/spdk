@@ -206,6 +206,10 @@ struct spdk_bs_dev {
 	 */
 	bool (*translate_lba)(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba);
 
+	void (*copy)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		     uint64_t dst_lba, uint64_t src_lba, uint64_t lba_count,
+		     struct spdk_bs_dev_cb_args *cb_args);
+
 	uint64_t	blockcnt;
 	uint32_t	blocklen; /* In bytes */
 };

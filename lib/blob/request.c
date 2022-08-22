@@ -239,6 +239,22 @@ bs_sequence_write_zeroes_dev(spdk_bs_sequence_t *seq,
 }
 
 void
+bs_sequence_copy_dev(spdk_bs_sequence_t *seq, uint64_t dst_lba, uint64_t src_lba,
+		     uint64_t lba_count, spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+{
+	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)seq;
+	struct spdk_bs_channel     *channel = set->channel;
+
+	SPDK_DEBUGLOG(blob_rw, "Copying %" PRIu64 " blocks from LBA %" PRIu64 " to LBA %" PRIu64 "\n",
+		      lba_count, src_lba, dst_lba);
+
+	set->u.sequence.cb_fn = cb_fn;
+	set->u.sequence.cb_arg = cb_arg;
+
+	channel->dev->copy(channel->dev, channel->dev_channel, dst_lba, src_lba, lba_count, &set->cb_args);
+}
+
+void
 bs_sequence_finish(spdk_bs_sequence_t *seq, int bserrno)
 {
 	if (bserrno != 0) {

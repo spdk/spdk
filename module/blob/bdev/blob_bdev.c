@@ -29,6 +29,7 @@ struct blob_resubmit {
 	void *payload;
 	int iovcnt;
 	uint64_t lba;
+	uint64_t src_lba;
 	uint32_t lba_count;
 	struct spdk_bs_dev_cb_args *cb_args;
 	struct spdk_blob_ext_io_opts *ext_io_opts;
@@ -64,8 +65,9 @@ bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 
 static void
 bdev_blob_queue_io(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload,
-		   int iovcnt, uint64_t lba, uint32_t lba_count, enum spdk_bdev_io_type io_type,
-		   struct spdk_bs_dev_cb_args *cb_args, struct spdk_blob_ext_io_opts *ext_io_opts)
+		   int iovcnt, uint64_t lba, uint64_t src_lba, uint32_t lba_count,
+		   enum spdk_bdev_io_type io_type, struct spdk_bs_dev_cb_args *cb_args,
+		   struct spdk_blob_ext_io_opts *ext_io_opts)
 {
 	int rc;
 	struct spdk_bdev *bdev = __get_bdev(dev);
@@ -85,6 +87,7 @@ bdev_blob_queue_io(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, voi
 	ctx->payload = payload;
 	ctx->iovcnt = iovcnt;
 	ctx->lba = lba;
+	ctx->src_lba = src_lba;
 	ctx->lba_count = lba_count;
 	ctx->cb_args = cb_args;
 	ctx->bdev_io_wait.bdev = bdev;
@@ -110,7 +113,7 @@ bdev_blob_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *p
 	rc = spdk_bdev_read_blocks(__get_desc(dev), channel, payload, lba,
 				   lba_count, bdev_blob_io_complete, cb_args);
 	if (rc == -ENOMEM) {
-		bdev_blob_queue_io(dev, channel, payload, 0, lba,
+		bdev_blob_queue_io(dev, channel, payload, 0, lba, 0,
 				   lba_count, SPDK_BDEV_IO_TYPE_READ, cb_args, NULL);
 	} else if (rc != 0) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -126,7 +129,7 @@ bdev_blob_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *
 	rc = spdk_bdev_write_blocks(__get_desc(dev), channel, payload, lba,
 				    lba_count, bdev_blob_io_complete, cb_args);
 	if (rc == -ENOMEM) {
-		bdev_blob_queue_io(dev, channel, payload, 0, lba,
+		bdev_blob_queue_io(dev, channel, payload, 0, lba, 0,
 				   lba_count, SPDK_BDEV_IO_TYPE_WRITE, cb_args, NULL);
 	} else if (rc != 0) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -143,7 +146,7 @@ bdev_blob_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	rc = spdk_bdev_readv_blocks(__get_desc(dev), channel, iov, iovcnt, lba,
 				    lba_count, bdev_blob_io_complete, cb_args);
 	if (rc == -ENOMEM) {
-		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba,
+		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, 0,
 				   lba_count, SPDK_BDEV_IO_TYPE_READ, cb_args, NULL);
 	} else if (rc != 0) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -160,7 +163,7 @@ bdev_blob_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	rc = spdk_bdev_writev_blocks(__get_desc(dev), channel, iov, iovcnt, lba,
 				     lba_count, bdev_blob_io_complete, cb_args);
 	if (rc == -ENOMEM) {
-		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba,
+		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, 0,
 				   lba_count, SPDK_BDEV_IO_TYPE_WRITE, cb_args, NULL);
 	} else if (rc != 0) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -187,7 +190,7 @@ bdev_blob_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	rc = spdk_bdev_readv_blocks_ext(__get_desc(dev), channel, iov, iovcnt, lba, lba_count,
 					bdev_blob_io_complete, cb_args, bdev_io_opts);
 	if (rc == -ENOMEM) {
-		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, lba_count, SPDK_BDEV_IO_TYPE_READ, cb_args,
+		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, 0, lba_count, SPDK_BDEV_IO_TYPE_READ, cb_args,
 				   io_opts);
 	} else if (rc != 0) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -214,7 +217,7 @@ bdev_blob_writev_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	rc = spdk_bdev_writev_blocks_ext(__get_desc(dev), channel, iov, iovcnt, lba, lba_count,
 					 bdev_blob_io_complete, cb_args, bdev_io_opts);
 	if (rc == -ENOMEM) {
-		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, lba_count, SPDK_BDEV_IO_TYPE_WRITE, cb_args,
+		bdev_blob_queue_io(dev, channel, iov, iovcnt, lba, 0, lba_count, SPDK_BDEV_IO_TYPE_WRITE, cb_args,
 				   io_opts);
 	} else if (rc != 0) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -230,7 +233,7 @@ bdev_blob_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	rc = spdk_bdev_write_zeroes_blocks(__get_desc(dev), channel, lba,
 					   lba_count, bdev_blob_io_complete, cb_args);
 	if (rc == -ENOMEM) {
-		bdev_blob_queue_io(dev, channel, NULL, 0, lba,
+		bdev_blob_queue_io(dev, channel, NULL, 0, lba, 0,
 				   lba_count, SPDK_BDEV_IO_TYPE_WRITE_ZEROES, cb_args, NULL);
 	} else if (rc != 0) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -248,7 +251,7 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 		rc = spdk_bdev_unmap_blocks(__get_desc(dev), channel, lba, lba_count,
 					    bdev_blob_io_complete, cb_args);
 		if (rc == -ENOMEM) {
-			bdev_blob_queue_io(dev, channel, NULL, 0, lba,
+			bdev_blob_queue_io(dev, channel, NULL, 0, lba, 0,
 					   lba_count, SPDK_BDEV_IO_TYPE_UNMAP, cb_args, NULL);
 		} else if (rc != 0) {
 			cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
@@ -260,6 +263,24 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 		 * data.
 		 */
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+	}
+}
+
+static void
+bdev_blob_copy(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+	       uint64_t dst_lba, uint64_t src_lba, uint64_t lba_count,
+	       struct spdk_bs_dev_cb_args *cb_args)
+{
+	int rc;
+
+	rc = spdk_bdev_copy_blocks(__get_desc(dev), channel,
+				   dst_lba, src_lba, lba_count,
+				   bdev_blob_io_complete, cb_args);
+	if (rc == -ENOMEM) {
+		bdev_blob_queue_io(dev, channel, NULL, 0, dst_lba, src_lba,
+				   lba_count, SPDK_BDEV_IO_TYPE_COPY, cb_args, NULL);
+	} else if (rc != 0) {
+		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}
 }
 
@@ -294,6 +315,10 @@ bdev_blob_resubmit(void *arg)
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		bdev_blob_write_zeroes(ctx->dev, ctx->channel,
 				       ctx->lba, ctx->lba_count, ctx->cb_args);
+		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		bdev_blob_copy(ctx->dev, ctx->channel,
+			       ctx->lba, ctx->src_lba, ctx->lba_count, ctx->cb_args);
 		break;
 	default:
 		SPDK_ERRLOG("Unsupported io type %d\n", ctx->io_type);
@@ -390,6 +415,9 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 	b->bs_dev.writev_ext = bdev_blob_writev_ext;
 	b->bs_dev.write_zeroes = bdev_blob_write_zeroes;
 	b->bs_dev.unmap = bdev_blob_unmap;
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_COPY)) {
+		b->bs_dev.copy = bdev_blob_copy;
+	}
 	b->bs_dev.get_base_bdev = bdev_blob_get_base_bdev;
 	b->bs_dev.is_zeroes = bdev_blob_is_zeroes;
 	b->bs_dev.translate_lba = bdev_blob_translate_lba;
