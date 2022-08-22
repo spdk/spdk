@@ -50,6 +50,7 @@ struct bdevio_request {
 	struct iovec fused_iov[BUFFER_IOVS];
 	int fused_iovcnt;
 	struct io_target *target;
+	uint64_t src_offset;
 };
 
 struct io_target *g_io_targets = NULL;
@@ -394,6 +395,41 @@ blockdev_read(struct io_target *target, char *rx_buf,
 	g_completion_success = false;
 
 	execute_spdk_function(__blockdev_read, &req);
+}
+
+static void
+_blockdev_copy(void *arg)
+{
+	struct bdevio_request *req = arg;
+	struct io_target *target = req->target;
+	struct spdk_bdev *bdev = target->bdev;
+	int rc;
+
+	rc = spdk_bdev_copy_blocks(target->bdev_desc, target->ch,
+				   bdev_bytes_to_blocks(bdev, req->offset),
+				   bdev_bytes_to_blocks(bdev, req->src_offset),
+				   bdev_bytes_to_blocks(bdev, req->data_len),
+				   quick_test_complete, NULL);
+
+	if (rc) {
+		g_completion_success = false;
+		wake_ut_thread();
+	}
+}
+
+static void
+blockdev_copy(struct io_target *target, uint64_t dst_offset, uint64_t src_offset, int data_len)
+{
+	struct bdevio_request req;
+
+	req.target = target;
+	req.data_len = data_len;
+	req.offset = dst_offset;
+	req.src_offset = src_offset;
+
+	g_completion_success = false;
+
+	execute_spdk_function(_blockdev_copy, &req);
 }
 
 static int
@@ -1135,6 +1171,42 @@ blockdev_test_nvme_admin_passthru(void)
 }
 
 static void
+blockdev_test_copy(void)
+{
+	uint32_t data_length;
+	uint64_t src_offset, dst_offset;
+	struct io_target *target = g_current_io_target;
+	struct spdk_bdev *bdev = target->bdev;
+	char *tx_buf = NULL;
+	char *rx_buf = NULL;
+	int rc;
+
+	if (!spdk_bdev_io_type_supported(target->bdev, SPDK_BDEV_IO_TYPE_COPY)) {
+		return;
+	}
+
+	data_length = spdk_bdev_get_block_size(bdev);
+	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
+	src_offset = 0;
+	dst_offset = spdk_bdev_get_block_size(bdev);
+
+	initialize_buffer(&tx_buf, 0xAA, data_length);
+	initialize_buffer(&rx_buf, 0, data_length);
+
+	blockdev_write(target, tx_buf, src_offset, data_length, data_length);
+	CU_ASSERT_EQUAL(g_completion_success, true);
+
+	blockdev_copy(target, dst_offset, src_offset, data_length);
+	CU_ASSERT_EQUAL(g_completion_success, true);
+
+	blockdev_read(target, rx_buf, dst_offset, data_length, data_length);
+	CU_ASSERT_EQUAL(g_completion_success, true);
+
+	rc = blockdev_write_read_data_match(rx_buf, tx_buf, data_length);
+	CU_ASSERT_EQUAL(rc, 0);
+}
+
+static void
 __stop_init_thread(void *arg)
 {
 	unsigned num_failures = g_num_failures;
@@ -1237,6 +1309,8 @@ __setup_ut_on_single_target(struct io_target *target)
 			       blockdev_test_nvme_passthru_vendor_specific) == NULL
 		|| CU_add_test(suite, "blockdev nvme admin passthru",
 			       blockdev_test_nvme_admin_passthru) == NULL
+		|| CU_add_test(suite, "blockdev copy",
+			       blockdev_test_copy) == NULL
 	) {
 		CU_cleanup_registry();
 		rc = CU_get_error();
