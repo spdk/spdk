@@ -157,9 +157,12 @@ struct spdk_bdev_io_stat {
 	uint64_t num_write_ops;
 	uint64_t bytes_unmapped;
 	uint64_t num_unmap_ops;
+	uint64_t bytes_copied;
+	uint64_t num_copy_ops;
 	uint64_t read_latency_ticks;
 	uint64_t write_latency_ticks;
 	uint64_t unmap_latency_ticks;
+	uint64_t copy_latency_ticks;
 	uint64_t ticks_rate;
 };
 

@@ -225,9 +225,12 @@ rpc_bdev_get_iostat_dump(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_uint64(w, "num_write_ops", stat->num_write_ops);
 	spdk_json_write_named_uint64(w, "bytes_unmapped", stat->bytes_unmapped);
 	spdk_json_write_named_uint64(w, "num_unmap_ops", stat->num_unmap_ops);
+	spdk_json_write_named_uint64(w, "bytes_copied", stat->bytes_copied);
+	spdk_json_write_named_uint64(w, "num_copy_ops", stat->num_copy_ops);
 	spdk_json_write_named_uint64(w, "read_latency_ticks", stat->read_latency_ticks);
 	spdk_json_write_named_uint64(w, "write_latency_ticks", stat->write_latency_ticks);
 	spdk_json_write_named_uint64(w, "unmap_latency_ticks", stat->unmap_latency_ticks);
+	spdk_json_write_named_uint64(w, "copy_latency_ticks", stat->copy_latency_ticks);
 }
 
 static void

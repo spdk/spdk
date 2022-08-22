@@ -3654,9 +3654,12 @@ bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add)
 	total->num_write_ops += add->num_write_ops;
 	total->bytes_unmapped += add->bytes_unmapped;
 	total->num_unmap_ops += add->num_unmap_ops;
+	total->bytes_copied += add->bytes_copied;
+	total->num_copy_ops += add->num_copy_ops;
 	total->read_latency_ticks += add->read_latency_ticks;
 	total->write_latency_ticks += add->write_latency_ticks;
 	total->unmap_latency_ticks += add->unmap_latency_ticks;
+	total->copy_latency_ticks += add->copy_latency_ticks;
 }
 
 static void
@@ -6069,6 +6072,11 @@ bdev_io_complete(void *ctx)
 					bdev_io->internal.ch->stat.write_latency_ticks += tsc_diff;
 				}
 			}
+			break;
+		case SPDK_BDEV_IO_TYPE_COPY:
+			bdev_io->internal.ch->stat.bytes_copied += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->internal.ch->stat.num_copy_ops++;
+			bdev_io->internal.ch->stat.copy_latency_ticks += tsc_diff;
 			break;
 		default:
 			break;
