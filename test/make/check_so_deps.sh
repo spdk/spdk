@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
 shopt -s extglob
+git_repo_abi="https://github.com/spdk/spdk-abi.git"
 
-function get_git_tag() {
-	git -C "${1:-$rootdir}" describe --tags --abbrev=0 --exclude=LTS
+function get_spdk_abi() {
+	local dest=$1
+	mkdir -p $dest
+	if [[ -d $SPDK_ABI_DIR ]]; then
+		echo "spdk-abi found at $SPDK_ABI_DIR"
+		cp -r "$SPDK_ABI_DIR"/* "$dest/"
+	else
+		# In case that someone run test manually and did not set existing
+		# spdk-abi directory via SPDK_ABI_DIR
+		echo "spdk-abi has not been found at $SPDK_ABI_DIR, cloning"
+		git clone $git_repo_abi "$dest"
+	fi
+}
+
+function get_release_branch() {
+	tag=$(git describe --tags --abbrev=0 --exclude=LTS --exclude=*-pre)
+	branch="${tag:0:6}.x"
+	echo "$branch"
 }
 
 if [ "$(uname -s)" = "FreeBSD" ]; then
@@ -23,14 +40,6 @@ source "$rootdir/test/common/autotest_common.sh"
 libdir="$rootdir/build/lib"
 libdeps_file="$rootdir/mk/spdk.lib_deps.mk"
 suppression_file="$HOME/abigail_suppressions.ini"
-
-spdk_tag=$(get_git_tag)
-spdk_lts_tag=$(get_git_tag "$HOME/spdk_abi_lts")
-repo="spdk_abi_latest"
-if [[ "$spdk_tag" == "$spdk_lts_tag" ]]; then
-	repo="spdk_abi_lts"
-fi
-source_abi_dir="$HOME/$repo/build/lib"
 
 function check_header_filenames() {
 	local dups_found=0
@@ -60,16 +69,16 @@ function check_header_filenames() {
 function confirm_abi_deps() {
 	local processed_so=0
 	local abidiff_output
+	local release
+	local source_abi_dir="$rootdir/test/make/abi"
 
-	echo "* Running ${FUNCNAME[0]} against $repo" >&2
+	release=$(get_release_branch)
+
+	get_spdk_abi "$source_abi_dir"
+	echo "* Running ${FUNCNAME[0]} against the latest (${release%.*}) release" >&2
 
 	if ! hash abidiff; then
 		echo "Unable to check ABI compatibility. Please install abidiff."
-		return 1
-	fi
-
-	if [ ! -d $source_abi_dir ]; then
-		echo "No source ABI available, failing this test."
 		return 1
 	fi
 
@@ -92,14 +101,14 @@ EOF
 		abidiff_output=0
 
 		so_file=$(basename $object)
-		if [ ! -f "$source_abi_dir/$so_file" ]; then
+		if [ ! -f "$source_abi_dir/$release/$so_file" ]; then
 			echo "No corresponding object for $so_file in canonical directory. Skipping."
 			continue
 		fi
 
 		cmd_args=('abidiff'
-			$source_abi_dir/$so_file $libdir/$so_file
-			'--headers-dir1' $source_abi_dir/../../include
+			$source_abi_dir/$release/$so_file "$libdir/$so_file"
+			'--headers-dir1' $source_abi_dir/$release/include
 			'--headers-dir2' $rootdir/include
 			'--leaf-changes-only' '--suppressions' $suppression_file)
 
@@ -108,7 +117,7 @@ EOF
 			output=$(sed "s/ [()][^)]*[)]//g" <<< "$output")
 
 			IFS="." read -r _ _ new_so_maj new_so_min < <(readlink "$libdir/$so_file")
-			IFS="." read -r _ _ old_so_maj old_so_min < <(readlink "$source_abi_dir/$so_file")
+			IFS="." read -r _ _ old_so_maj old_so_min < <(readlink "$source_abi_dir/$release/$so_file")
 
 			found_abi_change=false
 			so_name_changed=no
@@ -200,6 +209,7 @@ EOF
 	done
 	rm -f $suppression_file
 	echo "Processed $processed_so objects."
+	rm -rf "$source_abi_dir"
 }
 
 function get_lib_shortname() {
