@@ -86,6 +86,7 @@ stub_destruct(void *ctx)
 struct ut_expected_io {
 	uint8_t				type;
 	uint64_t			offset;
+	uint64_t			src_offset;
 	uint64_t			length;
 	int				iovcnt;
 	struct iovec			iov[BDEV_IO_NUM_CHILD_IOV];
@@ -135,6 +136,22 @@ ut_alloc_expected_io(uint8_t type, uint64_t offset, uint64_t length, int iovcnt)
 	expected_io->offset = offset;
 	expected_io->length = length;
 	expected_io->iovcnt = iovcnt;
+
+	return expected_io;
+}
+
+static struct ut_expected_io *
+ut_alloc_expected_copy_io(uint8_t type, uint64_t offset, uint64_t src_offset, uint64_t length)
+{
+	struct ut_expected_io *expected_io;
+
+	expected_io = calloc(1, sizeof(*expected_io));
+	SPDK_CU_ASSERT_FATAL(expected_io != NULL);
+
+	expected_io->type = type;
+	expected_io->offset = offset;
+	expected_io->src_offset = src_offset;
+	expected_io->length = length;
 
 	return expected_io;
 }
@@ -293,10 +310,13 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 
 	CU_ASSERT(expected_io->offset == bdev_io->u.bdev.offset_blocks);
 	CU_ASSERT(expected_io->length = bdev_io->u.bdev.num_blocks);
+	if (expected_io->type == SPDK_BDEV_IO_TYPE_COPY) {
+		CU_ASSERT(expected_io->src_offset == bdev_io->u.bdev.copy.src_offset_blocks);
+	}
 
 	if (expected_io->iovcnt == 0) {
 		free(expected_io);
-		/* UNMAP, WRITE_ZEROES and FLUSH don't have iovs, so we can just return now. */
+		/* UNMAP, WRITE_ZEROES, FLUSH and COPY don't have iovs, so we can just return now. */
 		return;
 	}
 
@@ -376,6 +396,7 @@ static bool g_io_types_supported[SPDK_BDEV_NUM_IO_TYPES] = {
 	[SPDK_BDEV_IO_TYPE_ABORT]		= true,
 	[SPDK_BDEV_IO_TYPE_SEEK_HOLE]		= true,
 	[SPDK_BDEV_IO_TYPE_SEEK_DATA]		= true,
+	[SPDK_BDEV_IO_TYPE_COPY]		= true,
 };
 
 static void
@@ -1087,6 +1108,12 @@ bdev_io_types_test(void)
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE_ZEROES, true);
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_WRITE, true);
 
+	/* COPY is not supported */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
+	rc = spdk_bdev_copy_blocks(desc, io_ch, 128, 0, 128, io_done, NULL);
+	CU_ASSERT(rc == -ENOTSUP);
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
+
 	/* NVME_IO, NVME_IO_MD and NVME_ADMIN are not supported */
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO, false);
 	ut_enable_io_type(SPDK_BDEV_IO_TYPE_NVME_IO_MD, false);
@@ -1783,6 +1810,19 @@ bdev_io_boundary_split_test(void)
 	stub_complete_io(1);
 	CU_ASSERT(g_io_done == true);
 
+	/* Test a COPY.  This should also not be split. */
+	bdev->optimal_io_boundary = 15;
+	g_io_done = false;
+	expected_io = ut_alloc_expected_copy_io(SPDK_BDEV_IO_TYPE_COPY, 9, 45, 36);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_copy_blocks(desc, io_ch, 9, 45, 36, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+
 	CU_ASSERT(TAILQ_EMPTY(&g_bdev_ut_channel->expected_io));
 
 	/* Children requests return an error status */
@@ -2446,6 +2486,19 @@ bdev_io_max_size_and_segment_split_test(void)
 	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
 
 	rc = spdk_bdev_flush_blocks(desc, io_ch, 15, 2, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+
+	/* Test a COPY.  This should also not be split. */
+	g_io_done = false;
+
+	expected_io = ut_alloc_expected_copy_io(SPDK_BDEV_IO_TYPE_COPY, 9, 45, 36);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+
+	rc = spdk_bdev_copy_blocks(desc, io_ch, 9, 45, 36, io_done, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_io_done == false);
 	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
@@ -5989,6 +6042,163 @@ bdev_seek_test(void)
 	poll_threads();
 }
 
+static void
+bdev_copy(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct ut_expected_io *expected_io;
+	uint64_t src_offset, num_blocks;
+	uint32_t num_completed;
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+
+	fn_table.submit_request = stub_submit_request;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	/* First test that if the bdev supports copy, the request won't be split */
+	bdev->md_len = 0;
+	bdev->blocklen = 4096;
+	num_blocks = 512;
+	src_offset = bdev->blockcnt - num_blocks;
+
+	expected_io = ut_alloc_expected_copy_io(SPDK_BDEV_IO_TYPE_COPY, 0, src_offset, num_blocks);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	num_completed = stub_complete_io(1);
+	CU_ASSERT_EQUAL(num_completed, 1);
+
+	/* Check that if copy is not supported it'll fail */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, false);
+
+	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, -ENOTSUP);
+
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_COPY, true);
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
+bdev_copy_split_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *ioch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct ut_expected_io *expected_io;
+	struct spdk_bdev_opts bdev_opts = {};
+	uint32_t i, num_outstanding;
+	uint64_t offset, src_offset, num_blocks, max_copy_blocks, num_children;
+	int rc;
+
+	spdk_bdev_get_opts(&bdev_opts, sizeof(bdev_opts));
+	bdev_opts.bdev_io_pool_size = 512;
+	bdev_opts.bdev_io_cache_size = 64;
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open_ext("bdev", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	ioch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(ioch != NULL);
+	bdev_ch = spdk_io_channel_get_ctx(ioch);
+	CU_ASSERT(TAILQ_EMPTY(&bdev_ch->io_submitted));
+
+	fn_table.submit_request = stub_submit_request;
+	g_io_exp_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	/* Case 1: First test the request won't be split */
+	num_blocks = 32;
+	src_offset = bdev->blockcnt - num_blocks;
+
+	g_io_done = false;
+	expected_io = ut_alloc_expected_copy_io(SPDK_BDEV_IO_TYPE_COPY, 0, src_offset, num_blocks);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Case 2: Test the split with 2 children requests */
+	max_copy_blocks = 8;
+	bdev->max_copy = max_copy_blocks;
+	num_children = 2;
+	num_blocks = max_copy_blocks * num_children;
+	offset = 0;
+	src_offset = bdev->blockcnt - num_blocks;
+
+	g_io_done = false;
+	for (i = 0; i < num_children; i++) {
+		expected_io = ut_alloc_expected_copy_io(SPDK_BDEV_IO_TYPE_COPY, offset,
+							src_offset + offset, max_copy_blocks);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		offset += max_copy_blocks;
+	}
+
+	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == num_children);
+	stub_complete_io(num_children);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
+	/* Case 3: Test the split with 15 children requests, will finish 8 requests first */
+	num_children = 15;
+	num_blocks = max_copy_blocks * num_children;
+	offset = 0;
+	src_offset = bdev->blockcnt - num_blocks;
+
+	g_io_done = false;
+	for (i = 0; i < num_children; i++) {
+		expected_io = ut_alloc_expected_copy_io(SPDK_BDEV_IO_TYPE_COPY, offset,
+							src_offset + offset, max_copy_blocks);
+		TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+		offset += max_copy_blocks;
+	}
+
+	rc = spdk_bdev_copy_blocks(desc, ioch, 0, src_offset, num_blocks, io_done, NULL);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT(g_io_done == false);
+
+	while (num_children > 0) {
+		num_outstanding = spdk_min(num_children, SPDK_BDEV_MAX_CHILDREN_COPY_REQS);
+		CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == num_outstanding);
+		stub_complete_io(num_outstanding);
+		num_children -= num_outstanding;
+	}
+	CU_ASSERT(g_io_done == true);
+
+	spdk_put_io_channel(ioch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -6049,6 +6259,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_unregister_by_name);
 	CU_ADD_TEST(suite, for_each_bdev_test);
 	CU_ADD_TEST(suite, bdev_seek_test);
+	CU_ADD_TEST(suite, bdev_copy);
+	CU_ADD_TEST(suite, bdev_copy_split_test);
 
 	allocate_cores(1);
 	allocate_threads(1);
