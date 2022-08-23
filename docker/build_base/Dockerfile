@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) Intel Corporation
 
-FROM fedora:33 AS base
+FROM fedora:35 AS base
 
 # Generic args
 ARG PROXY
@@ -19,7 +19,7 @@ RUN /install
 # base, is going to end up as an intermediate one, untagged, <none> - this
 # image can be then manually removed (--force-rm doesn't work here. Go
 # figure).
-FROM fedora:33 AS spdk
+FROM fedora:35 AS spdk
 
 LABEL maintainer=spdk.io
 
