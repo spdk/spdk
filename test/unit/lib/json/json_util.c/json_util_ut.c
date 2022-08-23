@@ -837,6 +837,34 @@ test_find(void)
 }
 
 static void
+test_find_array(void)
+{
+	char array_json_text[] = "[ \"Text\", 2, {} ]";
+	struct spdk_json_val *values, *key;
+	ssize_t values_cnt;
+	ssize_t rc;
+
+	values_cnt = spdk_json_parse(array_json_text, strlen(array_json_text), NULL, 0, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt > 0);
+
+	values = calloc(values_cnt, sizeof(struct spdk_json_val));
+	SPDK_CU_ASSERT_FATAL(values != NULL);
+
+	rc = spdk_json_parse(array_json_text, strlen(array_json_text), values, values_cnt, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(values_cnt == rc);
+
+	/* spdk_json_find cannot be used on arrays.  The element "Text" does exist in the array,
+	 * but spdk_json_find can only be used for finding keys in an object.  So this
+	 * test should fail.
+	 */
+	key = NULL;
+	rc = spdk_json_find(values, "Text", &key, NULL, SPDK_JSON_VAL_STRING);
+	CU_ASSERT(rc == -EPROTOTYPE);
+
+	free(values);
+}
+
+static void
 test_iterating(void)
 {
 	struct spdk_json_val *values;
@@ -945,6 +973,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_decode_uint64);
 	CU_ADD_TEST(suite, test_decode_string);
 	CU_ADD_TEST(suite, test_find);
+	CU_ADD_TEST(suite, test_find_array);
 	CU_ADD_TEST(suite, test_iterating);
 	CU_ADD_TEST(suite, test_free_object);
 
