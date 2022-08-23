@@ -19,6 +19,7 @@ if [[ ! -e $spdk_tar ]]; then
 fi
 
 tar -C "$spdk_repo" -xf "$spdk_tar"
+chown -R root:root "$spdk_repo"
 
 # Required for building RPM
 dnf install -y rpm-build

@@ -11,8 +11,7 @@ ENV http_proxy=$PROXY
 ENV https_proxy=$PROXY
 ENV no_proxy=$NO_PROXY
 
-
-COPY spdk.tar.gz /spdk.tar.gz
+COPY --chown=root:root spdk.tar.gz /spdk.tar.gz
 COPY pre-install /install
 RUN /install
 
