@@ -4431,9 +4431,9 @@ nvme_ctrlr_populate_namespaces_done(struct nvme_ctrlr *nvme_ctrlr,
 }
 
 static int
-bdev_nvme_compare_trids(struct nvme_ctrlr *nvme_ctrlr,
-			struct spdk_nvme_ctrlr *new_ctrlr,
-			struct spdk_nvme_transport_id *trid)
+bdev_nvme_check_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
+			       struct spdk_nvme_ctrlr *new_ctrlr,
+			       struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_path_id *tmp_trid;
 
@@ -4444,17 +4444,25 @@ bdev_nvme_compare_trids(struct nvme_ctrlr *nvme_ctrlr,
 
 	/* Currently we only support failover to the same transport type. */
 	if (nvme_ctrlr->active_path_id->trid.trtype != trid->trtype) {
+		SPDK_WARNLOG("Failover from trtype: %s to a different trtype: %s is not supported currently\n",
+			     spdk_nvme_transport_id_trtype_str(nvme_ctrlr->active_path_id->trid.trtype),
+			     spdk_nvme_transport_id_trtype_str(trid->trtype));
 		return -EINVAL;
 	}
 
+
 	/* Currently we only support failover to the same NQN. */
 	if (strncmp(trid->subnqn, nvme_ctrlr->active_path_id->trid.subnqn, SPDK_NVMF_NQN_MAX_LEN)) {
+		SPDK_WARNLOG("Failover from subnqn: %s to a different subnqn: %s is not supported currently\n",
+			     nvme_ctrlr->active_path_id->trid.subnqn, trid->subnqn);
 		return -EINVAL;
 	}
 
 	/* Skip all the other checks if we've already registered this path. */
 	TAILQ_FOREACH(tmp_trid, &nvme_ctrlr->trids, link) {
 		if (!spdk_nvme_transport_id_compare(&tmp_trid->trid, trid)) {
+			SPDK_WARNLOG("This path (traddr: %s subnqn: %s) is already registered\n", trid->traddr,
+				     trid->subnqn);
 			return -EEXIST;
 		}
 	}
@@ -4463,8 +4471,8 @@ bdev_nvme_compare_trids(struct nvme_ctrlr *nvme_ctrlr,
 }
 
 static int
-bdev_nvme_compare_namespaces(struct nvme_ctrlr *nvme_ctrlr,
-			     struct spdk_nvme_ctrlr *new_ctrlr)
+bdev_nvme_check_secondary_namespace(struct nvme_ctrlr *nvme_ctrlr,
+				    struct spdk_nvme_ctrlr *new_ctrlr)
 {
 	struct nvme_ns *nvme_ns;
 	struct spdk_nvme_ns *new_ns;
@@ -4523,12 +4531,12 @@ bdev_nvme_add_secondary_trid(struct nvme_ctrlr *nvme_ctrlr,
 
 	pthread_mutex_lock(&nvme_ctrlr->mutex);
 
-	rc = bdev_nvme_compare_trids(nvme_ctrlr, new_ctrlr, trid);
+	rc = bdev_nvme_check_secondary_trid(nvme_ctrlr, new_ctrlr, trid);
 	if (rc != 0) {
 		goto exit;
 	}
 
-	rc = bdev_nvme_compare_namespaces(nvme_ctrlr, new_ctrlr);
+	rc = bdev_nvme_check_secondary_namespace(nvme_ctrlr, new_ctrlr);
 	if (rc != 0) {
 		goto exit;
 	}
