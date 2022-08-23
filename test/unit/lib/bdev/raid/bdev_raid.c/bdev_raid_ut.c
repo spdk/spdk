@@ -931,34 +931,6 @@ verify_raid_bdev(struct rpc_bdev_raid_create *r, bool presence, uint32_t raid_st
 	} else {
 		CU_ASSERT(pbdev_found == false);
 	}
-	pbdev_found = false;
-	if (raid_state == RAID_BDEV_STATE_ONLINE) {
-		TAILQ_FOREACH(pbdev, &g_raid_bdev_configured_list, state_link) {
-			if (strcmp(pbdev->bdev.name, r->name) == 0) {
-				pbdev_found = true;
-				break;
-			}
-		}
-	} else if (raid_state == RAID_BDEV_STATE_CONFIGURING) {
-		TAILQ_FOREACH(pbdev, &g_raid_bdev_configuring_list, state_link) {
-			if (strcmp(pbdev->bdev.name, r->name) == 0) {
-				pbdev_found = true;
-				break;
-			}
-		}
-	} else if (raid_state == RAID_BDEV_STATE_OFFLINE) {
-		TAILQ_FOREACH(pbdev, &g_raid_bdev_offline_list, state_link) {
-			if (strcmp(pbdev->bdev.name, r->name) == 0) {
-				pbdev_found = true;
-				break;
-			}
-		}
-	}
-	if (presence == true) {
-		CU_ASSERT(pbdev_found == true);
-	} else {
-		CU_ASSERT(pbdev_found == false);
-	}
 }
 
 static void

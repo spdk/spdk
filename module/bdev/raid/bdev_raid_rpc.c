@@ -86,20 +86,11 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	/* Get raid bdev list based on the category requested */
-	if (strcmp(req.category, "all") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-			spdk_json_write_string(w, raid_bdev->bdev.name);
-		}
-	} else if (strcmp(req.category, "online") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configured_list, state_link) {
-			spdk_json_write_string(w, raid_bdev->bdev.name);
-		}
-	} else if (strcmp(req.category, "configuring") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configuring_list, state_link) {
-			spdk_json_write_string(w, raid_bdev->bdev.name);
-		}
-	} else {
-		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_offline_list, state_link) {
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		if (strcmp(req.category, "all") == 0 ||
+		    (strcmp(req.category, "configuring") == 0 && raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) ||
+		    (strcmp(req.category, "online") == 0 && raid_bdev->state == RAID_BDEV_STATE_ONLINE) ||
+		    (strcmp(req.category, "offline") == 0 && raid_bdev->state == RAID_BDEV_STATE_OFFLINE)) {
 			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	}

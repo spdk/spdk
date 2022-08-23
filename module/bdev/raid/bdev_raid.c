@@ -20,23 +20,8 @@ struct raid_config	g_raid_config = {
 	.raid_bdev_config_head = TAILQ_HEAD_INITIALIZER(g_raid_config.raid_bdev_config_head),
 };
 
-/*
- * List of raid bdev in configured list, these raid bdevs are registered with
- * bdev layer
- */
-struct raid_configured_tailq	g_raid_bdev_configured_list = TAILQ_HEAD_INITIALIZER(
-			g_raid_bdev_configured_list);
-
-/* List of raid bdev in configuring list */
-struct raid_configuring_tailq	g_raid_bdev_configuring_list = TAILQ_HEAD_INITIALIZER(
-			g_raid_bdev_configuring_list);
-
 /* List of all raid bdevs */
-struct raid_all_tailq		g_raid_bdev_list = TAILQ_HEAD_INITIALIZER(g_raid_bdev_list);
-
-/* List of all raid bdevs that are offline */
-struct raid_offline_tailq	g_raid_bdev_offline_list = TAILQ_HEAD_INITIALIZER(
-			g_raid_bdev_offline_list);
+struct raid_all_tailq g_raid_bdev_list = TAILQ_HEAD_INITIALIZER(g_raid_bdev_list);
 
 static TAILQ_HEAD(, raid_bdev_module) g_raid_modules = TAILQ_HEAD_INITIALIZER(g_raid_modules);
 
@@ -190,13 +175,7 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_cleanup, %p name %s, state %u, config %p\n",
 		      raid_bdev,
 		      raid_bdev->bdev.name, raid_bdev->state, raid_bdev->config);
-	if (raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
-		TAILQ_REMOVE(&g_raid_bdev_configuring_list, raid_bdev, state_link);
-	} else if (raid_bdev->state == RAID_BDEV_STATE_OFFLINE) {
-		TAILQ_REMOVE(&g_raid_bdev_offline_list, raid_bdev, state_link);
-	} else {
-		assert(0);
-	}
+	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 	TAILQ_REMOVE(&g_raid_bdev_list, raid_bdev, global_link);
 	free(raid_bdev->base_bdev_info);
 	if (raid_bdev->config) {
@@ -315,9 +294,7 @@ raid_bdev_destruct(void *ctxt)
 	}
 
 	if (g_shutdown_started) {
-		TAILQ_REMOVE(&g_raid_bdev_configured_list, raid_bdev, state_link);
 		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
-		TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
 	}
 
 	if (raid_bdev->module->stop != NULL) {
@@ -1134,7 +1111,6 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	raid_bdev_gen->module = &g_raid_if;
 	raid_bdev_gen->write_cache = 0;
 
-	TAILQ_INSERT_TAIL(&g_raid_bdev_configuring_list, raid_bdev, state_link);
 	TAILQ_INSERT_TAIL(&g_raid_bdev_list, raid_bdev, global_link);
 
 	raid_cfg->raid_bdev = raid_bdev;
@@ -1262,8 +1238,6 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		return rc;
 	}
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev generic %p\n", raid_bdev_gen);
-	TAILQ_REMOVE(&g_raid_bdev_configuring_list, raid_bdev, state_link);
-	TAILQ_INSERT_TAIL(&g_raid_bdev_configured_list, raid_bdev, state_link);
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev is created with name %s, raid_bdev %p\n",
 		      raid_bdev_gen->name, raid_bdev);
 
@@ -1294,10 +1268,8 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
 	}
 
 	assert(raid_bdev->num_base_bdevs == raid_bdev->num_base_bdevs_discovered);
-	TAILQ_REMOVE(&g_raid_bdev_configured_list, raid_bdev, state_link);
 	raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 	assert(raid_bdev->num_base_bdevs_discovered);
-	TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
 	SPDK_DEBUGLOG(bdev_raid, "raid bdev state changing from online to offline\n");
 
 	spdk_bdev_unregister(&raid_bdev->bdev, cb_fn, cb_arg);

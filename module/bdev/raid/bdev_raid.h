@@ -94,9 +94,6 @@ struct raid_bdev {
 	/* raid bdev device, this will get registered in bdev layer */
 	struct spdk_bdev		bdev;
 
-	/* link of raid bdev to link it to configured, configuring or offline list */
-	TAILQ_ENTRY(raid_bdev)		state_link;
-
 	/* link of raid bdev to link it to global raid bdev list */
 	TAILQ_ENTRY(raid_bdev)		global_link;
 
@@ -207,16 +204,10 @@ struct raid_bdev_io_channel {
 	struct spdk_io_channel	*module_channel;
 };
 
-/* TAIL heads for various raid bdev lists */
-TAILQ_HEAD(raid_configured_tailq, raid_bdev);
-TAILQ_HEAD(raid_configuring_tailq, raid_bdev);
+/* TAIL head for raid bdev list */
 TAILQ_HEAD(raid_all_tailq, raid_bdev);
-TAILQ_HEAD(raid_offline_tailq, raid_bdev);
 
-extern struct raid_configured_tailq	g_raid_bdev_configured_list;
-extern struct raid_configuring_tailq	g_raid_bdev_configuring_list;
 extern struct raid_all_tailq		g_raid_bdev_list;
-extern struct raid_offline_tailq	g_raid_bdev_offline_list;
 extern struct raid_config		g_raid_config;
 
 typedef void (*raid_bdev_destruct_cb)(void *cb_ctx, int rc);
