@@ -62,9 +62,8 @@ ftl_mngt_init_md(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 			 */
 			continue;
 		}
-		md_flags = is_buffer_needed(i) ?
-			   FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW :
-			   FTL_MD_CREATE_NO_MEM;
+		md_flags = is_buffer_needed(i) ? ftl_md_create_region_flags(dev,
+				region->type) : FTL_MD_CREATE_NO_MEM;
 		layout->md[i] = ftl_md_create(dev, region->current.blocks, region->vss_blksz, region->name,
 					      md_flags, region);
 		if (NULL == layout->md[i]) {

@@ -30,7 +30,7 @@ init_p2l_map_pool(struct spdk_ftl_dev *dev)
 	void *p2l_pool_buf;
 
 	dev->p2l_pool_md = ftl_md_create(dev, p2l_pool_buf_blks, 0, "p2l_pool",
-					 FTL_MD_CREATE_SHM | FTL_MD_CREATE_SHM_NEW, NULL);
+					 ftl_md_create_shm_flags(dev), NULL);
 	if (!dev->p2l_pool_md) {
 		return -ENOMEM;
 	}
