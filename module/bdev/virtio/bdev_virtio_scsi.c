@@ -805,6 +805,11 @@ bdev_virtio_poll(void *arg)
 		bdev_virtio_io_cpl(io[i]);
 	}
 
+	/* scan_ctx could have been freed while processing completions above, so
+	 * we need to re-read the value again here into the local variable before
+	 * using it.
+	 */
+	scan_ctx = svdev->scan_ctx;
 	if (spdk_unlikely(scan_ctx && scan_ctx->needs_resend)) {
 		if (svdev->removed) {
 			_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
