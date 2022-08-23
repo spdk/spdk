@@ -93,10 +93,10 @@ install_markdownlint() {
 		sudo -E git clone --branch "$mdl_version" "$git_repo_mdl" "/usr/src/markdownlint"
 		(
 			cd /usr/src/markdownlint
-			if ! hash rake; then
+			if ! hash rake &> /dev/null; then
 				sudo -E gem install rake
 			fi
-			if ! hash bundler; then
+			if ! hash bundler &> /dev/null; then
 				sudo -E gem install bundler
 			fi
 			sudo -E rake install
