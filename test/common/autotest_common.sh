@@ -496,6 +496,7 @@ function get_config_params() {
 
 	if [[ $SPDK_TEST_SMA -eq 1 ]]; then
 		config_params+=' --with-sma'
+		config_params+=' --with-crypto'
 	fi
 
 	if [ -f /usr/include/daos.h ] && [ $SPDK_TEST_DAOS -eq 1 ]; then
