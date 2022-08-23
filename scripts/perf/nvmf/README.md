@@ -91,7 +91,8 @@ Optional:
   "scheduler_settings": "static",
   "zcopy_settings": false,
   "dif_insert_strip": true,
-  "null_block_dif_type": 3
+  "null_block_dif_type": 3,
+  "enable_pm": true
 }
 ```
 
@@ -131,6 +132,8 @@ Optional, common:
 - irq_scripts_dir - path to scripts directory of Mellanox mlnx-tools package;
   Used to run set_irq_affinity.sh script.
   Default: /usr/src/local/mlnx-tools/ofed_scripts
+- enable_pm - if set to true, power measurement is enabled via collect-bmc-pm
+  on the target side.
 
 Optional, Kernel Target only:
 
