@@ -92,6 +92,10 @@
 	# public functions in file.h
 	spdk_posix_file_load;
 
+	# public functions in hexlify.h
+	spdk_hexlify;
+	spdk_unhexlify;
+
 	# public functions in pipe.h
 	spdk_pipe_create;
 	spdk_pipe_destroy;

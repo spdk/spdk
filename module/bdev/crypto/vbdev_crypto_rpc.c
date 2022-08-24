@@ -7,6 +7,8 @@
 
 #include "vbdev_crypto.h"
 
+#include "spdk/hexlify.h"
+
 /* Structure to hold the parameters for this RPC method. */
 struct rpc_construct_crypto {
 	char *base_bdev_name;
@@ -110,7 +112,7 @@ create_crypto_opts(struct rpc_construct_crypto *rpc,
 	if (strcmp(opts->drv_name, MLX5) == 0) {
 		/* Only AES-XTS supported. */
 
-		/* We cannot use strlen() after unhexlify() because of possible \0 chars
+		/* We cannot use strlen() after spdk_unhexlify() because of possible \0 chars
 		 * used in the key. Hexlified version of key is twice as longer. */
 		key_size = strnlen(rpc->key, (AES_XTS_512_BLOCK_KEY_LENGTH * 2) + 1);
 		if (key_size != AES_XTS_256_BLOCK_KEY_LENGTH * 2 &&
@@ -144,7 +146,7 @@ create_crypto_opts(struct rpc_construct_crypto *rpc,
 			}
 		}
 	}
-	opts->key = unhexlify(rpc->key);
+	opts->key = spdk_unhexlify(rpc->key);
 	if (!opts->key) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Failed to unhexlify key.");
@@ -163,7 +165,7 @@ create_crypto_opts(struct rpc_construct_crypto *rpc,
 							     key2_size, AES_XTS_TWEAK_KEY_LENGTH * 2);
 			goto error_invalid_key2;
 		}
-		opts->key2 = unhexlify(rpc->key2);
+		opts->key2 = spdk_unhexlify(rpc->key2);
 		if (!opts->key2) {
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							 "Failed to unhexlify key2.");

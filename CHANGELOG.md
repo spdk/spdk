@@ -75,6 +75,10 @@ tell the driver to not read the CHANGED_NS_LIST log page in response to a NS_ATT
 AEN.  When called the application is required to read this log page instead to clear the
 AEN.
 
+### util
+
+Added new functions: `spdk_hexlify` and `spdk_unhexlify`.
+
 ## v22.05
 
 ### sock
