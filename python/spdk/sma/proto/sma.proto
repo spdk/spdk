@@ -94,6 +94,41 @@ message DetachVolumeRequest {
 // Detach volume response
 message DetachVolumeResponse {}
 
+// QoS limit values.  0 means unlimited, while UINT64_MAX means to leave the
+// current limit value unchanged.  If one of the limits isn't supported by a
+// given device/volume, it must be set to 0.
+message QosLimit {
+  // Read kIOPS
+  uint64 rd_iops = 1;
+  // Write kIOPS
+  uint64 wr_iops = 2;
+  // Read/write kIOPS
+  uint64 rw_iops = 3;
+  // Read bandwidth (MB/s)
+  uint64 rd_bandwidth = 4;
+  // Write bandwidth (MB/s)
+  uint64 wr_bandwidth = 5;
+  // Read/write bandwidth (MB/s)
+  uint64 rw_bandwidth = 6;
+}
+
+// SetQos request
+message SetQosRequest {
+  // Device handle
+  string device_handle = 1;
+  // GUID/UUID of a volume to configure QoS on.  If this parameter is omitted,
+  // the QoS will be set up on the whole device (all volumes attached to that
+  // device will share QoS settings).  Some device types might only support
+  // configuring QoS on per-device (volume_id must be empty) or per-volume level
+  // (volume_id cannot be empty).
+  bytes volume_id = 2;
+  // Maximum allowed IOPS/bandwidth
+  QosLimit maximum = 3;
+}
+
+// SetQos response
+message SetQosResponse {}
+
 // Storage Management Agent gRPC service definition
 service StorageManagementAgent {
   // Creates a new device.  A device is an entity that can be used to expose
@@ -113,4 +148,7 @@ service StorageManagementAgent {
   // Detaches a volume from a device
   rpc DetachVolume (DetachVolumeRequest)
     returns (DetachVolumeResponse) {}
+  // Configures QoS on a device/volume
+  rpc SetQos (SetQosRequest)
+    returns (SetQosResponse) {}
 }
