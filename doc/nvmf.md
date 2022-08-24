@@ -270,3 +270,8 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
 SPDK has a tracing framework for capturing low-level event information at runtime.
 @ref nvmf_tgt_tracepoints enable analysis of both performance and application crashes.
+
+## Enabling NVMe-oF Multipath
+
+The SPDK NVMe-oF target and initiator support multiple independent paths to the same NVMe-oF subsystem.
+For step-by-step instructions for configuring and switching between paths, see @ref nvmf_multipath_howto .

@@ -834,6 +834,7 @@ INPUT                  += \
                          nvmf.md \
                          nvmf_tgt_pg.md \
                          nvmf_tracing.md \
+                         nvmf_multipath_howto.md \
                          overview.md \
                          peer_2_peer.md \
                          pkgconfig.md \
