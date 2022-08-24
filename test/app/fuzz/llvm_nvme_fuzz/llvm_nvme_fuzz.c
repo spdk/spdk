@@ -229,7 +229,7 @@ fuzz_admin_security_send_command(struct fuzz_command *cmd)
 	cmd->cmd.cdw10_bits.sec_send_recv.nssf = g_data[3];
 
 	/* Transfer Length(TL) */
-	cmd->cmd.cdw11 = (uint32_t)(g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
+	cmd->cmd.cdw11 = ((uint32_t)g_data[4] << 24) + ((uint32_t)g_data[5] << 16) +
 			 ((uint32_t)g_data[6] << 8) + (uint32_t)g_data[7];
 
 	g_data += 8;
