@@ -13,6 +13,14 @@ package sma;
 
 option go_package = "spdk.io/sma";
 
+// Enumeration defining types of devices
+enum DeviceType {
+  DEVICE_TYPE_INVALID = 0;
+  DEVICE_TYPE_NVME = 1;
+  DEVICE_TYPE_VIRTIO_BLK = 2;
+  DEVICE_TYPE_NVMF_TCP = 3;
+}
+
 // Volume's crypto parameters
 message VolumeCryptoParameters {
   // Key to be used for encryption
@@ -120,7 +128,8 @@ message SetQosRequest {
   // the QoS will be set up on the whole device (all volumes attached to that
   // device will share QoS settings).  Some device types might only support
   // configuring QoS on per-device (volume_id must be empty) or per-volume level
-  // (volume_id cannot be empty).
+  // (volume_id cannot be empty).  This information can be obtained by sending a
+  // GetQosCapabilities request.
   bytes volume_id = 2;
   // Maximum allowed IOPS/bandwidth
   QosLimit maximum = 3;
@@ -128,6 +137,34 @@ message SetQosRequest {
 
 // SetQos response
 message SetQosResponse {}
+
+// Get QoS capabilities request
+message GetQosCapabilitiesRequest {
+  // Type of a device to query for QoS capabilities
+  DeviceType device_type = 1;
+}
+
+// Get QoS capabilities response
+message GetQosCapabilitiesResponse {
+  message QosCapabilities {
+    // Read IOPS
+    bool rd_iops = 1;
+    // Write IOPS
+    bool wr_iops = 2;
+    // Read/write IOPS
+    bool rw_iops = 3;
+    // Read bandwidth
+    bool rd_bandwidth = 4;
+    // Write bandwidth
+    bool wr_bandwidth = 5;
+    // Read/write bandwidth
+    bool rw_bandwidth = 6;
+  }
+  // Device level maximum QoS limits
+  QosCapabilities max_device_caps = 1;
+  // Volume level maximum QoS limits
+  QosCapabilities max_volume_caps = 2;
+};
 
 // Storage Management Agent gRPC service definition
 service StorageManagementAgent {
@@ -151,4 +188,7 @@ service StorageManagementAgent {
   // Configures QoS on a device/volume
   rpc SetQos (SetQosRequest)
     returns (SetQosResponse) {}
+  // Returns QoS capabilities of a given device type
+  rpc GetQosCapabilities (GetQosCapabilitiesRequest)
+    returns (GetQosCapabilitiesResponse) {}
 }
