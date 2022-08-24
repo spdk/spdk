@@ -199,6 +199,7 @@ bdev_xnvme_free(struct bdev_xnvme *xnvme)
 {
 	assert(xnvme != NULL);
 
+	xnvme_dev_close(xnvme->dev);
 	free(xnvme->filename);
 	free(xnvme->bdev.name);
 	free(xnvme);
@@ -363,13 +364,12 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 	return &xnvme->bdev;
 
 error_return:
-	xnvme_dev_close(xnvme->dev);
-
 	bdev_xnvme_free(xnvme);
 	return NULL;
 }
 
 struct delete_xnvme_bdev_ctx {
+	struct bdev_xnvme *xnvme;
 	spdk_delete_xnvme_complete cb_fn;
 	void *cb_arg;
 };
@@ -379,6 +379,7 @@ xnvme_bdev_unregister_cb(void *arg, int bdeverrno)
 {
 	struct delete_xnvme_bdev_ctx *ctx = arg;
 
+	bdev_xnvme_destruct(ctx->xnvme);
 	ctx->cb_fn(ctx->cb_arg, bdeverrno);
 	free(ctx);
 }
@@ -400,10 +401,10 @@ delete_xnvme_bdev(struct spdk_bdev *bdev, spdk_delete_xnvme_complete cb_fn, void
 		return;
 	}
 
+	ctx->xnvme = xnvme;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 	spdk_bdev_unregister(bdev, xnvme_bdev_unregister_cb, ctx);
-	xnvme_dev_close(xnvme->dev);
 }
 
 static int
