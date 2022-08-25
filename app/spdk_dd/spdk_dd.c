@@ -145,6 +145,19 @@ static bool g_interrupt;
 static void dd_target_populate_buffer(struct dd_io *io);
 
 static void
+dd_cleanup_bdev(struct dd_target io)
+{
+	/* This can be only on the error path.
+	 * To prevent the SEGV, need add checks here.
+	 */
+	if (io.u.bdev.ch) {
+		spdk_put_io_channel(io.u.bdev.ch);
+	}
+
+	spdk_bdev_close(io.u.bdev.desc);
+}
+
+static void
 dd_exit(int rc)
 {
 	if (g_job.input.type == DD_TARGET_TYPE_FILE) {
@@ -157,8 +170,7 @@ dd_exit(int rc)
 			close(g_job.input.u.aio.fd);
 		}
 	} else if (g_job.input.type == DD_TARGET_TYPE_BDEV && g_job.input.open) {
-		spdk_put_io_channel(g_job.input.u.bdev.ch);
-		spdk_bdev_close(g_job.input.u.bdev.desc);
+		dd_cleanup_bdev(g_job.input);
 	}
 
 	if (g_job.output.type == DD_TARGET_TYPE_FILE) {
@@ -171,8 +183,7 @@ dd_exit(int rc)
 			close(g_job.output.u.aio.fd);
 		}
 	} else if (g_job.output.type == DD_TARGET_TYPE_BDEV && g_job.output.open) {
-		spdk_put_io_channel(g_job.output.u.bdev.ch);
-		spdk_bdev_close(g_job.output.u.bdev.desc);
+		dd_cleanup_bdev(g_job.output);
 	}
 
 	if (g_job.input.type == DD_TARGET_TYPE_FILE || g_job.output.type == DD_TARGET_TYPE_FILE) {
