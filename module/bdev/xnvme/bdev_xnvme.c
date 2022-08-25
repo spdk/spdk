@@ -85,13 +85,12 @@ static int
 bdev_xnvme_destruct(void *ctx)
 {
 	struct bdev_xnvme *xnvme = ctx;
-	int rc = 0;
 
 	TAILQ_REMOVE(&g_xnvme_bdev_head, xnvme, link);
 	spdk_io_device_unregister(xnvme, NULL);
 	bdev_xnvme_free(xnvme);
 
-	return rc;
+	return 0;
 }
 
 static void
