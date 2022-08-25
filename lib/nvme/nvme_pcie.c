@@ -907,6 +907,8 @@ static struct spdk_nvme_ctrlr *
 	pctrlr->ctrlr.trid = *trid;
 	pctrlr->ctrlr.opts.admin_queue_size = spdk_max(pctrlr->ctrlr.opts.admin_queue_size,
 					      NVME_PCIE_MIN_ADMIN_QUEUE_SIZE);
+	pci_id = spdk_pci_device_get_id(pci_dev);
+	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (rc != 0) {
@@ -937,9 +939,6 @@ static struct spdk_nvme_ctrlr *
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
-
-	pci_id = spdk_pci_device_get_id(pci_dev);
-	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
 
 	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr, pctrlr->ctrlr.opts.admin_queue_size);
 	if (rc != 0) {

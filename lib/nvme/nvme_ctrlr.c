@@ -4065,6 +4065,15 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->opts.admin_queue_size = SPDK_NVME_ADMIN_QUEUE_MAX_ENTRIES;
 	}
 
+	if (ctrlr->quirks & NVME_QUIRK_MINIMUM_ADMIN_QUEUE_SIZE &&
+	    (ctrlr->opts.admin_queue_size % SPDK_NVME_ADMIN_QUEUE_QUIRK_ENTRIES_MULTIPLE) != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr,
+				  "admin_queue_size %u is invalid for this NVMe device, adjust to next multiple\n",
+				  ctrlr->opts.admin_queue_size);
+		ctrlr->opts.admin_queue_size = SPDK_ALIGN_CEIL(ctrlr->opts.admin_queue_size,
+					       SPDK_NVME_ADMIN_QUEUE_QUIRK_ENTRIES_MULTIPLE);
+	}
+
 	if (ctrlr->opts.admin_queue_size < SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES) {
 		NVME_CTRLR_ERRLOG(ctrlr,
 				  "admin_queue_size %u is less than minimum defined by NVMe spec, use min value\n",

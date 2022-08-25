@@ -141,6 +141,12 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_QUIRK_NOT_USE_SGL 0x10000
 
+/*
+ * Some SSDs require the admin submission queue size to equate to an even
+ * 4KiB multiple.
+ */
+#define NVME_QUIRK_MINIMUM_ADMIN_QUEUE_SIZE 0x20000
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MAX_ADMIN_TIMEOUT_IN_SECS	(30)
