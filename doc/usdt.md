@@ -1,41 +1,10 @@
 # Userspace DTrace (USDT) {#usdt}
 
-## Package Dependencies
-
-These dependencies are needed for building bpftrace and
-the sys/sdt.h header file that SPDK libraries will include
-for DTRACE_PROBE macro definitions.
-
-Fedora:
-libbpf
-gtest-devel
-gmock-devel
-bcc-devel
-systemtap-sdt-devel
-llvm-devel
-bison
-flex
-
-Ubuntu:
-systemtap-sdt-dev
-libbpfcc-dev
-libclang-7-dev
-bison
-flex
-
 ## Building bpftrace
 
 We have found issues with the packaged bpftrace on both Ubuntu 20.04
 and Fedora 33.  So bpftrace should be built and installed from source.
-
-```bash
-git clone https://github.com/iovisor/bpftrace.git
-mkdir bpftrace/build
-cd bpftrace/build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make
-sudo make install
-```
+To build and install bpftrace go to [building bpftraces](https://github.com/iovisor/bpftrace/blob/master/INSTALL.md#building-bpftrace)
 
 ## bpftrace.sh
 
