@@ -213,9 +213,6 @@ leak:libtcmalloc_minimal.so
 
 # Suppress leaks in libiscsi
 leak:libiscsi.so
-
-# Supress leaks in xnvme
-leak:xnvme_dev_alloc
 EOL
 
 # Suppress leaks in libfuse3
