@@ -5915,6 +5915,121 @@ test_disable_auto_failback(void)
 	g_opts.disable_auto_failback = false;
 }
 
+static void
+ut_set_multipath_policy_done(void *cb_arg, int rc)
+{
+	int *done = cb_arg;
+
+	SPDK_CU_ASSERT_FATAL(done != NULL);
+	*done = rc;
+}
+
+static void
+test_set_multipath_policy(void)
+{
+	struct nvme_path_id path1 = {}, path2 = {};
+	struct nvme_ctrlr_opts opts = {};
+	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	struct nvme_bdev *bdev;
+	struct spdk_io_channel *ch;
+	struct nvme_bdev_channel *nbdev_ch;
+	struct spdk_uuid uuid1 = { .u.raw = { 0x1 } };
+	int done;
+	int rc;
+
+	memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+
+	g_opts.disable_auto_failback = true;
+
+	opts.ctrlr_loss_timeout_sec = -1;
+	opts.reconnect_delay_sec = 1;
+
+	set_thread(0);
+
+	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr1 != NULL);
+
+	ctrlr1->ns[0].uuid = &uuid1;
+
+	rc = bdev_nvme_create(&path1.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, &opts, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	ctrlr2 = ut_attach_ctrlr(&path2.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr2 != NULL);
+
+	ctrlr2->ns[0].uuid = &uuid1;
+
+	rc = bdev_nvme_create(&path2.trid, "nvme0", attached_names, STRING_SIZE,
+			      attach_ctrlr_done, NULL, NULL, &opts, true);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(1000);
+	poll_threads();
+	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+	poll_threads();
+
+	nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+
+	bdev = nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1);
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	/* If multipath policy is updated before getting any I/O channel,
+	 * an new I/O channel should have the update.
+	 */
+	done = -1;
+	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
+				       ut_set_multipath_policy_done, &done);
+	poll_threads();
+	CU_ASSERT(done == 0);
+
+	CU_ASSERT(bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
+
+	ch = spdk_get_io_channel(bdev);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	nbdev_ch = spdk_io_channel_get_ctx(ch);
+
+	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
+
+	/* If multipath policy is updated while a I/O channel is active,
+	 * the update should be applied to the I/O channel immediately.
+	 */
+	done = -1;
+	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE,
+				       ut_set_multipath_policy_done, &done);
+	poll_threads();
+	CU_ASSERT(done == 0);
+
+	CU_ASSERT(bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE);
+	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE);
+
+	spdk_put_io_channel(ch);
+
+	poll_threads();
+
+	rc = bdev_nvme_delete("nvme0", &g_any_path);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	spdk_delay_us(1000);
+	poll_threads();
+
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+}
+
 int
 main(int argc, const char **argv)
 {
@@ -5964,6 +6079,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_set_preferred_path);
 	CU_ADD_TEST(suite, test_find_next_io_path);
 	CU_ADD_TEST(suite, test_disable_auto_failback);
+	CU_ADD_TEST(suite, test_set_multipath_policy);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 

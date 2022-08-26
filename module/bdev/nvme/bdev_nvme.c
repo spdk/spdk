@@ -645,6 +645,9 @@ bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&nbdev_ch->retry_io_list);
 
 	pthread_mutex_lock(&nbdev->mutex);
+
+	nbdev_ch->mp_policy = nbdev->mp_policy;
+
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
 		rc = _bdev_nvme_add_io_path(nbdev_ch, nvme_ns);
 		if (rc != 0) {
