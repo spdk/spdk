@@ -18,6 +18,7 @@ struct dev {
 	bool						ns_test_active;
 	struct spdk_nvme_health_information_page	*health_page;
 	uint32_t					orig_temp_threshold;
+	bool						reset_temp_active;
 	char						name[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 };
 
@@ -211,6 +212,11 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
+	/* If we are already resetting the temp, no need to print more AENs */
+	if (dev->reset_temp_active) {
+		return;
+	}
+
 	AER_PRINTF("%s: aer_cb for log page %d, aen_event_type: 0x%02x, aen_event_info: 0x%02x\n",
 		   dev->name, log_page_id, aen_event_type, aen_event_info);
 	/* Temp Test: Verify proper EventType, Event Info and Log Page.
@@ -225,7 +231,10 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		/* Set the temperature threshold back to the original value to stop triggering  */
 		if (g_parent_process) {
 			AER_PRINTF("aer_cb - Resetting Temp Threshold for device: %s\n", dev->name);
-			set_temp_threshold(dev, dev->orig_temp_threshold);
+			if (set_temp_threshold(dev, dev->orig_temp_threshold)) {
+				g_failed = 1;
+			}
+			dev->reset_temp_active = true;
 		}
 		get_health_log_page(dev);
 	} else if (log_page_id == SPDK_NVME_LOG_CHANGED_NS_LIST) {
@@ -413,6 +422,7 @@ spdk_aer_temperature_test(void)
 	foreach_dev(dev) {
 		/* Get the original temperature threshold */
 		get_temp_threshold(dev);
+		dev->reset_temp_active = false;
 	}
 
 	while (!g_failed && g_temperature_done < g_num_devs) {
@@ -468,7 +478,9 @@ spdk_aer_temperature_test(void)
 	/* Waiting for AEN to be occur here. Each device will increment g_aer_done on an AEN */
 	while (!g_failed && (g_aer_done < g_num_devs)) {
 		foreach_dev(dev) {
-			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+			if (spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr) < 0) {
+				g_failed = 1;
+			}
 		}
 	}
 
