@@ -495,6 +495,8 @@ bs_page_to_cluster(struct spdk_blob_store *bs, uint64_t page)
 static inline uint64_t
 bs_cluster_to_lba(struct spdk_blob_store *bs, uint32_t cluster)
 {
+	assert(bs->cluster_sz / bs->dev->blocklen > 0);
+
 	return (uint64_t)cluster * (bs->cluster_sz / bs->dev->blocklen);
 }
 
