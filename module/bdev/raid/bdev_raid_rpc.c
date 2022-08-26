@@ -209,7 +209,7 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_raid_create	req = {};
-	struct raid_bdev_config		*raid_cfg;
+	struct raid_bdev		*raid_bdev;
 	int				rc;
 	size_t				i;
 
@@ -226,43 +226,29 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = raid_bdev_config_add(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,
-				  req.level,
-				  &raid_cfg);
+	rc = raid_bdev_create(req.name, req.strip_size_kb, req.base_bdevs.num_base_bdevs,
+			      req.level, &raid_bdev);
 	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc,
-						     "Failed to add RAID bdev config %s: %s",
-						     req.name, spdk_strerror(-rc));
-		goto cleanup;
-	}
-
-	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
-		rc = raid_bdev_config_add_base_bdev(raid_cfg, req.base_bdevs.base_bdevs[i], i);
-		if (rc != 0) {
-			raid_bdev_config_cleanup(raid_cfg);
-			spdk_jsonrpc_send_error_response_fmt(request, rc,
-							     "Failed to add base bdev %s to RAID bdev config %s: %s",
-							     req.base_bdevs.base_bdevs[i], req.name,
-							     spdk_strerror(-rc));
-			goto cleanup;
-		}
-	}
-
-	rc = raid_bdev_create(raid_cfg);
-	if (rc != 0) {
-		raid_bdev_config_cleanup(raid_cfg);
 		spdk_jsonrpc_send_error_response_fmt(request, rc,
 						     "Failed to create RAID bdev %s: %s",
 						     req.name, spdk_strerror(-rc));
 		goto cleanup;
 	}
 
-	rc = raid_bdev_add_base_devices(raid_cfg);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response_fmt(request, rc,
-						     "Failed to add any base bdev to RAID bdev %s: %s",
-						     req.name, spdk_strerror(-rc));
-		goto cleanup;
+	for (i = 0; i < req.base_bdevs.num_base_bdevs; i++) {
+		const char *base_bdev_name = req.base_bdevs.base_bdevs[i];
+
+		rc = raid_bdev_add_base_device(raid_bdev, base_bdev_name, i);
+		if (rc == -ENODEV) {
+			SPDK_DEBUGLOG(bdev_raid, "base bdev %s doesn't exist now\n", base_bdev_name);
+		} else if (rc != 0) {
+			raid_bdev_delete(raid_bdev, NULL, NULL);
+			spdk_jsonrpc_send_error_response_fmt(request, rc,
+							     "Failed to add base bdev %s to RAID bdev %s: %s",
+							     base_bdev_name, req.name,
+							     spdk_strerror(-rc));
+			goto cleanup;
+		}
 	}
 
 	spdk_jsonrpc_send_bool_response(request, true);
@@ -303,7 +289,6 @@ static const struct spdk_json_object_decoder rpc_bdev_raid_delete_decoders[] = {
 
 struct rpc_bdev_raid_delete_ctx {
 	struct rpc_bdev_raid_delete req;
-	struct raid_bdev_config *raid_cfg;
 	struct spdk_jsonrpc_request *request;
 };
 
@@ -319,7 +304,6 @@ static void
 bdev_raid_delete_done(void *cb_arg, int rc)
 {
 	struct rpc_bdev_raid_delete_ctx *ctx = cb_arg;
-	struct raid_bdev_config *raid_cfg;
 	struct spdk_jsonrpc_request *request = ctx->request;
 
 	if (rc != 0) {
@@ -329,11 +313,6 @@ bdev_raid_delete_done(void *cb_arg, int rc)
 						 spdk_strerror(-rc));
 		goto exit;
 	}
-
-	raid_cfg = ctx->raid_cfg;
-	assert(raid_cfg->raid_bdev == NULL);
-
-	raid_bdev_config_cleanup(raid_cfg);
 
 	spdk_jsonrpc_send_bool_response(request, true);
 exit:
@@ -357,6 +336,7 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_bdev_raid_delete_ctx *ctx;
+	struct raid_bdev *raid_bdev;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -372,18 +352,17 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	ctx->raid_cfg = raid_bdev_config_find_by_name(ctx->req.name);
-	if (ctx->raid_cfg == NULL) {
+	raid_bdev = raid_bdev_find_by_name(ctx->req.name);
+	if (raid_bdev == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, ENODEV,
-						     "raid bdev %s is not found in config",
+						     "raid bdev %s not found",
 						     ctx->req.name);
 		goto cleanup;
 	}
 
 	ctx->request = request;
 
-	/* Remove all the base bdevs from this raid bdev before deleting the raid bdev */
-	raid_bdev_remove_base_devices(ctx->raid_cfg, bdev_raid_delete_done, ctx);
+	raid_bdev_delete(raid_bdev, bdev_raid_delete_done, ctx);
 
 	return;
 

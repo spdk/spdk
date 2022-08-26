@@ -15,11 +15,6 @@
 
 static bool g_shutdown_started = false;
 
-/* raid bdev config as read from config file */
-struct raid_config	g_raid_config = {
-	.raid_bdev_config_head = TAILQ_HEAD_INITIALIZER(g_raid_config.raid_bdev_config_head),
-};
-
 /* List of all raid bdevs */
 struct raid_all_tailq g_raid_bdev_list = TAILQ_HEAD_INITIALIZER(g_raid_bdev_list);
 
@@ -56,8 +51,6 @@ static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);
 static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev,
 				      raid_bdev_destruct_cb cb_fn, void *cb_arg);
-static void	raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev,
-		void *event_ctx);
 
 /*
  * brief:
@@ -172,15 +165,20 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
 static void
 raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 {
-	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_cleanup, %p name %s, state %u, config %p\n",
-		      raid_bdev,
-		      raid_bdev->bdev.name, raid_bdev->state, raid_bdev->config);
+	struct raid_base_bdev_info *base_info;
+
+	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_cleanup, %p name %s, state %u\n",
+		      raid_bdev, raid_bdev->bdev.name, raid_bdev->state);
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
+
+	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		assert(base_info->bdev == NULL);
+		assert(base_info->desc == NULL);
+		free(base_info->name);
+	}
+
 	TAILQ_REMOVE(&g_raid_bdev_list, raid_bdev, global_link);
 	free(raid_bdev->base_bdev_info);
-	if (raid_bdev->config) {
-		raid_bdev->config->raid_bdev = NULL;
-	}
 }
 
 static void
@@ -227,6 +225,14 @@ static void
 raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev,
 				  struct raid_base_bdev_info *base_info)
 {
+	free(base_info->name);
+	base_info->name = NULL;
+
+	if (base_info->bdev == NULL) {
+		return;
+	}
+
+	assert(base_info->desc);
 	spdk_bdev_module_release_bdev(base_info->bdev);
 	if (base_info->thread && base_info->thread != spdk_get_thread()) {
 		spdk_thread_send_msg(base_info->thread, _raid_bdev_free_base_bdev_resource, base_info->desc);
@@ -286,9 +292,7 @@ raid_bdev_destruct(void *ctxt)
 		 * Close all base bdev descriptors for which call has come from below
 		 * layers.  Also close the descriptors if we have started shutdown.
 		 */
-		if (g_shutdown_started ||
-		    ((base_info->remove_scheduled == true) &&
-		     (base_info->bdev != NULL))) {
+		if (g_shutdown_started || base_info->remove_scheduled == true) {
 			raid_bdev_free_base_bdev_resource(raid_bdev, base_info);
 		}
 	}
@@ -725,157 +729,18 @@ static const struct spdk_bdev_fn_table g_raid_bdev_fn_table = {
 	.get_memory_domains	= raid_bdev_get_memory_domains,
 };
 
-/*
- * brief:
- * raid_bdev_config_cleanup function is used to free memory for one raid_bdev in configuration
- * params:
- * raid_cfg - pointer to raid_bdev_config structure
- * returns:
- * none
- */
-void
-raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
+struct raid_bdev *
+raid_bdev_find_by_name(const char *name)
 {
-	uint8_t i;
+	struct raid_bdev *raid_bdev;
 
-	TAILQ_REMOVE(&g_raid_config.raid_bdev_config_head, raid_cfg, link);
-	g_raid_config.total_raid_bdev--;
-
-	if (raid_cfg->base_bdev) {
-		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-			free(raid_cfg->base_bdev[i].name);
-		}
-		free(raid_cfg->base_bdev);
-	}
-	free(raid_cfg->name);
-	free(raid_cfg);
-}
-
-/* brief
- * raid_bdev_config_find_by_name is a helper function to find raid bdev config
- * by name as key.
- *
- * params:
- * raid_name - name for raid bdev.
- */
-struct raid_bdev_config *
-raid_bdev_config_find_by_name(const char *raid_name)
-{
-	struct raid_bdev_config *raid_cfg;
-
-	TAILQ_FOREACH(raid_cfg, &g_raid_config.raid_bdev_config_head, link) {
-		if (!strcmp(raid_cfg->name, raid_name)) {
-			return raid_cfg;
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		if (strcmp(raid_bdev->bdev.name, name) == 0) {
+			return raid_bdev;
 		}
 	}
 
-	return raid_cfg;
-}
-
-/*
- * brief
- * raid_bdev_config_add function adds config for newly created raid bdev.
- *
- * params:
- * raid_name - name for raid bdev.
- * strip_size - strip size in KB
- * num_base_bdevs - number of base bdevs.
- * level - raid level.
- * _raid_cfg - Pointer to newly added configuration
- */
-int
-raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_base_bdevs,
-		     enum raid_level level, struct raid_bdev_config **_raid_cfg)
-{
-	struct raid_bdev_config *raid_cfg;
-
-	raid_cfg = raid_bdev_config_find_by_name(raid_name);
-	if (raid_cfg != NULL) {
-		SPDK_ERRLOG("Duplicate raid bdev name found in config file %s\n",
-			    raid_name);
-		return -EEXIST;
-	}
-
-	if (spdk_u32_is_pow2(strip_size) == false) {
-		SPDK_ERRLOG("Invalid strip size %" PRIu32 "\n", strip_size);
-		return -EINVAL;
-	}
-
-	if (num_base_bdevs == 0) {
-		SPDK_ERRLOG("Invalid base device count %u\n", num_base_bdevs);
-		return -EINVAL;
-	}
-
-	raid_cfg = calloc(1, sizeof(*raid_cfg));
-	if (raid_cfg == NULL) {
-		SPDK_ERRLOG("unable to allocate memory\n");
-		return -ENOMEM;
-	}
-
-	raid_cfg->name = strdup(raid_name);
-	if (!raid_cfg->name) {
-		free(raid_cfg);
-		SPDK_ERRLOG("unable to allocate memory\n");
-		return -ENOMEM;
-	}
-	raid_cfg->strip_size = strip_size;
-	raid_cfg->num_base_bdevs = num_base_bdevs;
-	raid_cfg->level = level;
-
-	raid_cfg->base_bdev = calloc(num_base_bdevs, sizeof(*raid_cfg->base_bdev));
-	if (raid_cfg->base_bdev == NULL) {
-		free(raid_cfg->name);
-		free(raid_cfg);
-		SPDK_ERRLOG("unable to allocate memory\n");
-		return -ENOMEM;
-	}
-
-	TAILQ_INSERT_TAIL(&g_raid_config.raid_bdev_config_head, raid_cfg, link);
-	g_raid_config.total_raid_bdev++;
-
-	*_raid_cfg = raid_cfg;
-	return 0;
-}
-
-/*
- * brief:
- * raid_bdev_config_add_base_bdev function add base bdev to raid bdev config.
- *
- * params:
- * raid_cfg - pointer to raid bdev configuration
- * base_bdev_name - name of base bdev
- * slot - Position to add base bdev
- */
-int
-raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg, const char *base_bdev_name,
-			       uint8_t slot)
-{
-	uint8_t i;
-	struct raid_bdev_config *tmp;
-
-	if (slot >= raid_cfg->num_base_bdevs) {
-		return -EINVAL;
-	}
-
-	TAILQ_FOREACH(tmp, &g_raid_config.raid_bdev_config_head, link) {
-		for (i = 0; i < tmp->num_base_bdevs; i++) {
-			if (tmp->base_bdev[i].name != NULL) {
-				if (!strcmp(tmp->base_bdev[i].name, base_bdev_name)) {
-					SPDK_ERRLOG("duplicate base bdev name %s mentioned\n",
-						    base_bdev_name);
-					return -EEXIST;
-				}
-			}
-		}
-	}
-
-	raid_cfg->base_bdev[slot].name = strdup(base_bdev_name);
-	if (raid_cfg->base_bdev[slot].name == NULL) {
-		SPDK_ERRLOG("unable to allocate memory\n");
-		return -ENOMEM;
-	}
-
-	return 0;
+	return NULL;
 }
 
 static struct {
@@ -950,11 +815,12 @@ raid_bdev_fini_start(void)
 static void
 raid_bdev_exit(void)
 {
-	struct raid_bdev_config *raid_cfg, *tmp;
+	struct raid_bdev *raid_bdev, *tmp;
 
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_exit\n");
-	TAILQ_FOREACH_SAFE(raid_cfg, &g_raid_config.raid_bdev_config_head, link, tmp) {
-		raid_bdev_config_cleanup(raid_cfg);
+
+	TAILQ_FOREACH_SAFE(raid_bdev, &g_raid_bdev_list, global_link, tmp) {
+		raid_bdev_cleanup_and_free(raid_bdev);
 	}
 }
 
@@ -973,45 +839,6 @@ raid_bdev_get_ctx_size(void)
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_get_ctx_size\n");
 	return sizeof(struct raid_bdev_io);
 }
-
-/*
- * brief:
- * raid_bdev_can_claim_bdev is the function to check if this base_bdev can be
- * claimed by raid bdev or not.
- * params:
- * bdev_name - represents base bdev name
- * _raid_cfg - pointer to raid bdev config parsed from config file
- * base_bdev_slot - if bdev can be claimed, it represents the base_bdev correct
- * slot. This field is only valid if return value of this function is true
- * returns:
- * true - if bdev can be claimed
- * false - if bdev can't be claimed
- */
-static bool
-raid_bdev_can_claim_bdev(const char *bdev_name, struct raid_bdev_config **_raid_cfg,
-			 uint8_t *base_bdev_slot)
-{
-	struct raid_bdev_config *raid_cfg;
-	uint8_t i;
-
-	TAILQ_FOREACH(raid_cfg, &g_raid_config.raid_bdev_config_head, link) {
-		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-			/*
-			 * Check if the base bdev name is part of raid bdev configuration.
-			 * If match is found then return true and the slot information where
-			 * this base bdev should be inserted in raid bdev
-			 */
-			if (!strcmp(bdev_name, raid_cfg->base_bdev[i].name)) {
-				*_raid_cfg = raid_cfg;
-				*base_bdev_slot = i;
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
 
 static struct spdk_bdev_module g_raid_if = {
 	.name = "raid",
@@ -1044,29 +871,44 @@ raid_bdev_init(void)
  * brief:
  * raid_bdev_create allocates raid bdev based on passed configuration
  * params:
- * raid_cfg - configuration of raid bdev
+ * name - name for raid bdev
+ * strip_size - strip size in KB
+ * num_base_bdevs - number of base bdevs
+ * level - raid level
+ * raid_bdev_out - the created raid bdev
  * returns:
  * 0 - success
  * non zero - failure
  */
 int
-raid_bdev_create(struct raid_bdev_config *raid_cfg)
+raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
+		 enum raid_level level, struct raid_bdev **raid_bdev_out)
 {
 	struct raid_bdev *raid_bdev;
 	struct spdk_bdev *raid_bdev_gen;
 	struct raid_bdev_module *module;
 
-	module = raid_bdev_module_find(raid_cfg->level);
+	if (raid_bdev_find_by_name(name) != NULL) {
+		SPDK_ERRLOG("Duplicate raid bdev name found: %s\n", name);
+		return -EEXIST;
+	}
+
+	if (spdk_u32_is_pow2(strip_size) == false) {
+		SPDK_ERRLOG("Invalid strip size %" PRIu32 "\n", strip_size);
+		return -EINVAL;
+	}
+
+	module = raid_bdev_module_find(level);
 	if (module == NULL) {
-		SPDK_ERRLOG("Unsupported raid level '%d'\n", raid_cfg->level);
+		SPDK_ERRLOG("Unsupported raid level '%d'\n", level);
 		return -EINVAL;
 	}
 
 	assert(module->base_bdevs_min != 0);
-	if (raid_cfg->num_base_bdevs < module->base_bdevs_min) {
+	if (num_base_bdevs < module->base_bdevs_min) {
 		SPDK_ERRLOG("At least %u base devices required for %s\n",
 			    module->base_bdevs_min,
-			    raid_bdev_level_to_str(raid_cfg->level));
+			    raid_bdev_level_to_str(level));
 		return -EINVAL;
 	}
 
@@ -1077,7 +919,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	}
 
 	raid_bdev->module = module;
-	raid_bdev->num_base_bdevs = raid_cfg->num_base_bdevs;
+	raid_bdev->num_base_bdevs = num_base_bdevs;
 	raid_bdev->base_bdev_info = calloc(raid_bdev->num_base_bdevs,
 					   sizeof(struct raid_base_bdev_info));
 	if (!raid_bdev->base_bdev_info) {
@@ -1090,14 +932,13 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 	 * internally and set later.
 	 */
 	raid_bdev->strip_size = 0;
-	raid_bdev->strip_size_kb = raid_cfg->strip_size;
+	raid_bdev->strip_size_kb = strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
-	raid_bdev->config = raid_cfg;
-	raid_bdev->level = raid_cfg->level;
+	raid_bdev->level = level;
 
 	raid_bdev_gen = &raid_bdev->bdev;
 
-	raid_bdev_gen->name = strdup(raid_cfg->name);
+	raid_bdev_gen->name = strdup(name);
 	if (!raid_bdev_gen->name) {
 		SPDK_ERRLOG("Unable to allocate name for raid\n");
 		free(raid_bdev->base_bdev_info);
@@ -1113,57 +954,7 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 
 	TAILQ_INSERT_TAIL(&g_raid_bdev_list, raid_bdev, global_link);
 
-	raid_cfg->raid_bdev = raid_bdev;
-
-	return 0;
-}
-
-/*
- * brief
- * raid_bdev_alloc_base_bdev_resource allocates resource of base bdev.
- * params:
- * raid_bdev - pointer to raid bdev
- * bdev_name - base bdev name
- * base_bdev_slot - position to add base bdev
- * returns:
- * 0 - success
- * non zero - failure
- */
-static int
-raid_bdev_alloc_base_bdev_resource(struct raid_bdev *raid_bdev, const char *bdev_name,
-				   uint8_t base_bdev_slot)
-{
-	struct spdk_bdev_desc *desc;
-	struct spdk_bdev *bdev;
-	int rc;
-
-	rc = spdk_bdev_open_ext(bdev_name, true, raid_bdev_event_base_bdev, NULL, &desc);
-	if (rc != 0) {
-		if (rc != -ENODEV) {
-			SPDK_ERRLOG("Unable to create desc on bdev '%s'\n", bdev_name);
-		}
-		return rc;
-	}
-
-	bdev = spdk_bdev_desc_get_bdev(desc);
-
-	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &g_raid_if);
-	if (rc != 0) {
-		SPDK_ERRLOG("Unable to claim this bdev as it is already claimed\n");
-		spdk_bdev_close(desc);
-		return rc;
-	}
-
-	SPDK_DEBUGLOG(bdev_raid, "bdev %s is claimed\n", bdev_name);
-
-	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
-	assert(base_bdev_slot < raid_bdev->num_base_bdevs);
-
-	raid_bdev->base_bdev_info[base_bdev_slot].thread = spdk_get_thread();
-	raid_bdev->base_bdev_info[base_bdev_slot].bdev = bdev;
-	raid_bdev->base_bdev_info[base_bdev_slot].desc = desc;
-	raid_bdev->num_base_bdevs_discovered++;
-	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
+	*raid_bdev_out = raid_bdev;
 
 	return 0;
 }
@@ -1191,6 +982,7 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	assert(raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs);
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+		assert(base_info->bdev != NULL);
 		/* Check blocklen for all base bdevs that it should be same */
 		if (blocklen == 0) {
 			blocklen = base_info->bdev->blocklen;
@@ -1335,7 +1127,7 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 	base_info->remove_scheduled = true;
 
 	if (raid_bdev->destruct_called == true ||
-	    raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+	    raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 		/*
 		 * As raid bdev is not registered yet or already unregistered,
 		 * so cleanup should be done here itself.
@@ -1378,34 +1170,22 @@ raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev
 
 /*
  * brief:
- * Remove base bdevs from the raid bdev one by one.  Skip any base bdev which
- *  doesn't exist.
+ * Deletes the specified raid bdev
  * params:
- * raid_cfg - pointer to raid bdev config.
+ * raid_bdev - pointer to raid bdev
  * cb_fn - callback function
- * cb_ctx - argument to callback function
+ * cb_arg - argument to callback function
  */
 void
-raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
-			      raid_bdev_destruct_cb cb_fn, void *cb_arg)
+raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void *cb_arg)
 {
-	struct raid_bdev		*raid_bdev;
-	struct raid_base_bdev_info	*base_info;
+	struct raid_base_bdev_info *base_info;
 
-	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_remove_base_devices\n");
-
-	raid_bdev = raid_cfg->raid_bdev;
-	if (raid_bdev == NULL) {
-		SPDK_DEBUGLOG(bdev_raid, "raid bdev %s doesn't exist now\n", raid_cfg->name);
-		if (cb_fn) {
-			cb_fn(cb_arg, 0);
-		}
-		return;
-	}
+	SPDK_DEBUGLOG(bdev_raid, "delete raid bdev: %s\n", raid_bdev->bdev.name);
 
 	if (raid_bdev->destroy_started) {
 		SPDK_DEBUGLOG(bdev_raid, "destroying raid bdev %s is already started\n",
-			      raid_cfg->name);
+			      raid_bdev->bdev.name);
 		if (cb_fn) {
 			cb_fn(cb_arg, -EALREADY);
 		}
@@ -1415,15 +1195,10 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
 	raid_bdev->destroy_started = true;
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		if (base_info->bdev == NULL) {
-			continue;
-		}
-
-		assert(base_info->desc);
 		base_info->remove_scheduled = true;
 
 		if (raid_bdev->destruct_called == true ||
-		    raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+		    raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 			/*
 			 * As raid bdev is not registered yet or already unregistered,
 			 * so cleanup should be done here itself.
@@ -1443,40 +1218,41 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
 	}
 }
 
-/*
- * brief:
- * raid_bdev_add_base_device function is the actual function which either adds
- * the nvme base device to existing raid bdev or create a new raid bdev. It also claims
- * the base device and keep the open descriptor.
- * params:
- * raid_cfg - pointer to raid bdev config
- * bdev - pointer to base bdev
- * base_bdev_slot - position to add base bdev
- * returns:
- * 0 - success
- * non zero - failure
- */
 static int
-raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, const char *bdev_name,
-			  uint8_t base_bdev_slot)
+raid_bdev_configure_base_bdev(struct raid_bdev *raid_bdev, struct raid_base_bdev_info *base_info)
 {
-	struct raid_bdev	*raid_bdev;
-	int			rc;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	int rc;
 
-	raid_bdev = raid_cfg->raid_bdev;
-	if (!raid_bdev) {
-		SPDK_ERRLOG("Raid bdev '%s' is not created yet\n", raid_cfg->name);
-		return -ENODEV;
-	}
+	assert(base_info->name != NULL);
+	assert(base_info->bdev == NULL);
 
-	rc = raid_bdev_alloc_base_bdev_resource(raid_bdev, bdev_name, base_bdev_slot);
+	rc = spdk_bdev_open_ext(base_info->name, true, raid_bdev_event_base_bdev, NULL, &desc);
 	if (rc != 0) {
 		if (rc != -ENODEV) {
-			SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", bdev_name);
+			SPDK_ERRLOG("Unable to create desc on bdev '%s'\n", base_info->name);
 		}
 		return rc;
 	}
 
+	bdev = spdk_bdev_desc_get_bdev(desc);
+
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, &g_raid_if);
+	if (rc != 0) {
+		SPDK_ERRLOG("Unable to claim this bdev as it is already claimed\n");
+		spdk_bdev_close(desc);
+		return rc;
+	}
+
+	SPDK_DEBUGLOG(bdev_raid, "bdev %s is claimed\n", bdev->name);
+
+	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
+
+	base_info->thread = spdk_get_thread();
+	base_info->bdev = bdev;
+	base_info->desc = desc;
+	raid_bdev->num_base_bdevs_discovered++;
 	assert(raid_bdev->num_base_bdevs_discovered <= raid_bdev->num_base_bdevs);
 
 	if (raid_bdev->num_base_bdevs_discovered == raid_bdev->num_base_bdevs) {
@@ -1492,40 +1268,49 @@ raid_bdev_add_base_device(struct raid_bdev_config *raid_cfg, const char *bdev_na
 
 /*
  * brief:
- * Add base bdevs to the raid bdev one by one.  Skip any base bdev which doesn't
- *  exist or fails to add. If all base bdevs are successfully added, the raid bdev
- *  moves to the configured state and becomes available. Otherwise, the raid bdev
- *  stays at the configuring state with added base bdevs.
+ * raid_bdev_add_base_device function is the actual function which either adds
+ * the nvme base device to existing raid bdev or create a new raid bdev. It also claims
+ * the base device and keep the open descriptor.
  * params:
- * raid_cfg - pointer to raid bdev config
+ * raid_bdev - pointer to raid bdev
+ * name - name of the base bdev
+ * slot - position to add base bdev
  * returns:
- * 0 - The raid bdev moves to the configured state or stays at the configuring
- *     state with added base bdevs due to any nonexistent base bdev.
- * non zero - Failed to add any base bdev and stays at the configuring state with
- *            added base bdevs.
+ * 0 - success
+ * non zero - failure
  */
 int
-raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg)
+raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot)
 {
-	uint8_t	i;
-	int	rc = 0, _rc;
+	struct raid_base_bdev_info *base_info;
+	int rc;
 
-	for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
-		_rc = raid_bdev_add_base_device(raid_cfg, raid_cfg->base_bdev[i].name, i);
-		if (_rc == -ENODEV) {
-			SPDK_DEBUGLOG(bdev_raid, "base bdev %s doesn't exist now\n",
-				      raid_cfg->base_bdev[i].name);
-		} else if (_rc != 0) {
-			SPDK_ERRLOG("Failed to add base bdev %s to RAID bdev %s: %s\n",
-				    raid_cfg->base_bdev[i].name, raid_cfg->name,
-				    spdk_strerror(-_rc));
-			if (rc == 0) {
-				rc = _rc;
-			}
-		}
+	if (slot >= raid_bdev->num_base_bdevs) {
+		return -EINVAL;
 	}
 
-	return rc;
+	base_info = &raid_bdev->base_bdev_info[slot];
+
+	if (base_info->name != NULL) {
+		SPDK_ERRLOG("Slot %u on raid bdev '%s' already assigned to bdev '%s'\n",
+			    slot, raid_bdev->bdev.name, base_info->name);
+		return -EBUSY;
+	}
+
+	base_info->name = strdup(name);
+	if (base_info->name == NULL) {
+		return -ENOMEM;
+	}
+
+	rc = raid_bdev_configure_base_bdev(raid_bdev, base_info);
+	if (rc != 0) {
+		if (rc != -ENODEV) {
+			SPDK_ERRLOG("Failed to allocate resource for bdev '%s'\n", name);
+		}
+		return rc;
+	}
+
+	return 0;
 }
 
 /*
@@ -1541,14 +1326,16 @@ raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg)
 static void
 raid_bdev_examine(struct spdk_bdev *bdev)
 {
-	struct raid_bdev_config	*raid_cfg;
-	uint8_t			base_bdev_slot;
+	struct raid_bdev *raid_bdev;
+	struct raid_base_bdev_info *base_info;
 
-	if (raid_bdev_can_claim_bdev(bdev->name, &raid_cfg, &base_bdev_slot)) {
-		raid_bdev_add_base_device(raid_cfg, bdev->name, base_bdev_slot);
-	} else {
-		SPDK_DEBUGLOG(bdev_raid, "bdev %s can't be claimed\n",
-			      bdev->name);
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
+			if (base_info->bdev == NULL && strcmp(bdev->name, base_info->name) == 0) {
+				raid_bdev_configure_base_bdev(raid_bdev, base_info);
+				break;
+			}
+		}
 	}
 
 	spdk_bdev_module_examine_done(&g_raid_if);

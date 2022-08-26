@@ -45,6 +45,9 @@ enum raid_bdev_state {
  * required per base device for raid bdev will be kept here
  */
 struct raid_base_bdev_info {
+	/* name of the bdev */
+	char			*name;
+
 	/* pointer to base spdk bdev */
 	struct spdk_bdev	*bdev;
 
@@ -97,9 +100,6 @@ struct raid_bdev {
 	/* link of raid bdev to link it to global raid bdev list */
 	TAILQ_ENTRY(raid_bdev)		global_link;
 
-	/* pointer to config file entry */
-	struct raid_bdev_config		*config;
-
 	/* array of base bdev info */
 	struct raid_base_bdev_info	*base_bdev_info;
 
@@ -144,52 +144,6 @@ struct raid_bdev {
 	for (i = r->base_bdev_info; i < r->base_bdev_info + r->num_base_bdevs; i++)
 
 /*
- * raid_base_bdev_config is the per base bdev data structure which contains
- * information w.r.t to per base bdev during parsing config
- */
-struct raid_base_bdev_config {
-	/* base bdev name from config file */
-	char				*name;
-};
-
-/*
- * raid_bdev_config contains the raid bdev config related information after
- * parsing the config file
- */
-struct raid_bdev_config {
-	/* base bdev config per underlying bdev */
-	struct raid_base_bdev_config	*base_bdev;
-
-	/* Points to already created raid bdev  */
-	struct raid_bdev		*raid_bdev;
-
-	char				*name;
-
-	/* strip size of this raid bdev in KB */
-	uint32_t			strip_size;
-
-	/* number of base bdevs */
-	uint8_t				num_base_bdevs;
-
-	/* raid level */
-	enum raid_level			level;
-
-	TAILQ_ENTRY(raid_bdev_config)	link;
-};
-
-/*
- * raid_config is the top level structure representing the raid bdev config as read
- * from config file for all raids
- */
-struct raid_config {
-	/* raid bdev  context from config file */
-	TAILQ_HEAD(, raid_bdev_config) raid_bdev_config_head;
-
-	/* total raid bdev  from config file */
-	uint8_t total_raid_bdev;
-};
-
-/*
  * raid_bdev_io_channel is the context of spdk_io_channel for raid bdev device. It
  * contains the relationship of raid bdev io channel with base bdev io channels.
  */
@@ -208,20 +162,14 @@ struct raid_bdev_io_channel {
 TAILQ_HEAD(raid_all_tailq, raid_bdev);
 
 extern struct raid_all_tailq		g_raid_bdev_list;
-extern struct raid_config		g_raid_config;
 
 typedef void (*raid_bdev_destruct_cb)(void *cb_ctx, int rc);
 
-int raid_bdev_create(struct raid_bdev_config *raid_cfg);
-int raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg);
-void raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
-				   raid_bdev_destruct_cb cb_fn, void *cb_ctx);
-int raid_bdev_config_add(const char *raid_name, uint32_t strip_size, uint8_t num_base_bdevs,
-			 enum raid_level level, struct raid_bdev_config **_raid_cfg);
-int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
-				   const char *base_bdev_name, uint8_t slot);
-void raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg);
-struct raid_bdev_config *raid_bdev_config_find_by_name(const char *raid_name);
+int raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
+		     enum raid_level level, struct raid_bdev **raid_bdev_out);
+void raid_bdev_delete(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn, void *cb_ctx);
+int raid_bdev_add_base_device(struct raid_bdev *raid_bdev, const char *name, uint8_t slot);
+struct raid_bdev *raid_bdev_find_by_name(const char *name);
 enum raid_level raid_bdev_parse_raid_level(const char *str);
 const char *raid_bdev_level_to_str(enum raid_level level);
 

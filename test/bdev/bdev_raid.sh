@@ -180,8 +180,15 @@ function raid_state_function_test() {
 		return 1
 	fi
 
+	# Step5: delete last base bdev from the RAID bdev
+	# Expect state: removed from system
 	$rpc_py bdev_malloc_delete $base_bdev1
-	$rpc_py bdev_raid_delete $raid_bdev_name
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | cut -d ' ' -f 1)
+	if [ -n "$raid_bdev" ]; then
+		echo "$raid_bdev_name is not removed"
+		$rpc_py bdev_raid_delete $raid_bdev_name
+		return 1
+	fi
 
 	killprocess $raid_pid
 
