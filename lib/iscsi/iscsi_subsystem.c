@@ -55,7 +55,13 @@ iscsi_initialize_pdu_pool(void)
 					      sizeof(struct spdk_iscsi_pdu),
 					      256, SPDK_ENV_SOCKET_ID_ANY);
 	if (!iscsi->pdu_pool) {
-		SPDK_ERRLOG("create PDU pool failed\n");
+		if (spdk_mempool_lookup("PDU_Pool") != NULL) {
+			SPDK_ERRLOG("Cannot create PDU pool: already exists\n");
+			SPDK_ERRLOG("Probably running in multiprocess environment, which is "
+				    "unsupported by the iSCSI library\n");
+		} else {
+			SPDK_ERRLOG("create PDU pool failed\n");
+		}
 		return -1;
 	}
 

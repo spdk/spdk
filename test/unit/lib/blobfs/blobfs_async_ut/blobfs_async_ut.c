@@ -23,6 +23,7 @@ int g_fserrno;
 DEFINE_STUB(spdk_memory_domain_memzero, int, (struct spdk_memory_domain *src_domain,
 		void *src_domain_ctx, struct iovec *iov, uint32_t iovcnt, void (*cpl_cb)(void *, int),
 		void *cpl_cb_arg), 0);
+DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 
 static void
 fs_op_complete(void *ctx, int fserrno)

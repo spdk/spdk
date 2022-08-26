@@ -257,8 +257,14 @@ __start_cache_pool_mgmt(void *ctx)
 					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					   SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_cache_pool) {
-		SPDK_ERRLOG("Create mempool failed, you may "
-			    "increase the memory and try again\n");
+		if (spdk_mempool_lookup("spdk_fs_cache") != NULL) {
+			SPDK_ERRLOG("Unable to allocate mempool: already exists\n");
+			SPDK_ERRLOG("Probably running in multiprocess environment, which is "
+				    "unsupported by the blobfs library\n");
+		} else {
+			SPDK_ERRLOG("Create mempool failed, you may "
+				    "increase the memory and try again\n");
+		}
 		assert(false);
 	}
 

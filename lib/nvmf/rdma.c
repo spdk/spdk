@@ -2506,7 +2506,13 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				   SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_wr_pool) {
-		SPDK_ERRLOG("Unable to allocate work request pool for poll group\n");
+		if (spdk_mempool_lookup("spdk_nvmf_rdma_wr_data") != NULL) {
+			SPDK_ERRLOG("Unable to allocate work request pool for poll group: already exists\n");
+			SPDK_ERRLOG("Probably running in multiprocess environment, which is "
+				    "unsupported by the nvmf library\n");
+		} else {
+			SPDK_ERRLOG("Unable to allocate work request pool for poll group\n");
+		}
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}

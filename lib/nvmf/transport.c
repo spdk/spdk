@@ -233,7 +233,13 @@ spdk_nvmf_transport_create(const char *transport_name, struct spdk_nvmf_transpor
 					   SPDK_ENV_SOCKET_ID_ANY);
 
 		if (!transport->data_buf_pool) {
-			SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+			if (spdk_mempool_lookup(spdk_mempool_name) != NULL) {
+				SPDK_ERRLOG("Unable to allocate poll group buffer pull: already exists\n");
+				SPDK_ERRLOG("Probably running in multiprocess environment, which is "
+					    "unsupported by the nvmf library\n");
+			} else {
+				SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+			}
 			ops->destroy(transport, NULL, NULL);
 			return NULL;
 		}

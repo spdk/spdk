@@ -89,6 +89,7 @@ DEFINE_STUB(ut_transport_listen, int, (struct spdk_nvmf_transport *transport,
 				       const struct spdk_nvme_transport_id *trid, struct spdk_nvmf_listen_opts *opts), 0);
 DEFINE_STUB_V(ut_transport_stop_listen, (struct spdk_nvmf_transport *transport,
 		const struct spdk_nvme_transport_id *trid));
+DEFINE_STUB(spdk_mempool_lookup, struct spdk_mempool *, (const char *name), NULL);
 
 /* ibv_reg_mr can be a macro, need to undefine it */
 #ifdef ibv_reg_mr
