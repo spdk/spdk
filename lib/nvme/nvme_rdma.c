@@ -1193,6 +1193,20 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 {
 	int ret;
 
+	if (src_addr) {
+		int reuse = 1;
+
+		ret = rdma_set_option(rqpair->cm_id, RDMA_OPTION_ID, RDMA_OPTION_ID_REUSEADDR,
+				      &reuse, sizeof(reuse));
+		if (ret) {
+			SPDK_NOTICELOG("Can't apply RDMA_OPTION_ID_REUSEADDR %d, ret %d\n",
+				       reuse, ret);
+			/* It is likely that rdma_resolve_addr() returns -EADDRINUSE, but
+			 * we may missing something. We rely on rdma_resolve_addr().
+			 */
+		}
+	}
+
 	ret = rdma_resolve_addr(rqpair->cm_id, src_addr, dst_addr,
 				NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
