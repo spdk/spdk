@@ -29,6 +29,7 @@ struct virtio_user_dev {
 	uint32_t	queue_size;
 
 	uint8_t		status;
+	bool		is_stopping;
 	char		path[PATH_MAX];
 	uint64_t	protocol_features;
 	struct vring	vrings[SPDK_VIRTIO_MAX_VIRTQUEUES];
@@ -586,6 +587,18 @@ virtio_user_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	uint64_t features;
 	int ret;
 
+	/* We do not support dynamic memory allocation with virtio-user.  If this is the
+	 * initial notification when the device is started, dev->mem_map will be NULL.  If
+	 * this is the final notification when the device is stopped, dev->is_stopping will
+	 * be true.  All other cases are unsupported.
+	 */
+	if (dev->mem_map != NULL && !dev->is_stopping) {
+		assert(false);
+		SPDK_ERRLOG("Memory map change with active virtio_user_devs not allowed.\n");
+		SPDK_ERRLOG("Pre-allocate memory for application using -s (mem_size) option.\n");
+		return -1;
+	}
+
 	/* We have to resend all mappings anyway, so don't bother with any
 	 * page tracking.
 	 */
@@ -626,6 +639,7 @@ virtio_user_unregister_mem(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 
+	dev->is_stopping = true;
 	spdk_mem_map_free(&dev->mem_map);
 }
 

@@ -85,6 +85,16 @@ AEN.
 
 Added new functions: `spdk_hexlify` and `spdk_unhexlify`.
 
+### virtio
+
+virtio-vhost-user no longer tries to support dynamic memory allocation.  The vhost target does
+not support the high rate of SET_MEM_TABLE vhost messages that result from dynamic memory
+allocation, so a virtio-vhost-user device will now present an ERRLOG, assert, and skip the
+SET_MEM_TABLE vhost message if a memory notification is received outside of the normal device
+start/stop. Applications using the virtio library in vhost-user mode should now pre-allocate
+the application's memory using the -s/--mem-size option and use single shared memory file
+segments using the -g/--single-file-segments option.
+
 ## v22.05
 
 ### sock
