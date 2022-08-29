@@ -840,26 +840,33 @@ vmd_dev_cfg_write(struct spdk_pci_device *_dev,  void *value,
 }
 
 static void
-vmd_dev_detach(struct spdk_pci_device *dev)
+vmd_dev_free(struct vmd_pci_device *dev)
 {
-	struct vmd_pci_device *vmd_device = (struct vmd_pci_device *)dev;
-	struct vmd_pci_device *bus_device = vmd_device->bus->self;
-	struct vmd_pci_bus *bus = vmd_device->bus;
-	size_t i, num_bars = vmd_device->header_type ? 2 : 6;
-
-	spdk_pci_unhook_device(dev);
-	TAILQ_REMOVE(&bus->dev_list, vmd_device, tailq);
+	struct vmd_pci_device *bus_device = dev->bus->self;
+	size_t i, num_bars = dev->header_type ? 2 : 6;
 
 	/* Release the hotplug region if the device is under hotplug-capable bus */
 	if (bus_device && bus_device->hotplug_capable) {
 		for (i = 0; i < num_bars; ++i) {
-			if (vmd_device->bar[i].start != 0) {
-				vmd_hotplug_free_addr(&bus_device->hp, vmd_device->bar[i].start);
+			if (dev->bar[i].start != 0) {
+				vmd_hotplug_free_addr(&bus_device->hp, dev->bar[i].start);
 			}
 		}
 	}
 
 	free(dev);
+}
+
+static void
+vmd_dev_detach(struct spdk_pci_device *dev)
+{
+	struct vmd_pci_device *vmd_device = (struct vmd_pci_device *)dev;
+	struct vmd_pci_bus *bus = vmd_device->bus;
+
+	spdk_pci_unhook_device(dev);
+	TAILQ_REMOVE(&bus->dev_list, vmd_device, tailq);
+
+	vmd_dev_free(vmd_device);
 }
 
 static void
@@ -962,12 +969,12 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 
 			new_bus_num = vmd_get_next_bus_number(bus->vmd->is_hotplug_scan ? new_dev : NULL, bus->vmd);
 			if (new_bus_num == 0xff) {
-				free(new_dev);
+				vmd_dev_free(new_dev);
 				return dev_cnt;
 			}
 			new_bus = vmd_create_new_bus(bus, new_dev, new_bus_num);
 			if (!new_bus) {
-				free(new_dev);
+				vmd_dev_free(new_dev);
 				return dev_cnt;
 			}
 			new_bus->primary_bus = bus->secondary_bus;
@@ -1010,7 +1017,7 @@ vmd_scan_single_bus(struct vmd_pci_bus *bus, struct vmd_pci_device *parent_bridg
 		} else {
 			rc = vmd_init_end_device(new_dev);
 			if (rc != 0) {
-				free(new_dev);
+				vmd_dev_free(new_dev);
 				if (dev_cnt) {
 					dev_cnt--;
 				}
