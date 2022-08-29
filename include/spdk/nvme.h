@@ -4058,7 +4058,7 @@ void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops);
 static void __attribute__((constructor)) _spdk_nvme_transport_register_##name(void) \
 { \
 	spdk_nvme_transport_register(transport_ops); \
-}\
+}
 
 #ifdef __cplusplus
 }

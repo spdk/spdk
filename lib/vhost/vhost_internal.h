@@ -616,6 +616,6 @@ const struct spdk_virtio_blk_transport_ops *virtio_blk_get_transport_ops(
 static void __attribute__((constructor)) _virtio_blk_transport_register_##name(void) \
 { \
 	virtio_blk_transport_register(transport_ops); \
-}\
+}
 
 #endif /* SPDK_VHOST_INTERNAL_H */

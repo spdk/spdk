@@ -518,6 +518,6 @@ spdk_nvmf_req_get_xfer(struct spdk_nvmf_request *req) {
 static void __attribute__((constructor)) _spdk_nvmf_transport_register_##name(void) \
 { \
 	spdk_nvmf_transport_register(transport_ops); \
-}\
+}
 
 #endif

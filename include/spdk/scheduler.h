@@ -137,7 +137,7 @@ void spdk_governor_register(struct spdk_governor *governor);
 	static void __attribute__((constructor)) _spdk_governor_register_ ## governor(void) \
 	{ \
 		spdk_governor_register(&governor); \
-	} \
+	}
 
 /**
  * Structure representing thread used for scheduling.
@@ -264,7 +264,7 @@ void spdk_scheduler_register(struct spdk_scheduler *scheduler);
 static void __attribute__((constructor)) _spdk_scheduler_register_ ## scheduler (void) \
 { \
 	spdk_scheduler_register(&scheduler); \
-} \
+}
 
 #ifdef __cplusplus
 }
