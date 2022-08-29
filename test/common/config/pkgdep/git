@@ -514,6 +514,10 @@ function install_ice() {
 		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
 	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-ringparam-incompatible-pointer-types.patch"
 
+	if ge "$kernel_ver" 5.19.0; then
+		patch --dir="$GIT_REPOS/ice-$ICE_VERSION" -p1
+	fi < "$rootdir/test/common/config/pkgdep/patches/ice/0001-ext-ack.patch"
+
 	(
 		cd "$GIT_REPOS/ice-$ICE_VERSION/src"
 		sudo make -j"$(nproc)" install
