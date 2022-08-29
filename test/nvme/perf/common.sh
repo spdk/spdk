@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source "$rootdir/test/dd/common.sh"
 
 function discover_bdevs() {
 	local rootdir=$1
@@ -230,7 +231,7 @@ function create_fio_config() {
 		echo "gtod_reduce=1" >> $testdir/config.fio
 	fi
 
-	if [[ $PLUGIN =~ "uring" ]]; then
+	if [[ $PLUGIN =~ "uring" || $PLUGIN =~ "xnvme" ]]; then
 		cat <<- EOF >> $testdir/config.fio
 			fixedbufs=1
 			hipri=1
@@ -287,7 +288,7 @@ function create_fio_config() {
 
 				if [[ "$plugin" == "spdk-plugin-nvme" ]]; then
 					fio_job_section+=("filename=trtype=PCIe traddr=${disks[$n]//:/.} ns=1 #NVMe NUMA Node ${disks_numa[$n]}")
-				elif [[ "$plugin" == "spdk-plugin-bdev" ]]; then
+				elif [[ "$plugin" == "spdk-plugin-bdev" || "$plugin" == "spdk-plugin-bdev-xnvme" ]]; then
 					fio_job_section+=("filename=${disks[$n]} #NVMe NUMA Node ${disks_numa[$n]}")
 				elif [[ "$plugin" =~ "kernel" ]]; then
 					fio_job_section+=("filename=/dev/${disks[$n]} #NVMe NUMA Node ${disks_numa[$n]}")
@@ -393,7 +394,7 @@ function run_spdk_nvme_fio() {
 	echo "** Running fio test, this can take a while, depending on the run-time and ramp-time setting."
 	if [[ "$plugin" = "spdk-plugin-nvme" ]]; then
 		LD_PRELOAD=$plugin_dir/spdk_nvme $FIO_BIN $testdir/config.fio --output-format=json "${@:2}" --ioengine=spdk
-	elif [[ "$plugin" = "spdk-plugin-bdev" ]]; then
+	elif [[ "$plugin" = "spdk-plugin-bdev" || "$plugin" = "spdk-plugin-bdev-xnvme" ]]; then
 		LD_PRELOAD=$plugin_dir/spdk_bdev $FIO_BIN $testdir/config.fio --output-format=json "${@:2}" --ioengine=spdk_bdev --spdk_json_conf=$testdir/bdev.conf --spdk_mem=4096
 	fi
 
@@ -493,4 +494,29 @@ function verify_disk_number() {
 		echo "error: Required devices number ($DISKNO) is not a valid number or it's larger than the number of devices found (${#disks[@]})"
 		false
 	fi
+}
+
+function create_spdk_xnvme_bdev_conf() {
+	local bdev_io_cache_size=$1 bdev_io_pool_size=$2
+	local blocks block_idx io_mechanism=libaio
+
+	(($#)) && local -A method_bdev_set_options_0
+
+	blocks=($(get_disks))
+
+	if [[ -n $bdev_io_cache_size ]]; then
+		method_bdev_set_options_0["bdev_io_cache_size"]=$bdev_io_cache_size
+	fi
+	if [[ -n $bdev_io_pool_size ]]; then
+		method_bdev_set_options_0["bdev_io_pool_size"]=$bdev_io_pool_size
+	fi
+
+	for block_idx in "${!blocks[@]}"; do
+		local -A method_bdev_xnvme_create_$block_idx
+		local -n rpc_ref=method_bdev_xnvme_create_$block_idx
+		rpc_ref["filename"]=/dev/${blocks[block_idx]}
+		rpc_ref["io_mechanism"]=io_uring
+		rpc_ref["name"]=${blocks[block_idx]}
+	done
+	gen_conf > "$testdir/bdev.conf"
 }
