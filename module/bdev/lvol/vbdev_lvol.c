@@ -822,6 +822,10 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	case -ENOMEM:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 		break;
+	case -ETXTBSY:
+		spdk_bdev_io_complete_nvme_status(bdev_io, 0, SPDK_NVME_SCT_MEDIA_ERROR,
+						  SPDK_NVME_SC_DEALLOCATED_OR_UNWRITTEN_BLOCK);
+		break;
 	case -ENOSPC:
 		spdk_bdev_io_complete_nvme_status(bdev_io, 0, SPDK_NVME_SCT_VENDOR_SPECIFIC, -bserrno);
 		break;

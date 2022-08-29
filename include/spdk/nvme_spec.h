@@ -3599,6 +3599,9 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_streams_status) == 131072, "Incorr
 #define SPDK_NVME_IO_FLAGS_FUSE_MASK (SPDK_NVME_CMD_FUSE_MASK << 0)
 /** Enable Directive type as streams */
 #define SPDK_NVME_IO_FLAGS_STREAMS_DIRECTIVE (1U << 20)
+/** When set, reading of unwritten or deallocated block of a thin-provisioned device will fail
+ * with SPDK_NVME_SC_DEALLOCATED_OR_UNWRITTEN_BLOCK */
+#define SPDK_NVME_IO_FLAGS_UNWRITTEN_READ_FAIL (1U << 21)
 /** Zone append specific, determines the contents of the reference tag written to the media */
 #define SPDK_NVME_IO_FLAGS_ZONE_APPEND_PIREMAP (1U << 25)
 /** Enable protection information checking of the Logical Block Reference Tag field */

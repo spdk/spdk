@@ -316,8 +316,9 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	assert(!spdk_nvmf_request_using_zcopy(req));
 
-	rc = spdk_bdev_readv_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
-				    nvmf_bdev_ctrlr_complete_cmd, req);
+	rc = spdk_bdev_readv_blocks_with_flags(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
+					       nvmf_bdev_ctrlr_complete_cmd, req, req->cmd->nvme_cmd.cdw12);
+
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_ctrlr_process_io_cmd_resubmit, req);

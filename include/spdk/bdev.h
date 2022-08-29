@@ -822,6 +822,31 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param buf Data buffer to read into.
+ * \param offset The offset, in bytes, from the start of the block device.
+ * \param nbytes The number of bytes to read.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ * \param ext_io_flags Additional I/O flags to be passed via spdk_bdev_io.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset and/or nbytes are not aligned or out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_read_with_flags(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+                              void *buf, uint64_t offset, uint64_t nbytes,
+                              spdk_bdev_io_completion_cb cb, void *cb_arg,
+			      uint32_t ext_io_flags);
+
+/**
+ * Submit a read request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to read into.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks to read.
  * \param cb Called when the request is complete.
@@ -836,6 +861,31 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			  void *buf, uint64_t offset_blocks, uint64_t num_blocks,
 			  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a read request to the bdev on the given channel.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to read into.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to read.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ * \param ext_io_flags Additional I/O flags to be passed via spdk_bdev_io.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_read_blocks_with_flags(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				     void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+				     spdk_bdev_io_completion_cb cb, void *cb_arg,
+				     uint32_t ext_io_flags);
 
 /**
  * Submit a read request to the bdev on the given channel. This function uses
@@ -921,6 +971,37 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 			   struct iovec *iov, int iovcnt,
 			   uint64_t offset_blocks, uint64_t num_blocks,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a read request to the bdev on the given channel. This differs from
+ * spdk_bdev_read by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data and may not be able to directly transfer into the buffers provided. In
+ * this case, the request may fail.
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be read into.
+ * \param iovcnt The number of elements in iov.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to read.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ * \param ext_io_flags Additional I/O flags to be passed via spdk_bdev_io.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks and/or num_blocks are out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+ int spdk_bdev_readv_blocks_with_flags(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				       struct iovec *iov, int iovcnt,
+				       uint64_t offset_blocks, uint64_t num_blocks,
+				       spdk_bdev_io_completion_cb cb, void *cb_arg,
+				       uint32_t ext_io_flags);
 
 /**
  * Submit a read request to the bdev on the given channel. This differs from

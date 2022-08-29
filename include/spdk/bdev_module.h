@@ -610,6 +610,9 @@ struct spdk_bdev_io {
 			/** Pointer to user's ext opts to be used by bdev modules */
 			struct spdk_bdev_ext_io_opts *ext_opts;
 
+			/** Additional I/O flags */
+			uint32_t ext_io_flags;
+
 			/** stored user callback in case we split the I/O and use a temporary callback */
 			spdk_bdev_io_completion_cb stored_user_cb;
 

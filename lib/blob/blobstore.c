@@ -44,6 +44,7 @@
 #include "spdk/likely.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
+#include "spdk/bdev_module.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk/log.h"
@@ -2996,6 +2997,16 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 
 		if (read) {
 			spdk_bs_sequence_t *seq;
+			struct spdk_bdev_io *bdev_io = cb_arg;
+
+			if (bdev_io->u.bdev.ext_io_flags & SPDK_NVME_IO_FLAGS_UNWRITTEN_READ_FAIL) {
+				if (!is_allocated) {
+					/* ETXTBSY was chosen to indicate read of unwritten block.
+					 * It is not used by SPDK, so it should be fine. */
+					cb_fn(cb_arg, -ETXTBSY);
+					return;
+				}
+			}
 
 			seq = bs_sequence_start(_channel, &cpl);
 			if (!seq) {
