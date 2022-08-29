@@ -890,30 +890,30 @@ vmd_init_end_device(struct vmd_pci_device *dev)
 	struct vmd_adapter *vmd;
 	uint8_t bdf[32];
 
+	if (!vmd_assign_base_addrs(dev)) {
+		SPDK_ERRLOG("Failed to allocate BARs for device: %p\n", dev);
+		return -1;
+	}
+
+	vmd_setup_msix(dev, &bus->vmd->msix_table[0]);
+	vmd_dev_init(dev);
+
+	if (vmd_is_supported_device(dev)) {
+		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
+		SPDK_INFOLOG(vmd, "Initializing NVMe device at %s\n", bdf);
+		dev->pci.parent = dev->bus->vmd->pci;
+		spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
+
+		vmd = bus->vmd;
+		vmd->target[vmd->nvme_count] = dev;
+		vmd->nvme_count++;
+	}
+
 	/* Attach the device to the current bus and assign base addresses */
 	TAILQ_INSERT_TAIL(&bus->dev_list, dev, tailq);
 	g_end_device_count++;
-	if (vmd_assign_base_addrs(dev)) {
-		vmd_setup_msix(dev, &bus->vmd->msix_table[0]);
-		vmd_dev_init(dev);
-		if (vmd_is_supported_device(dev)) {
-			spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
-			SPDK_INFOLOG(vmd, "Initializing NVMe device at %s\n", bdf);
-			dev->pci.parent = dev->bus->vmd->pci;
-			spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
 
-			vmd = bus->vmd;
-			vmd->target[vmd->nvme_count] = dev;
-			vmd->nvme_count++;
-		}
-
-		return 0;
-	} else {
-		SPDK_INFOLOG(vmd, "Removing failed device:%p\n", dev);
-		TAILQ_REMOVE(&bus->dev_list, dev, tailq);
-
-		return -1;
-	}
+	return 0;
 }
 
 /*
