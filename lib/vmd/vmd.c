@@ -1240,9 +1240,9 @@ vmd_find_device(const struct spdk_pci_addr *addr)
 {
 	struct vmd_pci_bus *bus;
 	struct vmd_pci_device *dev;
-	int i;
+	uint32_t i;
 
-	for (i = 0; i < MAX_VMD_TARGET; ++i) {
+	for (i = 0; i < g_vmd_container.count; ++i) {
 		TAILQ_FOREACH(bus, &g_vmd_container.vmd[i].bus_list, tailq) {
 			if (bus->self) {
 				if (spdk_pci_addr_compare(&bus->self->pci.addr, addr) == 0) {
@@ -1311,12 +1311,13 @@ spdk_vmd_pci_device_list(struct spdk_pci_addr vmd_addr, struct spdk_pci_device *
 	int cnt = 0;
 	struct vmd_pci_bus *bus;
 	struct vmd_pci_device *dev;
+	uint32_t i;
 
 	if (!nvme_list) {
 		return -1;
 	}
 
-	for (int i = 0; i < MAX_VMD_TARGET; ++i) {
+	for (i = 0; i < g_vmd_container.count; ++i) {
 		if (spdk_pci_addr_compare(&vmd_addr, &g_vmd_container.vmd[i].pci->addr) == 0) {
 			TAILQ_FOREACH(bus, &g_vmd_container.vmd[i].bus_list, tailq) {
 				TAILQ_FOREACH(dev, &bus->dev_list, tailq) {
