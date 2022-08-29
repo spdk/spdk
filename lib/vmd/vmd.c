@@ -865,8 +865,6 @@ vmd_dev_detach(struct spdk_pci_device *dev)
 static void
 vmd_dev_init(struct vmd_pci_device *dev)
 {
-	uint8_t bdf[32];
-
 	dev->pci.addr.domain = dev->bus->vmd->domain;
 	dev->pci.addr.bus = dev->bus->bus_number;
 	dev->pci.addr.dev = dev->devfn;
@@ -883,13 +881,6 @@ vmd_dev_init(struct vmd_pci_device *dev)
 	if (dev->pcie_cap != NULL) {
 		dev->cached_slot_control = dev->pcie_cap->slot_control;
 	}
-
-	if (vmd_is_supported_device(dev)) {
-		spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
-		SPDK_INFOLOG(vmd, "Initializing NVMe device at %s\n", bdf);
-		dev->pci.parent = dev->bus->vmd->pci;
-		spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
-	}
 }
 
 static int
@@ -897,6 +888,7 @@ vmd_init_end_device(struct vmd_pci_device *dev)
 {
 	struct vmd_pci_bus *bus = dev->bus;
 	struct vmd_adapter *vmd;
+	uint8_t bdf[32];
 
 	/* Attach the device to the current bus and assign base addresses */
 	TAILQ_INSERT_TAIL(&bus->dev_list, dev, tailq);
@@ -905,6 +897,11 @@ vmd_init_end_device(struct vmd_pci_device *dev)
 		vmd_setup_msix(dev, &bus->vmd->msix_table[0]);
 		vmd_dev_init(dev);
 		if (vmd_is_supported_device(dev)) {
+			spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->pci.addr);
+			SPDK_INFOLOG(vmd, "Initializing NVMe device at %s\n", bdf);
+			dev->pci.parent = dev->bus->vmd->pci;
+			spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
+
 			vmd = bus->vmd;
 			vmd->target[vmd->nvme_count] = dev;
 			vmd->nvme_count++;
