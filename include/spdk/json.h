@@ -266,6 +266,7 @@ int spdk_json_write_named_object_begin(struct spdk_json_write_ctx *w, const char
  * -EINVAL - json object is invalid
  * -ENOENT - key not found
  * -EDOM - key exists but value type mismatch.
+ * -EPROTOTYPE - json not enclosed in {}.
  */
 int spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_json_val **key,
 		   struct spdk_json_val **val, enum spdk_json_val_type type);

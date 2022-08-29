@@ -2,6 +2,17 @@
 
 ## v22.09: (Upcoming Release)
 
+### json
+
+Added `spdk_json_find` API return errcode: EPROTOTYPE - json not enclosed in {}.
+`spdk_json_find` now returns -EPROTOTYPE instead of -ENOENT if the object parameter
+does not point to a JSON object (i.e. is not enclosed with {}).
+
+### init
+
+`spdk_subsystem_init_from_json_config` now fails if the JSON configuration file is not
+an object with an array named "subsystems".
+
 ### bdev
 
 New RPCs `bdev_xnvme_create` and `bdev_xnvme_delete` were added to support the xNVMe bdev.

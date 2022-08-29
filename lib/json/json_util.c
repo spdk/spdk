@@ -530,11 +530,17 @@ spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_j
 {
 	struct spdk_json_val *_key = NULL;
 	struct spdk_json_val *_val = NULL;
-	struct spdk_json_val *it;
+	struct spdk_json_val *it_first, *it;
 
 	assert(object != NULL);
 
-	for (it = json_first(object, SPDK_JSON_VAL_ARRAY_BEGIN | SPDK_JSON_VAL_OBJECT_BEGIN);
+	it_first = json_first(object, SPDK_JSON_VAL_OBJECT_BEGIN);
+	if (!it_first) {
+		SPDK_JSON_DEBUG("Not enclosed in {}\n");
+		return -EPROTOTYPE;
+	}
+
+	for (it = it_first;
 	     it != NULL;
 	     it = spdk_json_next(it)) {
 		if (it->type != SPDK_JSON_VAL_NAME) {
@@ -553,7 +559,7 @@ spdk_json_find(struct spdk_json_val *object, const char *key_name, struct spdk_j
 		_key = it;
 		_val = json_value(_key);
 
-		if (type != SPDK_JSON_VAL_INVALID && (_val->type & type) == 0) {
+		if (type != SPDK_JSON_VAL_ANY && (_val->type & type) == 0) {
 			SPDK_JSON_DEBUG("key '%s' type is %#x but expected one of %#x\n", key_name, _val->type, type);
 			return -EDOM;
 		}

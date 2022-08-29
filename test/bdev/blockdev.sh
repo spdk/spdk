@@ -7,6 +7,9 @@ source $testdir/nbd_common.sh
 
 rpc_py=rpc_cmd
 conf_file="$testdir/bdev.json"
+nonenclosed_conf_file="$testdir/nonenclosed.json"
+nonarray_conf_file="$testdir/nonarray.json"
+
 # Make sure the configuration is clean
 : > "$conf_file"
 
@@ -565,6 +568,12 @@ trap "cleanup" SIGINT SIGTERM EXIT
 
 run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3 "$env_ctx"
 run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx"
+
+# test json config not enclosed with {}
+run_test "bdev_json_nonenclosed" $testdir/bdevperf/bdevperf --json "$nonenclosed_conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx" || true
+
+# test json config "subsystems" not with array
+run_test "bdev_json_nonarray" $testdir/bdevperf/bdevperf --json "$nonarray_conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx" || true
 
 if [[ $test_type == bdev ]]; then
 	run_test "bdev_qos" qos_test_suite "$env_ctx"

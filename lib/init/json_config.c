@@ -566,14 +566,26 @@ spdk_subsystem_init_from_json_config(const char *json_config_file, const char *r
 
 	/* Capture subsystems array */
 	rc = spdk_json_find_array(ctx->values, "subsystems", NULL, &ctx->subsystems);
-	if (rc) {
-		SPDK_WARNLOG("No 'subsystems' key JSON configuration file.\n");
-	} else {
+	switch (rc) {
+	case 0:
 		/* Get first subsystem */
 		ctx->subsystems_it = spdk_json_array_first(ctx->subsystems);
 		if (ctx->subsystems_it == NULL) {
 			SPDK_NOTICELOG("'subsystems' configuration is empty\n");
 		}
+		break;
+	case -EPROTOTYPE:
+		SPDK_ERRLOG("Invalid JSON configuration: not enclosed in {}.\n");
+		goto fail;
+	case -ENOENT:
+		SPDK_WARNLOG("No 'subsystems' key JSON configuration file.\n");
+		break;
+	case -EDOM:
+		SPDK_ERRLOG("Invalid JSON configuration: 'subsystems' should be an array.\n");
+		goto fail;
+	default:
+		SPDK_ERRLOG("Failed to parse JSON configuration.\n");
+		goto fail;
 	}
 
 	/* If rpc_addr is not an Unix socket use default address as prefix. */
