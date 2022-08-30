@@ -2,6 +2,7 @@ import grpc
 import logging
 import uuid
 from spdk.rpc.client import JSONRPCException
+from spdk.sma import qos
 from .device import DeviceManager, DeviceException
 from ..common import format_volume_id, volume_id_to_nguid
 from ..volume import get_crypto_engine, CryptoException
@@ -209,3 +210,37 @@ class NvmfTcpDeviceManager(DeviceManager):
 
     def owns_device(self, handle):
         return handle.startswith('nvmf-tcp')
+
+    def set_qos(self, request):
+        nqn = self._get_nqn_from_handle(request.device_handle)
+        volume = format_volume_id(request.volume_id)
+        if volume is None:
+            raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                  'Invalid volume ID')
+        try:
+            with self._client() as client:
+                # Make sure that a volume exists and is attached to the device
+                bdev = self._find_bdev(client, volume)
+                if bdev is None:
+                    raise DeviceException(grpc.StatusCode.NOT_FOUND,
+                                          'No volume associated with volume_id could be found')
+                try:
+                    subsys = client.call('nvmf_get_subsystems', {'nqn': nqn})[0]
+                except JSONRPCException:
+                    raise DeviceException(grpc.StatusCode.NOT_FOUND,
+                                          'No device associated with device_handle could be found')
+                for ns in subsys['namespaces']:
+                    if ns['name'] == bdev['name']:
+                        break
+                else:
+                    raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                          'Specified volume is not attached to the device')
+                qos.set_volume_bdev_qos(client, request)
+        except qos.QosException as ex:
+            raise DeviceException(ex.code, ex.message)
+        except JSONRPCException:
+            raise DeviceException(grpc.StatusCode.INTERNAL,
+                                  'Failed to set QoS')
+
+    def get_qos_capabilities(self, request):
+        return qos.get_bdev_qos_capabilities()
