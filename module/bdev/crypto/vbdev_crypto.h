@@ -93,7 +93,7 @@ __c2v(char c)
 	return -1;
 }
 
-static inline char
+static inline signed char
 __v2c(int c)
 {
 	const char hexchar[] = "0123456789abcdef";
@@ -121,8 +121,8 @@ hexlify(const char *bin, size_t len)
 	}
 	phex = hex;
 	for (size_t i = 0; i < len; i++) {
-		char c0 = __v2c((bin[i] >> 4) & 0x0f);
-		char c1 = __v2c((bin[i]) & 0x0f);
+		signed char c0 = __v2c((bin[i] >> 4) & 0x0f);
+		signed char c1 = __v2c((bin[i]) & 0x0f);
 		if (c0 < 0 || c1 < 0) {
 			assert(false);
 			free(hex);
