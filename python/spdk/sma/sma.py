@@ -141,6 +141,49 @@ class StorageManagementAgent(pb2_grpc.StorageManagementAgentServicer):
             context.set_code(ex.code)
         return response
 
+    @_grpc_method
+    def SetQos(self, request, context):
+        response = pb2.SetQosResponse()
+        try:
+            device = self._find_device_by_handle(request.device_handle)
+            if device is None:
+                raise DeviceException(grpc.StatusCode.NOT_FOUND, 'Invalid device handle')
+            device.set_qos(request)
+        except DeviceException as ex:
+            context.set_details(ex.message)
+            context.set_code(ex.code)
+        except NotImplementedError:
+            context.set_details('Method is not implemented by selected device type')
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        return response
+
+    @_grpc_method
+    def GetQosCapabilities(self, request, context):
+        device_type_map = {
+            pb2.DeviceType.DEVICE_TYPE_NVME: 'nvme',
+            pb2.DeviceType.DEVICE_TYPE_VIRTIO_BLK: 'virtio_blk',
+            pb2.DeviceType.DEVICE_TYPE_NVMF_TCP: 'nvmf_tcp',
+        }
+        response = pb2.GetQosCapabilitiesResponse()
+        try:
+            name = device_type_map.get(request.device_type)
+            if name is None:
+                raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                      'Invalid device type')
+            manager = self._find_device_by_name(name)
+            if manager is None:
+                raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                      'Unsupported device type')
+            response = manager.get_qos_capabilities(request)
+        except DeviceException as ex:
+            context.set_details(ex.message)
+            context.set_code(ex.code)
+        except NotImplementedError:
+            # If a device manager doesn't implement this method, return empty capabilities to
+            # indicate that no QoS capabilities are supported
+            pass
+        return response
+
 
 crypto.register_crypto_engine(crypto.CryptoEngineNop())
 crypto.register_crypto_engine(crypto_bdev.CryptoEngineBdev())

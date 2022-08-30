@@ -30,3 +30,9 @@ class DeviceManager:
 
     def owns_device(self, id):
         raise NotImplementedError()
+
+    def set_qos(self, request):
+        raise NotImplementedError()
+
+    def get_qos_capabilities(self, request):
+        raise NotImplementedError()
