@@ -1236,26 +1236,27 @@ test_rdma_get_memory_translation(void)
 }
 
 static void
-test_nvme_rdma_poll_group_get_qpair_by_id(void)
+test_get_rdma_qpair_from_wc(void)
 {
 	const uint32_t test_qp_num = 123;
 	struct nvme_rdma_poll_group	group = {};
 	struct nvme_rdma_qpair rqpair = {};
 	struct spdk_rdma_qp rdma_qp = {};
 	struct ibv_qp qp = { .qp_num = test_qp_num };
+	struct ibv_wc wc = { .qp_num = test_qp_num };
 
 	STAILQ_INIT(&group.group.disconnected_qpairs);
 	STAILQ_INIT(&group.group.connected_qpairs);
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
 
 	/* Test 1 - Simulate case when nvme_rdma_qpair is disconnected but still in one of lists.
-	 * nvme_rdma_poll_group_get_qpair_by_id must return NULL */
+	 * get_rdma_qpair_from_wc must return NULL */
 	STAILQ_INSERT_HEAD(&group.group.disconnected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == NULL);
 	STAILQ_REMOVE_HEAD(&group.group.disconnected_qpairs, poll_group_stailq);
 
 	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == NULL);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == NULL);
 	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
 
 	/* Test 2 - nvme_rdma_qpair with valid rdma_qp/ibv_qp and qp_num */
@@ -1263,11 +1264,11 @@ test_nvme_rdma_poll_group_get_qpair_by_id(void)
 	rqpair.rdma_qp = &rdma_qp;
 
 	STAILQ_INSERT_HEAD(&group.group.disconnected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == &rqpair);
 	STAILQ_REMOVE_HEAD(&group.group.disconnected_qpairs, poll_group_stailq);
 
 	STAILQ_INSERT_HEAD(&group.group.connected_qpairs, &rqpair.qpair, poll_group_stailq);
-	CU_ASSERT(nvme_rdma_poll_group_get_qpair_by_id(&group, test_qp_num) == &rqpair);
+	CU_ASSERT(get_rdma_qpair_from_wc(&group, &wc) == &rqpair);
 	STAILQ_REMOVE_HEAD(&group.group.connected_qpairs, poll_group_stailq);
 }
 
@@ -1524,7 +1525,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_memory_domain);
 	CU_ADD_TEST(suite, test_rdma_ctrlr_get_memory_domains);
 	CU_ADD_TEST(suite, test_rdma_get_memory_translation);
-	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_qpair_by_id);
+	CU_ADD_TEST(suite, test_get_rdma_qpair_from_wc);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_get_max_sges);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_stats);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_set_cq);
