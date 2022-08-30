@@ -1325,6 +1325,25 @@ function autotest_cleanup() {
 		rm -rf "${storage_fallback_purge[@]}"
 	fi
 
+	if ((autotest_es)); then
+		if [[ $(uname) == FreeBSD ]]; then
+			ps aux
+		elif [[ $(uname) == Linux ]]; then
+			# Get more detailed view
+			grep . /proc/[0-9]*/status
+			# Dump some extra info into kernel log
+			echo "######## Autotest Cleanup Dump ########" > /dev/kmsg
+			# Show cpus backtraces
+			echo l > /proc/sysrq-trigger
+			# Show mem usage
+			echo m > /proc/sysrq-trigger
+			# show task states
+			echo t > /proc/sysrq-trigger
+			# show blocked tasks
+			echo w > /proc/sysrq-trigger
+
+		fi > "$output_dir/proc_list.txt" 2>&1 || :
+	fi
 	xtrace_restore
 	return $autotest_es
 }
