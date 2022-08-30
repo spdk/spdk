@@ -1494,11 +1494,15 @@ test_nvme_rdma_poll_group_set_cq(void)
 	CU_ASSERT(poller->required_num_wc == 0);
 	CU_ASSERT(rqpair.poller == poller);
 
-	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair.qpair);
+	rqpair.qpair.poll_group_tailq_head = &tgroup->disconnected_qpairs;
+
+	rc = nvme_rdma_poll_group_remove(tgroup, &rqpair.qpair);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rqpair.cq == NULL);
 	CU_ASSERT(rqpair.poller == NULL);
 	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
+
+	rqpair.qpair.poll_group_tailq_head = &tgroup->connected_qpairs;
 
 	/* Test4: Match cq success, function ibv_resize_cq failed */
 	rqpair.cq = NULL;
@@ -1522,7 +1526,9 @@ test_nvme_rdma_poll_group_set_cq(void)
 	CU_ASSERT(rqpair.cq == poller->cq);
 	CU_ASSERT(rqpair.poller == poller);
 
-	rc = nvme_rdma_poll_group_disconnect_qpair(&rqpair.qpair);
+	rqpair.qpair.poll_group_tailq_head = &tgroup->disconnected_qpairs;
+
+	rc = nvme_rdma_poll_group_remove(tgroup, &rqpair.qpair);
 	CU_ASSERT(rc == 0);
 
 	rc = nvme_rdma_poll_group_destroy(tgroup);

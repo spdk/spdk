@@ -1980,7 +1980,17 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 		rqpair->cm_id = NULL;
 	}
 
-	if (rqpair->cq) {
+	if (rqpair->poller) {
+		struct nvme_rdma_poll_group     *group;
+
+		assert(qpair->poll_group);
+		group = nvme_rdma_poll_group(qpair->poll_group);
+
+		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
+
+		rqpair->poller = NULL;
+		rqpair->cq = NULL;
+	} else if (rqpair->cq) {
 		ibv_destroy_cq(rqpair->cq);
 		rqpair->cq = NULL;
 	}
@@ -2164,18 +2174,6 @@ nvme_rdma_stale_conn_retry(struct nvme_rdma_qpair *rqpair)
 
 	SPDK_NOTICELOG("%d times, retry stale connnection to qpair (cntlid:%u, qid:%u).\n",
 		       rqpair->stale_conn_retry_count, qpair->ctrlr->cntlid, qpair->id);
-
-	if (rqpair->poller) {
-		struct nvme_rdma_poll_group	*group;
-
-		assert(qpair->poll_group);
-		group = nvme_rdma_poll_group(qpair->poll_group);
-
-		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
-
-		rqpair->poller = NULL;
-		rqpair->cq = NULL;
-	}
 
 	_nvme_rdma_ctrlr_disconnect_qpair(qpair->ctrlr, qpair, nvme_rdma_stale_conn_disconnected);
 
@@ -2968,18 +2966,6 @@ nvme_rdma_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 static int
 nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
-	struct nvme_rdma_poll_group	*group;
-
-	if (rqpair->poller) {
-		group = nvme_rdma_poll_group(qpair->poll_group);
-
-		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
-
-		rqpair->poller = NULL;
-		rqpair->cq = NULL;
-	}
-
 	return 0;
 }
 
@@ -2994,7 +2980,17 @@ static int
 nvme_rdma_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 			    struct spdk_nvme_qpair *qpair)
 {
+	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
+	struct nvme_rdma_poll_group	*group = nvme_rdma_poll_group(tgroup);
+
 	assert(qpair->poll_group_tailq_head == &tgroup->disconnected_qpairs);
+
+	if (rqpair->poller) {
+		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
+
+		rqpair->poller = NULL;
+		rqpair->cq = NULL;
+	}
 
 	return 0;
 }
