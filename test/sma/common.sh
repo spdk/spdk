@@ -35,3 +35,18 @@ uuid2nguid() {
 	local uuid=${1^^}
 	echo ${uuid//-/}
 }
+
+get_qos_caps() {
+	local rootdir
+
+	rootdir="$(dirname $BASH_SOURCE)/../.."
+
+	"$rootdir/scripts/sma-client.py" <<- EOF
+		{
+		  "method": "GetQosCapabilities",
+		  "params": {
+		    "device_type": $1
+		  }
+		}
+	EOF
+}
