@@ -2733,6 +2733,15 @@ nvme_rdma_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+static void
+nvme_rdma_poller_destroy(struct nvme_rdma_poller *poller)
+{
+	if (poller->cq) {
+		ibv_destroy_cq(poller->cq);
+	}
+	free(poller);
+}
+
 static struct nvme_rdma_poller *
 nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *ctx)
 {
@@ -2749,8 +2758,7 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 
 	if (poller->cq == NULL) {
 		SPDK_ERRLOG("Unable to create CQ, errno %d.\n", errno);
-		free(poller);
-		return NULL;
+		goto fail;
 	}
 
 	STAILQ_INSERT_HEAD(&group->pollers, poller, link);
@@ -2758,6 +2766,10 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 	poller->current_num_wc = DEFAULT_NVME_RDMA_CQ_SIZE;
 	poller->required_num_wc = 0;
 	return poller;
+
+fail:
+	nvme_rdma_poller_destroy(poller);
+	return NULL;
 }
 
 static void
@@ -2772,11 +2784,8 @@ nvme_rdma_poll_group_free_pollers(struct nvme_rdma_poll_group *group)
 				     poller, poller->refcnt);
 		}
 
-		if (poller->cq) {
-			ibv_destroy_cq(poller->cq);
-		}
 		STAILQ_REMOVE(&group->pollers, poller, nvme_rdma_poller, link);
-		free(poller);
+		nvme_rdma_poller_destroy(poller);
 	}
 }
 
@@ -2808,12 +2817,9 @@ nvme_rdma_poll_group_put_poller(struct nvme_rdma_poll_group *group, struct nvme_
 {
 	assert(poller->refcnt > 0);
 	if (--poller->refcnt == 0) {
-		if (poller->cq) {
-			ibv_destroy_cq(poller->cq);
-		}
 		STAILQ_REMOVE(&group->pollers, poller, nvme_rdma_poller, link);
-		free(poller);
 		group->num_pollers--;
+		nvme_rdma_poller_destroy(poller);
 	}
 }
 
