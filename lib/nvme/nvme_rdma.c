@@ -2165,14 +2165,15 @@ nvme_rdma_stale_conn_retry(struct nvme_rdma_qpair *rqpair)
 	SPDK_NOTICELOG("%d times, retry stale connnection to qpair (cntlid:%u, qid:%u).\n",
 		       rqpair->stale_conn_retry_count, qpair->ctrlr->cntlid, qpair->id);
 
-	if (qpair->poll_group) {
+	if (rqpair->poller) {
 		struct nvme_rdma_poll_group	*group;
 
+		assert(qpair->poll_group);
 		group = nvme_rdma_poll_group(qpair->poll_group);
-		if (rqpair->poller) {
-			nvme_rdma_poll_group_put_poller(group, rqpair->poller);
-			rqpair->poller = NULL;
-		}
+
+		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
+
+		rqpair->poller = NULL;
 		rqpair->cq = NULL;
 	}
 
@@ -2970,12 +2971,14 @@ nvme_rdma_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
 	struct nvme_rdma_poll_group	*group;
 
-	group = nvme_rdma_poll_group(qpair->poll_group);
 	if (rqpair->poller) {
+		group = nvme_rdma_poll_group(qpair->poll_group);
+
 		nvme_rdma_poll_group_put_poller(group, rqpair->poller);
+
 		rqpair->poller = NULL;
+		rqpair->cq = NULL;
 	}
-	rqpair->cq = NULL;
 
 	return 0;
 }
