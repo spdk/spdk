@@ -811,6 +811,67 @@ vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 	}
 }
 
+static bool
+vhost_memory_changed(struct rte_vhost_memory *new,
+		     struct rte_vhost_memory *old)
+{
+	uint32_t i;
+
+	if (new->nregions != old->nregions)
+		return true;
+
+	for (i = 0; i < new->nregions; ++i) {
+		struct rte_vhost_mem_region *new_r = &new->regions[i];
+		struct rte_vhost_mem_region *old_r = &old->regions[i];
+
+		if (new_r->guest_phys_addr != old_r->guest_phys_addr)
+			return true;
+		if (new_r->size != old_r->size)
+			return true;
+		if (new_r->guest_user_addr != old_r->guest_user_addr)
+			return true;
+		if (new_r->mmap_addr != old_r->mmap_addr)
+			return true;
+		if (new_r->fd != old_r->fd)
+			return true;
+	}
+
+	return false;
+}
+
+static int
+vhost_register_memtable_if_required(struct spdk_vhost_session *vsession, int vid)
+{
+	struct rte_vhost_memory *new_mem;
+
+	if (vhost_get_mem_table(vid, &new_mem) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
+		return -1;
+	}
+
+	if (vsession->mem == NULL) {
+		SPDK_INFOLOG(vhost, "Start to set memtable\n");
+		vsession->mem = new_mem;
+		vhost_session_mem_register(vsession->mem);
+		return 0;
+	}
+
+	if (vhost_memory_changed(new_mem, vsession->mem)) {
+		SPDK_INFOLOG(vhost, "Memtable is changed\n");
+		vhost_session_mem_unregister(vsession->mem);
+		free(vsession->mem);
+
+		vsession->mem = new_mem;
+		vhost_session_mem_register(vsession->mem);
+		return 0;
+
+	}
+
+	SPDK_INFOLOG(vhost, "Memtable is unchanged\n");
+	free(new_mem);
+	return 0;
+}
+
 static int
 _stop_session(struct spdk_vhost_session *vsession)
 {
@@ -848,9 +909,6 @@ _stop_session(struct spdk_vhost_session *vsession)
 
 		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
-
-	vhost_session_mem_unregister(vsession->mem);
-	free(vsession->mem);
 
 	return 0;
 }
@@ -1038,8 +1096,8 @@ start_device(int vid)
 		vsession->max_queues = i + 1;
 	}
 
-	if (vhost_get_mem_table(vid, &vsession->mem) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
+	if (!vsession->mem) {
+		SPDK_ERRLOG("Session %s doesn't set memory table yet\n", vsession->name);
 		goto out;
 	}
 
@@ -1068,12 +1126,9 @@ start_device(int vid)
 	}
 
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
-	vhost_session_mem_register(vsession->mem);
 	vsession->initialized = true;
 	rc = vhost_user_session_start(vdev, vsession);
 	if (rc != 0) {
-		vhost_session_mem_unregister(vsession->mem);
-		free(vsession->mem);
 		goto out;
 	}
 
@@ -1125,6 +1180,11 @@ destroy_connection(int vid)
 			spdk_vhost_unlock();
 			return;
 		}
+	}
+
+	if (vsession->mem) {
+		vhost_session_mem_unregister(vsession->mem);
+		free(vsession->mem);
 	}
 
 	TAILQ_REMOVE(&to_user_dev(vsession->vdev)->vsessions, vsession, tailq);
@@ -1510,6 +1570,10 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 		SPDK_ERRLOG("Received a message to unitialized session (vid %d).\n", vid);
 		assert(false);
 		return RTE_VHOST_MSG_RESULT_ERR;
+	}
+
+	if (msg->request == VHOST_USER_SET_MEM_TABLE) {
+		vhost_register_memtable_if_required(vsession, vid);
 	}
 
 	if (vsession->needs_restart) {
