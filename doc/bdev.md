@@ -162,12 +162,23 @@ all volumes, if used it will return the name or an error that the device does no
 ## Crypto Virtual Bdev Module {#bdev_config_crypto}
 
 The crypto virtual bdev module can be configured to provide at rest data encryption
-for any underlying bdev. The module relies on the DPDK CryptoDev Framework to provide
-all cryptographic functionality. The framework provides support for many different software
-only cryptographic modules as well hardware assisted support for the Intel QAT board and
-NVIDIA crypto enabled NICs.
-The framework also provides support for cipher, hash, authentication and AEAD functions.
-At this time the SPDK virtual bdev module supports cipher only as follows:
+for any underlying bdev. The module relies on the SPDK Accel Framework to provide
+all cryptographic functionality.
+One of the accel modules, dpdk_cryptodev is implemented with the DPDK CryptoDev API,
+it provides support for many different software only cryptographic modules as well hardware
+assisted support for the Intel QAT board and NVIDIA crypto enabled NICs.
+
+For reads, the buffer provided to the crypto block device will be used as the destination buffer
+for unencrypted data.  For writes, however, a temporary scratch buffer is used as the
+destination buffer for encryption which is then passed on to the underlying bdev as the
+write buffer.  This is done to avoid encrypting the data in the original source buffer which
+may cause problems in some use cases.
+
+Below is information about accel modules which support crypto operations:
+
+### dpdk_cryptodev accel module
+
+Supports the following ciphers:
 
 - AESN-NI Multi Buffer Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC
 - Intel(R) QuickAssist (QAT) Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC,
@@ -181,38 +192,61 @@ the crypto module break up all I/O into crypto operations of a size equal to the
 size of the underlying bdev.  For example, a 4K I/O to a bdev with a 512B block size,
 would result in 8 cryptographic operations.
 
-For reads, the buffer provided to the crypto module will be used as the destination buffer
-for unencrypted data.  For writes, however, a temporary scratch buffer is used as the
-destination buffer for encryption which is then passed on to the underlying bdev as the
-write buffer.  This is done to avoid encrypting the data in the original source buffer which
-may cause problems in some use cases.
+### SW accel module
 
-Example command
+Supports the following ciphers:
 
-`rpc.py bdev_crypto_create NVMe1n1 CryNvmeA crypto_aesni_mb 01234567891234560123456789123456`
+- AES_XTS cipher with 128 or 256 bit keys implemented with ISA-L_crypto
 
-This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
-'NVMe1n1' and will use the DPDK software driver 'crypto_aesni_mb' and the key
-'01234567891234560123456789123456'.
+### General workflow
+
+- Set desired accel module to perform crypto operations, that can be done with `accel_assign_opc` RPC command
+- Create a named crypto key using `accel_crypto_key_create` RPC command. The key will use the assigned accel
+  module. Set of parameters and supported ciphers may be different in each accel module.
+- Create virtual crypto block device providing the base block device name and the crypto key name
+  using `bdev_crypto_create` RPC command
+
+#### Example
+
+Example command which uses dpdk_cryptodev accel module
+```
+# start SPDK application with `--wait-for-rpc` parameter
+rpc.py dpdk_cryptodev_scan_accel_module
+rpc.py dpdk_cryptodev_set_driver crypto_aesni_mb
+rpc.py accel_assign_opc -o encrypt -m dpdk_cryptodev
+rpc.py accel_assign_opc -o decrypt -m dpdk_cryptodev
+rpc.py framework_start_init
+rpc.py accel_crypto_key_create -c AES_CBC -k 01234567891234560123456789123456 -n key_aesni_cbc_1
+rpc.py bdev_crypto_create NVMe1n1 CryNvmeA -n key_aesni_cbc_1
+```
+
+These commands will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
+'NVMe1n1' and will use a key named `key_aesni_cbc_1`. The key will work with the accel module which
+has been assigned for encrypt operations, in this example it will be the dpdk_cryptodev.
+
+### Crypto key format
 
 Please make sure the keys are provided in hexlified format. This means string passed to
 rpc.py must be twice as long than the key length in binary form.
 
-Example command
+#### Example command
 
-`rpc.py bdev_crypto_create -c AES_XTS -k2 7859243a027411e581e0c40a35c8228f NVMe1n1 CryNvmeA mlx5_pci d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09`
+`rpc.py accel_crypto_key_create -c AES_XTS -k2 7859243a027411e581e0c40a35c8228f -k d16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09 -n sample_key`
 
-This command will create a crypto vbdev called 'CryNvmeA' on top of the NVMe bdev
-'NVMe1n1' and will use the DPDK software driver 'mlx5_pci', the AES key
+This command will create a key called `sample_key`, the AES key
 'd16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b09' and the XTS key
 '7859243a027411e581e0c40a35c8228f'. In other words, the compound AES_XTS key to be used is
 'd16a2f3a9e9f5b32daefacd7f5984f4578add84425be4a0baa489b9de8884b097859243a027411e581e0c40a35c8228f'
+
+### Delete the virtual crypto block device
 
 To remove the vbdev use the bdev_crypto_delete command.
 
 `rpc.py bdev_crypto_delete CryNvmeA`
 
-The MLX5 driver works with crypto enabled Nvidia NICs and requires special configuration of
+### dpdk_cryptodev mlx5_pci driver configuration
+
+The mlx5_pci driver works with crypto enabled Nvidia NICs and requires special configuration of
 DPDK environment to enable crypto function. It can be done via SPDK event library by configuring
 `env_context` member of `spdk_app_opts` structure or by passing corresponding CLI arguments in
 the following form: `--allow=BDF,class=crypto,wcs_file=/full/path/to/wrapped/credentials`, e.g.

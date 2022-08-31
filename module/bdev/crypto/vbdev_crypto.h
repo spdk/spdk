@@ -12,43 +12,19 @@
 #include "spdk/util.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/accel.h"
+#include "spdk_internal/accel_module.h"
 
 #include "spdk/bdev.h"
 
-#define AESNI_MB "crypto_aesni_mb"
-#define QAT "crypto_qat"
-#define QAT_ASYM "crypto_qat_asym"
-#define MLX5 "mlx5_pci"
+#define BDEV_CRYPTO_DEFAULT_CIPHER "AES_CBC" /* QAT and AESNI_MB */
 
-/* Supported ciphers */
-#define AES_CBC "AES_CBC" /* QAT and AESNI_MB */
-#define AES_XTS "AES_XTS" /* QAT and MLX5 */
-
-/* Specific to AES_CBC. */
-#define AES_CBC_KEY_LENGTH	     16
-
-#define AES_XTS_128_BLOCK_KEY_LENGTH 16 /* AES-XTS-128 block key size. */
-#define AES_XTS_256_BLOCK_KEY_LENGTH 32 /* AES-XTS-256 block key size. */
-#define AES_XTS_512_BLOCK_KEY_LENGTH 64 /* AES-XTS-512 block key size. */
-
-#define AES_XTS_TWEAK_KEY_LENGTH     16 /* XTS part key size is always 128 bit. */
-
-/* Structure to hold crypto options for crypto pmd setup. */
+/* Structure to hold crypto options */
 struct vbdev_crypto_opts {
 	char				*vbdev_name;	/* name of the vbdev to create */
 	char				*bdev_name;	/* base bdev name */
-
-	char				*drv_name;	/* name of the crypto device driver */
-	char				*cipher;	/* AES_CBC or AES_XTS */
-
-	/* Note, for dev/test we allow use of key in the config file, for production
-	 * use, you must use an RPC to specify the key for security reasons.
-	 */
-	uint8_t				*key;		/* key per bdev */
-	uint8_t				key_size;	/* key size */
-	uint8_t				*key2;		/* key #2 for AES_XTS, per bdev */
-	uint8_t				key2_size;	/* key #2 size */
-	uint8_t				*xts_key;	/* key + key 2 */
+	struct spdk_accel_crypto_key	*key;		/* crypto key */
+	bool				key_owner;	/* If wet to true then the key was created by RPC and needs to be destroyed */
 };
 
 typedef void (*spdk_delete_crypto_complete)(void *cb_arg, int bdeverrno);

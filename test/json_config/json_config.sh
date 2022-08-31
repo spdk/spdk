@@ -143,6 +143,18 @@ function json_config_test_shutdown_app() {
 	echo "SPDK $app shutdown done"
 }
 
+function create_accel_config() {
+	timing_enter "${FUNCNAME[0]}"
+
+	if [[ $SPDK_TEST_CRYPTO -eq 1 ]]; then
+		tgt_rpc dpdk_cryptodev_scan_accel_module
+		tgt_rpc accel_assign_opc -o encrypt -m dpdk_cryptodev
+		tgt_rpc accel_assign_opc -o decrypt -m dpdk_cryptodev
+	fi
+
+	timing_exit "${FUNCNAME[0]}"
+}
+
 function create_bdev_subsystem_config() {
 	timing_enter "${FUNCNAME[0]}"
 
@@ -206,7 +218,7 @@ function create_bdev_subsystem_config() {
 			local crypto_driver=crypto_qat
 		fi
 
-		tgt_rpc bdev_crypto_create MallocForCryptoBdev CryptoMallocBdev $crypto_driver 01234567891234560123456789123456
+		tgt_rpc bdev_crypto_create MallocForCryptoBdev CryptoMallocBdev -p $crypto_driver -k 01234567891234560123456789123456
 		expected_notifications+=(
 			bdev_register:MallocForCryptoBdev
 			bdev_register:CryptoMallocBdev
@@ -323,6 +335,8 @@ function json_config_test_init() {
 	json_config_test_start_app target --wait-for-rpc
 
 	#TODO: global subsystem params
+
+	create_accel_config
 
 	# Load nvme configuration. The load_config will issue framework_start_init automatically
 	(

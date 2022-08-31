@@ -125,9 +125,16 @@ vm_run $vm_no
 vm_wait_for_boot 300 $vm_no
 
 # Start SPDK
-$rootdir/build/bin/spdk_tgt &
+$rootdir/build/bin/spdk_tgt --wait-for-rpc &
 tgtpid=$!
 waitforlisten $tgtpid
+
+# Configure accel crypto module & operations
+rpc_cmd dpdk_cryptodev_scan_accel_module
+rpc_cmd dpdk_cryptodev_set_driver -d crypto_aesni_mb
+rpc_cmd accel_assign_opc -o encrypt -m dpdk_cryptodev
+rpc_cmd accel_assign_opc -o decrypt -m dpdk_cryptodev
+rpc_cmd framework_start_init
 
 # Prepare the target
 rpc_cmd bdev_null_create null0 100 4096
@@ -148,8 +155,6 @@ $rootdir/scripts/sma.py -c <(
 		      qmp_port: 10005
 		crypto:
 		  name: 'bdev_crypto'
-		  params:
-		    driver: 'crypto_aesni_mb'
 	EOF
 ) &
 smapid=$!
@@ -304,7 +309,10 @@ ns_bdev=$(rpc_cmd nvmf_get_subsystems nqn.2016-06.io.spdk:vfiouser-0 | jq -r '.[
 crypto_bdev=$(rpc_cmd bdev_get_bdevs -b "$ns_bdev" | jq -r '.[] | select(.product_name == "crypto")')
 [[ $(rpc_cmd bdev_get_bdevs | jq -r '[.[] | select(.product_name == "crypto")] | length') -eq 1 ]]
 
-[[ $(jq -r '.driver_specific.crypto.key' <<< "$crypto_bdev") == "$key0" ]]
+key_name=$(jq -r '.driver_specific.crypto.key_name' <<< "$crypto_bdev")
+key_obj=$(rpc_cmd accel_crypto_keys_get -k $key_name)
+[[ $(jq -r '.[0].key' <<< "$key_obj") == "$key0" ]]
+[[ $(jq -r '.[0].cipher' <<< "$key_obj") == "AES_CBC" ]]
 
 detach_volume "$device0" "$uuid0"
 delete_device "$device0"

@@ -58,8 +58,17 @@ vm_run $vm_no
 vm_wait_for_boot 300 $vm_no
 timing_exit setup_vm
 
-$rootdir/build/bin/vhost -S /var/tmp -m 0x3 &
+$rootdir/build/bin/vhost -S /var/tmp -m 0x3 --wait-for-rpc &
 vhostpid=$!
+
+waitforlisten $vhostpid
+
+# Configure accel crypto module & operations
+rpc_cmd dpdk_cryptodev_scan_accel_module
+rpc_cmd dpdk_cryptodev_set_driver -d crypto_aesni_mb
+rpc_cmd accel_assign_opc -o encrypt -m dpdk_cryptodev
+rpc_cmd accel_assign_opc -o decrypt -m dpdk_cryptodev
+rpc_cmd framework_start_init
 
 $rootdir/scripts/sma.py -c <(
 	cat <<- EOF
@@ -77,8 +86,6 @@ $rootdir/scripts/sma.py -c <(
 		      qmp_port: 9090
 		crypto:
 		  name: 'bdev_crypto'
-		  params:
-		    driver: 'crypto_aesni_mb'
 	EOF
 ) &
 smapid=$!
@@ -191,8 +198,11 @@ devid0=$(
 bdev=$(rpc_cmd vhost_get_controllers | jq -r '.[].backend_specific.block.bdev')
 
 crypto_bdev=$(rpc_cmd bdev_get_bdevs | jq -r '.[] | select(.product_name == "crypto")')
-[[ $(jq -r '.driver_specific.crypto.key' <<< "$crypto_bdev") == "$key0" ]]
 [[ $(jq -r '.driver_specific.crypto.name' <<< "$crypto_bdev") == "$bdev" ]]
+key_name=$(jq -r '.driver_specific.crypto.key_name' <<< "$crypto_bdev")
+key_obj=$(rpc_cmd accel_crypto_keys_get -k $key_name)
+[[ $(jq -r '.[0].key' <<< "$key_obj") == "$key0" ]]
+[[ $(jq -r '.[0].cipher' <<< "$key_obj") == "AES_CBC" ]]
 
 # Delete crypto device and check if it's gone
 delete_device $devid0

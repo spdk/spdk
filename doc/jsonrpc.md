@@ -443,6 +443,7 @@ Example response:
     "spdk_kill_instance",
     "accel_get_opc_assignments",
     "accel_crypto_key_create",
+    "accel_crypto_key_destroy",
     "accel_crypto_keys_get",
     "ioat_scan_accel_module",
     "dsa_scan_accel_module",
@@ -1783,7 +1784,7 @@ Example response:
 
 ### accel_crypto_key_create {#rpc_accel_crypto_key_create}
 
-Create a crypt key which will be used in accel framework
+Create a crypto key which will be used in accel framework
 
 #### Parameters
 
@@ -1807,6 +1808,41 @@ Example request:
     "cipher": "AES_XTS",
     "key": "00112233445566778899001122334455",
     "key2": "00112233445566778899001122334455",
+    "name": "super_key"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### accel_crypto_key_destroy {#rpc_accel_crypto_key_destroy}
+
+Destroy a crypto key. The user is responsible for ensuring that the deleted key is not used by acceleration modules.
+
+#### Parameters
+
+Name       | Optional | Type        | Description
+-----------|----------| ----------- | -----------------
+name       | Required | string      | The key name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_crypto_key_destroy",
+  "id": 1,
+  "params": {
     "name": "super_key"
   }
 }
@@ -2039,7 +2075,7 @@ Set the DPDK cryptodev driver
 
 Name                    | Optional | Type   | Description
 ----------------------- |----------|--------| -----------
-driver_name             | Required | string | The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci
+crypto_pmd              | Required | string | The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci
 
 #### Example
 
@@ -2051,7 +2087,7 @@ Example request:
   "method": "dpdk_cryptodev_set_driver",
   "id": 1,
   "params": {
-    "driver_name": "crypto_aesni_mb"
+    "crypto_pmd": "crypto_aesni_mb"
   }
 }
 ~~~
@@ -2693,13 +2729,15 @@ Create a new crypto bdev on a given base bdev.
 #### Parameters
 
 Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
+----------------------- |----------| ----------- | -----------
 base_bdev_name          | Required | string      | Name of the base bdev
 name                    | Required | string      | Name of the crypto vbdev to create
-crypto_pmd              | Required | string      | Name of the crypto device driver
-key                     | Required | string      | Key in hex form
-cipher                  | Required | string      | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5)
-key2                    | Required | string      | 2nd key in hex form only required for cipher AES_XTS
+crypto_pmd              | Optional | string      | Name of the crypto device driver. Obsolete, see accel_crypto_key_create
+key                     | Optional | string      | Key in hex form. Obsolete, see accel_crypto_key_create
+cipher                  | Optional | string      | Cipher to use, AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create
+key2                    | Optional | string      | 2nd key in hex form only required for cipher AET_XTS. Obsolete, see accel_crypto_key_create
+key_name                | Optional | string      | Name of the key created with accel_crypto_key_create
+module                  | Optional | string      | Name of the accel module which is used to create a key (if no key_name specified)
 
 Both key and key2 must be passed in the hexlified form. For example, 256bit AES key may look like this:
 afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215

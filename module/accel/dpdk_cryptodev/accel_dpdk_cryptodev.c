@@ -601,6 +601,7 @@ accel_dpdk_cryptodev_mbuf_add_single_block(struct spdk_iov_sgl *sgl, struct rte_
 	spdk_iov_sgl_advance(sgl, buf_len);
 
 	/* Handle the case of page boundary. */
+	assert(task->base.block_size >= buf_len);
 	remainder = task->base.block_size - buf_len;
 	while (remainder) {
 		buf_len = spdk_min(remainder, sgl->iov->iov_len - sgl->iov_offset);

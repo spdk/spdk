@@ -144,8 +144,17 @@ verify_crypto_volume() {
 
 trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 
-"$rootdir/build/bin/spdk_tgt" -m 0x1 &
+"$rootdir/build/bin/spdk_tgt" -m 0x1 --wait-for-rpc &
 hostpid=$!
+
+waitforlisten $hostpid
+
+# Configure host with accel crypto parameters
+$rpc_py dpdk_cryptodev_scan_accel_module
+rpc_cmd dpdk_cryptodev_set_driver -d crypto_aesni_mb
+$rpc_py accel_assign_opc -o encrypt -m dpdk_cryptodev
+$rpc_py accel_assign_opc -o decrypt -m dpdk_cryptodev
+$rpc_py framework_start_init
 
 "$rootdir/build/bin/spdk_tgt" -r "$tgtsock" -m 0x2 &
 tgtpid=$!
@@ -158,8 +167,6 @@ $rootdir/scripts/sma.py -c <(
 		  - name: 'nvmf_tcp'
 		crypto:
 		  name: 'bdev_crypto'
-		  params:
-		    driver: 'crypto_aesni_mb'
 	CONFIG
 ) &
 smapid=$!
@@ -202,7 +209,10 @@ attach_volume $device $uuid AES_CBC $key0
 verify_crypto_volume $localnqn $uuid
 # Check that it's using correct key
 crypto_bdev=$(rpc_cmd bdev_get_bdevs | jq -r '.[] | select(.product_name == "crypto")')
-[[ $(jq -r '.driver_specific.crypto.key' <<< "$crypto_bdev") == "$key0" ]]
+key_name=$(jq -r '.driver_specific.crypto.key_name' <<< "$crypto_bdev")
+key_obj=$(rpc_cmd accel_crypto_keys_get -k $key_name)
+[[ $(jq -r '.[0].key' <<< "$key_obj") == "$key0" ]]
+[[ $(jq -r '.[0].cipher' <<< "$key_obj") == "AES_CBC" ]]
 
 # Attach the same volume again
 attach_volume $device $uuid AES_CBC $key0
@@ -213,7 +223,10 @@ attach_volume $device $uuid AES_CBC $key0
 verify_crypto_volume $localnqn $uuid
 crypto_bdev2=$(rpc_cmd bdev_get_bdevs | jq -r '.[] | select(.product_name == "crypto")')
 [[ $(jq -r '.name' <<< "$crypto_bdev") == $(jq -r '.name' <<< "$crypto_bdev2") ]]
-[[ $(jq -r '.driver_specific.crypto.key' <<< "$crypto_bdev2") == "$key0" ]]
+key_name=$(jq -r '.driver_specific.crypto.key_name' <<< "$crypto_bdev2")
+key_obj=$(rpc_cmd accel_crypto_keys_get -k $key_name)
+[[ $(jq -r '.[0].key' <<< "$key_obj") == "$key0" ]]
+[[ $(jq -r '.[0].cipher' <<< "$key_obj") == "AES_CBC" ]]
 
 # Try to do attach it again, but this time use a different crypto algorithm
 NOT attach_volume $device $uuid AES_XTS $key0

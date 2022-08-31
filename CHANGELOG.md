@@ -23,6 +23,8 @@ Protection information is now supported by the malloc bdev module.
 
 A new API `spkd_bdev_part_submit_request_ext` was added to specify a custom completion callback.
 
+vbdev_crypto is updated to use accel framework instead of DPDK PMDs.
+
 ### scheduler
 
 Changing scheduler from dynamic back to static is no longer possible,

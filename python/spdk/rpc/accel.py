@@ -54,6 +54,19 @@ def accel_crypto_key_create(client, cipher, key, key2, name):
     return client.call('accel_crypto_key_create', params)
 
 
+def accel_crypto_key_destroy(client, name):
+    """Destroy Data Encryption Key.
+
+    Args:
+        name: key name
+    """
+    params = {
+        'name': name
+    }
+
+    return client.call('accel_crypto_key_destroy', params)
+
+
 def accel_crypto_keys_get(client, key_name):
     """Get a list of the crypto keys.
 
