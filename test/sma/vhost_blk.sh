@@ -14,31 +14,31 @@ function cleanup() {
 }
 
 function create_device() {
-	"$rootdir/scripts/sma-client.py" <<- EOF
+	"$rootdir/scripts/sma-client.py" <<- CREATE
 		{
-			"method": "CreateDevice",
-			"params": {
-			"virtio_blk": {
-					"physical_id": "$1",
-					"virtual_id": "0"
-				},
-				"volume": {
-					"volume_id": "$(uuid2base64 $2)"
-				}
-			}
+		  "method": "CreateDevice",
+		  "params": {
+		    "virtio_blk": {
+		      "physical_id": "$1",
+		      "virtual_id": "0"
+		    },
+		    "volume": {
+		      "volume_id": "$(uuid2base64 $2)"
+		    }
+		  }
 		}
-	EOF
+	CREATE
 }
 
 function delete_device() {
-	"$rootdir/scripts/sma-client.py" <<- EOF
+	"$rootdir/scripts/sma-client.py" <<- DELETE
 		{
-			"method": "DeleteDevice",
-			"params": {
-				"handle": "$1"
-			}
+		  "method": "DeleteDevice",
+		  "params": {
+		    "handle": "$1"
+		  }
 		}
-	EOF
+	DELETE
 }
 
 trap "cleanup; exit 1" SIGINT SIGTERM EXIT

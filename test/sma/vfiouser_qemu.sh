@@ -11,54 +11,54 @@ function create_device() {
 	local pfid=${1:-1}
 	local vfid=${2:-0}
 
-	"$rootdir/scripts/sma-client.py" <<- EOF
+	"$rootdir/scripts/sma-client.py" <<- CREATE
 		{
-			"method": "CreateDevice",
-			"params": {
-				"nvme": {
-					"physical_id": "$pfid",
-					"virtual_id": "$vfid"
-				}
-			}
+		  "method": "CreateDevice",
+		  "params": {
+		    "nvme": {
+		      "physical_id": "$pfid",
+		      "virtual_id": "$vfid"
+		    }
+		  }
 		}
-	EOF
+	CREATE
 }
 
 function delete_device() {
-	"$rootdir/scripts/sma-client.py" <<- EOF
+	"$rootdir/scripts/sma-client.py" <<- DELETE
 		{
-			"method": "DeleteDevice",
-			"params": {
-				"handle": "$1"
-			}
+		  "method": "DeleteDevice",
+		  "params": {
+		    "handle": "$1"
+		  }
 		}
-	EOF
+	DELETE
 }
 
 function attach_volume() {
-	"$rootdir/scripts/sma-client.py" <<- EOF
+	"$rootdir/scripts/sma-client.py" <<- ATTACH
 		{
-			"method": "AttachVolume",
-			"params": {
-				"device_handle": "$1",
-				"volume": {
-					"volume_id": "$(uuid2base64 $2)"
-				}
-			}
+		  "method": "AttachVolume",
+		  "params": {
+		    "device_handle": "$1",
+		    "volume": {
+		      "volume_id": "$(uuid2base64 $2)"
+		    }
+		  }
 		}
-	EOF
+	ATTACH
 }
 
 function detach_volume() {
-	"$rootdir/scripts/sma-client.py" <<- EOF
+	"$rootdir/scripts/sma-client.py" <<- DETACH
 		{
-			"method": "DetachVolume",
-			"params": {
-				"device_handle": "$1",
-				"volume_id": "$(uuid2base64 $2)"
-			}
+		  "method": "DetachVolume",
+		  "params": {
+		    "device_handle": "$1",
+		    "volume_id": "$(uuid2base64 $2)"
+		  }
 		}
-	EOF
+	DETACH
 }
 
 function vm_count_nvme() {
