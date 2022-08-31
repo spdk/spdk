@@ -484,7 +484,7 @@ nvme_transport_ctrlr_connect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nv
 	if (!qpair->async) {
 		/* Busy wait until the qpair exits the connecting state */
 		while (nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING) {
-			if (qpair->poll_group) {
+			if (qpair->poll_group && spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
 				rc = spdk_nvme_poll_group_process_completions(
 					     qpair->poll_group->group, 0,
 					     nvme_transport_connect_qpair_fail);

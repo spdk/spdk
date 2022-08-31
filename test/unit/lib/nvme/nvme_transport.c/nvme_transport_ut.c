@@ -24,6 +24,7 @@ DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme
 		spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb), 0);
 DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+DEFINE_STUB(spdk_nvme_ctrlr_is_fabrics, bool, (struct spdk_nvme_ctrlr *ctrlr), false);
 
 static void
 ut_construct_transport(struct spdk_nvme_transport *transport, const char name[])
