@@ -2001,10 +2001,6 @@ static void nvme_rdma_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t d
 static int
 nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 {
-	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
-
-	nvme_rdma_qpair_destroy(rqpair);
-
 	nvme_rdma_qpair_abort_reqs(&rqpair->qpair, 0);
 
 	if (ret) {
@@ -2012,9 +2008,9 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 		goto quiet;
 	}
 
-	if (qpair->poll_group == NULL) {
-		/* If poll group is not used, cq is already destroyed. So complete
-		 * disconnecting qpair immediately.
+	if (rqpair->poller == NULL) {
+		/* If poller is not used, cq is not shared or already destroyed.
+		 * So complete disconnecting qpair immediately.
 		 */
 		goto quiet;
 	}
@@ -2030,6 +2026,7 @@ nvme_rdma_qpair_disconnected(struct nvme_rdma_qpair *rqpair, int ret)
 quiet:
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
 
+	nvme_rdma_qpair_destroy(rqpair);
 	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
 
 	return 0;
@@ -2045,6 +2042,7 @@ nvme_rdma_qpair_wait_until_quiet(struct nvme_rdma_qpair *rqpair)
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_EXITED;
 
+	nvme_rdma_qpair_destroy(rqpair);
 	nvme_transport_ctrlr_disconnect_qpair_done(&rqpair->qpair);
 
 	return 0;
