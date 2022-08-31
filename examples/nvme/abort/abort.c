@@ -847,6 +847,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	min_aq_size = spdk_divide_round_up(g_queue_depth, g_abort_interval) + 8;
 	opts->admin_queue_size = spdk_max(opts->admin_queue_size, min_aq_size);
 
+	/* Avoid possible nvme_qpair_abort_queued_reqs_with_cbarg ERROR when IO queue size is 128. */
+	opts->disable_error_logging = true;
+
 	return true;
 }
 
