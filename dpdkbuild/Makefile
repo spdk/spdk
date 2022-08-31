@@ -121,6 +121,9 @@ ifeq ($(shell test $(GCC_MAJOR) -ge 12 && echo 1), 1)
 # 3. gcc 12 reports reading incorect size from a region. Seems like false positive,
 # see issue #2460
 DPDK_CFLAGS += -Wno-stringop-overread
+# 4. gcc 12 reports array subscript * is outside array bounds. Seems like false positive,
+# see issue #2668
+DPDK_CFLAGS += -Wno-array-bounds
 endif
 endif
 endif
