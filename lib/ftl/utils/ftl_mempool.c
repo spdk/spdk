@@ -31,6 +31,8 @@ struct ftl_mempool {
 static inline bool is_element_valid(struct ftl_mempool *mpool,
 				    void *element)  __attribute__((unused));
 
+static inline bool ftl_mempool_is_initialized(struct ftl_mempool *mpool) __attribute__((unused));
+
 static size_t
 element_size_aligned(size_t size, size_t alignment)
 {
