@@ -132,6 +132,8 @@ struct nvme_rdma_poller_stats {
 	struct spdk_rdma_qp_stats rdma_stats;
 };
 
+struct nvme_rdma_poll_group;
+
 struct nvme_rdma_poller {
 	struct ibv_context		*device;
 	struct ibv_cq			*cq;
@@ -139,6 +141,7 @@ struct nvme_rdma_poller {
 	int				required_num_wc;
 	int				current_num_wc;
 	struct nvme_rdma_poller_stats	stats;
+	struct nvme_rdma_poll_group	*group;
 	STAILQ_ENTRY(nvme_rdma_poller)	link;
 };
 
@@ -2441,7 +2444,7 @@ nvme_rdma_is_rxe_device(struct ibv_device_attr *dev_attr)
 
 static int
 nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
-				 struct nvme_rdma_poll_group *group,
+				 struct nvme_rdma_poller *poller,
 				 struct nvme_rdma_qpair *rdma_qpair,
 				 uint64_t *rdma_completions)
 {
@@ -2510,14 +2513,14 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 			if (wc[i].status) {
 				rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
 				if (!rqpair) {
-					rqpair = rdma_qpair != NULL ? rdma_qpair : get_rdma_qpair_from_wc(group, &wc[i]);
+					rqpair = rdma_qpair != NULL ? rdma_qpair : get_rdma_qpair_from_wc(poller->group, &wc[i]);
 				}
 				if (!rqpair) {
 					/* When poll_group is used, several qpairs share the same CQ and it is possible to
 					 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
 					 * That happens due to qpair is destroyed while there are submitted but not completed send/receive
 					 * Work Requests */
-					assert(group);
+					assert(poller);
 					continue;
 				}
 				assert(rqpair->current_num_sends > 0);
@@ -2773,6 +2776,7 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 		return NULL;
 	}
 
+	poller->group = group;
 	poller->device = ctx;
 	poller->cq = ibv_create_cq(poller->device, DEFAULT_NVME_RDMA_CQ_SIZE, group, NULL, 0);
 
@@ -2960,7 +2964,7 @@ nvme_rdma_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 		do {
 			poller->stats.polls++;
 			batch_size = spdk_min((completions_per_poller - poller_completions), MAX_COMPLETIONS_PER_POLL);
-			rc = nvme_rdma_cq_process_completions(poller->cq, batch_size, group, NULL, &rdma_completions);
+			rc = nvme_rdma_cq_process_completions(poller->cq, batch_size, poller, NULL, &rdma_completions);
 			if (rc <= 0) {
 				if (rc == -ECANCELED) {
 					return -EIO;
