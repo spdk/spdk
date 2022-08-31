@@ -43,14 +43,17 @@ DPDK_DRIVERS += common/mlx5 bus/auxiliary
 endif
 
 ifeq ($(CONFIG_CRYPTO),y)
-DPDK_DRIVERS += crypto crypto/ipsec_mb
+DPDK_DRIVERS += crypto
 # aesni_mb is name of the PMD in DPDK 21.08 and earlier
 DPDK_DRIVERS += crypto/aesni_mb
 ifeq ($(CONFIG_CRYPTO_MLX5),y)
 DPDK_DRIVERS += crypto/mlx5
 endif
+ifeq ($(CONFIG_IPSEC_MB),y)
+DPDK_DRIVERS += crypto/ipsec_mb
 DPDK_CFLAGS += -I$(IPSEC_MB_DIR)
 DPDK_LDFLAGS += -L$(IPSEC_MB_DIR)
+endif
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
