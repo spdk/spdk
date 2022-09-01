@@ -374,7 +374,7 @@ def bdev_raid_get_bdevs(client, category):
         category: any one of all or online or configuring or offline
 
     Returns:
-        List of raid bdev names
+        List of raid bdev details
     """
     params = {'category': category}
     return client.call('bdev_raid_get_bdevs', params)

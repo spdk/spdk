@@ -101,6 +101,7 @@ DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const cha
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_named_object_begin, int, (struct spdk_json_write_ctx *w,
 		const char *name), 0);
+DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
 DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
@@ -391,19 +392,21 @@ spdk_sprintf_alloc(const char *format, ...)
 int
 spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
 {
-	struct rpc_bdev_raid_create *req = g_rpc_req;
-	if (strcmp(name, "strip_size_kb") == 0) {
-		CU_ASSERT(req->strip_size_kb == val);
-	} else if (strcmp(name, "blocklen_shift") == 0) {
-		CU_ASSERT(spdk_u32log2(g_block_len) == val);
-	} else if (strcmp(name, "num_base_bdevs") == 0) {
-		CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
-	} else if (strcmp(name, "state") == 0) {
-		CU_ASSERT(val == RAID_BDEV_STATE_ONLINE);
-	} else if (strcmp(name, "destruct_called") == 0) {
-		CU_ASSERT(val == 0);
-	} else if (strcmp(name, "num_base_bdevs_discovered") == 0) {
-		CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
+	if (!g_test_multi_raids) {
+		struct rpc_bdev_raid_create *req = g_rpc_req;
+		if (strcmp(name, "strip_size_kb") == 0) {
+			CU_ASSERT(req->strip_size_kb == val);
+		} else if (strcmp(name, "blocklen_shift") == 0) {
+			CU_ASSERT(spdk_u32log2(g_block_len) == val);
+		} else if (strcmp(name, "num_base_bdevs") == 0) {
+			CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
+		} else if (strcmp(name, "state") == 0) {
+			CU_ASSERT(val == RAID_BDEV_STATE_ONLINE);
+		} else if (strcmp(name, "destruct_called") == 0) {
+			CU_ASSERT(val == 0);
+		} else if (strcmp(name, "num_base_bdevs_discovered") == 0) {
+			CU_ASSERT(req->base_bdevs.num_base_bdevs == val);
+		}
 	}
 	return 0;
 }
@@ -411,9 +414,17 @@ spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, ui
 int
 spdk_json_write_named_string(struct spdk_json_write_ctx *w, const char *name, const char *val)
 {
-	struct rpc_bdev_raid_create *req = g_rpc_req;
-	if (strcmp(name, "raid_level") == 0) {
-		CU_ASSERT(strcmp(val, raid_bdev_level_to_str(req->level)) == 0);
+	if (g_test_multi_raids) {
+		if (strcmp(name, "name") == 0) {
+			g_get_raids_output[g_get_raids_count] = strdup(val);
+			SPDK_CU_ASSERT_FATAL(g_get_raids_output[g_get_raids_count] != NULL);
+			g_get_raids_count++;
+		}
+	} else {
+		struct rpc_bdev_raid_create *req = g_rpc_req;
+		if (strcmp(name, "raid_level") == 0) {
+			CU_ASSERT(strcmp(val, raid_bdev_level_to_str(req->level)) == 0);
+		}
 	}
 	return 0;
 }
@@ -516,18 +527,6 @@ struct spdk_json_write_ctx *
 spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {
 	return (void *)1;
-}
-
-int
-spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
-{
-	if (g_test_multi_raids) {
-		g_get_raids_output[g_get_raids_count] = strdup(val);
-		SPDK_CU_ASSERT_FATAL(g_get_raids_output[g_get_raids_count] != NULL);
-		g_get_raids_count++;
-	}
-
-	return 0;
 }
 
 void

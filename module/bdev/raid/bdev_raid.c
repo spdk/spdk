@@ -604,27 +604,13 @@ raid_bdev_get_io_channel(void *ctxt)
 	return spdk_get_io_channel(raid_bdev);
 }
 
-/*
- * brief:
- * raid_bdev_dump_info_json is the function table pointer for raid bdev
- * params:
- * ctx - pointer to raid_bdev
- * w - pointer to json context
- * returns:
- * 0 - success
- * non zero - failure
- */
-static int
-raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
+void
+raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ctx *w)
 {
-	struct raid_bdev *raid_bdev = ctx;
 	struct raid_base_bdev_info *base_info;
 
-	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_dump_config_json\n");
 	assert(raid_bdev != NULL);
 
-	/* Dump the raid bdev configuration related information */
-	spdk_json_write_named_object_begin(w, "raid");
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "state", raid_bdev_state_to_str(raid_bdev->state));
 	spdk_json_write_named_string(w, "raid_level", raid_bdev_level_to_str(raid_bdev->level));
@@ -640,6 +626,28 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 		}
 	}
 	spdk_json_write_array_end(w);
+}
+
+/*
+ * brief:
+ * raid_bdev_dump_info_json is the function table pointer for raid bdev
+ * params:
+ * ctx - pointer to raid_bdev
+ * w - pointer to json context
+ * returns:
+ * 0 - success
+ * non zero - failure
+ */
+static int
+raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct raid_bdev *raid_bdev = ctx;
+
+	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_dump_config_json\n");
+
+	/* Dump the raid bdev configuration related information */
+	spdk_json_write_named_object_begin(w, "raid");
+	raid_bdev_write_info_json(raid_bdev, w);
 	spdk_json_write_object_end(w);
 
 	return 0;

@@ -2010,11 +2010,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=bdev_lvol_get_lvstores)
 
     def bdev_raid_get_bdevs(args):
-        print_array(rpc.bdev.bdev_raid_get_bdevs(args.client,
-                                                 category=args.category))
+        print_json(rpc.bdev.bdev_raid_get_bdevs(args.client,
+                                                category=args.category))
 
     p = subparsers.add_parser('bdev_raid_get_bdevs',
-                              help="""This is used to list all the raid bdev names based on the input category
+                              help="""This is used to list all the raid bdev details based on the input category
     requested. Category should be one of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raid bdevs whether
     they are online or configuring or offline. 'online' is the raid bdev which is registered with bdev layer. 'configuring'
     is the raid bdev which does not have full configuration discovered yet. 'offline' is the raid bdev which is not registered

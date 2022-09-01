@@ -90,7 +90,7 @@ function raid_function_test() {
 		waitforlisten $raid_pid $rpc_server
 
 		configure_raid_bdev $raid_level
-		raid_bdev=$($rpc_py bdev_raid_get_bdevs online | cut -d ' ' -f 1)
+		raid_bdev=$($rpc_py bdev_raid_get_bdevs online | jq -r '.[0]["name"] | select(.)')
 		if [ $raid_bdev = "" ]; then
 			echo "No raid0 device in SPDK app"
 			return 1
@@ -133,7 +133,7 @@ function raid_state_function_test() {
 	# Step1: create a RAID bdev with no base bdevs
 	# Expect state: CONFIGURING
 	$rpc_py bdev_raid_create -z 64 -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
-	raid_bdev=$($rpc_py bdev_raid_get_bdevs configuring | cut -d ' ' -f 1)
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs configuring | jq -r '.[0]["name"]')
 	if [ $raid_bdev != $raid_bdev_name ]; then
 		echo "No raid device in SPDK app"
 		return 1
@@ -147,7 +147,7 @@ function raid_state_function_test() {
 	$rpc_py bdev_raid_create -z 64 -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
 	$rpc_py bdev_malloc_create 32 512 -b $base_bdev1
 	waitforbdev $base_bdev1
-	raid_bdev=$($rpc_py bdev_raid_get_bdevs configuring | cut -d ' ' -f 1)
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs configuring | jq -r '.[0]["name"]')
 	if [ $raid_bdev != $raid_bdev_name ]; then
 		echo "$raid_bdev_name is not in CONFIGURING state"
 		$rpc_py bdev_malloc_delete $base_bdev1
@@ -163,7 +163,7 @@ function raid_state_function_test() {
 	$rpc_py bdev_raid_create -z 64 -r $raid_level -b "$base_bdev1 $base_bdev2" -n $raid_bdev_name
 	$rpc_py bdev_malloc_create 32 512 -b $base_bdev2
 	waitforbdev $base_bdev2
-	raid_bdev=$($rpc_py bdev_raid_get_bdevs online | cut -d ' ' -f 1)
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs online | jq -r '.[0]["name"]')
 	if [ $raid_bdev != $raid_bdev_name ]; then
 		echo "$raid_bdev_name is not in ONLINE state"
 		$rpc_py bdev_malloc_delete $base_bdev1
@@ -175,7 +175,7 @@ function raid_state_function_test() {
 	# Step4: delete one base bdev from the RAID bdev
 	# Expect state: OFFLINE
 	$rpc_py bdev_malloc_delete $base_bdev2
-	raid_bdev=$($rpc_py bdev_raid_get_bdevs offline | cut -d ' ' -f 1)
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs offline | jq -r '.[0]["name"]')
 	if [ $raid_bdev != $raid_bdev_name ]; then
 		echo "$raid_bdev_name is not in OFFLINE state"
 		$rpc_py bdev_malloc_delete $base_bdev1
@@ -186,7 +186,7 @@ function raid_state_function_test() {
 	# Step5: delete last base bdev from the RAID bdev
 	# Expect state: removed from system
 	$rpc_py bdev_malloc_delete $base_bdev1
-	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | cut -d ' ' -f 1)
+	raid_bdev=$($rpc_py bdev_raid_get_bdevs all | jq -r '.[0]["name"] | select(.)')
 	if [ -n "$raid_bdev" ]; then
 		echo "$raid_bdev_name is not removed"
 		$rpc_py bdev_raid_delete $raid_bdev_name

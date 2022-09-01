@@ -57,6 +57,8 @@ names with this option to restrict allowed RPCs to only that list.
 
 Added spdk_rpc_set_allowlist to restrict allowed RPCs to the specified list.
 
+Changed `bdev_raid_get_bdevs` RPC output format to include raid_bdev details.
+
 ### bdevperf
 
 Promoted the application to example to match similar programs: fio_plugin and perf.

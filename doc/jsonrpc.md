@@ -9496,7 +9496,7 @@ Example response:
 
 ### bdev_raid_get_bdevs {#rpc_bdev_raid_get_bdevs}
 
-This is used to list all the raid bdev names based on the input category requested. Category should be one
+This is used to list all the raid bdev details based on the input category requested. Category should be one
 of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raid bdevs whether they are online or
 configuring or offline. 'online' is the raid bdev which is registered with bdev layer. 'configuring' is
 the raid bdev which does not have full configuration discovered yet. 'offline' is the raid bdev which is
@@ -9531,7 +9531,30 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": [
-    "Raid0"
+    {
+      "name": "RaidBdev0",
+      "strip_size_kb": 128,
+      "state": "online",
+      "raid_level": "raid0",
+      "num_base_bdevs": 2,
+      "num_base_bdevs_discovered": 2,
+      "base_bdevs_list": [
+        "malloc0",
+        "malloc1"
+      ]
+    },
+    {
+      "name": "RaidBdev1",
+      "strip_size_kb": 128,
+      "state": "configuring",
+      "raid_level": "raid0",
+      "num_base_bdevs": 2,
+      "num_base_bdevs_discovered": 1,
+      "base_bdevs_list": [
+        "malloc2",
+        null
+      ]
+    }
   ]
 }
 ~~~
