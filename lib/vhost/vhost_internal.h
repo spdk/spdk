@@ -244,7 +244,7 @@ struct spdk_vhost_dev_backend {
 	 */
 	size_t session_ctx_size;
 
-	int (*start_session)(struct spdk_vhost_session *vsession);
+	spdk_vhost_session_fn start_session;
 	int (*stop_session)(struct spdk_vhost_session *vsession);
 
 	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);

@@ -1197,6 +1197,17 @@ vhost_stop_device_cb(int vid)
 	return rc;
 }
 
+static int
+vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession)
+{
+	const struct spdk_vhost_dev_backend *backend;
+
+	assert(vdev != NULL);
+	backend = vdev->backend;
+
+	return vhost_session_send_event(vsession, backend->start_session, 3, "start session");
+}
+
 int
 vhost_start_device_cb(int vid)
 {
@@ -1318,7 +1329,7 @@ vhost_start_device_cb(int vid)
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
 	vhost_session_mem_register(vsession->mem);
 	vsession->initialized = true;
-	rc = vdev->backend->start_session(vsession);
+	rc = vhost_user_session_start(vdev, vsession);
 	if (rc != 0) {
 		vhost_session_mem_unregister(vsession->mem);
 		free(vsession->mem);

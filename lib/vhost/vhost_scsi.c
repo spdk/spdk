@@ -140,7 +140,8 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_virtqueue *vq;
 };
 
-static int vhost_scsi_start(struct spdk_vhost_session *vsession);
+static int vhost_scsi_start(struct spdk_vhost_dev *vdev,
+			    struct spdk_vhost_session *vsession, void *unused);
 static int vhost_scsi_stop(struct spdk_vhost_session *vsession);
 static void vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 				      struct spdk_json_write_ctx *w);
@@ -1364,8 +1365,8 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 }
 
 static int
-vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
-		    struct spdk_vhost_session *vsession, void *unused)
+vhost_scsi_start(struct spdk_vhost_dev *vdev,
+		 struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 	struct spdk_vhost_scsi_dev *svdev;
@@ -1423,13 +1424,6 @@ vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 out:
 	vhost_session_start_done(vsession, rc);
 	return rc;
-}
-
-static int
-vhost_scsi_start(struct spdk_vhost_session *vsession)
-{
-	return vhost_session_send_event(vsession, vhost_scsi_start_cb,
-					3, "start session");
 }
 
 static int
