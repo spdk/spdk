@@ -1381,10 +1381,14 @@ vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 		    struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
-	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
+	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_dev_vhost_state *state;
 	uint32_t i;
 	int rc;
+
+	svdev = to_scsi_dev(vsession->vdev);
+	assert(svdev != NULL);
+	svsession->svdev = svdev;
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vsession->max_queues; i++) {
@@ -1437,13 +1441,6 @@ out:
 static int
 vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
-	struct spdk_vhost_scsi_dev *svdev;
-
-	svdev = to_scsi_dev(vsession->vdev);
-	assert(svdev != NULL);
-	svsession->svdev = svdev;
-
 	return vhost_user_session_send_event(vsession, vhost_scsi_start_cb,
 					     3, "start session");
 }
