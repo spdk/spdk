@@ -920,6 +920,16 @@ new_connection(int vid)
 }
 
 static int
+vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession)
+{
+	const struct spdk_vhost_user_dev_backend *backend;
+
+	backend = to_user_dev(vdev)->user_backend;
+
+	return vhost_user_session_send_event(vsession, backend->start_session, 3, "start session");
+}
+
+static int
 start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
@@ -1040,7 +1050,7 @@ start_device(int vid)
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
 	vhost_session_mem_register(vsession->mem);
 	vsession->initialized = true;
-	rc = to_user_dev(vdev)->user_backend->start_session(vsession);
+	rc = vhost_user_session_start(vdev, vsession);
 	if (rc != 0) {
 		vhost_session_mem_unregister(vsession->mem);
 		free(vsession->mem);

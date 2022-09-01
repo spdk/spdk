@@ -1291,8 +1291,8 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 }
 
 static int
-vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
-		   struct spdk_vhost_session *vsession, void *unused)
+vhost_blk_start(struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
 	struct spdk_vhost_blk_dev *bvdev;
@@ -1361,13 +1361,6 @@ vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 out:
 	vhost_user_session_start_done(vsession, rc);
 	return rc;
-}
-
-static int
-vhost_blk_start(struct spdk_vhost_session *vsession)
-{
-	return vhost_user_session_send_event(vsession, vhost_blk_start_cb,
-					     3, "start session");
 }
 
 static int
