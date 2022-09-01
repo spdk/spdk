@@ -64,6 +64,9 @@ struct ftl_band_md {
 	/* nv_cache p2l md region associated with band */
 	enum ftl_layout_region_type	p2l_md_region;
 
+	/* Reserved */
+	uint8_t				reserved[4];
+
 	/* Sequence ID when band was opened */
 	uint64_t			seq;
 
@@ -78,7 +81,10 @@ struct ftl_band_md {
 
 	/* CRC32 checksum of the associated P2L map when band is in closed state */
 	uint32_t			p2l_map_checksum;
-} __attribute__((aligned(FTL_BLOCK_SIZE)));
+
+	/* Reserved */
+	uint8_t				reserved2[4028];
+} __attribute__((packed));
 
 SPDK_STATIC_ASSERT(sizeof(struct ftl_band_md) == FTL_BLOCK_SIZE, "Incorrect metadata size");
 

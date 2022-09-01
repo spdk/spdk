@@ -32,12 +32,8 @@ struct ftl_superblock {
 	/* Maximum IO depth per band relocate */
 	uint64_t			max_reloc_qdepth;
 
-	/* Reserved fields */
-	uint64_t			reserved;
-
-	bool				reserved3;
-
-	uint32_t			reserved2;
+	/* Reserved field */
+	uint8_t				reserved3[16];
 
 	/* Last L2P checkpoint +1 (i.e. min_seq_id, 0:no ckpt) */
 	uint64_t			ckpt_seq_id;
@@ -45,7 +41,7 @@ struct ftl_superblock {
 	struct ftl_superblock_gc_info	gc_info;
 
 	struct ftl_superblock_md_region	md_layout_head;
-};
+} __attribute__((packed));
 
 SPDK_STATIC_ASSERT(offsetof(struct ftl_superblock, header) == 0,
 		   "Invalid placement of header");

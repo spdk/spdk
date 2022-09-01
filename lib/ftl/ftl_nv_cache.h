@@ -83,7 +83,10 @@ struct ftl_nv_cache_chunk_md {
 
 	/* CRC32 checksum of the associated P2L map when chunk is in closed state */
 	uint32_t p2l_map_checksum;
-} __attribute__((aligned(FTL_BLOCK_SIZE)));
+
+	/* Reserved */
+	uint8_t reserved[4052];
+} __attribute__((packed));
 
 #define FTL_NV_CACHE_CHUNK_MD_SIZE sizeof(struct ftl_nv_cache_chunk_md)
 SPDK_STATIC_ASSERT(FTL_NV_CACHE_CHUNK_MD_SIZE == FTL_BLOCK_SIZE,

@@ -33,13 +33,17 @@ struct ftl_superblock_gc_info {
 	uint64_t band_phys_id;
 	/* May be updating multiple fields at the same time, clearing/setting this marks the transaction */
 	uint64_t is_valid;
-};
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct ftl_superblock_gc_info) == 32,
+		   "ftl_superblock_gc_info incorrect size");
 
 struct ftl_superblock_header {
 	uint64_t magic;
 	uint64_t crc;
 	uint64_t version;
-};
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct ftl_superblock_header) == 24,
+		   "ftl_superblock_header incorrect size");
 
 struct ftl_superblock_md_region {
 	uint32_t		type;
@@ -47,7 +51,9 @@ struct ftl_superblock_md_region {
 	uint64_t		blk_offs;
 	uint64_t		blk_sz;
 	ftl_df_obj_id		df_next;
-};
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct ftl_superblock_md_region) == 32,
+		   "ftl_superblock_md_region incorrect size");
 
 struct ftl_superblock_shm {
 	/* SHM initialization completed */
