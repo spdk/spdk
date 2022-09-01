@@ -1198,14 +1198,24 @@ vhost_stop_device_cb(int vid)
 }
 
 static int
-vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession)
+vhost_user_session_start_cb(struct spdk_vhost_dev *vdev,
+			    struct spdk_vhost_session *vsession, void *unused)
 {
 	const struct spdk_vhost_dev_backend *backend;
+	int rc;
 
 	assert(vdev != NULL);
 	backend = vdev->backend;
 
-	return vhost_session_send_event(vsession, backend->start_session, 3, "start session");
+	rc = backend->start_session(vdev, vsession, NULL);
+	vhost_session_start_done(vsession, rc);
+	return rc;
+}
+
+static int
+vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession)
+{
+	return vhost_session_send_event(vsession, vhost_user_session_start_cb, 3, "start session");
 }
 
 int
