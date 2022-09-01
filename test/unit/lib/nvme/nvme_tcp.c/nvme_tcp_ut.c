@@ -1046,7 +1046,7 @@ test_nvme_tcp_pdu_ch_handle(void)
 DEFINE_RETURN_MOCK(spdk_sock_connect_ext, struct spdk_sock *);
 struct spdk_sock *
 spdk_sock_connect_ext(const char *ip, int port,
-		      char *_impl_name, struct spdk_sock_opts *opts)
+		      const char *_impl_name, struct spdk_sock_opts *opts)
 {
 	HANDLE_RETURN_MOCK(spdk_sock_connect_ext);
 	CU_ASSERT(port == 23);

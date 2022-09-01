@@ -241,7 +241,7 @@ int spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *s
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_connect(const char *ip, int port, char *impl_name);
+struct spdk_sock *spdk_sock_connect(const char *ip, int port, const char *impl_name);
 
 /**
  * Create a socket using the specific sock implementation, connect the socket
@@ -258,7 +258,7 @@ struct spdk_sock *spdk_sock_connect(const char *ip, int port, char *impl_name);
  *
  * \return a pointer to the connected socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, char *impl_name,
+struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, const char *impl_name,
 					struct spdk_sock_opts *opts);
 
 /**
@@ -275,7 +275,7 @@ struct spdk_sock *spdk_sock_connect_ext(const char *ip, int port, char *impl_nam
  *
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_listen(const char *ip, int port, char *impl_name);
+struct spdk_sock *spdk_sock_listen(const char *ip, int port, const char *impl_name);
 
 /**
  * Create a socket using the specific sock implementation, bind the socket to
@@ -292,7 +292,7 @@ struct spdk_sock *spdk_sock_listen(const char *ip, int port, char *impl_name);
  *
  * \return a pointer to the listened socket on success, or NULL on failure.
  */
-struct spdk_sock *spdk_sock_listen_ext(const char *ip, int port, char *impl_name,
+struct spdk_sock *spdk_sock_listen_ext(const char *ip, int port, const char *impl_name,
 				       struct spdk_sock_opts *opts);
 
 /**

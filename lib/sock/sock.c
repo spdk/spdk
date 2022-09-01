@@ -292,7 +292,7 @@ sock_init_opts(struct spdk_sock_opts *opts, struct spdk_sock_opts *opts_user)
 }
 
 struct spdk_sock *
-spdk_sock_connect(const char *ip, int port, char *impl_name)
+spdk_sock_connect(const char *ip, int port, const char *impl_name)
 {
 	struct spdk_sock_opts opts;
 
@@ -302,7 +302,7 @@ spdk_sock_connect(const char *ip, int port, char *impl_name)
 }
 
 struct spdk_sock *
-spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_sock_opts *opts)
+spdk_sock_connect_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
@@ -346,7 +346,7 @@ spdk_sock_connect_ext(const char *ip, int port, char *_impl_name, struct spdk_so
 }
 
 struct spdk_sock *
-spdk_sock_listen(const char *ip, int port, char *impl_name)
+spdk_sock_listen(const char *ip, int port, const char *impl_name)
 {
 	struct spdk_sock_opts opts;
 
@@ -356,7 +356,7 @@ spdk_sock_listen(const char *ip, int port, char *impl_name)
 }
 
 struct spdk_sock *
-spdk_sock_listen_ext(const char *ip, int port, char *_impl_name, struct spdk_sock_opts *opts)
+spdk_sock_listen_ext(const char *ip, int port, const char *_impl_name, struct spdk_sock_opts *opts)
 {
 	struct spdk_net_impl *impl = NULL;
 	struct spdk_sock *sock;
