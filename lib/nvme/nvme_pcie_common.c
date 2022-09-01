@@ -1791,13 +1791,13 @@ nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
 		return -EINVAL;
 	}
 
-	group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
 	stats = calloc(1, sizeof(*stats));
 	if (!stats) {
 		SPDK_ERRLOG("Can't allocate memory for RDMA stats\n");
 		return -ENOMEM;
 	}
 	stats->trtype = SPDK_NVME_TRANSPORT_PCIE;
+	group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
 	memcpy(&stats->pcie, &group->stats, sizeof(group->stats));
 
 	*_stats = stats;
