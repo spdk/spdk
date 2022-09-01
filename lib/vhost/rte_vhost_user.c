@@ -948,13 +948,22 @@ new_connection(int vid)
 }
 
 static int
-vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession)
+vhost_user_session_start_cb(struct spdk_vhost_dev *vdev,
+			    struct spdk_vhost_session *vsession, void *unused)
 {
 	const struct spdk_vhost_user_dev_backend *backend;
+	int rc;
 
 	backend = to_user_dev(vdev)->user_backend;
+	rc = backend->start_session(vdev, vsession, NULL);
+	vhost_user_session_start_done(vsession, rc);
+	return rc;
+}
 
-	return vhost_user_session_send_event(vsession, backend->start_session, 3, "start session");
+static int
+vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession)
+{
+	return vhost_user_session_send_event(vsession, vhost_user_session_start_cb, 3, "start session");
 }
 
 static int

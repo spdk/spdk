@@ -1333,15 +1333,14 @@ vhost_blk_start(struct spdk_vhost_dev *vdev,
 		 */
 		if (vsession->virtqueue[i].vring.desc == NULL) {
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vsession->name, i);
-			rc = -1;
-			goto out;
+			return -1;
 		}
 	}
 
 	rc = alloc_task_pool(bvsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vsession->name);
-		goto out;
+		return rc;
 	}
 
 	if (bvdev->bdev) {
@@ -1349,8 +1348,7 @@ vhost_blk_start(struct spdk_vhost_dev *vdev,
 		if (!bvsession->io_channel) {
 			free_task_pool(bvsession);
 			SPDK_ERRLOG("%s: I/O channel allocation failed\n", vsession->name);
-			rc = -1;
-			goto out;
+			return -1;
 		}
 	}
 
@@ -1367,7 +1365,7 @@ vhost_blk_start(struct spdk_vhost_dev *vdev,
 
 		if (rc) {
 			SPDK_ERRLOG("%s: Interrupt register failed\n", vsession->name);
-			goto out;
+			return rc;
 		}
 	}
 
@@ -1382,8 +1380,6 @@ vhost_blk_start(struct spdk_vhost_dev *vdev,
 	spdk_poller_register_interrupt(bvsession->requestq_poller, vhost_blk_poller_set_interrupt_mode,
 				       bvsession);
 
-out:
-	vhost_user_session_start_done(vsession, rc);
 	return rc;
 }
 

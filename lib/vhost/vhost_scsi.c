@@ -1395,15 +1395,14 @@ vhost_scsi_start(struct spdk_vhost_dev *vdev,
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vsession->max_queues; i++) {
 		if (vsession->virtqueue[i].vring.desc == NULL) {
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vsession->name, i);
-			rc = -1;
-			goto out;
+			return -1;
 		}
 	}
 
 	rc = alloc_task_pool(svsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vsession->name);
-		goto out;
+		return rc;
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -1434,8 +1433,6 @@ vhost_scsi_start(struct spdk_vhost_dev *vdev,
 	svsession->requestq_poller = SPDK_POLLER_REGISTER(vdev_worker, svsession, 0);
 	svsession->mgmt_poller = SPDK_POLLER_REGISTER(vdev_mgmt_worker, svsession,
 				 MGMT_POLL_PERIOD_US);
-out:
-	vhost_user_session_start_done(vsession, rc);
 	return rc;
 }
 
