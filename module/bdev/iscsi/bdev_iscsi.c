@@ -101,7 +101,7 @@ struct bdev_iscsi_conn_req {
 };
 
 static struct spdk_bdev_iscsi_opts g_opts = {
-	.timeout = BDEV_ISCSI_TIMEOUT_DEFAULT,
+	.timeout_sec = BDEV_ISCSI_TIMEOUT_DEFAULT,
 	.timeout_poller_period_us = BDEV_ISCSI_TIMEOUT_POLL_PERIOD_DEFAULT,
 };
 
@@ -115,7 +115,7 @@ int
 bdev_iscsi_set_opts(struct spdk_bdev_iscsi_opts *opts)
 {
 	/* make the poller period equal to timeout / 30 */
-	opts->timeout_poller_period_us = (opts->timeout * 1000000ULL) /
+	opts->timeout_poller_period_us = (opts->timeout_sec * 1000000ULL) /
 					 BDEV_ISCSI_TIMEOUT_POLL_PERIOD_DIVISOR;
 
 	g_opts = *opts;
@@ -661,7 +661,7 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 		assert(lun->main_td == NULL);
 		lun->main_td = spdk_get_thread();
 		lun->poller = SPDK_POLLER_REGISTER(bdev_iscsi_poll_lun, lun, 0);
-		if (g_opts.timeout > 0) {
+		if (g_opts.timeout_sec > 0) {
 			lun->timeout_poller = SPDK_POLLER_REGISTER(bdev_iscsi_poll_lun_timeout, lun,
 					      g_opts.timeout_poller_period_us);
 		}
@@ -1044,7 +1044,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 	rc = iscsi_set_session_type(req->context, ISCSI_SESSION_NORMAL);
 	rc = rc ? rc : iscsi_set_header_digest(req->context, ISCSI_HEADER_DIGEST_NONE);
 	rc = rc ? rc : iscsi_set_targetname(req->context, iscsi_url->target);
-	rc = rc ? rc : iscsi_set_timeout(req->context, g_opts.timeout);
+	rc = rc ? rc : iscsi_set_timeout(req->context, g_opts.timeout_sec);
 	rc = rc ? rc : iscsi_full_connect_async(req->context, iscsi_url->portal, iscsi_url->lun,
 						iscsi_connect_cb, req);
 	if (rc == 0 && iscsi_url->user[0] != '\0') {

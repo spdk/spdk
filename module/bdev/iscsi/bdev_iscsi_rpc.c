@@ -11,7 +11,7 @@
 #include "spdk/log.h"
 
 static const struct spdk_json_object_decoder rpc_bdev_iscsi_options_decoders[] = {
-	{"timeout", offsetof(struct spdk_bdev_iscsi_opts, timeout), spdk_json_decode_uint64, true},
+	{"timeout_sec", offsetof(struct spdk_bdev_iscsi_opts, timeout_sec), spdk_json_decode_uint64, true},
 };
 
 static void

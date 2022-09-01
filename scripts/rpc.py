@@ -998,10 +998,10 @@ if __name__ == "__main__":
 
     def bdev_iscsi_set_options(args):
         rpc.bdev.bdev_iscsi_set_options(args.client,
-                                        timeout=args.timeout)
+                                        timeout_sec=args.timeout_sec)
 
     p = subparsers.add_parser('bdev_iscsi_set_options', help='Set options for the bdev iscsi type.')
-    p.add_argument('-t', '--timeout', help="Timeout for command, in seconds, if 0, don't track timeout.", type=int)
+    p.add_argument('-t', '--timeout-sec', help="Timeout for command, in seconds, if 0, don't track timeout.", type=int)
     p.set_defaults(func=bdev_iscsi_set_options)
 
     def bdev_iscsi_create(args):

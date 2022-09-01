@@ -4616,7 +4616,7 @@ This RPC can be called at any time, but the new value will only take effect for 
 
 Name                       | Optional | Type        | Description
 -------------------------- | -------- | ----------- | -----------
-timeout                    | Optional | number      | Timeout for command, in seconds, if 0, don't track timeout
+timeout_sec                | Optional | number      | Timeout for command, in seconds, if 0, don't track timeout
 
 #### Example
 
@@ -4626,7 +4626,7 @@ Example request:
 request:
 {
   "params": {
-    "timeout": 30
+    "timeout_sec": 30
   },
   "jsonrpc": "2.0",
   "method": "bdev_iscsi_set_options",

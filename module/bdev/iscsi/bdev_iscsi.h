@@ -9,7 +9,7 @@
 #include "spdk/bdev.h"
 
 struct spdk_bdev_iscsi_opts {
-	uint64_t timeout;
+	uint64_t timeout_sec;
 	uint64_t timeout_poller_period_us;
 };
 
