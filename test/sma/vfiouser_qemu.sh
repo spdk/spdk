@@ -295,5 +295,57 @@ detach_volume "$device0" "$uuid0"
 delete_device "$device0"
 [[ $(rpc_cmd bdev_get_bdevs | jq -r '.[] | select(.product_name == "crypto")' | jq -r length) -eq 0 ]]
 
+# Test qos
+device_vfio_user=1
+device0=$(create_device 0 0 | jq -r '.handle')
+attach_volume "$device0" "$uuid0"
+
+# First check the capabilities
+diff <(get_qos_caps $device_vfio_user | jq --sort-keys) <(
+	jq --sort-keys <<- CAPS
+		{
+		  "max_volume_caps": {
+		    "rw_iops": true,
+		    "rd_bandwidth": true,
+		    "wr_bandwidth": true,
+		    "rw_bandwidth": true
+		  }
+		}
+	CAPS
+)
+
+"$rootdir/scripts/sma-client.py" <<- EOF
+	{
+	  "method": "SetQos",
+	  "params": {
+	    "device_handle": "$device0",
+	    "volume_id": "$(uuid2base64 $uuid0)",
+	    "maximum": {
+	      "rd_iops": 0,
+	      "wr_iops": 0,
+	      "rw_iops": 3,
+	      "rd_bandwidth": 4,
+	      "wr_bandwidth": 5,
+	      "rw_bandwidth": 6
+	    }
+	  }
+	}
+EOF
+
+# Make sure that limits were changed
+diff <(rpc_cmd bdev_get_bdevs -b null0 | jq --sort-keys '.[].assigned_rate_limits') <(
+	jq --sort-keys <<- EOF
+		{
+		  "rw_ios_per_sec": 3000,
+		  "rw_mbytes_per_sec": 6,
+		  "r_mbytes_per_sec": 4,
+		  "w_mbytes_per_sec": 5
+		}
+	EOF
+)
+
+detach_volume "$device0" "$uuid0"
+delete_device "$device0"
+
 cleanup
 trap - SIGINT SIGTERM EXIT

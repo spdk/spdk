@@ -7,6 +7,7 @@ from socket import AddressFamily
 import grpc
 from google.protobuf import wrappers_pb2 as wrap
 from spdk.rpc.client import JSONRPCException
+from spdk.sma import qos
 
 from ..common import format_volume_id, volume_id_to_nguid
 from ..proto import sma_pb2
@@ -279,3 +280,34 @@ class NvmfVfioDeviceManager(DeviceManager):
 
     def owns_device(self, id):
         return id.startswith(self._prefix)
+
+    def set_qos(self, request):
+        nqn = request.device_handle[len(f'{self._prefix}:'):]
+        volume = format_volume_id(request.volume_id)
+        if volume is None:
+            raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                  'Invalid volume ID')
+        try:
+            with self._client() as client:
+                # Make sure that a volume exists and is attached to the device
+                bdev = self._get_bdev(client, volume)
+                if bdev is None:
+                    raise DeviceException(grpc.StatusCode.NOT_FOUND,
+                                          'No volume associated with volume_id could be found')
+                subsys = self._get_subsys(client, nqn)
+                if subsys is None:
+                    raise DeviceException(grpc.StatusCode.NOT_FOUND,
+                                          'No device associated with device_handle could be found')
+                ns = self._get_ns(bdev, subsys)
+                if ns is None:
+                    raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                          'Specified volume is not attached to the device')
+                qos.set_volume_bdev_qos(client, request)
+        except qos.QosException as ex:
+            raise DeviceException(ex.code, ex.message)
+        except JSONRPCException:
+            raise DeviceException(grpc.StatusCode.INTERNAL,
+                                  'Failed to set QoS')
+
+    def get_qos_capabilities(self, request):
+        return qos.get_bdev_qos_capabilities()
