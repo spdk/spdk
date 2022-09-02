@@ -586,7 +586,7 @@ usage(char *program_name)
 #ifdef DEBUG
 	printf("\t[-G enable debug logging]\n");
 #else
-	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 #endif
 }
 

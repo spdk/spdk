@@ -464,7 +464,7 @@ usage(char *program_name)
 #ifdef DEBUG
 	printf("\t[-L enable debug logging]\n");
 #else
-	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+	printf("\t[-L enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 #endif
 	spdk_log_usage(stdout, "\t\t-L");
 	printf("\t[-l enable latency tracking, default: disabled]\n");

@@ -44,7 +44,7 @@ usage(char *program_name)
 #ifdef DEBUG
 	printf("\t[-G, --enable-debug enable debug logging]\n");
 #else
-	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+	printf("\t[-G, --enable-debug enable debug logging (flag disabled, must reconfigure with --enable-debug)]\n");
 	printf("\t[--iova-mode <mode> specify DPDK IOVA mode: va|pa]\n");
 #endif
 }
