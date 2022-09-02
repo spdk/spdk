@@ -474,11 +474,9 @@ work_fn(void *arg)
 			}
 			if (ns_ctx->current_queue_depth > 0) {
 				spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
-				if (ns_ctx->current_queue_depth == 0) {
-					spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
-				} else {
-					unfinished_ctx++;
-				}
+				unfinished_ctx++;
+			} else {
+				spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
 			}
 		}
 	} while (unfinished_ctx > 0);
@@ -491,9 +489,7 @@ work_fn(void *arg)
 				pthread_mutex_lock(&ctrlr_ctx->mutex);
 				if (ctrlr_ctx->current_queue_depth > 0) {
 					spdk_nvme_ctrlr_process_admin_completions(ctrlr_ctx->ctrlr);
-					if (ctrlr_ctx->current_queue_depth > 0) {
-						unfinished_ctx++;
-					}
+					unfinished_ctx++;
 				}
 				pthread_mutex_unlock(&ctrlr_ctx->mutex);
 			}
