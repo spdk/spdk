@@ -3239,45 +3239,62 @@ nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 
 	switch (event.event_type) {
 	case IBV_EVENT_QP_FATAL:
-		rqpair = event.element.qp->qp_context;
-		SPDK_ERRLOG("Fatal event received for rqpair %p\n", rqpair);
-		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
-				  (uintptr_t)rqpair, event.event_type);
-		nvmf_rdma_update_ibv_state(rqpair);
-		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
-		/* This event only occurs for shared receive queues. */
-		rqpair = event.element.qp->qp_context;
-		SPDK_DEBUGLOG(rdma, "Last WQE reached event received for rqpair %p\n", rqpair);
-		rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_last_wqe_reached);
-		if (rc) {
-			SPDK_WARNLOG("Failed to send LAST_WQE_REACHED event. rqpair %p, err %d\n", rqpair, rc);
-			rqpair->last_wqe_reached = true;
-		}
-		break;
 	case IBV_EVENT_SQ_DRAINED:
-		/* This event occurs frequently in both error and non-error states.
-		 * Check if the qpair is in an error state before sending a message. */
-		rqpair = event.element.qp->qp_context;
-		SPDK_DEBUGLOG(rdma, "Last sq drained event received for rqpair %p\n", rqpair);
-		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
-				  (uintptr_t)rqpair, event.event_type);
-		if (nvmf_rdma_update_ibv_state(rqpair) == IBV_QPS_ERR) {
-			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
-		}
-		break;
 	case IBV_EVENT_QP_REQ_ERR:
 	case IBV_EVENT_QP_ACCESS_ERR:
 	case IBV_EVENT_COMM_EST:
 	case IBV_EVENT_PATH_MIG:
 	case IBV_EVENT_PATH_MIG_ERR:
-		SPDK_NOTICELOG("Async event: %s\n",
-			       ibv_event_type_str(event.event_type));
 		rqpair = event.element.qp->qp_context;
-		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
-				  (uintptr_t)rqpair, event.event_type);
-		nvmf_rdma_update_ibv_state(rqpair);
+		if (!rqpair) {
+			/* Any QP event for NVMe-RDMA initiator may be returned. */
+			SPDK_NOTICELOG("Async QP event for unknown QP: %s\n",
+				       ibv_event_type_str(event.event_type));
+			break;
+		}
+
+		switch (event.event_type) {
+		case IBV_EVENT_QP_FATAL:
+			SPDK_ERRLOG("Fatal event received for rqpair %p\n", rqpair);
+			spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
+					  (uintptr_t)rqpair, event.event_type);
+			nvmf_rdma_update_ibv_state(rqpair);
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+			break;
+		case IBV_EVENT_QP_LAST_WQE_REACHED:
+			/* This event only occurs for shared receive queues. */
+			SPDK_DEBUGLOG(rdma, "Last WQE reached event received for rqpair %p\n", rqpair);
+			rc = nvmf_rdma_send_qpair_async_event(rqpair, nvmf_rdma_handle_last_wqe_reached);
+			if (rc) {
+				SPDK_WARNLOG("Failed to send LAST_WQE_REACHED event. rqpair %p, err %d\n", rqpair, rc);
+				rqpair->last_wqe_reached = true;
+			}
+			break;
+		case IBV_EVENT_SQ_DRAINED:
+			/* This event occurs frequently in both error and non-error states.
+			 * Check if the qpair is in an error state before sending a message. */
+			SPDK_DEBUGLOG(rdma, "Last sq drained event received for rqpair %p\n", rqpair);
+			spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
+					  (uintptr_t)rqpair, event.event_type);
+			if (nvmf_rdma_update_ibv_state(rqpair) == IBV_QPS_ERR) {
+				spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+			}
+			break;
+		case IBV_EVENT_QP_REQ_ERR:
+		case IBV_EVENT_QP_ACCESS_ERR:
+		case IBV_EVENT_COMM_EST:
+		case IBV_EVENT_PATH_MIG:
+		case IBV_EVENT_PATH_MIG_ERR:
+			SPDK_NOTICELOG("Async QP event: %s\n",
+				       ibv_event_type_str(event.event_type));
+			spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
+					  (uintptr_t)rqpair, event.event_type);
+			nvmf_rdma_update_ibv_state(rqpair);
+			break;
+		default:
+			break;
+		}
 		break;
 	case IBV_EVENT_CQ_ERR:
 	case IBV_EVENT_DEVICE_FATAL:
