@@ -58,6 +58,10 @@ vhost_user_write(int fd, void *buf, int len, int *fds, int fd_num)
 		msgh.msg_control = control;
 		msgh.msg_controllen = sizeof(control);
 		cmsg = CMSG_FIRSTHDR(&msgh);
+		if (!cmsg) {
+			SPDK_WARNLOG("First HDR is NULL\n");
+			return -EIO;
+		}
 		cmsg->cmsg_len = CMSG_LEN(fd_size);
 		cmsg->cmsg_level = SOL_SOCKET;
 		cmsg->cmsg_type = SCM_RIGHTS;
