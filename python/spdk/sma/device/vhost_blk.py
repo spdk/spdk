@@ -1,9 +1,11 @@
 import logging
 import os
+import uuid
 from socket import AddressFamily
 
 import grpc
 from spdk.rpc.client import JSONRPCException
+from spdk.sma import qos
 
 from ..common import format_volume_id, volume_id_to_nguid
 from ..proto import sma_pb2, virtio_blk_pb2
@@ -188,3 +190,33 @@ class VhostBlkDeviceManager(DeviceManager):
             if not self._delete_controller(client, ctrlr):
                 raise DeviceException(grpc.StatusCode.INTERNAL,
                                       'Failed to delete vhost device')
+
+    def set_qos(self, request):
+        ctrlr = request.device_handle[len(f'{self._prefix}:'):]
+        volume = format_volume_id(request.volume_id)
+        try:
+            with self._client() as client:
+                nctrlr = self._find_controller(client, ctrlr)
+                if nctrlr is None:
+                    raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                          'No device associated with device_handle could be found')
+                nbdev = nctrlr['backend_specific']['block']['bdev']
+                if len(request.volume_id) == 0:
+                    id = self._find_bdev(client, nbdev)['uuid']
+                    request.volume_id = uuid.UUID(id).bytes
+                elif volume is not None:
+                    if not self._bdev_cmp(client, nbdev, volume):
+                        raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                              'Specified volume is not attached to the device')
+                else:
+                    raise DeviceException(grpc.StatusCode.INVALID_ARGUMENT,
+                                          'Invalid volume uuid')
+                qos.set_volume_bdev_qos(client, request)
+        except qos.QosException as ex:
+            raise DeviceException(ex.code, ex.message)
+        except JSONRPCException:
+            raise DeviceException(grpc.StatusCode.INTERNAL,
+                                  'Failed to set QoS')
+
+    def get_qos_capabilities(self, request):
+        return qos.get_bdev_qos_capabilities()
