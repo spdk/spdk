@@ -175,6 +175,9 @@ struct spdk_blob {
 	/* Number of data clusters retrieved from extent table,
 	 * that many have to be read from extent pages. */
 	uint64_t	remaining_clusters_in_et;
+
+	/* Cache number of used cluster for a thin provisioned blob. */
+	uint64_t	num_used_clusters_cache;
 };
 
 struct spdk_blob_store {

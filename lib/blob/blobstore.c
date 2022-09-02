@@ -167,6 +167,9 @@ bs_allocate_cluster(struct spdk_blob *blob, uint32_t cluster_num,
 {
 	uint32_t *extent_page = 0;
 
+	/* Reset cache of used clusters */
+	blob->num_used_clusters_cache = 0;
+
 	*cluster = bs_claim_cluster(blob->bs);
 	if (*cluster == UINT32_MAX) {
 		/* No more free clusters. Cannot satisfy the request */
@@ -2933,7 +2936,8 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 			   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg, bool read,
 			   struct spdk_blob_ext_io_opts *ext_io_opts)
 {
-	struct spdk_bs_cpl	cpl;
+	struct spdk_bs_cpl cpl;
+	struct spdk_bdev_io *bdev_io = cb_arg;
 
 	assert(blob != NULL);
 
@@ -2997,7 +3001,6 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 
 		if (read) {
 			spdk_bs_sequence_t *seq;
-			struct spdk_bdev_io *bdev_io = cb_arg;
 
 			if (bdev_io->u.bdev.ext_io_flags & SPDK_NVME_IO_FLAGS_UNWRITTEN_READ_FAIL) {
 				if (!is_allocated) {
@@ -3053,6 +3056,8 @@ blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_chan
 		}
 	} else {
 		struct rw_iov_ctx *ctx;
+
+		assert(!(bdev_io->u.bdev.ext_io_flags & SPDK_NVME_IO_FLAGS_UNWRITTEN_READ_FAIL));
 
 		ctx = calloc(1, sizeof(struct rw_iov_ctx) + iovcnt * sizeof(struct iovec));
 		if (ctx == NULL) {
@@ -5605,6 +5610,38 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob)
 	assert(blob != NULL);
 
 	return blob->active.num_clusters;
+}
+
+uint64_t spdk_blob_calc_used_clusters(struct spdk_blob *blob)
+{
+	size_t i;
+	uint64_t num;
+
+	assert(blob != NULL);
+
+	if (!spdk_blob_is_thin_provisioned(blob)) {
+		return spdk_blob_get_num_clusters(blob);
+	}
+
+	pthread_mutex_lock(&blob->bs->used_clusters_mutex);
+
+	if (blob->num_used_clusters_cache > 0) {
+		num = blob->num_used_clusters_cache;
+		pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
+		return num;
+	}
+
+	num = 0;
+	for (i = 0; i < blob->active.cluster_array_size; ++i) {
+		if (blob->active.clusters[i] != 0) {
+			++num;
+		}
+	}
+	blob->num_used_clusters_cache = num;
+
+	pthread_mutex_unlock(&blob->bs->used_clusters_mutex);
+
+	return num;
 }
 
 /* START spdk_bs_create_blob */

@@ -437,6 +437,16 @@ uint64_t spdk_blob_get_num_io_units(struct spdk_blob *blob);
  */
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
+/**
+ * Calculate the number of clusters used by the blob. Equal to number of allocated clusters for thick provisioned
+ * blobs, less or equal to number of allocated clusters for thin provisioned blobs.
+ *
+ * \param blob Blob struct to query.
+ *
+ * \return the number of allocated clusters.
+ */
+uint64_t spdk_blob_calc_used_clusters(struct spdk_blob *blob);
+
 struct spdk_blob_xattr_opts {
 	/* Number of attributes */
 	size_t	count;
