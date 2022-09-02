@@ -882,6 +882,7 @@ vmd_init_end_device(struct vmd_pci_device *dev)
 {
 	struct vmd_pci_bus *bus = dev->bus;
 	struct vmd_adapter *vmd;
+	struct spdk_pci_driver *driver;
 	uint8_t bdf[32];
 	int rc;
 
@@ -898,7 +899,9 @@ vmd_init_end_device(struct vmd_pci_device *dev)
 		SPDK_INFOLOG(vmd, "Initializing NVMe device at %s\n", bdf);
 		dev->pci.parent = dev->bus->vmd->pci;
 
-		rc = spdk_pci_hook_device(spdk_pci_nvme_get_driver(), &dev->pci);
+		driver = spdk_pci_nvme_get_driver();
+		assert(driver != NULL);
+		rc = spdk_pci_hook_device(driver, &dev->pci);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to hook device %s: %s\n", bdf, spdk_strerror(-rc));
 			return -1;
