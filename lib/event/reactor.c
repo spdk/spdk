@@ -318,6 +318,16 @@ _reactor_set_notify_cpuset(void *arg1, void *arg2)
 }
 
 static void
+_event_call(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	struct spdk_event *ev;
+
+	ev = spdk_event_allocate(lcore, fn, arg1, arg2);
+	assert(ev);
+	spdk_event_call(ev);
+}
+
+static void
 _reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
 {
 	struct spdk_reactor *target = arg1;
@@ -327,11 +337,7 @@ _reactor_set_notify_cpuset_cpl(void *arg1, void *arg2)
 		spdk_thread_send_msg(_spdk_get_app_thread(), target->set_interrupt_mode_cb_fn,
 				     target->set_interrupt_mode_cb_arg);
 	} else {
-		struct spdk_event *ev;
-
-		ev = spdk_event_allocate(target->lcore, _reactor_set_interrupt_mode, target, NULL);
-		assert(ev);
-		spdk_event_call(ev);
+		_event_call(target->lcore, _reactor_set_interrupt_mode, target, NULL);
 	}
 }
 
@@ -433,11 +439,7 @@ spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 		 * first change the mode of the reactor and then clear the corresponding
 		 * bit of the notify_cpuset of each reactor.
 		 */
-		struct spdk_event *ev;
-
-		ev = spdk_event_allocate(lcore, _reactor_set_interrupt_mode, target, NULL);
-		assert(ev);
-		spdk_event_call(ev);
+		_event_call(lcore, _reactor_set_interrupt_mode, target, NULL);
 	} else {
 		/* For race cases, when setting the reactor to interrupt mode, first set the
 		 * corresponding bit of the notify_cpuset of each reactor and then change the mode.
@@ -768,7 +770,6 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_thread *thread;
 	struct spdk_reactor *reactor;
-	struct spdk_event *evt;
 	uint32_t next_core;
 	uint32_t i = 0;
 
@@ -791,8 +792,7 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 			SPDK_ERRLOG("Failed to allocate memory when gathering metrics on %u\n", reactor->lcore);
 
 			/* Cancel this round of schedule work */
-			evt = spdk_event_allocate(g_scheduling_reactor->lcore, _reactors_scheduler_cancel, NULL, NULL);
-			spdk_event_call(evt);
+			_event_call(g_scheduling_reactor->lcore, _reactors_scheduler_cancel, NULL, NULL);
 			return;
 		}
 
@@ -819,13 +819,11 @@ _reactors_scheduler_gather_metrics(void *arg1, void *arg2)
 	/* If we've looped back around to the scheduler thread, move to the next phase */
 	if (next_core == g_scheduling_reactor->lcore) {
 		/* Phase 2 of scheduling is rebalancing - deciding which threads to move where */
-		evt = spdk_event_allocate(next_core, _reactors_scheduler_balance, NULL, NULL);
-		spdk_event_call(evt);
+		_event_call(next_core, _reactors_scheduler_balance, NULL, NULL);
 		return;
 	}
 
-	evt = spdk_event_allocate(next_core, _reactors_scheduler_gather_metrics, NULL, NULL);
-	spdk_event_call(evt);
+	_event_call(next_core, _reactors_scheduler_gather_metrics, NULL, NULL);
 }
 
 static int _reactor_schedule_thread(struct spdk_thread *thread);
@@ -1350,7 +1348,6 @@ void
 spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cpl)
 {
 	struct call_reactor *cr;
-	struct spdk_event *evt;
 
 	/* When the application framework is shutting down, we will send one
 	 * final for_each_reactor operation with completion callback _reactors_stop,
@@ -1383,10 +1380,7 @@ spdk_for_each_reactor(spdk_event_fn fn, void *arg1, void *arg2, spdk_event_fn cp
 
 	SPDK_DEBUGLOG(reactor, "Starting reactor iteration from %d\n", cr->orig_core);
 
-	evt = spdk_event_allocate(cr->cur_core, on_reactor, cr, NULL);
-	assert(evt != NULL);
-
-	spdk_event_call(evt);
+	_event_call(cr->cur_core, on_reactor, cr, NULL);
 }
 
 #ifdef __linux__
