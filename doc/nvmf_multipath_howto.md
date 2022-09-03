@@ -8,13 +8,12 @@ path load balancing.
 
 Clone the repo:
 ~~~{.sh}
-git clone https://github.com/spdk/spdk
+git clone https://github.com/spdk/spdk --recursive
 ~~~
 
 Configure and build SPDK:
 ~~~{.sh}
 cd spdk/
-git submodule update --init
 ./configure
 make -j16
 ~~~

@@ -130,11 +130,9 @@ After cloning SPDK repo and initialize submodules, FC LLD library is built which
 the fc transport.
 
 ~~~{.sh}
-git clone https://github.com/spdk/spdk spdk
+git clone https://github.com/spdk/spdk --recursive
 git clone https://github.com/ecdufcdrvr/bcmufctdrvr fc
-cd spdk
-git submodule update --init
-cd ../fc
+cd fc
 make DPDK_DIR=../spdk/dpdk/build SPDK_DIR=../spdk
 cd ../spdk
 ./configure --with-fc=../fc/build
