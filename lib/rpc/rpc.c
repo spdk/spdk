@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation. All rights reserved.
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include <sys/file.h>
@@ -267,6 +268,21 @@ spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask)
 			return 0;
 		} else {
 			return -EPERM;
+		}
+	}
+
+	return -ENOENT;
+}
+
+int
+spdk_rpc_get_method_state_mask(const char *method, uint32_t *state_mask)
+{
+	struct spdk_rpc_method *m;
+
+	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		if (strcmp(m->name, method) == 0) {
+			*state_mask = m->state_mask;
+			return 0;
 		}
 	}
 

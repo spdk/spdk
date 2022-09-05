@@ -9,6 +9,7 @@
 	spdk_rpc_register_method;
 	spdk_rpc_register_alias_deprecated;
 	spdk_rpc_is_method_allowed;
+	spdk_rpc_get_method_state_mask;
 	spdk_rpc_set_state;
 	spdk_rpc_get_state;
 

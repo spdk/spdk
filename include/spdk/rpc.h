@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #ifndef SPDK_RPC_CONFIG_H_
@@ -83,6 +84,16 @@ void spdk_rpc_register_alias_deprecated(const char *method, const char *alias);
  * -ENOENT method not found
  */
 int spdk_rpc_is_method_allowed(const char *method, uint32_t state_mask);
+
+/**
+ * Return state mask of the method
+ *
+ * \param method Method name
+ * \param[out] state_mask State mask of the method
+ * \retval 0 if method is found and \b state_mask is filled
+ * \retval -ENOENT if method is not found
+ */
+int spdk_rpc_get_method_state_mask(const char *method, uint32_t *state_mask);
 
 #define SPDK_RPC_STARTUP	0x1
 #define SPDK_RPC_RUNTIME	0x2

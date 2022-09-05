@@ -146,7 +146,7 @@ static void
 test_spdk_rpc_is_method_allowed(void)
 {
 	const char method[] = "test";
-	uint32_t state_mask = SPDK_RPC_STARTUP;
+	uint32_t state_mask = SPDK_RPC_STARTUP, m_state_mask;
 	struct spdk_rpc_method m = {};
 	int rc = 0;
 
@@ -156,6 +156,9 @@ test_spdk_rpc_is_method_allowed(void)
 	SLIST_INSERT_HEAD(&g_rpc_methods, &m, slist);
 	rc = spdk_rpc_is_method_allowed(method, state_mask);
 	CU_ASSERT(rc == -EPERM);
+	rc = spdk_rpc_get_method_state_mask(method, &m_state_mask);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(m_state_mask == m.state_mask);
 
 	/* Case 2: Expect return 0 */
 	state_mask = SPDK_RPC_RUNTIME;
@@ -165,6 +168,8 @@ test_spdk_rpc_is_method_allowed(void)
 	/* Case 3: Expect return -ENOENT */
 	SLIST_REMOVE_HEAD(&g_rpc_methods, slist);
 	rc = spdk_rpc_is_method_allowed(method, state_mask);
+	CU_ASSERT(rc == -ENOENT);
+	rc = spdk_rpc_get_method_state_mask(method, &m_state_mask);
 	CU_ASSERT(rc == -ENOENT);
 }
 
