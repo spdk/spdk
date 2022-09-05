@@ -169,6 +169,33 @@ spdk_blob_get_num_clusters(struct spdk_blob *b)
 	return 0;
 }
 
+/* Simulation of a blob with:
+ * - 1 io_unit per cluster
+ * - 20 data cluster
+ * - only last cluster allocated
+ */
+uint64_t g_blob_allocated_io_unit_offset = 20;
+
+uint64_t
+spdk_blob_get_next_allocated_io_unit(struct spdk_blob *blob, uint64_t offset)
+{
+	if (offset <= g_blob_allocated_io_unit_offset) {
+		return g_blob_allocated_io_unit_offset;
+	} else {
+		return UINT64_MAX;
+	}
+}
+
+uint64_t
+spdk_blob_get_next_unallocated_io_unit(struct spdk_blob *blob, uint64_t offset)
+{
+	if (offset < g_blob_allocated_io_unit_offset) {
+		return offset;
+	} else {
+		return UINT64_MAX;
+	}
+}
+
 int
 spdk_blob_get_clones(struct spdk_blob_store *bs, spdk_blob_id blobid, spdk_blob_id *ids,
 		     size_t *count)
@@ -1347,6 +1374,10 @@ ut_vbdev_lvol_io_type_supported(void)
 	CU_ASSERT(ret == true);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
 	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_SEEK_DATA);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_SEEK_HOLE);
+	CU_ASSERT(ret == true);
 
 	/* Unsupported types */
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_FLUSH);
@@ -1362,6 +1393,10 @@ ut_vbdev_lvol_io_type_supported(void)
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_READ);
 	CU_ASSERT(ret == true);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_RESET);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_SEEK_DATA);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_SEEK_HOLE);
 	CU_ASSERT(ret == true);
 
 	/* Unsupported types */
@@ -1495,6 +1530,48 @@ ut_lvs_rename(void)
 	free(g_base_bdev);
 }
 
+static void
+ut_lvol_seek(void)
+{
+	g_io = calloc(1, sizeof(struct spdk_bdev_io) + vbdev_lvs_get_ctx_size());
+	SPDK_CU_ASSERT_FATAL(g_io != NULL);
+	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
+	g_lvol = calloc(1, sizeof(struct spdk_lvol));
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	g_io->bdev = g_base_bdev;
+	g_io->bdev->ctxt = g_lvol;
+
+	/* Data found */
+	g_io->u.bdev.offset_blocks = 10;
+	lvol_seek_data(g_lvol, g_io);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->u.bdev.seek.offset == g_blob_allocated_io_unit_offset);
+
+	/* Data not found */
+	g_io->u.bdev.offset_blocks = 30;
+	lvol_seek_data(g_lvol, g_io);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->u.bdev.seek.offset == UINT64_MAX);
+
+	/* Hole found */
+	g_io->u.bdev.offset_blocks = 10;
+	lvol_seek_hole(g_lvol, g_io);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->u.bdev.seek.offset == 10);
+
+	/* Hole not found */
+	g_io->u.bdev.offset_blocks = 30;
+	lvol_seek_hole(g_lvol, g_io);
+	CU_ASSERT(g_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_io->u.bdev.seek.offset == UINT64_MAX);
+
+	free(g_io);
+	free(g_base_bdev);
+	free(g_lvol);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1523,6 +1600,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_lvol_rename);
 	CU_ADD_TEST(suite, ut_bdev_finish);
 	CU_ADD_TEST(suite, ut_lvs_rename);
+	CU_ADD_TEST(suite, ut_lvol_seek);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

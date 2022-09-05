@@ -765,6 +765,8 @@ vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return !spdk_blob_is_read_only(lvol->blob);
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_SEEK_DATA:
+	case SPDK_BDEV_IO_TYPE_SEEK_HOLE:
 		return true;
 	default:
 		return false;
@@ -798,6 +800,24 @@ lvol_unmap(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 	num_pages = bdev_io->u.bdev.num_blocks;
 
 	spdk_blob_io_unmap(blob, ch, start_page, num_pages, lvol_op_comp, bdev_io);
+}
+
+static void
+lvol_seek_data(struct spdk_lvol *lvol, struct spdk_bdev_io *bdev_io)
+{
+	bdev_io->u.bdev.seek.offset = spdk_blob_get_next_allocated_io_unit(lvol->blob,
+				      bdev_io->u.bdev.offset_blocks);
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
+static void
+lvol_seek_hole(struct spdk_lvol *lvol, struct spdk_bdev_io *bdev_io)
+{
+	bdev_io->u.bdev.seek.offset = spdk_blob_get_next_unallocated_io_unit(lvol->blob,
+				      bdev_io->u.bdev.offset_blocks);
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 static void
@@ -909,6 +929,12 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		lvol_write_zeroes(lvol, ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_SEEK_DATA:
+		lvol_seek_data(lvol, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_SEEK_HOLE:
+		lvol_seek_hole(lvol, bdev_io);
 		break;
 	default:
 		SPDK_INFOLOG(vbdev_lvol, "lvol: unsupported I/O type %d\n", bdev_io->type);
