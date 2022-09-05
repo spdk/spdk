@@ -1043,7 +1043,7 @@ registerfiles=1
         cmdline = self.exec_cmd(["cat", "/proc/cmdline"])
         self.log_print('\n'.join(self.get_uncommented_lines(cmdline.splitlines())))
         self.log_print("====sysctl conf:====")
-        sysctl = self.exec_cmd(["cat", "/etc/sysctl.conf"])
+        sysctl = self.exec_cmd(["sudo", "cat", "/etc/sysctl.conf"])
         self.log_print('\n'.join(self.get_uncommented_lines(sysctl.splitlines())))
         self.log_print("====Cpu power info:====")
         self.log_print(self.exec_cmd(["cpupower", "frequency-info"]))
