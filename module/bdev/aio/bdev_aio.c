@@ -307,7 +307,7 @@ bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *u
 static int
 bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 {
-	int nr, i = 0;
+	int nr, i, res = 0;
 	struct bdev_aio_task *aio_task;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
 
@@ -328,7 +328,12 @@ bdev_aio_io_channel_poll(struct bdev_aio_io_channel *io_ch)
 			 * convert it to signed value for error detection.
 			 */
 			SPDK_ERRLOG("failed to complete aio: rc %"PRId64"\n", events[i].res);
-			spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), (int)events[i].res);
+			res = (int)events[i].res;
+			if (res < 0) {
+				spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), res);
+			} else {
+				spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+			}
 		}
 	}
 
