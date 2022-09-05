@@ -1241,6 +1241,8 @@ class SPDKTarget(Target):
             time.sleep(1)
         self.client = rpc_client.JSONRPCClient("/var/tmp/spdk.sock")
 
+        rpc.sock.sock_set_default_impl(self.client, impl_name="posix")
+
         if self.enable_zcopy:
             rpc.sock.sock_impl_set_options(self.client, impl_name="posix",
                                            enable_zerocopy_send_server=True)
