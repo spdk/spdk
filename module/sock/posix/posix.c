@@ -2008,7 +2008,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.set_opts	= posix_sock_impl_set_opts,
 };
 
-SPDK_NET_IMPL_REGISTER(posix, &g_posix_net_impl, DEFAULT_SOCK_PRIORITY);
+SPDK_NET_IMPL_REGISTER(posix, &g_posix_net_impl, DEFAULT_SOCK_PRIORITY + 1);
 
 static struct spdk_sock *
 ssl_sock_listen(const char *ip, int port, struct spdk_sock_opts *opts)
