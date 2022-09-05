@@ -34,6 +34,7 @@ struct spdk_dd_opts {
 	int64_t		io_unit_count;
 	uint32_t	queue_depth;
 	bool		aio;
+	bool		sparse;
 };
 
 static struct spdk_dd_opts g_opts = {
@@ -56,6 +57,7 @@ struct dd_io {
 	int			idx;
 #endif
 	void			*buf;
+	STAILQ_ENTRY(dd_io)	link;
 };
 
 enum dd_target_type {
@@ -118,6 +120,7 @@ struct dd_job {
 
 	uint32_t		outstanding;
 	uint64_t		copy_size;
+	STAILQ_HEAD(, dd_io)	seek_queue;
 
 	struct timespec		start_time;
 	uint64_t		total_bytes;
@@ -147,7 +150,8 @@ static struct dd_job g_job = {};
 static int g_error = 0;
 static bool g_interrupt;
 
-static void dd_target_populate_buffer(struct dd_io *io);
+static void dd_target_seek(struct dd_io *io);
+static void _dd_bdev_seek_hole_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 static void
 dd_cleanup_bdev(struct dd_target io)
@@ -278,6 +282,37 @@ dd_status_poller(void *ctx)
 	return SPDK_POLLER_BUSY;
 }
 
+static void
+dd_finalize_output(void)
+{
+	off_t curr_offset;
+	int rc = 0;
+
+	if (g_job.outstanding > 0) {
+		return;
+	}
+
+	if (g_opts.output_file) {
+		curr_offset = lseek(g_job.output.u.aio.fd, 0, SEEK_END);
+		if (curr_offset == (off_t) -1) {
+			SPDK_ERRLOG("Could not seek output file for finalize: %s\n", strerror(errno));
+			g_error = errno;
+		} else if ((uint64_t)curr_offset < g_job.copy_size + g_job.output.pos) {
+			rc = ftruncate(g_job.output.u.aio.fd, g_job.copy_size + g_job.output.pos);
+			if (rc != 0) {
+				SPDK_ERRLOG("Could not truncate output file for finalize: %s\n", strerror(errno));
+				g_error = errno;
+			}
+		}
+	}
+
+	if (g_error == 0) {
+		dd_show_progress(true);
+		printf("\n\n");
+	}
+	dd_exit(g_error);
+}
+
 #ifdef SPDK_CONFIG_URING
 static void
 dd_uring_submit(struct dd_io *io, struct dd_target *target, uint64_t length, uint64_t offset)
@@ -306,7 +341,7 @@ _dd_write_bdev_done(struct spdk_bdev_io *bdev_io,
 	assert(g_job.outstanding > 0);
 	g_job.outstanding--;
 	spdk_bdev_free_io(bdev_io);
-	dd_target_populate_buffer(io);
+	dd_target_seek(io);
 }
 
 static void
@@ -454,7 +489,7 @@ dd_target_populate_buffer(struct dd_io *io)
 	int rc = 0;
 
 	io->offset = g_job.input.pos;
-	io->length = spdk_min((uint64_t)g_opts.io_unit_size, g_job.copy_size - read_offset);
+	io->length = spdk_min(io->length, g_job.copy_size - read_offset);
 
 	if (io->length == 0 || g_error != 0 || g_interrupt == true) {
 		if (g_job.outstanding == 0) {
@@ -512,6 +547,235 @@ dd_target_populate_buffer(struct dd_io *io)
 	}
 }
 
+static off_t
+dd_file_seek_data(void)
+{
+	off_t next_data_offset = (off_t) -1;
+
+	next_data_offset = lseek(g_job.input.u.aio.fd, g_job.input.pos, SEEK_DATA);
+
+	if (next_data_offset == (off_t) -1) {
+		/* NXIO with SEEK_DATA means there are no more data to read.
+		 * But in case of input and output files, we may have to finalize output file
+		 * inserting a hole to the end of the file.
+		 */
+		if (errno == ENXIO) {
+			dd_finalize_output();
+		} else if (g_job.outstanding == 0) {
+			SPDK_ERRLOG("Could not seek input file for data: %s\n", strerror(errno));
+			g_error = errno;
+			dd_exit(g_error);
+		}
+	}
+
+	return next_data_offset;
+}
+
+static off_t
+dd_file_seek_hole(void)
+{
+	off_t next_hole_offset = (off_t) -1;
+
+	next_hole_offset = lseek(g_job.input.u.aio.fd, g_job.input.pos, SEEK_HOLE);
+
+	if (next_hole_offset == (off_t) -1 && g_job.outstanding == 0) {
+		SPDK_ERRLOG("Could not seek input file for hole: %s\n", strerror(errno));
+		g_error = errno;
+		dd_exit(g_error);
+	}
+
+	return next_hole_offset;
+}
+
+static void
+_dd_bdev_seek_data_done(struct spdk_bdev_io *bdev_io,
+			bool success,
+			void *cb_arg)
+{
+	struct dd_io *io = cb_arg;
+	uint64_t next_data_offset_blocks = UINT64_MAX;
+	struct dd_target *target = &g_job.input;
+	int rc = 0;
+
+	if (g_error != 0 || g_interrupt == true) {
+		STAILQ_REMOVE_HEAD(&g_job.seek_queue, link);
+		if (g_job.outstanding == 0) {
+			if (g_error == 0) {
+				dd_show_progress(true);
+				printf("\n\n");
+			}
+			dd_exit(g_error);
+		}
+		return;
+	}
+
+	assert(g_job.outstanding > 0);
+	g_job.outstanding--;
+
+	next_data_offset_blocks = spdk_bdev_io_get_seek_offset(bdev_io);
+	spdk_bdev_free_io(bdev_io);
+
+	/* UINT64_MAX means there are no more data to read.
+	 * But in case of input and output files, we may have to finalize output file
+	 * inserting a hole to the end of the file.
+	 */
+	if (next_data_offset_blocks == UINT64_MAX) {
+		STAILQ_REMOVE_HEAD(&g_job.seek_queue, link);
+		dd_finalize_output();
+		return;
+	}
+
+	g_job.input.pos = next_data_offset_blocks * g_job.input.block_size;
+
+	g_job.outstanding++;
+	rc = spdk_bdev_seek_hole(target->u.bdev.desc, target->u.bdev.ch,
+				 g_job.input.pos / g_job.input.block_size,
+				 _dd_bdev_seek_hole_done, io);
+
+	if (rc != 0) {
+		SPDK_ERRLOG("%s\n", strerror(-rc));
+		STAILQ_REMOVE_HEAD(&g_job.seek_queue, link);
+		assert(g_job.outstanding > 0);
+		g_job.outstanding--;
+		g_error = rc;
+		if (g_job.outstanding == 0) {
+			dd_exit(rc);
+		}
+	}
+}
+
+static void
+_dd_bdev_seek_hole_done(struct spdk_bdev_io *bdev_io,
+			bool success,
+			void *cb_arg)
+{
+	struct dd_io *io = cb_arg;
+	struct dd_target *target = &g_job.input;
+	uint64_t next_hole_offset_blocks = UINT64_MAX;
+	struct dd_io *seek_io;
+	int rc = 0;
+
+	/* First seek operation is the one in progress, i.e. this one just ended */
+	STAILQ_REMOVE_HEAD(&g_job.seek_queue, link);
+
+	if (g_error != 0 || g_interrupt == true) {
+		if (g_job.outstanding == 0) {
+			if (g_error == 0) {
+				dd_show_progress(true);
+				printf("\n\n");
+			}
+			dd_exit(g_error);
+		}
+		return;
+	}
+
+	assert(g_job.outstanding > 0);
+	g_job.outstanding--;
+
+	next_hole_offset_blocks = spdk_bdev_io_get_seek_offset(bdev_io);
+	spdk_bdev_free_io(bdev_io);
+
+	/* UINT64_MAX means there are no more holes. */
+	if (next_hole_offset_blocks == UINT64_MAX) {
+		io->length = g_opts.io_unit_size;
+	} else {
+		io->length = spdk_min((uint64_t)g_opts.io_unit_size,
+				      next_hole_offset_blocks * g_job.input.block_size - g_job.input.pos);
+	}
+
+	dd_target_populate_buffer(io);
+
+	/* If input reading is not at the end, start following seek operation in the queue */
+	if (!STAILQ_EMPTY(&g_job.seek_queue) && g_job.input.pos < g_job.input.total_size) {
+		seek_io = STAILQ_FIRST(&g_job.seek_queue);
+		assert(seek_io != NULL);
+		g_job.outstanding++;
+		rc = spdk_bdev_seek_data(target->u.bdev.desc, target->u.bdev.ch,
+					 g_job.input.pos / g_job.input.block_size,
+					 _dd_bdev_seek_data_done, seek_io);
+
+		if (rc != 0) {
+			SPDK_ERRLOG("%s\n", strerror(-rc));
+			assert(g_job.outstanding > 0);
+			g_job.outstanding--;
+			g_error = rc;
+			if (g_job.outstanding == 0) {
+				dd_exit(rc);
+			}
+		}
+	}
+}
+
+static void
+dd_target_seek(struct dd_io *io)
+{
+	struct dd_target *target = &g_job.input;
+	uint64_t read_region_start = g_opts.input_offset * g_opts.io_unit_size;
+	uint64_t read_offset = g_job.input.pos - read_region_start;
+	off_t next_data_offset = (off_t) -1;
+	off_t next_hole_offset = (off_t) -1;
+	int rc = 0;
+
+	if (!g_opts.sparse) {
+		dd_target_populate_buffer(io);
+		return;
+	}
+
+	if (g_job.copy_size - read_offset == 0 || g_error != 0 || g_interrupt == true) {
+		if (g_job.outstanding == 0) {
+			if (g_error == 0) {
+				dd_show_progress(true);
+				printf("\n\n");
+			}
+			dd_exit(g_error);
+		}
+		return;
+	}
+
+	if (target->type == DD_TARGET_TYPE_FILE) {
+		next_data_offset = dd_file_seek_data();
+		if (next_data_offset < 0) {
+			return;
+		} else if ((uint64_t)next_data_offset > g_job.input.pos) {
+			g_job.input.pos = next_data_offset;
+		}
+
+		next_hole_offset = dd_file_seek_hole();
+		if (next_hole_offset < 0) {
+			return;
+		} else if ((uint64_t)next_hole_offset > g_job.input.pos) {
+			io->length = spdk_min((uint64_t)g_opts.io_unit_size,
+					      (uint64_t)(next_hole_offset - g_job.input.pos));
+		} else {
+			io->length = g_opts.io_unit_size;
+		}
+
+		dd_target_populate_buffer(io);
+	} else if (target->type == DD_TARGET_TYPE_BDEV) {
+		/* Check if other seek operation is in progress */
+		if (STAILQ_EMPTY(&g_job.seek_queue)) {
+			g_job.outstanding++;
+			rc = spdk_bdev_seek_data(target->u.bdev.desc, target->u.bdev.ch,
+						 g_job.input.pos / g_job.input.block_size,
+						 _dd_bdev_seek_data_done, io);
+
+		}
+
+		STAILQ_INSERT_TAIL(&g_job.seek_queue, io, link);
+	}
+
+	if (rc != 0) {
+		SPDK_ERRLOG("%s\n", strerror(-rc));
+		assert(g_job.outstanding > 0);
+		g_job.outstanding--;
+		g_error = rc;
+		if (g_job.outstanding == 0) {
+			dd_exit(rc);
+		}
+		return;
+	}
+}
+
 static void
 dd_complete_poll(struct dd_io *io)
 {
@@ -526,7 +790,7 @@ dd_complete_poll(struct dd_io *io)
 		dd_target_write(io);
 		break;
 	case DD_WRITE:
-		dd_target_populate_buffer(io);
+		dd_target_seek(io);
 		break;
 	default:
 		assert(false);
@@ -905,6 +1169,7 @@ dd_run(void *arg1)
 			dd_exit(-ENOMEM);
 			return;
 		}
+		g_job.ios[i].length = (uint64_t)g_opts.io_unit_size;
 	}
 
 	if (g_opts.input_file || g_opts.output_file) {
@@ -957,8 +1222,10 @@ dd_run(void *arg1)
 	g_job.status_poller = spdk_poller_register(dd_status_poller, NULL,
 			      STATUS_POLLER_PERIOD_SEC * SPDK_SEC_TO_USEC);
 
+	STAILQ_INIT(&g_job.seek_queue);
+
 	for (i = 0; i < g_opts.queue_depth; i++) {
-		dd_target_populate_buffer(&g_job.ios[i]);
+		dd_target_seek(&g_job.ios[i]);
 	}
 
 }
@@ -976,6 +1243,7 @@ enum dd_cmdline_opts {
 	DD_OPTION_QD,
 	DD_OPTION_COUNT,
 	DD_OPTION_AIO,
+	DD_OPTION_SPARSE,
 };
 
 static struct option g_cmdline_opts[] = {
@@ -1052,6 +1320,12 @@ static struct option g_cmdline_opts[] = {
 		.val = DD_OPTION_AIO,
 	},
 	{
+		.name = "sparse",
+		.has_arg = 0,
+		.flag = NULL,
+		.val = DD_OPTION_SPARSE,
+	},
+	{
 		.name = NULL
 	}
 };
@@ -1072,6 +1346,7 @@ usage(void)
 	printf(" --skip Skip this many I/O units at start of input. (default: 0)\n");
 	printf(" --seek Skip this many I/O units at start of output. (default: 0)\n");
 	printf(" --aio Force usage of AIO. (by default io_uring is used if available)\n");
+	printf(" --sparse Enable hole skipping in input target\n");
 	printf(" Available iflag and oflag values:\n");
 	printf("  append - append mode\n");
 	printf("  direct - use direct I/O for data\n");
@@ -1123,6 +1398,9 @@ parse_args(int argc, char *argv)
 		break;
 	case DD_OPTION_AIO:
 		g_opts.aio = true;
+		break;
+	case DD_OPTION_SPARSE:
+		g_opts.sparse = true;
 		break;
 	default:
 		usage();
