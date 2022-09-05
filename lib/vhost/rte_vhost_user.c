@@ -1051,7 +1051,11 @@ start_device(int vid)
 		 * so q->vring.desc can replace q->vring.desc_packed.
 		 */
 		if (q->vring.desc != NULL && q->vring.size > 0) {
-			rte_vhost_vring_call(vsession->vid, q->vring_idx);
+			/* Make sure a successful call of
+			 * `rte_vhost_vring_call` will happen
+			 * after starting the device.
+			 */
+			q->used_req_cnt += 1;
 		}
 	}
 
