@@ -107,6 +107,7 @@ static const double g_latency_cutoffs[] = {
 };
 
 struct ns_worker_stats {
+	uint64_t		io_submitted;
 	uint64_t		io_completed;
 	uint64_t		last_io_completed;
 	uint64_t		total_tsc;
@@ -228,6 +229,7 @@ static uint32_t g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
 static int g_time_in_sec;
+static uint64_t g_number_ios;
 static uint64_t g_elapsed_time_in_usec;
 static int g_warmup_time_in_sec;
 static uint32_t g_max_completions;
@@ -1401,6 +1403,8 @@ submit_single_io(struct perf_task *task)
 	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
 	struct ns_entry		*entry = ns_ctx->entry;
 
+	assert(!ns_ctx->is_draining);
+
 	if (entry->zipf) {
 		offset_in_ios = spdk_zipf_generate(entry->zipf);
 	} else if (g_is_random) {
@@ -1431,6 +1435,11 @@ submit_single_io(struct perf_task *task)
 		free(task);
 	} else {
 		ns_ctx->current_queue_depth++;
+		ns_ctx->stats.io_submitted++;
+	}
+
+	if (spdk_unlikely(g_number_ios && ns_ctx->stats.io_submitted >= g_number_ios)) {
+		ns_ctx->is_draining = true;
 	}
 }
 
@@ -1463,10 +1472,10 @@ task_complete(struct perf_task *task)
 	}
 
 	/*
-	 * is_draining indicates when time has expired for the test run
-	 * and we are just waiting for the previously submitted I/O
-	 * to complete.  In this case, do not submit a new I/O to replace
-	 * the one just completed.
+	 * is_draining indicates when time has expired or io_submitted exceeded
+	 * g_number_ios for the test run and we are just waiting for the previously
+	 * submitted I/O to complete. In this case, do not submit a new I/O to
+	 * replace the one just completed.
 	 */
 	if (spdk_unlikely(ns_ctx->is_draining)) {
 		spdk_dma_free(task->iovs[0].iov_base);
@@ -1649,6 +1658,8 @@ work_fn(void *arg)
 	}
 
 	while (spdk_likely(!g_exit)) {
+		bool all_draining = true;
+
 		/*
 		 * Check for completed I/O for each controller. A new
 		 * I/O will be submitted in the io_complete callback
@@ -1664,6 +1675,14 @@ work_fn(void *arg)
 				ns_ctx->stats.idle_tsc += check_now - ns_ctx->stats.last_tsc;
 			}
 			ns_ctx->stats.last_tsc = check_now;
+
+			if (!ns_ctx->is_draining) {
+				all_draining = false;
+			}
+		}
+
+		if (spdk_unlikely(all_draining)) {
+			break;
 		}
 
 		tsc_current = spdk_get_ticks();
@@ -1762,6 +1781,8 @@ usage(char *program_name)
 	printf("\t[-a, --warmup-time <sec> warmup time in seconds]\n");
 	printf("\t[-c, --core-mask <mask> core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
+	printf("\t[-d, --number-ios <val> number of I/O to perform per thread on each namespace. Note: this is additional exit criteria.]\n");
+	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-D, --disable-sq-cmb disable submission queue in controller memory buffer, default: enabled]\n");
 	printf("\t[-H, --enable-tcp-hdgst enable header digest for TCP transport, default: disabled]\n");
 	printf("\t[-I, --enable-tcp-ddgst enable data digest for TCP transport, default: disabled]\n");
@@ -2232,7 +2253,7 @@ parse_metadata(const char *metacfg_str)
 	return 0;
 }
 
-#define PERF_GETOPT_SHORT "a:b:c:e:gi:lmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
+#define PERF_GETOPT_SHORT "a:b:c:d:e:gi:lmo:q:r:k:s:t:w:z:A:C:DF:GHILM:NO:P:Q:RS:T:U:VZ:"
 
 static const struct option g_perf_cmdline_opts[] = {
 #define PERF_WARMUP_TIME	'a'
@@ -2263,6 +2284,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"hugemem-size",			required_argument,	NULL, PERF_HUGEMEM_SIZE},
 #define PERF_TIME	't'
 	{"time",			required_argument,	NULL, PERF_TIME},
+#define PERF_NUMBER_IOS	'd'
+	{"number-ios",			required_argument,	NULL, PERF_NUMBER_IOS},
 #define PERF_IO_PATTERN	'w'
 	{"io-pattern",			required_argument,	NULL, PERF_IO_PATTERN},
 #define PERF_DISABLE_ZCOPY	'z'
@@ -2334,6 +2357,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, long_idx;
 	long int val;
+	long long int val2;
 	int rc;
 	char *endptr;
 	bool ssl_used = false;
@@ -2419,6 +2443,15 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			case PERF_ZEROCOPY_THRESHOLD:
 				g_sock_zcopy_threshold = val;
 			}
+			break;
+		case PERF_NUMBER_IOS:
+			val2 = spdk_strtoll(optarg, 10);
+			if (val2 < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val2;
+			}
+
+			g_number_ios = (uint64_t)val2;
 			break;
 		case PERF_ZIPF:
 			errno = 0;
@@ -2639,6 +2672,16 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		}
 
 		perf_set_sock_opts(g_sock_threshold_impl, "zerocopy_threshold", g_sock_zcopy_threshold, NULL);
+	}
+
+	if (g_number_ios && g_warmup_time_in_sec) {
+		fprintf(stderr, "-d (--number-ios) with -a (--warmup-time) is not supported\n");
+		return 1;
+	}
+
+	if (g_number_ios && g_number_ios < g_queue_depth) {
+		fprintf(stderr, "-d (--number-ios) less than -q (--io-depth) is not supported\n");
+		return 1;
 	}
 
 	if (TAILQ_EMPTY(&g_trid_list)) {
