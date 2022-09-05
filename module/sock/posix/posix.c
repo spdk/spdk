@@ -1050,7 +1050,6 @@ posix_sock_accept(struct spdk_sock *_sock)
 		if (!ssl) {
 			SPDK_ERRLOG("ssl_sock_accept_loop() failed, errno = %d\n", errno);
 			close(fd);
-			SSL_CTX_free(sock->ctx);
 			return NULL;
 		}
 	}
