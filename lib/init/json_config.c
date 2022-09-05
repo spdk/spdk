@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -327,6 +328,7 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 	struct config_entry cfg = {};
 	struct spdk_json_val *params_end;
 	size_t params_len = 0;
+	uint32_t state_mask = 0, cur_state_mask, startup_runtime = SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME;
 	int rc;
 
 	if (ctx->config_it == NULL) {
@@ -345,9 +347,24 @@ app_json_config_load_subsystem_config_entry(void *_ctx)
 		goto out;
 	}
 
-	rc = spdk_rpc_is_method_allowed(cfg.method, spdk_rpc_get_state());
-	if (rc == -EPERM) {
+	rc = spdk_rpc_get_method_state_mask(cfg.method, &state_mask);
+	if (rc == -ENOENT) {
+		SPDK_ERRLOG("Method '%s' was not found\n", cfg.method);
+		app_json_config_load_done(ctx, rc);
+		goto out;
+	}
+	cur_state_mask = spdk_rpc_get_state();
+	if ((state_mask & cur_state_mask) != cur_state_mask) {
 		SPDK_DEBUG_APP_CFG("Method '%s' not allowed -> skipping\n", cfg.method);
+		/* Invoke later to avoid recurrency */
+		ctx->config_it = spdk_json_next(ctx->config_it);
+		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
+		goto out;
+	}
+	if ((state_mask & startup_runtime) == startup_runtime && cur_state_mask == SPDK_RPC_RUNTIME) {
+		/* Some methods are allowed to be run in both STARTUP and RUNTIME states.
+		 * We should not call such methods twice, so ignore the second attempt in RUNTIME state */
+		SPDK_DEBUG_APP_CFG("Method '%s' has already been run in STARTUP state\n", cfg.method);
 		/* Invoke later to avoid recurrency */
 		ctx->config_it = spdk_json_next(ctx->config_it);
 		spdk_thread_send_msg(ctx->thread, app_json_config_load_subsystem_config_entry, ctx);
