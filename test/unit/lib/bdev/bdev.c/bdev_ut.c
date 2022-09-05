@@ -119,6 +119,9 @@ static uint32_t g_zcopy_read_buf_len;
 static void *g_zcopy_write_buf;
 static uint32_t g_zcopy_write_buf_len;
 static struct spdk_bdev_io *g_zcopy_bdev_io;
+static uint64_t g_seek_data_offset;
+static uint64_t g_seek_hole_offset;
+static uint64_t g_seek_offset;
 
 static struct ut_expected_io *
 ut_alloc_expected_io(uint8_t type, uint64_t offset, uint64_t length, int iovcnt)
@@ -237,6 +240,14 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 				g_zcopy_read_buf_len = 0;
 			}
 		}
+	}
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_SEEK_DATA) {
+		bdev_io->u.bdev.seek.offset = g_seek_data_offset;
+	}
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_SEEK_HOLE) {
+		bdev_io->u.bdev.seek.offset = g_seek_hole_offset;
 	}
 
 	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
@@ -363,6 +374,8 @@ static bool g_io_types_supported[SPDK_BDEV_NUM_IO_TYPES] = {
 	[SPDK_BDEV_IO_TYPE_WRITE_ZEROES]	= true,
 	[SPDK_BDEV_IO_TYPE_ZCOPY]		= true,
 	[SPDK_BDEV_IO_TYPE_ABORT]		= true,
+	[SPDK_BDEV_IO_TYPE_SEEK_HOLE]		= true,
+	[SPDK_BDEV_IO_TYPE_SEEK_DATA]		= true,
 };
 
 static void
@@ -577,6 +590,13 @@ static void
 bdev_open_cb4(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *event_ctx)
 {
 	g_event_type4 = type;
+}
+
+static void
+bdev_seek_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	g_seek_offset = spdk_bdev_io_get_seek_offset(bdev_io);
+	spdk_bdev_free_io(bdev_io);
 }
 
 static void
@@ -5765,6 +5785,70 @@ for_each_bdev_test(void)
 	free_bdev(bdev[7]);
 }
 
+static void
+bdev_seek_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	poll_threads();
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	CU_ASSERT(bdev == spdk_bdev_desc_get_bdev(desc));
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	/* Seek data not supported */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_DATA, false);
+	rc = spdk_bdev_seek_data(desc, io_ch, 0, bdev_seek_cb, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	poll_threads();
+	CU_ASSERT(g_seek_offset == 0);
+
+	/* Seek hole not supported */
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_HOLE, false);
+	rc = spdk_bdev_seek_hole(desc, io_ch, 0, bdev_seek_cb, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	poll_threads();
+	CU_ASSERT(g_seek_offset == UINT64_MAX);
+
+	/* Seek data supported */
+	g_seek_data_offset = 12345;
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_DATA, true);
+	rc = spdk_bdev_seek_data(desc, io_ch, 0, bdev_seek_cb, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_seek_offset == 12345);
+
+	/* Seek hole supported */
+	g_seek_hole_offset = 67890;
+	ut_enable_io_type(SPDK_BDEV_IO_TYPE_SEEK_HOLE, true);
+	rc = spdk_bdev_seek_hole(desc, io_ch, 0, bdev_seek_cb, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 1);
+	stub_complete_io(1);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	CU_ASSERT(g_seek_offset == 67890);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -5823,6 +5907,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, bdev_register_uuid_alias);
 	CU_ADD_TEST(suite, bdev_unregister_by_name);
 	CU_ADD_TEST(suite, for_each_bdev_test);
+	CU_ADD_TEST(suite, bdev_seek_test);
 
 	allocate_cores(1);
 	allocate_threads(1);

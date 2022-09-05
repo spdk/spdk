@@ -117,6 +117,8 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_COMPARE,
 	SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE,
 	SPDK_BDEV_IO_TYPE_ABORT,
+	SPDK_BDEV_IO_TYPE_SEEK_HOLE,
+	SPDK_BDEV_IO_TYPE_SEEK_DATA,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -771,6 +773,52 @@ void *spdk_bdev_get_module_ctx(struct spdk_bdev_desc *desc);
  *  be represented by an spdk_bdev_io structure allocated from a global pool.
  *  These functions will return -ENOMEM if the spdk_bdev_io pool is empty.
  */
+
+/**
+ * Submit a data seek request to the bdev on the given channel.
+ * Starting from offset_blocks, search for next allocated data:
+ * seek result can be obtained with spdk_bdev_io_get_seek_offset
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks is out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_seek_data(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			uint64_t offset_blocks,
+			spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a hole seek request to the bdev on the given channel.
+ * Starting from offset_blocks, search for next unallocated hole:
+ * seek result can be obtained with spdk_bdev_io_get_seek_offset
+ *
+ * \ingroup bdev_io_submit_functions
+ *
+ * \param desc Block device descriptor.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ *   * -EINVAL - offset_blocks is out of range
+ *   * -ENOMEM - spdk_bdev_io buffer cannot be allocated
+ */
+int spdk_bdev_seek_hole(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			uint64_t offset_blocks,
+			spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a read request to the bdev on the given channel.
@@ -1817,6 +1865,17 @@ void *spdk_bdev_io_get_cb_arg(struct spdk_bdev_io *bdev_io);
 typedef void (*spdk_bdev_histogram_status_cb)(void *cb_arg, int status);
 typedef void (*spdk_bdev_histogram_data_cb)(void *cb_arg, int status,
 		struct spdk_histogram_data *histogram);
+
+/**
+ * Get the result of a previous seek function.
+ * After calling spdk_bdev_seek_data or spdk_bdev_seek_hole, call this function
+ * to retrieve the offset of next allocated data or next unallocated hole.
+ *
+ * \param bdev_io I/O to get the status from.
+ *
+ * \return data/hole offset in blocks or UINT64_MAX if not found
+ */
+uint64_t spdk_bdev_io_get_seek_offset(const struct spdk_bdev_io *bdev_io);
 
 /**
  * Enable or disable collecting histogram data on a bdev.

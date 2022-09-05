@@ -4206,6 +4206,81 @@ bdev_io_valid_blocks(struct spdk_bdev *bdev, uint64_t offset_blocks, uint64_t nu
 	return true;
 }
 
+static void
+bdev_seek_complete_cb(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+}
+
+static int
+bdev_seek(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	  uint64_t offset_blocks, enum spdk_bdev_io_type io_type,
+	  spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(desc);
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	assert(io_type == SPDK_BDEV_IO_TYPE_SEEK_DATA || io_type == SPDK_BDEV_IO_TYPE_SEEK_HOLE);
+
+	/* Check if offset_blocks is valid looking at the validity of one block */
+	if (!bdev_io_valid_blocks(bdev, offset_blocks, 1)) {
+		return -EINVAL;
+	}
+
+	bdev_io = bdev_channel_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->internal.desc = desc;
+	bdev_io->type = io_type;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	if (!spdk_bdev_io_type_supported(bdev, io_type)) {
+		/* In case bdev doesn't support seek to next data/hole offset,
+		 * it is assumed that only data and no holes are present */
+		if (io_type == SPDK_BDEV_IO_TYPE_SEEK_DATA) {
+			bdev_io->u.bdev.seek.offset = offset_blocks;
+		} else {
+			bdev_io->u.bdev.seek.offset = UINT64_MAX;
+		}
+
+		spdk_thread_send_msg(spdk_get_thread(), bdev_seek_complete_cb, bdev_io);
+		return 0;
+	}
+
+	bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int
+spdk_bdev_seek_data(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    uint64_t offset_blocks,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return bdev_seek(desc, ch, offset_blocks, SPDK_BDEV_IO_TYPE_SEEK_DATA, cb, cb_arg);
+}
+
+int
+spdk_bdev_seek_hole(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		    uint64_t offset_blocks,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return bdev_seek(desc, ch, offset_blocks, SPDK_BDEV_IO_TYPE_SEEK_HOLE, cb, cb_arg);
+}
+
+uint64_t
+spdk_bdev_io_get_seek_offset(const struct spdk_bdev_io *bdev_io)
+{
+	return bdev_io->u.bdev.seek.offset;
+}
+
 static int
 bdev_read_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, void *buf,
 			 void *md_buf, uint64_t offset_blocks, uint64_t num_blocks,

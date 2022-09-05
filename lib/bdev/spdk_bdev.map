@@ -53,6 +53,8 @@
 	spdk_bdev_get_weighted_io_time;
 	spdk_bdev_get_io_channel;
 	spdk_bdev_get_module_ctx;
+	spdk_bdev_seek_data;
+	spdk_bdev_seek_hole;
 	spdk_bdev_read;
 	spdk_bdev_read_blocks;
 	spdk_bdev_read_blocks_with_md;
@@ -94,6 +96,7 @@
 	spdk_bdev_io_get_iovec;
 	spdk_bdev_io_get_md_buf;
 	spdk_bdev_io_get_cb_arg;
+	spdk_bdev_io_get_seek_offset;
 	spdk_bdev_histogram_enable;
 	spdk_bdev_histogram_get;
 	spdk_bdev_get_media_events;

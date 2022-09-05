@@ -620,6 +620,11 @@ struct spdk_bdev_io {
 				 */
 				void *bio_cb_arg;
 			} abort;
+
+			struct {
+				/** The offset of next data/hole.  */
+				uint64_t offset;
+			} seek;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
