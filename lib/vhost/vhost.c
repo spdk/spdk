@@ -358,14 +358,13 @@ vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 		return 0;
 	}
 
-	virtqueue->req_cnt += virtqueue->used_req_cnt;
-	virtqueue->used_req_cnt = 0;
-
 	SPDK_DEBUGLOG(vhost_ring,
 		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
 		      virtqueue - vsession->virtqueue, virtqueue->last_used_idx);
 
 	if (rte_vhost_vring_call(vsession->vid, virtqueue->vring_idx) == 0) {
+		virtqueue->req_cnt += virtqueue->used_req_cnt;
+		virtqueue->used_req_cnt = 0;
 		/* interrupt signalled */
 		return 1;
 	} else {
