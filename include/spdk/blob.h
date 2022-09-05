@@ -428,6 +428,34 @@ uint64_t spdk_blob_get_num_io_units(struct spdk_blob *blob);
  */
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
+/**
+ * Get next allocated io_unit
+ *
+ * Starting at 'offset' io_units into the blob, returns the offset of
+ * the first allocated io unit found.
+ * If 'offset' points to an allocated io_unit, same offset is returned.
+ *
+ * \param blob Blob struct to query.
+ * \param offset Offset is in io units from the beginning of the blob.
+ *
+ * \return offset in io_units or UINT64_MAX if no allocated io_unit found
+ */
+uint64_t spdk_blob_get_next_allocated_io_unit(struct spdk_blob *blob, uint64_t offset);
+
+/**
+ * Get next unallocated io_unit
+ *
+ * Starting at 'offset' io_units into the blob, returns the offset of
+ * the first unallocated io unit found.
+ * If 'offset' points to an unallocated io_unit, same offset is returned.
+ *
+ * \param blob Blob struct to query.
+ * \param offset Offset is in io units from the beginning of the blob.
+ *
+ * \return offset in io_units or UINT64_MAX if only allocated io_unit found
+ */
+uint64_t spdk_blob_get_next_unallocated_io_unit(struct spdk_blob *blob, uint64_t offset);
+
 struct spdk_blob_xattr_opts {
 	/* Number of attributes */
 	size_t	count;

@@ -20,6 +20,8 @@
 	spdk_blob_get_num_pages;
 	spdk_blob_get_num_io_units;
 	spdk_blob_get_num_clusters;
+	spdk_blob_get_next_allocated_io_unit;
+	spdk_blob_get_next_unallocated_io_unit;
 	spdk_blob_opts_init;
 	spdk_bs_create_blob_ext;
 	spdk_bs_create_blob;

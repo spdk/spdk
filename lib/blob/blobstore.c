@@ -5593,6 +5593,34 @@ spdk_blob_get_num_clusters(struct spdk_blob *blob)
 	return blob->active.num_clusters;
 }
 
+static uint64_t
+blob_find_io_unit(struct spdk_blob *blob, uint64_t offset, bool is_allocated)
+{
+	uint64_t blob_io_unit_num = spdk_blob_get_num_io_units(blob);
+
+	while (offset < blob_io_unit_num) {
+		if (bs_io_unit_is_allocated(blob, offset) == is_allocated) {
+			return offset;
+		}
+
+		offset += bs_num_io_units_to_cluster_boundary(blob, offset);
+	}
+
+	return UINT64_MAX;
+}
+
+uint64_t
+spdk_blob_get_next_allocated_io_unit(struct spdk_blob *blob, uint64_t offset)
+{
+	return blob_find_io_unit(blob, offset, true);
+}
+
+uint64_t
+spdk_blob_get_next_unallocated_io_unit(struct spdk_blob *blob, uint64_t offset)
+{
+	return blob_find_io_unit(blob, offset, false);
+}
+
 /* START spdk_bs_create_blob */
 
 static void

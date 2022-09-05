@@ -7317,6 +7317,82 @@ blob_decouple_snapshot(void)
 }
 
 static void
+blob_seek_io_unit(void)
+{
+	struct spdk_blob_store *bs = g_bs;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *channel;
+	struct spdk_blob_opts opts;
+	uint64_t free_clusters;
+	uint8_t payload[10 * 4096];
+	uint64_t offset;
+	uint64_t io_unit, io_units_per_cluster;
+
+	free_clusters = spdk_bs_free_cluster_count(bs);
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel != NULL);
+
+	/* Set blob as thin provisioned */
+	ut_spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+
+	/* Create a blob */
+	blob = ut_blob_create_and_open(bs, &opts);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+
+	io_units_per_cluster = bs_io_units_per_cluster(blob);
+
+	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
+	spdk_blob_resize(blob, 5, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
+	CU_ASSERT(blob->active.num_clusters == 5);
+
+	/* Write at the beginning of first cluster */
+	offset = 0;
+	spdk_blob_io_write(blob, channel, payload, offset, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	io_unit = spdk_blob_get_next_allocated_io_unit(blob, 0);
+	CU_ASSERT(io_unit == offset);
+
+	io_unit = spdk_blob_get_next_unallocated_io_unit(blob, 0);
+	CU_ASSERT(io_unit == io_units_per_cluster);
+
+	/* Write in the middle of third cluster */
+	offset = 2 * io_units_per_cluster + io_units_per_cluster / 2;
+	spdk_blob_io_write(blob, channel, payload, offset, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	io_unit = spdk_blob_get_next_allocated_io_unit(blob, io_units_per_cluster);
+	CU_ASSERT(io_unit == 2 * io_units_per_cluster);
+
+	io_unit = spdk_blob_get_next_unallocated_io_unit(blob, 2 * io_units_per_cluster);
+	CU_ASSERT(io_unit == 3 * io_units_per_cluster);
+
+	/* Write at the end of last cluster */
+	offset = 5 * io_units_per_cluster - 1;
+	spdk_blob_io_write(blob, channel, payload, offset, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	io_unit = spdk_blob_get_next_allocated_io_unit(blob, 3 * io_units_per_cluster);
+	CU_ASSERT(io_unit == 4 * io_units_per_cluster);
+
+	io_unit = spdk_blob_get_next_unallocated_io_unit(blob, 4 * io_units_per_cluster);
+	CU_ASSERT(io_unit == UINT64_MAX);
+
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
+
+	ut_blob_close_and_delete(bs, blob);
+}
+
+static void
 suite_bs_setup(void)
 {
 	struct spdk_bs_dev *dev;
@@ -7491,6 +7567,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_simultaneous_operations);
 	CU_ADD_TEST(suite_bs, blob_persist_test);
 	CU_ADD_TEST(suite_bs, blob_decouple_snapshot);
+	CU_ADD_TEST(suite_bs, blob_seek_io_unit);
 
 	allocate_threads(2);
 	set_thread(0);
