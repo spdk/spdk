@@ -7,6 +7,9 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 iscsitestinit
 
+# Declare rpc_py here, because its default value points to rpc_cmd function,
+# which does not tolerate piping arguments into it.
+rpc_py="$rootdir/scripts/rpc.py"
 node_base="iqn.2013-06.com.intel.ch.spdk"
 
 timing_enter start_iscsi_tgt

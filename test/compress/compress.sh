@@ -8,6 +8,9 @@ plugindir=$rootdir/examples/bdev/fio_plugin
 source "$rootdir/scripts/common.sh"
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
+
+# Declare rpc_py here, because its default value points to rpc_cmd function,
+# which does not tolerate piping arguments into it.
 rpc_py="$rootdir/scripts/rpc.py"
 
 function error_cleanup() {

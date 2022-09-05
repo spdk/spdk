@@ -7,6 +7,9 @@ source $rootdir/test/iscsi_tgt/common.sh
 
 iscsitestinit
 
+# Declare rpc_py here, because its default value points to rpc_cmd function,
+# which does not tolerate piping arguments into it.
+rpc_py="$rootdir/scripts/rpc.py"
 fio_py="$rootdir/scripts/fio-wrapper"
 
 CONNECTION_NUMBER=30
