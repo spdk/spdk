@@ -23,6 +23,10 @@ ifeq ($(CONFIG_DEBUG),y)
 DPDK_OPTS += --buildtype=debug
 endif
 
+ifeq ($(CONFIG_LTO),y)
+DPDK_OPTS += -Db_lto=true
+endif
+
 # the drivers we use
 DPDK_DRIVERS = bus bus/pci bus/vdev mempool/ring
 
