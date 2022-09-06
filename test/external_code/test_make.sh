@@ -18,7 +18,7 @@ if [ -n "$SPDK_RUN_EXTERNAL_DPDK" ]; then
 	WITH_DPDK="--with-dpdk=$SPDK_RUN_EXTERNAL_DPDK"
 fi
 make -C $SPDK_DIR clean
-$SPDK_DIR/configure --with-shared --without-isal --without-ocf --disable-asan $WITH_DPDK
+$SPDK_DIR/configure --with-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
 
 export SPDK_HEADER_DIR="$SPDK_DIR/include"
@@ -58,7 +58,7 @@ run_test "external_run_nvme_shared" $_sudo $test_root/nvme/identify.sh
 make -C $test_root clean
 
 make -C $SPDK_DIR clean
-$SPDK_DIR/configure --without-shared --without-isal --without-ocf --disable-asan $WITH_DPDK
+$SPDK_DIR/configure --without-shared --without-ocf --disable-asan $WITH_DPDK
 make -C $SPDK_DIR -j$(nproc)
 
 # Make both the application and bdev against individual SPDK archives.

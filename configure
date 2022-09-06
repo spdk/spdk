@@ -91,8 +91,6 @@ function usage() {
 	echo "                           If argument is file, interpret it as compiled OCF lib"
 	echo "                           If no argument is specified, OCF git submodule is used by default"
 	echo "                           example: /usr/src/ocf/"
-	echo " --with-isal               Build with ISA-L. Enabled by default on x86 and aarch64 architectures."
-	echo " --without-isal            No path required."
 	echo " --with-uring[=DIR]        Build I/O uring bdev or socket module."
 	echo " --without-uring           If an argument is provided, it is considered a directory containing"
 	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
@@ -166,36 +164,11 @@ if [[ $arch == *mingw* ]] || [[ $arch == *windows* ]]; then
 	sys_name=Windows
 fi
 
-# Sanitize default configuration. All parameters set by user explicit should fail
-# Force no ISA-L if non-x86 or non-aarch64 architecture
-if [[ "${CONFIG[ISAL]}" = "y" ]]; then
-	if [[ $arch != x86_64* ]] && [[ $arch != aarch64* ]]; then
-		CONFIG[ISAL]=n
-		echo "Notice: ISA-L not supported for ${arch}. Turning off default feature."
-	fi
-fi
-
 if [[ $sys_name != "Linux" ]]; then
 	# Vhost, rte_vhost library and virtio are only supported on Linux.
 	CONFIG[VHOST]="n"
 	CONFIG[VIRTIO]="n"
 	echo "Notice: Vhost, rte_vhost library and virtio are only supported on Linux. Turning off default feature."
-fi
-
-#check nasm only on x86
-if [[ $arch == x86_64* ]]; then
-	ver=$(nasm -v 2> /dev/null | awk '{print $3}' | awk -Fr '{print $1}')
-	if lt "$ver" 2.14; then
-		# ISA-L, compression & crypto require NASM version 2.14 or newer.
-		CONFIG[ISAL]=n
-		CONFIG[CRYPTO]=n
-		CONFIG[IPSEC_MB]=n
-		CONFIG[REDUCE]=n
-		HAVE_NASM=n
-		echo "Notice: ISA-L, compression & crypto require NASM version 2.14 or newer. Turning off default ISA-L and crypto features."
-	else
-		HAVE_NASM=y
-	fi
 fi
 
 function check_dir() {
@@ -597,12 +570,6 @@ for i in "$@"; do
 			CONFIG[OCF]=n
 			CONFIG[OCF_PATH]=
 			;;
-		--with-isal)
-			CONFIG[ISAL]=y
-			;;
-		--without-isal)
-			CONFIG[ISAL]=n
-			;;
 		--with-uring=*)
 			CONFIG[URING]=y
 			CONFIG[URING_PATH]=$(readlink -f ${i#*=})
@@ -722,19 +689,6 @@ if [[ "${CONFIG[IDXD]}" = "y" ]]; then
 		CONFIG[IDXD_KERNEL]=y
 	fi
 
-fi
-
-# Detect architecture and force no ISA-L if non-x86 or non-aarch64 architecture
-if [[ "${CONFIG[ISAL]}" = "y" ]]; then
-	if [[ $arch != x86_64* ]] && [[ $arch != aarch64* ]]; then
-		echo "ERROR: ISA-L cannot be used due to CPU incompatibility."
-		exit 1
-	fi
-fi
-
-if [[ "${CONFIG[ISAL]}" = "n" ]] && [[ "${CONFIG[REDUCE]}" = "y" ]]; then
-	echo "ERROR Conflicting options: --with-reduce is not compatible with --without-isal."
-	exit 1
 fi
 
 if [ -z "${CONFIG[ENV]}" ]; then
@@ -901,14 +855,6 @@ if [[ "${CONFIG[FC]}" = "y" ]]; then
 			echo "${CONFIG[FC_PATH]}: directory not found"
 			exit 1
 		fi
-	fi
-fi
-
-if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	if [[ "${HAVE_NASM}" = "n" ]] && [[ $arch == x86_64* ]]; then
-		echo "ERROR: ISA-L, compression & crypto require NASM version 2.14 or newer."
-		echo "Please install or upgrade them re-run this script."
-		exit 1
 	fi
 fi
 
@@ -1169,13 +1115,33 @@ if [[ "${CONFIG[FUZZER]}" = "y" && "$CC_TYPE" != "clang" ]]; then
 	exit 1
 fi
 
-if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+if [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
+	CONFIG[ISAL]=y
+	# make sure the submodule is initialized
 	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
-		echo "ISA-L was not found; To install ISA-L run:"
+		echo "ISA-L is required but was not found, please init the submodule with:"
 		echo "  git submodule update --init"
+		echo "and then re-run this script."
 		exit 1
 	fi
+	# for x86 only, check the nasm version for ISA-L and IPSEC
+	if [[ $arch == x86_64* ]]; then
+		ver=$(nasm -v 2> /dev/null | awk '{print $3}' | awk -Fr '{print $1}')
+		if lt "$ver" 2.14; then
+			CONFIG[ISAL]=n
+			# IPSEC has nasm requirement and DPDK crypto relies on IPSEC
+			CONFIG[IPSEC_MB]=n
+			echo "WARNING: ISA-L & DPDK crypto cannot be used as nasm ver must be 2.14 or newer."
+		fi
+	fi
+else
+	# for PPC
+	CONFIG[ISAL]=n
+	echo "WARNING: ISA-L cannot be used due to architecture incompatibility."
+fi
 
+# now either configure ISA-L or disable unavailable features
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	cd $rootdir/isa-l
 	ISAL_LOG=$rootdir/isa-l/spdk-isal.log
 	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
@@ -1188,6 +1154,11 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	./configure CFLAGS="-fPIC -g -O2" "${ISAL_OPTS[@]}" --enable-shared=no >> $ISAL_LOG 2>&1
 	echo "done."
 	cd $rootdir
+else
+	echo "Without ISA-L, there is no software support for crypto or compression,"
+	echo "so these features will be disabled."
+	CONFIG[CRYPTO]=n
+	CONFIG[REDUCE]=n
 fi
 
 if [[ "${CONFIG[SMA]}" = "y" ]]; then

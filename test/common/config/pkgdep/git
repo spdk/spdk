@@ -136,7 +136,6 @@ function install_refspdk() {
 		# Prepare separate, fixed, cmdline for the FreeBSD, Issue #1397.
 		if [[ $OSID == freebsd ]]; then
 			config_params="--enable-debug"
-			config_params+=" --without-isal"
 			config_params+=" --with-idxd --disable-unit-tests"
 
 			MAKE=gmake

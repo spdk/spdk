@@ -11,7 +11,7 @@ TEST_TIMEOUT=1200
 allowed_nvme_transports=("rdma" "tcp")
 allowed_vhost_transports=("scsi" "blk" "all")
 bad_transport=true
-config_params="--enable-asan --enable-ubsan --enable-debug --without-isal"
+config_params="--enable-asan --enable-ubsan --enable-debug"
 
 # These arguments are used in addition to the test arguments in autotest_common.sh
 for i in "$@"; do
