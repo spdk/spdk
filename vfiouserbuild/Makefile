@@ -20,7 +20,7 @@ build:
 	$(Q)test -d $(VFIO_USER_BUILD_DIR) || \
 	     CC=$(SUB_CC) meson setup $(VFIO_USER_BUILD_DIR) $(VFIO_USER_SRC_DIR)
 	# Work around pre-v1.9 versions of ninja ignoring new configuration.
-	$(Q)[ $$((ninja --version; echo 1.9) | sort --version-sort | head -n 1) \
+	$(Q)[ $$( (ninja --version; echo 1.9) | sort --version-sort | head -n 1) \
 	     = 1.9 ] || sleep 0.5
 	$(Q)meson configure $(VFIO_USER_BUILD_DIR) $(VFIO_USER_CFG_OPTS)
 	$(Q)meson compile $(MESON_COMPILE_OPTS) -C $(VFIO_USER_BUILD_DIR)
