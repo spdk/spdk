@@ -272,7 +272,7 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	struct spdk_bdev_part *part = ch->part;
 	struct spdk_io_channel *base_ch = ch->base_ch;
 	struct spdk_bdev_desc *base_desc = part->internal.base->desc;
-	uint64_t offset, remapped_offset;
+	uint64_t offset, remapped_offset, remapped_src_offset;
 	int rc = 0;
 
 	offset = bdev_io->u.bdev.offset_blocks;
@@ -367,6 +367,12 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 				remapped_offset,
 				bdev_io->u.bdev.num_blocks,
 				bdev_part_complete_io, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		remapped_src_offset = bdev_io->u.bdev.copy.src_offset_blocks + part->internal.offset_blocks;
+		rc = spdk_bdev_copy_blocks(base_desc, base_ch, remapped_offset, remapped_src_offset,
+					   bdev_io->u.bdev.num_blocks, bdev_part_complete_io,
+					   bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("unknown I/O type %d\n", bdev_io->type);
