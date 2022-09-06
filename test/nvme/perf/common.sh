@@ -412,7 +412,7 @@ function run_bdevperf() {
 	local bpf_app_pid
 	local main_core_param=""
 
-	bdevperf_rpc="$rootdir/test/bdev/bdevperf/bdevperf.py"
+	bdevperf_rpc="$rootdir/examples/bdev/bdevperf/bdevperf.py"
 	rpc_socket="/var/tmp/spdk.sock"
 
 	if [[ -n $MAIN_CORE ]]; then

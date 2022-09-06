@@ -14,7 +14,7 @@ timeout=240
 
 for ((i = 0; i < ${#tests[@]}; i++)); do
 	timing_enter "${tests[$i]}"
-	"$rootdir/test/bdev/bdevperf/bdevperf" -z -T ftl0 ${tests[$i]} &
+	"$rootdir/build/examples/bdevperf" -z -T ftl0 ${tests[$i]} &
 	bdevperf_pid=$!
 
 	trap 'killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
@@ -25,7 +25,7 @@ for ((i = 0; i < ${#tests[@]}; i++)); do
 	l2p_dram_size_mb=$(($(get_bdev_size $split_bdev) * 20 / 100 / 1024))
 	$rpc_py -t $timeout bdev_ftl_create -b ftl0 -d $split_bdev $use_append -c $nv_cache --l2p_dram_limit $l2p_dram_size_mb
 
-	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests
 	$rpc_py bdev_ftl_delete -b ftl0
 
 	killprocess $bdevperf_pid

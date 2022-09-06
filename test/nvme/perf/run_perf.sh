@@ -5,7 +5,7 @@ set -e
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 plugin_dir=$rootdir/build/fio
-bdevperf_dir=$rootdir/test/bdev/bdevperf
+bdevperf_dir=$rootdir/examples/bdev/bdevperf
 nvmeperf_dir=$rootdir/build/examples
 source $testdir/common.sh
 source $rootdir/scripts/common.sh || exit 1

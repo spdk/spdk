@@ -113,12 +113,12 @@ function opal_bdevio() {
 }
 
 function opal_bdevperf() {
-	$rootdir/test/bdev/bdevperf/bdevperf -z -q 8 -o 4096 -w verify -t 10 &
+	$rootdir/build/examples/bdevperf -z -q 8 -o 4096 -w verify -t 10 &
 	bdevperf_pid=$!
 	trap 'revert; killprocess $bdevperf_pid; exit 1' SIGINT SIGTERM EXIT
 	waitforlisten $bdevperf_pid
 	setup_test_environment
-	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests
 	clean_up
 	revert
 	$rpc_py bdev_nvme_detach_controller nvme0

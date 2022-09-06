@@ -118,7 +118,7 @@ subnqn:nqn.2016-06.io.spdk:cnode1" --psk-key 1234567890ABCDEF --psk-identity psk
 
 # use bdevperf to test "bdev_nvme_attach_controller"
 bdevperf_rpc_sock=/var/tmp/bdevperf.sock
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 10 &
 bdevperf_pid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
@@ -127,7 +127,7 @@ waitforlisten $bdevperf_pid $bdevperf_rpc_sock
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b TLSTEST -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 --psk 1234567890ABCDEF
 # run I/O and wait
-$rootdir/test/bdev/bdevperf/bdevperf.py -t 20 -s $bdevperf_rpc_sock perform_tests
+$rootdir/examples/bdev/bdevperf/bdevperf.py -t 20 -s $bdevperf_rpc_sock perform_tests
 # finish
 killprocess $bdevperf_pid
 

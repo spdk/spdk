@@ -25,7 +25,7 @@ $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
 bdevperf_pid=$!
 
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
@@ -43,7 +43,7 @@ function get_controller() {
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -o 5
 
-$rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
+$rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
 
 sleep 1
@@ -66,7 +66,7 @@ killprocess $bdevperf_pid
 # Time to wait until ctrlr is reconnected before failing I/O to ctrlr
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 20 -f &
 bdevperf_pid=$!
 
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
@@ -76,7 +76,7 @@ $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT \
 	-f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -u 2 -o 1
 
-$rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
+$rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
 
 sleep 1
@@ -89,7 +89,7 @@ wait $rpc_pid
 
 # TODO: Check the IO fail if we wait for 5 sec, needs information from bdevperf
 
-$rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
+$rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
 sleep 1
 $rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
@@ -102,7 +102,7 @@ killprocess $bdevperf_pid
 
 # Case 3 test reconnect_delay_sec
 # Time to delay a reconnect trial
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w randread -t 20 -f &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w randread -t 20 -f &
 bdevperf_pid=$!
 
 waitforlisten $bdevperf_pid $bdevperf_rpc_sock
@@ -116,7 +116,7 @@ $rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1 -e 9
 # ctrlr_loss_timeout_sec is 10 reconnect_delay_sec is 2
 $rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b NVMe0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 	-s $NVMF_PORT -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l 10 -o 2
-$rootdir/test/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
+$rootdir/examples/bdev/bdevperf/bdevperf.py -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
 sleep 1
 $rpc_py nvmf_subsystem_remove_listener nqn.2016-06.io.spdk:cnode1 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT

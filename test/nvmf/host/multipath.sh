@@ -29,7 +29,7 @@ $rpc_py nvmf_subsystem_add_ns $NQN Malloc0
 $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT
 
-$rootdir/test/bdev/bdevperf/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> $testdir/try.txt &
+$rootdir/build/examples/bdevperf -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> $testdir/try.txt &
 bdevperf_pid=$!
 
 trap 'process_shm --id $NVMF_APP_SHM_ID; rm -f $testdir/try.txt; killprocess $bdevperf_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
@@ -62,7 +62,7 @@ function confirm_io_on_port() {
 	rm -f $testdir/trace.txt
 }
 
-$rootdir/test/bdev/bdevperf/bdevperf.py -t 120 -s $bdevperf_rpc_sock perform_tests &
+$rootdir/examples/bdev/bdevperf/bdevperf.py -t 120 -s $bdevperf_rpc_sock perform_tests &
 rpc_pid=$!
 
 sleep 1

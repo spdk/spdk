@@ -57,7 +57,7 @@ Add two listeners, each with a different `IP:port` pair:
 Launch the bdevperf process in the background:
 ~~~{.sh}
 cd spdk/
-./test/bdev/bdevperf/bdevperf -m 0x4 -z -r /tmp/bdevperf.sock -q 128 -o 4096 -w verify -t 90 &> bdevperf.log &
+./build/examples/bdevperf -m 0x4 -z -r /tmp/bdevperf.sock -q 128 -o 4096 -w verify -t 90 &> bdevperf.log &
 ~~~
 
 Configure bdevperf and add two paths:
@@ -71,7 +71,7 @@ Configure bdevperf and add two paths:
 
 Connect to the RPC socket of the bdevperf process and start the test:
 ~~~{.sh}
-PYTHONPATH=$PYTHONPATH:/root/src/spdk/python ./test/bdev/bdevperf/bdevperf.py -t 1 -s /tmp/bdevperf.sock perform_tests
+PYTHONPATH=$PYTHONPATH:/root/src/spdk/python ./examples/bdev/bdevperf/bdevperf.py -t 1 -s /tmp/bdevperf.sock perform_tests
 ~~~
 
 The RPC command will return, leaving the test to run for 90 seconds in the background. On the target server,

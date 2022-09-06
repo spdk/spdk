@@ -1,4 +1,4 @@
-bdevperf=$rootdir/test/bdev/bdevperf/bdevperf
+bdevperf=$rootdir/build/examples/bdevperf
 
 function create_job() {
 	local job_section=$1

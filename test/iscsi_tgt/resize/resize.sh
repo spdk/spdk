@@ -39,7 +39,7 @@ sleep 1
 trap 'killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
 # Start bdevperf with another sock file and iSCSI initiator
-"$rootdir/test/bdev/bdevperf/bdevperf" -r $RESIZE_SOCK --json <(initiator_json_config) -q 16 -o 4096 -w read -t 5 -R -s 128 -z &
+"$rootdir/build/examples/bdevperf" -r $RESIZE_SOCK --json <(initiator_json_config) -q 16 -o 4096 -w read -t 5 -R -s 128 -z &
 bdevperf_pid=$!
 waitforlisten $bdevperf_pid $RESIZE_SOCK
 # Resize the Bdev from iSCSI target
@@ -54,7 +54,7 @@ if [ $total_size != $BDEV_SIZE ]; then
 fi
 sleep 2
 # Start the bdevperf IO
-$rootdir/test/bdev/bdevperf/bdevperf.py -s $RESIZE_SOCK perform_tests
+$rootdir/examples/bdev/bdevperf/bdevperf.py -s $RESIZE_SOCK perform_tests
 # Obtain the Bdev from bdevperf with iSCSI initiator
 num_block=$($rpc_py -s $RESIZE_SOCK bdev_get_bdevs | grep num_blocks | sed 's/[^[:digit:]]//g')
 # Get the new bdev size in MiB.

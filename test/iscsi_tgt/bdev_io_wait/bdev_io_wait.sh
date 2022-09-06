@@ -36,10 +36,10 @@ $rpc_py iscsi_create_target_node disk1 disk1_alias 'Malloc0:0' $PORTAL_TAG:$INIT
 sleep 1
 trap 'killprocess $pid; iscsitestfini; exit 1' SIGINT SIGTERM EXIT
 
-"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w write -t 1
-"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w read -t 1
-"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 1
-"$rootdir/test/bdev/bdevperf/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 1
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w write -t 1
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w read -t 1
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w flush -t 1
+"$rootdir/build/examples/bdevperf" --json <(initiator_json_config) -q 128 -o 4096 -w unmap -t 1
 
 trap - SIGINT SIGTERM EXIT
 

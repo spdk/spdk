@@ -27,11 +27,11 @@ $rpc_py bdev_malloc_create 32 4096 -b malloc0
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 malloc0 -n 1
 
 # First send IO with verification
-$rootdir/test/bdev/bdevperf/bdevperf --json <(gen_nvmf_target_json) \
+$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json) \
 	-t 10 -q 128 -w verify -o 8192
 
 # Then send IO in the background while pausing/resuming the subsystem
-$rootdir/test/bdev/bdevperf/bdevperf --json <(gen_nvmf_target_json) \
+$rootdir/build/examples/bdevperf --json <(gen_nvmf_target_json) \
 	-t 5 -q 128 -w randrw -M 50 -o 8192 &
 perfpid=$!
 

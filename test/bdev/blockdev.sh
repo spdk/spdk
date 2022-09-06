@@ -375,7 +375,7 @@ function qos_function_test() {
 
 function qos_test_suite() {
 	# Run bdevperf with QoS disabled first
-	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 256 -o 4096 -w randread -t 60 "$env_ctx" &
+	"$rootdir/build/examples/bdevperf" -z -m 0x2 -q 256 -o 4096 -w randread -t 60 "$env_ctx" &
 	QOS_PID=$!
 	echo "Process qos testing pid: $QOS_PID"
 	trap 'cleanup; killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
@@ -386,7 +386,7 @@ function qos_test_suite() {
 	$rpc_py bdev_null_create $QOS_DEV_2 128 512
 	waitforbdev $QOS_DEV_2
 
-	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests &
 	qos_function_test
 
 	$rpc_py bdev_malloc_delete $QOS_DEV_1
@@ -401,7 +401,7 @@ function error_test_suite() {
 	ERR_DEV="EE_Dev_1"
 
 	# Run bdevperf with 1 normal bdev and 1 error bdev, also continue on error
-	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 16 -o 4096 -w randread -t 5 -f "$env_ctx" &
+	"$rootdir/build/examples/bdevperf" -z -m 0x2 -q 16 -o 4096 -w randread -t 5 -f "$env_ctx" &
 	ERR_PID=$!
 	echo "Process error testing pid: $ERR_PID"
 	waitforlisten $ERR_PID
@@ -413,7 +413,7 @@ function error_test_suite() {
 	waitforbdev $DEV_2
 	$rpc_py bdev_error_inject_error $ERR_DEV 'all' 'failure' -n 5
 
-	$rootdir/test/bdev/bdevperf/bdevperf.py -t 1 perform_tests &
+	$rootdir/examples/bdev/bdevperf/bdevperf.py -t 1 perform_tests &
 	sleep 1
 
 	# Bdevperf is expected to be there as the continue on error is set
@@ -432,7 +432,7 @@ function error_test_suite() {
 	killprocess $ERR_PID
 
 	# Run bdevperf with 1 normal bdev and 1 error bdev, and exit on error
-	"$testdir/bdevperf/bdevperf" -z -m 0x2 -q 16 -o 4096 -w randread -t 5 "$env_ctx" &
+	"$rootdir/build/examples/bdevperf" -z -m 0x2 -q 16 -o 4096 -w randread -t 5 "$env_ctx" &
 	ERR_PID=$!
 	echo "Process error testing pid: $ERR_PID"
 	waitforlisten $ERR_PID
@@ -444,7 +444,7 @@ function error_test_suite() {
 	waitforbdev $DEV_2
 	$rpc_py bdev_error_inject_error $ERR_DEV 'all' 'failure' -n 5
 
-	$rootdir/test/bdev/bdevperf/bdevperf.py -t 1 perform_tests &
+	$rootdir/examples/bdev/bdevperf/bdevperf.py -t 1 perform_tests &
 	NOT wait $ERR_PID
 }
 
@@ -470,7 +470,7 @@ function qd_sampling_function_test() {
 function qd_sampling_test_suite() {
 	QD_DEV="Malloc_QD"
 
-	"$testdir/bdevperf/bdevperf" -z -m 0x3 -q 256 -o 4096 -w randread -t 5 -C "$env_ctx" &
+	"$rootdir/build/examples/bdevperf" -z -m 0x3 -q 256 -o 4096 -w randread -t 5 -C "$env_ctx" &
 	QD_PID=$!
 	echo "Process bdev QD sampling period testing pid: $QD_PID"
 	trap 'cleanup; killprocess $QD_PID; exit 1' SIGINT SIGTERM EXIT
@@ -479,7 +479,7 @@ function qd_sampling_test_suite() {
 	$rpc_py bdev_malloc_create -b $QD_DEV 128 512
 	waitforbdev $QD_DEV
 
-	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests &
 	sleep 2
 	qd_sampling_function_test $QD_DEV
 
@@ -525,7 +525,7 @@ function stat_test_suite() {
 	STAT_DEV="Malloc_STAT"
 
 	# Run bdevperf with 2 cores so as to collect per Core IO statistics
-	"$testdir/bdevperf/bdevperf" -z -m 0x3 -q 256 -o 4096 -w randread -t 10 -C "$env_ctx" &
+	"$rootdir/build/examples/bdevperf" -z -m 0x3 -q 256 -o 4096 -w randread -t 10 -C "$env_ctx" &
 	STAT_PID=$!
 	echo "Process Bdev IO statistics testing pid: $STAT_PID"
 	trap 'cleanup; killprocess $STAT_PID; exit 1' SIGINT SIGTERM EXIT
@@ -534,7 +534,7 @@ function stat_test_suite() {
 	$rpc_py bdev_malloc_create -b $STAT_DEV 128 512
 	waitforbdev $STAT_DEV
 
-	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests &
+	$rootdir/examples/bdev/bdevperf/bdevperf.py perform_tests &
 	sleep 2
 	stat_function_test $STAT_DEV
 
@@ -651,14 +651,14 @@ fi
 
 trap "cleanup" SIGINT SIGTERM EXIT
 
-run_test "bdev_verify" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3 "$env_ctx"
-run_test "bdev_write_zeroes" $testdir/bdevperf/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx"
+run_test "bdev_verify" $rootdir/build/examples/bdevperf --json "$conf_file" -q 128 -o 4096 -w verify -t 5 -C -m 0x3 "$env_ctx"
+run_test "bdev_write_zeroes" $rootdir/build/examples/bdevperf --json "$conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx"
 
 # test json config not enclosed with {}
-run_test "bdev_json_nonenclosed" $testdir/bdevperf/bdevperf --json "$nonenclosed_conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx" || true
+run_test "bdev_json_nonenclosed" $rootdir/build/examples/bdevperf --json "$nonenclosed_conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx" || true
 
 # test json config "subsystems" not with array
-run_test "bdev_json_nonarray" $testdir/bdevperf/bdevperf --json "$nonarray_conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx" || true
+run_test "bdev_json_nonarray" $rootdir/build/examples/bdevperf --json "$nonarray_conf_file" -q 128 -o 4096 -w write_zeroes -t 1 "$env_ctx" || true
 
 if [[ $test_type == bdev ]]; then
 	run_test "bdev_qos" qos_test_suite "$env_ctx"
@@ -669,7 +669,7 @@ fi
 
 # Temporarily disabled - infinite loop
 # if [ $RUN_NIGHTLY -eq 1 ]; then
-# run_test "bdev_reset" $testdir/bdevperf/bdevperf --json "$conf_file" -q 16 -w reset -o 4096 -t 60 "$env_ctx"
+# run_test "bdev_reset" $rootdir/build/examples/bdevperf --json "$conf_file" -q 16 -w reset -o 4096 -t 60 "$env_ctx"
 # fi
 
 # Bdev and configuration cleanup below this line

@@ -65,7 +65,7 @@ xnvme_bdevperf() {
 
 	for io in "${xnvme_io[@]}"; do
 		method_bdev_xnvme_create_0["io_mechanism"]="$io"
-		"$rootdir/test/bdev/bdevperf/bdevperf" \
+		"$rootdir/build/examples/bdevperf" \
 			--json <(gen_conf) \
 			-q 64 \
 			-w randread \

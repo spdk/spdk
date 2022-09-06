@@ -611,7 +611,7 @@ function check_json_rpc() {
 			echo "Missing JSON-RPC documentation for ${rpc}"
 			rc=1
 		fi
-	done < <(git grep -h -E "^SPDK_RPC_REGISTER\(" ':!test/*' ':!examples/nvme/hotplug/*')
+	done < <(git grep -h -E "^SPDK_RPC_REGISTER\(" ':!test/*' ':!examples/*')
 
 	if [ $rc -eq 0 ]; then
 		echo " OK"

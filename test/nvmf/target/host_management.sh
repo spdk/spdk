@@ -66,7 +66,7 @@ function nvmf_host_management() {
 	starttarget
 
 	# Run bdevperf
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 10 &
+	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 10 &
 	perfpid=$!
 	waitforlisten $perfpid /var/tmp/bdevperf.sock
 	$rpc_py -s /var/tmp/bdevperf.sock framework_wait_init
@@ -88,7 +88,7 @@ function nvmf_host_management() {
 	kill -9 $perfpid || true
 
 	# Run bdevperf
-	$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 1
+	$rootdir/build/examples/bdevperf -r /var/tmp/bdevperf.sock --json <(gen_nvmf_target_json "0") -q 64 -o 65536 -w verify -t 1
 
 	stoptarget
 }

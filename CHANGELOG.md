@@ -44,6 +44,11 @@ names with this option to restrict allowed RPCs to only that list.
 
 Added spdk_rpc_set_allowlist to restrict allowed RPCs to the specified list.
 
+### bdevperf
+
+Promoted the application to example to match similar programs: fio_plugin and perf.
+It can now be found inside `examples/bdev/bdevperf`.
+
 ## v22.09
 
 ### accel
