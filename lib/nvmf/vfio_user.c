@@ -2129,7 +2129,7 @@ vfio_user_qpair_delete_cb(void *cb_arg)
 				     vfio_user_qpair_delete_cb,
 				     cb_arg);
 	} else {
-		post_completion(vu_ctrlr, vu_ctrlr->cqs[0], 0, 0,
+		post_completion(vu_ctrlr, admin_cq, 0, 0,
 				ctx->delete_io_sq_cmd.cid,
 				SPDK_NVME_SC_SUCCESS, SPDK_NVME_SCT_GENERIC);
 		free(ctx);
