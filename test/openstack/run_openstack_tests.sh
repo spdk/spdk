@@ -2,12 +2,13 @@
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
-rpc_py=$rootdir/scripts/rpc.py
 
 set -- "--iso" "--transport=tcp" "$@"
 
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+
+rpc_py=$rootdir/scripts/rpc.py
 
 HUGE_EVEN_ALLOC=yes HUGEMEM=1024 nvmftestinit
 
