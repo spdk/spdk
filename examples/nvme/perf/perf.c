@@ -2830,11 +2830,29 @@ unregister_controllers(void)
 }
 
 static int
+allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
+{
+	struct ns_worker_ctx	*ns_ctx;
+
+	ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
+	if (!ns_ctx) {
+		return -1;
+	}
+
+	printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
+	ns_ctx->stats.min_tsc = UINT64_MAX;
+	ns_ctx->entry = entry;
+	ns_ctx->histogram = spdk_histogram_data_alloc();
+	TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
+
+	return 0;
+}
+
+static int
 associate_workers_with_ns(void)
 {
 	struct ns_entry		*entry = TAILQ_FIRST(&g_namespaces);
 	struct worker_thread	*worker = TAILQ_FIRST(&g_workers);
-	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
 	/* Each core contains single worker, and namespaces are associated as follows:
@@ -2849,16 +2867,9 @@ associate_workers_with_ns(void)
 			break;
 		}
 
-		ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
-		if (!ns_ctx) {
+		if (allocate_ns_worker(entry, worker) != 0) {
 			return -1;
 		}
-
-		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
-		ns_ctx->stats.min_tsc = UINT64_MAX;
-		ns_ctx->entry = entry;
-		ns_ctx->histogram = spdk_histogram_data_alloc();
-		TAILQ_INSERT_TAIL(&worker->ns_ctx, ns_ctx, link);
 
 		worker = TAILQ_NEXT(worker, link);
 		if (worker == NULL) {
