@@ -184,6 +184,13 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 	case VHOST_USER_SET_VRING_BASE:
 	case VHOST_USER_SET_VRING_ADDR:
 	case VHOST_USER_SET_VRING_NUM:
+		/* For vhost-user socket messages except VHOST_USER_GET_VRING_BASE,
+		 * rte_vhost holds all VQ's access lock, then after DPDK 22.07 release,
+		 * `rte_vhost_vring_call` also needs to hold VQ's access lock, so we
+		 * can't call this function in DPDK "vhost-events" thread context, here
+		 * SPDK vring poller will avoid executing this function when it's TRUE.
+		 */
+		vsession->skip_used_signal = true;
 		if (vsession->forced_polling && vsession->started) {
 			/* Additional queues are being initialized, so we either processed
 			 * enough I/Os and are switching from SeaBIOS to the OS now, or
@@ -211,6 +218,7 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		 * rte_vhost.
 		 */
 	case VHOST_USER_SET_MEM_TABLE:
+		vsession->skip_used_signal = true;
 		/* rte_vhost will unmap previous memory that SPDK may still
 		 * have pending DMA operations on. We can't let that happen,
 		 * so stop the device before letting rte_vhost unmap anything.
@@ -255,6 +263,7 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		break;
 	}
 
+	vsession->skip_used_signal = false;
 	return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
 }
 

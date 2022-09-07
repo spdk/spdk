@@ -354,6 +354,14 @@ int
 vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 		     struct spdk_vhost_virtqueue *virtqueue)
 {
+	/* The flag is true when DPDK "vhost-events" thread is holding all
+	 * VQ's access lock, we will skip to post IRQs this round poll, and
+	 * try to post IRQs in next poll or after starting the device again.
+	 */
+	if (spdk_unlikely(vsession->skip_used_signal)) {
+		return 0;
+	}
+
 	if (virtqueue->used_req_cnt == 0) {
 		return 0;
 	}

@@ -157,6 +157,7 @@ struct spdk_vhost_session {
 	bool needs_restart;
 	bool forced_polling;
 	bool interrupt_mode;
+	bool skip_used_signal;
 
 	struct rte_vhost_memory *mem;
 
