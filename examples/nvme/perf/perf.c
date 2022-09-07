@@ -2837,6 +2837,11 @@ associate_workers_with_ns(void)
 	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
+	/* Each core contains single worker, and namespaces are associated as follows:
+	 * 1) equal workers and namespaces - each worker associated with single namespace
+	 * 2) more workers than namespaces - each namespace is associated with one or more workers
+	 * 3) more namespaces than workers - each worker is associated with one or more namespaces
+	 */
 	count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
 
 	for (i = 0; i < count; i++) {
