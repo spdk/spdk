@@ -22,16 +22,11 @@ device=$1
 timeout=240
 
 restore_kill() {
-	if mount | grep $mount_dir; then
-		umount $mount_dir
-	fi
-	rm -rf $mount_dir
+	rm -f $testdir/testfile
 	rm -f $testdir/testfile.md5
-	rm -f $testdir/testfile2.md5
 	rm -f $testdir/config/ftl.json
 
 	killprocess $svcpid
-	rmmod nbd || true
 	remove_shm
 }
 
@@ -53,53 +48,34 @@ ftl_construct_args="bdev_ftl_create -b ftl0 -d $split_bdev --l2p_dram_limit $l2p
 [ -n "$uuid" ] && ftl_construct_args+=" -u $uuid"
 [ -n "$nv_cache" ] && ftl_construct_args+=" -c $nvc_bdev"
 
-$rpc_py -t $timeout $ftl_construct_args
-
-# Load the nbd driver
-modprobe nbd
-$rpc_py nbd_start_disk ftl0 /dev/nbd0
-waitfornbd nbd0
-
-$rpc_py save_config > $testdir/config/ftl.json
-
-# Prepare the disk by creating ext4 fs and putting a file on it
-make_filesystem ext4 /dev/nbd0
-mount /dev/nbd0 $mount_dir
-dd if=/dev/urandom of=$mount_dir/testfile bs=4K count=256K
-sync
-mount -o remount /dev/nbd0 $mount_dir
-md5sum $mount_dir/testfile > $testdir/testfile.md5
-umount $mount_dir
-
-# Kill bdev service and start it again
 if [ "$fast_shutdown" -eq "1" ]; then
-	$rpc_py bdev_ftl_delete -b ftl0 --fast_shutdown
-else
-	$rpc_py bdev_ftl_delete -b ftl0
+	ftl_construct_args+=" --fast-shutdown"
 fi
 
+$rpc_py -t $timeout $ftl_construct_args
+
+(
+	echo '{"subsystems": ['
+	$rpc_py save_subsystem_config -n bdev
+	echo ']}'
+) > $testdir/config/ftl.json
 killprocess $svcpid
 
-"$SPDK_BIN_DIR/spdk_tgt" -L ftl_init &
-svcpid=$!
-# Wait until spdk_tgt starts
-waitforlisten $svcpid
+# Generate random data and calculate checksum
+dd if=/dev/urandom of=$testdir/testfile bs=4K count=256K
+md5sum $testdir/testfile > $testdir/testfile.md5
 
-$rpc_py load_config < $testdir/config/ftl.json
-waitfornbd nbd0
+# Write and read back the data, verifying checksum
+"$SPDK_BIN_DIR/spdk_dd" --if=$testdir/testfile --ob=ftl0 --json=$testdir/config/ftl.json
+"$SPDK_BIN_DIR/spdk_dd" --ib=ftl0 --of=$testdir/testfile --json=$testdir/config/ftl.json --count=262144
 
-mount /dev/nbd0 $mount_dir
-
-# Write second file, to make sure writer thread has restored properly
-dd if=/dev/urandom of=$mount_dir/testfile2 bs=4K count=256K
-md5sum $mount_dir/testfile2 > $testdir/testfile2.md5
-
-# Make sure second file will be read from disk
-echo 3 > /proc/sys/vm/drop_caches
-
-# Check both files have proper data
 md5sum -c $testdir/testfile.md5
-md5sum -c $testdir/testfile2.md5
+
+# Write second time at overlapped sectors, read back and verify checkum
+"$SPDK_BIN_DIR/spdk_dd" --if=$testdir/testfile --ob=ftl0 --json=$testdir/config/ftl.json --seek=131072
+"$SPDK_BIN_DIR/spdk_dd" --ib=ftl0 --of=$testdir/testfile --json=$testdir/config/ftl.json --skip=131072 --count=262144
+
+md5sum -c $testdir/testfile.md5
 
 trap - SIGINT SIGTERM EXIT
 restore_kill
