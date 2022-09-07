@@ -154,6 +154,36 @@ push_arg(char *args[], int *argcount, char *arg)
 #define SPDK_IOMMU_VA_REQUIRED_WIDTH 48
 #define VTD_CAP_MGAW_SHIFT 16
 #define VTD_CAP_MGAW_MASK (0x3F << VTD_CAP_MGAW_SHIFT)
+#define RD_AMD_CAP_VASIZE_SHIFT 15
+#define RD_AMD_CAP_VASIZE_MASK (0x7F << RD_AMD_CAP_VASIZE_SHIFT)
+
+static int
+get_amd_iommu_width(void)
+{
+	FILE *file;
+	char buf[64];
+	char *end;
+	long long int amd_cap;
+
+	file = fopen("/sys/class/iommu/ivhd2/amd-iommu/cap", "r");
+	if (file == NULL) {
+		return 0;
+	}
+
+	if (fgets(buf, sizeof(buf), file) == NULL) {
+		fclose(file);
+		return 0;
+	}
+
+	amd_cap = strtoll(buf, &end, 16);
+	if (amd_cap == LLONG_MIN || amd_cap == LLONG_MAX) {
+		fclose(file);
+		return 0;
+	}
+
+	fclose(file);
+	return (amd_cap & RD_AMD_CAP_VASIZE_MASK) >> RD_AMD_CAP_VASIZE_SHIFT;
+}
 
 static int
 get_iommu_width(void)
@@ -166,6 +196,11 @@ get_iommu_width(void)
 	char *end;
 	long long int val;
 	int width, tmp;
+	struct stat s;
+
+	if (stat("/sys/class/iommu/ivhd2/amd-iommu", &s) == 0) {
+		return get_amd_iommu_width();
+	}
 
 	dir = opendir("/sys/devices/virtual/iommu/");
 	if (dir == NULL) {
