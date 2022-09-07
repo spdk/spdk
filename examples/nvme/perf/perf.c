@@ -210,6 +210,7 @@ static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces
 static int g_num_namespaces;
 static TAILQ_HEAD(, worker_thread) g_workers = TAILQ_HEAD_INITIALIZER(g_workers);
 static int g_num_workers = 0;
+static bool g_use_every_core = false;
 static uint32_t g_main_core;
 static pthread_barrier_t g_worker_sync_barrier;
 
@@ -1870,6 +1871,7 @@ usage(char *program_name)
 	printf("\t[--zerocopy-threshold-sock-impl <impl> specify the sock implementation to set zerocopy_threshold]\n");
 	printf("\t[--transport-tos <val> specify the type of service for RDMA transport. Default: 0 (disabled)]\n");
 	printf("\t[--rdma-srq-size <val> The size of a shared rdma receive queue. Default: 0 (disabled)]\n");
+	printf("\t[--use-every-core for each namespace, I/Os are submitted from all cores]\n");
 }
 
 static void
@@ -2382,6 +2384,8 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"transport-tos", required_argument, NULL, PERF_TRANSPORT_TOS},
 #define PERF_RDMA_SRQ_SIZE	268
 	{"rdma-srq-size", required_argument, NULL, PERF_RDMA_SRQ_SIZE},
+#define PERF_USE_EVERY_CORE	269
+	{"use-every-core", no_argument, NULL, PERF_USE_EVERY_CORE},
 	/* Should be the last element */
 	{0, 0, 0, 0}
 };
@@ -2612,6 +2616,9 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			break;
 		case PERF_ENABLE_ZCOPY:
 			perf_set_sock_opts(optarg, "enable_zerocopy_send_client", 1, NULL);
+			break;
+		case PERF_USE_EVERY_CORE:
+			g_use_every_core = true;
 			break;
 		case PERF_DEFAULT_SOCK_IMPL:
 			sock_impl = optarg;
@@ -2961,10 +2968,23 @@ associate_workers_with_ns(void)
 	int			i, count;
 
 	/* Each core contains single worker, and namespaces are associated as follows:
-	 * 1) equal workers and namespaces - each worker associated with single namespace
-	 * 2) more workers than namespaces - each namespace is associated with one or more workers
-	 * 3) more namespaces than workers - each worker is associated with one or more namespaces
+	 * --use-every-core not specified (default):
+	 * 2) equal workers and namespaces - each worker associated with single namespace
+	 * 3) more workers than namespaces - each namespace is associated with one or more workers
+	 * 4) more namespaces than workers - each worker is associated with one or more namespaces
+	 * --use-every-core option enabled - every worker is associated with all namespaces
 	 */
+	if (g_use_every_core) {
+		TAILQ_FOREACH(worker, &g_workers, link) {
+			TAILQ_FOREACH(entry, &g_namespaces, link) {
+				if (allocate_ns_worker(entry, worker) != 0) {
+					return -1;
+				}
+			}
+		}
+		return 0;
+	}
+
 	count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
 
 	for (i = 0; i < count; i++) {

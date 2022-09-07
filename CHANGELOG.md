@@ -33,6 +33,12 @@ receive and send the I/O management commands.
 New `spdk_nvmf_transport_create_async` was added, it accepts a callback and callback argument.
 `spdk_nvmf_transport_create` is marked deprecated.
 
+### examples
+
+`examples/nvme/perf` application now accepts `--use-every-core` parameter that changes
+the existing worker and namespace association logic to access every namespace from each worker.
+This replicates behavior of bdevperf application when `-C` option is provided.
+
 ## v23.01
 
 ### accel
