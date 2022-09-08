@@ -738,33 +738,6 @@ test_nvme_rdma_qpair_process_cm_event(void)
 }
 
 static void
-test_nvme_rdma_mr_get_lkey(void)
-{
-	union nvme_rdma_mr mr = {};
-	struct ibv_mr	ibv_mr = {};
-	uint64_t mr_key;
-	uint32_t lkey;
-
-	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
-	ibv_mr.lkey = 1;
-	mr_key = 2;
-
-	/* Case 1:  get key form key address */
-	mr.key = (uint64_t)&mr_key;
-	g_nvme_hooks.get_rkey = (void *)0xAEADBEEF;
-
-	lkey = nvme_rdma_mr_get_lkey(&mr);
-	CU_ASSERT(lkey == mr_key);
-
-	/* Case 2: Get key from ibv_mr  */
-	g_nvme_hooks.get_rkey = NULL;
-	mr.mr = &ibv_mr;
-
-	lkey = nvme_rdma_mr_get_lkey(&mr);
-	CU_ASSERT(lkey == ibv_mr.lkey);
-}
-
-static void
 test_nvme_rdma_ctrlr_construct(void)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -1013,34 +986,20 @@ test_nvme_rdma_register_and_unregister_reqs(void)
 	rdma_qp.qp = &qp;
 	g_nvme_hooks.get_rkey = NULL;
 	rqpair.rdma_reqs = rdma_reqs;
-	/* case 1: nvme_rdma_register_req: nvme_rdma_reg_mr fail, expect: fail */
-	rqpair.num_entries = 0;
 
-	rc = nvme_rdma_register_reqs(&rqpair);
-	CU_ASSERT(rc == -ENOMEM);
-	CU_ASSERT(rqpair.cmd_mr.mr == NULL);
-
-	/* case 2: nvme_rdma_register_req: single entry, expect: PASS */
+	/* case 1: nvme_rdma_register_req: single entry, expect: PASS */
 	rqpair.num_entries = 1;
-
 	rc = nvme_rdma_register_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.cmd_mr.mr == &g_rdma_mr);
-	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == rqpair.cmd_mr.mr->lkey);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == g_rdma_mr.lkey);
 
-	/* case 3: nvme_rdma_register_req: multiple entry, expect: PASS */
+	/* case 2: nvme_rdma_register_req: multiple entry, expect: PASS */
 	rqpair.num_entries = 50;
-
 	rc = nvme_rdma_register_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.cmd_mr.mr == &g_rdma_mr);
 	for (int i = 0; i < rqpair.num_entries; i++) {
-		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].lkey == rqpair.cmd_mr.mr->lkey);
+		CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == g_rdma_mr.lkey);
 	}
-
-	/* case4: nvme_rdma_unregister_reqs, expect: PASS */
-	nvme_rdma_unregister_reqs(&rqpair);
-	CU_ASSERT(rqpair.cmd_mr.mr == NULL);
 }
 
 static void
@@ -1554,7 +1513,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_create_qpair);
 	CU_ADD_TEST(suite, test_nvme_rdma_poller_create);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_process_cm_event);
-	CU_ADD_TEST(suite, test_nvme_rdma_mr_get_lkey);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_construct);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_put_and_get);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_init);

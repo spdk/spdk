@@ -148,12 +148,6 @@ struct nvme_rdma_poll_group {
 	uint32_t					num_pollers;
 };
 
-/* Memory regions */
-union nvme_rdma_mr {
-	struct ibv_mr	*mr;
-	uint64_t	key;
-};
-
 enum nvme_rdma_qpair_state {
 	NVME_RDMA_QPAIR_STATE_INVALID = 0,
 	NVME_RDMA_QPAIR_STATE_STALE_CONN,
@@ -195,18 +189,11 @@ struct nvme_rdma_qpair {
 	struct spdk_nvme_rdma_rsp		*rsps;
 
 	struct ibv_recv_wr			*rsp_recv_wrs;
-
-	/* Memory region describing all rsps for this qpair */
-	union nvme_rdma_mr			rsp_mr;
-
 	/*
 	 * Array of num_entries NVMe commands registered as RDMA message buffers.
 	 * Indexed by rdma_req->id.
 	 */
 	struct spdk_nvmf_cmd			*cmds;
-
-	/* Memory region describing all cmds for this qpair */
-	union nvme_rdma_mr			cmd_mr;
 
 	struct spdk_rdma_mem_map		*mr_map;
 
@@ -894,58 +881,6 @@ nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 	return nvme_rdma_qpair_queue_recv_wr(rqpair, wr);
 }
 
-static int
-nvme_rdma_reg_mr(struct ibv_pd *pd, union nvme_rdma_mr *mr, void *mem, size_t length)
-{
-	if (!g_nvme_hooks.get_rkey) {
-		mr->mr = ibv_reg_mr(pd, mem, length, IBV_ACCESS_LOCAL_WRITE);
-		if (mr->mr == NULL) {
-			SPDK_ERRLOG("Unable to register mr: %s (%d)\n",
-				    spdk_strerror(errno), errno);
-			return -1;
-		}
-	} else {
-		mr->key = g_nvme_hooks.get_rkey(pd, mem, length);
-	}
-
-	return 0;
-}
-
-static void
-nvme_rdma_dereg_mr(union nvme_rdma_mr *mr)
-{
-	if (!g_nvme_hooks.get_rkey) {
-		if (mr->mr && ibv_dereg_mr(mr->mr)) {
-			SPDK_ERRLOG("Unable to de-register mr\n");
-		}
-	} else {
-		if (mr->key) {
-			g_nvme_hooks.put_rkey(mr->key);
-		}
-	}
-	memset(mr, 0, sizeof(*mr));
-}
-
-static uint32_t
-nvme_rdma_mr_get_lkey(union nvme_rdma_mr *mr)
-{
-	uint32_t lkey;
-
-	if (!g_nvme_hooks.get_rkey) {
-		lkey = mr->mr->lkey;
-	} else {
-		lkey = *((uint64_t *) mr->key);
-	}
-
-	return lkey;
-}
-
-static void
-nvme_rdma_unregister_rsps(struct nvme_rdma_qpair *rqpair)
-{
-	nvme_rdma_dereg_mr(&rqpair->rsp_mr);
-}
-
 static void
 nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
 {
@@ -990,18 +925,9 @@ fail:
 static int
 nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 {
+	struct spdk_rdma_memory_translation translation;
 	uint16_t i;
 	int rc;
-	uint32_t lkey;
-
-	rc = nvme_rdma_reg_mr(rqpair->rdma_qp->qp->pd, &rqpair->rsp_mr,
-			      rqpair->rsps, rqpair->num_entries * sizeof(*rqpair->rsps));
-
-	if (rc < 0) {
-		goto fail;
-	}
-
-	lkey = nvme_rdma_mr_get_lkey(&rqpair->rsp_mr);
 
 	for (i = 0; i < rqpair->num_entries; i++) {
 		struct ibv_sge *rsp_sgl = &rqpair->rsp_sgls[i];
@@ -1012,7 +938,12 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 		rsp->idx = i;
 		rsp_sgl->addr = (uint64_t)&rqpair->rsps[i];
 		rsp_sgl->length = sizeof(struct spdk_nvme_cpl);
-		rsp_sgl->lkey = lkey;
+		rc = spdk_rdma_get_translation(rqpair->mr_map, &rqpair->rsps[i], sizeof(*rqpair->rsps),
+					       &translation);
+		if (rc) {
+			return rc;
+		}
+		rsp_sgl->lkey = spdk_rdma_memory_translation_get_lkey(&translation);
 
 		rqpair->rsp_recv_wrs[i].wr_id = (uint64_t)&rsp->rdma_wr;
 		rqpair->rsp_recv_wrs[i].next = NULL;
@@ -1021,26 +952,16 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 
 		rc = nvme_rdma_post_recv(rqpair, i);
 		if (rc) {
-			goto fail;
+			return rc;
 		}
 	}
 
 	rc = nvme_rdma_qpair_submit_recvs(rqpair);
 	if (rc) {
-		goto fail;
+		return rc;
 	}
 
 	return 0;
-
-fail:
-	nvme_rdma_unregister_rsps(rqpair);
-	return rc;
-}
-
-static void
-nvme_rdma_unregister_reqs(struct nvme_rdma_qpair *rqpair)
-{
-	nvme_rdma_dereg_mr(&rqpair->cmd_mr);
 }
 
 static void
@@ -1111,28 +1032,20 @@ fail:
 static int
 nvme_rdma_register_reqs(struct nvme_rdma_qpair *rqpair)
 {
-	int i;
+	struct spdk_rdma_memory_translation translation;
+	uint16_t i;
 	int rc;
-	uint32_t lkey;
-
-	rc = nvme_rdma_reg_mr(rqpair->rdma_qp->qp->pd, &rqpair->cmd_mr,
-			      rqpair->cmds, rqpair->num_entries * sizeof(*rqpair->cmds));
-
-	if (rc < 0) {
-		goto fail;
-	}
-
-	lkey = nvme_rdma_mr_get_lkey(&rqpair->cmd_mr);
 
 	for (i = 0; i < rqpair->num_entries; i++) {
-		rqpair->rdma_reqs[i].send_sgl[0].lkey = lkey;
+		rc = spdk_rdma_get_translation(rqpair->mr_map, &rqpair->cmds[i], sizeof(*rqpair->cmds),
+					       &translation);
+		if (rc) {
+			return rc;
+		}
+		rqpair->rdma_reqs[i].send_sgl[0].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
 	}
 
 	return 0;
-
-fail:
-	nvme_rdma_unregister_reqs(rqpair);
-	return -ENOMEM;
 }
 
 static int nvme_rdma_connect(struct nvme_rdma_qpair *rqpair);
@@ -1230,6 +1143,13 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 		return ret;
 	}
 
+	rqpair->mr_map = spdk_rdma_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
+			 SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
+	if (!rqpair->mr_map) {
+		SPDK_ERRLOG("Unable to register RDMA memory translation map\n");
+		return -1;
+	}
+
 	ret = nvme_rdma_register_reqs(rqpair);
 	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
 	if (ret) {
@@ -1245,13 +1165,6 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 		return -1;
 	}
 	SPDK_DEBUGLOG(nvme, "RDMA responses registered\n");
-
-	rqpair->mr_map = spdk_rdma_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
-			 SPDK_RDMA_MEMORY_MAP_ROLE_INITIATOR);
-	if (!rqpair->mr_map) {
-		SPDK_ERRLOG("Unable to register RDMA memory translation map\n");
-		return -1;
-	}
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND;
 
@@ -1946,8 +1859,6 @@ nvme_rdma_qpair_destroy(struct nvme_rdma_qpair *rqpair)
 	struct nvme_rdma_cm_event_entry *entry, *tmp;
 
 	spdk_rdma_free_mem_map(&rqpair->mr_map);
-	nvme_rdma_unregister_reqs(rqpair);
-	nvme_rdma_unregister_rsps(rqpair);
 
 	if (rqpair->evt) {
 		rdma_ack_cm_event(rqpair->evt);
