@@ -703,6 +703,10 @@ main(int argc, char **argv)
 	}
 
 	foreach_dev(dev) {
+		spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+	}
+
+	foreach_dev(dev) {
 		spdk_nvme_detach_async(dev->ctrlr, &detach_ctx);
 	}
 
