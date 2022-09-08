@@ -531,6 +531,21 @@ bs_cluster_to_extent_page(struct spdk_blob *blob, uint64_t cluster_num)
 	return &blob->active.extent_pages[extent_table_id];
 }
 
+static inline uint64_t
+bs_io_units_per_cluster(struct spdk_blob *blob)
+{
+	uint64_t	io_units_per_cluster;
+	uint8_t		shift = blob->bs->pages_per_cluster_shift;
+
+	if (shift != 0) {
+		io_units_per_cluster = bs_io_unit_per_page(blob->bs) << shift;
+	} else {
+		io_units_per_cluster = bs_io_unit_per_page(blob->bs) * blob->bs->pages_per_cluster;
+	}
+
+	return io_units_per_cluster;
+}
+
 /* End basic conversions */
 
 static inline uint64_t
@@ -591,13 +606,8 @@ static inline uint32_t
 bs_num_io_units_to_cluster_boundary(struct spdk_blob *blob, uint64_t io_unit)
 {
 	uint64_t	io_units_per_cluster;
-	uint8_t		shift = blob->bs->pages_per_cluster_shift;
 
-	if (shift != 0) {
-		io_units_per_cluster = bs_io_unit_per_page(blob->bs) << shift;
-	} else {
-		io_units_per_cluster = bs_io_unit_per_page(blob->bs) * blob->bs->pages_per_cluster;
-	}
+	io_units_per_cluster = bs_io_units_per_cluster(blob);
 
 	return io_units_per_cluster - (io_unit % io_units_per_cluster);
 }
