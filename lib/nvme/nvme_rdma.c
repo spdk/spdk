@@ -234,9 +234,9 @@ struct spdk_nvme_rdma_req {
 	uint16_t				completion_flags: 2;
 	uint16_t				reserved: 14;
 	/* if completion of RDMA_RECV received before RDMA_SEND, we will complete nvme request
-	 * during processing of RDMA_SEND. To complete the request we must know the index
-	 * of nvme_cpl received in RDMA_RECV, so store it in this field */
-	uint16_t				rsp_idx;
+	 * during processing of RDMA_SEND. To complete the request we must know the response
+	 * received in RDMA_RECV, so store it in this field */
+	struct spdk_nvme_rdma_rsp		*rdma_rsp;
 
 	struct nvme_rdma_wr			rdma_wr;
 
@@ -252,7 +252,7 @@ struct spdk_nvme_rdma_req {
 struct spdk_nvme_rdma_rsp {
 	struct spdk_nvme_cpl	cpl;
 	struct nvme_rdma_qpair	*rqpair;
-	uint16_t		idx;
+	struct ibv_recv_wr	*recv_wr;
 	struct nvme_rdma_wr	rdma_wr;
 };
 
@@ -856,11 +856,8 @@ nvme_rdma_qpair_queue_recv_wr(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr
 	}
 
 static int
-nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
+nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr *wr)
 {
-	struct ibv_recv_wr *wr;
-
-	wr = &rqpair->rsp_recv_wrs[rsp_idx];
 	wr->next = NULL;
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
 	return nvme_rdma_qpair_queue_recv_wr(rqpair, wr);
@@ -920,25 +917,25 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 	for (i = 0; i < rqpair->num_entries; i++) {
 		struct ibv_sge *rsp_sgl = &rqpair->rsp_sgls[i];
 		struct spdk_nvme_rdma_rsp *rsp = &rqpair->rsps[i];
+		struct ibv_recv_wr *recv_wr = &rqpair->rsp_recv_wrs[i];
 
 		rsp->rqpair = rqpair;
 		rsp->rdma_wr.type = RDMA_WR_TYPE_RECV;
-		rsp->idx = i;
-		rsp_sgl->addr = (uint64_t)&rqpair->rsps[i];
+		rsp->recv_wr = recv_wr;
+		rsp_sgl->addr = (uint64_t)rsp;
 		rsp_sgl->length = sizeof(struct spdk_nvme_cpl);
-		rc = spdk_rdma_get_translation(rqpair->mr_map, &rqpair->rsps[i], sizeof(*rqpair->rsps),
-					       &translation);
+		rc = spdk_rdma_get_translation(rqpair->mr_map, rsp, sizeof(*rsp), &translation);
 		if (rc) {
 			return rc;
 		}
 		rsp_sgl->lkey = spdk_rdma_memory_translation_get_lkey(&translation);
 
-		rqpair->rsp_recv_wrs[i].wr_id = (uint64_t)&rsp->rdma_wr;
-		rqpair->rsp_recv_wrs[i].next = NULL;
-		rqpair->rsp_recv_wrs[i].sg_list = rsp_sgl;
-		rqpair->rsp_recv_wrs[i].num_sge = 1;
+		recv_wr->wr_id = (uint64_t)&rsp->rdma_wr;
+		recv_wr->next = NULL;
+		recv_wr->sg_list = rsp_sgl;
+		recv_wr->num_sge = 1;
 
-		rc = nvme_rdma_post_recv(rqpair, i);
+		rc = nvme_rdma_post_recv(rqpair, recv_wr);
 		if (rc) {
 			return rc;
 		}
@@ -2376,8 +2373,10 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 static inline int
 nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
-	nvme_rdma_req_complete(rdma_req, &rqpair->rsps[rdma_req->rsp_idx].cpl, true);
-	return nvme_rdma_post_recv(rqpair, rdma_req->rsp_idx);
+	struct spdk_nvme_rdma_rsp *rdma_rsp = rdma_req->rdma_rsp;
+
+	nvme_rdma_req_complete(rdma_req, &rdma_rsp->cpl, true);
+	return nvme_rdma_post_recv(rqpair, rdma_rsp->recv_wr);
 }
 
 #define MAX_COMPLETIONS_PER_POLL 128
@@ -2462,7 +2461,7 @@ nvme_rdma_process_recv_completion(struct ibv_wc *wc, struct nvme_rdma_wr *rdma_w
 	}
 	rdma_req = &rqpair->rdma_reqs[rdma_rsp->cpl.cid];
 	rdma_req->completion_flags |= NVME_RDMA_RECV_COMPLETED;
-	rdma_req->rsp_idx = rdma_rsp->idx;
+	rdma_req->rdma_rsp = rdma_rsp;
 
 	if ((rdma_req->completion_flags & NVME_RDMA_SEND_COMPLETED) == 0) {
 		return 0;
