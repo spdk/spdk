@@ -812,31 +812,6 @@ nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 	return rc;
 }
 
-/* Append the given send wr structure to the qpair's outstanding sends list. */
-/* This function accepts only a single wr. */
-static inline void
-nvme_rdma_qpair_queue_send_wr(struct nvme_rdma_qpair *rqpair, struct ibv_send_wr *wr)
-{
-	assert(wr->next == NULL);
-
-	assert(rqpair->current_num_sends < rqpair->num_entries);
-
-	rqpair->current_num_sends++;
-	spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, wr);
-}
-
-/* Append the given recv wr structure to the qpair's outstanding recvs list. */
-/* This function accepts only a single wr. */
-static inline void
-nvme_rdma_qpair_queue_recv_wr(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr *wr)
-{
-	assert(wr->next == NULL);
-	assert(rqpair->current_num_recvs < rqpair->num_entries);
-
-	rqpair->current_num_recvs++;
-	spdk_rdma_qp_queue_recv_wrs(rqpair->rdma_qp, wr);
-}
-
 #define nvme_rdma_trace_ibv_sge(sg_list) \
 	if (sg_list) { \
 		SPDK_DEBUGLOG(nvme, "local addr %p length 0x%x lkey 0x%x\n", \
@@ -916,8 +891,11 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 		recv_wr->num_sge = 1;
 
 		nvme_rdma_trace_ibv_sge(recv_wr->sg_list);
-		nvme_rdma_qpair_queue_recv_wr(rqpair, recv_wr);
+
+		spdk_rdma_qp_queue_recv_wrs(rqpair->rdma_qp, recv_wr);
 	}
+
+	rqpair->current_num_recvs = rqpair->num_entries;
 
 	rc = nvme_rdma_qpair_submit_recvs(rqpair);
 	if (rc) {
@@ -2270,10 +2248,14 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
+	assert(rqpair->current_num_sends < rqpair->num_entries);
+	rqpair->current_num_sends++;
+
 	wr = &rdma_req->send_wr;
 	wr->next = NULL;
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
-	nvme_rdma_qpair_queue_send_wr(rqpair, wr);
+
+	spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, wr);
 
 	if (!rqpair->delay_cmd_submit) {
 		return nvme_rdma_qpair_submit_sends(rqpair);
@@ -2362,9 +2344,13 @@ nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_re
 
 	nvme_rdma_req_complete(rdma_req, &rdma_rsp->cpl, true);
 
+	assert(rqpair->current_num_recvs < rqpair->num_entries);
+	rqpair->current_num_recvs++;
+
 	recv_wr->next = NULL;
 	nvme_rdma_trace_ibv_sge(recv_wr->sg_list);
-	nvme_rdma_qpair_queue_recv_wr(rqpair, recv_wr);
+
+	spdk_rdma_qp_queue_recv_wrs(rqpair->rdma_qp, recv_wr);
 }
 
 #define MAX_COMPLETIONS_PER_POLL 128
