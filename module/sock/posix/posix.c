@@ -1084,6 +1084,8 @@ posix_sock_close(struct spdk_sock *_sock)
 	 * memory. */
 	close(sock->fd);
 
+	SSL_free(sock->ssl);
+
 	spdk_pipe_destroy(sock->recv_pipe);
 	free(sock->recv_buf);
 	free(sock);
