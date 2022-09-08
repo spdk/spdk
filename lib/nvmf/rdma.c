@@ -246,7 +246,7 @@ struct spdk_nvmf_rdma_resource_opts {
 	struct spdk_nvmf_rdma_qpair	*qpair;
 	/* qp points either to an ibv_qp object or an ibv_srq object depending on the value of shared. */
 	void				*qp;
-	struct ibv_pd			*pd;
+	struct spdk_rdma_mem_map	*map;
 	uint32_t			max_queue_depth;
 	uint32_t			in_capsule_data_size;
 	bool				shared;
@@ -263,19 +263,16 @@ struct spdk_nvmf_rdma_resources {
 	 * used for receive.
 	 */
 	union nvmf_h2c_msg			*cmds;
-	struct ibv_mr				*cmds_mr;
 
 	/* Array of size "max_queue_depth" containing 16 byte completions
 	 * to be sent back to the user.
 	 */
 	union nvmf_c2h_msg			*cpls;
-	struct ibv_mr				*cpls_mr;
 
 	/* Array of size "max_queue_depth * InCapsuleDataSize" containing
 	 * buffers to be used for in capsule data.
 	 */
 	void					*bufs;
-	struct ibv_mr				*bufs_mr;
 
 	/* Receives that are waiting for a request object */
 	STAILQ_HEAD(, spdk_nvmf_rdma_recv)	incoming_queue;
@@ -650,18 +647,6 @@ nvmf_rdma_dump_qpair_contents(struct spdk_nvmf_rdma_qpair *rqpair)
 static void
 nvmf_rdma_resources_destroy(struct spdk_nvmf_rdma_resources *resources)
 {
-	if (resources->cmds_mr) {
-		ibv_dereg_mr(resources->cmds_mr);
-	}
-
-	if (resources->cpls_mr) {
-		ibv_dereg_mr(resources->cpls_mr);
-	}
-
-	if (resources->bufs_mr) {
-		ibv_dereg_mr(resources->bufs_mr);
-	}
-
 	spdk_free(resources->cmds);
 	spdk_free(resources->cpls);
 	spdk_free(resources->bufs);
@@ -674,14 +659,15 @@ nvmf_rdma_resources_destroy(struct spdk_nvmf_rdma_resources *resources)
 static struct spdk_nvmf_rdma_resources *
 nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 {
-	struct spdk_nvmf_rdma_resources	*resources;
-	struct spdk_nvmf_rdma_request	*rdma_req;
-	struct spdk_nvmf_rdma_recv	*rdma_recv;
-	struct spdk_rdma_qp		*qp = NULL;
-	struct spdk_rdma_srq		*srq = NULL;
-	struct ibv_recv_wr		*bad_wr = NULL;
-	uint32_t			i;
-	int				rc = 0;
+	struct spdk_nvmf_rdma_resources		*resources;
+	struct spdk_nvmf_rdma_request		*rdma_req;
+	struct spdk_nvmf_rdma_recv		*rdma_recv;
+	struct spdk_rdma_qp			*qp = NULL;
+	struct spdk_rdma_srq			*srq = NULL;
+	struct ibv_recv_wr			*bad_wr = NULL;
+	struct spdk_rdma_memory_translation	translation;
+	uint32_t				i;
+	int					rc = 0;
 
 	resources = calloc(1, sizeof(struct spdk_nvmf_rdma_resources));
 	if (!resources) {
@@ -710,35 +696,14 @@ nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 		goto cleanup;
 	}
 
-	resources->cmds_mr = ibv_reg_mr(opts->pd, resources->cmds,
-					opts->max_queue_depth * sizeof(*resources->cmds),
-					IBV_ACCESS_LOCAL_WRITE);
-	resources->cpls_mr = ibv_reg_mr(opts->pd, resources->cpls,
-					opts->max_queue_depth * sizeof(*resources->cpls),
-					0);
-
-	if (opts->in_capsule_data_size) {
-		resources->bufs_mr = ibv_reg_mr(opts->pd, resources->bufs,
-						opts->max_queue_depth *
-						opts->in_capsule_data_size,
-						IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE);
-	}
-
-	if (!resources->cmds_mr || !resources->cpls_mr ||
-	    (opts->in_capsule_data_size &&
-	     !resources->bufs_mr)) {
-		goto cleanup;
-	}
-	SPDK_DEBUGLOG(rdma, "Command Array: %p Length: %lx LKey: %x\n",
-		      resources->cmds, opts->max_queue_depth * sizeof(*resources->cmds),
-		      resources->cmds_mr->lkey);
-	SPDK_DEBUGLOG(rdma, "Completion Array: %p Length: %lx LKey: %x\n",
-		      resources->cpls, opts->max_queue_depth * sizeof(*resources->cpls),
-		      resources->cpls_mr->lkey);
-	if (resources->bufs && resources->bufs_mr) {
-		SPDK_DEBUGLOG(rdma, "In Capsule Data Array: %p Length: %x LKey: %x\n",
+	SPDK_DEBUGLOG(rdma, "Command Array: %p Length: %lx\n",
+		      resources->cmds, opts->max_queue_depth * sizeof(*resources->cmds));
+	SPDK_DEBUGLOG(rdma, "Completion Array: %p Length: %lx\n",
+		      resources->cpls, opts->max_queue_depth * sizeof(*resources->cpls));
+	if (resources->bufs) {
+		SPDK_DEBUGLOG(rdma, "In Capsule Data Array: %p Length: %x\n",
 			      resources->bufs, opts->max_queue_depth *
-			      opts->in_capsule_data_size, resources->bufs_mr->lkey);
+			      opts->in_capsule_data_size);
 	}
 
 	/* Initialize queues */
@@ -765,13 +730,22 @@ nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 
 		rdma_recv->sgl[0].addr = (uintptr_t)&resources->cmds[i];
 		rdma_recv->sgl[0].length = sizeof(resources->cmds[i]);
-		rdma_recv->sgl[0].lkey = resources->cmds_mr->lkey;
+		rc = spdk_rdma_get_translation(opts->map, &resources->cmds[i], sizeof(resources->cmds[i]),
+					       &translation);
+		if (rc) {
+			goto cleanup;
+		}
+		rdma_recv->sgl[0].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
 		rdma_recv->wr.num_sge = 1;
 
-		if (rdma_recv->buf && resources->bufs_mr) {
+		if (rdma_recv->buf) {
 			rdma_recv->sgl[1].addr = (uintptr_t)rdma_recv->buf;
 			rdma_recv->sgl[1].length = opts->in_capsule_data_size;
-			rdma_recv->sgl[1].lkey = resources->bufs_mr->lkey;
+			rc = spdk_rdma_get_translation(opts->map, rdma_recv->buf, opts->in_capsule_data_size, &translation);
+			if (rc) {
+				goto cleanup;
+			}
+			rdma_recv->sgl[1].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
 			rdma_recv->wr.num_sge++;
 		}
 
@@ -801,7 +775,12 @@ nvmf_rdma_resources_create(struct spdk_nvmf_rdma_resource_opts *opts)
 
 		rdma_req->rsp.sgl[0].addr = (uintptr_t)&resources->cpls[i];
 		rdma_req->rsp.sgl[0].length = sizeof(resources->cpls[i]);
-		rdma_req->rsp.sgl[0].lkey = resources->cpls_mr->lkey;
+		rc = spdk_rdma_get_translation(opts->map, &resources->cpls[i], sizeof(resources->cpls[i]),
+					       &translation);
+		if (rc) {
+			goto cleanup;
+		}
+		rdma_req->rsp.sgl[0].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
 
 		rdma_req->rsp.rdma_wr.type = RDMA_WR_TYPE_SEND;
 		rdma_req->rsp.wr.wr_id = (uintptr_t)&rdma_req->rsp.rdma_wr;
@@ -1028,7 +1007,7 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		transport = &rtransport->transport;
 
 		opts.qp = rqpair->rdma_qp;
-		opts.pd = rqpair->cm_id->pd;
+		opts.map = device->map;
 		opts.qpair = rqpair;
 		opts.shared = false;
 		opts.max_queue_depth = rqpair->max_queue_depth;
@@ -2922,7 +2901,7 @@ nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair)
 
 	nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
 
-	/* nvmr_rdma_close_qpair is not called */
+	/* nvmf_rdma_close_qpair is not called */
 	if (!rqpair->to_close) {
 		return;
 	}
@@ -3471,7 +3450,7 @@ nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport,
 			}
 
 			opts.qp = poller->srq;
-			opts.pd = device->pd;
+			opts.map = device->map;
 			opts.qpair = NULL;
 			opts.shared = true;
 			opts.max_queue_depth = poller->max_srq_depth;
