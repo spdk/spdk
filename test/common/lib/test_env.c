@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -153,6 +154,13 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint3
 	HANDLE_RETURN_MOCK(spdk_malloc);
 
 	void *buf = NULL;
+
+	if (size == 0) {
+		/* Align how mock handles 0 size with rte functions - return NULL.
+		 * According to posix_memalig docs, if size is 0, then the
+		 * value placed in *memptr is either NULL or a unique pointer value. */
+		return NULL;
+	}
 
 	if (align == 0) {
 		align = 8;

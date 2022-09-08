@@ -557,7 +557,7 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 
 	nvme_rdma_free_reqs(rqpair);
 	nvme_rdma_free_rsps(rqpair);
-	nvme_rdma_free(rqpair);
+	spdk_free(rqpair);
 	rqpair = NULL;
 
 	/* Test case 2: queue size 2. Expect: PASS */
@@ -574,7 +574,7 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 
 	nvme_rdma_free_reqs(rqpair);
 	nvme_rdma_free_rsps(rqpair);
-	nvme_rdma_free(rqpair);
+	spdk_free(rqpair);
 	rqpair = NULL;
 
 	/* Test case 3: queue size zero. Expect: FAIL */
