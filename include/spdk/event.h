@@ -157,8 +157,14 @@ struct spdk_app_opts {
 	 *  If non-NULL, a string array of allowed RPC methods.
 	 */
 	const char **rpc_allowlist;
+
+	/**
+	 * Used to pass vf_token to vfio_pci driver through DPDK.
+	 * The vf_token is an UUID that shared between SR-IOV PF and VF.
+	 */
+	const char		*vf_token;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 208, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 216, "Incorrect size");
 
 /**
  * Initialize the default value of opts

@@ -459,6 +459,15 @@ build_eal_cmdline(const struct spdk_env_opts *opts)
 			return -1;
 		}
 	}
+
+	/* --vfio-vf-token used for VF initialized by vfio_pci driver. */
+	if (opts->vf_token) {
+		args = push_arg(args, &argcount, _sprintf_alloc("--vfio-vf-token=%s",
+				opts->vf_token));
+		if (args == NULL) {
+			return -1;
+		}
+	}
 #endif
 
 	g_eal_cmdline = args;

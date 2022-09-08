@@ -125,7 +125,9 @@ static const struct option g_cmdline_options[] = {
 #define DISABLE_CPUMASK_LOCKS_OPT_IDX	267
 	{"disable-cpumask-locks",	no_argument,		NULL, DISABLE_CPUMASK_LOCKS_OPT_IDX},
 #define RPCS_ALLOWED_OPT_IDX	268
-	{"rpcs-allowed",		required_argument,	NULL, RPCS_ALLOWED_OPT_IDX}
+	{"rpcs-allowed",		required_argument,	NULL, RPCS_ALLOWED_OPT_IDX},
+#define ENV_VF_TOKEN_OPT_IDX 269
+	{"vfio-vf-token",		required_argument,	NULL, ENV_VF_TOKEN_OPT_IDX},
 };
 
 static void
@@ -337,6 +339,7 @@ app_setup_env(struct spdk_app_opts *opts)
 	env_opts.base_virtaddr = opts->base_virtaddr;
 	env_opts.env_context = opts->env_context;
 	env_opts.iova_mode = opts->iova_mode;
+	env_opts.vf_token = opts->vf_token;
 
 	rc = spdk_env_init(&env_opts);
 	free(env_opts.pci_blocked);
@@ -516,10 +519,11 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 	SET_FIELD(disable_signal_handlers);
 	SET_FIELD(msg_mempool_size);
 	SET_FIELD(rpc_allowlist);
+	SET_FIELD(vf_token);
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 208, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 216, "Incorrect size");
 
 #undef SET_FIELD
 }
@@ -872,6 +876,7 @@ usage(void (*app_usage)(void))
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	printf("     --rpcs-allowed	   comma-separated list of permitted RPCS\n");
 	printf("     --env-context         Opaque context for use of the env implementation\n");
+	printf("     --vfio-vf-token       VF token (UUID) shared between SR-IOV PF and VFs for vfio_pci driver\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
 	if (app_usage) {
@@ -1128,6 +1133,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				usage(app_usage);
 				goto out;
 			}
+			break;
+		case ENV_VF_TOKEN_OPT_IDX:
+			opts->vf_token = optarg;
 			break;
 		case VERSION_OPT_IDX:
 			printf(SPDK_VERSION_STRING"\n");
