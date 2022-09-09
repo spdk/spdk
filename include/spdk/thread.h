@@ -439,7 +439,7 @@ int spdk_thread_get_stats(struct spdk_thread_stats *stats);
 /**
  * Return the TSC value from the end of the last time this thread was polled.
  *
- * \param thread Thread to query.
+ * \param thread Thread to query.  If NULL, use current thread.
  *
  * \return TSC value from the end of the last time this thread was polled.
  */
