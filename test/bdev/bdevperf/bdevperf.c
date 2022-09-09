@@ -1283,6 +1283,7 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 	job->bdev = bdev;
 	job->io_size_blocks = job->io_size / data_block_size;
 	job->buf_size = job->io_size_blocks * block_size;
+	job->abort = g_abort;
 	job_init_rw(job, config->rw);
 
 	if ((job->io_size % data_block_size) != 0) {
@@ -2068,6 +2069,10 @@ verify_test_params(struct spdk_app_opts *opts)
 
 	if (g_timeout_in_sec < 0) {
 		goto out;
+	}
+
+	if (g_abort && !g_timeout_in_sec) {
+		printf("Timeout must be set for abort option, Ignoring g_abort\n");
 	}
 
 	if (g_show_performance_ema_period > 0 &&
