@@ -21,10 +21,11 @@ fi
 
 get_config() {
 	# Intercept part of the ./configure's cmdline we are interested in
-	configure_opts=($(getopt -l "$1::" -o "" -- $configure 2> /dev/null))
-	# Drop "--"
-	configure_opts=("${configure_opts[@]::${#configure_opts[@]}-1}")
-	((${#configure_opts[@]} > 0)) || return 1
+	configure_opts=($(getopt -l "$1::" -o "" -- $configure 2> /dev/null)) || true
+	# If "--" is the first argument then either the cmdline is empty or doesn't
+	# match on what we are looking for. In either case simply return as there
+	# is nothing to check.
+	[[ ${configure_opts[0]} == "--" ]] && return 1
 
 	if [[ $2 == has-arg ]]; then
 		[[ -n ${configure_opts[1]} && ${configure_opts[1]} != "''" ]]
