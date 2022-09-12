@@ -459,6 +459,12 @@ ftl_mngt_validate_sb(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 		return;
 	}
 
+	if (ftl_superblock_upgrade(dev)) {
+		FTL_ERRLOG(dev, "FTL superblock dirty or invalid version\n");
+		ftl_mngt_fail_step(mngt);
+		return;
+	}
+
 	if (spdk_uuid_compare(&sb->uuid, &dev->conf.uuid) != 0) {
 		FTL_ERRLOG(dev, "Invalid FTL superblock UUID\n");
 		ftl_mngt_fail_step(mngt);
