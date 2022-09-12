@@ -287,7 +287,10 @@ if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	config_params="$config_params --with-ocf=$rootdir/ocf.a"
 fi
 
-$MAKE $MAKEFLAGS clean
+if [[ -f $rootdir/mk/spdk.common.mk ]]; then
+	$MAKE $MAKEFLAGS clean
+fi
+
 ./configure $config_params --with-shared
 # By setting SPDK_NO_LIB_DEPS=1, we ensure that we won't create any link dependencies.
 # Then we can be sure we get a valid accounting of the symbol dependencies we have.

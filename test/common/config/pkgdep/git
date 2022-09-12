@@ -101,7 +101,7 @@ function install_refspdk() {
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
 		SPDK_BUILD_SHARED_OBJECT=1
-		SPDK_TEST_AUTOBUILD=1
+		SPDK_TEST_AUTOBUILD="full"
 		SPDK_TEST_UNITTEST=1
 		SPDK_TEST_BLOCKDEV=1
 		SPDK_TEST_PMDK=1

@@ -77,7 +77,7 @@ export SPDK_RUN_VALGRIND
 export SPDK_RUN_FUNCTIONAL_TEST
 : ${SPDK_TEST_UNITTEST=0}
 export SPDK_TEST_UNITTEST
-: ${SPDK_TEST_AUTOBUILD=0}
+: ${SPDK_TEST_AUTOBUILD=""}
 export SPDK_TEST_AUTOBUILD
 : ${SPDK_TEST_RELEASE_BUILD=0}
 export SPDK_TEST_RELEASE_BUILD
@@ -422,8 +422,8 @@ function get_config_params() {
 	fi
 
 	if [[ $SPDK_TEST_UNITTEST -eq 0 && \
-		$SPDK_TEST_SCANBUILD -eq 0 && \
-		$SPDK_TEST_AUTOBUILD -eq 0 ]]; then
+		$SPDK_TEST_SCANBUILD -eq 0 && -z \
+		$SPDK_TEST_AUTOBUILD ]]; then
 		config_params+=' --disable-unit-tests'
 	fi
 

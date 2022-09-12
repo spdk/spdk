@@ -335,15 +335,17 @@ function build_doc() {
 
 function autobuild_test_suite() {
 	run_test "autobuild_check_format" ./scripts/check_format.sh
-	run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
 	run_test "autobuild_check_so_deps" $rootdir/test/make/check_so_deps.sh $1
-	./configure $config_params --without-shared
-	$MAKE $MAKEFLAGS
-	run_test "autobuild_generated_files_check" porcelain_check
-	run_test "autobuild_header_dependency_check" header_dependency_check
-	run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR="$SPDK_WORKSPACE" prefix=/usr
-	run_test "autobuild_make_uninstall" test_make_uninstall
-	run_test "autobuild_build_doc" build_doc
+	if [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
+		run_test "autobuild_external_code" $rootdir/test/external_code/test_make.sh $rootdir
+		./configure $config_params --without-shared
+		$MAKE $MAKEFLAGS
+		run_test "autobuild_generated_files_check" porcelain_check
+		run_test "autobuild_header_dependency_check" header_dependency_check
+		run_test "autobuild_make_install" $MAKE $MAKEFLAGS install DESTDIR="$SPDK_WORKSPACE" prefix=/usr
+		run_test "autobuild_make_uninstall" test_make_uninstall
+		run_test "autobuild_build_doc" build_doc
+	fi
 }
 
 function unittest_build() {
@@ -363,12 +365,17 @@ if [ -n "$SPDK_TEST_NATIVE_DPDK" ]; then
 	run_test "build_native_dpdk" build_native_dpdk
 fi
 
-./configure $config_params
-echo "** START ** Info for Hostname: $HOSTNAME"
-uname -a
-$MAKE cc_version
-$MAKE cxx_version
-echo "** END ** Info for Hostname: $HOSTNAME"
+if [[ -z $SPDK_TEST_AUTOBUILD ]] || [[ $SPDK_TEST_AUTOBUILD == 'full' ]]; then
+	./configure $config_params
+	echo "** START ** Info for Hostname: $HOSTNAME"
+	uname -a
+	$MAKE cc_version
+	$MAKE cxx_version
+	echo "** END ** Info for Hostname: $HOSTNAME"
+elif [[ $SPDK_TEST_AUTOBUILD != 'tiny' ]]; then
+	echo "ERROR: supported values for SPDK_TEST_AUTOBUILD are 'full' and 'tiny'"
+	exit 1
+fi
 
 if [[ $SPDK_TEST_OCF -eq 1 ]]; then
 	run_test "autobuild_ocf_precompile" ocf_precompile
@@ -378,7 +385,7 @@ if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
 	run_test "autobuild_llvm_precompile" llvm_precompile
 fi
 
-if [[ $SPDK_TEST_AUTOBUILD -eq 1 ]]; then
+if [[ -n $SPDK_TEST_AUTOBUILD ]]; then
 	run_test "autobuild" autobuild_test_suite $1
 elif [[ $SPDK_TEST_UNITTEST -eq 1 ]]; then
 	run_test "unittest_build" unittest_build

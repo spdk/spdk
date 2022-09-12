@@ -22,4 +22,7 @@ $rootdir/autobuild.sh "$conf"
 if ((SPDK_TEST_UNITTEST == 1 || SPDK_RUN_FUNCTIONAL_TEST == 1)); then
 	sudo -E $rootdir/autotest.sh "$conf"
 fi
-$rootdir/autopackage.sh "$conf"
+
+if [[ $SPDK_TEST_AUTOBUILD != 'tiny' ]]; then
+	$rootdir/autopackage.sh "$conf"
+fi
