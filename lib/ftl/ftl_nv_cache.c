@@ -579,6 +579,10 @@ compaction_retry_read(void *_compactor)
 
 	ret = compaction_submit_read(compactor, rq->io.addr, rq->iter.count);
 
+	if (spdk_likely(!ret)) {
+		return;
+	}
+
 	if (ret == -ENOMEM) {
 		bdev = spdk_bdev_desc_get_bdev(compactor->nv_cache->bdev_desc);
 		compactor->bdev_io_wait.bdev = bdev;
