@@ -330,6 +330,7 @@ bdev_rbd_init(struct bdev_rbd *rbd)
 
 	if (spdk_call_unaffinitized(bdev_rbd_init_context, rbd) == NULL) {
 		SPDK_ERRLOG("Cannot init rbd context for rbd=%p\n", rbd);
+		return -1;
 	}
 
 	return ret;
