@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vfio_user/common.sh
+source $rootdir/test/vfio_user/autotest.config
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
@@ -52,6 +53,7 @@ timing_exit launch_vms
 timing_enter run_vm_cmd
 
 fio_disks=""
+
 for vm_num in $used_vms; do
 	qemu_mask_param="VM_${vm_num}_qemu_mask"
 

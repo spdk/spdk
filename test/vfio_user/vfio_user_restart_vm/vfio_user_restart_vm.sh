@@ -3,6 +3,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vfio_user/common.sh
+source $rootdir/test/vfio_user/autotest.config
 
 bdfs=($(get_nvme_bdfs))
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
