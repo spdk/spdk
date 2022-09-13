@@ -19,6 +19,7 @@
 #include "spdk/bit_array.h"
 #include "spdk/conf.h"
 #include "spdk/zipf.h"
+#include "spdk/histogram_data.h"
 
 #define BDEVPERF_CONFIG_MAX_FILENAME 1024
 #define BDEVPERF_CONFIG_UNDEFINED -1
@@ -75,6 +76,34 @@ static struct spdk_poller *g_perf_timer = NULL;
 static void bdevperf_submit_single(struct bdevperf_job *job, struct bdevperf_task *task);
 static void rpc_perform_tests_cb(void);
 
+static uint32_t g_bdev_count = 0;
+static uint32_t g_latency_display_level;
+
+static const double g_latency_cutoffs[] = {
+	0.01,
+	0.10,
+	0.25,
+	0.50,
+	0.75,
+	0.90,
+	0.95,
+	0.98,
+	0.99,
+	0.995,
+	0.999,
+	0.9999,
+	0.99999,
+	0.999999,
+	0.9999999,
+	-1,
+};
+
+struct latency_info {
+	uint64_t	min;
+	uint64_t	max;
+	uint64_t	total;
+};
+
 struct bdevperf_job {
 	char				*name;
 	struct spdk_bdev		*bdev;
@@ -116,6 +145,9 @@ struct bdevperf_job {
 	struct spdk_zipf		*zipf;
 	TAILQ_HEAD(, bdevperf_task)	task_list;
 	uint64_t			run_time_in_usec;
+
+	/* keep channel's histogram data before being destroyed */
+	struct spdk_histogram_data	*histogram;
 };
 
 struct spdk_bdevperf {
@@ -169,9 +201,13 @@ struct bdevperf_aggregate_stats {
 	double				total_mb_per_second;
 	double				total_failed_per_second;
 	double				total_timeout_per_second;
+	double				min_latency;
+	double				max_latency;
+	uint64_t			total_io_completed;
+	uint64_t			total_tsc;
 };
 
-static struct bdevperf_aggregate_stats g_stats = {};
+static struct bdevperf_aggregate_stats g_stats = {.min_latency = (double)UINT64_MAX};
 
 /*
  * Cumulative Moving Average (CMA): average of all data up to current
@@ -202,10 +238,35 @@ get_ema_io_per_second(struct bdevperf_job *job, uint64_t ema_period)
 }
 
 static void
+get_avg_latency(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+		uint64_t total, uint64_t so_far)
+{
+	struct latency_info *latency_info = ctx;
+
+	if (count == 0) {
+		return;
+	}
+
+	latency_info->total += (start + end) / 2 * count;
+
+	if (so_far == count) {
+		latency_info->min = start;
+	}
+
+	if (so_far == total) {
+		latency_info->max = end;
+	}
+}
+
+static void
 performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job *job)
 {
 	double io_per_second, mb_per_second, failed_per_second, timeout_per_second;
+	double average_latency = 0.0, min_latency, max_latency;
 	uint64_t time_in_usec;
+	uint64_t tsc_rate;
+	uint64_t total_io;
+	struct latency_info latency_info = {};
 
 	printf("\r Job: %s (Core Mask 0x%s)\n", spdk_thread_get_name(job->thread),
 	       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
@@ -235,20 +296,41 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	} else {
 		io_per_second = get_ema_io_per_second(job, stats->ema_period);
 	}
+
+	tsc_rate = spdk_get_ticks_hz();
 	mb_per_second = io_per_second * job->io_size / (1024 * 1024);
+
+	spdk_histogram_data_iterate(job->histogram, get_avg_latency, &latency_info);
+
+	total_io = job->io_completed + job->io_failed;
+	if (total_io != 0) {
+		average_latency = (double)latency_info.total / total_io * 1000 * 1000 / tsc_rate;
+	}
+	min_latency = (double)latency_info.min * 1000 * 1000 / tsc_rate;
+	max_latency = (double)latency_info.max * 1000 * 1000 / tsc_rate;
 
 	failed_per_second = (double)job->io_failed * 1000000 / time_in_usec;
 	timeout_per_second = (double)job->io_timeout * 1000000 / time_in_usec;
 
 	printf("\t %-20s: %10.2f %10.2f %10.2f",
 	       job->name, (float)time_in_usec / 1000000, io_per_second, mb_per_second);
-	printf(" %10.2f %8.2f\n",
+	printf(" %10.2f %8.2f",
 	       failed_per_second, timeout_per_second);
+	printf(" %10.2f %10.2f %10.2f\n",
+	       average_latency, min_latency, max_latency);
 
 	stats->total_io_per_second += io_per_second;
 	stats->total_mb_per_second += mb_per_second;
 	stats->total_failed_per_second += failed_per_second;
 	stats->total_timeout_per_second += timeout_per_second;
+	stats->total_io_completed += job->io_completed + job->io_failed;
+	stats->total_tsc += latency_info.total;
+	if (min_latency < stats->min_latency) {
+		stats->min_latency = min_latency;
+	}
+	if (max_latency > stats->max_latency) {
+		stats->max_latency = max_latency;
+	}
 }
 
 static void
@@ -364,6 +446,7 @@ free_job_config(void)
 static void
 bdevperf_job_free(struct bdevperf_job *job)
 {
+	spdk_histogram_data_free(job->histogram);
 	spdk_bit_array_free(&job->outstanding);
 	spdk_zipf_free(&job->zipf);
 	free(job->name);
@@ -377,12 +460,52 @@ job_thread_exit(void *ctx)
 }
 
 static void
+check_cutoff(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+	     uint64_t total, uint64_t so_far)
+{
+	double so_far_pct;
+	double **cutoff = ctx;
+	uint64_t tsc_rate;
+
+	if (count == 0) {
+		return;
+	}
+
+	tsc_rate = spdk_get_ticks_hz();
+	so_far_pct = (double)so_far / total;
+	while (so_far_pct >= **cutoff && **cutoff > 0) {
+		printf("%9.5f%% : %9.3fus\n", **cutoff * 100, (double)end * 1000 * 1000 / tsc_rate);
+		(*cutoff)++;
+	}
+}
+
+static void
+print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+	     uint64_t total, uint64_t so_far)
+{
+	double so_far_pct;
+	uint64_t tsc_rate;
+
+	if (count == 0) {
+		return;
+	}
+
+	tsc_rate = spdk_get_ticks_hz();
+	so_far_pct = (double)so_far * 100 / total;
+	printf("%9.3f - %9.3f: %9.4f%%  (%9ju)\n",
+	       (double)start * 1000 * 1000 / tsc_rate,
+	       (double)end * 1000 * 1000 / tsc_rate,
+	       so_far_pct, count);
+}
+
+static void
 bdevperf_test_done(void *ctx)
 {
 	struct bdevperf_job *job, *jtmp;
 	struct bdevperf_task *task, *ttmp;
-	int rc;
+	double average_latency = 0.0;
 	uint64_t time_in_usec;
+	int rc;
 
 	if (g_time_in_usec) {
 		g_stats.io_time_in_usec = g_time_in_usec;
@@ -405,13 +528,63 @@ bdevperf_test_done(void *ctx)
 		       (double)g_time_in_usec / 1000000);
 	}
 
-	printf("\n\r %-*s: %10s %10s %10s %10s %8s\n",
-	       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s");
+	printf("\n%*s\n", 107, "Latency(us)");
+	printf("\r %-*s: %10s %10s %10s %10s %8s %10s %10s %10s\n",
+	       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s", "Average", "min", "max");
 
 	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
-		TAILQ_REMOVE(&g_bdevperf.jobs, job, link);
-
 		performance_dump_job(&g_stats, job);
+	}
+
+	printf("\r =================================================================================="
+	       "=================================\n");
+	printf("\r %-28s: %10s %10.2f %10.2f",
+	       "Total", "", g_stats.total_io_per_second, g_stats.total_mb_per_second);
+	printf(" %10.2f %8.2f",
+	       g_stats.total_failed_per_second, g_stats.total_timeout_per_second);
+
+	if (g_stats.total_io_completed != 0) {
+		average_latency = ((double)g_stats.total_tsc / g_stats.total_io_completed) * 1000 * 1000 /
+				  spdk_get_ticks_hz();
+	}
+	printf(" %10.2f %10.2f %10.2f\n", average_latency, g_stats.min_latency, g_stats.max_latency);
+
+	fflush(stdout);
+
+	if (g_latency_display_level == 0 || g_stats.total_io_completed == 0) {
+		goto clean;
+	}
+
+	printf("\n Latency summary\n");
+	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
+		printf("\r =============================================\n");
+		printf("\r Job: %s (Core Mask 0x%s)\n", spdk_thread_get_name(job->thread),
+		       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
+
+		const double *cutoff = g_latency_cutoffs;
+
+		spdk_histogram_data_iterate(job->histogram, check_cutoff, &cutoff);
+
+		printf("\n");
+	}
+
+	if (g_latency_display_level == 1) {
+		goto clean;
+	}
+
+	printf("\r Latency histogram\n");
+	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
+		printf("\r =============================================\n");
+		printf("\r Job: %s (Core Mask 0x%s)\n", spdk_thread_get_name(job->thread),
+		       spdk_cpuset_fmt(spdk_thread_get_cpumask(job->thread)));
+
+		spdk_histogram_data_iterate(job->histogram, print_bucket, NULL);
+		printf("\n");
+	}
+
+clean:
+	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
+		TAILQ_REMOVE(&g_bdevperf.jobs, job, link);
 
 		spdk_thread_send_msg(job->thread, job_thread_exit, NULL);
 
@@ -424,13 +597,6 @@ bdevperf_test_done(void *ctx)
 
 		bdevperf_job_free(job);
 	}
-
-	printf("\r ==================================================================================\n");
-	printf("\r %-28s: %10s %10.2f %10.2f",
-	       "Total", "", g_stats.total_io_per_second, g_stats.total_mb_per_second);
-	printf(" %10.2f %8.2f\n",
-	       g_stats.total_failed_per_second, g_stats.total_timeout_per_second);
-	fflush(stdout);
 
 	rc = g_run_rc;
 	if (g_request && !g_shutdown) {
@@ -454,6 +620,13 @@ bdevperf_job_end(void *ctx)
 }
 
 static void
+bdevperf_channel_get_histogram_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	struct spdk_histogram_data *job_hist = cb_arg;
+	spdk_histogram_data_merge(job_hist, histogram);
+}
+
+static void
 bdevperf_end_task(struct bdevperf_task *task)
 {
 	struct bdevperf_job     *job = task->job;
@@ -464,6 +637,11 @@ bdevperf_end_task(struct bdevperf_task *task)
 		if (job->current_queue_depth == 0) {
 			end_tsc = spdk_get_ticks() - g_start_tsc;
 			job->run_time_in_usec = end_tsc * 1000000 / spdk_get_ticks_hz();
+
+			/* keep histogram info before channel is destroyed */
+			spdk_bdev_channel_get_histogram(job->bdev, job->ch, bdevperf_channel_get_histogram_cb,
+							job->histogram);
+
 			spdk_put_io_channel(job->ch);
 			spdk_bdev_close(job->bdev_desc);
 			spdk_thread_send_msg(g_main_thread, bdevperf_job_end, NULL);
@@ -1061,12 +1239,20 @@ static void
 _performance_dump_done(void *ctx)
 {
 	struct bdevperf_aggregate_stats *stats = ctx;
+	double average_latency;
 
-	printf("\r ==================================================================================\n");
+	printf("\r =================================================================================="
+	       "=================================\n");
 	printf("\r %-28s: %10s %10.2f %10.2f",
 	       "Total", "", stats->total_io_per_second, stats->total_mb_per_second);
-	printf(" %10.2f %8.2f\n",
+	printf(" %10.2f %8.2f",
 	       stats->total_failed_per_second, stats->total_timeout_per_second);
+
+	average_latency = ((double)stats->total_tsc / stats->total_io_completed) * 1000 * 1000 /
+			  spdk_get_ticks_hz();
+	printf(" %10.2f %10.2f %10.2f\n", average_latency, stats->min_latency, stats->max_latency);
+	printf("\n");
+
 	fflush(stdout);
 
 	g_performance_dump_active = false;
@@ -1107,6 +1293,8 @@ performance_statistics_thread(void *arg)
 		return -1;
 	}
 
+	stats->min_latency = (double)UINT64_MAX;
+
 	g_show_performance_period_num++;
 
 	stats->io_time_in_usec = g_show_performance_period_num * g_show_performance_period_in_usec;
@@ -1137,8 +1325,9 @@ bdevperf_test(void)
 	/* Start a timer to dump performance numbers */
 	g_start_tsc = spdk_get_ticks();
 	if (g_show_performance_real_time && !g_perf_timer) {
-		printf("\r %-*s: %10s %10s %10s %10s %8s\n",
-		       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s");
+		printf("%*s\n", 107, "Latency(us)");
+		printf("\r %-*s: %10s %10s %10s %10s %8s %10s %10s %10s\n",
+		       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s", "Average", "min", "max");
 
 		g_perf_timer = SPDK_POLLER_REGISTER(performance_statistics_thread, NULL,
 						    g_show_performance_period_in_usec);
@@ -1161,21 +1350,70 @@ bdevperf_bdev_removed(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, vo
 	}
 }
 
+static void
+bdevperf_histogram_status_cb(void *cb_arg, int status)
+{
+	if (status != 0) {
+		g_run_rc = status;
+		if (g_continue_on_failure == false) {
+			g_error_to_exit = true;
+		}
+	}
+
+	if (--g_bdev_count == 0) {
+		if (g_run_rc == 0) {
+			/* Ready to run the test */
+			bdevperf_test();
+		} else {
+			bdevperf_test_done(NULL);
+		}
+	}
+}
+
 static uint32_t g_construct_job_count = 0;
+
+static void
+_bdevperf_enable_histogram(bool enable)
+{
+	struct spdk_bdev *bdev;
+	/* increment initial g_bdev_count so that it will never reach 0 in the middle of iteration */
+	g_bdev_count = 1;
+
+	if (g_job_bdev_name != NULL) {
+		bdev = spdk_bdev_get_by_name(g_job_bdev_name);
+		if (bdev) {
+			g_bdev_count++;
+
+			spdk_bdev_histogram_enable(bdev, bdevperf_histogram_status_cb, NULL, enable);
+		} else {
+			fprintf(stderr, "Unable to find bdev '%s'\n", g_job_bdev_name);
+		}
+	} else {
+		bdev = spdk_bdev_first_leaf();
+
+		while (bdev != NULL) {
+			g_bdev_count++;
+
+			spdk_bdev_histogram_enable(bdev, bdevperf_histogram_status_cb, NULL, enable);
+			bdev = spdk_bdev_next_leaf(bdev);
+		}
+	}
+
+	bdevperf_histogram_status_cb(NULL, 0);
+}
 
 static void
 _bdevperf_construct_job_done(void *ctx)
 {
 	if (--g_construct_job_count == 0) {
-
 		if (g_run_rc != 0) {
 			/* Something failed. */
 			bdevperf_test_done(NULL);
 			return;
 		}
 
-		/* Ready to run the test */
-		bdevperf_test();
+		/* always enable histogram. */
+		_bdevperf_enable_histogram(true);
 	} else if (g_run_rc != 0) {
 		/* Reset error as some jobs constructed right */
 		g_run_rc = 0;
@@ -1395,6 +1633,13 @@ bdevperf_construct_job(struct spdk_bdev *bdev, struct job_config *config,
 			bdevperf_job_free(job);
 			return -ENOMEM;
 		}
+	}
+
+	job->histogram = spdk_histogram_data_alloc();
+	if (job->histogram == NULL) {
+		fprintf(stderr, "Failed to allocate histogram\n");
+		bdevperf_job_free(job);
+		return -ENOMEM;
 	}
 
 	TAILQ_INIT(&job->task_list);
@@ -2041,6 +2286,8 @@ bdevperf_parse_arg(int ch, char *arg)
 			fprintf(stderr, "Illegal zipf theta value %s\n", optarg);
 			return -EINVAL;
 		}
+	} else if (ch == 'l') {
+		g_latency_display_level++;
 	} else {
 		tmp = spdk_strtoll(optarg, 10);
 		if (tmp < 0) {
@@ -2104,6 +2351,7 @@ bdevperf_usage(void)
 	printf(" -X                        abort timed out I/O\n");
 	printf(" -C                        enable every core to send I/Os to each bdev\n");
 	printf(" -j <filename>             use job config file\n");
+	printf(" -l                        display latency histogram, default: disable. -l display summary, -ll display details\n");
 }
 
 static int
@@ -2216,7 +2464,7 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CF:M:P:S:T:Xj:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "Zzfq:o:t:w:k:CF:M:P:S:T:Xlj:", NULL,
 				      bdevperf_parse_arg, bdevperf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		return rc;
