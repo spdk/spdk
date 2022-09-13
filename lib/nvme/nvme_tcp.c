@@ -1608,15 +1608,15 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
 		prev_state = tqpair->recv_state;
+		pdu = tqpair->recv_pdu;
 		switch (tqpair->recv_state) {
 		/* If in a new state */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
-			memset(tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
+			memset(pdu, 0, sizeof(struct nvme_tcp_pdu));
 			nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 			break;
 		/* common header */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
-			pdu = tqpair->recv_pdu;
 			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
 				rc = nvme_tcp_read_data(tqpair->sock,
 							sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
@@ -1637,7 +1637,6 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			break;
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-			pdu = tqpair->recv_pdu;
 			rc = nvme_tcp_read_data(tqpair->sock,
 						pdu->psh_len - pdu->psh_valid_bytes,
 						(uint8_t *)&pdu->hdr.raw + sizeof(struct spdk_nvme_tcp_common_pdu_hdr) + pdu->psh_valid_bytes);
@@ -1656,7 +1655,6 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			nvme_tcp_pdu_psh_handle(tqpair, reaped);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
-			pdu = tqpair->recv_pdu;
 			/* check whether the data is valid, if not we just return */
 			if (!pdu->data_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
@@ -1687,7 +1685,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			nvme_tcp_pdu_payload_handle(tqpair, reaped);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
-			memset(tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
+			memset(pdu, 0, sizeof(struct nvme_tcp_pdu));
 			rc = NVME_TCP_PDU_FATAL;
 			break;
 		default:
