@@ -47,6 +47,9 @@ If the step 3, 4, or 5 fails, the reset reverts to the step 3 and then it is ret
 recovered within `ctrlr_loss_timeout_sec` seconds. If `ctrlr_loss_timeout_sec` is -1, it retries
 indefinitely.
 
+By default, error detection on a qpair is very slow for TCP and RDMA transports. For fast error
+detection, a global option, `transport_ack_timeout`, is useful.
+
 ### Path Selection
 
 Multipath mode supports two path selection policies, active-passive or active-active.
