@@ -11,7 +11,6 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/json.h"
-#include "spdk/string.h"
 
 static bool g_shutdown_started = false;
 
@@ -170,6 +169,7 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 	SPDK_DEBUGLOG(bdev_raid, "raid_bdev_cleanup, %p name %s, state %s\n",
 		      raid_bdev, raid_bdev->bdev.name, raid_bdev_state_to_str(raid_bdev->state));
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		assert(base_info->bdev == NULL);
@@ -197,22 +197,6 @@ raid_bdev_cleanup_and_free(struct raid_bdev *raid_bdev)
 
 /*
  * brief:
- * wrapper for the bdev close operation
- * params:
- * base_info - raid base bdev info
- * returns:
- */
-static void
-_raid_bdev_free_base_bdev_resource(void *ctx)
-{
-	struct spdk_bdev_desc *desc = ctx;
-
-	spdk_bdev_close(desc);
-}
-
-
-/*
- * brief:
  * free resource of base bdev for raid bdev
  * params:
  * raid_bdev - pointer to raid bdev
@@ -225,6 +209,8 @@ static void
 raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev,
 				  struct raid_base_bdev_info *base_info)
 {
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+
 	free(base_info->name);
 	base_info->name = NULL;
 
@@ -234,11 +220,7 @@ raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev,
 
 	assert(base_info->desc);
 	spdk_bdev_module_release_bdev(base_info->bdev);
-	if (base_info->thread && base_info->thread != spdk_get_thread()) {
-		spdk_thread_send_msg(base_info->thread, _raid_bdev_free_base_bdev_resource, base_info->desc);
-	} else {
-		spdk_bdev_close(base_info->desc);
-	}
+	spdk_bdev_close(base_info->desc);
 	base_info->desc = NULL;
 	base_info->bdev = NULL;
 
@@ -270,16 +252,8 @@ raid_bdev_module_stop_done(struct raid_bdev *raid_bdev)
 	}
 }
 
-/*
- * brief:
- * raid_bdev_destruct is the destruct function table pointer for raid bdev
- * params:
- * ctxt - pointer to raid_bdev
- * returns:
- * 1 - success (deferred completion)
- */
-static int
-raid_bdev_destruct(void *ctxt)
+static void
+_raid_bdev_destruct(void *ctxt)
 {
 	struct raid_bdev *raid_bdev = ctxt;
 	struct raid_base_bdev_info *base_info;
@@ -302,11 +276,17 @@ raid_bdev_destruct(void *ctxt)
 
 	if (raid_bdev->module->stop != NULL) {
 		if (raid_bdev->module->stop(raid_bdev) == false) {
-			return 1;
+			return;
 		}
 	}
 
 	raid_bdev_module_stop_done(raid_bdev);
+}
+
+static int
+raid_bdev_destruct(void *ctx)
+{
+	spdk_thread_exec_msg(spdk_thread_get_app_thread(), _raid_bdev_destruct, ctx);
 
 	return 1;
 }
@@ -610,6 +590,7 @@ raid_bdev_write_info_json(struct raid_bdev *raid_bdev, struct spdk_json_write_ct
 	struct raid_base_bdev_info *base_info;
 
 	assert(raid_bdev != NULL);
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	spdk_json_write_named_uint32(w, "strip_size_kb", raid_bdev->strip_size_kb);
 	spdk_json_write_named_string(w, "state", raid_bdev_state_to_str(raid_bdev->state));
@@ -667,6 +648,8 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 {
 	struct raid_bdev *raid_bdev = bdev->ctxt;
 	struct raid_base_bdev_info *base_info;
+
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
 	spdk_json_write_object_begin(w);
 
@@ -1171,6 +1154,8 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 		return;
 	}
 
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
+
 	assert(base_info->desc);
 	base_info->remove_scheduled = true;
 
@@ -1271,6 +1256,7 @@ raid_bdev_configure_base_bdev(struct raid_bdev *raid_bdev, struct raid_base_bdev
 	struct spdk_bdev *bdev;
 	int rc;
 
+	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 	assert(base_info->name != NULL);
 	assert(base_info->bdev == NULL);
 
@@ -1295,7 +1281,6 @@ raid_bdev_configure_base_bdev(struct raid_bdev *raid_bdev, struct raid_base_bdev
 
 	assert(raid_bdev->state != RAID_BDEV_STATE_ONLINE);
 
-	base_info->thread = spdk_get_thread();
 	base_info->bdev = bdev;
 	base_info->desc = desc;
 	raid_bdev->num_base_bdevs_discovered++;

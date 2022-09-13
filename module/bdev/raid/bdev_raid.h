@@ -60,9 +60,6 @@ struct raid_base_bdev_info {
 	 * descriptor will be closed
 	 */
 	bool			remove_scheduled;
-
-	/* thread where base device is opened */
-	struct spdk_thread	*thread;
 };
 
 /*
