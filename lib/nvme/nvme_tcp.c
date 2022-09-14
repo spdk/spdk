@@ -801,7 +801,7 @@ nvme_tcp_qpair_abort_reqs(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	}
 }
 
-static void
+static inline void
 nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 			      enum nvme_tcp_pdu_recv_state state)
 {
@@ -810,19 +810,7 @@ nvme_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 			    tqpair, state);
 		return;
 	}
-
 	tqpair->recv_state = state;
-	switch (state) {
-	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
-	case NVME_TCP_PDU_RECV_STATE_ERROR:
-		memset(tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
-		break;
-	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
-	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
-	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
-	default:
-		break;
-	}
 }
 
 static void
@@ -1623,6 +1611,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 		switch (tqpair->recv_state) {
 		/* If in a new state */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
+			memset(tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
 			nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 			break;
 		/* common header */
@@ -1698,6 +1687,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			nvme_tcp_pdu_payload_handle(tqpair, reaped);
 			break;
 		case NVME_TCP_PDU_RECV_STATE_ERROR:
+			memset(tqpair->recv_pdu, 0, sizeof(struct nvme_tcp_pdu));
 			rc = NVME_TCP_PDU_FATAL;
 			break;
 		default:
