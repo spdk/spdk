@@ -28,6 +28,11 @@
 extern "C" {
 #endif
 
+/* This parameter is best defined for bdevs that share an underlying bdev,
+ * such as multiple lvol bdevs sharing an nvme device, to avoid unnecessarily
+ * resetting the underlying bdev and affecting other bdevs that are sharing it. */
+#define BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE 5
+
 /** Block device module */
 struct spdk_bdev_module {
 	/**
@@ -431,6 +436,25 @@ struct spdk_bdev {
 	 */
 	bool media_events;
 
+	/* Upon receiving a reset request, this is the amount of time in seconds
+	 * to wait for all I/O to complete before moving forward with the reset.
+	 * If all I/O completes prior to this time out, the reset will be skipped.
+	 * A value of 0 is special and will always send resets immediately, even
+	 * if there is no I/O outstanding.
+	 *
+	 * Use case example:
+	 * A shared bdev (e.g. multiple lvol bdevs sharing an underlying nvme bdev)
+	 * needs to be reset. For a non-zero value bdev reset code will wait
+	 * `reset_io_drain_timeout` seconds for outstanding IO that are present
+	 * on any bdev channel, before sending a reset down to the underlying device.
+	 * That way we can avoid sending "empty" resets and interrupting work of
+	 * other lvols that use the same bdev. BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE
+	 * is a good choice for the value of this parameter.
+	 *
+	 * If this parameter remains equal to zero, the bdev reset will be forcefully
+	 * sent down to the device, without any delays and waiting for outstanding IO. */
+	uint16_t reset_io_drain_timeout;
+
 	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
@@ -629,6 +653,12 @@ struct spdk_bdev_io {
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
 			struct spdk_io_channel *ch_ref;
+			struct {
+				/* Handle to timed poller that checks each channel for outstanding IO. */
+				struct spdk_poller *poller;
+				/* Store calculated time value, when a poller should stop its work. */
+				uint64_t  stop_time_tsc;
+			} wait_poller;
 		} reset;
 		struct {
 			/** The outstanding request matching bio_cb_arg which this abort attempts to cancel. */

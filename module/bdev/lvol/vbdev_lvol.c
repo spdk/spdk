@@ -1041,6 +1041,13 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = &g_lvol_if;
 
+	/* Set default bdev reset waiting time. This value indicates how much
+	 * time a reset should wait before forcing a reset down to the underlying
+	 * bdev module.
+	 * Setting this parameter is mainly to avoid "empty" resets to a shared
+	 * bdev that may be used by multiple lvols. */
+	bdev->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+
 	rc = spdk_bdev_register(bdev);
 	if (rc) {
 		free(lvol_bdev);

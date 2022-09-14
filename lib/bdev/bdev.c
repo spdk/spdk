@@ -54,6 +54,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
  * when splitting into children requests at a time.
  */
 #define SPDK_BDEV_MAX_CHILDREN_UNMAP_WRITE_ZEROES_REQS (8)
+#define BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD 1000000
 
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
@@ -5276,15 +5277,91 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return 0;
 }
 
+static int bdev_reset_poll_for_outstanding_io(void *ctx);
+
 static void
-bdev_reset_dev(struct spdk_io_channel_iter *i, int status)
+bdev_reset_check_outstanding_io_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_channel *ch = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_bdev_io *bdev_io;
 
 	bdev_io = TAILQ_FIRST(&ch->queued_resets);
-	TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
-	bdev_io_submit_reset(bdev_io);
+
+	if (status == -EBUSY) {
+		if (spdk_get_ticks() < bdev_io->u.reset.wait_poller.stop_time_tsc) {
+			bdev_io->u.reset.wait_poller.poller = SPDK_POLLER_REGISTER(bdev_reset_poll_for_outstanding_io,
+							      ch, BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
+		} else {
+			/* If outstanding IOs are still present and reset_io_drain_timeout seconds passed,
+			 * start the reset. */
+			TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
+			bdev_io_submit_reset(bdev_io);
+		}
+	} else {
+		TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
+		SPDK_DEBUGLOG(bdev,
+			      "Skipping reset for underlying device of bdev: %s - no outstanding I/O.\n",
+			      ch->bdev->name);
+		/* Mark the completion status as a SUCCESS and complete the reset. */
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	}
+}
+
+static void
+bdev_reset_check_outstanding_io(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *cur_ch = spdk_io_channel_get_ctx(io_ch);
+	int status = 0;
+
+	if (cur_ch->io_outstanding > 0) {
+		/* If a channel has outstanding IO, set status to -EBUSY code. This will stop
+		 * further iteration over the rest of the channels and pass non-zero status
+		 * to the callback function. */
+		status = -EBUSY;
+	}
+	spdk_for_each_channel_continue(i, status);
+}
+
+static int
+bdev_reset_poll_for_outstanding_io(void *ctx)
+{
+	struct spdk_bdev_channel *ch = ctx;
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = TAILQ_FIRST(&ch->queued_resets);
+
+	spdk_poller_unregister(&bdev_io->u.reset.wait_poller.poller);
+	spdk_for_each_channel(__bdev_to_io_dev(ch->bdev), bdev_reset_check_outstanding_io,
+			      ch, bdev_reset_check_outstanding_io_done);
+
+	return SPDK_POLLER_BUSY;
+}
+
+static void
+bdev_reset_freeze_channel_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev_channel *ch = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = ch->bdev;
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = TAILQ_FIRST(&ch->queued_resets);
+
+	if (bdev->reset_io_drain_timeout == 0) {
+		TAILQ_REMOVE(&ch->queued_resets, bdev_io, internal.link);
+
+		bdev_io_submit_reset(bdev_io);
+		return;
+	}
+
+	bdev_io->u.reset.wait_poller.stop_time_tsc = spdk_get_ticks() +
+			(ch->bdev->reset_io_drain_timeout * spdk_get_ticks_hz());
+
+	/* In case bdev->reset_io_drain_timeout is not equal to zero,
+	 * submit the reset to the underlying module only if outstanding I/O
+	 * remain after reset_io_drain_timeout seconds have passed. */
+	spdk_for_each_channel(__bdev_to_io_dev(ch->bdev), bdev_reset_check_outstanding_io,
+			      ch, bdev_reset_check_outstanding_io_done);
 }
 
 static void
@@ -5331,7 +5408,7 @@ bdev_start_reset(void *ctx)
 	struct spdk_bdev_channel *ch = ctx;
 
 	spdk_for_each_channel(__bdev_to_io_dev(ch->bdev), bdev_reset_freeze_channel,
-			      ch, bdev_reset_dev);
+			      ch, bdev_reset_freeze_channel_done);
 }
 
 static void

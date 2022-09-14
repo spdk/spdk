@@ -486,6 +486,8 @@ aborted_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	spdk_bdev_free_io(bdev_io);
 }
 
+static void io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+
 static void
 aborted_reset(void)
 {
@@ -541,6 +543,58 @@ aborted_reset(void)
 
 	teardown_test();
 }
+
+static void
+aborted_reset_no_outstanding_io(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
+	struct spdk_bdev *bdev[2];
+	enum spdk_bdev_io_status status1 = SPDK_BDEV_IO_STATUS_PENDING,
+				 status2 = SPDK_BDEV_IO_STATUS_PENDING;
+
+	setup_test();
+
+	/*
+	 * This time we test the reset without any outstanding IO
+	 * present on the bdev channel, so both resets should finish
+	 * immediately.
+	 */
+
+	set_thread(0);
+	/* Set reset_io_drain_timeout to allow bdev
+	 * reset to stay pending until we call abort. */
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	bdev[0] = bdev_ch[0]->bdev;
+	bdev[0]->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+	CU_ASSERT(io_ch[0] != NULL);
+	spdk_bdev_reset(g_desc, io_ch[0], aborted_reset_done, &status1);
+	poll_threads();
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+	spdk_put_io_channel(io_ch[0]);
+
+	set_thread(1);
+	/* Set reset_io_drain_timeout to allow bdev
+	 * reset to stay pending until we call abort. */
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	bdev[1] = bdev_ch[1]->bdev;
+	bdev[1]->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+	CU_ASSERT(io_ch[1] != NULL);
+	spdk_bdev_reset(g_desc, io_ch[1], aborted_reset_done, &status2);
+	poll_threads();
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
+	CU_ASSERT(status2 == SPDK_BDEV_IO_STATUS_SUCCESS);
+	spdk_put_io_channel(io_ch[1]);
+
+	stub_complete_io(g_bdev.io_target, 0);
+	poll_threads();
+
+	teardown_test();
+}
+
 
 static void
 io_during_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -654,6 +708,162 @@ io_during_reset(void)
 
 	teardown_test();
 }
+
+static uint32_t
+count_queued_resets(void *io_target)
+{
+	struct spdk_io_channel *_ch = spdk_get_io_channel(io_target);
+	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_io *io;
+	uint32_t submitted_resets = 0;
+
+	TAILQ_FOREACH(io, &ch->outstanding_io, module_link) {
+		if (io->type == SPDK_BDEV_IO_TYPE_RESET) {
+			submitted_resets++;
+		}
+	}
+
+	spdk_put_io_channel(_ch);
+
+	return submitted_resets;
+}
+
+static void
+reset_completions(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev *bdev;
+	enum spdk_bdev_io_status status0, status_reset;
+	int rc, iter;
+
+	setup_test();
+
+	/* This test covers four test cases:
+	 * 1) reset_io_drain_timeout of a bdev is greater than 0
+	 * 2) No outstandind IO are present on any bdev channel
+	 * 3) Outstanding IO finish during bdev reset
+	 * 4) Outstanding IO do not finish before reset is done waiting
+	 *    for them.
+	 *
+	 * Above conditions mainly affect the timing of bdev reset completion
+	 * and whether a reset should be skipped via spdk_bdev_io_complete()
+	 * or sent down to the underlying bdev module via bdev_io_submit_reset(). */
+
+	/* Test preparation */
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	CU_ASSERT(bdev_ch->flags == 0);
+
+
+	/* Test case 1) reset_io_drain_timeout set to 0. Reset should be sent down immediately. */
+	bdev = &g_bdev.bdev;
+	bdev->reset_io_drain_timeout = 0;
+
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch, io_during_io_done, &status_reset);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(count_queued_resets(g_bdev.io_target) == 1);
+
+	/* Call reset completion inside bdev module. */
+	stub_complete_io(g_bdev.io_target, 0);
+	poll_threads();
+	CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
+
+
+	/* Test case 2) no outstanding IO are present. Reset should perform one iteration over
+	* channels and then be skipped. */
+	bdev->reset_io_drain_timeout = BDEV_RESET_IO_DRAIN_RECOMMENDED_VALUE;
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+
+	rc = spdk_bdev_reset(g_desc, io_ch, io_during_io_done, &status_reset);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	/* Reset was never submitted to the bdev module. */
+	CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
+
+
+	/* Test case 3) outstanding IO finish during bdev reset procedure. Reset should initiate
+	* wait poller to check for IO completions every second, until reset_io_drain_timeout is
+	* reached, but finish earlier than this threshold. */
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, io_during_io_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_reset(g_desc, io_ch, io_during_io_done, &status_reset);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	/* The reset just started and should not have been submitted yet. */
+	CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
+
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+	/* Let the poller wait for about half the time then complete outstanding IO. */
+	for (iter = 0; iter < 2; iter++) {
+		/* Reset is still processing and not submitted at this point. */
+		CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
+		spdk_delay_us(1000 * 1000);
+		poll_threads();
+		poll_threads();
+	}
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+	stub_complete_io(g_bdev.io_target, 0);
+	poll_threads();
+	spdk_delay_us(BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
+	poll_threads();
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+	/* Sending reset to the bdev module has been skipped. */
+	CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
+
+
+	/* Test case 4) outstanding IO are still present after reset_io_drain_timeout
+	* seconds have passed. */
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, io_during_io_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_reset(g_desc, io_ch, io_during_io_done, &status_reset);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	/* The reset just started and should not have been submitted yet. */
+	CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
+
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+	/* Let the poller wait for reset_io_drain_timeout seconds. */
+	for (iter = 0; iter < bdev->reset_io_drain_timeout; iter++) {
+		CU_ASSERT(count_queued_resets(g_bdev.io_target) == 0);
+		spdk_delay_us(BDEV_RESET_CHECK_OUTSTANDING_IO_PERIOD);
+		poll_threads();
+		poll_threads();
+	}
+
+	/* After timing out, the reset should have been sent to the module. */
+	CU_ASSERT(count_queued_resets(g_bdev.io_target) == 1);
+	/* Complete reset submitted to the module and the read IO. */
+	stub_complete_io(g_bdev.io_target, 0);
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_bdev.bdev.internal.reset_in_progress == NULL);
+
+
+	/* Destroy the channel and end the test. */
+	spdk_put_io_channel(io_ch);
+	poll_threads();
+
+	teardown_test();
+}
+
 
 static void
 basic_qos(void)
@@ -2092,7 +2302,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, basic_qos);
 	CU_ADD_TEST(suite, put_channel_during_reset);
 	CU_ADD_TEST(suite, aborted_reset);
+	CU_ADD_TEST(suite, aborted_reset_no_outstanding_io);
 	CU_ADD_TEST(suite, io_during_reset);
+	CU_ADD_TEST(suite, reset_completions);
 	CU_ADD_TEST(suite, io_during_qos_queue);
 	CU_ADD_TEST(suite, io_during_qos_reset);
 	CU_ADD_TEST(suite, enomem);
