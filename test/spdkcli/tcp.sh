@@ -18,7 +18,7 @@ PORT="9998"
 trap 'err_cleanup; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter run_spdk_tgt_tcp
-$SPDK_BIN_DIR/spdk_tgt -m 0x3 -p 0 -s 2048 &
+$SPDK_BIN_DIR/spdk_tgt -m 0x3 -p 0 &
 spdk_tgt_pid=$!
 
 waitforlisten $spdk_tgt_pid

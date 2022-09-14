@@ -21,19 +21,19 @@ function on_error_exit() {
 }
 
 function run_spdk_tgt() {
-	$SPDK_BIN_DIR/spdk_tgt -m 0x3 -p 0 -s 4096 &
+	$SPDK_BIN_DIR/spdk_tgt -m 0x3 -p 0 &
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 }
 
 function run_nvmf_tgt() {
-	$SPDK_BIN_DIR/nvmf_tgt -m 0x3 -p 0 -s 4096 &
+	$SPDK_BIN_DIR/nvmf_tgt -m 0x3 -p 0 &
 	nvmf_tgt_pid=$!
 	waitforlisten $nvmf_tgt_pid
 }
 
 function run_vhost_tgt() {
-	$SPDK_BIN_DIR/vhost -m 0x3 -p 0 -s 4096 &
+	$SPDK_BIN_DIR/vhost -m 0x3 -p 0 &
 	vhost_tgt_pid=$!
 	waitforlisten $vhost_tgt_pid
 }
@@ -43,6 +43,3 @@ function check_match() {
 	$rootdir/test/app/match/match $testdir/match_files/${MATCH_FILE}.match
 	rm -f $testdir/match_files/${MATCH_FILE}
 }
-
-# Allocate 5GB of hugepages to have some overhead for run_*()s
-HUGEMEM=5120 CLEAR_HUGE=yes "$rootdir/scripts/setup.sh"
