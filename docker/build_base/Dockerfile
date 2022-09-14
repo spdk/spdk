@@ -32,11 +32,11 @@ RUN DEPS="no" "$spdk_repo/rpmbuild/rpm.sh" \
 	--with-shared \
 	--with-virtio \
 	--with-fio
-RUN mv "$HOME/rpmbuild/rpm/x86_64/"*.rpm /tmp
+RUN mv "$HOME/rpmbuild/rpm/$(uname -m)/"*.rpm /tmp
 RUN mv "/usr/src/fio/fio" /tmp
 
 # Clean things up
-RUN rm -f "$HOME/rpmbuild/rpm/x86_64/"*.rpm
+RUN rm -f "$HOME/rpmbuild/rpm/$(uname -m)/"*.rpm
 RUN rm -f "$spdk_tar"
 RUN rm -rf "$spdk_repo"
 RUN dnf clean all
