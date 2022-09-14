@@ -224,7 +224,7 @@ static uint32_t g_metacfg_pract_flag;
 static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage = -1;
 static int g_is_random;
-static int g_queue_depth;
+static uint32_t g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
 static int g_time_in_sec;
