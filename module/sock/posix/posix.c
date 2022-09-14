@@ -948,6 +948,8 @@ retry:
 		flag = fcntl(fd, F_GETFL);
 		if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
 			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", fd, errno);
+			SSL_free(ssl);
+			SSL_CTX_free(ctx);
 			close(fd);
 			fd = -1;
 			break;
@@ -966,6 +968,8 @@ retry:
 	sock = posix_sock_alloc(fd, &impl_opts, enable_zcopy_user_opts && enable_zcopy_impl_opts);
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
+		SSL_free(ssl);
+		SSL_CTX_free(ctx);
 		close(fd);
 		return NULL;
 	}
