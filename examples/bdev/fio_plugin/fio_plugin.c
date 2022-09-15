@@ -918,7 +918,22 @@ spdk_fio_bdev_get_zone_info_done(struct spdk_bdev_io *bdev_io, bool success, voi
 		struct zbd_zone *zone_dest = &cb_arg->fio_zones[handled_zones];
 		uint32_t block_size = spdk_bdev_get_block_size(cb_arg->target->bdev);
 
-		zone_dest->type = ZBD_ZONE_TYPE_SWR;
+		switch (zone_src->type) {
+		case SPDK_BDEV_ZONE_TYPE_SEQWR:
+			zone_dest->type = ZBD_ZONE_TYPE_SWR;
+			break;
+		case SPDK_BDEV_ZONE_TYPE_SEQWP:
+			zone_dest->type = ZBD_ZONE_TYPE_SWP;
+			break;
+		case SPDK_BDEV_ZONE_TYPE_CNV:
+			zone_dest->type = ZBD_ZONE_TYPE_CNV;
+			break;
+		default:
+			spdk_bdev_free_io(bdev_io);
+			cb_arg->completed = -EIO;
+			return;
+		}
+
 		zone_dest->len = spdk_bdev_get_zone_size(cb_arg->target->bdev) * block_size;
 		zone_dest->capacity = zone_src->capacity * block_size;
 		zone_dest->start = zone_src->zone_id * block_size;
@@ -945,6 +960,11 @@ spdk_fio_bdev_get_zone_info_done(struct spdk_bdev_io *bdev_io, bool success, voi
 			break;
 		case SPDK_BDEV_ZONE_STATE_OFFLINE:
 			zone_dest->cond = ZBD_ZONE_COND_OFFLINE;
+			break;
+		case SPDK_BDEV_ZONE_STATE_NOT_WP:
+			zone_dest->cond = ZBD_ZONE_COND_NOT_WP;
+			/* Set WP to end of zone for zone types w/o WP (e.g. Conv. zones in SMR) */
+			zone_dest->wp = zone_dest->start + zone_dest->capacity;
 			break;
 		default:
 			spdk_bdev_free_io(bdev_io);
@@ -1144,7 +1164,9 @@ spdk_fio_handle_options(struct thread_data *td, struct fio_file *f, struct spdk_
 		if (rc) {
 			return rc;
 		}
-		rc = spdk_fio_reset_zones(td->io_ops_data, f->engine_data, 0, f->real_file_size);
+		/* offset used to indicate conventional zones that need to be skipped (reset not allowed) */
+		rc = spdk_fio_reset_zones(td->io_ops_data, f->engine_data, td->o.start_offset,
+					  f->real_file_size - td->o.start_offset);
 		if (rc) {
 			spdk_fio_cleanup(td);
 			return rc;

@@ -21,6 +21,12 @@
 
 struct spdk_bdev;
 
+enum spdk_bdev_zone_type {
+	SPDK_BDEV_ZONE_TYPE_CNV		= 0x1,
+	SPDK_BDEV_ZONE_TYPE_SEQWR	= 0x2,
+	SPDK_BDEV_ZONE_TYPE_SEQWP	= 0x3,
+};
+
 enum spdk_bdev_zone_action {
 	SPDK_BDEV_ZONE_CLOSE,
 	SPDK_BDEV_ZONE_FINISH,
@@ -39,6 +45,7 @@ enum spdk_bdev_zone_state {
 	SPDK_BDEV_ZONE_STATE_READ_ONLY	= 0x4,
 	SPDK_BDEV_ZONE_STATE_OFFLINE	= 0x5,
 	SPDK_BDEV_ZONE_STATE_EXP_OPEN	= 0x6,
+	SPDK_BDEV_ZONE_STATE_NOT_WP	= 0x7,
 };
 
 struct spdk_bdev_zone_info {
@@ -46,6 +53,7 @@ struct spdk_bdev_zone_info {
 	uint64_t			write_pointer;
 	uint64_t			capacity;
 	enum spdk_bdev_zone_state	state;
+	enum spdk_bdev_zone_type	type;
 };
 
 /**
