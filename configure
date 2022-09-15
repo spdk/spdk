@@ -78,7 +78,7 @@ function usage() {
 	echo " --without-fc              If an argument is provided, it is considered a directory containing"
 	echo "                           libufc.a and fc_lld.h. Otherwise the regular system paths will"
 	echo "                           be searched."
-	echo " --with-daos               Build DAOS bdev module."
+	echo " --with-daos[=DIR]         Build DAOS bdev module."
 	echo " --without-daos            No path required."
 	echo " --with-shared             Build spdk shared libraries."
 	echo " --without-shared          No path required."
@@ -488,6 +488,12 @@ for i in "$@"; do
 			;;
 		--with-daos)
 			CONFIG[DAOS]=y
+			CONFIG[DAOS_DIR]=""
+			;;
+		--with-daos=*)
+			CONFIG[DAOS]=y
+			check_dir "$i"
+			CONFIG[DAOS_DIR]=$(readlink -f ${i#*=})
 			;;
 		--without-daos)
 			CONFIG[DAOS]=n
@@ -1049,9 +1055,13 @@ if [[ "${CONFIG[ISCSI_INITIATOR]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[DAOS]}" = "y" ]]; then
+	daos_build_cmd=("${BUILD_CMD[@]}")
+	if [[ -n "${CONFIG[DAOS_DIR]}" ]]; then
+		daos_build_cmd+=(-I"${CONFIG[DAOS_DIR]}"/include -L"${CONFIG[DAOS_DIR]}"/lib64)
+	fi
 	if ! echo -e '#include <daos.h>\n#include <daos_fs.h>\n' \
 		'int main(void) { return 0; }\n' \
-		| "${BUILD_CMD[@]}" -lgurt -ldaos -ldaos_common -ldfs - 2> /dev/null; then
+		| "${daos_build_cmd[@]}" -lgurt -ldaos -ldaos_common -ldfs - 2> /dev/null; then
 		echo "--with-daos requires libdaos, libdaos_common, libdfs and libgurt"
 		echo "Please install then re-run this script."
 		exit 1

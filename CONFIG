@@ -107,6 +107,7 @@ CONFIG_RBD=n
 # Build DAOS support in bdev modules
 # Requires daos development libraries
 CONFIG_DAOS=n
+CONFIG_DAOS_DIR=
 
 # Build vhost library.
 CONFIG_VHOST=y

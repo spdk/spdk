@@ -206,6 +206,13 @@ LDFLAGS += -L$(XNVME_INSTALL_DIR)
 SYS_LIBS += -lxnvme
 endif
 
+ifeq ($(CONFIG_DAOS),y)
+ifneq ($(CONFIG_DAOS_DIR),)
+CFLAGS += -I$(CONFIG_DAOS_DIR)/include
+LDFLAGS += -L$(CONFIG_DAOS_DIR)/lib64
+endif
+endif
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
