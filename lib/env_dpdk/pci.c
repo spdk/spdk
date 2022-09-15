@@ -65,6 +65,9 @@ int dpdk_pci_device_read_config(struct rte_pci_device *dev, void *value, uint32_
 				uint32_t offset);
 int dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t len,
 				 uint32_t offset);
+int dpdk_pci_driver_register(struct spdk_pci_driver *driver,
+			     int (*probe_fn)(struct rte_pci_driver *driver, struct rte_pci_device *device),
+			     int (*remove_fn)(struct rte_pci_device *device));
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -308,67 +311,6 @@ cleanup_pci_devices(void)
 
 static int scan_pci_bus(bool delay_init);
 
-/* translate spdk_pci_driver to an rte_pci_driver and register it to dpdk */
-static int
-register_rte_driver(struct spdk_pci_driver *driver)
-{
-	unsigned pci_id_count = 0;
-	struct rte_pci_id *rte_id_table;
-	char *rte_name;
-	size_t rte_name_len;
-	uint32_t rte_flags;
-
-	assert(driver->id_table);
-	while (driver->id_table[pci_id_count].vendor_id) {
-		pci_id_count++;
-	}
-	assert(pci_id_count > 0);
-
-	rte_id_table = calloc(pci_id_count + 1, sizeof(*rte_id_table));
-	if (!rte_id_table) {
-		return -ENOMEM;
-	}
-
-	while (pci_id_count > 0) {
-		struct rte_pci_id *rte_id = &rte_id_table[pci_id_count - 1];
-		const struct spdk_pci_id *spdk_id = &driver->id_table[pci_id_count - 1];
-
-		rte_id->class_id = spdk_id->class_id;
-		rte_id->vendor_id = spdk_id->vendor_id;
-		rte_id->device_id = spdk_id->device_id;
-		rte_id->subsystem_vendor_id = spdk_id->subvendor_id;
-		rte_id->subsystem_device_id = spdk_id->subdevice_id;
-		pci_id_count--;
-	}
-
-	assert(driver->name);
-	rte_name_len = strlen(driver->name) + strlen("spdk_") + 1;
-	rte_name = calloc(rte_name_len, 1);
-	if (!rte_name) {
-		free(rte_id_table);
-		return -ENOMEM;
-	}
-
-	snprintf(rte_name, rte_name_len, "spdk_%s", driver->name);
-	driver->driver->driver.name = rte_name;
-	driver->driver->id_table = rte_id_table;
-
-	rte_flags = 0;
-	if (driver->drv_flags & SPDK_PCI_DRIVER_NEED_MAPPING) {
-		rte_flags |= RTE_PCI_DRV_NEED_MAPPING;
-	}
-	if (driver->drv_flags & SPDK_PCI_DRIVER_WC_ACTIVATE) {
-		rte_flags |= RTE_PCI_DRV_WC_ACTIVATE;
-	}
-	driver->driver->drv_flags = rte_flags;
-
-	driver->driver->probe = pci_device_init;
-	driver->driver->remove = pci_device_fini;
-
-	rte_pci_register(driver->driver);
-	return 0;
-}
-
 static inline void
 _pci_env_init(void)
 {
@@ -390,7 +332,7 @@ pci_env_init(void)
 	struct spdk_pci_driver *driver;
 
 	TAILQ_FOREACH(driver, &g_pci_drivers, tailq) {
-		register_rte_driver(driver);
+		dpdk_pci_driver_register(driver, pci_device_init, pci_device_fini);
 	}
 
 	_pci_env_init();
@@ -1316,4 +1258,67 @@ dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t l
 	return rc;
 #endif
 	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
+}
+
+/* translate spdk_pci_driver to an rte_pci_driver and register it to dpdk */
+int
+dpdk_pci_driver_register(struct spdk_pci_driver *driver,
+			 int (*probe_fn)(struct rte_pci_driver *driver, struct rte_pci_device *device),
+			 int (*remove_fn)(struct rte_pci_device *device))
+{
+	unsigned pci_id_count = 0;
+	struct rte_pci_id *rte_id_table;
+	char *rte_name;
+	size_t rte_name_len;
+	uint32_t rte_flags;
+
+	assert(driver->id_table);
+	while (driver->id_table[pci_id_count].vendor_id) {
+		pci_id_count++;
+	}
+	assert(pci_id_count > 0);
+
+	rte_id_table = calloc(pci_id_count + 1, sizeof(*rte_id_table));
+	if (!rte_id_table) {
+		return -ENOMEM;
+	}
+
+	while (pci_id_count > 0) {
+		struct rte_pci_id *rte_id = &rte_id_table[pci_id_count - 1];
+		const struct spdk_pci_id *spdk_id = &driver->id_table[pci_id_count - 1];
+
+		rte_id->class_id = spdk_id->class_id;
+		rte_id->vendor_id = spdk_id->vendor_id;
+		rte_id->device_id = spdk_id->device_id;
+		rte_id->subsystem_vendor_id = spdk_id->subvendor_id;
+		rte_id->subsystem_device_id = spdk_id->subdevice_id;
+		pci_id_count--;
+	}
+
+	assert(driver->name);
+	rte_name_len = strlen(driver->name) + strlen("spdk_") + 1;
+	rte_name = calloc(rte_name_len, 1);
+	if (!rte_name) {
+		free(rte_id_table);
+		return -ENOMEM;
+	}
+
+	snprintf(rte_name, rte_name_len, "spdk_%s", driver->name);
+	driver->driver->driver.name = rte_name;
+	driver->driver->id_table = rte_id_table;
+
+	rte_flags = 0;
+	if (driver->drv_flags & SPDK_PCI_DRIVER_NEED_MAPPING) {
+		rte_flags |= RTE_PCI_DRV_NEED_MAPPING;
+	}
+	if (driver->drv_flags & SPDK_PCI_DRIVER_WC_ACTIVATE) {
+		rte_flags |= RTE_PCI_DRV_WC_ACTIVATE;
+	}
+	driver->driver->drv_flags = rte_flags;
+
+	driver->driver->probe = probe_fn;
+	driver->driver->remove = remove_fn;
+
+	rte_pci_register(driver->driver);
+	return 0;
 }
