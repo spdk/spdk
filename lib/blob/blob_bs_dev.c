@@ -136,6 +136,24 @@ blob_bs_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
 					    bs_io_unit_to_back_dev_lba(blob, lba_count));
 }
 
+static bool
+blob_bs_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
+{
+	struct spdk_blob_bs_dev *b = (struct spdk_blob_bs_dev *)dev;
+	struct spdk_blob *blob = b->blob;
+
+	assert(base_lba != NULL);
+	if (bs_io_unit_is_allocated(blob, lba)) {
+		*base_lba = bs_blob_io_unit_to_lba(blob, lba);
+		return true;
+	}
+
+	assert(blob->back_bs_dev != NULL);
+	return blob->back_bs_dev->translate_lba(blob->back_bs_dev,
+						bs_io_unit_to_back_dev_lba(blob, lba),
+						base_lba);
+}
+
 struct spdk_bs_dev *
 bs_create_blob_bs_dev(struct spdk_blob *blob)
 {
@@ -161,6 +179,7 @@ bs_create_blob_bs_dev(struct spdk_blob *blob)
 	b->bs_dev.write_zeroes = blob_bs_dev_write_zeroes;
 	b->bs_dev.unmap = blob_bs_dev_unmap;
 	b->bs_dev.is_zeroes = blob_bs_is_zeroes;
+	b->bs_dev.translate_lba = blob_bs_translate_lba;
 	b->blob = blob;
 
 	return &b->bs_dev;

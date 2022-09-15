@@ -124,6 +124,12 @@ zeroes_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
 	return true;
 }
 
+static bool
+zeroes_translate_lba(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba)
+{
+	return false;
+}
+
 static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.blockcnt = UINT64_MAX,
 	.blocklen = 512,
@@ -139,6 +145,7 @@ static struct spdk_bs_dev g_zeroes_bs_dev = {
 	.write_zeroes = zeroes_write_zeroes,
 	.unmap = zeroes_unmap,
 	.is_zeroes = zeroes_is_zeroes,
+	.translate_lba = zeroes_translate_lba,
 };
 
 struct spdk_bs_dev *

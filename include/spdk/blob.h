@@ -197,6 +197,15 @@ struct spdk_bs_dev {
 
 	bool (*is_zeroes)(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count);
 
+	/* Translate blob lba to lba on the underlying bdev.
+	 * This operation recurses down the whole chain of bs_dev's.
+	 * Returns true and initializes value of base_lba on success.
+	 * Returns false on failure.
+	 * The function may fail when blob lba is not backed by the bdev lba.
+	 * For example, when we eventually hit zeroes device in the chain.
+	 */
+	bool (*translate_lba)(struct spdk_bs_dev *dev, uint64_t lba, uint64_t *base_lba);
+
 	uint64_t	blockcnt;
 	uint32_t	blocklen; /* In bytes */
 };
