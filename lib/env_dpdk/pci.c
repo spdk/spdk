@@ -572,22 +572,21 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 static int
 scan_pci_bus(bool delay_init)
 {
-	struct spdk_pci_driver *driver;
-	struct rte_pci_device *rte_dev;
+	struct rte_dev_iterator it;
+	struct rte_device *rte_dev;
 	uint64_t now;
 
 	rte_bus_scan();
 	now = spdk_get_ticks();
 
-	driver = TAILQ_FIRST(&g_pci_drivers);
-	if (!driver) {
+	if (!TAILQ_FIRST(&g_pci_drivers)) {
 		return 0;
 	}
 
-	TAILQ_FOREACH(rte_dev, &driver->driver.bus->device_list, next) {
+	RTE_DEV_FOREACH(rte_dev, "bus=pci", &it) {
 		struct rte_devargs *da;
 
-		da = rte_dev->device.devargs;
+		da = rte_dev->devargs;
 		if (!da) {
 			char devargs_str[128];
 
@@ -597,14 +596,14 @@ scan_pci_bus(bool delay_init)
 				return -1;
 			}
 
-			snprintf(devargs_str, sizeof(devargs_str), "pci:%s", rte_dev->device.name);
+			snprintf(devargs_str, sizeof(devargs_str), "pci:%s", rte_dev->name);
 			if (rte_devargs_parse(da, devargs_str) != 0) {
 				free(da);
 				return -1;
 			}
 
 			rte_devargs_insert(&da);
-			rte_dev->device.devargs = da;
+			rte_dev->devargs = da;
 		}
 
 		if (get_allowed_at(da)) {
@@ -614,7 +613,7 @@ scan_pci_bus(bool delay_init)
 			if (da->policy == RTE_DEV_BLOCKED && allowed_at <= now) {
 				da->policy = RTE_DEV_ALLOWED;
 			}
-		} else if ((driver->driver.bus->bus.conf.scan_mode == RTE_BUS_SCAN_ALLOWLIST &&
+		} else if ((rte_dev->bus->conf.scan_mode == RTE_BUS_SCAN_ALLOWLIST &&
 			    da->policy == RTE_DEV_ALLOWED) || da->policy != RTE_DEV_BLOCKED) {
 			/* override the policy only if not permanently blocked */
 
