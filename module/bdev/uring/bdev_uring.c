@@ -336,6 +336,26 @@ bdev_uring_read_sysfs_attr_long(const char *devname, const char *attr, long *val
 }
 
 static int
+bdev_uring_fill_zone_type(struct spdk_bdev_zone_info *zone_info, struct blk_zone *zones_rep)
+{
+	switch (zones_rep->type) {
+	case BLK_ZONE_TYPE_CONVENTIONAL:
+		zone_info->type = SPDK_BDEV_ZONE_TYPE_CNV;
+		break;
+	case BLK_ZONE_TYPE_SEQWRITE_REQ:
+		zone_info->type = SPDK_BDEV_ZONE_TYPE_SEQWR;
+		break;
+	case BLK_ZONE_TYPE_SEQWRITE_PREF:
+		zone_info->type = SPDK_BDEV_ZONE_TYPE_SEQWP;
+		break;
+	default:
+		SPDK_ERRLOG("Invalid zone type: %#x in zone report\n", zones_rep->type);
+		return -EIO;
+	}
+	return 0;
+}
+
+static int
 bdev_uring_fill_zone_state(struct spdk_bdev_zone_info *zone_info, struct blk_zone *zones_rep)
 {
 	switch (zones_rep->cond) {
@@ -359,6 +379,9 @@ bdev_uring_fill_zone_state(struct spdk_bdev_zone_info *zone_info, struct blk_zon
 		break;
 	case BLK_ZONE_COND_OFFLINE:
 		zone_info->state = SPDK_BDEV_ZONE_STATE_OFFLINE;
+		break;
+	case BLK_ZONE_COND_NOT_WP:
+		zone_info->state = SPDK_BDEV_ZONE_STATE_NOT_WP;
 		break;
 	default:
 		SPDK_ERRLOG("Invalid zone state: %#x in zone report\n", zones_rep->cond);
@@ -457,6 +480,7 @@ bdev_uring_zone_get_info(struct spdk_bdev_io *bdev_io)
 			zone_info->capacity = ((zones + i)->capacity >> shift);
 
 			bdev_uring_fill_zone_state(zone_info, zones + i);
+			bdev_uring_fill_zone_type(zone_info, zones + i);
 
 			zone_id = ((zones + i)->start + (zones + i)->len) >> shift;
 			zone_info++;

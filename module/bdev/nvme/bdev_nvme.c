@@ -5704,6 +5704,15 @@ bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 static int
 fill_zone_from_report(struct spdk_bdev_zone_info *info, struct spdk_nvme_zns_zone_desc *desc)
 {
+	switch (desc->zt) {
+	case SPDK_NVME_ZONE_TYPE_SEQWR:
+		info->type = SPDK_BDEV_ZONE_TYPE_SEQWR;
+		break;
+	default:
+		SPDK_ERRLOG("Invalid zone type: %#x in zone report\n", desc->zt);
+		return -EIO;
+	}
+
 	switch (desc->zs) {
 	case SPDK_NVME_ZONE_STATE_EMPTY:
 		info->state = SPDK_BDEV_ZONE_STATE_EMPTY;

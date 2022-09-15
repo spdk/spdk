@@ -678,6 +678,7 @@ zone_block_init_zone_info(struct bdev_zone_block *bdev_node)
 		zone->zone_info.capacity = bdev_node->zone_capacity;
 		zone->zone_info.write_pointer = zone->zone_info.zone_id + zone->zone_info.capacity;
 		zone->zone_info.state = SPDK_BDEV_ZONE_STATE_FULL;
+		zone->zone_info.type = SPDK_BDEV_ZONE_TYPE_SEQWR;
 		if (pthread_spin_init(&zone->lock, PTHREAD_PROCESS_PRIVATE)) {
 			SPDK_ERRLOG("pthread_spin_init() failed\n");
 			rc = -ENOMEM;
