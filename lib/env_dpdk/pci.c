@@ -56,6 +56,8 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver_buf) == 0, "driver_bu
 SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte_pci_driver),
 		   "driver_buf not big enough");
 
+const char *dpdk_pci_device_get_name(struct rte_pci_device *);
+
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
 
@@ -130,7 +132,7 @@ remove_rte_dev(struct rte_pci_device *rte_dev)
 	char bdf[32];
 	int i = 0, rc;
 
-	snprintf(bdf, sizeof(bdf), "%s", rte_dev->device.name);
+	snprintf(bdf, sizeof(bdf), "%s", dpdk_pci_device_get_name(rte_dev));
 	do {
 		rc = rte_eal_hotplug_remove("pci", bdf);
 	} while (rc == -ENOMSG && ++i <= DPDK_HOTPLUG_RETRY_COUNT);
@@ -198,7 +200,7 @@ detach_rte(struct spdk_pci_device *dev)
 	pthread_mutex_unlock(&g_pci_mutex);
 	if (!removed) {
 		SPDK_ERRLOG("Timeout waiting for DPDK to remove PCI device %s.\n",
-			    rte_dev->name);
+			    dpdk_pci_device_get_name(rte_dev));
 		/* If we reach this state, then the device couldn't be removed and most likely
 		   a subsequent hot add of a device in the same BDF will fail */
 	}
@@ -260,7 +262,7 @@ pci_device_rte_dev_event(const char *device_name,
 		TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 			struct rte_pci_device *rte_dev = dev->dev_handle;
 
-			if (strcmp(rte_dev->name, device_name) == 0 &&
+			if (strcmp(dpdk_pci_device_get_name(rte_dev), device_name) == 0 &&
 			    !dev->internal.pending_removal) {
 				can_detach = !dev->internal.attached;
 				/* prevent any further attaches */
@@ -1271,4 +1273,10 @@ dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr)
 	}
 
 	return SPDK_VTOPHYS_ERROR;
+}
+
+const char *
+dpdk_pci_device_get_name(struct rte_pci_device *rte_dev)
+{
+	return rte_dev->name;
 }
