@@ -6,6 +6,7 @@
 #include "env_internal.h"
 
 #include <rte_alarm.h>
+#include <rte_bus_pci.h>
 #include <rte_devargs.h>
 #include "spdk/env.h"
 #include "spdk/log.h"
@@ -37,6 +38,21 @@ static TAILQ_HEAD(, spdk_pci_device) g_pci_hotplugged_devices =
 static TAILQ_HEAD(, spdk_pci_driver) g_pci_drivers = TAILQ_HEAD_INITIALIZER(g_pci_drivers);
 static TAILQ_HEAD(, spdk_pci_device_provider) g_pci_device_providers =
 	TAILQ_HEAD_INITIALIZER(g_pci_device_providers);
+
+struct spdk_pci_driver {
+	struct rte_pci_driver		driver;
+
+	const char                      *name;
+	const struct spdk_pci_id	*id_table;
+	uint32_t			drv_flags;
+
+	spdk_pci_enum_cb		cb_fn;
+	void				*cb_arg;
+	TAILQ_ENTRY(spdk_pci_driver)	tailq;
+};
+
+int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
+int pci_device_fini(struct rte_pci_device *device);
 
 struct env_devargs {
 	struct rte_bus	*bus;
