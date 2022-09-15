@@ -884,6 +884,13 @@ dd_run(void *arg1)
 		return;
 	}
 
+	if (g_opts.input_bdev && g_opts.io_unit_size % g_job.input.block_size != 0) {
+		SPDK_ERRLOG("--bs value must be a multiple of input native block size (%d)\n",
+			    g_job.input.block_size);
+		dd_exit(-EINVAL);
+		return;
+	}
+
 	g_job.ios = calloc(g_opts.queue_depth, sizeof(struct dd_io));
 	if (g_job.ios == NULL) {
 		SPDK_ERRLOG("%s\n", strerror(ENOMEM));
