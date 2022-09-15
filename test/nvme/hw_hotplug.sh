@@ -70,13 +70,13 @@ hotplug_pid=$!
 trap 'killprocess $hotplug_pid; restore_device; rm $testdir/log.txt; exit 1' SIGINT SIGTERM EXIT
 
 i=0
-while ! grep "Starting I/O" $testdir/log.txt; do
+while ! grep -q "Starting I/O" $testdir/log.txt; do
 	[ $i -lt 20 ] || break
 	i=$((i + 1))
 	sleep 1
 done
 
-if ! grep "Starting I/O" $testdir/log.txt; then
+if ! grep -q "Starting I/O" $testdir/log.txt; then
 	rm $testdir/log.txt
 	exit 1
 fi
