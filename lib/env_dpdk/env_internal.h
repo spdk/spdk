@@ -31,7 +31,6 @@
 #define SHIFT_1GB	30 /* (1 << 30) == 1 GB */
 #define MASK_1GB	((1ULL << SHIFT_1GB) - 1)
 
-#define SPDK_PCI_DRIVER_MAX_NAME_LEN 32
 struct spdk_pci_driver {
 	struct rte_pci_driver		driver;
 
