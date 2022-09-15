@@ -9,6 +9,7 @@
 #include "spdk/log.h"
 
 extern struct dpdk_fn_table fn_table_2207;
+extern struct dpdk_fn_table fn_table_2211;
 
 static struct dpdk_fn_table *g_dpdk_fn_table;
 
@@ -32,14 +33,22 @@ dpdk_pci_init(void)
 		return -EINVAL;
 	}
 
-	/* Anything greater than 22.07 is not supported. */
-	if (year == 22 && month > 7) {
-		SPDK_ERRLOG("DPDK version %d.%02d.%d not supported.\n", year, month, minor);
-		return -EINVAL;
+	if (year == 22 && month == 11) {
+		if (minor != 0) {
+			/* It is possible that LTS minor release changed private ABI, so we
+			 * cannot assume fn_table_2211 works for minor releases.  As 22.11
+			 * minor releases occur, this will need to be updated to either affirm
+			 * no ABI changes for the minor release, or add new header files and
+			 * pci_dpdk_xxx.c implementation for the new minor release.
+			 */
+			SPDK_ERRLOG("DPDK LTS version 22.11.%d not supported.\n", minor);
+			return -EINVAL;
+		}
+		g_dpdk_fn_table = &fn_table_2211;
+	} else {
+		/* Everything else we use the 22.07 implementation. */
+		g_dpdk_fn_table = &fn_table_2207;
 	}
-
-	/* Everything else we use the 22.07 implementation. */
-	g_dpdk_fn_table = &fn_table_2207;
 	return 0;
 }
 
