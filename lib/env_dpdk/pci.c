@@ -59,6 +59,12 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte
 const char *dpdk_pci_device_get_name(struct rte_pci_device *);
 struct rte_devargs *dpdk_pci_device_get_devargs(struct rte_pci_device *);
 void dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_device *dev);
+int dpdk_pci_device_map_bar(struct rte_pci_device *dev, uint32_t bar,
+			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
+int dpdk_pci_device_read_config(struct rte_pci_device *dev, void *value, uint32_t len,
+				uint32_t offset);
+int dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t len,
+				 uint32_t offset);
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -89,13 +95,7 @@ static int
 map_bar_rte(struct spdk_pci_device *device, uint32_t bar,
 	    void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
 {
-	struct rte_pci_device *dev = device->dev_handle;
-
-	*mapped_addr = dev->mem_resource[bar].addr;
-	*phys_addr = (uint64_t)dev->mem_resource[bar].phys_addr;
-	*size = (uint64_t)dev->mem_resource[bar].len;
-
-	return 0;
+	return dpdk_pci_device_map_bar(device->dev_handle, bar, mapped_addr, phys_addr, size);
 }
 
 static int
@@ -107,25 +107,13 @@ unmap_bar_rte(struct spdk_pci_device *device, uint32_t bar, void *addr)
 static int
 cfg_read_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
-	int rc;
-
-	rc = rte_pci_read_config(dev->dev_handle, value, len, offset);
-
-	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
+	return dpdk_pci_device_read_config(dev->dev_handle, value, len, offset);
 }
 
 static int
 cfg_write_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
-	int rc;
-
-	rc = rte_pci_write_config(dev->dev_handle, value, len, offset);
-
-#ifdef __FreeBSD__
-	/* DPDK returns 0 on success and -1 on failure */
-	return rc;
-#endif
-	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
+	return dpdk_pci_device_write_config(dev->dev_handle, value, len, offset);
 }
 
 static void
@@ -1293,4 +1281,39 @@ dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_de
 	dev->id.subvendor_id = _dev->id.subsystem_vendor_id;
 	dev->id.subdevice_id = _dev->id.subsystem_device_id;
 	dev->socket_id = _dev->device.numa_node;
+}
+
+int
+dpdk_pci_device_map_bar(struct rte_pci_device *dev, uint32_t bar,
+			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+{
+	*mapped_addr = dev->mem_resource[bar].addr;
+	*phys_addr = (uint64_t)dev->mem_resource[bar].phys_addr;
+	*size = (uint64_t)dev->mem_resource[bar].len;
+
+	return 0;
+}
+
+int
+dpdk_pci_device_read_config(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	int rc;
+
+	rc = rte_pci_read_config(dev, value, len, offset);
+
+	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
+}
+
+int
+dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	int rc;
+
+	rc = rte_pci_write_config(dev, value, len, offset);
+
+#ifdef __FreeBSD__
+	/* DPDK returns 0 on success and -1 on failure */
+	return rc;
+#endif
+	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
 }
