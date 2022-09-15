@@ -11,6 +11,7 @@
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
+#include "spdk/assert.h"
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
@@ -40,7 +41,8 @@ static TAILQ_HEAD(, spdk_pci_device_provider) g_pci_device_providers =
 	TAILQ_HEAD_INITIALIZER(g_pci_device_providers);
 
 struct spdk_pci_driver {
-	struct rte_pci_driver		driver;
+	uint8_t				driver_buf[256];
+	struct rte_pci_driver		*driver;
 
 	const char                      *name;
 	const struct spdk_pci_id	*id_table;
@@ -50,6 +52,9 @@ struct spdk_pci_driver {
 	void				*cb_arg;
 	TAILQ_ENTRY(spdk_pci_driver)	tailq;
 };
+SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver_buf) == 0, "driver_buf must be first");
+SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte_pci_driver),
+		   "driver_buf not big enough");
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -213,6 +218,7 @@ spdk_pci_driver_register(const char *name, struct spdk_pci_id *id_table, uint32_
 	driver->name = name;
 	driver->id_table = id_table;
 	driver->drv_flags = flags;
+	driver->driver = (struct rte_pci_driver *)driver->driver_buf;
 	TAILQ_INSERT_TAIL(&g_pci_drivers, driver, tailq);
 }
 
@@ -352,8 +358,8 @@ register_rte_driver(struct spdk_pci_driver *driver)
 	}
 
 	snprintf(rte_name, rte_name_len, "spdk_%s", driver->name);
-	driver->driver.driver.name = rte_name;
-	driver->driver.id_table = rte_id_table;
+	driver->driver->driver.name = rte_name;
+	driver->driver->id_table = rte_id_table;
 
 	rte_flags = 0;
 	if (driver->drv_flags & SPDK_PCI_DRIVER_NEED_MAPPING) {
@@ -362,12 +368,12 @@ register_rte_driver(struct spdk_pci_driver *driver)
 	if (driver->drv_flags & SPDK_PCI_DRIVER_WC_ACTIVATE) {
 		rte_flags |= RTE_PCI_DRV_WC_ACTIVATE;
 	}
-	driver->driver.drv_flags = rte_flags;
+	driver->driver->drv_flags = rte_flags;
 
-	driver->driver.probe = pci_device_init;
-	driver->driver.remove = pci_device_fini;
+	driver->driver->probe = pci_device_init;
+	driver->driver->remove = pci_device_fini;
 
-	rte_pci_register(&driver->driver);
+	rte_pci_register(driver->driver);
 	return 0;
 }
 
