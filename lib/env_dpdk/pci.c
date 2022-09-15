@@ -58,6 +58,7 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte
 
 const char *dpdk_pci_device_get_name(struct rte_pci_device *);
 struct rte_devargs *dpdk_pci_device_get_devargs(struct rte_pci_device *);
+void dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_device *dev);
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -451,16 +452,7 @@ pci_device_init(struct rte_pci_driver *_drv,
 
 	dev->dev_handle = _dev;
 
-	dev->addr.domain = _dev->addr.domain;
-	dev->addr.bus = _dev->addr.bus;
-	dev->addr.dev = _dev->addr.devid;
-	dev->addr.func = _dev->addr.function;
-	dev->id.class_id = _dev->id.class_id;
-	dev->id.vendor_id = _dev->id.vendor_id;
-	dev->id.device_id = _dev->id.device_id;
-	dev->id.subvendor_id = _dev->id.subsystem_vendor_id;
-	dev->id.subdevice_id = _dev->id.subsystem_device_id;
-	dev->socket_id = _dev->device.numa_node;
+	dpdk_pci_device_copy_identifiers(_dev, dev);
 	dev->type = "pci";
 
 	dev->map_bar = map_bar_rte;
@@ -1286,4 +1278,19 @@ struct rte_devargs *
 dpdk_pci_device_get_devargs(struct rte_pci_device *rte_dev)
 {
 	return rte_dev->device.devargs;
+}
+
+void
+dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_device *dev)
+{
+	dev->addr.domain = _dev->addr.domain;
+	dev->addr.bus = _dev->addr.bus;
+	dev->addr.dev = _dev->addr.devid;
+	dev->addr.func = _dev->addr.function;
+	dev->id.class_id = _dev->id.class_id;
+	dev->id.vendor_id = _dev->id.vendor_id;
+	dev->id.device_id = _dev->id.device_id;
+	dev->id.subvendor_id = _dev->id.subsystem_vendor_id;
+	dev->id.subdevice_id = _dev->id.subsystem_device_id;
+	dev->socket_id = _dev->device.numa_node;
 }
