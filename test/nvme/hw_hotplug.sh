@@ -5,6 +5,9 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
+export PYTHONPATH="$rootdir/examples/nvme/hotplug/"
+rpc_py=$rootdir/scripts/rpc.py
+
 function beetle_ssh() {
 	ssh_opts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 	if [[ -n $BEETLE_SSH_KEY ]]; then
@@ -69,25 +72,14 @@ if [ "$driver" = "uio_pci_generic" ]; then
 	mode="-m pa"
 fi
 
-exec {log}> >(tee -a "$testdir/log.txt")
-exec >&$log 2>&1
-
-"$SPDK_EXAMPLE_DIR/hotplug" -i 0 -t 100 -n $((2 * nvme_count)) -r $((2 * nvme_count)) $mode &
+"$SPDK_EXAMPLE_DIR/hotplug" -i 0 -t 100 -n $((2 * nvme_count)) -r $((2 * nvme_count)) \
+	$mode --wait-for-rpc &
 hotplug_pid=$!
 
-trap 'killprocess $hotplug_pid; restore_device; rm $testdir/log.txt; exit 1' SIGINT SIGTERM EXIT
+trap 'killprocess $hotplug_pid; restore_device; exit 1' SIGINT SIGTERM EXIT
 
-i=0
-while ! grep -q "Starting I/O" $testdir/log.txt; do
-	[ $i -lt 20 ] || break
-	i=$((i + 1))
-	sleep 1
-done
-
-if ! grep -q "Starting I/O" $testdir/log.txt; then
-	rm $testdir/log.txt
-	exit 1
-fi
+waitforlisten $hotplug_pid
+$rpc_py --plugin hotplug_plugin perform_tests
 
 # Add and remove NVMe with delays between to give some time for IO to proceed
 remove_device
@@ -103,13 +95,10 @@ timing_enter wait_for_example
 
 if ! wait $hotplug_pid; then
 	echo "Hotplug example returned error!"
-	rm $testdir/log.txt
 	exit 1
 fi
 
 timing_exit wait_for_example
-
-rm $testdir/log.txt
 
 trap - SIGINT SIGTERM EXIT
 

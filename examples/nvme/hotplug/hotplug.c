@@ -10,6 +10,9 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/log.h"
+#include "spdk/rpc.h"
+
+static const char *g_rpc_addr = "/var/tmp/spdk.sock";
 
 struct dev_ctx {
 	TAILQ_ENTRY(dev_ctx)	tailq;
@@ -48,6 +51,9 @@ static int g_shm_id = -1;
 static const char *g_iova_mode = NULL;
 static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC;
 static struct spdk_nvme_detach_ctx *g_detach_ctx;
+
+static bool g_wait_for_rpc = false;
+static bool g_rpc_received = false;
 
 static void task_complete(struct perf_task *task);
 
@@ -402,24 +408,34 @@ usage(char *program_name)
 	printf("\t[-l log level]\n");
 	printf("\t Available log levels:\n");
 	printf("\t  disabled, error, warning, notice, info, debug\n");
+	printf("\t[--wait-for-rpc wait for RPC perform_tests\n");
+	printf("\t  to proceed with starting IO on NVMe disks]\n");
 }
+
+static const struct option g_wait_option[] = {
+#define WAIT_FOR_RPC_OPT_IDX	257
+	{"wait-for-rpc", no_argument, NULL, WAIT_FOR_RPC_OPT_IDX},
+};
 
 static int
 parse_args(int argc, char **argv)
 {
-	int op;
+	int op, opt_idx;
 	long int val;
 
 	/* default value */
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "c:i:l:m:n:r:t:")) != -1) {
+	while ((op = getopt_long(argc, argv, "c:i:l:m:n:r:t:", g_wait_option, &opt_idx)) != -1) {
 		if (op == '?') {
 			usage(argv[0]);
 			return 1;
 		}
 
 		switch (op) {
+		case WAIT_FOR_RPC_OPT_IDX:
+			g_wait_for_rpc = true;
+			break;
 		case 'c':
 		case 'i':
 		case 'n':
@@ -498,6 +514,39 @@ register_controllers(void)
 	return 0;
 }
 
+/* Hotplug RPC */
+static void
+rpc_perform_tests(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
+{
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'perform_tests' requires no arguments");
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+
+	g_rpc_received = true;
+}
+SPDK_RPC_REGISTER("perform_tests", rpc_perform_tests, SPDK_RPC_RUNTIME);
+
+static void
+wait_for_rpc_call(void)
+{
+	fprintf(stderr,
+		"Listening for perform_tests to start the application...\n");
+	spdk_rpc_listen(g_rpc_addr);
+	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
+
+	while (!g_rpc_received) {
+		spdk_rpc_accept();
+	}
+	/* Run spdk_rpc_accept() one more time to trigger
+	 * spdk_jsonrpv_server_poll() and send the RPC response. */
+	spdk_rpc_accept();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -529,6 +578,10 @@ main(int argc, char **argv)
 	if (register_controllers() != 0) {
 		rc = 1;
 		goto cleanup;
+	}
+
+	if (g_wait_for_rpc) {
+		wait_for_rpc_call();
 	}
 
 	fprintf(stderr, "Initialization complete. Starting I/O...\n");
