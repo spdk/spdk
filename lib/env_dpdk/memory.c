@@ -6,6 +6,7 @@
 #include "spdk/stdinc.h"
 
 #include "env_internal.h"
+#include "pci_dpdk.h"
 
 #include <rte_config.h>
 #include <rte_memory.h>
