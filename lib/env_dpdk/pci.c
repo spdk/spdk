@@ -68,6 +68,9 @@ int dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32
 int dpdk_pci_driver_register(struct spdk_pci_driver *driver,
 			     int (*probe_fn)(struct rte_pci_driver *driver, struct rte_pci_device *device),
 			     int (*remove_fn)(struct rte_pci_device *device));
+int dpdk_pci_device_enable_interrupt(struct rte_pci_device *rte_dev);
+int dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev);
+int dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev);
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -747,34 +750,19 @@ spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr)
 int
 spdk_pci_device_enable_interrupt(struct spdk_pci_device *dev)
 {
-	struct rte_pci_device *rte_dev = dev->dev_handle;
-#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
-	return rte_intr_enable(&rte_dev->intr_handle);
-#else
-	return rte_intr_enable(rte_dev->intr_handle);
-#endif
+	return dpdk_pci_device_enable_interrupt(dev->dev_handle);
 }
 
 int
 spdk_pci_device_disable_interrupt(struct spdk_pci_device *dev)
 {
-	struct rte_pci_device *rte_dev = dev->dev_handle;
-#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
-	return rte_intr_disable(&rte_dev->intr_handle);
-#else
-	return rte_intr_disable(rte_dev->intr_handle);
-#endif
+	return dpdk_pci_device_disable_interrupt(dev->dev_handle);
 }
 
 int
 spdk_pci_device_get_interrupt_efd(struct spdk_pci_device *dev)
 {
-	struct rte_pci_device *rte_dev = dev->dev_handle;
-#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
-	return rte_dev->intr_handle.fd;
-#else
-	return rte_intr_fd_get(rte_dev->intr_handle);
-#endif
+	return dpdk_pci_device_get_interrupt_efd(dev->dev_handle);
 }
 
 uint32_t
@@ -1321,4 +1309,34 @@ dpdk_pci_driver_register(struct spdk_pci_driver *driver,
 
 	rte_pci_register(driver->driver);
 	return 0;
+}
+
+int
+dpdk_pci_device_enable_interrupt(struct rte_pci_device *rte_dev)
+{
+#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
+	return rte_intr_enable(&rte_dev->intr_handle);
+#else
+	return rte_intr_enable(rte_dev->intr_handle);
+#endif
+}
+
+int
+dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev)
+{
+#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
+	return rte_intr_disable(&rte_dev->intr_handle);
+#else
+	return rte_intr_disable(rte_dev->intr_handle);
+#endif
+}
+
+int
+dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev)
+{
+#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
+	return rte_dev->intr_handle.fd;
+#else
+	return rte_intr_fd_get(rte_dev->intr_handle);
+#endif
 }
