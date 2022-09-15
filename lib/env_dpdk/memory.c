@@ -930,23 +930,14 @@ vtophys_get_paddr_pci(uint64_t vaddr)
 	struct spdk_vtophys_pci_device *vtophys_dev;
 	uintptr_t paddr;
 	struct rte_pci_device	*dev;
-	struct rte_mem_resource *res;
-	unsigned r;
 
 	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
 	TAILQ_FOREACH(vtophys_dev, &g_vtophys_pci_devices, tailq) {
 		dev = vtophys_dev->pci_device;
-
-		for (r = 0; r < PCI_MAX_RESOURCE; r++) {
-			res = &dev->mem_resource[r];
-			if (res->phys_addr && vaddr >= (uint64_t)res->addr &&
-			    vaddr < (uint64_t)res->addr + res->len) {
-				paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
-				DEBUG_PRINT("%s: %p -> %p\n", __func__, (void *)vaddr,
-					    (void *)paddr);
-				pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
-				return paddr;
-			}
+		paddr = dpdk_pci_device_vtophys(dev, vaddr);
+		if (paddr != SPDK_VTOPHYS_ERROR) {
+			pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
+			return paddr;
 		}
 	}
 	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);

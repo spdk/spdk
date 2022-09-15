@@ -1232,3 +1232,22 @@ spdk_pci_device_allow(struct spdk_pci_addr *pci_addr)
 
 	return 0;
 }
+
+uint64_t
+dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr)
+{
+	struct rte_mem_resource *res;
+	uint64_t paddr;
+	unsigned r;
+
+	for (r = 0; r < PCI_MAX_RESOURCE; r++) {
+		res = &dev->mem_resource[r];
+		if (res->phys_addr && vaddr >= (uint64_t)res->addr &&
+		    vaddr < (uint64_t)res->addr + res->len) {
+			paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
+			return paddr;
+		}
+	}
+
+	return SPDK_VTOPHYS_ERROR;
+}

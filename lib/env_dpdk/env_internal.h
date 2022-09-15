@@ -52,6 +52,8 @@ void pci_env_fini(void);
 int mem_map_init(bool legacy_mem);
 int vtophys_init(void);
 
+uint64_t dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr);
+
 /**
  * Report a DMA-capable PCI device to the vtophys translation code.
  * Increases the refcount of active DMA-capable devices managed by SPDK.
