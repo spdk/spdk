@@ -57,6 +57,7 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte
 		   "driver_buf not big enough");
 
 const char *dpdk_pci_device_get_name(struct rte_pci_device *);
+struct rte_devargs *dpdk_pci_device_get_devargs(struct rte_pci_device *);
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -537,8 +538,8 @@ pci_device_fini(struct rte_pci_device *_dev)
 	}
 
 	/* remove our allowed_at option */
-	if (_dev->device.devargs) {
-		set_allowed_at(_dev->device.devargs, 0);
+	if (dpdk_pci_device_get_devargs(_dev)) {
+		set_allowed_at(dpdk_pci_device_get_devargs(_dev), 0);
 	}
 
 	/* It is possible that removed flag was already set when there is a race
@@ -734,7 +735,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 
 	rte_dev = dev->dev_handle;
 	if (rte_dev != NULL) {
-		da = rte_dev->device.devargs;
+		da = dpdk_pci_device_get_devargs(rte_dev);
 		if (da && get_allowed_at(da)) {
 			set_allowed_at(da, spdk_get_ticks());
 			da->policy = RTE_DEV_ALLOWED;
@@ -1279,4 +1280,10 @@ const char *
 dpdk_pci_device_get_name(struct rte_pci_device *rte_dev)
 {
 	return rte_dev->name;
+}
+
+struct rte_devargs *
+dpdk_pci_device_get_devargs(struct rte_pci_device *rte_dev)
+{
+	return rte_dev->device.devargs;
 }
