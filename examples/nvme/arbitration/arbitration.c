@@ -457,7 +457,7 @@ usage(char *program_name)
 	printf("\t\n");
 	printf("\t[-d DPDK huge memory size in MB]\n");
 	printf("\t[-q io depth]\n");
-	printf("\t[-s io size in bytes]\n");
+	printf("\t[-o io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
@@ -641,7 +641,7 @@ parse_args(int argc, char **argv)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "a:b:c:d:ghi:l:m:n:q:r:s:t:w:M:L:")) != -1) {
+	while ((op = getopt(argc, argv, "a:b:c:d:ghi:l:m:n:o:q:r:t:w:M:L:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_arbitration.core_mask = optarg;
@@ -699,7 +699,7 @@ parse_args(int argc, char **argv)
 			case 'q':
 				g_arbitration.queue_depth = val;
 				break;
-			case 's':
+			case 'o':
 				g_arbitration.io_size_bytes = val;
 				break;
 			case 't':

@@ -293,7 +293,7 @@ usage(char *program_name)
 	printf("%s options", program_name);
 	printf("\n");
 	printf("\t[-q io depth]\n");
-	printf("\t[-s io size in bytes]\n");
+	printf("\t[-o io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
@@ -353,7 +353,7 @@ parse_args(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_rw_percentage = -1;
 
-	while ((op = getopt(argc, argv, "q:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "o:q:t:w:M:")) != -1) {
 		if (op == 'w') {
 			workload_type = optarg;
 		} else if (op == '?') {
@@ -369,7 +369,7 @@ parse_args(int argc, char **argv)
 			case 'q':
 				g_queue_depth = val;
 				break;
-			case 's':
+			case 'o':
 				g_io_size_bytes = val;
 				break;
 			case 't':

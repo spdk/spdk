@@ -123,7 +123,7 @@ if [ $(uname) = Linux ]; then
 	start_stub "-s 4096 -i 0 -m 0xE"
 fi
 
-run_test "nvme_reset" $testdir/reset/reset -q 64 -w write -s 4096 -t 5
+run_test "nvme_reset" $testdir/reset/reset -q 64 -w write -o 4096 -t 5
 run_test "nvme_identify" nvme_identify
 run_test "nvme_perf" nvme_perf
 run_test "nvme_hello_world" $SPDK_EXAMPLE_DIR/hello_world -i 0
@@ -131,7 +131,7 @@ run_test "nvme_sgl" $testdir/sgl/sgl
 run_test "nvme_e2edp" $testdir/e2edp/nvme_dp
 run_test "nvme_reserve" $testdir/reserve/reserve
 run_test "nvme_err_injection" $testdir/err_injection/err_injection
-run_test "nvme_overhead" $testdir/overhead/overhead -s 4096 -t 1 -H -i 0
+run_test "nvme_overhead" $testdir/overhead/overhead -o 4096 -t 1 -H -i 0
 run_test "nvme_arbitration" $SPDK_EXAMPLE_DIR/arbitration -t 3 -i 0
 run_test "nvme_single_aen" $testdir/aer/aer -T -i 0 -L log
 

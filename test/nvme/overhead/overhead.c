@@ -461,7 +461,7 @@ usage(char *program_name)
 #endif
 	printf("\t\n");
 	printf("\t[-d DPDK huge memory size in MB]\n");
-	printf("\t[-s io size in bytes]\n");
+	printf("\t[-o io size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t\t(default: 1)]\n");
 	printf("\t[-H enable histograms]\n");
@@ -540,13 +540,13 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	spdk_nvme_trid_populate_transport(&g_trid, SPDK_NVME_TRANSPORT_PCIE);
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "d:ghi:r:s:t:HL:")) != -1) {
+	while ((op = getopt(argc, argv, "d:ghi:o:r:t:HL:")) != -1) {
 		switch (op) {
 		case 'h':
 			usage(argv[0]);
 			exit(0);
 			break;
-		case 's':
+		case 'o':
 			val = spdk_strtol(optarg, 10);
 			if (val < 0) {
 				fprintf(stderr, "Invalid io size\n");
