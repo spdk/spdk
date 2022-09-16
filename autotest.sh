@@ -352,6 +352,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 			run_test "nvmf_llvm_fuzz" test/nvmf/target/llvm_nvme_fuzz.sh
 		fi
 	fi
+
+	if [[ $SPDK_TEST_RAID5 -eq 1 ]]; then
+		run_test "blockdev_raid5f" ./test/bdev/blockdev.sh "raid5f"
+	fi
 fi
 
 timing_enter cleanup
