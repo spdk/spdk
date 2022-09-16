@@ -1381,8 +1381,9 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	tqpair->recv_pdu->hdr.common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_IC_RESP;
 	tqpair->recv_pdu->hdr.common.plen = sizeof(struct spdk_nvme_tcp_ic_resp);
 	tqpair->recv_pdu->hdr.common.hlen = sizeof(struct spdk_nvme_tcp_ic_resp);
-	tqpair->recv_pdu->ch_valid_bytes = 7;
-	tqpair->recv_pdu->psh_valid_bytes = tqpair->recv_pdu->hdr.common.hlen;
+	tqpair->recv_pdu->ch_valid_bytes = sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - 1;
+	tqpair->recv_pdu->psh_valid_bytes = tqpair->recv_pdu->hdr.common.hlen -
+					    sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - 1;
 	tqpair->recv_pdu->hdr.ic_resp.maxh2cdata = 4096;
 	tqpair->recv_pdu->hdr.ic_resp.cpda = 1;
 	tqpair->flags.icreq_send_ack = 1;
