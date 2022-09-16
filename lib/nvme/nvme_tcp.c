@@ -1615,21 +1615,20 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			memset(pdu, 0, sizeof(struct nvme_tcp_pdu));
 			nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
 			break;
-		/* common header */
+		/* Wait for the pdu common header */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
+			assert(pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr));
+			rc = nvme_tcp_read_data(tqpair->sock,
+						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
+						(uint8_t *)&pdu->hdr.common + pdu->ch_valid_bytes);
+			if (rc < 0) {
+				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+				break;
+			}
+			pdu->ch_valid_bytes += rc;
 			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
-				rc = nvme_tcp_read_data(tqpair->sock,
-							sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
-							(uint8_t *)&pdu->hdr.common + pdu->ch_valid_bytes);
-				if (rc < 0) {
-					nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-					break;
-				}
-				pdu->ch_valid_bytes += rc;
-				if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
-					rc =  NVME_TCP_PDU_IN_PROGRESS;
-					goto out;
-				}
+				rc =  NVME_TCP_PDU_IN_PROGRESS;
+				goto out;
 			}
 
 			/* The command header of this PDU has now been read from the socket. */
