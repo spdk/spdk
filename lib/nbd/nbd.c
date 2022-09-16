@@ -835,7 +835,7 @@ nbd_poll(void *arg)
 		spdk_nbd_stop(nbd);
 	}
 
-	return SPDK_POLLER_BUSY;
+	return rc == 0 ? SPDK_POLLER_IDLE : SPDK_POLLER_BUSY;
 }
 
 static void *
