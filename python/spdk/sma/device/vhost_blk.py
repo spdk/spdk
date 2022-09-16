@@ -84,7 +84,7 @@ class VhostBlkDeviceManager(DeviceManager):
     def _bdev_cmp(self, client, bdev1, bdev2):
         try:
             return self._find_bdev(client, bdev1)['name'] == self._find_bdev(client, bdev2)['name']
-        except KeyError:
+        except (KeyError, TypeError):
             return False
 
     def _create_controller(self, client, ctrlr, volume_guid):
