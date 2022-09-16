@@ -187,6 +187,15 @@ function setup_daos_conf() {
 	"$rpc_py" bdev_daos_create Daos0 $pool $cont 16 4096
 }
 
+function setup_raid5f_conf() {
+	"$rpc_py" <<- RPC
+		bdev_malloc_create -b Malloc0 32 512
+		bdev_malloc_create -b Malloc1 32 512
+		bdev_malloc_create -b Malloc2 32 512
+		bdev_raid_create -n raid5f -z 2 -r 5f -b "Malloc0 Malloc1 Malloc2"
+	RPC
+}
+
 function bdev_bounds() {
 	$testdir/bdevio/bdevio -w -s $PRE_RESERVED_MEM --json "$conf_file" "$env_ctx" &
 	bdevio_pid=$!
@@ -523,6 +532,9 @@ case "$test_type" in
 		;;
 	daos)
 		setup_daos_conf
+		;;
+	raid5f)
+		setup_raid5f_conf
 		;;
 	*)
 		echo "invalid test name"
