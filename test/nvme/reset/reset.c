@@ -148,7 +148,6 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 	}
 
 	task->ns_ctx = ns_ctx;
-	task->ns_ctx->io_submitted++;
 
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % entry->size_in_ios;
@@ -174,6 +173,7 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		fprintf(stderr, "starting I/O failed\n");
 	} else {
 		ns_ctx->current_queue_depth++;
+		ns_ctx->io_submitted++;
 	}
 }
 
