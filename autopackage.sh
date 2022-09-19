@@ -104,7 +104,7 @@ if [[ $SPDK_TEST_RELEASE_BUILD -eq 1 ]]; then
 	$MAKE clean
 fi
 
-if [[ $RUN_NIGHTLY -eq 0 ]]; then
+if [[ $RUN_NIGHTLY -eq 0 || $SPDK_TEST_UNITTEST -eq 0 ]]; then
 	timing_finish
 	exit 0
 fi
