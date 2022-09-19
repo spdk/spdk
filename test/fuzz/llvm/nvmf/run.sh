@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 if [[ $SPDK_TEST_FUZZER_SHORT -eq 0 ]]; then
 	TIME=60000
 else
@@ -13,17 +14,12 @@ for i in "$@"; do
 	esac
 done
 
-VFIOUSER_DIR=/tmp/vfio-user/domain/1
-VFIOUSER_IO_DIR=/tmp/vfio-user/domain/2
-mkdir -p $VFIOUSER_DIR
-mkdir -p $VFIOUSER_IO_DIR
-
 function start_llvm_fuzz() {
 	local fuzzer_type=$1
 	local corpus_dir
 	corpus_dir=/tmp/llvm_fuzz$fuzzer_type
 	mkdir -p $corpus_dir
-	$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz -m 0x1 -i 0 -F $VFIOUSER_DIR -c $testdir/fuzz_vfio_json.conf -t $TIME -D $corpus_dir -Y $VFIOUSER_IO_DIR -Z $fuzzer_type
+	$rootdir/test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz -m 0x1 -i 0 -F "$trid" -c $testdir/fuzz_json.conf -t $TIME -D $corpus_dir -Z $fuzzer_type
 }
 
 function run_fuzz() {
@@ -48,14 +44,16 @@ function run_fuzz() {
 }
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
+rootdir=$(readlink -f $testdir/../../../../)
 source $rootdir/test/common/autotest_common.sh
 
-fuzzfile=$rootdir/test/app/fuzz/llvm_vfio_fuzz/llvm_vfio_fuzz.c
+fuzzfile=$rootdir/test/app/fuzz/llvm_nvme_fuzz/llvm_nvme_fuzz.c
 fuzz_num=$(($(grep -c "fn =" $fuzzfile) - 1))
 [[ $fuzz_num -ne 0 ]]
 
-trap 'process_shm --id 0; rm -rf /tmp/llvm_fuzz* $VFIOUSER_DIR $VFIOUSER_IO_DIR; exit 1' SIGINT SIGTERM EXIT
+trap 'process_shm --id 0; rm -rf /tmp/llvm_fuzz*; exit 1' SIGINT SIGTERM EXIT
+
+trid="trtype:tcp adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:127.0.0.1 trsvcid:4420"
 
 if [[ $SPDK_TEST_FUZZER_SHORT -eq 1 ]]; then
 	for ((i = 0; i < fuzz_num; i++)); do
@@ -67,5 +65,5 @@ else
 	start_llvm_fuzz $1
 fi
 
-rm -rf /tmp/llvm_fuzz* $VFIOUSER_DIR $VFIOUSER_IO_DIR
+rm -rf /tmp/llvm_fuzz*
 trap - SIGINT SIGTERM EXIT

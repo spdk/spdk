@@ -171,6 +171,9 @@ export SPDK_TEST_SMA
 export SPDK_TEST_DAOS
 : ${SPDK_TEST_XNVME:=0}
 export SPDK_TEST_XNVME
+# Comma-separated list of fuzzer targets matching test/fuzz/llvm/$target
+: ${SPDK_TEST_FUZZER_TARGET:=}
+export SPDK_TEST_FUZZER_TARGET
 
 # always test with SPDK shared objects.
 export SPDK_LIB_DIR="$rootdir/build/lib"
@@ -504,8 +507,40 @@ function get_config_params() {
 		config_params+=' --with-xnvme'
 	fi
 
+	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
+		config_params+=" $(get_fuzzer_target_config)"
+	fi
+
 	echo "$config_params"
 	xtrace_restore
+}
+
+function get_fuzzer_target_config() {
+	local -A fuzzer_targets_to_config=()
+	local config target
+
+	fuzzer_targets_to_config["vfio"]="--with-vfio-user"
+	for target in $(get_fuzzer_targets); do
+		[[ -n ${fuzzer_targets_to_config["$target"]} ]] || continue
+		config+=("${fuzzer_targets_to_config["$target"]}")
+	done
+
+	if ((${#config[@]} > 0)); then
+		echo "${config[*]}"
+	fi
+}
+
+function get_fuzzer_targets() {
+	local fuzzers=()
+
+	if [[ -n $SPDK_TEST_FUZZER_TARGET ]]; then
+		IFS="," read -ra fuzzers <<< "$SPDK_TEST_FUZZER_TARGET"
+	else
+		fuzzers=("$rootdir/test/fuzz/llvm/"*)
+		fuzzers=("${fuzzers[@]##*/}")
+	fi
+
+	echo "${fuzzers[*]}"
 }
 
 function rpc_cmd() {

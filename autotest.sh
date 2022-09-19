@@ -344,13 +344,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	fi
 
 	if [[ $SPDK_TEST_FUZZER -eq 1 ]]; then
-		# TODO: Consider re-using test/fuzz directory for all fuzzing tests with proper
-		# structure, e.g.: test/fuzz/nvmf/*, test/fuzz/vfio/*, etc.
-		if [[ $SPDK_TEST_VFIOUSER -eq 1 ]]; then
-			run_test "nvmf_vfio_llvm_fuzz" test/nvmf/target/llvm_vfio_fuzz.sh
-		else
-			run_test "nvmf_llvm_fuzz" test/nvmf/target/llvm_nvme_fuzz.sh
-		fi
+		run_test "llvm_fuzz" test/fuzz/llvm.sh
 	fi
 
 	if [[ $SPDK_TEST_RAID5 -eq 1 ]]; then
