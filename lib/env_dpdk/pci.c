@@ -73,6 +73,10 @@ int dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev);
 int dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev);
 void dpdk_bus_scan(void);
 int dpdk_bus_probe(void);
+struct rte_devargs *dpdk_device_get_devargs(struct rte_device *dev);
+void dpdk_device_set_devargs(struct rte_device *dev, struct rte_devargs *devargs);
+const char *dpdk_device_get_name(struct rte_device *dev);
+bool dpdk_device_scan_allowed(struct rte_device *dev);
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -522,7 +526,7 @@ scan_pci_bus(bool delay_init)
 	RTE_DEV_FOREACH(rte_dev, "bus=pci", &it) {
 		struct rte_devargs *da;
 
-		da = rte_dev->devargs;
+		da = dpdk_device_get_devargs(rte_dev);
 		if (!da) {
 			char devargs_str[128];
 
@@ -532,14 +536,14 @@ scan_pci_bus(bool delay_init)
 				return -1;
 			}
 
-			snprintf(devargs_str, sizeof(devargs_str), "pci:%s", rte_dev->name);
+			snprintf(devargs_str, sizeof(devargs_str), "pci:%s", dpdk_device_get_name(rte_dev));
 			if (rte_devargs_parse(da, devargs_str) != 0) {
 				free(da);
 				return -1;
 			}
 
 			rte_devargs_insert(&da);
-			rte_dev->devargs = da;
+			dpdk_device_set_devargs(rte_dev, da);
 		}
 
 		if (get_allowed_at(da)) {
@@ -549,8 +553,8 @@ scan_pci_bus(bool delay_init)
 			if (da->policy == RTE_DEV_BLOCKED && allowed_at <= now) {
 				da->policy = RTE_DEV_ALLOWED;
 			}
-		} else if ((rte_dev->bus->conf.scan_mode == RTE_BUS_SCAN_ALLOWLIST &&
-			    da->policy == RTE_DEV_ALLOWED) || da->policy != RTE_DEV_BLOCKED) {
+		} else if ((dpdk_device_scan_allowed(rte_dev) && da->policy == RTE_DEV_ALLOWED) ||
+			   da->policy != RTE_DEV_BLOCKED) {
 			/* override the policy only if not permanently blocked */
 
 			if (delay_init) {
@@ -1353,4 +1357,28 @@ void
 dpdk_bus_scan(void)
 {
 	rte_bus_scan();
+}
+
+struct rte_devargs *
+dpdk_device_get_devargs(struct rte_device *dev)
+{
+	return dev->devargs;
+}
+
+void
+dpdk_device_set_devargs(struct rte_device *dev, struct rte_devargs *devargs)
+{
+	dev->devargs = devargs;
+}
+
+const char *
+dpdk_device_get_name(struct rte_device *dev)
+{
+	return dev->name;
+}
+
+bool
+dpdk_device_scan_allowed(struct rte_device *dev)
+{
+	return dev->bus->conf.scan_mode == RTE_BUS_SCAN_ALLOWLIST;
 }
