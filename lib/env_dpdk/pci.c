@@ -71,6 +71,8 @@ int dpdk_pci_driver_register(struct spdk_pci_driver *driver,
 int dpdk_pci_device_enable_interrupt(struct rte_pci_device *rte_dev);
 int dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev);
 int dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev);
+void dpdk_bus_scan(void);
+int dpdk_bus_probe(void);
 
 int pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int pci_device_fini(struct rte_pci_device *device);
@@ -510,7 +512,7 @@ scan_pci_bus(bool delay_init)
 	struct rte_device *rte_dev;
 	uint64_t now;
 
-	rte_bus_scan();
+	dpdk_bus_scan();
 	now = spdk_get_ticks();
 
 	if (!TAILQ_FIRST(&g_pci_drivers)) {
@@ -709,7 +711,7 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 	driver->cb_fn = enum_cb;
 	driver->cb_arg = enum_ctx;
 
-	if (rte_bus_probe() != 0) {
+	if (dpdk_bus_probe() != 0) {
 		driver->cb_arg = NULL;
 		driver->cb_fn = NULL;
 		return -1;
@@ -1339,4 +1341,16 @@ dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev)
 #else
 	return rte_intr_fd_get(rte_dev->intr_handle);
 #endif
+}
+
+int
+dpdk_bus_probe(void)
+{
+	return rte_bus_probe();
+}
+
+void
+dpdk_bus_scan(void)
+{
+	rte_bus_scan();
 }
