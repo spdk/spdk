@@ -56,6 +56,8 @@ extern "C" {
  */
 #define SPDK_NVME_MAX_CHANGED_NAMESPACES 1024
 
+#define SPDK_NVME_DOORBELL_REGISTER_SIZE 4
+
 union spdk_nvme_cap_register {
 	uint64_t	raw;
 	struct {
