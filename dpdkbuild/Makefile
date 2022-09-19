@@ -24,7 +24,10 @@ DPDK_OPTS += --buildtype=debug
 endif
 
 ifeq ($(CONFIG_LTO),y)
+# dpdk complains about compiler not supporting fat LTO objects when clang is in use so don't enable it in such a instance
+ifneq ($(CC_TYPE),clang)
 DPDK_OPTS += -Db_lto=true
+endif
 endif
 
 # the drivers we use
