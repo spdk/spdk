@@ -2428,6 +2428,26 @@ handle_sq_tdbl_write(struct nvmf_vfio_user_ctrlr *ctrlr, const uint32_t new_tail
 	return count;
 }
 
+/* Checks whether endpoint is connected from the same process */
+static bool
+is_peer_same_process(struct nvmf_vfio_user_endpoint *endpoint)
+{
+	struct ucred ucred;
+	socklen_t ucredlen = sizeof(ucred);
+
+	if (endpoint == NULL) {
+		return false;
+	}
+
+	if (getsockopt(vfu_get_poll_fd(endpoint->vfu_ctx), SOL_SOCKET, SO_PEERCRED, &ucred,
+		       &ucredlen) < 0) {
+		SPDK_ERRLOG("getsockopt(SO_PEERCRED): %s\n", strerror(errno));
+		return false;
+	}
+
+	return ucred.pid == getpid();
+}
+
 static void
 memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 {
@@ -2466,9 +2486,10 @@ memory_region_add_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		      map_start, map_end);
 
 	/* VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE are enabled when registering to VFIO, here we also
-	 * check the protection bits before registering.
+	 * check the protection bits before registering. When vfio client and server are run in same process
+	 * there is no need to register the same memory again.
 	 */
-	if (info->prot == (PROT_WRITE | PROT_READ)) {
+	if (info->prot == (PROT_WRITE | PROT_READ) && !is_peer_same_process(endpoint)) {
 		ret = spdk_mem_register(info->mapping.iov_base, info->mapping.iov_len);
 		if (ret) {
 			SPDK_ERRLOG("Memory region register %p-%p failed, ret=%d\n",
@@ -2575,7 +2596,7 @@ memory_region_remove_cb(vfu_ctx_t *vfu_ctx, vfu_dma_info_t *info)
 		pthread_mutex_unlock(&endpoint->lock);
 	}
 
-	if (info->prot == (PROT_WRITE | PROT_READ)) {
+	if (info->prot == (PROT_WRITE | PROT_READ) && !is_peer_same_process(endpoint)) {
 		ret = spdk_mem_unregister(info->mapping.iov_base, info->mapping.iov_len);
 		if (ret) {
 			SPDK_ERRLOG("Memory region unregister %p-%p failed, ret=%d\n",
