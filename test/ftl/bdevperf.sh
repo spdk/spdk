@@ -28,7 +28,6 @@ for ((i = 0; i < ${#tests[@]}; i++)); do
 	$rootdir/test/bdev/bdevperf/bdevperf.py perform_tests
 	$rpc_py bdev_ftl_delete -b ftl0
 
-	$rpc_py bdev_nvme_detach_controller nvme0
 	killprocess $bdevperf_pid
 	trap - SIGINT SIGTERM EXIT
 	timing_exit "${tests[$i]}"
