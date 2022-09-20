@@ -91,6 +91,9 @@ Added spdk_rpc_set_allowlist to restrict allowed RPCs to the specified list.
 
 Changed `bdev_raid_get_bdevs` RPC output format to include raid_bdev details.
 
+Added `selector` parameter to bdev_nvme_set_multipath_policy RPC to set path selector for multipath.
+Option `round_robin` and `queue_depth` are available.
+
 ### bdevperf
 
 Promoted the application to example to match similar programs: fio_plugin and perf.
@@ -149,6 +152,10 @@ a specified qpair.
 ### bdev_nvme
 
 Updated `bdev_nvme_set_options` RPC (and rpc.py) to support the new `transport_tos` parameter.
+
+For the active-active policy of the multipath mode, in addition to the default round-robin path
+selector, the minimum queue depth path selector was added. The minimum queue depth path selector
+selects an I/O path according to the number of outstanding requests of each nvme qpair.
 
 ## v22.09
 

@@ -860,12 +860,14 @@ if __name__ == "__main__":
     def bdev_nvme_set_multipath_policy(args):
         rpc.bdev.bdev_nvme_set_multipath_policy(args.client,
                                                 name=args.name,
-                                                policy=args.policy)
+                                                policy=args.policy,
+                                                selector=args.selector)
 
     p = subparsers.add_parser('bdev_nvme_set_multipath_policy',
                               help="""Set multipath policy of the NVMe bdev""")
     p.add_argument('-b', '--name', help='Name of the NVMe bdev', required=True)
     p.add_argument('-p', '--policy', help='Multipath policy (active_passive or active_active)', required=True)
+    p.add_argument('-s', '--selector', help='Multipath selector (round_robin, queue_depth)', required=False)
     p.set_defaults(func=bdev_nvme_set_multipath_policy)
 
     def bdev_nvme_cuse_register(args):

@@ -655,6 +655,7 @@ bdev_nvme_create_bdev_channel_cb(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&nbdev->mutex);
 
 	nbdev_ch->mp_policy = nbdev->mp_policy;
+	nbdev_ch->mp_selector = nbdev->mp_selector;
 
 	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
 		rc = _bdev_nvme_add_io_path(nbdev_ch, nvme_ns);
@@ -873,6 +874,51 @@ _bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 	return non_optimized;
 }
 
+static struct nvme_io_path *
+_bdev_nvme_find_io_path_min_qd(struct nvme_bdev_channel *nbdev_ch)
+{
+	struct nvme_io_path *io_path;
+	struct nvme_io_path *optimized = NULL, *non_optimized = NULL;
+	uint32_t opt_min_qd = UINT32_MAX, non_opt_min_qd = UINT32_MAX;
+	uint32_t num_outstanding_reqs;
+
+	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+		if (spdk_unlikely(!nvme_io_path_is_connected(io_path))) {
+			/* The device is currently resetting. */
+			continue;
+		}
+
+		if (spdk_unlikely(io_path->nvme_ns->ana_state_updating)) {
+			continue;
+		}
+
+		num_outstanding_reqs = spdk_nvme_qpair_get_num_outstanding_reqs(io_path->qpair->qpair);
+		switch (io_path->nvme_ns->ana_state) {
+		case SPDK_NVME_ANA_OPTIMIZED_STATE:
+			if (num_outstanding_reqs < opt_min_qd) {
+				opt_min_qd = num_outstanding_reqs;
+				optimized = io_path;
+			}
+			break;
+		case SPDK_NVME_ANA_NON_OPTIMIZED_STATE:
+			if (num_outstanding_reqs < non_opt_min_qd) {
+				non_opt_min_qd = num_outstanding_reqs;
+				non_optimized = io_path;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	/* don't cache io path for BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH selector */
+	if (optimized != NULL) {
+		return optimized;
+	}
+
+	return non_optimized;
+}
+
 static inline struct nvme_io_path *
 bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 {
@@ -881,7 +927,12 @@ bdev_nvme_find_io_path(struct nvme_bdev_channel *nbdev_ch)
 		return nbdev_ch->current_io_path;
 	}
 
-	return _bdev_nvme_find_io_path(nbdev_ch);
+	if (nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE ||
+	    nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN) {
+		return _bdev_nvme_find_io_path(nbdev_ch);
+	} else {
+		return _bdev_nvme_find_io_path_min_qd(nbdev_ch);
+	}
 }
 
 /* Return true if there is any io_path whose qpair is active or ctrlr is not failed,
@@ -3301,6 +3352,7 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 
 	bdev->ref = 1;
 	bdev->mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE;
+	bdev->mp_selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN;
 	TAILQ_INIT(&bdev->nvme_ns_list);
 	TAILQ_INSERT_TAIL(&bdev->nvme_ns_list, nvme_ns, tailq);
 	bdev->opal = nvme_ctrlr->opal_dev != NULL;
@@ -4110,6 +4162,7 @@ _bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
 	struct nvme_bdev *nbdev = spdk_io_channel_get_io_device(_ch);
 
 	nbdev_ch->mp_policy = nbdev->mp_policy;
+	nbdev_ch->mp_selector = nbdev->mp_selector;
 	nbdev_ch->current_io_path = NULL;
 
 	spdk_for_each_channel_continue(i, 0);
@@ -4117,7 +4170,7 @@ _bdev_nvme_set_multipath_policy(struct spdk_io_channel_iter *i)
 
 void
 bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy policy,
-			       bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
+			       enum bdev_nvme_multipath_selector selector, bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
 {
 	struct bdev_nvme_set_multipath_policy_ctx *ctx;
 	struct spdk_bdev *bdev;
@@ -4153,6 +4206,7 @@ bdev_nvme_set_multipath_policy(const char *name, enum bdev_nvme_multipath_policy
 
 	pthread_mutex_lock(&nbdev->mutex);
 	nbdev->mp_policy = policy;
+	nbdev->mp_selector = selector;
 	pthread_mutex_unlock(&nbdev->mutex);
 
 	spdk_for_each_channel(nbdev,

@@ -943,16 +943,19 @@ def bdev_nvme_set_preferred_path(client, name, cntlid):
     return client.call('bdev_nvme_set_preferred_path', params)
 
 
-def bdev_nvme_set_multipath_policy(client, name, policy):
+def bdev_nvme_set_multipath_policy(client, name, policy, selector):
     """Set multipath policy of the NVMe bdev
 
     Args:
         name: NVMe bdev name
         policy: Multipath policy (active_passive or active_active)
+        selector: Multipath selector (round_robin, queue_depth)
     """
 
     params = {'name': name,
               'policy': policy}
+    if selector:
+        params['selector'] = selector
 
     return client.call('bdev_nvme_set_multipath_policy', params)
 

@@ -4135,7 +4135,8 @@ Example response:
 
 ### bdev_nvme_set_multipath_policy {#rpc_bdev_nvme_set_multipath_policy}
 
-Set multipath policy of the NVMe bdev in multipath mode.
+Set multipath policy of the NVMe bdev in multipath mode or set multipath
+selector for active-active multipath policy.
 
 #### Parameters
 
@@ -4143,6 +4144,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 name                    | Required | string      | Name of the NVMe bdev
 policy                  | Required | string      | Multipath policy: active_active or active_passive
+selector                | Optional | string      | Multipath selector: round_robin or queue_depth, used in active-active mode. Default is round_robin
 
 #### Example
 

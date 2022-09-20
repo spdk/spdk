@@ -305,6 +305,12 @@ spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	return 0;
 }
 
+uint32_t
+spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->num_outstanding_reqs;
+}
+
 static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_ut_init_ctrlrs);
 static TAILQ_HEAD(, spdk_nvme_ctrlr) g_ut_attached_ctrlrs = TAILQ_HEAD_INITIALIZER(
 			g_ut_attached_ctrlrs);
@@ -5845,6 +5851,7 @@ test_find_next_io_path(void)
 	struct nvme_bdev_channel nbdev_ch = {
 		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
 		.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
+		.mp_selector = BDEV_NVME_MP_SELECTOR_ROUND_ROBIN,
 	};
 	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {}, qpair3 = {};
 	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {}, ctrlr3 = {};
@@ -5866,7 +5873,9 @@ test_find_next_io_path(void)
 	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path2, stailq);
 	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path3, stailq);
 
-	/* nbdev_ch->current_io_path is filled always when bdev_nvme_find_next_io_path() is called. */
+	/* test the case when nbdev_ch->current_io_path is filled, the case of current_io_path = NULL
+	 * is covered in test_find_io_path.
+	 */
 
 	nbdev_ch.current_io_path = &io_path2;
 	nvme_ns1.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
@@ -5889,6 +5898,59 @@ test_find_next_io_path(void)
 	nvme_ns2.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
 	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
 	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+}
+
+static void
+test_find_io_path_min_qd(void)
+{
+	struct nvme_bdev_channel nbdev_ch = {
+		.io_path_list = STAILQ_HEAD_INITIALIZER(nbdev_ch.io_path_list),
+		.mp_policy = BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
+		.mp_selector = BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH,
+	};
+	struct spdk_nvme_qpair qpair1 = {}, qpair2 = {}, qpair3 = {};
+	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {}, ctrlr3 = {};
+	struct nvme_ctrlr nvme_ctrlr1 = { .ctrlr = &ctrlr1, };
+	struct nvme_ctrlr nvme_ctrlr2 = { .ctrlr = &ctrlr2, };
+	struct nvme_ctrlr nvme_ctrlr3 = { .ctrlr = &ctrlr3, };
+	struct nvme_ctrlr_channel ctrlr_ch1 = {};
+	struct nvme_ctrlr_channel ctrlr_ch2 = {};
+	struct nvme_ctrlr_channel ctrlr_ch3 = {};
+	struct nvme_qpair nvme_qpair1 = { .ctrlr_ch = &ctrlr_ch1, .ctrlr = &nvme_ctrlr1, .qpair = &qpair1, };
+	struct nvme_qpair nvme_qpair2 = { .ctrlr_ch = &ctrlr_ch2, .ctrlr = &nvme_ctrlr2, .qpair = &qpair2, };
+	struct nvme_qpair nvme_qpair3 = { .ctrlr_ch = &ctrlr_ch3, .ctrlr = &nvme_ctrlr3, .qpair = &qpair3, };
+	struct nvme_ns nvme_ns1 = {}, nvme_ns2 = {}, nvme_ns3 = {};
+	struct nvme_io_path io_path1 = { .qpair = &nvme_qpair1, .nvme_ns = &nvme_ns1, };
+	struct nvme_io_path io_path2 = { .qpair = &nvme_qpair2, .nvme_ns = &nvme_ns2, };
+	struct nvme_io_path io_path3 = { .qpair = &nvme_qpair3, .nvme_ns = &nvme_ns3, };
+
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path1, stailq);
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path2, stailq);
+	STAILQ_INSERT_TAIL(&nbdev_ch.io_path_list, &io_path3, stailq);
+
+	/* Test if the minumum io_outstanding or the ANA optimized state is
+	 * prioritized when using least queue depth selector
+	 */
+	qpair1.num_outstanding_reqs = 2;
+	qpair2.num_outstanding_reqs = 1;
+	qpair3.num_outstanding_reqs = 0;
+	nvme_ns1.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	nvme_ns1.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns2.ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	nvme_ns3.ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path2);
+
+	qpair2.num_outstanding_reqs = 4;
+	CU_ASSERT(bdev_nvme_find_io_path(&nbdev_ch) == &io_path1);
 }
 
 static void
@@ -6115,29 +6177,35 @@ test_set_multipath_policy(void)
 	 */
 	done = -1;
 	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
+				       BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH,
 				       ut_set_multipath_policy_done, &done);
 	poll_threads();
 	CU_ASSERT(done == 0);
 
 	CU_ASSERT(bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
+	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH);
 
 	ch = spdk_get_io_channel(bdev);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 	nbdev_ch = spdk_io_channel_get_ctx(ch);
 
 	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
+	CU_ASSERT(nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_QUEUE_DEPTH);
 
 	/* If multipath policy is updated while a I/O channel is active,
 	 * the update should be applied to the I/O channel immediately.
 	 */
 	done = -1;
 	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE,
+				       BDEV_NVME_MP_SELECTOR_ROUND_ROBIN,
 				       ut_set_multipath_policy_done, &done);
 	poll_threads();
 	CU_ASSERT(done == 0);
 
 	CU_ASSERT(bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE);
 	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_PASSIVE);
+	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
+	CU_ASSERT(nbdev_ch->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
 
 	spdk_put_io_channel(ch);
 
@@ -6257,17 +6325,19 @@ test_retry_io_to_same_path(void)
 
 	done = -1;
 	bdev_nvme_set_multipath_policy(bdev->disk.name, BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE,
-				       ut_set_multipath_policy_done, &done);
+				       BDEV_NVME_MP_SELECTOR_ROUND_ROBIN, ut_set_multipath_policy_done, &done);
 	poll_threads();
 	CU_ASSERT(done == 0);
 
 	CU_ASSERT(bdev->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
+	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
 
 	ch = spdk_get_io_channel(bdev);
 	SPDK_CU_ASSERT_FATAL(ch != NULL);
 	nbdev_ch = spdk_io_channel_get_ctx(ch);
 
 	CU_ASSERT(nbdev_ch->mp_policy == BDEV_NVME_MP_POLICY_ACTIVE_ACTIVE);
+	CU_ASSERT(bdev->mp_selector == BDEV_NVME_MP_SELECTOR_ROUND_ROBIN);
 
 	bdev_io = ut_alloc_bdev_io(SPDK_BDEV_IO_TYPE_WRITE, bdev, ch);
 	ut_bdev_io_set_buf(bdev_io);
@@ -6408,6 +6478,7 @@ main(int argc, const char **argv)
 	CU_ADD_TEST(suite, test_ana_transition);
 	CU_ADD_TEST(suite, test_set_preferred_path);
 	CU_ADD_TEST(suite, test_find_next_io_path);
+	CU_ADD_TEST(suite, test_find_io_path_min_qd);
 	CU_ADD_TEST(suite, test_disable_auto_failback);
 	CU_ADD_TEST(suite, test_set_multipath_policy);
 	CU_ADD_TEST(suite, test_uuid_generation);
