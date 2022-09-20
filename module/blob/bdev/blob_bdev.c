@@ -412,12 +412,19 @@ blob_bdev_init(struct blob_bdev *b, struct spdk_bdev_desc *desc)
 }
 
 int
-spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb,
-			    void *event_ctx, struct spdk_bs_dev **_bs_dev)
+spdk_bdev_create_bs_dev(const char *bdev_name, bool write,
+			struct spdk_bdev_bs_dev_opts *opts, size_t opts_size,
+			spdk_bdev_event_cb_t event_cb, void *event_ctx,
+			struct spdk_bs_dev **bs_dev)
 {
 	struct blob_bdev *b;
 	struct spdk_bdev_desc *desc;
 	int rc;
+
+	if (opts != NULL && opts_size != sizeof(*opts)) {
+		SPDK_ERRLOG("bdev name '%s': unsupported options\n", bdev_name);
+		return -EINVAL;
+	}
 
 	b = calloc(1, sizeof(*b));
 
@@ -426,7 +433,7 @@ spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb
 		return -ENOMEM;
 	}
 
-	rc = spdk_bdev_open_ext(bdev_name, true, event_cb, event_ctx, &desc);
+	rc = spdk_bdev_open_ext(bdev_name, write, event_cb, event_ctx, &desc);
 	if (rc != 0) {
 		free(b);
 		return rc;
@@ -434,7 +441,14 @@ spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb
 
 	blob_bdev_init(b, desc);
 
-	*_bs_dev = &b->bs_dev;
+	*bs_dev = &b->bs_dev;
 
 	return 0;
+}
+
+int
+spdk_bdev_create_bs_dev_ext(const char *bdev_name, spdk_bdev_event_cb_t event_cb,
+			    void *event_ctx, struct spdk_bs_dev **bs_dev)
+{
+	return spdk_bdev_create_bs_dev(bdev_name, true, NULL, 0, event_cb, event_ctx, bs_dev);
 }

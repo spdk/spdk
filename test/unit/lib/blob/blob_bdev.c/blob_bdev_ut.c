@@ -190,6 +190,75 @@ create_bs_dev(void)
 
 	blob_bdev = (struct blob_bdev *)bs_dev;
 	CU_ASSERT(blob_bdev->desc != NULL);
+	CU_ASSERT(blob_bdev->desc->write);
+	CU_ASSERT(blob_bdev->desc->bdev == g_bdev);
+	CU_ASSERT(blob_bdev->desc->claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
+
+	bs_dev->destroy(bs_dev);
+	CU_ASSERT(bdev.open_cnt == 0);
+	g_bdev = NULL;
+}
+
+static void
+create_bs_dev_ro(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_bs_dev *bs_dev = NULL;
+	struct blob_bdev *blob_bdev;
+	struct spdk_bdev_bs_dev_opts opts = { 0 };
+	int rc;
+
+	/* opts with the wrong size returns -EINVAL */
+	rc = spdk_bdev_create_bs_dev("nope", false, &opts, sizeof(opts) + 8, NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* opts with the right size is OK, but can still fail if the device doesn't exist. */
+	opts.opts_size = sizeof(opts);
+	rc = spdk_bdev_create_bs_dev("nope", false, &opts, sizeof(opts), NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == -ENODEV);
+
+	init_bdev(&bdev, "bdev0", 16);
+	g_bdev = &bdev;
+
+	/* The normal way to create a read-only device */
+	rc = spdk_bdev_create_bs_dev("bdev0", false, NULL, 0, NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	CU_ASSERT(bdev.open_cnt == 1);
+
+	blob_bdev = (struct blob_bdev *)bs_dev;
+	CU_ASSERT(blob_bdev->desc != NULL);
+	CU_ASSERT(!blob_bdev->desc->write);
+	CU_ASSERT(blob_bdev->desc->bdev == g_bdev);
+	CU_ASSERT(blob_bdev->desc->claim_type == SPDK_BDEV_CLAIM_NONE);
+	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
+
+	bs_dev->destroy(bs_dev);
+	CU_ASSERT(bdev.open_cnt == 0);
+	g_bdev = NULL;
+}
+
+static void
+create_bs_dev_rw(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_bs_dev *bs_dev = NULL;
+	struct blob_bdev *blob_bdev;
+	int rc;
+
+	init_bdev(&bdev, "bdev0", 16);
+	g_bdev = &bdev;
+
+	/* This is equivalent to spdk_bdev_create_bs_dev_ext() */
+	rc = spdk_bdev_create_bs_dev("bdev0", true, NULL, 0, NULL, NULL, &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	CU_ASSERT(bdev.open_cnt == 1);
+
+	blob_bdev = (struct blob_bdev *)bs_dev;
+	CU_ASSERT(blob_bdev->desc != NULL);
+	CU_ASSERT(blob_bdev->desc->write);
 	CU_ASSERT(blob_bdev->desc->bdev == g_bdev);
 	CU_ASSERT(blob_bdev->desc->claim_type == SPDK_BDEV_CLAIM_NONE);
 	CU_ASSERT(bdev.claim_type == SPDK_BDEV_CLAIM_NONE);
@@ -258,6 +327,8 @@ main(int argc, char **argv)
 	suite = CU_add_suite("blob_bdev", NULL, NULL);
 
 	CU_ADD_TEST(suite, create_bs_dev);
+	CU_ADD_TEST(suite, create_bs_dev_ro);
+	CU_ADD_TEST(suite, create_bs_dev_rw);
 	CU_ADD_TEST(suite, claim_bs_dev);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
