@@ -2098,21 +2098,6 @@ err:
 }
 
 static int
-nvmf_tcp_pdu_payload_insert_dif(struct nvme_tcp_pdu *pdu, uint32_t read_offset,
-				int read_len)
-{
-	int rc;
-
-	rc = spdk_dif_generate_stream(pdu->data_iov, pdu->data_iovcnt,
-				      read_offset, read_len, pdu->dif_ctx);
-	if (rc != 0) {
-		SPDK_ERRLOG("DIF generate failed\n");
-	}
-
-	return rc;
-}
-
-static int
 nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 {
 	int rc = 0;
@@ -2213,11 +2198,12 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
-			if (spdk_unlikely(pdu->dif_ctx != NULL)) {
-				rc = nvmf_tcp_pdu_payload_insert_dif(pdu, 0, data_len);
-				if (rc != 0) {
-					return NVME_TCP_PDU_FATAL;
-				}
+			/* Generate and insert DIF to whole data block received if DIF is enabled */
+			if (spdk_unlikely(pdu->dif_ctx != NULL) &&
+			    spdk_dif_generate_stream(pdu->data_iov, pdu->data_iovcnt, 0, data_len,
+						     pdu->dif_ctx) != 0) {
+				SPDK_ERRLOG("DIF generate failed\n");
+				return NVME_TCP_PDU_FATAL;
 			}
 
 			/* All of this PDU has now been read from the socket. */
