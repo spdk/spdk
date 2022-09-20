@@ -410,19 +410,34 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 	char	*tx_buf = NULL;
 	char	*rx_buf = NULL;
 	int	rc;
+	uint64_t write_offset = offset;
+	uint32_t write_data_len = data_length;
 
 	target = g_current_io_target;
 
+	if (spdk_bdev_get_write_unit_size(target->bdev) > 1 && expected_rc == 0) {
+		uint32_t write_unit_bytes;
+
+		write_unit_bytes = spdk_bdev_get_write_unit_size(target->bdev) *
+				   spdk_bdev_get_block_size(target->bdev);
+		write_offset -= offset % write_unit_bytes;
+		write_data_len += (offset - write_offset);
+
+		if (write_data_len % write_unit_bytes) {
+			write_data_len += write_unit_bytes - write_data_len % write_unit_bytes;
+		}
+	}
+
 	if (!write_zeroes) {
-		initialize_buffer(&tx_buf, pattern, data_length);
+		initialize_buffer(&tx_buf, pattern, write_data_len);
 		initialize_buffer(&rx_buf, 0, data_length);
 
-		blockdev_write(target, tx_buf, offset, data_length, iov_len);
+		blockdev_write(target, tx_buf, write_offset, write_data_len, iov_len);
 	} else {
-		initialize_buffer(&tx_buf, 0, data_length);
+		initialize_buffer(&tx_buf, 0, write_data_len);
 		initialize_buffer(&rx_buf, pattern, data_length);
 
-		blockdev_write_zeroes(target, tx_buf, offset, data_length);
+		blockdev_write_zeroes(target, tx_buf, write_offset, write_data_len);
 	}
 
 
@@ -440,7 +455,7 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 	}
 
 	if (g_completion_success) {
-		rc = blockdev_write_read_data_match(rx_buf, tx_buf, data_length);
+		rc = blockdev_write_read_data_match(rx_buf, tx_buf + (offset - write_offset), data_length);
 		/* Assert the write by comparing it with values read
 		 * from each blockdev */
 		CU_ASSERT_EQUAL(rc, 0);
