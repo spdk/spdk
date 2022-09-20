@@ -112,5 +112,5 @@ service StorageManagementAgent {
     returns (AttachVolumeResponse) {}
   // Detaches a volume from a device
   rpc DetachVolume (DetachVolumeRequest)
-    returns (DetachVolumeRequest) {}
+    returns (DetachVolumeResponse) {}
 }
