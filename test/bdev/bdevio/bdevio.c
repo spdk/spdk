@@ -831,52 +831,37 @@ blockdev_write_read_invalid_size(void)
 static void
 blockdev_write_read_offset_plus_nbytes_equals_bdev_size(void)
 {
-	struct io_target *target;
-	struct spdk_bdev *bdev;
-	char	*tx_buf = NULL;
-	char	*rx_buf = NULL;
+	uint32_t data_length;
 	uint64_t offset;
-	uint32_t block_size;
-	int rc;
+	int pattern;
+	int expected_rc;
+	struct io_target *target = g_current_io_target;
+	struct spdk_bdev *bdev = target->bdev;
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
-	target = g_current_io_target;
-	bdev = target->bdev;
-
-	block_size = spdk_bdev_get_block_size(bdev);
-
+	data_length = block_size;
+	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
 	/* The start offset has been set to a marginal value
 	 * such that offset + nbytes == Total size of
 	 * blockdev. */
 	offset = ((spdk_bdev_get_num_blocks(bdev) - 1) * block_size);
+	pattern = 0xA3;
+	/* Params are valid, hence the expected return value
+	 * of write and read for all blockdevs is 0. */
+	expected_rc = 0;
 
-	initialize_buffer(&tx_buf, 0xA3, block_size);
-	initialize_buffer(&rx_buf, 0, block_size);
-
-	blockdev_write(target, tx_buf, offset, block_size, 0);
-	CU_ASSERT_EQUAL(g_completion_success, true);
-
-	blockdev_read(target, rx_buf, offset, block_size, 0);
-	CU_ASSERT_EQUAL(g_completion_success, true);
-
-	rc = blockdev_write_read_data_match(rx_buf, tx_buf, block_size);
-	/* Assert the write by comparing it with values read
-	 * from each blockdev */
-	CU_ASSERT_EQUAL(rc, 0);
-
-	spdk_free(tx_buf);
-	spdk_free(rx_buf);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 }
 
 static void
 blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 {
-	struct io_target *target = g_current_io_target;
-	struct spdk_bdev *bdev = target->bdev;
-	char	*tx_buf = NULL;
-	char	*rx_buf = NULL;
-	int	data_length;
+	uint32_t data_length;
 	uint64_t offset;
 	int pattern;
+	int expected_rc;
+	struct io_target *target = g_current_io_target;
+	struct spdk_bdev *bdev = target->bdev;
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
 	/* Tests the overflow condition of the blockdevs. */
@@ -884,25 +869,15 @@ blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
 	pattern = 0xA3;
 
-	target = g_current_io_target;
-	bdev = target->bdev;
-
 	/* The start offset has been set to a valid value
 	 * but offset + nbytes is greater than the Total size
 	 * of the blockdev. The test should fail. */
 	offset = (spdk_bdev_get_num_blocks(bdev) - 1) * block_size;
+	/* Params are invalid, hence the expected return value
+	 * of write and read for all blockdevs is < 0 */
+	expected_rc = -1;
 
-	initialize_buffer(&tx_buf, pattern, data_length);
-	initialize_buffer(&rx_buf, 0, data_length);
-
-	blockdev_write(target, tx_buf, offset, data_length, 0);
-	CU_ASSERT_EQUAL(g_completion_success, false);
-
-	blockdev_read(target, rx_buf, offset, data_length, 0);
-	CU_ASSERT_EQUAL(g_completion_success, false);
-
-	spdk_free(tx_buf);
-	spdk_free(rx_buf);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 }
 
 static void
