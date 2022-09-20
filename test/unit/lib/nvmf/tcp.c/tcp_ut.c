@@ -818,6 +818,7 @@ test_nvmf_tcp_send_c2h_term_req(void)
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.plen == tqpair.mgmt_pdu->hdr.term_req.common.hlen +
 		  pdu.hdr.common.hlen);
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD);
 
 	/* case2: hlen > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE, Expect: copy_len == SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE */
 	pdu.hdr.common.hlen = 255;
@@ -827,6 +828,7 @@ test_nvmf_tcp_send_c2h_term_req(void)
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.plen == (unsigned)
 		  tqpair.mgmt_pdu->hdr.term_req.common.hlen + SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE);
 	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD);
 }
 
 static void
