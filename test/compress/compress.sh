@@ -95,7 +95,8 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_bdevperf 64 16384 30
 
 	# run perf on nvmf target w/compressed vols
-	export TEST_TRANSPORT=tcp && nvmftestinit
+	export TEST_TRANSPORT=tcp
+	NET_TYPE=virt nvmftestinit
 	nvmfappstart -m 0x7
 	trap "nvmftestfini; error_cleanup; exit 1" SIGINT SIGTERM EXIT
 
