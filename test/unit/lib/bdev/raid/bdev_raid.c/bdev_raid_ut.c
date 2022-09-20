@@ -589,6 +589,28 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
+int
+spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+		  spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	if (cb_fn) {
+		cb_fn(cb_arg, 0);
+	}
+
+	return 0;
+}
+
+int
+spdk_bdev_unquiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
+		    spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
+{
+	if (cb_fn) {
+		cb_fn(cb_arg, 0);
+	}
+
+	return 0;
+}
+
 static void
 bdev_io_cleanup(struct spdk_bdev_io *bdev_io)
 {

@@ -108,6 +108,9 @@ struct raid_bdev {
 	/* array of base bdev info */
 	struct raid_base_bdev_info	*base_bdev_info;
 
+	/* lock to protect the base bdev array */
+	struct spdk_spinlock		base_bdev_lock;
+
 	/* strip size of raid bdev in blocks */
 	uint32_t			strip_size;
 
