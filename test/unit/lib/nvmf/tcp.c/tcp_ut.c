@@ -897,7 +897,14 @@ test_nvmf_tcp_icreq_handle(void)
 
 	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
 
-	/* case 2: Expect: PASS.  */
+	/* case 2: Expected ICReq HPDA in range 0-31 and got are different. */
+	pdu.hdr.ic_req.hpda = SPDK_NVME_TCP_HPDA_MAX + 1;
+
+	nvmf_tcp_icreq_handle(&ttransport, &tqpair, &pdu);
+
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+
+	/* case 3: Expect: PASS.  */
 	ttransport.transport.opts.max_io_size = 32;
 	pdu.hdr.ic_req.pfv = 0;
 	tqpair.host_hdgst_enable = false;

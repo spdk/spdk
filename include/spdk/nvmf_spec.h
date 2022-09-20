@@ -550,6 +550,7 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_req, pfv) == 8, "Incorrect o
 SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_req, hpda) == 10, "Incorrect offset");
 SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_tcp_ic_req, maxr2t) == 12, "Incorrect offset");
 
+#define SPDK_NVME_TCP_HPDA_MAX 31
 #define SPDK_NVME_TCP_CPDA_MAX 31
 #define SPDK_NVME_TCP_PDU_PDO_MAX_OFFSET     ((SPDK_NVME_TCP_CPDA_MAX + 1) << 2)
 

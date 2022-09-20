@@ -1906,6 +1906,14 @@ nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		goto end;
 	}
 
+	/* This value is 0’s based value in units of dwords should not be larger than SPDK_NVME_TCP_HPDA_MAX */
+	if (ic_req->hpda > SPDK_NVME_TCP_HPDA_MAX) {
+		SPDK_ERRLOG("ICReq HPDA out of range 0 to 31, got %u\n", ic_req->hpda);
+		fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
+		error_offset = offsetof(struct spdk_nvme_tcp_ic_req, hpda);
+		goto end;
+	}
+
 	/* MAXR2T is 0's based */
 	SPDK_DEBUGLOG(nvmf_tcp, "maxr2t =%u\n", (ic_req->maxr2t + 1u));
 
