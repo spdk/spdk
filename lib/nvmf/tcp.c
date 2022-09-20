@@ -2209,15 +2209,15 @@ nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			}
 			pdu->rw_offset += rc;
 
+			if (pdu->rw_offset < data_len) {
+				return NVME_TCP_PDU_IN_PROGRESS;
+			}
+
 			if (spdk_unlikely(pdu->dif_ctx != NULL)) {
-				rc = nvmf_tcp_pdu_payload_insert_dif(pdu, pdu->rw_offset - rc, rc);
+				rc = nvmf_tcp_pdu_payload_insert_dif(pdu, 0, data_len);
 				if (rc != 0) {
 					return NVME_TCP_PDU_FATAL;
 				}
-			}
-
-			if (pdu->rw_offset < data_len) {
-				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
 			/* All of this PDU has now been read from the socket. */
