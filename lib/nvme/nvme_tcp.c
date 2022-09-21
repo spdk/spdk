@@ -117,7 +117,6 @@ struct nvme_tcp_req {
 	 * waiting for H2C complete */
 	uint16_t				ttag_r2t_next;
 	bool					in_capsule_data;
-	bool					pdu_in_use;
 	/* It is used to track whether the req can be safely freed */
 	union {
 		uint8_t raw;
@@ -193,7 +192,6 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->expected_datao = 0;
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
-	tcp_req->pdu_in_use = false;
 	tcp_req->r2tl_remain = 0;
 	tcp_req->r2tl_remain_next = 0;
 	tcp_req->active_r2ts = 0;
@@ -1097,7 +1095,6 @@ tcp_data_recv_crc32_done(void *cb_arg, int status)
 	}
 
 end:
-	tcp_req->pdu_in_use = false;
 	nvme_tcp_c2h_data_payload_handle(tqpair, tcp_req->pdu, &dummy_reaped);
 }
 
@@ -1124,13 +1121,11 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 		/* But if the data digest is enabled, tcp_req cannot be NULL */
 		assert(tcp_req != NULL);
 		tgroup = nvme_tcp_poll_group(tqpair->qpair.poll_group);
-		/* Only suport this limitated case for the first step */
+		/* Only suport this limitated case that the request has only one c2h pdu */
 		if ((nvme_qpair_get_state(&tqpair->qpair) >= NVME_QPAIR_CONNECTED) &&
 		    (tgroup != NULL && tgroup->group.group->accel_fn_table.submit_accel_crc32c) &&
 		    spdk_likely(!pdu->dif_ctx && (pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT == 0)
-				&& !tcp_req->pdu_in_use)) {
-
-			tcp_req->pdu_in_use = true;
+				&& tcp_req->req->payload_size == pdu->data_len)) {
 			tcp_req->pdu->hdr = pdu->hdr;
 			tcp_req->pdu->req = tcp_req;
 			memcpy(tcp_req->pdu->data_digest, pdu->data_digest, sizeof(pdu->data_digest));
