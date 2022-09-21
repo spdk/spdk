@@ -42,7 +42,10 @@ state_prefix["subsystem"]=SPDK_NVMF_SUBSYSTEM_
 enums=$(print_enums)
 clear=$(print_clear)
 
+# Add an empty line before "BEGIN {" to avoid it being commented out
+# when there is annotation at the end of bpftrace script
 cat <<- ENUM
+
 	BEGIN {
 		$enums
 	}
