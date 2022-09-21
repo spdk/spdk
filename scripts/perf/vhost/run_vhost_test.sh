@@ -65,9 +65,12 @@ if [[ -n $extra_params ]]; then
 	perf_args+=($extra_params)
 fi
 
-trap 'rm -f "$curdir/fio.conf"' EXIT
+out_fio_conf=${out_fio_conf:-$curdir/fio.conf}
+fio_conf > "$out_fio_conf"
 
-fio_conf > "$curdir/fio.conf"
+[[ -z $only_fio_conf ]] || exit 0
+
+trap 'rm -f "$out_fio_conf"' EXIT
 
 "$rootdir/test/vhost/perf_bench/vhost_perf.sh" \
-	"${perf_args[@]}" --fio-jobs="$curdir/fio.conf"${fio_jobs:+",$fio_jobs"}
+	"${perf_args[@]}" --fio-jobs="$out_fio_conf"${fio_jobs:+",$fio_jobs"}
