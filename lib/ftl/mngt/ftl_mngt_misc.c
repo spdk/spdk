@@ -69,10 +69,12 @@ ftl_mngt_init_mem_pools(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	if (init_p2l_map_pool(dev)) {
 		ftl_mngt_fail_step(mngt);
+		return;
 	}
 
 	if (init_band_md_pool(dev)) {
 		ftl_mngt_fail_step(mngt);
+		return;
 	}
 
 	ftl_mngt_next_step(mngt);
