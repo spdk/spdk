@@ -479,26 +479,6 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 	/* } */
 	spdk_json_write_object_end(w);
 
-	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
-	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
-		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
-
-		spdk_json_write_object_begin(w);
-		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_listener");
-
-		/*     "params" : { */
-		spdk_json_write_named_object_begin(w, "params");
-
-		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
-		nvmf_transport_listen_dump_opts(listener->transport, trid, w);
-
-		/*     } "params" */
-		spdk_json_write_object_end(w);
-
-		/* } */
-		spdk_json_write_object_end(w);
-	}
-
 	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
 	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
 
@@ -565,6 +545,27 @@ nvmf_write_subsystem_config_json(struct spdk_json_write_ctx *w,
 		/* } */
 		spdk_json_write_object_end(w);
 	}
+
+	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
+	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+		trid = spdk_nvmf_subsystem_listener_get_trid(listener);
+
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "method", "nvmf_subsystem_add_listener");
+
+		/*     "params" : { */
+		spdk_json_write_named_object_begin(w, "params");
+
+		spdk_json_write_named_string(w, "nqn", spdk_nvmf_subsystem_get_nqn(subsystem));
+		nvmf_transport_listen_dump_opts(listener->transport, trid, w);
+
+		/*     } "params" */
+		spdk_json_write_object_end(w);
+
+		/* } */
+		spdk_json_write_object_end(w);
+	}
+
 }
 
 void
