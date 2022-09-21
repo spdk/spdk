@@ -358,7 +358,7 @@ static void nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *g
 static void _nvmf_tcp_send_c2h_data(struct spdk_nvmf_tcp_qpair *tqpair,
 				    struct spdk_nvmf_tcp_req *tcp_req);
 
-static void
+static inline void
 nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
 		       enum spdk_nvmf_tcp_req_state state)
 {
