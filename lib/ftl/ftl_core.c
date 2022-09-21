@@ -805,9 +805,19 @@ ftl_stats_crc_error(struct spdk_ftl_dev *dev, enum ftl_stats_type type)
 struct ftl_get_stats_ctx {
 	struct spdk_ftl_dev *dev;
 	struct ftl_stats *stats;
+	struct spdk_thread *thread;
 	spdk_ftl_stats_fn cb_fn;
 	void *cb_arg;
 };
+
+static void
+_ftl_get_stats_cb(void *_ctx)
+{
+	struct ftl_get_stats_ctx *stats_ctx = _ctx;
+
+	stats_ctx->cb_fn(stats_ctx->stats, stats_ctx->cb_arg);
+	free(stats_ctx);
+}
 
 static void
 _ftl_get_stats(void *_ctx)
@@ -816,8 +826,9 @@ _ftl_get_stats(void *_ctx)
 
 	*stats_ctx->stats = stats_ctx->dev->stats;
 
-	stats_ctx->cb_fn(stats_ctx->stats, stats_ctx->cb_arg);
-	free(stats_ctx);
+	if (spdk_thread_send_msg(stats_ctx->thread, _ftl_get_stats_cb, stats_ctx)) {
+		ftl_abort();
+	}
 }
 
 int
@@ -836,6 +847,7 @@ spdk_ftl_get_stats(struct spdk_ftl_dev *dev, struct ftl_stats *stats, spdk_ftl_s
 	stats_ctx->stats = stats;
 	stats_ctx->cb_fn = cb_fn;
 	stats_ctx->cb_arg = cb_arg;
+	stats_ctx->thread = spdk_get_thread();
 
 	rc = spdk_thread_send_msg(dev->core_thread, _ftl_get_stats, stats_ctx);
 	if (rc) {

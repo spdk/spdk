@@ -295,6 +295,8 @@ struct ftl_unmap_ctx {
 	uint64_t num_blocks;
 	spdk_ftl_fn cb_fn;
 	void *cb_arg;
+	struct spdk_thread *thread;
+	int status;
 };
 
 static void
@@ -343,13 +345,23 @@ static const struct ftl_mngt_process_desc g_desc_unmap = {
 };
 
 static void
-ftl_mngt_unmap_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
+unmap_user_cb(void *_ctx)
 {
 	struct ftl_unmap_ctx *ctx = _ctx;
 
-	ctx->cb_fn(ctx->cb_arg, status);
-
+	ctx->cb_fn(ctx->cb_arg, ctx->status);
 	free(ctx);
+}
+
+static void
+ftl_mngt_unmap_cb(struct spdk_ftl_dev *dev, void *_ctx, int status)
+{
+	struct ftl_unmap_ctx *ctx = _ctx;
+	ctx->status = status;
+
+	if (spdk_thread_send_msg(ctx->thread, unmap_user_cb, ctx)) {
+		ftl_abort();
+	}
 }
 
 int
@@ -367,6 +379,7 @@ ftl_mngt_unmap(struct spdk_ftl_dev *dev, uint64_t lba, uint64_t num_blocks, spdk
 	ctx->num_blocks = num_blocks;
 	ctx->cb_fn = cb;
 	ctx->cb_arg = cb_cntx;
+	ctx->thread = spdk_get_thread();
 
 	return ftl_mngt_process_execute(dev, &g_desc_unmap, ftl_mngt_unmap_cb, ctx);
 }
