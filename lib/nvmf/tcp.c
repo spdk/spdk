@@ -2556,25 +2556,6 @@ request_transfer_out(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_tcp_set_in_capsule_data(struct spdk_nvmf_tcp_qpair *tqpair,
-			     struct spdk_nvmf_tcp_req *tcp_req)
-{
-	struct nvme_tcp_pdu *pdu;
-	uint32_t plen = 0;
-
-	pdu = tqpair->pdu_in_progress;
-	plen = pdu->hdr.common.hlen;
-
-	if (tqpair->host_hdgst_enable) {
-		plen += SPDK_NVME_TCP_DIGEST_LEN;
-	}
-
-	if (pdu->hdr.common.plen != plen) {
-		tcp_req->has_in_capsule_data = true;
-	}
-}
-
-static void
 nvmf_tcp_check_fused_ordering(struct spdk_nvmf_tcp_transport *ttransport,
 			      struct spdk_nvmf_tcp_qpair *tqpair,
 			      struct spdk_nvmf_tcp_req *tcp_req)
@@ -2632,6 +2613,8 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 {
 	struct spdk_nvmf_tcp_qpair		*tqpair;
 	int					rc;
+	uint32_t				plen;
+	struct nvme_tcp_pdu			*pdu;
 	enum spdk_nvmf_tcp_req_state		prev_state;
 	bool					progress = false;
 	struct spdk_nvmf_transport		*transport = &ttransport->transport;
@@ -2696,9 +2679,15 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				break;
 			}
 
-			nvmf_tcp_set_in_capsule_data(tqpair, tcp_req);
-
-			if (!tcp_req->has_in_capsule_data) {
+			pdu = tqpair->pdu_in_progress;
+			plen = pdu->hdr.common.hlen;
+			if (tqpair->host_hdgst_enable) {
+				plen += SPDK_NVME_TCP_DIGEST_LEN;
+			}
+			if (pdu->hdr.common.plen != plen) {
+				tcp_req->has_in_capsule_data = true;
+			} else {
+				/* Data is transmitted by C2H PDUs */
 				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 			}
 
