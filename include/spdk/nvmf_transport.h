@@ -487,7 +487,12 @@ struct spdk_nvmf_ctrlr_feat {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_feat) == 40, "Incorrect size");
 
-/* Migration data structure used to save & restore a NVMe-oF controller. */
+/*
+ * Migration data structure used to save & restore a NVMe-oF controller.
+ *
+ * The data structure is experimental.
+ *
+ */
 struct spdk_nvmf_ctrlr_migr_data {
 	/* `data_size` is valid size of `spdk_nvmf_ctrlr_migr_data` without counting `unused`.
 	 * We use this field to migrate `spdk_nvmf_ctrlr_migr_data` from source VM and restore
@@ -528,6 +533,8 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_migr_data) == 4096, "Incorrect 
 /**
  * Save the NVMe-oF controller state and configuration.
  *
+ * The API is experimental.
+ *
  * It is allowed to save the data only when the nvmf subystem is in paused
  * state i.e. there are no outstanding cmds in nvmf layer (other than aer),
  * pending async event completions are getting blocked.
@@ -545,6 +552,8 @@ int spdk_nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
 
 /**
  * Restore the NVMe-oF controller state and configuration.
+ *
+ * The API is experimental.
  *
  * It is allowed to restore the data only when the nvmf subystem is in paused
  * state.
