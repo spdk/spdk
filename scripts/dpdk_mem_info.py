@@ -385,7 +385,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not os.path.exists(args.stats_file):
-        print("Error, specified stats file does not exist. Please make sure you have run the"
+        print("Error, specified stats file does not exist. Please make sure you have run the "
               "env_dpdk_get_mem_stats rpc on the spdk app you want to analyze.")
         exit(1)
 
