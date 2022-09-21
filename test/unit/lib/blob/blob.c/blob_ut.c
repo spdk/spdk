@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -16,6 +16,7 @@
 #include "blob/request.c"
 #include "blob/zeroes.c"
 #include "blob/blob_bs_dev.c"
+#include "esnap_dev.c"
 
 struct spdk_blob_store *g_bs;
 spdk_blob_id g_blobid;
@@ -7408,6 +7409,98 @@ blob_seek_io_unit(void)
 }
 
 static void
+blob_esnap_create(void)
+{
+	struct spdk_blob_store	*bs = g_bs;
+	struct spdk_bs_opts	bs_opts;
+	struct ut_esnap_opts	esnap_opts;
+	struct spdk_blob_opts	opts;
+	struct spdk_blob	*blob;
+	uint32_t		cluster_sz, block_sz;
+	const uint32_t		esnap_num_clusters = 4;
+	uint64_t		esnap_num_blocks;
+	uint32_t		sz;
+	spdk_blob_id		blobid;
+
+	cluster_sz = spdk_bs_get_cluster_size(bs);
+	block_sz = spdk_bs_get_io_unit_size(bs);
+	esnap_num_blocks = cluster_sz * esnap_num_clusters / block_sz;
+
+	/* Create a normal blob and verify it is not an esnap clone. */
+	ut_spdk_blob_opts_init(&opts);
+	blob = ut_blob_create_and_open(bs, &opts);
+	CU_ASSERT(!blob_is_esnap_clone(blob));
+	ut_blob_close_and_delete(bs, blob);
+
+	/* Create an esnap clone blob then verify it is an esnap clone and has the right size */
+	ut_spdk_blob_opts_init(&opts);
+	ut_esnap_opts_init(block_sz, esnap_num_blocks, __func__, &esnap_opts);
+	opts.esnap_id = &esnap_opts;
+	opts.esnap_id_len = sizeof(esnap_opts);
+	opts.num_clusters = esnap_num_clusters;
+	blob = ut_blob_create_and_open(bs, &opts);
+	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	sz = spdk_blob_get_num_clusters(blob);
+	CU_ASSERT(sz == esnap_num_clusters);
+	ut_blob_close_and_delete(bs, blob);
+
+	/* Create an esnap clone without the size and verify it can be grown */
+	ut_spdk_blob_opts_init(&opts);
+	ut_esnap_opts_init(block_sz, esnap_num_blocks, __func__, &esnap_opts);
+	opts.esnap_id = &esnap_opts;
+	opts.esnap_id_len = sizeof(esnap_opts);
+	blob = ut_blob_create_and_open(bs, &opts);
+	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	sz = spdk_blob_get_num_clusters(blob);
+	CU_ASSERT(sz == 0);
+	spdk_blob_resize(blob, 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	sz = spdk_blob_get_num_clusters(blob);
+	CU_ASSERT(sz == 1);
+	spdk_blob_resize(blob, esnap_num_clusters, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	sz = spdk_blob_get_num_clusters(blob);
+	CU_ASSERT(sz == esnap_num_clusters);
+	spdk_blob_resize(blob, esnap_num_clusters + 1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	sz = spdk_blob_get_num_clusters(blob);
+	CU_ASSERT(sz == esnap_num_clusters + 1);
+
+	/* Reload the blobstore and be sure that the blob can be opened. */
+	blobid = spdk_blob_get_id(blob);
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_blob = NULL;
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	bs_opts.esnap_bs_dev_create = ut_esnap_create;
+	ut_bs_reload(&bs, &bs_opts);
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	sz = spdk_blob_get_num_clusters(blob);
+	CU_ASSERT(sz == esnap_num_clusters + 1);
+
+	/* Reload the blobstore without esnap_bs_dev_create: should fail to open blob. */
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_blob = NULL;
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	ut_bs_reload(&bs, &bs_opts);
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno != 0);
+	CU_ASSERT(g_blob == NULL);
+}
+
+static void
 suite_bs_setup(void)
 {
 	struct spdk_bs_dev *dev;
@@ -7418,6 +7511,23 @@ suite_bs_setup(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_bs != NULL);
+}
+
+static void
+suite_esnap_bs_setup(void)
+{
+	struct spdk_bs_dev	*dev;
+	struct spdk_bs_opts	bs_opts;
+
+	dev = init_dev();
+	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	bs_opts.cluster_sz = 16 * 1024;
+	bs_opts.esnap_bs_dev_create = ut_esnap_create;
+	spdk_bs_init(dev, &bs_opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 }
 
 static void
@@ -7500,7 +7610,7 @@ suite_blob_cleanup(void)
 int
 main(int argc, char **argv)
 {
-	CU_pSuite	suite, suite_bs, suite_blob;
+	CU_pSuite	suite, suite_bs, suite_blob, suite_esnap_bs;
 	unsigned int	num_failures;
 
 	CU_set_error_action(CUEA_ABORT);
@@ -7511,6 +7621,9 @@ main(int argc, char **argv)
 			suite_bs_setup, suite_bs_cleanup);
 	suite_blob = CU_add_suite_with_setup_and_teardown("blob_blob", NULL, NULL,
 			suite_blob_setup, suite_blob_cleanup);
+	suite_esnap_bs = CU_add_suite_with_setup_and_teardown("blob_esnap_bs", NULL, NULL,
+			 suite_esnap_bs_setup,
+			 suite_bs_cleanup);
 
 	CU_ADD_TEST(suite, blob_init);
 	CU_ADD_TEST(suite_bs, blob_open);
@@ -7583,6 +7696,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite_bs, blob_persist_test);
 	CU_ADD_TEST(suite_bs, blob_decouple_snapshot);
 	CU_ADD_TEST(suite_bs, blob_seek_io_unit);
+	CU_ADD_TEST(suite_esnap_bs, blob_esnap_create);
 
 	allocate_threads(2);
 	set_thread(0);

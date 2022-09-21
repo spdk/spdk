@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -39,6 +39,13 @@ static int blob_remove_xattr(struct spdk_blob *blob, const char *name, bool inte
 
 static void blob_write_extent_page(struct spdk_blob *blob, uint32_t extent, uint64_t cluster_num,
 				   struct spdk_blob_md_page *page, spdk_blob_op_complete cb_fn, void *cb_arg);
+
+static inline bool
+blob_is_esnap_clone(const struct spdk_blob *blob)
+{
+	assert(blob != NULL);
+	return !!(blob->invalid_flags & SPDK_BLOB_EXTERNAL_SNAPSHOT);
+}
 
 static int
 blob_id_cmp(struct spdk_blob *blob1, struct spdk_blob *blob2)
@@ -1338,6 +1345,54 @@ blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserrno)
 
 static void blob_update_clear_method(struct spdk_blob *blob);
 
+static int
+blob_load_esnap(struct spdk_blob *blob)
+{
+	struct spdk_blob_store *bs = blob->bs;
+	struct spdk_bs_dev *bs_dev = NULL;
+	const void *esnap_id = NULL;
+	size_t id_len = 0;
+	int rc;
+
+	if (bs->esnap_bs_dev_create == NULL) {
+		SPDK_NOTICELOG("blob 0x%" PRIx64 " is an esnap clone but the blobstore was opened "
+			       "without support for esnap clones\n", blob->id);
+		return -ENOTSUP;
+	}
+	assert(blob->back_bs_dev == NULL);
+
+	rc = blob_get_xattr_value(blob, BLOB_EXTERNAL_SNAPSHOT_ID, &esnap_id, &id_len, true);
+	if (rc != 0) {
+		SPDK_ERRLOG("blob 0x%" PRIx64 " is an esnap clone but has no esnap ID\n", blob->id);
+		return -EINVAL;
+	}
+	assert(id_len > 0 && id_len < UINT32_MAX);
+
+	SPDK_INFOLOG(blob, "Creating external snapshot device\n");
+
+	rc = bs->esnap_bs_dev_create(blob, esnap_id, (uint32_t)id_len, &bs_dev);
+	if (rc != 0) {
+		SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": failed to load back_bs_dev "
+			      "with error %d\n", blob->id, rc);
+		return rc;
+	}
+
+	assert(bs_dev != NULL);
+	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": loaded back_bs_dev\n", blob->id);
+	if ((bs->io_unit_size % bs_dev->blocklen) != 0) {
+		SPDK_NOTICELOG("blob 0x%" PRIx64 " external snapshot device block size %u is not "
+			       "compatible with blobstore block size %u\n",
+			       blob->id, bs_dev->blocklen, bs->io_unit_size);
+		bs_dev->destroy(bs_dev);
+		return -EINVAL;
+	}
+
+	blob->back_bs_dev = bs_dev;
+	blob->parent_id = SPDK_BLOBID_EXTERNAL_SNAPSHOT;
+
+	return 0;
+}
+
 static void
 blob_load_backing_dev(void *cb_arg)
 {
@@ -1346,6 +1401,13 @@ blob_load_backing_dev(void *cb_arg)
 	const void			*value;
 	size_t				len;
 	int				rc;
+
+	if (blob_is_esnap_clone(blob)) {
+		rc = blob_load_esnap(blob);
+		assert((rc == 0) ^ (blob->back_bs_dev == NULL));
+		blob_load_final(ctx, rc);
+		return;
+	}
 
 	if (spdk_blob_is_thin_provisioned(blob)) {
 		rc = blob_get_xattr_value(blob, BLOB_SNAPSHOT, &value, &len, true);
@@ -3284,7 +3346,8 @@ bs_blob_list_add(struct spdk_blob *blob)
 	assert(blob != NULL);
 
 	snapshot_id = blob->parent_id;
-	if (snapshot_id == SPDK_BLOBID_INVALID) {
+	if (snapshot_id == SPDK_BLOBID_INVALID ||
+	    snapshot_id == SPDK_BLOBID_EXTERNAL_SNAPSHOT) {
 		return 0;
 	}
 
@@ -3407,6 +3470,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size)
 	SET_FIELD(iter_cb_fn, NULL);
 	SET_FIELD(iter_cb_arg, NULL);
 	SET_FIELD(force_recover, false);
+	SET_FIELD(esnap_bs_dev_create, NULL);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -3534,6 +3598,7 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	bs->max_channel_ops = opts->max_channel_ops;
 	bs->super_blob = SPDK_BLOBID_INVALID;
 	memcpy(&bs->bstype, &opts->bstype, sizeof(opts->bstype));
+	bs->esnap_bs_dev_create = opts->esnap_bs_dev_create;
 
 	/* The metadata is assumed to be at least 1 page */
 	bs->used_md_pages = spdk_bit_array_create(1);
@@ -4610,12 +4675,13 @@ bs_opts_copy(struct spdk_bs_opts *src, struct spdk_bs_opts *dst)
 	SET_FIELD(iter_cb_fn);
 	SET_FIELD(iter_cb_arg);
 	SET_FIELD(force_recover);
+	SET_FIELD(esnap_bs_dev_create);
 
 	dst->opts_size = src->opts_size;
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 72, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 80, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -5780,12 +5846,14 @@ blob_opts_copy(const struct spdk_blob_opts *src, struct spdk_blob_opts *dst)
 	}
 
 	SET_FIELD(use_extent_table);
+	SET_FIELD(esnap_id);
+	SET_FIELD(esnap_id_len);
 
 	dst->opts_size = src->opts_size;
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_opts) == 64, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_opts) == 80, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -5859,6 +5927,22 @@ bs_create_blob(struct spdk_blob_store *bs,
 	}
 
 	blob_set_clear_method(blob, opts_local.clear_method);
+
+	if (opts_local.esnap_id != NULL) {
+		if (opts_local.esnap_id_len > UINT16_MAX) {
+			SPDK_ERRLOG("esnap id length %" PRIu64 "is too long\n",
+				    opts_local.esnap_id_len);
+			goto error;
+
+		}
+		blob_set_thin_provision(blob);
+		blob->invalid_flags |= SPDK_BLOB_EXTERNAL_SNAPSHOT;
+		rc = blob_set_xattr(blob, BLOB_EXTERNAL_SNAPSHOT_ID,
+				    opts_local.esnap_id, opts_local.esnap_id_len, true);
+		if (rc != 0) {
+			goto error;
+		}
+	}
 
 	rc = blob_resize(blob, opts_local.num_clusters);
 	if (rc < 0) {
@@ -8463,4 +8547,15 @@ spdk_bs_grow(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 			     bs_grow_load_super_cpl, ctx);
 }
 
+int
+spdk_blob_get_esnap_id(struct spdk_blob *blob, const void **id, size_t *len)
+{
+	if (!blob_is_esnap_clone(blob)) {
+		return -EINVAL;
+	}
+
+	return blob_get_xattr_value(blob, BLOB_EXTERNAL_SNAPSHOT_ID, id, len, true);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(blob)
+SPDK_LOG_REGISTER_COMPONENT(blob_esnap)

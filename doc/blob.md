@@ -159,6 +159,9 @@ options and their defaults are:
   Blobstore found here is appropriate to claim or not. The default is NULL and unless the application is being deployed in
   an environment where multiple applications using the same disks are at risk of inadvertently using the wrong Blobstore, there
   is no need to set this value. It can, however, be set to any valid set of characters.
+* **External Snapshot Device Creation Callback**: If the blobstore supports external snapshots this function will be called
+  as a blob that clones an external snapshot (an "esnap clone") is opened so that the blobstore consumer can load the external
+  snapshot and register a blobstore device that will satisfy read requests. See @ref blob_pg_esnap_and_esnap_clone.
 
 ### Sub-page Sized Operations
 
@@ -324,6 +327,9 @@ on whether the operation targets blocks that are backed by a cluster owned by th
 * **write to other blocks**: A copy-on-write operation is triggered. See @ref blob_pg_copy_on_write
   for details.
 
+External snapshots allow some external data source to act as a snapshot. This allows clones to be
+created of data that resides outside of the blobstore containing the clone.
+
 #### Thin Provisioning {#blob_pg_thin_provisioning}
 
 As mentioned in @ref blob_pg_cluster_layout, a blob may be thin provisioned. A thin provisioned blob
@@ -412,6 +418,21 @@ A clone can remove its dependence on a snapshot with the following operations:
    than being copied. If the snapshot that was deleted was itself a clone of another snapshot, the
    clone remains a clone, but is now a clone of a different snapshot.
 
+#### External Snapshots and Esnap Clones {#blob_pg_esnap_and_esnap_clone}
+
+A blobstore that is loaded with the `esnap_bs_dev_create` callback defined will support external
+snapshots (esnaps). An external snapshot is not useful on its own: it needs to be cloned by a blob.
+A clone of an external snapshot is referred to as an *esnap clone*. An esnap clone supports IO and
+other operations just like any other clone.
+
+An esnap clone can be recognized in various ways:
+
+* **On disk**: the blob metadata has the `SPDK_BLOB_EXTERNAL_SNAPSHOT` (0x8) bit is set in
+  `invalid_flags` and an internal XATTR with name `BLOB_EXTERNAL_SNAPSHOT_ID` ("EXTSNAP") exists.
+* **In memory**: The `spdk_blob` structure contains the metadata read from disk, `blob->parent_id`
+  is set to `SPDK_BLOBID_EXTERNAL_SNAPSHOT`, and `blob->back_bs_dev` references a blobstore device
+  which is not a blob in the same blobstore nor a zeroes device.
+
 #### Copy-on-write {#blob_pg_copy_on_write}
 
 A copy-on-write operation is somewhat expensive, with the cost being proportional to the cluster
@@ -427,7 +448,8 @@ size. Typical copy-on-write involves the following steps:
 
 If the source cluster is backed by a zeroes device, steps 2 through 4 are skipped. Alternatively, if
 the blobstore resides on a device that can perform the copy on its own, steps 2 through 4 are
-offloaded to the device.
+offloaded to the device. Neither of these optimizations are available when the back device is an
+external snapshot.
 
 ### Sequences and Batches
 

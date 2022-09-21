@@ -29,6 +29,7 @@
 	spdk_bs_create_clone;
 	spdk_blob_get_clones;
 	spdk_blob_get_parent_snapshot;
+	spdk_blob_get_esnap_id;
 	spdk_blob_is_read_only;
 	spdk_blob_is_snapshot;
 	spdk_blob_is_clone;

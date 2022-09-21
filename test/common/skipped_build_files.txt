@@ -28,6 +28,7 @@ test/common/lib/test_sock
 test/common/lib/ut_multithread
 test/common/lib/test_rdma
 test/unit/lib/bdev/raid/common
+test/unit/lib/blob/blob.c/esnap_dev
 test/unit/lib/blob/bs_dev_common
 test/unit/lib/blob/bs_scheduler
 test/unit/lib/ftl/common/utils
