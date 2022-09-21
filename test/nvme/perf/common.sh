@@ -142,11 +142,7 @@ function get_numa_node() {
 		done
 	else
 		for name in $disks; do
-			local bdf
-			# Not reading directly from /sys/block/nvme* because of a kernel bug
-			# which results in NUMA 0 always getting reported.
-			bdf=$(cat /sys/block/$name/device/address)
-			cat /sys/bus/pci/devices/$bdf/numa_node
+			cat "/sys/block/$name/device/numa_node"
 		done
 	fi
 }
