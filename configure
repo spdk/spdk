@@ -95,7 +95,7 @@ function usage() {
 	echo " --without-uring           If an argument is provided, it is considered a directory containing"
 	echo "                           liburing.a and io_uring.h. Otherwise the regular system paths will"
 	echo "                           be searched."
-	echo " --with-uring-zns          Build I/O uring module with ZNS (zoned namespaces) support."
+	echo " --without-uring-zns       Build I/O uring module without ZNS (zoned namespaces) support."
 	echo " --with-openssl[=DIR]      Build OPENSSL with custom path. Otherwise the regular system paths will"
 	echo "                           be searched."
 	echo " --with-fuse               Build FUSE components for mounting a blobfs filesystem."
@@ -576,14 +576,15 @@ for i in "$@"; do
 			;;
 		--with-uring)
 			CONFIG[URING]=y
+			CONFIG[URING_ZNS]=y
 			CONFIG[URING_PATH]=
 			;;
 		--without-uring)
 			CONFIG[URING]=n
 			CONFIG[URING_PATH]=
 			;;
-		--with-uring-zns)
-			CONFIG[URING_ZNS]=y
+		--without-uring-zns)
+			CONFIG[URING_ZNS]=n
 			;;
 		--with-openssl=*)
 			check_dir "$i"
@@ -1080,17 +1081,13 @@ if [[ "${CONFIG[URING]}" = "y" ]]; then
 		echo "Please build and install then re-run this script."
 		exit 1
 	fi
-fi
-
-if [[ "${CONFIG[URING_ZNS]}" = "y" ]]; then
-	if [[ "${CONFIG[URING]}" = "n" ]]; then
-		echo "--with-uring-zns requires --with-uring."
-		exit 1
-	fi
-	if ! echo -e '#include<linux/blkzoned.h>\nint main(void) { return BLK_ZONE_REP_CAPACITY; }\n' \
-		| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
-		echo "--with-uring-zns requires blkzoned.h (from kernel >= linux-5.9)."
-		exit 1
+	# Support for Zoned devices is enabled by default for Uring bdev. Check appropriate support in kernel.
+	if [[ "${CONFIG[URING_ZNS]}" = "y" ]]; then
+		if ! echo -e '#include<linux/blkzoned.h>\nint main(void) { return BLK_ZONE_REP_CAPACITY; }\n' \
+			| "${BUILD_CMD[@]}" -c - 2> /dev/null; then
+			echo "Disabling Zoned NS support in Uring! Requires blkzoned.h from kernel >= linux-5.9."
+			CONFIG[URING_ZNS]=n
+		fi
 	fi
 fi
 

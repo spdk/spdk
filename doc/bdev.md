@@ -605,9 +605,9 @@ The user needs to configure SPDK to include io_uring support:
 
 `configure --with-uring`
 
-To enable uring bdev for ZNS devices use the following:
+Support for zoned devices is enabled by default in uring bdev. It can be explicitly disabled as follows:
 
-`configure --with-uring --with-uring-zns`
+`configure --with-uring --without-uring-zns`
 
 To create a uring bdev with given filename, bdev name and block size use the `bdev_uring_create` RPC.
 
