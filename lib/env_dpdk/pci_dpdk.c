@@ -13,8 +13,8 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver_buf) == 0, "driver_bu
 SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte_pci_driver),
 		   "driver_buf not big enough");
 
-uint64_t
-dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr)
+static uint64_t
+pci_device_vtophys_2207(struct rte_pci_device *dev, uint64_t vaddr)
 {
 	struct rte_mem_resource *res;
 	uint64_t paddr;
@@ -32,20 +32,20 @@ dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr)
 	return SPDK_VTOPHYS_ERROR;
 }
 
-const char *
-dpdk_pci_device_get_name(struct rte_pci_device *rte_dev)
+static const char *
+pci_device_get_name_2207(struct rte_pci_device *rte_dev)
 {
 	return rte_dev->name;
 }
 
-struct rte_devargs *
-dpdk_pci_device_get_devargs(struct rte_pci_device *rte_dev)
+static struct rte_devargs *
+pci_device_get_devargs_2207(struct rte_pci_device *rte_dev)
 {
 	return rte_dev->device.devargs;
 }
 
-void
-dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_device *dev)
+static void
+pci_device_copy_identifiers_2207(struct rte_pci_device *_dev, struct spdk_pci_device *dev)
 {
 	dev->addr.domain = _dev->addr.domain;
 	dev->addr.bus = _dev->addr.bus;
@@ -59,8 +59,8 @@ dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_de
 	dev->socket_id = _dev->device.numa_node;
 }
 
-int
-dpdk_pci_device_map_bar(struct rte_pci_device *dev, uint32_t bar,
+static int
+pci_device_map_bar_2207(struct rte_pci_device *dev, uint32_t bar,
 			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
 {
 	*mapped_addr = dev->mem_resource[bar].addr;
@@ -70,8 +70,8 @@ dpdk_pci_device_map_bar(struct rte_pci_device *dev, uint32_t bar,
 	return 0;
 }
 
-int
-dpdk_pci_device_read_config(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+static int
+pci_device_read_config_2207(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
 	int rc;
 
@@ -80,8 +80,8 @@ dpdk_pci_device_read_config(struct rte_pci_device *dev, void *value, uint32_t le
 	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
 }
 
-int
-dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+static int
+pci_device_write_config_2207(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
 	int rc;
 
@@ -95,8 +95,8 @@ dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t l
 }
 
 /* translate spdk_pci_driver to an rte_pci_driver and register it to dpdk */
-int
-dpdk_pci_driver_register(struct spdk_pci_driver *driver,
+static int
+pci_driver_register_2207(struct spdk_pci_driver *driver,
 			 int (*probe_fn)(struct rte_pci_driver *driver, struct rte_pci_device *device),
 			 int (*remove_fn)(struct rte_pci_device *device))
 
@@ -158,8 +158,8 @@ dpdk_pci_driver_register(struct spdk_pci_driver *driver,
 	return 0;
 }
 
-int
-dpdk_pci_device_enable_interrupt(struct rte_pci_device *rte_dev)
+static int
+pci_device_enable_interrupt_2207(struct rte_pci_device *rte_dev)
 {
 #if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
 	return rte_intr_enable(&rte_dev->intr_handle);
@@ -168,8 +168,8 @@ dpdk_pci_device_enable_interrupt(struct rte_pci_device *rte_dev)
 #endif
 }
 
-int
-dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev)
+static int
+pci_device_disable_interrupt_2207(struct rte_pci_device *rte_dev)
 {
 #if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
 	return rte_intr_disable(&rte_dev->intr_handle);
@@ -178,8 +178,8 @@ dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev)
 #endif
 }
 
-int
-dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev)
+static int
+pci_device_get_interrupt_efd_2207(struct rte_pci_device *rte_dev)
 {
 #if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
 	return rte_dev->intr_handle.fd;
@@ -188,38 +188,166 @@ dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev)
 #endif
 }
 
+static int
+bus_probe_2207(void)
+{
+	return rte_bus_probe();
+}
+
+static void
+bus_scan_2207(void)
+{
+	rte_bus_scan();
+}
+
+static struct rte_devargs *
+device_get_devargs_2207(struct rte_device *dev)
+{
+	return dev->devargs;
+}
+
+static void
+device_set_devargs_2207(struct rte_device *dev, struct rte_devargs *devargs)
+{
+	dev->devargs = devargs;
+}
+
+static const char *
+device_get_name_2207(struct rte_device *dev)
+{
+	return dev->name;
+}
+
+static bool
+device_scan_allowed_2207(struct rte_device *dev)
+{
+	return dev->bus->conf.scan_mode == RTE_BUS_SCAN_ALLOWLIST;
+}
+
+static struct dpdk_fn_table fn_table_2207 = {
+	.pci_device_vtophys		= pci_device_vtophys_2207,
+	.pci_device_get_name		= pci_device_get_name_2207,
+	.pci_device_get_devargs		= pci_device_get_devargs_2207,
+	.pci_device_copy_identifiers	= pci_device_copy_identifiers_2207,
+	.pci_device_map_bar		= pci_device_map_bar_2207,
+	.pci_device_read_config		= pci_device_read_config_2207,
+	.pci_device_write_config	= pci_device_write_config_2207,
+	.pci_driver_register		= pci_driver_register_2207,
+	.pci_device_enable_interrupt	= pci_device_enable_interrupt_2207,
+	.pci_device_disable_interrupt	= pci_device_disable_interrupt_2207,
+	.pci_device_get_interrupt_efd	= pci_device_get_interrupt_efd_2207,
+	.bus_scan			= bus_scan_2207,
+	.bus_probe			= bus_probe_2207,
+	.device_get_devargs		= device_get_devargs_2207,
+	.device_set_devargs		= device_set_devargs_2207,
+	.device_get_name		= device_get_name_2207,
+	.device_scan_allowed		= device_scan_allowed_2207,
+};
+
+static struct dpdk_fn_table *g_dpdk_fn_table = &fn_table_2207;
+
+uint64_t
+dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr)
+{
+	return g_dpdk_fn_table->pci_device_vtophys(dev, vaddr);
+}
+
+const char *
+dpdk_pci_device_get_name(struct rte_pci_device *rte_dev)
+{
+	return g_dpdk_fn_table->pci_device_get_name(rte_dev);
+}
+
+struct rte_devargs *
+dpdk_pci_device_get_devargs(struct rte_pci_device *rte_dev)
+{
+	return g_dpdk_fn_table->pci_device_get_devargs(rte_dev);
+}
+
+void
+dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_device *dev)
+{
+	g_dpdk_fn_table->pci_device_copy_identifiers(_dev, dev);
+}
+
+int
+dpdk_pci_device_map_bar(struct rte_pci_device *dev, uint32_t bar,
+			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+{
+	return g_dpdk_fn_table->pci_device_map_bar(dev, bar, mapped_addr, phys_addr, size);
+}
+
+int
+dpdk_pci_device_read_config(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	return g_dpdk_fn_table->pci_device_read_config(dev, value, len, offset);
+}
+
+int
+dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	return g_dpdk_fn_table->pci_device_write_config(dev, value, len, offset);
+}
+
+int
+dpdk_pci_driver_register(struct spdk_pci_driver *driver,
+			 int (*probe_fn)(struct rte_pci_driver *driver, struct rte_pci_device *device),
+			 int (*remove_fn)(struct rte_pci_device *device))
+
+{
+	return g_dpdk_fn_table->pci_driver_register(driver, probe_fn, remove_fn);
+}
+
+int
+dpdk_pci_device_enable_interrupt(struct rte_pci_device *rte_dev)
+{
+	return g_dpdk_fn_table->pci_device_enable_interrupt(rte_dev);
+}
+
+int
+dpdk_pci_device_disable_interrupt(struct rte_pci_device *rte_dev)
+{
+	return g_dpdk_fn_table->pci_device_disable_interrupt(rte_dev);
+}
+
+int
+dpdk_pci_device_get_interrupt_efd(struct rte_pci_device *rte_dev)
+{
+	return g_dpdk_fn_table->pci_device_get_interrupt_efd(rte_dev);
+}
+
 int
 dpdk_bus_probe(void)
 {
-	return rte_bus_probe();
+	return g_dpdk_fn_table->bus_probe();
 }
 
 void
 dpdk_bus_scan(void)
 {
-	rte_bus_scan();
+	g_dpdk_fn_table->bus_scan();
 }
 
 struct rte_devargs *
 dpdk_device_get_devargs(struct rte_device *dev)
 {
-	return dev->devargs;
+	return g_dpdk_fn_table->device_get_devargs(dev);
 }
 
 void
 dpdk_device_set_devargs(struct rte_device *dev, struct rte_devargs *devargs)
 {
-	dev->devargs = devargs;
+	g_dpdk_fn_table->device_set_devargs(dev, devargs);
 }
 
 const char *
 dpdk_device_get_name(struct rte_device *dev)
 {
-	return dev->name;
+	return g_dpdk_fn_table->device_get_name(dev);
 }
 
 bool
 dpdk_device_scan_allowed(struct rte_device *dev)
 {
-	return dev->bus->conf.scan_mode == RTE_BUS_SCAN_ALLOWLIST;
+	return g_dpdk_fn_table->device_scan_allowed(dev);
 }

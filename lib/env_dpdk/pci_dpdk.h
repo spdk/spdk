@@ -25,6 +25,31 @@ struct rte_pci_device;
 struct rte_pci_driver;
 struct rte_device;
 
+struct dpdk_fn_table {
+	uint64_t (*pci_device_vtophys)(struct rte_pci_device *dev, uint64_t vaddr);
+	const char *(*pci_device_get_name)(struct rte_pci_device *);
+	struct rte_devargs *(*pci_device_get_devargs)(struct rte_pci_device *);
+	void (*pci_device_copy_identifiers)(struct rte_pci_device *_dev, struct spdk_pci_device *dev);
+	int (*pci_device_map_bar)(struct rte_pci_device *dev, uint32_t bar,
+				  void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
+	int (*pci_device_read_config)(struct rte_pci_device *dev, void *value, uint32_t len,
+				      uint32_t offset);
+	int (*pci_device_write_config)(struct rte_pci_device *dev, void *value, uint32_t len,
+				       uint32_t offset);
+	int (*pci_driver_register)(struct spdk_pci_driver *driver,
+				   int (*probe_fn)(struct rte_pci_driver *driver, struct rte_pci_device *device),
+				   int (*remove_fn)(struct rte_pci_device *device));
+	int (*pci_device_enable_interrupt)(struct rte_pci_device *rte_dev);
+	int (*pci_device_disable_interrupt)(struct rte_pci_device *rte_dev);
+	int (*pci_device_get_interrupt_efd)(struct rte_pci_device *rte_dev);
+	void (*bus_scan)(void);
+	int (*bus_probe)(void);
+	struct rte_devargs *(*device_get_devargs)(struct rte_device *dev);
+	void (*device_set_devargs)(struct rte_device *dev, struct rte_devargs *devargs);
+	const char *(*device_get_name)(struct rte_device *dev);
+	bool (*device_scan_allowed)(struct rte_device *dev);
+};
+
 uint64_t dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr);
 const char *dpdk_pci_device_get_name(struct rte_pci_device *);
 struct rte_devargs *dpdk_pci_device_get_devargs(struct rte_pci_device *);
