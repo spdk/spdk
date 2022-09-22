@@ -13,6 +13,11 @@ Protection information is now supported by the malloc bdev module.
 Changing scheduler from dynamic back to static is no longer possible,
 as there is no way of saving original SPDK thread distribution on reactors.
 
+### bdev
+
+New APIs `spdk_bdev_for_each_channel` and `spdk_bdev_for_each_channel_continue` and
+associated function pointers were added to iterate each channel of the required bdev.
+
 ## v22.09
 
 ### accel

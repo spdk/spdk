@@ -321,6 +321,13 @@ struct set_qos_limit_ctx {
 	struct spdk_bdev *bdev;
 };
 
+struct spdk_bdev_channel_iter {
+	spdk_bdev_for_each_channel_msg fn;
+	spdk_bdev_for_each_channel_done cpl;
+	struct spdk_io_channel_iter *i;
+	void *ctx;
+};
+
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
 
@@ -8031,6 +8038,66 @@ spdk_bdev_for_each_bdev_io(struct spdk_bdev *bdev, void *_ctx, spdk_bdev_io_fn f
 			      bdev_channel_for_each_io,
 			      ctx,
 			      bdev_for_each_io_done);
+}
+
+void
+spdk_bdev_for_each_channel_continue(struct spdk_bdev_channel_iter *iter, int status)
+{
+	spdk_for_each_channel_continue(iter->i, status);
+}
+
+static struct spdk_bdev *
+io_channel_iter_get_bdev(struct spdk_io_channel_iter *i)
+{
+	void *io_device = spdk_io_channel_iter_get_io_device(i);
+
+	return __bdev_from_io_dev(io_device);
+}
+
+static void
+bdev_each_channel_msg(struct spdk_io_channel_iter *i)
+{
+	struct spdk_bdev_channel_iter *iter = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = io_channel_iter_get_bdev(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+
+	iter->i = i;
+	iter->fn(iter, bdev, ch, iter->ctx);
+}
+
+static void
+bdev_each_channel_cpl(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_bdev_channel_iter *iter = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev *bdev = io_channel_iter_get_bdev(i);
+
+	iter->i = i;
+	iter->cpl(bdev, iter->ctx, status);
+
+	free(iter);
+}
+
+void
+spdk_bdev_for_each_channel(struct spdk_bdev *bdev, spdk_bdev_for_each_channel_msg fn,
+			   void *ctx, spdk_bdev_for_each_channel_done cpl)
+{
+	struct spdk_bdev_channel_iter *iter;
+
+	assert(bdev != NULL && fn != NULL && ctx != NULL);
+
+	iter = calloc(1, sizeof(struct spdk_bdev_channel_iter));
+	if (iter == NULL) {
+		SPDK_ERRLOG("Unable to allocate iterator\n");
+		assert(false);
+		return;
+	}
+
+	iter->fn = fn;
+	iter->cpl = cpl;
+	iter->ctx = ctx;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_each_channel_msg,
+			      iter, bdev_each_channel_cpl);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(bdev)

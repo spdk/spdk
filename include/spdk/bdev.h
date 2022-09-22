@@ -1934,6 +1934,60 @@ size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
 int spdk_bdev_get_memory_domains(struct spdk_bdev *bdev, struct spdk_memory_domain **domains,
 				 int array_size);
 
+/**
+ * \brief SPDK bdev channel iterator.
+ *
+ * This is a virtual representation of a bdev channel iterator.
+ */
+struct spdk_bdev_channel_iter;
+
+/**
+ * Called on the appropriate thread for each channel associated with the given bdev.
+ *
+ * \param i bdev channel iterator.
+ * \param bdev Block device.
+ * \param ch I/O channel.
+ * \param ctx context of the bdev channel iterator.
+ */
+typedef void (*spdk_bdev_for_each_channel_msg)(struct spdk_bdev_channel_iter *i,
+		struct spdk_bdev *bdev, struct spdk_io_channel *ch, void *ctx);
+
+/**
+ * spdk_bdev_for_each_channel() function's final callback with the given bdev.
+ *
+ * \param bdev Block device.
+ * \param ctx context of the bdev channel iterator.
+ * \param status 0 if it completed successfully, or negative errno if it failed.
+ */
+typedef void (*spdk_bdev_for_each_channel_done)(struct spdk_bdev *bdev, void *ctx, int status);
+
+/**
+ * Helper function to iterate the next channel for spdk_bdev_for_each_channel().
+ *
+ * \param i bdev channel iterator.
+ * \param status Status for the bdev channel iterator;
+ * for non 0 status remaining iterations are terminated.
+ */
+void spdk_bdev_for_each_channel_continue(struct spdk_bdev_channel_iter *i, int status);
+
+/**
+ * Call 'fn' on each channel associated with the given bdev.
+ *
+ * This happens asynchronously, so fn may be called after spdk_bdev_for_each_channel
+ * returns. 'fn' will be called for each channel serially, such that two calls
+ * to 'fn' will not overlap in time. After 'fn' has been called, call
+ * spdk_bdev_for_each_channel_continue() to continue iterating. Note that the
+ * spdk_bdev_for_each_channel_continue() function can be called asynchronously.
+ *
+ * \param bdev 'fn' will be called on each channel associated with this given bdev.
+ * \param fn Called on the appropriate thread for each channel associated with the given bdev.
+ * \param ctx Context for the caller.
+ * \param cpl Called on the thread that spdk_bdev_for_each_channel was initially called
+ * from when 'fn' has been called on each channel.
+ */
+void spdk_bdev_for_each_channel(struct spdk_bdev *bdev, spdk_bdev_for_each_channel_msg fn,
+				void *ctx, spdk_bdev_for_each_channel_done cpl);
+
 #ifdef __cplusplus
 }
 #endif
