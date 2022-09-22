@@ -59,6 +59,7 @@ DPDK_DEPS += ipsecbuild
 endif
 
 ifeq ($(CONFIG_ISAL),y)
+ISALBUILD = isalbuild
 LIB += isalbuild
 DPDK_DEPS += isalbuild
 endif
@@ -89,7 +90,7 @@ dpdkdeps $(DPDK_DEPS): $(WPDK)
 dpdkbuild: $(WPDK) $(DPDK_DEPS)
 endif
 
-lib: $(WPDK) $(DPDKBUILD) $(VFIOUSERBUILD) $(XNVMEBUILD)
+lib: $(WPDK) $(DPDKBUILD) $(VFIOUSERBUILD) $(XNVMEBUILD) $(ISALBUILD)
 module: lib
 shared_lib: module
 app: $(LIB)
