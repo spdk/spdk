@@ -524,7 +524,11 @@ spdk_env_dpdk_post_init(bool legacy_mem)
 {
 	int rc;
 
-	pci_env_init();
+	rc = pci_env_init();
+	if (rc < 0) {
+		SPDK_ERRLOG("pci_env_init() failed\n");
+		return rc;
+	}
 
 	rc = mem_map_init(legacy_mem);
 	if (rc < 0) {

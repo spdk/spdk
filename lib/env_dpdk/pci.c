@@ -296,7 +296,7 @@ _pci_env_init(void)
 	}
 }
 
-void
+int
 pci_env_init(void)
 {
 	struct spdk_pci_driver *driver;
@@ -306,6 +306,7 @@ pci_env_init(void)
 	}
 
 	_pci_env_init();
+	return 0;
 }
 
 void

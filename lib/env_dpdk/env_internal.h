@@ -27,7 +27,7 @@
 #define SHIFT_1GB	30 /* (1 << 30) == 1 GB */
 #define MASK_1GB	((1ULL << SHIFT_1GB) - 1)
 
-void pci_env_init(void);
+int pci_env_init(void);
 void pci_env_reinit(void);
 void pci_env_fini(void);
 int mem_map_init(bool legacy_mem);
