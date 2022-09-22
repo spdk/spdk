@@ -233,7 +233,7 @@ get_dcmi_now_reading() {
 	# Table 6-16, Get Power Reading Command:
 	get_cmd=(0x2 0x1 0x0 0x0)
 
-	if [[ -n ${available_time_periods_in_seconds[interval]} ]]; then
+	if [[ $interval =~ ^[0-9]+$ && -n ${available_time_periods_in_seconds[interval]} ]]; then
 		get_cmd=(0x2 0x2 "${available_time_periods_in_seconds[interval]}" 0x0)
 		get_avg=1
 		mode=02h
@@ -269,7 +269,7 @@ get_dcmi_now_reading() {
 
 		for print in min max avg reading; do
 			[[ -n ${!print} ]] || continue
-			printf '(%s) DCMI %s (mode: %s): %u Watts (interval: %us)\n' \
+			printf '(%s) DCMI %s (mode: %s): %u Watts (interval: %ss)\n' \
 				"$(utc "$ts")" \
 				"$print" \
 				"$mode" \
@@ -296,7 +296,7 @@ get_sdr_now_reading() {
 			power_readings["${power_sensors[sensor]}"]="_sensor${sensor}_readings[@]"
 			reading+=" $unit"
 		fi < <("$ipmitool" -c -S "$sdr_cache" sdr get "${power_sensors[sensor]}") 2> /dev/null
-		printf '(%s) Sensor %s reading: %s (interval %us)\n' \
+		printf '(%s) Sensor %s reading: %s (interval %ss)\n' \
 			"$ts" \
 			"${power_sensors[sensor]}" \
 			"$reading" \
