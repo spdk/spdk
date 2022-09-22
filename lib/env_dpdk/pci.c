@@ -300,6 +300,12 @@ int
 pci_env_init(void)
 {
 	struct spdk_pci_driver *driver;
+	int rc;
+
+	rc = dpdk_pci_init();
+	if (rc) {
+		return rc;
+	}
 
 	TAILQ_FOREACH(driver, &g_pci_drivers, tailq) {
 		dpdk_pci_driver_register(driver, pci_device_init, pci_device_fini);

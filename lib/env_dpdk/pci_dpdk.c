@@ -6,10 +6,35 @@
 #include <rte_config.h>
 #include <rte_version.h>
 #include "pci_dpdk.h"
+#include "spdk/log.h"
 
 extern struct dpdk_fn_table fn_table_2207;
 
-static struct dpdk_fn_table *g_dpdk_fn_table = &fn_table_2207;
+static struct dpdk_fn_table *g_dpdk_fn_table;
+
+int
+dpdk_pci_init(void)
+{
+	uint32_t year = rte_version_year();
+	uint32_t month = rte_version_month();
+	uint32_t minor = rte_version_minor();
+
+	/* Anything 23.x or higher is not supported. */
+	if (year > 22) {
+		SPDK_ERRLOG("DPDK version %d.%02d.%d not supported.\n", year, month, minor);
+		return -EINVAL;
+	}
+
+	/* Anything greater than 22.07 is not supported. */
+	if (year == 22 && month > 7) {
+		SPDK_ERRLOG("DPDK version %d.%02d.%d not supported.\n", year, month, minor);
+		return -EINVAL;
+	}
+
+	/* Everything else we use the 22.07 implementation. */
+	g_dpdk_fn_table = &fn_table_2207;
+	return 0;
+}
 
 uint64_t
 dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr)

@@ -50,6 +50,8 @@ struct dpdk_fn_table {
 	bool (*device_scan_allowed)(struct rte_device *dev);
 };
 
+int dpdk_pci_init(void);
+
 uint64_t dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr);
 const char *dpdk_pci_device_get_name(struct rte_pci_device *);
 struct rte_devargs *dpdk_pci_device_get_devargs(struct rte_pci_device *);
