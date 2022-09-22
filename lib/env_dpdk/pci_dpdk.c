@@ -15,9 +15,16 @@ static struct dpdk_fn_table *g_dpdk_fn_table;
 int
 dpdk_pci_init(void)
 {
-	uint32_t year = rte_version_year();
-	uint32_t month = rte_version_month();
-	uint32_t minor = rte_version_minor();
+	uint32_t year;
+	uint32_t month;
+	uint32_t minor;
+	int count;
+
+	count = sscanf(rte_version(), "DPDK %u.%u.%u", &year, &month, &minor);
+	if (count != 3) {
+		SPDK_ERRLOG("Unrecognized DPDK version format '%s'\n", rte_version());
+		return -EINVAL;
+	}
 
 	/* Anything 23.x or higher is not supported. */
 	if (year > 22) {
