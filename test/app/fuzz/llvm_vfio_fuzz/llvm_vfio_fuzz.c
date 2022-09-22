@@ -12,6 +12,7 @@
 #include "spdk/nvme.h"
 #include "spdk/likely.h"
 #include "spdk/file.h"
+#include "spdk/util.h"
 
 #include "spdk/vfio_user_pci.h"
 #include <linux/vfio.h>
@@ -51,7 +52,25 @@ fuzz_vfio_user_version(const uint8_t *data, size_t size, struct vfio_device *dev
 					       sizeof(payload), NULL, 0);
 }
 
+static int
+fuzz_vfio_user_region_rw(const uint8_t *data, size_t size, struct vfio_device *dev)
+{
+	uint8_t buf[4];
+	uint64_t offset = 0;
+
+	offset = ((uint64_t)data[0] << 8) + (uint64_t)data[1];
+	offset = (SPDK_ALIGN_FLOOR(offset, 4)) % 4096;
+	memcpy(buf, &data[2], sizeof(buf));
+
+	/* writes to BAR0 depending on the register, therefore the return value is never checked */
+	spdk_vfio_user_pci_bar_access(dev, VFIO_PCI_BAR0_REGION_INDEX, offset, sizeof(buf),
+				      &buf, true);
+	return spdk_vfio_user_pci_bar_access(dev, VFIO_PCI_BAR0_REGION_INDEX, offset, sizeof(buf),
+					     &buf, false);
+}
+
 static struct fuzz_type g_fuzzers[] = {
+	{ .fn = fuzz_vfio_user_region_rw,			.bytes_per_cmd = 6},
 	{ .fn = fuzz_vfio_user_version,				.bytes_per_cmd = 4},
 	{ .fn = NULL,						.bytes_per_cmd = 0}
 };
