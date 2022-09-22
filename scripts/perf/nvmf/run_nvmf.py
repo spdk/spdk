@@ -388,7 +388,10 @@ class Target(Server):
         self._nics_json_obj = json.loads(self.exec_cmd(["ip", "-j", "address", "show"]))
         self.subsystem_info_list = []
         self.initiator_info = []
-        self.enable_pm = True
+        self.enable_pm = False
+        self.pm_delay = 0
+        self.pm_interval = 0
+        self.pm_count = 1
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
@@ -407,8 +410,10 @@ class Target(Server):
             self.enable_zcopy = target_config["zcopy_settings"]
         if "results_dir" in target_config:
             self.results_dir = target_config["results_dir"]
-        if "enable_pm" in target_config:
-            self.enable_pm = target_config["enable_pm"]
+        if "pm_settings" in target_config:
+            self.enable_pm, self.pm_delay, self.pm_interval, self.pm_count = target_config["pm_settings"]
+            # Normalize pm_count - <= 0 means to loop indefinitely so let's avoid that to not block forever
+            self.pm_count = self.pm_count if self.pm_count > 0 else 1
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -502,7 +507,11 @@ class Target(Server):
             f.write("%0.2f" % sar_cpu_usage)
 
     def measure_power(self, results_dir, prefix, script_full_dir):
-        return subprocess.Popen(["%s/../pm/collect-bmc-pm" % script_full_dir, "-d", results_dir, "-l", "-p", prefix, "-x"])
+        time.sleep(self.pm_delay)
+        self.log_print("Starting power measurements")
+        self.exec_cmd(["%s/../pm/collect-bmc-pm" % script_full_dir,
+                      "-d", "%s" % results_dir, "-l", "-p", "%s" % prefix,
+                       "-x", "-c", "%s" % self.pm_count, "-t", "%s" % self.pm_interval])
 
     def ethtool_after_fio_ramp(self, fio_ramp_time):
         time.sleep(fio_ramp_time//2)
@@ -1532,7 +1541,9 @@ if __name__ == "__main__":
                 threads.append(ethtool_thread)
 
             if target_obj.enable_pm:
-                power_daemon = target_obj.measure_power(args.results, "%s_%s_%s" % (block_size, rw, io_depth), script_full_dir)
+                power_daemon = threading.Thread(target=target_obj.measure_power,
+                                                args=(args.results, "%s_%s_%s" % (block_size, rw, io_depth), script_full_dir))
+                threads.append(power_daemon)
 
             for t in threads:
                 t.start()
@@ -1542,9 +1553,6 @@ if __name__ == "__main__":
             for i in initiators:
                 i.init_disconnect()
                 i.copy_result_files(args.results)
-
-            if power_daemon:
-                power_daemon.terminate()
 
         target_obj.restore_governor()
         target_obj.restore_tuned()
