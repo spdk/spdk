@@ -339,6 +339,13 @@ blob_free(struct spdk_blob *blob)
 	free(blob);
 }
 
+static void
+blob_back_bs_destroy(struct spdk_blob *blob)
+{
+	blob->back_bs_dev->destroy(blob->back_bs_dev);
+	blob->back_bs_dev = NULL;
+}
+
 struct freeze_io_ctx {
 	struct spdk_bs_cpl cpl;
 	struct spdk_blob *blob;
@@ -6235,7 +6242,7 @@ bs_snapshot_freeze_cpl(void *cb_arg, int rc)
 	ctx->frozen = true;
 
 	if (newblob->back_bs_dev) {
-		newblob->back_bs_dev->destroy(newblob->back_bs_dev);
+		blob_back_bs_destroy(newblob);
 	}
 	/* set new back_bs_dev for snapshot */
 	newblob->back_bs_dev = origblob->back_bs_dev;
@@ -6532,7 +6539,7 @@ bs_inflate_blob_set_parent_cpl(void *cb_arg, struct spdk_blob *_parent, int bser
 	bs_blob_list_remove(_blob);
 	_blob->parent_id = _parent->id;
 
-	_blob->back_bs_dev->destroy(_blob->back_bs_dev);
+	blob_back_bs_destroy(_blob);
 	_blob->back_bs_dev = bs_create_blob_bs_dev(_parent);
 	bs_blob_list_add(_blob);
 
@@ -6549,8 +6556,7 @@ bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 		/* remove thin provisioning */
 		bs_blob_list_remove(_blob);
 		_blob->invalid_flags = _blob->invalid_flags & ~SPDK_BLOB_THIN_PROV;
-		_blob->back_bs_dev->destroy(_blob->back_bs_dev);
-		_blob->back_bs_dev = NULL;
+		blob_back_bs_destroy(_blob);
 		_blob->parent_id = SPDK_BLOBID_INVALID;
 	} else {
 		_parent = ((struct spdk_blob_bs_dev *)(_blob->back_bs_dev))->blob;
@@ -6563,7 +6569,7 @@ bs_inflate_blob_done(struct spdk_clone_snapshot_ctx *ctx)
 
 		bs_blob_list_remove(_blob);
 		_blob->parent_id = SPDK_BLOBID_INVALID;
-		_blob->back_bs_dev->destroy(_blob->back_bs_dev);
+		blob_back_bs_destroy(_blob);
 		_blob->back_bs_dev = bs_create_zeroes_dev();
 	}
 
@@ -7042,7 +7048,7 @@ static void
 delete_snapshot_update_extent_pages_cpl(struct delete_snapshot_ctx *ctx)
 {
 	/* Delete old backing bs_dev from clone (related to snapshot that will be removed) */
-	ctx->clone->back_bs_dev->destroy(ctx->clone->back_bs_dev);
+	blob_back_bs_destroy(ctx->clone);
 
 	/* Set/remove snapshot xattr and switch parent ID and backing bs_dev on clone... */
 	if (ctx->parent_snapshot_entry != NULL) {
