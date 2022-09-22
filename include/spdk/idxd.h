@@ -265,8 +265,8 @@ int spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
  * by writing to the proper device portal.
  *
  * \param chan IDXD channel to submit request.
- * \param diov Destination iovec. diov with diovcnt must be large enough to hold compressed data.
- * \param diovcnt Number of elements in diov for decompress buffer.
+ * \param dst Destination to write the compressed data to.
+ * \param nbytes Length in bytes. The dst buffer should be large enough to hold the compressed data.
  * \param siov Source iovec
  * \param siovcnt Number of elements in siov
  * \param output_size The size of the compressed data
@@ -278,7 +278,7 @@ int spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
  * \return 0 on success, negative errno on failure.
  */
 int spdk_idxd_submit_compress(struct spdk_idxd_io_channel *chan,
-			      struct iovec *diov, uint32_t diovcnt,
+			      void *dst, uint64_t nbytes,
 			      struct iovec *siov, uint32_t siovcnt, uint32_t *output_size,
 			      int flags, spdk_idxd_req_cb cb_fn, void *cb_arg);
 

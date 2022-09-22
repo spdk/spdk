@@ -221,10 +221,10 @@ int spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct
  * This function will build the compress descriptor and submit it.
  *
  * \param ch I/O channel associated with this call
- * \param dst Destination to compress to.
- * \param src Source to read from.
- * \param nbytes_dst Length in bytes of output buffer.
- * \param nbytes_src Length in bytes of input buffer.
+ * \param dst Destination to write the data to.
+ * \param nbytes Length in bytes.
+ * \param src_iovs The io vector array which stores the src data and len.
+ * \param src_iovcnt The size of the src io vectors.
  * \param output_size The size of the compressed data
  * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
@@ -233,9 +233,10 @@ int spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst, struct
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, void *src,
-			       uint64_t nbytes_dst, uint64_t nbytes_src, uint32_t *output_size,
-			       int flags, spdk_accel_completion_cb cb_fn, void *cb_arg);
+int spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst,
+			       uint64_t nbytes, struct iovec *src_iovs,
+			       size_t src_iovcnt, uint32_t *output_size, int flags,
+			       spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**
  * Build and submit a memory decompress request.
@@ -243,10 +244,10 @@ int spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, void *src,
  * This function will build the decompress descriptor and submit it.
  *
  * \param ch I/O channel associated with this call
- * \param dst Destination. Must be large enough to hold decompressed data.
- * \param src Source to read from.
- * \param nbytes_dst Length in bytes of output buffer.
- * \param nbytes_src Length in bytes of input buffer.
+ * \param dst_iovs The io vector array which stores the dst data and len.
+ * \param dst_iovcnt The size of the dst io vectors.
+ * \param src_iovs The io vector array which stores the src data and len.
+ * \param src_iovcnt The size of the src io vectors.
  * \param flags Flags, optional flags that can vary per operation.
  * \param cb_fn Callback function which will be called when the request is complete.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in
@@ -254,8 +255,9 @@ int spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, void *src,
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *src,
-				 uint64_t nbytes_dst, uint64_t nbytes_src, int flags,
+int spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
+				 size_t dst_iovcnt, struct iovec *src_iovs,
+				 size_t src_iovcnt, int flags,
 				 spdk_accel_completion_cb cb_fn, void *cb_arg);
 
 /**

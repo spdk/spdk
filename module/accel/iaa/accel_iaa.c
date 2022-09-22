@@ -124,28 +124,25 @@ _process_single_task(struct spdk_io_channel *ch, struct spdk_accel_task *task)
 	struct idxd_io_channel *chan = spdk_io_channel_get_ctx(ch);
 	struct idxd_task *idxd_task;
 	int rc = 0;
-	struct iovec siov = {};
-	struct iovec diov = {};
 	int flags = 0;
 
 	idxd_task = SPDK_CONTAINEROF(task, struct idxd_task, task);
 	idxd_task->chan = chan;
 
+	/* TODO: iovec supprot */
+	if (task->d.iovcnt > 1 || task->s.iovcnt > 1) {
+		SPDK_ERRLOG("fatal: IAA does not support > 1 iovec\n");
+		assert(0);
+	}
+
 	switch (task->op_code) {
 	case ACCEL_OPC_COMPRESS:
-		siov.iov_base = task->src;
-		siov.iov_len = task->nbytes;
-		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes_dst;
-		rc = spdk_idxd_submit_compress(chan->chan, &diov, 1, &siov, 1, task->output_size,
-					       flags, iaa_done, idxd_task);
+		rc = spdk_idxd_submit_compress(chan->chan, task->dst, task->nbytes_dst, task->s.iovs,
+					       task->s.iovcnt, task->output_size, flags, iaa_done, idxd_task);
 		break;
 	case ACCEL_OPC_DECOMPRESS:
-		siov.iov_base = task->src;
-		siov.iov_len = task->nbytes;
-		diov.iov_base = task->dst;
-		diov.iov_len = task->nbytes_dst;
-		rc = spdk_idxd_submit_decompress(chan->chan, &diov, 1, &siov, 1, flags, iaa_done, idxd_task);
+		rc = spdk_idxd_submit_decompress(chan->chan, task->d.iovs, task->d.iovcnt, task->s.iovs,
+						 task->s.iovcnt, flags, iaa_done, idxd_task);
 		break;
 	default:
 		assert(false);

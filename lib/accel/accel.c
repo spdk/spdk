@@ -388,25 +388,31 @@ spdk_accel_submit_copy_crc32cv(struct spdk_io_channel *ch, void *dst,
 }
 
 int
-spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes_dst,
-			   uint64_t nbytes_src, uint32_t *output_size, int flags,
+spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, uint64_t nbytes,
+			   struct iovec *src_iovs, size_t src_iovcnt, uint32_t *output_size, int flags,
 			   spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
 	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_COMPRESS];
 	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_COMPRESS];
+	size_t i, src_len = 0;
 
 	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
 	if (accel_task == NULL) {
 		return -ENOMEM;
 	}
 
+	for (i = 0; i < src_iovcnt; i++) {
+		src_len +=  src_iovs[i].iov_len;
+	}
+
+	accel_task->nbytes = src_len;
 	accel_task->output_size = output_size;
-	accel_task->src = src;
+	accel_task->s.iovs = src_iovs;
+	accel_task->s.iovcnt = src_iovcnt;
 	accel_task->dst = dst;
-	accel_task->nbytes = nbytes_src;
-	accel_task->nbytes_dst = nbytes_dst;
+	accel_task->nbytes_dst = nbytes;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_COMPRESS;
 
@@ -416,8 +422,9 @@ spdk_accel_submit_compress(struct spdk_io_channel *ch, void *dst, void *src, uin
 }
 
 int
-spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes_dst,
-			     uint64_t nbytes_src, int flags, spdk_accel_completion_cb cb_fn, void *cb_arg)
+spdk_accel_submit_decompress(struct spdk_io_channel *ch, struct iovec *dst_iovs,
+			     size_t dst_iovcnt, struct iovec *src_iovs, size_t src_iovcnt,
+			     int flags, spdk_accel_completion_cb cb_fn, void *cb_arg)
 {
 	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
 	struct spdk_accel_task *accel_task;
@@ -429,10 +436,10 @@ spdk_accel_submit_decompress(struct spdk_io_channel *ch, void *dst, void *src, u
 		return -ENOMEM;
 	}
 
-	accel_task->src = src;
-	accel_task->dst = dst;
-	accel_task->nbytes = nbytes_src;
-	accel_task->nbytes_dst = nbytes_dst;
+	accel_task->s.iovs = src_iovs;
+	accel_task->s.iovcnt = src_iovcnt;
+	accel_task->d.iovs = dst_iovs;
+	accel_task->d.iovcnt = dst_iovcnt;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_DECOMPRESS;
 

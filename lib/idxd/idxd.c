@@ -1170,22 +1170,22 @@ error:
 
 int
 spdk_idxd_submit_compress(struct spdk_idxd_io_channel *chan,
-			  struct iovec *diov, uint32_t diovcnt,
+			  void *dst, uint64_t nbytes,
 			  struct iovec *siov, uint32_t siovcnt, uint32_t *output_size,
 			  int flags, spdk_idxd_req_cb cb_fn, void *cb_arg)
 {
 	assert(chan != NULL);
-	assert(diov != NULL);
+	assert(dst != NULL);
 	assert(siov != NULL);
 
-	if (diovcnt == 1 && siovcnt == 1) {
+	if (siovcnt == 1) {
 		/* Simple case - copying one buffer to another */
-		if (diov[0].iov_len < siov[0].iov_len) {
+		if (nbytes < siov[0].iov_len) {
 			return -EINVAL;
 		}
 
-		return _idxd_submit_compress_single(chan, diov[0].iov_base, siov[0].iov_base,
-						    diov[0].iov_len, siov[0].iov_len,
+		return _idxd_submit_compress_single(chan, dst, siov[0].iov_base,
+						    nbytes, siov[0].iov_len,
 						    output_size, flags, cb_fn, cb_arg);
 	}
 	/* TODO: vectored support */

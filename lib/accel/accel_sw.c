@@ -175,18 +175,74 @@ static int
 _sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
 {
 #ifdef SPDK_CONFIG_ISAL
-	sw_ch->stream.next_in = accel_task->src;
-	sw_ch->stream.next_out = accel_task->dst;
-	sw_ch->stream.avail_in = accel_task->nbytes;
-	sw_ch->stream.avail_out = accel_task->nbytes_dst;
+	size_t last_seglen = accel_task->s.iovs[accel_task->s.iovcnt - 1].iov_len;
+	struct iovec *siov = accel_task->s.iovs;
+	struct iovec *diov = accel_task->d.iovs;
+	size_t remaining = accel_task->nbytes;
+	uint32_t s = 0, d = 0;
+	int rc = 0;
 
-	isal_deflate_stateless(&sw_ch->stream);
+	accel_task->d.iovcnt = 1;
+	diov[0].iov_base = accel_task->dst;
+	diov[0].iov_len = accel_task->nbytes_dst;
+
+	isal_deflate_reset(&sw_ch->stream);
+	sw_ch->stream.end_of_stream = 0;
+	sw_ch->stream.next_out = diov[d].iov_base;
+	sw_ch->stream.avail_out = diov[d].iov_len;
+	sw_ch->stream.next_in = siov[s].iov_base;
+	sw_ch->stream.avail_in = siov[s].iov_len;
+
+	do {
+		/* if isal has exhausted the current dst iovec, move to the next
+		 * one if there is one */
+		if (sw_ch->stream.avail_out == 0) {
+			if (++d < accel_task->d.iovcnt) {
+				sw_ch->stream.next_out = diov[d].iov_base;
+				sw_ch->stream.avail_out = diov[d].iov_len;
+				assert(sw_ch->stream.avail_out > 0);
+			} else {
+				/* we have no avail_out but also no more iovecs left so this is
+				 * the case where the output buffer was a perfect fit for the
+				 * compressed data and we're done. */
+				break;
+			}
+		}
+
+		/* if isal has exhausted the current src iovec, move to the next
+		 * one if there is one */
+		if (sw_ch->stream.avail_in == 0 && ((s + 1) < accel_task->s.iovcnt)) {
+			s++;
+			sw_ch->stream.next_in = siov[s].iov_base;
+			sw_ch->stream.avail_in = siov[s].iov_len;
+			assert(sw_ch->stream.avail_in > 0);
+		}
+
+		if (remaining <= last_seglen) {
+			/* Need to set end of stream on last block */
+			sw_ch->stream.end_of_stream = 1;
+		}
+
+		rc = isal_deflate(&sw_ch->stream);
+		if (rc) {
+			SPDK_ERRLOG("isal_deflate retunred error %d.\n", rc);
+		}
+
+		if (remaining > 0) {
+			assert(siov[s].iov_len > sw_ch->stream.avail_in);
+			remaining -= (siov[s].iov_len - sw_ch->stream.avail_in);
+		}
+
+	} while (remaining > 0 || sw_ch->stream.avail_out == 0);
+	assert(sw_ch->stream.avail_in  == 0);
+
+	/* Get our total output size */
 	if (accel_task->output_size != NULL) {
-		assert(accel_task->nbytes_dst > sw_ch->stream.avail_out);
-		*accel_task->output_size = accel_task->nbytes_dst - sw_ch->stream.avail_out;
+		assert(sw_ch->stream.total_out > 0);
+		*accel_task->output_size = sw_ch->stream.total_out;
 	}
 
-	return 0;
+	return rc;
 #else
 	SPDK_ERRLOG("ISAL option is required to use software compression.\n");
 	return -EINVAL;
@@ -197,17 +253,44 @@ static int
 _sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
 {
 #ifdef SPDK_CONFIG_ISAL
-	int rc;
+	struct iovec *siov = accel_task->s.iovs;
+	struct iovec *diov = accel_task->d.iovs;
+	uint32_t s = 0, d = 0;
+	int rc = 0;
 
-	sw_ch->state.next_in = accel_task->src;
-	sw_ch->state.avail_in = accel_task->nbytes;
-	sw_ch->state.next_out = accel_task->dst;
-	sw_ch->state.avail_out = accel_task->nbytes_dst;
+	isal_inflate_reset(&sw_ch->state);
+	sw_ch->state.next_out = diov[d].iov_base;
+	sw_ch->state.avail_out = diov[d].iov_len;
+	sw_ch->state.next_in = siov[s].iov_base;
+	sw_ch->state.avail_in = siov[s].iov_len;
 
-	rc = isal_inflate_stateless(&sw_ch->state);
-	if (rc) {
-		SPDK_ERRLOG("isal_inflate_stateless retunred error %d.\n", rc);
-	}
+	do {
+		/* if isal has exhausted the current dst iovec, move to the next
+		 * one if there is one */
+		if (sw_ch->state.avail_out == 0 && ((d + 1) < accel_task->d.iovcnt)) {
+			d++;
+			sw_ch->state.next_out = diov[d].iov_base;
+			sw_ch->state.avail_out = diov[d].iov_len;
+			assert(sw_ch->state.avail_out > 0);
+		}
+
+		/* if isal has exhausted the current src iovec, move to the next
+		 * one if there is one */
+		if (sw_ch->state.avail_in == 0 && ((s + 1) < accel_task->s.iovcnt)) {
+			s++;
+			sw_ch->state.next_in = siov[s].iov_base;
+			sw_ch->state.avail_in = siov[s].iov_len;
+			assert(sw_ch->state.avail_in > 0);
+		}
+
+		rc = isal_inflate(&sw_ch->state);
+		if (rc) {
+			SPDK_ERRLOG("isal_inflate retunred error %d.\n", rc);
+		}
+
+	} while (sw_ch->state.block_state < ISAL_BLOCK_FINISH);
+	assert(sw_ch->state.avail_in == 0);
+
 	return rc;
 #else
 	SPDK_ERRLOG("ISAL option is required to use software decompression.\n");
@@ -333,7 +416,8 @@ sw_accel_create_cb(void *io_device, void *ctx_buf)
 	sw_ch->completion_poller = SPDK_POLLER_REGISTER(accel_comp_poll, sw_ch, 0);
 
 #ifdef SPDK_CONFIG_ISAL
-	isal_deflate_stateless_init(&sw_ch->stream);
+	isal_deflate_init(&sw_ch->stream);
+	sw_ch->stream.flush = NO_FLUSH;
 	sw_ch->stream.level = 1;
 	sw_ch->stream.level_buf = calloc(1, ISAL_DEF_LVL1_DEFAULT);
 	if (sw_ch->stream.level_buf == NULL) {
