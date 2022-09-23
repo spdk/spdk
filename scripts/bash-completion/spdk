@@ -133,7 +133,7 @@ _spdk_opt_to_complete() {
 		--iova-mode)
 			COMPREPLY=($(compgen -W 'pa va' -- "$cur"))
 			;;
-		--tpoint-group-mask | -e)
+		--tpoint-group | -e)
 			COMPREPLY=($(compgen -W '$(_get_tpoint_g_masks)' -- "$cur"))
 			compopt -o nosort
 			;;

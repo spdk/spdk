@@ -44,7 +44,7 @@ run_step() {
 
 run_bsdump() {
 	# 0x80 is the bit mask for BlobFS tracepoints
-	$SPDK_EXAMPLE_DIR/blobcli -j $ROCKSDB_CONF -b Nvme0n1 --tpoint-group-mask 0x80 &> bsdump.txt
+	$SPDK_EXAMPLE_DIR/blobcli -j $ROCKSDB_CONF -b Nvme0n1 --tpoint-group blobfs &> bsdump.txt
 }
 
 # In the autotest job, we copy the rocksdb source to just outside the spdk directory.
@@ -83,7 +83,7 @@ trap 'dump_db_bench_on_err; run_bsdump || :; rm -f $ROCKSDB_CONF; sanitize_resul
 
 if [ -z "$SKIP_MKFS" ]; then
 	# 0x80 is the bit mask for BlobFS tracepoints
-	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1 --tpoint-group-mask 0x80
+	run_test "blobfs_mkfs" $rootdir/test/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1 --tpoint-group blobfs
 fi
 
 mkdir -p $output_dir/rocksdb

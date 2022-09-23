@@ -62,8 +62,8 @@ static const struct option g_cmdline_options[] = {
 	{"config",			required_argument,	NULL, CONFIG_FILE_OPT_IDX},
 #define LIMIT_COREDUMP_OPT_IDX 'd'
 	{"limit-coredump",		no_argument,		NULL, LIMIT_COREDUMP_OPT_IDX},
-#define TPOINT_GROUP_MASK_OPT_IDX 'e'
-	{"tpoint-group-mask",		required_argument,	NULL, TPOINT_GROUP_MASK_OPT_IDX},
+#define TPOINT_GROUP_OPT_IDX 'e'
+	{"tpoint-group",		required_argument,	NULL, TPOINT_GROUP_OPT_IDX},
 #define SINGLE_FILE_SEGMENTS_OPT_IDX 'g'
 	{"single-file-segments",	no_argument,		NULL, SINGLE_FILE_SEGMENTS_OPT_IDX},
 #define HELP_OPT_IDX		'h'
@@ -812,7 +812,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case LIMIT_COREDUMP_OPT_IDX:
 			opts->enable_coredump = false;
 			break;
-		case TPOINT_GROUP_MASK_OPT_IDX:
+		case TPOINT_GROUP_OPT_IDX:
 			opts->tpoint_group_mask = optarg;
 			break;
 		case SINGLE_FILE_SEGMENTS_OPT_IDX:
