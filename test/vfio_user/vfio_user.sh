@@ -10,5 +10,7 @@ vhosttestinit
 
 run_test "vfio_user_nvme_fio" $WORKDIR/nvme/vfio_user_fio.sh
 run_test "vfio_user_nvme_restart_vm" $WORKDIR/nvme/vfio_user_restart_vm.sh
+run_test "vfio_user_virtio_blk_restart_vm" $WORKDIR/virtio/fio_restart_vm.sh virtio_blk
+run_test "vfio_user_virtio_scsi_restart_vm" $WORKDIR/virtio/fio_restart_vm.sh virtio_scsi
 
 vhosttestfini
