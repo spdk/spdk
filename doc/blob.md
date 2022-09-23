@@ -129,6 +129,11 @@ Channels are an SPDK-wide abstraction and with Blobstore the best way to think a
 required in order to do IO.  The application will perform IO to the channel and channels are best thought of as being
 associated 1:1 with a thread.
 
+With external snapshots (see @ref blob_pg_esnap_and_esnap_clone), a read from a blob may lead to
+reading from the device containing the blobstore or an external snapshot device. To support this,
+each blobstore IO channel maintains a tree of channels to be used when reading from external
+snapshot devices.
+
 ### Blob Identifiers
 
 When an application creates a blob, it does not provide a name as is the case with many other similar
@@ -464,6 +469,13 @@ These requests sets are basically bookkeeping mechanisms to help Blobstore effic
 of IO. They are an internal construct only and are pre-allocated on a per channel basis (channels were discussed
 earlier). They are removed from a channel associated linked list when the set (sequence or batch) is started and
 then returned to the list when completed.
+
+Each request set maintains a reference to a `channel` and a `back_channel`. The `channel` is used
+for performing IO on the blobstore device. The `back_channel` is used for performing IO on the
+blob's back device, `blob->back_bs_dev`. For blobs that are not esnap clones, `channel` and
+`back_channel` reference an IO channel used with the device that contains the blobstore.  For blobs
+that are esnap clones, `channel` is the same as with any other blob and `back_channel` is an IO
+channel for the external snapshot device.
 
 ### Key Internal Structures
 

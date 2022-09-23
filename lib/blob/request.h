@@ -91,8 +91,8 @@ struct spdk_bs_request_set {
 	 */
 	struct spdk_bs_channel		*channel;
 	/*
-	 * The channel used by the blobstore to perform IO on back_bs_dev.
-	 * For now, back_channel == spdk_io_channel_get_ctx(set->channel).
+	 * The channel used by the blobstore to perform IO on back_bs_dev. Unless the blob
+	 * is an esnap clone, back_channel == spdk_io_channel_get_ctx(set->channel).
 	 */
 	struct spdk_io_channel		*back_channel;
 
@@ -135,6 +135,9 @@ spdk_bs_sequence_t *bs_sequence_start_bs(struct spdk_io_channel *channel,
 spdk_bs_sequence_t *bs_sequence_start_blob(struct spdk_io_channel *channel,
 		struct spdk_bs_cpl *cpl, struct spdk_blob *blob);
 
+spdk_bs_sequence_t *bs_sequence_start_esnap(struct spdk_io_channel *channel,
+		struct spdk_bs_cpl *cpl, struct spdk_blob *blob);
+
 void bs_sequence_read_bs_dev(spdk_bs_sequence_t *seq, struct spdk_bs_dev *bs_dev,
 			     void *payload, uint64_t lba, uint32_t lba_count,
 			     spdk_bs_sequence_cpl cb_fn, void *cb_arg);
@@ -172,7 +175,7 @@ void bs_sequence_finish(spdk_bs_sequence_t *seq, int bserrno);
 void bs_user_op_sequence_finish(void *cb_arg, int bserrno);
 
 spdk_bs_batch_t *bs_batch_open(struct spdk_io_channel *channel,
-			       struct spdk_bs_cpl *cpl);
+			       struct spdk_bs_cpl *cpl, struct spdk_blob *blob);
 
 void bs_batch_read_bs_dev(spdk_bs_batch_t *batch, struct spdk_bs_dev *bs_dev,
 			  void *payload, uint64_t lba, uint32_t lba_count);
