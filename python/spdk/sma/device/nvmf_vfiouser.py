@@ -112,13 +112,17 @@ class NvmfVfioDeviceManager(DeviceManager):
 
     def _find_pcidev(self, qclient, name):
         def rsearch(devices, name):
+            found_dev = None
             for dev in devices:
                 if dev['qdev_id'] == name:
-                    return dev
-                if 'pci_bridge' in dev:
-                    return rsearch(dev['pci_bridge']['devices'], name)
-                else:
-                    pass
+                    found_dev = dev
+                elif 'pci_bridge' in dev:
+                    found_dev = rsearch(dev['pci_bridge']['devices'], name)
+
+                if found_dev:
+                    break
+            return found_dev
+
         try:
             buses = qclient.query_pci()['return']
             for bus in buses:
