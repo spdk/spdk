@@ -341,8 +341,9 @@ static inline void bdev_io_complete(void *ctx);
 static void bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 static void bdev_write_zero_buffer_next(void *_bdev_io);
 
-static void bdev_enable_qos_msg(struct spdk_io_channel_iter *i);
-static void bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status);
+static void bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+				struct spdk_io_channel *ch, void *_ctx);
+static void bdev_enable_qos_done(struct spdk_bdev *bdev, void *_ctx, int status);
 
 static int bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				     struct iovec *iov, int iovcnt, void *md_buf, uint64_t offset_blocks,
@@ -3262,9 +3263,9 @@ bdev_desc_free(struct spdk_bdev_desc *desc)
 }
 
 static void
-bdev_channel_poll_timeout_io_done(struct spdk_io_channel_iter *i, int status)
+bdev_channel_poll_timeout_io_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct poll_timeout_ctx *ctx  = spdk_io_channel_iter_get_ctx(i);
+	struct poll_timeout_ctx *ctx  = _ctx;
 	struct spdk_bdev_desc *desc = ctx->desc;
 
 	free(ctx);
@@ -3280,10 +3281,10 @@ bdev_channel_poll_timeout_io_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_channel_poll_timeout_io(struct spdk_io_channel_iter *i)
+bdev_channel_poll_timeout_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			     struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct poll_timeout_ctx *ctx  = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct poll_timeout_ctx *ctx  = _ctx;
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
 	struct spdk_bdev_desc *desc = ctx->desc;
 	struct spdk_bdev_io *bdev_io;
@@ -3292,7 +3293,7 @@ bdev_channel_poll_timeout_io(struct spdk_io_channel_iter *i)
 	pthread_mutex_lock(&desc->mutex);
 	if (desc->closed == true) {
 		pthread_mutex_unlock(&desc->mutex);
-		spdk_for_each_channel_continue(i, -1);
+		spdk_bdev_for_each_channel_continue(i, -1);
 		return;
 	}
 	pthread_mutex_unlock(&desc->mutex);
@@ -3318,7 +3319,7 @@ bdev_channel_poll_timeout_io(struct spdk_io_channel_iter *i)
 	}
 
 end:
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static int
@@ -3345,10 +3346,8 @@ bdev_poll_timeout_io(void *arg)
 	desc->refs++;
 	pthread_mutex_unlock(&desc->mutex);
 
-	spdk_for_each_channel(__bdev_to_io_dev(bdev),
-			      bdev_channel_poll_timeout_io,
-			      ctx,
-			      bdev_channel_poll_timeout_io_done);
+	spdk_bdev_for_each_channel(bdev, bdev_channel_poll_timeout_io, ctx,
+				   bdev_channel_poll_timeout_io_done);
 
 	return SPDK_POLLER_BUSY;
 }
@@ -4062,10 +4061,8 @@ spdk_bdev_get_io_time(const struct spdk_bdev *bdev)
 static void bdev_update_qd_sampling_period(void *ctx);
 
 static void
-_calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
+_calculate_measured_qd_cpl(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
-
 	bdev->internal.measured_queue_depth = bdev->internal.temporary_queue_depth;
 
 	if (bdev->internal.measured_queue_depth) {
@@ -4079,14 +4076,13 @@ _calculate_measured_qd_cpl(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-_calculate_measured_qd(struct spdk_io_channel_iter *i)
+_calculate_measured_qd(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+		       struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(io_ch);
 
 	bdev->internal.temporary_queue_depth += ch->io_outstanding;
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static int
@@ -4096,8 +4092,7 @@ bdev_calculate_measured_queue_depth(void *ctx)
 
 	bdev->internal.qd_poll_in_progress = true;
 	bdev->internal.temporary_queue_depth = 0;
-	spdk_for_each_channel(__bdev_to_io_dev(bdev), _calculate_measured_qd, bdev,
-			      _calculate_measured_qd_cpl);
+	spdk_bdev_for_each_channel(bdev, _calculate_measured_qd, bdev, _calculate_measured_qd_cpl);
 	return SPDK_POLLER_BUSY;
 }
 
@@ -4171,26 +4166,25 @@ struct bdev_get_current_qd_ctx {
 };
 
 static void
-bdev_get_current_qd_done(struct spdk_io_channel_iter *i, int status)
+bdev_get_current_qd_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct bdev_get_current_qd_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	void *io_dev = spdk_io_channel_iter_get_io_device(i);
+	struct bdev_get_current_qd_ctx *ctx = _ctx;
 
-	ctx->cb_fn(__bdev_from_io_dev(io_dev), ctx->current_qd, ctx->cb_arg, 0);
+	ctx->cb_fn(bdev, ctx->current_qd, ctx->cb_arg, 0);
 
 	free(ctx);
 }
 
 static void
-bdev_get_current_qd(struct spdk_io_channel_iter *i)
+bdev_get_current_qd(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+		    struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct bdev_get_current_qd_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct bdev_get_current_qd_ctx *ctx = _ctx;
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
 
 	ctx->current_qd += bdev_ch->io_outstanding;
 
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 void
@@ -4210,10 +4204,7 @@ spdk_bdev_get_current_qd(struct spdk_bdev *bdev, spdk_bdev_get_current_qd_cb cb_
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	spdk_for_each_channel(__bdev_to_io_dev(bdev),
-			      bdev_get_current_qd,
-			      ctx,
-			      bdev_get_current_qd_done);
+	spdk_bdev_for_each_channel(bdev, bdev_get_current_qd, ctx, bdev_get_current_qd_done);
 }
 
 static void
@@ -5391,9 +5382,9 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 static int bdev_reset_poll_for_outstanding_io(void *ctx);
 
 static void
-bdev_reset_check_outstanding_io_done(struct spdk_io_channel_iter *i, int status)
+bdev_reset_check_outstanding_io_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_channel *ch = _ctx;
 	struct spdk_bdev_io *bdev_io;
 
 	bdev_io = TAILQ_FIRST(&ch->queued_resets);
@@ -5419,9 +5410,9 @@ bdev_reset_check_outstanding_io_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_reset_check_outstanding_io(struct spdk_io_channel_iter *i)
+bdev_reset_check_outstanding_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+				struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *cur_ch = spdk_io_channel_get_ctx(io_ch);
 	int status = 0;
 
@@ -5431,7 +5422,7 @@ bdev_reset_check_outstanding_io(struct spdk_io_channel_iter *i)
 		 * to the callback function. */
 		status = -EBUSY;
 	}
-	spdk_for_each_channel_continue(i, status);
+	spdk_bdev_for_each_channel_continue(i, status);
 }
 
 static int
@@ -5443,17 +5434,16 @@ bdev_reset_poll_for_outstanding_io(void *ctx)
 	bdev_io = TAILQ_FIRST(&ch->queued_resets);
 
 	spdk_poller_unregister(&bdev_io->u.reset.wait_poller.poller);
-	spdk_for_each_channel(__bdev_to_io_dev(ch->bdev), bdev_reset_check_outstanding_io,
-			      ch, bdev_reset_check_outstanding_io_done);
+	spdk_bdev_for_each_channel(ch->bdev, bdev_reset_check_outstanding_io, ch,
+				   bdev_reset_check_outstanding_io_done);
 
 	return SPDK_POLLER_BUSY;
 }
 
 static void
-bdev_reset_freeze_channel_done(struct spdk_io_channel_iter *i, int status)
+bdev_reset_freeze_channel_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_channel *ch = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_bdev *bdev = ch->bdev;
+	struct spdk_bdev_channel *ch = _ctx;
 	struct spdk_bdev_io *bdev_io;
 
 	bdev_io = TAILQ_FIRST(&ch->queued_resets);
@@ -5471,14 +5461,14 @@ bdev_reset_freeze_channel_done(struct spdk_io_channel_iter *i, int status)
 	/* In case bdev->reset_io_drain_timeout is not equal to zero,
 	 * submit the reset to the underlying module only if outstanding I/O
 	 * remain after reset_io_drain_timeout seconds have passed. */
-	spdk_for_each_channel(__bdev_to_io_dev(ch->bdev), bdev_reset_check_outstanding_io,
-			      ch, bdev_reset_check_outstanding_io_done);
+	spdk_bdev_for_each_channel(ch->bdev, bdev_reset_check_outstanding_io, ch,
+				   bdev_reset_check_outstanding_io_done);
 }
 
 static void
-bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
+bdev_reset_freeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			  struct spdk_io_channel *ch, void *_ctx)
 {
-	struct spdk_io_channel		*ch;
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 	struct spdk_bdev_shared_resource *shared_resource;
@@ -5486,7 +5476,6 @@ bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 
 	TAILQ_INIT(&tmp_queued);
 
-	ch = spdk_io_channel_iter_get_channel(i);
 	channel = spdk_io_channel_get_ctx(ch);
 	shared_resource = channel->shared_resource;
 	mgmt_channel = shared_resource->mgmt_ch;
@@ -5510,7 +5499,7 @@ bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 	bdev_abort_all_buf_io(&mgmt_channel->need_buf_large, channel);
 	bdev_abort_all_queued_io(&tmp_queued, channel);
 
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -5518,8 +5507,8 @@ bdev_start_reset(void *ctx)
 {
 	struct spdk_bdev_channel *ch = ctx;
 
-	spdk_for_each_channel(__bdev_to_io_dev(ch->bdev), bdev_reset_freeze_channel,
-			      ch, bdev_reset_freeze_channel_done);
+	spdk_bdev_for_each_channel(ch->bdev, bdev_reset_freeze_channel, ch,
+				   bdev_reset_freeze_channel_done);
 }
 
 static void
@@ -5535,7 +5524,7 @@ bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 		/*
 		 * Take a channel reference for the target bdev for the life of this
 		 *  reset.  This guards against the channel getting destroyed while
-		 *  spdk_for_each_channel() calls related to this reset IO are in
+		 *  spdk_bdev_for_each_channel() calls related to this reset IO are in
 		 *  progress.  We will release the reference when this reset is
 		 *  completed.
 		 */
@@ -5587,25 +5576,24 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 }
 
 static void
-bdev_get_device_stat_done(struct spdk_io_channel_iter *i, int status)
+bdev_get_device_stat_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	void *io_device = spdk_io_channel_iter_get_io_device(i);
-	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = _ctx;
 
-	bdev_iostat_ctx->cb(__bdev_from_io_dev(io_device), bdev_iostat_ctx->stat,
+	bdev_iostat_ctx->cb(bdev, bdev_iostat_ctx->stat,
 			    bdev_iostat_ctx->cb_arg, 0);
 	free(bdev_iostat_ctx);
 }
 
 static void
-bdev_get_each_channel_stat(struct spdk_io_channel_iter *i)
+bdev_get_each_channel_stat(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			   struct spdk_io_channel *ch, void *_ctx)
 {
-	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_iostat_ctx *bdev_iostat_ctx = _ctx;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
 	bdev_io_stat_add(bdev_iostat_ctx->stat, &channel->stat);
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 void
@@ -5635,10 +5623,8 @@ spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
 	/* Then iterate and add the statistics from each existing channel. */
-	spdk_for_each_channel(__bdev_to_io_dev(bdev),
-			      bdev_get_each_channel_stat,
-			      bdev_iostat_ctx,
-			      bdev_get_device_stat_done);
+	spdk_bdev_for_each_channel(bdev, bdev_get_each_channel_stat, bdev_iostat_ctx,
+				   bdev_get_device_stat_done);
 }
 
 int
@@ -6113,10 +6099,9 @@ bdev_io_complete(void *ctx)
 static void bdev_destroy_cb(void *io_device);
 
 static void
-bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
+bdev_reset_complete(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_bdev_io *bdev_io = _ctx;
 
 	if (bdev_io->u.reset.ch_ref != NULL) {
 		spdk_put_io_channel(bdev_io->u.reset.ch_ref);
@@ -6132,10 +6117,10 @@ bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_unfreeze_channel(struct spdk_io_channel_iter *i)
+bdev_unfreeze_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+		      struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_io *bdev_io = _ctx;
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct spdk_bdev_io *queued_reset;
 
@@ -6146,7 +6131,7 @@ bdev_unfreeze_channel(struct spdk_io_channel_iter *i)
 		spdk_bdev_io_complete(queued_reset, bdev_io->internal.status);
 	}
 
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 void
@@ -6172,8 +6157,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		pthread_mutex_unlock(&bdev->internal.mutex);
 
 		if (unlock_channels) {
-			spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_unfreeze_channel,
-					      bdev_io, bdev_reset_complete);
+			spdk_bdev_for_each_channel(bdev, bdev_unfreeze_channel, bdev_io,
+						   bdev_reset_complete);
 			return;
 		}
 	} else {
@@ -6599,19 +6584,18 @@ bdev_unregister_unsafe(struct spdk_bdev *bdev)
 }
 
 static void
-bdev_unregister_abort_channel(struct spdk_io_channel_iter *i)
+bdev_unregister_abort_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			      struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
 
 	bdev_channel_abort_queued_ios(bdev_ch);
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
-bdev_unregister(struct spdk_io_channel_iter *i, int status)
+bdev_unregister(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev *bdev = spdk_io_channel_iter_get_ctx(i);
 	int rc;
 
 	pthread_mutex_lock(&g_bdev_mgr.mutex);
@@ -6619,7 +6603,8 @@ bdev_unregister(struct spdk_io_channel_iter *i, int status)
 	/*
 	 * Set the status to REMOVING after completing to abort channels. Otherwise,
 	 * the last spdk_bdev_close() may call spdk_io_device_unregister() while
-	 * spdk_for_each_channel() is executed and spdk_io_device_unregister() may fail.
+	 * spdk_bdev_for_each_channel() is executed and spdk_io_device_unregister()
+	 * may fail.
 	 */
 	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
 	rc = bdev_unregister_unsafe(bdev);
@@ -6666,10 +6651,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 
 	spdk_bdev_set_qd_sampling_period(bdev, 0);
 
-	spdk_for_each_channel(__bdev_to_io_dev(bdev),
-			      bdev_unregister_abort_channel,
-			      bdev,
-			      bdev_unregister);
+	spdk_bdev_for_each_channel(bdev, bdev_unregister_abort_channel, bdev,
+				   bdev_unregister);
 }
 
 int
@@ -6715,9 +6698,7 @@ bdev_start_qos(struct spdk_bdev *bdev)
 			return -ENOMEM;
 		}
 		ctx->bdev = bdev;
-		spdk_for_each_channel(__bdev_to_io_dev(bdev),
-				      bdev_enable_qos_msg, ctx,
-				      bdev_enable_qos_done);
+		spdk_bdev_for_each_channel(bdev, bdev_enable_qos_msg, ctx, bdev_enable_qos_done);
 	}
 
 	return 0;
@@ -7280,11 +7261,9 @@ bdev_disable_qos_done(void *cb_arg)
 }
 
 static void
-bdev_disable_qos_msg_done(struct spdk_io_channel_iter *i, int status)
+bdev_disable_qos_msg_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	void *io_device = spdk_io_channel_iter_get_io_device(i);
-	struct spdk_bdev *bdev = __bdev_from_io_dev(io_device);
-	struct set_qos_limit_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct set_qos_limit_ctx *ctx = _ctx;
 	struct spdk_thread *thread;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
@@ -7299,14 +7278,14 @@ bdev_disable_qos_msg_done(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_disable_qos_msg(struct spdk_io_channel_iter *i)
+bdev_disable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+		     struct spdk_io_channel *ch, void *_ctx)
 {
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
 
 	bdev_ch->flags &= ~BDEV_CH_QOS_ENABLED;
 
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -7323,23 +7302,21 @@ bdev_update_qos_rate_limit_msg(void *cb_arg)
 }
 
 static void
-bdev_enable_qos_msg(struct spdk_io_channel_iter *i)
+bdev_enable_qos_msg(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+		    struct spdk_io_channel *ch, void *_ctx)
 {
-	void *io_device = spdk_io_channel_iter_get_io_device(i);
-	struct spdk_bdev *bdev = __bdev_from_io_dev(io_device);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
 
 	pthread_mutex_lock(&bdev->internal.mutex);
 	bdev_enable_qos(bdev, bdev_ch);
 	pthread_mutex_unlock(&bdev->internal.mutex);
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
-bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status)
+bdev_enable_qos_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct set_qos_limit_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct set_qos_limit_ctx *ctx = _ctx;
 
 	bdev_set_qos_limit_done(ctx, status);
 }
@@ -7445,9 +7422,8 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 			/* Enabling */
 			bdev_set_qos_rate_limits(bdev, limits);
 
-			spdk_for_each_channel(__bdev_to_io_dev(bdev),
-					      bdev_enable_qos_msg, ctx,
-					      bdev_enable_qos_done);
+			spdk_bdev_for_each_channel(bdev, bdev_enable_qos_msg, ctx,
+						   bdev_enable_qos_done);
 		} else {
 			/* Updating */
 			bdev_set_qos_rate_limits(bdev, limits);
@@ -7460,9 +7436,8 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 			bdev_set_qos_rate_limits(bdev, limits);
 
 			/* Disabling */
-			spdk_for_each_channel(__bdev_to_io_dev(bdev),
-					      bdev_disable_qos_msg, ctx,
-					      bdev_disable_qos_msg_done);
+			spdk_bdev_for_each_channel(bdev, bdev_disable_qos_msg, ctx,
+						   bdev_disable_qos_msg_done);
 		} else {
 			pthread_mutex_unlock(&bdev->internal.mutex);
 			bdev_set_qos_limit_done(ctx, 0);
@@ -7481,9 +7456,9 @@ struct spdk_bdev_histogram_ctx {
 };
 
 static void
-bdev_histogram_disable_channel_cb(struct spdk_io_channel_iter *i, int status)
+bdev_histogram_disable_channel_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_histogram_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_histogram_ctx *ctx = _ctx;
 
 	pthread_mutex_lock(&ctx->bdev->internal.mutex);
 	ctx->bdev->internal.histogram_in_progress = false;
@@ -7493,28 +7468,28 @@ bdev_histogram_disable_channel_cb(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_histogram_disable_channel(struct spdk_io_channel_iter *i)
+bdev_histogram_disable_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			       struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 
 	if (ch->histogram != NULL) {
 		spdk_histogram_data_free(ch->histogram);
 		ch->histogram = NULL;
 	}
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static void
-bdev_histogram_enable_channel_cb(struct spdk_io_channel_iter *i, int status)
+bdev_histogram_enable_channel_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_histogram_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_histogram_ctx *ctx = _ctx;
 
 	if (status != 0) {
 		ctx->status = status;
 		ctx->bdev->internal.histogram_enabled = false;
-		spdk_for_each_channel(__bdev_to_io_dev(ctx->bdev), bdev_histogram_disable_channel, ctx,
-				      bdev_histogram_disable_channel_cb);
+		spdk_bdev_for_each_channel(ctx->bdev, bdev_histogram_disable_channel, ctx,
+					   bdev_histogram_disable_channel_cb);
 	} else {
 		pthread_mutex_lock(&ctx->bdev->internal.mutex);
 		ctx->bdev->internal.histogram_in_progress = false;
@@ -7525,9 +7500,9 @@ bdev_histogram_enable_channel_cb(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_histogram_enable_channel(struct spdk_io_channel_iter *i)
+bdev_histogram_enable_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			      struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 	int status = 0;
 
@@ -7538,7 +7513,7 @@ bdev_histogram_enable_channel(struct spdk_io_channel_iter *i)
 		}
 	}
 
-	spdk_for_each_channel_continue(i, status);
+	spdk_bdev_for_each_channel_continue(i, status);
 }
 
 void
@@ -7573,11 +7548,11 @@ spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb
 
 	if (enable) {
 		/* Allocate histogram for each channel */
-		spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_histogram_enable_channel, ctx,
-				      bdev_histogram_enable_channel_cb);
+		spdk_bdev_for_each_channel(bdev, bdev_histogram_enable_channel, ctx,
+					   bdev_histogram_enable_channel_cb);
 	} else {
-		spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_histogram_disable_channel, ctx,
-				      bdev_histogram_disable_channel_cb);
+		spdk_bdev_for_each_channel(bdev, bdev_histogram_disable_channel, ctx,
+					   bdev_histogram_disable_channel_cb);
 	}
 }
 
@@ -7590,20 +7565,20 @@ struct spdk_bdev_histogram_data_ctx {
 };
 
 static void
-bdev_histogram_get_channel_cb(struct spdk_io_channel_iter *i, int status)
+bdev_histogram_get_channel_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_histogram_data_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_histogram_data_ctx *ctx = _ctx;
 
 	ctx->cb_fn(ctx->cb_arg, status, ctx->histogram);
 	free(ctx);
 }
 
 static void
-bdev_histogram_get_channel(struct spdk_io_channel_iter *i)
+bdev_histogram_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			   struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
-	struct spdk_bdev_histogram_data_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_histogram_data_ctx *ctx = _ctx;
 	int status = 0;
 
 	if (ch->histogram == NULL) {
@@ -7612,7 +7587,7 @@ bdev_histogram_get_channel(struct spdk_io_channel_iter *i)
 		spdk_histogram_data_merge(ctx->histogram, ch->histogram);
 	}
 
-	spdk_for_each_channel_continue(i, status);
+	spdk_bdev_for_each_channel_continue(i, status);
 }
 
 void
@@ -7634,8 +7609,8 @@ spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *hist
 
 	ctx->histogram = histogram;
 
-	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_histogram_get_channel, ctx,
-			      bdev_histogram_get_channel_cb);
+	spdk_bdev_for_each_channel(bdev, bdev_histogram_get_channel, ctx,
+				   bdev_histogram_get_channel_cb);
 }
 
 size_t
@@ -7725,21 +7700,21 @@ struct locked_lba_range_ctx {
 };
 
 static void
-bdev_lock_error_cleanup_cb(struct spdk_io_channel_iter *i, int status)
+bdev_lock_error_cleanup_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct locked_lba_range_ctx *ctx = _ctx;
 
 	ctx->cb_fn(ctx->cb_arg, -ENOMEM);
 	free(ctx);
 }
 
-static void bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i);
+static void bdev_unlock_lba_range_get_channel(struct spdk_bdev_channel_iter *i,
+		struct spdk_bdev *bdev, struct spdk_io_channel *ch, void *_ctx);
 
 static void
-bdev_lock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
+bdev_lock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_bdev *bdev = ctx->bdev;
+	struct locked_lba_range_ctx *ctx = _ctx;
 
 	if (status == -ENOMEM) {
 		/* One of the channels could not allocate a range object.
@@ -7748,9 +7723,8 @@ bdev_lock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
 		 * the caller.  We can reuse the unlock function to do that
 		 * clean up.
 		 */
-		spdk_for_each_channel(__bdev_to_io_dev(bdev),
-				      bdev_unlock_lba_range_get_channel, ctx,
-				      bdev_lock_error_cleanup_cb);
+		spdk_bdev_for_each_channel(bdev, bdev_unlock_lba_range_get_channel, ctx,
+					   bdev_lock_error_cleanup_cb);
 		return;
 	}
 
@@ -7771,10 +7745,10 @@ bdev_lock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
 static int
 bdev_lock_lba_range_check_io(void *_i)
 {
-	struct spdk_io_channel_iter *i = _i;
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel_iter *i = _i;
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i->i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
-	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct locked_lba_range_ctx *ctx = i->ctx;
 	struct lba_range *range = ctx->current_range;
 	struct spdk_bdev_io *bdev_io;
 
@@ -7791,16 +7765,16 @@ bdev_lock_lba_range_check_io(void *_i)
 		}
 	}
 
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 	return SPDK_POLLER_BUSY;
 }
 
 static void
-bdev_lock_lba_range_get_channel(struct spdk_io_channel_iter *i)
+bdev_lock_lba_range_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+				struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
-	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct locked_lba_range_ctx *ctx = _ctx;
 	struct lba_range *range;
 
 	TAILQ_FOREACH(range, &ch->locked_ranges, tailq) {
@@ -7814,14 +7788,14 @@ bdev_lock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 			 * range was locked before any I/O could be submitted to the
 			 * new channel.
 			 */
-			spdk_for_each_channel_continue(i, 0);
+			spdk_bdev_for_each_channel_continue(i, 0);
 			return;
 		}
 	}
 
 	range = calloc(1, sizeof(*range));
 	if (range == NULL) {
-		spdk_for_each_channel_continue(i, -ENOMEM);
+		spdk_bdev_for_each_channel_continue(i, -ENOMEM);
 		return;
 	}
 
@@ -7846,8 +7820,8 @@ bdev_lock_lba_range_ctx(struct spdk_bdev *bdev, struct locked_lba_range_ctx *ctx
 	assert(spdk_get_thread() == spdk_io_channel_get_thread(ctx->range.owner_ch->channel));
 
 	/* We will add a copy of this range to each channel now. */
-	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_lock_lba_range_get_channel, ctx,
-			      bdev_lock_lba_range_cb);
+	spdk_bdev_for_each_channel(bdev, bdev_lock_lba_range_get_channel, ctx,
+				   bdev_lock_lba_range_cb);
 }
 
 static bool
@@ -7914,12 +7888,10 @@ bdev_lock_lba_range_ctx_msg(void *_ctx)
 }
 
 static void
-bdev_unlock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
+bdev_unlock_lba_range_cb(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct locked_lba_range_ctx *ctx = _ctx;
 	struct locked_lba_range_ctx *pending_ctx;
-	struct spdk_bdev_channel *ch = ctx->range.owner_ch;
-	struct spdk_bdev *bdev = ch->bdev;
 	struct lba_range *range, *tmp;
 
 	pthread_mutex_lock(&bdev->internal.mutex);
@@ -7945,11 +7917,11 @@ bdev_unlock_lba_range_cb(struct spdk_io_channel_iter *i, int status)
 }
 
 static void
-bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i)
+bdev_unlock_lba_range_get_channel(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+				  struct spdk_io_channel *_ch, void *_ctx)
 {
-	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
-	struct locked_lba_range_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct locked_lba_range_ctx *ctx = _ctx;
 	TAILQ_HEAD(, spdk_bdev_io) io_locked;
 	struct spdk_bdev_io *bdev_io;
 	struct lba_range *range;
@@ -7986,7 +7958,7 @@ bdev_unlock_lba_range_get_channel(struct spdk_io_channel_iter *i)
 		bdev_io_submit(bdev_io);
 	}
 
-	spdk_for_each_channel_continue(i, 0);
+	spdk_bdev_for_each_channel_continue(i, 0);
 }
 
 static int
@@ -8040,8 +8012,8 @@ bdev_unlock_lba_range(struct spdk_bdev_desc *desc, struct spdk_io_channel *_ch,
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 
-	spdk_for_each_channel(__bdev_to_io_dev(bdev), bdev_unlock_lba_range_get_channel, ctx,
-			      bdev_unlock_lba_range_cb);
+	spdk_bdev_for_each_channel(bdev, bdev_unlock_lba_range_get_channel, ctx,
+				   bdev_unlock_lba_range_cb);
 	return 0;
 }
 
@@ -8067,10 +8039,10 @@ struct spdk_bdev_for_each_io_ctx {
 };
 
 static void
-bdev_channel_for_each_io(struct spdk_io_channel_iter *i)
+bdev_channel_for_each_io(struct spdk_bdev_channel_iter *i, struct spdk_bdev *bdev,
+			 struct spdk_io_channel *io_ch, void *_ctx)
 {
-	struct spdk_bdev_for_each_io_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *io_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_for_each_io_ctx *ctx = _ctx;
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(io_ch);
 	struct spdk_bdev_io *bdev_io;
 	int rc = 0;
@@ -8082,13 +8054,13 @@ bdev_channel_for_each_io(struct spdk_io_channel_iter *i)
 		}
 	}
 
-	spdk_for_each_channel_continue(i, rc);
+	spdk_bdev_for_each_channel_continue(i, rc);
 }
 
 static void
-bdev_for_each_io_done(struct spdk_io_channel_iter *i, int status)
+bdev_for_each_io_done(struct spdk_bdev *bdev, void *_ctx, int status)
 {
-	struct spdk_bdev_for_each_io_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_bdev_for_each_io_ctx *ctx = _ctx;
 
 	ctx->cb(ctx->ctx, status);
 
@@ -8114,10 +8086,8 @@ spdk_bdev_for_each_bdev_io(struct spdk_bdev *bdev, void *_ctx, spdk_bdev_io_fn f
 	ctx->fn = fn;
 	ctx->cb = cb;
 
-	spdk_for_each_channel(__bdev_to_io_dev(bdev),
-			      bdev_channel_for_each_io,
-			      ctx,
-			      bdev_for_each_io_done);
+	spdk_bdev_for_each_channel(bdev, bdev_channel_for_each_io, ctx,
+				   bdev_for_each_io_done);
 }
 
 void
