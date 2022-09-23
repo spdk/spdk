@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk/stdinc.h"
@@ -90,6 +90,7 @@ bs_sequence_start(struct spdk_io_channel *_channel,
 	set->cpl = *cpl;
 	set->bserrno = 0;
 	set->channel = channel;
+	set->back_channel = _channel;
 
 	set->cb_args.cb_fn = bs_sequence_completion;
 	set->cb_args.cb_arg = set;
@@ -104,8 +105,8 @@ bs_sequence_read_bs_dev(spdk_bs_sequence_t *seq, struct spdk_bs_dev *bs_dev,
 			void *payload, uint64_t lba, uint32_t lba_count,
 			spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
-	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
-	struct spdk_bs_channel       *channel = set->channel;
+	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)seq;
+	struct spdk_io_channel		*back_channel = set->back_channel;
 
 	SPDK_DEBUGLOG(blob_rw, "Reading %" PRIu32 " blocks from LBA %" PRIu64 "\n", lba_count,
 		      lba);
@@ -113,7 +114,7 @@ bs_sequence_read_bs_dev(spdk_bs_sequence_t *seq, struct spdk_bs_dev *bs_dev,
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
 
-	bs_dev->read(bs_dev, spdk_io_channel_from_ctx(channel), payload, lba, lba_count, &set->cb_args);
+	bs_dev->read(bs_dev, back_channel, payload, lba, lba_count, &set->cb_args);
 }
 
 void
@@ -157,7 +158,7 @@ bs_sequence_readv_bs_dev(spdk_bs_sequence_t *seq, struct spdk_bs_dev *bs_dev,
 			 spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
-	struct spdk_bs_channel       *channel = set->channel;
+	struct spdk_io_channel		*back_channel = set->back_channel;
 
 	SPDK_DEBUGLOG(blob_rw, "Reading %" PRIu32 " blocks from LBA %" PRIu64 "\n", lba_count,
 		      lba);
@@ -167,11 +168,10 @@ bs_sequence_readv_bs_dev(spdk_bs_sequence_t *seq, struct spdk_bs_dev *bs_dev,
 
 	if (set->ext_io_opts) {
 		assert(bs_dev->readv_ext);
-		bs_dev->readv_ext(bs_dev, spdk_io_channel_from_ctx(channel), iov, iovcnt, lba, lba_count,
+		bs_dev->readv_ext(bs_dev, back_channel, iov, iovcnt, lba, lba_count,
 				  &set->cb_args, set->ext_io_opts);
 	} else {
-		bs_dev->readv(bs_dev, spdk_io_channel_from_ctx(channel), iov, iovcnt, lba, lba_count,
-			      &set->cb_args);
+		bs_dev->readv(bs_dev, back_channel, iov, iovcnt, lba, lba_count, &set->cb_args);
 	}
 }
 
@@ -310,6 +310,7 @@ bs_batch_open(struct spdk_io_channel *_channel,
 	set->cpl = *cpl;
 	set->bserrno = 0;
 	set->channel = channel;
+	set->back_channel = _channel;
 
 	set->u.batch.cb_fn = NULL;
 	set->u.batch.cb_arg = NULL;
@@ -328,13 +329,13 @@ bs_batch_read_bs_dev(spdk_bs_batch_t *batch, struct spdk_bs_dev *bs_dev,
 		     void *payload, uint64_t lba, uint32_t lba_count)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
-	struct spdk_bs_channel		*channel = set->channel;
+	struct spdk_io_channel		*back_channel = set->back_channel;
 
 	SPDK_DEBUGLOG(blob_rw, "Reading %" PRIu32 " blocks from LBA %" PRIu64 "\n", lba_count,
 		      lba);
 
 	set->u.batch.outstanding_ops++;
-	bs_dev->read(bs_dev, spdk_io_channel_from_ctx(channel), payload, lba, lba_count, &set->cb_args);
+	bs_dev->read(bs_dev, back_channel, payload, lba, lba_count, &set->cb_args);
 }
 
 void
@@ -445,6 +446,7 @@ bs_user_op_alloc(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
 
 	set->cpl = *cpl;
 	set->channel = channel;
+	set->back_channel = NULL;
 	set->ext_io_opts = NULL;
 
 	args = &set->u.user_op;

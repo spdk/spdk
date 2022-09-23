@@ -85,7 +85,16 @@ struct spdk_bs_request_set {
 
 	int                     bserrno;
 
+	/*
+	 * The blobstore's channel, obtained by blobstore consumers via
+	 * spdk_bs_alloc_io_channel(). Used for IO to the blobstore.
+	 */
 	struct spdk_bs_channel		*channel;
+	/*
+	 * The channel used by the blobstore to perform IO on back_bs_dev.
+	 * For now, back_channel == spdk_io_channel_get_ctx(set->channel).
+	 */
+	struct spdk_io_channel		*back_channel;
 
 	struct spdk_bs_dev_cb_args	cb_args;
 
