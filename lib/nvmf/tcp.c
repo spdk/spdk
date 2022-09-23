@@ -2277,15 +2277,17 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 	struct spdk_nvme_sgl_descriptor		*sgl;
 	struct spdk_nvmf_tcp_poll_group		*tgroup;
 	enum spdk_nvme_tcp_term_req_fes		fes;
+	struct nvme_tcp_pdu			*pdu;
+	struct spdk_nvmf_tcp_qpair		*tqpair;
 	uint32_t				length, error_offset = 0;
 
 	cmd = &req->cmd->nvme_cmd;
 	sgl = &cmd->dptr.sgl1;
 
-	length = sgl->unkeyed.length;
-
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK &&
 	    sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT) {
+		/* get request length from sgl */
+		length = sgl->unkeyed.length;
 		if (spdk_unlikely(length > transport->opts.max_io_size)) {
 			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
 				    length, transport->opts.max_io_size);
@@ -2328,7 +2330,24 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 		uint64_t offset = sgl->address;
 		uint32_t max_len = transport->opts.in_capsule_data_size;
+
 		assert(tcp_req->has_in_capsule_data);
+		/* Capsule Cmd with In-capsule Data should get data length from pdu header */
+		tqpair = tcp_req->pdu->qpair;
+		/* receiving pdu is not same with the pdu in tcp_req */
+		pdu = tqpair->pdu_in_progress;
+		length = pdu->hdr.common.plen - pdu->psh_len - sizeof(struct spdk_nvme_tcp_common_pdu_hdr);
+		if (tqpair->host_ddgst_enable) {
+			length -= SPDK_NVME_TCP_DIGEST_LEN;
+		}
+		/* This error is not defined in NVMe/TCP spec, take this error as fatal error */
+		if (spdk_unlikely(length != sgl->unkeyed.length)) {
+			SPDK_ERRLOG("In-Capsule Data length 0x%x is not equal to SGL data length 0x%x\n",
+				    length, sgl->unkeyed.length);
+			fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD;
+			error_offset = offsetof(struct spdk_nvme_tcp_common_pdu_hdr, plen);
+			goto fatal_err;
+		}
 
 		SPDK_DEBUGLOG(nvmf_tcp, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, length);
