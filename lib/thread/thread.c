@@ -2381,6 +2381,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	i = calloc(1, sizeof(*i));
 	if (!i) {
 		SPDK_ERRLOG("Unable to allocate iterator\n");
+		assert(false);
 		return;
 	}
 
