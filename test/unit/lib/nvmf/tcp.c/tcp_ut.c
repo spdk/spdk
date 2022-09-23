@@ -1013,6 +1013,7 @@ test_nvmf_tcp_invalid_sgl(void)
 
 	struct spdk_nvmf_tcp_req tcp_req = {};
 	struct nvme_tcp_pdu rsp_pdu = {};
+	struct nvme_tcp_pdu mgmt_pdu = {};
 
 	struct spdk_nvme_tcp_cmd *capsule_data;
 	struct spdk_nvme_sgl_descriptor *sgl;
@@ -1043,6 +1044,9 @@ test_nvmf_tcp_invalid_sgl(void)
 	/* init tcp_req */
 	tcp_req.req.qpair = &tqpair.qpair;
 	tcp_req.pdu = &rsp_pdu;
+	tcp_req.pdu->qpair = &tqpair;
+	tqpair.mgmt_pdu = &mgmt_pdu;
+	tqpair.mgmt_pdu->qpair = &tqpair;
 	tcp_req.req.cmd = (union nvmf_h2c_msg *)&tcp_req.cmd;
 	tcp_req.req.rsp = &rsp0;
 	tcp_req.state = TCP_REQUEST_STATE_NEW;
@@ -1068,12 +1072,10 @@ test_nvmf_tcp_invalid_sgl(void)
 
 	/* Process a command and ensure that it fails and the request is set up to return an error */
 	nvmf_tcp_req_process(&ttransport, &tcp_req);
-	CU_ASSERT(STAILQ_EMPTY(&group->pending_buf_queue));
-	CU_ASSERT(tcp_req.state == TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
-	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
-	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.cid == cid);
-	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
-	CU_ASSERT(tcp_req.req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID);
+	CU_ASSERT(!STAILQ_EMPTY(&group->pending_buf_queue));
+	CU_ASSERT(tcp_req.state == TCP_REQUEST_STATE_NEED_BUFFER);
+	CU_ASSERT(tqpair.recv_state == NVME_TCP_PDU_RECV_STATE_ERROR);
+	CU_ASSERT(tqpair.mgmt_pdu->hdr.term_req.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ);
 }
 
 static void

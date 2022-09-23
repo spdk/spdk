@@ -2274,24 +2274,23 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 {
 	struct spdk_nvmf_request		*req = &tcp_req->req;
 	struct spdk_nvme_cmd			*cmd;
-	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
 	struct spdk_nvmf_tcp_poll_group		*tgroup;
-	uint32_t				length;
+	enum spdk_nvme_tcp_term_req_fes		fes;
+	uint32_t				length, error_offset = 0;
 
 	cmd = &req->cmd->nvme_cmd;
-	rsp = &req->rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
 
 	length = sgl->unkeyed.length;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK &&
 	    sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT) {
-		if (length > transport->opts.max_io_size) {
+		if (spdk_unlikely(length > transport->opts.max_io_size)) {
 			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
 				    length, transport->opts.max_io_size);
-			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-			return -1;
+			fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_LIMIT_EXCEEDED;
+			goto fatal_err;
 		}
 
 		/* fill request length and populate iovs */
@@ -2334,13 +2333,14 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 		SPDK_DEBUGLOG(nvmf_tcp, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, length);
 
-		if (offset > max_len) {
-			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
-				    offset, max_len);
-			rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
-			return -1;
+		/* The NVMe/TCP transport does not use ICDOFF to control the in-capsule data offset. ICDOFF should be '0' */
+		if (spdk_unlikely(offset != 0)) {
+			/* Not defined fatal error in NVMe/TCP spec, handle this error as a fatal error */
+			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " should be ZERO in NVMe/TCP\n", offset);
+			fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER;
+			error_offset = offsetof(struct spdk_nvme_tcp_cmd, ccsqe.dptr.sgl1.address);
+			goto fatal_err;
 		}
-		max_len -= (uint32_t)offset;
 
 		if (spdk_unlikely(length > max_len)) {
 			/* According to the SPEC we should support ICD up to 8192 bytes for admin and fabric commands */
@@ -2360,8 +2360,8 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 			} else {
 				SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
 					    length, max_len);
-				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-				return -1;
+				fes = SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_LIMIT_EXCEEDED;
+				goto fatal_err;
 			}
 		} else {
 			req->data = tcp_req->buf;
@@ -2381,10 +2381,14 @@ nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_req *tcp_req,
 
 		return 0;
 	}
-
+	/* If we want to handle the problem here, then we can't skip the following data segment.
+	 * Because this function runs before reading data part, now handle all errors as fatal errors. */
 	SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
 		    sgl->generic.type, sgl->generic.subtype);
-	rsp->status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
+	fes = SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER;
+	error_offset = offsetof(struct spdk_nvme_tcp_cmd, ccsqe.dptr.sgl1.generic);
+fatal_err:
+	nvmf_tcp_send_c2h_term_req(tcp_req->pdu->qpair, tcp_req->pdu, fes, error_offset);
 	return -1;
 }
 
@@ -2629,7 +2633,6 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		     struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvmf_tcp_qpair		*tqpair;
-	int					rc;
 	uint32_t				plen;
 	struct nvme_tcp_pdu			*pdu;
 	enum spdk_nvmf_tcp_req_state		prev_state;
@@ -2726,14 +2729,7 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			}
 
 			/* Try to get a data buffer */
-			rc = nvmf_tcp_req_parse_sgl(tcp_req, transport, group);
-			if (rc < 0) {
-				STAILQ_REMOVE_HEAD(&group->pending_buf_queue, buf_link);
-				/* Reset the tqpair receiving pdu state */
-				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-				nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_COMPLETE);
-				tcp_req->req.rsp->nvme_cpl.cid = tcp_req->req.cmd->nvme_cmd.cid;
-				nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
+			if (nvmf_tcp_req_parse_sgl(tcp_req, transport, group) < 0) {
 				break;
 			}
 
@@ -2909,8 +2905,9 @@ nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		case TCP_REQUEST_STATE_READY_TO_COMPLETE:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_READY_TO_COMPLETE, tqpair->qpair.qid, 0,
 					  (uintptr_t)tcp_req, tqpair);
-			rc = request_transfer_out(&tcp_req->req);
-			assert(rc == 0); /* No good way to handle this currently */
+			if (request_transfer_out(&tcp_req->req) != 0) {
+				assert(0); /* No good way to handle this currently */
+			}
 			break;
 		case TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST:
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST, tqpair->qpair.qid, 0,
