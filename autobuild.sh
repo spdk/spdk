@@ -125,7 +125,7 @@ function build_native_dpdk() {
 	DPDK_DRIVERS=("bus" "bus/pci" "bus/vdev" "mempool/ring" "net/i40e" "net/i40e/base")
 
 	local mlx5_libs_added="n"
-	if [[ "$SPDK_TEST_CRYPTO" -eq 1 ]]; then
+	if [[ "$SPDK_TEST_CRYPTO" -eq 1 || "$SPDK_TEST_SMA" -eq 1 ]]; then
 		intel_ipsec_mb_ver=v0.54
 		intel_ipsec_mb_drv=crypto/aesni_mb
 		intel_ipsec_lib=""
