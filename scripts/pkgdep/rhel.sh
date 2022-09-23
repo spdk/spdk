@@ -124,13 +124,19 @@ yum install -y numactl-devel nasm
 yum install -y systemtap-sdt-devel
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
 	# Tools for developers
+	devtool_pkgs=(git sg3_utils pciutils libabigail bash-completion ruby-devel)
+
 	if echo "$ID $VERSION_ID" | grep -E -q 'centos 8|rocky 8'; then
-		yum install -y python3-pycodestyle
+		devtool_pkgs+=(python3-pycodestyle astyle)
 		echo "Centos 8 and Rocky 8 do not have lcov and ShellCheck dependencies"
+	elif [[ $ID == openeuler ]]; then
+		devtool_pkgs+=(python3-pycodestyle)
+		echo "openEuler does not have astyle, lcov and ShellCheck dependencies"
 	else
-		yum install -y python-pycodestyle lcov ShellCheck
+		devtool_pkgs+=(python-pycodestyle astyle lcov ShellCheck)
 	fi
-	yum install -y git astyle sg3_utils pciutils libabigail bash-completion ruby-devel
+
+	yum install -y "${devtool_pkgs[@]}"
 fi
 if [[ $INSTALL_PMEM == "true" ]]; then
 	# Additional dependencies for building pmem based backends
