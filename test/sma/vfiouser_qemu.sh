@@ -113,7 +113,9 @@ mkdir -p "${VFO_ROOT_PATH}"
 used_vms=$vm_no
 vm_kill_all
 
-vm_setup --os="$VM_IMAGE" --disk-type=virtio --force=$vm_no --qemu-args="-qmp tcp:localhost:10005,server,nowait -device pci-bridge,chassis_nr=1,id=pci.spdk.0"
+vm_setup --os="$VM_IMAGE" --disk-type=virtio --force=$vm_no --qemu-args="-qmp tcp:localhost:10005,server,nowait \
+-device pci-bridge,chassis_nr=1,id=pci.spdk.0 \
+-device pci-bridge,chassis_nr=2,id=pci.spdk.1"
 
 # Run pre-configured VM and wait for them to start
 vm_run $vm_no
@@ -136,6 +138,8 @@ $rootdir/scripts/sma.py -c <(
 		    params:
 		      buses:
 		        - name: 'pci.spdk.0'
+		          count: 32
+		        - name: 'pci.spdk.1'
 		          count: 32
 		      qmp_addr: 127.0.0.1
 		      qmp_port: 10005
@@ -261,6 +265,14 @@ detach_volume "$device1" "$uuid0"
 
 delete_device "$device0"
 delete_device "$device1"
+
+# Create device with allocation on second bus
+device3=$(create_device 42 0 | jq -r '.handle')
+vm_check_subsys_nqn $vm_no nqn.2016-06.io.spdk:vfiouser-42
+
+# Verify that device can be found on second bus and properly deleted
+delete_device "$device3"
+NOT vm_check_subsys_nqn $vm_no nqn.2016-06.io.spdk:vfiouser-42
 
 key0=1234567890abcdef1234567890abcdef
 device0=$(create_device 0 0 | jq -r '.handle')
