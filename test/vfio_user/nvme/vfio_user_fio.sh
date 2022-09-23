@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/vfio_user/common.sh
+source $rootdir/test/vfio_user/nvme/common.sh
 source $rootdir/test/vfio_user/autotest.config
 
 rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
