@@ -1414,7 +1414,7 @@ class KernelInitiator(Initiator):
         nvme_ctrl = os.path.basename(dev_name)[:-2]
         remote_nvme_ip = re.search(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',
                                    self.exec_cmd(["cat", "/sys/class/nvme/%s/address" % nvme_ctrl]))
-        return self.get_route_nic_numa(remote_nvme_ip)
+        return self.get_route_nic_numa(remote_nvme_ip.group(0))
 
     def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
         # Generate connected nvme devices names and sort them by used NIC numa node
