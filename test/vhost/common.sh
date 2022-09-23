@@ -757,8 +757,16 @@ function vm_setup() {
 					boot_disk_present=true
 				fi
 				;;
+			vfio_user_virtio)
+				notice "using socket $VM_DIR/vfu_tgt/virtio.$disk"
+				cmd+=(-device "vfio-user-pci,x-msg-timeout=5000,socket=$VM_DIR/vfu_tgt/virtio.$disk")
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd[-1]+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				;;
 			*)
-				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk, kernel_vhost or vfio_user"
+				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk, kernel_vhost, vfio_user or vfio_user_virtio"
 				return 1
 				;;
 		esac
