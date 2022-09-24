@@ -1077,7 +1077,7 @@ elif [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
 	fi
 fi
 
-if [[ "${CONFIG[URING]}" = "y" ]]; then
+if [[ "${CONFIG[URING]}" = "y" || "${CONFIG[XNVME]}" = "y" ]]; then
 	if [[ -n "${CONFIG[URING_PATH]}" ]]; then
 		check_dir "${CONFIG[URING_PATH]}"
 	elif ! echo -e '#include <liburing.h>\nint main(void) { return 0; }\n' \

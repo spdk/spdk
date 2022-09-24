@@ -220,6 +220,9 @@ XNVME_INCLUDE_DIR=$(XNVME_DIR)/include
 CFLAGS += -I$(XNVME_INCLUDE_DIR)
 LDFLAGS += -L$(XNVME_INSTALL_DIR)
 SYS_LIBS += -lxnvme
+ifneq ($(CONFIG_URING), y)
+SYS_LIBS += -luring
+endif
 endif
 
 ifeq ($(CONFIG_DAOS),y)
