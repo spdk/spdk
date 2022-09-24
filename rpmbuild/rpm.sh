@@ -95,8 +95,14 @@ build_macros() {
 			# Don't build dpdk rpm rather define proper requirements for the spdk.
 			macros+=(-D "dpdk 0")
 			macros+=(-D "shared 1")
-			requirements=${requirements:+$requirements, }"dpdk-devel >= 19.11"
-			build_requirements=${build_requirements:+$build_requirements, }"dpdk-devel >= 19.11"
+			# This maps how Epoch is used inside dpdk packages across different distros. It's
+			# mainly relevant when comparing version of required packages. Default maps to 0.
+			local -A dpdk_rpm_epoch["fedora"]=2
+			local dpdk_version_min=${dpdk_rpm_epoch["$ID"]:-0}:20.11
+			local dpdk_req="dpdk-devel >= $dpdk_version_min"
+
+			requirements=${requirements:+$requirements, }"$dpdk_req"
+			build_requirements=${build_requirements:+$build_requirements, }"$dpdk_req"
 		else
 			dpdk_build_path=$(get_config with-dpdk print)
 			dpdk_path=$(dirname "$dpdk_build_path")

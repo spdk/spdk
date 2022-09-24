@@ -36,13 +36,20 @@ function build_rpms() (
 		# Separate run to see the final .spec in use
 		GEN_SPEC=yes BUILDDIR=$builddir MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@"
 		# Actual build
-		BUILDDIR=$builddir MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@"
+		BUILDDIR=$builddir MAKEFLAGS="$MAKEFLAGS" SPDK_VERSION="$version" DEPS=no "$rootdir/rpmbuild/rpm.sh" "$@" || return $?
 		install_uninstall_rpms
 	}
 
 	build_rpm_with_rpmed_dpdk() {
+		local es=0
+
 		sudo dnf install -y dpdk-devel
-		build_rpm --with-shared --with-dpdk
+		build_rpm --with-shared --with-dpdk || es=$?
+
+		if ((es == 11)); then
+			echo "ERROR: Failed to resolve required build dependencies. Please review the build log." >&2
+		fi
+		return "$es"
 	}
 
 	build_rpm_from_gen_spec() {
