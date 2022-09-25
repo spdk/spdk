@@ -5737,6 +5737,7 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | name of xNVMe bdev to create
 filename                | Required | string      | path to device or file (ex: /dev/nvme0n1)
 io_mechanism            | Required | string      | IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)
+conserve_cpu            | Optional | boolean     | Whether or not to conserve CPU when polling (default: false)
 
 #### Result
 
@@ -5754,7 +5755,8 @@ Example request:
   "params": {
     "name": "bdev_ng0n1",
     "filename": "/dev/ng0n1",
-    "io_mechanism": "io_uring_cmd"
+    "io_mechanism": "io_uring_cmd",
+    "conserve_cpu": false,
   }
 }
 ~~~

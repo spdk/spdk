@@ -39,6 +39,7 @@ struct bdev_xnvme {
 	char			*io_mechanism;
 	struct xnvme_dev	*dev;
 	uint32_t		nsid;
+	bool			conserve_cpu;
 
 	TAILQ_ENTRY(bdev_xnvme) link;
 };
@@ -68,6 +69,7 @@ bdev_xnvme_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_string(w, "name", xnvme->bdev.name);
 		spdk_json_write_named_string(w, "filename", xnvme->filename);
 		spdk_json_write_named_string(w, "io_mechanism", xnvme->io_mechanism);
+		spdk_json_write_named_bool(w, "conserve_cpu", xnvme->conserve_cpu);
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);
@@ -304,7 +306,8 @@ bdev_xnvme_queue_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 struct spdk_bdev *
-create_xnvme_bdev(const char *name, const char *filename, const char *io_mechanism)
+create_xnvme_bdev(const char *name, const char *filename, const char *io_mechanism,
+		  bool conserve_cpu)
 {
 	struct bdev_xnvme *xnvme;
 	uint32_t block_size;
@@ -328,8 +331,14 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 		goto error_return;
 	}
 
-	if (!strcmp(xnvme->io_mechanism, "io_uring_cmd")) {
-		opts.poll_sq = 1;
+	if (!conserve_cpu) {
+		if (!strcmp(xnvme->io_mechanism, "libaio")) {
+			opts.poll_io = 1;
+		} else if (!strcmp(xnvme->io_mechanism, "io_uring")) {
+			opts.poll_io = 1;
+		} else if (!strcmp(xnvme->io_mechanism, "io_uring_cmd")) {
+			opts.poll_sq = 1;
+		}
 	}
 
 	xnvme->filename = strdup(filename);

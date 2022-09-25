@@ -14,6 +14,7 @@ struct rpc_create_xnvme {
 	char *name;
 	char *filename;
 	char *io_mechanism;
+	bool conserve_cpu;
 };
 
 /* Free the allocated memory resource after the RPC handling. */
@@ -30,6 +31,7 @@ static const struct spdk_json_object_decoder rpc_create_xnvme_decoders[] = {
 	{"name", offsetof(struct rpc_create_xnvme, name), spdk_json_decode_string},
 	{"filename", offsetof(struct rpc_create_xnvme, filename), spdk_json_decode_string},
 	{"io_mechanism", offsetof(struct rpc_create_xnvme, io_mechanism), spdk_json_decode_string},
+	{"conserve_cpu", offsetof(struct rpc_create_xnvme, conserve_cpu), spdk_json_decode_bool, true},
 };
 
 static void
@@ -57,7 +59,7 @@ rpc_bdev_xnvme_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	bdev = create_xnvme_bdev(req.name, req.filename, req.io_mechanism);
+	bdev = create_xnvme_bdev(req.name, req.filename, req.io_mechanism, req.conserve_cpu);
 	if (!bdev) {
 		SPDK_ERRLOG("Unable to create xNVMe bdev from file %s\n", req.filename);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,

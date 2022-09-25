@@ -525,6 +525,7 @@ if __name__ == "__main__":
     p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
     p.add_argument('name', help='name of xNVMe bdev to create')
     p.add_argument('io_mechanism', help='IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)')
+    p.add_argument('conserve_cpu', action='store_true', help='Whether or not to conserve CPU when polling')
     p.set_defaults(func=bdev_xnvme_create)
 
     def bdev_xnvme_delete(args):
