@@ -105,14 +105,21 @@ bdev_xnvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	}
 }
 
+static void
+bdev_xnvme_destruct_cb(void *io_device)
+{
+	struct bdev_xnvme *xnvme = io_device;
+
+	TAILQ_REMOVE(&g_xnvme_bdev_head, xnvme, link);
+	bdev_xnvme_free(xnvme);
+}
+
 static int
 bdev_xnvme_destruct(void *ctx)
 {
 	struct bdev_xnvme *xnvme = ctx;
 
-	TAILQ_REMOVE(&g_xnvme_bdev_head, xnvme, link);
-	spdk_io_device_unregister(xnvme, NULL);
-	bdev_xnvme_free(xnvme);
+	spdk_io_device_unregister(xnvme, bdev_xnvme_destruct_cb);
 
 	return 0;
 }
