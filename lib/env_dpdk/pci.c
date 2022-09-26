@@ -8,6 +8,7 @@
 
 #include <rte_alarm.h>
 #include <rte_devargs.h>
+#include <rte_pci.h>
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
@@ -351,6 +352,8 @@ pci_device_init(struct rte_pci_driver *_drv,
 {
 	struct spdk_pci_driver *driver = (struct spdk_pci_driver *)_drv;
 	struct spdk_pci_device *dev;
+	struct rte_pci_addr *addr;
+	struct rte_pci_id *id;
 	int rc;
 
 	dev = calloc(1, sizeof(*dev));
@@ -360,7 +363,20 @@ pci_device_init(struct rte_pci_driver *_drv,
 
 	dev->dev_handle = _dev;
 
-	dpdk_pci_device_copy_identifiers(_dev, dev);
+	addr = dpdk_pci_device_get_addr(_dev);
+	dev->addr.domain = addr->domain;
+	dev->addr.bus = addr->bus;
+	dev->addr.dev = addr->devid;
+	dev->addr.func = addr->function;
+
+	id = dpdk_pci_device_get_id(_dev);
+	dev->id.class_id = id->class_id;
+	dev->id.vendor_id = id->vendor_id;
+	dev->id.device_id = id->device_id;
+	dev->id.subvendor_id = id->subsystem_vendor_id;
+	dev->id.subdevice_id = id->subsystem_device_id;
+
+	dev->socket_id = dpdk_pci_device_get_numa_node(_dev);
 	dev->type = "pci";
 
 	dev->map_bar = map_bar_rte;

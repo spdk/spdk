@@ -59,19 +59,22 @@ pci_device_get_devargs_2207(struct rte_pci_device *rte_dev)
 	return rte_dev->device.devargs;
 }
 
-static void
-pci_device_copy_identifiers_2207(struct rte_pci_device *_dev, struct spdk_pci_device *dev)
+static struct rte_pci_addr *
+pci_device_get_addr_2207(struct rte_pci_device *_dev)
 {
-	dev->addr.domain = _dev->addr.domain;
-	dev->addr.bus = _dev->addr.bus;
-	dev->addr.dev = _dev->addr.devid;
-	dev->addr.func = _dev->addr.function;
-	dev->id.class_id = _dev->id.class_id;
-	dev->id.vendor_id = _dev->id.vendor_id;
-	dev->id.device_id = _dev->id.device_id;
-	dev->id.subvendor_id = _dev->id.subsystem_vendor_id;
-	dev->id.subdevice_id = _dev->id.subsystem_device_id;
-	dev->socket_id = _dev->device.numa_node;
+	return &_dev->addr;
+}
+
+static struct rte_pci_id *
+pci_device_get_id_2207(struct rte_pci_device *_dev)
+{
+	return &_dev->id;
+}
+
+static int
+pci_device_get_numa_node_2207(struct rte_pci_device *_dev)
+{
+	return _dev->device.numa_node;
 }
 
 static int
@@ -243,7 +246,9 @@ struct dpdk_fn_table fn_table_2207 = {
 	.pci_device_vtophys		= pci_device_vtophys_2207,
 	.pci_device_get_name		= pci_device_get_name_2207,
 	.pci_device_get_devargs		= pci_device_get_devargs_2207,
-	.pci_device_copy_identifiers	= pci_device_copy_identifiers_2207,
+	.pci_device_get_addr		= pci_device_get_addr_2207,
+	.pci_device_get_id		= pci_device_get_id_2207,
+	.pci_device_get_numa_node	= pci_device_get_numa_node_2207,
 	.pci_device_map_bar		= pci_device_map_bar_2207,
 	.pci_device_read_config		= pci_device_read_config_2207,
 	.pci_device_write_config	= pci_device_write_config_2207,

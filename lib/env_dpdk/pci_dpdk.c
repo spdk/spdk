@@ -61,10 +61,22 @@ dpdk_pci_device_get_devargs(struct rte_pci_device *rte_dev)
 	return g_dpdk_fn_table->pci_device_get_devargs(rte_dev);
 }
 
-void
-dpdk_pci_device_copy_identifiers(struct rte_pci_device *_dev, struct spdk_pci_device *dev)
+struct rte_pci_addr *
+dpdk_pci_device_get_addr(struct rte_pci_device *rte_dev)
 {
-	g_dpdk_fn_table->pci_device_copy_identifiers(_dev, dev);
+	return g_dpdk_fn_table->pci_device_get_addr(rte_dev);
+}
+
+struct rte_pci_id *
+dpdk_pci_device_get_id(struct rte_pci_device *rte_dev)
+{
+	return g_dpdk_fn_table->pci_device_get_id(rte_dev);
+}
+
+int
+dpdk_pci_device_get_numa_node(struct rte_pci_device *_dev)
+{
+	return g_dpdk_fn_table->pci_device_get_numa_node(_dev);
 }
 
 int
