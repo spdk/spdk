@@ -126,7 +126,8 @@ function check_c_style() {
 		else
 			rm -f astyle.log
 			touch astyle.log
-			git ls-files '*.[ch]' \
+			# Exclude DPDK header files copied into our tree
+			git ls-files '*.[ch]' ':!:*/env_dpdk/*/*.h' \
 				| xargs -P$(nproc) -n10 astyle --break-return-type --attach-return-type-decl \
 					--options=.astylerc >> astyle.log
 			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
@@ -268,7 +269,9 @@ function check_posix_includes() {
 	local rc=0
 
 	echo -n "Checking for POSIX includes..."
-	git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!include/linux/**' ':!scripts/posix.txt' ':!*.patch' ':!configure' > scripts/posix.log || true
+	git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' \
+		':!include/linux/**' ':!scripts/posix.txt' ':!lib/env_dpdk/*/*.h' \
+		':!*.patch' ':!configure' > scripts/posix.log || true
 	if [ -s scripts/posix.log ]; then
 		echo "POSIX includes detected. Please include spdk/stdinc.h instead."
 		cat scripts/posix.log

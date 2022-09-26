@@ -6,7 +6,9 @@
 #include <rte_config.h>
 #include <rte_version.h>
 #include "pci_dpdk.h"
-#include <rte_bus_pci.h>
+#include "22.07/rte_dev.h"
+#include "22.07/rte_bus.h"
+#include "22.07/rte_bus_pci.h"
 #include "spdk/assert.h"
 
 SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver_buf) == 0, "driver_buf must be first");
