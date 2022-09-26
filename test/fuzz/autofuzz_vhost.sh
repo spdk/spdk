@@ -8,7 +8,7 @@ TEST_TIMEOUT=1200
 
 VHOST_APP+=(-p 0)
 FUZZ_RPC_SOCK="/var/tmp/spdk_fuzz.sock"
-VHOST_FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" --wait-for-rpc -g)
+VHOST_FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" -g -s 256 --wait-for-rpc)
 
 vhost_rpc_py="$rootdir/scripts/rpc.py"
 fuzz_generic_rpc_py="$rootdir/scripts/rpc.py -s $FUZZ_RPC_SOCK"
