@@ -1948,11 +1948,12 @@ spdk_nvmf_ctrlr_save_migr_data(struct spdk_nvmf_ctrlr *ctrlr,
 	data_local.num_aer_cids = ctrlr->nr_aer_reqs;
 
 	STAILQ_FOREACH_SAFE(event, &ctrlr->async_events, link, event_tmp) {
-		data_local.async_events[data_local.num_async_events++].raw = event->event.raw;
-		if (data_local.num_async_events > SPDK_NVMF_MIGR_MAX_PENDING_AERS) {
+		if (data_local.num_async_events + 1 > SPDK_NVMF_MIGR_MAX_PENDING_AERS) {
 			SPDK_ERRLOG("ctrlr %p has too many pending AERs\n", ctrlr);
 			break;
 		}
+
+		data_local.async_events[data_local.num_async_events++].raw = event->event.raw;
 	}
 
 	for (i = 0; i < ctrlr->nr_aer_reqs; i++) {
