@@ -60,7 +60,8 @@ to_user_dev(struct spdk_vhost_dev *vdev)
 	return vdev->ctxt;
 }
 
-static void __attribute__((constructor))
+static void
+__attribute__((constructor))
 _vhost_user_sem_init(void)
 {
 	if (sem_init(&g_dpdk_sem, 0, 0) != 0) {
@@ -69,13 +70,15 @@ _vhost_user_sem_init(void)
 	}
 }
 
-static void __attribute__((destructor))
+static void
+__attribute__((destructor))
 _vhost_user_sem_destroy(void)
 {
 	sem_destroy(&g_dpdk_sem);
 }
 
-void *vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len)
+void *
+vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len)
 {
 	void *vva;
 	uint64_t newlen;
@@ -817,23 +820,29 @@ vhost_memory_changed(struct rte_vhost_memory *new,
 {
 	uint32_t i;
 
-	if (new->nregions != old->nregions)
+	if (new->nregions != old->nregions) {
 		return true;
+	}
 
 	for (i = 0; i < new->nregions; ++i) {
 		struct rte_vhost_mem_region *new_r = &new->regions[i];
 		struct rte_vhost_mem_region *old_r = &old->regions[i];
 
-		if (new_r->guest_phys_addr != old_r->guest_phys_addr)
+		if (new_r->guest_phys_addr != old_r->guest_phys_addr) {
 			return true;
-		if (new_r->size != old_r->size)
+		}
+		if (new_r->size != old_r->size) {
 			return true;
-		if (new_r->guest_user_addr != old_r->guest_user_addr)
+		}
+		if (new_r->guest_user_addr != old_r->guest_user_addr) {
 			return true;
-		if (new_r->mmap_addr != old_r->mmap_addr)
+		}
+		if (new_r->mmap_addr != old_r->mmap_addr) {
 			return true;
-		if (new_r->fd != old_r->fd)
+		}
+		if (new_r->fd != old_r->fd) {
 			return true;
+		}
 	}
 
 	return false;
@@ -1305,8 +1314,8 @@ vhost_event_cb(void *arg1)
 
 int
 vhost_user_session_send_event(struct spdk_vhost_session *vsession,
-			 spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
-			 const char *errmsg)
+			      spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
+			      const char *errmsg)
 {
 	struct vhost_session_fn_ctx ev_ctx = {0};
 	struct spdk_vhost_dev *vdev = vsession->vdev;
@@ -1377,9 +1386,9 @@ out:
 
 void
 vhost_user_dev_foreach_session(struct spdk_vhost_dev *vdev,
-			  spdk_vhost_session_fn fn,
-			  spdk_vhost_dev_fn cpl_fn,
-			  void *arg)
+			       spdk_vhost_session_fn fn,
+			       spdk_vhost_dev_fn cpl_fn,
+			       void *arg)
 {
 	struct vhost_session_fn_ctx *ev_ctx;
 	struct spdk_vhost_user_dev *user_dev = to_user_dev(vdev);
@@ -1451,7 +1460,7 @@ vhost_user_session_set_interrupt_mode(struct spdk_vhost_session *vsession, bool 
 }
 
 
-static enum rte_vhost_msg_result
+static int
 extern_vhost_pre_msg_handler(int vid, void *_msg)
 {
 	struct vhost_user_msg *msg = _msg;
@@ -1494,21 +1503,21 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		}
 		break;
 	case VHOST_USER_SET_VRING_KICK:
-		/* rte_vhost(after 20.08) will call new_device after one active vring is
-		 * configured, we will start the session before all vrings are available,
-		 * so for each new vring, if the session is started, we need to restart it
-		 * again.
-		 */
+	/* rte_vhost(after 20.08) will call new_device after one active vring is
+	 * configured, we will start the session before all vrings are available,
+	 * so for each new vring, if the session is started, we need to restart it
+	 * again.
+	 */
 	case VHOST_USER_SET_VRING_CALL:
-		/* rte_vhost will close the previous callfd and won't notify
-		 * us about any change. This will effectively make SPDK fail
-		 * to deliver any subsequent interrupts until a session is
-		 * restarted. We stop the session here before closing the previous
-		 * fd (so that all interrupts must have been delivered by the
-		 * time the descriptor is closed) and start right after (which
-		 * will make SPDK retrieve the latest, up-to-date callfd from
-		 * rte_vhost.
-		 */
+	/* rte_vhost will close the previous callfd and won't notify
+	 * us about any change. This will effectively make SPDK fail
+	 * to deliver any subsequent interrupts until a session is
+	 * restarted. We stop the session here before closing the previous
+	 * fd (so that all interrupts must have been delivered by the
+	 * time the descriptor is closed) and start right after (which
+	 * will make SPDK retrieve the latest, up-to-date callfd from
+	 * rte_vhost.
+	 */
 	case VHOST_USER_SET_MEM_TABLE:
 		vsession->skip_used_signal = true;
 		/* rte_vhost will unmap previous memory that SPDK may still
@@ -1529,7 +1538,7 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		spdk_vhost_lock();
 		if (vsession->vdev->backend->vhost_get_config) {
 			rc = vsession->vdev->backend->vhost_get_config(vsession->vdev,
-				msg->payload.cfg.region, msg->payload.cfg.size);
+					msg->payload.cfg.region, msg->payload.cfg.size);
 			if (rc != 0) {
 				msg->size = 0;
 			}
@@ -1544,8 +1553,8 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		spdk_vhost_lock();
 		if (vsession->vdev->backend->vhost_set_config) {
 			rc = vsession->vdev->backend->vhost_set_config(vsession->vdev,
-				msg->payload.cfg.region, msg->payload.cfg.offset,
-				msg->payload.cfg.size, msg->payload.cfg.flags);
+					msg->payload.cfg.region, msg->payload.cfg.offset,
+					msg->payload.cfg.size, msg->payload.cfg.flags);
 		}
 		spdk_vhost_unlock();
 
@@ -1559,7 +1568,7 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 	return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
 }
 
-static enum rte_vhost_msg_result
+static int
 extern_vhost_post_msg_handler(int vid, void *_msg)
 {
 	struct vhost_user_msg *msg = _msg;
@@ -1712,7 +1721,7 @@ vhost_get_negotiated_features(int vid, uint64_t *negotiated_features)
 
 int
 vhost_user_dev_set_coalescing(struct spdk_vhost_user_dev *user_dev, uint32_t delay_base_us,
-			 uint32_t iops_threshold)
+			      uint32_t iops_threshold)
 {
 	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
 	uint32_t io_rate = iops_threshold * SPDK_VHOST_STATS_CHECK_INTERVAL_MS / 1000U;
@@ -1733,7 +1742,7 @@ vhost_user_dev_set_coalescing(struct spdk_vhost_user_dev *user_dev, uint32_t del
 
 int
 vhost_user_session_set_coalescing(struct spdk_vhost_dev *vdev,
-			     struct spdk_vhost_session *vsession, void *ctx)
+				  struct spdk_vhost_session *vsession, void *ctx)
 {
 	vsession->coalescing_delay_time_base =
 		to_user_dev(vdev)->coalescing_delay_us * spdk_get_ticks_hz() / 1000000ULL;
@@ -1811,7 +1820,7 @@ vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct sp
 
 	if (snprintf(path, sizeof(path), "%s%s", g_vhost_user_dev_dirname, name) >= (int)sizeof(path)) {
 		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n",
-				name,g_vhost_user_dev_dirname, name);
+			    name, g_vhost_user_dev_dirname, name);
 		return -EINVAL;
 	}
 
@@ -1841,7 +1850,7 @@ vhost_user_dev_register(struct spdk_vhost_dev *vdev, const char *name, struct sp
 	TAILQ_INIT(&user_dev->vsessions);
 
 	vhost_user_dev_set_coalescing(user_dev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
-				 SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
+				      SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
 	if (vhost_register_unix_socket(path, name, vdev->virtio_features, vdev->disabled_features,
 				       vdev->protocol_features)) {
