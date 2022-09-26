@@ -761,7 +761,7 @@ nvmf_bdev_ctrlr_zcopy_start_complete(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct spdk_nvmf_request	*req = cb_arg;
 	struct iovec *iov;
-	int iovcnt;
+	int iovcnt = 0;
 
 	if (spdk_unlikely(!success)) {
 		int                     sc = 0, sct = 0;
