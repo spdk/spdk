@@ -127,11 +127,9 @@ function check_c_style() {
 			rm -f astyle.log
 			touch astyle.log
 			git ls-files '*.[ch]' \
-				| grep -v cpp_headers \
 				| xargs -P$(nproc) -n10 astyle --break-return-type --attach-return-type-decl \
 					--options=.astylerc >> astyle.log
 			git ls-files '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' \
-				| grep -v cpp_headers \
 				| xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
 			if grep -q "^Formatted" astyle.log; then
 				echo " errors detected"
