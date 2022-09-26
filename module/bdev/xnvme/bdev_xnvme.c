@@ -320,6 +320,10 @@ create_xnvme_bdev(const char *name, const char *filename, const char *io_mechani
 		goto error_return;
 	}
 
+	if (!strcmp(xnvme->io_mechanism, "io_uring_cmd")) {
+		opts.poll_sq = 1;
+	}
+
 	xnvme->filename = strdup(filename);
 	if (!xnvme->filename) {
 		goto error_return;
