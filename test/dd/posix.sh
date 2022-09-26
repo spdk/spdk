@@ -56,6 +56,11 @@ noatime() {
 	atime_if=$(stat --printf="%X" "$test_file0")
 	atime_of=$(stat --printf="%X" "$test_file1")
 
+	# Make sure atime has a chance to be updated - if all tests finish within
+	# 1s (see %X) we may get a false negative at the last check. See:
+	# https://github.com/spdk/spdk/issues/2720
+	sleep 1
+
 	"${DD_APP[@]}" --if="$test_file0" --iflag=noatime --of="$test_file1"
 	((atime_if == $(stat --printf="%X" "$test_file0")))
 	((atime_of == $(stat --printf="%X" "$test_file1")))
