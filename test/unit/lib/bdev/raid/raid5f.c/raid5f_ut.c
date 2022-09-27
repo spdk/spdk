@@ -12,9 +12,11 @@
 #include "bdev/raid/raid5f.c"
 
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
-DEFINE_STUB_V(raid_bdev_queue_io_wait, (struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
-					struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn));
 DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
+
+struct spdk_bdev_desc {
+	struct spdk_bdev *bdev;
+};
 
 void
 raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status)
@@ -130,11 +132,20 @@ create_raid_bdev(struct raid5f_params *params)
 	SPDK_CU_ASSERT_FATAL(raid_bdev->base_bdev_info != NULL);
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
-		base_info->bdev = calloc(1, sizeof(*base_info->bdev));
-		SPDK_CU_ASSERT_FATAL(base_info->bdev != NULL);
+		struct spdk_bdev *bdev;
+		struct spdk_bdev_desc *desc;
 
-		base_info->bdev->blockcnt = params->base_bdev_blockcnt;
-		base_info->bdev->blocklen = params->base_bdev_blocklen;
+		bdev = calloc(1, sizeof(*bdev));
+		SPDK_CU_ASSERT_FATAL(bdev != NULL);
+		bdev->blockcnt = params->base_bdev_blockcnt;
+		bdev->blocklen = params->base_bdev_blocklen;
+
+		desc = calloc(1, sizeof(*desc));
+		SPDK_CU_ASSERT_FATAL(desc != NULL);
+		desc->bdev = bdev;
+
+		base_info->bdev = bdev;
+		base_info->desc = desc;
 	}
 
 	raid_bdev->strip_size = params->strip_size;
@@ -153,6 +164,7 @@ delete_raid_bdev(struct raid_bdev *raid_bdev)
 
 	RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_info) {
 		free(base_info->bdev);
+		free(base_info->desc);
 	}
 	free(raid_bdev->base_bdev_info);
 	free(raid_bdev);
@@ -201,6 +213,13 @@ test_raid5f_start(void)
 	}
 }
 
+enum test_bdev_error_type {
+	TEST_BDEV_ERROR_NONE,
+	TEST_BDEV_ERROR_SUBMIT,
+	TEST_BDEV_ERROR_COMPLETE,
+	TEST_BDEV_ERROR_NOMEM,
+};
+
 struct raid_io_info {
 	struct raid5f_info *r5f_info;
 	struct raid_bdev_io_channel *raid_ch;
@@ -217,6 +236,13 @@ struct raid_io_info {
 	bool failed;
 	int remaining;
 	TAILQ_HEAD(, spdk_bdev_io) bdev_io_queue;
+	TAILQ_HEAD(, spdk_bdev_io_wait_entry) bdev_io_wait_queue;
+	struct {
+		enum test_bdev_error_type type;
+		struct spdk_bdev *bdev;
+		void (*on_enomem_cb)(struct raid_io_info *io_info, void *ctx);
+		void *on_enomem_cb_ctx;
+	} error;
 };
 
 struct test_raid_bdev_io {
@@ -224,6 +250,20 @@ struct test_raid_bdev_io {
 	struct raid_io_info *io_info;
 	void *buf;
 };
+
+void
+raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
+			struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn)
+{
+	struct raid_io_info *io_info;
+
+	io_info = ((struct test_raid_bdev_io *)spdk_bdev_io_from_ctx(raid_io))->io_info;
+
+	raid_io->waitq_entry.bdev = bdev;
+	raid_io->waitq_entry.cb_fn = cb_fn;
+	raid_io->waitq_entry.cb_arg = raid_io;
+	TAILQ_INSERT_TAIL(&io_info->bdev_io_wait_queue, &raid_io->waitq_entry, link);
+}
 
 static void
 raid_bdev_io_completion_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -298,29 +338,70 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	free(bdev_io);
 }
 
-static void
+static int
 submit_io(struct raid_io_info *io_info, struct spdk_bdev_desc *desc,
 	  spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
+
+	if (bdev == io_info->error.bdev) {
+		if (io_info->error.type == TEST_BDEV_ERROR_SUBMIT) {
+			return -EINVAL;
+		} else if (io_info->error.type == TEST_BDEV_ERROR_NOMEM) {
+			return -ENOMEM;
+		}
+	}
 
 	bdev_io = calloc(1, sizeof(*bdev_io));
 	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	bdev_io->bdev = bdev;
 	bdev_io->internal.cb = cb;
 	bdev_io->internal.caller_ctx = cb_arg;
 
 	TAILQ_INSERT_TAIL(&io_info->bdev_io_queue, bdev_io, internal.link);
+
+	return 0;
 }
 
 static void
 process_io_completions(struct raid_io_info *io_info)
 {
 	struct spdk_bdev_io *bdev_io;
+	bool success;
 
 	while ((bdev_io = TAILQ_FIRST(&io_info->bdev_io_queue))) {
 		TAILQ_REMOVE(&io_info->bdev_io_queue, bdev_io, internal.link);
 
-		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+		if (io_info->error.type == TEST_BDEV_ERROR_COMPLETE &&
+		    io_info->error.bdev == bdev_io->bdev) {
+			success = false;
+		} else {
+			success = true;
+		}
+
+		bdev_io->internal.cb(bdev_io, success, bdev_io->internal.caller_ctx);
+	}
+
+	if (io_info->error.type == TEST_BDEV_ERROR_NOMEM) {
+		struct spdk_bdev_io_wait_entry *waitq_entry, *tmp;
+		struct spdk_bdev *enomem_bdev = io_info->error.bdev;
+
+		io_info->error.type = TEST_BDEV_ERROR_NONE;
+
+		if (io_info->error.on_enomem_cb != NULL) {
+			io_info->error.on_enomem_cb(io_info, io_info->error.on_enomem_cb_ctx);
+		}
+
+		TAILQ_FOREACH_SAFE(waitq_entry, &io_info->bdev_io_wait_queue, link, tmp) {
+			TAILQ_REMOVE(&io_info->bdev_io_wait_queue, waitq_entry, link);
+			CU_ASSERT(waitq_entry->bdev == enomem_bdev);
+			waitq_entry->cb_fn(waitq_entry->cb_arg);
+		}
+
+		process_io_completions(io_info);
+	} else {
+		CU_ASSERT(TAILQ_EMPTY(&io_info->bdev_io_wait_queue));
 	}
 }
 
@@ -366,9 +447,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	memcpy(dest_buf, iov->iov_base, iov->iov_len);
 submit:
-	submit_io(test_raid_bdev_io->io_info, desc, cb, cb_arg);
-
-	return 0;
+	return submit_io(io_info, desc, cb, cb_arg);
 }
 
 int
@@ -387,9 +466,7 @@ spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	memcpy(iov->iov_base, test_raid_bdev_io->buf, iov->iov_len);
 
-	submit_io(test_raid_bdev_io->io_info, desc, cb, cb_arg);
-
-	return 0;
+	return submit_io(test_raid_bdev_io->io_info, desc, cb, cb_arg);
 }
 
 static void
@@ -486,6 +563,7 @@ init_io_info(struct raid_io_info *io_info, struct raid5f_info *r5f_info,
 	io_info->status = SPDK_BDEV_IO_STATUS_PENDING;
 
 	TAILQ_INIT(&io_info->bdev_io_queue);
+	TAILQ_INIT(&io_info->bdev_io_wait_queue);
 }
 
 static void
@@ -702,6 +780,103 @@ test_raid5f_submit_full_stripe_write_request(void)
 	run_for_each_raid5f_config(__test_raid5f_submit_full_stripe_write_request);
 }
 
+static void
+__test_raid5f_chunk_write_error(struct raid_bdev *raid_bdev, struct raid_bdev_io_channel *raid_ch)
+{
+	struct raid5f_info *r5f_info = raid_bdev->module_private;
+	struct raid_base_bdev_info *base_bdev_info;
+	uint64_t stripe_index;
+	struct raid_io_info io_info;
+	enum test_bdev_error_type error_type;
+
+	for (error_type = TEST_BDEV_ERROR_SUBMIT; error_type <= TEST_BDEV_ERROR_NOMEM; error_type++) {
+		RAID5F_TEST_FOR_EACH_STRIPE(raid_bdev, stripe_index) {
+			RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_bdev_info) {
+				init_io_info(&io_info, r5f_info, raid_ch, SPDK_BDEV_IO_TYPE_WRITE,
+					     stripe_index * r5f_info->stripe_blocks, r5f_info->stripe_blocks);
+
+				io_info.error.type = error_type;
+				io_info.error.bdev = base_bdev_info->bdev;
+
+				test_raid5f_write_request(&io_info);
+
+				if (error_type == TEST_BDEV_ERROR_NOMEM) {
+					CU_ASSERT(io_info.status == SPDK_BDEV_IO_STATUS_SUCCESS);
+				} else {
+					CU_ASSERT(io_info.status == SPDK_BDEV_IO_STATUS_FAILED);
+				}
+
+				deinit_io_info(&io_info);
+			}
+		}
+	}
+}
+static void
+test_raid5f_chunk_write_error(void)
+{
+	run_for_each_raid5f_config(__test_raid5f_chunk_write_error);
+}
+
+struct chunk_write_error_with_enomem_ctx {
+	enum test_bdev_error_type error_type;
+	struct spdk_bdev *bdev;
+};
+
+static void
+chunk_write_error_with_enomem_cb(struct raid_io_info *io_info, void *_ctx)
+{
+	struct chunk_write_error_with_enomem_ctx *ctx = _ctx;
+
+	io_info->error.type = ctx->error_type;
+	io_info->error.bdev = ctx->bdev;
+}
+
+static void
+__test_raid5f_chunk_write_error_with_enomem(struct raid_bdev *raid_bdev,
+		struct raid_bdev_io_channel *raid_ch)
+{
+	struct raid5f_info *r5f_info = raid_bdev->module_private;
+	struct raid_base_bdev_info *base_bdev_info;
+	uint64_t stripe_index;
+	struct raid_io_info io_info;
+	enum test_bdev_error_type error_type;
+	struct chunk_write_error_with_enomem_ctx on_enomem_cb_ctx;
+
+	for (error_type = TEST_BDEV_ERROR_SUBMIT; error_type <= TEST_BDEV_ERROR_COMPLETE; error_type++) {
+		RAID5F_TEST_FOR_EACH_STRIPE(raid_bdev, stripe_index) {
+			struct raid_base_bdev_info *base_bdev_info_last =
+					&raid_bdev->base_bdev_info[raid_bdev->num_base_bdevs - 1];
+
+			RAID_FOR_EACH_BASE_BDEV(raid_bdev, base_bdev_info) {
+				if (base_bdev_info == base_bdev_info_last) {
+					continue;
+				}
+
+				init_io_info(&io_info, r5f_info, raid_ch, SPDK_BDEV_IO_TYPE_WRITE,
+					     stripe_index * r5f_info->stripe_blocks, r5f_info->stripe_blocks);
+
+				io_info.error.type = TEST_BDEV_ERROR_NOMEM;
+				io_info.error.bdev = base_bdev_info->bdev;
+				io_info.error.on_enomem_cb = chunk_write_error_with_enomem_cb;
+				io_info.error.on_enomem_cb_ctx = &on_enomem_cb_ctx;
+				on_enomem_cb_ctx.error_type = error_type;
+				on_enomem_cb_ctx.bdev = base_bdev_info_last->bdev;
+
+				test_raid5f_write_request(&io_info);
+
+				CU_ASSERT(io_info.status == SPDK_BDEV_IO_STATUS_FAILED);
+
+				deinit_io_info(&io_info);
+			}
+		}
+	}
+}
+static void
+test_raid5f_chunk_write_error_with_enomem(void)
+{
+	run_for_each_raid5f_config(__test_raid5f_chunk_write_error_with_enomem);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -716,6 +891,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_raid5f_submit_read_request);
 	CU_ADD_TEST(suite, test_raid5f_stripe_request_map_iovecs);
 	CU_ADD_TEST(suite, test_raid5f_submit_full_stripe_write_request);
+	CU_ADD_TEST(suite, test_raid5f_chunk_write_error);
+	CU_ADD_TEST(suite, test_raid5f_chunk_write_error_with_enomem);
 
 	allocate_threads(1);
 	set_thread(0);
