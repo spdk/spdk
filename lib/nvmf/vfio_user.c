@@ -355,6 +355,60 @@ struct nvmf_vfio_user_poll_group {
 	TAILQ_HEAD(, nvmf_vfio_user_sq)		sqs;
 	struct spdk_interrupt			*intr;
 	int					intr_fd;
+	struct {
+
+		/*
+		 * ctrlr_intr and ctrlr_kicks will be zero for all other poll
+		 * groups. However, they can be zero even for the poll group
+		 * the controller belongs are if no vfio-user message has been
+		 * received or the controller hasn't been kicked yet.
+		 */
+
+		/*
+		 * Number of times vfio_user_ctrlr_intr() has run:
+		 * vfio-user file descriptor has been ready or explicitly
+		 * kicked (see below).
+		 */
+		uint64_t ctrlr_intr;
+
+		/*
+		 * Kicks to the controller by ctrlr_kick().
+		 * ctrlr_intr - ctrlr_kicks is the number of times the
+		 * vfio-user poll file descriptor has been ready.
+		 */
+		uint64_t ctrlr_kicks;
+
+		/*
+		 * How many times we won the race arming an SQ.
+		 */
+		uint64_t won;
+
+		/*
+		 * How many times we lost the race arming an SQ
+		 */
+		uint64_t lost;
+
+		/*
+		 * How many requests we processed in total each time we lost
+		 * the rearm race.
+		 */
+		uint64_t lost_count;
+
+		/*
+		 * Number of attempts we attempted to rearm all the SQs in the
+		 * poll group.
+		 */
+		uint64_t rearms;
+
+		uint64_t pg_process_count;
+		uint64_t intr;
+		uint64_t polls;
+		uint64_t polls_spurious;
+		uint64_t poll_reqs;
+		uint64_t poll_reqs_squared;
+		uint64_t cqh_admin_writes;
+		uint64_t cqh_io_writes;
+	} stats;
 };
 
 struct nvmf_vfio_user_shadow_doorbells {
@@ -665,6 +719,11 @@ static int vfio_user_ctrlr_intr(void *ctx);
 static void
 vfio_user_msg_ctrlr_intr(void *ctx)
 {
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx;
+	struct nvmf_vfio_user_poll_group *vu_ctrlr_group = ctrlr_to_poll_group(vu_ctrlr);
+
+	vu_ctrlr_group->stats.ctrlr_kicks++;
+
 	vfio_user_ctrlr_intr(ctx);
 }
 
@@ -1493,7 +1552,8 @@ static int nvmf_vfio_user_sq_poll(struct nvmf_vfio_user_sq *sq);
  */
 static int
 vfio_user_sq_rearm(struct nvmf_vfio_user_ctrlr *ctrlr,
-		   struct nvmf_vfio_user_sq *sq)
+		   struct nvmf_vfio_user_sq *sq,
+		   struct nvmf_vfio_user_poll_group *vu_group)
 {
 	int count = 0;
 	size_t i;
@@ -1505,6 +1565,7 @@ vfio_user_sq_rearm(struct nvmf_vfio_user_ctrlr *ctrlr,
 
 		if (set_sq_eventidx(sq)) {
 			/* We won the race and set eventidx; done. */
+			vu_group->stats.won++;
 			return count;
 		}
 
@@ -1532,6 +1593,9 @@ vfio_user_sq_rearm(struct nvmf_vfio_user_ctrlr *ctrlr,
 		      "%s: set_sq_eventidx() lost the race %zu times\n",
 		      ctrlr_id(ctrlr), i);
 
+	vu_group->stats.lost++;
+	vu_group->stats.lost_count += count;
+
 	/*
 	 * We couldn't arrange an eventidx guaranteed to cause a BAR0 write, as
 	 * we raced with the producer too many times; force ourselves to wake up
@@ -1556,13 +1620,15 @@ vfio_user_poll_group_rearm(struct nvmf_vfio_user_poll_group *vu_group)
 	struct nvmf_vfio_user_sq *sq;
 	int count = 0;
 
+	vu_group->stats.rearms++;
+
 	TAILQ_FOREACH(sq, &vu_group->sqs, link) {
 		if (spdk_unlikely(sq->sq_state != VFIO_USER_SQ_ACTIVE || !sq->size)) {
 			continue;
 		}
 
 		if (sq->need_rearm) {
-			count += vfio_user_sq_rearm(sq->ctrlr, sq);
+			count += vfio_user_sq_rearm(sq->ctrlr, sq, vu_group);
 		}
 	}
 
@@ -2794,6 +2860,8 @@ static int
 handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 		  const size_t count, loff_t pos, const bool is_write)
 {
+	struct nvmf_vfio_user_poll_group *group;
+
 	assert(ctrlr != NULL);
 	assert(buf != NULL);
 
@@ -2831,6 +2899,13 @@ handle_dbl_access(struct nvmf_vfio_user_ctrlr *ctrlr, uint32_t *buf,
 
 	ctrlr->bar0_doorbells[pos] = *buf;
 	spdk_wmb();
+
+	group = ctrlr_to_poll_group(ctrlr);
+	if (pos == 1) {
+		group->stats.cqh_admin_writes++;
+	} else if (pos & 1) {
+		group->stats.cqh_io_writes++;
+	}
 
 	SPDK_DEBUGLOG(vfio_user_db, "%s: updating BAR0 doorbell %s:%ld to %u\n",
 		      ctrlr_id(ctrlr), (pos & 1) ? "cqid" : "sqid",
@@ -4841,6 +4916,7 @@ vfio_user_poll_group_process(void *ctx)
 	 */
 	ret |= vfio_user_poll_group_rearm(vu_group);
 
+	vu_group->stats.pg_process_count++;
 	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
 
@@ -4851,6 +4927,9 @@ vfio_user_poll_group_intr(void *ctx)
 	eventfd_t val;
 
 	eventfd_read(vu_group->intr_fd, &val);
+
+	vu_group->stats.intr++;
+
 	return vfio_user_poll_group_process(ctx);
 }
 
@@ -4870,6 +4949,8 @@ vfio_user_ctrlr_intr(void *ctx)
 	vu_ctrlr_group = ctrlr_to_poll_group(vu_ctrlr);
 
 	SPDK_DEBUGLOG(vfio_user_db, "ctrlr pg:%p got intr\n", vu_ctrlr_group);
+
+	vu_ctrlr_group->stats.ctrlr_intr++;
 
 	/*
 	 * Poll vfio-user for this controller. We need to do this before polling
@@ -5596,6 +5677,13 @@ nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 		count += ret;
 	}
 
+	vu_group->stats.polls++;
+	vu_group->stats.poll_reqs += count;
+	vu_group->stats.poll_reqs_squared += count * count;
+	if (count == 0) {
+		vu_group->stats.polls_spurious++;
+	}
+
 	return count;
 }
 
@@ -5665,6 +5753,36 @@ nvmf_vfio_user_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 }
 
 static void
+nvmf_vfio_user_poll_group_dump_stat(struct spdk_nvmf_transport_poll_group *group,
+				    struct spdk_json_write_ctx *w)
+{
+	struct nvmf_vfio_user_poll_group *vu_group = SPDK_CONTAINEROF(group,
+			struct nvmf_vfio_user_poll_group, group);
+	uint64_t polls_denom;
+
+	spdk_json_write_named_uint64(w, "ctrlr_intr", vu_group->stats.ctrlr_intr);
+	spdk_json_write_named_uint64(w, "ctrlr_kicks", vu_group->stats.ctrlr_kicks);
+	spdk_json_write_named_uint64(w, "won", vu_group->stats.won);
+	spdk_json_write_named_uint64(w, "lost", vu_group->stats.lost);
+	spdk_json_write_named_uint64(w, "lost_count", vu_group->stats.lost_count);
+	spdk_json_write_named_uint64(w, "rearms", vu_group->stats.rearms);
+	spdk_json_write_named_uint64(w, "pg_process_count", vu_group->stats.pg_process_count);
+	spdk_json_write_named_uint64(w, "intr", vu_group->stats.intr);
+	spdk_json_write_named_uint64(w, "polls", vu_group->stats.polls);
+	spdk_json_write_named_uint64(w, "polls_spurious", vu_group->stats.polls_spurious);
+	spdk_json_write_named_uint64(w, "poll_reqs", vu_group->stats.poll_reqs);
+	polls_denom = vu_group->stats.polls * (vu_group->stats.polls - 1);
+	if (polls_denom) {
+		uint64_t n = vu_group->stats.polls * vu_group->stats.poll_reqs_squared - vu_group->stats.poll_reqs *
+			     vu_group->stats.poll_reqs;
+		spdk_json_write_named_double(w, "poll_reqs_variance", sqrt(n / polls_denom));
+	}
+
+	spdk_json_write_named_uint64(w, "cqh_admin_writes", vu_group->stats.cqh_admin_writes);
+	spdk_json_write_named_uint64(w, "cqh_io_writes", vu_group->stats.cqh_io_writes);
+}
+
+static void
 nvmf_vfio_user_opts_init(struct spdk_nvmf_transport_opts *opts)
 {
 	opts->max_queue_depth =		NVMF_VFIO_USER_DEFAULT_MAX_QUEUE_DEPTH;
@@ -5708,6 +5826,8 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_vfio_user = {
 	.qpair_get_peer_trid = nvmf_vfio_user_qpair_get_peer_trid,
 	.qpair_get_listen_trid = nvmf_vfio_user_qpair_get_listen_trid,
 	.qpair_abort_request = nvmf_vfio_user_qpair_abort_request,
+
+	.poll_group_dump_stat = nvmf_vfio_user_poll_group_dump_stat,
 };
 
 SPDK_NVMF_TRANSPORT_REGISTER(muser, &spdk_nvmf_transport_vfio_user);
