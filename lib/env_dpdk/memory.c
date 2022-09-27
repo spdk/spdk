@@ -11,6 +11,8 @@
 #include <rte_config.h>
 #include <rte_memory.h>
 #include <rte_eal_memconfig.h>
+#include <rte_dev.h>
+#include <rte_pci.h>
 
 #include "spdk_internal/assert.h"
 
@@ -978,6 +980,38 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 	return paddr;
 }
 
+static uint64_t
+pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr, size_t len)
+{
+	struct rte_mem_resource *res;
+	uint64_t paddr;
+	unsigned r;
+
+	for (r = 0; r < PCI_MAX_RESOURCE; r++) {
+		res = dpdk_pci_device_get_mem_resource(dev, r);
+
+		if (res->phys_addr == 0 || vaddr < (uint64_t)res->addr ||
+		    (vaddr + len) >= (uint64_t)res->addr + res->len) {
+			continue;
+		}
+
+#if VFIO_ENABLED
+		if (spdk_iommu_is_enabled() && rte_eal_iova_mode() == RTE_IOVA_VA) {
+			/*
+			 * The IOMMU is on and we're using IOVA == VA. The BAR was
+			 * automatically registered when it was mapped, so just return
+			 * the virtual address here.
+			 */
+			return vaddr;
+		}
+#endif
+		paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
+		return paddr;
+	}
+
+	return SPDK_VTOPHYS_ERROR;
+}
+
 /* Try to get the paddr from pci devices */
 static uint64_t
 vtophys_get_paddr_pci(uint64_t vaddr, size_t len)
@@ -989,7 +1023,7 @@ vtophys_get_paddr_pci(uint64_t vaddr, size_t len)
 	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
 	TAILQ_FOREACH(vtophys_dev, &g_vtophys_pci_devices, tailq) {
 		dev = vtophys_dev->pci_device;
-		paddr = dpdk_pci_device_vtophys(dev, vaddr, len);
+		paddr = pci_device_vtophys(dev, vaddr, len);
 		if (paddr != SPDK_VTOPHYS_ERROR) {
 			pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
 			return paddr;

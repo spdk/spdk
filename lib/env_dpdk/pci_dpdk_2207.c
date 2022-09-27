@@ -15,36 +15,15 @@ SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver_buf) == 0, "driver_bu
 SPDK_STATIC_ASSERT(offsetof(struct spdk_pci_driver, driver) >= sizeof(struct rte_pci_driver),
 		   "driver_buf not big enough");
 
-static uint64_t
-pci_device_vtophys_2207(struct rte_pci_device *dev, uint64_t vaddr, size_t len)
+static struct rte_mem_resource *
+pci_device_get_mem_resource_2207(struct rte_pci_device *dev, uint32_t bar)
 {
-	struct rte_mem_resource *res;
-	uint64_t paddr;
-	unsigned r;
-
-	for (r = 0; r < PCI_MAX_RESOURCE; r++) {
-		res = &dev->mem_resource[r];
-
-		if (res->phys_addr == 0 || vaddr < (uint64_t)res->addr ||
-		    (vaddr + len) >= (uint64_t)res->addr + res->len) {
-			continue;
-		}
-
-#if VFIO_ENABLED
-		if (spdk_iommu_is_enabled() && rte_eal_iova_mode() == RTE_IOVA_VA) {
-			/*
-			 * The IOMMU is on and we're using IOVA == VA. The BAR was
-			 * automatically registered when it was mapped, so just return
-			 * the virtual address here.
-			 */
-			return vaddr;
-		}
-#endif
-		paddr = res->phys_addr + (vaddr - (uint64_t)res->addr);
-		return paddr;
+	if (bar >= PCI_MAX_RESOURCE) {
+		assert(false);
+		return NULL;
 	}
 
-	return SPDK_VTOPHYS_ERROR;
+	return &dev->mem_resource[bar];
 }
 
 static const char *
@@ -75,17 +54,6 @@ static int
 pci_device_get_numa_node_2207(struct rte_pci_device *_dev)
 {
 	return _dev->device.numa_node;
-}
-
-static int
-pci_device_map_bar_2207(struct rte_pci_device *dev, uint32_t bar,
-			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
-{
-	*mapped_addr = dev->mem_resource[bar].addr;
-	*phys_addr = (uint64_t)dev->mem_resource[bar].phys_addr;
-	*size = (uint64_t)dev->mem_resource[bar].len;
-
-	return 0;
 }
 
 static int
@@ -243,13 +211,12 @@ device_scan_allowed_2207(struct rte_device *dev)
 }
 
 struct dpdk_fn_table fn_table_2207 = {
-	.pci_device_vtophys		= pci_device_vtophys_2207,
+	.pci_device_get_mem_resource	= pci_device_get_mem_resource_2207,
 	.pci_device_get_name		= pci_device_get_name_2207,
 	.pci_device_get_devargs		= pci_device_get_devargs_2207,
 	.pci_device_get_addr		= pci_device_get_addr_2207,
 	.pci_device_get_id		= pci_device_get_id_2207,
 	.pci_device_get_numa_node	= pci_device_get_numa_node_2207,
-	.pci_device_map_bar		= pci_device_map_bar_2207,
 	.pci_device_read_config		= pci_device_read_config_2207,
 	.pci_device_write_config	= pci_device_write_config_2207,
 	.pci_driver_register		= pci_driver_register_2207,

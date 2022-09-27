@@ -26,14 +26,12 @@ struct rte_pci_driver;
 struct rte_device;
 
 struct dpdk_fn_table {
-	uint64_t (*pci_device_vtophys)(struct rte_pci_device *dev, uint64_t vaddr, size_t len);
+	struct rte_mem_resource *(*pci_device_get_mem_resource)(struct rte_pci_device *dev, uint32_t bar);
 	const char *(*pci_device_get_name)(struct rte_pci_device *);
 	struct rte_devargs *(*pci_device_get_devargs)(struct rte_pci_device *);
 	struct rte_pci_addr *(*pci_device_get_addr)(struct rte_pci_device *);
 	struct rte_pci_id *(*pci_device_get_id)(struct rte_pci_device *);
 	int (*pci_device_get_numa_node)(struct rte_pci_device *_dev);
-	int (*pci_device_map_bar)(struct rte_pci_device *dev, uint32_t bar,
-				  void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
 	int (*pci_device_read_config)(struct rte_pci_device *dev, void *value, uint32_t len,
 				      uint32_t offset);
 	int (*pci_device_write_config)(struct rte_pci_device *dev, void *value, uint32_t len,
@@ -54,14 +52,13 @@ struct dpdk_fn_table {
 
 int dpdk_pci_init(void);
 
+struct rte_mem_resource *dpdk_pci_device_get_mem_resource(struct rte_pci_device *dev, uint32_t bar);
 uint64_t dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr, size_t len);
 const char *dpdk_pci_device_get_name(struct rte_pci_device *);
 struct rte_devargs *dpdk_pci_device_get_devargs(struct rte_pci_device *);
 struct rte_pci_addr *dpdk_pci_device_get_addr(struct rte_pci_device *);
 struct rte_pci_id *dpdk_pci_device_get_id(struct rte_pci_device *);
 int dpdk_pci_device_get_numa_node(struct rte_pci_device *_dev);
-int dpdk_pci_device_map_bar(struct rte_pci_device *dev, uint32_t bar,
-			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
 int dpdk_pci_device_read_config(struct rte_pci_device *dev, void *value, uint32_t len,
 				uint32_t offset);
 int dpdk_pci_device_write_config(struct rte_pci_device *dev, void *value, uint32_t len,

@@ -43,10 +43,10 @@ dpdk_pci_init(void)
 	return 0;
 }
 
-uint64_t
-dpdk_pci_device_vtophys(struct rte_pci_device *dev, uint64_t vaddr, size_t len)
+struct rte_mem_resource *
+dpdk_pci_device_get_mem_resource(struct rte_pci_device *dev, uint32_t bar)
 {
-	return g_dpdk_fn_table->pci_device_vtophys(dev, vaddr, len);
+	return g_dpdk_fn_table->pci_device_get_mem_resource(dev, bar);
 }
 
 const char *
@@ -77,13 +77,6 @@ int
 dpdk_pci_device_get_numa_node(struct rte_pci_device *_dev)
 {
 	return g_dpdk_fn_table->pci_device_get_numa_node(_dev);
-}
-
-int
-dpdk_pci_device_map_bar(struct rte_pci_device *dev, uint32_t bar,
-			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
-{
-	return g_dpdk_fn_table->pci_device_map_bar(dev, bar, mapped_addr, phys_addr, size);
 }
 
 int
