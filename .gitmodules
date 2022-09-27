@@ -10,3 +10,6 @@
 [submodule "ocf"]
 	path = ocf
 	url = https://github.com/Open-CAS/ocf.git
+[submodule "snap-rdma"]
+	path = snap-rdma
+	url = https://github.com/LiZhang-2020/snap-rdma.git
