@@ -430,6 +430,31 @@ test_bdev_zone_append_with_md(void)
 	stop_operation();
 }
 
+static void
+test_bdev_zone_appendv(void)
+{
+	DECLARE_VIRTUAL_BDEV_START();
+
+	g_io_type = SPDK_BDEV_IO_TYPE_ZONE_APPEND;
+	g_append_with_md = true;
+
+	start_operation();
+
+	rc = spdk_bdev_zone_appendv(desc, ch, g_zone_op->bdev.iovs, g_unexpected_iovcnt, g_start_lba,
+				    g_num_blocks, NULL, NULL);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_io->internal.desc == desc);
+	CU_ASSERT(g_bdev_io->type == SPDK_BDEV_IO_TYPE_ZONE_APPEND);
+	CU_ASSERT(g_bdev_io->u.bdev.iovs == g_zone_op->bdev.iovs);
+	CU_ASSERT(g_bdev_io->u.bdev.iovcnt == g_unexpected_iovcnt);
+	CU_ASSERT(g_bdev_io->u.bdev.md_buf == NULL);
+	CU_ASSERT(g_bdev_io->u.bdev.num_blocks == g_num_blocks);
+	CU_ASSERT(g_bdev_io->u.bdev.offset_blocks == g_expected_zone_id);
+
+	stop_operation();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -445,6 +470,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_bdev_zone_management);
 	CU_ADD_TEST(suite, test_bdev_zone_append);
 	CU_ADD_TEST(suite, test_bdev_zone_append_with_md);
+	CU_ADD_TEST(suite, test_bdev_zone_appendv);
 	CU_ADD_TEST(suite, test_bdev_io_get_append_location);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
