@@ -32,6 +32,8 @@
 
 #define SPDK_NVMF_TCP_MIN_IO_QUEUE_DEPTH 2
 #define SPDK_NVMF_TCP_MAX_IO_QUEUE_DEPTH 65535
+#define SPDK_NVMF_TCP_MIN_ADMIN_QUEUE_DEPTH 2
+#define SPDK_NVMF_TCP_MAX_ADMIN_QUEUE_DEPTH 4096
 
 #define SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH 128
 #define SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH 128
@@ -682,6 +684,15 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 			     opts->max_queue_depth, SPDK_NVMF_TCP_MIN_IO_QUEUE_DEPTH,
 			     SPDK_NVMF_TCP_MAX_IO_QUEUE_DEPTH, SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH);
 		opts->max_queue_depth = SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH;
+	}
+
+	/* max admin queue depth cannot be smaller than 2 or larger than 4096 */
+	if (opts->max_aq_depth < SPDK_NVMF_TCP_MIN_ADMIN_QUEUE_DEPTH ||
+	    opts->max_aq_depth > SPDK_NVMF_TCP_MAX_ADMIN_QUEUE_DEPTH) {
+		SPDK_WARNLOG("TCP param max_aq_depth %u can't be smaller than %u or larger than %u. Using default value %u\n",
+			     opts->max_aq_depth, SPDK_NVMF_TCP_MIN_ADMIN_QUEUE_DEPTH,
+			     SPDK_NVMF_TCP_MAX_ADMIN_QUEUE_DEPTH, SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH);
+		opts->max_aq_depth = SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH;
 	}
 
 	sge_count = opts->max_io_size / opts->io_unit_size;
