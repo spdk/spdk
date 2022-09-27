@@ -300,12 +300,14 @@ concat_start(struct raid_bdev *raid_bdev)
 	return 0;
 }
 
-static void
+static bool
 concat_stop(struct raid_bdev *raid_bdev)
 {
 	struct concat_block_range *block_range = raid_bdev->module_private;
 
 	free(block_range);
+
+	return true;
 }
 
 static struct raid_bdev_module g_concat_module = {

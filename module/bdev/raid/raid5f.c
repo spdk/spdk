@@ -671,15 +671,19 @@ raid5f_io_device_unregister_done(void *io_device)
 {
 	struct raid5f_info *r5f_info = io_device;
 
+	raid_bdev_module_stop_done(r5f_info->raid_bdev);
+
 	free(r5f_info);
 }
 
-static void
+static bool
 raid5f_stop(struct raid_bdev *raid_bdev)
 {
 	struct raid5f_info *r5f_info = raid_bdev->module_private;
 
 	spdk_io_device_unregister(r5f_info, raid5f_io_device_unregister_done);
+
+	return false;
 }
 
 static struct spdk_io_channel *
