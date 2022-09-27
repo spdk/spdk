@@ -70,7 +70,14 @@ static int
 map_bar_rte(struct spdk_pci_device *device, uint32_t bar,
 	    void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
 {
-	return dpdk_pci_device_map_bar(device->dev_handle, bar, mapped_addr, phys_addr, size);
+	struct rte_mem_resource *res;
+
+	res = dpdk_pci_device_get_mem_resource(device->dev_handle, bar);
+	*mapped_addr = res->addr;
+	*phys_addr = (uint64_t)res->phys_addr;
+	*size = (uint64_t)res->len;
+
+	return 0;
 }
 
 static int

@@ -29,8 +29,8 @@ DEFINE_STUB(rte_vfio_noiommu_is_enabled, int, (void), 0);
 DEFINE_STUB(rte_memseg_get_fd_thread_unsafe, int, (const struct rte_memseg *ms), 0);
 DEFINE_STUB(rte_memseg_get_fd_offset_thread_unsafe, int,
 	    (const struct rte_memseg *ms, size_t *offset), 0);
-DEFINE_STUB(dpdk_pci_device_vtophys, uint64_t, (struct rte_pci_device *dev, uint64_t vaddr,
-		size_t len), 0);
+DEFINE_STUB(dpdk_pci_device_get_mem_resource, struct rte_mem_resource *,
+	    (struct rte_pci_device *dev, uint32_t bar), 0);
 
 static int
 test_mem_map_notify(void *cb_ctx, struct spdk_mem_map *map,
