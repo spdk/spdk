@@ -30,6 +30,20 @@
 #define SPDK_NVMF_TCP_DEFAULT_CONTROL_MSG_NUM 32
 #define SPDK_NVMF_TCP_DEFAULT_SUCCESS_OPTIMIZATION true
 
+#define SPDK_NVMF_TCP_MIN_IO_QUEUE_DEPTH 2
+#define SPDK_NVMF_TCP_MAX_IO_QUEUE_DEPTH 65535
+
+#define SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH 128
+#define SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH 128
+#define SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR 128
+#define SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
+#define SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE 131072
+#define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
+#define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 511
+#define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
+#define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
+#define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
+
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp;
 
 /* spdk nvmf related structure */
@@ -659,6 +673,15 @@ nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		SPDK_WARNLOG("TCP param ICD size %u can't be larger than max_io_size %u. Using max_io_size as ICD size\n",
 			     opts->io_unit_size, opts->max_io_size);
 		opts->in_capsule_data_size = opts->max_io_size;
+	}
+
+	/* max IO queue depth cannot be smaller than 2 or larger than 65535.
+	 * We will not check SPDK_NVMF_TCP_MAX_IO_QUEUE_DEPTH, because max_queue_depth is 16bits and always not larger than 64k. */
+	if (opts->max_queue_depth < SPDK_NVMF_TCP_MIN_IO_QUEUE_DEPTH) {
+		SPDK_WARNLOG("TCP param max_queue_depth %u can't be smaller than %u or larger than %u. Using default value %u\n",
+			     opts->max_queue_depth, SPDK_NVMF_TCP_MIN_IO_QUEUE_DEPTH,
+			     SPDK_NVMF_TCP_MAX_IO_QUEUE_DEPTH, SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH);
+		opts->max_queue_depth = SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH;
 	}
 
 	sge_count = opts->max_io_size / opts->io_unit_size;
@@ -3335,17 +3358,6 @@ nvmf_tcp_qpair_abort_request(struct spdk_nvmf_qpair *qpair,
 
 	_nvmf_tcp_qpair_abort_request(req);
 }
-
-#define SPDK_NVMF_TCP_DEFAULT_MAX_IO_QUEUE_DEPTH 128
-#define SPDK_NVMF_TCP_DEFAULT_MAX_ADMIN_QUEUE_DEPTH 128
-#define SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR 128
-#define SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
-#define SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE 131072
-#define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
-#define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 511
-#define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
-#define SPDK_NVMF_TCP_DEFAULT_DIF_INSERT_OR_STRIP false
-#define SPDK_NVMF_TCP_DEFAULT_ABORT_TIMEOUT_SEC 1
 
 static void
 nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
