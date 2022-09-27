@@ -10,6 +10,7 @@ import re
 import sys
 import argparse
 import json
+import logging
 import zipfile
 import threading
 import subprocess
@@ -38,6 +39,8 @@ class Server:
         self.nic_ips = server_config["nic_ips"]
         self.mode = server_config["mode"]
 
+        self.log = logging.getLogger(self.name)
+
         self.irq_scripts_dir = "/usr/src/local/mlnx-tools/ofed_scripts"
         if "irq_scripts_dir" in server_config and server_config["irq_scripts_dir"]:
             self.irq_scripts_dir = server_config["irq_scripts_dir"]
@@ -60,11 +63,8 @@ class Server:
             self.tuned_profile = server_config["tuned_profile"]
 
         if not re.match("^[A-Za-z0-9]*$", name):
-            self.log_print("Please use a name which contains only letters or numbers")
+            self.log.info("Please use a name which contains only letters or numbers")
             sys.exit(1)
-
-    def log_print(self, msg):
-        print("[%s] %s" % (self.name, msg), flush=True)
 
     @staticmethod
     def get_uncommented_lines(lines):
@@ -125,7 +125,7 @@ class Server:
         self.configure_irq_affinity()
 
     def load_drivers(self):
-        self.log_print("Loading drivers")
+        self.log.info("Loading drivers")
         self.exec_cmd(["sudo", "modprobe", "-a",
                        "nvme-%s" % self.transport,
                        "nvmet-%s" % self.transport])
@@ -135,27 +135,27 @@ class Server:
 
     def configure_adq(self):
         if self.mode == "kernel":
-            self.log_print("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+            self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
             return
         self.adq_load_modules()
         self.adq_configure_nic()
 
     def adq_load_modules(self):
-        self.log_print("Modprobing ADQ-related Linux modules...")
+        self.log.info("Modprobing ADQ-related Linux modules...")
         adq_module_deps = ["sch_mqprio", "act_mirred", "cls_flower"]
         for module in adq_module_deps:
             try:
                 self.exec_cmd(["sudo", "modprobe", module])
-                self.log_print("%s loaded!" % module)
+                self.log.info("%s loaded!" % module)
             except CalledProcessError as e:
-                self.log_print("ERROR: failed to load module %s" % module)
-                self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+                self.log.error("ERROR: failed to load module %s" % module)
+                self.log.error("%s resulted in error: %s" % (e.cmd, e.output))
 
     def adq_configure_tc(self):
-        self.log_print("Configuring ADQ Traffic classes and filters...")
+        self.log.info("Configuring ADQ Traffic classes and filters...")
 
         if self.mode == "kernel":
-            self.log_print("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+            self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
             return
 
         num_queues_tc0 = 2  # 2 is minimum number of queues for TC0
@@ -171,35 +171,35 @@ class Server:
                                 "queues", "%s@0" % num_queues_tc0,
                                 "%s@%s" % (num_queues_tc1, num_queues_tc0),
                                 "hw", "1", "mode", "channel"]
-            self.log_print(" ".join(tc_qdisc_map_cmd))
+            self.log.info(" ".join(tc_qdisc_map_cmd))
             self.exec_cmd(tc_qdisc_map_cmd)
 
             time.sleep(5)
             tc_qdisc_ingress_cmd = ["sudo", "tc", "qdisc", "add", "dev", nic_name, "ingress"]
-            self.log_print(" ".join(tc_qdisc_ingress_cmd))
+            self.log.info(" ".join(tc_qdisc_ingress_cmd))
             self.exec_cmd(tc_qdisc_ingress_cmd)
 
             tc_filter_cmd = ["sudo", "tc", "filter", "add", "dev", nic_name,
                              "protocol", "ip", "ingress", "prio", "1", "flower",
                              "dst_ip", "%s/32" % nic_ip, "ip_proto", "tcp", port_param, port,
                              "skip_sw", "hw_tc", "1"]
-            self.log_print(" ".join(tc_filter_cmd))
+            self.log.info(" ".join(tc_filter_cmd))
             self.exec_cmd(tc_filter_cmd)
 
             # show tc configuration
-            self.log_print("Show tc configuration for %s NIC..." % nic_name)
+            self.log.info("Show tc configuration for %s NIC..." % nic_name)
             tc_disk_out = self.exec_cmd(["sudo", "tc", "qdisc", "show", "dev", nic_name])
             tc_filter_out = self.exec_cmd(["sudo", "tc", "filter", "show", "dev", nic_name, "ingress"])
-            self.log_print("%s" % tc_disk_out)
-            self.log_print("%s" % tc_filter_out)
+            self.log.info("%s" % tc_disk_out)
+            self.log.info("%s" % tc_filter_out)
 
             # Ethtool coalesce settings must be applied after configuring traffic classes
             self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-rx", "off", "rx-usecs", "0"])
             self.exec_cmd(["sudo", "ethtool", "--coalesce", nic_name, "adaptive-tx", "off", "tx-usecs", "500"])
 
-            self.log_print("Running set_xps_rxqs script for %s NIC..." % nic_name)
+            self.log.info("Running set_xps_rxqs script for %s NIC..." % nic_name)
             xps_cmd = ["sudo", xps_script_path, nic_name]
-            self.log_print(xps_cmd)
+            self.log.info(xps_cmd)
             self.exec_cmd(xps_cmd)
 
     def reload_driver(self, driver):
@@ -207,18 +207,18 @@ class Server:
             self.exec_cmd(["sudo", "rmmod", driver])
             self.exec_cmd(["sudo", "modprobe", driver])
         except CalledProcessError as e:
-            self.log_print("ERROR: failed to reload %s module!" % driver)
-            self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
+            self.log.error("ERROR: failed to reload %s module!" % driver)
+            self.log.error("%s resulted in error: %s" % (e.cmd, e.output))
 
     def adq_configure_nic(self):
-        self.log_print("Configuring NIC port settings for ADQ testing...")
+        self.log.info("Configuring NIC port settings for ADQ testing...")
 
         # Reload the driver first, to make sure any previous settings are re-set.
         self.reload_driver("ice")
 
         nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
         for nic in nic_names:
-            self.log_print(nic)
+            self.log.info(nic)
             try:
                 self.exec_cmd(["sudo", "ethtool", "-K", nic,
                                "hw-tc-offload", "on"])  # Enable hardware TC offload
@@ -230,14 +230,14 @@ class Server:
                 self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
                                "channel-pkt-inspect-optimize", "on"])
             except CalledProcessError as e:
-                self.log_print("ERROR: failed to configure NIC port using ethtool!")
-                self.log_print("%s resulted in error: %s" % (e.cmd, e.output))
-                self.log_print("Please update your NIC driver and firmware versions and try again.")
-            self.log_print(self.exec_cmd(["sudo", "ethtool", "-k", nic]))
-            self.log_print(self.exec_cmd(["sudo", "ethtool", "--show-priv-flags", nic]))
+                self.log.error("ERROR: failed to configure NIC port using ethtool!")
+                self.log.error("%s resulted in error: %s" % (e.cmd, e.output))
+                self.log.info("Please update your NIC driver and firmware versions and try again.")
+            self.log.info(self.exec_cmd(["sudo", "ethtool", "-k", nic]))
+            self.log.info(self.exec_cmd(["sudo", "ethtool", "--show-priv-flags", nic]))
 
     def configure_services(self):
-        self.log_print("Configuring active services...")
+        self.log.info("Configuring active services...")
         svc_config = configparser.ConfigParser(strict=False)
 
         # Below list is valid only for RHEL / Fedora systems and might not
@@ -258,14 +258,14 @@ class Server:
                 continue
 
             service_state = svc_config[service]["ActiveState"]
-            self.log_print("Current state of %s service is %s" % (service, service_state))
+            self.log.info("Current state of %s service is %s" % (service, service_state))
             self.svc_restore_dict.update({service: service_state})
             if service_state != "inactive":
-                self.log_print("Disabling %s. It will be restored after the test has finished." % service)
+                self.log.info("Disabling %s. It will be restored after the test has finished." % service)
                 self.exec_cmd(["sudo", "systemctl", "stop", service])
 
     def configure_sysctl(self):
-        self.log_print("Tuning sysctl settings...")
+        self.log.info("Tuning sysctl settings...")
 
         busy_read = 0
         if self.enable_adq and self.mode == "spdk":
@@ -288,14 +288,14 @@ class Server:
 
         for opt, value in sysctl_opts.items():
             self.sysctl_restore_dict.update({opt: self.exec_cmd(["sysctl", "-n", opt]).strip()})
-            self.log_print(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
+            self.log.info(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
 
     def configure_tuned(self):
         if not self.tuned_profile:
-            self.log_print("WARNING: Tuned profile not set in configuration file. Skipping configuration.")
+            self.log.warning("WARNING: Tuned profile not set in configuration file. Skipping configuration.")
             return
 
-        self.log_print("Configuring tuned-adm profile to %s." % self.tuned_profile)
+        self.log.info("Configuring tuned-adm profile to %s." % self.tuned_profile)
         service = "tuned"
         tuned_config = configparser.ConfigParser(strict=False)
 
@@ -316,54 +316,54 @@ class Server:
 
         self.exec_cmd(["sudo", "systemctl", "start", service])
         self.exec_cmd(["sudo", "tuned-adm", "profile", self.tuned_profile])
-        self.log_print("Tuned profile set to %s." % self.exec_cmd(["cat", "/etc/tuned/active_profile"]))
+        self.log.info("Tuned profile set to %s." % self.exec_cmd(["cat", "/etc/tuned/active_profile"]))
 
     def configure_cpu_governor(self):
-        self.log_print("Setting CPU governor to performance...")
+        self.log.info("Setting CPU governor to performance...")
 
         # This assumes that there is the same CPU scaling governor on each CPU
         self.governor_restore = self.exec_cmd(["cat", "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"]).strip()
         self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", "performance"])
 
     def configure_irq_affinity(self):
-        self.log_print("Setting NIC irq affinity for NICs...")
+        self.log.info("Setting NIC irq affinity for NICs...")
 
         irq_script_path = os.path.join(self.irq_scripts_dir, "set_irq_affinity.sh")
         nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
         for nic in nic_names:
             irq_cmd = ["sudo", irq_script_path, nic]
-            self.log_print(irq_cmd)
+            self.log.info(irq_cmd)
             self.exec_cmd(irq_cmd, change_dir=self.irq_scripts_dir)
 
     def restore_services(self):
-        self.log_print("Restoring services...")
+        self.log.info("Restoring services...")
         for service, state in self.svc_restore_dict.items():
             cmd = "stop" if state == "inactive" else "start"
             self.exec_cmd(["sudo", "systemctl", cmd, service])
 
     def restore_sysctl(self):
-        self.log_print("Restoring sysctl settings...")
+        self.log.info("Restoring sysctl settings...")
         for opt, value in self.sysctl_restore_dict.items():
-            self.log_print(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
+            self.log.info(self.exec_cmd(["sudo", "sysctl", "-w", "%s=%s" % (opt, value)]).strip())
 
     def restore_tuned(self):
-        self.log_print("Restoring tuned-adm settings...")
+        self.log.info("Restoring tuned-adm settings...")
 
         if not self.tuned_restore_dict:
             return
 
         if self.tuned_restore_dict["mode"] == "auto":
             self.exec_cmd(["sudo", "tuned-adm", "auto_profile"])
-            self.log_print("Reverted tuned-adm to auto_profile.")
+            self.log.info("Reverted tuned-adm to auto_profile.")
         else:
             self.exec_cmd(["sudo", "tuned-adm", "profile", self.tuned_restore_dict["profile"]])
-            self.log_print("Reverted tuned-adm to %s profile." % self.tuned_restore_dict["profile"])
+            self.log.info("Reverted tuned-adm to %s profile." % self.tuned_restore_dict["profile"])
 
     def restore_governor(self):
-        self.log_print("Restoring CPU governor setting...")
+        self.log.info("Restoring CPU governor setting...")
         if self.governor_restore:
             self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", self.governor_restore])
-            self.log_print("Reverted CPU governor to %s." % self.governor_restore)
+            self.log.info("Reverted CPU governor to %s." % self.governor_restore)
 
 
 class Target(Server):
@@ -434,23 +434,23 @@ class Target(Server):
         if change_dir:
             old_cwd = os.getcwd()
             os.chdir(change_dir)
-            self.log_print("Changing directory to %s" % change_dir)
+            self.log.info("Changing directory to %s" % change_dir)
 
         out = check_output(cmd, stderr=stderr_opt).decode(encoding="utf-8")
 
         if change_dir:
             os.chdir(old_cwd)
-            self.log_print("Changing directory to %s" % old_cwd)
+            self.log.info("Changing directory to %s" % old_cwd)
         return out
 
     def zip_spdk_sources(self, spdk_dir, dest_file):
-        self.log_print("Zipping SPDK source directory")
+        self.log.info("Zipping SPDK source directory")
         fh = zipfile.ZipFile(dest_file, "w", zipfile.ZIP_DEFLATED)
         for root, _directories, files in os.walk(spdk_dir, followlinks=True):
             for file in files:
                 fh.write(os.path.relpath(os.path.join(root, file)))
         fh.close()
-        self.log_print("Done zipping")
+        self.log.info("Done zipping")
 
     @staticmethod
     def _chunks(input_list, chunks_no):
@@ -567,7 +567,7 @@ class Target(Server):
         rows = set()
 
         for fio_config in fio_files:
-            self.log_print("Getting FIO stats for %s" % fio_config)
+            self.log.info("Getting FIO stats for %s" % fio_config)
             job_name, _ = os.path.splitext(fio_config)
 
             # Look in the filename for rwmixread value. Function arguments do
@@ -585,16 +585,16 @@ class Target(Server):
             # Initiators for the same job could have different num_cores parameter
             job_name = re.sub(r"_\d+CPU", "", job_name)
             job_result_files = [x for x in json_files if x.startswith(job_name)]
-            self.log_print("Matching result files for current fio config:")
+            self.log.info("Matching result files for current fio config:")
             for j in job_result_files:
-                self.log_print("\t %s" % j)
+                self.log.info("\t %s" % j)
 
             # There may have been more than 1 initiator used in test, need to check that
             # Result files are created so that string after last "_" separator is server name
             inits_names = set([os.path.splitext(x)[0].split("_")[-1] for x in job_result_files])
             inits_avg_results = []
             for i in inits_names:
-                self.log_print("\tGetting stats for initiator %s" % i)
+                self.log.info("\tGetting stats for initiator %s" % i)
                 # There may have been more than 1 test run for this job, calculate average results for initiator
                 i_results = [x for x in job_result_files if i in x]
                 i_results_filename = re.sub(r"run_\d+_", "", i_results[0].replace("json", "csv"))
@@ -604,16 +604,16 @@ class Target(Server):
                     try:
                         stats = self.read_json_stats(os.path.join(results_dir, r))
                         separate_stats.append(stats)
-                        self.log_print(stats)
+                        self.log.info(stats)
                     except JSONDecodeError:
-                        self.log_print("ERROR: Failed to parse %s results! Results might be incomplete!" % r)
+                        self.log.error("ERROR: Failed to parse %s results! Results might be incomplete!" % r)
 
                 init_results = [sum(x) for x in zip(*separate_stats)]
                 init_results = [x / len(separate_stats) for x in init_results]
                 inits_avg_results.append(init_results)
 
-                self.log_print("\tAverage results for initiator %s" % i)
-                self.log_print(init_results)
+                self.log.info("\tAverage results for initiator %s" % i)
+                self.log.info(init_results)
                 with open(os.path.join(results_dir, i_results_filename), "w") as fh:
                     fh.write(header_line + "\n")
                     fh.write(",".join([job_name, *["{0:.3f}".format(x) for x in init_results]]) + "\n")
@@ -643,7 +643,7 @@ class Target(Server):
         for row in rows:
             with open(os.path.join(results_dir, csv_file), "a") as fh:
                 fh.write(row + "\n")
-        self.log_print("You can find the test results in the file %s" % os.path.join(results_dir, csv_file))
+        self.log.info("You can find the test results in the file %s" % os.path.join(results_dir, csv_file))
 
     def measure_sar(self, results_dir, sar_file_prefix):
         cpu_number = os.cpu_count()
@@ -651,19 +651,19 @@ class Target(Server):
         sar_output_file = os.path.join(results_dir, sar_file_prefix + ".txt")
         sar_cpu_util_file = os.path.join(results_dir, ".".join([sar_file_prefix + "cpu_util", "txt"]))
 
-        self.log_print("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % self.sar_delay)
+        self.log.info("Waiting %d seconds for ramp-up to finish before measuring SAR stats" % self.sar_delay)
         time.sleep(self.sar_delay)
-        self.log_print("Starting SAR measurements")
+        self.log.info("Starting SAR measurements")
 
         out = self.exec_cmd(["sar", "-P", "ALL", "%s" % self.sar_interval, "%s" % self.sar_count])
         with open(os.path.join(results_dir, sar_output_file), "w") as fh:
             for line in out.split("\n"):
                 if "Average" in line:
                     if "CPU" in line:
-                        self.log_print("Summary CPU utilization from SAR:")
-                        self.log_print(line)
+                        self.log.info("Summary CPU utilization from SAR:")
+                        self.log.info(line)
                     elif "all" in line:
-                        self.log_print(line)
+                        self.log.info(line)
                     else:
                         sar_idle_sum += float(line.split()[7])
             fh.write(out)
@@ -679,7 +679,7 @@ class Target(Server):
         time.sleep(fio_ramp_time//2)
         nic_names = [self.get_nic_name_by_ip(n) for n in self.nic_ips]
         for nic in nic_names:
-            self.log_print(nic)
+            self.log.info(nic)
             self.exec_cmd(["sudo", "ethtool", "--set-priv-flags", nic,
                            "channel-pkt-inspect-optimize", "off"])  # Disable channel packet inspection optimization
 
@@ -708,34 +708,34 @@ class Target(Server):
             fh.write(out)
 
     def measure_network_bandwidth(self, results_dir, bandwidth_file_name):
-        self.log_print("INFO: starting network bandwidth measure")
+        self.log.info("INFO: starting network bandwidth measure")
         self.exec_cmd(["bwm-ng", "-o", "csv", "-F", "%s/%s" % (results_dir, bandwidth_file_name),
                        "-a", "1", "-t", "1000", "-c", str(self.bandwidth_count)])
 
     def measure_dpdk_memory(self, results_dir):
-        self.log_print("INFO: waiting to generate DPDK memory usage")
+        self.log.info("INFO: waiting to generate DPDK memory usage")
         time.sleep(self.dpdk_wait_time)
-        self.log_print("INFO: generating DPDK memory usage")
+        self.log.info("INFO: generating DPDK memory usage")
         rpc.env.env_dpdk_get_mem_stats
         os.rename("/tmp/spdk_mem_dump.txt", "%s/spdk_mem_dump.txt" % (results_dir))
 
     def sys_config(self):
-        self.log_print("====Kernel release:====")
-        self.log_print(os.uname().release)
-        self.log_print("====Kernel command line:====")
+        self.log.info("====Kernel release:====")
+        self.log.info(os.uname().release)
+        self.log.info("====Kernel command line:====")
         with open('/proc/cmdline') as f:
             cmdline = f.readlines()
-            self.log_print('\n'.join(self.get_uncommented_lines(cmdline)))
-        self.log_print("====sysctl conf:====")
+            self.log.info('\n'.join(self.get_uncommented_lines(cmdline)))
+        self.log.info("====sysctl conf:====")
         with open('/etc/sysctl.conf') as f:
             sysctl = f.readlines()
-            self.log_print('\n'.join(self.get_uncommented_lines(sysctl)))
-        self.log_print("====Cpu power info:====")
-        self.log_print(self.exec_cmd(["cpupower", "frequency-info"]))
-        self.log_print("====zcopy settings:====")
-        self.log_print("zcopy enabled: %s" % (self.enable_zcopy))
-        self.log_print("====Scheduler settings:====")
-        self.log_print("SPDK scheduler: %s" % (self.scheduler_name))
+            self.log.info('\n'.join(self.get_uncommented_lines(sysctl)))
+        self.log.info("====Cpu power info:====")
+        self.log.info(self.exec_cmd(["cpupower", "frequency-info"]))
+        self.log.info("====zcopy settings:====")
+        self.log.info("zcopy enabled: %s" % (self.enable_zcopy))
+        self.log.info("====Scheduler settings:====")
+        self.log.info("SPDK scheduler: %s" % (self.scheduler_name))
 
 
 class Initiator(Server):
@@ -826,14 +826,14 @@ class Initiator(Server):
         ftp.close()
 
     def copy_spdk(self, local_spdk_zip):
-        self.log_print("Copying SPDK sources to initiator %s" % self.name)
+        self.log.info("Copying SPDK sources to initiator %s" % self.name)
         self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
-        self.log_print("Copied sources zip from target")
+        self.log.info("Copied sources zip from target")
         self.exec_cmd(["unzip", "-qo", "/tmp/spdk_drop.zip", "-d", self.spdk_dir])
-        self.log_print("Sources unpacked")
+        self.log.info("Sources unpacked")
 
     def copy_result_files(self, dest_dir):
-        self.log_print("Copying results")
+        self.log.info("Copying results")
 
         if not os.path.exists(dest_dir):
             os.mkdir(dest_dir)
@@ -844,13 +844,13 @@ class Initiator(Server):
         for file in file_list:
             self.get_file(os.path.join(self.spdk_dir, "nvmf_perf", file),
                           os.path.join(dest_dir, file))
-        self.log_print("Done copying results")
+        self.log.info("Done copying results")
 
     def discover_subsystems(self, address_list, subsys_no):
         num_nvmes = range(0, subsys_no)
         nvme_discover_output = ""
         for ip, subsys_no in itertools.product(address_list, num_nvmes):
-            self.log_print("Trying to discover: %s:%s" % (ip, 4420 + subsys_no))
+            self.log.info("Trying to discover: %s:%s" % (ip, 4420 + subsys_no))
             nvme_discover_cmd = ["sudo",
                                  "%s" % self.nvmecli_bin,
                                  "discover", "-t", "%s" % self.transport,
@@ -875,9 +875,9 @@ class Initiator(Server):
         subsystems = filter(lambda x: "discovery" not in x[1], subsystems)
         subsystems = list(set(subsystems))
         subsystems.sort(key=lambda x: x[1])
-        self.log_print("Found matching subsystems on target side:")
+        self.log.info("Found matching subsystems on target side:")
         for s in subsystems:
-            self.log_print(s)
+            self.log.info(s)
         self.subsystem_info_list = subsystems
 
     def gen_fio_filename_conf(self, *args, **kwargs):
@@ -942,7 +942,7 @@ rate_iops={rate_iops}
             subsystems = [x for x in out.split("\n") if "nvme" in x]
 
         if self.cpus_allowed is not None:
-            self.log_print("Limiting FIO workload execution on specific cores %s" % self.cpus_allowed)
+            self.log.info("Limiting FIO workload execution on specific cores %s" % self.cpus_allowed)
             cpus_num = 0
             cpus = self.cpus_allowed.split(",")
             for cpu in cpus:
@@ -956,7 +956,7 @@ rate_iops={rate_iops}
             self.num_cores = cpus_num
             threads = range(0, self.num_cores)
         elif hasattr(self, 'num_cores'):
-            self.log_print("Limiting FIO workload execution to %s cores" % self.num_cores)
+            self.log.info("Limiting FIO workload execution to %s cores" % self.num_cores)
             threads = range(0, int(self.num_cores))
         else:
             self.num_cores = len(subsystems)
@@ -996,8 +996,8 @@ registerfiles=1
 
         self.exec_cmd(["mkdir", "-p", "%s/nvmf_perf" % self.spdk_dir])
         self.exec_cmd(["echo", "'%s'" % fio_config, ">", "%s/nvmf_perf/%s" % (self.spdk_dir, fio_config_filename)])
-        self.log_print("Created FIO Config:")
-        self.log_print(fio_config)
+        self.log.info("Created FIO Config:")
+        self.log.info(fio_config)
 
         return os.path.join(self.spdk_dir, "nvmf_perf", fio_config_filename)
 
@@ -1006,17 +1006,17 @@ registerfiles=1
             try:
                 self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", "userspace"], True)
                 self.exec_cmd(["sudo", "cpupower", "frequency-set", "-f", "%s" % self.cpu_frequency], True)
-                self.log_print(self.exec_cmd(["sudo", "cpupower", "frequency-info"]))
+                self.log.info(self.exec_cmd(["sudo", "cpupower", "frequency-info"]))
             except Exception:
-                self.log_print("ERROR: cpu_frequency will not work when intel_pstate is enabled!")
+                self.log.error("ERROR: cpu_frequency will not work when intel_pstate is enabled!")
                 sys.exit()
         else:
-            self.log_print("WARNING: you have disabled intel_pstate and using default cpu governance.")
+            self.log.warning("WARNING: you have disabled intel_pstate and using default cpu governance.")
 
     def run_fio(self, fio_config_file, run_num=None):
         job_name, _ = os.path.splitext(fio_config_file)
-        self.log_print("Starting FIO run for job: %s" % job_name)
-        self.log_print("Using FIO: %s" % self.fio_bin)
+        self.log.info("Starting FIO run for job: %s" % job_name)
+        self.log.info("Using FIO: %s" % self.fio_bin)
 
         if run_num:
             for i in range(1, run_num + 1):
@@ -1024,29 +1024,29 @@ registerfiles=1
                 try:
                     output = self.exec_cmd(["sudo", self.fio_bin, fio_config_file, "--output-format=json",
                                             "--output=%s" % output_filename, "--eta=never"], True)
-                    self.log_print(output)
+                    self.log.info(output)
                 except subprocess.CalledProcessError as e:
-                    self.log_print("ERROR: Fio process failed!")
-                    self.log_print(e.stdout)
+                    self.log.error("ERROR: Fio process failed!")
+                    self.log.info(e.stdout)
         else:
             output_filename = job_name + "_" + self.name + ".json"
             output = self.exec_cmd(["sudo", self.fio_bin,
                                     fio_config_file, "--output-format=json",
                                     "--output" % output_filename], True)
-            self.log_print(output)
-        self.log_print("FIO run finished. Results in: %s" % output_filename)
+            self.log.info(output)
+        self.log.info("FIO run finished. Results in: %s" % output_filename)
 
     def sys_config(self):
-        self.log_print("====Kernel release:====")
-        self.log_print(self.exec_cmd(["uname", "-r"]))
-        self.log_print("====Kernel command line:====")
+        self.log.info("====Kernel release:====")
+        self.log.info(self.exec_cmd(["uname", "-r"]))
+        self.log.info("====Kernel command line:====")
         cmdline = self.exec_cmd(["cat", "/proc/cmdline"])
-        self.log_print('\n'.join(self.get_uncommented_lines(cmdline.splitlines())))
-        self.log_print("====sysctl conf:====")
+        self.log.info('\n'.join(self.get_uncommented_lines(cmdline.splitlines())))
+        self.log.info("====sysctl conf:====")
         sysctl = self.exec_cmd(["sudo", "cat", "/etc/sysctl.conf"])
-        self.log_print('\n'.join(self.get_uncommented_lines(sysctl.splitlines())))
-        self.log_print("====Cpu power info:====")
-        self.log_print(self.exec_cmd(["cpupower", "frequency-info"]))
+        self.log.info('\n'.join(self.get_uncommented_lines(sysctl.splitlines())))
+        self.log.info("====Cpu power info:====")
+        self.log.info(self.exec_cmd(["cpupower", "frequency-info"]))
 
 
 class KernelTarget(Target):
@@ -1114,13 +1114,13 @@ class KernelTarget(Target):
             fh.write(json.dumps(nvmet_cfg, indent=2))
 
     def tgt_start(self):
-        self.log_print("Configuring kernel NVMeOF Target")
+        self.log.info("Configuring kernel NVMeOF Target")
 
         if self.null_block:
-            print("Configuring with null block device.")
+            self.log.info("Configuring with null block device.")
             nvme_list = ["/dev/nullb{}".format(x) for x in range(self.null_block)]
         else:
-            print("Configuring with NVMe drives.")
+            self.log.info("Configuring with NVMe drives.")
             nvme_list = get_nvme_devices()
 
         self.kernel_tgt_gen_subsystem_conf(nvme_list)
@@ -1132,7 +1132,7 @@ class KernelTarget(Target):
         if self.enable_adq:
             self.adq_configure_tc()
 
-        self.log_print("Done configuring kernel NVMeOF Target")
+        self.log.info("Done configuring kernel NVMeOF Target")
 
 
 class SPDKTarget(Target):
@@ -1168,8 +1168,8 @@ class SPDKTarget(Target):
         if "scheduler_core_limit" in target_config:
             self.scheduler_core_limit = target_config["scheduler_core_limit"]
 
-        self.log_print("====DSA settings:====")
-        self.log_print("DSA enabled: %s" % (self.enable_dsa))
+        self.log.info("====DSA settings:====")
+        self.log.info("DSA enabled: %s" % (self.enable_dsa))
 
     @staticmethod
     def get_num_cores(core_mask):
@@ -1188,7 +1188,7 @@ class SPDKTarget(Target):
             return num_cores
 
     def spdk_tgt_configure(self):
-        self.log_print("Configuring SPDK NVMeOF target via RPC")
+        self.log.info("Configuring SPDK NVMeOF target via RPC")
 
         if self.enable_adq:
             self.adq_configure_tc()
@@ -1199,7 +1199,7 @@ class SPDKTarget(Target):
                                        max_queue_depth=self.max_queue_depth,
                                        dif_insert_or_strip=self.dif_insert_strip,
                                        sock_priority=self.adq_priority)
-        self.log_print("SPDK NVMeOF transport layer:")
+        self.log.info("SPDK NVMeOF transport layer:")
         rpc_client.print_dict(rpc.nvmf.nvmf_get_transports(self.client))
 
         if self.null_block:
@@ -1209,7 +1209,7 @@ class SPDKTarget(Target):
             self.spdk_tgt_add_nvme_conf()
             self.spdk_tgt_add_subsystem_conf(self.nic_ips)
 
-        self.log_print("Done configuring SPDK NVMeOF Target")
+        self.log.info("Done configuring SPDK NVMeOF Target")
 
     def spdk_tgt_add_nullblock(self, null_block_count):
         md_size = 0
@@ -1217,23 +1217,23 @@ class SPDKTarget(Target):
         if self.null_block_dif_type != 0:
             md_size = 128
 
-        self.log_print("Adding null block bdevices to config via RPC")
+        self.log.info("Adding null block bdevices to config via RPC")
         for i in range(null_block_count):
-            self.log_print("Setting bdev protection to :%s" % self.null_block_dif_type)
+            self.log.info("Setting bdev protection to :%s" % self.null_block_dif_type)
             rpc.bdev.bdev_null_create(self.client, 102400, block_size + md_size, "Nvme{}n1".format(i),
                                       dif_type=self.null_block_dif_type, md_size=md_size)
-        self.log_print("SPDK Bdevs configuration:")
+        self.log.info("SPDK Bdevs configuration:")
         rpc_client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 
     def spdk_tgt_add_nvme_conf(self, req_num_disks=None):
-        self.log_print("Adding NVMe bdevs to config via RPC")
+        self.log.info("Adding NVMe bdevs to config via RPC")
 
         bdfs = get_nvme_devices_bdf()
         bdfs = [b.replace(":", ".") for b in bdfs]
 
         if req_num_disks:
             if req_num_disks > len(bdfs):
-                self.log_print("ERROR: Requested number of disks is more than available %s" % len(bdfs))
+                self.log.error("ERROR: Requested number of disks is more than available %s" % len(bdfs))
                 sys.exit(1)
             else:
                 bdfs = bdfs[0:req_num_disks]
@@ -1241,11 +1241,11 @@ class SPDKTarget(Target):
         for i, bdf in enumerate(bdfs):
             rpc.bdev.bdev_nvme_attach_controller(self.client, name="Nvme%s" % i, trtype="PCIe", traddr=bdf)
 
-        self.log_print("SPDK Bdevs configuration:")
+        self.log.info("SPDK Bdevs configuration:")
         rpc_client.print_dict(rpc.bdev.bdev_get_bdevs(self.client))
 
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
-        self.log_print("Adding subsystems to config")
+        self.log.info("Adding subsystems to config")
         if not req_num_disks:
             req_num_disks = get_nvme_devices_count()
 
@@ -1268,11 +1268,11 @@ class SPDKTarget(Target):
             self.subsystem_info_list.append([port, nqn, ip])
         self.subsys_no = len(self.subsystem_info_list)
 
-        self.log_print("SPDK NVMeOF subsystem configuration:")
+        self.log.info("SPDK NVMeOF subsystem configuration:")
         rpc_client.print_dict(rpc.nvmf.nvmf_get_subsystems(self.client))
 
     def bpf_start(self):
-        self.log_print("Starting BPF Trace scripts: %s" % self.bpf_scripts)
+        self.log.info("Starting BPF Trace scripts: %s" % self.bpf_scripts)
         bpf_script = os.path.join(self.spdk_dir, "scripts/bpftrace.sh")
         bpf_traces = [os.path.join(self.spdk_dir, "scripts/bpf", trace) for trace in self.bpf_scripts]
         results_path = os.path.join(self.results_dir, "bpf_traces.txt")
@@ -1281,7 +1281,7 @@ class SPDKTarget(Target):
             nvmf_pid = str(fh.readline())
 
         cmd = [bpf_script, nvmf_pid, *bpf_traces]
-        self.log_print(cmd)
+        self.log.info(cmd)
         self.bpf_proc = subprocess.Popen(cmd, env={"BPF_OUTFILE": results_path})
 
     def tgt_start(self):
@@ -1289,7 +1289,7 @@ class SPDKTarget(Target):
             self.subsys_no = 1
         else:
             self.subsys_no = get_nvme_devices_count()
-        self.log_print("Starting SPDK NVMeOF Target process")
+        self.log.info("Starting SPDK NVMeOF Target process")
         nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
         proc = subprocess.Popen([nvmf_app_path, "--wait-for-rpc", "-m", self.core_mask])
         self.pid = os.path.join(self.spdk_dir, "nvmf.pid")
@@ -1297,8 +1297,8 @@ class SPDKTarget(Target):
         with open(self.pid, "w") as fh:
             fh.write(str(proc.pid))
         self.nvmf_proc = proc
-        self.log_print("SPDK NVMeOF Target PID=%s" % self.pid)
-        self.log_print("Waiting for spdk to initialize...")
+        self.log.info("SPDK NVMeOF Target PID=%s" % self.pid)
+        self.log.info("Waiting for spdk to initialize...")
         while True:
             if os.path.exists("/var/tmp/spdk.sock"):
                 break
@@ -1310,7 +1310,7 @@ class SPDKTarget(Target):
         if self.enable_zcopy:
             rpc.sock.sock_impl_set_options(self.client, impl_name="posix",
                                            enable_zerocopy_send_server=True)
-            self.log_print("Target socket options:")
+            self.log.info("Target socket options:")
             rpc_client.print_dict(rpc.sock.sock_impl_get_options(self.client, impl_name="posix"))
 
         if self.enable_adq:
@@ -1320,7 +1320,7 @@ class SPDKTarget(Target):
 
         if self.enable_dsa:
             rpc.dsa.dsa_scan_accel_module(self.client, config_kernel_mode=None)
-            self.log_print("Target DSA accel module enabled")
+            self.log.info("Target DSA accel module enabled")
 
         rpc.app.framework_set_scheduler(self.client, name=self.scheduler_name, core_limit=self.scheduler_core_limit)
         rpc.framework_start_init(self.client)
@@ -1332,7 +1332,7 @@ class SPDKTarget(Target):
 
     def stop(self):
         if self.bpf_proc:
-            self.log_print("Stopping BPF Trace script")
+            self.log.info("Stopping BPF Trace script")
             self.bpf_proc.terminate()
             self.bpf_proc.wait()
 
@@ -1341,8 +1341,8 @@ class SPDKTarget(Target):
                 self.nvmf_proc.terminate()
                 self.nvmf_proc.wait(timeout=30)
             except Exception as e:
-                self.log_print("Failed to terminate SPDK Target process. Sending SIGKILL.")
-                self.log_print(e)
+                self.log.info("Failed to terminate SPDK Target process. Sending SIGKILL.")
+                self.log.info(e)
                 self.nvmf_proc.kill()
                 self.nvmf_proc.communicate()
                 # Try to clean up RPC socket files if they were not removed
@@ -1377,15 +1377,15 @@ class KernelInitiator(Initiator):
         return nvme_list
 
     def kernel_init_connect(self):
-        self.log_print("Below connection attempts may result in error messages, this is expected!")
+        self.log.info("Below connection attempts may result in error messages, this is expected!")
         for subsystem in self.subsystem_info_list:
-            self.log_print("Trying to connect %s %s %s" % subsystem)
+            self.log.info("Trying to connect %s %s %s" % subsystem)
             self.exec_cmd(["sudo", self.nvmecli_bin, "connect", "-t", self.transport,
                            "-s", subsystem[0], "-n", subsystem[1], "-a", subsystem[2], self.extra_params])
             time.sleep(2)
 
         if "io_uring" in self.ioengine:
-            self.log_print("Setting block layer settings for io_uring.")
+            self.log.info("Setting block layer settings for io_uring.")
 
             # TODO: io_poll=1 and io_poll_delay=-1 params not set here, because
             #       apparently it's not possible for connected subsystems.
@@ -1403,10 +1403,10 @@ class KernelInitiator(Initiator):
                     try:
                         self.exec_cmd(["sudo", "bash", "-c", "echo %s > %s" % (v, sysfs_opt_path)], stderr_redirect=True)
                     except subprocess.CalledProcessError as e:
-                        self.log_print("Warning: command %s failed due to error %s. %s was not set!" % (e.cmd, e.output, v))
+                        self.log.warning("Warning: command %s failed due to error %s. %s was not set!" % (e.cmd, e.output, v))
                     finally:
                         _ = self.exec_cmd(["sudo", "cat", "%s" % (sysfs_opt_path)])
-                        self.log_print("%s=%s" % (sysfs_opt_path, _))
+                        self.log.info("%s=%s" % (sysfs_opt_path, _))
 
     def kernel_init_disconnect(self):
         for subsystem in self.subsystem_info_list:
@@ -1474,14 +1474,14 @@ class SPDKInitiator(Initiator):
             self.enable_data_digest = initiator_config["enable_data_digest"]
 
     def install_spdk(self):
-        self.log_print("Using fio binary %s" % self.fio_bin)
+        self.log.info("Using fio binary %s" % self.fio_bin)
         self.exec_cmd(["git", "-C", self.spdk_dir, "submodule", "update", "--init"])
         self.exec_cmd(["git", "-C", self.spdk_dir, "clean", "-ffdx"])
         self.exec_cmd(["cd", self.spdk_dir, "&&", "./configure", "--with-rdma", "--with-fio=%s" % os.path.dirname(self.fio_bin)])
         self.exec_cmd(["make", "-C", self.spdk_dir, "clean"])
         self.exec_cmd(["make", "-C", self.spdk_dir, "-j$(($(nproc)*2))"])
 
-        self.log_print("SPDK built")
+        self.log.info("SPDK built")
         self.exec_cmd(["sudo", "%s/scripts/setup.sh" % self.spdk_dir])
 
     def gen_spdk_bdev_conf(self, remote_subsystem_list):
@@ -1582,7 +1582,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("Using config file: %s" % args.config)
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(name)s:%(funcName)s:%(lineno)d] %(message)s')
+
+    logging.info("Using config file: %s" % args.config)
     with open(args.config, "r") as config:
         data = json.load(config)
 
