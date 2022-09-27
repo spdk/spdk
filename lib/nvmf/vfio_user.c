@@ -7,6 +7,8 @@
  * NVMe over vfio-user transport
  */
 
+#include <sys/param.h>
+
 #include <vfio-user/libvfio-user.h>
 #include <vfio-user/pci_defs.h>
 
@@ -55,11 +57,6 @@ SPDK_STATIC_ASSERT(NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR >= 2 &&
  * available on PCI-X 2.0 and PCI Express buses
  */
 #define NVME_REG_CFG_SIZE       0x1000
-#define NVME_IRQ_MSIX_NUM	NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR
-/* MSIX Table Size */
-#define NVME_BAR4_SIZE		SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM * 16), 0x1000)
-/* MSIX Pending Bit Array Size */
-#define NVME_BAR5_SIZE		SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM / 8), 0x1000)
 
 /*
  * Doorbells must be page aligned so that they can memory mapped.
@@ -71,6 +68,29 @@ SPDK_STATIC_ASSERT(NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR >= 2 &&
 		(NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR * 2 * SPDK_NVME_DOORBELL_REGISTER_SIZE), \
 		0x1000)
 #define NVME_REG_BAR0_SIZE (NVME_DOORBELLS_OFFSET + NVMF_VFIO_USER_DOORBELLS_SIZE)
+
+/*
+ * TODO check the PCI spec whether BAR4 and BAR5 really have to be at least one
+ * page and a multiple of page size (maybe QEMU also needs this?). Document all
+ * this.
+ */
+
+/*
+ * MSI-X Pending Bit Array Size
+ *
+ * TODO according to the PCI spec we need one bit per vector, document the
+ * relevant section.
+ *
+ * If the first argument to SPDK_ALIGN_CEIL is 0 then the result is 0, so we
+ * would end up with a 0-size BAR5.
+ */
+#define NVME_IRQ_MSIX_NUM MAX(CHAR_BIT, NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR)
+#define NVME_BAR5_SIZE SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM / CHAR_BIT), 0x1000)
+SPDK_STATIC_ASSERT(NVME_BAR5_SIZE > 0, "Incorrect size");
+
+/* MSI-X Table Size */
+#define NVME_BAR4_SIZE SPDK_ALIGN_CEIL((NVME_IRQ_MSIX_NUM * 16), 0x1000)
+SPDK_STATIC_ASSERT(NVME_BAR4_SIZE > 0, "Incorrect size");
 
 struct nvmf_vfio_user_req;
 
