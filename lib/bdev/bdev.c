@@ -6371,9 +6371,9 @@ bdev_register(struct spdk_bdev *bdev)
 		bdev->write_unit_size = 1;
 	}
 
-	/* Set ACWU value to 1 if bdev module did not set it (does not support it natively) */
+	/* Set ACWU value to the write unit size if bdev module did not set it (does not support it natively) */
 	if (bdev->acwu == 0) {
-		bdev->acwu = 1;
+		bdev->acwu = bdev->write_unit_size;
 	}
 
 	if (bdev->phys_blocklen == 0) {
@@ -7086,6 +7086,7 @@ bdev_write_zero_buffer_next(void *_bdev_io)
 			     bdev_io->u.bdev.split_remaining_num_blocks,
 			     ZERO_BUFFER_SIZE);
 	num_blocks = num_bytes / _bdev_get_block_size_with_md(bdev_io->bdev);
+	num_blocks -= num_blocks % bdev_io->bdev->write_unit_size;
 
 	if (spdk_bdev_is_md_separate(bdev_io->bdev)) {
 		md_buf = (char *)g_bdev_mgr.zero_buffer +
