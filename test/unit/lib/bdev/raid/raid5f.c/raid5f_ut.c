@@ -13,6 +13,7 @@
 
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
 
 struct spdk_bdev_desc {
 	struct spdk_bdev *bdev;

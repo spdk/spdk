@@ -277,6 +277,14 @@ raid_bdev_io_device_unregister_cb(void *io_device)
 	}
 }
 
+void
+raid_bdev_module_stop_done(struct raid_bdev *raid_bdev)
+{
+	if (raid_bdev->state != RAID_BDEV_STATE_CONFIGURING) {
+		spdk_io_device_unregister(raid_bdev, raid_bdev_io_device_unregister_cb);
+	}
+}
+
 /*
  * brief:
  * raid_bdev_destruct is the destruct function table pointer for raid bdev
@@ -313,10 +321,12 @@ raid_bdev_destruct(void *ctxt)
 	}
 
 	if (raid_bdev->module->stop != NULL) {
-		raid_bdev->module->stop(raid_bdev);
+		if (raid_bdev->module->stop(raid_bdev) == false) {
+			return 1;
+		}
 	}
 
-	spdk_io_device_unregister(raid_bdev, raid_bdev_io_device_unregister_cb);
+	raid_bdev_module_stop_done(raid_bdev);
 
 	return 1;
 }

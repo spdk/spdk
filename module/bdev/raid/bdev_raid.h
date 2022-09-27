@@ -262,8 +262,12 @@ struct raid_bdev_module {
 	/*
 	 * Called when the raid is stopping, right before changing the state to
 	 * offline and unregistering the bdev. Optional.
+	 *
+	 * The function should return false if it is asynchronous. Then, after
+	 * the async operation has completed and the module is fully stopped
+	 * raid_bdev_module_stop_done() must be called.
 	 */
-	void (*stop)(struct raid_bdev *raid_bdev);
+	bool (*stop)(struct raid_bdev *raid_bdev);
 
 	/* Handler for R/W requests */
 	void (*submit_rw_request)(struct raid_bdev_io *raid_io);
@@ -297,5 +301,6 @@ bool raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed
 void raid_bdev_queue_io_wait(struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 			     struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn);
 void raid_bdev_io_complete(struct raid_bdev_io *raid_io, enum spdk_bdev_io_status status);
+void raid_bdev_module_stop_done(struct raid_bdev *raid_bdev);
 
 #endif /* SPDK_BDEV_RAID_INTERNAL_H */
