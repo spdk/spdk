@@ -23,6 +23,7 @@ struct hello_context_t {
 	struct spdk_bdev_desc *bdev_desc;
 	struct spdk_io_channel *bdev_io_channel;
 	char *buff;
+	uint32_t buff_size;
 	char *bdev_name;
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
@@ -79,11 +80,11 @@ hello_read(void *arg)
 {
 	struct hello_context_t *hello_context = arg;
 	int rc = 0;
-	uint32_t length = spdk_bdev_get_block_size(hello_context->bdev);
 
 	SPDK_NOTICELOG("Reading io\n");
 	rc = spdk_bdev_read(hello_context->bdev_desc, hello_context->bdev_io_channel,
-			    hello_context->buff, 0, length, read_complete, hello_context);
+			    hello_context->buff, 0, hello_context->buff_size, read_complete,
+			    hello_context);
 
 	if (rc == -ENOMEM) {
 		SPDK_NOTICELOG("Queueing io\n");
@@ -108,7 +109,6 @@ static void
 write_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct hello_context_t *hello_context = cb_arg;
-	uint32_t length;
 
 	/* Complete the I/O */
 	spdk_bdev_free_io(bdev_io);
@@ -124,8 +124,7 @@ write_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	/* Zero the buffer so that we can use it for reading */
-	length = spdk_bdev_get_block_size(hello_context->bdev);
-	memset(hello_context->buff, 0, length);
+	memset(hello_context->buff, 0, hello_context->buff_size);
 
 	hello_read(hello_context);
 }
@@ -135,11 +134,11 @@ hello_write(void *arg)
 {
 	struct hello_context_t *hello_context = arg;
 	int rc = 0;
-	uint32_t length = spdk_bdev_get_block_size(hello_context->bdev);
 
 	SPDK_NOTICELOG("Writing to the bdev\n");
 	rc = spdk_bdev_write(hello_context->bdev_desc, hello_context->bdev_io_channel,
-			     hello_context->buff, 0, length, write_complete, hello_context);
+			     hello_context->buff, 0, hello_context->buff_size, write_complete,
+			     hello_context);
 
 	if (rc == -ENOMEM) {
 		SPDK_NOTICELOG("Queueing io\n");
@@ -215,7 +214,7 @@ static void
 hello_start(void *arg1)
 {
 	struct hello_context_t *hello_context = arg1;
-	uint32_t blk_size, buf_align;
+	uint32_t buf_align;
 	int rc = 0;
 	hello_context->bdev = NULL;
 	hello_context->bdev_desc = NULL;
@@ -255,9 +254,10 @@ hello_start(void *arg1)
 	/* Allocate memory for the write buffer.
 	 * Initialize the write buffer with the string "Hello World!"
 	 */
-	blk_size = spdk_bdev_get_block_size(hello_context->bdev);
+	hello_context->buff_size = spdk_bdev_get_block_size(hello_context->bdev) *
+				   spdk_bdev_get_write_unit_size(hello_context->bdev);
 	buf_align = spdk_bdev_get_buf_align(hello_context->bdev);
-	hello_context->buff = spdk_dma_zmalloc(blk_size, buf_align, NULL);
+	hello_context->buff = spdk_dma_zmalloc(hello_context->buff_size, buf_align, NULL);
 	if (!hello_context->buff) {
 		SPDK_ERRLOG("Failed to allocate buffer\n");
 		spdk_put_io_channel(hello_context->bdev_io_channel);
@@ -265,7 +265,7 @@ hello_start(void *arg1)
 		spdk_app_stop(-1);
 		return;
 	}
-	snprintf(hello_context->buff, blk_size, "%s", "Hello World!\n");
+	snprintf(hello_context->buff, hello_context->buff_size, "%s", "Hello World!\n");
 
 	if (spdk_bdev_is_zoned(hello_context->bdev)) {
 		hello_reset_zone(hello_context);
