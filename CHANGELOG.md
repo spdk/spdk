@@ -105,6 +105,12 @@ start/stop. Applications using the virtio library in vhost-user mode should now 
 the application's memory using the -s/--mem-size option and use single shared memory file
 segments using the -g/--single-file-segments option.
 
+### vmd
+
+Fixed hotplug when a device is inserted in a slot in which a disk was already enumerated previously.
+Added two new RPCs: `vmd_remove_device` simulating a hotremove, and `vmd_rescan`, which rescans all
+buses managed by the VMD driver and hotplugs all newfound devices.
+
 ## v22.05
 
 ### sock
