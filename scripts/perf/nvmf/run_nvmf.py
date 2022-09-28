@@ -1107,7 +1107,7 @@ class KernelTarget(Target):
                 "subsystems": [nqn]
             })
 
-            self.subsystem_info_list.append([port, nqn, ip])
+            self.subsystem_info_list.append((port, nqn, ip))
         self.subsys_no = len(self.subsystem_info_list)
 
         with open("kernel.conf", "w") as fh:
@@ -1265,7 +1265,7 @@ class SPDKTarget(Target):
                                                      traddr=ip,
                                                      trsvcid=port,
                                                      adrfam="ipv4")
-            self.subsystem_info_list.append([port, nqn, ip])
+            self.subsystem_info_list.append((port, nqn, ip))
         self.subsys_no = len(self.subsystem_info_list)
 
         self.log.info("SPDK NVMeOF subsystem configuration:")
