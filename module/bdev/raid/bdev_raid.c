@@ -1110,6 +1110,10 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 	 * internal use.
 	 */
 	raid_bdev->strip_size = (raid_bdev->strip_size_kb * 1024) / blocklen;
+	if (raid_bdev->strip_size == 0 && raid_bdev->level != RAID1) {
+		SPDK_ERRLOG("Strip size cannot be smaller than the device block size\n");
+		return -EINVAL;
+	}
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
 
