@@ -904,8 +904,6 @@ runtime={run_time}
 rate_iops={rate_iops}
 """
         if "spdk" in self.mode:
-            bdev_conf = self.gen_spdk_bdev_conf(self.subsystem_info_list)
-            self.exec_cmd(["echo", "'%s'" % bdev_conf, ">", "%s/bdev.conf" % self.spdk_dir])
             ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
             spdk_conf = "spdk_json_conf=%s/bdev.conf" % self.spdk_dir
         else:
@@ -949,7 +947,7 @@ rate_iops={rate_iops}
 
         # TODO: hipri disabled for now, as it causes fio errors:
         # io_u error on file /dev/nvme2n1: Operation not supported
-        # See comment in KernelInitiator class, kernel_init_connect() function
+        # See comment in KernelInitiator class, init_connect() function
         if hasattr(self, "ioengine") and "io_uring" in self.ioengine:
             fio_config = fio_config + """
 fixedbufs=1
@@ -1350,7 +1348,7 @@ class KernelInitiator(Initiator):
                      if "SPDK" in x["ModelNumber"] or "Linux" in x["ModelNumber"]]
         return nvme_list
 
-    def kernel_init_connect(self):
+    def init_connect(self):
         self.log.info("Below connection attempts may result in error messages, this is expected!")
         for subsystem in self.subsystem_info_list:
             self.log.info("Trying to connect %s %s %s" % subsystem)
@@ -1382,7 +1380,7 @@ class KernelInitiator(Initiator):
                         _ = self.exec_cmd(["sudo", "cat", "%s" % (sysfs_opt_path)])
                         self.log.info("%s=%s" % (sysfs_opt_path, _))
 
-    def kernel_init_disconnect(self):
+    def init_disconnect(self):
         for subsystem in self.subsystem_info_list:
             self.exec_cmd(["sudo", self.nvmecli_bin, "disconnect", "-n", subsystem[1]])
             time.sleep(1)
@@ -1457,6 +1455,21 @@ class SPDKInitiator(Initiator):
 
         self.log.info("SPDK built")
         self.exec_cmd(["sudo", "%s/scripts/setup.sh" % self.spdk_dir])
+
+    def init_connect(self):
+        # Not a real "connect" like when doing "nvme connect" because SPDK's fio
+        # bdev plugin initiates connection just before starting IO traffic.
+        # This is just to have a "init_connect" equivalent of the same function
+        # from KernelInitiator class.
+        # Just prepare bdev.conf JSON file for later use and consider it
+        # "making a connection".
+        bdev_conf = self.gen_spdk_bdev_conf(self.subsystem_info_list)
+        self.exec_cmd(["echo", "'%s'" % bdev_conf, ">", "%s/bdev.conf" % self.spdk_dir])
+
+    def init_disconnect(self):
+        # SPDK Initiator does not need to explicity disconnect as this gets done
+        # after fio bdev plugin finishes IO.
+        pass
 
     def gen_spdk_bdev_conf(self, remote_subsystem_list):
         bdev_cfg_section = {
@@ -1634,9 +1647,7 @@ if __name__ == "__main__":
             configs = []
             power_daemon = None
             for i in initiators:
-                if i.mode == "kernel":
-                    i.kernel_init_connect()
-
+                i.init_connect()
                 cfg = i.gen_fio_config(rw, fio_rw_mix_read, block_size, io_depth, target_obj.subsys_no,
                                        fio_num_jobs, fio_ramp_time, fio_run_time, fio_rate_iops,
                                        fio_offset, fio_offset_inc)
@@ -1684,8 +1695,7 @@ if __name__ == "__main__":
                 t.join()
 
             for i in initiators:
-                if i.mode == "kernel":
-                    i.kernel_init_disconnect()
+                i.init_disconnect()
                 i.copy_result_files(args.results)
 
             if power_daemon:
