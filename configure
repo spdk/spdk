@@ -96,7 +96,7 @@ function usage()
 	echo "                           No path required."
 	echo " nvme-cuse                 Build NVMe driver with support for CUSE-based character devices."
 	echo "                           No path required."
-	echo ""
+	echo " snap-rdma                 Build with SNAP_RDMA. Enabled by default."
 	echo "Environment variables:"
 	echo ""
 	echo "CC                         C compiler"
@@ -347,6 +347,12 @@ for i in "$@"; do
 		--without-isal)
 			CONFIG[ISAL]=n
 			;;
+		--with-snap)
+                        CONFIG[SNAP]=y
+                        ;;
+                --without-snap)
+                        CONFIG[SNAP]=n
+                        ;;
 		--with-uring=*)
 			CONFIG[URING]=y
 			CONFIG[URING_PATH]=$(readlink -f ${i#*=})
@@ -587,6 +593,24 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 		echo "done."
 		cd $rootdir
 	fi
+fi
+
+if [[ "${CONFIG[SNAP]}" = "y" ]]; then
+        if [ ! -f "$rootdir"/snap-rdma/autogen.sh ]; then
+                echo "SNAP-RDMA was not found; To install SNAP-RDMA run:"
+                echo "  git submodule update --init"
+                exit 1
+        fi
+
+        cd $rootdir/snap-rdma
+        SNAP_LOG=/tmp/spdk-snap.log
+        echo -n "Configuring SNAP-RDMA (logfile: $SNAP_LOG)..."
+        ./autogen.sh &> $SNAP_LOG
+        #./configure CFLAGS="-fPIC -g -O2" --enable-shared=no >> $SNAP_LOG 2>&1
+	./configure >> $SNAP_LOG 2>&1
+
+        echo "done."
+        cd $rootdir
 fi
 
 if [[ "${CONFIG[PMDK]}" = "y" ]]; then

@@ -45,8 +45,10 @@ isal_pv=isal-$(date +%Y_%m_%d)
 isal_tarball=${isal_pv}.tar
 ocf_pv=ocf-$(date +%Y_%m_%d)
 ocf_tarball=${ocf_pv}.tar
+snap_pv=snap-$(date +%Y_%m_%d)
+snap_tarball=${snap_pv}.tar
 
-find . -iname "spdk-*.tar* dpdk-*.tar* ipsec-*.tar* isal-*.tar*" -delete
+find . -iname "spdk-*.tar* dpdk-*.tar* ipsec-*.tar* isal-*.tar* snap-*.tar*" -delete
 git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
 
 # Build from packaged source
@@ -81,6 +83,14 @@ if [ -d "ocf" ]; then
 	cd ..
 	tar -C "$tmpdir/${spdk_pv}" -xf $ocf_tarball
 fi
+
+if [ -d "snap-rdma" ]; then
+        cd snap-rdma 
+        git archive HEAD^{tree} --prefix=snap-rdma/ -o ../${snap_tarball}
+        cd ..
+        tar -C "$tmpdir/${spdk_pv}" -xf $snap_tarball
+fi
+
 
 (
 	cd "$tmpdir"/spdk-*

@@ -161,6 +161,12 @@ SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal
 COMMON_CFLAGS += -I$(ISAL_DIR)/..
 endif
 
+SNAP_DIR=$(SPDK_ROOT_DIR)/snap-rdma
+ifeq ($(CONFIG_SNAP), y)
+#SYS_LIBS += -L$(SNAP_DIR)/.libs -lsnap
+COMMON_CFLAGS += -I$(SNAP_DIR)/..
+endif
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
