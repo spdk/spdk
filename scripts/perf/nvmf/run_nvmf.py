@@ -846,34 +846,8 @@ class Initiator(Server):
                           os.path.join(dest_dir, file))
         self.log.info("Done copying results")
 
-    def discover_subsystems(self, address_list, subsys_no):
-        num_nvmes = range(0, subsys_no)
-        nvme_discover_output = ""
-        for ip, subsys_no in itertools.product(address_list, num_nvmes):
-            self.log.info("Trying to discover: %s:%s" % (ip, 4420 + subsys_no))
-            nvme_discover_cmd = ["sudo",
-                                 "%s" % self.nvmecli_bin,
-                                 "discover", "-t", "%s" % self.transport,
-                                 "-s", "%s" % (4420 + subsys_no),
-                                 "-a", "%s" % ip]
-
-            try:
-                stdout = self.exec_cmd(nvme_discover_cmd)
-                if stdout:
-                    nvme_discover_output = nvme_discover_output + stdout
-            except CalledProcessError:
-                # Do nothing. In case of discovering remote subsystems of kernel target
-                # we expect "nvme discover" to fail a bunch of times because we basically
-                # scan ports.
-                pass
-
-        subsystems = re.findall(r'trsvcid:\s(\d+)\s+'  # get svcid number
-                                r'subnqn:\s+([a-zA-Z0-9\.\-\:]+)\s+'  # get NQN id
-                                r'traddr:\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',  # get IP address
-                                nvme_discover_output)  # from nvme discovery output
-        subsystems = filter(lambda x: x[-1] in address_list, subsystems)
-        subsystems = filter(lambda x: "discovery" not in x[1], subsystems)
-        subsystems = list(set(subsystems))
+    def match_subsystems(self, target_subsytems):
+        subsystems = [subsystem for subsystem in target_subsytems if subsystem[2] in self.target_nic_ips]
         subsystems.sort(key=lambda x: x[1])
         self.log.info("Found matching subsystems on target side:")
         for s in subsystems:
@@ -1649,7 +1623,7 @@ if __name__ == "__main__":
         target_obj.tgt_start()
 
         for i in initiators:
-            i.discover_subsystems(i.target_nic_ips, target_obj.subsys_no)
+            i.match_subsystems(target_obj.subsystem_info_list)
             if i.enable_adq:
                 i.adq_configure_tc()
 
