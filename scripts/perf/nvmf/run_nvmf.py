@@ -1031,7 +1031,10 @@ class KernelTarget(Target):
             self.nvmet_bin = target_config["nvmet_bin"]
 
     def stop(self):
-        nvmet_command(self.nvmet_bin, "clear")
+        self.nvmet_command(self.nvmet_bin, "clear")
+
+    def nvmet_command(self, nvmet_bin, command):
+        return self.exec_cmd([nvmet_bin, *(command.split(" "))])
 
     def kernel_tgt_gen_subsystem_conf(self, nvme_list):
 
@@ -1098,8 +1101,8 @@ class KernelTarget(Target):
         self.kernel_tgt_gen_subsystem_conf(nvme_list)
         self.subsys_no = len(nvme_list)
 
-        nvmet_command(self.nvmet_bin, "clear")
-        nvmet_command(self.nvmet_bin, "restore kernel.conf")
+        self.nvmet_command(self.nvmet_bin, "clear")
+        self.nvmet_command(self.nvmet_bin, "restore kernel.conf")
 
         if self.enable_adq:
             self.adq_configure_tc()
