@@ -43,6 +43,7 @@ DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
 DIRS-$(CONFIG_ISAL) += isalbuild
+DIRS-$(CONFIG_SNAP) += snaprdmabuild
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk \
 	cc_version cxx_version .libs_only_other .ldflags ldflags install \
@@ -71,6 +72,10 @@ endif
 ifeq ($(CONFIG_ISAL),y)
 LIB += isalbuild
 DPDK_DEPS += isalbuild
+endif
+
+ifeq ($(CONFIG_SNAP),y)
+LIB += snaprdmabuild
 endif
 
 all: mk/cc.mk $(DIRS-y)

@@ -151,6 +151,9 @@ CONFIG_CUSTOMOCF=n
 # Build ISA-L library
 CONFIG_ISAL=y
 
+#Build SNAP-RDMA library
+CONFIG_SNAP=y
+
 # Build with IO_URING support
 CONFIG_URING=n
 
