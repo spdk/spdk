@@ -1,5 +1,5 @@
 ---
-name: Bug report
+name: Sighting report
 about: Create a report to help us improve. Please use the issue tracker only for reporting suspected issues.
 title: ''
 labels: 'Sighting'
@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-# Bug report
+# Sighting report
 
 <!--- Provide a general summary of the issue in the Title above -->
 
@@ -21,12 +21,12 @@ assignees: ''
 
 ## Possible Solution
 
-<!--- Not obligatory, but suggest a fix/reason for the bug, -->
+<!--- Not obligatory, but suggest a fix/reason for the potential issue, -->
 
 ## Steps to Reproduce
 
 <!--- Provide a link to a live example, or an unambiguous set of steps to -->
-<!--- reproduce this bug. Include code to reproduce, if relevant -->
+<!--- reproduce this sighting. Include code to reproduce, if relevant -->
 1.
 2.
 3.
