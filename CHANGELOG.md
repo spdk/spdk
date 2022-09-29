@@ -2,16 +2,16 @@
 
 ## v22.09: (Upcoming Release)
 
-### json
+### accel
 
-Added `spdk_json_find` API return errcode: EPROTOTYPE - json not enclosed in {}.
-`spdk_json_find` now returns -EPROTOTYPE instead of -ENOENT if the object parameter
-does not point to a JSON object (i.e. is not enclosed with {}).
+Many names were changed in the accel framework to make them consistent both with themselves and
+the rest of SPDK. The primary public header file is now named `include/spdk/accel.h`.
 
-### init
+Added a new runtime RPC `accel_get_opc_assignments` to get a list of current opcode to engine
+assignments.
 
-`spdk_subsystem_init_from_json_config` now fails if the JSON configuration file is not
-an object with an array named "subsystems".
+Added a new startup RPC `accel_assign_opc` to assign/override a specific opcode to
+an engine.
 
 ### bdev
 
@@ -23,23 +23,50 @@ thread for each bdev_io submitted to the bdev.
 A new API `spdk_bdev_get_current_qd` was added to measure and return the queue depth from a
 bdev. This API is available even when queue depth sampling is disabled.
 
-### sock
-
-Added new `ssl` based socket implementation, the code is located in module/sock/posix.
-For now we are using hard-coded PSK and only support TLS 1.3
-
 ### blobstore
 
-Reserve space for used_cluster bitmap. The reserved space could be used for blobstore growing
+Reserve space for `used_clusters` bitmap. The reserved space could be used for blobstore growing
 in the future.
 
 Added `is_zeroes` operation to `spdk_bs_dev`. It allows to detect if logical blocks are backed
 by zeroes device and do a shortcut in copy-on-write flow by excluding copy part from zeroes device.
 
+### init
+
+`spdk_subsystem_init_from_json_config` now fails if the JSON configuration file is not
+an object with an array named "subsystems".
+
+### json
+
+Added `spdk_json_find` API return errcode: EPROTOTYPE - json not enclosed in {}.
+`spdk_json_find` now returns -EPROTOTYPE instead of -ENOENT if the object parameter
+does not point to a JSON object (i.e. is not enclosed with {}).
+
 ### lvol
 
-Add num_md_pages_per_cluster_ratio parameter to the bdev_lvol_create_lvstore RPC.
-Calculate num_md_pages from num_md_pages_per_cluster_ratio, and pass it to spdk_bs_opts.
+Add `num_md_pages_per_cluster_ratio` parameter to the `bdev_lvol_create_lvstore` RPC.
+Calculate `num_md_pages` from `num_md_pages_per_cluster_ratio`, and pass it to `spdk_bs_opts`.
+
+### nvme
+
+Added SPDK_NVME_TRANSPORT_CUSTOM_FABRICS to enum `spdk_nvme_transport_type` to support custom
+fabric transport. SPDK_NVME_TRANSPORT_CUSTOM was intended to be non-fabric custom transport.
+
+Added a new function `spdk_nvme_ns_cmd_verify` to submit a Verify Command to a Namespace.
+
+Added `spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page` to allow an application to
+tell the driver to not read the CHANGED_NS_LIST log page in response to a NS_ATTR_CHANGED
+AEN.  When called the application is required to read this log page instead to clear the
+AEN.
+
+Added `psk` field to `spdk_nvme_ctrlr_opts` struct in order to enable SSL socket implementation
+of TCP connection and set the PSK. Applicable for TCP transport only.
+
+### raid
+
+Renamed the `raid5` module to `raid5f` to reflect that it is not a traditional
+RAID5 implementation - only full stripe writes are supported, partial stripe
+writes (read-modify-write) are not.
 
 ### rpc
 
@@ -57,37 +84,23 @@ Renamed `enable_vmd` RPC to `vmd_enable` to make it consistent with our naming s
 
 New function `spdk_rpc_get_method_state_mask` was added to RPC library.
 
-### raid
+### sma
 
-Renamed the `raid5` module to `raid5f` to reflect that it is not a traditional
-RAID5 implementation - only full stripe writes are supported, partial stripe
-writes (read-modify-write) are not.
+Extended `VolumeParameters` with crypto parameters allowing the user to configure crypto when
+attaching a volume to a device.  This interface is now supported by all upstream device types
+(nvmf-tcp, virtio-blk, vfio-user) using `bdev_crypto`.  Users must specify the crypto engine to use
+under `crypto` section in config.  It is also possible to register out-of-tree crypto engines by
+inheriting from the `CryptoEngine` class.
 
-### accel
+Added two new methods: `SetQos` and `GetQosCapabilities` allowing the user to configure QoS on a
+per-device or per-volume level.  Not all QoS settings have to be supported by each device, so users
+can use `GetQosCapabilities` to query them for that.  All upstream device types support QoS on a
+per-volume level using bdev layer's QoS mechanism.
 
-Many names were changed in the accel framework to make them consistent both with themselves and
-the rest of SPDK. The primary public header file is now named `include/spdk/accel.h`.
+### sock
 
-Added a new runtime RPC `accel_get_opc_assignments` to get a list of current opcode to engine
-assignements.
-
-Added a new startup RPC `accel_assign_opc` to assign/override a specific opcode to
-an engine.
-
-### nvme
-
-Added SPDK_NVME_TRANSPORT_CUSTOM_FABRICS to enum spdk_nvme_transport_type to support custom
-fabric transport. SPDK_NVME_TRANSPORT_CUSTOM was intended to be non-fabric custom transport.
-
-Added a new function `spdk_nvme_ns_cmd_verify` to submit a Verify Command to a Namespace.
-
-Added `spdk_nvme_ctrlr_disable_read_changed_ns_list_log_page` to allow an application to
-tell the driver to not read the CHANGED_NS_LIST log page in response to a NS_ATTR_CHANGED
-AEN.  When called the application is required to read this log page instead to clear the
-AEN.
-
-Added `psk` field to `spdk_nvme_ctrlr_opts` struct in order to enable SSL socket implementation
-of TCP connection and set the PSK. Applicable for TCP transport only.
+Added new `ssl` based socket implementation, the code is located in `module/sock/posix`.
+For now we are using hard-coded PSK and only support TLS 1.3.
 
 ### util
 
@@ -108,19 +121,6 @@ segments using the -g/--single-file-segments option.
 Fixed hotplug when a device is inserted in a slot in which a disk was already enumerated previously.
 Added two new RPCs: `vmd_remove_device` simulating a hotremove, and `vmd_rescan`, which rescans all
 buses managed by the VMD driver and hotplugs all newfound devices.
-
-### sma
-
-Extended `VolumeParameters` with crypto parameters allowing the user to configure crypto when
-attaching a volume to a device.  This interface is now supported by all upstream device types
-(nvmf-tcp, virtio-blk, vfio-user) using `bdev_crypto`.  Users must specify the crypto engine to use
-under `crypto` section in config.  It is also possible to register out-of-tree crypto engines by
-inheriting from the `CryptoEngine` class.
-
-Added two new methods: `SetQos` and `GetQosCapabilities` allowing the user to configure QoS on a
-per-device or per-volume level.  Not all QoS settings have to be supported by each device, so users
-can use `GetQosCapabilities` to query them for that.  All upstream device types support QoS on a
-per-volume level using bdev layer's QoS mechanism.
 
 ## v22.05
 
