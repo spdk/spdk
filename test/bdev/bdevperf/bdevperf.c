@@ -1122,6 +1122,12 @@ _bdevperf_construct_job_done(void *ctx)
 
 		/* Ready to run the test */
 		bdevperf_test();
+	} else if (g_run_rc != 0) {
+		/* Reset error as some jobs constructed right */
+		g_run_rc = 0;
+		if (g_continue_on_failure == false) {
+			g_error_to_exit = true;
+		}
 	}
 }
 
@@ -1196,6 +1202,8 @@ _bdevperf_construct_job(void *ctx)
 	if (!job->ch) {
 		SPDK_ERRLOG("Could not get io_channel for device %s, error=%d\n", spdk_bdev_get_name(job->bdev),
 			    rc);
+		spdk_bdev_close(job->bdev_desc);
+		TAILQ_REMOVE(&g_bdevperf.jobs, job, link);
 		g_run_rc = -ENOMEM;
 		goto end;
 	}
