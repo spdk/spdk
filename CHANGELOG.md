@@ -25,6 +25,19 @@ thread for each bdev_io submitted to the bdev.
 A new API `spdk_bdev_get_current_qd` was added to measure and return the queue depth from a
 bdev. This API is available even when queue depth sampling is disabled.
 
+Added `spdk_bdev_seek_data`, `spdk_bdev_seek_hole` and `spdk_bdev_io_get_seek_offset` functions
+that start from a given offset and seek for next data or for next hole. At this time only
+supported by lvol bdev module.
+
+A new parameter `io_drain_timeout` has been added to `spdk_bdev` structure. It controls how long
+a bdev reset must wait for IO to complete prior to issuing a reset to the underlying device.
+If there is no outstanding IO at the end of that period, the reset is skipped.
+Best defined for bdevs that share an underlying bdev, such as multiple lvol bdevs sharing
+an nvme device, to avoid unnecessarily resetting the underlying bdev and affecting other
+bdevs that are sharing it.
+Modifying this field is optional. Setting the value to 0 keeps the original behavior
+to always send resets immediately, even if there is no I/O outstanding.
+
 ### blobstore
 
 Reserve space for `used_clusters` bitmap. The reserved space could be used for blobstore growing
@@ -33,10 +46,32 @@ in the future.
 Added `is_zeroes` operation to `spdk_bs_dev`. It allows to detect if logical blocks are backed
 by zeroes device and do a shortcut in copy-on-write flow by excluding copy part from zeroes device.
 
+Added `spdk_blob_get_next_allocated_io_unit` and `spdk_blob_get_next_unallocated_io_unit` functions
+that start from a given offset and seek for first io_unit belonging to an allocated cluster
+or first io_unit belonging to an unallocated cluster.
+
+Added `spdk_bs_grow` function to grow blobstore size if the underlying bdev size is increased.
+This is used by lvol bdev via `bdev_lvol_grow_lvstore` RPC.
+
+### daos
+
+Added new DAOS bdev module, that creates SPDK block device on top of DAOS DFS.
+Please see [documentation](https://spdk.io/doc/bdev.html#bdev_config_daos) for more details.
+
+### env
+
+Added `spdk_pci_register_device_provider` and matching `SPDK_PCI_REGISTER_DEVICE_PROVIDER`
+functions for registering PCI device providers. That allow the VMD driver to be notified
+when users want to attach a device under a given BDF and when a device is detached.
+
 ### init
 
 `spdk_subsystem_init_from_json_config` now fails if the JSON configuration file is not
 an object with an array named "subsystems".
+
+### iscsi
+
+Added `bdev_iscsi_set_options` RPC to modify options of the iSCSI bdev module.
 
 ### json
 
@@ -111,6 +146,12 @@ Added new functions: `spdk_hexlify` and `spdk_unhexlify`.
 A new API `spdk_xor_gen` was added to generate XOR from multiple source buffers. It is going to be
 used by `raid5f` for calculating parity.
 
+### vfu_tgt
+
+Added vfu_tgt library abstraction based on libvfio-user for PCI device emulation.
+Besides the NVMe device emulation, its now possible to emulate virtio-blk and virtio-scsi
+devices.
+
 ### virtio
 
 virtio-vhost-user no longer tries to support dynamic memory allocation.  The vhost target does
@@ -120,6 +161,8 @@ SET_MEM_TABLE vhost message if a memory notification is received outside of the 
 start/stop. Applications using the virtio library in vhost-user mode should now pre-allocate
 the application's memory using the -s/--mem-size option and use single shared memory file
 segments using the -g/--single-file-segments option.
+
+Added `vfio-user` transport type for virtio-blk and virtio-scsi devices.
 
 ### vmd
 
