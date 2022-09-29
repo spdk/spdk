@@ -876,6 +876,16 @@ if __name__ == "__main__":
     p.add_argument('-r', '--rr-min-io', help='Number of IO to route to a path before switching to another for round-robin', required=False)
     p.set_defaults(func=bdev_nvme_set_multipath_policy)
 
+    def bdev_nvme_get_path_iostat(args):
+        print_dict(rpc.bdev.bdev_nvme_get_path_iostat(args.client,
+                                                      name=args.name))
+
+    p = subparsers.add_parser('bdev_nvme_get_path_iostat',
+                              help="""Display current I/O statistics of all the IO paths of the blockdev. It can be
+                              called when io_path_stat is true.""")
+    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: NVMe0n1", required=True)
+    p.set_defaults(func=bdev_nvme_get_path_iostat)
+
     def bdev_nvme_cuse_register(args):
         rpc.bdev.bdev_nvme_cuse_register(args.client,
                                          name=args.name)

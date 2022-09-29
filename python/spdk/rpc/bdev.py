@@ -967,6 +967,20 @@ def bdev_nvme_set_multipath_policy(client, name, policy, selector, rr_min_io):
     return client.call('bdev_nvme_set_multipath_policy', params)
 
 
+def bdev_nvme_get_path_iostat(client, name):
+    """Get I/O statistics for IO paths of the block device.
+
+    Args:
+        name: bdev name to query
+
+    Returns:
+        I/O statistics for IO paths of the requested block device.
+    """
+    params = {'name': name}
+
+    return client.call('bdev_nvme_get_path_iostat', params)
+
+
 def bdev_nvme_cuse_register(client, name):
     """Register CUSE devices on NVMe controller.
 

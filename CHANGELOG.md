@@ -69,6 +69,8 @@ were added to process I/O statistics outside the generic bdev layer, especially 
 Added I/O statistics per I/O path to the NVMe bdev module for NVMe bdev multipath. It can be
 enabled by a new option io_path_stat of RPC bdev_nvme_set_options.
 
+Added RPC bdev_nvme_get_path_iostat to get I/O statistics for IO paths of the NVMe bdev.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple

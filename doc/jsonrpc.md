@@ -4211,6 +4211,102 @@ Example response:
 }
 ~~~
 
+### bdev_nvme_get_path_iostat {#rpc_bdev_nvme_get_path_iostat}
+
+Get I/O statistics for IO paths of the block device. Call RPC bdev_nvme_set_options to set enable_io_path_stat
+true before using this RPC.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the NVMe bdev
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_nvme_get_path_iostat",
+  "id": 1,
+  "params": {
+    "name": "NVMe0n1"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "name": "NVMe0n1",
+    "stats": [
+      {
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "10.169.204.201",
+          "trsvcid": "4420",
+          "subnqn": "nqn.2016-06.io.spdk:cnode1"
+        },
+        "stat": {
+          "bytes_read": 676691968,
+          "num_read_ops": 165201,
+          "bytes_written": 0,
+          "num_write_ops": 0,
+          "bytes_unmapped": 0,
+          "num_unmap_ops": 0,
+          "max_read_latency_ticks": 521487,
+          "min_read_latency_ticks": 0,
+          "write_latency_ticks": 0,
+          "max_write_latency_ticks": 0,
+          "min_write_latency_ticks": 0,
+          "unmap_latency_ticks": 0,
+          "max_unmap_latency_ticks": 0,
+          "min_unmap_latency_ticks": 0,
+          "copy_latency_ticks": 0,
+          "max_copy_latency_ticks": 0,
+          "min_copy_latency_ticks": 0
+        }
+      },
+      {
+        "trid": {
+          "trtype": "TCP",
+          "adrfam": "IPv4",
+          "traddr": "8.8.8.6",
+          "trsvcid": "4420",
+          "subnqn": "nqn.2016-06.io.spdk:cnode1"
+        },
+        "stat": {
+          "bytes_read": 677138432,
+          "num_read_ops": 165317,
+          "bytes_written": 0,
+          "num_write_ops": 0,
+          "bytes_unmapped": 0,
+          "num_unmap_ops": 0,
+          "max_read_latency_ticks": 108525,
+          "min_read_latency_ticks": 0,
+          "write_latency_ticks": 0,
+          "max_write_latency_ticks": 0,
+          "min_write_latency_ticks": 0,
+          "unmap_latency_ticks": 0,
+          "max_unmap_latency_ticks": 0,
+          "min_unmap_latency_ticks": 0,
+          "copy_latency_ticks": 0,
+          "max_copy_latency_ticks": 0,
+          "min_copy_latency_ticks": 0
+        }
+      }
+    ]
+  }
+}
+~~~
+
 ### bdev_nvme_cuse_register {#rpc_bdev_nvme_cuse_register}
 
 Register CUSE device on NVMe controller.
