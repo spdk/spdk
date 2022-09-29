@@ -93,6 +93,9 @@ struct nvme_bdev_io {
 
 	/* How many times the current I/O was retried. */
 	int32_t retry_count;
+
+	/* Current tsc at submit time. */
+	uint64_t submit_tsc;
 };
 
 struct nvme_probe_skip_entry {
@@ -126,6 +129,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.generate_uuids = false,
 	.transport_tos = 0,
 	.nvme_error_stat = false,
+	.io_path_stat = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -588,10 +592,21 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 		return -ENOMEM;
 	}
 
+	if (g_opts.io_path_stat) {
+		io_path->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+		if (io_path->stat == NULL) {
+			free(io_path);
+			SPDK_ERRLOG("Failed to alloc io_path stat.\n");
+			return -ENOMEM;
+		}
+		spdk_bdev_reset_io_stat(io_path->stat, BDEV_RESET_STAT_MAXMIN);
+	}
+
 	io_path->nvme_ns = nvme_ns;
 
 	ch = spdk_get_io_channel(nvme_ns->ctrlr);
 	if (ch == NULL) {
+		free(io_path->stat);
 		free(io_path);
 		SPDK_ERRLOG("Failed to alloc io_channel.\n");
 		return -ENOMEM;
@@ -635,6 +650,7 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	ch = spdk_io_channel_from_ctx(ctrlr_ch);
 	spdk_put_io_channel(ch);
 
+	free(io_path->stat);
 	free(io_path);
 }
 
@@ -1123,6 +1139,99 @@ bdev_nvme_update_nvme_error_stat(struct spdk_bdev_io *bdev_io, const struct spdk
 }
 
 static inline void
+bdev_nvme_update_io_path_stat(struct nvme_bdev_io *bio)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	uint64_t num_blocks = bdev_io->u.bdev.num_blocks;
+	uint32_t blocklen = bdev_io->bdev->blocklen;
+	struct spdk_bdev_io_stat *stat;
+	uint64_t tsc_diff;
+
+	if (bio->io_path->stat == NULL) {
+		return;
+	}
+
+	tsc_diff = spdk_get_ticks() - bio->submit_tsc;
+	stat = bio->io_path->stat;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		stat->bytes_read += num_blocks * blocklen;
+		stat->num_read_ops++;
+		stat->read_latency_ticks += tsc_diff;
+		if (stat->max_read_latency_ticks < tsc_diff) {
+			stat->max_read_latency_ticks = tsc_diff;
+		}
+		if (stat->min_read_latency_ticks > tsc_diff) {
+			stat->min_read_latency_ticks = tsc_diff;
+		}
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		stat->bytes_written += num_blocks * blocklen;
+		stat->num_write_ops++;
+		stat->write_latency_ticks += tsc_diff;
+		if (stat->max_write_latency_ticks < tsc_diff) {
+			stat->max_write_latency_ticks = tsc_diff;
+		}
+		if (stat->min_write_latency_ticks > tsc_diff) {
+			stat->min_write_latency_ticks = tsc_diff;
+		}
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		stat->bytes_unmapped += num_blocks * blocklen;
+		stat->num_unmap_ops++;
+		stat->unmap_latency_ticks += tsc_diff;
+		if (stat->max_unmap_latency_ticks < tsc_diff) {
+			stat->max_unmap_latency_ticks = tsc_diff;
+		}
+		if (stat->min_unmap_latency_ticks > tsc_diff) {
+			stat->min_unmap_latency_ticks = tsc_diff;
+		}
+		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		/* Track the data in the start phase only */
+		if (!bdev_io->u.bdev.zcopy.start) {
+			break;
+		}
+		if (bdev_io->u.bdev.zcopy.populate) {
+			stat->bytes_read += num_blocks * blocklen;
+			stat->num_read_ops++;
+			stat->read_latency_ticks += tsc_diff;
+			if (stat->max_read_latency_ticks < tsc_diff) {
+				stat->max_read_latency_ticks = tsc_diff;
+			}
+			if (stat->min_read_latency_ticks > tsc_diff) {
+				stat->min_read_latency_ticks = tsc_diff;
+			}
+		} else {
+			stat->bytes_written += num_blocks * blocklen;
+			stat->num_write_ops++;
+			stat->write_latency_ticks += tsc_diff;
+			if (stat->max_write_latency_ticks < tsc_diff) {
+				stat->max_write_latency_ticks = tsc_diff;
+			}
+			if (stat->min_write_latency_ticks > tsc_diff) {
+				stat->min_write_latency_ticks = tsc_diff;
+			}
+		}
+		break;
+	case SPDK_BDEV_IO_TYPE_COPY:
+		stat->bytes_copied += num_blocks * blocklen;
+		stat->num_copy_ops++;
+		stat->copy_latency_ticks += tsc_diff;
+		if (stat->max_copy_latency_ticks < tsc_diff) {
+			stat->max_copy_latency_ticks = tsc_diff;
+		}
+		if (stat->min_copy_latency_ticks > tsc_diff) {
+			stat->min_copy_latency_ticks = tsc_diff;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+static inline void
 bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 				  const struct spdk_nvme_cpl *cpl)
 {
@@ -1136,6 +1245,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 	assert(!bdev_nvme_io_type_is_admin(bdev_io->type));
 
 	if (spdk_likely(spdk_nvme_cpl_is_success(cpl))) {
+		bdev_nvme_update_io_path_stat(bio);
 		goto complete;
 	}
 
@@ -1188,6 +1298,7 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 
 complete:
 	bio->retry_count = 0;
+	bio->submit_tsc = 0;
 	__bdev_nvme_io_complete(bdev_io, 0, cpl);
 }
 
@@ -1223,6 +1334,7 @@ bdev_nvme_io_complete(struct nvme_bdev_io *bio, int rc)
 	}
 
 	bio->retry_count = 0;
+	bio->submit_tsc = 0;
 	__bdev_nvme_io_complete(bdev_io, io_status, NULL);
 }
 
@@ -2327,6 +2439,15 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 {
 	struct nvme_bdev_channel *nbdev_ch = spdk_io_channel_get_ctx(ch);
 	struct nvme_bdev_io *nbdev_io = (struct nvme_bdev_io *)bdev_io->driver_ctx;
+
+	if (spdk_likely(nbdev_io->submit_tsc == 0)) {
+		nbdev_io->submit_tsc = spdk_bdev_io_get_submit_tsc(bdev_io);
+	} else {
+		/* There are cases where submit_tsc != 0, i.e. retry I/O.
+		 * We need to update submit_tsc here.
+		 */
+		nbdev_io->submit_tsc = spdk_get_ticks();
+	}
 
 	spdk_trace_record(TRACE_BDEV_NVME_IO_START, 0, 0, (uintptr_t)nbdev_io, (uintptr_t)bdev_io);
 	nbdev_io->io_path = bdev_nvme_find_io_path(nbdev_ch);
@@ -6942,6 +7063,7 @@ bdev_nvme_opts_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint32(w, "fast_io_fail_timeout_sec", g_opts.fast_io_fail_timeout_sec);
 	spdk_json_write_named_bool(w, "generate_uuids", g_opts.generate_uuids);
 	spdk_json_write_named_uint8(w, "transport_tos", g_opts.transport_tos);
+	spdk_json_write_named_bool(w, "io_path_stat", g_opts.io_path_stat);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);

@@ -198,6 +198,9 @@ struct nvme_io_path {
 	/* The following are used to update io_path cache of the nvme_bdev_channel. */
 	struct nvme_bdev_channel	*nbdev_ch;
 	TAILQ_ENTRY(nvme_io_path)	tailq;
+
+	/* allocation of stat is decided by option io_path_stat of RPC bdev_nvme_set_options */
+	struct spdk_bdev_io_stat	*stat;
 };
 
 struct nvme_bdev_channel {
@@ -274,6 +277,7 @@ struct spdk_bdev_nvme_opts {
 	uint8_t transport_tos;
 	bool nvme_error_stat;
 	uint32_t rdma_srq_size;
+	bool io_path_stat;
 };
 
 struct spdk_nvme_qpair *bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);

@@ -66,6 +66,9 @@ collecting NVMe error counts.
 New APIs `spdk_bdev_reset_io_stat`, `spdk_bdev_add_io_stat` and `spdk_bdev_dump_io_stat_json`
 were added to process I/O statistics outside the generic bdev layer, especially in bdev modules.
 
+Added I/O statistics per I/O path to the NVMe bdev module for NVMe bdev multipath. It can be
+enabled by a new option io_path_stat of RPC bdev_nvme_set_options.
+
 ### event
 
 Added core lock file mechanism to prevent the same CPU cores from being used by multiple
@@ -100,6 +103,8 @@ Option `round_robin` and `queue_depth` are available.
 Added `rr_min_io` option to RPC bdev_nvme_set_multipath_policy. It switches I/O to
 another path after rr_min_io I/Os are routed to current io path for the round-robin
 path selector.
+
+Added option `--io-path-stat` for RPC bdev_nvme_set_option to enable collecting io path stat.
 
 ### bdevperf
 
