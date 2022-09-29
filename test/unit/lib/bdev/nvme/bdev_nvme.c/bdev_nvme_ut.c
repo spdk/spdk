@@ -62,6 +62,8 @@ DEFINE_STUB(spdk_bdev_io_get_submit_tsc, uint64_t, (struct spdk_bdev_io *bdev_io
 
 DEFINE_STUB_V(spdk_bdev_reset_io_stat, (struct spdk_bdev_io_stat *stat,
 					enum spdk_bdev_reset_stat_mode mode));
+DEFINE_STUB_V(spdk_bdev_add_io_stat, (struct spdk_bdev_io_stat *total,
+				      struct spdk_bdev_io_stat *add));
 
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,

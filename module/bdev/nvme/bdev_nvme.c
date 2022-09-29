@@ -637,6 +637,16 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	struct spdk_io_channel *ch;
 	struct nvme_qpair *nvme_qpair;
 	struct nvme_ctrlr_channel *ctrlr_ch;
+	struct nvme_bdev *nbdev;
+
+	nbdev = spdk_io_channel_get_io_device(spdk_io_channel_from_ctx(nbdev_ch));
+
+	/* Add the statistics to nvme_ns before this path is destroyed. */
+	pthread_mutex_lock(&nbdev->mutex);
+	if (nbdev->ref != 0 && io_path->nvme_ns->stat != NULL && io_path->stat != NULL) {
+		spdk_bdev_add_io_stat(io_path->nvme_ns->stat, io_path->stat);
+	}
+	pthread_mutex_unlock(&nbdev->mutex);
 
 	bdev_nvme_clear_current_io_path(nbdev_ch);
 
@@ -3651,12 +3661,29 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 static struct nvme_ns *
 nvme_ns_alloc(void)
 {
-	return calloc(1, sizeof(struct nvme_ns));
+	struct nvme_ns *nvme_ns;
+
+	nvme_ns = calloc(1, sizeof(struct nvme_ns));
+	if (nvme_ns == NULL) {
+		return NULL;
+	}
+
+	if (g_opts.io_path_stat) {
+		nvme_ns->stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
+		if (nvme_ns->stat == NULL) {
+			free(nvme_ns);
+			return NULL;
+		}
+		spdk_bdev_reset_io_stat(nvme_ns->stat, BDEV_RESET_STAT_MAXMIN);
+	}
+
+	return nvme_ns;
 }
 
 static void
 nvme_ns_free(struct nvme_ns *nvme_ns)
 {
+	free(nvme_ns->stat);
 	free(nvme_ns);
 }
 

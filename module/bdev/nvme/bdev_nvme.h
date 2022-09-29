@@ -75,6 +75,13 @@ struct nvme_ns {
 	struct nvme_async_probe_ctx	*probe_ctx;
 	TAILQ_ENTRY(nvme_ns)		tailq;
 	RB_ENTRY(nvme_ns)		node;
+
+	/**
+	 * record io path stat before destroyed. Allocation of stat is
+	 * decided by option io_path_stat of RPC
+	 * bdev_nvme_set_options
+	 */
+	struct spdk_bdev_io_stat	*stat;
 };
 
 struct nvme_bdev_io;
