@@ -1382,34 +1382,6 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_end(w);
 }
 
-static int
-bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
-{
-	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
-	struct spdk_bdev_io *bdev_io;
-	uint32_t i;
-
-	STAILQ_INIT(&ch->need_buf_small);
-	STAILQ_INIT(&ch->need_buf_large);
-
-	STAILQ_INIT(&ch->per_thread_cache);
-	ch->bdev_io_cache_size = g_bdev_opts.bdev_io_cache_size;
-
-	/* Pre-populate bdev_io cache to ensure this thread cannot be starved. */
-	ch->per_thread_cache_count = 0;
-	for (i = 0; i < ch->bdev_io_cache_size; i++) {
-		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
-		assert(bdev_io != NULL);
-		ch->per_thread_cache_count++;
-		STAILQ_INSERT_HEAD(&ch->per_thread_cache, bdev_io, internal.buf_link);
-	}
-
-	TAILQ_INIT(&ch->shared_resources);
-	TAILQ_INIT(&ch->io_wait_queue);
-
-	return 0;
-}
-
 static void
 bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
@@ -1432,6 +1404,39 @@ bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	}
 
 	assert(ch->per_thread_cache_count == 0);
+}
+
+static int
+bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
+	struct spdk_bdev_io *bdev_io;
+	uint32_t i;
+
+	STAILQ_INIT(&ch->need_buf_small);
+	STAILQ_INIT(&ch->need_buf_large);
+
+	STAILQ_INIT(&ch->per_thread_cache);
+	ch->bdev_io_cache_size = g_bdev_opts.bdev_io_cache_size;
+
+	/* Pre-populate bdev_io cache to ensure this thread cannot be starved. */
+	ch->per_thread_cache_count = 0;
+	for (i = 0; i < ch->bdev_io_cache_size; i++) {
+		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+		if (bdev_io == NULL) {
+			SPDK_ERRLOG("You need to increase bdev_io_pool_size using bdev_set_options RPC.\n");
+			assert(false);
+			bdev_mgmt_channel_destroy(io_device, ctx_buf);
+			return -1;
+		}
+		ch->per_thread_cache_count++;
+		STAILQ_INSERT_HEAD(&ch->per_thread_cache, bdev_io, internal.buf_link);
+	}
+
+	TAILQ_INIT(&ch->shared_resources);
+	TAILQ_INIT(&ch->io_wait_queue);
+
+	return 0;
 }
 
 static void
