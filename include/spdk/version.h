@@ -31,7 +31,7 @@
 /**
  * Version string suffix.
  */
-#define SPDK_VERSION_SUFFIX	"-pre"
+#define SPDK_VERSION_SUFFIX	""
 
 /**
  * Single numeric value representing a version number for compile-time comparisons.
