@@ -109,6 +109,19 @@ Fixed hotplug when a device is inserted in a slot in which a disk was already en
 Added two new RPCs: `vmd_remove_device` simulating a hotremove, and `vmd_rescan`, which rescans all
 buses managed by the VMD driver and hotplugs all newfound devices.
 
+### sma
+
+Extended `VolumeParameters` with crypto parameters allowing the user to configure crypto when
+attaching a volume to a device.  This interface is now supported by all upstream device types
+(nvmf-tcp, virtio-blk, vfio-user) using `bdev_crypto`.  Users must specify the crypto engine to use
+under `crypto` section in config.  It is also possible to register out-of-tree crypto engines by
+inheriting from the `CryptoEngine` class.
+
+Added two new methods: `SetQos` and `GetQosCapabilities` allowing the user to configure QoS on a
+per-device or per-volume level.  Not all QoS settings have to be supported by each device, so users
+can use `GetQosCapabilities` to query them for that.  All upstream device types support QoS on a
+per-volume level using bdev layer's QoS mechanism.
+
 ## v22.05
 
 ### sock
