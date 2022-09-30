@@ -67,6 +67,12 @@ cfs() {
 	shift; for f; do [[ -e $f ]] && cp -a "$f" "$dst"; done
 }
 
+cl() {
+	[[ -e $2 ]] || return 0
+
+	cfs "$1" $(find "$2" -name '*.so*' -type f -o -type l | grep -v .symbols)
+}
+
 %if %{deps}
 ./scripts/pkgdep.sh --docs --pmem --rdma --uring
 %endif
@@ -80,13 +86,13 @@ make DESTDIR=%{buildroot} install %{make}
 %if %{dpdk}
 cfs %{buildroot}/usr/local/lib/dpdk %{dpdk_build_path}/lib/*
 # Special case for SPDK_RUN_EXTERNAL_DPDK setup
-cfs %{buildroot}/usr/local/lib/dpdk $(find %{dpdk_path}/intel-ipsec-mb/ -name '*.so*')
-cfs %{buildroot}/usr/local/lib/dpdk $(find %{dpdk_path}/isa-l/ -name '*.so*')
+cl %{buildroot}/usr/local/lib/dpdk %{dpdk_path}/intel-ipsec-mb/
+cl %{buildroot}/usr/local/lib/dpdk %{dpdk_path}/isa-l/
 %endif
 
 # Include libvfio-user libs in case --with-vfio-user is in use together with --with-shared
 %if %{vfio_user} && %{shared}
-cfs %{buildroot}/usr/local/lib/libvfio-user $(find build/libvfio-user/ -name '*.so*' | grep -v .symbols)
+cl %{buildroot}/usr/local/lib/libvfio-user build/libvfio-user/
 %endif
 # Try to include extra binaries that were potentially built
 cfs %{buildroot}/usr/local/bin build/fio
