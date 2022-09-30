@@ -58,6 +58,8 @@ make clean %{make} &>/dev/null || :
 %setup
 
 %build
+set +x
+
 cfs() {
 	(($# > 1)) || return 0
 
