@@ -53,7 +53,7 @@ polled mode instead of relying on interrupts, which avoids kernel context switch
 eliminates interrupt handling overhead.
 
 %prep
-make clean &>/dev/null || :
+make clean %{make} &>/dev/null || :
 %setup
 
 %build
@@ -64,7 +64,7 @@ make clean &>/dev/null || :
 # Rely mainly on CONFIG
 ./configure --disable-unit-tests --disable-tests %{configure}
 make %{make}
-make DESTDIR=%{buildroot} install
+make DESTDIR=%{buildroot} install %{make}
 
 # Include DPDK libs in case --with-shared is in use.
 %if %{dpdk}
