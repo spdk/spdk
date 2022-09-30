@@ -364,10 +364,12 @@ _reactor_set_interrupt_mode(void *arg1, void *arg2)
 
 	target->in_interrupt = target->new_in_interrupt;
 
-	/* Align spdk_thread with reactor to interrupt mode or poll mode */
-	TAILQ_FOREACH_SAFE(lw_thread, &target->threads, link, tmp) {
-		thread = spdk_thread_get_from_ctx(lw_thread);
-		spdk_thread_send_msg(thread, _reactor_set_thread_interrupt_mode, target);
+	if (spdk_interrupt_mode_is_enabled()) {
+		/* Align spdk_thread with reactor to interrupt mode or poll mode */
+		TAILQ_FOREACH_SAFE(lw_thread, &target->threads, link, tmp) {
+			thread = spdk_thread_get_from_ctx(lw_thread);
+			spdk_thread_send_msg(thread, _reactor_set_thread_interrupt_mode, target);
+		}
 	}
 
 	if (target->new_in_interrupt == false) {
