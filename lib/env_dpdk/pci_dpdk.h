@@ -8,6 +8,12 @@
 
 #include "spdk/env.h"
 
+#if RTE_VERSION < RTE_VERSION_NUM(21, 11, 0, 0)
+#define RTE_TAILQ_HEAD(name, type) TAILQ_HEAD(name, type)
+#define RTE_TAILQ_ENTRY(type) TAILQ_ENTRY(type)
+#define RTE_TAILQ_FOREACH(var, head, field) TAILQ_FOREACH(var, head, field)
+#endif
+
 struct spdk_pci_driver {
 	uint8_t				driver_buf[256];
 	struct rte_pci_driver		*driver;
