@@ -9,6 +9,7 @@
 %{!?build_requirements:%define build_requirements 0}
 %{!?shared:%define shared 0}
 %{!?libdir:%define libdir /usr/local/lib}
+%{!?vfio_user:%define vfio_user 0}
 
 # Spec metadata
 Name:           spdk
@@ -83,6 +84,10 @@ cfs %{buildroot}/usr/local/lib/dpdk $(find %{dpdk_path}/intel-ipsec-mb/ -name '*
 cfs %{buildroot}/usr/local/lib/dpdk $(find %{dpdk_path}/isa-l/ -name '*.so*')
 %endif
 
+# Include libvfio-user libs in case --with-vfio-user is in use together with --with-shared
+%if %{vfio_user} && %{shared}
+cfs %{buildroot}/usr/local/lib/libvfio-user $(find build/libvfio-user/ -name '*.so*' | grep -v .symbols)
+%endif
 # Try to include extra binaries that were potentially built
 cfs %{buildroot}/usr/local/bin build/fio
 
@@ -96,6 +101,7 @@ mkdir -p %{buildroot}%{python3_sitelib}
 cat <<-EOF > %{buildroot}/etc/ld.so.conf.d/spdk.conf
 %{libdir}
 /usr/local/lib/dpdk
+/usr/local/lib/libvfio-user
 EOF
 
 cat <<-'EOF' > %{buildroot}/etc/profile.d/spdk_path.sh
@@ -165,6 +171,20 @@ DPDK libraries
 /usr/local/lib/dpdk
 
 %post dpdk-libs
+ldconfig
+%endif
+
+%if %{vfio_user} && %{shared}
+%package libvfio-user
+Summary: libvfio-user libraries
+
+%description libvfio-user
+libvfio-user libraries
+
+%files libvfio-user
+/usr/local/lib/libvfio-user
+
+%post libvfio-user
 ldconfig
 %endif
 

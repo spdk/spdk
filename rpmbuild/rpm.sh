@@ -116,6 +116,10 @@ build_macros() {
 		macros+=(-D "libdir $(get_config libdir print)")
 	fi
 
+	if get_config with-vfio-user; then
+		macros+=(-D "vfio_user 1")
+	fi
+
 	if [[ $deps == no ]]; then
 		macros+=(-D "deps 0")
 	fi
