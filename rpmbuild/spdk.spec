@@ -57,6 +57,15 @@ make clean %{make} &>/dev/null || :
 %setup
 
 %build
+cfs() {
+	(($# > 1)) || return 0
+
+	local dst=$1 f
+
+	mkdir -p "$dst"
+	shift; for f; do [[ -e $f ]] && cp -a "$f" "$dst"; done
+}
+
 %if %{deps}
 ./scripts/pkgdep.sh --docs --pmem --rdma --uring
 %endif
@@ -68,15 +77,14 @@ make DESTDIR=%{buildroot} install %{make}
 
 # Include DPDK libs in case --with-shared is in use.
 %if %{dpdk}
-mkdir -p %{buildroot}/usr/local/lib/dpdk
-cp -a %{dpdk_build_path}/lib/* %{buildroot}/usr/local/lib/dpdk/
+cfs %{buildroot}/usr/local/lib/dpdk %{dpdk_build_path}/lib/*
 # Special case for SPDK_RUN_EXTERNAL_DPDK setup
-[[ -e %{dpdk_path}/intel-ipsec-mb ]] && find %{dpdk_path}/intel-ipsec-mb/ -name '*.so*' -exec cp -a {} %{buildroot}/usr/local/lib/dpdk/ ';'
-[[ -e %{dpdk_path}/isa-l/build/lib ]] && cp -a %{dpdk_path}/isa-l/build/lib/*.so* %{buildroot}/usr/local/lib/dpdk/
+cfs %{buildroot}/usr/local/lib/dpdk $(find %{dpdk_path}/intel-ipsec-mb/ -name '*.so*')
+cfs %{buildroot}/usr/local/lib/dpdk $(find %{dpdk_path}/isa-l/ -name '*.so*')
 %endif
 
 # Try to include extra binaries that were potentially built
-[[ -e build/fio ]] && cp -a build/fio %{buildroot}/usr/local/bin/fio
+cfs %{buildroot}/usr/local/bin build/fio
 
 # And some useful setup scripts SPDK uses
 mkdir -p %{buildroot}/usr/libexec/spdk
@@ -97,8 +105,8 @@ PATH=$PATH:/usr/libexec/spdk/test/common/config
 export PATH
 EOF
 
-cp -a scripts %{buildroot}/usr/libexec/spdk/scripts
-cp -a python/spdk %{buildroot}%{python3_sitelib}
+cfs %{buildroot}/usr/libexec/spdk scripts
+cfs  %{buildroot}%{python3_sitelib} python/spdk
 ln -s /usr/libexec/spdk/scripts/bash-completion/spdk %{buildroot}/etc/bash_completion.d/
 
 # We need to take into the account the fact that most of the scripts depend on being
