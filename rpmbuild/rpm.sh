@@ -133,6 +133,23 @@ build_macros() {
 		macros+=(-D "build_requirements 1")
 		macros+=(-D "build_requirements_list $build_requirements")
 	fi
+
+	build_macros_flags
+}
+
+build_macros_flags() {
+	local flags flag
+
+	flags=(CFLAGS CXXFLAGS LDFLAGS)
+
+	for flag in "${flags[@]}"; do
+		# If we are running in the environment where the flag is set, don't touch it -
+		# rpmbuild will use it as is during the build. If it's not set, make sure the
+		# rpmbuild won't set its defaults which may affect the build in an unpredictable
+		# manner.
+		[[ -n ${!flag} ]] && continue
+		macros+=(-D "build_${flag,,} %{nil}")
+	done
 }
 
 gen_spec() {
