@@ -75,9 +75,7 @@ cp -a %{dpdk_build_path}/lib/* %{buildroot}/usr/local/lib/dpdk/
 [[ -e %{dpdk_path}/isa-l/build/lib ]] && cp -a %{dpdk_path}/isa-l/build/lib/*.so* %{buildroot}/usr/local/lib/dpdk/
 %endif
 
-# Try to include all the binaries that were potentially built
-[[ -e build/examples ]] && cp -a build/examples/* %{buildroot}/usr/local/bin/
-[[ -e build/bin ]] && cp -a build/bin/* %{buildroot}/usr/local/bin/
+# Try to include extra binaries that were potentially built
 [[ -e build/fio ]] && cp -a build/fio %{buildroot}/usr/local/bin/fio
 
 # And some useful setup scripts SPDK uses
