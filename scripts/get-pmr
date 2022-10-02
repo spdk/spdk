@@ -61,7 +61,13 @@ info() {
 	bar4=$(get_bar "$dev" 0x20)
 	bar5=$(get_bar "$dev" 0x24)
 
-	# QEMU uses 64-bit BARs
+	# QEMU uses 64-bit BARs. If there is no CMB or PMR present, report
+	# that to the user and signal failure.
+	if ((!(bar2 & 1 << 2) && !(bar4 & 1 << 2))); then
+		echo "No CMB|PMR present under $dev" >&2
+		return 1
+	fi
+
 	if ((bar2 & 1 << 2)); then
 		bar_type2=pmr
 		if [[ -e $nvme/cmb ]]; then
@@ -70,14 +76,16 @@ info() {
 		base_addr2=$(((bar2 & ~0xf) + (bar3 << 32)))
 		print_info "$bar2" "$base_addr2" "$bar_type2"
 	fi
-	# QEMU uses 64-bit BARs
+
 	if ((bar4 & 1 << 2)); then
 		base_addr4=$(((bar4 & ~0xf) + (bar5 << 32)))
 		print_info "$bar4" "$base_addr4" pmr
 	fi
 }
 
+missing_buf=0
 for nvme in /sys/class/nvme/nvme*; do
 	pci=$(readlink -f "$nvme/device") pci=${pci##*/}
-	info "$pci"
+	info "$pci" || ((++missing_buf))
 done
+((missing_buf == 0))
