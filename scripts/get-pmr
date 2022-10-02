@@ -3,7 +3,7 @@
 #  Copyright (C) 2021 Intel Corporation
 #  All rights reserved.
 
-# We simply check if BAR2 is present as that's where PMR or CMB is
+# We simply check if BAR2, BAR4 are present as that's where PMR or CMB is
 # meant to be located under qemu. If found, print some stats then exit.
 shopt -s nullglob
 
@@ -33,12 +33,12 @@ get_size() {
 info() {
 	local dev=$1
 
-	local pref loc
+	local pref
 
 	local base_addr2
 	local base_addr4
 
-	local bar local bar2 bar3 bar4 bar5
+	local bar bar2 bar3 bar4 bar5
 	local bar_type2
 
 	pref[0]=non-prefetchable
