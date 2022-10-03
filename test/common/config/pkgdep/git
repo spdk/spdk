@@ -50,12 +50,7 @@ function install_refspdk() {
 
 	release=${release#v}
 
-	if ((gcc_version >= 11)) && eq "$release" 22.05.0; then
-		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13404
-		cherry_picks+=("713506d5da4676b9f900ae59963f6eb50ecdba36")
-	fi
-
-	if ((gcc_version >= 12)); then
+	if ((gcc_version >= 12)) && eq "$release" 22.01.1; then
 		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13405
 		cherry_picks+=("8c532ae0322edc71003db3e4d3ece138f0f47ef7")
 		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13412
@@ -72,8 +67,7 @@ function install_refspdk() {
 		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13484 - master
 		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13541 - LTS.x
 		case "$version" in
-			latest) eq "$release" 22.05.0 && cherry_picks+=("a83dc0546f838905dbe96605e99811b2f62c0eb5") ;;
-			LTS   ) eq "$release" 22.01.1 && cherry_picks+=("1d1248bd1b0e11896ed5e3fa5ce4a8b94c3d5fd0") ;;
+			LTS) eq "$release" 22.01.1 && cherry_picks+=("1d1248bd1b0e11896ed5e3fa5ce4a8b94c3d5fd0") ;;
 		esac
 	fi
 
@@ -95,11 +89,9 @@ function install_refspdk() {
 		# the LTS, however, we can cherry-pick target commit directly into the submodule.
 		git -C "$output_dir/libvfio-user" cherry-pick b52bff72d4eb646a453d19e19ddbd13ed6111a09
 	fi
-	if ((gcc_version >= 12)); then
-		if eq "$release" 22.01.1 || eq "$release" 22.05.0; then
-			# https://review.spdk.io/gerrit/c/spdk/dpdk/+/13411
-			git -C "$output_dir/dpdk" cherry-pick 66866df9602b024541b7071f5c4142ce47c9f640
-		fi
+	if ((gcc_version >= 12)) && eq "$release" 22.01.1; then
+		# https://review.spdk.io/gerrit/c/spdk/dpdk/+/13411
+		git -C "$output_dir/dpdk" cherry-pick 66866df9602b024541b7071f5c4142ce47c9f640
 	fi
 
 	cat > $HOME/autorun-spdk.conf <<- EOF
