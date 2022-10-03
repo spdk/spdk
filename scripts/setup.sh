@@ -207,7 +207,7 @@ function get_used_bdf_block_devs() {
 	local blocks block blockp dev mount holder
 	local used
 
-	hash lsblk || return 1
+	hash lsblk &> /dev/null || return 1
 	blocks=($(get_block_dev_from_bdf "$bdf"))
 
 	for block in "${blocks[@]}"; do
