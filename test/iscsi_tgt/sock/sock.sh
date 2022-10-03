@@ -157,9 +157,13 @@ if ! echo "$response" | grep -q "$message"; then
 fi
 
 # send message using hello_sock client with KTLS enabled
-message="**MESSAGE:This is a test message from the hello_sock client with KTLS enabled**"
-# UT infrastructure so far doesn't support new openssl-3 with this option, so expect a failure
-echo $message | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -K && exit 1
+
+# CI so far doesn't support new openssl-3 with this option.
+# This section is commented out and will be changed back after the CI has systems that run with openssl-3
+# See GH issue #2687
+
+# message="**MESSAGE:This is a test message from the hello_sock client with KTLS enabled**"
+# echo $message | $HELLO_SOCK_APP -H $TARGET_IP -P $ISCSI_PORT $PSK -K
 
 # send message using openssl client using TLS 1.3
 message="**MESSAGE:This is a test message from the openssl client using TLS 1.3**"
