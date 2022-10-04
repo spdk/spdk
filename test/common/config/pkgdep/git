@@ -50,6 +50,11 @@ function install_refspdk() {
 
 	release=${release#v}
 
+	if eq "$release" 22.09 || eq "$release" 22.01.1; then
+		# https://review.spdk.io/gerrit/c/spdk/spdk/+/12893
+		cherry_picks+=("8878c1735f55d1e886fbde0cf6f8e4fbea5dd19c")
+	fi
+
 	if ((gcc_version >= 12)) && eq "$release" 22.01.1; then
 		# https://review.spdk.io/gerrit/c/spdk/spdk/+/13405
 		cherry_picks+=("8c532ae0322edc71003db3e4d3ece138f0f47ef7")
