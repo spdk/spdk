@@ -508,6 +508,41 @@ test_spdk_accel_submit_copy_crc32c(void)
 }
 
 static void
+test_spdk_accel_submit_xor(void)
+{
+	const uint64_t nbytes = TEST_SUBMIT_SIZE;
+	uint8_t dst[TEST_SUBMIT_SIZE] = {0};
+	uint8_t src1[TEST_SUBMIT_SIZE] = {0};
+	uint8_t src2[TEST_SUBMIT_SIZE] = {0};
+	void *sources[] = { src1, src2 };
+	uint32_t nsrcs = SPDK_COUNTOF(sources);
+	int rc;
+	struct spdk_accel_task task;
+	struct spdk_accel_task *expected_accel_task = NULL;
+
+	TAILQ_INIT(&g_accel_ch->task_pool);
+
+	/* Fail with no tasks on _get_task() */
+	rc = spdk_accel_submit_xor(g_ch, dst, sources, nsrcs, nbytes, NULL, NULL);
+	CU_ASSERT(rc == -ENOMEM);
+
+	TAILQ_INSERT_TAIL(&g_accel_ch->task_pool, &task, link);
+
+	/* submission OK. */
+	rc = spdk_accel_submit_xor(g_ch, dst, sources, nsrcs, nbytes, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(task.nsrcs.srcs == sources);
+	CU_ASSERT(task.nsrcs.cnt == nsrcs);
+	CU_ASSERT(task.d.iovcnt == 1);
+	CU_ASSERT(task.d.iovs[0].iov_base == dst);
+	CU_ASSERT(task.d.iovs[0].iov_len == nbytes);
+	CU_ASSERT(task.op_code == ACCEL_OPC_XOR);
+	expected_accel_task = TAILQ_FIRST(&g_sw_ch->tasks_to_complete);
+	TAILQ_REMOVE(&g_sw_ch->tasks_to_complete, expected_accel_task, link);
+	CU_ASSERT(expected_accel_task == &task);
+}
+
+static void
 test_spdk_accel_module_find_by_name(void)
 {
 	struct spdk_accel_module_if mod1 = {};
@@ -3183,6 +3218,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32c);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_crc32cv);
 	CU_ADD_TEST(suite, test_spdk_accel_submit_copy_crc32c);
+	CU_ADD_TEST(suite, test_spdk_accel_submit_xor);
 	CU_ADD_TEST(suite, test_spdk_accel_module_find_by_name);
 	CU_ADD_TEST(suite, test_spdk_accel_module_register);
 

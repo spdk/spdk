@@ -65,7 +65,7 @@ static struct spdk_accel_driver *g_accel_driver;
 
 static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
 	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
-	"compress", "decompress", "encrypt", "decrypt"
+	"compress", "decompress", "encrypt", "decrypt", "xor"
 };
 
 enum accel_sequence_state {
@@ -691,6 +691,34 @@ spdk_accel_submit_decrypt(struct spdk_io_channel *ch, struct spdk_accel_crypto_k
 	accel_task->block_size = block_size;
 	accel_task->flags = flags;
 	accel_task->op_code = ACCEL_OPC_DECRYPT;
+
+	return module->submit_tasks(module_ch, accel_task);
+}
+
+int
+spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uint32_t nsrcs,
+		      uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct accel_io_channel *accel_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_accel_task *accel_task;
+	struct spdk_accel_module_if *module = g_modules_opc[ACCEL_OPC_XOR].module;
+	struct spdk_io_channel *module_ch = accel_ch->module_ch[ACCEL_OPC_XOR];
+
+	accel_task = _get_task(accel_ch, cb_fn, cb_arg);
+	if (accel_task == NULL) {
+		return -ENOMEM;
+	}
+
+	accel_task->nsrcs.srcs = sources;
+	accel_task->nsrcs.cnt = nsrcs;
+	accel_task->d.iovs = &accel_task->aux_iovs[SPDK_ACCEL_AUX_IOV_DST];
+	accel_task->d.iovs[0].iov_base = dst;
+	accel_task->d.iovs[0].iov_len = nbytes;
+	accel_task->d.iovcnt = 1;
+	accel_task->op_code = ACCEL_OPC_XOR;
+	accel_task->src_domain = NULL;
+	accel_task->dst_domain = NULL;
+	accel_task->step_cb_fn = NULL;
 
 	return module->submit_tasks(module_ch, accel_task);
 }

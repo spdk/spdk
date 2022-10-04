@@ -16,6 +16,7 @@
 #include "spdk/json.h"
 #include "spdk/crc32.h"
 #include "spdk/util.h"
+#include "spdk/xor.h"
 
 #ifdef SPDK_CONFIG_PMDK
 #include "libpmem.h"
@@ -98,6 +99,7 @@ sw_accel_supports_opcode(enum accel_opcode opc)
 	case ACCEL_OPC_DECOMPRESS:
 	case ACCEL_OPC_ENCRYPT:
 	case ACCEL_OPC_DECRYPT:
+	case ACCEL_OPC_XOR:
 		return true;
 	default:
 		return false;
@@ -511,6 +513,15 @@ _sw_accel_decrypt(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *acc
 }
 
 static int
+_sw_accel_xor(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+	return spdk_xor_gen(accel_task->d.iovs[0].iov_base,
+			    accel_task->nsrcs.srcs,
+			    accel_task->nsrcs.cnt,
+			    accel_task->d.iovs[0].iov_len);
+}
+
+static int
 sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task)
 {
 	struct sw_accel_io_channel *sw_ch = spdk_io_channel_get_ctx(ch);
@@ -565,6 +576,9 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 			break;
 		case ACCEL_OPC_DECOMPRESS:
 			rc = _sw_accel_decompress(sw_ch, accel_task);
+			break;
+		case ACCEL_OPC_XOR:
+			rc = _sw_accel_xor(sw_ch, accel_task);
 			break;
 		case ACCEL_OPC_ENCRYPT:
 			rc = _sw_accel_encrypt(sw_ch, accel_task);

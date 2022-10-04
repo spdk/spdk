@@ -2,6 +2,10 @@
 
 ## v23.05: (Upcoming Release)
 
+### accel
+
+Added API `spdk_accel_submit_xor` to perform XOR.
+
 ### bdev
 
 A new API `spdk_bdev_module_claim_bdev_desc` was added. Unlike `spdk_bdev_module_claim_bdev`, this
