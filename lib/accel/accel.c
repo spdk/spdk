@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -43,6 +44,11 @@ static TAILQ_HEAD(, spdk_accel_module_if) spdk_accel_module_list =
 static struct spdk_accel_module_if *g_modules_opc[ACCEL_OPC_LAST] = {};
 static char *g_modules_opc_override[ACCEL_OPC_LAST] = {};
 
+static const char *g_opcode_strings[ACCEL_OPC_LAST] = {
+	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
+	"compress", "decompress"
+};
+
 struct accel_io_channel {
 	struct spdk_io_channel		*module_ch[ACCEL_OPC_LAST];
 	void				*task_pool_base;
@@ -85,6 +91,21 @@ _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn)
 		fn(info);
 		j = 0;
 	}
+}
+
+int
+_accel_get_opc_name(enum accel_opcode opcode, const char **opcode_name)
+{
+	int rc = 0;
+
+	if (opcode < ACCEL_OPC_LAST) {
+		*opcode_name = g_opcode_strings[opcode];
+	} else {
+		/* invalid opcode */
+		rc = -EINVAL;
+	}
+
+	return rc;
 }
 
 int
@@ -625,10 +646,24 @@ accel_module_finish_cb(void)
 	g_fini_cb_arg = NULL;
 }
 
+static void
+accel_write_overridden_opc(struct spdk_json_write_ctx *w, const char *opc_str,
+			   const char *module_str)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "accel_assign_opc");
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "opname", opc_str);
+	spdk_json_write_named_string(w, "module", module_str);
+	spdk_json_write_object_end(w);
+	spdk_json_write_object_end(w);
+}
+
 void
 spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_accel_module_if *accel_module;
+	int i;
 
 	/*
 	 * The accel fw has no config, there may be some in
@@ -638,6 +673,11 @@ spdk_accel_write_config_json(struct spdk_json_write_ctx *w)
 	TAILQ_FOREACH(accel_module, &spdk_accel_module_list, tailq) {
 		if (accel_module->write_config_json) {
 			accel_module->write_config_json(w);
+		}
+	}
+	for (i = 0; i < ACCEL_OPC_LAST; i++) {
+		if (g_modules_opc_override[i]) {
+			accel_write_overridden_opc(w, g_opcode_strings[i], g_modules_opc_override[i]);
 		}
 	}
 	spdk_json_write_array_end(w);

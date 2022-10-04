@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -21,5 +22,6 @@ struct module_info {
 
 typedef void (*_accel_for_each_module_fn)(struct module_info *info);
 void _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn);
+int _accel_get_opc_name(enum accel_opcode opcode, const char **opcode_name);
 
 #endif

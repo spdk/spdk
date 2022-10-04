@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -10,26 +11,6 @@
 #include "spdk/event.h"
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
-
-const char *g_opcode_strings[ACCEL_OPC_LAST] = {
-	"copy", "fill", "dualcast", "compare", "crc32c", "copy_crc32c",
-	"compress", "decompress"
-};
-
-static int
-_get_opc_name(enum accel_opcode opcode, const char **opcode_name)
-{
-	int rc = 0;
-
-	if (opcode < ACCEL_OPC_LAST) {
-		*opcode_name = g_opcode_strings[opcode];
-	} else {
-		/* invalid opcode */
-		rc = -EINVAL;
-	}
-
-	return rc;
-}
 
 static void
 rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
@@ -50,7 +31,7 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_object_begin(w);
 	for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
-		rc = _get_opc_name(opcode, &name);
+		rc = _accel_get_opc_name(opcode, &name);
 		if (rc == 0) {
 			rc = spdk_accel_get_opc_module_name(opcode, &module_name);
 			if (rc != 0) {
@@ -86,7 +67,7 @@ rpc_dump_module_info(struct module_info *info)
 	spdk_json_write_named_array_begin(w, "supported ops");
 
 	for (i = 0; i < info->num_ops; i++) {
-		rc = _get_opc_name(i, &name);
+		rc = _accel_get_opc_name(i, &name);
 		if (rc == 0) {
 			spdk_json_write_string(w, name);
 		} else {
@@ -146,6 +127,7 @@ rpc_accel_assign_opc(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_accel_assign_opc req = {};
+	const char *opcode_str;
 	enum accel_opcode opcode;
 	bool found = false;
 	int rc;
@@ -160,7 +142,9 @@ rpc_accel_assign_opc(struct spdk_jsonrpc_request *request,
 	}
 
 	for (opcode = 0; opcode < ACCEL_OPC_LAST; opcode++) {
-		if (strcmp(g_opcode_strings[opcode], req.opname) == 0) {
+		rc = _accel_get_opc_name(opcode, &opcode_str);
+		assert(!rc);
+		if (strcmp(opcode_str, req.opname) == 0) {
 			found = true;
 			break;
 		}
