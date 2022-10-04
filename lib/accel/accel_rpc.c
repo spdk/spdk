@@ -37,7 +37,7 @@ rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	enum accel_opcode opcode;
-	const char *name, *module_name;
+	const char *name, *module_name = NULL;
 	int rc;
 
 	if (params != NULL) {
