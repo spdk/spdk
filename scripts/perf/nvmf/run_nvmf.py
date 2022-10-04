@@ -712,8 +712,9 @@ class Initiator(Server):
                           "offset=0%",
                           "offset_increment=%s%%" % offset_inc])
 
-    def gen_fio_numa_section(self, fio_filenames_list):
+    def gen_fio_numa_section(self, fio_filenames_list, num_jobs):
         numa_stats = {}
+        allowed_cpus = []
         for nvme in fio_filenames_list:
             nvme_numa = self.get_nvme_subsystem_numa(os.path.basename(nvme))
             numa_stats[nvme_numa] = numa_stats.setdefault(nvme_numa, 0) + 1
@@ -721,7 +722,14 @@ class Initiator(Server):
         # Use the most common NUMA node for this chunk to allocate memory and CPUs
         section_local_numa = sorted(numa_stats.items(), key=lambda item: item[1], reverse=True)[0][0]
 
-        return "\n".join(["numa_cpu_nodes=%s" % section_local_numa,
+        for _ in range(num_jobs):
+            try:
+                allowed_cpus.append(str(self.available_cpus[section_local_numa].pop(0)))
+            except IndexError:
+                self.log.error("No more free CPU cores to use from allowed_cpus list!")
+                raise
+
+        return "\n".join(["cpus_allowed=%s" % ",".join(allowed_cpus),
                           "numa_mem_policy=prefer:%s" % section_local_numa])
 
     def gen_fio_config(self, rw, rwmixread, block_size, io_depth, subsys_no,
@@ -1287,6 +1295,7 @@ class KernelInitiator(Initiator):
         return self.get_route_nic_numa(remote_nvme_ip.group(0))
 
     def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
+        self.available_cpus = self.get_numa_cpu_map()
         if len(threads) >= len(subsystems):
             threads = range(0, len(subsystems))
 
@@ -1320,7 +1329,7 @@ class KernelInitiator(Initiator):
             if offset:
                 offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
 
-            numa_opts = self.gen_fio_numa_section(r)
+            numa_opts = self.gen_fio_numa_section(r, num_jobs)
 
             filename_section = "\n".join([filename_section, header, disks, iodepth, numa_opts, offset_section, ""])
 
@@ -1408,6 +1417,7 @@ class SPDKInitiator(Initiator):
         return json.dumps(bdev_cfg_section, indent=2)
 
     def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
+        self.available_cpus = self.get_numa_cpu_map()
         filename_section = ""
         if len(threads) >= len(subsystems):
             threads = range(0, len(subsystems))
@@ -1441,7 +1451,7 @@ class SPDKInitiator(Initiator):
             if offset:
                 offset_section = self.gen_fio_offset_section(offset_inc, num_jobs)
 
-            numa_opts = self.gen_fio_numa_section(r)
+            numa_opts = self.gen_fio_numa_section(r, num_jobs)
 
             filename_section = "\n".join([filename_section, header, disks, iodepth, numa_opts, offset_section, ""])
 
