@@ -2,6 +2,10 @@
 
 ## v23.01: (Upcoming Release)
 
+### accel
+
+New library isa-l-crypto has been added, it is used by accel library in crypto operations.
+
 ### bdev
 
 Both of interleaved and separated metadata are now supported by the malloc bdev module.

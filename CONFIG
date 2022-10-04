@@ -1,7 +1,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2015 Intel Corporation.
 #  All rights reserved.
-#  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#  Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
 # configure options: __CONFIGURE_OPTIONS__
@@ -160,6 +160,9 @@ CONFIG_CUSTOMOCF=n
 
 # Build ISA-L library
 CONFIG_ISAL=y
+
+# Build ISA-L-crypto library
+CONFIG_ISAL_CRYPTO=y
 
 # Build with IO_URING support
 CONFIG_URING=n

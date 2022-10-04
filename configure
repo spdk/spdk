@@ -56,8 +56,8 @@ function usage() {
 	echo "                           Implies --without-dpdk."
 	echo " --with-idxd               Build the IDXD library and accel framework plug-in module."
 	echo " --without-idxd            Disabled while experimental. Only built for x86 when enabled."
-	echo " --with-crypto             Build vbdev crypto module."
-	echo " --without-crypto          No path required."
+	echo " --with-crypto             Build isa-l-crypto and vbdev crypto module. No path required."
+	echo " --without-crypto          Disable isa-l-crypto and vbdev crypto module."
 	echo " --with-fio[=DIR]          Build fio_plugin."
 	echo " --without-fio             default: /usr/src/fio"
 	echo " --with-xnvme              Build xNVMe bdev module."
@@ -1136,6 +1136,18 @@ if [[ $arch == x86_64* ]] || [[ $arch == aarch64* ]]; then
 			echo "WARNING: ISA-L & DPDK crypto cannot be used as nasm ver must be 2.14 or newer."
 		fi
 	fi
+	# check gas version on aarch64
+	if [[ $arch == aarch64* ]]; then
+		ver=$(as --version 2> /dev/null | awk 'NR==1{print $7}')
+		if lt "$ver" 2.24; then
+			# ISA-L, compression & crypto require gas version 2.24 or newer.
+			CONFIG[ISAL]=n
+			echo "Notice: ISA-L, compression & crypto require GAS version 2.24 or newer. Turning off default ISA-L and crypto features."
+		elif lt "$ver" 2.34; then
+			#For gas v2.24~v2.34, sve2 instructions are not supported. To workaround it, sve2 optimization should be disabled
+			ISAL_CRYPTO_OPTS+=("--disable-sve2")
+		fi
+	fi
 else
 	# for PPC
 	CONFIG[ISAL]=n
@@ -1161,6 +1173,31 @@ else
 	echo "so these features will be disabled."
 	CONFIG[CRYPTO]=n
 	CONFIG[VBDEV_COMPRESS]=n
+fi
+
+# ISA-L-crypto complements ISA-L functionality, it is only enabled together with ISA-L
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	if [ ! -f "$rootdir"/isa-l-crypto/autogen.sh ]; then
+		echo "ISA-L-crypto is required but was not found, please init the submodule with:"
+		echo "  git submodule update --init"
+		echo "and then re-run this script."
+		exit 1
+	fi
+
+	cd $rootdir/isa-l-crypto
+	ISAL_CRYPTO_LOG=$rootdir/isa-l-crypto/spdk-isal-crypto.log
+	if [[ -n "${CONFIG[CROSS_PREFIX]}" ]]; then
+		ISAL_CRYPTO_OPTS+=("--host=${CONFIG[CROSS_PREFIX]}")
+	fi
+	ISAL_CRYPTO_OPTS+=("--enable-shared=no")
+	echo -n "Configuring ISA-L-crypto (logfile: $ISAL_CRYPTO_LOG)..."
+	./autogen.sh &> $ISAL_CRYPTO_LOG
+	./configure CFLAGS="-fPIC -g -O2" "${ISAL_CRYPTO_OPTS[@]}" >> $ISAL_CRYPTO_LOG 2>&1
+	echo "done."
+	cd $rootdir
+	CONFIG[ISAL_CRYPTO]=y
+else
+	CONFIG[ISAL_CRYPTO]=n
 fi
 
 if [[ "${CONFIG[SMA]}" = "y" ]]; then

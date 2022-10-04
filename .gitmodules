@@ -16,3 +16,6 @@
 [submodule "xnvme"]
 	path = xnvme
 	url = https://github.com/OpenMPDK/xNVMe.git
+[submodule "isa-l-crypto"]
+	path = isa-l-crypto
+	url = https://github.com/intel/isa-l_crypto
