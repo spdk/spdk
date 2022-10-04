@@ -314,7 +314,7 @@ void
 ftl_mngt_finalize_init_bands(struct spdk_ftl_dev *dev, struct ftl_mngt_process *mngt)
 {
 	struct ftl_band *band, *temp_band, *open_bands[FTL_MAX_OPEN_BANDS];
-	struct ftl_writer *writer;
+	struct ftl_writer *writer = NULL;
 	uint64_t i, num_open = 0, num_shut = 0;
 	uint64_t offset;
 	bool fast_startup = ftl_fast_startup(dev);
