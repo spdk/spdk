@@ -364,6 +364,14 @@ class Server:
             self.exec_cmd(["sudo", "cpupower", "frequency-set", "-g", self.governor_restore])
             self.log.info("Reverted CPU governor to %s." % self.governor_restore)
 
+    def restore_settings(self):
+        self.restore_governor()
+        self.restore_tuned()
+        self.restore_services()
+        self.restore_sysctl()
+        if self.enable_adq:
+            self.reload_driver("ice")
+
 
 class Target(Server):
     def __init__(self, name, general_config, target_config):
@@ -640,6 +648,7 @@ class Initiator(Server):
         return json.loads(self.exec_cmd(["lshw", "-json"]))
 
     def stop(self):
+        self.restore_settings()
         self.ssh_connection.close()
 
     def exec_cmd(self, cmd, stderr_redirect=False, change_dir=None):
@@ -882,6 +891,7 @@ class KernelTarget(Target):
 
     def stop(self):
         self.nvmet_command(self.nvmet_bin, "clear")
+        self.restore_settings()
 
     def get_nvme_device_bdf(self, nvme_dev_path):
         nvme_name = os.path.basename(nvme_dev_path)
@@ -1212,6 +1222,7 @@ class SPDKTarget(Target):
                     os.remove("/var/tmp/spdk.sock.lock")
                 except FileNotFoundError:
                     pass
+        self.restore_settings()
 
 
 class KernelInitiator(Initiator):
@@ -1606,19 +1617,6 @@ if __name__ == "__main__":
                 i.init_disconnect()
                 i.copy_result_files(args.results)
 
-        target_obj.restore_governor()
-        target_obj.restore_tuned()
-        target_obj.restore_services()
-        target_obj.restore_sysctl()
-        if target_obj.enable_adq:
-            target_obj.reload_driver("ice")
-        for i in initiators:
-            i.restore_governor()
-            i.restore_tuned()
-            i.restore_services()
-            i.restore_sysctl()
-            if i.enable_adq:
-                i.reload_driver("ice")
         parse_results(args.results, args.csv_filename)
     finally:
         for i in initiators:
