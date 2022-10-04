@@ -393,6 +393,8 @@ class Target(Server):
         self.pm_delay = 0
         self.pm_interval = 0
         self.pm_count = 1
+        self.nvme_allowlist = []
+        self.nvme_blocklist = []
 
         if "null_block_devices" in target_config:
             self.null_block = target_config["null_block_devices"]
@@ -415,6 +417,15 @@ class Target(Server):
             self.enable_pm, self.pm_delay, self.pm_interval, self.pm_count = target_config["pm_settings"]
             # Normalize pm_count - <= 0 means to loop indefinitely so let's avoid that to not block forever
             self.pm_count = self.pm_count if self.pm_count > 0 else 1
+        if "blocklist" in target_config:
+            self.nvme_blocklist = target_config["blocklist"]
+        if "allowlist" in target_config:
+            self.nvme_allowlist = target_config["allowlist"]
+            # Blocklist takes precedence, remove common elements from allowlist
+            self.nvme_allowlist = list(set(self.nvme_allowlist) - set(self.nvme_blocklist))
+
+        self.log.info("Items now on allowlist: %s" % self.nvme_allowlist)
+        self.log.info("Items now on blocklist: %s" % self.nvme_blocklist)
 
         self.script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.spdk_dir = os.path.abspath(os.path.join(self.script_dir, "../../../"))
@@ -872,10 +883,24 @@ class KernelTarget(Target):
     def stop(self):
         self.nvmet_command(self.nvmet_bin, "clear")
 
+    def get_nvme_device_bdf(self, nvme_dev_path):
+        nvme_name = os.path.basename(nvme_dev_path)
+        return self.exec_cmd(["cat", "/sys/block/%s/device/address" % nvme_name]).strip()
+
     def get_nvme_devices(self):
-        output = self.exec_cmd(["lsblk", "-o", "NAME", "-nlpd"])
-        output = [x for x in output.split("\n") if "nvme" in x]
-        return output
+        dev_list = self.exec_cmd(["lsblk", "-o", "NAME", "-nlpd"]).split("\n")
+        nvme_list = []
+        for dev in dev_list:
+            if "nvme" not in dev:
+                continue
+            if self.get_nvme_device_bdf(dev) in self.nvme_blocklist:
+                continue
+            if len(self.nvme_allowlist) == 0:
+                nvme_list.append(dev)
+                continue
+            if self.get_nvme_device_bdf(dev) in self.nvme_allowlist:
+                nvme_list.append(dev)
+        return dev_list
 
     def nvmet_command(self, nvmet_bin, command):
         return self.exec_cmd([nvmet_bin, *(command.split(" "))])
@@ -995,7 +1020,15 @@ class SPDKTarget(Target):
 
     def get_nvme_devices(self):
         bdev_subsys_json_obj = json.loads(self.exec_cmd([os.path.join(self.spdk_dir, "scripts/gen_nvme.sh")]))
-        bdev_bdfs = [bdev["params"]["traddr"] for bdev in bdev_subsys_json_obj["config"]]
+        bdev_bdfs = []
+        for bdev in bdev_subsys_json_obj["config"]:
+            bdev_traddr = bdev["params"]["traddr"]
+            if bdev_traddr in self.nvme_blocklist:
+                continue
+            if len(self.nvme_allowlist) == 0:
+                bdev_bdfs.append(bdev_traddr)
+            if bdev_traddr in self.nvme_allowlist:
+                bdev_bdfs.append(bdev_traddr)
         return bdev_bdfs
 
     @staticmethod
@@ -1421,6 +1454,10 @@ if __name__ == "__main__":
                         help='Results directory.')
     parser.add_argument('-s', '--csv-filename', type=str, default='nvmf_results.csv',
                         help='CSV results filename.')
+    parser.add_argument('-f', '--force', default=False, action='store_true',
+                        dest='force', help="""Force script to continue and try to use all
+                        available NVMe devices during test.
+                        WARNING: Might result in data loss on used NVMe drives""")
 
     args = parser.parse_args()
 
@@ -1437,6 +1474,16 @@ if __name__ == "__main__":
     general_config = data["general"]
     target_config = data["target"]
     initiator_configs = [data[x] for x in data.keys() if "initiator" in x]
+
+    if "null_block_devices" not in data["target"] and \
+        (args.force is False and
+            "allowlist" not in data["target"] and
+            "blocklist" not in data["target"]):
+        # TODO: Also check if allowlist or blocklist are not empty.
+        logging.warning("""WARNING: This script requires allowlist and blocklist to be defined.
+        You can choose to use all available NVMe drives on your system, which may potentially
+        lead to data loss. If you wish to proceed with all attached NVMes, use "-f" option.""")
+        exit(1)
 
     for k, v in data.items():
         if "target" in k:
