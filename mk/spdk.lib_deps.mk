@@ -1,5 +1,6 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2015 Intel Corporation.
+#  Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
 #  All rights reserved.
 #
 
@@ -96,6 +97,7 @@ endif
 DEPDIRS-accel_ioat := log ioat thread jsonrpc rpc accel
 DEPDIRS-accel_dsa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_iaa := log idxd thread $(JSON_LIBS) accel trace
+DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel
 
 # module/env_dpdk
 DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)

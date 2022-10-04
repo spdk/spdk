@@ -446,6 +446,9 @@ Example response:
     "accel_crypto_keys_get",
     "ioat_scan_accel_module",
     "dsa_scan_accel_module",
+    "dpdk_cryptodev_scan_accel_module",
+    "dpdk_cryptodev_set_driver",
+    "dpdk_cryptodev_get_driver",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
@@ -1958,6 +1961,101 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+### dpdk_cryptodev_scan_accel_module {#rpc_dpdk_cryptodev_scan_accel_module}
+
+Enable dpdk_cryptodev accel offload
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "dpdk_cryptodev_scan_accel_module",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### dpdk_cryptodev_set_driver {#rpc_dpdk_cryptodev_set_driver}
+
+Set the DPDK cryptodev driver
+
+#### Parameters
+
+Name                    | Optional | Type   | Description
+----------------------- |----------|--------| -----------
+driver_name             | Required | string | The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "dpdk_cryptodev_set_driver",
+  "id": 1,
+  "params": {
+    "driver_name": "crypto_aesni_mb"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### dpdk_cryptodev_get_driver {#rpc_dpdk_cryptodev_get_driver}
+
+Get the DPDK cryptodev driver
+
+#### Parameters
+
+None
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "dpdk_cryptodev_get_driver",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "crypto_aesni_mb"
 }
 ~~~
 

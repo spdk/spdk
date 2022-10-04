@@ -8,6 +8,9 @@ New library isa-l-crypto has been added, it is used by accel library in crypto o
 
 New functions `spdk_accel_submit_encrypt` and `spdk_accel_submit_decrypt` were added.
 
+New accel module `dpdk_cryptodev` has been added. It uses DPDK crypto PMD and support encrypt and
+decrypt operations. New RPC `dpdk_cryptodev_scan_accel_module` has been added to enable this accel module.
+
 ### bdev
 
 Both of interleaved and separated metadata are now supported by the malloc bdev module.

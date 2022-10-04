@@ -2839,6 +2839,28 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Set config and enable iaa accel module offload.')
     p.set_defaults(func=iaa_scan_accel_module)
 
+    def dpdk_cryptodev_scan_accel_module(args):
+        rpc.dpdk_cryptodev.dpdk_cryptodev_scan_accel_module(args.client)
+
+    p = subparsers.add_parser('dpdk_cryptodev_scan_accel_module',
+                              help='Enable dpdk_cryptodev accel module offload.')
+    p.set_defaults(func=dpdk_cryptodev_scan_accel_module)
+
+    def dpdk_cryptodev_set_driver(args):
+        rpc.dpdk_cryptodev.dpdk_cryptodev_set_driver(args.client,
+                                                     driver_name=args.driver_name)
+
+    p = subparsers.add_parser('dpdk_cryptodev_set_driver',
+                              help='Set the DPDK cryptodev driver.')
+    p.add_argument('-d', '--driver-name', help='The driver, can be one of crypto_aesni_mb, crypto_qat or mlx5_pci', type=str)
+    p.set_defaults(func=dpdk_cryptodev_set_driver)
+
+    def dpdk_cryptodev_get_driver(args):
+        print_dict(rpc.dpdk_cryptodev.dpdk_cryptodev_get_driver(args.client))
+
+    p = subparsers.add_parser('dpdk_cryptodev_get_driver', help='Get the DPDK cryptodev driver')
+    p.set_defaults(func=dpdk_cryptodev_get_driver)
+
     # opal
     def bdev_nvme_opal_init(args):
         rpc.nvme.bdev_nvme_opal_init(args.client,

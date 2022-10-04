@@ -1,7 +1,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2016 Intel Corporation.
+#  Copyright (c) 2021, 2022 NVIDIA CORPORATION & AFFILIATES.
 #  All rights reserved.
-#  Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
 BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme bdev_passthru bdev_lvol
@@ -100,6 +100,9 @@ endif
 ACCEL_MODULES_LIST = accel_ioat ioat
 ifeq ($(CONFIG_IDXD),y)
 ACCEL_MODULES_LIST += accel_dsa accel_iaa idxd
+endif
+ifeq ($(CONFIG_CRYPTO),y)
+ACCEL_MODULES_LIST += accel_dpdk_cryptodev
 endif
 
 SCHEDULER_MODULES_LIST = scheduler_dynamic

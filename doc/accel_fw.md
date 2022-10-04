@@ -86,7 +86,7 @@ The DSA hardware supports a limited queue depth and channels. This means that
 only a limited number of `spdk_thread`s will be able to acquire a channel.
 Design software to deal with the inability to get a channel.
 
-### How to use kernel idxd driver {#accel_idxd_kernel}
+#### How to use kernel idxd driver {#accel_idxd_kernel}
 
 There are several dependencies to leverage the Linux idxd driver for driving DSA devices.
 
@@ -138,6 +138,22 @@ The software module is enabled by default. If no hardware module is explicitly
 enabled via startup RPC as discussed earlier, the software module will use ISA-L
 if available for functions such as CRC32C. Otherwise, standard glibc calls are
 used to back the framework API.
+
+### dpdk_cryptodev {#accel_dpdk_cryptodev}
+
+The dpdk_cryptodev module uses DPDK CryptoDev API to implement crypto operations.
+The following ciphers and PMDs are supported:
+
+- AESN-NI Multi Buffer Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC
+- Intel(R) QuickAssist (QAT) Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES128_CBC,
+  RTE_CRYPTO_CIPHER_AES128_XTS
+  (Note: QAT is functional however is marked as experimental until the hardware has
+  been fully integrated with the SPDK CI system.)
+- MLX5 Crypto Poll Mode Driver: RTE_CRYPTO_CIPHER_AES256_XTS, RTE_CRYPTO_CIPHER_AES512_XTS
+
+To enable this module, use [`dpdk_cryptodev_scan_accel_module`](https://spdk.io/doc/jsonrpc.html),
+this RPC is available in STARTUP state and the SPDK application needs to be run with `--wait-for-rpc`
+CLI parameter. To select a specific PMD, use [`dpdk_cryptodev_set_driver`](https://spdk.io/doc/jsonrpc.html)
 
 ### Module to Operation Code Assignment {#accel_assignments}
 

@@ -56,7 +56,3 @@ module/bdev/daos/bdev_daos_rpc
 # Not configured to test xNVMe bdev
 module/bdev/xnvme/bdev_xnvme
 module/bdev/xnvme/bdev_xnvme_rpc
-
-# Temporary added, will be remove in the next patch
-module/accel/dpdk_cryptodev/accel_dpdk_cryptodev
-test/unit/lib/accel/dpdk_cryptodev.c/accel_dpdk_cryptodev_ut

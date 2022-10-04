@@ -1,5 +1,6 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (C) 2015 Intel Corporation.
+#  Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
 #  All rights reserved.
 #
 
@@ -10,6 +11,7 @@ DIRS-y = ioat
 
 DIRS-$(CONFIG_IDXD) += dsa
 DIRS-$(CONFIG_IDXD) += iaa
+DIRS-$(CONFIG_CRYPTO) += dpdk_cryptodev
 
 .PHONY: all clean $(DIRS-y)
 
