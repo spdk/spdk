@@ -980,6 +980,14 @@ class SPDKTarget(Target):
         self.log.info("====DSA settings:====")
         self.log.info("DSA enabled: %s" % (self.enable_dsa))
 
+    def get_nvme_devices_count(self):
+        return len(self.get_nvme_devices())
+
+    def get_nvme_devices(self):
+        bdev_subsys_json_obj = json.loads(self.exec_cmd([os.path.join(self.spdk_dir, "scripts/gen_nvme.sh")]))
+        bdev_bdfs = [bdev["params"]["traddr"] for bdev in bdev_subsys_json_obj["config"]]
+        return bdev_bdfs
+
     @staticmethod
     def get_num_cores(core_mask):
         if "0x" in core_mask:
@@ -1037,7 +1045,7 @@ class SPDKTarget(Target):
     def spdk_tgt_add_nvme_conf(self, req_num_disks=None):
         self.log.info("Adding NVMe bdevs to config via RPC")
 
-        bdfs = get_nvme_devices_bdf()
+        bdfs = self.get_nvme_devices()
         bdfs = [b.replace(":", ".") for b in bdfs]
 
         if req_num_disks:
@@ -1056,7 +1064,7 @@ class SPDKTarget(Target):
     def spdk_tgt_add_subsystem_conf(self, ips=None, req_num_disks=None):
         self.log.info("Adding subsystems to config")
         if not req_num_disks:
-            req_num_disks = get_nvme_devices_count()
+            req_num_disks = self.get_nvme_devices_count()
 
         for ip, bdev_num in self.spread_bdevs(req_num_disks):
             port = str(4420 + bdev_num)
@@ -1097,7 +1105,7 @@ class SPDKTarget(Target):
         if self.null_block:
             self.subsys_no = 1
         else:
-            self.subsys_no = get_nvme_devices_count()
+            self.subsys_no = self.get_nvme_devices_count()
         self.log.info("Starting SPDK NVMeOF Target process")
         nvmf_app_path = os.path.join(self.spdk_dir, "build/bin/nvmf_tgt")
         proc = subprocess.Popen([nvmf_app_path, "--wait-for-rpc", "-m", self.core_mask])

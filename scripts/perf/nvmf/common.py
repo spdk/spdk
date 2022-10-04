@@ -7,22 +7,6 @@ from collections import OrderedDict
 from json.decoder import JSONDecodeError
 
 
-def get_nvme_devices_count():
-    output = get_nvme_devices_bdf()
-    return len(output)
-
-
-def get_nvme_devices_bdf():
-    print("Getting BDFs for NVMe section")
-    output = check_output("rootdir=$PWD; \
-                          source test/common/autotest_common.sh; \
-                          get_nvme_bdfs 01 08 02",
-                          executable="/bin/bash", shell=True)
-    output = [str(x, encoding="utf-8") for x in output.split()]
-    print("Done getting BDFs")
-    return output
-
-
 def read_json_stats(file):
     with open(file, "r") as json_data:
         data = json.load(json_data)
