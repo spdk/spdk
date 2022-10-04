@@ -23,14 +23,6 @@ def get_nvme_devices_bdf():
     return output
 
 
-def get_nvme_devices():
-    print("Getting kernel NVMe names")
-    output = check_output("lsblk -o NAME -nlp", shell=True).decode(encoding="utf-8")
-    output = [x for x in output.split("\n") if "nvme" in x]
-    print("Done getting kernel NVMe names")
-    return output
-
-
 def read_json_stats(file):
     with open(file, "r") as json_data:
         data = json.load(json_data)

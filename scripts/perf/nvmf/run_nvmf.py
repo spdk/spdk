@@ -862,6 +862,11 @@ class KernelTarget(Target):
     def stop(self):
         self.nvmet_command(self.nvmet_bin, "clear")
 
+    def get_nvme_devices(self):
+        output = self.exec_cmd(["lsblk", "-o", "NAME", "-nlpd"])
+        output = [x for x in output.split("\n") if "nvme" in x]
+        return output
+
     def nvmet_command(self, nvmet_bin, command):
         return self.exec_cmd([nvmet_bin, *(command.split(" "))])
 
@@ -925,7 +930,7 @@ class KernelTarget(Target):
             nvme_list = ["/dev/nullb{}".format(x) for x in range(self.null_block)]
         else:
             self.log.info("Configuring with NVMe drives.")
-            nvme_list = get_nvme_devices()
+            nvme_list = self.get_nvme_devices()
 
         self.kernel_tgt_gen_subsystem_conf(nvme_list)
         self.subsys_no = len(nvme_list)
