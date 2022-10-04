@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2020 Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
  *   All rights reserved.
  */
 
@@ -12,9 +13,24 @@
 #include "spdk/queue.h"
 #include "spdk/config.h"
 
+struct spdk_accel_module_if;
 struct spdk_accel_task;
 
 void spdk_accel_task_complete(struct spdk_accel_task *task, int status);
+
+/** Some reasonable key length used with strnlen() */
+#define SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH (256 + 1)
+
+struct spdk_accel_crypto_key {
+	void *priv;					/**< Module private data */
+	char *key;					/**< Key in binary form */
+	size_t key_size;				/**< Key size in bytes */
+	char *key2;					/**< Key2 in binary form */
+	size_t key2_size;				/**< Key2 size in bytes */
+	struct spdk_accel_module_if *module_if;			/**< Accel module the key belongs to */
+	struct spdk_accel_crypto_key_create_param param;	/**< User input parameters */
+	TAILQ_ENTRY(spdk_accel_crypto_key) link;
+};
 
 struct spdk_accel_task {
 	struct accel_io_channel		*accel_ch;
@@ -45,14 +61,19 @@ struct spdk_accel_task {
 		void				*dst2;
 		uint32_t			seed;
 		uint64_t			fill_pattern;
+		struct spdk_accel_crypto_key	*crypto_key;
 	};
 	union {
 		uint32_t		*crc_dst;
 		uint32_t		*output_size;
+		uint32_t		block_size; /* for crypto op */
 	};
 	enum accel_opcode		op_code;
 	uint64_t			nbytes;
-	uint64_t			nbytes_dst;
+	union {
+		uint64_t		nbytes_dst; /* for compress op */
+		uint64_t		iv; /* Initialization vector (tweak) for crypto op */
+	};
 	int				flags;
 	int				status;
 	TAILQ_ENTRY(spdk_accel_task)	link;
@@ -88,6 +109,13 @@ struct spdk_accel_module_if {
 	bool (*supports_opcode)(enum accel_opcode);
 	struct spdk_io_channel *(*get_io_channel)(void);
 	int (*submit_tasks)(struct spdk_io_channel *ch, struct spdk_accel_task *accel_task);
+
+	/**
+	 * Create crypto key function. Module is responsible to fill all necessary parameters in
+	 * \b spdk_accel_crypto_key structure
+	 */
+	int (*crypto_key_init)(struct spdk_accel_crypto_key *key);
+	void (*crypto_key_deinit)(struct spdk_accel_crypto_key *key);
 
 	TAILQ_ENTRY(spdk_accel_module_if)	tailq;
 };

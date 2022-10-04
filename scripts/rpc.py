@@ -2792,6 +2792,28 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-m', '--module', help='name of module')
     p.set_defaults(func=accel_assign_opc)
 
+    def accel_crypto_key_create(args):
+        print_dict(rpc.accel.accel_crypto_key_create(args.client,
+                                                     cipher=args.cipher,
+                                                     key=args.key,
+                                                     key2=args.key2,
+                                                     name=args.name))
+
+    p = subparsers.add_parser('accel_crypto_key_create', help='Create encryption key')
+    p.add_argument('-c', '--cipher', help='cipher', required=True, type=str)
+    p.add_argument('-k', '--key', help='key', required=True, type=str)
+    p.add_argument('-e', '--key2', help='key2', required=False, type=str)
+    p.add_argument('-n', '--name', help='key name', required=True, type=str)
+    p.set_defaults(func=accel_crypto_key_create)
+
+    def accel_crypto_keys_get(args):
+        print_dict(rpc.accel.accel_crypto_keys_get(args.client,
+                                                   key_name=args.key_name))
+
+    p = subparsers.add_parser('accel_crypto_keys_get', help='Get a list of the crypto keys')
+    p.add_argument('-k', '--key-name', help='Get information about a specific key', type=str)
+    p.set_defaults(func=accel_crypto_keys_get)
+
     # ioat
     def ioat_scan_accel_module(args):
         rpc.ioat.ioat_scan_accel_module(args.client)

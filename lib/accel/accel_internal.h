@@ -23,5 +23,8 @@ struct module_info {
 typedef void (*_accel_for_each_module_fn)(struct module_info *info);
 void _accel_for_each_module(struct module_info *info, _accel_for_each_module_fn fn);
 int _accel_get_opc_name(enum accel_opcode opcode, const char **opcode_name);
+void _accel_crypto_key_dump_param(struct spdk_json_write_ctx *w, struct spdk_accel_crypto_key *key);
+void _accel_crypto_keys_dump_param(struct spdk_json_write_ctx *w);
+
 
 #endif

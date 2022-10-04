@@ -1,11 +1,13 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2022 Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES
  *   All rights reserved.
  */
 
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/accel_module.h"
+#include "accel_internal.h"
 
 #include "spdk/env.h"
 #include "spdk/likely.h"
@@ -21,7 +23,16 @@
 
 #ifdef SPDK_CONFIG_ISAL
 #include "../isa-l/include/igzip_lib.h"
+#ifdef SPDK_CONFIG_ISAL_CRYPTO
+#include "../isa-l-crypto/include/aes_xts.h"
 #endif
+#endif
+
+#define ACCEL_AES_XTS_128_KEY_SIZE 16
+#define ACCEL_AES_XTS_256_KEY_SIZE 32
+#define ACCEL_AES_XTS "AES_XTS"
+/* Per the AES-XTS spec, the size of data unit cannot be bigger than 2^20 blocks, 128b each block */
+#define ACCEL_AES_XTS_MAX_BLOCK_SIZE (1 << 24)
 
 struct sw_accel_io_channel {
 	/* for ISAL */
@@ -32,6 +43,19 @@ struct sw_accel_io_channel {
 	struct spdk_poller		*completion_poller;
 	TAILQ_HEAD(, spdk_accel_task)	tasks_to_complete;
 };
+
+typedef void (*sw_accel_crypto_op)(uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
+				   const uint8_t *src, uint8_t *dst);
+
+struct sw_accel_crypto_key_data {
+	sw_accel_crypto_op encrypt;
+	sw_accel_crypto_op decrypt;
+};
+
+static struct spdk_accel_module_if g_sw_module;
+
+static void sw_accel_crypto_key_deinit(struct spdk_accel_crypto_key *_key);
+static int sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key);
 
 /* Post SW completions to a list and complete in a poller as we don't want to
  * complete them on the caller's stack as they'll likely submit another. */
@@ -68,6 +92,8 @@ sw_accel_supports_opcode(enum accel_opcode opc)
 	case ACCEL_OPC_COPY_CRC32C:
 	case ACCEL_OPC_COMPRESS:
 	case ACCEL_OPC_DECOMPRESS:
+	case ACCEL_OPC_ENCRYPT:
+	case ACCEL_OPC_DECRYPT:
 		return true;
 	default:
 		return false;
@@ -230,7 +256,7 @@ _sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *ac
 
 		rc = isal_deflate(&sw_ch->stream);
 		if (rc) {
-			SPDK_ERRLOG("isal_deflate retunred error %d.\n", rc);
+			SPDK_ERRLOG("isal_deflate returned error %d.\n", rc);
 		}
 
 		if (remaining > 0) {
@@ -290,7 +316,7 @@ _sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *
 
 		rc = isal_inflate(&sw_ch->state);
 		if (rc) {
-			SPDK_ERRLOG("isal_inflate retunred error %d.\n", rc);
+			SPDK_ERRLOG("isal_inflate returned error %d.\n", rc);
 		}
 
 	} while (sw_ch->state.block_state < ISAL_BLOCK_FINISH);
@@ -301,6 +327,127 @@ _sw_accel_decompress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *
 	SPDK_ERRLOG("ISAL option is required to use software decompression.\n");
 	return -EINVAL;
 #endif
+}
+
+static int
+_sw_accel_crypto_operation(struct spdk_accel_task *accel_task, struct spdk_accel_crypto_key *key,
+			   sw_accel_crypto_op op)
+{
+#ifdef SPDK_CONFIG_ISAL_CRYPTO
+	uint64_t iv[2];
+	size_t remaining_len;
+	uint64_t src_offset = 0, dst_offset = 0;
+	uint32_t src_iovpos = 0, dst_iovpos = 0, src_iovcnt, dst_iovcnt;
+	uint32_t block_size, crypto_len, crypto_accum_len = 0;
+	struct iovec *src_iov, *dst_iov;
+	uint8_t *src, *dst;
+
+	/* iv is 128 bits, since we are using logical block address (64 bits) as iv, fill first 8 bytes with zeroes */
+	iv[0] = 0;
+	iv[1] = accel_task->iv;
+	src_iov = accel_task->s.iovs;
+	src_iovcnt = accel_task->s.iovcnt;
+	if (accel_task->d.iovcnt) {
+		dst_iov = accel_task->d.iovs;
+		dst_iovcnt = accel_task->d.iovcnt;
+	} else {
+		/* inplace operation */
+		dst_iov = accel_task->s.iovs;
+		dst_iovcnt = accel_task->s.iovcnt;
+	}
+	block_size = accel_task->block_size;
+
+	if (!src_iovcnt || !dst_iovcnt || !block_size || !op) {
+		SPDK_ERRLOG("src_iovcnt %d, dst_iovcnt %d, block_size %d, op %p\n", src_iovcnt, dst_iovcnt,
+			    block_size, op);
+		return -EINVAL;
+	}
+
+	remaining_len = accel_task->nbytes;
+
+	while (remaining_len) {
+		crypto_len = spdk_min(block_size - crypto_accum_len, src_iov->iov_len - src_offset);
+		crypto_len = spdk_min(crypto_len, dst_iov->iov_len - dst_offset);
+		src = (uint8_t *)src_iov->iov_base + src_offset;
+		dst = (uint8_t *)dst_iov->iov_base + dst_offset;
+
+		op((uint8_t *)key->key2, (uint8_t *)key->key, (uint8_t *)iv, crypto_len, src, dst);
+
+		src_offset += crypto_len;
+		dst_offset += crypto_len;
+		crypto_accum_len += crypto_len;
+		remaining_len -= crypto_len;
+
+		if (crypto_accum_len == block_size) {
+			/* we can process part of logical block. Once the whole block is processed, increment iv */
+			crypto_accum_len = 0;
+			iv[1]++;
+		}
+		if (src_offset == src_iov->iov_len) {
+			src_iov++;
+			src_iovpos++;
+			src_offset = 0;
+		}
+		if (src_iovpos == src_iovcnt) {
+			break;
+		}
+		if (dst_offset == dst_iov->iov_len) {
+			dst_iov++;
+			dst_iovpos++;
+			dst_offset = 0;
+		}
+		if (dst_iovpos == dst_iovcnt) {
+			break;
+		}
+	}
+
+	if (remaining_len) {
+		SPDK_ERRLOG("remaining len %zu\n", remaining_len);
+		return -EINVAL;
+	}
+
+	return 0;
+#else
+	return -ENOTSUP;
+#endif
+}
+
+static int
+_sw_accel_encrypt(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+	struct spdk_accel_crypto_key *key;
+	struct sw_accel_crypto_key_data *key_data;
+
+	key = accel_task->crypto_key;
+	if (spdk_unlikely(key->module_if != &g_sw_module || !key->priv)) {
+		return -EINVAL;
+	}
+	if (spdk_unlikely(accel_task->block_size > ACCEL_AES_XTS_MAX_BLOCK_SIZE)) {
+		SPDK_WARNLOG("Max block size for AES_XTS is limited to %u, current size %u\n",
+			     ACCEL_AES_XTS_MAX_BLOCK_SIZE, accel_task->block_size);
+		return -ERANGE;
+	}
+	key_data = key->priv;
+	return _sw_accel_crypto_operation(accel_task, key, key_data->encrypt);
+}
+
+static int
+_sw_accel_decrypt(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *accel_task)
+{
+	struct spdk_accel_crypto_key *key;
+	struct sw_accel_crypto_key_data *key_data;
+
+	key = accel_task->crypto_key;
+	if (spdk_unlikely(key->module_if != &g_sw_module || !key->priv)) {
+		return -EINVAL;
+	}
+	if (spdk_unlikely(accel_task->block_size > ACCEL_AES_XTS_MAX_BLOCK_SIZE)) {
+		SPDK_WARNLOG("Max block size for AES_XTS is limited to %u, current size %u\n",
+			     ACCEL_AES_XTS_MAX_BLOCK_SIZE, accel_task->block_size);
+		return -ERANGE;
+	}
+	key_data = key->priv;
+	return _sw_accel_crypto_operation(accel_task, key, key_data->decrypt);
 }
 
 static int
@@ -359,6 +506,12 @@ sw_accel_submit_tasks(struct spdk_io_channel *ch, struct spdk_accel_task *accel_
 		case ACCEL_OPC_DECOMPRESS:
 			rc = _sw_accel_decompress(sw_ch, accel_task);
 			break;
+		case ACCEL_OPC_ENCRYPT:
+			rc = _sw_accel_encrypt(sw_ch, accel_task);
+			break;
+		case ACCEL_OPC_DECRYPT:
+			rc = _sw_accel_decrypt(sw_ch, accel_task);
+			break;
 		default:
 			assert(false);
 			break;
@@ -380,14 +533,16 @@ static void sw_accel_module_fini(void *ctxt);
 static size_t sw_accel_module_get_ctx_size(void);
 
 static struct spdk_accel_module_if g_sw_module = {
-	.module_init = sw_accel_module_init,
-	.module_fini = sw_accel_module_fini,
-	.write_config_json = NULL,
-	.get_ctx_size = sw_accel_module_get_ctx_size,
+	.module_init		= sw_accel_module_init,
+	.module_fini		= sw_accel_module_fini,
+	.write_config_json	= NULL,
+	.get_ctx_size		= sw_accel_module_get_ctx_size,
 	.name			= "software",
 	.supports_opcode	= sw_accel_supports_opcode,
 	.get_io_channel		= sw_accel_get_io_channel,
-	.submit_tasks		= sw_accel_submit_tasks
+	.submit_tasks		= sw_accel_submit_tasks,
+	.crypto_key_init	= sw_accel_crypto_key_init,
+	.crypto_key_deinit	= sw_accel_crypto_key_deinit,
 };
 
 static int
@@ -475,6 +630,76 @@ sw_accel_module_fini(void *ctxt)
 {
 	spdk_io_device_unregister(&g_sw_module, NULL);
 	spdk_accel_module_finish();
+}
+
+static int
+sw_accel_create_aes_xts(struct spdk_accel_crypto_key *key)
+{
+#ifdef SPDK_CONFIG_ISAL_CRYPTO
+	struct sw_accel_crypto_key_data *key_data;
+
+	if (!key->key || !key->key2) {
+		SPDK_ERRLOG("key or key2 are missing\n");
+		return -EINVAL;
+	}
+
+	if (!key->key_size || key->key_size != key->key2_size) {
+		SPDK_ERRLOG("key size %zu is not equal to key2 size %zu or is 0\n", key->key_size,
+			    key->key2_size);
+		return -EINVAL;
+	}
+
+	key_data = calloc(1, sizeof(*key_data));
+	if (!key_data) {
+		return -ENOMEM;
+	}
+
+	switch (key->key_size) {
+	case ACCEL_AES_XTS_128_KEY_SIZE:
+		key_data->encrypt = XTS_AES_128_enc;
+		key_data->decrypt = XTS_AES_128_dec;
+		break;
+	case ACCEL_AES_XTS_256_KEY_SIZE:
+		key_data->encrypt = XTS_AES_256_enc;
+		key_data->decrypt = XTS_AES_256_dec;
+		break;
+	default:
+		SPDK_ERRLOG("Incorrect key size  %zu, should be %d for AEX_XTS_128 or %d for AES_XTS_256\n",
+			    key->key_size, ACCEL_AES_XTS_128_KEY_SIZE, ACCEL_AES_XTS_256_KEY_SIZE);
+		free(key_data);
+		return -EINVAL;
+	}
+
+	key->priv = key_data;
+
+	return 0;
+#else
+	return -ENOTSUP;
+#endif
+}
+
+static int
+sw_accel_crypto_key_init(struct spdk_accel_crypto_key *key)
+{
+	if (!key || !key->param.cipher) {
+		return -EINVAL;
+	}
+	if (strcmp(key->param.cipher, ACCEL_AES_XTS) == 0) {
+		return sw_accel_create_aes_xts(key);
+	} else {
+		SPDK_ERRLOG("Only %s cipher is supported\n", ACCEL_AES_XTS);
+		return -EINVAL;
+	}
+}
+
+static void
+sw_accel_crypto_key_deinit(struct spdk_accel_crypto_key *key)
+{
+	if (!key || key->module_if != &g_sw_module || !key->priv) {
+		return;
+	}
+
+	free(key->priv);
 }
 
 SPDK_ACCEL_MODULE_REGISTER(sw, &g_sw_module)

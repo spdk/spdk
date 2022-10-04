@@ -24,6 +24,17 @@ DEFINE_STUB(spdk_memory_domain_create, int,
 	     struct spdk_memory_domain_ctx *ctx, const char *id), 0);
 DEFINE_STUB_V(spdk_memory_domain_destroy, (struct spdk_memory_domain *domain));
 
+#ifdef SPDK_CONFIG_ISAL
+DEFINE_STUB_V(XTS_AES_128_enc, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
+				const uint8_t *src, uint8_t *dst));
+DEFINE_STUB_V(XTS_AES_128_dec, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
+				const uint8_t *src, uint8_t *dst));
+DEFINE_STUB_V(XTS_AES_256_enc, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
+				const uint8_t *src, uint8_t *dst));
+DEFINE_STUB_V(XTS_AES_256_dec, (uint8_t *k2, uint8_t *k1, uint8_t *tweak, uint64_t lba_size,
+				const uint8_t *src, uint8_t *dst));
+#endif
+
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_accel_module_if g_module = {};
 struct spdk_io_channel *g_ch = NULL;

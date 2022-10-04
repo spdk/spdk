@@ -6,6 +6,8 @@
 
 New library isa-l-crypto has been added, it is used by accel library in crypto operations.
 
+New functions `spdk_accel_submit_encrypt` and `spdk_accel_submit_decrypt` were added.
+
 ### bdev
 
 Both of interleaved and separated metadata are now supported by the malloc bdev module.

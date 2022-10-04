@@ -15,6 +15,8 @@
 	spdk_accel_submit_copy_crc32cv;
 	spdk_accel_submit_compress;
 	spdk_accel_submit_decompress;
+	spdk_accel_submit_encrypt;
+	spdk_accel_submit_decrypt;
 	spdk_accel_get_opc_module_name;
 	spdk_accel_assign_opc;
 	spdk_accel_write_config_json;
@@ -26,6 +28,9 @@
 	spdk_accel_sequence_reverse;
 	spdk_accel_get_buf;
 	spdk_accel_put_buf;
+	spdk_accel_crypto_key_create;
+	spdk_accel_crypto_key_destroy;
+	spdk_accel_crypto_key_get;
 
 	# functions needed by modules
 	spdk_accel_module_list_add;

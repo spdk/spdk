@@ -5,12 +5,14 @@
  */
 
 #include "accel_internal.h"
+#include "spdk_internal/accel_module.h"
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/event.h"
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 static void
 rpc_accel_get_opc_assignments(struct spdk_jsonrpc_request *request,
@@ -171,3 +173,102 @@ cleanup:
 
 }
 SPDK_RPC_REGISTER("accel_assign_opc", rpc_accel_assign_opc, SPDK_RPC_STARTUP)
+
+struct rpc_accel_crypto_key_create {
+	struct spdk_accel_crypto_key_create_param param;
+};
+
+static const struct spdk_json_object_decoder rpc_accel_dek_create_decoders[] = {
+	{"cipher", offsetof(struct rpc_accel_crypto_key_create, param.cipher), spdk_json_decode_string},
+	{"key", offsetof(struct rpc_accel_crypto_key_create, param.hex_key),   spdk_json_decode_string},
+	{"key2", offsetof(struct rpc_accel_crypto_key_create, param.hex_key2), spdk_json_decode_string, true},
+	{"name", offsetof(struct rpc_accel_crypto_key_create, param.key_name), spdk_json_decode_string},
+};
+
+static void
+rpc_accel_crypto_key_create(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_accel_crypto_key_create req = {};
+	size_t key_size;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_accel_dek_create_decoders,
+				    SPDK_COUNTOF(rpc_accel_dek_create_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "spdk_json_decode_object failed");
+		goto cleanup;
+	}
+
+	rc = spdk_accel_crypto_key_create(&req.param);
+	if (rc) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "failed to create DEK, rc %d", rc);
+	} else {
+		spdk_jsonrpc_send_bool_response(request, true);
+	}
+
+cleanup:
+	free(req.param.cipher);
+	if (req.param.hex_key) {
+		key_size = strnlen(req.param.hex_key, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH);
+		spdk_memset_s(req.param.hex_key, key_size, 0, key_size);
+		free(req.param.hex_key);
+	}
+	if (req.param.hex_key2) {
+		key_size = strnlen(req.param.hex_key2, SPDK_ACCEL_CRYPTO_KEY_MAX_HEX_LENGTH);
+		spdk_memset_s(req.param.hex_key2, key_size, 0, key_size);
+		free(req.param.hex_key2);
+	}
+	free(req.param.key_name);
+}
+SPDK_RPC_REGISTER("accel_crypto_key_create", rpc_accel_crypto_key_create, SPDK_RPC_RUNTIME)
+
+struct rpc_accel_crypto_keys_get_ctx {
+	char *key_name;
+};
+
+static const struct spdk_json_object_decoder rpc_accel_crypto_keys_get_decoders[] = {
+	{"key_name", offsetof(struct rpc_accel_crypto_keys_get_ctx, key_name), spdk_json_decode_string, true},
+};
+
+static void
+rpc_accel_crypto_keys_get(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_accel_crypto_keys_get_ctx req = {};
+	struct spdk_accel_crypto_key *key = NULL;
+	struct spdk_json_write_ctx *w;
+
+	if (params && spdk_json_decode_object(params, rpc_accel_crypto_keys_get_decoders,
+					      SPDK_COUNTOF(rpc_accel_crypto_keys_get_decoders),
+					      &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "spdk_json_decode_object failed");
+		free(req.key_name);
+		return;
+	}
+
+	if (req.key_name) {
+		key = spdk_accel_crypto_key_get(req.key_name);
+		free(req.key_name);
+		if (!key) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "key was not found\n");
+			return;
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_array_begin(w);
+
+	if (key) {
+		_accel_crypto_key_dump_param(w, key);
+	} else {
+		_accel_crypto_keys_dump_param(w);
+	}
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("accel_crypto_keys_get", rpc_accel_crypto_keys_get, SPDK_RPC_RUNTIME)

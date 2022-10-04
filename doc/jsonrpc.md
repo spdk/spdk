@@ -442,6 +442,8 @@ Example response:
     "framework_monitor_context_switch",
     "spdk_kill_instance",
     "accel_get_opc_assignments",
+    "accel_crypto_key_create",
+    "accel_crypto_keys_get",
     "ioat_scan_accel_module",
     "dsa_scan_accel_module",
     "bdev_virtio_attach_controller",
@@ -1773,6 +1775,92 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+### accel_crypto_key_create {#rpc_accel_crypto_key_create}
+
+Create a crypt key which will be used in accel framework
+
+#### Parameters
+
+Name       | Optional | Type        | Description
+-----------|----------| ----------- | -----------------
+cipher     | Required | string      | crypto cipher to use
+key        | Required | string      | Key in **hex** form
+key2       | Optional | string      | Optional 2nd part of the key or a tweak in **hex** form
+name       | Required | string      | The key name
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_crypto_key_create",
+  "id": 1,
+  "params": {
+    "cipher": "AES_XTS",
+    "key": "00112233445566778899001122334455",
+    "key2": "00112233445566778899001122334455",
+    "name": "super_key"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### accel_crypto_keys_get {#rpc_accel_crypto_keys_get}
+
+Get information about existing crypto keys
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- |----------| ----------- | -----------------
+key_name                | Optional | string      | If specified, return info about a specific key
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "accel_crypto_keys_get",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "test_dek",
+      "cipher": "AES_XTS",
+      "key": "00112233445566778899001122334455",
+      "key2": "11223344556677889900112233445500"
+    },
+    {
+      "name": "test_dek2",
+      "cipher": "AES_XTS",
+      "key": "11223344556677889900112233445500",
+      "key2": "22334455667788990011223344550011"
+    }
+  ]
 }
 ~~~
 
