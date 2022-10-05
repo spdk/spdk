@@ -551,12 +551,7 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 	CU_ASSERT(qpair == &rqpair->qpair);
 	CU_ASSERT(rqpair->num_entries == qsize - 1);
 	CU_ASSERT(rqpair->delay_cmd_submit == false);
-	CU_ASSERT(rqpair->rsp_sgls != NULL);
-	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair->rsps != NULL);
 
-	nvme_rdma_free_reqs(rqpair);
-	nvme_rdma_free_rsps(rqpair);
 	spdk_free(rqpair);
 	rqpair = NULL;
 
@@ -568,12 +563,7 @@ test_nvme_rdma_ctrlr_create_qpair(void)
 	CU_ASSERT(qpair != NULL);
 	rqpair = SPDK_CONTAINEROF(qpair, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(rqpair->num_entries == qsize - 1);
-	CU_ASSERT(rqpair->rsp_sgls != NULL);
-	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair->rsps != NULL);
 
-	nvme_rdma_free_reqs(rqpair);
-	nvme_rdma_free_rsps(rqpair);
 	spdk_free(rqpair);
 	rqpair = NULL;
 
@@ -773,9 +763,6 @@ test_nvme_rdma_ctrlr_construct(void)
 	rqpair = SPDK_CONTAINEROF(ctrlr->adminq, struct nvme_rdma_qpair, qpair);
 	CU_ASSERT(rqpair->num_entries == opts.admin_queue_size - 1);
 	CU_ASSERT(rqpair->delay_cmd_submit == false);
-	CU_ASSERT(rqpair->rsp_sgls != NULL);
-	CU_ASSERT(rqpair->rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair->rsps != NULL);
 	MOCK_CLEAR(rdma_create_event_channel);
 
 	/* Hardcode the trtype, because nvme_qpair_init() is stub function. */
