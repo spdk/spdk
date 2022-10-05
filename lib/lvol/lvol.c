@@ -178,7 +178,10 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto invalid;
 	}
 
-	lvol->blob = blob;
+	/*
+	 * Do not store a reference to blob now because spdk_bs_iter_next() will close it.
+	 * Storing blob_id for future lookups is fine.
+	 */
 	lvol->blob_id = blob_id;
 	lvol->lvol_store = lvs;
 	lvol->thin_provision = spdk_blob_is_thin_provisioned(blob);
