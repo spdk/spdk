@@ -203,8 +203,13 @@ _sw_accel_compress(struct sw_accel_io_channel *sw_ch, struct spdk_accel_task *ac
 				assert(sw_ch->stream.avail_out > 0);
 			} else {
 				/* we have no avail_out but also no more iovecs left so this is
-				 * the case where the output buffer was a perfect fit for the
-				 * compressed data and we're done. */
+				* the case where either the output buffer was a perfect fit
+				* or not enough was provided.  Check the ISAL state to determine
+				* which. */
+				if (sw_ch->stream.internal_state.state != ZSTATE_END) {
+					SPDK_ERRLOG("Not enough destination buffer provided.\n");
+					rc = -ENOMEM;
+				}
 				break;
 			}
 		}
