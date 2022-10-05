@@ -897,11 +897,6 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 
 	rqpair->current_num_recvs = rqpair->num_entries;
 
-	rc = nvme_rdma_qpair_submit_recvs(rqpair);
-	if (rc) {
-		return rc;
-	}
-
 	return 0;
 }
 
@@ -1108,6 +1103,14 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 		return -1;
 	}
 	SPDK_DEBUGLOG(nvme, "RDMA responses registered\n");
+
+	ret = nvme_rdma_qpair_submit_recvs(rqpair);
+	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
+	if (ret) {
+		SPDK_ERRLOG("Unable to submit rqpair RDMA responses\n");
+		return -1;
+	}
+	SPDK_DEBUGLOG(nvme, "RDMA responses submitted\n");
 
 	rqpair->state = NVME_RDMA_QPAIR_STATE_FABRIC_CONNECT_SEND;
 
