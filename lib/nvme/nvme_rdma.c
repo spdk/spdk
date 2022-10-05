@@ -814,7 +814,7 @@ nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 
 /* Append the given send wr structure to the qpair's outstanding sends list. */
 /* This function accepts only a single wr. */
-static inline int
+static inline void
 nvme_rdma_qpair_queue_send_wr(struct nvme_rdma_qpair *rqpair, struct ibv_send_wr *wr)
 {
 	assert(wr->next == NULL);
@@ -823,17 +823,11 @@ nvme_rdma_qpair_queue_send_wr(struct nvme_rdma_qpair *rqpair, struct ibv_send_wr
 
 	rqpair->current_num_sends++;
 	spdk_rdma_qp_queue_send_wrs(rqpair->rdma_qp, wr);
-
-	if (!rqpair->delay_cmd_submit) {
-		return nvme_rdma_qpair_submit_sends(rqpair);
-	}
-
-	return 0;
 }
 
 /* Append the given recv wr structure to the qpair's outstanding recvs list. */
 /* This function accepts only a single wr. */
-static inline int
+static inline void
 nvme_rdma_qpair_queue_recv_wr(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr *wr)
 {
 	assert(wr->next == NULL);
@@ -841,12 +835,6 @@ nvme_rdma_qpair_queue_recv_wr(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr
 
 	rqpair->current_num_recvs++;
 	spdk_rdma_qp_queue_recv_wrs(rqpair->rdma_qp, wr);
-
-	if (!rqpair->delay_cmd_submit) {
-		return nvme_rdma_qpair_submit_recvs(rqpair);
-	}
-
-	return 0;
 }
 
 #define nvme_rdma_trace_ibv_sge(sg_list) \
@@ -855,12 +843,12 @@ nvme_rdma_qpair_queue_recv_wr(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr
 			      (void *)(sg_list)->addr, (sg_list)->length, (sg_list)->lkey); \
 	}
 
-static int
+static inline void
 nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, struct ibv_recv_wr *wr)
 {
 	wr->next = NULL;
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
-	return nvme_rdma_qpair_queue_recv_wr(rqpair, wr);
+	nvme_rdma_qpair_queue_recv_wr(rqpair, wr);
 }
 
 static void
@@ -935,10 +923,7 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 		recv_wr->sg_list = rsp_sgl;
 		recv_wr->num_sge = 1;
 
-		rc = nvme_rdma_post_recv(rqpair, recv_wr);
-		if (rc) {
-			return rc;
-		}
+		nvme_rdma_post_recv(rqpair, recv_wr);
 	}
 
 	rc = nvme_rdma_qpair_submit_recvs(rqpair);
@@ -2295,7 +2280,13 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	wr = &rdma_req->send_wr;
 	wr->next = NULL;
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
-	return nvme_rdma_qpair_queue_send_wr(rqpair, wr);
+	nvme_rdma_qpair_queue_send_wr(rqpair, wr);
+
+	if (!rqpair->delay_cmd_submit) {
+		return nvme_rdma_qpair_submit_sends(rqpair);
+	}
+
+	return 0;
 }
 
 static int
@@ -2370,13 +2361,13 @@ nvme_rdma_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
-static inline int
+static inline void
 nvme_rdma_request_ready(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct spdk_nvme_rdma_rsp *rdma_rsp = rdma_req->rdma_rsp;
 
 	nvme_rdma_req_complete(rdma_req, &rdma_rsp->cpl, true);
-	return nvme_rdma_post_recv(rqpair, rdma_rsp->recv_wr);
+	nvme_rdma_post_recv(rqpair, rdma_rsp->recv_wr);
 }
 
 #define MAX_COMPLETIONS_PER_POLL 128
@@ -2467,11 +2458,16 @@ nvme_rdma_process_recv_completion(struct ibv_wc *wc, struct nvme_rdma_wr *rdma_w
 		return 0;
 	}
 
-	if (spdk_unlikely(nvme_rdma_request_ready(rqpair, rdma_req))) {
-		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
-		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
-		return -ENXIO;
+	nvme_rdma_request_ready(rqpair, rdma_req);
+
+	if (!rqpair->delay_cmd_submit) {
+		if (spdk_unlikely(nvme_rdma_qpair_submit_recvs(rqpair))) {
+			SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+			nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+			return -ENXIO;
+		}
 	}
+
 	rqpair->num_completions++;
 	return 1;
 }
@@ -2521,11 +2517,16 @@ nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
 		return 0;
 	}
 
-	if (spdk_unlikely(nvme_rdma_request_ready(rqpair, rdma_req))) {
-		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
-		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
-		return -ENXIO;
+	nvme_rdma_request_ready(rqpair, rdma_req);
+
+	if (!rqpair->delay_cmd_submit) {
+		if (spdk_unlikely(nvme_rdma_qpair_submit_recvs(rqpair))) {
+			SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+			nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+			return -ENXIO;
+		}
 	}
+
 	rqpair->num_completions++;
 	return 1;
 }
