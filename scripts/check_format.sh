@@ -4,7 +4,7 @@ if [[ $(uname -s) == Darwin ]]; then
 	# SPDK is not supported on MacOS, but as a developer
 	# convenience we support running the check_format.sh
 	# script on MacOS.
-	# Running "brew install bash greadlink ggrep" should be
+	# Running "brew install bash coreutils grep" should be
 	# sufficient to get the correct versions of these utilities.
 	if [[ $(type -t mapfile) != builtin ]]; then
 		# We need bash version >= 4.0 for mapfile builtin
