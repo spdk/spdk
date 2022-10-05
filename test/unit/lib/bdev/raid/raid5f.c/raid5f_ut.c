@@ -6,15 +6,26 @@
 #include "spdk/stdinc.h"
 #include "spdk_cunit.h"
 #include "spdk/env.h"
+#include "spdk/xor.h"
 
 #include "common/lib/ut_multithread.c"
 
 #include "bdev/raid/raid5f.c"
 #include "../common.c"
 
+static void *g_accel_p = (void *)0xdeadbeaf;
+
 DEFINE_STUB_V(raid_bdev_module_list_add, (struct raid_bdev_module *raid_module));
 DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB_V(raid_bdev_module_stop_done, (struct raid_bdev *raid_bdev));
+DEFINE_STUB(accel_channel_create, int, (void *io_device, void *ctx_buf), 0);
+DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
+
+struct spdk_io_channel *
+spdk_accel_get_io_channel(void)
+{
+	return spdk_get_io_channel(g_accel_p);
+}
 
 void *
 spdk_bdev_io_get_md_buf(struct spdk_bdev_io *bdev_io)
@@ -26,6 +37,38 @@ uint32_t
 spdk_bdev_get_md_size(const struct spdk_bdev *bdev)
 {
 	return bdev->md_len;
+}
+
+struct xor_ctx {
+	spdk_accel_completion_cb cb_fn;
+	void *cb_arg;
+};
+
+static void
+finish_xor(void *_ctx)
+{
+	struct xor_ctx *ctx = _ctx;
+
+	ctx->cb_fn(ctx->cb_arg, 0);
+
+	free(ctx);
+}
+
+int
+spdk_accel_submit_xor(struct spdk_io_channel *ch, void *dst, void **sources, uint32_t nsrcs,
+		      uint64_t nbytes, spdk_accel_completion_cb cb_fn, void *cb_arg)
+{
+	struct xor_ctx *ctx;
+
+	ctx = malloc(sizeof(*ctx));
+	SPDK_CU_ASSERT_FATAL(ctx != NULL);
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	SPDK_CU_ASSERT_FATAL(spdk_xor_gen(dst, sources, nsrcs, nbytes) == 0);
+
+	spdk_thread_send_msg(spdk_get_thread(), finish_xor, ctx);
+
+	return 0;
 }
 
 void
@@ -55,6 +98,19 @@ raid_bdev_io_complete_part(struct raid_bdev_io *raid_io, uint64_t completed,
 	} else {
 		return false;
 	}
+}
+
+static void
+init_accel(void)
+{
+	spdk_io_device_register(g_accel_p, accel_channel_create, accel_channel_destroy,
+				sizeof(int), "accel_p");
+}
+
+static void
+fini_accel(void)
+{
+	spdk_io_device_unregister(g_accel_p, NULL);
 }
 
 static int
@@ -105,12 +161,15 @@ test_setup(void)
 		}
 	}
 
+	init_accel();
+
 	return 0;
 }
 
 static int
 test_cleanup(void)
 {
+	fini_accel();
 	raid_test_params_free();
 	return 0;
 }
@@ -515,6 +574,8 @@ test_raid5f_write_request(struct raid_io_info *io_info)
 	raid_io = get_raid_io(io_info, 0, io_info->num_blocks);
 
 	raid5f_submit_rw_request(raid_io);
+
+	poll_threads();
 
 	process_io_completions(io_info);
 
