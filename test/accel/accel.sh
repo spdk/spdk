@@ -18,6 +18,8 @@ run_test "accel_copy_crc32c" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w copy_crc32c -y
 run_test "accel_copy_crc32c_C2" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w copy_crc32c -y -C 2
 run_test "accel_dualcast" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w dualcast -y
 run_test "accel_compare" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compare -y
+run_test "accel_xor" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w xor -y
+run_test "accel_xor" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w xor -y -x 3
 # do not run compress/decompress unless ISAL is installed
 if [[ $CONFIG_ISAL == y ]]; then
 	run_test "accel_comp" $SPDK_EXAMPLE_DIR/accel_perf -t 1 -w compress -l $testdir/bib

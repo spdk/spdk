@@ -12,6 +12,7 @@
 #include "spdk/accel.h"
 #include "spdk/crc32.h"
 #include "spdk/util.h"
+#include "spdk/xor.h"
 
 #define DATA_PATTERN 0x5a
 #define ALIGN_4K 0x1000
@@ -32,6 +33,7 @@ static uint32_t g_crc32c_seed = 0;
 static uint32_t g_chained_count = 1;
 static int g_fail_percent_goal = 0;
 static uint8_t g_fill_pattern = 255;
+static uint32_t g_xor_src_count = 2;
 static bool g_verify = false;
 static const char *g_workload_type = NULL;
 static enum accel_opcode g_workload_selection;
@@ -70,6 +72,7 @@ struct ap_task {
 	void			*src;
 	struct iovec		*src_iovs;
 	uint32_t		src_iovcnt;
+	void			**sources;
 	struct iovec		*dst_iovs;
 	uint32_t		dst_iovcnt;
 	void			*dst;
@@ -121,6 +124,8 @@ dump_user_config(void)
 		printf("Fill pattern:   0x%x\n", g_fill_pattern);
 	} else if ((g_workload_selection == ACCEL_OPC_COMPARE) && g_fail_percent_goal > 0) {
 		printf("Failure inject: %u percent\n", g_fail_percent_goal);
+	} else if (g_workload_selection == ACCEL_OPC_XOR) {
+		printf("Source buffers: %u\n", g_xor_src_count);
 	}
 	if (g_workload_selection == ACCEL_OPC_COPY_CRC32C) {
 		printf("Vector size:    %u bytes\n", g_xfer_size_bytes);
@@ -151,11 +156,12 @@ usage(void)
 	printf("\t[-n number of channels]\n");
 	printf("\t[-o transfer size in bytes (default: 4KiB. For compress/decompress, 0 means the input file size)]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast\n");
+	printf("\t[-w workload type must be one of these: copy, fill, crc32c, copy_crc32c, compare, compress, decompress, dualcast, xor\n");
 	printf("\t[-l for compress/decompress workloads, name of uncompressed input file\n");
 	printf("\t[-s for crc32c workload, use this seed value (default 0)\n");
 	printf("\t[-P for compare workload, percentage of operations that should miscompare (percent, default 0)\n");
 	printf("\t[-f for fill workload, use this BYTE value (default 255)\n");
+	printf("\t[-x for xor workload, use this number of source buffers (default, minimum: 2)]\n");
 	printf("\t[-y verify result if this switch is on]\n");
 	printf("\t[-a tasks to allocate per core (default: same value as -q)]\n");
 	printf("\t\tCan be used to spread operations across a wider range of memory.\n");
@@ -176,6 +182,7 @@ parse_args(int argc, char *argv)
 	case 'q':
 	case 's':
 	case 't':
+	case 'x':
 		argval = spdk_strtol(optarg, 10);
 		if (argval < 0) {
 			fprintf(stderr, "-%c option must be non-negative.\n", argc);
@@ -218,6 +225,9 @@ parse_args(int argc, char *argv)
 	case 't':
 		g_time_in_sec = argval;
 		break;
+	case 'x':
+		g_xor_src_count = argval;
+		break;
 	case 'y':
 		g_verify = true;
 		break;
@@ -239,6 +249,8 @@ parse_args(int argc, char *argv)
 			g_workload_selection = ACCEL_OPC_COMPRESS;
 		} else if (!strcmp(g_workload_type, "decompress")) {
 			g_workload_selection = ACCEL_OPC_DECOMPRESS;
+		} else if (!strcmp(g_workload_type, "xor")) {
+			g_workload_selection = ACCEL_OPC_XOR;
 		} else {
 			usage();
 			return 1;
@@ -356,7 +368,20 @@ _get_task_data_bufs(struct ap_task *task)
 			memset(task->src_iovs[i].iov_base, DATA_PATTERN, g_xfer_size_bytes);
 			task->src_iovs[i].iov_len = g_xfer_size_bytes;
 		}
+	} else if (g_workload_selection == ACCEL_OPC_XOR) {
+		assert(g_xor_src_count > 1);
+		task->sources = calloc(g_xor_src_count, sizeof(*task->sources));
+		if (!task->sources) {
+			return -ENOMEM;
+		}
 
+		for (i = 0; i < g_xor_src_count; i++) {
+			task->sources[i] = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
+			if (!task->sources[i]) {
+				return -ENOMEM;
+			}
+			memset(task->sources[i], DATA_PATTERN, g_xfer_size_bytes);
+		}
 	} else {
 		task->src = spdk_dma_zmalloc(g_xfer_size_bytes, 0, NULL);
 		if (task->src == NULL) {
@@ -388,7 +413,8 @@ _get_task_data_bufs(struct ap_task *task)
 	}
 
 	/* For dualcast 2 buffers are needed for the operation.  */
-	if (g_workload_selection == ACCEL_OPC_DUALCAST) {
+	if (g_workload_selection == ACCEL_OPC_DUALCAST ||
+	    (g_workload_selection == ACCEL_OPC_XOR && g_verify)) {
 		task->dst2 = spdk_dma_zmalloc(g_xfer_size_bytes, align, NULL);
 		if (task->dst2 == NULL) {
 			fprintf(stderr, "Unable to alloc dst buffer\n");
@@ -474,6 +500,10 @@ _submit_single(struct worker_thread *worker, struct ap_task *task)
 		rc = spdk_accel_submit_decompress(worker->ch, task->dst_iovs, task->dst_iovcnt, task->src_iovs,
 						  task->src_iovcnt, NULL, flags, accel_done, task);
 		break;
+	case ACCEL_OPC_XOR:
+		rc = spdk_accel_submit_xor(worker->ch, task->dst, task->sources, g_xor_src_count,
+					   g_xfer_size_bytes, accel_done, task);
+		break;
 	default:
 		assert(false);
 		break;
@@ -503,12 +533,19 @@ _free_task_buffers(struct ap_task *task)
 			}
 			free(task->src_iovs);
 		}
+	} else if (g_workload_selection == ACCEL_OPC_XOR) {
+		if (task->sources) {
+			for (i = 0; i < g_xor_src_count; i++) {
+				spdk_dma_free(task->sources[i]);
+			}
+			free(task->sources);
+		}
 	} else {
 		spdk_dma_free(task->src);
 	}
 
 	spdk_dma_free(task->dst);
-	if (g_workload_selection == ACCEL_OPC_DUALCAST) {
+	if (g_workload_selection == ACCEL_OPC_DUALCAST || g_workload_selection == ACCEL_OPC_XOR) {
 		spdk_dma_free(task->dst2);
 	}
 }
@@ -596,6 +633,15 @@ accel_done(void *arg1, int status)
 		case ACCEL_OPC_DECOMPRESS:
 			if (memcmp(task->dst, task->cur_seg->uncompressed_data, task->cur_seg->uncompressed_len)) {
 				SPDK_NOTICELOG("Data miscompare on decompression\n");
+				worker->xfer_failed++;
+			}
+			break;
+		case ACCEL_OPC_XOR:
+			if (spdk_xor_gen(task->dst2, task->sources, g_xor_src_count,
+					 g_xfer_size_bytes) != 0) {
+				SPDK_ERRLOG("Failed to generate xor for verification\n");
+			} else if (memcmp(task->dst, task->dst2, g_xfer_size_bytes)) {
+				SPDK_NOTICELOG("Data miscompare\n");
 				worker->xfer_failed++;
 			}
 			break;
@@ -1077,7 +1123,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&g_opts, sizeof(g_opts));
 	g_opts.name = "accel_perf";
 	g_opts.reactor_mask = "0x1";
-	if (spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:", NULL, parse_args,
+	if (spdk_app_parse_args(argc, argv, &g_opts, "a:C:o:q:t:yw:P:f:T:l:x:", NULL, parse_args,
 				usage) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 		g_rc = -1;
 		goto cleanup;
@@ -1090,7 +1136,8 @@ main(int argc, char **argv)
 	    (g_workload_selection != ACCEL_OPC_COMPARE) &&
 	    (g_workload_selection != ACCEL_OPC_COMPRESS) &&
 	    (g_workload_selection != ACCEL_OPC_DECOMPRESS) &&
-	    (g_workload_selection != ACCEL_OPC_DUALCAST)) {
+	    (g_workload_selection != ACCEL_OPC_DUALCAST) &&
+	    (g_workload_selection != ACCEL_OPC_XOR)) {
 		usage();
 		g_rc = -1;
 		goto cleanup;
@@ -1109,6 +1156,12 @@ main(int argc, char **argv)
 
 	if ((g_workload_selection == ACCEL_OPC_CRC32C || g_workload_selection == ACCEL_OPC_COPY_CRC32C) &&
 	    g_chained_count == 0) {
+		usage();
+		g_rc = -1;
+		goto cleanup;
+	}
+
+	if (g_workload_selection == ACCEL_OPC_XOR && g_xor_src_count < 2) {
 		usage();
 		g_rc = -1;
 		goto cleanup;
