@@ -510,31 +510,33 @@ test_nvme_rdma_create_reqs(void)
 static void
 test_nvme_rdma_create_rsps(void)
 {
-	struct nvme_rdma_qpair rqpair = {};
-	int rc;
+	struct nvme_rdma_rsp_opts opts = {};
+	struct nvme_rdma_rsps *rsps;
+	struct spdk_rdma_qp *rdma_qp = (struct spdk_rdma_qp *)0xfeedf00d;
+	struct nvme_rdma_qpair rqpair = { .rdma_qp = rdma_qp, };
 
 	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
 
+	opts.rqpair = &rqpair;
+
 	/* Test case 1 calloc false */
-	rqpair.num_entries = 0;
-	rc = nvme_rdma_create_rsps(&rqpair);
-	CU_ASSERT(rqpair.rsp_sgls == NULL);
-	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
+	opts.num_entries = 0;
+	rsps = nvme_rdma_create_rsps(&opts);
+	SPDK_CU_ASSERT_FATAL(rsps == NULL);
 
 	/* Test case 2 calloc success */
-	memset(&rqpair, 0, sizeof(rqpair));
-	rqpair.num_entries = 1;
+	opts.num_entries = 1;
 
-	rc = nvme_rdma_create_rsps(&rqpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.rsp_sgls != NULL);
-	CU_ASSERT(rqpair.rsp_recv_wrs != NULL);
-	CU_ASSERT(rqpair.rsps != NULL);
-	CU_ASSERT(rqpair.rsp_sgls[0].lkey == g_rdma_mr.lkey);
-	CU_ASSERT(rqpair.rsp_sgls[0].addr == (uint64_t)&rqpair.rsps[0]);
-	CU_ASSERT(rqpair.rsp_recv_wrs[0].wr_id == (uint64_t)&rqpair.rsps[0].rdma_wr);
+	rsps = nvme_rdma_create_rsps(&opts);
+	SPDK_CU_ASSERT_FATAL(rsps != NULL);
+	CU_ASSERT(rsps->rsp_sgls != NULL);
+	CU_ASSERT(rsps->rsp_recv_wrs != NULL);
+	CU_ASSERT(rsps->rsps != NULL);
+	CU_ASSERT(rsps->rsp_sgls[0].lkey == g_rdma_mr.lkey);
+	CU_ASSERT(rsps->rsp_sgls[0].addr == (uint64_t)&rsps->rsps[0]);
+	CU_ASSERT(rsps->rsp_recv_wrs[0].wr_id == (uint64_t)&rsps->rsps[0].rdma_wr);
 
-	nvme_rdma_free_rsps(&rqpair);
+	nvme_rdma_free_rsps(rsps);
 }
 
 static void
@@ -1004,7 +1006,6 @@ test_nvme_rdma_qpair_init(void)
 	CU_ASSERT(rqpair.max_send_sge == NVME_RDMA_DEFAULT_TX_SGE);
 	CU_ASSERT(rqpair.max_recv_sge == NVME_RDMA_DEFAULT_RX_SGE);
 	CU_ASSERT(rqpair.current_num_sends == 0);
-	CU_ASSERT(rqpair.current_num_recvs == 0);
 	CU_ASSERT(rqpair.cq == (struct ibv_cq *)0xFEEDBEEF);
 	CU_ASSERT(rqpair.memory_domain != NULL);
 
