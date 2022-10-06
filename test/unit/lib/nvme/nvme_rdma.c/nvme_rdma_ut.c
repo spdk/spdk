@@ -449,7 +449,7 @@ test_nvme_rdma_build_contig_inline_request(void)
 }
 
 static void
-test_nvme_rdma_alloc_reqs(void)
+test_nvme_rdma_create_reqs(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
 	int rc;
@@ -459,7 +459,7 @@ test_nvme_rdma_alloc_reqs(void)
 	/* Test case 1: zero entry. Expect: FAIL */
 	rqpair.num_entries = 0;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rqpair.rdma_reqs == NULL);
 	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
 
@@ -467,8 +467,9 @@ test_nvme_rdma_alloc_reqs(void)
 	memset(&rqpair, 0, sizeof(rqpair));
 	rqpair.num_entries = 1;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == g_rdma_mr.lkey);
 	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].addr
 		  == (uint64_t)&rqpair.cmds[0]);
 	CU_ASSERT(rqpair.rdma_reqs[0].send_wr.wr_id
@@ -486,9 +487,10 @@ test_nvme_rdma_alloc_reqs(void)
 	memset(&rqpair, 0, sizeof(rqpair));
 	rqpair.num_entries = 5;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
 	for (int i = 0; i < 5; i++) {
+		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].lkey == g_rdma_mr.lkey);
 		CU_ASSERT(rqpair.rdma_reqs[i].send_sgl[0].addr
 			  == (uint64_t)&rqpair.cmds[i]);
 		CU_ASSERT(rqpair.rdma_reqs[i].send_wr.wr_id
@@ -506,7 +508,7 @@ test_nvme_rdma_alloc_reqs(void)
 }
 
 static void
-test_nvme_rdma_alloc_rsps(void)
+test_nvme_rdma_create_rsps(void)
 {
 	struct nvme_rdma_qpair rqpair = {};
 	int rc;
@@ -515,7 +517,7 @@ test_nvme_rdma_alloc_rsps(void)
 
 	/* Test case 1 calloc false */
 	rqpair.num_entries = 0;
-	rc = nvme_rdma_alloc_rsps(&rqpair);
+	rc = nvme_rdma_create_rsps(&rqpair);
 	CU_ASSERT(rqpair.rsp_sgls == NULL);
 	SPDK_CU_ASSERT_FATAL(rc == -ENOMEM);
 
@@ -523,11 +525,15 @@ test_nvme_rdma_alloc_rsps(void)
 	memset(&rqpair, 0, sizeof(rqpair));
 	rqpair.num_entries = 1;
 
-	rc = nvme_rdma_alloc_rsps(&rqpair);
+	rc = nvme_rdma_create_rsps(&rqpair);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rqpair.rsp_sgls != NULL);
 	CU_ASSERT(rqpair.rsp_recv_wrs != NULL);
 	CU_ASSERT(rqpair.rsps != NULL);
+	CU_ASSERT(rqpair.rsp_sgls[0].lkey == g_rdma_mr.lkey);
+	CU_ASSERT(rqpair.rsp_sgls[0].addr == (uint64_t)&rqpair.rsps[0]);
+	CU_ASSERT(rqpair.rsp_recv_wrs[0].wr_id == (uint64_t)&rqpair.rsps[0].rdma_wr);
+
 	nvme_rdma_free_rsps(&rqpair);
 }
 
@@ -957,39 +963,6 @@ test_nvme_rdma_validate_cm_event(void)
 }
 
 static void
-test_nvme_rdma_register_and_unregister_reqs(void)
-{
-	struct nvme_rdma_qpair rqpair = {};
-	struct spdk_nvmf_cmd cmds = {};
-	struct ibv_qp qp = {};
-	struct spdk_rdma_qp rdma_qp = {};
-	struct rdma_cm_id cm_id = {};
-	struct spdk_nvme_rdma_req rdma_reqs[50] = {};
-	int rc;
-
-	rqpair.cm_id = &cm_id;
-	rqpair.cmds = &cmds;
-	rqpair.rdma_qp = &rdma_qp;
-	rdma_qp.qp = &qp;
-	g_nvme_hooks.get_rkey = NULL;
-	rqpair.rdma_reqs = rdma_reqs;
-
-	/* case 1: nvme_rdma_register_req: single entry, expect: PASS */
-	rqpair.num_entries = 1;
-	rc = nvme_rdma_register_reqs(&rqpair);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == g_rdma_mr.lkey);
-
-	/* case 2: nvme_rdma_register_req: multiple entry, expect: PASS */
-	rqpair.num_entries = 50;
-	rc = nvme_rdma_register_reqs(&rqpair);
-	CU_ASSERT(rc == 0);
-	for (int i = 0; i < rqpair.num_entries; i++) {
-		CU_ASSERT(rqpair.rdma_reqs[0].send_sgl[0].lkey == g_rdma_mr.lkey);
-	}
-}
-
-static void
 test_nvme_rdma_parse_addr(void)
 {
 	struct sockaddr_storage dst_addr;
@@ -1058,7 +1031,7 @@ test_nvme_rdma_qpair_submit_request(void)
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rqpair.poller = &poller;
 
-	rc = nvme_rdma_alloc_reqs(&rqpair);
+	rc = nvme_rdma_create_reqs(&rqpair);
 	CU_ASSERT(rc == 0);
 	/* Give send_wr.next a non null value */
 	rdma_req = TAILQ_FIRST(&rqpair.free_reqs);
@@ -1496,8 +1469,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_build_sgl_inline_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_request);
 	CU_ADD_TEST(suite, test_nvme_rdma_build_contig_inline_request);
-	CU_ADD_TEST(suite, test_nvme_rdma_alloc_reqs);
-	CU_ADD_TEST(suite, test_nvme_rdma_alloc_rsps);
+	CU_ADD_TEST(suite, test_nvme_rdma_create_reqs);
+	CU_ADD_TEST(suite, test_nvme_rdma_create_rsps);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_create_qpair);
 	CU_ADD_TEST(suite, test_nvme_rdma_poller_create);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_process_cm_event);
@@ -1505,7 +1478,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_req_put_and_get);
 	CU_ADD_TEST(suite, test_nvme_rdma_req_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_validate_cm_event);
-	CU_ADD_TEST(suite, test_nvme_rdma_register_and_unregister_reqs);
 	CU_ADD_TEST(suite, test_nvme_rdma_parse_addr);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_init);
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_submit_request);

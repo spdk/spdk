@@ -830,8 +830,12 @@ nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
 }
 
 static int
-nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
+nvme_rdma_create_rsps(struct nvme_rdma_qpair *rqpair)
 {
+	struct spdk_rdma_memory_translation translation;
+	uint16_t i;
+	int rc;
+
 	rqpair->rsps = NULL;
 	rqpair->rsp_recv_wrs = NULL;
 
@@ -856,19 +860,6 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 		goto fail;
 	}
 
-	return 0;
-fail:
-	nvme_rdma_free_rsps(rqpair);
-	return -ENOMEM;
-}
-
-static int
-nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
-{
-	struct spdk_rdma_memory_translation translation;
-	uint16_t i;
-	int rc;
-
 	for (i = 0; i < rqpair->num_entries; i++) {
 		struct ibv_sge *rsp_sgl = &rqpair->rsp_sgls[i];
 		struct spdk_nvme_rdma_rsp *rsp = &rqpair->rsps[i];
@@ -881,7 +872,7 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 		rsp_sgl->length = sizeof(struct spdk_nvme_cpl);
 		rc = spdk_rdma_get_translation(rqpair->mr_map, rsp, sizeof(*rsp), &translation);
 		if (rc) {
-			return rc;
+			goto fail;
 		}
 		rsp_sgl->lkey = spdk_rdma_memory_translation_get_lkey(&translation);
 
@@ -898,6 +889,9 @@ nvme_rdma_register_rsps(struct nvme_rdma_qpair *rqpair)
 	rqpair->current_num_recvs = rqpair->num_entries;
 
 	return 0;
+fail:
+	nvme_rdma_free_rsps(rqpair);
+	return -ENOMEM;
 }
 
 static void
@@ -915,9 +909,11 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 }
 
 static int
-nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
+nvme_rdma_create_reqs(struct nvme_rdma_qpair *rqpair)
 {
+	struct spdk_rdma_memory_translation translation;
 	uint16_t i;
+	int rc;
 
 	rqpair->rdma_reqs = spdk_zmalloc(rqpair->num_entries * sizeof(struct spdk_nvme_rdma_req), 0, NULL,
 					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
@@ -946,6 +942,12 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 
 		rdma_req->id = i;
 
+		rc = spdk_rdma_get_translation(rqpair->mr_map, cmd, sizeof(*cmd), &translation);
+		if (rc) {
+			goto fail;
+		}
+		rdma_req->send_sgl[0].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
+
 		/* The first RDMA sgl element will always point
 		 * at this data structure. Depending on whether
 		 * an NVMe-oF SGL is required, the length of
@@ -965,25 +967,6 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 fail:
 	nvme_rdma_free_reqs(rqpair);
 	return -ENOMEM;
-}
-
-static int
-nvme_rdma_register_reqs(struct nvme_rdma_qpair *rqpair)
-{
-	struct spdk_rdma_memory_translation translation;
-	uint16_t i;
-	int rc;
-
-	for (i = 0; i < rqpair->num_entries; i++) {
-		rc = spdk_rdma_get_translation(rqpair->mr_map, &rqpair->cmds[i], sizeof(*rqpair->cmds),
-					       &translation);
-		if (rc) {
-			return rc;
-		}
-		rqpair->rdma_reqs[i].send_sgl[0].lkey = spdk_rdma_memory_translation_get_lkey(&translation);
-	}
-
-	return 0;
 }
 
 static int nvme_rdma_connect(struct nvme_rdma_qpair *rqpair);
@@ -1088,37 +1071,21 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 		return -1;
 	}
 
-	ret = nvme_rdma_alloc_reqs(rqpair);
+	ret = nvme_rdma_create_reqs(rqpair);
 	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
 	if (ret) {
-		SPDK_ERRLOG("Unable to allocate rqpair RDMA requests\n");
+		SPDK_ERRLOG("Unable to create rqpair RDMA requests\n");
 		return -1;
 	}
-	SPDK_DEBUGLOG(nvme, "RDMA requests allocated\n");
+	SPDK_DEBUGLOG(nvme, "RDMA requests created\n");
 
-	ret = nvme_rdma_register_reqs(rqpair);
-	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
-	if (ret) {
-		SPDK_ERRLOG("Unable to register rqpair RDMA requests\n");
-		return -1;
-	}
-	SPDK_DEBUGLOG(nvme, "RDMA requests registered\n");
-
-	ret = nvme_rdma_alloc_rsps(rqpair);
+	ret = nvme_rdma_create_rsps(rqpair);
 	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
 	if (ret < 0) {
-		SPDK_ERRLOG("Unable to allocate rqpair RDMA responses\n");
+		SPDK_ERRLOG("Unable to create rqpair RDMA responses\n");
 		return -1;
 	}
-	SPDK_DEBUGLOG(nvme, "RDMA responses allocated\n");
-
-	ret = nvme_rdma_register_rsps(rqpair);
-	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
-	if (ret < 0) {
-		SPDK_ERRLOG("Unable to register rqpair RDMA responses\n");
-		return -1;
-	}
-	SPDK_DEBUGLOG(nvme, "RDMA responses registered\n");
+	SPDK_DEBUGLOG(nvme, "RDMA responses created\n");
 
 	ret = nvme_rdma_qpair_submit_recvs(rqpair);
 	SPDK_DEBUGLOG(nvme, "rc =%d\n", ret);
