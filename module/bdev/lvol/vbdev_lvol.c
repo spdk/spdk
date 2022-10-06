@@ -137,6 +137,8 @@ vbdev_lvs_hotremove_cb(struct spdk_bdev *bdev)
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_bdev(bdev);
 	if (lvs_bdev != NULL) {
+		SPDK_NOTICELOG("bdev %s being removed: closing lvstore %s\n",
+			       spdk_bdev_get_name(bdev), lvs_bdev->lvs->name);
 		vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 	}
 }
