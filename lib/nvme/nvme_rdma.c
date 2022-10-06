@@ -770,6 +770,32 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	return 0;
 }
 
+static void
+nvme_rdma_reset_failed_sends(struct nvme_rdma_qpair *rqpair,
+			     struct ibv_send_wr *bad_send_wr, int rc)
+{
+	SPDK_ERRLOG("Failed to post WRs on send queue, errno %d (%s), bad_wr %p\n",
+		    rc, spdk_strerror(rc), bad_send_wr);
+	while (bad_send_wr != NULL) {
+		assert(rqpair->current_num_sends > 0);
+		rqpair->current_num_sends--;
+		bad_send_wr = bad_send_wr->next;
+	}
+}
+
+static void
+nvme_rdma_reset_failed_recvs(struct nvme_rdma_qpair *rqpair,
+			     struct ibv_recv_wr *bad_recv_wr, int rc)
+{
+	SPDK_ERRLOG("Failed to post WRs on receive queue, errno %d (%s), bad_wr %p\n",
+		    rc, spdk_strerror(rc), bad_recv_wr);
+	while (bad_recv_wr != NULL) {
+		assert(rqpair->current_num_recvs > 0);
+		rqpair->current_num_recvs--;
+		bad_recv_wr = bad_recv_wr->next;
+	}
+}
+
 static inline int
 nvme_rdma_qpair_submit_sends(struct nvme_rdma_qpair *rqpair)
 {
@@ -779,17 +805,10 @@ nvme_rdma_qpair_submit_sends(struct nvme_rdma_qpair *rqpair)
 	rc = spdk_rdma_qp_flush_send_wrs(rqpair->rdma_qp, &bad_send_wr);
 
 	if (spdk_unlikely(rc)) {
-		SPDK_ERRLOG("Failed to post WRs on send queue, errno %d (%s), bad_wr %p\n",
-			    rc, spdk_strerror(rc), bad_send_wr);
-		while (bad_send_wr != NULL) {
-			assert(rqpair->current_num_sends > 0);
-			rqpair->current_num_sends--;
-			bad_send_wr = bad_send_wr->next;
-		}
-		return rc;
+		nvme_rdma_reset_failed_sends(rqpair, bad_send_wr, rc);
 	}
 
-	return 0;
+	return rc;
 }
 
 static inline int
@@ -800,13 +819,7 @@ nvme_rdma_qpair_submit_recvs(struct nvme_rdma_qpair *rqpair)
 
 	rc = spdk_rdma_qp_flush_recv_wrs(rqpair->rdma_qp, &bad_recv_wr);
 	if (spdk_unlikely(rc)) {
-		SPDK_ERRLOG("Failed to post WRs on receive queue, errno %d (%s), bad_wr %p\n",
-			    rc, spdk_strerror(rc), bad_recv_wr);
-		while (bad_recv_wr != NULL) {
-			assert(rqpair->current_num_recvs > 0);
-			rqpair->current_num_recvs--;
-			bad_recv_wr = bad_recv_wr->next;
-		}
+		nvme_rdma_reset_failed_recvs(rqpair, bad_recv_wr, rc);
 	}
 
 	return rc;
