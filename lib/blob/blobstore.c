@@ -5586,6 +5586,30 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 
 	SPDK_DEBUGLOG(blob, "Syncing blobstore\n");
 
+	/*
+	 * If external snapshot channels are being destroyed while the blobstore is unloaded, the
+	 * unload is deferred until after the channel destruction completes.
+	 */
+	if (bs->esnap_channels_unloading != 0) {
+		if (bs->esnap_unload_cb_fn != NULL) {
+			SPDK_ERRLOG("Blobstore unload in progress\n");
+			cb_fn(cb_arg, -EBUSY);
+			return;
+		}
+		SPDK_DEBUGLOG(blob_esnap, "Blobstore unload deferred: %" PRIu32
+			      " esnap clones are unloading\n", bs->esnap_channels_unloading);
+		bs->esnap_unload_cb_fn = cb_fn;
+		bs->esnap_unload_cb_arg = cb_arg;
+		return;
+	}
+	if (bs->esnap_unload_cb_fn != NULL) {
+		SPDK_DEBUGLOG(blob_esnap, "Blobstore deferred unload progressing\n");
+		assert(bs->esnap_unload_cb_fn == cb_fn);
+		assert(bs->esnap_unload_cb_arg == cb_arg);
+		bs->esnap_unload_cb_fn = NULL;
+		bs->esnap_unload_cb_arg = NULL;
+	}
+
 	if (!RB_EMPTY(&bs->open_blobs)) {
 		SPDK_ERRLOG("Blobstore still has open blobs\n");
 		cb_fn(cb_arg, -EBUSY);
@@ -7977,7 +8001,8 @@ blob_close_esnap_done(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
-	SPDK_DEBUGLOG(blob_esnap, "blob %" PRIx64 ": closed, syncing metadata\n", blob->id);
+	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": closed, syncing metadata on thread %s\n",
+		      blob->id, spdk_thread_get_name(spdk_get_thread()));
 
 	/* Sync metadata */
 	blob_persist(seq, blob, blob_close_cpl, blob);
@@ -8842,6 +8867,7 @@ blob_esnap_destroy_channels_done(struct spdk_io_channel_iter *i, int status)
 {
 	struct blob_esnap_destroy_ctx	*ctx = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_blob		*blob = ctx->blob;
+	struct spdk_blob_store		*bs = blob->bs;
 
 	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": done destroying channels for this blob\n",
 		      blob->id);
@@ -8850,6 +8876,11 @@ blob_esnap_destroy_channels_done(struct spdk_io_channel_iter *i, int status)
 		ctx->cb_fn(ctx->cb_arg, blob, status);
 	}
 	free(ctx);
+
+	bs->esnap_channels_unloading--;
+	if (bs->esnap_channels_unloading == 0 && bs->esnap_unload_cb_fn != NULL) {
+		spdk_bs_unload(bs, bs->esnap_unload_cb_fn, bs->esnap_unload_cb_arg);
+	}
 }
 
 static void
@@ -8910,6 +8941,7 @@ blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob, spdk_blob_op_with_han
 	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": destroying channels for this blob\n",
 		      blob->id);
 
+	blob->bs->esnap_channels_unloading++;
 	spdk_for_each_channel(blob->bs, blob_esnap_destroy_one_channel, ctx,
 			      blob_esnap_destroy_channels_done);
 }

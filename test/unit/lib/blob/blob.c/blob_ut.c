@@ -167,6 +167,11 @@ bs_op_with_handle_complete(void *cb_arg, struct spdk_blob_store *bs,
 static void
 blob_op_complete(void *cb_arg, int bserrno)
 {
+	if (cb_arg != NULL) {
+		int *errp = cb_arg;
+
+		*errp = bserrno;
+	}
 	g_bserrno = bserrno;
 }
 
@@ -7577,6 +7582,136 @@ blob_esnap_create(void)
 	g_blob = NULL;
 }
 
+static void
+blob_esnap_clone_reload(void)
+{
+	struct spdk_blob_store	*bs = g_bs;
+	struct spdk_bs_opts	bs_opts;
+	struct ut_esnap_opts	esnap_opts;
+	struct spdk_blob_opts	opts;
+	struct spdk_blob	*eclone1, *snap1, *clone1;
+	uint32_t		cluster_sz = spdk_bs_get_cluster_size(bs);
+	uint32_t		block_sz = spdk_bs_get_io_unit_size(bs);
+	const uint32_t		esnap_num_clusters = 4;
+	uint64_t		esnap_num_blocks = cluster_sz * esnap_num_clusters / block_sz;
+	spdk_blob_id		eclone1_id, snap1_id, clone1_id;
+	struct spdk_io_channel	*bs_ch;
+	char			buf[block_sz];
+	int			bserr1, bserr2, bserr3, bserr4;
+	struct spdk_bs_dev	*dev;
+
+	/* Create and open an esnap clone blob */
+	ut_spdk_blob_opts_init(&opts);
+	ut_esnap_opts_init(block_sz, esnap_num_blocks, __func__, NULL, &esnap_opts);
+	opts.esnap_id = &esnap_opts;
+	opts.esnap_id_len = sizeof(esnap_opts);
+	opts.num_clusters = esnap_num_clusters;
+	eclone1 = ut_blob_create_and_open(bs, &opts);
+	CU_ASSERT(eclone1 != NULL);
+	CU_ASSERT(spdk_blob_is_esnap_clone(eclone1));
+	eclone1_id = eclone1->id;
+
+	/* Create and open a snapshot of eclone1 */
+	spdk_bs_create_snapshot(bs, eclone1_id, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT(g_bserrno == 0);
+	snap1_id = g_blobid;
+	spdk_bs_open_blob(bs, snap1_id, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	snap1 = g_blob;
+
+	/* Create and open regular clone of snap1 */
+	spdk_bs_create_clone(bs, snap1_id, NULL, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	SPDK_CU_ASSERT_FATAL(g_bserrno == 0);
+	clone1_id = g_blobid;
+	spdk_bs_open_blob(bs, clone1_id, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	clone1 = g_blob;
+
+	/* Close the blobs in preparation for reloading the blobstore */
+	spdk_blob_close(clone1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	spdk_blob_close(snap1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	spdk_blob_close(eclone1, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_blob = NULL;
+
+	/* Reload the blobstore */
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	bs_opts.esnap_bs_dev_create = ut_esnap_create;
+	ut_bs_reload(&bs, &bs_opts);
+
+	/* Be sure each of the blobs can be opened */
+	spdk_bs_open_blob(bs, eclone1_id, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	eclone1 = g_blob;
+	spdk_bs_open_blob(bs, snap1_id, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	snap1 = g_blob;
+	spdk_bs_open_blob(bs, clone1_id, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	clone1 = g_blob;
+
+	/* Perform some reads on each of them to cause channels to be allocated */
+	bs_ch = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(bs_ch != NULL);
+	spdk_blob_io_read(eclone1, bs_ch, buf, 0, 1, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	spdk_blob_io_read(snap1, bs_ch, buf, 0, 1, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	spdk_blob_io_read(clone1, bs_ch, buf, 0, 1, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	/*
+	 * Unload the blobstore in a way similar to how lvstore unloads it.  This should exercise
+	 * the deferred unload path in spdk_bs_unload().
+	 */
+	bserr1 = 0xbad;
+	bserr2 = 0xbad;
+	bserr3 = 0xbad;
+	bserr4 = 0xbad;
+	spdk_blob_close(eclone1, blob_op_complete, &bserr1);
+	spdk_blob_close(snap1, blob_op_complete, &bserr2);
+	spdk_blob_close(clone1, blob_op_complete, &bserr3);
+	spdk_bs_unload(bs, blob_op_complete, &bserr4);
+	spdk_bs_free_io_channel(bs_ch);
+	poll_threads();
+	CU_ASSERT(bserr1 == 0);
+	CU_ASSERT(bserr2 == 0);
+	CU_ASSERT(bserr3 == 0);
+	CU_ASSERT(bserr4 == 0);
+	g_blob = NULL;
+
+	/* Reload the blobstore */
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	bs_opts.esnap_bs_dev_create = ut_esnap_create;
+	dev = init_dev();
+	spdk_bs_load(dev, &bs_opts, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+}
+
 static bool
 blob_esnap_verify_contents(struct spdk_blob *blob, struct spdk_io_channel *ch,
 			   uint64_t offset, uint64_t size, uint32_t readsize, const char *how)
@@ -8494,6 +8629,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_snapshot);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_inflate);
 	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_decouple);
+	CU_ADD_TEST(suite_esnap_bs, blob_esnap_clone_reload);
 
 	allocate_threads(2);
 	set_thread(0);

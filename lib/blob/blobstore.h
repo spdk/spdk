@@ -189,6 +189,14 @@ struct spdk_blob_store {
 
 	spdk_bs_esnap_dev_create	esnap_bs_dev_create;
 	void				*esnap_ctx;
+
+	/* If external snapshot channels are being destroyed while
+	 * the blobstore is unloaded, the unload is deferred until
+	 * after the channel destruction completes.
+	 */
+	uint32_t			esnap_channels_unloading;
+	spdk_bs_op_complete		esnap_unload_cb_fn;
+	void				*esnap_unload_cb_arg;
 };
 
 struct spdk_bs_channel {
