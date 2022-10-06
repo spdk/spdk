@@ -68,6 +68,9 @@ rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			default:
 				SPDK_UNREACHABLE();
 			}
+#ifdef IBV_ACCESS_OPTIONAL_FIRST
+			access_flags |= IBV_ACCESS_RELAXED_ORDERING;
+#endif
 			mr = ibv_reg_mr(pd, vaddr, size, access_flags);
 			if (mr == NULL) {
 				SPDK_ERRLOG("ibv_reg_mr() failed\n");
