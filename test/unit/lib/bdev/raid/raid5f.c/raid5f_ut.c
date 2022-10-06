@@ -426,7 +426,7 @@ spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_chan
 	uint64_t data_offset;
 	void *dest_buf, *dest_md_buf;
 
-	SPDK_CU_ASSERT_FATAL(cb == raid5f_chunk_write_complete_bdev_io);
+	SPDK_CU_ASSERT_FATAL(cb == raid5f_chunk_complete_bdev_io);
 	SPDK_CU_ASSERT_FATAL(iovcnt == 1);
 
 	stripe_req = raid5f_chunk_stripe_req(chunk);
@@ -821,7 +821,7 @@ __test_raid5f_stripe_request_map_iovecs(struct raid_bdev *raid_bdev,
 	bdev_io->u.bdev.iovs = iovs;
 	bdev_io->u.bdev.iovcnt = iovcnt;
 
-	stripe_req = raid5f_stripe_request_alloc(r5ch);
+	stripe_req = raid5f_stripe_request_alloc(r5ch, STRIPE_REQ_WRITE);
 	SPDK_CU_ASSERT_FATAL(stripe_req != NULL);
 
 	stripe_req->parity_chunk = &stripe_req->chunks[raid5f_stripe_data_chunks_num(raid_bdev)];
