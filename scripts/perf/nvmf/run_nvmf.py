@@ -128,14 +128,8 @@ class Server:
         self.exec_cmd(["sudo", "modprobe", "-a",
                        "nvme-%s" % self.transport,
                        "nvmet-%s" % self.transport])
-        if self.mode == "kernel" and hasattr(self, "null_block") and self.null_block:
-            self.exec_cmd(["sudo", "modprobe", "null_blk",
-                           "nr_devices=%s" % self.null_block])
 
     def configure_adq(self):
-        if self.mode == "kernel":
-            self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
-            return
         self.adq_load_modules()
         self.adq_configure_nic()
 
@@ -152,10 +146,6 @@ class Server:
 
     def adq_configure_tc(self):
         self.log.info("Configuring ADQ Traffic classes and filters...")
-
-        if self.mode == "kernel":
-            self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
-            return
 
         num_queues_tc0 = 2  # 2 is minimum number of queues for TC0
         num_queues_tc1 = self.num_cores
@@ -266,13 +256,9 @@ class Server:
     def configure_sysctl(self):
         self.log.info("Tuning sysctl settings...")
 
-        busy_read = 0
-        if self.enable_adq and self.mode == "spdk":
-            busy_read = 1
-
         sysctl_opts = {
             "net.core.busy_poll": 0,
-            "net.core.busy_read": busy_read,
+            "net.core.busy_read": 0,
             "net.core.somaxconn": 4096,
             "net.core.netdev_max_backlog": 8192,
             "net.ipv4.tcp_max_syn_backlog": 16384,
@@ -284,6 +270,9 @@ class Server:
             "net.ipv4.route.flush": 1,
             "vm.overcommit_memory": 1,
         }
+
+        if self.enable_adq:
+            sysctl_opts.update(self.adq_set_busy_read(1))
 
         for opt, value in sysctl_opts.items():
             self.sysctl_restore_dict.update({opt: self.exec_cmd(["sysctl", "-n", opt]).strip()})
@@ -756,15 +745,6 @@ ramp_time={ramp_time}
 runtime={run_time}
 rate_iops={rate_iops}
 """
-        if "spdk" in self.mode:
-            ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
-            spdk_conf = "spdk_json_conf=%s/bdev.conf" % self.spdk_dir
-        else:
-            ioengine = self.ioengine
-            spdk_conf = ""
-            out = self.exec_cmd(["sudo", "nvme", "list", "|", "grep", "-E", "'SPDK|Linux'",
-                                 "|", "awk", "'{print $1}'"])
-            subsystems = [x for x in out.split("\n") if "nvme" in x]
 
         if self.cpus_allowed is not None:
             self.log.info("Limiting FIO workload execution on specific cores %s" % self.cpus_allowed)
@@ -784,24 +764,20 @@ rate_iops={rate_iops}
             self.log.info("Limiting FIO workload execution to %s cores" % self.num_cores)
             threads = range(0, int(self.num_cores))
         else:
-            self.num_cores = len(subsystems)
-            threads = range(0, len(subsystems))
+            self.num_cores = len(self.subsystem_info_list)
+            threads = range(0, len(self.subsystem_info_list))
 
-        if "spdk" in self.mode:
-            filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, num_jobs,
-                                                          offset, offset_inc)
-        else:
-            filename_section = self.gen_fio_filename_conf(threads, io_depth, num_jobs,
-                                                          offset, offset_inc)
+        filename_section = self.gen_fio_filename_conf(self.subsystem_info_list, threads, io_depth, num_jobs,
+                                                      offset, offset_inc)
 
-        fio_config = fio_conf_template.format(ioengine=ioengine, spdk_conf=spdk_conf,
+        fio_config = fio_conf_template.format(ioengine=self.ioengine, spdk_conf=self.spdk_conf,
                                               rw=rw, rwmixread=rwmixread, block_size=block_size,
                                               ramp_time=ramp_time, run_time=run_time, rate_iops=rate_iops)
 
         # TODO: hipri disabled for now, as it causes fio errors:
         # io_u error on file /dev/nvme2n1: Operation not supported
         # See comment in KernelInitiator class, init_connect() function
-        if hasattr(self, "ioengine") and "io_uring" in self.ioengine:
+        if "io_uring" in self.ioengine:
             fio_config = fio_config + """
 fixedbufs=1
 registerfiles=1
@@ -874,6 +850,22 @@ class KernelTarget(Target):
 
         if "nvmet_bin" in target_config:
             self.nvmet_bin = target_config["nvmet_bin"]
+
+    def load_drivers(self):
+        self.log.info("Loading drivers")
+        super().load_drivers()
+        if self.null_block:
+            self.exec_cmd(["sudo", "modprobe", "null_blk", "nr_devices=%s" % self.null_block])
+
+    def configure_adq(self):
+        self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+
+    def adq_configure_tc(self):
+        self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+
+    def adq_set_busy_read(self, busy_read_val):
+        self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. busy_read set to 0")
+        return {"net.core.busy_read": 0}
 
     def stop(self):
         self.nvmet_command(self.nvmet_bin, "clear")
@@ -1010,6 +1002,9 @@ class SPDKTarget(Target):
 
         self.log.info("====DSA settings:====")
         self.log.info("DSA enabled: %s" % (self.enable_dsa))
+
+    def adq_set_busy_read(self, busy_read_val):
+        return {"net.core.busy_read": busy_read_val}
 
     def get_nvme_devices_count(self):
         return len(self.get_nvme_devices())
@@ -1218,6 +1213,7 @@ class KernelInitiator(Initiator):
         # Defaults
         self.extra_params = ""
         self.ioengine = "libaio"
+        self.spdk_conf = ""
 
         if "num_cores" in initiator_config:
             self.num_cores = initiator_config["num_cores"]
@@ -1229,6 +1225,16 @@ class KernelInitiator(Initiator):
             self.ioengine = initiator_config["kernel_engine"]
             if "io_uring" in self.ioengine:
                 self.extra_params = "--nr-poll-queues=8"
+
+    def configure_adq(self):
+        self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+
+    def adq_configure_tc(self):
+        self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. Skipping configuration.")
+
+    def adq_set_busy_read(self, busy_read_val):
+        self.log.warning("WARNING: ADQ setup not yet supported for Kernel mode. busy_read set to 0")
+        return {"net.core.busy_read": 0}
 
     def get_connected_nvme_list(self):
         json_obj = json.loads(self.exec_cmd(["sudo", "nvme", "list", "-o", "json"]))
@@ -1280,7 +1286,10 @@ class KernelInitiator(Initiator):
                                    self.exec_cmd(["cat", "/sys/class/nvme/%s/address" % nvme_ctrl]))
         return self.get_route_nic_numa(remote_nvme_ip.group(0))
 
-    def gen_fio_filename_conf(self, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
+    def gen_fio_filename_conf(self, subsystems, threads, io_depth, num_jobs=1, offset=False, offset_inc=0):
+        if len(threads) >= len(subsystems):
+            threads = range(0, len(subsystems))
+
         # Generate connected nvme devices names and sort them by used NIC numa node
         # to allow better grouping when splitting into fio sections.
         nvme_list = [os.path.join("/dev", nvme) for nvme in self.get_connected_nvme_list()]
@@ -1331,6 +1340,12 @@ class SPDKInitiator(Initiator):
             self.enable_data_digest = initiator_config["enable_data_digest"]
         if "num_cores" in initiator_config:
             self.num_cores = initiator_config["num_cores"]
+
+        self.ioengine = "%s/build/fio/spdk_bdev" % self.spdk_dir
+        self.spdk_conf = "spdk_json_conf=%s/bdev.conf" % self.spdk_dir
+
+    def adq_set_busy_read(self, busy_read_val):
+        return {"net.core.busy_read": busy_read_val}
 
     def install_spdk(self):
         self.log.info("Using fio binary %s" % self.fio_bin)
