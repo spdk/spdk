@@ -1219,6 +1219,9 @@ class KernelInitiator(Initiator):
         self.extra_params = ""
         self.ioengine = "libaio"
 
+        if "num_cores" in initiator_config:
+            self.num_cores = initiator_config["num_cores"]
+
         if "extra_params" in initiator_config:
             self.extra_params = initiator_config["extra_params"]
 
@@ -1322,13 +1325,12 @@ class SPDKInitiator(Initiator):
         if "skip_spdk_install" not in general_config or general_config["skip_spdk_install"] is False:
             self.install_spdk()
 
-        # Required fields
-        self.num_cores = initiator_config["num_cores"]
-
         # Optional fields
         self.enable_data_digest = False
         if "enable_data_digest" in initiator_config:
             self.enable_data_digest = initiator_config["enable_data_digest"]
+        if "num_cores" in initiator_config:
+            self.num_cores = initiator_config["num_cores"]
 
     def install_spdk(self):
         self.log.info("Using fio binary %s" % self.fio_bin)
