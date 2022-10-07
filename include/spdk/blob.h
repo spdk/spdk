@@ -132,6 +132,8 @@ typedef void (*spdk_blob_op_with_bs_dev)(void *cb_arg, struct spdk_bs_dev *bs_de
  * callback registered with the blobstore to create the external snapshot device. The blobstore
  * consumer must set this while loading the blobstore if it intends to support external snapshots.
  *
+ * \param bs_ctx Context provided by the blobstore consumer via esnap_ctx member of struct
+ * spdk_bs_opts.
  * \param blob The blob that needs its external snapshot device.
  * \param esnap_id A copy of the esnap_id passed via blob_opts when creating the esnap clone.
  * \param id_size The size in bytes of the data referenced by esnap_id.
@@ -139,8 +141,9 @@ typedef void (*spdk_blob_op_with_bs_dev)(void *cb_arg, struct spdk_bs_dev *bs_de
  *
  * \return 0 on success, else a negative errno.
  */
-typedef int (*spdk_bs_esnap_dev_create)(struct spdk_blob *blob, const void *esnap_id,
-					uint32_t id_size, struct spdk_bs_dev **bs_dev);
+typedef int (*spdk_bs_esnap_dev_create)(void *bs_ctx, struct spdk_blob *blob,
+					const void *esnap_id, uint32_t id_size,
+					struct spdk_bs_dev **bs_dev);
 
 struct spdk_bs_dev_cb_args {
 	spdk_bs_dev_cpl		cb_fn;
@@ -287,8 +290,13 @@ struct spdk_bs_opts {
 	 * External snapshot creation callback to register with the blobstore.
 	 */
 	spdk_bs_esnap_dev_create esnap_bs_dev_create;
+
+	/**
+	 * Context to pass with esnap_bs_dev_create.
+	 */
+	void *esnap_ctx;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 80, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 88, "Incorrect size");
 
 /**
  * Initialize a spdk_bs_opts structure to the default blobstore option values.

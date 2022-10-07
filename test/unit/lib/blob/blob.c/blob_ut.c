@@ -7421,6 +7421,7 @@ blob_esnap_create(void)
 	uint64_t		esnap_num_blocks;
 	uint32_t		sz;
 	spdk_blob_id		blobid;
+	uint32_t		bs_ctx_count;
 
 	cluster_sz = spdk_bs_get_cluster_size(bs);
 	block_sz = spdk_bs_get_io_unit_size(bs);
@@ -7498,6 +7499,29 @@ blob_esnap_create(void)
 	poll_threads();
 	CU_ASSERT(g_bserrno != 0);
 	CU_ASSERT(g_blob == NULL);
+
+	/* Reload the blobstore with ctx set and verify it is passed to the esnap create callback */
+	bs_ctx_count = 0;
+	spdk_bs_opts_init(&bs_opts, sizeof(bs_opts));
+	bs_opts.esnap_bs_dev_create = ut_esnap_create_with_count;
+	bs_opts.esnap_ctx = &bs_ctx_count;
+	ut_bs_reload(&bs, &bs_opts);
+	/* Loading the blobstore triggers the esnap to be loaded */
+	CU_ASSERT(bs_ctx_count == 1);
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	/* Opening the blob also triggers the esnap to be loaded */
+	CU_ASSERT(bs_ctx_count == 2);
+	blob = g_blob;
+	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
+	sz = spdk_blob_get_num_clusters(blob);
+	CU_ASSERT(sz == esnap_num_clusters + 1);
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_blob = NULL;
 }
 
 static void

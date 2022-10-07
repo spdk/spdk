@@ -1370,7 +1370,7 @@ blob_load_esnap(struct spdk_blob *blob)
 
 	SPDK_INFOLOG(blob, "Creating external snapshot device\n");
 
-	rc = bs->esnap_bs_dev_create(blob, esnap_id, (uint32_t)id_len, &bs_dev);
+	rc = bs->esnap_bs_dev_create(bs->esnap_ctx, blob, esnap_id, (uint32_t)id_len, &bs_dev);
 	if (rc != 0) {
 		SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": failed to load back_bs_dev "
 			      "with error %d\n", blob->id, rc);
@@ -3471,6 +3471,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size)
 	SET_FIELD(iter_cb_arg, NULL);
 	SET_FIELD(force_recover, false);
 	SET_FIELD(esnap_bs_dev_create, NULL);
+	SET_FIELD(esnap_ctx, NULL);
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -3599,6 +3600,7 @@ bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts, struct spdk_blob_st
 	bs->super_blob = SPDK_BLOBID_INVALID;
 	memcpy(&bs->bstype, &opts->bstype, sizeof(opts->bstype));
 	bs->esnap_bs_dev_create = opts->esnap_bs_dev_create;
+	bs->esnap_ctx = opts->esnap_ctx;
 
 	/* The metadata is assumed to be at least 1 page */
 	bs->used_md_pages = spdk_bit_array_create(1);
@@ -4676,12 +4678,13 @@ bs_opts_copy(struct spdk_bs_opts *src, struct spdk_bs_opts *dst)
 	SET_FIELD(iter_cb_arg);
 	SET_FIELD(force_recover);
 	SET_FIELD(esnap_bs_dev_create);
+	SET_FIELD(esnap_ctx);
 
 	dst->opts_size = src->opts_size;
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 80, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_opts) == 88, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD

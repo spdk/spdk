@@ -188,6 +188,7 @@ struct spdk_blob_store {
 	bool				clean;
 
 	spdk_bs_esnap_dev_create	esnap_bs_dev_create;
+	void				*esnap_ctx;
 };
 
 struct spdk_bs_channel {
