@@ -162,7 +162,7 @@ class NvmfSubsystem(SpdkObject):
         s += '\nnqn %s' % self.get_name()
         s += '\nID %d' % self.get_id()
         for ns in self.get_ns_list():
-            s + '\t%s' % str(ns)
+            s += '\t%s' % str(ns)
         return s
 
 
