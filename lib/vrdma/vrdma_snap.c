@@ -1,7 +1,5 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright © 2022 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
+/*
+ *   Copyright © 2021 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -29,70 +27,51 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <infiniband/verbs.h>
+
 #include "spdk/config.h"
 #include "spdk/log.h"
-#include "spdk/vrdma.h"
 #include "spdk/vrdma_snap.h"
-#include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_snap_pci_mgr.h"
+#include "spdk/vrdma_emu_mgr.h"
+#include "spdk/vrdma_io_mgr.h"
 
-struct spdk_vrdma_dev_list_head spdk_vrdma_dev_list =
-                              LIST_HEAD_INITIALIZER(spdk_vrdma_dev_list);
-
-void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
+int spdk_vrdma_snap_start(void)
 {
-    struct spdk_vrdma_dev *vdev;
-
-    spdk_vrdma_snap_stop(fini_cb);
-    while ((vdev = LIST_FIRST(&spdk_vrdma_dev_list)) != NULL) {
-        LIST_REMOVE(vdev, entry);
-        spdk_emu_controller_vrdma_delete(vdev);
-    }
-}
-
-int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
-{
-    struct spdk_vrdma_dev *vdev;
-    struct ibv_device **list;
-    int dev_count;
-
-    if (vrdma_ctx->dpa_enabled) {
-        /*Load provider just for DPA*/
-    }
-
-    if (spdk_vrdma_snap_start()) {
-        SPDK_ERRLOG("Failed to start vrdma snap");
+    if (spdk_vrdma_snap_pci_mgr_init()) {
+        SPDK_ERRLOG("Failed to init emulation managers list");
         goto err;
     }
-
-    list = ibv_get_device_list(&dev_count);
-    if (!list || !dev_count) {
-        SPDK_ERRLOG("failed to open IB device list");
-        goto err;
-    }
-    strncpy(vrdma_ctx->emu_manager, ibv_get_device_name(list[0]),
-             MAX_VRDMA_DEV_LEN - 1);
-
-    ibv_free_device_list(list);
-    
-    if (vrdma_ctx->dpa_enabled) {
-        /*Prove init DPA*/
+    if (spdk_io_mgr_init()) {
+        SPDK_ERRLOG("Failed to init SPDK IO manager");
+        goto clear_pci;
     }
 
-    /*Create static PF device*/
-    vdev = calloc(1, sizeof(*vdev));
-    if (!vdev)
-        goto err;
-    vdev->emu_mgr = spdk_vrdma_snap_get_ibv_device(vrdma_ctx->emu_manager);
-    vdev->devid = 0; /*lizh: Hard code for POC*/
-    if (spdk_emu_controller_vrdma_create(vdev))
-        goto free_vdev;
-
-    LIST_INSERT_HEAD(&spdk_vrdma_dev_list, vdev, entry);
     return 0;
-free_vdev:
-    free(vdev);
+clear_pci:
+    spdk_vrdma_snap_pci_mgr_clear();
 err:
     return -1;
+}
+
+static volatile int spdk_emu_list_num_deleting = 0;
+
+void spdk_vrdma_snap_stop(void (*fini_cb)(void))
+{
+    struct spdk_emu_ctx *ctx;
+    int count = 0;
+
+    pthread_mutex_lock(&spdk_emu_list_lock);
+    while ((ctx = LIST_FIRST(&spdk_emu_list)) != NULL) {
+        LIST_REMOVE(ctx, entry);
+        spdk_emu_list_num_deleting++;
+        spdk_emu_ctx_destroy(ctx);
+        count++;
+    }
+    pthread_mutex_unlock(&spdk_emu_list_lock);
+
+    if (count == 0) {
+        spdk_io_mgr_clear();
+        spdk_vrdma_snap_pci_mgr_clear();
+        fini_cb();
+    }
 }
