@@ -31,6 +31,7 @@ def filter_methods(do_remove_global_rpcs):
         'nvmf_set_crdt',
         'bdev_set_options',
         'bdev_wait_for_examine',
+        'bdev_iscsi_set_options',
         'bdev_nvme_set_options',
         'bdev_nvme_set_hotplug',
         'sock_impl_set_options',

@@ -188,10 +188,32 @@ bdev_iscsi_finish(void)
 	}
 }
 
+static void
+bdev_iscsi_opts_config_json(struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "bdev_iscsi_set_options");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_uint64(w, "timeout_sec", g_opts.timeout_sec);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static int
+bdev_iscsi_config_json(struct spdk_json_write_ctx *w)
+{
+	bdev_iscsi_opts_config_json(w);
+	return 0;
+}
+
 static struct spdk_bdev_module g_iscsi_bdev_module = {
 	.name		= "iscsi",
 	.module_init	= bdev_iscsi_initialize,
 	.module_fini	= bdev_iscsi_finish,
+	.config_json	= bdev_iscsi_config_json,
 	.get_ctx_size	= bdev_iscsi_get_ctx_size,
 };
 
