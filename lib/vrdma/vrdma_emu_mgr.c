@@ -212,6 +212,7 @@ static void spdk_emu_ctx_destroy_end(void *arg)
      */
     if (ctx->fini_cb)
         ctx->fini_cb(ctx->fini_cb_arg);
+    free(ctx->vdev);
     free(ctx);
 }
 
@@ -441,8 +442,8 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
         goto free_attr;
     }
     strncpy(vdev->emu_name, ctx->emu_name, MAX_VRDMA_DEV_LEN - 1);
+    ctx->vdev = vdev;
     LIST_INSERT_HEAD(&spdk_emu_list, ctx, entry);
-
     pthread_mutex_unlock(&spdk_emu_list_lock);
     free(attr);
     return 0;
@@ -452,33 +453,4 @@ free_attr:
 err:
     SPDK_ERRLOG("failed to create VRDMA controller");
     return -1;
-}
-
-void
-spdk_emu_controller_vrdma_delete(struct spdk_vrdma_dev *vdev)
-{
-    struct spdk_emu_ctx *ctx;
-
-    /* Find SPDK context matching the requested PF id */
-    pthread_mutex_lock(&spdk_emu_list_lock);
-    ctx = spdk_emu_ctx_find_by_emu_name(vdev->emu_name);
-    if (!ctx) {
-        SPDK_ERRLOG("emulation %s cannot be found\n", vdev->emu_name);
-        goto err;
-    }
-
-    if (ctx->spci->plugged && !vrdma_ctrl_is_suspended(ctx->ctrl)) {
-        SPDK_ERRLOG("emulation %s cannot be closed because vrdma driver is "
-                    "up\n", vdev->emu_name);
-        goto err;
-    }
-
-    LIST_REMOVE(ctx, entry);
-    pthread_mutex_unlock(&spdk_emu_list_lock);
-    spdk_emu_ctx_destroy(ctx);
-    return;
-
-err:
-    pthread_mutex_unlock(&spdk_emu_list_lock);
-    return;
 }
