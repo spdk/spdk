@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "spdk/stdinc.h"
+#include "spdk/vrdma_admq.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
@@ -47,6 +48,7 @@ struct vrdma_ctrl {
     struct snap_context *sctx;
     struct ibv_pd *pd;
     struct ibv_mr *mr;
+    struct vrdma_admin_sw_qp sw_qp;
     struct snap_vrdma_ctrl *sctrl;
     void (*destroy_done_cb)(void *arg);
     void *destroy_done_cb_arg;

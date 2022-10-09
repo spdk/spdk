@@ -37,18 +37,10 @@
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_snap_pci_mgr.h"
 
-struct spdk_vrdma_dev_list_head spdk_vrdma_dev_list =
-                              LIST_HEAD_INITIALIZER(spdk_vrdma_dev_list);
 
 void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
 {
-    struct spdk_vrdma_dev *vdev;
-
     spdk_vrdma_snap_stop(fini_cb);
-    while ((vdev = LIST_FIRST(&spdk_vrdma_dev_list)) != NULL) {
-        LIST_REMOVE(vdev, entry);
-        spdk_emu_controller_vrdma_delete(vdev);
-    }
 }
 
 int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
@@ -88,8 +80,6 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
     vdev->devid = 0; /*lizh: Hard code for POC*/
     if (spdk_emu_controller_vrdma_create(vdev))
         goto free_vdev;
-
-    LIST_INSERT_HEAD(&spdk_vrdma_dev_list, vdev, entry);
     return 0;
 free_vdev:
     free(vdev);
