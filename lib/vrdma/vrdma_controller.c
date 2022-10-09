@@ -179,7 +179,7 @@ static int vrdma_ctrl_post_flr(void *arg)
     return 0;
 }
 
-static void vrdma_adminq_dma_cb(struct vrdma_snap_dma_completion *self, int status)
+static void vrdma_adminq_dma_cb(struct snap_dma_completion *self, int status)
 {
     struct vrdma_admin_queue *admq;
     struct vrdma_admin_sw_qp *sw_qp = container_of(self,

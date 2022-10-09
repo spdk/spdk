@@ -37,6 +37,13 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
 INSTALLED_HEADERS := $(patsubst $(SPDK_ROOT_DIR)/include%,$(DESTDIR)$(includedir)%,$(HEADERS))
 
+SNAP_INC_DIR := $(SPDK_ROOT_DIR)/snap-rdma/src
+SNAP_CTL_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/ctl
+SNAP_RPC_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/rpc
+SNAP_VRDMA_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/vrdma
+
+CFLAGS += -I$(SNAP_INC_DIR) -I$(SNAP_CTL_INC_DIR) -I$(SNAP_RPC_INC_DIR) -I$(SNAP_VRDMA_INC_DIR)
+
 $(INSTALLED_HEADERS):
 ifeq ($(MAKECMDGOALS),install)
 	$(INSTALL_HEADER)
