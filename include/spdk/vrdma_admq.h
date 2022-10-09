@@ -514,4 +514,6 @@ struct vrdma_admin_sw_qp {
 	struct vrdma_admin_queue *admq;
 };
 
+int vrdma_parse_admq_entry(struct vrdma_admin_cmd_entry *aqe);
+
 #endif
