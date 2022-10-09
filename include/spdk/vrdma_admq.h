@@ -508,10 +508,24 @@ struct vrdma_cmd_param {
 };
 
 #define VRDMA_INVALID_CI_PI 0xFFFF
+struct vrdma_snap_dma_completion;
+
+/* Must be same as snap_dma_comp_cb_t in snap lib*/
+typedef void (*vrdma_snap_dma_comp_cb_t)(struct vrdma_snap_dma_completion *comp, int status);
+
+/* Must be same as struct snap_dma_completion in snap lib*/
+struct vrdma_snap_dma_completion {
+	/** @func: callback function. See &typedef snap_dma_comp_cb_t */
+	vrdma_snap_dma_comp_cb_t func;
+	/** @count: completion counter */
+	int                count;
+};
+
 struct vrdma_admin_sw_qp {
 	uint16_t pre_ci;// invalid -1
 	uint16_t pre_pi;// invalid -1 == snap_last_ci
 	struct vrdma_admin_queue *admq;
+	struct vrdma_snap_dma_completion init_ci;
 };
 
 int vrdma_parse_admq_entry(struct vrdma_admin_cmd_entry *aqe);

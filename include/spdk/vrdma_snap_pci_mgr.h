@@ -34,8 +34,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-//#include <infiniband/verbs.h>
-//#include "snap.h"
 
 struct snap_pci;
 struct snap_context;

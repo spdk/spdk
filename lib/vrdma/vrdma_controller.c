@@ -34,6 +34,7 @@
 
 #include "snap.h"
 #include "snap_env.h"
+#include "snap_dma.h"
 #include "snap_vrdma_ctrl.h"
 
 #include "spdk/conf.h"
@@ -178,6 +179,18 @@ static int vrdma_ctrl_post_flr(void *arg)
     return 0;
 }
 
+static void vrdma_adminq_dma_cb(struct vrdma_snap_dma_completion *self, int status)
+{
+    struct vrdma_admin_queue *admq;
+    struct vrdma_admin_sw_qp *sw_qp = container_of(self,
+            struct vrdma_admin_sw_qp, init_ci);
+
+    admq = sw_qp->admq;
+    sw_qp->pre_ci = admq->ci;
+    /* pre_pi should be init as last ci*/
+    sw_qp->pre_pi = sw_qp->pre_ci;
+}
+
 static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
 {
     struct vrdma_admin_queue *admq;
@@ -196,9 +209,11 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
         spdk_free(admq);
         return -1;
     }
-    ctrl->sw_qp.admq = admq;
     ctrl->sw_qp.pre_ci = VRDMA_INVALID_CI_PI;
     ctrl->sw_qp.pre_pi = VRDMA_INVALID_CI_PI;
+    ctrl->sw_qp.init_ci.func = vrdma_adminq_dma_cb;
+    ctrl->sw_qp.init_ci.count = 1;
+    ctrl->sw_qp.admq = admq;
     return 0;
 }
 
@@ -236,8 +251,9 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     sctrl_attr.npgs = attr->nthreads;
     sctrl_attr.force_in_order = attr->force_in_order;
     sctrl_attr.suspended = attr->suspended;
-    sctrl_attr.adminq_size = sizeof(struct vrdma_admin_queue);
+    sctrl_attr.adminq_size = sizeof(struct vrdma_admin_cmd_entry);
     sctrl_attr.adminq_buf = ctrl->sw_qp.admq;
+    sctrl_attr.adminq_dma_comp = (struct snap_dma_completion *)&ctrl->sw_qp.init_ci;
     ctrl->sctrl = snap_vrdma_ctrl_open(ctrl->sctx, &sctrl_attr);
     if (!ctrl->sctrl) {
             SPDK_ERRLOG("Failed to open VRDMA controller %d [in order %d]"
