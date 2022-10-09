@@ -32,44 +32,80 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/env.h"
+#include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/event.h"
+#include "spdk/vrdma.h"
 
-#include "spdk/vhost.h"
+static struct spdk_thread *g_vrdma_app_thread;
+static int g_start_mqpn;
+static struct spdk_vrdma_context g_vrdma_ctx;
+#define MAX_START_MQP_NUM  4096
 
-static const char *g_pid_path = NULL;
-
-static void
-vhost_usage(void)
+static void stop_done_cb()
 {
-	printf(" -f <path>                 save pid to file under given path\n");
-	printf(" -S <path>                 directory where to create vhost sockets (default: pwd)\n");
+    spdk_app_stop(0);
+}
+
+static void spdk_vrdma_app_stop(void *arg)
+{
+    spdk_vrdma_ctx_stop(stop_done_cb);
+}
+
+static void spdk_vrdma_signal_handler(int dummy)
+{
+    spdk_thread_send_msg(g_vrdma_app_thread, spdk_vrdma_app_stop, NULL);
+}
+
+static void spdk_vrdma_app_start(void *arg)
+{
+    struct sigaction act;
+
+    /*
+     * Set signal handler to allow stop on Ctrl+C.
+     */
+    g_vrdma_app_thread = spdk_get_thread();
+    if (!g_vrdma_app_thread) {
+        SPDK_ERRLOG("Failed to get SPDK thread\n");
+        goto err;
+    }
+    memset(&g_vrdma_ctx, 0, sizeof(g_vrdma_ctx));
+    if (spdk_vrdma_ctx_start(&g_vrdma_ctx)) {
+        SPDK_ERRLOG("Failed to start VRDMA_SNAP\n");
+        goto err;
+    }
+
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = spdk_vrdma_signal_handler;
+    sigaction(SIGINT, &act, 0);
+    sigaction(SIGPIPE, &act, 0);
+    sigaction(SIGTERM, &act, 0);
+
+    SPDK_NOTICELOG("VRDMA_SNAP started successfully\n");
+    return;
+
+err:
+    spdk_app_stop(-1);
 }
 
 static void
-save_pid(const char *pid_path)
+vrdma_usage(void)
 {
-	FILE *pid_file;
-
-	pid_file = fopen(pid_path, "w");
-	if (pid_file == NULL) {
-		fprintf(stderr, "Couldn't create pid file '%s': %s\n", pid_path, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	fprintf(pid_file, "%d\n", getpid());
-	fclose(pid_file);
+	fprintf(stderr, " -s <integer>              remote_mqp start mlnx qp number.\n");
 }
 
 static int
-vhost_parse_arg(int ch, char *arg)
+vrdma_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
-	case 'f':
-		g_pid_path = arg;
-		break;
-	case 'S':
-		spdk_vhost_set_socket_path(arg);
+	case 's':
+		g_start_mqpn = spdk_strtol(arg, 10);
+		if (g_start_mqpn < 0 || g_start_mqpn > MAX_START_MQP_NUM) {
+			fprintf(stderr,
+			"You must supply a positive mqp number less than 4096.\n");
+			return -EINVAL;
+		}
 		break;
 	default:
 		return -EINVAL;
@@ -77,34 +113,28 @@ vhost_parse_arg(int ch, char *arg)
 	return 0;
 }
 
-static void
-vhost_started(void *arg1)
+int main(int argc, char **argv)
 {
-}
+    struct spdk_app_opts opts = {0};
+    int rc;
 
-int
-main(int argc, char *argv[])
-{
-	struct spdk_app_opts opts = {};
-	int rc;
+    /* Set default values in opts structure. */
+    spdk_app_opts_init(&opts);
+    opts.name = "vrdma_snap_emu_app";
 
-	spdk_app_opts_init(&opts);
-	opts.name = "vhost";
+    if ((rc = spdk_app_parse_args(argc, argv, &opts,"s", NULL,
+    	vrdma_parse_arg, vrdma_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
+	fprintf(stderr, "Unable to parse the application arguments.\n");
+        exit(rc);
+    }
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:", NULL,
-				      vhost_parse_arg, vhost_usage)) !=
-	    SPDK_APP_PARSE_ARGS_SUCCESS) {
-		exit(rc);
-	}
+    rc = spdk_app_start(&opts, spdk_vrdma_app_start, NULL);
+    if (rc) {
+        SPDK_ERRLOG("ERROR starting application\n");
+    }
 
-	if (g_pid_path) {
-		save_pid(g_pid_path);
-	}
-
-	/* Blocks until the application is exiting */
-	rc = spdk_app_start(&opts, vhost_started, NULL);
-
-	spdk_app_fini();
-
-	return rc;
+    /* Gracefully close out all of the SPDK subsystems. */
+    SPDK_NOTICELOG("Exiting...\n");
+    spdk_app_fini();
+    return rc;
 }

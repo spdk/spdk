@@ -58,14 +58,13 @@ struct spdk_vrdma_port_ctx {
 	uint16_t mtu;
 };
 struct spdk_vrdma_events_ctx {
-	pthread_t	tid;
-	int		epfd;
+	pthread_t tid;
+	int	epfd;
 };
 
 struct spdk_vrdma_dev {
-        LIST_ENTRY(spdk_vrdma_dev) entry;
         uint32_t devid; /*PF_id*/
-	char emu_name[MAX_VRDMA_DEV_LEN];
+		char emu_name[MAX_VRDMA_DEV_LEN];
         uint32_t gid_index;
         struct ibv_device *emu_mgr;
         /*LIST_HEAD(pd, vpd) pd_list;
@@ -75,13 +74,10 @@ struct spdk_vrdma_dev {
         LIST_HEAD(qp, vqp) qp_list;*/
 };
 
-LIST_HEAD(spdk_vrdma_dev_list_head, spdk_vrdma_dev);
-extern struct spdk_vrdma_dev_list_head spdk_vrdma_dev_list;
-
 struct spdk_vrdma_ctx {
-        uint32_t dpa_enabled:1;
+    uint32_t dpa_enabled:1;
 	char emu_manager[MAX_VRDMA_DEV_LEN];
-        char emu_name[MAX_VRDMA_DEV_LEN];
+    char emu_name[MAX_VRDMA_DEV_LEN];
 	struct snap_context *sctx;
 	struct spdk_vrdma_port_ctx *port_ctx[VRDMA_IB_NUM_PORTS];
 	struct spdk_vrdma_events_ctx dev_ev_ctx;

@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __VRDMA_API_H__
-#define __VRDMA_API_H__
+#ifndef __VRDMA_ADMQ_H__
+#define __VRDMA_ADMQ_H__
 
 #include <stdint.h>
 #include <infiniband/verbs.h>
@@ -507,18 +507,11 @@ struct vrdma_cmd_param {
 	}param;
 };
 
+#define VRDMA_INVALID_CI_PI 0xFFFF
 struct vrdma_admin_sw_qp {
-	//struct snap_virtio_blk_queue vbq;
-	struct snap_dma_q *dma_q;
-	uint64_t driver_addr;
-	uint16_t q_size;
-	uint32_t dma_mkey;
-	uint16_t pre_ci;
-	uint16_t pre_pi;
-	struct ibv_pd *pd;
-	struct ibv_mr *aq_mr;
+	uint16_t pre_ci;// invalid -1
+	uint16_t pre_pi;// invalid -1 == snap_last_ci
 	struct vrdma_admin_queue *admq;
 };
 
-
-
+#endif

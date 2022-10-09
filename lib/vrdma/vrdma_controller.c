@@ -157,8 +157,8 @@ bool vrdma_ctrl_is_suspended(void *arg)
     if (!ctrl->sctrl)
         return true;
 
-    return snap_vrdma_ctrl_is_suspended(&ctrl->sctrl) ||
-           snap_vrdma_ctrl_is_stopped(&ctrl->sctrl);
+    return snap_vrdma_ctrl_is_suspended(ctrl->sctrl) ||
+           snap_vrdma_ctrl_is_stopped(ctrl->sctrl);
 }
 
 static int vrdma_ctrl_post_flr(void *arg)
@@ -175,6 +175,30 @@ static int vrdma_ctrl_post_flr(void *arg)
      */
     //vrdma_ctrl_io_channels_clear(ctrl, NULL, NULL);
 
+    return 0;
+}
+
+static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
+{
+    struct vrdma_admin_queue *admq;
+    uint32_t aq_size = sizeof(*admq);
+    
+    admq = spdk_malloc(aq_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
+                             SPDK_MALLOC_DMA);
+    if (!admq) {
+        return -1;
+    }
+    ctrl->mr = ibv_reg_mr(ctrl->pd, admq, aq_size,
+                    IBV_ACCESS_REMOTE_READ |
+                    IBV_ACCESS_REMOTE_WRITE |
+                    IBV_ACCESS_LOCAL_WRITE);
+    if (!ctrl->mr) {
+        spdk_free(admq);
+        return -1;
+    }
+    ctrl->sw_qp.admq = admq;
+    ctrl->sw_qp.pre_ci = VRDMA_INVALID_CI_PI;
+    ctrl->sw_qp.pre_pi = VRDMA_INVALID_CI_PI;
     return 0;
 }
 
@@ -200,6 +224,8 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     ctrl->pd = ibv_alloc_pd(ctrl->sctx->context);
     if (!ctrl->pd)
         goto free_ctrl;
+    if (vrdma_adminq_init(ctrl))
+        goto dealloc_pd;
 
     sctrl_attr.regs.mac = attr->mac;
     sctrl_attr.bar_cbs = &bar_cbs;
@@ -210,13 +236,14 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     sctrl_attr.npgs = attr->nthreads;
     sctrl_attr.force_in_order = attr->force_in_order;
     sctrl_attr.suspended = attr->suspended;
-
+    sctrl_attr.adminq_size = sizeof(struct vrdma_admin_queue);
+    sctrl_attr.adminq_buf = ctrl->sw_qp.admq;
     ctrl->sctrl = snap_vrdma_ctrl_open(ctrl->sctx, &sctrl_attr);
     if (!ctrl->sctrl) {
             SPDK_ERRLOG("Failed to open VRDMA controller %d [in order %d]"
                 " over RDMA device %s, PF %d",
                 attr->pf_id, attr->force_in_order, attr->emu_manager_name, attr->pf_id);
-        goto dealloc_pd;
+        goto dereg_mr;
     }
 
     ctrl->pf_id = attr->pf_id;
@@ -229,6 +256,9 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
 
     return ctrl;
 
+dereg_mr:
+    ibv_dereg_mr(ctrl->mr);
+    spdk_free(ctrl->sw_qp.admq);
 dealloc_pd:
     ibv_dealloc_pd(ctrl->pd);
 free_ctrl:
@@ -237,15 +267,28 @@ err:
     return NULL;
 }
 
+static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
+{
+    if (ctrl->mr)
+        ibv_dereg_mr(ctrl->mr);
+    if (ctrl->sw_qp.admq)
+        spdk_free(ctrl->sw_qp.admq);
+    ibv_dealloc_pd(ctrl->pd);
+
+    if (ctrl->destroy_done_cb)
+        ctrl->destroy_done_cb(ctrl->destroy_done_cb_arg);
+
+    free(ctrl);
+}
+
 void vrdma_ctrl_destroy(void *arg, void (*done_cb)(void *arg),
                              void *done_cb_arg)
 {
     struct vrdma_ctrl *ctrl = arg;
 
-    /* bdev_close is async, so free ctrl once done */
     snap_vrdma_ctrl_close(ctrl->sctrl);
     ctrl->sctrl = NULL;
-
     ctrl->destroy_done_cb = done_cb;
     ctrl->destroy_done_cb_arg = done_cb_arg;
+    vrdma_ctrl_free(ctrl);
 }
