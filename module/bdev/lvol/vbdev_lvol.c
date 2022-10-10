@@ -10,6 +10,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/uuid.h"
+#include "spdk/blob.h"
 
 #include "vbdev_lvol.h"
 
@@ -439,6 +440,10 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 		return;
 	}
 	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		if (lvol->bdev == NULL) {
+			spdk_lvol_close(lvol, _vbdev_lvs_remove_bdev_unregistered_cb, lvs_bdev);
+			continue;
+		}
 		spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_remove_bdev_unregistered_cb, lvs_bdev);
 	}
 }
@@ -1002,6 +1007,12 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	uint64_t total_size;
 	unsigned char *alias;
 	int rc;
+
+	if (spdk_blob_is_degraded(lvol->blob)) {
+		SPDK_NOTICELOG("lvol %s: blob is degraded: deferring bdev creation\n",
+			       lvol->unique_id);
+		return 0;
+	}
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	if (lvs_bdev == NULL) {
@@ -1686,6 +1697,90 @@ vbdev_lvs_grow(struct spdk_lvol_store *lvs,
 	}
 }
 
+/* Begin degraded blobstore device */
+
+/*
+ * When an external snapshot is missing, an instance of bs_dev_degraded is used as the blob's
+ * back_bs_dev. No bdev is registered, so there should be no IO nor requests for channels. The main
+ * purposes of this device are to prevent blobstore from hitting fatal runtime errors and to
+ * indicate that the blob is degraded via the is_degraded() callback.
+ */
+
+static void
+bs_dev_degraded_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload,
+		     uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
+{
+	assert(false);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
+}
+
+static void
+bs_dev_degraded_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		      struct iovec *iov, int iovcnt, uint64_t lba, uint32_t lba_count,
+		      struct spdk_bs_dev_cb_args *cb_args)
+{
+	assert(false);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
+}
+
+static void
+bs_dev_degraded_readv_ext(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+			  struct iovec *iov, int iovcnt, uint64_t lba, uint32_t lba_count,
+			  struct spdk_bs_dev_cb_args *cb_args,
+			  struct spdk_blob_ext_io_opts *io_opts)
+{
+	assert(false);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
+}
+
+static bool
+bs_dev_degraded_is_zeroes(struct spdk_bs_dev *dev, uint64_t lba, uint64_t lba_count)
+{
+	assert(false);
+	return false;
+}
+
+static struct spdk_io_channel *
+bs_dev_degraded_create_channel(struct spdk_bs_dev *bs_dev)
+{
+	assert(false);
+	return NULL;
+}
+
+static void
+bs_dev_degraded_destroy_channel(struct spdk_bs_dev *bs_dev, struct spdk_io_channel *channel)
+{
+	assert(false);
+}
+
+static void
+bs_dev_degraded_destroy(struct spdk_bs_dev *bs_dev)
+{
+}
+
+static bool
+bs_dev_degraded_is_degraded(struct spdk_bs_dev *bs_dev)
+{
+	return true;
+}
+
+static struct spdk_bs_dev bs_dev_degraded = {
+	.create_channel = bs_dev_degraded_create_channel,
+	.destroy_channel = bs_dev_degraded_destroy_channel,
+	.destroy = bs_dev_degraded_destroy,
+	.read = bs_dev_degraded_read,
+	.readv = bs_dev_degraded_readv,
+	.readv_ext = bs_dev_degraded_readv_ext,
+	.is_zeroes = bs_dev_degraded_is_zeroes,
+	.is_degraded = bs_dev_degraded_is_degraded,
+	/* Make the device as large as possible without risk of uint64 overflow. */
+	.blockcnt = UINT64_MAX / 512,
+	/* Prevent divide by zero errors calculating LBAs that will never be read. */
+	.blocklen = 512,
+};
+
+/* End degraded blobstore device */
+
 /* Begin external snapshot support */
 
 static void
@@ -1701,6 +1796,7 @@ vbdev_lvol_esnap_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob
 			    const void *esnap_id, uint32_t id_len,
 			    struct spdk_bs_dev **_bs_dev)
 {
+	struct spdk_lvol_store	*lvs = bs_ctx;
 	struct spdk_lvol	*lvol = blob_ctx;
 	struct spdk_bs_dev	*bs_dev = NULL;
 	struct spdk_uuid	uuid;
@@ -1735,16 +1831,37 @@ vbdev_lvol_esnap_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob
 	rc = spdk_bdev_create_bs_dev(uuid_str, false, NULL, 0,
 				     vbdev_lvol_esnap_bdev_event_cb, NULL, &bs_dev);
 	if (rc != 0) {
-		SPDK_ERRLOG("lvol %s: failed to create bs_dev from bdev '%s': %d\n",
-			    lvol->unique_id, uuid_str, rc);
-		return rc;
+		goto fail;
 	}
+
 	rc = spdk_bs_bdev_claim(bs_dev, &g_lvol_if);
 	if (rc != 0) {
-		SPDK_ERRLOG("lvol %s: unable to claim esnap bdev '%s': %d\n",
-			    lvol->unique_id, uuid_str, rc);
+		SPDK_ERRLOG("lvol %s: unable to claim esnap bdev '%s': %d\n", lvol->unique_id,
+			    uuid_str, rc);
 		bs_dev->destroy(bs_dev);
-		return rc;
+		goto fail;
+	}
+
+	*_bs_dev = bs_dev;
+	return 0;
+
+fail:
+	/* Unable to open or claim the bdev. This lvol is degraded. */
+	bs_dev = &bs_dev_degraded;
+	SPDK_NOTICELOG("lvol %s: bdev %s not available: lvol is degraded\n", lvol->unique_id,
+		       uuid_str);
+
+	/*
+	 * Be sure not to call spdk_lvs_missing_add() on an lvol that is already degraded. This can
+	 * lead to a cycle in the degraded_lvols tailq.
+	 */
+	if (lvol->degraded_set == NULL) {
+		rc = spdk_lvs_esnap_missing_add(lvs, lvol, uuid_str, sizeof(uuid_str));
+		if (rc != 0) {
+			SPDK_NOTICELOG("lvol %s: unable to register missing esnap device %s: "
+				       "it will not be hotplugged if added later\n",
+				       lvol->unique_id, uuid_str);
+		}
 	}
 
 	*_bs_dev = bs_dev;

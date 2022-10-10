@@ -7,6 +7,7 @@
 #include "spdk_cunit.h"
 #include "spdk/string.h"
 
+#include "common/lib/ut_multithread.c"
 #include "bdev/lvol/vbdev_lvol.c"
 
 #include "unit/lib/json_mock.c"
@@ -44,6 +45,10 @@ DEFINE_STUB(spdk_blob_get_esnap_id, int,
 DEFINE_STUB(spdk_blob_is_esnap_clone, bool, (const struct spdk_blob *blob), false);
 DEFINE_STUB(spdk_lvol_iter_immediate_clones, int,
 	    (struct spdk_lvol *lvol, spdk_lvol_iter_cb cb_fn, void *cb_arg), -ENOTSUP);
+DEFINE_STUB(spdk_lvs_esnap_missing_add, int,
+	    (struct spdk_lvol_store *lvs, struct spdk_lvol *lvol, const void *esnap_id,
+	     uint32_t id_len), -ENOTSUP);
+DEFINE_STUB(spdk_blob_is_degraded, bool, (const struct spdk_blob *blob), false);
 
 struct spdk_blob {
 	uint64_t	id;
@@ -1797,27 +1802,37 @@ ut_esnap_dev_create(void)
 
 	/* Bdev not found */
 	g_base_bdev = NULL;
-	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
-	CU_ASSERT(rc == -ENODEV);
-	CU_ASSERT(bs_dev == NULL);
-
-	/* Cannot get a claim */
-	g_base_bdev = &bdev;
-	lvol_already_opened = true;
-	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
-	CU_ASSERT(rc == -EPERM);
-	CU_ASSERT(bs_dev == NULL);
-
-	/* Happy path */
-	lvol_already_opened = false;
+	MOCK_SET(spdk_blob_is_degraded, true);
 	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	CU_ASSERT(bs_dev->destroy == bs_dev_degraded_destroy);
+	bs_dev->destroy(bs_dev);
+
+	/* Cannot get a claim */
+	/* TODO: This suggests we need a way to wait for a claim to be available. */
+	g_base_bdev = &bdev;
+	lvol_already_opened = true;
+	MOCK_SET(spdk_blob_is_degraded, true);
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	CU_ASSERT(bs_dev->destroy == bs_dev_degraded_destroy);
+	bs_dev->destroy(bs_dev);
+
+	/* Happy path */
+	lvol_already_opened = false;
+	MOCK_SET(spdk_blob_is_degraded, false);
+	rc = vbdev_lvol_esnap_dev_create(&lvs, &lvol, &blob, uuid_str, sizeof(uuid_str), &bs_dev);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
+	CU_ASSERT(bs_dev->destroy == ut_bs_dev_destroy);
 	bs_dev->destroy(bs_dev);
 
 	g_base_bdev = NULL;
 	lvol_already_opened = false;
 	free(unterminated);
+	MOCK_CLEAR(spdk_blob_is_degraded);
 }
 
 static void
@@ -1910,9 +1925,15 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, ut_esnap_dev_create);
 	CU_ADD_TEST(suite, ut_lvol_esnap_clone_bad_args);
 
+	allocate_threads(1);
+	set_thread(0);
+
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+
+	free_threads();
+
 	return num_failures;
 }
