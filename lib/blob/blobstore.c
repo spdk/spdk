@@ -372,6 +372,20 @@ blob_back_bs_destroy_esnap_done(void *ctx, struct spdk_blob *blob, int bserrno)
 		assert(false);
 	}
 
+	if (bs_dev == NULL) {
+		/*
+		 * This check exists to make scanbuild happy.
+		 *
+		 * blob->back_bs_dev for an esnap is NULL during the first iteration of blobs while
+		 * the blobstore is being loaded. It could also be NULL if there was an error
+		 * opening the esnap device. In each of these cases, no channels could have been
+		 * created because back_bs_dev->create_channel() would have led to a NULL pointer
+		 * deref.
+		 */
+		assert(false);
+		return;
+	}
+
 	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": calling destroy on back_bs_dev\n", blob->id);
 	bs_dev->destroy(bs_dev);
 }
@@ -1420,14 +1434,19 @@ blob_load_esnap(struct spdk_blob *blob, void *blob_ctx)
 		return rc;
 	}
 
-	assert(bs_dev != NULL);
-	SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": loaded back_bs_dev\n", blob->id);
-	if ((bs->io_unit_size % bs_dev->blocklen) != 0) {
-		SPDK_NOTICELOG("blob 0x%" PRIx64 " external snapshot device block size %u is not "
-			       "compatible with blobstore block size %u\n",
-			       blob->id, bs_dev->blocklen, bs->io_unit_size);
-		bs_dev->destroy(bs_dev);
-		return -EINVAL;
+	/*
+	 * Note: bs_dev might be NULL if the consumer chose to not open the external snapshot.
+	 * This especially might happen during spdk_bs_load() iteration.
+	 */
+	if (bs_dev != NULL) {
+		SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": loaded back_bs_dev\n", blob->id);
+		if ((bs->io_unit_size % bs_dev->blocklen) != 0) {
+			SPDK_NOTICELOG("blob 0x%" PRIx64 " external snapshot device block size %u "
+				       "is not compatible with blobstore block size %u\n",
+				       blob->id, bs_dev->blocklen, bs->io_unit_size);
+			bs_dev->destroy(bs_dev);
+			return -EINVAL;
+		}
 	}
 
 	blob->back_bs_dev = bs_dev;
@@ -1447,7 +1466,6 @@ blob_load_backing_dev(spdk_bs_sequence_t *seq, void *cb_arg)
 
 	if (blob_is_esnap_clone(blob)) {
 		rc = blob_load_esnap(blob, seq->cpl.u.blob_handle.esnap_ctx);
-		assert((rc == 0) ^ (blob->back_bs_dev == NULL));
 		blob_load_final(ctx, rc);
 		return;
 	}
@@ -8937,7 +8955,7 @@ blob_esnap_destroy_bs_dev_channels(struct spdk_blob *blob, bool abort_io,
 {
 	struct blob_esnap_destroy_ctx	*ctx;
 
-	if (!blob_is_esnap_clone(blob)) {
+	if (!blob_is_esnap_clone(blob) || blob->back_bs_dev == NULL) {
 		if (cb_fn != NULL) {
 			cb_fn(cb_arg, blob, 0);
 		}

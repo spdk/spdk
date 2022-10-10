@@ -28,8 +28,6 @@
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
 
-DEFINE_STUB(spdk_blob_get_esnap_id, int,
-	    (struct spdk_blob *blob, const void **id, size_t *len), -ENOTSUP);
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), NULL);
 DEFINE_STUB(spdk_bdev_get_by_name, struct spdk_bdev *, (const char *name), NULL);
 DEFINE_STUB(spdk_bdev_create_bs_dev_ro, int,
@@ -494,6 +492,21 @@ spdk_bs_create_clone(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	spdk_bs_create_blob_ext(bs, NULL, cb_fn, cb_arg);
+}
+
+static int g_spdk_blob_get_esnap_id_errno;
+static bool g_spdk_blob_get_esnap_id_called;
+static void *g_spdk_blob_get_esnap_id;
+static size_t g_spdk_blob_get_esnap_id_len;
+int
+spdk_blob_get_esnap_id(struct spdk_blob *blob, const void **id, size_t *len)
+{
+	g_spdk_blob_get_esnap_id_called = true;
+	if (g_spdk_blob_get_esnap_id_errno == 0) {
+		*id = g_spdk_blob_get_esnap_id;
+		*len = g_spdk_blob_get_esnap_id_len;
+	}
+	return g_spdk_blob_get_esnap_id_errno;
 }
 
 static void
@@ -2152,13 +2165,16 @@ lvol_get_xattr(void)
 	free_dev(&dev);
 }
 
+struct spdk_bs_dev *g_esnap_bs_dev;
+int g_esnap_bs_dev_errno = -ENOTSUP;
+
 static int
 ut_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 		       const void *esnap_id, uint32_t id_len,
 		       struct spdk_bs_dev **_bs_dev)
 {
-	CU_ASSERT(false);
-	return -ENOTSUP;
+	*_bs_dev = g_esnap_bs_dev;
+	return g_esnap_bs_dev_errno;
 }
 
 static void
@@ -2168,6 +2184,9 @@ lvol_esnap_reload(void)
 	struct spdk_lvs_with_handle_req *req;
 	struct spdk_lvs_opts opts;
 	int rc;
+
+	g_esnap_bs_dev = NULL;
+	g_esnap_bs_dev_errno = -ENOTSUP;
 
 	req = calloc(1, sizeof(*req));
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -2345,6 +2364,67 @@ lvol_esnap_create_delete(void)
 	g_lvol_store = NULL;
 }
 
+static void
+lvol_esnap_load_esnaps(void)
+{
+	struct spdk_blob	blob = { .id = 42 };
+	struct spdk_lvol_store	*lvs;
+	struct spdk_lvol	*lvol;
+	struct spdk_bs_dev	*bs_dev = NULL;
+	struct spdk_bs_dev	esnap_bs_dev = { 0 };
+	int			rc;
+	uint64_t		esnap_id = 42;
+
+	lvs = lvs_alloc();
+	SPDK_CU_ASSERT_FATAL(lvs != NULL);
+	lvs->esnap_bs_dev_create = ut_esnap_bs_dev_create;
+	lvol = lvol_alloc(lvs, __func__, true, LVOL_CLEAR_WITH_DEFAULT);
+	SPDK_CU_ASSERT_FATAL(lvol != NULL);
+
+	/* Handle missing bs_ctx and blob_ctx gracefully */
+	rc = lvs_esnap_bs_dev_create(NULL, NULL, &blob, &esnap_id, sizeof(esnap_id), &bs_dev);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Do not try to load external snapshot when load_esnaps is false */
+	g_spdk_blob_get_esnap_id_called = false;
+	bs_dev = NULL;
+	rc = lvs_esnap_bs_dev_create(lvs, lvol, &blob, &esnap_id, sizeof(esnap_id), &bs_dev);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bs_dev == NULL);
+	CU_ASSERT(!g_spdk_blob_get_esnap_id_called);
+
+	/* Same, with only lvs */
+	bs_dev = NULL;
+	rc = lvs_esnap_bs_dev_create(lvs, NULL, &blob, &esnap_id, sizeof(esnap_id), &bs_dev);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bs_dev == NULL);
+	CU_ASSERT(!g_spdk_blob_get_esnap_id_called);
+
+	/* Same, with only lvol */
+	bs_dev = NULL;
+	rc = lvs_esnap_bs_dev_create(NULL, lvol, &blob, &esnap_id, sizeof(esnap_id), &bs_dev);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bs_dev == NULL);
+	CU_ASSERT(!g_spdk_blob_get_esnap_id_called);
+
+	/* Happy path */
+	g_esnap_bs_dev = &esnap_bs_dev;
+	g_esnap_bs_dev_errno = 0;
+
+	lvs->load_esnaps = true;
+	ut_spdk_bdev_create_bs_dev_ro = 0;
+	g_spdk_blob_get_esnap_id_errno = 0;
+	bs_dev = NULL;
+	rc = lvs_esnap_bs_dev_create(lvs, lvol, &blob, &esnap_id, sizeof(esnap_id), &bs_dev);
+	CU_ASSERT(rc == 0);
+
+	/* Clean up */
+	lvol_free(lvol);
+	lvs_free(lvs);
+	g_esnap_bs_dev = NULL;
+	g_esnap_bs_dev_errno = -ENOTSUP;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2386,6 +2466,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_esnap_reload);
 	CU_ADD_TEST(suite, lvol_esnap_create_bad_args);
 	CU_ADD_TEST(suite, lvol_esnap_create_delete);
+	CU_ADD_TEST(suite, lvol_esnap_load_esnaps);
 
 	allocate_threads(1);
 	set_thread(0);

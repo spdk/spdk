@@ -132,6 +132,9 @@ typedef void (*spdk_blob_op_with_bs_dev)(void *cb_arg, struct spdk_bs_dev *bs_de
  * callback registered with the blobstore to create the external snapshot device. The blobstore
  * consumer must set this while loading the blobstore if it intends to support external snapshots.
  *
+ * If the blobstore consumer does not wish to load an external snapshot, it should set *bs_dev to
+ * NULL and return 0.
+ *
  * \param bs_ctx Context provided by the blobstore consumer via esnap_ctx member of struct
  * spdk_bs_opts.
  * \param blob_ctx Context provided to spdk_bs_open_ext() via esnap_ctx member of struct

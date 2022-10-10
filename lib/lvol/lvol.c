@@ -22,6 +22,9 @@ static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lv
 static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static inline int lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs_opts *dst);
+static int lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
+				   const void *esnap_id, uint32_t id_len,
+				   struct spdk_bs_dev **_bs_dev);
 
 static int
 add_lvs_to_list(struct spdk_lvol_store *lvs)
@@ -58,6 +61,8 @@ lvs_alloc(void)
 	TAILQ_INIT(&lvs->lvols);
 	TAILQ_INIT(&lvs->pending_lvols);
 	TAILQ_INIT(&lvs->retry_open_lvols);
+
+	lvs->load_esnaps = false;
 
 	return lvs;
 }
@@ -188,6 +193,7 @@ load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	if (lvolerrno == -ENOENT) {
 		/* Finished iterating */
 		if (req->lvserrno == 0) {
+			lvs->load_esnaps = true;
 			req->cb_fn(req->cb_arg, lvs, req->lvserrno);
 			free(req);
 		} else {
@@ -441,7 +447,8 @@ lvs_load(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *_lvs_opts,
 	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 
 	if (lvs_opts.esnap_bs_dev_create != NULL) {
-		bs_opts.esnap_bs_dev_create = lvs_opts.esnap_bs_dev_create;
+		req->lvol_store->esnap_bs_dev_create = lvs_opts.esnap_bs_dev_create;
+		bs_opts.esnap_bs_dev_create = lvs_esnap_bs_dev_create;
 		bs_opts.esnap_ctx = req->lvol_store;
 	}
 
@@ -1686,4 +1693,37 @@ spdk_lvs_grow(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
 	spdk_bs_grow(bs_dev, &opts, lvs_load_cb, req);
+}
+
+static int
+lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
+			const void *esnap_id, uint32_t id_len,
+			struct spdk_bs_dev **bs_dev)
+{
+	struct spdk_lvol_store	*lvs = bs_ctx;
+	struct spdk_lvol	*lvol = blob_ctx;
+	spdk_blob_id		blob_id = spdk_blob_get_id(blob);
+
+	if (lvs == NULL) {
+		if (lvol == NULL) {
+			SPDK_ERRLOG("Blob 0x%" PRIx64 ": no lvs context nor lvol context\n",
+				    blob_id);
+			return -EINVAL;
+		}
+		lvs = lvol->lvol_store;
+	}
+
+	/*
+	 * When spdk_lvs_load() is called, it iterates through all blobs in its blobstore building
+	 * up a list of lvols (lvs->lvols). During this initial iteration, each blob is opened,
+	 * passed to load_next_lvol(), then closed. There is no need to open the external snapshot
+	 * during this phase. Once the blobstore is loaded, lvs->load_esnaps is set to true so that
+	 * future lvol opens cause the external snapshot to be loaded.
+	 */
+	if (!lvs->load_esnaps) {
+		*bs_dev = NULL;
+		return 0;
+	}
+
+	return lvs->esnap_bs_dev_create(lvs, lvol, blob, esnap_id, id_len, bs_dev);
 }

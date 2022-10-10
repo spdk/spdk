@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #ifndef SPDK_INTERNAL_LVOLSTORE_H
@@ -74,10 +75,12 @@ struct spdk_lvol_store {
 	TAILQ_HEAD(, spdk_lvol)		lvols;
 	TAILQ_HEAD(, spdk_lvol)		pending_lvols;
 	TAILQ_HEAD(, spdk_lvol)		retry_open_lvols;
+	bool				load_esnaps;
 	bool				on_list;
 	TAILQ_ENTRY(spdk_lvol_store)	link;
 	char				name[SPDK_LVS_NAME_MAX];
 	char				new_name[SPDK_LVS_NAME_MAX];
+	spdk_bs_esnap_dev_create	esnap_bs_dev_create;
 };
 
 struct spdk_lvol {
