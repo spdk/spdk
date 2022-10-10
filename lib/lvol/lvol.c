@@ -607,7 +607,6 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
-	lvs->destruct = false;
 
 	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 

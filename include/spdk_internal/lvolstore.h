@@ -72,7 +72,6 @@ struct spdk_lvol_store {
 	struct spdk_uuid		uuid;
 	int				lvol_count;
 	int				lvols_opened;
-	bool				destruct;
 	TAILQ_HEAD(, spdk_lvol)		lvols;
 	TAILQ_HEAD(, spdk_lvol)		pending_lvols;
 	bool				on_list;

@@ -430,7 +430,6 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 			spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 		}
 	} else {
-		lvs->destruct = destroy;
 		if (destroy) {
 			_vbdev_lvs_remove_lvol_cb(lvs_bdev, 0);
 		} else {
@@ -1700,7 +1699,6 @@ vbdev_lvs_grow(struct spdk_lvol_store *lvs,
 	if (_vbdev_lvs_are_lvols_closed(lvs)) {
 		spdk_lvs_unload(lvs, _vbdev_lvs_grow_unload_cb, req);
 	} else {
-		lvs->destruct = false;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 			req->lvol_cnt++;
 			spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_grow_remove_bdev_unregistered_cb, req);
