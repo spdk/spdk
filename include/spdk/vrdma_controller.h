@@ -38,6 +38,8 @@
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
 
+extern struct vrdma_state_machine vrdma_sm;
+
 struct snap_vrdma_ctrl;
 struct snap_context;
 
@@ -63,7 +65,7 @@ struct vrdma_ctrl_init_attr {
     bool suspended;
 };
 
-void vrdma_ctrl_adminq_progress(void *ctrl);
+int vrdma_ctrl_adminq_progress(void *ctrl);
 void vrdma_ctrl_progress(void *ctrl);
 int vrdma_ctrl_progress_all_io(void *ctrl);
 int vrdma_ctrl_progress_io(void *arg, int thread_id);

@@ -526,18 +526,72 @@ struct vrdma_cmd_param {
 	}param;
 };
 
+/**
+ * enum vrdma_aq_cmd_sm_state - state of the sm handling a admq cmd
+ * @VRDMA_CMD_STATE_IDLE:            SM initialization state
+ * @VRDMA_CMD_STATE_INIT_CI:         set in snap lib when admq is created
+ * @VRDMA_CMD_STATE_POLL_PI:         read admq PI from host memory
+ * @VRDMA_CMD_STATE_HANDLE_PI:       process PI
+ * @VRDMA_CMD_STATE_READ_CMD_ENTRY:  Read admq cmd entry from host memory
+ * @VRDMA_CMD_STATE_PARSE_CMD_ENTRY: handle each cmd
+ * @VRDMA_CMD_STATE_WRITE_CMD_BACK:  when all cmds are handled, write back to host memory
+ * @VRDMA_CMD_STATE_UPDATE_CI:       update admq CI
+ * @VRDMA_CMD_STATE_FATAL_ERR:       Fatal error, SM stuck here (until reset)
+ * @VRDMA_CMD_NUM_OF_STATES:         should always be the last enum
+ */
+enum vrdma_aq_cmd_sm_state {
+        VRDMA_CMD_STATE_IDLE,
+        VRDMA_CMD_STATE_INIT_CI,
+        VRDMA_CMD_STATE_POLL_PI,
+        VRDMA_CMD_STATE_HANDLE_PI,
+        VRDMA_CMD_STATE_READ_CMD_ENTRY,
+        VRDMA_CMD_STATE_PARSE_CMD_ENTRY,
+        VRDMA_CMD_STATE_WRITE_CMD_BACK,
+        VRDMA_CMD_STATE_UPDATE_CI,
+        VRDMA_CMD_STATE_FATAL_ERR,
+        VRDMA_CMD_NUM_OF_STATES,
+};
+
 #define VRDMA_INVALID_CI_PI 0xFFFF
 
 struct vrdma_admin_sw_qp {
 	uint16_t pre_ci;
 	uint16_t pre_pi;
+	enum vrdma_aq_cmd_sm_state state;
+	uint16_t num_to_parse;
 	struct vrdma_admin_queue *admq;
 	struct snap_dma_completion init_ci;
+	struct snap_dma_completion poll_comp;
+	struct vrdma_state_machine *custom_sm;
+};
+
+/**
+ * enum vrdma_aq_cmd_sm_op_status - status of last operation
+ * @VRDMA_CMD_SM_OP_OK:		Last operation finished without a problem
+ * @VRDMA_CMD_SM_OP_ERR:	Last operation failed
+ *
+ * State machine operates asynchronously, usually by calling a function
+ * and providing a callback. Once callback is called it calls the state machine
+ * progress again and provides it with the status of the function called.
+ * This enum describes the status of the function called.
+ */
+enum vrdma_aq_cmd_sm_op_status {
+	VRDMA_CMD_SM_OP_OK,
+	VRDMA_CMD_SM_OP_ERR,
+};
+
+struct vrdma_aq_sm_state {
+	bool (*sm_handler)(struct vrdma_admin_sw_qp *aq,
+				enum vrdma_aq_cmd_sm_op_status status);
+};
+
+struct vrdma_state_machine {
+	struct vrdma_aq_sm_state *sm_array;
+	uint16_t sme;
 };
 
 struct vrdma_ctrl;
 
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
-						struct vrdma_admin_cmd_entry *aqe);
-
+				struct vrdma_admin_cmd_entry *aqe);
 #endif

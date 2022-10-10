@@ -43,6 +43,7 @@
 #include "spdk/vrdma.h"
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_snap_pci_mgr.h"
+#include "spdk/vrdma_admq.h"
 
 
 int vrdma_dev_name_to_id(const char *rdma_dev_name)
@@ -121,11 +122,6 @@ void vrdma_ctrl_progress(void *arg)
     snap_vrdma_ctrl_progress(ctrl->sctrl);
 }
 
-void vrdma_ctrl_adminq_progress(void *arg)
-{
-    /*TBD*/
-}
-
 #ifndef HAVE_SPDK_POLLER_BUSY
 enum spdk_thread_poller_rc { SPDK_POLLER_IDLE , SPDK_POLLER_BUSY };
 #endif
@@ -189,6 +185,7 @@ static void vrdma_adminq_dma_cb(struct snap_dma_completion *self, int status)
     sw_qp->pre_ci = admq->ci;
     /* pre_pi should be init as last ci*/
     sw_qp->pre_pi = sw_qp->pre_ci;
+	sw_qp->state = VRDMA_CMD_STATE_INIT_CI;
 }
 
 static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
@@ -214,6 +211,8 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     ctrl->sw_qp.init_ci.func = vrdma_adminq_dma_cb;
     ctrl->sw_qp.init_ci.count = 1;
     ctrl->sw_qp.admq = admq;
+	ctrl->sw_qp.state = VRDMA_CMD_STATE_IDLE;
+	ctrl->sw_qp.custom_sm = &vrdma_sm;
     return 0;
 }
 
