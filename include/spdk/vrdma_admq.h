@@ -57,6 +57,13 @@ enum vrdma_dev_state {
 	rdev_state_max,
 };
 
+enum vrdma_aq_msg_err_code {
+	aq_msg_err_code_success = 0x0,
+	aq_msg_err_code_invalid_params = 0x1,
+	aq_msg_err_code_nomem = 0x2,
+	aq_msg_err_code_unknown = 0x3,
+};
+
 /* more fields need mlnx to fill */
 struct vrdma_dev {
 	uint32_t rdev_idx;
@@ -84,6 +91,16 @@ struct vrdma_open_device_resp {
 
 struct vrdma_query_device_req {
 };
+
+enum vrdma_device_cap_flags {
+	VRDMA_DEVICE_RC_RNR_NAK_GEN		= (1 << 0),
+};
+#define VRDMA_DEV_MAX_QP     0x40000
+#define VRDMA_DEV_MAX_QP_SZ  0x2000000
+#define VRDMA_DEV_MAX_CQ     0x40000
+#define VRDMA_DEV_MAX_CQ_DP  0x400
+#define VRDMA_DEV_MAX_SQ_DP  0x400
+#define VRDMA_DEV_MAX_RQ_DP  0x400
 
 struct vrdma_query_device_resp {
 	uint32_t err_code:8;
@@ -512,12 +529,15 @@ struct vrdma_cmd_param {
 #define VRDMA_INVALID_CI_PI 0xFFFF
 
 struct vrdma_admin_sw_qp {
-	uint16_t pre_ci;// invalid -1
-	uint16_t pre_pi;// invalid -1 == snap_last_ci
+	uint16_t pre_ci;
+	uint16_t pre_pi;
 	struct vrdma_admin_queue *admq;
 	struct snap_dma_completion init_ci;
 };
 
-int vrdma_parse_admq_entry(struct vrdma_admin_cmd_entry *aqe);
+struct vrdma_ctrl;
+
+int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
+						struct vrdma_admin_cmd_entry *aqe);
 
 #endif

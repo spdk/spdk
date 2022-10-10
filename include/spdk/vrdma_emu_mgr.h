@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "spdk/vrdma.h"
-#include "spdk/vrdma_admq.h"
+//#include "spdk/vrdma_admq.h"
 
 #define SPDK_EMU_NAME_MAXLEN MAX_VRDMA_DEV_LEN
 #define SPDK_EMU_MANAGER_NAME_MAXLEN 16
