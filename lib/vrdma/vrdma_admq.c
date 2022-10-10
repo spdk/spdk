@@ -320,7 +320,7 @@ static bool vrdma_aq_sm_read_pi(struct vrdma_admin_sw_qp *aq,
 		return true;
 	}
 
-	SPDK_NOTICELOG("vrdam poll admin pi: admq pa 0x%llx\n", ctrl->sctrl->adminq_driver_addr);
+	SPDK_NOTICELOG("vrdam poll admin pi: admq pa 0x%lx\n", ctrl->sctrl->adminq_driver_addr);
 
 	aq->state = VRDMA_CMD_STATE_HANDLE_PI;
 	aq->poll_comp.count = 1;
@@ -370,7 +370,7 @@ static bool vrdma_aq_sm_read_cmd(struct vrdma_admin_sw_qp *aq,
 
 	host_ring_addr = ctrl->sctrl->adminq_driver_addr +
 		             offsetof(struct vrdma_admin_queue, ring);
-	SPDK_NOTICELOG("vrdam poll admin cmd: admq pa 0x%llx\n", ctrl->sctrl->adminq_driver_addr);
+	SPDK_NOTICELOG("vrdam poll admin cmd: admq pa 0x%lx\n", ctrl->sctrl->adminq_driver_addr);
 
 	aq->state = VRDMA_CMD_STATE_PARSE_CMD_ENTRY;
 	aq->num_to_parse = pi - aq->pre_ci;
@@ -381,7 +381,7 @@ static bool vrdma_aq_sm_read_cmd(struct vrdma_admin_sw_qp *aq,
 		num = pi - aq->pre_ci;
 		aq_poll_size = num * sizeof(struct vrdma_admin_cmd_entry);
 		offset = (aq->pre_pi % q_size) * sizeof(struct vrdma_admin_cmd_entry);
-	    	host_ring_addr = (uint8_t *)host_ring_addr + offset;
+	    	host_ring_addr = host_ring_addr + offset;
 		ret = snap_dma_q_read(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
 				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
 				              ctrl->sctrl->xmkey->mkey, &aq->poll_comp);
@@ -396,7 +396,7 @@ static bool vrdma_aq_sm_read_cmd(struct vrdma_admin_sw_qp *aq,
 		num = q_size - (aq->pre_ci % q_size);
 		aq_poll_size = num * sizeof(struct vrdma_admin_cmd_entry);
 		offset = (aq->pre_ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
-		host_ring_addr = (uint8_t *)host_ring_addr + offset;
+		host_ring_addr = host_ring_addr + offset;
 		ret = snap_dma_q_read(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
 				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
 				              ctrl->sctrl->xmkey->mkey, &aq->poll_comp);
@@ -454,7 +454,6 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 {
 	struct vrdma_ctrl *ctrl = container_of(aq, struct vrdma_ctrl, sw_qp);
 	uint16_t num_to_write = aq->num_to_parse;
-	uint16_t pi = aq->admq->pi;
 	uint16_t ci = aq->admq->ci;
 	uint32_t aq_poll_size = 0;
 	uint64_t host_ring_addr;
@@ -466,7 +465,7 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 
 	host_ring_addr = ctrl->sctrl->adminq_driver_addr +
 		             offsetof(struct vrdma_admin_queue, ring);
-	SPDK_NOTICELOG("vrdam write admin cmd: admq pa 0x%llx\n", ctrl->sctrl->adminq_driver_addr);
+	SPDK_NOTICELOG("vrdam write admin cmd: admq pa 0x%lx\n", ctrl->sctrl->adminq_driver_addr);
 
 	aq->state = VRDMA_CMD_STATE_UPDATE_CI;
 
@@ -475,7 +474,7 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 		aq->poll_comp.count = 1;
 		aq_poll_size = num_to_write * sizeof(struct vrdma_admin_cmd_entry);
 		offset = (ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
-	    host_ring_addr = (uint8_t *)host_ring_addr + offset;
+	    host_ring_addr = host_ring_addr + offset;
 		ret = snap_dma_q_write(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
 				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
 				              ctrl->sctrl->xmkey->mkey, &aq->poll_comp);
@@ -490,7 +489,7 @@ static bool vrdma_aq_sm_write_cmd(struct vrdma_admin_sw_qp *aq,
 		num = q_size - (ci % q_size);
 		aq_poll_size = num * sizeof(struct vrdma_admin_cmd_entry);
 		offset = (ci % q_size) * sizeof(struct vrdma_admin_cmd_entry);
-		host_ring_addr = (uint8_t *)host_ring_addr + offset;
+		host_ring_addr = host_ring_addr + offset;
 		ret = snap_dma_q_write(ctrl->sctrl->adminq_dma_q, aq->admq->ring, aq_poll_size,
 				              ctrl->sctrl->adminq_mr->lkey, host_ring_addr,
 				              ctrl->sctrl->xmkey->mkey, &aq->poll_comp);
@@ -533,7 +532,7 @@ static bool vrdma_aq_sm_update_ci(struct vrdma_admin_sw_qp *aq,
 		return true;
 	}
 
-	SPDK_NOTICELOG("vrdam update admq CI: admq pa 0x%llx\n", ctrl->sctrl->adminq_driver_addr);
+	SPDK_NOTICELOG("vrdam update admq CI: admq pa 0x%lx\n", ctrl->sctrl->adminq_driver_addr);
 
 	aq->state = VRDMA_CMD_STATE_POLL_PI;
 	aq->poll_comp.count = 1;
@@ -580,7 +579,7 @@ struct vrdma_state_machine vrdma_sm  = { vrdma_aq_sm_arr, sizeof(vrdma_aq_sm_arr
  *
  * Return: 0 (Currently no option to fail)
  */
-int vrdma_aq_cmd_progress(struct vrdma_admin_sw_qp *aq,
+static int vrdma_aq_cmd_progress(struct vrdma_admin_sw_qp *aq,
 		          enum vrdma_aq_cmd_sm_op_status status)
 {
 	struct vrdma_state_machine *sm;
@@ -599,7 +598,7 @@ int vrdma_aq_cmd_progress(struct vrdma_admin_sw_qp *aq,
 	return 0;
 }
 
-static void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status)
+void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status)
 {
 	enum vrdma_aq_cmd_sm_op_status op_status = VRDMA_CMD_SM_OP_OK;
 	struct vrdma_admin_sw_qp *aq = container_of(self, struct vrdma_admin_sw_qp,

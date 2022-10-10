@@ -594,4 +594,6 @@ struct vrdma_ctrl;
 
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe);
+void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status);
+
 #endif
