@@ -35,6 +35,8 @@
 #include "spdk/env.h"
 #include "spdk/barrier.h"
 #include "spdk/vrdma_admq.h"
+#include "spdk/vrdma_controller.h"
+#include "snap_vrdma_ctrl.h"
 
 static inline int aqe_sanity_check(struct vrdma_admin_cmd_entry *aqe)
 {
@@ -51,194 +53,233 @@ static inline int aqe_sanity_check(struct vrdma_admin_cmd_entry *aqe)
 
 }
 
-static int vrdma_aq_open_dev(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_open_dev(struct vrdma_ctrl *ctrl,
+								struct vrdma_admin_cmd_entry *aqe)
+{
+	/* No action and just return OK*/
+	aqe->resp.open_device_resp.err_code = aq_msg_err_code_success;
+	return 0;
+}
+
+
+static int vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
+								struct vrdma_admin_cmd_entry *aqe)
+{
+
+	struct snap_device *sdev = ctrl->sctrl->sdev;
+	const char fw_ver[] = "Unkown";
+
+	memcpy(aqe->resp.query_device_resp.fw_ver, fw_ver, strlen(fw_ver));
+	aqe->resp.query_device_resp.dev_cap_flags = VRDMA_DEVICE_RC_RNR_NAK_GEN;
+	aqe->resp.query_device_resp.vendor_id = sdev->pci->pci_attr.vendor_id;
+	aqe->resp.query_device_resp.hw_ver = sdev->pci->pci_attr.revision_id;
+	aqe->resp.query_device_resp.max_pd = 1 << ctrl->sctx->vrdma_caps.log_max_pd;
+	aqe->resp.query_device_resp.max_qp = VRDMA_DEV_MAX_QP;
+	aqe->resp.query_device_resp.max_qp_wr = VRDMA_DEV_MAX_QP_SZ;
+	aqe->resp.query_device_resp.max_cq = VRDMA_DEV_MAX_CQ;
+	aqe->resp.query_device_resp.max_sq_depth = VRDMA_DEV_MAX_SQ_DP;
+	aqe->resp.query_device_resp.max_rq_depth = VRDMA_DEV_MAX_RQ_DP;
+	aqe->resp.query_device_resp.max_cq_depth = VRDMA_DEV_MAX_CQ_DP;
+	aqe->resp.query_device_resp.max_mr = 1 << ctrl->sctx->vrdma_caps.log_max_mkey;
+	aqe->resp.query_device_resp.err_code = aq_msg_err_code_success;
+	return 0;
+}
+
+static int vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
+								struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_query_dev(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_query_port(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_query_gid(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_modify_gid(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_create_pd(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_destroy_pd(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_reg_mr(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_dereg_mr(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_create_cq(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_destroy_cq(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_create_qp(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_destroy_qp(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_query_qp(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_modify_qp(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_modify_ceq(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_create_ceq(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_modify_ceq(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_destroy_ceq(struct vrdma_admin_cmd_entry *aqe)
+static int vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
+							struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
 	return 0;
 }
 
-static int vrdma_aq_create_ah(struct vrdma_admin_cmd_entry *aqe)
-{
-	//TODO
-	return 0;
-}
-
-static int vrdma_aq_destroy_ah(struct vrdma_admin_cmd_entry *aqe)
-{
-	//TODO
-	return 0;
-}
-
-int vrdma_parse_admq_entry(struct vrdma_admin_cmd_entry *aqe)
+int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
+			struct vrdma_admin_cmd_entry *aqe)
 {
 	int ret = 0;
 	
-	if (aqe_sanity_check(aqe)) {
+	if (!ctrl || aqe_sanity_check(aqe)) {
 		return -1;
 	}
 
 	switch (aqe->hdr.opcode) {
 			case VRDMA_ADMIN_OPEN_DEVICE:
-				ret = vrdma_aq_open_dev(aqe);
+				ret = vrdma_aq_open_dev(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_DEVICE:
-				ret = vrdma_aq_query_dev(aqe);
+				ret = vrdma_aq_query_dev(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_PORT:
-				ret = vrdma_aq_query_port(aqe);
+				ret = vrdma_aq_query_port(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_GID:
-				ret = vrdma_aq_query_gid(aqe);
+				ret = vrdma_aq_query_gid(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_MODIFY_GID:
-				ret = vrdma_aq_modify_gid(aqe);
+				ret = vrdma_aq_modify_gid(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_PD:
-				ret = vrdma_aq_create_pd(aqe);
+				ret = vrdma_aq_create_pd(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_PD:
-				ret = vrdma_aq_destroy_pd(aqe);
+				ret = vrdma_aq_destroy_pd(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_REG_MR:
-				ret = vrdma_aq_reg_mr(aqe);
+				ret = vrdma_aq_reg_mr(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DEREG_MR:
-				ret = vrdma_aq_dereg_mr(aqe);
+				ret = vrdma_aq_dereg_mr(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_CQ:
-				ret = vrdma_aq_create_cq(aqe);
+				ret = vrdma_aq_create_cq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_CQ:
-				ret = vrdma_aq_destroy_cq(aqe);
+				ret = vrdma_aq_destroy_cq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_QP:
-				ret = vrdma_aq_create_qp(aqe);
+				ret = vrdma_aq_create_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_QP:
-				ret = vrdma_aq_destroy_qp(aqe);
+				ret = vrdma_aq_destroy_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_QP:
-				ret = vrdma_aq_query_qp(aqe);
+				ret = vrdma_aq_query_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_MODIFY_QP:
-				ret = vrdma_aq_modify_qp(aqe);
+				ret = vrdma_aq_modify_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_CEQ:
-				ret = vrdma_aq_create_ceq(aqe);
+				ret = vrdma_aq_create_ceq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_MODIFY_CEQ:
-				ret = vrdma_aq_modify_ceq(aqe);
+				ret = vrdma_aq_modify_ceq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_CEQ:
-				ret = vrdma_aq_destroy_ceq(aqe);
+				ret = vrdma_aq_destroy_ceq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_AH:
-				ret = vrdma_aq_create_ah(aqe);
+				ret = vrdma_aq_create_ah(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_AH:
-				ret = vrdma_aq_destroy_ah(aqe);
+				ret = vrdma_aq_destroy_ah(ctrl, aqe);
 				break;
 			default:
 				return -1;		
@@ -246,5 +287,3 @@ int vrdma_parse_admq_entry(struct vrdma_admin_cmd_entry *aqe)
 
 	return ret;
 }
-
-	
