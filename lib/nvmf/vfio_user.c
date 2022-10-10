@@ -912,6 +912,8 @@ vfio_user_ctrlr_switch_doorbells(struct nvmf_vfio_user_ctrlr *ctrlr, bool shadow
 
 		if (sq != NULL) {
 			sq->dbl_tailp = doorbells + queue_index(sq->qid, false);
+
+			ctrlr->sqs[i]->need_rearm = shadow;
 		}
 
 		if (cq != NULL) {
@@ -2287,9 +2289,6 @@ handle_doorbell_buffer_config(struct nvmf_vfio_user_ctrlr *ctrlr, struct spdk_nv
 	 */
 	for (uint16_t i = 0; i < NVMF_VFIO_USER_DEFAULT_MAX_QPAIRS_PER_CTRLR; ++i) {
 		sdbl->eventidxs[queue_index(i, true)] = NVMF_VFIO_USER_EVENTIDX_POLL;
-		if (ctrlr->sqs[i] != NULL) {
-			ctrlr->sqs[i]->need_rearm = true;
-		}
 	}
 
 	/* Update controller. */
@@ -2647,6 +2646,7 @@ disable_ctrlr(struct nvmf_vfio_user_ctrlr *vu_ctrlr)
 	nvmf_ctrlr_abort_aer(vu_ctrlr->ctrlr);
 
 	/* Free the shadow doorbell buffer. */
+	vfio_user_ctrlr_switch_doorbells(vu_ctrlr, false);
 	free_sdbl(vu_ctrlr->endpoint->vfu_ctx, vu_ctrlr->sdbl);
 	vu_ctrlr->sdbl = NULL;
 }
@@ -3429,6 +3429,7 @@ vfio_user_device_reset(vfu_ctx_t *vfu_ctx, vfu_reset_type_t type)
 
 	/* FIXME: LOST_CONN case ? */
 	if (ctrlr->sdbl != NULL) {
+		vfio_user_ctrlr_switch_doorbells(ctrlr, false);
 		free_sdbl(vfu_ctx, ctrlr->sdbl);
 		ctrlr->sdbl = NULL;
 	}
