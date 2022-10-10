@@ -33,6 +33,7 @@ from . import sock
 from . import vfio_user
 from . import iobuf
 from . import dpdk_cryptodev
+from . import mlx5
 from . import client as rpc_client
 
 

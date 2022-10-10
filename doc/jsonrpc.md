@@ -450,6 +450,7 @@ Example response:
     "dpdk_cryptodev_scan_accel_module",
     "dpdk_cryptodev_set_driver",
     "dpdk_cryptodev_get_driver",
+    "mlx5_scan_accel_module",
     "bdev_virtio_attach_controller",
     "bdev_virtio_scsi_get_devices",
     "bdev_virtio_detach_controller",
@@ -2129,6 +2130,43 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": "crypto_aesni_mb"
+}
+~~~
+
+### mlx5_scan_accel_module {#rpc_mlx5_scan_accel_module}
+
+Enable mlx5 accel offload
+
+#### Parameters
+
+Name                    | Optional | Type   | Description
+----------------------- | -------- |--------| -----------
+qp_size                 | Optional | number | qpair size
+num_requests            | Optional | number | Size of the shared requests pool
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "mlx5_scan_accel_module",
+  "id": 1,
+  "params": {
+    "qp_size": 256,
+    "num_requests": 2047
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
 }
 ~~~
 

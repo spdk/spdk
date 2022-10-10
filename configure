@@ -874,12 +874,16 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 
 	if [ "${CONFIG[RDMA_PROV]}" == "mlx5_dv" ]; then
-		if ! echo -e '#include <spdk/stdinc.h>\n' \
-			'#include <infiniband/mlx5dv.h>\n' \
-			'#include <rdma/rdma_cma.h>\n' \
-			'int main(void) { return rdma_establish(NULL) || ' \
-			'!!IBV_QP_INIT_ATTR_SEND_OPS_FLAGS || !!MLX5_OPCODE_RDMA_WRITE; }\n' \
-			| "${BUILD_CMD[@]}" -lmlx5 -I${rootdir}/include -c - 2> /dev/null; then
+		MLX5_DV_BUILD_BUILD_CMD="
+		#include <infiniband/mlx5dv.h>\n
+		#include <rdma/rdma_cma.h>\n
+		int main(void) { return rdma_establish(NULL) ||\n
+		!!IBV_QP_INIT_ATTR_SEND_OPS_FLAGS || !!MLX5_OPCODE_RDMA_WRITE"
+		if [ "${CONFIG[CRYPTO]}" = "y" ]; then
+			MLX5_DV_BUILD_BUILD_CMD+="|| !!MLX5DV_CRYPTO_ENGINES_CAP_AES_XTS_SINGLE_BLOCK"
+		fi
+		MLX5_DV_BUILD_BUILD_CMD+=";}"
+		if ! echo -e $MLX5_DV_BUILD_BUILD_CMD | "${BUILD_CMD[@]}" -lmlx5 -I${rootdir}/include -c -; then
 			echo "mlx5_dv provider is not supported"
 			exit 1
 		fi

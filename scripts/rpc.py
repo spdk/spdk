@@ -2908,6 +2908,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('dpdk_cryptodev_get_driver', help='Get the DPDK cryptodev driver')
     p.set_defaults(func=dpdk_cryptodev_get_driver)
 
+    # mlx5
+    def mlx5_scan_accel_module(args):
+        rpc.mlx5.mlx5_scan_accel_module(args.client,
+                                        qp_size=args.qp_size,
+                                        num_requests=args.num_requests)
+
+    p = subparsers.add_parser('mlx5_scan_accel_module', help='Enable mlx5 accel module.')
+    p.add_argument('-q', '--qp-size', type=int, help='QP size')
+    p.add_argument('-r', '--num-requests', type=int, help='Size of the shared requests pool')
+    p.set_defaults(func=mlx5_scan_accel_module)
+
     # opal
     def bdev_nvme_opal_init(args):
         rpc.nvme.bdev_nvme_opal_init(args.client,

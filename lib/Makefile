@@ -22,6 +22,9 @@ DIRS-$(CONFIG_VBDEV_COMPRESS) += reduce
 DIRS-$(CONFIG_RDMA) += rdma
 DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
+DIRS-y += mlx5
+endif
 # If CONFIG_ENV is pointing at a directory in lib, build it.
 # Out-of-tree env implementations must be built separately by the user.
 ENV_NAME := $(notdir $(CONFIG_ENV))

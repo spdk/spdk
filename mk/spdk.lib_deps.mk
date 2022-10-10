@@ -70,6 +70,9 @@ DEPDIRS-nvmf := accel log sock util nvme thread $(JSON_LIBS) trace bdev
 ifeq ($(CONFIG_RDMA),y)
 DEPDIRS-nvmf += rdma
 endif
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
+DEPDIRS-mlx5 = log rdma util
+endif
 DEPDIRS-scsi := log util thread $(JSON_LIBS) trace bdev
 
 DEPDIRS-iscsi := log sock util conf thread $(JSON_LIBS) trace scsi
@@ -99,6 +102,10 @@ DEPDIRS-accel_dsa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_iaa := log idxd thread $(JSON_LIBS) accel trace
 DEPDIRS-accel_dpdk_cryptodev := log thread $(JSON_LIBS) accel
 DEPDIRS-accel_dpdk_compressdev := log thread $(JSON_LIBS) accel util
+
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
+DEPDIRS-accel_mlx5 := accel thread log mlx5 rdma util
+endif
 
 # module/env_dpdk
 DEPDIRS-env_dpdk_rpc := log $(JSON_LIBS)

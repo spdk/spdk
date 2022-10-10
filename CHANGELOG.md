@@ -11,6 +11,9 @@ New functions `spdk_accel_submit_encrypt` and `spdk_accel_submit_decrypt` were a
 New accel module `dpdk_cryptodev` has been added. It uses DPDK crypto PMD and support encrypt and
 decrypt operations. New RPC `dpdk_cryptodev_scan_accel_module` has been added to enable this accel module.
 
+New accel module `mlx5` was added. It implements crypto operations, enabled when SPDK is configured with
+RDMA provider is mlx5_dv and crypto support.
+
 ### bdev
 
 Added RPCs bdev_nvme_start_mdns_discovery, bdev_nvme_get_mdns_discovery_info and

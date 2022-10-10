@@ -56,3 +56,8 @@ module/bdev/daos/bdev_daos_rpc
 # Not configured to test xNVMe bdev
 module/bdev/xnvme/bdev_xnvme
 module/bdev/xnvme/bdev_xnvme_rpc
+
+# Not configured to test mlx5 accel module & crypto lib
+module/accel/mlx5/accel_mlx5
+module/accel/mlx5/accel_mlx5_rpc
+lib/mlx5/mlx5_crypto

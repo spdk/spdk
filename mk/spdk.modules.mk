@@ -108,6 +108,10 @@ ifeq ($(CONFIG_DPDK_COMPRESSDEV),y)
 ACCEL_MODULES_LIST += accel_dpdk_compressdev
 endif
 
+ifeq ($(CONFIG_RDMA_PROV)|$(CONFIG_CRYPTO),mlx5_dv|y)
+ACCEL_MODULES_LIST += accel_mlx5
+endif
+
 SCHEDULER_MODULES_LIST = scheduler_dynamic
 ifeq (y,$(DPDK_POWER))
 SCHEDULER_MODULES_LIST += env_dpdk scheduler_dpdk_governor scheduler_gscheduler
