@@ -2018,14 +2018,12 @@ nvme_rdma_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 
 	_nvme_rdma_ctrlr_disconnect_qpair(ctrlr, qpair, nvme_rdma_qpair_disconnected);
 
-	/* If the qpair is in a poll group, disconnected_qpair_cb has to be called
-	 * asynchronously after the qpair is actually disconnected. Hence let
-	 * poll_group_process_completions() poll the qpair until then.
-	 *
-	 * If the qpair is not in a poll group, poll the qpair until it is actually
-	 * disconnected here.
+	/* If the async mode is disabled, poll the qpair until it is actually disconnected.
+	 * It is ensured that poll_group_process_completions() calls disconnected_qpair_cb
+	 * for any disconnected qpair. Hence, we do not have to check if the qpair is in
+	 * a poll group or not.
 	 */
-	if (qpair->async || qpair->poll_group != NULL) {
+	if (qpair->async) {
 		return;
 	}
 
