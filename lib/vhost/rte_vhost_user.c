@@ -918,6 +918,7 @@ _stop_session(struct spdk_vhost_session *vsession)
 
 		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
+	vsession->max_queues = 0;
 
 	return 0;
 }
@@ -1013,13 +1014,100 @@ vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session 
 }
 
 static int
+enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
+{
+	struct spdk_vhost_virtqueue *q;
+	bool packed_ring;
+
+	if (qid >= SPDK_VHOST_MAX_VQUEUES) {
+		return -EINVAL;
+	}
+
+	q = &vsession->virtqueue[qid];
+	memset(q, 0, sizeof(*q));
+	packed_ring = ((vsession->negotiated_features & (1ULL << VIRTIO_F_RING_PACKED)) != 0);
+
+	q->vsession = vsession;
+	q->vring_idx = -1;
+	if (rte_vhost_get_vhost_vring(vsession->vid, qid, &q->vring)) {
+		return 0;
+	}
+	q->vring_idx = qid;
+	rte_vhost_get_vhost_ring_inflight(vsession->vid, qid, &q->vring_inflight);
+
+	/* vring.desc and vring.desc_packed are in a union struct
+	 * so q->vring.desc can replace q->vring.desc_packed.
+	 */
+	if (q->vring.desc == NULL || q->vring.size == 0) {
+		return 0;
+	}
+
+	if (rte_vhost_get_vring_base(vsession->vid, qid, &q->last_avail_idx, &q->last_used_idx)) {
+		q->vring.desc = NULL;
+		return 0;
+	}
+
+	/*
+	 * Not sure right now but this look like some kind of QEMU bug and guest IO
+	 * might be frozed without kicking all queues after live-migration. This look like
+	 * the previous vhost instance failed to effectively deliver all interrupts before
+	 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
+	 * should be ignored by guest virtio driver.
+	 *
+	 * Tested on QEMU 2.10.91 and 2.11.50.
+	 *
+	 * Make sure a successful call of
+	 * `rte_vhost_vring_call` will happen
+	 * after starting the device.
+	 */
+	q->used_req_cnt += 1;
+
+	if (packed_ring) {
+		/* Use the inflight mem to restore the last_avail_idx and last_used_idx.
+		 * When the vring format is packed, there is no used_idx in the
+		 * used ring, so VM can't resend the used_idx to VHOST when reconnect.
+		 * QEMU version 5.2.0 supports the packed inflight before that it only
+		 * supports split ring inflight because it doesn't send negotiated features
+		 * before get inflight fd. Users can use RPC to enable this function.
+		 */
+		if (spdk_unlikely(vsession->vdev->packed_ring_recovery)) {
+			rte_vhost_get_vring_base_from_inflight(vsession->vid, qid,
+							       &q->last_avail_idx,
+							       &q->last_used_idx);
+		}
+
+		/* Packed virtqueues support up to 2^15 entries each
+		 * so left one bit can be used as wrap counter.
+		 */
+		q->packed.avail_phase = q->last_avail_idx >> 15;
+		q->last_avail_idx = q->last_avail_idx & 0x7FFF;
+		q->packed.used_phase = q->last_used_idx >> 15;
+		q->last_used_idx = q->last_used_idx & 0x7FFF;
+
+		if (!vsession->interrupt_mode) {
+			/* Disable I/O submission notifications, we'll be polling. */
+			q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
+		}
+	} else {
+		if (!vsession->interrupt_mode) {
+			/* Disable I/O submission notifications, we'll be polling. */
+			q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
+		}
+	}
+
+	q->packed.packed_ring = packed_ring;
+	vsession->max_queues = spdk_max(vsession->max_queues, qid + 1);
+
+	return 0;
+}
+
+static int
 start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
 	int rc = -1;
 	uint16_t i;
-	bool packed_ring;
 
 	spdk_vhost_lock();
 
@@ -1041,83 +1129,11 @@ start_device(int vid)
 		goto out;
 	}
 
-	packed_ring = ((vsession->negotiated_features & (1ULL << VIRTIO_F_RING_PACKED)) != 0);
-
-	vsession->max_queues = 0;
-	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
-		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
-
-		q->vsession = vsession;
-		q->vring_idx = -1;
-		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
-			continue;
+		rc = enable_device_vq(vsession, i);
+		if (rc != 0) {
+			goto out;
 		}
-		q->vring_idx = i;
-		rte_vhost_get_vhost_ring_inflight(vid, i, &q->vring_inflight);
-
-		/* vring.desc and vring.desc_packed are in a union struct
-		 * so q->vring.desc can replace q->vring.desc_packed.
-		 */
-		if (q->vring.desc == NULL || q->vring.size == 0) {
-			continue;
-		}
-
-		if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
-			q->vring.desc = NULL;
-			continue;
-		}
-
-		/*
-		 * Not sure right now but this look like some kind of QEMU bug and guest IO
-		 * might be frozed without kicking all queues after live-migration. This look like
-		 * the previous vhost instance failed to effectively deliver all interrupts before
-		 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
-		 * should be ignored by guest virtio driver.
-		 *
-		 * Tested on QEMU 2.10.91 and 2.11.50.
-		 *
-		 * Make sure a successful call of
-		 * `rte_vhost_vring_call` will happen
-		 * after starting the device.
-		 */
-		q->used_req_cnt += 1;
-
-		if (packed_ring) {
-			/* Use the inflight mem to restore the last_avail_idx and last_used_idx.
-			 * When the vring format is packed, there is no used_idx in the
-			 * used ring, so VM can't resend the used_idx to VHOST when reconnect.
-			 * QEMU version 5.2.0 supports the packed inflight before that it only
-			 * supports split ring inflight because it doesn't send negotiated features
-			 * before get inflight fd. Users can use RPC to enable this function.
-			 */
-			if (spdk_unlikely(vdev->packed_ring_recovery)) {
-				rte_vhost_get_vring_base_from_inflight(vsession->vid, i,
-								       &q->last_avail_idx,
-								       &q->last_used_idx);
-			}
-
-			/* Packed virtqueues support up to 2^15 entries each
-			 * so left one bit can be used as wrap counter.
-			 */
-			q->packed.avail_phase = q->last_avail_idx >> 15;
-			q->last_avail_idx = q->last_avail_idx & 0x7FFF;
-			q->packed.used_phase = q->last_used_idx >> 15;
-			q->last_used_idx = q->last_used_idx & 0x7FFF;
-
-			if (!vsession->interrupt_mode) {
-				/* Disable I/O submission notifications, we'll be polling. */
-				q->vring.device_event->flags = VRING_PACKED_EVENT_FLAG_DISABLE;
-			}
-		} else {
-			if (!vsession->interrupt_mode) {
-				/* Disable I/O submission notifications, we'll be polling. */
-				q->vring.used->flags = VRING_USED_F_NO_NOTIFY;
-			}
-		}
-
-		q->packed.packed_ring = packed_ring;
-		vsession->max_queues = i + 1;
 	}
 
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
