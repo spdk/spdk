@@ -186,3 +186,12 @@ set_zram_dev() {
 
 	echo "$size" > "/sys/block/zram$id/disksize"
 }
+
+init_null_blk() {
+	[[ -e /sys/module/null_blk ]] || modprobe null_blk "$@"
+	return
+}
+
+remove_null_blk() {
+	modprobe -r null_blk
+}

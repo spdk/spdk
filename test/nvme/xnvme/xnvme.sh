@@ -5,18 +5,20 @@ rootdir=$(readlink -f "$testdir/../../../")
 source "$rootdir/test/dd/common.sh"
 
 malloc_to_xnvme_copy() {
-	# Use zram for the xnvme backend
-	init_zram
+	# Use 1GB null_blk for the xnvme backend
+	init_null_blk gb=1
 
-	local mbdev0=malloc0 mbdev0_b=1048576 mbdev0_bs=512
-	local xnvme0=zram0 xnvme0_dev xnvme_io=()
+	local mbdev0=malloc0 mbdev0_bs=512
+	local xnvme0=null0 xnvme0_dev xnvme_io=()
 	local io
 
 	xnvme_io+=(libaio)
 	xnvme_io+=(io_uring)
 
-	xnvme0_dev=$(create_zram_dev)
-	set_zram_dev "$xnvme0_dev" 512M
+	# This always represents size of the device in 512B sectors
+	# so it should align nicely with the $mbdev0_bs.
+	mbdev0_b=$(< /sys/block/nullb0/size)
+	xnvme0_dev=/dev/nullb0
 
 	local -A method_bdev_malloc_create_0=(
 		["name"]=$mbdev0
@@ -26,7 +28,7 @@ malloc_to_xnvme_copy() {
 
 	local -A method_bdev_xnvme_create_0=()
 	method_bdev_xnvme_create_0["name"]=$xnvme0
-	method_bdev_xnvme_create_0["filename"]="/dev/zram$xnvme0_dev"
+	method_bdev_xnvme_create_0["filename"]=$xnvme0_dev
 
 	for io in "${xnvme_io[@]}"; do
 		method_bdev_xnvme_create_0["io_mechanism"]="$io"
@@ -42,25 +44,24 @@ malloc_to_xnvme_copy() {
 			--json <(gen_conf)
 	done
 
-	remove_zram_dev "$xnvme0_dev"
+	remove_null_blk
 }
 
 xnvme_bdevperf() {
-	# Use zram for the xnvme backend
-	init_zram
+	# Use 1GB null_blk for the xnvme backend
+	init_null_blk gb=1
 
-	local xnvme0=zram0 xnvme0_dev xnvme_io=()
+	local xnvme0=null0 xnvme0_dev xnvme_io=()
 	local io
 
 	xnvme_io+=(libaio)
 	xnvme_io+=(io_uring)
 
-	xnvme0_dev=$(create_zram_dev)
-	set_zram_dev "$xnvme0_dev" 512M
+	xnvme0_dev=/dev/nullb0
 
 	local -A method_bdev_xnvme_create_0=()
 	method_bdev_xnvme_create_0["name"]=$xnvme0
-	method_bdev_xnvme_create_0["filename"]="/dev/zram$xnvme0_dev"
+	method_bdev_xnvme_create_0["filename"]=$xnvme0_dev
 
 	for io in "${xnvme_io[@]}"; do
 		method_bdev_xnvme_create_0["io_mechanism"]="$io"
@@ -73,7 +74,7 @@ xnvme_bdevperf() {
 			-o 4096
 	done
 
-	remove_zram_dev "$xnvme0_dev"
+	remove_null_blk
 }
 
 run_test "xnvme_to_malloc_dd_copy" malloc_to_xnvme_copy
