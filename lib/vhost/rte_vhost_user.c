@@ -1041,11 +1041,6 @@ start_device(int vid)
 		goto out;
 	}
 
-	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		goto out;
-	}
-
 	packed_ring = ((vsession->negotiated_features & (1ULL << VIRTIO_F_RING_PACKED)) != 0);
 
 	vsession->max_queues = 0;
@@ -1564,6 +1559,7 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 {
 	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
+	int rc;
 
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
@@ -1584,6 +1580,12 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 
 	switch (msg->request) {
 	case VHOST_USER_SET_FEATURES:
+		rc = vhost_get_negotiated_features(vid, &vsession->negotiated_features);
+		if (rc) {
+			SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
+			return RTE_VHOST_MSG_RESULT_ERR;
+		}
+
 		/* rte_vhost requires all queues to be fully initialized in order
 		 * to start I/O processing. This behavior is not compliant with the
 		 * vhost-user specification and doesn't work with QEMU 2.12+, which
