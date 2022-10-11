@@ -122,11 +122,13 @@ static void vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
 static int vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 static int vhost_scsi_dev_param_changed(struct spdk_vhost_dev *vdev,
 					unsigned scsi_tgt_num);
+static int alloc_vq_task_pool(struct spdk_vhost_session *vsession, uint16_t qid);
 
 static const struct spdk_vhost_user_dev_backend spdk_vhost_scsi_user_device_backend = {
 	.session_ctx_size = sizeof(struct spdk_vhost_scsi_session) - sizeof(struct spdk_vhost_session),
 	.start_session =  vhost_scsi_start,
 	.stop_session = vhost_scsi_stop,
+	.alloc_vq_tasks = alloc_vq_task_pool,
 };
 
 static const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
@@ -1307,45 +1309,46 @@ free_task_pool(struct spdk_vhost_scsi_session *svsession)
 }
 
 static int
-alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
+alloc_vq_task_pool(struct spdk_vhost_session *vsession, uint16_t qid)
 {
-	struct spdk_vhost_session *vsession = &svsession->vsession;
+	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_scsi_task *task;
 	uint32_t task_cnt;
-	uint16_t i;
 	uint32_t j;
 
-	for (i = 0; i < vsession->max_queues; i++) {
-		vq = &vsession->virtqueue[i];
-		if (vq->vring.desc == NULL) {
-			continue;
-		}
+	if (qid >= SPDK_VHOST_MAX_VQUEUES) {
+		return -EINVAL;
+	}
 
-		task_cnt = vq->vring.size;
-		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
-			/* sanity check */
-			SPDK_ERRLOG("%s: virtqueue %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
-				    vsession->name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
-			free_task_pool(svsession);
-			return -1;
-		}
-		vq->tasks = spdk_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
-					 SPDK_CACHE_LINE_SIZE, NULL,
-					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
-		if (vq->tasks == NULL) {
-			SPDK_ERRLOG("%s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
-				    vsession->name, task_cnt, i);
-			free_task_pool(svsession);
-			return -1;
-		}
+	vq = &vsession->virtqueue[qid];
+	if (vq->vring.desc == NULL) {
+		return 0;
+	}
 
-		for (j = 0; j < task_cnt; j++) {
-			task = &((struct spdk_vhost_scsi_task *)vq->tasks)[j];
-			task->svsession = svsession;
-			task->vq = vq;
-			task->req_idx = j;
-		}
+	task_cnt = vq->vring.size;
+	if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
+		/* sanity check */
+		SPDK_ERRLOG("%s: virtqueue %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
+			    vsession->name, qid, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
+		free_task_pool(svsession);
+		return -1;
+	}
+	vq->tasks = spdk_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
+				 SPDK_CACHE_LINE_SIZE, NULL,
+				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
+	if (vq->tasks == NULL) {
+		SPDK_ERRLOG("%s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
+			    vsession->name, task_cnt, qid);
+		free_task_pool(svsession);
+		return -1;
+	}
+
+	for (j = 0; j < task_cnt; j++) {
+		task = &((struct spdk_vhost_scsi_task *)vq->tasks)[j];
+		task->svsession = svsession;
+		task->vq = vq;
+		task->req_idx = j;
 	}
 
 	return 0;
@@ -1371,12 +1374,6 @@ vhost_scsi_start(struct spdk_vhost_dev *vdev,
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vsession->name, i);
 			return -1;
 		}
-	}
-
-	rc = alloc_task_pool(svsession);
-	if (rc != 0) {
-		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vsession->name);
-		return rc;
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {

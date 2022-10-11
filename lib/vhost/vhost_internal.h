@@ -219,6 +219,7 @@ struct spdk_vhost_user_dev_backend {
 
 	spdk_vhost_session_fn start_session;
 	int (*stop_session)(struct spdk_vhost_session *vsession);
+	int (*alloc_vq_tasks)(struct spdk_vhost_session *vsession, uint16_t qid);
 };
 
 enum vhost_backend_type {

@@ -1018,6 +1018,8 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 {
 	struct spdk_vhost_virtqueue *q;
 	bool packed_ring;
+	const struct spdk_vhost_user_dev_backend *backend;
+	int rc;
 
 	if (qid >= SPDK_VHOST_MAX_VQUEUES) {
 		return -EINVAL;
@@ -1045,6 +1047,12 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 	if (rte_vhost_get_vring_base(vsession->vid, qid, &q->last_avail_idx, &q->last_used_idx)) {
 		q->vring.desc = NULL;
 		return 0;
+	}
+
+	backend = to_user_dev(vsession->vdev)->user_backend;
+	rc = backend->alloc_vq_tasks(vsession, qid);
+	if (rc) {
+		return rc;
 	}
 
 	/*
