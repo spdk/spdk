@@ -1036,6 +1036,11 @@ start_device(int vid)
 		goto out;
 	}
 
+	if (!vsession->mem) {
+		SPDK_ERRLOG("Session %s doesn't set memory table yet\n", vsession->name);
+		goto out;
+	}
+
 	if (vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
 		goto out;
@@ -1118,11 +1123,6 @@ start_device(int vid)
 
 		q->packed.packed_ring = packed_ring;
 		vsession->max_queues = i + 1;
-	}
-
-	if (!vsession->mem) {
-		SPDK_ERRLOG("Session %s doesn't set memory table yet\n", vsession->name);
-		goto out;
 	}
 
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
