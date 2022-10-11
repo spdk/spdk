@@ -1215,6 +1215,8 @@ end:
 static void
 job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
 {
+	srand(getpid());
+
 	switch (rw) {
 	case JOB_CONFIG_RW_READ:
 		job->rw_percentage = 100;
@@ -1225,16 +1227,19 @@ job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
 	case JOB_CONFIG_RW_RANDREAD:
 		job->is_random = true;
 		job->rw_percentage = 100;
+		job->seed = rand();
 		break;
 	case JOB_CONFIG_RW_RANDWRITE:
 		job->is_random = true;
 		job->rw_percentage = 0;
+		job->seed = rand();
 		break;
 	case JOB_CONFIG_RW_RW:
 		job->is_random = false;
 		break;
 	case JOB_CONFIG_RW_RANDRW:
 		job->is_random = true;
+		job->seed = rand();
 		break;
 	case JOB_CONFIG_RW_VERIFY:
 		job->verify = true;

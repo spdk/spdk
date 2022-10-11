@@ -744,8 +744,12 @@ register_file(const char *path)
 	entry->size_in_ios = size / g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / blklen;
 
-	if (g_is_random && g_zipf_theta > 0) {
-		entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+	if (g_is_random) {
+		srand(getpid());
+		entry->seed = rand();
+		if (g_zipf_theta > 0) {
+			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+		}
 	}
 
 	snprintf(entry->name, sizeof(entry->name), "%s", path);
