@@ -1330,7 +1330,6 @@ alloc_vq_task_pool(struct spdk_vhost_session *vsession, uint16_t qid)
 		/* sanity check */
 		SPDK_ERRLOG("%s: virtqueue %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
 			    vsession->name, qid, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
-		free_task_pool(svsession);
 		return -1;
 	}
 	vq->tasks = spdk_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
@@ -1339,7 +1338,6 @@ alloc_vq_task_pool(struct spdk_vhost_session *vsession, uint16_t qid)
 	if (vq->tasks == NULL) {
 		SPDK_ERRLOG("%s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
 			    vsession->name, task_cnt, qid);
-		free_task_pool(svsession);
 		return -1;
 	}
 
@@ -1363,9 +1361,11 @@ vhost_scsi_start(struct spdk_vhost_dev *vdev,
 	uint32_t i;
 	int rc;
 
-	svdev = to_scsi_dev(vsession->vdev);
-	assert(svdev != NULL);
-	svsession->svdev = svdev;
+	/* return if start is already in progress */
+	if (svsession->requestq_poller) {
+		SPDK_INFOLOG(vhost, "%s: start in progress\n", vsession->name);
+		return -EINPROGRESS;
+	}
 
 	/* validate all I/O queues are in a contiguous index range */
 	if (vsession->max_queues < VIRTIO_SCSI_REQUESTQ + 1) {
@@ -1378,6 +1378,10 @@ vhost_scsi_start(struct spdk_vhost_dev *vdev,
 			return -1;
 		}
 	}
+
+	svdev = to_scsi_dev(vsession->vdev);
+	assert(svdev != NULL);
+	svsession->svdev = svdev;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
 		state = &svdev->scsi_dev_state[i];
@@ -1407,7 +1411,7 @@ vhost_scsi_start(struct spdk_vhost_dev *vdev,
 	svsession->requestq_poller = SPDK_POLLER_REGISTER(vdev_worker, svsession, 0);
 	svsession->mgmt_poller = SPDK_POLLER_REGISTER(vdev_mgmt_worker, svsession,
 				 MGMT_POLL_PERIOD_US);
-	return rc;
+	return 0;
 }
 
 static int
@@ -1476,6 +1480,11 @@ vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 		   struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_scsi_session *svsession = to_scsi_session(vsession);
+
+	/* return if stop is already in progress */
+	if (svsession->stop_poller) {
+		return -EINPROGRESS;
+	}
 
 	/* Stop receiving new I/O requests */
 	spdk_poller_unregister(&svsession->requestq_poller);

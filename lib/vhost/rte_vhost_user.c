@@ -354,14 +354,6 @@ int
 vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 		     struct spdk_vhost_virtqueue *virtqueue)
 {
-	/* The flag is true when DPDK "vhost-events" thread is holding all
-	 * VQ's access lock, we will skip to post IRQs this round poll, and
-	 * try to post IRQs in next poll or after starting the device again.
-	 */
-	if (spdk_unlikely(vsession->skip_used_signal)) {
-		return 0;
-	}
-
 	if (virtqueue->used_req_cnt == 0) {
 		return 0;
 	}
@@ -905,6 +897,7 @@ _stop_session(struct spdk_vhost_session *vsession)
 		}
 
 		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
+		q->vring.desc = NULL;
 	}
 	vsession->max_queues = 0;
 
@@ -1002,6 +995,46 @@ vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session 
 }
 
 static int
+set_device_vq_callfd(struct spdk_vhost_session *vsession, uint16_t qid)
+{
+	struct spdk_vhost_virtqueue *q;
+
+	if (qid >= SPDK_VHOST_MAX_VQUEUES) {
+		return -EINVAL;
+	}
+
+	q = &vsession->virtqueue[qid];
+	/* vq isn't enabled yet */
+	if (q->vring_idx != qid) {
+		return 0;
+	}
+
+	/* vring.desc and vring.desc_packed are in a union struct
+	 * so q->vring.desc can replace q->vring.desc_packed.
+	 */
+	if (q->vring.desc == NULL || q->vring.size == 0) {
+		return 0;
+	}
+
+	/*
+	 * Not sure right now but this look like some kind of QEMU bug and guest IO
+	 * might be frozed without kicking all queues after live-migration. This look like
+	 * the previous vhost instance failed to effectively deliver all interrupts before
+	 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
+	 * should be ignored by guest virtio driver.
+	 *
+	 * Tested on QEMU 2.10.91 and 2.11.50.
+	 *
+	 * Make sure a successful call of
+	 * `rte_vhost_vring_call` will happen
+	 * after starting the device.
+	 */
+	q->used_req_cnt += 1;
+
+	return 0;
+}
+
+static int
 enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 {
 	struct spdk_vhost_virtqueue *q;
@@ -1042,21 +1075,6 @@ enable_device_vq(struct spdk_vhost_session *vsession, uint16_t qid)
 	if (rc) {
 		return rc;
 	}
-
-	/*
-	 * Not sure right now but this look like some kind of QEMU bug and guest IO
-	 * might be frozed without kicking all queues after live-migration. This look like
-	 * the previous vhost instance failed to effectively deliver all interrupts before
-	 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
-	 * should be ignored by guest virtio driver.
-	 *
-	 * Tested on QEMU 2.10.91 and 2.11.50.
-	 *
-	 * Make sure a successful call of
-	 * `rte_vhost_vring_call` will happen
-	 * after starting the device.
-	 */
-	q->used_req_cnt += 1;
 
 	if (packed_ring) {
 		/* Use the inflight mem to restore the last_avail_idx and last_used_idx.
@@ -1103,7 +1121,6 @@ start_device(int vid)
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
 	int rc = -1;
-	uint16_t i;
 
 	spdk_vhost_lock();
 
@@ -1123,13 +1140,6 @@ start_device(int vid)
 	if (!vsession->mem) {
 		SPDK_ERRLOG("Session %s doesn't set memory table yet\n", vsession->name);
 		goto out;
-	}
-
-	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
-		rc = enable_device_vq(vsession, i);
-		if (rc != 0) {
-			goto out;
-		}
 	}
 
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
@@ -1473,61 +1483,8 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 
 	switch (msg->request) {
 	case VHOST_USER_GET_VRING_BASE:
-		if (vsession->forced_polling && vsession->started) {
-			/* Our queue is stopped for whatever reason, but we may still
-			 * need to poll it after it's initialized again.
-			 */
-			g_spdk_vhost_ops.destroy_device(vid);
-		}
-		break;
-	case VHOST_USER_SET_VRING_BASE:
-	case VHOST_USER_SET_VRING_ADDR:
-	case VHOST_USER_SET_VRING_NUM:
-		/* For vhost-user socket messages except VHOST_USER_GET_VRING_BASE,
-		 * rte_vhost holds all VQ's access lock, then after DPDK 22.07 release,
-		 * `rte_vhost_vring_call` also needs to hold VQ's access lock, so we
-		 * can't call this function in DPDK "vhost-events" thread context, here
-		 * SPDK vring poller will avoid executing this function when it's TRUE.
-		 */
-		vsession->skip_used_signal = true;
-		if (vsession->forced_polling && vsession->started) {
-			/* Additional queues are being initialized, so we either processed
-			 * enough I/Os and are switching from SeaBIOS to the OS now, or
-			 * we were never in SeaBIOS in the first place. Either way, we
-			 * don't need our workaround anymore.
-			 */
-			g_spdk_vhost_ops.destroy_device(vid);
-			vsession->forced_polling = false;
-		}
-		break;
-	case VHOST_USER_SET_VRING_KICK:
-	/* rte_vhost(after 20.08) will call new_device after one active vring is
-	 * configured, we will start the session before all vrings are available,
-	 * so for each new vring, if the session is started, we need to restart it
-	 * again.
-	 */
-	case VHOST_USER_SET_VRING_CALL:
-	/* rte_vhost will close the previous callfd and won't notify
-	 * us about any change. This will effectively make SPDK fail
-	 * to deliver any subsequent interrupts until a session is
-	 * restarted. We stop the session here before closing the previous
-	 * fd (so that all interrupts must have been delivered by the
-	 * time the descriptor is closed) and start right after (which
-	 * will make SPDK retrieve the latest, up-to-date callfd from
-	 * rte_vhost.
-	 */
-	case VHOST_USER_SET_MEM_TABLE:
-		vsession->skip_used_signal = true;
-		/* rte_vhost will unmap previous memory that SPDK may still
-		 * have pending DMA operations on. We can't let that happen,
-		 * so stop the device before letting rte_vhost unmap anything.
-		 * This will block until all pending I/Os are finished.
-		 * We will start the device again from the post-processing
-		 * message handler.
-		 */
 		if (vsession->started) {
 			g_spdk_vhost_ops.destroy_device(vid);
-			vsession->needs_restart = true;
 		}
 		break;
 	case VHOST_USER_GET_CONFIG: {
@@ -1562,7 +1519,6 @@ extern_vhost_pre_msg_handler(int vid, void *_msg)
 		break;
 	}
 
-	vsession->skip_used_signal = false;
 	return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
 }
 
@@ -1571,6 +1527,7 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 {
 	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
+	uint16_t qid;
 	int rc;
 
 	vsession = vhost_session_find_by_vid(vid);
@@ -1584,12 +1541,6 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 		vhost_register_memtable_if_required(vsession, vid);
 	}
 
-	if (vsession->needs_restart) {
-		g_spdk_vhost_ops.new_device(vid);
-		vsession->needs_restart = false;
-		return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
-	}
-
 	switch (msg->request) {
 	case VHOST_USER_SET_FEATURES:
 		rc = vhost_get_negotiated_features(vid, &vsession->negotiated_features);
@@ -1597,28 +1548,25 @@ extern_vhost_post_msg_handler(int vid, void *_msg)
 			SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
 			return RTE_VHOST_MSG_RESULT_ERR;
 		}
-
-		/* rte_vhost requires all queues to be fully initialized in order
-		 * to start I/O processing. This behavior is not compliant with the
-		 * vhost-user specification and doesn't work with QEMU 2.12+, which
-		 * will only initialize 1 I/O queue for the SeaBIOS boot.
-		 * Theoretically, we should start polling each virtqueue individually
-		 * after receiving its SET_VRING_KICK message, but rte_vhost is not
-		 * designed to poll individual queues. So here we use a workaround
-		 * to detect when the vhost session could be potentially at that SeaBIOS
-		 * stage and we mark it to start polling as soon as its first virtqueue
-		 * gets initialized. This doesn't hurt any non-QEMU vhost slaves
-		 * and allows QEMU 2.12+ to boot correctly. SET_FEATURES could be sent
-		 * at any time, but QEMU will send it at least once on SeaBIOS
-		 * initialization - whenever powered-up or rebooted.
-		 */
-		vsession->forced_polling = true;
+		break;
+	case VHOST_USER_SET_VRING_CALL:
+		qid = (uint16_t)msg->payload.u64;
+		rc = set_device_vq_callfd(vsession, qid);
+		if (rc) {
+			return RTE_VHOST_MSG_RESULT_ERR;
+		}
 		break;
 	case VHOST_USER_SET_VRING_KICK:
+		qid = (uint16_t)msg->payload.u64;
+		rc = enable_device_vq(vsession, qid);
+		if (rc) {
+			return RTE_VHOST_MSG_RESULT_ERR;
+		}
+
 		/* vhost-user spec tells us to start polling a queue after receiving
 		 * its SET_VRING_KICK message. Let's do it!
 		 */
-		if (vsession->forced_polling && !vsession->started) {
+		if (!vsession->started) {
 			g_spdk_vhost_ops.new_device(vid);
 		}
 		break;

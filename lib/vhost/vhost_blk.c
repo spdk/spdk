@@ -1268,7 +1268,6 @@ alloc_vq_task_pool(struct spdk_vhost_session *vsession, uint16_t qid)
 		/* sanity check */
 		SPDK_ERRLOG("%s: virtqueue %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
 			    vsession->name, qid, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
-		free_task_pool(bvsession);
 		return -1;
 	}
 	vq->tasks = spdk_zmalloc(sizeof(struct spdk_vhost_user_blk_task) * task_cnt,
@@ -1277,7 +1276,6 @@ alloc_vq_task_pool(struct spdk_vhost_session *vsession, uint16_t qid)
 	if (vq->tasks == NULL) {
 		SPDK_ERRLOG("%s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
 			    vsession->name, task_cnt, qid);
-		free_task_pool(bvsession);
 		return -1;
 	}
 
@@ -1299,9 +1297,11 @@ vhost_blk_start(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_blk_dev *bvdev;
 	int i, rc = 0;
 
-	bvdev = to_blk_dev(vdev);
-	assert(bvdev != NULL);
-	bvsession->bvdev = bvdev;
+	/* return if start is already in progress */
+	if (bvsession->requestq_poller) {
+		SPDK_INFOLOG(vhost, "%s: start in progress\n", vsession->name);
+		return -EINPROGRESS;
+	}
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = 0; i < vsession->max_queues; i++) {
@@ -1313,6 +1313,10 @@ vhost_blk_start(struct spdk_vhost_dev *vdev,
 			return -1;
 		}
 	}
+
+	bvdev = to_blk_dev(vdev);
+	assert(bvdev != NULL);
+	bvsession->bvdev = bvdev;
 
 	if (bvdev->bdev) {
 		bvsession->io_channel = vhost_blk_get_io_channel(vdev);
@@ -1351,7 +1355,7 @@ vhost_blk_start(struct spdk_vhost_dev *vdev,
 	spdk_poller_register_interrupt(bvsession->requestq_poller, vhost_blk_poller_set_interrupt_mode,
 				       bvsession);
 
-	return rc;
+	return 0;
 }
 
 static int
@@ -1400,6 +1404,11 @@ vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 		  struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_session *bvsession = to_blk_session(vsession);
+
+	/* return if stop is already in progress */
+	if (bvsession->stop_poller) {
+		return -EINPROGRESS;
+	}
 
 	spdk_poller_unregister(&bvsession->requestq_poller);
 
