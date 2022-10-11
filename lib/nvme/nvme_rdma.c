@@ -678,7 +678,7 @@ nvme_rdma_resize_cq(struct nvme_rdma_qpair *rqpair, struct nvme_rdma_poller *pol
 }
 
 static int
-nvme_rdma_poll_group_set_cq(struct spdk_nvme_qpair *qpair)
+nvme_rdma_qpair_set_poller(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair          *rqpair = nvme_rdma_qpair(qpair);
 	struct nvme_rdma_poll_group     *group = nvme_rdma_poll_group(qpair->poll_group);
@@ -718,7 +718,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	if (rqpair->qpair.poll_group) {
 		assert(!rqpair->cq);
-		rc = nvme_rdma_poll_group_set_cq(&rqpair->qpair);
+		rc = nvme_rdma_qpair_set_poller(&rqpair->qpair);
 		if (rc) {
 			SPDK_ERRLOG("Unable to activate the rdmaqpair.\n");
 			return -1;

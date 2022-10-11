@@ -1354,7 +1354,7 @@ test_nvme_rdma_poll_group_get_stats(void)
 }
 
 static void
-test_nvme_rdma_poll_group_set_cq(void)
+test_nvme_rdma_qpair_set_poller(void)
 {
 	int rc = -1;
 	struct nvme_rdma_poll_group *group;
@@ -1372,7 +1372,7 @@ test_nvme_rdma_poll_group_set_cq(void)
 	CU_ASSERT(group != NULL);
 	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
 
-	/* Case2: Test function nvme_rdma_poll_group_set_cq */
+	/* Case2: Test function nvme_rdma_qpair_set_poller */
 	rqpair.qpair.poll_group = tgroup;
 	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rqpair.cm_id = &cm_id;
@@ -1381,7 +1381,7 @@ test_nvme_rdma_poll_group_set_cq(void)
 	cm_id.verbs = (void *)0xFEEDBEEF;
 	MOCK_SET(ibv_create_cq, NULL);
 
-	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(rqpair.cq == NULL);
 	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
@@ -1391,7 +1391,7 @@ test_nvme_rdma_poll_group_set_cq(void)
 	/* Test2: Unable to find a cq for qpair on poll group */
 	cm_id.verbs = NULL;
 
-	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(rqpair.cq == NULL);
 	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
@@ -1402,7 +1402,7 @@ test_nvme_rdma_poll_group_set_cq(void)
 	cm_id.verbs = (void *)0xFEEDBEEF;
 	rqpair.num_entries = 0;
 
-	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rqpair.cq == (void *)0xFEEDBEEF);
 
@@ -1429,14 +1429,14 @@ test_nvme_rdma_poll_group_set_cq(void)
 	rqpair.num_entries = DEFAULT_NVME_RDMA_CQ_SIZE - 1;
 	MOCK_SET(ibv_resize_cq, -1);
 
-	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
 	CU_ASSERT(rc == -EPROTO);
 	CU_ASSERT(STAILQ_EMPTY(&group->pollers));
 
 	/* Test5: Current_num_wc is not enough, resize success */
 	MOCK_SET(ibv_resize_cq, 0);
 
-	rc = nvme_rdma_poll_group_set_cq(&rqpair.qpair);
+	rc = nvme_rdma_qpair_set_poller(&rqpair.qpair);
 	CU_ASSERT(rc == 0);
 
 	poller = STAILQ_FIRST(&group->pollers);
@@ -1487,7 +1487,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_get_rdma_qpair_from_wc);
 	CU_ADD_TEST(suite, test_nvme_rdma_ctrlr_get_max_sges);
 	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_get_stats);
-	CU_ADD_TEST(suite, test_nvme_rdma_poll_group_set_cq);
+	CU_ADD_TEST(suite, test_nvme_rdma_qpair_set_poller);
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
