@@ -19,4 +19,12 @@ int create_bdev_daos(struct spdk_bdev **bdev, const char *name, const struct spd
 
 void delete_bdev_daos(struct spdk_bdev *bdev, spdk_delete_daos_complete cb_fn, void *cb_arg);
 
+/**
+ * Resize DAOS bdev.
+ *
+ * \param bdev_name Name of DAOS bdev.
+ * \param new_size_in_mb The new size in MiB for this bdev
+ */
+int bdev_daos_resize(const char *bdev_name, const uint64_t new_size_in_mb);
+
 #endif /* SPDK_BDEV_DAOS_H */

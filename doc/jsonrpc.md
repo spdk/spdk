@@ -485,7 +485,8 @@ Example response:
     "bdev_lvol_rename_lvstore",
     "bdev_lvol_create_lvstore",
     "bdev_daos_delete",
-    "bdev_daos_create"
+    "bdev_daos_create",
+    "bdev_daos_resize"
   ]
 }
 ~~~
@@ -10770,6 +10771,43 @@ Example request:
   },
   "jsonrpc": "2.0",
   "method": "bdev_daos_delete",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### bdev_daos_resize {#rpc_bdev_daos_resize}
+
+Resize @ref bdev_config_daos.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+new_size                | Required | number      | Bdev new capacity in MB
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "params": {
+    "name": "daosdev0",
+    "new_size": 8192
+  },
+  "jsonrpc": "2.0",
+  "method": "bdev_daos_resize",
   "id": 1
 }
 ~~~

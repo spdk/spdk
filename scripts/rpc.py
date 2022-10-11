@@ -3104,6 +3104,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='DAOS bdev name')
     p.set_defaults(func=bdev_daos_delete)
 
+    def bdev_daos_resize(args):
+        print_json(rpc.bdev.bdev_daos_resize(args.client,
+                                             name=args.name,
+                                             new_size=int(args.new_size)))
+
+    p = subparsers.add_parser('bdev_daos_resize',
+                              help='Resize a DAOS bdev')
+    p.add_argument('name', help='DAOS bdev name')
+    p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB')
+    p.set_defaults(func=bdev_daos_resize)
+
     def check_called_name(name):
         if name in deprecated_aliases:
             print("{} is deprecated, use {} instead.".format(name, deprecated_aliases[name]), file=sys.stderr)

@@ -725,6 +725,68 @@ create_bdev_daos(struct spdk_bdev **bdev,
 	return rc;
 }
 
+static void
+dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void *ctx)
+{
+}
+
+int
+bdev_daos_resize(const char *name, const uint64_t new_size_in_mb)
+{
+	int rc = 0;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *bdev;
+	struct spdk_io_channel *ch;
+	struct bdev_daos_io_channel *dch;
+	uint64_t new_size_in_byte;
+	uint64_t current_size_in_mb;
+
+	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &desc);
+	if (rc != 0) {
+		return rc;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+	if (bdev->module != &daos_if) {
+		rc = -EINVAL;
+		goto exit;
+	}
+
+	current_size_in_mb = bdev->blocklen * bdev->blockcnt / (1024 * 1024);
+	if (current_size_in_mb > new_size_in_mb) {
+		SPDK_ERRLOG("The new bdev size must be larger than current bdev size.\n");
+		rc = -EINVAL;
+		goto exit;
+	}
+
+	ch = bdev_daos_get_io_channel(bdev);
+	dch = spdk_io_channel_get_ctx(ch);
+	new_size_in_byte = new_size_in_mb * 1024 * 1024;
+
+	rc = dfs_punch(dch->dfs, dch->obj, new_size_in_byte, DFS_MAX_FSIZE);
+	spdk_put_io_channel(ch);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to resize daos bdev: " DF_RC "\n", DP_RC(rc));
+		rc = -EINTR;
+		goto exit;
+	}
+
+	SPDK_NOTICELOG("DAOS bdev device is resized: bdev name %s, old block count %" PRIu64
+		       ", new block count %"
+		       PRIu64 "\n",
+		       bdev->name,
+		       bdev->blockcnt,
+		       new_size_in_byte / bdev->blocklen);
+	rc = spdk_bdev_notify_blockcnt_change(bdev, new_size_in_byte / bdev->blocklen);
+	if (rc != 0) {
+		SPDK_ERRLOG("failed to notify block cnt change.\n");
+	}
+
+exit:
+	spdk_bdev_close(desc);
+	return rc;
+}
+
 void
 delete_bdev_daos(struct spdk_bdev *bdev, spdk_delete_daos_complete cb_fn, void *cb_arg)
 {

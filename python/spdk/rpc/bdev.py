@@ -1613,3 +1613,16 @@ def bdev_daos_delete(client, name):
     """
     params = {'name': name}
     return client.call('bdev_daos_delete', params)
+
+
+def bdev_daos_resize(client, name, new_size):
+    """Resize DAOS bdev in the system.
+    Args:
+        name: name of DAOS bdev to resize
+        new_size: new bdev size of resize operation. The unit is MiB
+    """
+    params = {
+            'name': name,
+            'new_size': new_size,
+            }
+    return client.call('bdev_daos_resize', params)
