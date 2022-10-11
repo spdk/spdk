@@ -134,6 +134,8 @@ typedef void (*spdk_blob_op_with_bs_dev)(void *cb_arg, struct spdk_bs_dev *bs_de
  *
  * \param bs_ctx Context provided by the blobstore consumer via esnap_ctx member of struct
  * spdk_bs_opts.
+ * \param blob_ctx Context provided to spdk_bs_open_ext() via esnap_ctx member of struct
+ * spdk_bs_open_opts.
  * \param blob The blob that needs its external snapshot device.
  * \param esnap_id A copy of the esnap_id passed via blob_opts when creating the esnap clone.
  * \param id_size The size in bytes of the data referenced by esnap_id.
@@ -141,7 +143,7 @@ typedef void (*spdk_blob_op_with_bs_dev)(void *cb_arg, struct spdk_bs_dev *bs_de
  *
  * \return 0 on success, else a negative errno.
  */
-typedef int (*spdk_bs_esnap_dev_create)(void *bs_ctx, struct spdk_blob *blob,
+typedef int (*spdk_bs_esnap_dev_create)(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
 					const void *esnap_id, uint32_t id_size,
 					struct spdk_bs_dev **bs_dev);
 
@@ -753,8 +755,14 @@ struct spdk_blob_open_opts {
 	 * New added fields should be put at the end of the struct.
 	 */
 	size_t opts_size;
+
+	/**
+	 * Blob context to be passed to any call of bs->external_bs_dev_create() that is triggered
+	 * by this open call.
+	 */
+	void *esnap_ctx;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_open_opts) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_open_opts) == 24, "Incorrect size");
 
 /**
  * Initialize a spdk_blob_open_opts structure to the default blob option values.

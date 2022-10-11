@@ -7415,13 +7415,14 @@ blob_esnap_create(void)
 	struct spdk_bs_opts	bs_opts;
 	struct ut_esnap_opts	esnap_opts;
 	struct spdk_blob_opts	opts;
+	struct spdk_blob_open_opts open_opts;
 	struct spdk_blob	*blob;
 	uint32_t		cluster_sz, block_sz;
 	const uint32_t		esnap_num_clusters = 4;
 	uint64_t		esnap_num_blocks;
 	uint32_t		sz;
 	spdk_blob_id		blobid;
-	uint32_t		bs_ctx_count;
+	uint32_t		bs_ctx_count, blob_ctx_count;
 
 	cluster_sz = spdk_bs_get_cluster_size(bs);
 	block_sz = spdk_bs_get_io_unit_size(bs);
@@ -7518,6 +7519,19 @@ blob_esnap_create(void)
 	SPDK_CU_ASSERT_FATAL(blob_is_esnap_clone(blob));
 	sz = spdk_blob_get_num_clusters(blob);
 	CU_ASSERT(sz == esnap_num_clusters + 1);
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_blob = NULL;
+	/* If open_opts.esnap_ctx is set it is passed to the esnap create callback */
+	blob_ctx_count = 0;
+	spdk_blob_open_opts_init(&open_opts, sizeof(open_opts));
+	open_opts.esnap_ctx = &blob_ctx_count;
+	spdk_bs_open_blob_ext(bs, blobid, &open_opts, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	blob = g_blob;
+	CU_ASSERT(bs_ctx_count == 3);
+	CU_ASSERT(blob_ctx_count == 1);
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
 	CU_ASSERT(g_bserrno == 0);

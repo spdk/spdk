@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #ifndef SPDK_BS_REQUEST_H
@@ -65,6 +65,7 @@ struct spdk_bs_cpl {
 			spdk_blob_op_with_handle_complete       cb_fn;
 			void                                    *cb_arg;
 			struct spdk_blob                        *blob;
+			void					*esnap_ctx;
 		} blob_handle;
 
 		struct {

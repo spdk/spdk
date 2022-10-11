@@ -1340,7 +1340,7 @@ blob_load_snapshot_cpl(void *cb_arg, struct spdk_blob *snapshot, int bserrno)
 static void blob_update_clear_method(struct spdk_blob *blob);
 
 static int
-blob_load_esnap(struct spdk_blob *blob)
+blob_load_esnap(struct spdk_blob *blob, void *blob_ctx)
 {
 	struct spdk_blob_store *bs = blob->bs;
 	struct spdk_bs_dev *bs_dev = NULL;
@@ -1364,7 +1364,8 @@ blob_load_esnap(struct spdk_blob *blob)
 
 	SPDK_INFOLOG(blob, "Creating external snapshot device\n");
 
-	rc = bs->esnap_bs_dev_create(bs->esnap_ctx, blob, esnap_id, (uint32_t)id_len, &bs_dev);
+	rc = bs->esnap_bs_dev_create(bs->esnap_ctx, blob_ctx, blob, esnap_id, (uint32_t)id_len,
+				     &bs_dev);
 	if (rc != 0) {
 		SPDK_DEBUGLOG(blob_esnap, "blob 0x%" PRIx64 ": failed to load back_bs_dev "
 			      "with error %d\n", blob->id, rc);
@@ -1388,7 +1389,7 @@ blob_load_esnap(struct spdk_blob *blob)
 }
 
 static void
-blob_load_backing_dev(void *cb_arg)
+blob_load_backing_dev(spdk_bs_sequence_t *seq, void *cb_arg)
 {
 	struct spdk_blob_load_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
@@ -1397,7 +1398,7 @@ blob_load_backing_dev(void *cb_arg)
 	int				rc;
 
 	if (blob_is_esnap_clone(blob)) {
-		rc = blob_load_esnap(blob);
+		rc = blob_load_esnap(blob, seq->cpl.u.blob_handle.esnap_ctx);
 		assert((rc == 0) ^ (blob->back_bs_dev == NULL));
 		blob_load_final(ctx, rc);
 		return;
@@ -1507,7 +1508,7 @@ blob_load_cpl_extents_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		}
 	}
 
-	blob_load_backing_dev(ctx);
+	blob_load_backing_dev(seq, ctx);
 }
 
 static void
@@ -1595,7 +1596,7 @@ blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	if (blob->extent_table_found) {
 		blob_load_cpl_extents_cpl(seq, ctx, 0);
 	} else {
-		blob_load_backing_dev(ctx);
+		blob_load_backing_dev(seq, ctx);
 	}
 }
 
@@ -7418,12 +7419,13 @@ blob_open_opts_copy(const struct spdk_blob_open_opts *src, struct spdk_blob_open
         } \
 
 	SET_FIELD(clear_method);
+	SET_FIELD(esnap_ctx);
 
 	dst->opts_size = src->opts_size;
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_open_opts) == 16, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_open_opts) == 24, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -7476,6 +7478,7 @@ bs_open_blob(struct spdk_blob_store *bs,
 	cpl.u.blob_handle.cb_fn = cb_fn;
 	cpl.u.blob_handle.cb_arg = cb_arg;
 	cpl.u.blob_handle.blob = blob;
+	cpl.u.blob_handle.esnap_ctx = opts_local.esnap_ctx;
 
 	seq = bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
