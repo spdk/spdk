@@ -1068,6 +1068,21 @@ start_device(int vid)
 			continue;
 		}
 
+		/*
+		 * Not sure right now but this look like some kind of QEMU bug and guest IO
+		 * might be frozed without kicking all queues after live-migration. This look like
+		 * the previous vhost instance failed to effectively deliver all interrupts before
+		 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
+		 * should be ignored by guest virtio driver.
+		 *
+		 * Tested on QEMU 2.10.91 and 2.11.50.
+		 *
+		 * Make sure a successful call of
+		 * `rte_vhost_vring_call` will happen
+		 * after starting the device.
+		 */
+		q->used_req_cnt += 1;
+
 		if (packed_ring) {
 			/* Use the inflight mem to restore the last_avail_idx and last_used_idx.
 			 * When the vring format is packed, there is no used_idx in the
@@ -1108,30 +1123,6 @@ start_device(int vid)
 	if (!vsession->mem) {
 		SPDK_ERRLOG("Session %s doesn't set memory table yet\n", vsession->name);
 		goto out;
-	}
-
-	/*
-	 * Not sure right now but this look like some kind of QEMU bug and guest IO
-	 * might be frozed without kicking all queues after live-migration. This look like
-	 * the previous vhost instance failed to effectively deliver all interrupts before
-	 * the GET_VRING_BASE message. This shouldn't harm guest since spurious interrupts
-	 * should be ignored by guest virtio driver.
-	 *
-	 * Tested on QEMU 2.10.91 and 2.11.50.
-	 */
-	for (i = 0; i < vsession->max_queues; i++) {
-		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
-
-		/* vring.desc and vring.desc_packed are in a union struct
-		 * so q->vring.desc can replace q->vring.desc_packed.
-		 */
-		if (q->vring.desc != NULL && q->vring.size > 0) {
-			/* Make sure a successful call of
-			 * `rte_vhost_vring_call` will happen
-			 * after starting the device.
-			 */
-			q->used_req_cnt += 1;
-		}
 	}
 
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
