@@ -186,6 +186,22 @@ custom_alloc() {
 	nr_hugepages=$_nr_hugepages verify_nr_hugepages
 }
 
+no_shrink_alloc() {
+	# Defalut HUGEMEM (2G) alloc on node0
+	# attempt to shrink by half: 2G should remain
+
+	get_test_nr_hugepages $((2048 * 1024)) 0
+
+	# Verify the default first
+	setup
+	verify_nr_hugepages
+
+	# Now attempt to shrink the hp number
+	CLEAR_HUGE=no NRHUGE=$((nr_hugepages / 2)) setup
+	# 2G should remain
+	verify_nr_hugepages
+}
+
 get_nodes
 clear_hp
 
@@ -194,5 +210,6 @@ run_test "per_node_2G_alloc" per_node_2G_alloc
 run_test "even_2G_alloc" even_2G_alloc
 run_test "odd_alloc" odd_alloc
 run_test "custom_alloc" custom_alloc
+run_test "no_shrink_alloc" no_shrink_alloc
 
 clear_hp

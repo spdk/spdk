@@ -57,6 +57,9 @@ function usage() {
 	echo "                  2048 pages for node0, 512 for node1 and default NRHUGE for node2."
 	echo "HUGEPGSZ          Size of the hugepages to use in kB. If not set, kernel's default"
 	echo "                  setting is used."
+	echo "SHRINK_HUGE       If set to 'yes', hugepages allocation won't be skipped in case"
+	echo "                  number of requested hugepages is lower from what's already"
+	echo "                  allocated. Doesn't apply when HUGE_EVEN_ALLOC is in use."
 	echo "CLEAR_HUGE        If set to 'yes', the attempt to remove hugepages from all nodes will"
 	echo "                  be made prior to allocation".
 	echo "PCI_ALLOWED"
@@ -466,6 +469,13 @@ function cleanup_linux() {
 check_hugepages_alloc() {
 	local hp_int=$1
 	local allocated_hugepages
+
+	allocated_hugepages=$(< "$hp_int")
+
+	if ((NRHUGE <= allocated_hugepages)) && [[ $SHRINK_HUGE != yes ]]; then
+		echo "INFO: Requested $NRHUGE hugepages but $allocated_hugepages already allocated ${2:+on node$2}"
+		return 0
+	fi
 
 	echo $((NRHUGE < 0 ? 0 : NRHUGE)) > "$hp_int"
 
