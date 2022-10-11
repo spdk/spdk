@@ -83,12 +83,12 @@ enum spdk_placement_mode {
  */
 struct spdk_sock_impl_opts {
 	/**
-	 * Size of sock receive buffer. Used by posix and uring socket modules.
+	 * Minimum size of sock receive buffer. Used by posix and uring socket modules.
 	 */
 	uint32_t recv_buf_size;
 
 	/**
-	 * Size of sock send buffer. Used by posix and uring socket modules.
+	 * Minimum size of sock send buffer. Used by posix and uring socket modules.
 	 */
 	uint32_t send_buf_size;
 

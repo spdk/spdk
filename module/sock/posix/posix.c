@@ -317,6 +317,7 @@ static int
 posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int min_size;
 	int rc;
 
 	assert(sock != NULL);
@@ -328,9 +329,12 @@ posix_sock_set_recvbuf(struct spdk_sock *_sock, int sz)
 		}
 	}
 
-	/* Set kernel buffer size to be at least MIN_SO_RCVBUF_SIZE */
-	if (sz < MIN_SO_RCVBUF_SIZE) {
-		sz = MIN_SO_RCVBUF_SIZE;
+	/* Set kernel buffer size to be at least MIN_SO_RCVBUF_SIZE and
+	 * g_spdk_posix_sock_impl_opts.recv_buf_size. */
+	min_size = spdk_max(MIN_SO_RCVBUF_SIZE, g_spdk_posix_sock_impl_opts.recv_buf_size);
+
+	if (sz < min_size) {
+		sz = min_size;
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz));
@@ -347,12 +351,17 @@ static int
 posix_sock_set_sendbuf(struct spdk_sock *_sock, int sz)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
+	int min_size;
 	int rc;
 
 	assert(sock != NULL);
 
-	if (sz < MIN_SO_SNDBUF_SIZE) {
-		sz = MIN_SO_SNDBUF_SIZE;
+	/* Set kernel buffer size to be at least MIN_SO_SNDBUF_SIZE and
+	 * g_spdk_posix_sock_impl_opts.send_buf_size. */
+	min_size = spdk_max(MIN_SO_SNDBUF_SIZE, g_spdk_posix_sock_impl_opts.send_buf_size);
+
+	if (sz < min_size) {
+		sz = min_size;
 	}
 
 	rc = setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF, &sz, sizeof(sz));
