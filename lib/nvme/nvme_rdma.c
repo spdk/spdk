@@ -2435,6 +2435,102 @@ nvme_rdma_log_wc_status(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 	}
 }
 
+static inline int
+nvme_rdma_process_recv_completion(struct ibv_wc *wc, struct nvme_rdma_wr *rdma_wr)
+{
+	struct nvme_rdma_qpair		*rqpair;
+	struct spdk_nvme_rdma_req	*rdma_req;
+	struct spdk_nvme_rdma_rsp	*rdma_rsp;
+
+	rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
+	rqpair = rdma_rsp->rqpair;
+	assert(rqpair->current_num_recvs > 0);
+	rqpair->current_num_recvs--;
+
+	if (wc->status) {
+		nvme_rdma_log_wc_status(rqpair, wc);
+		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+		return -ENXIO;
+	}
+
+	SPDK_DEBUGLOG(nvme, "CQ recv completion\n");
+
+	if (wc->byte_len < sizeof(struct spdk_nvme_cpl)) {
+		SPDK_ERRLOG("recv length %u less than expected response size\n", wc->byte_len);
+		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+		return -ENXIO;
+	}
+	rdma_req = &rqpair->rdma_reqs[rdma_rsp->cpl.cid];
+	rdma_req->completion_flags |= NVME_RDMA_RECV_COMPLETED;
+	rdma_req->rsp_idx = rdma_rsp->idx;
+
+	if ((rdma_req->completion_flags & NVME_RDMA_SEND_COMPLETED) == 0) {
+		return 0;
+	}
+
+	if (spdk_unlikely(nvme_rdma_request_ready(rqpair, rdma_req))) {
+		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+		return -ENXIO;
+	}
+	rqpair->num_completions++;
+	return 1;
+}
+
+static inline int
+nvme_rdma_process_send_completion(struct nvme_rdma_poller *poller,
+				  struct nvme_rdma_qpair *rdma_qpair,
+				  struct ibv_wc *wc, struct nvme_rdma_wr *rdma_wr)
+{
+	struct nvme_rdma_qpair		*rqpair;
+	struct spdk_nvme_rdma_req	*rdma_req;
+
+	rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_req, rdma_wr);
+
+	/* If we are flushing I/O */
+	if (wc->status) {
+		rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
+		if (!rqpair) {
+			rqpair = rdma_qpair != NULL ? rdma_qpair : get_rdma_qpair_from_wc(poller->group, wc);
+		}
+		if (!rqpair) {
+			/* When poll_group is used, several qpairs share the same CQ and it is possible to
+			 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
+			 * That happens due to qpair is destroyed while there are submitted but not completed send/receive
+			 * Work Requests */
+			assert(poller);
+			return 0;
+		}
+		assert(rqpair->current_num_sends > 0);
+		rqpair->current_num_sends--;
+		nvme_rdma_log_wc_status(rqpair, wc);
+		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+		return -ENXIO;
+	}
+
+	/* We do not support Soft Roce anymore. Other than Soft Roce's bug, we should not
+	 * receive a completion without error status after qpair is disconnected/destroyed.
+	 */
+	assert(rdma_req->req != NULL);
+
+	rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
+	rdma_req->completion_flags |= NVME_RDMA_SEND_COMPLETED;
+	assert(rqpair->current_num_sends > 0);
+	rqpair->current_num_sends--;
+
+	if ((rdma_req->completion_flags & NVME_RDMA_RECV_COMPLETED) == 0) {
+		return 0;
+	}
+
+	if (spdk_unlikely(nvme_rdma_request_ready(rqpair, rdma_req))) {
+		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+		nvme_rdma_fail_qpair(&rqpair->qpair, 0);
+		return -ENXIO;
+	}
+	rqpair->num_completions++;
+	return 1;
+}
+
 static int
 nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 				 struct nvme_rdma_poller *poller,
@@ -2442,13 +2538,10 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 				 uint64_t *rdma_completions)
 {
 	struct ibv_wc			wc[MAX_COMPLETIONS_PER_POLL];
-	struct nvme_rdma_qpair		*rqpair;
-	struct spdk_nvme_rdma_req	*rdma_req;
-	struct spdk_nvme_rdma_rsp	*rdma_rsp;
 	struct nvme_rdma_wr		*rdma_wr;
 	uint32_t			reaped = 0;
 	int				completion_rc = 0;
-	int				rc, i;
+	int				rc, _rc, i;
 
 	rc = ibv_poll_cq(cq, batch_size, wc);
 	if (rc < 0) {
@@ -2463,92 +2556,21 @@ nvme_rdma_cq_process_completions(struct ibv_cq *cq, uint32_t batch_size,
 		rdma_wr = (struct nvme_rdma_wr *)wc[i].wr_id;
 		switch (rdma_wr->type) {
 		case RDMA_WR_TYPE_RECV:
-			rdma_rsp = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_rsp, rdma_wr);
-			rqpair = rdma_rsp->rqpair;
-			assert(rqpair->current_num_recvs > 0);
-			rqpair->current_num_recvs--;
-
-			if (wc[i].status) {
-				nvme_rdma_log_wc_status(rqpair, &wc[i]);
-				nvme_rdma_fail_qpair(&rqpair->qpair, 0);
-				completion_rc = -ENXIO;
-				continue;
-			}
-
-			SPDK_DEBUGLOG(nvme, "CQ recv completion\n");
-
-			if (wc[i].byte_len < sizeof(struct spdk_nvme_cpl)) {
-				SPDK_ERRLOG("recv length %u less than expected response size\n", wc[i].byte_len);
-				nvme_rdma_fail_qpair(&rqpair->qpair, 0);
-				completion_rc = -ENXIO;
-				continue;
-			}
-			rdma_req = &rqpair->rdma_reqs[rdma_rsp->cpl.cid];
-			rdma_req->completion_flags |= NVME_RDMA_RECV_COMPLETED;
-			rdma_req->rsp_idx = rdma_rsp->idx;
-
-			if ((rdma_req->completion_flags & NVME_RDMA_SEND_COMPLETED) != 0) {
-				if (spdk_unlikely(nvme_rdma_request_ready(rqpair, rdma_req))) {
-					SPDK_ERRLOG("Unable to re-post rx descriptor\n");
-					nvme_rdma_fail_qpair(&rqpair->qpair, 0);
-					completion_rc = -ENXIO;
-					continue;
-				}
-				reaped++;
-				rqpair->num_completions++;
-			}
+			_rc = nvme_rdma_process_recv_completion(&wc[i], rdma_wr);
 			break;
 
 		case RDMA_WR_TYPE_SEND:
-			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvme_rdma_req, rdma_wr);
-
-			/* If we are flushing I/O */
-			if (wc[i].status) {
-				rqpair = rdma_req->req ? nvme_rdma_qpair(rdma_req->req->qpair) : NULL;
-				if (!rqpair) {
-					rqpair = rdma_qpair != NULL ? rdma_qpair : get_rdma_qpair_from_wc(poller->group, &wc[i]);
-				}
-				if (!rqpair) {
-					/* When poll_group is used, several qpairs share the same CQ and it is possible to
-					 * receive a completion with error (e.g. IBV_WC_WR_FLUSH_ERR) for already disconnected qpair
-					 * That happens due to qpair is destroyed while there are submitted but not completed send/receive
-					 * Work Requests */
-					assert(poller);
-					continue;
-				}
-				assert(rqpair->current_num_sends > 0);
-				rqpair->current_num_sends--;
-				nvme_rdma_log_wc_status(rqpair, &wc[i]);
-				nvme_rdma_fail_qpair(&rqpair->qpair, 0);
-				completion_rc = -ENXIO;
-				continue;
-			}
-
-			/* We do not support Soft Roce anymore. Other than Soft Roce's bug, we should not
-			 * receive a completion without error status after qpair is disconnected/destroyed.
-			 */
-			assert(rdma_req->req != NULL);
-
-			rqpair = nvme_rdma_qpair(rdma_req->req->qpair);
-			rdma_req->completion_flags |= NVME_RDMA_SEND_COMPLETED;
-			assert(rqpair->current_num_sends > 0);
-			rqpair->current_num_sends--;
-
-			if ((rdma_req->completion_flags & NVME_RDMA_RECV_COMPLETED) != 0) {
-				if (spdk_unlikely(nvme_rdma_request_ready(rqpair, rdma_req))) {
-					SPDK_ERRLOG("Unable to re-post rx descriptor\n");
-					nvme_rdma_fail_qpair(&rqpair->qpair, 0);
-					completion_rc = -ENXIO;
-					continue;
-				}
-				reaped++;
-				rqpair->num_completions++;
-			}
+			_rc = nvme_rdma_process_send_completion(poller, rdma_qpair, &wc[i], rdma_wr);
 			break;
 
 		default:
 			SPDK_ERRLOG("Received an unexpected opcode on the CQ: %d\n", rdma_wr->type);
 			return -ECANCELED;
+		}
+		if (spdk_likely(_rc >= 0)) {
+			reaped += _rc;
+		} else {
+			completion_rc = _rc;
 		}
 	}
 
