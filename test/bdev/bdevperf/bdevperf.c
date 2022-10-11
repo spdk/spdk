@@ -239,14 +239,11 @@ performance_dump_job(struct bdevperf_aggregate_stats *stats, struct bdevperf_job
 	failed_per_second = (double)job->io_failed * 1000000 / time_in_usec;
 	timeout_per_second = (double)job->io_timeout * 1000000 / time_in_usec;
 
-	printf("\t %-20s: %10.2f IOPS %10.2f MiB/s\n",
-	       job->name, io_per_second, mb_per_second);
-	if (failed_per_second != 0) {
-		printf("\t %-20s: %10.2f Fail/s %8.2f TO/s\n",
-		       "", failed_per_second, timeout_per_second);
-		printf("\t %-20s: %10ld Fail IOs %6ld TO IOs\n",
-		       "", job->io_failed, job->io_timeout);
-	}
+	printf("\t %-20s: %10.2f %10.2f %10.2f",
+	       job->name, (float)time_in_usec / 1000000, io_per_second, mb_per_second);
+	printf(" %10.2f %8.2f\n",
+	       failed_per_second, timeout_per_second);
+
 	stats->total_io_per_second += io_per_second;
 	stats->total_mb_per_second += mb_per_second;
 	stats->total_failed_per_second += failed_per_second;
@@ -392,6 +389,9 @@ bdevperf_test_done(void *ctx)
 		       (double)g_time_in_usec / 1000000);
 	}
 
+	printf("\n\r %-*s: %10s %10s %10s %10s %8s\n",
+	       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s");
+
 	TAILQ_FOREACH_SAFE(job, &g_bdevperf.jobs, link, jtmp) {
 		TAILQ_REMOVE(&g_bdevperf.jobs, job, link);
 
@@ -412,13 +412,11 @@ bdevperf_test_done(void *ctx)
 		free(job);
 	}
 
-	printf("\r =============================================================\n");
-	printf("\r %-28s: %10.2f IOPS %10.2f MiB/s\n",
-	       "Total", g_stats.total_io_per_second, g_stats.total_mb_per_second);
-	if (g_stats.total_failed_per_second != 0 || g_stats.total_timeout_per_second != 0) {
-		printf("\r %-28s: %10.2f Fail/s %8.2f TO/s\n",
-		       "", g_stats.total_failed_per_second, g_stats.total_timeout_per_second);
-	}
+	printf("\r ==================================================================================\n");
+	printf("\r %-28s: %10s %10.2f %10.2f",
+	       "Total", "", g_stats.total_io_per_second, g_stats.total_mb_per_second);
+	printf(" %10.2f %8.2f\n",
+	       g_stats.total_failed_per_second, g_stats.total_timeout_per_second);
 	fflush(stdout);
 
 	rc = g_run_rc;
@@ -1009,13 +1007,11 @@ _performance_dump_done(void *ctx)
 {
 	struct bdevperf_aggregate_stats *stats = ctx;
 
-	printf("\r =====================================================\n");
-	printf("\r %-20s: %10.2f IOPS %10.2f MiB/s\n",
-	       "Total", stats->total_io_per_second, stats->total_mb_per_second);
-	if (stats->total_failed_per_second != 0 || stats->total_timeout_per_second != 0) {
-		printf("\r %-20s: %10.2f Fail/s %8.2f TO/s\n",
-		       "", stats->total_failed_per_second, stats->total_timeout_per_second);
-	}
+	printf("\r ==================================================================================\n");
+	printf("\r %-28s: %10s %10.2f %10.2f",
+	       "Total", "", stats->total_io_per_second, stats->total_mb_per_second);
+	printf(" %10.2f %8.2f\n",
+	       stats->total_failed_per_second, stats->total_timeout_per_second);
 	fflush(stdout);
 
 	g_performance_dump_active = false;
@@ -1086,6 +1082,9 @@ bdevperf_test(void)
 	/* Start a timer to dump performance numbers */
 	g_start_tsc = spdk_get_ticks();
 	if (g_show_performance_real_time && !g_perf_timer) {
+		printf("\r %-*s: %10s %10s %10s %10s %8s\n",
+		       28, "Device Information", "runtime(s)", "IOPS", "MiB/s", "Fail/s", "TO/s");
+
 		g_perf_timer = SPDK_POLLER_REGISTER(performance_statistics_thread, NULL,
 						    g_show_performance_period_in_usec);
 	}
