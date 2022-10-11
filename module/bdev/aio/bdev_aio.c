@@ -55,6 +55,7 @@ struct file_disk {
 	int			fd;
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
+	bool			readonly;
 };
 
 /* For user space reaping of completions */
@@ -99,11 +100,12 @@ static int
 bdev_aio_open(struct file_disk *disk)
 {
 	int fd;
+	int io_flag = disk->readonly ? O_RDONLY : O_RDWR;
 
-	fd = open(disk->filename, O_RDWR | O_DIRECT);
+	fd = open(disk->filename, io_flag | O_DIRECT);
 	if (fd < 0) {
 		/* Try without O_DIRECT for non-disk files */
-		fd = open(disk->filename, O_RDWR);
+		fd = open(disk->filename, io_flag);
 		if (fd < 0) {
 			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
 				    disk->filename, errno, spdk_strerror(errno));
@@ -227,7 +229,6 @@ bdev_aio_destruct_cb(void *io_device)
 	if (rc < 0) {
 		SPDK_ERRLOG("bdev_aio_close() failed\n");
 	}
-
 	aio_free_disk(fdisk);
 }
 
@@ -474,15 +475,25 @@ bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 static int
 _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct file_disk *fdisk = (struct file_disk *)bdev_io->bdev->ctxt;
+
 	switch (bdev_io->type) {
 	/* Read and write operations must be performed on buffers aligned to
 	 * bdev->required_alignment. If user specified unaligned buffers,
 	 * get the aligned buffer from the pool by calling spdk_bdev_io_get_buf. */
 	case SPDK_BDEV_IO_TYPE_READ:
-	case SPDK_BDEV_IO_TYPE_WRITE:
 		spdk_bdev_io_get_buf(bdev_io, bdev_aio_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		if (fdisk->readonly) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		} else {
+			spdk_bdev_io_get_buf(bdev_io, bdev_aio_get_buf_cb,
+					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		}
+		return 0;
+
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		bdev_aio_flush((struct file_disk *)bdev_io->bdev->ctxt,
 			       (struct bdev_aio_task *)bdev_io->driver_ctx);
@@ -567,6 +578,10 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_string(w, "filename", fdisk->filename);
 
+	spdk_json_write_named_bool(w, "block_size_override", fdisk->block_size_override);
+
+	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
+
 	spdk_json_write_object_end(w);
 
 	return 0;
@@ -587,6 +602,7 @@ bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 		spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
 	}
 	spdk_json_write_named_string(w, "filename", fdisk->filename);
+	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -685,7 +701,7 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 int
-create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
+create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
@@ -697,6 +713,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 		SPDK_ERRLOG("Unable to allocate enough memory for aio backend\n");
 		return -ENOMEM;
 	}
+	fdisk->readonly = readonly;
 
 	fdisk->filename = strdup(filename);
 	if (!fdisk->filename) {

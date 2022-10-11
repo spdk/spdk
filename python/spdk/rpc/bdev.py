@@ -370,13 +370,14 @@ def bdev_raid_delete(client, name):
     return client.call('bdev_raid_delete', params)
 
 
-def bdev_aio_create(client, filename, name, block_size=None):
+def bdev_aio_create(client, filename, name, block_size=None, readonly=False):
     """Construct a Linux AIO block device.
 
     Args:
         filename: path to device or file (ex: /dev/sda)
         name: name of block device
         block_size: block size of device (optional; autodetected if omitted)
+        readonly: set aio bdev as read-only
 
     Returns:
         Name of created block device.
@@ -386,6 +387,9 @@ def bdev_aio_create(client, filename, name, block_size=None):
 
     if block_size:
         params['block_size'] = block_size
+
+    if readonly:
+        params['readonly'] = readonly
 
     return client.call('bdev_aio_create', params)
 

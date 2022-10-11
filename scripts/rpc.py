@@ -424,12 +424,14 @@ if __name__ == "__main__":
         print_json(rpc.bdev.bdev_aio_create(args.client,
                                             filename=args.filename,
                                             name=args.name,
-                                            block_size=args.block_size))
+                                            block_size=args.block_size,
+                                            readonly=args.readonly))
 
     p = subparsers.add_parser('bdev_aio_create', help='Add a bdev with aio backend')
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
     p.add_argument('name', help='Block device name')
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
+    p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
     p.set_defaults(func=bdev_aio_create)
 
     def bdev_aio_rescan(args):
