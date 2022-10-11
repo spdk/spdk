@@ -7295,7 +7295,7 @@ static inline void
 blob_open_opts_copy(const struct spdk_blob_open_opts *src, struct spdk_blob_open_opts *dst)
 {
 #define FIELD_OK(field) \
-        offsetof(struct spdk_blob_opts, field) + sizeof(src->field) <= src->opts_size
+        offsetof(struct spdk_blob_open_opts, field) + sizeof(src->field) <= src->opts_size
 
 #define SET_FIELD(field) \
         if (FIELD_OK(field)) { \
