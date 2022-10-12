@@ -4810,19 +4810,12 @@ _post_completion_msg(void *ctx)
 static int nvmf_vfio_user_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
 static int
-vfio_user_poll_group_intr(void *ctx)
+vfio_user_poll_group_process(void *ctx)
 {
 	struct nvmf_vfio_user_poll_group *vu_group = ctx;
-	eventfd_t val;
 	int ret = 0;
 
 	SPDK_DEBUGLOG(vfio_user_db, "pg:%p got intr\n", vu_group);
-
-	/*
-	 * NB: this might fail if called from vfio_user_ctrlr_intr(), but it's
-	 * non-blocking, so not an issue.
-	 */
-	eventfd_read(vu_group->intr_fd, &val);
 
 	ret |= nvmf_vfio_user_poll_group_poll(&vu_group->group);
 
@@ -4833,6 +4826,16 @@ vfio_user_poll_group_intr(void *ctx)
 	ret |= vfio_user_poll_group_rearm(vu_group);
 
 	return ret != 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+}
+
+static int
+vfio_user_poll_group_intr(void *ctx)
+{
+	struct nvmf_vfio_user_poll_group *vu_group = ctx;
+	eventfd_t val;
+
+	eventfd_read(vu_group->intr_fd, &val);
+	return vfio_user_poll_group_process(ctx);
 }
 
 /*
@@ -4880,7 +4883,7 @@ vfio_user_ctrlr_intr(void *ctx)
 		}
 	}
 
-	ret |= vfio_user_poll_group_intr(vu_ctrlr_group);
+	ret |= vfio_user_poll_group_process(vu_ctrlr_group);
 
 	return ret;
 }
