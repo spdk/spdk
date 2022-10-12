@@ -301,14 +301,6 @@ int vhost_inflight_queue_get_desc(struct spdk_vhost_session *vsession,
  */
 int vhost_vq_used_signal(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *vq);
 
-
-/**
- * Send IRQs for all queues that need to be signaled.
- * \param vsession vhost session
- * \param vq virtqueue
- */
-void vhost_session_used_signal(struct spdk_vhost_session *vsession);
-
 /**
  * Send IRQs for the queue that need to be signaled.
  * \param vq virtqueue

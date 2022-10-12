@@ -469,18 +469,6 @@ vhost_session_vq_used_signal(struct spdk_vhost_virtqueue *virtqueue)
 	}
 }
 
-void
-vhost_session_used_signal(struct spdk_vhost_session *vsession)
-{
-	struct spdk_vhost_virtqueue *virtqueue;
-	uint16_t q_idx;
-
-	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		virtqueue = &vsession->virtqueue[q_idx];
-		vhost_session_vq_used_signal(virtqueue);
-	}
-}
-
 /*
  * Enqueue id and len to used ring.
  */

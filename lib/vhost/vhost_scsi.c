@@ -815,9 +815,8 @@ vdev_worker(void *arg)
 
 	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < vsession->max_queues; q_idx++) {
 		rc = process_vq(svsession, &vsession->virtqueue[q_idx]);
+		vhost_session_vq_used_signal(&vsession->virtqueue[q_idx]);
 	}
-
-	vhost_session_used_signal(vsession);
 
 	return rc > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
 }
