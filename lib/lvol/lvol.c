@@ -55,6 +55,29 @@ lvs_free(struct spdk_lvol_store *lvs)
 	free(lvs);
 }
 
+static struct spdk_lvol *
+lvol_alloc(struct spdk_lvol_store *lvs, const char *name, bool thin_provision,
+	   enum lvol_clear_method clear_method)
+{
+	struct spdk_lvol *lvol;
+
+	lvol = calloc(1, sizeof(*lvol));
+	if (lvol == NULL) {
+		return NULL;
+	}
+
+	lvol->lvol_store = lvs;
+	lvol->clear_method = (enum blob_clear_method)clear_method;
+	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
+	spdk_uuid_generate(&lvol->uuid);
+	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
+	spdk_uuid_fmt_lower(lvol->unique_id, sizeof(lvol->uuid_str), &lvol->uuid);
+
+	TAILQ_INSERT_TAIL(&lvs->pending_lvols, lvol, link);
+
+	return lvol;
+}
+
 static void
 lvol_free(struct spdk_lvol *lvol)
 {
@@ -915,7 +938,6 @@ lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
-	snprintf(lvol->unique_id, sizeof(lvol->unique_id), "%s", lvol->uuid_str);
 	lvol->ref_count++;
 
 	assert(req->cb_fn != NULL);
@@ -1007,7 +1029,6 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol;
 	struct spdk_blob_opts opts;
-	uint64_t num_clusters;
 	char *xattr_names[] = {LVOL_NAME, "uuid"};
 	int rc;
 
@@ -1031,24 +1052,17 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	lvol = calloc(1, sizeof(*lvol));
+	lvol = lvol_alloc(lvs, name, thin_provision, clear_method);
 	if (!lvol) {
 		free(req);
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		return -ENOMEM;
 	}
-	lvol->lvol_store = lvs;
-	num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
-	lvol->clear_method = (enum blob_clear_method)clear_method;
-	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
-	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
-	spdk_uuid_generate(&lvol->uuid);
-	spdk_uuid_fmt_lower(lvol->uuid_str, sizeof(lvol->uuid_str), &lvol->uuid);
-	req->lvol = lvol;
 
+	req->lvol = lvol;
 	spdk_blob_opts_init(&opts, sizeof(opts));
 	opts.thin_provision = thin_provision;
-	opts.num_clusters = num_clusters;
+	opts.num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	opts.clear_method = lvol->clear_method;
 	opts.xattrs.count = SPDK_COUNTOF(xattr_names);
 	opts.xattrs.names = xattr_names;
@@ -1099,7 +1113,8 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 		return;
 	}
 
-	newlvol = calloc(1, sizeof(*newlvol));
+	newlvol = lvol_alloc(origlvol->lvol_store, snapshot_name, true,
+			     (enum lvol_clear_method)origlvol->clear_method);
 	if (!newlvol) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		free(req);
@@ -1107,11 +1122,6 @@ spdk_lvol_create_snapshot(struct spdk_lvol *origlvol, const char *snapshot_name,
 		return;
 	}
 
-	newlvol->lvol_store = origlvol->lvol_store;
-	snprintf(newlvol->name, sizeof(newlvol->name), "%s", snapshot_name);
-	TAILQ_INSERT_TAIL(&newlvol->lvol_store->pending_lvols, newlvol, link);
-	spdk_uuid_generate(&newlvol->uuid);
-	spdk_uuid_fmt_lower(newlvol->uuid_str, sizeof(newlvol->uuid_str), &newlvol->uuid);
 	snapshot_xattrs.count = SPDK_COUNTOF(xattr_names);
 	snapshot_xattrs.ctx = newlvol;
 	snapshot_xattrs.names = xattr_names;
@@ -1163,7 +1173,7 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 		return;
 	}
 
-	newlvol = calloc(1, sizeof(*newlvol));
+	newlvol = lvol_alloc(lvs, clone_name, true, (enum lvol_clear_method)origlvol->clear_method);
 	if (!newlvol) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
 		free(req);
@@ -1171,11 +1181,6 @@ spdk_lvol_create_clone(struct spdk_lvol *origlvol, const char *clone_name,
 		return;
 	}
 
-	newlvol->lvol_store = lvs;
-	snprintf(newlvol->name, sizeof(newlvol->name), "%s", clone_name);
-	TAILQ_INSERT_TAIL(&newlvol->lvol_store->pending_lvols, newlvol, link);
-	spdk_uuid_generate(&newlvol->uuid);
-	spdk_uuid_fmt_lower(newlvol->uuid_str, sizeof(newlvol->uuid_str), &newlvol->uuid);
 	clone_xattrs.count = SPDK_COUNTOF(xattr_names);
 	clone_xattrs.ctx = newlvol;
 	clone_xattrs.names = xattr_names;
