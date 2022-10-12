@@ -614,4 +614,5 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe);
 int spdk_vrdma_adminq_resource_init(void);
 void spdk_vrdma_adminq_resource_destory(void);
+void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status);
 #endif
