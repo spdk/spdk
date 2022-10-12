@@ -980,7 +980,7 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 	uint64_t len, seg_len;
 	void *src;
 	size_t i;
-	void *prev_crc;
+	uint64_t prev_crc;
 
 	assert(chan != NULL);
 	assert(siov != NULL);
@@ -1037,11 +1037,11 @@ spdk_idxd_submit_crc32c(struct spdk_idxd_io_channel *chan,
 				desc->crc32c.seed = seed;
 			} else {
 				desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
-				desc->crc32c.addr = (uint64_t)prev_crc;
+				desc->crc32c.addr = prev_crc;
 			}
 
 			desc->xfer_size = seg_len;
-			prev_crc = &op->hw.crc32c_val;
+			prev_crc = desc->completion_addr + offsetof(struct dsa_hw_comp_record, crc32c_val);
 
 			len -= seg_len;
 			src += seg_len;
@@ -1075,7 +1075,7 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 	uint64_t len, seg_len;
 	struct spdk_ioviter iter;
 	struct idxd_vtophys_iter vtophys_iter;
-	void *prev_crc;
+	uint64_t prev_crc;
 
 	assert(chan != NULL);
 	assert(diov != NULL);
@@ -1132,11 +1132,11 @@ spdk_idxd_submit_copy_crc32c(struct spdk_idxd_io_channel *chan,
 				desc->crc32c.seed = seed;
 			} else {
 				desc->flags |= IDXD_FLAG_FENCE | IDXD_FLAG_CRC_READ_CRC_SEED;
-				desc->crc32c.addr = (uint64_t)prev_crc;
+				desc->crc32c.addr = prev_crc;
 			}
 
 			desc->xfer_size = seg_len;
-			prev_crc = &op->hw.crc32c_val;
+			prev_crc = desc->completion_addr + offsetof(struct dsa_hw_comp_record, crc32c_val);
 
 			len -= seg_len;
 		}
