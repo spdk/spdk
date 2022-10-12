@@ -43,6 +43,23 @@ add_lvs_to_list(struct spdk_lvol_store *lvs)
 	return name_conflict ? -1 : 0;
 }
 
+static struct spdk_lvol_store *
+lvs_alloc(void)
+{
+	struct spdk_lvol_store *lvs;
+
+	lvs = calloc(1, sizeof(*lvs));
+	if (lvs == NULL) {
+		return NULL;
+	}
+
+	TAILQ_INIT(&lvs->lvols);
+	TAILQ_INIT(&lvs->pending_lvols);
+	TAILQ_INIT(&lvs->retry_open_lvols);
+
+	return lvs;
+}
+
 static void
 lvs_free(struct spdk_lvol_store *lvs)
 {
@@ -362,7 +379,7 @@ lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 		return;
 	}
 
-	lvs = calloc(1, sizeof(*lvs));
+	lvs = lvs_alloc();
 	if (lvs == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol store\n");
 		spdk_bs_unload(bs, bs_unload_with_error_cb, req);
@@ -371,9 +388,6 @@ lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 
 	lvs->blobstore = bs;
 	lvs->bs_dev = req->bs_dev;
-	TAILQ_INIT(&lvs->lvols);
-	TAILQ_INIT(&lvs->pending_lvols);
-	TAILQ_INIT(&lvs->retry_open_lvols);
 
 	req->lvol_store = lvs;
 
@@ -538,9 +552,6 @@ lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 
 	assert(bs != NULL);
 	lvs->blobstore = bs;
-	TAILQ_INIT(&lvs->lvols);
-	TAILQ_INIT(&lvs->pending_lvols);
-	TAILQ_INIT(&lvs->retry_open_lvols);
 
 	SPDK_INFOLOG(lvol, "Lvol store initialized\n");
 
@@ -606,7 +617,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -EINVAL;
 	}
 
-	lvs = calloc(1, sizeof(*lvs));
+	lvs = lvs_alloc();
 	if (!lvs) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol store base pointer\n");
 		return -ENOMEM;
