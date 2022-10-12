@@ -38,6 +38,8 @@
 #include "spdk/vrdma_snap_pci_mgr.h"
 
 
+static uint32_t g_vdev_cnt;
+
 void spdk_vrdma_ctx_stop(void (*fini_cb)(void))
 {
     spdk_vrdma_snap_stop(fini_cb);
@@ -49,6 +51,7 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
     struct ibv_device **list;
     int dev_count;
 
+    g_vdev_cnt = 0;
     if (vrdma_ctx->dpa_enabled) {
         /*Load provider just for DPA*/
     }
@@ -78,6 +81,12 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
         goto err;
     vdev->emu_mgr = spdk_vrdma_snap_get_ibv_device(vrdma_ctx->emu_manager);
     vdev->devid = 0; /*lizh: Hard code for POC*/
+    LIST_INIT(&vdev->vpd_list);
+    LIST_INIT(&vdev->vmr_list);
+    LIST_INIT(&vdev->vqp_list);
+    LIST_INIT(&vdev->vcq_list);
+    LIST_INIT(&vdev->veq_list);
+    g_vdev_cnt++;
     if (spdk_emu_controller_vrdma_create(vdev))
         goto free_vdev;
     return 0;

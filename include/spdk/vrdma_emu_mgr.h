@@ -33,7 +33,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "spdk/vrdma.h"
-//#include "spdk/vrdma_admq.h"
 
 #define SPDK_EMU_NAME_MAXLEN MAX_VRDMA_DEV_LEN
 #define SPDK_EMU_MANAGER_NAME_MAXLEN 16
@@ -51,7 +50,6 @@ struct spdk_emu_io_thread {
 struct spdk_emu_ctx {
     void *ctrl;
     const struct spdk_emu_ctx_ctrl_ops *ctrl_ops;
-    struct spdk_vrdma_dev *vdev;
     char emu_manager[SPDK_EMU_MANAGER_NAME_MAXLEN];
     struct snap_pci *spci;
     char emu_name[SPDK_EMU_NAME_MAXLEN];
@@ -73,6 +71,7 @@ struct spdk_emu_ctx_create_attr {
     void *priv;
     const char *emu_manager;
     struct snap_pci *spci;
+    struct spdk_vrdma_dev *vdev;
 };
 
 LIST_HEAD(spdk_emu_list_head, spdk_emu_ctx);

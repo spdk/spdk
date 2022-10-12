@@ -30,6 +30,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <infiniband/verbs.h>
 
 #include "snap.h"
@@ -37,6 +38,7 @@
 #include "snap_dma.h"
 #include "snap_vrdma_ctrl.h"
 
+#include "spdk/stdinc.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
@@ -216,6 +218,46 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     return 0;
 }
 
+static inline void eth_random_addr(uint8_t *addr)
+{
+	struct timeval t;
+	uint64_t rand;
+
+	gettimeofday(&t, NULL);
+	srandom(t.tv_sec + t.tv_usec);
+	rand = random();
+
+	rand = rand << 32 | random();
+
+	memcpy(addr, (uint8_t *)&rand, 6);
+	addr[0] &= 0xfe;        /* clear multicast bit */
+	addr[0] |= 0x02;        /* set local assignment bit (IEEE802) */
+}
+
+static int vrdma_device_mac_init(struct vrdma_ctrl *ctrl)
+{
+	struct snap_device *sdev = ctrl->sctrl->sdev;
+	struct snap_vrdma_device_attr vattr = {};
+	uint8_t *vmac;
+	int ret;
+
+	ret = snap_vrdma_query_device(sdev, &vattr);
+	if (ret)
+		return -1;
+    if (!(vattr.modifiable_fields & SNAP_VRDMA_MOD_MAC))
+        return -1;
+	vmac = (uint8_t *)&vattr.mac;
+	eth_random_addr(&vmac[2]);
+	vattr.mac = be64toh(vattr.mac);
+
+	ret = snap_vrdma_modify_device(sdev, SNAP_VRDMA_MOD_MAC, &vattr);
+	if (ret)
+		ret = -1;
+
+    memcpy(ctrl->gid, &vattr.mac, sizeof(uint64_t));
+	return ret;
+}
+
 struct vrdma_ctrl *
 vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
 {
@@ -241,7 +283,6 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     if (vrdma_adminq_init(ctrl))
         goto dealloc_pd;
 
-    sctrl_attr.regs.mac = attr->mac;
     sctrl_attr.bar_cbs = &bar_cbs;
     sctrl_attr.cb_ctx = ctrl;
     sctrl_attr.pf_id = attr->pf_id;
@@ -260,17 +301,27 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
                 attr->pf_id, attr->force_in_order, attr->emu_manager_name, attr->pf_id);
         goto dereg_mr;
     }
+    if (vrdma_device_mac_init(ctrl)) {
+            SPDK_ERRLOG("Failed to modify Mac for VRDMA controller %d [in order %d]"
+                " over RDMA device %s, PF %d",
+                attr->pf_id, attr->force_in_order, attr->emu_manager_name, attr->pf_id);
+        goto ctrl_close;
+    }
 
     ctrl->pf_id = attr->pf_id;
+    ctrl->vdev = attr->vdev;
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
                   " was opened successfully over RDMA device %s ",
                   attr->pf_id, attr->force_in_order, attr->emu_manager_name);
     snprintf(ctrl->name, VRDMA_EMU_NAME_MAXLEN,
                 "%s%dpf%d", VRDMA_EMU_NAME_PREFIX,
                 vrdma_dev_name_to_id(attr->emu_manager_name), attr->pf_id);
-
+    strncpy(ctrl->emu_manager, attr->emu_manager_name,
+            SPDK_EMU_MANAGER_NAME_MAXLEN - 1);
     return ctrl;
 
+ctrl_close:
+    snap_vrdma_ctrl_close(ctrl->sctrl);
 dereg_mr:
     ibv_dereg_mr(ctrl->mr);
     spdk_free(ctrl->sw_qp.admq);
@@ -284,6 +335,12 @@ err:
 
 static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
 {
+    struct spdk_vrdma_pd *vpd;
+    struct spdk_vrdma_mr *vmr;
+    struct spdk_vrdma_qp *vqp;
+    struct spdk_vrdma_cq *vcq;
+    struct spdk_vrdma_eq *veq;
+
     if (ctrl->mr)
         ibv_dereg_mr(ctrl->mr);
     if (ctrl->sw_qp.admq)
@@ -292,7 +349,30 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
 
     if (ctrl->destroy_done_cb)
         ctrl->destroy_done_cb(ctrl->destroy_done_cb_arg);
-
+    if (ctrl->vdev) {
+        LIST_FOREACH(vqp, &ctrl->vdev->vqp_list, entry) {
+            LIST_REMOVE(vqp, entry);
+            free(vqp);
+        }
+        LIST_FOREACH(vcq, &ctrl->vdev->vcq_list, entry) {
+            LIST_REMOVE(vcq, entry);
+            free(vcq);
+        }
+        LIST_FOREACH(veq, &ctrl->vdev->veq_list, entry) {
+            LIST_REMOVE(veq, entry);
+            free(veq);
+        }
+        LIST_FOREACH(vmr, &ctrl->vdev->vmr_list, entry) {
+            LIST_REMOVE(vmr, entry);
+            free(vmr);
+        }
+        LIST_FOREACH(vpd, &ctrl->vdev->vpd_list, entry) {
+            LIST_REMOVE(vpd, entry);
+            ibv_dealloc_pd(vpd->ibpd);
+            free(vpd);
+        }
+        free(ctrl->vdev);
+    }
     free(ctrl);
 }
 

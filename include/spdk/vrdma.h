@@ -35,7 +35,7 @@
 #include <infiniband/verbs.h>
 #include <sys/queue.h>
 
-#define VRDMA_IB_NUM_PORTS 2
+#define MAX_VRDMA_DEV_NUM 64
 #define MAX_VRDMA_DEV_LEN 32
 
 enum vrdma_size {
@@ -51,36 +51,60 @@ enum vrdma_size {
 	VRDMA_FILE_PATH_SZ	= 512,
 };
 
-struct spdk_vrdma_port_ctx {
-	struct ibv_device *dev;
-	char pci_addr_str[VRDMA_PCI_ADDR_STR_SZ + 1];
-	uint8_t pci_function;
-	uint16_t mtu;
+struct spdk_vrdma_pd {
+    LIST_ENTRY(spdk_vrdma_pd) entry;
+	uint32_t pd_idx;
+	struct ibv_pd *ibpd;
+	uint32_t ref_cnt;
 };
-struct spdk_vrdma_events_ctx {
-	pthread_t tid;
-	int	epfd;
+
+struct spdk_vrdma_mr {
+    LIST_ENTRY(spdk_vrdma_mr) entry;
+	uint32_t mr_idx;
+	uint32_t ref_cnt;
+};
+
+struct spdk_vrdma_qp {
+    LIST_ENTRY(spdk_vrdma_qp) entry;
+	uint32_t qp_idx;
+	uint32_t ref_cnt;
+};
+
+struct spdk_vrdma_cq {
+    LIST_ENTRY(spdk_vrdma_cq) entry;
+	uint32_t cq_idx;
+	uint32_t ref_cnt;
+};
+
+struct spdk_vrdma_eq {
+    LIST_ENTRY(spdk_vrdma_eq) entry;
+	uint32_t eq_idx;
+	uint32_t ref_cnt;
 };
 
 struct spdk_vrdma_dev {
-        uint32_t devid; /*PF_id*/
-		char emu_name[MAX_VRDMA_DEV_LEN];
-        uint32_t gid_index;
-        struct ibv_device *emu_mgr;
-        /*LIST_HEAD(pd, vpd) pd_list;
-        LIST_HEAD(mr, vmr) mr_list;
-        LIST_HEAD(cq, vcq) cq_list;
-        LIST_HEAD(eq, veq) eq_list;
-        LIST_HEAD(qp, vqp) qp_list;*/
+    uint32_t devid; /*PF_id*/
+	char emu_name[MAX_VRDMA_DEV_LEN];
+    struct ibv_device *emu_mgr;
+	uint32_t vpd_cnt;
+	uint32_t vmr_cnt;
+	uint32_t vqp_cnt;
+	uint32_t vcq_cnt;
+	uint32_t veq_cnt;
+	LIST_HEAD(vpd_list, spdk_vrdma_pd) vpd_list;
+	LIST_HEAD(vmr_list, spdk_vrdma_mr) vmr_list;
+	LIST_HEAD(vqp_list, spdk_vrdma_qp) vqp_list;
+	LIST_HEAD(vcq_list, spdk_vrdma_cq) vcq_list;
+	LIST_HEAD(veq_list, spdk_vrdma_eq) veq_list;
 };
 
 struct spdk_vrdma_ctx {
     uint32_t dpa_enabled:1;
 	char emu_manager[MAX_VRDMA_DEV_LEN];
-    char emu_name[MAX_VRDMA_DEV_LEN];
-	struct snap_context *sctx;
-	struct spdk_vrdma_port_ctx *port_ctx[VRDMA_IB_NUM_PORTS];
-	struct spdk_vrdma_events_ctx dev_ev_ctx;
+	uint32_t vdev_cnt;
+	uint32_t vpd_cnt;
+	uint32_t vqp_cnt;
+	uint32_t vcq_cnt;
 };
 
 int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx);

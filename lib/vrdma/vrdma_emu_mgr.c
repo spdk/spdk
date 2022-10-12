@@ -66,7 +66,6 @@ struct spdk_emu_list_head spdk_emu_list =
 struct spdk_emu_controller_vrdma_create_attr {
     char emu_manager[MAX_VRDMA_DEV_LEN];
     int   pf_id;
-    uint64_t mac;
     bool force_in_order;
     bool suspended;
 };
@@ -175,10 +174,10 @@ static int spdk_emu_ctrl_vrdma_create(struct spdk_emu_ctx *ctx,
     vrdma_attr = attr->priv;
     vrdma_init_attr.emu_manager_name = attr->emu_manager;
     vrdma_init_attr.pf_id = attr->spci->id;
-    vrdma_init_attr.mac = vrdma_attr->mac;
     vrdma_init_attr.nthreads = spdk_env_get_core_count();
     vrdma_init_attr.force_in_order = vrdma_attr->force_in_order;
     vrdma_init_attr.suspended = vrdma_attr->suspended;
+    vrdma_init_attr.vdev = attr->vdev;
     ctx->ctrl = vrdma_ctrl_init(&vrdma_init_attr);
     if (!ctx->ctrl)
         goto err;
@@ -212,7 +211,6 @@ static void spdk_emu_ctx_destroy_end(void *arg)
      */
     if (ctx->fini_cb)
         ctx->fini_cb(ctx->fini_cb_arg);
-    free(ctx->vdev);
     free(ctx);
 }
 
@@ -419,8 +417,6 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     strncpy(attr->emu_manager, ibv_get_device_name(vdev->emu_mgr),
              MAX_VRDMA_DEV_LEN - 1);
     attr->pf_id = vdev->devid;
-    /*lizh: TBD random generate MAC*/
-    attr->mac = rand_r(&rand_seed);
     spci = spdk_vrdma_snap_get_snap_pci(attr->emu_manager, attr->pf_id);
     if (!spci)
         goto free_attr;
@@ -436,13 +432,13 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     emu_attr.priv = attr;
     emu_attr.emu_manager = attr->emu_manager;
     emu_attr.spci = spci;
+    emu_attr.vdev = vdev;
     ctx = spdk_emu_ctx_create(&emu_attr);
     if (!ctx) {
         pthread_mutex_unlock(&spdk_emu_list_lock);
         goto free_attr;
     }
     strncpy(vdev->emu_name, ctx->emu_name, MAX_VRDMA_DEV_LEN - 1);
-    ctx->vdev = vdev;
     LIST_INSERT_HEAD(&spdk_emu_list, ctx, entry);
     pthread_mutex_unlock(&spdk_emu_list_lock);
     free(attr);
