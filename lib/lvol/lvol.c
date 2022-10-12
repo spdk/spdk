@@ -22,6 +22,7 @@ static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lv
 static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static inline int lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs_opts *dst);
+
 static int
 add_lvs_to_list(struct spdk_lvol_store *lvs)
 {
@@ -394,11 +395,13 @@ lvs_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->max_channel_ops = SPDK_LVOL_BLOB_OPTS_CHANNEL_OPS;
 }
 
-void
-spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+static void
+lvs_load(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *_lvs_opts,
+	 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvs_with_handle_req *req;
-	struct spdk_bs_opts opts = {};
+	struct spdk_bs_opts bs_opts = {};
+	struct spdk_lvs_opts lvs_opts;
 
 	assert(cb_fn != NULL);
 
@@ -406,6 +409,14 @@ spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 		SPDK_ERRLOG("Blobstore device does not exist\n");
 		cb_fn(cb_arg, NULL, -ENODEV);
 		return;
+	}
+
+	spdk_lvs_opts_init(&lvs_opts);
+	if (_lvs_opts != NULL) {
+		if (lvs_opts_copy(_lvs_opts, &lvs_opts) != 0) {
+			SPDK_ERRLOG("Invalid options\n");
+			cb_fn(cb_arg, NULL, -EINVAL);
+		}
 	}
 
 	req = calloc(1, sizeof(*req));
@@ -426,10 +437,28 @@ spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	req->cb_arg = cb_arg;
 	req->bs_dev = bs_dev;
 
-	lvs_bs_opts_init(&opts);
-	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
+	lvs_bs_opts_init(&bs_opts);
+	snprintf(bs_opts.bstype.bstype, sizeof(bs_opts.bstype.bstype), "LVOLSTORE");
 
-	spdk_bs_load(bs_dev, &opts, lvs_load_cb, req);
+	if (lvs_opts.esnap_bs_dev_create != NULL) {
+		bs_opts.esnap_bs_dev_create = lvs_opts.esnap_bs_dev_create;
+		bs_opts.esnap_ctx = req->lvol_store;
+	}
+
+	spdk_bs_load(bs_dev, &bs_opts, lvs_load_cb, req);
+}
+
+void
+spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	lvs_load(bs_dev, NULL, cb_fn, cb_arg);
+}
+
+void
+spdk_lvs_load_ext(struct spdk_bs_dev *bs_dev, const struct spdk_lvs_opts *opts,
+		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	lvs_load(bs_dev, opts, cb_fn, cb_arg);
 }
 
 static void
@@ -591,12 +620,13 @@ lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs_opts *dst)
 	}
 	SET_FIELD(num_md_pages_per_cluster_ratio);
 	SET_FIELD(opts_size);
+	SET_FIELD(esnap_bs_dev_create);
 
 	dst->opts_size = src->opts_size;
 
 	/* You should not remove this statement, but need to update the assert statement
 	 * if you add a new field, and also add a corresponding SET_FIELD statement */
-	SPDK_STATIC_ASSERT(sizeof(struct spdk_lvs_opts) == 80, "Incorrect size");
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_lvs_opts) == 88, "Incorrect size");
 
 #undef FIELD_OK
 #undef SET_FIELD
@@ -605,13 +635,17 @@ lvs_opts_copy(const struct spdk_lvs_opts *src, struct spdk_lvs_opts *dst)
 }
 
 static void
-setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o, uint32_t total_clusters)
+setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o, uint32_t total_clusters,
+	       void *esnap_ctx)
 {
 	assert(o != NULL);
 	lvs_bs_opts_init(bs_opts);
 	bs_opts->cluster_sz = o->cluster_sz;
 	bs_opts->clear_method = (enum bs_clear_method)o->clear_method;
 	bs_opts->num_md_pages = (o->num_md_pages_per_cluster_ratio * total_clusters) / 100;
+	bs_opts->esnap_bs_dev_create = o->esnap_bs_dev_create;
+	bs_opts->esnap_ctx = esnap_ctx;
+	snprintf(bs_opts->bstype.bstype, sizeof(bs_opts->bstype.bstype), "LVOLSTORE");
 }
 
 int
@@ -648,22 +682,24 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	}
 	total_clusters = bs_dev->blockcnt / (lvs_opts.cluster_sz / bs_dev->blocklen);
 
-	setup_lvs_opts(&opts, o, total_clusters);
+	lvs = lvs_alloc();
+	if (!lvs) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol store base pointer\n");
+		return -ENOMEM;
+	}
+
+	setup_lvs_opts(&opts, o, total_clusters, lvs);
 
 	if (strnlen(lvs_opts.name, SPDK_LVS_NAME_MAX) == SPDK_LVS_NAME_MAX) {
 		SPDK_ERRLOG("Name has no null terminator.\n");
+		lvs_free(lvs);
 		return -EINVAL;
 	}
 
 	if (strnlen(lvs_opts.name, SPDK_LVS_NAME_MAX) == 0) {
 		SPDK_ERRLOG("No name specified.\n");
+		lvs_free(lvs);
 		return -EINVAL;
-	}
-
-	lvs = lvs_alloc();
-	if (!lvs) {
-		SPDK_ERRLOG("Cannot alloc memory for lvol store base pointer\n");
-		return -ENOMEM;
 	}
 
 	spdk_uuid_generate(&lvs->uuid);
@@ -688,8 +724,6 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
-
-	snprintf(opts.bstype.bstype, sizeof(opts.bstype.bstype), "LVOLSTORE");
 
 	SPDK_INFOLOG(lvol, "Initializing lvol store\n");
 	spdk_bs_init(bs_dev, &opts, lvs_init_cb, lvs_req);
@@ -1017,6 +1051,16 @@ lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 
 	spdk_blob_open_opts_init(&opts, sizeof(opts));
 	opts.clear_method = req->lvol->clear_method;
+	/*
+	 * If the lvol that is being created is an esnap clone, the blobstore needs to be able to
+	 * pass the lvol to the esnap_bs_dev_create callback. In order for that to happen, we need
+	 * to pass it here.
+	 *
+	 * This does set ensap_ctx in cases where it's not needed, but we don't know that it's not
+	 * needed until after the blob is open. When the blob is not an esnap clone, a reference to
+	 * the value stored in opts.esnap_ctx is not retained by the blobstore.
+	 */
+	opts.esnap_ctx = req->lvol;
 	bs = req->lvol->lvol_store->blobstore;
 
 	spdk_bs_open_blob_ext(bs, blobid, &opts, lvol_create_open_cb, req);
@@ -1117,6 +1161,62 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	spdk_blob_opts_init(&opts, sizeof(opts));
 	opts.thin_provision = thin_provision;
 	opts.num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
+	opts.clear_method = lvol->clear_method;
+	opts.xattrs.count = SPDK_COUNTOF(xattr_names);
+	opts.xattrs.names = xattr_names;
+	opts.xattrs.ctx = lvol;
+	opts.xattrs.get_value = lvol_get_xattr_value;
+
+	spdk_bs_create_blob_ext(lvs->blobstore, &opts, lvol_create_cb, req);
+
+	return 0;
+}
+
+int
+spdk_lvol_create_esnap_clone(const void *esnap_id, uint32_t id_len, uint64_t size_bytes,
+			     struct spdk_lvol_store *lvs, const char *clone_name,
+			     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_with_handle_req *req;
+	struct spdk_blob_store *bs;
+	struct spdk_lvol *lvol;
+	struct spdk_blob_opts opts;
+	char *xattr_names[] = {LVOL_NAME, "uuid"};
+	int rc;
+
+	if (lvs == NULL) {
+		SPDK_ERRLOG("lvol store does not exist\n");
+		return -EINVAL;
+	}
+
+	rc = lvs_verify_lvol_name(lvs, clone_name);
+	if (rc < 0) {
+		return rc;
+	}
+
+	bs = lvs->blobstore;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	lvol = lvol_alloc(lvs, clone_name, true, LVOL_CLEAR_WITH_DEFAULT);
+	if (!lvol) {
+		free(req);
+		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
+		return -ENOMEM;
+	}
+	req->lvol = lvol;
+
+	spdk_blob_opts_init(&opts, sizeof(opts));
+	opts.esnap_id = esnap_id;
+	opts.esnap_id_len = id_len;
+	opts.thin_provision = true;
+	opts.num_clusters = spdk_divide_round_up(size_bytes, spdk_bs_get_cluster_size(bs));
 	opts.clear_method = lvol->clear_method;
 	opts.xattrs.count = SPDK_COUNTOF(xattr_names);
 	opts.xattrs.names = xattr_names;

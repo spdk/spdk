@@ -1,7 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
- *   Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include "spdk_cunit.h"
@@ -12,7 +12,6 @@
 #include "thread/thread_internal.h"
 
 #include "common/lib/ut_multithread.c"
-
 #include "lvol/lvol.c"
 
 #define DEV_BUFFER_SIZE (64 * 1024 * 1024)
@@ -28,6 +27,14 @@
 #define SPDK_BLOB_OPTS_MAX_CHANNEL_OPS 512
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
+
+DEFINE_STUB(spdk_blob_get_esnap_id, int,
+	    (struct spdk_blob *blob, const void **id, size_t *len), -ENOTSUP);
+DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), NULL);
+DEFINE_STUB(spdk_bdev_get_by_name, struct spdk_bdev *, (const char *name), NULL);
+DEFINE_STUB(spdk_bdev_create_bs_dev_ro, int,
+	    (const char *bdev_name, spdk_bdev_event_cb_t event_cb, void *event_ctx,
+	     struct spdk_bs_dev **bs_dev), -ENOTSUP);
 
 const char *uuid = "828d9766-ae50-11e7-bd8d-001e67edf350";
 
@@ -54,12 +61,14 @@ struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 spdk_blob_id g_blobid = 1;
 struct spdk_io_channel *g_io_channel;
+struct lvol_ut_bs_dev g_esnap_dev;
 
 struct spdk_blob_store {
 	struct spdk_bs_opts	bs_opts;
 	spdk_blob_id		super_blobid;
 	TAILQ_HEAD(, spdk_blob)	blobs;
 	int			get_super_status;
+	spdk_bs_esnap_dev_create esnap_bs_dev_create;
 };
 
 struct lvol_ut_bs_dev {
@@ -67,6 +76,11 @@ struct lvol_ut_bs_dev {
 	int			init_status;
 	int			load_status;
 	struct spdk_blob_store	*bs;
+};
+
+struct ut_cb_res {
+	void *data;
+	int err;
 };
 
 void
@@ -234,6 +248,24 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	return 0;
 }
 
+const struct spdk_uuid *
+spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
+{
+	return &bdev->uuid;
+}
+
+uint64_t
+spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
+{
+	return bdev->blockcnt;
+}
+
+uint32_t
+spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
+{
+	return bdev->blocklen;
+}
+
 static void
 init_dev(struct lvol_ut_bs_dev *dev)
 {
@@ -261,6 +293,17 @@ free_dev(struct lvol_ut_bs_dev *dev)
 	dev->bs = NULL;
 }
 
+static void
+init_bdev(struct spdk_bdev *bdev, char *name, size_t size)
+{
+	memset(bdev, 0, sizeof(*bdev));
+	bdev->name = name;
+	spdk_uuid_generate(&bdev->uuid);
+	bdev->blocklen = BS_PAGE_SIZE;
+	bdev->phys_blocklen = BS_PAGE_SIZE;
+	bdev->blockcnt = size / BS_PAGE_SIZE;
+}
+
 void
 spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
@@ -274,6 +317,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	TAILQ_INIT(&bs->blobs);
 
 	ut_dev->bs = bs;
+	bs->esnap_bs_dev_create = o->esnap_bs_dev_create;
 
 	memcpy(&bs->bs_opts, o, sizeof(struct spdk_bs_opts));
 
@@ -321,12 +365,12 @@ spdk_blob_get_id(struct spdk_blob *blob)
 void
 spdk_bs_opts_init(struct spdk_bs_opts *opts, size_t opts_size)
 {
+	memset(opts, 0, sizeof(*opts));
 	opts->opts_size = opts_size;
 	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
-	memset(&opts->bstype, 0, sizeof(opts->bstype));
 }
 
 DEFINE_STUB(spdk_bs_get_cluster_size, uint64_t, (struct spdk_blob_store *bs), BS_CLUSTER_SIZE);
@@ -464,12 +508,31 @@ lvol_op_with_handle_complete(void *cb_arg, struct spdk_lvol *lvol, int lvserrno)
 {
 	g_lvol = lvol;
 	g_lvserrno = lvserrno;
+	if (cb_arg != NULL) {
+		struct ut_cb_res *res = cb_arg;
+
+		res->data = lvol;
+		res->err = lvserrno;
+	}
 }
 
 static void
 op_complete(void *cb_arg, int lvserrno)
 {
 	g_lvserrno = lvserrno;
+	if (cb_arg != NULL) {
+		struct ut_cb_res *res = cb_arg;
+
+		res->err = lvserrno;
+	}
+}
+
+static struct ut_cb_res *
+ut_cb_res_clear(struct ut_cb_res *res)
+{
+	res->data = (void *)(uintptr_t)(-1);
+	res->err = 0xbad;
+	return res;
 }
 
 static void
@@ -1032,7 +1095,7 @@ null_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 }
 
 static void
-lvs_load(void)
+test_lvs_load(void)
 {
 	int rc = -1;
 	struct lvol_ut_bs_dev dev;
@@ -2089,6 +2152,199 @@ lvol_get_xattr(void)
 	free_dev(&dev);
 }
 
+static int
+ut_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
+		       const void *esnap_id, uint32_t id_len,
+		       struct spdk_bs_dev **_bs_dev)
+{
+	CU_ASSERT(false);
+	return -ENOTSUP;
+}
+
+static void
+lvol_esnap_reload(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_with_handle_req *req;
+	struct spdk_lvs_opts opts;
+	int rc;
+
+	req = calloc(1, sizeof(*req));
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	init_dev(&dev);
+
+	/* Create an lvstore with external snapshot support */
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+	opts.esnap_bs_dev_create = ut_esnap_bs_dev_create;
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(dev.bs->esnap_bs_dev_create == ut_esnap_bs_dev_create);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	/* Unload the lvstore */
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	/* Load the lvstore with external snapshot support */
+	g_lvserrno = -1;
+	spdk_lvs_opts_init(&opts);
+	opts.esnap_bs_dev_create = ut_esnap_bs_dev_create;
+	spdk_lvs_load_ext(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(dev.bs->esnap_bs_dev_create == ut_esnap_bs_dev_create);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	free(req);
+}
+
+static void
+lvol_esnap_create_bad_args(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_bdev esnap_bdev;
+	struct spdk_lvs_opts opts;
+	char long_name[SPDK_LVOL_NAME_MAX + 1];
+	int rc;
+	struct ut_cb_res lvres1, lvres2;
+	struct spdk_lvol *lvol;
+	char uuid_str[SPDK_UUID_STRING_LEN];
+
+	init_dev(&dev);
+
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+	opts.esnap_bs_dev_create = ut_esnap_bs_dev_create;
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	init_bdev(&esnap_bdev, "bdev1", BS_CLUSTER_SIZE);
+	CU_ASSERT(spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &esnap_bdev.uuid) == 0);
+	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
+
+	/* error with lvs == NULL */
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, NULL, "clone1",
+					  lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* error with clone name that is too short */
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "",
+					  lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* error with clone name that is too long */
+	memset(long_name, 'a', sizeof(long_name));
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, long_name,
+					  lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* error when an lvol with that name already exists */
+	spdk_lvol_create(g_lvol_store, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol = g_lvol;
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "lvol",
+					  lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == -EEXIST);
+	spdk_lvol_close(lvol, op_complete, ut_cb_res_clear(&lvres1));
+	spdk_lvol_destroy(lvol, op_complete, ut_cb_res_clear(&lvres2));
+	poll_threads();
+	CU_ASSERT(lvres1.err == 0);
+	CU_ASSERT(lvres2.err == 0);
+	g_lvol = NULL;
+
+	/* error when two clones created at the same time with the same name */
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "clone1",
+					  lvol_op_with_handle_complete, ut_cb_res_clear(&lvres1));
+	CU_ASSERT(rc == 0);
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "clone1",
+					  lvol_op_with_handle_complete, ut_cb_res_clear(&lvres2));
+	CU_ASSERT(rc == -EEXIST);
+	poll_threads();
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(lvres1.err == 0);
+	CU_ASSERT(lvres2.err == 0xbad);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->pending_lvols));
+	spdk_lvol_close(g_lvol, op_complete, ut_cb_res_clear(&lvres1));
+	spdk_lvol_destroy(g_lvol, op_complete, ut_cb_res_clear(&lvres2));
+	poll_threads();
+	CU_ASSERT(lvres1.err == 0);
+	CU_ASSERT(lvres2.err == 0);
+	g_lvol = NULL;
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	free_dev(&dev);
+}
+
+static void
+lvol_esnap_create_delete(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_bdev esnap_bdev;
+	struct spdk_lvs_opts opts;
+	char uuid_str[SPDK_UUID_STRING_LEN];
+	int rc;
+
+	init_dev(&dev);
+	init_dev(&g_esnap_dev);
+
+	spdk_lvs_opts_init(&opts);
+	snprintf(opts.name, sizeof(opts.name), "lvs");
+	opts.esnap_bs_dev_create = ut_esnap_bs_dev_create;
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	g_lvserrno = 0xbad;
+	init_bdev(&esnap_bdev, "bdev1", BS_CLUSTER_SIZE);
+	CU_ASSERT(spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &esnap_bdev.uuid) == 0);
+	MOCK_SET(spdk_bdev_get_by_name, &esnap_bdev);
+	rc = spdk_lvol_create_esnap_clone(uuid_str, strlen(uuid_str), 1, g_lvol_store, "clone1",
+					  lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	MOCK_CLEAR(spdk_bdev_get_by_name);
+
+	g_lvserrno = 0xbad;
+	spdk_lvol_close(g_lvol, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvserrno = 0xbad;
+	spdk_lvol_destroy(g_lvol, op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol = NULL;
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(g_lvol_store, op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2112,7 +2368,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_close_success);
 	CU_ADD_TEST(suite, lvol_resize);
 	CU_ADD_TEST(suite, lvol_set_read_only);
-	CU_ADD_TEST(suite, lvs_load);
+	CU_ADD_TEST(suite, test_lvs_load);
 	CU_ADD_TEST(suite, lvols_load);
 	CU_ADD_TEST(suite, lvol_open);
 	CU_ADD_TEST(suite, lvol_snapshot);
@@ -2127,6 +2383,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lvol_inflate);
 	CU_ADD_TEST(suite, lvol_decouple_parent);
 	CU_ADD_TEST(suite, lvol_get_xattr);
+	CU_ADD_TEST(suite, lvol_esnap_reload);
+	CU_ADD_TEST(suite, lvol_esnap_create_bad_args);
+	CU_ADD_TEST(suite, lvol_esnap_create_delete);
 
 	allocate_threads(1);
 	set_thread(0);

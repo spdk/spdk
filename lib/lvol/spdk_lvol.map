@@ -17,9 +17,11 @@
 	spdk_lvol_close;
 	spdk_lvol_get_io_channel;
 	spdk_lvs_load;
+	spdk_lvs_load_ext;
 	spdk_lvol_open;
 	spdk_lvol_inflate;
 	spdk_lvol_decouple_parent;
+	spdk_lvol_create_esnap_clone;
 
 	# internal functions
 	spdk_lvol_resize;
