@@ -47,21 +47,32 @@
 #define VRDMA_CEQ_START_MSIX_VEC_IDX        (1)
 #define VRDMA_AQ_HDR_MEGIC_NUM 				(0xAA88)
 
-
 /* more states need mlnx to fill */
 enum vrdma_dev_state {
-	rdev_state_reset = 0x0,
-	rdev_state_driver_ok = 0x4,
-	rdev_state_need_reset = 0x40,
-	rdev_state_driver_error = 0x80, /*when driver encounter err to inform device*/
-	rdev_state_max,
+	VRDMA_DEV_STATE_RESET = 0x0,
+	VRDMA_DEV_STATE_DRIVER_OK = 0x4,
+	VRDMA_DEV_STATE_NEED_RESET = 0x40,
+	VRDMA_DEV_STATE_DRIVER_ERROR = 0x80, /*when driver encounter err to inform device*/
+	VRDMA_DEV_STATE_MAX,
 };
 
 enum vrdma_aq_msg_err_code {
-	aq_msg_err_code_success = 0x0,
-	aq_msg_err_code_invalid_params = 0x1,
-	aq_msg_err_code_nomem = 0x2,
-	aq_msg_err_code_unknown = 0x3,
+	VRDMA_AQ_MSG_ERR_CODE_SUCCESS = 0x0,
+	VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM = 0x1,
+	VRDMA_AQ_MSG_ERR_CODE_NO_MEM = 0x2,
+	VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX = 0x3,
+	VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID = 0x4,
+	VRDMA_AQ_MSG_ERR_CODE_UNKNOWN = 0x5,
+};
+
+enum vrdma_port_phys_state {
+	VRDMA_PORT_PHYS_STATE_SLEEP = 1,
+	VRDMA_PORT_PHYS_STATE_POLLING = 2,
+	VRDMA_PORT_PHYS_STATE_DISABLED = 3,
+	VRDMA_PORT_PHYS_STATE_PORT_CONFIGURATION_TRAINING = 4,
+	VRDMA_PORT_PHYS_STATE_LINK_UP = 5,
+	VRDMA_PORT_PHYS_STATE_LINK_ERROR_RECOVERY = 6,
+	VRDMA_PORT_PHYS_STATE_PHY_TEST = 7,
 };
 
 /* more fields need mlnx to fill */
@@ -95,9 +106,15 @@ struct vrdma_query_device_req {
 enum vrdma_device_cap_flags {
 	VRDMA_DEVICE_RC_RNR_NAK_GEN		= (1 << 0),
 };
-#define VRDMA_DEV_MAX_QP     0x40000
+#define VRDMA_MAX_PD_NUM     0x40000
+#define VRDMA_DEV_MAX_PD     0x2000
+#define VRDMA_MAX_MR_NUM     0x40000
+#define VRDMA_DEV_MAX_MR     0x2000
+#define VRDMA_MAX_QP_NUM     0x40000
+#define VRDMA_DEV_MAX_QP     0x2000
 #define VRDMA_DEV_MAX_QP_SZ  0x2000000
-#define VRDMA_DEV_MAX_CQ     0x40000
+#define VRDMA_MAX_CQ_NUM     0x40000
+#define VRDMA_DEV_MAX_CQ     0x2000
 #define VRDMA_DEV_MAX_CQ_DP  0x400
 #define VRDMA_DEV_MAX_SQ_DP  0x400
 #define VRDMA_DEV_MAX_RQ_DP  0x400
@@ -139,37 +156,37 @@ struct vrdma_query_port_req {
 struct vrdma_query_port_resp {
 	uint32_t err_code:8;
 	uint32_t err_hint:24;
-	enum ibv_port_state     state; /* Logical port state */
-	enum ibv_mtu            max_mtu;/* Max MTU supported by port */
-	enum ibv_mtu            active_mtu; /* Actual MTU */
-	int                     gid_tbl_len;/* Length of source GID table */
-	uint32_t                port_cap_flags; /* Port capabilities */
-	uint32_t                max_msg_sz; /* Length of source GID table */
-	uint32_t		bad_pkey_cntr; /* Bad P_Key counter */
-	uint32_t		qkey_viol_cntr; /* Q_Key violation counter */
-	uint32_t		sm_lid; /* SM LID */
-	uint32_t		lid; /* Base port LID */
-	uint16_t		pkey_tbl_len; /* Length of partition table */
-	uint8_t			lmc; /* LMC of LID */
-	uint8_t			max_vl_num; /* Maximum number of VLs */
-	uint8_t			sm_sl; /* SM service level */
-	uint8_t                 active_speed;
-	uint8_t          	phys_state;/* Physical port state */
-	uint8_t                 link_layer; /* link layer protocol of the port */
-
+	enum ibv_port_state state; /* Logical port state */
+	enum ibv_mtu max_mtu;/* Max MTU supported by port */
+	enum ibv_mtu active_mtu; /* Actual MTU */
+	int gid_tbl_len;/* Length of source GID table */
+	uint32_t port_cap_flags; /* Port capabilities */
+	uint32_t max_msg_sz; /* Length of source GID table */
+	uint32_t bad_pkey_cntr; /* Bad P_Key counter */
+	uint32_t qkey_viol_cntr; /* Q_Key violation counter */
+	uint32_t sm_lid; /* SM LID */
+	uint32_t lid; /* Base port LID */
+	uint16_t pkey_tbl_len; /* Length of partition table */
+	uint8_t lmc; /* LMC of LID */
+	uint8_t max_vl_num; /* Maximum number of VLs */
+	uint8_t sm_sl; /* SM service level */
+	uint8_t active_speed;
+	uint8_t phys_state;/* Physical port state */
+	uint8_t link_layer; /* link layer protocol of the port */
 } __attribute__((packed));
 
 struct vrdma_query_gid_req {
 };
 
+#define VRDMA_DEV_GID_LEN 16
 struct vrdma_query_gid_resp {
 	uint32_t err_code:8;
 	uint32_t err_hint:24;
-	uint8_t gid[16];
+	uint8_t gid[VRDMA_DEV_GID_LEN];
 } __attribute__((packed));
 
 struct vrdma_modify_gid_req {
-	uint8_t gid[16];
+	uint8_t gid[VRDMA_DEV_GID_LEN];
 };
 
 struct vrdma_modify_gid_resp {
@@ -305,6 +322,7 @@ struct vrdma_create_qp_req {
 	//uint64_t qpc_l0_paddr; /* qpc buffer vm phy addr */
 	uint64_t sq_l0_paddr;  /* sqe buffer vm phy addr */
 	uint64_t rq_l0_paddr;  /* rqe buffer vm phy addr */
+	uint64_t sq_pi_paddr;
 	uint64_t rq_pi_paddr;
 } __attribute__((packed));
 
@@ -362,7 +380,7 @@ struct vrdma_modify_qp_resp {
 
 struct vrdma_create_ah_req {
 	uint32_t pd_handle;
-    	uint32_t dip;
+    uint32_t dip;
 } __attribute__((packed));
 
 struct vrdma_create_ah_resp {
@@ -460,8 +478,8 @@ union vrdma_admin_cmd_req {
 union vrdma_admin_cmd_resp {
 	char buf[64];  /* 64 Byte */
 	struct { 
-    	uint16_t    len; 
-		uint16_t	reserved[3]; 
+    	uint16_t    len;
+		uint16_t	reserved[3];
     	uint64_t 	pdata; 
 	}; 
 	struct vrdma_open_device_resp open_device_resp;
@@ -594,4 +612,6 @@ struct vrdma_ctrl;
 
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe);
+int spdk_vrdma_adminq_resource_init(void);
+void spdk_vrdma_adminq_resource_destory(void);
 #endif

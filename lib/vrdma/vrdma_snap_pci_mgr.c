@@ -39,27 +39,11 @@ struct vrdma_snap_emu_manager {
     struct snap_context *sctx;
     struct ibv_context *ibctx;
     struct ibv_device *ibdev;
-    struct ibv_pd *ibpd;
     LIST_ENTRY(vrdma_snap_emu_manager) entry;
 };
 
 LIST_HEAD(, vrdma_snap_emu_manager) vrdma_snap_emu_manager_list =
                               LIST_HEAD_INITIALIZER(vrdma_snap_emu_manager_list);
-
-struct ibv_pd *spdk_vrdma_snap_get_ibv_pd(const char *vrdma_dev)
-{
-    struct vrdma_snap_emu_manager *emu_manager;
-    struct ibv_pd *ibpd = NULL;
-
-    LIST_FOREACH(emu_manager, &vrdma_snap_emu_manager_list, entry) {
-        if (!strncmp(vrdma_dev, ibv_get_device_name(emu_manager->ibdev), 16)) {
-            ibpd = emu_manager->ibpd;
-            break;
-        }
-    }
-
-    return ibpd;
-}
 
 struct ibv_device *spdk_vrdma_snap_get_ibv_device(const char *vrdma_dev)
 {
@@ -213,9 +197,6 @@ int spdk_vrdma_snap_pci_mgr_init(void)
         emu_manager->sctx = sctx;
         emu_manager->ibctx = ibctx;
         emu_manager->ibdev = list[i];
-        emu_manager->ibpd = ibv_alloc_pd(sctx->context);
-        if (!emu_manager->ibpd)
-            goto clear_emu_manager_list;
 
         LIST_INSERT_HEAD(&vrdma_snap_emu_manager_list, emu_manager, entry);
     }

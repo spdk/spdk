@@ -45,7 +45,6 @@ struct snap_pci **spdk_vrdma_snap_get_snap_pci_list(const char *vrdma_dev,
                                               int *spci_list_sz);
 struct snap_context *spdk_vrdma_snap_get_snap_context(const char *vrdma_dev);
 struct ibv_context *spdk_vrdma_snap_get_ibv_context(const char *vrdma_dev);
-struct ibv_pd *spdk_vrdma_snap_get_ibv_pd(const char *vrdma_dev);
 struct ibv_device *spdk_vrdma_snap_get_ibv_device(const char *vrdma_dev);
 struct snap_pci *spdk_vrdma_snap_get_snap_pci(const char *vrdma_dev, int pf_index);
 

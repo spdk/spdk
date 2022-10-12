@@ -33,7 +33,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "spdk/stdinc.h"
+#include "spdk/vrdma.h"
 #include "spdk/vrdma_admq.h"
+#include "spdk/vrdma_emu_mgr.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
@@ -45,8 +47,11 @@ struct snap_context;
 
 struct vrdma_ctrl {
     char name[VRDMA_EMU_NAME_MAXLEN];
+    char emu_manager[SPDK_EMU_MANAGER_NAME_MAXLEN];
     size_t nthreads;
     int pf_id;
+    uint8_t gid[16];
+    struct spdk_vrdma_dev *vdev;
     struct snap_context *sctx;
     struct ibv_pd *pd;
     struct ibv_mr *mr;
@@ -59,7 +64,7 @@ struct vrdma_ctrl {
 struct vrdma_ctrl_init_attr {
     const char *emu_manager_name;
     int pf_id;
-    uint64_t mac;
+    struct spdk_vrdma_dev *vdev;
     uint32_t nthreads;
     bool force_in_order;
     bool suspended;

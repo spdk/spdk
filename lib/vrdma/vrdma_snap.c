@@ -34,9 +34,14 @@
 #include "spdk/vrdma_snap_pci_mgr.h"
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_io_mgr.h"
+#include "spdk/vrdma_admq.h"
 
 int spdk_vrdma_snap_start(void)
 {
+    if (spdk_vrdma_adminq_resource_init()) {
+        SPDK_ERRLOG("Failed to init admin-queue resource");
+        goto err;
+    }
     if (spdk_vrdma_snap_pci_mgr_init()) {
         SPDK_ERRLOG("Failed to init emulation managers list");
         goto err;
@@ -72,6 +77,7 @@ void spdk_vrdma_snap_stop(void (*fini_cb)(void))
     if (count == 0) {
         spdk_io_mgr_clear();
         spdk_vrdma_snap_pci_mgr_clear();
+        spdk_vrdma_adminq_resource_destory();
         fini_cb();
     }
 }

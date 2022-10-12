@@ -41,7 +41,6 @@
 static struct spdk_thread *g_vrdma_app_thread;
 static int g_start_mqpn;
 static struct spdk_vrdma_context g_vrdma_ctx;
-#define MAX_START_MQP_NUM  4096
 
 static void stop_done_cb()
 {

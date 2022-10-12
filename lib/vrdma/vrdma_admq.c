@@ -29,11 +29,12 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include <infiniband/verbs.h>
 #include "snap_vrdma_ctrl.h"
 
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
+#include "spdk/bit_array.h"
 #include "spdk/barrier.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
@@ -41,7 +42,68 @@
 
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_controller.h"
+#include "spdk/vrdma_emu_mgr.h"
 #include "snap_vrdma_ctrl.h"
+
+static uint32_t g_vpd_cnt;
+static uint32_t g_vmr_cnt;
+static uint32_t g_vqp_cnt;
+static uint32_t g_vcq_cnt;
+
+struct spdk_bit_array *free_vpd_ids;
+struct spdk_bit_array *free_vmr_ids;
+struct spdk_bit_array *free_vqp_ids;
+struct spdk_bit_array *free_vcq_ids;
+
+static struct spdk_bit_array *
+spdk_vrdma_create_id_pool(uint32_t max_num)
+{
+	struct spdk_bit_array *free_ids;
+	uint32_t i;
+
+	free_ids = spdk_bit_array_create(max_num + 1);
+	if (!free_ids)
+		return NULL;
+	for (i = 0; i <= max_num; i++)
+		spdk_bit_array_clear(free_ids, i);
+	return free_ids;
+}
+
+static int spdk_vrdma_init_all_id_pool(void)
+{
+	free_vpd_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_PD_NUM);
+	if (!free_vpd_ids)
+		return -1;
+	free_vmr_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_MR_NUM);
+	if (!free_vmr_ids)
+		return -1;
+	free_vqp_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_QP_NUM);
+	if (!free_vqp_ids)
+		return -1;
+	free_vcq_ids = spdk_vrdma_create_id_pool(VRDMA_MAX_CQ_NUM);
+	if (!free_vcq_ids)
+		return -1;
+	return 0;
+}
+
+int spdk_vrdma_adminq_resource_init(void)
+{
+	g_vpd_cnt = 0;
+	g_vqp_cnt = 0;
+	g_vcq_cnt = 0;
+	g_vmr_cnt = 0;
+	if (spdk_vrdma_init_all_id_pool())
+		return -1;
+	return 0;
+}
+
+void spdk_vrdma_adminq_resource_destory(void)
+{
+	spdk_bit_array_free(&free_vpd_ids);
+	spdk_bit_array_free(&free_vmr_ids);
+	spdk_bit_array_free(&free_vqp_ids);
+	spdk_bit_array_free(&free_vcq_ids);
+}
 
 static inline int aqe_sanity_check(struct vrdma_admin_cmd_entry *aqe)
 {
@@ -58,15 +120,14 @@ static inline int aqe_sanity_check(struct vrdma_admin_cmd_entry *aqe)
 
 }
 
-static int vrdma_aq_open_dev(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_open_dev(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	/* No action and just return OK*/
-	aqe->resp.open_device_resp.err_code = aq_msg_err_code_success;
-	return 0;
+	aqe->resp.open_device_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
-static int vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 
@@ -85,211 +146,319 @@ static int vrdma_aq_query_dev(struct vrdma_ctrl *ctrl,
 	aqe->resp.query_device_resp.max_rq_depth = VRDMA_DEV_MAX_RQ_DP;
 	aqe->resp.query_device_resp.max_cq_depth = VRDMA_DEV_MAX_CQ_DP;
 	aqe->resp.query_device_resp.max_mr = 1 << ctrl->sctx->vrdma_caps.log_max_mkey;
-	aqe->resp.query_device_resp.err_code = aq_msg_err_code_success;
-	return 0;
+	aqe->resp.query_device_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
-static int vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
+				struct vrdma_admin_cmd_entry *aqe)
+{
+	aqe->resp.query_port_resp.state = IBV_PORT_ACTIVE; /* hardcode just for POC*/
+	aqe->resp.query_port_resp.max_mtu = ctrl->sctrl->bar_curr->mtu;
+	aqe->resp.query_port_resp.active_mtu = ctrl->sctrl->bar_curr->mtu;
+	aqe->resp.query_port_resp.gid_tbl_len = 1;/* hardcode just for POC*/
+	aqe->resp.query_port_resp.max_msg_sz = 1 << ctrl->sctx->vrdma_caps.log_max_msg;
+	aqe->resp.query_port_resp.sm_lid = 0xFFFF; /*IB_LID_PERMISSIVE*/
+	aqe->resp.query_port_resp.lid = 0xFFFF;
+	aqe->resp.query_port_resp.pkey_tbl_len = 1;/* hardcode just for POC*/
+	aqe->resp.query_port_resp.active_speed = 16; /* FDR hardcode just for POC*/
+	aqe->resp.query_port_resp.phys_state = VRDMA_PORT_PHYS_STATE_LINK_UP;
+	aqe->resp.query_port_resp.link_layer = IBV_LINK_LAYER_INFINIBAND;
+	aqe->resp.query_port_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+}
+
+static void vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
+				struct vrdma_admin_cmd_entry *aqe)
+{
+	memcpy(aqe->resp.query_gid_resp.gid, ctrl->gid, VRDMA_DEV_GID_LEN);
+	aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+}
+
+static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	memcpy(ctrl->gid, aqe->req.modify_gid_req.gid, VRDMA_DEV_GID_LEN);
+	aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
-static int vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	//TODO
-	return 0;
+	struct spdk_vrdma_pd *vpd;
+	uint32_t pd_idx;
+
+	if (g_vpd_cnt > VRDMA_MAX_PD_NUM ||
+		!ctrl->vdev ||
+		ctrl->vdev->vpd_cnt > VRDMA_DEV_MAX_PD) {
+		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		return;
+	}
+	pd_idx = spdk_bit_array_find_first_clear(free_vpd_ids, 0);
+	if (pd_idx == UINT32_MAX) {
+		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		return;
+	}
+    vpd = calloc(1, sizeof(*vpd));
+    if (!vpd) {
+		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		return;
+	}
+	
+	vpd->ibpd = ibv_alloc_pd(ctrl->sctx->context);
+	if (!vpd->ibpd) {
+		aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		goto free_vpd;
+	}
+
+	/* Create mlnx-qp pool with mlnx-cq/eq and hardcode remote-qpn */
+
+	g_vpd_cnt++;
+	ctrl->vdev->vpd_cnt++;
+	vpd->pd_idx = pd_idx;
+	spdk_bit_array_set(free_vpd_ids, pd_idx);
+	LIST_INSERT_HEAD(&ctrl->vdev->vpd_list, vpd, entry);
+	aqe->resp.create_pd_resp.pd_handle = pd_idx;
+	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	return;
+
+//free_ibpd:
+//	ibv_dealloc_pd(vpd->ibpd);
+free_vpd:
+	free(vpd);
 }
 
-static int vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	//TODO
-	return 0;
+	struct spdk_vrdma_pd *vpd = NULL;
+
+	if (!g_vpd_cnt || !ctrl->vdev ||
+		!ctrl->vdev->vpd_cnt ||
+		!aqe->req.destroy_pd_req.pd_handle) {
+		aqe->resp.destroy_pd_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		return;
+	}
+	LIST_FOREACH(vpd, &ctrl->vdev->vpd_list, entry)
+        if (vpd->pd_idx == aqe->req.destroy_pd_req.pd_handle)
+            break;
+	if (!vpd) {
+		aqe->resp.destroy_pd_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		return;
+	}
+	if (vpd->ref_cnt) {
+		aqe->resp.destroy_pd_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
+		return;
+	}
+	LIST_REMOVE(vpd, entry);
+    ibv_dealloc_pd(vpd->ibpd);
+	spdk_bit_array_clear(free_vpd_ids, vpd->pd_idx);
+
+	/* Free mlnx-qp pool */
+
+    free(vpd);
+	g_vpd_cnt--;
+	ctrl->vdev->vpd_cnt--;
+	aqe->resp.destroy_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
-static int vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
-				struct vrdma_admin_cmd_entry *aqe)
-{
-	//TODO
-	return 0;
-}
-
-static int vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
-				struct vrdma_admin_cmd_entry *aqe)
-{
-	//TODO
-	return 0;
-}
-
-static int vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	        	struct vrdma_admin_cmd_entry *aqe)
 {
+	//struct spdk_vrdma_mr *vmr;
+	struct spdk_vrdma_pd *vpd = NULL;
+	uint32_t dev_max_mr = spdk_min(VRDMA_DEV_MAX_MR,
+			(1 << ctrl->sctx->vrdma_caps.log_max_mkey));
+
+	if (g_vmr_cnt > VRDMA_MAX_MR_NUM ||
+		!ctrl->vdev ||
+		ctrl->vdev->vmr_cnt > dev_max_mr) {
+		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		return;
+	}
+	LIST_FOREACH(vpd, &ctrl->vdev->vpd_list, entry)
+        if (vpd->pd_idx == aqe->req.create_mr_req.pd_handle)
+            break;
+	if (!vpd) {
+		aqe->resp.create_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		return;
+	}
+
 	//TODO
-	return 0;
+	/*ctrl->mr = ibv_reg_mr(ctrl->pd, admq, aq_size,
+                    IBV_ACCESS_REMOTE_READ |
+                    IBV_ACCESS_REMOTE_WRITE |
+                    IBV_ACCESS_LOCAL_WRITE);*/
 }
 
-static int vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 			struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
+				struct vrdma_admin_cmd_entry *aqe)
+{
+	if (g_vcq_cnt > VRDMA_MAX_CQ_NUM) {
+		aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		return;
+	}
+	//TODO
+	return;
+}
+
+static void vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_destroy_cq(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
+				struct vrdma_admin_cmd_entry *aqe)
+{
+	if (g_vqp_cnt > VRDMA_MAX_QP_NUM) {
+		aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		return;
+	}
+	//TODO
+	return;
+}
+
+static void vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_destroy_qp(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_query_qp(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_modify_qp(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_modify_ceq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_create_ceq(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_modify_ceq(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
+	return;
 }
 
-static int vrdma_aq_destroy_ceq(struct vrdma_ctrl *ctrl,
+static void vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	//TODO
-	return 0;
-}
-
-static int vrdma_aq_create_ah(struct vrdma_ctrl *ctrl,
-				struct vrdma_admin_cmd_entry *aqe)
-{
-	//TODO
-	return 0;
-}
-
-static int vrdma_aq_destroy_ah(struct vrdma_ctrl *ctrl,
-				struct vrdma_admin_cmd_entry *aqe)
-{
-	//TODO
-	return 0;
+	return;
 }
 
 int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 			struct vrdma_admin_cmd_entry *aqe)
 {
-	int ret = 0;
-	
 	if (!ctrl || aqe_sanity_check(aqe)) {
 		return -1;
 	}
 
 	switch (aqe->hdr.opcode) {
 			case VRDMA_ADMIN_OPEN_DEVICE:
-				ret = vrdma_aq_open_dev(ctrl, aqe);
+				vrdma_aq_open_dev(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_DEVICE:
-				ret = vrdma_aq_query_dev(ctrl, aqe);
+				vrdma_aq_query_dev(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_PORT:
-				ret = vrdma_aq_query_port(ctrl, aqe);
+				vrdma_aq_query_port(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_GID:
-				ret = vrdma_aq_query_gid(ctrl, aqe);
+				vrdma_aq_query_gid(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_MODIFY_GID:
-				ret = vrdma_aq_modify_gid(ctrl, aqe);
+				vrdma_aq_modify_gid(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_PD:
-				ret = vrdma_aq_create_pd(ctrl, aqe);
+				vrdma_aq_create_pd(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_PD:
-				ret = vrdma_aq_destroy_pd(ctrl, aqe);
+				vrdma_aq_destroy_pd(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_REG_MR:
-				ret = vrdma_aq_reg_mr(ctrl, aqe);
+				vrdma_aq_reg_mr(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DEREG_MR:
-				ret = vrdma_aq_dereg_mr(ctrl, aqe);
+				vrdma_aq_dereg_mr(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_CQ:
-				ret = vrdma_aq_create_cq(ctrl, aqe);
+				vrdma_aq_create_cq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_CQ:
-				ret = vrdma_aq_destroy_cq(ctrl, aqe);
+				vrdma_aq_destroy_cq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_QP:
-				ret = vrdma_aq_create_qp(ctrl, aqe);
+				vrdma_aq_create_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_QP:
-				ret = vrdma_aq_destroy_qp(ctrl, aqe);
+				vrdma_aq_destroy_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_QUERY_QP:
-				ret = vrdma_aq_query_qp(ctrl, aqe);
+				vrdma_aq_query_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_MODIFY_QP:
-				ret = vrdma_aq_modify_qp(ctrl, aqe);
+				vrdma_aq_modify_qp(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_CEQ:
-				ret = vrdma_aq_create_ceq(ctrl, aqe);
+				vrdma_aq_create_ceq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_MODIFY_CEQ:
-				ret = vrdma_aq_modify_ceq(ctrl, aqe);
+				vrdma_aq_modify_ceq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_CEQ:
-				ret = vrdma_aq_destroy_ceq(ctrl, aqe);
+				vrdma_aq_destroy_ceq(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_CREATE_AH:
-				ret = vrdma_aq_create_ah(ctrl, aqe);
+				vrdma_aq_create_ah(ctrl, aqe);
 				break;
 			case VRDMA_ADMIN_DESTROY_AH:
-				ret = vrdma_aq_destroy_ah(ctrl, aqe);
+				vrdma_aq_destroy_ah(ctrl, aqe);
 				break;
 			default:
 				return -1;		
 	}
 
-	return ret;
+	return 0;
 }
 
 //need invoker to guarantee pi is bigger than pre_pi
