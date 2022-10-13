@@ -37,6 +37,7 @@ extern "C" {
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <glob.h>
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <poll.h>

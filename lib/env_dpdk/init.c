@@ -158,95 +158,42 @@ push_arg(char *args[], int *argcount, char *arg)
 #define RD_AMD_CAP_VASIZE_MASK (0x7F << RD_AMD_CAP_VASIZE_SHIFT)
 
 static int
-get_amd_iommu_width(void)
-{
-	FILE *file;
-	char buf[64];
-	char *end;
-	long long int amd_cap;
-
-	file = fopen("/sys/class/iommu/ivhd2/amd-iommu/cap", "r");
-	if (file == NULL) {
-		return 0;
-	}
-
-	if (fgets(buf, sizeof(buf), file) == NULL) {
-		fclose(file);
-		return 0;
-	}
-
-	amd_cap = strtoll(buf, &end, 16);
-	if (amd_cap == LLONG_MIN || amd_cap == LLONG_MAX) {
-		fclose(file);
-		return 0;
-	}
-
-	fclose(file);
-	return (amd_cap & RD_AMD_CAP_VASIZE_MASK) >> RD_AMD_CAP_VASIZE_SHIFT;
-}
-
-static int
 get_iommu_width(void)
 {
-	DIR *dir;
-	FILE *file;
-	struct dirent *entry;
-	char mgaw_path[64];
-	char buf[64];
-	char *end;
-	long long int val;
-	int width, tmp;
-	struct stat s;
+	int width = 0;
+	glob_t glob_results = {};
 
-	if (stat("/sys/class/iommu/ivhd2/amd-iommu", &s) == 0) {
-		return get_amd_iommu_width();
-	}
+	/* Break * and / into separate strings to appease check_format.sh comment style check. */
+	glob("/sys/devices/virtual/iommu/dmar*" "/intel-iommu/cap", 0, NULL, &glob_results);
+	glob("/sys/class/iommu/ivhd*" "/amd-iommu/cap", GLOB_APPEND, NULL, &glob_results);
 
-	dir = opendir("/sys/devices/virtual/iommu/");
-	if (dir == NULL) {
-		return -EINVAL;
-	}
+	for (size_t i = 0; i < glob_results.gl_pathc; i++) {
+		const char *filename = glob_results.gl_pathv[0];
+		FILE *file = fopen(filename, "r");
+		uint64_t cap_reg = 0;
 
-	width = 0;
+		if (file != NULL && fscanf(file, "%" PRIx64, &cap_reg) == 1) {
+			if (strstr(filename, "intel-iommu") != NULL) {
+				/* We have an Intel IOMMU */
+				int mgaw = ((cap_reg & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
 
-	while ((entry = readdir(dir)) != NULL) {
-		/* Find directories named "dmar0", "dmar1", etc */
-		if (strncmp(entry->d_name, "dmar", sizeof("dmar") - 1) != 0) {
-			continue;
-		}
+				if (width == 0 || (mgaw > 0 && mgaw < width)) {
+					width = mgaw;
+				}
+			} else if (strstr(filename, "amd-iommu") != NULL) {
+				/* We have an AMD IOMMU */
+				int mgaw = ((cap_reg & RD_AMD_CAP_VASIZE_MASK) >> RD_AMD_CAP_VASIZE_SHIFT) + 1;
 
-		tmp = snprintf(mgaw_path, sizeof(mgaw_path), "/sys/devices/virtual/iommu/%s/intel-iommu/cap",
-			       entry->d_name);
-		if ((unsigned)tmp >= sizeof(mgaw_path)) {
-			continue;
-		}
-
-		file = fopen(mgaw_path, "r");
-		if (file == NULL) {
-			continue;
-		}
-
-		if (fgets(buf, sizeof(buf), file) == NULL) {
-			fclose(file);
-			continue;
-		}
-
-		val = strtoll(buf, &end, 16);
-		if (val == LLONG_MIN || val == LLONG_MAX) {
-			fclose(file);
-			continue;
-		}
-
-		tmp = ((val & VTD_CAP_MGAW_MASK) >> VTD_CAP_MGAW_SHIFT) + 1;
-		if (width == 0 || tmp < width) {
-			width = tmp;
+				if (width == 0 || (mgaw > 0 && mgaw < width)) {
+					width = mgaw;
+				}
+			}
 		}
 
 		fclose(file);
 	}
 
-	closedir(dir);
-
+	globfree(&glob_results);
 	return width;
 }
 
