@@ -38,10 +38,19 @@ APP = spdk_vrdma
 
 C_SRCS := spdk_vrdma.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SNAP_INC_DIR := $(SPDK_ROOT_DIR)/snap-rdma/src
+SNAP_CTL_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/ctl
+SNAP_RPC_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/rpc
+SNAP_VRDMA_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/vrdma
 
+CFLAGS += $(ENV_CFLAGS)
+CFLAGS += -I$(SNAP_INC_DIR) -I$(SNAP_CTL_INC_DIR) -I$(SNAP_RPC_INC_DIR) -I$(SNAP_VRDMA_INC_DIR)
+#LOCAL_SYS_LIBS = -libverbs
+SYS_LIBS += -libverbs
+
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
-SPDK_LIB_LIST += thread util log log_rpc app_rpc
+SPDK_LIB_LIST += thread util event log log_rpc app_rpc
 SPDK_LIB_LIST += event_nbd nbd net sock notify vrdma
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
