@@ -2532,13 +2532,32 @@ _nvme_ana_state_str(enum spdk_nvme_ana_state ana_state)
 static int
 bdev_nvme_get_memory_domains(void *ctx, struct spdk_memory_domain **domains, int array_size)
 {
+	struct spdk_memory_domain **_domains = NULL;
 	struct nvme_bdev *nbdev = ctx;
 	struct nvme_ns *nvme_ns;
+	int i = 0, _array_size = array_size;
+	int rc = 0;
 
-	nvme_ns = TAILQ_FIRST(&nbdev->nvme_ns_list);
-	assert(nvme_ns != NULL);
+	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
+		if (domains && array_size >= i) {
+			_domains = &domains[i];
+		} else {
+			_domains = NULL;
+		}
+		rc = spdk_nvme_ctrlr_get_memory_domains(nvme_ns->ctrlr->ctrlr, _domains, _array_size);
+		if (rc > 0) {
+			i += rc;
+			if (_array_size >= rc) {
+				_array_size -= rc;
+			} else {
+				_array_size = 0;
+			}
+		} else if (rc < 0) {
+			return rc;
+		}
+	}
 
-	return spdk_nvme_ctrlr_get_memory_domains(nvme_ns->ctrlr->ctrlr, domains, array_size);
+	return i;
 }
 
 static const char *

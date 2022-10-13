@@ -42,16 +42,23 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_flags, uint64_t, (struct spdk_nvme_ctrlr *ctrlr)
 DEFINE_STUB(accel_channel_create, int, (void *io_device, void *ctx_buf), 0);
 DEFINE_STUB_V(accel_channel_destroy, (void *io_device, void *ctx_buf));
 
-DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domain, int);
-
 DEFINE_STUB(spdk_nvme_ctrlr_get_discovery_log_page, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, spdk_nvme_discovery_cb cb_fn, void *cb_arg), 0);
 
+DEFINE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domains, int);
 int
 spdk_nvme_ctrlr_get_memory_domains(const struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_memory_domain **domains, int array_size)
 {
-	HANDLE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domain);
+	int i, min_array_size;
+
+	if (ut_spdk_nvme_ctrlr_get_memory_domains > 0 && domains && array_size > 0) {
+		min_array_size = spdk_min(ut_spdk_nvme_ctrlr_get_memory_domains, array_size);
+		for (i = 0; i < min_array_size; i++) {
+			domains[i] = (struct spdk_memory_domain *)0xf1f2f3f4f5;
+		}
+	}
+	HANDLE_RETURN_MOCK(spdk_nvme_ctrlr_get_memory_domains);
 
 	return 0;
 }
@@ -3015,24 +3022,78 @@ fini_accel(void)
 static void
 test_get_memory_domains(void)
 {
-	struct nvme_ctrlr ctrlr = { .ctrlr = (struct spdk_nvme_ctrlr *) 0xbaadbeef };
-	struct nvme_ns ns = { .ctrlr = &ctrlr };
+	struct nvme_ctrlr ctrlr_1 = { .ctrlr = (struct spdk_nvme_ctrlr *) 0xbaadbeef };
+	struct nvme_ctrlr ctrlr_2 = { .ctrlr = (struct spdk_nvme_ctrlr *) 0xbaaadbeeef };
+	struct nvme_ns ns_1 = { .ctrlr = &ctrlr_1 };
+	struct nvme_ns ns_2 = { .ctrlr = &ctrlr_2 };
 	struct nvme_bdev nbdev = { .nvme_ns_list = TAILQ_HEAD_INITIALIZER(nbdev.nvme_ns_list) };
-	struct spdk_memory_domain *domains[2] = {};
+	struct spdk_memory_domain *domains[4] = {};
 	int rc = 0;
 
-	TAILQ_INSERT_TAIL(&nbdev.nvme_ns_list, &ns, tailq);
+	TAILQ_INSERT_TAIL(&nbdev.nvme_ns_list, &ns_1, tailq);
 
-	/* nvme controller doesn't have memory domainы */
-	MOCK_SET(spdk_nvme_ctrlr_get_memory_domain, 0);
+	/* nvme controller doesn't have memory domains */
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domains, 0);
 	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 2);
-	CU_ASSERT(rc == 0)
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(domains[0] == NULL);
+	CU_ASSERT(domains[1] == NULL);
 
 	/* nvme controller has a memory domain */
-	MOCK_SET(spdk_nvme_ctrlr_get_memory_domain, 1);
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domains, 1);
 	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 2);
 	CU_ASSERT(rc == 1);
-	MOCK_CLEAR(spdk_nvme_ctrlr_get_memory_domain);
+	CU_ASSERT(domains[0] != NULL);
+	memset(domains, 0, sizeof(domains));
+
+	/* multipath, 2 controllers report 1 memory domain each */
+	TAILQ_INSERT_TAIL(&nbdev.nvme_ns_list, &ns_2, tailq);
+
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 2);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(domains[0] != NULL);
+	CU_ASSERT(domains[1] != NULL);
+	memset(domains, 0, sizeof(domains));
+
+	/* multipath, 2 controllers report 1 memory domain each, NULL domains ptr */
+	rc = bdev_nvme_get_memory_domains(&nbdev, NULL, 2);
+	CU_ASSERT(rc == 2);
+
+	/* multipath, 2 controllers report 1 memory domain each, array_size = 0 */
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 0);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(domains[0] == NULL);
+	CU_ASSERT(domains[1] == NULL);
+
+	/* multipath, 2 controllers report 1 memory domain each, array_size = 1 */
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 1);
+	CU_ASSERT(rc == 2);
+	CU_ASSERT(domains[0] != NULL);
+	CU_ASSERT(domains[1] == NULL);
+	memset(domains, 0, sizeof(domains));
+
+	/* multipath, 2 controllers report 2 memory domain each (not possible, just for test) */
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domains, 2);
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 4);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(domains[0] != NULL);
+	CU_ASSERT(domains[1] != NULL);
+	CU_ASSERT(domains[2] != NULL);
+	CU_ASSERT(domains[3] != NULL);
+	memset(domains, 0, sizeof(domains));
+
+	/* multipath, 2 controllers report 2 memory domain each (not possible, just for test)
+	 * Array size is less than the number of memory domains */
+	MOCK_SET(spdk_nvme_ctrlr_get_memory_domains, 2);
+	rc = bdev_nvme_get_memory_domains(&nbdev, domains, 3);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(domains[0] != NULL);
+	CU_ASSERT(domains[1] != NULL);
+	CU_ASSERT(domains[2] != NULL);
+	CU_ASSERT(domains[3] == NULL);
+	memset(domains, 0, sizeof(domains));
+
+	MOCK_CLEAR(spdk_nvme_ctrlr_get_memory_domains);
 }
 
 static void
