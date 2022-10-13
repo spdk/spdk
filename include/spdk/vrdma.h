@@ -34,9 +34,12 @@
 #include <stdint.h>
 #include <infiniband/verbs.h>
 #include <sys/queue.h>
+#include "snap_mr.h"
 
 #define MAX_VRDMA_DEV_NUM 64
 #define MAX_VRDMA_DEV_LEN 32
+#define LOG_4K_PAGE_SIZE 12
+#define MAX_VRDMA_MR_SGE_NUM 8
 
 enum vrdma_size {
 	VRDMA_VIRTQ_TYPE_SZ	= 2,
@@ -58,9 +61,28 @@ struct spdk_vrdma_pd {
 	uint32_t ref_cnt;
 };
 
+struct spdk_vrdma_mem_sge {
+      uint64_t	paddr;
+      uint32_t	size;
+};
+
+struct spdk_vrdma_mr_log {
+	uint64_t start_vaddr;
+	uint64_t log_base;
+	uint32_t log_size;
+	uint32_t mkey;
+	struct mlx5_klm *klm_array;
+	struct snap_indirect_mkey *indirect_mkey;
+	struct snap_cross_mkey *crossing_mkey;
+	uint32_t num_sge;
+	struct spdk_vrdma_mem_sge sge[MAX_VRDMA_MR_SGE_NUM];
+};
+
 struct spdk_vrdma_mr {
     LIST_ENTRY(spdk_vrdma_mr) entry;
 	uint32_t mr_idx;
+	struct spdk_vrdma_mr_log mr_log;
+	struct spdk_vrdma_pd *vpd;
 	uint32_t ref_cnt;
 };
 
@@ -101,10 +123,6 @@ struct spdk_vrdma_dev {
 struct spdk_vrdma_ctx {
     uint32_t dpa_enabled:1;
 	char emu_manager[MAX_VRDMA_DEV_LEN];
-	uint32_t vdev_cnt;
-	uint32_t vpd_cnt;
-	uint32_t vqp_cnt;
-	uint32_t vcq_cnt;
 };
 
 int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx);
