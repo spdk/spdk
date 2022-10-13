@@ -30,6 +30,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <infiniband/verbs.h>
+#include "snap.h"
 #include "snap_vrdma_ctrl.h"
 
 #include "spdk/stdinc.h"
@@ -43,7 +44,6 @@
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_emu_mgr.h"
-#include "snap_vrdma_ctrl.h"
 
 static uint32_t g_vpd_cnt;
 static uint32_t g_vmr_cnt;
@@ -264,13 +264,200 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	aqe->resp.destroy_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
+static inline unsigned int log2above(unsigned int v)
+{
+	unsigned int l;
+	unsigned int r;
+
+	for (l = 0, r = 0; (v >> 1); ++l, v >>= 1)
+		r |= (v & 1);
+	return l + r;
+}
+
+static void vrdma_destroy_crossing_mkey(struct snap_device *dev,
+					 struct spdk_vrdma_mr_log *lattr)
+{
+	int ret = 0;
+
+	if (lattr->crossing_mkey) {
+		ret = snap_destroy_cross_mkey(lattr->crossing_mkey);
+		if (ret)
+			SPDK_ERRLOG("dev(%s): Failed to destroy cross mkey, err(%d)",
+				  dev->pci->pci_number, ret);
+
+		lattr->crossing_mkey = NULL;
+	}
+
+	return;
+}
+
+static void vrdma_indirect_mkey_attr_init(struct snap_device *dev,
+					 struct spdk_vrdma_mr_log *log,
+					 struct snap_cross_mkey *crossing_mkey,
+					 struct mlx5_devx_mkey_attr* attr,
+					 uint32_t *total_len)
+{
+	uint32_t sge_size = log->sge[0].size;
+	struct mlx5_klm *klm_array = attr->klm_array;
+	uint64_t size = 0;
+	uint32_t i;
+
+	attr->log_entity_size = log2above(sge_size);
+
+	if (((uint32_t)(1 << attr->log_entity_size) != sge_size) ||
+	    (attr->log_entity_size < LOG_4K_PAGE_SIZE))
+		attr->log_entity_size = 0;
+
+	for (i = 0; i < log->num_sge; ++i) {
+		size += log->sge[i].size;
+
+		if (log->sge[i].size != sge_size)
+			attr->log_entity_size = 0;
+	}
+
+	for (i = 0; i < log->num_sge; ++i) {
+		if (!attr->log_entity_size)
+			klm_array[i].byte_count = log->sge[i].size;
+
+		klm_array[i].mkey = crossing_mkey->mkey;
+		klm_array[i].address = log->sge[i].paddr;
+	}
+
+	attr->addr = log->start_vaddr;
+	attr->size = size; /* total size */
+	attr->klm_num = log->num_sge;
+	*total_len = size;
+
+	SPDK_NOTICELOG("dev(%s): start_addr:0x%lx, total_size:0x%lx, "
+		  "crossing key:0x%x, log_entity_size:0x%x klm_num:0x%x",
+		  dev->pci->pci_number, attr->addr, attr->size,
+		  crossing_mkey->mkey, attr->log_entity_size, attr->klm_num);
+}
+
+static int vrdma_destroy_indirect_mkey(struct snap_device *dev,
+					struct spdk_vrdma_mr_log *lattr)
+{
+	int ret = 0;
+
+	if (lattr->indirect_mkey) {
+		ret = snap_destroy_indirect_mkey(lattr->indirect_mkey);
+		if (ret)
+			SPDK_ERRLOG("dev(%s): Failed to destroy indirect mkey, err(%d)",
+				  dev->pci->pci_number, ret);
+		lattr->indirect_mkey = NULL;
+		free(lattr->klm_array);
+		lattr->klm_array = NULL;
+	}
+
+	return ret;
+}
+
+static struct snap_indirect_mkey*
+vrdma_create_indirect_mkey(struct snap_device *dev,
+					struct spdk_vrdma_mr *vmr,
+				    struct spdk_vrdma_mr_log *log,
+				    uint32_t *total_len)
+{
+	struct snap_cross_mkey *crossing_mkey = log->crossing_mkey;
+	struct snap_indirect_mkey *indirect_mkey;
+	struct mlx5_devx_mkey_attr attr = {0};
+
+	attr.klm_array = calloc(log->num_sge, sizeof(struct mlx5_klm));
+	if (!attr.klm_array)
+		return NULL;
+
+	vrdma_indirect_mkey_attr_init(dev, log,
+						 crossing_mkey,
+						 &attr, total_len);
+
+	indirect_mkey = snap_create_indirect_mkey(vmr->vpd->ibpd, &attr);
+	if (indirect_mkey == NULL) {
+		SPDK_ERRLOG("dev(%s): Failed to create indirect mkey",
+			  dev->pci->pci_number);
+		goto free_klm_array;
+	}
+	log->klm_array = attr.klm_array;
+	return indirect_mkey;
+free_klm_array:
+	free(attr.klm_array);
+	return NULL;
+}
+
+static int vrdma_create_remote_mkey(struct vrdma_ctrl *ctrl,
+					struct spdk_vrdma_mr *vmr)
+{
+	struct spdk_vrdma_mr_log *lattr;
+	uint32_t total_len = 0;
+
+	lattr = &vmr->mr_log;
+	lattr->crossing_mkey = snap_create_cross_mkey(vmr->vpd->ibpd,
+								ctrl->sctrl->sdev);
+	if (!lattr->crossing_mkey)
+		return -1;
+
+	if (lattr->num_sge == 1) {
+			lattr->mkey = lattr->crossing_mkey->mkey;
+			lattr->log_base = lattr->sge[0].paddr;
+			lattr->log_size = lattr->sge[0].size;
+	} else {
+		lattr->indirect_mkey = vrdma_create_indirect_mkey(ctrl->sctrl->sdev,
+									vmr, lattr, &total_len);
+		if (!lattr->indirect_mkey)
+			goto destroy_crossing;
+
+		lattr->mkey = lattr->indirect_mkey->mkey;
+		lattr->log_size = total_len;
+		lattr->log_base = 0;
+	}
+
+	SPDK_NOTICELOG("dev(%s): Created remote mkey=0x%x, "
+	"start_vaddr=0x%lx, base=0x%lx, size=0x%x",
+		  ctrl->name, lattr->mkey, lattr->start_vaddr, lattr->log_base, lattr->log_size);
+
+	return 0;
+
+destroy_crossing:
+	vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, lattr);
+	return -1;
+}
+
+void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
+					struct spdk_vrdma_mr *vmr)
+{
+	struct spdk_vrdma_mr_log *lattr = &vmr->mr_log;
+
+	if (!lattr->mkey) {
+		SPDK_ERRLOG("dev(%s): remote mkey is not created", ctrl->name);
+		return;
+	}
+	vrdma_destroy_indirect_mkey(ctrl->sctrl->sdev, lattr);
+	vrdma_destroy_crossing_mkey(ctrl->sctrl->sdev, lattr);
+	return;
+}
+
+static void vrdma_reg_mr_create_attr(struct vrdma_create_mr_req *mr_req,
+				struct spdk_vrdma_mr *vmr)
+{
+	struct spdk_vrdma_mr_log *lattr = &vmr->mr_log;
+	uint32_t i;
+ 
+	lattr->start_vaddr = mr_req->vaddr;
+	lattr->num_sge = mr_req->sge_count;
+	for (i = 0; i < lattr->num_sge; i++) {
+		lattr->sge[i].paddr = mr_req->sge_list[i].pa;
+		lattr->sge[i].size = mr_req->sge_list[i].length;
+	}
+	/*TODO use mr_type and access_flag in future. Not support in POC.*/
+}
+
 static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	        	struct vrdma_admin_cmd_entry *aqe)
 {
-	//struct spdk_vrdma_mr *vmr;
+	struct spdk_vrdma_mr *vmr;
 	struct spdk_vrdma_pd *vpd = NULL;
 	uint32_t dev_max_mr = spdk_min(VRDMA_DEV_MAX_MR,
 			(1 << ctrl->sctx->vrdma_caps.log_max_mkey));
+	uint32_t i, mr_idx, total_len = 0;
 
 	if (g_vmr_cnt > VRDMA_MAX_MR_NUM ||
 		!ctrl->vdev ||
@@ -286,19 +473,80 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
 		return;
 	}
-
-	//TODO
-	/*ctrl->mr = ibv_reg_mr(ctrl->pd, admq, aq_size,
-                    IBV_ACCESS_REMOTE_READ |
-                    IBV_ACCESS_REMOTE_WRITE |
-                    IBV_ACCESS_LOCAL_WRITE);*/
+	if (aqe->req.create_mr_req.sge_count > MAX_VRDMA_MR_SGE_NUM) {
+		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		return;
+	}
+	for (i = 0; i < aqe->req.create_mr_req.sge_count; i++) {
+		total_len += aqe->req.create_mr_req.sge_list[i].length;
+	}
+	if (total_len < aqe->req.create_mr_req.length) {
+		aqe->resp.create_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		return;
+	}
+	mr_idx = spdk_bit_array_find_first_clear(free_vmr_ids, 0);
+	if (mr_idx == UINT32_MAX) {
+		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		return;
+	}
+    vmr = calloc(1, sizeof(*vmr));
+    if (!vmr) {
+		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_NO_MEM;
+		return;
+	}
+	vrdma_reg_mr_create_attr(&aqe->req.create_mr_req, vmr);
+	vmr->vpd = vpd;
+	if (vrdma_create_remote_mkey(ctrl, vmr)) {
+		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
+		free(vmr);
+		return;
+	}
+	g_vmr_cnt++;
+	ctrl->vdev->vmr_cnt++;
+	vmr->mr_idx = mr_idx;
+	vpd->ref_cnt++;
+	spdk_bit_array_set(free_vmr_ids, mr_idx);
+	LIST_INSERT_HEAD(&ctrl->vdev->vmr_list, vmr, entry);
+	aqe->resp.create_mr_resp.lkey = vmr->mr_log.mkey;
+	aqe->resp.create_mr_resp.lkey = aqe->resp.create_mr_resp.rkey;
+	aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
 static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 			struct vrdma_admin_cmd_entry *aqe)
 {
-	//TODO
-	return;
+	struct spdk_vrdma_mr *vmr = NULL;
+
+	if (!g_vmr_cnt || !ctrl->vdev ||
+		!ctrl->vdev->vmr_cnt ||
+		!aqe->req.destroy_mr_req.lkey) {
+		aqe->resp.destroy_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		return;
+	}
+	LIST_FOREACH(vmr, &ctrl->vdev->vmr_list, entry)
+        if (vmr->mr_log.mkey == aqe->req.destroy_mr_req.lkey)
+            break;
+	if (!vmr) {
+		aqe->resp.destroy_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_INVALID_PARAM;
+		return;
+	}
+	if (vmr->ref_cnt) {
+		aqe->resp.destroy_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
+		return;
+	}
+	LIST_REMOVE(vmr, entry);
+	vrdma_destroy_remote_mkey(ctrl, vmr);
+	spdk_bit_array_clear(free_vmr_ids, vmr->mr_idx);
+
+	g_vpd_cnt--;
+	ctrl->vdev->vmr_cnt--;
+	vmr->vpd->ref_cnt--;
+	free(vmr);
+	aqe->resp.destroy_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
 static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,

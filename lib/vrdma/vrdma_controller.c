@@ -39,6 +39,7 @@
 #include "snap_vrdma_ctrl.h"
 
 #include "spdk/stdinc.h"
+#include "spdk/bit_array.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
@@ -364,11 +365,14 @@ static void vrdma_ctrl_free(struct vrdma_ctrl *ctrl)
         }
         LIST_FOREACH(vmr, &ctrl->vdev->vmr_list, entry) {
             LIST_REMOVE(vmr, entry);
+            vrdma_destroy_remote_mkey(ctrl, vmr);
+	        spdk_bit_array_clear(free_vmr_ids, vmr->mr_idx);
             free(vmr);
         }
         LIST_FOREACH(vpd, &ctrl->vdev->vpd_list, entry) {
             LIST_REMOVE(vpd, entry);
             ibv_dealloc_pd(vpd->ibpd);
+	        spdk_bit_array_clear(free_vpd_ids, vpd->pd_idx);
             free(vpd);
         }
         free(ctrl->vdev);

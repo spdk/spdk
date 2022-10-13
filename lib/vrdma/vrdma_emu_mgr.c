@@ -406,7 +406,6 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
 {
     struct spdk_emu_controller_vrdma_create_attr *attr = NULL;
     struct spdk_emu_ctx_create_attr emu_attr = {};
-    unsigned int rand_seed = time(NULL);
     struct spdk_emu_ctx *ctx;
     struct snap_pci *spci;
 
