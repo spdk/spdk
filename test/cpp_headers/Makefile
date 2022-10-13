@@ -34,7 +34,10 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+SNAP_INC_DIR :=/usr/local/snap/include
+
 HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
+HEADERS += $(wildcard (SNAP_INC_DIR/*.h))
 
 # On Linux, queue_extras.h is pulled in with queue.h,
 # on FreeBSD, we want to ignore queue_extras.h entirely.

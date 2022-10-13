@@ -34,19 +34,17 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
+SNAP_INC_DIR :=/usr/local/snap/include
+SNAP_LIB_DIR :=/usr/local/snap/lib
+
 APP = spdk_vrdma
 
 C_SRCS := spdk_vrdma.c
 
-SNAP_INC_DIR := $(SPDK_ROOT_DIR)/snap-rdma/src
-SNAP_CTL_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/ctl
-SNAP_RPC_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/rpc
-SNAP_VRDMA_INC_DIR :=$(SPDK_ROOT_DIR)/snap-rdma/vrdma
-
 CFLAGS += $(ENV_CFLAGS)
-CFLAGS += -I$(SNAP_INC_DIR) -I$(SNAP_CTL_INC_DIR) -I$(SNAP_RPC_INC_DIR) -I$(SNAP_VRDMA_INC_DIR)
+CFLAGS += -I$(SNAP_INC_DIR)
 #LOCAL_SYS_LIBS = -libverbs
-SYS_LIBS += -libverbs
+SYS_LIBS += -libverbs -L$(SNAP_LIB_DIR) -lsnap-dma -lsnap -lsnap-mr -lsnap-env -lsnap-vrdma -lsnap-virtio-blk-ctrl
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
