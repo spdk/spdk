@@ -1368,6 +1368,10 @@ vhost_scsi_start(struct spdk_vhost_dev *vdev,
 	svsession->svdev = svdev;
 
 	/* validate all I/O queues are in a contiguous index range */
+	if (vsession->max_queues < VIRTIO_SCSI_REQUESTQ + 1) {
+		SPDK_INFOLOG(vhost, "%s: max_queues %u, no I/O queues\n", vsession->name, vsession->max_queues);
+		return -1;
+	}
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vsession->max_queues; i++) {
 		if (vsession->virtqueue[i].vring.desc == NULL) {
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vsession->name, i);
