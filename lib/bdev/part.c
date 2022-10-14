@@ -234,45 +234,34 @@ bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
 }
 
 static void
-bdev_part_complete_read_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *part_io = cb_arg;
 	uint32_t offset, remapped_offset;
 	int rc, status;
 
-	offset = bdev_io->u.bdev.offset_blocks;
-	remapped_offset = part_io->u.bdev.offset_blocks;
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		if (success) {
+			offset = bdev_io->u.bdev.offset_blocks;
+			remapped_offset = part_io->u.bdev.offset_blocks;
 
-	if (success) {
-		rc = bdev_part_remap_dif(bdev_io, offset, remapped_offset);
-		if (rc != 0) {
-			success = false;
+			rc = bdev_part_remap_dif(bdev_io, offset, remapped_offset);
+			if (rc != 0) {
+				success = false;
+			}
 		}
+		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		spdk_bdev_io_set_buf(part_io, bdev_io->u.bdev.iovs[0].iov_base,
+				     bdev_io->u.bdev.iovs[0].iov_len);
+		break;
+	default:
+		break;
 	}
 
 	status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
-	spdk_bdev_io_complete(part_io, status);
-	spdk_bdev_free_io(bdev_io);
-}
-
-static void
-bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct spdk_bdev_io *part_io = cb_arg;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-	spdk_bdev_io_complete(part_io, status);
-	spdk_bdev_free_io(bdev_io);
-}
-
-static void
-bdev_part_complete_zcopy_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct spdk_bdev_io *part_io = cb_arg;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-
-	spdk_bdev_io_set_buf(part_io, bdev_io->u.bdev.iovs[0].iov_base, bdev_io->u.bdev.iovs[0].iov_len);
 	spdk_bdev_io_complete(part_io, status);
 	spdk_bdev_free_io(bdev_io);
 }
@@ -296,7 +285,7 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 			rc = spdk_bdev_readv_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
 							bdev_io->u.bdev.iovcnt, remapped_offset,
 							bdev_io->u.bdev.num_blocks,
-							bdev_part_complete_read_io, bdev_io,
+							bdev_part_complete_io, bdev_io,
 							bdev_io->u.bdev.ext_opts);
 		} else {
 			rc = spdk_bdev_readv_blocks_with_md(base_desc, base_ch,
@@ -304,7 +293,7 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 							    bdev_io->u.bdev.iovcnt,
 							    bdev_io->u.bdev.md_buf, remapped_offset,
 							    bdev_io->u.bdev.num_blocks,
-							    bdev_part_complete_read_io, bdev_io);
+							    bdev_part_complete_io, bdev_io);
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -350,7 +339,7 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		rc = spdk_bdev_zcopy_start(base_desc, base_ch, NULL, 0, remapped_offset,
 					   bdev_io->u.bdev.num_blocks, bdev_io->u.bdev.zcopy.populate,
-					   bdev_part_complete_zcopy_io, bdev_io);
+					   bdev_part_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_COMPARE:
 		if (!bdev_io->u.bdev.md_buf) {
