@@ -38,6 +38,12 @@
 #include <infiniband/verbs.h>
 
 #include "snap_dma.h"
+#include "vrdma.h"
+
+extern struct spdk_bit_array *free_vpd_ids;
+extern struct spdk_bit_array *free_vmr_ids;
+extern struct spdk_bit_array *free_vqp_ids;
+extern struct spdk_bit_array *free_vcq_ids;
 
 #define VRDMA_NUM_MSIX_VEC                  (64) 
 #define VRDMA_ADMINQ_SIZE                   (1024)
@@ -252,7 +258,6 @@ struct vrdma_create_mr_req {
 	uint64_t vaddr;
 	uint32_t sge_count;
 	struct vrdma_sge {
-		uint64_t va;
 		uint64_t pa;
 		uint32_t length;
 	} sge_list[8];
@@ -615,4 +620,6 @@ int vrdma_parse_admq_entry(struct vrdma_ctrl *ctrl,
 int spdk_vrdma_adminq_resource_init(void);
 void spdk_vrdma_adminq_resource_destory(void);
 void vrdma_aq_sm_dma_cb(struct snap_dma_completion *self, int status);
+void vrdma_destroy_remote_mkey(struct vrdma_ctrl *ctrl,
+					struct spdk_vrdma_mr *vmr);
 #endif
