@@ -1261,12 +1261,16 @@ raid_bdev_remove_base_bdev_on_unquiesced(void *ctx, int status)
 	if (status != 0) {
 		SPDK_ERRLOG("Failed to unquiesce raid bdev %s: %s\n",
 			    raid_bdev->bdev.name, spdk_strerror(-status));
-		return;
+		goto out;
 	}
 
 	spdk_spin_lock(&raid_bdev->base_bdev_lock);
 	raid_bdev_free_base_bdev_resource(base_info);
 	spdk_spin_unlock(&raid_bdev->base_bdev_lock);
+out:
+	if (base_info->remove_cb != NULL) {
+		base_info->remove_cb(base_info->remove_cb_ctx, status);
+	}
 }
 
 static void
@@ -1307,6 +1311,9 @@ raid_bdev_remove_base_bdev_on_quiesced(void *ctx, int status)
 		SPDK_ERRLOG("Failed to quiesce raid bdev %s: %s\n",
 			    raid_bdev->bdev.name, spdk_strerror(-status));
 		base_info->remove_scheduled = false;
+		if (base_info->remove_cb != NULL) {
+			base_info->remove_cb(base_info->remove_cb_ctx, status);
+		}
 		return;
 	}
 
@@ -1321,12 +1328,15 @@ raid_bdev_remove_base_bdev_on_quiesced(void *ctx, int status)
  * or not. If yes, it takes necessary action on that particular raid bdev.
  * params:
  * base_bdev - pointer to base bdev which got removed
+ * cb_fn - callback function
+ * cb_arg - argument to callback function
  * returns:
  * 0 - success
  * non zero - failure
  */
-static int
-raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
+int
+raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev, raid_bdev_remove_base_bdev_cb cb_fn,
+			   void *cb_ctx)
 {
 	struct raid_bdev *raid_bdev;
 	struct raid_base_bdev_info *base_info;
@@ -1349,6 +1359,8 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 
 	assert(base_info->desc);
 	base_info->remove_scheduled = true;
+	base_info->remove_cb = cb_fn;
+	base_info->remove_cb_ctx = cb_ctx;
 
 	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
 		/*
@@ -1365,7 +1377,7 @@ raid_bdev_remove_base_bdev(struct spdk_bdev *base_bdev)
 		 * After this base bdev is removed there will not be enough base bdevs
 		 * to keep the raid bdev operational.
 		 */
-		raid_bdev_deconfigure(raid_bdev, NULL, NULL);
+		raid_bdev_deconfigure(raid_bdev, cb_fn, cb_ctx);
 	} else {
 		int ret;
 
@@ -1435,7 +1447,7 @@ raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev
 
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
-		rc = raid_bdev_remove_base_bdev(bdev);
+		rc = raid_bdev_remove_base_bdev(bdev, NULL, NULL);
 		if (rc != 0) {
 			SPDK_ERRLOG("Failed to remove base bdev %s: %s\n",
 				    spdk_bdev_get_name(bdev), spdk_strerror(-rc));

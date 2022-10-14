@@ -10153,6 +10153,41 @@ Example response:
 }
 ~~~
 
+### bdev_raid_remove_base_bdev {#rpc_bdev_raid_remove_base_bdev}
+
+Remove base bdev from existing raid bdev.
+
+#### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Base bdev name in RAID
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "method": "bdev_raid_remove_base_bdev",
+  "id": 1,
+  "params": {
+    "name": "Raid0"
+  }
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## SPLIT
 
 ### bdev_split_create {#rpc_bdev_split_create}

@@ -381,3 +381,65 @@ cleanup:
 	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
+
+/*
+ * Decoder object for RPC bdev_raid_remove_base_bdev
+ */
+static const struct spdk_json_object_decoder rpc_bdev_raid_remove_base_bdev_decoders[] = {
+	{"name", 0, spdk_json_decode_string},
+};
+
+static void
+rpc_bdev_raid_remove_base_bdev_done(void *ctx, int status)
+{
+	struct spdk_jsonrpc_request *request = ctx;
+
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response_fmt(request, status, "Failed to remove base bdev from raid bdev");
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+
+/*
+ * brief:
+ * bdev_raid_remove_base_bdev function is the RPC for removing base bdev from a raid bdev.
+ * It takes base bdev name as input.
+ * params:
+ * request - pointer to json rpc request
+ * params - pointer to request parameters
+ * returns:
+ * none
+ */
+static void
+rpc_bdev_raid_remove_base_bdev(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct spdk_bdev *bdev;
+	char *name = NULL;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_raid_remove_base_bdev_decoders,
+				    SPDK_COUNTOF(rpc_bdev_raid_remove_base_bdev_decoders),
+				    &name)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev == NULL) {
+		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV, "base bdev %s is not found in config", name);
+		goto cleanup;
+	}
+
+	rc = raid_bdev_remove_base_bdev(bdev, rpc_bdev_raid_remove_base_bdev_done, request);
+	if (rc != 0) {
+		rpc_bdev_raid_remove_base_bdev_done(request, rc);
+	}
+
+cleanup:
+	free(name);
+}
+SPDK_RPC_REGISTER("bdev_raid_remove_base_bdev", rpc_bdev_raid_remove_base_bdev, SPDK_RPC_RUNTIME)
