@@ -5,6 +5,8 @@ rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
 
+shopt -s nullglob extglob
+
 rpc_py=rpc_cmd
 conf_file="$testdir/bdev.json"
 nonenclosed_conf_file="$testdir/nonenclosed.json"
@@ -208,42 +210,34 @@ function bdev_bounds() {
 }
 
 function nbd_function_test() {
-	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
-		local rpc_server=/var/tmp/spdk-nbd.sock
-		local conf=$1
-		local nbd_all=($(ls /dev/nbd* | grep -v p))
-		local bdev_all=($bdevs_name)
-		local nbd_num=${#bdev_all[@]}
-		if ((nbd_num < 1)); then
-			# There should be at least one bdev and one valid nbd device
-			return 1
-		fi
-		if [ ${#nbd_all[@]} -le $nbd_num ]; then
-			nbd_num=${#nbd_all[@]}
-		fi
-		local nbd_list=(${nbd_all[@]:0:$nbd_num})
-		local bdev_list=(${bdev_all[@]:0:$nbd_num})
+	[[ $(uname -s) == Linux ]] || return 0
 
-		if [ ! -e $conf ]; then
-			return 1
-		fi
+	local rpc_server=/var/tmp/spdk-nbd.sock
+	local conf=$1
+	local bdev_all=($2)
+	local bdev_num=${#bdev_all[@]}
 
-		modprobe nbd
-		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 --json "$conf" "$env_ctx" &
-		nbd_pid=$!
-		trap 'cleanup; killprocess $nbd_pid; exit 1' SIGINT SIGTERM EXIT
-		echo "Process nbd pid: $nbd_pid"
-		waitforlisten $nbd_pid $rpc_server
+	# FIXME: Centos7 in the CI is not shipped with a kernel supporting BLK_DEV_NBD
+	# so don't fail here for now.
+	[[ -e /sys/module/nbd ]] || modprobe -q nbd nbds_max=$bdev_num || return 0
 
-		nbd_rpc_start_stop_verify $rpc_server "${bdev_list[*]}"
-		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
-		nbd_with_lvol_verify $rpc_server "${nbd_list[*]}"
+	local nbd_all=(/dev/nbd+([0-9]))
+	bdev_num=$((${#nbd_all[@]} < bdev_num ? ${#nbd_all[@]} : bdev_num))
 
-		killprocess $nbd_pid
-		trap - SIGINT SIGTERM EXIT
-	fi
+	local nbd_list=(${nbd_all[@]::bdev_num})
+	local bdev_list=(${bdev_all[@]::bdev_num})
 
-	return 0
+	$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 --json "$conf" "$env_ctx" &
+	nbd_pid=$!
+	trap 'cleanup; killprocess $nbd_pid' SIGINT SIGTERM EXIT
+	waitforlisten $nbd_pid $rpc_server
+
+	nbd_rpc_start_stop_verify $rpc_server "${bdev_list[*]}"
+	nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
+	nbd_with_lvol_verify $rpc_server "${nbd_list[*]}"
+
+	killprocess $nbd_pid
+	trap - SIGINT SIGTERM EXIT
 }
 
 function fio_test_suite() {
