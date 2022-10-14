@@ -8986,5 +8986,98 @@ blob_esnap_destroy_bs_channel(struct spdk_bs_channel *ch)
 		      spdk_thread_get_name(spdk_get_thread()));
 }
 
+struct set_bs_dev_ctx {
+	struct spdk_blob	*blob;
+	struct spdk_bs_dev	*back_bs_dev;
+	spdk_blob_op_complete	cb_fn;
+	void			*cb_arg;
+	int			bserrno;
+};
+
+static void
+blob_set_back_bs_dev_done(void *_ctx, int bserrno)
+{
+	struct set_bs_dev_ctx	*ctx = _ctx;
+
+	if (bserrno != 0) {
+		/* Even though the unfreeze failed, the update may have succeed. */
+		SPDK_ERRLOG("blob 0x%" PRIx64 ": unfreeze failed with error %d\n", ctx->blob->id,
+			    bserrno);
+	}
+	ctx->cb_fn(ctx->cb_arg, ctx->bserrno);
+	free(ctx);
+}
+
+static void
+blob_frozen_set_back_bs_dev(void *_ctx, struct spdk_blob *blob, int bserrno)
+{
+	struct set_bs_dev_ctx	*ctx = _ctx;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("blob 0x%" PRIx64 ": failed to release old back_bs_dev with error %d\n",
+			    blob->id, bserrno);
+		ctx->bserrno = bserrno;
+		blob_unfreeze_io(blob, blob_set_back_bs_dev_done, ctx);
+		return;
+	}
+
+	if (blob->back_bs_dev != NULL) {
+		blob->back_bs_dev->destroy(blob->back_bs_dev);
+	}
+
+	SPDK_NOTICELOG("blob 0x%" PRIx64 ": hotplugged back_bs_dev\n", blob->id);
+	blob->back_bs_dev = ctx->back_bs_dev;
+	ctx->bserrno = 0;
+
+	blob_unfreeze_io(blob, blob_set_back_bs_dev_done, ctx);
+}
+
+static void
+blob_frozen_destroy_esnap_channels(void *_ctx, int bserrno)
+{
+	struct set_bs_dev_ctx	*ctx = _ctx;
+	struct spdk_blob	*blob = ctx->blob;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("blob 0x%" PRIx64 ": failed to freeze with error %d\n", blob->id,
+			    bserrno);
+		ctx->cb_fn(ctx->cb_arg, bserrno);
+		free(ctx);
+		return;
+	}
+
+	/*
+	 * This does not prevent future reads from the esnap device because any future IO will
+	 * lazily create a new esnap IO channel.
+	 */
+	blob_esnap_destroy_bs_dev_channels(blob, true, blob_frozen_set_back_bs_dev, ctx);
+}
+
+void
+spdk_blob_set_esnap_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back_bs_dev,
+			   spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	struct set_bs_dev_ctx	*ctx;
+
+	if (!blob_is_esnap_clone(blob)) {
+		SPDK_ERRLOG("blob 0x%" PRIx64 ": not an esnap clone\n", blob->id);
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("blob 0x%" PRIx64 ": out of memory while setting back_bs_dev\n",
+			    blob->id);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->back_bs_dev = back_bs_dev;
+	ctx->blob = blob;
+	blob_freeze_io(blob, blob_frozen_destroy_esnap_channels, ctx);
+}
+
 SPDK_LOG_REGISTER_COMPONENT(blob)
 SPDK_LOG_REGISTER_COMPONENT(blob_esnap)

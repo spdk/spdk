@@ -66,6 +66,7 @@
 	spdk_xattr_names_free;
 	spdk_bs_get_bstype;
 	spdk_bs_set_bstype;
+	spdk_blob_set_esnap_bs_dev;
 
 	local: *;
 };

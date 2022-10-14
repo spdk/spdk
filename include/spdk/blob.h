@@ -1120,6 +1120,17 @@ struct spdk_bs_type spdk_bs_get_bstype(struct spdk_blob_store *bs);
  */
 void spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype);
 
+/**
+ * Replace the existing external snapshot device.
+ *
+ * \param blob The blob that is getting a new external snapshot device.
+ * \param back_bs_dev The new blobstore device to use as an external snapshot.
+ * \param cb_fn Callback to be called when complete.
+ * \param cb_arg Callback argument used with cb_fn.
+ */
+void spdk_blob_set_esnap_bs_dev(struct spdk_blob *blob, struct spdk_bs_dev *back_bs_dev,
+				spdk_blob_op_complete cb_fn, void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
