@@ -1835,6 +1835,15 @@ lvs_esnap_bs_dev_create(void *bs_ctx, void *blob_ctx, struct spdk_blob *blob,
  * Missing external snapshots are tracked in a per-lvolstore tree, lvs->degraded_lvol_sets_tree.
  * Each tree node (struct spdk_lvs_degraded_lvol_set) contains a tailq of lvols that are missing
  * that particular external snapshot.
+ *
+ * When a potential missing snapshot becomes available, spdk_lvs_notify_hotplug() may be called to
+ * notify this library that it is available. It will then iterate through the active lvolstores and
+ * search each lvs->degraded_lvol_sets_tree for a set of degraded lvols that are missing an external
+ * snapshot matching the id passed in the notification. The lvols in the tailq on each matching tree
+ * node are then asked to create an external snapshot bs_dev using the esnap_bs_dev_create()
+ * callback that the consumer registered with the lvolstore. If lvs->esnap_bs_dev_create() returns
+ * 0, the lvol is removed from the spdk_lvs_degraded_lvol_set's lvol tailq. When this tailq becomes
+ * empty, the degraded lvol set node for this missing external snapshot is removed.
  */
 static int
 lvs_esnap_name_cmp(struct spdk_lvs_degraded_lvol_set *m1, struct spdk_lvs_degraded_lvol_set *m2)
@@ -1934,4 +1943,123 @@ spdk_lvs_esnap_missing_remove(struct spdk_lvol *lvol)
 
 	free((char *)degraded_set->esnap_id);
 	free(degraded_set);
+}
+
+static void
+lvs_esnap_hotplug_done(void *cb_arg, int bserrno)
+{
+	struct spdk_lvol	*lvol = cb_arg;
+	struct spdk_lvol_store	*lvs = lvol->lvol_store;
+
+	if (bserrno != 0) {
+		SPDK_ERRLOG("lvol %s/%s: failed to hotplug blob_bdev due to error %d\n",
+			    lvs->name, lvol->name, bserrno);
+	}
+}
+
+static void
+lvs_esnap_degraded_hotplug(struct spdk_lvs_degraded_lvol_set *degraded_set)
+{
+	struct spdk_lvol_store	*lvs = degraded_set->lvol_store;
+	struct spdk_lvol	*lvol, *tmp, *last_missing;
+	struct spdk_bs_dev	*bs_dev;
+	const void		*esnap_id = degraded_set->esnap_id;
+	uint32_t		id_len = degraded_set->id_len;
+	int			rc;
+
+	assert(lvs->thread == spdk_get_thread());
+
+	/*
+	 * When lvs->esnap_bs_bdev_create() tries to load an external snapshot, it can encounter
+	 * errors that lead it to calling spdk_lvs_esnap_missing_add(). This function needs to be
+	 * sure that such modifications do not lead to degraded_set->lvols tailqs or references
+	 * to memory that this function will free.
+	 *
+	 * While this function is running, no other thread can add items to degraded_set->lvols. If
+	 * the list is mutated, it must have been done by this function or something in its call
+	 * graph running on this thread.
+	 */
+
+	/* Remember the last lvol on the list. Iteration will stop once it has been processed. */
+	last_missing = TAILQ_LAST(&degraded_set->lvols, degraded_lvols);
+
+	TAILQ_FOREACH_SAFE(lvol, &degraded_set->lvols, degraded_link, tmp) {
+		/*
+		 * Remove the lvol from the tailq so that tailq corruption is avoided if
+		 * lvs->esnap_bs_dev_create() calls spdk_lvs_esnap_missing_add(lvol).
+		 */
+		TAILQ_REMOVE(&degraded_set->lvols, lvol, degraded_link);
+		lvol->degraded_set = NULL;
+
+		bs_dev = NULL;
+		rc = lvs->esnap_bs_dev_create(lvs, lvol, lvol->blob, esnap_id, id_len, &bs_dev);
+		if (rc != 0) {
+			SPDK_ERRLOG("lvol %s: failed to create esnap bs_dev: error %d\n",
+				    lvol->unique_id, rc);
+			lvol->degraded_set = degraded_set;
+			TAILQ_INSERT_TAIL(&degraded_set->lvols, lvol, degraded_link);
+		} else {
+			spdk_blob_set_esnap_bs_dev(lvol->blob, bs_dev,
+						   lvs_esnap_hotplug_done, lvol);
+		}
+
+		if (lvol == last_missing) {
+			/*
+			 * Anything after last_missing was added due to some problem encountered
+			 * while trying to create the esnap bs_dev.
+			 */
+			break;
+		}
+	}
+
+	if (TAILQ_EMPTY(&degraded_set->lvols)) {
+		RB_REMOVE(degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree, degraded_set);
+		free((void *)degraded_set->esnap_id);
+		free(degraded_set);
+	}
+}
+
+/*
+ * Notify each lvstore created on this thread that is missing a bdev by the specified name or uuid
+ * that the bdev now exists.
+ */
+bool
+spdk_lvs_notify_hotplug(const void *esnap_id, uint32_t id_len)
+{
+	struct spdk_lvs_degraded_lvol_set *found;
+	struct spdk_lvs_degraded_lvol_set find = { 0 };
+	struct spdk_lvol_store	*lvs;
+	struct spdk_thread	*thread = spdk_get_thread();
+	bool			ret = false;
+
+	find.esnap_id = esnap_id;
+	find.id_len = id_len;
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	TAILQ_FOREACH(lvs, &g_lvol_stores, link) {
+		if (thread != lvs->thread) {
+			/*
+			 * It is expected that this is called from vbdev_lvol's examine_config()
+			 * callback. The lvstore was likely loaded do a creation happening as a
+			 * result of an RPC call or opening of an existing lvstore via
+			 * examine_disk() callback. RPC calls, examine_disk(), and examine_config()
+			 * should all be happening only on the app thread. The "wrong thread"
+			 * condition will only happen when an application is doing something weird.
+			 */
+			SPDK_NOTICELOG("Discarded examine for lvstore %s: wrong thread\n",
+				       lvs->name);
+			continue;
+		}
+
+		found = RB_FIND(degraded_lvol_sets_tree, &lvs->degraded_lvol_sets_tree, &find);
+		if (found == NULL) {
+			continue;
+		}
+
+		ret = true;
+		lvs_esnap_degraded_hotplug(found);
+	}
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
+
+	return ret;
 }

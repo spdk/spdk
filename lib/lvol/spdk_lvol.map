@@ -28,6 +28,7 @@
 	spdk_lvol_set_read_only;
 	spdk_lvs_esnap_missing_add;
 	spdk_lvs_esnap_missing_remove;
+	spdk_lvs_notify_hotplug;
 
 	local: *;
 };
