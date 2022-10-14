@@ -34,6 +34,9 @@ function cleanup() {
 			wipefs --all "$gpt_nvme"
 		fi
 	fi
+	if [[ $test_type == xnvme ]]; then
+		"$rootdir/scripts/setup.sh"
+	fi
 }
 
 function start_spdk_tgt() {
@@ -71,6 +74,23 @@ function setup_nvme_conf() {
 	local json
 	mapfile -t json < <("$rootdir/scripts/gen_nvme.sh")
 	"$rpc_py" load_subsystem_config -j "'${json[*]}'"
+}
+
+function setup_xnvme_conf() {
+	# TODO: Switch to io_uring_cmd when proper CI support is in place
+	local io_mechanism=io_uring
+	local nvme nvmes
+
+	"$rootdir/scripts/setup.sh" reset
+	get_zoned_devs
+
+	for nvme in /dev/nvme*n*; do
+		[[ -b $nvme && -z ${zoned_devs["${nvme##*/}"]} ]] || continue
+		nvmes+=("bdev_xnvme_create $nvme ${nvme##*/} $io_mechanism")
+	done
+
+	((${#nvmes[@]} > 0))
+	"$rpc_py" < <(printf '%s\n' "${nvmes[@]}")
 }
 
 function setup_gpt_conf() {
@@ -529,6 +549,9 @@ case "$test_type" in
 		;;
 	raid5f)
 		setup_raid5f_conf
+		;;
+	xnvme)
+		setup_xnvme_conf
 		;;
 	*)
 		echo "invalid test name"
