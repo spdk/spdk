@@ -43,12 +43,11 @@ C_SRCS := spdk_vrdma.c
 
 CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SNAP_INC_DIR)
-#LOCAL_SYS_LIBS = -libverbs
 SYS_LIBS += -libverbs -L$(SNAP_LIB_DIR) -lsnap-dma -lsnap -lsnap-mr -lsnap-env -lsnap-vrdma -lsnap-virtio-blk-ctrl
 
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += thread util event log log_rpc app_rpc
-SPDK_LIB_LIST += event_nbd nbd net sock notify vrdma
+SPDK_LIB_LIST += net sock notify vrdma
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

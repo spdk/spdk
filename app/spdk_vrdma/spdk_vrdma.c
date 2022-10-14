@@ -96,14 +96,14 @@ err:
 static void
 vrdma_usage(void)
 {
-	fprintf(stderr, " -s <integer>              remote_mqp start mlnx qp number.\n");
+	fprintf(stderr, " -q <integer>              remote_mqp start mlnx qp number.\n");
 }
 
 static int
 vrdma_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
-	case 's':
+	case 'q':
 		g_start_mqpn = spdk_strtol(arg, 10);
 		if (g_start_mqpn < 0 || g_start_mqpn > MAX_START_MQP_NUM) {
 			fprintf(stderr,
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     spdk_app_opts_init(&opts);
     opts.name = "spdk_vrdma";
 
-    if ((rc = spdk_app_parse_args(argc, argv, &opts,"s", NULL,
+    if ((rc = spdk_app_parse_args(argc, argv, &opts, "q", NULL,
     	vrdma_parse_arg, vrdma_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
 	    fprintf(stderr, "Unable to parse the application arguments.\n");
         exit(rc);
