@@ -1078,6 +1078,15 @@ struct spdk_thread *spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io);
 struct spdk_io_channel *spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io);
 
 /**
+ * Get the submit_tsc of a bdev I/O.
+ *
+ * \param bdev_io The bdev I/O to get the submit_tsc.
+ *
+ * \return The submit_tsc of the specified bdev I/O.
+ */
+uint64_t spdk_bdev_io_get_submit_tsc(struct spdk_bdev_io *bdev_io);
+
+/**
  * Resize for a bdev.
  *
  * Change number of blocks for provided block device.

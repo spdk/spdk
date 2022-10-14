@@ -25,6 +25,8 @@ required bdev.
 
 New `spdk_bdev_copy_blocks` and `spdk_bdev_get_max_copy` APIs to support copy commands.
 
+A new API `spdk_bdev_io_get_submit_tsc` was added to get the submit_tsc of the bdev I/O.
+
 ## v22.09
 
 ### accel

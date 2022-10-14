@@ -134,6 +134,7 @@
 	spdk_bdev_io_complete_aio_status;
 	spdk_bdev_io_get_thread;
 	spdk_bdev_io_get_io_channel;
+	spdk_bdev_io_get_submit_tsc;
 	spdk_bdev_notify_blockcnt_change;
 	spdk_scsi_nvme_translate;
 	spdk_bdev_module_list_add;

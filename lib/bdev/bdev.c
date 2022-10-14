@@ -3095,6 +3095,12 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 	return supported;
 }
 
+uint64_t
+spdk_bdev_io_get_submit_tsc(struct spdk_bdev_io *bdev_io)
+{
+	return bdev_io->internal.submit_tsc;
+}
+
 int
 spdk_bdev_dump_info_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
