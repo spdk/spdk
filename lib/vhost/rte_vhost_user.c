@@ -975,23 +975,23 @@ new_connection(int vid)
 	return 0;
 }
 
-static int
-vhost_user_session_start_cb(struct spdk_vhost_dev *vdev,
-			    struct spdk_vhost_session *vsession, void *unused)
+static void
+vhost_user_session_start(void *arg1)
 {
+	struct spdk_vhost_session *vsession = arg1;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+	struct spdk_vhost_user_dev *user_dev = to_user_dev(vsession->vdev);
 	const struct spdk_vhost_user_dev_backend *backend;
 	int rc;
 
-	backend = to_user_dev(vdev)->user_backend;
+	backend = user_dev->user_backend;
 	rc = backend->start_session(vdev, vsession, NULL);
-	vhost_user_session_start_done(vsession, rc);
-	return rc;
-}
+	if (rc == 0) {
+		vsession->started = true;
 
-static int
-vhost_user_session_start(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession)
-{
-	return vhost_user_session_send_event(vsession, vhost_user_session_start_cb, 3, "start session");
+		assert(user_dev->active_session_num < UINT32_MAX);
+		user_dev->active_session_num++;
+	}
 }
 
 static int
@@ -1120,34 +1120,32 @@ start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
-	int rc = -1;
+	int rc = 0;
 
 	spdk_vhost_lock();
 
 	vsession = vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
+		rc = -1;
 		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		goto out;
 	}
 
-	vdev = vsession->vdev;
 	if (vsession->started) {
 		/* already started, nothing to do */
-		rc = 0;
 		goto out;
 	}
 
 	if (!vsession->mem) {
+		rc = -1;
 		SPDK_ERRLOG("Session %s doesn't set memory table yet\n", vsession->name);
 		goto out;
 	}
 
+	vdev = vsession->vdev;
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
 	vsession->initialized = true;
-	rc = vhost_user_session_start(vdev, vsession);
-	if (rc != 0) {
-		goto out;
-	}
+	spdk_thread_send_msg(vdev->thread, vhost_user_session_start, vsession);
 
 out:
 	spdk_vhost_unlock();
@@ -1273,20 +1271,6 @@ vhost_session_cb_done(int rc)
 {
 	g_dpdk_response = rc;
 	sem_post(&g_dpdk_sem);
-}
-
-void
-vhost_user_session_start_done(struct spdk_vhost_session *vsession, int response)
-{
-	struct spdk_vhost_user_dev *user_dev = to_user_dev(vsession->vdev);
-	if (response == 0) {
-		vsession->started = true;
-
-		assert(user_dev->active_session_num < UINT32_MAX);
-		user_dev->active_session_num++;
-	}
-
-	vhost_session_cb_done(response);
 }
 
 void
