@@ -144,7 +144,7 @@ spdk_rpc_listen(const char *listen_addr)
 		return -1;
 	}
 
-	g_rpc_lock_fd = open(g_rpc_lock_path, O_RDONLY | O_CREAT, 0600);
+	g_rpc_lock_fd = open(g_rpc_lock_path, O_RDWR | O_CREAT, 0600);
 	if (g_rpc_lock_fd == -1) {
 		SPDK_ERRLOG("Cannot open lock file %s: %s\n",
 			    g_rpc_lock_path, spdk_strerror(errno));
