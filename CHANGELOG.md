@@ -34,6 +34,9 @@ SPDK application instances.
 
 Added a command line switch to disable CPU locks on SPDK startup.
 
+Added RPCs framework_enable_cpumask_locks and framework_disable_cpumask_locks to enable
+and disable CPU core locks in runtime.
+
 ## v22.09
 
 ### accel

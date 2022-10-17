@@ -797,6 +797,82 @@ Example response:
 }
 ~~~
 
+### framework_enable_cpumask_locks
+
+Enable CPU core lock files to block multiple SPDK applications from running on the same cpumask.
+The CPU core locks are enabled by default, unless user specified `--disable-cpumask-locks` command
+line option when launching SPDK.
+
+This RPC may be called after locks have already been enabled, with no effect and no error response.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Response
+
+true on success
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "framework_enable_cpumask_locks"
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### framework_disable_cpumask_locks
+
+Disable CPU core lock files. The locks can also be disabled during startup, when
+user specifies `--disable-cpumask-locks` command line option during SPDK launch.
+
+This RPC may be called after locks have already been disabled, with no effect and no error
+response.
+
+#### Parameters
+
+This method has no parameters.
+
+#### Response
+
+true on success
+
+#### Example
+
+Example request:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "framework_disable_cpumask_locks"
+}
+~~~
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ### thread_get_stats {#rpc_thread_get_stats}
 
 Retrieve current statistics of all the threads.

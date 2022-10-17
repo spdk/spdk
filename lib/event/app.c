@@ -525,6 +525,7 @@ unclaim_cpu_cores(void)
 		if (g_core_locks[i] != -1) {
 			snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", i);
 			close(g_core_locks[i]);
+			g_core_locks[i] = -1;
 			unlink(core_name);
 		}
 	}
@@ -546,6 +547,11 @@ claim_cpu_cores(uint32_t *failed_core)
 	};
 
 	SPDK_ENV_FOREACH_CORE(core) {
+		if (g_core_locks[core] != -1) {
+			/* If this core is locked already, do not try lock it again. */
+			continue;
+		}
+
 		snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", core);
 		core_fd = open(core_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 		if (core_fd == -1) {
@@ -1210,4 +1216,48 @@ rpc_framework_wait_init(struct spdk_jsonrpc_request *request,
 	}
 }
 SPDK_RPC_REGISTER("framework_wait_init", rpc_framework_wait_init,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+rpc_framework_disable_cpumask_locks(struct spdk_jsonrpc_request *request,
+				    const struct spdk_json_val *params)
+{
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "framework_disable_cpumask_locks"
+						 "requires no arguments");
+		return;
+	}
+
+	unclaim_cpu_cores();
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("framework_disable_cpumask_locks", rpc_framework_disable_cpumask_locks,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+rpc_framework_enable_cpumask_locks(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	char msg[128];
+	int rc;
+	uint32_t failed_core;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "framework_enable_cpumask_locks"
+						 "requires no arguments");
+		return;
+	}
+
+	rc = claim_cpu_cores(&failed_core);
+	if (rc) {
+		snprintf(msg, sizeof(msg), "Failed to claim CPU core: %" PRIu32, failed_core);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
+		return;
+	}
+
+	spdk_jsonrpc_send_bool_response(request, true);
+}
+SPDK_RPC_REGISTER("framework_enable_cpumask_locks", rpc_framework_enable_cpumask_locks,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)

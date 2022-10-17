@@ -179,6 +179,20 @@ if __name__ == "__main__":
         'framework_get_scheduler', help='Display currently set scheduler and its properties.')
     p.set_defaults(func=framework_get_scheduler)
 
+    def framework_disable_cpumask_locks(args):
+        rpc.framework_disable_cpumask_locks(args.client)
+
+    p = subparsers.add_parser('framework_disable_cpumask_locks',
+                              help='Disable CPU core lock files.')
+    p.set_defaults(func=framework_disable_cpumask_locks)
+
+    def framework_enable_cpumask_locks(args):
+        rpc.framework_enable_cpumask_locks(args.client)
+
+    p = subparsers.add_parser('framework_enable_cpumask_locks',
+                              help='Enable CPU core lock files.')
+    p.set_defaults(func=framework_enable_cpumask_locks)
+
     # bdev
     def bdev_set_options(args):
         rpc.bdev.bdev_set_options(args.client,

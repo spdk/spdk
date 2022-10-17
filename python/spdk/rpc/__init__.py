@@ -39,6 +39,16 @@ def framework_wait_init(client):
     return client.call('framework_wait_init')
 
 
+def framework_disable_cpumask_locks(client):
+    """ Disable CPU core lock files."""
+    return client.call('framework_disable_cpumask_locks')
+
+
+def framework_enable_cpumask_locks(client):
+    """ Enable CPU core lock files."""
+    return client.call('framework_enable_cpumask_locks')
+
+
 def rpc_get_methods(client, current=None, include_aliases=None):
     """Get list of supported RPC methods.
     Args:
