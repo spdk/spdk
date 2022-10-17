@@ -69,7 +69,7 @@ rpc_bdev_raid_get_bdevs(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_bdev_raid_get_bdevs_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_get_bdevs_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
@@ -216,13 +216,13 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_bdev_raid_create_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_create_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
 	if (req.strip_size_kb == 0) {
-		spdk_jsonrpc_send_error_response(request, EINVAL, "strip size not specified");
+		spdk_jsonrpc_send_error_response(request, -EINVAL, "strip size not specified");
 		goto cleanup;
 	}
 
@@ -347,14 +347,14 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_bdev_raid_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_raid_delete_decoders),
 				    &ctx->req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_PARSE_ERROR,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
 
 	raid_bdev = raid_bdev_find_by_name(ctx->req.name);
 	if (raid_bdev == NULL) {
-		spdk_jsonrpc_send_error_response_fmt(request, ENODEV,
+		spdk_jsonrpc_send_error_response_fmt(request, -ENODEV,
 						     "raid bdev %s not found",
 						     ctx->req.name);
 		goto cleanup;
