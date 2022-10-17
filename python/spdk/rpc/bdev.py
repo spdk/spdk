@@ -1505,7 +1505,7 @@ def bdev_get_histogram(client, name):
     return client.call('bdev_get_histogram', params)
 
 
-def bdev_error_inject_error(client, name, io_type, error_type, num=1):
+def bdev_error_inject_error(client, name, io_type, error_type, num):
     """Inject an error via an error bdev.
 
     Args:
