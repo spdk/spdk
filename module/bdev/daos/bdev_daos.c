@@ -47,6 +47,7 @@ struct bdev_daos_task {
 
 struct bdev_daos {
 	struct spdk_bdev disk;
+	daos_oclass_id_t oclass;
 
 	char pool_name[DAOS_PROP_MAX_LABEL_BUF_LEN];
 	char cont_name[DAOS_PROP_MAX_LABEL_BUF_LEN];
@@ -519,7 +520,6 @@ _bdev_daos_io_channel_create_cb(void *ctx)
 
 	daos_pool_info_t pinfo;
 	daos_cont_info_t cinfo;
-	daos_oclass_id_t obj_class = OC_SX;
 
 	int fd_oflag = O_CREAT | O_RDWR;
 	mode_t mode = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
@@ -549,7 +549,7 @@ _bdev_daos_io_channel_create_cb(void *ctx)
 		goto cleanup_cont;
 	}
 	SPDK_DEBUGLOG(bdev_daos, "opening dfs object\n");
-	if ((rc = dfs_open(ch->dfs, NULL, daos->disk.name, mode, fd_oflag, obj_class,
+	if ((rc = dfs_open(ch->dfs, NULL, daos->disk.name, mode, fd_oflag, daos->oclass,
 			   0, NULL, &ch->obj))) {
 		SPDK_ERRLOG("%s: could not open dfs object: " DF_RC "\n",
 			    daos->disk.name, DP_RC(rc));
@@ -628,7 +628,7 @@ bdev_daos_io_channel_destroy_cb(void *io_device, void *ctx_buf)
 int
 create_bdev_daos(struct spdk_bdev **bdev,
 		 const char *name, const struct spdk_uuid *uuid,
-		 const char *pool, const char *cont,
+		 const char *pool, const char *cont, const char *oclass,
 		 uint64_t num_blocks, uint32_t block_size)
 {
 	int rc;
@@ -665,6 +665,16 @@ create_bdev_daos(struct spdk_bdev **bdev,
 	if (!daos) {
 		SPDK_ERRLOG("calloc() failed\n");
 		return -ENOMEM;
+	}
+
+	if (!oclass) {
+		oclass = "SX"; /* Max throughput by default */
+	}
+	daos->oclass = daos_oclass_name2id(oclass);
+	if (daos->oclass == OC_UNKNOWN) {
+		SPDK_ERRLOG("could not parse daos oclass: '%s'\n", oclass);
+		free(daos);
+		return -EINVAL;
 	}
 
 	len = strlen(pool);

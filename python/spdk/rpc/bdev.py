@@ -1585,7 +1585,7 @@ def bdev_nvme_get_controller_health_info(client, name):
     return client.call('bdev_nvme_get_controller_health_info', params)
 
 
-def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, uuid=None):
+def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, oclass=None, uuid=None):
     """Construct DAOS block device.
 
     Args:
@@ -1595,6 +1595,7 @@ def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, uuid=None
         pool: UUID of DAOS pool
         cont: UUID of DAOS container
         uuid: UUID of block device (optional)
+        oclass: DAOS object class (optional)
 
     Returns:
         Name of created block device.
@@ -1602,6 +1603,8 @@ def bdev_daos_create(client, num_blocks, block_size, pool, cont, name, uuid=None
     params = {'num_blocks': num_blocks, 'block_size': block_size, 'pool': pool, 'cont': cont, 'name': name}
     if uuid:
         params['uuid'] = uuid
+    if oclass:
+        params['oclass'] = oclass
     return client.call('bdev_daos_create', params)
 
 

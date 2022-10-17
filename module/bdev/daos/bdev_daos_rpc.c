@@ -17,6 +17,7 @@ struct rpc_construct_daos {
 	char *uuid;
 	char *pool;
 	char *cont;
+	char *oclass;
 	uint64_t num_blocks;
 	uint32_t block_size;
 };
@@ -35,6 +36,7 @@ static const struct spdk_json_object_decoder rpc_construct_daos_decoders[] = {
 	{"uuid", offsetof(struct rpc_construct_daos, uuid), spdk_json_decode_string, true},
 	{"pool", offsetof(struct rpc_construct_daos, pool), spdk_json_decode_string},
 	{"cont", offsetof(struct rpc_construct_daos, cont), spdk_json_decode_string},
+	{"oclass", offsetof(struct rpc_construct_daos, oclass), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_daos, num_blocks), spdk_json_decode_uint64},
 	{"block_size", offsetof(struct rpc_construct_daos, block_size), spdk_json_decode_uint32},
 };
@@ -68,7 +70,7 @@ rpc_bdev_daos_create(struct spdk_jsonrpc_request *request,
 		uuid = &decoded_uuid;
 	}
 
-	rc = create_bdev_daos(&bdev, req.name, uuid, req.pool, req.cont,
+	rc = create_bdev_daos(&bdev, req.name, uuid, req.pool, req.cont, req.oclass,
 			      req.num_blocks, req.block_size);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

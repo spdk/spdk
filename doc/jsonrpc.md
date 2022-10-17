@@ -10716,6 +10716,11 @@ cont                    | Required | string      | DAOS cont label or its uuid
 block_size              | Required | number      | Block size in bytes -must be multiple of 512
 num_blocks              | Required | number      | Number of blocks
 uuid                    | Optional | string      | UUID of new bdev
+oclass                  | Optional | string      | DAOS object class (default SX)
+
+To find more about various object classes please visit [DAOS documentation](https://github.com/daos-stack/daos/blob/master/src/object/README.md).
+Please note, that DAOS bdev module uses the same CLI flag notation as `dmg` and `daos` commmands,
+for instance, `SX` or `EC_4P2G2` rather than in DAOS header file `OC_SX` or `OC_EC_4P2G2`.
 
 #### Result
 
@@ -10733,6 +10738,7 @@ Example request:
     "name": "daosdev0",
     "pool": "test-pool",
     "cont": "test-cont",
+    "oclass": "EC_4P2G2"
   },
   "jsonrpc": "2.0",
   "method": "bdev_daos_create",

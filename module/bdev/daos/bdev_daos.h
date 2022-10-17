@@ -14,7 +14,7 @@
 typedef void (*spdk_delete_daos_complete)(void *cb_arg, int bdeverrno);
 
 int create_bdev_daos(struct spdk_bdev **bdev, const char *name, const struct spdk_uuid *uuid,
-		     const char *pool, const char *cont,
+		     const char *pool, const char *cont, const char *oclass,
 		     uint64_t num_blocks, uint32_t block_size);
 
 void delete_bdev_daos(struct spdk_bdev *bdev, spdk_delete_daos_complete cb_fn, void *cb_arg);

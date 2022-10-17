@@ -3083,7 +3083,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                              name=args.name,
                                              uuid=args.uuid,
                                              pool=args.pool,
-                                             cont=args.cont))
+                                             cont=args.cont,
+                                             oclass=args.oclass))
     p = subparsers.add_parser('bdev_daos_create',
                               help='Create a bdev with DAOS backend')
     p.add_argument('name', help="Name of the bdev")
@@ -3093,6 +3094,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         'total_size', help='Size of DAOS bdev in MB (float > 0)', type=float)
     p.add_argument('block_size', help='Block size for this bdev', type=int)
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
+    p.add_argument('-o', '--oclass', help="DAOS object class")
     p.set_defaults(func=bdev_daos_create)
 
     def bdev_daos_delete(args):
