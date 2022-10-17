@@ -34,15 +34,19 @@ int vbdev_error_create(const char *base_bdev_name);
 void vbdev_error_delete(const char *error_vbdev_name, spdk_delete_error_complete cb_fn,
 			void *cb_arg);
 
+struct vbdev_error_inject_opts {
+	uint32_t io_type;
+	uint32_t error_type;
+	uint32_t error_num;
+};
+
 /**
  * Inject error to the base bdev. Users can specify which IO type error is injected,
  * what type of error is injected, and how many errors are injected.
  *
  * \param name Name of the base bdev into which error is injected.
- * \param io_type IO type into which error is injected.
- * \param error_num Count of injected errors
+ * \param opts Options for error injection.
  */
-int vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type,
-			     uint32_t error_num);
+int vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts);
 
 #endif /* SPDK_VBDEV_ERROR_H */

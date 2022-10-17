@@ -72,7 +72,7 @@ dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void
 }
 
 int
-vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
+vbdev_error_inject_error(char *name, const struct vbdev_error_inject_opts *opts)
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_bdev *bdev;
@@ -105,18 +105,18 @@ vbdev_error_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint
 		goto exit;
 	}
 
-	if (0xffffffff == io_type) {
+	if (0xffffffff == opts->io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
-			error_disk->error_vector[i].error_type = error_type;
-			error_disk->error_vector[i].error_num = error_num;
+			error_disk->error_vector[i].error_type = opts->error_type;
+			error_disk->error_vector[i].error_num = opts->error_num;
 		}
-	} else if (0 == io_type) {
+	} else if (0 == opts->io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
 			error_disk->error_vector[i].error_num = 0;
 		}
 	} else {
-		error_disk->error_vector[io_type].error_type = error_type;
-		error_disk->error_vector[io_type].error_num = error_num;
+		error_disk->error_vector[opts->io_type].error_type = opts->error_type;
+		error_disk->error_vector[opts->io_type].error_num = opts->error_num;
 	}
 
 exit:

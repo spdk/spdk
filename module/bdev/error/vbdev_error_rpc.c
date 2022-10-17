@@ -145,16 +145,14 @@ SPDK_RPC_REGISTER("bdev_error_delete", rpc_bdev_error_delete, SPDK_RPC_RUNTIME)
 
 struct rpc_error_information {
 	char *name;
-	uint32_t io_type;
-	uint32_t error_type;
-	uint32_t num;
+	struct vbdev_error_inject_opts opts;
 };
 
 static const struct spdk_json_object_decoder rpc_error_information_decoders[] = {
 	{"name", offsetof(struct rpc_error_information, name), spdk_json_decode_string},
-	{"io_type", offsetof(struct rpc_error_information, io_type), rpc_error_bdev_decode_io_type},
-	{"error_type", offsetof(struct rpc_error_information, error_type), rpc_error_bdev_decode_error_type},
-	{"num", offsetof(struct rpc_error_information, num), spdk_json_decode_uint32, true},
+	{"io_type", offsetof(struct rpc_error_information, opts.io_type), rpc_error_bdev_decode_io_type},
+	{"error_type", offsetof(struct rpc_error_information, opts.error_type), rpc_error_bdev_decode_error_type},
+	{"num", offsetof(struct rpc_error_information, opts.error_num), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -167,7 +165,7 @@ static void
 rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_error_information req = {.num = 1};
+	struct rpc_error_information req = {.opts.error_num = 1};
 	int rc = 0;
 
 	if (spdk_json_decode_object(params, rpc_error_information_decoders,
@@ -179,7 +177,7 @@ rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	rc = vbdev_error_inject_error(req.name, req.io_type, req.error_type, req.num);
+	rc = vbdev_error_inject_error(req.name, &req.opts);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;
