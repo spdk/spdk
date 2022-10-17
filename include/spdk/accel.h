@@ -34,10 +34,10 @@ enum accel_opcode {
 /**
  * Acceleration operation callback.
  *
- * \param ref 'accel_task' passed to the corresponding spdk_accel_submit* call.
+ * \param cb_arg Callback argument specified in the spdk_accel_submit* call.
  * \param status 0 if it completed successfully, or negative errno if it failed.
  */
-typedef void (*spdk_accel_completion_cb)(void *ref, int status);
+typedef void (*spdk_accel_completion_cb)(void *cb_arg, int status);
 
 /**
  * Acceleration framework finish callback.
