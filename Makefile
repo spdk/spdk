@@ -19,7 +19,7 @@ DIRS-y += test
 DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
 DIRS-$(CONFIG_ISAL) += isalbuild
 DIRS-$(CONFIG_VFIO_USER) += vfiouserbuild
-DIRS-y += python
+DIRS-$(CONFIG_SMA) += proto
 DIRS-$(CONFIG_XNVME) += xnvmebuild
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk \
