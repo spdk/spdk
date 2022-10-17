@@ -188,6 +188,7 @@ static struct spdk_nvme_ctrlr *
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_CONFIG_REGION_INDEX, 4, 2,
 					    &cmd_reg, false);
 	if (ret != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		SPDK_ERRLOG("Read PCI CMD REG failed\n");
 		goto exit;
 	}
@@ -195,11 +196,13 @@ static struct spdk_nvme_ctrlr *
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_CONFIG_REGION_INDEX, 4, 2,
 					    &cmd_reg, true);
 	if (ret != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		SPDK_ERRLOG("Write PCI CMD REG failed\n");
 		goto exit;
 	}
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		SPDK_ERRLOG("get_cap() failed\n");
 		goto exit;
 	}
