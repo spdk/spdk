@@ -61,8 +61,8 @@ class Server:
         if "tuned_profile" in server_config:
             self.tuned_profile = server_config["tuned_profile"]
 
-        if not re.match("^[A-Za-z0-9]*$", name):
-            self.log.info("Please use a name which contains only letters or numbers")
+        if not re.match(r'^[A-Za-z0-9\-]+$', name):
+            self.log.info("Please use a name which contains only letters, numbers or dashes")
             sys.exit(1)
 
     @staticmethod
