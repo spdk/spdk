@@ -47,7 +47,7 @@
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_snap_pci_mgr.h"
 #include "spdk/vrdma_admq.h"
-
+#include "spdk/vrdma_srv.h"
 
 int vrdma_dev_name_to_id(const char *rdma_dev_name)
 {
@@ -82,6 +82,8 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
     int ibv_list_sz, pf_list_sz;
     int i, j;
 
+    SPDK_ERRLOG("lizh vrdma_ctrl_find_snap_context...emu_manager %s pf_id %d",
+     emu_manager, pf_id);
     ibv_list = ibv_get_device_list(&ibv_list_sz);
     if (!ibv_list)
         return NULL;
@@ -94,6 +96,24 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
         if (!ctx)
             continue;
 
+        /* lizh just for test*/
+        if (!(ctx->emulation_caps & SNAP_VIRTIO_NET))
+            continue;
+
+        pf_list = calloc(ctx->virtio_net_pfs.max_pfs, sizeof(*pf_list));
+        if (!pf_list)
+            continue;
+
+        pf_list_sz = snap_get_pf_list(ctx, SNAP_VIRTIO_NET, pf_list);
+        for (j = 0; j < pf_list_sz; j++) {
+            SPDK_ERRLOG("\n lizh vrdma_ctrl_find_snap_context...pf_list[%d]->plugged %d id %d",
+            j, pf_list[j]->plugged, pf_list[j]->id);
+            if (pf_list[j]->plugged && pf_list[j]->id == pf_id) {
+                found = ctx;
+                break;
+            }
+        }
+#if 0
         if (!(ctx->emulation_caps & SNAP_VRDMA))
             continue;
 
@@ -108,6 +128,7 @@ vrdma_ctrl_find_snap_context(const char *emu_manager, int pf_id)
                 break;
             }
         }
+#endif
         free(pf_list);
 
         if (found)
@@ -196,6 +217,7 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     struct vrdma_admin_queue *admq;
     uint32_t aq_size = sizeof(*admq);
     
+    SPDK_ERRLOG("lizh vrdma_adminq_init...start");
     admq = spdk_malloc(aq_size, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
                              SPDK_MALLOC_DMA);
     if (!admq) {
@@ -216,47 +238,8 @@ static int vrdma_adminq_init(struct vrdma_ctrl *ctrl)
     ctrl->sw_qp.admq = admq;
 	ctrl->sw_qp.state = VRDMA_CMD_STATE_IDLE;
 	ctrl->sw_qp.custom_sm = &vrdma_sm;
+    SPDK_ERRLOG("lizh vrdma_adminq_init...done");
     return 0;
-}
-
-static inline void eth_random_addr(uint8_t *addr)
-{
-	struct timeval t;
-	uint64_t rand;
-
-	gettimeofday(&t, NULL);
-	srandom(t.tv_sec + t.tv_usec);
-	rand = random();
-
-	rand = rand << 32 | random();
-
-	memcpy(addr, (uint8_t *)&rand, 6);
-	addr[0] &= 0xfe;        /* clear multicast bit */
-	addr[0] |= 0x02;        /* set local assignment bit (IEEE802) */
-}
-
-static int vrdma_device_mac_init(struct vrdma_ctrl *ctrl)
-{
-	struct snap_device *sdev = ctrl->sctrl->sdev;
-	struct snap_vrdma_device_attr vattr = {};
-	uint8_t *vmac;
-	int ret;
-
-	ret = snap_vrdma_query_device(sdev, &vattr);
-	if (ret)
-		return -1;
-    if (!(vattr.modifiable_fields & SNAP_VRDMA_MOD_MAC))
-        return -1;
-	vmac = (uint8_t *)&vattr.mac;
-	eth_random_addr(&vmac[2]);
-	vattr.mac = be64toh(vattr.mac);
-
-	ret = snap_vrdma_modify_device(sdev, SNAP_VRDMA_MOD_MAC, &vattr);
-	if (ret)
-		ret = -1;
-
-    memcpy(ctrl->gid, &vattr.mac, sizeof(uint64_t));
-	return ret;
 }
 
 struct vrdma_ctrl *
@@ -268,6 +251,7 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
         .post_flr = vrdma_ctrl_post_flr,
     };
 
+    SPDK_ERRLOG("lizh vrdma_ctrl_init...pf_id %d start", attr->pf_id);
     ctrl = calloc(1, sizeof(*ctrl));
     if (!ctrl)
         goto err;
@@ -287,7 +271,9 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
     sctrl_attr.bar_cbs = &bar_cbs;
     sctrl_attr.cb_ctx = ctrl;
     sctrl_attr.pf_id = attr->pf_id;
-    sctrl_attr.pci_type = SNAP_VRDMA_PF;
+    /*lizh Just for test*/
+    sctrl_attr.pci_type = SNAP_VIRTIO_NET_PF;
+    //sctrl_attr.pci_type = SNAP_VRDMA_PF;
     sctrl_attr.pd = ctrl->pd;
     sctrl_attr.npgs = attr->nthreads;
     sctrl_attr.force_in_order = attr->force_in_order;
@@ -302,15 +288,11 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
                 attr->pf_id, attr->force_in_order, attr->emu_manager_name, attr->pf_id);
         goto dereg_mr;
     }
-    if (vrdma_device_mac_init(ctrl)) {
-            SPDK_ERRLOG("Failed to modify Mac for VRDMA controller %d [in order %d]"
-                " over RDMA device %s, PF %d",
-                attr->pf_id, attr->force_in_order, attr->emu_manager_name, attr->pf_id);
-        goto ctrl_close;
-    }
 
     ctrl->pf_id = attr->pf_id;
     ctrl->vdev = attr->vdev;
+    ctrl->dev.rdev_idx = attr->vdev->devid;
+    vrdma_srv_device_init(ctrl);
     SPDK_NOTICELOG("new VRDMA controller %d [in order %d]"
                   " was opened successfully over RDMA device %s ",
                   attr->pf_id, attr->force_in_order, attr->emu_manager_name);
@@ -321,8 +303,8 @@ vrdma_ctrl_init(const struct vrdma_ctrl_init_attr *attr)
             SPDK_EMU_MANAGER_NAME_MAXLEN - 1);
     return ctrl;
 
-ctrl_close:
-    snap_vrdma_ctrl_close(ctrl->sctrl);
+//ctrl_close:
+//    snap_vrdma_ctrl_close(ctrl->sctrl);
 dereg_mr:
     ibv_dereg_mr(ctrl->mr);
     spdk_free(ctrl->sw_qp.admq);
@@ -385,9 +367,11 @@ void vrdma_ctrl_destroy(void *arg, void (*done_cb)(void *arg),
 {
     struct vrdma_ctrl *ctrl = arg;
 
+    SPDK_ERRLOG("lizh vrdma_ctrl_destroy...start");
     snap_vrdma_ctrl_close(ctrl->sctrl);
     ctrl->sctrl = NULL;
     ctrl->destroy_done_cb = done_cb;
     ctrl->destroy_done_cb_arg = done_cb_arg;
     vrdma_ctrl_free(ctrl);
+    SPDK_ERRLOG("lizh vrdma_ctrl_destroy...done");
 }

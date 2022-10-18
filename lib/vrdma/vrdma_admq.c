@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright © 2021 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
+ *   Copyright © 2022 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -42,6 +42,7 @@
 #include "spdk/likely.h"
 
 #include "spdk/vrdma_admq.h"
+#include "spdk/vrdma_srv.h"
 #include "spdk/vrdma_controller.h"
 #include "spdk/vrdma_emu_mgr.h"
 
@@ -120,10 +121,29 @@ static inline int aqe_sanity_check(struct vrdma_admin_cmd_entry *aqe)
 
 }
 
+static void vrdma_ctrl_dev_init(struct vrdma_ctrl *ctrl)
+{
+	struct snap_device *sdev = ctrl->sctrl->sdev;
+	struct snap_vrdma_device_attr vattr = {};
+
+	if (ctrl->dev_inited)
+		return;
+	if (snap_vrdma_query_device(sdev, &vattr))
+		return;
+    memcpy(ctrl->dev.gid, &vattr.mac, sizeof(uint64_t));
+	memcpy(ctrl->dev.mac, &vattr.mac, sizeof(uint64_t));
+	ctrl->dev.state = vattr.status;
+	ctrl->dev_inited = 1;
+}
+
 static void vrdma_aq_open_dev(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	/* No action and just return OK*/
+	if (ctrl->srv_ops->vrdma_device_notify(&ctrl->dev)) {
+		aqe->resp.open_device_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		return;
+	}
 	aqe->resp.open_device_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
@@ -169,21 +189,38 @@ static void vrdma_aq_query_port(struct vrdma_ctrl *ctrl,
 static void vrdma_aq_query_gid(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	memcpy(aqe->resp.query_gid_resp.gid, ctrl->gid, VRDMA_DEV_GID_LEN);
+	struct snap_device *sdev = ctrl->sctrl->sdev;
+
+	if (ctrl->srv_ops->vrdma_device_query_gid(&ctrl->dev, aqe)) {
+		aqe->resp.query_gid_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		return;
+	}
+	memcpy(aqe->resp.query_gid_resp.gid, ctrl->dev.gid, VRDMA_DEV_GID_LEN);
 	aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
 static void vrdma_aq_modify_gid(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
-	//TODO
-	memcpy(ctrl->gid, aqe->req.modify_gid_req.gid, VRDMA_DEV_GID_LEN);
-	aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	struct vrdma_cmd_param param;
+	
+	
+	memcpy(param.param.modify_gid_param.gid, aqe->req.modify_gid_req.gid,
+			VRDMA_DEV_GID_LEN);
+	if (ctrl->srv_ops->vrdma_device_modify_gid(&ctrl->dev, aqe, &param)) {
+		aqe->resp.modify_gid_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		return;
+	}
+	memcpy(ctrl->dev.gid, aqe->req.modify_gid_req.gid, VRDMA_DEV_GID_LEN);
+	aqe->resp.modify_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 }
 
 static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
+	struct vrdma_cmd_param param;
 	struct spdk_vrdma_pd *vpd;
 	uint32_t pd_idx;
 
@@ -212,6 +249,12 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 
 	/* Create mlnx-qp pool with mlnx-cq/eq and hardcode remote-qpn */
 
+	param.param.create_pd_param.pd_handle = pd_idx;
+	if (ctrl->srv_ops->vrdma_device_create_pd(&ctrl->dev, aqe, &param)) {
+		aqe->resp.create_pd_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		goto free_ibpd;
+	}
 	g_vpd_cnt++;
 	ctrl->vdev->vpd_cnt++;
 	vpd->pd_idx = pd_idx;
@@ -221,8 +264,8 @@ static void vrdma_aq_create_pd(struct vrdma_ctrl *ctrl,
 	aqe->resp.create_pd_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
 	return;
 
-//free_ibpd:
-//	ibv_dealloc_pd(vpd->ibpd);
+free_ibpd:
+	ibv_dealloc_pd(vpd->ibpd);
 free_vpd:
 	free(vpd);
 }
@@ -250,6 +293,11 @@ static void vrdma_aq_destroy_pd(struct vrdma_ctrl *ctrl,
 	if (vpd->ref_cnt) {
 		aqe->resp.destroy_pd_resp.err_code =
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
+		return;
+	}
+	if (ctrl->srv_ops->vrdma_device_destroy_pd(&ctrl->dev, aqe)) {
+		aqe->resp.destroy_pd_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
 		return;
 	}
 	LIST_REMOVE(vpd, entry);
@@ -454,6 +502,7 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	        	struct vrdma_admin_cmd_entry *aqe)
 {
 	struct spdk_vrdma_mr *vmr;
+	struct vrdma_cmd_param param;
 	struct spdk_vrdma_pd *vpd = NULL;
 	uint32_t dev_max_mr = spdk_min(VRDMA_DEV_MAX_MR,
 			(1 << ctrl->sctx->vrdma_caps.log_max_mkey));
@@ -499,8 +548,15 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	vmr->vpd = vpd;
 	if (vrdma_create_remote_mkey(ctrl, vmr)) {
 		aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_UNKNOWN;
-		free(vmr);
-		return;
+		goto free_vmr;
+	}
+	param.param.create_mr_param.mr_handle = mr_idx;
+	param.param.create_mr_param.lkey = vmr->mr_log.mkey;
+	param.param.create_mr_param.rkey = vmr->mr_log.mkey;
+	if (ctrl->srv_ops->vrdma_device_create_mr(&ctrl->dev, aqe, &param)) {
+		aqe->resp.create_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		goto free_mkey;
 	}
 	g_vmr_cnt++;
 	ctrl->vdev->vmr_cnt++;
@@ -508,15 +564,23 @@ static void vrdma_aq_reg_mr(struct vrdma_ctrl *ctrl,
 	vpd->ref_cnt++;
 	spdk_bit_array_set(free_vmr_ids, mr_idx);
 	LIST_INSERT_HEAD(&ctrl->vdev->vmr_list, vmr, entry);
-	aqe->resp.create_mr_resp.lkey = vmr->mr_log.mkey;
+	aqe->resp.create_mr_resp.rkey = vmr->mr_log.mkey;
 	aqe->resp.create_mr_resp.lkey = aqe->resp.create_mr_resp.rkey;
 	aqe->resp.create_mr_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_SUCCESS;
+	return;
+
+free_mkey:
+	vrdma_destroy_remote_mkey(ctrl, vmr);
+free_vmr:
+	free(vmr);
+	return;
 }
 
 static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 			struct vrdma_admin_cmd_entry *aqe)
 {
 	struct spdk_vrdma_mr *vmr = NULL;
+	struct vrdma_cmd_param param;
 
 	if (!g_vmr_cnt || !ctrl->vdev ||
 		!ctrl->vdev->vmr_cnt ||
@@ -538,6 +602,12 @@ static void vrdma_aq_dereg_mr(struct vrdma_ctrl *ctrl,
 				VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID;
 		return;
 	}
+	param.param.destroy_mr_param.mr_handle = vmr->mr_idx;
+	if (ctrl->srv_ops->vrdma_device_destroy_mr(&ctrl->dev, aqe, &param)) {
+		aqe->resp.destroy_mr_resp.err_code =
+				VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL;
+		return;
+	}
 	LIST_REMOVE(vmr, entry);
 	vrdma_destroy_remote_mkey(ctrl, vmr);
 	spdk_bit_array_clear(free_vmr_ids, vmr->mr_idx);
@@ -553,7 +623,7 @@ static void vrdma_aq_create_cq(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	if (g_vcq_cnt > VRDMA_MAX_CQ_NUM) {
-		aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		aqe->resp.create_cq_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
 		return;
 	}
 	//TODO
@@ -571,7 +641,7 @@ static void vrdma_aq_create_qp(struct vrdma_ctrl *ctrl,
 				struct vrdma_admin_cmd_entry *aqe)
 {
 	if (g_vqp_cnt > VRDMA_MAX_QP_NUM) {
-		aqe->resp.query_gid_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
+		aqe->resp.create_qp_resp.err_code = VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX;
 		return;
 	}
 	//TODO
@@ -855,7 +925,8 @@ static bool vrdma_aq_sm_parse_cmd(struct vrdma_admin_sw_qp *aq,
 		return true;
 	}
 
-    	aq->state = VRDMA_CMD_STATE_WRITE_CMD_BACK;
+	vrdma_ctrl_dev_init(ctrl);
+    aq->state = VRDMA_CMD_STATE_WRITE_CMD_BACK;
 	for (i = 0; i < aq->num_to_parse; i++) {
 		ret = vrdma_parse_admq_entry(ctrl, &(aq->admq->ring[i]));
 		if (ret) {

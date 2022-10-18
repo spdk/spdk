@@ -33,16 +33,20 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/net.h"
 #include "spdk/conf.h"
 #include "spdk/event.h"
 #include "spdk/vrdma.h"
 
 static struct spdk_thread *g_vrdma_app_thread;
 static int g_start_mqpn;
-static struct spdk_vrdma_context g_vrdma_ctx;
+static struct spdk_vrdma_ctx g_vrdma_ctx;
 
-static void stop_done_cb()
+#define MAX_START_MQP_NUM 0x40000
+
+static void stop_done_cb(void)
 {
     spdk_app_stop(0);
 }
@@ -61,6 +65,7 @@ static void spdk_vrdma_app_start(void *arg)
 {
     struct sigaction act;
 
+    SPDK_ERRLOG("lizh spdk_vrdma_app_start...start\n");
     /*
      * Set signal handler to allow stop on Ctrl+C.
      */
@@ -69,7 +74,7 @@ static void spdk_vrdma_app_start(void *arg)
         SPDK_ERRLOG("Failed to get SPDK thread\n");
         goto err;
     }
-    memset(&g_vrdma_ctx, 0, sizeof(g_vrdma_ctx));
+    memset(&g_vrdma_ctx, 0, sizeof(struct spdk_vrdma_ctx));
     if (spdk_vrdma_ctx_start(&g_vrdma_ctx)) {
         SPDK_ERRLOG("Failed to start VRDMA_SNAP\n");
         goto err;
@@ -91,14 +96,14 @@ err:
 static void
 vrdma_usage(void)
 {
-	fprintf(stderr, " -s <integer>              remote_mqp start mlnx qp number.\n");
+	fprintf(stderr, " -q <integer>              remote_mqp start mlnx qp number.\n");
 }
 
 static int
 vrdma_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
-	case 's':
+	case 'q':
 		g_start_mqpn = spdk_strtol(arg, 10);
 		if (g_start_mqpn < 0 || g_start_mqpn > MAX_START_MQP_NUM) {
 			fprintf(stderr,
@@ -119,11 +124,11 @@ int main(int argc, char **argv)
 
     /* Set default values in opts structure. */
     spdk_app_opts_init(&opts);
-    opts.name = "vrdma_snap_emu_app";
+    opts.name = "spdk_vrdma";
 
-    if ((rc = spdk_app_parse_args(argc, argv, &opts,"s", NULL,
+    if ((rc = spdk_app_parse_args(argc, argv, &opts, "q", NULL,
     	vrdma_parse_arg, vrdma_usage)) != SPDK_APP_PARSE_ARGS_SUCCESS) {
-	fprintf(stderr, "Unable to parse the application arguments.\n");
+	    fprintf(stderr, "Unable to parse the application arguments.\n");
         exit(rc);
     }
 

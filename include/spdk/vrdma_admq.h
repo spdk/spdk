@@ -1,8 +1,5 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+/*
+ *   Copyright © 2022 NVIDIA CORPORATION & AFFILIATES. ALL RIGHTS RESERVED.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -56,7 +53,10 @@ extern struct spdk_bit_array *free_vcq_ids;
 /* more states need mlnx to fill */
 enum vrdma_dev_state {
 	VRDMA_DEV_STATE_RESET = 0x0,
+	VRDMA_DEV_STATE_ACKNOWLEDGE = 0x1,
+	VRDMA_DEV_STATE_DRIVER = 0x2,
 	VRDMA_DEV_STATE_DRIVER_OK = 0x4,
+	VRDMA_DEV_STATE_FEATURES_OK = 0x8,
 	VRDMA_DEV_STATE_NEED_RESET = 0x40,
 	VRDMA_DEV_STATE_DRIVER_ERROR = 0x80, /*when driver encounter err to inform device*/
 	VRDMA_DEV_STATE_MAX,
@@ -69,6 +69,7 @@ enum vrdma_aq_msg_err_code {
 	VRDMA_AQ_MSG_ERR_CODE_EXCEED_MAX = 0x3,
 	VRDMA_AQ_MSG_ERR_CODE_REF_CNT_INVALID = 0x4,
 	VRDMA_AQ_MSG_ERR_CODE_UNKNOWN = 0x5,
+	VRDMA_AQ_MSG_ERR_CODE_SERVICE_FAIL = 0x6,
 };
 
 enum vrdma_port_phys_state {
@@ -81,7 +82,6 @@ enum vrdma_port_phys_state {
 	VRDMA_PORT_PHYS_STATE_PHY_TEST = 7,
 };
 
-/* more fields need mlnx to fill */
 struct vrdma_dev {
 	uint32_t rdev_idx;
 	uint64_t rdev_ver;
@@ -520,34 +520,6 @@ struct vrdma_admin_queue {
     uint16_t pi;
     struct vrdma_admin_cmd_entry ring[VRDMA_ADMINQ_SIZE];
 } __attribute__((packed));
-
-struct vrdma_modify_gid_req_param {
-	uint8_t gid[16];
-};
-
-struct vrdma_create_pd_req_param {
-	uint32_t pd_handle;  /* pd handle need to be created in vrdev and passed to vservice */
-};
-
-struct vrdma_create_mr_req_param {
-	uint32_t mr_handle; /* mr handle, lkey, rkey need to be created in vrdev and passed to vservice */
-	uint32_t lkey;
-	uint32_t rkey;
-};
-
-struct vrdma_destroy_mr_req_param {
-	uint32_t mr_handle; /* mr handle need to be created in vrdev and passed to vservice */
-};
-
-struct vrdma_cmd_param {
-	union {
-		char buf[12];
-		struct vrdma_modify_gid_req_param modify_gid_param;
-		struct vrdma_create_pd_req_param create_pd_param;
-		struct vrdma_create_mr_req_param create_mr_param;
-		struct vrdma_destroy_mr_req_param destroy_mr_param;
-	}param;
-};
 
 /**
  * enum vrdma_aq_cmd_sm_state - state of the sm handling a admq cmd

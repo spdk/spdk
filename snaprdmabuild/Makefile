@@ -43,7 +43,8 @@ ifneq ($(Q),)
 endif
 
 all:
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/snap-rdma -j$(NPROC) all SHARED=n EXTRA_CFLAGS=-fPIC CC=cc $(REDIRECT)
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/snap-rdma -j$(NPROC) all SHARED=n EXTRA_CFLAGS=-fPIC CC=cc $(REDIRECT) \
+	&& cd $(SPDK_ROOT_DIR)/snap-rdma && make install
 
 #install: all
 

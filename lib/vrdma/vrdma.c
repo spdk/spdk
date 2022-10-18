@@ -51,6 +51,7 @@ int spdk_vrdma_ctx_start(struct spdk_vrdma_ctx *vrdma_ctx)
     struct ibv_device **list;
     int dev_count;
 
+    SPDK_ERRLOG("lizh spdk_vrdma_ctx_start...start\n");
     g_vdev_cnt = 0;
     if (vrdma_ctx->dpa_enabled) {
         /*Load provider just for DPA*/
