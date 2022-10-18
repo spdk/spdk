@@ -36,6 +36,7 @@
 #include "spdk/vrdma.h"
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_emu_mgr.h"
+#include "spdk/vrdma_srv.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
@@ -50,13 +51,16 @@ struct vrdma_ctrl {
     char emu_manager[SPDK_EMU_MANAGER_NAME_MAXLEN];
     size_t nthreads;
     int pf_id;
-    uint8_t gid[16];
+    uint32_t dev_inited:1;
+    struct vrdma_dev dev;
     struct spdk_vrdma_dev *vdev;
     struct snap_context *sctx;
     struct ibv_pd *pd;
     struct ibv_mr *mr;
     struct vrdma_admin_sw_qp sw_qp;
     struct snap_vrdma_ctrl *sctrl;
+    /** Service-specific callbacks. */
+	const struct vRdmaServiceOps *srv_ops;
     void (*destroy_done_cb)(void *arg);
     void *destroy_done_cb_arg;
 };

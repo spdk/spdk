@@ -38,6 +38,7 @@
 
 int spdk_vrdma_snap_start(void)
 {
+    SPDK_ERRLOG("lizh spdk_vrdma_snap_start...start");
     if (spdk_vrdma_adminq_resource_init()) {
         SPDK_ERRLOG("Failed to init admin-queue resource");
         goto err;
