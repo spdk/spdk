@@ -577,6 +577,7 @@ _bdev_nvme_add_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_ns *nvme_
 	}
 
 	io_path->nvme_ns = nvme_ns;
+	io_path->io_outstanding = 0;
 
 	ch = spdk_get_io_channel(nvme_ns->ctrlr);
 	if (ch == NULL) {
@@ -608,6 +609,7 @@ _bdev_nvme_delete_io_path(struct nvme_bdev_channel *nbdev_ch, struct nvme_io_pat
 	struct nvme_qpair *nvme_qpair;
 	struct nvme_ctrlr_channel *ctrlr_ch;
 
+	assert(io_path->io_outstanding == 0);
 	nbdev_ch->current_io_path = NULL;
 
 	STAILQ_REMOVE(&nbdev_ch->io_path_list, io_path, nvme_io_path, stailq);
@@ -1029,6 +1031,10 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 
 	assert(!bdev_nvme_io_type_is_admin(bdev_io->type));
 
+	assert(bio->io_path != NULL);
+	assert(bio->io_path->io_outstanding > 0);
+	bio->io_path->io_outstanding--;
+
 	if (spdk_likely(spdk_nvme_cpl_is_success(cpl))) {
 		goto complete;
 	}
@@ -1040,7 +1046,6 @@ bdev_nvme_io_complete_nvme_status(struct nvme_bdev_io *bio,
 
 	nbdev_ch = spdk_io_channel_get_ctx(spdk_bdev_io_get_io_channel(bdev_io));
 
-	assert(bio->io_path != NULL);
 	nvme_ctrlr = bio->io_path->qpair->ctrlr;
 
 	if (spdk_nvme_cpl_is_path_error(cpl) ||
@@ -2063,7 +2068,9 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			      bdev_io->u.bdev.ext_opts);
 
 exit:
-	if (spdk_unlikely(ret != 0)) {
+	if (spdk_likely(ret == 0)) {
+		bio->io_path->io_outstanding++;
+	} else {
 		bdev_nvme_io_complete(bio, ret);
 	}
 }
@@ -2104,7 +2111,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		} else {
 			spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb,
 					     bdev_io->u.bdev.num_blocks * bdev->blocklen);
-			rc = 0;
+			return;
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -2150,10 +2157,10 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	case SPDK_BDEV_IO_TYPE_RESET:
 		nbdev_io->io_path = NULL;
 		bdev_nvme_reset_io(nbdev_ch, nbdev_io);
-		break;
+		return;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		bdev_nvme_io_complete(nbdev_io, 0);
-		break;
+		return;
 	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
 		rc = bdev_nvme_zone_appendv(nbdev_io,
 					    bdev_io->u.bdev.iovs,
@@ -2181,7 +2188,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 					 &bdev_io->u.nvme_passthru.cmd,
 					 bdev_io->u.nvme_passthru.buf,
 					 bdev_io->u.nvme_passthru.nbytes);
-		break;
+		return;
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
 		rc = bdev_nvme_io_passthru(nbdev_io,
 					   &bdev_io->u.nvme_passthru.cmd,
@@ -2202,7 +2209,7 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		bdev_nvme_abort(nbdev_ch,
 				nbdev_io,
 				nbdev_io_to_abort);
-		break;
+		return;
 	case SPDK_BDEV_IO_TYPE_COPY:
 		rc = bdev_nvme_copy(nbdev_io,
 				    bdev_io->u.bdev.offset_blocks,
@@ -2215,7 +2222,13 @@ bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	}
 
 exit:
-	if (spdk_unlikely(rc != 0)) {
+	if (spdk_likely(rc == 0)) {
+		/* bdev io sent to a namespace gets counted. bdev io sent to a controller(i.e. RESET,
+		 * NVME_ADMIN,ABORT) doesn't get counted. FLUSH case is special which directly calls
+		 * bdev_nvme_io_complete(), it does not get counted.
+		 */
+		nbdev_io->io_path->io_outstanding++;
+	} else {
 		bdev_nvme_io_complete(nbdev_io, rc);
 	}
 }

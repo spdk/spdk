@@ -2181,12 +2181,14 @@ ut_test_submit_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
 	CU_ASSERT(qpair->num_outstanding_reqs == 1);
+	CU_ASSERT(io_path->io_outstanding == 1);
 
 	poll_threads();
 
 	CU_ASSERT(bdev_io->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(io_path->io_outstanding == 0);
 }
 
 static void
@@ -2210,6 +2212,7 @@ ut_test_submit_nop(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	CU_ASSERT(bdev_io->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(io_path->io_outstanding == 0);
 }
 
 static void
@@ -2235,6 +2238,7 @@ ut_test_submit_fused_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	CU_ASSERT(bdev_io->internal.in_submit_request == true);
 	CU_ASSERT(qpair->num_outstanding_reqs == 2);
 	CU_ASSERT(bio->first_fused_submitted == true);
+	CU_ASSERT(io_path->io_outstanding == 1);
 
 	/* First outstanding request is compare operation. */
 	req = TAILQ_FIRST(&qpair->outstanding_reqs);
@@ -2247,6 +2251,7 @@ ut_test_submit_fused_nvme_cmd(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 	CU_ASSERT(bdev_io->internal.in_submit_request == false);
 	CU_ASSERT(bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(qpair->num_outstanding_reqs == 0);
+	CU_ASSERT(io_path->io_outstanding == 0);
 }
 
 static void
