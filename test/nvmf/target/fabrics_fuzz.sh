@@ -32,8 +32,5 @@ $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
-killprocess $nvmfpid
-nvmfpid=
-
 nvmftestfini
+rm "$output_dir/"nvmf_fuzz_logs*.txt
