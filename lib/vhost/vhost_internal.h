@@ -114,7 +114,6 @@ struct spdk_vhost_session {
 	/* Unique session name. */
 	char *name;
 
-	bool initialized;
 	bool started;
 	bool interrupt_mode;
 

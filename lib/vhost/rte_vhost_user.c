@@ -964,7 +964,6 @@ new_connection(int vid)
 		return -1;
 	}
 	vsession->started = false;
-	vsession->initialized = false;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;
@@ -1144,7 +1143,6 @@ start_device(int vid)
 
 	vdev = vsession->vdev;
 	vhost_user_session_set_coalescing(vdev, vsession, NULL);
-	vsession->initialized = true;
 	spdk_thread_send_msg(vdev->thread, vhost_user_session_start, vsession);
 
 out:
@@ -1362,11 +1360,9 @@ foreach_session(void *arg1)
 	}
 
 	TAILQ_FOREACH(vsession, &to_user_dev(vdev)->vsessions, tailq) {
-		if (vsession->initialized) {
-			rc = ev_ctx->cb_fn(vdev, vsession, ev_ctx->user_ctx);
-			if (rc < 0) {
-				goto out;
-			}
+		rc = ev_ctx->cb_fn(vdev, vsession, ev_ctx->user_ctx);
+		if (rc < 0) {
+			goto out;
 		}
 	}
 
