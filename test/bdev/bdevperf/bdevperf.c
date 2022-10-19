@@ -506,6 +506,47 @@ bdevperf_abort_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	bdevperf_end_task(task);
 }
 
+static int
+bdevperf_verify_dif(struct bdevperf_task *task, struct iovec *iovs, int iovcnt)
+{
+	struct bdevperf_job	*job = task->job;
+	struct spdk_bdev	*bdev = job->bdev;
+	struct spdk_dif_ctx	dif_ctx;
+	struct spdk_dif_error	err_blk = {};
+	int			rc;
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       spdk_bdev_get_block_size(bdev),
+			       spdk_bdev_get_md_size(bdev),
+			       spdk_bdev_is_md_interleaved(bdev),
+			       spdk_bdev_is_dif_head_of_md(bdev),
+			       spdk_bdev_get_dif_type(bdev),
+			       job->dif_check_flags,
+			       task->offset_blocks, 0, 0, 0, 0);
+	if (rc != 0) {
+		fprintf(stderr, "Initialization of DIF context failed\n");
+		return rc;
+	}
+
+	if (spdk_bdev_is_md_interleaved(bdev)) {
+		rc = spdk_dif_verify(iovs, iovcnt, job->io_size_blocks, &dif_ctx, &err_blk);
+	} else {
+		struct iovec md_iov = {
+			.iov_base	= task->md_buf,
+			.iov_len	= spdk_bdev_get_md_size(bdev) * job->io_size_blocks,
+		};
+
+		rc = spdk_dix_verify(iovs, iovcnt, &md_iov, job->io_size_blocks, &dif_ctx, &err_blk);
+	}
+
+	if (rc != 0) {
+		fprintf(stderr, "DIF/DIX error detected. type=%d, offset=%" PRIu32 "\n",
+			err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
 static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
@@ -515,6 +556,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	int			iovcnt;
 	bool			md_check;
 	uint64_t		offset_in_ios;
+	int			rc;
 
 	job = task->job;
 	md_check = spdk_bdev_get_dif_type(job->bdev) == SPDK_DIF_DISABLE;
@@ -542,6 +584,24 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			printf("   First dword expected 0x%x got 0x%x\n", *(int *)task->buf, *(int *)iovs[0].iov_base);
 			bdevperf_job_drain(job);
 			g_run_rc = -1;
+		}
+	} else if (job->dif_check_flags != 0) {
+		if (task->io_type == SPDK_BDEV_IO_TYPE_READ && spdk_bdev_get_md_size(job->bdev) != 0) {
+			spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
+			assert(iovcnt == 1);
+			assert(iovs != NULL);
+			rc = bdevperf_verify_dif(task, iovs, iovcnt);
+			if (rc != 0) {
+				printf("DIF error detected. task offset: %" PRIu64 " on job bdev=%s\n",
+				       task->offset_blocks, job->name);
+
+				success = false;
+				if (!job->reset && !job->continue_on_failure) {
+					bdevperf_job_drain(job);
+					g_run_rc = -1;
+					g_error_to_exit = true;
+				}
+			}
 		}
 	}
 
