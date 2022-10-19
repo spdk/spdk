@@ -40,6 +40,7 @@
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
+#define VRDMA_DMA_ELEM_SIZE 64
 
 extern struct vrdma_state_machine vrdma_sm;
 
