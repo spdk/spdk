@@ -13,6 +13,17 @@
 #include "bdev/raid/concat.c"
 #include "../common.c"
 
+DEFINE_STUB(spdk_bdev_readv_blocks_with_md, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, void *md,
+		uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_writev_blocks_with_md, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, void *md,
+		uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+
 #define BLOCK_LEN (4096)
 
 enum CONCAT_IO_TYPE {
