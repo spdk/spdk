@@ -51,10 +51,18 @@ raid1_submit_read_request(struct raid_bdev_io *raid_io)
 
 	raid_io->base_bdev_io_remaining = 1;
 
-	ret = spdk_bdev_readv_blocks(base_info->desc, base_ch,
-				     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-				     pd_lba, pd_blocks,
-				     raid1_bdev_io_completion, raid_io);
+	if (bdev_io->u.bdev.ext_opts != NULL) {
+		ret = spdk_bdev_readv_blocks_ext(base_info->desc, base_ch,
+						 bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						 pd_lba, pd_blocks, raid1_bdev_io_completion,
+						 raid_io, bdev_io->u.bdev.ext_opts);
+	} else {
+		ret = spdk_bdev_readv_blocks_with_md(base_info->desc, base_ch,
+						     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+						     bdev_io->u.bdev.md_buf,
+						     pd_lba, pd_blocks,
+						     raid1_bdev_io_completion, raid_io);
+	}
 
 	if (spdk_likely(ret == 0)) {
 		raid_io->base_bdev_io_submitted++;
@@ -90,10 +98,18 @@ raid1_submit_write_request(struct raid_bdev_io *raid_io)
 		base_info = &raid_bdev->base_bdev_info[idx];
 		base_ch = raid_io->raid_ch->base_channel[idx];
 
-		ret = spdk_bdev_writev_blocks(base_info->desc, base_ch,
-					      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-					      pd_lba, pd_blocks,
-					      raid1_bdev_io_completion, raid_io);
+		if (bdev_io->u.bdev.ext_opts != NULL) {
+			ret = spdk_bdev_writev_blocks_ext(base_info->desc, base_ch,
+							  bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+							  pd_lba, pd_blocks, raid1_bdev_io_completion,
+							  raid_io, bdev_io->u.bdev.ext_opts);
+		} else {
+			ret = spdk_bdev_writev_blocks_with_md(base_info->desc, base_ch,
+							      bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+							      bdev_io->u.bdev.md_buf,
+							      pd_lba, pd_blocks,
+							      raid1_bdev_io_completion, raid_io);
+		}
 
 		if (spdk_unlikely(ret != 0)) {
 			if (spdk_unlikely(ret == -ENOMEM)) {

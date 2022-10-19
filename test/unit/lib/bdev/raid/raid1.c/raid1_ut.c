@@ -19,17 +19,9 @@ DEFINE_STUB(raid_bdev_io_complete_part, bool, (struct raid_bdev_io *raid_io, uin
 DEFINE_STUB_V(spdk_bdev_free_io, (struct spdk_bdev_io *bdev_io));
 DEFINE_STUB_V(raid_bdev_queue_io_wait, (struct raid_bdev_io *raid_io, struct spdk_bdev *bdev,
 					struct spdk_io_channel *ch, spdk_bdev_io_wait_cb cb_fn));
-DEFINE_STUB(spdk_bdev_readv_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt,
-		uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB(spdk_bdev_readv_blocks_with_md, int, (struct spdk_bdev_desc *desc,
 		struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, void *md,
-		uint64_t offset_blocks, uint64_t num_blocks,
-		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
-DEFINE_STUB(spdk_bdev_writev_blocks, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt,
 		uint64_t offset_blocks, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB(spdk_bdev_writev_blocks_with_md, int, (struct spdk_bdev_desc *desc,
@@ -37,6 +29,14 @@ DEFINE_STUB(spdk_bdev_writev_blocks_with_md, int, (struct spdk_bdev_desc *desc,
 		struct iovec *iov, int iovcnt, void *md,
 		uint64_t offset_blocks, uint64_t num_blocks,
 		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_readv_blocks_ext, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts), 0);
+DEFINE_STUB(spdk_bdev_writev_blocks_ext, int, (struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t offset_blocks, uint64_t num_blocks,
+		spdk_bdev_io_completion_cb cb, void *cb_arg, struct spdk_bdev_ext_io_opts *opts), 0);
 
 static int
 test_setup(void)
