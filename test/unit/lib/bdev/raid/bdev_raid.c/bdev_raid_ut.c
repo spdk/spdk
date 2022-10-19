@@ -298,6 +298,15 @@ spdk_bdev_writev_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 }
 
 int
+spdk_bdev_writev_blocks_with_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				struct iovec *iov, int iovcnt, void *md,
+				uint64_t offset_blocks, uint64_t num_blocks,
+				spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
+}
+
+int
 spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
@@ -479,6 +488,16 @@ spdk_bdev_readv_blocks_ext(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 {
 	return spdk_bdev_readv_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
 }
+
+int
+spdk_bdev_readv_blocks_with_md(struct spdk_bdev_desc *desc,	struct spdk_io_channel *ch,
+			       struct iovec *iov, int iovcnt, void *md,
+			       uint64_t offset_blocks, uint64_t num_blocks,
+			       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return spdk_bdev_readv_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
+}
+
 
 void
 spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
