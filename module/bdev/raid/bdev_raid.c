@@ -1029,6 +1029,47 @@ raid_bdev_create(const char *name, uint32_t strip_size, uint8_t num_base_bdevs,
 
 /*
  * brief:
+ * Check underlying block devices against support for metadata. Do not configure
+ * md support when parameters from block devices are inconsistent.
+ * params:
+ * raid_bdev - pointer to raid bdev
+ * returns:
+ * 0 - The raid bdev md parameters were successfully configured.
+ * non zero - Failed to configure md.
+ */
+static int
+raid_bdev_configure_md(struct raid_bdev *raid_bdev)
+{
+	struct spdk_bdev *base_bdev;
+	uint8_t i;
+
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		base_bdev = raid_bdev->base_bdev_info[i].bdev;
+
+		if (i == 0) {
+			raid_bdev->bdev.md_len = spdk_bdev_get_md_size(base_bdev);
+			raid_bdev->bdev.md_interleave = spdk_bdev_is_md_interleaved(base_bdev);
+			raid_bdev->bdev.dif_type = spdk_bdev_get_dif_type(base_bdev);
+			raid_bdev->bdev.dif_is_head_of_md = spdk_bdev_is_dif_head_of_md(base_bdev);
+			raid_bdev->bdev.dif_check_flags = base_bdev->dif_check_flags;
+			continue;
+		}
+
+		if (raid_bdev->bdev.md_len != spdk_bdev_get_md_size(base_bdev) ||
+		    raid_bdev->bdev.md_interleave != spdk_bdev_is_md_interleaved(base_bdev) ||
+		    raid_bdev->bdev.dif_type != spdk_bdev_get_dif_type(base_bdev) ||
+		    raid_bdev->bdev.dif_is_head_of_md != spdk_bdev_is_dif_head_of_md(base_bdev) ||
+		    raid_bdev->bdev.dif_check_flags != base_bdev->dif_check_flags) {
+			SPDK_ERRLOG("base bdevs are configured with different metadata formats\n");
+			return -EPERM;
+		}
+	}
+
+	return 0;
+}
+
+/*
+ * brief:
  * If raid bdev config is complete, then only register the raid bdev to
  * bdev layer and remove this raid bdev from configuring list and
  * insert the raid bdev to configured list
@@ -1074,6 +1115,12 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 
 	raid_bdev_gen = &raid_bdev->bdev;
 	raid_bdev_gen->blocklen = blocklen;
+
+	rc = raid_bdev_configure_md(raid_bdev);
+	if (rc != 0) {
+		SPDK_ERRLOG("raid metadata configuration failed\n");
+		return rc;
+	}
 
 	rc = raid_bdev->module->start(raid_bdev);
 	if (rc != 0) {
