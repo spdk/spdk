@@ -22,13 +22,13 @@ extern "C" {
 #endif
 
 /**
- * Callback for spdk_vhost_init().
+ * Callback for spdk_vhost_blk|scsi_init().
  *
  * \param rc 0 on success, negative errno on failure
  */
 typedef void (*spdk_vhost_init_cb)(int rc);
 
-/** Callback for spdk_vhost_fini(). */
+/** Callback for spdk_vhost_blk|scsi_fini(). */
 typedef void (*spdk_vhost_fini_cb)(void);
 
 /**
