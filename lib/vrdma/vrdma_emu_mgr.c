@@ -123,7 +123,6 @@ static inline int spdk_emu_progress(void *arg)
 {
     struct spdk_emu_ctx *ctx = arg;
 
-
     ctx->ctrl_ops->progress(ctx->ctrl);
 
     /* suspend must be initiated by us */
@@ -178,7 +177,9 @@ static int spdk_emu_ctrl_vrdma_create(struct spdk_emu_ctx *ctx,
     SPDK_ERRLOG("\n lizh spdk_emu_ctrl_vrdma_create..pf_id %d.start\n", attr->spci->id);
     vrdma_attr = attr->priv;
     vrdma_init_attr.emu_manager_name = attr->emu_manager;
-    vrdma_init_attr.pf_id = attr->spci->id;
+    //vrdma_init_attr.pf_id = attr->spci->id;
+    /* lizh hardcode for test */
+    vrdma_init_attr.pf_id = attr->vdev->devid;
     vrdma_init_attr.nthreads = spdk_env_get_core_count();
     vrdma_init_attr.force_in_order = vrdma_attr->force_in_order;
     vrdma_init_attr.suspended = vrdma_attr->suspended;
@@ -324,13 +325,14 @@ spdk_emu_ctx_create(const struct spdk_emu_ctx_create_attr *attr)
         SPDK_ERRLOG("failed to start controller admin queue poller\n");
         goto ctrl_destroy;
     }
+    SPDK_ERRLOG("\n lizh spdk_emu_ctx_create..adminq_poller...done\n");
     ctx->bar_event_poller = spdk_poller_register(spdk_emu_progress_mmio,
                                             ctx, 100000);
     if (!ctx->bar_event_poller) {
         SPDK_ERRLOG("failed to start controller bar event poller\n");
         goto unregister_adminq_poller;
     }
-
+    SPDK_ERRLOG("\n lizh spdk_emu_ctx_create..bar_event_poller...done\n");
     if (spdk_emu_ctrl_has_mt(ctx)) {
         err = spdk_emu_ctx_io_threads_create(ctx);
         if (err) {
@@ -358,7 +360,7 @@ spdk_emu_ctx_create(const struct spdk_emu_ctx_create_attr *attr)
         snprintf(ctx->emu_name, SPDK_EMU_NAME_MAXLEN,
                 "%s%dpf%d", ctx->ctrl_ops->prefix,
                 vrdma_dev_name_to_id(attr->emu_manager), attr->spci->id);
-
+    SPDK_ERRLOG("\n lizh spdk_emu_ctx_create...done\n");
     return ctx;
 
 unregister_adminq_bar_poller:
@@ -446,6 +448,7 @@ spdk_emu_controller_vrdma_create(struct spdk_vrdma_dev *vdev)
     LIST_INSERT_HEAD(&spdk_emu_list, ctx, entry);
     pthread_mutex_unlock(&spdk_emu_list_lock);
     free(attr);
+    SPDK_ERRLOG("\n lizh spdk_emu_controller_vrdma_create done\n");
     return 0;
 
 free_attr:
