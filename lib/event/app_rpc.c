@@ -465,6 +465,17 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
+	scheduler = spdk_scheduler_get();
+	/* SPDK does not support changing scheduler back to static. */
+	if (scheduler != NULL && (strcmp(req.name, "static") == 0) &&
+	    strcmp(scheduler->name, "static") != 0) {
+		spdk_jsonrpc_send_error_response(request,
+						 SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Static scheduler cannot be re-enabled "
+						 "after a different scheduler was selected");
+		goto end;
+	}
+
 	if (req.period != 0) {
 		spdk_scheduler_set_period(req.period);
 	}
@@ -476,7 +487,6 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	scheduler = spdk_scheduler_get();
 	if (scheduler != NULL && scheduler->set_opts != NULL) {
 		ret = scheduler->set_opts(params);
 	}

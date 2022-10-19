@@ -2,6 +2,11 @@
 
 ## v23.01: (Upcoming Release)
 
+### scheduler
+
+Changing scheduler from dynamic back to static is no longer possible,
+as there is no way of saving original SPDK thread distribution on reactors.
+
 ## v22.09
 
 ### accel
