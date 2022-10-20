@@ -27,6 +27,13 @@ New `spdk_bdev_copy_blocks` and `spdk_bdev_get_max_copy` APIs to support copy co
 
 A new API `spdk_bdev_io_get_submit_tsc` was added to get the submit_tsc of the bdev I/O.
 
+### event
+
+Added core lock file mechanism to prevent the same CPU cores from being used by multiple
+SPDK application instances.
+
+Added a command line switch to disable CPU locks on SPDK startup.
+
 ## v22.09
 
 ### accel

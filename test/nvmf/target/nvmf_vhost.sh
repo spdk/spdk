@@ -20,7 +20,7 @@ vhosttestinit
 nvmftestinit
 
 # Start Apps
-"${NVMF_APP[@]}" -r $NVMF_SOCK &
+"${NVMF_APP[@]}" -r $NVMF_SOCK -m 0x1 &
 nvmfpid=$!
 waitforlisten $nvmfpid $NVMF_SOCK
 
@@ -28,7 +28,7 @@ trap 'process_shm --id $NVMF_APP_SHM_ID; nvmftestfini; exit 1' SIGINT SIGTERM EX
 
 mkdir -p "$(get_vhost_dir 3)"
 
-"${VHOST_APP[@]}" -S "$(get_vhost_dir 3)" &
+"${VHOST_APP[@]}" -S "$(get_vhost_dir 3)" -m 0x2 &
 vhostpid=$!
 waitforlisten $vhostpid $NVMF_SOCK
 

@@ -7,7 +7,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 nvmftestinit
-nvmfappstart
+nvmfappstart -m 0x2
 
 if [ "$TEST_TRANSPORT" != tcp ]; then
 	echo "Unsupported transport: $TEST_TRANSPORT"

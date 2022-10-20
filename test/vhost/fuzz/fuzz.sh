@@ -5,7 +5,10 @@ rootdir=$(readlink -f $(dirname $0))/../../..
 source $rootdir/test/common/autotest_common.sh
 source "$rootdir/scripts/common.sh"
 
-VHOST_APP+=(-p 0)
+# This test fails, if second VHOST_FUZZ_APP call is run on
+# a different core than VHOST_APP. This problem has been
+# explained in GitHub issue #2732.
+VHOST_APP+=(-p 0 --disable-cpumask-locks)
 FUZZ_RPC_SOCK="/var/tmp/spdk_fuzz.sock"
 VHOST_FUZZ_APP+=(-r "$FUZZ_RPC_SOCK" -g -s 256 --wait-for-rpc)
 

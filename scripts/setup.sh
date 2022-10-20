@@ -422,6 +422,7 @@ function cleanup_linux() {
 		files_to_clean+=("$dir/"*)
 	done
 	file_locks+=(/var/tmp/spdk_pci_lock*)
+	file_locks+=(/var/tmp/spdk_cpu_lock*)
 
 	files_to_clean+=(/dev/shm/@(@($match_spdk)_trace|spdk_iscsi_conns)*)
 	files_to_clean+=("${file_locks[@]}")

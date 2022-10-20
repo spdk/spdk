@@ -140,10 +140,10 @@ verify_crypto_volume() {
 
 trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 
-"$rootdir/build/bin/spdk_tgt" &
+"$rootdir/build/bin/spdk_tgt" -m 0x1 &
 hostpid=$!
 
-"$rootdir/build/bin/spdk_tgt" -r "$tgtsock" &
+"$rootdir/build/bin/spdk_tgt" -r "$tgtsock" -m 0x2 &
 tgtpid=$!
 
 $rootdir/scripts/sma.py -c <(

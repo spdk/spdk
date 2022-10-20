@@ -9,7 +9,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 function tgt_init() {
-	nvmfappstart -m 0xF
+	nvmfappstart -m 0xE
 
 	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0

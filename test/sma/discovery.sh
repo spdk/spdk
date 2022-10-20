@@ -129,13 +129,13 @@ function detach_volume() {
 trap "cleanup; exit 1" SIGINT SIGTERM EXIT
 
 # Start two remote targets
-$rootdir/build/bin/spdk_tgt -r $t1sock &
+$rootdir/build/bin/spdk_tgt -r $t1sock -m 0x1 &
 t1pid=$!
-$rootdir/build/bin/spdk_tgt -r $t2sock &
+$rootdir/build/bin/spdk_tgt -r $t2sock -m 0x2 &
 t2pid=$!
 
 # One target that the SMA will configure
-$rootdir/build/bin/spdk_tgt &
+$rootdir/build/bin/spdk_tgt -m 0x4 &
 tgtpid=$!
 
 # And finally the SMA itself

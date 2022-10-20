@@ -31,6 +31,8 @@
 #define SPDK_APP_DPDK_DEFAULT_BASE_VIRTADDR	0x200000000000
 #define SPDK_APP_DEFAULT_CORE_LIMIT		0x140000000 /* 5 GiB */
 
+#define MAX_CPU_CORES				128
+
 struct spdk_app {
 	const char			*json_config_file;
 	bool				json_config_ignore_errors;
@@ -49,6 +51,9 @@ static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
 static struct spdk_app_opts g_default_opts;
+static bool g_disable_cpumask_locks = false;
+
+static int g_core_locks[MAX_CPU_CORES];
 
 int
 spdk_app_get_shm_id(void)
@@ -116,6 +121,8 @@ static const struct option g_cmdline_options[] = {
 	{"base-virtaddr",		required_argument,	NULL, BASE_VIRTADDR_OPT_IDX},
 #define ENV_CONTEXT_OPT_IDX	266
 	{"env-context",			required_argument,	NULL, ENV_CONTEXT_OPT_IDX},
+#define DISABLE_CPUMASK_LOCKS_OPT_IDX	267
+	{"disable-cpumask-locks",	no_argument,		NULL, DISABLE_CPUMASK_LOCKS_OPT_IDX},
 };
 
 static void
@@ -508,6 +515,86 @@ app_copy_opts(struct spdk_app_opts *opts, struct spdk_app_opts *opts_user, size_
 #undef SET_FIELD
 }
 
+static void
+unclaim_cpu_cores(void)
+{
+	char core_name[40];
+	uint32_t i;
+
+	for (i = 0; i < MAX_CPU_CORES; i++) {
+		if (g_core_locks[i] != -1) {
+			snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", i);
+			close(g_core_locks[i]);
+			unlink(core_name);
+		}
+	}
+}
+
+static int
+claim_cpu_cores(uint32_t *failed_core)
+{
+	char core_name[40];
+	int core_fd, pid;
+	int *core_map;
+	uint32_t core;
+
+	struct flock core_lock = {
+		.l_type = F_WRLCK,
+		.l_whence = SEEK_SET,
+		.l_start = 0,
+		.l_len = 0,
+	};
+
+	SPDK_ENV_FOREACH_CORE(core) {
+		snprintf(core_name, sizeof(core_name), "/var/tmp/spdk_cpu_lock_%03d", core);
+		core_fd = open(core_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+		if (core_fd == -1) {
+			SPDK_ERRLOG("Could not open %s (%s).\n", core_name, spdk_strerror(errno));
+			/* Return number of core we failed to claim. */
+			goto error;
+		}
+
+		if (ftruncate(core_fd, sizeof(int)) != 0) {
+			SPDK_ERRLOG("Could not truncate %s (%s).\n", core_name, spdk_strerror(errno));
+			close(core_fd);
+			goto error;
+		}
+
+		core_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, core_fd, 0);
+		if (core_map == MAP_FAILED) {
+			SPDK_ERRLOG("Could not mmap core %s (%s).\n", core_name, spdk_strerror(errno));
+			close(core_fd);
+			goto error;
+		}
+
+		if (fcntl(core_fd, F_SETLK, &core_lock) != 0) {
+			pid = *core_map;
+			SPDK_ERRLOG("Cannot create lock on core %" PRIu32 ", probably process %d has claimed it.\n",
+				    core, pid);
+			munmap(core_map, sizeof(int));
+			close(core_fd);
+			goto error;
+		}
+
+		/* We write the PID to the core lock file so that other processes trying
+		* to claim the same core will know what process is holding the lock. */
+		*core_map = (int)getpid();
+		munmap(core_map, sizeof(int));
+		g_core_locks[core] = core_fd;
+		/* Keep core_fd open to maintain the lock. */
+	}
+
+	return 0;
+
+error:
+	if (failed_core != NULL) {
+		/* Set number of core we failed to claim. */
+		*failed_core = core;
+	}
+	unclaim_cpu_cores();
+	return -1;
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	       void *arg1)
@@ -518,6 +605,7 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	static bool		g_env_was_setup = false;
 	struct spdk_app_opts opts_local = {};
 	struct spdk_app_opts *opts = &opts_local;
+	uint32_t i;
 
 	if (!opts_user) {
 		SPDK_ERRLOG("opts_user should not be NULL\n");
@@ -583,6 +671,21 @@ spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 	}
 
 	spdk_log_open(opts->log);
+
+	/* Initialize each lock to -1 to indicate "empty" status */
+	for (i = 0; i < MAX_CPU_CORES; i++) {
+		g_core_locks[i] = -1;
+	}
+
+	if (!g_disable_cpumask_locks) {
+		if (claim_cpu_cores(NULL)) {
+			SPDK_ERRLOG("Unable to acquire lock on assigned core mask - exiting.\n");
+			return 1;
+		}
+	} else {
+		SPDK_NOTICELOG("CPU core locks deactivated.\n");
+	}
+
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
 	if ((rc = spdk_reactors_init(opts->msg_mempool_size)) != 0) {
@@ -639,6 +742,7 @@ spdk_app_fini(void)
 	spdk_reactors_fini();
 	spdk_env_fini();
 	spdk_log_close();
+	unclaim_cpu_cores();
 }
 
 static void
@@ -718,6 +822,7 @@ usage(void (*app_usage)(void))
 	{
 		printf("%dMB)\n", g_default_opts.mem_size >= 0 ? g_default_opts.mem_size : 0);
 	}
+	printf("     --disable-cpumask-locks    Disable CPU core lock files.\n");
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf(" -u, --no-pci              disable PCI access\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
@@ -842,6 +947,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case CPUMASK_OPT_IDX:
 			opts->reactor_mask = optarg;
+			break;
+		case DISABLE_CPUMASK_LOCKS_OPT_IDX:
+			g_disable_cpumask_locks = true;
 			break;
 		case MEM_CHANNELS_OPT_IDX:
 			opts->mem_channel = spdk_strtol(optarg, 0);
