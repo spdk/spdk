@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -292,7 +293,7 @@ spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		if (bdev_io->u.bdev.ext_opts || !bdev_io->u.bdev.md_buf) {
+		if (bdev_io->u.bdev.ext_opts) {
 			rc = spdk_bdev_readv_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
 							bdev_io->u.bdev.iovcnt, remapped_offset,
 							bdev_io->u.bdev.num_blocks,
@@ -313,7 +314,7 @@ spdk_bdev_part_submit_request_ext(struct spdk_bdev_part_channel *ch, struct spdk
 			return SPDK_BDEV_IO_STATUS_FAILED;
 		}
 
-		if (bdev_io->u.bdev.ext_opts || !bdev_io->u.bdev.md_buf) {
+		if (bdev_io->u.bdev.ext_opts) {
 			rc = spdk_bdev_writev_blocks_ext(base_desc, base_ch, bdev_io->u.bdev.iovs,
 							 bdev_io->u.bdev.iovcnt, remapped_offset,
 							 bdev_io->u.bdev.num_blocks,
