@@ -410,39 +410,37 @@ function configure_linux_pci() {
 }
 
 function cleanup_linux() {
-	dirs_to_clean=""
-	dirs_to_clean="$(echo {/var/run,/tmp}/dpdk/spdk{,_pid}+([0-9])) "
-	if [[ -d $XDG_RUNTIME_DIR && $XDG_RUNTIME_DIR != *" "* ]]; then
-		dirs_to_clean+="$(readlink -e assert_not_empty $XDG_RUNTIME_DIR/dpdk/spdk{,_pid}+([0-9]) || true) "
+	local dirs_to_clean=() files_to_clean=() opened_files=() file_locks=()
+	local match_spdk="spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf|vhost_fuzz|nvme_fuzz|accel_perf|bdev_svc"
+
+	dirs_to_clean=({/var/run,/tmp}/dpdk/spdk{,_pid}+([0-9]))
+	if [[ -d $XDG_RUNTIME_DIR ]]; then
+		dirs_to_clean+=("$XDG_RUNTIME_DIR/dpdk/spdk"{,_pid}+([0-9]))
 	fi
 
-	files_to_clean="" file_locks=()
-	for dir in $dirs_to_clean; do
-		files_to_clean+="$(echo $dir/*) "
+	for dir in "${dirs_to_clean[@]}"; do
+		files_to_clean+=("$dir/"*)
 	done
 	file_locks+=(/var/tmp/spdk_pci_lock*)
 
-	files_to_clean+="$(ls -1 /dev/shm/* \
-		| grep -E '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf|vhost_fuzz|nvme_fuzz|accel_perf|bdev_svc)_trace|spdk_iscsi_conns' || true) "
-	files_to_clean+=" ${file_locks[*]}"
-	files_to_clean="$(readlink -e assert_not_empty $files_to_clean || true)"
-	if [[ -z "$files_to_clean" ]]; then
+	files_to_clean+=(/dev/shm/@(@($match_spdk)_trace|spdk_iscsi_conns))
+	files_to_clean+=("${file_locks[@]}")
+	if ((${#files_to_clean[@]} == 0)); then
 		echo "Clean"
 		return 0
 	fi
 
-	for fd_dir in $(echo /proc/+([0-9])); do
-		opened_files+="$(readlink -e assert_not_empty $fd_dir/fd/* || true)"
-	done
+	opened_files+=($(readlink -f /proc/+([0-9])/fd/+([0-9])))
 
-	if [[ -z "$opened_files" ]]; then
+	if ((${#opened_files[@]} == 0)); then
 		echo "Can't get list of opened files!"
 		exit 1
 	fi
 
 	echo 'Cleaning'
-	for f in $files_to_clean; do
-		if ! echo "$opened_files" | grep -E -q "^$f\$"; then
+	for f in "${files_to_clean[@]}"; do
+		[[ -e $f ]] || continue
+		if [[ ${opened_files[*]} != *"$f"* ]]; then
 			echo "Removing:    $f"
 			rm $f
 		else
@@ -450,8 +448,9 @@ function cleanup_linux() {
 		fi
 	done
 
-	for dir in $dirs_to_clean; do
-		if ! echo "$opened_files" | grep -E -q "^$dir\$"; then
+	for dir in "${dirs_to_clean[@]}"; do
+		[[ -d $dir ]] || continue
+		if [[ ${opened_files[*]} != *"$dir"* ]]; then
 			echo "Removing:    $dir"
 			rmdir $dir
 		else
@@ -459,8 +458,6 @@ function cleanup_linux() {
 		fi
 	done
 	echo "Clean"
-
-	unset dirs_to_clean files_to_clean opened_files
 }
 
 check_hugepages_alloc() {
