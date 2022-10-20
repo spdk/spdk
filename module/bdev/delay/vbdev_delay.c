@@ -266,10 +266,10 @@ delay_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, 
 		return;
 	}
 
-	rc = spdk_bdev_readv_blocks(delay_node->base_desc, delay_ch->base_ch, bdev_io->u.bdev.iovs,
-				    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-				    bdev_io->u.bdev.num_blocks, _delay_complete_io,
-				    bdev_io);
+	rc = spdk_bdev_readv_blocks_ext(delay_node->base_desc, delay_ch->base_ch, bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					bdev_io->u.bdev.num_blocks, _delay_complete_io,
+					bdev_io, bdev_io->u.bdev.ext_opts);
 
 	if (rc == -ENOMEM) {
 		SPDK_ERRLOG("No memory, start to queue io for delay.\n");
@@ -400,10 +400,10 @@ vbdev_delay_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		io_ctx->type = is_p99 ? DELAY_P99_WRITE : DELAY_AVG_WRITE;
-		rc = spdk_bdev_writev_blocks(delay_node->base_desc, delay_ch->base_ch, bdev_io->u.bdev.iovs,
-					     bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-					     bdev_io->u.bdev.num_blocks, _delay_complete_io,
-					     bdev_io);
+		rc = spdk_bdev_writev_blocks_ext(delay_node->base_desc, delay_ch->base_ch, bdev_io->u.bdev.iovs,
+						 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+						 bdev_io->u.bdev.num_blocks, _delay_complete_io,
+						 bdev_io, bdev_io->u.bdev.ext_opts);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		rc = spdk_bdev_write_zeroes_blocks(delay_node->base_desc, delay_ch->base_ch,
