@@ -232,11 +232,11 @@ pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, boo
 		return;
 	}
 
-	if (bdev_io->u.bdev.md_buf == NULL) {
-		rc = spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-					    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks, _pt_complete_io,
-					    bdev_io);
+	if (bdev_io->u.bdev.ext_opts) {
+		rc = spdk_bdev_readv_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+						bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+						bdev_io->u.bdev.num_blocks, _pt_complete_io,
+						bdev_io, bdev_io->u.bdev.ext_opts);
 	} else {
 		rc = spdk_bdev_readv_blocks_with_md(pt_node->base_desc, pt_ch->base_ch,
 						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
@@ -282,11 +282,11 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		if (bdev_io->u.bdev.md_buf == NULL) {
-			rc = spdk_bdev_writev_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-						     bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-						     bdev_io->u.bdev.num_blocks, _pt_complete_io,
-						     bdev_io);
+		if (bdev_io->u.bdev.ext_opts) {
+			rc = spdk_bdev_writev_blocks_ext(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+							 bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+							 bdev_io->u.bdev.num_blocks, _pt_complete_io,
+							 bdev_io, bdev_io->u.bdev.ext_opts);
 		} else {
 			rc = spdk_bdev_writev_blocks_with_md(pt_node->base_desc, pt_ch->base_ch,
 							     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
