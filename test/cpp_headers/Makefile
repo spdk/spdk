@@ -34,14 +34,16 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SNAP_INC_DIR :=/usr/local/snap/include
-
 HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
-HEADERS += $(wildcard (SNAP_INC_DIR/*.h))
+VRDMA_HDRS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*vrdma*.h)
 
 # On Linux, queue_extras.h is pulled in with queue.h,
 # on FreeBSD, we want to ignore queue_extras.h entirely.
 HEADERS := $(filter-out $(SPDK_ROOT_DIR)/include/spdk/queue_extras.h,$(HEADERS))
+
+# remove vrdma related temporally
+HEADERS := $(filter-out $(VRDMA_HDRS),$(HEADERS))
+
 CXX_SRCS := $(patsubst %.h,%.cpp,$(notdir $(HEADERS)))
 
 install : all

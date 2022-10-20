@@ -37,7 +37,8 @@
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_srv.h"
-#include "spdk/snap-rdma/vrdma/snap_vrdma_virtq.h"
+
+#include "snap_vrdma_virtq.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
@@ -81,13 +82,15 @@ enum action_type {
 	VRDMA_ACT_PI,
 };
 
+struct vrdma_dma_completion; 
+
 typedef void (*vrdma_dma_comp_cb_t)(struct vrdma_dma_completion *comp, int status);
 
 struct vrdma_dma_completion {
 	/** @func: callback function. See &typedef snap_dma_comp_cb_t */
 	vrdma_dma_comp_cb_t func;
 	/** @count: completion counter */
-	uint32_t                count;
+	uint32_t count;
 	uint8_t action_type;
 };
 

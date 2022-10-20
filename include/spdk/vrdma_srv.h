@@ -212,8 +212,7 @@ typedef int (*vrdma_admin_destroy_eq_op)(struct vrdma_dev *rdev,
 typedef int (*vrdma_admin_create_pd_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd, 
 										struct vrdma_cmd_param *param);
-typedef int (*vrdma_admin_destroy_pd_op)(struct vrdma_dev *rdev, 
-										struct vrdma_admin_cmd_entry *cmd);
+typedef int (*vrdma_admin_destroy_pd_op)(struct vrdma_dev *rdev,		struct vrdma_admin_cmd_entry *cmd);
 typedef int (*vrdma_admin_create_mr_op)(struct vrdma_dev *rdev, 
 										struct vrdma_admin_cmd_entry *cmd, 
 										struct vrdma_cmd_param *param);
@@ -278,13 +277,13 @@ uint16_t vrdma_fetch_rq_wqes(struct vrdma_dev *dev, uint32_t qp_handle, uint32_t
 //return: the number of cqes vdev can provide, maybe less than num param
 //        0 means failure.
 uint16_t vrdma_gen_cqes(struct vrdma_dev *dev, uint32_t cq_handle, uint32_t idx,
-                        uint16_t num, struct cqe * cqe_list);
+                        uint16_t num, struct vrdma_cqe * cqe_list);
 
 //eqe_list: the place where eqes are stored
 //return: the number of ceqes vdev can provide, maybe less than num param
 //        0 means failure.
 uint16_t vrdma_gen_ceqes(struct vrdma_dev *dev, uint32_t ceq_handle, uint32_t idx,
-                         uint16_t num, struct ceqe * eqe_list);
+                         uint16_t num, struct vrdma_ceqe * eqe_list);
 
 // Generate Interrupt for CEQ:
 bool vrdma_gen_ceq_msi(struct vrdma_dev *dev, uint32_t cqe_vector);

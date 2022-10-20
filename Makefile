@@ -36,6 +36,7 @@ S :=
 SPDK_ROOT_DIR := $(CURDIR)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+DIRS-$(CONFIG_SNAP) += snaprdmabuild
 DIRS-y += lib
 DIRS-y += module
 DIRS-$(CONFIG_SHARED) += shared_lib
@@ -43,7 +44,6 @@ DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
 DIRS-$(CONFIG_ISAL) += isalbuild
-DIRS-$(CONFIG_SNAP) += snaprdmabuild
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk \
 	cc_version cxx_version .libs_only_other .ldflags ldflags install \
