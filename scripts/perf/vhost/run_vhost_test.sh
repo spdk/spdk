@@ -65,6 +65,17 @@ perf_args+=(${split:+--use-split})
 perf_args+=(${disk_map:+--disk-map="$disk_map"})
 perf_args+=(${cpu_cfg:+--custom-cpu-cfg="$cpu_cfg"})
 
+if [[ $auto_cfg == yes || $auto_cfg_print == yes ]]; then
+	if [[ $auto_cfg_print == yes ]]; then
+		"$curdir/conf-generator" -p all || exit 1
+		exit 0
+	fi
+	cpu_out=$curdir/auto-cpu.conf disk_out=$curdir/auto-disk.conf \
+		"$curdir/conf-generator" -s || exit 1
+	perf_args+=("--disk-map=$disk_out")
+	perf_args+=("--custom-cpu-cfg=$cpu_out")
+fi
+
 if [[ -n $extra_params ]]; then
 	perf_args+=($extra_params)
 fi

@@ -65,7 +65,7 @@ map_cpus_node() {
 			local -n _cpu_core_map=node_${node_idx}_core_${core_idx}
 			_cpu_core_map+=("$cpu_idx") cpu_core_map[cpu_idx]=$core_idx
 		fi
-		_cpu_node_map+=("$cpu_idx") cpu_node_map[cpu_idx]=$node_idx
+		_cpu_node_map[cpu_idx]=$cpu_idx cpu_node_map[cpu_idx]=$node_idx
 		cpus+=("$cpu_idx")
 	done
 
