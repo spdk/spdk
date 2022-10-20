@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -416,18 +417,11 @@ zone_block_write(struct bdev_zone_block *bdev_node, struct zone_block_io_channel
 	}
 	pthread_spin_unlock(&zone->lock);
 
-	if (bdev_io->u.bdev.md_buf == NULL) {
-		rc = spdk_bdev_writev_blocks(bdev_node->base_desc, ch->base_ch, bdev_io->u.bdev.iovs,
-					     bdev_io->u.bdev.iovcnt, lba,
-					     bdev_io->u.bdev.num_blocks, _zone_block_complete_write,
-					     bdev_io);
-	} else {
-		rc = spdk_bdev_writev_blocks_with_md(bdev_node->base_desc, ch->base_ch,
-						     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						     bdev_io->u.bdev.md_buf,
-						     lba, bdev_io->u.bdev.num_blocks,
-						     _zone_block_complete_write, bdev_io);
-	}
+	rc = spdk_bdev_writev_blocks_with_md(bdev_node->base_desc, ch->base_ch,
+					     bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					     bdev_io->u.bdev.md_buf,
+					     lba, bdev_io->u.bdev.num_blocks,
+					     _zone_block_complete_write, bdev_io);
 
 	return rc;
 
@@ -469,18 +463,11 @@ zone_block_read(struct bdev_zone_block *bdev_node, struct zone_block_io_channel 
 		return -EINVAL;
 	}
 
-	if (bdev_io->u.bdev.md_buf == NULL) {
-		rc = spdk_bdev_readv_blocks(bdev_node->base_desc, ch->base_ch, bdev_io->u.bdev.iovs,
-					    bdev_io->u.bdev.iovcnt, lba,
-					    len, _zone_block_complete_read,
-					    bdev_io);
-	} else {
-		rc = spdk_bdev_readv_blocks_with_md(bdev_node->base_desc, ch->base_ch,
-						    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-						    bdev_io->u.bdev.md_buf,
-						    lba, len,
-						    _zone_block_complete_read, bdev_io);
-	}
+	rc = spdk_bdev_readv_blocks_with_md(bdev_node->base_desc, ch->base_ch,
+					    bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					    bdev_io->u.bdev.md_buf,
+					    lba, len,
+					    _zone_block_complete_read, bdev_io);
 
 	return rc;
 }
