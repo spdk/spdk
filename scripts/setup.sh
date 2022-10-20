@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+shopt -s nullglob extglob
 
 os=$(uname -s)
 
@@ -409,7 +410,6 @@ function configure_linux_pci() {
 }
 
 function cleanup_linux() {
-	shopt -s extglob nullglob
 	dirs_to_clean=""
 	dirs_to_clean="$(echo {/var/run,/tmp}/dpdk/spdk{,_pid}+([0-9])) "
 	if [[ -d $XDG_RUNTIME_DIR && $XDG_RUNTIME_DIR != *" "* ]]; then
@@ -421,7 +421,6 @@ function cleanup_linux() {
 		files_to_clean+="$(echo $dir/*) "
 	done
 	file_locks+=(/var/tmp/spdk_pci_lock*)
-	shopt -u extglob nullglob
 
 	files_to_clean+="$(ls -1 /dev/shm/* \
 		| grep -E '(spdk_tgt|iscsi|vhost|nvmf|rocksdb|bdevio|bdevperf|vhost_fuzz|nvme_fuzz|accel_perf|bdev_svc)_trace|spdk_iscsi_conns' || true) "
@@ -432,11 +431,9 @@ function cleanup_linux() {
 		return 0
 	fi
 
-	shopt -s extglob
 	for fd_dir in $(echo /proc/+([0-9])); do
 		opened_files+="$(readlink -e assert_not_empty $fd_dir/fd/* || true)"
 	done
-	shopt -u extglob
 
 	if [[ -z "$opened_files" ]]; then
 		echo "Can't get list of opened files!"
@@ -624,7 +621,6 @@ function status_linux() {
 	printf "%-6s %10s %8s / %6s\n" "node" "hugesize" "free" "total" >&2
 
 	numa_nodes=0
-	shopt -s nullglob
 	for path in /sys/devices/system/node/node*/hugepages/hugepages-*/; do
 		numa_nodes=$((numa_nodes + 1))
 		free_pages=$(cat $path/free_hugepages)
@@ -637,7 +633,6 @@ function status_linux() {
 
 		printf "%-6s %10s %8s / %6s\n" $node $huge_size $free_pages $all_pages
 	done
-	shopt -u nullglob
 
 	# fall back to system-wide hugepages
 	if [ "$numa_nodes" = "0" ]; then
