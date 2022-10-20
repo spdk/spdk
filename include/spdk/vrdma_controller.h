@@ -37,6 +37,7 @@
 #include "spdk/vrdma_admq.h"
 #include "spdk/vrdma_emu_mgr.h"
 #include "spdk/vrdma_srv.h"
+#include "spdk/snap-rdma/vrdma/snap_vrdma_virtq.h"
 
 #define VRDMA_EMU_NAME_PREFIX "VrdmaEmu"
 #define VRDMA_EMU_NAME_MAXLEN 32
@@ -73,6 +74,42 @@ struct vrdma_ctrl_init_attr {
     uint32_t nthreads;
     bool force_in_order;
     bool suspended;
+};
+
+enum action_type {
+	VRDMA_ACT_WR = 1,
+	VRDMA_ACT_PI,
+};
+
+typedef void (*vrdma_dma_comp_cb_t)(struct vrdma_dma_completion *comp, int status);
+
+struct vrdma_dma_completion {
+	/** @func: callback function. See &typedef snap_dma_comp_cb_t */
+	vrdma_dma_comp_cb_t func;
+	/** @count: completion counter */
+	uint32_t                count;
+	uint8_t action_type;
+};
+
+struct vrdma_q_comm {
+	uint16_t pre_ci;
+	uint16_t pre_exe_pi;
+	enum vrdma_aq_cmd_sm_state state;
+	uint64_t driver_addr;
+	struct snap_vrdma_queue snap_queue;
+	uint16_t num_to_parse;
+	struct vrdma_dma_completion q_comp;
+	struct snap_vrdma_vq_state_machine *custom_sm;
+};
+
+struct vrdma_sq {
+	struct vrdma_q_comm comm;
+	struct vrdma_send_wqe *sq_buff; /* wqe buff */
+};
+
+struct vrdma_rq {
+	struct vrdma_q_comm comm;
+	struct vrdma_recv_wqe *rq_buff; /* wqe buff */
 };
 
 int vrdma_ctrl_adminq_progress(void *ctrl);
