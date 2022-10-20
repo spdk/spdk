@@ -5307,11 +5307,10 @@ discovery_poller(void *arg)
 				assert(ctx->initializing);
 				stop_discovery(ctx, NULL, ctx->cb_ctx);
 			} else {
+				assert(rc == 0);
 				DISCOVERY_INFOLOG(ctx, "discovery ctrlr connected\n");
 				ctx->rc = rc;
-				if (rc == 0) {
-					get_discovery_log_page(ctx);
-				}
+				get_discovery_log_page(ctx);
 			}
 		}
 	} else {
