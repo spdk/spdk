@@ -1,5 +1,6 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
  *   All rights reserved.
  */
 
@@ -646,15 +647,9 @@ bdevperf_verify_submit_read(void *cb_arg)
 	job = task->job;
 
 	/* Read the data back in */
-	if (spdk_bdev_is_md_separate(job->bdev)) {
-		rc = spdk_bdev_read_blocks_with_md(job->bdev_desc, job->ch, NULL, NULL,
-						   task->offset_blocks, job->io_size_blocks,
-						   bdevperf_complete, task);
-	} else {
-		rc = spdk_bdev_read_blocks(job->bdev_desc, job->ch, NULL,
+	rc = spdk_bdev_read_blocks_with_md(job->bdev_desc, job->ch, NULL, NULL,
 					   task->offset_blocks, job->io_size_blocks,
 					   bdevperf_complete, task);
-	}
 
 	if (rc == -ENOMEM) {
 		bdevperf_queue_io_wait_with_cb(task, bdevperf_verify_submit_read);
@@ -753,18 +748,11 @@ bdevperf_submit_task(void *arg)
 				spdk_bdev_zcopy_end(task->bdev_io, true, cb_fn, task);
 				return;
 			} else {
-				if (spdk_bdev_is_md_separate(job->bdev)) {
-					rc = spdk_bdev_writev_blocks_with_md(desc, ch, &task->iov, 1,
-									     task->md_buf,
-									     task->offset_blocks,
-									     job->io_size_blocks,
-									     cb_fn, task);
-				} else {
-					rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1,
+				rc = spdk_bdev_writev_blocks_with_md(desc, ch, &task->iov, 1,
+								     task->md_buf,
 								     task->offset_blocks,
 								     job->io_size_blocks,
 								     cb_fn, task);
-				}
 			}
 		}
 		break;
@@ -785,15 +773,10 @@ bdevperf_submit_task(void *arg)
 			rc = spdk_bdev_zcopy_start(desc, ch, NULL, 0, task->offset_blocks, job->io_size_blocks,
 						   true, bdevperf_zcopy_populate_complete, task);
 		} else {
-			if (spdk_bdev_is_md_separate(job->bdev)) {
-				rc = spdk_bdev_read_blocks_with_md(desc, ch, task->buf, task->md_buf,
-								   task->offset_blocks,
-								   job->io_size_blocks,
-								   bdevperf_complete, task);
-			} else {
-				rc = spdk_bdev_read_blocks(desc, ch, task->buf, task->offset_blocks,
-							   job->io_size_blocks, bdevperf_complete, task);
-			}
+			rc = spdk_bdev_read_blocks_with_md(desc, ch, task->buf, task->md_buf,
+							   task->offset_blocks,
+							   job->io_size_blocks,
+							   bdevperf_complete, task);
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_ABORT:
