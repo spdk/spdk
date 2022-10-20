@@ -12,6 +12,7 @@
 #include "spdk/barrier.h"
 #include "spdk/log.h"
 #include "spdk/cpuset.h"
+#include "spdk/likely.h"
 
 static int g_trace_fd = -1;
 static char g_shm_name[64];
@@ -39,11 +40,12 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 	va_list vl;
 
 	lcore = spdk_env_get_current_core();
-	if (lcore >= SPDK_TRACE_MAX_LCORE) {
+	if (spdk_unlikely(lcore >= SPDK_TRACE_MAX_LCORE)) {
 		return;
 	}
 
 	lcore_history = spdk_get_per_lcore_history(g_trace_histories, lcore);
+
 	if (tsc == 0) {
 		tsc = spdk_get_ticks();
 	}
@@ -52,7 +54,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 
 	tpoint = &g_trace_flags->tpoint[tpoint_id];
 	/* Make sure that the number of arguments passed matches tracepoint definition */
-	if (tpoint->num_args != num_args) {
+	if (spdk_unlikely(tpoint->num_args != num_args)) {
 		assert(0 && "Unexpected number of tracepoint arguments");
 		return;
 	}
@@ -106,7 +108,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 		argoff = 0;
 		while (argoff < argument->size) {
 			/* Current buffer is full, we need to acquire another one */
-			if (offset == sizeof(buffer->data)) {
+			if (spdk_unlikely(offset == sizeof(buffer->data))) {
 				buffer = (struct spdk_trace_entry_buffer *) get_trace_entry(
 						 lcore_history,
 						 lcore_history->next_entry + num_entries);
@@ -117,7 +119,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 			}
 
 			curlen = spdk_min(sizeof(buffer->data) - offset, argument->size - argoff);
-			if (argoff < arglen) {
+			if (spdk_likely(argoff < arglen)) {
 				assert(argval != NULL);
 				memcpy(&buffer->data[offset], (uint8_t *)argval + argoff,
 				       spdk_min(curlen, arglen - argoff));
@@ -128,7 +130,7 @@ _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id, uint32_
 		}
 
 		/* Make sure that truncated strings are NULL-terminated */
-		if (argument->type == SPDK_TRACE_ARG_TYPE_STR) {
+		if (spdk_unlikely(argument->type == SPDK_TRACE_ARG_TYPE_STR)) {
 			assert(offset > 0);
 			buffer->data[offset - 1] = '\0';
 		}
